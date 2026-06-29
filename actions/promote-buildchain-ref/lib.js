@@ -1,4 +1,15 @@
 const DEFAULT_REPOSITORY = "kungfu-systems/buildchain";
+const fs = require("node:fs");
+const path = require("node:path");
+const {
+  detectPackageManager,
+  getWorkspaceInfo,
+} = require("../../packages/core/package-manager.cjs");
+
+const COMMIT_IDENTITY = {
+  name: "Keren Dong",
+  email: "keren.dong@kungfu.link",
+};
 
 function parseTags(input) {
   const tags = String(input || "")
@@ -93,6 +104,85 @@ function assertSha(sha) {
   if (!/^[0-9a-f]{40}$/i.test(String(sha || ""))) {
     throw new Error(`Invalid commit SHA: ${sha}`);
   }
+}
+
+function stripTagPrefix(tag) {
+  return String(tag || "").replace(/^v/, "");
+}
+
+function readJsonIfExists(filePath) {
+  if (!fs.existsSync(filePath)) {
+    return undefined;
+  }
+  return JSON.parse(fs.readFileSync(filePath, "utf8"));
+}
+
+function writeJsonContent(value) {
+  return `${JSON.stringify(value, null, 2)}\n`;
+}
+
+function detectVersionPackageManager(cwd) {
+  try {
+    const detected = detectPackageManager(cwd);
+    return detected;
+  } catch (error) {
+    return {
+      name: "unknown",
+      reason: "not-detected",
+      message: error.message,
+    };
+  }
+}
+
+function discoverVersionStateFiles(cwd = process.cwd()) {
+  const files = new Map();
+  const addJsonVersionFile = (relativePath, kind) => {
+    const filePath = path.join(cwd, relativePath);
+    const content = readJsonIfExists(filePath);
+    if (content && typeof content.version === "string") {
+      files.set(relativePath.split(path.sep).join("/"), {
+        kind,
+        path: relativePath.split(path.sep).join("/"),
+        content,
+      });
+    }
+  };
+
+  addJsonVersionFile("lerna.json", "lerna");
+  addJsonVersionFile("package.json", "package");
+
+  let workspaceInfo = {};
+  try {
+    workspaceInfo = getWorkspaceInfo(cwd);
+  } catch {
+    workspaceInfo = {};
+  }
+  for (const info of Object.values(workspaceInfo)) {
+    if (info?.location) {
+      addJsonVersionFile(path.join(info.location, "package.json"), "package");
+    }
+  }
+
+  return {
+    files: [...files.values()].sort((a, b) => a.path.localeCompare(b.path)),
+    packageManager: detectVersionPackageManager(cwd),
+  };
+}
+
+function updateVersionStateContents(files, version) {
+  return files
+    .map((file) => {
+      const nextContent = { ...file.content, version };
+      const before = writeJsonContent(file.content);
+      const after = writeJsonContent(nextContent);
+      return {
+        path: file.path,
+        kind: file.kind,
+        changed: before !== after,
+        content: after,
+      };
+    })
+    .filter((file) => file.changed);
 }
 
 function resolveTagsForTarget(targetRef, inputTags) {
@@ -201,6 +291,17 @@ function selectAlphaTag({ refs, releasePrefix, sha, patchAfterRelease }) {
         tag: existingForSha.tag,
         patch: existingForSha.patch,
         prerelease: existingForSha.prerelease,
+        sha: existingForSha.sha,
+        exists: true,
+      };
+    }
+    if (samePatchTags.length > 0) {
+      const prepared = samePatchTags[0];
+      return {
+        tag: prepared.tag,
+        patch: prepared.patch,
+        prerelease: prepared.prerelease,
+        sha: prepared.sha,
         exists: true,
       };
     }
@@ -223,6 +324,7 @@ function selectAlphaTag({ refs, releasePrefix, sha, patchAfterRelease }) {
       tag: existingForSha.tag,
       patch: existingForSha.patch,
       prerelease: existingForSha.prerelease,
+      sha: existingForSha.sha,
       exists: true,
     };
   }
@@ -272,6 +374,8 @@ async function promoteBuildchainRefs({
   tags,
   dryRun = false,
   allowRepository = DEFAULT_REPOSITORY,
+  cwd = process.cwd(),
+  versionState = true,
 }) {
   assertPromotableRepository(owner, repo, allowRepository);
   assertPromotableTargetRef(targetRef);
@@ -363,6 +467,147 @@ async function promoteBuildchainRefs({
     }
   };
 
+  const updateBranch = async (branch, branchSha, action = "updated") => {
+    if (dryRun) {
+      updates.push({ ref: branch, action: "dry-run", sha: branchSha });
+      return;
+    }
+    try {
+      await octokit.rest.git.updateRef({
+        owner,
+        repo,
+        ref: `heads/${branch}`,
+        sha: branchSha,
+        force: true,
+      });
+      updates.push({ ref: branch, action, sha: branchSha });
+    } catch (error) {
+      if (!notFound(error)) {
+        throw error;
+      }
+      await octokit.rest.git.createRef({
+        owner,
+        repo,
+        ref: `refs/heads/${branch}`,
+        sha: branchSha,
+      });
+      updates.push({ ref: branch, action: "created", sha: branchSha });
+    }
+  };
+
+  const createVersionStateCommit = async ({ baseSha, version, message }) => {
+    if (!versionState) {
+      return {
+        sha: baseSha,
+        version,
+        action: "disabled",
+        files: [],
+      };
+    }
+
+    const discovered = discoverVersionStateFiles(cwd);
+    if (discovered.files.length === 0) {
+      updates.push({
+        version,
+        action: "skipped-no-version-state",
+        packageManager: discovered.packageManager.name,
+        sha: baseSha,
+      });
+      return {
+        sha: baseSha,
+        version,
+        action: "skipped-no-version-state",
+        files: [],
+        packageManager: discovered.packageManager,
+      };
+    }
+
+    const changedFiles = updateVersionStateContents(discovered.files, version);
+    if (changedFiles.length === 0) {
+      updates.push({
+        version,
+        action: "existing-version-state",
+        packageManager: discovered.packageManager.name,
+        files: discovered.files.map((file) => file.path),
+        sha: baseSha,
+      });
+      return {
+        sha: baseSha,
+        version,
+        action: "existing",
+        files: discovered.files.map((file) => file.path),
+        packageManager: discovered.packageManager,
+      };
+    }
+
+    if (dryRun) {
+      updates.push({
+        version,
+        action: "dry-run-version-state",
+        packageManager: discovered.packageManager.name,
+        files: changedFiles.map((file) => file.path),
+        sha: baseSha,
+      });
+      return {
+        sha: baseSha,
+        version,
+        action: "dry-run",
+        files: changedFiles.map((file) => file.path),
+        packageManager: discovered.packageManager,
+      };
+    }
+
+    const { data: baseCommit } = await octokit.rest.git.getCommit({
+      owner,
+      repo,
+      commit_sha: baseSha,
+    });
+    const tree = [];
+    for (const file of changedFiles) {
+      const { data: blob } = await octokit.rest.git.createBlob({
+        owner,
+        repo,
+        content: file.content,
+        encoding: "utf-8",
+      });
+      tree.push({
+        path: file.path,
+        mode: "100644",
+        type: "blob",
+        sha: blob.sha,
+      });
+    }
+    const { data: nextTree } = await octokit.rest.git.createTree({
+      owner,
+      repo,
+      base_tree: baseCommit.tree.sha,
+      tree,
+    });
+    const { data: nextCommit } = await octokit.rest.git.createCommit({
+      owner,
+      repo,
+      message,
+      tree: nextTree.sha,
+      parents: [baseSha],
+      author: COMMIT_IDENTITY,
+      committer: COMMIT_IDENTITY,
+    });
+    updates.push({
+      version,
+      action: "created-version-state",
+      packageManager: discovered.packageManager.name,
+      files: changedFiles.map((file) => file.path),
+      sha: nextCommit.sha,
+    });
+    return {
+      sha: nextCommit.sha,
+      version,
+      action: "created",
+      files: changedFiles.map((file) => file.path),
+      packageManager: discovered.packageManager,
+    };
+  };
+
   const shouldPromoteMajorTag = async () => {
     try {
       await octokit.rest.git.getRef({
@@ -397,9 +642,20 @@ async function promoteBuildchainRefs({
           releasePrefix: rule.releasePrefix,
           sha,
         });
-    await ensureTag(selectedAlpha.tag);
-    await updateTag(rule.alphaTag);
-    return { owner, repo, sha, targetRef, updates };
+    const alphaVersion = stripTagPrefix(selectedAlpha.tag);
+    const alphaCommit = await createVersionStateCommit({
+      baseSha: sha,
+      version: alphaVersion,
+      message: `chore(release): prepare ${selectedAlpha.tag}`,
+    });
+    const alphaSha = alphaCommit.sha;
+    if (versionState) {
+      await updateBranch(targetRef, alphaSha);
+      await updateBranch(`dev/v${rule.major}/v${rule.major}.${rule.minor}`, alphaSha);
+    }
+    await ensureTag(selectedAlpha.tag, alphaSha);
+    await updateTag(rule.alphaTag, alphaSha);
+    return { owner, repo, sourceSha: sha, sha: alphaSha, targetRef, updates };
   }
 
   const explicitReleaseTags = requestedTags
@@ -421,15 +677,25 @@ async function promoteBuildchainRefs({
         releasePrefix: rule.releasePrefix,
         sha,
       });
-  await ensureTag(selectedRelease.tag);
-  await updateTag(rule.minorTag);
+  const releaseVersion = stripTagPrefix(selectedRelease.tag);
+  const releaseCommit = await createVersionStateCommit({
+    baseSha: sha,
+    version: releaseVersion,
+    message: `chore(release): release ${selectedRelease.tag}`,
+  });
+  const releaseSha = releaseCommit.sha;
+  if (versionState) {
+    await updateBranch(targetRef, releaseSha);
+  }
+  await ensureTag(selectedRelease.tag, releaseSha);
+  await updateTag(rule.minorTag, releaseSha);
   if (await shouldPromoteMajorTag()) {
-    await updateTag(rule.majorTag);
+    await updateTag(rule.majorTag, releaseSha);
   } else {
     updates.push({
       tag: rule.majorTag,
       action: "skipped-next-minor-exists",
-      sha,
+      sha: releaseSha,
     });
   }
 
@@ -446,12 +712,40 @@ async function promoteBuildchainRefs({
     : selectAlphaTag({
         refs: lineRefs,
         releasePrefix: rule.releasePrefix,
-        sha,
+        sha: releaseSha,
         patchAfterRelease: selectedRelease.patch + 1,
       });
-  await ensureTag(selectedNextAlpha.tag);
-  await updateTag(rule.alphaTag);
-  return { owner, repo, sha, targetRef, updates };
+  const nextAlphaVersion = stripTagPrefix(selectedNextAlpha.tag);
+  let nextAlphaSha = versionState ? selectedNextAlpha.sha : sha;
+  if (versionState && selectedNextAlpha.exists && nextAlphaSha) {
+    updates.push({
+      version: nextAlphaVersion,
+      action: "existing-version-state",
+      sha: nextAlphaSha,
+    });
+  } else if (versionState) {
+    const nextAlphaCommit = await createVersionStateCommit({
+      baseSha: releaseSha,
+      version: nextAlphaVersion,
+      message: `chore(release): prepare ${selectedNextAlpha.tag}`,
+    });
+    nextAlphaSha = nextAlphaCommit.sha;
+  }
+  if (versionState) {
+    await updateBranch(`alpha/v${rule.major}/v${rule.major}.${rule.minor}`, nextAlphaSha);
+    await updateBranch(`dev/v${rule.major}/v${rule.major}.${rule.minor}`, nextAlphaSha);
+  }
+  await ensureTag(selectedNextAlpha.tag, nextAlphaSha);
+  await updateTag(rule.alphaTag, nextAlphaSha);
+  return {
+    owner,
+    repo,
+    sourceSha: sha,
+    sha: releaseSha,
+    nextAlphaSha,
+    targetRef,
+    updates,
+  };
 }
 
 module.exports = {
@@ -459,6 +753,7 @@ module.exports = {
   assertPromotableRepository,
   assertPromotableTargetRef,
   assertSha,
+  discoverVersionStateFiles,
   getPromotionRule,
   parseAlphaPrereleaseTag,
   parseRepository,
@@ -468,4 +763,6 @@ module.exports = {
   resolveTagsForTarget,
   selectAlphaTag,
   selectReleaseTag,
+  stripTagPrefix,
+  updateVersionStateContents,
 };
