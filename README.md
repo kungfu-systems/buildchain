@@ -33,8 +33,11 @@ GitHub Actions:
 - action bundling is handled by tsup.
 - buildchain's own release-line and compatibility tags are promoted by the
   internal `promote-buildchain-ref` action after Verify succeeds: alpha branch
-  promotes `v1-alpha`; release branch creates or reuses the next `1.0.N` patch
-  tag and promotes `v1` plus the current minor tag such as `v1.0`.
+  creates or reuses the next exact prerelease tag such as
+  `v1.0.1-alpha.0` and promotes `v1.0-alpha`; release branch creates or
+  reuses the next exact release tag such as `v1.0.0`, promotes the current
+  minor tag such as `v1.0`, conditionally promotes `v1`, and prepares the next
+  exact prerelease tag for the minor line.
 
 Stable consumers should reference actions as
 `kungfu-systems/buildchain/actions/<name>@v1` and reusable workflows as

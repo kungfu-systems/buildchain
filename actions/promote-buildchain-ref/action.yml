@@ -12,7 +12,7 @@ inputs:
     description: "Buildchain channel branch that must currently point at sha"
     required: true
   tags:
-    description: "Optional comma-separated tags to update. Defaults from target-ref channel and release-line patch sequence."
+    description: "Optional comma-separated ABV-style tags to update. Defaults from target-ref channel and release-line patch/prerelease sequence."
     default: ""
   dry-run:
     description: "Only print planned ref updates"
