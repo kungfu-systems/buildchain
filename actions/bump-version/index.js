@@ -3,21 +3,20 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import semver from 'semver';
-import * as core from '@actions/core';
-import * as github from '@actions/github';
+import * as core from './runtime-core.js';
+import { context, githubClient } from './runtime-github.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 function getPullRequestNumber() {
-  const issue = github.context.issue;
-  return issue.number ? issue.number : github.context.payload.pull_request.number;
+  const issue = context.issue;
+  return issue.number ? issue.number : context.payload.pull_request.number;
 }
 
 const setup = async function (argv) {
-  const context = github.context;
   if (context.eventName === 'pull_request') {
-    const octokit = github.getOctokit(argv.token);
+    const octokit = githubClient(argv.token);
     const { data: pullRequest } = await octokit.rest.pulls.get({
       owner: argv.owner,
       repo: argv.repo,
@@ -40,9 +39,9 @@ const setup = async function (argv) {
 };
 
 const teardown = async function (argv) {
-  if (github.context.eventName === 'pull_request' && argv.action === 'verify') {
+  if (context.eventName === 'pull_request' && argv.action === 'verify') {
     const keyword = lib.getBumpKeyword(argv);
-    const octokit = github.getOctokit(argv.token);
+    const octokit = githubClient(argv.token);
     const title = {
       premajor: (v) => `Prepare v${semver.inc(v, 'major')}`,
       preminor: (v) => `Prepare v${semver.inc(v, 'minor')}`,
@@ -80,11 +79,11 @@ const postbuild = async (argv) => {
 
 const tryClosePullRequest = async (error) => {
   const token = core.getInput('token');
-  const headRef = process.env.GITHUB_HEAD_REF || github.context.ref;
-  const baseRef = process.env.GITHUB_BASE_REF || github.context.ref;
-  if (github.context.eventName === 'pull_request' && core.getInput('action') === 'verify') {
-    const repo = github.context.repo;
-    const octokit = github.getOctokit(token);
+  const headRef = process.env.GITHUB_HEAD_REF || context.ref;
+  const baseRef = process.env.GITHUB_BASE_REF || context.ref;
+  if (context.eventName === 'pull_request' && core.getInput('action') === 'verify') {
+    const repo = context.repo;
+    const octokit = githubClient(token);
     const pullRequestQuery = await octokit.graphql(`
             query {
             repository(name: "${repo.repo}", owner: "${repo.owner}") {
@@ -113,7 +112,6 @@ const actions = {
 };
 
 const main = async function () {
-  const context = github.context;
   const headRef = process.env.GITHUB_HEAD_REF || context.ref;
   const baseRef = process.env.GITHUB_BASE_REF || context.ref;
   const argv = {

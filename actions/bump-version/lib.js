@@ -1,10 +1,9 @@
-import * as github from '@actions/github';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import git from 'git-client';
 import semver from 'semver';
 import { spawnSync } from 'node:child_process';
+import { githubClient } from './runtime-github.js';
 import {
   commandForVersion,
   detectPackageManager,
@@ -119,8 +118,13 @@ async function gitCall(...args) {
   if (bumpOpts.dry) {
     return;
   }
-  const output = await git(...args);
+  const result = spawnSync('git', args, spawnOpts);
+  const output = result.output.filter((item) => item && item.length > 0).toString();
   console.log(output);
+  if (result.status !== 0) {
+    throw new Error(`Git failed with status ${result.status}`);
+  }
+  return output;
 }
 
 async function deleteLocalTagIfExists(tag) {
@@ -129,7 +133,7 @@ async function deleteLocalTagIfExists(tag) {
     return;
   }
   try {
-    await git('rev-parse', '--verify', `refs/tags/${tag}`);
+    await gitCall('rev-parse', '--verify', `refs/tags/${tag}`);
   } catch {
     return;
   }
@@ -137,13 +141,7 @@ async function deleteLocalTagIfExists(tag) {
 }
 
 async function octokitGraphqlCall(argv, query) {
-  const octokit = github.getOctokit(argv.token);
-  const result = await octokit.graphql(query, {
-    headers: {
-      Connection: 'close',
-    },
-  });
-  return result;
+  return await githubClient(argv.token).graphql(query);
 }
 
 async function bumpCall(argv, keyword, message, tag = true) {
@@ -336,7 +334,7 @@ async function mergeCall(argv, keyword) {
   const branchPatterns = pushTargets[keyword].map((p) => `${p}/*/*`);
   await suspendBranchesProtection(argv, branchPatterns).catch(console.error);
 
-  const octokit = github.getOctokit(argv.token);
+  const octokit = githubClient(argv.token);
   const headVersion = getCurrentVersion(argv.cwd);
 
   const pushTag = (tag) => gitCall('push', '-f', 'origin', `HEAD:refs/tags/${tag}`);
@@ -470,7 +468,7 @@ async function mergeCall(argv, keyword) {
 }
 
 async function resetDefaultBranch(argv) {
-  const octokit = github.getOctokit(argv.token);
+  const octokit = githubClient(argv.token);
   const lastDevVersion = await octokitGraphqlCall(
     argv,
     `
@@ -534,7 +532,7 @@ const verify = async (argv) => {
   if (!keyword) {
     throw new Error(`No rule to bump for head/base refs: ${argv.headRef} -> ${argv.baseRef}`);
   }
-  const octokit = github.getOctokit(argv.token);
+  const octokit = githubClient(argv.token);
   try {
     // https://octokit.github.io/rest.js/v20#actions-list-workflow-runs
     const queryWorkflowRuns = await octokit.rest.actions.listWorkflowRuns({
