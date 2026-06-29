@@ -9,9 +9,9 @@
     "build": "tsup index.js --format cjs --target node24 --platform node --splitting=false --no-sourcemap --minify --clean --out-dir dist",
     "package": "echo noop"
   },
-  "dependencies": {
+  "dependencies": {},
+  "devDependencies": {
     "@actions/core": "^3.0.1",
     "@actions/github": "^9.1.1"
-  },
-  "devDependencies": {}
+  }
 }
