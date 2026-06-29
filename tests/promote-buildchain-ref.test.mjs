@@ -657,7 +657,7 @@ test("strict alpha promotion requires a protected dev-to-alpha PR", async () => 
           return {
             data: {
               required_pull_request_reviews: { required_approving_review_count: 1 },
-              required_status_checks: { strict: true, contexts: ["Verify / check"] },
+              required_status_checks: { strict: true, contexts: ["check"] },
             },
           };
         },
@@ -697,6 +697,65 @@ test("strict alpha promotion requires a protected dev-to-alpha PR", async () => 
   ]);
 });
 
+test("strict alpha promotion accepts protected branch fallback when protection details are unreadable", async () => {
+  const calls = [];
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (ref === "heads/alpha/v1/v1.0") {
+            return { data: { object: { sha: SHA } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async () => ({ data: [] }),
+        createRef: async () => ({}),
+        updateRef: async () => ({}),
+      },
+      repos: {
+        getBranchProtection: async ({ branch }) => {
+          calls.push(["getBranchProtection", branch]);
+          const error = new Error("Resource not accessible by integration");
+          error.status = 403;
+          throw error;
+        },
+        getBranch: async ({ branch }) => {
+          calls.push(["getBranch", branch]);
+          return { data: { protected: true } };
+        },
+        listPullRequestsAssociatedWithCommit: async () => ({
+          data: [
+            {
+              merged_at: "2026-06-29T00:00:00Z",
+              base: { ref: "alpha/v1/v1.0" },
+              head: {
+                ref: "dev/v1/v1.0",
+                repo: { full_name: "kungfu-systems/buildchain" },
+              },
+            },
+          ],
+        }),
+      },
+    },
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    versionState: false,
+    requireGovernance: true,
+  });
+
+  assert.equal(result.sha, SHA);
+  assert.deepEqual(calls, [
+    ["getBranchProtection", "alpha/v1/v1.0"],
+    ["getBranch", "alpha/v1/v1.0"],
+  ]);
+});
+
 test("strict alpha promotion rejects missing PR lineage", async () => {
   const octokit = {
     rest: {
@@ -713,7 +772,7 @@ test("strict alpha promotion rejects missing PR lineage", async () => {
         getBranchProtection: async () => ({
           data: {
             required_pull_request_reviews: { required_approving_review_count: 1 },
-            required_status_checks: { strict: true, contexts: ["Verify / check"] },
+              required_status_checks: { strict: true, contexts: ["check"] },
           },
         }),
         listPullRequestsAssociatedWithCommit: async () => ({
@@ -799,7 +858,7 @@ test("strict release promotion requires a matching alpha tree and alpha-to-relea
         getBranchProtection: async () => ({
           data: {
             required_pull_request_reviews: { required_approving_review_count: 1 },
-            required_status_checks: { strict: true, contexts: ["Verify / check"] },
+              required_status_checks: { strict: true, contexts: ["check"] },
           },
         }),
         listPullRequestsAssociatedWithCommit: async () => ({
@@ -868,7 +927,7 @@ test("strict release promotion rejects code changes after alpha", async () => {
         getBranchProtection: async () => ({
           data: {
             required_pull_request_reviews: { required_approving_review_count: 1 },
-            required_status_checks: { strict: true, contexts: ["Verify / check"] },
+            required_status_checks: { strict: true, contexts: ["check"] },
           },
         }),
       },
