@@ -7,6 +7,7 @@ import test from "node:test";
 
 const require = createRequire(import.meta.url);
 const {
+  assertAllowedLocalChanges,
   assertPromotableRepository,
   assertPromotableTargetRef,
   discoverVersionStateFiles,
@@ -41,6 +42,13 @@ function makeTempWorkspace(files) {
     );
   }
   return cwd;
+}
+
+function run(command, cwd) {
+  require("node:child_process").execFileSync(command[0], command.slice(1), {
+    cwd,
+    stdio: "ignore",
+  });
 }
 
 test("parseTags accepts only ABV-style buildchain tags", () => {
@@ -237,6 +245,38 @@ test("discoverVersionStateFiles follows package-manager workspace metadata", () 
   assert.deepEqual(
     updateVersionStateContents(discovered.files, "1.0.1").map((file) => file.path),
     ["actions/one/package.json", "package.json"],
+  );
+});
+
+test("version verification allows only discovered version-state file changes", () => {
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-systems/example",
+      version: "1.0.0-alpha.0",
+    },
+    "actions/one/package.json": {
+      name: "@kungfu-systems/one",
+      version: "1.0.0-alpha.0",
+    },
+    "README.md": "fixture\n",
+  });
+  run(["git", "init"], cwd);
+  run(["git", "add", "."], cwd);
+  run(["git", "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-m", "init"], cwd);
+
+  fs.writeFileSync(
+    path.join(cwd, "actions/one/package.json"),
+    JSON.stringify({ name: "@kungfu-systems/one", version: "1.0.1-alpha.0" }, null, 2) + "\n",
+  );
+  fs.writeFileSync(path.join(cwd, "README.md"), "changed\n");
+
+  assert.throws(
+    () => assertAllowedLocalChanges(cwd, ["actions/one/package.json"]),
+    /README\.md/,
+  );
+  fs.writeFileSync(path.join(cwd, "README.md"), "fixture\n");
+  assert.doesNotThrow(() =>
+    assertAllowedLocalChanges(cwd, ["actions/one/package.json"]),
   );
 });
 

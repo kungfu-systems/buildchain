@@ -198,14 +198,18 @@ function assertAllowedLocalChanges(cwd, allowedPaths) {
   const output = execSync("git status --porcelain --untracked-files=all", {
     cwd,
     encoding: "utf8",
-  }).trim();
+  }).trimEnd();
   const unexpected = output
     .split(/\r?\n/)
     .filter(Boolean)
     .filter((line) => {
       const status = line.slice(0, 2);
       const filePath = line.slice(3).trim();
-      return !(status === " M" && allowed.has(filePath));
+      return !(
+        allowed.has(filePath) &&
+        status !== "??" &&
+        !status.includes("D")
+      );
     });
   if (unexpected.length > 0) {
     throw new Error(
@@ -220,16 +224,13 @@ function applyLocalVersionState(cwd, changedFiles) {
   }
 }
 
-function runVersionVerification({ cwd, command, changedFiles }) {
+function runVersionVerification({ cwd, command, changedFiles, allowedPaths }) {
   if (!command) {
     return;
   }
   applyLocalVersionState(cwd, changedFiles);
   execSync(command, { cwd, stdio: "inherit", shell: true });
-  assertAllowedLocalChanges(
-    cwd,
-    changedFiles.map((file) => file.path),
-  );
+  assertAllowedLocalChanges(cwd, allowedPaths);
 }
 
 async function getCommitInfo(octokit, owner, repo, sha) {
@@ -688,24 +689,34 @@ async function promoteBuildchainRefs({
     }
 
     const changedFiles = updateVersionStateContents(discovered.files, version);
+    const discoveredPaths = discovered.files.map((file) => file.path);
+    const changedPaths = changedFiles.map((file) => file.path);
+    console.log(
+      `> version state manager: ${discovered.packageManager.name} (${discovered.packageManager.reason})`,
+    );
+    console.log(`> version state files: ${discoveredPaths.join(", ")}`);
+    console.log(
+      `> version state changes for ${version}: ${changedPaths.length ? changedPaths.join(", ") : "none"}`,
+    );
     if (changedFiles.length === 0) {
       runVersionVerification({
         cwd,
         command: verificationCommand,
         changedFiles: [],
+        allowedPaths: discoveredPaths,
       });
       updates.push({
         version,
         action: "existing-version-state",
         packageManager: discovered.packageManager.name,
-        files: discovered.files.map((file) => file.path),
+        files: discoveredPaths,
         sha: baseSha,
       });
       return {
         sha: baseSha,
         version,
         action: "existing",
-        files: discovered.files.map((file) => file.path),
+        files: discoveredPaths,
         packageManager: discovered.packageManager,
       };
     }
@@ -731,6 +742,7 @@ async function promoteBuildchainRefs({
       cwd,
       command: verificationCommand,
       changedFiles,
+      allowedPaths: discoveredPaths,
     });
 
     const { data: baseCommit } = await octokit.rest.git.getCommit({
@@ -980,6 +992,7 @@ async function promoteBuildchainRefs({
 module.exports = {
   DEFAULT_REPOSITORY,
   assertChannelPromotionPr,
+  assertAllowedLocalChanges,
   assertProtectedChannel,
   assertPromotableRepository,
   assertPromotableTargetRef,
