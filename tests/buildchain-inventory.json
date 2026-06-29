@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "coreSelfBootstrap": [
+    {
+      "repo": "workflows",
+      "branch": "dev/v2/v2.0",
+      "stableRefs": ["v2", "v2.0", "v2.0.2-alpha.0"],
+      "phase1Disposition": "compatibility-surface"
+    },
+    {
+      "repo": "action-bump-version",
+      "branch": "dev/v4/v4.0",
+      "stableRefs": ["v4", "v4.0", "v4.0.2-alpha.0"],
+      "phase1Disposition": "compatibility-surface"
+    }
+  ],
+  "activeCoupledActions": [
+    "action-publish-prebuilt",
+    "action-release-note",
+    "action-check-format",
+    "action-approve",
+    "action-qa-automated",
+    "action-merge-close-issue",
+    "action-rollback-release"
+  ],
+  "deferredOrUnknown": [
+    "action-batch-pull-request",
+    "action-find-dependencies",
+    "action-generate-download-page",
+    "action-generate-release-page",
+    "action-package-dependency",
+    "action-purge-artifacts",
+    "action-set-collaborators",
+    "action-sync-airtable",
+    "action-sync-extensions-version",
+    "action-sync-pr",
+    "action-update-dependencies-version"
+  ],
+  "phase1Safety": {
+    "publishingDefault": false,
+    "consumerChangesDefault": false,
+    "forkPrSecretsDefault": false,
+    "selfHostedRunnerDefault": false
+  }
+}
+

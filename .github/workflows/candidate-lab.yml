@@ -1,0 +1,45 @@
+name: Candidate Lab
+
+on:
+  workflow_dispatch:
+    inputs:
+      buildchain_ref:
+        description: "Buildchain ref to validate"
+        required: true
+        default: "dev/v1/v1.0"
+      legacy_workflows_ref:
+        description: "Compatibility workflows ref"
+        required: true
+        default: "v2"
+      legacy_action_bump_version_ref:
+        description: "Compatibility action-bump-version ref"
+        required: true
+        default: "v4"
+      target_fixture:
+        description: "Fixture to run"
+        required: true
+        default: "action-bump-version-smoke"
+      publish:
+        description: "Publishing is intentionally disabled in Phase 1"
+        required: true
+        default: "false"
+
+permissions:
+  contents: read
+
+jobs:
+  lab:
+    if: ${{ inputs.publish == 'false' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Report candidate map
+        run: |
+          echo "buildchain_ref=${{ inputs.buildchain_ref }}"
+          echo "legacy_workflows_ref=${{ inputs.legacy_workflows_ref }}"
+          echo "legacy_action_bump_version_ref=${{ inputs.legacy_action_bump_version_ref }}"
+          echo "target_fixture=${{ inputs.target_fixture }}"
+          echo "publish=false"
+      - name: Phase 1 no-publish guard
+        run: test "${{ inputs.publish }}" = "false"
+

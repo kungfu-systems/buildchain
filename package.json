@@ -1,0 +1,15 @@
+{
+  "name": "@kungfu-systems/buildchain",
+  "version": "1.0.0-alpha.0",
+  "private": true,
+  "repository": "https://github.com/kungfu-systems/buildchain",
+  "author": "Keren Dong",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "check": "node scripts/check-inventory.mjs",
+    "build": "npm run check",
+    "package": "echo noop"
+  }
+}
+
