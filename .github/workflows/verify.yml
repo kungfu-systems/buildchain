@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - dev/v*/v*
+      - alpha/v*/v*
+      - release/v*/v*
       - main
   workflow_dispatch:
 
