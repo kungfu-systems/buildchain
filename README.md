@@ -20,19 +20,32 @@ docs/                     Ownership, migration, and rollback notes
 scripts/                  Local verification scripts
 ```
 
-## Current Phase
+## Buildchain v1
 
-Phase 1 creates the monorepo foundation only:
+Buildchain v1 is the monorepo source of truth for Kungfu reusable workflows and
+GitHub Actions:
 
-- inventory current buildchain repositories;
-- keep old stable refs available;
-- add baseline structure and safe checks;
-- keep publishing disabled by default;
-- avoid production consumer changes.
+- reusable workflows live under `.github/workflows`;
+- action implementations live under `actions/<name>`;
+- all migrated actions build to committed `dist/index.js` bundles;
+- action runtime is Node 24;
+- workspace package management is pnpm;
+- action bundling is handled by tsup.
 
-The buildchain repository is not complete until it can verify, version, and
-release itself through the buildchain path, and at least one low-risk consumer
-plus the core Kungfu release path have been migrated to a stable monorepo ref.
+Stable consumers should reference actions as
+`kungfu-systems/buildchain/actions/<name>@v1` and reusable workflows as
+`kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v1`.
+
+## Local Verification
+
+```bash
+corepack enable pnpm
+pnpm install --frozen-lockfile
+pnpm run check
+```
+
+`pnpm run check` validates the inventory, lints all root workflows including
+hidden reusable workflows, and rebuilds every action bundle.
 
 ## Safety Defaults
 
@@ -41,4 +54,5 @@ plus the core Kungfu release path have been migrated to a stable monorepo ref.
 - Fork pull requests must not reach secrets or self-hosted runners.
 - Candidate refs are expected to come from `kungfu-systems/*`.
 - Old workflow and action repositories remain rollback anchors during migration.
-
+- Self-hosted runner validation is available only through the manual
+  `Agent 120 Smoke` workflow.

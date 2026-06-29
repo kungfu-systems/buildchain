@@ -1,0 +1,13 @@
+name: Admin - Bump Minor Version
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+      - release/*/lts
+
+jobs:
+  bump:
+    uses: ./.github/workflows/.bump-minor-version.yml
+    secrets:
+      GITHUB_PUSH_TOKEN: ${{ secrets.KUNGFU_GITHUB_TOKEN }}

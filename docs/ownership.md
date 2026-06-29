@@ -2,9 +2,9 @@
 
 ## Source Of Truth
 
-New buildchain workflow and action design should land in this repository.
-Standalone `workflows` and `action-*` repositories are compatibility surfaces
-until consumers migrate to stable buildchain refs.
+Buildchain v1 workflow and action design lands in this repository. Standalone
+`workflows` and `action-*` repositories are compatibility surfaces and rollback
+anchors until consumers migrate to stable buildchain refs.
 
 ## Compatibility Rule
 
@@ -21,15 +21,20 @@ Any consumer migration must record:
 - workflow run ids;
 - rollback command or revert path.
 
+New stable references should use:
+
+- `kungfu-systems/buildchain/actions/<name>@v1`
+- `kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v1`
+
 ## Publishing Rule
 
-No Phase 1 workflow may publish releases, packages, S3 artifacts, release pages,
-or preview links. Publishing paths must be added only with explicit production
-cutover work and rollback notes.
+Publishing paths stay disabled in buildchain's own verification workflows unless
+explicitly enabled by a production release workflow. Any consumer cutover that
+publishes packages, S3 artifacts, release pages, or preview links must include
+rollback notes.
 
 ## Candidate Ref Rule
 
 Candidate refs are expected to resolve under `kungfu-systems/*`. Broader
 sources require an explicit trust decision before they can reach self-hosted
 runners or secrets.
-

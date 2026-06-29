@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#e9ecef">
+    <link href="https://cdn.staticfile.org/layui/2.8.18/css/layui.min.css" rel="stylesheet">
+    <script src="https://cdn.staticfile.org/layui/2.8.18/layui.min.js"></script>
+    <style>
+        html {
+            font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen-Sans, Ubuntu, Cantarell, Helvetica Neue, sans-serif;
+        }
+
+        html,
+        body {
+            background-color: #fff;
+            box-sizing: border-box;
+            font-size: 15px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            box-sizing: border-box;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .panel {
+            box-sizing: border-box;
+            min-height: 400px;
+            min-height: calc(100vh - 210px);
+            padding-bottom: 36px;
+            padding-left: 20px;
+            padding-right: 20px;
+            margin-top: 110px;
+        }
+
+        @media (min-width: 578px) {
+            .container {
+                max-width: 100%;
+            }
+
+        }
+
+        @media (max-width: 922px) {
+
+            html,
+            body {
+                font-size: 13.68px;
+            }
+        }
+
+        @media (min-width: 1400px) {
+            .container {
+                max-width: 1200px;
+            }
+        }
+
+
+        .header {
+            background-color: #fff;
+            user-select: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1;
+        }
+
+        .header-content {
+            background-color: rgba(0, 0, 0, .8);
+        }
+
+        .custom-logo-wrap {
+            display: block;
+            margin-left: 28px;
+        }
+
+        .custom-logo {
+            display: block;
+            margin-top: -2px;
+        }
+
+        .header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            height: 100%;
+            max-width: 1200px;
+        }
+
+        .nav-menu {
+            font-size: 18px;
+            display: flex;
+            justify-content: flex-end;
+            padding-right: 34px;
+        }
+
+        .nav-menu-item {
+            line-height: 30px;
+            overflow: visible;
+            margin: 0;
+            position: relative;
+        }
+
+        .nav-menu-item .nav-menu-link {
+            display: block;
+            color: #ffffff;
+            transition: all .3s ease;
+            padding: 0 18px;
+            white-space: nowrap;
+        }
+
+        .nav-menu-item:last-child .nav-menu-link {
+            padding: 0 0 0 20px;
+        }
+
+        .nav-menu-item .nav-menu-link.active {
+            color: #F2BA02;
+        }
+
+        .nav-menu-item .nav-menu-link:hover {
+            transform: scale(1.2);
+            color: #F2BA02;
+        }
+
+        .nav-menu-item .icon-arrow svg {
+            fill: currentColor;
+            margin-left: 4px;
+        }
+
+        .nav-menu-item .nav-menu-link-icon {
+            height: 30px;
+        }
+
+        .nav-menu-item .drop-down-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: rgba(0, 0, 0, .8);
+            display: none;
+            transition: display 2s;
+        }
+
+        .nav-menu-item:hover .drop-down-list {
+            display: block;
+        }
+
+        .drop-down-list .nav-menu-link {
+            line-height: 58.47px;
+        }
+
+        .nav-menu-item .drop-down-list .nav-menu-link:hover {
+            transform: scale(1);
+        }
+
+        .nav-icon-wrap {
+            display: none;
+            color: #fff;
+            margin-right: 15px;
+            cursor: pointer;
+            position: relative;
+            right: -5px;
+            top: 2px;
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            padding: 5px;
+            fill: #0170b9;
+        }
+
+        .nav-wrap {
+            display: flex;
+        }
+
+        @media (max-width: 922px) {
+            .nav-menu {
+                width: 100vw;
+                font-size: 13.68px;
+                flex-direction: column;
+                padding-right: 0;
+                display: none;
+            }
+
+            .nav-menu-item {
+                background-color: #fff;
+            }
+
+            .nav-menu-item .nav-menu-link {
+                color: #424242;
+                padding: 0;
+                line-height: 41.06px;
+                padding-left: 20px;
+            }
+
+            .nav-menu-item .nav-menu-link:hover {
+                transform: none;
+            }
+
+            .nav-icon-wrap {
+                display: block;
+            }
+
+            .layui-panel {
+                margin-top: 24px !important;
+            }
+
+            .nav-menu-item .drop-down-list {
+                position: static;
+                display: block;
+                background-color: transparent;
+            }
+
+            .drop-down-list .nav-menu-link {
+                line-height: 41.06px;
+                padding-left: 2em;
+            }
+
+            .nav-menu-link-icon {
+                filter: invert(100%);
+            }
+            .custom-logo-wrap {
+                margin-left: 0;
+            }
+        }
+
+        .layui-btn-container {
+            padding-bottom: .5em;
+        }
+
+        .footer {
+            min-height: 60px;
+            text-align: center;
+            background-color: #343434;
+            padding: 20px 12px;
+            color: #fff;
+            line-height: 22.5px;
+            font-weight: 400;
+        }
+
+        a {
+            color: #0170b9;
+            text-decoration: none;
+        }
+
+        .footer a {
+            color: inherit;
+        }
+
+        .link-wrap {
+            margin-right: 16px;
+        }
+
+        .link-wrap .layui-btn {
+            margin: 0;
+        }
+
+        .layui-bg-blue {
+            background: #0066B8;
+        }
+
+        #table-container {
+            transition: all .2s;
+        }
+
+        .description {
+            line-height: 1.8;
+        }
+
+        .description p {
+            margin: 8px 0;
+        }
+
+        .description li {
+            margin-left: 1.5em;
+            list-style: disc;
+        }
+
+        .description code {
+            background-color: #eee;
+        }
+
+        .description>h1:first-child {
+            display: none;
+        }
+
+        .layui-btn,
+        .layui-bg-orange {
+            background-color: #FAAC15;
+        }
+
+        .notes-download {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1.5em;
+            margin-bottom: 1.2em;
+        }
+    </style>
+    <title>{{title}}</title>
+</head>
+
+<body>
+    <header class="header" style="position: {{logo.position}}">
+        <div class="header-content">
+            <div class="container">
+                <a class="custom-logo-wrap" href="{{{homePage}}}" style="height: {{logo.wrap}}px">
+                    <img
+                        width="300"
+                        src="{{{logo.url}}}"
+                        height="{{logo.height}}"
+                        style="margin-top: {{logo.offset}}px"
+                        class="custom-logo" alt=""
+                    >
+                </a>
+                <div class="nav-icon-wrap" id="toggle-nav">
+                    <svg id="icon-open" style="display: block;" class="nav-icon" version="1.1"
+                        xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                        <path
+                            d="M3 13h18c0.552 0 1-0.448 1-1s-0.448-1-1-1h-18c-0.552 0-1 0.448-1 1s0.448 1 1 1zM3 7h18c0.552 0 1-0.448 1-1s-0.448-1-1-1h-18c-0.552 0-1 0.448-1 1s0.448 1 1 1zM3 19h18c0.552 0 1-0.448 1-1s-0.448-1-1-1h-18c-0.552 0-1 0.448-1 1s0.448 1 1 1z">
+                        </path>
+                    </svg>
+                    <svg id="icon-close" style="display: none;" class="nav-icon" version="1.1"
+                        xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                        <path
+                            d="M5.293 6.707l5.293 5.293-5.293 5.293c-0.391 0.391-0.391 1.024 0 1.414s1.024 0.391 1.414 0l5.293-5.293 5.293 5.293c0.391 0.391 1.024 0.391 1.414 0s0.391-1.024 0-1.414l-5.293-5.293 5.293-5.293c0.391-0.391 0.391-1.024 0-1.414s-1.024-0.391-1.414 0l-5.293 5.293-5.293-5.293c-0.391-0.391-1.024-0.391-1.414 0s-0.391 1.024 0 1.414z">
+                        </path>
+                    </svg>
+                </div>
+                <nav class="nav-menu" id="nav-menu">
+                    {{#menu}}
+                    <div class="nav-menu-item">
+                        {{#url}}
+                        <a class="nav-menu-link {{class}}" href="{{{url}}}" aria-current="page" target="{{target}}">
+                            {{#icon}}
+                            <img src="{{{icon}}}" alt="" class="nav-menu-link-icon">
+                            {{/icon}}
+                            {{^icon}}
+                            {{title}}
+                            {{/icon}}
+                        </a>
+                        {{/url}}
+                        {{^url}}
+                        <span class="nav-menu-link {{class}}">
+                            <span>{{title}}</span>
+                            <span class="icon-arrow">
+                                <svg class="ast-arrow-svg" xmlns="http://www.w3.org/2000/svg"
+                                    xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px"
+                                    width="11px" height="11px" viewBox="57 35.171 26 16.043"
+                                    enable-background="new 57 35.171 26 16.043" xml:space="preserve">
+                                    <path d="M57.5,38.193l12.5,12.5l12.5-12.5l-2.5-2.5l-10,10l-10-10L57.5,38.193z">
+                                    </path>
+                                </svg>
+                            </span>
+                        </span>
+                        <div class="drop-down-list">
+                            <ul>
+                                {{#children}}
+                                <li>
+                                    <a class="{{class}} nav-menu-link" href="{{{url}}}" aria-current="page"
+                                        target="{{target}}">
+                                        {{#icon}}
+                                        <img src="{{{icon}}}" alt="" class="nav-menu-link-icon">
+                                        {{/icon}}
+                                        {{^icon}}
+                                        {{title}}
+                                        {{/icon}}
+                                    </a>
+                                </li>
+                                {{/children}}
+                            </ul>
+                        </div>
+                        {{/url}}
+                    </div>
+                    {{/menu}}
+                </nav>
+            </div>
+        </div>
+    </header>
+    <section section class="container panel">
+        <h2 style="margin: 36px 0 18px;">{{artifactName}} {{version}}</h2>
+        {{#hasNotes}}
+        <div>
+            <div class="notes-download">
+                <h3>Release notes</h3>
+                <button class="layui-btn demo-dropdown-base">
+                    下载Release notes
+                </button>
+            </div>
+            <div id="release-notes" class="description">{{{notes}}}</div>
+        </div>
+        {{/hasNotes}}
+        <div>
+            <div class="notes-download">
+                <h3>Download</h3>
+            </div>
+            <table class="layui-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Platform</th>
+                        <th scope="col">Download</th>
+                        <th scope="col">Size</th>
+                        <th scope="col">Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#tableItem}}
+                    <tr>
+                        <th scope="row">
+                            {{#platform}}
+                            <span class="layui-badge layui-bg-orange">{{platform}}</span>
+                            {{/platform}}
+                        </th>
+                        <td><a href="{{{url}}}" download>{{name}}</a></td>
+                        <td>{{size}}</td>
+                        <td>{{date}}</td>
+                    </tr>
+                    {{/tableItem}}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    <footer class="footer" style="background-color: {{copyright.bgcolor}}; color: {{copyright.color}}">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <div class="ast-footer-copyright">
+                <div style="display: inline-block; text-align: justify;">
+                    <span>
+                        Copyright © {{copyright.year}}&nbsp; &nbsp;{{copyright.company}} &nbsp;
+                        <a href="{{{copyright.miitUrl}}}" target="_blank"
+                            rel="noopener">{{copyright.miitCode}}</a>&nbsp; &nbsp;
+                        <img loading="lazy" src="{{{copyright.icpIcon}}}" alt="" width="15" height="16">
+                        <a href="{{{copyright.mpsUrl}}}" target="_blank"
+                            rel="noopener noreferrer">{{copyright.mpsCode}}</a>
+                    </span>
+                </div>
+                <div style="float: right;">
+                    <span>
+                        {{#copyright.agreementUrl}}
+                        <a href="{{{copyright.agreementUrl}}}" target="_blank" rel="noopener">[用户协议]</a> &nbsp;&nbsp;
+                        {{/copyright.agreementUrl}}
+                        {{#copyright.privacyPolicyUrl}}
+                        <a href="{{{copyright.privacyPolicyUrl}}}" target="_blank" rel="noopener">[隐私政策] </a>&nbsp;
+                        &nbsp;
+                        {{/copyright.privacyPolicyUrl}}
+                        {{#copyright.disclaimerUrl}}
+                        <a href="{{{copyright.disclaimerUrl}}}" target="_blank" rel="noopener">[法律声明]</a>
+                        {{/copyright.disclaimerUrl}}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <script>
+        function printReleaseNote() {
+            var notesContainer = document.getElementById('release-notes');
+            notesContainer.addEventListener('click', function (event) {
+                if (event.target.tagName.toUpperCase() === 'A') {
+                    event.preventDefault();
+                    window.open(event.target.href)
+                }
+            });
+        }
+        window.onload = function () {
+            printReleaseNote();
+        }
+    </script>
+    <script>
+        layui.use(function () {
+            var dropdown = layui.dropdown;
+            const data = [{
+                title: '下载pdf',
+                id: 'pdf',
+                url: '{{{pdfUrl}}}',
+            }, {
+                title: '下载html',
+                id: 'html',
+                url: '{{{htmlUrl}}}'
+            }, {
+                title: '下载markdown',
+                id: 'md',
+                url: '{{{mdUrl}}}'
+            }, {
+                title: '下载rst',
+                id: 'rst',
+                url: '{{{rstUrl}}}'
+            }].filter(v => v.url)
+
+            dropdown.render({
+                elem: '.demo-dropdown-base',
+                data,
+                templet: function (d) {
+                    return `<div>
+                            <a href="${d.url}" target="_blank" download>${d.title}</a>
+                        </div>`;
+                }
+            });
+        })
+    </script>
+    <script>
+        const nav = document.getElementById('nav-menu');
+        const btn = document.getElementById('toggle-nav');
+        const iconOpen = document.getElementById('icon-open');
+        const iconClose = document.getElementById('icon-close');
+        let isShow = false;
+
+        function show() {
+            nav.style.display = 'flex';
+            iconOpen.style.display = 'none';
+            iconClose.style.display = 'block';
+            isShow = true;
+        }
+        function hide() {
+            nav.style.display = 'none';
+            iconOpen.style.display = 'block';
+            iconClose.style.display = 'none';
+            isShow = false;
+        }
+        btn.addEventListener('click', function (e) {
+            isShow ? hide() : show()
+        }, false);
+
+        window.addEventListener('resize', function () {
+            if (!isShow && document.body.offsetWidth > 922) {
+                show();
+            }
+            if (isShow && document.body.offsetWidth <= 922) {
+                hide();
+            }
+        })
+    </script>
+</body>
+
+</html>

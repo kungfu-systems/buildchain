@@ -1,0 +1,38 @@
+on:
+    workflow_call:
+      inputs:
+        aws-user-region:
+          default: "cn-northwest-1"
+          type: string
+          required: false
+        aws-region:
+          default: "cn-northwest-1"
+          type: string
+          required: false
+        bucket-release:
+          default: "kungfu-releases"
+          type: string
+          required: false
+      secrets:
+        AWS_USER_ACCESS_KEY_ID:
+          required: false
+        AWS_USER_SECRET_ACCESS_KEY:
+          required: false
+  
+permissions: write-all
+  
+jobs:
+    release:
+      if: ${{ github.event.pull_request.merged }}
+      runs-on: ubuntu-24.04
+      steps:
+        - name: Checkout source code
+          uses: actions/checkout@v7.0.0
+  
+        - name: Bump Version
+          id: bump_version
+          uses: kungfu-systems/buildchain/actions/bump-version@v1
+          with:
+            token: ${{ secrets.GITHUB_TOKEN }}
+            action: "prebuild"
+  

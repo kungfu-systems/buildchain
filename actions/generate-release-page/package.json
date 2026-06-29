@@ -1,0 +1,31 @@
+{
+  "name": "@kungfu-systems/buildchain-generate-release-page",
+  "version": "1.0.0-alpha.0",
+  "private": true,
+  "main": "dist/index.js",
+  "author": "Keren Dong",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "tsup index.js --format cjs --target node24 --platform node --splitting=false --no-sourcemap --minify --clean --out-dir dist",
+    "package": "echo noop"
+  },
+  "dependencies": {
+    "@actions/core": "^3.0.1",
+    "@actions/github": "^9.1.1",
+    "@octokit/rest": "^22.0.0",
+    "@yarnpkg/lockfile": "^1.1.0",
+    "axios": "^1.13.0",
+    "cheerio": "^1.1.2",
+    "esbuild": "^0.19.2",
+    "glob": "^13.0.0",
+    "lodash.chunk": "^4.2.0",
+    "lodash.groupby": "^4.6.0",
+    "lodash.sortby": "^4.7.0",
+    "marked": "^17.0.0",
+    "mustache": "^4.2.0",
+    "rimraf": "^6.0.1",
+    "semver": "^7.8.5",
+    "yargs": "^18.0.0"
+  },
+  "devDependencies": {}
+}

@@ -1,0 +1,281 @@
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        default: "24"
+        type: string
+        required: false
+      protect-dev-branches:
+        default: false
+        type: boolean
+        required: false
+      publish-github-npm:
+        default: true
+        type: boolean
+        required: false
+      publish-npmjs:
+        default: false
+        type: boolean
+        required: false
+      publish-aws-ci:
+        default: true
+        type: boolean
+        required: false
+      publish-aws-user:
+        default: true
+        type: boolean
+        required: false
+      aws-ci-region:
+        default: "us-east-1"
+        type: string
+        required: false
+      aws-user-region:
+        default: "cn-northwest-1"
+        type: string
+        required: false
+      bucket-staging-ci:
+        default: "kungfu-prebuilt-staging"
+        type: string
+        required: false
+      bucket-staging-user:
+        default: "kungfu-prebuilt-staging"
+        type: string
+        required: false
+      bucket-release-ci:
+        default: "kungfu-prebuilt"
+        type: string
+        required: false
+      bucket-release-user:
+        default: "kungfu-prebuilt"
+        type: string
+        required: false
+      clean-release-ci:
+        default: false
+        type: boolean
+        required: false
+      clean-release-user:
+        default: false
+        type: boolean
+        required: false
+      cloudfront-id-ci:
+        default: ""
+        type: string
+        required: false
+      cloudfront-id-user:
+        default: ""
+        type: string
+        required: false
+      cloudfront-paths-ci:
+        default: "/*"
+        type: string
+        required: false
+      cloudfront-paths-user:
+        default: "/*"
+        type: string
+        required: false
+      need-qa-automated:
+        default: false
+        type: boolean
+        required: false
+      close-issues:
+        default: false
+        type: boolean
+        required: false
+      create-release-note:
+        default: false
+        type: boolean
+        required: false
+      publish-release-note:
+        default: false
+        type: boolean
+        required: false
+      sync-extensions-version:
+        default: false
+        type: boolean
+        required: false
+      max-preview-links:
+        default: "32"
+        type: string
+        required: false
+      action-bump-version-repository:
+        default: "kungfu-systems/buildchain"
+        type: string
+        required: false
+      action-bump-version-ref:
+        default: "v1"
+        type: string
+        required: false
+      action-bump-version-path:
+        default: "actions/bump-version"
+        type: string
+        required: false
+    secrets:
+      GITHUB_PUSH_TOKEN:
+        required: false
+      NPM_PUSH_TOKEN:
+        required: false
+      AWS_CI_ACCESS_KEY_ID:
+        required: false
+      AWS_CI_SECRET_ACCESS_KEY:
+        required: false
+      AWS_USER_ACCESS_KEY_ID:
+        required: false
+      AWS_USER_SECRET_ACCESS_KEY:
+        required: false
+      MONDAY_API_KEY:
+        required: false
+      AIRTABLE_API_KEY:
+        required: false
+
+jobs:
+  release:
+    if: ${{ github.event.pull_request.merged }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      packages: write
+      issues: write
+      pull-requests: write
+    env:
+      NODE_AUTH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+
+      - name: Checkout Bump Version Action
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.action-bump-version-repository }}
+          ref: ${{ inputs.action-bump-version-ref }}
+          path: node_modules/.github-actions/buildchain
+          persist-credentials: false
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: ${{ inputs.node-version }}
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@kungfu-systems"
+
+      - name: Setup Node.js registry scope
+        if: ${{ inputs.publish-github-npm }}
+        uses: actions/setup-node@v6.4.0
+        with:
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@${{github.repository_owner}}"
+
+      - name: Bump Version
+        run: node node_modules/.github-actions/buildchain/${{ inputs.action-bump-version-path }}/dist/index.js
+        env:
+          KUNGFU_ACTION_BUMP_VERSION_ALLOW_LOCAL: "true"
+          INPUT_TOKEN: ${{ github.token }}
+          INPUT_ACTION: "prebuild"
+
+      - name: Configure AWS Crendentials (CI)
+        if: ${{ inputs.publish-aws-ci }}
+        uses: aws-actions/configure-aws-credentials@v6.2.1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_CI_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_CI_SECRET_ACCESS_KEY }}
+          aws-region: ${{ inputs.aws-ci-region }}
+
+      - name: Publish Prebuilt to AWS (CI)
+        if: ${{ inputs.publish-aws-ci }}
+        uses: kungfu-systems/buildchain/actions/publish-prebuilt@v1
+        with:
+          token: ${{ github.token }}
+          bucket-staging: ${{ inputs.bucket-staging-ci }}
+          bucket-release: ${{ inputs.bucket-release-ci }}
+          clean-release: ${{ inputs.clean-release-ci }}
+          cloudfront-id: ${{ inputs.cloudfront-id-ci }}
+          cloudfront-paths: ${{ inputs.cloudfront-paths-ci }}
+          no-comment: "true"
+
+      - name: Configure AWS Crendentials (User)
+        if: ${{ inputs.publish-aws-user }}
+        uses: aws-actions/configure-aws-credentials@v6.2.1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_USER_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_USER_SECRET_ACCESS_KEY }}
+          aws-region: ${{ inputs.aws-user-region }}
+
+      - name: Publish Prebuilt to AWS (User)
+        if: ${{ inputs.publish-aws-user }}
+        uses: kungfu-systems/buildchain/actions/publish-prebuilt@v1
+        with:
+          token: ${{ github.token }}
+          bucket-staging: ${{ inputs.bucket-staging-user }}
+          bucket-release: ${{ inputs.bucket-release-user }}
+          clean-release: ${{ inputs.clean-release-user }}
+          cloudfront-id: ${{ inputs.cloudfront-id-user }}
+          cloudfront-paths: ${{ inputs.cloudfront-paths-user }}
+          max-preview-links: ${{ inputs.max-preview-links }}
+
+      - name: Publish New Version To GitHub
+        if: ${{ github.event.pull_request.merged && inputs.publish-github-npm }}
+        run: >-
+          env
+          'INPUT_NO-PROTECTION=true'
+          'INPUT_PROTECT-DEV-BRANCHES=${{ inputs.protect-dev-branches }}'
+          'INPUT_RESET-DEFAULT-BRANCH=false'
+          'INPUT_SKIP-BASE-BRANCH-PUSH=true'
+          'INPUT_SKIP-CHANNEL-BRANCH-MERGE=true'
+          node node_modules/.github-actions/buildchain/${{ inputs.action-bump-version-path }}/dist/index.js
+        env:
+          KUNGFU_ACTION_BUMP_VERSION_ALLOW_LOCAL: "true"
+          INPUT_TOKEN: ${{ github.token }}
+          INPUT_ACTION: "postbuild"
+
+      - name: Setup NPM registry
+        if: ${{ inputs.publish-npmjs }}
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: ${{ inputs.node-version }}
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Setup NPM registry for owner
+        if: ${{ inputs.publish-npmjs }}
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: ${{ inputs.node-version }}
+          registry-url: "https://registry.npmjs.org"
+          scope: "@${{github.repository_owner}}"
+
+      - name: Publish to NPM Packages
+        if: ${{ inputs.publish-npmjs }}
+        run: npm publish --access=public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUSH_TOKEN }}
+
+      - name: Rollback Check
+        if: ${{ failure() }}
+        uses: kungfu-systems/buildchain/actions/rollback-release@v1
+        with:
+          token: ${{ github.token }}
+
+      - name: Close Issues
+        if: ${{ github.event.pull_request.merged && inputs.close-issues }}
+        uses: kungfu-systems/buildchain/actions/merge-close-issue@v1
+        with:
+          token: ${{ github.token }}
+          monday_api_key: ${{ secrets.MONDAY_API_KEY }}
+
+      - name: Reject retired Airtable release note
+        if: ${{ inputs.create-release-note || inputs.publish-release-note }}
+        run: |
+          echo "::error::Airtable-backed release note generation is retired in workflows v2."
+          echo "::error::Do not enable create-release-note or publish-release-note until the release note mechanism is redesigned."
+          exit 1
+
+      - name: Reject retired extensions Airtable sync
+        if: ${{ inputs.sync-extensions-version }}
+        run: |
+          echo "::error::sync-extensions-version is retired in workflows v2."
+          echo "::error::Do not route modern releases through Airtable extension version synchronization."
+          exit 1
+
+      - name: Trigger Qa Automated
+        if: ${{ inputs.need-qa-automated }}
+        uses: kungfu-systems/buildchain/actions/qa-automated@v1
+        with:
+          token: ${{ github.token }}

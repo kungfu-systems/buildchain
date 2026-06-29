@@ -1,0 +1,23 @@
+on:
+  workflow_call:
+    inputs:
+      image-name:
+        required: true
+        type: string
+    secrets:
+      GITHUB_PUSH_TOKEN:
+        required: false
+      DOCKER_HUB_USERNAME:
+        required: false
+      DOCKER_HUB_PASSWORD:
+        required: false
+
+jobs:
+  retired:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Docker release workflow retired
+        run: |
+          echo "::error::The workflows v2 Docker release path is retired."
+          echo "::error::Do not use .release-docker.yml until the Docker publishing mechanism is redesigned."
+          exit 1

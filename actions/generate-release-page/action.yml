@@ -1,0 +1,43 @@
+name: "Generate Release Page"
+author: "Keren Dong"
+description: "Generate Release Page for Kungfu Products"
+inputs:
+  token:
+    description: "GitHub token"
+  apiKey:
+    description: "Airtable token"
+  product:
+    description: "Kungfu Product"
+    default: "kungfu-trader"
+  product-name:
+    description: "产品中文名"
+  repo:
+    description: "repo"
+  release-path:
+    description: "Release Path for URL"
+    default: "static"
+  lower-edge:
+    description: "Filter version >= lower-edge value"
+    required: false
+  upper-edge:
+    description: "Filter version <= upper-edge value"
+    required: false
+  release-url:
+    description: "Release page base url"
+    default: "https://releases.kungfu-trader.com"
+  bucket-release:
+    description: "S3 bucket for releases page"
+    default: "kungfu-releases"
+  exclude:
+    description: "Manually exclude the version, comma separation"
+    required: false
+  base-id:
+    type: string
+    default: "appAdi5zFFEsCzmEM"
+  title:
+    type: string
+    default: "历史版本 - 功夫量化"
+
+runs:
+  using: "node24"
+  main: "dist/index.js"

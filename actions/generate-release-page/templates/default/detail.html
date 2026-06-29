@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <meta name="theme-color" content="#e9ecef">
+    <link href="https://cdn.staticfile.org/layui/2.8.18/css/layui.min.css" rel="stylesheet">
+    <script src="https://cdn.staticfile.org/layui/2.8.18/layui.min.js"></script>
+    <style>
+        html {
+            font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen-Sans, Ubuntu, Cantarell, Helvetica Neue, sans-serif;
+        }
+
+        html,
+        body {
+            background-color: #fff;
+            box-sizing: border-box;
+            font-size: 15px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            box-sizing: border-box;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .panel {
+            box-sizing: border-box;
+            min-height: 400px;
+            min-height: calc(100vh - 100px);
+            padding-bottom: 36px;
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+
+        @media (min-width: 578px) {
+            .container {
+                max-width: 100%;
+            }
+
+        }
+
+        @media (max-width: 922px) {
+
+            html,
+            body {
+                font-size: 13.68px;
+            }
+        }
+
+        @media (min-width: 1400px) {
+            .container {
+                max-width: 1200px;
+            }
+        }
+
+
+        .header {
+            background-color: #fff;
+            user-select: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1;
+        }
+
+        .header-content {
+            background-color: rgba(0, 0, 0, .8);
+        }
+
+        .custom-logo-wrap {
+            display: block;
+            margin-left: 28px;
+        }
+
+        .custom-logo {
+            display: block;
+        }
+
+        .header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            height: 100%;
+            max-width: 1200px;
+        }
+
+        .nav-menu {
+            font-size: 18px;
+            display: flex;
+            justify-content: flex-end;
+            padding-right: 34px;
+        }
+
+        .nav-menu-item {
+            line-height: 30px;
+            overflow: visible;
+            margin: 0;
+            position: relative;
+        }
+
+        .nav-menu-item .nav-menu-link {
+            display: block;
+            color: #ffffff;
+            transition: all .3s ease;
+            padding: 0 18px;
+            white-space: nowrap;
+        }
+
+        .nav-menu-item:last-child .nav-menu-link {
+            padding: 0 0 0 20px;
+        }
+
+        .nav-menu-item .nav-menu-link.active {
+            color: #F2BA02;
+        }
+
+        .nav-menu-item .nav-menu-link:hover {
+            transform: scale(1.2);
+            color: #F2BA02;
+        }
+
+        .nav-menu-item .icon-arrow svg {
+            fill: currentColor;
+            margin-left: 4px;
+        }
+
+        .nav-menu-item .nav-menu-link-icon {
+            height: 30px;
+        }
+
+        .nav-menu-item .drop-down-list {
+            position: absolute;
+            top: 55px;
+            left: 0;
+            background-color: rgba(0, 0, 0, .8);
+            display: none;
+            transition: display 2s;
+        }
+
+        .nav-menu-item .nav-menu-hack {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: -30px;
+            left: 0;
+            right: 0;
+            background-color: transparent;
+            z-index: 1;
+        }
+
+        .nav-menu-item:hover .drop-down-list {
+            display: block;
+        }
+
+        .drop-down-list .nav-menu-link {
+            line-height: 58.47px;
+        }
+
+        .nav-menu-item .drop-down-list .nav-menu-link:hover {
+            transform: scale(1);
+        }
+
+        .nav-icon-wrap {
+            display: none;
+            color: #fff;
+            margin-right: 15px;
+            cursor: pointer;
+            position: relative;
+            right: -5px;
+            top: 2px;
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            padding: 5px;
+            fill: #0170b9;
+        }
+
+        .nav-wrap {
+            display: flex;
+        }
+
+        @media (max-width: 922px) {
+            .nav-menu {
+                width: 100vw;
+                font-size: 13.68px;
+                flex-direction: column;
+                padding-right: 0;
+                display: none;
+            }
+
+            .nav-menu-item {
+                background-color: #fff;
+            }
+
+            .nav-menu-item .nav-menu-link {
+                color: #424242;
+                padding: 0;
+                line-height: 41.06px;
+                padding-left: 20px;
+            }
+
+            .nav-menu-item .nav-menu-link:hover {
+                transform: none;
+            }
+
+            .nav-icon-wrap {
+                display: block;
+            }
+
+            .layui-panel {
+                margin-top: 24px !important;
+            }
+
+            .nav-menu-item .drop-down-list {
+                position: static;
+                display: block;
+                background-color: transparent;
+            }
+
+            .drop-down-list .nav-menu-link {
+                line-height: 41.06px;
+                padding-left: 2em;
+            }
+
+            .nav-menu-link-icon {
+                filter: invert(100%);
+            }
+
+            .custom-logo-wrap {
+                margin-left: 0;
+            }
+        }
+
+        .layui-btn-container {
+            padding-bottom: .5em;
+        }
+
+        .footer {
+            min-height: 60px;
+            text-align: center;
+            background-color: #343434;
+            padding: 20px 12px;
+            color: #fff;
+            line-height: 22.5px;
+            font-weight: 400;
+        }
+
+        a {
+            color: #0170b9;
+            text-decoration: none;
+        }
+
+        .footer a {
+            color: inherit;
+        }
+
+        .content-iframe {
+            width: 100%;
+            opacity: 0;
+            transition: opacity .3s;
+        }
+
+        /* HTML: <div class="loader"></div> */
+        .loader {
+            transform: scale(2);
+            width: fit-content;
+            font-size: 17px;
+            font-family: monospace;
+            line-height: 1.4;
+            font-weight: bold;
+            --c: no-repeat linear-gradient(#000 0 0);
+            background: var(--c), var(--c), var(--c), var(--c), var(--c), var(--c), var(--c);
+            background-size: calc(1ch + 1px) 100%;
+            border-bottom: 10px solid #0000;
+            position: relative;
+            animation: l8-0 1s infinite linear;
+            clip-path: inset(-20px 0);
+        }
+
+        .loader::before {
+            content: "Loading";
+        }
+
+        .loader::after {
+            content: "";
+            position: absolute;
+            width: 10px;
+            height: 14px;
+            background: #25adda;
+            left: -10px;
+            bottom: 100%;
+            animation: l8-1 1s infinite linear;
+        }
+
+        @keyframes l8-0 {
+
+            0%,
+            12.5% {
+                background-position: calc(0*100%/6) 0, calc(1*100%/6) 0, calc(2*100%/6) 0, calc(3*100%/6) 0, calc(4*100%/6) 0, calc(5*100%/6) 0, calc(6*100%/6) 0
+            }
+
+            25% {
+                background-position: calc(0*100%/6) 40px, calc(1*100%/6) 0, calc(2*100%/6) 0, calc(3*100%/6) 0, calc(4*100%/6) 0, calc(5*100%/6) 0, calc(6*100%/6) 0
+            }
+
+            37.5% {
+                background-position: calc(0*100%/6) 40px, calc(1*100%/6) 40px, calc(2*100%/6) 0, calc(3*100%/6) 0, calc(4*100%/6) 0, calc(5*100%/6) 0, calc(6*100%/6) 0
+            }
+
+            50% {
+                background-position: calc(0*100%/6) 40px, calc(1*100%/6) 40px, calc(2*100%/6) 40px, calc(3*100%/6) 0, calc(4*100%/6) 0, calc(5*100%/6) 0, calc(6*100%/6) 0
+            }
+
+            62.5% {
+                background-position: calc(0*100%/6) 40px, calc(1*100%/6) 40px, calc(2*100%/6) 40px, calc(3*100%/6) 40px, calc(4*100%/6) 0, calc(5*100%/6) 0, calc(6*100%/6) 0
+            }
+
+            75% {
+                background-position: calc(0*100%/6) 40px, calc(1*100%/6) 40px, calc(2*100%/6) 40px, calc(3*100%/6) 40px, calc(4*100%/6) 40px, calc(5*100%/6) 0, calc(6*100%/6) 0
+            }
+
+            87.4% {
+                background-position: calc(0*100%/6) 40px, calc(1*100%/6) 40px, calc(2*100%/6) 40px, calc(3*100%/6) 40px, calc(4*100%/6) 40px, calc(5*100%/6) 40px, calc(6*100%/6) 0
+            }
+
+            100% {
+                background-position: calc(0*100%/6) 40px, calc(1*100%/6) 40px, calc(2*100%/6) 40px, calc(3*100%/6) 40px, calc(4*100%/6) 40px, calc(5*100%/6) 40px, calc(6*100%/6) 40px
+            }
+        }
+
+        @keyframes l8-1 {
+            100% {
+                left: 115%
+            }
+        }
+
+        #loader-wrap {
+            position: fixed;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header" style="position: fixed">
+        <div class="header-content">
+            <div class="container">
+                <a class="custom-logo-wrap" href="{{{homePage}}}" style="height: 77px">
+                    <img width="300" height="77" src="{{{logo.url}}}" class="custom-logo" alt="">
+                </a>
+                <div class="nav-icon-wrap" id="toggle-nav">
+                    <svg id="icon-open" style="display: block;" class="nav-icon" version="1.1"
+                        xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                        <path
+                            d="M3 13h18c0.552 0 1-0.448 1-1s-0.448-1-1-1h-18c-0.552 0-1 0.448-1 1s0.448 1 1 1zM3 7h18c0.552 0 1-0.448 1-1s-0.448-1-1-1h-18c-0.552 0-1 0.448-1 1s0.448 1 1 1zM3 19h18c0.552 0 1-0.448 1-1s-0.448-1-1-1h-18c-0.552 0-1 0.448-1 1s0.448 1 1 1z">
+                        </path>
+                    </svg>
+                    <svg id="icon-close" style="display: none;" class="nav-icon" version="1.1"
+                        xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                        <path
+                            d="M5.293 6.707l5.293 5.293-5.293 5.293c-0.391 0.391-0.391 1.024 0 1.414s1.024 0.391 1.414 0l5.293-5.293 5.293 5.293c0.391 0.391 1.024 0.391 1.414 0s0.391-1.024 0-1.414l-5.293-5.293 5.293-5.293c0.391-0.391 0.391-1.024 0-1.414s-1.024-0.391-1.414 0l-5.293 5.293-5.293-5.293c-0.391-0.391-1.024-0.391-1.414 0s-0.391 1.024 0 1.414z">
+                        </path>
+                    </svg>
+                </div>
+                <nav class="nav-menu" id="nav-menu">
+                    {{#menu}}
+                    <div class="nav-menu-item">
+                        {{#url}}
+                        <a class="nav-menu-link {{class}}" href="{{{url}}}" aria-current="page" target="{{target}}">
+                            {{#icon}}
+                            <img src="{{{icon}}}" alt="" class="nav-menu-link-icon">
+                            {{/icon}}
+                            {{^icon}}
+                            {{title}}
+                            {{/icon}}
+                        </a>
+                        {{/url}}
+                        {{^url}}
+                        <span class="nav-menu-link {{class}}">
+                            <span>{{title}}</span>
+                            <span class="icon-arrow">
+                                <svg class="ast-arrow-svg" xmlns="http://www.w3.org/2000/svg"
+                                    xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px"
+                                    width="11px" height="11px" viewBox="57 35.171 26 16.043"
+                                    enable-background="new 57 35.171 26 16.043" xml:space="preserve">
+                                    <path d="M57.5,38.193l12.5,12.5l12.5-12.5l-2.5-2.5l-10,10l-10-10L57.5,38.193z">
+                                    </path>
+                                </svg>
+                            </span>
+                        </span>
+                        <div class="nav-menu-hack"></div>
+                        <div class="drop-down-list">
+                            <ul>
+                                {{#children}}
+                                <li>
+                                    <a class="{{class}} nav-menu-link" href="{{{url}}}" aria-current="page"
+                                        target="{{target}}">
+                                        {{#icon}}
+                                        <img src="{{{icon}}}" alt="" class="nav-menu-link-icon">
+                                        {{/icon}}
+                                        {{^icon}}
+                                        {{title}}
+                                        {{/icon}}
+                                    </a>
+                                </li>
+                                {{/children}}
+                            </ul>
+                        </div>
+                        {{/url}}
+                    </div>
+                    {{/menu}}
+                </nav>
+            </div>
+        </div>
+    </header>
+    <section class="panel">
+        <div id="loader-wrap">
+            <span class="loader"></span>
+        </div>
+        <iframe id="content" class="content-iframe" frameborder="0"></iframe>
+    </section>
+    <footer class="footer">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <div class="ast-footer-copyright">
+                <div style="display: inline-block; text-align: justify;">
+                    <span>
+                        Copyright © {{copyright.year}}&nbsp; &nbsp;{{copyright.company}} &nbsp;
+                        <a href="{{{copyright.miitUrl}}}" target="_blank"
+                            rel="noopener">{{copyright.miitCode}}</a>&nbsp; &nbsp;
+                        <img loading="lazy" src="{{{copyright.icpIcon}}}" alt="" width="15" height="16">
+                        <a href="{{{copyright.mpsUrl}}}" target="_blank"
+                            rel="noopener noreferrer">{{copyright.mpsCode}}</a>
+                    </span>
+                </div>
+                <div style="float: right;">
+                    <span>
+                        {{#copyright.agreementUrl}}
+                        <a href="{{{copyright.agreementUrl}}}" target="_blank" rel="noopener">[用户协议]</a> &nbsp;&nbsp;
+                        {{/copyright.agreementUrl}}
+                        {{#copyright.privacyPolicyUrl}}
+                        <a href="{{{copyright.privacyPolicyUrl}}}" target="_blank" rel="noopener">[隐私政策] </a>&nbsp;
+                        &nbsp;
+                        {{/copyright.privacyPolicyUrl}}
+                        {{#copyright.disclaimerUrl}}
+                        <a href="{{{copyright.disclaimerUrl}}}" target="_blank" rel="noopener">[法律声明]</a>
+                        {{/copyright.disclaimerUrl}}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <script>
+        const nav = document.getElementById('nav-menu');
+        const btn = document.getElementById('toggle-nav');
+        const iconOpen = document.getElementById('icon-open');
+        const iconClose = document.getElementById('icon-close');
+        let isShow = false;
+
+        function show() {
+            nav.style.display = 'flex';
+            iconOpen.style.display = 'none';
+            iconClose.style.display = 'block';
+            isShow = true;
+        }
+        function hide() {
+            nav.style.display = 'none';
+            iconOpen.style.display = 'block';
+            iconClose.style.display = 'none';
+            isShow = false;
+        }
+        btn.addEventListener('click', function (e) {
+            isShow ? hide() : show()
+        }, false);
+
+        window.addEventListener('resize', function () {
+            if (!isShow && document.body.offsetWidth > 922) {
+                show();
+            }
+            if (isShow && document.body.offsetWidth <= 922) {
+                hide();
+            }
+        })
+    </script>
+    <script>
+        function resizeIframe() {
+            const obj = document.getElementById('content');
+            setTimeout(() => {
+                obj.style.opacity = 1;
+                document.getElementById('loader-wrap').style.display = 'none';
+                obj.style.height = obj.contentWindow.document.documentElement.scrollHeight + 'px';
+            }, 500);
+            obj.contentWindow.document.querySelectorAll('header').forEach(element => {
+                element.style.display = 'none';
+            });
+            obj.contentWindow.document.querySelectorAll('footer').forEach(element => {
+                element.style.display = 'none';
+            });
+            obj.contentWindow.document.body.style.overflow = 'hidden';
+        }
+        function getParams() {
+            if (!location.search) {
+                return;
+            }
+            return location.search.replace('?', '').split('&').reduce((acc, cur) => {
+                const [key, value] = cur.split('=');
+                acc.set(key, value)
+                return acc;
+            }, new Map());
+        }
+        const params = getParams();
+        if (params && params.get('version')) {
+            const version = params.get('version');
+            const content = document.getElementById('content');
+            content.setAttribute('src', `https://releases.kungfu-trader.com/kungfu-trader/${version.split('.')[0]}/${version}/index.html`);
+            content.addEventListener('load', resizeIframe);
+            document.title = `下载kungfu-trader ${version} - 功夫量化`;
+        }
+    </script>
+</body>
+
+</html>

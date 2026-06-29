@@ -1,0 +1,10 @@
+name: "Check Format"
+author: "Kungfu Trader"
+description: "Check code format"
+inputs:
+  token:
+    description: "E.g. secrets.GITHUB_TOKEN"
+    required: true
+runs:
+  using: "node24"
+  main: "dist/index.js"

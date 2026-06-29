@@ -1,0 +1,38 @@
+name: "Publish Prebuilt"
+author: "Keren Dong"
+description: "Publish Prebuilt to AWS S3"
+inputs:
+  token:
+    description: "GitHub token"
+  aws-proxy:
+    description: "AWS proxy in /etc/hosts"
+  artifacts-path:
+    description: "Where to find the artifacts"
+  bucket-staging:
+    description: "S3 Bucket used as staging area of prebuilt binaries"
+  bucket-release:
+    description: "S3 Bucket used as release area of prebuilt binaries"
+  clean-release:
+    description: "Clean bucket-release when publish (with --delete)"
+    default: "false"
+  cloudfront-id:
+    description: "Cloundfront distribution ID to invalidate"
+    default: ""
+  cloudfront-paths:
+    description: "Cloundfront distribution paths to invalidate"
+    default: "/*"
+  no-digest:
+    description: "Do not digest files [true/false]"
+    default: "false"
+  no-comment:
+    description: "Do not add comment to GitHub [true/false]"
+    default: "false"
+  preview-files:
+    description: "Pattern for preview file names"
+    default: ".*"
+  max-preview-links:
+    description: "Max number of preview links"
+    default: "32"
+runs:
+  using: "node24"
+  main: "dist/index.js"

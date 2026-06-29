@@ -1,49 +1,60 @@
-# Buildchain Migration Inventory
+# Buildchain v1 Migration Inventory
 
-This inventory records the first migration set for the buildchain monorepo.
-It is intentionally conservative: Phase 1 records ownership and status without
-changing production consumers.
+This inventory records the buildchain v1 migration set. Buildchain v1 is the
+monorepo source of truth for active Kungfu reusable workflows and GitHub Actions.
+Standalone `workflows` and `action-*` repositories remain compatibility and
+rollback anchors while consumers migrate to stable buildchain refs.
 
-## Core Self-Bootstrap
+## Workflow Sources
 
-| Repository | Current branch | Latest observed stable refs | Phase 1 disposition |
-| --- | --- | --- | --- |
-| `workflows` | `dev/v2/v2.0` | `v2`, `v2.0`, `v2.0.2-alpha.0` | compatibility surface; migrate reusable workflow sources in Phase 2 |
-| `action-bump-version` | `dev/v4/v4.0` | `v4`, `v4.0`, `v4.0.2-alpha.0` | compatibility surface; migrate action implementation in Phase 2 |
+| Source repository | Previous branch | Buildchain v1 disposition |
+| --- | --- | --- |
+| `workflows` | `dev/v2/v2.0` | root `.github/workflows` sources migrated; reusable workflows linted by actionlint |
 
-## Active Coupled Actions
+## Migrated Actions
 
-| Repository | Current branch | Latest observed stable refs | Phase 1 disposition |
-| --- | --- | --- | --- |
-| `action-publish-prebuilt` | `dev/v2/v2.0` | `v2`, `v2.0`, `v2.0.17-alpha.0` | active; migrate after core self-bootstrap |
-| `action-release-note` | `dev/v1/v1.0` | `v1.0-alpha`, `v1.0.2-alpha.48` | active; migrate after core self-bootstrap |
-| `action-check-format` | `dev/v1/v1.0` | `v1`, `v1.0`, `v1.0.1-alpha.0` | active; migrate after core self-bootstrap |
-| `action-approve` | `dev/v1/v1.0` | `v1`, `v1.0`, `v1.0.1-alpha.0` | active; migrate after core self-bootstrap |
-| `action-qa-automated` | `dev/v1/v1.0` | `v1.0-alpha`, `v1.0.0-alpha.11` | active; migrate after core self-bootstrap |
-| `action-merge-close-issue` | `dev/v1/v1.0` | `v1.0-alpha`, `v1.0.3-alpha.9` | active; migrate after core self-bootstrap |
-| `action-rollback-release` | `dev/v1/v1.0` | `v1`, `v1.0`, `v1.0.1-alpha.0` | active; migrate after core self-bootstrap |
+Migrated actions use `runs.using: node24`, build with tsup, and commit a
+generated `dist/index.js` bundle for direct GitHub Actions consumption.
 
-## Deferred Or Unknown
+| Buildchain path | Previous repository |
+| --- | --- |
+| `actions/approve` | `action-approve` |
+| `actions/batch-pull-request` | `action-batch-pull-request` |
+| `actions/bump-version` | `action-bump-version` |
+| `actions/check-format` | `action-check-format` |
+| `actions/generate-download-page` | `action-generate-download-page` |
+| `actions/generate-release-page` | `action-generate-release-page` |
+| `actions/merge-close-issue` | `action-merge-close-issue` |
+| `actions/publish-prebuilt` | `action-publish-prebuilt` |
+| `actions/qa-automated` | `action-qa-automated` |
+| `actions/rollback-release` | `action-rollback-release` |
+| `actions/sync-pr` | `action-sync-pr` |
+| `actions/update-dependencies-version` | `action-update-dependencies-version` |
 
-These repositories remain outside the first active migration set until a live
-workflow dependency proves they are still needed:
+## Retired Actions Excluded From v1
 
-- `action-batch-pull-request`
-- `action-find-dependencies`
-- `action-generate-download-page`
-- `action-generate-release-page`
-- `action-package-dependency`
-- `action-purge-artifacts`
-- `action-set-collaborators`
-- `action-sync-airtable`
-- `action-sync-extensions-version`
-- `action-sync-pr`
-- `action-update-dependencies-version`
+These legacy action repositories are intentionally not shipped as buildchain v1
+actions because the corresponding workflows now reject the retired mechanism or
+because the action is part of that retired path.
 
-## Phase 2 Entry Criteria
+| Previous repository | Reason |
+| --- | --- |
+| `action-find-dependencies` | retired in workflows v2 or backed by retired Airtable/dependency/collaborator/purge mechanism |
+| `action-package-dependency` | retired in workflows v2 or backed by retired Airtable/dependency/collaborator/purge mechanism |
+| `action-purge-artifacts` | retired in workflows v2 or backed by retired Airtable/dependency/collaborator/purge mechanism |
+| `action-release-note` | retired in workflows v2 or backed by retired Airtable/dependency/collaborator/purge mechanism |
+| `action-set-collaborators` | retired in workflows v2 or backed by retired Airtable/dependency/collaborator/purge mechanism |
+| `action-sync-airtable` | retired in workflows v2 or backed by retired Airtable/dependency/collaborator/purge mechanism |
+| `action-sync-extensions-version` | retired in workflows v2 or backed by retired Airtable/dependency/collaborator/purge mechanism |
 
-- This repository has baseline CI.
-- Inventory checks pass locally.
-- No publishing path is enabled by default.
-- Existing `workflows@v2` and `action-bump-version@v4` remain available.
+## Stable v1 Refs
 
+- Actions: `kungfu-systems/buildchain/actions/<name>@v1`
+- Reusable workflows: `kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v1`
+
+## Verification Gates
+
+- `pnpm install --frozen-lockfile`
+- `pnpm run check`
+- GitHub-hosted `Verify` workflow
+- Manual `Agent 120 Smoke` workflow for trusted self-hosted runner validation

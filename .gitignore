@@ -1,6 +1,7 @@
 .DS_Store
 node_modules/
 dist/
+!actions/*/dist/
+!actions/*/dist/index.js
 coverage/
 *.log
-

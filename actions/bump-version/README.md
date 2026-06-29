@@ -1,9 +1,18 @@
 # Bump Version Action
 
-This path will become the monorepo home for the `action-bump-version`
-implementation in Phase 2.
+Buildchain v1 implementation of the bump-version GitHub Action.
 
-Phase 1 does not change production consumers. Existing consumers should keep
-using `kungfu-systems/action-bump-version@v4` until the buildchain monorepo has
-candidate validation, self-version dogfooding, and a stable migration ref.
+## Runtime
 
+- GitHub Actions runtime: Node 24
+- Build tool: tsup
+- Workspace package: `@kungfu-systems/buildchain-bump-version`
+- Published action path: `kungfu-systems/buildchain/actions/bump-version@v1`
+
+## Local Build
+
+```bash
+pnpm --filter @kungfu-systems/buildchain-bump-version build
+```
+
+Generated bundles are committed under `dist/index.js` so consumers can use the action without installing workspace dependencies.

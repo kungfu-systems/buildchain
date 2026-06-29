@@ -1,0 +1,26 @@
+var I=(t,s)=>()=>(s||t((s={exports:{}}).exports,s),s.exports);var A=I(q=>{var{Octokit:S}=require("@octokit/rest"),_=require("axios"),T=require("lodash.sortby"),f;q.getPulls=async function(t){f=new S({auth:t.token}),await k(t)};var k=async t=>{let s=await G(t,t.pullRequestNumber);if(!s)return;let o=s.base.ref,a=s.head.ref,r=b(s.merged_at),{devPulls:n,alphaPulls:i,releasePulls:c}=await x(t,o,a);if(o.startsWith("alpha/")){let l=await $(t,t.pullRequestNumber,n,i,r);h(t,l,!1,s)}if(o.startsWith("release/")){let l=await C(t,t.pullRequestNumber,n,i,c,r);h(t,l,!0,s)}},h=async(t,s,o,a)=>{let{items:r}=s.reduce((n,i)=>(n.set.has(i.number)||n.items.push(i),n.set.add(i.number),n),{items:[],set:new Set});for await(let n of r){o&&await E(t,n.number);let i=o?"Done":"Waiting test",c=n.title,l=c.indexOf("#",1),u=c.slice(1,l);l>1&&await R(t.mondayApi,n.body,u,i,a.title)}},x=async(t,s,o)=>s.startsWith("release/")?{devPulls:await m(t,{base:o.replace("alpha","dev")}),alphaPulls:await m(t,{base:o}),releasePulls:await m(t,{base:s})}:{devPulls:await m(t,{base:o}),alphaPulls:await m(t,{base:s})},C=async(t,s,o,a,r,n)=>{let i=r.findIndex(d=>d.number===s),c=r[i+1]?.merged_at||0,l=a.filter(d=>d.merged_at>=c&&d.merged_at<=n),u=await g(t,s);for await(let d of l)u=[...u,...await $(t,d.number,o,a,d.merged_at)];return u},$=async(t,s,o,a,r)=>{let n=a.findIndex(u=>u.number===s),i=a[n+1]?.merged_at||0;console.log(a[n].title,i,r);let c=o.filter(u=>u.merged_at>=i&&u.merged_at<=r),l=await g(t,s);for await(let u of c)l=[...l,...await g(t,u.number)];return l},m=async(t,s,o=1)=>{let r=await f.request(`GET /repos/kungfu-trader/${t.repo}/pulls`,{owner:t.owner,repo:t.repo,per_page:100,state:"closed",page:o,...s,headers:{"X-GitHub-Api-Version":"2022-11-28"}}).then(n=>n.data.map(i=>({number:i.number,title:i.title,merged_at:b(i.merged_at),base:i.base.ref}))).catch(n=>(console.error(n.message),[]));return r.length<100?r.filter(n=>!!n.merged_at):T([...r,...await m(t,s,o+1)],n=>n.merged_at*-1)},G=async(t,s)=>{let o=await f.request(`GET /repos/kungfu-trader/${t.repo}/pulls/${s}`,{owner:t.owner,repo:t.repo,headers:{"X-GitHub-Api-Version":"2022-11-28"}}).catch(r=>console.error("get pr error",r.message)),a=o?.data?.merged?o.data:null;return console.log("from request pull",a?.title,s),a},g=async(t,s)=>{let a=(await f.graphql(`query{
+        repository(name: "${t.repo}", owner: "${t.owner}") {
+          pullRequest(number: ${s}) {
+            title
+            closingIssuesReferences (first: 100) {
+              edges {
+                node {
+                  number
+                  body
+                  title,
+                  url
+                }
+              }
+            }
+          }
+        }
+      } 
+    `).catch(r=>console.error(r.message)))?.repository?.pullRequest?.closingIssuesReferences?.edges||[];return console.log(`pullRequestNumber: ${s}, issues: ${a.length}`),a.map(r=>r.node)},b=t=>t?Date.parse(new Date(t)):null,R=async function(t,s,o,a,r){if(!t||!s||!o){console.log("empty monday:",s,o,t?.length);return}let n=await V(t,s);if(!n)return;let i=n.columns.find(p=>p.title.toUpperCase().includes("STATUS"))?.id,c=n.columns.find(p=>p.title.toUpperCase().includes("VERSION"))?.id,l=n.groups.find(p=>p.title.toUpperCase().includes("LAUNCH"))?.id,u=n.groups.find(p=>p.title.toUpperCase().includes("TEST"))?.id,d=a==="Done"?l:u,P=`move_item_to_group (item_id: ${o}, group_id: "${d}"){id}`;await y(t,`mutation{
+    change_simple_column_value (board_id:${s}, item_id:${o}, column_id:"${i}", value:"${a}"){id}
+    ${d?P:""}
+  }`,()=>console.log(`updateStatus to monday completed boardId: ${s} itemId: ${o} status:${a}`),()=>console.error(`updateStatus to monday failed ${e.message} boardId: ${s} itemId: ${o}`)),await y(t,`mutation{
+    change_simple_column_value (board_id:${s}, item_id:${o}, column_id:"${c}", value:"${r}"){id}
+  }`)},y=async(t,s,o,a)=>_.post("https://api.monday.com/v2",JSON.stringify({query:s}),{headers:{"Content-Type":"application/json",Authorization:t,"API-Version":"2024-01"}}).then(r=>{if(r.data.errors)throw new Error(r.data.errors?.[0]?.message);o?.()}).catch(r=>{console.error(r.message),a?.()}),V=async(t,s)=>_.post("https://api.monday.com/v2",JSON.stringify({query:`query {boards (ids: ${s}) {
+            columns { id title }
+            groups { id title }
+          }}`}),{headers:{"Content-Type":"application/json",Authorization:t,"API-Version":"2024-01"}}).then(o=>{if(o.data.errors)throw new Error(o.data.errors?.[0]?.message);return o.data?.data?.boards?.[0]}).catch(o=>console.log(o?.message)),E=function(t,s){return f.request(`PATCH /repos/kungfu-trader/${t.repo}/issues/${s}`,{owner:t.owner,repo:t.repo,issue_number:s,state:"closed",headers:{"X-GitHub-Api-Version":"2022-11-28"}}).then(()=>console.log(`close issue completed ${s}`)).catch(o=>console.error(`close issue failed ${s} ${o.message}`))}});var H=exports.lib=A(),w=require("@actions/core"),N=require("@actions/github"),O=async function(){let t=N.context,s=t.payload.pull_request.number,o={token:w.getInput("token"),mondayApi:w.getInput("monday_api_key"),owner:t.payload.repository.owner.login,repo:t.payload.repository.name,pullRequestNumber:s};console.log("mondayApi length:",o.mondayApi.length),await H.getPulls(o,s)};require.main===module&&O().catch(t=>{console.error(t),w.setFailed(t.message)});
