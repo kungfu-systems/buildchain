@@ -293,22 +293,28 @@ async function assertProtectedChannel({
       branch: targetRef,
     }));
   } catch (error) {
-    if (error.status !== 403) {
-      throw error;
+    if (error.status === 403) {
+      throw new Error(
+        `Protected channel ${targetRef} protection details must be readable to verify admin enforcement`,
+      );
     }
-    const { data: branch } = await octokit.rest.repos.getBranch({
-      owner,
-      repo,
-      branch: targetRef,
-    });
-    if (!branch.protected) {
-      throw new Error(`Promotion target ${targetRef} must be a protected branch`);
-    }
-    console.log(
-      `> branch protection details for ${targetRef} are not readable by this token; ` +
-        "using protected branch status plus merged PR governance checks",
+    throw error;
+  }
+  if (protection.enforce_admins?.enabled !== true) {
+    throw new Error(
+      `Protected channel ${targetRef} must enforce branch protection for administrators`,
     );
-    return;
+  }
+  if (protection.allow_force_pushes?.enabled !== false) {
+    throw new Error(`Protected channel ${targetRef} must disallow force pushes`);
+  }
+  if (protection.allow_deletions?.enabled !== false) {
+    throw new Error(`Protected channel ${targetRef} must disallow branch deletion`);
+  }
+  if (protection.required_conversation_resolution?.enabled !== true) {
+    throw new Error(
+      `Protected channel ${targetRef} must require conversation resolution`,
+    );
   }
   const reviews = protection.required_pull_request_reviews;
   if (!reviews || Number(reviews.required_approving_review_count || 0) < 1) {

@@ -119,6 +119,8 @@ The important constraints are:
 
 - non-dry-run promotion is not available from manual dispatch;
 - promotion must be backed by a protected same-repository PR channel path;
+- protected channel details must be readable and must enforce protection for
+  administrators;
 - alpha promotion must come from `dev/vX/vX.Y -> alpha/vX/vX.Y`;
 - release promotion must come from `alpha/vX/vX.Y -> release/vX/vX.Y`;
 - release promotion must match an existing same-patch alpha tag tree;

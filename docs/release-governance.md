@@ -87,6 +87,8 @@ The implementation is intentionally stricter than a local release script:
 
 - manual workflow dispatch can only do dry-run promotion;
 - non-dry-run promotion must be driven by a completed `Verify` workflow;
+- target branch protection details must be readable, and branch protection must
+  apply to administrators as well as regular contributors;
 - alpha promotion must come from a merged same-repository PR from
   `dev/vX/vX.Y` to `alpha/vX/vX.Y`;
 - release promotion must come from a merged same-repository PR from
@@ -204,7 +206,9 @@ When the loop succeeds, maintainers and consumers can rely on these facts:
 - every alpha minor line has a floating tag such as `v1.0-alpha`;
 - version manifests match the tag visible from the same commit;
 - production releases are derived from the alpha tree that was tested;
-- manual non-dry-run promotion cannot bypass PR review and verification.
+- manual non-dry-run promotion cannot bypass PR review and verification;
+- admin users cannot make a channel promotion valid by temporarily bypassing
+  branch protection.
 
 This is the practical meaning of "governance closed loop" in Buildchain: the
 decision, code, version state, and Git refs close over the same evidence chain.
