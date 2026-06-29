@@ -1,6 +1,6 @@
 {
   "name": "@kungfu-systems/buildchain-check-format",
-  "version": "1.0.0-alpha.0",
+  "version": "1.0.2-alpha.1",
   "private": true,
   "main": "dist/index.js",
   "author": "Keren Dong",
