@@ -1,0 +1,56 @@
+on:
+  workflow_call:
+    inputs:
+      aws-region:
+        required: true
+        type: string
+      eb-environment-name:
+        required: true
+        type: string
+      eb-application-name:
+        required: true
+        type: string
+    secrets:
+      AWS_USER_ACCESS_KEY_ID:
+        required: true
+      AWS_USER_SECRET_ACCESS_KEY:
+        required: true
+      GITHUB_PUSH_TOKEN:
+        required: true
+
+jobs:
+  release:
+    if: ${{ github.event.pull_request.merged }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v7.0.0
+
+      - name: Bump Version
+        id: bump_version
+        uses: kungfu-systems/buildchain/actions/bump-version@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          action: "prebuild"
+
+      - name: Generate deployment package
+        run: zip -r deploy.zip . -x '*.git*'
+
+      - name: Deploy to EB
+        uses: einaregilsson/beanstalk-deploy@v20
+        with:
+          aws_access_key: ${{ secrets.AWS_USER_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_USER_SECRET_ACCESS_KEY }}
+          application_name: ${{inputs.eb-application-name}}
+          environment_name: ${{inputs.eb-environment-name}}
+          version_label: ${{steps.bump_version.outputs.version}}
+          version_description: ${{github.SHA}}
+          region: ${{inputs.aws-region}}
+          deployment_package: deploy.zip
+          wait_for_environment_recovery: 120
+
+      - name: Publish New Version To GitHub
+        uses: kungfu-systems/buildchain/actions/bump-version@v1
+        with:
+          token: ${{ secrets.GITHUB_PUSH_TOKEN }}
+          action: "postbuild"

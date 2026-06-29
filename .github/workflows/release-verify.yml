@@ -1,0 +1,32 @@
+name: Release - Verify
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    branches:
+      - alpha/*/*
+      - release/*/*
+      - main
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  try:
+    uses: ./.github/workflows/.release-verify.yml
+    with:
+      prebuild: false
+      find-dependencies: false
+      publish-versioning: false
+      action-bump-version-repository: kungfu-systems/buildchain
+      action-bump-version-ref: ${{ github.head_ref || github.ref_name }}
+      action-bump-version-path: actions/bump-version
+  
+  verify:
+    # report status for branch protection rule
+    needs: try
+    runs-on: ubuntu-24.04
+    steps:
+      - name: report
+        run: echo verified

@@ -1,0 +1,87 @@
+{
+    "homePage": "https://www.libkungfu.cc",
+    "logo": {
+        "url": "https://s3.cn-northwest-1.amazonaws.com.cn/www.libkungfu.cc/uploads/2024/02/cropped-核心库3.png"
+    },
+    "menu": [
+        {
+            "title": "文档",
+            "url": "https://docs.libkungfu.cc/latest/index.html",
+            "target": "_blank"
+        },
+        {
+            "title": "版本",
+            "url": "https://releases.libkungfu.cc/",
+            "target": "_blank",
+            "class": "active"
+        },
+        {
+            "title": "解决方案",
+            "url": "https://www.kungfu-trader.com/index.php/solution/",
+            "target": "_blank"
+        },
+        {
+            "title": "功夫量化",
+            "url": "https://www.kungfu-trader.com/",
+            "target": "_blank"
+        },
+        {
+            "title": "github",
+            "icon": "https://s3.cn-northwest-1.amazonaws.com.cn/www.libkungfu.cc/uploads/2024/02/github-mark-white.png",
+            "url": "https://github.com/kungfu-origin/kungfu",
+            "target": "_blank"
+        }
+    ],
+    "workingScheule": {
+        "imageUrl": "https://s3.cn-northwest-1.amazonaws.com.cn/www.libkungfu.cc/uploads/2024/02/working-schedule.png",
+        "data": [
+            {
+                "name": "v2.4",
+                "start": "2022-02-07",
+                "end": "2023-11-03",
+                "codename": ""
+            },
+            {
+                "name": "v2.5",
+                "start": "2023-02-28",
+                "end": "2024-02-01",
+                "codename": ""
+            },
+            {
+                "name": "v2.6",
+                "start": "2023-03-01",
+                "lts": "2023-05-22",
+                "maintenance": "2024-01-23",
+                "end": "2024-05-30",
+                "codename": ""
+            },
+            {
+                "name": "v2.7",
+                "start": "2023-05-29",
+                "lts": "2023-12-09",
+                "end": "2024-12-01"
+            },
+            {
+                "name": "v3.0",
+                "start": "2024-02-23",
+                "end": "2025-12-30"
+            }
+        ]
+    },
+    "detailUrl": "https://releases.libkungfu.cc/detail.html",
+    "copyright": {
+        "year": "2017 - 2024",
+        "company": "北京功夫源科技发展有限责任公司",
+        "miitCode": "京ICP备19056728号-2",
+        "miitUrl": "https://beian.miit.gov.cn/#/Integrated/index",
+        "mpsCode": "京公网安备11010202010763",
+        "mpsUrl": "https://beian.mps.gov.cn/#/query/webSearch?code=11010202010763",
+        "icpIcon": "https://s3.cn-northwest-1.amazonaws.com.cn/users.kungfu-trader.com/uploads/2023/12/logo01.6189a29f1.png",
+        "agreementUrl": "https://www.kungfu-trader.com/index.php/user_agreement/",
+        "privacyPolicyUrl": "https://www.kungfu-trader.com/index.php/privacy_policy/",
+        "disclaimerUrl": "https://www.kungfu-trader.com/index.php/disclaimer/",
+        "bgcolor": "transparent",
+        "color": "#343434"
+    },
+    "docUrl": "https://docs.libkungfu.cc"
+}

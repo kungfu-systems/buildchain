@@ -15,10 +15,18 @@ jobs:
   check:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7.0.0
+      - uses: actions/setup-node@v6.4.0
         with:
           node-version: "24"
+      - uses: actions/setup-go@v6.5.0
+        with:
+          go-version: "1.25.x"
+      - name: Enable pnpm
+        run: |
+          corepack enable pnpm
+          pnpm --version
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
       - name: Check inventory and structure
-        run: npm run check
-
+        run: pnpm run check

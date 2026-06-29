@@ -1,0 +1,24 @@
+name: Release - New Version
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - alpha/v*/v*
+      - release/v*/v*
+
+permissions:
+  contents: write
+  packages: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  release:
+    uses: ./.github/workflows/.release-new-version.yml
+    with:
+      publish-aws-ci: false
+      publish-aws-user: false
+      action-bump-version-repository: kungfu-systems/buildchain
+      action-bump-version-ref: ${{ github.head_ref || github.ref_name }}
+      action-bump-version-path: actions/bump-version

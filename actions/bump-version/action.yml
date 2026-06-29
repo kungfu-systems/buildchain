@@ -1,0 +1,31 @@
+name: "Bump Version"
+author: "Keren Dong"
+description: "Bump version for Kungfu projects"
+inputs:
+  token:
+    description: "E.g. secrets.GITHUB_TOKEN"
+    required: true
+  action:
+    description: "Choices [auto/prebuild/postbuild/verify]"
+    default: "auto"
+  no-publish:
+    description: "Choices [true/false]"
+    default: "false"
+  no-protection:
+    description: "Choices [true/false]"
+    default: "false"
+  protect-dev-branches:
+    description: "Choices [true/false]"
+    default: "false"
+  reset-default-branch:
+    description: "Choices [true/false]"
+    default: "true"
+  skip-base-branch-push:
+    description: "Choices [true/false]"
+    default: "false"
+  skip-channel-branch-merge:
+    description: "Choices [true/false]"
+    default: "false"
+runs:
+  using: "node24"
+  main: "dist/index.js"

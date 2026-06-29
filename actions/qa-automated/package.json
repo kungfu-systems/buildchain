@@ -1,0 +1,21 @@
+{
+  "name": "@kungfu-systems/buildchain-qa-automated",
+  "version": "1.0.0-alpha.0",
+  "private": true,
+  "main": "dist/index.js",
+  "author": "Keren Dong",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "tsup index.ts --format cjs --target node24 --platform node --splitting=false --no-sourcemap --minify --clean --out-dir dist",
+    "package": "echo noop"
+  },
+  "dependencies": {
+    "@actions/core": "^3.0.1",
+    "@actions/github": "^9.1.1",
+    "@octokit/rest": "^22.0.0",
+    "glob": "^13.0.0",
+    "semver": "^7.8.5",
+    "yargs": "^18.0.0"
+  },
+  "devDependencies": {}
+}

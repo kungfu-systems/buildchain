@@ -1,0 +1,47 @@
+on:
+    workflow_call:
+      inputs:
+        pull-request-title:
+          type: string
+          required: false
+        repo:
+          type: string
+          default: ''
+          required: false
+        repo-includes:
+          type: string
+          default: ''
+          required: false
+        repo-excludes:
+          type: string
+          default: ''
+          required: false
+      secrets:
+        GITHUB_PUSH_TOKEN:
+          required: true
+
+jobs:
+    batch-pull-request:
+      runs-on: ubuntu-24.04
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v7.0.0
+
+        - name: update deps version
+          uses: kungfu-systems/buildchain/actions/update-dependencies-version@v1
+          continue-on-error: true
+          with:
+              token: ${{ secrets.GITHUB_PUSH_TOKEN }}
+              repo: ${{ inputs.repo }}
+              repo-includes: ${{ inputs.repo-includes }}
+
+        - name: request batch pr
+          uses: indiesdev/curl@v1.1
+          continue-on-error: true
+          with:
+              url: https://api.github.com/repos/kungfu-systems/buildchain/actions/workflows/handpick-pull-request.yml/dispatches
+              method: "POST"
+              headers: '{"X-GitHub-Api-Version": "2022-11-28"}'
+              bearer-token: ${{ secrets.GITHUB_PUSH_TOKEN }}
+              body: '{"ref": "dev/v1/v1.0", "inputs": {"repo-includes": "${{inputs.repo-includes}}", "repo-excludes": "${{inputs.repo-excludes}}","repo": "${{inputs.repo}}", "pull-request-title": "${{ github.event.pull_request.title }}"}}'
+  

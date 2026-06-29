@@ -1,46 +1,121 @@
 {
-  "schemaVersion": 1,
-  "coreSelfBootstrap": [
+  "schemaVersion": 2,
+  "release": "buildchain-v1",
+  "workflowSources": [
     {
       "repo": "workflows",
-      "branch": "dev/v2/v2.0",
-      "stableRefs": ["v2", "v2.0", "v2.0.2-alpha.0"],
-      "phase1Disposition": "compatibility-surface"
-    },
-    {
-      "repo": "action-bump-version",
-      "branch": "dev/v4/v4.0",
-      "stableRefs": ["v4", "v4.0", "v4.0.2-alpha.0"],
-      "phase1Disposition": "compatibility-surface"
+      "previousBranch": "dev/v2/v2.0",
+      "disposition": "migrated-to-root-workflows"
     }
   ],
-  "activeCoupledActions": [
-    "action-publish-prebuilt",
-    "action-release-note",
-    "action-check-format",
-    "action-approve",
-    "action-qa-automated",
-    "action-merge-close-issue",
-    "action-rollback-release"
+  "migratedActions": [
+    {
+      "path": "actions/approve",
+      "previousRepo": "action-approve",
+      "runtime": "node24",
+      "build": "tsup",
+      "bundle": "actions/approve/dist/index.js"
+    },
+    {
+      "path": "actions/batch-pull-request",
+      "previousRepo": "action-batch-pull-request",
+      "runtime": "node24",
+      "build": "tsup",
+      "bundle": "actions/batch-pull-request/dist/index.js"
+    },
+    {
+      "path": "actions/bump-version",
+      "previousRepo": "action-bump-version",
+      "runtime": "node24",
+      "build": "tsup",
+      "bundle": "actions/bump-version/dist/index.js"
+    },
+    {
+      "path": "actions/check-format",
+      "previousRepo": "action-check-format",
+      "runtime": "node24",
+      "build": "tsup",
+      "bundle": "actions/check-format/dist/index.js"
+    },
+    {
+      "path": "actions/generate-download-page",
+      "previousRepo": "action-generate-download-page",
+      "runtime": "node24",
+      "build": "tsup",
+      "bundle": "actions/generate-download-page/dist/index.js"
+    },
+    {
+      "path": "actions/generate-release-page",
+      "previousRepo": "action-generate-release-page",
+      "runtime": "node24",
+      "build": "tsup",
+      "bundle": "actions/generate-release-page/dist/index.js"
+    },
+    {
+      "path": "actions/merge-close-issue",
+      "previousRepo": "action-merge-close-issue",
+      "runtime": "node24",
+      "build": "tsup",
+      "bundle": "actions/merge-close-issue/dist/index.js"
+    },
+    {
+      "path": "actions/publish-prebuilt",
+      "previousRepo": "action-publish-prebuilt",
+      "runtime": "node24",
+      "build": "tsup",
+      "bundle": "actions/publish-prebuilt/dist/index.js"
+    },
+    {
+      "path": "actions/qa-automated",
+      "previousRepo": "action-qa-automated",
+      "runtime": "node24",
+      "build": "tsup",
+      "bundle": "actions/qa-automated/dist/index.js"
+    },
+    {
+      "path": "actions/rollback-release",
+      "previousRepo": "action-rollback-release",
+      "runtime": "node24",
+      "build": "tsup",
+      "bundle": "actions/rollback-release/dist/index.js"
+    },
+    {
+      "path": "actions/sync-pr",
+      "previousRepo": "action-sync-pr",
+      "runtime": "node24",
+      "build": "tsup",
+      "bundle": "actions/sync-pr/dist/index.js"
+    },
+    {
+      "path": "actions/update-dependencies-version",
+      "previousRepo": "action-update-dependencies-version",
+      "runtime": "node24",
+      "build": "tsup",
+      "bundle": "actions/update-dependencies-version/dist/index.js"
+    }
   ],
-  "deferredOrUnknown": [
-    "action-batch-pull-request",
+  "retiredActionsExcluded": [
     "action-find-dependencies",
-    "action-generate-download-page",
-    "action-generate-release-page",
     "action-package-dependency",
     "action-purge-artifacts",
+    "action-release-note",
     "action-set-collaborators",
     "action-sync-airtable",
-    "action-sync-extensions-version",
-    "action-sync-pr",
-    "action-update-dependencies-version"
+    "action-sync-extensions-version"
   ],
-  "phase1Safety": {
-    "publishingDefault": false,
-    "consumerChangesDefault": false,
+  "stableRefs": {
+    "actions": "kungfu-systems/buildchain/actions/<name>@v1",
+    "workflows": "kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v1"
+  },
+  "verification": [
+    "pnpm install --frozen-lockfile",
+    "pnpm run check",
+    "GitHub Verify workflow",
+    "manual Agent 120 Smoke workflow"
+  ],
+  "safety": {
     "forkPrSecretsDefault": false,
-    "selfHostedRunnerDefault": false
+    "selfHostedRunnerDefault": false,
+    "selfHostedRunnerManualWorkflow": "agent-120-smoke.yml"
   }
 }
-

@@ -1,0 +1,18 @@
+on:
+  workflow_call:
+    secrets:
+      GITHUB_PUSH_TOKEN:
+        required: true
+
+jobs:
+  bump:
+    if: ${{ github.event.inputs.confirm  == 'confirm' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+
+      - name: Bump Version
+        uses: kungfu-systems/buildchain/actions/bump-version@v1
+        with:
+          token: ${{ secrets.GITHUB_PUSH_TOKEN }}

@@ -1,0 +1,68 @@
+on:
+  workflow_call:
+    inputs:
+      aws-role-arn:
+        default: "arn:aws-cn:iam::186931371703:role/github-actions-role-dev"
+        type: string
+        required: false
+      aws-region:
+        default: "cn-northwest-1"
+        type: string
+        required: false
+      bucket-release:
+        default: "kungfu-releases"
+        type: string
+        required: false
+      cloudfront-id:
+        default: "E1GP1ZMAI7TELG"
+        type: string
+        required: false
+      release-path:
+        default: "static"
+        type: string
+        required: false
+      product:
+        type: string
+        required: true
+      lower-edge:
+        type: string
+        required: false
+      upper-edge:
+        type: string
+        required: false
+      base-id:
+        type: string
+        required: false
+        default: "appAdi5zFFEsCzmEM"
+      release-url:
+        type: string
+        default: 'https://releases.kungfu-trader.com'
+        required: false
+      exclude:
+        type: string
+        required: false
+      product-name: 
+        type: string
+        required: false
+      repo: 
+        type: string
+        required: false
+    secrets:
+      AIRTABLE_API_KEY:
+        required: false
+      GITHUB_PUSH_TOKEN:
+        required: false
+
+
+permissions:
+  contents: read
+
+jobs:
+  sync-release-page:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Reject retired Airtable release page sync
+        run: |
+          echo "::error::The Airtable-backed release page synchronization workflow is retired in workflows v2."
+          echo "::error::Do not route modern releases through AIRTABLE_API_KEY, base-id, or the legacy release page sync actions."
+          exit 1

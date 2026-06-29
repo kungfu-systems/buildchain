@@ -1,0 +1,18 @@
+name: Schedule - Purge GitHub Artifacts
+on:
+  workflow_dispatch:
+    inputs:
+      enable-legacy-purge:
+        description: 'Type enable to run the retired legacy artifact purge action'
+        required: true
+        default: 'disabled'
+
+jobs:
+  delete-artifacts:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Reject retired artifact purge
+        run: |
+          echo "::error::The legacy artifact purge action is retired and is not shipped in buildchain v1."
+          echo "::error::Use GitHub retention policy or a newly designed purge workflow instead."
+          exit 1

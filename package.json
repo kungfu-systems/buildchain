@@ -6,10 +6,18 @@
   "author": "Keren Dong",
   "license": "Apache-2.0",
   "type": "module",
+  "packageManager": "pnpm@11.7.0",
   "scripts": {
-    "check": "node scripts/check-inventory.mjs",
-    "build": "npm run check",
+    "check": "node scripts/check-inventory.mjs && pnpm run check:workflows && pnpm -r --filter \"./actions/**\" build",
+    "check:workflows": "bash scripts/check-workflows.sh",
+    "build": "pnpm -r --filter \"./actions/**\" build",
     "package": "echo noop"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "prettier": "^3.9.0",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.0",
+    "vitest": "^4.1.9"
   }
 }
-

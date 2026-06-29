@@ -1,0 +1,43 @@
+name: Agent 120 Smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on:
+      - self-hosted
+      - Linux
+      - X64
+      - agent-120
+      - kungfu-build-v4-linux-x64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+
+      - name: Show runner
+        run: |
+          echo "runner.name=${RUNNER_NAME}"
+          echo "runner.os=${RUNNER_OS}"
+          echo "runner.arch=${RUNNER_ARCH}"
+          node --version
+          corepack --version
+
+      - name: Setup Go
+        uses: actions/setup-go@v6.5.0
+        with:
+          go-version: "1.25.x"
+
+      - name: Enable pnpm
+        run: |
+          corepack enable pnpm
+          pnpm --version
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check buildchain
+        run: pnpm run check

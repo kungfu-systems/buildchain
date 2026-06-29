@@ -1,0 +1,79 @@
+on:
+  workflow_call:
+    inputs:
+      aws-root:
+        default: "aws-cn"
+        type: string
+        required: false
+      aws-role:
+        default: "github-actions-role-dev"
+        type: string
+        required: false
+      aws-region:
+        default: "cn-northwest-1"
+        type: string
+        required: false
+      manager:
+        default: "kungfu-developers"
+        type: string
+        required: false
+    secrets:
+      AWS_ACCOUNT_ID:
+        required: true
+      NODE_AUTH_TOKEN:
+        required: false
+
+permissions: write-all
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+
+      - name: Set Pull Request Title
+        uses: kungfu-systems/buildchain/actions/bump-version@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          action: "verify"
+
+  build:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+
+      - uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - name: Configure AWS Crendentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:${{inputs.aws-root}}:iam::${{secrets.AWS_ACCOUNT_ID}}:role/${{inputs.aws-role}}
+          role-session-name: github-dev
+          aws-region: ${{ inputs.aws-region }}
+
+      - run: sam build
+
+  verify:
+    if: ${{ always() }}
+    needs: [prepare, build]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+
+      - name: Bump Version
+        uses: kungfu-systems/buildchain/actions/bump-version@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          action: "prebuild"
+
+      - name: Verify Version
+        uses: kungfu-systems/buildchain/actions/bump-version@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          action: "verify"
