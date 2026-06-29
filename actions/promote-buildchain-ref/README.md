@@ -29,8 +29,8 @@ version state degrade to ref-only promotion instead of assuming Yarn or Lerna.
 In strict buildchain promotion, ref movement is also gated by the old ABV
 governance semantics:
 
-- the target channel branch must be protected with approving PR review and a
-  strict `Verify` status check;
+- the target channel branch must be protected with approving PR review and the
+  strict `check` job from the `Verify` workflow;
 - alpha promotion must come from a merged same-repository PR
   `dev/vN/vN.M -> alpha/vN/vN.M`;
 - release promotion must come from a merged same-repository PR
