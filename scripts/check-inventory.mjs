@@ -8,7 +8,7 @@ const requiredPaths = [
   "docs/ownership.md",
   "tests/buildchain-inventory.json",
   ".github/actionlint.yaml",
-  ".github/workflows/agent-120-smoke.yml",
+  ".github/workflows/self-hosted-runner-smoke.yml",
   ".github/workflows/buildchain-ref-promotion.yml",
   ".github/workflows/verify.yml",
   ".github/workflows/candidate-lab.yml",

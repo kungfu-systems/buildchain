@@ -1,21 +1,3 @@
----
-status: draft
-period: 2026-06
-theme: buildchain-v1-release-governance
-doc_type: overview
-source_level: local-files
-confidence: high
-sensitivity: public
-evidence_grade: A
-review_state: unreviewed
-last_reviewed: 2026-06-29
-ai_provenance:
-  model_family: GPT-5
-  product_surface: Codex desktop
-  generated_at: 2026-06-29
-  invisible_context_boundary: no hidden model internals, weights, or private credentials assumed
----
-
 # Kungfu Buildchain
 
 Kungfu Buildchain is the v1 source of truth for Kungfu reusable GitHub
@@ -166,4 +148,4 @@ hidden reusable workflows, and rebuilds every action bundle.
 - Fork pull requests must not reach secrets or self-hosted runners.
 - Candidate refs are expected to come from `kungfu-systems/*`.
 - Self-hosted runner validation is available only through the manual
-  `Agent 120 Smoke` workflow.
+  `Self-hosted Runner Smoke` workflow.

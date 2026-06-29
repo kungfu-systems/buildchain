@@ -1,21 +1,3 @@
----
-status: draft
-period: 2026-06
-theme: buildchain-v1-release-flow
-doc_type: diagram
-source_level: local-files
-confidence: high
-sensitivity: public
-evidence_grade: A
-review_state: unreviewed
-last_reviewed: 2026-06-29
-ai_provenance:
-  model_family: GPT-5
-  product_surface: Codex desktop
-  generated_at: 2026-06-29
-  invisible_context_boundary: no hidden model internals, weights, or private credentials assumed
----
-
 # Release Flow Diagrams
 
 This document describes the Buildchain v1 branch, tag, and version-state flow.

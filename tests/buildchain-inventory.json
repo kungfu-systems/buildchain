@@ -120,12 +120,12 @@
     "pnpm install --frozen-lockfile",
     "pnpm run check",
     "GitHub Verify workflow",
-    "manual Agent 120 Smoke workflow"
+    "manual Self-hosted Runner Smoke workflow"
   ],
   "safety": {
     "forkPrSecretsDefault": false,
     "selfHostedRunnerDefault": false,
-    "selfHostedRunnerManualWorkflow": "agent-120-smoke.yml",
+    "selfHostedRunnerManualWorkflow": "self-hosted-runner-smoke.yml",
     "buildchainRefPromotionWorkflow": "buildchain-ref-promotion.yml"
   }
 }

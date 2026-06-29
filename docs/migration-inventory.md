@@ -57,4 +57,4 @@ because the action is part of that retired path.
 - `pnpm install --frozen-lockfile`
 - `pnpm run check`
 - GitHub-hosted `Verify` workflow
-- Manual `Agent 120 Smoke` workflow for trusted self-hosted runner validation
+- Manual `Self-hosted Runner Smoke` workflow for trusted self-hosted runner validation
