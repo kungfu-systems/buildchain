@@ -1,6 +1,6 @@
 name: "Promote Buildchain Ref"
 author: "Keren Dong"
-description: "Promote verified buildchain compatibility tags to a target commit"
+description: "Promote verified buildchain release-line and compatibility tags to a target commit"
 inputs:
   token:
     description: "GitHub token with contents:write"
@@ -12,7 +12,7 @@ inputs:
     description: "Buildchain channel branch that must currently point at sha"
     required: true
   tags:
-    description: "Comma-separated tags to update. Defaults from target-ref channel."
+    description: "Optional comma-separated tags to update. Defaults from target-ref channel and release-line patch sequence."
     default: ""
   dry-run:
     description: "Only print planned ref updates"
