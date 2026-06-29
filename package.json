@@ -1,6 +1,6 @@
 {
   "name": "@kungfu-systems/buildchain",
-  "version": "1.0.3",
+  "version": "1.0.4-alpha.0",
   "private": true,
   "repository": "https://github.com/kungfu-systems/buildchain",
   "author": "Keren Dong",

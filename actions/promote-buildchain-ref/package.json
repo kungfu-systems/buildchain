@@ -1,6 +1,6 @@
 {
   "name": "@kungfu-systems/buildchain-promote-buildchain-ref",
-  "version": "1.0.3",
+  "version": "1.0.4-alpha.0",
   "private": true,
   "main": "dist/index.js",
   "author": "Keren Dong",
