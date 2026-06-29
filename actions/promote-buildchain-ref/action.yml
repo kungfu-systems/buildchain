@@ -1,0 +1,25 @@
+name: "Promote Buildchain Ref"
+author: "Keren Dong"
+description: "Promote verified buildchain compatibility tags to a target commit"
+inputs:
+  token:
+    description: "GitHub token with contents:write"
+    required: true
+  sha:
+    description: "Verified commit SHA to promote"
+    required: true
+  target-ref:
+    description: "Buildchain channel branch that must currently point at sha"
+    required: true
+  tags:
+    description: "Comma-separated tags to update. Defaults from target-ref channel."
+    default: ""
+  dry-run:
+    description: "Only print planned ref updates"
+    default: "false"
+  allow-repository:
+    description: "Repository allowed to promote"
+    default: "kungfu-systems/buildchain"
+runs:
+  using: "node24"
+  main: "dist/index.js"

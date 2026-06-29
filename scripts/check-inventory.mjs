@@ -9,6 +9,7 @@ const requiredPaths = [
   "tests/buildchain-inventory.json",
   ".github/actionlint.yaml",
   ".github/workflows/agent-120-smoke.yml",
+  ".github/workflows/buildchain-ref-promotion.yml",
   ".github/workflows/verify.yml",
   ".github/workflows/candidate-lab.yml",
   "fixtures/action-bump-version-smoke/README.md"
@@ -47,10 +48,13 @@ const actualActions = fs
   .filter((name) => fs.existsSync(path.join(root, "actions", name, "action.yml")))
   .sort();
 const inventoriedActions = inventory.migratedActions.map((action) => action.path.replace(/^actions\//, "")).sort();
+const internalActions = Array.isArray(inventory.internalActions) ? inventory.internalActions : [];
+const shippedActions = [...inventory.migratedActions, ...internalActions];
+const shippedActionNames = shippedActions.map((action) => action.path.replace(/^actions\//, "")).sort();
 
-if (JSON.stringify(actualActions) !== JSON.stringify(inventoriedActions)) {
+if (JSON.stringify(actualActions) !== JSON.stringify(shippedActionNames)) {
   throw new Error(
-    `migratedActions mismatch. actual=${actualActions.join(",")} inventory=${inventoriedActions.join(",")}`
+    `action inventory mismatch. actual=${actualActions.join(",")} inventory=${shippedActionNames.join(",")}`
   );
 }
 
@@ -62,7 +66,13 @@ for (const retiredRepo of inventory.retiredActionsExcluded || []) {
 }
 
 for (const action of inventory.migratedActions) {
-  for (const key of ["path", "previousRepo", "runtime", "build", "bundle"]) {
+  if (!action.previousRepo) {
+    throw new Error(`migrated action entry is missing previousRepo: ${action.path}`);
+  }
+}
+
+for (const action of shippedActions) {
+  for (const key of ["path", "runtime", "build", "bundle"]) {
     if (!action[key]) {
       throw new Error(`migrated action entry is missing ${key}`);
     }

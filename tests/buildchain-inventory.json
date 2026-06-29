@@ -94,6 +94,15 @@
       "bundle": "actions/update-dependencies-version/dist/index.js"
     }
   ],
+  "internalActions": [
+    {
+      "path": "actions/promote-buildchain-ref",
+      "disposition": "buildchain-self-promotion",
+      "runtime": "node24",
+      "build": "tsup",
+      "bundle": "actions/promote-buildchain-ref/dist/index.js"
+    }
+  ],
   "retiredActionsExcluded": [
     "action-find-dependencies",
     "action-package-dependency",
@@ -116,6 +125,7 @@
   "safety": {
     "forkPrSecretsDefault": false,
     "selfHostedRunnerDefault": false,
-    "selfHostedRunnerManualWorkflow": "agent-120-smoke.yml"
+    "selfHostedRunnerManualWorkflow": "agent-120-smoke.yml",
+    "buildchainRefPromotionWorkflow": "buildchain-ref-promotion.yml"
   }
 }

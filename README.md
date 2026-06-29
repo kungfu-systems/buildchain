@@ -31,6 +31,9 @@ GitHub Actions:
 - action runtime is Node 24;
 - workspace package management is pnpm;
 - action bundling is handled by tsup.
+- buildchain's own compatibility tags are promoted by the internal
+  `promote-buildchain-ref` action after Verify succeeds: alpha branch promotes
+  `v1-alpha`, release branch promotes `v1` and `v1.0`.
 
 Stable consumers should reference actions as
 `kungfu-systems/buildchain/actions/<name>@v1` and reusable workflows as

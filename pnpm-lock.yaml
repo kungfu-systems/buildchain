@@ -210,6 +210,15 @@ importers:
         specifier: ^18.0.0
         version: 18.0.0
 
+  actions/promote-buildchain-ref:
+    dependencies:
+      '@actions/core':
+        specifier: ^3.0.1
+        version: 3.0.1
+      '@actions/github':
+        specifier: ^9.1.1
+        version: 9.1.1
+
   actions/publish-prebuilt:
     dependencies:
       '@actions/core':

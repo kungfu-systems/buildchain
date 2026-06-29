@@ -1,0 +1,75 @@
+name: Buildchain Ref Promotion
+
+on:
+  workflow_run:
+    workflows: ["Verify"]
+    branches:
+      - "alpha/v1/v1.0"
+      - "release/v1/v1.0"
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: "Verified alpha/release commit to promote. Defaults to the current workflow ref SHA."
+        required: false
+        default: ""
+      target-ref:
+        description: "Buildchain channel branch to promote"
+        required: true
+        default: "alpha/v1/v1.0"
+      dry-run:
+        description: "Only print planned tag updates"
+        required: true
+        default: "false"
+
+permissions:
+  contents: write
+
+jobs:
+  promote:
+    if: >-
+      ${{
+        github.event_name == 'workflow_dispatch' ||
+        github.event.workflow_run.conclusion == 'success'
+      }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Resolve target SHA
+        id: target
+        env:
+          WORKFLOW_RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+          INPUT_SHA: ${{ inputs.sha }}
+          FALLBACK_SHA: ${{ github.sha }}
+        run: |
+          sha="${WORKFLOW_RUN_SHA:-${INPUT_SHA:-$FALLBACK_SHA}}"
+          echo "sha=${sha}" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve target ref
+        id: target_ref
+        env:
+          WORKFLOW_RUN_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          INPUT_TARGET_REF: ${{ inputs['target-ref'] }}
+        run: |
+          target_ref="${WORKFLOW_RUN_BRANCH:-$INPUT_TARGET_REF}"
+          case "$target_ref" in
+            alpha/v1/v1.0|release/v1/v1.0) ;;
+            *)
+              echo "::error::unsupported target ref: $target_ref"
+              exit 1
+              ;;
+          esac
+          echo "target_ref=${target_ref}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout target commit
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ steps.target.outputs.sha }}
+          persist-credentials: false
+
+      - name: Promote v1 refs
+        uses: ./actions/promote-buildchain-ref
+        with:
+          token: ${{ github.token }}
+          sha: ${{ steps.target.outputs.sha }}
+          target-ref: ${{ steps.target_ref.outputs.target_ref }}
+          dry-run: ${{ inputs['dry-run'] || 'false' }}
