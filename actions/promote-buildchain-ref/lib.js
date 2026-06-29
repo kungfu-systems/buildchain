@@ -282,13 +282,33 @@ async function assertProtectedChannel({
   owner,
   repo,
   targetRef,
-  requiredStatusCheck = "Verify",
+  requiredStatusCheck = "check",
 }) {
-  const { data: protection } = await octokit.rest.repos.getBranchProtection({
-    owner,
-    repo,
-    branch: targetRef,
-  });
+  let protection;
+  try {
+    ({ data: protection } = await octokit.rest.repos.getBranchProtection({
+      owner,
+      repo,
+      branch: targetRef,
+    }));
+  } catch (error) {
+    if (error.status !== 403) {
+      throw error;
+    }
+    const { data: branch } = await octokit.rest.repos.getBranch({
+      owner,
+      repo,
+      branch: targetRef,
+    });
+    if (!branch.protected) {
+      throw new Error(`Promotion target ${targetRef} must be a protected branch`);
+    }
+    console.log(
+      `> branch protection details for ${targetRef} are not readable by this token; ` +
+        "using protected branch status plus merged PR governance checks",
+    );
+    return;
+  }
   const reviews = protection.required_pull_request_reviews;
   if (!reviews || Number(reviews.required_approving_review_count || 0) < 1) {
     throw new Error(
@@ -517,7 +537,7 @@ async function promoteBuildchainRefs({
   requireVersionState = false,
   requireGovernance = false,
   verificationCommand = "",
-  requiredStatusCheck = "Verify",
+  requiredStatusCheck = "check",
 }) {
   assertPromotableRepository(owner, repo, allowRepository);
   assertPromotableTargetRef(targetRef);

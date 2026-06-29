@@ -14,7 +14,7 @@ async function main() {
   const requireGovernance = core.getBooleanInput("require-governance");
   const requireVersionState = core.getBooleanInput("require-version-state");
   const verificationCommand = core.getInput("verification-command");
-  const requiredStatusCheck = core.getInput("required-status-check") || "Verify";
+  const requiredStatusCheck = core.getInput("required-status-check") || "check";
   const allowRepository = core.getInput("allow-repository") || "kungfu-systems/buildchain";
   const octokit = github.getOctokit(token);
   const result = await promoteBuildchainRefs({
