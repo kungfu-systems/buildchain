@@ -1,6 +1,6 @@
 {
   "name": "@kungfu-systems/buildchain-merge-close-issue",
-  "version": "1.0.3-alpha.0",
+  "version": "1.0.3-alpha.1",
   "private": true,
   "main": "dist/index.js",
   "author": "Keren Dong",
