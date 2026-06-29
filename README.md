@@ -39,6 +39,15 @@ GitHub Actions:
   such as `v1.0.0`, writes matching package version state, promotes the current
   minor tag such as `v1.0`, conditionally promotes `v1`, and prepares a
   matching source commit for the next exact prerelease tag on the minor line.
+- buildchain self-promotion is governance-closed: non-dry-run promotion is not
+  available from manual dispatch, alpha/release promotion must be backed by the
+  corresponding protected same-repository PR channel path, release promotion
+  must match an existing same-patch alpha tag tree, and generated version-state
+  commits are checked before tags move.
+- buildchain's top-level `Release - New Version` workflow is intentionally a
+  no-op for this repository; consumer repositories still call the reusable
+  `.release-new-version.yml`, while buildchain itself is promoted only by
+  `Buildchain Ref Promotion`.
 
 Stable consumers should reference actions as
 `kungfu-systems/buildchain/actions/<name>@v1` and reusable workflows as

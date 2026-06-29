@@ -86,6 +86,7 @@ for (const action of shippedActions) {
   const actionPath = path.join(root, action.path);
   const actionYmlPath = path.join(actionPath, "action.yml");
   const packageJsonPath = path.join(actionPath, "package.json");
+  const tsupConfigPath = path.join(actionPath, "tsup.config.mjs");
   const bundlePath = path.join(root, action.bundle);
   for (const required of [actionYmlPath, packageJsonPath, bundlePath, path.join(actionPath, "README.md")]) {
     if (!fs.existsSync(required)) {
@@ -100,11 +101,16 @@ for (const action of shippedActions) {
     throw new Error(`${action.path}/action.yml must point at dist/index.js`);
   }
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+  const bundleContent = fs.readFileSync(bundlePath, "utf8");
   if (!packageJson.scripts?.build?.includes("tsup ")) {
     throw new Error(`${action.path}/package.json must define a tsup build`);
   }
-  if (!packageJson.scripts.build.includes("--target node24")) {
+  const tsupConfig = fs.existsSync(tsupConfigPath) ? fs.readFileSync(tsupConfigPath, "utf8") : "";
+  if (!packageJson.scripts.build.includes("--target node24") && !/target:\s*["']node24["']/.test(tsupConfig)) {
     throw new Error(`${action.path}/package.json build must target node24`);
+  }
+  if (packageJson.type === "module" && /\b(require\s*\(|module\.exports|Dynamic require)\b/.test(bundleContent)) {
+    throw new Error(`${action.path}/dist/index.js must stay ESM-only`);
   }
 }
 

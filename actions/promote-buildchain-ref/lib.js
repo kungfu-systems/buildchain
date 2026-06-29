@@ -1,6 +1,7 @@
 const DEFAULT_REPOSITORY = "kungfu-systems/buildchain";
 const fs = require("node:fs");
 const path = require("node:path");
+const { execSync } = require("node:child_process");
 const {
   detectPackageManager,
   getWorkspaceInfo,
@@ -183,6 +184,143 @@ function updateVersionStateContents(files, version) {
       };
     })
     .filter((file) => file.changed);
+}
+
+function expectedHeadRefForTarget(targetRef) {
+  const rule = getPromotionRule(targetRef);
+  return rule.channel === "alpha"
+    ? `dev/v${rule.major}/v${rule.major}.${rule.minor}`
+    : `alpha/v${rule.major}/v${rule.major}.${rule.minor}`;
+}
+
+function assertAllowedLocalChanges(cwd, allowedPaths) {
+  const allowed = new Set(allowedPaths);
+  const output = execSync("git status --porcelain --untracked-files=all", {
+    cwd,
+    encoding: "utf8",
+  }).trim();
+  const unexpected = output
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .filter((line) => {
+      const status = line.slice(0, 2);
+      const filePath = line.slice(3).trim();
+      return !(status === " M" && allowed.has(filePath));
+    });
+  if (unexpected.length > 0) {
+    throw new Error(
+      `Version verification changed files outside version state: ${unexpected.join(", ")}`,
+    );
+  }
+}
+
+function applyLocalVersionState(cwd, changedFiles) {
+  for (const file of changedFiles) {
+    fs.writeFileSync(path.join(cwd, file.path), file.content);
+  }
+}
+
+function runVersionVerification({ cwd, command, changedFiles }) {
+  if (!command) {
+    return;
+  }
+  applyLocalVersionState(cwd, changedFiles);
+  execSync(command, { cwd, stdio: "inherit", shell: true });
+  assertAllowedLocalChanges(
+    cwd,
+    changedFiles.map((file) => file.path),
+  );
+}
+
+async function getCommitInfo(octokit, owner, repo, sha) {
+  const { data } = await octokit.rest.git.getCommit({
+    owner,
+    repo,
+    commit_sha: sha,
+  });
+  return {
+    treeSha: data.tree?.sha,
+    parents: (data.parents || []).map((parent) => parent.sha),
+  };
+}
+
+async function assertChannelPromotionPr({
+  octokit,
+  owner,
+  repo,
+  sha,
+  targetRef,
+}) {
+  const expectedHeadRef = expectedHeadRefForTarget(targetRef);
+  const { data: pullRequests } =
+    await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+      owner,
+      repo,
+      commit_sha: sha,
+    });
+  const matchingPullRequest = pullRequests.find((pullRequest) => {
+    const baseRef = pullRequest.base?.ref;
+    const headRef = pullRequest.head?.ref;
+    const headRepo = pullRequest.head?.repo?.full_name;
+    return (
+      pullRequest.merged_at &&
+      baseRef === targetRef &&
+      headRef === expectedHeadRef &&
+      headRepo === `${owner}/${repo}`
+    );
+  });
+  if (!matchingPullRequest) {
+    throw new Error(
+      `Promotion source ${sha} must come from a merged same-repository PR ${expectedHeadRef} -> ${targetRef}`,
+    );
+  }
+  return matchingPullRequest;
+}
+
+async function assertProtectedChannel({
+  octokit,
+  owner,
+  repo,
+  targetRef,
+  requiredStatusCheck = "Verify",
+}) {
+  const { data: protection } = await octokit.rest.repos.getBranchProtection({
+    owner,
+    repo,
+    branch: targetRef,
+  });
+  const reviews = protection.required_pull_request_reviews;
+  if (!reviews || Number(reviews.required_approving_review_count || 0) < 1) {
+    throw new Error(
+      `Protected channel ${targetRef} must require at least one approving review`,
+    );
+  }
+  const checks = protection.required_status_checks;
+  if (!checks?.strict) {
+    throw new Error(`Protected channel ${targetRef} must require strict status checks`);
+  }
+  const checkNames = [
+    ...(checks.contexts || []),
+    ...((checks.checks || []).map((check) => check.context || check.app_id) || []),
+  ].map(String);
+  if (!checkNames.some((name) => name.includes(requiredStatusCheck))) {
+    throw new Error(
+      `Protected channel ${targetRef} must require a ${requiredStatusCheck} status check`,
+    );
+  }
+}
+
+function latestAlphaForPatch(refs, releasePrefix, patch) {
+  return refs
+    .map((ref) => {
+      const parsed = parseAlphaPrereleaseTag(ref.ref, releasePrefix);
+      if (!parsed || parsed.patch !== patch) {
+        return undefined;
+      }
+      return { ...parsed, sha: ref.object?.sha };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.prerelease - a.prerelease)[0];
 }
 
 function resolveTagsForTarget(targetRef, inputTags) {
@@ -376,6 +514,10 @@ async function promoteBuildchainRefs({
   allowRepository = DEFAULT_REPOSITORY,
   cwd = process.cwd(),
   versionState = true,
+  requireVersionState = false,
+  requireGovernance = false,
+  verificationCommand = "",
+  requiredStatusCheck = "Verify",
 }) {
   assertPromotableRepository(owner, repo, allowRepository);
   assertPromotableTargetRef(targetRef);
@@ -478,7 +620,7 @@ async function promoteBuildchainRefs({
         repo,
         ref: `heads/${branch}`,
         sha: branchSha,
-        force: true,
+        force: false,
       });
       updates.push({ ref: branch, action, sha: branchSha });
     } catch (error) {
@@ -507,6 +649,9 @@ async function promoteBuildchainRefs({
 
     const discovered = discoverVersionStateFiles(cwd);
     if (discovered.files.length === 0) {
+      if (requireVersionState) {
+        throw new Error("Strict promotion requires package version state");
+      }
       updates.push({
         version,
         action: "skipped-no-version-state",
@@ -524,6 +669,11 @@ async function promoteBuildchainRefs({
 
     const changedFiles = updateVersionStateContents(discovered.files, version);
     if (changedFiles.length === 0) {
+      runVersionVerification({
+        cwd,
+        command: verificationCommand,
+        changedFiles: [],
+      });
       updates.push({
         version,
         action: "existing-version-state",
@@ -556,6 +706,12 @@ async function promoteBuildchainRefs({
         packageManager: discovered.packageManager,
       };
     }
+
+    runVersionVerification({
+      cwd,
+      command: verificationCommand,
+      changedFiles,
+    });
 
     const { data: baseCommit } = await octokit.rest.git.getCommit({
       owner,
@@ -626,7 +782,26 @@ async function promoteBuildchainRefs({
 
   const lineRefs = await listLineRefs();
 
+  if (requireGovernance && !dryRun) {
+    await assertProtectedChannel({
+      octokit,
+      owner,
+      repo,
+      targetRef,
+      requiredStatusCheck,
+    });
+  }
+
   if (rule.channel === "alpha") {
+    if (requireGovernance && !dryRun) {
+      await assertChannelPromotionPr({
+        octokit,
+        owner,
+        repo,
+        sha,
+        targetRef,
+      });
+    }
     const explicitAlphaTags = requestedTags
       ? requestedTags.filter((tag) => tag.includes("-alpha."))
       : [];
@@ -677,6 +852,40 @@ async function promoteBuildchainRefs({
         releasePrefix: rule.releasePrefix,
         sha,
       });
+  const sourceAlpha = latestAlphaForPatch(
+    lineRefs,
+    rule.releasePrefix,
+    selectedRelease.patch,
+  );
+  if (requireGovernance && !dryRun) {
+    if (!sourceAlpha?.sha) {
+      throw new Error(
+        `Release promotion requires an existing ${rule.releasePrefix}.${selectedRelease.patch}-alpha.N tag`,
+      );
+    }
+    const releaseCandidateCommit = await getCommitInfo(octokit, owner, repo, sha);
+    const alphaCommit = await getCommitInfo(octokit, owner, repo, sourceAlpha.sha);
+    const prSourceSha =
+      selectedRelease.exists && releaseCandidateCommit.parents.length > 0
+        ? releaseCandidateCommit.parents[0]
+        : sha;
+    const prSourceCommit =
+      prSourceSha === sha
+        ? releaseCandidateCommit
+        : await getCommitInfo(octokit, owner, repo, prSourceSha);
+    if (prSourceCommit.treeSha !== alphaCommit.treeSha) {
+      throw new Error(
+        `Release source ${prSourceSha} must have the same tree as ${sourceAlpha.tag} (${sourceAlpha.sha})`,
+      );
+    }
+    await assertChannelPromotionPr({
+      octokit,
+      owner,
+      repo,
+      sha: prSourceSha,
+      targetRef,
+    });
+  }
   const releaseVersion = stripTagPrefix(selectedRelease.tag);
   const releaseCommit = await createVersionStateCommit({
     baseSha: sha,
@@ -750,11 +959,15 @@ async function promoteBuildchainRefs({
 
 module.exports = {
   DEFAULT_REPOSITORY,
+  assertChannelPromotionPr,
+  assertProtectedChannel,
   assertPromotableRepository,
   assertPromotableTargetRef,
   assertSha,
   discoverVersionStateFiles,
+  expectedHeadRefForTarget,
   getPromotionRule,
+  latestAlphaForPatch,
   parseAlphaPrereleaseTag,
   parseRepository,
   parseReleasePatchTag,
