@@ -6,6 +6,13 @@ const {
   detectPackageManager,
   getWorkspaceInfo,
 } = require("../../packages/core/package-manager.cjs");
+const {
+  discoverConfiguredVersionStateFiles,
+  getLifecycleStage,
+  loadBuildchainConfig,
+  runLifecycleStage,
+  updateConfiguredVersionStateContents,
+} = require("../../packages/core/buildchain-config.cjs");
 
 const COMMIT_IDENTITY = {
   name: "Keren Dong",
@@ -136,6 +143,20 @@ function detectVersionPackageManager(cwd) {
 }
 
 function discoverVersionStateFiles(cwd = process.cwd()) {
+  const loadedConfig = loadBuildchainConfig(cwd);
+  if (loadedConfig?.config?.version) {
+    const files = discoverConfiguredVersionStateFiles(cwd, loadedConfig);
+    return {
+      files: files.sort((a, b) => a.path.localeCompare(b.path)),
+      packageManager: {
+        name: "buildchain.toml",
+        reason: "buildchain.toml",
+        config: loadedConfig.path,
+      },
+      config: loadedConfig,
+    };
+  }
+
   const files = new Map();
   const addJsonVersionFile = (relativePath, kind) => {
     const filePath = path.join(cwd, relativePath);
@@ -167,10 +188,14 @@ function discoverVersionStateFiles(cwd = process.cwd()) {
   return {
     files: [...files.values()].sort((a, b) => a.path.localeCompare(b.path)),
     packageManager: detectVersionPackageManager(cwd),
+    config: loadedConfig,
   };
 }
 
 function updateVersionStateContents(files, version) {
+  if (files.some((file) => file.type)) {
+    return updateConfiguredVersionStateContents(files, version);
+  }
   return files
     .map((file) => {
       const nextContent = { ...file.content, version };
@@ -224,12 +249,27 @@ function applyLocalVersionState(cwd, changedFiles) {
   }
 }
 
-function runVersionVerification({ cwd, command, changedFiles, allowedPaths }) {
-  if (!command) {
+function runVersionVerification({ cwd, command, loadedConfig, version, changedFiles, allowedPaths }) {
+  const lifecycleVerify = getLifecycleStage(loadedConfig, "verify");
+  if (!command && !lifecycleVerify) {
     return;
   }
   applyLocalVersionState(cwd, changedFiles);
-  execSync(command, { cwd, stdio: "inherit", shell: true });
+  const env = {
+    ...process.env,
+    BUILDCHAIN_VERSION: version,
+  };
+  if (command) {
+    execSync(command, { cwd, env, stdio: "inherit", shell: true });
+  } else {
+    runLifecycleStage({
+      cwd,
+      loadedConfig,
+      name: "verify",
+      stage: lifecycleVerify,
+      env: { BUILDCHAIN_VERSION: version },
+    });
+  }
   assertAllowedLocalChanges(cwd, allowedPaths);
 }
 
@@ -293,22 +333,28 @@ async function assertProtectedChannel({
       branch: targetRef,
     }));
   } catch (error) {
-    if (error.status !== 403) {
-      throw error;
+    if (error.status === 403) {
+      throw new Error(
+        `Protected channel ${targetRef} protection details must be readable to verify admin enforcement`,
+      );
     }
-    const { data: branch } = await octokit.rest.repos.getBranch({
-      owner,
-      repo,
-      branch: targetRef,
-    });
-    if (!branch.protected) {
-      throw new Error(`Promotion target ${targetRef} must be a protected branch`);
-    }
-    console.log(
-      `> branch protection details for ${targetRef} are not readable by this token; ` +
-        "using protected branch status plus merged PR governance checks",
+    throw error;
+  }
+  if (protection.enforce_admins?.enabled !== true) {
+    throw new Error(
+      `Protected channel ${targetRef} must enforce branch protection for administrators`,
     );
-    return;
+  }
+  if (protection.allow_force_pushes?.enabled !== false) {
+    throw new Error(`Protected channel ${targetRef} must disallow force pushes`);
+  }
+  if (protection.allow_deletions?.enabled !== false) {
+    throw new Error(`Protected channel ${targetRef} must disallow branch deletion`);
+  }
+  if (protection.required_conversation_resolution?.enabled !== true) {
+    throw new Error(
+      `Protected channel ${targetRef} must require conversation resolution`,
+    );
   }
   const reviews = protection.required_pull_request_reviews;
   if (!reviews || Number(reviews.required_approving_review_count || 0) < 1) {
@@ -735,6 +781,8 @@ async function promoteBuildchainRefs({
       runVersionVerification({
         cwd,
         command: verificationCommand,
+        loadedConfig: discovered.config,
+        version,
         changedFiles: [],
         allowedPaths: discoveredPaths,
       });
@@ -774,6 +822,8 @@ async function promoteBuildchainRefs({
     runVersionVerification({
       cwd,
       command: verificationCommand,
+      loadedConfig: discovered.config,
+      version,
       changedFiles,
       allowedPaths: discoveredPaths,
     });

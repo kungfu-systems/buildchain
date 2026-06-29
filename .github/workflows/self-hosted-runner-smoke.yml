@@ -1,4 +1,4 @@
-name: Agent 120 Smoke
+name: Self-hosted Runner Smoke
 
 on:
   workflow_dispatch:
@@ -12,7 +12,6 @@ jobs:
       - self-hosted
       - Linux
       - X64
-      - agent-120
       - kungfu-build-v4-linux-x64
     steps:
       - name: Checkout

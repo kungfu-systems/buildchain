@@ -51,6 +51,18 @@ function run(command, cwd) {
   });
 }
 
+function protectedChannel(overrides = {}) {
+  return {
+    enforce_admins: { enabled: true },
+    allow_force_pushes: { enabled: false },
+    allow_deletions: { enabled: false },
+    required_conversation_resolution: { enabled: true },
+    required_pull_request_reviews: { required_approving_review_count: 1 },
+    required_status_checks: { strict: true, contexts: ["check"] },
+    ...overrides,
+  };
+}
+
 test("parseTags accepts only ABV-style buildchain tags", () => {
   assert.deepEqual(
     parseTags("v1, v1.0, v1.0-alpha, v1.0.0, v1.0.1-alpha.0, v1"),
@@ -246,6 +258,36 @@ test("discoverVersionStateFiles follows package-manager workspace metadata", () 
     updateVersionStateContents(discovered.files, "1.0.1").map((file) => file.path),
     ["actions/one/package.json", "package.json"],
   );
+});
+
+test("discoverVersionStateFiles prefers buildchain.toml version state", () => {
+  const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+type = "toml"
+path = "pyproject.toml"
+key = "project.version"
+`,
+    "package.json": {
+      name: "@kungfu-systems/example",
+      version: "1.0.0-alpha.0",
+      packageManager: "pnpm@11.7.0",
+    },
+    "pyproject.toml": '[project]\nname = "example"\nversion = "1.0.0-alpha.0"\n',
+  });
+
+  const discovered = discoverVersionStateFiles(cwd);
+
+  assert.equal(discovered.packageManager.name, "buildchain.toml");
+  assert.deepEqual(discovered.files.map((file) => file.path), ["pyproject.toml"]);
+  const changed = updateVersionStateContents(discovered.files, "1.0.1");
+  assert.equal(changed.length, 1);
+  assert.match(changed[0].content, /version = "1.0.1"/);
 });
 
 test("version verification allows only discovered version-state file changes", () => {
@@ -695,10 +737,7 @@ test("strict alpha promotion requires a protected dev-to-alpha PR", async () => 
         getBranchProtection: async ({ branch }) => {
           assert.equal(branch, "alpha/v1/v1.0");
           return {
-            data: {
-              required_pull_request_reviews: { required_approving_review_count: 1 },
-              required_status_checks: { strict: true, contexts: ["check"] },
-            },
+            data: protectedChannel(),
           };
         },
         listPullRequestsAssociatedWithCommit: async ({ commit_sha }) => {
@@ -737,7 +776,7 @@ test("strict alpha promotion requires a protected dev-to-alpha PR", async () => 
   ]);
 });
 
-test("strict alpha promotion accepts protected branch fallback when protection details are unreadable", async () => {
+test("strict alpha promotion rejects unreadable protection details", async () => {
   const calls = [];
   const octokit = {
     rest: {
@@ -759,10 +798,6 @@ test("strict alpha promotion accepts protected branch fallback when protection d
           error.status = 403;
           throw error;
         },
-        getBranch: async ({ branch }) => {
-          calls.push(["getBranch", branch]);
-          return { data: { protected: true } };
-        },
         listPullRequestsAssociatedWithCommit: async () => ({
           data: [
             {
@@ -779,21 +814,103 @@ test("strict alpha promotion accepts protected branch fallback when protection d
     },
   };
 
-  const result = await promoteBuildchainRefs({
-    octokit,
-    owner: "kungfu-systems",
-    repo: "buildchain",
-    sha: SHA,
-    targetRef: "alpha/v1/v1.0",
-    versionState: false,
-    requireGovernance: true,
-  });
+  await assert.rejects(
+    promoteBuildchainRefs({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sha: SHA,
+      targetRef: "alpha/v1/v1.0",
+      versionState: false,
+      requireGovernance: true,
+    }),
+    /protection details must be readable/,
+  );
 
-  assert.equal(result.sha, SHA);
-  assert.deepEqual(calls, [
-    ["getBranchProtection", "alpha/v1/v1.0"],
-    ["getBranch", "alpha/v1/v1.0"],
-  ]);
+  assert.deepEqual(calls, [["getBranchProtection", "alpha/v1/v1.0"]]);
+});
+
+test("strict alpha promotion rejects protection without admin enforcement", async () => {
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (ref === "heads/alpha/v1/v1.0") {
+            return { data: { object: { sha: SHA } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async () => ({ data: [] }),
+      },
+      repos: {
+        getBranchProtection: async () => ({
+          data: protectedChannel({ enforce_admins: { enabled: false } }),
+        }),
+      },
+    },
+  };
+
+  await assert.rejects(
+    promoteBuildchainRefs({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sha: SHA,
+      targetRef: "alpha/v1/v1.0",
+      versionState: false,
+      requireGovernance: true,
+    }),
+    /must enforce branch protection for administrators/,
+  );
+});
+
+test("strict alpha promotion rejects protection bypass surfaces", async () => {
+  for (const [override, pattern] of [
+    [
+      { allow_force_pushes: { enabled: true } },
+      /must disallow force pushes/,
+    ],
+    [
+      { allow_deletions: { enabled: true } },
+      /must disallow branch deletion/,
+    ],
+    [
+      { required_conversation_resolution: { enabled: false } },
+      /must require conversation resolution/,
+    ],
+  ]) {
+    const octokit = {
+      rest: {
+        git: {
+          getRef: async ({ ref }) => {
+            if (ref === "heads/alpha/v1/v1.0") {
+              return { data: { object: { sha: SHA } } };
+            }
+            throw notFound();
+          },
+          listMatchingRefs: async () => ({ data: [] }),
+        },
+        repos: {
+          getBranchProtection: async () => ({
+            data: protectedChannel(override),
+          }),
+        },
+      },
+    };
+
+    await assert.rejects(
+      promoteBuildchainRefs({
+        octokit,
+        owner: "kungfu-systems",
+        repo: "buildchain",
+        sha: SHA,
+        targetRef: "alpha/v1/v1.0",
+        versionState: false,
+        requireGovernance: true,
+      }),
+      pattern,
+    );
+  }
 });
 
 test("strict alpha promotion rejects missing PR lineage", async () => {
@@ -810,10 +927,7 @@ test("strict alpha promotion rejects missing PR lineage", async () => {
       },
       repos: {
         getBranchProtection: async () => ({
-          data: {
-            required_pull_request_reviews: { required_approving_review_count: 1 },
-              required_status_checks: { strict: true, contexts: ["check"] },
-          },
+          data: protectedChannel(),
         }),
         listPullRequestsAssociatedWithCommit: async () => ({
           data: [
@@ -881,10 +995,7 @@ test("strict alpha promotion no-ops settled generated version-state commits", as
       },
       repos: {
         getBranchProtection: async () => ({
-          data: {
-            required_pull_request_reviews: { required_approving_review_count: 1 },
-            required_status_checks: { strict: true, contexts: ["check"] },
-          },
+          data: protectedChannel(),
         }),
         listPullRequestsAssociatedWithCommit: async () => {
           assert.fail("settled alpha version-state commits should not need PR lookup");
@@ -963,10 +1074,7 @@ test("strict release promotion requires a matching alpha tree and alpha-to-relea
       },
       repos: {
         getBranchProtection: async () => ({
-          data: {
-            required_pull_request_reviews: { required_approving_review_count: 1 },
-              required_status_checks: { strict: true, contexts: ["check"] },
-          },
+          data: protectedChannel(),
         }),
         listPullRequestsAssociatedWithCommit: async () => ({
           data: [
@@ -1032,10 +1140,7 @@ test("strict release promotion rejects code changes after alpha", async () => {
       },
       repos: {
         getBranchProtection: async () => ({
-          data: {
-            required_pull_request_reviews: { required_approving_review_count: 1 },
-            required_status_checks: { strict: true, contexts: ["check"] },
-          },
+          data: protectedChannel(),
         }),
       },
     },
