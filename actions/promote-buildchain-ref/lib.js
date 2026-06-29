@@ -1,15 +1,4 @@
 const DEFAULT_REPOSITORY = "kungfu-systems/buildchain";
-const CHANNEL_RULES = {
-  alpha: {
-    refPattern: /^alpha\/v1\/v1\.0$/,
-    tags: ["v1-alpha"],
-  },
-  release: {
-    refPattern: /^release\/v1\/v1\.0$/,
-    tags: ["v1", "v1.0"],
-  },
-};
-
 function parseTags(input) {
   const tags = String(input || "")
     .split(",")
@@ -19,7 +8,7 @@ function parseTags(input) {
     throw new Error("At least one tag must be provided");
   }
   for (const tag of tags) {
-    if (!/^v\d+(?:\.\d+)?(?:-alpha)?$/.test(tag)) {
+    if (!/^(?:v\d+(?:\.\d+)?(?:-alpha)?|\d+\.\d+\.\d+)$/.test(tag)) {
       throw new Error(`Unsupported buildchain promotion tag: ${tag}`);
     }
   }
@@ -42,12 +31,23 @@ function assertPromotableRepository(owner, repo, allowRepository = DEFAULT_REPOS
 }
 
 function getPromotionRule(targetRef) {
-  const channel = String(targetRef || "").split("/", 1)[0];
-  const rule = CHANNEL_RULES[channel];
-  if (!rule || !rule.refPattern.test(targetRef)) {
-    throw new Error(`Ref promotion target must be alpha/v1/v1.0 or release/v1/v1.0; got ${targetRef}`);
+  const match = String(targetRef || "").match(/^(alpha|release)\/v(\d+)\/v(\d+)\.(\d+)$/);
+  if (!match) {
+    throw new Error(`Ref promotion target must be alpha/vN/vN.M or release/vN/vN.M; got ${targetRef}`);
   }
-  return { channel, tags: rule.tags };
+  const channel = match[1];
+  const major = Number(match[2]);
+  const minorMajor = Number(match[3]);
+  const minor = Number(match[4]);
+  if (major !== minorMajor) {
+    throw new Error(`Ref promotion target major mismatch: ${targetRef}`);
+  }
+  const majorTag = `v${major}`;
+  const minorTag = `v${major}.${minor}`;
+  if (channel === "alpha") {
+    return { channel, major, minor, releasePrefix: `${major}.${minor}`, tags: [`${majorTag}-alpha`] };
+  }
+  return { channel, major, minor, releasePrefix: `${major}.${minor}`, tags: [majorTag, minorTag] };
 }
 
 function assertPromotableTargetRef(targetRef) {
@@ -64,11 +64,43 @@ function resolveTagsForTarget(targetRef, inputTags) {
   const rule = getPromotionRule(targetRef);
   const tags = inputTags && inputTags.length > 0 ? inputTags : rule.tags;
   for (const tag of tags) {
-    if (!rule.tags.includes(tag)) {
+    const isReleasePatchTag = rule.channel === "release" && tag.startsWith(`${rule.releasePrefix}.`);
+    if (!rule.tags.includes(tag) && !isReleasePatchTag) {
       throw new Error(`Tag ${tag} is not allowed for ${rule.channel} promotion`);
     }
   }
   return tags;
+}
+
+function parseReleasePatchTag(refName, releasePrefix) {
+  const match = String(refName || "").match(new RegExp(`^refs/tags/${releasePrefix.replace(".", "\\.")}\\.(\\d+)$`));
+  if (!match) {
+    return undefined;
+  }
+  return {
+    tag: refName.replace(/^refs\/tags\//, ""),
+    patch: Number(match[1]),
+  };
+}
+
+function selectReleaseTag({ refs, releasePrefix, sha }) {
+  const releaseTags = refs
+    .map((ref) => {
+      const parsed = parseReleasePatchTag(ref.ref, releasePrefix);
+      if (!parsed) {
+        return undefined;
+      }
+      return { ...parsed, sha: ref.object?.sha };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.patch - b.patch);
+
+  const existingForSha = releaseTags.find((tag) => tag.sha === sha);
+  if (existingForSha) {
+    return { tag: existingForSha.tag, exists: true };
+  }
+  const latestPatch = releaseTags.length > 0 ? releaseTags[releaseTags.length - 1].patch : -1;
+  return { tag: `${releasePrefix}.${latestPatch + 1}`, exists: false };
 }
 
 function notFound(error) {
@@ -90,7 +122,13 @@ async function promoteBuildchainRefs({
   assertPromotableRepository(owner, repo, allowRepository);
   assertPromotableTargetRef(targetRef);
   assertSha(sha);
-  const promotionTags = resolveTagsForTarget(targetRef, tags);
+  const rule = getPromotionRule(targetRef);
+  const requestedTags = tags ? resolveTagsForTarget(targetRef, tags) : undefined;
+  const requestedCompatibilityTags = requestedTags
+    ? requestedTags.filter((tag) => !/^\d+\.\d+\.\d+$/.test(tag))
+    : undefined;
+  const compatibilityTags =
+    requestedCompatibilityTags && requestedCompatibilityTags.length > 0 ? requestedCompatibilityTags : rule.tags;
 
   const { data: branchRef } = await octokit.rest.git.getRef({
     owner,
@@ -103,7 +141,55 @@ async function promoteBuildchainRefs({
   }
 
   const updates = [];
-  for (const tag of promotionTags) {
+  if (rule.channel === "release") {
+    const explicitReleaseTags = requestedTags ? requestedTags.filter((tag) => /^\d+\.\d+\.\d+$/.test(tag)) : [];
+    if (explicitReleaseTags.length > 1) {
+      throw new Error("Release promotion accepts at most one explicit patch tag");
+    }
+    let releaseTag = explicitReleaseTags[0];
+    let releaseTagExists = false;
+    if (!releaseTag) {
+      const { data: refs } = await octokit.rest.git.listMatchingRefs({
+        owner,
+        repo,
+        ref: `tags/${rule.releasePrefix}.`,
+      });
+      const selected = selectReleaseTag({ refs, releasePrefix: rule.releasePrefix, sha });
+      releaseTag = selected.tag;
+      releaseTagExists = selected.exists;
+    }
+    if (dryRun) {
+      updates.push({ tag: releaseTag, action: "dry-run", sha });
+    } else {
+      try {
+        const { data: tagRef } = await octokit.rest.git.getRef({
+          owner,
+          repo,
+          ref: `tags/${releaseTag}`,
+        });
+        if (tagRef.object.sha !== sha) {
+          throw new Error(`Release tag ${releaseTag} points at ${tagRef.object.sha}, not requested SHA ${sha}`);
+        }
+        updates.push({ tag: releaseTag, action: "existing", sha });
+      } catch (error) {
+        if (!notFound(error)) {
+          throw error;
+        }
+        if (releaseTagExists) {
+          throw error;
+        }
+        await octokit.rest.git.createRef({
+          owner,
+          repo,
+          ref: `refs/tags/${releaseTag}`,
+          sha,
+        });
+        updates.push({ tag: releaseTag, action: "created", sha });
+      }
+    }
+  }
+
+  for (const tag of compatibilityTags) {
     const ref = `tags/${tag}`;
     if (dryRun) {
       updates.push({ tag, action: "dry-run", sha });
@@ -136,13 +222,14 @@ async function promoteBuildchainRefs({
 
 module.exports = {
   DEFAULT_REPOSITORY,
-  CHANNEL_RULES,
   assertPromotableRepository,
   assertPromotableTargetRef,
   assertSha,
   getPromotionRule,
   parseRepository,
+  parseReleasePatchTag,
   parseTags,
   promoteBuildchainRefs,
   resolveTagsForTarget,
+  selectReleaseTag,
 };
