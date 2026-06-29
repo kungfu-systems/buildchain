@@ -28,7 +28,7 @@ inputs:
     default: ""
   required-status-check:
     description: "Status check name fragment required by protected channel branches"
-    default: "Verify"
+    default: "check"
   allow-repository:
     description: "Repository allowed to promote"
     default: "kungfu-systems/buildchain"
