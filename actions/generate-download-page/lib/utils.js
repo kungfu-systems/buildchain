@@ -2,13 +2,14 @@ const path = require("path");
 const fs = require("fs");
 const glob = require("glob");
 const { spawnSync } = require("child_process");
-const lockfile = require("@yarnpkg/lockfile");
+const {
+  getCurrentLockInfo,
+  getYarnLockInfo,
+} = require("../../../packages/core/package-manager.cjs");
 
-const getCurrentYarnLock = () => {
+const getCurrentPackageLock = () => {
   try {
-    return getYarnLockInfo(
-      fs.readFileSync(path.join(process.cwd(), "yarn.lock"), "utf8")
-    );
+    return getCurrentLockInfo(process.cwd());
   } catch (error) {
     console.error(error);
   }
@@ -58,26 +59,6 @@ const getArtifactMap = () => {
   return glob.sync("artifact*/package.json").map((v) => getPkgConfig(cwd, v));
 };
 
-const getYarnLockInfo = function (content) {
-  if (!content) {
-    return;
-  }
-  const json = lockfile.parse(content);
-  return filterBy(json.object).reduce((acc, [key, value]) => {
-    acc.set("@" + key.split("@")[1], value.version);
-    return acc;
-  }, new Map());
-};
-
-const filterBy = (items) => {
-  if (!items) {
-    return [];
-  }
-  return Object.entries(items).filter(([key]) =>
-    key.startsWith("@kungfu-trader/")
-  );
-};
-
 module.exports = {
   getPkgNameMap,
   getPkgConfig,
@@ -85,5 +66,5 @@ module.exports = {
   writeFile,
   getArtifactMap,
   getYarnLockInfo,
-  getCurrentYarnLock,
+  getCurrentPackageLock,
 };

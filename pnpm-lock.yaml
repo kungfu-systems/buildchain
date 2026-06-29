@@ -119,9 +119,6 @@ importers:
       '@octokit/rest':
         specifier: ^22.0.0
         version: 22.0.1
-      '@yarnpkg/lockfile':
-        specifier: ^1.1.0
-        version: 1.1.0
       axios:
         specifier: ^1.13.0
         version: 1.18.1
@@ -155,9 +152,6 @@ importers:
       '@octokit/rest':
         specifier: ^22.0.0
         version: 22.0.1
-      '@yarnpkg/lockfile':
-        specifier: ^1.1.0
-        version: 1.1.0
       axios:
         specifier: ^1.13.0
         version: 1.18.1
@@ -1049,9 +1043,6 @@ packages:
 
   '@vitest/utils@4.1.9':
     resolution: {integrity: sha512-A51o8ymO5PpqlWNnBP9ZHPXDIpuMtTLlGSjN7la4US+LJzoUMyhwjA5QXlm39JexgwHKW4Xjs8Z2d3dLCXOeuA==}
-
-  '@yarnpkg/lockfile@1.1.0':
-    resolution: {integrity: sha512-GpSwvyXOcOOlV70vbnzjj4fW5xW/FdUF6nQEt1ENy7m4ZCczi1+/buVUPAqmGfqznsORNFzUMjctTIp8a9tuCQ==}
 
   abort-controller@3.0.0:
     resolution: {integrity: sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==}
@@ -2730,8 +2721,6 @@ snapshots:
       '@vitest/pretty-format': 4.1.9
       convert-source-map: 2.0.0
       tinyrainbow: 3.1.0
-
-  '@yarnpkg/lockfile@1.1.0': {}
 
   abort-controller@3.0.0:
     dependencies:

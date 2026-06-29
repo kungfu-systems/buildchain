@@ -13,7 +13,6 @@
     "@actions/core": "^3.0.1",
     "@actions/github": "^9.1.1",
     "@octokit/rest": "^22.0.0",
-    "@yarnpkg/lockfile": "^1.1.0",
     "axios": "^1.13.0",
     "esbuild": "^0.19.2",
     "glob": "^13.0.0",

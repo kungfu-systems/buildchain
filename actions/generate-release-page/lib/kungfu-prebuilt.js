@@ -1,6 +1,5 @@
 const Bucket = "kungfu-prebuilt";
 
-const { exists } = require("@yarnpkg/lockfile");
 const { spawnSync } = require("child_process");
 
 const spawnOptsInherit = { shell: true, stdio: "inherit", windowsHide: true };

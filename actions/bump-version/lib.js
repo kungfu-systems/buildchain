@@ -5,6 +5,11 @@ import path from 'node:path';
 import git from 'git-client';
 import semver from 'semver';
 import { spawnSync } from 'node:child_process';
+import {
+  commandForVersion,
+  detectPackageManager,
+  getWorkspaceInfo,
+} from '../../packages/core/package-manager.js';
 
 const ProtectedBranchPatterns = ['main', 'release/*/*', 'alpha/*/*', 'dev/*/*'];
 
@@ -162,8 +167,13 @@ async function bumpCall(argv, keyword, message, tag = true) {
     const lernaOpt = ['--yes', '--no-push', ...messageOpt, ...tagOpt, ...forceOpt];
     exec('lerna', ['version', `${keyword}`, ...lernaOpt]);
   } else {
-    const yarnOpt = ['--preid', 'alpha', ...messageOpt, ...tagOpt];
-    exec('yarn', ['version', `--${keyword}`, ...yarnOpt]);
+    const manager = detectPackageManager(argv.cwd).name;
+    const versionCommand = commandForVersion(manager, keyword, {
+      preid: 'alpha',
+      message: messageOpt[1],
+      tag,
+    });
+    exec(versionCommand.cmd, versionCommand.args);
   }
 }
 
@@ -179,18 +189,15 @@ async function publishCall(argv) {
   };
   if (hasLerna(argv.cwd)) {
     // https://github.com/lerna/lerna/issues/2404
-    // Until lerna solves this issue we have to use yarn workspaces and npm publish
-    console.log('> detected lerna, use yarn workspaces publish');
-    const result = spawnSync('yarn', ['-s', 'workspaces', 'info'], spawnOpts);
-    const output = result.output.filter((e) => e && e.length > 0).toString();
-    if (output.toString().split(' ')[0] !== 'error') {
-      const workspaces = JSON.parse(output);
+    // Lerna publish is avoided here; publish workspace packages with npm.
+    console.log('> detected lerna, use package-manager workspace metadata for npm publish');
+    const workspaces = getWorkspaceInfo(argv.cwd);
+    if (Object.keys(workspaces).length > 0) {
       for (const key in workspaces) {
-        const workspace = workspaces[key];
-        tryPublish(path.join(argv.cwd, workspace.location));
+        tryPublish(path.join(argv.cwd, workspaces[key].location));
       }
     } else {
-      console.log('[error]: Found lerna.json in a non-workspace project, please remove lerna.json in your project!');
+      throw new Error('Found lerna.json without package workspace metadata, please configure workspaces/packages.');
     }
   } else {
     console.log('> use npm publish');

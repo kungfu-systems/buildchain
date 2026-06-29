@@ -9,7 +9,6 @@ const {
   writeFile,
   getPkgNameMap,
   getArtifactMap,
-  getCurrentYarnLock,
 } = require("./utils");
 const { htmlDir, platforms, suffixs } = require("./const");
 

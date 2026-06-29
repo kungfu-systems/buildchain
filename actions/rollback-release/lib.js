@@ -5,6 +5,7 @@ const path = require('path');
 const git = require('git-client');
 const semver = require('semver');
 const { spawnSync } = require('child_process');
+const { getWorkspaceInfo } = require('../../packages/core/package-manager.cjs');
 
 const spawnOpts = { shell: true, stdio: 'pipe', windowsHide: true };
 
@@ -27,9 +28,10 @@ exports.rollbackRelease = async function (argv) {
 };
 
 exports.solveAllPackages = async function (argv) {
-  const pkgsWorkspace = spawnSync('yarn', ['-s', 'workspaces', 'info'], spawnOpts);
-  const outputStr = pkgsWorkspace.output.filter((e) => e && e.length > 0).toString();
-  const output = JSON.parse(outputStr);
+  const output = getWorkspaceInfo(process.cwd());
+  if (Object.keys(output).length === 0) {
+    throw new Error('No workspace packages found; configure package.json workspaces, lerna packages, or pnpm-workspace.yaml.');
+  }
 
   for (const key in output) {
     console.log(`package path is: ${output[key].location}`);
@@ -184,7 +186,7 @@ exports.deletePublishedPackage = async function (argv, info) {
       }`,
       { headers: { accept: `application/vnd.github.package-deletes-preview+json` } },
     );
-    console.log(`[Sucess!] Already has deleted package [${info.names}] with version [${info.delVersion}] \n`);
+    console.log(`[Sucess!] Already has deleted package [${info.names}] with version [${info.delVersion}]\n`);
   } else {
     console.log(
       `[Notice!] Package [${info.names}] with version [${info.delVersion}] didn't be published, earlier version [${packageVersion}] exists now.\n\n`,
@@ -210,7 +212,7 @@ exports.deletePublishedPackages = async function (argv, info) {
       org: 'kungfu-trader',
       package_version_id: res.data[0].id,
     });
-    console.log(`[Sucess!] Already has deleted package [${info.names}] with version [${info.delVersion}] \n`);
+    console.log(`[Sucess!] Already has deleted package [${info.names}] with version [${info.delVersion}]\n`);
   } else {
     console.log(
       `[Notice!] Package [${info.names}] with version [${info.delVersion}] didn't be published, earlier version [${packageVersion}] exists now.\n\n`,
