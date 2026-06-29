@@ -20,7 +20,7 @@ on:
       dry-run:
         description: "Only print planned tag updates"
         required: true
-        default: "false"
+        default: "true"
 
 permissions:
   contents: write
@@ -34,6 +34,13 @@ jobs:
       }}
     runs-on: ubuntu-24.04
     steps:
+      - name: Reject manual apply
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs['dry-run'] != 'true' }}
+        run: |
+          echo "::error::Manual buildchain ref promotion is limited to dry-run."
+          echo "::error::Merge through alpha/release and let a successful Verify workflow_run promote refs."
+          exit 1
+
       - name: Resolve target SHA
         id: target
         env:
@@ -66,6 +73,18 @@ jobs:
           ref: ${{ steps.target.outputs.sha }}
           persist-credentials: false
 
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "24"
+
+      - name: Enable pnpm
+        run: |
+          corepack enable pnpm
+          pnpm --version
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Promote buildchain refs
         uses: ./actions/promote-buildchain-ref
         with:
@@ -73,3 +92,7 @@ jobs:
           sha: ${{ steps.target.outputs.sha }}
           target-ref: ${{ steps.target_ref.outputs.target_ref }}
           dry-run: ${{ inputs['dry-run'] || 'false' }}
+          require-governance: "true"
+          require-version-state: "true"
+          verification-command: "pnpm run check"
+          required-status-check: "Verify"

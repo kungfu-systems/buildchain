@@ -11,6 +11,10 @@ async function main() {
   const tagInput = core.getInput("tags");
   const tags = tagInput ? parseTags(tagInput) : undefined;
   const dryRun = core.getBooleanInput("dry-run");
+  const requireGovernance = core.getBooleanInput("require-governance");
+  const requireVersionState = core.getBooleanInput("require-version-state");
+  const verificationCommand = core.getInput("verification-command");
+  const requiredStatusCheck = core.getInput("required-status-check") || "Verify";
   const allowRepository = core.getInput("allow-repository") || "kungfu-systems/buildchain";
   const octokit = github.getOctokit(token);
   const result = await promoteBuildchainRefs({
@@ -22,6 +26,10 @@ async function main() {
     tags,
     dryRun,
     allowRepository,
+    requireGovernance,
+    requireVersionState,
+    verificationCommand,
+    requiredStatusCheck,
   });
 
   for (const update of result.updates) {

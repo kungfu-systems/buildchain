@@ -8,17 +8,12 @@ on:
       - release/v*/v*
 
 permissions:
-  contents: write
-  packages: write
-  issues: write
-  pull-requests: write
+  contents: read
 
 jobs:
-  release:
-    uses: ./.github/workflows/.release-new-version.yml
-    with:
-      publish-aws-ci: false
-      publish-aws-user: false
-      action-bump-version-repository: kungfu-systems/buildchain
-      action-bump-version-ref: ${{ github.head_ref || github.ref_name }}
-      action-bump-version-path: actions/bump-version
+  buildchain-self-release:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: |
+          echo "Buildchain self-release is handled by Buildchain Ref Promotion after Verify succeeds."
+          echo "The reusable .release-new-version.yml workflow remains available for consumer repositories."

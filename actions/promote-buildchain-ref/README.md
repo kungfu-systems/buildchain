@@ -26,6 +26,21 @@ in logs; the version commit itself is written through the GitHub Git Data API so
 the ref graph is the durable source of truth. Repositories without any supported
 version state degrade to ref-only promotion instead of assuming Yarn or Lerna.
 
+In strict buildchain promotion, ref movement is also gated by the old ABV
+governance semantics:
+
+- the target channel branch must be protected with approving PR review and a
+  strict `Verify` status check;
+- alpha promotion must come from a merged same-repository PR
+  `dev/vN/vN.M -> alpha/vN/vN.M`;
+- release promotion must come from a merged same-repository PR
+  `alpha/vN/vN.M -> release/vN/vN.M`;
+- release promotion must have an exact alpha tag for the same patch line, and
+  the release source tree must match that alpha tag tree, so release does not
+  introduce new code after alpha;
+- generated release and next-alpha version-state trees can be verified locally
+  with a command such as `pnpm run check` before any tags or channel refs move.
+
 The tag names intentionally follow the old `action-bump-version` semantics:
 exact release tags are `vX.Y.Z`, exact alpha tags are `vX.Y.Z-alpha.N`, floating
 release tags are minor/major tags such as `v1.0` and `v1`, and floating alpha
