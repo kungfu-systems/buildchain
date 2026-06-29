@@ -1,9 +1,8 @@
-const core = require("@actions/core");
-const github = require("@actions/github");
-const {
-  parseTags,
-  promoteBuildchainRefs,
-} = require("./lib.js");
+import * as core from "@actions/core";
+import * as github from "@actions/github";
+import promotion from "./lib.js";
+
+const { parseTags, promoteBuildchainRefs } = promotion;
 
 async function main() {
   const token = core.getInput("token", { required: true });
@@ -32,9 +31,7 @@ async function main() {
   core.setOutput("tags", result.updates.map((update) => update.tag).join(","));
 }
 
-if (require.main === module) {
-  main().catch((error) => {
-    console.error(error);
-    core.setFailed(error.message);
-  });
-}
+main().catch((error) => {
+  console.error(error);
+  core.setFailed(error.message);
+});

@@ -211,7 +211,7 @@ importers:
         version: 18.0.0
 
   actions/promote-buildchain-ref:
-    dependencies:
+    devDependencies:
       '@actions/core':
         specifier: ^3.0.1
         version: 3.0.1
