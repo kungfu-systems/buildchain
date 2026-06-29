@@ -45,13 +45,46 @@ function getLooseVersion(version) {
 }
 
 function getChannel(ref) {
-  return ref.replace(/^refs\/heads\//, '').split('/')[0];
+  const versionStateTarget = parseVersionStateRef(ref);
+  if (versionStateTarget) {
+    return versionStateTarget.channel;
+  }
+  return normalizeRef(ref).split('/')[0];
+}
+
+function normalizeRef(ref) {
+  return String(ref || '').replace(/^refs\/heads\//, '');
+}
+
+function parseVersionStateRef(ref) {
+  const match = normalizeRef(ref).match(
+    /^buildchain\/version-state\/(alpha|release)-v(\d+)-v(\d+\.\d+)\/[0-9a-f]{12,40}$/,
+  );
+  if (!match) {
+    return undefined;
+  }
+  return {
+    channel: match[1],
+    major: Number(match[2]),
+    loose: Number(match[3]),
+    normalizedRef: `${match[1]}/v${match[2]}/v${match[3]}`,
+    lineSuffix: `/v${match[2]}/v${match[3]}`,
+  };
+}
+
+function getLineSuffix(ref, channel) {
+  const versionStateTarget = parseVersionStateRef(ref);
+  if (versionStateTarget) {
+    return versionStateTarget.lineSuffix;
+  }
+  return normalizeRef(ref).replace(channel, '');
 }
 
 function getBumpKeyword(cwd, headRef, baseRef, loose = false) {
   const version = getCurrentVersion(cwd);
   const looseVersionNumber = Number(getLooseVersion(version));
   const lastLooseVersionNumber = looseVersionNumber - 0.1;
+  const versionStateTarget = parseVersionStateRef(headRef);
   const headChannel = getChannel(headRef);
   const baseChannel = getChannel(baseRef);
   const key = `${headChannel}->${baseChannel}`;
@@ -66,8 +99,15 @@ function getBumpKeyword(cwd, headRef, baseRef, loose = false) {
   const lts = baseChannel === 'release' && baseRef.split('/').pop() === 'lts';
   const preminor = headChannel === 'release' && (baseChannel === 'main' || lts);
 
-  if (headRef.replace(headChannel, '') !== baseRef.replace(baseChannel, '') && !preminor) {
+  if (getLineSuffix(headRef, headChannel) !== getLineSuffix(baseRef, baseChannel) && !preminor) {
     throw new Error(`Versions not match for head/base refs: ${headRef} -> ${baseRef}`);
+  }
+
+  if (versionStateTarget) {
+    if (versionStateTarget.channel !== baseChannel) {
+      throw new Error(`Versions not match for head/base refs: ${headRef} -> ${baseRef}`);
+    }
+    return baseChannel === 'release' ? 'patch' : 'prerelease';
   }
 
   if (headChannel === 'main') {
@@ -75,7 +115,8 @@ function getBumpKeyword(cwd, headRef, baseRef, loose = false) {
     return keywords[key];
   }
 
-  const headMatch = headRef.match(/(\w+)\/v(\d+)\/v(\d+\.\d)/);
+  const normalizedHeadRef = versionStateTarget?.normalizedRef || normalizeRef(headRef);
+  const headMatch = normalizedHeadRef.match(/(\w+)\/v(\d+)\/v(\d+\.\d)/);
   const mismatchMsg = `The version of head ref ${headRef} does not match current ${version}`;
 
   if (!headMatch) {
