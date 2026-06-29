@@ -845,6 +845,73 @@ test("strict alpha promotion rejects missing PR lineage", async () => {
   );
 });
 
+test("strict alpha promotion no-ops settled generated version-state commits", async () => {
+  const refs = new Map([
+    ["heads/alpha/v1/v1.0", SHA],
+    ["heads/dev/v1/v1.0", SHA],
+    ["tags/v1.0.4-alpha.0", SHA],
+    ["tags/v1.0-alpha", SHA],
+  ]);
+  const writes = [];
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (refs.has(ref)) {
+            return { data: { object: { sha: refs.get(ref) } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async ({ ref }) => ({
+          data: [...refs.entries()]
+            .filter(([name]) => name.startsWith(ref))
+            .map(([name, objectSha]) => ({
+              ref: `refs/${name}`,
+              object: { sha: objectSha },
+            })),
+        }),
+        createRef: async (args) => {
+          writes.push(["createRef", args.ref]);
+          return {};
+        },
+        updateRef: async (args) => {
+          writes.push(["updateRef", args.ref]);
+          return {};
+        },
+      },
+      repos: {
+        getBranchProtection: async () => ({
+          data: {
+            required_pull_request_reviews: { required_approving_review_count: 1 },
+            required_status_checks: { strict: true, contexts: ["check"] },
+          },
+        }),
+        listPullRequestsAssociatedWithCommit: async () => {
+          assert.fail("settled alpha version-state commits should not need PR lookup");
+        },
+      },
+    },
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    requireGovernance: true,
+  });
+
+  assert.equal(result.sha, SHA);
+  assert.deepEqual(writes, []);
+  assert.deepEqual(result.updates, [
+    { ref: "alpha/v1/v1.0", action: "already-promoted", sha: SHA },
+    { ref: "dev/v1/v1.0", action: "already-promoted", sha: SHA },
+    { tag: "v1.0.4-alpha.0", action: "existing", sha: SHA },
+    { tag: "v1.0-alpha", action: "existing", sha: SHA },
+  ]);
+});
+
 test("strict release promotion requires a matching alpha tree and alpha-to-release PR", async () => {
   const cwd = makeTempWorkspace({
     "package.json": {
