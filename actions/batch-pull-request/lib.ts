@@ -1,6 +1,10 @@
 import { Octokit } from "@octokit/rest";
 import shell from "shelljs";
 import semver from "semver";
+import {
+  commandForKungfuUpgrade,
+  detectPackageManager,
+} from "../../packages/core/package-manager.cjs";
 
 export type argvs = {
   token: string;
@@ -257,11 +261,13 @@ async function upgradeKf(token: string, repo: string, head: string) {
   if (code == 0) {
     let status;
     shell.exec("git pull");
-    // shell.exec("yarn install -scope @kungfu-trader --ignore-scripts --pure-lockfile");
-    const { code: upgradeCode } = shell.exec("yarn upgrade --scope @kungfu-trader --ignore-scripts");
+    const manager = detectPackageManager(process.cwd()).name;
+    const upgradeCommands = commandForKungfuUpgrade(manager);
+    console.log(`package manager: ${manager}`);
+    const { code: upgradeCode } = shell.exec(upgradeCommands.primary);
     status = upgradeCode;
     if (upgradeCode != 0) {
-      const { code: importCode } =  shell.exec("yarn install -scope @kungfu-trader --ignore-scripts --force --dry-run");
+      const { code: importCode } = shell.exec(upgradeCommands.fallback);
       status = importCode;
     }
     console.log("..........");

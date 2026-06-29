@@ -5,6 +5,10 @@ const path = require('path');
 const git = require('git-client');
 // 开启子进程，用于在终端执行格式检查脚本
 const { spawnSync } = require('child_process');
+const {
+  commandForRunScript,
+  detectPackageManager,
+} = require('../../packages/core/package-manager.cjs');
 
 const spawnOpts = { shell: true, stdio: 'pipe', windowsHide: true };
 
@@ -34,7 +38,9 @@ exports.checkFormat = async function (argv) {
   const hasFormat = jsonInfo.scripts.format;
   if (hasFormat !== undefined) {
     // format : 定义在package.json中的scripts
-    exec('yarn', ['run', 'format']);
+    const manager = detectPackageManager(process.cwd()).name;
+    const command = commandForRunScript(manager, 'format');
+    exec(command.cmd, command.args);
     const gitStatus = await gitCall('status', '--short');
     if (gitStatus) {
       console.log('\n! Found unformatted code');
