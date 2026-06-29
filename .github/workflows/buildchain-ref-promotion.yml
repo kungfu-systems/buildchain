@@ -95,4 +95,4 @@ jobs:
           require-governance: "true"
           require-version-state: "true"
           verification-command: "pnpm run check"
-          required-status-check: "Verify"
+          required-status-check: "check"
