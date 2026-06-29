@@ -34,10 +34,11 @@ GitHub Actions:
 - buildchain's own release-line and compatibility tags are promoted by the
   internal `promote-buildchain-ref` action after Verify succeeds: alpha branch
   creates or reuses the next exact prerelease tag such as
-  `v1.0.1-alpha.0` and promotes `v1.0-alpha`; release branch creates or
-  reuses the next exact release tag such as `v1.0.0`, promotes the current
-  minor tag such as `v1.0`, conditionally promotes `v1`, and prepares the next
-  exact prerelease tag for the minor line.
+  `v1.0.1-alpha.0`, writes matching package version state, and promotes
+  `v1.0-alpha`; release branch creates or reuses the next exact release tag
+  such as `v1.0.0`, writes matching package version state, promotes the current
+  minor tag such as `v1.0`, conditionally promotes `v1`, and prepares a
+  matching source commit for the next exact prerelease tag on the minor line.
 
 Stable consumers should reference actions as
 `kungfu-systems/buildchain/actions/<name>@v1` and reusable workflows as

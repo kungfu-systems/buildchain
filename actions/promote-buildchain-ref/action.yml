@@ -1,12 +1,12 @@
 name: "Promote Buildchain Ref"
 author: "Keren Dong"
-description: "Promote verified buildchain release-line and compatibility tags to a target commit"
+description: "Promote verified buildchain release-line refs through source version commits"
 inputs:
   token:
     description: "GitHub token with contents:write"
     required: true
   sha:
-    description: "Verified commit SHA to promote"
+    description: "Verified commit SHA used as the source parent for promotion"
     required: true
   target-ref:
     description: "Buildchain channel branch that must currently point at sha"

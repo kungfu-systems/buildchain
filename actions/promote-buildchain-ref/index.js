@@ -25,10 +25,21 @@ async function main() {
   });
 
   for (const update of result.updates) {
-    console.log(`${update.action}: ${update.tag} -> ${update.sha}`);
+    const target =
+      update.tag ||
+      update.ref ||
+      (update.version ? `version-state ${update.version}` : "promotion");
+    const detail = update.files?.length ? ` (${update.files.join(", ")})` : "";
+    console.log(`${update.action}: ${target} -> ${update.sha}${detail}`);
   }
   core.setOutput("sha", result.sha);
-  core.setOutput("tags", result.updates.map((update) => update.tag).join(","));
+  core.setOutput(
+    "tags",
+    result.updates
+      .map((update) => update.tag)
+      .filter(Boolean)
+      .join(","),
+  );
 }
 
 main().catch((error) => {
