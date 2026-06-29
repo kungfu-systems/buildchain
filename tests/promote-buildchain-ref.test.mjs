@@ -47,7 +47,10 @@ test("promoteBuildchainRefs updates existing tags and creates missing tags", asy
         updateRef: async ({ ref, sha, force }) => {
           calls.push(["updateRef", ref, sha, force]);
           if (ref === "tags/v1.0") {
-            throw Object.assign(new Error("not found"), { status: 404 });
+            throw Object.assign(new Error("Reference does not exist"), {
+              status: 422,
+              response: { data: { message: "Reference does not exist" } },
+            });
           }
           return {};
         },

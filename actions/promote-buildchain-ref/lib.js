@@ -72,7 +72,9 @@ function resolveTagsForTarget(targetRef, inputTags) {
 }
 
 function notFound(error) {
-  return error?.status === 404 || error?.response?.status === 404;
+  const status = error?.status || error?.response?.status;
+  const message = error?.response?.data?.message || error?.message || "";
+  return status === 404 || (status === 422 && /Reference does not exist/i.test(message));
 }
 
 async function promoteBuildchainRefs({
