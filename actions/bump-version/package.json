@@ -7,14 +7,11 @@
   "author": "Keren Dong",
   "license": "Apache-2.0",
   "scripts": {
-    "build": "tsup index.js --format esm --target node24 --platform node --splitting=false --no-sourcemap --minify --clean --out-dir dist",
+    "build": "tsup --config tsup.config.mjs",
     "package": "echo noop"
   },
   "dependencies": {
-    "@actions/core": "^3.0.1",
-    "@actions/github": "^9.1.1",
     "@eslint/js": "^10.0.1",
-    "git-client": "^1.12.1",
     "globals": "latest",
     "semver": "^7.8.5",
     "yargs": "^18.0.0"
