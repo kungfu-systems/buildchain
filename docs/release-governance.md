@@ -191,6 +191,13 @@ The verify stage runs after generated version-state changes are applied locally
 and before any release refs move. If `verification-command` is passed directly
 to the action, that explicit command overrides `lifecycle.verify`.
 
+Protected release-line branches keep their normal review gate. When generated
+version state would move a protected alpha or release branch, Buildchain creates
+a version-state PR instead of bypassing branch protection. After that PR is
+reviewed, checked, and merged, the next promotion run verifies that only
+declared version-state files changed from the legally merged source parent, then
+moves the exact and floating tags.
+
 ## What This Guarantees
 
 When the loop succeeds, maintainers and consumers can rely on these facts:

@@ -31,6 +31,13 @@ version commit itself is written through the GitHub Git Data API so the ref
 graph is the durable source of truth. Repositories without any supported version
 state degrade to ref-only promotion only when strict version state is disabled.
 
+When branch protection requires pull requests, generated version-state commits
+are also routed through pull requests. The action creates an internal
+`buildchain/version-state/...` branch and PR, then stops before moving tags. Once
+that PR is reviewed, checked, and merged, the next promotion run verifies that
+the merge only changed declared version-state files from the legal source
+parent, then moves exact and floating refs.
+
 In strict buildchain promotion, ref movement is also gated by the old ABV
 governance semantics:
 

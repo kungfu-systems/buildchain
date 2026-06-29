@@ -1023,6 +1023,204 @@ test("strict alpha promotion no-ops settled generated version-state commits", as
   ]);
 });
 
+test("strict alpha promotion opens a version-state PR for protected branches", async () => {
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-systems/buildchain",
+      version: "1.0.0-alpha.0",
+      packageManager: "pnpm@11.7.0",
+    },
+  });
+  const versionSha = "c".repeat(40);
+  const refs = new Map([
+    ["heads/alpha/v1/v1.0", SHA],
+    ["tags/v1.0.0", OTHER_SHA],
+  ]);
+  const pullRequests = [];
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (refs.has(ref)) {
+            return { data: { object: { sha: refs.get(ref) } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async ({ ref }) => ({
+          data: [...refs.entries()]
+            .filter(([name]) => name.startsWith(ref))
+            .map(([name, objectSha]) => ({
+              ref: `refs/${name}`,
+              object: { sha: objectSha },
+            })),
+        }),
+        getCommit: async ({ commit_sha }) => ({
+          data: { tree: { sha: `tree-${commit_sha}` } },
+        }),
+        createBlob: async () => ({ data: { sha: "blob-sha" } }),
+        createTree: async () => ({ data: { sha: "tree-sha" } }),
+        createCommit: async () => ({ data: { sha: versionSha } }),
+        updateRef: async ({ ref }) => {
+          if (ref === "heads/alpha/v1/v1.0") {
+            const error = new Error('Changes must be made through a pull request. Required status check "check" is expected.');
+            error.status = 422;
+            throw error;
+          }
+          return {};
+        },
+        createRef: async ({ ref, sha }) => {
+          refs.set(ref.replace(/^refs\//, ""), sha);
+          return {};
+        },
+      },
+      pulls: {
+        list: async () => ({ data: [] }),
+        create: async ({ title, head, base }) => {
+          const pullRequest = {
+            html_url: "https://github.com/kungfu-systems/buildchain/pull/100",
+            title,
+            head: { ref: head },
+            base: { ref: base },
+          };
+          pullRequests.push(pullRequest);
+          return { data: pullRequest };
+        },
+      },
+      repos: {
+        getBranchProtection: async () => ({ data: protectedChannel() }),
+        listPullRequestsAssociatedWithCommit: async () => ({
+          data: [
+            {
+              merged_at: "2026-06-29T00:00:00Z",
+              base: { ref: "alpha/v1/v1.0" },
+              head: {
+                ref: "dev/v1/v1.0",
+                repo: { full_name: "kungfu-systems/buildchain" },
+              },
+            },
+          ],
+        }),
+      },
+    },
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    cwd,
+    requireGovernance: true,
+    requireVersionState: true,
+  });
+
+  assert.equal(result.pendingPullRequest, "https://github.com/kungfu-systems/buildchain/pull/100");
+  assert.equal(pullRequests[0].base.ref, "alpha/v1/v1.0");
+  assert.equal(pullRequests[0].head.ref, `buildchain/version-state/alpha-v1-v1.0/${versionSha.slice(0, 12)}`);
+  assert.equal(refs.get(`heads/${pullRequests[0].head.ref}`), versionSha);
+  assert.deepEqual(
+    result.updates.map((update) => update.action),
+    ["created-version-state", "pending-version-state-pr"],
+  );
+});
+
+test("strict alpha promotion accepts reviewed version-state PRs from a legal parent", async () => {
+  const versionSha = "c".repeat(40);
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-systems/buildchain",
+      version: "1.0.1-alpha.0",
+      packageManager: "pnpm@11.7.0",
+    },
+  });
+  const refs = new Map([
+    ["heads/alpha/v1/v1.0", versionSha],
+    ["heads/dev/v1/v1.0", SHA],
+    ["tags/v1.0.0", OTHER_SHA],
+  ]);
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (refs.has(ref)) {
+            return { data: { object: { sha: refs.get(ref) } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async ({ ref }) => ({
+          data: [...refs.entries()]
+            .filter(([name]) => name.startsWith(ref))
+            .map(([name, objectSha]) => ({
+              ref: `refs/${name}`,
+              object: { sha: objectSha },
+            })),
+        }),
+        getCommit: async ({ commit_sha }) => ({
+          data: {
+            tree: { sha: `tree-${commit_sha}` },
+            parents: commit_sha === versionSha ? [{ sha: SHA }] : [],
+          },
+        }),
+        updateRef: async ({ ref, sha }) => {
+          refs.set(ref, sha);
+          return {};
+        },
+        createRef: async ({ ref, sha }) => {
+          refs.set(ref.replace(/^refs\//, ""), sha);
+          return {};
+        },
+      },
+      repos: {
+        getBranchProtection: async () => ({ data: protectedChannel() }),
+        compareCommitsWithBasehead: async () => ({
+          data: { files: [{ filename: "package.json" }] },
+        }),
+        listPullRequestsAssociatedWithCommit: async ({ commit_sha }) => ({
+          data:
+            commit_sha === SHA
+              ? [
+                  {
+                    merged_at: "2026-06-29T00:00:00Z",
+                    base: { ref: "alpha/v1/v1.0" },
+                    head: {
+                      ref: "dev/v1/v1.0",
+                      repo: { full_name: "kungfu-systems/buildchain" },
+                    },
+                  },
+                ]
+              : [
+                  {
+                    merged_at: "2026-06-29T00:00:00Z",
+                    base: { ref: "alpha/v1/v1.0" },
+                    head: {
+                      ref: "buildchain/version-state/alpha-v1-v1.0/cccccccccccc",
+                      repo: { full_name: "kungfu-systems/buildchain" },
+                    },
+                  },
+                ],
+        }),
+      },
+    },
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: versionSha,
+    targetRef: "alpha/v1/v1.0",
+    cwd,
+    requireGovernance: true,
+    requireVersionState: true,
+  });
+
+  assert.equal(result.sha, versionSha);
+  assert.equal(refs.get("heads/dev/v1/v1.0"), versionSha);
+  assert.equal(refs.get("tags/v1.0.1-alpha.0"), versionSha);
+  assert.equal(refs.get("tags/v1.0-alpha"), versionSha);
+});
+
 test("strict release promotion requires a matching alpha tree and alpha-to-release PR", async () => {
   const cwd = makeTempWorkspace({
     "package.json": {
