@@ -1,6 +1,6 @@
 {
   "name": "@kungfu-systems/buildchain-publish-prebuilt",
-  "version": "1.0.3-alpha.1",
+  "version": "1.0.3",
   "private": true,
   "main": "dist/index.js",
   "author": "Keren Dong",
