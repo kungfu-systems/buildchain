@@ -658,6 +658,39 @@ async function promoteBuildchainRefs({
     }
   };
 
+  const readRefSha = async (ref) => {
+    try {
+      const { data: refData } = await octokit.rest.git.getRef({
+        owner,
+        repo,
+        ref,
+      });
+      return refData.object.sha;
+    } catch (error) {
+      if (notFound(error)) {
+        return undefined;
+      }
+      throw error;
+    }
+  };
+
+  const isSettledAlphaVersionState = async (selectedAlpha) => {
+    if (!selectedAlpha?.exists || selectedAlpha.sha !== sha) {
+      return false;
+    }
+    const devRef = `heads/dev/v${rule.major}/v${rule.major}.${rule.minor}`;
+    const [devSha, exactAlphaTagSha, floatingAlphaTagSha] = await Promise.all([
+      readRefSha(devRef),
+      readRefSha(`tags/${selectedAlpha.tag}`),
+      readRefSha(`tags/${rule.alphaTag}`),
+    ]);
+    return (
+      devSha === sha &&
+      exactAlphaTagSha === sha &&
+      floatingAlphaTagSha === sha
+    );
+  };
+
   const createVersionStateCommit = async ({ baseSha, version, message }) => {
     if (!versionState) {
       return {
@@ -825,15 +858,6 @@ async function promoteBuildchainRefs({
   }
 
   if (rule.channel === "alpha") {
-    if (requireGovernance && !dryRun) {
-      await assertChannelPromotionPr({
-        octokit,
-        owner,
-        repo,
-        sha,
-        targetRef,
-      });
-    }
     const explicitAlphaTags = requestedTags
       ? requestedTags.filter((tag) => tag.includes("-alpha."))
       : [];
@@ -849,6 +873,27 @@ async function promoteBuildchainRefs({
           releasePrefix: rule.releasePrefix,
           sha,
         });
+    const settledAlphaVersionState = await isSettledAlphaVersionState(selectedAlpha);
+    if (requireGovernance && !dryRun && !settledAlphaVersionState) {
+      await assertChannelPromotionPr({
+        octokit,
+        owner,
+        repo,
+        sha,
+        targetRef,
+      });
+    }
+    if (settledAlphaVersionState) {
+      updates.push({ ref: targetRef, action: "already-promoted", sha });
+      updates.push({
+        ref: `dev/v${rule.major}/v${rule.major}.${rule.minor}`,
+        action: "already-promoted",
+        sha,
+      });
+      updates.push({ tag: selectedAlpha.tag, action: "existing", sha });
+      updates.push({ tag: rule.alphaTag, action: "existing", sha });
+      return { owner, repo, sourceSha: sha, sha, targetRef, updates };
+    }
     const alphaVersion = stripTagPrefix(selectedAlpha.tag);
     const alphaCommit = await createVersionStateCommit({
       baseSha: sha,
