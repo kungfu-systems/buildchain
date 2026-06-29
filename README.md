@@ -43,6 +43,10 @@ Stable consumers should reference actions as
 `kungfu-systems/buildchain/actions/<name>@v1` and reusable workflows as
 `kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v1`.
 
+Exact buildchain release and prerelease tags are always v-prefixed. Use
+`v1.0.0` or `v1.0.1-alpha.0` for pinned refs; bare tags such as `1.0.0` are
+not maintained as buildchain release entrypoints.
+
 ## Local Verification
 
 ```bash

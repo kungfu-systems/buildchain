@@ -21,4 +21,5 @@ It only moves buildchain entrypoint tags after the target commit has already
 passed Verify on the matching release channel. The tag names intentionally
 follow the old `action-bump-version` semantics: exact release tags are
 `vX.Y.Z`, exact alpha tags are `vX.Y.Z-alpha.N`, and floating alpha tags are
-minor-line tags such as `v1.0-alpha`.
+minor-line tags such as `v1.0-alpha`. Bare tags such as `1.0.0` are not
+maintained as buildchain release entrypoints.
