@@ -1,0 +1,15 @@
+schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[lifecycle.verify]
+commands = [
+  "pnpm run check",
+]
+

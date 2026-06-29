@@ -6,6 +6,13 @@ const {
   detectPackageManager,
   getWorkspaceInfo,
 } = require("../../packages/core/package-manager.cjs");
+const {
+  discoverConfiguredVersionStateFiles,
+  getLifecycleStage,
+  loadBuildchainConfig,
+  runLifecycleStage,
+  updateConfiguredVersionStateContents,
+} = require("../../packages/core/buildchain-config.cjs");
 
 const COMMIT_IDENTITY = {
   name: "Keren Dong",
@@ -136,6 +143,20 @@ function detectVersionPackageManager(cwd) {
 }
 
 function discoverVersionStateFiles(cwd = process.cwd()) {
+  const loadedConfig = loadBuildchainConfig(cwd);
+  if (loadedConfig?.config?.version) {
+    const files = discoverConfiguredVersionStateFiles(cwd, loadedConfig);
+    return {
+      files: files.sort((a, b) => a.path.localeCompare(b.path)),
+      packageManager: {
+        name: "buildchain.toml",
+        reason: "buildchain.toml",
+        config: loadedConfig.path,
+      },
+      config: loadedConfig,
+    };
+  }
+
   const files = new Map();
   const addJsonVersionFile = (relativePath, kind) => {
     const filePath = path.join(cwd, relativePath);
@@ -167,10 +188,14 @@ function discoverVersionStateFiles(cwd = process.cwd()) {
   return {
     files: [...files.values()].sort((a, b) => a.path.localeCompare(b.path)),
     packageManager: detectVersionPackageManager(cwd),
+    config: loadedConfig,
   };
 }
 
 function updateVersionStateContents(files, version) {
+  if (files.some((file) => file.type)) {
+    return updateConfiguredVersionStateContents(files, version);
+  }
   return files
     .map((file) => {
       const nextContent = { ...file.content, version };
@@ -224,12 +249,27 @@ function applyLocalVersionState(cwd, changedFiles) {
   }
 }
 
-function runVersionVerification({ cwd, command, changedFiles, allowedPaths }) {
-  if (!command) {
+function runVersionVerification({ cwd, command, loadedConfig, version, changedFiles, allowedPaths }) {
+  const lifecycleVerify = getLifecycleStage(loadedConfig, "verify");
+  if (!command && !lifecycleVerify) {
     return;
   }
   applyLocalVersionState(cwd, changedFiles);
-  execSync(command, { cwd, stdio: "inherit", shell: true });
+  const env = {
+    ...process.env,
+    BUILDCHAIN_VERSION: version,
+  };
+  if (command) {
+    execSync(command, { cwd, env, stdio: "inherit", shell: true });
+  } else {
+    runLifecycleStage({
+      cwd,
+      loadedConfig,
+      name: "verify",
+      stage: lifecycleVerify,
+      env: { BUILDCHAIN_VERSION: version },
+    });
+  }
   assertAllowedLocalChanges(cwd, allowedPaths);
 }
 
@@ -293,22 +333,28 @@ async function assertProtectedChannel({
       branch: targetRef,
     }));
   } catch (error) {
-    if (error.status !== 403) {
-      throw error;
+    if (error.status === 403) {
+      throw new Error(
+        `Protected channel ${targetRef} protection details must be readable to verify admin enforcement`,
+      );
     }
-    const { data: branch } = await octokit.rest.repos.getBranch({
-      owner,
-      repo,
-      branch: targetRef,
-    });
-    if (!branch.protected) {
-      throw new Error(`Promotion target ${targetRef} must be a protected branch`);
-    }
-    console.log(
-      `> branch protection details for ${targetRef} are not readable by this token; ` +
-        "using protected branch status plus merged PR governance checks",
+    throw error;
+  }
+  if (protection.enforce_admins?.enabled !== true) {
+    throw new Error(
+      `Protected channel ${targetRef} must enforce branch protection for administrators`,
     );
-    return;
+  }
+  if (protection.allow_force_pushes?.enabled !== false) {
+    throw new Error(`Protected channel ${targetRef} must disallow force pushes`);
+  }
+  if (protection.allow_deletions?.enabled !== false) {
+    throw new Error(`Protected channel ${targetRef} must disallow branch deletion`);
+  }
+  if (protection.required_conversation_resolution?.enabled !== true) {
+    throw new Error(
+      `Protected channel ${targetRef} must require conversation resolution`,
+    );
   }
   const reviews = protection.required_pull_request_reviews;
   if (!reviews || Number(reviews.required_approving_review_count || 0) < 1) {
@@ -524,6 +570,19 @@ function notFound(error) {
   );
 }
 
+function protectedBranchUpdateRejected(error) {
+  const status = error?.status || error?.response?.status;
+  const message = error?.response?.data?.message || error?.message || "";
+  return (
+    status === 422 &&
+    /Changes must be made through a pull request|Required status check/i.test(message)
+  );
+}
+
+function versionStateBranchName(branch, sha) {
+  return `buildchain/version-state/${branch.replaceAll("/", "-")}/${sha.slice(0, 12)}`;
+}
+
 async function promoteBuildchainRefs({
   octokit,
   owner,
@@ -630,34 +689,6 @@ async function promoteBuildchainRefs({
     }
   };
 
-  const updateBranch = async (branch, branchSha, action = "updated") => {
-    if (dryRun) {
-      updates.push({ ref: branch, action: "dry-run", sha: branchSha });
-      return;
-    }
-    try {
-      await octokit.rest.git.updateRef({
-        owner,
-        repo,
-        ref: `heads/${branch}`,
-        sha: branchSha,
-        force: false,
-      });
-      updates.push({ ref: branch, action, sha: branchSha });
-    } catch (error) {
-      if (!notFound(error)) {
-        throw error;
-      }
-      await octokit.rest.git.createRef({
-        owner,
-        repo,
-        ref: `refs/heads/${branch}`,
-        sha: branchSha,
-      });
-      updates.push({ ref: branch, action: "created", sha: branchSha });
-    }
-  };
-
   const readRefSha = async (ref) => {
     try {
       const { data: refData } = await octokit.rest.git.getRef({
@@ -672,6 +703,208 @@ async function promoteBuildchainRefs({
       }
       throw error;
     }
+  };
+
+  const openVersionStatePullRequest = async ({ branch, branchSha, title, body }) => {
+    const headBranch = versionStateBranchName(branch, branchSha);
+    const headRef = `heads/${headBranch}`;
+    const existingHeadSha = await readRefSha(headRef);
+    if (!existingHeadSha) {
+      await octokit.rest.git.createRef({
+        owner,
+        repo,
+        ref: `refs/${headRef}`,
+        sha: branchSha,
+      });
+    } else if (existingHeadSha !== branchSha) {
+      await octokit.rest.git.updateRef({
+        owner,
+        repo,
+        ref: headRef,
+        sha: branchSha,
+        force: true,
+      });
+    }
+
+    const { data: openPulls } = await octokit.rest.pulls.list({
+      owner,
+      repo,
+      state: "open",
+      head: `${owner}:${headBranch}`,
+      base: branch,
+    });
+    const pullRequest =
+      openPulls[0] ||
+      (
+        await octokit.rest.pulls.create({
+          owner,
+          repo,
+          title,
+          head: headBranch,
+          base: branch,
+          body,
+          maintainer_can_modify: true,
+        })
+      ).data;
+    updates.push({
+      ref: branch,
+      action: "pending-version-state-pr",
+      sha: branchSha,
+      pullRequest: pullRequest.html_url || pullRequest.url,
+    });
+    return {
+      pending: true,
+      branch: headBranch,
+      pullRequest,
+    };
+  };
+
+  const updateBranch = async (branch, branchSha, action = "updated", protectedUpdate) => {
+    if (dryRun) {
+      updates.push({ ref: branch, action: "dry-run", sha: branchSha });
+      return { updated: true };
+    }
+    const currentSha = await readRefSha(`heads/${branch}`);
+    if (currentSha === branchSha) {
+      updates.push({ ref: branch, action: "existing", sha: branchSha });
+      return { updated: true, existing: true };
+    }
+    try {
+      if (currentSha) {
+        await octokit.rest.git.updateRef({
+          owner,
+          repo,
+          ref: `heads/${branch}`,
+          sha: branchSha,
+          force: false,
+        });
+        updates.push({ ref: branch, action, sha: branchSha });
+      } else {
+        await octokit.rest.git.createRef({
+          owner,
+          repo,
+          ref: `refs/heads/${branch}`,
+          sha: branchSha,
+        });
+        updates.push({ ref: branch, action: "created", sha: branchSha });
+      }
+      return { updated: true };
+    } catch (error) {
+      if (protectedUpdate && protectedBranchUpdateRejected(error)) {
+        return openVersionStatePullRequest({
+          branch,
+          branchSha,
+          title: protectedUpdate.title,
+          body: protectedUpdate.body,
+        });
+      }
+      if (!notFound(error)) {
+        throw error;
+      }
+      await octokit.rest.git.createRef({
+        owner,
+        repo,
+        ref: `refs/heads/${branch}`,
+        sha: branchSha,
+      });
+      updates.push({ ref: branch, action: "created", sha: branchSha });
+      return { updated: true };
+    }
+  };
+
+  const assertOnlyAllowedChangesBetween = async ({ baseSha, headSha, allowedPaths }) => {
+    const { data: comparison } = await octokit.rest.repos.compareCommitsWithBasehead({
+      owner,
+      repo,
+      basehead: `${baseSha}...${headSha}`,
+    });
+    const changedPaths = (comparison.files || []).map((file) => file.filename);
+    const unexpected = changedPaths.filter((file) => !allowedPaths.includes(file));
+    if (unexpected.length > 0) {
+      throw new Error(
+        `Version-state PR changed files outside declared version state: ${unexpected.join(", ")}`,
+      );
+    }
+  };
+
+  const assertPromotionPrOrVersionStateParent = async ({ commitSha, targetRef, allowedPaths }) => {
+    try {
+      await assertChannelPromotionPr({
+        octokit,
+        owner,
+        repo,
+        sha: commitSha,
+        targetRef,
+      });
+      return;
+    } catch (directError) {
+      if (!allowedPaths?.length) {
+        throw directError;
+      }
+      const commit = await getCommitInfo(octokit, owner, repo, commitSha);
+      for (const parentSha of commit.parents) {
+        try {
+          await assertChannelPromotionPr({
+            octokit,
+            owner,
+            repo,
+            sha: parentSha,
+            targetRef,
+          });
+          await assertOnlyAllowedChangesBetween({
+            baseSha: parentSha,
+            headSha: commitSha,
+            allowedPaths,
+          });
+          return;
+        } catch {
+          // Try the next parent before surfacing the original lineage failure.
+        }
+      }
+      throw directError;
+    }
+  };
+
+  const assertReleasePrOrVersionStateParent = async ({
+    commitSha,
+    targetRef,
+    alphaTag,
+    alphaTreeSha,
+    allowedPaths,
+  }) => {
+    const commit = await getCommitInfo(octokit, owner, repo, commitSha);
+    if (commit.treeSha === alphaTreeSha) {
+      await assertChannelPromotionPr({
+        octokit,
+        owner,
+        repo,
+        sha: commitSha,
+        targetRef,
+      });
+      return;
+    }
+    for (const parentSha of commit.parents) {
+      const parent = await getCommitInfo(octokit, owner, repo, parentSha);
+      if (parent.treeSha !== alphaTreeSha) {
+        continue;
+      }
+      await assertChannelPromotionPr({
+        octokit,
+        owner,
+        repo,
+        sha: parentSha,
+        targetRef,
+      });
+      await assertOnlyAllowedChangesBetween({
+        baseSha: parentSha,
+        headSha: commitSha,
+        allowedPaths,
+      });
+      return;
+    }
+    throw new Error(
+      `Release source ${commitSha} must have the same tree as ${alphaTag}, except declared version-state files`,
+    );
   };
 
   const isSettledAlphaVersionState = async (selectedAlpha) => {
@@ -735,6 +968,8 @@ async function promoteBuildchainRefs({
       runVersionVerification({
         cwd,
         command: verificationCommand,
+        loadedConfig: discovered.config,
+        version,
         changedFiles: [],
         allowedPaths: discoveredPaths,
       });
@@ -774,6 +1009,8 @@ async function promoteBuildchainRefs({
     runVersionVerification({
       cwd,
       command: verificationCommand,
+      loadedConfig: discovered.config,
+      version,
       changedFiles,
       allowedPaths: discoveredPaths,
     });
@@ -874,15 +1111,6 @@ async function promoteBuildchainRefs({
           sha,
         });
     const settledAlphaVersionState = await isSettledAlphaVersionState(selectedAlpha);
-    if (requireGovernance && !dryRun && !settledAlphaVersionState) {
-      await assertChannelPromotionPr({
-        octokit,
-        owner,
-        repo,
-        sha,
-        targetRef,
-      });
-    }
     if (settledAlphaVersionState) {
       updates.push({ ref: targetRef, action: "already-promoted", sha });
       updates.push({
@@ -901,8 +1129,39 @@ async function promoteBuildchainRefs({
       message: `chore(release): prepare ${selectedAlpha.tag}`,
     });
     const alphaSha = alphaCommit.sha;
+    if (requireGovernance && !dryRun) {
+      if (alphaCommit.action === "existing") {
+        await assertPromotionPrOrVersionStateParent({
+          commitSha: sha,
+          targetRef,
+          allowedPaths: alphaCommit.files,
+        });
+      } else {
+        await assertChannelPromotionPr({
+          octokit,
+          owner,
+          repo,
+          sha,
+          targetRef,
+        });
+      }
+    }
     if (versionState) {
-      await updateBranch(targetRef, alphaSha);
+      const targetUpdate = await updateBranch(targetRef, alphaSha, "updated", {
+        title: `Prepare ${selectedAlpha.tag}`,
+        body: `Create the generated version-state commit for ${selectedAlpha.tag}.`,
+      });
+      if (targetUpdate.pending) {
+        return {
+          owner,
+          repo,
+          sourceSha: sha,
+          sha: alphaSha,
+          targetRef,
+          pendingPullRequest: targetUpdate.pullRequest.html_url || targetUpdate.pullRequest.url,
+          updates,
+        };
+      }
       await updateBranch(`dev/v${rule.major}/v${rule.major}.${rule.minor}`, alphaSha);
     }
     await ensureTag(selectedAlpha.tag, alphaSha);
@@ -934,35 +1193,6 @@ async function promoteBuildchainRefs({
     rule.releasePrefix,
     selectedRelease.patch,
   );
-  if (requireGovernance && !dryRun) {
-    if (!sourceAlpha?.sha) {
-      throw new Error(
-        `Release promotion requires an existing ${rule.releasePrefix}.${selectedRelease.patch}-alpha.N tag`,
-      );
-    }
-    const releaseCandidateCommit = await getCommitInfo(octokit, owner, repo, sha);
-    const alphaCommit = await getCommitInfo(octokit, owner, repo, sourceAlpha.sha);
-    const prSourceSha =
-      selectedRelease.exists && releaseCandidateCommit.parents.length > 0
-        ? releaseCandidateCommit.parents[0]
-        : sha;
-    const prSourceCommit =
-      prSourceSha === sha
-        ? releaseCandidateCommit
-        : await getCommitInfo(octokit, owner, repo, prSourceSha);
-    if (prSourceCommit.treeSha !== alphaCommit.treeSha) {
-      throw new Error(
-        `Release source ${prSourceSha} must have the same tree as ${sourceAlpha.tag} (${sourceAlpha.sha})`,
-      );
-    }
-    await assertChannelPromotionPr({
-      octokit,
-      owner,
-      repo,
-      sha: prSourceSha,
-      targetRef,
-    });
-  }
   const releaseVersion = stripTagPrefix(selectedRelease.tag);
   const releaseCommit = await createVersionStateCommit({
     baseSha: sha,
@@ -970,8 +1200,37 @@ async function promoteBuildchainRefs({
     message: `chore(release): release ${selectedRelease.tag}`,
   });
   const releaseSha = releaseCommit.sha;
+  if (requireGovernance && !dryRun) {
+    if (!sourceAlpha?.sha) {
+      throw new Error(
+        `Release promotion requires an existing ${rule.releasePrefix}.${selectedRelease.patch}-alpha.N tag`,
+      );
+    }
+    const alphaCommit = await getCommitInfo(octokit, owner, repo, sourceAlpha.sha);
+    await assertReleasePrOrVersionStateParent({
+      commitSha: releaseSha,
+      targetRef,
+      alphaTag: sourceAlpha.tag,
+      alphaTreeSha: alphaCommit.treeSha,
+      allowedPaths: releaseCommit.files,
+    });
+  }
   if (versionState) {
-    await updateBranch(targetRef, releaseSha);
+    const targetUpdate = await updateBranch(targetRef, releaseSha, "updated", {
+      title: `Release ${selectedRelease.tag}`,
+      body: `Create the generated version-state commit for ${selectedRelease.tag}.`,
+    });
+    if (targetUpdate.pending) {
+      return {
+        owner,
+        repo,
+        sourceSha: sha,
+        sha: releaseSha,
+        targetRef,
+        pendingPullRequest: targetUpdate.pullRequest.html_url || targetUpdate.pullRequest.url,
+        updates,
+      };
+    }
   }
   await ensureTag(selectedRelease.tag, releaseSha);
   await updateTag(rule.minorTag, releaseSha);
@@ -1018,7 +1277,24 @@ async function promoteBuildchainRefs({
     nextAlphaSha = nextAlphaCommit.sha;
   }
   if (versionState) {
-    await updateBranch(`alpha/v${rule.major}/v${rule.major}.${rule.minor}`, nextAlphaSha);
+    const nextAlphaRef = `alpha/v${rule.major}/v${rule.major}.${rule.minor}`;
+    const nextAlphaUpdate = await updateBranch(nextAlphaRef, nextAlphaSha, "updated", {
+      title: `Prepare ${selectedNextAlpha.tag}`,
+      body: `Create the generated version-state commit for ${selectedNextAlpha.tag}.`,
+    });
+    if (nextAlphaUpdate.pending) {
+      return {
+        owner,
+        repo,
+        sourceSha: sha,
+        sha: releaseSha,
+        nextAlphaSha,
+        targetRef,
+        pendingPullRequest:
+          nextAlphaUpdate.pullRequest.html_url || nextAlphaUpdate.pullRequest.url,
+        updates,
+      };
+    }
     await updateBranch(`dev/v${rule.major}/v${rule.major}.${rule.minor}`, nextAlphaSha);
   }
   await ensureTag(selectedNextAlpha.tag, nextAlphaSha);
