@@ -88,7 +88,7 @@ jobs:
       - name: Promote buildchain refs
         uses: ./actions/promote-buildchain-ref
         with:
-          token: ${{ github.token }}
+          token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
           sha: ${{ steps.target.outputs.sha }}
           target-ref: ${{ steps.target_ref.outputs.target_ref }}
           dry-run: ${{ inputs['dry-run'] || 'false' }}
