@@ -5,8 +5,10 @@ const root = process.cwd();
 const requiredPaths = [
   "README.md",
   "docs/migration-inventory.md",
+  "docs/lifecycle-protocol.md",
   "docs/ownership.md",
   "tests/buildchain-inventory.json",
+  "buildchain.toml",
   ".github/actionlint.yaml",
   ".github/workflows/self-hosted-runner-smoke.yml",
   ".github/workflows/buildchain-ref-promotion.yml",

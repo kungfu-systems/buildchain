@@ -6,6 +6,13 @@ const {
   detectPackageManager,
   getWorkspaceInfo,
 } = require("../../packages/core/package-manager.cjs");
+const {
+  discoverConfiguredVersionStateFiles,
+  getLifecycleStage,
+  loadBuildchainConfig,
+  runLifecycleStage,
+  updateConfiguredVersionStateContents,
+} = require("../../packages/core/buildchain-config.cjs");
 
 const COMMIT_IDENTITY = {
   name: "Keren Dong",
@@ -136,6 +143,20 @@ function detectVersionPackageManager(cwd) {
 }
 
 function discoverVersionStateFiles(cwd = process.cwd()) {
+  const loadedConfig = loadBuildchainConfig(cwd);
+  if (loadedConfig?.config?.version) {
+    const files = discoverConfiguredVersionStateFiles(cwd, loadedConfig);
+    return {
+      files: files.sort((a, b) => a.path.localeCompare(b.path)),
+      packageManager: {
+        name: "buildchain.toml",
+        reason: "buildchain.toml",
+        config: loadedConfig.path,
+      },
+      config: loadedConfig,
+    };
+  }
+
   const files = new Map();
   const addJsonVersionFile = (relativePath, kind) => {
     const filePath = path.join(cwd, relativePath);
@@ -167,10 +188,14 @@ function discoverVersionStateFiles(cwd = process.cwd()) {
   return {
     files: [...files.values()].sort((a, b) => a.path.localeCompare(b.path)),
     packageManager: detectVersionPackageManager(cwd),
+    config: loadedConfig,
   };
 }
 
 function updateVersionStateContents(files, version) {
+  if (files.some((file) => file.type)) {
+    return updateConfiguredVersionStateContents(files, version);
+  }
   return files
     .map((file) => {
       const nextContent = { ...file.content, version };
@@ -224,12 +249,27 @@ function applyLocalVersionState(cwd, changedFiles) {
   }
 }
 
-function runVersionVerification({ cwd, command, changedFiles, allowedPaths }) {
-  if (!command) {
+function runVersionVerification({ cwd, command, loadedConfig, version, changedFiles, allowedPaths }) {
+  const lifecycleVerify = getLifecycleStage(loadedConfig, "verify");
+  if (!command && !lifecycleVerify) {
     return;
   }
   applyLocalVersionState(cwd, changedFiles);
-  execSync(command, { cwd, stdio: "inherit", shell: true });
+  const env = {
+    ...process.env,
+    BUILDCHAIN_VERSION: version,
+  };
+  if (command) {
+    execSync(command, { cwd, env, stdio: "inherit", shell: true });
+  } else {
+    runLifecycleStage({
+      cwd,
+      loadedConfig,
+      name: "verify",
+      stage: lifecycleVerify,
+      env: { BUILDCHAIN_VERSION: version },
+    });
+  }
   assertAllowedLocalChanges(cwd, allowedPaths);
 }
 
@@ -741,6 +781,8 @@ async function promoteBuildchainRefs({
       runVersionVerification({
         cwd,
         command: verificationCommand,
+        loadedConfig: discovered.config,
+        version,
         changedFiles: [],
         allowedPaths: discoveredPaths,
       });
@@ -780,6 +822,8 @@ async function promoteBuildchainRefs({
     runVersionVerification({
       cwd,
       command: verificationCommand,
+      loadedConfig: discovered.config,
+      version,
       changedFiles,
       allowedPaths: discoveredPaths,
     });

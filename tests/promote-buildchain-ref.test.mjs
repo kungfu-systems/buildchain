@@ -260,6 +260,36 @@ test("discoverVersionStateFiles follows package-manager workspace metadata", () 
   );
 });
 
+test("discoverVersionStateFiles prefers buildchain.toml version state", () => {
+  const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+type = "toml"
+path = "pyproject.toml"
+key = "project.version"
+`,
+    "package.json": {
+      name: "@kungfu-systems/example",
+      version: "1.0.0-alpha.0",
+      packageManager: "pnpm@11.7.0",
+    },
+    "pyproject.toml": '[project]\nname = "example"\nversion = "1.0.0-alpha.0"\n',
+  });
+
+  const discovered = discoverVersionStateFiles(cwd);
+
+  assert.equal(discovered.packageManager.name, "buildchain.toml");
+  assert.deepEqual(discovered.files.map((file) => file.path), ["pyproject.toml"]);
+  const changed = updateVersionStateContents(discovered.files, "1.0.1");
+  assert.equal(changed.length, 1);
+  assert.match(changed[0].content, /version = "1.0.1"/);
+});
+
 test("version verification allows only discovered version-state file changes", () => {
   const cwd = makeTempWorkspace({
     "package.json": {

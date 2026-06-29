@@ -63,7 +63,9 @@ Buildchain implements the same governance loop with:
 - `actions/promote-buildchain-ref` for branch, tag, version-state, and
   governance checks;
 - package-manager adapters that can update version state for pnpm, npm, and
-  yarn style repositories.
+  yarn style repositories;
+- `buildchain.toml` lifecycle configuration for repositories whose version
+  state or verification commands are not Node package-manager defaults.
 
 The implementation is intentionally stricter than a local release script:
 
@@ -176,6 +178,18 @@ It then runs the repository's detected package manager semantics where needed:
 For Buildchain itself, version state is required. For a consumer repository that
 has no package manifest, the same action can degrade to ref-only behavior only
 when that is explicitly allowed by the caller.
+
+## Lifecycle Configuration
+
+`buildchain.toml` is the v1 user configuration format. It lets a repository
+declare version-state files and lifecycle commands without pretending every
+project is a Node workspace. Supported version files include JSON, TOML, and
+regex-based files such as `CMakeLists.txt` or `conanfile.py`.
+
+The promotion action currently consumes `version.files` and `lifecycle.verify`.
+The verify stage runs after generated version-state changes are applied locally
+and before any release refs move. If `verification-command` is passed directly
+to the action, that explicit command overrides `lifecycle.verify`.
 
 ## What This Guarantees
 

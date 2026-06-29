@@ -22,9 +22,14 @@ The action updates version state in `lerna.json`, root `package.json`, and
 workspace package manifests discovered from package manager metadata
 (`package.json` workspaces, `lerna.json` packages, or `pnpm-workspace.yaml`).
 Package manager detection is adaptive (`pnpm`, `npm`, or `yarn`) and is recorded
-in logs; the version commit itself is written through the GitHub Git Data API so
-the ref graph is the durable source of truth. Repositories without any supported
-version state degrade to ref-only promotion instead of assuming Yarn or Lerna.
+in logs.
+
+Repositories can also provide `buildchain.toml` to declare version-state files
+and `lifecycle.verify`. TOML-configured version files take precedence over
+package-manager discovery and can target JSON, TOML, or regex-based files. The
+version commit itself is written through the GitHub Git Data API so the ref
+graph is the durable source of truth. Repositories without any supported version
+state degrade to ref-only promotion only when strict version state is disabled.
 
 In strict buildchain promotion, ref movement is also gated by the old ABV
 governance semantics:
@@ -40,7 +45,8 @@ governance semantics:
   the release source tree must match that alpha tag tree, so release does not
   introduce new code after alpha;
 - generated release and next-alpha version-state trees can be verified locally
-  with a command such as `pnpm run check` before any tags or channel refs move.
+  with either the `verification-command` input or `buildchain.toml`
+  `lifecycle.verify` before any tags or channel refs move.
 
 The promotion workflow should use `BUILDCHAIN_PROMOTION_TOKEN` for non-dry-run
 promotion. The token is the buildchain equivalent of the old ABV runner release

@@ -94,5 +94,4 @@ jobs:
           dry-run: ${{ inputs['dry-run'] || 'false' }}
           require-governance: "true"
           require-version-state: "true"
-          verification-command: "pnpm run check"
           required-status-check: "check"

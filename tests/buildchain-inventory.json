@@ -117,6 +117,7 @@
     "workflows": "kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v1"
   },
   "verification": [
+    "buildchain.toml lifecycle.verify",
     "pnpm install --frozen-lockfile",
     "pnpm run check",
     "GitHub Verify workflow",

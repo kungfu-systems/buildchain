@@ -26,7 +26,8 @@ Kungfu release automation has to solve a few problems at the same time:
 The older ABV model solved this by treating a GitHub release PR as the release
 intent. Buildchain v1 keeps that semantic contract, but implements it inside a
 modern monorepo with Node 24 actions, pnpm, tsup bundles, committed `dist`
-outputs, reusable workflow tests, and package-manager adapters.
+outputs, reusable workflow tests, package-manager adapters, and a TOML lifecycle
+protocol for non-Node projects.
 
 ## Mental Model
 
@@ -74,6 +75,8 @@ Buildchain v1 ships these active migration surfaces:
 - action bundling through tsup;
 - committed `dist/index.js` bundles for direct GitHub Actions consumption;
 - package-manager adapters for pnpm, npm, and yarn version-state updates;
+- `buildchain.toml` lifecycle configuration for custom version files and
+  verification commands;
 - governance-closed self-promotion through `Buildchain Ref Promotion`.
 
 Stable consumers should reference actions as:
@@ -128,6 +131,8 @@ no-op for this repository. Consumer repositories still call the reusable
   boundaries.
 - [promote-buildchain-ref](actions/promote-buildchain-ref/README.md) documents
   the internal promotion action.
+- [Lifecycle protocol](docs/lifecycle-protocol.md) documents `buildchain.toml`
+  for custom version-state files and lifecycle commands.
 
 ## Local Verification
 
@@ -139,6 +144,13 @@ pnpm run check
 
 `pnpm run check` validates inventory data, lints all root workflows including
 hidden reusable workflows, and rebuilds every action bundle.
+
+## Lifecycle Configuration
+
+Projects can add `buildchain.toml` to declare release version state and
+lifecycle commands. Buildchain v1 supports TOML only. The promotion action uses
+configured version files to create source version commits, then runs
+`lifecycle.verify` before moving release refs.
 
 ## Safety Defaults
 
