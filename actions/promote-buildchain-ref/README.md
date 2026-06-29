@@ -41,6 +41,13 @@ governance semantics:
 - generated release and next-alpha version-state trees can be verified locally
   with a command such as `pnpm run check` before any tags or channel refs move.
 
+The promotion workflow should use `BUILDCHAIN_PROMOTION_TOKEN` for non-dry-run
+promotion. The token is the buildchain equivalent of the old ABV runner release
+authority: protected branch review and check rules guard human channel merges,
+while this action independently rechecks PR lineage, alpha/release tree
+equivalence, and generated version-state verification before moving channel
+refs and tags.
+
 The tag names intentionally follow the old `action-bump-version` semantics:
 exact release tags are `vX.Y.Z`, exact alpha tags are `vX.Y.Z-alpha.N`, floating
 release tags are minor/major tags such as `v1.0` and `v1`, and floating alpha
