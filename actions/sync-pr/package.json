@@ -6,12 +6,12 @@
   "author": "Keren Dong",
   "license": "Apache-2.0",
   "scripts": {
-    "build": "tsup index.js --format cjs --target node24 --platform node --splitting=false --no-sourcemap --minify --clean --out-dir dist",
+    "build": "tsup index.js --format cjs --config ../../scripts/tsup-action.config.mjs && node ../../scripts/strip-trailing-whitespace.mjs dist/index.js",
     "package": "echo noop"
   },
   "dependencies": {
-    "@actions/core": "^3.0.1",
-    "@actions/github": "^9.1.1",
+    "@actions/core": "1.11.1",
+    "@actions/github": "6.0.1",
     "@octokit/core": "^7.0.6",
     "@octokit/rest": "^22.0.0",
     "airtable": "^0.12.2",
