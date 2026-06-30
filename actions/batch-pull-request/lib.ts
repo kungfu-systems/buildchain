@@ -289,8 +289,8 @@ async function upgradeKf(token: string, repo: string, head: string) {
 }
 
 function getBranchRef(argv: argvs, mainVer: string | number, branch: string) {
-  let head = "dev/v1/v1.0";
-  let base = "alpha/v1/v1.0";
+  let head = "dev/v2/v2.0";
+  let base = "alpha/v2/v2.0";
   if (argv.version == "alpha") {
     head = `dev/v${mainVer}/v` + branch;
     base = `alpha/v${mainVer}/v` + branch;
