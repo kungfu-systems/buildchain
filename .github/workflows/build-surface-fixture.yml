@@ -18,9 +18,11 @@ jobs:
     with:
       buildchain-ref: ${{ github.head_ref || github.ref_name }}
       working-directory: fixtures/libnode-shaped
+      runner-preset: github-hosted
       artifact-name: libnode-shaped
+      artifact-name-template: "{artifact}-{platform}-{shortSha}"
       artifact-paths: |
         fixtures/libnode-shaped/dist
         .buildchain/artifacts
-      platforms-json: >-
-        [{"id":"linux-x64","name":"Linux x64","runner":"[\"ubuntu-24.04\"]"},{"id":"macos","name":"macOS","runner":"[\"macos-latest\"]"},{"id":"windows-x64","name":"Windows x64","runner":"[\"windows-2022\"]"}]
+      expected-artifacts-json: >-
+        {"minFiles":2,"requiredPaths":["fixtures/libnode-shaped/dist/install.txt","fixtures/libnode-shaped/dist/libnode-shaped.txt"]}

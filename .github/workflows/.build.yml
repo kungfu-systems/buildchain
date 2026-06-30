@@ -15,10 +15,14 @@ on:
         default: "."
         type: string
         required: false
+      runner-preset:
+        description: "Runner preset: github-hosted, kungfu-v4-self-hosted, or custom with platforms-json"
+        default: "github-hosted"
+        type: string
+        required: false
       platforms-json:
-        description: "JSON array of platform objects: id, name, runner JSON string"
-        default: >-
-          [{"id":"linux-x64","name":"Linux x64","runner":"[\"ubuntu-24.04\"]"},{"id":"macos","name":"macOS","runner":"[\"macos-latest\"]"},{"id":"windows-x64","name":"Windows x64","runner":"[\"windows-2022\"]"}]
+        description: "Optional custom JSON array of platform objects: id, name, runner JSON string"
+        default: ""
         type: string
         required: false
       require-trusted-event:
@@ -66,16 +70,42 @@ on:
         default: "buildchain-artifact"
         type: string
         required: false
+      artifact-name-template:
+        description: "Artifact name template with placeholders: {artifact}, {platform}, {sha}, {shortSha}, {runId}, {runAttempt}"
+        default: "{artifact}-{platform}-{sha}"
+        type: string
+        required: false
       artifact-paths:
         default: |
           dist
           build/stage
         type: string
         required: false
+      expected-artifacts-json:
+        description: "Optional JSON expectation contract for final artifact files"
+        default: ""
+        type: string
+        required: false
       artifact-retention-days:
         default: 14
         type: number
         required: false
+    outputs:
+      runner-preset:
+        description: "Resolved runner preset name"
+        value: ${{ jobs.resolve-contract.outputs.runner-preset }}
+      platforms-json:
+        description: "Resolved platform matrix JSON"
+        value: ${{ jobs.resolve-contract.outputs.platforms-json }}
+      platform-count:
+        description: "Resolved platform count"
+        value: ${{ jobs.resolve-contract.outputs.platform-count }}
+      build-summary-artifact:
+        description: "Uploaded aggregate build summary artifact name"
+        value: ${{ jobs.summarize.outputs.summary-artifact-name }}
+      build-summary-json:
+        description: "Compact aggregate build summary JSON"
+        value: ${{ jobs.summarize.outputs.artifact-summary-json }}
 
 permissions:
   contents: read
@@ -105,14 +135,40 @@ jobs:
             fi
           fi
 
+  resolve-contract:
+    name: Resolve reusable contract
+    runs-on: ubuntu-24.04
+    outputs:
+      runner-preset: ${{ steps.runners.outputs.runner-preset }}
+      platforms-json: ${{ steps.runners.outputs.platforms-json }}
+      platform-count: ${{ steps.runners.outputs.platform-count }}
+      platform-source: ${{ steps.runners.outputs.platform-source }}
+    steps:
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.buildchain-ref }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Resolve runner matrix
+        id: runners
+        run: node .buildchain/runtime/scripts/resolve-build-contract.mjs --mode runners
+        env:
+          BUILDCHAIN_RUNNER_PRESET: ${{ inputs.runner-preset }}
+          BUILDCHAIN_PLATFORMS_JSON: ${{ inputs.platforms-json }}
+
   build:
     name: ${{ matrix.platform.name }}
-    needs: trust-gate
+    needs:
+      - trust-gate
+      - resolve-contract
     if: ${{ needs.trust-gate.outputs.trusted == 'true' }}
     strategy:
       fail-fast: false
       matrix:
-        platform: ${{ fromJSON(inputs.platforms-json) }}
+        platform: ${{ fromJSON(needs.resolve-contract.outputs.platforms-json) }}
     runs-on: ${{ fromJSON(matrix.platform.runner) }}
     steps:
       - name: Checkout source
@@ -129,6 +185,15 @@ jobs:
           path: .buildchain/runtime
           persist-credentials: false
 
+      - name: Resolve artifact contract
+        id: artifact-contract
+        run: node .buildchain/runtime/scripts/resolve-build-contract.mjs --mode artifact
+        env:
+          BUILDCHAIN_ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          BUILDCHAIN_ARTIFACT_NAME_TEMPLATE: ${{ inputs.artifact-name-template }}
+          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
+          BUILDCHAIN_PLATFORM_NAME: ${{ matrix.platform.name }}
+
       - name: Setup Node.js
         if: ${{ inputs.setup-node }}
         uses: actions/setup-node@v6.4.0
@@ -142,11 +207,12 @@ jobs:
           stage: install
           command: ${{ inputs.install-command }}
           required: ${{ inputs.require-install }}
-          artifact-name: ${{ inputs.artifact-name }}-${{ matrix.platform.id }}-${{ github.sha }}
+          artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
           platform-id: ${{ matrix.platform.id }}
           platform-name: ${{ matrix.platform.name }}
           artifact-paths: ${{ inputs.artifact-paths }}
           manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest-install.json
+          summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary-install.json
 
       - name: Run build lifecycle
         uses: ./.buildchain/runtime/actions/run-lifecycle
@@ -155,32 +221,37 @@ jobs:
           stage: build
           command: ${{ inputs.build-command }}
           required: ${{ inputs.require-build }}
-          artifact-name: ${{ inputs.artifact-name }}-${{ matrix.platform.id }}-${{ github.sha }}
+          artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
           platform-id: ${{ matrix.platform.id }}
           platform-name: ${{ matrix.platform.name }}
           artifact-paths: ${{ inputs.artifact-paths }}
           manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest-build.json
+          summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary-build.json
 
       - name: Run verify lifecycle
+        id: verify-lifecycle
         uses: ./.buildchain/runtime/actions/run-lifecycle
         with:
           cwd: ${{ inputs.working-directory }}
           stage: verify
           command: ${{ inputs.verify-command }}
           required: ${{ inputs.require-verify }}
-          artifact-name: ${{ inputs.artifact-name }}-${{ matrix.platform.id }}-${{ github.sha }}
+          artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
           platform-id: ${{ matrix.platform.id }}
           platform-name: ${{ matrix.platform.name }}
           artifact-paths: ${{ inputs.artifact-paths }}
           manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
+          summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
+          expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
 
       - name: Upload deterministic artifact
         uses: actions/upload-artifact@v7.0.1
         with:
-          name: ${{ inputs.artifact-name }}-${{ matrix.platform.id }}-${{ github.sha }}
+          name: ${{ steps.artifact-contract.outputs.artifact-name }}
           path: |
             ${{ inputs.artifact-paths }}
             .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
@@ -188,6 +259,58 @@ jobs:
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ github.sha }}
-          path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
+          path: |
+            .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+  summarize:
+    name: Summarize build contract
+    needs:
+      - resolve-contract
+      - build
+    if: ${{ always() && needs.build.result == 'success' }}
+    runs-on: ubuntu-24.04
+    outputs:
+      summary-artifact-name: ${{ steps.names.outputs.summary-artifact-name }}
+      summary-path: ${{ steps.summary.outputs.summary-path }}
+      artifact-summary-json: ${{ steps.summary.outputs.artifact-summary-json }}
+    steps:
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.buildchain-ref }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Resolve summary artifact name
+        id: names
+        run: echo "summary-artifact-name=${BUILDCHAIN_SUMMARY_ARTIFACT_NAME}" >> "${GITHUB_OUTPUT}"
+        env:
+          BUILDCHAIN_SUMMARY_ARTIFACT_NAME: ${{ inputs.artifact-name }}-summary-${{ github.sha }}
+
+      - name: Download platform manifests
+        uses: actions/download-artifact@v7.0.0
+        with:
+          pattern: ${{ inputs.artifact-name }}-manifest-*-${{ github.sha }}
+          path: .buildchain/downloaded-manifests
+          merge-multiple: false
+
+      - name: Aggregate artifact summary
+        id: summary
+        run: node .buildchain/runtime/scripts/aggregate-build-summary.mjs
+        env:
+          BUILDCHAIN_SUMMARY_INPUT: .buildchain/downloaded-manifests
+          BUILDCHAIN_SUMMARY_OUTPUT: .buildchain/artifacts/build-summary.json
+          BUILDCHAIN_ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          BUILDCHAIN_PLATFORM_COUNT: ${{ needs.resolve-contract.outputs.platform-count }}
+
+      - name: Upload aggregate build summary
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.names.outputs.summary-artifact-name }}
+          path: .buildchain/artifacts/build-summary.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}

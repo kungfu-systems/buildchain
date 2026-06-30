@@ -144,6 +144,16 @@
     "trustedEventGate": true,
     "selfHostedRunnerManualWorkflow": "self-hosted-runner-smoke.yml",
     "reusableBuildWorkflow": ".build.yml",
+    "reusableContract": {
+      "runnerPresets": [
+        "github-hosted",
+        "kungfu-v4-self-hosted",
+        "custom"
+      ],
+      "artifactNameTemplate": true,
+      "expectedArtifactSummary": true,
+      "aggregateSummaryArtifact": true
+    },
     "libnodeShapedFixture": "fixtures/libnode-shaped",
     "buildchainRefPromotionWorkflow": "buildchain-ref-promotion.yml"
   }
