@@ -41,6 +41,7 @@ async function main() {
     console.log(`${update.action}: ${target} -> ${update.sha}${detail}`);
   }
   core.setOutput("sha", result.sha);
+  core.setOutput("next-anchor-required", String(result.nextAlphaRequired === true));
   core.setOutput(
     "tags",
     result.updates

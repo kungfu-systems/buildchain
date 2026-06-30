@@ -8,7 +8,9 @@ const {
 } = require("../../packages/core/package-manager.cjs");
 const {
   discoverConfiguredVersionStateFiles,
+  getVersionStrategy,
   getLifecycleStage,
+  loadConfiguredAnchorManifest,
   loadBuildchainConfig,
   runLifecycleStage,
   updateConfiguredVersionStateContents,
@@ -273,7 +275,7 @@ function applyLocalVersionState(cwd, changedFiles) {
   }
 }
 
-function runVersionVerification({ cwd, command, loadedConfig, version, changedFiles, allowedPaths }) {
+function runVersionVerification({ cwd, command, loadedConfig, version, changedFiles, allowedPaths, env: extraEnv }) {
   const lifecycleVerify = getLifecycleStage(loadedConfig, "verify");
   if (!command && !lifecycleVerify) {
     return;
@@ -282,6 +284,7 @@ function runVersionVerification({ cwd, command, loadedConfig, version, changedFi
   const env = {
     ...process.env,
     BUILDCHAIN_VERSION: version,
+    ...(extraEnv || {}),
   };
   if (command) {
     execSync(command, { cwd, env, stdio: "inherit", shell: true });
@@ -291,10 +294,23 @@ function runVersionVerification({ cwd, command, loadedConfig, version, changedFi
       loadedConfig,
       name: "verify",
       stage: lifecycleVerify,
-      env: { BUILDCHAIN_VERSION: version },
+      env: { BUILDCHAIN_VERSION: version, ...(extraEnv || {}) },
     });
   }
   assertAllowedLocalChanges(cwd, allowedPaths);
+}
+
+function versionVerificationEnv(versionStrategy, anchorManifest) {
+  return {
+    BUILDCHAIN_VERSION_STRATEGY: versionStrategy.strategy,
+    BUILDCHAIN_VERSION_NEXT: versionStrategy.next,
+    ...(anchorManifest
+      ? {
+          BUILDCHAIN_ANCHOR_MANIFEST: anchorManifest.path,
+          BUILDCHAIN_ANCHOR_MANIFEST_JSON: JSON.stringify(anchorManifest.fields),
+        }
+      : {}),
+  };
 }
 
 async function getCommitInfo(octokit, owner, repo, sha) {
@@ -1090,16 +1106,57 @@ async function promoteBuildchainRefs({
       };
     }
 
-    const changedFiles = updateVersionStateContents(discovered.files, version);
     const discoveredPaths = discovered.files.map((file) => file.path);
+    const versionStrategy = getVersionStrategy(discovered.config);
+    const anchorManifest = loadConfiguredAnchorManifest(cwd, discovered.config);
+    const strategyEnv = versionVerificationEnv(versionStrategy, anchorManifest);
+    const manualNext =
+      versionStrategy.strategy === "anchored" && versionStrategy.next === "manual";
+    const changedFiles = manualNext
+      ? []
+      : updateVersionStateContents(discovered.files, version);
     const changedPaths = changedFiles.map((file) => file.path);
     console.log(
       `> version state manager: ${discovered.packageManager.name} (${discovered.packageManager.reason})`,
     );
+    console.log(
+      `> version strategy: ${versionStrategy.strategy}/${versionStrategy.next}`,
+    );
+    if (anchorManifest) {
+      console.log(`> anchor manifest: ${anchorManifest.path}`);
+    }
     console.log(`> version state files: ${discoveredPaths.join(", ")}`);
     console.log(
       `> version state changes for ${version}: ${changedPaths.length ? changedPaths.join(", ") : "none"}`,
     );
+    if (manualNext) {
+      runVersionVerification({
+        cwd,
+        command: verificationCommand,
+        loadedConfig: discovered.config,
+        version,
+        changedFiles: [],
+        allowedPaths: discoveredPaths,
+        env: strategyEnv,
+      });
+      updates.push({
+        version,
+        action: "anchored-manual-version-state",
+        packageManager: discovered.packageManager.name,
+        files: discoveredPaths,
+        manifest: anchorManifest?.path,
+        sha: baseSha,
+      });
+      return {
+        sha: baseSha,
+        version,
+        action: "anchored-manual",
+        files: discoveredPaths,
+        packageManager: discovered.packageManager,
+        versionStrategy,
+        anchorManifest,
+      };
+    }
     if (changedFiles.length === 0) {
       runVersionVerification({
         cwd,
@@ -1108,6 +1165,7 @@ async function promoteBuildchainRefs({
         version,
         changedFiles: [],
         allowedPaths: discoveredPaths,
+        env: strategyEnv,
       });
       updates.push({
         version,
@@ -1122,6 +1180,8 @@ async function promoteBuildchainRefs({
         action: "existing",
         files: discoveredPaths,
         packageManager: discovered.packageManager,
+        versionStrategy,
+        anchorManifest,
       };
     }
 
@@ -1139,6 +1199,8 @@ async function promoteBuildchainRefs({
         action: "dry-run",
         files: changedFiles.map((file) => file.path),
         packageManager: discovered.packageManager,
+        versionStrategy,
+        anchorManifest,
       };
     }
 
@@ -1149,6 +1211,7 @@ async function promoteBuildchainRefs({
       version,
       changedFiles,
       allowedPaths: discoveredPaths,
+      env: strategyEnv,
     });
 
     const { data: baseCommit } = await octokit.rest.git.getCommit({
@@ -1199,6 +1262,8 @@ async function promoteBuildchainRefs({
       action: "created",
       files: changedFiles.map((file) => file.path),
       packageManager: discovered.packageManager,
+      versionStrategy,
+      anchorManifest,
     };
   };
 
@@ -1329,6 +1394,25 @@ async function promoteBuildchainRefs({
     await ensureTag(selectedRelease.tag, releaseSha);
     await updateTag(majorRule.minorTag, releaseSha);
     await updateTag(majorRule.majorTag, releaseSha);
+
+    if (releaseCommit.versionStrategy?.next === "manual") {
+      updates.push({
+        ref: `dev/v${majorRule.major}/v${majorRule.major}.0`,
+        action: "next-anchor-required",
+        versionStrategy: releaseCommit.versionStrategy.strategy,
+        manifest: releaseCommit.anchorManifest?.path,
+        sha: releaseSha,
+      });
+      return {
+        owner,
+        repo,
+        sourceSha: sha,
+        sha: releaseSha,
+        nextAlphaRequired: true,
+        targetRef,
+        updates,
+      };
+    }
 
     const explicitAlphaTags = requestedTags
       ? requestedTags.filter((tag) => tag.includes("-alpha."))
@@ -1531,6 +1615,25 @@ async function promoteBuildchainRefs({
       action: "skipped-next-minor-exists",
       sha: releaseSha,
     });
+  }
+
+  if (releaseCommit.versionStrategy?.next === "manual") {
+    updates.push({
+      ref: `dev/v${rule.major}/v${rule.major}.${rule.minor}`,
+      action: "next-anchor-required",
+      versionStrategy: releaseCommit.versionStrategy.strategy,
+      manifest: releaseCommit.anchorManifest?.path,
+      sha: releaseSha,
+    });
+    return {
+      owner,
+      repo,
+      sourceSha: sha,
+      sha: releaseSha,
+      nextAlphaRequired: true,
+      targetRef,
+      updates,
+    };
   }
 
   const explicitAlphaTags = requestedTags

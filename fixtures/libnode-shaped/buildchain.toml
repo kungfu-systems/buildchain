@@ -2,6 +2,9 @@ schema = 1
 
 [version]
 required = true
+strategy = "anchored"
+next = "manual"
+manifest = "libnode.release.json"
 
 [[version.files]]
 type = "json"

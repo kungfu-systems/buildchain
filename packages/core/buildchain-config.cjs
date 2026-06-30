@@ -7,6 +7,8 @@ const { parse, stringify } = require("smol-toml");
 const CONFIG_FILE = "buildchain.toml";
 const RESERVED_LIFECYCLE_KEYS = new Set(["env", "shell"]);
 const SUPPORTED_VERSION_FILE_TYPES = new Set(["json", "toml", "regex"]);
+const SUPPORTED_VERSION_STRATEGIES = new Set(["semver", "anchored"]);
+const SUPPORTED_VERSION_NEXT = new Set(["auto", "manual"]);
 
 function posixPath(value) {
   return String(value || "").split(path.sep).join("/");
@@ -84,8 +86,31 @@ function normalizeVersionSection(version) {
   if (!Array.isArray(files)) {
     throw new Error("version.files must be an array of tables");
   }
+  const strategy = version.strategy === undefined
+    ? "semver"
+    : assertString(version.strategy, "version.strategy");
+  if (!SUPPORTED_VERSION_STRATEGIES.has(strategy)) {
+    throw new Error("version.strategy must be one of semver or anchored");
+  }
+  const next = version.next === undefined
+    ? "auto"
+    : assertString(version.next, "version.next");
+  if (!SUPPORTED_VERSION_NEXT.has(next)) {
+    throw new Error("version.next must be one of auto or manual");
+  }
+  if (strategy === "semver" && next !== "auto") {
+    throw new Error('version.next = "manual" requires version.strategy = "anchored"');
+  }
+  if (strategy === "anchored" && next !== "manual") {
+    throw new Error('version.strategy = "anchored" requires version.next = "manual"');
+  }
   return {
     required: version.required === undefined ? false : Boolean(version.required),
+    strategy,
+    next,
+    manifest: version.manifest === undefined
+      ? undefined
+      : posixPath(assertString(version.manifest, "version.manifest")),
     files: files.map((file, index) => normalizeVersionFile(file, index)),
   };
 }
@@ -261,6 +286,52 @@ function discoverConfiguredVersionStateFiles(cwd = process.cwd(), loadedConfig =
   return files;
 }
 
+function summarizeManifestFields(content) {
+  assertPlainObject(content, "version.manifest content");
+  return Object.fromEntries(
+    Object.entries(content).map(([key, value]) => {
+      if (value === null || ["string", "number", "boolean"].includes(typeof value)) {
+        return [key, value];
+      }
+      return [key, JSON.stringify(value)];
+    }),
+  );
+}
+
+function getVersionStrategy(loadedConfig) {
+  const version = loadedConfig && loadedConfig.config && loadedConfig.config.version;
+  return {
+    strategy: (version && version.strategy) || "semver",
+    next: (version && version.next) || "auto",
+    manifest: version && version.manifest,
+  };
+}
+
+function loadConfiguredAnchorManifest(cwd = process.cwd(), loadedConfig = loadBuildchainConfig(cwd)) {
+  const manifest = loadedConfig && loadedConfig.config && loadedConfig.config.version && loadedConfig.config.version.manifest;
+  if (!manifest) {
+    return undefined;
+  }
+  const filePath = path.join(cwd, manifest);
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`Configured anchor manifest does not exist: ${manifest}`);
+  }
+  const source = fs.readFileSync(filePath, "utf8");
+  let content;
+  if (manifest.endsWith(".json")) {
+    content = JSON.parse(source);
+  } else if (manifest.endsWith(".toml")) {
+    content = parse(source);
+  } else {
+    throw new Error("version.manifest must point to a .json or .toml file");
+  }
+  return {
+    path: manifest,
+    filePath,
+    fields: summarizeManifestFields(content),
+  };
+}
+
 function configuredLifecycleStages(loadedConfig) {
   const lifecycle = (loadedConfig && loadedConfig.config && loadedConfig.config.lifecycle) || {};
   return Object.entries(lifecycle)
@@ -297,6 +368,7 @@ function validateBuildchainConfig(
   const versionFiles = loadedConfig.config.version
     ? discoverConfiguredVersionStateFiles(cwd, loadedConfig)
     : [];
+  const anchorManifest = loadConfiguredAnchorManifest(cwd, loadedConfig);
   if (requireVersionState && versionFiles.length === 0) {
     throw new Error("version state is required but no version.files are configured");
   }
@@ -314,6 +386,15 @@ function validateBuildchainConfig(
       filePath: loadedConfig.filePath,
       schema: loadedConfig.config.schema,
     },
+    version: loadedConfig.config.version
+      ? getVersionStrategy(loadedConfig)
+      : undefined,
+    anchorManifest: anchorManifest
+      ? {
+          path: anchorManifest.path,
+          fields: anchorManifest.fields,
+        }
+      : undefined,
     versionFiles: versionFiles.map((file) => ({
       path: file.path,
       type: file.type,
@@ -366,7 +447,9 @@ function writeLifecycleScriptFixture(cwd, name, script) {
 
 module.exports = {
   discoverConfiguredVersionStateFiles,
+  getVersionStrategy,
   getLifecycleStage,
+  loadConfiguredAnchorManifest,
   loadBuildchainConfig,
   normalizeBuildchainConfig,
   normalizeLifecycleStage,

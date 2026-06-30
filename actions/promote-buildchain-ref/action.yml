@@ -32,6 +32,13 @@ inputs:
   allow-repository:
     description: "Repository allowed to promote"
     default: "kungfu-systems/buildchain"
+outputs:
+  sha:
+    description: "Final promoted release or alpha commit SHA"
+  tags:
+    description: "Comma-separated tags updated by the promotion"
+  next-anchor-required:
+    description: "true when anchored/manual strategy leaves next anchor creation to the repository"
 runs:
   using: "node24"
   main: "dist/index.js"

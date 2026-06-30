@@ -153,6 +153,81 @@ command = "node -e \\"require('node:fs').writeFileSync('also-should-not-exist.tx
   );
 });
 
+test("buildchain.toml accepts anchored manual version strategy with manifest summary", () => {
+  withTempRepo(
+    {
+      "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+strategy = "anchored"
+next = "manual"
+manifest = "libnode.release.json"
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[lifecycle.verify]
+command = "node -e \\"process.exit(0)\\""
+`,
+      "package.json": '{ "name": "@kungfu-tech/libnode", "version": "22.22.3-kf.0" }\n',
+      "libnode.release.json": JSON.stringify(
+        {
+          nodeVersion: "22.22.3",
+          nodeTag: "v22.22.3",
+          nodeCommit: "abc123",
+          libnodeRevision: "kf.0",
+          npmVersion: "22.22.3-kf.0",
+        },
+        null,
+        2,
+      ) + "\n",
+    },
+    (dir) => {
+      const summary = validateBuildchainConfig(dir, {
+        requireVersionState: true,
+        requireLifecycleStages: ["verify"],
+      });
+
+      assert.deepEqual(summary.version, {
+        strategy: "anchored",
+        next: "manual",
+        manifest: "libnode.release.json",
+      });
+      assert.equal(summary.anchorManifest.path, "libnode.release.json");
+      assert.equal(summary.anchorManifest.fields.nodeTag, "v22.22.3");
+      assert.equal(summary.anchorManifest.fields.npmVersion, "22.22.3-kf.0");
+      assert.deepEqual(summary.versionFiles.map((file) => file.path), ["package.json"]);
+    },
+  );
+});
+
+test("manual next version is only valid for anchored strategy", () => {
+  assert.throws(
+    () =>
+      normalizeBuildchainConfig({
+        schema: 1,
+        version: {
+          next: "manual",
+        },
+      }),
+    /requires version\.strategy = "anchored"/,
+  );
+  assert.throws(
+    () =>
+      normalizeBuildchainConfig({
+        schema: 1,
+        version: {
+          strategy: "anchored",
+        },
+      }),
+    /requires version\.next = "manual"/,
+  );
+});
+
 test("validateBuildchainConfig fails when required lifecycle stages are missing", () => {
   withTempRepo(
     {
