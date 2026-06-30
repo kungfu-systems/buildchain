@@ -8,6 +8,11 @@ import {
   normalizeLifecycleStage,
   runLifecycleStage,
 } from "../packages/core/buildchain-config.js";
+import {
+  createArtifactSummary,
+  parseExpectedArtifactsJson,
+  validateExpectedArtifacts,
+} from "./build-contract-core.mjs";
 
 function sha256File(filePath) {
   const hash = crypto.createHash("sha256");
@@ -58,15 +63,18 @@ export function runLifecycle({
   command = "",
   required = false,
   manifestPath = ".buildchain/artifacts/manifest.json",
+  summaryPath = ".buildchain/artifacts/summary.json",
   artifactName = "buildchain-artifact",
   platformId = os.platform(),
   platformName = platformId,
   artifactPaths = [],
+  expectedArtifactsJson = "",
   workspace = process.cwd(),
 } = {}) {
   const resolvedCwd = path.resolve(cwd);
   const resolvedWorkspace = path.resolve(workspace);
   const resolvedManifestPath = path.resolve(resolvedWorkspace, manifestPath);
+  const resolvedSummaryPath = path.resolve(resolvedWorkspace, summaryPath);
   const loadedConfig = loadBuildchainConfig(resolvedCwd);
   let commandSource = "none";
   let executed = false;
@@ -95,16 +103,36 @@ export function runLifecycle({
 
   fs.mkdirSync(path.dirname(resolvedManifestPath), { recursive: true });
   const files = collectArtifactFiles(resolvedWorkspace, artifactPaths);
+  const manifestFiles = files.map((file) => {
+    const stat = fs.statSync(file);
+    return {
+      path: manifestPathFor(resolvedWorkspace, file),
+      size: stat.size,
+      sha256: sha256File(file),
+    };
+  });
+  const platform = {
+    id: platformId,
+    name: platformName,
+    os: process.env.RUNNER_OS || os.platform(),
+    arch: process.env.RUNNER_ARCH || os.arch(),
+  };
+  const summary = createArtifactSummary({
+    artifactName,
+    platform,
+    files: manifestFiles,
+  });
+  const expected = parseExpectedArtifactsJson(expectedArtifactsJson);
+  const expectedArtifacts = validateExpectedArtifacts({
+    expected,
+    files: manifestFiles,
+    summary,
+  });
   const manifest = {
     schemaVersion: 1,
     contract: "kungfu-buildchain-artifact",
     artifactName,
-    platform: {
-      id: platformId,
-      name: platformName,
-      os: process.env.RUNNER_OS || os.platform(),
-      arch: process.env.RUNNER_ARCH || os.arch(),
-    },
+    platform,
     git: {
       repository: process.env.GITHUB_REPOSITORY || "",
       sha: process.env.GITHUB_SHA || "",
@@ -117,17 +145,14 @@ export function runLifecycle({
       commandSource,
       executed,
     },
-    files: files.map((file) => {
-      const stat = fs.statSync(file);
-      return {
-        path: manifestPathFor(resolvedWorkspace, file),
-        size: stat.size,
-        sha256: sha256File(file),
-      };
-    }),
+    summary,
+    expectedArtifacts,
+    files: manifestFiles,
   };
 
   fs.writeFileSync(resolvedManifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  fs.mkdirSync(path.dirname(resolvedSummaryPath), { recursive: true });
+  fs.writeFileSync(resolvedSummaryPath, `${JSON.stringify(summary, null, 2)}\n`);
   console.log(`buildchain_manifest=${path.relative(resolvedWorkspace, resolvedManifestPath)}`);
   return manifest;
 }
