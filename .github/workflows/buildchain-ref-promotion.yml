@@ -4,8 +4,9 @@ on:
   workflow_run:
     workflows: ["Verify"]
     branches:
-      - "alpha/v1/v1.0"
-      - "release/v1/v1.0"
+      - "alpha/v*/v*"
+      - "release/v*/v*"
+      - "major-gate"
     types: [completed]
   workflow_dispatch:
     inputs:
@@ -59,7 +60,7 @@ jobs:
         run: |
           target_ref="${WORKFLOW_RUN_BRANCH:-$INPUT_TARGET_REF}"
           case "$target_ref" in
-            alpha/v1/v1.0|release/v1/v1.0) ;;
+            alpha/v*/v*|release/v*/v*|major-gate) ;;
             *)
               echo "::error::unsupported target ref: $target_ref"
               exit 1
