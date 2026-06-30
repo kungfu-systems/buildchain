@@ -1,0 +1,26 @@
+name: Build Surface Fixture
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - dev/v*/v*.*
+      - alpha/v*/v*.*
+      - release/v*/v*.*
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  libnode-shaped:
+    uses: ./.github/workflows/.build.yml
+    with:
+      buildchain-ref: ${{ github.head_ref || github.ref_name }}
+      working-directory: fixtures/libnode-shaped
+      artifact-name: libnode-shaped
+      artifact-paths: |
+        fixtures/libnode-shaped/dist
+        .buildchain/artifacts
+      platforms-json: >-
+        [{"id":"linux-x64","name":"Linux x64","runner":"[\"ubuntu-24.04\"]"},{"id":"macos","name":"macOS","runner":"[\"macos-latest\"]"},{"id":"windows-x64","name":"Windows x64","runner":"[\"windows-2022\"]"}]

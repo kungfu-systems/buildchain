@@ -14,8 +14,12 @@ const requiredPaths = [
   ".github/workflows/self-hosted-runner-smoke.yml",
   ".github/workflows/buildchain-ref-promotion.yml",
   ".github/workflows/verify.yml",
+  ".github/workflows/.build.yml",
+  ".github/workflows/build-surface-fixture.yml",
   ".github/workflows/candidate-lab.yml",
-  "fixtures/action-bump-version-smoke/README.md"
+  "fixtures/action-bump-version-smoke/README.md",
+  "fixtures/libnode-shaped/buildchain.toml",
+  "fixtures/libnode-shaped/package.json"
 ];
 
 for (const rel of requiredPaths) {
@@ -132,6 +136,9 @@ for (const key of ["forkPrSecretsDefault", "selfHostedRunnerDefault"]) {
   if (safety[key] !== false) {
     throw new Error(`safety.${key} must be false`);
   }
+}
+if (safety.trustedEventGate !== true) {
+  throw new Error("safety.trustedEventGate must be true");
 }
 
 console.log("buildchain inventory check passed");

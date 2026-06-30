@@ -79,6 +79,11 @@ Buildchain v1 ships these active migration surfaces:
   verification commands;
 - `actions/validate-config` migration preflight for TOML version-state and
   lifecycle declarations without running heavyweight builds;
+- `.github/workflows/.build.yml` as the reusable build surface for
+  tri-platform runner matrices, caller-provided lifecycle commands, trusted event
+  gating, and deterministic artifact manifests;
+- `actions/run-lifecycle` for callers that need the same lifecycle/manifest
+  contract inside their own workflows;
 - governance-closed self-promotion through `Buildchain Ref Promotion`.
 
 Stable consumers should reference actions as:
@@ -135,6 +140,8 @@ no-op for this repository. Consumer repositories still call the reusable
   the internal promotion action.
 - [Lifecycle protocol](docs/lifecycle-protocol.md) documents `buildchain.toml`
   for custom version-state files and lifecycle commands.
+- [Reusable build surface](docs/reusable-build-surface.md) documents the build
+  workflow, local runner matrix, artifact contract, and libnode-shaped fixture.
 
 ## Local Verification
 

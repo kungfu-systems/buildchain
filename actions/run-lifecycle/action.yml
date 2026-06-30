@@ -1,0 +1,47 @@
+name: "Buildchain Run Lifecycle"
+description: "Run a Buildchain lifecycle stage or command and write a deterministic artifact manifest"
+inputs:
+  cwd:
+    description: "Working directory for command execution"
+    required: false
+    default: "."
+  stage:
+    description: "Lifecycle stage name to run when command is empty"
+    required: false
+    default: "build"
+  command:
+    description: "Explicit command overriding buildchain.toml"
+    required: false
+    default: ""
+  required:
+    description: "Fail when neither command nor configured stage ran"
+    required: false
+    default: "true"
+  artifact-name:
+    description: "Deterministic artifact name"
+    required: false
+    default: "buildchain-artifact"
+  artifact-paths:
+    description: "Newline-separated artifact roots to include in the manifest"
+    required: false
+    default: |
+      dist
+      build/stage
+  platform-id:
+    description: "Stable platform id"
+    required: false
+    default: ""
+  platform-name:
+    description: "Human-readable platform name"
+    required: false
+    default: ""
+  manifest-path:
+    description: "Manifest output path"
+    required: false
+    default: ".buildchain/artifacts/manifest.json"
+outputs:
+  manifest-path:
+    description: "Path to the generated artifact manifest"
+runs:
+  using: "node24"
+  main: "dist/index.js"
