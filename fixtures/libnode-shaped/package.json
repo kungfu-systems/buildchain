@@ -1,0 +1,10 @@
+{
+  "name": "@kungfu-systems/libnode-shaped-fixture",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install-fixture": "node scripts/install.mjs",
+    "build-fixture": "node scripts/build.mjs",
+    "verify-fixture": "node scripts/verify.mjs"
+  }
+}

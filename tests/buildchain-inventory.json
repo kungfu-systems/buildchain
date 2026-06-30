@@ -103,6 +103,13 @@
       "bundle": "actions/promote-buildchain-ref/dist/index.js"
     },
     {
+      "path": "actions/run-lifecycle",
+      "disposition": "buildchain-reusable-build-surface",
+      "runtime": "node24",
+      "build": "tsup",
+      "bundle": "actions/run-lifecycle/dist/index.js"
+    },
+    {
       "path": "actions/validate-config",
       "disposition": "buildchain-config-preflight",
       "runtime": "node24",
@@ -128,12 +135,16 @@
     "pnpm install --frozen-lockfile",
     "pnpm run check",
     "GitHub Verify workflow",
+    "Build Surface Fixture workflow",
     "manual Self-hosted Runner Smoke workflow"
   ],
   "safety": {
     "forkPrSecretsDefault": false,
     "selfHostedRunnerDefault": false,
+    "trustedEventGate": true,
     "selfHostedRunnerManualWorkflow": "self-hosted-runner-smoke.yml",
+    "reusableBuildWorkflow": ".build.yml",
+    "libnodeShapedFixture": "fixtures/libnode-shaped",
     "buildchainRefPromotionWorkflow": "buildchain-ref-promotion.yml"
   }
 }
