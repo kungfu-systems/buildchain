@@ -1,0 +1,24 @@
+name: "Validate Buildchain Config"
+author: "Keren Dong"
+description: "Validate buildchain.toml version-state and lifecycle declarations without running lifecycle commands"
+inputs:
+  config-required:
+    description: "Fail when buildchain.toml is missing"
+    default: "true"
+  require-version-state:
+    description: "Fail when no version.files entries are configured"
+    default: "false"
+  require-lifecycle-stages:
+    description: "Comma-separated lifecycle stage names that must be declared"
+    default: ""
+outputs:
+  config-path:
+    description: "Resolved Buildchain config path"
+  version-files:
+    description: "Comma-separated configured version-state files"
+  lifecycle-stages:
+    description: "Comma-separated configured lifecycle stages"
+runs:
+  using: "node24"
+  main: "dist/index.js"
+

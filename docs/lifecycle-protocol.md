@@ -143,6 +143,25 @@ tags.
 The action input `verification-command` remains supported. When it is provided,
 it overrides `lifecycle.verify` for that invocation.
 
+## Migration Preflight
+
+Heavy repositories can validate their Buildchain declaration before they are
+ready to run the real build. `actions/validate-config` checks that
+`buildchain.toml` parses, configured version-state files exist, configured
+version keys are strings, and required lifecycle stage names are declared.
+
+It does not run lifecycle commands. This is useful for repositories such as
+`libnode`, where `lifecycle.build` represents an expensive multi-platform native
+build and the first migration milestone is to prove the release metadata and
+lifecycle protocol without consuming build runners.
+
+```yaml
+- uses: kungfu-systems/buildchain/actions/validate-config@v1
+  with:
+    require-version-state: "true"
+    require-lifecycle-stages: "install,build,verify"
+```
+
 ## Examples
 
 ### Node Workspace
