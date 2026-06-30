@@ -3,25 +3,25 @@
 Internal buildchain action for promoting verified buildchain release-line and
 compatibility refs from buildchain release channels:
 
-- `alpha/v1/v1.0` creates or reuses the next exact prerelease tag such as
-  `v1.0.1-alpha.0`, writes that version into package version state, points the
+- `alpha/v2/v2.0` creates or reuses the next exact prerelease tag such as
+  `v2.0.1-alpha.0`, writes that version into package version state, points the
   alpha and dev channel branches at the version commit, then promotes
-  `v1.0-alpha`;
-- `release/v1/v1.0` creates or reuses the next exact release tag such as
-  `v1.0.0`, writes that version into package version state, points the release
+  `v2.0-alpha`;
+- `release/v2/v2.0` creates or reuses the next exact release tag such as
+  `v2.0.0`, writes that version into package version state, points the release
   channel branch and release tags at the release commit, then prepares a second
-  source commit for the next exact prerelease tag such as `v1.0.1-alpha.0` and
-  points the alpha/dev channel branches plus `v1.0-alpha` at that prerelease
+  source commit for the next exact prerelease tag such as `v2.0.1-alpha.0` and
+  points the alpha/dev channel branches plus `v2.0-alpha` at that prerelease
   commit;
 - `major-gate` accepts a reviewed PR from a production release line such as
-  `release/v1/v1.0`, writes the next major production version such as
-  `v2.0.0`, points `major-gate`, `release/v2/v2.0`, `v2.0`, and `v2` at that
-  release commit, then prepares `v2.0.1-alpha.0` for `alpha/v2/v2.0`,
-  `dev/v2/v2.0`, and `v2.0-alpha`.
+  `release/v2/v2.0`, writes the next major production version such as
+  `v3.0.0`, points `major-gate`, `release/v3/v3.0`, `v3.0`, and `v3` at that
+  release commit, then prepares `v3.0.1-alpha.0` for `alpha/v3/v3.0`,
+  `dev/v3/v3.0`, and `v3.0-alpha`.
 
 The release branch name defines the minor line. For example,
-`release/v1/v1.1` creates `v1.1.N`, promotes `v1.1`, and promotes `v1` only
-when the next minor tag such as `v1.2` does not already exist.
+`release/v2/v2.1` creates `v2.1.N`, promotes `v2.1`, and promotes `v2` only
+when the next minor tag such as `v2.2` does not already exist.
 
 The action updates version state in `lerna.json`, root `package.json`, and
 workspace package manifests discovered from package manager metadata
@@ -89,6 +89,6 @@ refs and tags.
 
 The tag names intentionally follow the old `action-bump-version` semantics:
 exact release tags are `vX.Y.Z`, exact alpha tags are `vX.Y.Z-alpha.N`, floating
-release tags are minor/major tags such as `v1.0` and `v1`, and floating alpha
-tags are minor-line tags such as `v1.0-alpha`. Bare tags such as `1.0.0` are not
+release tags are minor/major tags such as `v2.0` and `v2`, and floating alpha
+tags are minor-line tags such as `v2.0-alpha`. Bare tags such as `1.0.0` are not
 maintained as buildchain release entrypoints.

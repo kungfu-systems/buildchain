@@ -1,13 +1,13 @@
 # Publish Prebuilt Action
 
-Buildchain v1 implementation of the publish-prebuilt GitHub Action.
+Buildchain v2 implementation of the publish-prebuilt GitHub Action.
 
 ## Runtime
 
 - GitHub Actions runtime: Node 24
 - Build tool: tsup
 - Workspace package: `@kungfu-systems/buildchain-publish-prebuilt`
-- Published action path: `kungfu-systems/buildchain/actions/publish-prebuilt@v1`
+- Published action path: `kungfu-systems/buildchain/actions/publish-prebuilt@v2`
 
 ## Local Build
 

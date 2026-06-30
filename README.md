@@ -1,6 +1,6 @@
 # Kungfu Buildchain
 
-Kungfu Buildchain is the v1 source of truth for Kungfu reusable GitHub
+Kungfu Buildchain is the v2 source of truth for Kungfu reusable GitHub
 workflows, GitHub Actions, and release-line automation.
 
 The repository does more than collect workflow files. Its main job is to make a
@@ -13,9 +13,9 @@ after the fact.
 
 Kungfu release automation has to solve a few problems at the same time:
 
-- consumers need stable refs such as `v1`, `v1.0`, and `v1.0-alpha`;
-- maintainers need exact immutable refs such as `v1.0.4` and
-  `v1.0.5-alpha.0` for audit and rollback;
+- consumers need stable refs such as `v2`, `v2.0`, and `v2.0-alpha`;
+- maintainers need exact immutable refs such as `v2.0.2` and
+  `v2.0.3-alpha.0` for audit and rollback;
 - package manifests must record the same version that the release tag
   advertises;
 - alpha and release promotion must follow reviewed PRs, not local scripts or
@@ -24,7 +24,7 @@ Kungfu release automation has to solve a few problems at the same time:
   that it applies to product repositories.
 
 The older ABV model solved this by treating a GitHub release PR as the release
-intent. Buildchain v1 keeps that semantic contract, but implements it inside a
+intent. Buildchain v2 keeps that semantic contract, but implements it inside a
 modern monorepo with Node 24 actions, pnpm, tsup bundles, committed `dist`
 outputs, reusable workflow tests, package-manager adapters, and a TOML lifecycle
 protocol for non-Node projects.
@@ -42,22 +42,22 @@ Buildchain release automation is branch-driven:
 After a production release, Buildchain prepares the next alpha source commit for
 the same minor line and moves `dev/vX/vX.Y`, `alpha/vX/vX.Y`, and
 `vX.Y-alpha` to that next prerelease state. This is why a release can leave the
-production channel at `v1.0.4` while the test channel is already at
-`v1.0.5-alpha.0`.
+production channel at `v2.0.2` while the test channel is already at
+`v2.0.3-alpha.0`.
 
-Kungfu treats minor lines as long-running product trains. `v1.0`, `v1.1`, and
-future minor refs can each receive many patch releases such as `v1.0.1234`.
-`v1` points at the selected stable major line, while `v1.0` points at the
+Kungfu treats minor lines as long-running product trains. `v2.0`, `v2.1`, and
+future minor refs can each receive many patch releases such as `v2.0.1234`.
+`v2` points at the selected stable major line, while `v2.0` points at the
 latest production patch for that minor line.
 
 `major-gate` replaces the old ABV `main` channel. It is deliberately not named
 `main` because it is not the active development trunk. Maintainers use the same
-PR flow as other channel promotions: merging `release/v1/v1.0 -> major-gate`
+PR flow as other channel promotions: merging `release/v2/v2.0 -> major-gate`
 means "publish the next major line from this production state." The promotion
-then creates the next major production version, for example `v2.0.0`, and
-prepares `dev/v2/v2.0` plus `alpha/v2/v2.0` at `v2.0.1-alpha.0`.
+then creates the next major production version, for example `v3.0.0`, and
+prepares `dev/v3/v3.0` plus `alpha/v3/v3.0` at `v3.0.1-alpha.0`.
 
-Exact tags are always v-prefixed. Use `v1.0.0` and `v1.0.1-alpha.0`; bare tags
+Exact tags are always v-prefixed. Use `v2.0.0` and `v2.0.1-alpha.0`; bare tags
 such as `1.0.0` are not maintained as Buildchain release entrypoints.
 
 ## Repository Layout
@@ -72,9 +72,9 @@ docs/                     Governance, migration, architecture, and rollback note
 scripts/                  Local verification scripts
 ```
 
-## Buildchain v1 Contract
+## Buildchain v2 Contract
 
-Buildchain v1 ships these active migration surfaces:
+Buildchain v2 ships these active migration surfaces:
 
 - reusable workflows under `.github/workflows`;
 - GitHub Actions under `actions/<name>`;
@@ -100,13 +100,13 @@ Buildchain v1 ships these active migration surfaces:
 Stable consumers should reference actions as:
 
 ```yaml
-uses: kungfu-systems/buildchain/actions/<name>@v1
+uses: kungfu-systems/buildchain/actions/<name>@v2
 ```
 
 Reusable workflows should be referenced as:
 
 ```yaml
-uses: kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v1
+uses: kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v2
 ```
 
 Standalone `workflows` and `action-*` repositories remain compatibility and
@@ -169,7 +169,7 @@ hidden reusable workflows, and rebuilds every action bundle.
 ## Lifecycle Configuration
 
 Projects can add `buildchain.toml` to declare release version state and
-lifecycle commands. Buildchain v1 supports TOML only. The promotion action uses
+lifecycle commands. Buildchain v2 supports TOML only. The promotion action uses
 configured version files to create source version commits, then runs
 `lifecycle.verify` before moving release refs.
 

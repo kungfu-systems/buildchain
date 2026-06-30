@@ -1,13 +1,13 @@
 # Merge Close Issue Action
 
-Buildchain v1 implementation of the merge-close-issue GitHub Action.
+Buildchain v2 implementation of the merge-close-issue GitHub Action.
 
 ## Runtime
 
 - GitHub Actions runtime: Node 24
 - Build tool: tsup
 - Workspace package: `@kungfu-systems/buildchain-merge-close-issue`
-- Published action path: `kungfu-systems/buildchain/actions/merge-close-issue@v1`
+- Published action path: `kungfu-systems/buildchain/actions/merge-close-issue@v2`
 
 ## Local Build
 

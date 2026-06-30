@@ -1,13 +1,13 @@
-# Buildchain v1 Migration Inventory
+# Buildchain v2 Migration Inventory
 
-This inventory records the buildchain v1 migration set. Buildchain v1 is the
+This inventory records the buildchain v2 migration set. Buildchain v2 is the
 monorepo source of truth for active Kungfu reusable workflows and GitHub Actions.
 Standalone `workflows` and `action-*` repositories remain compatibility and
 rollback anchors while consumers migrate to stable buildchain refs.
 
 ## Workflow Sources
 
-| Source repository | Previous branch | Buildchain v1 disposition |
+| Source repository | Previous branch | Buildchain v2 disposition |
 | --- | --- | --- |
 | `workflows` | `dev/v2/v2.0` | root `.github/workflows` sources migrated; reusable workflows linted by actionlint |
 
@@ -31,9 +31,9 @@ generated `dist/index.js` bundle for direct GitHub Actions consumption.
 | `actions/sync-pr` | `action-sync-pr` |
 | `actions/update-dependencies-version` | `action-update-dependencies-version` |
 
-## Retired Actions Excluded From v1
+## Retired Actions Excluded From v2
 
-These legacy action repositories are intentionally not shipped as buildchain v1
+These legacy action repositories are intentionally not shipped as buildchain v2
 actions because the corresponding workflows now reject the retired mechanism or
 because the action is part of that retired path.
 
@@ -49,7 +49,7 @@ because the action is part of that retired path.
 
 ## Buildchain-Native Actions
 
-These actions are new Buildchain v1 surfaces rather than migrations from an
+These actions are new Buildchain v2 surfaces rather than migrations from an
 older standalone action repository.
 
 | Buildchain path | Purpose |
@@ -57,10 +57,10 @@ older standalone action repository.
 | `actions/promote-buildchain-ref` | governance-closed Buildchain release ref promotion |
 | `actions/validate-config` | `buildchain.toml` version-state and lifecycle preflight without executing lifecycle commands |
 
-## Stable v1 Refs
+## Stable v2 Refs
 
-- Actions: `kungfu-systems/buildchain/actions/<name>@v1`
-- Reusable workflows: `kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v1`
+- Actions: `kungfu-systems/buildchain/actions/<name>@v2`
+- Reusable workflows: `kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v2`
 
 ## Verification Gates
 

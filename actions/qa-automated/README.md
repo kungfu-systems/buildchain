@@ -1,13 +1,13 @@
 # Qa Automated Action
 
-Buildchain v1 implementation of the qa-automated GitHub Action.
+Buildchain v2 implementation of the qa-automated GitHub Action.
 
 ## Runtime
 
 - GitHub Actions runtime: Node 24
 - Build tool: tsup
 - Workspace package: `@kungfu-systems/buildchain-qa-automated`
-- Published action path: `kungfu-systems/buildchain/actions/qa-automated@v1`
+- Published action path: `kungfu-systems/buildchain/actions/qa-automated@v2`
 
 ## Local Build
 
