@@ -6,7 +6,7 @@ on:
     branches:
       - alpha/*/*
       - release/*/*
-      - main
+      - major-gate
 
 permissions:
   contents: read

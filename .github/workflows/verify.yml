@@ -7,7 +7,7 @@ on:
       - dev/v*/v*
       - alpha/v*/v*
       - release/v*/v*
-      - main
+      - major-gate
   workflow_dispatch:
 
 permissions:

@@ -57,3 +57,25 @@ test("version-state PRs must target the same release line", () => {
     );
   });
 });
+
+test("release to major-gate is the only major bump channel", () => {
+  withPackageVersion("1.0.5", (cwd) => {
+    assert.equal(
+      getBumpKeyword({
+        cwd,
+        headRef: "release/v1/v1.0",
+        baseRef: "major-gate",
+      }),
+      "premajor",
+    );
+    assert.throws(
+      () =>
+        getBumpKeyword({
+          cwd,
+          headRef: "main",
+          baseRef: "main",
+        }),
+      /does not match current/,
+    );
+  });
+});
