@@ -1,0 +1,199 @@
+name: Buildchain Build
+
+on:
+  workflow_call:
+    inputs:
+      buildchain-repository:
+        default: "kungfu-systems/buildchain"
+        type: string
+        required: false
+      buildchain-ref:
+        default: "v1"
+        type: string
+        required: false
+      working-directory:
+        default: "."
+        type: string
+        required: false
+      platforms-json:
+        description: "JSON array of platform objects: id, name, runner JSON string"
+        default: >-
+          [{"id":"linux-x64","name":"Linux x64","runner":"[\"ubuntu-24.04\"]"},{"id":"macos-x64","name":"macOS x64","runner":"[\"macos-13\"]"},{"id":"windows-x64","name":"Windows x64","runner":"[\"windows-2022\"]"}]
+        type: string
+        required: false
+      require-trusted-event:
+        default: true
+        type: boolean
+        required: false
+      untrusted-policy:
+        description: "fail or skip when an untrusted fork event asks for build execution"
+        default: "fail"
+        type: string
+        required: false
+      setup-node:
+        default: true
+        type: boolean
+        required: false
+      node-version:
+        default: "24"
+        type: string
+        required: false
+      install-command:
+        default: ""
+        type: string
+        required: false
+      build-command:
+        default: ""
+        type: string
+        required: false
+      verify-command:
+        default: ""
+        type: string
+        required: false
+      require-install:
+        default: false
+        type: boolean
+        required: false
+      require-build:
+        default: true
+        type: boolean
+        required: false
+      require-verify:
+        default: false
+        type: boolean
+        required: false
+      artifact-name:
+        default: "buildchain-artifact"
+        type: string
+        required: false
+      artifact-paths:
+        default: |
+          dist
+          build/stage
+        type: string
+        required: false
+      artifact-retention-days:
+        default: 14
+        type: number
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  trust-gate:
+    name: Trust gate
+    runs-on: ubuntu-24.04
+    outputs:
+      trusted: ${{ steps.gate.outputs.trusted }}
+    steps:
+      - name: Evaluate event trust
+        id: gate
+        shell: bash
+        run: |
+          trusted=true
+          if [ "${{ inputs.require-trusted-event }}" = "true" ] && [ "${{ github.event_name }}" = "pull_request" ]; then
+            if [ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" ]; then
+              trusted=false
+            fi
+          fi
+          echo "trusted=${trusted}" >> "$GITHUB_OUTPUT"
+          if [ "${trusted}" != "true" ]; then
+            echo "::warning::Untrusted event is not allowed to reach Buildchain build runners."
+            if [ "${{ inputs.untrusted-policy }}" = "fail" ]; then
+              exit 1
+            fi
+          fi
+
+  build:
+    name: ${{ matrix.platform.name }}
+    needs: trust-gate
+    if: ${{ needs.trust-gate.outputs.trusted == 'true' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: ${{ fromJSON(inputs.platforms-json) }}
+    runs-on: ${{ fromJSON(matrix.platform.runner) }}
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7.0.0
+        with:
+          clean: true
+          persist-credentials: false
+
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.buildchain-ref }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Setup Node.js
+        if: ${{ inputs.setup-node }}
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Run install lifecycle
+        shell: bash
+        env:
+          BUILDCHAIN_COMMAND: ${{ inputs.install-command }}
+          BUILDCHAIN_ARTIFACT_PATHS: ${{ inputs.artifact-paths }}
+        run: >-
+          node .buildchain/runtime/scripts/run-lifecycle.mjs
+          --cwd "${{ inputs.working-directory }}"
+          --stage install
+          --required "${{ inputs.require-install }}"
+          --artifact-name "${{ inputs.artifact-name }}-${{ matrix.platform.id }}-${{ github.sha }}"
+          --platform-id "${{ matrix.platform.id }}"
+          --platform-name "${{ matrix.platform.name }}"
+          --manifest-path ".buildchain/artifacts/${{ matrix.platform.id }}/manifest-install.json"
+
+      - name: Run build lifecycle
+        shell: bash
+        env:
+          BUILDCHAIN_COMMAND: ${{ inputs.build-command }}
+          BUILDCHAIN_ARTIFACT_PATHS: ${{ inputs.artifact-paths }}
+        run: >-
+          node .buildchain/runtime/scripts/run-lifecycle.mjs
+          --cwd "${{ inputs.working-directory }}"
+          --stage build
+          --required "${{ inputs.require-build }}"
+          --artifact-name "${{ inputs.artifact-name }}-${{ matrix.platform.id }}-${{ github.sha }}"
+          --platform-id "${{ matrix.platform.id }}"
+          --platform-name "${{ matrix.platform.name }}"
+          --manifest-path ".buildchain/artifacts/${{ matrix.platform.id }}/manifest-build.json"
+
+      - name: Run verify lifecycle
+        shell: bash
+        env:
+          BUILDCHAIN_COMMAND: ${{ inputs.verify-command }}
+          BUILDCHAIN_ARTIFACT_PATHS: ${{ inputs.artifact-paths }}
+        run: >-
+          node .buildchain/runtime/scripts/run-lifecycle.mjs
+          --cwd "${{ inputs.working-directory }}"
+          --stage verify
+          --required "${{ inputs.require-verify }}"
+          --artifact-name "${{ inputs.artifact-name }}-${{ matrix.platform.id }}-${{ github.sha }}"
+          --platform-id "${{ matrix.platform.id }}"
+          --platform-name "${{ matrix.platform.name }}"
+          --manifest-path ".buildchain/artifacts/${{ matrix.platform.id }}/manifest.json"
+
+      - name: Upload deterministic artifact
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-${{ matrix.platform.id }}-${{ github.sha }}
+          path: |
+            ${{ inputs.artifact-paths }}
+            .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload artifact manifest
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ github.sha }}
+          path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}

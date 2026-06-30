@@ -1,0 +1,18 @@
+schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[lifecycle.install]
+command = "node scripts/install.mjs"
+
+[lifecycle.build]
+command = "node scripts/build.mjs"
+
+[lifecycle.verify]
+command = "node scripts/verify.mjs"
