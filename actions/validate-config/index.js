@@ -12,6 +12,9 @@ async function main() {
   core.setOutput("config-path", result.configPath);
   core.setOutput("version-files", result.versionFiles.join(","));
   core.setOutput("lifecycle-stages", result.lifecycleStages.join(","));
+  core.setOutput("version-strategy", result.versionStrategy);
+  core.setOutput("version-next", result.versionNext);
+  core.setOutput("anchor-manifest", result.anchorManifest);
 
   await core.summary
     .addHeading("Buildchain config validation")
@@ -21,6 +24,8 @@ async function main() {
         { data: "Value", header: true },
       ],
       ["Config", result.configPath || "(none)"],
+      ["Version strategy", result.versionStrategy ? `${result.versionStrategy}/${result.versionNext}` : "(none)"],
+      ["Anchor manifest", result.anchorManifest || "(none)"],
       ["Version files", result.versionFiles.join(", ") || "(none)"],
       ["Lifecycle stages", result.lifecycleStages.join(", ") || "(none)"],
     ])
@@ -31,4 +36,3 @@ main().catch((error) => {
   console.error(error);
   core.setFailed(error.message);
 });
-

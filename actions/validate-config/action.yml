@@ -18,7 +18,12 @@ outputs:
     description: "Comma-separated configured version-state files"
   lifecycle-stages:
     description: "Comma-separated configured lifecycle stages"
+  version-strategy:
+    description: "Configured version strategy"
+  version-next:
+    description: "Configured next-version behavior"
+  anchor-manifest:
+    description: "Configured anchor manifest path"
 runs:
   using: "node24"
   main: "dist/index.js"
-

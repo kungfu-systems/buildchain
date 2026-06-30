@@ -23,6 +23,9 @@ export function validateConfigAction({
     configPath: summary.config?.path || "",
     versionFiles: summary.versionFiles.map((file) => file.path),
     lifecycleStages: summary.lifecycleStages.map((stage) => stage.name),
+    versionStrategy: summary.version?.strategy || "",
+    versionNext: summary.version?.next || "",
+    anchorManifest: summary.anchorManifest?.path || "",
     summary,
   };
 }
@@ -30,4 +33,3 @@ export function validateConfigAction({
 export default {
   validateConfigAction,
 };
-
