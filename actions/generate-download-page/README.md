@@ -1,13 +1,13 @@
 # Generate Download Page Action
 
-Buildchain v1 implementation of the generate-download-page GitHub Action.
+Buildchain v2 implementation of the generate-download-page GitHub Action.
 
 ## Runtime
 
 - GitHub Actions runtime: Node 24
 - Build tool: tsup
 - Workspace package: `@kungfu-systems/buildchain-generate-download-page`
-- Published action path: `kungfu-systems/buildchain/actions/generate-download-page@v1`
+- Published action path: `kungfu-systems/buildchain/actions/generate-download-page@v2`
 
 ## Local Build
 

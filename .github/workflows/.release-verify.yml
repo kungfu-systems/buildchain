@@ -162,7 +162,7 @@ on:
         type: string
         required: false
       action-bump-version-ref:
-        default: "v1"
+        default: "v2"
         type: string
         required: false
       action-bump-version-path:
@@ -659,7 +659,7 @@ jobs:
 
       - name: Publish Prebuilt to AWS (CI)
         if: ${{ inputs.prebuild && inputs.publish-aws-ci }}
-        uses: kungfu-systems/buildchain/actions/publish-prebuilt@v1
+        uses: kungfu-systems/buildchain/actions/publish-prebuilt@v2
         with:
           token: ${{ github.token }}
           artifacts-path: "github-artifacts"
@@ -676,7 +676,7 @@ jobs:
 
       - name: Publish Prebuilt to AWS (User)
         if: ${{ inputs.prebuild && inputs.publish-aws-user }}
-        uses: kungfu-systems/buildchain/actions/publish-prebuilt@v1
+        uses: kungfu-systems/buildchain/actions/publish-prebuilt@v2
         with:
           token: ${{ github.token }}
           artifacts-path: "github-artifacts"
@@ -701,6 +701,6 @@ jobs:
 
       - name: Approve Merge
         if: ${{ github.event_name == 'pull_request' && inputs.auto-approve-enabled && env.HAS_NODE_AUTH_TOKEN == 'true' && (!inputs.prebuild || needs.build.result == 'success' || needs.build_local.result == 'success') && !contains(join(needs.*.result, ','), 'failure') && !contains(join(needs.*.result, ','), 'cancelled') }}
-        uses: kungfu-systems/buildchain/actions/approve@v1
+        uses: kungfu-systems/buildchain/actions/approve@v2
         with:
           token: ${{ secrets.NODE_AUTH_TOKEN }}

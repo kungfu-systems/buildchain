@@ -1,6 +1,6 @@
 # Release Governance
 
-Buildchain v1 preserves the release semantics of the older ABV workflow while
+Buildchain v2 preserves the release semantics of the older ABV workflow while
 moving the implementation into one modern repository.
 
 The central idea is simple: a reviewed merge into a release channel is the
@@ -19,9 +19,9 @@ Kungfu release automation has to keep four facts aligned:
 
 If any one of these facts is updated by hand, the system can split:
 
-- a consumer can fetch `v1.0` and receive a tree whose package version still
+- a consumer can fetch `v2.0` and receive a tree whose package version still
   says the previous release;
-- a maintainer can move `v1` without producing an exact `v1.0.N` audit tag;
+- a maintainer can move `v2` without producing an exact `v2.0.N` audit tag;
 - an alpha can be promoted to production even though the release tree is not the
   same tree that was tested;
 - a protected branch merge can succeed while the follow-up version commit is
@@ -50,7 +50,7 @@ repositories that usually meant changing `lerna.json` and/or `package.json`.
 That commit is important because the tag alone is not enough evidence: the
 source tree should also declare the version that the tag advertises.
 
-Buildchain v1 treats that as a hard semantic requirement for its own release
+Buildchain v2 treats that as a hard semantic requirement for its own release
 line.
 
 ## Buildchain Implementation
@@ -86,24 +86,24 @@ The implementation is intentionally stricter than a local release script:
 ## Version Lines
 
 Kungfu uses Python-like version lines where a minor line can represent a
-long-lived product train. A line such as `v1.0` can produce many production
+long-lived product train. A line such as `v2.0` can produce many production
 patch releases:
 
 ```text
-v1.0.0
-v1.0.1
-v1.0.2
+v2.0.0
+v2.0.1
+v2.0.2
 ...
-v1.0.1234
+v2.0.1234
 ```
 
 This is why Buildchain maintains both exact and floating refs:
 
-- `v1.0.4` is immutable release evidence;
-- `v1.0` is the latest production release on the `1.0` line;
-- `v1` is the selected stable major-line entrypoint;
-- `v1.0.5-alpha.0` is immutable alpha evidence;
-- `v1.0-alpha` is the latest test channel for the `1.0` line.
+- `v2.0.2` is immutable release evidence;
+- `v2.0` is the latest production release on the `2.0` line;
+- `v2` is the selected stable major-line entrypoint;
+- `v2.0.3-alpha.0` is immutable alpha evidence;
+- `v2.0-alpha` is the latest test channel for the `2.0` line.
 
 A release does not mean "minor is complete." It means "this patch on this minor
 line is now production."
@@ -127,7 +127,7 @@ Buildchain then:
 7. Moves `vX.Y-alpha` to the same generated alpha commit.
 
 This keeps the test channel self-describing. If a consumer checks out
-`v1.0-alpha`, the manifests and exact alpha tag agree.
+`v2.0-alpha`, the manifests and exact alpha tag agree.
 
 ## Release Semantics
 
@@ -214,7 +214,7 @@ when that is explicitly allowed by the caller.
 
 ## Lifecycle Configuration
 
-`buildchain.toml` is the v1 user configuration format. It lets a repository
+`buildchain.toml` is the v2 user configuration format. It lets a repository
 declare version-state files and lifecycle commands without pretending every
 project is a Node workspace. Supported version files include JSON, TOML, and
 regex-based files such as `CMakeLists.txt` or `conanfile.py`.
@@ -235,13 +235,13 @@ moves the exact and floating tags.
 
 When the loop succeeds, maintainers and consumers can rely on these facts:
 
-- every production release has an exact tag such as `v1.0.4`;
-- every production minor line has a floating tag such as `v1.0`;
-- every selected stable major has a floating tag such as `v1`;
+- every production release has an exact tag such as `v2.0.2`;
+- every production minor line has a floating tag such as `v2.0`;
+- every selected stable major has a floating tag such as `v2`;
 - every next-major release is driven by a reviewed `release -> major-gate` PR,
   not a hidden manual button;
-- every test channel has an exact alpha tag such as `v1.0.5-alpha.0`;
-- every alpha minor line has a floating tag such as `v1.0-alpha`;
+- every test channel has an exact alpha tag such as `v2.0.3-alpha.0`;
+- every alpha minor line has a floating tag such as `v2.0-alpha`;
 - version manifests match the tag visible from the same commit;
 - production releases are derived from the alpha tree that was tested;
 - manual non-dry-run promotion cannot bypass PR review and verification;
@@ -260,8 +260,8 @@ Buildchain also does not maintain bare exact tags such as `1.0.0`. The supported
 exact release and alpha refs are v-prefixed:
 
 ```text
-v1.0.0
-v1.0.1-alpha.0
+v2.0.0
+v2.0.1-alpha.0
 ```
 
 ## Operational Reading Order

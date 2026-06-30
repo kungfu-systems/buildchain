@@ -13,6 +13,6 @@ jobs:
     steps:
       - name: Reject retired artifact purge
         run: |
-          echo "::error::The legacy artifact purge action is retired and is not shipped in buildchain v1."
+          echo "::error::The legacy artifact purge action is retired and is not shipped in buildchain v2."
           echo "::error::Use GitHub retention policy or a newly designed purge workflow instead."
           exit 1

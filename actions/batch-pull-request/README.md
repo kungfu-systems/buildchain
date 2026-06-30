@@ -1,13 +1,13 @@
 # Batch Pull Request Action
 
-Buildchain v1 implementation of the batch-pull-request GitHub Action.
+Buildchain v2 implementation of the batch-pull-request GitHub Action.
 
 ## Runtime
 
 - GitHub Actions runtime: Node 24
 - Build tool: tsup
 - Workspace package: `@kungfu-systems/buildchain-batch-pull-request`
-- Published action path: `kungfu-systems/buildchain/actions/batch-pull-request@v1`
+- Published action path: `kungfu-systems/buildchain/actions/batch-pull-request@v2`
 
 ## Local Build
 

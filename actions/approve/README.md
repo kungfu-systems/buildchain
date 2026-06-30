@@ -1,13 +1,13 @@
 # Approve Action
 
-Buildchain v1 implementation of the approve GitHub Action.
+Buildchain v2 implementation of the approve GitHub Action.
 
 ## Runtime
 
 - GitHub Actions runtime: Node 24
 - Build tool: tsup
 - Workspace package: `@kungfu-systems/buildchain-approve`
-- Published action path: `kungfu-systems/buildchain/actions/approve@v1`
+- Published action path: `kungfu-systems/buildchain/actions/approve@v2`
 
 ## Local Build
 

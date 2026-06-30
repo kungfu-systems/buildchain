@@ -1,13 +1,13 @@
 # Bump Version Action
 
-Buildchain v1 implementation of the bump-version GitHub Action.
+Buildchain v2 implementation of the bump-version GitHub Action.
 
 ## Runtime
 
 - GitHub Actions runtime: Node 24
 - Build tool: tsup
 - Workspace package: `@kungfu-systems/buildchain-bump-version`
-- Published action path: `kungfu-systems/buildchain/actions/bump-version@v1`
+- Published action path: `kungfu-systems/buildchain/actions/bump-version@v2`
 
 ## Local Build
 

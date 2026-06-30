@@ -1,6 +1,6 @@
 # Release Flow Diagrams
 
-This document describes the Buildchain v1 branch, tag, and version-state flow.
+This document describes the Buildchain v2 branch, tag, and version-state flow.
 See [Release governance](release-governance.md) for the design rationale.
 
 ## Architecture
@@ -37,15 +37,15 @@ only component allowed to turn that intent into release refs.
 
 | Ref kind | Example | Mutability | Purpose |
 | --- | --- | --- | --- |
-| Development branch | `dev/v1/v1.0` | moves | next source state for a minor line |
-| Alpha branch | `alpha/v1/v1.0` | moves | latest test state for a minor line |
-| Release branch | `release/v1/v1.0` | moves | latest production state for a minor line |
+| Development branch | `dev/v2/v2.0` | moves | next source state for a minor line |
+| Alpha branch | `alpha/v2/v2.0` | moves | latest test state for a minor line |
+| Release branch | `release/v2/v2.0` | moves | latest production state for a minor line |
 | Major gate branch | `major-gate` | moves | reviewed administrator gate for publishing the next major |
-| Exact alpha tag | `v1.0.5-alpha.0` | immutable | audit ref for one tested prerelease |
-| Exact release tag | `v1.0.4` | immutable | audit ref for one production release |
-| Floating alpha tag | `v1.0-alpha` | moves | latest test channel for a minor line |
-| Floating minor tag | `v1.0` | moves | latest production patch on a minor line |
-| Floating major tag | `v1` | moves | selected stable major entrypoint |
+| Exact alpha tag | `v2.0.3-alpha.0` | immutable | audit ref for one tested prerelease |
+| Exact release tag | `v2.0.2` | immutable | audit ref for one production release |
+| Floating alpha tag | `v2.0-alpha` | moves | latest test channel for a minor line |
+| Floating minor tag | `v2.0` | moves | latest production patch on a minor line |
+| Floating major tag | `v2` | moves | selected stable major entrypoint |
 
 ## Alpha Promotion
 
@@ -152,25 +152,25 @@ The same minor line can loop through this state machine many times.
 
 ## Version Examples
 
-Assume `v1.0.4-alpha.0` has been tested and a maintainer merges
-`alpha/v1/v1.0 -> release/v1/v1.0`.
+Assume `v2.0.2-alpha.1` has been tested and a maintainer merges
+`alpha/v2/v2.0 -> release/v2/v2.0`.
 
 Buildchain should produce:
 
 ```text
-v1.0.4                  exact production tag
-v1.0                    floating minor tag
-v1                      floating major tag when v1.0 is the selected major line
-release/v1/v1.0         production channel branch
+v2.0.2                  exact production tag
+v2.0                    floating minor tag
+v2                      floating major tag when v2.0 is the selected major line
+release/v2/v2.0         production channel branch
 ```
 
 It should also prepare:
 
 ```text
-v1.0.5-alpha.0          exact next alpha tag
-v1.0-alpha              floating alpha tag
-alpha/v1/v1.0           alpha channel branch
-dev/v1/v1.0             development channel branch
+v2.0.3-alpha.0          exact next alpha tag
+v2.0-alpha              floating alpha tag
+alpha/v2/v2.0           alpha channel branch
+dev/v2/v2.0             development channel branch
 ```
 
 This is expected behavior. A production release closes one patch and opens the
