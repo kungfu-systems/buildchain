@@ -20,8 +20,9 @@ The action checks:
 
 - `buildchain.toml` exists and uses schema `1`;
 - configured version-state files exist and expose a string version;
+- anchored/manual version strategy declarations and JSON/TOML anchor manifests
+  are structurally valid when configured;
 - required lifecycle stages are declared and structurally valid.
 
 It does not execute `lifecycle.install`, `lifecycle.build`, `lifecycle.verify`,
 or any other lifecycle command.
-
