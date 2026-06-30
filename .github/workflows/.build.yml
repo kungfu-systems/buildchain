@@ -34,6 +34,16 @@ on:
         default: "fail"
         type: string
         required: false
+      publish-channel:
+        description: "Publish channel requested by the caller: none, alpha, release, major, or a custom channel from publish-refs-json"
+        default: "none"
+        type: string
+        required: false
+      publish-refs-json:
+        description: "Optional JSON object mapping publish channels to allowed Git ref regular expressions"
+        default: ""
+        type: string
+        required: false
       setup-node:
         default: true
         type: boolean
@@ -106,6 +116,18 @@ on:
       build-summary-json:
         description: "Compact aggregate build summary JSON"
         value: ${{ jobs.summarize.outputs.artifact-summary-json }}
+      trusted-event:
+        description: "Whether the event is trusted enough to run build jobs"
+        value: ${{ jobs.trust-gate.outputs.trusted-event }}
+      publish-channel:
+        description: "Resolved publish channel"
+        value: ${{ jobs.trust-gate.outputs.publish-channel }}
+      publish-allowed:
+        description: "Whether this event/ref may publish after successful verification"
+        value: ${{ jobs.trust-gate.outputs.publish-allowed }}
+      publish-reason:
+        description: "Human-readable publish gate reason"
+        value: ${{ jobs.trust-gate.outputs.publish-reason }}
 
 permissions:
   contents: read
@@ -115,10 +137,22 @@ jobs:
     name: Trust gate
     runs-on: ubuntu-24.04
     outputs:
-      trusted: ${{ steps.gate.outputs.trusted }}
+      trusted: ${{ steps.trust.outputs.trusted }}
+      trusted-event: ${{ steps.publish.outputs.trusted-event }}
+      publish-channel: ${{ steps.publish.outputs.publish-channel }}
+      publish-allowed: ${{ steps.publish.outputs.publish-allowed }}
+      publish-reason: ${{ steps.publish.outputs.publish-reason }}
     steps:
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.buildchain-ref }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
       - name: Evaluate event trust
-        id: gate
+        id: trust
         shell: bash
         run: |
           trusted=true
@@ -130,10 +164,19 @@ jobs:
           echo "trusted=${trusted}" >> "$GITHUB_OUTPUT"
           if [ "${trusted}" != "true" ]; then
             echo "::warning::Untrusted event is not allowed to reach Buildchain build runners."
-            if [ "${{ inputs.untrusted-policy }}" = "fail" ]; then
-              exit 1
-            fi
           fi
+
+      - name: Resolve publish gate
+        id: publish
+        run: node .buildchain/runtime/scripts/resolve-publish-gate.mjs
+        env:
+          BUILDCHAIN_TRUSTED_EVENT: ${{ steps.trust.outputs.trusted }}
+          BUILDCHAIN_PUBLISH_CHANNEL: ${{ inputs.publish-channel }}
+          BUILDCHAIN_PUBLISH_REFS_JSON: ${{ inputs.publish-refs-json }}
+
+      - name: Reject untrusted event
+        if: ${{ steps.trust.outputs.trusted != 'true' && inputs.untrusted-policy == 'fail' }}
+        run: exit 1
 
   resolve-contract:
     name: Resolve reusable contract
@@ -268,6 +311,7 @@ jobs:
   summarize:
     name: Summarize build contract
     needs:
+      - trust-gate
       - resolve-contract
       - build
     if: ${{ always() && needs.build.result == 'success' }}
@@ -306,6 +350,10 @@ jobs:
           BUILDCHAIN_SUMMARY_OUTPUT: .buildchain/artifacts/build-summary.json
           BUILDCHAIN_ARTIFACT_NAME: ${{ inputs.artifact-name }}
           BUILDCHAIN_PLATFORM_COUNT: ${{ needs.resolve-contract.outputs.platform-count }}
+          BUILDCHAIN_TRUSTED_EVENT: ${{ needs.trust-gate.outputs.trusted-event }}
+          BUILDCHAIN_PUBLISH_CHANNEL: ${{ needs.trust-gate.outputs.publish-channel }}
+          BUILDCHAIN_PUBLISH_ALLOWED: ${{ needs.trust-gate.outputs.publish-allowed }}
+          BUILDCHAIN_PUBLISH_REASON: ${{ needs.trust-gate.outputs.publish-reason }}
 
       - name: Upload aggregate build summary
         uses: actions/upload-artifact@v7.0.1

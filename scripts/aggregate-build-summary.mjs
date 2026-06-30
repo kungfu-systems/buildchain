@@ -32,6 +32,12 @@ export function aggregateBuildSummaryCli() {
       runId: process.env.GITHUB_RUN_ID || "",
       runAttempt: process.env.GITHUB_RUN_ATTEMPT || "",
     },
+    publishGate: {
+      trustedEvent: readEnv("BUILDCHAIN_TRUSTED_EVENT", "true") === "true",
+      channel: readEnv("BUILDCHAIN_PUBLISH_CHANNEL", "none"),
+      allowed: readEnv("BUILDCHAIN_PUBLISH_ALLOWED", "false") === "true",
+      reason: readEnv("BUILDCHAIN_PUBLISH_REASON", ""),
+    },
     platformCount: manifests.length,
     fileCount: manifests.reduce((sum, manifest) => sum + Number(manifest.summary?.fileCount || 0), 0),
     totalBytes: manifests.reduce((sum, manifest) => sum + Number(manifest.summary?.totalBytes || 0), 0),
@@ -56,6 +62,7 @@ export function aggregateBuildSummaryCli() {
       platformCount: summary.platformCount,
       fileCount: summary.fileCount,
       totalBytes: summary.totalBytes,
+      publishGate: summary.publishGate,
     }),
   });
   return summary;
