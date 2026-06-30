@@ -1,5 +1,6 @@
 .DS_Store
 node_modules/
+.buildchain/
 dist/
 !actions/*/dist/
 !actions/*/dist/index.js

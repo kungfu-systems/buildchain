@@ -258,6 +258,14 @@ workflow after version-state promotion has been verified.
 
 ## Design Boundaries
 
+The lifecycle protocol is also the command source for the reusable build
+surface. `.github/workflows/.build.yml` runs `lifecycle.install`,
+`lifecycle.build`, and `lifecycle.verify` by default, while allowing callers to
+override each stage with explicit workflow inputs. The underlying
+`actions/run-lifecycle` action can be used directly by repositories that need a
+custom workflow but still want Buildchain's lifecycle and deterministic manifest
+contract.
+
 Buildchain lifecycle commands are data, not executable configuration files.
 They make release behavior reviewable in pull requests and keep the release
 fact chain simple:

@@ -277,6 +277,16 @@ importers:
         specifier: ^18.0.0
         version: 18.0.0
 
+  actions/run-lifecycle:
+    dependencies:
+      smol-toml:
+        specifier: 1.7.0
+        version: 1.7.0
+    devDependencies:
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.15)(typescript@5.9.3)
+
   actions/sync-pr:
     dependencies:
       '@actions/core':
