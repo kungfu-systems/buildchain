@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const root = process.cwd();
+const sharedActionTsupConfig = fs.readFileSync(path.join(root, "scripts/tsup-action.config.mjs"), "utf8");
 const requiredPaths = [
   "README.md",
   "docs/migration-inventory.md",
@@ -107,9 +108,19 @@ for (const action of shippedActions) {
   if (!packageJson.scripts?.build?.includes("tsup ")) {
     throw new Error(`${action.path}/package.json must define a tsup build`);
   }
+  if (!packageJson.scripts.build.includes("tsup-action.config.mjs")) {
+    throw new Error(`${action.path}/package.json build must use the shared action tsup config`);
+  }
   const tsupConfig = fs.existsSync(tsupConfigPath) ? fs.readFileSync(tsupConfigPath, "utf8") : "";
-  if (!packageJson.scripts.build.includes("--target node24") && !/target:\s*["']node24["']/.test(tsupConfig)) {
+  if (
+    !packageJson.scripts.build.includes("--target node24") &&
+    !/target:\s*["']node24["']/.test(tsupConfig) &&
+    !/target:\s*["']node24["']/.test(sharedActionTsupConfig)
+  ) {
     throw new Error(`${action.path}/package.json build must target node24`);
+  }
+  if (/(from|import)\s*["']@actions\//.test(bundleContent) || /require\(["']@actions\//.test(bundleContent)) {
+    throw new Error(`${action.path}/dist/index.js must bundle @actions dependencies`);
   }
   if (packageJson.type === "module" && /\b(require\s*\(|module\.exports|Dynamic require)\b/.test(bundleContent)) {
     throw new Error(`${action.path}/dist/index.js must stay ESM-only`);
