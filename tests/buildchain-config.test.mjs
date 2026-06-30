@@ -9,6 +9,7 @@ import {
   normalizeBuildchainConfig,
   runLifecycleStage,
   updateConfiguredVersionStateContents,
+  validateBuildchainConfig,
 } from "../packages/core/buildchain-config.js";
 
 function withTempRepo(files, fn) {
@@ -111,6 +112,64 @@ test "$BUILDCHAIN_VERSION" = "1.2.3"
           env: { BUILDCHAIN_VERSION: "1.2.3" },
         }),
         true,
+      );
+    },
+  );
+});
+
+test("validateBuildchainConfig checks lifecycle declarations without executing them", () => {
+  withTempRepo(
+    {
+      "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[lifecycle.build]
+command = "node -e \\"require('node:fs').writeFileSync('should-not-exist.txt', 'ran')\\""
+
+[lifecycle.verify]
+command = "node -e \\"require('node:fs').writeFileSync('also-should-not-exist.txt', 'ran')\\""
+`,
+      "package.json": '{ "name": "demo", "version": "1.0.0" }\n',
+    },
+    (dir) => {
+      const summary = validateBuildchainConfig(dir, {
+        requireVersionState: true,
+        requireLifecycleStages: ["build", "verify"],
+      });
+
+      assert.deepEqual(summary.versionFiles.map((file) => file.path), ["package.json"]);
+      assert.deepEqual(summary.lifecycleStages.map((stage) => stage.name), ["build", "verify"]);
+      assert.equal(fs.existsSync(path.join(dir, "should-not-exist.txt")), false);
+      assert.equal(fs.existsSync(path.join(dir, "also-should-not-exist.txt")), false);
+    },
+  );
+});
+
+test("validateBuildchainConfig fails when required lifecycle stages are missing", () => {
+  withTempRepo(
+    {
+      "buildchain.toml": `
+schema = 1
+
+[lifecycle.verify]
+command = "echo verify"
+`,
+    },
+    (dir) => {
+      assert.throws(
+        () =>
+          validateBuildchainConfig(dir, {
+            requireLifecycleStages: ["build", "verify"],
+          }),
+        /required lifecycle stage missing: build/,
       );
     },
   );

@@ -583,6 +583,16 @@ function versionStateBranchName(branch, sha) {
   return `buildchain/version-state/${branch.replaceAll("/", "-")}/${sha.slice(0, 12)}`;
 }
 
+function parseVersionStateBranchName(branch) {
+  const match = String(branch || "").match(
+    /^buildchain\/version-state\/(alpha|release)-v(\d+)-v(\d+\.\d+)\/[0-9a-f]{12,40}$/,
+  );
+  if (!match) {
+    return undefined;
+  }
+  return `${match[1]}/v${match[2]}/v${match[3]}`;
+}
+
 async function promoteBuildchainRefs({
   octokit,
   owner,
@@ -841,7 +851,39 @@ async function promoteBuildchainRefs({
       if (!allowedPaths?.length) {
         throw directError;
       }
+      const { data: pullRequests } =
+        await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+          owner,
+          repo,
+          commit_sha: commitSha,
+        });
+      const matchingVersionStatePullRequest = pullRequests.find((pullRequest) => {
+        const baseRef = pullRequest.base?.ref;
+        const headRef = pullRequest.head?.ref;
+        const headRepo = pullRequest.head?.repo?.full_name;
+        return (
+          pullRequest.merged_at &&
+          baseRef === targetRef &&
+          parseVersionStateBranchName(headRef) === targetRef &&
+          headRepo === `${owner}/${repo}`
+        );
+      });
       const commit = await getCommitInfo(octokit, owner, repo, commitSha);
+      if (matchingVersionStatePullRequest) {
+        for (const parentSha of commit.parents) {
+          try {
+            await assertOnlyAllowedChangesBetween({
+              baseSha: parentSha,
+              headSha: commitSha,
+              allowedPaths,
+            });
+            return;
+          } catch {
+            // Try the next parent before surfacing the original lineage failure.
+          }
+        }
+        throw directError;
+      }
       for (const parentSha of commit.parents) {
         try {
           await assertChannelPromotionPr({
