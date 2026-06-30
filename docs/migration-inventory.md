@@ -47,6 +47,16 @@ because the action is part of that retired path.
 | `action-sync-airtable` | retired in workflows v2 or backed by retired Airtable/dependency/collaborator/purge mechanism |
 | `action-sync-extensions-version` | retired in workflows v2 or backed by retired Airtable/dependency/collaborator/purge mechanism |
 
+## Buildchain-Native Actions
+
+These actions are new Buildchain v1 surfaces rather than migrations from an
+older standalone action repository.
+
+| Buildchain path | Purpose |
+| --- | --- |
+| `actions/promote-buildchain-ref` | governance-closed Buildchain release ref promotion |
+| `actions/validate-config` | `buildchain.toml` version-state and lifecycle preflight without executing lifecycle commands |
+
 ## Stable v1 Refs
 
 - Actions: `kungfu-systems/buildchain/actions/<name>@v1`
