@@ -39,9 +39,29 @@ inputs:
     description: "Manifest output path"
     required: false
     default: ".buildchain/artifacts/manifest.json"
+  summary-path:
+    description: "Compact artifact summary output path"
+    required: false
+    default: ".buildchain/artifacts/summary.json"
+  expected-artifacts-json:
+    description: "JSON expectation contract for final artifact files"
+    required: false
+    default: ""
 outputs:
   manifest-path:
     description: "Path to the generated artifact manifest"
+  summary-path:
+    description: "Path to the generated compact artifact summary"
+  artifact-name:
+    description: "Resolved artifact name recorded in the manifest"
+  artifact-file-count:
+    description: "Number of files included in the artifact manifest"
+  artifact-total-bytes:
+    description: "Total bytes included in the artifact manifest"
+  artifact-summary-json:
+    description: "Compact machine-readable artifact summary JSON"
+  expected-artifacts-ok:
+    description: "true when expected-artifacts-json is empty or passed"
 runs:
   using: "node24"
   main: "dist/index.js"

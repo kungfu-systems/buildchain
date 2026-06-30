@@ -26,12 +26,14 @@ function setFailed(message) {
 
 async function main() {
   const manifestPath = getInput("manifest-path") || ".buildchain/artifacts/manifest.json";
-  runLifecycle({
+  const summaryPath = getInput("summary-path") || ".buildchain/artifacts/summary.json";
+  const manifest = runLifecycle({
     cwd: getInput("cwd") || ".",
     stageName: getInput("stage") || "build",
     command: getInput("command") || "",
     required: getInput("required") === "true",
     manifestPath,
+    summaryPath,
     artifactName: getInput("artifact-name") || "buildchain-artifact",
     platformId: getInput("platform-id") || process.env.RUNNER_OS || process.platform,
     platformName: getInput("platform-name") || getInput("platform-id") || process.env.RUNNER_OS || process.platform,
@@ -39,9 +41,26 @@ async function main() {
       .split(/\r?\n/)
       .map((entry) => entry.trim())
       .filter(Boolean),
+    expectedArtifactsJson: getInput("expected-artifacts-json") || "",
     workspace: process.cwd(),
   });
   setOutput("manifest-path", manifestPath);
+  setOutput("summary-path", summaryPath);
+  setOutput("artifact-name", manifest.artifactName);
+  setOutput("artifact-file-count", String(manifest.summary.fileCount));
+  setOutput("artifact-total-bytes", String(manifest.summary.totalBytes));
+  setOutput(
+    "artifact-summary-json",
+    JSON.stringify({
+      contract: manifest.summary.contract,
+      artifactName: manifest.summary.artifactName,
+      platform: manifest.summary.platform,
+      fileCount: manifest.summary.fileCount,
+      totalBytes: manifest.summary.totalBytes,
+      digest: manifest.summary.digest,
+    }),
+  );
+  setOutput("expected-artifacts-ok", String(manifest.expectedArtifacts.ok));
 }
 
 main().catch((error) => setFailed(error.message));
