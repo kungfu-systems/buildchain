@@ -177,7 +177,9 @@ configured version files to create source version commits, then runs
 
 - Lab workflows are manual by default.
 - Publishing is disabled unless explicitly enabled by a production release
-  workflow.
+  workflow. Reusable builds expose `publish-channel`, `publish-allowed`, and
+  `publish-reason` so callers can gate publish jobs on a reviewed channel ref
+  instead of inferring publish eligibility from ad hoc branch checks.
 - Fork pull requests must not reach secrets or self-hosted runners.
 - Candidate refs are expected to come from `kungfu-systems/*`.
 - Self-hosted runner validation is available only through the manual
