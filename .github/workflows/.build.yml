@@ -8,7 +8,7 @@ on:
         type: string
         required: false
       buildchain-ref:
-        default: "v1"
+        default: "v2"
         type: string
         required: false
       working-directory:

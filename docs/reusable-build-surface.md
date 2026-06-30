@@ -1,6 +1,6 @@
 # Reusable Build Surface
 
-Buildchain v1 provides a reusable build workflow for repositories that need
+Buildchain v2 provides a reusable build workflow for repositories that need
 Buildchain's release semantics but cannot be described as a simple Node package.
 The first target shape is `libnode`: expensive native builds, multiple operating
 systems, self-hosted runner labels, and release artifacts that must be auditable.
@@ -12,7 +12,7 @@ Stable consumers call:
 ```yaml
 jobs:
   build:
-    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v1
+    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2
     with:
       working-directory: .
       artifact-name: libnode
@@ -96,7 +96,7 @@ with:
 For custom workflows, use the action directly:
 
 ```yaml
-- uses: kungfu-systems/buildchain/actions/run-lifecycle@v1
+- uses: kungfu-systems/buildchain/actions/run-lifecycle@v2
   with:
     stage: build
     required: "true"
@@ -118,7 +118,7 @@ Supported placeholders are `{artifact}`, `{artifactName}`, `{platform}`,
 `{platformId}`, `{platformName}`, `{sha}`, `{shortSha}`, `{ref}`, `{runId}`,
 and `{runAttempt}`. Invalid GitHub artifact name characters are normalized to
 `-`, so `{ref}` remains deterministic even for refs such as
-`refs/heads/dev/v1/v1.0`.
+`refs/heads/dev/v2/v2.0`.
 
 Each platform also writes and uploads:
 

@@ -102,7 +102,7 @@ on:
         type: string
         required: false
       action-bump-version-ref:
-        default: "v1"
+        default: "v2"
         type: string
         required: false
       action-bump-version-path:
@@ -181,7 +181,7 @@ jobs:
 
       - name: Publish Prebuilt to AWS (CI)
         if: ${{ inputs.publish-aws-ci }}
-        uses: kungfu-systems/buildchain/actions/publish-prebuilt@v1
+        uses: kungfu-systems/buildchain/actions/publish-prebuilt@v2
         with:
           token: ${{ github.token }}
           bucket-staging: ${{ inputs.bucket-staging-ci }}
@@ -201,7 +201,7 @@ jobs:
 
       - name: Publish Prebuilt to AWS (User)
         if: ${{ inputs.publish-aws-user }}
-        uses: kungfu-systems/buildchain/actions/publish-prebuilt@v1
+        uses: kungfu-systems/buildchain/actions/publish-prebuilt@v2
         with:
           token: ${{ github.token }}
           bucket-staging: ${{ inputs.bucket-staging-user }}
@@ -249,13 +249,13 @@ jobs:
 
       - name: Rollback Check
         if: ${{ failure() }}
-        uses: kungfu-systems/buildchain/actions/rollback-release@v1
+        uses: kungfu-systems/buildchain/actions/rollback-release@v2
         with:
           token: ${{ github.token }}
 
       - name: Close Issues
         if: ${{ github.event.pull_request.merged && inputs.close-issues }}
-        uses: kungfu-systems/buildchain/actions/merge-close-issue@v1
+        uses: kungfu-systems/buildchain/actions/merge-close-issue@v2
         with:
           token: ${{ github.token }}
           monday_api_key: ${{ secrets.MONDAY_API_KEY }}
@@ -276,6 +276,6 @@ jobs:
 
       - name: Trigger Qa Automated
         if: ${{ inputs.need-qa-automated }}
-        uses: kungfu-systems/buildchain/actions/qa-automated@v1
+        uses: kungfu-systems/buildchain/actions/qa-automated@v2
         with:
           token: ${{ github.token }}

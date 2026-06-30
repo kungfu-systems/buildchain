@@ -28,7 +28,7 @@ jobs:
 
       - name: Bump Version
         id: bump_version
-        uses: kungfu-systems/buildchain/actions/bump-version@v1
+        uses: kungfu-systems/buildchain/actions/bump-version@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           action: "prebuild"
@@ -50,7 +50,7 @@ jobs:
           wait_for_environment_recovery: 120
 
       - name: Publish New Version To GitHub
-        uses: kungfu-systems/buildchain/actions/bump-version@v1
+        uses: kungfu-systems/buildchain/actions/bump-version@v2
         with:
           token: ${{ secrets.GITHUB_PUSH_TOKEN }}
           action: "postbuild"

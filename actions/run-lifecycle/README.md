@@ -4,7 +4,7 @@ Run a Buildchain lifecycle stage or an explicit command and write a deterministi
 artifact manifest.
 
 ```yaml
-- uses: kungfu-systems/buildchain/actions/run-lifecycle@v1
+- uses: kungfu-systems/buildchain/actions/run-lifecycle@v2
   with:
     stage: build
     required: "true"
