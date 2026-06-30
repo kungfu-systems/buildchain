@@ -25,10 +25,12 @@ export function runLifecycleCli() {
     command: process.env.BUILDCHAIN_COMMAND || "",
     required: readArg("required", "false") === "true",
     manifestPath: readArg("manifest-path", ".buildchain/artifacts/manifest.json"),
+    summaryPath: readArg("summary-path", ".buildchain/artifacts/summary.json"),
     artifactName: readArg("artifact-name", "buildchain-artifact"),
     platformId: readArg("platform-id", os.platform()),
     platformName: readArg("platform-name", readArg("platform-id", os.platform())),
     artifactPaths: parseList(process.env.BUILDCHAIN_ARTIFACT_PATHS || ""),
+    expectedArtifactsJson: process.env.BUILDCHAIN_EXPECTED_ARTIFACTS_JSON || "",
     workspace: process.cwd(),
   });
 }

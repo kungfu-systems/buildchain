@@ -80,8 +80,9 @@ Buildchain v1 ships these active migration surfaces:
 - `actions/validate-config` migration preflight for TOML version-state and
   lifecycle declarations without running heavyweight builds;
 - `.github/workflows/.build.yml` as the reusable build surface for
-  tri-platform runner matrices, caller-provided lifecycle commands, trusted event
-  gating, and deterministic artifact manifests;
+  tri-platform runner presets, custom runner matrices, caller-provided lifecycle
+  commands, trusted event gating, artifact name templates, expected artifact
+  checks, deterministic artifact manifests, and aggregate build summaries;
 - `actions/run-lifecycle` for callers that need the same lifecycle/manifest
   contract inside their own workflows;
 - governance-closed self-promotion through `Buildchain Ref Promotion`.

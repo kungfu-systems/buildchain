@@ -16,14 +16,25 @@ jobs:
     with:
       working-directory: .
       artifact-name: libnode
-      platforms-json: >-
-        [{"id":"linux-x64","name":"Linux x64","runner":"[\"self-hosted\",\"Linux\",\"X64\",\"kungfu-build-v4-linux-x64\"]"},{"id":"macos-arm64","name":"macOS ARM64","runner":"[\"self-hosted\",\"macOS\",\"ARM64\",\"kungfu-build-v4-macos-arm64\"]"},{"id":"windows-x64","name":"Windows x64","runner":"[\"self-hosted\",\"Windows\",\"X64\",\"kungfu-build-v4-windows-x64\"]"}]
+      runner-preset: kungfu-v4-self-hosted
+      artifact-name-template: "{artifact}-{platform}-{sha}"
       artifact-paths: |
         dist
         build/stage
+      expected-artifacts-json: >-
+        {"minFiles":2,"requiredPaths":["dist/libnode.tar.gz","dist/checksums.txt"]}
 ```
 
-The matrix is caller-provided JSON. Each platform object has:
+`runner-preset` is the stable first-class surface for known runner fleets:
+
+| Preset | Platforms |
+| --- | --- |
+| `github-hosted` | `ubuntu-24.04`, `macos-latest`, `windows-2022` |
+| `kungfu-v4-self-hosted` | Kungfu Linux x64, macOS ARM64, and Windows x64 self-hosted runner labels |
+| `custom` | Requires `platforms-json` |
+
+Callers can still provide a custom matrix with `platforms-json`. Each platform
+object has:
 
 | Field | Meaning |
 | --- | --- |
@@ -38,6 +49,23 @@ guessing the labels.
 Only include platforms that should run. GitHub schedules matrix jobs before
 steps execute, so a disabled entry with unavailable runner labels can still
 block the workflow queue.
+
+## Workflow Outputs
+
+The reusable workflow exposes the resolved contract:
+
+| Output | Meaning |
+| --- | --- |
+| `runner-preset` | Resolved preset, or `custom` when `platforms-json` was provided |
+| `platforms-json` | Exact matrix JSON used by the build job |
+| `platform-count` | Number of matrix platforms |
+| `build-summary-artifact` | Uploaded aggregate summary artifact name |
+| `build-summary-json` | Compact aggregate JSON with platform count, file count, and byte total |
+
+The aggregate summary is intentionally an artifact as well as an output. GitHub
+Actions matrix outputs are not a reliable place to carry every platform's full
+manifest, so Buildchain uploads each platform manifest and then emits one
+aggregate summary artifact after the matrix completes.
 
 ## Command Sources
 
@@ -80,16 +108,23 @@ For custom workflows, use the action directly:
 
 ## Artifact Contract
 
-Each platform upload uses this deterministic name:
+Each platform upload uses `artifact-name-template`. The default is:
 
 ```text
-<artifact-name>-<platform-id>-<github.sha>
+{artifact}-{platform}-{sha}
 ```
+
+Supported placeholders are `{artifact}`, `{artifactName}`, `{platform}`,
+`{platformId}`, `{platformName}`, `{sha}`, `{shortSha}`, `{ref}`, `{runId}`,
+and `{runAttempt}`. Invalid GitHub artifact name characters are normalized to
+`-`, so `{ref}` remains deterministic even for refs such as
+`refs/heads/dev/v1/v1.0`.
 
 Each platform also writes and uploads:
 
 ```text
 .buildchain/artifacts/<platform-id>/manifest.json
+.buildchain/artifacts/<platform-id>/summary.json
 ```
 
 The manifest schema is:
@@ -117,6 +152,18 @@ The manifest schema is:
     "commandSource": "buildchain.toml",
     "executed": true
   },
+  "summary": {
+    "contract": "kungfu-buildchain-artifact-summary",
+    "artifactName": "libnode-linux-x64-<sha>",
+    "fileCount": 1,
+    "totalBytes": 1234,
+    "digest": "<hex>"
+  },
+  "expectedArtifacts": {
+    "ok": true,
+    "source": "expected-artifacts-json",
+    "checks": []
+  },
   "files": [
     {
       "path": "dist/example.zip",
@@ -129,6 +176,16 @@ The manifest schema is:
 
 Artifact names do not include actor names, timestamps, or retry counters. Reruns
 produce a new GitHub Actions run but keep the same source SHA/platform contract.
+
+`expected-artifacts-json` fails the build before upload when the artifact does
+not match the caller's declared contract. Supported checks are:
+
+| Field | Meaning |
+| --- | --- |
+| `minFiles` | Minimum number of manifest files |
+| `maxFiles` | Maximum number of manifest files |
+| `minTotalBytes` | Minimum total byte count |
+| `requiredPaths` | Exact manifest paths that must exist |
 
 ## Trusted Event Gate
 
