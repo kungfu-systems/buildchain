@@ -44,6 +44,19 @@ test("version-state release PRs are valid verify-only release candidates", () =>
   });
 });
 
+test("version-state major-gate PRs are valid verify-only major release candidates", () => {
+  withPackageVersion("2.0.0", (cwd) => {
+    assert.equal(
+      getBumpKeyword({
+        cwd,
+        headRef: "buildchain/version-state/major-gate/c249a32edecf",
+        baseRef: "major-gate",
+      }),
+      "patch",
+    );
+  });
+});
+
 test("version-state PRs must target the same release line", () => {
   withPackageVersion("1.0.5-alpha.1", (cwd) => {
     assert.throws(
