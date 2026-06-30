@@ -29,9 +29,7 @@ const setup = async function (argv) {
     argv.pullRequest = pullRequest;
   }
   if (context.eventName === 'workflow_dispatch') {
-    if (lib.getChannel(argv.headRef) !== 'main' || lib.getChannel(argv.baseRef) !== 'main') {
-      throw new Error(`Manual trigger on head [${argv.headRef}] -> base [${argv.baseRef}] not supported`);
-    }
+    throw new Error('Manual bump-version dispatch is not supported; use a protected channel PR');
   }
   await lib.gitCall('config', '--global', 'user.name', argv.actor);
   await lib.gitCall('config', '--global', 'user.email', `${argv.actor}@users.noreply.github.com`);

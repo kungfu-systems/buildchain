@@ -10,7 +10,7 @@ import {
   getWorkspaceInfo,
 } from '../../packages/core/package-manager.js';
 
-const ProtectedBranchPatterns = ['main', 'release/*/*', 'alpha/*/*', 'dev/*/*'];
+const ProtectedBranchPatterns = ['major-gate', 'release/*/*', 'alpha/*/*', 'dev/*/*'];
 
 const bumpOpts = { dry: false };
 const spawnOpts = { shell: true, stdio: 'pipe', windowsHide: true };
@@ -91,15 +91,15 @@ function getBumpKeyword(cwd, headRef, baseRef, loose = false) {
   const keywords = {
     'dev->alpha': 'prerelease',
     'alpha->release': 'patch',
-    'release->main': 'preminor',
+    'release->major-gate': 'premajor',
     'release->release': 'preminor',
-    'main->main': 'premajor',
   };
 
   const lts = baseChannel === 'release' && baseRef.split('/').pop() === 'lts';
-  const preminor = headChannel === 'release' && (baseChannel === 'main' || lts);
+  const preminor = headChannel === 'release' && lts;
+  const majorGate = headChannel === 'release' && baseChannel === 'major-gate';
 
-  if (getLineSuffix(headRef, headChannel) !== getLineSuffix(baseRef, baseChannel) && !preminor) {
+  if (getLineSuffix(headRef, headChannel) !== getLineSuffix(baseRef, baseChannel) && !preminor && !majorGate) {
     throw new Error(`Versions not match for head/base refs: ${headRef} -> ${baseRef}`);
   }
 
@@ -108,11 +108,6 @@ function getBumpKeyword(cwd, headRef, baseRef, loose = false) {
       throw new Error(`Versions not match for head/base refs: ${headRef} -> ${baseRef}`);
     }
     return baseChannel === 'release' ? 'patch' : 'prerelease';
-  }
-
-  if (headChannel === 'main') {
-    // for main -> main
-    return keywords[key];
   }
 
   const normalizedHeadRef = versionStateTarget?.normalizedRef || normalizeRef(headRef);

@@ -1,9 +1,9 @@
-name: Admin - Bump Minor Version
+name: Admin - Channel Bump Version
 on:
   pull_request:
     types: [closed]
     branches:
-      - main
+      - major-gate
       - release/*/lts
 
 jobs:

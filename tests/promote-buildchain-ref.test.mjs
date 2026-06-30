@@ -13,6 +13,7 @@ const {
   discoverVersionStateFiles,
   expectedHeadRefForTarget,
   latestAlphaForPatch,
+  parseReleaseLineRef,
   parseTags,
   promoteBuildchainRefs,
   resolveTagsForTarget,
@@ -91,13 +92,14 @@ test("promotion is limited to buildchain alpha and release line refs", () => {
   assertPromotableTargetRef("alpha/v1/v1.0");
   assertPromotableTargetRef("release/v1/v1.0");
   assertPromotableTargetRef("release/v1/v1.1");
+  assertPromotableTargetRef("major-gate");
   assert.throws(
     () => assertPromotableRepository("kungfu-systems", "other"),
     /limited to kungfu-systems\/buildchain/,
   );
   assert.throws(
     () => assertPromotableTargetRef("dev/v1/v1.0"),
-    /alpha\/vN\/vN\.M or release\/vN\/vN\.M/,
+    /alpha\/vN\/vN\.M, release\/vN\/vN\.M, or major-gate/,
   );
   assert.throws(
     () => assertPromotableTargetRef("release/v1/v2.0"),
@@ -106,6 +108,7 @@ test("promotion is limited to buildchain alpha and release line refs", () => {
   assert.deepEqual(resolveTagsForTarget("alpha/v1/v1.0"), ["v1.0-alpha"]);
   assert.deepEqual(resolveTagsForTarget("release/v1/v1.0"), ["v1", "v1.0"]);
   assert.deepEqual(resolveTagsForTarget("release/v1/v1.1"), ["v1", "v1.1"]);
+  assert.deepEqual(resolveTagsForTarget("major-gate"), []);
   assert.throws(
     () => resolveTagsForTarget("alpha/v1/v1.0", ["v1"]),
     /not allowed for alpha promotion/,
@@ -119,6 +122,12 @@ test("promotion is limited to buildchain alpha and release line refs", () => {
 test("governance maps channel targets to the only legal PR source", () => {
   assert.equal(expectedHeadRefForTarget("alpha/v1/v1.0"), "dev/v1/v1.0");
   assert.equal(expectedHeadRefForTarget("release/v1/v1.0"), "alpha/v1/v1.0");
+  assert.equal(expectedHeadRefForTarget("major-gate"), "release/vN/vN.M");
+  assert.deepEqual(parseReleaseLineRef("release/v1/v1.0"), {
+    ref: "release/v1/v1.0",
+    major: 1,
+    minor: 0,
+  });
   assert.deepEqual(
     latestAlphaForPatch(
       [
@@ -620,6 +629,124 @@ test("release promotion creates source version commits and points refs at them",
       ["1.0.0", "pnpm"],
       ["1.0.1-alpha.0", "pnpm"],
     ],
+  );
+});
+
+test("major-gate promotion publishes next major production and prepares next alpha", async () => {
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-systems/buildchain",
+      version: "1.0.10",
+      packageManager: "pnpm@11.7.0",
+    },
+    "pnpm-workspace.yaml": 'packages:\n  - "actions/*"\n',
+    "actions/promote-buildchain-ref/package.json": {
+      name: "@kungfu-systems/buildchain-promote-buildchain-ref",
+      version: "1.0.10",
+      private: true,
+    },
+  });
+  const refs = new Map([["heads/major-gate", SHA]]);
+  const blobs = [];
+  const commits = [];
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (refs.has(ref)) {
+            return { data: { object: { sha: refs.get(ref) } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async ({ ref }) => ({
+          data: [...refs.entries()]
+            .filter(([name]) => name.startsWith(ref))
+            .map(([name, objectSha]) => ({
+              ref: `refs/${name}`,
+              object: { sha: objectSha },
+            })),
+        }),
+        getCommit: async ({ commit_sha }) => ({
+          data: { tree: { sha: `tree-${commit_sha}` }, parents: [] },
+        }),
+        createBlob: async ({ content }) => {
+          const sha = `blob-${blobs.length + 1}`;
+          blobs.push({ sha, content });
+          return { data: { sha } };
+        },
+        createTree: async ({ tree }) => ({
+          data: { sha: `tree-created-${tree.map((item) => item.sha).join("-")}` },
+        }),
+        createCommit: async ({ message, parents }) => {
+          const sha = `commit-${commits.length + 1}`.padEnd(40, "0");
+          commits.push({ sha, message, parents });
+          return { data: { sha } };
+        },
+        updateRef: async ({ ref, sha }) => {
+          refs.set(ref, sha);
+          return {};
+        },
+        createRef: async ({ ref, sha }) => {
+          refs.set(ref.replace(/^refs\//, ""), sha);
+          return {};
+        },
+      },
+      repos: {
+        listPullRequestsAssociatedWithCommit: async ({ commit_sha }) => {
+          assert.equal(commit_sha, SHA);
+          return {
+            data: [
+              {
+                merged_at: "2026-06-30T00:00:00Z",
+                base: { ref: "major-gate" },
+                head: {
+                  ref: "release/v1/v1.0",
+                  repo: { full_name: "kungfu-systems/buildchain" },
+                },
+              },
+            ],
+          };
+        },
+      },
+    },
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "major-gate",
+    cwd,
+  });
+
+  const releaseSha = commits[0].sha;
+  const nextAlphaSha = commits[1].sha;
+  assert.equal(result.sha, releaseSha);
+  assert.equal(result.nextAlphaSha, nextAlphaSha);
+  assert.equal(refs.get("heads/major-gate"), releaseSha);
+  assert.equal(refs.get("heads/release/v2/v2.0"), releaseSha);
+  assert.equal(refs.get("tags/v2.0.0"), releaseSha);
+  assert.equal(refs.get("tags/v2.0"), releaseSha);
+  assert.equal(refs.get("tags/v2"), releaseSha);
+  assert.equal(refs.get("heads/alpha/v2/v2.0"), nextAlphaSha);
+  assert.equal(refs.get("heads/dev/v2/v2.0"), nextAlphaSha);
+  assert.equal(refs.get("tags/v2.0.1-alpha.0"), nextAlphaSha);
+  assert.equal(refs.get("tags/v2.0-alpha"), nextAlphaSha);
+  assert.deepEqual(
+    commits.map((commit) => [commit.message, commit.parents]),
+    [
+      ["chore(release): release v2.0.0", [SHA]],
+      ["chore(release): prepare v2.0.1-alpha.0", [releaseSha]],
+    ],
+  );
+  assert(
+    blobs.slice(0, 2).every(({ content }) => content.includes('"version": "2.0.0"')),
+  );
+  assert(
+    blobs
+      .slice(2)
+      .every(({ content }) => content.includes('"version": "2.0.1-alpha.0"')),
   );
 });
 

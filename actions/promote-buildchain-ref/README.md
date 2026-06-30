@@ -12,7 +12,12 @@ compatibility refs from buildchain release channels:
   channel branch and release tags at the release commit, then prepares a second
   source commit for the next exact prerelease tag such as `v1.0.1-alpha.0` and
   points the alpha/dev channel branches plus `v1.0-alpha` at that prerelease
-  commit.
+  commit;
+- `major-gate` accepts a reviewed PR from a production release line such as
+  `release/v1/v1.0`, writes the next major production version such as
+  `v2.0.0`, points `major-gate`, `release/v2/v2.0`, `v2.0`, and `v2` at that
+  release commit, then prepares `v2.0.1-alpha.0` for `alpha/v2/v2.0`,
+  `dev/v2/v2.0`, and `v2.0-alpha`.
 
 The release branch name defines the minor line. For example,
 `release/v1/v1.1` creates `v1.1.N`, promotes `v1.1`, and promotes `v1` only
@@ -48,6 +53,8 @@ governance semantics:
   `dev/vN/vN.M -> alpha/vN/vN.M`;
 - release promotion must come from a merged same-repository PR
   `alpha/vN/vN.M -> release/vN/vN.M`;
+- major-gate promotion must come from a merged same-repository PR
+  `release/vN/vN.M -> major-gate`;
 - release promotion must have an exact alpha tag for the same patch line, and
   the release source tree must match that alpha tag tree, so release does not
   introduce new code after alpha;

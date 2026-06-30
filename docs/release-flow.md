@@ -40,6 +40,7 @@ only component allowed to turn that intent into release refs.
 | Development branch | `dev/v1/v1.0` | moves | next source state for a minor line |
 | Alpha branch | `alpha/v1/v1.0` | moves | latest test state for a minor line |
 | Release branch | `release/v1/v1.0` | moves | latest production state for a minor line |
+| Major gate branch | `major-gate` | moves | reviewed administrator gate for publishing the next major |
 | Exact alpha tag | `v1.0.5-alpha.0` | immutable | audit ref for one tested prerelease |
 | Exact release tag | `v1.0.4` | immutable | audit ref for one production release |
 | Floating alpha tag | `v1.0-alpha` | moves | latest test channel for a minor line |
@@ -174,6 +175,36 @@ dev/v1/v1.0             development channel branch
 
 This is expected behavior. A production release closes one patch and opens the
 next test patch on the same minor line.
+
+## Major Gate Promotion
+
+```mermaid
+sequenceDiagram
+  participant Release as release/vX/vX.Y
+  participant PR as PR release -> major-gate
+  participant Verify as Release - Verify
+  participant Gate as major-gate
+  participant Promote as Buildchain Ref Promotion
+  participant Tags as Tags
+  participant Next as dev/alpha/release v(X+1).0
+
+  Release->>PR: open administrator PR
+  PR->>Verify: run verification checks
+  Verify-->>PR: check succeeds
+  PR->>Gate: reviewed merge
+  Gate->>Promote: Verify workflow_run completed
+  Promote->>Promote: validate same-repo release -> major-gate PR
+  Promote->>Promote: write v(X+1).0.0 version state
+  Promote->>Tags: create v(X+1).0.0
+  Promote->>Tags: move v(X+1).0 and v(X+1)
+  Promote->>Gate: move major-gate to v(X+1).0.0
+  Promote->>Next: move release/v(X+1)/v(X+1).0 to v(X+1).0.0
+  Promote->>Promote: prepare v(X+1).0.1-alpha.0
+  Promote->>Next: move alpha/dev v(X+1).0 to next alpha
+```
+
+`major-gate` is intentionally not an active source branch. It is the PR target
+for the administrator's "publish the next major" decision.
 
 ## Failure Boundaries
 

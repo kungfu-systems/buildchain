@@ -61,12 +61,19 @@ function assertPromotableRepository(
 }
 
 function getPromotionRule(targetRef) {
+  if (targetRef === "major-gate") {
+    return {
+      channel: "major-gate",
+      targetRef,
+      tags: [],
+    };
+  }
   const match = String(targetRef || "").match(
     /^(alpha|release)\/v(\d+)\/v(\d+)\.(\d+)$/,
   );
   if (!match) {
     throw new Error(
-      `Ref promotion target must be alpha/vN/vN.M or release/vN/vN.M; got ${targetRef}`,
+      `Ref promotion target must be alpha/vN/vN.M, release/vN/vN.M, or major-gate; got ${targetRef}`,
     );
   }
   const channel = match[1];
@@ -213,9 +220,26 @@ function updateVersionStateContents(files, version) {
 
 function expectedHeadRefForTarget(targetRef) {
   const rule = getPromotionRule(targetRef);
+  if (rule.channel === "major-gate") {
+    return "release/vN/vN.M";
+  }
   return rule.channel === "alpha"
     ? `dev/v${rule.major}/v${rule.major}.${rule.minor}`
     : `alpha/v${rule.major}/v${rule.major}.${rule.minor}`;
+}
+
+function parseReleaseLineRef(ref) {
+  const match = String(ref || "").match(/^release\/v(\d+)\/v(\d+)\.(\d+)$/);
+  if (!match) {
+    return undefined;
+  }
+  const major = Number(match[1]);
+  const minorMajor = Number(match[2]);
+  const minor = Number(match[3]);
+  if (major !== minorMajor) {
+    throw new Error(`Release ref major mismatch: ${ref}`);
+  }
+  return { ref, major, minor };
 }
 
 function assertAllowedLocalChanges(cwd, allowedPaths) {
@@ -303,6 +327,14 @@ async function assertChannelPromotionPr({
     const baseRef = pullRequest.base?.ref;
     const headRef = pullRequest.head?.ref;
     const headRepo = pullRequest.head?.repo?.full_name;
+    if (targetRef === "major-gate") {
+      return (
+        pullRequest.merged_at &&
+        baseRef === targetRef &&
+        parseReleaseLineRef(headRef) &&
+        headRepo === `${owner}/${repo}`
+      );
+    }
     return (
       pullRequest.merged_at &&
       baseRef === targetRef &&
@@ -316,6 +348,38 @@ async function assertChannelPromotionPr({
     );
   }
   return matchingPullRequest;
+}
+
+async function getMajorGateSource({
+  octokit,
+  owner,
+  repo,
+  sha,
+  targetRef = "major-gate",
+}) {
+  const pullRequest = await assertChannelPromotionPr({
+    octokit,
+    owner,
+    repo,
+    sha,
+    targetRef,
+  });
+  const source = parseReleaseLineRef(pullRequest.head?.ref);
+  if (!source) {
+    throw new Error(
+      `Promotion source ${sha} must come from a merged same-repository PR release/vN/vN.M -> major-gate`,
+    );
+  }
+  return {
+    source,
+    pullRequest,
+    major: source.major + 1,
+    minor: 0,
+    releasePrefix: `v${source.major + 1}.0`,
+    majorTag: `v${source.major + 1}`,
+    minorTag: `v${source.major + 1}.0`,
+    alphaTag: `v${source.major + 1}.0-alpha`,
+  };
 }
 
 async function assertProtectedChannel({
@@ -392,6 +456,17 @@ function latestAlphaForPatch(refs, releasePrefix, patch) {
 
 function resolveTagsForTarget(targetRef, inputTags) {
   const rule = getPromotionRule(targetRef);
+  if (rule.channel === "major-gate" && (!inputTags || inputTags.length === 0)) {
+    return [];
+  }
+  if (rule.channel === "major-gate") {
+    for (const tag of inputTags) {
+      if (!/^v\d+$|^v\d+\.0$|^v\d+\.0-alpha$|^v\d+\.0\.\d+$|^v\d+\.0\.\d+-alpha\.\d+$/.test(tag)) {
+        throw new Error(`Tag ${tag} is not allowed for major-gate promotion`);
+      }
+    }
+    return inputTags;
+  }
   const tags = inputTags && inputTags.length > 0 ? inputTags : rule.tags;
   for (const tag of tags) {
     const isLineReleaseTag =
@@ -584,6 +659,12 @@ function versionStateBranchName(branch, sha) {
 }
 
 function parseVersionStateBranchName(branch) {
+  const majorGateMatch = String(branch || "").match(
+    /^buildchain\/version-state\/major-gate\/[0-9a-f]{12,40}$/,
+  );
+  if (majorGateMatch) {
+    return "major-gate";
+  }
   const match = String(branch || "").match(
     /^buildchain\/version-state\/(alpha|release)-v(\d+)-v(\d+\.\d+)\/[0-9a-f]{12,40}$/,
   );
@@ -1124,8 +1205,6 @@ async function promoteBuildchainRefs({
     }
   };
 
-  const lineRefs = await listLineRefs();
-
   if (requireGovernance && !dryRun) {
     await assertProtectedChannel({
       octokit,
@@ -1135,6 +1214,159 @@ async function promoteBuildchainRefs({
       requiredStatusCheck,
     });
   }
+
+  if (rule.channel === "major-gate") {
+    const resolveMajorGateSource = async () => {
+      try {
+        return await getMajorGateSource({
+          octokit,
+          owner,
+          repo,
+          sha,
+          targetRef,
+        });
+      } catch (directError) {
+        const commit = await getCommitInfo(octokit, owner, repo, sha);
+        for (const parentSha of commit.parents) {
+          try {
+            return await getMajorGateSource({
+              octokit,
+              owner,
+              repo,
+              sha: parentSha,
+              targetRef,
+            });
+          } catch {
+            // Try the next parent before surfacing the direct lineage failure.
+          }
+        }
+        throw directError;
+      }
+    };
+    const majorGate = await resolveMajorGateSource();
+    const majorRule = {
+      ...rule,
+      ...majorGate,
+      tags: [majorGate.majorTag, majorGate.minorTag],
+    };
+    const { data: refs } = await octokit.rest.git.listMatchingRefs({
+      owner,
+      repo,
+      ref: `tags/${majorRule.releasePrefix}.`,
+    });
+    const explicitReleaseTags = requestedTags
+      ? requestedTags.filter(
+          (tag) =>
+            !tag.includes("-alpha.") &&
+            tag.startsWith(`${majorRule.releasePrefix}.`),
+        )
+      : [];
+    if (explicitReleaseTags.length > 1) {
+      throw new Error("Major-gate promotion accepts at most one explicit release tag");
+    }
+    const selectedRelease = explicitReleaseTags[0]
+      ? {
+          tag: explicitReleaseTags[0],
+          patch: Number(explicitReleaseTags[0].split(".").pop()),
+        }
+      : selectReleaseTag({
+          refs,
+          releasePrefix: majorRule.releasePrefix,
+          sha,
+        });
+    if (selectedRelease.patch !== 0) {
+      throw new Error(
+        `Major-gate promotion must create the first patch of the next major line; got ${selectedRelease.tag}`,
+      );
+    }
+    const releaseVersion = stripTagPrefix(selectedRelease.tag);
+    const releaseCommit = await createVersionStateCommit({
+      baseSha: sha,
+      version: releaseVersion,
+      message: `chore(release): release ${selectedRelease.tag}`,
+    });
+    const releaseSha = releaseCommit.sha;
+    if (requireGovernance && !dryRun) {
+      if (releaseCommit.action === "existing") {
+        await assertPromotionPrOrVersionStateParent({
+          commitSha: sha,
+          targetRef,
+          allowedPaths: releaseCommit.files,
+        });
+      }
+    }
+    if (versionState) {
+      const gateUpdate = await updateBranch(targetRef, releaseSha, "updated", {
+        title: `Release ${selectedRelease.tag}`,
+        body: `Create the generated version-state commit for ${selectedRelease.tag}.`,
+      });
+      if (gateUpdate.pending) {
+        return {
+          owner,
+          repo,
+          sourceSha: sha,
+          sha: releaseSha,
+          targetRef,
+          pendingPullRequest: gateUpdate.pullRequest.html_url || gateUpdate.pullRequest.url,
+          updates,
+        };
+      }
+      await updateBranch(`release/v${majorRule.major}/v${majorRule.major}.0`, releaseSha);
+    }
+    await ensureTag(selectedRelease.tag, releaseSha);
+    await updateTag(majorRule.minorTag, releaseSha);
+    await updateTag(majorRule.majorTag, releaseSha);
+
+    const explicitAlphaTags = requestedTags
+      ? requestedTags.filter((tag) => tag.includes("-alpha."))
+      : [];
+    if (explicitAlphaTags.length > 1) {
+      throw new Error(
+        "Major-gate promotion accepts at most one explicit next-alpha tag",
+      );
+    }
+    const selectedNextAlpha = explicitAlphaTags[0]
+      ? { tag: explicitAlphaTags[0] }
+      : selectAlphaTag({
+          refs,
+          releasePrefix: majorRule.releasePrefix,
+          sha: releaseSha,
+          patchAfterRelease: 1,
+        });
+    const nextAlphaVersion = stripTagPrefix(selectedNextAlpha.tag);
+    let nextAlphaSha = versionState ? selectedNextAlpha.sha : sha;
+    if (versionState && selectedNextAlpha.exists && nextAlphaSha) {
+      updates.push({
+        version: nextAlphaVersion,
+        action: "existing-version-state",
+        sha: nextAlphaSha,
+      });
+    } else if (versionState) {
+      const nextAlphaCommit = await createVersionStateCommit({
+        baseSha: releaseSha,
+        version: nextAlphaVersion,
+        message: `chore(release): prepare ${selectedNextAlpha.tag}`,
+      });
+      nextAlphaSha = nextAlphaCommit.sha;
+    }
+    if (versionState) {
+      await updateBranch(`alpha/v${majorRule.major}/v${majorRule.major}.0`, nextAlphaSha);
+      await updateBranch(`dev/v${majorRule.major}/v${majorRule.major}.0`, nextAlphaSha);
+    }
+    await ensureTag(selectedNextAlpha.tag, nextAlphaSha);
+    await updateTag(majorRule.alphaTag, nextAlphaSha);
+    return {
+      owner,
+      repo,
+      sourceSha: sha,
+      sha: releaseSha,
+      nextAlphaSha,
+      targetRef,
+      updates,
+    };
+  }
+
+  const lineRefs = await listLineRefs();
 
   if (rule.channel === "alpha") {
     const explicitAlphaTags = requestedTags
@@ -1364,6 +1596,7 @@ module.exports = {
   expectedHeadRefForTarget,
   getPromotionRule,
   latestAlphaForPatch,
+  parseReleaseLineRef,
   parseAlphaPrereleaseTag,
   parseRepository,
   parseReleasePatchTag,
