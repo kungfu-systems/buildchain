@@ -57,7 +57,19 @@ function normalizeRef(ref) {
 }
 
 function parseVersionStateRef(ref) {
-  const match = normalizeRef(ref).match(
+  const normalizedRef = normalizeRef(ref);
+  const majorGateMatch = normalizedRef.match(/^buildchain\/version-state\/major-gate\/[0-9a-f]{12,40}$/);
+  if (majorGateMatch) {
+    return {
+      channel: 'major-gate',
+      major: undefined,
+      loose: undefined,
+      normalizedRef: 'major-gate',
+      lineSuffix: '',
+    };
+  }
+
+  const match = normalizedRef.match(
     /^buildchain\/version-state\/(alpha|release)-v(\d+)-v(\d+\.\d+)\/[0-9a-f]{12,40}$/,
   );
   if (!match) {
@@ -107,7 +119,7 @@ function getBumpKeyword(cwd, headRef, baseRef, loose = false) {
     if (versionStateTarget.channel !== baseChannel) {
       throw new Error(`Versions not match for head/base refs: ${headRef} -> ${baseRef}`);
     }
-    return baseChannel === 'release' ? 'patch' : 'prerelease';
+    return baseChannel === 'release' || baseChannel === 'major-gate' ? 'patch' : 'prerelease';
   }
 
   const normalizedHeadRef = versionStateTarget?.normalizedRef || normalizeRef(headRef);
