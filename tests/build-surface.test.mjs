@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -72,6 +73,54 @@ test("runLifecycle writes deterministic artifact manifest", () => {
       ],
     );
     assert.ok(manifest.files.every((file) => /^[a-f0-9]{64}$/.test(file.sha256)));
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("run-lifecycle action accepts hyphenated GitHub Action inputs", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-action-"));
+  const fixtureSource = path.join(root, "fixtures/libnode-shaped");
+  const fixture = path.join(workspace, "fixture");
+  fs.cpSync(fixtureSource, fixture, { recursive: true });
+
+  try {
+    runLifecycle({
+      cwd: fixture,
+      stageName: "install",
+      required: true,
+      workspace,
+    });
+    runLifecycle({
+      cwd: fixture,
+      stageName: "build",
+      required: true,
+      workspace,
+    });
+    const manifestPath = path.join(workspace, ".buildchain/artifacts/linux-x64/manifest-action.json");
+    const result = spawnSync(process.execPath, [path.join(root, "actions/run-lifecycle/dist/index.js")], {
+      cwd: workspace,
+      env: {
+        ...process.env,
+        INPUT_CWD: fixture,
+        INPUT_STAGE: "verify",
+        INPUT_REQUIRED: "true",
+        "INPUT_ARTIFACT-NAME": "libnode-shaped-linux-x64-test",
+        "INPUT_PLATFORM-ID": "linux-x64",
+        "INPUT_PLATFORM-NAME": "Linux x64",
+        "INPUT_ARTIFACT-PATHS": "fixture/dist",
+        "INPUT_MANIFEST-PATH": ".buildchain/artifacts/linux-x64/manifest-action.json",
+      },
+      encoding: "utf8",
+    });
+    assert.equal(result.status, 0, result.stderr || result.stdout);
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    assert.equal(manifest.artifactName, "libnode-shaped-linux-x64-test");
+    assert.equal(manifest.platform.id, "linux-x64");
+    assert.deepEqual(
+      manifest.files.map((file) => file.path),
+      ["fixture/dist/install.txt", "fixture/dist/libnode-shaped.txt"],
+    );
   } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
   }

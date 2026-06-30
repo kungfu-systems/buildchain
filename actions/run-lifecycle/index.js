@@ -3,7 +3,7 @@ import os from "node:os";
 import { runLifecycle } from "../../scripts/run-lifecycle-core.mjs";
 
 function inputName(name) {
-  return `INPUT_${String(name).replace(/ /g, "_").replace(/-/g, "_").toUpperCase()}`;
+  return `INPUT_${String(name).replace(/ /g, "_").toUpperCase()}`;
 }
 
 function getInput(name) {
