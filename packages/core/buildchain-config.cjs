@@ -261,6 +261,69 @@ function discoverConfiguredVersionStateFiles(cwd = process.cwd(), loadedConfig =
   return files;
 }
 
+function configuredLifecycleStages(loadedConfig) {
+  const lifecycle = (loadedConfig && loadedConfig.config && loadedConfig.config.lifecycle) || {};
+  return Object.entries(lifecycle)
+    .filter(([, stage]) => stage && typeof stage === "object" && typeof stage.mode === "string")
+    .map(([name, stage]) => ({
+      name,
+      mode: stage.mode,
+      timeoutMinutes: stage.timeoutMinutes,
+      retries: stage.retries,
+      commandCount: stage.mode === "script" ? 1 : stage.commands.length,
+    }));
+}
+
+function validateBuildchainConfig(
+  cwd = process.cwd(),
+  {
+    requireConfig = true,
+    requireVersionState = false,
+    requireLifecycleStages = [],
+  } = {},
+) {
+  const loadedConfig = loadBuildchainConfig(cwd);
+  if (!loadedConfig) {
+    if (requireConfig) {
+      throw new Error(`${CONFIG_FILE} is required`);
+    }
+    return {
+      config: undefined,
+      versionFiles: [],
+      lifecycleStages: [],
+    };
+  }
+
+  const versionFiles = loadedConfig.config.version
+    ? discoverConfiguredVersionStateFiles(cwd, loadedConfig)
+    : [];
+  if (requireVersionState && versionFiles.length === 0) {
+    throw new Error("version state is required but no version.files are configured");
+  }
+
+  const lifecycleStages = configuredLifecycleStages(loadedConfig);
+  const stageNames = new Set(lifecycleStages.map((stage) => stage.name));
+  const missingStages = requireLifecycleStages.filter((stage) => !stageNames.has(stage));
+  if (missingStages.length > 0) {
+    throw new Error(`required lifecycle stage missing: ${missingStages.join(", ")}`);
+  }
+
+  return {
+    config: {
+      path: loadedConfig.path,
+      filePath: loadedConfig.filePath,
+      schema: loadedConfig.config.schema,
+    },
+    versionFiles: versionFiles.map((file) => ({
+      path: file.path,
+      type: file.type,
+      key: file.key,
+      pattern: file.pattern && file.pattern.source,
+    })),
+    lifecycleStages,
+  };
+}
+
 function updateConfiguredVersionStateContents(files, version) {
   return files
     .map((file) => {
@@ -309,5 +372,6 @@ module.exports = {
   normalizeLifecycleStage,
   runLifecycleStage,
   updateConfiguredVersionStateContents,
+  validateBuildchainConfig,
   writeLifecycleScriptFixture,
 };

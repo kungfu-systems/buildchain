@@ -77,6 +77,8 @@ Buildchain v1 ships these active migration surfaces:
 - package-manager adapters for pnpm, npm, and yarn version-state updates;
 - `buildchain.toml` lifecycle configuration for custom version files and
   verification commands;
+- `actions/validate-config` migration preflight for TOML version-state and
+  lifecycle declarations without running heavyweight builds;
 - governance-closed self-promotion through `Buildchain Ref Promotion`.
 
 Stable consumers should reference actions as:

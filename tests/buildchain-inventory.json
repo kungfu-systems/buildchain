@@ -101,6 +101,13 @@
       "runtime": "node24",
       "build": "tsup",
       "bundle": "actions/promote-buildchain-ref/dist/index.js"
+    },
+    {
+      "path": "actions/validate-config",
+      "disposition": "buildchain-config-preflight",
+      "runtime": "node24",
+      "build": "tsup",
+      "bundle": "actions/validate-config/dist/index.js"
     }
   ],
   "retiredActionsExcluded": [

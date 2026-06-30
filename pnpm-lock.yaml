@@ -325,6 +325,15 @@ importers:
         specifier: ^18.0.0
         version: 18.0.0
 
+  actions/validate-config:
+    dependencies:
+      '@actions/core':
+        specifier: ^3.0.1
+        version: 3.0.1
+      smol-toml:
+        specifier: 1.7.0
+        version: 1.7.0
+
 packages:
 
   '@actions/core@3.0.1':
