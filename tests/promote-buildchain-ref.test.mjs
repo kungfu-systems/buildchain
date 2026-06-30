@@ -649,6 +649,7 @@ test("major-gate promotion publishes next major production and prepares next alp
   const refs = new Map([["heads/major-gate", SHA]]);
   const blobs = [];
   const commits = [];
+  const repoUpdates = [];
   const octokit = {
     rest: {
       git: {
@@ -692,6 +693,10 @@ test("major-gate promotion publishes next major production and prepares next alp
         },
       },
       repos: {
+        update: async (input) => {
+          repoUpdates.push(input);
+          return {};
+        },
         listPullRequestsAssociatedWithCommit: async ({ commit_sha }) => {
           assert.equal(commit_sha, SHA);
           return {
@@ -731,6 +736,13 @@ test("major-gate promotion publishes next major production and prepares next alp
   assert.equal(refs.get("tags/v2"), releaseSha);
   assert.equal(refs.get("heads/alpha/v2/v2.0"), nextAlphaSha);
   assert.equal(refs.get("heads/dev/v2/v2.0"), nextAlphaSha);
+  assert.deepEqual(repoUpdates, [
+    {
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      default_branch: "dev/v2/v2.0",
+    },
+  ]);
   assert.equal(refs.get("tags/v2.0.1-alpha.0"), nextAlphaSha);
   assert.equal(refs.get("tags/v2.0-alpha"), nextAlphaSha);
   assert.deepEqual(

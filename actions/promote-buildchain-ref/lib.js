@@ -903,6 +903,19 @@ async function promoteBuildchainRefs({
     }
   };
 
+  const updateDefaultBranch = async (branch) => {
+    if (dryRun) {
+      updates.push({ ref: branch, action: "dry-run-default-branch" });
+      return;
+    }
+    await octokit.rest.repos.update({
+      owner,
+      repo,
+      default_branch: branch,
+    });
+    updates.push({ ref: branch, action: "updated-default-branch" });
+  };
+
   const assertOnlyAllowedChangesBetween = async ({ baseSha, headSha, allowedPaths }) => {
     const { data: comparison } = await octokit.rest.repos.compareCommitsWithBasehead({
       owner,
@@ -1351,7 +1364,9 @@ async function promoteBuildchainRefs({
     }
     if (versionState) {
       await updateBranch(`alpha/v${majorRule.major}/v${majorRule.major}.0`, nextAlphaSha);
-      await updateBranch(`dev/v${majorRule.major}/v${majorRule.major}.0`, nextAlphaSha);
+      const nextDevRef = `dev/v${majorRule.major}/v${majorRule.major}.0`;
+      await updateBranch(nextDevRef, nextAlphaSha);
+      await updateDefaultBranch(nextDevRef);
     }
     await ensureTag(selectedNextAlpha.tag, nextAlphaSha);
     await updateTag(majorRule.alphaTag, nextAlphaSha);
