@@ -1,6 +1,6 @@
 # validate-config
 
-Buildchain v1 action for validating `buildchain.toml` without running lifecycle
+Buildchain v2 action for validating `buildchain.toml` without running lifecycle
 commands.
 
 Use this action during repository migration when a heavyweight project needs to
@@ -10,7 +10,7 @@ the actual build should not run yet.
 ## Usage
 
 ```yaml
-- uses: kungfu-systems/buildchain/actions/validate-config@v1
+- uses: kungfu-systems/buildchain/actions/validate-config@v2
   with:
     require-version-state: "true"
     require-lifecycle-stages: "install,build,verify"

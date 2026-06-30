@@ -1,13 +1,13 @@
 # Generate Release Page Action
 
-Buildchain v1 implementation of the generate-release-page GitHub Action.
+Buildchain v2 implementation of the generate-release-page GitHub Action.
 
 ## Runtime
 
 - GitHub Actions runtime: Node 24
 - Build tool: tsup
 - Workspace package: `@kungfu-systems/buildchain-generate-release-page`
-- Published action path: `kungfu-systems/buildchain/actions/generate-release-page@v1`
+- Published action path: `kungfu-systems/buildchain/actions/generate-release-page@v2`
 
 ## Local Build
 

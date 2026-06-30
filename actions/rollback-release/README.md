@@ -1,13 +1,13 @@
 # Rollback Release Action
 
-Buildchain v1 implementation of the rollback-release GitHub Action.
+Buildchain v2 implementation of the rollback-release GitHub Action.
 
 ## Runtime
 
 - GitHub Actions runtime: Node 24
 - Build tool: tsup
 - Workspace package: `@kungfu-systems/buildchain-rollback-release`
-- Published action path: `kungfu-systems/buildchain/actions/rollback-release@v1`
+- Published action path: `kungfu-systems/buildchain/actions/rollback-release@v2`
 
 ## Local Build
 

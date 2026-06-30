@@ -1,11 +1,11 @@
 # Lifecycle Protocol
 
-Buildchain uses `buildchain.toml` as the v1 repository configuration format.
+Buildchain uses `buildchain.toml` as the v2 repository configuration format.
 The file is optional for simple JavaScript repositories, but it is the preferred
 way to describe release version state and lifecycle commands when a project is
 not a plain pnpm, npm, or yarn workspace.
 
-Only TOML is supported in v1. YAML, JSON, and JavaScript config files are not
+Only TOML is supported in v2. YAML, JSON, and JavaScript config files are not
 loaded.
 
 ## Minimal File
@@ -205,7 +205,7 @@ build and the first migration milestone is to prove the release metadata and
 lifecycle protocol without consuming build runners.
 
 ```yaml
-- uses: kungfu-systems/buildchain/actions/validate-config@v1
+- uses: kungfu-systems/buildchain/actions/validate-config@v2
   with:
     require-version-state: "true"
     require-lifecycle-stages: "install,build,verify"

@@ -33,7 +33,7 @@ jobs:
 
       - name: Bump Version
         id: bump_version
-        uses: kungfu-systems/buildchain/actions/bump-version@v1
+        uses: kungfu-systems/buildchain/actions/bump-version@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           action: "prebuild"
