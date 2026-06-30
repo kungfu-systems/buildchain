@@ -632,6 +632,125 @@ test("release promotion creates source version commits and points refs at them",
   );
 });
 
+test("anchored manual release verifies existing anchor state and does not prepare next alpha", async () => {
+  const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+strategy = "anchored"
+next = "manual"
+manifest = "libnode.release.json"
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[lifecycle.verify]
+command = "node scripts/verify.mjs"
+`,
+    "package.json": {
+      name: "@kungfu-tech/libnode",
+      version: "22.22.3-kf.0",
+    },
+    "libnode.release.json": {
+      nodeVersion: "22.22.3",
+      nodeTag: "v22.22.3",
+      nodeCommit: "abc123",
+      libnodeRevision: "kf.0",
+      npmVersion: "22.22.3-kf.0",
+    },
+    "scripts/verify.mjs": `
+import assert from "node:assert/strict";
+import fs from "node:fs";
+
+const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+const anchor = JSON.parse(fs.readFileSync(process.env.BUILDCHAIN_ANCHOR_MANIFEST, "utf8"));
+const fields = JSON.parse(process.env.BUILDCHAIN_ANCHOR_MANIFEST_JSON);
+
+assert.equal(process.env.BUILDCHAIN_VERSION, "22.22.0");
+assert.equal(process.env.BUILDCHAIN_VERSION_STRATEGY, "anchored");
+assert.equal(process.env.BUILDCHAIN_VERSION_NEXT, "manual");
+assert.equal(pkg.version, "22.22.3-kf.0");
+assert.equal(anchor.npmVersion, pkg.version);
+assert.equal(fields.nodeTag, "v22.22.3");
+`,
+  });
+  run(["git", "init"], cwd);
+  run(["git", "add", "."], cwd);
+  run(["git", "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-m", "init"], cwd);
+
+  const refs = new Map([["heads/release/v22/v22.22", SHA]]);
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (refs.has(ref)) {
+            return { data: { object: { sha: refs.get(ref) } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async ({ ref }) => ({
+          data: [...refs.entries()]
+            .filter(([name]) => name.startsWith(ref))
+            .map(([name, objectSha]) => ({
+              ref: `refs/${name}`,
+              object: { sha: objectSha },
+            })),
+        }),
+        createBlob: async () => {
+          throw new Error("anchored manual release should not create version blobs");
+        },
+        createTree: async () => {
+          throw new Error("anchored manual release should not create version trees");
+        },
+        createCommit: async () => {
+          throw new Error("anchored manual release should not create version commits");
+        },
+        updateRef: async ({ ref, sha }) => {
+          refs.set(ref, sha);
+          return {};
+        },
+        createRef: async ({ ref, sha }) => {
+          refs.set(ref.replace(/^refs\//, ""), sha);
+          return {};
+        },
+      },
+    },
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "release/v22/v22.22",
+    cwd,
+  });
+
+  assert.equal(result.sha, SHA);
+  assert.equal(result.nextAlphaRequired, true);
+  assert.equal(result.nextAlphaSha, undefined);
+  assert.equal(refs.get("heads/release/v22/v22.22"), SHA);
+  assert.equal(refs.get("heads/alpha/v22/v22.22"), undefined);
+  assert.equal(refs.get("heads/dev/v22/v22.22"), undefined);
+  assert.equal(refs.get("tags/v22.22.0"), SHA);
+  assert.equal(refs.get("tags/v22.22"), SHA);
+  assert.equal(refs.get("tags/v22"), SHA);
+  assert.equal(refs.get("tags/v22.22-alpha"), undefined);
+  assert.deepEqual(
+    result.updates
+      .filter((update) => update.action === "anchored-manual-version-state" || update.action === "next-anchor-required")
+      .map((update) => [update.action, update.version || update.ref, update.manifest]),
+    [
+      ["anchored-manual-version-state", "22.22.0", "libnode.release.json"],
+      ["next-anchor-required", "dev/v22/v22.22", "libnode.release.json"],
+    ],
+  );
+});
+
 test("major-gate promotion publishes next major production and prepares next alpha", async () => {
   const cwd = makeTempWorkspace({
     "package.json": {

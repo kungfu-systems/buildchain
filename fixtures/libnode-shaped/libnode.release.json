@@ -1,0 +1,7 @@
+{
+  "nodeVersion": "22.22.3",
+  "nodeTag": "v22.22.3",
+  "nodeCommit": "fixture-node-commit",
+  "libnodeRevision": "kf.0",
+  "npmVersion": "22.22.3-kf.0"
+}

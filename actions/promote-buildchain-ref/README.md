@@ -36,6 +36,24 @@ version commit itself is written through the GitHub Git Data API so the ref
 graph is the durable source of truth. Repositories without any supported version
 state degrade to ref-only promotion only when strict version state is disabled.
 
+Repositories whose package version is anchored to an explicitly selected
+upstream release can opt into manual next-anchor behavior:
+
+```toml
+[version]
+required = true
+strategy = "anchored"
+next = "manual"
+manifest = "libnode.release.json"
+```
+
+In this mode, the action validates the configured version files and anchor
+manifest through the repository's verify lifecycle, but it does not rewrite the
+package version to match the Buildchain release tag. After a production
+release, it sets `next-anchor-required=true` and does not auto-create the next
+alpha branch or tag. The repository must create the next upstream anchor line
+explicitly, then run the normal channel promotion flow for that line.
+
 When branch protection requires pull requests, generated version-state commits
 are also routed through pull requests. The action creates an internal
 `buildchain/version-state/...` branch and PR, then stops before moving tags. Once

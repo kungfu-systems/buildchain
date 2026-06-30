@@ -68,6 +68,55 @@ replacement = '${version}'
 If `version.required = true`, promotion fails when no configured version files
 are available.
 
+### Anchored Manual Versions
+
+Some repositories do not derive their package version from the Buildchain
+release tag. `libnode` is the canonical example: the package version is anchored
+to an explicitly selected upstream Node.js release such as `22.22.3-kf.0`, while
+the channel line may be `release/v22/v22.22`.
+
+Those repositories can opt into anchored manual semantics:
+
+```toml
+[version]
+required = true
+strategy = "anchored"
+next = "manual"
+manifest = "libnode.release.json"
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+```
+
+With `strategy = "anchored"` and `next = "manual"`:
+
+- Buildchain validates the configured version files and anchor manifest, but it
+  does not rewrite those files to the Buildchain release tag.
+- `lifecycle.verify` is the project-owned truth gate. It should compare the
+  package version, anchor manifest, and upstream source/submodule state.
+- release promotion still creates the exact/floating production refs for the
+  current line;
+- release promotion does not auto-create the next alpha branch or tag;
+- the action output `next-anchor-required` is `true`, signaling that the next
+  upstream anchor line must be created explicitly by the repository.
+
+The configured anchor manifest must be JSON or TOML. Buildchain does not
+interpret project-specific field names; it only loads the manifest and exposes
+its top-level fields to validation summaries and lifecycle environment:
+
+```text
+BUILDCHAIN_VERSION_STRATEGY=anchored
+BUILDCHAIN_VERSION_NEXT=manual
+BUILDCHAIN_ANCHOR_MANIFEST=libnode.release.json
+BUILDCHAIN_ANCHOR_MANIFEST_JSON={"nodeTag":"v22.22.3",...}
+```
+
+The upstream anchor decision remains outside Buildchain. A future line such as
+`dev/v24/v24.xx` should be created by an explicit repository workflow or human
+decision after the upstream version has been selected and checked in.
+
 ## Lifecycle Stages
 
 Lifecycle stages are declarative shell commands. A stage can use exactly one of:
