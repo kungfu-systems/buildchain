@@ -20,6 +20,8 @@ const COMMIT_IDENTITY = {
   name: "Keren Dong",
   email: "keren.dong@kungfu.link",
 };
+const MAJOR_GATE_REF = "publish-gate/major";
+const LEGACY_MAJOR_GATE_REF = "major-gate";
 
 function parseTags(input) {
   const tags = String(input || "")
@@ -63,10 +65,11 @@ function assertPromotableRepository(
 }
 
 function getPromotionRule(targetRef) {
-  if (targetRef === "major-gate") {
+  if (targetRef === MAJOR_GATE_REF || targetRef === LEGACY_MAJOR_GATE_REF) {
     return {
-      channel: "major-gate",
+      channel: "major",
       targetRef,
+      legacyAlias: targetRef === LEGACY_MAJOR_GATE_REF,
       tags: [],
     };
   }
@@ -75,7 +78,7 @@ function getPromotionRule(targetRef) {
   );
   if (!match) {
     throw new Error(
-      `Ref promotion target must be alpha/vN/vN.M, release/vN/vN.M, or major-gate; got ${targetRef}`,
+      `Ref promotion target must be alpha/vN/vN.M, release/vN/vN.M, publish-gate/major, or major-gate; got ${targetRef}`,
     );
   }
   const channel = match[1];
@@ -222,7 +225,7 @@ function updateVersionStateContents(files, version) {
 
 function expectedHeadRefForTarget(targetRef) {
   const rule = getPromotionRule(targetRef);
-  if (rule.channel === "major-gate") {
+  if (rule.channel === "major") {
     return "release/vN/vN.M";
   }
   return rule.channel === "alpha"
@@ -343,7 +346,7 @@ async function assertChannelPromotionPr({
     const baseRef = pullRequest.base?.ref;
     const headRef = pullRequest.head?.ref;
     const headRepo = pullRequest.head?.repo?.full_name;
-    if (targetRef === "major-gate") {
+    if (getPromotionRule(targetRef).channel === "major") {
       return (
         pullRequest.merged_at &&
         baseRef === targetRef &&
@@ -371,7 +374,7 @@ async function getMajorGateSource({
   owner,
   repo,
   sha,
-  targetRef = "major-gate",
+  targetRef = MAJOR_GATE_REF,
 }) {
   const pullRequest = await assertChannelPromotionPr({
     octokit,
@@ -383,7 +386,7 @@ async function getMajorGateSource({
   const source = parseReleaseLineRef(pullRequest.head?.ref);
   if (!source) {
     throw new Error(
-      `Promotion source ${sha} must come from a merged same-repository PR release/vN/vN.M -> major-gate`,
+      `Promotion source ${sha} must come from a merged same-repository PR release/vN/vN.M -> ${targetRef}`,
     );
   }
   return {
@@ -472,13 +475,13 @@ function latestAlphaForPatch(refs, releasePrefix, patch) {
 
 function resolveTagsForTarget(targetRef, inputTags) {
   const rule = getPromotionRule(targetRef);
-  if (rule.channel === "major-gate" && (!inputTags || inputTags.length === 0)) {
+  if (rule.channel === "major" && (!inputTags || inputTags.length === 0)) {
     return [];
   }
-  if (rule.channel === "major-gate") {
+  if (rule.channel === "major") {
     for (const tag of inputTags) {
       if (!/^v\d+$|^v\d+\.0$|^v\d+\.0-alpha$|^v\d+\.0\.\d+$|^v\d+\.0\.\d+-alpha\.\d+$/.test(tag)) {
-        throw new Error(`Tag ${tag} is not allowed for major-gate promotion`);
+        throw new Error(`Tag ${tag} is not allowed for publish-gate/major promotion`);
       }
     }
     return inputTags;
@@ -675,11 +678,17 @@ function versionStateBranchName(branch, sha) {
 }
 
 function parseVersionStateBranchName(branch) {
+  const publishGateMajorMatch = String(branch || "").match(
+    /^buildchain\/version-state\/publish-gate-major\/[0-9a-f]{12,40}$/,
+  );
+  if (publishGateMajorMatch) {
+    return MAJOR_GATE_REF;
+  }
   const majorGateMatch = String(branch || "").match(
     /^buildchain\/version-state\/major-gate\/[0-9a-f]{12,40}$/,
   );
   if (majorGateMatch) {
-    return "major-gate";
+    return LEGACY_MAJOR_GATE_REF;
   }
   const match = String(branch || "").match(
     /^buildchain\/version-state\/(alpha|release)-v(\d+)-v(\d+\.\d+)\/[0-9a-f]{12,40}$/,
@@ -1293,7 +1302,7 @@ async function promoteBuildchainRefs({
     });
   }
 
-  if (rule.channel === "major-gate") {
+  if (rule.channel === "major") {
     const resolveMajorGateSource = async () => {
       try {
         return await getMajorGateSource({
@@ -1340,7 +1349,7 @@ async function promoteBuildchainRefs({
         )
       : [];
     if (explicitReleaseTags.length > 1) {
-      throw new Error("Major-gate promotion accepts at most one explicit release tag");
+      throw new Error("publish-gate/major promotion accepts at most one explicit release tag");
     }
     const selectedRelease = explicitReleaseTags[0]
       ? {
@@ -1354,7 +1363,7 @@ async function promoteBuildchainRefs({
         });
     if (selectedRelease.patch !== 0) {
       throw new Error(
-        `Major-gate promotion must create the first patch of the next major line; got ${selectedRelease.tag}`,
+        `publish-gate/major promotion must create the first patch of the next major line; got ${selectedRelease.tag}`,
       );
     }
     const releaseVersion = stripTagPrefix(selectedRelease.tag);
@@ -1419,7 +1428,7 @@ async function promoteBuildchainRefs({
       : [];
     if (explicitAlphaTags.length > 1) {
       throw new Error(
-        "Major-gate promotion accepts at most one explicit next-alpha tag",
+        "publish-gate/major promotion accepts at most one explicit next-alpha tag",
       );
     }
     const selectedNextAlpha = explicitAlphaTags[0]

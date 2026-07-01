@@ -13,11 +13,12 @@ compatibility refs from buildchain release channels:
   source commit for the next exact prerelease tag such as `v2.0.1-alpha.0` and
   points the alpha/dev channel branches plus `v2.0-alpha` at that prerelease
   commit;
-- `major-gate` accepts a reviewed PR from a production release line such as
-  `release/v2/v2.0`, writes the next major production version such as
-  `v3.0.0`, points `major-gate`, `release/v3/v3.0`, `v3.0`, and `v3` at that
-  release commit, then prepares `v3.0.1-alpha.0` for `alpha/v3/v3.0`,
-  `dev/v3/v3.0`, and `v3.0-alpha`.
+- `publish-gate/major` accepts a reviewed PR from a production release line such
+  as `release/v2/v2.0`, writes the next major production version such as
+  `v3.0.0`, points `publish-gate/major`, `release/v3/v3.0`, `v3.0`, and `v3`
+  at that release commit, then prepares `v3.0.1-alpha.0` for
+  `alpha/v3/v3.0`, `dev/v3/v3.0`, and `v3.0-alpha`. The older `major-gate`
+  branch name is a compatibility alias only.
 
 The release branch name defines the minor line. For example,
 `release/v2/v2.1` creates `v2.1.N`, promotes `v2.1`, and promotes `v2` only
@@ -71,8 +72,8 @@ governance semantics:
   `dev/vN/vN.M -> alpha/vN/vN.M`;
 - release promotion must come from a merged same-repository PR
   `alpha/vN/vN.M -> release/vN/vN.M`;
-- major-gate promotion must come from a merged same-repository PR
-  `release/vN/vN.M -> major-gate`;
+- major promotion must come from a merged same-repository PR
+  `release/vN/vN.M -> publish-gate/major`;
 - release promotion must have an exact alpha tag for the same patch line, and
   the release source tree must match that alpha tag tree, so release does not
   introduce new code after alpha;

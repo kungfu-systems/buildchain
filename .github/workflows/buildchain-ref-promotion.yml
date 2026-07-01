@@ -6,6 +6,7 @@ on:
     branches:
       - "alpha/v*/v*"
       - "release/v*/v*"
+      - "publish-gate/major"
       - "major-gate"
     types: [completed]
   workflow_dispatch:
@@ -60,7 +61,7 @@ jobs:
         run: |
           target_ref="${WORKFLOW_RUN_BRANCH:-$INPUT_TARGET_REF}"
           case "$target_ref" in
-            alpha/v*/v*|release/v*/v*|major-gate) ;;
+            alpha/v*/v*|release/v*/v*|publish-gate/major|major-gate) ;;
             *)
               echo "::error::unsupported target ref: $target_ref"
               exit 1

@@ -177,6 +177,7 @@ test("publish source refs parse gate channel, line, and consumer version", () =>
   });
   assert.equal(parsePublishSourceRef("publish-gate/release/v22/v22.22/22.22.3-kf.0").channel, "release");
   assert.equal(parsePublishSourceRef("publish-gate/anchor").anchor, true);
+  assert.equal(parsePublishSourceRef("publish-gate/major").legacyAlias, false);
   assert.equal(parsePublishSourceRef("major-gate").legacyAlias, true);
   assert.throws(
     () => parsePublishSourceRef("publish-gate/alpha/v22/22.22.3-kf.0"),
