@@ -87,6 +87,9 @@ Buildchain v2 ships these active migration surfaces:
 - package-manager adapters for pnpm, npm, and yarn version-state updates;
 - `buildchain.toml` lifecycle configuration for custom version files and
   verification commands;
+- `project.type = "web-surface"` configuration for site and app repositories
+  that need preview/staging/production deployment manifests and dry-run deploy
+  plans without package-release version semantics;
 - opt-in anchored/manual version strategy for packages whose version is pinned
   to an explicit upstream release instead of derived from the Buildchain tag;
 - `actions/validate-config` migration preflight for TOML version-state and
@@ -157,6 +160,9 @@ no-op for this repository. Consumer repositories still call the reusable
   for custom version-state files and lifecycle commands.
 - [Reusable build surface](docs/reusable-build-surface.md) documents the build
   workflow, local runner matrix, artifact contract, and libnode-shaped fixture.
+- [Web-surface deployments](docs/web-surface-deployments.md) documents the
+  preview/staging/production channel ontology, deployment manifest, adapter
+  contract, and dry-run cleanup/deploy plans.
 
 ## Local Verification
 
@@ -174,7 +180,15 @@ hidden reusable workflows, and rebuilds every action bundle.
 Projects can add `buildchain.toml` to declare release version state and
 lifecycle commands. Buildchain v2 supports TOML only. The promotion action uses
 configured version files to create source version commits, then runs
-`lifecycle.verify` before moving release refs.
+`lifecycle.verify` before moving release refs. Repositories that publish
+external artifacts can also declare `lifecycle.publish`; with publish
+transactions enabled, Buildchain requires machine-readable evidence before exact
+release tags and floating channel refs move.
+
+Web-surface projects can also declare `project.type = "web-surface"` with
+preview, staging, and production channels. Those projects get deployment
+manifests and dry-run deploy/cleanup plans, but they are not forced into package
+version lines or anchored release semantics.
 
 ## Safety Defaults
 
@@ -186,7 +200,17 @@ configured version files to create source version commits, then runs
 - Publish gate branches are resolved to a source SHA before checkout. Builds,
   verification, artifact manifests, and summaries use that locked SHA; publish
   jobs must re-check the branch tip before external side effects.
+- Publish transactions are keyed by repository, version, source SHA, and target
+  ref rather than run id. Reruns may resume missing artifacts, accept matching
+  existing artifacts, and fail closed on conflicting material until an explicit
+  repair override is used.
 - Fork pull requests must not reach secrets or self-hosted runners.
 - Candidate refs are expected to come from `kungfu-systems/*`.
 - Self-hosted runner validation is available only through the manual
   `Self-hosted Runner Smoke` workflow.
+
+## Read Next
+
+- [Lifecycle protocol](docs/lifecycle-protocol.md)
+- [Publish transaction](docs/publish-transaction.md)
+- [Reusable build surface](docs/reusable-build-surface.md)

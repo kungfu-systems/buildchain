@@ -171,10 +171,48 @@ command = "pytest"
 PYTHONPATH = "src"
 ```
 
+### Publish Stage
+
+`lifecycle.publish` is the project-owned side-effect stage. It may call npm,
+PyPI, Conan, CMake packaging scripts, Docker/OCI registries, S3 uploaders, or
+any other publisher. Buildchain does not assume the tool; it assumes the
+evidence contract.
+
+```toml
+[lifecycle.publish]
+script = """
+set -euo pipefail
+python scripts/publish_wheels.py
+node scripts/publish-images.mjs
+node scripts/write-publish-evidence.mjs
+"""
+```
+
+When `actions/promote-buildchain-ref` runs with `publish-transaction: "true"`,
+the publish stage receives:
+
+```text
+BUILDCHAIN_VERSION
+BUILDCHAIN_CHANNEL
+BUILDCHAIN_SOURCE_SHA
+BUILDCHAIN_TARGET_REF
+BUILDCHAIN_RELEASE_STATE
+BUILDCHAIN_EVIDENCE_DIR
+BUILDCHAIN_RELEASE_SHA
+BUILDCHAIN_RELEASE_MATERIAL_SHA
+BUILDCHAIN_PUBLISH_TOOLING_SHA
+BUILDCHAIN_PUBLISH_EVIDENCE
+```
+
+The stage must write publish evidence JSON. Buildchain validates that evidence
+before exact tags and floating refs move. See
+[`docs/publish-transaction.md`](publish-transaction.md) for the state machine,
+evidence schema, and recovery commands.
+
 ## Promotion Semantics
 
-`actions/promote-buildchain-ref` currently consumes `version.files` and
-`lifecycle.verify`.
+`actions/promote-buildchain-ref` consumes `version.files`, `lifecycle.verify`,
+and optionally `lifecycle.publish`.
 
 The verify stage runs after Buildchain has applied the generated version-state
 changes to the local checkout, and before it creates release commits or moves
@@ -198,6 +236,8 @@ Heavy repositories can validate their Buildchain declaration before they are
 ready to run the real build. `actions/validate-config` checks that
 `buildchain.toml` parses, configured version-state files exist, configured
 version keys are strings, and required lifecycle stage names are declared.
+For web-surface repositories it also validates `project`, `channels`, `deploy`,
+`retention`, and `security` declarations.
 
 It does not run lifecycle commands. This is useful for repositories such as
 `libnode`, where `lifecycle.build` represents an expensive multi-platform native
@@ -210,6 +250,59 @@ lifecycle protocol without consuming build runners.
     require-version-state: "true"
     require-lifecycle-stages: "install,build,verify"
 ```
+
+Web-surface repositories can use the same action without requiring version
+state:
+
+```yaml
+- uses: kungfu-systems/buildchain/actions/validate-config@v2
+  with:
+    require-lifecycle-stages: "build,verify"
+```
+
+The action exposes project and deploy metadata through outputs such as
+`project-type`, `project-site`, `channels`, and `deploy-adapters-json`.
+
+## Web-Surface Projects
+
+`project.type = "web-surface"` is for sites, docs, browser apps, and operator
+consoles whose release object is a deployed surface, not a package version.
+
+```toml
+schema = 1
+
+[project]
+type = "web-surface"
+name = "site-kungfu-tech"
+site = "kungfu-tech"
+
+[channels.preview]
+url_pattern = "https://{alias}.preview.kungfu.tech"
+visibility = "ephemeral"
+noindex = true
+
+[channels.staging]
+url = "https://staging.kungfu.tech"
+visibility = "protected"
+requires_auth = true
+noindex = true
+promotable = true
+
+[channels.production]
+url = "https://kungfu.tech"
+visibility = "public"
+canonical = true
+noindex = false
+
+[deploy.production]
+adapter = "aws-s3-cloudfront"
+bucket = "kungfu-tech-production"
+artifact_path = "dist"
+secret_refs = ["AWS_ROLE_ARN"]
+```
+
+See [Web-surface deployments](web-surface-deployments.md) for the manifest,
+preview alias, retention, cleanup, and dry-run deploy contract.
 
 ## Examples
 
