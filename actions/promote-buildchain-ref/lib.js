@@ -2254,7 +2254,7 @@ async function promoteBuildchainRefs({
     const currentAlphaTagSha = currentAlpha
       ? await readRefSha(`tags/${currentAlpha.tag}`)
       : undefined;
-    const selectedAlpha = explicitAlphaTags[0]
+    let selectedAlpha = explicitAlphaTags[0]
       ? { tag: explicitAlphaTags[0] }
       : currentAlpha && !currentAlphaTagSha
         ? currentAlpha
@@ -2275,30 +2275,62 @@ async function promoteBuildchainRefs({
       updates.push({ tag: rule.alphaTag, action: "existing", sha });
       return { owner, repo, sourceSha: sha, sha, targetRef, updates };
     }
-    const alphaVersion = stripTagPrefix(selectedAlpha.tag);
-    const alphaCommit = await createVersionStateCommit({
-      baseSha: sha,
-      version: alphaVersion,
-      message: `chore(release): prepare ${selectedAlpha.tag}`,
-    });
-    const alphaSha = alphaCommit.sha;
-    if (requireGovernance && !dryRun) {
-      await assertPromotionPrOrVersionStateParent({
-        commitSha: sha,
-        targetRef,
-        allowedPaths: alphaCommit.files,
+    const prepareAlphaCommit = async (candidate) => {
+      const version = stripTagPrefix(candidate.tag);
+      const commit = await createVersionStateCommit({
+        baseSha: sha,
+        version,
+        message: `chore(release): prepare ${candidate.tag}`,
+      });
+      if (requireGovernance && !dryRun) {
+        await assertPromotionPrOrVersionStateParent({
+          commitSha: sha,
+          targetRef,
+          allowedPaths: commit.files,
+        });
+      }
+      return { version, commit, sha: commit.sha };
+    };
+    let alpha = await prepareAlphaCommit(selectedAlpha);
+    try {
+      await executePublishTransaction({
+        version: alpha.version,
+        exactTag: selectedAlpha.tag,
+        channel: rule.channel,
+        line: rule.releasePrefix,
+        releaseSha: alpha.sha,
+      });
+    } catch (error) {
+      const staleCurrentAlpha =
+        currentAlpha &&
+        !currentAlphaTagSha &&
+        selectedAlpha.tag === currentAlpha.tag &&
+        /release transaction identity mismatch/.test(error.message || "");
+      if (!staleCurrentAlpha) {
+        throw error;
+      }
+      updates.push({
+        tag: selectedAlpha.tag,
+        action: "stale-publish-transaction",
+        sha: alpha.sha,
+      });
+      selectedAlpha = selectAlphaTag({
+        refs: lineRefs,
+        releasePrefix: rule.releasePrefix,
+        sha,
+      });
+      alpha = await prepareAlphaCommit(selectedAlpha);
+      await executePublishTransaction({
+        version: alpha.version,
+        exactTag: selectedAlpha.tag,
+        channel: rule.channel,
+        line: rule.releasePrefix,
+        releaseSha: alpha.sha,
       });
     }
-    await executePublishTransaction({
-      version: alphaVersion,
-      exactTag: selectedAlpha.tag,
-      channel: rule.channel,
-      line: rule.releasePrefix,
-      releaseSha: alphaSha,
-    });
     if (versionState) {
       await markFinalizing();
-      const targetUpdate = await updateBranch(targetRef, alphaSha, "updated", {
+      const targetUpdate = await updateBranch(targetRef, alpha.sha, "updated", {
         title: `Prepare ${selectedAlpha.tag}`,
         body: `Create the generated version-state commit for ${selectedAlpha.tag}.`,
       });
@@ -2307,7 +2339,7 @@ async function promoteBuildchainRefs({
           owner,
           repo,
           sourceSha: sha,
-          sha: alphaSha,
+          sha: alpha.sha,
           targetRef,
           pendingPullRequest: targetUpdate.pullRequest.html_url || targetUpdate.pullRequest.url,
           updates,
@@ -2315,16 +2347,16 @@ async function promoteBuildchainRefs({
       }
       await updateBranch(
         `dev/v${rule.major}/v${rule.major}.${rule.minor}`,
-        alphaSha,
+        alpha.sha,
         "updated",
         { allowNonFastForwardSkip: true },
       );
     }
     await markFinalizing();
-    await ensureTag(selectedAlpha.tag, alphaSha);
-    await updateTag(rule.alphaTag, alphaSha);
+    await ensureTag(selectedAlpha.tag, alpha.sha);
+    await updateTag(rule.alphaTag, alpha.sha);
     await markComplete();
-    return withPublishTransaction({ owner, repo, sourceSha: sha, sha: alphaSha, targetRef, updates });
+    return withPublishTransaction({ owner, repo, sourceSha: sha, sha: alpha.sha, targetRef, updates });
   }
 
   const explicitReleaseTags = requestedTags
