@@ -79,7 +79,8 @@ scripts/                  Local verification scripts
 
 Buildchain v2 ships these active surfaces:
 
-- reusable workflows under `.github/workflows`;
+- repository workflows under `.github/workflows`;
+- the active reusable build workflow `.github/workflows/.build.yml`;
 - exactly three GitHub Actions under `actions/<name>`:
   `validate-config`, `run-lifecycle`, and `promote-buildchain-ref`;
 - action runtime on Node 24;
@@ -111,7 +112,7 @@ Stable consumers should reference actions as:
 uses: kungfu-systems/buildchain/actions/<name>@v2
 ```
 
-Reusable workflows should be referenced as:
+Documented reusable workflows should be referenced as:
 
 ```yaml
 uses: kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v2
@@ -120,6 +121,14 @@ uses: kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v2
 Standalone `workflows` and `action-*` repositories are historical rollback
 anchors. Buildchain no longer ships migrated copies of legacy action
 repositories.
+
+Some hidden reusable workflow files from the old `workflows` repository still
+exist in this repository so they can be linted, audited, and made fail-closed
+while consumers migrate. They are not Buildchain-native release or publish
+surfaces unless this README or a dedicated document explicitly names them.
+Modern package, artifact, and publish integrations should use `.build.yml`,
+`buildchain.toml`, lifecycle commands, and publish transaction evidence instead
+of retired legacy action paths.
 
 ## Release Governance
 
@@ -143,9 +152,11 @@ The important constraints are:
   refs when repository policy requires it.
 
 Buildchain's top-level `Release - New Version` workflow is intentionally a
-no-op for this repository. Consumer repositories still call the reusable
-`.release-new-version.yml`; Buildchain itself is promoted only by
-`Buildchain Ref Promotion` after `Verify` succeeds.
+no-op for this repository. Buildchain itself is promoted only by
+`Buildchain Ref Promotion` after `Verify` succeeds. The legacy hidden
+`.release-new-version.yml` file is not the modern publish surface; it remains a
+migration boundary for old consumers and must not be used for new Buildchain v2
+integrations.
 
 ## Read Next
 
