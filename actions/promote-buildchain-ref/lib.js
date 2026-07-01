@@ -385,13 +385,21 @@ function materialErrorRequiresRepair(error) {
   );
 }
 
-function ensureTransactionCanResume({ existing, expected, explicitOverride }) {
+function ensureTransactionCanResume({
+  existing,
+  expected,
+  explicitOverride,
+  evidence,
+  validation,
+}) {
   if (!existing) {
     return;
   }
   assertTransactionIdentity(existing, expected, { allowToolingDrift: true });
   const recovery = planTransactionRecovery({
     transaction: existing,
+    evidence,
+    validation,
     explicitOverride,
   });
   if (recovery.blocked) {
@@ -469,6 +477,59 @@ async function restoreDurableReleaseTransaction({
   if (!octokit || !stateRef) {
     return undefined;
   }
+  const record = await readDurableReleaseTransaction({
+    octokit,
+    owner,
+    repo,
+    stateRef,
+  });
+  if (!record) {
+    return undefined;
+  }
+  writeReleaseTransaction(statePath, record);
+
+  const ref = await getGitRefOrUndefined({
+    octokit,
+    owner,
+    repo,
+    ref: `heads/${stateRef}`,
+  });
+  const commitSha = ref.object?.sha;
+  const { data: commit } = await octokit.rest.git.getCommit({
+    owner,
+    repo,
+    commit_sha: commitSha,
+  });
+  const { data: tree } = await octokit.rest.git.getTree({
+    owner,
+    repo,
+    tree_sha: commit.tree.sha,
+    recursive: "1",
+  });
+  const entryByPath = new Map((tree.tree || []).map((entry) => [entry.path, entry]));
+  const evidenceEntry = entryByPath.get("evidence.json");
+  if (evidenceEntry) {
+    const { data: evidenceBlob } = await octokit.rest.git.getBlob({
+      owner,
+      repo,
+      file_sha: evidenceEntry.sha,
+    });
+    fs.mkdirSync(path.dirname(evidencePath), { recursive: true });
+    fs.writeFileSync(evidencePath, decodeGitBlob(evidenceBlob));
+  }
+
+  return record;
+}
+
+async function readDurableReleaseTransaction({
+  octokit,
+  owner,
+  repo,
+  stateRef,
+}) {
+  if (!octokit || !stateRef) {
+    return undefined;
+  }
   const ref = await getGitRefOrUndefined({
     octokit,
     owner,
@@ -500,21 +561,7 @@ async function restoreDurableReleaseTransaction({
     repo,
     file_sha: stateEntry.sha,
   });
-  const record = JSON.parse(decodeGitBlob(stateBlob));
-  writeReleaseTransaction(statePath, record);
-
-  const evidenceEntry = entryByPath.get("evidence.json");
-  if (evidenceEntry) {
-    const { data: evidenceBlob } = await octokit.rest.git.getBlob({
-      owner,
-      repo,
-      file_sha: evidenceEntry.sha,
-    });
-    fs.mkdirSync(path.dirname(evidencePath), { recursive: true });
-    fs.writeFileSync(evidencePath, decodeGitBlob(evidenceBlob));
-  }
-
-  return record;
+  return JSON.parse(decodeGitBlob(stateBlob));
 }
 
 async function persistDurableReleaseTransaction({
@@ -742,9 +789,30 @@ async function runPublishTransaction({
     );
   }
   const existing = durableExisting || localExisting;
+  const existingEvidence = readPublishEvidence(resolvedEvidencePath);
+  let existingValidation;
+  if (existingEvidence) {
+    existingValidation = validatePublishEvidence({
+      evidence: existingEvidence,
+      version,
+      channel,
+      sourceSha,
+      releaseSha,
+      targetRef,
+      releaseMaterialSha: expected.releaseMaterialSha,
+      publishToolingSha: expected.publishToolingSha,
+      requiredArtifacts,
+    });
+  }
   let versionStateFinalization = false;
   try {
-    ensureTransactionCanResume({ existing, expected, explicitOverride });
+    ensureTransactionCanResume({
+      existing,
+      expected,
+      explicitOverride,
+      evidence: existingEvidence,
+      validation: existingValidation,
+    });
   } catch (error) {
     const canFinalizeVersionState =
       allowVersionStateFinalization &&
@@ -813,8 +881,11 @@ async function runPublishTransaction({
 
   let validation;
   try {
-    const evidence = readPublishEvidence(resolvedEvidencePath);
+    const evidence = existingEvidence || readPublishEvidence(resolvedEvidencePath);
     if (evidence) {
+      validation = existingValidation;
+    }
+    if (evidence && !validation) {
       validation = validatePublishEvidence({
         evidence,
         version,
@@ -907,6 +978,19 @@ async function runPublishTransaction({
       cwd,
     };
   } catch (error) {
+    if (["published", "finalizing", "complete"].includes(transaction.state)) {
+      try {
+        transaction = transitionReleaseTransaction(transaction, transaction.state, {
+          actor,
+          runId,
+          failure: error.message,
+        });
+        await persistTransaction(transaction);
+      } catch (persistError) {
+        error.message = `${error.message}; additionally failed to preserve post-publish transaction state: ${persistError.message}`;
+      }
+      throw error;
+    }
     const nextState = materialErrorRequiresRepair(error)
       ? "repair_required"
       : "publish_failed";
@@ -1249,6 +1333,54 @@ function currentAlphaVersionState({ cwd, refs, releasePrefix }) {
     tag: `v${versions[0]}`,
     version: versions[0],
   };
+}
+
+async function resumableAlphaTransactionState({
+  octokit,
+  owner,
+  repo,
+  cwd,
+  refs,
+  releasePrefix,
+  targetRef,
+  sourceSha,
+}) {
+  const candidates = refs
+    .map((ref) => parseAlphaPrereleaseRef(ref.ref, releasePrefix))
+    .filter((ref) => ref?.source === "release-state")
+    .sort((a, b) => b.patch - a.patch || b.prerelease - a.prerelease);
+  for (const candidate of candidates) {
+    const version = stripTagPrefix(candidate.tag);
+    let transaction;
+    try {
+      transaction = await readDurableReleaseTransaction({
+        octokit,
+        owner,
+        repo,
+        stateRef: releaseTransactionStateRef(version),
+      });
+    } catch (error) {
+      const message = error?.message || "";
+      if (notFound(error) || /missing state\.json/i.test(message)) {
+        continue;
+      }
+      throw error;
+    }
+    if (
+      transaction &&
+      transaction.source_sha === sourceSha &&
+      transaction.target_ref === targetRef &&
+      transaction.exact_tag === candidate.tag &&
+      !["complete", "abandoned", "failed_permanently"].includes(transaction.state)
+    ) {
+      return {
+        ...candidate,
+        version,
+        transaction,
+      };
+    }
+  }
+  return undefined;
 }
 
 function parseAlphaPrereleaseRef(refName, releasePrefix) {
@@ -2421,11 +2553,30 @@ async function promoteBuildchainRefs({
           refs: lineRefs,
           releasePrefix: rule.releasePrefix,
         });
+    const publishTransactionEnabled = Boolean(
+      publishTransaction ||
+      publishCommand ||
+      getLifecycleStage(loadBuildchainConfig(cwd), "publish")
+    );
+    const resumableAlpha = explicitAlphaTags[0] || !publishTransactionEnabled
+      ? undefined
+      : await resumableAlphaTransactionState({
+          octokit,
+          owner,
+          repo,
+          cwd,
+          refs: lineRefs,
+          releasePrefix: rule.releasePrefix,
+          targetRef,
+          sourceSha: sha,
+        });
     const currentAlphaTagSha = currentAlpha
       ? await readRefSha(`tags/${currentAlpha.tag}`)
       : undefined;
     let selectedAlpha = explicitAlphaTags[0]
       ? { tag: explicitAlphaTags[0] }
+      : resumableAlpha
+        ? resumableAlpha
       : currentAlpha && !currentAlphaTagSha
         ? currentAlpha
         : selectAlphaTag({
@@ -2447,6 +2598,13 @@ async function promoteBuildchainRefs({
     }
     const prepareAlphaCommit = async (candidate) => {
       const version = stripTagPrefix(candidate.tag);
+      if (candidate.transaction?.release_sha) {
+        return {
+          version,
+          commit: { action: "existing-publish-transaction", files: [] },
+          sha: candidate.transaction.release_sha,
+        };
+      }
       const commit = await createVersionStateCommit({
         baseSha: sha,
         version,
@@ -2725,6 +2883,7 @@ export {
   parseTags,
   promoteBuildchainRefs,
   persistDurableReleaseTransaction,
+  readDurableReleaseTransaction,
   restoreDurableReleaseTransaction,
   resolveTagsForTarget,
   selectAlphaTag,

@@ -42,7 +42,8 @@ noindex = true
 [channels.staging]
 url = "https://staging.kungfu.tech"
 visibility = "protected"
-requires_auth = true
+access_control = "managed-network"
+edge_auth = "none"
 noindex = true
 promotable = true
 
@@ -64,7 +65,11 @@ Buildchain validates these hard constraints:
 
 - `channels.preview.url_pattern` is required and must contain the alias shape
   used by preview deployments.
-- `channels.staging.requires_auth = true` is required.
+- `channels.staging.access_control` must protect staging. Supported modes are
+  `managed-network`, `edge-basic-auth`, `oidc`, and `app-auth`.
+- `channels.staging.edge_auth` records whether the edge layer owns auth. Use
+  `edge_auth = "none"` when staging is protected by managed network controls
+  such as WAF/IP allowlists or VPN access.
 - `channels.staging.noindex = true` is required.
 - `channels.production.url` is required.
 - deploy adapters must be declared per channel.
@@ -122,6 +127,9 @@ rollback:
   "deployedAt": "2026-07-01T00:00:00.000Z",
   "retentionClass": "preview-sha-immutable",
   "expiresAt": "2026-09-29T00:00:00.000Z",
+  "accessControl": "none",
+  "edgeAuth": "none",
+  "noindex": true,
   "secretRefs": ["AWS_ROLE_ARN"]
 }
 ```
@@ -166,17 +174,54 @@ The CLI emits GitHub outputs when `GITHUB_OUTPUT` is present:
 
 ## Cleanup Plans
 
-Preview cleanup is also a dry-run plan:
+Preview cleanup is an auditable cleanup contract. It can run as a dry-run plan
+or as an apply-mode plan for the caller workflow to execute with preview-only
+credentials:
 
 ```bash
 node scripts/web-surface.mjs \
   --mode cleanup-plan \
   --cwd fixtures/web-surface-shaped \
+  --event pull-request-closed \
+  --pull-number 123 \
   --aliases pr-123,sha-abcdef123456
 ```
 
 The plan keeps mutable PR aliases and immutable SHA aliases distinct so a caller
-can expire them with different retention windows.
+can expire them with different retention windows. Closed-PR cleanup can derive
+`pr-N` from `--pull-number`, records the event, source SHA, actor, run id,
+preview bucket/prefix, manifest key, and adapter steps, and is an auditable
+no-op when no aliases are requested.
+
+## Reusable Workflow Shape
+
+Buildchain ships `.github/workflows/.web-surface.yml` for repositories that want
+the standard PR review and promotion flow without copying bespoke glue:
+
+```yaml
+jobs:
+  web-surface:
+    uses: kungfu-systems/buildchain/.github/workflows/.web-surface.yml@v2
+    with:
+      buildchain-ref: v2
+      build-command: npm run build
+      verify-command: npm run check
+      artifact-path: dist
+```
+
+The reusable workflow maps GitHub events to Buildchain web-surface semantics:
+
+| Event | Buildchain behavior |
+| --- | --- |
+| `pull_request` opened / synchronized / reopened | validate, build, verify, and plan `preview` for `pr-N` |
+| `pull_request` closed | plan apply-mode cleanup for the `pr-N` preview alias and manifest |
+| `push` to `main` | validate, build, verify, and plan `staging` from the merged `main` SHA |
+| `workflow_dispatch` with `production-approved = true` | plan `production` and enter the configured GitHub Environment gate |
+
+The workflow deliberately plans and emits manifests; live AWS mutation still
+belongs to the caller's controlled deploy step or a later adapter apply
+implementation. This keeps production from being an implicit side effect of
+merging to `main`.
 
 ## Site Repository Shape
 
@@ -208,4 +253,3 @@ Buildchain does not currently perform live AWS mutations for web surfaces.
 Production deploy, DNS changes, staging auth implementation, CloudFront
 distribution creation, and credential provisioning remain explicitly authorized
 operations outside the dry-run contract.
-

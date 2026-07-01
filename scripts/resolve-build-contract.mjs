@@ -15,25 +15,40 @@ function readArg(name, fallback = "") {
 }
 
 export function resolveBuildContractCli() {
-  const mode = readArg("mode", process.env.BUILDCHAIN_CONTRACT_MODE || "artifact");
+  const mode = readArg(
+    "mode",
+    process.env.BUILDCHAIN_CONTRACT_MODE || "artifact",
+  );
   if (mode === "runners") {
     const resolved = resolveRunnerMatrix({
       runnerPreset: process.env.BUILDCHAIN_RUNNER_PRESET || "github-hosted",
       platformsJson: process.env.BUILDCHAIN_PLATFORMS_JSON || "",
+      linuxContainerPreset: process.env.BUILDCHAIN_LINUX_CONTAINER_PRESET || "",
+      linuxContainerImage: process.env.BUILDCHAIN_LINUX_CONTAINER_IMAGE || "",
     });
     writeGitHubOutputs({
       "runner-preset": resolved.runnerPreset,
       "platforms-json": resolved.platformsJson,
       "platform-count": String(resolved.platformCount),
       "platform-source": resolved.source,
+      "native-platforms-json": resolved.nativePlatformsJson,
+      "native-platform-count": String(resolved.nativePlatformCount),
+      "container-platforms-json": resolved.containerPlatformsJson,
+      "container-platform-count": String(resolved.containerPlatformCount),
+      "linux-container-enabled": String(resolved.linuxContainer.enabled),
+      "linux-container-preset": resolved.linuxContainer.preset,
+      "linux-container-image": resolved.linuxContainer.image,
+      "linux-container-source": resolved.linuxContainer.source,
     });
     return resolved;
   }
   if (mode === "artifact") {
     const resolved = resolveArtifactContract({
-      artifactName: process.env.BUILDCHAIN_ARTIFACT_NAME || "buildchain-artifact",
+      artifactName:
+        process.env.BUILDCHAIN_ARTIFACT_NAME || "buildchain-artifact",
       artifactNameTemplate:
-        process.env.BUILDCHAIN_ARTIFACT_NAME_TEMPLATE || "{artifact}-{platform}-{sha}",
+        process.env.BUILDCHAIN_ARTIFACT_NAME_TEMPLATE ||
+        "{artifact}-{platform}-{sha}",
       platformId: process.env.BUILDCHAIN_PLATFORM_ID || "",
       platformName: process.env.BUILDCHAIN_PLATFORM_NAME || "",
       sha: process.env.BUILDCHAIN_SOURCE_SHA || process.env.GITHUB_SHA || "",
@@ -53,11 +68,16 @@ export function resolveBuildContractCli() {
   throw new Error(`unsupported build contract mode: ${mode}`);
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
   try {
     resolveBuildContractCli();
   } catch (error) {
-    console.error(`::error::${String(error.message || error).replace(/\r?\n/g, "%0A")}`);
+    console.error(
+      `::error::${String(error.message || error).replace(/\r?\n/g, "%0A")}`,
+    );
     process.exitCode = 1;
   }
 }
