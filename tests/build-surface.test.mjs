@@ -6,10 +6,15 @@ import path from "node:path";
 import test from "node:test";
 import {
   DEFAULT_ARTIFACT_NAME_TEMPLATE,
+  createResolvedReleaseManifest,
+  parsePublishSourceRef,
   parseExpectedArtifactsJson,
+  planPackageSetPublish,
   resolveArtifactContract,
   resolvePublishGate,
+  resolvePublishSourceLock,
   resolveRunnerMatrix,
+  verifyPublishSourceLock,
 } from "../scripts/build-contract-core.mjs";
 import { aggregateBuildSummaryCli } from "../scripts/aggregate-build-summary.mjs";
 import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
@@ -27,8 +32,12 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /require-trusted-event:/);
   assert.match(workflow, /publish-channel:/);
   assert.match(workflow, /publish-refs-json:/);
+  assert.match(workflow, /publish-source-ref:/);
+  assert.match(workflow, /publish-anchor-request-json:/);
   assert.match(workflow, /github\.event\.pull_request\.head\.repo\.full_name/);
   assert.match(workflow, /resolve-publish-gate\.mjs/);
+  assert.match(workflow, /resolve-publish-source\.mjs --mode lock/);
+  assert.match(workflow, /resolve-publish-source\.mjs --mode manifest/);
   assert.match(workflow, /install-command:/);
   assert.match(workflow, /build-command:/);
   assert.match(workflow, /verify-command:/);
@@ -40,6 +49,9 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /build-summary-artifact:/);
   assert.match(workflow, /publish-allowed:/);
   assert.match(workflow, /publish-reason:/);
+  assert.match(workflow, /publish-source-sha:/);
+  assert.match(workflow, /release-manifest-json:/);
+  assert.match(workflow, /ref: \$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/);
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
 });
 
@@ -152,6 +164,180 @@ test("publish gate supports custom publish channels", () => {
   );
 });
 
+test("publish source refs parse gate channel, line, and consumer version", () => {
+  assert.deepEqual(parsePublishSourceRef("publish-gate/alpha/v22/v22.22/22.22.3-kf.0"), {
+    sourceRef: "publish-gate/alpha/v22/v22.22/22.22.3-kf.0",
+    fullRef: "refs/heads/publish-gate/alpha/v22/v22.22/22.22.3-kf.0",
+    enabled: true,
+    channel: "alpha",
+    line: "v22/v22.22",
+    consumerVersion: "22.22.3-kf.0",
+    anchor: false,
+    legacyAlias: false,
+  });
+  assert.equal(parsePublishSourceRef("publish-gate/release/v22/v22.22/22.22.3-kf.0").channel, "release");
+  assert.equal(parsePublishSourceRef("publish-gate/anchor").anchor, true);
+  assert.equal(parsePublishSourceRef("major-gate").legacyAlias, true);
+  assert.throws(
+    () => parsePublishSourceRef("publish-gate/alpha/v22/22.22.3-kf.0"),
+    /line must include/,
+  );
+});
+
+test("publish source manifest binds gate version to configured version state", async () => {
+  const fixture = path.join(root, "fixtures/libnode-shaped");
+  const sourceSha = "a".repeat(40);
+  const manifest = await createResolvedReleaseManifest({
+    cwd: fixture,
+    repository: "kungfu-systems/libnode",
+    sourceRef: "publish-gate/alpha/v22/v22.22/22.22.3-kf.0",
+    sourceSha,
+  });
+  assert.equal(manifest.sourceSha, sourceSha);
+  assert.equal(manifest.channel, "alpha");
+  assert.equal(manifest.line, "v22/v22.22");
+  assert.equal(manifest.consumerVersion, "22.22.3-kf.0");
+  assert.equal(manifest.versionStrategy, "anchored");
+  assert.equal(manifest.versionNext, "manual");
+  assert.deepEqual(manifest.versionFiles, [
+    {
+      path: "package.json",
+      type: "json",
+      key: "version",
+      version: "22.22.3-kf.0",
+    },
+  ]);
+  assert.equal(manifest.anchorManifest.path, "libnode.release.json");
+  assert.equal(manifest.anchorManifest.summary.npmVersion, "22.22.3-kf.0");
+  assert.equal(manifest.publish.distTag, "alpha");
+});
+
+test("publish source manifest fails closed on version mismatch", async () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-source-lock-"));
+  const fixture = path.join(workspace, "fixture");
+  fs.cpSync(path.join(root, "fixtures/libnode-shaped"), fixture, { recursive: true });
+  try {
+    await assert.rejects(
+      async () =>
+        await createResolvedReleaseManifest({
+          cwd: fixture,
+          sourceRef: "publish-gate/release/v22/v22.22/22.22.3-kf.1",
+          sourceSha: "b".repeat(40),
+        }),
+      /version mismatch/,
+    );
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("publish source lock fails closed when branch moved", () => {
+  assert.deepEqual(
+    resolvePublishSourceLock({
+      fallbackRef: "refs/pull/103/merge",
+      fallbackSha: "1".repeat(40),
+    }),
+    {
+      sourceRef: "",
+      fullRef: "",
+      enabled: false,
+      channel: "none",
+      line: "",
+      consumerVersion: "",
+      anchor: false,
+      legacyAlias: false,
+      fallbackRef: "refs/pull/103/merge",
+      fallbackFullRef: "refs/pull/103/merge",
+      sourceSha: "1".repeat(40),
+      sourceLocked: false,
+      sourceReason: "publish source ref is not configured",
+    },
+  );
+  assert.deepEqual(
+    resolvePublishSourceLock({
+      publishSourceRef: "publish-gate/alpha/v22/v22.22/22.22.3-kf.0",
+      publishSourceSha: "c".repeat(40),
+    }),
+    {
+      sourceRef: "publish-gate/alpha/v22/v22.22/22.22.3-kf.0",
+      fullRef: "refs/heads/publish-gate/alpha/v22/v22.22/22.22.3-kf.0",
+      enabled: true,
+      channel: "alpha",
+      line: "v22/v22.22",
+      consumerVersion: "22.22.3-kf.0",
+      anchor: false,
+      legacyAlias: false,
+      sourceSha: "c".repeat(40),
+      sourceLocked: true,
+      sourceReason: `locked publish-gate/alpha/v22/v22.22/22.22.3-kf.0 at ${"c".repeat(40)}`,
+    },
+  );
+  assert.throws(
+    () =>
+      verifyPublishSourceLock({
+        sourceRef: "publish-gate/alpha/v22/v22.22/22.22.3-kf.0",
+        expectedSha: "c".repeat(40),
+        currentSha: "d".repeat(40),
+      }),
+    /publish source ref moved/,
+  );
+});
+
+test("package-set publish plan is platform-first, main-last, and idempotent", () => {
+  const plan = planPackageSetPublish({
+    mainPackage: "@kungfu-systems/libnode",
+    distTag: "alpha",
+    packages: [
+      {
+        name: "@kungfu-systems/libnode",
+        version: "22.22.3-kf.0",
+        role: "main",
+        integrity: "sha-main",
+      },
+      {
+        name: "@kungfu-systems/libnode-linux-x64",
+        version: "22.22.3-kf.0",
+        role: "platform",
+        integrity: "sha-linux",
+      },
+      {
+        name: "@kungfu-systems/libnode-darwin-arm64",
+        version: "22.22.3-kf.0",
+        role: "platform",
+        integrity: "sha-macos",
+      },
+    ],
+    existingPackages: [
+      {
+        name: "@kungfu-systems/libnode-linux-x64",
+        version: "22.22.3-kf.0",
+        integrity: "sha-linux",
+      },
+    ],
+  });
+  assert.deepEqual(
+    plan.steps.map((step) => `${step.action}:${step.package.name}`),
+    [
+      "accept-existing:@kungfu-systems/libnode-linux-x64",
+      "publish:@kungfu-systems/libnode-darwin-arm64",
+      "publish:@kungfu-systems/libnode",
+    ],
+  );
+  assert.equal(plan.visibilityGate, "main-package-last");
+  assert.equal(plan.distTagMove.package.name, "@kungfu-systems/libnode");
+  assert.throws(
+    () =>
+      planPackageSetPublish({
+        packages: [
+          { name: "main", version: "1.0.0", role: "main", integrity: "a" },
+          { name: "platform", version: "1.0.0", integrity: "b" },
+        ],
+        existingPackages: [{ name: "platform", version: "1.0.0", integrity: "different" }],
+      }),
+    /integrity mismatch/,
+  );
+});
+
 test("expected artifact JSON normalizes supported checks", () => {
   assert.deepEqual(
     parseExpectedArtifactsJson(
@@ -182,7 +368,12 @@ test("runLifecycle writes deterministic artifact manifest", () => {
   const fixture = path.join(workspace, "fixtures/libnode-shaped");
   fs.cpSync(fixtureSource, fixture, { recursive: true });
 
+  const originalEnv = { ...process.env };
   try {
+    process.env.GITHUB_SHA = "1".repeat(40);
+    process.env.GITHUB_REF = "refs/heads/dev/v2/v2.0";
+    process.env.BUILDCHAIN_SOURCE_SHA = "2".repeat(40);
+    process.env.BUILDCHAIN_SOURCE_REF = "publish-gate/release/v22/v22.22/22.22.3-kf.0";
     runLifecycle({
       cwd: fixture,
       stageName: "install",
@@ -207,6 +398,8 @@ test("runLifecycle writes deterministic artifact manifest", () => {
     assert.equal(manifest.contract, "kungfu-buildchain-artifact");
     assert.equal(manifest.artifactName, "libnode-shaped-linux-x64-abc123");
     assert.equal(manifest.platform.id, "linux-x64");
+    assert.equal(manifest.git.sha, "2".repeat(40));
+    assert.equal(manifest.git.ref, "publish-gate/release/v22/v22.22/22.22.3-kf.0");
     assert.equal(manifest.summary.contract, "kungfu-buildchain-artifact-summary");
     assert.equal(manifest.summary.fileCount, 2);
     assert.ok(manifest.summary.totalBytes > 0);
@@ -220,6 +413,7 @@ test("runLifecycle writes deterministic artifact manifest", () => {
     );
     assert.ok(manifest.files.every((file) => /^[a-f0-9]{64}$/.test(file.sha256)));
   } finally {
+    process.env = originalEnv;
     fs.rmSync(workspace, { recursive: true, force: true });
   }
 });
@@ -261,10 +455,22 @@ test("aggregate build summary reads uploaded platform manifests", () => {
     process.env.BUILDCHAIN_PUBLISH_CHANNEL = "release";
     process.env.BUILDCHAIN_PUBLISH_ALLOWED = "true";
     process.env.BUILDCHAIN_PUBLISH_REASON = "ref matched release";
+    process.env.BUILDCHAIN_PUBLISH_SOURCE_REF = "publish-gate/release/v22/v22.22/22.22.3-kf.0";
+    process.env.BUILDCHAIN_PUBLISH_SOURCE_SHA = "e".repeat(40);
+    process.env.BUILDCHAIN_PUBLISH_SOURCE_LOCKED = "true";
+    process.env.BUILDCHAIN_PUBLISH_SOURCE_CHANNEL = "release";
+    process.env.BUILDCHAIN_PUBLISH_SOURCE_LINE = "v22/v22.22";
+    process.env.BUILDCHAIN_PUBLISH_SOURCE_CONSUMER_VERSION = "22.22.3-kf.0";
+    process.env.BUILDCHAIN_RELEASE_MANIFEST_JSON = '{"schema":1}';
+    process.env.BUILDCHAIN_SOURCE_SHA = "e".repeat(40);
+    process.env.BUILDCHAIN_SOURCE_REF = "publish-gate/release/v22/v22.22/22.22.3-kf.0";
+    process.env.GITHUB_SHA = "f".repeat(40);
     process.env.GITHUB_OUTPUT = path.join(workspace, "github-output.txt");
     const summary = aggregateBuildSummaryCli();
 
     assert.equal(summary.contract, "kungfu-buildchain-build-summary");
+    assert.equal(summary.git.sha, "e".repeat(40));
+    assert.equal(summary.git.ref, "publish-gate/release/v22/v22.22/22.22.3-kf.0");
     assert.equal(summary.platformCount, 1);
     assert.equal(summary.fileCount, 2);
     assert.ok(summary.totalBytes > 0);
@@ -273,6 +479,15 @@ test("aggregate build summary reads uploaded platform manifests", () => {
       channel: "release",
       allowed: true,
       reason: "ref matched release",
+    });
+    assert.deepEqual(summary.publishSource, {
+      ref: "publish-gate/release/v22/v22.22/22.22.3-kf.0",
+      sha: "e".repeat(40),
+      locked: true,
+      channel: "release",
+      line: "v22/v22.22",
+      consumerVersion: "22.22.3-kf.0",
+      releaseManifest: '{"schema":1}',
     });
     assert.equal(summary.platforms[0].artifactName, "libnode-linux-x64-sha");
     assert.equal(summary.platforms[0].expectedArtifacts.ok, true);

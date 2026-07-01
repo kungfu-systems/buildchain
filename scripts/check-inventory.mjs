@@ -36,8 +36,8 @@ if (inventory.schemaVersion !== 2) {
   throw new Error("inventory schemaVersion must be 2");
 }
 
-if (inventory.release !== "buildchain-v1") {
-  throw new Error("inventory release must be buildchain-v1");
+if (inventory.release !== "buildchain-v2") {
+  throw new Error("inventory release must be buildchain-v2");
 }
 
 if (!Array.isArray(inventory.workflowSources) || inventory.workflowSources.length < 1) {
@@ -142,6 +142,11 @@ if (safety.trustedEventGate !== true) {
 }
 if (safety.reusableContract?.publishGateChannels !== true) {
   throw new Error("safety.reusableContract.publishGateChannels must be true");
+}
+for (const key of ["publishGateSourceLock", "resolvedReleaseManifest", "packageSetPublishPlan"]) {
+  if (safety.reusableContract?.[key] !== true) {
+    throw new Error(`safety.reusableContract.${key} must be true`);
+  }
 }
 
 console.log("buildchain inventory check passed");

@@ -44,6 +44,21 @@ on:
         default: ""
         type: string
         required: false
+      publish-source-ref:
+        description: "Optional source branch such as publish-gate/alpha/<line>/<version> to resolve and lock before build"
+        default: ""
+        type: string
+        required: false
+      publish-anchor-request-json:
+        description: "Required JSON request when publish-source-ref resolves to publish-gate/anchor"
+        default: ""
+        type: string
+        required: false
+      publish-registry:
+        description: "Registry recorded in the resolved publish source manifest"
+        default: "https://registry.npmjs.org/"
+        type: string
+        required: false
       setup-node:
         default: true
         type: boolean
@@ -128,6 +143,27 @@ on:
       publish-reason:
         description: "Human-readable publish gate reason"
         value: ${{ jobs.trust-gate.outputs.publish-reason }}
+      publish-source-ref:
+        description: "Resolved publish source ref"
+        value: ${{ jobs.trust-gate.outputs.publish-source-ref }}
+      publish-source-sha:
+        description: "Locked source SHA used for checkout/build/summary"
+        value: ${{ jobs.trust-gate.outputs.publish-source-sha }}
+      publish-source-locked:
+        description: "Whether a publish-gate source ref was explicitly locked"
+        value: ${{ jobs.trust-gate.outputs.publish-source-locked }}
+      publish-source-channel:
+        description: "Channel parsed from the publish-gate source ref"
+        value: ${{ jobs.trust-gate.outputs.publish-source-channel }}
+      publish-source-line:
+        description: "Line parsed from the publish-gate source ref"
+        value: ${{ jobs.trust-gate.outputs.publish-source-line }}
+      publish-source-consumer-version:
+        description: "Consumer version parsed from the publish-gate source ref"
+        value: ${{ jobs.trust-gate.outputs.publish-source-consumer-version }}
+      release-manifest-json:
+        description: "Resolved release manifest JSON"
+        value: ${{ jobs.resolve-source.outputs.release-manifest-json }}
 
 permissions:
   contents: read
@@ -142,6 +178,13 @@ jobs:
       publish-channel: ${{ steps.publish.outputs.publish-channel }}
       publish-allowed: ${{ steps.publish.outputs.publish-allowed }}
       publish-reason: ${{ steps.publish.outputs.publish-reason }}
+      publish-source-ref: ${{ steps.source.outputs.publish-source-ref }}
+      publish-source-full-ref: ${{ steps.source.outputs.publish-source-full-ref }}
+      publish-source-sha: ${{ steps.source.outputs.publish-source-sha }}
+      publish-source-locked: ${{ steps.source.outputs.publish-source-locked }}
+      publish-source-channel: ${{ steps.source.outputs.publish-source-channel }}
+      publish-source-line: ${{ steps.source.outputs.publish-source-line }}
+      publish-source-consumer-version: ${{ steps.source.outputs.publish-source-consumer-version }}
     steps:
       - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
@@ -173,10 +216,78 @@ jobs:
           BUILDCHAIN_TRUSTED_EVENT: ${{ steps.trust.outputs.trusted }}
           BUILDCHAIN_PUBLISH_CHANNEL: ${{ inputs.publish-channel }}
           BUILDCHAIN_PUBLISH_REFS_JSON: ${{ inputs.publish-refs-json }}
+          GITHUB_REF: ${{ github.ref }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+
+      - name: Resolve publish source lock
+        id: source
+        run: node .buildchain/runtime/scripts/resolve-publish-source.mjs --mode lock
+        env:
+          BUILDCHAIN_PUBLISH_SOURCE_REF: ${{ inputs.publish-source-ref }}
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF: ${{ github.ref }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_TOKEN: ${{ github.token }}
 
       - name: Reject untrusted event
         if: ${{ steps.trust.outputs.trusted != 'true' && inputs.untrusted-policy == 'fail' }}
         run: exit 1
+
+  resolve-source:
+    name: Resolve publish source
+    runs-on: ubuntu-24.04
+    needs:
+      - trust-gate
+    if: ${{ needs.trust-gate.outputs.trusted == 'true' }}
+    outputs:
+      publish-source-ref: ${{ steps.manifest.outputs.publish-source-ref }}
+      publish-source-sha: ${{ steps.manifest.outputs.publish-source-sha }}
+      publish-source-locked: ${{ steps.manifest.outputs.publish-source-locked }}
+      publish-source-channel: ${{ steps.manifest.outputs.publish-source-channel }}
+      publish-source-line: ${{ steps.manifest.outputs.publish-source-line }}
+      publish-source-consumer-version: ${{ steps.manifest.outputs.publish-source-consumer-version }}
+      release-manifest-path: ${{ steps.manifest.outputs.release-manifest-path }}
+      release-manifest-json: ${{ steps.manifest.outputs.release-manifest-json }}
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ needs.trust-gate.outputs.publish-source-sha }}
+          clean: true
+          persist-credentials: false
+          path: source
+
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.buildchain-ref }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Install Buildchain runtime dependencies
+        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+
+      - name: Resolve release manifest
+        id: manifest
+        run: node .buildchain/runtime/scripts/resolve-publish-source.mjs --mode manifest
+        env:
+          BUILDCHAIN_SOURCE_CWD: source/${{ inputs.working-directory }}
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_PUBLISH_SOURCE_REF: ${{ needs.trust-gate.outputs.publish-source-ref }}
+          BUILDCHAIN_PUBLISH_SOURCE_SHA: ${{ needs.trust-gate.outputs.publish-source-sha }}
+          BUILDCHAIN_PUBLISH_ANCHOR_REQUEST_JSON: ${{ inputs.publish-anchor-request-json }}
+          BUILDCHAIN_PUBLISH_REGISTRY: ${{ inputs.publish-registry }}
+          BUILDCHAIN_RELEASE_MANIFEST: .buildchain/artifacts/publish-source-manifest.json
+
+      - name: Upload resolved release manifest
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-publish-source-${{ needs.trust-gate.outputs.publish-source-sha }}
+          path: .buildchain/artifacts/publish-source-manifest.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
 
   resolve-contract:
     name: Resolve reusable contract
@@ -207,6 +318,7 @@ jobs:
     needs:
       - trust-gate
       - resolve-contract
+      - resolve-source
     if: ${{ needs.trust-gate.outputs.trusted == 'true' }}
     strategy:
       fail-fast: false
@@ -217,6 +329,7 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v7.0.0
         with:
+          ref: ${{ needs.resolve-source.outputs.publish-source-sha }}
           clean: true
           persist-credentials: false
 
@@ -236,6 +349,7 @@ jobs:
           BUILDCHAIN_ARTIFACT_NAME_TEMPLATE: ${{ inputs.artifact-name-template }}
           BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
           BUILDCHAIN_PLATFORM_NAME: ${{ matrix.platform.name }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
 
       - name: Setup Node.js
         if: ${{ inputs.setup-node }}
@@ -245,6 +359,9 @@ jobs:
 
       - name: Run install lifecycle
         uses: ./.buildchain/runtime/actions/run-lifecycle
+        env:
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
         with:
           cwd: ${{ inputs.working-directory }}
           stage: install
@@ -259,6 +376,9 @@ jobs:
 
       - name: Run build lifecycle
         uses: ./.buildchain/runtime/actions/run-lifecycle
+        env:
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
         with:
           cwd: ${{ inputs.working-directory }}
           stage: build
@@ -274,6 +394,9 @@ jobs:
       - name: Run verify lifecycle
         id: verify-lifecycle
         uses: ./.buildchain/runtime/actions/run-lifecycle
+        env:
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
         with:
           cwd: ${{ inputs.working-directory }}
           stage: verify
@@ -301,7 +424,7 @@ jobs:
       - name: Upload artifact manifest
         uses: actions/upload-artifact@v7.0.1
         with:
-          name: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ github.sha }}
+          name: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           path: |
             .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
             .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
@@ -313,6 +436,7 @@ jobs:
     needs:
       - trust-gate
       - resolve-contract
+      - resolve-source
       - build
     if: ${{ always() && needs.build.result == 'success' }}
     runs-on: ubuntu-24.04
@@ -333,12 +457,12 @@ jobs:
         id: names
         run: echo "summary-artifact-name=${BUILDCHAIN_SUMMARY_ARTIFACT_NAME}" >> "${GITHUB_OUTPUT}"
         env:
-          BUILDCHAIN_SUMMARY_ARTIFACT_NAME: ${{ inputs.artifact-name }}-summary-${{ github.sha }}
+          BUILDCHAIN_SUMMARY_ARTIFACT_NAME: ${{ inputs.artifact-name }}-summary-${{ needs.resolve-source.outputs.publish-source-sha }}
 
       - name: Download platform manifests
         uses: actions/download-artifact@v7.0.0
         with:
-          pattern: ${{ inputs.artifact-name }}-manifest-*-${{ github.sha }}
+          pattern: ${{ inputs.artifact-name }}-manifest-*-${{ needs.resolve-source.outputs.publish-source-sha }}
           path: .buildchain/downloaded-manifests
           merge-multiple: false
 
@@ -354,6 +478,15 @@ jobs:
           BUILDCHAIN_PUBLISH_CHANNEL: ${{ needs.trust-gate.outputs.publish-channel }}
           BUILDCHAIN_PUBLISH_ALLOWED: ${{ needs.trust-gate.outputs.publish-allowed }}
           BUILDCHAIN_PUBLISH_REASON: ${{ needs.trust-gate.outputs.publish-reason }}
+          BUILDCHAIN_PUBLISH_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref }}
+          BUILDCHAIN_PUBLISH_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_PUBLISH_SOURCE_LOCKED: ${{ needs.resolve-source.outputs.publish-source-locked }}
+          BUILDCHAIN_PUBLISH_SOURCE_CHANNEL: ${{ needs.resolve-source.outputs.publish-source-channel }}
+          BUILDCHAIN_PUBLISH_SOURCE_LINE: ${{ needs.resolve-source.outputs.publish-source-line }}
+          BUILDCHAIN_PUBLISH_SOURCE_CONSUMER_VERSION: ${{ needs.resolve-source.outputs.publish-source-consumer-version }}
+          BUILDCHAIN_RELEASE_MANIFEST_JSON: ${{ needs.resolve-source.outputs.release-manifest-json }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
 
       - name: Upload aggregate build summary
         uses: actions/upload-artifact@v7.0.1

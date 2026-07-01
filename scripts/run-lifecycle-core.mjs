@@ -135,8 +135,8 @@ export function runLifecycle({
     platform,
     git: {
       repository: process.env.GITHUB_REPOSITORY || "",
-      sha: process.env.GITHUB_SHA || "",
-      ref: process.env.GITHUB_REF || "",
+      sha: process.env.BUILDCHAIN_SOURCE_SHA || process.env.GITHUB_SHA || "",
+      ref: process.env.BUILDCHAIN_SOURCE_REF || process.env.GITHUB_REF || "",
       runId: process.env.GITHUB_RUN_ID || "",
       runAttempt: process.env.GITHUB_RUN_ATTEMPT || "",
     },
