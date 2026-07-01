@@ -10,6 +10,9 @@ const SUPPORTED_VERSION_FILE_TYPES = new Set(["json", "toml", "regex"]);
 const SUPPORTED_VERSION_STRATEGIES = new Set(["semver", "anchored"]);
 const SUPPORTED_VERSION_NEXT = new Set(["auto", "manual"]);
 const SUPPORTED_PROJECT_TYPES = new Set(["package", "web-surface"]);
+const SUPPORTED_PUBLISH_MODES = new Set(["publish-final-version", "promote-existing-version"]);
+const SUPPORTED_PUBLISH_AUTH = new Set(["trusted-publishing", "npm-token"]);
+const SUPPORTED_PACKAGE_SET_ORDER = new Set(["as-provided", "platforms-first-main-last"]);
 const WEB_SURFACE_CHANNELS = ["preview", "staging", "production"];
 const SUPPORTED_CHANNEL_VISIBILITY = new Set(["ephemeral", "protected", "public", "internal"]);
 const SUPPORTED_ACCESS_CONTROL = new Set(["none", "managed-network", "edge-basic-auth", "oidc", "app-auth"]);
@@ -104,6 +107,9 @@ export function normalizeBuildchainConfig(config) {
   if (normalized.lifecycle !== undefined) {
     normalized.lifecycle = normalizeLifecycleSection(normalized.lifecycle);
   }
+  if (normalized.publish !== undefined) {
+    normalized.publish = normalizePublishSection(normalized.publish);
+  }
   if (normalized.channels !== undefined) {
     normalized.channels = normalizeChannelsSection(normalized.channels, normalized.project);
   }
@@ -118,6 +124,42 @@ export function normalizeBuildchainConfig(config) {
   }
   validateWebSurfaceConfig(normalized);
   return normalized;
+}
+
+function normalizePublishSection(publish) {
+  assertPlainObject(publish, "publish");
+  const mode = publish.mode === undefined
+    ? "publish-final-version"
+    : assertString(publish.mode, "publish.mode");
+  if (!SUPPORTED_PUBLISH_MODES.has(mode)) {
+    throw new Error("publish.mode must be one of publish-final-version or promote-existing-version");
+  }
+  const auth = publish.auth === undefined
+    ? "trusted-publishing"
+    : assertString(publish.auth, "publish.auth");
+  if (!SUPPORTED_PUBLISH_AUTH.has(auth)) {
+    throw new Error("publish.auth must be one of trusted-publishing or npm-token");
+  }
+  if (mode === "promote-existing-version" && auth !== "npm-token") {
+    throw new Error('publish.mode = "promote-existing-version" requires publish.auth = "npm-token"');
+  }
+  const packageSetOrder = publish.package_set_order === undefined
+    ? "as-provided"
+    : assertString(publish.package_set_order, "publish.package_set_order");
+  if (!SUPPORTED_PACKAGE_SET_ORDER.has(packageSetOrder)) {
+    throw new Error("publish.package_set_order must be one of as-provided or platforms-first-main-last");
+  }
+  return {
+    mode,
+    auth,
+    distTag: publish.dist_tag === undefined
+      ? undefined
+      : assertString(publish.dist_tag, "publish.dist_tag"),
+    packageSetOrder,
+    mainPackage: publish.main_package === undefined
+      ? ""
+      : assertString(publish.main_package, "publish.main_package"),
+  };
 }
 
 function normalizeProjectSection(project) {
@@ -473,6 +515,10 @@ export function getLifecycleStage(loadedConfig, name) {
   return loadedConfig?.config?.lifecycle?.[name];
 }
 
+export function getPublishContract(loadedConfig) {
+  return loadedConfig?.config?.publish;
+}
+
 export function runLifecycleStage({ cwd = process.cwd(), loadedConfig, name, stage, env: extraEnv }) {
   const lifecycle = loadedConfig?.config?.lifecycle || {};
   const selected = stage || getLifecycleStage(loadedConfig, name);
@@ -706,6 +752,7 @@ export function validateBuildchainConfig(
       pattern: file.pattern?.source,
     })),
     lifecycleStages,
+    publish: loadedConfig.config.publish,
   };
 }
 

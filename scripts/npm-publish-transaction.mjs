@@ -152,7 +152,7 @@ export function npmPublishTransaction({
   const pkg = readPackageJson(resolvedCwd);
   const expectedVersion = readEnv("BUILDCHAIN_VERSION");
   const exactTag = assertPackageVersion({ pkg, expectedVersion });
-  const distTag = pkg.version.includes("-") ? "alpha" : "latest";
+  const distTag = readEnv("BUILDCHAIN_NPM_DIST_TAG", pkg.version.includes("-") ? "alpha" : "latest");
 
   const pack = parsePackResult(runNpm({
     cwd: resolvedCwd,

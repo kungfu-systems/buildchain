@@ -943,6 +943,115 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   ]);
 });
 
+test("release final-version trusted publishing runs without npm token auth", async () => {
+  const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[publish]
+mode = "publish-final-version"
+auth = "trusted-publishing"
+dist_tag = "latest"
+
+[lifecycle.publish]
+command = "node scripts/publish.mjs"
+`,
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "0.0.0",
+      packageManager: "pnpm@11.7.0",
+    },
+    "scripts/publish.mjs": `
+import fs from "node:fs";
+
+fs.mkdirSync(process.env.BUILDCHAIN_EVIDENCE_DIR, { recursive: true });
+fs.writeFileSync("publish-env.json", JSON.stringify({
+  mode: process.env.BUILDCHAIN_PUBLISH_MODE,
+  auth: process.env.BUILDCHAIN_PUBLISH_AUTH,
+  distTag: process.env.BUILDCHAIN_NPM_DIST_TAG,
+  tokenConfigured: Boolean(process.env.NODE_AUTH_TOKEN || process.env.NPM_TOKEN || process.env.npm_config__authToken)
+}, null, 2) + "\\n");
+fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
+  schema: 1,
+  version: process.env.BUILDCHAIN_VERSION,
+  channel: process.env.BUILDCHAIN_CHANNEL,
+  source_sha: process.env.BUILDCHAIN_SOURCE_SHA,
+  release_sha: process.env.BUILDCHAIN_RELEASE_SHA,
+  target_ref: process.env.BUILDCHAIN_TARGET_REF,
+  release_material_sha: process.env.BUILDCHAIN_RELEASE_MATERIAL_SHA,
+  publish_tooling_sha: process.env.BUILDCHAIN_PUBLISH_TOOLING_SHA,
+  artifacts: [{
+    kind: "npm",
+    name: "@kungfu-tech/buildchain",
+    ref: process.env.BUILDCHAIN_VERSION,
+    digest: "sha256:release"
+  }]
+}, null, 2) + "\\n");
+`,
+  });
+  const { octokit, refs } = createGitMock({
+    refs: new Map([
+      ["heads/release/v1/v1.0", SHA],
+      ["tags/v1.0.0-alpha.0", OTHER_SHA],
+    ]),
+  });
+  const previousEnv = {
+    NODE_AUTH_TOKEN: process.env.NODE_AUTH_TOKEN,
+    NPM_TOKEN: process.env.NPM_TOKEN,
+    npm_config__authToken: process.env.npm_config__authToken,
+  };
+  delete process.env.NODE_AUTH_TOKEN;
+  delete process.env.NPM_TOKEN;
+  delete process.env.npm_config__authToken;
+  try {
+    const result = await promoteBuildchainRefs({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sha: SHA,
+      targetRef: "release/v1/v1.0",
+      cwd,
+      publishTransaction: true,
+      publishRequiredArtifactsJson: JSON.stringify([
+        {
+          kind: "npm",
+          name: "@kungfu-tech/buildchain",
+          ref: "1.0.0",
+          digest: "sha256:release",
+        },
+      ]),
+    });
+
+    assert.equal(result.publishTransaction.state, "complete");
+    assert.equal(refs.has("tags/v1.0.0"), true);
+    assert.deepEqual(
+      JSON.parse(fs.readFileSync(path.join(cwd, "publish-env.json"), "utf8")),
+      {
+        mode: "publish-final-version",
+        auth: "trusted-publishing",
+        distTag: "latest",
+        tokenConfigured: false,
+      },
+    );
+  } finally {
+    for (const [key, value] of Object.entries(previousEnv)) {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+  }
+});
+
 test("publish transaction skips alpha versions occupied by durable state refs", async () => {
   const cwd = makeTempWorkspace({
     "buildchain.toml": `
@@ -1032,6 +1141,13 @@ type = "json"
 path = "package.json"
 key = "version"
 
+[publish]
+mode = "promote-existing-version"
+auth = "npm-token"
+dist_tag = "latest"
+package_set_order = "platforms-first-main-last"
+main_package = "@kungfu-tech/buildchain"
+
 [lifecycle.publish]
 command = "node scripts/should-not-run.mjs"
 `,
@@ -1048,7 +1164,15 @@ command = "node scripts/should-not-run.mjs"
     path.join(binDir, "npm"),
     `#!/bin/sh
 echo "$@" >> "$NPM_LOG"
-if [ "$1" = "view" ]; then
+if [ "$1" = "whoami" ]; then
+  printf 'keren\\n'
+  exit 0
+fi
+if [ "$1" = "view" ] && [ "$3" = "dist-tags.latest" ]; then
+  printf '""\\n'
+  exit 0
+fi
+if [ "$1" = "view" ] && [ "$3" = "dist.integrity" ]; then
   printf '"sha512-existing"\\n'
   exit 0
 fi
@@ -1069,13 +1193,11 @@ exit 64
   const previousEnv = {
     PATH: process.env.PATH,
     NPM_LOG: process.env.NPM_LOG,
-    KF_NPM_RELEASE_REQUIRES_EXISTING: process.env.KF_NPM_RELEASE_REQUIRES_EXISTING,
-    KF_NPM_DIST_TAG: process.env.KF_NPM_DIST_TAG,
+    NODE_AUTH_TOKEN: process.env.NODE_AUTH_TOKEN,
   };
   process.env.PATH = `${binDir}${path.delimiter}${process.env.PATH}`;
   process.env.NPM_LOG = path.join(cwd, "npm.log");
-  process.env.KF_NPM_RELEASE_REQUIRES_EXISTING = "true";
-  process.env.KF_NPM_DIST_TAG = "latest";
+  process.env.NODE_AUTH_TOKEN = "test-token";
   try {
     const result = await promoteBuildchainRefs({
       octokit,
@@ -1088,9 +1210,17 @@ exit 64
       publishRequiredArtifactsJson: JSON.stringify([
         {
           kind: "npm",
+          name: "@kungfu-tech/buildchain-linux-x64",
+          ref: "1.0.0",
+          digest: "sha512-rebuilt",
+          role: "platform",
+        },
+        {
+          kind: "npm",
           name: "@kungfu-tech/buildchain",
           ref: "1.0.0",
           digest: "sha512-rebuilt",
+          role: "main",
         },
       ]),
     });
@@ -1104,15 +1234,31 @@ exit 64
       {
         group: "",
         kind: "npm",
+        name: "@kungfu-tech/buildchain-linux-x64",
+        ref: "1.0.0",
+        digest: "sha512-existing",
+        role: "platform",
+        required: true,
+      },
+      {
+        group: "",
+        kind: "npm",
         name: "@kungfu-tech/buildchain",
         ref: "1.0.0",
         digest: "sha512-existing",
+        role: "main",
         required: true,
       },
     ]);
-    assert.match(
-      fs.readFileSync(process.env.NPM_LOG, "utf8"),
-      /dist-tag add @kungfu-tech\/buildchain@1\.0\.0 latest/,
+    assert.deepEqual(
+      fs.readFileSync(process.env.NPM_LOG, "utf8")
+        .trim()
+        .split("\n")
+        .filter((line) => line.startsWith("dist-tag add")),
+      [
+        "dist-tag add @kungfu-tech/buildchain-linux-x64@1.0.0 latest",
+        "dist-tag add @kungfu-tech/buildchain@1.0.0 latest",
+      ],
     );
   } finally {
     for (const [key, value] of Object.entries(previousEnv)) {
@@ -1123,6 +1269,135 @@ exit 64
       }
     }
   }
+});
+
+test("release existing-version promotion fails before transaction side effects without npm token", async () => {
+  const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[publish]
+mode = "promote-existing-version"
+auth = "npm-token"
+dist_tag = "latest"
+`,
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "0.0.0",
+      packageManager: "pnpm@11.7.0",
+    },
+  });
+  const { octokit, refs } = createGitMock({
+    refs: new Map([
+      ["heads/release/v1/v1.0", SHA],
+      ["tags/v1.0.0-alpha.0", OTHER_SHA],
+    ]),
+  });
+  const previousEnv = {
+    NODE_AUTH_TOKEN: process.env.NODE_AUTH_TOKEN,
+    NPM_TOKEN: process.env.NPM_TOKEN,
+    npm_config__authToken: process.env.npm_config__authToken,
+  };
+  delete process.env.NODE_AUTH_TOKEN;
+  delete process.env.NPM_TOKEN;
+  delete process.env.npm_config__authToken;
+  try {
+    await assert.rejects(
+      () =>
+        promoteBuildchainRefs({
+          octokit,
+          owner: "kungfu-systems",
+          repo: "buildchain",
+          sha: SHA,
+          targetRef: "release/v1/v1.0",
+          cwd,
+          publishTransaction: true,
+          publishRequiredArtifactsJson: JSON.stringify([
+            {
+              kind: "npm",
+              name: "@kungfu-tech/buildchain",
+              ref: "1.0.0",
+              digest: "sha512-existing",
+            },
+          ]),
+        }),
+      /requires npm token auth before dist-tag promotion/,
+    );
+    assert.equal(refs.has("heads/buildchain/release-state/1-0-0"), false);
+    assert.equal(refs.has("tags/v1.0.0"), false);
+  } finally {
+    for (const [key, value] of Object.entries(previousEnv)) {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+  }
+});
+
+test("release final-version trusted publishing rejects alpha package refs", async () => {
+  const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[publish]
+mode = "publish-final-version"
+auth = "trusted-publishing"
+dist_tag = "latest"
+`,
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "0.0.0",
+      packageManager: "pnpm@11.7.0",
+    },
+  });
+  const { octokit, refs } = createGitMock({
+    refs: new Map([
+      ["heads/release/v1/v1.0", SHA],
+      ["tags/v1.0.0-alpha.0", OTHER_SHA],
+    ]),
+  });
+
+  await assert.rejects(
+    () =>
+      promoteBuildchainRefs({
+        octokit,
+        owner: "kungfu-systems",
+        repo: "buildchain",
+        sha: SHA,
+        targetRef: "release/v1/v1.0",
+        cwd,
+        publishTransaction: true,
+        publishRequiredArtifactsJson: JSON.stringify([
+          {
+            kind: "npm",
+            name: "@kungfu-tech/buildchain",
+            ref: "1.0.0-alpha.0",
+            digest: "sha512-alpha",
+          },
+        ]),
+      }),
+    /must publish final package refs, not alpha refs/,
+  );
+  assert.equal(refs.has("heads/buildchain/release-state/1-0-0"), false);
+  assert.equal(refs.has("tags/v1.0.0"), false);
 });
 
 test("publish transaction skips stale current alpha transaction identity", async () => {

@@ -1,6 +1,7 @@
 export {
   discoverConfiguredVersionStateFiles,
   getLifecycleStage,
+  getPublishContract,
   getVersionStrategy,
   loadBuildchainConfig,
   loadConfiguredAnchorManifest,

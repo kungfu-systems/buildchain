@@ -8,6 +8,7 @@ import {
 } from "../../packages/core/package-manager.js";
 import {
   discoverConfiguredVersionStateFiles,
+  getPublishContract,
   getVersionStrategy,
   getLifecycleStage,
   loadConfiguredAnchorManifest,
@@ -383,15 +384,94 @@ function npmPackageSpec(artifact) {
   return `${artifact.name}@${artifact.ref}`;
 }
 
-function releaseExistingNpmPromotionEnabled({ channel, requiredArtifacts }) {
+function isAlphaLikeVersion(version) {
+  return /(?:^|[-.])alpha(?:[-.]|$)/i.test(String(version || ""));
+}
+
+function defaultDistTagForChannel(channel) {
+  return channel === "alpha" ? "alpha" : "latest";
+}
+
+function resolvePublishContract({
+  loadedConfig,
+  channel,
+  publishMode = "",
+  publishAuth = "",
+  publishDistTag = "",
+  publishPackageSetOrder = "",
+  publishPackageMain = "",
+} = {}) {
+  const configured = getPublishContract(loadedConfig) || {};
+  const mode = publishMode || configured.mode || "publish-final-version";
+  const auth = publishAuth || configured.auth || "trusted-publishing";
+  const packageSetOrder = publishPackageSetOrder || configured.packageSetOrder || "as-provided";
+  const mainPackage = publishPackageMain || configured.mainPackage || "";
+  const distTag = publishDistTag || configured.distTag || defaultDistTagForChannel(channel);
+  if (!["publish-final-version", "promote-existing-version"].includes(mode)) {
+    throw new Error("publish mode must be one of publish-final-version or promote-existing-version");
+  }
+  if (!["trusted-publishing", "npm-token"].includes(auth)) {
+    throw new Error("publish auth must be one of trusted-publishing or npm-token");
+  }
+  if (!["as-provided", "platforms-first-main-last"].includes(packageSetOrder)) {
+    throw new Error("publish package set order must be one of as-provided or platforms-first-main-last");
+  }
+  if (mode === "promote-existing-version" && auth !== "npm-token") {
+    throw new Error("promote-existing-version requires npm-token auth; Trusted Publishing cannot authorize npm dist-tag add");
+  }
+  if (channel === "release" && mode === "publish-final-version" && distTag !== "latest") {
+    throw new Error("release publish-final-version must use dist-tag latest");
+  }
+  if (channel === "alpha" && mode === "publish-final-version" && distTag !== "alpha") {
+    throw new Error("alpha publish-final-version must use dist-tag alpha");
+  }
+  return {
+    mode,
+    auth,
+    distTag,
+    packageSetOrder,
+    mainPackage,
+  };
+}
+
+function allRequiredArtifactsAreNpm(requiredArtifacts) {
   return (
-    channel === "release" &&
-    process.env.KF_NPM_RELEASE_REQUIRES_EXISTING === "true" &&
     requiredArtifacts.length > 0 &&
     requiredArtifacts.every(
       (artifact) => artifact.kind === "npm" && artifact.name && artifact.ref,
     )
   );
+}
+
+function orderNpmArtifactsForPackageSet({ artifacts, contract }) {
+  if (contract.packageSetOrder !== "platforms-first-main-last") {
+    return artifacts;
+  }
+  const mainPackage = contract.mainPackage;
+  return [
+    ...artifacts.filter((artifact) => artifact.role !== "main" && artifact.name !== mainPackage),
+    ...artifacts.filter((artifact) => artifact.role === "main" || artifact.name === mainPackage),
+  ];
+}
+
+function validatePublishContractForArtifacts({ channel, contract, requiredArtifacts }) {
+  if (contract.mode === "promote-existing-version" && !allRequiredArtifactsAreNpm(requiredArtifacts)) {
+    throw new Error("promote-existing-version requires npm publish-required-artifacts-json entries");
+  }
+  if (contract.packageSetOrder === "platforms-first-main-last") {
+    const mainArtifacts = requiredArtifacts.filter(
+      (artifact) => artifact.role === "main" || artifact.name === contract.mainPackage,
+    );
+    if (mainArtifacts.length !== 1) {
+      throw new Error("platforms-first-main-last package set requires exactly one main npm artifact");
+    }
+  }
+  if (channel === "release" && contract.mode === "publish-final-version") {
+    const alphaArtifacts = requiredArtifacts.filter((artifact) => isAlphaLikeVersion(artifact.ref));
+    if (alphaArtifacts.length > 0) {
+      throw new Error("release publish-final-version must publish final package refs, not alpha refs");
+    }
+  }
 }
 
 function readExistingNpmIntegrity({ cwd, artifact }) {
@@ -456,13 +536,57 @@ function writeExistingNpmEvidence({
   );
 }
 
-function promoteExistingNpmArtifacts({ cwd, artifacts }) {
-  const distTag = process.env.KF_NPM_DIST_TAG || "latest";
+function npmTokenLooksConfigured() {
+  return Boolean(process.env.NODE_AUTH_TOKEN || process.env.NPM_TOKEN || process.env.npm_config__authToken);
+}
+
+function preflightNpmTokenAuth({ cwd, registry = "https://registry.npmjs.org/" } = {}) {
+  if (!npmTokenLooksConfigured()) {
+    throw new Error("promote-existing-version requires npm token auth before dist-tag promotion; set NODE_AUTH_TOKEN or NPM_TOKEN");
+  }
+  try {
+    execFileSync("npm", ["whoami", `--registry=${registry}`], {
+      cwd,
+      env: process.env,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+  } catch (error) {
+    const message = error.stderr?.toString?.().trim() || error.message;
+    throw new Error(`promote-existing-version npm token preflight failed: npm whoami failed: ${message}`);
+  }
+}
+
+function npmDistTagAlreadyPoints({ cwd, artifact, distTag }) {
+  try {
+    const output = execFileSync(
+      "npm",
+      ["view", artifact.name, `dist-tags.${distTag}`, "--json"],
+      {
+        cwd,
+        env: process.env,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+      },
+    ).trim();
+    if (!output) {
+      return false;
+    }
+    return JSON.parse(output) === artifact.ref;
+  } catch {
+    return false;
+  }
+}
+
+function promoteExistingNpmArtifacts({ cwd, artifacts, distTag }) {
   const promoted = new Set();
   for (const artifact of artifacts) {
     const spec = npmPackageSpec(artifact);
     const key = `${spec}\0${distTag}`;
     if (promoted.has(key)) {
+      continue;
+    }
+    if (npmDistTagAlreadyPoints({ cwd, artifact, distTag })) {
+      promoted.add(key);
       continue;
     }
     execFileSync("npm", ["dist-tag", "add", spec, distTag], {
@@ -848,6 +972,11 @@ async function runPublishTransaction({
   publishRequiredArtifactsJson = "",
   releaseMaterialSha = "",
   publishToolingSha = "",
+  publishMode = "",
+  publishAuth = "",
+  publishDistTag = "",
+  publishPackageSetOrder = "",
+  publishPackageMain = "",
   actor = "",
   runId = "",
   explicitOverride = false,
@@ -872,12 +1001,34 @@ async function runPublishTransaction({
     publishRequiredArtifactsJson,
     "publish-required-artifacts-json",
   );
-  const existingNpmPromotion = releaseExistingNpmPromotionEnabled({
+  const publishContract = resolvePublishContract({
+    loadedConfig,
     channel,
+    publishMode,
+    publishAuth,
+    publishDistTag,
+    publishPackageSetOrder,
+    publishPackageMain,
+  });
+  validatePublishContractForArtifacts({
+    channel,
+    contract: publishContract,
     requiredArtifacts,
+  });
+  const existingNpmPromotion = publishContract.mode === "promote-existing-version";
+  if (existingNpmPromotion) {
+    preflightNpmTokenAuth({ cwd });
+  }
+  requiredArtifacts = orderNpmArtifactsForPackageSet({
+    artifacts: requiredArtifacts,
+    contract: publishContract,
   });
   if (existingNpmPromotion) {
     requiredArtifacts = resolveExistingNpmArtifacts({ cwd, requiredArtifacts });
+    requiredArtifacts = orderNpmArtifactsForPackageSet({
+      artifacts: requiredArtifacts,
+      contract: publishContract,
+    });
   }
   const expected = {
     repository,
@@ -1047,7 +1198,11 @@ async function runPublishTransaction({
       ({ transaction, durable } = await persistTransaction(transaction));
       let source;
       if (existingNpmPromotion) {
-        source = promoteExistingNpmArtifacts({ cwd, artifacts: requiredArtifacts });
+        source = promoteExistingNpmArtifacts({
+          cwd,
+          artifacts: requiredArtifacts,
+          distTag: publishContract.distTag,
+        });
         writeExistingNpmEvidence({
           evidencePath: resolvedEvidencePath,
           version,
@@ -1075,6 +1230,11 @@ async function runPublishTransaction({
             BUILDCHAIN_RELEASE_MATERIAL_SHA: expected.releaseMaterialSha,
             BUILDCHAIN_PUBLISH_TOOLING_SHA: expected.publishToolingSha,
             BUILDCHAIN_PUBLISH_EVIDENCE: resolvedEvidencePath,
+            BUILDCHAIN_PUBLISH_MODE: publishContract.mode,
+            BUILDCHAIN_PUBLISH_AUTH: publishContract.auth,
+            BUILDCHAIN_NPM_DIST_TAG: publishContract.distTag,
+            BUILDCHAIN_PACKAGE_SET_ORDER: publishContract.packageSetOrder,
+            BUILDCHAIN_PACKAGE_SET_MAIN_PACKAGE: publishContract.mainPackage,
           },
         });
       }
@@ -1805,6 +1965,11 @@ async function promoteBuildchainRefs({
   publishRequiredArtifactsJson = "",
   releaseMaterialSha = "",
   publishToolingSha = "",
+  publishMode = "",
+  publishAuth = "",
+  publishDistTag = "",
+  publishPackageSetOrder = "",
+  publishPackageMain = "",
   actor = process.env.GITHUB_ACTOR || process.env.USER || "",
   runId = process.env.GITHUB_RUN_ID || "",
   publishTransactionOverride = false,
@@ -2557,6 +2722,11 @@ async function promoteBuildchainRefs({
       publishRequiredArtifactsJson,
       releaseMaterialSha,
       publishToolingSha,
+      publishMode,
+      publishAuth,
+      publishDistTag,
+      publishPackageSetOrder,
+      publishPackageMain,
       actor,
       runId,
       explicitOverride: publishTransactionOverride,

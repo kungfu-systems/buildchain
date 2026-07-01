@@ -93,6 +93,8 @@ trusted channel workflow:
     sha: ${{ github.sha }}
     target-ref: release/v2/v2.0
     publish-transaction: "true"
+    publish-mode: publish-final-version
+    publish-auth: trusted-publishing
     publish-required-artifacts-json: >-
       [
         {"kind":"npm","name":"@kungfu-tech/buildchain","ref":"2.0.0","digest":"sha256:..."}
@@ -110,6 +112,13 @@ The action runs `lifecycle.publish` from `buildchain.toml` or the explicit
 `publish-command` input, then validates publish evidence before exact tags and
 floating refs move. If durable state persistence fails, the action fails closed
 before publish or public ref finalization.
+
+`publish-mode` defaults to `publish-final-version`, the token-free path for
+normal npm Trusted Publishing. Same-version alpha-to-latest recovery must be
+declared as `publish-mode: promote-existing-version` and
+`publish-auth: npm-token`; Buildchain runs `npm whoami` before it creates
+release-state or moves any `npm dist-tag`. The Trusted Publishing mode is not
+allowed to perform `npm dist-tag add`.
 
 Buildchain itself uses this path for npm. Its `lifecycle.publish` runs
 `node scripts/npm-publish-transaction.mjs`, which publishes

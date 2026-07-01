@@ -212,6 +212,47 @@ command = "node -e \\"process.exit(0)\\""
   );
 });
 
+test("buildchain.toml normalizes explicit publish contract", () => {
+  withTempRepo(
+    {
+      "buildchain.toml": `
+schema = 1
+
+[publish]
+mode = "promote-existing-version"
+auth = "npm-token"
+dist_tag = "latest"
+package_set_order = "platforms-first-main-last"
+main_package = "@kungfu-tech/libnode"
+`,
+    },
+    (dir) => {
+      const summary = validateBuildchainConfig(dir);
+      assert.deepEqual(summary.publish, {
+        mode: "promote-existing-version",
+        auth: "npm-token",
+        distTag: "latest",
+        packageSetOrder: "platforms-first-main-last",
+        mainPackage: "@kungfu-tech/libnode",
+      });
+    },
+  );
+});
+
+test("buildchain.toml rejects dist-tag promotion without npm token auth", () => {
+  assert.throws(
+    () =>
+      normalizeBuildchainConfig({
+        schema: 1,
+        publish: {
+          mode: "promote-existing-version",
+          auth: "trusted-publishing",
+        },
+      }),
+    /requires publish\.auth = "npm-token"/,
+  );
+});
+
 test("manual next version is only valid for anchored strategy", () => {
   assert.throws(
     () =>
