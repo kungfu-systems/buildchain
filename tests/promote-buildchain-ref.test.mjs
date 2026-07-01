@@ -1019,6 +1019,112 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   assert.equal(refs.has("heads/buildchain/release-state/1-0-0-alpha-1"), true);
 });
 
+test("release publish transaction can promote existing npm artifacts by dist tag", async () => {
+  const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[lifecycle.publish]
+command = "node scripts/should-not-run.mjs"
+`,
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "0.0.0",
+      packageManager: "pnpm@11.7.0",
+    },
+    "scripts/should-not-run.mjs": "throw new Error('lifecycle.publish should not run');\n",
+  });
+  const binDir = path.join(cwd, "bin");
+  fs.mkdirSync(binDir);
+  fs.writeFileSync(
+    path.join(binDir, "npm"),
+    `#!/bin/sh
+echo "$@" >> "$NPM_LOG"
+if [ "$1" = "view" ]; then
+  printf '"sha512-existing"\\n'
+  exit 0
+fi
+if [ "$1" = "dist-tag" ] && [ "$2" = "add" ]; then
+  exit 0
+fi
+exit 64
+`,
+  );
+  fs.chmodSync(path.join(binDir, "npm"), 0o755);
+
+  const { octokit, refs } = createGitMock({
+    refs: new Map([
+      ["heads/release/v1/v1.0", SHA],
+      ["tags/v1.0.0-alpha.0", OTHER_SHA],
+    ]),
+  });
+  const previousEnv = {
+    PATH: process.env.PATH,
+    NPM_LOG: process.env.NPM_LOG,
+    KF_NPM_RELEASE_REQUIRES_EXISTING: process.env.KF_NPM_RELEASE_REQUIRES_EXISTING,
+    KF_NPM_DIST_TAG: process.env.KF_NPM_DIST_TAG,
+  };
+  process.env.PATH = `${binDir}${path.delimiter}${process.env.PATH}`;
+  process.env.NPM_LOG = path.join(cwd, "npm.log");
+  process.env.KF_NPM_RELEASE_REQUIRES_EXISTING = "true";
+  process.env.KF_NPM_DIST_TAG = "latest";
+  try {
+    const result = await promoteBuildchainRefs({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sha: SHA,
+      targetRef: "release/v1/v1.0",
+      cwd,
+      publishTransaction: true,
+      publishRequiredArtifactsJson: JSON.stringify([
+        {
+          kind: "npm",
+          name: "@kungfu-tech/buildchain",
+          ref: "1.0.0",
+          digest: "sha512-rebuilt",
+        },
+      ]),
+    });
+
+    assert.equal(result.publishTransaction.state, "complete");
+    assert.equal(refs.has("tags/v1.0.0"), true);
+    const evidence = JSON.parse(
+      fs.readFileSync(path.join(cwd, result.publishTransaction.evidencePath), "utf8"),
+    );
+    assert.deepEqual(evidence.artifacts, [
+      {
+        group: "",
+        kind: "npm",
+        name: "@kungfu-tech/buildchain",
+        ref: "1.0.0",
+        digest: "sha512-existing",
+        required: true,
+      },
+    ]);
+    assert.match(
+      fs.readFileSync(process.env.NPM_LOG, "utf8"),
+      /dist-tag add @kungfu-tech\/buildchain@1\.0\.0 latest/,
+    );
+  } finally {
+    for (const [key, value] of Object.entries(previousEnv)) {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+  }
+});
+
 test("publish transaction skips stale current alpha transaction identity", async () => {
   const cwd = makeTempWorkspace({
     "buildchain.toml": `
