@@ -1,11 +1,10 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
-import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-const require = createRequire(import.meta.url);
 const {
   assertAllowedLocalChanges,
   assertPromotableRepository,
@@ -20,7 +19,7 @@ const {
   selectAlphaTag,
   selectReleaseTag,
   updateVersionStateContents,
-} = require("../actions/promote-buildchain-ref/lib.js");
+} = await import("../actions/promote-buildchain-ref/lib.js");
 
 const SHA = "a".repeat(40);
 const OTHER_SHA = "b".repeat(40);
@@ -46,7 +45,7 @@ function makeTempWorkspace(files) {
 }
 
 function run(command, cwd) {
-  require("node:child_process").execFileSync(command[0], command.slice(1), {
+  execFileSync(command[0], command.slice(1), {
     cwd,
     stdio: "ignore",
   });

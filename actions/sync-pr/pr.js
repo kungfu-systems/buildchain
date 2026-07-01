@@ -1,5 +1,6 @@
-const { Octokit } = require("@octokit/rest");
-const axios = require("axios");
+import { Octokit } from "@octokit/rest";
+import axios from "axios";
+import Airtable from "airtable";
 
 const sleep = function (ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -65,7 +66,7 @@ async function checkAndPush(
   return count;
 }
 
-exports.syncAirtableWithRest = async function (argv) {
+export async function syncAirtableWithRest(argv) {
   const octokit = new Octokit({
     auth: `${argv.token}`,
   });
@@ -90,7 +91,6 @@ exports.syncAirtableWithRest = async function (argv) {
   }
   console.log(repoList.size, " repositories");
   const airtableApiKey = argv.apiKey;
-  const Airtable = require("airtable");
   const base = new Airtable({ apiKey: airtableApiKey }).base(
     "appAdi5zFFEsCzmEM"
   );
@@ -149,4 +149,4 @@ exports.syncAirtableWithRest = async function (argv) {
   let cnt = await checkAndPush(urlData, dataList, argv.apiKey, false, ["Url"]);
   dataCount += cnt;
   console.log(`totally update ${dataCount} raw data`);
-};
+}

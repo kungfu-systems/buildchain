@@ -1,14 +1,14 @@
 /* eslint-disable no-restricted-globals */
-const github = require('@actions/github');
-const fs = require('fs-extra');
-const path = require('path');
-const git = require('git-client');
+import * as github from '@actions/github';
+import fs from 'fs-extra';
+import path from 'node:path';
+import git from 'git-client';
 // 开启子进程，用于在终端执行格式检查脚本
-const { spawnSync } = require('child_process');
-const {
+import { spawnSync } from 'node:child_process';
+import {
   commandForRunScript,
   detectPackageManager,
-} = require('../../packages/core/package-manager.cjs');
+} from '../../packages/core/package-manager.js';
 
 const spawnOpts = { shell: true, stdio: 'pipe', windowsHide: true };
 
@@ -33,7 +33,7 @@ async function gitCall(...args) {
   return output;
 }
 
-exports.checkFormat = async function (argv) {
+export async function checkFormat(argv) {
   const jsonInfo = fs.readJSONSync('package.json');
   const hasFormat = jsonInfo.scripts.format;
   if (hasFormat !== undefined) {
@@ -45,15 +45,15 @@ exports.checkFormat = async function (argv) {
     if (gitStatus) {
       console.log('\n! Found unformatted code');
       // 字符串拼接：`words + ${字符串变量}`
-      exports.addPullRequestComment(argv, gitStatus);
+      addPullRequestComment(argv, gitStatus);
       throw new Error(`Found unformatted code\n${gitStatus}`);
     }
   } else {
     console.log('[info] package.json does not define "format" action in scrips.');
   }
-};
+}
 
-exports.addPullRequestComment = async function (argv, filesInfo) {
+export async function addPullRequestComment(argv, filesInfo) {
   const octokit = github.getOctokit(argv.token);
   const pullRequestQuery = await octokit.graphql(`
     query {
@@ -67,4 +67,4 @@ exports.addPullRequestComment = async function (argv, filesInfo) {
   const pullRequestID = pullRequestQuery.repository.pullRequest.id;
   const body = `Unformatted code:\n${filesInfo}`;
   await octokit.graphql(`mutation{addComment(input:{body:"${body}", subjectId:"${pullRequestID}"}){clientMutationId}}`);
-};
+}

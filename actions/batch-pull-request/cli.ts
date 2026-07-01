@@ -1,6 +1,5 @@
 import { batchPullRequest, type argvs } from "./lib";
-// import * as yargs from 'yargs';
-const yargs = require("yargs");
+import yargs from "yargs/yargs";
 const cmdArgv = yargs(process.argv.slice(2))
   .option("token", { description: "token", type: "string", default: "" })
   .option("branch", { description: "branch", type: "string", default: "1.0" })

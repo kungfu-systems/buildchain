@@ -2,7 +2,7 @@ import { update } from "./lib";
 import { getInput, setFailed } from "@actions/core";
 import { context } from "@actions/github";
 
-const main = async function () {
+export const main = async function () {
   const argv = {
     token: getInput("token"),
     repo: getInput("repo"),
@@ -13,7 +13,7 @@ const main = async function () {
   await update(argv);
 };
 
-if (require.main === module) {
+if (process.env.GITHUB_ACTION) {
   main().catch((error) => {
     console.error(error);
     setFailed(error.message);

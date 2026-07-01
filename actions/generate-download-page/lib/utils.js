@@ -1,13 +1,13 @@
-const path = require("path");
-const fs = require("fs");
-const glob = require("glob");
-const { spawnSync } = require("child_process");
-const {
+import path from "node:path";
+import fs from "node:fs";
+import { sync as globSync } from "glob";
+import { spawnSync } from "node:child_process";
+import {
   getCurrentLockInfo,
   getYarnLockInfo,
-} = require("../../../packages/core/package-manager.cjs");
+} from "../../../packages/core/package-manager.js";
 
-const getCurrentPackageLock = () => {
+export const getCurrentPackageLock = () => {
   try {
     return getCurrentLockInfo(process.cwd());
   } catch (error) {
@@ -15,14 +15,14 @@ const getCurrentPackageLock = () => {
   }
 };
 
-const writeFile = (fileName, content, folder) => {
+export const writeFile = (fileName, content, folder) => {
   if (!fs.existsSync(path.join(process.cwd(), folder))) {
     fs.mkdirSync(path.join(process.cwd(), folder));
   }
   fs.writeFileSync(fileName, content);
 };
 
-function awsCall(args, opts) {
+export function awsCall(args, opts) {
   console.log(`$ aws ${args.join(" ")}`);
   const result = spawnSync("aws", args, opts);
   if (result.status !== 0) {
@@ -31,14 +31,14 @@ function awsCall(args, opts) {
   return result;
 }
 
-const getPkgNameMap = (filterBinary = true) => {
+export const getPkgNameMap = (filterBinary = true) => {
   const cwd = process.cwd();
   const hasLerna = fs.existsSync(path.join(cwd, "lerna.json"));
   const config = getPkgConfig(cwd, hasLerna ? "lerna.json" : "package.json");
   if (hasLerna) {
     const items = config.packages
       .map((x) =>
-        glob.sync(`${x}/package.json`).reduce((acc, link) => {
+        globSync(`${x}/package.json`).reduce((acc, link) => {
           const { name, binary } = getPkgConfig(cwd, link);
           !(filterBinary && !binary) && acc.push(name);
           return acc;
@@ -50,21 +50,13 @@ const getPkgNameMap = (filterBinary = true) => {
   return [config.name];
 };
 
-const getPkgConfig = (cwd, link = "package.json") => {
+export const getPkgConfig = (cwd, link = "package.json") => {
   return JSON.parse(fs.readFileSync(path.join(cwd || process.cwd(), link)));
 };
 
-const getArtifactMap = () => {
+export const getArtifactMap = () => {
   const cwd = process.cwd();
-  return glob.sync("artifact*/package.json").map((v) => getPkgConfig(cwd, v));
+  return globSync("artifact*/package.json").map((v) => getPkgConfig(cwd, v));
 };
 
-module.exports = {
-  getPkgNameMap,
-  getPkgConfig,
-  awsCall,
-  writeFile,
-  getArtifactMap,
-  getYarnLockInfo,
-  getCurrentPackageLock,
-};
+export { getYarnLockInfo };

@@ -1,10 +1,10 @@
 console.log("start sync messages to airtable"); //在控制台输出信息,提醒开始运行
 /* eslint-disable no-restricted-globals */
-const core = require("@actions/core"); //Core functions for setting results, logging, registering secrets and exporting variables across actions
-const github = require("@actions/github");
-const pr = require("./pr.js");
+import * as core from "@actions/core"; //Core functions for setting results, logging, registering secrets and exporting variables across actions
+import * as github from "@actions/github";
+import * as pr from "./pr.js";
 
-const main = async function () {
+export const main = async function () {
   const argv = {
     token: core.getInput("token"),
     owner: github.context.repo.owner,
@@ -17,6 +17,8 @@ const main = async function () {
 if (process.env.GITHUB_ACTION) {
   main().catch((error) => {
     console.error(error);
-    setFailed(error.message);
+    core.setFailed(error.message);
   });
 } //捕获并输出错误信息
+
+export { pr };

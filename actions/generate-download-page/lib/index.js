@@ -1,16 +1,17 @@
-const path = require("path");
-const fs = require("fs");
-const axios = require("axios");
-const marked = require("marked");
-const mustache = require("mustache");
-const sortBy = require("lodash.sortby");
-const {
+import path from "node:path";
+import fs from "node:fs";
+import { fileURLToPath } from "node:url";
+import axios from "axios";
+import * as marked from "marked";
+import mustache from "mustache";
+import sortBy from "lodash.sortby";
+import {
   awsCall,
   writeFile,
   getPkgNameMap,
   getArtifactMap,
-} = require("./utils");
-const { htmlDir, platforms, suffixs } = require("./const");
+} from "./utils.js";
+import { htmlDir, platforms, suffixs } from "./const.js";
 
 const spawnOpts = {
   shell: true,
@@ -19,12 +20,15 @@ const spawnOpts = {
   windowsHide: true,
 };
 
-const getMenu = require("../template/menu");
+import getMenu from "../template/menu.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const downloadBaseUrl = "https://download.kungfu-trader.com/";
 const releaseBaseUrl = "https://releases.kungfu-trader.com/";
 
-const generateHTML = async (argv) => {
+export const generateHTML = async (argv) => {
   const artifacts = getArtifactMap().map((v) => v.name);
   const pkgInfo = getPkgNameMap();
   const version = argv.pullRequestTitle.split(" ")[1];
@@ -196,8 +200,4 @@ const dateFormat = (str) => {
 
 const getArtifactPath = (version) => {
   return `${version.split(".")[0]}/${version}`;
-};
-
-module.exports = {
-  generateHTML,
 };

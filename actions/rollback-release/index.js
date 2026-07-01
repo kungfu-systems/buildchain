@@ -1,9 +1,9 @@
 /* eslint-disable no-restricted-globals */
-const lib = (exports.lib = require('./lib.js'));
-const core = require('@actions/core');
-const github = require('@actions/github');
+import * as core from '@actions/core';
+import * as github from '@actions/github';
+import * as lib from './lib.js';
 
-const main = async function () {
+export const main = async function () {
   const context = github.context;
   const headRef = process.env.GITHUB_HEAD_REF || context.ref;
   const baseRef = process.env.GITHUB_BASE_REF || context.ref;
@@ -17,10 +17,12 @@ const main = async function () {
   await lib.rollbackRelease(argv);
 };
 
-if (require.main === module) {
+if (process.env.GITHUB_ACTION) {
   main().catch((error) => {
     console.log('test');
     console.error(error);
     core.setFailed(error.message);
   });
 }
+
+export { lib };
