@@ -5,8 +5,16 @@ const root = process.cwd();
 const sharedActionTsupConfig = fs.readFileSync(path.join(root, "scripts/tsup-action.config.mjs"), "utf8");
 const commonJsSourcePattern = /\b(require\s*\(|module\.exports|exports\.|require\.main|createRequire)\b/;
 const requiredPaths = [
+  "AGENTS.md",
+  "CONTRIBUTING.md",
+  "LICENSE",
+  "LICENSE-POLICY.md",
   "README.md",
+  "SECURITY.md",
+  ".github/ISSUE_TEMPLATE/config.yml",
+  ".github/pull_request_template.md",
   "bin/buildchain.mjs",
+  "docs/MAP.md",
   "docs/cli.md",
   "scripts/release-line-dry-run.mjs",
   "scripts/npm-publish-dry-run.mjs",
@@ -53,7 +61,7 @@ if (rootPackage.publishConfig?.access !== "public") {
 if (rootPackage.publishConfig?.registry !== "https://registry.npmjs.org/") {
   throw new Error("root package publishConfig.registry must be npmjs");
 }
-for (const expectedFile of ["bin/", "scripts/*.mjs", "packages/core/", "docs/cli.md"]) {
+for (const expectedFile of ["bin/", "scripts/*.mjs", "packages/core/", "docs/MAP.md", "docs/cli.md"]) {
   if (!rootPackage.files?.includes(expectedFile)) {
     throw new Error(`root package files must include ${expectedFile}`);
   }
