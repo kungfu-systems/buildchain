@@ -139,6 +139,15 @@ The action outputs `transaction-id`, `transaction-state`,
 `finalization-needed=true` means publish evidence is valid, but protected branch
 or ref finalization needs a later promotion run.
 
+Finalization recovery is anchored to the durable transaction, not to a single
+workflow run SHA. After a generated version-state PR is merged, the current
+channel head can be a merge commit that contains or corresponds to the recorded
+`release_material_sha`; it does not have to equal the original `source_sha` or
+the transaction `release_sha`. Reruns accept exact tags that already point at
+the transaction release/material SHA or the finalized channel head, and continue
+moving any missing floating tags or dev/alpha refs before marking the
+transaction `complete`.
+
 Normal reruns accept already-published artifacts only when evidence matches.
 Missing required artifacts can be published on the next run. Conflicting
 artifacts put the transaction into `repair_required`; `abandoned` and
@@ -176,3 +185,9 @@ exact release tags are `vX.Y.Z`, exact alpha tags are `vX.Y.Z-alpha.N`, floating
 release tags are minor/major tags such as `v2.0` and `v2`, and floating alpha
 tags are minor-line tags such as `v2.0-alpha`. Bare tags such as `1.0.0` are not
 maintained as buildchain release entrypoints.
+
+Repository rulesets should protect exact tags, not every `v*` tag. A ruleset
+such as `refs/tags/v*` also protects floating channel tags like `v2.0-alpha`,
+which Buildchain must update after exact tags and publish evidence are durable.
+Use an exact-tag rule such as `refs/tags/v*.*.*` for immutable evidence tags and
+leave floating channel tags mutable for the promotion token.

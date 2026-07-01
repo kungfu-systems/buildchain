@@ -108,6 +108,15 @@ This is why Buildchain maintains both exact and floating refs:
 A release does not mean "minor is complete." It means "this patch on this minor
 line is now production."
 
+GitHub repository rules must preserve that distinction. Exact tags such as
+`v2.0.2` and `v2.0.3-alpha.0` should be immutable. Floating channel tags such as
+`v2`, `v2.0`, and `v2.0-alpha` must remain movable by the Buildchain promotion
+token after governance checks and publish evidence pass. A tag ruleset that
+protects every `refs/tags/v*` ref is too broad because it also locks the
+floating channel tags that Buildchain is required to update. Prefer exact-tag
+patterns such as `refs/tags/v*.*.*` for immutable release evidence, while
+leaving floating channel tags under Buildchain automation control.
+
 ## Alpha Semantics
 
 An alpha merge is:
@@ -136,6 +145,12 @@ and still completes the exact and floating alpha tags for the reviewed alpha
 commit. Later dev changes must go through their own dev-to-alpha promotion
 instead of rewinding dev.
 
+If alpha finalization is resumed after the version-state PR is merged,
+Buildchain accepts the current alpha head as a merge commit that contains the
+recorded release material. An already-created exact alpha tag may point at the
+transaction release/material SHA or at the finalized alpha head; missing
+floating alpha tags are retried before the transaction becomes `complete`.
+
 ## Release Semantics
 
 A release merge is:
@@ -163,6 +178,12 @@ Buildchain then:
 The production channel and the test channel therefore intentionally diverge
 after release: production stays on the release commit, while alpha/dev continue
 at the next prerelease commit.
+
+If release finalization is resumed after the version-state PR is merged,
+Buildchain applies the same recovery rule: the current release head may be a
+merge commit that contains the recorded release material, existing exact tags
+and alpha/dev refs are accepted when they match the transaction, and missing
+floating `vX.Y` or `vX` tags are retried idempotently before completion.
 
 ## Major Gate Semantics
 

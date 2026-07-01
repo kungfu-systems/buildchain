@@ -139,11 +139,11 @@ Dynamic adapters can also fill `runtimeId`, `configFingerprint`,
 `rollbackLimitations`. Buildchain records secret reference names only, never
 secret values.
 
-## Dry-Run Deploy Plans
+## Deploy Plans
 
-The first implementation is deliberately dry-run only. It plans the adapter
-steps and writes manifest JSON, but it does not touch AWS, DNS, CloudFront, or
-deployment credentials.
+Deploy planning is the default behavior. It plans the adapter steps and writes
+manifest JSON, but it does not touch AWS, DNS, CloudFront, or deployment
+credentials.
 
 ```bash
 node scripts/web-surface.mjs \
@@ -172,10 +172,77 @@ The CLI emits GitHub outputs when `GITHUB_OUTPUT` is present:
 - `web-surface-artifact-hash`
 - `web-surface-manifest-json`
 
+## Explicit Apply
+
+`deploy-apply` and `cleanup-apply` are explicit execution modes for the
+`aws-s3-cloudfront` static-site adapter. They still default to `--dry-run true`;
+live AWS mutation requires `--dry-run false`.
+
+Deploy apply syncs the artifact, writes the deployment manifest, and invalidates
+CloudFront when a distribution id is configured:
+
+```bash
+node scripts/web-surface.mjs \
+  --mode deploy-apply \
+  --cwd fixtures/web-surface-shaped \
+  --channel staging \
+  --source-sha aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
+  --artifact-path dist \
+  --dry-run false \
+  --output .buildchain/web-surface-staging-apply.json
+```
+
+It can also execute a previously saved deploy plan. In that mode Buildchain
+recomputes the local artifact hash before running AWS commands and fails closed
+if the artifact no longer matches the saved plan:
+
+```bash
+node scripts/web-surface.mjs \
+  --mode deploy-apply \
+  --cwd fixtures/web-surface-shaped \
+  --plan .buildchain/web-surface-staging-plan.json \
+  --dry-run false \
+  --output .buildchain/web-surface-staging-apply.json
+```
+
+Cleanup apply deletes preview content, deletes the preview manifest, and
+invalidates CloudFront:
+
+```bash
+node scripts/web-surface.mjs \
+  --mode cleanup-apply \
+  --cwd fixtures/web-surface-shaped \
+  --event pull-request-closed \
+  --pull-number 123 \
+  --source-sha aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
+  --dry-run false \
+  --output .buildchain/web-surface-cleanup-apply.json
+```
+
+Cleanup apply can also execute a saved cleanup plan:
+
+```bash
+node scripts/web-surface.mjs \
+  --mode cleanup-apply \
+  --cwd fixtures/web-surface-shaped \
+  --plan .buildchain/web-surface-cleanup-plan.json \
+  --dry-run false \
+  --output .buildchain/web-surface-cleanup-apply.json
+```
+
+Apply output records the channel, alias, source SHA, artifact hash, target
+bucket, object prefix, manifest key, CDN invalidation paths, actor/run metadata,
+and every adapter operation with `executed`, `exitCode`, `stdout`, and `stderr`.
+If an operation fails, Buildchain records the failed operation, stops subsequent
+adapter operations, and exits non-zero after writing the result JSON. Buildchain
+records secret reference names only; the runner must provide the AWS CLI and
+credentials outside Buildchain, typically through OIDC and the declared
+`secret_refs`.
+
 ## Cleanup Plans
 
-Preview cleanup is an auditable cleanup contract. It can run as a dry-run plan
-or as an apply-mode plan for the caller workflow to execute with preview-only
+Preview cleanup is an auditable cleanup contract. It can run as a dry-run plan,
+an apply-mode plan, or the explicit `cleanup-apply` executor with preview-only
 credentials:
 
 ```bash
@@ -187,11 +254,11 @@ node scripts/web-surface.mjs \
   --aliases pr-123,sha-abcdef123456
 ```
 
-The plan keeps mutable PR aliases and immutable SHA aliases distinct so a caller
-can expire them with different retention windows. Closed-PR cleanup can derive
-`pr-N` from `--pull-number`, records the event, source SHA, actor, run id,
-preview bucket/prefix, manifest key, and adapter steps, and is an auditable
-no-op when no aliases are requested.
+The plan and apply result keep mutable PR aliases and immutable SHA aliases
+distinct so a caller can expire them with different retention windows. Closed-PR
+cleanup can derive `pr-N` from `--pull-number`, records the event, source SHA,
+actor, run id, preview bucket/prefix, manifest key, and adapter steps, and is an
+auditable no-op when no aliases are requested.
 
 ## Reusable Workflow Shape
 
@@ -218,10 +285,55 @@ The reusable workflow maps GitHub events to Buildchain web-surface semantics:
 | `push` to `main` | validate, build, verify, and plan `staging` from the merged `main` SHA |
 | `workflow_dispatch` with `production-approved = true` | plan `production` and enter the configured GitHub Environment gate |
 
-The workflow deliberately plans and emits manifests; live AWS mutation still
-belongs to the caller's controlled deploy step or a later adapter apply
-implementation. This keeps production from being an implicit side effect of
-merging to `main`.
+The workflow deliberately plans and emits manifests by default. Live mutation is
+opt-in per channel:
+
+```yaml
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+jobs:
+  web-surface:
+    uses: kungfu-systems/buildchain/.github/workflows/.web-surface.yml@v2
+    with:
+      buildchain-ref: v2
+      build-command: pnpm run build
+      verify-command: pnpm run check
+      artifact-path: dist
+      preview-apply: true
+      preview-cleanup-apply: true
+      preview-aws-role-arn: arn:aws:iam::123456789012:role/site-preview-github-actions
+      staging-apply: true
+      staging-aws-role-arn: arn:aws:iam::123456789012:role/site-staging-github-actions
+      production-apply: false
+      production-aws-role-arn: arn:aws:iam::123456789012:role/site-production-github-actions
+      production-environment: production
+```
+
+When enabled, Buildchain owns the full release apply state machine:
+
+- PR preview deploys run `deploy-apply --dry-run false` with the preview role
+  and update a single idempotent PR comment.
+- Closed PR cleanup runs `cleanup-apply --dry-run false` with the preview role
+  only.
+- Pushes to `main` run staging `deploy-apply --dry-run false` with the staging
+  role.
+- Production runs only on `workflow_dispatch` when both `production-approved`
+  and `production-apply` are true, and the job is gated by the configured GitHub
+  Environment.
+
+Callers must grant `id-token: write` for OIDC role assumption. Preview comments
+also need `pull-requests: write`. The AWS roles remain caller-owned and should
+be scoped by channel: preview can mutate only preview resources, staging can
+mutate only staging resources, and production can mutate only production
+resources.
+
+Apply mode fails closed when the deploy config still contains placeholder AWS
+targets such as `pending-preview-distribution`. Planning can use placeholders
+for dry-run-only design work, but live apply requires concrete bucket and
+CloudFront distribution identifiers.
 
 ## Site Repository Shape
 
@@ -249,7 +361,9 @@ only needs a deterministic artifact path and the manifest facts.
 
 ## Boundaries
 
-Buildchain does not currently perform live AWS mutations for web surfaces.
-Production deploy, DNS changes, staging auth implementation, CloudFront
-distribution creation, and credential provisioning remain explicitly authorized
-operations outside the dry-run contract.
+Buildchain only performs live AWS mutations in explicit apply modes with
+`--dry-run false`. Production deploys must still be gated by a human-controlled
+workflow, release, or GitHub Environment. DNS changes, staging auth
+implementation, CloudFront distribution creation, and credential provisioning
+remain explicitly authorized infrastructure operations outside the web-surface
+artifact apply contract.
