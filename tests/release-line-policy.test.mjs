@@ -9,7 +9,7 @@ function withPackageVersion(version, fn) {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-bump-ref-"));
   fs.writeFileSync(
     path.join(cwd, "package.json"),
-    JSON.stringify({ name: "@kungfu-systems/buildchain", version }, null, 2) + "\n",
+    JSON.stringify({ name: "@kungfu-tech/buildchain", version }, null, 2) + "\n",
   );
   try {
     return fn(cwd);
