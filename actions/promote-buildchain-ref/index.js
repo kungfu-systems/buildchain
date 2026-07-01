@@ -1,8 +1,6 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
-import promotion from "./lib.js";
-
-const { parseTags, promoteBuildchainRefs } = promotion;
+import { parseTags, promoteBuildchainRefs } from "./lib.js";
 
 async function main() {
   const token = core.getInput("token", { required: true });

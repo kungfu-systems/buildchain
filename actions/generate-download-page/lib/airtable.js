@@ -1,7 +1,7 @@
-const chunk = require("lodash.chunk");
-const axios = require("axios");
+import chunk from "lodash.chunk";
+import axios from "axios";
 
-const getTableRecords = async ({ apiKey, baseId, tableId, params = {} }) => {
+export const getTableRecords = async ({ apiKey, baseId, tableId, params = {} }) => {
   const res = await axios
     .get(`https://api.airtable.com/v0/${baseId}/${tableId}`, {
       params: {
@@ -40,7 +40,7 @@ const getTableRecords = async ({ apiKey, baseId, tableId, params = {} }) => {
     : res.data;
 };
 
-const insertTableRecords = async ({ apiKey, baseId, tableId, records }) => {
+export const insertTableRecords = async ({ apiKey, baseId, tableId, records }) => {
   return Promise.all(
     chunk(records, 10).map((data) =>
       axios
@@ -62,7 +62,7 @@ const insertTableRecords = async ({ apiKey, baseId, tableId, records }) => {
   );
 };
 
-const updateTableRecords = async ({ apiKey, baseId, tableId, records }) => {
+export const updateTableRecords = async ({ apiKey, baseId, tableId, records }) => {
   return Promise.all(
     chunk(records, 10).map((data) =>
       axios
@@ -84,7 +84,7 @@ const updateTableRecords = async ({ apiKey, baseId, tableId, records }) => {
   );
 };
 
-const deleteTableRecords = async ({ apiKey, baseId, tableId, ids }) => {
+export const deleteTableRecords = async ({ apiKey, baseId, tableId, ids }) => {
   return Promise.all(
     chunk(ids, 10).map((records) =>
       axios
@@ -101,11 +101,4 @@ const deleteTableRecords = async ({ apiKey, baseId, tableId, ids }) => {
         .catch((e) => console.error(e.response.data.error, e.response.config))
     )
   );
-};
-
-module.exports = {
-  getTableRecords,
-  insertTableRecords,
-  updateTableRecords,
-  deleteTableRecords,
 };

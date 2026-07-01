@@ -1,11 +1,10 @@
 /* eslint-disable no-restricted-globals */
-const github = require('@actions/github');
-const fse = require('fs-extra');
-const path = require('path');
-const git = require('git-client');
-const semver = require('semver');
-const { spawnSync } = require('child_process');
-const { getWorkspaceInfo } = require('../../packages/core/package-manager.cjs');
+import * as github from '@actions/github';
+import fse from 'fs-extra';
+import path from 'node:path';
+import git from 'git-client';
+import semver from 'semver';
+import { getWorkspaceInfo } from '../../packages/core/package-manager.js';
 
 const spawnOpts = { shell: true, stdio: 'pipe', windowsHide: true };
 
@@ -16,18 +15,18 @@ async function gitCall(...args) {
   return output;
 }
 
-exports.rollbackRelease = async function (argv) {
+export async function rollbackRelease(argv) {
   const rootPackageJson = fse.readJSONSync('package.json');
   console.log(`token:${argv.token}`);
   console.log(rootPackageJson);
   try {
-    await exports.solveAllPackages(argv);
+    await solveAllPackages(argv);
   } catch (err) {
     console.log(err);
   }
-};
+}
 
-exports.solveAllPackages = async function (argv) {
+export async function solveAllPackages(argv) {
   const output = getWorkspaceInfo(process.cwd());
   if (Object.keys(output).length === 0) {
     throw new Error('No workspace packages found; configure package.json workspaces, lerna packages, or pnpm-workspace.yaml.');
@@ -54,14 +53,14 @@ exports.solveAllPackages = async function (argv) {
     } else {
       console.log(`--- Starting to delete package: ${info.names}(version:${info.delVersion}) ---`);
       try {
-        await exports.deletePublishedPackages(argv, info);
+        await deletePublishedPackages(argv, info);
       } catch (e) {
         console.log('[Warning!] Error on delete published package:\n', e);
       }
     }
   }
-  await exports.createNewPullRequest(output, argv);
-};
+  await createNewPullRequest(output, argv);
+}
 
 function hasLerna(cwd) {
   return fse.existsSync(path.join(cwd, 'lerna.json'));
@@ -73,7 +72,7 @@ function getCurrentVersion(cwd) {
   return semver.parse(config.version);
 }
 
-exports.createNewPullRequest = async function (output, argv) {
+export async function createNewPullRequest(output, argv) {
   const currentVersion = getCurrentVersion(process.cwd());
   const versionRef = `v${currentVersion.major}/v${currentVersion.major}.${currentVersion.minor}`;
   const devChannel = `dev/${versionRef}`;
@@ -145,9 +144,9 @@ exports.createNewPullRequest = async function (output, argv) {
       }
     }`);
   console.log(`New pr has created, which is:[${title}](${argv.headRef}--->${argv.baseRef});`);
-};
+}
 
-exports.deletePublishedPackage = async function (argv, info) {
+export async function deletePublishedPackage(argv, info) {
   const octokit = github.getOctokit(argv.token);
   const number = 1;
   const packageInfo = await octokit.graphql(`
@@ -192,16 +191,16 @@ exports.deletePublishedPackage = async function (argv, info) {
       `[Notice!] Package [${info.names}] with version [${info.delVersion}] didn't be published, earlier version [${packageVersion}] exists now.\n\n`,
     );
   }
-};
+}
 
-exports.deletePublishedPackages = async function (argv, info) {
+export async function deletePublishedPackages(argv, info) {
   const octokit = github.getOctokit(argv.token);
   const res = await octokit.rest.packages.getAllPackageVersionsForPackageOwnedByOrg({
     package_type: 'npm',
     package_name: info.names,
     org: 'kungfu-trader',
   });
-  packageVersion = res.data[0].name;
+  const packageVersion = res.data[0].name;
   console.log(`| Version [${info.delVersion}] needs to be deleted |`);
   console.log(`| Version [${packageVersion}] has found |`);
 
@@ -218,4 +217,4 @@ exports.deletePublishedPackages = async function (argv, info) {
       `[Notice!] Package [${info.names}] with version [${info.delVersion}] didn't be published, earlier version [${packageVersion}] exists now.\n\n`,
     );
   }
-};
+}

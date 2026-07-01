@@ -1,5 +1,5 @@
-const { Octokit } = require('@octokit/rest');
-const axios = require('axios');
+import { Octokit } from '@octokit/rest';
+import axios from 'axios';
 
 const doCloseIssue = async function (token, repo, issue_number) {
   const octokit = new Octokit({
@@ -69,7 +69,7 @@ const closeIssue = async function (argv, pullRequestNumber, close) {
   }
 };
 
-getMatchName = function (headIn, baseIn) {
+const getMatchName = function (headIn, baseIn) {
   const failObj = { match: false, close: false, head: '', base: '' };
   const match = headIn.match(/(dev|alpha)\/v(\d+)\/v(\d+\.\d)/);
   if (!match) {
@@ -93,7 +93,7 @@ getMatchName = function (headIn, baseIn) {
   }
 };
 
-exports.getPulls = async function (argv, prNumber) {
+export async function getPulls(argv, prNumber) {
   const octokit = new Octokit({
     auth: argv.token,
   });
@@ -121,8 +121,8 @@ exports.getPulls = async function (argv, prNumber) {
         page++;
         console.log('pr number', pulls.data[0].number, prNumber);
         if (head && base && pulls.data[0].merged_at) {
-          curHead = pulls.data[0].head.ref;
-          curBase = pulls.data[0].base.ref;
+          const curHead = pulls.data[0].head.ref;
+          const curBase = pulls.data[0].base.ref;
           if (head == curHead && base == curBase) {
             break;
           } else if (curHead == matchName.head && curBase == matchName.base) {
@@ -148,9 +148,9 @@ exports.getPulls = async function (argv, prNumber) {
   } catch (e) {
     console.error(e);
   }
-};
+}
 
-updateStatus = async function (mondayapi, boardId, itemId, status) {
+const updateStatus = async function (mondayapi, boardId, itemId, status) {
   if (!boardId || boardId.length < 5) {
     console.log('empty boardId:', boardId);
     return;

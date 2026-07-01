@@ -1,9 +1,9 @@
 /* eslint-disable no-restricted-globals */
-const lib = (exports.lib = require('./lib.js'));
-const core = require('@actions/core');
-const github = require('@actions/github');
+import * as core from '@actions/core';
+import * as github from '@actions/github';
+import * as lib from './lib.js';
 
-const main = async function () {
+export const main = async function () {
   const context = github.context;
   const token = core.getInput('token');
   const awsProxy = core.getInput('aws-proxy');
@@ -73,3 +73,5 @@ if (process.env.GITHUB_ACTION) {
     core.setFailed(error.message);
   });
 }
+
+export { lib };

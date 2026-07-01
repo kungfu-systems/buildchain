@@ -4,7 +4,7 @@ import semver from "semver";
 import {
   commandForKungfuUpgrade,
   detectPackageManager,
-} from "../../packages/core/package-manager.cjs";
+} from "../../packages/core/package-manager.js";
 
 export type argvs = {
   token: string;

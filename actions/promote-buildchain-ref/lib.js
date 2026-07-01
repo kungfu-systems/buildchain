@@ -1,12 +1,12 @@
 const DEFAULT_REPOSITORY = "kungfu-systems/buildchain";
-const fs = require("node:fs");
-const path = require("node:path");
-const { execSync } = require("node:child_process");
-const {
+import fs from "node:fs";
+import path from "node:path";
+import { execSync } from "node:child_process";
+import {
   detectPackageManager,
   getWorkspaceInfo,
-} = require("../../packages/core/package-manager.cjs");
-const {
+} from "../../packages/core/package-manager.js";
+import {
   discoverConfiguredVersionStateFiles,
   getVersionStrategy,
   getLifecycleStage,
@@ -14,7 +14,7 @@ const {
   loadBuildchainConfig,
   runLifecycleStage,
   updateConfiguredVersionStateContents,
-} = require("../../packages/core/buildchain-config.cjs");
+} from "../../packages/core/buildchain-config.js";
 
 const COMMIT_IDENTITY = {
   name: "Keren Dong",
@@ -1711,7 +1711,7 @@ async function promoteBuildchainRefs({
   };
 }
 
-module.exports = {
+export {
   DEFAULT_REPOSITORY,
   assertChannelPromotionPr,
   assertAllowedLocalChanges,

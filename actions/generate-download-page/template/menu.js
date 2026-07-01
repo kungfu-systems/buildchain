@@ -129,4 +129,4 @@ const getMenu = (product) => {
   return items.find((v) => v.products.includes(product)) || items[0];
 };
 
-module.exports = getMenu;
+export default getMenu;

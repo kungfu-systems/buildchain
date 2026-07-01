@@ -1,7 +1,7 @@
 import { batchPullRequest, npmrc, designatedPullRequest } from "./lib";
 import { getInput, setFailed } from "@actions/core";
 
-const main = async function () {
+export const main = async function () {
   const argv = {
     token: getInput("token"),
     branch: getInput("branch"),
@@ -18,7 +18,7 @@ const main = async function () {
     : await batchPullRequest(argv);
 };
 
-if (require.main === module) {
+if (process.env.GITHUB_ACTION) {
   main().catch((error) => {
     console.error(error);
     setFailed(error.message);

@@ -1,12 +1,12 @@
 /* eslint-disable no-restricted-globals */
-const github = require('@actions/github');
-const fs = require('fs');
-const path = require('path');
-const glob = require('glob');
-const md5 = require('md5-file');
-const os = require('os');
-const semver = require('semver');
-const { spawnSync } = require('child_process');
+import * as github from '@actions/github';
+import fs from 'node:fs';
+import path from 'node:path';
+import { sync as globSync } from 'glob';
+import md5 from 'md5-file';
+import os from 'node:os';
+import semver from 'semver';
+import { spawnSync } from 'node:child_process';
 
 const spawnOptsInherit = { shell: true, stdio: 'inherit', windowsHide: true };
 const spawnOptsPipe = { shell: true, stdio: 'pipe', windowsHide: true };
@@ -41,7 +41,7 @@ function awsOutput(args) {
     .trimEnd();
 }
 
-exports.setupProxy = function (awsProxy) {
+export function setupProxy(awsProxy) {
   const hostsFile = '/etc/hosts';
   const markBegin = '# AWS PROXY BEGIN #';
   const markEnd = '# AWS PROXY END #';
@@ -59,14 +59,14 @@ exports.setupProxy = function (awsProxy) {
     fs.writeFileSync(hostsFile, hosts.join(os.EOL));
   }
   fs.appendFileSync(hostsFile, `${markBegin}${os.EOL}${hostProxy}${os.EOL}${markEnd}${os.EOL}`);
-};
+}
 
-exports.clean = function (repo, bucketStaging) {
+export function clean(repo, bucketStaging) {
   awsCall(['s3', 'rm', `s3://${bucketStaging}/${stagingArea(repo)}`, '--recursive', '--only-show-errors']);
-};
+}
 
-exports.digest = function (repo, artifactsPath) {
-  glob.sync(`${path.resolve(artifactsPath)}/**`).forEach((filePath) => {
+export function digest(repo, artifactsPath) {
+  globSync(`${path.resolve(artifactsPath)}/**`).forEach((filePath) => {
     const suffix = '.md5-checksum';
     const stat = fs.lstatSync(filePath);
     if (stat.isFile() && !filePath.endsWith(suffix)) {
@@ -74,40 +74,40 @@ exports.digest = function (repo, artifactsPath) {
       fs.writeFileSync(filePath + suffix, `${hash}${os.EOL}`);
     }
   });
-};
+}
 
-exports.stage = function (repo, artifactsPath, bucketStaging) {
-  glob.sync(`${path.resolve(artifactsPath)}/**/build/stage/*`).forEach((source) => {
+export function stage(repo, artifactsPath, bucketStaging) {
+  globSync(`${path.resolve(artifactsPath)}/**/build/stage/*`).forEach((source) => {
     const productName = path.basename(source);
     const dest = `s3://${bucketStaging}/${stagingArea(repo)}/${productName}`;
     awsCall(['s3', 'sync', source, dest, '--acl', 'public-read', '--only-show-errors']);
   });
-};
+}
 
-exports.publish = function (repo, bucketStaging, bucketRelease, cleanRelease) {
+export function publish(repo, bucketStaging, bucketRelease, cleanRelease) {
   const source = `s3://${bucketStaging}/${stagingArea(repo)}`;
   const dest = `s3://${bucketRelease}`;
   const cleanOpt = cleanRelease ? ['--delete'] : [];
   awsCall(['s3', 'sync', source, dest, '--acl', 'public-read', '--only-show-errors'].concat(cleanOpt));
-};
+}
 
-exports.release = function (repo, artifactsPath, bucketRelease, cleanRelease) {
+export function release(repo, artifactsPath, bucketRelease, cleanRelease) {
   console.log(`find artifacts from ${path.resolve(artifactsPath)}`);
-  glob.sync(`${path.resolve(artifactsPath)}/**/build/stage/*`).forEach((source) => {
+  globSync(`${path.resolve(artifactsPath)}/**/build/stage/*`).forEach((source) => {
     const productName = path.basename(source);
     const dest = `s3://${bucketRelease}/${productName}`;
     const cleanOpt = cleanRelease ? ['--delete'] : [];
     awsCall(['s3', 'sync', source, dest, '--acl', 'public-read', '--only-show-errors'].concat(cleanOpt));
   });
-};
+}
 
-exports.refreshCloudfront = function (cloudfrontId, paths) {
+export function refreshCloudfront(cloudfrontId, paths) {
   if (cloudfrontId.trim().length > 0) {
     awsCall(['cloudfront', 'create-invalidation', '--distribution-id', cloudfrontId, '--paths', `"${paths}"`]);
   }
-};
+}
 
-exports.addPreviewComment = async function (
+export async function addPreviewComment(
   token,
   owner,
   repo,
@@ -168,9 +168,9 @@ exports.addPreviewComment = async function (
     console.log(query);
     await octokit.graphql(query);
   }
-};
+}
 
-exports.deletePreviewComment = async function (token, owner, repo, pullRequestNumber) {
+export async function deletePreviewComment(token, owner, repo, pullRequestNumber) {
   const octokit = github.getOctokit(token);
   const pullRequestQuery = await octokit.graphql(`
     query {
@@ -192,4 +192,4 @@ exports.deletePreviewComment = async function (token, owner, repo, pullRequestNu
       await octokit.graphql(`mutation{deleteIssueComment(input:{id:"${comment.id}"}){clientMutationId}}`);
     }
   }
-};
+}

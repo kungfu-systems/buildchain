@@ -13,8 +13,10 @@ rollback anchors while consumers migrate to stable buildchain refs.
 
 ## Migrated Actions
 
-Migrated actions use `runs.using: node24`, build with tsup, and commit a
-generated `dist/index.js` bundle for direct GitHub Actions consumption.
+Migrated actions use `runs.using: node24`, declare `type: module`, build ESM
+bundles with tsup, and commit a generated `dist/index.js` bundle for direct
+GitHub Actions consumption. Active action source is ESM-only; legacy
+CommonJS-only compatibility files are not shipped under `packages/`.
 
 | Buildchain path | Previous repository |
 | --- | --- |
