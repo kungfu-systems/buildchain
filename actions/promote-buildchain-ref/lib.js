@@ -469,6 +469,59 @@ async function restoreDurableReleaseTransaction({
   if (!octokit || !stateRef) {
     return undefined;
   }
+  const record = await readDurableReleaseTransaction({
+    octokit,
+    owner,
+    repo,
+    stateRef,
+  });
+  if (!record) {
+    return undefined;
+  }
+  writeReleaseTransaction(statePath, record);
+
+  const ref = await getGitRefOrUndefined({
+    octokit,
+    owner,
+    repo,
+    ref: `heads/${stateRef}`,
+  });
+  const commitSha = ref.object?.sha;
+  const { data: commit } = await octokit.rest.git.getCommit({
+    owner,
+    repo,
+    commit_sha: commitSha,
+  });
+  const { data: tree } = await octokit.rest.git.getTree({
+    owner,
+    repo,
+    tree_sha: commit.tree.sha,
+    recursive: "1",
+  });
+  const entryByPath = new Map((tree.tree || []).map((entry) => [entry.path, entry]));
+  const evidenceEntry = entryByPath.get("evidence.json");
+  if (evidenceEntry) {
+    const { data: evidenceBlob } = await octokit.rest.git.getBlob({
+      owner,
+      repo,
+      file_sha: evidenceEntry.sha,
+    });
+    fs.mkdirSync(path.dirname(evidencePath), { recursive: true });
+    fs.writeFileSync(evidencePath, decodeGitBlob(evidenceBlob));
+  }
+
+  return record;
+}
+
+async function readDurableReleaseTransaction({
+  octokit,
+  owner,
+  repo,
+  stateRef,
+}) {
+  if (!octokit || !stateRef) {
+    return undefined;
+  }
   const ref = await getGitRefOrUndefined({
     octokit,
     owner,
@@ -500,21 +553,7 @@ async function restoreDurableReleaseTransaction({
     repo,
     file_sha: stateEntry.sha,
   });
-  const record = JSON.parse(decodeGitBlob(stateBlob));
-  writeReleaseTransaction(statePath, record);
-
-  const evidenceEntry = entryByPath.get("evidence.json");
-  if (evidenceEntry) {
-    const { data: evidenceBlob } = await octokit.rest.git.getBlob({
-      owner,
-      repo,
-      file_sha: evidenceEntry.sha,
-    });
-    fs.mkdirSync(path.dirname(evidencePath), { recursive: true });
-    fs.writeFileSync(evidencePath, decodeGitBlob(evidenceBlob));
-  }
-
-  return record;
+  return JSON.parse(decodeGitBlob(stateBlob));
 }
 
 async function persistDurableReleaseTransaction({
@@ -1282,13 +1321,11 @@ async function resumableAlphaTransactionState({
     const version = stripTagPrefix(candidate.tag);
     let transaction;
     try {
-      transaction = await restoreDurableReleaseTransaction({
+      transaction = await readDurableReleaseTransaction({
         octokit,
         owner,
         repo,
         stateRef: releaseTransactionStateRef(version),
-        statePath: defaultReleaseStatePath(candidate.tag, cwd),
-        evidencePath: defaultPublishEvidencePath(candidate.tag, cwd),
       });
     } catch (error) {
       const message = error?.message || "";
@@ -2814,6 +2851,7 @@ export {
   parseTags,
   promoteBuildchainRefs,
   persistDurableReleaseTransaction,
+  readDurableReleaseTransaction,
   restoreDurableReleaseTransaction,
   resolveTagsForTarget,
   selectAlphaTag,
