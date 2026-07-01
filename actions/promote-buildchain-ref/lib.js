@@ -623,15 +623,29 @@ async function releaseCommitIncludesTransactionHead({
   if (!octokit || !releaseSha || !transactionReleaseSha) {
     return false;
   }
-  if (releaseSha === transactionReleaseSha) {
-    return true;
+  const seen = new Set();
+  const queue = [releaseSha];
+  while (queue.length > 0 && seen.size < 64) {
+    const sha = queue.shift();
+    if (!sha || seen.has(sha)) {
+      continue;
+    }
+    if (sha === transactionReleaseSha) {
+      return true;
+    }
+    seen.add(sha);
+    const { data: commit } = await octokit.rest.git.getCommit({
+      owner,
+      repo,
+      commit_sha: sha,
+    });
+    for (const parent of commit.parents || []) {
+      if (!seen.has(parent.sha)) {
+        queue.push(parent.sha);
+      }
+    }
   }
-  const { data: commit } = await octokit.rest.git.getCommit({
-    owner,
-    repo,
-    commit_sha: releaseSha,
-  });
-  return (commit.parents || []).some((parent) => parent.sha === transactionReleaseSha);
+  return false;
 }
 
 async function runPublishTransaction({
