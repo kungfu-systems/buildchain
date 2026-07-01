@@ -1212,6 +1212,97 @@ test("publish transaction finalizes current alpha version-state merge commits", 
   );
 });
 
+test("publish transaction finalizes current release version-state merge commits", async () => {
+  const oldReleaseSha = "d".repeat(40);
+  const alphaSha = "e".repeat(40);
+  const versionHeadSha = "f".repeat(40);
+  const mergeSha = "1".repeat(40);
+  const toolingMergeSha = "2".repeat(40);
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "1.0.0",
+      packageManager: "pnpm@11.7.0",
+    },
+  });
+  const { octokit, refs, commits } = createGitMock({
+    refs: new Map([
+      ["heads/release/v1/v1.0", toolingMergeSha],
+      ["tags/v1.0.0-alpha.0", alphaSha],
+    ]),
+  });
+  commits.set(mergeSha, {
+    sha: mergeSha,
+    tree: { sha: `tree-${mergeSha}` },
+    parents: [{ sha: oldReleaseSha }, { sha: versionHeadSha }],
+  });
+  commits.set(toolingMergeSha, {
+    sha: toolingMergeSha,
+    tree: { sha: `tree-${toolingMergeSha}` },
+    parents: [{ sha: mergeSha }, { sha: "3".repeat(40) }],
+  });
+  const statePath = path.join(cwd, ".buildchain/release-state/1.0.0.json");
+  await persistDurableReleaseTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    transaction: {
+      schema: 1,
+      id: "release-merge-finalization",
+      repository: "kungfu-systems/buildchain",
+      target_ref: "release/v1/v1.0",
+      source_sha: oldReleaseSha,
+      release_sha: versionHeadSha,
+      release_material_sha: versionHeadSha,
+      publish_tooling_sha: versionHeadSha,
+      version: "1.0.0",
+      exact_tag: "v1.0.0",
+      channel: "release",
+      line: "v1.0",
+      version_strategy: "",
+      lifecycle_identity: "lifecycle.publish",
+      state_ref: "buildchain/release-state/1-0-0",
+      state_path: statePath,
+      evidence_path: "",
+      state: "published",
+      previous_state: "publishing",
+      actor: "codex",
+      run_id: "1",
+      superseded_by: "",
+      failure: "",
+      artifacts: [],
+      evidence: [],
+      created_at: "2026-07-01T00:00:00.000Z",
+      updated_at: "2026-07-01T00:00:00.000Z",
+    },
+    evidencePath: "",
+  });
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: toolingMergeSha,
+    targetRef: "release/v1/v1.0",
+    cwd,
+    publishTransaction: true,
+    requireVersionState: true,
+  });
+
+  assert.equal(result.sha, toolingMergeSha);
+  assert.equal(result.publishTransaction.state, "complete");
+  assert.equal(result.publishTransaction.exactTag, "v1.0.0");
+  assert.equal(refs.get("tags/v1.0.0"), toolingMergeSha);
+  assert.equal(refs.get("tags/v1.0"), toolingMergeSha);
+  assert.equal(refs.get("tags/v1"), toolingMergeSha);
+  assert.equal(refs.has("tags/v1.0.1"), false);
+  assert.equal(
+    result.updates.some((update) => update.action === "stale-publish-transaction"),
+    false,
+  );
+});
+
 test("publish transaction durable ref restores state and evidence in a fresh workspace", async () => {
   const sourceCwd = makeTempWorkspace({});
   const statePath = path.join(sourceCwd, ".buildchain/release-state/1.0.0.json");
