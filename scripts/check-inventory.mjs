@@ -18,7 +18,6 @@ const requiredPaths = [
   ".github/workflows/.build.yml",
   ".github/workflows/build-surface-fixture.yml",
   ".github/workflows/candidate-lab.yml",
-  "fixtures/action-bump-version-smoke/README.md",
   "fixtures/libnode-shaped/buildchain.toml",
   "fixtures/libnode-shaped/package.json"
 ];
@@ -53,8 +52,8 @@ if (!Array.isArray(inventory.workflowSources) || inventory.workflowSources.lengt
   throw new Error("workflowSources must include the migrated workflows repository");
 }
 
-if (!Array.isArray(inventory.migratedActions) || inventory.migratedActions.length === 0) {
-  throw new Error("migratedActions must include buildchain v1 actions");
+if (!Array.isArray(inventory.retiredActionsExcluded) || inventory.retiredActionsExcluded.length === 0) {
+  throw new Error("retiredActionsExcluded must list retired legacy actions");
 }
 
 const actualActions = fs
@@ -63,9 +62,11 @@ const actualActions = fs
   .map((entry) => entry.name)
   .filter((name) => fs.existsSync(path.join(root, "actions", name, "action.yml")))
   .sort();
-const inventoriedActions = inventory.migratedActions.map((action) => action.path.replace(/^actions\//, "")).sort();
 const internalActions = Array.isArray(inventory.internalActions) ? inventory.internalActions : [];
-const shippedActions = [...inventory.migratedActions, ...internalActions];
+if (!Array.isArray(inventory.migratedActions) || inventory.migratedActions.length !== 0) {
+  throw new Error("migratedActions must be empty; buildchain v2 only ships native actions");
+}
+const shippedActions = internalActions;
 const shippedActionNames = shippedActions.map((action) => action.path.replace(/^actions\//, "")).sort();
 
 if (JSON.stringify(actualActions) !== JSON.stringify(shippedActionNames)) {
@@ -77,13 +78,7 @@ if (JSON.stringify(actualActions) !== JSON.stringify(shippedActionNames)) {
 for (const retiredRepo of inventory.retiredActionsExcluded || []) {
   const retiredPath = path.join(root, "actions", retiredRepo.replace(/^action-/, ""));
   if (fs.existsSync(retiredPath)) {
-    throw new Error(`retired action must not be shipped in buildchain v1: ${retiredRepo}`);
-  }
-}
-
-for (const action of inventory.migratedActions) {
-  if (!action.previousRepo) {
-    throw new Error(`migrated action entry is missing previousRepo: ${action.path}`);
+    throw new Error(`retired action must not be shipped in buildchain v2: ${retiredRepo}`);
   }
 }
 

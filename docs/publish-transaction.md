@@ -33,6 +33,32 @@ repository + version + source_sha + target_ref
 
 It is not the GitHub Actions run id.
 
+## Durable State
+
+`actions/promote-buildchain-ref` stores release transaction state in a
+machine-managed Git branch:
+
+```text
+refs/heads/buildchain/release-state/<version>
+```
+
+The branch contains:
+
+```text
+state.json
+evidence.json   # present after publish evidence exists
+```
+
+The local `.buildchain/release-state/...` and
+`.buildchain/release-evidence/...` files are working copies. They are useful for
+local inspection and lifecycle commands, but they are not the durable truth for
+GitHub-hosted reruns. On action startup, Buildchain reads the durable state ref
+first, restores the local working copies, and only then decides whether to
+publish, repair, or finalize.
+
+Every meaningful state transition is written to the durable ref before public
+release refs move. If the durable write fails, the action fails closed.
+
 ## Lifecycle
 
 Repositories declare publish work in `buildchain.toml`:
@@ -106,6 +132,8 @@ The generic contract is intentionally small:
 - `version`, `channel`, `source_sha`, `release_sha`, and `target_ref` must match
   the promotion run;
 - required artifacts must appear in evidence;
+- evidence used by a GitHub-hosted rerun must either be stored in the durable
+  state ref or be reconstructed by a machine-verifiable consumer command;
 - existing artifacts with the same identity and digest are accepted on rerun;
 - missing artifacts can be published by the next run;
 - an existing artifact with a different digest puts the transaction into
@@ -113,6 +141,32 @@ The generic contract is intentionally small:
 
 Artifact identity is `group + kind + name + ref`. A required artifact that omits
 `group` matches any group with the same `kind + name + ref`.
+
+## Registry Truth Contract
+
+Buildchain owns transaction orchestration, finalization ordering, durable state,
+and generic evidence validation. It does not embed registry clients for npm,
+PyPI, GHCR/OCI, GitHub Releases, S3, Conan, CMake packaging, or project-specific
+download pages.
+
+Consumer `lifecycle.publish` commands own registry truth. A valid consumer stage
+must be idempotent and machine-verifiable:
+
+- inspect the target registry before publishing;
+- accept an existing exact artifact only when version, identity, digest, and
+  release-source binding match;
+- publish missing required artifacts;
+- reject conflicting existing artifacts and write evidence that lets Buildchain
+  move the transaction to `repair_required`;
+- write `BUILDCHAIN_PUBLISH_EVIDENCE` after every successful inspect/publish
+  cycle;
+- leave floating aliases such as npm dist-tags, PyPI stable markers, OCI
+  floating tags, GitHub Release "published" status, or download-page stable
+  links to a finalization step after Buildchain evidence validation.
+
+The first-class adapter surface is command-based. Projects may wrap npm, PyPI,
+GHCR/OCI, GitHub Release assets, archives, SBOMs, provenance, or checksums
+however they need, as long as they emit the common evidence contract.
 
 ## States
 
@@ -164,6 +218,11 @@ stop in `finalizing` and output `finalization-needed=true`. A later run can
 resume from the same transaction state and complete ref movement without
 republishing matching artifacts.
 
+If finalization fails after an exact Git tag is created, the next run reads the
+durable `finalizing` state, verifies the exact tag points at the recorded
+release SHA, and retries the remaining floating refs. An exact tag at a
+different SHA is a material conflict and blocks recovery.
+
 ## CLI Recovery
 
 Local recovery commands operate on the same state/evidence files:
@@ -174,6 +233,14 @@ node scripts/release-transaction.mjs recover --version v1.0.0
 node scripts/release-transaction.mjs finalize --version v1.0.0
 node scripts/release-transaction.mjs abort --version v1.0.0 --superseded-by v1.0.1
 ```
+
+The CLI is a diagnostic and local repair surface. It reports the durable
+`state_ref`, but remote durable-ref writes and public Git ref finalization are
+owned by `actions/promote-buildchain-ref`, because that action runs inside the
+same governed GitHub permissions and branch-protection checks as release
+promotion. In other words, CLI `finalize` can mark the local transaction state
+complete after valid evidence; the machine-operated public finalization path is
+to rerun the promotion action.
 
 When no state file exists, creation commands also require:
 

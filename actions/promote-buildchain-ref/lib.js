@@ -20,6 +20,7 @@ import {
   createReleaseTransaction,
   defaultPublishEvidencePath,
   defaultReleaseStatePath,
+  releaseTransactionStateRef,
   parsePublishArtifactsJson,
   planTransactionRecovery,
   readPublishEvidence,
@@ -405,7 +406,184 @@ function validateTransactionEvidence({
   return validation;
 }
 
-function runPublishTransaction({
+function durableTransactionHeadRef(transaction) {
+  if (!transaction?.state_ref) {
+    throw new Error("release transaction durable state_ref is required");
+  }
+  return `heads/${transaction.state_ref}`;
+}
+
+function decodeGitBlob(blob) {
+  const content = blob?.content || "";
+  return Buffer.from(
+    content.replace(/\n/g, ""),
+    blob?.encoding === "base64" ? "base64" : "utf8",
+  ).toString("utf8");
+}
+
+async function getGitRefOrUndefined({ octokit, owner, repo, ref }) {
+  try {
+    const { data } = await octokit.rest.git.getRef({ owner, repo, ref });
+    return data;
+  } catch (error) {
+    if (notFound(error)) {
+      return undefined;
+    }
+    throw error;
+  }
+}
+
+async function restoreDurableReleaseTransaction({
+  octokit,
+  owner,
+  repo,
+  stateRef,
+  statePath,
+  evidencePath,
+}) {
+  if (!octokit || !stateRef) {
+    return undefined;
+  }
+  const ref = await getGitRefOrUndefined({
+    octokit,
+    owner,
+    repo,
+    ref: `heads/${stateRef}`,
+  });
+  if (!ref) {
+    return undefined;
+  }
+  const commitSha = ref.object?.sha;
+  const { data: commit } = await octokit.rest.git.getCommit({
+    owner,
+    repo,
+    commit_sha: commitSha,
+  });
+  const { data: tree } = await octokit.rest.git.getTree({
+    owner,
+    repo,
+    tree_sha: commit.tree.sha,
+    recursive: "1",
+  });
+  const entryByPath = new Map((tree.tree || []).map((entry) => [entry.path, entry]));
+  const stateEntry = entryByPath.get("state.json");
+  if (!stateEntry) {
+    throw new Error(`durable release transaction ${stateRef} is missing state.json`);
+  }
+  const { data: stateBlob } = await octokit.rest.git.getBlob({
+    owner,
+    repo,
+    file_sha: stateEntry.sha,
+  });
+  const record = JSON.parse(decodeGitBlob(stateBlob));
+  writeReleaseTransaction(statePath, record);
+
+  const evidenceEntry = entryByPath.get("evidence.json");
+  if (evidenceEntry) {
+    const { data: evidenceBlob } = await octokit.rest.git.getBlob({
+      owner,
+      repo,
+      file_sha: evidenceEntry.sha,
+    });
+    fs.mkdirSync(path.dirname(evidencePath), { recursive: true });
+    fs.writeFileSync(evidencePath, decodeGitBlob(evidenceBlob));
+  }
+
+  return record;
+}
+
+async function persistDurableReleaseTransaction({
+  octokit,
+  owner,
+  repo,
+  cwd,
+  transaction,
+  evidencePath,
+}) {
+  if (!octokit || !transaction) {
+    return undefined;
+  }
+  const refName = durableTransactionHeadRef(transaction);
+  const currentRef = await getGitRefOrUndefined({ octokit, owner, repo, ref: refName });
+  let baseTree;
+  const parents = [];
+  if (currentRef?.object?.sha) {
+    const { data: currentCommit } = await octokit.rest.git.getCommit({
+      owner,
+      repo,
+      commit_sha: currentRef.object.sha,
+    });
+    baseTree = currentCommit.tree?.sha;
+    parents.push(currentRef.object.sha);
+  }
+
+  const stateBlob = await octokit.rest.git.createBlob({
+    owner,
+    repo,
+    content: JSON.stringify(transaction, null, 2) + "\n",
+    encoding: "utf-8",
+  });
+  const treeEntries = [
+    {
+      path: "state.json",
+      mode: "100644",
+      type: "blob",
+      sha: stateBlob.data.sha,
+    },
+  ];
+  if (evidencePath && fs.existsSync(evidencePath)) {
+    const evidenceBlob = await octokit.rest.git.createBlob({
+      owner,
+      repo,
+      content: fs.readFileSync(evidencePath, "utf8"),
+      encoding: "utf-8",
+    });
+    treeEntries.push({
+      path: "evidence.json",
+      mode: "100644",
+      type: "blob",
+      sha: evidenceBlob.data.sha,
+    });
+  }
+
+  const tree = await octokit.rest.git.createTree({
+    owner,
+    repo,
+    tree: treeEntries,
+    ...(baseTree ? { base_tree: baseTree } : {}),
+  });
+  const commit = await octokit.rest.git.createCommit({
+    owner,
+    repo,
+    message: `chore(buildchain): persist release transaction ${transaction.exact_tag}`,
+    tree: tree.data.sha,
+    parents,
+  });
+  if (currentRef) {
+    await octokit.rest.git.updateRef({
+      owner,
+      repo,
+      ref: refName,
+      sha: commit.data.sha,
+      force: false,
+    });
+  } else {
+    await octokit.rest.git.createRef({
+      owner,
+      repo,
+      ref: `refs/${refName}`,
+      sha: commit.data.sha,
+    });
+  }
+  return {
+    ref: transaction.state_ref,
+    sha: commit.data.sha,
+    statePath: path.relative(cwd, transaction.state_path || "").split(path.sep).join("/"),
+  };
+}
+
+async function runPublishTransaction({
+  octokit,
   owner,
   repo,
   cwd,
@@ -456,7 +634,22 @@ function runPublishTransaction({
     publishToolingSha: publishToolingSha || releaseSha,
   };
 
-  const existing = readReleaseTransaction(resolvedStatePath);
+  const durableStateRef = releaseTransactionStateRef(version);
+  const durableExisting = await restoreDurableReleaseTransaction({
+    octokit,
+    owner,
+    repo,
+    stateRef: durableStateRef,
+    statePath: resolvedStatePath,
+    evidencePath: resolvedEvidencePath,
+  });
+  const localExisting = readReleaseTransaction(resolvedStatePath);
+  if (durableExisting && localExisting && durableExisting.id !== localExisting.id) {
+    throw new Error(
+      `release transaction local state ${localExisting.id} conflicts with durable state ${durableExisting.id}`,
+    );
+  }
+  const existing = durableExisting || localExisting;
   ensureTransactionCanResume({ existing, expected, explicitOverride });
   let transaction =
     existing ||
@@ -476,7 +669,20 @@ function runPublishTransaction({
       actor,
       runId,
     });
-  transaction = writeReleaseTransaction(resolvedStatePath, transaction);
+  const persistTransaction = async (record) => {
+    const persisted = writeReleaseTransaction(resolvedStatePath, record);
+    const durable = await persistDurableReleaseTransaction({
+      octokit,
+      owner,
+      repo,
+      cwd,
+      transaction: persisted,
+      evidencePath: resolvedEvidencePath,
+    });
+    return { transaction: persisted, durable };
+  };
+  let durable;
+  ({ transaction, durable } = await persistTransaction(transaction));
 
   let validation;
   try {
@@ -516,7 +722,7 @@ function runPublishTransaction({
           runId,
         });
       }
-      writeReleaseTransaction(resolvedStatePath, transaction);
+      ({ transaction, durable } = await persistTransaction(transaction));
       const source = runPublishCommand({
         cwd,
         command: publishCommand,
@@ -561,12 +767,17 @@ function runPublishTransaction({
       artifacts: validation.evidence.artifacts,
       evidence: [path.relative(cwd, resolvedEvidencePath).split(path.sep).join("/")],
     };
-    writeReleaseTransaction(resolvedStatePath, transaction);
+    ({ transaction, durable } = await persistTransaction(transaction));
     return {
       transaction,
       validation,
       statePath: resolvedStatePath,
       evidencePath: resolvedEvidencePath,
+      durable,
+      octokit,
+      owner,
+      repo,
+      cwd,
     };
   } catch (error) {
     const nextState = materialErrorRequiresRepair(error)
@@ -578,13 +789,26 @@ function runPublishTransaction({
         runId,
         failure: error.message,
       });
-      writeReleaseTransaction(resolvedStatePath, transaction);
+      await persistTransaction(transaction);
     }
     throw error;
   }
 }
 
-function beginTransactionFinalization(result, actor, runId) {
+async function persistTransactionResult(result, transaction) {
+  const persisted = writeReleaseTransaction(result.statePath, transaction);
+  const durable = await persistDurableReleaseTransaction({
+    octokit: result.octokit,
+    owner: result.owner,
+    repo: result.repo,
+    cwd: result.cwd,
+    transaction: persisted,
+    evidencePath: result.evidencePath,
+  });
+  return { ...result, transaction: persisted, durable };
+}
+
+async function beginTransactionFinalization(result, actor, runId) {
   if (!result?.transaction || result.transaction.state === "finalizing" || result.transaction.state === "complete") {
     return result;
   }
@@ -592,11 +816,10 @@ function beginTransactionFinalization(result, actor, runId) {
     actor,
     runId,
   });
-  writeReleaseTransaction(result.statePath, transaction);
-  return { ...result, transaction };
+  return persistTransactionResult(result, transaction);
 }
 
-function completeTransactionFinalization(result, actor, runId) {
+async function completeTransactionFinalization(result, actor, runId) {
   if (!result?.transaction || result.transaction.state === "complete") {
     return result;
   }
@@ -607,8 +830,7 @@ function completeTransactionFinalization(result, actor, runId) {
     actor,
     runId,
   });
-  writeReleaseTransaction(result.statePath, transaction);
-  return { ...result, transaction };
+  return persistTransactionResult(result, transaction);
 }
 
 async function getCommitInfo(octokit, owner, repo, sha) {
@@ -1598,7 +1820,7 @@ async function promoteBuildchainRefs({
   };
 
   let latestPublishTransaction;
-  const executePublishTransaction = ({
+  const executePublishTransaction = async ({
     version,
     exactTag,
     channel,
@@ -1614,7 +1836,8 @@ async function promoteBuildchainRefs({
       });
       return undefined;
     }
-    latestPublishTransaction = runPublishTransaction({
+    latestPublishTransaction = await runPublishTransaction({
+      octokit,
       owner,
       repo,
       cwd,
@@ -1647,17 +1870,19 @@ async function promoteBuildchainRefs({
         transactionId: latestPublishTransaction.transaction.id,
         statePath: path.relative(cwd, latestPublishTransaction.statePath).split(path.sep).join("/"),
         evidencePath: path.relative(cwd, latestPublishTransaction.evidencePath).split(path.sep).join("/"),
+        stateRef: latestPublishTransaction.transaction.state_ref,
+        stateSha: latestPublishTransaction.durable?.sha,
       });
     }
     return latestPublishTransaction;
   };
 
-  const markFinalizing = () => {
-    latestPublishTransaction = beginTransactionFinalization(latestPublishTransaction, actor, runId);
+  const markFinalizing = async () => {
+    latestPublishTransaction = await beginTransactionFinalization(latestPublishTransaction, actor, runId);
   };
 
-  const markComplete = () => {
-    latestPublishTransaction = completeTransactionFinalization(latestPublishTransaction, actor, runId);
+  const markComplete = async () => {
+    latestPublishTransaction = await completeTransactionFinalization(latestPublishTransaction, actor, runId);
     return latestPublishTransaction;
   };
 
@@ -1670,6 +1895,10 @@ async function promoteBuildchainRefs({
       publishTransaction: {
         id: latestPublishTransaction.transaction.id,
         state: latestPublishTransaction.transaction.state,
+        exactTag: latestPublishTransaction.transaction.exact_tag,
+        releaseSha: latestPublishTransaction.transaction.release_sha,
+        stateRef: latestPublishTransaction.transaction.state_ref,
+        stateSha: latestPublishTransaction.durable?.sha,
         statePath: path.relative(cwd, latestPublishTransaction.statePath).split(path.sep).join("/"),
         evidencePath: path.relative(cwd, latestPublishTransaction.evidencePath).split(path.sep).join("/"),
         ...extra,
@@ -1767,7 +1996,7 @@ async function promoteBuildchainRefs({
         });
       }
     }
-    executePublishTransaction({
+    await executePublishTransaction({
       version: releaseVersion,
       exactTag: selectedRelease.tag,
       channel: majorRule.channel || "major",
@@ -1775,7 +2004,7 @@ async function promoteBuildchainRefs({
       releaseSha,
     });
     if (versionState) {
-      markFinalizing();
+      await markFinalizing();
       const gateUpdate = await updateBranch(targetRef, releaseSha, "updated", {
         title: `Release ${selectedRelease.tag}`,
         body: `Create the generated version-state commit for ${selectedRelease.tag}.`,
@@ -1793,11 +2022,11 @@ async function promoteBuildchainRefs({
       }
       await updateBranch(`release/v${majorRule.major}/v${majorRule.major}.0`, releaseSha);
     }
-    markFinalizing();
+    await markFinalizing();
     await ensureTag(selectedRelease.tag, releaseSha);
     await updateTag(majorRule.minorTag, releaseSha);
     await updateTag(majorRule.majorTag, releaseSha);
-    markComplete();
+    await markComplete();
 
     if (releaseCommit.versionStrategy?.next === "manual") {
       updates.push({
@@ -1819,6 +2048,10 @@ async function promoteBuildchainRefs({
           ? {
               id: latestPublishTransaction.transaction.id,
               state: latestPublishTransaction.transaction.state,
+              exactTag: latestPublishTransaction.transaction.exact_tag,
+              releaseSha: latestPublishTransaction.transaction.release_sha,
+              stateRef: latestPublishTransaction.transaction.state_ref,
+              stateSha: latestPublishTransaction.durable?.sha,
               statePath: path.relative(cwd, latestPublishTransaction.statePath).split(path.sep).join("/"),
               evidencePath: path.relative(cwd, latestPublishTransaction.evidencePath).split(path.sep).join("/"),
             }
@@ -1931,7 +2164,7 @@ async function promoteBuildchainRefs({
         });
       }
     }
-    executePublishTransaction({
+    await executePublishTransaction({
       version: alphaVersion,
       exactTag: selectedAlpha.tag,
       channel: rule.channel,
@@ -1939,7 +2172,7 @@ async function promoteBuildchainRefs({
       releaseSha: alphaSha,
     });
     if (versionState) {
-      markFinalizing();
+      await markFinalizing();
       const targetUpdate = await updateBranch(targetRef, alphaSha, "updated", {
         title: `Prepare ${selectedAlpha.tag}`,
         body: `Create the generated version-state commit for ${selectedAlpha.tag}.`,
@@ -1957,10 +2190,10 @@ async function promoteBuildchainRefs({
       }
       await updateBranch(`dev/v${rule.major}/v${rule.major}.${rule.minor}`, alphaSha);
     }
-    markFinalizing();
+    await markFinalizing();
     await ensureTag(selectedAlpha.tag, alphaSha);
     await updateTag(rule.alphaTag, alphaSha);
-    markComplete();
+    await markComplete();
     return withPublishTransaction({ owner, repo, sourceSha: sha, sha: alphaSha, targetRef, updates });
   }
 
@@ -2010,7 +2243,7 @@ async function promoteBuildchainRefs({
       allowedPaths: releaseCommit.files,
     });
   }
-  executePublishTransaction({
+  await executePublishTransaction({
     version: releaseVersion,
     exactTag: selectedRelease.tag,
     channel: rule.channel,
@@ -2018,7 +2251,7 @@ async function promoteBuildchainRefs({
     releaseSha,
   });
   if (versionState) {
-    markFinalizing();
+    await markFinalizing();
     const targetUpdate = await updateBranch(targetRef, releaseSha, "updated", {
       title: `Release ${selectedRelease.tag}`,
       body: `Create the generated version-state commit for ${selectedRelease.tag}.`,
@@ -2035,7 +2268,7 @@ async function promoteBuildchainRefs({
       }, { finalizationNeeded: true });
     }
   }
-  markFinalizing();
+  await markFinalizing();
   await ensureTag(selectedRelease.tag, releaseSha);
   await updateTag(rule.minorTag, releaseSha);
   if (await shouldPromoteMajorTag()) {
@@ -2047,7 +2280,7 @@ async function promoteBuildchainRefs({
       sha: releaseSha,
     });
   }
-  markComplete();
+  await markComplete();
 
   if (releaseCommit.versionStrategy?.next === "manual") {
     updates.push({
@@ -2152,6 +2385,8 @@ export {
   parseReleasePatchTag,
   parseTags,
   promoteBuildchainRefs,
+  persistDurableReleaseTransaction,
+  restoreDurableReleaseTransaction,
   resolveTagsForTarget,
   selectAlphaTag,
   selectReleaseTag,

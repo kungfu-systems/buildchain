@@ -60,6 +60,10 @@ async function main() {
   core.setOutput("next-anchor-required", String(result.nextAlphaRequired === true));
   core.setOutput("transaction-id", result.publishTransaction?.id || "");
   core.setOutput("transaction-state", result.publishTransaction?.state || "");
+  core.setOutput("transaction-exact-tag", result.publishTransaction?.exactTag || "");
+  core.setOutput("transaction-release-sha", result.publishTransaction?.releaseSha || "");
+  core.setOutput("transaction-state-ref", result.publishTransaction?.stateRef || "");
+  core.setOutput("transaction-state-sha", result.publishTransaction?.stateSha || "");
   core.setOutput("transaction-state-path", result.publishTransaction?.statePath || "");
   core.setOutput("publish-evidence-path", result.publishTransaction?.evidencePath || "");
   core.setOutput(
