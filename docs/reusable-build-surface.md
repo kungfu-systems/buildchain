@@ -23,6 +23,7 @@ jobs:
         build/stage
       expected-artifacts-json: >-
         {"minFiles":2,"requiredPaths":["dist/libnode.tar.gz","dist/checksums.txt"]}
+      publish-channel: release
 ```
 
 `runner-preset` is the stable first-class surface for known runner fleets:
@@ -61,11 +62,67 @@ The reusable workflow exposes the resolved contract:
 | `platform-count` | Number of matrix platforms |
 | `build-summary-artifact` | Uploaded aggregate summary artifact name |
 | `build-summary-json` | Compact aggregate JSON with platform count, file count, and byte total |
+| `trusted-event` | `true` when the event is trusted enough to reach build runners |
+| `publish-channel` | Resolved publish channel requested by the caller |
+| `publish-allowed` | `true` only when this event/ref may publish after verification |
+| `publish-reason` | Human-readable reason for the publish gate decision |
 
 The aggregate summary is intentionally an artifact as well as an output. GitHub
 Actions matrix outputs are not a reliable place to carry every platform's full
 manifest, so Buildchain uploads each platform manifest and then emits one
 aggregate summary artifact after the matrix completes.
+
+## Publish Gate
+
+Buildchain separates "may build/verify" from "may publish." A same-repository
+pull request may be trusted enough to run the build matrix, but it still must
+not publish packages, S3 objects, release pages, or preview aliases. Publishing
+is allowed only when the caller explicitly requests a channel and the current
+event/ref matches that channel.
+
+Use `publish-channel` to request a channel:
+
+```yaml
+jobs:
+  build:
+    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2
+    with:
+      publish-channel: release
+
+  publish:
+    needs: build
+    if: ${{ needs.build.outputs.publish-allowed == 'true' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - run: ./scripts/publish.sh
+```
+
+Default channels are:
+
+| Channel | Allowed refs |
+| --- | --- |
+| `none` | Never publishes; this is the default |
+| `alpha` | `alpha/vN/vN.M` branches or exact `vN.M.P-alpha.K` tags |
+| `release` | `release/vN/vN.M` branches or release tags such as `vN.M.P`, `vN.M`, `vN` |
+| `major` | `major-gate` or next-major release tags such as `vN.0.0`, `vN.0`, `vN` |
+
+Pull request events always produce `publish-allowed=false`, even when the PR is
+from the same repository. Untrusted fork events also produce
+`publish-allowed=false`; with the default `untrusted-policy: fail`, the workflow
+then fails before any build runner starts.
+
+Projects with their own channel names can pass `publish-refs-json`:
+
+```yaml
+with:
+  publish-channel: nightly
+  publish-refs-json: >-
+    {"nightly":["^refs/heads/nightly/v\\d+$"]}
+```
+
+The aggregate build summary includes the same publish gate decision under
+`publishGate`, so a downloaded artifact summary explains both what was built and
+why it was or was not eligible to publish.
 
 ## Command Sources
 
@@ -203,6 +260,9 @@ with:
 
 Do not set `require-trusted-event: false` for workflows that use self-hosted
 runners or secrets.
+
+`require-trusted-event` controls access to build runners. It does not override
+the publish gate: pull requests remain non-publishing events.
 
 ## Fixture
 
