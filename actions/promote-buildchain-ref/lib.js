@@ -2283,21 +2283,11 @@ async function promoteBuildchainRefs({
     });
     const alphaSha = alphaCommit.sha;
     if (requireGovernance && !dryRun) {
-      if (alphaCommit.action === "existing") {
-        await assertPromotionPrOrVersionStateParent({
-          commitSha: sha,
-          targetRef,
-          allowedPaths: alphaCommit.files,
-        });
-      } else {
-        await assertChannelPromotionPr({
-          octokit,
-          owner,
-          repo,
-          sha,
-          targetRef,
-        });
-      }
+      await assertPromotionPrOrVersionStateParent({
+        commitSha: sha,
+        targetRef,
+        allowedPaths: alphaCommit.files,
+      });
     }
     await executePublishTransaction({
       version: alphaVersion,
