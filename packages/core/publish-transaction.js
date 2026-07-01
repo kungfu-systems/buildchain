@@ -216,12 +216,17 @@ export function normalizePublishArtifact(artifact, label = "artifact") {
   if (!artifact || typeof artifact !== "object" || Array.isArray(artifact)) {
     throw new Error(`${label} must be an object`);
   }
+  const role = optionalString(artifact.role);
+  if (role && !["main", "platform"].includes(role)) {
+    throw new Error(`${label}.role must be one of main or platform`);
+  }
   return {
     group: optionalString(artifact.group),
     kind: assertNonEmptyString(artifact.kind, `${label}.kind`),
     name: assertNonEmptyString(artifact.name, `${label}.name`),
     ref: optionalString(artifact.ref),
     digest: assertNonEmptyString(artifact.digest, `${label}.digest`),
+    role,
     required: artifact.required === undefined ? true : Boolean(artifact.required),
   };
 }

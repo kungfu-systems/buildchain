@@ -70,6 +70,13 @@ of reusing or overwriting that failed transaction slot.
 Repositories declare publish work in `buildchain.toml`:
 
 ```toml
+[publish]
+mode = "publish-final-version"
+auth = "trusted-publishing"
+dist_tag = "latest"
+package_set_order = "platforms-first-main-last"
+main_package = "@kungfu-tech/libnode"
+
 [lifecycle.publish]
 commands = [
   "python scripts/publish_wheels.py",
@@ -93,6 +100,11 @@ BUILDCHAIN_RELEASE_SHA
 BUILDCHAIN_RELEASE_MATERIAL_SHA
 BUILDCHAIN_PUBLISH_TOOLING_SHA
 BUILDCHAIN_PUBLISH_EVIDENCE
+BUILDCHAIN_PUBLISH_MODE
+BUILDCHAIN_PUBLISH_AUTH
+BUILDCHAIN_NPM_DIST_TAG
+BUILDCHAIN_PACKAGE_SET_ORDER
+BUILDCHAIN_PACKAGE_SET_MAIN_PACKAGE
 ```
 
 Buildchain itself uses this contract for npm publishing:
@@ -103,13 +115,40 @@ command = "node scripts/npm-publish-transaction.mjs"
 ```
 
 That script validates that `package.json` matches `BUILDCHAIN_VERSION`, runs
-`npm publish --access public --tag <alpha|latest>` through npm Trusted
+`npm publish --access public --tag <BUILDCHAIN_NPM_DIST_TAG>` through npm Trusted
 Publishing, and writes npm artifact evidence before the promotion action moves
 public refs.
 
 `BUILDCHAIN_RELEASE_MATERIAL_SHA` is the source material whose artifacts must
 match. `BUILDCHAIN_PUBLISH_TOOLING_SHA` identifies the publishing code. A repair
 run may change tooling, but material drift fails closed.
+
+## Release Modes And Auth
+
+Buildchain distinguishes two npm release modes:
+
+| Mode | Use | Auth | npm operation |
+| --- | --- | --- | --- |
+| `publish-final-version` | normal alpha or stable publication | `trusted-publishing` | `npm publish --tag <alpha|latest>` |
+| `promote-existing-version` | same-version alpha-to-latest recovery | `npm-token` | `npm dist-tag add <pkg>@<version> latest` |
+
+The normal libnode path is `publish-final-version`: publish an alpha package set
+such as `22.22.3-kf.3-alpha.0` with the `alpha` dist-tag, then publish a
+distinct final package set such as `22.22.3-kf.3` with the `latest` dist-tag.
+GitHub-hosted npm Trusted Publishing can authorize those `npm publish` calls
+when the workflow grants `id-token: write`.
+
+`promote-existing-version` is deliberately separate. npm Trusted Publishing does
+not authorize arbitrary registry-management operations such as `npm dist-tag
+add`; it authorizes publish-time package provenance. Therefore same-version
+promotion must declare `auth = "npm-token"`. Buildchain runs an npm token
+preflight with `npm whoami` before it writes any release transaction state or
+moves a dist-tag. Missing token auth fails early with a contract error instead
+of a late `E401` after publish evidence has started to move.
+
+For package sets, `package_set_order = "platforms-first-main-last"` makes the
+main package the visibility gate. Platform package side effects are planned or
+retried first, and the main package or main dist-tag move happens last.
 
 ## Evidence
 

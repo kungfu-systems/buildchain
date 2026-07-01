@@ -362,6 +362,46 @@ test("npm publish transaction writes Buildchain evidence without real publish in
   assert.equal(validation.valid, true);
 });
 
+test("npm publish transaction honors explicit dist tag for libnode-style final versions", () => {
+  const cwd = tempDir();
+  fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({
+    name: "@kungfu-tech/libnode-fixture",
+    version: "22.22.3-kf.3",
+    private: false,
+    license: "Apache-2.0",
+  }, null, 2));
+  fs.writeFileSync(path.join(cwd, "README.md"), "# fixture\n");
+  const evidencePath = path.join(cwd, ".buildchain/release-evidence/22.22.3-kf.3/evidence.json");
+  const run = spawnSync(process.execPath, [
+    path.join(process.cwd(), "scripts/npm-publish-transaction.mjs"),
+    "--cwd",
+    cwd,
+    "--dry-run-publish",
+    "--skip-registry-lookup",
+  ], {
+    cwd,
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      BUILDCHAIN_VERSION: "22.22.3-kf.3",
+      BUILDCHAIN_CHANNEL: "release",
+      BUILDCHAIN_SOURCE_SHA: SHA,
+      BUILDCHAIN_RELEASE_SHA: RELEASE_SHA,
+      BUILDCHAIN_RELEASE_MATERIAL_SHA: RELEASE_SHA,
+      BUILDCHAIN_PUBLISH_TOOLING_SHA: RELEASE_SHA,
+      BUILDCHAIN_TARGET_REF: "release/v22/v22.22",
+      BUILDCHAIN_EVIDENCE_DIR: path.dirname(evidencePath),
+      BUILDCHAIN_PUBLISH_EVIDENCE: evidencePath,
+      BUILDCHAIN_NPM_DIST_TAG: "latest",
+    },
+  });
+
+  assert.equal(run.status, 0, run.stderr);
+  const output = JSON.parse(run.stdout);
+  assert.equal(output.distTag, "latest");
+  assert.equal(output.package.version, "22.22.3-kf.3");
+});
+
 test("npm publish transaction fails closed on non-404 registry lookup errors", () => {
   const cwd = tempDir();
   fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({

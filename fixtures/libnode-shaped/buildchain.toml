@@ -19,3 +19,10 @@ command = "node scripts/build.mjs"
 
 [lifecycle.verify]
 command = "node scripts/verify.mjs"
+
+[publish]
+mode = "publish-final-version"
+auth = "trusted-publishing"
+dist_tag = "latest"
+package_set_order = "platforms-first-main-last"
+main_package = "@kungfu-tech/libnode"

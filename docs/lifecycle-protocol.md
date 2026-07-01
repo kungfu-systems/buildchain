@@ -189,7 +189,8 @@ node scripts/write-publish-evidence.mjs
 ```
 
 When `actions/promote-buildchain-ref` runs with `publish-transaction: "true"`,
-the publish stage receives:
+the publish stage receives the transaction identity plus the resolved publish
+contract:
 
 ```text
 BUILDCHAIN_VERSION
@@ -202,6 +203,11 @@ BUILDCHAIN_RELEASE_SHA
 BUILDCHAIN_RELEASE_MATERIAL_SHA
 BUILDCHAIN_PUBLISH_TOOLING_SHA
 BUILDCHAIN_PUBLISH_EVIDENCE
+BUILDCHAIN_PUBLISH_MODE
+BUILDCHAIN_PUBLISH_AUTH
+BUILDCHAIN_NPM_DIST_TAG
+BUILDCHAIN_PACKAGE_SET_ORDER
+BUILDCHAIN_PACKAGE_SET_MAIN_PACKAGE
 ```
 
 The stage must write publish evidence JSON. Buildchain validates that evidence
@@ -211,6 +217,20 @@ action also persists `state.json` and `evidence.json` to
 without local workspace residue. See
 [`docs/publish-transaction.md`](publish-transaction.md) for the state machine,
 evidence schema, and recovery commands.
+
+For npm packages, prefer:
+
+```toml
+[publish]
+mode = "publish-final-version"
+auth = "trusted-publishing"
+dist_tag = "latest"
+```
+
+Use `mode = "promote-existing-version"` only for explicit same-version
+dist-tag recovery, and pair it with `auth = "npm-token"`. Trusted Publishing
+does not authorize `npm dist-tag add`; Buildchain fails that combination before
+any publish transaction side effect.
 
 ## Promotion Semantics
 
