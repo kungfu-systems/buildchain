@@ -3,7 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { getBumpKeyword } from "../actions/bump-version/lib.js";
+import { getBumpKeyword } from "../scripts/release-line-policy.mjs";
 
 function withPackageVersion(version, fn) {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-bump-ref-"));

@@ -112,7 +112,7 @@ function validateIfPossible(record, options) {
     releaseSha: record.release_sha,
     targetRef: record.target_ref,
     releaseMaterialSha: record.release_material_sha,
-    publishToolingSha: options.publish_tooling_sha || "",
+    publishToolingSha: options.publish_tooling_sha || record.publish_tooling_sha || "",
     requiredArtifacts,
   });
   return { evidence, validation };
@@ -139,6 +139,8 @@ async function main() {
     printJson({
       command,
       statePath: filePath,
+      durableStateRef: record.state_ref || "",
+      durableBoundary: "remote durable refs and public Git ref finalization are owned by actions/promote-buildchain-ref",
       created,
       transaction: record,
       evidence,
@@ -154,7 +156,15 @@ async function main() {
       validation,
       explicitOverride: Boolean(options.override),
     });
-    printJson({ command, statePath: filePath, recovery, transaction: record, validation });
+    printJson({
+      command,
+      statePath: filePath,
+      durableStateRef: record.state_ref || "",
+      durableBoundary: "remote durable refs and public Git ref finalization are owned by actions/promote-buildchain-ref",
+      recovery,
+      transaction: record,
+      validation,
+    });
     if (recovery.blocked) {
       process.exitCode = 1;
     }
@@ -170,7 +180,14 @@ async function main() {
       "complete",
     );
     writeReleaseTransaction(filePath, next);
-    printJson({ command, statePath: filePath, transaction: next, validation });
+    printJson({
+      command,
+      statePath: filePath,
+      durableStateRef: next.state_ref || "",
+      durableBoundary: "local transaction state finalized; public Git refs are finalized by actions/promote-buildchain-ref",
+      transaction: next,
+      validation,
+    });
     return;
   }
 
@@ -180,7 +197,13 @@ async function main() {
     failure: `abandoned in favor of ${supersededBy}`,
   });
   writeReleaseTransaction(filePath, next);
-  printJson({ command, statePath: filePath, transaction: next });
+  printJson({
+    command,
+    statePath: filePath,
+    durableStateRef: next.state_ref || "",
+    durableBoundary: "local transaction state abandoned; remote durable state is written by actions/promote-buildchain-ref",
+    transaction: next,
+  });
 }
 
 main().catch((error) => {

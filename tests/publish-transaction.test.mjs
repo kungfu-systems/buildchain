@@ -6,6 +6,7 @@ import path from "node:path";
 import test from "node:test";
 
 import {
+  assertTransactionIdentity,
   createReleaseTransaction,
   defaultPublishEvidencePath,
   defaultReleaseStatePath,
@@ -142,6 +143,55 @@ test("transaction recovery blocks repair and abandoned states unless override is
   assert.equal(
     planTransactionRecovery({ transaction: abandoned, explicitOverride: true }).blocked,
     false,
+  );
+});
+
+test("transaction identity allows tooling drift but fails closed on material drift", () => {
+  const record = createReleaseTransaction({
+    repository: "kungfu-systems/buildchain",
+    version: "1.0.0",
+    exactTag: "v1.0.0",
+    channel: "release",
+    sourceSha: SHA,
+    targetRef: "release/v1/v1.0",
+    releaseSha: RELEASE_SHA,
+    releaseMaterialSha: RELEASE_SHA,
+    publishToolingSha: "c".repeat(40),
+  });
+
+  assert.doesNotThrow(() =>
+    assertTransactionIdentity(record, {
+      repository: "kungfu-systems/buildchain",
+      version: "1.0.0",
+      sourceSha: SHA,
+      targetRef: "release/v1/v1.0",
+      releaseMaterialSha: RELEASE_SHA,
+      publishToolingSha: "d".repeat(40),
+    }, { allowToolingDrift: true }),
+  );
+  assert.throws(
+    () =>
+      assertTransactionIdentity(record, {
+        repository: "kungfu-systems/buildchain",
+        version: "1.0.0",
+        sourceSha: SHA,
+        targetRef: "release/v1/v1.0",
+        releaseMaterialSha: "e".repeat(40),
+        publishToolingSha: "d".repeat(40),
+      }, { allowToolingDrift: true }),
+    /release_material_sha mismatch/,
+  );
+  assert.throws(
+    () =>
+      assertTransactionIdentity(record, {
+        repository: "kungfu-systems/buildchain",
+        version: "1.0.0",
+        sourceSha: SHA,
+        targetRef: "release/v1/v1.0",
+        releaseMaterialSha: RELEASE_SHA,
+        publishToolingSha: "d".repeat(40),
+      }, { allowToolingDrift: false }),
+    /publish_tooling_sha mismatch/,
   );
 });
 

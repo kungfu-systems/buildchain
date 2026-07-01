@@ -14,7 +14,9 @@ const {
   latestAlphaForPatch,
   parseReleaseLineRef,
   parseTags,
+  persistDurableReleaseTransaction,
   promoteBuildchainRefs,
+  restoreDurableReleaseTransaction,
   resolveTagsForTarget,
   selectAlphaTag,
   selectReleaseTag,
@@ -29,6 +31,104 @@ function notFound() {
     status: 422,
     response: { data: { message: "Reference does not exist" } },
   });
+}
+
+function createGitMock({ refs = new Map(), orderFile = "" } = {}) {
+  const blobs = new Map();
+  const trees = new Map();
+  const commits = new Map();
+  const commitLog = [];
+  let blobCount = 0;
+  let treeCount = 0;
+  let commitCount = 0;
+  const appendOrder = (entry) => {
+    if (orderFile) {
+      fs.appendFileSync(orderFile, `${entry}\n`);
+    }
+  };
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (refs.has(ref)) {
+            return { data: { object: { sha: refs.get(ref) } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async ({ ref }) => ({
+          data: [...refs.entries()]
+            .filter(([name]) => name.startsWith(ref))
+            .map(([name, objectSha]) => ({
+              ref: `refs/${name}`,
+              object: { sha: objectSha },
+            })),
+        }),
+        getCommit: async ({ commit_sha }) => {
+          const commit = commits.get(commit_sha);
+          if (commit) {
+            return { data: commit };
+          }
+          return { data: { tree: { sha: `tree-${commit_sha}` }, parents: [] } };
+        },
+        getTree: async ({ tree_sha }) => ({
+          data: { tree: trees.get(tree_sha) || [] },
+        }),
+        getBlob: async ({ file_sha }) => {
+          const blob = blobs.get(file_sha);
+          if (!blob) {
+            throw notFound();
+          }
+          return { data: blob };
+        },
+        createBlob: async ({ content, encoding }) => {
+          const sha = `blob-${++blobCount}`;
+          const normalized =
+            encoding === "base64"
+              ? content
+              : Buffer.from(content).toString("base64");
+          blobs.set(sha, { content: normalized, encoding: "base64" });
+          return { data: { sha } };
+        },
+        createTree: async ({ tree, base_tree: baseTree }) => {
+          const sha = `tree-created-${++treeCount}`;
+          const entries = baseTree && trees.has(baseTree) ? [...trees.get(baseTree)] : [];
+          for (const entry of tree) {
+            const nextEntry = { ...entry };
+            const index = entries.findIndex((existing) => existing.path === nextEntry.path);
+            if (index >= 0) {
+              entries[index] = nextEntry;
+            } else {
+              entries.push(nextEntry);
+            }
+          }
+          trees.set(sha, entries);
+          return { data: { sha } };
+        },
+        createCommit: async ({ message, tree, parents = [] }) => {
+          const sha = `commit-${++commitCount}`.padEnd(40, "0");
+          const commit = {
+            sha,
+            tree: { sha: tree },
+            parents: parents.map((parentSha) => ({ sha: parentSha })),
+          };
+          commits.set(sha, commit);
+          commitLog.push({ sha, message, parents, tree });
+          return { data: { sha } };
+        },
+        updateRef: async ({ ref, sha }) => {
+          appendOrder(`update:${ref}`);
+          refs.set(ref, sha);
+          return {};
+        },
+        createRef: async ({ ref, sha }) => {
+          appendOrder(`create:${ref}`);
+          refs.set(ref.replace(/^refs\//, ""), sha);
+          return {};
+        },
+      },
+    },
+  };
+  return { octokit, refs, blobs, trees, commits, commitLog };
 }
 
 function makeTempWorkspace(files) {
@@ -679,49 +779,10 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
 }, null, 2) + "\\n");
 `,
   });
-  const refs = new Map([["heads/alpha/v1/v1.0", SHA]]);
-  const commits = [];
-  const appendOrder = (entry) => fs.appendFileSync(path.join(cwd, "order.log"), `${entry}\n`);
-  const octokit = {
-    rest: {
-      git: {
-        getRef: async ({ ref }) => {
-          if (refs.has(ref)) {
-            return { data: { object: { sha: refs.get(ref) } } };
-          }
-          throw notFound();
-        },
-        listMatchingRefs: async ({ ref }) => ({
-          data: [...refs.entries()]
-            .filter(([name]) => name.startsWith(ref))
-            .map(([name, objectSha]) => ({
-              ref: `refs/${name}`,
-              object: { sha: objectSha },
-            })),
-        }),
-        getCommit: async ({ commit_sha }) => ({
-          data: { tree: { sha: `tree-${commit_sha}` } },
-        }),
-        createBlob: async () => ({ data: { sha: `blob-${commits.length + 1}` } }),
-        createTree: async () => ({ data: { sha: `tree-created-${commits.length + 1}` } }),
-        createCommit: async ({ message, parents }) => {
-          const sha = `commit-${commits.length + 1}`.padEnd(40, "0");
-          commits.push({ sha, message, parents });
-          return { data: { sha } };
-        },
-        updateRef: async ({ ref, sha }) => {
-          appendOrder(`update:${ref}`);
-          refs.set(ref, sha);
-          return {};
-        },
-        createRef: async ({ ref, sha }) => {
-          appendOrder(`create:${ref}`);
-          refs.set(ref.replace(/^refs\//, ""), sha);
-          return {};
-        },
-      },
-    },
-  };
+  const { octokit, refs, commitLog } = createGitMock({
+    refs: new Map([["heads/alpha/v1/v1.0", SHA]]),
+    orderFile: path.join(cwd, "order.log"),
+  });
 
   const result = await promoteBuildchainRefs({
     octokit,
@@ -741,18 +802,152 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
     ]),
   });
 
-  const alphaSha = commits[0].sha;
+  const alphaSha = commitLog[0].sha;
   assert.equal(result.sha, alphaSha);
   assert.equal(result.publishTransaction.state, "complete");
+  assert.equal(result.publishTransaction.stateRef, "buildchain/release-state/1-0-0-alpha-0");
+  assert.equal(refs.has("heads/buildchain/release-state/1-0-0-alpha-0"), true);
   assert.equal(refs.get("tags/v1.0.0-alpha.0"), alphaSha);
   assert.equal(refs.get("tags/v1.0-alpha"), alphaSha);
-  assert.deepEqual(fs.readFileSync(path.join(cwd, "order.log"), "utf8").trim().split("\n"), [
+  const order = fs.readFileSync(path.join(cwd, "order.log"), "utf8").trim().split("\n");
+  assert.equal(order[0], "create:refs/heads/buildchain/release-state/1-0-0-alpha-0");
+  assert.equal(order.filter((entry) => entry.includes("buildchain/release-state")).length >= 4, true);
+  assert.deepEqual(order.filter((entry) => !entry.includes("buildchain/release-state")), [
     "publish",
     "update:heads/alpha/v1/v1.0",
     "create:refs/heads/dev/v1/v1.0",
     "create:refs/tags/v1.0.0-alpha.0",
     "update:tags/v1.0-alpha",
   ]);
+});
+
+test("publish transaction durable ref restores state and evidence in a fresh workspace", async () => {
+  const sourceCwd = makeTempWorkspace({});
+  const statePath = path.join(sourceCwd, ".buildchain/release-state/1.0.0.json");
+  const evidencePath = path.join(sourceCwd, ".buildchain/release-evidence/1.0.0/evidence.json");
+  const transaction = {
+    schema: 1,
+    id: "tx-1",
+    repository: "kungfu-systems/buildchain",
+    target_ref: "release/v1/v1.0",
+    source_sha: SHA,
+    release_sha: OTHER_SHA,
+    release_material_sha: OTHER_SHA,
+    publish_tooling_sha: OTHER_SHA,
+    version: "1.0.0",
+    exact_tag: "v1.0.0",
+    channel: "release",
+    line: "v1.0",
+    version_strategy: "",
+    lifecycle_identity: "lifecycle.publish",
+    state_ref: "buildchain/release-state/1-0-0",
+    state_path: statePath,
+    evidence_path: evidencePath,
+    state: "published",
+    previous_state: "publishing",
+    actor: "codex",
+    run_id: "1",
+    superseded_by: "",
+    failure: "",
+    artifacts: [{ kind: "npm", name: "@kungfu-systems/buildchain", ref: "1.0.0", digest: "sha256:ok", group: "", required: true }],
+    evidence: [".buildchain/release-evidence/1.0.0/evidence.json"],
+    created_at: "2026-07-01T00:00:00.000Z",
+    updated_at: "2026-07-01T00:00:00.000Z",
+  };
+  fs.mkdirSync(path.dirname(evidencePath), { recursive: true });
+  fs.writeFileSync(evidencePath, JSON.stringify({
+    schema: 1,
+    version: "1.0.0",
+    channel: "release",
+    source_sha: SHA,
+    release_sha: OTHER_SHA,
+    target_ref: "release/v1/v1.0",
+    release_material_sha: OTHER_SHA,
+    publish_tooling_sha: OTHER_SHA,
+    artifacts: transaction.artifacts,
+  }, null, 2) + "\n");
+
+  const { octokit } = createGitMock();
+  await persistDurableReleaseTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd: sourceCwd,
+    transaction,
+    evidencePath,
+  });
+
+  const freshCwd = makeTempWorkspace({});
+  const freshStatePath = path.join(freshCwd, ".buildchain/release-state/1.0.0.json");
+  const freshEvidencePath = path.join(freshCwd, ".buildchain/release-evidence/1.0.0/evidence.json");
+  const restored = await restoreDurableReleaseTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    stateRef: "buildchain/release-state/1-0-0",
+    statePath: freshStatePath,
+    evidencePath: freshEvidencePath,
+  });
+
+  assert.equal(restored.id, "tx-1");
+  assert.equal(JSON.parse(fs.readFileSync(freshStatePath, "utf8")).id, "tx-1");
+  assert.equal(JSON.parse(fs.readFileSync(freshEvidencePath, "utf8")).artifacts[0].digest, "sha256:ok");
+});
+
+test("publish transaction fails closed when durable state cannot be persisted", async () => {
+  const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[lifecycle.publish]
+command = "node scripts/publish.mjs"
+`,
+    "package.json": {
+      name: "@kungfu-systems/buildchain",
+      version: "0.0.0-alpha.0",
+    },
+    "scripts/publish.mjs": `
+import fs from "node:fs";
+fs.appendFileSync("order.log", "publish\\n");
+`,
+  });
+  const { octokit, refs } = createGitMock({
+    refs: new Map([["heads/alpha/v1/v1.0", SHA]]),
+    orderFile: path.join(cwd, "order.log"),
+  });
+  const originalCreateRef = octokit.rest.git.createRef;
+  octokit.rest.git.createRef = async (args) => {
+    if (args.ref.includes("buildchain/release-state")) {
+      throw new Error("durable state write denied");
+    }
+    return originalCreateRef(args);
+  };
+
+  await assert.rejects(
+    () =>
+      promoteBuildchainRefs({
+        octokit,
+        owner: "kungfu-systems",
+        repo: "buildchain",
+        sha: SHA,
+        targetRef: "alpha/v1/v1.0",
+        cwd,
+        publishTransaction: true,
+      }),
+    /durable state write denied/,
+  );
+
+  assert.equal(fs.existsSync(path.join(cwd, "order.log")), false);
+  assert.equal(refs.has("tags/v1.0.0-alpha.0"), false);
+  assert.equal(refs.has("tags/v1.0-alpha"), false);
 });
 
 test("anchored manual release verifies existing anchor state and does not prepare next alpha", async () => {

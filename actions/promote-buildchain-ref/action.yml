@@ -67,6 +67,14 @@ outputs:
     description: "Stable release transaction identity"
   transaction-state:
     description: "Final release transaction state"
+  transaction-exact-tag:
+    description: "Exact release or prerelease tag governed by the transaction"
+  transaction-release-sha:
+    description: "Release/version-state SHA governed by the transaction"
+  transaction-state-ref:
+    description: "Machine-managed durable release transaction ref"
+  transaction-state-sha:
+    description: "Commit SHA at the durable release transaction ref"
   transaction-state-path:
     description: "Release transaction state file path"
   publish-evidence-path:
