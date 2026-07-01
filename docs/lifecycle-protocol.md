@@ -198,6 +198,8 @@ Heavy repositories can validate their Buildchain declaration before they are
 ready to run the real build. `actions/validate-config` checks that
 `buildchain.toml` parses, configured version-state files exist, configured
 version keys are strings, and required lifecycle stage names are declared.
+For web-surface repositories it also validates `project`, `channels`, `deploy`,
+`retention`, and `security` declarations.
 
 It does not run lifecycle commands. This is useful for repositories such as
 `libnode`, where `lifecycle.build` represents an expensive multi-platform native
@@ -210,6 +212,59 @@ lifecycle protocol without consuming build runners.
     require-version-state: "true"
     require-lifecycle-stages: "install,build,verify"
 ```
+
+Web-surface repositories can use the same action without requiring version
+state:
+
+```yaml
+- uses: kungfu-systems/buildchain/actions/validate-config@v2
+  with:
+    require-lifecycle-stages: "build,verify"
+```
+
+The action exposes project and deploy metadata through outputs such as
+`project-type`, `project-site`, `channels`, and `deploy-adapters-json`.
+
+## Web-Surface Projects
+
+`project.type = "web-surface"` is for sites, docs, browser apps, and operator
+consoles whose release object is a deployed surface, not a package version.
+
+```toml
+schema = 1
+
+[project]
+type = "web-surface"
+name = "site-kungfu-tech"
+site = "kungfu-tech"
+
+[channels.preview]
+url_pattern = "https://{alias}.preview.kungfu.tech"
+visibility = "ephemeral"
+noindex = true
+
+[channels.staging]
+url = "https://staging.kungfu.tech"
+visibility = "protected"
+requires_auth = true
+noindex = true
+promotable = true
+
+[channels.production]
+url = "https://kungfu.tech"
+visibility = "public"
+canonical = true
+noindex = false
+
+[deploy.production]
+adapter = "aws-s3-cloudfront"
+bucket = "kungfu-tech-production"
+artifact_path = "dist"
+secret_refs = ["AWS_ROLE_ARN"]
+```
+
+See [Web-surface deployments](web-surface-deployments.md) for the manifest,
+preview alias, retention, cleanup, and dry-run deploy contract.
 
 ## Examples
 

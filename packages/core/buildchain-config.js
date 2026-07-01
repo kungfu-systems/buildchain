@@ -9,6 +9,14 @@ const RESERVED_LIFECYCLE_KEYS = new Set(["env", "shell"]);
 const SUPPORTED_VERSION_FILE_TYPES = new Set(["json", "toml", "regex"]);
 const SUPPORTED_VERSION_STRATEGIES = new Set(["semver", "anchored"]);
 const SUPPORTED_VERSION_NEXT = new Set(["auto", "manual"]);
+const SUPPORTED_PROJECT_TYPES = new Set(["package", "web-surface"]);
+const WEB_SURFACE_CHANNELS = ["preview", "staging", "production"];
+const SUPPORTED_CHANNEL_VISIBILITY = new Set(["ephemeral", "protected", "public", "internal"]);
+const SUPPORTED_DEPLOY_ADAPTERS = new Set([
+  "aws-s3-cloudfront",
+  "aws-elastic-beanstalk",
+  "aws-ecs-service",
+]);
 
 function posixPath(value) {
   return String(value || "").split(path.sep).join("/");
@@ -26,6 +34,20 @@ function assertString(value, label) {
     throw new Error(`${label} must be a non-empty string`);
   }
   return value;
+}
+
+function optionalBoolean(value, fallback) {
+  return value === undefined ? fallback : Boolean(value);
+}
+
+function normalizeStringArray(value, label) {
+  if (value === undefined) {
+    return [];
+  }
+  if (!Array.isArray(value)) {
+    throw new Error(`${label} must be an array of strings`);
+  }
+  return value.map((entry, index) => assertString(entry, `${label}[${index}]`));
 }
 
 function getByDottedKey(target, key) {
@@ -71,13 +93,221 @@ export function loadBuildchainConfig(cwd = process.cwd()) {
 export function normalizeBuildchainConfig(config) {
   assertPlainObject(config, CONFIG_FILE);
   const normalized = { ...config };
+  if (normalized.project !== undefined) {
+    normalized.project = normalizeProjectSection(normalized.project);
+  }
   if (normalized.version !== undefined) {
     normalized.version = normalizeVersionSection(normalized.version);
   }
   if (normalized.lifecycle !== undefined) {
     normalized.lifecycle = normalizeLifecycleSection(normalized.lifecycle);
   }
+  if (normalized.channels !== undefined) {
+    normalized.channels = normalizeChannelsSection(normalized.channels, normalized.project);
+  }
+  if (normalized.deploy !== undefined) {
+    normalized.deploy = normalizeDeploySection(normalized.deploy, normalized.project);
+  }
+  if (normalized.retention !== undefined) {
+    normalized.retention = normalizeRetentionSection(normalized.retention);
+  }
+  if (normalized.security !== undefined) {
+    normalized.security = normalizeSecuritySection(normalized.security);
+  }
+  validateWebSurfaceConfig(normalized);
   return normalized;
+}
+
+function normalizeProjectSection(project) {
+  assertPlainObject(project, "project");
+  const type = assertString(project.type, "project.type");
+  if (!SUPPORTED_PROJECT_TYPES.has(type)) {
+    throw new Error("project.type must be one of package or web-surface");
+  }
+  const normalized = { type };
+  for (const key of ["name", "site"]) {
+    if (project[key] !== undefined) {
+      normalized[key] = assertString(project[key], `project.${key}`);
+    }
+  }
+  return normalized;
+}
+
+function normalizeChannelsSection(channels) {
+  assertPlainObject(channels, "channels");
+  return Object.fromEntries(
+    Object.entries(channels).map(([name, channel]) => [
+      name,
+      normalizeChannelConfig(name, channel),
+    ]),
+  );
+}
+
+function normalizeChannelConfig(name, channel) {
+  assertPlainObject(channel, `channels.${name}`);
+  const hasUrl = channel.url !== undefined;
+  const hasUrlPattern = channel.url_pattern !== undefined;
+  if (hasUrl && hasUrlPattern) {
+    throw new Error(`channels.${name} must define only one of url or url_pattern`);
+  }
+  if (!hasUrl && !hasUrlPattern) {
+    throw new Error(`channels.${name} must define url or url_pattern`);
+  }
+  const visibility = channel.visibility === undefined
+    ? defaultChannelVisibility(name)
+    : assertString(channel.visibility, `channels.${name}.visibility`);
+  if (!SUPPORTED_CHANNEL_VISIBILITY.has(visibility)) {
+    throw new Error(`channels.${name}.visibility must be one of ephemeral, protected, public, or internal`);
+  }
+  const normalized = {
+    name,
+    visibility,
+    requiresAuth: optionalBoolean(channel.requires_auth, name === "staging"),
+    noindex: optionalBoolean(channel.noindex, name !== "production"),
+    promotable: optionalBoolean(channel.promotable, name === "staging"),
+    canonical: optionalBoolean(channel.canonical, name === "production"),
+  };
+  if (hasUrl) {
+    normalized.url = assertString(channel.url, `channels.${name}.url`);
+  }
+  if (hasUrlPattern) {
+    normalized.urlPattern = assertString(channel.url_pattern, `channels.${name}.url_pattern`);
+  }
+  return normalized;
+}
+
+function defaultChannelVisibility(name) {
+  if (name === "preview") {
+    return "ephemeral";
+  }
+  if (name === "staging") {
+    return "protected";
+  }
+  if (name === "production") {
+    return "public";
+  }
+  return "internal";
+}
+
+function normalizeDeploySection(deploy) {
+  assertPlainObject(deploy, "deploy");
+  return Object.fromEntries(
+    Object.entries(deploy).map(([name, config]) => [
+      name,
+      normalizeDeployConfig(name, config),
+    ]),
+  );
+}
+
+function normalizeDeployConfig(name, config) {
+  assertPlainObject(config, `deploy.${name}`);
+  const adapter = assertString(config.adapter, `deploy.${name}.adapter`);
+  if (!SUPPORTED_DEPLOY_ADAPTERS.has(adapter)) {
+    throw new Error(`deploy.${name}.adapter must be one of aws-s3-cloudfront, aws-elastic-beanstalk, or aws-ecs-service`);
+  }
+  const normalized = {
+    ...config,
+    adapter,
+    artifactPath: config.artifact_path === undefined
+      ? undefined
+      : posixPath(assertString(config.artifact_path, `deploy.${name}.artifact_path`)),
+    secretRefs: normalizeStringArray(config.secret_refs, `deploy.${name}.secret_refs`),
+  };
+  delete normalized.artifact_path;
+  delete normalized.secret_refs;
+  for (const [key, value] of Object.entries(config)) {
+    if (key === "secret_refs" || key.endsWith("_ref") || key.endsWith("_refs")) {
+      continue;
+    }
+    if (/(secret|token|password)/i.test(key) && value !== undefined) {
+      throw new Error(`deploy.${name}.${key} must be declared as a secret reference, not a secret value`);
+    }
+  }
+  return normalized;
+}
+
+function normalizeRetentionSection(retention) {
+  assertPlainObject(retention, "retention");
+  return Object.fromEntries(
+    Object.entries(retention).map(([name, config]) => [
+      name,
+      normalizeRetentionConfig(name, config),
+    ]),
+  );
+}
+
+function normalizeRetentionConfig(name, config) {
+  assertPlainObject(config, `retention.${name}`);
+  const normalized = {};
+  for (const [key, value] of Object.entries(config)) {
+    const numberValue = Number(value);
+    if (!Number.isInteger(numberValue) || numberValue < 0) {
+      throw new Error(`retention.${name}.${key} must be a non-negative integer`);
+    }
+    normalized[key] = numberValue;
+  }
+  return normalized;
+}
+
+function normalizeSecuritySection(security) {
+  assertPlainObject(security, "security");
+  return Object.fromEntries(
+    Object.entries(security).map(([name, config]) => [
+      name,
+      normalizeSecurityConfig(name, config),
+    ]),
+  );
+}
+
+function normalizeSecurityConfig(name, config) {
+  assertPlainObject(config, `security.${name}`);
+  return {
+    requiresAuth: optionalBoolean(config.requires_auth, undefined),
+    noindex: optionalBoolean(config.noindex, undefined),
+    isolatedProviders: optionalBoolean(config.isolated_providers, undefined),
+    sandboxData: optionalBoolean(config.sandbox_data, undefined),
+    secretRefs: normalizeStringArray(config.secret_refs, `security.${name}.secret_refs`),
+  };
+}
+
+function validateWebSurfaceConfig(config) {
+  if (config.project?.type !== "web-surface") {
+    return;
+  }
+  for (const name of WEB_SURFACE_CHANNELS) {
+    if (!config.channels?.[name]) {
+      throw new Error(`project.type = "web-surface" requires channels.${name}`);
+    }
+    if (!config.deploy?.[name]) {
+      throw new Error(`project.type = "web-surface" requires deploy.${name}`);
+    }
+  }
+  if (!config.channels.preview.urlPattern) {
+    throw new Error("channels.preview.url_pattern is required for web-surface preview aliases");
+  }
+  for (const name of ["staging", "production"]) {
+    if (!config.channels[name].url) {
+      throw new Error(`channels.${name}.url is required for web-surface`);
+    }
+  }
+  if (!config.channels.staging.requiresAuth) {
+    throw new Error("channels.staging.requires_auth must be true for web-surface");
+  }
+  if (!config.channels.staging.noindex) {
+    throw new Error("channels.staging.noindex must be true for web-surface");
+  }
+  const stagingSecurity = config.security?.staging;
+  if (stagingSecurity) {
+    if (stagingSecurity.requiresAuth === false) {
+      throw new Error("security.staging.requires_auth must not disable staging auth");
+    }
+    if (stagingSecurity.noindex === false) {
+      throw new Error("security.staging.noindex must not disable staging noindex");
+    }
+    if (stagingSecurity.isolatedProviders === false) {
+      throw new Error("security.staging.isolated_providers must not be false for web-surface");
+    }
+  }
 }
 
 function normalizeVersionSection(version) {
@@ -386,6 +616,37 @@ export function validateBuildchainConfig(
       filePath: loadedConfig.filePath,
       schema: loadedConfig.config.schema,
     },
+    project: loadedConfig.config.project,
+    channels: loadedConfig.config.channels
+      ? Object.fromEntries(
+          Object.entries(loadedConfig.config.channels).map(([name, channel]) => [
+            name,
+            {
+              visibility: channel.visibility,
+              requiresAuth: channel.requiresAuth,
+              noindex: channel.noindex,
+              promotable: channel.promotable,
+              canonical: channel.canonical,
+              url: channel.url,
+              urlPattern: channel.urlPattern,
+            },
+          ]),
+        )
+      : undefined,
+    deploy: loadedConfig.config.deploy
+      ? Object.fromEntries(
+          Object.entries(loadedConfig.config.deploy).map(([name, deploy]) => [
+            name,
+            {
+              adapter: deploy.adapter,
+              artifactPath: deploy.artifactPath,
+              secretRefs: deploy.secretRefs,
+            },
+          ]),
+        )
+      : undefined,
+    retention: loadedConfig.config.retention,
+    security: loadedConfig.config.security,
     version: loadedConfig.config.version
       ? getVersionStrategy(loadedConfig)
       : undefined,

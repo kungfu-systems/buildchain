@@ -1,0 +1,71 @@
+schema = 1
+
+[project]
+type = "web-surface"
+name = "site-kungfu-tech"
+site = "kungfu-tech"
+
+[channels.preview]
+url_pattern = "https://{alias}.preview.kungfu.tech"
+visibility = "ephemeral"
+requires_auth = false
+noindex = true
+
+[channels.staging]
+url = "https://staging.kungfu.tech"
+visibility = "protected"
+requires_auth = true
+noindex = true
+promotable = true
+
+[channels.production]
+url = "https://kungfu.tech"
+visibility = "public"
+canonical = true
+noindex = false
+
+[deploy.preview]
+adapter = "aws-s3-cloudfront"
+bucket = "kungfu-tech-preview"
+cloudfront_distribution = "E-PREVIEW"
+artifact_path = "dist"
+secret_refs = ["AWS_ROLE_ARN"]
+
+[deploy.staging]
+adapter = "aws-s3-cloudfront"
+bucket = "kungfu-tech-staging"
+cloudfront_distribution = "E-STAGING"
+artifact_path = "dist"
+secret_refs = ["AWS_ROLE_ARN", "STAGING_EDGE_AUTH_SECRET"]
+
+[deploy.production]
+adapter = "aws-s3-cloudfront"
+bucket = "kungfu-tech-production"
+cloudfront_distribution = "E-PRODUCTION"
+artifact_path = "dist"
+secret_refs = ["AWS_ROLE_ARN"]
+
+[retention.preview]
+pr_days = 14
+sha_days = 90
+
+[retention.staging]
+days = 90
+keep_deploys = 10
+
+[retention.production]
+days = 365
+
+[security.staging]
+requires_auth = true
+noindex = true
+isolated_providers = true
+sandbox_data = true
+secret_refs = ["STAGING_EDGE_AUTH_SECRET"]
+
+[lifecycle.build]
+command = "node scripts/build.mjs"
+
+[lifecycle.verify]
+command = "node scripts/verify.mjs"
+

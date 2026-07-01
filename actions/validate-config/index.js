@@ -12,6 +12,11 @@ async function main() {
   core.setOutput("config-path", result.configPath);
   core.setOutput("version-files", result.versionFiles.join(","));
   core.setOutput("lifecycle-stages", result.lifecycleStages.join(","));
+  core.setOutput("project-type", result.projectType);
+  core.setOutput("project-name", result.projectName);
+  core.setOutput("project-site", result.projectSite);
+  core.setOutput("channels", result.channels.join(","));
+  core.setOutput("deploy-adapters-json", JSON.stringify(result.deployAdapters));
   core.setOutput("version-strategy", result.versionStrategy);
   core.setOutput("version-next", result.versionNext);
   core.setOutput("anchor-manifest", result.anchorManifest);
@@ -24,6 +29,9 @@ async function main() {
         { data: "Value", header: true },
       ],
       ["Config", result.configPath || "(none)"],
+      ["Project", result.projectType ? `${result.projectType} ${result.projectSite || result.projectName}`.trim() : "(none)"],
+      ["Channels", result.channels.join(", ") || "(none)"],
+      ["Deploy adapters", JSON.stringify(result.deployAdapters)],
       ["Version strategy", result.versionStrategy ? `${result.versionStrategy}/${result.versionNext}` : "(none)"],
       ["Anchor manifest", result.anchorManifest || "(none)"],
       ["Version files", result.versionFiles.join(", ") || "(none)"],
