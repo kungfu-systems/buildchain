@@ -3,16 +3,15 @@
 ## Source Of Truth
 
 Buildchain v2 workflow and action design lands in this repository. Standalone
-`workflows` and `action-*` repositories are compatibility surfaces and rollback
-anchors until consumers migrate to stable buildchain refs.
+`workflows` and `action-*` repositories are historical rollback anchors.
+Buildchain only ships the native action surface required for config validation,
+lifecycle execution, and release ref promotion.
 
 ## Compatibility Rule
 
-Do not break existing stable refs during migration:
+Do not break existing stable reusable workflow refs during migration:
 
 - `kungfu-systems/workflows@v2`
-- `kungfu-systems/action-bump-version@v4`
-- stable refs for active action repositories listed in `docs/migration-inventory.md`
 
 Any consumer migration must record:
 
@@ -23,7 +22,9 @@ Any consumer migration must record:
 
 New stable references should use:
 
-- `kungfu-systems/buildchain/actions/<name>@v2`
+- `kungfu-systems/buildchain/actions/validate-config@v2`
+- `kungfu-systems/buildchain/actions/run-lifecycle@v2`
+- `kungfu-systems/buildchain/actions/promote-buildchain-ref@v2`
 - `kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v2`
 
 ## Publishing Rule

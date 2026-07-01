@@ -11,14 +11,10 @@ on:
         description: "Compatibility workflows ref"
         required: true
         default: "v2"
-      legacy_action_bump_version_ref:
-        description: "Compatibility action-bump-version ref"
-        required: true
-        default: "v4"
       target_fixture:
         description: "Fixture to run"
         required: true
-        default: "action-bump-version-smoke"
+        default: "libnode-shaped"
       publish:
         description: "Publishing is intentionally disabled in Phase 1"
         required: true
@@ -37,9 +33,7 @@ jobs:
         run: |
           echo "buildchain_ref=${{ inputs.buildchain_ref }}"
           echo "legacy_workflows_ref=${{ inputs.legacy_workflows_ref }}"
-          echo "legacy_action_bump_version_ref=${{ inputs.legacy_action_bump_version_ref }}"
           echo "target_fixture=${{ inputs.target_fixture }}"
           echo "publish=false"
       - name: Phase 1 no-publish guard
         run: test "${{ inputs.publish }}" = "false"
-
