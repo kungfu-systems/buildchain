@@ -7,6 +7,10 @@ import { initBuildchainRepo } from "../scripts/init-repo.mjs";
 import { npmPublishDryRun } from "../scripts/npm-publish-dry-run.mjs";
 import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
 import { validateBuildchainConfig } from "../packages/core/buildchain-config.js";
+import {
+  explainReleaseLineDryRun,
+  formatReleaseLineDryRun,
+} from "../packages/core/release-line-dry-run.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -23,6 +27,10 @@ function usage() {
                              [--artifact-name <name>] [--artifact-path <path>]...
   buildchain npm dry-run [--cwd <dir>] [--expected-tag <tag>] [--registry <url>]
                          [--dist-tag <tag>] [--skip-npm-publish-dry-run] [--json]
+  buildchain release --dry-run --target-ref <ref> [--sha <sha>] [--source-ref <ref>]
+                                 [--tags <comma-list>] [--json]
+  buildchain release dry-run --target-ref <ref> [--sha <sha>] [--source-ref <ref>]
+                                      [--tags <comma-list>] [--json]
   buildchain release <inspect|recover|finalize|abort> ...
   buildchain web-surface ...
   buildchain publish-source <lock|manifest|verify-lock> ...
@@ -33,6 +41,7 @@ Examples:
   buildchain validate --require-version-state --require-lifecycle-stages build,verify
   buildchain lifecycle run build --artifact-path dist --artifact-name "{repo}-{version}-{platform}"
   buildchain npm dry-run --json
+  buildchain release --dry-run --target-ref alpha/v2/v2.0
 `;
 }
 
@@ -159,6 +168,24 @@ async function main(argv = process.argv.slice(2)) {
   }
 
   if (command === "release") {
+    const releaseArgs = args[0] === "dry-run" ? args.slice(1) : args;
+    if (args[0] === "dry-run" || readBooleanFlag(args, "dry-run")) {
+      const plan = explainReleaseLineDryRun({
+        cwd: readFlag(releaseArgs, "cwd", process.cwd()),
+        targetRef: readFlag(releaseArgs, "target-ref", ""),
+        sourceRef: readFlag(releaseArgs, "source-ref", ""),
+        sha: readFlag(releaseArgs, "sha", ""),
+        tags: readFlag(releaseArgs, "tags", ""),
+        publishTransaction: readBooleanFlag(releaseArgs, "publish-transaction"),
+        publishCommand: readFlag(releaseArgs, "publish-command", ""),
+      });
+      if (readBooleanFlag(releaseArgs, "json")) {
+        printJson(plan);
+      } else {
+        process.stdout.write(formatReleaseLineDryRun(plan));
+      }
+      return;
+    }
     runScript("release-transaction.mjs", args);
     return;
   }

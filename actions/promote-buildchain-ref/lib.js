@@ -505,17 +505,6 @@ async function persistDurableReleaseTransaction({
   }
   const refName = durableTransactionHeadRef(transaction);
   const currentRef = await getGitRefOrUndefined({ octokit, owner, repo, ref: refName });
-  let baseTree;
-  const parents = [];
-  if (currentRef?.object?.sha) {
-    const { data: currentCommit } = await octokit.rest.git.getCommit({
-      owner,
-      repo,
-      commit_sha: currentRef.object.sha,
-    });
-    baseTree = currentCommit.tree?.sha;
-    parents.push(currentRef.object.sha);
-  }
 
   const stateBlob = await octokit.rest.git.createBlob({
     owner,
@@ -546,40 +535,103 @@ async function persistDurableReleaseTransaction({
     });
   }
 
-  const tree = await octokit.rest.git.createTree({
-    owner,
-    repo,
-    tree: treeEntries,
-    ...(baseTree ? { base_tree: baseTree } : {}),
-  });
-  const commit = await octokit.rest.git.createCommit({
-    owner,
-    repo,
-    message: `chore(buildchain): persist release transaction ${transaction.exact_tag}`,
-    tree: tree.data.sha,
-    parents,
-  });
+  const createStateCommit = async (parentSha) => {
+    let baseTree;
+    const parents = [];
+    if (parentSha) {
+      const { data: currentCommit } = await octokit.rest.git.getCommit({
+        owner,
+        repo,
+        commit_sha: parentSha,
+      });
+      baseTree = currentCommit.tree?.sha;
+      parents.push(parentSha);
+    }
+    const tree = await octokit.rest.git.createTree({
+      owner,
+      repo,
+      tree: treeEntries,
+      ...(baseTree ? { base_tree: baseTree } : {}),
+    });
+    return octokit.rest.git.createCommit({
+      owner,
+      repo,
+      message: `chore(buildchain): persist release transaction ${transaction.exact_tag}`,
+      tree: tree.data.sha,
+      parents,
+    });
+  };
+  let commit = await createStateCommit(currentRef?.object?.sha);
   if (currentRef) {
-    await octokit.rest.git.updateRef({
-      owner,
-      repo,
-      ref: refName,
-      sha: commit.data.sha,
-      force: false,
-    });
+    try {
+      await octokit.rest.git.updateRef({
+        owner,
+        repo,
+        ref: refName,
+        sha: commit.data.sha,
+        force: false,
+      });
+    } catch (error) {
+      if (!nonFastForwardUpdateRejected(error)) {
+        throw error;
+      }
+      const latestRef = await getGitRefOrUndefined({ octokit, owner, repo, ref: refName });
+      commit = await createStateCommit(latestRef?.object?.sha);
+      await octokit.rest.git.updateRef({
+        owner,
+        repo,
+        ref: refName,
+        sha: commit.data.sha,
+        force: false,
+      });
+    }
   } else {
-    await octokit.rest.git.createRef({
-      owner,
-      repo,
-      ref: `refs/${refName}`,
-      sha: commit.data.sha,
-    });
+    try {
+      await octokit.rest.git.createRef({
+        owner,
+        repo,
+        ref: `refs/${refName}`,
+        sha: commit.data.sha,
+      });
+    } catch (error) {
+      if (!referenceAlreadyExists(error)) {
+        throw error;
+      }
+      await octokit.rest.git.updateRef({
+        owner,
+        repo,
+        ref: refName,
+        sha: commit.data.sha,
+        force: true,
+      });
+    }
   }
   return {
     ref: transaction.state_ref,
     sha: commit.data.sha,
     statePath: path.relative(cwd, transaction.state_path || "").split(path.sep).join("/"),
   };
+}
+
+async function releaseCommitIncludesTransactionHead({
+  octokit,
+  owner,
+  repo,
+  releaseSha,
+  transactionReleaseSha,
+}) {
+  if (!octokit || !releaseSha || !transactionReleaseSha) {
+    return false;
+  }
+  if (releaseSha === transactionReleaseSha) {
+    return true;
+  }
+  const { data: commit } = await octokit.rest.git.getCommit({
+    owner,
+    repo,
+    commit_sha: releaseSha,
+  });
+  return (commit.parents || []).some((parent) => parent.sha === transactionReleaseSha);
 }
 
 async function runPublishTransaction({
@@ -605,6 +657,7 @@ async function runPublishTransaction({
   actor = "",
   runId = "",
   explicitOverride = false,
+  allowVersionStateFinalization = false,
 }) {
   const lifecyclePublish = getLifecycleStage(loadedConfig, "publish");
   const enabled = Boolean(publishTransaction || publishCommand || lifecyclePublish);
@@ -650,7 +703,29 @@ async function runPublishTransaction({
     );
   }
   const existing = durableExisting || localExisting;
-  ensureTransactionCanResume({ existing, expected, explicitOverride });
+  let versionStateFinalization = false;
+  try {
+    ensureTransactionCanResume({ existing, expected, explicitOverride });
+  } catch (error) {
+    const canFinalizeVersionState =
+      allowVersionStateFinalization &&
+      materialErrorRequiresRepair(error) &&
+      existing?.version === version &&
+      existing?.exact_tag === exactTag &&
+      existing?.target_ref === targetRef &&
+      ["published", "finalizing", "complete"].includes(existing.state || "") &&
+      (await releaseCommitIncludesTransactionHead({
+        octokit,
+        owner,
+        repo,
+        releaseSha,
+        transactionReleaseSha: existing.release_sha,
+      }));
+    if (!canFinalizeVersionState) {
+      throw error;
+    }
+    versionStateFinalization = true;
+  }
   let transaction =
     existing ||
     createReleaseTransaction({
@@ -683,6 +758,19 @@ async function runPublishTransaction({
   };
   let durable;
   ({ transaction, durable } = await persistTransaction(transaction));
+  if (versionStateFinalization) {
+    return {
+      transaction,
+      validation: undefined,
+      statePath: resolvedStatePath,
+      evidencePath: resolvedEvidencePath,
+      durable,
+      octokit,
+      owner,
+      repo,
+      cwd,
+    };
+  }
 
   let validation;
   try {
@@ -1056,6 +1144,10 @@ function parseAlphaPrereleaseTag(refName, releasePrefix) {
   };
 }
 
+function parseAlphaPrereleaseVersion(version, releasePrefix) {
+  return parseAlphaPrereleaseTag(`refs/tags/v${version}`, releasePrefix);
+}
+
 function parseAlphaTransactionStateRef(refName, releasePrefix) {
   const statePrefix = releasePrefix.replace(/^v/, "").replaceAll(".", "-");
   const match = String(refName || "").match(
@@ -1071,6 +1163,52 @@ function parseAlphaTransactionStateRef(refName, releasePrefix) {
     patch: Number(match[1]),
     prerelease: Number(match[2]),
     occupied: true,
+  };
+}
+
+function getVersionFileValue(file) {
+  if (file.type === "json" || file.type === "toml") {
+    return String(file.key || "")
+      .split(".")
+      .reduce((current, segment) => current?.[segment], file.content);
+  }
+  if (file.type === "regex") {
+    const match = file.source.match(file.pattern);
+    return match?.groups?.version;
+  }
+  return file.content?.version;
+}
+
+function currentAlphaVersionState({ cwd, refs, releasePrefix }) {
+  const discovered = discoverVersionStateFiles(cwd);
+  if (discovered.files.length === 0) {
+    return undefined;
+  }
+  const versions = [
+    ...new Set(
+      discovered.files
+        .map((file) => getVersionFileValue(file))
+        .filter((version) => typeof version === "string" && version.trim()),
+    ),
+  ];
+  if (versions.length !== 1) {
+    return undefined;
+  }
+  const parsed = parseAlphaPrereleaseVersion(versions[0], releasePrefix);
+  if (!parsed) {
+    return undefined;
+  }
+  const hasDurableState = refs.some((ref) => {
+    const candidate = parseAlphaPrereleaseRef(ref.ref, releasePrefix);
+    return candidate?.source === "release-state" && candidate.tag === `v${versions[0]}`;
+  });
+  if (!hasDurableState) {
+    return undefined;
+  }
+  return {
+    ...parsed,
+    tag: `v${versions[0]}`,
+    version: versions[0],
   };
 }
 
@@ -1216,6 +1354,12 @@ function notFound(error) {
     status === 404 ||
     (status === 422 && /Reference does not exist/i.test(message))
   );
+}
+
+function referenceAlreadyExists(error) {
+  const status = error?.status || error?.response?.status;
+  const message = error?.response?.data?.message || error?.message || "";
+  return status === 422 && /Reference already exists/i.test(message);
 }
 
 function protectedBranchUpdateRejected(error) {
@@ -1884,6 +2028,7 @@ async function promoteBuildchainRefs({
     channel,
     line,
     releaseSha,
+    allowVersionStateFinalization = false,
   }) => {
     if (dryRun && (publishTransaction || publishCommand || getLifecycleStage(loadBuildchainConfig(cwd), "publish"))) {
       updates.push({
@@ -1917,6 +2062,7 @@ async function promoteBuildchainRefs({
       actor,
       runId,
       explicitOverride: publishTransactionOverride,
+      allowVersionStateFinalization,
     });
     if (latestPublishTransaction) {
       updates.push({
@@ -2175,13 +2321,25 @@ async function promoteBuildchainRefs({
         "Alpha promotion accepts at most one explicit prerelease tag",
       );
     }
-    const selectedAlpha = explicitAlphaTags[0]
-      ? { tag: explicitAlphaTags[0] }
-      : selectAlphaTag({
+    const currentAlpha = explicitAlphaTags[0]
+      ? undefined
+      : currentAlphaVersionState({
+          cwd,
           refs: lineRefs,
           releasePrefix: rule.releasePrefix,
-          sha,
         });
+    const currentAlphaTagSha = currentAlpha
+      ? await readRefSha(`tags/${currentAlpha.tag}`)
+      : undefined;
+    let selectedAlpha = explicitAlphaTags[0]
+      ? { tag: explicitAlphaTags[0] }
+      : currentAlpha && !currentAlphaTagSha
+        ? currentAlpha
+        : selectAlphaTag({
+            refs: lineRefs,
+            releasePrefix: rule.releasePrefix,
+            sha,
+          });
     const settledAlphaVersionState = await isSettledAlphaVersionState(selectedAlpha);
     if (settledAlphaVersionState) {
       updates.push({ ref: targetRef, action: "already-promoted", sha });
@@ -2194,40 +2352,67 @@ async function promoteBuildchainRefs({
       updates.push({ tag: rule.alphaTag, action: "existing", sha });
       return { owner, repo, sourceSha: sha, sha, targetRef, updates };
     }
-    const alphaVersion = stripTagPrefix(selectedAlpha.tag);
-    const alphaCommit = await createVersionStateCommit({
-      baseSha: sha,
-      version: alphaVersion,
-      message: `chore(release): prepare ${selectedAlpha.tag}`,
-    });
-    const alphaSha = alphaCommit.sha;
-    if (requireGovernance && !dryRun) {
-      if (alphaCommit.action === "existing") {
+    const prepareAlphaCommit = async (candidate) => {
+      const version = stripTagPrefix(candidate.tag);
+      const commit = await createVersionStateCommit({
+        baseSha: sha,
+        version,
+        message: `chore(release): prepare ${candidate.tag}`,
+      });
+      if (requireGovernance && !dryRun) {
         await assertPromotionPrOrVersionStateParent({
           commitSha: sha,
           targetRef,
-          allowedPaths: alphaCommit.files,
-        });
-      } else {
-        await assertChannelPromotionPr({
-          octokit,
-          owner,
-          repo,
-          sha,
-          targetRef,
+          allowedPaths: commit.files,
         });
       }
+      return { version, commit, sha: commit.sha };
+    };
+    let alpha = await prepareAlphaCommit(selectedAlpha);
+    try {
+      await executePublishTransaction({
+        version: alpha.version,
+        exactTag: selectedAlpha.tag,
+        channel: rule.channel,
+        line: rule.releasePrefix,
+        releaseSha: alpha.sha,
+        allowVersionStateFinalization:
+          currentAlpha &&
+          !currentAlphaTagSha &&
+          selectedAlpha.tag === currentAlpha.tag &&
+          alpha.commit.action === "existing",
+      });
+    } catch (error) {
+      const staleCurrentAlpha =
+        currentAlpha &&
+        !currentAlphaTagSha &&
+        selectedAlpha.tag === currentAlpha.tag &&
+        /release transaction identity mismatch/.test(error.message || "");
+      if (!staleCurrentAlpha) {
+        throw error;
+      }
+      updates.push({
+        tag: selectedAlpha.tag,
+        action: "stale-publish-transaction",
+        sha: alpha.sha,
+      });
+      selectedAlpha = selectAlphaTag({
+        refs: lineRefs,
+        releasePrefix: rule.releasePrefix,
+        sha,
+      });
+      alpha = await prepareAlphaCommit(selectedAlpha);
+      await executePublishTransaction({
+        version: alpha.version,
+        exactTag: selectedAlpha.tag,
+        channel: rule.channel,
+        line: rule.releasePrefix,
+        releaseSha: alpha.sha,
+      });
     }
-    await executePublishTransaction({
-      version: alphaVersion,
-      exactTag: selectedAlpha.tag,
-      channel: rule.channel,
-      line: rule.releasePrefix,
-      releaseSha: alphaSha,
-    });
     if (versionState) {
       await markFinalizing();
-      const targetUpdate = await updateBranch(targetRef, alphaSha, "updated", {
+      const targetUpdate = await updateBranch(targetRef, alpha.sha, "updated", {
         title: `Prepare ${selectedAlpha.tag}`,
         body: `Create the generated version-state commit for ${selectedAlpha.tag}.`,
       });
@@ -2236,7 +2421,7 @@ async function promoteBuildchainRefs({
           owner,
           repo,
           sourceSha: sha,
-          sha: alphaSha,
+          sha: alpha.sha,
           targetRef,
           pendingPullRequest: targetUpdate.pullRequest.html_url || targetUpdate.pullRequest.url,
           updates,
@@ -2244,16 +2429,16 @@ async function promoteBuildchainRefs({
       }
       await updateBranch(
         `dev/v${rule.major}/v${rule.major}.${rule.minor}`,
-        alphaSha,
+        alpha.sha,
         "updated",
         { allowNonFastForwardSkip: true },
       );
     }
     await markFinalizing();
-    await ensureTag(selectedAlpha.tag, alphaSha);
-    await updateTag(rule.alphaTag, alphaSha);
+    await ensureTag(selectedAlpha.tag, alpha.sha);
+    await updateTag(rule.alphaTag, alpha.sha);
     await markComplete();
-    return withPublishTransaction({ owner, repo, sourceSha: sha, sha: alphaSha, targetRef, updates });
+    return withPublishTransaction({ owner, repo, sourceSha: sha, sha: alpha.sha, targetRef, updates });
   }
 
   const explicitReleaseTags = requestedTags

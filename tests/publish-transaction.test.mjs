@@ -299,3 +299,127 @@ test("publish-transaction-shaped fixture writes valid generic evidence", () => {
   });
   assert.equal(validation.valid, true);
 });
+
+test("npm publish transaction writes Buildchain evidence without real publish in dry-run mode", () => {
+  const cwd = tempDir();
+  fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({
+    name: "buildchain-npm-transaction-fixture",
+    version: "1.2.3-alpha.0",
+    private: false,
+    license: "Apache-2.0",
+  }, null, 2));
+  fs.writeFileSync(path.join(cwd, "README.md"), "# fixture\n");
+  const evidencePath = path.join(cwd, ".buildchain/release-evidence/1.2.3-alpha.0/evidence.json");
+  const run = spawnSync(process.execPath, [
+    path.join(process.cwd(), "scripts/npm-publish-transaction.mjs"),
+    "--cwd",
+    cwd,
+    "--dry-run-publish",
+    "--skip-registry-lookup",
+  ], {
+    cwd,
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      BUILDCHAIN_VERSION: "1.2.3-alpha.0",
+      BUILDCHAIN_CHANNEL: "alpha",
+      BUILDCHAIN_SOURCE_SHA: SHA,
+      BUILDCHAIN_RELEASE_SHA: RELEASE_SHA,
+      BUILDCHAIN_RELEASE_MATERIAL_SHA: RELEASE_SHA,
+      BUILDCHAIN_PUBLISH_TOOLING_SHA: RELEASE_SHA,
+      BUILDCHAIN_TARGET_REF: "alpha/v1/v1.2",
+      BUILDCHAIN_EVIDENCE_DIR: path.dirname(evidencePath),
+      BUILDCHAIN_PUBLISH_EVIDENCE: evidencePath,
+    },
+  });
+
+  assert.equal(run.status, 0, run.stderr);
+  const output = JSON.parse(run.stdout);
+  assert.equal(output.publishAction, "dry-run");
+  assert.equal(output.distTag, "alpha");
+  assert.ok(output.pack.integrity);
+  const writtenEvidence = JSON.parse(fs.readFileSync(evidencePath, "utf8"));
+  assert.equal(writtenEvidence.artifacts[0].kind, "npm");
+  assert.equal(writtenEvidence.artifacts[0].name, "buildchain-npm-transaction-fixture");
+  assert.equal(writtenEvidence.artifacts[0].ref, "1.2.3-alpha.0");
+  assert.equal(writtenEvidence.artifacts[0].digest, output.pack.integrity);
+  const validation = validatePublishEvidence({
+    evidence: writtenEvidence,
+    version: "1.2.3-alpha.0",
+    channel: "alpha",
+    sourceSha: SHA,
+    releaseSha: RELEASE_SHA,
+    targetRef: "alpha/v1/v1.2",
+    releaseMaterialSha: RELEASE_SHA,
+    publishToolingSha: RELEASE_SHA,
+    requiredArtifacts: [{
+      kind: "npm",
+      name: "buildchain-npm-transaction-fixture",
+      ref: "1.2.3-alpha.0",
+      digest: output.pack.integrity,
+    }],
+  });
+  assert.equal(validation.valid, true);
+});
+
+test("npm publish transaction fails closed on non-404 registry lookup errors", () => {
+  const cwd = tempDir();
+  fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({
+    name: "buildchain-npm-transaction-fixture",
+    version: "1.2.3",
+    private: false,
+    license: "Apache-2.0",
+  }, null, 2));
+  fs.writeFileSync(path.join(cwd, "README.md"), "# fixture\n");
+  const fakeBin = path.join(cwd, "bin");
+  fs.mkdirSync(fakeBin);
+  const fakeNpm = path.join(fakeBin, "npm");
+  fs.writeFileSync(fakeNpm, `#!/usr/bin/env node
+const args = process.argv.slice(2);
+if (args[0] === "pack") {
+  process.stdout.write(JSON.stringify([{
+    name: "buildchain-npm-transaction-fixture",
+    version: "1.2.3",
+    filename: "fixture.tgz",
+    integrity: "sha512-fixture",
+    shasum: "fixture",
+    files: [{ path: "package.json" }]
+  }]));
+  process.exit(0);
+}
+if (args[0] === "view") {
+  process.stderr.write("npm ERR! code EAI_AGAIN\\n");
+  process.exit(1);
+}
+process.stderr.write("unexpected npm command: " + args.join(" ") + "\\n");
+process.exit(2);
+`);
+  fs.chmodSync(fakeNpm, 0o755);
+  const evidencePath = path.join(cwd, ".buildchain/release-evidence/1.2.3/evidence.json");
+  const run = spawnSync(process.execPath, [
+    path.join(process.cwd(), "scripts/npm-publish-transaction.mjs"),
+    "--cwd",
+    cwd,
+    "--dry-run-publish",
+  ], {
+    cwd,
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      PATH: `${fakeBin}${path.delimiter}${process.env.PATH}`,
+      BUILDCHAIN_VERSION: "1.2.3",
+      BUILDCHAIN_CHANNEL: "release",
+      BUILDCHAIN_SOURCE_SHA: SHA,
+      BUILDCHAIN_RELEASE_SHA: RELEASE_SHA,
+      BUILDCHAIN_RELEASE_MATERIAL_SHA: RELEASE_SHA,
+      BUILDCHAIN_PUBLISH_TOOLING_SHA: RELEASE_SHA,
+      BUILDCHAIN_TARGET_REF: "release/v1/v1.2",
+      BUILDCHAIN_EVIDENCE_DIR: path.dirname(evidencePath),
+      BUILDCHAIN_PUBLISH_EVIDENCE: evidencePath,
+    },
+  });
+
+  assert.notEqual(run.status, 0);
+  assert.match(run.stderr, /npm view buildchain-npm-transaction-fixture@1\.2\.3 failed/);
+  assert.equal(fs.existsSync(evidencePath), false);
+});

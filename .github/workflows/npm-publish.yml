@@ -1,9 +1,6 @@
 name: Publish npm package
 
 on:
-  push:
-    tags:
-      - "v*.*.*"
   workflow_dispatch:
     inputs:
       ref:
@@ -18,7 +15,6 @@ on:
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
   dry-run:
@@ -53,38 +49,3 @@ jobs:
 
       - name: Dry-run npm publish
         run: node scripts/npm-publish-dry-run.mjs --json
-
-  publish:
-    name: Publish exact release tag
-    runs-on: ubuntu-24.04
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-    steps:
-      - name: Checkout release tag
-        uses: actions/checkout@v7.0.0
-        with:
-          persist-credentials: false
-
-      - name: Setup Node
-        uses: actions/setup-node@v6.4.0
-        with:
-          node-version: "24"
-          registry-url: "https://registry.npmjs.org/"
-
-      - name: Enable pnpm
-        run: |
-          corepack enable pnpm
-          pnpm --version
-          npm --version
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Verify release package version
-        id: package
-        run: node scripts/npm-publish-dry-run.mjs --expected-tag "$GITHUB_REF_NAME" --skip-npm-publish-dry-run --json
-
-      - name: Verify package
-        run: pnpm run check
-
-      - name: Publish to npm
-        run: npm publish --access public --tag "${{ steps.package.outputs.dist-tag }}"
