@@ -3531,6 +3531,84 @@ test("strict release promotion accepts line-scoped buildchain recovery PRs", asy
   assert.equal(refs.get("tags/v1.0.3-alpha.0"), nextAlphaSha);
 });
 
+test("strict release promotion accepts recovery from floating alpha material after exact alpha", async () => {
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "1.0.2-alpha.0",
+      packageManager: "pnpm@11.7.0",
+    },
+  });
+  const exactAlphaSha = "c".repeat(40);
+  const floatingAlphaSha = "d".repeat(40);
+  const refs = new Map([
+    ["heads/release/v1/v1.0", SHA],
+    ["tags/v1.0.1", OTHER_SHA],
+    ["tags/v1.0.2-alpha.0", exactAlphaSha],
+    ["tags/v1.0-alpha", floatingAlphaSha],
+  ]);
+  const { octokit, commits } = createGitMock({ refs });
+  commits.set(exactAlphaSha, {
+    sha: exactAlphaSha,
+    tree: { sha: "exact-alpha-tree" },
+    parents: [],
+  });
+  commits.set(floatingAlphaSha, {
+    sha: floatingAlphaSha,
+    tree: { sha: "floating-alpha-tree" },
+    parents: [{ sha: exactAlphaSha }],
+  });
+  commits.set(SHA, {
+    sha: SHA,
+    tree: { sha: "floating-alpha-tree" },
+    parents: [{ sha: OTHER_SHA }, { sha: floatingAlphaSha }],
+  });
+  octokit.rest.repos = {
+    getBranchProtection: async () => ({
+      data: protectedChannel(),
+    }),
+    compareCommitsWithBasehead: async ({ basehead }) => {
+      if (basehead === `${floatingAlphaSha}...${SHA}`) {
+        return { data: { files: [] } };
+      }
+      if (basehead.startsWith(`${SHA}...commit-`)) {
+        return { data: { files: [{ filename: "package.json" }] } };
+      }
+      throw new Error(`unexpected comparison ${basehead}`);
+    },
+    listPullRequestsAssociatedWithCommit: async ({ commit_sha }) => ({
+      data:
+        commit_sha === SHA
+          ? [
+              {
+                merged_at: "2026-07-01T00:00:00Z",
+                base: { ref: "release/v1/v1.0" },
+                head: {
+                  ref: "fix/release-line-v1-v1.0-finalization-recovery",
+                  repo: { full_name: "kungfu-systems/buildchain" },
+                },
+              },
+            ]
+          : [],
+    }),
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "release/v1/v1.0",
+    cwd,
+    requireGovernance: true,
+    requireVersionState: true,
+  });
+
+  assert.match(result.sha, /^commit-/);
+  assert.equal(refs.get("tags/v1.0.2"), result.sha);
+  assert.match(refs.get("tags/v1.0.3-alpha.0"), /^commit-/);
+});
+
 test("strict promotion rejects repositories without version state", async () => {
   const cwd = makeTempWorkspace({ "README.md": "no package state\n" });
   const octokit = {

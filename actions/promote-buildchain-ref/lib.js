@@ -2111,6 +2111,27 @@ async function promoteBuildchainRefs({
     }
   };
 
+  const findMatchingReleaseRecoveryPullRequest = async ({ commitSha, targetRef }) => {
+    const { data: pullRequests } =
+      await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+        owner,
+        repo,
+        commit_sha: commitSha,
+      });
+    return pullRequests.find((pullRequest) => {
+      const baseRef = pullRequest.base?.ref;
+      const headRef = pullRequest.head?.ref;
+      const headRepo = pullRequest.head?.repo?.full_name;
+      const recovery = parseReleaseLineRecoveryRef(headRef);
+      return (
+        pullRequest.merged_at &&
+        baseRef === targetRef &&
+        recovery?.targetRef === targetRef &&
+        headRepo === `${owner}/${repo}`
+      );
+    });
+  };
+
   const assertPromotionPrOrVersionStateParent = async ({ commitSha, targetRef, allowedPaths }) => {
     try {
       await assertChannelPromotionPr({
@@ -2191,13 +2212,26 @@ async function promoteBuildchainRefs({
   }) => {
     const commit = await getCommitInfo(octokit, owner, repo, commitSha);
     if (commit.treeSha === alphaTreeSha) {
-      await assertChannelPromotionPr({
-        octokit,
-        owner,
-        repo,
-        sha: commitSha,
-        targetRef,
-      });
+      try {
+        await assertChannelPromotionPr({
+          octokit,
+          owner,
+          repo,
+          sha: commitSha,
+          targetRef,
+        });
+      } catch (error) {
+        const matchingReleaseRecoveryPullRequest =
+          await findMatchingReleaseRecoveryPullRequest({ commitSha, targetRef });
+        if (!matchingReleaseRecoveryPullRequest) {
+          throw error;
+        }
+        await assertOnlyAllowedReleaseRecoveryChangesBetween({
+          baseSha: alphaSha,
+          headSha: commitSha,
+          allowedPaths,
+        });
+      }
       return;
     }
     for (const parentSha of commit.parents) {
@@ -2205,13 +2239,26 @@ async function promoteBuildchainRefs({
       if (parent.treeSha !== alphaTreeSha) {
         continue;
       }
-      await assertChannelPromotionPr({
-        octokit,
-        owner,
-        repo,
-        sha: parentSha,
-        targetRef,
-      });
+      try {
+        await assertChannelPromotionPr({
+          octokit,
+          owner,
+          repo,
+          sha: parentSha,
+          targetRef,
+        });
+      } catch (error) {
+        const matchingReleaseRecoveryPullRequest =
+          await findMatchingReleaseRecoveryPullRequest({ commitSha: parentSha, targetRef });
+        if (!matchingReleaseRecoveryPullRequest) {
+          throw error;
+        }
+        await assertOnlyAllowedReleaseRecoveryChangesBetween({
+          baseSha: alphaSha,
+          headSha: parentSha,
+          allowedPaths,
+        });
+      }
       await assertOnlyAllowedChangesBetween({
         baseSha: parentSha,
         headSha: commitSha,
@@ -2219,24 +2266,8 @@ async function promoteBuildchainRefs({
       });
       return;
     }
-    const { data: pullRequests } =
-      await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
-        owner,
-        repo,
-        commit_sha: commitSha,
-      });
-    const matchingReleaseRecoveryPullRequest = pullRequests.find((pullRequest) => {
-      const baseRef = pullRequest.base?.ref;
-      const headRef = pullRequest.head?.ref;
-      const headRepo = pullRequest.head?.repo?.full_name;
-      const recovery = parseReleaseLineRecoveryRef(headRef);
-      return (
-        pullRequest.merged_at &&
-        baseRef === targetRef &&
-        recovery?.targetRef === targetRef &&
-        headRepo === `${owner}/${repo}`
-      );
-    });
+    const matchingReleaseRecoveryPullRequest =
+      await findMatchingReleaseRecoveryPullRequest({ commitSha, targetRef });
     if (matchingReleaseRecoveryPullRequest) {
       await assertOnlyAllowedReleaseRecoveryChangesBetween({
         baseSha: alphaSha,
@@ -3038,6 +3069,34 @@ async function promoteBuildchainRefs({
     rule.releasePrefix,
     selectedReleaseCandidate.patch,
   );
+  let sourceAlphaMaterial = sourceAlpha;
+  const floatingAlphaSha = sourceAlpha?.sha
+    ? await readRefSha(`tags/${rule.alphaTag}`)
+    : undefined;
+  if (sourceAlpha?.sha && floatingAlphaSha && floatingAlphaSha !== sourceAlpha.sha) {
+    const floatingContainsExact = await releaseCommitIncludesTransactionHead({
+      octokit,
+      owner,
+      repo,
+      releaseSha: floatingAlphaSha,
+      transactionReleaseSha: sourceAlpha.sha,
+    });
+    const targetContainsFloating = await releaseCommitIncludesTransactionHead({
+      octokit,
+      owner,
+      repo,
+      releaseSha: sha,
+      transactionReleaseSha: floatingAlphaSha,
+    });
+    if (floatingContainsExact && targetContainsFloating) {
+      sourceAlphaMaterial = {
+        ...sourceAlpha,
+        tag: rule.alphaTag,
+        exactTag: sourceAlpha.tag,
+        sha: floatingAlphaSha,
+      };
+    }
+  }
   const releaseVersion = stripTagPrefix(selectedReleaseCandidate.tag);
   const releaseCommit = await createVersionStateCommit({
     baseSha: sha,
@@ -3051,12 +3110,12 @@ async function promoteBuildchainRefs({
         `Release promotion requires an existing ${rule.releasePrefix}.${selectedReleaseCandidate.patch}-alpha.N tag`,
       );
     }
-    const alphaCommit = await getCommitInfo(octokit, owner, repo, sourceAlpha.sha);
+    const alphaCommit = await getCommitInfo(octokit, owner, repo, sourceAlphaMaterial.sha);
     await assertReleasePrOrVersionStateParent({
       commitSha: releaseSha,
       targetRef,
-      alphaSha: sourceAlpha.sha,
-      alphaTag: sourceAlpha.tag,
+      alphaSha: sourceAlphaMaterial.sha,
+      alphaTag: sourceAlphaMaterial.tag,
       alphaTreeSha: alphaCommit.treeSha,
       allowedPaths: releaseCommit.files,
     });
