@@ -205,7 +205,10 @@ BUILDCHAIN_PUBLISH_EVIDENCE
 ```
 
 The stage must write publish evidence JSON. Buildchain validates that evidence
-before exact tags and floating refs move. See
+before exact tags and floating refs move. In GitHub Actions, the promotion
+action also persists `state.json` and `evidence.json` to
+`refs/heads/buildchain/release-state/<version>` so fresh runners can recover
+without local workspace residue. See
 [`docs/publish-transaction.md`](publish-transaction.md) for the state machine,
 evidence schema, and recovery commands.
 
