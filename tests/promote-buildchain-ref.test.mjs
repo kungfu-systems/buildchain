@@ -1498,6 +1498,7 @@ test("publish transaction resumes partial alpha finalization with exact tag on r
   const oldAlphaSha = "3".repeat(40);
   const versionHeadSha = "4".repeat(40);
   const mergeSha = "5".repeat(40);
+  const previousFinalizedSha = "6".repeat(40);
   const cwd = makeTempWorkspace({
     "package.json": {
       name: "@kungfu-tech/buildchain",
@@ -1509,13 +1510,18 @@ test("publish transaction resumes partial alpha finalization with exact tag on r
     refs: new Map([
       ["heads/alpha/v1/v1.0", mergeSha],
       ["heads/dev/v1/v1.0", mergeSha],
-      ["tags/v1.0.0-alpha.0", versionHeadSha],
+      ["tags/v1.0.0-alpha.0", previousFinalizedSha],
     ]),
+  });
+  commits.set(previousFinalizedSha, {
+    sha: previousFinalizedSha,
+    tree: { sha: `tree-${previousFinalizedSha}` },
+    parents: [{ sha: oldAlphaSha }, { sha: versionHeadSha }],
   });
   commits.set(mergeSha, {
     sha: mergeSha,
     tree: { sha: `tree-${mergeSha}` },
-    parents: [{ sha: oldAlphaSha }, { sha: versionHeadSha }],
+    parents: [{ sha: previousFinalizedSha }, { sha: "7".repeat(40) }],
   });
   const statePath = path.join(cwd, ".buildchain/release-state/1.0.0-alpha.0.json");
   await persistDurableReleaseTransaction({
@@ -1571,7 +1577,7 @@ test("publish transaction resumes partial alpha finalization with exact tag on r
   assert.equal(result.publishTransaction.exactTag, "v1.0.0-alpha.0");
   assert.equal(refs.get("heads/alpha/v1/v1.0"), mergeSha);
   assert.equal(refs.get("heads/dev/v1/v1.0"), mergeSha);
-  assert.equal(refs.get("tags/v1.0.0-alpha.0"), versionHeadSha);
+  assert.equal(refs.get("tags/v1.0.0-alpha.0"), previousFinalizedSha);
   assert.equal(refs.get("tags/v1.0-alpha"), mergeSha);
   assert.equal(refs.has("tags/v1.0.0-alpha.1"), false);
 });
@@ -1668,10 +1674,11 @@ test("publish transaction finalizes current release version-state merge commits"
 });
 
 test("publish transaction resumes partial release finalization with exact tag on release material", async () => {
-  const oldReleaseSha = "6".repeat(40);
-  const alphaSha = "7".repeat(40);
-  const versionHeadSha = "8".repeat(40);
-  const mergeSha = "9".repeat(40);
+  const oldReleaseSha = "8".repeat(40);
+  const alphaSha = "9".repeat(40);
+  const versionHeadSha = "1".repeat(40);
+  const previousFinalizedSha = "2".repeat(40);
+  const mergeSha = "3".repeat(40);
   const cwd = makeTempWorkspace({
     "package.json": {
       name: "@kungfu-tech/buildchain",
@@ -1683,13 +1690,18 @@ test("publish transaction resumes partial release finalization with exact tag on
     refs: new Map([
       ["heads/release/v1/v1.0", mergeSha],
       ["tags/v1.0.0-alpha.0", alphaSha],
-      ["tags/v1.0.0", versionHeadSha],
+      ["tags/v1.0.0", previousFinalizedSha],
     ]),
+  });
+  commits.set(previousFinalizedSha, {
+    sha: previousFinalizedSha,
+    tree: { sha: `tree-${previousFinalizedSha}` },
+    parents: [{ sha: oldReleaseSha }, { sha: versionHeadSha }],
   });
   commits.set(mergeSha, {
     sha: mergeSha,
     tree: { sha: `tree-${mergeSha}` },
-    parents: [{ sha: oldReleaseSha }, { sha: versionHeadSha }],
+    parents: [{ sha: previousFinalizedSha }, { sha: "4".repeat(40) }],
   });
   const statePath = path.join(cwd, ".buildchain/release-state/1.0.0.json");
   await persistDurableReleaseTransaction({
@@ -1744,7 +1756,7 @@ test("publish transaction resumes partial release finalization with exact tag on
   assert.equal(result.publishTransaction.state, "complete");
   assert.equal(result.publishTransaction.exactTag, "v1.0.0");
   assert.equal(refs.get("heads/release/v1/v1.0"), mergeSha);
-  assert.equal(refs.get("tags/v1.0.0"), versionHeadSha);
+  assert.equal(refs.get("tags/v1.0.0"), previousFinalizedSha);
   assert.equal(refs.get("tags/v1.0"), mergeSha);
   assert.equal(refs.get("tags/v1"), mergeSha);
   assert.equal(refs.has("tags/v1.0.1"), false);
