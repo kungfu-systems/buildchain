@@ -8,6 +8,7 @@ const requiredPaths = [
   "README.md",
   "bin/buildchain.mjs",
   "docs/cli.md",
+  "scripts/npm-publish-dry-run.mjs",
   "docs/migration-inventory.md",
   "docs/lifecycle-protocol.md",
   "docs/ownership.md",
@@ -63,18 +64,33 @@ if (commonJsSourcePattern.test(cliSource)) {
   throw new Error("bin/buildchain.mjs must use ESM syntax");
 }
 const npmPublishWorkflow = fs.readFileSync(path.join(root, ".github/workflows/npm-publish.yml"), "utf8");
+const npmDryRunScript = fs.readFileSync(path.join(root, "scripts/npm-publish-dry-run.mjs"), "utf8");
 for (const requiredSnippet of [
   "id-token: write",
   "runs-on: ubuntu-24.04",
+  "workflow_dispatch:",
+  "Dry-run npm publish",
   "tags:",
   "- \"v*.*.*\"",
-  "tag !== expectedTag",
-  "distTag = pkg.version.includes(\"-\") ? \"alpha\" : \"latest\"",
+  "github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')",
+  "scripts/npm-publish-dry-run.mjs --expected-tag \"$GITHUB_REF_NAME\" --skip-npm-publish-dry-run --json",
   "npm publish --access public --tag",
 ]) {
   if (!npmPublishWorkflow.includes(requiredSnippet)) {
     throw new Error(`npm publish workflow missing required snippet: ${requiredSnippet}`);
   }
+}
+for (const requiredSnippet of [
+  "distTag || (pkg.version.includes(\"-\") ? \"alpha\" : \"latest\")",
+  "\"publish\", \"--dry-run\", \"--access\", \"public\"",
+  "expectedTag && expectedTag !== exactTag",
+]) {
+  if (!npmDryRunScript.includes(requiredSnippet)) {
+    throw new Error(`npm publish dry-run script missing required snippet: ${requiredSnippet}`);
+  }
+}
+if (commonJsSourcePattern.test(npmDryRunScript)) {
+  throw new Error("scripts/npm-publish-dry-run.mjs must use ESM syntax");
 }
 if (/runs-on:\s*self-hosted/.test(npmPublishWorkflow)) {
   throw new Error("npm publish workflow must use GitHub-hosted runners for trusted publishing");
@@ -232,6 +248,12 @@ if (safety.npmPublish?.stableDistTag !== "latest") {
 }
 if (safety.npmPublish?.trustedPublishing !== true) {
   throw new Error("safety.npmPublish.trustedPublishing must be true");
+}
+if (safety.npmPublish?.manualDryRun !== true) {
+  throw new Error("safety.npmPublish.manualDryRun must be true");
+}
+if (safety.npmPublish?.manualDryRunPublishes !== false) {
+  throw new Error("safety.npmPublish.manualDryRunPublishes must be false");
 }
 
 console.log("buildchain inventory check passed");

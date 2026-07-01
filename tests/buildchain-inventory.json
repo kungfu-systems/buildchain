@@ -92,6 +92,8 @@
       "exactReleaseTagsOnly": true,
       "trustedPublishing": true,
       "githubHostedRunner": true,
+      "manualDryRun": true,
+      "manualDryRunPublishes": false,
       "alphaDistTag": "alpha",
       "stableDistTag": "latest"
     }
