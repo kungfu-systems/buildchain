@@ -111,6 +111,12 @@ The action runs `lifecycle.publish` from `buildchain.toml` or the explicit
 floating refs move. If durable state persistence fails, the action fails closed
 before publish or public ref finalization.
 
+Buildchain itself uses this path for npm. Its `lifecycle.publish` runs
+`node scripts/npm-publish-transaction.mjs`, which publishes
+`@kungfu-systems/buildchain` through npm Trusted Publishing and writes npm
+artifact evidence into the transaction before release refs move. The separate
+`.github/workflows/npm-publish.yml` workflow is dry-run only.
+
 Publish lifecycle environment:
 
 ```text

@@ -88,8 +88,11 @@
     "libnodeShapedFixture": "fixtures/libnode-shaped",
     "buildchainRefPromotionWorkflow": "buildchain-ref-promotion.yml",
     "npmPublish": {
-      "workflow": "npm-publish.yml",
-      "exactReleaseTagsOnly": true,
+      "workflow": "buildchain-ref-promotion.yml",
+      "dryRunWorkflow": "npm-publish.yml",
+      "promotionTransaction": true,
+      "tagPushPublish": false,
+      "exactVersionsOnly": true,
       "trustedPublishing": true,
       "githubHostedRunner": true,
       "manualDryRun": true,

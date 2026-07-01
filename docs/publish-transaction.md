@@ -95,6 +95,18 @@ BUILDCHAIN_PUBLISH_TOOLING_SHA
 BUILDCHAIN_PUBLISH_EVIDENCE
 ```
 
+Buildchain itself uses this contract for npm publishing:
+
+```toml
+[lifecycle.publish]
+command = "node scripts/npm-publish-transaction.mjs"
+```
+
+That script validates that `package.json` matches `BUILDCHAIN_VERSION`, runs
+`npm publish --access public --tag <alpha|latest>` through npm Trusted
+Publishing, and writes npm artifact evidence before the promotion action moves
+public refs.
+
 `BUILDCHAIN_RELEASE_MATERIAL_SHA` is the source material whose artifacts must
 match. `BUILDCHAIN_PUBLISH_TOOLING_SHA` identifies the publishing code. A repair
 run may change tooling, but material drift fails closed.
