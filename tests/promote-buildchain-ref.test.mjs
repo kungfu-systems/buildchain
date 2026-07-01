@@ -37,6 +37,13 @@ function notFound() {
   });
 }
 
+function alreadyExists() {
+  return Object.assign(new Error("Reference already exists"), {
+    status: 422,
+    response: { data: { message: "Reference already exists" } },
+  });
+}
+
 function createGitMock({ refs = new Map(), orderFile = "" } = {}) {
   const blobs = new Map();
   const trees = new Map();
@@ -126,7 +133,11 @@ function createGitMock({ refs = new Map(), orderFile = "" } = {}) {
         },
         createRef: async ({ ref, sha }) => {
           appendOrder(`create:${ref}`);
-          refs.set(ref.replace(/^refs\//, ""), sha);
+          const refName = ref.replace(/^refs\//, "");
+          if (refs.has(refName)) {
+            throw alreadyExists();
+          }
+          refs.set(refName, sha);
           return {};
         },
       },
@@ -1075,6 +1086,83 @@ test("publish transaction durable ref restores state and evidence in a fresh wor
   assert.equal(restored.id, "tx-1");
   assert.equal(JSON.parse(fs.readFileSync(freshStatePath, "utf8")).id, "tx-1");
   assert.equal(JSON.parse(fs.readFileSync(freshEvidencePath, "utf8")).artifacts[0].digest, "sha256:ok");
+});
+
+test("publish transaction durable ref updates when create races existing ref visibility", async () => {
+  const cwd = makeTempWorkspace({});
+  const statePath = path.join(cwd, ".buildchain/release-state/1.0.0.json");
+  const baseTransaction = {
+    schema: 1,
+    id: "tx-visibility-race",
+    repository: "kungfu-systems/buildchain",
+    target_ref: "release/v1/v1.0",
+    source_sha: SHA,
+    release_sha: OTHER_SHA,
+    release_material_sha: OTHER_SHA,
+    publish_tooling_sha: OTHER_SHA,
+    version: "1.0.0",
+    exact_tag: "v1.0.0",
+    channel: "release",
+    line: "v1.0",
+    version_strategy: "",
+    lifecycle_identity: "lifecycle.publish",
+    state_ref: "buildchain/release-state/1-0-0",
+    state_path: statePath,
+    evidence_path: "",
+    state: "prepared",
+    previous_state: "",
+    actor: "codex",
+    run_id: "1",
+    superseded_by: "",
+    failure: "",
+    artifacts: [],
+    evidence: [],
+    created_at: "2026-07-01T00:00:00.000Z",
+    updated_at: "2026-07-01T00:00:00.000Z",
+  };
+  const orderFile = path.join(cwd, "order.log");
+  const { octokit, refs } = createGitMock({ orderFile });
+
+  const first = await persistDurableReleaseTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    transaction: baseTransaction,
+    evidencePath: "",
+  });
+
+  const originalGetRef = octokit.rest.git.getRef;
+  let hideStateRefOnce = true;
+  octokit.rest.git.getRef = async (args) => {
+    if (hideStateRefOnce && args.ref === "heads/buildchain/release-state/1-0-0") {
+      hideStateRefOnce = false;
+      throw notFound();
+    }
+    return originalGetRef(args);
+  };
+
+  const second = await persistDurableReleaseTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    transaction: {
+      ...baseTransaction,
+      state: "publishing",
+      previous_state: "prepared",
+      updated_at: "2026-07-01T00:00:01.000Z",
+    },
+    evidencePath: "",
+  });
+
+  assert.notEqual(second.sha, first.sha);
+  assert.equal(refs.get("heads/buildchain/release-state/1-0-0"), second.sha);
+  assert.deepEqual(fs.readFileSync(orderFile, "utf8").trim().split("\n"), [
+    "create:refs/heads/buildchain/release-state/1-0-0",
+    "create:refs/heads/buildchain/release-state/1-0-0",
+    "update:heads/buildchain/release-state/1-0-0",
+  ]);
 });
 
 test("publish transaction fails closed when durable state cannot be persisted", async () => {
