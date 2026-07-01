@@ -79,7 +79,10 @@ scripts/                  Local verification scripts
 
 Buildchain v2 ships these active surfaces:
 
-- reusable workflows under `.github/workflows`;
+- repository workflows under `.github/workflows`;
+- the public npm package `@kungfu-systems/buildchain` and `buildchain` CLI for
+  initializing and validating new repositories;
+- the active reusable build workflow `.github/workflows/.build.yml`;
 - exactly three GitHub Actions under `actions/<name>`:
   `validate-config`, `run-lifecycle`, and `promote-buildchain-ref`;
 - action runtime on Node 24;
@@ -111,15 +114,31 @@ Stable consumers should reference actions as:
 uses: kungfu-systems/buildchain/actions/<name>@v2
 ```
 
-Reusable workflows should be referenced as:
+Documented reusable workflows should be referenced as:
 
 ```yaml
 uses: kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v2
 ```
 
+Repositories can also bootstrap local integration through the CLI:
+
+```bash
+npx @kungfu-systems/buildchain init --type package
+npx @kungfu-systems/buildchain validate --require-version-state
+npx @kungfu-systems/buildchain npm dry-run --json
+```
+
 Standalone `workflows` and `action-*` repositories are historical rollback
 anchors. Buildchain no longer ships migrated copies of legacy action
 repositories.
+
+Some hidden reusable workflow files from the old `workflows` repository still
+exist in this repository so they can be linted, audited, and made fail-closed
+while consumers migrate. They are not Buildchain-native release or publish
+surfaces unless this README or a dedicated document explicitly names them.
+Modern package, artifact, and publish integrations should use `.build.yml`,
+`buildchain.toml`, lifecycle commands, and publish transaction evidence instead
+of retired legacy action paths.
 
 ## Release Governance
 
@@ -143,9 +162,19 @@ The important constraints are:
   refs when repository policy requires it.
 
 Buildchain's top-level `Release - New Version` workflow is intentionally a
-no-op for this repository. Consumer repositories still call the reusable
-`.release-new-version.yml`; Buildchain itself is promoted only by
-`Buildchain Ref Promotion` after `Verify` succeeds.
+no-op for this repository. Buildchain itself is promoted only by
+`Buildchain Ref Promotion` after `Verify` succeeds. The legacy hidden
+`.release-new-version.yml` file is not the modern publish surface; it remains a
+migration boundary for old consumers and must not be used for new Buildchain v2
+integrations.
+
+Buildchain's npm package is published only from exact v-prefixed release tags
+created by that same promotion flow. Alpha releases such as
+`v2.0.13-alpha.0` publish to npm with dist-tag `alpha`; stable releases such as
+`v2.0.13` publish with dist-tag `latest`. Floating refs like `v2`, `v2.0`, and
+`v2.0-alpha` never publish npm packages. The same workflow can be manually
+dispatched as a dry-run before release; that path verifies package contents and
+publish shape but does not run a real `npm publish`.
 
 ## Read Next
 
@@ -166,6 +195,9 @@ no-op for this repository. Consumer repositories still call the reusable
 - [Web-surface deployments](docs/web-surface-deployments.md) documents the
   preview/staging/production channel ontology, deployment manifest, adapter
   contract, and dry-run cleanup/deploy plans.
+- [Buildchain CLI and npm package](docs/cli.md) documents the npm package,
+  command-line entrypoint, repository bootstrap flow, and release-only publish
+  gate.
 
 ## Local Verification
 

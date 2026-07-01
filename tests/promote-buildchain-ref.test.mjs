@@ -308,6 +308,19 @@ test("selectAlphaTag creates ABV-style prerelease tags for the minor line", () =
   );
   assert.deepEqual(
     selectAlphaTag({
+      refs: [
+        {
+          ref: "refs/heads/buildchain/release-state/1-0-1-alpha-0",
+          object: { sha: OTHER_SHA },
+        },
+      ],
+      releasePrefix: "v1.0",
+      sha: SHA,
+    }),
+    { tag: "v1.0.1-alpha.1", patch: 1, prerelease: 1, exists: false },
+  );
+  assert.deepEqual(
+    selectAlphaTag({
       refs: [{ ref: "refs/tags/v1.0.1-alpha.0", object: { sha: SHA } }],
       releasePrefix: "v1.0",
       sha: SHA,
@@ -337,6 +350,20 @@ test("selectAlphaTag creates ABV-style prerelease tags for the minor line", () =
       sha: OTHER_SHA,
       exists: true,
     },
+  );
+  assert.deepEqual(
+    selectAlphaTag({
+      refs: [
+        {
+          ref: "refs/heads/buildchain/release-state/1-0-1-alpha-0",
+          object: { sha: OTHER_SHA },
+        },
+      ],
+      releasePrefix: "v1.0",
+      sha: SHA,
+      patchAfterRelease: 1,
+    }),
+    { tag: "v1.0.1-alpha.1", patch: 1, prerelease: 1, exists: false },
   );
 });
 
@@ -480,6 +507,7 @@ test("release promotion creates v-prefixed release tag and prepares next alpha t
   assert.deepEqual(calls, [
     ["getRef", "heads/release/v1/v1.0"],
     ["listMatchingRefs", "tags/v1.0."],
+    ["listMatchingRefs", "heads/buildchain/release-state/1-0-"],
     ["getRef", "tags/v1.0.0"],
     ["createRef", "refs/tags/v1.0.0", SHA],
     ["updateRef", "tags/v1.0", SHA, true],
@@ -572,6 +600,7 @@ test("alpha promotion creates exact prerelease tag and moves only the minor alph
   assert.deepEqual(calls, [
     ["getRef", "heads/alpha/v1/v1.0"],
     ["listMatchingRefs", "tags/v1.0."],
+    ["listMatchingRefs", "heads/buildchain/release-state/1-0-"],
     ["getRef", "tags/v1.0.1-alpha.0"],
     ["createRef", "refs/tags/v1.0.1-alpha.0", SHA],
     ["updateRef", "tags/v1.0-alpha", SHA, true],
@@ -819,6 +848,82 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
     "create:refs/tags/v1.0.0-alpha.0",
     "update:tags/v1.0-alpha",
   ]);
+});
+
+test("publish transaction skips alpha versions occupied by durable state refs", async () => {
+  const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[lifecycle.publish]
+command = "node scripts/publish.mjs"
+`,
+    "package.json": {
+      name: "@kungfu-systems/buildchain",
+      version: "0.0.0-alpha.0",
+      packageManager: "pnpm@11.7.0",
+    },
+    "scripts/publish.mjs": `
+import fs from "node:fs";
+
+fs.mkdirSync(process.env.BUILDCHAIN_EVIDENCE_DIR, { recursive: true });
+fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
+  schema: 1,
+  version: process.env.BUILDCHAIN_VERSION,
+  channel: process.env.BUILDCHAIN_CHANNEL,
+  source_sha: process.env.BUILDCHAIN_SOURCE_SHA,
+  release_sha: process.env.BUILDCHAIN_RELEASE_SHA,
+  target_ref: process.env.BUILDCHAIN_TARGET_REF,
+  release_material_sha: process.env.BUILDCHAIN_RELEASE_MATERIAL_SHA,
+  publish_tooling_sha: process.env.BUILDCHAIN_PUBLISH_TOOLING_SHA,
+  artifacts: [{
+    kind: "npm",
+    name: "@kungfu-systems/buildchain",
+    ref: process.env.BUILDCHAIN_VERSION,
+    digest: "sha256:alpha1"
+  }]
+}, null, 2) + "\\n");
+`,
+  });
+  const { octokit, refs } = createGitMock({
+    refs: new Map([
+      ["heads/alpha/v1/v1.0", SHA],
+      ["heads/buildchain/release-state/1-0-0-alpha-0", OTHER_SHA],
+    ]),
+  });
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    cwd,
+    publishTransaction: true,
+    publishRequiredArtifactsJson: JSON.stringify([
+      {
+        kind: "npm",
+        name: "@kungfu-systems/buildchain",
+        ref: "1.0.0-alpha.1",
+        digest: "sha256:alpha1",
+      },
+    ]),
+  });
+
+  assert.equal(result.publishTransaction.state, "complete");
+  assert.equal(result.publishTransaction.exactTag, "v1.0.0-alpha.1");
+  assert.equal(result.publishTransaction.stateRef, "buildchain/release-state/1-0-0-alpha-1");
+  assert.equal(refs.has("tags/v1.0.0-alpha.0"), false);
+  assert.equal(refs.has("tags/v1.0.0-alpha.1"), true);
+  assert.equal(refs.has("heads/buildchain/release-state/1-0-0-alpha-1"), true);
 });
 
 test("publish transaction durable ref restores state and evidence in a fresh workspace", async () => {
@@ -1888,6 +1993,119 @@ test("strict alpha promotion accepts merged generated version-state PR commits",
   assert.equal(refs.get("heads/dev/v1/v1.0"), mergeSha);
   assert.equal(refs.get("tags/v1.0.6-alpha.0"), mergeSha);
   assert.equal(refs.get("tags/v1.0-alpha"), mergeSha);
+});
+
+test("strict alpha promotion finalizes tags when dev already advanced", async () => {
+  const oldAlphaSha = "a".repeat(40);
+  const versionHeadSha = "b".repeat(40);
+  const mergeSha = "c".repeat(40);
+  const advancedDevSha = "d".repeat(40);
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-systems/buildchain",
+      version: "1.0.6-alpha.0",
+      packageManager: "pnpm@11.7.0",
+    },
+  });
+  const refs = new Map([
+    ["heads/alpha/v1/v1.0", mergeSha],
+    ["heads/dev/v1/v1.0", advancedDevSha],
+    ["tags/v1.0.5", OTHER_SHA],
+    ["tags/v1.0.5-alpha.1", oldAlphaSha],
+  ]);
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (refs.has(ref)) {
+            return { data: { object: { sha: refs.get(ref) } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async ({ ref }) => ({
+          data: [...refs.entries()]
+            .filter(([name]) => name.startsWith(ref))
+            .map(([name, objectSha]) => ({
+              ref: `refs/${name}`,
+              object: { sha: objectSha },
+            })),
+        }),
+        getCommit: async ({ commit_sha }) => ({
+          data: {
+            tree: { sha: `tree-${commit_sha}` },
+            parents:
+              commit_sha === mergeSha
+                ? [{ sha: oldAlphaSha }, { sha: versionHeadSha }]
+                : [],
+          },
+        }),
+        updateRef: async ({ ref, sha }) => {
+          if (ref === "heads/dev/v1/v1.0") {
+            throw Object.assign(new Error("Update is not a fast forward"), {
+              status: 422,
+              response: { data: { message: "Update is not a fast forward" } },
+            });
+          }
+          refs.set(ref, sha);
+          return {};
+        },
+        createRef: async ({ ref, sha }) => {
+          refs.set(ref.replace(/^refs\//, ""), sha);
+          return {};
+        },
+      },
+      repos: {
+        getBranchProtection: async () => ({ data: protectedChannel() }),
+        compareCommitsWithBasehead: async () => ({
+          data: { files: [{ filename: "package.json" }] },
+        }),
+        listPullRequestsAssociatedWithCommit: async ({ commit_sha }) => ({
+          data:
+            commit_sha === mergeSha
+              ? [
+                  {
+                    merged_at: "2026-06-29T00:00:00Z",
+                    base: { ref: "alpha/v1/v1.0" },
+                    head: {
+                      ref: "buildchain/version-state/alpha-v1-v1.0/bbbbbbbbbbbb",
+                      repo: { full_name: "kungfu-systems/buildchain" },
+                    },
+                  },
+                ]
+              : [],
+        }),
+      },
+    },
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: mergeSha,
+    targetRef: "alpha/v1/v1.0",
+    cwd,
+    requireGovernance: true,
+    requireVersionState: true,
+  });
+
+  assert.equal(result.sha, mergeSha);
+  assert.equal(refs.get("heads/dev/v1/v1.0"), advancedDevSha);
+  assert.equal(refs.get("tags/v1.0.6-alpha.0"), mergeSha);
+  assert.equal(refs.get("tags/v1.0-alpha"), mergeSha);
+  assert.deepEqual(
+    result.updates.find(
+      (update) =>
+        update.ref === "dev/v1/v1.0" &&
+        update.action === "skipped-non-fast-forward",
+    ),
+    {
+      ref: "dev/v1/v1.0",
+      action: "skipped-non-fast-forward",
+      sha: mergeSha,
+      currentSha: advancedDevSha,
+    },
+  );
 });
 
 test("strict release promotion requires a matching alpha tree and alpha-to-release PR", async () => {

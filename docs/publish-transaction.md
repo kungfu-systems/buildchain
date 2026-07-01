@@ -59,6 +59,12 @@ publish, repair, or finalize.
 Every meaningful state transition is written to the durable ref before public
 release refs move. If the durable write fails, the action fails closed.
 
+Durable release-state refs reserve their exact version even when the public exact
+tag was never created. If a later machine run sees a failed or repair-required
+state for `vX.Y.Z-alpha.N` and cannot resume it with the same transaction
+identity, alpha version selection must advance to the next prerelease instead
+of reusing or overwriting that failed transaction slot.
+
 ## Lifecycle
 
 Repositories declare publish work in `buildchain.toml`:
@@ -101,11 +107,11 @@ fields and required artifact identities before final refs move.
 ```json
 {
   "schema": 1,
-  "version": "1.0.0",
+  "version": "2.0.11",
   "channel": "release",
   "source_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "release_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-  "target_ref": "release/v1/v1.0",
+  "target_ref": "release/v2/v2.0",
   "release_material_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
   "publish_tooling_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
   "artifacts": [
@@ -113,14 +119,14 @@ fields and required artifact identities before final refs move.
       "group": "node",
       "kind": "npm",
       "name": "@kungfu-systems/example",
-      "ref": "1.0.0",
+      "ref": "2.0.11",
       "digest": "sha256:..."
     },
     {
       "group": "image",
       "kind": "oci",
       "name": "ghcr.io/kungfu-systems/example",
-      "ref": "1.0.0",
+      "ref": "2.0.11",
       "digest": "sha256:..."
     }
   ]
@@ -228,10 +234,10 @@ different SHA is a material conflict and blocks recovery.
 Local recovery commands operate on the same state/evidence files:
 
 ```bash
-node scripts/release-transaction.mjs inspect --version v1.0.0
-node scripts/release-transaction.mjs recover --version v1.0.0
-node scripts/release-transaction.mjs finalize --version v1.0.0
-node scripts/release-transaction.mjs abort --version v1.0.0 --superseded-by v1.0.1
+node scripts/release-transaction.mjs inspect --version v2.0.11
+node scripts/release-transaction.mjs recover --version v2.0.11
+node scripts/release-transaction.mjs finalize --version v2.0.11
+node scripts/release-transaction.mjs abort --version v2.0.11 --superseded-by v2.0.12
 ```
 
 The CLI is a diagnostic and local repair surface. It reports the durable
@@ -248,7 +254,7 @@ When no state file exists, creation commands also require:
 --repository kungfu-systems/buildchain \
 --source-sha <sha> \
 --release-sha <sha> \
---target-ref release/v1/v1.0 \
+--target-ref release/v2/v2.0 \
 --channel release
 ```
 

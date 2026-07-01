@@ -1056,6 +1056,36 @@ function parseAlphaPrereleaseTag(refName, releasePrefix) {
   };
 }
 
+function parseAlphaTransactionStateRef(refName, releasePrefix) {
+  const statePrefix = releasePrefix.replace(/^v/, "").replaceAll(".", "-");
+  const match = String(refName || "").match(
+    new RegExp(
+      `^refs/heads/buildchain/release-state/${statePrefix}-(\\d+)-alpha-(\\d+)$`,
+    ),
+  );
+  if (!match) {
+    return undefined;
+  }
+  return {
+    tag: `${releasePrefix}.${Number(match[1])}-alpha.${Number(match[2])}`,
+    patch: Number(match[1]),
+    prerelease: Number(match[2]),
+    occupied: true,
+  };
+}
+
+function parseAlphaPrereleaseRef(refName, releasePrefix) {
+  const tag = parseAlphaPrereleaseTag(refName, releasePrefix);
+  if (tag) {
+    return { ...tag, source: "tag" };
+  }
+  const stateRef = parseAlphaTransactionStateRef(refName, releasePrefix);
+  if (stateRef) {
+    return { ...stateRef, source: "release-state" };
+  }
+  return undefined;
+}
+
 function selectReleaseTag({ refs, releasePrefix, sha }) {
   const releaseTags = refs
     .map((ref) => {
@@ -1088,11 +1118,14 @@ function selectReleaseTag({ refs, releasePrefix, sha }) {
 function selectAlphaTag({ refs, releasePrefix, sha, patchAfterRelease }) {
   const alphaTags = refs
     .map((ref) => {
-      const parsed = parseAlphaPrereleaseTag(ref.ref, releasePrefix);
+      const parsed = parseAlphaPrereleaseRef(ref.ref, releasePrefix);
       if (!parsed) {
         return undefined;
       }
-      return { ...parsed, sha: ref.object?.sha };
+      return {
+        ...parsed,
+        sha: parsed.source === "tag" ? ref.object?.sha : undefined,
+      };
     })
     .filter(Boolean)
     .sort((a, b) => a.patch - b.patch || a.prerelease - b.prerelease);
@@ -1101,7 +1134,9 @@ function selectAlphaTag({ refs, releasePrefix, sha, patchAfterRelease }) {
     const samePatchTags = alphaTags.filter(
       (tag) => tag.patch === patchAfterRelease,
     );
-    const existingForSha = samePatchTags.find((tag) => tag.sha === sha);
+    const existingForSha = samePatchTags.find(
+      (tag) => tag.source === "tag" && tag.sha === sha,
+    );
     if (existingForSha) {
       return {
         tag: existingForSha.tag,
@@ -1111,8 +1146,8 @@ function selectAlphaTag({ refs, releasePrefix, sha, patchAfterRelease }) {
         exists: true,
       };
     }
-    if (samePatchTags.length > 0) {
-      const prepared = samePatchTags[0];
+    const prepared = samePatchTags.find((tag) => tag.source === "tag");
+    if (prepared) {
       return {
         tag: prepared.tag,
         patch: prepared.patch,
@@ -1134,7 +1169,9 @@ function selectAlphaTag({ refs, releasePrefix, sha, patchAfterRelease }) {
     };
   }
 
-  const existingForSha = alphaTags.find((tag) => tag.sha === sha);
+  const existingForSha = alphaTags.find(
+    (tag) => tag.source === "tag" && tag.sha === sha,
+  );
   if (existingForSha) {
     return {
       tag: existingForSha.tag,
@@ -1188,6 +1225,12 @@ function protectedBranchUpdateRejected(error) {
     status === 422 &&
     /Changes must be made through a pull request|Required status check/i.test(message)
   );
+}
+
+function nonFastForwardUpdateRejected(error) {
+  const status = error?.status || error?.response?.status;
+  const message = error?.response?.data?.message || error?.message || "";
+  return status === 422 && /Update is not a fast forward/i.test(message);
 }
 
 function versionStateBranchName(branch, sha) {
@@ -1264,13 +1307,19 @@ async function promoteBuildchainRefs({
 
   const updates = [];
 
-  const listLineRefs = async () => {
-    const { data: refs } = await octokit.rest.git.listMatchingRefs({
+  const listLineRefs = async (releasePrefix = rule.releasePrefix) => {
+    const { data: tagRefs } = await octokit.rest.git.listMatchingRefs({
       owner,
       repo,
-      ref: `tags/${rule.releasePrefix}.`,
+      ref: `tags/${releasePrefix}.`,
     });
-    return refs;
+    const statePrefix = releasePrefix.replace(/^v/, "").replaceAll(".", "-");
+    const { data: stateRefs } = await octokit.rest.git.listMatchingRefs({
+      owner,
+      repo,
+      ref: `heads/buildchain/release-state/${statePrefix}-`,
+    });
+    return [...tagRefs, ...stateRefs];
   };
 
   const ensureTag = async (tag, tagSha = sha) => {
@@ -1440,6 +1489,15 @@ async function promoteBuildchainRefs({
           title: protectedUpdate.title,
           body: protectedUpdate.body,
         });
+      }
+      if (protectedUpdate?.allowNonFastForwardSkip && nonFastForwardUpdateRejected(error)) {
+        updates.push({
+          ref: branch,
+          action: "skipped-non-fast-forward",
+          sha: branchSha,
+          currentSha,
+        });
+        return { updated: false, skipped: true, currentSha };
       }
       if (!notFound(error)) {
         throw error;
@@ -1950,11 +2008,7 @@ async function promoteBuildchainRefs({
       ...majorGate,
       tags: [majorGate.majorTag, majorGate.minorTag],
     };
-    const { data: refs } = await octokit.rest.git.listMatchingRefs({
-      owner,
-      repo,
-      ref: `tags/${majorRule.releasePrefix}.`,
-    });
+    const refs = await listLineRefs(majorRule.releasePrefix);
     const explicitReleaseTags = requestedTags
       ? requestedTags.filter(
           (tag) =>
@@ -2188,7 +2242,12 @@ async function promoteBuildchainRefs({
           updates,
         }, { finalizationNeeded: true });
       }
-      await updateBranch(`dev/v${rule.major}/v${rule.major}.${rule.minor}`, alphaSha);
+      await updateBranch(
+        `dev/v${rule.major}/v${rule.major}.${rule.minor}`,
+        alphaSha,
+        "updated",
+        { allowNonFastForwardSkip: true },
+      );
     }
     await markFinalizing();
     await ensureTag(selectedAlpha.tag, alphaSha);

@@ -1,0 +1,316 @@
+#!/usr/bin/env node
+import fs from "node:fs";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+import { detectPackageManager, assertPackageManager } from "../packages/core/package-manager.js";
+
+const BUILDCHAIN_WORKFLOW_REF = "kungfu-systems/buildchain/.github/workflows/.build.yml@v2";
+
+function posixPath(value) {
+  return String(value || "").split(path.sep).join("/");
+}
+
+function repoName(cwd) {
+  return path.basename(path.resolve(cwd));
+}
+
+function detectOrDefaultPackageManager(cwd, requested) {
+  if (requested) {
+    return assertPackageManager(requested);
+  }
+  try {
+    return detectPackageManager(cwd).name;
+  } catch {
+    return "pnpm";
+  }
+}
+
+function packageLifecycle(manager) {
+  if (manager === "npm") {
+    return {
+      install: "npm ci",
+      build: "npm run build",
+      verify: "npm run check",
+    };
+  }
+  if (manager === "yarn") {
+    return {
+      install: "corepack yarn install --immutable",
+      build: "corepack yarn run build",
+      verify: "corepack yarn run check",
+    };
+  }
+  return {
+    install: "corepack pnpm install --frozen-lockfile",
+    build: "corepack pnpm run build",
+    verify: "corepack pnpm run check",
+  };
+}
+
+function packageToml(cwd, manager) {
+  const lifecycle = packageLifecycle(manager);
+  const hasPackageJson = fs.existsSync(path.join(cwd, "package.json"));
+  const versionFiles = hasPackageJson
+    ? `
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+`
+    : "";
+  return `schema = 1
+
+[project]
+type = "package"
+name = "${repoName(cwd)}"
+
+[version]
+required = ${hasPackageJson ? "true" : "false"}
+strategy = "semver"
+next = "auto"
+${versionFiles}
+[lifecycle.install]
+command = "${lifecycle.install}"
+
+[lifecycle.build]
+command = "${lifecycle.build}"
+
+[lifecycle.verify]
+command = "${lifecycle.verify}"
+`;
+}
+
+function nativeToml(cwd) {
+  return `schema = 1
+
+[project]
+type = "package"
+name = "${repoName(cwd)}"
+
+[version]
+required = false
+strategy = "semver"
+next = "auto"
+
+[[version.files]]
+type = "regex"
+path = "CMakeLists.txt"
+pattern = 'project\\([^)]* VERSION (?<version>[^ )]+)'
+replacement = '\${version}'
+
+[lifecycle.configure]
+commands = [
+  "cmake -S . -B build -DCMAKE_BUILD_TYPE=Release",
+]
+
+[lifecycle.build]
+commands = [
+  "cmake --build build --config Release",
+]
+
+[lifecycle.verify]
+commands = [
+  "ctest --test-dir build --output-on-failure",
+]
+`;
+}
+
+function anchoredPackageToml(cwd, manager) {
+  const lifecycle = packageLifecycle(manager);
+  return `schema = 1
+
+[project]
+type = "package"
+name = "${repoName(cwd)}"
+
+[version]
+required = true
+strategy = "anchored"
+next = "manual"
+manifest = "release.json"
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[lifecycle.install]
+command = "${lifecycle.install}"
+
+[lifecycle.build]
+command = "${lifecycle.build}"
+
+[lifecycle.verify]
+command = "${lifecycle.verify}"
+`;
+}
+
+function webSurfaceToml(cwd) {
+  const name = repoName(cwd);
+  return `schema = 1
+
+[project]
+type = "web-surface"
+name = "${name}"
+site = "${name}"
+
+[channels.preview]
+url_pattern = "https://{alias}.preview.example.com"
+visibility = "ephemeral"
+requires_auth = false
+noindex = true
+
+[channels.staging]
+url = "https://staging.example.com"
+visibility = "protected"
+requires_auth = true
+noindex = true
+promotable = true
+
+[channels.production]
+url = "https://example.com"
+visibility = "public"
+requires_auth = false
+noindex = false
+canonical = true
+
+[deploy.preview]
+adapter = "aws-s3-cloudfront"
+artifact_path = "dist"
+bucket_ref = "AWS_PREVIEW_BUCKET"
+distribution_ref = "AWS_PREVIEW_DISTRIBUTION"
+
+[deploy.staging]
+adapter = "aws-s3-cloudfront"
+artifact_path = "dist"
+bucket_ref = "AWS_STAGING_BUCKET"
+distribution_ref = "AWS_STAGING_DISTRIBUTION"
+
+[deploy.production]
+adapter = "aws-s3-cloudfront"
+artifact_path = "dist"
+bucket_ref = "AWS_PRODUCTION_BUCKET"
+distribution_ref = "AWS_PRODUCTION_DISTRIBUTION"
+
+[security.staging]
+requires_auth = true
+noindex = true
+isolated_providers = true
+
+[lifecycle.build]
+command = "corepack pnpm run build"
+
+[lifecycle.verify]
+command = "corepack pnpm run check"
+`;
+}
+
+function workflowYaml({ runnerPreset, artifactName }) {
+  return `name: Build
+
+on:
+  pull_request:
+  push:
+    branches:
+      - "dev/**"
+      - "alpha/**"
+      - "release/**"
+      - "publish-gate/**"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    uses: ${BUILDCHAIN_WORKFLOW_REF}
+    with:
+      working-directory: "."
+      runner-preset: "${runnerPreset}"
+      artifact-name-template: "${artifactName}"
+      artifact-paths: |
+        dist
+        build/stage
+`;
+}
+
+function writeIfAllowed(filePath, content, { force }) {
+  if (fs.existsSync(filePath) && !force) {
+    throw new Error(`${posixPath(filePath)} already exists; pass --force to overwrite`);
+  }
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, content);
+  return filePath;
+}
+
+export function initBuildchainRepo({
+  cwd = process.cwd(),
+  type = "package",
+  force = false,
+  packageManager = "",
+  runnerPreset = "github-hosted",
+  artifactName = "{repo}-{version}-{platform}",
+} = {}) {
+  const resolvedCwd = path.resolve(cwd);
+  const manager = detectOrDefaultPackageManager(resolvedCwd, packageManager);
+  const toml = (() => {
+    if (type === "package") {
+      return packageToml(resolvedCwd, manager);
+    }
+    if (type === "native") {
+      return nativeToml(resolvedCwd);
+    }
+    if (type === "web-surface") {
+      return webSurfaceToml(resolvedCwd);
+    }
+    if (type === "anchored-package") {
+      return anchoredPackageToml(resolvedCwd, manager);
+    }
+    throw new Error("init --type must be one of package, native, web-surface, or anchored-package");
+  })();
+
+  const written = [
+    writeIfAllowed(path.join(resolvedCwd, "buildchain.toml"), toml, { force }),
+    writeIfAllowed(path.join(resolvedCwd, ".github", "workflows", "build.yml"), workflowYaml({
+      runnerPreset,
+      artifactName,
+    }), { force }),
+  ];
+
+  if (type === "anchored-package" && !fs.existsSync(path.join(resolvedCwd, "release.json"))) {
+    written.push(writeIfAllowed(path.join(resolvedCwd, "release.json"), "{\n  \"upstream\": \"\",\n  \"version\": \"0.0.0\"\n}\n", { force }));
+  }
+
+  return {
+    schemaVersion: 1,
+    type,
+    cwd: resolvedCwd,
+    packageManager: manager,
+    workflowRef: BUILDCHAIN_WORKFLOW_REF,
+    written: written.map((filePath) => posixPath(path.relative(resolvedCwd, filePath))),
+  };
+}
+
+function readArg(name, fallback = "") {
+  const index = process.argv.indexOf(`--${name}`);
+  if (index === -1) {
+    return fallback;
+  }
+  return process.argv[index + 1] || "";
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  try {
+    const result = initBuildchainRepo({
+      cwd: readArg("cwd", process.cwd()),
+      type: readArg("type", "package"),
+      force: process.argv.includes("--force"),
+      packageManager: readArg("package-manager", ""),
+      runnerPreset: readArg("runner-preset", "github-hosted"),
+      artifactName: readArg("artifact-name", "{repo}-{version}-{platform}"),
+    });
+    process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+  } catch (error) {
+    console.error(`init-repo: ${error.message}`);
+    process.exitCode = 1;
+  }
+}

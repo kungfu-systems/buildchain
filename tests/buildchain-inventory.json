@@ -86,6 +86,16 @@
       "packageSetPublishPlan": true
     },
     "libnodeShapedFixture": "fixtures/libnode-shaped",
-    "buildchainRefPromotionWorkflow": "buildchain-ref-promotion.yml"
+    "buildchainRefPromotionWorkflow": "buildchain-ref-promotion.yml",
+    "npmPublish": {
+      "workflow": "npm-publish.yml",
+      "exactReleaseTagsOnly": true,
+      "trustedPublishing": true,
+      "githubHostedRunner": true,
+      "manualDryRun": true,
+      "manualDryRunPublishes": false,
+      "alphaDistTag": "alpha",
+      "stableDistTag": "latest"
+    }
   }
 }

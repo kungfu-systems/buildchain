@@ -123,11 +123,18 @@ Buildchain then:
 3. Verifies the generated version-state tree.
 4. Creates or reuses the exact alpha tag.
 5. Moves `alpha/vX/vX.Y` to the generated alpha commit.
-6. Moves `dev/vX/vX.Y` to the same generated alpha commit.
+6. Moves `dev/vX/vX.Y` to the same generated alpha commit when this is a
+   fast-forward update.
 7. Moves `vX.Y-alpha` to the same generated alpha commit.
 
 This keeps the test channel self-describing. If a consumer checks out
 `v2.0-alpha`, the manifests and exact alpha tag agree.
+
+If `dev/vX/vX.Y` has already advanced while the generated alpha version-state PR
+was under review, Buildchain records `skipped-non-fast-forward` for the dev sync
+and still completes the exact and floating alpha tags for the reviewed alpha
+commit. Later dev changes must go through their own dev-to-alpha promotion
+instead of rewinding dev.
 
 ## Release Semantics
 
@@ -254,8 +261,13 @@ decision, code, version state, and Git refs close over the same evidence chain.
 
 ## What This Does Not Do
 
-Buildchain release promotion does not publish packages or external artifacts by
-itself. Publishing remains the responsibility of explicit consumer workflows.
+Buildchain release promotion does not embed registry clients or product-specific
+publish logic. When publish transactions are enabled, `promote-buildchain-ref`
+can run the consumer's `lifecycle.publish` command and own the transaction,
+evidence validation, durable recovery state, and ref finalization order. The
+consumer repository still owns registry truth: npm, PyPI, OCI, S3, Conan, CMake
+packaging, download pages, dist-tags, and similar side effects must be
+implemented by project lifecycle commands that emit Buildchain publish evidence.
 
 Buildchain also does not maintain bare exact tags such as `1.0.0`. The supported
 exact release and alpha refs are v-prefixed:
