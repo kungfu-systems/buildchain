@@ -92,7 +92,8 @@ Buildchain v2 ships these active migration surfaces:
 - `.github/workflows/.build.yml` as the reusable build surface for
   tri-platform runner presets, custom runner matrices, caller-provided lifecycle
   commands, trusted event gating, artifact name templates, expected artifact
-  checks, deterministic artifact manifests, and aggregate build summaries;
+  checks, deterministic artifact manifests, publish-gate source locks, resolved
+  release manifests, and aggregate build summaries;
 - `actions/run-lifecycle` for callers that need the same lifecycle/manifest
   contract inside their own workflows;
 - governance-closed self-promotion through `Buildchain Ref Promotion`.
@@ -180,6 +181,9 @@ configured version files to create source version commits, then runs
   workflow. Reusable builds expose `publish-channel`, `publish-allowed`, and
   `publish-reason` so callers can gate publish jobs on a reviewed channel ref
   instead of inferring publish eligibility from ad hoc branch checks.
+- Publish gate branches are resolved to a source SHA before checkout. Builds,
+  verification, artifact manifests, and summaries use that locked SHA; publish
+  jobs must re-check the branch tip before external side effects.
 - Fork pull requests must not reach secrets or self-hosted runners.
 - Candidate refs are expected to come from `kungfu-systems/*`.
 - Self-hosted runner validation is available only through the manual

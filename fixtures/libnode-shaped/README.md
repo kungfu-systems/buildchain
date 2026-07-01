@@ -13,4 +13,7 @@ It is intentionally small, but it keeps the important shape:
   anchor automatically;
 - lifecycle commands are Node-based and cross-platform;
 - build output lands under `dist/`, which the reusable build workflow uploads
-  with a deterministic artifact name and manifest.
+  with a deterministic artifact name and manifest;
+- the fixture can be resolved through a publish-gate source lock, which binds
+  the requested consumer version to `package.json` and `libnode.release.json`
+  before any publish side effect is allowed.
