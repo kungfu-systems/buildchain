@@ -1217,6 +1217,7 @@ test("publish transaction finalizes current release version-state merge commits"
   const alphaSha = "e".repeat(40);
   const versionHeadSha = "f".repeat(40);
   const mergeSha = "1".repeat(40);
+  const toolingMergeSha = "2".repeat(40);
   const cwd = makeTempWorkspace({
     "package.json": {
       name: "@kungfu-tech/buildchain",
@@ -1226,7 +1227,7 @@ test("publish transaction finalizes current release version-state merge commits"
   });
   const { octokit, refs, commits } = createGitMock({
     refs: new Map([
-      ["heads/release/v1/v1.0", mergeSha],
+      ["heads/release/v1/v1.0", toolingMergeSha],
       ["tags/v1.0.0-alpha.0", alphaSha],
     ]),
   });
@@ -1234,6 +1235,11 @@ test("publish transaction finalizes current release version-state merge commits"
     sha: mergeSha,
     tree: { sha: `tree-${mergeSha}` },
     parents: [{ sha: oldReleaseSha }, { sha: versionHeadSha }],
+  });
+  commits.set(toolingMergeSha, {
+    sha: toolingMergeSha,
+    tree: { sha: `tree-${toolingMergeSha}` },
+    parents: [{ sha: mergeSha }, { sha: "3".repeat(40) }],
   });
   const statePath = path.join(cwd, ".buildchain/release-state/1.0.0.json");
   await persistDurableReleaseTransaction({
@@ -1277,19 +1283,19 @@ test("publish transaction finalizes current release version-state merge commits"
     octokit,
     owner: "kungfu-systems",
     repo: "buildchain",
-    sha: mergeSha,
+    sha: toolingMergeSha,
     targetRef: "release/v1/v1.0",
     cwd,
     publishTransaction: true,
     requireVersionState: true,
   });
 
-  assert.equal(result.sha, mergeSha);
+  assert.equal(result.sha, toolingMergeSha);
   assert.equal(result.publishTransaction.state, "complete");
   assert.equal(result.publishTransaction.exactTag, "v1.0.0");
-  assert.equal(refs.get("tags/v1.0.0"), mergeSha);
-  assert.equal(refs.get("tags/v1.0"), mergeSha);
-  assert.equal(refs.get("tags/v1"), mergeSha);
+  assert.equal(refs.get("tags/v1.0.0"), toolingMergeSha);
+  assert.equal(refs.get("tags/v1.0"), toolingMergeSha);
+  assert.equal(refs.get("tags/v1"), toolingMergeSha);
   assert.equal(refs.has("tags/v1.0.1"), false);
   assert.equal(
     result.updates.some((update) => update.action === "stale-publish-transaction"),
