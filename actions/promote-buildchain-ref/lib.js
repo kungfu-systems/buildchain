@@ -2236,35 +2236,49 @@ async function promoteBuildchainRefs({
     }
     for (const parentSha of commit.parents) {
       const parent = await getCommitInfo(octokit, owner, repo, parentSha);
-      if (parent.treeSha !== alphaTreeSha) {
-        continue;
-      }
-      try {
-        await assertChannelPromotionPr({
-          octokit,
-          owner,
-          repo,
-          sha: parentSha,
-          targetRef,
-        });
-      } catch (error) {
-        const matchingReleaseRecoveryPullRequest =
-          await findMatchingReleaseRecoveryPullRequest({ commitSha: parentSha, targetRef });
-        if (!matchingReleaseRecoveryPullRequest) {
-          throw error;
+      if (parent.treeSha === alphaTreeSha) {
+        try {
+          await assertChannelPromotionPr({
+            octokit,
+            owner,
+            repo,
+            sha: parentSha,
+            targetRef,
+          });
+        } catch (error) {
+          const matchingReleaseRecoveryPullRequest =
+            await findMatchingReleaseRecoveryPullRequest({ commitSha: parentSha, targetRef });
+          if (!matchingReleaseRecoveryPullRequest) {
+            throw error;
+          }
+          await assertOnlyAllowedReleaseRecoveryChangesBetween({
+            baseSha: alphaSha,
+            headSha: parentSha,
+            allowedPaths,
+          });
         }
+        await assertOnlyAllowedChangesBetween({
+          baseSha: parentSha,
+          headSha: commitSha,
+          allowedPaths,
+        });
+        return;
+      }
+      const matchingReleaseRecoveryPullRequest =
+        await findMatchingReleaseRecoveryPullRequest({ commitSha: parentSha, targetRef });
+      if (matchingReleaseRecoveryPullRequest) {
         await assertOnlyAllowedReleaseRecoveryChangesBetween({
           baseSha: alphaSha,
           headSha: parentSha,
           allowedPaths,
         });
+        await assertOnlyAllowedChangesBetween({
+          baseSha: parentSha,
+          headSha: commitSha,
+          allowedPaths,
+        });
+        return;
       }
-      await assertOnlyAllowedChangesBetween({
-        baseSha: parentSha,
-        headSha: commitSha,
-        allowedPaths,
-      });
-      return;
     }
     const matchingReleaseRecoveryPullRequest =
       await findMatchingReleaseRecoveryPullRequest({ commitSha, targetRef });
