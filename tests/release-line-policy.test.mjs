@@ -84,6 +84,37 @@ test("version-state PRs must target the same release line", () => {
   });
 });
 
+test("release-line recovery PRs are valid only for the same release line", () => {
+  withPackageVersion("2.0.13", (cwd) => {
+    assert.equal(
+      getBumpKeyword({
+        cwd,
+        headRef: "fix/release-line-v2-v2.0-finalization-recovery",
+        baseRef: "release/v2/v2.0",
+      }),
+      "patch",
+    );
+    assert.throws(
+      () =>
+        getBumpKeyword({
+          cwd,
+          headRef: "fix/release-line-v2-v2.0-finalization-recovery",
+          baseRef: "release/v2/v2.1",
+        }),
+      /Versions not match/,
+    );
+    assert.throws(
+      () =>
+        getBumpKeyword({
+          cwd,
+          headRef: "fix/release-line-finalization-recovery",
+          baseRef: "release/v2/v2.0",
+        }),
+      /Versions not match/,
+    );
+  });
+});
+
 test("release to publish-gate/major is the only major bump channel", () => {
   withPackageVersion("1.0.5", (cwd) => {
     assert.equal(

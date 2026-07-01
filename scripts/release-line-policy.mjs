@@ -45,6 +45,18 @@ export function parseVersionStateRef(ref) {
   };
 }
 
+export function parseReleaseLineRecoveryRef(ref) {
+  const normalizedRef = normalizeRef(ref);
+  const match = normalizedRef.match(/^fix\/release-line-v(\d+)-v(\d+\.\d+)-[0-9A-Za-z._-]+$/);
+  if (!match) return undefined;
+  return {
+    major: Number(match[1]),
+    loose: Number(match[2]),
+    normalizedRef: `release/v${match[1]}/v${match[2]}`,
+    lineSuffix: `/v${match[1]}/v${match[2]}`,
+  };
+}
+
 export function getChannel(ref) {
   const versionStateTarget = parseVersionStateRef(ref);
   if (versionStateTarget) return versionStateTarget.channel;
@@ -85,6 +97,7 @@ export function getBumpKeyword({ cwd = process.cwd(), headRef, baseRef, loose = 
   const looseVersionNumber = Number(`${version.major}.${version.minor}`);
   const lastLooseVersionNumber = Number((looseVersionNumber - 0.1).toFixed(1));
   const versionStateTarget = parseVersionStateRef(headRef);
+  const releaseLineRecoveryTarget = parseReleaseLineRecoveryRef(headRef);
   const headChannel = getChannel(headRef);
   const baseChannel = getChannel(baseRef);
   const key = `${headChannel}->${baseChannel}`;
@@ -98,6 +111,17 @@ export function getBumpKeyword({ cwd = process.cwd(), headRef, baseRef, loose = 
   const lts = baseChannel === "release" && normalizeRef(baseRef).split("/").pop() === "lts";
   const preminor = headChannel === "release" && lts;
   const majorGate = headChannel === "release" && baseChannel === MAJOR_GATE_CHANNEL;
+
+  if (releaseLineRecoveryTarget) {
+    if (baseChannel !== "release" || releaseLineRecoveryTarget.normalizedRef !== normalizeRef(baseRef)) {
+      throw new Error(`Versions not match for head/base refs: ${headRef} -> ${baseRef}`);
+    }
+    const mismatchMsg = `The version of head ref ${headRef} does not match current ${version.version}`;
+    if (releaseLineRecoveryTarget.major !== version.major || releaseLineRecoveryTarget.loose !== looseVersionNumber) {
+      throw new Error(mismatchMsg);
+    }
+    return "patch";
+  }
 
   if (getLineSuffix(headRef, headChannel) !== getLineSuffix(baseRef, baseChannel) && !preminor && !majorGate) {
     throw new Error(`Versions not match for head/base refs: ${headRef} -> ${baseRef}`);
