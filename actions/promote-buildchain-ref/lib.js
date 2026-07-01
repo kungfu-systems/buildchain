@@ -1851,6 +1851,9 @@ async function promoteBuildchainRefs({
       tagSha,
       ...(options.acceptedExistingShas || []),
     ]);
+    const acceptedExistingMaterialShas = uniqueShas(
+      options.acceptedExistingMaterialShas || [],
+    );
     if (dryRun) {
       updates.push({ tag, action: "dry-run", sha: tagSha });
       return;
@@ -1861,7 +1864,20 @@ async function promoteBuildchainRefs({
         repo,
         ref: `tags/${tag}`,
       });
-      if (!acceptedExistingShas.includes(tagRef.object.sha)) {
+      let acceptedExistingMaterial = false;
+      for (const materialSha of acceptedExistingMaterialShas) {
+        if (await releaseCommitIncludesTransactionHead({
+          octokit,
+          owner,
+          repo,
+          releaseSha: tagRef.object.sha,
+          transactionReleaseSha: materialSha,
+        })) {
+          acceptedExistingMaterial = true;
+          break;
+        }
+      }
+      if (!acceptedExistingShas.includes(tagRef.object.sha) && !acceptedExistingMaterial) {
         throw new Error(
           `Tag ${tag} points at ${tagRef.object.sha}, not one of requested SHAs ${acceptedExistingShas.join(", ")}`,
         );
@@ -2950,6 +2966,10 @@ async function promoteBuildchainRefs({
         latestPublishTransaction?.transaction || currentAlphaTransaction,
         alpha.sha,
       ),
+      acceptedExistingMaterialShas: transactionAcceptedExactTagShas(
+        latestPublishTransaction?.transaction || currentAlphaTransaction,
+        "",
+      ),
     });
     await updateTag(rule.alphaTag, alpha.sha);
     await markComplete();
@@ -3072,6 +3092,10 @@ async function promoteBuildchainRefs({
     acceptedExistingShas: transactionAcceptedExactTagShas(
       latestPublishTransaction?.transaction || currentReleaseTransaction,
       releaseSha,
+    ),
+    acceptedExistingMaterialShas: transactionAcceptedExactTagShas(
+      latestPublishTransaction?.transaction || currentReleaseTransaction,
+      "",
     ),
   });
   await updateTag(rule.minorTag, releaseSha);
