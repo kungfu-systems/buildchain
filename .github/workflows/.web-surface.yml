@@ -31,9 +31,53 @@ on:
         default: "dist"
         type: string
         required: false
+      aws-region:
+        default: "us-east-1"
+        type: string
+        required: false
+      preview-apply:
+        default: false
+        type: boolean
+        required: false
+      preview-cleanup-apply:
+        default: false
+        type: boolean
+        required: false
+      preview-aws-role-arn:
+        default: ""
+        type: string
+        required: false
+      preview-environment:
+        default: "preview"
+        type: string
+        required: false
+      preview-comment:
+        default: true
+        type: boolean
+        required: false
+      staging-apply:
+        default: false
+        type: boolean
+        required: false
+      staging-aws-role-arn:
+        default: ""
+        type: string
+        required: false
+      staging-environment:
+        default: "staging"
+        type: string
+        required: false
+      production-apply:
+        default: false
+        type: boolean
+        required: false
       production-approved:
         default: false
         type: boolean
+        required: false
+      production-aws-role-arn:
+        default: ""
+        type: string
         required: false
       production-environment:
         default: "production"
@@ -55,9 +99,23 @@ on:
       web-surface-cleanup-plan-json:
         description: "Cleanup plan JSON when a cleanup plan was created"
         value: ${{ jobs.plan.outputs.web-surface-cleanup-plan-json }}
+      preview-apply-result-json:
+        description: "Preview deploy apply result JSON when preview apply ran"
+        value: ${{ jobs.preview-apply.outputs.preview-apply-result-json }}
+      preview-cleanup-result-json:
+        description: "Preview cleanup apply result JSON when cleanup apply ran"
+        value: ${{ jobs.preview-cleanup.outputs.preview-cleanup-result-json }}
+      staging-apply-result-json:
+        description: "Staging deploy apply result JSON when staging apply ran"
+        value: ${{ jobs.staging-apply.outputs.staging-apply-result-json }}
+      production-apply-result-json:
+        description: "Production deploy apply result JSON when production apply ran"
+        value: ${{ jobs.production-apply.outputs.production-apply-result-json }}
 
 permissions:
   contents: read
+  id-token: write
+  pull-requests: write
 
 jobs:
   plan:
@@ -165,6 +223,21 @@ jobs:
           --artifact-path "${{ inputs.artifact-path }}"
           --output .buildchain/web-surface-production-plan.json
 
+      - name: Upload web-surface plans
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-web-surface-plans
+          path: .buildchain/web-surface-*-plan.json
+          if-no-files-found: ignore
+
+      - name: Upload web-surface artifact
+        if: ${{ github.event_name != 'pull_request' || github.event.action != 'closed' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-web-surface-artifact
+          path: ${{ inputs.working-directory }}/${{ inputs.artifact-path }}
+          if-no-files-found: error
+
       - name: Select web-surface outputs
         id: web
         run: |
@@ -188,14 +261,452 @@ jobs:
             echo "web-surface-cleanup-plan-json=$(node -e 'process.stdout.write(JSON.stringify(JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))))' .buildchain/web-surface-cleanup-plan.json)" >> "$GITHUB_OUTPUT"
           fi
 
-  production-gate:
-    name: Production gate
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.production-approved }}
+  preview-apply:
+    name: Apply pull request preview
+    if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' && inputs.preview-apply }}
+    runs-on: ubuntu-24.04
+    needs: plan
+    environment: ${{ inputs.preview-environment }}
+    outputs:
+      preview-apply-result-json: ${{ steps.apply.outputs.web-surface-apply-result-json }}
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    steps:
+      - name: Checkout caller repository
+        uses: actions/checkout@v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.buildchain-ref }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Enable pnpm
+        run: |
+          corepack enable pnpm
+          pnpm --version
+
+      - name: Install Buildchain runtime
+        working-directory: .buildchain/runtime
+        run: pnpm install --frozen-lockfile
+
+      - name: Download web-surface plan
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: buildchain-web-surface-plans
+          path: .buildchain/downloaded-plans
+
+      - name: Download web-surface artifact
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: buildchain-web-surface-artifact
+          path: ${{ inputs.working-directory }}/${{ inputs.artifact-path }}
+
+      - name: Validate preview role
+        env:
+          ROLE_ARN: ${{ inputs.preview-aws-role-arn }}
+        run: |
+          set -euo pipefail
+          if [ -z "$ROLE_ARN" ]; then
+            echo "::error::preview-aws-role-arn is required when preview-apply is true"
+            exit 1
+          fi
+
+      - name: Configure preview AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ inputs.preview-aws-role-arn }}
+          aws-region: ${{ inputs.aws-region }}
+          role-session-name: buildchain-preview-${{ github.run_id }}
+
+      - name: Apply preview deploy
+        id: apply
+        run: |
+          set -euo pipefail
+          plan_file="$(find .buildchain/downloaded-plans -name web-surface-preview-plan.json -print -quit)"
+          if [ -z "$plan_file" ]; then
+            echo "::error::preview apply requested but preview plan artifact was not found"
+            exit 1
+          fi
+          node .buildchain/runtime/scripts/web-surface.mjs \
+            --mode deploy-apply \
+            --cwd "${{ inputs.working-directory }}" \
+            --plan "$plan_file" \
+            --dry-run false \
+            --actor "${{ github.actor }}" \
+            --run-id "${{ github.run_id }}" \
+            --output .buildchain/web-surface-preview-apply.json
+
+      - name: Comment preview URL
+        if: ${{ inputs.preview-comment }}
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require("fs");
+            const result = JSON.parse(fs.readFileSync(".buildchain/web-surface-preview-apply.json", "utf8"));
+            const marker = "<!-- buildchain:web-surface-preview -->";
+            const body = [
+              marker,
+              `Preview deployed: ${result.url}`,
+              "",
+              `- Source: \`${result.sourceSha}\``,
+              `- Artifact: \`${result.artifactHash}\``,
+              `- Status: \`${result.status}\``,
+              `- Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            ].join("\n");
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number,
+              per_page: 100,
+            });
+            const existing = comments.find((comment) => comment.body && comment.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number,
+                body,
+              });
+            }
+
+      - name: Summarize preview apply
+        run: |
+          {
+            echo "## Preview apply"
+            node -e 'const r=JSON.parse(require("fs").readFileSync(".buildchain/web-surface-preview-apply.json","utf8")); console.log("- url: "+r.url+"\n- status: "+r.status+"\n- target: "+r.target+"\n- manifest: "+r.manifestKey)'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  preview-cleanup:
+    name: Apply pull request preview cleanup
+    if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' && inputs.preview-cleanup-apply }}
+    runs-on: ubuntu-24.04
+    needs: plan
+    environment: ${{ inputs.preview-environment }}
+    outputs:
+      preview-cleanup-result-json: ${{ steps.apply.outputs.web-surface-cleanup-result-json }}
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    steps:
+      - name: Checkout caller repository
+        uses: actions/checkout@v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.buildchain-ref }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Enable pnpm
+        run: |
+          corepack enable pnpm
+          pnpm --version
+
+      - name: Install Buildchain runtime
+        working-directory: .buildchain/runtime
+        run: pnpm install --frozen-lockfile
+
+      - name: Download web-surface plan
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: buildchain-web-surface-plans
+          path: .buildchain/downloaded-plans
+
+      - name: Validate preview cleanup role
+        env:
+          ROLE_ARN: ${{ inputs.preview-aws-role-arn }}
+        run: |
+          set -euo pipefail
+          if [ -z "$ROLE_ARN" ]; then
+            echo "::error::preview-aws-role-arn is required when preview-cleanup-apply is true"
+            exit 1
+          fi
+
+      - name: Configure preview AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ inputs.preview-aws-role-arn }}
+          aws-region: ${{ inputs.aws-region }}
+          role-session-name: buildchain-cleanup-${{ github.run_id }}
+
+      - name: Apply preview cleanup
+        id: apply
+        run: |
+          set -euo pipefail
+          plan_file="$(find .buildchain/downloaded-plans -name web-surface-cleanup-plan.json -print -quit)"
+          if [ -z "$plan_file" ]; then
+            echo "::error::preview cleanup requested but cleanup plan artifact was not found"
+            exit 1
+          fi
+          node .buildchain/runtime/scripts/web-surface.mjs \
+            --mode cleanup-apply \
+            --cwd "${{ inputs.working-directory }}" \
+            --plan "$plan_file" \
+            --dry-run false \
+            --actor "${{ github.actor }}" \
+            --run-id "${{ github.run_id }}" \
+            --output .buildchain/web-surface-cleanup-apply.json
+
+      - name: Comment preview cleanup
+        if: ${{ inputs.preview-comment }}
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require("fs");
+            const result = JSON.parse(fs.readFileSync(".buildchain/web-surface-cleanup-apply.json", "utf8"));
+            const marker = "<!-- buildchain:web-surface-preview -->";
+            const aliases = result.entries.map((entry) => `\`${entry.alias}\``).join(", ") || "none";
+            const body = [
+              marker,
+              "Preview cleanup completed.",
+              "",
+              `- Aliases: ${aliases}`,
+              `- Status: \`${result.status}\``,
+              `- Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            ].join("\n");
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number,
+              per_page: 100,
+            });
+            const existing = comments.find((comment) => comment.body && comment.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number,
+                body,
+              });
+            }
+
+      - name: Summarize preview cleanup
+        run: |
+          {
+            echo "## Preview cleanup"
+            node -e 'const r=JSON.parse(require("fs").readFileSync(".buildchain/web-surface-cleanup-apply.json","utf8")); console.log("- status: "+r.status+"\n- target: "+r.target+"\n- aliases: "+(r.entries.map(e=>e.alias).join(", ") || "none"))'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  staging-apply:
+    name: Apply staging deploy
+    if: ${{ github.event_name == 'push' && github.ref_name == 'main' && inputs.staging-apply }}
+    runs-on: ubuntu-24.04
+    needs: plan
+    environment: ${{ inputs.staging-environment }}
+    outputs:
+      staging-apply-result-json: ${{ steps.apply.outputs.web-surface-apply-result-json }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout caller repository
+        uses: actions/checkout@v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.buildchain-ref }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Enable pnpm
+        run: |
+          corepack enable pnpm
+          pnpm --version
+
+      - name: Install Buildchain runtime
+        working-directory: .buildchain/runtime
+        run: pnpm install --frozen-lockfile
+
+      - name: Download web-surface plan
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: buildchain-web-surface-plans
+          path: .buildchain/downloaded-plans
+
+      - name: Download web-surface artifact
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: buildchain-web-surface-artifact
+          path: ${{ inputs.working-directory }}/${{ inputs.artifact-path }}
+
+      - name: Validate staging role
+        env:
+          ROLE_ARN: ${{ inputs.staging-aws-role-arn }}
+        run: |
+          set -euo pipefail
+          if [ -z "$ROLE_ARN" ]; then
+            echo "::error::staging-aws-role-arn is required when staging-apply is true"
+            exit 1
+          fi
+
+      - name: Configure staging AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ inputs.staging-aws-role-arn }}
+          aws-region: ${{ inputs.aws-region }}
+          role-session-name: buildchain-staging-${{ github.run_id }}
+
+      - name: Apply staging deploy
+        id: apply
+        run: |
+          set -euo pipefail
+          plan_file="$(find .buildchain/downloaded-plans -name web-surface-staging-plan.json -print -quit)"
+          if [ -z "$plan_file" ]; then
+            echo "::error::staging apply requested but staging plan artifact was not found"
+            exit 1
+          fi
+          node .buildchain/runtime/scripts/web-surface.mjs \
+            --mode deploy-apply \
+            --cwd "${{ inputs.working-directory }}" \
+            --plan "$plan_file" \
+            --dry-run false \
+            --actor "${{ github.actor }}" \
+            --run-id "${{ github.run_id }}" \
+            --output .buildchain/web-surface-staging-apply.json
+
+      - name: Summarize staging apply
+        run: |
+          {
+            echo "## Staging apply"
+            node -e 'const r=JSON.parse(require("fs").readFileSync(".buildchain/web-surface-staging-apply.json","utf8")); console.log("- url: "+r.url+"\n- status: "+r.status+"\n- target: "+r.target+"\n- source: "+r.sourceSha+"\n- artifact: "+r.artifactHash)'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  production-apply:
+    name: Apply production deploy
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.production-approved && inputs.production-apply }}
     runs-on: ubuntu-24.04
     needs: plan
     environment: ${{ inputs.production-environment }}
+    outputs:
+      production-apply-result-json: ${{ steps.apply.outputs.web-surface-apply-result-json }}
+    permissions:
+      contents: read
+      id-token: write
     steps:
-      - name: Report production gate evidence
+      - name: Checkout caller repository
+        uses: actions/checkout@v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.buildchain-ref }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Enable pnpm
         run: |
-          echo "Production deploy remains gated by the GitHub Environment."
-          echo '${{ needs.plan.outputs.web-surface-manifest-json }}'
+          corepack enable pnpm
+          pnpm --version
+
+      - name: Install Buildchain runtime
+        working-directory: .buildchain/runtime
+        run: pnpm install --frozen-lockfile
+
+      - name: Download web-surface plan
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: buildchain-web-surface-plans
+          path: .buildchain/downloaded-plans
+
+      - name: Download web-surface artifact
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: buildchain-web-surface-artifact
+          path: ${{ inputs.working-directory }}/${{ inputs.artifact-path }}
+
+      - name: Validate production role
+        env:
+          ROLE_ARN: ${{ inputs.production-aws-role-arn }}
+        run: |
+          set -euo pipefail
+          if [ -z "$ROLE_ARN" ]; then
+            echo "::error::production-aws-role-arn is required when production-apply is true"
+            exit 1
+          fi
+
+      - name: Configure production AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ inputs.production-aws-role-arn }}
+          aws-region: ${{ inputs.aws-region }}
+          role-session-name: buildchain-production-${{ github.run_id }}
+
+      - name: Apply production deploy
+        id: apply
+        run: |
+          set -euo pipefail
+          plan_file="$(find .buildchain/downloaded-plans -name web-surface-production-plan.json -print -quit)"
+          if [ -z "$plan_file" ]; then
+            echo "::error::production apply requested but production plan artifact was not found"
+            exit 1
+          fi
+          node .buildchain/runtime/scripts/web-surface.mjs \
+            --mode deploy-apply \
+            --cwd "${{ inputs.working-directory }}" \
+            --plan "$plan_file" \
+            --dry-run false \
+            --actor "${{ github.actor }}" \
+            --run-id "${{ github.run_id }}" \
+            --output .buildchain/web-surface-production-apply.json
+
+      - name: Summarize production apply
+        run: |
+          {
+            echo "## Production apply"
+            node -e 'const r=JSON.parse(require("fs").readFileSync(".buildchain/web-surface-production-apply.json","utf8")); console.log("- url: "+r.url+"\n- status: "+r.status+"\n- target: "+r.target+"\n- source: "+r.sourceSha+"\n- artifact: "+r.artifactHash+"\n- rollback pointer: "+(r.manifest.rollbackPointer || "not configured"))'
+          } >> "$GITHUB_STEP_SUMMARY"

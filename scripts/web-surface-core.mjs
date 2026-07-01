@@ -223,6 +223,31 @@ function appliedStatus({ dryRun, operations, noOp = false }) {
   return dryRun ? "planned" : "applied";
 }
 
+function isPlaceholderValue(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  return (
+    normalized === "" ||
+    normalized === "pending" ||
+    normalized.startsWith("pending-") ||
+    normalized.startsWith("pending_") ||
+    normalized.includes("placeholder") ||
+    normalized.includes("example.")
+  );
+}
+
+function assertConcreteAwsDeployConfig({ deployConfig, channel, operation }) {
+  const bucket = deployConfig.bucket || deployConfig.target || "";
+  const distribution = deployConfig.cloudfront_distribution || deployConfig.distribution || "";
+  if (isPlaceholderValue(bucket)) {
+    throw new Error(`web-surface ${operation} apply requires concrete deploy.${channel}.bucket or deploy.${channel}.target`);
+  }
+  if (isPlaceholderValue(distribution)) {
+    throw new Error(
+      `web-surface ${operation} apply requires concrete deploy.${channel}.cloudfront_distribution or deploy.${channel}.distribution`,
+    );
+  }
+}
+
 function deployManifestKey(deployConfig, manifest) {
   return joinS3Key(manifestPrefixFor(deployConfig), `${manifest.alias || manifest.channel}.json`);
 }
@@ -485,6 +510,13 @@ export function applyWebSurfaceDeploy({
   if (resolvedPlan.adapter !== "aws-s3-cloudfront") {
     throw new Error(`web-surface deploy apply does not support adapter: ${resolvedPlan.adapter}`);
   }
+  if (!dryRun) {
+    assertConcreteAwsDeployConfig({
+      deployConfig,
+      channel: resolvedPlan.channel,
+      operation: "deploy",
+    });
+  }
   const bucket = deployConfig.bucket || deployConfig.target || "";
   const artifactRoot = path.resolve(cwd, resolvedPlan.artifact.path);
   const objectPrefix = objectPrefixFor(deployConfig, resolvedPlan.manifest.alias || resolvedPlan.manifest.channel);
@@ -668,6 +700,13 @@ export function applyWebSurfaceCleanup({
   }
   if (cleanup.adapter !== "aws-s3-cloudfront") {
     throw new Error(`web-surface cleanup apply does not support adapter: ${cleanup.adapter}`);
+  }
+  if (!dryRun) {
+    assertConcreteAwsDeployConfig({
+      deployConfig,
+      channel: cleanup.channel,
+      operation: "cleanup",
+    });
   }
   const bucket = deployConfig.bucket || deployConfig.target || "";
   const operations = cleanup.entries.flatMap((entry) => {

@@ -93,13 +93,27 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /Plan pull request preview cleanup/);
   assert.match(workflow, /pull-request-closed/);
   assert.match(workflow, /--dry-run false/);
+  assert.match(workflow, /Apply pull request preview/);
+  assert.match(workflow, /preview-aws-role-arn is required when preview-apply is true/);
+  assert.match(workflow, /aws-actions\/configure-aws-credentials@v5/);
+  assert.match(workflow, /buildchain:web-surface-preview/);
+  assert.match(workflow, /preview-apply-result-json/);
+  assert.match(workflow, /Apply pull request preview cleanup/);
+  assert.match(workflow, /preview-cleanup-apply/);
   assert.match(workflow, /Plan main staging deploy/);
   assert.match(workflow, /github\.ref_name == 'main'/);
+  assert.match(workflow, /Apply staging deploy/);
+  assert.match(workflow, /staging-aws-role-arn is required when staging-apply is true/);
   assert.match(workflow, /Plan gated production deploy/);
+  assert.match(workflow, /Apply production deploy/);
+  assert.match(workflow, /inputs\.production-approved && inputs\.production-apply/);
+  assert.match(workflow, /production-aws-role-arn is required when production-apply is true/);
   assert.match(
     workflow,
     /environment: \$\{\{ inputs\.production-environment \}\}/,
   );
+  assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
+  assert.match(workflow, /actions\/download-artifact@v7\.0\.0/);
 });
 
 test("runner presets resolve to explicit matrices", () => {
