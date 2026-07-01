@@ -63,6 +63,22 @@ and `buildchain build-contract` route to the same scripts used by Buildchain's
 GitHub Actions workflows. This keeps local inspection and CI behavior on the
 same implementation path.
 
+`buildchain release --dry-run` explains the release-line state machine before a
+maintainer opens or merges a channel PR:
+
+```bash
+buildchain release --dry-run --target-ref alpha/v2/v2.0
+buildchain release --dry-run --target-ref release/v2/v2.0 --sha <verified-sha>
+buildchain release dry-run --target-ref publish-gate/major --source-ref release/v2/v2.0
+```
+
+This is a Buildchain-level dry-run, not an npm dry-run. It explains the legal
+source branch, exact release or alpha tags, floating tags, channel branches,
+version-state files, governance checks, and publish transaction behavior that
+would apply if the corresponding PR merge were promoted. It does not move
+branches, move tags, edit files, publish npm packages, or run lifecycle publish
+commands. Pass `--json` for a machine-readable plan.
+
 `buildchain npm dry-run` verifies the package shape before a release tag exists:
 
 ```bash

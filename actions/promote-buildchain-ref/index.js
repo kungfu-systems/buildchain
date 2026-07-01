@@ -1,6 +1,10 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 import { parseTags, promoteBuildchainRefs } from "./lib.js";
+import {
+  explainReleaseLineDryRun,
+  formatReleaseLineDryRun,
+} from "../../packages/core/release-line-dry-run.js";
 
 async function main() {
   const token = core.getInput("token", { required: true });
@@ -23,6 +27,15 @@ async function main() {
   const publishToolingSha = core.getInput("publish-tooling-sha");
   const publishTransactionOverride = core.getBooleanInput("publish-transaction-override");
   const octokit = github.getOctokit(token);
+  if (dryRun) {
+    console.log(formatReleaseLineDryRun(explainReleaseLineDryRun({
+      targetRef,
+      sha,
+      tags,
+      publishTransaction,
+      publishCommand,
+    })));
+  }
   const result = await promoteBuildchainRefs({
     octokit,
     owner: github.context.repo.owner,
