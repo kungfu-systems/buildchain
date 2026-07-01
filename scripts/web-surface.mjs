@@ -3,6 +3,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import {
+  applyWebSurfaceCleanup,
+  applyWebSurfaceDeploy,
   defaultWebSurfaceAlias,
   planWebSurfaceCleanup,
   planWebSurfaceDeploy,
@@ -33,6 +35,20 @@ function writeJson(result, outputPath) {
     fs.writeFileSync(outputPath, json);
   } else {
     process.stdout.write(json);
+  }
+}
+
+function readJsonFileArg(name) {
+  const value = readArg(name, "");
+  if (!value) {
+    return null;
+  }
+  return JSON.parse(fs.readFileSync(path.resolve(value), "utf8"));
+}
+
+function assertApplySucceeded(result) {
+  if (result.status === "failed") {
+    throw new Error(`web-surface ${result.contract} failed; see apply result for operation details`);
   }
 }
 
@@ -80,6 +96,40 @@ export function webSurfaceCli() {
     return outputResult;
   }
 
+  if (mode === "deploy-apply") {
+    const plan = readJsonFileArg("plan");
+    const alias = plan
+      ? readArg("alias", process.env.BUILDCHAIN_WEB_SURFACE_ALIAS || "")
+      : readArg(
+          "alias",
+          process.env.BUILDCHAIN_WEB_SURFACE_ALIAS || defaultWebSurfaceAlias({ channel, sourceSha, pullNumber }),
+        );
+    const result = applyWebSurfaceDeploy({
+      cwd,
+      channel,
+      alias,
+      sourceSha,
+      artifactHash: readArg("artifact-hash", process.env.BUILDCHAIN_WEB_SURFACE_ARTIFACT_HASH || ""),
+      artifactPath: readArg("artifact-path", process.env.BUILDCHAIN_WEB_SURFACE_ARTIFACT_PATH || ""),
+      plan,
+      dryRun: readBooleanArg("dry-run", true),
+      actor: readArg("actor", process.env.GITHUB_ACTOR || ""),
+      runId: readArg("run-id", process.env.GITHUB_RUN_ID || ""),
+    });
+    writeJson(result, output);
+    writeGitHubOutputs({
+      "web-surface-channel": result.channel,
+      "web-surface-alias": result.alias,
+      "web-surface-url": result.url,
+      "web-surface-artifact-hash": result.artifactHash,
+      "web-surface-apply-mode": result.applyMode,
+      "web-surface-apply-status": result.status,
+      "web-surface-manifest-json": JSON.stringify(result.manifest),
+    });
+    assertApplySucceeded(result);
+    return result;
+  }
+
   if (mode === "cleanup-plan") {
     const aliases = readArg("aliases", process.env.BUILDCHAIN_WEB_SURFACE_ALIASES || "")
       .split(",")
@@ -103,6 +153,35 @@ export function webSurfaceCli() {
       "web-surface-cleanup-status": result.status,
       "web-surface-cleanup-plan-json": JSON.stringify(result),
     });
+    return result;
+  }
+
+  if (mode === "cleanup-apply") {
+    const plan = readJsonFileArg("plan");
+    const aliases = readArg("aliases", process.env.BUILDCHAIN_WEB_SURFACE_ALIASES || "")
+      .split(",")
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+    const result = applyWebSurfaceCleanup({
+      cwd,
+      channel,
+      aliases,
+      sourceSha,
+      pullNumber,
+      event: readArg("event", process.env.BUILDCHAIN_WEB_SURFACE_EVENT || "manual"),
+      actor: readArg("actor", process.env.GITHUB_ACTOR || ""),
+      runId: readArg("run-id", process.env.GITHUB_RUN_ID || ""),
+      plan,
+      dryRun: readBooleanArg("dry-run", true),
+    });
+    writeJson(result, output);
+    writeGitHubOutputs({
+      "web-surface-cleanup-count": String(result.entries.length),
+      "web-surface-cleanup-mode": result.applyMode,
+      "web-surface-cleanup-status": result.status,
+      "web-surface-cleanup-result-json": JSON.stringify(result),
+    });
+    assertApplySucceeded(result);
     return result;
   }
 
