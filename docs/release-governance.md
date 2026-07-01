@@ -254,8 +254,13 @@ decision, code, version state, and Git refs close over the same evidence chain.
 
 ## What This Does Not Do
 
-Buildchain release promotion does not publish packages or external artifacts by
-itself. Publishing remains the responsibility of explicit consumer workflows.
+Buildchain release promotion does not embed registry clients or product-specific
+publish logic. When publish transactions are enabled, `promote-buildchain-ref`
+can run the consumer's `lifecycle.publish` command and own the transaction,
+evidence validation, durable recovery state, and ref finalization order. The
+consumer repository still owns registry truth: npm, PyPI, OCI, S3, Conan, CMake
+packaging, download pages, dist-tags, and similar side effects must be
+implemented by project lifecycle commands that emit Buildchain publish evidence.
 
 Buildchain also does not maintain bare exact tags such as `1.0.0`. The supported
 exact release and alpha refs are v-prefixed:
