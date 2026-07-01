@@ -3560,7 +3560,7 @@ test("strict release promotion accepts recovery from floating alpha material aft
   });
   commits.set(SHA, {
     sha: SHA,
-    tree: { sha: "floating-alpha-tree" },
+    tree: { sha: "release-recovery-tree" },
     parents: [{ sha: OTHER_SHA }, { sha: floatingAlphaSha }],
   });
   octokit.rest.repos = {
@@ -3569,7 +3569,15 @@ test("strict release promotion accepts recovery from floating alpha material aft
     }),
     compareCommitsWithBasehead: async ({ basehead }) => {
       if (basehead === `${floatingAlphaSha}...${SHA}`) {
-        return { data: { files: [] } };
+        return {
+          data: {
+            files: [
+              { filename: "actions/promote-buildchain-ref/lib.js" },
+              { filename: "actions/promote-buildchain-ref/dist/index.js" },
+              { filename: "tests/promote-buildchain-ref.test.mjs" },
+            ],
+          },
+        };
       }
       if (basehead.startsWith(`${SHA}...commit-`)) {
         return { data: { files: [{ filename: "package.json" }] } };
