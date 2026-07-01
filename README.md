@@ -80,7 +80,7 @@ scripts/                  Local verification scripts
 Buildchain v2 ships these active surfaces:
 
 - repository workflows under `.github/workflows`;
-- the public npm package `@kungfu-systems/buildchain` and `buildchain` CLI for
+- the public npm package `@kungfu-tech/buildchain` and `buildchain` CLI for
   initializing and validating new repositories;
 - the active reusable build workflow `.github/workflows/.build.yml`;
 - exactly three GitHub Actions under `actions/<name>`:
@@ -123,10 +123,10 @@ uses: kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v2
 Repositories can also bootstrap local integration through the CLI:
 
 ```bash
-npx @kungfu-systems/buildchain init --type package
-npx @kungfu-systems/buildchain validate --require-version-state
-npx @kungfu-systems/buildchain release --dry-run --target-ref alpha/v2/v2.0
-npx @kungfu-systems/buildchain npm dry-run --json
+npx @kungfu-tech/buildchain init --type package
+npx @kungfu-tech/buildchain validate --require-version-state
+npx @kungfu-tech/buildchain release --dry-run --target-ref alpha/v2/v2.0
+npx @kungfu-tech/buildchain npm dry-run --json
 ```
 
 Standalone `workflows` and `action-*` repositories are historical rollback

@@ -95,7 +95,7 @@ trusted channel workflow:
     publish-transaction: "true"
     publish-required-artifacts-json: >-
       [
-        {"kind":"npm","name":"@kungfu-systems/buildchain","ref":"2.0.0","digest":"sha256:..."}
+        {"kind":"npm","name":"@kungfu-tech/buildchain","ref":"2.0.0","digest":"sha256:..."}
       ]
 ```
 
@@ -113,7 +113,7 @@ before publish or public ref finalization.
 
 Buildchain itself uses this path for npm. Its `lifecycle.publish` runs
 `node scripts/npm-publish-transaction.mjs`, which publishes
-`@kungfu-systems/buildchain` through npm Trusted Publishing and writes npm
+`@kungfu-tech/buildchain` through npm Trusted Publishing and writes npm
 artifact evidence into the transaction before release refs move. The separate
 `.github/workflows/npm-publish.yml` workflow is dry-run only.
 

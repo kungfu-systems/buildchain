@@ -35,8 +35,8 @@ for (const rel of requiredPaths) {
 }
 
 const rootPackage = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
-if (rootPackage.name !== "@kungfu-systems/buildchain") {
-  throw new Error("root package must be @kungfu-systems/buildchain");
+if (rootPackage.name !== "@kungfu-tech/buildchain") {
+  throw new Error("root package must be @kungfu-tech/buildchain");
 }
 if (rootPackage.private !== false) {
   throw new Error("root package must be publishable with private=false");

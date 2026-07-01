@@ -1,5 +1,5 @@
 {
-  "name": "@kungfu-systems/buildchain",
+  "name": "@kungfu-tech/buildchain",
   "version": "2.0.13-alpha.0",
   "private": false,
   "description": "Kungfu Buildchain reusable workflows, release governance, and CLI tooling.",
