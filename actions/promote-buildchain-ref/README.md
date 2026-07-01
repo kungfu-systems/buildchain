@@ -81,9 +81,16 @@ trusted channel workflow:
 ```
 
 When enabled, the action creates or resumes a release transaction keyed by
-repository, version, source SHA, and target ref. It runs `lifecycle.publish` from
-`buildchain.toml` or the explicit `publish-command` input, then validates publish
-evidence before exact tags and floating refs move.
+repository, version, source SHA, and target ref. It persists that transaction to
+a machine-managed branch under `buildchain/release-state/<version>`, with
+`state.json` and, once available, `evidence.json`. Fresh GitHub runners read
+that durable ref before running publish, so reruns do not depend on a previous
+runner's local `.buildchain` directory.
+
+The action runs `lifecycle.publish` from `buildchain.toml` or the explicit
+`publish-command` input, then validates publish evidence before exact tags and
+floating refs move. If durable state persistence fails, the action fails closed
+before publish or public ref finalization.
 
 Publish lifecycle environment:
 
@@ -101,7 +108,9 @@ BUILDCHAIN_PUBLISH_EVIDENCE
 ```
 
 The action outputs `transaction-id`, `transaction-state`,
-`transaction-state-path`, `publish-evidence-path`, and `finalization-needed`.
+`transaction-exact-tag`, `transaction-release-sha`, `transaction-state-ref`,
+`transaction-state-sha`, `transaction-state-path`, `publish-evidence-path`, and
+`finalization-needed`. `transaction-state-ref` is the durable recovery location.
 `finalization-needed=true` means publish evidence is valid, but protected branch
 or ref finalization needs a later promotion run.
 
