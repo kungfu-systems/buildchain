@@ -505,17 +505,6 @@ async function persistDurableReleaseTransaction({
   }
   const refName = durableTransactionHeadRef(transaction);
   const currentRef = await getGitRefOrUndefined({ octokit, owner, repo, ref: refName });
-  let baseTree;
-  const parents = [];
-  if (currentRef?.object?.sha) {
-    const { data: currentCommit } = await octokit.rest.git.getCommit({
-      owner,
-      repo,
-      commit_sha: currentRef.object.sha,
-    });
-    baseTree = currentCommit.tree?.sha;
-    parents.push(currentRef.object.sha);
-  }
 
   const stateBlob = await octokit.rest.git.createBlob({
     owner,
@@ -546,27 +535,56 @@ async function persistDurableReleaseTransaction({
     });
   }
 
-  const tree = await octokit.rest.git.createTree({
-    owner,
-    repo,
-    tree: treeEntries,
-    ...(baseTree ? { base_tree: baseTree } : {}),
-  });
-  const commit = await octokit.rest.git.createCommit({
-    owner,
-    repo,
-    message: `chore(buildchain): persist release transaction ${transaction.exact_tag}`,
-    tree: tree.data.sha,
-    parents,
-  });
-  if (currentRef) {
-    await octokit.rest.git.updateRef({
+  const createStateCommit = async (parentSha) => {
+    let baseTree;
+    const parents = [];
+    if (parentSha) {
+      const { data: currentCommit } = await octokit.rest.git.getCommit({
+        owner,
+        repo,
+        commit_sha: parentSha,
+      });
+      baseTree = currentCommit.tree?.sha;
+      parents.push(parentSha);
+    }
+    const tree = await octokit.rest.git.createTree({
       owner,
       repo,
-      ref: refName,
-      sha: commit.data.sha,
-      force: false,
+      tree: treeEntries,
+      ...(baseTree ? { base_tree: baseTree } : {}),
     });
+    return octokit.rest.git.createCommit({
+      owner,
+      repo,
+      message: `chore(buildchain): persist release transaction ${transaction.exact_tag}`,
+      tree: tree.data.sha,
+      parents,
+    });
+  };
+  let commit = await createStateCommit(currentRef?.object?.sha);
+  if (currentRef) {
+    try {
+      await octokit.rest.git.updateRef({
+        owner,
+        repo,
+        ref: refName,
+        sha: commit.data.sha,
+        force: false,
+      });
+    } catch (error) {
+      if (!nonFastForwardUpdateRejected(error)) {
+        throw error;
+      }
+      const latestRef = await getGitRefOrUndefined({ octokit, owner, repo, ref: refName });
+      commit = await createStateCommit(latestRef?.object?.sha);
+      await octokit.rest.git.updateRef({
+        owner,
+        repo,
+        ref: refName,
+        sha: commit.data.sha,
+        force: false,
+      });
+    }
   } else {
     try {
       await octokit.rest.git.createRef({
