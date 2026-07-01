@@ -140,5 +140,8 @@ for (const key of ["forkPrSecretsDefault", "selfHostedRunnerDefault"]) {
 if (safety.trustedEventGate !== true) {
   throw new Error("safety.trustedEventGate must be true");
 }
+if (safety.reusableContract?.publishGateChannels !== true) {
+  throw new Error("safety.reusableContract.publishGateChannels must be true");
+}
 
 console.log("buildchain inventory check passed");

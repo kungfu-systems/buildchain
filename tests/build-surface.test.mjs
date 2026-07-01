@@ -8,6 +8,7 @@ import {
   DEFAULT_ARTIFACT_NAME_TEMPLATE,
   parseExpectedArtifactsJson,
   resolveArtifactContract,
+  resolvePublishGate,
   resolveRunnerMatrix,
 } from "../scripts/build-contract-core.mjs";
 import { aggregateBuildSummaryCli } from "../scripts/aggregate-build-summary.mjs";
@@ -24,7 +25,10 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /resolve-contract:/);
   assert.match(workflow, /fromJSON\(needs\.resolve-contract\.outputs\.platforms-json\)/);
   assert.match(workflow, /require-trusted-event:/);
+  assert.match(workflow, /publish-channel:/);
+  assert.match(workflow, /publish-refs-json:/);
   assert.match(workflow, /github\.event\.pull_request\.head\.repo\.full_name/);
+  assert.match(workflow, /resolve-publish-gate\.mjs/);
   assert.match(workflow, /install-command:/);
   assert.match(workflow, /build-command:/);
   assert.match(workflow, /verify-command:/);
@@ -34,6 +38,8 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /manifest\.json/);
   assert.match(workflow, /summary\.json/);
   assert.match(workflow, /build-summary-artifact:/);
+  assert.match(workflow, /publish-allowed:/);
+  assert.match(workflow, /publish-reason:/);
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
 });
 
@@ -76,6 +82,74 @@ test("artifact name templates resolve deterministically", () => {
     ref: "refs/heads/dev/v1/v1.0",
   });
   assert.equal(short.artifactName, "libnode-linux-x64-1234567890ab-refs-heads-dev-v1-v1.0");
+});
+
+test("publish gate separates verification trust from publish eligibility", () => {
+  assert.deepEqual(
+    resolvePublishGate({
+      trusted: true,
+      publishChannel: "release",
+      eventName: "push",
+      ref: "refs/heads/release/v2/v2.0",
+    }),
+    {
+      trusted: true,
+      publishChannel: "release",
+      publishAllowed: true,
+      publishReason: "ref matched ^refs/heads/release/v\\d+/v\\d+\\.\\d+$",
+    },
+  );
+
+  const sameRepoPr = resolvePublishGate({
+    trusted: true,
+    publishChannel: "release",
+    eventName: "pull_request",
+    ref: "refs/pull/123/merge",
+  });
+  assert.equal(sameRepoPr.publishAllowed, false);
+  assert.match(sameRepoPr.publishReason, /pull_request events may verify/);
+
+  const forkPr = resolvePublishGate({
+    trusted: false,
+    publishChannel: "alpha",
+    eventName: "pull_request",
+    ref: "refs/pull/456/merge",
+  });
+  assert.equal(forkPr.publishAllowed, false);
+  assert.equal(forkPr.publishReason, "event is not trusted");
+
+  assert.equal(
+    resolvePublishGate({
+      trusted: true,
+      publishChannel: "alpha",
+      eventName: "push",
+      ref: "refs/tags/v2.0.5-alpha.0",
+    }).publishAllowed,
+    true,
+  );
+});
+
+test("publish gate supports custom publish channels", () => {
+  const resolved = resolvePublishGate({
+    trusted: true,
+    publishChannel: "nightly",
+    eventName: "push",
+    ref: "refs/heads/nightly/v2",
+    publishRefsJson: '{"nightly":["^refs/heads/nightly/v\\\\d+$"]}',
+  });
+  assert.equal(resolved.publishAllowed, true);
+  assert.equal(resolved.publishChannel, "nightly");
+
+  assert.equal(
+    resolvePublishGate({
+      trusted: true,
+      publishChannel: "nightly",
+      eventName: "push",
+      ref: "refs/heads/dev/v2/v2.0",
+      publishRefsJson: '{"nightly":["^refs/heads/nightly/v\\\\d+$"]}',
+    }).publishAllowed,
+    false,
+  );
 });
 
 test("expected artifact JSON normalizes supported checks", () => {
@@ -183,6 +257,10 @@ test("aggregate build summary reads uploaded platform manifests", () => {
     process.env.BUILDCHAIN_SUMMARY_OUTPUT = path.join(workspace, ".buildchain/artifacts/build-summary.json");
     process.env.BUILDCHAIN_ARTIFACT_NAME = "libnode";
     process.env.BUILDCHAIN_PLATFORM_COUNT = "1";
+    process.env.BUILDCHAIN_TRUSTED_EVENT = "true";
+    process.env.BUILDCHAIN_PUBLISH_CHANNEL = "release";
+    process.env.BUILDCHAIN_PUBLISH_ALLOWED = "true";
+    process.env.BUILDCHAIN_PUBLISH_REASON = "ref matched release";
     process.env.GITHUB_OUTPUT = path.join(workspace, "github-output.txt");
     const summary = aggregateBuildSummaryCli();
 
@@ -190,6 +268,12 @@ test("aggregate build summary reads uploaded platform manifests", () => {
     assert.equal(summary.platformCount, 1);
     assert.equal(summary.fileCount, 2);
     assert.ok(summary.totalBytes > 0);
+    assert.deepEqual(summary.publishGate, {
+      trustedEvent: true,
+      channel: "release",
+      allowed: true,
+      reason: "ref matched release",
+    });
     assert.equal(summary.platforms[0].artifactName, "libnode-linux-x64-sha");
     assert.equal(summary.platforms[0].expectedArtifacts.ok, true);
   } finally {

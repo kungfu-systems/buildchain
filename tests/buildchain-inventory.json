@@ -152,7 +152,8 @@
       ],
       "artifactNameTemplate": true,
       "expectedArtifactSummary": true,
-      "aggregateSummaryArtifact": true
+      "aggregateSummaryArtifact": true,
+      "publishGateChannels": true
     },
     "libnodeShapedFixture": "fixtures/libnode-shaped",
     "buildchainRefPromotionWorkflow": "buildchain-ref-promotion.yml"

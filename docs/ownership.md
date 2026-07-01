@@ -31,7 +31,10 @@ New stable references should use:
 Publishing paths stay disabled in buildchain's own verification workflows unless
 explicitly enabled by a production release workflow. Any consumer cutover that
 publishes packages, S3 artifacts, release pages, or preview links must include
-rollback notes.
+rollback notes. Reusable workflow consumers should gate publish jobs with
+`needs.<build-job>.outputs.publish-allowed == 'true'` and record the requested
+`publish-channel`, rather than duplicating channel branch logic in every
+consumer workflow.
 
 ## Candidate Ref Rule
 
