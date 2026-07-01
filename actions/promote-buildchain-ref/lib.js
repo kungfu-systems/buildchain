@@ -1227,6 +1227,12 @@ function protectedBranchUpdateRejected(error) {
   );
 }
 
+function nonFastForwardUpdateRejected(error) {
+  const status = error?.status || error?.response?.status;
+  const message = error?.response?.data?.message || error?.message || "";
+  return status === 422 && /Update is not a fast forward/i.test(message);
+}
+
 function versionStateBranchName(branch, sha) {
   return `buildchain/version-state/${branch.replaceAll("/", "-")}/${sha.slice(0, 12)}`;
 }
@@ -1483,6 +1489,15 @@ async function promoteBuildchainRefs({
           title: protectedUpdate.title,
           body: protectedUpdate.body,
         });
+      }
+      if (protectedUpdate?.allowNonFastForwardSkip && nonFastForwardUpdateRejected(error)) {
+        updates.push({
+          ref: branch,
+          action: "skipped-non-fast-forward",
+          sha: branchSha,
+          currentSha,
+        });
+        return { updated: false, skipped: true, currentSha };
       }
       if (!notFound(error)) {
         throw error;
@@ -2227,7 +2242,12 @@ async function promoteBuildchainRefs({
           updates,
         }, { finalizationNeeded: true });
       }
-      await updateBranch(`dev/v${rule.major}/v${rule.major}.${rule.minor}`, alphaSha);
+      await updateBranch(
+        `dev/v${rule.major}/v${rule.major}.${rule.minor}`,
+        alphaSha,
+        "updated",
+        { allowNonFastForwardSkip: true },
+      );
     }
     await markFinalizing();
     await ensureTag(selectedAlpha.tag, alphaSha);
