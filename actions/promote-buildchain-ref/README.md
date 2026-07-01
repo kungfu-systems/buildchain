@@ -62,6 +62,55 @@ that PR is reviewed, checked, and merged, the next promotion run verifies that
 the merge only changed declared version-state files from the legal source
 parent, then moves exact and floating refs.
 
+## Publish Transactions
+
+Promotion can also own external publish side effects. Enable this only from a
+trusted channel workflow:
+
+```yaml
+- uses: kungfu-systems/buildchain/actions/promote-buildchain-ref@v2
+  with:
+    token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+    sha: ${{ github.sha }}
+    target-ref: release/v2/v2.0
+    publish-transaction: "true"
+    publish-required-artifacts-json: >-
+      [
+        {"kind":"npm","name":"@kungfu-systems/buildchain","ref":"2.0.0","digest":"sha256:..."}
+      ]
+```
+
+When enabled, the action creates or resumes a release transaction keyed by
+repository, version, source SHA, and target ref. It runs `lifecycle.publish` from
+`buildchain.toml` or the explicit `publish-command` input, then validates publish
+evidence before exact tags and floating refs move.
+
+Publish lifecycle environment:
+
+```text
+BUILDCHAIN_VERSION
+BUILDCHAIN_CHANNEL
+BUILDCHAIN_SOURCE_SHA
+BUILDCHAIN_TARGET_REF
+BUILDCHAIN_RELEASE_STATE
+BUILDCHAIN_EVIDENCE_DIR
+BUILDCHAIN_RELEASE_SHA
+BUILDCHAIN_RELEASE_MATERIAL_SHA
+BUILDCHAIN_PUBLISH_TOOLING_SHA
+BUILDCHAIN_PUBLISH_EVIDENCE
+```
+
+The action outputs `transaction-id`, `transaction-state`,
+`transaction-state-path`, `publish-evidence-path`, and `finalization-needed`.
+`finalization-needed=true` means publish evidence is valid, but protected branch
+or ref finalization needs a later promotion run.
+
+Normal reruns accept already-published artifacts only when evidence matches.
+Missing required artifacts can be published on the next run. Conflicting
+artifacts put the transaction into `repair_required`; `abandoned` and
+`failed_permanently` also fail closed unless `publish-transaction-override` is
+set for a controlled repair.
+
 In strict buildchain promotion, ref movement is also gated by the old ABV
 governance semantics:
 

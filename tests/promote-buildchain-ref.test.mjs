@@ -528,7 +528,7 @@ test("release promotion creates source version commits and points refs at them",
   const cwd = makeTempWorkspace({
     "package.json": {
       name: "@kungfu-systems/buildchain",
-      version: "1.0.0-alpha.0",
+      version: "0.0.0-alpha.0",
       packageManager: "pnpm@11.7.0",
     },
     "pnpm-workspace.yaml": 'packages:\n  - "actions/*"\n',
@@ -632,6 +632,127 @@ test("release promotion creates source version commits and points refs at them",
       ["1.0.1-alpha.0", "pnpm"],
     ],
   );
+});
+
+test("publish transaction gates alpha final refs on lifecycle.publish evidence", async () => {
+  const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[lifecycle.publish]
+command = "node scripts/publish.mjs"
+`,
+    "package.json": {
+      name: "@kungfu-systems/buildchain",
+      version: "0.0.0-alpha.0",
+      packageManager: "pnpm@11.7.0",
+    },
+    "scripts/publish.mjs": `
+import fs from "node:fs";
+import path from "node:path";
+
+fs.mkdirSync(process.env.BUILDCHAIN_EVIDENCE_DIR, { recursive: true });
+fs.appendFileSync("order.log", "publish\\n");
+fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
+  schema: 1,
+  version: process.env.BUILDCHAIN_VERSION,
+  channel: process.env.BUILDCHAIN_CHANNEL,
+  source_sha: process.env.BUILDCHAIN_SOURCE_SHA,
+  release_sha: process.env.BUILDCHAIN_RELEASE_SHA,
+  target_ref: process.env.BUILDCHAIN_TARGET_REF,
+  release_material_sha: process.env.BUILDCHAIN_RELEASE_MATERIAL_SHA,
+  publish_tooling_sha: process.env.BUILDCHAIN_PUBLISH_TOOLING_SHA,
+  artifacts: [{
+    kind: "npm",
+    name: "@kungfu-systems/buildchain",
+    ref: process.env.BUILDCHAIN_VERSION,
+    digest: "sha256:alpha"
+  }]
+}, null, 2) + "\\n");
+`,
+  });
+  const refs = new Map([["heads/alpha/v1/v1.0", SHA]]);
+  const commits = [];
+  const appendOrder = (entry) => fs.appendFileSync(path.join(cwd, "order.log"), `${entry}\n`);
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (refs.has(ref)) {
+            return { data: { object: { sha: refs.get(ref) } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async ({ ref }) => ({
+          data: [...refs.entries()]
+            .filter(([name]) => name.startsWith(ref))
+            .map(([name, objectSha]) => ({
+              ref: `refs/${name}`,
+              object: { sha: objectSha },
+            })),
+        }),
+        getCommit: async ({ commit_sha }) => ({
+          data: { tree: { sha: `tree-${commit_sha}` } },
+        }),
+        createBlob: async () => ({ data: { sha: `blob-${commits.length + 1}` } }),
+        createTree: async () => ({ data: { sha: `tree-created-${commits.length + 1}` } }),
+        createCommit: async ({ message, parents }) => {
+          const sha = `commit-${commits.length + 1}`.padEnd(40, "0");
+          commits.push({ sha, message, parents });
+          return { data: { sha } };
+        },
+        updateRef: async ({ ref, sha }) => {
+          appendOrder(`update:${ref}`);
+          refs.set(ref, sha);
+          return {};
+        },
+        createRef: async ({ ref, sha }) => {
+          appendOrder(`create:${ref}`);
+          refs.set(ref.replace(/^refs\//, ""), sha);
+          return {};
+        },
+      },
+    },
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    cwd,
+    publishTransaction: true,
+    publishRequiredArtifactsJson: JSON.stringify([
+      {
+        kind: "npm",
+        name: "@kungfu-systems/buildchain",
+        ref: "1.0.0-alpha.0",
+        digest: "sha256:alpha",
+      },
+    ]),
+  });
+
+  const alphaSha = commits[0].sha;
+  assert.equal(result.sha, alphaSha);
+  assert.equal(result.publishTransaction.state, "complete");
+  assert.equal(refs.get("tags/v1.0.0-alpha.0"), alphaSha);
+  assert.equal(refs.get("tags/v1.0-alpha"), alphaSha);
+  assert.deepEqual(fs.readFileSync(path.join(cwd, "order.log"), "utf8").trim().split("\n"), [
+    "publish",
+    "update:heads/alpha/v1/v1.0",
+    "create:refs/heads/dev/v1/v1.0",
+    "create:refs/tags/v1.0.0-alpha.0",
+    "update:tags/v1.0-alpha",
+  ]);
 });
 
 test("anchored manual release verifies existing anchor state and does not prepare next alpha", async () => {

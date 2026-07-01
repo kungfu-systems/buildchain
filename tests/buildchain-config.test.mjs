@@ -136,17 +136,24 @@ command = "node -e \\"import('node:fs').then((fs) => fs.writeFileSync('should-no
 
 [lifecycle.verify]
 command = "node -e \\"import('node:fs').then((fs) => fs.writeFileSync('also-should-not-exist.txt', 'ran'))\\""
+
+[lifecycle.publish]
+commands = [
+  "node scripts/publish-artifacts.mjs",
+  "node scripts/write-evidence.mjs",
+]
 `,
       "package.json": '{ "name": "demo", "version": "1.0.0" }\n',
     },
     (dir) => {
       const summary = validateBuildchainConfig(dir, {
         requireVersionState: true,
-        requireLifecycleStages: ["build", "verify"],
+        requireLifecycleStages: ["build", "verify", "publish"],
       });
 
       assert.deepEqual(summary.versionFiles.map((file) => file.path), ["package.json"]);
-      assert.deepEqual(summary.lifecycleStages.map((stage) => stage.name), ["build", "verify"]);
+      assert.deepEqual(summary.lifecycleStages.map((stage) => stage.name), ["build", "verify", "publish"]);
+      assert.equal(summary.lifecycleStages.find((stage) => stage.name === "publish").commandCount, 2);
       assert.equal(fs.existsSync(path.join(dir, "should-not-exist.txt")), false);
       assert.equal(fs.existsSync(path.join(dir, "also-should-not-exist.txt")), false);
     },
@@ -284,6 +291,145 @@ replacement = '\${version}'
       assert.throws(
         () => discoverConfiguredVersionStateFiles(dir, loadBuildchainConfig(dir)),
         /named capture group called version/,
+      );
+    },
+  );
+});
+
+test("buildchain.toml validates web-surface channels and deploy adapters", () => {
+  withTempRepo(
+    {
+      "buildchain.toml": `
+schema = 1
+
+[project]
+type = "web-surface"
+name = "site-demo"
+site = "demo-site"
+
+[channels.preview]
+url_pattern = "https://{alias}.preview.example.test"
+visibility = "ephemeral"
+noindex = true
+
+[channels.staging]
+url = "https://staging.example.test"
+visibility = "protected"
+requires_auth = true
+noindex = true
+
+[channels.production]
+url = "https://example.test"
+visibility = "public"
+canonical = true
+noindex = false
+
+[deploy.preview]
+adapter = "aws-s3-cloudfront"
+bucket = "demo-preview"
+artifact_path = "dist"
+secret_refs = ["AWS_ROLE_ARN"]
+
+[deploy.staging]
+adapter = "aws-s3-cloudfront"
+bucket = "demo-staging"
+artifact_path = "dist"
+
+[deploy.production]
+adapter = "aws-s3-cloudfront"
+bucket = "demo-production"
+artifact_path = "dist"
+
+[security.staging]
+requires_auth = true
+noindex = true
+isolated_providers = true
+`,
+    },
+    (dir) => {
+      const summary = validateBuildchainConfig(dir);
+      assert.equal(summary.project.type, "web-surface");
+      assert.equal(summary.channels.preview.urlPattern, "https://{alias}.preview.example.test");
+      assert.equal(summary.channels.staging.requiresAuth, true);
+      assert.equal(summary.deploy.production.adapter, "aws-s3-cloudfront");
+    },
+  );
+});
+
+test("web-surface staging must be protected and noindex", () => {
+  withTempRepo(
+    {
+      "buildchain.toml": `
+schema = 1
+
+[project]
+type = "web-surface"
+
+[channels.preview]
+url_pattern = "https://{alias}.preview.example.test"
+
+[channels.staging]
+url = "https://staging.example.test"
+requires_auth = false
+noindex = true
+
+[channels.production]
+url = "https://example.test"
+
+[deploy.preview]
+adapter = "aws-s3-cloudfront"
+
+[deploy.staging]
+adapter = "aws-s3-cloudfront"
+
+[deploy.production]
+adapter = "aws-s3-cloudfront"
+`,
+    },
+    (dir) => {
+      assert.throws(
+        () => validateBuildchainConfig(dir),
+        /channels\.staging\.requires_auth must be true/,
+      );
+    },
+  );
+});
+
+test("web-surface deploy config rejects inline secret values", () => {
+  withTempRepo(
+    {
+      "buildchain.toml": `
+schema = 1
+
+[project]
+type = "web-surface"
+
+[channels.preview]
+url_pattern = "https://{alias}.preview.example.test"
+
+[channels.staging]
+url = "https://staging.example.test"
+requires_auth = true
+noindex = true
+
+[channels.production]
+url = "https://example.test"
+
+[deploy.preview]
+adapter = "aws-s3-cloudfront"
+
+[deploy.staging]
+adapter = "aws-s3-cloudfront"
+
+[deploy.production]
+adapter = "aws-s3-cloudfront"
+aws_secret_access_key = "not-allowed"
+`,
+    },
+    (dir) => {
+      assert.throws(
+        () => validateBuildchainConfig(dir),
+        /must be declared as a secret reference/,
       );
     },
   );

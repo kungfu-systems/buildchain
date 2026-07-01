@@ -32,6 +32,30 @@ inputs:
   allow-repository:
     description: "Repository allowed to promote"
     default: "kungfu-systems/buildchain"
+  publish-transaction:
+    description: "Run lifecycle.publish or publish-command and require valid publish evidence before final refs move"
+    default: "false"
+  publish-command:
+    description: "Explicit publish command. Overrides lifecycle.publish when set."
+    default: ""
+  publish-evidence-path:
+    description: "Path to publish evidence JSON. Defaults to .buildchain/release-evidence/<tag>/evidence.json"
+    default: ""
+  transaction-state-path:
+    description: "Path to release transaction state JSON. Defaults to .buildchain/release-state/<tag>.json"
+    default: ""
+  publish-required-artifacts-json:
+    description: "JSON array of required artifacts whose evidence must exist before refs move"
+    default: ""
+  release-material-sha:
+    description: "Material SHA that published artifacts must prove. Defaults to the generated release SHA."
+    default: ""
+  publish-tooling-sha:
+    description: "Publish tooling SHA used for controlled repair. Defaults to the generated release SHA."
+    default: ""
+  publish-transaction-override:
+    description: "Explicitly allow recovery from repair_required, abandoned, or failed_permanently transaction states"
+    default: "false"
 outputs:
   sha:
     description: "Final promoted release or alpha commit SHA"
@@ -39,6 +63,16 @@ outputs:
     description: "Comma-separated tags updated by the promotion"
   next-anchor-required:
     description: "true when anchored/manual strategy leaves next anchor creation to the repository"
+  transaction-id:
+    description: "Stable release transaction identity"
+  transaction-state:
+    description: "Final release transaction state"
+  transaction-state-path:
+    description: "Release transaction state file path"
+  publish-evidence-path:
+    description: "Publish evidence file path"
+  finalization-needed:
+    description: "true when publish completed but protected ref finalization still needs a later run"
 runs:
   using: "node24"
   main: "dist/index.js"
