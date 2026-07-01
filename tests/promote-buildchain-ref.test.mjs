@@ -1185,6 +1185,42 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
     cwd,
     transaction: {
       schema: 1,
+      id: "non-matching-alpha-1",
+      repository: "kungfu-systems/buildchain",
+      target_ref: "alpha/v1/v1.0",
+      source_sha: OTHER_SHA,
+      release_sha: OTHER_SHA,
+      release_material_sha: OTHER_SHA,
+      publish_tooling_sha: OTHER_SHA,
+      version: "1.0.0-alpha.1",
+      exact_tag: "v1.0.0-alpha.1",
+      channel: "alpha",
+      line: "v1.0",
+      version_strategy: "",
+      lifecycle_identity: "lifecycle.publish",
+      state_ref: "buildchain/release-state/1-0-0-alpha-1",
+      state_path: "",
+      evidence_path: "",
+      state: "publishing",
+      previous_state: "prepared",
+      actor: "",
+      run_id: "",
+      superseded_by: "",
+      failure: "",
+      artifacts: [],
+      evidence: [],
+      created_at: "2026-07-01T00:00:00.000Z",
+      updated_at: "2026-07-01T00:00:00.000Z",
+    },
+    evidencePath: "",
+  });
+  await persistDurableReleaseTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    transaction: {
+      schema: 1,
       id: "matching-alpha-0",
       repository: "kungfu-systems/buildchain",
       target_ref: "alpha/v1/v1.0",
@@ -1239,6 +1275,10 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   assert.equal(refs.get("heads/alpha/v1/v1.0"), OTHER_SHA);
   assert.equal(refs.get("tags/v1.0.0-alpha.0"), OTHER_SHA);
   assert.equal(refs.has("tags/v1.0.0-alpha.1"), false);
+  assert.equal(
+    fs.existsSync(path.join(cwd, ".buildchain/release-state/v1.0.0-alpha.1.json")),
+    false,
+  );
 });
 
 test("publish transaction finalizes current alpha version-state merge commits", async () => {
