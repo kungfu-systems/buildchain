@@ -22,6 +22,10 @@ const {
   selectReleaseTag,
   updateVersionStateContents,
 } = await import("../actions/promote-buildchain-ref/lib.js");
+const {
+  explainReleaseLineDryRun,
+  formatReleaseLineDryRun,
+} = await import("../packages/core/release-line-dry-run.js");
 
 const SHA = "a".repeat(40);
 const OTHER_SHA = "b".repeat(40);
@@ -30,6 +34,13 @@ function notFound() {
   return Object.assign(new Error("Reference does not exist"), {
     status: 422,
     response: { data: { message: "Reference does not exist" } },
+  });
+}
+
+function alreadyExists() {
+  return Object.assign(new Error("Reference already exists"), {
+    status: 422,
+    response: { data: { message: "Reference already exists" } },
   });
 }
 
@@ -122,7 +133,11 @@ function createGitMock({ refs = new Map(), orderFile = "" } = {}) {
         },
         createRef: async ({ ref, sha }) => {
           appendOrder(`create:${ref}`);
-          refs.set(ref.replace(/^refs\//, ""), sha);
+          const refName = ref.replace(/^refs\//, "");
+          if (refs.has(refName)) {
+            throw alreadyExists();
+          }
+          refs.set(refName, sha);
           return {};
         },
       },
@@ -242,6 +257,80 @@ test("governance maps channel targets to the only legal PR source", () => {
     ),
     { tag: "v1.0.2-alpha.1", patch: 2, prerelease: 1, sha: OTHER_SHA },
   );
+});
+
+test("release line dry-run explains alpha promotion semantics", () => {
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "fixture",
+      version: "2.0.0-alpha.0",
+    },
+  });
+  const plan = explainReleaseLineDryRun({
+    cwd,
+    targetRef: "alpha/v2/v2.0",
+    sha: SHA,
+  });
+
+  assert.equal(plan.channel, "alpha");
+  assert.equal(plan.source.expectedHeadRef, "dev/v2/v2.0");
+  assert.deepEqual(plan.branchUpdates.map((update) => update.ref), [
+    "alpha/v2/v2.0",
+    "dev/v2/v2.0",
+  ]);
+  assert.deepEqual(plan.floatingRefs.map((update) => update.ref), ["v2.0-alpha"]);
+  assert.match(formatReleaseLineDryRun(plan), /No refs, tags, packages, or files were modified/);
+});
+
+test("release line dry-run explains production and next-alpha semantics", () => {
+  const cwd = makeTempWorkspace({
+    "buildchain.toml": `schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+path = "VERSION"
+type = "regex"
+pattern = "VERSION=(?<version>[^\\n]+)"
+replacement = "VERSION={{version}}"
+`,
+    VERSION: "VERSION=2.0.1-alpha.0\n",
+  });
+  const plan = explainReleaseLineDryRun({
+    cwd,
+    targetRef: "release/v2/v2.0",
+    sha: SHA,
+    tags: ["v2.0.1", "v2.0.2-alpha.0"],
+    publishTransaction: true,
+  });
+
+  assert.equal(plan.channel, "release");
+  assert.deepEqual(plan.exactTags.map((tag) => tag.tag), ["v2.0.1", "v2.0.2-alpha.0"]);
+  assert.deepEqual(plan.floatingRefs.map((update) => update.ref), ["v2.0", "v2", "v2.0-alpha"]);
+  assert.equal(plan.publishTransaction.enabled, true);
+  assert.equal(plan.versionState.manager, "buildchain.toml");
+  assert.deepEqual(plan.versionState.files, ["VERSION"]);
+  assert.match(plan.governanceChecks.join("\n"), /same-patch exact alpha tag tree/);
+});
+
+test("release line dry-run resolves major gate from explicit source ref", () => {
+  const plan = explainReleaseLineDryRun({
+    cwd: makeTempWorkspace({}),
+    targetRef: "publish-gate/major",
+    sourceRef: "release/v2/v2.0",
+    sha: SHA,
+  });
+
+  assert.equal(plan.channel, "major");
+  assert.equal(plan.line, "v3.0");
+  assert.deepEqual(plan.exactTags.map((tag) => tag.tag), ["v3.0.0", "v3.0.1-alpha.0"]);
+  assert.deepEqual(plan.branchUpdates.map((update) => update.ref), [
+    "publish-gate/major",
+    "release/v3/v3.0",
+    "alpha/v3/v3.0",
+    "dev/v3/v3.0",
+  ]);
 });
 
 test("selectReleaseTag creates, increments, and reuses canonical v-prefixed release tags", () => {
@@ -997,6 +1086,83 @@ test("publish transaction durable ref restores state and evidence in a fresh wor
   assert.equal(restored.id, "tx-1");
   assert.equal(JSON.parse(fs.readFileSync(freshStatePath, "utf8")).id, "tx-1");
   assert.equal(JSON.parse(fs.readFileSync(freshEvidencePath, "utf8")).artifacts[0].digest, "sha256:ok");
+});
+
+test("publish transaction durable ref updates when create races existing ref visibility", async () => {
+  const cwd = makeTempWorkspace({});
+  const statePath = path.join(cwd, ".buildchain/release-state/1.0.0.json");
+  const baseTransaction = {
+    schema: 1,
+    id: "tx-visibility-race",
+    repository: "kungfu-systems/buildchain",
+    target_ref: "release/v1/v1.0",
+    source_sha: SHA,
+    release_sha: OTHER_SHA,
+    release_material_sha: OTHER_SHA,
+    publish_tooling_sha: OTHER_SHA,
+    version: "1.0.0",
+    exact_tag: "v1.0.0",
+    channel: "release",
+    line: "v1.0",
+    version_strategy: "",
+    lifecycle_identity: "lifecycle.publish",
+    state_ref: "buildchain/release-state/1-0-0",
+    state_path: statePath,
+    evidence_path: "",
+    state: "prepared",
+    previous_state: "",
+    actor: "codex",
+    run_id: "1",
+    superseded_by: "",
+    failure: "",
+    artifacts: [],
+    evidence: [],
+    created_at: "2026-07-01T00:00:00.000Z",
+    updated_at: "2026-07-01T00:00:00.000Z",
+  };
+  const orderFile = path.join(cwd, "order.log");
+  const { octokit, refs } = createGitMock({ orderFile });
+
+  const first = await persistDurableReleaseTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    transaction: baseTransaction,
+    evidencePath: "",
+  });
+
+  const originalGetRef = octokit.rest.git.getRef;
+  let hideStateRefOnce = true;
+  octokit.rest.git.getRef = async (args) => {
+    if (hideStateRefOnce && args.ref === "heads/buildchain/release-state/1-0-0") {
+      hideStateRefOnce = false;
+      throw notFound();
+    }
+    return originalGetRef(args);
+  };
+
+  const second = await persistDurableReleaseTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    transaction: {
+      ...baseTransaction,
+      state: "publishing",
+      previous_state: "prepared",
+      updated_at: "2026-07-01T00:00:01.000Z",
+    },
+    evidencePath: "",
+  });
+
+  assert.notEqual(second.sha, first.sha);
+  assert.equal(refs.get("heads/buildchain/release-state/1-0-0"), second.sha);
+  assert.deepEqual(fs.readFileSync(orderFile, "utf8").trim().split("\n"), [
+    "create:refs/heads/buildchain/release-state/1-0-0",
+    "create:refs/heads/buildchain/release-state/1-0-0",
+    "update:heads/buildchain/release-state/1-0-0",
+  ]);
 });
 
 test("publish transaction fails closed when durable state cannot be persisted", async () => {

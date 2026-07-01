@@ -125,6 +125,7 @@ Repositories can also bootstrap local integration through the CLI:
 ```bash
 npx @kungfu-systems/buildchain init --type package
 npx @kungfu-systems/buildchain validate --require-version-state
+npx @kungfu-systems/buildchain release --dry-run --target-ref alpha/v2/v2.0
 npx @kungfu-systems/buildchain npm dry-run --json
 ```
 
@@ -175,6 +176,16 @@ created by that same promotion flow. Alpha releases such as
 `v2.0-alpha` never publish npm packages. The same workflow can be manually
 dispatched as a dry-run before release; that path verifies package contents and
 publish shape but does not run a real `npm publish`.
+
+For release-line planning, use the CLI dry-run:
+
+```bash
+buildchain release --dry-run --target-ref release/v2/v2.0 --sha <verified-sha>
+```
+
+This prints the branch/tag/version-state/governance plan that a channel merge
+would trigger. It is intentionally separate from `buildchain npm dry-run`, which
+only checks package publish shape.
 
 ## Read Next
 

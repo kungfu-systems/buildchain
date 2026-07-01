@@ -37,6 +37,25 @@ version commit itself is written through the GitHub Git Data API so the ref
 graph is the durable source of truth. Repositories without any supported version
 state degrade to ref-only promotion only when strict version state is disabled.
 
+## Dry Run
+
+Use `dry-run: "true"` or the CLI `buildchain release --dry-run` before merging a
+channel PR when you need to understand what Buildchain would do. This dry-run is
+at the Buildchain release-line level. It explains:
+
+- the legal source branch for the target channel;
+- exact release or alpha tags that would be created or reused;
+- floating tags and channel branches that would move;
+- version-state files and verification lifecycle that would apply;
+- branch protection, PR lineage, and release-from-alpha checks;
+- publish transaction behavior when `lifecycle.publish` or
+  `publish-transaction` is enabled.
+
+It does not move refs, move tags, write package files, run publish commands, or
+publish npm packages. The GitHub action dry-run still calls GitHub APIs to
+resolve the current target SHA and concrete pending ref updates, but every
+write is reported as a dry-run update.
+
 Repositories whose package version is anchored to an explicitly selected
 upstream release can opt into manual next-anchor behavior:
 

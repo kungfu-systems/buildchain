@@ -33,3 +33,8 @@ export {
   validatePublishEvidence,
   writeReleaseTransaction,
 } from "./publish-transaction.js";
+
+export {
+  explainReleaseLineDryRun,
+  formatReleaseLineDryRun,
+} from "./release-line-dry-run.js";
