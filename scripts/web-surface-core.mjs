@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -122,6 +123,177 @@ function manifestPrefixFor(deployConfig) {
 
 function objectPrefixFor(deployConfig, alias) {
   return deployConfig.prefix || alias || "preview";
+}
+
+function normalizeS3Key(value) {
+  return String(value || "")
+    .replace(/^\/+/, "")
+    .replace(/\/{2,}/g, "/");
+}
+
+function joinS3Key(...parts) {
+  return normalizeS3Key(parts.filter(Boolean).join("/"));
+}
+
+function s3Uri(bucket, key = "") {
+  if (!bucket) {
+    throw new Error("aws-s3-cloudfront adapter requires a bucket or target");
+  }
+  const normalizedKey = normalizeS3Key(key);
+  return normalizedKey ? `s3://${bucket}/${normalizedKey}` : `s3://${bucket}`;
+}
+
+function cdnPath(value) {
+  const normalized = normalizeS3Key(value);
+  return normalized ? `/${normalized}` : "/";
+}
+
+function defaultCommandRunner({ command, args, stdin = "" }) {
+  const result = spawnSync(command, args, {
+    encoding: "utf8",
+    input: stdin,
+  });
+  if (result.error) {
+    throw result.error;
+  }
+  if (result.status !== 0) {
+    const stderr = String(result.stderr || "").trim();
+    throw new Error(`${command} ${args.join(" ")} failed with exit code ${result.status}${stderr ? `: ${stderr}` : ""}`);
+  }
+  return {
+    exitCode: result.status,
+    stdout: String(result.stdout || ""),
+    stderr: String(result.stderr || ""),
+  };
+}
+
+function runAdapterOperation({ operation, dryRun, commandRunner }) {
+  if (dryRun) {
+    return {
+      ...operation,
+      status: "planned",
+      executed: false,
+      exitCode: null,
+      stdout: "",
+      stderr: "",
+    };
+  }
+  try {
+    const commandResult = commandRunner(operation);
+    const exitCode = commandResult?.exitCode ?? 0;
+    return {
+      ...operation,
+      status: exitCode === 0 ? "applied" : "failed",
+      executed: true,
+      exitCode,
+      stdout: commandResult?.stdout || "",
+      stderr: commandResult?.stderr || "",
+    };
+  } catch (error) {
+    return {
+      ...operation,
+      status: "failed",
+      executed: true,
+      exitCode: null,
+      stdout: "",
+      stderr: String(error.message || error),
+    };
+  }
+}
+
+function runAdapterOperations({ operations, dryRun, commandRunner }) {
+  const results = [];
+  for (const operation of operations) {
+    const result = runAdapterOperation({ operation, dryRun, commandRunner });
+    results.push(result);
+    if (result.status === "failed") {
+      break;
+    }
+  }
+  return results;
+}
+
+function appliedStatus({ dryRun, operations, noOp = false }) {
+  if (noOp) {
+    return "no-op";
+  }
+  if (operations.some((operation) => operation.status === "failed")) {
+    return "failed";
+  }
+  return dryRun ? "planned" : "applied";
+}
+
+function isPlaceholderValue(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  return (
+    normalized === "" ||
+    normalized === "pending" ||
+    normalized.startsWith("pending-") ||
+    normalized.startsWith("pending_") ||
+    normalized.includes("placeholder") ||
+    normalized.includes("example.")
+  );
+}
+
+function assertConcreteAwsDeployConfig({ deployConfig, channel, operation }) {
+  const bucket = deployConfig.bucket || deployConfig.target || "";
+  const distribution = deployConfig.cloudfront_distribution || deployConfig.distribution || "";
+  if (isPlaceholderValue(bucket)) {
+    throw new Error(`web-surface ${operation} apply requires concrete deploy.${channel}.bucket or deploy.${channel}.target`);
+  }
+  if (isPlaceholderValue(distribution)) {
+    throw new Error(
+      `web-surface ${operation} apply requires concrete deploy.${channel}.cloudfront_distribution or deploy.${channel}.distribution`,
+    );
+  }
+}
+
+function deployManifestKey(deployConfig, manifest) {
+  return joinS3Key(manifestPrefixFor(deployConfig), `${manifest.alias || manifest.channel}.json`);
+}
+
+function assertDeployPlan(plan) {
+  if (plan?.contract !== "kungfu-buildchain-web-surface-deploy-plan") {
+    throw new Error("web-surface deploy apply requires a deploy plan");
+  }
+  if (!plan.manifest) {
+    throw new Error("web-surface deploy plan is missing manifest");
+  }
+  if (!plan.artifact?.hash) {
+    throw new Error("web-surface deploy plan is missing artifact hash");
+  }
+  if (plan.manifest.artifactHash !== plan.artifact.hash) {
+    throw new Error("web-surface deploy plan artifact hash does not match manifest");
+  }
+  return plan;
+}
+
+function verifyDeployPlanArtifact({ cwd, plan }) {
+  const artifactPath = plan.artifact.path || ".";
+  const actual = createWebSurfaceArtifactHash({ cwd, artifactPath });
+  if (actual.artifactHash !== plan.artifact.hash) {
+    throw new Error(
+      `web-surface deploy plan artifact hash mismatch: expected ${plan.artifact.hash}, got ${actual.artifactHash}`,
+    );
+  }
+  return {
+    ...plan,
+    artifact: {
+      ...plan.artifact,
+      path: artifactPath,
+      files: actual.files,
+    },
+  };
+}
+
+function assertCleanupPlan(plan) {
+  if (plan?.contract !== "kungfu-buildchain-web-surface-cleanup-plan") {
+    throw new Error("web-surface cleanup apply requires a cleanup plan");
+  }
+  if (!Array.isArray(plan.entries)) {
+    throw new Error("web-surface cleanup plan is missing entries");
+  }
+  return plan;
 }
 
 function retentionFor({ config, channelName, alias, deployedAt }) {
@@ -303,6 +475,99 @@ export function planWebSurfaceDeploy({
   };
 }
 
+export function applyWebSurfaceDeploy({
+  cwd = process.cwd(),
+  channel = "preview",
+  alias = "",
+  sourceSha = "",
+  artifactHash = "",
+  artifactPath = "",
+  plan = null,
+  dryRun = true,
+  actor = "",
+  runId = "",
+  appliedAt = new Date().toISOString(),
+  commandRunner = defaultCommandRunner,
+} = {}) {
+  const resolvedPlan = plan
+    ? verifyDeployPlanArtifact({ cwd, plan: assertDeployPlan(plan) })
+    : planWebSurfaceDeploy({
+        cwd,
+        channel,
+        alias,
+        sourceSha,
+        artifactHash,
+        artifactPath,
+        dryRun: true,
+        deployedAt: appliedAt,
+      });
+  const loadedConfig = loadBuildchainConfig(cwd);
+  const config = assertWebSurfaceConfig(loadedConfig);
+  const deployConfig = config.deploy?.[resolvedPlan.channel];
+  if (!deployConfig) {
+    throw new Error(`missing deploy.${resolvedPlan.channel}`);
+  }
+  if (resolvedPlan.adapter !== "aws-s3-cloudfront") {
+    throw new Error(`web-surface deploy apply does not support adapter: ${resolvedPlan.adapter}`);
+  }
+  if (!dryRun) {
+    assertConcreteAwsDeployConfig({
+      deployConfig,
+      channel: resolvedPlan.channel,
+      operation: "deploy",
+    });
+  }
+  const bucket = deployConfig.bucket || deployConfig.target || "";
+  const artifactRoot = path.resolve(cwd, resolvedPlan.artifact.path);
+  const objectPrefix = objectPrefixFor(deployConfig, resolvedPlan.manifest.alias || resolvedPlan.manifest.channel);
+  const manifestKey = deployManifestKey(deployConfig, resolvedPlan.manifest);
+  const invalidationPaths = [`${cdnPath(objectPrefix)}/*`, cdnPath(manifestKey)];
+  const operations = [
+    {
+      action: "sync-static-artifact",
+      command: "aws",
+      args: ["s3", "sync", artifactRoot, s3Uri(bucket, objectPrefix), "--delete"],
+    },
+    {
+      action: "write-deployment-manifest",
+      command: "aws",
+      args: ["s3", "cp", "-", s3Uri(bucket, manifestKey), "--content-type", "application/json"],
+      stdin: `${JSON.stringify(resolvedPlan.manifest, null, 2)}\n`,
+    },
+  ];
+  const distribution = deployConfig.cloudfront_distribution || deployConfig.distribution || "";
+  if (distribution) {
+    operations.push({
+      action: "invalidate-cdn",
+      command: "aws",
+      args: ["cloudfront", "create-invalidation", "--distribution-id", distribution, "--paths", ...invalidationPaths],
+    });
+  }
+  const operationResults = runAdapterOperations({ operations, dryRun, commandRunner });
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-web-surface-deploy-apply",
+    dryRun,
+    applyMode: dryRun ? "dry-run" : "apply",
+    status: appliedStatus({ dryRun, operations: operationResults }),
+    actor,
+    runId,
+    appliedAt,
+    channel: resolvedPlan.channel,
+    alias: resolvedPlan.alias,
+    url: resolvedPlan.url,
+    sourceSha: resolvedPlan.manifest.sourceSha,
+    artifactHash: resolvedPlan.artifact.hash,
+    adapter: resolvedPlan.adapter,
+    target: bucket,
+    objectPrefix,
+    manifestKey,
+    invalidationPaths,
+    manifest: resolvedPlan.manifest,
+    operations: operationResults,
+  };
+}
+
 function planAdapterSteps(adapter, deployConfig, manifest) {
   if (adapter === "aws-s3-cloudfront") {
     return [
@@ -396,6 +661,107 @@ export function planWebSurfaceCleanup({
         }),
       };
     }),
+  };
+}
+
+export function applyWebSurfaceCleanup({
+  cwd = process.cwd(),
+  aliases = [],
+  channel = "preview",
+  now = new Date().toISOString(),
+  event = "manual",
+  sourceSha = "",
+  pullNumber = "",
+  actor = "",
+  runId = "",
+  plan = null,
+  dryRun = true,
+  commandRunner = defaultCommandRunner,
+} = {}) {
+  const cleanup = plan
+    ? assertCleanupPlan(plan)
+    : planWebSurfaceCleanup({
+        cwd,
+        aliases,
+        channel,
+        now,
+        event,
+        sourceSha,
+        pullNumber,
+        actor,
+        runId,
+        dryRun,
+      });
+  const loadedConfig = loadBuildchainConfig(cwd);
+  const config = assertWebSurfaceConfig(loadedConfig);
+  const deployConfig = config.deploy?.[cleanup.channel];
+  if (!deployConfig) {
+    throw new Error(`missing deploy.${cleanup.channel}`);
+  }
+  if (cleanup.adapter !== "aws-s3-cloudfront") {
+    throw new Error(`web-surface cleanup apply does not support adapter: ${cleanup.adapter}`);
+  }
+  if (!dryRun) {
+    assertConcreteAwsDeployConfig({
+      deployConfig,
+      channel: cleanup.channel,
+      operation: "cleanup",
+    });
+  }
+  const bucket = deployConfig.bucket || deployConfig.target || "";
+  const operations = cleanup.entries.flatMap((entry) => {
+    const entryOperations = [
+      {
+        action: "delete-static-prefix",
+        alias: entry.alias,
+        command: "aws",
+        args: ["s3", "rm", s3Uri(bucket, entry.objectPrefix), "--recursive"],
+      },
+      {
+        action: "delete-deployment-manifest",
+        alias: entry.alias,
+        command: "aws",
+        args: ["s3", "rm", s3Uri(bucket, entry.manifestKey)],
+      },
+    ];
+    const distribution = deployConfig.cloudfront_distribution || deployConfig.distribution || "";
+    if (distribution) {
+      entryOperations.push({
+        action: "invalidate-cdn",
+        alias: entry.alias,
+        command: "aws",
+        args: [
+          "cloudfront",
+          "create-invalidation",
+          "--distribution-id",
+          distribution,
+          "--paths",
+          `${cdnPath(entry.objectPrefix)}/*`,
+          cdnPath(entry.manifestKey),
+        ],
+      });
+    }
+    return entryOperations;
+  });
+  const operationResults = runAdapterOperations({ operations, dryRun, commandRunner });
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-web-surface-cleanup-apply",
+    dryRun,
+    applyMode: dryRun ? "dry-run" : "apply",
+    status: appliedStatus({ dryRun, operations: operationResults, noOp: cleanup.status === "no-op" }),
+    event,
+    channel,
+    now,
+    sourceSha: cleanup.sourceSha,
+    pullNumber: cleanup.pullNumber,
+    actor,
+    runId,
+    adapter: cleanup.adapter,
+    target: bucket,
+    manifestPrefix: cleanup.manifestPrefix,
+    entries: cleanup.entries,
+    operations: operationResults,
   };
 }
 
