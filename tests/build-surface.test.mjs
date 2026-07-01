@@ -17,7 +17,13 @@ import {
   verifyPublishSourceLock,
 } from "../scripts/build-contract-core.mjs";
 import { aggregateBuildSummaryCli } from "../scripts/aggregate-build-summary.mjs";
+import {
+  currentGitHubRefSha,
+  resolvePublishSourceRefSha,
+} from "../scripts/publish-source-ref-resolver.mjs";
+import { resolvePublishSourceCli } from "../scripts/resolve-publish-source.mjs";
 import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
+import { verifyPublishSourceLockCli } from "../scripts/verify-publish-source-lock.mjs";
 import { validateBuildchainConfig } from "../packages/core/buildchain-config.js";
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
@@ -282,6 +288,114 @@ test("publish source lock fails closed when branch moved", () => {
       }),
     /publish source ref moved/,
   );
+});
+
+test("publish source resolver uses current push ref without remote access", async () => {
+  const sourceRef = "publish-gate/alpha/v22/v22.22/22.22.3-kf.0";
+  const sourceSha = "a".repeat(40);
+  const env = {
+    BUILDCHAIN_PUBLISH_SOURCE_REF: sourceRef,
+    BUILDCHAIN_SOURCE_REPOSITORY: "kungfu-systems/libnode",
+    GITHUB_REF: `refs/heads/${sourceRef}`,
+    GITHUB_REF_NAME: sourceRef,
+    GITHUB_SHA: sourceSha,
+  };
+  const fetchImpl = async () => {
+    throw new Error("remote resolver should not be called for current push ref");
+  };
+
+  assert.equal(currentGitHubRefSha(sourceRef, env), sourceSha);
+  assert.equal(
+    await resolvePublishSourceRefSha({
+      repository: env.BUILDCHAIN_SOURCE_REPOSITORY,
+      sourceRef,
+      env,
+      fetchImpl,
+    }),
+    sourceSha,
+  );
+
+  const lock = await resolvePublishSourceCli({ args: ["--mode", "lock"], env, fetchImpl });
+  assert.equal(lock.sourceRef, sourceRef);
+  assert.equal(lock.sourceSha, sourceSha);
+  assert.equal(lock.sourceLocked, true);
+});
+
+test("publish source resolver reads non-current slash-heavy refs through GitHub API", async () => {
+  const sourceRef = "publish-gate/alpha/v22/v22.22/22.22.3-kf.0";
+  const sourceSha = "b".repeat(40);
+  const env = {
+    GITHUB_REF: "refs/heads/alpha/v22/v22.22",
+    GITHUB_REF_NAME: "alpha/v22/v22.22",
+    GITHUB_SHA: "a".repeat(40),
+    GITHUB_TOKEN: "token",
+  };
+  const seen = [];
+  const fetchImpl = async (url, options) => {
+    seen.push({ url, options });
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ object: { sha: sourceSha } }),
+    };
+  };
+
+  assert.equal(
+    await resolvePublishSourceRefSha({
+      repository: "kungfu-systems/libnode",
+      sourceRef,
+      env,
+      fetchImpl,
+    }),
+    sourceSha,
+  );
+  assert.equal(seen.length, 1);
+  assert.equal(
+    seen[0].url,
+    "https://api.github.com/repos/kungfu-systems/libnode/git/ref/heads/publish-gate/alpha/v22/v22.22/22.22.3-kf.0",
+  );
+  assert.equal(seen[0].options.headers.Authorization, "Bearer token");
+});
+
+test("verify publish source lock fails closed when API ref has moved", async () => {
+  const sourceRef = "publish-gate/alpha/v22/v22.22/22.22.3-kf.0";
+  const env = {
+    BUILDCHAIN_PUBLISH_SOURCE_REF: sourceRef,
+    BUILDCHAIN_PUBLISH_SOURCE_SHA: "c".repeat(40),
+    BUILDCHAIN_SOURCE_REPOSITORY: "kungfu-systems/libnode",
+  };
+  const fetchImpl = async () => ({
+    ok: true,
+    status: 200,
+    json: async () => ({ object: { sha: "d".repeat(40) } }),
+  });
+
+  await assert.rejects(
+    async () => await verifyPublishSourceLockCli({ env, fetchImpl }),
+    /publish source ref moved/,
+  );
+});
+
+test("verify publish source lock accepts unchanged current push ref", async () => {
+  const sourceRef = "publish-gate/alpha/v22/v22.22/22.22.3-kf.0";
+  const sourceSha = "e".repeat(40);
+  const env = {
+    BUILDCHAIN_PUBLISH_SOURCE_REF: sourceRef,
+    BUILDCHAIN_PUBLISH_SOURCE_SHA: sourceSha,
+    BUILDCHAIN_SOURCE_REPOSITORY: "kungfu-systems/libnode",
+    GITHUB_REF: `refs/heads/${sourceRef}`,
+    GITHUB_REF_NAME: sourceRef,
+    GITHUB_SHA: sourceSha,
+  };
+  const fetchImpl = async () => {
+    throw new Error("remote resolver should not be called for current push ref");
+  };
+
+  assert.deepEqual(await verifyPublishSourceLockCli({ env, fetchImpl }), {
+    ok: true,
+    sourceRef,
+    sourceSha,
+  });
 });
 
 test("package-set publish plan is platform-first, main-last, and idempotent", () => {
