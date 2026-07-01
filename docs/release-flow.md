@@ -40,7 +40,7 @@ only component allowed to turn that intent into release refs.
 | Development branch | `dev/v2/v2.0` | moves | next source state for a minor line |
 | Alpha branch | `alpha/v2/v2.0` | moves | latest test state for a minor line |
 | Release branch | `release/v2/v2.0` | moves | latest production state for a minor line |
-| Major gate branch | `major-gate` | moves | reviewed administrator gate for publishing the next major |
+| Major gate branch | `publish-gate/major` | moves | reviewed administrator gate for publishing the next major |
 | Exact alpha tag | `v2.0.3-alpha.0` | immutable | audit ref for one tested prerelease |
 | Exact release tag | `v2.0.2` | immutable | audit ref for one production release |
 | Floating alpha tag | `v2.0-alpha` | moves | latest test channel for a minor line |
@@ -181,9 +181,9 @@ next test patch on the same minor line.
 ```mermaid
 sequenceDiagram
   participant Release as release/vX/vX.Y
-  participant PR as PR release -> major-gate
+  participant PR as PR release -> publish-gate/major
   participant Verify as Release - Verify
-  participant Gate as major-gate
+  participant Gate as publish-gate/major
   participant Promote as Buildchain Ref Promotion
   participant Tags as Tags
   participant Next as dev/alpha/release v(X+1).0
@@ -193,18 +193,19 @@ sequenceDiagram
   Verify-->>PR: check succeeds
   PR->>Gate: reviewed merge
   Gate->>Promote: Verify workflow_run completed
-  Promote->>Promote: validate same-repo release -> major-gate PR
+  Promote->>Promote: validate same-repo release -> publish-gate/major PR
   Promote->>Promote: write v(X+1).0.0 version state
   Promote->>Tags: create v(X+1).0.0
   Promote->>Tags: move v(X+1).0 and v(X+1)
-  Promote->>Gate: move major-gate to v(X+1).0.0
+  Promote->>Gate: move publish-gate/major to v(X+1).0.0
   Promote->>Next: move release/v(X+1)/v(X+1).0 to v(X+1).0.0
   Promote->>Promote: prepare v(X+1).0.1-alpha.0
   Promote->>Next: move alpha/dev v(X+1).0 to next alpha
 ```
 
-`major-gate` is intentionally not an active source branch. It is the PR target
-for the administrator's "publish the next major" decision.
+`publish-gate/major` is intentionally not an active source branch. It is the PR
+target for the administrator's "publish the next major" decision. The older
+`major-gate` name is a compatibility alias only.
 
 ## Failure Boundaries
 

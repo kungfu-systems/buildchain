@@ -112,7 +112,7 @@ Default channels are:
 | `none` | Never publishes; this is the default |
 | `alpha` | `alpha/vN/vN.M` branches or exact `vN.M.P-alpha.K` tags |
 | `release` | `release/vN/vN.M` branches or release tags such as `vN.M.P`, `vN.M`, `vN` |
-| `major` | `major-gate` or next-major release tags such as `vN.0.0`, `vN.0`, `vN` |
+| `major` | `publish-gate/major`, legacy `major-gate`, or next-major release tags such as `vN.0.0`, `vN.0`, `vN` |
 
 Pull request events always produce `publish-allowed=false`, even when the PR is
 from the same repository. Untrusted fork events also produce
@@ -144,7 +144,7 @@ to bind a publish run to a reviewed gate branch before any checkout happens:
 | `publish-gate/release/<line>/<consumer-version>` | Build and publish a production candidate for a consumer line |
 | `publish-gate/anchor` | Resolve an explicit anchor request; it does not publish artifacts by itself |
 | `publish-gate/major` | Gate the next major source state |
-| `major-gate` | Compatibility alias for the major gate |
+| `major-gate` | Legacy compatibility alias for the major gate |
 
 For alpha and release refs, `<line>` is intentionally allowed to contain `/`, so
 Kungfu-style lines such as `v22/v22.22` stay readable. The final path segment is

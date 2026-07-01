@@ -6,6 +6,7 @@ on:
     branches:
       - alpha/*/*
       - release/*/*
+      - publish-gate/major
       - major-gate
 
 permissions:

@@ -10,7 +10,10 @@ import {
   getWorkspaceInfo,
 } from '../../packages/core/package-manager.js';
 
-const ProtectedBranchPatterns = ['major-gate', 'release/*/*', 'alpha/*/*', 'dev/*/*'];
+const MAJOR_GATE_REF = 'publish-gate/major';
+const LEGACY_MAJOR_GATE_REF = 'major-gate';
+const MAJOR_GATE_CHANNEL = 'major';
+const ProtectedBranchPatterns = [MAJOR_GATE_REF, LEGACY_MAJOR_GATE_REF, 'release/*/*', 'alpha/*/*', 'dev/*/*'];
 
 const bumpOpts = { dry: false };
 const spawnOpts = { shell: true, stdio: 'pipe', windowsHide: true };
@@ -49,22 +52,42 @@ function getChannel(ref) {
   if (versionStateTarget) {
     return versionStateTarget.channel;
   }
-  return normalizeRef(ref).split('/')[0];
+  const normalizedRef = normalizeRef(ref);
+  if (isMajorGateRef(normalizedRef)) {
+    return MAJOR_GATE_CHANNEL;
+  }
+  return normalizedRef.split('/')[0];
 }
 
 function normalizeRef(ref) {
   return String(ref || '').replace(/^refs\/heads\//, '');
 }
 
+function isMajorGateRef(ref) {
+  const normalizedRef = normalizeRef(ref);
+  return normalizedRef === MAJOR_GATE_REF || normalizedRef === LEGACY_MAJOR_GATE_REF;
+}
+
 function parseVersionStateRef(ref) {
   const normalizedRef = normalizeRef(ref);
+  const publishGateMajorMatch = normalizedRef.match(/^buildchain\/version-state\/publish-gate-major\/[0-9a-f]{12,40}$/);
+  if (publishGateMajorMatch) {
+    return {
+      channel: MAJOR_GATE_CHANNEL,
+      major: undefined,
+      loose: undefined,
+      normalizedRef: MAJOR_GATE_REF,
+      lineSuffix: '',
+    };
+  }
+
   const majorGateMatch = normalizedRef.match(/^buildchain\/version-state\/major-gate\/[0-9a-f]{12,40}$/);
   if (majorGateMatch) {
     return {
-      channel: 'major-gate',
+      channel: MAJOR_GATE_CHANNEL,
       major: undefined,
       loose: undefined,
-      normalizedRef: 'major-gate',
+      normalizedRef: LEGACY_MAJOR_GATE_REF,
       lineSuffix: '',
     };
   }
@@ -89,6 +112,9 @@ function getLineSuffix(ref, channel) {
   if (versionStateTarget) {
     return versionStateTarget.lineSuffix;
   }
+  if (isMajorGateRef(ref)) {
+    return '';
+  }
   return normalizeRef(ref).replace(channel, '');
 }
 
@@ -103,13 +129,13 @@ function getBumpKeyword(cwd, headRef, baseRef, loose = false) {
   const keywords = {
     'dev->alpha': 'prerelease',
     'alpha->release': 'patch',
-    'release->major-gate': 'premajor',
+    'release->major': 'premajor',
     'release->release': 'preminor',
   };
 
   const lts = baseChannel === 'release' && baseRef.split('/').pop() === 'lts';
   const preminor = headChannel === 'release' && lts;
-  const majorGate = headChannel === 'release' && baseChannel === 'major-gate';
+  const majorGate = headChannel === 'release' && baseChannel === MAJOR_GATE_CHANNEL;
 
   if (getLineSuffix(headRef, headChannel) !== getLineSuffix(baseRef, baseChannel) && !preminor && !majorGate) {
     throw new Error(`Versions not match for head/base refs: ${headRef} -> ${baseRef}`);
@@ -119,7 +145,7 @@ function getBumpKeyword(cwd, headRef, baseRef, loose = false) {
     if (versionStateTarget.channel !== baseChannel) {
       throw new Error(`Versions not match for head/base refs: ${headRef} -> ${baseRef}`);
     }
-    return baseChannel === 'release' || baseChannel === 'major-gate' ? 'patch' : 'prerelease';
+    return baseChannel === 'release' || baseChannel === MAJOR_GATE_CHANNEL ? 'patch' : 'prerelease';
   }
 
   const normalizedHeadRef = versionStateTarget?.normalizedRef || normalizeRef(headRef);

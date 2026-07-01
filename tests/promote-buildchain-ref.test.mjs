@@ -92,6 +92,7 @@ test("promotion is limited to buildchain alpha and release line refs", () => {
   assertPromotableTargetRef("alpha/v1/v1.0");
   assertPromotableTargetRef("release/v1/v1.0");
   assertPromotableTargetRef("release/v1/v1.1");
+  assertPromotableTargetRef("publish-gate/major");
   assertPromotableTargetRef("major-gate");
   assert.throws(
     () => assertPromotableRepository("kungfu-systems", "other"),
@@ -99,7 +100,7 @@ test("promotion is limited to buildchain alpha and release line refs", () => {
   );
   assert.throws(
     () => assertPromotableTargetRef("dev/v1/v1.0"),
-    /alpha\/vN\/vN\.M, release\/vN\/vN\.M, or major-gate/,
+    /alpha\/vN\/vN\.M, release\/vN\/vN\.M, publish-gate\/major, or major-gate/,
   );
   assert.throws(
     () => assertPromotableTargetRef("release/v1/v2.0"),
@@ -108,6 +109,7 @@ test("promotion is limited to buildchain alpha and release line refs", () => {
   assert.deepEqual(resolveTagsForTarget("alpha/v1/v1.0"), ["v1.0-alpha"]);
   assert.deepEqual(resolveTagsForTarget("release/v1/v1.0"), ["v1", "v1.0"]);
   assert.deepEqual(resolveTagsForTarget("release/v1/v1.1"), ["v1", "v1.1"]);
+  assert.deepEqual(resolveTagsForTarget("publish-gate/major"), []);
   assert.deepEqual(resolveTagsForTarget("major-gate"), []);
   assert.throws(
     () => resolveTagsForTarget("alpha/v1/v1.0", ["v1"]),
@@ -122,6 +124,7 @@ test("promotion is limited to buildchain alpha and release line refs", () => {
 test("governance maps channel targets to the only legal PR source", () => {
   assert.equal(expectedHeadRefForTarget("alpha/v1/v1.0"), "dev/v1/v1.0");
   assert.equal(expectedHeadRefForTarget("release/v1/v1.0"), "alpha/v1/v1.0");
+  assert.equal(expectedHeadRefForTarget("publish-gate/major"), "release/vN/vN.M");
   assert.equal(expectedHeadRefForTarget("major-gate"), "release/vN/vN.M");
   assert.deepEqual(parseReleaseLineRef("release/v1/v1.0"), {
     ref: "release/v1/v1.0",
@@ -751,7 +754,7 @@ assert.equal(fields.nodeTag, "v22.22.3");
   );
 });
 
-test("major-gate promotion publishes next major production and prepares next alpha", async () => {
+test("publish-gate/major promotion publishes next major production and prepares next alpha", async () => {
   const cwd = makeTempWorkspace({
     "package.json": {
       name: "@kungfu-systems/buildchain",
@@ -765,7 +768,7 @@ test("major-gate promotion publishes next major production and prepares next alp
       private: true,
     },
   });
-  const refs = new Map([["heads/major-gate", SHA]]);
+  const refs = new Map([["heads/publish-gate/major", SHA]]);
   const blobs = [];
   const commits = [];
   const repoUpdates = [];
@@ -822,7 +825,7 @@ test("major-gate promotion publishes next major production and prepares next alp
             data: [
               {
                 merged_at: "2026-06-30T00:00:00Z",
-                base: { ref: "major-gate" },
+                base: { ref: "publish-gate/major" },
                 head: {
                   ref: "release/v1/v1.0",
                   repo: { full_name: "kungfu-systems/buildchain" },
@@ -840,7 +843,7 @@ test("major-gate promotion publishes next major production and prepares next alp
     owner: "kungfu-systems",
     repo: "buildchain",
     sha: SHA,
-    targetRef: "major-gate",
+    targetRef: "publish-gate/major",
     cwd,
   });
 
@@ -848,7 +851,7 @@ test("major-gate promotion publishes next major production and prepares next alp
   const nextAlphaSha = commits[1].sha;
   assert.equal(result.sha, releaseSha);
   assert.equal(result.nextAlphaSha, nextAlphaSha);
-  assert.equal(refs.get("heads/major-gate"), releaseSha);
+  assert.equal(refs.get("heads/publish-gate/major"), releaseSha);
   assert.equal(refs.get("heads/release/v2/v2.0"), releaseSha);
   assert.equal(refs.get("tags/v2.0.0"), releaseSha);
   assert.equal(refs.get("tags/v2.0"), releaseSha);
