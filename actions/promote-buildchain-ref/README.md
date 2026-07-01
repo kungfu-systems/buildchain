@@ -176,3 +176,9 @@ exact release tags are `vX.Y.Z`, exact alpha tags are `vX.Y.Z-alpha.N`, floating
 release tags are minor/major tags such as `v2.0` and `v2`, and floating alpha
 tags are minor-line tags such as `v2.0-alpha`. Bare tags such as `1.0.0` are not
 maintained as buildchain release entrypoints.
+
+Repository rulesets should protect exact tags, not every `v*` tag. A ruleset
+such as `refs/tags/v*` also protects floating channel tags like `v2.0-alpha`,
+which Buildchain must update after exact tags and publish evidence are durable.
+Use an exact-tag rule such as `refs/tags/v*.*.*` for immutable evidence tags and
+leave floating channel tags mutable for the promotion token.

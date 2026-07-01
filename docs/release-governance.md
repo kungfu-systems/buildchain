@@ -108,6 +108,15 @@ This is why Buildchain maintains both exact and floating refs:
 A release does not mean "minor is complete." It means "this patch on this minor
 line is now production."
 
+GitHub repository rules must preserve that distinction. Exact tags such as
+`v2.0.2` and `v2.0.3-alpha.0` should be immutable. Floating channel tags such as
+`v2`, `v2.0`, and `v2.0-alpha` must remain movable by the Buildchain promotion
+token after governance checks and publish evidence pass. A tag ruleset that
+protects every `refs/tags/v*` ref is too broad because it also locks the
+floating channel tags that Buildchain is required to update. Prefer exact-tag
+patterns such as `refs/tags/v*.*.*` for immutable release evidence, while
+leaving floating channel tags under Buildchain automation control.
+
 ## Alpha Semantics
 
 An alpha merge is:

@@ -285,10 +285,55 @@ The reusable workflow maps GitHub events to Buildchain web-surface semantics:
 | `push` to `main` | validate, build, verify, and plan `staging` from the merged `main` SHA |
 | `workflow_dispatch` with `production-approved = true` | plan `production` and enter the configured GitHub Environment gate |
 
-The workflow deliberately plans and emits manifests by default. Callers that
-want live AWS mutation should invoke `deploy-apply` / `cleanup-apply` from a
-controlled deploy job with scoped credentials. This keeps production from being
-an implicit side effect of merging to `main`.
+The workflow deliberately plans and emits manifests by default. Live mutation is
+opt-in per channel:
+
+```yaml
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+jobs:
+  web-surface:
+    uses: kungfu-systems/buildchain/.github/workflows/.web-surface.yml@v2
+    with:
+      buildchain-ref: v2
+      build-command: pnpm run build
+      verify-command: pnpm run check
+      artifact-path: dist
+      preview-apply: true
+      preview-cleanup-apply: true
+      preview-aws-role-arn: arn:aws:iam::123456789012:role/site-preview-github-actions
+      staging-apply: true
+      staging-aws-role-arn: arn:aws:iam::123456789012:role/site-staging-github-actions
+      production-apply: false
+      production-aws-role-arn: arn:aws:iam::123456789012:role/site-production-github-actions
+      production-environment: production
+```
+
+When enabled, Buildchain owns the full release apply state machine:
+
+- PR preview deploys run `deploy-apply --dry-run false` with the preview role
+  and update a single idempotent PR comment.
+- Closed PR cleanup runs `cleanup-apply --dry-run false` with the preview role
+  only.
+- Pushes to `main` run staging `deploy-apply --dry-run false` with the staging
+  role.
+- Production runs only on `workflow_dispatch` when both `production-approved`
+  and `production-apply` are true, and the job is gated by the configured GitHub
+  Environment.
+
+Callers must grant `id-token: write` for OIDC role assumption. Preview comments
+also need `pull-requests: write`. The AWS roles remain caller-owned and should
+be scoped by channel: preview can mutate only preview resources, staging can
+mutate only staging resources, and production can mutate only production
+resources.
+
+Apply mode fails closed when the deploy config still contains placeholder AWS
+targets such as `pending-preview-distribution`. Planning can use placeholders
+for dry-run-only design work, but live apply requires concrete bucket and
+CloudFront distribution identifiers.
 
 ## Site Repository Shape
 

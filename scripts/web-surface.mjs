@@ -125,6 +125,7 @@ export function webSurfaceCli() {
       "web-surface-apply-mode": result.applyMode,
       "web-surface-apply-status": result.status,
       "web-surface-manifest-json": JSON.stringify(result.manifest),
+      "web-surface-apply-result-json": JSON.stringify(result),
     });
     assertApplySucceeded(result);
     return result;
