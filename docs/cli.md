@@ -93,29 +93,32 @@ The command validates `package.json`, infers the exact release tag
 
 ## npm Publish Gate
 
-`.github/workflows/npm-publish.yml` publishes only on exact v-prefixed release
-tags:
+Buildchain's own npm package is published from
+`.github/workflows/buildchain-ref-promotion.yml`, inside the same publish
+transaction that promotes release refs:
 
 - `v2.0.13-alpha.0` publishes to npm with dist-tag `alpha`.
 - `v2.0.13` publishes to npm with dist-tag `latest`.
 - moving refs such as `v2`, `v2.0`, and `v2.0-alpha` do not match the publish
   workflow and do not publish.
 
-The workflow uses npm Trusted Publishing through GitHub Actions OIDC. It runs
-on a GitHub-hosted runner with `id-token: write`, verifies that the Git tag is
-exactly `v${package.json.version}`, runs `pnpm run check`, and then runs:
+The promotion workflow uses npm Trusted Publishing through GitHub Actions OIDC.
+It runs on a GitHub-hosted runner with `id-token: write`, generates the
+version-state commit, runs `lifecycle.verify`, runs `lifecycle.publish`, writes
+Buildchain publish evidence, validates that evidence, and only then moves exact
+tags and floating refs.
 
 ```bash
-npm publish --access public --tag <alpha|latest>
+node scripts/npm-publish-transaction.mjs
 ```
 
 Before the first real release, configure npm Trusted Publishing for:
 
 - package: `@kungfu-systems/buildchain`
 - repository: `kungfu-systems/buildchain`
-- workflow: `.github/workflows/npm-publish.yml`
+- workflow: `.github/workflows/buildchain-ref-promotion.yml`
 
-No npm package is published by manual dispatch or by ordinary branch builds.
-Manual dispatch on `.github/workflows/npm-publish.yml` runs only the dry-run
-job, so maintainers can verify package contents and npm publish shape before
-opening or merging the release PR.
+No npm package is published by manual dispatch or ordinary branch builds.
+Manual dispatch on `.github/workflows/npm-publish.yml` remains dry-run only, so
+maintainers can verify package contents and npm publish shape before opening or
+merging the release PR.

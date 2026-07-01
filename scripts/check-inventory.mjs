@@ -10,6 +10,7 @@ const requiredPaths = [
   "docs/cli.md",
   "scripts/release-line-dry-run.mjs",
   "scripts/npm-publish-dry-run.mjs",
+  "scripts/npm-publish-transaction.mjs",
   "docs/migration-inventory.md",
   "docs/lifecycle-protocol.md",
   "docs/ownership.md",
@@ -78,20 +79,34 @@ if (commonJsSourcePattern.test(releaseLineDryRunScript)) {
   throw new Error("scripts/release-line-dry-run.mjs must use ESM syntax");
 }
 const npmPublishWorkflow = fs.readFileSync(path.join(root, ".github/workflows/npm-publish.yml"), "utf8");
+const buildchainRefPromotionWorkflow = fs.readFileSync(path.join(root, ".github/workflows/buildchain-ref-promotion.yml"), "utf8");
 const npmDryRunScript = fs.readFileSync(path.join(root, "scripts/npm-publish-dry-run.mjs"), "utf8");
+const npmPublishTransactionScript = fs.readFileSync(path.join(root, "scripts/npm-publish-transaction.mjs"), "utf8");
 for (const requiredSnippet of [
-  "id-token: write",
   "runs-on: ubuntu-24.04",
   "workflow_dispatch:",
   "Dry-run npm publish",
-  "tags:",
-  "- \"v*.*.*\"",
-  "github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')",
-  "scripts/npm-publish-dry-run.mjs --expected-tag \"$GITHUB_REF_NAME\" --skip-npm-publish-dry-run --json",
-  "npm publish --access public --tag",
 ]) {
   if (!npmPublishWorkflow.includes(requiredSnippet)) {
     throw new Error(`npm publish workflow missing required snippet: ${requiredSnippet}`);
+  }
+}
+for (const forbiddenSnippet of [
+  "tags:",
+  "Publish exact release tag",
+  "npm publish --access public --tag",
+]) {
+  if (npmPublishWorkflow.includes(forbiddenSnippet)) {
+    throw new Error(`npm publish dry-run workflow must not contain real publish snippet: ${forbiddenSnippet}`);
+  }
+}
+for (const requiredSnippet of [
+  "id-token: write",
+  "registry-url: \"https://registry.npmjs.org/\"",
+  "publish-transaction: \"true\"",
+]) {
+  if (!buildchainRefPromotionWorkflow.includes(requiredSnippet)) {
+    throw new Error(`buildchain ref promotion workflow missing npm transaction snippet: ${requiredSnippet}`);
   }
 }
 for (const requiredSnippet of [
@@ -105,6 +120,18 @@ for (const requiredSnippet of [
 }
 if (commonJsSourcePattern.test(npmDryRunScript)) {
   throw new Error("scripts/npm-publish-dry-run.mjs must use ESM syntax");
+}
+for (const requiredSnippet of [
+  "BUILDCHAIN_PUBLISH_EVIDENCE",
+  "\"publish\", \"--access\", access, \"--tag\", distTag",
+  "artifact digest mismatch",
+]) {
+  if (!npmPublishTransactionScript.includes(requiredSnippet)) {
+    throw new Error(`npm publish transaction script missing required snippet: ${requiredSnippet}`);
+  }
+}
+if (commonJsSourcePattern.test(npmPublishTransactionScript)) {
+  throw new Error("scripts/npm-publish-transaction.mjs must use ESM syntax");
 }
 if (/runs-on:\s*self-hosted/.test(npmPublishWorkflow)) {
   throw new Error("npm publish workflow must use GitHub-hosted runners for trusted publishing");
@@ -251,8 +278,14 @@ for (const key of ["publishGateSourceLock", "resolvedReleaseManifest", "packageS
     throw new Error(`safety.reusableContract.${key} must be true`);
   }
 }
-if (safety.npmPublish?.exactReleaseTagsOnly !== true) {
-  throw new Error("safety.npmPublish.exactReleaseTagsOnly must be true");
+if (safety.npmPublish?.promotionTransaction !== true) {
+  throw new Error("safety.npmPublish.promotionTransaction must be true");
+}
+if (safety.npmPublish?.tagPushPublish !== false) {
+  throw new Error("safety.npmPublish.tagPushPublish must be false");
+}
+if (safety.npmPublish?.exactVersionsOnly !== true) {
+  throw new Error("safety.npmPublish.exactVersionsOnly must be true");
 }
 if (safety.npmPublish?.alphaDistTag !== "alpha") {
   throw new Error("safety.npmPublish.alphaDistTag must be alpha");

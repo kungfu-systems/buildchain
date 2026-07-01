@@ -26,6 +26,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   promote:
@@ -78,6 +79,7 @@ jobs:
       - uses: actions/setup-node@v6.4.0
         with:
           node-version: "24"
+          registry-url: "https://registry.npmjs.org/"
 
       - name: Enable pnpm
         run: |
@@ -97,3 +99,4 @@ jobs:
           require-governance: "true"
           require-version-state: "true"
           required-status-check: "check"
+          publish-transaction: "true"
