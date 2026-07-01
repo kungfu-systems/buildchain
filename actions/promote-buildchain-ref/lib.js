@@ -36,6 +36,12 @@ const COMMIT_IDENTITY = {
 };
 const MAJOR_GATE_REF = "publish-gate/major";
 const LEGACY_MAJOR_GATE_REF = "major-gate";
+const RELEASE_LINE_RECOVERY_PATHS = [
+  "actions/promote-buildchain-ref/",
+  "scripts/release-line-policy.mjs",
+  "tests/promote-buildchain-ref.test.mjs",
+  "tests/release-line-policy.test.mjs",
+];
 
 function parseTags(input) {
   const tags = String(input || "")
@@ -259,6 +265,25 @@ function parseReleaseLineRef(ref) {
     throw new Error(`Release ref major mismatch: ${ref}`);
   }
   return { ref, major, minor };
+}
+
+function parseReleaseLineRecoveryRef(ref) {
+  const match = String(ref || "").match(/^fix\/release-line-v(\d+)-v(\d+)\.(\d+)-[0-9A-Za-z._-]+$/);
+  if (!match) {
+    return undefined;
+  }
+  const major = Number(match[1]);
+  const minorMajor = Number(match[2]);
+  const minor = Number(match[3]);
+  if (major !== minorMajor) {
+    throw new Error(`Release recovery ref major mismatch: ${ref}`);
+  }
+  return {
+    ref,
+    major,
+    minor,
+    targetRef: `release/v${major}/v${major}.${minor}`,
+  };
 }
 
 function assertAllowedLocalChanges(cwd, allowedPaths) {
@@ -1699,6 +1724,32 @@ async function promoteBuildchainRefs({
     }
   };
 
+  const assertOnlyAllowedReleaseRecoveryChangesBetween = async ({
+    baseSha,
+    headSha,
+    allowedPaths = [],
+  }) => {
+    const { data: comparison } = await octokit.rest.repos.compareCommitsWithBasehead({
+      owner,
+      repo,
+      basehead: `${baseSha}...${headSha}`,
+    });
+    const changedPaths = (comparison.files || []).map((file) => file.filename);
+    const unexpected = changedPaths.filter((file) => {
+      if (allowedPaths.includes(file)) {
+        return false;
+      }
+      return !RELEASE_LINE_RECOVERY_PATHS.some((allowedPath) =>
+        allowedPath.endsWith("/") ? file.startsWith(allowedPath) : file === allowedPath,
+      );
+    });
+    if (unexpected.length > 0) {
+      throw new Error(
+        `Release-line recovery PR changed files outside buildchain recovery scope: ${unexpected.join(", ")}`,
+      );
+    }
+  };
+
   const assertPromotionPrOrVersionStateParent = async ({ commitSha, targetRef, allowedPaths }) => {
     try {
       await assertChannelPromotionPr({
@@ -1772,6 +1823,7 @@ async function promoteBuildchainRefs({
   const assertReleasePrOrVersionStateParent = async ({
     commitSha,
     targetRef,
+    alphaSha,
     alphaTag,
     alphaTreeSha,
     allowedPaths,
@@ -1801,6 +1853,32 @@ async function promoteBuildchainRefs({
       });
       await assertOnlyAllowedChangesBetween({
         baseSha: parentSha,
+        headSha: commitSha,
+        allowedPaths,
+      });
+      return;
+    }
+    const { data: pullRequests } =
+      await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+        owner,
+        repo,
+        commit_sha: commitSha,
+      });
+    const matchingReleaseRecoveryPullRequest = pullRequests.find((pullRequest) => {
+      const baseRef = pullRequest.base?.ref;
+      const headRef = pullRequest.head?.ref;
+      const headRepo = pullRequest.head?.repo?.full_name;
+      const recovery = parseReleaseLineRecoveryRef(headRef);
+      return (
+        pullRequest.merged_at &&
+        baseRef === targetRef &&
+        recovery?.targetRef === targetRef &&
+        headRepo === `${owner}/${repo}`
+      );
+    });
+    if (matchingReleaseRecoveryPullRequest) {
+      await assertOnlyAllowedReleaseRecoveryChangesBetween({
+        baseSha: alphaSha,
         headSha: commitSha,
         allowedPaths,
       });
@@ -2497,6 +2575,7 @@ async function promoteBuildchainRefs({
     await assertReleasePrOrVersionStateParent({
       commitSha: releaseSha,
       targetRef,
+      alphaSha: sourceAlpha.sha,
       alphaTag: sourceAlpha.tag,
       alphaTreeSha: alphaCommit.treeSha,
       allowedPaths: releaseCommit.files,
