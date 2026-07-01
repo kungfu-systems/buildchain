@@ -40,14 +40,18 @@ export const DEFAULT_PUBLISH_REFS = Object.freeze({
   alpha: [
     "^refs/heads/alpha/v\\d+/v\\d+\\.\\d+$",
     "^refs/tags/v\\d+\\.\\d+\\.\\d+-alpha\\.\\d+$",
+    "^refs/heads/publish-gate/alpha/.+/.+$",
   ],
   release: [
     "^refs/heads/release/v\\d+/v\\d+\\.\\d+$",
     "^refs/tags/v\\d+\\.\\d+\\.\\d+$",
     "^refs/tags/v\\d+\\.\\d+$",
     "^refs/tags/v\\d+$",
+    "^refs/heads/publish-gate/release/.+/.+$",
   ],
+  anchor: ["^refs/heads/publish-gate/anchor$"],
   major: [
+    "^refs/heads/publish-gate/major$",
     "^refs/heads/major-gate$",
     "^refs/tags/v\\d+\\.0\\.0$",
     "^refs/tags/v\\d+\\.0$",
@@ -68,6 +72,315 @@ function parseJsonObject(value, label) {
     }
     throw new Error(`${label} must be valid JSON: ${error.message}`);
   }
+}
+
+function getByDottedKey(target, key) {
+  return String(key)
+    .split(".")
+    .reduce((current, segment) => current?.[segment], target);
+}
+
+function assertSha(sha, label = "sourceSha") {
+  const value = String(sha || "").trim();
+  if (!/^[0-9a-f]{40}$/i.test(value)) {
+    throw new Error(`${label} must be a 40-character Git SHA`);
+  }
+  return value;
+}
+
+function normalizeGitRefName(value = "") {
+  return String(value || "")
+    .trim()
+    .replace(/^refs\/heads\//, "")
+    .replace(/^refs\/tags\//, "");
+}
+
+function normalizeGitFullRef(value = "") {
+  const ref = String(value || "").trim();
+  if (!ref) {
+    return "";
+  }
+  if (ref.startsWith("refs/")) {
+    return ref;
+  }
+  if (/^v\d/.test(ref)) {
+    return `refs/tags/${ref}`;
+  }
+  return `refs/heads/${ref}`;
+}
+
+export function parsePublishSourceRef(value = "") {
+  const sourceRef = normalizeGitRefName(value);
+  if (!sourceRef) {
+    return {
+      sourceRef: "",
+      fullRef: "",
+      enabled: false,
+      channel: "none",
+      line: "",
+      consumerVersion: "",
+      anchor: false,
+      legacyAlias: false,
+    };
+  }
+  if (sourceRef === "publish-gate/anchor") {
+    return {
+      sourceRef,
+      fullRef: "refs/heads/publish-gate/anchor",
+      enabled: true,
+      channel: "anchor",
+      line: "",
+      consumerVersion: "",
+      anchor: true,
+      legacyAlias: false,
+    };
+  }
+  if (sourceRef === "publish-gate/major" || sourceRef === "major-gate") {
+    return {
+      sourceRef,
+      fullRef: sourceRef === "major-gate" ? "refs/heads/major-gate" : "refs/heads/publish-gate/major",
+      enabled: true,
+      channel: "major",
+      line: "",
+      consumerVersion: "",
+      anchor: false,
+      legacyAlias: sourceRef === "major-gate",
+    };
+  }
+  const match = sourceRef.match(/^publish-gate\/(alpha|release)\/(.+)\/([^/]+)$/);
+  if (!match) {
+    throw new Error(
+      `unsupported publish source ref: ${sourceRef}; expected publish-gate/alpha/<line>/<version>, publish-gate/release/<line>/<version>, publish-gate/anchor, publish-gate/major, or major-gate`,
+    );
+  }
+  const [, channel, line, consumerVersion] = match;
+  if (!line.includes("/")) {
+    throw new Error(`publish source line must include a major/minor path: ${sourceRef}`);
+  }
+  if (!/^[A-Za-z0-9._+~-]+$/.test(consumerVersion)) {
+    throw new Error(`publish source consumer version contains unsupported characters: ${consumerVersion}`);
+  }
+  return {
+    sourceRef,
+    fullRef: `refs/heads/${sourceRef}`,
+    enabled: true,
+    channel,
+    line,
+    consumerVersion,
+    anchor: false,
+    legacyAlias: false,
+  };
+}
+
+export function resolvePublishSourceLock({
+  publishSourceRef = "",
+  publishSourceSha = "",
+  fallbackRef = "",
+  fallbackSha = "",
+} = {}) {
+  const parsed = parsePublishSourceRef(publishSourceRef);
+  if (!parsed.enabled) {
+    return {
+      ...parsed,
+      sourceRef: "",
+      fullRef: "",
+      fallbackRef: normalizeGitRefName(fallbackRef),
+      fallbackFullRef: normalizeGitFullRef(fallbackRef),
+      sourceSha: fallbackSha ? assertSha(fallbackSha, "fallbackSha") : "",
+      sourceLocked: false,
+      sourceReason: "publish source ref is not configured",
+    };
+  }
+  return {
+    ...parsed,
+    sourceSha: assertSha(publishSourceSha),
+    sourceLocked: true,
+    sourceReason: `locked ${parsed.sourceRef} at ${publishSourceSha}`,
+  };
+}
+
+function versionValue(file) {
+  if (file.type === "json" || file.type === "toml") {
+    return getByDottedKey(file.content, file.key);
+  }
+  const match = file.source.match(file.pattern);
+  return match?.groups?.version;
+}
+
+export async function createResolvedReleaseManifest({
+  cwd = process.cwd(),
+  repository = "",
+  sourceRef = "",
+  sourceSha = "",
+  anchorRequestJson = "",
+  publishRegistry = "https://registry.npmjs.org/",
+  distTag = "",
+  visibilityGate = "main-package-last",
+} = {}) {
+  const lock = resolvePublishSourceLock({
+    publishSourceRef: sourceRef,
+    publishSourceSha: sourceSha,
+    fallbackRef: sourceRef,
+    fallbackSha: sourceSha,
+  });
+  const {
+    discoverConfiguredVersionStateFiles,
+    getVersionStrategy,
+    loadBuildchainConfig,
+    loadConfiguredAnchorManifest,
+  } = await import("../packages/core/buildchain-config.js");
+  const loadedConfig = loadBuildchainConfig(cwd);
+  const versionStrategy = getVersionStrategy(loadedConfig);
+  const versionFiles = loadedConfig?.config?.version
+    ? discoverConfiguredVersionStateFiles(cwd, loadedConfig)
+    : [];
+  const resolvedVersionFiles = versionFiles.map((file) => ({
+    path: file.path,
+    type: file.type,
+    key: file.key,
+    version: versionValue(file),
+  }));
+  if (lock.consumerVersion) {
+    if (resolvedVersionFiles.length === 0) {
+      throw new Error("publish source consumer version requires configured version.files");
+    }
+    for (const file of resolvedVersionFiles) {
+      if (file.version !== lock.consumerVersion) {
+        throw new Error(
+          `publish source version mismatch: ${file.path} has ${file.version}, expected ${lock.consumerVersion}`,
+        );
+      }
+    }
+  }
+
+  const anchorManifest = loadConfiguredAnchorManifest(cwd, loadedConfig);
+  if (lock.consumerVersion && anchorManifest?.fields?.npmVersion && anchorManifest.fields.npmVersion !== lock.consumerVersion) {
+    throw new Error(
+      `anchor manifest npmVersion ${anchorManifest.fields.npmVersion} does not match ${lock.consumerVersion}`,
+    );
+  }
+  const anchorRequest = anchorRequestJson.trim()
+    ? parseJsonObject(anchorRequestJson, "publish-anchor-request-json")
+    : undefined;
+  if (lock.channel === "anchor" && !anchorRequest) {
+    throw new Error("publish-gate/anchor requires publish-anchor-request-json");
+  }
+
+  return {
+    schema: 1,
+    sourceRef: lock.sourceRef,
+    sourceSha: lock.sourceSha,
+    sourceLocked: lock.sourceLocked,
+    channel: lock.channel,
+    line: lock.line,
+    consumerVersion: lock.consumerVersion,
+    repository,
+    versionStrategy: versionStrategy.strategy,
+    versionNext: versionStrategy.next,
+    versionFiles: resolvedVersionFiles,
+    anchorManifest: anchorManifest
+      ? {
+          path: anchorManifest.path,
+          summary: anchorManifest.fields,
+        }
+      : undefined,
+    anchorRequest,
+    publish: {
+      registry: publishRegistry,
+      distTag: distTag || (lock.channel === "release" ? "latest" : lock.channel === "alpha" ? "alpha" : ""),
+      visibilityGate,
+    },
+  };
+}
+
+export function verifyPublishSourceLock({ sourceRef = "", expectedSha = "", currentSha = "" } = {}) {
+  const expected = assertSha(expectedSha, "expectedSha");
+  const current = assertSha(currentSha, "currentSha");
+  if (expected !== current) {
+    throw new Error(`publish source ref moved: ${sourceRef || "<unknown>"} expected ${expected}, got ${current}`);
+  }
+  return {
+    ok: true,
+    sourceRef,
+    sourceSha: expected,
+  };
+}
+
+function normalizePackageSet(packages) {
+  if (!Array.isArray(packages) || packages.length === 0) {
+    throw new Error("package set must include at least one package");
+  }
+  return packages.map((pkg, index) => {
+    const name = String(pkg?.name || "").trim();
+    const version = String(pkg?.version || "").trim();
+    if (!name) {
+      throw new Error(`packages[${index}].name is required`);
+    }
+    if (!version) {
+      throw new Error(`packages[${index}].version is required`);
+    }
+    return {
+      name,
+      version,
+      role: pkg.role === "main" ? "main" : "platform",
+      integrity: pkg.integrity ? String(pkg.integrity) : "",
+    };
+  });
+}
+
+function existingPackageKey(entry) {
+  return `${entry.name}@${entry.version}`;
+}
+
+export function planPackageSetPublish({
+  packages = [],
+  existingPackages = [],
+  mainPackage = "",
+  distTag = "alpha",
+} = {}) {
+  const normalized = normalizePackageSet(packages).map((pkg) => ({
+    ...pkg,
+    role: pkg.name === mainPackage ? "main" : pkg.role,
+  }));
+  const mainPackages = normalized.filter((pkg) => pkg.role === "main");
+  if (mainPackages.length !== 1) {
+    throw new Error("package set must contain exactly one main package");
+  }
+  const existing = new Map(
+    existingPackages.map((pkg) => {
+      const normalizedExisting = normalizePackageSet([pkg])[0];
+      return [existingPackageKey(normalizedExisting), normalizedExisting];
+    }),
+  );
+  const steps = [];
+  for (const pkg of normalized) {
+    const already = existing.get(existingPackageKey(pkg));
+    if (already) {
+      if (pkg.integrity && already.integrity && pkg.integrity !== already.integrity) {
+        throw new Error(`existing package integrity mismatch: ${pkg.name}@${pkg.version}`);
+      }
+      steps.push({ action: "accept-existing", package: pkg });
+    } else {
+      steps.push({ action: "publish", package: pkg });
+    }
+  }
+  const orderedSteps = [
+    ...steps.filter((step) => step.package.role !== "main"),
+    ...steps.filter((step) => step.package.role === "main"),
+  ];
+  const main = mainPackages[0];
+  return {
+    completeAfterPlan: true,
+    visibilityGate: "main-package-last",
+    distTag,
+    steps: orderedSteps,
+    distTagMove: {
+      action: "move-dist-tag",
+      package: main,
+      distTag,
+      after: "package-set-complete",
+    },
+  };
 }
 
 function normalizePublishRefs(value = "") {
@@ -186,6 +499,14 @@ export function resolvePublishGate({
       publishChannel: channel,
       publishAllowed: false,
       publishReason: "publish channel is none",
+    };
+  }
+  if (channel === "anchor") {
+    return {
+      trusted: isTrusted,
+      publishChannel: channel,
+      publishAllowed: false,
+      publishReason: "anchor gates resolve source state but do not publish artifacts",
     };
   }
   if (!isTrusted) {

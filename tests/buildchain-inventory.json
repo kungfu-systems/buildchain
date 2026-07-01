@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "release": "buildchain-v1",
+  "release": "buildchain-v2",
   "workflowSources": [
     {
       "repo": "workflows",
@@ -153,7 +153,10 @@
       "artifactNameTemplate": true,
       "expectedArtifactSummary": true,
       "aggregateSummaryArtifact": true,
-      "publishGateChannels": true
+      "publishGateChannels": true,
+      "publishGateSourceLock": true,
+      "resolvedReleaseManifest": true,
+      "packageSetPublishPlan": true
     },
     "libnodeShapedFixture": "fixtures/libnode-shaped",
     "buildchainRefPromotionWorkflow": "buildchain-ref-promotion.yml"

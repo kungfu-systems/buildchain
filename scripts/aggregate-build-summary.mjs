@@ -27,8 +27,8 @@ export function aggregateBuildSummaryCli() {
     artifactName,
     git: {
       repository: process.env.GITHUB_REPOSITORY || "",
-      sha: process.env.GITHUB_SHA || "",
-      ref: process.env.GITHUB_REF || "",
+      sha: process.env.BUILDCHAIN_SOURCE_SHA || process.env.GITHUB_SHA || "",
+      ref: process.env.BUILDCHAIN_SOURCE_REF || process.env.GITHUB_REF || "",
       runId: process.env.GITHUB_RUN_ID || "",
       runAttempt: process.env.GITHUB_RUN_ATTEMPT || "",
     },
@@ -37,6 +37,15 @@ export function aggregateBuildSummaryCli() {
       channel: readEnv("BUILDCHAIN_PUBLISH_CHANNEL", "none"),
       allowed: readEnv("BUILDCHAIN_PUBLISH_ALLOWED", "false") === "true",
       reason: readEnv("BUILDCHAIN_PUBLISH_REASON", ""),
+    },
+    publishSource: {
+      ref: readEnv("BUILDCHAIN_PUBLISH_SOURCE_REF", ""),
+      sha: readEnv("BUILDCHAIN_PUBLISH_SOURCE_SHA", ""),
+      locked: readEnv("BUILDCHAIN_PUBLISH_SOURCE_LOCKED", "false") === "true",
+      channel: readEnv("BUILDCHAIN_PUBLISH_SOURCE_CHANNEL", "none"),
+      line: readEnv("BUILDCHAIN_PUBLISH_SOURCE_LINE", ""),
+      consumerVersion: readEnv("BUILDCHAIN_PUBLISH_SOURCE_CONSUMER_VERSION", ""),
+      releaseManifest: readEnv("BUILDCHAIN_RELEASE_MANIFEST_JSON", ""),
     },
     platformCount: manifests.length,
     fileCount: manifests.reduce((sum, manifest) => sum + Number(manifest.summary?.fileCount || 0), 0),
@@ -63,6 +72,7 @@ export function aggregateBuildSummaryCli() {
       fileCount: summary.fileCount,
       totalBytes: summary.totalBytes,
       publishGate: summary.publishGate,
+      publishSource: summary.publishSource,
     }),
   });
   return summary;
