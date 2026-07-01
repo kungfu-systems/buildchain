@@ -102,3 +102,49 @@ command = "node -e \\"require('node:fs').mkdirSync('out',{recursive:true});requi
   assert.equal(manifest.files[0].path, "out/result.txt");
   assert.ok(fs.existsSync(path.join(cwd, ".buildchain", "artifacts", "manifest.json")));
 });
+
+test("npm dry-run validates package publish shape without publishing", () => {
+  const cwd = tempDir("npm-dry-run");
+  fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({
+    name: "buildchain-dry-run-fixture",
+    version: "1.2.3-alpha.0",
+    private: false,
+    license: "Apache-2.0",
+  }, null, 2));
+  fs.writeFileSync(path.join(cwd, "README.md"), "# fixture\n");
+  const result = JSON.parse(runBuildchain([
+    "npm",
+    "dry-run",
+    "--cwd",
+    cwd,
+    "--json",
+    "--skip-npm-publish-dry-run",
+  ]));
+
+  assert.equal(result.package.name, "buildchain-dry-run-fixture");
+  assert.equal(result.exactTag, "v1.2.3-alpha.0");
+  assert.equal(result.distTag, "alpha");
+  assert.equal(result.wouldPublish, false);
+  assert.ok(result.pack.entryCount >= 2);
+});
+
+test("npm dry-run fails closed when expected tag does not match package version", () => {
+  const cwd = tempDir("npm-dry-run-mismatch");
+  fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({
+    name: "buildchain-dry-run-mismatch",
+    version: "1.2.3",
+    private: false,
+  }, null, 2));
+  const failure = runBuildchainFailure([
+    "npm",
+    "dry-run",
+    "--cwd",
+    cwd,
+    "--expected-tag",
+    "v1.2.4",
+    "--skip-npm-publish-dry-run",
+  ]);
+
+  assert.notEqual(failure.status, 0);
+  assert.match(failure.stderr, /tag=v1\.2\.4 expected=v1\.2\.3/);
+});

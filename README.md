@@ -125,6 +125,7 @@ Repositories can also bootstrap local integration through the CLI:
 ```bash
 npx @kungfu-systems/buildchain init --type package
 npx @kungfu-systems/buildchain validate --require-version-state
+npx @kungfu-systems/buildchain npm dry-run --json
 ```
 
 Standalone `workflows` and `action-*` repositories are historical rollback
@@ -171,7 +172,9 @@ Buildchain's npm package is published only from exact v-prefixed release tags
 created by that same promotion flow. Alpha releases such as
 `v2.0.13-alpha.0` publish to npm with dist-tag `alpha`; stable releases such as
 `v2.0.13` publish with dist-tag `latest`. Floating refs like `v2`, `v2.0`, and
-`v2.0-alpha` never publish npm packages.
+`v2.0-alpha` never publish npm packages. The same workflow can be manually
+dispatched as a dry-run before release; that path verifies package contents and
+publish shape but does not run a real `npm publish`.
 
 ## Read Next
 

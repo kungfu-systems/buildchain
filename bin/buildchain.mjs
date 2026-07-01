@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { initBuildchainRepo } from "../scripts/init-repo.mjs";
+import { npmPublishDryRun } from "../scripts/npm-publish-dry-run.mjs";
 import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
 import { validateBuildchainConfig } from "../packages/core/buildchain-config.js";
 
@@ -20,6 +21,8 @@ function usage() {
                       [--require-lifecycle-stages <comma-list>]
   buildchain lifecycle run <stage> [--cwd <dir>] [--required]
                              [--artifact-name <name>] [--artifact-path <path>]...
+  buildchain npm dry-run [--cwd <dir>] [--expected-tag <tag>] [--registry <url>]
+                         [--dist-tag <tag>] [--skip-npm-publish-dry-run] [--json]
   buildchain release <inspect|recover|finalize|abort> ...
   buildchain web-surface ...
   buildchain publish-source <lock|manifest|verify-lock> ...
@@ -29,6 +32,7 @@ Examples:
   buildchain init --type package --package-manager pnpm
   buildchain validate --require-version-state --require-lifecycle-stages build,verify
   buildchain lifecycle run build --artifact-path dist --artifact-name "{repo}-{version}-{platform}"
+  buildchain npm dry-run --json
 `;
 }
 
@@ -130,6 +134,27 @@ async function main(argv = process.argv.slice(2)) {
       workspace: process.cwd(),
     });
     printJson(manifest);
+    return;
+  }
+
+  if (command === "npm") {
+    const [subcommand = "", ...npmArgs] = args;
+    if (subcommand !== "dry-run") {
+      throw new Error("usage: buildchain npm dry-run");
+    }
+    const result = npmPublishDryRun({
+      cwd: readFlag(npmArgs, "cwd", process.cwd()),
+      expectedTag: readFlag(npmArgs, "expected-tag", ""),
+      registry: readFlag(npmArgs, "registry", "https://registry.npmjs.org/"),
+      distTag: readFlag(npmArgs, "dist-tag", ""),
+      skipNpmPublishDryRun: readBooleanFlag(npmArgs, "skip-npm-publish-dry-run"),
+    });
+    if (readBooleanFlag(npmArgs, "json")) {
+      printJson(result);
+    } else {
+      process.stdout.write(`npm publish dry-run ok: ${result.package.name}@${result.package.version} -> ${result.distTag}\n`);
+      process.stdout.write(`pack entries: ${result.pack.entryCount}\n`);
+    }
     return;
   }
 
