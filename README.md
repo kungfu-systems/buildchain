@@ -104,6 +104,9 @@ Buildchain v2 ships these active surfaces:
   commands, trusted event gating, artifact name templates, expected artifact
   checks, deterministic artifact manifests, publish-gate source locks, resolved
   release manifests, and aggregate build summaries;
+- `.github/workflows/.web-surface.yml` as the reusable site/app surface for PR
+  preview plans, closed-PR preview cleanup plans, push-main staging promotion
+  plans, and explicit production environment gates;
 - `actions/run-lifecycle` for callers that need the same lifecycle/manifest
   contract inside their own workflows;
 - governance-closed self-promotion through `Buildchain Ref Promotion`.

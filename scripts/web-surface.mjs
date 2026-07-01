@@ -89,11 +89,18 @@ export function webSurfaceCli() {
       cwd,
       channel,
       aliases,
+      sourceSha,
+      pullNumber,
+      event: readArg("event", process.env.BUILDCHAIN_WEB_SURFACE_EVENT || "manual"),
+      actor: readArg("actor", process.env.GITHUB_ACTOR || ""),
+      runId: readArg("run-id", process.env.GITHUB_RUN_ID || ""),
       dryRun: readBooleanArg("dry-run", true),
     });
     writeJson(result, output);
     writeGitHubOutputs({
       "web-surface-cleanup-count": String(result.entries.length),
+      "web-surface-cleanup-mode": result.applyMode,
+      "web-surface-cleanup-status": result.status,
       "web-surface-cleanup-plan-json": JSON.stringify(result),
     });
     return result;

@@ -12,6 +12,8 @@ const SUPPORTED_VERSION_NEXT = new Set(["auto", "manual"]);
 const SUPPORTED_PROJECT_TYPES = new Set(["package", "web-surface"]);
 const WEB_SURFACE_CHANNELS = ["preview", "staging", "production"];
 const SUPPORTED_CHANNEL_VISIBILITY = new Set(["ephemeral", "protected", "public", "internal"]);
+const SUPPORTED_ACCESS_CONTROL = new Set(["none", "managed-network", "edge-basic-auth", "oidc", "app-auth"]);
+const SUPPORTED_EDGE_AUTH = new Set(["none", "cloudfront-basic-auth", "oidc", "app-auth"]);
 const SUPPORTED_DEPLOY_ADAPTERS = new Set([
   "aws-s3-cloudfront",
   "aws-elastic-beanstalk",
@@ -159,13 +161,18 @@ function normalizeChannelConfig(name, channel) {
   if (!SUPPORTED_CHANNEL_VISIBILITY.has(visibility)) {
     throw new Error(`channels.${name}.visibility must be one of ephemeral, protected, public, or internal`);
   }
+  const accessControl = normalizeAccessControl(channel, name);
+  const edgeAuth = normalizeEdgeAuth(channel, name, accessControl);
   const normalized = {
     name,
     visibility,
-    requiresAuth: optionalBoolean(channel.requires_auth, name === "staging"),
+    requiresAuth: optionalBoolean(channel.requires_auth, accessControl !== "none"),
+    requiresControlledAccess: accessControl !== "none",
     noindex: optionalBoolean(channel.noindex, name !== "production"),
     promotable: optionalBoolean(channel.promotable, name === "staging"),
     canonical: optionalBoolean(channel.canonical, name === "production"),
+    accessControl,
+    edgeAuth,
   };
   if (hasUrl) {
     normalized.url = assertString(channel.url, `channels.${name}.url`);
@@ -174,6 +181,36 @@ function normalizeChannelConfig(name, channel) {
     normalized.urlPattern = assertString(channel.url_pattern, `channels.${name}.url_pattern`);
   }
   return normalized;
+}
+
+function normalizeAccessControl(channel, name) {
+  if (channel.access_control !== undefined) {
+    const accessControl = assertString(channel.access_control, `channels.${name}.access_control`);
+    if (!SUPPORTED_ACCESS_CONTROL.has(accessControl)) {
+      throw new Error(`channels.${name}.access_control must be one of none, managed-network, edge-basic-auth, oidc, or app-auth`);
+    }
+    return accessControl;
+  }
+  if (name === "staging") {
+    return "edge-basic-auth";
+  }
+  if (name === "production") {
+    return "none";
+  }
+  return "none";
+}
+
+function normalizeEdgeAuth(channel, name, accessControl) {
+  if (channel.edge_auth !== undefined) {
+    const edgeAuth = assertString(channel.edge_auth, `channels.${name}.edge_auth`);
+    if (!SUPPORTED_EDGE_AUTH.has(edgeAuth)) {
+      throw new Error(`channels.${name}.edge_auth must be one of none, cloudfront-basic-auth, oidc, or app-auth`);
+    }
+    return edgeAuth;
+  }
+  return accessControl === "edge-basic-auth"
+    ? "cloudfront-basic-auth"
+    : "none";
 }
 
 function defaultChannelVisibility(name) {
@@ -290,17 +327,20 @@ function validateWebSurfaceConfig(config) {
       throw new Error(`channels.${name}.url is required for web-surface`);
     }
   }
-  if (!config.channels.staging.requiresAuth) {
-    throw new Error("channels.staging.requires_auth must be true for web-surface");
+  if (config.channels.staging.visibility === "public") {
+    throw new Error("channels.staging.visibility must not be public for web-surface");
+  }
+  if (config.channels.staging.accessControl === "none") {
+    throw new Error("channels.staging.access_control must protect staging for web-surface");
+  }
+  if (config.channels.staging.accessControl === "edge-basic-auth" && config.channels.staging.edgeAuth === "none") {
+    throw new Error("channels.staging.edge_auth must not be none when access_control = edge-basic-auth");
   }
   if (!config.channels.staging.noindex) {
     throw new Error("channels.staging.noindex must be true for web-surface");
   }
   const stagingSecurity = config.security?.staging;
   if (stagingSecurity) {
-    if (stagingSecurity.requiresAuth === false) {
-      throw new Error("security.staging.requires_auth must not disable staging auth");
-    }
     if (stagingSecurity.noindex === false) {
       throw new Error("security.staging.noindex must not disable staging noindex");
     }
@@ -624,6 +664,9 @@ export function validateBuildchainConfig(
             {
               visibility: channel.visibility,
               requiresAuth: channel.requiresAuth,
+              requiresControlledAccess: channel.requiresControlledAccess,
+              accessControl: channel.accessControl,
+              edgeAuth: channel.edgeAuth,
               noindex: channel.noindex,
               promotable: channel.promotable,
               canonical: channel.canonical,
