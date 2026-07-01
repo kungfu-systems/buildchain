@@ -191,8 +191,15 @@ This prints the branch/tag/version-state/governance plan that a channel merge
 would trigger. It is intentionally separate from `buildchain npm dry-run`, which
 only checks package publish shape.
 
-## Read Next
+## Documentation
 
+- [Documentation map](docs/MAP.md) routes common user, contributor, release,
+  workflow, and security questions to the right document.
+- [Contributing guide](CONTRIBUTING.md) explains local development, commit
+  rules, and pull request flow.
+- [Security policy](SECURITY.md) explains private vulnerability reporting.
+- [License policy](LICENSE-POLICY.md) explains Apache-2.0 and DCO contribution
+  terms.
 - [Release governance](docs/release-governance.md) explains the design problem,
   old ABV compatibility, hard constraints, and operational guarantees.
 - [Release flow diagrams](docs/release-flow.md) gives the branch/tag state
@@ -261,6 +268,7 @@ version lines or anchored release semantics.
 
 ## Read Next
 
+- [Documentation map](docs/MAP.md)
 - [Lifecycle protocol](docs/lifecycle-protocol.md)
 - [Publish transaction](docs/publish-transaction.md)
 - [Reusable build surface](docs/reusable-build-surface.md)

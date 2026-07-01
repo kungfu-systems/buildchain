@@ -228,6 +228,7 @@ jobs:
         with:
           name: buildchain-web-surface-plans
           path: .buildchain/web-surface-*-plan.json
+          include-hidden-files: true
           if-no-files-found: ignore
 
       - name: Upload web-surface artifact
@@ -236,6 +237,7 @@ jobs:
         with:
           name: buildchain-web-surface-artifact
           path: ${{ inputs.working-directory }}/${{ inputs.artifact-path }}
+          include-hidden-files: true
           if-no-files-found: error
 
       - name: Select web-surface outputs

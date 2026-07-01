@@ -16,4 +16,8 @@ It is intentionally small, but it keeps the important shape:
   with a deterministic artifact name and manifest;
 - the fixture can be resolved through a publish-gate source lock, which binds
   the requested consumer version to `package.json` and `libnode.release.json`
-  before any publish side effect is allowed.
+  before any publish side effect is allowed;
+- `[publish]` declares the normal token-free path:
+  `mode = "publish-final-version"` with `auth = "trusted-publishing"`, `latest`
+  as the release dist-tag, and platform packages published before the main
+  package.

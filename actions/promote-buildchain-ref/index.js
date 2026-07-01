@@ -23,6 +23,11 @@ async function main() {
   const publishEvidencePath = core.getInput("publish-evidence-path");
   const transactionStatePath = core.getInput("transaction-state-path");
   const publishRequiredArtifactsJson = core.getInput("publish-required-artifacts-json");
+  const publishMode = core.getInput("publish-mode");
+  const publishAuth = core.getInput("publish-auth");
+  const publishDistTag = core.getInput("publish-dist-tag");
+  const publishPackageSetOrder = core.getInput("publish-package-set-order");
+  const publishPackageMain = core.getInput("publish-package-main");
   const releaseMaterialSha = core.getInput("release-material-sha");
   const publishToolingSha = core.getInput("publish-tooling-sha");
   const publishTransactionOverride = core.getBooleanInput("publish-transaction-override");
@@ -34,6 +39,8 @@ async function main() {
       tags,
       publishTransaction,
       publishCommand,
+      publishMode,
+      publishAuth,
     })));
   }
   const result = await promoteBuildchainRefs({
@@ -54,6 +61,11 @@ async function main() {
     publishEvidencePath,
     transactionStatePath,
     publishRequiredArtifactsJson,
+    publishMode,
+    publishAuth,
+    publishDistTag,
+    publishPackageSetOrder,
+    publishPackageMain,
     releaseMaterialSha,
     publishToolingSha,
     actor: github.context.actor,
