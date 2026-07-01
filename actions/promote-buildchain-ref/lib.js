@@ -1069,6 +1069,10 @@ function parseAlphaPrereleaseTag(refName, releasePrefix) {
   };
 }
 
+function parseAlphaPrereleaseVersion(version, releasePrefix) {
+  return parseAlphaPrereleaseTag(`refs/tags/v${version}`, releasePrefix);
+}
+
 function parseAlphaTransactionStateRef(refName, releasePrefix) {
   const statePrefix = releasePrefix.replace(/^v/, "").replaceAll(".", "-");
   const match = String(refName || "").match(
@@ -1084,6 +1088,52 @@ function parseAlphaTransactionStateRef(refName, releasePrefix) {
     patch: Number(match[1]),
     prerelease: Number(match[2]),
     occupied: true,
+  };
+}
+
+function getVersionFileValue(file) {
+  if (file.type === "json" || file.type === "toml") {
+    return String(file.key || "")
+      .split(".")
+      .reduce((current, segment) => current?.[segment], file.content);
+  }
+  if (file.type === "regex") {
+    const match = file.source.match(file.pattern);
+    return match?.groups?.version;
+  }
+  return file.content?.version;
+}
+
+function currentAlphaVersionState({ cwd, refs, releasePrefix }) {
+  const discovered = discoverVersionStateFiles(cwd);
+  if (discovered.files.length === 0) {
+    return undefined;
+  }
+  const versions = [
+    ...new Set(
+      discovered.files
+        .map((file) => getVersionFileValue(file))
+        .filter((version) => typeof version === "string" && version.trim()),
+    ),
+  ];
+  if (versions.length !== 1) {
+    return undefined;
+  }
+  const parsed = parseAlphaPrereleaseVersion(versions[0], releasePrefix);
+  if (!parsed) {
+    return undefined;
+  }
+  const hasDurableState = refs.some((ref) => {
+    const candidate = parseAlphaPrereleaseRef(ref.ref, releasePrefix);
+    return candidate?.source === "release-state" && candidate.tag === `v${versions[0]}`;
+  });
+  if (!hasDurableState) {
+    return undefined;
+  }
+  return {
+    ...parsed,
+    tag: `v${versions[0]}`,
+    version: versions[0],
   };
 }
 
@@ -2194,13 +2244,25 @@ async function promoteBuildchainRefs({
         "Alpha promotion accepts at most one explicit prerelease tag",
       );
     }
-    const selectedAlpha = explicitAlphaTags[0]
-      ? { tag: explicitAlphaTags[0] }
-      : selectAlphaTag({
+    const currentAlpha = explicitAlphaTags[0]
+      ? undefined
+      : currentAlphaVersionState({
+          cwd,
           refs: lineRefs,
           releasePrefix: rule.releasePrefix,
-          sha,
         });
+    const currentAlphaTagSha = currentAlpha
+      ? await readRefSha(`tags/${currentAlpha.tag}`)
+      : undefined;
+    const selectedAlpha = explicitAlphaTags[0]
+      ? { tag: explicitAlphaTags[0] }
+      : currentAlpha && !currentAlphaTagSha
+        ? currentAlpha
+        : selectAlphaTag({
+            refs: lineRefs,
+            releasePrefix: rule.releasePrefix,
+            sha,
+          });
     const settledAlphaVersionState = await isSettledAlphaVersionState(selectedAlpha);
     if (settledAlphaVersionState) {
       updates.push({ ref: targetRef, action: "already-promoted", sha });

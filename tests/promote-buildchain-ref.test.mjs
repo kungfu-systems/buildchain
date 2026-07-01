@@ -2190,6 +2190,7 @@ test("strict alpha promotion can advance from a generated version-state merge co
     ["heads/dev/v1/v1.0", oldAlphaSha],
     ["tags/v1.0.5", OTHER_SHA],
     ["tags/v1.0.5-alpha.1", oldAlphaSha],
+    ["tags/v1.0.6-alpha.0", oldAlphaSha],
     ["heads/buildchain/release-state/1-0-6-alpha-0", "e".repeat(40)],
   ]);
   const pullRequests = [];
@@ -2299,6 +2300,7 @@ test("strict alpha promotion finalizes tags when dev already advanced", async ()
   const refs = new Map([
     ["heads/alpha/v1/v1.0", mergeSha],
     ["heads/dev/v1/v1.0", advancedDevSha],
+    ["heads/buildchain/release-state/1-0-6-alpha-0", "e".repeat(40)],
     ["tags/v1.0.5", OTHER_SHA],
     ["tags/v1.0.5-alpha.1", oldAlphaSha],
   ]);
