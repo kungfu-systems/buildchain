@@ -37,7 +37,7 @@ Buildchain release automation is branch-driven:
 | --- | --- | --- | --- |
 | `dev/vX/vX.Y -> alpha/vX/vX.Y` | publish the next testable alpha for a minor line | `vX.Y.Z-alpha.N` | `vX.Y-alpha`, `alpha/vX/vX.Y`, `dev/vX/vX.Y` |
 | `alpha/vX/vX.Y -> release/vX/vX.Y` | publish production for that minor line | `vX.Y.Z` | `vX.Y`, usually `vX`, `release/vX/vX.Y` |
-| `release/vX/vX.Y -> major-gate` | publish the next major from a reviewed production line | `v(X+1).0.0` | `v(X+1)`, `v(X+1).0`, `release/v(X+1)/v(X+1).0` |
+| `release/vX/vX.Y -> publish-gate/major` | publish the next major from a reviewed production line | `v(X+1).0.0` | `v(X+1)`, `v(X+1).0`, `release/v(X+1)/v(X+1).0` |
 
 After a production release, Buildchain prepares the next alpha source commit for
 the same minor line and moves `dev/vX/vX.Y`, `alpha/vX/vX.Y`, and
@@ -50,12 +50,14 @@ future minor refs can each receive many patch releases such as `v2.0.1234`.
 `v2` points at the selected stable major line, while `v2.0` points at the
 latest production patch for that minor line.
 
-`major-gate` replaces the old ABV `main` channel. It is deliberately not named
-`main` because it is not the active development trunk. Maintainers use the same
-PR flow as other channel promotions: merging `release/v2/v2.0 -> major-gate`
-means "publish the next major line from this production state." The promotion
-then creates the next major production version, for example `v3.0.0`, and
-prepares `dev/v3/v3.0` plus `alpha/v3/v3.0` at `v3.0.1-alpha.0`.
+`publish-gate/major` replaces the old ABV `main` channel. It is deliberately
+not named `main` because it is not the active development trunk. Maintainers use
+the same PR flow as other channel promotions: merging
+`release/v2/v2.0 -> publish-gate/major` means "publish the next major line from
+this production state." The promotion then creates the next major production
+version, for example `v3.0.0`, and prepares `dev/v3/v3.0` plus
+`alpha/v3/v3.0` at `v3.0.1-alpha.0`. The older `major-gate` branch name is only
+a compatibility alias during migration.
 
 Exact tags are always v-prefixed. Use `v2.0.0` and `v2.0.1-alpha.0`; bare tags
 such as `1.0.0` are not maintained as Buildchain release entrypoints.
@@ -127,7 +129,7 @@ The important constraints are:
   administrators;
 - alpha promotion must come from `dev/vX/vX.Y -> alpha/vX/vX.Y`;
 - release promotion must come from `alpha/vX/vX.Y -> release/vX/vX.Y`;
-- major promotion must come from `release/vX/vX.Y -> major-gate`;
+- major promotion must come from `release/vX/vX.Y -> publish-gate/major`;
 - release promotion must match an existing same-patch alpha tag tree;
 - generated version-state commits must pass the configured verification command
   before refs move;

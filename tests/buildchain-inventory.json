@@ -127,8 +127,8 @@
     "action-sync-extensions-version"
   ],
   "stableRefs": {
-    "actions": "kungfu-systems/buildchain/actions/<name>@v1",
-    "workflows": "kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v1"
+    "actions": "kungfu-systems/buildchain/actions/<name>@v2",
+    "workflows": "kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v2"
   },
   "verification": [
     "buildchain.toml lifecycle.verify",
