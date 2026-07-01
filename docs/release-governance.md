@@ -145,6 +145,12 @@ and still completes the exact and floating alpha tags for the reviewed alpha
 commit. Later dev changes must go through their own dev-to-alpha promotion
 instead of rewinding dev.
 
+If alpha finalization is resumed after the version-state PR is merged,
+Buildchain accepts the current alpha head as a merge commit that contains the
+recorded release material. An already-created exact alpha tag may point at the
+transaction release/material SHA or at the finalized alpha head; missing
+floating alpha tags are retried before the transaction becomes `complete`.
+
 ## Release Semantics
 
 A release merge is:
@@ -172,6 +178,12 @@ Buildchain then:
 The production channel and the test channel therefore intentionally diverge
 after release: production stays on the release commit, while alpha/dev continue
 at the next prerelease commit.
+
+If release finalization is resumed after the version-state PR is merged,
+Buildchain applies the same recovery rule: the current release head may be a
+merge commit that contains the recorded release material, existing exact tags
+and alpha/dev refs are accepted when they match the transaction, and missing
+floating `vX.Y` or `vX` tags are retried idempotently before completion.
 
 ## Major Gate Semantics
 

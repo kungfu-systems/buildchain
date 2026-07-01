@@ -236,6 +236,18 @@ stop in `finalizing` and output `finalization-needed=true`. A later run can
 resume from the same transaction state and complete ref movement without
 republishing matching artifacts.
 
+If finalization fails after an exact Git tag, a channel branch, or dev/alpha
+sync ref has already moved, the next run reads the durable `finalizing` state
+and continues from the recorded transaction. The current workflow SHA may be a
+version-state merge commit that contains or corresponds to the transaction's
+`release_material_sha`; it does not have to equal the original `source_sha` or
+the transaction `release_sha`. Exact tags are accepted when they already point
+at the transaction release/material SHA or the finalized channel head. Floating
+channel tags and dev/alpha refs are then retried idempotently, and the
+transaction is marked `complete` only after those public refs are consistent.
+An exact tag at an unrelated SHA is still a material conflict and blocks
+recovery.
+
 If finalization fails after an exact Git tag is created, the next run reads the
 durable `finalizing` state, verifies the exact tag points at the recorded
 release SHA, and retries the remaining floating refs. An exact tag at a
