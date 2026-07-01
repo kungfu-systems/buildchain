@@ -19,6 +19,7 @@ jobs:
       buildchain-ref: ${{ github.head_ref || github.ref_name }}
       working-directory: fixtures/libnode-shaped
       runner-preset: github-hosted
+      linux-container-preset: kungfu-verify
       artifact-name: libnode-shaped
       artifact-name-template: "{artifact}-{platform}-{shortSha}"
       artifact-paths: |
