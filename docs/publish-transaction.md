@@ -59,6 +59,12 @@ publish, repair, or finalize.
 Every meaningful state transition is written to the durable ref before public
 release refs move. If the durable write fails, the action fails closed.
 
+Durable release-state refs reserve their exact version even when the public exact
+tag was never created. If a later machine run sees a failed or repair-required
+state for `vX.Y.Z-alpha.N` and cannot resume it with the same transaction
+identity, alpha version selection must advance to the next prerelease instead
+of reusing or overwriting that failed transaction slot.
+
 ## Lifecycle
 
 Repositories declare publish work in `buildchain.toml`:
