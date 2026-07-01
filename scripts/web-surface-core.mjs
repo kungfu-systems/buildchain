@@ -116,6 +116,14 @@ function resolveChannelUrl(channel, alias) {
   return channel.url;
 }
 
+function manifestPrefixFor(deployConfig) {
+  return deployConfig.manifest_prefix || ".buildchain/deployments";
+}
+
+function objectPrefixFor(deployConfig, alias) {
+  return deployConfig.prefix || alias || "preview";
+}
+
 function retentionFor({ config, channelName, alias, deployedAt }) {
   if (channelName === "preview") {
     const classified = classifyPreviewAlias(alias);
@@ -224,6 +232,11 @@ export function createWebSurfaceDeploymentManifest({
     retentionClass: retention.retentionClass,
     expiresAt: retention.expiresAt,
     mutableAlias: retention.mutableAlias,
+    accessControl: channelConfig.accessControl,
+    edgeAuth: channelConfig.edgeAuth,
+    noindex: channelConfig.noindex,
+    promotable: channelConfig.promotable,
+    canonical: channelConfig.canonical,
     runtimeId,
     configFingerprint,
     secretRefs: [
@@ -296,11 +309,11 @@ function planAdapterSteps(adapter, deployConfig, manifest) {
       {
         action: "sync-static-artifact",
         target: deployConfig.bucket || deployConfig.target || "",
-        prefix: deployConfig.prefix || manifest.alias || manifest.channel,
+        prefix: objectPrefixFor(deployConfig, manifest.alias || manifest.channel),
       },
       {
         action: "write-deployment-manifest",
-        target: deployConfig.manifest_prefix || ".buildchain/deployments",
+        target: manifestPrefixFor(deployConfig),
       },
       {
         action: "invalidate-cdn",
@@ -315,7 +328,7 @@ function planAdapterSteps(adapter, deployConfig, manifest) {
     },
     {
       action: "write-deployment-manifest",
-      target: deployConfig.manifest_prefix || ".buildchain/deployments",
+      target: manifestPrefixFor(deployConfig),
     },
   ];
 }
@@ -325,35 +338,98 @@ export function planWebSurfaceCleanup({
   aliases = [],
   channel = "preview",
   now = new Date().toISOString(),
+  event = "manual",
+  sourceSha = "",
+  pullNumber = "",
+  actor = "",
+  runId = "",
   dryRun = true,
 } = {}) {
-  if (!dryRun) {
-    throw new Error("web-surface cleanup currently supports dry-run planning only");
-  }
   const loadedConfig = loadBuildchainConfig(cwd);
   const config = assertWebSurfaceConfig(loadedConfig);
   if (channel !== "preview") {
-    throw new Error("web-surface cleanup plan currently supports preview aliases only");
+    throw new Error("web-surface cleanup currently supports preview aliases only");
   }
+  const deployConfig = config.deploy?.[channel];
+  if (!deployConfig) {
+    throw new Error(`missing deploy.${channel}`);
+  }
+  const requestedAliases = [...aliases];
+  if (requestedAliases.length === 0 && pullNumber) {
+    requestedAliases.push(`pr-${pullNumber}`);
+  }
+  const manifestPrefix = manifestPrefixFor(deployConfig);
   return {
     schemaVersion: 1,
     contract: "kungfu-buildchain-web-surface-cleanup-plan",
-    dryRun: true,
+    dryRun,
+    applyMode: dryRun ? "dry-run" : "apply",
+    event,
     channel,
     now,
-    entries: aliases.map((alias) => {
+    sourceSha: sourceSha ? assertSha(sourceSha, "sourceSha") : "",
+    pullNumber: pullNumber ? String(pullNumber) : "",
+    actor,
+    runId,
+    status: requestedAliases.length === 0 ? "no-op" : "planned",
+    adapter: deployConfig.adapter,
+    target: deployConfig.bucket || deployConfig.target || "",
+    manifestPrefix,
+    secretRefs: [...new Set([...(deployConfig.secretRefs || [])])],
+    entries: requestedAliases.map((alias) => {
       const classified = classifyPreviewAlias(alias);
       const retention = retentionConfig(config, "preview");
+      const objectPrefix = objectPrefixFor(deployConfig, alias);
       return {
         alias,
         aliasKind: classified.kind,
         mutableAlias: classified.mutable,
         retentionClass: classified.retentionClass,
         retentionDays: retention[classified.retentionKey],
-        action: "expire-preview-alias",
+        action: "delete-preview-alias",
+        objectPrefix,
+        manifestKey: `${manifestPrefix.replace(/\/$/, "")}/${alias}.json`,
+        steps: cleanupAdapterSteps(deployConfig.adapter, deployConfig, {
+          alias,
+          objectPrefix,
+          manifestPrefix,
+        }),
       };
     }),
   };
+}
+
+function cleanupAdapterSteps(adapter, deployConfig, entry) {
+  if (adapter === "aws-s3-cloudfront") {
+    return [
+      {
+        action: "delete-static-prefix",
+        target: deployConfig.bucket || deployConfig.target || "",
+        prefix: entry.objectPrefix,
+      },
+      {
+        action: "delete-deployment-manifest",
+        target: entry.manifestPrefix,
+        key: `${entry.manifestPrefix.replace(/\/$/, "")}/${entry.alias}.json`,
+      },
+      {
+        action: "invalidate-cdn",
+        distribution: deployConfig.cloudfront_distribution || deployConfig.distribution || "",
+      },
+    ];
+  }
+  return [
+    {
+      action: "delete-preview-environment",
+      target: deployConfig.environment || deployConfig.service || deployConfig.target || "",
+      alias: entry.alias,
+    },
+    {
+      action: "delete-deployment-manifest",
+      target: entry.manifestPrefix,
+      key: `${entry.manifestPrefix.replace(/\/$/, "")}/${entry.alias}.json`,
+    },
+  ];
 }
 
 export function defaultWebSurfaceAlias({ channel = "preview", sourceSha = "", pullNumber = "" } = {}) {

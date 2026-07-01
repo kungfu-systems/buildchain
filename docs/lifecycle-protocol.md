@@ -287,7 +287,8 @@ noindex = true
 [channels.staging]
 url = "https://staging.kungfu.tech"
 visibility = "protected"
-requires_auth = true
+access_control = "managed-network"
+edge_auth = "none"
 noindex = true
 promotable = true
 

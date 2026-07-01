@@ -66,7 +66,7 @@ test("web-surface deploy plan emits deterministic manifest without touching AWS"
   });
 });
 
-test("web-surface manifest supports staging security and secret references", () => {
+test("web-surface manifest supports managed-network staging without Basic Auth", () => {
   withFixture((fixture) => {
     const manifest = createWebSurfaceDeploymentManifest({
       cwd: fixture,
@@ -79,10 +79,10 @@ test("web-surface manifest supports staging security and secret references", () 
     assert.equal(manifest.url, "https://staging.kungfu.tech");
     assert.equal(manifest.retentionClass, "staging-protected");
     assert.equal(manifest.expiresAt, "2026-09-29T00:00:00.000Z");
-    assert.deepEqual(
-      manifest.secretRefs.sort(),
-      ["AWS_ROLE_ARN", "STAGING_EDGE_AUTH_SECRET"].sort(),
-    );
+    assert.equal(manifest.accessControl, "managed-network");
+    assert.equal(manifest.edgeAuth, "none");
+    assert.equal(manifest.noindex, true);
+    assert.deepEqual(manifest.secretRefs.sort(), ["AWS_ROLE_ARN"].sort());
   });
 });
 
@@ -94,12 +94,57 @@ test("web-surface cleanup plan distinguishes mutable PR aliases from immutable S
     });
 
     assert.equal(cleanup.dryRun, true);
+    assert.equal(cleanup.status, "planned");
+    assert.equal(cleanup.applyMode, "dry-run");
     assert.equal(cleanup.entries[0].aliasKind, "pr");
     assert.equal(cleanup.entries[0].mutableAlias, true);
     assert.equal(cleanup.entries[0].retentionDays, 14);
+    assert.equal(cleanup.entries[0].action, "delete-preview-alias");
+    assert.equal(cleanup.entries[0].manifestKey, ".buildchain/deployments/pr-123.json");
     assert.equal(cleanup.entries[1].aliasKind, "sha");
     assert.equal(cleanup.entries[1].mutableAlias, false);
     assert.equal(cleanup.entries[1].retentionDays, 90);
+  });
+});
+
+test("web-surface closed PR cleanup can plan apply from pull number", () => {
+  withFixture((fixture) => {
+    const cleanup = planWebSurfaceCleanup({
+      cwd: fixture,
+      pullNumber: "321",
+      event: "pull-request-closed",
+      sourceSha: "1".repeat(40),
+      actor: "octocat",
+      runId: "12345",
+      dryRun: false,
+    });
+
+    assert.equal(cleanup.dryRun, false);
+    assert.equal(cleanup.applyMode, "apply");
+    assert.equal(cleanup.event, "pull-request-closed");
+    assert.equal(cleanup.status, "planned");
+    assert.equal(cleanup.pullNumber, "321");
+    assert.equal(cleanup.sourceSha, "1".repeat(40));
+    assert.equal(cleanup.entries.length, 1);
+    assert.equal(cleanup.entries[0].alias, "pr-321");
+    assert.deepEqual(
+      cleanup.entries[0].steps.map((step) => step.action),
+      ["delete-static-prefix", "delete-deployment-manifest", "invalidate-cdn"],
+    );
+  });
+});
+
+test("web-surface cleanup without aliases is an auditable no-op", () => {
+  withFixture((fixture) => {
+    const cleanup = planWebSurfaceCleanup({
+      cwd: fixture,
+      event: "pull-request-closed",
+      dryRun: false,
+    });
+
+    assert.equal(cleanup.status, "no-op");
+    assert.equal(cleanup.applyMode, "apply");
+    assert.deepEqual(cleanup.entries, []);
   });
 });
 

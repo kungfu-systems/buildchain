@@ -163,7 +163,8 @@ noindex = true
 [channels.staging]
 url = "https://staging.example.com"
 visibility = "protected"
-requires_auth = true
+access_control = "managed-network"
+edge_auth = "none"
 noindex = true
 promotable = true
 
@@ -193,7 +194,6 @@ bucket_ref = "AWS_PRODUCTION_BUCKET"
 distribution_ref = "AWS_PRODUCTION_DISTRIBUTION"
 
 [security.staging]
-requires_auth = true
 noindex = true
 isolated_providers = true
 

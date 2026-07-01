@@ -315,7 +315,8 @@ noindex = true
 [channels.staging]
 url = "https://staging.example.test"
 visibility = "protected"
-requires_auth = true
+access_control = "managed-network"
+edge_auth = "none"
 noindex = true
 
 [channels.production]
@@ -341,7 +342,6 @@ bucket = "demo-production"
 artifact_path = "dist"
 
 [security.staging]
-requires_auth = true
 noindex = true
 isolated_providers = true
 `,
@@ -350,13 +350,15 @@ isolated_providers = true
       const summary = validateBuildchainConfig(dir);
       assert.equal(summary.project.type, "web-surface");
       assert.equal(summary.channels.preview.urlPattern, "https://{alias}.preview.example.test");
-      assert.equal(summary.channels.staging.requiresAuth, true);
+      assert.equal(summary.channels.staging.accessControl, "managed-network");
+      assert.equal(summary.channels.staging.edgeAuth, "none");
+      assert.equal(summary.channels.staging.requiresControlledAccess, true);
       assert.equal(summary.deploy.production.adapter, "aws-s3-cloudfront");
     },
   );
 });
 
-test("web-surface staging must be protected and noindex", () => {
+test("web-surface staging must be access-controlled and noindex", () => {
   withTempRepo(
     {
       "buildchain.toml": `
@@ -370,7 +372,7 @@ url_pattern = "https://{alias}.preview.example.test"
 
 [channels.staging]
 url = "https://staging.example.test"
-requires_auth = false
+access_control = "none"
 noindex = true
 
 [channels.production]
@@ -389,7 +391,7 @@ adapter = "aws-s3-cloudfront"
     (dir) => {
       assert.throws(
         () => validateBuildchainConfig(dir),
-        /channels\.staging\.requires_auth must be true/,
+        /channels\.staging\.access_control must protect staging/,
       );
     },
   );
@@ -409,7 +411,8 @@ url_pattern = "https://{alias}.preview.example.test"
 
 [channels.staging]
 url = "https://staging.example.test"
-requires_auth = true
+access_control = "managed-network"
+edge_auth = "none"
 noindex = true
 
 [channels.production]
