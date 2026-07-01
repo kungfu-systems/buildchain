@@ -180,7 +180,10 @@ hidden reusable workflows, and rebuilds every action bundle.
 Projects can add `buildchain.toml` to declare release version state and
 lifecycle commands. Buildchain v2 supports TOML only. The promotion action uses
 configured version files to create source version commits, then runs
-`lifecycle.verify` before moving release refs.
+`lifecycle.verify` before moving release refs. Repositories that publish
+external artifacts can also declare `lifecycle.publish`; with publish
+transactions enabled, Buildchain requires machine-readable evidence before exact
+release tags and floating channel refs move.
 
 Web-surface projects can also declare `project.type = "web-surface"` with
 preview, staging, and production channels. Those projects get deployment
@@ -197,7 +200,17 @@ version lines or anchored release semantics.
 - Publish gate branches are resolved to a source SHA before checkout. Builds,
   verification, artifact manifests, and summaries use that locked SHA; publish
   jobs must re-check the branch tip before external side effects.
+- Publish transactions are keyed by repository, version, source SHA, and target
+  ref rather than run id. Reruns may resume missing artifacts, accept matching
+  existing artifacts, and fail closed on conflicting material until an explicit
+  repair override is used.
 - Fork pull requests must not reach secrets or self-hosted runners.
 - Candidate refs are expected to come from `kungfu-systems/*`.
 - Self-hosted runner validation is available only through the manual
   `Self-hosted Runner Smoke` workflow.
+
+## Read Next
+
+- [Lifecycle protocol](docs/lifecycle-protocol.md)
+- [Publish transaction](docs/publish-transaction.md)
+- [Reusable build surface](docs/reusable-build-surface.md)

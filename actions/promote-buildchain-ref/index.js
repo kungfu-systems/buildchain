@@ -14,6 +14,14 @@ async function main() {
   const verificationCommand = core.getInput("verification-command");
   const requiredStatusCheck = core.getInput("required-status-check") || "check";
   const allowRepository = core.getInput("allow-repository") || "kungfu-systems/buildchain";
+  const publishTransaction = core.getBooleanInput("publish-transaction");
+  const publishCommand = core.getInput("publish-command");
+  const publishEvidencePath = core.getInput("publish-evidence-path");
+  const transactionStatePath = core.getInput("transaction-state-path");
+  const publishRequiredArtifactsJson = core.getInput("publish-required-artifacts-json");
+  const releaseMaterialSha = core.getInput("release-material-sha");
+  const publishToolingSha = core.getInput("publish-tooling-sha");
+  const publishTransactionOverride = core.getBooleanInput("publish-transaction-override");
   const octokit = github.getOctokit(token);
   const result = await promoteBuildchainRefs({
     octokit,
@@ -28,6 +36,16 @@ async function main() {
     requireVersionState,
     verificationCommand,
     requiredStatusCheck,
+    publishTransaction,
+    publishCommand,
+    publishEvidencePath,
+    transactionStatePath,
+    publishRequiredArtifactsJson,
+    releaseMaterialSha,
+    publishToolingSha,
+    actor: github.context.actor,
+    runId: String(github.context.runId || ""),
+    publishTransactionOverride,
   });
 
   for (const update of result.updates) {
@@ -40,6 +58,14 @@ async function main() {
   }
   core.setOutput("sha", result.sha);
   core.setOutput("next-anchor-required", String(result.nextAlphaRequired === true));
+  core.setOutput("transaction-id", result.publishTransaction?.id || "");
+  core.setOutput("transaction-state", result.publishTransaction?.state || "");
+  core.setOutput("transaction-state-path", result.publishTransaction?.statePath || "");
+  core.setOutput("publish-evidence-path", result.publishTransaction?.evidencePath || "");
+  core.setOutput(
+    "finalization-needed",
+    String(result.publishTransaction?.finalizationNeeded === true),
+  );
   core.setOutput(
     "tags",
     result.updates

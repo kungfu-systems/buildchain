@@ -136,17 +136,24 @@ command = "node -e \\"import('node:fs').then((fs) => fs.writeFileSync('should-no
 
 [lifecycle.verify]
 command = "node -e \\"import('node:fs').then((fs) => fs.writeFileSync('also-should-not-exist.txt', 'ran'))\\""
+
+[lifecycle.publish]
+commands = [
+  "node scripts/publish-artifacts.mjs",
+  "node scripts/write-evidence.mjs",
+]
 `,
       "package.json": '{ "name": "demo", "version": "1.0.0" }\n',
     },
     (dir) => {
       const summary = validateBuildchainConfig(dir, {
         requireVersionState: true,
-        requireLifecycleStages: ["build", "verify"],
+        requireLifecycleStages: ["build", "verify", "publish"],
       });
 
       assert.deepEqual(summary.versionFiles.map((file) => file.path), ["package.json"]);
-      assert.deepEqual(summary.lifecycleStages.map((stage) => stage.name), ["build", "verify"]);
+      assert.deepEqual(summary.lifecycleStages.map((stage) => stage.name), ["build", "verify", "publish"]);
+      assert.equal(summary.lifecycleStages.find((stage) => stage.name === "publish").commandCount, 2);
       assert.equal(fs.existsSync(path.join(dir, "should-not-exist.txt")), false);
       assert.equal(fs.existsSync(path.join(dir, "also-should-not-exist.txt")), false);
     },
