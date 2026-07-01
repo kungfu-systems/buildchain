@@ -1126,6 +1126,12 @@ test("publish transaction durable ref updates when create races existing ref vis
   };
   const orderFile = path.join(cwd, "order.log");
   const { octokit, refs } = createGitMock({ orderFile });
+  const originalUpdateRef = octokit.rest.git.updateRef;
+  const updateForces = [];
+  octokit.rest.git.updateRef = async (args) => {
+    updateForces.push(args.force);
+    return originalUpdateRef(args);
+  };
 
   const first = await persistDurableReleaseTransaction({
     octokit,
@@ -1167,6 +1173,7 @@ test("publish transaction durable ref updates when create races existing ref vis
     "create:refs/heads/buildchain/release-state/1-0-0",
     "update:heads/buildchain/release-state/1-0-0",
   ]);
+  assert.deepEqual(updateForces, [true]);
 });
 
 test("publish transaction fails closed when durable state cannot be persisted", async () => {
