@@ -1,7 +1,7 @@
 const DEFAULT_REPOSITORY = "kungfu-systems/buildchain";
 import fs from "node:fs";
 import path from "node:path";
-import { execSync } from "node:child_process";
+import { execFileSync, execSync } from "node:child_process";
 import {
   detectPackageManager,
   getWorkspaceInfo,
@@ -377,6 +377,102 @@ function runPublishCommand({ cwd, command, loadedConfig, env }) {
     return "buildchain.toml";
   }
   return "none";
+}
+
+function npmPackageSpec(artifact) {
+  return `${artifact.name}@${artifact.ref}`;
+}
+
+function releaseExistingNpmPromotionEnabled({ channel, requiredArtifacts }) {
+  return (
+    channel === "release" &&
+    process.env.KF_NPM_RELEASE_REQUIRES_EXISTING === "true" &&
+    requiredArtifacts.length > 0 &&
+    requiredArtifacts.every(
+      (artifact) => artifact.kind === "npm" && artifact.name && artifact.ref,
+    )
+  );
+}
+
+function readExistingNpmIntegrity({ cwd, artifact }) {
+  const spec = npmPackageSpec(artifact);
+  try {
+    const output = execFileSync(
+      "npm",
+      ["view", spec, "dist.integrity", "--json"],
+      {
+        cwd,
+        env: process.env,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+      },
+    ).trim();
+    if (!output) {
+      throw new Error("empty dist.integrity");
+    }
+    return JSON.parse(output);
+  } catch (error) {
+    const message = error.stderr?.toString?.().trim() || error.message;
+    throw new Error(`existing npm artifact is required for release promotion: ${spec}: ${message}`);
+  }
+}
+
+function resolveExistingNpmArtifacts({ cwd, requiredArtifacts }) {
+  return requiredArtifacts.map((artifact) => ({
+    ...artifact,
+    digest: readExistingNpmIntegrity({ cwd, artifact }),
+  }));
+}
+
+function writeExistingNpmEvidence({
+  evidencePath,
+  version,
+  channel,
+  sourceSha,
+  releaseSha,
+  targetRef,
+  releaseMaterialSha,
+  publishToolingSha,
+  artifacts,
+}) {
+  fs.mkdirSync(path.dirname(evidencePath), { recursive: true });
+  fs.writeFileSync(
+    evidencePath,
+    `${JSON.stringify(
+      {
+        schema: 1,
+        version,
+        channel,
+        source_sha: sourceSha,
+        release_sha: releaseSha,
+        target_ref: targetRef,
+        release_material_sha: releaseMaterialSha,
+        publish_tooling_sha: publishToolingSha,
+        artifacts,
+      },
+      null,
+      2,
+    )}\n`,
+  );
+}
+
+function promoteExistingNpmArtifacts({ cwd, artifacts }) {
+  const distTag = process.env.KF_NPM_DIST_TAG || "latest";
+  const promoted = new Set();
+  for (const artifact of artifacts) {
+    const spec = npmPackageSpec(artifact);
+    const key = `${spec}\0${distTag}`;
+    if (promoted.has(key)) {
+      continue;
+    }
+    execFileSync("npm", ["dist-tag", "add", spec, distTag], {
+      cwd,
+      env: process.env,
+      stdio: "inherit",
+    });
+    promoted.add(key);
+  }
+  return "existing-npm-artifacts";
 }
 
 function materialErrorRequiresRepair(error) {
@@ -760,10 +856,17 @@ async function runPublishTransaction({
     cwd,
     publishEvidencePath || defaultPublishEvidencePath(exactTag, cwd),
   );
-  const requiredArtifacts = parsePublishArtifactsJson(
+  let requiredArtifacts = parsePublishArtifactsJson(
     publishRequiredArtifactsJson,
     "publish-required-artifacts-json",
   );
+  const existingNpmPromotion = releaseExistingNpmPromotionEnabled({
+    channel,
+    requiredArtifacts,
+  });
+  if (existingNpmPromotion) {
+    requiredArtifacts = resolveExistingNpmArtifacts({ cwd, requiredArtifacts });
+  }
   const expected = {
     repository,
     version,
@@ -921,23 +1024,39 @@ async function runPublishTransaction({
         });
       }
       ({ transaction, durable } = await persistTransaction(transaction));
-      const source = runPublishCommand({
-        cwd,
-        command: publishCommand,
-        loadedConfig,
-        env: {
-          BUILDCHAIN_VERSION: version,
-          BUILDCHAIN_CHANNEL: channel,
-          BUILDCHAIN_SOURCE_SHA: sourceSha,
-          BUILDCHAIN_TARGET_REF: targetRef,
-          BUILDCHAIN_RELEASE_STATE: resolvedStatePath,
-          BUILDCHAIN_EVIDENCE_DIR: path.dirname(resolvedEvidencePath),
-          BUILDCHAIN_RELEASE_SHA: releaseSha,
-          BUILDCHAIN_RELEASE_MATERIAL_SHA: expected.releaseMaterialSha,
-          BUILDCHAIN_PUBLISH_TOOLING_SHA: expected.publishToolingSha,
-          BUILDCHAIN_PUBLISH_EVIDENCE: resolvedEvidencePath,
-        },
-      });
+      let source;
+      if (existingNpmPromotion) {
+        source = promoteExistingNpmArtifacts({ cwd, artifacts: requiredArtifacts });
+        writeExistingNpmEvidence({
+          evidencePath: resolvedEvidencePath,
+          version,
+          channel,
+          sourceSha,
+          releaseSha,
+          targetRef,
+          releaseMaterialSha: expected.releaseMaterialSha,
+          publishToolingSha: expected.publishToolingSha,
+          artifacts: requiredArtifacts,
+        });
+      } else {
+        source = runPublishCommand({
+          cwd,
+          command: publishCommand,
+          loadedConfig,
+          env: {
+            BUILDCHAIN_VERSION: version,
+            BUILDCHAIN_CHANNEL: channel,
+            BUILDCHAIN_SOURCE_SHA: sourceSha,
+            BUILDCHAIN_TARGET_REF: targetRef,
+            BUILDCHAIN_RELEASE_STATE: resolvedStatePath,
+            BUILDCHAIN_EVIDENCE_DIR: path.dirname(resolvedEvidencePath),
+            BUILDCHAIN_RELEASE_SHA: releaseSha,
+            BUILDCHAIN_RELEASE_MATERIAL_SHA: expected.releaseMaterialSha,
+            BUILDCHAIN_PUBLISH_TOOLING_SHA: expected.publishToolingSha,
+            BUILDCHAIN_PUBLISH_EVIDENCE: resolvedEvidencePath,
+          },
+        });
+      }
       if (source === "none") {
         throw new Error("publish transaction requires lifecycle.publish, publish-command, or existing evidence");
       }
