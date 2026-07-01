@@ -1,6 +1,7 @@
-const lib = require('./lib.js');
+import { getPulls } from './lib.js';
+import yargs from 'yargs/yargs';
 
-const argv = require('yargs/yargs')(process.argv.slice(2))
+const argv = yargs(process.argv.slice(2))
   .option('token', { description: 'token', type: 'string' })
   .option('owner', { description: 'owner', type: 'string' })
   .option('repo', { description: 'repo', type: 'string' })
@@ -8,5 +9,5 @@ const argv = require('yargs/yargs')(process.argv.slice(2))
   .help().argv;
 
 // node cli.js --token token --owner kungfu-trader --repo test-rollback-packages --pullRequestNumber 88
-lib.getPulls(argv, argv.pullRequestNumber).catch(console.error);
+getPulls(argv, argv.pullRequestNumber).catch(console.error);
 // lib.closeIssue(argv).catch(console.error);

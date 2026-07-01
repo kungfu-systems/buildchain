@@ -1,7 +1,7 @@
-const { Octokit } = require('@octokit/rest');
-const github = require('@actions/github');
+import { Octokit } from '@octokit/rest';
+import * as github from '@actions/github';
 
-exports.approveAndMerge = async function (argv) {
+export async function approveAndMerge(argv) {
   const ruleId = await getBranchProtectionRuleForAlpha(argv);
   if (!ruleId) {
     console.error('empty ruleId for alpha!');
@@ -15,7 +15,7 @@ exports.approveAndMerge = async function (argv) {
   await branchProtection(argv, false, ruleId);
   await merge(argv);
   await branchProtection(argv, true, ruleId);
-};
+}
 
 const isBatchPullRequestTag = async function (argv) {
   const octokit = new Octokit({

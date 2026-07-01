@@ -1,7 +1,8 @@
 /* eslint-disable no-restricted-globals */
-const lib = require("./lib.js");
+import { generate } from "./lib/index.js";
+import yargs from "yargs/yargs";
 
-const argv = require("yargs/yargs")(process.argv.slice(2))
+const argv = yargs(process.argv.slice(2))
   .option("token", { description: "token", type: "string" })
   .option("release-path", {
     description: "release path",
@@ -11,4 +12,4 @@ const argv = require("yargs/yargs")(process.argv.slice(2))
   .option("product", { description: "product", type: "string" })
   .help().argv;
 
-lib.generate(argv);
+generate(argv);

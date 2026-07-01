@@ -1,8 +1,8 @@
-const lib = (exports.lib = require("./lib"));
-const core = require("@actions/core");
-const github = require("@actions/github");
+import * as core from "@actions/core";
+import * as github from "@actions/github";
+import * as lib from "./lib/index.js";
 
-const main = async function () {
+export const main = async function () {
   const context = github.context;
   const argv = {
     apiKey: core.getInput("apiKey"),
@@ -16,10 +16,12 @@ const main = async function () {
   lib.generateHTML(argv);
 };
 
-if (require.main === module) {
+if (process.env.GITHUB_ACTION) {
   main().catch((error) => {
     console.error(error);
     // 设置操作失败时退出
     core.setFailed(error.message);
   });
 }
+
+export { lib };

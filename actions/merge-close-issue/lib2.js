@@ -1,14 +1,14 @@
-const { Octokit } = require('@octokit/rest');
-const axios = require('axios');
-const sortBy = require('lodash.sortby');
+import { Octokit } from '@octokit/rest';
+import axios from 'axios';
+import sortBy from 'lodash.sortby';
 let octokit;
 
-exports.getPulls = async function (argv) {
+export async function getPulls(argv) {
   octokit = new Octokit({
     auth: argv.token,
   });
   await getPrIssues(argv);
-};
+}
 
 const getPrIssues = async (argv) => {
   const current = await getPr(argv, argv.pullRequestNumber);

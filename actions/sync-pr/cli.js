@@ -1,7 +1,8 @@
 /* eslint-disable no-restricted-globals */
-const pr = require("./pr.js");
+import { syncAirtableWithRest } from "./pr.js";
+import yargs from "yargs/yargs";
 //node cli.js --token ??? --owner kungfu-trade
-const argv = require("yargs/yargs")(process.argv.slice(2))
+const argv = yargs(process.argv.slice(2))
   .option("token", { description: "token", type: "string" })
   .option("owner", { description: "owner", type: "string" })
   .option("apiKey", { description: "apiKey", type: "string" })
@@ -9,4 +10,4 @@ const argv = require("yargs/yargs")(process.argv.slice(2))
   .help().argv;
 
 // pr.getPrWithGraphQL(argv).catch(console.error);
-pr.syncAirtableWithRest(argv).catch(console.error);
+syncAirtableWithRest(argv).catch(console.error);

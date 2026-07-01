@@ -1,8 +1,8 @@
-const lib = (exports.lib = require('./lib2.js'));
-const core = require('@actions/core');
-const github = require('@actions/github');
+import * as core from '@actions/core';
+import * as github from '@actions/github';
+import * as lib from './lib2.js';
 
-const main = async function () {
+export const main = async function () {
   const context = github.context;
   const pullRequestNumber = context.payload.pull_request.number;
   const argv = {
@@ -16,10 +16,12 @@ const main = async function () {
   await lib.getPulls(argv, pullRequestNumber);
 };
 
-if (require.main === module) {
+if (process.env.GITHUB_ACTION) {
   main().catch((error) => {
     console.error(error);
     // 设置操作失败时退出
     core.setFailed(error.message);
   });
 }
+
+export { lib };

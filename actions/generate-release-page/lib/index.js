@@ -1,15 +1,19 @@
 /* eslint-disable no-restricted-globals */
-const fs = require("fs");
-const path = require("path");
-const mustache = require("mustache");
-const axios = require("axios");
-const cheerio = require("cheerio");
-const marked = require("marked");
-const sortBy = require("lodash.sortby");
-const { getProductMetaData } = require("./kungfu-prebuilt");
-const { Octokit } = require("@octokit/rest");
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import mustache from "mustache";
+import axios from "axios";
+import * as cheerio from "cheerio";
+import * as marked from "marked";
+import sortBy from "lodash.sortby";
+import { getProductMetaData } from "./kungfu-prebuilt.js";
+import { Octokit } from "@octokit/rest";
 
-exports.generate = async (argv) => {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export const generate = async (argv) => {
   console.log(`Generating release page for ${argv.product}`);
   const outputDir = getOutputDir(argv);
   const result = await generateHTML(argv, outputDir);

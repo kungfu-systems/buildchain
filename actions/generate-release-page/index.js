@@ -1,9 +1,8 @@
 /* eslint-disable no-restricted-globals */
-const lib = (exports.lib = require("./lib"));
-const core = require("@actions/core");
-// const github = require("@actions/github");
+import * as core from "@actions/core";
+import * as lib from "./lib/index.js";
 
-const main = function () {
+export const main = function () {
   const argv = {
     token: core.getInput("token"),
     apiKey: core.getInput("apiKey"),
@@ -25,3 +24,5 @@ const main = function () {
 if (process.env.GITHUB_ACTION) {
   main();
 }
+
+export { lib };

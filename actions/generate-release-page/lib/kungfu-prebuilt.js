@@ -1,6 +1,6 @@
 const Bucket = "kungfu-prebuilt";
 
-const { spawnSync } = require("child_process");
+import { spawnSync } from "node:child_process";
 
 const spawnOptsInherit = { shell: true, stdio: "inherit", windowsHide: true };
 const spawnOptsPipe = { shell: true, stdio: "pipe", windowsHide: true };
@@ -26,7 +26,7 @@ function s3ApiOutput(args) {
   return awsOutput(["s3api", ...args]);
 }
 
-function getProductMetaData(argv) {
+export function getProductMetaData(argv) {
   const { product, repo } = argv;
   if (!product) return [];
 
@@ -69,7 +69,3 @@ function getProductMetaData(argv) {
 
   return versions;
 }
-
-module.exports = {
-  getProductMetaData,
-};

@@ -2,7 +2,7 @@ import { dispatch, Argv } from "./lib";
 import { getInput, setFailed } from "@actions/core";
 import { context } from "@actions/github";
 
-const main = async function () {
+export const main = async function () {
   const argv: Argv = {
     token: getInput("token"),
     bucketPrebuilt: getInput("bucket-prebuilt"),
@@ -25,7 +25,7 @@ const main = async function () {
   await dispatch(argv);
 };
 
-if (require.main === module) {
+if (process.env.GITHUB_ACTION) {
   main().catch((error) => {
     console.error(error);
     setFailed(error.message);

@@ -6,7 +6,7 @@
   "author": "Keren Dong",
   "license": "Apache-2.0",
   "scripts": {
-    "build": "tsup index.js --format cjs --config ../../scripts/tsup-action.config.mjs && node ../../scripts/strip-trailing-whitespace.mjs dist/index.js",
+    "build": "tsup index.js --format esm --config ../../scripts/tsup-action.config.mjs && node ../../scripts/strip-trailing-whitespace.mjs dist/index.js",
     "package": "echo noop"
   },
   "dependencies": {
@@ -21,5 +21,6 @@
     "marked": "^17.0.0",
     "mustache": "^4.2.0"
   },
-  "devDependencies": {}
+  "devDependencies": {},
+  "type": "module"
 }
