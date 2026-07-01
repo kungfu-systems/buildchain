@@ -385,13 +385,21 @@ function materialErrorRequiresRepair(error) {
   );
 }
 
-function ensureTransactionCanResume({ existing, expected, explicitOverride }) {
+function ensureTransactionCanResume({
+  existing,
+  expected,
+  explicitOverride,
+  evidence,
+  validation,
+}) {
   if (!existing) {
     return;
   }
   assertTransactionIdentity(existing, expected, { allowToolingDrift: true });
   const recovery = planTransactionRecovery({
     transaction: existing,
+    evidence,
+    validation,
     explicitOverride,
   });
   if (recovery.blocked) {
@@ -781,9 +789,30 @@ async function runPublishTransaction({
     );
   }
   const existing = durableExisting || localExisting;
+  const existingEvidence = readPublishEvidence(resolvedEvidencePath);
+  let existingValidation;
+  if (existingEvidence) {
+    existingValidation = validatePublishEvidence({
+      evidence: existingEvidence,
+      version,
+      channel,
+      sourceSha,
+      releaseSha,
+      targetRef,
+      releaseMaterialSha: expected.releaseMaterialSha,
+      publishToolingSha: expected.publishToolingSha,
+      requiredArtifacts,
+    });
+  }
   let versionStateFinalization = false;
   try {
-    ensureTransactionCanResume({ existing, expected, explicitOverride });
+    ensureTransactionCanResume({
+      existing,
+      expected,
+      explicitOverride,
+      evidence: existingEvidence,
+      validation: existingValidation,
+    });
   } catch (error) {
     const canFinalizeVersionState =
       allowVersionStateFinalization &&
@@ -852,8 +881,11 @@ async function runPublishTransaction({
 
   let validation;
   try {
-    const evidence = readPublishEvidence(resolvedEvidencePath);
+    const evidence = existingEvidence || readPublishEvidence(resolvedEvidencePath);
     if (evidence) {
+      validation = existingValidation;
+    }
+    if (evidence && !validation) {
       validation = validatePublishEvidence({
         evidence,
         version,

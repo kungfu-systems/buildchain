@@ -1214,6 +1214,32 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
     },
     evidencePath: "",
   });
+  const matchingEvidencePath = path.join(cwd, "durable-alpha-0-evidence.json");
+  fs.writeFileSync(
+    matchingEvidencePath,
+    JSON.stringify(
+      {
+        schema: 1,
+        version: "1.0.0-alpha.0",
+        channel: "alpha",
+        source_sha: SHA,
+        release_sha: OTHER_SHA,
+        target_ref: "alpha/v1/v1.0",
+        release_material_sha: OTHER_SHA,
+        publish_tooling_sha: OTHER_SHA,
+        artifacts: [
+          {
+            kind: "npm",
+            name: "@kungfu-tech/buildchain",
+            ref: "1.0.0-alpha.0",
+            digest: "sha256:alpha0",
+          },
+        ],
+      },
+      null,
+      2,
+    ) + "\n",
+  );
   await persistDurableReleaseTransaction({
     octokit,
     owner: "kungfu-systems",
@@ -1237,8 +1263,8 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
       state_ref: "buildchain/release-state/1-0-0-alpha-0",
       state_path: "",
       evidence_path: "",
-      state: "publishing",
-      previous_state: "prepared",
+      state: "published",
+      previous_state: "publishing",
       actor: "",
       run_id: "",
       superseded_by: "",
@@ -1248,8 +1274,9 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
       created_at: "2026-07-01T00:00:00.000Z",
       updated_at: "2026-07-01T00:00:00.000Z",
     },
-    evidencePath: "",
+    evidencePath: matchingEvidencePath,
   });
+  fs.unlinkSync(matchingEvidencePath);
 
   const result = await promoteBuildchainRefs({
     octokit,
