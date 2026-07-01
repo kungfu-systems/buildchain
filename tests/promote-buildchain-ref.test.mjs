@@ -308,6 +308,19 @@ test("selectAlphaTag creates ABV-style prerelease tags for the minor line", () =
   );
   assert.deepEqual(
     selectAlphaTag({
+      refs: [
+        {
+          ref: "refs/heads/buildchain/release-state/1-0-1-alpha-0",
+          object: { sha: OTHER_SHA },
+        },
+      ],
+      releasePrefix: "v1.0",
+      sha: SHA,
+    }),
+    { tag: "v1.0.1-alpha.1", patch: 1, prerelease: 1, exists: false },
+  );
+  assert.deepEqual(
+    selectAlphaTag({
       refs: [{ ref: "refs/tags/v1.0.1-alpha.0", object: { sha: SHA } }],
       releasePrefix: "v1.0",
       sha: SHA,
@@ -337,6 +350,20 @@ test("selectAlphaTag creates ABV-style prerelease tags for the minor line", () =
       sha: OTHER_SHA,
       exists: true,
     },
+  );
+  assert.deepEqual(
+    selectAlphaTag({
+      refs: [
+        {
+          ref: "refs/heads/buildchain/release-state/1-0-1-alpha-0",
+          object: { sha: OTHER_SHA },
+        },
+      ],
+      releasePrefix: "v1.0",
+      sha: SHA,
+      patchAfterRelease: 1,
+    }),
+    { tag: "v1.0.1-alpha.1", patch: 1, prerelease: 1, exists: false },
   );
 });
 
@@ -480,6 +507,7 @@ test("release promotion creates v-prefixed release tag and prepares next alpha t
   assert.deepEqual(calls, [
     ["getRef", "heads/release/v1/v1.0"],
     ["listMatchingRefs", "tags/v1.0."],
+    ["listMatchingRefs", "heads/buildchain/release-state/1-0-"],
     ["getRef", "tags/v1.0.0"],
     ["createRef", "refs/tags/v1.0.0", SHA],
     ["updateRef", "tags/v1.0", SHA, true],
@@ -572,6 +600,7 @@ test("alpha promotion creates exact prerelease tag and moves only the minor alph
   assert.deepEqual(calls, [
     ["getRef", "heads/alpha/v1/v1.0"],
     ["listMatchingRefs", "tags/v1.0."],
+    ["listMatchingRefs", "heads/buildchain/release-state/1-0-"],
     ["getRef", "tags/v1.0.1-alpha.0"],
     ["createRef", "refs/tags/v1.0.1-alpha.0", SHA],
     ["updateRef", "tags/v1.0-alpha", SHA, true],
@@ -819,6 +848,82 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
     "create:refs/tags/v1.0.0-alpha.0",
     "update:tags/v1.0-alpha",
   ]);
+});
+
+test("publish transaction skips alpha versions occupied by durable state refs", async () => {
+  const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[lifecycle.publish]
+command = "node scripts/publish.mjs"
+`,
+    "package.json": {
+      name: "@kungfu-systems/buildchain",
+      version: "0.0.0-alpha.0",
+      packageManager: "pnpm@11.7.0",
+    },
+    "scripts/publish.mjs": `
+import fs from "node:fs";
+
+fs.mkdirSync(process.env.BUILDCHAIN_EVIDENCE_DIR, { recursive: true });
+fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
+  schema: 1,
+  version: process.env.BUILDCHAIN_VERSION,
+  channel: process.env.BUILDCHAIN_CHANNEL,
+  source_sha: process.env.BUILDCHAIN_SOURCE_SHA,
+  release_sha: process.env.BUILDCHAIN_RELEASE_SHA,
+  target_ref: process.env.BUILDCHAIN_TARGET_REF,
+  release_material_sha: process.env.BUILDCHAIN_RELEASE_MATERIAL_SHA,
+  publish_tooling_sha: process.env.BUILDCHAIN_PUBLISH_TOOLING_SHA,
+  artifacts: [{
+    kind: "npm",
+    name: "@kungfu-systems/buildchain",
+    ref: process.env.BUILDCHAIN_VERSION,
+    digest: "sha256:alpha1"
+  }]
+}, null, 2) + "\\n");
+`,
+  });
+  const { octokit, refs } = createGitMock({
+    refs: new Map([
+      ["heads/alpha/v1/v1.0", SHA],
+      ["heads/buildchain/release-state/1-0-0-alpha-0", OTHER_SHA],
+    ]),
+  });
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    cwd,
+    publishTransaction: true,
+    publishRequiredArtifactsJson: JSON.stringify([
+      {
+        kind: "npm",
+        name: "@kungfu-systems/buildchain",
+        ref: "1.0.0-alpha.1",
+        digest: "sha256:alpha1",
+      },
+    ]),
+  });
+
+  assert.equal(result.publishTransaction.state, "complete");
+  assert.equal(result.publishTransaction.exactTag, "v1.0.0-alpha.1");
+  assert.equal(result.publishTransaction.stateRef, "buildchain/release-state/1-0-0-alpha-1");
+  assert.equal(refs.has("tags/v1.0.0-alpha.0"), false);
+  assert.equal(refs.has("tags/v1.0.0-alpha.1"), true);
+  assert.equal(refs.has("heads/buildchain/release-state/1-0-0-alpha-1"), true);
 });
 
 test("publish transaction durable ref restores state and evidence in a fresh workspace", async () => {

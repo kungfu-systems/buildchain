@@ -1,18 +1,46 @@
 {
   "name": "@kungfu-systems/buildchain",
   "version": "2.0.12-alpha.0",
-  "private": true,
+  "private": false,
+  "description": "Kungfu Buildchain reusable workflows, release governance, and CLI tooling.",
   "repository": "https://github.com/kungfu-systems/buildchain",
   "author": "Keren Dong",
   "license": "Apache-2.0",
   "type": "module",
+  "bin": {
+    "buildchain": "./bin/buildchain.mjs"
+  },
+  "exports": {
+    ".": "./packages/core/index.js",
+    "./core": "./packages/core/index.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "bin/",
+    "scripts/*.mjs",
+    "packages/core/",
+    "README.md",
+    "docs/cli.md",
+    "docs/lifecycle-protocol.md",
+    "docs/publish-transaction.md",
+    "docs/reusable-build-surface.md",
+    "docs/web-surface-deployments.md"
+  ],
+  "engines": {
+    "node": ">=22.14.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "packageManager": "pnpm@11.7.0",
   "scripts": {
     "check": "node scripts/check-inventory.mjs && pnpm run check:workflows && pnpm run test:unit && pnpm -r --filter \"./actions/**\" build",
     "check:workflows": "bash scripts/check-workflows.sh",
     "test:unit": "node --test tests/*.test.mjs",
     "build": "pnpm -r --filter \"./actions/**\" build",
-    "package": "echo noop"
+    "package": "npm pack --dry-run --json --registry=https://registry.npmjs.org/",
+    "pack:check": "npm pack --dry-run --json --registry=https://registry.npmjs.org/"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

@@ -1,8 +1,9 @@
 # Buildchain v2 Migration Inventory
 
 This inventory records the buildchain v2 action surface. Buildchain v2 is the
-monorepo source of truth for active Kungfu reusable workflows and the three
-GitHub Actions that are still part of Buildchain's reusable contract.
+monorepo source of truth for active Kungfu repository workflows, the active
+reusable build workflow, and the three GitHub Actions that are still part of
+Buildchain's reusable contract.
 Standalone `workflows` and `action-*` repositories are historical rollback
 anchors, not active Buildchain migration targets.
 
@@ -11,6 +12,22 @@ anchors, not active Buildchain migration targets.
 | Source repository | Previous branch | Buildchain v2 disposition |
 | --- | --- | --- |
 | `workflows` | `dev/v2/v2.0` | root `.github/workflows` sources migrated; reusable workflows linted by actionlint |
+
+## Reusable Workflow Boundaries
+
+The active Buildchain-native reusable surface is:
+
+| Workflow | Disposition |
+| --- | --- |
+| `.github/workflows/.build.yml` | active reusable build contract: runner presets, trusted event gate, publish source lock, lifecycle commands, deterministic artifacts, aggregate summary, and release manifest outputs |
+
+Other hidden reusable workflow files from the old `workflows` repository may
+still exist in `.github/workflows`. They are retained so the repository can lint
+them, document migration boundaries, and make retired paths fail closed. They
+are not new Buildchain v2 integration targets unless a dedicated document says
+otherwise. In particular, the legacy `.release-new-version.yml` path is not the
+modern publish surface; new publish integrations should use `.build.yml`,
+`buildchain.toml`, `lifecycle.publish`, and publish transaction evidence.
 
 ## Migrated Actions
 
