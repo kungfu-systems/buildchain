@@ -13,3 +13,5 @@ commands = [
   "pnpm run check",
 ]
 
+[lifecycle.publish]
+command = "node scripts/npm-publish-transaction.mjs"

@@ -572,6 +572,7 @@ test("release promotion creates v-prefixed release tag and prepares next alpha t
     repo: "buildchain",
     sha: SHA,
     targetRef: "release/v1/v1.0",
+    cwd: makeTempWorkspace({}),
     versionState: false,
   });
 
@@ -620,6 +621,7 @@ test("release promotion does not move v1 when the next minor line exists", async
     repo: "buildchain",
     sha: SHA,
     targetRef: "release/v1/v1.0",
+    cwd: makeTempWorkspace({}),
     versionState: false,
   });
 
@@ -668,6 +670,7 @@ test("alpha promotion creates exact prerelease tag and moves only the minor alph
     repo: "buildchain",
     sha: SHA,
     targetRef: "alpha/v1/v1.0",
+    cwd: makeTempWorkspace({}),
     versionState: false,
   });
 
@@ -719,6 +722,7 @@ test("rerunning the same release SHA reuses exact tags", async () => {
     repo: "buildchain",
     sha: SHA,
     targetRef: "release/v1/v1.0",
+    cwd: makeTempWorkspace({}),
     versionState: false,
   });
 
@@ -1524,6 +1528,7 @@ test("strict alpha promotion requires a protected dev-to-alpha PR", async () => 
     repo: "buildchain",
     sha: SHA,
     targetRef: "alpha/v1/v1.0",
+    cwd: makeTempWorkspace({}),
     versionState: false,
     requireGovernance: true,
   });

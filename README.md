@@ -169,13 +169,13 @@ no-op for this repository. Buildchain itself is promoted only by
 migration boundary for old consumers and must not be used for new Buildchain v2
 integrations.
 
-Buildchain's npm package is published only from exact v-prefixed release tags
-created by that same promotion flow. Alpha releases such as
+Buildchain's npm package is published by the same promotion transaction that
+creates exact v-prefixed release tags. Alpha releases such as
 `v2.0.13-alpha.0` publish to npm with dist-tag `alpha`; stable releases such as
 `v2.0.13` publish with dist-tag `latest`. Floating refs like `v2`, `v2.0`, and
-`v2.0-alpha` never publish npm packages. The same workflow can be manually
-dispatched as a dry-run before release; that path verifies package contents and
-publish shape but does not run a real `npm publish`.
+`v2.0-alpha` never publish npm packages. The old tag-push npm workflow is
+dry-run only; real npm publish happens before public release refs move, using
+the evidence contract in `lifecycle.publish`.
 
 For release-line planning, use the CLI dry-run:
 
