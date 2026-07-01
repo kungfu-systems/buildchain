@@ -40,6 +40,14 @@ if (inventory.release !== "buildchain-v2") {
   throw new Error("inventory release must be buildchain-v2");
 }
 
+if (inventory.stableRefs?.actions !== "kungfu-systems/buildchain/actions/<name>@v2") {
+  throw new Error("inventory stable action ref must point at @v2");
+}
+
+if (inventory.stableRefs?.workflows !== "kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v2") {
+  throw new Error("inventory stable workflow ref must point at @v2");
+}
+
 if (!Array.isArray(inventory.workflowSources) || inventory.workflowSources.length < 1) {
   throw new Error("workflowSources must include the migrated workflows repository");
 }

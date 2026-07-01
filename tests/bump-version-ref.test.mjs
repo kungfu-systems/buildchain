@@ -44,7 +44,20 @@ test("version-state release PRs are valid verify-only release candidates", () =>
   });
 });
 
-test("version-state major-gate PRs are valid verify-only major release candidates", () => {
+test("version-state publish-gate/major PRs are valid verify-only major release candidates", () => {
+  withPackageVersion("2.0.0", (cwd) => {
+    assert.equal(
+      getBumpKeyword({
+        cwd,
+        headRef: "buildchain/version-state/publish-gate-major/c249a32edecf",
+        baseRef: "publish-gate/major",
+      }),
+      "patch",
+    );
+  });
+});
+
+test("legacy major-gate version-state PRs remain explicit compatibility aliases", () => {
   withPackageVersion("2.0.0", (cwd) => {
     assert.equal(
       getBumpKeyword({
@@ -71,13 +84,13 @@ test("version-state PRs must target the same release line", () => {
   });
 });
 
-test("release to major-gate is the only major bump channel", () => {
+test("release to publish-gate/major is the only major bump channel", () => {
   withPackageVersion("1.0.5", (cwd) => {
     assert.equal(
       getBumpKeyword({
         cwd,
         headRef: "release/v1/v1.0",
-        baseRef: "major-gate",
+        baseRef: "publish-gate/major",
       }),
       "premajor",
     );
