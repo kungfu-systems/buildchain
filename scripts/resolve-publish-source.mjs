@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -9,69 +8,41 @@ import {
   resolvePublishSourceLock,
   writeGitHubOutputs,
 } from "./build-contract-core.mjs";
+import {
+  resolvePublishSourceRefSha,
+  sourceRefFromEnv,
+} from "./publish-source-ref-resolver.mjs";
 
-function readArg(name, fallback = "") {
-  const index = process.argv.indexOf(`--${name}`);
+function readArg(args, name, fallback = "") {
+  const index = args.indexOf(`--${name}`);
   if (index === -1) {
     return fallback;
   }
-  return process.argv[index + 1] || "";
+  return args[index + 1] || "";
 }
 
-function readEnv(name, fallback = "") {
-  return process.env[name] || fallback;
+function readEnv(env, name, fallback = "") {
+  return env[name] || fallback;
 }
 
-function normalizeSourceRef(value, fallback = "") {
-  return String(value || fallback || "")
-    .trim()
-    .replace(/^refs\/heads\//, "")
-    .replace(/^refs\/tags\//, "");
-}
-
-function sourceRefFromEnv() {
-  const configured = normalizeSourceRef(readEnv("BUILDCHAIN_PUBLISH_SOURCE_REF"));
-  if (configured) {
-    return configured;
-  }
-  const refName = normalizeSourceRef(readEnv("GITHUB_REF_NAME"));
-  if (refName.startsWith("publish-gate/") || refName === "major-gate") {
-    return refName;
-  }
-  return "";
-}
-
-function lsRemoteHead(repository, sourceRef) {
-  const token = readEnv("GITHUB_TOKEN");
-  const url = `https://github.com/${repository}.git`;
-  const args = [];
-  if (token) {
-    args.push("-c", `http.https://github.com/.extraheader=AUTHORIZATION: bearer ${token}`);
-  }
-  args.push("ls-remote", url, `refs/heads/${sourceRef}`);
-  const output = execFileSync("git", args, {
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
-  }).trim();
-  const [sha] = output.split(/\s+/);
-  if (!sha) {
-    throw new Error(`publish source ref not found: ${sourceRef}`);
-  }
-  return sha;
-}
-
-export async function resolvePublishSourceCli() {
-  const mode = readArg("mode", readEnv("BUILDCHAIN_PUBLISH_SOURCE_MODE", "lock"));
-  const sourceRef = sourceRefFromEnv();
+export async function resolvePublishSourceCli({
+  args = process.argv.slice(2),
+  env = process.env,
+  fetchImpl = globalThis.fetch,
+} = {}) {
+  const mode = readArg(args, "mode", readEnv(env, "BUILDCHAIN_PUBLISH_SOURCE_MODE", "lock"));
+  const sourceRef = sourceRefFromEnv(env);
   const parsed = parsePublishSourceRef(sourceRef);
-  const repository = readEnv("BUILDCHAIN_SOURCE_REPOSITORY", readEnv("GITHUB_REPOSITORY"));
-  const sourceSha = readEnv("BUILDCHAIN_PUBLISH_SOURCE_SHA")
-    || (parsed.enabled ? lsRemoteHead(repository, parsed.sourceRef) : readEnv("GITHUB_SHA"));
+  const repository = readEnv(env, "BUILDCHAIN_SOURCE_REPOSITORY", readEnv(env, "GITHUB_REPOSITORY"));
+  const sourceSha = readEnv(env, "BUILDCHAIN_PUBLISH_SOURCE_SHA")
+    || (parsed.enabled
+      ? await resolvePublishSourceRefSha({ repository, sourceRef: parsed.sourceRef, env, fetchImpl })
+      : readEnv(env, "GITHUB_SHA"));
   const lock = resolvePublishSourceLock({
     publishSourceRef: parsed.sourceRef,
     publishSourceSha: sourceSha,
-    fallbackRef: readEnv("GITHUB_REF_NAME", readEnv("GITHUB_REF")),
-    fallbackSha: readEnv("GITHUB_SHA"),
+    fallbackRef: readEnv(env, "GITHUB_REF_NAME", readEnv(env, "GITHUB_REF")),
+    fallbackSha: readEnv(env, "GITHUB_SHA"),
   });
 
   if (mode === "lock") {
@@ -88,18 +59,18 @@ export async function resolvePublishSourceCli() {
     return lock;
   }
   if (mode === "manifest") {
-    const cwd = path.resolve(readEnv("BUILDCHAIN_SOURCE_CWD", "."));
+    const cwd = path.resolve(readEnv(env, "BUILDCHAIN_SOURCE_CWD", "."));
     const outputPath = path.resolve(
-      readEnv("BUILDCHAIN_RELEASE_MANIFEST", ".buildchain/artifacts/publish-source-manifest.json"),
+      readEnv(env, "BUILDCHAIN_RELEASE_MANIFEST", ".buildchain/artifacts/publish-source-manifest.json"),
     );
     const manifest = await createResolvedReleaseManifest({
       cwd,
       repository,
       sourceRef: lock.sourceLocked ? lock.sourceRef : "",
       sourceSha: lock.sourceSha,
-      anchorRequestJson: readEnv("BUILDCHAIN_PUBLISH_ANCHOR_REQUEST_JSON"),
-      publishRegistry: readEnv("BUILDCHAIN_PUBLISH_REGISTRY", "https://registry.npmjs.org/"),
-      distTag: readEnv("BUILDCHAIN_PUBLISH_DIST_TAG"),
+      anchorRequestJson: readEnv(env, "BUILDCHAIN_PUBLISH_ANCHOR_REQUEST_JSON"),
+      publishRegistry: readEnv(env, "BUILDCHAIN_PUBLISH_REGISTRY", "https://registry.npmjs.org/"),
+      distTag: readEnv(env, "BUILDCHAIN_PUBLISH_DIST_TAG"),
     });
     fs.mkdirSync(path.dirname(outputPath), { recursive: true });
     fs.writeFileSync(outputPath, `${JSON.stringify(manifest, null, 2)}\n`);
