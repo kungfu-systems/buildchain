@@ -584,7 +584,7 @@ async function persistDurableReleaseTransaction({
         repo,
         ref: refName,
         sha: commit.data.sha,
-        force: false,
+        force: true,
       });
     }
   }
