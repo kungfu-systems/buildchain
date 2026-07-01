@@ -113,6 +113,7 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
     /environment: \$\{\{ inputs\.production-environment \}\}/,
   );
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
+  assert.match(workflow, /include-hidden-files: true/);
   assert.match(workflow, /actions\/download-artifact@v7\.0\.0/);
 });
 
