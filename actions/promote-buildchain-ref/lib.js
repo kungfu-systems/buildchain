@@ -568,12 +568,25 @@ async function persistDurableReleaseTransaction({
       force: false,
     });
   } else {
-    await octokit.rest.git.createRef({
-      owner,
-      repo,
-      ref: `refs/${refName}`,
-      sha: commit.data.sha,
-    });
+    try {
+      await octokit.rest.git.createRef({
+        owner,
+        repo,
+        ref: `refs/${refName}`,
+        sha: commit.data.sha,
+      });
+    } catch (error) {
+      if (!referenceAlreadyExists(error)) {
+        throw error;
+      }
+      await octokit.rest.git.updateRef({
+        owner,
+        repo,
+        ref: refName,
+        sha: commit.data.sha,
+        force: false,
+      });
+    }
   }
   return {
     ref: transaction.state_ref,
@@ -1216,6 +1229,12 @@ function notFound(error) {
     status === 404 ||
     (status === 422 && /Reference does not exist/i.test(message))
   );
+}
+
+function referenceAlreadyExists(error) {
+  const status = error?.status || error?.response?.status;
+  const message = error?.response?.data?.message || error?.message || "";
+  return status === 422 && /Reference already exists/i.test(message);
 }
 
 function protectedBranchUpdateRejected(error) {
