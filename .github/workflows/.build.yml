@@ -25,6 +25,16 @@ on:
         default: ""
         type: string
         required: false
+      linux-container-preset:
+        description: "Optional Linux job container preset: kungfu-verify, none, or custom with linux-container-image"
+        default: ""
+        type: string
+        required: false
+      linux-container-image:
+        description: "Optional explicit Linux job container image, preferably pinned by digest"
+        default: ""
+        type: string
+        required: false
       require-trusted-event:
         default: true
         type: boolean
@@ -125,6 +135,12 @@ on:
       platform-count:
         description: "Resolved platform count"
         value: ${{ jobs.resolve-contract.outputs.platform-count }}
+      linux-container-enabled:
+        description: "Whether Linux build platforms are routed through a job container"
+        value: ${{ jobs.resolve-contract.outputs.linux-container-enabled }}
+      linux-container-image:
+        description: "Resolved Linux job container image"
+        value: ${{ jobs.resolve-contract.outputs.linux-container-image }}
       build-summary-artifact:
         description: "Uploaded aggregate build summary artifact name"
         value: ${{ jobs.summarize.outputs.summary-artifact-name }}
@@ -297,6 +313,14 @@ jobs:
       platforms-json: ${{ steps.runners.outputs.platforms-json }}
       platform-count: ${{ steps.runners.outputs.platform-count }}
       platform-source: ${{ steps.runners.outputs.platform-source }}
+      native-platforms-json: ${{ steps.runners.outputs.native-platforms-json }}
+      native-platform-count: ${{ steps.runners.outputs.native-platform-count }}
+      container-platforms-json: ${{ steps.runners.outputs.container-platforms-json }}
+      container-platform-count: ${{ steps.runners.outputs.container-platform-count }}
+      linux-container-enabled: ${{ steps.runners.outputs.linux-container-enabled }}
+      linux-container-preset: ${{ steps.runners.outputs.linux-container-preset }}
+      linux-container-image: ${{ steps.runners.outputs.linux-container-image }}
+      linux-container-source: ${{ steps.runners.outputs.linux-container-source }}
     steps:
       - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
@@ -312,18 +336,20 @@ jobs:
         env:
           BUILDCHAIN_RUNNER_PRESET: ${{ inputs.runner-preset }}
           BUILDCHAIN_PLATFORMS_JSON: ${{ inputs.platforms-json }}
+          BUILDCHAIN_LINUX_CONTAINER_PRESET: ${{ inputs.linux-container-preset }}
+          BUILDCHAIN_LINUX_CONTAINER_IMAGE: ${{ inputs.linux-container-image }}
 
-  build:
+  build-native:
     name: ${{ matrix.platform.name }}
     needs:
       - trust-gate
       - resolve-contract
       - resolve-source
-    if: ${{ needs.trust-gate.outputs.trusted == 'true' }}
+    if: ${{ needs.trust-gate.outputs.trusted == 'true' && needs.resolve-contract.outputs.native-platform-count != '0' }}
     strategy:
       fail-fast: false
       matrix:
-        platform: ${{ fromJSON(needs.resolve-contract.outputs.platforms-json) }}
+        platform: ${{ fromJSON(needs.resolve-contract.outputs.native-platforms-json) }}
     runs-on: ${{ fromJSON(matrix.platform.runner) }}
     steps:
       - name: Checkout source
@@ -431,14 +457,142 @@ jobs:
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
+  build-linux-container:
+    name: ${{ matrix.platform.name }} container
+    needs:
+      - trust-gate
+      - resolve-contract
+      - resolve-source
+    if: ${{ needs.trust-gate.outputs.trusted == 'true' && needs.resolve-contract.outputs.container-platform-count != '0' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: ${{ fromJSON(needs.resolve-contract.outputs.container-platforms-json) }}
+    runs-on: ${{ fromJSON(matrix.platform.runner) }}
+    container:
+      image: ${{ needs.resolve-contract.outputs.linux-container-image }}
+      options: --user root
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          clean: true
+          persist-credentials: false
+
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.buildchain-ref }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Setup Buildchain Node.js with fnm
+        shell: bash
+        run: |
+          eval "$(fnm env --shell bash)"
+          fnm install "${BUILDCHAIN_NODE_VERSION}"
+          fnm use "${BUILDCHAIN_NODE_VERSION}"
+          dirname "$(command -v node)" >> "${GITHUB_PATH}"
+          node --version
+          corepack enable
+        env:
+          BUILDCHAIN_NODE_VERSION: ${{ inputs.node-version }}
+
+      - name: Resolve artifact contract
+        id: artifact-contract
+        run: node .buildchain/runtime/scripts/resolve-build-contract.mjs --mode artifact
+        env:
+          BUILDCHAIN_ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          BUILDCHAIN_ARTIFACT_NAME_TEMPLATE: ${{ inputs.artifact-name-template }}
+          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
+          BUILDCHAIN_PLATFORM_NAME: ${{ matrix.platform.name }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+
+      - name: Run install lifecycle
+        uses: ./.buildchain/runtime/actions/run-lifecycle
+        env:
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+        with:
+          cwd: ${{ inputs.working-directory }}
+          stage: install
+          command: ${{ inputs.install-command }}
+          required: ${{ inputs.require-install }}
+          artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
+          platform-id: ${{ matrix.platform.id }}
+          platform-name: ${{ matrix.platform.name }}
+          artifact-paths: ${{ inputs.artifact-paths }}
+          manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest-install.json
+          summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary-install.json
+
+      - name: Run build lifecycle
+        uses: ./.buildchain/runtime/actions/run-lifecycle
+        env:
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+        with:
+          cwd: ${{ inputs.working-directory }}
+          stage: build
+          command: ${{ inputs.build-command }}
+          required: ${{ inputs.require-build }}
+          artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
+          platform-id: ${{ matrix.platform.id }}
+          platform-name: ${{ matrix.platform.name }}
+          artifact-paths: ${{ inputs.artifact-paths }}
+          manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest-build.json
+          summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary-build.json
+
+      - name: Run verify lifecycle
+        id: verify-lifecycle
+        uses: ./.buildchain/runtime/actions/run-lifecycle
+        env:
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+        with:
+          cwd: ${{ inputs.working-directory }}
+          stage: verify
+          command: ${{ inputs.verify-command }}
+          required: ${{ inputs.require-verify }}
+          artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
+          platform-id: ${{ matrix.platform.id }}
+          platform-name: ${{ matrix.platform.name }}
+          artifact-paths: ${{ inputs.artifact-paths }}
+          manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
+          summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
+          expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
+
+      - name: Upload deterministic artifact
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.artifact-contract.outputs.artifact-name }}
+          path: |
+            ${{ inputs.artifact-paths }}
+            .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload artifact manifest
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: |
+            .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
   summarize:
     name: Summarize build contract
     needs:
       - trust-gate
       - resolve-contract
       - resolve-source
-      - build
-    if: ${{ always() && needs.build.result == 'success' }}
+      - build-native
+      - build-linux-container
+    if: ${{ always() && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') }}
     runs-on: ubuntu-24.04
     outputs:
       summary-artifact-name: ${{ steps.names.outputs.summary-artifact-name }}

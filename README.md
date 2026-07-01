@@ -34,11 +34,11 @@ protocol for non-Node projects.
 
 Buildchain release automation is branch-driven:
 
-| Merge path | Meaning | Exact tag | Floating tags and branches |
-| --- | --- | --- | --- |
-| `dev/vX/vX.Y -> alpha/vX/vX.Y` | publish the next testable alpha for a minor line | `vX.Y.Z-alpha.N` | `vX.Y-alpha`, `alpha/vX/vX.Y`, `dev/vX/vX.Y` |
-| `alpha/vX/vX.Y -> release/vX/vX.Y` | publish production for that minor line | `vX.Y.Z` | `vX.Y`, usually `vX`, `release/vX/vX.Y` |
-| `release/vX/vX.Y -> publish-gate/major` | publish the next major from a reviewed production line | `v(X+1).0.0` | `v(X+1)`, `v(X+1).0`, `release/v(X+1)/v(X+1).0` |
+| Merge path                              | Meaning                                                | Exact tag        | Floating tags and branches                      |
+| --------------------------------------- | ------------------------------------------------------ | ---------------- | ----------------------------------------------- |
+| `dev/vX/vX.Y -> alpha/vX/vX.Y`          | publish the next testable alpha for a minor line       | `vX.Y.Z-alpha.N` | `vX.Y-alpha`, `alpha/vX/vX.Y`, `dev/vX/vX.Y`    |
+| `alpha/vX/vX.Y -> release/vX/vX.Y`      | publish production for that minor line                 | `vX.Y.Z`         | `vX.Y`, usually `vX`, `release/vX/vX.Y`         |
+| `release/vX/vX.Y -> publish-gate/major` | publish the next major from a reviewed production line | `v(X+1).0.0`     | `v(X+1)`, `v(X+1).0`, `release/v(X+1)/v(X+1).0` |
 
 After a production release, Buildchain prepares the next alpha source commit for
 the same minor line and moves `dev/vX/vX.Y`, `alpha/vX/vX.Y`, and
@@ -102,8 +102,9 @@ Buildchain v2 ships these active surfaces:
 - `.github/workflows/.build.yml` as the reusable build surface for
   tri-platform runner presets, custom runner matrices, caller-provided lifecycle
   commands, trusted event gating, artifact name templates, expected artifact
-  checks, deterministic artifact manifests, publish-gate source locks, resolved
-  release manifests, and aggregate build summaries;
+  checks, optional digest-pinned Linux job containers, deterministic artifact
+  manifests, publish-gate source locks, resolved release manifests, and
+  aggregate build summaries;
 - `.github/workflows/.web-surface.yml` as the reusable site/app surface for PR
   preview plans, closed-PR preview cleanup plans, push-main staging promotion
   plans, and explicit production environment gates;

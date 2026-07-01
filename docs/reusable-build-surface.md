@@ -17,6 +17,7 @@ jobs:
       working-directory: .
       artifact-name: libnode
       runner-preset: kungfu-v4-self-hosted
+      linux-container-preset: kungfu-verify
       artifact-name-template: "{artifact}-{platform}-{sha}"
       artifact-paths: |
         dist
@@ -29,20 +30,20 @@ jobs:
 
 `runner-preset` is the stable first-class surface for known runner fleets:
 
-| Preset | Platforms |
-| --- | --- |
-| `github-hosted` | `ubuntu-24.04`, `macos-latest`, `windows-2022` |
+| Preset                  | Platforms                                                                |
+| ----------------------- | ------------------------------------------------------------------------ |
+| `github-hosted`         | `ubuntu-24.04`, `macos-latest`, `windows-2022`                           |
 | `kungfu-v4-self-hosted` | Kungfu Linux x64, macOS ARM64, and Windows x64 self-hosted runner labels |
-| `custom` | Requires `platforms-json` |
+| `custom`                | Requires `platforms-json`                                                |
 
 Callers can still provide a custom matrix with `platforms-json`. Each platform
 object has:
 
-| Field | Meaning |
-| --- | --- |
-| `id` | Stable artifact/platform key, such as `linux-x64` |
-| `name` | Human-readable job name |
-| `runner` | JSON string passed to `runs-on` after `fromJSON` |
+| Field    | Meaning                                           |
+| -------- | ------------------------------------------------- |
+| `id`     | Stable artifact/platform key, such as `linux-x64` |
+| `name`   | Human-readable job name                           |
+| `runner` | JSON string passed to `runs-on` after `fromJSON`  |
 
 The runner field is intentionally a JSON string so callers can pass either
 GitHub-hosted runners or multi-label self-hosted runners without Buildchain
@@ -52,28 +53,85 @@ Only include platforms that should run. GitHub schedules matrix jobs before
 steps execute, so a disabled entry with unavailable runner labels can still
 block the workflow queue.
 
+## Linux Job Containers
+
+Linux build platforms can run inside a digest-pinned job container while macOS
+and Windows keep using native runners. This is the recommended way to remove
+moving Linux runner prerequisites from Buildchain consumers: the Linux host only
+needs a GitHub Actions runner, Docker, and network access; common verification
+tools come from the image contract.
+
+Use the Kungfu verification image for lifecycle stages that need Git, jq,
+Python, uv, and fnm, but do not need native compilation:
+
+```yaml
+jobs:
+  build:
+    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2
+    with:
+      runner-preset: kungfu-v4-self-hosted
+      linux-container-preset: kungfu-verify
+```
+
+`kungfu-verify` resolves to:
+
+```text
+ghcr.io/kungfu-systems/build-images/kungfu-verify@sha256:11f0ba64267ce88174a4f73a9bf833ff4e9c59cd16ec3d08a6432a06c2be6fb1
+```
+
+Callers that own a different Linux image can pass it explicitly:
+
+```yaml
+with:
+  linux-container-preset: custom
+  linux-container-image: ghcr.io/example/project-build@sha256:<digest>
+```
+
+`linux-container-image` should be pinned by digest. A floating tag makes the
+runner surface mutable and weakens Buildchain's release evidence.
+
+The workflow splits the matrix into two build jobs:
+
+- Linux platforms go to `build-linux-container` when a Linux container is
+  configured.
+- All other platforms go to `build-native`.
+
+Artifact names, manifest paths, expected artifact checks, publish-source locks,
+and aggregate summaries are the same in both jobs. The split is an execution
+detail, not a different artifact contract.
+
+The container image provides `fnm` but does not preinstall Node. Buildchain uses
+`fnm` inside the container to install the requested `node-version` before it
+runs Buildchain runtime scripts or lifecycle actions.
+
+Do not use `kungfu-verify` for stages that need CMake, Ninja, ccache, Conan, or
+Docker image publishing. Those should use a heavier native-build image or remain
+on a host runner until their image contract is explicit.
+
 ## Workflow Outputs
 
 The reusable workflow exposes the resolved contract:
 
-| Output | Meaning |
-| --- | --- |
-| `runner-preset` | Resolved preset, or `custom` when `platforms-json` was provided |
-| `platforms-json` | Exact matrix JSON used by the build job |
-| `platform-count` | Number of matrix platforms |
-| `build-summary-artifact` | Uploaded aggregate summary artifact name |
-| `build-summary-json` | Compact aggregate JSON with platform count, file count, and byte total |
-| `trusted-event` | `true` when the event is trusted enough to reach build runners |
-| `publish-channel` | Resolved publish channel requested by the caller |
-| `publish-allowed` | `true` only when this event/ref may publish after verification |
-| `publish-reason` | Human-readable reason for the publish gate decision |
-| `publish-source-ref` | Gate source ref that was resolved before checkout |
-| `publish-source-sha` | Exact source commit used by checkout, build, verify, and artifacts |
-| `publish-source-locked` | `true` when a `publish-gate/*` source ref was explicitly locked |
-| `publish-source-channel` | `alpha`, `release`, `anchor`, or `major` parsed from the source ref |
-| `publish-source-line` | Product line parsed from source refs such as `v22/v22.22` |
-| `publish-source-consumer-version` | Consumer package version parsed from source refs |
-| `release-manifest-json` | Resolved release manifest including source lock, version state, and anchor data |
+| Output                            | Meaning                                                                         |
+| --------------------------------- | ------------------------------------------------------------------------------- |
+| `runner-preset`                   | Resolved preset, or `custom` when `platforms-json` was provided                 |
+| `platforms-json`                  | Exact matrix JSON used by the build job                                         |
+| `platform-count`                  | Number of matrix platforms                                                      |
+| `linux-container-enabled`         | `true` when Linux platforms are routed through a job container                  |
+| `linux-container-image`           | Resolved digest-pinned Linux job container image                                |
+| `build-summary-artifact`          | Uploaded aggregate summary artifact name                                        |
+| `build-summary-json`              | Compact aggregate JSON with platform count, file count, and byte total          |
+| `trusted-event`                   | `true` when the event is trusted enough to reach build runners                  |
+| `publish-channel`                 | Resolved publish channel requested by the caller                                |
+| `publish-allowed`                 | `true` only when this event/ref may publish after verification                  |
+| `publish-reason`                  | Human-readable reason for the publish gate decision                             |
+| `publish-source-ref`              | Gate source ref that was resolved before checkout                               |
+| `publish-source-sha`              | Exact source commit used by checkout, build, verify, and artifacts              |
+| `publish-source-locked`           | `true` when a `publish-gate/*` source ref was explicitly locked                 |
+| `publish-source-channel`          | `alpha`, `release`, `anchor`, or `major` parsed from the source ref             |
+| `publish-source-line`             | Product line parsed from source refs such as `v22/v22.22`                       |
+| `publish-source-consumer-version` | Consumer package version parsed from source refs                                |
+| `release-manifest-json`           | Resolved release manifest including source lock, version state, and anchor data |
 
 The aggregate summary is intentionally an artifact as well as an output. GitHub
 Actions matrix outputs are not a reliable place to carry every platform's full
@@ -107,12 +165,12 @@ jobs:
 
 Default channels are:
 
-| Channel | Allowed refs |
-| --- | --- |
-| `none` | Never publishes; this is the default |
-| `alpha` | `alpha/vN/vN.M` branches or exact `vN.M.P-alpha.K` tags |
-| `release` | `release/vN/vN.M` branches or release tags such as `vN.M.P`, `vN.M`, `vN` |
-| `major` | `publish-gate/major`, legacy `major-gate`, or next-major release tags such as `vN.0.0`, `vN.0`, `vN` |
+| Channel   | Allowed refs                                                                                         |
+| --------- | ---------------------------------------------------------------------------------------------------- |
+| `none`    | Never publishes; this is the default                                                                 |
+| `alpha`   | `alpha/vN/vN.M` branches or exact `vN.M.P-alpha.K` tags                                              |
+| `release` | `release/vN/vN.M` branches or release tags such as `vN.M.P`, `vN.M`, `vN`                            |
+| `major`   | `publish-gate/major`, legacy `major-gate`, or next-major release tags such as `vN.0.0`, `vN.0`, `vN` |
 
 Pull request events always produce `publish-allowed=false`, even when the PR is
 from the same repository. Untrusted fork events also produce
@@ -138,13 +196,13 @@ why it was or was not eligible to publish.
 source tree is the publish decision about?" A caller can pass `publish-source-ref`
 to bind a publish run to a reviewed gate branch before any checkout happens:
 
-| Ref | Meaning |
-| --- | --- |
-| `publish-gate/alpha/<line>/<consumer-version>` | Build and publish an alpha candidate for a consumer line |
-| `publish-gate/release/<line>/<consumer-version>` | Build and publish a production candidate for a consumer line |
-| `publish-gate/anchor` | Resolve an explicit anchor request; it does not publish artifacts by itself |
-| `publish-gate/major` | Gate the next major source state |
-| `major-gate` | Legacy compatibility alias for the major gate |
+| Ref                                              | Meaning                                                                     |
+| ------------------------------------------------ | --------------------------------------------------------------------------- |
+| `publish-gate/alpha/<line>/<consumer-version>`   | Build and publish an alpha candidate for a consumer line                    |
+| `publish-gate/release/<line>/<consumer-version>` | Build and publish a production candidate for a consumer line                |
+| `publish-gate/anchor`                            | Resolve an explicit anchor request; it does not publish artifacts by itself |
+| `publish-gate/major`                             | Gate the next major source state                                            |
+| `major-gate`                                     | Legacy compatibility alias for the major gate                               |
 
 For alpha and release refs, `<line>` is intentionally allowed to contain `/`, so
 Kungfu-style lines such as `v22/v22.22` stay readable. The final path segment is
@@ -310,11 +368,11 @@ produce a new GitHub Actions run but keep the same source SHA/platform contract.
 `expected-artifacts-json` fails the build before upload when the artifact does
 not match the caller's declared contract. Supported checks are:
 
-| Field | Meaning |
-| --- | --- |
-| `minFiles` | Minimum number of manifest files |
-| `maxFiles` | Maximum number of manifest files |
-| `minTotalBytes` | Minimum total byte count |
+| Field           | Meaning                              |
+| --------------- | ------------------------------------ |
+| `minFiles`      | Minimum number of manifest files     |
+| `maxFiles`      | Maximum number of manifest files     |
+| `minTotalBytes` | Minimum total byte count             |
 | `requiredPaths` | Exact manifest paths that must exist |
 
 ## Trusted Event Gate
