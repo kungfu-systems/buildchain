@@ -4,16 +4,60 @@ on:
   push:
     tags:
       - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Ref to dry-run. Defaults to the selected workflow ref."
+        required: false
+        default: ""
+      run-check:
+        description: "Run the full Buildchain check before npm publish dry-run."
+        required: true
+        default: true
+        type: boolean
 
 permissions:
   contents: read
   id-token: write
 
 jobs:
+  dry-run:
+    name: Dry-run npm publish
+    runs-on: ubuntu-24.04
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout dry-run ref
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org/"
+
+      - name: Enable pnpm
+        run: |
+          corepack enable pnpm
+          pnpm --version
+          npm --version
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify package
+        if: ${{ inputs.run-check }}
+        run: pnpm run check
+
+      - name: Dry-run npm publish
+        run: node scripts/npm-publish-dry-run.mjs --json
+
   publish:
     name: Publish exact release tag
     runs-on: ubuntu-24.04
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     steps:
       - name: Checkout release tag
         uses: actions/checkout@v7.0.0
@@ -37,26 +81,7 @@ jobs:
 
       - name: Verify release package version
         id: package
-        run: |
-          node --input-type=module <<'NODE'
-          import fs from "node:fs";
-
-          const tag = process.env.GITHUB_REF_NAME;
-          const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
-          const expectedTag = `v${pkg.version}`;
-          if (tag !== expectedTag) {
-            throw new Error(`npm publish tag must match package.json version: tag=${tag} expected=${expectedTag}`);
-          }
-          if (pkg.private === true) {
-            throw new Error("package.json private must be false before npm publish");
-          }
-          if (!/^v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(tag)) {
-            throw new Error(`unsupported release tag for npm publish: ${tag}`);
-          }
-          const distTag = pkg.version.includes("-") ? "alpha" : "latest";
-          fs.appendFileSync(process.env.GITHUB_OUTPUT, `version=${pkg.version}\n`);
-          fs.appendFileSync(process.env.GITHUB_OUTPUT, `dist-tag=${distTag}\n`);
-          NODE
+        run: node scripts/npm-publish-dry-run.mjs --expected-tag "$GITHUB_REF_NAME" --skip-npm-publish-dry-run --json
 
       - name: Verify package
         run: pnpm run check

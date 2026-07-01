@@ -63,6 +63,18 @@ and `buildchain build-contract` route to the same scripts used by Buildchain's
 GitHub Actions workflows. This keeps local inspection and CI behavior on the
 same implementation path.
 
+`buildchain npm dry-run` verifies the package shape before a release tag exists:
+
+```bash
+buildchain npm dry-run --json
+```
+
+The command validates `package.json`, infers the exact release tag
+`v${package.json.version}`, chooses npm dist-tag `alpha` for prereleases and
+`latest` for stable releases, runs `npm pack --dry-run --json`, and then runs
+`npm publish --dry-run --access public --tag <alpha|latest>` unless
+`--skip-npm-publish-dry-run` is passed. It never performs a real publish.
+
 ## npm Publish Gate
 
 `.github/workflows/npm-publish.yml` publishes only on exact v-prefixed release
@@ -88,3 +100,6 @@ Before the first real release, configure npm Trusted Publishing for:
 - workflow: `.github/workflows/npm-publish.yml`
 
 No npm package is published by manual dispatch or by ordinary branch builds.
+Manual dispatch on `.github/workflows/npm-publish.yml` runs only the dry-run
+job, so maintainers can verify package contents and npm publish shape before
+opening or merging the release PR.

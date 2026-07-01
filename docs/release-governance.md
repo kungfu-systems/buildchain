@@ -123,11 +123,18 @@ Buildchain then:
 3. Verifies the generated version-state tree.
 4. Creates or reuses the exact alpha tag.
 5. Moves `alpha/vX/vX.Y` to the generated alpha commit.
-6. Moves `dev/vX/vX.Y` to the same generated alpha commit.
+6. Moves `dev/vX/vX.Y` to the same generated alpha commit when this is a
+   fast-forward update.
 7. Moves `vX.Y-alpha` to the same generated alpha commit.
 
 This keeps the test channel self-describing. If a consumer checks out
 `v2.0-alpha`, the manifests and exact alpha tag agree.
+
+If `dev/vX/vX.Y` has already advanced while the generated alpha version-state PR
+was under review, Buildchain records `skipped-non-fast-forward` for the dev sync
+and still completes the exact and floating alpha tags for the reviewed alpha
+commit. Later dev changes must go through their own dev-to-alpha promotion
+instead of rewinding dev.
 
 ## Release Semantics
 
