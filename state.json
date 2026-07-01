@@ -16,14 +16,14 @@
   "state_ref": "buildchain/release-state/2-0-13-alpha-2",
   "state_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-state/v2.0.13-alpha.2.json",
   "evidence_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-evidence/v2.0.13-alpha.2/evidence.json",
-  "state": "prepared",
-  "previous_state": "",
+  "state": "publish_failed",
+  "previous_state": "publishing",
   "actor": "kungfu-origin",
   "run_id": "28506188846",
   "superseded_by": "",
-  "failure": "",
+  "failure": "Update is not a fast forward - https://docs.github.com/rest/git/refs#update-a-reference",
   "artifacts": [],
   "evidence": [],
   "created_at": "2026-07-01T09:04:17.186Z",
-  "updated_at": "2026-07-01T09:04:17.186Z"
+  "updated_at": "2026-07-01T09:04:20.268Z"
 }
