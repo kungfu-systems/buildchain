@@ -3,6 +3,7 @@ import path from "node:path";
 
 const root = process.cwd();
 const sharedActionTsupConfig = fs.readFileSync(path.join(root, "scripts/tsup-action.config.mjs"), "utf8");
+const commonJsSourcePattern = /\b(require\s*\(|module\.exports|exports\.|require\.main|createRequire)\b/;
 const requiredPaths = [
   "README.md",
   "docs/migration-inventory.md",
@@ -117,8 +118,14 @@ for (const action of shippedActions) {
   }
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
   const bundleContent = fs.readFileSync(bundlePath, "utf8");
+  if (packageJson.type !== "module") {
+    throw new Error(`${action.path}/package.json must set type=module`);
+  }
   if (!packageJson.scripts?.build?.includes("tsup ")) {
     throw new Error(`${action.path}/package.json must define a tsup build`);
+  }
+  if (!packageJson.scripts.build.includes("--format esm")) {
+    throw new Error(`${action.path}/package.json build must emit ESM`);
   }
   if (!packageJson.scripts.build.includes("tsup-action.config.mjs")) {
     throw new Error(`${action.path}/package.json build must use the shared action tsup config`);
@@ -134,9 +141,20 @@ for (const action of shippedActions) {
   if (/(from|import)\s*["']@actions\//.test(bundleContent) || /require\(["']@actions\//.test(bundleContent)) {
     throw new Error(`${action.path}/dist/index.js must bundle @actions dependencies`);
   }
-  if (packageJson.type === "module" && /\b(require\s*\(|module\.exports|Dynamic require)\b/.test(bundleContent)) {
-    throw new Error(`${action.path}/dist/index.js must stay ESM-only`);
+  // Bundled third-party dependencies may still be wrapped with esbuild helper
+  // shims. The ESM contract is enforced at the action source and package
+  // boundary instead of by banning helper text inside generated bundles.
+  const sourceFiles = collectFiles(actionPath, [".js", ".ts", ".mjs"], ["dist"]);
+  for (const sourceFile of sourceFiles) {
+    const source = fs.readFileSync(sourceFile, "utf8");
+    if (commonJsSourcePattern.test(source)) {
+      throw new Error(`${path.relative(root, sourceFile)} must use ESM syntax`);
+    }
   }
+}
+
+for (const file of collectFiles(path.join(root, "packages"), [".cjs"], [])) {
+  throw new Error(`CommonJS core package file is not allowed: ${path.relative(root, file)}`);
 }
 
 const safety = inventory.safety || {};
@@ -158,3 +176,22 @@ for (const key of ["publishGateSourceLock", "resolvedReleaseManifest", "packageS
 }
 
 console.log("buildchain inventory check passed");
+
+function collectFiles(dir, extensions, excludedDirNames) {
+  if (!fs.existsSync(dir)) {
+    return [];
+  }
+  const files = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (excludedDirNames.includes(entry.name)) {
+      continue;
+    }
+    const item = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...collectFiles(item, extensions, excludedDirNames));
+    } else if (extensions.some((extension) => item.endsWith(extension))) {
+      files.push(item);
+    }
+  }
+  return files;
+}

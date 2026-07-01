@@ -87,8 +87,8 @@ BUILDCHAIN_TEST_VALUE = "ok"
 
 [lifecycle.build]
 commands = [
-  "node -e \\"require('node:fs').writeFileSync('a.txt', process.env.BUILDCHAIN_TEST_VALUE)\\"",
-  "node -e \\"require('node:fs').appendFileSync('a.txt', '-done')\\"",
+  "node -e \\"import('node:fs').then((fs) => fs.writeFileSync('a.txt', process.env.BUILDCHAIN_TEST_VALUE))\\"",
+  "node -e \\"import('node:fs').then((fs) => fs.appendFileSync('a.txt', '-done'))\\"",
 ]
 
 [lifecycle.verify]
@@ -132,10 +132,10 @@ path = "package.json"
 key = "version"
 
 [lifecycle.build]
-command = "node -e \\"require('node:fs').writeFileSync('should-not-exist.txt', 'ran')\\""
+command = "node -e \\"import('node:fs').then((fs) => fs.writeFileSync('should-not-exist.txt', 'ran'))\\""
 
 [lifecycle.verify]
-command = "node -e \\"require('node:fs').writeFileSync('also-should-not-exist.txt', 'ran')\\""
+command = "node -e \\"import('node:fs').then((fs) => fs.writeFileSync('also-should-not-exist.txt', 'ran'))\\""
 `,
       "package.json": '{ "name": "demo", "version": "1.0.0" }\n',
     },
