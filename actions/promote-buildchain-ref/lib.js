@@ -15,6 +15,19 @@ import {
   runLifecycleStage,
   updateConfiguredVersionStateContents,
 } from "../../packages/core/buildchain-config.js";
+import {
+  assertTransactionIdentity,
+  createReleaseTransaction,
+  defaultPublishEvidencePath,
+  defaultReleaseStatePath,
+  parsePublishArtifactsJson,
+  planTransactionRecovery,
+  readPublishEvidence,
+  readReleaseTransaction,
+  transitionReleaseTransaction,
+  validatePublishEvidence,
+  writeReleaseTransaction,
+} from "../../packages/core/publish-transaction.js";
 
 const COMMIT_IDENTITY = {
   name: "Keren Dong",
@@ -314,6 +327,288 @@ function versionVerificationEnv(versionStrategy, anchorManifest) {
         }
       : {}),
   };
+}
+
+function runPublishCommand({ cwd, command, loadedConfig, env }) {
+  const lifecyclePublish = getLifecycleStage(loadedConfig, "publish");
+  if (command) {
+    execSync(command, {
+      cwd,
+      env: { ...process.env, ...env },
+      stdio: "inherit",
+      shell: true,
+    });
+    return "workflow-input";
+  }
+  if (lifecyclePublish) {
+    runLifecycleStage({
+      cwd,
+      loadedConfig,
+      name: "publish",
+      stage: lifecyclePublish,
+      env,
+    });
+    return "buildchain.toml";
+  }
+  return "none";
+}
+
+function materialErrorRequiresRepair(error) {
+  return /release_material_sha mismatch|source_sha mismatch|release_sha mismatch|version mismatch|target_ref mismatch|artifact digest mismatch|required artifact missing/.test(
+    error.message || "",
+  );
+}
+
+function ensureTransactionCanResume({ existing, expected, explicitOverride }) {
+  if (!existing) {
+    return;
+  }
+  assertTransactionIdentity(existing, expected, { allowToolingDrift: true });
+  const recovery = planTransactionRecovery({
+    transaction: existing,
+    explicitOverride,
+  });
+  if (recovery.blocked) {
+    throw new Error(`release transaction cannot resume: ${recovery.reason}`);
+  }
+}
+
+function validateTransactionEvidence({
+  evidencePath,
+  version,
+  channel,
+  sourceSha,
+  releaseSha,
+  targetRef,
+  releaseMaterialSha,
+  publishToolingSha,
+  requiredArtifacts,
+}) {
+  const evidence = readPublishEvidence(evidencePath);
+  if (!evidence) {
+    throw new Error(`publish evidence missing: ${evidencePath}`);
+  }
+  const validation = validatePublishEvidence({
+    evidence,
+    version,
+    channel,
+    sourceSha,
+    releaseSha,
+    targetRef,
+    releaseMaterialSha,
+    publishToolingSha,
+    requiredArtifacts,
+  });
+  if (!validation.valid) {
+    throw new Error(`publish evidence invalid: ${validation.errors.join("; ")}`);
+  }
+  return validation;
+}
+
+function runPublishTransaction({
+  owner,
+  repo,
+  cwd,
+  loadedConfig,
+  targetRef,
+  sourceSha,
+  releaseSha,
+  version,
+  exactTag,
+  channel,
+  line,
+  publishTransaction,
+  publishCommand = "",
+  publishEvidencePath = "",
+  transactionStatePath = "",
+  publishRequiredArtifactsJson = "",
+  releaseMaterialSha = "",
+  publishToolingSha = "",
+  actor = "",
+  runId = "",
+  explicitOverride = false,
+}) {
+  const lifecyclePublish = getLifecycleStage(loadedConfig, "publish");
+  const enabled = Boolean(publishTransaction || publishCommand || lifecyclePublish);
+  if (!enabled) {
+    return undefined;
+  }
+
+  const repository = `${owner}/${repo}`;
+  const resolvedStatePath = path.resolve(
+    cwd,
+    transactionStatePath || defaultReleaseStatePath(exactTag, cwd),
+  );
+  const resolvedEvidencePath = path.resolve(
+    cwd,
+    publishEvidencePath || defaultPublishEvidencePath(exactTag, cwd),
+  );
+  const requiredArtifacts = parsePublishArtifactsJson(
+    publishRequiredArtifactsJson,
+    "publish-required-artifacts-json",
+  );
+  const expected = {
+    repository,
+    version,
+    sourceSha,
+    targetRef,
+    releaseMaterialSha: releaseMaterialSha || releaseSha,
+    publishToolingSha: publishToolingSha || releaseSha,
+  };
+
+  const existing = readReleaseTransaction(resolvedStatePath);
+  ensureTransactionCanResume({ existing, expected, explicitOverride });
+  let transaction =
+    existing ||
+    createReleaseTransaction({
+      repository,
+      version,
+      exactTag,
+      channel,
+      line,
+      sourceSha,
+      targetRef,
+      releaseSha,
+      releaseMaterialSha: expected.releaseMaterialSha,
+      publishToolingSha: expected.publishToolingSha,
+      statePath: resolvedStatePath,
+      evidencePath: resolvedEvidencePath,
+      actor,
+      runId,
+    });
+  transaction = writeReleaseTransaction(resolvedStatePath, transaction);
+
+  let validation;
+  try {
+    const evidence = readPublishEvidence(resolvedEvidencePath);
+    if (evidence) {
+      validation = validatePublishEvidence({
+        evidence,
+        version,
+        channel,
+        sourceSha,
+        releaseSha,
+        targetRef,
+        releaseMaterialSha: expected.releaseMaterialSha,
+        publishToolingSha: expected.publishToolingSha,
+        requiredArtifacts,
+      });
+    }
+    const recovery = planTransactionRecovery({
+      transaction,
+      evidence,
+      validation,
+      explicitOverride,
+    });
+    if (recovery.blocked) {
+      throw new Error(`release transaction cannot recover: ${recovery.reason}`);
+    }
+    if (!validation?.valid) {
+      if (transaction.state === "repair_required" && explicitOverride) {
+        transaction = transitionReleaseTransaction(transaction, "publishing", {
+          actor,
+          runId,
+          failure: "",
+        });
+      } else if (transaction.state !== "publishing") {
+        transaction = transitionReleaseTransaction(transaction, "publishing", {
+          actor,
+          runId,
+        });
+      }
+      writeReleaseTransaction(resolvedStatePath, transaction);
+      const source = runPublishCommand({
+        cwd,
+        command: publishCommand,
+        loadedConfig,
+        env: {
+          BUILDCHAIN_VERSION: version,
+          BUILDCHAIN_CHANNEL: channel,
+          BUILDCHAIN_SOURCE_SHA: sourceSha,
+          BUILDCHAIN_TARGET_REF: targetRef,
+          BUILDCHAIN_RELEASE_STATE: resolvedStatePath,
+          BUILDCHAIN_EVIDENCE_DIR: path.dirname(resolvedEvidencePath),
+          BUILDCHAIN_RELEASE_SHA: releaseSha,
+          BUILDCHAIN_RELEASE_MATERIAL_SHA: expected.releaseMaterialSha,
+          BUILDCHAIN_PUBLISH_TOOLING_SHA: expected.publishToolingSha,
+          BUILDCHAIN_PUBLISH_EVIDENCE: resolvedEvidencePath,
+        },
+      });
+      if (source === "none") {
+        throw new Error("publish transaction requires lifecycle.publish, publish-command, or existing evidence");
+      }
+    }
+    validation = validateTransactionEvidence({
+      evidencePath: resolvedEvidencePath,
+      version,
+      channel,
+      sourceSha,
+      releaseSha,
+      targetRef,
+      releaseMaterialSha: expected.releaseMaterialSha,
+      publishToolingSha: expected.publishToolingSha,
+      requiredArtifacts,
+    });
+    if (transaction.state === "publishing" || transaction.state === "publish_failed") {
+      transaction = transitionReleaseTransaction(transaction, "published", {
+        actor,
+        runId,
+        failure: "",
+      });
+    }
+    transaction = {
+      ...transaction,
+      artifacts: validation.evidence.artifacts,
+      evidence: [path.relative(cwd, resolvedEvidencePath).split(path.sep).join("/")],
+    };
+    writeReleaseTransaction(resolvedStatePath, transaction);
+    return {
+      transaction,
+      validation,
+      statePath: resolvedStatePath,
+      evidencePath: resolvedEvidencePath,
+    };
+  } catch (error) {
+    const nextState = materialErrorRequiresRepair(error)
+      ? "repair_required"
+      : "publish_failed";
+    if (transaction.state !== "repair_required") {
+      transaction = transitionReleaseTransaction(transaction, nextState, {
+        actor,
+        runId,
+        failure: error.message,
+      });
+      writeReleaseTransaction(resolvedStatePath, transaction);
+    }
+    throw error;
+  }
+}
+
+function beginTransactionFinalization(result, actor, runId) {
+  if (!result?.transaction || result.transaction.state === "finalizing" || result.transaction.state === "complete") {
+    return result;
+  }
+  const transaction = transitionReleaseTransaction(result.transaction, "finalizing", {
+    actor,
+    runId,
+  });
+  writeReleaseTransaction(result.statePath, transaction);
+  return { ...result, transaction };
+}
+
+function completeTransactionFinalization(result, actor, runId) {
+  if (!result?.transaction || result.transaction.state === "complete") {
+    return result;
+  }
+  const current = result.transaction.state === "published"
+    ? transitionReleaseTransaction(result.transaction, "finalizing", { actor, runId })
+    : result.transaction;
+  const transaction = transitionReleaseTransaction(current, "complete", {
+    actor,
+    runId,
+  });
+  writeReleaseTransaction(result.statePath, transaction);
+  return { ...result, transaction };
 }
 
 async function getCommitInfo(octokit, owner, repo, sha) {
@@ -714,6 +1009,16 @@ async function promoteBuildchainRefs({
   requireGovernance = false,
   verificationCommand = "",
   requiredStatusCheck = "check",
+  publishTransaction = false,
+  publishCommand = "",
+  publishEvidencePath = "",
+  transactionStatePath = "",
+  publishRequiredArtifactsJson = "",
+  releaseMaterialSha = "",
+  publishToolingSha = "",
+  actor = process.env.GITHUB_ACTOR || process.env.USER || "",
+  runId = process.env.GITHUB_RUN_ID || "",
+  publishTransactionOverride = false,
 }) {
   assertPromotableRepository(owner, repo, allowRepository);
   assertPromotableTargetRef(targetRef);
@@ -1292,6 +1597,86 @@ async function promoteBuildchainRefs({
     }
   };
 
+  let latestPublishTransaction;
+  const executePublishTransaction = ({
+    version,
+    exactTag,
+    channel,
+    line,
+    releaseSha,
+  }) => {
+    if (dryRun && (publishTransaction || publishCommand || getLifecycleStage(loadBuildchainConfig(cwd), "publish"))) {
+      updates.push({
+        action: "dry-run-publish-transaction",
+        version,
+        tag: exactTag,
+        sha: releaseSha,
+      });
+      return undefined;
+    }
+    latestPublishTransaction = runPublishTransaction({
+      owner,
+      repo,
+      cwd,
+      loadedConfig: loadBuildchainConfig(cwd),
+      targetRef,
+      sourceSha: sha,
+      releaseSha,
+      version,
+      exactTag,
+      channel,
+      line,
+      publishTransaction,
+      publishCommand,
+      publishEvidencePath,
+      transactionStatePath,
+      publishRequiredArtifactsJson,
+      releaseMaterialSha,
+      publishToolingSha,
+      actor,
+      runId,
+      explicitOverride: publishTransactionOverride,
+    });
+    if (latestPublishTransaction) {
+      updates.push({
+        action: "publish-transaction",
+        version,
+        tag: exactTag,
+        sha: latestPublishTransaction.transaction.release_sha,
+        state: latestPublishTransaction.transaction.state,
+        transactionId: latestPublishTransaction.transaction.id,
+        statePath: path.relative(cwd, latestPublishTransaction.statePath).split(path.sep).join("/"),
+        evidencePath: path.relative(cwd, latestPublishTransaction.evidencePath).split(path.sep).join("/"),
+      });
+    }
+    return latestPublishTransaction;
+  };
+
+  const markFinalizing = () => {
+    latestPublishTransaction = beginTransactionFinalization(latestPublishTransaction, actor, runId);
+  };
+
+  const markComplete = () => {
+    latestPublishTransaction = completeTransactionFinalization(latestPublishTransaction, actor, runId);
+    return latestPublishTransaction;
+  };
+
+  const withPublishTransaction = (result, extra = {}) => {
+    if (!latestPublishTransaction) {
+      return result;
+    }
+    return {
+      ...result,
+      publishTransaction: {
+        id: latestPublishTransaction.transaction.id,
+        state: latestPublishTransaction.transaction.state,
+        statePath: path.relative(cwd, latestPublishTransaction.statePath).split(path.sep).join("/"),
+        evidencePath: path.relative(cwd, latestPublishTransaction.evidencePath).split(path.sep).join("/"),
+        ...extra,
+      },
+    };
+  };
+
   if (requireGovernance && !dryRun) {
     await assertProtectedChannel({
       octokit,
@@ -1382,13 +1767,21 @@ async function promoteBuildchainRefs({
         });
       }
     }
+    executePublishTransaction({
+      version: releaseVersion,
+      exactTag: selectedRelease.tag,
+      channel: majorRule.channel || "major",
+      line: majorRule.releasePrefix,
+      releaseSha,
+    });
     if (versionState) {
+      markFinalizing();
       const gateUpdate = await updateBranch(targetRef, releaseSha, "updated", {
         title: `Release ${selectedRelease.tag}`,
         body: `Create the generated version-state commit for ${selectedRelease.tag}.`,
       });
       if (gateUpdate.pending) {
-        return {
+        return withPublishTransaction({
           owner,
           repo,
           sourceSha: sha,
@@ -1396,13 +1789,15 @@ async function promoteBuildchainRefs({
           targetRef,
           pendingPullRequest: gateUpdate.pullRequest.html_url || gateUpdate.pullRequest.url,
           updates,
-        };
+        }, { finalizationNeeded: true });
       }
       await updateBranch(`release/v${majorRule.major}/v${majorRule.major}.0`, releaseSha);
     }
+    markFinalizing();
     await ensureTag(selectedRelease.tag, releaseSha);
     await updateTag(majorRule.minorTag, releaseSha);
     await updateTag(majorRule.majorTag, releaseSha);
+    markComplete();
 
     if (releaseCommit.versionStrategy?.next === "manual") {
       updates.push({
@@ -1420,6 +1815,14 @@ async function promoteBuildchainRefs({
         nextAlphaRequired: true,
         targetRef,
         updates,
+        publishTransaction: latestPublishTransaction
+          ? {
+              id: latestPublishTransaction.transaction.id,
+              state: latestPublishTransaction.transaction.state,
+              statePath: path.relative(cwd, latestPublishTransaction.statePath).split(path.sep).join("/"),
+              evidencePath: path.relative(cwd, latestPublishTransaction.evidencePath).split(path.sep).join("/"),
+            }
+          : undefined,
       };
     }
 
@@ -1463,7 +1866,7 @@ async function promoteBuildchainRefs({
     }
     await ensureTag(selectedNextAlpha.tag, nextAlphaSha);
     await updateTag(majorRule.alphaTag, nextAlphaSha);
-    return {
+    return withPublishTransaction({
       owner,
       repo,
       sourceSha: sha,
@@ -1471,7 +1874,7 @@ async function promoteBuildchainRefs({
       nextAlphaSha,
       targetRef,
       updates,
-    };
+    });
   }
 
   const lineRefs = await listLineRefs();
@@ -1528,13 +1931,21 @@ async function promoteBuildchainRefs({
         });
       }
     }
+    executePublishTransaction({
+      version: alphaVersion,
+      exactTag: selectedAlpha.tag,
+      channel: rule.channel,
+      line: rule.releasePrefix,
+      releaseSha: alphaSha,
+    });
     if (versionState) {
+      markFinalizing();
       const targetUpdate = await updateBranch(targetRef, alphaSha, "updated", {
         title: `Prepare ${selectedAlpha.tag}`,
         body: `Create the generated version-state commit for ${selectedAlpha.tag}.`,
       });
       if (targetUpdate.pending) {
-        return {
+        return withPublishTransaction({
           owner,
           repo,
           sourceSha: sha,
@@ -1542,13 +1953,15 @@ async function promoteBuildchainRefs({
           targetRef,
           pendingPullRequest: targetUpdate.pullRequest.html_url || targetUpdate.pullRequest.url,
           updates,
-        };
+        }, { finalizationNeeded: true });
       }
       await updateBranch(`dev/v${rule.major}/v${rule.major}.${rule.minor}`, alphaSha);
     }
+    markFinalizing();
     await ensureTag(selectedAlpha.tag, alphaSha);
     await updateTag(rule.alphaTag, alphaSha);
-    return { owner, repo, sourceSha: sha, sha: alphaSha, targetRef, updates };
+    markComplete();
+    return withPublishTransaction({ owner, repo, sourceSha: sha, sha: alphaSha, targetRef, updates });
   }
 
   const explicitReleaseTags = requestedTags
@@ -1597,13 +2010,21 @@ async function promoteBuildchainRefs({
       allowedPaths: releaseCommit.files,
     });
   }
+  executePublishTransaction({
+    version: releaseVersion,
+    exactTag: selectedRelease.tag,
+    channel: rule.channel,
+    line: rule.releasePrefix,
+    releaseSha,
+  });
   if (versionState) {
+    markFinalizing();
     const targetUpdate = await updateBranch(targetRef, releaseSha, "updated", {
       title: `Release ${selectedRelease.tag}`,
       body: `Create the generated version-state commit for ${selectedRelease.tag}.`,
     });
     if (targetUpdate.pending) {
-      return {
+      return withPublishTransaction({
         owner,
         repo,
         sourceSha: sha,
@@ -1611,9 +2032,10 @@ async function promoteBuildchainRefs({
         targetRef,
         pendingPullRequest: targetUpdate.pullRequest.html_url || targetUpdate.pullRequest.url,
         updates,
-      };
+      }, { finalizationNeeded: true });
     }
   }
+  markFinalizing();
   await ensureTag(selectedRelease.tag, releaseSha);
   await updateTag(rule.minorTag, releaseSha);
   if (await shouldPromoteMajorTag()) {
@@ -1625,6 +2047,7 @@ async function promoteBuildchainRefs({
       sha: releaseSha,
     });
   }
+  markComplete();
 
   if (releaseCommit.versionStrategy?.next === "manual") {
     updates.push({
@@ -1634,7 +2057,7 @@ async function promoteBuildchainRefs({
       manifest: releaseCommit.anchorManifest?.path,
       sha: releaseSha,
     });
-    return {
+    return withPublishTransaction({
       owner,
       repo,
       sourceSha: sha,
@@ -1642,7 +2065,7 @@ async function promoteBuildchainRefs({
       nextAlphaRequired: true,
       targetRef,
       updates,
-    };
+    });
   }
 
   const explicitAlphaTags = requestedTags
@@ -1684,7 +2107,7 @@ async function promoteBuildchainRefs({
       body: `Create the generated version-state commit for ${selectedNextAlpha.tag}.`,
     });
     if (nextAlphaUpdate.pending) {
-      return {
+      return withPublishTransaction({
         owner,
         repo,
         sourceSha: sha,
@@ -1694,13 +2117,13 @@ async function promoteBuildchainRefs({
         pendingPullRequest:
           nextAlphaUpdate.pullRequest.html_url || nextAlphaUpdate.pullRequest.url,
         updates,
-      };
+      });
     }
     await updateBranch(`dev/v${rule.major}/v${rule.major}.${rule.minor}`, nextAlphaSha);
   }
   await ensureTag(selectedNextAlpha.tag, nextAlphaSha);
   await updateTag(rule.alphaTag, nextAlphaSha);
-  return {
+  return withPublishTransaction({
     owner,
     repo,
     sourceSha: sha,
@@ -1708,7 +2131,7 @@ async function promoteBuildchainRefs({
     nextAlphaSha,
     targetRef,
     updates,
-  };
+  });
 }
 
 export {
