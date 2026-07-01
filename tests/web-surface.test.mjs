@@ -183,6 +183,36 @@ test("web-surface deploy apply fails closed when saved plan artifact drifted", (
   });
 });
 
+test("web-surface deploy apply fails closed on placeholder AWS targets", () => {
+  withFixture((fixture) => {
+    const configPath = path.join(fixture, "buildchain.toml");
+    const source = fs.readFileSync(configPath, "utf8");
+    fs.writeFileSync(
+      configPath,
+      source
+        .replace('bucket = "kungfu-tech-staging"', 'bucket = "pending-staging-bucket"')
+        .replace('cloudfront_distribution = "E-STAGING"', 'cloudfront_distribution = "pending-staging-distribution"'),
+    );
+    fs.mkdirSync(path.join(fixture, "dist"), { recursive: true });
+    fs.writeFileSync(path.join(fixture, "dist", "index.html"), "hello\n");
+
+    assert.doesNotThrow(() => planWebSurfaceDeploy({
+      cwd: fixture,
+      channel: "staging",
+      sourceSha: "b".repeat(40),
+    }));
+    assert.throws(
+      () => applyWebSurfaceDeploy({
+        cwd: fixture,
+        channel: "staging",
+        sourceSha: "b".repeat(40),
+        dryRun: false,
+      }),
+      /deploy\.staging\.bucket/,
+    );
+  });
+});
+
 test("web-surface deploy apply records failure and stops subsequent operations", () => {
   withFixture((fixture) => {
     fs.mkdirSync(path.join(fixture, "dist"), { recursive: true });
@@ -374,6 +404,27 @@ test("web-surface cleanup apply executes preview deletion through runner", () =>
       "/pr-123/*",
       "/.buildchain/deployments/pr-123.json",
     ]);
+  });
+});
+
+test("web-surface cleanup apply fails closed on placeholder preview distribution", () => {
+  withFixture((fixture) => {
+    const configPath = path.join(fixture, "buildchain.toml");
+    const source = fs.readFileSync(configPath, "utf8");
+    fs.writeFileSync(
+      configPath,
+      source.replace('cloudfront_distribution = "E-PREVIEW"', 'cloudfront_distribution = "pending-preview-distribution"'),
+    );
+
+    assert.throws(
+      () => applyWebSurfaceCleanup({
+        cwd: fixture,
+        pullNumber: "123",
+        sourceSha: "c".repeat(40),
+        dryRun: false,
+      }),
+      /deploy\.preview\.cloudfront_distribution/,
+    );
   });
 });
 

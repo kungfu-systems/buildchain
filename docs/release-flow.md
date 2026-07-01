@@ -47,6 +47,32 @@ only component allowed to turn that intent into release refs.
 | Floating minor tag | `v2.0` | moves | latest production patch on a minor line |
 | Floating major tag | `v2` | moves | selected stable major entrypoint |
 
+## Ref Protection Contract
+
+Repository rulesets must distinguish immutable evidence refs from mutable
+channel refs.
+
+Protect exact release and alpha tags as immutable evidence:
+
+```text
+refs/tags/v*.*.*
+```
+
+Do not apply immutable-tag rulesets to every `refs/tags/v*` ref. Buildchain
+must be able to update floating channel tags such as `v2`, `v2.0`, and
+`v2.0-alpha` after the exact tag and publish evidence are valid. A ruleset that
+matches all `v*` tags also matches floating tags, so release finalization can
+fail with GitHub protected-ref errors even though the exact release tag and
+published artifacts are already durable.
+
+The intended governance split is:
+
+- exact tags such as `v2.0.14` and `v2.0.15-alpha.0` are immutable audit refs;
+- floating tags such as `v2`, `v2.0`, and `v2.0-alpha` are mutable channel refs
+  owned by the Buildchain promotion token;
+- protected branches still require reviewed channel PRs before Buildchain can
+  move any exact or floating release refs.
+
 ## Alpha Promotion
 
 ```mermaid
