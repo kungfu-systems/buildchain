@@ -14,7 +14,8 @@ noindex = true
 [channels.staging]
 url = "https://staging.kungfu.tech"
 visibility = "protected"
-requires_auth = true
+access_control = "managed-network"
+edge_auth = "none"
 noindex = true
 promotable = true
 
@@ -36,7 +37,7 @@ adapter = "aws-s3-cloudfront"
 bucket = "kungfu-tech-staging"
 cloudfront_distribution = "E-STAGING"
 artifact_path = "dist"
-secret_refs = ["AWS_ROLE_ARN", "STAGING_EDGE_AUTH_SECRET"]
+secret_refs = ["AWS_ROLE_ARN"]
 
 [deploy.production]
 adapter = "aws-s3-cloudfront"
@@ -57,15 +58,12 @@ keep_deploys = 10
 days = 365
 
 [security.staging]
-requires_auth = true
 noindex = true
 isolated_providers = true
 sandbox_data = true
-secret_refs = ["STAGING_EDGE_AUTH_SECRET"]
 
 [lifecycle.build]
 command = "node scripts/build.mjs"
 
 [lifecycle.verify]
 command = "node scripts/verify.mjs"
-

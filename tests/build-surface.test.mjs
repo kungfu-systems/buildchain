@@ -61,6 +61,20 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
 });
 
+test("reusable web-surface workflow exposes preview, cleanup, staging, and production gates", () => {
+  const workflow = fs.readFileSync(path.join(root, ".github/workflows/.web-surface.yml"), "utf8");
+  assert.match(workflow, /workflow_call:/);
+  assert.match(workflow, /Plan pull request preview/);
+  assert.match(workflow, /github\.event\.action != 'closed'/);
+  assert.match(workflow, /Plan pull request preview cleanup/);
+  assert.match(workflow, /pull-request-closed/);
+  assert.match(workflow, /--dry-run false/);
+  assert.match(workflow, /Plan main staging deploy/);
+  assert.match(workflow, /github\.ref_name == 'main'/);
+  assert.match(workflow, /Plan gated production deploy/);
+  assert.match(workflow, /environment: \$\{\{ inputs\.production-environment \}\}/);
+});
+
 test("runner presets resolve to explicit matrices", () => {
   const hosted = resolveRunnerMatrix({ runnerPreset: "github-hosted" });
   assert.equal(hosted.runnerPreset, "github-hosted");
