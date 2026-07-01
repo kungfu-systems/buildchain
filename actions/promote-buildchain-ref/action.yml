@@ -47,6 +47,21 @@ inputs:
   publish-required-artifacts-json:
     description: "JSON array of required artifacts whose evidence must exist before refs move"
     default: ""
+  publish-mode:
+    description: "Publish mode: publish-final-version or promote-existing-version"
+    default: ""
+  publish-auth:
+    description: "Publish auth model: trusted-publishing or npm-token"
+    default: ""
+  publish-dist-tag:
+    description: "Expected npm dist-tag for publish or existing-version promotion"
+    default: ""
+  publish-package-set-order:
+    description: "Package-set order: as-provided or platforms-first-main-last"
+    default: ""
+  publish-package-main:
+    description: "Main npm package name for package-set visibility gating"
+    default: ""
   release-material-sha:
     description: "Material SHA that published artifacts must prove. Defaults to the generated release SHA."
     default: ""
