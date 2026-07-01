@@ -2202,6 +2202,7 @@ async function promoteBuildchainRefs({
       channel: majorRule.channel || "major",
       line: majorRule.releasePrefix,
       releaseSha,
+      allowVersionStateFinalization: releaseCommit.action === "existing",
     });
     if (versionState) {
       await markFinalizing();
@@ -2493,6 +2494,7 @@ async function promoteBuildchainRefs({
     channel: rule.channel,
     line: rule.releasePrefix,
     releaseSha,
+    allowVersionStateFinalization: releaseCommit.action === "existing",
   });
   if (versionState) {
     await markFinalizing();
