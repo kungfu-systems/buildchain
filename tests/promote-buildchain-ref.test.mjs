@@ -749,7 +749,7 @@ test("rerunning the same release SHA reuses exact tags", async () => {
 test("release promotion creates source version commits and points refs at them", async () => {
   const cwd = makeTempWorkspace({
     "package.json": {
-      name: "@kungfu-systems/buildchain",
+      name: "@kungfu-tech/buildchain",
       version: "0.0.0-alpha.0",
       packageManager: "pnpm@11.7.0",
     },
@@ -873,7 +873,7 @@ key = "version"
 command = "node scripts/publish.mjs"
 `,
     "package.json": {
-      name: "@kungfu-systems/buildchain",
+      name: "@kungfu-tech/buildchain",
       version: "0.0.0-alpha.0",
       packageManager: "pnpm@11.7.0",
     },
@@ -894,7 +894,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   publish_tooling_sha: process.env.BUILDCHAIN_PUBLISH_TOOLING_SHA,
   artifacts: [{
     kind: "npm",
-    name: "@kungfu-systems/buildchain",
+    name: "@kungfu-tech/buildchain",
     ref: process.env.BUILDCHAIN_VERSION,
     digest: "sha256:alpha"
   }]
@@ -917,7 +917,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
     publishRequiredArtifactsJson: JSON.stringify([
       {
         kind: "npm",
-        name: "@kungfu-systems/buildchain",
+        name: "@kungfu-tech/buildchain",
         ref: "1.0.0-alpha.0",
         digest: "sha256:alpha",
       },
@@ -960,7 +960,7 @@ key = "version"
 command = "node scripts/publish.mjs"
 `,
     "package.json": {
-      name: "@kungfu-systems/buildchain",
+      name: "@kungfu-tech/buildchain",
       version: "0.0.0-alpha.0",
       packageManager: "pnpm@11.7.0",
     },
@@ -979,7 +979,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   publish_tooling_sha: process.env.BUILDCHAIN_PUBLISH_TOOLING_SHA,
   artifacts: [{
     kind: "npm",
-    name: "@kungfu-systems/buildchain",
+    name: "@kungfu-tech/buildchain",
     ref: process.env.BUILDCHAIN_VERSION,
     digest: "sha256:alpha1"
   }]
@@ -1004,7 +1004,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
     publishRequiredArtifactsJson: JSON.stringify([
       {
         kind: "npm",
-        name: "@kungfu-systems/buildchain",
+        name: "@kungfu-tech/buildchain",
         ref: "1.0.0-alpha.1",
         digest: "sha256:alpha1",
       },
@@ -1047,7 +1047,7 @@ test("publish transaction durable ref restores state and evidence in a fresh wor
     run_id: "1",
     superseded_by: "",
     failure: "",
-    artifacts: [{ kind: "npm", name: "@kungfu-systems/buildchain", ref: "1.0.0", digest: "sha256:ok", group: "", required: true }],
+    artifacts: [{ kind: "npm", name: "@kungfu-tech/buildchain", ref: "1.0.0", digest: "sha256:ok", group: "", required: true }],
     evidence: [".buildchain/release-evidence/1.0.0/evidence.json"],
     created_at: "2026-07-01T00:00:00.000Z",
     updated_at: "2026-07-01T00:00:00.000Z",
@@ -1193,7 +1193,7 @@ key = "version"
 command = "node scripts/publish.mjs"
 `,
     "package.json": {
-      name: "@kungfu-systems/buildchain",
+      name: "@kungfu-tech/buildchain",
       version: "0.0.0-alpha.0",
     },
     "scripts/publish.mjs": `
@@ -1354,7 +1354,7 @@ assert.equal(fields.nodeTag, "v22.22.3");
 test("publish-gate/major promotion publishes next major production and prepares next alpha", async () => {
   const cwd = makeTempWorkspace({
     "package.json": {
-      name: "@kungfu-systems/buildchain",
+      name: "@kungfu-tech/buildchain",
       version: "1.0.10",
       packageManager: "pnpm@11.7.0",
     },
@@ -1486,7 +1486,7 @@ test("release promotion rerun reuses prepared next alpha version commit", async 
   const nextAlphaSha = "d".repeat(40);
   const cwd = makeTempWorkspace({
     "package.json": {
-      name: "@kungfu-systems/buildchain",
+      name: "@kungfu-tech/buildchain",
       version: "1.0.0",
       packageManager: "pnpm@11.7.0",
     },
@@ -1885,7 +1885,7 @@ test("strict alpha promotion no-ops settled generated version-state commits", as
 test("strict alpha promotion opens a version-state PR for protected branches", async () => {
   const cwd = makeTempWorkspace({
     "package.json": {
-      name: "@kungfu-systems/buildchain",
+      name: "@kungfu-tech/buildchain",
       version: "1.0.0-alpha.0",
       packageManager: "pnpm@11.7.0",
     },
@@ -1988,7 +1988,7 @@ test("strict alpha promotion accepts reviewed version-state PRs from a legal par
   const versionSha = "c".repeat(40);
   const cwd = makeTempWorkspace({
     "package.json": {
-      name: "@kungfu-systems/buildchain",
+      name: "@kungfu-tech/buildchain",
       version: "1.0.1-alpha.0",
       packageManager: "pnpm@11.7.0",
     },
@@ -2086,7 +2086,7 @@ test("strict alpha promotion accepts merged generated version-state PR commits",
   const mergeSha = "c".repeat(40);
   const cwd = makeTempWorkspace({
     "package.json": {
-      name: "@kungfu-systems/buildchain",
+      name: "@kungfu-tech/buildchain",
       version: "1.0.6-alpha.0",
       packageManager: "pnpm@11.7.0",
     },
@@ -2180,7 +2180,7 @@ test("strict alpha promotion finalizes tags when dev already advanced", async ()
   const advancedDevSha = "d".repeat(40);
   const cwd = makeTempWorkspace({
     "package.json": {
-      name: "@kungfu-systems/buildchain",
+      name: "@kungfu-tech/buildchain",
       version: "1.0.6-alpha.0",
       packageManager: "pnpm@11.7.0",
     },
@@ -2289,7 +2289,7 @@ test("strict alpha promotion finalizes tags when dev already advanced", async ()
 test("strict release promotion requires a matching alpha tree and alpha-to-release PR", async () => {
   const cwd = makeTempWorkspace({
     "package.json": {
-      name: "@kungfu-systems/buildchain",
+      name: "@kungfu-tech/buildchain",
       version: "1.0.2-alpha.0",
       packageManager: "pnpm@11.7.0",
     },

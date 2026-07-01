@@ -1,7 +1,7 @@
 # Buildchain CLI and npm Package
 
 Buildchain is published as the public npm package
-`@kungfu-systems/buildchain`. The package contains the `buildchain` command,
+`@kungfu-tech/buildchain`. The package contains the `buildchain` command,
 the shared core libraries, and the local scripts needed to initialize and
 validate repositories before they use the reusable GitHub workflow surface.
 
@@ -15,15 +15,15 @@ state machine.
 Use the published package directly:
 
 ```bash
-npx @kungfu-systems/buildchain --help
-npx @kungfu-systems/buildchain init --type package
-npx @kungfu-systems/buildchain validate --require-version-state
+npx @kungfu-tech/buildchain --help
+npx @kungfu-tech/buildchain init --type package
+npx @kungfu-tech/buildchain validate --require-version-state
 ```
 
 Or install it in a repository:
 
 ```bash
-pnpm add -D @kungfu-systems/buildchain
+pnpm add -D @kungfu-tech/buildchain
 pnpm exec buildchain validate
 ```
 
@@ -114,7 +114,7 @@ node scripts/npm-publish-transaction.mjs
 
 Before the first real release, configure npm Trusted Publishing for:
 
-- package: `@kungfu-systems/buildchain`
+- package: `@kungfu-tech/buildchain`
 - repository: `kungfu-systems/buildchain`
 - workflow: `.github/workflows/buildchain-ref-promotion.yml`
 
