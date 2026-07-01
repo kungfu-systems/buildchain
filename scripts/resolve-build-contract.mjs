@@ -36,7 +36,7 @@ export function resolveBuildContractCli() {
         process.env.BUILDCHAIN_ARTIFACT_NAME_TEMPLATE || "{artifact}-{platform}-{sha}",
       platformId: process.env.BUILDCHAIN_PLATFORM_ID || "",
       platformName: process.env.BUILDCHAIN_PLATFORM_NAME || "",
-      sha: process.env.GITHUB_SHA || "",
+      sha: process.env.BUILDCHAIN_SOURCE_SHA || process.env.GITHUB_SHA || "",
       ref: process.env.GITHUB_REF || "",
       runId: process.env.GITHUB_RUN_ID || "",
       runAttempt: process.env.GITHUB_RUN_ATTEMPT || "",

@@ -41,3 +41,11 @@ consumer workflow.
 Candidate refs are expected to resolve under `kungfu-systems/*`. Broader
 sources require an explicit trust decision before they can reach self-hosted
 runners or secrets.
+
+## Source-Locked Publish Rule
+
+When a consumer uses `publish-gate/*` branches, publish jobs must use the
+resolved `publish-source-sha` and `release-manifest-json` emitted by the reusable
+build workflow. Before touching a package registry, S3 bucket, release page, or
+floating alias, the publish job must verify that the gate branch still points at
+the recorded SHA. A moved gate branch is a stale release decision, not a retry.
