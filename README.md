@@ -1,7 +1,8 @@
 # Kungfu Buildchain
 
 Kungfu Buildchain is the v2 source of truth for Kungfu reusable GitHub
-workflows, GitHub Actions, and release-line automation.
+workflows, the minimal Buildchain-native GitHub Actions surface, and release-line
+automation.
 
 The repository does more than collect workflow files. Its main job is to make a
 Kungfu release auditable and repeatable: a protected branch merge should produce
@@ -76,10 +77,11 @@ scripts/                  Local verification scripts
 
 ## Buildchain v2 Contract
 
-Buildchain v2 ships these active migration surfaces:
+Buildchain v2 ships these active surfaces:
 
 - reusable workflows under `.github/workflows`;
-- GitHub Actions under `actions/<name>`;
+- exactly three GitHub Actions under `actions/<name>`:
+  `validate-config`, `run-lifecycle`, and `promote-buildchain-ref`;
 - action runtime on Node 24;
 - workspace package management with pnpm;
 - action bundling through tsup;
@@ -115,8 +117,9 @@ Reusable workflows should be referenced as:
 uses: kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v2
 ```
 
-Standalone `workflows` and `action-*` repositories remain compatibility and
-rollback anchors until consumers migrate to stable Buildchain refs.
+Standalone `workflows` and `action-*` repositories are historical rollback
+anchors. Buildchain no longer ships migrated copies of legacy action
+repositories.
 
 ## Release Governance
 

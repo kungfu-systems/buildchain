@@ -137,7 +137,7 @@ while this action independently rechecks PR lineage, alpha/release tree
 equivalence, and generated version-state verification before moving channel
 refs and tags.
 
-The tag names intentionally follow the old `action-bump-version` semantics:
+The tag names intentionally follow the old ABV release semantics:
 exact release tags are `vX.Y.Z`, exact alpha tags are `vX.Y.Z-alpha.N`, floating
 release tags are minor/major tags such as `v2.0` and `v2`, and floating alpha
 tags are minor-line tags such as `v2.0-alpha`. Bare tags such as `1.0.0` are not

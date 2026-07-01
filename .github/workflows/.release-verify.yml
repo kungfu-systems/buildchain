@@ -157,16 +157,12 @@ on:
         default: "kungfu-developers"
         type: string
         required: false
-      action-bump-version-repository:
+      buildchain-repository:
         default: "kungfu-systems/buildchain"
         type: string
         required: false
-      action-bump-version-ref:
+      buildchain-ref:
         default: "v2"
-        type: string
-        required: false
-      action-bump-version-path:
-        default: "actions/bump-version"
         type: string
         required: false
     secrets:
@@ -217,24 +213,31 @@ jobs:
           echo "::error::Use build-container-enabled=false and self-hosted runner labels until the Docker mechanism is redesigned."
           exit 1
 
+      - name: Reject retired prebuild path
+        if: ${{ inputs.prebuild }}
+        run: |
+          echo "::error::The legacy .release-verify.yml prebuild path is retired."
+          echo "::error::Use .github/workflows/.build.yml with lifecycle commands and publish-gate source locks."
+          exit 1
+
       - name: Configure Git safe directory
         run: git config --global --add safe.directory /__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}
 
-      - name: Checkout Bump Version Action
+      - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
         with:
-          repository: ${{ inputs.action-bump-version-repository }}
-          ref: ${{ inputs.action-bump-version-ref }}
-          path: node_modules/.github-actions/buildchain
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.buildchain-ref }}
+          path: .buildchain/runtime
           persist-credentials: false
 
-      - name: Set Pull Request Title
+      - name: Verify release PR lineage
         if: ${{ github.event_name == 'pull_request' }}
-        run: node node_modules/.github-actions/buildchain/${{ inputs.action-bump-version-path }}/dist/index.js
+        run: node .buildchain/runtime/scripts/verify-release-pr.mjs
         env:
-          KUNGFU_ACTION_BUMP_VERSION_ALLOW_LOCAL: "true"
-          INPUT_TOKEN: ${{ github.token }}
-          INPUT_ACTION: "verify"
+          BUILDCHAIN_SOURCE_CWD: ${{ github.workspace }}
+          BUILDCHAIN_HEAD_REF: ${{ github.head_ref }}
+          BUILDCHAIN_BASE_REF: ${{ github.base_ref }}
 
       - name: Reject retired collaborator automation
         if: ${{ inputs.collaborator-automation-enabled }}
@@ -292,13 +295,13 @@ jobs:
           clean: true
           persist-credentials: false
 
-      - name: Checkout Bump Version Action
+      - name: Checkout Buildchain runtime
         if: ${{ matrix.enabled }}
         uses: actions/checkout@v7.0.0
         with:
-          repository: ${{ inputs.action-bump-version-repository }}
-          ref: ${{ inputs.action-bump-version-ref }}
-          path: node_modules/.github-actions/buildchain
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.buildchain-ref }}
+          path: .buildchain/runtime
           persist-credentials: false
 
       - name: Configure Git safe directory
@@ -357,13 +360,12 @@ jobs:
         if: ${{ matrix.enabled && !matrix.container && inputs.use-poetry }}
         run: pipx install poetry==${{ inputs.poetry-version }}
 
-      - name: Bump Version
+      - name: Reject retired version mutation
         if: ${{ matrix.enabled }}
-        run: node node_modules/.github-actions/buildchain/${{ inputs.action-bump-version-path }}/dist/index.js
-        env:
-          KUNGFU_ACTION_BUMP_VERSION_ALLOW_LOCAL: "true"
-          INPUT_TOKEN: ${{ github.token }}
-          INPUT_ACTION: "prebuild"
+        run: |
+          echo "::error::The legacy prebuild version mutation path is retired."
+          echo "::error::Use Buildchain Ref Promotion for generated version-state commits."
+          exit 1
 
       - name: Setup Build Environment
         if: ${{ matrix.enabled }}
@@ -481,12 +483,12 @@ jobs:
           clean: true
           persist-credentials: false
 
-      - name: Checkout Bump Version Action
+      - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
         with:
-          repository: ${{ inputs.action-bump-version-repository }}
-          ref: ${{ inputs.action-bump-version-ref }}
-          path: node_modules/.github-actions/buildchain
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.buildchain-ref }}
+          path: .buildchain/runtime
           persist-credentials: false
 
       - name: Configure Git safe directory
@@ -531,12 +533,11 @@ jobs:
         if: ${{ inputs.use-poetry }}
         run: pipx install poetry==${{ inputs.poetry-version }}
 
-      - name: Bump Version
-        run: node node_modules/.github-actions/buildchain/${{ inputs.action-bump-version-path }}/dist/index.js
-        env:
-          KUNGFU_ACTION_BUMP_VERSION_ALLOW_LOCAL: "true"
-          INPUT_TOKEN: ${{ github.token }}
-          INPUT_ACTION: "prebuild"
+      - name: Reject retired version mutation
+        run: |
+          echo "::error::The legacy prebuild version mutation path is retired."
+          echo "::error::Use Buildchain Ref Promotion for generated version-state commits."
+          exit 1
 
       - name: Setup Build Environment
         uses: nick-fields/retry@v4.0.0
@@ -627,21 +628,20 @@ jobs:
         with:
           node-version: ${{ inputs.node-version }}
 
-      - name: Checkout Bump Version Action
+      - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
         with:
-          repository: ${{ inputs.action-bump-version-repository }}
-          ref: ${{ inputs.action-bump-version-ref }}
-          path: node_modules/.github-actions/buildchain
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.buildchain-ref }}
+          path: .buildchain/runtime
           persist-credentials: false
 
-      - name: Bump Version
+      - name: Reject retired version mutation
         if: ${{ inputs.prebuild }}
-        run: node node_modules/.github-actions/buildchain/${{ inputs.action-bump-version-path }}/dist/index.js
-        env:
-          KUNGFU_ACTION_BUMP_VERSION_ALLOW_LOCAL: "true"
-          INPUT_TOKEN: ${{ github.token }}
-          INPUT_ACTION: "prebuild"
+        run: |
+          echo "::error::The legacy prebuild version mutation path is retired."
+          echo "::error::Use Buildchain Ref Promotion for generated version-state commits."
+          exit 1
 
       - name: Download Artifacts
         if: ${{ inputs.prebuild }}
@@ -659,12 +659,10 @@ jobs:
 
       - name: Publish Prebuilt to AWS (CI)
         if: ${{ inputs.prebuild && inputs.publish-aws-ci }}
-        uses: kungfu-systems/buildchain/actions/publish-prebuilt@v2
-        with:
-          token: ${{ github.token }}
-          artifacts-path: "github-artifacts"
-          bucket-staging: ${{ inputs.bucket-staging-ci }}
-          no-comment: "true"
+        run: |
+          echo "::error::actions/publish-prebuilt is retired."
+          echo "::error::Use lifecycle.publish plus publish transaction evidence."
+          exit 1
 
       - name: Configure AWS Crendentials (User)
         if: ${{ inputs.prebuild && inputs.publish-aws-user }}
@@ -676,21 +674,18 @@ jobs:
 
       - name: Publish Prebuilt to AWS (User)
         if: ${{ inputs.prebuild && inputs.publish-aws-user }}
-        uses: kungfu-systems/buildchain/actions/publish-prebuilt@v2
-        with:
-          token: ${{ github.token }}
-          artifacts-path: "github-artifacts"
-          bucket-staging: ${{ inputs.bucket-staging-user }}
-          preview-files: ${{ inputs.preview-files }}
-          max-preview-links: ${{ inputs.max-preview-links }}
+        run: |
+          echo "::error::actions/publish-prebuilt is retired."
+          echo "::error::Use lifecycle.publish plus publish transaction evidence."
+          exit 1
 
-      - name: Verify Version
+      - name: Verify release PR lineage
         if: ${{ github.event_name == 'pull_request' }}
-        run: node node_modules/.github-actions/buildchain/${{ inputs.action-bump-version-path }}/dist/index.js
+        run: node .buildchain/runtime/scripts/verify-release-pr.mjs
         env:
-          KUNGFU_ACTION_BUMP_VERSION_ALLOW_LOCAL: "true"
-          INPUT_TOKEN: ${{ github.token }}
-          INPUT_ACTION: "verify"
+          BUILDCHAIN_SOURCE_CWD: ${{ github.workspace }}
+          BUILDCHAIN_HEAD_REF: ${{ github.head_ref }}
+          BUILDCHAIN_BASE_REF: ${{ github.base_ref }}
 
       - name: Reject retired dependency discovery
         if: ${{ inputs.find-dependencies }}
@@ -701,6 +696,7 @@ jobs:
 
       - name: Approve Merge
         if: ${{ github.event_name == 'pull_request' && inputs.auto-approve-enabled && env.HAS_NODE_AUTH_TOKEN == 'true' && (!inputs.prebuild || needs.build.result == 'success' || needs.build_local.result == 'success') && !contains(join(needs.*.result, ','), 'failure') && !contains(join(needs.*.result, ','), 'cancelled') }}
-        uses: kungfu-systems/buildchain/actions/approve@v2
-        with:
-          token: ${{ secrets.NODE_AUTH_TOKEN }}
+        run: |
+          echo "::error::actions/approve is retired."
+          echo "::error::Use repository-native GitHub automation for PR approval."
+          exit 1
