@@ -613,6 +613,27 @@ async function persistDurableReleaseTransaction({
   };
 }
 
+async function releaseCommitIncludesTransactionHead({
+  octokit,
+  owner,
+  repo,
+  releaseSha,
+  transactionReleaseSha,
+}) {
+  if (!octokit || !releaseSha || !transactionReleaseSha) {
+    return false;
+  }
+  if (releaseSha === transactionReleaseSha) {
+    return true;
+  }
+  const { data: commit } = await octokit.rest.git.getCommit({
+    owner,
+    repo,
+    commit_sha: releaseSha,
+  });
+  return (commit.parents || []).some((parent) => parent.sha === transactionReleaseSha);
+}
+
 async function runPublishTransaction({
   octokit,
   owner,
@@ -636,6 +657,7 @@ async function runPublishTransaction({
   actor = "",
   runId = "",
   explicitOverride = false,
+  allowVersionStateFinalization = false,
 }) {
   const lifecyclePublish = getLifecycleStage(loadedConfig, "publish");
   const enabled = Boolean(publishTransaction || publishCommand || lifecyclePublish);
@@ -681,7 +703,29 @@ async function runPublishTransaction({
     );
   }
   const existing = durableExisting || localExisting;
-  ensureTransactionCanResume({ existing, expected, explicitOverride });
+  let versionStateFinalization = false;
+  try {
+    ensureTransactionCanResume({ existing, expected, explicitOverride });
+  } catch (error) {
+    const canFinalizeVersionState =
+      allowVersionStateFinalization &&
+      materialErrorRequiresRepair(error) &&
+      existing?.version === version &&
+      existing?.exact_tag === exactTag &&
+      existing?.target_ref === targetRef &&
+      ["published", "finalizing", "complete"].includes(existing.state || "") &&
+      (await releaseCommitIncludesTransactionHead({
+        octokit,
+        owner,
+        repo,
+        releaseSha,
+        transactionReleaseSha: existing.release_sha,
+      }));
+    if (!canFinalizeVersionState) {
+      throw error;
+    }
+    versionStateFinalization = true;
+  }
   let transaction =
     existing ||
     createReleaseTransaction({
@@ -714,6 +758,19 @@ async function runPublishTransaction({
   };
   let durable;
   ({ transaction, durable } = await persistTransaction(transaction));
+  if (versionStateFinalization) {
+    return {
+      transaction,
+      validation: undefined,
+      statePath: resolvedStatePath,
+      evidencePath: resolvedEvidencePath,
+      durable,
+      octokit,
+      owner,
+      repo,
+      cwd,
+    };
+  }
 
   let validation;
   try {
@@ -1971,6 +2028,7 @@ async function promoteBuildchainRefs({
     channel,
     line,
     releaseSha,
+    allowVersionStateFinalization = false,
   }) => {
     if (dryRun && (publishTransaction || publishCommand || getLifecycleStage(loadBuildchainConfig(cwd), "publish"))) {
       updates.push({
@@ -2004,6 +2062,7 @@ async function promoteBuildchainRefs({
       actor,
       runId,
       explicitOverride: publishTransactionOverride,
+      allowVersionStateFinalization,
     });
     if (latestPublishTransaction) {
       updates.push({
@@ -2317,6 +2376,11 @@ async function promoteBuildchainRefs({
         channel: rule.channel,
         line: rule.releasePrefix,
         releaseSha: alpha.sha,
+        allowVersionStateFinalization:
+          currentAlpha &&
+          !currentAlphaTagSha &&
+          selectedAlpha.tag === currentAlpha.tag &&
+          alpha.commit.action === "existing",
       });
     } catch (error) {
       const staleCurrentAlpha =
