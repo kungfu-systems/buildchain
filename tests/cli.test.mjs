@@ -148,3 +148,79 @@ test("npm dry-run fails closed when expected tag does not match package version"
   assert.notEqual(failure.status, 0);
   assert.match(failure.stderr, /tag=v1\.2\.4 expected=v1\.2\.3/);
 });
+
+test("release dry-run explains channel promotion without moving refs", () => {
+  const cwd = tempDir("release-dry-run");
+  fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({
+    name: "release-dry-run-fixture",
+    version: "1.2.3-alpha.0",
+  }, null, 2));
+  fs.writeFileSync(path.join(cwd, "buildchain.toml"), `schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+path = "package.json"
+type = "json"
+key = "version"
+`);
+
+  const output = runBuildchain([
+    "release",
+    "--dry-run",
+    "--cwd",
+    cwd,
+    "--target-ref",
+    "release/v2/v2.0",
+    "--sha",
+    "b".repeat(40),
+    "--tags",
+    "v2.0.12,v2.0.13-alpha.0",
+    "--json",
+  ], { cwd });
+  const plan = JSON.parse(output);
+
+  assert.equal(plan.dryRun, true);
+  assert.equal(plan.targetRef, "release/v2/v2.0");
+  assert.equal(plan.source.expectedHeadRef, "alpha/v2/v2.0");
+  assert.deepEqual(plan.exactTags.map((tag) => tag.tag), ["v2.0.12", "v2.0.13-alpha.0"]);
+  assert.deepEqual(plan.branchUpdates.map((update) => update.ref), [
+    "release/v2/v2.0",
+    "alpha/v2/v2.0",
+    "dev/v2/v2.0",
+  ]);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(cwd, "package.json"), "utf8")).version, "1.2.3-alpha.0");
+});
+
+test("release dry-run subcommand explains major gate with source ref", () => {
+  const output = runBuildchain([
+    "release",
+    "dry-run",
+    "--target-ref",
+    "publish-gate/major",
+    "--source-ref",
+    "release/v2/v2.0",
+    "--sha",
+    "c".repeat(40),
+  ]);
+
+  assert.match(output, /target ref: publish-gate\/major/);
+  assert.match(output, /expected source: release\/v2\/v2\.0/);
+  assert.match(output, /v3\.0\.0: would create the first production patch/);
+  assert.match(output, /No refs, tags, packages, or files were modified/);
+});
+
+test("release dry-run rejects unsupported tag syntax", () => {
+  const failure = runBuildchainFailure([
+    "release",
+    "--dry-run",
+    "--target-ref",
+    "release/v2/v2.0",
+    "--tags",
+    "2.0.0",
+  ]);
+
+  assert.notEqual(failure.status, 0);
+  assert.match(failure.stderr, /Unsupported buildchain dry-run tag: 2\.0\.0/);
+});

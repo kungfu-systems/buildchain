@@ -15,7 +15,7 @@ inputs:
     description: "Optional comma-separated ABV-style tags to update. Defaults from target-ref channel and release-line patch/prerelease sequence."
     default: ""
   dry-run:
-    description: "Only print planned ref updates"
+    description: "Explain the release-line promotion plan and report planned ref updates without writing refs"
     default: "false"
   require-governance:
     description: "Require protected-channel PR lineage and release-from-alpha checks"

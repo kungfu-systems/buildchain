@@ -8,6 +8,7 @@ const requiredPaths = [
   "README.md",
   "bin/buildchain.mjs",
   "docs/cli.md",
+  "scripts/release-line-dry-run.mjs",
   "scripts/npm-publish-dry-run.mjs",
   "docs/migration-inventory.md",
   "docs/lifecycle-protocol.md",
@@ -62,6 +63,19 @@ if (!cliSource.startsWith("#!/usr/bin/env node")) {
 }
 if (commonJsSourcePattern.test(cliSource)) {
   throw new Error("bin/buildchain.mjs must use ESM syntax");
+}
+const releaseLineDryRunScript = fs.readFileSync(path.join(root, "scripts/release-line-dry-run.mjs"), "utf8");
+for (const requiredSnippet of [
+  "explainReleaseLineDryRun",
+  "formatReleaseLineDryRun",
+  "--target-ref <ref>",
+]) {
+  if (!releaseLineDryRunScript.includes(requiredSnippet)) {
+    throw new Error(`release line dry-run script missing required snippet: ${requiredSnippet}`);
+  }
+}
+if (commonJsSourcePattern.test(releaseLineDryRunScript)) {
+  throw new Error("scripts/release-line-dry-run.mjs must use ESM syntax");
 }
 const npmPublishWorkflow = fs.readFileSync(path.join(root, ".github/workflows/npm-publish.yml"), "utf8");
 const npmDryRunScript = fs.readFileSync(path.join(root, "scripts/npm-publish-dry-run.mjs"), "utf8");
