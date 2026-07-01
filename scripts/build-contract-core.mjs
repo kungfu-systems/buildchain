@@ -4,27 +4,34 @@ import path from "node:path";
 
 export const RUNNER_PRESETS = Object.freeze({
   "github-hosted": [
-    { id: "linux-x64", name: "Linux x64", runner: "[\"ubuntu-24.04\"]" },
-    { id: "macos", name: "macOS", runner: "[\"macos-latest\"]" },
-    { id: "windows-x64", name: "Windows x64", runner: "[\"windows-2022\"]" },
+    { id: "linux-x64", name: "Linux x64", runner: '["ubuntu-24.04"]' },
+    { id: "macos", name: "macOS", runner: '["macos-latest"]' },
+    { id: "windows-x64", name: "Windows x64", runner: '["windows-2022"]' },
   ],
   "kungfu-v4-self-hosted": [
     {
       id: "linux-x64",
       name: "Linux x64",
-      runner: "[\"self-hosted\",\"Linux\",\"X64\",\"kungfu-build-v4-linux-x64\"]",
+      runner: '["self-hosted","Linux","X64","kungfu-build-v4-linux-x64"]',
     },
     {
       id: "macos-arm64",
       name: "macOS ARM64",
-      runner: "[\"self-hosted\",\"macOS\",\"ARM64\",\"kungfu-build-v4-macos-arm64\"]",
+      runner: '["self-hosted","macOS","ARM64","kungfu-build-v4-macos-arm64"]',
     },
     {
       id: "windows-x64",
       name: "Windows x64",
-      runner: "[\"self-hosted\",\"Windows\",\"X64\",\"kungfu-build-v4-windows-x64\"]",
+      runner: '["self-hosted","Windows","X64","kungfu-build-v4-windows-x64"]',
     },
   ],
+});
+
+export const LINUX_CONTAINER_PRESETS = Object.freeze({
+  "kungfu-verify": {
+    image:
+      "ghcr.io/kungfu-systems/build-images/kungfu-verify@sha256:11f0ba64267ce88174a4f73a9bf833ff4e9c59cd16ec3d08a6432a06c2be6fb1",
+  },
 });
 
 const RUNNER_PRESET_ALIASES = Object.freeze({
@@ -33,6 +40,14 @@ const RUNNER_PRESET_ALIASES = Object.freeze({
   kungfu: "kungfu-v4-self-hosted",
   "kungfu-self-hosted": "kungfu-v4-self-hosted",
   "kungfu-v4": "kungfu-v4-self-hosted",
+});
+
+const LINUX_CONTAINER_PRESET_ALIASES = Object.freeze({
+  "": "",
+  none: "",
+  off: "",
+  false: "",
+  verify: "kungfu-verify",
 });
 
 export const DEFAULT_ARTIFACT_NAME_TEMPLATE = "{artifact}-{platform}-{sha}";
@@ -138,7 +153,10 @@ export function parsePublishSourceRef(value = "") {
   if (sourceRef === "publish-gate/major" || sourceRef === "major-gate") {
     return {
       sourceRef,
-      fullRef: sourceRef === "major-gate" ? "refs/heads/major-gate" : "refs/heads/publish-gate/major",
+      fullRef:
+        sourceRef === "major-gate"
+          ? "refs/heads/major-gate"
+          : "refs/heads/publish-gate/major",
       enabled: true,
       channel: "major",
       line: "",
@@ -147,7 +165,9 @@ export function parsePublishSourceRef(value = "") {
       legacyAlias: sourceRef === "major-gate",
     };
   }
-  const match = sourceRef.match(/^publish-gate\/(alpha|release)\/(.+)\/([^/]+)$/);
+  const match = sourceRef.match(
+    /^publish-gate\/(alpha|release)\/(.+)\/([^/]+)$/,
+  );
   if (!match) {
     throw new Error(
       `unsupported publish source ref: ${sourceRef}; expected publish-gate/alpha/<line>/<version>, publish-gate/release/<line>/<version>, publish-gate/anchor, publish-gate/major, or major-gate`,
@@ -155,10 +175,14 @@ export function parsePublishSourceRef(value = "") {
   }
   const [, channel, line, consumerVersion] = match;
   if (!line.includes("/")) {
-    throw new Error(`publish source line must include a major/minor path: ${sourceRef}`);
+    throw new Error(
+      `publish source line must include a major/minor path: ${sourceRef}`,
+    );
   }
   if (!/^[A-Za-z0-9._+~-]+$/.test(consumerVersion)) {
-    throw new Error(`publish source consumer version contains unsupported characters: ${consumerVersion}`);
+    throw new Error(
+      `publish source consumer version contains unsupported characters: ${consumerVersion}`,
+    );
   }
   return {
     sourceRef,
@@ -242,7 +266,9 @@ export async function createResolvedReleaseManifest({
   }));
   if (lock.consumerVersion) {
     if (resolvedVersionFiles.length === 0) {
-      throw new Error("publish source consumer version requires configured version.files");
+      throw new Error(
+        "publish source consumer version requires configured version.files",
+      );
     }
     for (const file of resolvedVersionFiles) {
       if (file.version !== lock.consumerVersion) {
@@ -254,7 +280,11 @@ export async function createResolvedReleaseManifest({
   }
 
   const anchorManifest = loadConfiguredAnchorManifest(cwd, loadedConfig);
-  if (lock.consumerVersion && anchorManifest?.fields?.npmVersion && anchorManifest.fields.npmVersion !== lock.consumerVersion) {
+  if (
+    lock.consumerVersion &&
+    anchorManifest?.fields?.npmVersion &&
+    anchorManifest.fields.npmVersion !== lock.consumerVersion
+  ) {
     throw new Error(
       `anchor manifest npmVersion ${anchorManifest.fields.npmVersion} does not match ${lock.consumerVersion}`,
     );
@@ -287,17 +317,29 @@ export async function createResolvedReleaseManifest({
     anchorRequest,
     publish: {
       registry: publishRegistry,
-      distTag: distTag || (lock.channel === "release" ? "latest" : lock.channel === "alpha" ? "alpha" : ""),
+      distTag:
+        distTag ||
+        (lock.channel === "release"
+          ? "latest"
+          : lock.channel === "alpha"
+            ? "alpha"
+            : ""),
       visibilityGate,
     },
   };
 }
 
-export function verifyPublishSourceLock({ sourceRef = "", expectedSha = "", currentSha = "" } = {}) {
+export function verifyPublishSourceLock({
+  sourceRef = "",
+  expectedSha = "",
+  currentSha = "",
+} = {}) {
   const expected = assertSha(expectedSha, "expectedSha");
   const current = assertSha(currentSha, "currentSha");
   if (expected !== current) {
-    throw new Error(`publish source ref moved: ${sourceRef || "<unknown>"} expected ${expected}, got ${current}`);
+    throw new Error(
+      `publish source ref moved: ${sourceRef || "<unknown>"} expected ${expected}, got ${current}`,
+    );
   }
   return {
     ok: true,
@@ -356,8 +398,14 @@ export function planPackageSetPublish({
   for (const pkg of normalized) {
     const already = existing.get(existingPackageKey(pkg));
     if (already) {
-      if (pkg.integrity && already.integrity && pkg.integrity !== already.integrity) {
-        throw new Error(`existing package integrity mismatch: ${pkg.name}@${pkg.version}`);
+      if (
+        pkg.integrity &&
+        already.integrity &&
+        pkg.integrity !== already.integrity
+      ) {
+        throw new Error(
+          `existing package integrity mismatch: ${pkg.name}@${pkg.version}`,
+        );
       }
       steps.push({ action: "accept-existing", package: pkg });
     } else {
@@ -406,7 +454,9 @@ function normalizePublishRefs(value = "") {
       try {
         new RegExp(value);
       } catch (error) {
-        throw new Error(`publish-refs-json.${key}[${index}] is invalid: ${error.message}`);
+        throw new Error(
+          `publish-refs-json.${key}[${index}] is invalid: ${error.message}`,
+        );
       }
       return value;
     });
@@ -434,6 +484,65 @@ function normalizeRunnerPreset(value) {
   return RUNNER_PRESET_ALIASES[preset] || preset;
 }
 
+function normalizeLinuxContainerPreset(value) {
+  const preset = String(value || "").trim();
+  return LINUX_CONTAINER_PRESET_ALIASES[preset] ?? preset;
+}
+
+function resolveLinuxContainer({
+  linuxContainerPreset = "",
+  linuxContainerImage = "",
+} = {}) {
+  const explicitImage = String(linuxContainerImage || "").trim();
+  const preset = normalizeLinuxContainerPreset(linuxContainerPreset);
+  if (explicitImage) {
+    if (preset && preset !== "custom") {
+      throw new Error(
+        "linux-container-image cannot be combined with a named linux-container-preset",
+      );
+    }
+    return {
+      enabled: true,
+      preset: preset || "custom",
+      image: explicitImage,
+      source: "linux-container-image",
+    };
+  }
+  if (!preset) {
+    return {
+      enabled: false,
+      preset: "",
+      image: "",
+      source: "none",
+    };
+  }
+  const resolved = LINUX_CONTAINER_PRESETS[preset];
+  if (!resolved) {
+    throw new Error(`unsupported linux-container-preset: ${preset}`);
+  }
+  return {
+    enabled: true,
+    preset,
+    image: resolved.image,
+    source: "linux-container-preset",
+  };
+}
+
+function platformIsLinux(platform) {
+  const id = String(platform?.id || "").toLowerCase();
+  const name = String(platform?.name || "").toLowerCase();
+  if (id.includes("linux") || name.includes("linux")) {
+    return true;
+  }
+  const runnerLabels = parseJsonArray(
+    String(platform?.runner || "[]"),
+    "platform.runner",
+  ).map((label) => String(label || "").toLowerCase());
+  return runnerLabels.some(
+    (label) => label.includes("linux") || label.includes("ubuntu"),
+  );
+}
+
 function normalizePlatform(platform, index) {
   const id = String(platform?.id || "").trim();
   const name = String(platform?.name || id).trim();
@@ -451,19 +560,43 @@ function normalizePlatform(platform, index) {
   return { id, name, runner };
 }
 
-export function resolveRunnerMatrix({ runnerPreset = "github-hosted", platformsJson = "" } = {}) {
+export function resolveRunnerMatrix({
+  runnerPreset = "github-hosted",
+  platformsJson = "",
+  linuxContainerPreset = "",
+  linuxContainerImage = "",
+} = {}) {
   const customPlatformsJson = String(platformsJson || "").trim();
+  const linuxContainer = resolveLinuxContainer({
+    linuxContainerPreset,
+    linuxContainerImage,
+  });
   if (customPlatformsJson) {
-    const platforms = parseJsonArray(customPlatformsJson, "platforms-json").map(normalizePlatform);
+    const platforms = parseJsonArray(customPlatformsJson, "platforms-json").map(
+      normalizePlatform,
+    );
     if (platforms.length === 0) {
       throw new Error("platforms-json must include at least one platform");
     }
+    const containerPlatforms = linuxContainer.enabled
+      ? platforms.filter(platformIsLinux)
+      : [];
+    const nativePlatforms = linuxContainer.enabled
+      ? platforms.filter((platform) => !platformIsLinux(platform))
+      : platforms;
     return {
       source: "platforms-json",
       runnerPreset: "custom",
       platforms,
       platformsJson: JSON.stringify(platforms),
       platformCount: platforms.length,
+      nativePlatforms,
+      nativePlatformsJson: JSON.stringify(nativePlatforms),
+      nativePlatformCount: nativePlatforms.length,
+      containerPlatforms,
+      containerPlatformsJson: JSON.stringify(containerPlatforms),
+      containerPlatformCount: containerPlatforms.length,
+      linuxContainer,
     };
   }
 
@@ -475,12 +608,25 @@ export function resolveRunnerMatrix({ runnerPreset = "github-hosted", platformsJ
   if (!platforms) {
     throw new Error(`unsupported runner-preset: ${preset}`);
   }
+  const containerPlatforms = linuxContainer.enabled
+    ? platforms.filter(platformIsLinux)
+    : [];
+  const nativePlatforms = linuxContainer.enabled
+    ? platforms.filter((platform) => !platformIsLinux(platform))
+    : platforms;
   return {
     source: "runner-preset",
     runnerPreset: preset,
     platforms,
     platformsJson: JSON.stringify(platforms),
     platformCount: platforms.length,
+    nativePlatforms,
+    nativePlatformsJson: JSON.stringify(nativePlatforms),
+    nativePlatformCount: nativePlatforms.length,
+    containerPlatforms,
+    containerPlatformsJson: JSON.stringify(containerPlatforms),
+    containerPlatformCount: containerPlatforms.length,
+    linuxContainer,
   };
 }
 
@@ -506,7 +652,8 @@ export function resolvePublishGate({
       trusted: isTrusted,
       publishChannel: channel,
       publishAllowed: false,
-      publishReason: "anchor gates resolve source state but do not publish artifacts",
+      publishReason:
+        "anchor gates resolve source state but do not publish artifacts",
     };
   }
   if (!isTrusted) {
@@ -537,7 +684,9 @@ export function resolvePublishGate({
     };
   }
   const refValue = String(ref || "");
-  const matchedPattern = patterns.find((pattern) => new RegExp(pattern).test(refValue));
+  const matchedPattern = patterns.find((pattern) =>
+    new RegExp(pattern).test(refValue),
+  );
   if (!matchedPattern) {
     return {
       trusted: true,
@@ -573,7 +722,9 @@ export function resolveArtifactContract({
   runId = "",
   runAttempt = "",
 } = {}) {
-  const baseName = String(artifactName || "buildchain-artifact").trim() || "buildchain-artifact";
+  const baseName =
+    String(artifactName || "buildchain-artifact").trim() ||
+    "buildchain-artifact";
   const template =
     String(artifactNameTemplate || "").trim() || DEFAULT_ARTIFACT_NAME_TEMPLATE;
   const replacements = {
@@ -588,15 +739,22 @@ export function resolveArtifactContract({
     runId,
     runAttempt,
   };
-  const resolved = template.replace(/\{([A-Za-z][A-Za-z0-9]*)\}/g, (match, key) => {
-    if (!Object.hasOwn(replacements, key)) {
-      throw new Error(`unsupported artifact-name-template placeholder: ${match}`);
-    }
-    return replacements[key] || "";
-  });
+  const resolved = template.replace(
+    /\{([A-Za-z][A-Za-z0-9]*)\}/g,
+    (match, key) => {
+      if (!Object.hasOwn(replacements, key)) {
+        throw new Error(
+          `unsupported artifact-name-template placeholder: ${match}`,
+        );
+      }
+      return replacements[key] || "";
+    },
+  );
   const safeName = sanitizeArtifactName(resolved);
   if (!safeName) {
-    throw new Error("artifact-name-template resolved to an empty artifact name");
+    throw new Error(
+      "artifact-name-template resolved to an empty artifact name",
+    );
   }
   return {
     artifactName: safeName,
@@ -619,19 +777,28 @@ export function parseExpectedArtifactsJson(value = "") {
   if (expected.minFiles !== undefined) {
     normalized.minFiles = Number(expected.minFiles);
     if (!Number.isInteger(normalized.minFiles) || normalized.minFiles < 0) {
-      throw new Error("expected-artifacts-json.minFiles must be a non-negative integer");
+      throw new Error(
+        "expected-artifacts-json.minFiles must be a non-negative integer",
+      );
     }
   }
   if (expected.maxFiles !== undefined) {
     normalized.maxFiles = Number(expected.maxFiles);
     if (!Number.isInteger(normalized.maxFiles) || normalized.maxFiles < 0) {
-      throw new Error("expected-artifacts-json.maxFiles must be a non-negative integer");
+      throw new Error(
+        "expected-artifacts-json.maxFiles must be a non-negative integer",
+      );
     }
   }
   if (expected.minTotalBytes !== undefined) {
     normalized.minTotalBytes = Number(expected.minTotalBytes);
-    if (!Number.isInteger(normalized.minTotalBytes) || normalized.minTotalBytes < 0) {
-      throw new Error("expected-artifacts-json.minTotalBytes must be a non-negative integer");
+    if (
+      !Number.isInteger(normalized.minTotalBytes) ||
+      normalized.minTotalBytes < 0
+    ) {
+      throw new Error(
+        "expected-artifacts-json.minTotalBytes must be a non-negative integer",
+      );
     }
   }
   if (expected.requiredPaths !== undefined) {
@@ -639,9 +806,13 @@ export function parseExpectedArtifactsJson(value = "") {
       throw new Error("expected-artifacts-json.requiredPaths must be an array");
     }
     normalized.requiredPaths = expected.requiredPaths.map((entry, index) => {
-      const pathValue = String(entry || "").replace(/\\/g, "/").trim();
+      const pathValue = String(entry || "")
+        .replace(/\\/g, "/")
+        .trim();
       if (!pathValue) {
-        throw new Error(`expected-artifacts-json.requiredPaths[${index}] must be non-empty`);
+        throw new Error(
+          `expected-artifacts-json.requiredPaths[${index}] must be non-empty`,
+        );
       }
       return pathValue;
     });
@@ -650,7 +821,10 @@ export function parseExpectedArtifactsJson(value = "") {
 }
 
 export function createArtifactSummary({ artifactName, platform, files }) {
-  const totalBytes = files.reduce((sum, file) => sum + Number(file.size || 0), 0);
+  const totalBytes = files.reduce(
+    (sum, file) => sum + Number(file.size || 0),
+    0,
+  );
   const digest = crypto.createHash("sha256");
   for (const file of files) {
     digest.update(`${file.path}\0${file.size}\0${file.sha256}\n`);
@@ -713,7 +887,9 @@ export function writeGitHubOutputs(outputs) {
     }
     return;
   }
-  const lines = Object.entries(outputs).map(([key, value]) => `${key}=${value}`);
+  const lines = Object.entries(outputs).map(
+    ([key, value]) => `${key}=${value}`,
+  );
   fs.appendFileSync(outputPath, `${lines.join("\n")}\n`);
 }
 
