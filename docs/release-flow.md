@@ -244,7 +244,16 @@ Promotion should stop before moving refs when:
 - the required status check did not pass;
 - a release tree does not match the same-patch alpha tag tree;
 - version-state verification fails;
-- a required exact tag already exists at a different commit.
+- a required exact tag already exists at a commit unrelated to the active
+  transaction or finalized channel head.
 
 These failures are intentional. They protect consumers from refs that look
 released but do not have a complete evidence chain.
+
+During transaction finalization recovery, the current channel head may be a
+generated version-state merge commit. Buildchain validates that the durable
+transaction version, exact tag, evidence, and release material match, and that
+the current target ref contains or corresponds to the recorded
+`release_material_sha`. It must then tolerate exact tags, dev refs, or alpha
+refs that have already moved and continue filling any missing floating tags
+before writing the transaction state as `complete`.
