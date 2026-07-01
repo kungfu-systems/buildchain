@@ -80,6 +80,8 @@ scripts/                  Local verification scripts
 Buildchain v2 ships these active surfaces:
 
 - repository workflows under `.github/workflows`;
+- the public npm package `@kungfu-systems/buildchain` and `buildchain` CLI for
+  initializing and validating new repositories;
 - the active reusable build workflow `.github/workflows/.build.yml`;
 - exactly three GitHub Actions under `actions/<name>`:
   `validate-config`, `run-lifecycle`, and `promote-buildchain-ref`;
@@ -116,6 +118,13 @@ Documented reusable workflows should be referenced as:
 
 ```yaml
 uses: kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v2
+```
+
+Repositories can also bootstrap local integration through the CLI:
+
+```bash
+npx @kungfu-systems/buildchain init --type package
+npx @kungfu-systems/buildchain validate --require-version-state
 ```
 
 Standalone `workflows` and `action-*` repositories are historical rollback
@@ -158,6 +167,12 @@ no-op for this repository. Buildchain itself is promoted only by
 migration boundary for old consumers and must not be used for new Buildchain v2
 integrations.
 
+Buildchain's npm package is published only from exact v-prefixed release tags
+created by that same promotion flow. Alpha releases such as
+`v2.0.13-alpha.0` publish to npm with dist-tag `alpha`; stable releases such as
+`v2.0.13` publish with dist-tag `latest`. Floating refs like `v2`, `v2.0`, and
+`v2.0-alpha` never publish npm packages.
+
 ## Read Next
 
 - [Release governance](docs/release-governance.md) explains the design problem,
@@ -177,6 +192,9 @@ integrations.
 - [Web-surface deployments](docs/web-surface-deployments.md) documents the
   preview/staging/production channel ontology, deployment manifest, adapter
   contract, and dry-run cleanup/deploy plans.
+- [Buildchain CLI and npm package](docs/cli.md) documents the npm package,
+  command-line entrypoint, repository bootstrap flow, and release-only publish
+  gate.
 
 ## Local Verification
 

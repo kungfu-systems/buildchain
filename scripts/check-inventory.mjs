@@ -6,6 +6,8 @@ const sharedActionTsupConfig = fs.readFileSync(path.join(root, "scripts/tsup-act
 const commonJsSourcePattern = /\b(require\s*\(|module\.exports|exports\.|require\.main|createRequire)\b/;
 const requiredPaths = [
   "README.md",
+  "bin/buildchain.mjs",
+  "docs/cli.md",
   "docs/migration-inventory.md",
   "docs/lifecycle-protocol.md",
   "docs/ownership.md",
@@ -14,6 +16,7 @@ const requiredPaths = [
   ".github/actionlint.yaml",
   ".github/workflows/self-hosted-runner-smoke.yml",
   ".github/workflows/buildchain-ref-promotion.yml",
+  ".github/workflows/npm-publish.yml",
   ".github/workflows/verify.yml",
   ".github/workflows/.build.yml",
   ".github/workflows/build-surface-fixture.yml",
@@ -26,6 +29,55 @@ for (const rel of requiredPaths) {
   if (!fs.existsSync(path.join(root, rel))) {
     throw new Error(`missing required path: ${rel}`);
   }
+}
+
+const rootPackage = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
+if (rootPackage.name !== "@kungfu-systems/buildchain") {
+  throw new Error("root package must be @kungfu-systems/buildchain");
+}
+if (rootPackage.private !== false) {
+  throw new Error("root package must be publishable with private=false");
+}
+if (rootPackage.bin?.buildchain !== "./bin/buildchain.mjs") {
+  throw new Error("root package must expose the buildchain CLI");
+}
+if (rootPackage.exports?.["."] !== "./packages/core/index.js") {
+  throw new Error("root package must export packages/core/index.js");
+}
+if (rootPackage.publishConfig?.access !== "public") {
+  throw new Error("root package publishConfig.access must be public");
+}
+if (rootPackage.publishConfig?.registry !== "https://registry.npmjs.org/") {
+  throw new Error("root package publishConfig.registry must be npmjs");
+}
+for (const expectedFile of ["bin/", "scripts/*.mjs", "packages/core/", "docs/cli.md"]) {
+  if (!rootPackage.files?.includes(expectedFile)) {
+    throw new Error(`root package files must include ${expectedFile}`);
+  }
+}
+const cliSource = fs.readFileSync(path.join(root, "bin/buildchain.mjs"), "utf8");
+if (!cliSource.startsWith("#!/usr/bin/env node")) {
+  throw new Error("bin/buildchain.mjs must be executable with a node shebang");
+}
+if (commonJsSourcePattern.test(cliSource)) {
+  throw new Error("bin/buildchain.mjs must use ESM syntax");
+}
+const npmPublishWorkflow = fs.readFileSync(path.join(root, ".github/workflows/npm-publish.yml"), "utf8");
+for (const requiredSnippet of [
+  "id-token: write",
+  "runs-on: ubuntu-24.04",
+  "tags:",
+  "- \"v*.*.*\"",
+  "tag !== expectedTag",
+  "distTag = pkg.version.includes(\"-\") ? \"alpha\" : \"latest\"",
+  "npm publish --access public --tag",
+]) {
+  if (!npmPublishWorkflow.includes(requiredSnippet)) {
+    throw new Error(`npm publish workflow missing required snippet: ${requiredSnippet}`);
+  }
+}
+if (/runs-on:\s*self-hosted/.test(npmPublishWorkflow)) {
+  throw new Error("npm publish workflow must use GitHub-hosted runners for trusted publishing");
 }
 
 const inventory = JSON.parse(
@@ -168,6 +220,18 @@ for (const key of ["publishGateSourceLock", "resolvedReleaseManifest", "packageS
   if (safety.reusableContract?.[key] !== true) {
     throw new Error(`safety.reusableContract.${key} must be true`);
   }
+}
+if (safety.npmPublish?.exactReleaseTagsOnly !== true) {
+  throw new Error("safety.npmPublish.exactReleaseTagsOnly must be true");
+}
+if (safety.npmPublish?.alphaDistTag !== "alpha") {
+  throw new Error("safety.npmPublish.alphaDistTag must be alpha");
+}
+if (safety.npmPublish?.stableDistTag !== "latest") {
+  throw new Error("safety.npmPublish.stableDistTag must be latest");
+}
+if (safety.npmPublish?.trustedPublishing !== true) {
+  throw new Error("safety.npmPublish.trustedPublishing must be true");
 }
 
 console.log("buildchain inventory check passed");
