@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -42,6 +43,10 @@ function runBuildchainFailure(args, options = {}) {
 
 function tempDir(name) {
   return fs.mkdtempSync(path.join(os.tmpdir(), `buildchain-${name}-`));
+}
+
+function sha256File(filePath) {
+  return crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");
 }
 
 test("CLI prints help and version", () => {
@@ -521,6 +526,7 @@ test("diagnostics SDK summarizes lifecycle timing across diagnostic artifacts", 
 test("CLI summarizes diagnostics artifacts into a small cross-platform report", () => {
   const cwd = tempDir("diagnostics-summary");
   const linuxArtifact = path.join(cwd, "linux-diagnostics.json");
+  const linuxManifest = path.join(cwd, "linux-diagnostics-manifest.json");
   const macosArtifact = path.join(cwd, "macos-diagnostics.json");
   const outputPath = path.join(cwd, "diagnostics-summary.json");
 
@@ -576,6 +582,25 @@ test("CLI summarizes diagnostics artifacts into a small cross-platform report", 
         { command: "sleep", category: "other", maxConcurrent: 1, maxCpu: 0 },
       ],
     },
+    links: { diagnosticsManifest: linuxManifest },
+  }, null, 2));
+  const linuxStat = fs.statSync(linuxArtifact);
+  fs.writeFileSync(linuxManifest, JSON.stringify({
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-diagnostics-manifest",
+    artifactName: "linux-artifact",
+    platformId: "linux-x64",
+    fileCount: 1,
+    totalBytes: linuxStat.size,
+    files: [
+      {
+        kind: "diagnostics",
+        path: "linux-diagnostics.json",
+        bytes: linuxStat.size,
+        sha256: sha256File(linuxArtifact),
+        required: true,
+      },
+    ],
   }, null, 2));
   fs.writeFileSync(macosArtifact, JSON.stringify({
     runner: { github: { runnerOs: "macOS", runnerArch: "ARM64" } },
@@ -614,6 +639,7 @@ test("CLI summarizes diagnostics artifacts into a small cross-platform report", 
   assert.equal(summary.count, 2);
   assert.equal(summary.totalWarningCount, 2);
   assert.equal(summary.totalErrorCount, 1);
+  assert.equal(summary.diagnosticsManifestWarningCount, 1);
   assert.deepEqual(summary.slowestPlatforms.map((entry) => entry.gitHead), ["abc123def456", "def456abc123"]);
   assert.equal(summary.platforms[0].artifactUploadDurationMs, 62000);
   assert.equal(summary.platforms[0].totalDurationMs, 64250);
@@ -623,6 +649,10 @@ test("CLI summarizes diagnostics artifacts into a small cross-platform report", 
   assert.equal(summary.platforms[0].tools.missing[0], "ninja");
   assert.equal(summary.platforms[0].cache.packageManager.packageManager, "pnpm@11.0.0");
   assert.equal(summary.platforms[0].cache.compilerCaches.ccache.stats.cache_miss, 2);
+  assert.equal(summary.platforms[0].diagnosticsManifest.status, "verified");
+  assert.equal(summary.platforms[0].diagnosticsManifest.fileCount, 1);
+  assert.equal(summary.platforms[1].diagnosticsManifest.status, "missing");
+  assert.equal(summary.platforms[1].diagnosticsManifest.warningCount, 1);
   assert.equal(summary.slowestPlatforms[0].process.requestedParallelism, 20);
   assert.equal(summary.slowestPlatforms[0].process.observedConcurrencyMax, 4);
   assert.equal(summary.slowestPlatforms[0].process.ratioToRequestedMax, 0.2);

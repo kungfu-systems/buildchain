@@ -1144,8 +1144,15 @@ test("aggregate diagnostics summary reads uploaded platform diagnostics", () => 
 
     assert.equal(summary.contract, "kungfu-buildchain-diagnostics-summary");
     assert.equal(summary.count, 1);
+    assert.equal(summary.diagnosticsManifestWarningCount, 0);
     assert.equal(summary.platforms[0].fileCount, 2);
     assert.ok(summary.platforms[0].lifecycle.build);
+    assert.equal(summary.platforms[0].diagnosticsManifest.status, "verified");
+    assert.equal(summary.platforms[0].diagnosticsManifest.fileCount, 2);
+    assert.deepEqual(
+      summary.platforms[0].diagnosticsManifest.files.map((file) => file.kind),
+      ["diagnostics", "events"],
+    );
     assert.equal(summary.platforms[0].links.artifactName, "libnode-linux-x64-sha");
     assert.equal(summary.platforms[0].links.platformId, "linux-x64");
     assert.ok(fs.existsSync(process.env.BUILDCHAIN_DIAGNOSTICS_OUTPUT));

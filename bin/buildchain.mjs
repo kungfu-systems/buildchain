@@ -469,6 +469,9 @@ async function main(argv = process.argv.slice(2)) {
     } else {
       process.stdout.write(`buildchain diagnostics summary: ${summary.count} platforms\n`);
       process.stdout.write(`warnings: ${summary.totalWarningCount} errors: ${summary.totalErrorCount}\n`);
+      if (summary.diagnosticsManifestWarningCount) {
+        process.stdout.write(`diagnostics manifest warnings: ${summary.diagnosticsManifestWarningCount}\n`);
+      }
       process.stdout.write(`${formatDiagnosticsSummaryTable(summary)}\n`);
       if (outputPath) {
         process.stdout.write(`wrote: ${outputPath}\n`);

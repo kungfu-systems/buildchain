@@ -258,6 +258,12 @@ artifact name, platform id, diagnostics sidecar manifest path, manifest path,
 summary path, and process sidecar paths when present. They also keep compact
 runner/tool/cache summaries so reviewers can tell whether a slow row ran on the
 expected runner, missed an expected tool, or lacked useful compiler-cache stats.
+When the downloaded platform diagnostics include a sibling
+`diagnostics-manifest.json`, `summarizeDiagnosticsArtifacts()` carries a compact
+`diagnosticsManifest` section for that platform and verifies the manifest's
+`diagnostics.json` byte count and sha256. Missing or mismatched sidecar manifests
+increment `diagnosticsManifestWarningCount`, so reviewers can distinguish
+diagnostics sidecar drift from lifecycle warnings.
 
 The CLI exposes the same aggregation for shell and workflow steps:
 

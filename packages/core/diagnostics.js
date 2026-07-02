@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -36,6 +37,18 @@ function safeReadJson(filePath) {
   } catch {
     return undefined;
   }
+}
+
+function readJsonResult(filePath) {
+  try {
+    return { value: JSON.parse(fs.readFileSync(filePath, "utf8")) };
+  } catch (error) {
+    return { error };
+  }
+}
+
+function sha256File(filePath) {
+  return crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");
 }
 
 function fileStats(cwd, entries = []) {
@@ -1031,6 +1044,121 @@ function compactCacheSummary(cache = {}, native = {}) {
   };
 }
 
+function resolveDiagnosticsInput(entry) {
+  if (typeof entry !== "string") {
+    return { diagnostics: entry, sourcePath: "" };
+  }
+  return {
+    diagnostics: readDiagnosticsArtifact(entry),
+    sourcePath: path.resolve(entry),
+  };
+}
+
+function buildchainRootForPath(filePath) {
+  const parts = path.resolve(filePath).split(path.sep);
+  const index = parts.lastIndexOf(".buildchain");
+  if (index <= 0) {
+    return "";
+  }
+  const rootParts = parts.slice(0, index);
+  return rootParts.length ? rootParts.join(path.sep) || path.sep : path.sep;
+}
+
+function diagnosticsManifestCandidates(diagnostics, sourcePath) {
+  if (!sourcePath) {
+    return [];
+  }
+  const candidates = [path.join(path.dirname(sourcePath), "diagnostics-manifest.json")];
+  const linkedPath = diagnostics?.links?.diagnosticsManifest || "";
+  if (linkedPath) {
+    if (path.isAbsolute(linkedPath)) {
+      candidates.push(linkedPath);
+    } else {
+      const buildchainRoot = buildchainRootForPath(sourcePath);
+      if (buildchainRoot) {
+        candidates.push(path.resolve(buildchainRoot, linkedPath));
+      }
+      candidates.push(path.resolve(process.cwd(), linkedPath));
+      candidates.push(path.resolve(path.dirname(sourcePath), linkedPath));
+    }
+  }
+  return [...new Set(candidates)];
+}
+
+function compactDiagnosticsManifestFile(entry = {}) {
+  return {
+    kind: entry.kind || "",
+    path: entry.path || "",
+    bytes: Number(entry.bytes || 0),
+    sha256: entry.sha256 || "",
+    required: Boolean(entry.required),
+  };
+}
+
+function summarizeDiagnosticsManifest(diagnostics, sourcePath) {
+  if (!sourcePath) {
+    return undefined;
+  }
+  const candidates = diagnosticsManifestCandidates(diagnostics, sourcePath);
+  const manifestPath = candidates.find((candidate) => fs.existsSync(candidate)) || candidates[0] || "";
+  const relativePath = manifestPath
+    ? posixPath(path.relative(path.dirname(sourcePath), manifestPath))
+    : "";
+  if (!manifestPath || !fs.existsSync(manifestPath)) {
+    return {
+      status: "missing",
+      path: relativePath || "diagnostics-manifest.json",
+      warningCount: 1,
+      warnings: ["diagnostics sidecar manifest is missing"],
+    };
+  }
+
+  const { value: manifest, error } = readJsonResult(manifestPath);
+  if (error) {
+    return {
+      status: "invalid",
+      path: relativePath,
+      warningCount: 1,
+      warnings: [`failed to read diagnostics sidecar manifest: ${error.message}`],
+    };
+  }
+
+  const warnings = [];
+  if (manifest?.contract !== "kungfu-buildchain-diagnostics-manifest") {
+    warnings.push(`unexpected diagnostics sidecar manifest contract: ${manifest?.contract || "unknown"}`);
+  }
+  const files = Array.isArray(manifest?.files) ? manifest.files.map(compactDiagnosticsManifestFile) : [];
+  if (!Array.isArray(manifest?.files)) {
+    warnings.push("diagnostics sidecar manifest files must be an array");
+  }
+  const diagnosticsEntry = files.find((entry) => entry.kind === "diagnostics");
+  if (!diagnosticsEntry) {
+    warnings.push("diagnostics sidecar manifest does not list diagnostics.json");
+  } else {
+    const stat = fs.statSync(sourcePath);
+    const digest = sha256File(sourcePath);
+    if (diagnosticsEntry.bytes !== stat.size) {
+      warnings.push("diagnostics sidecar manifest bytes do not match diagnostics.json");
+    }
+    if (diagnosticsEntry.sha256 && diagnosticsEntry.sha256 !== digest) {
+      warnings.push("diagnostics sidecar manifest sha256 does not match diagnostics.json");
+    }
+  }
+
+  return {
+    status: warnings.length ? "warning" : "verified",
+    path: relativePath,
+    artifactName: manifest?.artifactName || "",
+    diagnosticsArtifactName: manifest?.diagnosticsArtifactName || "",
+    platformId: manifest?.platformId || "",
+    fileCount: Number(manifest?.fileCount || files.length),
+    totalBytes: Number(manifest?.totalBytes || files.reduce((sum, entry) => sum + entry.bytes, 0)),
+    files,
+    warningCount: warnings.length,
+    warnings,
+  };
+}
+
 function formatDiagnosticsSummaryRows(rows = []) {
   const widths = rows[0].map((_, columnIndex) => (
     Math.max(...rows.map((row) => String(row[columnIndex] ?? "").length))
@@ -1080,13 +1208,14 @@ export function formatDiagnosticsSummaryTable(summary = {}) {
 
 export function summarizeDiagnosticsArtifacts(inputs = []) {
   const diagnostics = inputs
-    .map((entry) => (typeof entry === "string" ? readDiagnosticsArtifact(entry) : entry))
-    .filter(Boolean);
-  const platforms = diagnostics.map((entry) => {
+    .map(resolveDiagnosticsInput)
+    .filter((entry) => entry.diagnostics);
+  const platforms = diagnostics.map(({ diagnostics: entry, sourcePath }) => {
     const lifecycle = entry.lifecycleObservability?.stages || {};
     const lifecycleTotalDurationMs = sumLifecycleDurationMs(lifecycle);
     const artifactScanDurationMs = Math.round(Number(entry.lifecycleObservability?.artifactScan?.durationMs || 0));
     const artifactUploadDurationMs = Math.round(Number(entry.lifecycleObservability?.artifactUpload?.durationMs || 0));
+    const diagnosticsManifest = summarizeDiagnosticsManifest(entry, sourcePath);
     return {
       runner: entry.runner?.github?.runnerOs || entry.runner?.os?.platform || "unknown",
       arch: entry.runner?.github?.runnerArch || entry.runner?.os?.arch || "unknown",
@@ -1103,6 +1232,7 @@ export function summarizeDiagnosticsArtifacts(inputs = []) {
       tools: compactToolSummary(entry.tools || {}, entry.native?.tools || {}),
       cache: compactCacheSummary(entry.cache || {}, entry.native || {}),
       process: entry.process || {},
+      ...(diagnosticsManifest ? { diagnosticsManifest } : {}),
       links: entry.links || {},
       warningCount: entry.lifecycleObservability?.warningCount || 0,
       errorCount: entry.lifecycleObservability?.errorCount || 0,
@@ -1115,6 +1245,10 @@ export function summarizeDiagnosticsArtifacts(inputs = []) {
     count: diagnostics.length,
     totalWarningCount: platforms.reduce((sum, entry) => sum + entry.warningCount, 0),
     totalErrorCount: platforms.reduce((sum, entry) => sum + entry.errorCount, 0),
+    diagnosticsManifestWarningCount: platforms.reduce(
+      (sum, entry) => sum + Number(entry.diagnosticsManifest?.warningCount || 0),
+      0,
+    ),
     slowestPlatforms: platforms
       .map(({ runner, arch, gitHead, lifecycleTotalDurationMs, totalDurationMs, process }) => ({
         runner,

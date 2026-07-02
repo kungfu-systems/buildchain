@@ -150,6 +150,11 @@ parallelism, observed max active processes, the ratio between them, sample
 count, process categories, and the top sampled command basenames. This lets
 maintainers inspect matrix timing, runner, tool, cache, and concurrency context
 without downloading large platform binaries or process sidecars first.
+When a sibling `diagnostics-manifest.json` is available, the summary also records
+its file list and verifies the listed `diagnostics.json` byte count and sha256.
+Missing, unreadable, or mismatched sidecar manifests are reported through
+`diagnosticsManifestWarningCount` and the per-platform `diagnosticsManifest`
+field without failing the timing rollup.
 
 Without `--json`, the command prints a compact lifecycle timing table with
 install/build/verify/publish, artifact scan/upload, total, warning, and error
