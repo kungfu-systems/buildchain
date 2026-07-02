@@ -1,8 +1,8 @@
-# Buildchain CLI and npm Package
+# Buildchain CLI, npm Package, and Toolkit API
 
 Buildchain is published as the public npm package
 `@kungfu-tech/buildchain`. The package contains the `buildchain` command,
-the shared core libraries, and the local scripts needed to initialize and
+the importable ESM toolkit APIs, and the local scripts needed to initialize and
 validate repositories before they use the reusable GitHub workflow surface.
 
 The npm package is not the release authority. Release authority still comes
@@ -26,6 +26,22 @@ Or install it in a repository:
 pnpm add -D @kungfu-tech/buildchain
 pnpm exec buildchain validate
 ```
+
+Use the package API directly inside JavaScript build scripts:
+
+```js
+import { createBuildchainLogger } from "@kungfu-tech/buildchain/logging";
+
+const logger = createBuildchainLogger({ source: "user", component: "build" });
+await logger.span("build.native", { phase: "build" }, async () => {
+  await buildNativeArtifacts();
+});
+```
+
+The standalone binary and CLI are for workflow steps, shell scripts, and
+non-JavaScript environments. JavaScript code that already depends on
+`@kungfu-tech/buildchain` should import the toolkit API instead of spawning
+`npx buildchain` or a downloaded binary.
 
 ## Commands
 
@@ -153,9 +169,9 @@ for agents: trust, completeness, impact, recovery route, and next action.
 maintainer opens or merges a channel PR:
 
 ```bash
-buildchain release --dry-run --target-ref alpha/v2/v2.0
-buildchain release --dry-run --target-ref release/v2/v2.0 --sha <verified-sha>
-buildchain release dry-run --target-ref publish-gate/major --source-ref release/v2/v2.0
+buildchain release --dry-run --target-ref alpha/v2/v2.2
+buildchain release --dry-run --target-ref release/v2/v2.2 --sha <verified-sha>
+buildchain release dry-run --target-ref publish-gate/major --source-ref release/v2/v2.2
 buildchain release explain --target-ref alpha/v2/v2.1 --json
 ```
 

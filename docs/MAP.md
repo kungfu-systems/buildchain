@@ -21,6 +21,7 @@ running artifact), *use* (consume / extend) - and a **status**:
 | How do agents and contributors enter this repo? | [`../AGENTS.md`](../AGENTS.md) + [`../CONTRIBUTING.md`](../CONTRIBUTING.md) | use | stable |
 | How do I install a standalone binary or npm package? | [`install.md`](install.md) | use | stable |
 | How do I run the `buildchain` CLI? | [`cli.md`](cli.md) | use | stable |
+| How do I import Buildchain toolkit APIs from JavaScript build code? | [`toolkit-observability.md`](toolkit-observability.md) + [`../packages/core/README.md`](../packages/core/README.md) | use | stable |
 | How do I initialize a new repository? | [`cli.md`](cli.md) + [`lifecycle-protocol.md`](lifecycle-protocol.md) | use | stable |
 | Why does Buildchain use branch-driven release governance? | [`release-governance.md`](release-governance.md) | why | stable |
 | How does Buildchain decide patch, minor, and major release lines? | [`versioning.md`](versioning.md) | why | stable |
@@ -67,7 +68,8 @@ running artifact), *use* (consume / extend) - and a **status**:
   [`release-passport.md`](release-passport.md),
   [`binary-distribution.md`](binary-distribution.md), and [`cli.md`](cli.md).
 - **Buildchain logging / timestamps / consumer build phase timing** ->
-  [`toolkit-observability.md`](toolkit-observability.md) and [`cli.md`](cli.md).
+  [`toolkit-observability.md`](toolkit-observability.md) for JavaScript API
+  imports, and [`cli.md`](cli.md) for workflow or shell command usage.
 - **buildchain.libkungfu.dev / package-owned site facts** ->
   [`site-bundle-contract.md`](site-bundle-contract.md).
 - **sites / web previews / staging / production gates** ->
