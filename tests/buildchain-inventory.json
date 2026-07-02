@@ -102,14 +102,17 @@
     },
     "releasePassport": {
       "line": "v2.2",
-      "protocolArtifacts": [
-        "product-mechanism.json",
-        "buildchain.release.json",
-        "artifact-evidence.json",
-        "impact.json",
-        "agent-index.json",
-        "llms.txt"
-      ],
+        "protocolArtifacts": [
+          "product-mechanism.json",
+          "buildchain.release.json",
+          "artifact-evidence.json",
+          "impact.json",
+          "agent-index.json",
+          "check-report.json",
+          "llms.txt",
+          "buildchain-release-bundle.json",
+          "buildchain-release-bundle.tar.gz"
+        ],
       "cli": [
         "collect github-release",
         "verify release-passport",

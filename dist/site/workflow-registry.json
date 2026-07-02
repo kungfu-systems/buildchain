@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-workflow-registry",
+  "workflows": [
+    {
+      "id": "build",
+      "path": ".github/workflows/.build.yml",
+      "surface": "reusable-build",
+      "status": "active"
+    },
+    {
+      "id": "web-surface",
+      "path": ".github/workflows/.web-surface.yml",
+      "surface": "site-app-deployment",
+      "status": "active"
+    },
+    {
+      "id": "buildchain-ref-promotion",
+      "path": ".github/workflows/buildchain-ref-promotion.yml",
+      "surface": "release-governance",
+      "status": "active"
+    },
+    {
+      "id": "binary-distribution",
+      "path": ".github/workflows/binary-distribution.yml",
+      "surface": "release-passport",
+      "status": "active"
+    }
+  ],
+  "actions": [
+    {
+      "id": "validate-config",
+      "path": "actions/validate-config",
+      "status": "active"
+    },
+    {
+      "id": "run-lifecycle",
+      "path": "actions/run-lifecycle",
+      "status": "active"
+    },
+    {
+      "id": "promote-buildchain-ref",
+      "path": "actions/promote-buildchain-ref",
+      "status": "active"
+    }
+  ]
+}
