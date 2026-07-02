@@ -143,12 +143,16 @@ buildchain diagnostics summary \
 
 The JSON summary keeps per-platform lifecycle stage tables, adds lifecycle
 total durations, carries top slow spans, aggregates warning/error counts, and
-sorts the slowest platforms. This lets maintainers inspect matrix timing
-without downloading large platform binaries.
+sorts the slowest platforms. Each slow platform row also carries a compact
+process sampler summary: requested parallelism, observed max active processes,
+the ratio between them, sample count, process categories, and the top sampled
+command basenames. This lets maintainers inspect matrix timing and concurrency
+without downloading large platform binaries or process sidecars first.
 
 Without `--json`, the command prints a compact lifecycle timing table with
 install/build/verify/publish, artifact scan/upload, total, warning, and error
-columns for each platform.
+columns for each platform, plus `jobs` and `active` columns for requested and
+observed process concurrency when sampler data is present.
 
 `buildchain sample process-tree` wraps a long-running command and periodically
 writes process-tree snapshots:

@@ -217,9 +217,12 @@ values.
 Use `summarizeDiagnosticsArtifacts()` when a matrix build uploads one
 diagnostics artifact per platform. The summary keeps each platform's lifecycle
 stage table, adds a lifecycle total duration, carries the top slow spans, and
-aggregates warning/error counts plus the slowest platforms. That gives release
-reviewers a small cross-platform timing view without downloading full build
-outputs.
+aggregates warning/error counts plus the slowest platforms. Slow platform rows
+also include a compact process sampler view with requested parallelism, observed
+max active processes, the ratio between them, sample count, process categories,
+and top sampled command basenames. That gives release reviewers a small
+cross-platform timing and concurrency view without downloading full build
+outputs or process sidecars.
 
 The CLI exposes the same aggregation for shell and workflow steps:
 
@@ -232,7 +235,8 @@ buildchain diagnostics summary \
 ```
 
 Omit `--json` when the workflow log should show a compact platform table with
-lifecycle stages, artifact scan/upload time, total time, warnings, and errors.
+lifecycle stages, artifact scan/upload time, total time, requested jobs,
+observed active processes, warnings, and errors.
 
 For long native build commands, the CLI can also sample the child process tree
 while preserving the wrapped command's exit code:

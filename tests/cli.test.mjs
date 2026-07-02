@@ -400,6 +400,15 @@ test("diagnostics SDK summarizes lifecycle timing across diagnostic artifacts", 
   assert.equal(summary.platforms[0].topSlowSpans[0].event, "native.compile");
   assert.equal(summary.platforms[1].lifecycleTotalDurationMs, 50);
   assert.deepEqual(summary.slowestPlatforms.map((entry) => entry.gitHead), ["abc123", "def456"]);
+  assert.deepEqual(summary.slowestPlatforms[0].process, {
+    requestedParallelism: 0,
+    requestedParallelismSource: "",
+    observedConcurrencyMax: 4,
+    ratioToRequestedMax: 0,
+    sampleCount: 0,
+    categories: {},
+    topCommands: [],
+  });
 });
 
 test("CLI summarizes diagnostics artifacts into a small cross-platform report", () => {
@@ -423,6 +432,19 @@ test("CLI summarizes diagnostics artifacts into a small cross-platform report", 
       warningCount: 2,
       errorCount: 0,
     },
+    process: {
+      requestedParallelism: 20,
+      requestedParallelismSource: "command",
+      observedConcurrency: { max: 4, ratioToRequestedMax: 0.2 },
+      sampleCount: 3,
+      categories: { compiler: 4 },
+      topCommands: [
+        { command: "clang++", category: "compiler", maxConcurrent: 4, maxCpu: 95.5 },
+        { command: "ninja", category: "build-tool", maxConcurrent: 1, maxCpu: 5 },
+        { command: "ccache", category: "cache", maxConcurrent: 2, maxCpu: 3.5 },
+        { command: "sleep", category: "other", maxConcurrent: 1, maxCpu: 0 },
+      ],
+    },
   }, null, 2));
   fs.writeFileSync(macosArtifact, JSON.stringify({
     runner: { github: { runnerOs: "macOS", runnerArch: "ARM64" } },
@@ -437,6 +459,12 @@ test("CLI summarizes diagnostics artifacts into a small cross-platform report", 
       ],
       warningCount: 0,
       errorCount: 1,
+    },
+    process: {
+      requestedParallelism: 8,
+      requestedParallelismSource: "env:MAKEFLAGS",
+      observedConcurrency: { max: 6, ratioToRequestedMax: 0.75 },
+      sampleCount: 2,
     },
   }, null, 2));
 
@@ -460,18 +488,25 @@ test("CLI summarizes diagnostics artifacts into a small cross-platform report", 
   assert.equal(summary.platforms[0].totalDurationMs, 64250);
   assert.equal(summary.platforms[0].totalBytes, 4096);
   assert.equal(summary.platforms[0].fileCount, 2);
+  assert.equal(summary.slowestPlatforms[0].process.requestedParallelism, 20);
+  assert.equal(summary.slowestPlatforms[0].process.observedConcurrencyMax, 4);
+  assert.equal(summary.slowestPlatforms[0].process.ratioToRequestedMax, 0.2);
+  assert.deepEqual(
+    summary.slowestPlatforms[0].process.topCommands.map((entry) => entry.command),
+    ["clang++", "ninja", "ccache"],
+  );
   assert.equal(summary.platforms[1].topSlowSpans[0].event, "native.archive");
   assert.deepEqual(JSON.parse(fs.readFileSync(outputPath, "utf8")), summary);
 
   const table = formatDiagnosticsSummaryTable(summary);
-  assert.match(table, /platform\s+head\s+install\s+build\s+verify\s+publish\s+scan\s+upload\s+total\s+warn\s+err/);
-  assert.match(table, /Linux\/X64\s+abc123def456\s+-\s+900ms\s+100ms\s+-\s+1\.3s\s+1m2s\s+1m4s\s+2\s+0/);
-  assert.match(table, /macOS\/ARM64\s+def456abc123\s+26s\s+3s\s+-\s+-\s+-\s+-\s+29s\s+0\s+1/);
+  assert.match(table, /platform\s+head\s+install\s+build\s+verify\s+publish\s+scan\s+upload\s+total\s+jobs\s+active\s+warn\s+err/);
+  assert.match(table, /Linux\/X64\s+abc123def456\s+-\s+900ms\s+100ms\s+-\s+1\.3s\s+1m2s\s+1m4s\s+20\s+4\s+2\s+0/);
+  assert.match(table, /macOS\/ARM64\s+def456abc123\s+26s\s+3s\s+-\s+-\s+-\s+-\s+29s\s+8\s+6\s+0\s+1/);
 
   const humanOutput = runBuildchain(["diagnostics", "summary", linuxArtifact, macosArtifact], { cwd });
   assert.match(humanOutput, /buildchain diagnostics summary: 2 platforms/);
-  assert.match(humanOutput, /platform\s+head\s+install\s+build\s+verify\s+publish\s+scan\s+upload\s+total\s+warn\s+err/);
-  assert.match(humanOutput, /macOS\/ARM64\s+def456abc123\s+26s\s+3s\s+-\s+-\s+-\s+-\s+29s\s+0\s+1/);
+  assert.match(humanOutput, /platform\s+head\s+install\s+build\s+verify\s+publish\s+scan\s+upload\s+total\s+jobs\s+active\s+warn\s+err/);
+  assert.match(humanOutput, /macOS\/ARM64\s+def456abc123\s+26s\s+3s\s+-\s+-\s+-\s+-\s+29s\s+8\s+6\s+0\s+1/);
 
   const missing = runBuildchainFailure(["diagnostics", "summary", linuxArtifact, path.join(cwd, "missing.json")], { cwd });
   assert.equal(missing.status, 1);

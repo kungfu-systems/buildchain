@@ -781,6 +781,32 @@ function formatDiagnosticsDurationMs(value) {
   return seconds ? `${minutes}m${seconds}s` : `${minutes}m`;
 }
 
+function compactProcessSummary(process = {}) {
+  const observedConcurrency = process?.observedConcurrency || {};
+  const topCommands = Array.isArray(process?.topCommands)
+    ? process.topCommands.slice(0, 3).map((entry) => ({
+        command: entry.command || "",
+        category: entry.category || "",
+        maxConcurrent: Number(entry.maxConcurrent || 0),
+        maxCpu: Number(entry.maxCpu || 0),
+      }))
+    : [];
+  return {
+    requestedParallelism: Number(process?.requestedParallelism || 0),
+    requestedParallelismSource: process?.requestedParallelismSource || "",
+    observedConcurrencyMax: Number(observedConcurrency.max || 0),
+    ratioToRequestedMax: Number(observedConcurrency.ratioToRequestedMax || 0),
+    sampleCount: Number(process?.sampleCount || 0),
+    categories: process?.categories || {},
+    topCommands,
+  };
+}
+
+function formatDiagnosticsProcessValue(value) {
+  const number = Number(value || 0);
+  return number > 0 ? String(number) : "-";
+}
+
 function formatDiagnosticsSummaryRows(rows = []) {
   const widths = rows[0].map((_, columnIndex) => (
     Math.max(...rows.map((row) => String(row[columnIndex] ?? "").length))
@@ -801,11 +827,14 @@ export function formatDiagnosticsSummaryTable(summary = {}) {
     "scan",
     "upload",
     "total",
+    "jobs",
+    "active",
     "warn",
     "err",
   ]];
   for (const platform of summary.platforms || []) {
     const label = `${platform.runner || "unknown"}/${platform.arch || "unknown"}`;
+    const processSummary = compactProcessSummary(platform.process);
     rows.push([
       label,
       platform.gitHead ? platform.gitHead.slice(0, 12) : "-",
@@ -816,6 +845,8 @@ export function formatDiagnosticsSummaryTable(summary = {}) {
       formatDiagnosticsDurationMs(platform.artifactScanDurationMs),
       formatDiagnosticsDurationMs(platform.artifactUploadDurationMs),
       formatDiagnosticsDurationMs(platform.totalDurationMs),
+      formatDiagnosticsProcessValue(processSummary.requestedParallelism),
+      formatDiagnosticsProcessValue(processSummary.observedConcurrencyMax),
       platform.warningCount || 0,
       platform.errorCount || 0,
     ]);
@@ -857,12 +888,13 @@ export function summarizeDiagnosticsArtifacts(inputs = []) {
     totalWarningCount: platforms.reduce((sum, entry) => sum + entry.warningCount, 0),
     totalErrorCount: platforms.reduce((sum, entry) => sum + entry.errorCount, 0),
     slowestPlatforms: platforms
-      .map(({ runner, arch, gitHead, lifecycleTotalDurationMs, totalDurationMs }) => ({
+      .map(({ runner, arch, gitHead, lifecycleTotalDurationMs, totalDurationMs, process }) => ({
         runner,
         arch,
         gitHead,
         lifecycleTotalDurationMs,
         totalDurationMs,
+        process: compactProcessSummary(process),
       }))
       .sort((left, right) => right.totalDurationMs - left.totalDurationMs)
       .slice(0, 10),
