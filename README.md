@@ -55,11 +55,31 @@ npx buildchain version
 npx buildchain doctor --json
 ```
 
-The npm package exposes the `buildchain` command and importable toolkit APIs:
+The npm package is also the Buildchain toolkit. Use the command when a workflow
+or shell step needs an executable; use the ESM APIs directly from JavaScript
+build scripts. JavaScript callers should import the package instead of spawning
+the CLI or unpacking the standalone binary:
 
 ```js
-import { createBuildchainLogger } from "@kungfu-tech/buildchain/logging";
-import { verifyReleasePassport } from "@kungfu-tech/buildchain/release-passport";
+import {
+  createBuildchainLogger,
+  verifyBuildchainLogEvents,
+} from "@kungfu-tech/buildchain/logging";
+
+const logger = createBuildchainLogger({
+  path: ".buildchain/logs/native-build.jsonl",
+  source: "user",
+  component: "native-build",
+});
+
+await logger.span("native.compile", { phase: "build" }, async () => {
+  await compileNativeTargets();
+});
+
+const report = verifyBuildchainLogEvents({
+  path: logger.path,
+  requireEvents: ["native.compile.start", "native.compile.end"],
+});
 ```
 
 The package also ships `dist/site/` as the Buildchain-owned fact source for
@@ -130,7 +150,18 @@ should open a new major line.
 
 ## Toolkit Observability
 
-Buildchain includes a logging toolkit for release and build steps:
+Buildchain includes a logging toolkit for release and build steps. Inside
+JavaScript build code, prefer the package API:
+
+```js
+import { createBuildchainLogger } from "@kungfu-tech/buildchain/logging";
+
+const logger = createBuildchainLogger({ source: "user", component: "conan" });
+logger.mark("conan.profile.ready", { phase: "configure" });
+await logger.span("conan.install", { phase: "dependencies" }, runConanInstall);
+```
+
+In workflows or shell scripts, use the equivalent CLI:
 
 ```bash
 buildchain mark --event native.configure --phase configure --component cmake

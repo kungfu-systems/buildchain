@@ -29,7 +29,7 @@ For new repositories, prefer the CLI:
 ```sh
 npx @kungfu-tech/buildchain init --type package
 npx @kungfu-tech/buildchain validate --require-version-state
-npx @kungfu-tech/buildchain release --dry-run --target-ref alpha/v2/v2.0
+npx @kungfu-tech/buildchain release --dry-run --target-ref alpha/v2/v2.2
 ```
 
 See [`docs/cli.md`](docs/cli.md), [`docs/lifecycle-protocol.md`](docs/lifecycle-protocol.md),
