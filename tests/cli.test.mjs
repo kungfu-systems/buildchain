@@ -317,6 +317,69 @@ test("diagnostics SDK validates anchored package release contracts", () => {
     requireLifecycleStages: ["install", "build", "verify"],
   });
   assert.equal(relaxed.ok, true);
+
+  const gated = validateAnchoredPackageRelease({
+    cwd: path.join(root, "fixtures/libnode-shaped"),
+    requirePublishGateSourceLock: true,
+    publishSource: {
+      sourceRef: "publish-gate/release/v22/v22.22/22.22.3-kf.0",
+      sourceSha: "a".repeat(40),
+      sourceLocked: true,
+    },
+  });
+  assert.equal(gated.ok, true);
+  assert.equal(gated.summary.publishSource.channel, "release");
+  assert.equal(gated.checks.find((entry) => entry.id === "publish.source_locked").status, "pass");
+  assert.equal(gated.checks.find((entry) => entry.id === "publish.source_version").status, "pass");
+
+  const directBranch = validateAnchoredPackageRelease({
+    cwd: path.join(root, "fixtures/libnode-shaped"),
+    requirePublishGateSourceLock: true,
+    publishSource: {
+      sourceRef: "release/v22/v22.22",
+      sourceSha: "b".repeat(40),
+      sourceLocked: true,
+    },
+  });
+  assert.equal(directBranch.ok, false);
+  assert.equal(directBranch.checks.find((entry) => entry.id === "publish.source_ref").status, "fail");
+});
+
+test("CLI validates anchored publish source lock before package release", () => {
+  const cwd = path.join(root, "fixtures/libnode-shaped");
+  const report = JSON.parse(runBuildchain([
+    "publish-source",
+    "validate-anchored-release",
+    "--cwd",
+    cwd,
+    "--json",
+  ], {
+    env: {
+      BUILDCHAIN_PUBLISH_SOURCE_REF: "publish-gate/release/v22/v22.22/22.22.3-kf.0",
+      BUILDCHAIN_PUBLISH_SOURCE_SHA: "c".repeat(40),
+      BUILDCHAIN_PUBLISH_SOURCE_LOCKED: "true",
+    },
+  }));
+
+  assert.equal(report.ok, true);
+  assert.equal(report.summary.publishSource.consumerVersion, "22.22.3-kf.0");
+
+  const directBranch = runBuildchainFailure([
+    "publish-source",
+    "validate-anchored-release",
+    "--cwd",
+    cwd,
+    "--json",
+  ], {
+    env: {
+      BUILDCHAIN_PUBLISH_SOURCE_REF: "release/v22/v22.22",
+      BUILDCHAIN_PUBLISH_SOURCE_SHA: "d".repeat(40),
+      BUILDCHAIN_PUBLISH_SOURCE_LOCKED: "true",
+    },
+  });
+  assert.notEqual(directBranch.status, 0);
+  const failure = JSON.parse(directBranch.stdout);
+  assert.equal(failure.checks.find((entry) => entry.id === "publish.source_ref").status, "fail");
 });
 
 test("diagnostics SDK summarizes process samples against requested parallelism", () => {

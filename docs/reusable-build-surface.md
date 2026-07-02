@@ -257,6 +257,24 @@ If the branch tip no longer matches the manifest SHA, the publish job must fail
 closed. Moving a gate branch creates a new publish decision and should produce a
 new build run.
 
+Anchored/manual package release jobs should also validate that publication is
+entering through the same `publish-gate/{alpha,release,major}` source-lock
+contract before running `npm publish` or a package-set publish script:
+
+```yaml
+- name: Validate anchored release source lock
+  run: npx buildchain publish-source validate-anchored-release --json
+  env:
+    BUILDCHAIN_PUBLISH_SOURCE_REF: ${{ needs.build.outputs.publish-source-ref }}
+    BUILDCHAIN_PUBLISH_SOURCE_SHA: ${{ needs.build.outputs.publish-source-sha }}
+    BUILDCHAIN_PUBLISH_SOURCE_LOCKED: ${{ needs.build.outputs.publish-source-locked }}
+```
+
+This keeps the version bump commit, publish authorization, and auditable publish
+entrypoint on the Buildchain source-lock protocol. A publish job that still runs
+directly from `alpha/*` or `release/*` channel branches fails this check because
+those refs are channel state, not publish-gate decisions.
+
 ## Package-Set Publish Plan
 
 Projects that publish multiple packages should treat package publication as a

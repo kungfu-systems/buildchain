@@ -101,6 +101,52 @@ function check(ok, id, message, details = {}) {
   return { id, status: ok ? "pass" : "fail", message, details };
 }
 
+function normalizePublishSourceRef(value = "") {
+  return String(value || "")
+    .trim()
+    .replace(/^refs\/heads\//, "")
+    .replace(/^refs\/tags\//, "");
+}
+
+function parsePublishGateSourceRef(value = "") {
+  const sourceRef = normalizePublishSourceRef(value);
+  if (sourceRef === "publish-gate/major") {
+    return { sourceRef, channel: "major", line: "", consumerVersion: "" };
+  }
+  if (sourceRef === "publish-gate/anchor") {
+    return { sourceRef, channel: "anchor", line: "", consumerVersion: "" };
+  }
+  const match = sourceRef.match(/^publish-gate\/(alpha|release)\/(.+)\/([^/]+)$/);
+  if (!match) {
+    return { sourceRef, channel: "", line: "", consumerVersion: "" };
+  }
+  return {
+    sourceRef,
+    channel: match[1],
+    line: match[2],
+    consumerVersion: match[3],
+  };
+}
+
+function versionFileValue(file) {
+  if (file.type === "json" || file.type === "toml") {
+    return String(file.key || "")
+      .split(".")
+      .reduce((current, segment) => current?.[segment], file.content);
+  }
+  return file.source.match(file.pattern)?.groups?.version;
+}
+
+function defaultPublishSourceFromEnv(env = process.env) {
+  return {
+    sourceRef: env.BUILDCHAIN_PUBLISH_SOURCE_REF || "",
+    sourceSha: env.BUILDCHAIN_PUBLISH_SOURCE_SHA || "",
+    sourceLocked: env.BUILDCHAIN_PUBLISH_SOURCE_LOCKED || "",
+    channel: env.BUILDCHAIN_PUBLISH_SOURCE_CHANNEL || "",
+    consumerVersion: env.BUILDCHAIN_PUBLISH_SOURCE_CONSUMER_VERSION || "",
+  };
+}
+
 function lifecycleTimingFromEvents(events = []) {
   const stages = {};
   const spans = [];
@@ -252,9 +298,13 @@ export function validateAnchoredPackageRelease({
   requirePackageSetOrder = "platforms-first-main-last",
   requireTrustedPublishing = true,
   requireLifecycleStages = ["install", "build", "verify", "publish"],
+  requirePublishGateSourceLock = false,
+  publishSource = undefined,
+  env = process.env,
 } = {}) {
   const resolvedCwd = path.resolve(cwd);
   const checks = [];
+  let versionFiles = [];
   let loadedConfig;
   try {
     loadedConfig = loadBuildchainConfig(resolvedCwd);
@@ -283,9 +333,9 @@ export function validateAnchoredPackageRelease({
     { path: anchorManifest?.path || versionStrategy.manifest || "" },
   ));
   try {
-    const files = discoverConfiguredVersionStateFiles(resolvedCwd, loadedConfig);
-    checks.push(check(files.length > 0, "version.files", "configured version files are readable", {
-      files: files.map((file) => file.path),
+    versionFiles = discoverConfiguredVersionStateFiles(resolvedCwd, loadedConfig);
+    checks.push(check(versionFiles.length > 0, "version.files", "configured version files are readable", {
+      files: versionFiles.map((file) => file.path),
     }));
   } catch (error) {
     checks.push(check(false, "version.files", error.message));
@@ -320,6 +370,48 @@ export function validateAnchoredPackageRelease({
       `lifecycle stage is configured: ${stage}`,
     ));
   }
+  const source = publishSource || defaultPublishSourceFromEnv(env);
+  const parsedSource = parsePublishGateSourceRef(source.sourceRef);
+  if (requirePublishGateSourceLock) {
+    const normalizedLocked = String(source.sourceLocked || "").toLowerCase();
+    const lockEnabled = normalizedLocked === "true" || normalizedLocked === "1" || source.sourceLocked === true;
+    checks.push(check(
+      lockEnabled,
+      "publish.source_locked",
+      "publish source lock is required before package publication",
+      { sourceLocked: source.sourceLocked || "" },
+    ));
+    checks.push(check(
+      Boolean(parsedSource.channel) && parsedSource.channel !== "anchor",
+      "publish.source_ref",
+      "publish source ref uses publish-gate/{alpha,release,major}",
+      { sourceRef: parsedSource.sourceRef || source.sourceRef || "", channel: parsedSource.channel || "" },
+    ));
+    checks.push(check(
+      /^[0-9a-f]{40}$/i.test(String(source.sourceSha || "")),
+      "publish.source_sha",
+      "publish source SHA is a 40-character Git SHA",
+      { sourceSha: source.sourceSha || "" },
+    ));
+    const consumerVersion = parsedSource.consumerVersion || source.consumerVersion || "";
+    if (consumerVersion) {
+      const mismatches = versionFiles
+        .map((file) => ({ path: file.path, version: versionFileValue(file) || "" }))
+        .filter((file) => file.version !== consumerVersion);
+      checks.push(check(
+        mismatches.length === 0,
+        "publish.source_version",
+        `publish source consumer version matches configured version files: ${consumerVersion}`,
+        { consumerVersion, mismatches },
+      ));
+      checks.push(check(
+        !anchorManifest?.fields?.npmVersion || anchorManifest.fields.npmVersion === consumerVersion,
+        "publish.anchor_version",
+        `anchor manifest npmVersion matches publish source version: ${consumerVersion}`,
+        { consumerVersion, npmVersion: anchorManifest?.fields?.npmVersion || "" },
+      ));
+    }
+  }
   return {
     schemaVersion: 1,
     contract: "kungfu-buildchain-anchored-package-release-validation",
@@ -330,6 +422,14 @@ export function validateAnchoredPackageRelease({
       versionStrategy,
       anchorManifest: anchorManifest?.path || "",
       publish,
+      publishSource: {
+        sourceRef: parsedSource.sourceRef || source.sourceRef || "",
+        sourceSha: source.sourceSha || "",
+        sourceLocked: source.sourceLocked || "",
+        channel: parsedSource.channel || source.channel || "",
+        line: parsedSource.line || "",
+        consumerVersion: parsedSource.consumerVersion || source.consumerVersion || "",
+      },
       requiredLifecycleStages: requireLifecycleStages,
     },
   };

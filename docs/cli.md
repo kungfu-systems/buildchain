@@ -185,7 +185,23 @@ It validates `buildchain.toml`, package-manager detection, Git repository state,
 and the reusable workflow caller. For `version.strategy = "anchored"` with
 `version.next = "manual"`, it also embeds the anchored package release contract
 check: anchor manifest readability, configured version files, trusted
-publishing, package publish order, and required lifecycle stages. The JSON
+publishing, package publish order, and required lifecycle stages. Add
+`--require-publish-source-lock` inside a publish job when the doctor report
+should also fail unless the job is running from a resolved `publish-gate/*`
+source lock.
+
+Anchored/manual package publish jobs can run the narrower source-lock gate
+directly:
+
+```bash
+buildchain publish-source validate-anchored-release --json
+```
+
+The command requires `BUILDCHAIN_PUBLISH_SOURCE_REF`,
+`BUILDCHAIN_PUBLISH_SOURCE_SHA`, and `BUILDCHAIN_PUBLISH_SOURCE_LOCKED` from the
+reusable build workflow outputs. It fails closed for direct `alpha/*` or
+`release/*` channel-branch publication, and checks the publish-gate consumer
+version against configured version files and the anchor manifest. The JSON
 result is shaped for future `buildchain.libkungfu.dev` fact ingestion.
 
 `buildchain release`, `buildchain web-surface`, `buildchain publish-source`,

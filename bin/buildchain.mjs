@@ -67,7 +67,7 @@ function usage() {
                                              [--require-event <csv>] [--allow-errors] [--json]
   buildchain explain release --passport <file-or-url> [--for human|agent] [--json]
   buildchain inspect release --passport <file-or-url> [--json]
-  buildchain doctor [--cwd <dir>] [--json]
+  buildchain doctor [--cwd <dir>] [--require-publish-source-lock] [--json]
   buildchain log <info|warn|error> --event <name> [--phase <phase>]
                  [--component <name>] [--source <name>] [--attribute key=value]...
                  [--path <jsonl>] [--json]
@@ -83,7 +83,7 @@ function usage() {
   buildchain span --event <name> [--phase <phase>] [--component <name>]
                   [--path <jsonl>] -- <command> [args...]
   buildchain web-surface ...
-  buildchain publish-source <lock|manifest|verify-lock> ...
+  buildchain publish-source <lock|manifest|verify-lock|validate-anchored-release> ...
   buildchain build-contract ...
 
 Examples:
@@ -154,7 +154,7 @@ function checkStatus(ok, id, message, details = {}) {
   return { id, status: ok ? "pass" : "fail", message, details };
 }
 
-function runDoctor({ cwd = process.cwd() } = {}) {
+function runDoctor({ cwd = process.cwd(), requirePublishSourceLock = false } = {}) {
   const resolvedCwd = path.resolve(cwd);
   const checks = [];
   checks.push(checkStatus(fs.existsSync(resolvedCwd), "cwd.exists", "working directory exists", { cwd: resolvedCwd }));
@@ -184,7 +184,10 @@ function runDoctor({ cwd = process.cwd() } = {}) {
     path: ".github/workflows/build.yml",
   }));
   if (validation?.version?.strategy === "anchored" && validation.version.next === "manual") {
-    const anchored = validateAnchoredPackageRelease({ cwd: resolvedCwd });
+    const anchored = validateAnchoredPackageRelease({
+      cwd: resolvedCwd,
+      requirePublishGateSourceLock: requirePublishSourceLock,
+    });
     checks.push(checkStatus(
       anchored.ok,
       "anchored-package-release.valid",
@@ -399,7 +402,10 @@ async function main(argv = process.argv.slice(2)) {
   }
 
   if (command === "doctor") {
-    const result = runDoctor({ cwd: readFlag(args, "cwd", process.cwd()) });
+    const result = runDoctor({
+      cwd: readFlag(args, "cwd", process.cwd()),
+      requirePublishSourceLock: readBooleanFlag(args, "require-publish-source-lock"),
+    });
     if (readBooleanFlag(args, "json")) {
       printJson(result);
     } else {
@@ -756,6 +762,24 @@ async function main(argv = process.argv.slice(2)) {
     }
     if (mode === "verify-lock") {
       runScript("verify-publish-source-lock.mjs", publishArgs);
+      return;
+    }
+    if (mode === "validate-anchored-release") {
+      const report = validateAnchoredPackageRelease({
+        cwd: readFlag(publishArgs, "cwd", process.cwd()),
+        requirePublishGateSourceLock: true,
+      });
+      if (readBooleanFlag(publishArgs, "json")) {
+        printJson(report);
+      } else {
+        process.stdout.write(`anchored release source lock: ${report.ok ? "ok" : "failed"}\n`);
+        for (const entry of report.checks) {
+          process.stdout.write(`- ${entry.status}: ${entry.id}: ${entry.message}\n`);
+        }
+      }
+      if (!report.ok) {
+        process.exitCode = 1;
+      }
       return;
     }
     throw new Error(`unsupported publish-source command: ${mode}`);

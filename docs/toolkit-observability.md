@@ -209,6 +209,23 @@ if (!anchoredReport.ok) {
 }
 ```
 
+In an actual publish job, make that check source-lock aware:
+
+```js
+const publishReady = validateAnchoredPackageRelease({
+  cwd: process.cwd(),
+  requirePublishGateSourceLock: true,
+});
+```
+
+The source-lock inputs are read from `BUILDCHAIN_PUBLISH_SOURCE_REF`,
+`BUILDCHAIN_PUBLISH_SOURCE_SHA`, and `BUILDCHAIN_PUBLISH_SOURCE_LOCKED`, which
+the reusable build workflow emits after resolving `publish-source-ref`. That
+turns direct channel-branch publication from `alpha/*` or `release/*` into a
+hard failure, while `publish-gate/alpha/<line>/<version>` and
+`publish-gate/release/<line>/<version>` also validate the requested consumer
+version against configured version files and the anchor manifest.
+
 `buildchain lifecycle run` writes this small diagnostics artifact next to the
 platform manifest by default. The per-platform diagnostics upload includes the
 compact `diagnostics.json`, `diagnostics-manifest.json`, lifecycle
