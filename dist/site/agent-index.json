@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-site-agent-index",
+  "readOrder": [
+    "site-manifest.json",
+    "product-mechanism.json",
+    "release-model.json",
+    "cli-registry.json",
+    "workflow-registry.json",
+    "artifact-schemas.json"
+  ],
+  "instruction": "Use this bundle as the package-owned fact source for Buildchain pages. Do not infer current release mechanics from prose alone."
+}

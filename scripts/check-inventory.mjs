@@ -15,11 +15,18 @@ const requiredPaths = [
   ".github/pull_request_template.md",
   "bin/buildchain.mjs",
   "docs/MAP.md",
+  "docs/binary-distribution.md",
   "docs/cli.md",
+  "docs/install.md",
+  "docs/product-mechanism.md",
   "docs/release-passport.md",
+  "docs/site-bundle-contract.md",
+  "docs/toolkit-observability.md",
   "docs/versioning.md",
   "scripts/release-line-dry-run.mjs",
   "scripts/build-standalone-binary.mjs",
+  "scripts/create-release-bundle.mjs",
+  "scripts/generate-site-bundle.mjs",
   "scripts/npm-publish-dry-run.mjs",
   "scripts/npm-publish-transaction.mjs",
   "docs/migration-inventory.md",
@@ -72,6 +79,11 @@ if (rootPackage.publishConfig?.registry !== "https://registry.npmjs.org/") {
   throw new Error("root package publishConfig.registry must be npmjs");
 }
 for (const expectedFile of ["bin/", "scripts/*.mjs", "packages/core/", "docs/MAP.md", "docs/cli.md"]) {
+  if (!rootPackage.files?.includes(expectedFile)) {
+    throw new Error(`root package files must include ${expectedFile}`);
+  }
+}
+for (const expectedFile of ["dist/site/", "docs/install.md", "docs/binary-distribution.md", "docs/site-bundle-contract.md"]) {
   if (!rootPackage.files?.includes(expectedFile)) {
     throw new Error(`root package files must include ${expectedFile}`);
   }
@@ -206,6 +218,8 @@ for (const requiredSnippet of [
   "bin/buildchain.mjs log summary",
   "collect github-release",
   "verify release-passport",
+  "scripts/create-release-bundle.mjs",
+  "buildchain-release-bundle",
   "gh release upload",
 ]) {
   if (!binaryDistributionWorkflow.includes(requiredSnippet)) {
@@ -247,9 +261,24 @@ if (inventory.safety?.releasePassport?.binaryDistribution?.productionRunnerDefau
 if (inventory.safety?.releasePassport?.binaryDistribution?.selfHostedRole !== "compatibility-fixture") {
   throw new Error("self-hosted runners must remain release passport compatibility fixtures");
 }
-for (const artifact of ["buildchain.release.json", "artifact-evidence.json", "impact.json", "agent-index.json", "llms.txt"]) {
+for (const artifact of [
+  "buildchain.release.json",
+  "artifact-evidence.json",
+  "impact.json",
+  "agent-index.json",
+  "check-report.json",
+  "llms.txt",
+  "buildchain-release-bundle.json",
+  "buildchain-release-bundle.tar.gz",
+]) {
   if (!inventory.safety?.releasePassport?.protocolArtifacts?.includes(artifact)) {
     throw new Error(`release passport inventory missing protocol artifact ${artifact}`);
+  }
+}
+
+for (const siteFile of ["buildchain-site.json", "site-manifest.json", "cli-registry.json", "release-model.json"]) {
+  if (!fs.existsSync(path.join(root, "dist", "site", siteFile))) {
+    throw new Error(`site bundle missing ${siteFile}`);
   }
 }
 

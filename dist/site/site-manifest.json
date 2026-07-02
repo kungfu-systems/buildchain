@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-site-manifest",
+  "product": {
+    "name": "Buildchain",
+    "formalName": "Buildchain by Kungfu",
+    "category": "Buildchain Release Passport"
+  },
+  "package": {
+    "name": "@kungfu-tech/buildchain",
+    "version": "2.2.1-alpha.0"
+  },
+  "entrypoint": "buildchain-site.json",
+  "docs": [
+    {
+      "id": "install",
+      "title": "Install and verify Buildchain",
+      "path": "docs/install.md",
+      "plane": "use",
+      "exists": true
+    },
+    {
+      "id": "release-passport",
+      "title": "Release Passport protocol",
+      "path": "docs/release-passport.md",
+      "plane": "verify",
+      "exists": true
+    },
+    {
+      "id": "binary-distribution",
+      "title": "Binary distribution contract",
+      "path": "docs/binary-distribution.md",
+      "plane": "verify",
+      "exists": true
+    },
+    {
+      "id": "toolkit-observability",
+      "title": "Toolkit observability",
+      "path": "docs/toolkit-observability.md",
+      "plane": "use",
+      "exists": true
+    },
+    {
+      "id": "site-bundle-contract",
+      "title": "Site bundle contract",
+      "path": "docs/site-bundle-contract.md",
+      "plane": "use",
+      "exists": true
+    },
+    {
+      "id": "product-mechanism",
+      "title": "Product mechanism",
+      "path": "docs/product-mechanism.md",
+      "plane": "why",
+      "exists": true
+    },
+    {
+      "id": "cli",
+      "title": "CLI and npm package",
+      "path": "docs/cli.md",
+      "plane": "use",
+      "exists": true
+    },
+    {
+      "id": "lifecycle-protocol",
+      "title": "Lifecycle protocol",
+      "path": "docs/lifecycle-protocol.md",
+      "plane": "use",
+      "exists": true
+    },
+    {
+      "id": "reusable-build-surface",
+      "title": "Reusable build surface",
+      "path": "docs/reusable-build-surface.md",
+      "plane": "use",
+      "exists": true
+    },
+    {
+      "id": "publish-transaction",
+      "title": "Publish transaction",
+      "path": "docs/publish-transaction.md",
+      "plane": "verify",
+      "exists": true
+    },
+    {
+      "id": "release-governance",
+      "title": "Release governance",
+      "path": "docs/release-governance.md",
+      "plane": "why",
+      "exists": true
+    },
+    {
+      "id": "release-flow",
+      "title": "Release flow",
+      "path": "docs/release-flow.md",
+      "plane": "verify",
+      "exists": true
+    },
+    {
+      "id": "versioning",
+      "title": "Versioning",
+      "path": "docs/versioning.md",
+      "plane": "why",
+      "exists": true
+    },
+    {
+      "id": "web-surface-deployments",
+      "title": "Web surface deployments",
+      "path": "docs/web-surface-deployments.md",
+      "plane": "use",
+      "exists": true
+    }
+  ],
+  "facts": [
+    "cli-registry.json",
+    "workflow-registry.json",
+    "release-model.json",
+    "artifact-schemas.json",
+    "product-mechanism.json",
+    "release-provenance.json",
+    "agent-index.json"
+  ]
+}
