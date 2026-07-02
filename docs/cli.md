@@ -27,6 +27,14 @@ pnpm add -D @kungfu-tech/buildchain
 pnpm exec buildchain validate
 ```
 
+Consumers should pin the exact Buildchain version that was validated in their
+repository. When dogfooding a fresh Buildchain release immediately after it is
+published, pnpm may block the install through a minimum release-age policy. In
+that case, add a temporary package/version-specific `minimumReleaseAgeExclude`
+entry, such as `@kungfu-tech/buildchain@2.2.5`, and remove it once the package
+has aged past the normal policy window. Do not replace that with a broad
+registry or scope-wide exclude.
+
 Use the package API directly inside JavaScript build scripts:
 
 ```js

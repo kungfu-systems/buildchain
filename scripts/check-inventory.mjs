@@ -94,6 +94,8 @@ for (const expectedFile of ["dist/site/", "docs/install.md", "docs/binary-distri
 const cliSource = fs.readFileSync(path.join(root, "bin/buildchain.mjs"), "utf8");
 const coreIndexSource = fs.readFileSync(path.join(root, "packages/core/index.js"), "utf8");
 const versioningDoc = fs.readFileSync(path.join(root, "docs/versioning.md"), "utf8");
+const cliDoc = fs.readFileSync(path.join(root, "docs/cli.md"), "utf8");
+const installDoc = fs.readFileSync(path.join(root, "docs/install.md"), "utf8");
 if (!cliSource.startsWith("#!/usr/bin/env node")) {
   throw new Error("bin/buildchain.mjs must be executable with a node shebang");
 }
@@ -114,6 +116,17 @@ for (const requiredSnippet of [
 ]) {
   if (!versioningDoc.includes(requiredSnippet)) {
     throw new Error(`versioning doc missing required snippet: ${requiredSnippet}`);
+  }
+}
+for (const [docName, docSource] of Object.entries({ "docs/cli.md": cliDoc, "docs/install.md": installDoc })) {
+  for (const requiredSnippet of [
+    "minimumReleaseAgeExclude",
+    "@kungfu-tech/buildchain@2.2.5",
+    "package/version-specific",
+  ]) {
+    if (!docSource.includes(requiredSnippet)) {
+      throw new Error(`${docName} missing fresh Buildchain package pin guidance: ${requiredSnippet}`);
+    }
   }
 }
 const releaseLineDryRunScript = fs.readFileSync(path.join(root, "scripts/release-line-dry-run.mjs"), "utf8");
