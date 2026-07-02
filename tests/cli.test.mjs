@@ -145,6 +145,72 @@ test("CLI logging writes redacted JSONL events and summaries", () => {
   assert.equal(summary.components.fixture.count, 1);
 });
 
+test("CLI verifies observability logs fail closed", () => {
+  const cwd = tempDir("logging-verify");
+  const logPath = path.join(cwd, ".buildchain", "logs", "events.jsonl");
+  runBuildchain([
+    "mark",
+    "--event",
+    "binary.matrix.start",
+    "--phase",
+    "setup",
+    "--component",
+    "workflow",
+    "--source",
+    "buildchain",
+    "--path",
+    logPath,
+  ], { cwd });
+  runBuildchain([
+    "mark",
+    "--event",
+    "binary.matrix.complete",
+    "--phase",
+    "evidence",
+    "--component",
+    "standalone-binary",
+    "--source",
+    "buildchain",
+    "--path",
+    logPath,
+  ], { cwd });
+
+  const report = JSON.parse(runBuildchain([
+    "verify",
+    "observability-log",
+    logPath,
+    "--min-events",
+    "2",
+    "--require-phase",
+    "setup,evidence",
+    "--require-component",
+    "workflow",
+    "--require-component",
+    "standalone-binary",
+    "--require-event",
+    "binary.matrix.start",
+    "--json",
+  ], { cwd }));
+  assert.equal(report.ok, true);
+  assert.equal(report.summary.eventCount, 2);
+
+  const failure = runBuildchainFailure([
+    "verify",
+    "observability-log",
+    logPath,
+    "--min-events",
+    "3",
+    "--require-phase",
+    "archive",
+    "--json",
+  ], { cwd });
+  assert.equal(failure.status, 1);
+  const failedReport = JSON.parse(failure.stdout);
+  assert.equal(failedReport.ok, false);
+  assert.ok(failedReport.issues.some((entry) => entry.code === "log.events.too_few"));
+  assert.ok(failedReport.issues.some((entry) => entry.code === "log.phase.missing"));
+});
+
 test("CLI span wraps commands and preserves failure exit codes", () => {
   const cwd = tempDir("span");
   const logPath = path.join(cwd, "events.jsonl");

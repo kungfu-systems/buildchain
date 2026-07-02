@@ -77,12 +77,16 @@ for (const expectedFile of ["bin/", "scripts/*.mjs", "packages/core/", "docs/MAP
   }
 }
 const cliSource = fs.readFileSync(path.join(root, "bin/buildchain.mjs"), "utf8");
+const coreIndexSource = fs.readFileSync(path.join(root, "packages/core/index.js"), "utf8");
 const versioningDoc = fs.readFileSync(path.join(root, "docs/versioning.md"), "utf8");
 if (!cliSource.startsWith("#!/usr/bin/env node")) {
   throw new Error("bin/buildchain.mjs must be executable with a node shebang");
 }
 if (commonJsSourcePattern.test(cliSource)) {
   throw new Error("bin/buildchain.mjs must use ESM syntax");
+}
+if (!coreIndexSource.includes("verifyBuildchainLogEvents")) {
+  throw new Error("packages/core/index.js must export verifyBuildchainLogEvents");
 }
 for (const requiredSnippet of [
   "Release passport and binary distribution are a minor surface.",
@@ -198,6 +202,7 @@ for (const requiredSnippet of [
   "buildchain-log-summary",
   "bin/buildchain.mjs mark",
   "bin/buildchain.mjs span",
+  "verify observability-log",
   "bin/buildchain.mjs log summary",
   "collect github-release",
   "verify release-passport",

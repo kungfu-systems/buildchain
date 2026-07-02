@@ -50,6 +50,7 @@ export {
   readBuildchainLogEvents,
   redactBuildchainLogAttributes,
   summarizeBuildchainLogEvents,
+  verifyBuildchainLogEvents,
 } from "./logging.js";
 
 export {

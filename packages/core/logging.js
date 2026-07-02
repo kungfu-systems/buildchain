@@ -111,6 +111,90 @@ export function summarizeBuildchainLogEvents(input = {}) {
   };
 }
 
+function listOption(value) {
+  if (Array.isArray(value)) {
+    return value.flatMap((entry) => listOption(entry));
+  }
+  if (typeof value !== "string") {
+    return [];
+  }
+  return value.split(",").map((entry) => entry.trim()).filter(Boolean);
+}
+
+function issue(level, code, message) {
+  return { level, code, message };
+}
+
+export function verifyBuildchainLogEvents({
+  path: filePath = "",
+  events: inputEvents = undefined,
+  minEvents = 1,
+  allowErrors = false,
+  requirePhases = [],
+  requireComponents = [],
+  requireEvents = [],
+} = {}) {
+  const issues = [];
+  let events = [];
+  try {
+    events = Array.isArray(inputEvents) ? inputEvents : readBuildchainLogEvents(filePath);
+  } catch (error) {
+    issues.push(issue("error", "log.read.failed", error.message));
+  }
+  if (!events.length) {
+    issues.push(issue("error", "log.events.empty", `no Buildchain log events found at ${filePath || "<memory>"}`));
+  }
+  for (const [index, event] of events.entries()) {
+    if (event?.contract !== BUILDCHAIN_LOG_EVENT_CONTRACT) {
+      issues.push(issue("error", "log.contract.invalid", `event ${index} has invalid contract`));
+    }
+    for (const key of ["timestamp", "level", "source", "component", "event"]) {
+      if (!event?.[key]) {
+        issues.push(issue("error", "log.field.missing", `event ${index} is missing ${key}`));
+      }
+    }
+  }
+  const summary = summarizeBuildchainLogEvents(events);
+  const requiredEventCount = Number(minEvents || 0);
+  if (summary.eventCount < requiredEventCount) {
+    issues.push(issue("error", "log.events.too_few", `expected at least ${requiredEventCount} events, found ${summary.eventCount}`));
+  }
+  if (!allowErrors && summary.errorCount > 0) {
+    issues.push(issue("error", "log.errors.present", `expected no error events, found ${summary.errorCount}`));
+  }
+  for (const phase of listOption(requirePhases)) {
+    if (!summary.phases[phase]) {
+      issues.push(issue("error", "log.phase.missing", `required phase missing: ${phase}`));
+    }
+  }
+  for (const component of listOption(requireComponents)) {
+    if (!summary.components[component]) {
+      issues.push(issue("error", "log.component.missing", `required component missing: ${component}`));
+    }
+  }
+  const eventNames = new Set(events.map((event) => event.event).filter(Boolean));
+  for (const eventName of listOption(requireEvents)) {
+    if (!eventNames.has(eventName)) {
+      issues.push(issue("error", "log.event.missing", `required event missing: ${eventName}`));
+    }
+  }
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-log-verification",
+    ok: !issues.some((entry) => entry.level === "error"),
+    path: filePath,
+    summary,
+    requirements: {
+      minEvents: requiredEventCount,
+      allowErrors,
+      phases: listOption(requirePhases),
+      components: listOption(requireComponents),
+      events: listOption(requireEvents),
+    },
+    issues,
+  };
+}
+
 export function createBuildchainLogger(options = {}) {
   const cwd = path.resolve(options.cwd || process.cwd());
   const runningInActions = process.env.GITHUB_ACTIONS === "true";

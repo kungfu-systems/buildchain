@@ -13,6 +13,7 @@ import {
   createBuildchainLogger,
   defaultBuildchainLogPath,
   summarizeBuildchainLogEvents,
+  verifyBuildchainLogEvents,
 } from "../packages/core/logging.js";
 import {
   explainReleaseLineDryRun,
@@ -52,6 +53,10 @@ function usage() {
                                     [--assets-dir <dir>] [--assets-json <json-or-path>]
                                     [--release-json <json-or-path>] [--output-dir <dir>] [--json]
   buildchain verify release-passport <file-or-url> [--json]
+  buildchain verify observability-log <jsonl> [--min-events <n>]
+                                             [--require-phase <csv>]
+                                             [--require-component <csv>]
+                                             [--require-event <csv>] [--allow-errors] [--json]
   buildchain explain release --passport <file-or-url> [--for human|agent] [--json]
   buildchain inspect release --passport <file-or-url> [--json]
   buildchain doctor [--cwd <dir>] [--json]
@@ -76,6 +81,7 @@ Examples:
   buildchain span --event native.build -- cmake --build build
   buildchain collect github-release --tag v2.2.0 --assets-dir dist --output-dir .buildchain/release-passport
   buildchain verify release-passport .buildchain/release-passport/buildchain.release.json
+  buildchain verify observability-log .buildchain/logs/events.jsonl --min-events 4 --require-phase build
 `;
 }
 
@@ -455,6 +461,30 @@ async function main(argv = process.argv.slice(2)) {
 
   if (command === "verify") {
     const [subcommand = "", location = "", ...verifyArgs] = args;
+    if (subcommand === "observability-log") {
+      if (!location) {
+        throw new Error("usage: buildchain verify observability-log <jsonl>");
+      }
+      const report = verifyBuildchainLogEvents({
+        path: location,
+        minEvents: Number(readFlag(verifyArgs, "min-events", "1")),
+        allowErrors: readBooleanFlag(verifyArgs, "allow-errors"),
+        requirePhases: readRepeatedFlag(verifyArgs, "require-phase"),
+        requireComponents: readRepeatedFlag(verifyArgs, "require-component"),
+        requireEvents: readRepeatedFlag(verifyArgs, "require-event"),
+      });
+      if (readBooleanFlag(verifyArgs, "json")) {
+        printJson(report);
+      } else {
+        process.stdout.write(`observability log: ${report.ok ? "ok" : "failed"}\n`);
+        process.stdout.write(`events: ${report.summary.eventCount}\n`);
+        for (const entry of report.issues) {
+          process.stdout.write(`- ${entry.level}: ${entry.code}: ${entry.message}\n`);
+        }
+      }
+      process.exitCode = report.ok ? 0 : 1;
+      return;
+    }
     if (subcommand !== "release-passport" || !location) {
       throw new Error("usage: buildchain verify release-passport <file-or-url>");
     }

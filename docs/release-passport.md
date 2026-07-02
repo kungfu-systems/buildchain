@@ -92,6 +92,8 @@ source of truth remains the Node/ESM CLI and core library.
 The standalone binary builder imports `@kungfu-tech/buildchain/logging` directly
 and records setup, SEA blob generation, injection, signing, archiving, manifest,
 and evidence phases. The GitHub workflow wraps the same build and passport
-steps with `buildchain mark`, `buildchain span`, and `buildchain log summary`.
-Those logs are release assets and are covered by the release passport digest
-checks.
+steps with `buildchain mark`, `buildchain span`,
+`buildchain verify observability-log`, and `buildchain log summary`. Logging is
+a hard release gate: missing events, error events, or missing required phases
+fail the job before assets are uploaded. The verified logs are release assets
+and are covered by the release passport digest checks.

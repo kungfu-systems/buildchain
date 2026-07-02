@@ -85,6 +85,7 @@ jobs:
         shell: bash
         run: |
           node bin/buildchain.mjs mark --event binary.matrix.complete --phase evidence --component workflow --source buildchain --attribute platform=${{ matrix.platform }}
+          node bin/buildchain.mjs verify observability-log "${BUILDCHAIN_LOG_PATH}" --min-events 8 --require-phase setup --require-phase binary --require-phase prepare --require-phase package --require-phase archive --require-phase evidence --require-component workflow --require-component standalone-binary --require-event binary.matrix.start --require-event binary.matrix.complete --require-event standalone.build.complete
           node bin/buildchain.mjs log summary --path "${BUILDCHAIN_LOG_PATH}" --json > "dist/binary/buildchain-log-summary-${BUILDCHAIN_PLATFORM}.json"
           node -e "import fs from 'node:fs'; fs.copyFileSync(process.env.BUILDCHAIN_LOG_PATH, 'dist/binary/buildchain-log-events-' + process.env.BUILDCHAIN_PLATFORM + '.jsonl');"
 
@@ -169,6 +170,7 @@ jobs:
       - name: Summarize passport observability
         run: |
           node bin/buildchain.mjs mark --event release-passport.complete --phase evidence --component workflow --source buildchain
+          node bin/buildchain.mjs verify observability-log "${BUILDCHAIN_LOG_PATH}" --min-events 7 --require-phase passport --require-phase evidence --require-component workflow --require-event release-passport.checksums.start --require-event release-passport.checksums.end --require-event release-passport.collect.start --require-event release-passport.collect.end --require-event release-passport.verify.start --require-event release-passport.verify.end --require-event release-passport.complete
           node bin/buildchain.mjs log summary --path "${BUILDCHAIN_LOG_PATH}" --json > .buildchain/release-passport/buildchain-log-summary-passport.json
           cp "${BUILDCHAIN_LOG_PATH}" .buildchain/release-passport/buildchain-log-events-passport.jsonl
 
