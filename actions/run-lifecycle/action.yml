@@ -43,6 +43,10 @@ inputs:
     description: "Compact artifact summary output path"
     required: false
     default: ".buildchain/artifacts/summary.json"
+  diagnostics-path:
+    description: "Compact diagnostics artifact output path"
+    required: false
+    default: ""
   expected-artifacts-json:
     description: "JSON expectation contract for final artifact files"
     required: false
@@ -67,6 +71,10 @@ inputs:
     description: "Optional expected build parallelism recorded in process diagnostics"
     required: false
     default: "0"
+  process-summary-required:
+    description: "Fail when process-summary-path is configured but missing"
+    required: false
+    default: "true"
 outputs:
   manifest-path:
     description: "Path to the generated artifact manifest"

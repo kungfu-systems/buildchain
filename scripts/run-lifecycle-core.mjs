@@ -25,8 +25,16 @@ import {
   validateExpectedArtifacts,
 } from "./build-contract-core.mjs";
 
-const runtimeRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const buildchainCliPath = path.join(runtimeRoot, "bin", "buildchain.mjs");
+const moduleDir = path.dirname(fileURLToPath(import.meta.url));
+const buildchainCliCandidates = [
+  path.resolve(moduleDir, "..", "bin", "buildchain.mjs"),
+  path.resolve(moduleDir, "..", "..", "..", "bin", "buildchain.mjs"),
+  path.resolve(process.cwd(), ".buildchain", "runtime", "bin", "buildchain.mjs"),
+];
+
+function resolveBuildchainCliPath() {
+  return buildchainCliCandidates.find((candidate) => fs.existsSync(candidate)) || buildchainCliCandidates[0];
+}
 
 function sha256File(filePath) {
   const hash = crypto.createHash("sha256");
@@ -142,7 +150,7 @@ function executeSampledShellCommand({
   fs.mkdirSync(path.dirname(processSummaryPath), { recursive: true });
   fs.mkdirSync(path.dirname(processSamplesPath), { recursive: true });
   const args = [
-    buildchainCliPath,
+    resolveBuildchainCliPath(),
     "sample",
     "process-tree",
     "--label",
@@ -276,6 +284,7 @@ export function runLifecycle({
   sampleProcessTree = false,
   processSampleIntervalMs = 15000,
   requestedParallelism = 0,
+  processSummaryRequired = true,
 } = {}) {
   const resolvedCwd = path.resolve(cwd);
   const resolvedWorkspace = path.resolve(workspace);
@@ -454,7 +463,13 @@ export function runLifecycle({
     throw new Error(`required lifecycle stage did not run: ${stageName || "command"}`);
   }
 
-  const processSummaryArtifact = readProcessSummaryArtifact(resolvedProcessSummaryPath);
+  const shouldReadProcessSummary = Boolean(
+    resolvedProcessSummaryPath
+      && (fs.existsSync(resolvedProcessSummaryPath) || processSummaryRequired),
+  );
+  const processSummaryArtifact = shouldReadProcessSummary
+    ? readProcessSummaryArtifact(resolvedProcessSummaryPath)
+    : undefined;
   fs.mkdirSync(path.dirname(resolvedManifestPath), { recursive: true });
   const scanStartedAt = Date.now();
   const files = collectArtifactFiles(resolvedWorkspace, artifactPaths);

@@ -444,6 +444,7 @@ jobs:
           sample-process-tree: ${{ inputs.sample-process-tree }}
           process-sample-interval-ms: ${{ inputs.process-sample-interval-ms }}
           requested-parallelism: ${{ inputs.requested-parallelism }}
+          process-summary-required: ${{ inputs.require-build }}
 
       - name: Run verify lifecycle
         id: verify-lifecycle
@@ -464,6 +465,7 @@ jobs:
           summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
           expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
           process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
+          process-summary-required: ${{ inputs.process-summary-path != '' || inputs.require-build }}
 
       - name: Upload deterministic artifact
         uses: actions/upload-artifact@v7.0.1
@@ -591,6 +593,7 @@ jobs:
           sample-process-tree: ${{ inputs.sample-process-tree }}
           process-sample-interval-ms: ${{ inputs.process-sample-interval-ms }}
           requested-parallelism: ${{ inputs.requested-parallelism }}
+          process-summary-required: ${{ inputs.require-build }}
 
       - name: Run verify lifecycle
         id: verify-lifecycle
@@ -611,6 +614,7 @@ jobs:
           summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
           expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
           process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
+          process-summary-required: ${{ inputs.process-summary-path != '' || inputs.require-build }}
 
       - name: Upload deterministic artifact
         uses: actions/upload-artifact@v7.0.1

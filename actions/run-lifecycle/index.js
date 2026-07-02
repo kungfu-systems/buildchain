@@ -27,6 +27,7 @@ function setFailed(message) {
 async function main() {
   const manifestPath = getInput("manifest-path") || ".buildchain/artifacts/manifest.json";
   const summaryPath = getInput("summary-path") || ".buildchain/artifacts/summary.json";
+  const diagnosticsPath = getInput("diagnostics-path") || "";
   const manifest = runLifecycle({
     cwd: getInput("cwd") || ".",
     stageName: getInput("stage") || "build",
@@ -34,6 +35,7 @@ async function main() {
     required: getInput("required") === "true",
     manifestPath,
     summaryPath,
+    diagnosticsPath,
     artifactName: getInput("artifact-name") || "buildchain-artifact",
     platformId: getInput("platform-id") || process.env.RUNNER_OS || process.platform,
     platformName: getInput("platform-name") || getInput("platform-id") || process.env.RUNNER_OS || process.platform,
@@ -47,6 +49,7 @@ async function main() {
     sampleProcessTree: getInput("sample-process-tree") === "true",
     processSampleIntervalMs: Number(getInput("process-sample-interval-ms") || 15000),
     requestedParallelism: Number(getInput("requested-parallelism") || 0),
+    processSummaryRequired: getInput("process-summary-required") !== "false",
     workspace: process.cwd(),
   });
   setOutput("manifest-path", manifestPath);

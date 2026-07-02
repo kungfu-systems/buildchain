@@ -305,6 +305,9 @@ The path is relative to the checked-out workspace and is read again during the
 final verify lifecycle. Custom workflows can still write their own sampler
 summary and pass `process-summary-path`; Buildchain reads the file after the
 lifecycle command finishes, so it may be produced during the same invocation.
+When the build stage is optional, the reusable workflow treats the default
+sampler path as optional during verify; an explicitly supplied
+`process-summary-path` remains required.
 
 For custom workflows, use the action directly:
 

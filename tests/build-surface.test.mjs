@@ -73,6 +73,7 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /sample-process-tree:/);
   assert.match(workflow, /process-sample-interval-ms:/);
   assert.match(workflow, /requested-parallelism:/);
+  assert.match(workflow, /process-summary-required:/);
   assert.match(workflow, /manifest\.json/);
   assert.match(workflow, /summary\.json/);
   assert.match(workflow, /diagnostics\.json/);
@@ -91,6 +92,14 @@ test("reusable build workflow exposes the required surface contract", () => {
   );
   assert.equal(
     (workflow.match(/sample-process-tree: \$\{\{ inputs\.sample-process-tree \}\}/g) || []).length,
+    2,
+  );
+  assert.equal(
+    (workflow.match(/process-summary-required: \$\{\{ inputs\.require-build \}\}/g) || []).length,
+    2,
+  );
+  assert.equal(
+    (workflow.match(/process-summary-required: \$\{\{ inputs\.process-summary-path != '' \|\| inputs\.require-build \}\}/g) || []).length,
     2,
   );
   assert.match(workflow, /publish-allowed:/);
@@ -852,6 +861,40 @@ test("runLifecycle samples a configured lifecycle stage", () => {
   }
 });
 
+test("runLifecycle can treat a missing process summary as optional", () => {
+  const workspace = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-optional-process-summary-"),
+  );
+  const fixtureSource = path.join(root, "fixtures/libnode-shaped");
+  const fixture = path.join(workspace, "fixtures/libnode-shaped");
+  fs.cpSync(fixtureSource, fixture, { recursive: true });
+
+  try {
+    runLifecycle({
+      cwd: fixture,
+      command: 'node -e "console.log(\'optional process summary smoke\')"',
+      required: true,
+      workspace,
+      artifactPaths: ["fixtures/libnode-shaped/dist"],
+      manifestPath: ".buildchain/artifacts/linux-x64/manifest-optional-process.json",
+      diagnosticsPath: ".buildchain/artifacts/linux-x64/diagnostics-optional-process.json",
+      processSummaryPath: ".buildchain/diagnostics/missing-process-summary.json",
+      processSummaryRequired: false,
+    });
+    const diagnostics = JSON.parse(
+      fs.readFileSync(
+        path.join(workspace, ".buildchain/artifacts/linux-x64/diagnostics-optional-process.json"),
+        "utf8",
+      ),
+    );
+    assert.equal(diagnostics.process.sampleCount, 0);
+    assert.equal(diagnostics.links.processSummary, ".buildchain/diagnostics/missing-process-summary.json");
+    assert.equal(diagnostics.links.diagnosticsProcessSummary, undefined);
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
 test("aggregate build summary reads uploaded platform manifests", () => {
   const workspace = fs.mkdtempSync(
     path.join(os.tmpdir(), "buildchain-summary-"),
@@ -1102,6 +1145,72 @@ test("run-lifecycle action accepts hyphenated GitHub Action inputs", () => {
       manifest.files.map((file) => file.path),
       ["fixture/dist/install.txt", "fixture/dist/libnode-shaped.txt"],
     );
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("run-lifecycle action samples a configured lifecycle stage from the bundled dist", () => {
+  const workspace = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-action-sampled-"),
+  );
+  const fixtureSource = path.join(root, "fixtures/libnode-shaped");
+  const fixture = path.join(workspace, "fixture");
+  fs.cpSync(fixtureSource, fixture, { recursive: true });
+
+  try {
+    runLifecycle({
+      cwd: fixture,
+      stageName: "install",
+      required: true,
+      workspace,
+    });
+    const outputPath = path.join(workspace, "github-output-sampled.txt");
+    const result = spawnSync(
+      process.execPath,
+      [path.join(root, "actions/run-lifecycle/dist/index.js")],
+      {
+        cwd: workspace,
+        env: {
+          ...process.env,
+          GITHUB_OUTPUT: outputPath,
+          INPUT_CWD: fixture,
+          INPUT_STAGE: "build",
+          INPUT_REQUIRED: "true",
+          "INPUT_ARTIFACT-NAME": "libnode-shaped-linux-x64-sampled-action",
+          "INPUT_PLATFORM-ID": "linux-x64",
+          "INPUT_PLATFORM-NAME": "Linux x64",
+          "INPUT_ARTIFACT-PATHS": "fixture/dist",
+          "INPUT_MANIFEST-PATH":
+            ".buildchain/artifacts/linux-x64/manifest-sampled-action.json",
+          "INPUT_DIAGNOSTICS-PATH":
+            ".buildchain/artifacts/linux-x64/diagnostics-sampled-action.json",
+          "INPUT_PROCESS-SUMMARY-PATH": ".buildchain/diagnostics/action-process-summary.json",
+          "INPUT_PROCESS-SAMPLES-PATH": ".buildchain/diagnostics/action-process-samples.jsonl",
+          "INPUT_SAMPLE-PROCESS-TREE": "true",
+          "INPUT_PROCESS-SAMPLE-INTERVAL-MS": "1000",
+          "INPUT_REQUESTED-PARALLELISM": "6",
+        },
+        encoding: "utf8",
+      },
+    );
+    assert.equal(result.status, 0, result.stderr || result.stdout);
+    const processSummary = JSON.parse(
+      fs.readFileSync(
+        path.join(workspace, ".buildchain/diagnostics/action-process-summary.json"),
+        "utf8",
+      ),
+    );
+    const diagnostics = JSON.parse(
+      fs.readFileSync(
+        path.join(workspace, ".buildchain/artifacts/linux-x64/diagnostics-sampled-action.json"),
+        "utf8",
+      ),
+    );
+    assert.equal(processSummary.contract, "kungfu-buildchain-process-sample-report");
+    assert.equal(processSummary.summary.requestedParallelism, 6);
+    assert.equal(diagnostics.process.requestedParallelism, 6);
+    assert.ok(fs.existsSync(path.join(workspace, ".buildchain/diagnostics/action-process-samples.jsonl")));
   } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
   }

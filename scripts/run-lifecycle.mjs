@@ -44,6 +44,7 @@ export function runLifecycleCli() {
     sampleProcessTree: readBooleanArg("sample-process-tree", process.env.BUILDCHAIN_SAMPLE_PROCESS_TREE || "false"),
     processSampleIntervalMs: readNumberArg("process-sample-interval-ms", process.env.BUILDCHAIN_PROCESS_SAMPLE_INTERVAL_MS || 15000),
     requestedParallelism: readNumberArg("requested-parallelism", process.env.BUILDCHAIN_REQUESTED_PARALLELISM || 0),
+    processSummaryRequired: readBooleanArg("process-summary-required", process.env.BUILDCHAIN_PROCESS_SUMMARY_REQUIRED || "true"),
     workspace: process.cwd(),
   });
 }

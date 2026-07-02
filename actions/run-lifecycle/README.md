@@ -55,3 +55,5 @@ with:
 Custom wrappers can still pass an existing sampler report or summary with
 `process-summary-path`; the action reads it after the lifecycle command
 finishes, so commands may generate the file during the same invocation.
+Set `process-summary-required: "false"` when the summary is an optional sidecar,
+for example when a reusable workflow may skip an optional build stage.
