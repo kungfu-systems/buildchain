@@ -178,6 +178,10 @@ governance semantics:
 - release promotion must have an exact alpha tag for the same patch line, and
   the release source tree must match that alpha tag tree, so release does not
   introduce new code after alpha;
+- anchored/manual release promotion may differ from that alpha tree only in
+  declared `version.files` and the configured anchor manifest, and only when the
+  checked-out release material has passed `lifecycle.verify` or the explicit
+  `verification-command`;
 - generated release and next-alpha version-state trees can be verified locally
   with either the `verification-command` input or `buildchain.toml`
   `lifecycle.verify` before any tags or channel refs move.
