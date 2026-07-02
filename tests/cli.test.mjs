@@ -464,6 +464,45 @@ test("diagnostics process sampler annotates samples with build concurrency conte
   assert.equal(Number.isFinite(samples[0].elapsedMs), true);
 });
 
+test("CLI samples a long-running process tree and preserves concurrency context", () => {
+  const cwd = tempDir("process-sample-cli");
+  const samplesPath = path.join(cwd, ".buildchain", "diagnostics", "samples.jsonl");
+  const summaryPath = path.join(cwd, ".buildchain", "diagnostics", "summary.json");
+  const output = JSON.parse(runBuildchain([
+    "sample",
+    "process-tree",
+    "--interval-ms",
+    "60000",
+    "--label",
+    "native-build",
+    "--output",
+    samplesPath,
+    "--summary-output",
+    summaryPath,
+    "--json",
+    "--",
+    process.execPath,
+    "-e",
+    "setTimeout(() => process.exit(0), 30)",
+    "--",
+    "-j3",
+  ], { cwd }));
+
+  assert.equal(output.contract, "kungfu-buildchain-process-sample-report");
+  assert.equal(output.label, "native-build");
+  assert.equal(output.command, path.basename(process.execPath));
+  assert.equal(output.exit.status, 0);
+  assert.equal(output.summary.contract, "kungfu-buildchain-process-sample-summary");
+  assert.equal(output.summary.requestedParallelism, 3);
+  assert.equal(output.summary.requestedParallelismSource, "command");
+  assert.equal(output.summary.sampleCount >= 1, true);
+  assert.ok(fs.existsSync(samplesPath));
+  assert.deepEqual(JSON.parse(fs.readFileSync(summaryPath, "utf8")), output);
+  const samples = fs.readFileSync(samplesPath, "utf8").trim().split(/\r?\n/).map((line) => JSON.parse(line));
+  assert.equal(samples.length, output.summary.sampleCount);
+  assert.equal(samples[0].label, "native-build");
+});
+
 test("CLI verifies observability logs fail closed", () => {
   const cwd = tempDir("logging-verify");
   const logPath = path.join(cwd, ".buildchain", "logs", "events.jsonl");

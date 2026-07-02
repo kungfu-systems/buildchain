@@ -93,6 +93,7 @@ buildchain log warn --event cache.miss --component conan --attribute token=hidde
 buildchain log summary --json
 buildchain verify observability-log .buildchain/logs/events.jsonl --min-events 4 --require-phase build
 buildchain diagnostics summary .buildchain/artifacts/*/diagnostics.json --json
+buildchain sample process-tree --label native-build --interval-ms 15000 -- make -j20
 ```
 
 During `buildchain lifecycle run`, child processes receive
@@ -136,6 +137,25 @@ without downloading large platform binaries.
 Without `--json`, the command prints a compact lifecycle timing table with
 install/build/verify/publish, artifact scan/upload, total, warning, and error
 columns for each platform.
+
+`buildchain sample process-tree` wraps a long-running command and periodically
+writes process-tree snapshots:
+
+```bash
+buildchain sample process-tree \
+  --label native-build \
+  --interval-ms 15000 \
+  --output .buildchain/diagnostics/process-samples.jsonl \
+  --summary-output .buildchain/diagnostics/process-summary.json \
+  -- \
+  make -j20
+```
+
+The command returns the wrapped command's exit status. The JSONL file contains
+small timestamped samples; the summary JSON records requested parallelism,
+observed concurrency, sampled CPU, command categories, and top command
+basenames. Use it when a native build requests high parallelism but appears to
+spend long stretches in low-concurrency compile, archive, link, or cache steps.
 
 `buildchain doctor` checks repository readiness before remote side effects:
 

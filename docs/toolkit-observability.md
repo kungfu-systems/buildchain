@@ -212,6 +212,26 @@ buildchain diagnostics summary \
 Omit `--json` when the workflow log should show a compact platform table with
 lifecycle stages, artifact scan/upload time, total time, warnings, and errors.
 
+For long native build commands, the CLI can also sample the child process tree
+while preserving the wrapped command's exit code:
+
+```bash
+buildchain sample process-tree \
+  --label native-build \
+  --interval-ms 15000 \
+  --output .buildchain/diagnostics/process-samples.jsonl \
+  --summary-output .buildchain/diagnostics/process-summary.json \
+  -- \
+  make -j20
+```
+
+The JSONL sample file stores timestamped process-tree snapshots with command
+basenames, CPU percentages, elapsed time, and requested parallelism context. The
+summary file records observed concurrency, total sampled CPU, command
+categories, and top command basenames. This is intended for diagnosing
+low-utilization tails such as archive/link phases without logging full command
+lines or environment dumps.
+
 The lifecycle observability summary is stage-wide, not just final-step timing:
 when install and build write to the same Buildchain log, the final platform
 manifest can show both stages and the slowest spans.

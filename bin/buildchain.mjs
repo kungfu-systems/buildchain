@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -26,7 +26,9 @@ import {
 } from "../packages/core/release-passport.js";
 import {
   formatDiagnosticsSummaryTable,
+  startProcessSampler,
   summarizeDiagnosticsArtifacts,
+  summarizeProcessSamples,
 } from "../packages/core/diagnostics.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -70,6 +72,10 @@ function usage() {
   buildchain log summary [--path <jsonl>] [--json]
   buildchain diagnostics summary <diagnostics.json>... [--artifact <file>]...
                                       [--output <file>] [--json]
+  buildchain sample process-tree [--interval-ms <n>] [--label <name>]
+                                 [--output <jsonl>] [--summary-output <json>]
+                                 [--requested-parallelism <n>] [--json]
+                                 -- <command> [args...]
   buildchain mark --event <name> [--phase <phase>] [--component <name>]
                   [--attribute key=value]... [--path <jsonl>] [--json]
   buildchain span --event <name> [--phase <phase>] [--component <name>]
@@ -210,6 +216,27 @@ function writeJsonFile(filePath, value) {
   return filePath;
 }
 
+function appendJsonLine(filePath, value) {
+  if (!filePath) {
+    return "";
+  }
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.appendFileSync(filePath, `${JSON.stringify(value)}\n`);
+  return filePath;
+}
+
+function readIntegerFlag(args, name, fallback = 0) {
+  const value = readFlag(args, name, "");
+  if (!value) {
+    return fallback;
+  }
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    throw new Error(`--${name} must be a non-negative integer`);
+  }
+  return parsed;
+}
+
 function readDiagnosticsArtifactInputs(args) {
   const values = [];
   for (let index = 0; index < args.length; index += 1) {
@@ -241,6 +268,81 @@ function packageVersion() {
   }
   const packageJson = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
   return packageJson.version;
+}
+
+async function runProcessTreeSample(sampleArgs = []) {
+  const separator = sampleArgs.indexOf("--");
+  const optionArgs = separator === -1 ? sampleArgs : sampleArgs.slice(0, separator);
+  const commandArgs = separator === -1 ? [] : sampleArgs.slice(separator + 1);
+  if (commandArgs.length === 0) {
+    throw new Error("usage: buildchain sample process-tree -- <command> [args...]");
+  }
+  const command = commandArgs[0];
+  const args = commandArgs.slice(1);
+  const label = readFlag(optionArgs, "label", "process-tree");
+  const intervalMs = readIntegerFlag(optionArgs, "interval-ms", 15000);
+  const requestedParallelism = readIntegerFlag(optionArgs, "requested-parallelism", 0);
+  const outputPath = readFlag(optionArgs, "output", ".buildchain/diagnostics/process-samples.jsonl");
+  const summaryOutputPath = readFlag(optionArgs, "summary-output", ".buildchain/diagnostics/process-summary.json");
+  const startedAt = Date.now();
+  const child = spawn(command, args, {
+    cwd: process.cwd(),
+    env: process.env,
+    stdio: "inherit",
+  });
+  const sampler = startProcessSampler({
+    rootPid: child.pid || process.pid,
+    intervalMs,
+    label,
+    command,
+    args,
+    env: process.env,
+    requestedParallelism,
+    onSample(sample) {
+      appendJsonLine(outputPath, sample);
+    },
+  });
+  const result = await new Promise((resolve) => {
+    child.on("error", (error) => resolve({ error, status: 1, signal: "" }));
+    child.on("close", (status, signal) => resolve({ status, signal: signal || "" }));
+  });
+  const samples = sampler.stop();
+  const summary = summarizeProcessSamples({
+    samples,
+    command,
+    args,
+    env: process.env,
+    requestedParallelism,
+  });
+  const report = {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-process-sample-report",
+    label,
+    command: path.basename(command),
+    argsCount: args.length,
+    exit: {
+      status: result.status ?? 0,
+      signal: result.signal || "",
+      error: result.error?.message || "",
+    },
+    durationMs: Date.now() - startedAt,
+    samplesPath: outputPath,
+    summaryPath: summaryOutputPath,
+    summary,
+  };
+  writeJsonFile(summaryOutputPath, report);
+  if (readBooleanFlag(optionArgs, "json")) {
+    printJson(report);
+  } else {
+    process.stdout.write(`buildchain process sample: ${summary.sampleCount} samples\n`);
+    process.stdout.write(`observed concurrency max: ${summary.observedConcurrency.max}\n`);
+    process.stdout.write(`wrote: ${outputPath}\n`);
+    process.stdout.write(`wrote: ${summaryOutputPath}\n`);
+  }
+  if (result.error || result.status !== 0) {
+    process.exitCode = result.status || 1;
+  }
+  return report;
 }
 
 async function main(argv = process.argv.slice(2)) {
@@ -350,6 +452,15 @@ async function main(argv = process.argv.slice(2)) {
         process.stdout.write(`wrote: ${outputPath}\n`);
       }
     }
+    return;
+  }
+
+  if (command === "sample") {
+    const [subcommand = "", ...sampleArgs] = args;
+    if (subcommand !== "process-tree") {
+      throw new Error("usage: buildchain sample process-tree -- <command> [args...]");
+    }
+    await runProcessTreeSample(sampleArgs);
     return;
   }
 
