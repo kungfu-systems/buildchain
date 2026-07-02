@@ -400,7 +400,7 @@ the publish gate: pull requests remain non-publishing events.
 `fixtures/libnode-shaped` is the contract fixture. It has:
 
 - `package.json` version state;
-- `buildchain.toml` with `install`, `build`, and `verify`;
+- `buildchain.toml` with `install`, `build`, `verify`, and `publish`;
 - cross-platform Node scripts that create small `dist/` outputs;
 - `Build Surface Fixture` workflow coverage.
 

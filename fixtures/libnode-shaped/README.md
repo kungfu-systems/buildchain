@@ -7,7 +7,8 @@ It is intentionally small, but it keeps the important shape:
 
 - `package.json` is the package version-state file;
 - `libnode.release.json` is the explicit upstream anchor manifest;
-- `buildchain.toml` declares `install`, `build`, and `verify` lifecycle stages;
+- `buildchain.toml` declares `install`, `build`, `verify`, and `publish`
+  lifecycle stages;
 - `version.strategy = "anchored"` and `version.next = "manual"` tell
   Buildchain to validate the current anchor instead of deriving the next Node
   anchor automatically;

@@ -1,0 +1,475 @@
+import { execFileSync } from "node:child_process";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import {
+  discoverConfiguredVersionStateFiles,
+  getLifecycleStage,
+  getPublishContract,
+  getVersionStrategy,
+  loadBuildchainConfig,
+  loadConfiguredAnchorManifest,
+  validateBuildchainConfig,
+} from "./buildchain-config.js";
+import { detectPackageManager, getWorkspaceInfo } from "./package-manager.js";
+import {
+  BUILDCHAIN_LOG_EVENT_CONTRACT,
+  readBuildchainLogEvents,
+  summarizeBuildchainLogEvents,
+} from "./logging.js";
+
+export const BUILDCHAIN_DIAGNOSTICS_CONTRACT = "kungfu-buildchain-diagnostics";
+export const BUILDCHAIN_LIFECYCLE_OBSERVABILITY_CONTRACT =
+  "kungfu-buildchain-lifecycle-observability";
+
+const DEFAULT_SECRET_KEY_PATTERN =
+  /(authorization|cookie|credential|password|passwd|private[_-]?key|secret|token|api[_-]?key)/i;
+
+function posixPath(value) {
+  return String(value || "").split(path.sep).join("/");
+}
+
+function safeReadJson(filePath) {
+  try {
+    return JSON.parse(fs.readFileSync(filePath, "utf8"));
+  } catch {
+    return undefined;
+  }
+}
+
+function fileStats(cwd, entries = []) {
+  return entries.map((entry) => {
+    const filePath = path.resolve(cwd, entry);
+    if (!fs.existsSync(filePath)) {
+      return { path: posixPath(entry), exists: false };
+    }
+    const stat = fs.statSync(filePath);
+    return {
+      path: posixPath(entry),
+      exists: true,
+      type: stat.isDirectory() ? "directory" : stat.isFile() ? "file" : "other",
+      bytes: stat.size,
+    };
+  });
+}
+
+function commandVersion(command, args = ["--version"], cwd = process.cwd()) {
+  try {
+    return execFileSync(command, args, {
+      cwd,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+      timeout: 5000,
+    }).trim().split(/\r?\n/)[0] || "";
+  } catch {
+    return "";
+  }
+}
+
+function gitField(cwd, args) {
+  try {
+    return execFileSync("git", args, {
+      cwd,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+      timeout: 5000,
+    }).trim();
+  } catch {
+    return "";
+  }
+}
+
+function safeAnchorManifest(cwd, loadedConfig) {
+  try {
+    return loadConfiguredAnchorManifest(cwd, loadedConfig);
+  } catch (error) {
+    return { error: error.message };
+  }
+}
+
+function check(ok, id, message, details = {}) {
+  return { id, status: ok ? "pass" : "fail", message, details };
+}
+
+function lifecycleTimingFromEvents(events = []) {
+  const stages = {};
+  const spans = [];
+  let warningCount = 0;
+  let errorCount = 0;
+  for (const event of events) {
+    if (event.level === "warn") {
+      warningCount += 1;
+    }
+    if (event.level === "error") {
+      errorCount += 1;
+    }
+    const stage = event.attributes?.stage || event.phase || "unknown";
+    const durationMs = Number(event.durationMs || 0);
+    if (durationMs > 0) {
+      stages[stage] = stages[stage] || { durationMs: 0, eventCount: 0 };
+      stages[stage].durationMs += durationMs;
+      spans.push({
+        event: event.event,
+        source: event.source || "",
+        component: event.component || "",
+        stage,
+        phase: event.phase || "",
+        durationMs,
+      });
+    }
+    if (stage) {
+      stages[stage] = stages[stage] || { durationMs: 0, eventCount: 0 };
+      stages[stage].eventCount += 1;
+    }
+  }
+  return {
+    stages: Object.fromEntries(Object.entries(stages).sort(([left], [right]) => left.localeCompare(right))),
+    topSlowSpans: spans.sort((left, right) => right.durationMs - left.durationMs).slice(0, 10),
+    warningCount,
+    errorCount,
+  };
+}
+
+export function summarizeLifecycleObservability({
+  events = [],
+  logPath = "",
+  artifactScanDurationMs = 0,
+  artifactUploadDurationMs = 0,
+  totalBytes = 0,
+  fileCount = 0,
+} = {}) {
+  const resolvedEvents = events.length ? events : readBuildchainLogEvents(logPath);
+  const timing = lifecycleTimingFromEvents(resolvedEvents);
+  return {
+    schemaVersion: 1,
+    contract: BUILDCHAIN_LIFECYCLE_OBSERVABILITY_CONTRACT,
+    log: {
+      contract: BUILDCHAIN_LOG_EVENT_CONTRACT,
+      path: logPath ? posixPath(logPath) : "",
+      summary: summarizeBuildchainLogEvents(resolvedEvents),
+    },
+    stages: timing.stages,
+    artifactScan: { durationMs: Math.round(Number(artifactScanDurationMs || 0)) },
+    artifactUpload: { durationMs: Math.round(Number(artifactUploadDurationMs || 0)) },
+    totalBytes: Number(totalBytes || 0),
+    fileCount: Number(fileCount || 0),
+    topSlowSpans: timing.topSlowSpans,
+    warningCount: timing.warningCount,
+    errorCount: timing.errorCount,
+  };
+}
+
+export function collectBuildchainDiagnostics({ cwd = process.cwd(), artifactPaths = [] } = {}) {
+  const resolvedCwd = path.resolve(cwd);
+  const loadedConfig = loadBuildchainConfig(resolvedCwd);
+  let configSummary = {};
+  try {
+    configSummary = validateBuildchainConfig(resolvedCwd);
+  } catch (error) {
+    configSummary = { ok: false, error: error.message };
+  }
+  return {
+    config: loadedConfig
+      ? {
+          path: loadedConfig.path,
+          project: loadedConfig.config.project || {},
+          versionStrategy: getVersionStrategy(loadedConfig),
+          publishContract: getPublishContract(loadedConfig),
+          lifecycleStages: Object.keys(loadedConfig.config.lifecycle || {}),
+          anchorManifest: safeAnchorManifest(resolvedCwd, loadedConfig),
+          validation: configSummary,
+        }
+      : { path: "", validation: configSummary },
+    lifecycle: Object.fromEntries(
+      ["install", "build", "verify", "publish"]
+        .map((stage) => [stage, getLifecycleStage(loadedConfig, stage)])
+        .filter(([, value]) => Boolean(value)),
+    ),
+    artifactPaths: fileStats(resolvedCwd, artifactPaths),
+  };
+}
+
+export function validateAnchoredPackageRelease({
+  cwd = process.cwd(),
+  requireManifest = true,
+  requirePackageSetOrder = "platforms-first-main-last",
+  requireTrustedPublishing = true,
+  requireLifecycleStages = ["install", "build", "verify", "publish"],
+} = {}) {
+  const resolvedCwd = path.resolve(cwd);
+  const checks = [];
+  let loadedConfig;
+  try {
+    loadedConfig = loadBuildchainConfig(resolvedCwd);
+    checks.push(check(Boolean(loadedConfig), "config.load", "buildchain.toml is readable"));
+  } catch (error) {
+    checks.push(check(false, "config.load", error.message));
+  }
+  const versionStrategy = getVersionStrategy(loadedConfig);
+  checks.push(check(
+    versionStrategy.strategy === "anchored",
+    "version.strategy",
+    "version strategy is anchored",
+    versionStrategy,
+  ));
+  checks.push(check(
+    versionStrategy.next === "manual",
+    "version.next",
+    "next version strategy is manual",
+    versionStrategy,
+  ));
+  const anchorManifest = safeAnchorManifest(resolvedCwd, loadedConfig);
+  checks.push(check(
+    !requireManifest || (anchorManifest && !anchorManifest.error),
+    "version.manifest",
+    anchorManifest?.error || "anchor manifest is readable",
+    { path: anchorManifest?.path || versionStrategy.manifest || "" },
+  ));
+  try {
+    const files = discoverConfiguredVersionStateFiles(resolvedCwd, loadedConfig);
+    checks.push(check(files.length > 0, "version.files", "configured version files are readable", {
+      files: files.map((file) => file.path),
+    }));
+  } catch (error) {
+    checks.push(check(false, "version.files", error.message));
+  }
+  const publish = getPublishContract(loadedConfig) || {};
+  checks.push(check(
+    publish.mode === "publish-final-version",
+    "publish.mode",
+    "publish mode is compatible with anchored final-version release",
+    { mode: publish.mode || "" },
+  ));
+  if (requireTrustedPublishing) {
+    checks.push(check(
+      publish.auth === "trusted-publishing",
+      "publish.auth",
+      "trusted publishing is enabled",
+      { auth: publish.auth || "" },
+    ));
+  }
+  if (requirePackageSetOrder) {
+    checks.push(check(
+      publish.packageSetOrder === requirePackageSetOrder,
+      "publish.package_set_order",
+      `package set order is ${requirePackageSetOrder}`,
+      { packageSetOrder: publish.packageSetOrder || "" },
+    ));
+  }
+  for (const stage of requireLifecycleStages || []) {
+    checks.push(check(
+      Boolean(getLifecycleStage(loadedConfig, stage)),
+      `lifecycle.${stage}`,
+      `lifecycle stage is configured: ${stage}`,
+    ));
+  }
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-anchored-package-release-validation",
+    cwd: resolvedCwd,
+    ok: checks.every((entry) => entry.status === "pass"),
+    checks,
+    summary: {
+      versionStrategy,
+      anchorManifest: anchorManifest?.path || "",
+      publish,
+      requiredLifecycleStages: requireLifecycleStages,
+    },
+  };
+}
+
+export function collectRunnerDiagnostics() {
+  return {
+    os: {
+      platform: os.platform(),
+      release: os.release(),
+      arch: os.arch(),
+      type: os.type(),
+    },
+    cpu: {
+      logicalCount: os.cpus().length,
+      model: os.cpus()[0]?.model || "",
+      loadAverage: os.loadavg(),
+    },
+    memory: {
+      totalBytes: os.totalmem(),
+      freeBytes: os.freemem(),
+    },
+    uptimeSeconds: Math.round(os.uptime()),
+    github: {
+      actions: process.env.GITHUB_ACTIONS === "true",
+      runnerOs: process.env.RUNNER_OS || "",
+      runnerArch: process.env.RUNNER_ARCH || "",
+      runnerName: process.env.RUNNER_NAME || "",
+    },
+  };
+}
+
+export function collectToolDiagnostics({ cwd = process.cwd(), tools = ["node", "pnpm", "npm", "git", "cmake", "ninja", "ccache", "sccache"] } = {}) {
+  return Object.fromEntries(tools.map((tool) => [tool, { version: commandVersion(tool, ["--version"], cwd) }]));
+}
+
+export function collectCacheDiagnostics({ cwd = process.cwd(), cacheDirs = [] } = {}) {
+  const resolvedCwd = path.resolve(cwd);
+  return {
+    packageManager: (() => {
+      try {
+        return detectPackageManager(resolvedCwd);
+      } catch (error) {
+        return { name: "unknown", error: error.message };
+      }
+    })(),
+    workspace: (() => {
+      try {
+        return getWorkspaceInfo(resolvedCwd);
+      } catch (error) {
+        return { error: error.message };
+      }
+    })(),
+    dirs: fileStats(resolvedCwd, cacheDirs),
+  };
+}
+
+export function collectGitDiagnostics({ cwd = process.cwd() } = {}) {
+  return {
+    repository: gitField(cwd, ["config", "--get", "remote.origin.url"]),
+    head: gitField(cwd, ["rev-parse", "HEAD"]),
+    ref: gitField(cwd, ["rev-parse", "--abbrev-ref", "HEAD"]),
+    dirty: gitField(cwd, ["status", "--short"]) !== "",
+  };
+}
+
+export function redactDiagnosticsValue(key, value, pattern = DEFAULT_SECRET_KEY_PATTERN) {
+  if (pattern.test(String(key || ""))) {
+    return "[REDACTED]";
+  }
+  return value;
+}
+
+export function collectProcessTreeSnapshot({ rootPid = process.pid, cwd = process.cwd() } = {}) {
+  const pid = String(rootPid || process.pid);
+  if (process.platform === "win32") {
+    return { rootPid: pid, platform: process.platform, processes: [] };
+  }
+  let lines = [];
+  try {
+    lines = execFileSync("ps", ["-axo", "pid=,ppid=,pcpu=,comm="], {
+      cwd,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+      timeout: 5000,
+    }).split(/\r?\n/).filter(Boolean);
+  } catch {
+    return { rootPid: pid, platform: process.platform, processes: [] };
+  }
+  const rows = lines.map((line) => {
+    const match = line.trim().match(/^(\d+)\s+(\d+)\s+([0-9.]+)\s+(.+)$/);
+    return match
+      ? { pid: match[1], ppid: match[2], cpu: Number(match[3]), command: path.basename(match[4]) }
+      : undefined;
+  }).filter(Boolean);
+  const byParent = new Map();
+  for (const row of rows) {
+    byParent.set(row.ppid, [...(byParent.get(row.ppid) || []), row]);
+  }
+  const seen = new Set();
+  const stack = [pid];
+  const processes = [];
+  while (stack.length) {
+    const current = stack.pop();
+    for (const child of byParent.get(current) || []) {
+      if (seen.has(child.pid)) {
+        continue;
+      }
+      seen.add(child.pid);
+      processes.push(child);
+      stack.push(child.pid);
+    }
+  }
+  return { rootPid: pid, platform: process.platform, processes };
+}
+
+export function startProcessSampler({
+  rootPid = process.pid,
+  intervalMs = 15000,
+  onSample = () => undefined,
+  cwd = process.cwd(),
+} = {}) {
+  const samples = [];
+  const sample = () => {
+    const snapshot = {
+      timestamp: new Date().toISOString(),
+      ...collectProcessTreeSnapshot({ rootPid, cwd }),
+    };
+    samples.push(snapshot);
+    onSample(snapshot);
+    return snapshot;
+  };
+  sample();
+  const timer = setInterval(sample, Math.max(1000, Number(intervalMs || 15000)));
+  return {
+    samples,
+    stop() {
+      clearInterval(timer);
+      return samples;
+    },
+  };
+}
+
+export function createDiagnosticsArtifact({
+  cwd = process.cwd(),
+  logPath = "",
+  artifactPaths = [],
+  cacheDirs = [],
+  lifecycleObservability = undefined,
+  links = {},
+} = {}) {
+  const resolvedCwd = path.resolve(cwd);
+  const events = logPath ? readBuildchainLogEvents(logPath) : [];
+  return {
+    schemaVersion: 1,
+    contract: BUILDCHAIN_DIAGNOSTICS_CONTRACT,
+    generatedAt: new Date().toISOString(),
+    cwd: resolvedCwd,
+    buildchain: collectBuildchainDiagnostics({ cwd: resolvedCwd, artifactPaths }),
+    runner: collectRunnerDiagnostics(),
+    tools: collectToolDiagnostics({ cwd: resolvedCwd }),
+    cache: collectCacheDiagnostics({ cwd: resolvedCwd, cacheDirs }),
+    git: collectGitDiagnostics({ cwd: resolvedCwd }),
+    lifecycleObservability: lifecycleObservability || summarizeLifecycleObservability({ events, logPath }),
+    links,
+  };
+}
+
+export function writeDiagnosticsArtifact(filePath, diagnostics) {
+  if (!filePath) {
+    return "";
+  }
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, `${JSON.stringify(diagnostics, null, 2)}\n`);
+  return filePath;
+}
+
+export function readDiagnosticsArtifact(filePath) {
+  return safeReadJson(filePath);
+}
+
+export function summarizeDiagnosticsArtifacts(inputs = []) {
+  const diagnostics = inputs
+    .map((entry) => (typeof entry === "string" ? readDiagnosticsArtifact(entry) : entry))
+    .filter(Boolean);
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-diagnostics-summary",
+    generatedAt: new Date().toISOString(),
+    count: diagnostics.length,
+    platforms: diagnostics.map((entry) => ({
+      runner: entry.runner?.github?.runnerOs || entry.runner?.os?.platform || "unknown",
+      arch: entry.runner?.github?.runnerArch || entry.runner?.os?.arch || "unknown",
+      gitHead: entry.git?.head || "",
+      lifecycle: entry.lifecycleObservability?.stages || {},
+      warningCount: entry.lifecycleObservability?.warningCount || 0,
+      errorCount: entry.lifecycleObservability?.errorCount || 0,
+    })),
+  };
+}

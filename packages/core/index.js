@@ -54,6 +54,25 @@ export {
 } from "./logging.js";
 
 export {
+  BUILDCHAIN_DIAGNOSTICS_CONTRACT,
+  BUILDCHAIN_LIFECYCLE_OBSERVABILITY_CONTRACT,
+  collectBuildchainDiagnostics,
+  collectCacheDiagnostics,
+  collectGitDiagnostics,
+  collectProcessTreeSnapshot,
+  collectRunnerDiagnostics,
+  collectToolDiagnostics,
+  createDiagnosticsArtifact,
+  readDiagnosticsArtifact,
+  redactDiagnosticsValue,
+  startProcessSampler,
+  summarizeDiagnosticsArtifacts,
+  summarizeLifecycleObservability,
+  validateAnchoredPackageRelease,
+  writeDiagnosticsArtifact,
+} from "./diagnostics.js";
+
+export {
   AGENT_INDEX_CONTRACT,
   ARTIFACT_EVIDENCE_CONTRACT,
   IMPACT_LEDGER_CONTRACT,

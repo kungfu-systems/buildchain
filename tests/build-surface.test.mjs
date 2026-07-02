@@ -70,6 +70,8 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /expected-artifacts-json:/);
   assert.match(workflow, /manifest\.json/);
   assert.match(workflow, /summary\.json/);
+  assert.match(workflow, /diagnostics\.json/);
+  assert.match(workflow, /-diagnostics-\$\{\{ matrix\.platform\.id \}\}-/);
   assert.match(workflow, /build-summary-artifact:/);
   assert.match(workflow, /publish-allowed:/);
   assert.match(workflow, /publish-reason:/);
@@ -625,7 +627,7 @@ test("libnode-shaped fixture declares the build lifecycle contract", () => {
   );
   assert.deepEqual(
     summary.lifecycleStages.map((stage) => stage.name),
-    ["install", "build", "verify"],
+    ["install", "build", "verify", "publish"],
   );
 });
 
@@ -682,6 +684,12 @@ test("runLifecycle writes deterministic artifact manifest", () => {
     );
     assert.equal(manifest.summary.fileCount, 2);
     assert.ok(manifest.summary.totalBytes > 0);
+    assert.ok(manifest.observability.lifecycle.stages.install);
+    assert.ok(manifest.observability.lifecycle.stages.build);
+    assert.equal(
+      manifest.observability.diagnostics.path,
+      ".buildchain/artifacts/linux-x64/diagnostics.json",
+    );
     assert.equal(manifest.expectedArtifacts.ok, true);
     assert.deepEqual(
       manifest.files.map((file) => file.path),
@@ -693,6 +701,15 @@ test("runLifecycle writes deterministic artifact manifest", () => {
     assert.ok(
       manifest.files.every((file) => /^[a-f0-9]{64}$/.test(file.sha256)),
     );
+    const diagnostics = JSON.parse(
+      fs.readFileSync(
+        path.join(workspace, ".buildchain/artifacts/linux-x64/diagnostics.json"),
+        "utf8",
+      ),
+    );
+    assert.equal(diagnostics.contract, "kungfu-buildchain-diagnostics");
+    assert.equal(diagnostics.lifecycleObservability.stages.install.eventCount > 0, true);
+    assert.equal(diagnostics.lifecycleObservability.stages.build.eventCount > 0, true);
   } finally {
     process.env = originalEnv;
     fs.rmSync(workspace, { recursive: true, force: true });
@@ -770,6 +787,8 @@ test("aggregate build summary reads uploaded platform manifests", () => {
     assert.equal(summary.platformCount, 1);
     assert.equal(summary.fileCount, 2);
     assert.ok(summary.totalBytes > 0);
+    assert.ok(summary.observability.lifecycle.stages.install);
+    assert.ok(summary.observability.lifecycle.stages.build);
     assert.deepEqual(summary.publishGate, {
       trustedEvent: true,
       channel: "release",
@@ -786,6 +805,7 @@ test("aggregate build summary reads uploaded platform manifests", () => {
       releaseManifest: '{"schema":1}',
     });
     assert.equal(summary.platforms[0].artifactName, "libnode-linux-x64-sha");
+    assert.ok(summary.platforms[0].observability.lifecycle.stages.build);
     assert.equal(summary.platforms[0].expectedArtifacts.ok, true);
   } finally {
     process.env = originalEnv;

@@ -4,6 +4,11 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { createBuildchainLogger } from "@kungfu-tech/buildchain/logging";
+import {
+  collectRunnerDiagnostics,
+  validateAnchoredPackageRelease,
+} from "@kungfu-tech/buildchain/diagnostics";
 import { resolveSpawnCommand, usesShellForSpawnCommand } from "../scripts/build-standalone-binary.mjs";
 import { createReleaseEvidenceBundle } from "../scripts/create-release-bundle.mjs";
 
@@ -145,6 +150,52 @@ test("CLI logging writes redacted JSONL events and summaries", () => {
   assert.equal(summary.sources.user.count, 1);
   assert.equal(summary.phases.configure.count, 1);
   assert.equal(summary.components.fixture.count, 1);
+});
+
+test("logging SDK supports sync spans and spawn wrappers", () => {
+  const cwd = tempDir("logging-sync");
+  const logPath = path.join(cwd, ".buildchain", "logs", "events.jsonl");
+  const logger = createBuildchainLogger({
+    cwd,
+    path: logPath,
+    console: false,
+    component: "sync-fixture",
+  });
+
+  const value = logger.spanSync("fixture.sync", { phase: "build" }, () => 42);
+  assert.equal(value, 42);
+  const result = logger.spawnSync(
+    "fixture.spawn",
+    process.execPath,
+    ["-e", "process.exit(0)"],
+    { cwd, stdio: "ignore" },
+    { phase: "build" },
+  );
+  assert.equal(result.status, 0);
+
+  const events = fs.readFileSync(logPath, "utf8").trim().split(/\r?\n/).map((line) => JSON.parse(line));
+  assert.deepEqual(
+    events.map((event) => event.event),
+    ["fixture.sync.start", "fixture.sync.end", "fixture.spawn.start", "fixture.spawn.end"],
+  );
+  assert.equal(collectRunnerDiagnostics().cpu.logicalCount > 0, true);
+});
+
+test("diagnostics SDK validates anchored package release contracts", () => {
+  const report = validateAnchoredPackageRelease({
+    cwd: path.join(root, "fixtures/libnode-shaped"),
+  });
+  assert.equal(report.ok, true);
+  assert.equal(report.summary.versionStrategy.strategy, "anchored");
+  assert.ok(report.checks.some((entry) => entry.id === "lifecycle.publish" && entry.status === "pass"));
+
+  const relaxed = validateAnchoredPackageRelease({
+    cwd: path.join(root, "fixtures/libnode-shaped"),
+    requirePackageSetOrder: "",
+    requireTrustedPublishing: false,
+    requireLifecycleStages: ["install", "build", "verify"],
+  });
+  assert.equal(relaxed.ok, true);
 });
 
 test("CLI verifies observability logs fail closed", () => {

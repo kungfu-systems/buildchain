@@ -66,6 +66,9 @@ if (rootPackage.bin?.buildchain !== "./bin/buildchain.mjs") {
 if (rootPackage.exports?.["."] !== "./packages/core/index.js") {
   throw new Error("root package must export packages/core/index.js");
 }
+if (rootPackage.exports?.["./diagnostics"] !== "./packages/core/diagnostics.js") {
+  throw new Error("root package must export @kungfu-tech/buildchain/diagnostics");
+}
 if (rootPackage.exports?.["./logging"] !== "./packages/core/logging.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/logging");
 }
@@ -99,6 +102,9 @@ if (commonJsSourcePattern.test(cliSource)) {
 }
 if (!coreIndexSource.includes("verifyBuildchainLogEvents")) {
   throw new Error("packages/core/index.js must export verifyBuildchainLogEvents");
+}
+if (!coreIndexSource.includes("collectBuildchainDiagnostics")) {
+  throw new Error("packages/core/index.js must export collectBuildchainDiagnostics");
 }
 for (const requiredSnippet of [
   "Release passport and binary distribution are a minor surface.",

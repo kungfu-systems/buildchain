@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { spawnSync as nodeSpawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -267,6 +268,54 @@ export function createBuildchainLogger(options = {}) {
     }
   }
 
+  function spanSync(eventName, details = {}, callback = () => undefined) {
+    const spanId = details.spanId || crypto.randomUUID();
+    const startedAt = Date.now();
+    emit("info", `${eventName}.start`, { ...details, spanId });
+    try {
+      const result = callback({ spanId });
+      emit("info", `${eventName}.end`, {
+        ...details,
+        spanId,
+        durationMs: Date.now() - startedAt,
+      });
+      return result;
+    } catch (error) {
+      emit("error", `${eventName}.error`, {
+        ...details,
+        spanId,
+        durationMs: Date.now() - startedAt,
+        message: error.message,
+        attributes: {
+          ...(details.attributes || {}),
+          errorName: error.name,
+        },
+      });
+      throw error;
+    }
+  }
+
+  function spawnSync(eventName, command, args = [], spawnOptions = {}, details = {}) {
+    return spanSync(eventName, details, () => {
+      const result = nodeSpawnSync(command, args, {
+        cwd,
+        env: process.env,
+        stdio: "inherit",
+        ...spawnOptions,
+      });
+      if (result.error) {
+        throw result.error;
+      }
+      if (result.status !== 0) {
+        const error = new Error(`command exited with ${result.status ?? "signal"}`);
+        error.status = result.status;
+        error.signal = result.signal;
+        throw error;
+      }
+      return result;
+    });
+  }
+
   return {
     path: resolvedPath,
     events: inMemoryEvents,
@@ -276,6 +325,8 @@ export function createBuildchainLogger(options = {}) {
     error: (eventName, details) => emit("error", eventName, details),
     mark: (eventName, details) => emit("info", eventName, details),
     span,
+    spanSync,
+    spawnSync,
     summary: () => summarizeBuildchainLogEvents(resolvedPath ? { path: resolvedPath } : inMemoryEvents),
   };
 }

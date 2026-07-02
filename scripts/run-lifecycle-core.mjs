@@ -14,6 +14,11 @@ import {
   summarizeBuildchainLogEvents,
 } from "../packages/core/logging.js";
 import {
+  createDiagnosticsArtifact,
+  summarizeLifecycleObservability,
+  writeDiagnosticsArtifact,
+} from "../packages/core/diagnostics.js";
+import {
   createArtifactSummary,
   parseExpectedArtifactsJson,
   validateExpectedArtifacts,
@@ -78,6 +83,7 @@ export function runLifecycle({
   required = false,
   manifestPath = ".buildchain/artifacts/manifest.json",
   summaryPath = ".buildchain/artifacts/summary.json",
+  diagnosticsPath = "",
   artifactName = "buildchain-artifact",
   platformId = os.platform(),
   platformName = platformId,
@@ -90,8 +96,13 @@ export function runLifecycle({
   const resolvedWorkspace = path.resolve(workspace);
   const resolvedManifestPath = path.resolve(resolvedWorkspace, manifestPath);
   const resolvedSummaryPath = path.resolve(resolvedWorkspace, summaryPath);
+  const resolvedDiagnosticsPath = path.resolve(
+    resolvedWorkspace,
+    diagnosticsPath || path.join(path.dirname(manifestPath), "diagnostics.json"),
+  );
   const resolvedLogPath = logPath ? path.resolve(resolvedWorkspace, logPath) : "";
   const relativeLogPath = resolvedLogPath ? toPosix(path.relative(resolvedWorkspace, resolvedLogPath)) : "";
+  const relativeDiagnosticsPath = toPosix(path.relative(resolvedWorkspace, resolvedDiagnosticsPath));
   const logRunId = crypto.randomUUID();
   const frameworkLog = createBuildchainLogger({
     cwd: resolvedWorkspace,
@@ -229,8 +240,9 @@ export function runLifecycle({
       sha256: sha256File(file),
     };
   });
+  const artifactScanDurationMs = Date.now() - scanStartedAt;
   frameworkLog.info("artifact.scan", {
-    durationMs: Date.now() - scanStartedAt,
+    durationMs: artifactScanDurationMs,
     attributes: {
       fileCount: manifestFiles.length,
     },
@@ -279,6 +291,18 @@ export function runLifecycle({
         : summarizeBuildchainLogEvents([...frameworkLog.events, ...userLog.events]),
     },
   };
+  const lifecycleObservability = summarizeLifecycleObservability({
+    events: resolvedLogPath ? readBuildchainLogEvents(resolvedLogPath) : [...frameworkLog.events, ...userLog.events],
+    logPath: relativeLogPath,
+    artifactScanDurationMs,
+    totalBytes: summary.totalBytes,
+    fileCount: summary.fileCount,
+  });
+  observability.lifecycle = lifecycleObservability;
+  observability.diagnostics = {
+    contract: "kungfu-buildchain-diagnostics",
+    path: relativeDiagnosticsPath,
+  };
   const summaryWithObservability = {
     ...summary,
     observability,
@@ -309,6 +333,20 @@ export function runLifecycle({
   fs.writeFileSync(resolvedManifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
   fs.mkdirSync(path.dirname(resolvedSummaryPath), { recursive: true });
   fs.writeFileSync(resolvedSummaryPath, `${JSON.stringify(summaryWithObservability, null, 2)}\n`);
+  writeDiagnosticsArtifact(
+    resolvedDiagnosticsPath,
+    createDiagnosticsArtifact({
+      cwd: resolvedCwd,
+      logPath: resolvedLogPath,
+      artifactPaths,
+      lifecycleObservability,
+      links: {
+        manifest: toPosix(path.relative(resolvedWorkspace, resolvedManifestPath)),
+        summary: toPosix(path.relative(resolvedWorkspace, resolvedSummaryPath)),
+        log: relativeLogPath,
+      },
+    }),
+  );
   console.log(`buildchain_manifest=${path.relative(resolvedWorkspace, resolvedManifestPath)}`);
   return manifest;
 }

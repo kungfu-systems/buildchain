@@ -20,6 +20,9 @@ command = "node scripts/build.mjs"
 [lifecycle.verify]
 command = "node scripts/verify.mjs"
 
+[lifecycle.publish]
+command = "node scripts/verify.mjs"
+
 [publish]
 mode = "publish-final-version"
 auth = "trusted-publishing"
