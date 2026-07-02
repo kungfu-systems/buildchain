@@ -91,6 +91,14 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /-diagnostics-summary-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/);
   assert.match(workflow, /Upload aggregate diagnostics summary/);
   assert.equal(
+    (workflow.match(/manifest-artifact-name: \$\{\{ inputs\.artifact-name \}\}-manifest-\$\{\{ matrix\.platform\.id \}\}-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/g) || []).length,
+    2,
+  );
+  assert.equal(
+    (workflow.match(/diagnostics-artifact-name: \$\{\{ inputs\.artifact-name \}\}-diagnostics-\$\{\{ matrix\.platform\.id \}\}-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/g) || []).length,
+    2,
+  );
+  assert.equal(
     (workflow.match(/process-summary-path: \$\{\{ inputs\.process-summary-path \|\| \(inputs\.sample-process-tree && '\.buildchain\/diagnostics\/process-summary\.json'\) \|\| '' \}\}/g) || []).length,
     4,
   );
@@ -791,6 +799,8 @@ test("runLifecycle writes deterministic artifact manifest", () => {
     assert.equal(diagnostics.native.cacheDirs[0].exists, false);
     assert.equal(diagnostics.process.requestedParallelism, 8);
     assert.equal(diagnostics.process.observedConcurrency.max, 3);
+    assert.equal(diagnostics.links.artifactName, "libnode-shaped-linux-x64-abc123");
+    assert.equal(diagnostics.links.platformId, "linux-x64");
     assert.equal(diagnostics.links.processSummary, ".buildchain/diagnostics/process-summary.json");
     assert.equal(diagnostics.links.diagnosticsEvents, ".buildchain/artifacts/linux-x64/events.jsonl");
     assert.equal(diagnostics.links.diagnosticsProcessSummary, ".buildchain/artifacts/linux-x64/process-summary.json");
@@ -1045,6 +1055,8 @@ test("aggregate diagnostics summary reads uploaded platform diagnostics", () => 
     assert.equal(summary.count, 1);
     assert.equal(summary.platforms[0].fileCount, 2);
     assert.ok(summary.platforms[0].lifecycle.build);
+    assert.equal(summary.platforms[0].links.artifactName, "libnode-linux-x64-sha");
+    assert.equal(summary.platforms[0].links.platformId, "linux-x64");
     assert.ok(fs.existsSync(process.env.BUILDCHAIN_DIAGNOSTICS_OUTPUT));
     const outputs = fs.readFileSync(process.env.GITHUB_OUTPUT, "utf8");
     assert.match(outputs, /diagnostics-summary-path=/);
@@ -1105,6 +1117,8 @@ test("run-lifecycle action accepts hyphenated GitHub Action inputs", () => {
           INPUT_STAGE: "verify",
           INPUT_REQUIRED: "true",
           "INPUT_ARTIFACT-NAME": "libnode-shaped-linux-x64-test",
+          "INPUT_MANIFEST-ARTIFACT-NAME": "libnode-manifest-linux-x64-test",
+          "INPUT_DIAGNOSTICS-ARTIFACT-NAME": "libnode-diagnostics-linux-x64-test",
           "INPUT_PLATFORM-ID": "linux-x64",
           "INPUT_PLATFORM-NAME": "Linux x64",
           "INPUT_ARTIFACT-PATHS": "fixture/dist",
@@ -1144,6 +1158,9 @@ test("run-lifecycle action accepts hyphenated GitHub Action inputs", () => {
     assert.match(outputs, /expected-artifacts-ok=true/);
     assert.equal(diagnostics.process.requestedParallelism, 4);
     assert.equal(diagnostics.process.observedConcurrency.max, 2);
+    assert.equal(diagnostics.links.artifactName, "libnode-shaped-linux-x64-test");
+    assert.equal(diagnostics.links.manifestArtifactName, "libnode-manifest-linux-x64-test");
+    assert.equal(diagnostics.links.diagnosticsArtifactName, "libnode-diagnostics-linux-x64-test");
     assert.equal(diagnostics.links.processSummary, ".buildchain/diagnostics/action-process-summary.json");
     assert.deepEqual(
       manifest.files.map((file) => file.path),

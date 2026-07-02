@@ -35,6 +35,8 @@ export function runLifecycleCli() {
     manifestPath: readArg("manifest-path", ".buildchain/artifacts/manifest.json"),
     summaryPath: readArg("summary-path", ".buildchain/artifacts/summary.json"),
     artifactName: readArg("artifact-name", "buildchain-artifact"),
+    manifestArtifactName: readArg("manifest-artifact-name", ""),
+    diagnosticsArtifactName: readArg("diagnostics-artifact-name", ""),
     platformId: readArg("platform-id", os.platform()),
     platformName: readArg("platform-name", readArg("platform-id", os.platform())),
     artifactPaths: parseList(process.env.BUILDCHAIN_ARTIFACT_PATHS || ""),

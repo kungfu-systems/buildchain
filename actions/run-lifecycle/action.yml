@@ -47,6 +47,14 @@ inputs:
     description: "Compact diagnostics artifact output path"
     required: false
     default: ""
+  manifest-artifact-name:
+    description: "Uploaded platform manifest artifact name recorded in diagnostics links"
+    required: false
+    default: ""
+  diagnostics-artifact-name:
+    description: "Uploaded platform diagnostics artifact name recorded in diagnostics links"
+    required: false
+    default: ""
   expected-artifacts-json:
     description: "JSON expectation contract for final artifact files"
     required: false

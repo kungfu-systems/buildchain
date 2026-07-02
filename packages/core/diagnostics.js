@@ -876,6 +876,7 @@ export function summarizeDiagnosticsArtifacts(inputs = []) {
       fileCount: Number(entry.lifecycleObservability?.fileCount || 0),
       topSlowSpans: (entry.lifecycleObservability?.topSlowSpans || []).slice(0, 5),
       process: entry.process || {},
+      links: entry.links || {},
       warningCount: entry.lifecycleObservability?.warningCount || 0,
       errorCount: entry.lifecycleObservability?.errorCount || 0,
     };

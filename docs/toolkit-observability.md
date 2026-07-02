@@ -231,7 +231,10 @@ The reusable build workflow writes that rollup as `diagnostics-summary.json` and
 uploads it in a separate aggregate diagnostics summary artifact. Consumers can
 read the `build-diagnostics-summary-artifact` output when they need only timing,
 warning/error, runner, cache, and process-sampler context instead of the build
-summary or binary artifacts.
+summary or binary artifacts. Per-platform rows keep the diagnostics `links`
+object, including the binary artifact name, manifest artifact name, diagnostics
+artifact name, platform id, manifest path, summary path, and process sidecar
+paths when present.
 
 The CLI exposes the same aggregation for shell and workflow steps:
 

@@ -37,6 +37,8 @@ async function main() {
     summaryPath,
     diagnosticsPath,
     artifactName: getInput("artifact-name") || "buildchain-artifact",
+    manifestArtifactName: getInput("manifest-artifact-name") || "",
+    diagnosticsArtifactName: getInput("diagnostics-artifact-name") || "",
     platformId: getInput("platform-id") || process.env.RUNNER_OS || process.platform,
     platformName: getInput("platform-name") || getInput("platform-id") || process.env.RUNNER_OS || process.platform,
     artifactPaths: String(getInput("artifact-paths") || "")

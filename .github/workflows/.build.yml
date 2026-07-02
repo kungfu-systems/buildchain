@@ -461,6 +461,8 @@ jobs:
           command: ${{ inputs.verify-command }}
           required: ${{ inputs.require-verify }}
           artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
+          manifest-artifact-name: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          diagnostics-artifact-name: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           platform-id: ${{ matrix.platform.id }}
           platform-name: ${{ matrix.platform.name }}
           artifact-paths: ${{ inputs.artifact-paths }}
@@ -610,6 +612,8 @@ jobs:
           command: ${{ inputs.verify-command }}
           required: ${{ inputs.require-verify }}
           artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
+          manifest-artifact-name: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          diagnostics-artifact-name: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           platform-id: ${{ matrix.platform.id }}
           platform-name: ${{ matrix.platform.name }}
           artifact-paths: ${{ inputs.artifact-paths }}
