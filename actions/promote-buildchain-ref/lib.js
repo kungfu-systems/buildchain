@@ -1705,13 +1705,6 @@ function currentAlphaVersionState({ cwd, refs, releasePrefix }) {
   if (!parsed) {
     return undefined;
   }
-  const hasDurableState = refs.some((ref) => {
-    const candidate = parseAlphaPrereleaseRef(ref.ref, releasePrefix);
-    return candidate?.source === "release-state" && candidate.tag === `v${versions[0]}`;
-  });
-  if (!hasDurableState) {
-    return undefined;
-  }
   return {
     ...parsed,
     tag: `v${versions[0]}`,
