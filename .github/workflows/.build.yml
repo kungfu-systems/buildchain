@@ -393,6 +393,12 @@ jobs:
           path: .buildchain/runtime
           persist-credentials: false
 
+      - name: Setup Node.js
+        if: ${{ inputs.setup-node }}
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: ${{ inputs.node-version }}
+
       - name: Install Buildchain runtime dependencies
         run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
 
@@ -405,12 +411,6 @@ jobs:
           BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
           BUILDCHAIN_PLATFORM_NAME: ${{ matrix.platform.name }}
           BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-
-      - name: Setup Node.js
-        if: ${{ inputs.setup-node }}
-        uses: actions/setup-node@v6.4.0
-        with:
-          node-version: ${{ inputs.node-version }}
 
       - name: Run install lifecycle
         uses: ./.buildchain/runtime/actions/run-lifecycle
