@@ -165,6 +165,37 @@ test("web-surface deploy apply can execute a saved deploy plan", () => {
   });
 });
 
+test("web-surface deploy apply honors explicit bucket-root prefix", () => {
+  withFixture((fixture) => {
+    const configPath = path.join(fixture, "buildchain.toml");
+    fs.writeFileSync(
+      configPath,
+      fs.readFileSync(configPath, "utf8").replace(
+        '[deploy.staging]\nadapter = "aws-s3-cloudfront"',
+        '[deploy.staging]\nprefix = ""\nadapter = "aws-s3-cloudfront"',
+      ),
+    );
+    fs.mkdirSync(path.join(fixture, "dist"), { recursive: true });
+    fs.writeFileSync(path.join(fixture, "dist", "index.html"), "hello\n");
+    const calls = [];
+    const result = applyWebSurfaceDeploy({
+      cwd: fixture,
+      channel: "staging",
+      sourceSha: "b".repeat(40),
+      dryRun: false,
+      appliedAt: "2026-07-01T00:00:00.000Z",
+      commandRunner(operation) {
+        calls.push(operation);
+        return { exitCode: 0, stdout: `${operation.action}\n`, stderr: "" };
+      },
+    });
+
+    assert.equal(result.objectPrefix, "");
+    assert.equal(calls[0].args[3], "s3://kungfu-tech-staging");
+    assert.deepEqual(calls[2].args.slice(-2), ["/*", "/.buildchain/deployments/staging.json"]);
+  });
+});
+
 test("web-surface deploy apply fails closed when saved plan artifact drifted", () => {
   withFixture((fixture) => {
     fs.mkdirSync(path.join(fixture, "dist"), { recursive: true });

@@ -122,7 +122,10 @@ function manifestPrefixFor(deployConfig) {
 }
 
 function objectPrefixFor(deployConfig, alias) {
-  return deployConfig.prefix || alias || "preview";
+  if (Object.hasOwn(deployConfig, "prefix")) {
+    return normalizeS3Key(deployConfig.prefix);
+  }
+  return alias || "preview";
 }
 
 function normalizeS3Key(value) {
@@ -146,6 +149,11 @@ function s3Uri(bucket, key = "") {
 function cdnPath(value) {
   const normalized = normalizeS3Key(value);
   return normalized ? `/${normalized}` : "/";
+}
+
+function cdnWildcardPath(value) {
+  const normalized = normalizeS3Key(value);
+  return normalized ? `/${normalized}/*` : "/*";
 }
 
 function defaultCommandRunner({ command, args, stdin = "" }) {
@@ -521,7 +529,7 @@ export function applyWebSurfaceDeploy({
   const artifactRoot = path.resolve(cwd, resolvedPlan.artifact.path);
   const objectPrefix = objectPrefixFor(deployConfig, resolvedPlan.manifest.alias || resolvedPlan.manifest.channel);
   const manifestKey = deployManifestKey(deployConfig, resolvedPlan.manifest);
-  const invalidationPaths = [`${cdnPath(objectPrefix)}/*`, cdnPath(manifestKey)];
+  const invalidationPaths = [cdnWildcardPath(objectPrefix), cdnPath(manifestKey)];
   const operations = [
     {
       action: "sync-static-artifact",
