@@ -9,6 +9,11 @@ import {
   runLifecycleStage,
 } from "../packages/core/buildchain-config.js";
 import {
+  createBuildchainLogger,
+  readBuildchainLogEvents,
+  summarizeBuildchainLogEvents,
+} from "../packages/core/logging.js";
+import {
   createArtifactSummary,
   parseExpectedArtifactsJson,
   validateExpectedArtifacts,
@@ -46,6 +51,15 @@ function manifestPathFor(root, filePath) {
   return toPosix(path.resolve(filePath));
 }
 
+function lifecycleErrorAttributes(error, extra = {}) {
+  return {
+    ...extra,
+    errorName: error.name,
+    status: error.status ?? "",
+    signal: error.signal || "",
+  };
+}
+
 function collectArtifactFiles(root, patterns) {
   const files = new Set();
   for (const pattern of patterns) {
@@ -70,38 +84,142 @@ export function runLifecycle({
   artifactPaths = [],
   expectedArtifactsJson = "",
   workspace = process.cwd(),
+  logPath = process.env.BUILDCHAIN_LOG_PATH || ".buildchain/logs/events.jsonl",
 } = {}) {
   const resolvedCwd = path.resolve(cwd);
   const resolvedWorkspace = path.resolve(workspace);
   const resolvedManifestPath = path.resolve(resolvedWorkspace, manifestPath);
   const resolvedSummaryPath = path.resolve(resolvedWorkspace, summaryPath);
+  const resolvedLogPath = logPath ? path.resolve(resolvedWorkspace, logPath) : "";
+  const relativeLogPath = resolvedLogPath ? toPosix(path.relative(resolvedWorkspace, resolvedLogPath)) : "";
+  const logRunId = crypto.randomUUID();
+  const frameworkLog = createBuildchainLogger({
+    cwd: resolvedWorkspace,
+    path: resolvedLogPath || false,
+    console: false,
+    source: "buildchain",
+    component: "lifecycle",
+    phase: stageName || "lifecycle",
+    attributes: { buildchainLogRunId: logRunId },
+  });
+  const userLog = createBuildchainLogger({
+    cwd: resolvedWorkspace,
+    path: resolvedLogPath || false,
+    console: false,
+    source: "user",
+    component: "lifecycle",
+    phase: stageName || "lifecycle",
+    attributes: { buildchainLogRunId: logRunId },
+  });
   const loadedConfig = loadBuildchainConfig(resolvedCwd);
   let commandSource = "none";
   let executed = false;
 
+  frameworkLog.info("lifecycle.start", {
+    attributes: {
+      stage: stageName,
+      artifactName,
+      platformId,
+    },
+  });
+
   if (command.trim()) {
     commandSource = "workflow-input";
-    execSync(command, {
-      cwd: resolvedCwd,
-      env: process.env,
-      shell: true,
-      stdio: "inherit",
+    const startedAt = Date.now();
+    userLog.info("lifecycle.command.start", {
+      attributes: {
+        commandSource,
+        stage: stageName || "command",
+      },
     });
-    executed = true;
+    try {
+      execSync(command, {
+        cwd: resolvedCwd,
+        env: {
+          ...process.env,
+          ...(resolvedLogPath
+            ? {
+                BUILDCHAIN_LOG_PATH: resolvedLogPath,
+                BUILDCHAIN_LOG_RUN_ID: logRunId,
+              }
+            : {}),
+        },
+        shell: true,
+        stdio: "inherit",
+      });
+      executed = true;
+      userLog.info("lifecycle.command.end", {
+        durationMs: Date.now() - startedAt,
+        attributes: {
+          commandSource,
+          stage: stageName || "command",
+        },
+      });
+    } catch (error) {
+      userLog.error("lifecycle.command.error", {
+        durationMs: Date.now() - startedAt,
+        message: "lifecycle command failed",
+        attributes: lifecycleErrorAttributes(error, {
+          commandSource,
+          stage: stageName || "command",
+        }),
+      });
+      throw error;
+    }
   } else if (stageName) {
     commandSource = "buildchain.toml";
-    executed = runLifecycleStage({
-      cwd: resolvedCwd,
-      loadedConfig,
-      name: stageName,
+    const startedAt = Date.now();
+    userLog.info("lifecycle.stage.start", {
+      attributes: {
+        commandSource,
+        stage: stageName,
+      },
     });
+    try {
+      executed = runLifecycleStage({
+        cwd: resolvedCwd,
+        loadedConfig,
+        name: stageName,
+        env: resolvedLogPath
+          ? {
+              BUILDCHAIN_LOG_PATH: resolvedLogPath,
+              BUILDCHAIN_LOG_RUN_ID: logRunId,
+            }
+          : {},
+      });
+      userLog.info("lifecycle.stage.end", {
+        durationMs: Date.now() - startedAt,
+        attributes: {
+          commandSource,
+          stage: stageName,
+          executed,
+        },
+      });
+    } catch (error) {
+      userLog.error("lifecycle.stage.error", {
+        durationMs: Date.now() - startedAt,
+        message: "lifecycle stage failed",
+        attributes: lifecycleErrorAttributes(error, {
+          commandSource,
+          stage: stageName,
+        }),
+      });
+      throw error;
+    }
   }
 
   if (required && !executed) {
+    frameworkLog.error("lifecycle.required-missing", {
+      attributes: {
+        stage: stageName || "command",
+        commandSource,
+      },
+    });
     throw new Error(`required lifecycle stage did not run: ${stageName || "command"}`);
   }
 
   fs.mkdirSync(path.dirname(resolvedManifestPath), { recursive: true });
+  const scanStartedAt = Date.now();
   const files = collectArtifactFiles(resolvedWorkspace, artifactPaths);
   const manifestFiles = files.map((file) => {
     const stat = fs.statSync(file);
@@ -110,6 +228,12 @@ export function runLifecycle({
       size: stat.size,
       sha256: sha256File(file),
     };
+  });
+  frameworkLog.info("artifact.scan", {
+    durationMs: Date.now() - scanStartedAt,
+    attributes: {
+      fileCount: manifestFiles.length,
+    },
   });
   const platform = {
     id: platformId,
@@ -128,6 +252,37 @@ export function runLifecycle({
     files: manifestFiles,
     summary,
   });
+  frameworkLog.info("artifact.manifest.write", {
+    attributes: {
+      manifestPath: toPosix(path.relative(resolvedWorkspace, resolvedManifestPath)),
+      summaryPath: toPosix(path.relative(resolvedWorkspace, resolvedSummaryPath)),
+    },
+  });
+  frameworkLog.info("lifecycle.end", {
+    attributes: {
+      stage: stageName,
+      executed,
+      fileCount: manifestFiles.length,
+    },
+  });
+  const observability = {
+    log: {
+      contract: "kungfu-buildchain-log-event",
+      runId: logRunId,
+      path: relativeLogPath,
+      summary: resolvedLogPath
+        ? summarizeBuildchainLogEvents(
+            readBuildchainLogEvents(resolvedLogPath).filter(
+              (event) => event.attributes?.buildchainLogRunId === logRunId,
+            ),
+          )
+        : summarizeBuildchainLogEvents([...frameworkLog.events, ...userLog.events]),
+    },
+  };
+  const summaryWithObservability = {
+    ...summary,
+    observability,
+  };
   const manifest = {
     schemaVersion: 1,
     contract: "kungfu-buildchain-artifact",
@@ -145,14 +300,15 @@ export function runLifecycle({
       commandSource,
       executed,
     },
-    summary,
+    observability,
+    summary: summaryWithObservability,
     expectedArtifacts,
     files: manifestFiles,
   };
 
   fs.writeFileSync(resolvedManifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
   fs.mkdirSync(path.dirname(resolvedSummaryPath), { recursive: true });
-  fs.writeFileSync(resolvedSummaryPath, `${JSON.stringify(summary, null, 2)}\n`);
+  fs.writeFileSync(resolvedSummaryPath, `${JSON.stringify(summaryWithObservability, null, 2)}\n`);
   console.log(`buildchain_manifest=${path.relative(resolvedWorkspace, resolvedManifestPath)}`);
   return manifest;
 }

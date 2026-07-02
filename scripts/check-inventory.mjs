@@ -55,6 +55,9 @@ if (rootPackage.bin?.buildchain !== "./bin/buildchain.mjs") {
 if (rootPackage.exports?.["."] !== "./packages/core/index.js") {
   throw new Error("root package must export packages/core/index.js");
 }
+if (rootPackage.exports?.["./logging"] !== "./packages/core/logging.js") {
+  throw new Error("root package must export @kungfu-tech/buildchain/logging");
+}
 if (rootPackage.publishConfig?.access !== "public") {
   throw new Error("root package publishConfig.access must be public");
 }
