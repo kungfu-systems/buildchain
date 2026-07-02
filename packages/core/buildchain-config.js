@@ -116,6 +116,9 @@ export function normalizeBuildchainConfig(config) {
   if (normalized.deploy !== undefined) {
     normalized.deploy = normalizeDeploySection(normalized.deploy, normalized.project);
   }
+  if (normalized.surfaces !== undefined) {
+    normalized.surfaces = normalizeSurfacesSection(normalized.surfaces);
+  }
   if (normalized.retention !== undefined) {
     normalized.retention = normalizeRetentionSection(normalized.retention);
   }
@@ -291,18 +294,111 @@ function normalizeDeployConfig(name, config) {
       ? undefined
       : posixPath(assertString(config.artifact_path, `deploy.${name}.artifact_path`)),
     secretRefs: normalizeStringArray(config.secret_refs, `deploy.${name}.secret_refs`),
+    surfaces: config.surfaces === undefined
+      ? undefined
+      : normalizeDeploySurfaceOverrides(name, config.surfaces),
   };
   delete normalized.artifact_path;
   delete normalized.secret_refs;
+  if (normalized.surfaces === undefined) {
+    delete normalized.surfaces;
+  }
+  assertNoInlineSecretValues(config, `deploy.${name}`, new Set(["secret_refs", "surfaces"]));
+  return normalized;
+}
+
+function normalizeDeploySurfaceOverrides(channelName, surfaces) {
+  assertPlainObject(surfaces, `deploy.${channelName}.surfaces`);
+  return Object.fromEntries(
+    Object.entries(surfaces).map(([surfaceName, override]) => [
+      surfaceName,
+      normalizeDeploySurfaceOverride(channelName, surfaceName, override),
+    ]),
+  );
+}
+
+function normalizeDeploySurfaceOverride(channelName, surfaceName, override) {
+  assertPlainObject(override, `deploy.${channelName}.surfaces.${surfaceName}`);
+  const label = `deploy.${channelName}.surfaces.${surfaceName}`;
+  const normalized = {
+    ...override,
+    artifactPath: override.artifact_path === undefined
+      ? undefined
+      : posixPath(assertString(override.artifact_path, `${label}.artifact_path`)),
+    originPath: override.origin_path === undefined
+      ? undefined
+      : assertString(override.origin_path, `${label}.origin_path`),
+    secretRefs: normalizeStringArray(override.secret_refs, `${label}.secret_refs`),
+  };
+  delete normalized.artifact_path;
+  delete normalized.origin_path;
+  delete normalized.secret_refs;
+  if (normalized.artifactPath === undefined) {
+    delete normalized.artifactPath;
+  }
+  if (normalized.originPath === undefined) {
+    delete normalized.originPath;
+  }
+  if (normalized.secretRefs.length === 0) {
+    delete normalized.secretRefs;
+  }
+  assertNoInlineSecretValues(override, label, new Set(["secret_refs"]));
+  return normalized;
+}
+
+function assertNoInlineSecretValues(config, label, ignoredKeys = new Set()) {
   for (const [key, value] of Object.entries(config)) {
-    if (key === "secret_refs" || key.endsWith("_ref") || key.endsWith("_refs")) {
+    if (ignoredKeys.has(key) || key.endsWith("_ref") || key.endsWith("_refs")) {
       continue;
     }
     if (/(secret|token|password)/i.test(key) && value !== undefined) {
-      throw new Error(`deploy.${name}.${key} must be declared as a secret reference, not a secret value`);
+      throw new Error(`${label}.${key} must be declared as a secret reference, not a secret value`);
     }
   }
+}
+
+function normalizeSurfacesSection(surfaces) {
+  assertPlainObject(surfaces, "surfaces");
+  const entries = Object.entries(surfaces);
+  if (entries.length === 0) {
+    throw new Error("surfaces must declare at least one surface");
+  }
+  return Object.fromEntries(
+    entries.map(([name, surface]) => [
+      name,
+      normalizeSurfaceConfig(name, surface),
+    ]),
+  );
+}
+
+function normalizeSurfaceConfig(name, surface) {
+  assertPlainObject(surface, `surfaces.${name}`);
+  const normalized = {
+    name,
+    path: surface.path === undefined
+      ? "/"
+      : normalizeSurfacePath(assertString(surface.path, `surfaces.${name}.path`)),
+    pathOnly: optionalBoolean(surface.path_only, false),
+    canonical: optionalBoolean(surface.canonical, name === "default" || name === "hub"),
+  };
+  if (surface.preview_url_pattern !== undefined) {
+    normalized.previewUrlPattern = assertString(surface.preview_url_pattern, `surfaces.${name}.preview_url_pattern`);
+  }
+  if (surface.staging_url !== undefined) {
+    normalized.stagingUrl = assertString(surface.staging_url, `surfaces.${name}.staging_url`);
+  }
+  if (surface.production_url !== undefined) {
+    normalized.productionUrl = assertString(surface.production_url, `surfaces.${name}.production_url`);
+  }
   return normalized;
+}
+
+function normalizeSurfacePath(value) {
+  const normalized = `/${String(value).replace(/^\/+/, "")}`.replace(/\/{2,}/g, "/");
+  if (normalized === "/") {
+    return normalized;
+  }
+  return normalized.endsWith("/") ? normalized : `${normalized}/`;
 }
 
 function normalizeRetentionSection(retention) {
@@ -388,6 +484,25 @@ function validateWebSurfaceConfig(config) {
     }
     if (stagingSecurity.isolatedProviders === false) {
       throw new Error("security.staging.isolated_providers must not be false for web-surface");
+    }
+  }
+  validateWebSurfaceSurfaces(config);
+}
+
+function validateWebSurfaceSurfaces(config) {
+  const surfaces = config.surfaces || {};
+  for (const [name, surface] of Object.entries(surfaces)) {
+    if (!surface.pathOnly && !surface.previewUrlPattern) {
+      throw new Error(`surfaces.${name}.preview_url_pattern is required unless path_only = true`);
+    }
+    if (!surface.pathOnly && !surface.stagingUrl) {
+      throw new Error(`surfaces.${name}.staging_url is required unless path_only = true`);
+    }
+    if (!surface.pathOnly && !surface.productionUrl) {
+      throw new Error(`surfaces.${name}.production_url is required unless path_only = true`);
+    }
+    if (surface.productionUrl && !surface.pathOnly && !surface.stagingUrl) {
+      throw new Error(`surfaces.${name}.staging_url is required when production_url declares a first-class host`);
     }
   }
 }
@@ -730,6 +845,21 @@ export function validateBuildchainConfig(
               adapter: deploy.adapter,
               artifactPath: deploy.artifactPath,
               secretRefs: deploy.secretRefs,
+            },
+          ]),
+        )
+      : undefined,
+    surfaces: loadedConfig.config.surfaces
+      ? Object.fromEntries(
+          Object.entries(loadedConfig.config.surfaces).map(([name, surface]) => [
+            name,
+            {
+              path: surface.path,
+              pathOnly: surface.pathOnly,
+              canonical: surface.canonical,
+              previewUrlPattern: surface.previewUrlPattern,
+              stagingUrl: surface.stagingUrl,
+              productionUrl: surface.productionUrl,
             },
           ]),
         )
