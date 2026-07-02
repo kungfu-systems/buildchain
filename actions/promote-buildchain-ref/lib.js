@@ -2305,6 +2305,24 @@ async function promoteBuildchainRefs({
     });
   };
 
+  const findMatchingTargetPullRequest = async ({ commitSha, targetRef }) => {
+    const { data: pullRequests } =
+      await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+        owner,
+        repo,
+        commit_sha: commitSha,
+      });
+    return pullRequests.find((pullRequest) => {
+      const baseRef = pullRequest.base?.ref;
+      const headRepo = pullRequest.head?.repo?.full_name;
+      return (
+        pullRequest.merged_at &&
+        baseRef === targetRef &&
+        headRepo === `${owner}/${repo}`
+      );
+    });
+  };
+
   const assertPromotionPrOrVersionStateParent = async ({ commitSha, targetRef, allowedPaths }) => {
     try {
       await assertChannelPromotionPr({
@@ -2429,6 +2447,18 @@ async function promoteBuildchainRefs({
         if (validPromotionPr) {
           throw error;
         }
+      }
+      const matchingTargetPullRequest = await findMatchingTargetPullRequest({
+        commitSha,
+        targetRef,
+      });
+      if (matchingTargetPullRequest) {
+        await assertOnlyAllowedChangesBetween({
+          baseSha: alphaSha,
+          headSha: commitSha,
+          allowedPaths,
+        });
+        return;
       }
     }
     for (const parentSha of commit.parents) {
