@@ -6,7 +6,7 @@ on:
       buildchain_ref:
         description: "Buildchain ref to validate"
         required: true
-        default: "dev/v2/v2.0"
+        default: "dev/v2/v2.2"
       legacy_workflows_ref:
         description: "Compatibility workflows ref"
         required: true

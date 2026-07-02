@@ -2231,6 +2231,10 @@ async function promoteBuildchainRefs({
       updates.push({ ref: branch, action: "dry-run-default-branch" });
       return;
     }
+    if (typeof octokit.rest.repos?.update !== "function") {
+      updates.push({ ref: branch, action: "skipped-default-branch-update-unavailable" });
+      return;
+    }
     await octokit.rest.repos.update({
       owner,
       repo,
@@ -3396,7 +3400,8 @@ async function promoteBuildchainRefs({
     ),
   });
   await updateTag(rule.minorTag, releaseSha);
-  if (await shouldPromoteMajorTag()) {
+  const ownsMajorFloatingTag = await shouldPromoteMajorTag();
+  if (ownsMajorFloatingTag) {
     await updateTag(rule.majorTag, releaseSha);
   } else {
     updates.push({
@@ -3408,6 +3413,9 @@ async function promoteBuildchainRefs({
   await markComplete();
 
   if (releaseCommit.versionStrategy?.next === "manual") {
+    if (ownsMajorFloatingTag) {
+      await updateDefaultBranch(`dev/v${rule.major}/v${rule.major}.${rule.minor}`);
+    }
     updates.push({
       ref: `dev/v${rule.major}/v${rule.major}.${rule.minor}`,
       action: "next-anchor-required",
@@ -3477,7 +3485,11 @@ async function promoteBuildchainRefs({
         updates,
       });
     }
-    await updateBranch(`dev/v${rule.major}/v${rule.major}.${rule.minor}`, nextAlphaSha);
+    const nextDevRef = `dev/v${rule.major}/v${rule.major}.${rule.minor}`;
+    await updateBranch(nextDevRef, nextAlphaSha);
+    if (ownsMajorFloatingTag) {
+      await updateDefaultBranch(nextDevRef);
+    }
   }
   await ensureTag(selectedNextAlpha.tag, nextAlphaSha);
   await updateTag(rule.alphaTag, nextAlphaSha);
