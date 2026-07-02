@@ -1414,7 +1414,7 @@ dist_tag = "latest"
   assert.equal(refs.has("tags/v1.0.0"), false);
 });
 
-test("publish transaction skips stale current alpha transaction identity", async () => {
+test("publish transaction replaces stale current alpha transaction identity", async () => {
   const cwd = makeTempWorkspace({
     "buildchain.toml": `
 schema = 1
@@ -1509,22 +1509,29 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
       {
         kind: "npm",
         name: "@kungfu-tech/buildchain",
-        ref: "1.0.0-alpha.1",
+        ref: "1.0.0-alpha.0",
         digest: "sha256:alpha1",
       },
     ]),
   });
 
   assert.equal(result.publishTransaction.state, "complete");
-  assert.equal(result.publishTransaction.exactTag, "v1.0.0-alpha.1");
-  assert.equal(result.publishTransaction.stateRef, "buildchain/release-state/1-0-0-alpha-1");
-  assert.equal(refs.has("tags/v1.0.0-alpha.0"), false);
-  assert.equal(refs.has("tags/v1.0.0-alpha.1"), true);
-  assert.equal(refs.has("heads/buildchain/release-state/1-0-0-alpha-1"), true);
-  assert.equal(
-    result.updates.some((update) => update.action === "stale-publish-transaction"),
-    true,
-  );
+  assert.equal(result.publishTransaction.exactTag, "v1.0.0-alpha.0");
+  assert.equal(result.publishTransaction.stateRef, "buildchain/release-state/1-0-0-alpha-0");
+  assert.equal(refs.get("tags/v1.0.0-alpha.0"), SHA);
+  assert.equal(refs.get("tags/v1.0-alpha"), SHA);
+  assert.equal(refs.get("heads/buildchain/release-state/1-0-0-alpha-0") !== OTHER_SHA, true);
+  const recovered = await restoreDurableReleaseTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    stateRef: "buildchain/release-state/1-0-0-alpha-0",
+    statePath: path.join(cwd, ".buildchain", "release-state.json"),
+    evidencePath: path.join(cwd, ".buildchain", "publish-evidence.json"),
+  });
+  assert.equal(recovered.source_sha, SHA);
+  assert.equal(recovered.release_sha, SHA);
+  assert.equal(recovered.state, "complete");
 });
 
 test("publish transaction resumes matching alpha durable state refs", async () => {
