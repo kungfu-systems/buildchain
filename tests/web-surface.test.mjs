@@ -32,7 +32,9 @@ test("web-surface fixture validates and runs lifecycle without version state", (
   withFixture((fixture) => {
     const summary = validateWebSurfaceProject(fixture);
     assert.equal(summary.project.type, "web-surface");
-    assert.equal(summary.channels.preview.urlPattern, "https://{alias}.preview.kungfu.tech");
+    assert.equal(summary.channels.preview.urlPattern, "https://{alias}.preview.libkungfu.dev");
+    assert.deepEqual(Object.keys(summary.surfaces), ["hub", "core", "buildchain"]);
+    assert.equal(summary.surfaces.core.stagingUrl, "https://core.staging.libkungfu.dev");
     assert.equal(summary.version, undefined);
 
     assert.equal(runLifecycle({ cwd: fixture, stageName: "build" }).lifecycle.executed, true);
@@ -55,15 +57,39 @@ test("web-surface deploy plan emits deterministic manifest without touching AWS"
 
     assert.equal(plan.dryRun, true);
     assert.equal(plan.adapter, "aws-s3-cloudfront");
-    assert.equal(plan.url, "https://sha-aaaaaaaaaaaa.preview.kungfu.tech");
-    assert.equal(plan.manifest.site, "kungfu-tech");
+    assert.equal(plan.url, "https://sha-aaaaaaaaaaaa.preview.libkungfu.dev");
+    assert.deepEqual(plan.urls, {
+      hub: "https://sha-aaaaaaaaaaaa.preview.libkungfu.dev",
+      core: "https://core-sha-aaaaaaaaaaaa.preview.libkungfu.dev",
+      buildchain: "https://buildchain-sha-aaaaaaaaaaaa.preview.libkungfu.dev",
+    });
+    assert.equal(plan.manifest.site, "libkungfu-dev");
     assert.equal(plan.manifest.sourceSha, sourceSha);
+    assert.equal(plan.manifest.surfaceBindings.length, 3);
+    assert.deepEqual(
+      plan.manifest.surfaceBindings.map((binding) => [binding.surface, binding.sourcePath, binding.canonicalUrl]),
+      [
+        ["hub", "/", "https://libkungfu.dev"],
+        ["core", "/core/", "https://core.libkungfu.dev"],
+        ["buildchain", "/buildchain/", "https://buildchain.libkungfu.dev"],
+      ],
+    );
     assert.match(plan.manifest.artifactHash, /^[0-9a-f]{64}$/);
     assert.equal(plan.manifest.retentionClass, "preview-sha-immutable");
     assert.equal(plan.manifest.expiresAt, "2026-09-29T00:00:00.000Z");
     assert.deepEqual(
       plan.steps.map((step) => step.action),
-      ["sync-static-artifact", "write-deployment-manifest", "invalidate-cdn"],
+      [
+        "sync-static-artifact",
+        "write-deployment-manifest",
+        "invalidate-cdn",
+        "sync-static-artifact",
+        "write-deployment-manifest",
+        "invalidate-cdn",
+        "sync-static-artifact",
+        "write-deployment-manifest",
+        "invalidate-cdn",
+      ],
     );
   });
 });
@@ -87,10 +113,11 @@ test("web-surface deploy apply defaults to dry-run operations", () => {
     assert.equal(result.applyMode, "dry-run");
     assert.equal(result.status, "planned");
     assert.equal(result.objectPrefix, "pr-123");
-    assert.equal(result.manifestKey, ".buildchain/deployments/pr-123.json");
+    assert.equal(result.manifestKey, ".buildchain/deployments/pr-123/hub.json");
+    assert.equal(result.surfaceBindings.length, 3);
     assert.deepEqual(
       result.operations.map((operation) => operation.executed),
-      [false, false, false],
+      [false, false, false, false, false, false, false, false, false],
     );
   });
 });
@@ -114,10 +141,10 @@ test("web-surface deploy apply executes aws s3 and cloudfront commands through r
 
     assert.equal(result.applyMode, "apply");
     assert.equal(result.status, "applied");
-    assert.equal(result.target, "kungfu-tech-staging");
-    assert.equal(result.operations.length, 3);
+    assert.equal(result.target, "libkungfu-dev-staging");
+    assert.equal(result.operations.length, 9);
     assert.deepEqual(calls[0].args.slice(0, 3), ["s3", "sync", path.join(fixture, "dist")]);
-    assert.equal(calls[0].args[3], "s3://kungfu-tech-staging/staging");
+    assert.equal(calls[0].args[3], "s3://libkungfu-dev-staging/staging");
     assert.equal(calls[1].args[0], "s3");
     assert.equal(calls[1].args[2], "-");
     assert.match(calls[1].stdin, /"channel": "staging"/);
@@ -128,12 +155,57 @@ test("web-surface deploy apply executes aws s3 and cloudfront commands through r
       "E-STAGING",
       "--paths",
       "/staging/*",
-      "/.buildchain/deployments/staging.json",
+      "/.buildchain/deployments/staging/hub.json",
+    ]);
+    assert.equal(calls[3].args[3], "s3://libkungfu-dev-staging/staging/core");
+    assert.deepEqual(calls[5].args.slice(-2), [
+      "/staging/core/*",
+      "/.buildchain/deployments/staging/core.json",
     ]);
     assert.deepEqual(
       result.operations.map((operation) => operation.executed),
-      [true, true, true],
+      [true, true, true, true, true, true, true, true, true],
     );
+  });
+});
+
+test("web-surface deploy apply honors per-surface deploy overrides", () => {
+  withFixture((fixture) => {
+    const configPath = path.join(fixture, "buildchain.toml");
+    fs.appendFileSync(configPath, `
+
+[deploy.staging.surfaces.core]
+bucket = "libkungfu-dev-core-staging"
+cloudfront_distribution = "E-CORE-STAGING"
+prefix = "core-staging"
+origin_path = "/core"
+secret_refs = ["CORE_AWS_ROLE_ARN"]
+`);
+    fs.mkdirSync(path.join(fixture, "dist"), { recursive: true });
+    fs.writeFileSync(path.join(fixture, "dist", "index.html"), "hello\n");
+    const calls = [];
+    const result = applyWebSurfaceDeploy({
+      cwd: fixture,
+      channel: "staging",
+      sourceSha: "b".repeat(40),
+      dryRun: false,
+      appliedAt: "2026-07-01T00:00:00.000Z",
+      commandRunner(operation) {
+        calls.push(operation);
+        return { exitCode: 0, stdout: `${operation.action}\n`, stderr: "" };
+      },
+    });
+
+    const coreBinding = result.surfaceBindings.find((binding) => binding.surface === "core");
+    assert.equal(coreBinding.bucket, "libkungfu-dev-core-staging");
+    assert.equal(coreBinding.distributionId, "E-CORE-STAGING");
+    assert.equal(coreBinding.originPath, "/core");
+    assert.equal(coreBinding.objectPrefix, "core-staging");
+    assert.equal(calls[3].args[3], "s3://libkungfu-dev-core-staging/core-staging");
+    assert.deepEqual(calls[5].args.slice(-2), [
+      "/core-staging/*",
+      "/.buildchain/deployments/staging/core.json",
+    ]);
   });
 });
 
@@ -161,7 +233,7 @@ test("web-surface deploy apply can execute a saved deploy plan", () => {
     assert.equal(result.status, "applied");
     assert.equal(result.sourceSha, "b".repeat(40));
     assert.equal(result.artifactHash, plan.artifact.hash);
-    assert.equal(calls[0].args[3], "s3://kungfu-tech-staging/staging");
+    assert.equal(calls[0].args[3], "s3://libkungfu-dev-staging/staging");
   });
 });
 
@@ -195,12 +267,12 @@ test("web-surface deploy apply honors explicit bucket-root prefix", () => {
       "s3",
       "sync",
       path.join(fixture, "dist"),
-      "s3://kungfu-tech-staging",
+      "s3://libkungfu-dev-staging",
       "--delete",
       "--exclude",
       ".buildchain/*",
     ]);
-    assert.deepEqual(calls[2].args.slice(-2), ["/*", "/.buildchain/deployments/staging.json"]);
+    assert.deepEqual(calls[2].args.slice(-2), ["/*", "/.buildchain/deployments/staging/hub.json"]);
   });
 });
 
@@ -229,7 +301,7 @@ test("web-surface deploy apply fails closed on placeholder AWS targets", () => {
     fs.writeFileSync(
       configPath,
       source
-        .replace('bucket = "kungfu-tech-staging"', 'bucket = "pending-staging-bucket"')
+        .replace('bucket = "libkungfu-dev-staging"', 'bucket = "pending-staging-bucket"')
         .replace('cloudfront_distribution = "E-STAGING"', 'cloudfront_distribution = "pending-staging-distribution"'),
     );
     fs.mkdirSync(path.join(fixture, "dist"), { recursive: true });
@@ -247,7 +319,31 @@ test("web-surface deploy apply fails closed on placeholder AWS targets", () => {
         sourceSha: "b".repeat(40),
         dryRun: false,
       }),
-      /deploy\.staging\.bucket/,
+      /deploy\.staging\.surfaces\.hub\.bucket/,
+    );
+  });
+});
+
+test("web-surface deploy apply fails closed on placeholder per-surface AWS targets", () => {
+  withFixture((fixture) => {
+    const configPath = path.join(fixture, "buildchain.toml");
+    fs.appendFileSync(configPath, `
+
+[deploy.staging.surfaces.core]
+bucket = "pending-core-bucket"
+cloudfront_distribution = "E-CORE-STAGING"
+`);
+    fs.mkdirSync(path.join(fixture, "dist"), { recursive: true });
+    fs.writeFileSync(path.join(fixture, "dist", "index.html"), "hello\n");
+
+    assert.throws(
+      () => applyWebSurfaceDeploy({
+        cwd: fixture,
+        channel: "staging",
+        sourceSha: "b".repeat(40),
+        dryRun: false,
+      }),
+      /deploy\.staging\.surfaces\.core\.bucket/,
     );
   });
 });
@@ -287,7 +383,15 @@ test("web-surface manifest supports managed-network staging without Basic Auth",
       deployedAt: "2026-07-01T00:00:00.000Z",
     });
 
-    assert.equal(manifest.url, "https://staging.kungfu.tech");
+    assert.equal(manifest.url, "https://staging.libkungfu.dev");
+    assert.deepEqual(
+      Object.fromEntries(manifest.surfaceBindings.map((binding) => [binding.surface, binding.url])),
+      {
+        hub: "https://staging.libkungfu.dev",
+        core: "https://core.staging.libkungfu.dev",
+        buildchain: "https://buildchain.staging.libkungfu.dev",
+      },
+    );
     assert.equal(manifest.retentionClass, "staging-protected");
     assert.equal(manifest.expiresAt, "2026-09-29T00:00:00.000Z");
     assert.equal(manifest.accessControl, "managed-network");
@@ -307,7 +411,7 @@ test("web-surface production manifest uses canonical retention and public indexa
       deployedAt: "2026-07-01T00:00:00.000Z",
     });
 
-    assert.equal(manifest.url, "https://kungfu.tech");
+    assert.equal(manifest.url, "https://libkungfu.dev");
     assert.equal(manifest.retentionClass, "production-canonical");
     assert.equal(manifest.expiresAt, "2027-07-01T00:00:00.000Z");
     assert.equal(manifest.mutableAlias, false);
@@ -335,8 +439,8 @@ test("web-surface production deploy apply executes against production target", (
 
     assert.equal(result.status, "applied");
     assert.equal(result.objectPrefix, "production");
-    assert.equal(result.manifestKey, ".buildchain/deployments/production.json");
-    assert.equal(calls[0].args[3], "s3://kungfu-tech-production/production");
+    assert.equal(result.manifestKey, ".buildchain/deployments/production/hub.json");
+    assert.equal(calls[0].args[3], "s3://libkungfu-dev-production/production");
     assert.deepEqual(calls[2].args, [
       "cloudfront",
       "create-invalidation",
@@ -344,7 +448,7 @@ test("web-surface production deploy apply executes against production target", (
       "E-PRODUCTION",
       "--paths",
       "/production/*",
-      "/.buildchain/deployments/production.json",
+      "/.buildchain/deployments/production/hub.json",
     ]);
   });
 });
@@ -363,7 +467,8 @@ test("web-surface cleanup plan distinguishes mutable PR aliases from immutable S
     assert.equal(cleanup.entries[0].mutableAlias, true);
     assert.equal(cleanup.entries[0].retentionDays, 14);
     assert.equal(cleanup.entries[0].action, "delete-preview-alias");
-    assert.equal(cleanup.entries[0].manifestKey, ".buildchain/deployments/pr-123.json");
+    assert.equal(cleanup.entries[0].manifestKey, ".buildchain/deployments/pr-123/hub.json");
+    assert.equal(cleanup.entries[0].surfaceBindings.length, 3);
     assert.equal(cleanup.entries[1].aliasKind, "sha");
     assert.equal(cleanup.entries[1].mutableAlias, false);
     assert.equal(cleanup.entries[1].retentionDays, 90);
@@ -392,7 +497,17 @@ test("web-surface closed PR cleanup can plan apply from pull number", () => {
     assert.equal(cleanup.entries[0].alias, "pr-321");
     assert.deepEqual(
       cleanup.entries[0].steps.map((step) => step.action),
-      ["delete-static-prefix", "delete-deployment-manifest", "invalidate-cdn"],
+      [
+        "delete-static-prefix",
+        "delete-deployment-manifest",
+        "invalidate-cdn",
+        "delete-static-prefix",
+        "delete-deployment-manifest",
+        "invalidate-cdn",
+        "delete-static-prefix",
+        "delete-deployment-manifest",
+        "invalidate-cdn",
+      ],
     );
   });
 });
@@ -432,8 +547,8 @@ test("web-surface cleanup apply executes preview deletion through runner", () =>
     assert.equal(result.applyMode, "apply");
     assert.equal(result.status, "applied");
     assert.equal(result.entries[0].alias, "pr-123");
-    assert.deepEqual(calls[0].args, ["s3", "rm", "s3://kungfu-tech-preview/pr-123", "--recursive"]);
-    assert.deepEqual(calls[1].args, ["s3", "rm", "s3://kungfu-tech-preview/.buildchain/deployments/pr-123.json"]);
+    assert.deepEqual(calls[0].args, ["s3", "rm", "s3://libkungfu-dev-preview/pr-123", "--recursive"]);
+    assert.deepEqual(calls[1].args, ["s3", "rm", "s3://libkungfu-dev-preview/.buildchain/deployments/pr-123/hub.json"]);
     assert.deepEqual(calls[2].args, [
       "cloudfront",
       "create-invalidation",
@@ -441,8 +556,9 @@ test("web-surface cleanup apply executes preview deletion through runner", () =>
       "E-PREVIEW",
       "--paths",
       "/pr-123/*",
-      "/.buildchain/deployments/pr-123.json",
+      "/.buildchain/deployments/pr-123/hub.json",
     ]);
+    assert.deepEqual(calls[3].args, ["s3", "rm", "s3://libkungfu-dev-preview/pr-123/core", "--recursive"]);
   });
 });
 
@@ -462,7 +578,7 @@ test("web-surface cleanup apply fails closed on placeholder preview distribution
         sourceSha: "c".repeat(40),
         dryRun: false,
       }),
-      /deploy\.preview\.cloudfront_distribution/,
+      /deploy\.preview\.surfaces\.hub\.cloudfront_distribution/,
     );
   });
 });
@@ -488,7 +604,7 @@ test("web-surface cleanup apply can execute a saved cleanup plan", () => {
 
     assert.equal(result.status, "applied");
     assert.equal(result.entries[0].alias, "pr-456");
-    assert.deepEqual(calls[0].args, ["s3", "rm", "s3://kungfu-tech-preview/pr-456", "--recursive"]);
+    assert.deepEqual(calls[0].args, ["s3", "rm", "s3://libkungfu-dev-preview/pr-456", "--recursive"]);
   });
 });
 

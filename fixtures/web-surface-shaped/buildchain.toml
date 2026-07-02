@@ -2,17 +2,17 @@ schema = 1
 
 [project]
 type = "web-surface"
-name = "site-kungfu-tech"
-site = "kungfu-tech"
+name = "site-libkungfu-dev"
+site = "libkungfu-dev"
 
 [channels.preview]
-url_pattern = "https://{alias}.preview.kungfu.tech"
+url_pattern = "https://{alias}.preview.libkungfu.dev"
 visibility = "ephemeral"
 requires_auth = false
 noindex = true
 
 [channels.staging]
-url = "https://staging.kungfu.tech"
+url = "https://staging.libkungfu.dev"
 visibility = "protected"
 access_control = "managed-network"
 edge_auth = "none"
@@ -20,28 +20,46 @@ noindex = true
 promotable = true
 
 [channels.production]
-url = "https://kungfu.tech"
+url = "https://libkungfu.dev"
 visibility = "public"
 canonical = true
 noindex = false
 
+[surfaces.hub]
+path = "/"
+production_url = "https://libkungfu.dev"
+staging_url = "https://staging.libkungfu.dev"
+preview_url_pattern = "https://{alias}.preview.libkungfu.dev"
+
+[surfaces.core]
+path = "/core/"
+production_url = "https://core.libkungfu.dev"
+staging_url = "https://core.staging.libkungfu.dev"
+preview_url_pattern = "https://core-{alias}.preview.libkungfu.dev"
+
+[surfaces.buildchain]
+path = "/buildchain/"
+production_url = "https://buildchain.libkungfu.dev"
+staging_url = "https://buildchain.staging.libkungfu.dev"
+preview_url_pattern = "https://buildchain-{alias}.preview.libkungfu.dev"
+
 [deploy.preview]
 adapter = "aws-s3-cloudfront"
-bucket = "kungfu-tech-preview"
+bucket = "libkungfu-dev-preview"
 cloudfront_distribution = "E-PREVIEW"
 artifact_path = "dist"
 secret_refs = ["AWS_ROLE_ARN"]
 
 [deploy.staging]
 adapter = "aws-s3-cloudfront"
-bucket = "kungfu-tech-staging"
+bucket = "libkungfu-dev-staging"
 cloudfront_distribution = "E-STAGING"
 artifact_path = "dist"
 secret_refs = ["AWS_ROLE_ARN"]
 
 [deploy.production]
 adapter = "aws-s3-cloudfront"
-bucket = "kungfu-tech-production"
+bucket = "libkungfu-dev-production"
 cloudfront_distribution = "E-PRODUCTION"
 artifact_path = "dist"
 secret_refs = ["AWS_ROLE_ARN"]

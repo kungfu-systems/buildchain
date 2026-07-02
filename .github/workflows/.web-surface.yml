@@ -93,6 +93,9 @@ on:
       web-surface-url:
         description: "Planned deployment URL"
         value: ${{ jobs.plan.outputs.web-surface-url }}
+      web-surface-urls-json:
+        description: "All planned deployment URLs keyed by surface name"
+        value: ${{ jobs.plan.outputs.web-surface-urls-json }}
       web-surface-manifest-json:
         description: "Deployment manifest JSON when a deployment plan was created"
         value: ${{ jobs.plan.outputs.web-surface-manifest-json }}
@@ -125,6 +128,7 @@ jobs:
       web-surface-channel: ${{ steps.web.outputs.web-surface-channel }}
       web-surface-alias: ${{ steps.web.outputs.web-surface-alias }}
       web-surface-url: ${{ steps.web.outputs.web-surface-url }}
+      web-surface-urls-json: ${{ steps.web.outputs.web-surface-urls-json }}
       web-surface-manifest-json: ${{ steps.web.outputs.web-surface-manifest-json }}
       web-surface-cleanup-plan-json: ${{ steps.web.outputs.web-surface-cleanup-plan-json }}
     steps:
@@ -254,6 +258,7 @@ jobs:
                 echo "web-surface-channel=$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).channel || "")' "$file")"
                 echo "web-surface-alias=$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).alias || "")' "$file")"
                 echo "web-surface-url=$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).url || "")' "$file")"
+                echo "web-surface-urls-json=$(node -e 'process.stdout.write(JSON.stringify(JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).urls || {}))' "$file")"
                 echo "web-surface-manifest-json=$(node -e 'process.stdout.write(JSON.stringify(JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).manifest || {}))' "$file")"
               } >> "$GITHUB_OUTPUT"
               exit 0
@@ -358,9 +363,12 @@ jobs:
             const fs = require("fs");
             const result = JSON.parse(fs.readFileSync(".buildchain/web-surface-preview-apply.json", "utf8"));
             const marker = "<!-- buildchain:web-surface-preview -->";
+            const urls = result.urls || { default: result.url };
+            const urlLines = Object.entries(urls).map(([surface, url]) => `- ${surface}: ${url}`);
             const body = [
               marker,
-              `Preview deployed: ${result.url}`,
+              "Preview deployed:",
+              ...urlLines,
               "",
               `- Source: \`${result.sourceSha}\``,
               `- Artifact: \`${result.artifactHash}\``,
@@ -395,7 +403,7 @@ jobs:
         run: |
           {
             echo "## Preview apply"
-            node -e 'const r=JSON.parse(require("fs").readFileSync(".buildchain/web-surface-preview-apply.json","utf8")); console.log("- url: "+r.url+"\n- status: "+r.status+"\n- target: "+r.target+"\n- manifest: "+r.manifestKey)'
+            node -e 'const r=JSON.parse(require("fs").readFileSync(".buildchain/web-surface-preview-apply.json","utf8")); const urls=Object.entries(r.urls||{default:r.url}).map(([s,u])=>"- "+s+": "+u).join("\n"); console.log(urls+"\n- status: "+r.status+"\n- target: "+r.target+"\n- manifest: "+r.manifestKey)'
           } >> "$GITHUB_STEP_SUMMARY"
 
   preview-cleanup:
@@ -617,7 +625,7 @@ jobs:
         run: |
           {
             echo "## Staging apply"
-            node -e 'const r=JSON.parse(require("fs").readFileSync(".buildchain/web-surface-staging-apply.json","utf8")); console.log("- url: "+r.url+"\n- status: "+r.status+"\n- target: "+r.target+"\n- source: "+r.sourceSha+"\n- artifact: "+r.artifactHash)'
+            node -e 'const r=JSON.parse(require("fs").readFileSync(".buildchain/web-surface-staging-apply.json","utf8")); const urls=Object.entries(r.urls||{default:r.url}).map(([s,u])=>"- "+s+": "+u).join("\n"); console.log(urls+"\n- status: "+r.status+"\n- target: "+r.target+"\n- source: "+r.sourceSha+"\n- artifact: "+r.artifactHash)'
           } >> "$GITHUB_STEP_SUMMARY"
 
   production-apply:
@@ -710,5 +718,5 @@ jobs:
         run: |
           {
             echo "## Production apply"
-            node -e 'const r=JSON.parse(require("fs").readFileSync(".buildchain/web-surface-production-apply.json","utf8")); console.log("- url: "+r.url+"\n- status: "+r.status+"\n- target: "+r.target+"\n- source: "+r.sourceSha+"\n- artifact: "+r.artifactHash+"\n- rollback pointer: "+(r.manifest.rollbackPointer || "not configured"))'
+            node -e 'const r=JSON.parse(require("fs").readFileSync(".buildchain/web-surface-production-apply.json","utf8")); const urls=Object.entries(r.urls||{default:r.url}).map(([s,u])=>"- "+s+": "+u).join("\n"); console.log(urls+"\n- status: "+r.status+"\n- target: "+r.target+"\n- source: "+r.sourceSha+"\n- artifact: "+r.artifactHash+"\n- rollback pointer: "+(r.manifest.rollbackPointer || "not configured"))'
           } >> "$GITHUB_STEP_SUMMARY"

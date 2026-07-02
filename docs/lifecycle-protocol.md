@@ -307,16 +307,16 @@ schema = 1
 
 [project]
 type = "web-surface"
-name = "site-kungfu-tech"
-site = "kungfu-tech"
+name = "site-libkungfu-dev"
+site = "libkungfu-dev"
 
 [channels.preview]
-url_pattern = "https://{alias}.preview.kungfu.tech"
+url_pattern = "https://{alias}.preview.libkungfu.dev"
 visibility = "ephemeral"
 noindex = true
 
 [channels.staging]
-url = "https://staging.kungfu.tech"
+url = "https://staging.libkungfu.dev"
 visibility = "protected"
 access_control = "managed-network"
 edge_auth = "none"
@@ -324,20 +324,33 @@ noindex = true
 promotable = true
 
 [channels.production]
-url = "https://kungfu.tech"
+url = "https://libkungfu.dev"
 visibility = "public"
 canonical = true
 noindex = false
 
+[surfaces.hub]
+path = "/"
+production_url = "https://libkungfu.dev"
+staging_url = "https://staging.libkungfu.dev"
+preview_url_pattern = "https://{alias}.preview.libkungfu.dev"
+
+[surfaces.core]
+path = "/core/"
+production_url = "https://core.libkungfu.dev"
+staging_url = "https://core.staging.libkungfu.dev"
+preview_url_pattern = "https://core-{alias}.preview.libkungfu.dev"
+
 [deploy.production]
 adapter = "aws-s3-cloudfront"
-bucket = "kungfu-tech-production"
+bucket = "libkungfu-dev-production"
 artifact_path = "dist"
 secret_refs = ["AWS_ROLE_ARN"]
 ```
 
-See [Web-surface deployments](web-surface-deployments.md) for the manifest,
-preview alias, retention, cleanup, and dry-run deploy contract.
+See [Web-surface deployments](web-surface-deployments.md) for named surface host
+mappings, the manifest, preview alias, retention, cleanup, and dry-run deploy
+contract.
 
 ## Examples
 
