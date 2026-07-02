@@ -10,6 +10,8 @@ Current shared surfaces:
 - lifecycle stage normalization and execution;
 - config validation for release-package and `web-surface` projects.
 - toolkit observability logging through `@kungfu-tech/buildchain/logging`;
+- toolkit diagnostics and native profile collection through
+  `@kungfu-tech/buildchain/diagnostics`;
 - release passport creation and verification through
   `@kungfu-tech/buildchain/release-passport`.
 

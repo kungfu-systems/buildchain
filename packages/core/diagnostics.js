@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import {
   discoverConfiguredVersionStateFiles,
+  getNativeDiagnosticsProfile,
   getLifecycleStage,
   getPublishContract,
   getVersionStrategy,
@@ -185,6 +186,9 @@ export function collectBuildchainDiagnostics({ cwd = process.cwd(), artifactPath
           versionStrategy: getVersionStrategy(loadedConfig),
           publishContract: getPublishContract(loadedConfig),
           lifecycleStages: Object.keys(loadedConfig.config.lifecycle || {}),
+          diagnostics: {
+            native: getNativeDiagnosticsProfile(loadedConfig),
+          },
           anchorManifest: safeAnchorManifest(resolvedCwd, loadedConfig),
           validation: configSummary,
         }
@@ -195,6 +199,50 @@ export function collectBuildchainDiagnostics({ cwd = process.cwd(), artifactPath
         .filter(([, value]) => Boolean(value)),
     ),
     artifactPaths: fileStats(resolvedCwd, artifactPaths),
+  };
+}
+
+function selectedCompilerCacheDiagnostics({ cwd, compilerCache, runCommand }) {
+  if (compilerCache === "none") {
+    return {};
+  }
+  const diagnostics = collectCompilerCacheDiagnostics({ cwd, runCommand });
+  if (compilerCache === "ccache") {
+    return { ccache: diagnostics.ccache };
+  }
+  if (compilerCache === "sccache") {
+    return { sccache: diagnostics.sccache };
+  }
+  return diagnostics;
+}
+
+export function collectNativeDiagnostics({
+  cwd = process.cwd(),
+  profile = undefined,
+  runCommand = defaultDiagnosticCommandRunner,
+} = {}) {
+  const resolvedCwd = path.resolve(cwd);
+  const nativeProfile = profile || getNativeDiagnosticsProfile(loadBuildchainConfig(resolvedCwd));
+  if (!nativeProfile.enabled) {
+    return {
+      enabled: false,
+      profile: nativeProfile,
+    };
+  }
+  const expectedTools = nativeProfile.expectedTools.length
+    ? nativeProfile.expectedTools
+    : ["node", "pnpm", "npm", "git", "cmake", "ninja", "ccache", "sccache"];
+  return {
+    enabled: true,
+    profile: nativeProfile,
+    tools: collectToolDiagnostics({ cwd: resolvedCwd, tools: expectedTools }),
+    compilerCaches: selectedCompilerCacheDiagnostics({
+      cwd: resolvedCwd,
+      compilerCache: nativeProfile.compilerCache,
+      runCommand,
+    }),
+    artifactDirs: fileStats(resolvedCwd, nativeProfile.artifactDirs),
+    cacheDirs: fileStats(resolvedCwd, nativeProfile.cacheDirs),
   };
 }
 
@@ -676,6 +724,8 @@ export function createDiagnosticsArtifact({
 } = {}) {
   const resolvedCwd = path.resolve(cwd);
   const events = logPath ? readBuildchainLogEvents(logPath) : [];
+  const loadedConfig = loadBuildchainConfig(resolvedCwd);
+  const nativeProfile = getNativeDiagnosticsProfile(loadedConfig);
   return {
     schemaVersion: 1,
     contract: BUILDCHAIN_DIAGNOSTICS_CONTRACT,
@@ -685,6 +735,7 @@ export function createDiagnosticsArtifact({
     runner: collectRunnerDiagnostics(),
     tools: collectToolDiagnostics({ cwd: resolvedCwd }),
     cache: collectCacheDiagnostics({ cwd: resolvedCwd, cacheDirs }),
+    native: collectNativeDiagnostics({ cwd: resolvedCwd, profile: nativeProfile }),
     git: collectGitDiagnostics({ cwd: resolvedCwd }),
     lifecycleObservability: lifecycleObservability || summarizeLifecycleObservability({ events, logPath }),
     process: processSummary || summarizeProcessSamples({ samples: processSamples, requestedParallelism }),

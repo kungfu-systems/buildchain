@@ -56,6 +56,10 @@ Supported presets:
 - `--type anchored-package` for packages whose version is anchored to an
   explicit upstream release manifest.
 
+The native preset includes an opt-in `[diagnostics.native]` profile with common
+tool/cache/artifact probes. Consumers can keep it enabled, adjust the tool and
+directory lists, or disable it if a repository does not need native diagnostics.
+
 `buildchain validate` parses `buildchain.toml`, checks configured version-state
 files, and can require named lifecycle stages:
 

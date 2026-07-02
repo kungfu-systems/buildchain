@@ -171,6 +171,25 @@ and conservative command categories such as `compiler`, `archive`, `linker`,
 `make -j20`" from "the build graph only kept two active compiler or archive
 children busy during the sampled window" without storing full command lines.
 
+Native repositories can opt into a reusable diagnostics profile in
+`buildchain.toml`:
+
+```toml
+[diagnostics.native]
+enabled = true
+sample_process_tree = true
+compiler_cache = "auto"
+expected_tools = ["ccache", "sccache", "clang", "cl", "cmake", "ninja"]
+artifact_dirs = ["build", "dist", "build/Release"]
+cache_dirs = [".ccache", ".sccache"]
+```
+
+When enabled, diagnostics artifacts include the normalized profile, selected
+tool versions, compiler-cache stats, and configured artifact/cache directory
+stats. The profile is data-driven: Buildchain does not assume a specific
+project such as libnode, and `sample_process_tree` only declares intent for a
+consumer or wrapper to start the sampler around the long native command.
+
 Anchored/manual package projects can also run one higher-level release-shape
 check instead of assembling lower-level config calls:
 

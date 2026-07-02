@@ -1,6 +1,7 @@
 export {
   discoverConfiguredVersionStateFiles,
   getLifecycleStage,
+  getNativeDiagnosticsProfile,
   getPublishContract,
   getVersionStrategy,
   loadBuildchainConfig,
@@ -61,6 +62,7 @@ export {
   collectCacheDiagnostics,
   collectCompilerCacheDiagnostics,
   collectGitDiagnostics,
+  collectNativeDiagnostics,
   collectProcessTreeSnapshot,
   collectRunnerDiagnostics,
   collectToolDiagnostics,

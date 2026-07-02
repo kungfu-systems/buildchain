@@ -112,6 +112,13 @@ commands = [
 commands = [
   "ctest --test-dir build --output-on-failure",
 ]
+
+[diagnostics.native]
+enabled = true
+sample_process_tree = false
+compiler_cache = "auto"
+expected_tools = ["ccache", "sccache", "clang", "cl", "cmake", "ninja"]
+artifact_dirs = ["build", "dist"]
 `;
 }
 

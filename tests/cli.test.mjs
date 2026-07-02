@@ -9,6 +9,7 @@ import {
   createDiagnosticsArtifact,
   collectCacheDiagnostics,
   collectCompilerCacheDiagnostics,
+  collectNativeDiagnostics,
   collectRunnerDiagnostics,
   detectRequestedParallelism,
   formatDiagnosticsSummaryTable,
@@ -447,6 +448,48 @@ test("diagnostics SDK collects compiler cache stats through injectable runners",
   });
   assert.equal(unavailable.ccache.available, false);
   assert.equal(unavailable.sccache.available, false);
+});
+
+test("diagnostics SDK applies optional native diagnostics profile", () => {
+  const cwd = tempDir("native-diagnostics-profile");
+  fs.mkdirSync(path.join(cwd, "build"), { recursive: true });
+  fs.writeFileSync(path.join(cwd, "build", "artifact.txt"), "ok");
+  fs.mkdirSync(path.join(cwd, ".ccache"), { recursive: true });
+  fs.writeFileSync(path.join(cwd, "buildchain.toml"), `schema = 1
+
+[diagnostics.native]
+enabled = true
+sample_process_tree = true
+compiler_cache = "ccache"
+expected_tools = ["node", "ccache"]
+artifact_dirs = ["build", "dist"]
+cache_dirs = [".ccache"]
+`);
+
+  const runCommand = (command) => {
+    if (command === "ccache") {
+      return JSON.stringify({ cache_hit_direct: 2, cache_miss: 1 });
+    }
+    throw new Error("unexpected cache command");
+  };
+  const native = collectNativeDiagnostics({ cwd, runCommand });
+  assert.equal(native.enabled, true);
+  assert.equal(native.profile.sampleProcessTree, true);
+  assert.equal(native.profile.compilerCache, "ccache");
+  assert.equal(native.artifactDirs[0].path, "build");
+  assert.equal(native.artifactDirs[0].exists, true);
+  assert.equal(native.artifactDirs[1].exists, false);
+  assert.equal(native.cacheDirs[0].path, ".ccache");
+  assert.equal(native.compilerCaches.ccache.stats.cache_hit_direct, 2);
+  assert.equal(native.compilerCaches.sccache, undefined);
+
+  const artifact = createDiagnosticsArtifact({ cwd });
+  assert.equal(artifact.native.enabled, true);
+  assert.equal(artifact.native.profile.compilerCache, "ccache");
+  assert.deepEqual(
+    artifact.buildchain.config.diagnostics.native.artifactDirs,
+    ["build", "dist"],
+  );
 });
 
 test("diagnostics process sampler annotates samples with build concurrency context", () => {
