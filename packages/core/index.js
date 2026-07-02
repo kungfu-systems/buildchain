@@ -59,6 +59,7 @@ export {
   classifyProcessCommand,
   collectBuildchainDiagnostics,
   collectCacheDiagnostics,
+  collectCompilerCacheDiagnostics,
   collectGitDiagnostics,
   collectProcessTreeSnapshot,
   collectRunnerDiagnostics,

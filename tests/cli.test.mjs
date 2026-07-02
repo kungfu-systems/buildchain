@@ -7,6 +7,8 @@ import test from "node:test";
 import { createBuildchainLogger } from "@kungfu-tech/buildchain/logging";
 import {
   createDiagnosticsArtifact,
+  collectCacheDiagnostics,
+  collectCompilerCacheDiagnostics,
   collectRunnerDiagnostics,
   detectRequestedParallelism,
   startProcessSampler,
@@ -273,6 +275,55 @@ test("diagnostics SDK detects requested parallelism from commands and env", () =
     detectRequestedParallelism({ env: { CMAKE_BUILD_PARALLEL_LEVEL: "16" } }),
     { value: 16, source: "env:CMAKE_BUILD_PARALLEL_LEVEL", token: "CMAKE_BUILD_PARALLEL_LEVEL" },
   );
+});
+
+test("diagnostics SDK collects compiler cache stats through injectable runners", () => {
+  const calls = [];
+  const runCommand = (command, args) => {
+    calls.push([command, ...args]);
+    if (command === "ccache") {
+      return JSON.stringify({
+        cache_hit_direct: 7,
+        cache_miss: 3,
+      });
+    }
+    if (command === "sccache") {
+      return JSON.stringify({
+        stats: {
+          cache_hits: 4,
+          compile_requests: 9,
+        },
+      });
+    }
+    const error = new Error("not found");
+    error.code = "ENOENT";
+    throw error;
+  };
+
+  const compilerCaches = collectCompilerCacheDiagnostics({ cwd: root, runCommand });
+  assert.equal(compilerCaches.ccache.available, true);
+  assert.equal(compilerCaches.ccache.format, "json");
+  assert.equal(compilerCaches.ccache.stats.cache_hit_direct, 7);
+  assert.equal(compilerCaches.sccache.stats.stats.cache_hits, 4);
+  assert.deepEqual(calls, [
+    ["ccache", "--show-stats", "--json"],
+    ["sccache", "--show-stats", "--stats-format", "json"],
+  ]);
+
+  const cache = collectCacheDiagnostics({ cwd: root, runCommand });
+  assert.equal(cache.compilerCaches.ccache.stats.cache_miss, 3);
+  assert.equal(cache.compilerCaches.sccache.stats.stats.compile_requests, 9);
+
+  const unavailable = collectCompilerCacheDiagnostics({
+    cwd: root,
+    runCommand() {
+      const error = new Error("not found");
+      error.code = "ENOENT";
+      throw error;
+    },
+  });
+  assert.equal(unavailable.ccache.available, false);
+  assert.equal(unavailable.sccache.available, false);
 });
 
 test("diagnostics process sampler annotates samples with build concurrency context", () => {

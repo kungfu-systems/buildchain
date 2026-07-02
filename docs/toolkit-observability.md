@@ -110,6 +110,7 @@ useful when a native build is slow or flaky:
 import {
   collectBuildchainDiagnostics,
   collectCacheDiagnostics,
+  collectCompilerCacheDiagnostics,
   collectRunnerDiagnostics,
   collectToolDiagnostics,
   detectRequestedParallelism,
@@ -140,17 +141,25 @@ const processSummary = summarizeProcessSamples({
   requestedParallelism: requestedParallelism.value,
   samples: processSampler.stop(),
 });
+const cacheDiagnostics = collectCacheDiagnostics({ cwd: process.cwd() });
 
 writeDiagnosticsArtifact(".buildchain/artifacts/diagnostics.json", {
   contract: "consumer-build-diagnostics",
   buildchain: collectBuildchainDiagnostics({ cwd: process.cwd() }),
   runner: collectRunnerDiagnostics(),
   tools: collectToolDiagnostics({ cwd: process.cwd() }),
-  cache: collectCacheDiagnostics({ cwd: process.cwd() }),
+  cache: cacheDiagnostics,
   lifecycleObservability,
   process: processSummary,
 });
 ```
+
+`collectCacheDiagnostics()` includes package-manager/workspace context, selected
+cache directory stats, and compiler-cache stats from `ccache --show-stats
+--json` plus `sccache --show-stats --stats-format json` when those tools are
+present. Missing cache tools are recorded as unavailable instead of failing the
+diagnostics artifact. Call `collectCompilerCacheDiagnostics()` directly when a
+consumer script only needs compiler cache data.
 
 Process samples are intentionally summarized before they become long-lived
 artifacts. The summary records requested parallelism, the source of that value

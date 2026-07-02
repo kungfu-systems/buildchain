@@ -66,6 +66,15 @@ function commandVersion(command, args = ["--version"], cwd = process.cwd()) {
   }
 }
 
+function defaultDiagnosticCommandRunner(command, args = [], { cwd = process.cwd(), timeoutMs = 5000 } = {}) {
+  return execFileSync(command, args, {
+    cwd,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "ignore"],
+    timeout: timeoutMs,
+  });
+}
+
 function gitField(cwd, args) {
   try {
     return execFileSync("git", args, {
@@ -309,7 +318,58 @@ export function collectToolDiagnostics({ cwd = process.cwd(), tools = ["node", "
   return Object.fromEntries(tools.map((tool) => [tool, { version: commandVersion(tool, ["--version"], cwd) }]));
 }
 
-export function collectCacheDiagnostics({ cwd = process.cwd(), cacheDirs = [] } = {}) {
+function parseJsonDiagnostics(value = "") {
+  try {
+    return JSON.parse(String(value || "").trim());
+  } catch {
+    return undefined;
+  }
+}
+
+function collectCompilerCacheTool({ command, args, cwd, runCommand }) {
+  try {
+    const output = runCommand(command, args, { cwd, timeoutMs: 5000 });
+    const text = String(output || "").trim();
+    const stats = parseJsonDiagnostics(text);
+    return {
+      available: true,
+      command,
+      format: stats ? "json" : "text",
+      stats: stats || {},
+      rawBytes: Buffer.byteLength(text, "utf8"),
+      parseError: stats ? "" : "stats output was not JSON",
+    };
+  } catch (error) {
+    return {
+      available: false,
+      command,
+      error: error?.code || error?.message || "stats command failed",
+    };
+  }
+}
+
+export function collectCompilerCacheDiagnostics({
+  cwd = process.cwd(),
+  runCommand = defaultDiagnosticCommandRunner,
+} = {}) {
+  const resolvedCwd = path.resolve(cwd);
+  return {
+    ccache: collectCompilerCacheTool({
+      command: "ccache",
+      args: ["--show-stats", "--json"],
+      cwd: resolvedCwd,
+      runCommand,
+    }),
+    sccache: collectCompilerCacheTool({
+      command: "sccache",
+      args: ["--show-stats", "--stats-format", "json"],
+      cwd: resolvedCwd,
+      runCommand,
+    }),
+  };
+}
+
+export function collectCacheDiagnostics({ cwd = process.cwd(), cacheDirs = [], runCommand = defaultDiagnosticCommandRunner } = {}) {
   const resolvedCwd = path.resolve(cwd);
   return {
     packageManager: (() => {
@@ -327,6 +387,7 @@ export function collectCacheDiagnostics({ cwd = process.cwd(), cacheDirs = [] } 
       }
     })(),
     dirs: fileStats(resolvedCwd, cacheDirs),
+    compilerCaches: collectCompilerCacheDiagnostics({ cwd: resolvedCwd, runCommand }),
   };
 }
 
