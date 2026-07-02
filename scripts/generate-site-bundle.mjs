@@ -103,6 +103,7 @@ function buildSiteBundle() {
     npm: {
       package: packageJson.name,
       command: packageJson.bin?.buildchain || "",
+      versionSource: "package.json#version",
       alphaDistTag: "alpha",
       stableDistTag: "latest",
     },
@@ -161,7 +162,7 @@ function buildSiteBundle() {
     contract: "kungfu-buildchain-release-provenance",
     package: {
       name: packageJson.name,
-      version: packageJson.version,
+      versionSource: "package.json#version",
       bin: packageJson.bin,
       exports: packageJson.exports,
     },
@@ -181,7 +182,7 @@ function buildSiteBundle() {
     },
     package: {
       name: packageJson.name,
-      version: packageJson.version,
+      versionSource: "package.json#version",
     },
     entrypoint: "buildchain-site.json",
     docs,
