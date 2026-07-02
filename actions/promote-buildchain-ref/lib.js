@@ -356,6 +356,37 @@ function versionVerificationEnv(versionStrategy, anchorManifest) {
   };
 }
 
+function readConfiguredVersionValue(file) {
+  if (file.type === "json" || file.type === "toml") {
+    return String(file.key)
+      .split(".")
+      .reduce((current, segment) => current?.[segment], file.content);
+  }
+  if (file.type === "regex") {
+    return file.source.match(file.pattern)?.groups?.version;
+  }
+  return undefined;
+}
+
+function currentConfiguredVersion(files) {
+  const versions = [
+    ...new Set(
+      files
+        .map((file) => readConfiguredVersionValue(file))
+        .filter((version) => typeof version === "string" && version.trim() !== ""),
+    ),
+  ];
+  if (versions.length === 0) {
+    return undefined;
+  }
+  if (versions.length > 1) {
+    throw new Error(
+      `Configured version files disagree: ${versions.join(", ")}`,
+    );
+  }
+  return versions[0];
+}
+
 function uniquePaths(paths) {
   return [...new Set(paths.filter(Boolean))];
 }
@@ -2575,6 +2606,10 @@ async function promoteBuildchainRefs({
     const strategyEnv = versionVerificationEnv(versionStrategy, anchorManifest);
     const manualNext =
       versionStrategy.strategy === "anchored" && versionStrategy.next === "manual";
+    const configuredVersion = manualNext
+      ? currentConfiguredVersion(discovered.files)
+      : undefined;
+    const publishVersion = manualNext ? configuredVersion || version : version;
     const hasVersionVerification =
       Boolean(verificationCommand || getLifecycleStage(discovered.config, "verify"));
     const anchoredReleaseTreePaths =
@@ -2615,11 +2650,13 @@ async function promoteBuildchainRefs({
         files: discoveredPaths,
         manifest: anchorManifest?.path,
         sha: baseSha,
+        publishVersion,
       });
       return {
         sha: baseSha,
         version,
         action: "anchored-manual",
+        publishVersion,
         files: discoveredPaths,
         releaseTreeAllowedPaths: anchoredReleaseTreePaths,
         hasVersionVerification,
@@ -2644,11 +2681,13 @@ async function promoteBuildchainRefs({
         packageManager: discovered.packageManager.name,
         files: discoveredPaths,
         sha: baseSha,
+        publishVersion,
       });
       return {
         sha: baseSha,
         version,
         action: "existing",
+        publishVersion,
         files: discoveredPaths,
         releaseTreeAllowedPaths: discoveredPaths,
         hasVersionVerification,
@@ -2670,6 +2709,7 @@ async function promoteBuildchainRefs({
         sha: baseSha,
         version,
         action: "dry-run",
+        publishVersion,
         files: changedFiles.map((file) => file.path),
         releaseTreeAllowedPaths: changedFiles.map((file) => file.path),
         hasVersionVerification,
@@ -2735,6 +2775,7 @@ async function promoteBuildchainRefs({
       sha: nextCommit.sha,
       version,
       action: "created",
+      publishVersion,
       files: changedFiles.map((file) => file.path),
       releaseTreeAllowedPaths: changedFiles.map((file) => file.path),
       hasVersionVerification,
@@ -2769,10 +2810,11 @@ async function promoteBuildchainRefs({
     releaseSha,
     allowVersionStateFinalization = false,
   }) => {
+    const transactionVersion = version;
     if (dryRun && (publishTransaction || publishCommand || getLifecycleStage(loadBuildchainConfig(cwd), "publish"))) {
       updates.push({
         action: "dry-run-publish-transaction",
-        version,
+        version: transactionVersion,
         tag: exactTag,
         sha: releaseSha,
       });
@@ -2787,7 +2829,7 @@ async function promoteBuildchainRefs({
       targetRef,
       sourceSha: sha,
       releaseSha,
-      version,
+      version: transactionVersion,
       exactTag,
       channel,
       line,
@@ -2941,7 +2983,7 @@ async function promoteBuildchainRefs({
       }
     }
     await executePublishTransaction({
-      version: releaseVersion,
+      version: releaseCommit.publishVersion || releaseVersion,
       exactTag: selectedRelease.tag,
       channel: majorRule.channel || "major",
       line: majorRule.releasePrefix,
@@ -3172,6 +3214,7 @@ async function promoteBuildchainRefs({
       if (candidate.transaction?.release_sha) {
         return {
           version,
+          publishVersion: version,
           commit: { action: "existing-publish-transaction", files: [] },
           sha: candidate.transaction.release_sha,
         };
@@ -3188,12 +3231,12 @@ async function promoteBuildchainRefs({
           allowedPaths: commit.files,
         });
       }
-      return { version, commit, sha: commit.sha };
+      return { version, publishVersion: commit.publishVersion || version, commit, sha: commit.sha };
     };
     let alpha = await prepareAlphaCommit(selectedAlpha);
     try {
       await executePublishTransaction({
-        version: alpha.version,
+        version: alpha.publishVersion || alpha.version,
         exactTag: selectedAlpha.tag,
         channel: rule.channel,
         line: rule.releasePrefix,
@@ -3223,7 +3266,7 @@ async function promoteBuildchainRefs({
       });
       alpha = await prepareAlphaCommit(selectedAlpha);
       await executePublishTransaction({
-        version: alpha.version,
+        version: alpha.publishVersion || alpha.version,
         exactTag: selectedAlpha.tag,
         channel: rule.channel,
         line: rule.releasePrefix,
@@ -3393,7 +3436,7 @@ async function promoteBuildchainRefs({
     });
   }
   await executePublishTransaction({
-    version: releaseVersion,
+    version: releaseCommit.publishVersion || releaseVersion,
     exactTag: selectedReleaseCandidate.tag,
     channel: rule.channel,
     line: rule.releasePrefix,
