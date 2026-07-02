@@ -39,3 +39,15 @@ export {
   explainReleaseLineDryRun,
   formatReleaseLineDryRun,
 } from "./release-line-dry-run.js";
+
+export {
+  BUILDCHAIN_LOG_EVENT_CONTRACT,
+  BUILDCHAIN_LOG_SUMMARY_CONTRACT,
+  appendBuildchainLogEvent,
+  createBuildchainLogger,
+  defaultBuildchainLogPath,
+  normalizeBuildchainLogEvent,
+  readBuildchainLogEvents,
+  redactBuildchainLogAttributes,
+  summarizeBuildchainLogEvents,
+} from "./logging.js";

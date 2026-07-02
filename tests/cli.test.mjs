@@ -94,13 +94,102 @@ command = "node -e \\"require('node:fs').mkdirSync('out',{recursive:true});requi
     "out",
     "--artifact-name",
     "fixture",
+    "--log-path",
+    ".buildchain/logs/events.jsonl",
   ], { cwd });
   const manifest = JSON.parse(output.slice(output.indexOf("{")));
 
   assert.equal(manifest.artifactName, "fixture");
   assert.equal(manifest.lifecycle.stage, "build");
   assert.equal(manifest.files[0].path, "out/result.txt");
+  assert.equal(manifest.observability.log.contract, "kungfu-buildchain-log-event");
+  assert.equal(manifest.observability.log.summary.sources.buildchain.count, 4);
+  assert.equal(manifest.observability.log.summary.sources.user.count, 2);
   assert.ok(fs.existsSync(path.join(cwd, ".buildchain", "artifacts", "manifest.json")));
+  assert.ok(fs.existsSync(path.join(cwd, ".buildchain", "logs", "events.jsonl")));
+});
+
+test("CLI logging writes redacted JSONL events and summaries", () => {
+  const cwd = tempDir("logging");
+  const logPath = path.join(cwd, ".buildchain", "logs", "events.jsonl");
+  const output = runBuildchain([
+    "log",
+    "info",
+    "--event",
+    "native.configure",
+    "--phase",
+    "configure",
+    "--component",
+    "fixture",
+    "--attribute",
+    "token=secret-value",
+    "--attribute",
+    "target=debug",
+    "--path",
+    logPath,
+    "--json",
+  ], { cwd });
+  const event = JSON.parse(output);
+  assert.equal(event.attributes.token, "[REDACTED]");
+  assert.equal(event.attributes.target, "debug");
+
+  const events = fs.readFileSync(logPath, "utf8").trim().split(/\r?\n/).map((line) => JSON.parse(line));
+  assert.equal(events.length, 1);
+  assert.equal(events[0].contract, "kungfu-buildchain-log-event");
+
+  const summary = JSON.parse(runBuildchain(["log", "summary", "--path", logPath, "--json"], { cwd }));
+  assert.equal(summary.contract, "kungfu-buildchain-log-summary");
+  assert.equal(summary.eventCount, 1);
+  assert.equal(summary.sources.user.count, 1);
+  assert.equal(summary.phases.configure.count, 1);
+  assert.equal(summary.components.fixture.count, 1);
+});
+
+test("CLI span wraps commands and preserves failure exit codes", () => {
+  const cwd = tempDir("span");
+  const logPath = path.join(cwd, "events.jsonl");
+  const failure = runBuildchainFailure([
+    "span",
+    "--event",
+    "heavy.build",
+    "--phase",
+    "build",
+    "--path",
+    logPath,
+    "--",
+    process.execPath,
+    "-e",
+    "process.exit(7)",
+  ], { cwd });
+
+  assert.equal(failure.status, 7);
+  const events = fs.readFileSync(logPath, "utf8").trim().split(/\r?\n/).map((line) => JSON.parse(line));
+  assert.equal(events.length, 2);
+  assert.equal(events[0].event, "heavy.build.start");
+  assert.equal(events[1].event, "heavy.build.error");
+  assert.equal(events[1].attributes.status, 7);
+});
+
+test("doctor reports repository readiness as structured JSON", () => {
+  const cwd = tempDir("doctor");
+  fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({
+    name: "doctor-fixture",
+    version: "0.1.0",
+    packageManager: "npm@11.0.0",
+  }, null, 2));
+  execFileSync("git", ["init"], { cwd, stdio: "ignore" });
+  runBuildchain(["init", "--cwd", cwd, "--type", "package", "--package-manager", "npm"]);
+  const result = JSON.parse(runBuildchain(["doctor", "--cwd", cwd, "--json"], { cwd }));
+
+  assert.equal(result.contract, "kungfu-buildchain-doctor");
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.checks.map((check) => check.id), [
+    "cwd.exists",
+    "config.valid",
+    "package-manager.detected",
+    "git.repository",
+    "workflow.build",
+  ]);
 });
 
 test("npm dry-run validates package publish shape without publishing", () => {
@@ -209,6 +298,52 @@ test("release dry-run subcommand explains major gate with source ref", () => {
   assert.match(output, /expected source: release\/v2\/v2\.0/);
   assert.match(output, /v3\.0\.0: would create the first production patch/);
   assert.match(output, /No refs, tags, packages, or files were modified/);
+});
+
+test("release explain aliases release dry-run", () => {
+  const output = runBuildchain([
+    "release",
+    "explain",
+    "--target-ref",
+    "alpha/v2/v2.1",
+    "--sha",
+    "d".repeat(40),
+    "--json",
+  ]);
+  const plan = JSON.parse(output);
+
+  assert.equal(plan.dryRun, true);
+  assert.equal(plan.targetRef, "alpha/v2/v2.1");
+  assert.equal(plan.source.expectedHeadRef, "dev/v2/v2.1");
+});
+
+test("transaction inspect is available as a top-level read/recovery helper", () => {
+  const cwd = tempDir("transaction-inspect");
+  const statePath = path.join(cwd, ".buildchain", "release-state", "v2.1.0-alpha.0.json");
+  const output = runBuildchain([
+    "transaction",
+    "inspect",
+    "--version",
+    "v2.1.0-alpha.0",
+    "--state-path",
+    statePath,
+    "--repository",
+    "kungfu-systems/buildchain",
+    "--source-sha",
+    "a".repeat(40),
+    "--release-sha",
+    "b".repeat(40),
+    "--target-ref",
+    "alpha/v2/v2.1",
+    "--channel",
+    "alpha",
+  ], { cwd });
+  const result = JSON.parse(output);
+
+  assert.equal(result.command, "inspect");
+  assert.equal(result.created, true);
+  assert.equal(result.transaction.version, "v2.1.0-alpha.0");
+  assert.match(result.durableBoundary, /remote durable refs/);
 });
 
 test("release dry-run rejects unsupported tag syntax", () => {
