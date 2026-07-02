@@ -187,8 +187,11 @@ cache_dirs = [".ccache", ".sccache"]
 When enabled, diagnostics artifacts include the normalized profile, selected
 tool versions, compiler-cache stats, and configured artifact/cache directory
 stats. The profile is data-driven: Buildchain does not assume a specific
-project such as libnode, and `sample_process_tree` only declares intent for a
-consumer or wrapper to start the sampler around the long native command.
+project such as libnode. The reusable build workflow also exposes
+`sample-process-tree`, which wraps the build lifecycle with the process sampler
+and carries the generated summary into the final diagnostics artifact. Custom
+workflows can call `buildchain sample process-tree` directly when they need a
+different command boundary.
 
 Anchored/manual package projects can also run one higher-level release-shape
 check instead of assembling lower-level config calls:

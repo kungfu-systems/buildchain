@@ -51,6 +51,22 @@ inputs:
     description: "Optional process sampler summary JSON to embed in diagnostics"
     required: false
     default: ""
+  process-samples-path:
+    description: "Optional process sampler JSONL sidecar path"
+    required: false
+    default: ".buildchain/diagnostics/process-samples.jsonl"
+  sample-process-tree:
+    description: "Wrap the lifecycle command or stage with the process tree sampler"
+    required: false
+    default: "false"
+  process-sample-interval-ms:
+    description: "Process sampler interval in milliseconds"
+    required: false
+    default: "15000"
+  requested-parallelism:
+    description: "Optional expected build parallelism recorded in process diagnostics"
+    required: false
+    default: "0"
 outputs:
   manifest-path:
     description: "Path to the generated artifact manifest"

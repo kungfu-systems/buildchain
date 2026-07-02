@@ -70,6 +70,9 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /artifact-name-template:/);
   assert.match(workflow, /expected-artifacts-json:/);
   assert.match(workflow, /process-summary-path:/);
+  assert.match(workflow, /sample-process-tree:/);
+  assert.match(workflow, /process-sample-interval-ms:/);
+  assert.match(workflow, /requested-parallelism:/);
   assert.match(workflow, /manifest\.json/);
   assert.match(workflow, /summary\.json/);
   assert.match(workflow, /diagnostics\.json/);
@@ -83,7 +86,11 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /aggregate-diagnostics-summary\.mjs/);
   assert.match(workflow, /diagnostics-summary\.json/);
   assert.equal(
-    (workflow.match(/process-summary-path: \$\{\{ inputs\.process-summary-path \}\}/g) || []).length,
+    (workflow.match(/process-summary-path: \$\{\{ inputs\.process-summary-path \|\| \(inputs\.sample-process-tree && '\.buildchain\/diagnostics\/process-summary\.json'\) \|\| '' \}\}/g) || []).length,
+    4,
+  );
+  assert.equal(
+    (workflow.match(/sample-process-tree: \$\{\{ inputs\.sample-process-tree \}\}/g) || []).length,
     2,
   );
   assert.match(workflow, /publish-allowed:/);
@@ -780,6 +787,67 @@ test("runLifecycle writes deterministic artifact manifest", () => {
     assert.ok(fs.existsSync(path.join(workspace, ".buildchain/artifacts/linux-x64/process-samples.jsonl")));
   } finally {
     process.env = originalEnv;
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("runLifecycle samples a configured lifecycle stage", () => {
+  const workspace = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-sampled-lifecycle-"),
+  );
+  const fixtureSource = path.join(root, "fixtures/libnode-shaped");
+  const fixture = path.join(workspace, "fixtures/libnode-shaped");
+  fs.cpSync(fixtureSource, fixture, { recursive: true });
+
+  try {
+    runLifecycle({
+      cwd: fixture,
+      stageName: "install",
+      required: true,
+      workspace,
+    });
+    runLifecycle({
+      cwd: fixture,
+      stageName: "build",
+      required: true,
+      workspace,
+      artifactPaths: ["fixtures/libnode-shaped/dist"],
+      manifestPath: ".buildchain/artifacts/linux-x64/manifest-sampled.json",
+      summaryPath: ".buildchain/artifacts/linux-x64/summary-sampled.json",
+      diagnosticsPath: ".buildchain/artifacts/linux-x64/diagnostics-sampled.json",
+      artifactName: "libnode-shaped-linux-x64-sampled",
+      platformId: "linux-x64",
+      platformName: "Linux x64",
+      processSummaryPath: ".buildchain/diagnostics/process-summary.json",
+      processSamplesPath: ".buildchain/diagnostics/process-samples.jsonl",
+      sampleProcessTree: true,
+      processSampleIntervalMs: 1000,
+      requestedParallelism: 4,
+    });
+
+    const processSummary = JSON.parse(
+      fs.readFileSync(
+        path.join(workspace, ".buildchain/diagnostics/process-summary.json"),
+        "utf8",
+      ),
+    );
+    const diagnostics = JSON.parse(
+      fs.readFileSync(
+        path.join(workspace, ".buildchain/artifacts/linux-x64/diagnostics-sampled.json"),
+        "utf8",
+      ),
+    );
+    assert.equal(processSummary.contract, "kungfu-buildchain-process-sample-report");
+    assert.equal(processSummary.summary.requestedParallelism, 4);
+    assert.ok(processSummary.summary.sampleCount >= 1);
+    assert.equal(diagnostics.process.requestedParallelism, 4);
+    assert.equal(diagnostics.links.processSummary, ".buildchain/diagnostics/process-summary.json");
+    assert.equal(diagnostics.links.diagnosticsProcessSummary, ".buildchain/artifacts/linux-x64/process-summary.json");
+    assert.equal(diagnostics.links.diagnosticsProcessSamples, ".buildchain/artifacts/linux-x64/process-samples.jsonl");
+    assert.ok(fs.existsSync(path.join(workspace, ".buildchain/diagnostics/process-samples.jsonl")));
+    assert.ok(fs.existsSync(path.join(workspace, ".buildchain/artifacts/linux-x64/process-summary.json")));
+    assert.ok(fs.existsSync(path.join(workspace, ".buildchain/artifacts/linux-x64/process-samples.jsonl")));
+  } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
   }
 });

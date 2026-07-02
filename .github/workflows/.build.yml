@@ -126,6 +126,21 @@ on:
         default: ""
         type: string
         required: false
+      sample-process-tree:
+        description: "Wrap the build lifecycle with the process tree sampler"
+        default: true
+        type: boolean
+        required: false
+      process-sample-interval-ms:
+        description: "Process sampler interval in milliseconds"
+        default: 15000
+        type: number
+        required: false
+      requested-parallelism:
+        description: "Optional expected build parallelism recorded in process diagnostics"
+        default: 0
+        type: number
+        required: false
       artifact-retention-days:
         default: 14
         type: number
@@ -424,6 +439,11 @@ jobs:
           artifact-paths: ${{ inputs.artifact-paths }}
           manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest-build.json
           summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary-build.json
+          process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
+          process-samples-path: .buildchain/diagnostics/process-samples.jsonl
+          sample-process-tree: ${{ inputs.sample-process-tree }}
+          process-sample-interval-ms: ${{ inputs.process-sample-interval-ms }}
+          requested-parallelism: ${{ inputs.requested-parallelism }}
 
       - name: Run verify lifecycle
         id: verify-lifecycle
@@ -443,7 +463,7 @@ jobs:
           manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
           summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
           expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
-          process-summary-path: ${{ inputs.process-summary-path }}
+          process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
 
       - name: Upload deterministic artifact
         uses: actions/upload-artifact@v7.0.1
@@ -566,6 +586,11 @@ jobs:
           artifact-paths: ${{ inputs.artifact-paths }}
           manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest-build.json
           summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary-build.json
+          process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
+          process-samples-path: .buildchain/diagnostics/process-samples.jsonl
+          sample-process-tree: ${{ inputs.sample-process-tree }}
+          process-sample-interval-ms: ${{ inputs.process-sample-interval-ms }}
+          requested-parallelism: ${{ inputs.requested-parallelism }}
 
       - name: Run verify lifecycle
         id: verify-lifecycle
@@ -585,7 +610,7 @@ jobs:
           manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
           summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
           expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
-          process-summary-path: ${{ inputs.process-summary-path }}
+          process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
 
       - name: Upload deterministic artifact
         uses: actions/upload-artifact@v7.0.1

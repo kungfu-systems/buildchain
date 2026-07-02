@@ -43,6 +43,10 @@ async function main() {
       .filter(Boolean),
     expectedArtifactsJson: getInput("expected-artifacts-json") || "",
     processSummaryPath: getInput("process-summary-path") || "",
+    processSamplesPath: getInput("process-samples-path") || ".buildchain/diagnostics/process-samples.jsonl",
+    sampleProcessTree: getInput("sample-process-tree") === "true",
+    processSampleIntervalMs: Number(getInput("process-sample-interval-ms") || 15000),
+    requestedParallelism: Number(getInput("requested-parallelism") || 0),
     workspace: process.cwd(),
   });
   setOutput("manifest-path", manifestPath);

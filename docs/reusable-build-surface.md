@@ -287,20 +287,24 @@ with:
   verify-command: ctest --test-dir build --output-on-failure
 ```
 
-Set `process-summary-path` when the build command writes a process sampler
-summary that should be embedded in the final `diagnostics.json` upload:
+The reusable build workflow samples the build lifecycle by default and carries
+the generated summary into the final verify diagnostics. Callers can override
+the sidecar path or disable sampling:
 
 ```yaml
 with:
-  build-command: >-
-    buildchain sample process-tree --summary-output
-    .buildchain/diagnostics/process-summary.json --
-    cmake --build build --config Release
+  sample-process-tree: true
   process-summary-path: .buildchain/diagnostics/process-summary.json
+  process-sample-interval-ms: 15000
+  requested-parallelism: 20
 ```
 
-The path is relative to the checked-out workspace and is read during the final
-verify lifecycle, so a configured path must exist before that stage runs.
+When `sample-process-tree` is true, Buildchain wraps either `build-command` or
+the configured `lifecycle.build` stage with `buildchain sample process-tree`.
+The path is relative to the checked-out workspace and is read again during the
+final verify lifecycle. Custom workflows can still write their own sampler
+summary and pass `process-summary-path`; Buildchain reads the file after the
+lifecycle command finishes, so it may be produced during the same invocation.
 
 For custom workflows, use the action directly:
 

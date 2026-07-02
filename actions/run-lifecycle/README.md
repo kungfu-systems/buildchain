@@ -40,8 +40,18 @@ with:
     {"minFiles":2,"requiredPaths":["dist/app.tar.gz","dist/checksums.txt"]}
 ```
 
-For long native builds, pass a process sampler report or summary with
-`process-summary-path`. The file can be produced by
-`buildchain sample process-tree --summary-output .buildchain/diagnostics/process-summary.json -- <command>`.
-The lifecycle diagnostics artifact embeds the process summary and links back to
-the source JSON.
+For long native builds, set `sample-process-tree: "true"` and pass
+`process-summary-path`. The action wraps either the explicit `command` or the
+configured lifecycle stage with `buildchain sample process-tree`, then embeds
+the produced summary in the lifecycle diagnostics artifact:
+
+```yaml
+with:
+  stage: build
+  sample-process-tree: "true"
+  process-summary-path: .buildchain/diagnostics/process-summary.json
+```
+
+Custom wrappers can still pass an existing sampler report or summary with
+`process-summary-path`; the action reads it after the lifecycle command
+finishes, so commands may generate the file during the same invocation.

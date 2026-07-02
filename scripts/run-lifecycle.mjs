@@ -18,6 +18,14 @@ function parseList(value) {
     .filter(Boolean);
 }
 
+function readBooleanArg(name, fallback = "false") {
+  return readArg(name, fallback) === "true";
+}
+
+function readNumberArg(name, fallback) {
+  return Number(readArg(name, String(fallback)) || fallback);
+}
+
 export function runLifecycleCli() {
   return runLifecycle({
     cwd: readArg("cwd", process.cwd()),
@@ -32,6 +40,10 @@ export function runLifecycleCli() {
     artifactPaths: parseList(process.env.BUILDCHAIN_ARTIFACT_PATHS || ""),
     expectedArtifactsJson: process.env.BUILDCHAIN_EXPECTED_ARTIFACTS_JSON || "",
     processSummaryPath: readArg("process-summary", process.env.BUILDCHAIN_PROCESS_SUMMARY_PATH || ""),
+    processSamplesPath: readArg("process-samples", process.env.BUILDCHAIN_PROCESS_SAMPLES_PATH || ".buildchain/diagnostics/process-samples.jsonl"),
+    sampleProcessTree: readBooleanArg("sample-process-tree", process.env.BUILDCHAIN_SAMPLE_PROCESS_TREE || "false"),
+    processSampleIntervalMs: readNumberArg("process-sample-interval-ms", process.env.BUILDCHAIN_PROCESS_SAMPLE_INTERVAL_MS || 15000),
+    requestedParallelism: readNumberArg("requested-parallelism", process.env.BUILDCHAIN_REQUESTED_PARALLELISM || 0),
     workspace: process.cwd(),
   });
 }

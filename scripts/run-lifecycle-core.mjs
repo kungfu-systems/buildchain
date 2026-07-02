@@ -1,8 +1,9 @@
 import crypto from "node:crypto";
-import { execSync } from "node:child_process";
+import { execFileSync, execSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   loadBuildchainConfig,
   normalizeLifecycleStage,
@@ -23,6 +24,9 @@ import {
   parseExpectedArtifactsJson,
   validateExpectedArtifacts,
 } from "./build-contract-core.mjs";
+
+const runtimeRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const buildchainCliPath = path.join(runtimeRoot, "bin", "buildchain.mjs");
 
 function sha256File(filePath) {
   const hash = crypto.createHash("sha256");
@@ -106,6 +110,124 @@ function readProcessSummaryArtifact(filePath) {
   throw new Error(`process summary file has unsupported contract: ${artifact?.contract || "unknown"}`);
 }
 
+function shellCommandArgs(command, shell) {
+  if (typeof shell === "string" && shell.trim()) {
+    return [shell, "-c", command];
+  }
+  if (process.platform === "win32") {
+    return [process.env.ComSpec || "cmd.exe", "/d", "/s", "/c", command];
+  }
+  return [process.env.SHELL || "/bin/sh", "-c", command];
+}
+
+function samplerPathForCwd(filePath, cwd) {
+  const relative = path.relative(cwd, filePath);
+  return relative && !relative.startsWith("..") && !path.isAbsolute(relative)
+    ? toPosix(relative)
+    : filePath;
+}
+
+function executeSampledShellCommand({
+  command,
+  cwd,
+  env,
+  shell,
+  timeout,
+  label,
+  processSummaryPath,
+  processSamplesPath,
+  processSampleIntervalMs,
+  requestedParallelism,
+}) {
+  fs.mkdirSync(path.dirname(processSummaryPath), { recursive: true });
+  fs.mkdirSync(path.dirname(processSamplesPath), { recursive: true });
+  const args = [
+    buildchainCliPath,
+    "sample",
+    "process-tree",
+    "--label",
+    label || "lifecycle",
+    "--interval-ms",
+    String(processSampleIntervalMs || 15000),
+    "--output",
+    samplerPathForCwd(processSamplesPath, cwd),
+    "--summary-output",
+    samplerPathForCwd(processSummaryPath, cwd),
+  ];
+  if (Number(requestedParallelism || 0) > 0) {
+    args.push("--requested-parallelism", String(Number(requestedParallelism)));
+  }
+  args.push("--", ...shellCommandArgs(command, shell));
+  execFileSync(process.execPath, args, {
+    cwd,
+    env,
+    stdio: "inherit",
+    timeout,
+  });
+}
+
+function stageCommandText(stage) {
+  if (stage.mode === "script") {
+    return stage.script;
+  }
+  if (process.platform === "win32") {
+    return stage.commands.join(" && ");
+  }
+  return ["set -e", ...stage.commands].join("\n");
+}
+
+function runLifecycleStageWithSampler({
+  cwd,
+  loadedConfig,
+  name,
+  env,
+  sampleProcessTree,
+  processSummaryPath,
+  processSamplesPath,
+  processSampleIntervalMs,
+  requestedParallelism,
+}) {
+  if (!sampleProcessTree) {
+    return runLifecycleStage({ cwd, loadedConfig, name, env });
+  }
+  const lifecycle = loadedConfig?.config?.lifecycle || {};
+  const stage = lifecycle[name];
+  if (!stage) {
+    return false;
+  }
+  const stageEnv = {
+    ...process.env,
+    ...(lifecycle.env || {}),
+    ...(stage.env || {}),
+    ...(env || {}),
+  };
+  const timeout = stage.timeoutMinutes ? stage.timeoutMinutes * 60_000 : undefined;
+  let lastError;
+  for (let attempt = 1; attempt <= stage.retries; attempt += 1) {
+    try {
+      executeSampledShellCommand({
+        command: stageCommandText(stage),
+        cwd,
+        env: stageEnv,
+        shell: stage.shell || true,
+        timeout,
+        label: `lifecycle-${name}`,
+        processSummaryPath,
+        processSamplesPath,
+        processSampleIntervalMs,
+        requestedParallelism,
+      });
+      return true;
+    } catch (error) {
+      lastError = error;
+      if (attempt < stage.retries) {
+        console.log(`> lifecycle ${name || "stage"} failed, retry ${attempt + 1}/${stage.retries}`);
+      }
+    }
+  }
+  throw lastError;
+}
+
 function writeJsonlEvents(filePath, events = []) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, events.map((event) => JSON.stringify(event)).join("\n") + (events.length ? "\n" : ""));
@@ -150,6 +272,10 @@ export function runLifecycle({
   workspace = process.cwd(),
   logPath = process.env.BUILDCHAIN_LOG_PATH || ".buildchain/logs/events.jsonl",
   processSummaryPath = "",
+  processSamplesPath = ".buildchain/diagnostics/process-samples.jsonl",
+  sampleProcessTree = false,
+  processSampleIntervalMs = 15000,
+  requestedParallelism = 0,
 } = {}) {
   const resolvedCwd = path.resolve(cwd);
   const resolvedWorkspace = path.resolve(workspace);
@@ -160,13 +286,17 @@ export function runLifecycle({
     diagnosticsPath || path.join(path.dirname(manifestPath), "diagnostics.json"),
   );
   const resolvedLogPath = logPath ? path.resolve(resolvedWorkspace, logPath) : "";
-  const resolvedProcessSummaryPath = processSummaryPath ? path.resolve(resolvedWorkspace, processSummaryPath) : "";
+  const resolvedProcessSummaryPath = processSummaryPath || sampleProcessTree
+    ? path.resolve(resolvedWorkspace, processSummaryPath || ".buildchain/diagnostics/process-summary.json")
+    : "";
+  const resolvedProcessSamplesPath = processSamplesPath
+    ? path.resolve(resolvedWorkspace, processSamplesPath)
+    : path.resolve(resolvedWorkspace, ".buildchain/diagnostics/process-samples.jsonl");
   const relativeLogPath = resolvedLogPath ? toPosix(path.relative(resolvedWorkspace, resolvedLogPath)) : "";
   const relativeProcessSummaryPath = resolvedProcessSummaryPath
     ? toPosix(path.relative(resolvedWorkspace, resolvedProcessSummaryPath))
     : "";
   const relativeDiagnosticsPath = toPosix(path.relative(resolvedWorkspace, resolvedDiagnosticsPath));
-  const processSummaryArtifact = readProcessSummaryArtifact(resolvedProcessSummaryPath);
   const diagnosticsDir = path.dirname(resolvedDiagnosticsPath);
   const resolvedDiagnosticsEventsPath = path.join(diagnosticsDir, "events.jsonl");
   const resolvedDiagnosticsProcessSummaryPath = path.join(diagnosticsDir, "process-summary.json");
@@ -212,23 +342,39 @@ export function runLifecycle({
       attributes: {
         commandSource,
         stage: stageName || "command",
+        sampleProcessTree,
       },
     });
     try {
-      execSync(command, {
-        cwd: resolvedCwd,
-        env: {
-          ...process.env,
-          ...(resolvedLogPath
-            ? {
-                BUILDCHAIN_LOG_PATH: resolvedLogPath,
-                BUILDCHAIN_LOG_RUN_ID: logRunId,
-              }
-            : {}),
-        },
-        shell: true,
-        stdio: "inherit",
-      });
+      const commandEnv = {
+        ...process.env,
+        ...(resolvedLogPath
+          ? {
+              BUILDCHAIN_LOG_PATH: resolvedLogPath,
+              BUILDCHAIN_LOG_RUN_ID: logRunId,
+            }
+          : {}),
+      };
+      if (sampleProcessTree) {
+        executeSampledShellCommand({
+          command,
+          cwd: resolvedCwd,
+          env: commandEnv,
+          shell: true,
+          label: `lifecycle-${stageName || "command"}`,
+          processSummaryPath: resolvedProcessSummaryPath,
+          processSamplesPath: resolvedProcessSamplesPath,
+          processSampleIntervalMs,
+          requestedParallelism,
+        });
+      } else {
+        execSync(command, {
+          cwd: resolvedCwd,
+          env: commandEnv,
+          shell: true,
+          stdio: "inherit",
+        });
+      }
       executed = true;
       userLog.info("lifecycle.command.end", {
         durationMs: Date.now() - startedAt,
@@ -244,6 +390,7 @@ export function runLifecycle({
         attributes: lifecycleErrorAttributes(error, {
           commandSource,
           stage: stageName || "command",
+          sampleProcessTree,
         }),
       });
       throw error;
@@ -255,10 +402,11 @@ export function runLifecycle({
       attributes: {
         commandSource,
         stage: stageName,
+        sampleProcessTree,
       },
     });
     try {
-      executed = runLifecycleStage({
+      executed = runLifecycleStageWithSampler({
         cwd: resolvedCwd,
         loadedConfig,
         name: stageName,
@@ -268,6 +416,11 @@ export function runLifecycle({
               BUILDCHAIN_LOG_RUN_ID: logRunId,
             }
           : {},
+        sampleProcessTree,
+        processSummaryPath: resolvedProcessSummaryPath,
+        processSamplesPath: resolvedProcessSamplesPath,
+        processSampleIntervalMs,
+        requestedParallelism,
       });
       userLog.info("lifecycle.stage.end", {
         durationMs: Date.now() - startedAt,
@@ -284,6 +437,7 @@ export function runLifecycle({
         attributes: lifecycleErrorAttributes(error, {
           commandSource,
           stage: stageName,
+          sampleProcessTree,
         }),
       });
       throw error;
@@ -300,6 +454,7 @@ export function runLifecycle({
     throw new Error(`required lifecycle stage did not run: ${stageName || "command"}`);
   }
 
+  const processSummaryArtifact = readProcessSummaryArtifact(resolvedProcessSummaryPath);
   fs.mkdirSync(path.dirname(resolvedManifestPath), { recursive: true });
   const scanStartedAt = Date.now();
   const files = collectArtifactFiles(resolvedWorkspace, artifactPaths);
