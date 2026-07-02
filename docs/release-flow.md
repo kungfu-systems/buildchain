@@ -129,7 +129,7 @@ sequenceDiagram
   Promote->>Promote: validate same-repo merged PR
   Promote->>Promote: find same-patch alpha tag
   Promote->>Promote: compare release tree with tested alpha tree
-  Promote->>Promote: write and verify final version state
+  Promote->>Promote: write final version state or verify anchored material
   Promote->>Tags: create or reuse vX.Y.Z
   Promote->>Tags: move vX.Y
   Promote->>Tags: move vX when eligible
@@ -242,7 +242,9 @@ Promotion should stop before moving refs when:
 - the PR was not merged;
 - the branch pair is not a valid channel path;
 - the required status check did not pass;
-- a release tree does not match the same-patch alpha tag tree;
+- a release tree does not match the same-patch alpha tag tree, except for the
+  declared anchored/manual version files and anchor manifest that
+  `lifecycle.verify` or `verification-command` validates;
 - version-state verification fails;
 - a required exact tag already exists at a commit unrelated to the active
   transaction or finalized channel head.
