@@ -164,6 +164,9 @@ on:
       build-summary-artifact:
         description: "Uploaded aggregate build summary artifact name"
         value: ${{ jobs.summarize.outputs.summary-artifact-name }}
+      build-diagnostics-summary-artifact:
+        description: "Uploaded aggregate diagnostics summary artifact name"
+        value: ${{ jobs.summarize.outputs.diagnostics-summary-artifact-name }}
       build-summary-json:
         description: "Compact aggregate build summary JSON"
         value: ${{ jobs.summarize.outputs.artifact-summary-json }}
@@ -663,6 +666,7 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       summary-artifact-name: ${{ steps.names.outputs.summary-artifact-name }}
+      diagnostics-summary-artifact-name: ${{ steps.names.outputs.diagnostics-summary-artifact-name }}
       summary-path: ${{ steps.summary.outputs.summary-path }}
       artifact-summary-json: ${{ steps.summary.outputs.artifact-summary-json }}
       diagnostics-summary-path: ${{ steps.diagnostics.outputs.diagnostics-summary-path }}
@@ -678,9 +682,12 @@ jobs:
 
       - name: Resolve summary artifact name
         id: names
-        run: echo "summary-artifact-name=${BUILDCHAIN_SUMMARY_ARTIFACT_NAME}" >> "${GITHUB_OUTPUT}"
+        run: |
+          echo "summary-artifact-name=${BUILDCHAIN_SUMMARY_ARTIFACT_NAME}" >> "${GITHUB_OUTPUT}"
+          echo "diagnostics-summary-artifact-name=${BUILDCHAIN_DIAGNOSTICS_SUMMARY_ARTIFACT_NAME}" >> "${GITHUB_OUTPUT}"
         env:
           BUILDCHAIN_SUMMARY_ARTIFACT_NAME: ${{ inputs.artifact-name }}-summary-${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_DIAGNOSTICS_SUMMARY_ARTIFACT_NAME: ${{ inputs.artifact-name }}-diagnostics-summary-${{ needs.resolve-source.outputs.publish-source-sha }}
 
       - name: Download platform manifests
         uses: actions/download-artifact@v7.0.0
@@ -730,8 +737,14 @@ jobs:
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ steps.names.outputs.summary-artifact-name }}
-          path: |
-            .buildchain/artifacts/build-summary.json
-            .buildchain/artifacts/diagnostics-summary.json
+          path: .buildchain/artifacts/build-summary.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload aggregate diagnostics summary
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.names.outputs.diagnostics-summary-artifact-name }}
+          path: .buildchain/artifacts/diagnostics-summary.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}

@@ -82,10 +82,14 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /process-samples\.jsonl/);
   assert.match(workflow, /-diagnostics-\$\{\{ matrix\.platform\.id \}\}-/);
   assert.match(workflow, /build-summary-artifact:/);
+  assert.match(workflow, /build-diagnostics-summary-artifact:/);
+  assert.match(workflow, /diagnostics-summary-artifact-name:/);
   assert.match(workflow, /build-diagnostics-summary-json:/);
   assert.match(workflow, /downloaded-diagnostics/);
   assert.match(workflow, /aggregate-diagnostics-summary\.mjs/);
   assert.match(workflow, /diagnostics-summary\.json/);
+  assert.match(workflow, /-diagnostics-summary-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/);
+  assert.match(workflow, /Upload aggregate diagnostics summary/);
   assert.equal(
     (workflow.match(/process-summary-path: \$\{\{ inputs\.process-summary-path \|\| \(inputs\.sample-process-tree && '\.buildchain\/diagnostics\/process-summary\.json'\) \|\| '' \}\}/g) || []).length,
     4,
