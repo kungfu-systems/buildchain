@@ -121,6 +121,11 @@ on:
         default: ""
         type: string
         required: false
+      process-summary-path:
+        description: "Optional process sampler summary JSON path, relative to workspace, to embed in final diagnostics"
+        default: ""
+        type: string
+        required: false
       artifact-retention-days:
         default: 14
         type: number
@@ -438,6 +443,7 @@ jobs:
           manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
           summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
           expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
+          process-summary-path: ${{ inputs.process-summary-path }}
 
       - name: Upload deterministic artifact
         uses: actions/upload-artifact@v7.0.1
@@ -575,6 +581,7 @@ jobs:
           manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
           summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
           expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
+          process-summary-path: ${{ inputs.process-summary-path }}
 
       - name: Upload deterministic artifact
         uses: actions/upload-artifact@v7.0.1

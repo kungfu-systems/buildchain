@@ -69,6 +69,7 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /artifact-name:/);
   assert.match(workflow, /artifact-name-template:/);
   assert.match(workflow, /expected-artifacts-json:/);
+  assert.match(workflow, /process-summary-path:/);
   assert.match(workflow, /manifest\.json/);
   assert.match(workflow, /summary\.json/);
   assert.match(workflow, /diagnostics\.json/);
@@ -78,6 +79,10 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /downloaded-diagnostics/);
   assert.match(workflow, /aggregate-diagnostics-summary\.mjs/);
   assert.match(workflow, /diagnostics-summary\.json/);
+  assert.equal(
+    (workflow.match(/process-summary-path: \$\{\{ inputs\.process-summary-path \}\}/g) || []).length,
+    2,
+  );
   assert.match(workflow, /publish-allowed:/);
   assert.match(workflow, /publish-reason:/);
   assert.match(workflow, /publish-source-sha:/);

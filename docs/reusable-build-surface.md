@@ -24,6 +24,7 @@ jobs:
         build/stage
       expected-artifacts-json: >-
         {"minFiles":2,"requiredPaths":["dist/libnode.tar.gz","dist/checksums.txt"]}
+      process-summary-path: .buildchain/diagnostics/process-summary.json
       publish-channel: release
       publish-source-ref: publish-gate/release/v22/v22.22/22.22.3-kf.0
 ```
@@ -284,6 +285,21 @@ with:
   build-command: cmake --build build --config Release
   verify-command: ctest --test-dir build --output-on-failure
 ```
+
+Set `process-summary-path` when the build command writes a process sampler
+summary that should be embedded in the final `diagnostics.json` upload:
+
+```yaml
+with:
+  build-command: >-
+    buildchain sample process-tree --summary-output
+    .buildchain/diagnostics/process-summary.json --
+    cmake --build build --config Release
+  process-summary-path: .buildchain/diagnostics/process-summary.json
+```
+
+The path is relative to the checked-out workspace and is read during the final
+verify lifecycle, so a configured path must exist before that stage runs.
 
 For custom workflows, use the action directly:
 

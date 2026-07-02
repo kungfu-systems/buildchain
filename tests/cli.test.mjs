@@ -225,6 +225,62 @@ test("logging SDK supports sync spans and spawn wrappers", () => {
   assert.equal(collectRunnerDiagnostics().cpu.logicalCount > 0, true);
 });
 
+test("logging and diagnostics SDK subpaths can be used from CommonJS scripts", () => {
+  const cwd = fs.mkdtempSync(path.join(root, ".tmp-cjs-logging-"));
+  const scriptPath = path.join(cwd, "fixture.cjs");
+  const logPath = path.join(cwd, ".buildchain", "logs", "events.jsonl");
+  fs.writeFileSync(scriptPath, `
+(async () => {
+  const { createBuildchainLogger } = await import("@kungfu-tech/buildchain/logging");
+  const { collectRunnerDiagnostics } = await import("@kungfu-tech/buildchain/diagnostics");
+  const logger = createBuildchainLogger({
+    path: process.argv[2],
+    console: false,
+    component: "cjs-fixture",
+  });
+  const value = logger.spanSync("cjs.sync", { phase: "build" }, () => 7);
+  const result = logger.spawnSync(
+    "cjs.spawn",
+    process.execPath,
+    ["-e", "process.exit(0)"],
+    { stdio: "ignore" },
+    { phase: "build" },
+  );
+  const runner = collectRunnerDiagnostics();
+  process.stdout.write(JSON.stringify({
+    value,
+    status: result.status,
+    cpu: runner.cpu.logicalCount,
+    events: logger.events.length,
+  }));
+})().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
+`);
+
+  try {
+    const result = spawnSync(process.execPath, [scriptPath, logPath], {
+      cwd: root,
+      encoding: "utf8",
+    });
+    assert.equal(result.status, 0, result.stderr || result.stdout);
+    const report = JSON.parse(result.stdout);
+    assert.equal(report.value, 7);
+    assert.equal(report.status, 0);
+    assert.equal(report.cpu > 0, true);
+    assert.equal(report.events, 4);
+
+    const events = fs.readFileSync(logPath, "utf8").trim().split(/\r?\n/).map((line) => JSON.parse(line));
+    assert.deepEqual(
+      events.map((event) => event.event),
+      ["cjs.sync.start", "cjs.sync.end", "cjs.spawn.start", "cjs.spawn.end"],
+    );
+  } finally {
+    fs.rmSync(cwd, { recursive: true, force: true });
+  }
+});
+
 test("diagnostics SDK validates anchored package release contracts", () => {
   const report = validateAnchoredPackageRelease({
     cwd: path.join(root, "fixtures/libnode-shaped"),
