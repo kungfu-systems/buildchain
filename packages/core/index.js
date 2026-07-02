@@ -56,6 +56,7 @@ export {
 export {
   BUILDCHAIN_DIAGNOSTICS_CONTRACT,
   BUILDCHAIN_LIFECYCLE_OBSERVABILITY_CONTRACT,
+  classifyProcessCommand,
   collectBuildchainDiagnostics,
   collectCacheDiagnostics,
   collectGitDiagnostics,
@@ -68,6 +69,7 @@ export {
   startProcessSampler,
   summarizeDiagnosticsArtifacts,
   summarizeLifecycleObservability,
+  summarizeProcessSamples,
   validateAnchoredPackageRelease,
   writeDiagnosticsArtifact,
 } from "./diagnostics.js";

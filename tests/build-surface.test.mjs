@@ -77,6 +77,10 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /publish-reason:/);
   assert.match(workflow, /publish-source-sha:/);
   assert.match(workflow, /release-manifest-json:/);
+  assert.equal(
+    (workflow.match(/artifact-summary-json: \$\{\{ steps\.summary\.outputs\.artifact-summary-json \}\}/g) || []).length,
+    1,
+  );
   assert.match(
     workflow,
     /ref: \$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/,

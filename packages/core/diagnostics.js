@@ -389,6 +389,112 @@ export function collectProcessTreeSnapshot({ rootPid = process.pid, cwd = proces
   return { rootPid: pid, platform: process.platform, processes };
 }
 
+export function classifyProcessCommand(command = "") {
+  const name = path.basename(String(command || "")).toLowerCase();
+  if (/^(ccache|sccache)$/.test(name)) {
+    return "cache";
+  }
+  if (/^(clang|clang\+\+|gcc|g\+\+|cc|c\+\+|cl)(\.exe)?$/.test(name)) {
+    return "compiler";
+  }
+  if (/^(ld|lld|lld-link|link)(\.exe)?$/.test(name)) {
+    return "linker";
+  }
+  if (/^(ar|llvm-ar|libtool|ranlib)(\.exe)?$/.test(name)) {
+    return "archive";
+  }
+  if (/^(make|ninja|cmake|msbuild|vcbuild|gyp-mac-tool)(\.exe)?$/.test(name)) {
+    return "build-tool";
+  }
+  if (/^(node|python|python3|bash|sh|pwsh|powershell)(\.exe)?$/.test(name)) {
+    return "script";
+  }
+  return "other";
+}
+
+export function summarizeProcessSamples({
+  samples = [],
+  requestedParallelism = 0,
+  activeCpuThreshold = 0.1,
+} = {}) {
+  const normalizedSamples = Array.isArray(samples) ? samples : [];
+  const activeCounts = [];
+  const cpuTotals = [];
+  const categoryMax = {};
+  const commandStats = new Map();
+  const threshold = Number(activeCpuThreshold || 0);
+
+  for (const sample of normalizedSamples) {
+    const processes = Array.isArray(sample?.processes) ? sample.processes : [];
+    const active = processes.filter((entry) => Number(entry.cpu || 0) >= threshold);
+    activeCounts.push(active.length);
+    cpuTotals.push(processes.reduce((sum, entry) => sum + Number(entry.cpu || 0), 0));
+
+    const categoryCounts = {};
+    for (const entry of active) {
+      const command = path.basename(String(entry.command || "unknown"));
+      const category = classifyProcessCommand(command);
+      categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+      const stats = commandStats.get(command) || {
+        command,
+        category,
+        samples: 0,
+        maxConcurrent: 0,
+        maxCpu: 0,
+      };
+      stats.samples += 1;
+      stats.maxCpu = Math.max(stats.maxCpu, Number(entry.cpu || 0));
+      commandStats.set(command, stats);
+    }
+
+    const commandCounts = {};
+    for (const entry of active) {
+      const command = path.basename(String(entry.command || "unknown"));
+      commandCounts[command] = (commandCounts[command] || 0) + 1;
+    }
+    for (const [command, count] of Object.entries(commandCounts)) {
+      const stats = commandStats.get(command);
+      if (stats) {
+        stats.maxConcurrent = Math.max(stats.maxConcurrent, count);
+      }
+    }
+    for (const [category, count] of Object.entries(categoryCounts)) {
+      categoryMax[category] = Math.max(categoryMax[category] || 0, count);
+    }
+  }
+
+  const observedMax = activeCounts.length ? Math.max(...activeCounts) : 0;
+  const observedAverage = activeCounts.length
+    ? activeCounts.reduce((sum, value) => sum + value, 0) / activeCounts.length
+    : 0;
+  const totalCpuMax = cpuTotals.length ? Math.max(...cpuTotals) : 0;
+  const totalCpuAverage = cpuTotals.length
+    ? cpuTotals.reduce((sum, value) => sum + value, 0) / cpuTotals.length
+    : 0;
+  const requested = Number(requestedParallelism || 0);
+
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-process-sample-summary",
+    sampleCount: normalizedSamples.length,
+    activeCpuThreshold: threshold,
+    requestedParallelism: requested,
+    observedConcurrency: {
+      max: observedMax,
+      average: Number(observedAverage.toFixed(2)),
+      ratioToRequestedMax: requested > 0 ? Number((observedMax / requested).toFixed(3)) : 0,
+    },
+    cpu: {
+      totalMax: Number(totalCpuMax.toFixed(2)),
+      totalAverage: Number(totalCpuAverage.toFixed(2)),
+    },
+    categories: Object.fromEntries(Object.entries(categoryMax).sort(([left], [right]) => left.localeCompare(right))),
+    topCommands: [...commandStats.values()]
+      .sort((left, right) => right.maxConcurrent - left.maxConcurrent || right.maxCpu - left.maxCpu)
+      .slice(0, 10),
+  };
+}
+
 export function startProcessSampler({
   rootPid = process.pid,
   intervalMs = 15000,
@@ -422,6 +528,9 @@ export function createDiagnosticsArtifact({
   artifactPaths = [],
   cacheDirs = [],
   lifecycleObservability = undefined,
+  processSamples = [],
+  processSummary = undefined,
+  requestedParallelism = 0,
   links = {},
 } = {}) {
   const resolvedCwd = path.resolve(cwd);
@@ -437,6 +546,7 @@ export function createDiagnosticsArtifact({
     cache: collectCacheDiagnostics({ cwd: resolvedCwd, cacheDirs }),
     git: collectGitDiagnostics({ cwd: resolvedCwd }),
     lifecycleObservability: lifecycleObservability || summarizeLifecycleObservability({ events, logPath }),
+    process: processSummary || summarizeProcessSamples({ samples: processSamples, requestedParallelism }),
     links,
   };
 }
@@ -468,6 +578,7 @@ export function summarizeDiagnosticsArtifacts(inputs = []) {
       arch: entry.runner?.github?.runnerArch || entry.runner?.os?.arch || "unknown",
       gitHead: entry.git?.head || "",
       lifecycle: entry.lifecycleObservability?.stages || {},
+      process: entry.process || {},
       warningCount: entry.lifecycleObservability?.warningCount || 0,
       errorCount: entry.lifecycleObservability?.errorCount || 0,
     })),

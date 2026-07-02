@@ -6,7 +6,9 @@ import path from "node:path";
 import test from "node:test";
 import { createBuildchainLogger } from "@kungfu-tech/buildchain/logging";
 import {
+  createDiagnosticsArtifact,
   collectRunnerDiagnostics,
+  summarizeProcessSamples,
   validateAnchoredPackageRelease,
 } from "@kungfu-tech/buildchain/diagnostics";
 import { resolveSpawnCommand, usesShellForSpawnCommand } from "../scripts/build-standalone-binary.mjs";
@@ -208,6 +210,45 @@ test("diagnostics SDK validates anchored package release contracts", () => {
     requireLifecycleStages: ["install", "build", "verify"],
   });
   assert.equal(relaxed.ok, true);
+});
+
+test("diagnostics SDK summarizes process samples against requested parallelism", () => {
+  const summary = summarizeProcessSamples({
+    requestedParallelism: 20,
+    samples: [
+      {
+        processes: [
+          { command: "make", cpu: 1.1 },
+          { command: "ccache", cpu: 0.4 },
+          { command: "clang++", cpu: 92.5 },
+          { command: "clang++", cpu: 88.25 },
+          { command: "libtool", cpu: 12.5 },
+          { command: "sleep", cpu: 0 },
+        ],
+      },
+      {
+        processes: [
+          { command: "make", cpu: 3 },
+          { command: "libtool", cpu: 70 },
+        ],
+      },
+    ],
+  });
+
+  assert.equal(summary.contract, "kungfu-buildchain-process-sample-summary");
+  assert.equal(summary.requestedParallelism, 20);
+  assert.equal(summary.observedConcurrency.max, 5);
+  assert.equal(summary.observedConcurrency.ratioToRequestedMax, 0.25);
+  assert.equal(summary.categories.compiler, 2);
+  assert.equal(summary.categories.archive, 1);
+  assert.equal(summary.topCommands[0].command, "clang++");
+
+  const artifact = createDiagnosticsArtifact({
+    cwd: path.join(root, "fixtures/libnode-shaped"),
+    processSummary: summary,
+  });
+  assert.equal(artifact.process.requestedParallelism, 20);
+  assert.equal(artifact.process.observedConcurrency.max, 5);
 });
 
 test("CLI verifies observability logs fail closed", () => {
