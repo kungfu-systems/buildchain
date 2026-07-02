@@ -21,6 +21,7 @@ running artifact), *use* (consume / extend) - and a **status**:
 | How do I install or run the `buildchain` CLI? | [`cli.md`](cli.md) | use | stable |
 | How do I initialize a new repository? | [`cli.md`](cli.md) + [`lifecycle-protocol.md`](lifecycle-protocol.md) | use | stable |
 | Why does Buildchain use branch-driven release governance? | [`release-governance.md`](release-governance.md) | why | stable |
+| When must a change open a minor or major (and when must it not)? | [`versioning.md`](versioning.md) (rule: KFD-1) | verify | stable |
 | What exact branch/tag state machine runs on alpha, release, and major gate? | [`release-flow.md`](release-flow.md) | verify | stable |
 | What did Buildchain migrate or retire from old action repositories? | [`migration-inventory.md`](migration-inventory.md) | verify | stable |
 | What is the active action and workflow source of truth? | [`ownership.md`](ownership.md) | verify | stable |
