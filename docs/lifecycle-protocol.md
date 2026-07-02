@@ -250,6 +250,17 @@ After that PR lands, Buildchain verifies that the version-state PR changed only
 declared version files from the legal channel-promotion parent before it moves
 tags.
 
+For `version.strategy = "anchored"` with `version.next = "manual"`, release
+promotion does not generate a Buildchain-owned version-state commit. In that
+mode, a protected `alpha -> release` PR may carry the declared `version.files`
+from the tested alpha package version to the final package version, and may
+carry the configured `version.manifest` with it. Buildchain only accepts that
+release tree difference when the PR is the valid channel-promotion PR, the
+changed paths are limited to those declared version files plus the anchor
+manifest, and `lifecycle.verify` or `verification-command` has validated the
+checked-out release material. Any code or undeclared file change still fails the
+release tree gate.
+
 The action input `verification-command` remains supported. When it is provided,
 it overrides `lifecycle.verify` for that invocation.
 

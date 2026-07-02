@@ -3778,6 +3778,151 @@ test("strict release promotion requires a matching alpha tree and alpha-to-relea
   assert.equal(refs.get("tags/v1.0.2"), "d".repeat(40));
 });
 
+test("strict anchored release promotion accepts declared version file and anchor manifest changes", async () => {
+  const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+strategy = "anchored"
+next = "manual"
+manifest = "libnode.release.json"
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[lifecycle.verify]
+command = "node scripts/verify.mjs"
+`,
+    "package.json": {
+      name: "@kungfu-tech/libnode",
+      version: "22.22.3-kf.0",
+    },
+    "libnode.release.json": {
+      nodeVersion: "22.22.3",
+      nodeTag: "v22.22.3",
+      npmVersion: "22.22.3-kf.0",
+    },
+    "scripts/verify.mjs": `
+import assert from "node:assert/strict";
+import fs from "node:fs";
+
+const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+const anchor = JSON.parse(fs.readFileSync(process.env.BUILDCHAIN_ANCHOR_MANIFEST, "utf8"));
+
+assert.equal(process.env.BUILDCHAIN_VERSION, "22.22.0");
+assert.equal(process.env.BUILDCHAIN_VERSION_STRATEGY, "anchored");
+assert.equal(process.env.BUILDCHAIN_VERSION_NEXT, "manual");
+assert.equal(anchor.npmVersion, "22.22.3-kf.0");
+assert.equal(pkg.version, anchor.npmVersion);
+`,
+  });
+  run(["git", "init"], cwd);
+  run(["git", "add", "."], cwd);
+  run(["git", "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-m", "release material"], cwd);
+
+  const alphaSha = "c".repeat(40);
+  const refs = new Map([
+    ["heads/release/v22/v22.22", SHA],
+    ["tags/v22.22.0-alpha.0", alphaSha],
+  ]);
+  const comparedBaseheads = [];
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (refs.has(ref)) {
+            return { data: { object: { sha: refs.get(ref) } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async ({ ref }) => ({
+          data: [...refs.entries()]
+            .filter(([name]) => name.startsWith(ref))
+            .map(([name, objectSha]) => ({
+              ref: `refs/${name}`,
+              object: { sha: objectSha },
+            })),
+        }),
+        getCommit: async ({ commit_sha }) => ({
+          data: {
+            tree: { sha: commit_sha === alphaSha ? "alpha-tree" : "release-tree" },
+            parents: commit_sha === SHA ? [{ sha: alphaSha }] : [],
+          },
+        }),
+        createBlob: async () => {
+          throw new Error("anchored manual release should not create version blobs");
+        },
+        createTree: async () => {
+          throw new Error("anchored manual release should not create version trees");
+        },
+        createCommit: async () => {
+          throw new Error("anchored manual release should not create version commits");
+        },
+        updateRef: async ({ ref, sha }) => {
+          refs.set(ref, sha);
+          return {};
+        },
+        createRef: async ({ ref, sha }) => {
+          refs.set(ref.replace(/^refs\//, ""), sha);
+          return {};
+        },
+      },
+      repos: {
+        getBranchProtection: async () => ({
+          data: protectedChannel(),
+        }),
+        listPullRequestsAssociatedWithCommit: async ({ commit_sha }) => ({
+          data: commit_sha === SHA
+            ? [
+                {
+                  merged_at: "2026-07-02T00:00:00Z",
+                  base: { ref: "release/v22/v22.22" },
+                  head: {
+                    ref: "alpha/v22/v22.22",
+                    repo: { full_name: "kungfu-systems/buildchain" },
+                  },
+                },
+              ]
+            : [],
+        }),
+        compareCommitsWithBasehead: async ({ basehead }) => {
+          comparedBaseheads.push(basehead);
+          return {
+            data: {
+              files: [
+                { filename: "package.json" },
+                { filename: "libnode.release.json" },
+              ],
+            },
+          };
+        },
+      },
+    },
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "release/v22/v22.22",
+    cwd,
+    requireGovernance: true,
+    requireVersionState: true,
+  });
+
+  assert.equal(result.sha, SHA);
+  assert.equal(result.nextAlphaRequired, true);
+  assert.equal(refs.get("tags/v22.22.0"), SHA);
+  assert.equal(refs.get("tags/v22.22"), SHA);
+  assert.equal(refs.get("tags/v22"), SHA);
+  assert.deepEqual(comparedBaseheads, [`${alphaSha}...${SHA}`]);
+});
+
 test("strict release promotion rejects code changes after alpha", async () => {
   const alphaSha = "c".repeat(40);
   const refs = new Map([
