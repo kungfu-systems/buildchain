@@ -208,6 +208,27 @@ test("publish source-lock docs distinguish source refs from promotion targets", 
   assert.match(docs, /it is not a replacement for `target-ref`/);
 });
 
+test("promote action docs describe publish source-lock inputs", () => {
+  const docs = fs.readFileSync(
+    path.join(root, "actions/promote-buildchain-ref/README.md"),
+    "utf8",
+  );
+
+  assert.match(docs, /require-publish-source-lock: "true"/);
+  assert.match(
+    docs,
+    /publish-source-ref: \$\{\{ needs\.build\.outputs\.publish-source-ref \}\}/,
+  );
+  assert.match(
+    docs,
+    /publish-source-sha: \$\{\{ needs\.build\.outputs\.publish-source-sha \}\}/,
+  );
+  assert.match(docs, /target-ref: release\/v22\/v22\.22/);
+  assert.match(docs, /`target-ref` remains the channel promotion target/);
+  assert.match(docs, /Direct `alpha\/\*` or `release\/\*` channel refs/);
+  assert.match(docs, /fails before any promotion or publish side effects begin/);
+});
+
 test("runner presets resolve to explicit matrices", () => {
   const hosted = resolveRunnerMatrix({ runnerPreset: "github-hosted" });
   assert.equal(hosted.runnerPreset, "github-hosted");
