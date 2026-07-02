@@ -670,10 +670,18 @@ function canReplaceStaleVersionStateTransaction({
   targetRef,
   channel,
   allowVersionStateFinalization,
+  localOnly,
 }) {
+  if (!materialErrorRequiresRepair(error)) {
+    return false;
+  }
+  if (localOnly) {
+    return true;
+  }
+  if (!allowVersionStateFinalization) {
+    return false;
+  }
   if (
-    !allowVersionStateFinalization ||
-    !materialErrorRequiresRepair(error) ||
     existing?.version !== version ||
     existing?.exact_tag !== exactTag ||
     existing?.target_ref !== targetRef ||
@@ -1169,6 +1177,7 @@ async function runPublishTransaction({
         targetRef,
         channel,
         allowVersionStateFinalization,
+        localOnly: Boolean(localExisting && !durableExisting),
       });
     if (!canFinalizeVersionState && !canReplaceStaleVersionState) {
       throw error;
