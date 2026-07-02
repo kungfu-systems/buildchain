@@ -399,6 +399,149 @@ isolated_providers = true
   );
 });
 
+test("buildchain.toml validates web-surface named surface host mappings", () => {
+  withTempRepo(
+    {
+      "buildchain.toml": `
+schema = 1
+
+[project]
+type = "web-surface"
+name = "site-libkungfu-dev"
+site = "libkungfu-dev"
+
+[channels.preview]
+url_pattern = "https://{alias}.preview.libkungfu.dev"
+
+[channels.staging]
+url = "https://staging.libkungfu.dev"
+access_control = "managed-network"
+edge_auth = "none"
+noindex = true
+
+[channels.production]
+url = "https://libkungfu.dev"
+noindex = false
+
+[surfaces.hub]
+path = "/"
+production_url = "https://libkungfu.dev"
+staging_url = "https://staging.libkungfu.dev"
+preview_url_pattern = "https://{alias}.preview.libkungfu.dev"
+
+[surfaces.core]
+path = "/core"
+production_url = "https://core.libkungfu.dev"
+staging_url = "https://core.staging.libkungfu.dev"
+preview_url_pattern = "https://core-{alias}.preview.libkungfu.dev"
+
+[deploy.preview]
+adapter = "aws-s3-cloudfront"
+
+[deploy.staging]
+adapter = "aws-s3-cloudfront"
+
+[deploy.production]
+adapter = "aws-s3-cloudfront"
+`,
+    },
+    (dir) => {
+      const summary = validateBuildchainConfig(dir);
+      assert.equal(summary.surfaces.core.path, "/core/");
+      assert.equal(summary.surfaces.core.previewUrlPattern, "https://core-{alias}.preview.libkungfu.dev");
+      assert.equal(summary.surfaces.hub.canonical, true);
+    },
+  );
+});
+
+test("buildchain.toml rejects incomplete first-class web-surface host mappings", () => {
+  withTempRepo(
+    {
+      "buildchain.toml": `
+schema = 1
+
+[project]
+type = "web-surface"
+
+[channels.preview]
+url_pattern = "https://{alias}.preview.example.test"
+
+[channels.staging]
+url = "https://staging.example.test"
+access_control = "managed-network"
+edge_auth = "none"
+noindex = true
+
+[channels.production]
+url = "https://example.test"
+
+[surfaces.core]
+path = "/core/"
+production_url = "https://core.example.test"
+preview_url_pattern = "https://core-{alias}.preview.example.test"
+
+[deploy.preview]
+adapter = "aws-s3-cloudfront"
+
+[deploy.staging]
+adapter = "aws-s3-cloudfront"
+
+[deploy.production]
+adapter = "aws-s3-cloudfront"
+`,
+    },
+    (dir) => {
+      assert.throws(
+        () => validateBuildchainConfig(dir),
+        /surfaces\.core\.staging_url is required unless path_only = true/,
+      );
+    },
+  );
+});
+
+test("buildchain.toml allows explicit path-only web-surface fallback", () => {
+  withTempRepo(
+    {
+      "buildchain.toml": `
+schema = 1
+
+[project]
+type = "web-surface"
+
+[channels.preview]
+url_pattern = "https://{alias}.preview.example.test"
+
+[channels.staging]
+url = "https://staging.example.test"
+access_control = "managed-network"
+edge_auth = "none"
+noindex = true
+
+[channels.production]
+url = "https://example.test"
+
+[surfaces.docs]
+path = "/docs/"
+path_only = true
+
+[deploy.preview]
+adapter = "aws-s3-cloudfront"
+
+[deploy.staging]
+adapter = "aws-s3-cloudfront"
+
+[deploy.production]
+adapter = "aws-s3-cloudfront"
+`,
+    },
+    (dir) => {
+      const summary = validateBuildchainConfig(dir);
+      assert.equal(summary.surfaces.docs.pathOnly, true);
+      assert.equal(summary.surfaces.docs.path, "/docs/");
+    },
+  );
+});
+
 test("web-surface staging must be access-controlled and noindex", () => {
   withTempRepo(
     {
@@ -476,5 +619,74 @@ aws_secret_access_key = "not-allowed"
         /must be declared as a secret reference/,
       );
     },
+  );
+});
+
+test("web-surface deploy surface overrides normalize paths and reject inline secrets", () => {
+  withTempRepo(
+    {
+      "buildchain.toml": `
+schema = 1
+
+[project]
+type = "web-surface"
+
+[channels.preview]
+url_pattern = "https://{alias}.preview.example.test"
+
+[channels.staging]
+url = "https://staging.example.test"
+access_control = "managed-network"
+edge_auth = "none"
+noindex = true
+
+[channels.production]
+url = "https://example.test"
+
+[surfaces.docs]
+path = "/docs/"
+path_only = true
+
+[deploy.preview]
+adapter = "aws-s3-cloudfront"
+
+[deploy.staging]
+adapter = "aws-s3-cloudfront"
+
+[deploy.staging.surfaces.docs]
+bucket = "docs-staging"
+artifact_path = "dist/docs"
+origin_path = "/docs"
+secret_refs = ["AWS_ROLE_ARN"]
+
+[deploy.production]
+adapter = "aws-s3-cloudfront"
+`,
+    },
+    (dir) => {
+      validateBuildchainConfig(dir);
+      const loaded = loadBuildchainConfig(dir);
+      assert.equal(loaded.config.deploy.staging.surfaces.docs.artifactPath, "dist/docs");
+      assert.equal(loaded.config.deploy.staging.surfaces.docs.originPath, "/docs");
+      assert.deepEqual(loaded.config.deploy.staging.surfaces.docs.secretRefs, ["AWS_ROLE_ARN"]);
+    },
+  );
+
+  assert.throws(
+    () =>
+      normalizeBuildchainConfig({
+        schema: 1,
+        deploy: {
+          staging: {
+            adapter: "aws-s3-cloudfront",
+            surfaces: {
+              docs: {
+                token: "not-allowed",
+              },
+            },
+          },
+        },
+      }),
+    /deploy\.staging\.surfaces\.docs\.token must be declared as a secret reference/,
   );
 });

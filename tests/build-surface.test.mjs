@@ -103,6 +103,8 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /preview-aws-role-arn is required when preview-apply is true/);
   assert.match(workflow, /aws-actions\/configure-aws-credentials@v5/);
   assert.match(workflow, /buildchain:web-surface-preview/);
+  assert.match(workflow, /web-surface-urls-json/);
+  assert.match(workflow, /Preview deployed:/);
   assert.match(workflow, /preview-apply-result-json/);
   assert.match(workflow, /Apply pull request preview cleanup/);
   assert.match(workflow, /preview-cleanup-apply/);

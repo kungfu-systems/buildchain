@@ -90,6 +90,7 @@ export function webSurfaceCli() {
       "web-surface-channel": result.channel,
       "web-surface-alias": result.alias,
       "web-surface-url": result.url,
+      "web-surface-urls-json": JSON.stringify(result.urls || {}),
       "web-surface-artifact-hash": result.artifact.hash,
       "web-surface-manifest-json": JSON.stringify(result.manifest),
     });
@@ -121,10 +122,12 @@ export function webSurfaceCli() {
       "web-surface-channel": result.channel,
       "web-surface-alias": result.alias,
       "web-surface-url": result.url,
+      "web-surface-urls-json": JSON.stringify(result.urls || {}),
       "web-surface-artifact-hash": result.artifactHash,
       "web-surface-apply-mode": result.applyMode,
       "web-surface-apply-status": result.status,
       "web-surface-manifest-json": JSON.stringify(result.manifest),
+      "web-surface-bindings-json": JSON.stringify(result.surfaceBindings || []),
       "web-surface-apply-result-json": JSON.stringify(result),
     });
     assertApplySucceeded(result);
