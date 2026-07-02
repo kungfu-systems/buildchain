@@ -40,3 +40,17 @@ jobs:
 
       - name: Check buildchain
         run: pnpm run check
+
+      - name: Verify release passport compatibility fixture
+        env:
+          BUILDCHAIN_RUNNER_KIND: self-hosted
+        run: |
+          mkdir -p dist/passport-fixture
+          printf 'self-hosted compatibility fixture\n' > dist/passport-fixture/buildchain-self-hosted-fixture.tar.gz
+          node bin/buildchain.mjs collect github-release \
+            --tag "v0.0.0-self-hosted-smoke" \
+            --repository "${GITHUB_REPOSITORY}" \
+            --source-sha "${GITHUB_SHA}" \
+            --assets-dir dist/passport-fixture \
+            --output-dir .buildchain/self-hosted-passport
+          node bin/buildchain.mjs verify release-passport .buildchain/self-hosted-passport/buildchain.release.json

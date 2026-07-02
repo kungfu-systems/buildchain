@@ -4,6 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { resolveSpawnCommand, usesShellForSpawnCommand } from "../scripts/build-standalone-binary.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const bin = path.join(root, "bin", "buildchain.mjs");
@@ -143,6 +144,83 @@ test("CLI logging writes redacted JSONL events and summaries", () => {
   assert.equal(summary.sources.user.count, 1);
   assert.equal(summary.phases.configure.count, 1);
   assert.equal(summary.components.fixture.count, 1);
+});
+
+test("CLI verifies observability logs fail closed", () => {
+  const cwd = tempDir("logging-verify");
+  const logPath = path.join(cwd, ".buildchain", "logs", "events.jsonl");
+  runBuildchain([
+    "mark",
+    "--event",
+    "binary.matrix.start",
+    "--phase",
+    "setup",
+    "--component",
+    "workflow",
+    "--source",
+    "buildchain",
+    "--path",
+    logPath,
+  ], { cwd });
+  runBuildchain([
+    "mark",
+    "--event",
+    "binary.matrix.complete",
+    "--phase",
+    "evidence",
+    "--component",
+    "standalone-binary",
+    "--source",
+    "buildchain",
+    "--path",
+    logPath,
+  ], { cwd });
+
+  const report = JSON.parse(runBuildchain([
+    "verify",
+    "observability-log",
+    logPath,
+    "--min-events",
+    "2",
+    "--require-phase",
+    "setup,evidence",
+    "--require-component",
+    "workflow",
+    "--require-component",
+    "standalone-binary",
+    "--require-event",
+    "binary.matrix.start",
+    "--json",
+  ], { cwd }));
+  assert.equal(report.ok, true);
+  assert.equal(report.summary.eventCount, 2);
+
+  const failure = runBuildchainFailure([
+    "verify",
+    "observability-log",
+    logPath,
+    "--min-events",
+    "3",
+    "--require-phase",
+    "archive",
+    "--json",
+  ], { cwd });
+  assert.equal(failure.status, 1);
+  const failedReport = JSON.parse(failure.stdout);
+  assert.equal(failedReport.ok, false);
+  assert.ok(failedReport.issues.some((entry) => entry.code === "log.events.too_few"));
+  assert.ok(failedReport.issues.some((entry) => entry.code === "log.phase.missing"));
+});
+
+test("standalone binary builder resolves Windows package manager shims", () => {
+  assert.equal(resolveSpawnCommand("pnpm", "win32"), "pnpm.cmd");
+  assert.equal(resolveSpawnCommand("npx", "win32"), "npx.cmd");
+  assert.equal(resolveSpawnCommand("powershell", "win32"), "powershell");
+  assert.equal(resolveSpawnCommand("pnpm", "linux"), "pnpm");
+  assert.equal(usesShellForSpawnCommand("pnpm", "win32"), true);
+  assert.equal(usesShellForSpawnCommand("npx", "win32"), true);
+  assert.equal(usesShellForSpawnCommand("powershell", "win32"), false);
+  assert.equal(usesShellForSpawnCommand("pnpm", "linux"), false);
 });
 
 test("CLI span wraps commands and preserves failure exit codes", () => {
@@ -344,6 +422,113 @@ test("transaction inspect is available as a top-level read/recovery helper", () 
   assert.equal(result.created, true);
   assert.equal(result.transaction.version, "v2.1.0-alpha.0");
   assert.match(result.durableBoundary, /remote durable refs/);
+});
+
+test("release passport collect verify and explain form an agent-readable contract", () => {
+  const cwd = tempDir("release-passport");
+  const assetsDir = path.join(cwd, "dist");
+  fs.mkdirSync(assetsDir, { recursive: true });
+  fs.writeFileSync(path.join(assetsDir, "buildchain-x86_64-unknown-linux-gnu.tar.gz"), "linux-binary\n");
+  fs.writeFileSync(path.join(assetsDir, "checksums.txt"), "placeholder\n");
+  fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({
+    name: "@kungfu-tech/buildchain",
+    version: "2.2.0-alpha.0",
+  }, null, 2));
+
+  const collected = JSON.parse(runBuildchain([
+    "collect",
+    "github-release",
+    "--cwd",
+    cwd,
+    "--tag",
+    "v2.2.0-alpha.0",
+    "--repository",
+    "kungfu-systems/buildchain",
+    "--source-sha",
+    "e".repeat(40),
+    "--assets-dir",
+    assetsDir,
+    "--output-dir",
+    "release-passport",
+    "--json",
+  ], { cwd }));
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+
+  assert.equal(passport.contract, "kungfu-buildchain-release-passport");
+  assert.equal(passport.runnerPolicy.productionDefault, "github-hosted");
+  assert.equal(passport.runnerPolicy.compatibilityFixture, "self-hosted");
+  assert.equal(passport.artifacts.length, 2);
+
+  const report = JSON.parse(runBuildchain(["verify", "release-passport", passportPath, "--json"], { cwd }));
+  assert.equal(report.contract, "kungfu-buildchain-release-check-report");
+  assert.equal(report.ok, true);
+  assert.equal(report.completeness.artifactCount, 2);
+
+  const explanation = JSON.parse(runBuildchain([
+    "explain",
+    "release",
+    "--passport",
+    passportPath,
+    "--for",
+    "agent",
+    "--json",
+  ], { cwd }));
+  assert.equal(explanation.audience, "agent");
+  assert.equal(explanation.trust, "pass");
+  assert.equal(explanation.nextAction, "install-or-upgrade-after-policy-review");
+});
+
+test("release passport verification fails closed on missing artifact evidence", () => {
+  const cwd = tempDir("release-passport-fail");
+  const passportPath = path.join(cwd, "buildchain.release.json");
+  fs.writeFileSync(passportPath, JSON.stringify({
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-release-passport",
+    product: {
+      name: "Buildchain",
+      repository: "kungfu-systems/buildchain",
+      mechanism: "product-mechanism.json",
+    },
+    release: {
+      tag: "v2.2.0",
+      sourceSha: "f".repeat(40),
+    },
+    runnerPolicy: {
+      productionDefault: "github-hosted",
+    },
+    artifacts: [
+      {
+        name: "buildchain-x86_64-unknown-linux-gnu.tar.gz",
+        platform: "linux-x64",
+        sha256: "0".repeat(64),
+        evidence: "artifact-evidence.json",
+      },
+    ],
+    evidence: {
+      artifactEvidence: "artifact-evidence.json",
+      impact: "impact.json",
+      agentIndex: "agent-index.json",
+    },
+  }, null, 2));
+  for (const [fileName, contract] of [
+    ["artifact-evidence.json", "kungfu-buildchain-artifact-evidence"],
+    ["impact.json", "kungfu-buildchain-impact"],
+    ["agent-index.json", "kungfu-buildchain-agent-index"],
+    ["product-mechanism.json", "kungfu-buildchain-product-mechanism"],
+  ]) {
+    fs.writeFileSync(path.join(cwd, fileName), JSON.stringify({
+      schemaVersion: 1,
+      contract,
+      artifacts: [],
+    }, null, 2));
+  }
+  const failure = runBuildchainFailure(["verify", "release-passport", passportPath, "--json"], { cwd });
+
+  assert.equal(failure.status, 1);
+  const report = JSON.parse(failure.stdout);
+  assert.equal(report.ok, false);
+  assert.match(JSON.stringify(report.issues), /artifact\.evidence\.missing/);
 });
 
 test("release dry-run rejects unsupported tag syntax", () => {

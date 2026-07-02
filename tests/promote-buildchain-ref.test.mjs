@@ -1857,6 +1857,136 @@ test("publish transaction resumes partial alpha finalization with exact tag on r
   assert.equal(refs.has("tags/v1.0.0-alpha.1"), false);
 });
 
+test("completed alpha transaction does not reuse exact tag for new alpha material", async () => {
+  const oldAlphaSha = "3".repeat(40);
+  const versionHeadSha = "4".repeat(40);
+  const mergeSha = "5".repeat(40);
+  const previousFinalizedSha = "6".repeat(40);
+  const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[lifecycle.publish]
+command = "node scripts/publish.mjs"
+`,
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "1.0.0-alpha.0",
+      packageManager: "pnpm@11.7.0",
+    },
+    "scripts/publish.mjs": `
+import fs from "node:fs";
+
+fs.mkdirSync(process.env.BUILDCHAIN_EVIDENCE_DIR, { recursive: true });
+fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
+  schema: 1,
+  version: process.env.BUILDCHAIN_VERSION,
+  channel: process.env.BUILDCHAIN_CHANNEL,
+  source_sha: process.env.BUILDCHAIN_SOURCE_SHA,
+  release_sha: process.env.BUILDCHAIN_RELEASE_SHA,
+  target_ref: process.env.BUILDCHAIN_TARGET_REF,
+  release_material_sha: process.env.BUILDCHAIN_RELEASE_MATERIAL_SHA,
+  publish_tooling_sha: process.env.BUILDCHAIN_PUBLISH_TOOLING_SHA,
+  artifacts: [{
+    kind: "npm",
+    name: "@kungfu-tech/buildchain",
+    ref: process.env.BUILDCHAIN_VERSION,
+    digest: "sha256:alpha-next"
+  }]
+}, null, 2) + "\\n");
+`,
+  });
+  const { octokit, refs, commits } = createGitMock({
+    refs: new Map([
+      ["heads/alpha/v1/v1.0", mergeSha],
+      ["heads/dev/v1/v1.0", mergeSha],
+      ["tags/v1.0.0-alpha.0", previousFinalizedSha],
+      ["tags/v1.0-alpha", previousFinalizedSha],
+    ]),
+  });
+  commits.set(previousFinalizedSha, {
+    sha: previousFinalizedSha,
+    tree: { sha: `tree-${previousFinalizedSha}` },
+    parents: [{ sha: oldAlphaSha }, { sha: versionHeadSha }],
+  });
+  commits.set(mergeSha, {
+    sha: mergeSha,
+    tree: { sha: `tree-${mergeSha}` },
+    parents: [{ sha: previousFinalizedSha }, { sha: "7".repeat(40) }],
+  });
+  const statePath = path.join(cwd, ".buildchain/release-state/1.0.0-alpha.0.json");
+  await persistDurableReleaseTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    transaction: {
+      schema: 1,
+      id: "alpha-complete",
+      repository: "kungfu-systems/buildchain",
+      target_ref: "alpha/v1/v1.0",
+      source_sha: oldAlphaSha,
+      release_sha: previousFinalizedSha,
+      release_material_sha: versionHeadSha,
+      publish_tooling_sha: versionHeadSha,
+      version: "1.0.0-alpha.0",
+      exact_tag: "v1.0.0-alpha.0",
+      channel: "alpha",
+      line: "v1.0",
+      version_strategy: "",
+      lifecycle_identity: "lifecycle.publish",
+      state_ref: "buildchain/release-state/1-0-0-alpha-0",
+      state_path: statePath,
+      evidence_path: "",
+      state: "complete",
+      previous_state: "finalizing",
+      actor: "codex",
+      run_id: "1",
+      superseded_by: "",
+      failure: "",
+      artifacts: [],
+      evidence: [],
+      created_at: "2026-07-01T00:00:00.000Z",
+      updated_at: "2026-07-01T00:00:00.000Z",
+    },
+    evidencePath: "",
+  });
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: mergeSha,
+    targetRef: "alpha/v1/v1.0",
+    cwd,
+    publishTransaction: true,
+    publishCommand: "node scripts/publish.mjs",
+    requireVersionState: true,
+    publishRequiredArtifactsJson: JSON.stringify([
+      {
+        kind: "npm",
+        name: "@kungfu-tech/buildchain",
+        ref: "1.0.0-alpha.1",
+        digest: "sha256:alpha-next",
+      },
+    ]),
+  });
+
+  assert.notEqual(result.sha, mergeSha);
+  assert.equal(result.publishTransaction.exactTag, "v1.0.0-alpha.1");
+  assert.equal(refs.get("tags/v1.0.0-alpha.0"), previousFinalizedSha);
+  assert.equal(refs.get("tags/v1.0.0-alpha.1"), result.sha);
+  assert.equal(refs.get("tags/v1.0-alpha"), result.sha);
+});
+
 test("publish transaction finalizes current release version-state merge commits", async () => {
   const oldReleaseSha = "d".repeat(40);
   const alphaSha = "e".repeat(40);
