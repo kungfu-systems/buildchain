@@ -167,6 +167,25 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /actions\/download-artifact@v7\.0\.0/);
 });
 
+test("promote action exposes anchored publish source-lock gate", () => {
+  const action = fs.readFileSync(
+    path.join(root, "actions/promote-buildchain-ref/action.yml"),
+    "utf8",
+  );
+  const implementation = fs.readFileSync(
+    path.join(root, "actions/promote-buildchain-ref/index.js"),
+    "utf8",
+  );
+
+  assert.match(action, /require-publish-source-lock:/);
+  assert.match(action, /publish-source-ref:/);
+  assert.match(action, /publish-source-sha:/);
+  assert.match(action, /publish-source-locked:/);
+  assert.match(implementation, /validateAnchoredPackageRelease/);
+  assert.match(implementation, /requirePublishGateSourceLock: true/);
+  assert.match(implementation, /does not match promotion sha/);
+});
+
 test("runner presets resolve to explicit matrices", () => {
   const hosted = resolveRunnerMatrix({ runnerPreset: "github-hosted" });
   assert.equal(hosted.runnerPreset, "github-hosted");

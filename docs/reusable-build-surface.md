@@ -257,23 +257,29 @@ If the branch tip no longer matches the manifest SHA, the publish job must fail
 closed. Moving a gate branch creates a new publish decision and should produce a
 new build run.
 
-Anchored/manual package release jobs should also validate that publication is
-entering through the same `publish-gate/{alpha,release,major}` source-lock
-contract before running `npm publish` or a package-set publish script:
+Anchored/manual package release jobs should also make the Buildchain promotion
+action validate that publication is entering through the same
+`publish-gate/{alpha,release,major}` source-lock contract before any package
+publish side effect:
 
 ```yaml
-- name: Validate anchored release source lock
-  run: npx buildchain publish-source validate-anchored-release --json
-  env:
-    BUILDCHAIN_PUBLISH_SOURCE_REF: ${{ needs.build.outputs.publish-source-ref }}
-    BUILDCHAIN_PUBLISH_SOURCE_SHA: ${{ needs.build.outputs.publish-source-sha }}
-    BUILDCHAIN_PUBLISH_SOURCE_LOCKED: ${{ needs.build.outputs.publish-source-locked }}
+- name: Promote release ref and publish npm package set
+  uses: kungfu-systems/buildchain/actions/promote-buildchain-ref@v2
+  with:
+    sha: ${{ needs.build.outputs.publish-source-sha }}
+    require-publish-source-lock: 'true'
+    publish-source-ref: ${{ needs.build.outputs.publish-source-ref }}
+    publish-source-sha: ${{ needs.build.outputs.publish-source-sha }}
+    publish-source-locked: ${{ needs.build.outputs.publish-source-locked }}
 ```
 
 This keeps the version bump commit, publish authorization, and auditable publish
-entrypoint on the Buildchain source-lock protocol. A publish job that still runs
-directly from `alpha/*` or `release/*` channel branches fails this check because
-those refs are channel state, not publish-gate decisions.
+entrypoint on the Buildchain source-lock protocol. The CLI form
+`buildchain publish-source validate-anchored-release --json` is still useful for
+custom publish scripts, but the preferred GitHub Actions gate is the promotion
+action input above. A publish job that still runs directly from `alpha/*` or
+`release/*` channel branches fails this check because those refs are channel
+state, not publish-gate decisions.
 
 ## Package-Set Publish Plan
 
