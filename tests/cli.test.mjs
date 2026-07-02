@@ -8,6 +8,8 @@ import { createBuildchainLogger } from "@kungfu-tech/buildchain/logging";
 import {
   createDiagnosticsArtifact,
   collectRunnerDiagnostics,
+  detectRequestedParallelism,
+  startProcessSampler,
   summarizeProcessSamples,
   validateAnchoredPackageRelease,
 } from "@kungfu-tech/buildchain/diagnostics";
@@ -214,7 +216,9 @@ test("diagnostics SDK validates anchored package release contracts", () => {
 
 test("diagnostics SDK summarizes process samples against requested parallelism", () => {
   const summary = summarizeProcessSamples({
-    requestedParallelism: 20,
+    command: "make",
+    args: ["-j20"],
+    env: {},
     samples: [
       {
         processes: [
@@ -237,6 +241,7 @@ test("diagnostics SDK summarizes process samples against requested parallelism",
 
   assert.equal(summary.contract, "kungfu-buildchain-process-sample-summary");
   assert.equal(summary.requestedParallelism, 20);
+  assert.equal(summary.requestedParallelismSource, "command");
   assert.equal(summary.observedConcurrency.max, 5);
   assert.equal(summary.observedConcurrency.ratioToRequestedMax, 0.25);
   assert.equal(summary.categories.compiler, 2);
@@ -249,6 +254,40 @@ test("diagnostics SDK summarizes process samples against requested parallelism",
   });
   assert.equal(artifact.process.requestedParallelism, 20);
   assert.equal(artifact.process.observedConcurrency.max, 5);
+});
+
+test("diagnostics SDK detects requested parallelism from commands and env", () => {
+  assert.deepEqual(
+    detectRequestedParallelism({ command: "make -j20" }),
+    { value: 20, source: "command", token: "-j20" },
+  );
+  assert.deepEqual(
+    detectRequestedParallelism({ command: "cmake", args: ["--build", "build", "--parallel", "8"] }),
+    { value: 8, source: "command", token: "--parallel 8" },
+  );
+  assert.deepEqual(
+    detectRequestedParallelism({ env: { MAKEFLAGS: "--jobs=12" } }),
+    { value: 12, source: "env:MAKEFLAGS", token: "--jobs=12" },
+  );
+  assert.deepEqual(
+    detectRequestedParallelism({ env: { CMAKE_BUILD_PARALLEL_LEVEL: "16" } }),
+    { value: 16, source: "env:CMAKE_BUILD_PARALLEL_LEVEL", token: "CMAKE_BUILD_PARALLEL_LEVEL" },
+  );
+});
+
+test("diagnostics process sampler annotates samples with build concurrency context", () => {
+  const sampler = startProcessSampler({
+    label: "native-build",
+    command: "make -j20",
+    intervalMs: 60000,
+    env: {},
+  });
+  const samples = sampler.stop();
+  assert.equal(samples.length, 1);
+  assert.equal(samples[0].label, "native-build");
+  assert.equal(samples[0].requestedParallelism, 20);
+  assert.equal(samples[0].requestedParallelismSource, "command");
+  assert.equal(Number.isFinite(samples[0].elapsedMs), true);
 });
 
 test("CLI verifies observability logs fail closed", () => {

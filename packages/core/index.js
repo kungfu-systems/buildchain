@@ -64,6 +64,7 @@ export {
   collectRunnerDiagnostics,
   collectToolDiagnostics,
   createDiagnosticsArtifact,
+  detectRequestedParallelism,
   readDiagnosticsArtifact,
   redactDiagnosticsValue,
   startProcessSampler,

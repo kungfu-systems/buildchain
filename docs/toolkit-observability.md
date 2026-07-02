@@ -112,6 +112,7 @@ import {
   collectCacheDiagnostics,
   collectRunnerDiagnostics,
   collectToolDiagnostics,
+  detectRequestedParallelism,
   startProcessSampler,
   summarizeLifecycleObservability,
   summarizeProcessSamples,
@@ -122,10 +123,21 @@ import {
 const lifecycleObservability = summarizeLifecycleObservability({
   logPath: ".buildchain/logs/events.jsonl",
 });
-const processSampler = startProcessSampler({ intervalMs: 15000 });
+const buildCommand = "make";
+const buildArgs = ["-j20"];
+const requestedParallelism = detectRequestedParallelism({
+  command: buildCommand,
+  args: buildArgs,
+});
+const processSampler = startProcessSampler({
+  intervalMs: 15000,
+  label: "native-build",
+  command: buildCommand,
+  args: buildArgs,
+});
 // Run the long native build while the sampler is active.
 const processSummary = summarizeProcessSamples({
-  requestedParallelism: 20,
+  requestedParallelism: requestedParallelism.value,
   samples: processSampler.stop(),
 });
 
@@ -141,12 +153,13 @@ writeDiagnosticsArtifact(".buildchain/artifacts/diagnostics.json", {
 ```
 
 Process samples are intentionally summarized before they become long-lived
-artifacts. The summary records requested parallelism, observed active process
-concurrency, total sampled CPU, and conservative command categories such as
-`compiler`, `archive`, `linker`, `build-tool`, and `cache`. This lets native
-projects distinguish "we asked for `make -j20`" from "the build graph only kept
-two active compiler or archive children busy during the sampled window" without
-storing full command lines.
+artifacts. The summary records requested parallelism, the source of that value
+(`command`, `env:MAKEFLAGS`, `env:CMAKE_BUILD_PARALLEL_LEVEL`, or `explicit`),
+observed active process concurrency, elapsed sample time, total sampled CPU,
+and conservative command categories such as `compiler`, `archive`, `linker`,
+`build-tool`, and `cache`. This lets native projects distinguish "we asked for
+`make -j20`" from "the build graph only kept two active compiler or archive
+children busy during the sampled window" without storing full command lines.
 
 Anchored/manual package projects can also run one higher-level release-shape
 check instead of assembling lower-level config calls:

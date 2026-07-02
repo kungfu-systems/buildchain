@@ -412,9 +412,73 @@ export function classifyProcessCommand(command = "") {
   return "other";
 }
 
+function firstPositiveInteger(value) {
+  const number = Number(value);
+  return Number.isInteger(number) && number > 0 ? number : 0;
+}
+
+function detectParallelismFromTokens(tokens = []) {
+  for (let index = 0; index < tokens.length; index += 1) {
+    const token = String(tokens[index] || "");
+    const inlineMatch = token.match(/^(?:-j|--jobs=|--parallel=|\/m:|-m:)(\d+)$/i);
+    if (inlineMatch) {
+      return { value: Number(inlineMatch[1]), source: "command", token };
+    }
+    if (/^(?:-j|--jobs|--parallel)$/i.test(token)) {
+      const value = firstPositiveInteger(tokens[index + 1]);
+      if (value) {
+        return { value, source: "command", token: `${token} ${tokens[index + 1]}` };
+      }
+    }
+  }
+  return { value: 0, source: "", token: "" };
+}
+
+function shellishTokens(command = "") {
+  return String(command || "").match(/"[^"]+"|'[^']+'|\S+/g)?.map((token) => token.replace(/^['"]|['"]$/g, "")) || [];
+}
+
+export function detectRequestedParallelism({
+  command = "",
+  args = [],
+  env = process.env,
+} = {}) {
+  const commandTokens = [
+    ...shellishTokens(command),
+    ...(Array.isArray(args) ? args.map((entry) => String(entry)) : shellishTokens(args)),
+  ];
+  const commandParallelism = detectParallelismFromTokens(commandTokens);
+  if (commandParallelism.value) {
+    return commandParallelism;
+  }
+
+  const explicitEnvKeys = [
+    "BUILDCHAIN_REQUESTED_PARALLELISM",
+    "CMAKE_BUILD_PARALLEL_LEVEL",
+    "NINJA_STATUS_JOBS",
+    "npm_config_jobs",
+  ];
+  for (const key of explicitEnvKeys) {
+    const value = firstPositiveInteger(env?.[key]);
+    if (value) {
+      return { value, source: `env:${key}`, token: key };
+    }
+  }
+
+  const makeflags = detectParallelismFromTokens(shellishTokens(env?.MAKEFLAGS || ""));
+  if (makeflags.value) {
+    return { ...makeflags, source: "env:MAKEFLAGS" };
+  }
+
+  return { value: 0, source: "", token: "" };
+}
+
 export function summarizeProcessSamples({
   samples = [],
   requestedParallelism = 0,
+  command = "",
+  args = [],
+  env = process.env,
   activeCpuThreshold = 0.1,
 } = {}) {
   const normalizedSamples = Array.isArray(samples) ? samples : [];
@@ -471,7 +535,9 @@ export function summarizeProcessSamples({
   const totalCpuAverage = cpuTotals.length
     ? cpuTotals.reduce((sum, value) => sum + value, 0) / cpuTotals.length
     : 0;
-  const requested = Number(requestedParallelism || 0);
+  const explicitRequested = firstPositiveInteger(requestedParallelism);
+  const detectedParallelism = detectRequestedParallelism({ command, args, env });
+  const requested = explicitRequested || detectedParallelism.value;
 
   return {
     schemaVersion: 1,
@@ -479,6 +545,7 @@ export function summarizeProcessSamples({
     sampleCount: normalizedSamples.length,
     activeCpuThreshold: threshold,
     requestedParallelism: requested,
+    requestedParallelismSource: explicitRequested ? "explicit" : detectedParallelism.source,
     observedConcurrency: {
       max: observedMax,
       average: Number(observedAverage.toFixed(2)),
@@ -498,13 +565,26 @@ export function summarizeProcessSamples({
 export function startProcessSampler({
   rootPid = process.pid,
   intervalMs = 15000,
+  label = "",
+  command = "",
+  args = [],
+  env = process.env,
+  requestedParallelism = 0,
   onSample = () => undefined,
   cwd = process.cwd(),
 } = {}) {
   const samples = [];
+  const startedAt = Date.now();
+  const explicitRequested = firstPositiveInteger(requestedParallelism);
+  const detectedParallelism = detectRequestedParallelism({ command, args, env });
+  const requested = explicitRequested || detectedParallelism.value;
   const sample = () => {
     const snapshot = {
       timestamp: new Date().toISOString(),
+      label,
+      elapsedMs: Date.now() - startedAt,
+      requestedParallelism: requested,
+      requestedParallelismSource: explicitRequested ? "explicit" : detectedParallelism.source,
       ...collectProcessTreeSnapshot({ rootPid, cwd }),
     };
     samples.push(snapshot);
