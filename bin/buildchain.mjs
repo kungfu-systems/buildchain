@@ -147,7 +147,7 @@ function runDoctor({ cwd = process.cwd() } = {}) {
   try {
     const validation = validateBuildchainConfig(resolvedCwd);
     checks.push(checkStatus(true, "config.valid", "buildchain.toml is valid", {
-      projectType: validation.project.type,
+      projectType: validation.project?.type || "",
       lifecycleStages: validation.lifecycleStages.map((stage) => stage.name),
     }));
   } catch (error) {

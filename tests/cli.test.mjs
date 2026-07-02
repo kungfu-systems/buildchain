@@ -84,6 +84,18 @@ test("validate reads initialized package config", () => {
   assert.deepEqual(validation.lifecycleStages.map((stage) => stage.name).sort(), ["build", "install", "verify"]);
 });
 
+test("doctor accepts anchored package configs without project section", () => {
+  const report = JSON.parse(runBuildchain(["doctor", "--cwd", path.join(root, "fixtures/libnode-shaped"), "--json"]));
+
+  const configCheck = report.checks.find((check) => check.id === "config.valid");
+  assert.equal(configCheck.status, "pass");
+  assert.equal(configCheck.details.projectType, "");
+  assert.deepEqual(
+    configCheck.details.lifecycleStages.sort(),
+    ["build", "install", "publish", "verify"],
+  );
+});
+
 test("lifecycle run writes deterministic artifact manifest", () => {
   const cwd = tempDir("lifecycle");
   fs.writeFileSync(path.join(cwd, "buildchain.toml"), `schema = 1
