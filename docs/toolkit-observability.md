@@ -222,12 +222,14 @@ or secret-looking values.
 Use `summarizeDiagnosticsArtifacts()` when a matrix build uploads one
 diagnostics artifact per platform. The summary keeps each platform's lifecycle
 stage table, adds a lifecycle total duration, carries the top slow spans, and
-aggregates warning/error counts plus the slowest platforms. Slow platform rows
-also include a compact process sampler view with requested parallelism, observed
-max active processes, the ratio between them, sample count, process categories,
-and top sampled command basenames. That gives release reviewers a small
-cross-platform timing and concurrency view without downloading full build
-outputs or process sidecars.
+aggregates warning/error counts plus the slowest platforms. Per-platform rows
+also include compact runner facts, checked tool versions/missing tools, package
+manager/cache directory details, compiler cache availability, and a compact
+process sampler view with requested parallelism, observed max active processes,
+the ratio between them, sample count, process categories, and top sampled
+command basenames. That gives release reviewers a small cross-platform timing,
+runner, tool, cache, and concurrency view without downloading full build outputs
+or process sidecars.
 
 The reusable build workflow writes that rollup as `diagnostics-summary.json` and
 uploads it in a separate aggregate diagnostics summary artifact. Consumers can
@@ -236,7 +238,9 @@ warning/error, runner, cache, and process-sampler context instead of the build
 summary or binary artifacts. Per-platform rows keep the diagnostics `links`
 object, including the binary artifact name, manifest artifact name, diagnostics
 artifact name, platform id, diagnostics sidecar manifest path, manifest path,
-summary path, and process sidecar paths when present.
+summary path, and process sidecar paths when present. They also keep compact
+runner/tool/cache summaries so reviewers can tell whether a slow row ran on the
+expected runner, missed an expected tool, or lacked useful compiler-cache stats.
 
 The CLI exposes the same aggregation for shell and workflow steps:
 

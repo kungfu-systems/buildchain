@@ -807,6 +807,130 @@ function formatDiagnosticsProcessValue(value) {
   return number > 0 ? String(number) : "-";
 }
 
+function compactRunnerDetails(runner = {}) {
+  return {
+    os: {
+      platform: runner.os?.platform || "",
+      release: runner.os?.release || "",
+      arch: runner.os?.arch || "",
+      type: runner.os?.type || "",
+    },
+    github: {
+      actions: Boolean(runner.github?.actions),
+      runnerOs: runner.github?.runnerOs || "",
+      runnerArch: runner.github?.runnerArch || "",
+      runnerName: runner.github?.runnerName || "",
+    },
+    cpu: {
+      logicalCount: Number(runner.cpu?.logicalCount || 0),
+      model: runner.cpu?.model || "",
+      loadAverage: Array.isArray(runner.cpu?.loadAverage)
+        ? runner.cpu.loadAverage.map((entry) => Number(entry || 0))
+        : [],
+    },
+    memory: {
+      totalBytes: Number(runner.memory?.totalBytes || 0),
+      freeBytes: Number(runner.memory?.freeBytes || 0),
+    },
+    uptimeSeconds: Number(runner.uptimeSeconds || 0),
+  };
+}
+
+function compactToolSummary(...toolSets) {
+  const merged = {};
+  for (const toolSet of toolSets) {
+    for (const [name, details] of Object.entries(toolSet || {})) {
+      merged[name] = details || {};
+    }
+  }
+  const versions = {};
+  const missing = [];
+  for (const [name, details] of Object.entries(merged).sort(([left], [right]) => left.localeCompare(right))) {
+    const version = String(details?.version || "").trim();
+    if (version) {
+      versions[name] = version;
+    } else {
+      missing.push(name);
+    }
+  }
+  return {
+    checked: Object.keys(merged).length,
+    available: Object.keys(versions).length,
+    missing,
+    versions,
+  };
+}
+
+function compactStatsObject(stats = {}, limit = 12) {
+  const entries = [];
+  const visit = (prefix, value) => {
+    if (entries.length >= limit || value === undefined || value === null) {
+      return;
+    }
+    if (typeof value === "number" || typeof value === "string" || typeof value === "boolean") {
+      entries.push([prefix, value]);
+      return;
+    }
+    if (Array.isArray(value) || typeof value !== "object") {
+      return;
+    }
+    for (const [key, nested] of Object.entries(value).sort(([left], [right]) => left.localeCompare(right))) {
+      visit(prefix ? `${prefix}.${key}` : key, nested);
+      if (entries.length >= limit) {
+        break;
+      }
+    }
+  };
+  visit("", stats);
+  return Object.fromEntries(entries);
+}
+
+function compactCompilerCacheSummary(compilerCaches = {}) {
+  return Object.fromEntries(
+    Object.entries(compilerCaches || {})
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([name, details]) => [name, {
+        available: Boolean(details?.available),
+        format: details?.format || "",
+        rawBytes: Number(details?.rawBytes || 0),
+        error: details?.error || "",
+        stats: compactStatsObject(details?.stats || {}),
+      }]),
+  );
+}
+
+function compactCacheSummary(cache = {}, native = {}) {
+  const workspace = cache.workspace || {};
+  const workspacePackages = workspace && !workspace.error && !Array.isArray(workspace) && typeof workspace === "object"
+    ? Object.keys(workspace).length
+    : 0;
+  return {
+    packageManager: cache.packageManager || {},
+    workspacePackages,
+    workspaceError: workspace.error || "",
+    dirs: Array.isArray(cache.dirs)
+      ? cache.dirs.map((entry) => ({
+          path: entry.path || "",
+          exists: Boolean(entry.exists),
+          type: entry.type || "",
+          bytes: Number(entry.bytes || 0),
+        }))
+      : [],
+    compilerCaches: compactCompilerCacheSummary({
+      ...(cache.compilerCaches || {}),
+      ...(native.compilerCaches || {}),
+    }),
+    nativeCacheDirs: Array.isArray(native.cacheDirs)
+      ? native.cacheDirs.map((entry) => ({
+          path: entry.path || "",
+          exists: Boolean(entry.exists),
+          type: entry.type || "",
+          bytes: Number(entry.bytes || 0),
+        }))
+      : [],
+  };
+}
+
 function formatDiagnosticsSummaryRows(rows = []) {
   const widths = rows[0].map((_, columnIndex) => (
     Math.max(...rows.map((row) => String(row[columnIndex] ?? "").length))
@@ -875,6 +999,9 @@ export function summarizeDiagnosticsArtifacts(inputs = []) {
       totalBytes: Number(entry.lifecycleObservability?.totalBytes || 0),
       fileCount: Number(entry.lifecycleObservability?.fileCount || 0),
       topSlowSpans: (entry.lifecycleObservability?.topSlowSpans || []).slice(0, 5),
+      runnerDetails: compactRunnerDetails(entry.runner || {}),
+      tools: compactToolSummary(entry.tools || {}, entry.native?.tools || {}),
+      cache: compactCacheSummary(entry.cache || {}, entry.native || {}),
       process: entry.process || {},
       links: entry.links || {},
       warningCount: entry.lifecycleObservability?.warningCount || 0,

@@ -141,16 +141,19 @@ Actions matrix outputs are not a reliable place to carry every platform's full
 manifest, so Buildchain uploads each platform manifest and then emits one
 aggregate build summary artifact after the matrix completes. Buildchain uploads
 `diagnostics-summary.json` as a separate aggregate diagnostics summary artifact,
-a compact rollup of each platform's small diagnostics upload. Each platform
-diagnostics upload includes `diagnostics.json`, `diagnostics-manifest.json`, the
-lifecycle `events.jsonl`, and process sampler sidecars when enabled, so
-slow-build diagnosis does not require downloading the binary platform artifact or
-the aggregate build summary. The sidecar manifest records the uploaded
-diagnostics files with bytes and sha256 hashes. Each `diagnostics.json` also
-records the related binary artifact name, manifest artifact name, diagnostics
-artifact name, diagnostics sidecar manifest path, and platform id in `links`, so
-a reviewer can navigate from the small diagnostics artifact back to the exact
-platform outputs when deeper inspection is needed.
+a compact rollup of each platform's small diagnostics upload. The rollup keeps
+per-platform runner facts, checked tool versions/missing tools, package
+manager/cache directory details, compiler-cache availability, lifecycle timing,
+process sampler context, and links back to the exact platform artifacts. Each
+platform diagnostics upload includes `diagnostics.json`,
+`diagnostics-manifest.json`, the lifecycle `events.jsonl`, and process sampler
+sidecars when enabled, so slow-build diagnosis does not require downloading the
+binary platform artifact or the aggregate build summary. The sidecar manifest
+records the uploaded diagnostics files with bytes and sha256 hashes. Each
+`diagnostics.json` also records the related binary artifact name, manifest
+artifact name, diagnostics artifact name, diagnostics sidecar manifest path, and
+platform id in `links`, so a reviewer can navigate from the small diagnostics
+artifact back to the exact platform outputs when deeper inspection is needed.
 
 ## Publish Gate
 

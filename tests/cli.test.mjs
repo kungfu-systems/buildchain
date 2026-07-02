@@ -364,7 +364,39 @@ test("diagnostics SDK summarizes process samples against requested parallelism",
 test("diagnostics SDK summarizes lifecycle timing across diagnostic artifacts", () => {
   const summary = summarizeDiagnosticsArtifacts([
     {
-      runner: { github: { runnerOs: "Linux", runnerArch: "X64" } },
+      runner: {
+        github: { actions: true, runnerOs: "Linux", runnerArch: "X64", runnerName: "runner-linux" },
+        os: { platform: "linux", release: "6.8", arch: "x64", type: "Linux" },
+        cpu: { logicalCount: 16, model: "EPYC", loadAverage: [1.2, 0.8, 0.4] },
+        memory: { totalBytes: 32000, freeBytes: 16000 },
+        uptimeSeconds: 42,
+      },
+      tools: {
+        node: { version: "v24.0.0" },
+        pnpm: { version: "11.0.0" },
+        cmake: { version: "" },
+      },
+      cache: {
+        packageManager: { name: "pnpm", reason: "packageManager", packageManager: "pnpm@11.0.0" },
+        workspace: { "@kungfu-tech/buildchain": { location: "." } },
+        dirs: [{ path: ".pnpm-store", exists: true, type: "directory", bytes: 0 }],
+        compilerCaches: {
+          ccache: {
+            available: true,
+            format: "json",
+            rawBytes: 64,
+            stats: { cache_hit_direct: 7, cache_miss: 3 },
+          },
+          sccache: { available: false, error: "ENOENT" },
+        },
+      },
+      native: {
+        tools: {
+          ninja: { version: "1.12.0" },
+          ccache: { version: "4.10" },
+        },
+        cacheDirs: [{ path: ".ccache", exists: true, type: "directory", bytes: 0 }],
+      },
       git: { head: "abc123" },
       lifecycleObservability: {
         stages: {
@@ -398,6 +430,18 @@ test("diagnostics SDK summarizes lifecycle timing across diagnostic artifacts", 
   assert.equal(summary.totalErrorCount, 2);
   assert.equal(summary.platforms[0].lifecycleTotalDurationMs, 400);
   assert.equal(summary.platforms[0].topSlowSpans[0].event, "native.compile");
+  assert.equal(summary.platforms[0].runnerDetails.github.runnerName, "runner-linux");
+  assert.equal(summary.platforms[0].runnerDetails.cpu.logicalCount, 16);
+  assert.equal(summary.platforms[0].tools.checked, 5);
+  assert.equal(summary.platforms[0].tools.available, 4);
+  assert.deepEqual(summary.platforms[0].tools.missing, ["cmake"]);
+  assert.equal(summary.platforms[0].tools.versions.ninja, "1.12.0");
+  assert.equal(summary.platforms[0].cache.packageManager.name, "pnpm");
+  assert.equal(summary.platforms[0].cache.workspacePackages, 1);
+  assert.equal(summary.platforms[0].cache.compilerCaches.ccache.available, true);
+  assert.equal(summary.platforms[0].cache.compilerCaches.ccache.stats.cache_hit_direct, 7);
+  assert.equal(summary.platforms[0].cache.compilerCaches.sccache.error, "ENOENT");
+  assert.equal(summary.platforms[0].cache.nativeCacheDirs[0].path, ".ccache");
   assert.equal(summary.platforms[1].lifecycleTotalDurationMs, 50);
   assert.deepEqual(summary.slowestPlatforms.map((entry) => entry.gitHead), ["abc123", "def456"]);
   assert.deepEqual(summary.slowestPlatforms[0].process, {
@@ -418,7 +462,31 @@ test("CLI summarizes diagnostics artifacts into a small cross-platform report", 
   const outputPath = path.join(cwd, "diagnostics-summary.json");
 
   fs.writeFileSync(linuxArtifact, JSON.stringify({
-    runner: { github: { runnerOs: "Linux", runnerArch: "X64" } },
+    runner: {
+      github: { actions: true, runnerOs: "Linux", runnerArch: "X64", runnerName: "runner-linux" },
+      os: { platform: "linux", release: "6.8", arch: "x64", type: "Linux" },
+      cpu: { logicalCount: 8, model: "EPYC", loadAverage: [1, 0.5, 0.25] },
+      memory: { totalBytes: 64000, freeBytes: 32000 },
+      uptimeSeconds: 120,
+    },
+    tools: {
+      node: { version: "v24.0.0" },
+      pnpm: { version: "11.0.0" },
+      ninja: { version: "" },
+    },
+    cache: {
+      packageManager: { name: "pnpm", reason: "packageManager", packageManager: "pnpm@11.0.0" },
+      workspace: { "@kungfu-tech/buildchain": { location: "." } },
+      dirs: [{ path: ".pnpm-store", exists: true, type: "directory", bytes: 0 }],
+      compilerCaches: {
+        ccache: {
+          available: true,
+          format: "json",
+          rawBytes: 64,
+          stats: { cache_hit_direct: 5, cache_miss: 2 },
+        },
+      },
+    },
     git: { head: "abc123def456" },
     lifecycleObservability: {
       stages: {
@@ -488,6 +556,10 @@ test("CLI summarizes diagnostics artifacts into a small cross-platform report", 
   assert.equal(summary.platforms[0].totalDurationMs, 64250);
   assert.equal(summary.platforms[0].totalBytes, 4096);
   assert.equal(summary.platforms[0].fileCount, 2);
+  assert.equal(summary.platforms[0].runnerDetails.github.runnerName, "runner-linux");
+  assert.equal(summary.platforms[0].tools.missing[0], "ninja");
+  assert.equal(summary.platforms[0].cache.packageManager.packageManager, "pnpm@11.0.0");
+  assert.equal(summary.platforms[0].cache.compilerCaches.ccache.stats.cache_miss, 2);
   assert.equal(summary.slowestPlatforms[0].process.requestedParallelism, 20);
   assert.equal(summary.slowestPlatforms[0].process.observedConcurrencyMax, 4);
   assert.equal(summary.slowestPlatforms[0].process.ratioToRequestedMax, 0.2);
