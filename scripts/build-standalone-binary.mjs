@@ -42,10 +42,23 @@ function timed(logger, eventName, details, callback) {
   }
 }
 
+const WINDOWS_CMD_SHIMS = new Set(["corepack", "npm", "npx", "pnpm", "yarn"]);
+
+export function resolveSpawnCommand(command, platform = process.platform) {
+  if (platform !== "win32") {
+    return command;
+  }
+  if (!WINDOWS_CMD_SHIMS.has(command)) {
+    return command;
+  }
+  return `${command}.cmd`;
+}
+
 function run(command, args, options = {}) {
   const { logger, event = "process.run", phase = "process", attributes = {}, ...spawnOptions } = options;
+  const resolvedCommand = resolveSpawnCommand(command);
   const runCommand = () => {
-    const result = spawnSync(command, args, {
+    const result = spawnSync(resolvedCommand, args, {
       stdio: "inherit",
       shell: false,
       ...spawnOptions,
@@ -62,6 +75,7 @@ function run(command, args, options = {}) {
       phase,
       attributes: {
         command,
+        resolvedCommand,
         args: args.join(" "),
         ...attributes,
       },

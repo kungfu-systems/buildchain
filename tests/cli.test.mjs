@@ -4,6 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { resolveSpawnCommand } from "../scripts/build-standalone-binary.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const bin = path.join(root, "bin", "buildchain.mjs");
@@ -209,6 +210,13 @@ test("CLI verifies observability logs fail closed", () => {
   assert.equal(failedReport.ok, false);
   assert.ok(failedReport.issues.some((entry) => entry.code === "log.events.too_few"));
   assert.ok(failedReport.issues.some((entry) => entry.code === "log.phase.missing"));
+});
+
+test("standalone binary builder resolves Windows package manager shims", () => {
+  assert.equal(resolveSpawnCommand("pnpm", "win32"), "pnpm.cmd");
+  assert.equal(resolveSpawnCommand("npx", "win32"), "npx.cmd");
+  assert.equal(resolveSpawnCommand("powershell", "win32"), "powershell");
+  assert.equal(resolveSpawnCommand("pnpm", "linux"), "pnpm");
 });
 
 test("CLI span wraps commands and preserves failure exit codes", () => {
