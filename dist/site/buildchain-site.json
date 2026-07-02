@@ -8,7 +8,7 @@
   },
   "package": {
     "name": "@kungfu-tech/buildchain",
-    "version": "2.2.1-alpha.0"
+    "versionSource": "package.json#version"
   },
   "sourceOfTruth": "npm package @kungfu-tech/buildchain/dist/site",
   "humanFirst": true,
@@ -142,6 +142,7 @@
     "npm": {
       "package": "@kungfu-tech/buildchain",
       "command": "./bin/buildchain.mjs",
+      "versionSource": "package.json#version",
       "alphaDistTag": "alpha",
       "stableDistTag": "latest"
     }

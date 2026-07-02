@@ -8,7 +8,7 @@
   },
   "package": {
     "name": "@kungfu-tech/buildchain",
-    "version": "2.2.1-alpha.0"
+    "versionSource": "package.json#version"
   },
   "entrypoint": "buildchain-site.json",
   "docs": [
