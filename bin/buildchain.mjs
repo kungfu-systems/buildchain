@@ -25,6 +25,7 @@ import {
   verifyReleasePassport,
 } from "../packages/core/release-passport.js";
 import {
+  formatDiagnosticsSummaryTable,
   summarizeDiagnosticsArtifacts,
 } from "../packages/core/diagnostics.js";
 
@@ -344,12 +345,7 @@ async function main(argv = process.argv.slice(2)) {
     } else {
       process.stdout.write(`buildchain diagnostics summary: ${summary.count} platforms\n`);
       process.stdout.write(`warnings: ${summary.totalWarningCount} errors: ${summary.totalErrorCount}\n`);
-      for (const entry of summary.slowestPlatforms) {
-        const head = entry.gitHead ? ` ${entry.gitHead.slice(0, 12)}` : "";
-        process.stdout.write(
-          `- ${entry.runner}/${entry.arch}${head}: ${entry.lifecycleTotalDurationMs}ms\n`,
-        );
-      }
+      process.stdout.write(`${formatDiagnosticsSummaryTable(summary)}\n`);
       if (outputPath) {
         process.stdout.write(`wrote: ${outputPath}\n`);
       }

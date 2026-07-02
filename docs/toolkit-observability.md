@@ -209,6 +209,9 @@ buildchain diagnostics summary \
   --json
 ```
 
+Omit `--json` when the workflow log should show a compact platform table with
+lifecycle stages, artifact scan/upload time, total time, warnings, and errors.
+
 The lifecycle observability summary is stage-wide, not just final-step timing:
 when install and build write to the same Buildchain log, the final platform
 manifest can show both stages and the slowest spans.

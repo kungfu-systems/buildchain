@@ -66,6 +66,7 @@ export {
   collectToolDiagnostics,
   createDiagnosticsArtifact,
   detectRequestedParallelism,
+  formatDiagnosticsSummaryTable,
   readDiagnosticsArtifact,
   redactDiagnosticsValue,
   startProcessSampler,

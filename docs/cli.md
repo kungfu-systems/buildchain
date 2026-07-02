@@ -133,6 +133,10 @@ total durations, carries top slow spans, aggregates warning/error counts, and
 sorts the slowest platforms. This lets maintainers inspect matrix timing
 without downloading large platform binaries.
 
+Without `--json`, the command prints a compact lifecycle timing table with
+install/build/verify/publish, artifact scan/upload, total, warning, and error
+columns for each platform.
+
 `buildchain doctor` checks repository readiness before remote side effects:
 
 ```bash

@@ -11,6 +11,7 @@ import {
   collectCompilerCacheDiagnostics,
   collectRunnerDiagnostics,
   detectRequestedParallelism,
+  formatDiagnosticsSummaryTable,
   startProcessSampler,
   summarizeDiagnosticsArtifacts,
   summarizeProcessSamples,
@@ -314,6 +315,10 @@ test("CLI summarizes diagnostics artifacts into a small cross-platform report", 
         build: { durationMs: 900, eventCount: 2 },
         verify: { durationMs: 100, eventCount: 1 },
       },
+      artifactScan: { durationMs: 1250 },
+      artifactUpload: { durationMs: 62000 },
+      totalBytes: 4096,
+      fileCount: 2,
       warningCount: 2,
       errorCount: 0,
     },
@@ -323,6 +328,7 @@ test("CLI summarizes diagnostics artifacts into a small cross-platform report", 
     git: { head: "def456abc123" },
     lifecycleObservability: {
       stages: {
+        install: { durationMs: 26000, eventCount: 1 },
         build: { durationMs: 3000, eventCount: 2 },
       },
       topSlowSpans: [
@@ -348,13 +354,23 @@ test("CLI summarizes diagnostics artifacts into a small cross-platform report", 
   assert.equal(summary.count, 2);
   assert.equal(summary.totalWarningCount, 2);
   assert.equal(summary.totalErrorCount, 1);
-  assert.deepEqual(summary.slowestPlatforms.map((entry) => entry.gitHead), ["def456abc123", "abc123def456"]);
+  assert.deepEqual(summary.slowestPlatforms.map((entry) => entry.gitHead), ["abc123def456", "def456abc123"]);
+  assert.equal(summary.platforms[0].artifactUploadDurationMs, 62000);
+  assert.equal(summary.platforms[0].totalDurationMs, 64250);
+  assert.equal(summary.platforms[0].totalBytes, 4096);
+  assert.equal(summary.platforms[0].fileCount, 2);
   assert.equal(summary.platforms[1].topSlowSpans[0].event, "native.archive");
   assert.deepEqual(JSON.parse(fs.readFileSync(outputPath, "utf8")), summary);
 
+  const table = formatDiagnosticsSummaryTable(summary);
+  assert.match(table, /platform\s+head\s+install\s+build\s+verify\s+publish\s+scan\s+upload\s+total\s+warn\s+err/);
+  assert.match(table, /Linux\/X64\s+abc123def456\s+-\s+900ms\s+100ms\s+-\s+1\.3s\s+1m2s\s+1m4s\s+2\s+0/);
+  assert.match(table, /macOS\/ARM64\s+def456abc123\s+26s\s+3s\s+-\s+-\s+-\s+-\s+29s\s+0\s+1/);
+
   const humanOutput = runBuildchain(["diagnostics", "summary", linuxArtifact, macosArtifact], { cwd });
   assert.match(humanOutput, /buildchain diagnostics summary: 2 platforms/);
-  assert.match(humanOutput, /macOS\/ARM64 def456abc123: 3000ms/);
+  assert.match(humanOutput, /platform\s+head\s+install\s+build\s+verify\s+publish\s+scan\s+upload\s+total\s+warn\s+err/);
+  assert.match(humanOutput, /macOS\/ARM64\s+def456abc123\s+26s\s+3s\s+-\s+-\s+-\s+-\s+29s\s+0\s+1/);
 
   const missing = runBuildchainFailure(["diagnostics", "summary", linuxArtifact, path.join(cwd, "missing.json")], { cwd });
   assert.equal(missing.status, 1);

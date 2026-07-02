@@ -709,18 +709,89 @@ function sumLifecycleDurationMs(stages = {}) {
   return Object.values(stages).reduce((sum, entry) => sum + Number(entry?.durationMs || 0), 0);
 }
 
+function stageDurationMs(stages = {}, stage) {
+  return Math.round(Number(stages?.[stage]?.durationMs || 0));
+}
+
+function formatDiagnosticsDurationMs(value) {
+  const durationMs = Math.round(Number(value || 0));
+  if (!Number.isFinite(durationMs) || durationMs <= 0) {
+    return "-";
+  }
+  if (durationMs < 1000) {
+    return `${durationMs}ms`;
+  }
+  if (durationMs < 60000) {
+    const seconds = durationMs / 1000;
+    return `${seconds < 10 ? seconds.toFixed(1).replace(/\.0$/, "") : Math.round(seconds)}s`;
+  }
+  const minutes = Math.floor(durationMs / 60000);
+  const seconds = Math.round((durationMs % 60000) / 1000);
+  return seconds ? `${minutes}m${seconds}s` : `${minutes}m`;
+}
+
+function formatDiagnosticsSummaryRows(rows = []) {
+  const widths = rows[0].map((_, columnIndex) => (
+    Math.max(...rows.map((row) => String(row[columnIndex] ?? "").length))
+  ));
+  return rows
+    .map((row) => row.map((cell, index) => String(cell ?? "").padEnd(widths[index], " ")).join("  ").trimEnd())
+    .join("\n");
+}
+
+export function formatDiagnosticsSummaryTable(summary = {}) {
+  const rows = [[
+    "platform",
+    "head",
+    "install",
+    "build",
+    "verify",
+    "publish",
+    "scan",
+    "upload",
+    "total",
+    "warn",
+    "err",
+  ]];
+  for (const platform of summary.platforms || []) {
+    const label = `${platform.runner || "unknown"}/${platform.arch || "unknown"}`;
+    rows.push([
+      label,
+      platform.gitHead ? platform.gitHead.slice(0, 12) : "-",
+      formatDiagnosticsDurationMs(stageDurationMs(platform.lifecycle, "install")),
+      formatDiagnosticsDurationMs(stageDurationMs(platform.lifecycle, "build")),
+      formatDiagnosticsDurationMs(stageDurationMs(platform.lifecycle, "verify")),
+      formatDiagnosticsDurationMs(stageDurationMs(platform.lifecycle, "publish")),
+      formatDiagnosticsDurationMs(platform.artifactScanDurationMs),
+      formatDiagnosticsDurationMs(platform.artifactUploadDurationMs),
+      formatDiagnosticsDurationMs(platform.totalDurationMs),
+      platform.warningCount || 0,
+      platform.errorCount || 0,
+    ]);
+  }
+  return formatDiagnosticsSummaryRows(rows);
+}
+
 export function summarizeDiagnosticsArtifacts(inputs = []) {
   const diagnostics = inputs
     .map((entry) => (typeof entry === "string" ? readDiagnosticsArtifact(entry) : entry))
     .filter(Boolean);
   const platforms = diagnostics.map((entry) => {
     const lifecycle = entry.lifecycleObservability?.stages || {};
+    const lifecycleTotalDurationMs = sumLifecycleDurationMs(lifecycle);
+    const artifactScanDurationMs = Math.round(Number(entry.lifecycleObservability?.artifactScan?.durationMs || 0));
+    const artifactUploadDurationMs = Math.round(Number(entry.lifecycleObservability?.artifactUpload?.durationMs || 0));
     return {
       runner: entry.runner?.github?.runnerOs || entry.runner?.os?.platform || "unknown",
       arch: entry.runner?.github?.runnerArch || entry.runner?.os?.arch || "unknown",
       gitHead: entry.git?.head || "",
       lifecycle,
-      lifecycleTotalDurationMs: sumLifecycleDurationMs(lifecycle),
+      lifecycleTotalDurationMs,
+      artifactScanDurationMs,
+      artifactUploadDurationMs,
+      totalDurationMs: lifecycleTotalDurationMs + artifactScanDurationMs + artifactUploadDurationMs,
+      totalBytes: Number(entry.lifecycleObservability?.totalBytes || 0),
+      fileCount: Number(entry.lifecycleObservability?.fileCount || 0),
       topSlowSpans: (entry.lifecycleObservability?.topSlowSpans || []).slice(0, 5),
       process: entry.process || {},
       warningCount: entry.lifecycleObservability?.warningCount || 0,
@@ -735,13 +806,14 @@ export function summarizeDiagnosticsArtifacts(inputs = []) {
     totalWarningCount: platforms.reduce((sum, entry) => sum + entry.warningCount, 0),
     totalErrorCount: platforms.reduce((sum, entry) => sum + entry.errorCount, 0),
     slowestPlatforms: platforms
-      .map(({ runner, arch, gitHead, lifecycleTotalDurationMs }) => ({
+      .map(({ runner, arch, gitHead, lifecycleTotalDurationMs, totalDurationMs }) => ({
         runner,
         arch,
         gitHead,
         lifecycleTotalDurationMs,
+        totalDurationMs,
       }))
-      .sort((left, right) => right.lifecycleTotalDurationMs - left.lifecycleTotalDurationMs)
+      .sort((left, right) => right.totalDurationMs - left.totalDurationMs)
       .slice(0, 10),
     platforms,
   };
