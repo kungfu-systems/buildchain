@@ -763,6 +763,7 @@ test("release promotion creates source version commits and points refs at them",
   const refs = new Map([["heads/release/v1/v1.0", SHA]]);
   const blobs = [];
   const commits = [];
+  const repoUpdates = [];
   const octokit = {
     rest: {
       git: {
@@ -805,6 +806,12 @@ test("release promotion creates source version commits and points refs at them",
           return {};
         },
       },
+      repos: {
+        update: async (input) => {
+          repoUpdates.push(input);
+          return {};
+        },
+      },
     },
   };
 
@@ -829,6 +836,13 @@ test("release promotion creates source version commits and points refs at them",
   assert.equal(refs.get("heads/dev/v1/v1.0"), nextAlphaSha);
   assert.equal(refs.get("tags/v1.0.1-alpha.0"), nextAlphaSha);
   assert.equal(refs.get("tags/v1.0-alpha"), nextAlphaSha);
+  assert.deepEqual(repoUpdates, [
+    {
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      default_branch: "dev/v1/v1.0",
+    },
+  ]);
   assert.deepEqual(
     commits.map((commit) => [commit.message, commit.parents]),
     [

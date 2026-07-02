@@ -18,7 +18,7 @@ on:
       target-ref:
         description: "Buildchain channel branch to promote"
         required: true
-        default: "alpha/v2/v2.0"
+        default: "alpha/v2/v2.2"
       dry-run:
         description: "Only print planned tag updates"
         required: true
