@@ -25,6 +25,7 @@ import {
   verifyReleasePassport,
 } from "../packages/core/release-passport.js";
 import {
+  BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT,
   formatDiagnosticsSummaryTable,
   startProcessSampler,
   summarizeDiagnosticsArtifacts,
@@ -335,7 +336,7 @@ async function runProcessTreeSample(sampleArgs = []) {
   });
   const report = {
     schemaVersion: 1,
-    contract: "kungfu-buildchain-process-sample-report",
+    contract: BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT,
     label,
     command: path.basename(command),
     argsCount: args.length,

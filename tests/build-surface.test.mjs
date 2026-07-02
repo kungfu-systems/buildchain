@@ -27,6 +27,12 @@ import { resolvePublishSourceCli } from "../scripts/resolve-publish-source.mjs";
 import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
 import { verifyPublishSourceLockCli } from "../scripts/verify-publish-source-lock.mjs";
 import { validateBuildchainConfig } from "../packages/core/buildchain-config.js";
+import {
+  BUILDCHAIN_DIAGNOSTICS_MANIFEST_CONTRACT,
+  BUILDCHAIN_DIAGNOSTICS_SUMMARY_CONTRACT,
+  BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT,
+  BUILDCHAIN_PROCESS_SAMPLE_SUMMARY_CONTRACT,
+} from "../packages/core/diagnostics.js";
 
 const root = path.resolve(
   path.dirname(new URL(import.meta.url).pathname),
@@ -766,11 +772,11 @@ test("runLifecycle writes deterministic artifact manifest", () => {
     })}\n`);
     fs.writeFileSync(processSummaryPath, `${JSON.stringify({
       schemaVersion: 1,
-      contract: "kungfu-buildchain-process-sample-report",
+      contract: BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT,
       samplesPath: ".buildchain/diagnostics/process-samples.jsonl",
       summary: {
         schemaVersion: 1,
-        contract: "kungfu-buildchain-process-sample-summary",
+        contract: BUILDCHAIN_PROCESS_SAMPLE_SUMMARY_CONTRACT,
         requestedParallelism: 8,
         requestedParallelismSource: "explicit",
         observedConcurrency: { max: 3, ratioToRequestedMax: 0.375 },
@@ -880,7 +886,7 @@ test("runLifecycle writes deterministic artifact manifest", () => {
         "utf8",
       ),
     );
-    assert.equal(diagnosticsManifest.contract, "kungfu-buildchain-diagnostics-manifest");
+    assert.equal(diagnosticsManifest.contract, BUILDCHAIN_DIAGNOSTICS_MANIFEST_CONTRACT);
     assert.equal(diagnosticsManifest.artifactName, "libnode-shaped-linux-x64-abc123");
     assert.equal(diagnosticsManifest.platformId, "linux-x64");
     assert.equal(diagnosticsManifest.fileCount, 4);
@@ -950,7 +956,7 @@ test("runLifecycle samples a configured lifecycle stage", () => {
         "utf8",
       ),
     );
-    assert.equal(processSummary.contract, "kungfu-buildchain-process-sample-report");
+    assert.equal(processSummary.contract, BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT);
     assert.equal(processSummary.summary.requestedParallelism, 4);
     assert.ok(processSummary.summary.sampleCount >= 1);
     assert.equal(diagnostics.process.requestedParallelism, 4);
@@ -1143,7 +1149,7 @@ test("aggregate diagnostics summary reads uploaded platform diagnostics", () => 
     process.env.GITHUB_OUTPUT = path.join(workspace, "github-output.txt");
     const summary = aggregateDiagnosticsSummaryCli();
 
-    assert.equal(summary.contract, "kungfu-buildchain-diagnostics-summary");
+    assert.equal(summary.contract, BUILDCHAIN_DIAGNOSTICS_SUMMARY_CONTRACT);
     assert.equal(summary.count, 1);
     assert.equal(summary.diagnosticsManifestWarningCount, 0);
     assert.equal(summary.platforms[0].fileCount, 2);
@@ -1199,7 +1205,7 @@ test("run-lifecycle action accepts hyphenated GitHub Action inputs", () => {
     fs.mkdirSync(path.dirname(processSummaryPath), { recursive: true });
     fs.writeFileSync(processSummaryPath, `${JSON.stringify({
       schemaVersion: 1,
-      contract: "kungfu-buildchain-process-sample-summary",
+      contract: BUILDCHAIN_PROCESS_SAMPLE_SUMMARY_CONTRACT,
       requestedParallelism: 4,
       requestedParallelismSource: "explicit",
       observedConcurrency: { max: 2, ratioToRequestedMax: 0.5 },
@@ -1337,7 +1343,7 @@ test("run-lifecycle action samples a configured lifecycle stage from the bundled
         "utf8",
       ),
     );
-    assert.equal(processSummary.contract, "kungfu-buildchain-process-sample-report");
+    assert.equal(processSummary.contract, BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT);
     assert.equal(processSummary.summary.requestedParallelism, 6);
     assert.equal(diagnostics.process.requestedParallelism, 6);
     assert.ok(fs.existsSync(path.join(workspace, ".buildchain/diagnostics/action-process-samples.jsonl")));

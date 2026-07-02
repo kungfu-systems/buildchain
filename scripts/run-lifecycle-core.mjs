@@ -15,6 +15,10 @@ import {
   summarizeBuildchainLogEvents,
 } from "../packages/core/logging.js";
 import {
+  BUILDCHAIN_DIAGNOSTICS_CONTRACT,
+  BUILDCHAIN_DIAGNOSTICS_MANIFEST_CONTRACT,
+  BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT,
+  BUILDCHAIN_PROCESS_SAMPLE_SUMMARY_CONTRACT,
   createDiagnosticsArtifact,
   summarizeLifecycleObservability,
   writeDiagnosticsArtifact,
@@ -101,14 +105,14 @@ function readProcessSummaryArtifact(filePath) {
   } catch (error) {
     throw new Error(`failed to read process summary file ${filePath}: ${error.message}`);
   }
-  if (artifact?.contract === "kungfu-buildchain-process-sample-report" && artifact.summary) {
+  if (artifact?.contract === BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT && artifact.summary) {
     return {
       artifact,
       summary: artifact.summary,
       samplesPath: artifact.samplesPath || "",
     };
   }
-  if (artifact?.contract === "kungfu-buildchain-process-sample-summary") {
+  if (artifact?.contract === BUILDCHAIN_PROCESS_SAMPLE_SUMMARY_CONTRACT) {
     return {
       artifact,
       summary: artifact,
@@ -293,7 +297,7 @@ function writeDiagnosticsSidecarManifest(filePath, {
     .filter(Boolean);
   const manifest = {
     schemaVersion: 1,
-    contract: "kungfu-buildchain-diagnostics-manifest",
+    contract: BUILDCHAIN_DIAGNOSTICS_MANIFEST_CONTRACT,
     generatedAt: new Date().toISOString(),
     artifactName,
     platformId,
@@ -587,14 +591,14 @@ export function runLifecycle({
   });
   observability.lifecycle = lifecycleObservability;
   observability.diagnostics = {
-    contract: "kungfu-buildchain-diagnostics",
+    contract: BUILDCHAIN_DIAGNOSTICS_CONTRACT,
     path: relativeDiagnosticsPath,
     manifestPath: relativeDiagnosticsManifestPath,
     eventsPath: relativeDiagnosticsEventsPath,
   };
   if (relativeProcessSummaryPath) {
     observability.process = {
-      contract: "kungfu-buildchain-process-sample-summary",
+      contract: BUILDCHAIN_PROCESS_SAMPLE_SUMMARY_CONTRACT,
       path: relativeProcessSummaryPath,
     };
   }

@@ -23,6 +23,16 @@ import {
 export const BUILDCHAIN_DIAGNOSTICS_CONTRACT = "kungfu-buildchain-diagnostics";
 export const BUILDCHAIN_LIFECYCLE_OBSERVABILITY_CONTRACT =
   "kungfu-buildchain-lifecycle-observability";
+export const BUILDCHAIN_ANCHORED_PACKAGE_RELEASE_VALIDATION_CONTRACT =
+  "kungfu-buildchain-anchored-package-release-validation";
+export const BUILDCHAIN_DIAGNOSTICS_MANIFEST_CONTRACT =
+  "kungfu-buildchain-diagnostics-manifest";
+export const BUILDCHAIN_DIAGNOSTICS_SUMMARY_CONTRACT =
+  "kungfu-buildchain-diagnostics-summary";
+export const BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT =
+  "kungfu-buildchain-process-sample-report";
+export const BUILDCHAIN_PROCESS_SAMPLE_SUMMARY_CONTRACT =
+  "kungfu-buildchain-process-sample-summary";
 
 const DEFAULT_SECRET_KEY_PATTERN =
   /(authorization|cookie|credential|password|passwd|private[_-]?key|secret|token|api[_-]?key)/i;
@@ -427,7 +437,7 @@ export function validateAnchoredPackageRelease({
   }
   return {
     schemaVersion: 1,
-    contract: "kungfu-buildchain-anchored-package-release-validation",
+    contract: BUILDCHAIN_ANCHORED_PACKAGE_RELEASE_VALIDATION_CONTRACT,
     cwd: resolvedCwd,
     ok: checks.every((entry) => entry.status === "pass"),
     checks,
@@ -763,7 +773,7 @@ export function summarizeProcessSamples({
 
   return {
     schemaVersion: 1,
-    contract: "kungfu-buildchain-process-sample-summary",
+    contract: BUILDCHAIN_PROCESS_SAMPLE_SUMMARY_CONTRACT,
     sampleCount: normalizedSamples.length,
     activeCpuThreshold: threshold,
     requestedParallelism: requested,
@@ -1124,7 +1134,7 @@ function summarizeDiagnosticsManifest(diagnostics, sourcePath) {
   }
 
   const warnings = [];
-  if (manifest?.contract !== "kungfu-buildchain-diagnostics-manifest") {
+  if (manifest?.contract !== BUILDCHAIN_DIAGNOSTICS_MANIFEST_CONTRACT) {
     warnings.push(`unexpected diagnostics sidecar manifest contract: ${manifest?.contract || "unknown"}`);
   }
   const files = Array.isArray(manifest?.files) ? manifest.files.map(compactDiagnosticsManifestFile) : [];
@@ -1240,7 +1250,7 @@ export function summarizeDiagnosticsArtifacts(inputs = []) {
   });
   return {
     schemaVersion: 1,
-    contract: "kungfu-buildchain-diagnostics-summary",
+    contract: BUILDCHAIN_DIAGNOSTICS_SUMMARY_CONTRACT,
     generatedAt: new Date().toISOString(),
     count: diagnostics.length,
     totalWarningCount: platforms.reduce((sum, entry) => sum + entry.warningCount, 0),

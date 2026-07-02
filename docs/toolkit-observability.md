@@ -263,7 +263,16 @@ When the downloaded platform diagnostics include a sibling
 `diagnosticsManifest` section for that platform and verifies the manifest's
 `diagnostics.json` byte count and sha256. Missing or mismatched sidecar manifests
 increment `diagnosticsManifestWarningCount`, so reviewers can distinguish
-diagnostics sidecar drift from lifecycle warnings.
+diagnostics sidecar drift from lifecycle warnings or build failures.
+
+The diagnostics SDK also exports stable contract constants such as
+`BUILDCHAIN_DIAGNOSTICS_SUMMARY_CONTRACT`,
+`BUILDCHAIN_DIAGNOSTICS_MANIFEST_CONTRACT`,
+`BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT`,
+`BUILDCHAIN_PROCESS_SAMPLE_SUMMARY_CONTRACT`, and
+`BUILDCHAIN_ANCHORED_PACKAGE_RELEASE_VALIDATION_CONTRACT` from
+`@kungfu-tech/buildchain/diagnostics`; consumers should compare against those
+constants instead of hardcoding contract strings.
 
 The CLI exposes the same aggregation for shell and workflow steps:
 

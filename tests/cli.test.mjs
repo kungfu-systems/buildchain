@@ -7,6 +7,11 @@ import path from "node:path";
 import test from "node:test";
 import { createBuildchainLogger } from "@kungfu-tech/buildchain/logging";
 import {
+  BUILDCHAIN_ANCHORED_PACKAGE_RELEASE_VALIDATION_CONTRACT,
+  BUILDCHAIN_DIAGNOSTICS_MANIFEST_CONTRACT,
+  BUILDCHAIN_DIAGNOSTICS_SUMMARY_CONTRACT,
+  BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT,
+  BUILDCHAIN_PROCESS_SAMPLE_SUMMARY_CONTRACT,
   createDiagnosticsArtifact,
   collectCacheDiagnostics,
   collectCompilerCacheDiagnostics,
@@ -110,7 +115,7 @@ test("doctor accepts anchored package configs without project section", () => {
   );
   const anchoredCheck = report.checks.find((check) => check.id === "anchored-package-release.valid");
   assert.equal(anchoredCheck.status, "pass");
-  assert.equal(anchoredCheck.details.contract, "kungfu-buildchain-anchored-package-release-validation");
+  assert.equal(anchoredCheck.details.contract, BUILDCHAIN_ANCHORED_PACKAGE_RELEASE_VALIDATION_CONTRACT);
   assert.equal(anchoredCheck.details.summary.versionStrategy.strategy, "anchored");
   assert.equal(anchoredCheck.details.summary.publish.auth, "trusted-publishing");
   assert.equal(
@@ -135,11 +140,11 @@ command = "node -e \\"require('node:fs').mkdirSync('out',{recursive:true});requi
   })}\n`);
   fs.writeFileSync(processSummaryPath, `${JSON.stringify({
     schemaVersion: 1,
-    contract: "kungfu-buildchain-process-sample-report",
+    contract: BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT,
     samplesPath: ".buildchain/diagnostics/process-samples.jsonl",
     summary: {
       schemaVersion: 1,
-      contract: "kungfu-buildchain-process-sample-summary",
+      contract: BUILDCHAIN_PROCESS_SAMPLE_SUMMARY_CONTRACT,
       requestedParallelism: 6,
       requestedParallelismSource: "explicit",
       observedConcurrency: { max: 2, ratioToRequestedMax: 0.333 },
@@ -412,7 +417,7 @@ test("diagnostics SDK summarizes process samples against requested parallelism",
     ],
   });
 
-  assert.equal(summary.contract, "kungfu-buildchain-process-sample-summary");
+  assert.equal(summary.contract, BUILDCHAIN_PROCESS_SAMPLE_SUMMARY_CONTRACT);
   assert.equal(summary.requestedParallelism, 20);
   assert.equal(summary.requestedParallelismSource, "command");
   assert.equal(summary.observedConcurrency.max, 5);
@@ -492,7 +497,7 @@ test("diagnostics SDK summarizes lifecycle timing across diagnostic artifacts", 
     },
   ]);
 
-  assert.equal(summary.contract, "kungfu-buildchain-diagnostics-summary");
+  assert.equal(summary.contract, BUILDCHAIN_DIAGNOSTICS_SUMMARY_CONTRACT);
   assert.equal(summary.count, 2);
   assert.equal(summary.totalWarningCount, 1);
   assert.equal(summary.totalErrorCount, 2);
@@ -587,7 +592,7 @@ test("CLI summarizes diagnostics artifacts into a small cross-platform report", 
   const linuxStat = fs.statSync(linuxArtifact);
   fs.writeFileSync(linuxManifest, JSON.stringify({
     schemaVersion: 1,
-    contract: "kungfu-buildchain-diagnostics-manifest",
+    contract: BUILDCHAIN_DIAGNOSTICS_MANIFEST_CONTRACT,
     artifactName: "linux-artifact",
     platformId: "linux-x64",
     fileCount: 1,
@@ -635,7 +640,7 @@ test("CLI summarizes diagnostics artifacts into a small cross-platform report", 
     "--json",
   ], { cwd }));
 
-  assert.equal(summary.contract, "kungfu-buildchain-diagnostics-summary");
+  assert.equal(summary.contract, BUILDCHAIN_DIAGNOSTICS_SUMMARY_CONTRACT);
   assert.equal(summary.count, 2);
   assert.equal(summary.totalWarningCount, 2);
   assert.equal(summary.totalErrorCount, 1);
@@ -831,11 +836,11 @@ test("CLI samples a long-running process tree and preserves concurrency context"
     "-j3",
   ], { cwd }));
 
-  assert.equal(output.contract, "kungfu-buildchain-process-sample-report");
+  assert.equal(output.contract, BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT);
   assert.equal(output.label, "native-build");
   assert.equal(output.command, path.basename(process.execPath));
   assert.equal(output.exit.status, 0);
-  assert.equal(output.summary.contract, "kungfu-buildchain-process-sample-summary");
+  assert.equal(output.summary.contract, BUILDCHAIN_PROCESS_SAMPLE_SUMMARY_CONTRACT);
   assert.equal(output.summary.requestedParallelism, 3);
   assert.equal(output.summary.requestedParallelismSource, "command");
   assert.equal(output.summary.sampleCount >= 1, true);
