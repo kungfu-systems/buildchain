@@ -54,14 +54,19 @@ export function resolveSpawnCommand(command, platform = process.platform) {
   return `${command}.cmd`;
 }
 
+export function usesShellForSpawnCommand(command, platform = process.platform) {
+  return platform === "win32" && WINDOWS_CMD_SHIMS.has(command);
+}
+
 function run(command, args, options = {}) {
   const { logger, event = "process.run", phase = "process", attributes = {}, ...spawnOptions } = options;
   const resolvedCommand = resolveSpawnCommand(command);
+  const shell = spawnOptions.shell ?? usesShellForSpawnCommand(command);
   const runCommand = () => {
     const result = spawnSync(resolvedCommand, args, {
       stdio: "inherit",
-      shell: false,
       ...spawnOptions,
+      shell,
     });
     if (result.error) {
       throw result.error;
