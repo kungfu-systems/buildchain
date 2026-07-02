@@ -16,7 +16,10 @@ const requiredPaths = [
   "bin/buildchain.mjs",
   "docs/MAP.md",
   "docs/cli.md",
+  "docs/release-passport.md",
+  "docs/versioning.md",
   "scripts/release-line-dry-run.mjs",
+  "scripts/build-standalone-binary.mjs",
   "scripts/npm-publish-dry-run.mjs",
   "scripts/npm-publish-transaction.mjs",
   "docs/migration-inventory.md",
@@ -28,6 +31,7 @@ const requiredPaths = [
   ".github/workflows/self-hosted-runner-smoke.yml",
   ".github/workflows/buildchain-ref-promotion.yml",
   ".github/workflows/npm-publish.yml",
+  ".github/workflows/binary-distribution.yml",
   ".github/workflows/verify.yml",
   ".github/workflows/.build.yml",
   ".github/workflows/build-surface-fixture.yml",
@@ -58,6 +62,9 @@ if (rootPackage.exports?.["."] !== "./packages/core/index.js") {
 if (rootPackage.exports?.["./logging"] !== "./packages/core/logging.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/logging");
 }
+if (rootPackage.exports?.["./release-passport"] !== "./packages/core/release-passport.js") {
+  throw new Error("root package must export @kungfu-tech/buildchain/release-passport");
+}
 if (rootPackage.publishConfig?.access !== "public") {
   throw new Error("root package publishConfig.access must be public");
 }
@@ -70,13 +77,25 @@ for (const expectedFile of ["bin/", "scripts/*.mjs", "packages/core/", "docs/MAP
   }
 }
 const cliSource = fs.readFileSync(path.join(root, "bin/buildchain.mjs"), "utf8");
+const versioningDoc = fs.readFileSync(path.join(root, "docs/versioning.md"), "utf8");
 if (!cliSource.startsWith("#!/usr/bin/env node")) {
   throw new Error("bin/buildchain.mjs must be executable with a node shebang");
 }
 if (commonJsSourcePattern.test(cliSource)) {
   throw new Error("bin/buildchain.mjs must use ESM syntax");
 }
+for (const requiredSnippet of [
+  "Release passport and binary distribution are a minor surface.",
+  "`v2.2`",
+  "GitHub-hosted runners for production",
+  "Self-hosted runners remain compatibility fixtures",
+]) {
+  if (!versioningDoc.includes(requiredSnippet)) {
+    throw new Error(`versioning doc missing required snippet: ${requiredSnippet}`);
+  }
+}
 const releaseLineDryRunScript = fs.readFileSync(path.join(root, "scripts/release-line-dry-run.mjs"), "utf8");
+const standaloneBinaryScript = fs.readFileSync(path.join(root, "scripts/build-standalone-binary.mjs"), "utf8");
 for (const requiredSnippet of [
   "explainReleaseLineDryRun",
   "formatReleaseLineDryRun",
@@ -89,8 +108,30 @@ for (const requiredSnippet of [
 if (commonJsSourcePattern.test(releaseLineDryRunScript)) {
   throw new Error("scripts/release-line-dry-run.mjs must use ESM syntax");
 }
+for (const requiredSnippet of [
+  "../packages/core/logging.js",
+  "standalone.cli-bundle.create",
+  "BUILDCHAIN_EMBEDDED_PACKAGE_VERSION",
+  "noExternal: [\"smol-toml\"]",
+  "--macho-segment-name",
+  "mainFormat: \"commonjs\"",
+  "standalone.sea-blob.create",
+  "standalone.sea-blob.inject",
+  "standalone.archive.create",
+  "standalone.build.complete",
+  ".log-summary.json",
+]) {
+  if (!standaloneBinaryScript.includes(requiredSnippet)) {
+    throw new Error(`standalone binary script missing observability dogfood snippet: ${requiredSnippet}`);
+  }
+}
+if (commonJsSourcePattern.test(standaloneBinaryScript)) {
+  throw new Error("scripts/build-standalone-binary.mjs must use ESM syntax");
+}
 const npmPublishWorkflow = fs.readFileSync(path.join(root, ".github/workflows/npm-publish.yml"), "utf8");
 const buildchainRefPromotionWorkflow = fs.readFileSync(path.join(root, ".github/workflows/buildchain-ref-promotion.yml"), "utf8");
+const binaryDistributionWorkflow = fs.readFileSync(path.join(root, ".github/workflows/binary-distribution.yml"), "utf8");
+const selfHostedRunnerSmokeWorkflow = fs.readFileSync(path.join(root, ".github/workflows/self-hosted-runner-smoke.yml"), "utf8");
 const npmDryRunScript = fs.readFileSync(path.join(root, "scripts/npm-publish-dry-run.mjs"), "utf8");
 const npmPublishTransactionScript = fs.readFileSync(path.join(root, "scripts/npm-publish-transaction.mjs"), "utf8");
 for (const requiredSnippet of [
@@ -147,6 +188,31 @@ if (commonJsSourcePattern.test(npmPublishTransactionScript)) {
 if (/runs-on:\s*self-hosted/.test(npmPublishWorkflow)) {
   throw new Error("npm publish workflow must use GitHub-hosted runners for trusted publishing");
 }
+for (const requiredSnippet of [
+  "name: Binary Distribution",
+  "ubuntu-24.04",
+  "macos-latest",
+  "windows-2022",
+  "BUILDCHAIN_LOG_PATH",
+  "buildchain-log-events",
+  "buildchain-log-summary",
+  "bin/buildchain.mjs mark",
+  "bin/buildchain.mjs span",
+  "bin/buildchain.mjs log summary",
+  "collect github-release",
+  "verify release-passport",
+  "gh release upload",
+]) {
+  if (!binaryDistributionWorkflow.includes(requiredSnippet)) {
+    throw new Error(`binary distribution workflow missing required snippet: ${requiredSnippet}`);
+  }
+}
+if (/runs-on:\s*self-hosted/.test(binaryDistributionWorkflow)) {
+  throw new Error("binary distribution production workflow must not require self-hosted runners");
+}
+if (!selfHostedRunnerSmokeWorkflow.includes("BUILDCHAIN_RUNNER_KIND: self-hosted")) {
+  throw new Error("self-hosted smoke must remain a release-passport compatibility fixture");
+}
 
 const inventory = JSON.parse(
   fs.readFileSync(path.join(root, "tests/buildchain-inventory.json"), "utf8")
@@ -166,6 +232,20 @@ if (inventory.stableRefs?.actions !== "kungfu-systems/buildchain/actions/<name>@
 
 if (inventory.stableRefs?.workflows !== "kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v2") {
   throw new Error("inventory stable workflow ref must point at @v2");
+}
+if (inventory.safety?.releasePassport?.line !== "v2.2") {
+  throw new Error("release passport inventory must be registered as a v2.2 surface");
+}
+if (inventory.safety?.releasePassport?.binaryDistribution?.productionRunnerDefault !== "github-hosted") {
+  throw new Error("release passport binary distribution must default to GitHub-hosted production runners");
+}
+if (inventory.safety?.releasePassport?.binaryDistribution?.selfHostedRole !== "compatibility-fixture") {
+  throw new Error("self-hosted runners must remain release passport compatibility fixtures");
+}
+for (const artifact of ["buildchain.release.json", "artifact-evidence.json", "impact.json", "agent-index.json", "llms.txt"]) {
+  if (!inventory.safety?.releasePassport?.protocolArtifacts?.includes(artifact)) {
+    throw new Error(`release passport inventory missing protocol artifact ${artifact}`);
+  }
 }
 
 if (!Array.isArray(inventory.workflowSources) || inventory.workflowSources.length < 1) {
