@@ -828,6 +828,27 @@ test("npm dry-run validates package publish shape without publishing", () => {
   assert.equal(result.distTag, "alpha");
   assert.equal(result.wouldPublish, false);
   assert.ok(result.pack.entryCount >= 2);
+  assert.ok(result.pack.files.some((file) => file.path === "package.json"));
+});
+
+test("npm dry-run proves Buildchain toolkit subpaths are included in the package", () => {
+  const result = JSON.parse(runBuildchain([
+    "npm",
+    "dry-run",
+    "--cwd",
+    root,
+    "--json",
+    "--skip-npm-publish-dry-run",
+  ]));
+  const packageFiles = new Set(result.pack.files.map((file) => file.path));
+
+  assert.equal(result.package.name, "@kungfu-tech/buildchain");
+  assert.equal(result.wouldPublish, false);
+  assert.ok(packageFiles.has("packages/core/index.js"));
+  assert.ok(packageFiles.has("packages/core/diagnostics.js"));
+  assert.ok(packageFiles.has("packages/core/logging.js"));
+  assert.ok(packageFiles.has("packages/core/release-passport.js"));
+  assert.ok(packageFiles.has("bin/buildchain.mjs"));
 });
 
 test("npm dry-run fails closed when expected tag does not match package version", () => {
