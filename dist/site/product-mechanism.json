@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-product-mechanism",
+  "name": "Buildchain",
+  "formalName": "Buildchain by Kungfu",
+  "category": "Buildchain Release Passport",
+  "purpose": "A mature product release record for artifacts that users or agents depend on.",
+  "executionSubstrate": "GitHub Actions, protected refs, exact tags, GitHub Releases, npm Trusted Publishing, and machine-readable evidence.",
+  "notA": [
+    "a replacement CI/CD platform",
+    "a binary-only release tool",
+    "a workflow file collection as the product boundary"
+  ],
+  "proofCases": [
+    "multi-platform CLI archives",
+    "npm package publication",
+    "native and multi-artifact release passports",
+    "site facts consumed by buildchain.libkungfu.dev"
+  ]
+}

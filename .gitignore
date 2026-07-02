@@ -1,7 +1,9 @@
 .DS_Store
 node_modules/
 .buildchain/
-dist/
+dist/*
+!dist/site/
+!dist/site/**
 !actions/*/dist/
 !actions/*/dist/index.js
 coverage/

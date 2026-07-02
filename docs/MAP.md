@@ -17,8 +17,10 @@ running artifact), *use* (consume / extend) - and a **status**:
 | Your question | Document | Plane | Status |
 | --- | --- | --- | --- |
 | What is Buildchain, in one idea? | [`../README.md`](../README.md) | - | stable |
+| Why is Buildchain a Release Passport mechanism rather than a generic workflow collection? | [`product-mechanism.md`](product-mechanism.md) | why | stable |
 | How do agents and contributors enter this repo? | [`../AGENTS.md`](../AGENTS.md) + [`../CONTRIBUTING.md`](../CONTRIBUTING.md) | use | stable |
-| How do I install or run the `buildchain` CLI? | [`cli.md`](cli.md) | use | stable |
+| How do I install a standalone binary or npm package? | [`install.md`](install.md) | use | stable |
+| How do I run the `buildchain` CLI? | [`cli.md`](cli.md) | use | stable |
 | How do I initialize a new repository? | [`cli.md`](cli.md) + [`lifecycle-protocol.md`](lifecycle-protocol.md) | use | stable |
 | Why does Buildchain use branch-driven release governance? | [`release-governance.md`](release-governance.md) | why | stable |
 | How does Buildchain decide patch, minor, and major release lines? | [`versioning.md`](versioning.md) | why | stable |
@@ -27,7 +29,10 @@ running artifact), *use* (consume / extend) - and a **status**:
 | What is the active action and workflow source of truth? | [`ownership.md`](ownership.md) | verify | stable |
 | How do I declare version files and custom lifecycle commands? | [`lifecycle-protocol.md`](lifecycle-protocol.md) | use | stable |
 | How does publish evidence, recovery, and finalization work? | [`publish-transaction.md`](publish-transaction.md) | verify | stable |
-| How do I publish or verify binary release passport artifacts? | [`release-passport.md`](release-passport.md) | use | stable |
+| How do I publish or verify release passport artifacts? | [`release-passport.md`](release-passport.md) | use | stable |
+| Why are binary release assets archived by platform, and where is the single bundle? | [`binary-distribution.md`](binary-distribution.md) | verify | stable |
+| How do I add timestamped logs inside build scripts? | [`toolkit-observability.md`](toolkit-observability.md) | use | stable |
+| What package-owned facts should buildchain.libkungfu.dev render? | [`site-bundle-contract.md`](site-bundle-contract.md) | use | stable |
 | How do I call the reusable build workflow? | [`reusable-build-surface.md`](reusable-build-surface.md) | use | stable |
 | How do I deploy a site/app preview, staging, or production surface? | [`web-surface-deployments.md`](web-surface-deployments.md) | use | stable |
 | How do I use the active actions directly? | [`../actions/validate-config/README.md`](../actions/validate-config/README.md), [`../actions/run-lifecycle/README.md`](../actions/run-lifecycle/README.md), [`../actions/promote-buildchain-ref/README.md`](../actions/promote-buildchain-ref/README.md) | use | stable |
@@ -53,10 +58,18 @@ running artifact), *use* (consume / extend) - and a **status**:
 - **libnode / native artifacts / self-hosted runner matrix** ->
   [`reusable-build-surface.md`](reusable-build-surface.md) and
   [`../fixtures/libnode-shaped/README.md`](../fixtures/libnode-shaped/README.md).
+- **standalone binary install / platform archives / GitHub Release bundle** ->
+  [`install.md`](install.md), [`binary-distribution.md`](binary-distribution.md),
+  and [`release-passport.md`](release-passport.md).
 - **Trusted Publishing / npm / publish evidence / recovery** ->
   [`cli.md`](cli.md) and [`publish-transaction.md`](publish-transaction.md).
 - **GitHub Release passport / binary assets / artifact evidence / agent release checks** ->
-  [`release-passport.md`](release-passport.md) and [`cli.md`](cli.md).
+  [`release-passport.md`](release-passport.md),
+  [`binary-distribution.md`](binary-distribution.md), and [`cli.md`](cli.md).
+- **Buildchain logging / timestamps / consumer build phase timing** ->
+  [`toolkit-observability.md`](toolkit-observability.md) and [`cli.md`](cli.md).
+- **buildchain.libkungfu.dev / package-owned site facts** ->
+  [`site-bundle-contract.md`](site-bundle-contract.md).
 - **sites / web previews / staging / production gates** ->
   [`web-surface-deployments.md`](web-surface-deployments.md).
 

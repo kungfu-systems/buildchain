@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-release-provenance",
+  "package": {
+    "name": "@kungfu-tech/buildchain",
+    "version": "2.2.1-alpha.0",
+    "bin": {
+      "buildchain": "./bin/buildchain.mjs"
+    },
+    "exports": {
+      ".": "./packages/core/index.js",
+      "./core": "./packages/core/index.js",
+      "./logging": "./packages/core/logging.js",
+      "./release-passport": "./packages/core/release-passport.js",
+      "./site/buildchain-site.json": "./dist/site/buildchain-site.json",
+      "./site/site-manifest.json": "./dist/site/site-manifest.json",
+      "./site/cli-registry.json": "./dist/site/cli-registry.json",
+      "./site/workflow-registry.json": "./dist/site/workflow-registry.json",
+      "./site/release-model.json": "./dist/site/release-model.json",
+      "./site/artifact-schemas.json": "./dist/site/artifact-schemas.json",
+      "./site/product-mechanism.json": "./dist/site/product-mechanism.json",
+      "./site/release-provenance.json": "./dist/site/release-provenance.json",
+      "./site/agent-index.json": "./dist/site/agent-index.json",
+      "./package.json": "./package.json"
+    }
+  },
+  "repository": "https://github.com/kungfu-systems/buildchain",
+  "packageManager": "pnpm@11.7.0",
+  "inventoryRelease": "buildchain-v2",
+  "stableRefs": {
+    "actions": "kungfu-systems/buildchain/actions/<name>@v2",
+    "workflows": "kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v2"
+  }
+}

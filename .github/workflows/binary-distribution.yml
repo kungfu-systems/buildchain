@@ -93,7 +93,10 @@ jobs:
         uses: actions/upload-artifact@v6.0.0
         with:
           name: buildchain-binary-${{ matrix.platform }}
-          path: dist/binary/*
+          path: |
+            dist/binary/*
+            !dist/binary/buildchain
+            !dist/binary/buildchain.exe
           if-no-files-found: error
 
   passport:
@@ -173,6 +176,17 @@ jobs:
           node bin/buildchain.mjs verify observability-log "${BUILDCHAIN_LOG_PATH}" --min-events 7 --require-phase passport --require-phase evidence --require-component workflow --require-event release-passport.checksums.start --require-event release-passport.checksums.end --require-event release-passport.collect.start --require-event release-passport.collect.end --require-event release-passport.verify.start --require-event release-passport.verify.end --require-event release-passport.complete
           node bin/buildchain.mjs log summary --path "${BUILDCHAIN_LOG_PATH}" --json > .buildchain/release-passport/buildchain-log-summary-passport.json
           cp "${BUILDCHAIN_LOG_PATH}" .buildchain/release-passport/buildchain-log-events-passport.jsonl
+
+      - name: Create release evidence bundle
+        run: |
+          node scripts/create-release-bundle.mjs \
+            --assets-dir dist/binary \
+            --passport-dir .buildchain/release-passport \
+            --output-dir .buildchain/release-passport \
+            --tag "${{ env.RELEASE_TAG }}" \
+            --source-sha "${{ github.sha }}"
+          test -f .buildchain/release-passport/buildchain-release-bundle.tar.gz
+          test -f .buildchain/release-passport/buildchain-release-bundle.json
 
       - name: Upload release passport artifact
         uses: actions/upload-artifact@v6.0.0
