@@ -4084,6 +4084,118 @@ assert.equal(pkg.version, anchor.npmVersion);
   assert.deepEqual(comparedBaseheads, [`${alphaSha}...${SHA}`]);
 });
 
+test("anchored manual publish transactions use declared package version for durable state", async () => {
+  const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+strategy = "anchored"
+next = "manual"
+manifest = "libnode.release.json"
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[publish]
+mode = "publish-final-version"
+auth = "trusted-publishing"
+dist_tag = "latest"
+
+[lifecycle.verify]
+command = "node scripts/verify.mjs"
+
+[lifecycle.publish]
+command = "node scripts/publish.mjs"
+`,
+    "package.json": {
+      name: "@kungfu-tech/libnode",
+      version: "22.22.3-kf.3",
+    },
+    "libnode.release.json": {
+      nodeVersion: "22.22.3",
+      nodeTag: "v22.22.3",
+      npmVersion: "22.22.3-kf.3",
+    },
+    "scripts/verify.mjs": `
+import assert from "node:assert/strict";
+import fs from "node:fs";
+
+const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+const anchor = JSON.parse(fs.readFileSync(process.env.BUILDCHAIN_ANCHOR_MANIFEST, "utf8"));
+
+assert.equal(process.env.BUILDCHAIN_VERSION, "22.22.0");
+assert.equal(pkg.version, anchor.npmVersion);
+`,
+    "scripts/publish.mjs": `
+import assert from "node:assert/strict";
+import fs from "node:fs";
+
+assert.equal(process.env.BUILDCHAIN_VERSION, "22.22.3-kf.3");
+fs.mkdirSync(process.env.BUILDCHAIN_EVIDENCE_DIR, { recursive: true });
+fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
+  schema: 1,
+  version: process.env.BUILDCHAIN_VERSION,
+  channel: process.env.BUILDCHAIN_CHANNEL,
+  source_sha: process.env.BUILDCHAIN_SOURCE_SHA,
+  release_sha: process.env.BUILDCHAIN_RELEASE_SHA,
+  target_ref: process.env.BUILDCHAIN_TARGET_REF,
+  release_material_sha: process.env.BUILDCHAIN_RELEASE_MATERIAL_SHA,
+  publish_tooling_sha: process.env.BUILDCHAIN_PUBLISH_TOOLING_SHA,
+  artifacts: [{
+    group: "libnode",
+    kind: "npm",
+    name: "@kungfu-tech/libnode",
+    ref: process.env.BUILDCHAIN_VERSION,
+    digest: "sha512:libnode"
+  }]
+}, null, 2) + "\\n");
+`,
+  });
+  run(["git", "init"], cwd);
+  run(["git", "add", "."], cwd);
+  run(["git", "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-m", "release material"], cwd);
+
+  const alphaSha = "c".repeat(40);
+  const { octokit, refs } = createGitMock({
+    refs: new Map([
+      ["heads/release/v22/v22.22", SHA],
+      ["tags/v22.22.0-alpha.2", alphaSha],
+    ]),
+  });
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "libnode",
+    allowRepository: "kungfu-systems/libnode",
+    sha: SHA,
+    targetRef: "release/v22/v22.22",
+    cwd,
+    publishTransaction: true,
+    publishRequiredArtifactsJson: JSON.stringify([
+      {
+        group: "libnode",
+        kind: "npm",
+        name: "@kungfu-tech/libnode",
+        ref: "22.22.3-kf.3",
+        digest: "sha512:libnode",
+      },
+    ]),
+  });
+
+  assert.equal(result.nextAlphaRequired, true);
+  assert.equal(result.publishTransaction.state, "complete");
+  assert.equal(result.publishTransaction.exactTag, "v22.22.0");
+  assert.equal(result.publishTransaction.stateRef, "buildchain/release-state/22-22-3-kf-3");
+  assert.equal(refs.has("heads/buildchain/release-state/22-22-3-kf-3"), true);
+  assert.equal(refs.has("heads/buildchain/release-state/22-22-0"), false);
+  assert.equal(refs.get("tags/v22.22.0"), SHA);
+});
+
 test("strict release promotion rejects code changes after alpha", async () => {
   const alphaSha = "c".repeat(40);
   const refs = new Map([
