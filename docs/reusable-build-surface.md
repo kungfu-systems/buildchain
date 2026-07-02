@@ -140,8 +140,9 @@ Actions matrix outputs are not a reliable place to carry every platform's full
 manifest, so Buildchain uploads each platform manifest and then emits one
 aggregate summary artifact after the matrix completes. The same artifact also
 contains `diagnostics-summary.json`, a compact rollup of each platform's small
-`diagnostics.json` file with lifecycle timings, artifact scan/upload timings,
-warning/error totals, and the slowest platform list.
+diagnostics upload. Each platform diagnostics upload includes `diagnostics.json`,
+the lifecycle `events.jsonl`, and process sampler sidecars when enabled, so
+slow-build diagnosis does not require downloading the binary platform artifact.
 
 ## Publish Gate
 

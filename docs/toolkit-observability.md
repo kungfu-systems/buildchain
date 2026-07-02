@@ -207,9 +207,12 @@ if (!anchoredReport.ok) {
 ```
 
 `buildchain lifecycle run` writes this small diagnostics artifact next to the
-platform manifest by default. It is intended to stay small enough to download
-without fetching large binary packages, and it should not include full
-environment dumps or secret-looking values.
+platform manifest by default. The per-platform diagnostics upload includes the
+compact `diagnostics.json`, lifecycle `events.jsonl`, and, when process sampling
+is enabled, copied `process-summary.json` and `process-samples.jsonl` sidecars.
+It is intended to stay small enough to download without fetching large binary
+packages, and it should not include full environment dumps or secret-looking
+values.
 
 Use `summarizeDiagnosticsArtifacts()` when a matrix build uploads one
 diagnostics artifact per platform. The summary keeps each platform's lifecycle

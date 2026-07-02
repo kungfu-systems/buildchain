@@ -73,6 +73,9 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /manifest\.json/);
   assert.match(workflow, /summary\.json/);
   assert.match(workflow, /diagnostics\.json/);
+  assert.match(workflow, /events\.jsonl/);
+  assert.match(workflow, /process-summary\.json/);
+  assert.match(workflow, /process-samples\.jsonl/);
   assert.match(workflow, /-diagnostics-\$\{\{ matrix\.platform\.id \}\}-/);
   assert.match(workflow, /build-summary-artifact:/);
   assert.match(workflow, /build-diagnostics-summary-json:/);
@@ -663,16 +666,26 @@ test("runLifecycle writes deterministic artifact manifest", () => {
     process.env.BUILDCHAIN_SOURCE_REF =
       "publish-gate/release/v22/v22.22/22.22.3-kf.0";
     const processSummaryPath = path.join(workspace, ".buildchain/diagnostics/process-summary.json");
+    const processSamplesPath = path.join(workspace, ".buildchain/diagnostics/process-samples.jsonl");
     fs.mkdirSync(path.dirname(processSummaryPath), { recursive: true });
+    fs.writeFileSync(processSamplesPath, `${JSON.stringify({
+      timestamp: "2026-07-02T00:00:00.000Z",
+      processes: [{ command: "clang++", cpu: 25 }],
+    })}\n`);
     fs.writeFileSync(processSummaryPath, `${JSON.stringify({
       schemaVersion: 1,
-      contract: "kungfu-buildchain-process-sample-summary",
-      requestedParallelism: 8,
-      requestedParallelismSource: "explicit",
-      observedConcurrency: { max: 3, ratioToRequestedMax: 0.375 },
-      sampleCount: 1,
-      categories: { compiler: 2, "build-tool": 1 },
-      topCommands: [{ command: "clang++", count: 2 }],
+      contract: "kungfu-buildchain-process-sample-report",
+      samplesPath: ".buildchain/diagnostics/process-samples.jsonl",
+      summary: {
+        schemaVersion: 1,
+        contract: "kungfu-buildchain-process-sample-summary",
+        requestedParallelism: 8,
+        requestedParallelismSource: "explicit",
+        observedConcurrency: { max: 3, ratioToRequestedMax: 0.375 },
+        sampleCount: 1,
+        categories: { compiler: 2, "build-tool": 1 },
+        topCommands: [{ command: "clang++", count: 2 }],
+      },
     })}\n`);
     runLifecycle({
       cwd: fixture,
@@ -759,6 +772,12 @@ test("runLifecycle writes deterministic artifact manifest", () => {
     assert.equal(diagnostics.process.requestedParallelism, 8);
     assert.equal(diagnostics.process.observedConcurrency.max, 3);
     assert.equal(diagnostics.links.processSummary, ".buildchain/diagnostics/process-summary.json");
+    assert.equal(diagnostics.links.diagnosticsEvents, ".buildchain/artifacts/linux-x64/events.jsonl");
+    assert.equal(diagnostics.links.diagnosticsProcessSummary, ".buildchain/artifacts/linux-x64/process-summary.json");
+    assert.equal(diagnostics.links.diagnosticsProcessSamples, ".buildchain/artifacts/linux-x64/process-samples.jsonl");
+    assert.ok(fs.existsSync(path.join(workspace, ".buildchain/artifacts/linux-x64/events.jsonl")));
+    assert.ok(fs.existsSync(path.join(workspace, ".buildchain/artifacts/linux-x64/process-summary.json")));
+    assert.ok(fs.existsSync(path.join(workspace, ".buildchain/artifacts/linux-x64/process-samples.jsonl")));
   } finally {
     process.env = originalEnv;
     fs.rmSync(workspace, { recursive: true, force: true });

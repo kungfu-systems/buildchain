@@ -472,7 +472,11 @@ jobs:
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
-          path: .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+          path: |
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
+            .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
@@ -610,7 +614,11 @@ jobs:
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
-          path: .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+          path: |
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
+            .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 

@@ -113,10 +113,16 @@ test("lifecycle run writes deterministic artifact manifest", () => {
 command = "node -e \\"require('node:fs').mkdirSync('out',{recursive:true});require('node:fs').writeFileSync('out/result.txt','ok')\\""
 `);
   const processSummaryPath = path.join(cwd, ".buildchain", "diagnostics", "process-summary.json");
+  const processSamplesPath = path.join(cwd, ".buildchain", "diagnostics", "process-samples.jsonl");
   fs.mkdirSync(path.dirname(processSummaryPath), { recursive: true });
+  fs.writeFileSync(processSamplesPath, `${JSON.stringify({
+    timestamp: "2026-07-02T00:00:00.000Z",
+    processes: [{ command: "clang++", cpu: 10 }],
+  })}\n`);
   fs.writeFileSync(processSummaryPath, `${JSON.stringify({
     schemaVersion: 1,
     contract: "kungfu-buildchain-process-sample-report",
+    samplesPath: ".buildchain/diagnostics/process-samples.jsonl",
     summary: {
       schemaVersion: 1,
       contract: "kungfu-buildchain-process-sample-summary",
@@ -154,10 +160,16 @@ command = "node -e \\"require('node:fs').mkdirSync('out',{recursive:true});requi
   assert.equal(manifest.observability.process.path, ".buildchain/diagnostics/process-summary.json");
   assert.ok(fs.existsSync(path.join(cwd, ".buildchain", "artifacts", "manifest.json")));
   assert.ok(fs.existsSync(path.join(cwd, ".buildchain", "logs", "events.jsonl")));
+  assert.ok(fs.existsSync(path.join(cwd, ".buildchain", "artifacts", "events.jsonl")));
+  assert.ok(fs.existsSync(path.join(cwd, ".buildchain", "artifacts", "process-summary.json")));
+  assert.ok(fs.existsSync(path.join(cwd, ".buildchain", "artifacts", "process-samples.jsonl")));
   const diagnostics = JSON.parse(fs.readFileSync(path.join(cwd, ".buildchain", "artifacts", "diagnostics.json"), "utf8"));
   assert.equal(diagnostics.process.requestedParallelism, 6);
   assert.equal(diagnostics.process.observedConcurrency.max, 2);
   assert.equal(diagnostics.links.processSummary, ".buildchain/diagnostics/process-summary.json");
+  assert.equal(diagnostics.links.diagnosticsEvents, ".buildchain/artifacts/events.jsonl");
+  assert.equal(diagnostics.links.diagnosticsProcessSummary, ".buildchain/artifacts/process-summary.json");
+  assert.equal(diagnostics.links.diagnosticsProcessSamples, ".buildchain/artifacts/process-samples.jsonl");
 });
 
 test("CLI logging writes redacted JSONL events and summaries", () => {

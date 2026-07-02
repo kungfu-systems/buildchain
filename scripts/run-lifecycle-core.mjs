@@ -90,12 +90,48 @@ function readProcessSummaryArtifact(filePath) {
     throw new Error(`failed to read process summary file ${filePath}: ${error.message}`);
   }
   if (artifact?.contract === "kungfu-buildchain-process-sample-report" && artifact.summary) {
-    return artifact.summary;
+    return {
+      artifact,
+      summary: artifact.summary,
+      samplesPath: artifact.samplesPath || "",
+    };
   }
   if (artifact?.contract === "kungfu-buildchain-process-sample-summary") {
-    return artifact;
+    return {
+      artifact,
+      summary: artifact,
+      samplesPath: "",
+    };
   }
   throw new Error(`process summary file has unsupported contract: ${artifact?.contract || "unknown"}`);
+}
+
+function writeJsonlEvents(filePath, events = []) {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, events.map((event) => JSON.stringify(event)).join("\n") + (events.length ? "\n" : ""));
+}
+
+function copyIfExists(sourcePath, targetPath) {
+  if (!sourcePath || !fs.existsSync(sourcePath)) {
+    return false;
+  }
+  fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+  fs.copyFileSync(sourcePath, targetPath);
+  return true;
+}
+
+function resolveLinkedFilePath({ linkedPath = "", workspace, cwd, fallbackDir }) {
+  if (!linkedPath) {
+    return "";
+  }
+  const candidates = path.isAbsolute(linkedPath)
+    ? [linkedPath]
+    : [
+        path.resolve(workspace, linkedPath),
+        path.resolve(cwd, linkedPath),
+        path.resolve(fallbackDir, linkedPath),
+      ];
+  return candidates.find((candidate) => fs.existsSync(candidate)) || candidates[0] || "";
 }
 
 export function runLifecycle({
@@ -130,7 +166,14 @@ export function runLifecycle({
     ? toPosix(path.relative(resolvedWorkspace, resolvedProcessSummaryPath))
     : "";
   const relativeDiagnosticsPath = toPosix(path.relative(resolvedWorkspace, resolvedDiagnosticsPath));
-  const processSummary = readProcessSummaryArtifact(resolvedProcessSummaryPath);
+  const processSummaryArtifact = readProcessSummaryArtifact(resolvedProcessSummaryPath);
+  const diagnosticsDir = path.dirname(resolvedDiagnosticsPath);
+  const resolvedDiagnosticsEventsPath = path.join(diagnosticsDir, "events.jsonl");
+  const resolvedDiagnosticsProcessSummaryPath = path.join(diagnosticsDir, "process-summary.json");
+  const resolvedDiagnosticsProcessSamplesPath = path.join(diagnosticsDir, "process-samples.jsonl");
+  const relativeDiagnosticsEventsPath = toPosix(path.relative(resolvedWorkspace, resolvedDiagnosticsEventsPath));
+  const relativeDiagnosticsProcessSummaryPath = toPosix(path.relative(resolvedWorkspace, resolvedDiagnosticsProcessSummaryPath));
+  const relativeDiagnosticsProcessSamplesPath = toPosix(path.relative(resolvedWorkspace, resolvedDiagnosticsProcessSamplesPath));
   const logRunId = crypto.randomUUID();
   const frameworkLog = createBuildchainLogger({
     cwd: resolvedWorkspace,
@@ -330,6 +373,7 @@ export function runLifecycle({
   observability.diagnostics = {
     contract: "kungfu-buildchain-diagnostics",
     path: relativeDiagnosticsPath,
+    eventsPath: relativeDiagnosticsEventsPath,
   };
   if (relativeProcessSummaryPath) {
     observability.process = {
@@ -374,15 +418,33 @@ export function runLifecycle({
       logPath: resolvedLogPath,
       artifactPaths,
       lifecycleObservability,
-      processSummary,
+      processSummary: processSummaryArtifact?.summary,
       links: {
         manifest: toPosix(path.relative(resolvedWorkspace, resolvedManifestPath)),
         summary: toPosix(path.relative(resolvedWorkspace, resolvedSummaryPath)),
         log: relativeLogPath,
+        diagnosticsEvents: relativeDiagnosticsEventsPath,
         ...(relativeProcessSummaryPath ? { processSummary: relativeProcessSummaryPath } : {}),
+        ...(processSummaryArtifact ? { diagnosticsProcessSummary: relativeDiagnosticsProcessSummaryPath } : {}),
+        ...(processSummaryArtifact?.samplesPath ? { diagnosticsProcessSamples: relativeDiagnosticsProcessSamplesPath } : {}),
       },
     }),
   );
+  if (resolvedLogPath && fs.existsSync(resolvedLogPath)) {
+    copyIfExists(resolvedLogPath, resolvedDiagnosticsEventsPath);
+  } else {
+    writeJsonlEvents(resolvedDiagnosticsEventsPath, [...frameworkLog.events, ...userLog.events]);
+  }
+  if (processSummaryArtifact) {
+    copyIfExists(resolvedProcessSummaryPath, resolvedDiagnosticsProcessSummaryPath);
+    const resolvedSamplesPath = resolveLinkedFilePath({
+      linkedPath: processSummaryArtifact.samplesPath,
+      workspace: resolvedWorkspace,
+      cwd: resolvedCwd,
+      fallbackDir: path.dirname(resolvedProcessSummaryPath),
+    });
+    copyIfExists(resolvedSamplesPath, resolvedDiagnosticsProcessSamplesPath);
+  }
   console.log(`buildchain_manifest=${path.relative(resolvedWorkspace, resolvedManifestPath)}`);
   return manifest;
 }
