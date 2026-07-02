@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-release-model",
+  "exactTags": "v-prefixed exact tags are immutable release records.",
+  "floatingTags": "vX, vX.Y, and vX.Y-alpha are channel pointers updated by Buildchain transactions.",
+  "channelBranches": [
+    "dev/vX/vX.Y",
+    "alpha/vX/vX.Y",
+    "release/vX/vX.Y",
+    "publish-gate/major"
+  ],
+  "releasePassport": {
+    "entrypoint": "buildchain.release.json",
+    "bundle": "buildchain-release-bundle.tar.gz",
+    "contract": "kungfu-buildchain-release-passport"
+  },
+  "npm": {
+    "package": "@kungfu-tech/buildchain",
+    "command": "./bin/buildchain.mjs",
+    "versionSource": "package.json#version",
+    "alphaDistTag": "alpha",
+    "stableDistTag": "latest"
+  }
+}

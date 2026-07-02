@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-artifact-schema-index",
+  "releasePassport": [
+    "buildchain.release.json",
+    "artifact-evidence.json",
+    "product-mechanism.json",
+    "impact.json",
+    "agent-index.json",
+    "check-report.json",
+    "llms.txt",
+    "buildchain-release-bundle.json",
+    "buildchain-release-bundle.tar.gz"
+  ],
+  "site": [
+    "buildchain-site.json",
+    "site-manifest.json",
+    "cli-registry.json",
+    "workflow-registry.json",
+    "release-model.json",
+    "artifact-schemas.json",
+    "product-mechanism.json",
+    "release-provenance.json",
+    "agent-index.json"
+  ]
+}

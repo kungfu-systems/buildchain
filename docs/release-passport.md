@@ -1,8 +1,12 @@
-# Release Passport and Binary Distribution
+# Release Passport
 
-Buildchain v2.2 adds a GitHub-native release passport protocol for binary and
-multi-artifact products. The protocol is meant for projects that want release
-evidence without migrating their whole CI/CD system to Buildchain.
+Buildchain Release Passport is the core product mechanism: a mature product
+release record for artifacts that users or agents depend on.
+
+The protocol is GitHub-native because it uses protected refs, reviewed
+promotion PRs, exact tags, GitHub Releases, npm Trusted Publishing, and
+machine-readable evidence. A project can keep its existing build system and use
+Buildchain to make the release record auditable.
 
 ## Contract
 
@@ -16,7 +20,10 @@ P0 protocol artifacts:
 - `artifact-evidence.json`
 - `impact.json`
 - `agent-index.json`
+- `check-report.json`
 - `llms.txt`
+- `buildchain-release-bundle.json`
+- `buildchain-release-bundle.tar.gz`
 
 `buildchain.release.json` is the first file an agent should read. It points to
 artifact evidence, impact, recovery, product mechanism, and agent index facts.
@@ -27,6 +34,11 @@ the Buildchain logging API and CLI:
 - `buildchain-log-summary-<platform>.json`
 - `buildchain-log-events-passport.jsonl`
 - `buildchain-log-summary-passport.json`
+
+`buildchain-release-bundle.tar.gz` is the single evidence bundle for consumers
+that want one file for offline inspection, mirroring, or site ingestion.
+`buildchain-release-bundle.json` records its digest and the digest of every
+included file.
 
 ## Runner Policy
 
@@ -81,7 +93,20 @@ Initial binary distribution stays lightweight:
 - GitHub Release assets.
 - `checksums.txt`.
 - release passport artifacts.
-- install scripts and Homebrew tap fixtures after the passport is reliable.
+- a single release evidence bundle.
+- install scripts and Homebrew tap fixtures after the passport path is reliable.
+
+Buildchain publishes platform-specific archives, not loose top-level
+executables:
+
+- `buildchain-x86_64-unknown-linux-gnu.tar.gz`
+- `buildchain-aarch64-apple-darwin.tar.gz`
+- `buildchain-x86_64-pc-windows-msvc.zip`
+
+The executable name inside each archive stays natural for the platform
+(`buildchain` or `buildchain.exe`). Top-level loose executable assets are not
+uploaded, because Linux and macOS would otherwise collide when GitHub Actions
+matrix artifacts are merged.
 
 Heavy package manager channels such as apt, yum, winget, choco, Scoop, mise, or
 asdf are out of the P0/P1 scope until there is real external demand.
@@ -97,3 +122,6 @@ steps with `buildchain mark`, `buildchain span`,
 a hard release gate: missing events, error events, or missing required phases
 fail the job before assets are uploaded. The verified logs are release assets
 and are covered by the release passport digest checks.
+
+See also [`binary-distribution.md`](binary-distribution.md) for asset naming and
+bundle details, and [`install.md`](install.md) for consumer commands.

@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { resolveSpawnCommand, usesShellForSpawnCommand } from "../scripts/build-standalone-binary.mjs";
+import { createReleaseEvidenceBundle } from "../scripts/create-release-bundle.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const bin = path.join(root, "bin", "buildchain.mjs");
@@ -477,6 +478,35 @@ test("release passport collect verify and explain form an agent-readable contrac
   assert.equal(explanation.audience, "agent");
   assert.equal(explanation.trust, "pass");
   assert.equal(explanation.nextAction, "install-or-upgrade-after-policy-review");
+});
+
+test("release evidence bundle groups release assets and passport files", () => {
+  const cwd = tempDir("release-bundle");
+  const assetsDir = path.join(cwd, "dist", "binary");
+  const passportDir = path.join(cwd, ".buildchain", "release-passport");
+  fs.mkdirSync(assetsDir, { recursive: true });
+  fs.mkdirSync(passportDir, { recursive: true });
+  fs.writeFileSync(path.join(assetsDir, "buildchain-x86_64-unknown-linux-gnu.tar.gz"), "linux-binary\n");
+  fs.writeFileSync(path.join(assetsDir, "checksums.txt"), "checksum\n");
+  fs.writeFileSync(path.join(passportDir, "buildchain.release.json"), "{}\n");
+  fs.writeFileSync(path.join(passportDir, "artifact-evidence.json"), "{}\n");
+
+  const result = createReleaseEvidenceBundle({
+    cwd,
+    assetsDir,
+    passportDir,
+    outputDir: passportDir,
+    tag: "v2.2.1",
+    sourceSha: "a".repeat(40),
+  });
+
+  assert.ok(fs.existsSync(result.archivePath));
+  assert.ok(fs.existsSync(result.manifestPath));
+  assert.equal(result.manifest.contract, "kungfu-buildchain-release-evidence-bundle");
+  assert.equal(result.manifest.release.tag, "v2.2.1");
+  assert.match(result.manifest.bundle.name, /buildchain-release-bundle\.tar\.gz/);
+  assert.ok(result.manifest.files.some((file) => file.bundlePath === "release-assets/checksums.txt"));
+  assert.ok(result.manifest.files.some((file) => file.bundlePath === "release-passport/buildchain.release.json"));
 });
 
 test("release passport verification fails closed on missing artifact evidence", () => {
