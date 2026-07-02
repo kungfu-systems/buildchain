@@ -24,6 +24,9 @@ import {
   explainReleasePassport,
   verifyReleasePassport,
 } from "../packages/core/release-passport.js";
+import {
+  summarizeDiagnosticsArtifacts,
+} from "../packages/core/diagnostics.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const embeddedPackageVersion = process.env.BUILDCHAIN_EMBEDDED_PACKAGE_VERSION || "";
@@ -64,6 +67,8 @@ function usage() {
                  [--component <name>] [--source <name>] [--attribute key=value]...
                  [--path <jsonl>] [--json]
   buildchain log summary [--path <jsonl>] [--json]
+  buildchain diagnostics summary <diagnostics.json>... [--artifact <file>]...
+                                      [--output <file>] [--json]
   buildchain mark --event <name> [--phase <phase>] [--component <name>]
                   [--attribute key=value]... [--path <jsonl>] [--json]
   buildchain span --event <name> [--phase <phase>] [--component <name>]
@@ -195,6 +200,40 @@ function printJson(value) {
   process.stdout.write(`${JSON.stringify(value, null, 2)}\n`);
 }
 
+function writeJsonFile(filePath, value) {
+  if (!filePath) {
+    return "";
+  }
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`);
+  return filePath;
+}
+
+function readDiagnosticsArtifactInputs(args) {
+  const values = [];
+  for (let index = 0; index < args.length; index += 1) {
+    const entry = args[index];
+    if (entry === "--artifact") {
+      const value = args[index + 1];
+      if (!value || value.startsWith("--")) {
+        throw new Error("buildchain diagnostics summary --artifact requires a file path");
+      }
+      values.push(value);
+      index += 1;
+      continue;
+    }
+    if (entry === "--output") {
+      index += 1;
+      continue;
+    }
+    if (entry === "--json") {
+      continue;
+    }
+    values.push(entry);
+  }
+  return values;
+}
+
 function packageVersion() {
   if (embeddedPackageVersion) {
     return embeddedPackageVersion;
@@ -281,6 +320,39 @@ async function main(argv = process.argv.slice(2)) {
     });
     if (readBooleanFlag(logArgs, "json")) {
       printJson(event);
+    }
+    return;
+  }
+
+  if (command === "diagnostics") {
+    const [subcommand = "", ...diagnosticsArgs] = args;
+    if (subcommand !== "summary") {
+      throw new Error("usage: buildchain diagnostics summary <diagnostics.json>...");
+    }
+    const inputs = readDiagnosticsArtifactInputs(diagnosticsArgs);
+    if (inputs.length === 0) {
+      throw new Error("buildchain diagnostics summary requires at least one artifact");
+    }
+    const summary = summarizeDiagnosticsArtifacts(inputs);
+    if (summary.count !== inputs.length) {
+      throw new Error(`buildchain diagnostics summary read ${summary.count}/${inputs.length} artifacts`);
+    }
+    const outputPath = readFlag(diagnosticsArgs, "output", "");
+    writeJsonFile(outputPath, summary);
+    if (readBooleanFlag(diagnosticsArgs, "json")) {
+      printJson(summary);
+    } else {
+      process.stdout.write(`buildchain diagnostics summary: ${summary.count} platforms\n`);
+      process.stdout.write(`warnings: ${summary.totalWarningCount} errors: ${summary.totalErrorCount}\n`);
+      for (const entry of summary.slowestPlatforms) {
+        const head = entry.gitHead ? ` ${entry.gitHead.slice(0, 12)}` : "";
+        process.stdout.write(
+          `- ${entry.runner}/${entry.arch}${head}: ${entry.lifecycleTotalDurationMs}ms\n`,
+        );
+      }
+      if (outputPath) {
+        process.stdout.write(`wrote: ${outputPath}\n`);
+      }
     }
     return;
   }

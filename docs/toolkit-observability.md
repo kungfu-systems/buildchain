@@ -199,6 +199,16 @@ aggregates warning/error counts plus the slowest platforms. That gives release
 reviewers a small cross-platform timing view without downloading full build
 outputs.
 
+The CLI exposes the same aggregation for shell and workflow steps:
+
+```bash
+buildchain diagnostics summary \
+  .buildchain/artifacts/linux-x64/diagnostics.json \
+  .buildchain/artifacts/macos-arm64/diagnostics.json \
+  --output .buildchain/artifacts/diagnostics-summary.json \
+  --json
+```
+
 The lifecycle observability summary is stage-wide, not just final-step timing:
 when install and build write to the same Buildchain log, the final platform
 manifest can show both stages and the slowest spans.

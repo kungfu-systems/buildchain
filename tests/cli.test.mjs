@@ -300,6 +300,71 @@ test("diagnostics SDK summarizes lifecycle timing across diagnostic artifacts", 
   assert.deepEqual(summary.slowestPlatforms.map((entry) => entry.gitHead), ["abc123", "def456"]);
 });
 
+test("CLI summarizes diagnostics artifacts into a small cross-platform report", () => {
+  const cwd = tempDir("diagnostics-summary");
+  const linuxArtifact = path.join(cwd, "linux-diagnostics.json");
+  const macosArtifact = path.join(cwd, "macos-diagnostics.json");
+  const outputPath = path.join(cwd, "diagnostics-summary.json");
+
+  fs.writeFileSync(linuxArtifact, JSON.stringify({
+    runner: { github: { runnerOs: "Linux", runnerArch: "X64" } },
+    git: { head: "abc123def456" },
+    lifecycleObservability: {
+      stages: {
+        build: { durationMs: 900, eventCount: 2 },
+        verify: { durationMs: 100, eventCount: 1 },
+      },
+      warningCount: 2,
+      errorCount: 0,
+    },
+  }, null, 2));
+  fs.writeFileSync(macosArtifact, JSON.stringify({
+    runner: { github: { runnerOs: "macOS", runnerArch: "ARM64" } },
+    git: { head: "def456abc123" },
+    lifecycleObservability: {
+      stages: {
+        build: { durationMs: 3000, eventCount: 2 },
+      },
+      topSlowSpans: [
+        { event: "native.archive", stage: "build", durationMs: 2500 },
+      ],
+      warningCount: 0,
+      errorCount: 1,
+    },
+  }, null, 2));
+
+  const summary = JSON.parse(runBuildchain([
+    "diagnostics",
+    "summary",
+    linuxArtifact,
+    "--artifact",
+    macosArtifact,
+    "--output",
+    outputPath,
+    "--json",
+  ], { cwd }));
+
+  assert.equal(summary.contract, "kungfu-buildchain-diagnostics-summary");
+  assert.equal(summary.count, 2);
+  assert.equal(summary.totalWarningCount, 2);
+  assert.equal(summary.totalErrorCount, 1);
+  assert.deepEqual(summary.slowestPlatforms.map((entry) => entry.gitHead), ["def456abc123", "abc123def456"]);
+  assert.equal(summary.platforms[1].topSlowSpans[0].event, "native.archive");
+  assert.deepEqual(JSON.parse(fs.readFileSync(outputPath, "utf8")), summary);
+
+  const humanOutput = runBuildchain(["diagnostics", "summary", linuxArtifact, macosArtifact], { cwd });
+  assert.match(humanOutput, /buildchain diagnostics summary: 2 platforms/);
+  assert.match(humanOutput, /macOS\/ARM64 def456abc123: 3000ms/);
+
+  const missing = runBuildchainFailure(["diagnostics", "summary", linuxArtifact, path.join(cwd, "missing.json")], { cwd });
+  assert.equal(missing.status, 1);
+  assert.match(missing.stderr, /read 1\/2 artifacts/);
+
+  const missingArtifactValue = runBuildchainFailure(["diagnostics", "summary", linuxArtifact, "--artifact", "--json"], { cwd });
+  assert.equal(missingArtifactValue.status, 1);
+  assert.match(missingArtifactValue.stderr, /--artifact requires a file path/);
+});
+
 test("diagnostics SDK detects requested parallelism from commands and env", () => {
   assert.deepEqual(
     detectRequestedParallelism({ command: "make -j20" }),

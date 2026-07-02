@@ -92,6 +92,7 @@ buildchain span --event native.build --phase build -- cmake --build build
 buildchain log warn --event cache.miss --component conan --attribute token=hidden
 buildchain log summary --json
 buildchain verify observability-log .buildchain/logs/events.jsonl --min-events 4 --require-phase build
+buildchain diagnostics summary .buildchain/artifacts/*/diagnostics.json --json
 ```
 
 During `buildchain lifecycle run`, child processes receive
@@ -115,6 +116,22 @@ Secret-looking attribute keys such as `token`, `password`, `secret`,
 `authorization`, `cookie`, and `private-key` are redacted before they are written.
 Full command strings are not recorded by `span`; scripts should provide stable
 event names and safe attributes instead.
+
+`buildchain diagnostics summary` reads one or more small diagnostics artifacts
+and emits the same cross-platform summary as the diagnostics SDK:
+
+```bash
+buildchain diagnostics summary \
+  .buildchain/artifacts/linux-x64/diagnostics.json \
+  .buildchain/artifacts/macos-arm64/diagnostics.json \
+  --output .buildchain/artifacts/diagnostics-summary.json \
+  --json
+```
+
+The JSON summary keeps per-platform lifecycle stage tables, adds lifecycle
+total durations, carries top slow spans, aggregates warning/error counts, and
+sorts the slowest platforms. This lets maintainers inspect matrix timing
+without downloading large platform binaries.
 
 `buildchain doctor` checks repository readiness before remote side effects:
 
