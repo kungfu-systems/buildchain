@@ -61,6 +61,72 @@ artifact_path = "dist"
 secret_refs = ["AWS_ROLE_ARN"]
 ```
 
+### Multi-Surface Host Mapping
+
+Some site repositories publish more than one first-class web surface from the
+same artifact. For example, a developer substrate site may have a hub plus
+separate hostnames for core and Buildchain documentation. These are not just
+navigation paths; staging and preview should be able to verify host-level
+behavior for each surface.
+
+Declare named surfaces with per-channel URLs:
+
+```toml
+[surfaces.hub]
+path = "/"
+production_url = "https://libkungfu.dev"
+staging_url = "https://staging.libkungfu.dev"
+preview_url_pattern = "https://{alias}.preview.libkungfu.dev"
+
+[surfaces.core]
+path = "/core/"
+production_url = "https://core.libkungfu.dev"
+staging_url = "https://core.staging.libkungfu.dev"
+preview_url_pattern = "https://core-{alias}.preview.libkungfu.dev"
+
+[surfaces.buildchain]
+path = "/buildchain/"
+production_url = "https://buildchain.libkungfu.dev"
+staging_url = "https://buildchain.staging.libkungfu.dev"
+preview_url_pattern = "https://buildchain-{alias}.preview.libkungfu.dev"
+```
+
+Buildchain resolves every `(channel, surface)` pair. A preview alias such as
+`pr-12` becomes:
+
+```text
+hub:        https://pr-12.preview.libkungfu.dev
+core:       https://core-pr-12.preview.libkungfu.dev
+buildchain: https://buildchain-pr-12.preview.libkungfu.dev
+```
+
+When `surfaces` is omitted, Buildchain preserves the legacy single-surface
+contract by creating an implicit `default` surface from the channel URL. When a
+surface is intentionally path-only, declare it explicitly:
+
+```toml
+[surfaces.docs]
+path = "/docs/"
+path_only = true
+```
+
+`path_only = true` is an exception, not the default. Without it, every named
+surface must declare `preview_url_pattern`, `staging_url`, and
+`production_url`. This makes staging/production mismatches fail during
+validation instead of becoming invisible deploy drift.
+
+Adapter strategy remains explicit. The default `aws-s3-cloudfront` plan uses the
+channel deploy target for every surface, and each binding records its own
+bucket, distribution id, object prefix, manifest key, source path, and URL. A
+channel can override target details per surface:
+
+```toml
+[deploy.staging.surfaces.core]
+bucket = "libkungfu-dev-core-staging"
+cloudfront_distribution = "E-CORE-STAGING"
+origin_path = "/core"
+```
+
 Buildchain validates these hard constraints:
 
 - `channels.preview.url_pattern` is required and must contain the alias shape
@@ -73,6 +139,8 @@ Buildchain validates these hard constraints:
 - `channels.staging.noindex = true` is required.
 - `channels.production.url` is required.
 - deploy adapters must be declared per channel.
+- named surfaces must declare first-class URLs for every channel unless
+  `path_only = true` is explicitly set.
 - secret material must be declared as reference names, such as
   `secret_refs = ["AWS_ROLE_ARN"]`; inline secret-like deploy keys are rejected.
 
@@ -116,13 +184,13 @@ rollback:
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-web-surface-deployment",
-  "site": "kungfu-tech",
+  "site": "libkungfu-dev",
   "channel": "preview",
   "alias": "sha-abcdef123456",
-  "url": "https://sha-abcdef123456.preview.kungfu.tech",
+  "url": "https://sha-abcdef123456.preview.libkungfu.dev",
   "sourceSha": "...",
   "artifactHash": "...",
-  "deployTarget": "kungfu-tech-preview",
+  "deployTarget": "libkungfu-dev-preview",
   "adapter": "aws-s3-cloudfront",
   "deployedAt": "2026-07-01T00:00:00.000Z",
   "retentionClass": "preview-sha-immutable",
@@ -130,7 +198,24 @@ rollback:
   "accessControl": "none",
   "edgeAuth": "none",
   "noindex": true,
-  "secretRefs": ["AWS_ROLE_ARN"]
+  "secretRefs": ["AWS_ROLE_ARN"],
+  "surfaceBindings": [
+    {
+      "surface": "hub",
+      "channel": "preview",
+      "alias": "sha-abcdef123456",
+      "url": "https://sha-abcdef123456.preview.libkungfu.dev",
+      "sourcePath": "/",
+      "canonicalUrl": "https://libkungfu.dev",
+      "bucket": "libkungfu-dev-preview",
+      "distributionId": "E-PREVIEW",
+      "originPath": "",
+      "objectPrefix": "sha-abcdef123456",
+      "manifestKey": ".buildchain/deployments/sha-abcdef123456/hub.json",
+      "noindex": true,
+      "accessControl": "none"
+    }
+  ]
 }
 ```
 
@@ -169,6 +254,7 @@ The CLI emits GitHub outputs when `GITHUB_OUTPUT` is present:
 - `web-surface-channel`
 - `web-surface-alias`
 - `web-surface-url`
+- `web-surface-urls-json`
 - `web-surface-artifact-hash`
 - `web-surface-manifest-json`
 
@@ -231,13 +317,13 @@ node scripts/web-surface.mjs \
 ```
 
 Apply output records the channel, alias, source SHA, artifact hash, target
-bucket, object prefix, manifest key, CDN invalidation paths, actor/run metadata,
-and every adapter operation with `executed`, `exitCode`, `stdout`, and `stderr`.
-If an operation fails, Buildchain records the failed operation, stops subsequent
-adapter operations, and exits non-zero after writing the result JSON. Buildchain
-records secret reference names only; the runner must provide the AWS CLI and
-credentials outside Buildchain, typically through OIDC and the declared
-`secret_refs`.
+bucket, object prefix, manifest key, all surface URLs, all surface bindings, CDN
+invalidation paths, actor/run metadata, and every adapter operation with
+`executed`, `exitCode`, `stdout`, and `stderr`. If an operation fails,
+Buildchain records the failed operation, stops subsequent adapter operations,
+and exits non-zero after writing the result JSON. Buildchain records secret
+reference names only; the runner must provide the AWS CLI and credentials
+outside Buildchain, typically through OIDC and the declared `secret_refs`.
 
 ## Cleanup Plans
 

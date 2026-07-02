@@ -117,6 +117,38 @@ function resolveChannelUrl(channel, alias) {
   return channel.url;
 }
 
+function resolvePathOnlyUrl(channel, sourcePath, alias) {
+  const base = resolveChannelUrl(channel, alias);
+  const url = new URL(base);
+  const normalizedPath = normalizeSurfacePath(sourcePath);
+  if (normalizedPath === "/") {
+    return `${url.origin}/`;
+  }
+  return new URL(normalizedPath.replace(/^\//, ""), `${url.origin}/`).toString();
+}
+
+function resolveSurfaceUrl({ surface, channel, channelName, alias }) {
+  if (channelName === "preview" && surface.previewUrlPattern) {
+    if (!alias) {
+      throw new Error(`surface ${surface.name} requires alias for preview_url_pattern`);
+    }
+    return surface.previewUrlPattern.replaceAll("{alias}", alias);
+  }
+  if (channelName === "staging" && surface.stagingUrl) {
+    return surface.stagingUrl;
+  }
+  if (channelName === "production" && surface.productionUrl) {
+    return surface.productionUrl;
+  }
+  if (surface.pathOnly) {
+    return resolvePathOnlyUrl(channel, surface.path, alias);
+  }
+  const key = channelName === "preview"
+    ? "preview_url_pattern"
+    : `${channelName}_url`;
+  throw new Error(`surfaces.${surface.name}.${key} is required for channel ${channelName}`);
+}
+
 function manifestPrefixFor(deployConfig) {
   return deployConfig.manifest_prefix || ".buildchain/deployments";
 }
@@ -128,10 +160,51 @@ function objectPrefixFor(deployConfig, alias) {
   return alias || "preview";
 }
 
+function normalizeSurfacePath(value) {
+  const normalized = `/${String(value || "/").replace(/^\/+/, "")}`.replace(/\/{2,}/g, "/");
+  if (normalized === "/") {
+    return normalized;
+  }
+  return normalized.endsWith("/") ? normalized : `${normalized}/`;
+}
+
+function surfaceDeployConfig(deployConfig, surfaceName) {
+  const overrides = deployConfig.surfaces?.[surfaceName];
+  if (!overrides || typeof overrides !== "object" || Array.isArray(overrides)) {
+    return deployConfig;
+  }
+  return {
+    ...deployConfig,
+    ...overrides,
+    surfaces: deployConfig.surfaces,
+    secretRefs: [
+      ...new Set([
+        ...(deployConfig.secretRefs || []),
+        ...(Array.isArray(overrides.secretRefs) ? overrides.secretRefs : []),
+      ]),
+    ],
+    artifactPath: overrides.artifactPath || deployConfig.artifactPath,
+  };
+}
+
+function surfaceObjectPrefixFor({ deployConfig, surface, alias }) {
+  const effective = surfaceDeployConfig(deployConfig, surface.name);
+  if (Object.hasOwn(effective, "prefix")) {
+    return normalizeS3Key(effective.prefix);
+  }
+  const root = objectPrefixFor(deployConfig, alias);
+  const surfacePath = normalizeS3Key(surface.path);
+  if (!surfacePath) {
+    return root;
+  }
+  return joinS3Key(root, surfacePath);
+}
+
 function normalizeS3Key(value) {
   return String(value || "")
     .replace(/^\/+/, "")
-    .replace(/\/{2,}/g, "/");
+    .replace(/\/{2,}/g, "/")
+    .replace(/\/+$/, "");
 }
 
 function joinS3Key(...parts) {
@@ -268,6 +341,13 @@ function deployManifestKey(deployConfig, manifest) {
   return joinS3Key(manifestPrefixFor(deployConfig), `${manifest.alias || manifest.channel}.json`);
 }
 
+function deploySurfaceManifestKey(deployConfig, binding) {
+  const suffix = binding.surface === "default"
+    ? `${binding.alias || binding.channel}.json`
+    : `${binding.alias || binding.channel}/${binding.surface}.json`;
+  return joinS3Key(manifestPrefixFor(deployConfig), suffix);
+}
+
 function assertDeployPlan(plan) {
   if (plan?.contract !== "kungfu-buildchain-web-surface-deploy-plan") {
     throw new Error("web-surface deploy apply requires a deploy plan");
@@ -345,6 +425,55 @@ function retentionFor({ config, channelName, alias, deployedAt }) {
   };
 }
 
+function configuredSurfaces(config) {
+  if (config.surfaces && Object.keys(config.surfaces).length > 0) {
+    return Object.values(config.surfaces);
+  }
+  return [{
+    name: "default",
+    path: "/",
+    pathOnly: false,
+    canonical: true,
+  }];
+}
+
+function resolveSurfaceBindings({ config, channelName, alias, deployConfig }) {
+  const channel = config.channels?.[channelName];
+  if (!channel) {
+    throw new Error(`unknown web-surface channel: ${channelName}`);
+  }
+  return configuredSurfaces(config).map((surface) => {
+    const effectiveDeploy = surfaceDeployConfig(deployConfig, surface.name);
+    const url = surface.name === "default" && !config.surfaces
+      ? resolveChannelUrl(channel, alias)
+      : resolveSurfaceUrl({ surface, channel, channelName, alias });
+    const objectPrefix = surface.name === "default" && !config.surfaces
+      ? objectPrefixFor(deployConfig, alias || channelName)
+      : surfaceObjectPrefixFor({ deployConfig, surface, alias: alias || channelName });
+    const bucket = effectiveDeploy.bucket || effectiveDeploy.target || "";
+    const distributionId = effectiveDeploy.cloudfront_distribution || effectiveDeploy.distribution || "";
+    return {
+      surface: surface.name,
+      channel: channelName,
+      alias,
+      url,
+      sourcePath: normalizeSurfacePath(surface.path),
+      canonicalUrl: surface.productionUrl || (channelName === "production" ? url : ""),
+      pathOnly: Boolean(surface.pathOnly),
+      bucket,
+      distributionId,
+      originPath: effectiveDeploy.origin_path || effectiveDeploy.originPath || "",
+      objectPrefix,
+      manifestKey: "",
+      noindex: channel.noindex,
+      accessControl: channel.accessControl,
+    };
+  }).map((binding) => ({
+    ...binding,
+    manifestKey: deploySurfaceManifestKey(deployConfig, binding),
+  }));
+}
+
 export function validateWebSurfaceProject(cwd = process.cwd()) {
   const summary = validateBuildchainConfig(cwd, {
     requireConfig: true,
@@ -404,13 +533,20 @@ export function createWebSurfaceDeploymentManifest({
     throw new Error(`missing deploy.${channel}`);
   }
   const retention = retentionFor({ config, channelName: channel, alias, deployedAt });
+  const surfaceBindings = resolveSurfaceBindings({
+    config,
+    channelName: channel,
+    alias,
+    deployConfig,
+  });
+  const primaryBinding = surfaceBindings[0];
   return {
     schemaVersion: 1,
     contract: "kungfu-buildchain-web-surface-deployment",
     site: config.project.site || config.project.name || "",
     channel,
     alias,
-    url: resolveChannelUrl(channelConfig, alias),
+    url: primaryBinding.url,
     sourceSha: assertSha(sourceSha, "sourceSha"),
     artifactHash: assertHash(artifactHash, "artifactHash"),
     deployTarget: deployConfig.target || deployConfig.bucket || deployConfig.environment || deployConfig.service || "",
@@ -437,6 +573,7 @@ export function createWebSurfaceDeploymentManifest({
     migrationState,
     rollbackPointer,
     rollbackLimitations,
+    surfaceBindings,
   };
 }
 
@@ -481,12 +618,14 @@ export function planWebSurfaceDeploy({
     channel,
     alias,
     url: manifest.url,
+    urls: Object.fromEntries(manifest.surfaceBindings.map((binding) => [binding.surface, binding.url])),
     artifact: {
       path: artifactPath || deployConfig.artifactPath || ".",
       hash: resolvedArtifact.artifactHash,
       files: resolvedArtifact.files,
     },
     manifest,
+    surfaceBindings: manifest.surfaceBindings,
     steps: planAdapterSteps(deployConfig.adapter, deployConfig, manifest),
   };
 }
@@ -526,39 +665,28 @@ export function applyWebSurfaceDeploy({
   if (resolvedPlan.adapter !== "aws-s3-cloudfront") {
     throw new Error(`web-surface deploy apply does not support adapter: ${resolvedPlan.adapter}`);
   }
-  if (!dryRun) {
-    assertConcreteAwsDeployConfig({
-      deployConfig,
-      channel: resolvedPlan.channel,
-      operation: "deploy",
-    });
-  }
   const bucket = deployConfig.bucket || deployConfig.target || "";
   const artifactRoot = path.resolve(cwd, resolvedPlan.artifact.path);
-  const objectPrefix = objectPrefixFor(deployConfig, resolvedPlan.manifest.alias || resolvedPlan.manifest.channel);
-  const manifestKey = deployManifestKey(deployConfig, resolvedPlan.manifest);
-  const invalidationPaths = [cdnWildcardPath(objectPrefix), cdnPath(manifestKey)];
-  const operations = [
-    {
-      action: "sync-static-artifact",
-      command: "aws",
-      args: syncStaticArtifactArgs({ artifactRoot, bucket, objectPrefix }),
-    },
-    {
-      action: "write-deployment-manifest",
-      command: "aws",
-      args: ["s3", "cp", "-", s3Uri(bucket, manifestKey), "--content-type", "application/json"],
-      stdin: `${JSON.stringify(resolvedPlan.manifest, null, 2)}\n`,
-    },
-  ];
-  const distribution = deployConfig.cloudfront_distribution || deployConfig.distribution || "";
-  if (distribution) {
-    operations.push({
-      action: "invalidate-cdn",
-      command: "aws",
-      args: ["cloudfront", "create-invalidation", "--distribution-id", distribution, "--paths", ...invalidationPaths],
-    });
+  const bindings = resolvedPlan.manifest.surfaceBindings || [];
+  if (!dryRun) {
+    for (const binding of bindings) {
+      assertConcreteAwsDeployConfig({
+        deployConfig: surfaceDeployConfig(deployConfig, binding.surface),
+        channel: `${resolvedPlan.channel}.surfaces.${binding.surface}`,
+        operation: "deploy",
+      });
+    }
   }
+  const operations = bindings.flatMap((binding) => deployBindingOperations({
+    artifactRoot,
+    deployConfig,
+    manifest: resolvedPlan.manifest,
+    binding,
+  }));
+  const primaryBinding = bindings[0] || {};
+  const objectPrefix = primaryBinding.objectPrefix || objectPrefixFor(deployConfig, resolvedPlan.manifest.alias || resolvedPlan.manifest.channel);
+  const manifestKey = primaryBinding.manifestKey || deployManifestKey(deployConfig, resolvedPlan.manifest);
+  const invalidationPaths = bindings.flatMap((binding) => [cdnWildcardPath(binding.objectPrefix), cdnPath(binding.manifestKey)]);
   const operationResults = runAdapterOperations({ operations, dryRun, commandRunner });
   return {
     schemaVersion: 1,
@@ -572,6 +700,7 @@ export function applyWebSurfaceDeploy({
     channel: resolvedPlan.channel,
     alias: resolvedPlan.alias,
     url: resolvedPlan.url,
+    urls: resolvedPlan.urls || Object.fromEntries(bindings.map((binding) => [binding.surface, binding.url])),
     sourceSha: resolvedPlan.manifest.sourceSha,
     artifactHash: resolvedPlan.artifact.hash,
     adapter: resolvedPlan.adapter,
@@ -580,26 +709,76 @@ export function applyWebSurfaceDeploy({
     manifestKey,
     invalidationPaths,
     manifest: resolvedPlan.manifest,
+    surfaceBindings: bindings,
     operations: operationResults,
   };
+}
+
+function deployBindingOperations({ artifactRoot, deployConfig, manifest, binding }) {
+  const effectiveDeploy = surfaceDeployConfig(deployConfig, binding.surface);
+  const bucket = binding.bucket || effectiveDeploy.bucket || effectiveDeploy.target || "";
+  const distribution = binding.distributionId || effectiveDeploy.cloudfront_distribution || effectiveDeploy.distribution || "";
+  const operations = [
+    {
+      action: "sync-static-artifact",
+      surface: binding.surface,
+      command: "aws",
+      args: syncStaticArtifactArgs({ artifactRoot, bucket, objectPrefix: binding.objectPrefix }),
+    },
+    {
+      action: "write-deployment-manifest",
+      surface: binding.surface,
+      command: "aws",
+      args: ["s3", "cp", "-", s3Uri(bucket, binding.manifestKey), "--content-type", "application/json"],
+      stdin: `${JSON.stringify({
+        ...manifest,
+        surface: binding.surface,
+        url: binding.url,
+        surfaceBinding: binding,
+      }, null, 2)}\n`,
+    },
+  ];
+  if (distribution) {
+    operations.push({
+      action: "invalidate-cdn",
+      surface: binding.surface,
+      command: "aws",
+      args: [
+        "cloudfront",
+        "create-invalidation",
+        "--distribution-id",
+        distribution,
+        "--paths",
+        cdnWildcardPath(binding.objectPrefix),
+        cdnPath(binding.manifestKey),
+      ],
+    });
+  }
+  return operations;
 }
 
 function planAdapterSteps(adapter, deployConfig, manifest) {
   if (adapter === "aws-s3-cloudfront") {
     return [
-      {
-        action: "sync-static-artifact",
-        target: deployConfig.bucket || deployConfig.target || "",
-        prefix: objectPrefixFor(deployConfig, manifest.alias || manifest.channel),
-      },
-      {
-        action: "write-deployment-manifest",
-        target: manifestPrefixFor(deployConfig),
-      },
-      {
-        action: "invalidate-cdn",
-        distribution: deployConfig.cloudfront_distribution || deployConfig.distribution || "",
-      },
+      ...manifest.surfaceBindings.flatMap((binding) => [
+        {
+          action: "sync-static-artifact",
+          surface: binding.surface,
+          target: binding.bucket,
+          prefix: binding.objectPrefix,
+        },
+        {
+          action: "write-deployment-manifest",
+          surface: binding.surface,
+          target: manifestPrefixFor(deployConfig),
+          key: binding.manifestKey,
+        },
+        {
+          action: "invalidate-cdn",
+          surface: binding.surface,
+          distribution: binding.distributionId,
+        },
+      ]),
     ];
   }
   return [
@@ -640,6 +819,10 @@ export function planWebSurfaceCleanup({
     requestedAliases.push(`pr-${pullNumber}`);
   }
   const manifestPrefix = manifestPrefixFor(deployConfig);
+  const bindingsByAlias = new Map(requestedAliases.map((alias) => [
+    alias,
+    resolveSurfaceBindings({ config, channelName: channel, alias, deployConfig }),
+  ]));
   return {
     schemaVersion: 1,
     contract: "kungfu-buildchain-web-surface-cleanup-plan",
@@ -660,7 +843,9 @@ export function planWebSurfaceCleanup({
     entries: requestedAliases.map((alias) => {
       const classified = classifyPreviewAlias(alias);
       const retention = retentionConfig(config, "preview");
-      const objectPrefix = objectPrefixFor(deployConfig, alias);
+      const surfaceBindings = bindingsByAlias.get(alias) || [];
+      const primaryBinding = surfaceBindings[0] || {};
+      const objectPrefix = primaryBinding.objectPrefix || objectPrefixFor(deployConfig, alias);
       return {
         alias,
         aliasKind: classified.kind,
@@ -669,11 +854,13 @@ export function planWebSurfaceCleanup({
         retentionDays: retention[classified.retentionKey],
         action: "delete-preview-alias",
         objectPrefix,
-        manifestKey: `${manifestPrefix.replace(/\/$/, "")}/${alias}.json`,
+        manifestKey: primaryBinding.manifestKey || `${manifestPrefix.replace(/\/$/, "")}/${alias}.json`,
+        surfaceBindings,
         steps: cleanupAdapterSteps(deployConfig.adapter, deployConfig, {
           alias,
           objectPrefix,
           manifestPrefix,
+          surfaceBindings,
         }),
       };
     }),
@@ -718,47 +905,23 @@ export function applyWebSurfaceCleanup({
     throw new Error(`web-surface cleanup apply does not support adapter: ${cleanup.adapter}`);
   }
   if (!dryRun) {
-    assertConcreteAwsDeployConfig({
-      deployConfig,
-      channel: cleanup.channel,
-      operation: "cleanup",
-    });
+    for (const entry of cleanup.entries) {
+      const bindings = entry.surfaceBindings?.length
+        ? entry.surfaceBindings
+        : [{
+            surface: "default",
+          }];
+      for (const binding of bindings) {
+        assertConcreteAwsDeployConfig({
+          deployConfig: surfaceDeployConfig(deployConfig, binding.surface),
+          channel: `${cleanup.channel}.surfaces.${binding.surface}`,
+          operation: "cleanup",
+        });
+      }
+    }
   }
   const bucket = deployConfig.bucket || deployConfig.target || "";
-  const operations = cleanup.entries.flatMap((entry) => {
-    const entryOperations = [
-      {
-        action: "delete-static-prefix",
-        alias: entry.alias,
-        command: "aws",
-        args: ["s3", "rm", s3Uri(bucket, entry.objectPrefix), "--recursive"],
-      },
-      {
-        action: "delete-deployment-manifest",
-        alias: entry.alias,
-        command: "aws",
-        args: ["s3", "rm", s3Uri(bucket, entry.manifestKey)],
-      },
-    ];
-    const distribution = deployConfig.cloudfront_distribution || deployConfig.distribution || "";
-    if (distribution) {
-      entryOperations.push({
-        action: "invalidate-cdn",
-        alias: entry.alias,
-        command: "aws",
-        args: [
-          "cloudfront",
-          "create-invalidation",
-          "--distribution-id",
-          distribution,
-          "--paths",
-          `${cdnPath(entry.objectPrefix)}/*`,
-          cdnPath(entry.manifestKey),
-        ],
-      });
-    }
-    return entryOperations;
-  });
+  const operations = cleanup.entries.flatMap((entry) => cleanupEntryOperations({ deployConfig, entry, bucket }));
   const operationResults = runAdapterOperations({ operations, dryRun, commandRunner });
   return {
     schemaVersion: 1,
@@ -781,24 +944,87 @@ export function applyWebSurfaceCleanup({
   };
 }
 
-function cleanupAdapterSteps(adapter, deployConfig, entry) {
-  if (adapter === "aws-s3-cloudfront") {
-    return [
+function cleanupEntryOperations({ deployConfig, entry, bucket }) {
+  const bindings = entry.surfaceBindings?.length
+    ? entry.surfaceBindings
+    : [{
+        surface: "default",
+        objectPrefix: entry.objectPrefix,
+        manifestKey: entry.manifestKey,
+        bucket,
+        distributionId: deployConfig.cloudfront_distribution || deployConfig.distribution || "",
+      }];
+  return bindings.flatMap((binding) => {
+    const effectiveDeploy = surfaceDeployConfig(deployConfig, binding.surface);
+    const bindingBucket = binding.bucket || effectiveDeploy.bucket || effectiveDeploy.target || bucket;
+    const distribution = binding.distributionId || effectiveDeploy.cloudfront_distribution || effectiveDeploy.distribution || "";
+    const entryOperations = [
       {
         action: "delete-static-prefix",
-        target: deployConfig.bucket || deployConfig.target || "",
-        prefix: entry.objectPrefix,
+        alias: entry.alias,
+        surface: binding.surface,
+        command: "aws",
+        args: ["s3", "rm", s3Uri(bindingBucket, binding.objectPrefix), "--recursive"],
       },
       {
         action: "delete-deployment-manifest",
-        target: entry.manifestPrefix,
-        key: `${entry.manifestPrefix.replace(/\/$/, "")}/${entry.alias}.json`,
-      },
-      {
-        action: "invalidate-cdn",
-        distribution: deployConfig.cloudfront_distribution || deployConfig.distribution || "",
+        alias: entry.alias,
+        surface: binding.surface,
+        command: "aws",
+        args: ["s3", "rm", s3Uri(bindingBucket, binding.manifestKey)],
       },
     ];
+    if (distribution) {
+      entryOperations.push({
+        action: "invalidate-cdn",
+        alias: entry.alias,
+        surface: binding.surface,
+        command: "aws",
+        args: [
+          "cloudfront",
+          "create-invalidation",
+          "--distribution-id",
+          distribution,
+          "--paths",
+          `${cdnPath(binding.objectPrefix)}/*`,
+          cdnPath(binding.manifestKey),
+        ],
+      });
+    }
+    return entryOperations;
+  });
+}
+
+function cleanupAdapterSteps(adapter, deployConfig, entry) {
+  if (adapter === "aws-s3-cloudfront") {
+    const bindings = entry.surfaceBindings?.length
+      ? entry.surfaceBindings
+      : [{
+          surface: "default",
+          objectPrefix: entry.objectPrefix,
+          manifestKey: `${entry.manifestPrefix.replace(/\/$/, "")}/${entry.alias}.json`,
+          bucket: deployConfig.bucket || deployConfig.target || "",
+          distributionId: deployConfig.cloudfront_distribution || deployConfig.distribution || "",
+        }];
+    return bindings.flatMap((binding) => [
+        {
+          action: "delete-static-prefix",
+          surface: binding.surface,
+          target: binding.bucket,
+          prefix: binding.objectPrefix,
+        },
+        {
+          action: "delete-deployment-manifest",
+          surface: binding.surface,
+          target: entry.manifestPrefix,
+          key: binding.manifestKey,
+        },
+        {
+          action: "invalidate-cdn",
+          surface: binding.surface,
+          distribution: binding.distributionId,
+        },
+      ]);
   }
   return [
     {
