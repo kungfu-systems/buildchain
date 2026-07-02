@@ -264,6 +264,48 @@ function resolveLinkedFilePath({ linkedPath = "", workspace, cwd, fallbackDir })
   return candidates.find((candidate) => fs.existsSync(candidate)) || candidates[0] || "";
 }
 
+function diagnosticsSidecarEntry({ kind, filePath, workspace, required = false }) {
+  if (!filePath || !fs.existsSync(filePath)) {
+    return null;
+  }
+  const stat = fs.statSync(filePath);
+  if (!stat.isFile()) {
+    return null;
+  }
+  return {
+    kind,
+    path: toPosix(path.relative(workspace, filePath)),
+    bytes: stat.size,
+    sha256: sha256File(filePath),
+    required: Boolean(required),
+  };
+}
+
+function writeDiagnosticsSidecarManifest(filePath, {
+  workspace,
+  artifactName,
+  platformId,
+  diagnosticsArtifactName = "",
+  files = [],
+}) {
+  const entries = files
+    .map((entry) => diagnosticsSidecarEntry({ ...entry, workspace }))
+    .filter(Boolean);
+  const manifest = {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-diagnostics-manifest",
+    generatedAt: new Date().toISOString(),
+    artifactName,
+    platformId,
+    ...(diagnosticsArtifactName ? { diagnosticsArtifactName } : {}),
+    fileCount: entries.length,
+    totalBytes: entries.reduce((sum, entry) => sum + entry.bytes, 0),
+    files: entries,
+  };
+  fs.writeFileSync(filePath, `${JSON.stringify(manifest, null, 2)}\n`);
+  return manifest;
+}
+
 export function runLifecycle({
   cwd = process.cwd(),
   stageName = "",
@@ -312,9 +354,11 @@ export function runLifecycle({
   const resolvedDiagnosticsEventsPath = path.join(diagnosticsDir, "events.jsonl");
   const resolvedDiagnosticsProcessSummaryPath = path.join(diagnosticsDir, "process-summary.json");
   const resolvedDiagnosticsProcessSamplesPath = path.join(diagnosticsDir, "process-samples.jsonl");
+  const resolvedDiagnosticsManifestPath = path.join(diagnosticsDir, "diagnostics-manifest.json");
   const relativeDiagnosticsEventsPath = toPosix(path.relative(resolvedWorkspace, resolvedDiagnosticsEventsPath));
   const relativeDiagnosticsProcessSummaryPath = toPosix(path.relative(resolvedWorkspace, resolvedDiagnosticsProcessSummaryPath));
   const relativeDiagnosticsProcessSamplesPath = toPosix(path.relative(resolvedWorkspace, resolvedDiagnosticsProcessSamplesPath));
+  const relativeDiagnosticsManifestPath = toPosix(path.relative(resolvedWorkspace, resolvedDiagnosticsManifestPath));
   const logRunId = crypto.randomUUID();
   const frameworkLog = createBuildchainLogger({
     cwd: resolvedWorkspace,
@@ -545,6 +589,7 @@ export function runLifecycle({
   observability.diagnostics = {
     contract: "kungfu-buildchain-diagnostics",
     path: relativeDiagnosticsPath,
+    manifestPath: relativeDiagnosticsManifestPath,
     eventsPath: relativeDiagnosticsEventsPath,
   };
   if (relativeProcessSummaryPath) {
@@ -599,6 +644,7 @@ export function runLifecycle({
         manifest: toPosix(path.relative(resolvedWorkspace, resolvedManifestPath)),
         summary: toPosix(path.relative(resolvedWorkspace, resolvedSummaryPath)),
         log: relativeLogPath,
+        diagnosticsManifest: relativeDiagnosticsManifestPath,
         diagnosticsEvents: relativeDiagnosticsEventsPath,
         ...(relativeProcessSummaryPath ? { processSummary: relativeProcessSummaryPath } : {}),
         ...(processSummaryArtifact ? { diagnosticsProcessSummary: relativeDiagnosticsProcessSummaryPath } : {}),
@@ -621,6 +667,18 @@ export function runLifecycle({
     });
     copyIfExists(resolvedSamplesPath, resolvedDiagnosticsProcessSamplesPath);
   }
+  writeDiagnosticsSidecarManifest(resolvedDiagnosticsManifestPath, {
+    workspace: resolvedWorkspace,
+    artifactName,
+    platformId,
+    diagnosticsArtifactName,
+    files: [
+      { kind: "diagnostics", filePath: resolvedDiagnosticsPath, required: true },
+      { kind: "events", filePath: resolvedDiagnosticsEventsPath, required: true },
+      { kind: "process-summary", filePath: resolvedDiagnosticsProcessSummaryPath },
+      { kind: "process-samples", filePath: resolvedDiagnosticsProcessSamplesPath },
+    ],
+  });
   console.log(`buildchain_manifest=${path.relative(resolvedWorkspace, resolvedManifestPath)}`);
   return manifest;
 }

@@ -57,3 +57,5 @@ Custom wrappers can still pass an existing sampler report or summary with
 finishes, so commands may generate the file during the same invocation.
 Set `process-summary-required: "false"` when the summary is an optional sidecar,
 for example when a reusable workflow may skip an optional build stage.
+The diagnostics directory also includes `diagnostics-manifest.json`, a compact
+inventory of the diagnostics sidecars with byte counts and sha256 hashes.

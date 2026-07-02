@@ -142,12 +142,14 @@ manifest, so Buildchain uploads each platform manifest and then emits one
 aggregate build summary artifact after the matrix completes. Buildchain uploads
 `diagnostics-summary.json` as a separate aggregate diagnostics summary artifact,
 a compact rollup of each platform's small diagnostics upload. Each platform
-diagnostics upload includes `diagnostics.json`, the lifecycle `events.jsonl`,
-and process sampler sidecars when enabled, so slow-build diagnosis does not
-require downloading the binary platform artifact or the aggregate build summary.
-Each `diagnostics.json` also records the related binary artifact name, manifest
-artifact name, diagnostics artifact name, and platform id in `links`, so a
-reviewer can navigate from the small diagnostics artifact back to the exact
+diagnostics upload includes `diagnostics.json`, `diagnostics-manifest.json`, the
+lifecycle `events.jsonl`, and process sampler sidecars when enabled, so
+slow-build diagnosis does not require downloading the binary platform artifact or
+the aggregate build summary. The sidecar manifest records the uploaded
+diagnostics files with bytes and sha256 hashes. Each `diagnostics.json` also
+records the related binary artifact name, manifest artifact name, diagnostics
+artifact name, diagnostics sidecar manifest path, and platform id in `links`, so
+a reviewer can navigate from the small diagnostics artifact back to the exact
 platform outputs when deeper inspection is needed.
 
 ## Publish Gate

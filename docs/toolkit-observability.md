@@ -211,11 +211,13 @@ if (!anchoredReport.ok) {
 
 `buildchain lifecycle run` writes this small diagnostics artifact next to the
 platform manifest by default. The per-platform diagnostics upload includes the
-compact `diagnostics.json`, lifecycle `events.jsonl`, and, when process sampling
-is enabled, copied `process-summary.json` and `process-samples.jsonl` sidecars.
-It is intended to stay small enough to download without fetching large binary
-packages, and it should not include full environment dumps or secret-looking
-values.
+compact `diagnostics.json`, `diagnostics-manifest.json`, lifecycle
+`events.jsonl`, and, when process sampling is enabled, copied
+`process-summary.json` and `process-samples.jsonl` sidecars. The sidecar
+manifest records each uploaded diagnostics file with its relative path, byte
+count, and sha256 hash. It is intended to stay small enough to download without
+fetching large binary packages, and it should not include full environment dumps
+or secret-looking values.
 
 Use `summarizeDiagnosticsArtifacts()` when a matrix build uploads one
 diagnostics artifact per platform. The summary keeps each platform's lifecycle
@@ -233,8 +235,8 @@ read the `build-diagnostics-summary-artifact` output when they need only timing,
 warning/error, runner, cache, and process-sampler context instead of the build
 summary or binary artifacts. Per-platform rows keep the diagnostics `links`
 object, including the binary artifact name, manifest artifact name, diagnostics
-artifact name, platform id, manifest path, summary path, and process sidecar
-paths when present.
+artifact name, platform id, diagnostics sidecar manifest path, manifest path,
+summary path, and process sidecar paths when present.
 
 The CLI exposes the same aggregation for shell and workflow steps:
 
