@@ -705,23 +705,44 @@ export function readDiagnosticsArtifact(filePath) {
   return safeReadJson(filePath);
 }
 
+function sumLifecycleDurationMs(stages = {}) {
+  return Object.values(stages).reduce((sum, entry) => sum + Number(entry?.durationMs || 0), 0);
+}
+
 export function summarizeDiagnosticsArtifacts(inputs = []) {
   const diagnostics = inputs
     .map((entry) => (typeof entry === "string" ? readDiagnosticsArtifact(entry) : entry))
     .filter(Boolean);
+  const platforms = diagnostics.map((entry) => {
+    const lifecycle = entry.lifecycleObservability?.stages || {};
+    return {
+      runner: entry.runner?.github?.runnerOs || entry.runner?.os?.platform || "unknown",
+      arch: entry.runner?.github?.runnerArch || entry.runner?.os?.arch || "unknown",
+      gitHead: entry.git?.head || "",
+      lifecycle,
+      lifecycleTotalDurationMs: sumLifecycleDurationMs(lifecycle),
+      topSlowSpans: (entry.lifecycleObservability?.topSlowSpans || []).slice(0, 5),
+      process: entry.process || {},
+      warningCount: entry.lifecycleObservability?.warningCount || 0,
+      errorCount: entry.lifecycleObservability?.errorCount || 0,
+    };
+  });
   return {
     schemaVersion: 1,
     contract: "kungfu-buildchain-diagnostics-summary",
     generatedAt: new Date().toISOString(),
     count: diagnostics.length,
-    platforms: diagnostics.map((entry) => ({
-      runner: entry.runner?.github?.runnerOs || entry.runner?.os?.platform || "unknown",
-      arch: entry.runner?.github?.runnerArch || entry.runner?.os?.arch || "unknown",
-      gitHead: entry.git?.head || "",
-      lifecycle: entry.lifecycleObservability?.stages || {},
-      process: entry.process || {},
-      warningCount: entry.lifecycleObservability?.warningCount || 0,
-      errorCount: entry.lifecycleObservability?.errorCount || 0,
-    })),
+    totalWarningCount: platforms.reduce((sum, entry) => sum + entry.warningCount, 0),
+    totalErrorCount: platforms.reduce((sum, entry) => sum + entry.errorCount, 0),
+    slowestPlatforms: platforms
+      .map(({ runner, arch, gitHead, lifecycleTotalDurationMs }) => ({
+        runner,
+        arch,
+        gitHead,
+        lifecycleTotalDurationMs,
+      }))
+      .sort((left, right) => right.lifecycleTotalDurationMs - left.lifecycleTotalDurationMs)
+      .slice(0, 10),
+    platforms,
   };
 }

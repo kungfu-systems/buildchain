@@ -12,6 +12,7 @@ import {
   collectRunnerDiagnostics,
   detectRequestedParallelism,
   startProcessSampler,
+  summarizeDiagnosticsArtifacts,
   summarizeProcessSamples,
   validateAnchoredPackageRelease,
 } from "@kungfu-tech/buildchain/diagnostics";
@@ -256,6 +257,47 @@ test("diagnostics SDK summarizes process samples against requested parallelism",
   });
   assert.equal(artifact.process.requestedParallelism, 20);
   assert.equal(artifact.process.observedConcurrency.max, 5);
+});
+
+test("diagnostics SDK summarizes lifecycle timing across diagnostic artifacts", () => {
+  const summary = summarizeDiagnosticsArtifacts([
+    {
+      runner: { github: { runnerOs: "Linux", runnerArch: "X64" } },
+      git: { head: "abc123" },
+      lifecycleObservability: {
+        stages: {
+          build: { durationMs: 300, eventCount: 2 },
+          install: { durationMs: 100, eventCount: 1 },
+        },
+        topSlowSpans: [
+          { event: "native.compile", stage: "build", durationMs: 250 },
+        ],
+        warningCount: 1,
+        errorCount: 0,
+      },
+      process: { observedConcurrency: { max: 4 } },
+    },
+    {
+      runner: { os: { platform: "darwin", arch: "arm64" } },
+      git: { head: "def456" },
+      lifecycleObservability: {
+        stages: {
+          verify: { durationMs: 50, eventCount: 1 },
+        },
+        warningCount: 0,
+        errorCount: 2,
+      },
+    },
+  ]);
+
+  assert.equal(summary.contract, "kungfu-buildchain-diagnostics-summary");
+  assert.equal(summary.count, 2);
+  assert.equal(summary.totalWarningCount, 1);
+  assert.equal(summary.totalErrorCount, 2);
+  assert.equal(summary.platforms[0].lifecycleTotalDurationMs, 400);
+  assert.equal(summary.platforms[0].topSlowSpans[0].event, "native.compile");
+  assert.equal(summary.platforms[1].lifecycleTotalDurationMs, 50);
+  assert.deepEqual(summary.slowestPlatforms.map((entry) => entry.gitHead), ["abc123", "def456"]);
 });
 
 test("diagnostics SDK detects requested parallelism from commands and env", () => {

@@ -115,6 +115,7 @@ import {
   collectToolDiagnostics,
   detectRequestedParallelism,
   startProcessSampler,
+  summarizeDiagnosticsArtifacts,
   summarizeLifecycleObservability,
   summarizeProcessSamples,
   validateAnchoredPackageRelease,
@@ -190,6 +191,13 @@ if (!anchoredReport.ok) {
 platform manifest by default. It is intended to stay small enough to download
 without fetching large binary packages, and it should not include full
 environment dumps or secret-looking values.
+
+Use `summarizeDiagnosticsArtifacts()` when a matrix build uploads one
+diagnostics artifact per platform. The summary keeps each platform's lifecycle
+stage table, adds a lifecycle total duration, carries the top slow spans, and
+aggregates warning/error counts plus the slowest platforms. That gives release
+reviewers a small cross-platform timing view without downloading full build
+outputs.
 
 The lifecycle observability summary is stage-wide, not just final-step timing:
 when install and build write to the same Buildchain log, the final platform
