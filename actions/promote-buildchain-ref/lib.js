@@ -662,6 +662,28 @@ function ensureTransactionCanResume({
   }
 }
 
+function canReplaceStaleVersionStateTransaction({
+  error,
+  existing,
+  version,
+  exactTag,
+  targetRef,
+  channel,
+  allowVersionStateFinalization,
+}) {
+  if (
+    !allowVersionStateFinalization ||
+    !materialErrorRequiresRepair(error) ||
+    existing?.version !== version ||
+    existing?.exact_tag !== exactTag ||
+    existing?.target_ref !== targetRef ||
+    existing?.channel !== channel
+  ) {
+    return false;
+  }
+  return !["complete", "abandoned", "failed_permanently"].includes(existing.state || "");
+}
+
 function validateTransactionEvidence({
   evidencePath,
   version,
@@ -1089,8 +1111,8 @@ async function runPublishTransaction({
       `release transaction local state ${localExisting.id} conflicts with durable state ${durableExisting.id}`,
     );
   }
-  const existing = durableExisting || localExisting;
-  const existingEvidence = readPublishEvidence(resolvedEvidencePath);
+  let existing = durableExisting || localExisting;
+  let existingEvidence = readPublishEvidence(resolvedEvidencePath);
   let existingValidation;
   if (existingEvidence) {
     existingValidation = validatePublishEvidence({
@@ -1138,10 +1160,28 @@ async function runPublishTransaction({
           transactionReleaseSha: existing.release_material_sha,
         })
       );
-    if (!canFinalizeVersionState) {
+    const canReplaceStaleVersionState =
+      canReplaceStaleVersionStateTransaction({
+        error,
+        existing,
+        version,
+        exactTag,
+        targetRef,
+        channel,
+        allowVersionStateFinalization,
+      });
+    if (!canFinalizeVersionState && !canReplaceStaleVersionState) {
       throw error;
     }
-    versionStateFinalization = true;
+    if (canFinalizeVersionState) {
+      versionStateFinalization = true;
+    } else {
+      existing = undefined;
+      existingEvidence = undefined;
+      existingValidation = undefined;
+      fs.rmSync(resolvedStatePath, { force: true });
+      fs.rmSync(resolvedEvidencePath, { force: true });
+    }
   }
   let transaction =
     existing ||
