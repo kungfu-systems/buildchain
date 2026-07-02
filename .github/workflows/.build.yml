@@ -121,6 +121,26 @@ on:
         default: ""
         type: string
         required: false
+      process-summary-path:
+        description: "Optional process sampler summary JSON path, relative to workspace, to embed in final diagnostics"
+        default: ""
+        type: string
+        required: false
+      sample-process-tree:
+        description: "Wrap the build lifecycle with the process tree sampler"
+        default: true
+        type: boolean
+        required: false
+      process-sample-interval-ms:
+        description: "Process sampler interval in milliseconds"
+        default: 15000
+        type: number
+        required: false
+      requested-parallelism:
+        description: "Optional expected build parallelism recorded in process diagnostics"
+        default: 0
+        type: number
+        required: false
       artifact-retention-days:
         default: 14
         type: number
@@ -144,9 +164,15 @@ on:
       build-summary-artifact:
         description: "Uploaded aggregate build summary artifact name"
         value: ${{ jobs.summarize.outputs.summary-artifact-name }}
+      build-diagnostics-summary-artifact:
+        description: "Uploaded aggregate diagnostics summary artifact name"
+        value: ${{ jobs.summarize.outputs.diagnostics-summary-artifact-name }}
       build-summary-json:
         description: "Compact aggregate build summary JSON"
         value: ${{ jobs.summarize.outputs.artifact-summary-json }}
+      build-diagnostics-summary-json:
+        description: "Compact aggregate diagnostics summary JSON with lifecycle, diagnostics contract warning, and sidecar manifest warning totals"
+        value: ${{ jobs.summarize.outputs.diagnostics-summary-json }}
       trusted-event:
         description: "Whether the event is trusted enough to run build jobs"
         value: ${{ jobs.trust-gate.outputs.trusted-event }}
@@ -367,6 +393,15 @@ jobs:
           path: .buildchain/runtime
           persist-credentials: false
 
+      - name: Setup Node.js
+        if: ${{ inputs.setup-node }}
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Install Buildchain runtime dependencies
+        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+
       - name: Resolve artifact contract
         id: artifact-contract
         run: node .buildchain/runtime/scripts/resolve-build-contract.mjs --mode artifact
@@ -376,12 +411,6 @@ jobs:
           BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
           BUILDCHAIN_PLATFORM_NAME: ${{ matrix.platform.name }}
           BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-
-      - name: Setup Node.js
-        if: ${{ inputs.setup-node }}
-        uses: actions/setup-node@v6.4.0
-        with:
-          node-version: ${{ inputs.node-version }}
 
       - name: Run install lifecycle
         uses: ./.buildchain/runtime/actions/run-lifecycle
@@ -416,6 +445,12 @@ jobs:
           artifact-paths: ${{ inputs.artifact-paths }}
           manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest-build.json
           summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary-build.json
+          process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
+          process-samples-path: .buildchain/diagnostics/process-samples.jsonl
+          sample-process-tree: ${{ inputs.sample-process-tree }}
+          process-sample-interval-ms: ${{ inputs.process-sample-interval-ms }}
+          requested-parallelism: ${{ inputs.requested-parallelism }}
+          process-summary-required: ${{ inputs.require-build }}
 
       - name: Run verify lifecycle
         id: verify-lifecycle
@@ -429,12 +464,16 @@ jobs:
           command: ${{ inputs.verify-command }}
           required: ${{ inputs.require-verify }}
           artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
+          manifest-artifact-name: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          diagnostics-artifact-name: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           platform-id: ${{ matrix.platform.id }}
           platform-name: ${{ matrix.platform.name }}
           artifact-paths: ${{ inputs.artifact-paths }}
           manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
           summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
           expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
+          process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
+          process-summary-required: ${{ inputs.process-summary-path != '' || inputs.require-build }}
 
       - name: Upload deterministic artifact
         uses: actions/upload-artifact@v7.0.1
@@ -444,6 +483,7 @@ jobs:
             ${{ inputs.artifact-paths }}
             .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
             .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
@@ -454,6 +494,20 @@ jobs:
           path: |
             .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
             .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload diagnostics artifact
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: |
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics-manifest.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
+            .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
@@ -500,6 +554,9 @@ jobs:
         env:
           BUILDCHAIN_NODE_VERSION: ${{ inputs.node-version }}
 
+      - name: Install Buildchain runtime dependencies
+        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+
       - name: Resolve artifact contract
         id: artifact-contract
         run: node .buildchain/runtime/scripts/resolve-build-contract.mjs --mode artifact
@@ -543,6 +600,12 @@ jobs:
           artifact-paths: ${{ inputs.artifact-paths }}
           manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest-build.json
           summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary-build.json
+          process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
+          process-samples-path: .buildchain/diagnostics/process-samples.jsonl
+          sample-process-tree: ${{ inputs.sample-process-tree }}
+          process-sample-interval-ms: ${{ inputs.process-sample-interval-ms }}
+          requested-parallelism: ${{ inputs.requested-parallelism }}
+          process-summary-required: ${{ inputs.require-build }}
 
       - name: Run verify lifecycle
         id: verify-lifecycle
@@ -556,12 +619,16 @@ jobs:
           command: ${{ inputs.verify-command }}
           required: ${{ inputs.require-verify }}
           artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
+          manifest-artifact-name: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          diagnostics-artifact-name: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           platform-id: ${{ matrix.platform.id }}
           platform-name: ${{ matrix.platform.name }}
           artifact-paths: ${{ inputs.artifact-paths }}
           manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
           summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
           expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
+          process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
+          process-summary-required: ${{ inputs.process-summary-path != '' || inputs.require-build }}
 
       - name: Upload deterministic artifact
         uses: actions/upload-artifact@v7.0.1
@@ -571,6 +638,7 @@ jobs:
             ${{ inputs.artifact-paths }}
             .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
             .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
@@ -581,6 +649,20 @@ jobs:
           path: |
             .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
             .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload diagnostics artifact
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: |
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics-manifest.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
+            .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
@@ -596,8 +678,11 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       summary-artifact-name: ${{ steps.names.outputs.summary-artifact-name }}
+      diagnostics-summary-artifact-name: ${{ steps.names.outputs.diagnostics-summary-artifact-name }}
       summary-path: ${{ steps.summary.outputs.summary-path }}
       artifact-summary-json: ${{ steps.summary.outputs.artifact-summary-json }}
+      diagnostics-summary-path: ${{ steps.diagnostics.outputs.diagnostics-summary-path }}
+      diagnostics-summary-json: ${{ steps.diagnostics.outputs.diagnostics-summary-json }}
     steps:
       - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
@@ -607,17 +692,30 @@ jobs:
           path: .buildchain/runtime
           persist-credentials: false
 
+      - name: Install Buildchain runtime dependencies
+        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+
       - name: Resolve summary artifact name
         id: names
-        run: echo "summary-artifact-name=${BUILDCHAIN_SUMMARY_ARTIFACT_NAME}" >> "${GITHUB_OUTPUT}"
+        run: |
+          echo "summary-artifact-name=${BUILDCHAIN_SUMMARY_ARTIFACT_NAME}" >> "${GITHUB_OUTPUT}"
+          echo "diagnostics-summary-artifact-name=${BUILDCHAIN_DIAGNOSTICS_SUMMARY_ARTIFACT_NAME}" >> "${GITHUB_OUTPUT}"
         env:
           BUILDCHAIN_SUMMARY_ARTIFACT_NAME: ${{ inputs.artifact-name }}-summary-${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_DIAGNOSTICS_SUMMARY_ARTIFACT_NAME: ${{ inputs.artifact-name }}-diagnostics-summary-${{ needs.resolve-source.outputs.publish-source-sha }}
 
       - name: Download platform manifests
         uses: actions/download-artifact@v7.0.0
         with:
           pattern: ${{ inputs.artifact-name }}-manifest-*-${{ needs.resolve-source.outputs.publish-source-sha }}
           path: .buildchain/downloaded-manifests
+          merge-multiple: false
+
+      - name: Download platform diagnostics
+        uses: actions/download-artifact@v7.0.0
+        with:
+          pattern: ${{ inputs.artifact-name }}-diagnostics-*-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: .buildchain/downloaded-diagnostics
           merge-multiple: false
 
       - name: Aggregate artifact summary
@@ -642,10 +740,26 @@ jobs:
           BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
           BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
 
+      - name: Aggregate diagnostics summary
+        id: diagnostics
+        run: node .buildchain/runtime/scripts/aggregate-diagnostics-summary.mjs
+        env:
+          BUILDCHAIN_DIAGNOSTICS_INPUT: .buildchain/downloaded-diagnostics
+          BUILDCHAIN_DIAGNOSTICS_OUTPUT: .buildchain/artifacts/diagnostics-summary.json
+          BUILDCHAIN_PLATFORM_COUNT: ${{ needs.resolve-contract.outputs.platform-count }}
+
       - name: Upload aggregate build summary
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ steps.names.outputs.summary-artifact-name }}
           path: .buildchain/artifacts/build-summary.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload aggregate diagnostics summary
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.names.outputs.diagnostics-summary-artifact-name }}
+          path: .buildchain/artifacts/diagnostics-summary.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}

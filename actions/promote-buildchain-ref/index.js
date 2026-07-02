@@ -1,10 +1,41 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
+import { pathToFileURL } from "node:url";
 import { parseTags, promoteBuildchainRefs } from "./lib.js";
 import {
   explainReleaseLineDryRun,
   formatReleaseLineDryRun,
 } from "../../packages/core/release-line-dry-run.js";
+import { validateAnchoredPackageRelease } from "../../packages/core/diagnostics.js";
+
+export function validateRequiredPublishSourceLock({
+  cwd = process.cwd(),
+  sha,
+  publishSourceRef = "",
+  publishSourceSha = "",
+  publishSourceLocked = "",
+} = {}) {
+  if (publishSourceSha && publishSourceSha !== sha) {
+    throw new Error(`publish-source-sha ${publishSourceSha} does not match promotion sha ${sha}`);
+  }
+  const sourceLockReport = validateAnchoredPackageRelease({
+    cwd,
+    requirePublishGateSourceLock: true,
+    publishSource: {
+      sourceRef: publishSourceRef,
+      sourceSha: publishSourceSha || sha,
+      sourceLocked: publishSourceLocked,
+    },
+  });
+  if (!sourceLockReport.ok) {
+    const failed = sourceLockReport.checks
+      .filter((check) => check.status !== "pass")
+      .map((check) => `${check.id}: ${check.message}`)
+      .join("; ");
+    throw new Error(`anchored publish source-lock validation failed: ${failed}`);
+  }
+  return sourceLockReport;
+}
 
 async function main() {
   const token = core.getInput("token", { required: true });
@@ -28,10 +59,23 @@ async function main() {
   const publishDistTag = core.getInput("publish-dist-tag");
   const publishPackageSetOrder = core.getInput("publish-package-set-order");
   const publishPackageMain = core.getInput("publish-package-main");
+  const requirePublishSourceLock = core.getBooleanInput("require-publish-source-lock");
+  const publishSourceRef = core.getInput("publish-source-ref");
+  const publishSourceSha = core.getInput("publish-source-sha");
+  const publishSourceLocked = core.getInput("publish-source-locked");
   const releaseMaterialSha = core.getInput("release-material-sha");
   const publishToolingSha = core.getInput("publish-tooling-sha");
   const publishTransactionOverride = core.getBooleanInput("publish-transaction-override");
   const octokit = github.getOctokit(token);
+  if (requirePublishSourceLock) {
+    const sourceLockReport = validateRequiredPublishSourceLock({
+      sha,
+      publishSourceRef,
+      publishSourceSha,
+      publishSourceLocked,
+    });
+    core.info(`anchored publish source-lock validation ok: ${sourceLockReport.summary.publishSource.sourceRef}`);
+  }
   if (dryRun) {
     console.log(formatReleaseLineDryRun(explainReleaseLineDryRun({
       targetRef,
@@ -104,7 +148,9 @@ async function main() {
   );
 }
 
-main().catch((error) => {
-  console.error(error);
-  core.setFailed(error.message);
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((error) => {
+    console.error(error);
+    core.setFailed(error.message);
+  });
+}

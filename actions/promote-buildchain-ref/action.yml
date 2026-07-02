@@ -62,6 +62,18 @@ inputs:
   publish-package-main:
     description: "Main npm package name for package-set visibility gating"
     default: ""
+  require-publish-source-lock:
+    description: "Require publish side effects to come from a resolved publish-gate source lock"
+    default: "false"
+  publish-source-ref:
+    description: "Resolved publish-gate source ref from the reusable build workflow"
+    default: ""
+  publish-source-sha:
+    description: "Resolved publish-gate source SHA from the reusable build workflow"
+    default: ""
+  publish-source-locked:
+    description: "Whether the reusable build workflow locked the publish source ref"
+    default: ""
   release-material-sha:
     description: "Material SHA that published artifacts must prove. Defaults to the generated release SHA."
     default: ""

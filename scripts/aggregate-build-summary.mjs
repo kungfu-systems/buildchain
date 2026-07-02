@@ -50,10 +50,29 @@ export function aggregateBuildSummaryCli() {
     platformCount: manifests.length,
     fileCount: manifests.reduce((sum, manifest) => sum + Number(manifest.summary?.fileCount || 0), 0),
     totalBytes: manifests.reduce((sum, manifest) => sum + Number(manifest.summary?.totalBytes || 0), 0),
+    observability: {
+      lifecycle: {
+        stages: manifests.reduce((acc, manifest) => {
+          for (const [stage, value] of Object.entries(manifest.observability?.lifecycle?.stages || {})) {
+            acc[stage] = acc[stage] || { durationMs: 0, eventCount: 0 };
+            acc[stage].durationMs += Number(value.durationMs || 0);
+            acc[stage].eventCount += Number(value.eventCount || 0);
+          }
+          return acc;
+        }, {}),
+        topSlowSpans: manifests
+          .flatMap((manifest) => manifest.observability?.lifecycle?.topSlowSpans || [])
+          .sort((left, right) => Number(right.durationMs || 0) - Number(left.durationMs || 0))
+          .slice(0, 10),
+        warningCount: manifests.reduce((sum, manifest) => sum + Number(manifest.observability?.lifecycle?.warningCount || 0), 0),
+        errorCount: manifests.reduce((sum, manifest) => sum + Number(manifest.observability?.lifecycle?.errorCount || 0), 0),
+      },
+    },
     platforms: manifests.map((manifest, index) => ({
       artifactName: manifest.artifactName,
       platform: manifest.platform,
       summary: manifest.summary,
+      observability: manifest.observability,
       expectedArtifacts: manifest.expectedArtifacts,
       manifestPath: manifestFiles[index],
     })),

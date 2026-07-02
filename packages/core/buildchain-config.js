@@ -13,6 +13,7 @@ const SUPPORTED_PROJECT_TYPES = new Set(["package", "web-surface"]);
 const SUPPORTED_PUBLISH_MODES = new Set(["publish-final-version", "promote-existing-version"]);
 const SUPPORTED_PUBLISH_AUTH = new Set(["trusted-publishing", "npm-token"]);
 const SUPPORTED_PACKAGE_SET_ORDER = new Set(["as-provided", "platforms-first-main-last"]);
+const SUPPORTED_NATIVE_COMPILER_CACHE = new Set(["auto", "ccache", "sccache", "none"]);
 const WEB_SURFACE_CHANNELS = ["preview", "staging", "production"];
 const SUPPORTED_CHANNEL_VISIBILITY = new Set(["ephemeral", "protected", "public", "internal"]);
 const SUPPORTED_ACCESS_CONTROL = new Set(["none", "managed-network", "edge-basic-auth", "oidc", "app-auth"]);
@@ -125,8 +126,49 @@ export function normalizeBuildchainConfig(config) {
   if (normalized.security !== undefined) {
     normalized.security = normalizeSecuritySection(normalized.security);
   }
+  if (normalized.diagnostics !== undefined) {
+    normalized.diagnostics = normalizeDiagnosticsSection(normalized.diagnostics);
+  }
   validateWebSurfaceConfig(normalized);
   return normalized;
+}
+
+function normalizeDiagnosticsSection(diagnostics) {
+  assertPlainObject(diagnostics, "diagnostics");
+  const normalized = { ...diagnostics };
+  if (diagnostics.native !== undefined) {
+    normalized.native = normalizeNativeDiagnosticsProfile(diagnostics.native);
+  }
+  return normalized;
+}
+
+function normalizeNativeDiagnosticsProfile(native) {
+  assertPlainObject(native, "diagnostics.native");
+  const compilerCache = native.compiler_cache === undefined
+    ? "auto"
+    : assertString(native.compiler_cache, "diagnostics.native.compiler_cache");
+  if (!SUPPORTED_NATIVE_COMPILER_CACHE.has(compilerCache)) {
+    throw new Error("diagnostics.native.compiler_cache must be one of auto, ccache, sccache, or none");
+  }
+  return {
+    enabled: optionalBoolean(native.enabled, false),
+    sampleProcessTree: optionalBoolean(native.sample_process_tree, false),
+    compilerCache,
+    expectedTools: normalizeStringArray(native.expected_tools, "diagnostics.native.expected_tools"),
+    artifactDirs: normalizeStringArray(native.artifact_dirs, "diagnostics.native.artifact_dirs").map(posixPath),
+    cacheDirs: normalizeStringArray(native.cache_dirs, "diagnostics.native.cache_dirs").map(posixPath),
+  };
+}
+
+export function getNativeDiagnosticsProfile(loadedConfig) {
+  return loadedConfig?.config?.diagnostics?.native || {
+    enabled: false,
+    sampleProcessTree: false,
+    compilerCache: "auto",
+    expectedTools: [],
+    artifactDirs: [],
+    cacheDirs: [],
+  };
 }
 
 function normalizePublishSection(publish) {
