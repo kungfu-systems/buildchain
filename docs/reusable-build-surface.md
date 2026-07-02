@@ -121,6 +121,7 @@ The reusable workflow exposes the resolved contract:
 | `linux-container-enabled`         | `true` when Linux platforms are routed through a job container                  |
 | `linux-container-image`           | Resolved digest-pinned Linux job container image                                |
 | `build-summary-artifact`          | Uploaded aggregate summary artifact name                                        |
+| `build-diagnostics-summary-artifact` | Uploaded aggregate diagnostics summary artifact name                         |
 | `build-summary-json`              | Compact aggregate JSON with platform count, file count, and byte total          |
 | `build-diagnostics-summary-json`  | Compact aggregate diagnostics JSON with platform count and warning/error totals  |
 | `trusted-event`                   | `true` when the event is trusted enough to reach build runners                  |
@@ -135,14 +136,15 @@ The reusable workflow exposes the resolved contract:
 | `publish-source-consumer-version` | Consumer package version parsed from source refs                                |
 | `release-manifest-json`           | Resolved release manifest including source lock, version state, and anchor data |
 
-The aggregate summary is intentionally an artifact as well as an output. GitHub
+The aggregate summaries are intentionally artifacts as well as outputs. GitHub
 Actions matrix outputs are not a reliable place to carry every platform's full
 manifest, so Buildchain uploads each platform manifest and then emits one
-aggregate summary artifact after the matrix completes. The same artifact also
-contains `diagnostics-summary.json`, a compact rollup of each platform's small
-diagnostics upload. Each platform diagnostics upload includes `diagnostics.json`,
-the lifecycle `events.jsonl`, and process sampler sidecars when enabled, so
-slow-build diagnosis does not require downloading the binary platform artifact.
+aggregate build summary artifact after the matrix completes. Buildchain uploads
+`diagnostics-summary.json` as a separate aggregate diagnostics summary artifact,
+a compact rollup of each platform's small diagnostics upload. Each platform
+diagnostics upload includes `diagnostics.json`, the lifecycle `events.jsonl`,
+and process sampler sidecars when enabled, so slow-build diagnosis does not
+require downloading the binary platform artifact or the aggregate build summary.
 
 ## Publish Gate
 
