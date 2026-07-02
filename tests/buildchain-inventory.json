@@ -99,6 +99,29 @@
       "manualDryRunPublishes": false,
       "alphaDistTag": "alpha",
       "stableDistTag": "latest"
+    },
+    "releasePassport": {
+      "line": "v2.2",
+      "protocolArtifacts": [
+        "product-mechanism.json",
+        "buildchain.release.json",
+        "artifact-evidence.json",
+        "impact.json",
+        "agent-index.json",
+        "llms.txt"
+      ],
+      "cli": [
+        "collect github-release",
+        "verify release-passport",
+        "explain release --passport",
+        "inspect release --passport"
+      ],
+      "binaryDistribution": {
+        "workflow": "binary-distribution.yml",
+        "productionRunnerDefault": "github-hosted",
+        "selfHostedRole": "compatibility-fixture",
+        "heavyPackageManagersDeferred": true
+      }
     }
   }
 }

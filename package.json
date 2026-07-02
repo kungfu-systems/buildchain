@@ -14,6 +14,7 @@
     ".": "./packages/core/index.js",
     "./core": "./packages/core/index.js",
     "./logging": "./packages/core/logging.js",
+    "./release-passport": "./packages/core/release-passport.js",
     "./package.json": "./package.json"
   },
   "files": [
@@ -31,9 +32,11 @@
     "docs/migration-inventory.md",
     "docs/ownership.md",
     "docs/publish-transaction.md",
+    "docs/release-passport.md",
     "docs/release-flow.md",
     "docs/release-governance.md",
     "docs/reusable-build-surface.md",
+    "docs/versioning.md",
     "docs/web-surface-deployments.md",
     "actions/*/README.md",
     "fixtures/*/README.md"

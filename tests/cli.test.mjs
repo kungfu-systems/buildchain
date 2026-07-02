@@ -346,6 +346,113 @@ test("transaction inspect is available as a top-level read/recovery helper", () 
   assert.match(result.durableBoundary, /remote durable refs/);
 });
 
+test("release passport collect verify and explain form an agent-readable contract", () => {
+  const cwd = tempDir("release-passport");
+  const assetsDir = path.join(cwd, "dist");
+  fs.mkdirSync(assetsDir, { recursive: true });
+  fs.writeFileSync(path.join(assetsDir, "buildchain-x86_64-unknown-linux-gnu.tar.gz"), "linux-binary\n");
+  fs.writeFileSync(path.join(assetsDir, "checksums.txt"), "placeholder\n");
+  fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({
+    name: "@kungfu-tech/buildchain",
+    version: "2.2.0-alpha.0",
+  }, null, 2));
+
+  const collected = JSON.parse(runBuildchain([
+    "collect",
+    "github-release",
+    "--cwd",
+    cwd,
+    "--tag",
+    "v2.2.0-alpha.0",
+    "--repository",
+    "kungfu-systems/buildchain",
+    "--source-sha",
+    "e".repeat(40),
+    "--assets-dir",
+    assetsDir,
+    "--output-dir",
+    "release-passport",
+    "--json",
+  ], { cwd }));
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+
+  assert.equal(passport.contract, "kungfu-buildchain-release-passport");
+  assert.equal(passport.runnerPolicy.productionDefault, "github-hosted");
+  assert.equal(passport.runnerPolicy.compatibilityFixture, "self-hosted");
+  assert.equal(passport.artifacts.length, 2);
+
+  const report = JSON.parse(runBuildchain(["verify", "release-passport", passportPath, "--json"], { cwd }));
+  assert.equal(report.contract, "kungfu-buildchain-release-check-report");
+  assert.equal(report.ok, true);
+  assert.equal(report.completeness.artifactCount, 2);
+
+  const explanation = JSON.parse(runBuildchain([
+    "explain",
+    "release",
+    "--passport",
+    passportPath,
+    "--for",
+    "agent",
+    "--json",
+  ], { cwd }));
+  assert.equal(explanation.audience, "agent");
+  assert.equal(explanation.trust, "pass");
+  assert.equal(explanation.nextAction, "install-or-upgrade-after-policy-review");
+});
+
+test("release passport verification fails closed on missing artifact evidence", () => {
+  const cwd = tempDir("release-passport-fail");
+  const passportPath = path.join(cwd, "buildchain.release.json");
+  fs.writeFileSync(passportPath, JSON.stringify({
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-release-passport",
+    product: {
+      name: "Buildchain",
+      repository: "kungfu-systems/buildchain",
+      mechanism: "product-mechanism.json",
+    },
+    release: {
+      tag: "v2.2.0",
+      sourceSha: "f".repeat(40),
+    },
+    runnerPolicy: {
+      productionDefault: "github-hosted",
+    },
+    artifacts: [
+      {
+        name: "buildchain-x86_64-unknown-linux-gnu.tar.gz",
+        platform: "linux-x64",
+        sha256: "0".repeat(64),
+        evidence: "artifact-evidence.json",
+      },
+    ],
+    evidence: {
+      artifactEvidence: "artifact-evidence.json",
+      impact: "impact.json",
+      agentIndex: "agent-index.json",
+    },
+  }, null, 2));
+  for (const [fileName, contract] of [
+    ["artifact-evidence.json", "kungfu-buildchain-artifact-evidence"],
+    ["impact.json", "kungfu-buildchain-impact"],
+    ["agent-index.json", "kungfu-buildchain-agent-index"],
+    ["product-mechanism.json", "kungfu-buildchain-product-mechanism"],
+  ]) {
+    fs.writeFileSync(path.join(cwd, fileName), JSON.stringify({
+      schemaVersion: 1,
+      contract,
+      artifacts: [],
+    }, null, 2));
+  }
+  const failure = runBuildchainFailure(["verify", "release-passport", passportPath, "--json"], { cwd });
+
+  assert.equal(failure.status, 1);
+  const report = JSON.parse(failure.stdout);
+  assert.equal(report.ok, false);
+  assert.match(JSON.stringify(report.issues), /artifact\.evidence\.missing/);
+});
+
 test("release dry-run rejects unsupported tag syntax", () => {
   const failure = runBuildchainFailure([
     "release",
