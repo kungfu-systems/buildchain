@@ -86,6 +86,7 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /build-diagnostics-summary-artifact:/);
   assert.match(workflow, /diagnostics-summary-artifact-name:/);
   assert.match(workflow, /build-diagnostics-summary-json:/);
+  assert.match(workflow, /sidecar manifest warning totals/);
   assert.match(workflow, /downloaded-diagnostics/);
   assert.match(workflow, /aggregate-diagnostics-summary\.mjs/);
   assert.match(workflow, /diagnostics-summary\.json/);
@@ -1159,6 +1160,14 @@ test("aggregate diagnostics summary reads uploaded platform diagnostics", () => 
     const outputs = fs.readFileSync(process.env.GITHUB_OUTPUT, "utf8");
     assert.match(outputs, /diagnostics-summary-path=/);
     assert.match(outputs, /diagnostics-summary-json=/);
+    const diagnosticsSummaryOutput = outputs
+      .split(/\r?\n/)
+      .find((line) => line.startsWith("diagnostics-summary-json="));
+    assert.ok(diagnosticsSummaryOutput);
+    const diagnosticsSummaryJson = JSON.parse(
+      diagnosticsSummaryOutput.slice("diagnostics-summary-json=".length),
+    );
+    assert.equal(diagnosticsSummaryJson.diagnosticsManifestWarningCount, 0);
   } finally {
     process.env = originalEnv;
     fs.rmSync(workspace, { recursive: true, force: true });

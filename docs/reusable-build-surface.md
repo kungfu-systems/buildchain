@@ -123,7 +123,7 @@ The reusable workflow exposes the resolved contract:
 | `build-summary-artifact`          | Uploaded aggregate summary artifact name                                        |
 | `build-diagnostics-summary-artifact` | Uploaded aggregate diagnostics summary artifact name                         |
 | `build-summary-json`              | Compact aggregate JSON with platform count, file count, and byte total          |
-| `build-diagnostics-summary-json`  | Compact aggregate diagnostics JSON with platform count and warning/error totals  |
+| `build-diagnostics-summary-json`  | Compact aggregate diagnostics JSON with platform, lifecycle warning/error, and diagnostics sidecar manifest warning totals |
 | `trusted-event`                   | `true` when the event is trusted enough to reach build runners                  |
 | `publish-channel`                 | Resolved publish channel requested by the caller                                |
 | `publish-allowed`                 | `true` only when this event/ref may publish after verification                  |
@@ -154,6 +154,10 @@ records the uploaded diagnostics files with bytes and sha256 hashes. Each
 artifact name, diagnostics artifact name, diagnostics sidecar manifest path, and
 platform id in `links`, so a reviewer can navigate from the small diagnostics
 artifact back to the exact platform outputs when deeper inspection is needed.
+The workflow output `build-diagnostics-summary-json` includes
+`diagnosticsManifestWarningCount` so release jobs can detect missing or drifting
+diagnostics sidecar manifests without downloading the per-platform diagnostics
+artifacts first.
 
 ## Publish Gate
 
