@@ -3043,8 +3043,11 @@ async function promoteBuildchainRefs({
       currentAlphaAcceptedExactShas.includes(currentAlphaTagSha);
     const currentAlphaHasFinalizationRefs =
       currentAlpha && Boolean(currentAlphaTagSha || currentAlphaFloatingSha || currentAlphaDevSha);
-    const currentAlphaContainsTransaction =
+    const currentAlphaTransactionOpen =
       currentAlphaTransaction &&
+      !["complete", "abandoned", "failed_permanently"].includes(currentAlphaTransaction.state);
+    const currentAlphaContainsTransaction =
+      currentAlphaTransactionOpen &&
       (
         await releaseCommitIncludesTransactionHead({
           octokit,
@@ -3063,13 +3066,13 @@ async function promoteBuildchainRefs({
       );
     let selectedAlpha = explicitAlphaTags[0]
       ? { tag: explicitAlphaTags[0] }
-      : currentAlphaTransaction && (currentAlphaHasFinalizationRefs || currentAlphaContainsTransaction) && !currentAlphaSettled
+      : currentAlphaTransactionOpen && (currentAlphaHasFinalizationRefs || currentAlphaContainsTransaction) && !currentAlphaSettled
         ? currentAlpha
       : currentAlpha && currentAlphaHasFinalizationRefs && !currentAlphaTagSha
         ? currentAlpha
       : resumableAlpha
         ? resumableAlpha
-      : currentAlphaTransaction && currentAlpha && !currentAlphaTagSha
+      : currentAlphaTransactionOpen && currentAlpha && !currentAlphaTagSha
         ? currentAlpha
       : selectAlphaTag({
           refs: lineRefs,
