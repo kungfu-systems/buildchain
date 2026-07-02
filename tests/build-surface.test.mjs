@@ -70,6 +70,14 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /resolve-publish-gate\.mjs/);
   assert.match(workflow, /resolve-publish-source\.mjs --mode lock/);
   assert.match(workflow, /resolve-publish-source\.mjs --mode manifest/);
+  assert.equal(
+    (workflow.match(/Install Buildchain runtime dependencies/g) || []).length,
+    4,
+  );
+  assert.equal(
+    (workflow.match(/pnpm@11\.7\.0 install --dir \.buildchain\/runtime --prod --frozen-lockfile --ignore-scripts/g) || []).length,
+    4,
+  );
   assert.match(workflow, /install-command:/);
   assert.match(workflow, /build-command:/);
   assert.match(workflow, /verify-command:/);

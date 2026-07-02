@@ -393,6 +393,9 @@ jobs:
           path: .buildchain/runtime
           persist-credentials: false
 
+      - name: Install Buildchain runtime dependencies
+        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+
       - name: Resolve artifact contract
         id: artifact-contract
         run: node .buildchain/runtime/scripts/resolve-build-contract.mjs --mode artifact
@@ -551,6 +554,9 @@ jobs:
         env:
           BUILDCHAIN_NODE_VERSION: ${{ inputs.node-version }}
 
+      - name: Install Buildchain runtime dependencies
+        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+
       - name: Resolve artifact contract
         id: artifact-contract
         run: node .buildchain/runtime/scripts/resolve-build-contract.mjs --mode artifact
@@ -685,6 +691,9 @@ jobs:
           ref: ${{ inputs.buildchain-ref }}
           path: .buildchain/runtime
           persist-credentials: false
+
+      - name: Install Buildchain runtime dependencies
+        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
 
       - name: Resolve summary artifact name
         id: names
