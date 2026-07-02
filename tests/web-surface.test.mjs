@@ -191,7 +191,15 @@ test("web-surface deploy apply honors explicit bucket-root prefix", () => {
     });
 
     assert.equal(result.objectPrefix, "");
-    assert.equal(calls[0].args[3], "s3://kungfu-tech-staging");
+    assert.deepEqual(calls[0].args, [
+      "s3",
+      "sync",
+      path.join(fixture, "dist"),
+      "s3://kungfu-tech-staging",
+      "--delete",
+      "--exclude",
+      ".buildchain/*",
+    ]);
     assert.deepEqual(calls[2].args.slice(-2), ["/*", "/.buildchain/deployments/staging.json"]);
   });
 });

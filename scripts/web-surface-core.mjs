@@ -156,6 +156,14 @@ function cdnWildcardPath(value) {
   return normalized ? `/${normalized}/*` : "/*";
 }
 
+function syncStaticArtifactArgs({ artifactRoot, bucket, objectPrefix }) {
+  const args = ["s3", "sync", artifactRoot, s3Uri(bucket, objectPrefix), "--delete"];
+  if (!objectPrefix) {
+    args.push("--exclude", ".buildchain/*");
+  }
+  return args;
+}
+
 function defaultCommandRunner({ command, args, stdin = "" }) {
   const result = spawnSync(command, args, {
     encoding: "utf8",
@@ -534,7 +542,7 @@ export function applyWebSurfaceDeploy({
     {
       action: "sync-static-artifact",
       command: "aws",
-      args: ["s3", "sync", artifactRoot, s3Uri(bucket, objectPrefix), "--delete"],
+      args: syncStaticArtifactArgs({ artifactRoot, bucket, objectPrefix }),
     },
     {
       action: "write-deployment-manifest",
