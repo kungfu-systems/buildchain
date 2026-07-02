@@ -121,6 +121,7 @@ The reusable workflow exposes the resolved contract:
 | `linux-container-image`           | Resolved digest-pinned Linux job container image                                |
 | `build-summary-artifact`          | Uploaded aggregate summary artifact name                                        |
 | `build-summary-json`              | Compact aggregate JSON with platform count, file count, and byte total          |
+| `build-diagnostics-summary-json`  | Compact aggregate diagnostics JSON with platform count and warning/error totals  |
 | `trusted-event`                   | `true` when the event is trusted enough to reach build runners                  |
 | `publish-channel`                 | Resolved publish channel requested by the caller                                |
 | `publish-allowed`                 | `true` only when this event/ref may publish after verification                  |
@@ -136,7 +137,10 @@ The reusable workflow exposes the resolved contract:
 The aggregate summary is intentionally an artifact as well as an output. GitHub
 Actions matrix outputs are not a reliable place to carry every platform's full
 manifest, so Buildchain uploads each platform manifest and then emits one
-aggregate summary artifact after the matrix completes.
+aggregate summary artifact after the matrix completes. The same artifact also
+contains `diagnostics-summary.json`, a compact rollup of each platform's small
+`diagnostics.json` file with lifecycle timings, artifact scan/upload timings,
+warning/error totals, and the slowest platform list.
 
 ## Publish Gate
 

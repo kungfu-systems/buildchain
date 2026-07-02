@@ -18,6 +18,7 @@ import {
   verifyPublishSourceLock,
 } from "../scripts/build-contract-core.mjs";
 import { aggregateBuildSummaryCli } from "../scripts/aggregate-build-summary.mjs";
+import { aggregateDiagnosticsSummaryCli } from "../scripts/aggregate-diagnostics-summary.mjs";
 import {
   currentGitHubRefSha,
   resolvePublishSourceRefSha,
@@ -73,6 +74,10 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /diagnostics\.json/);
   assert.match(workflow, /-diagnostics-\$\{\{ matrix\.platform\.id \}\}-/);
   assert.match(workflow, /build-summary-artifact:/);
+  assert.match(workflow, /build-diagnostics-summary-json:/);
+  assert.match(workflow, /downloaded-diagnostics/);
+  assert.match(workflow, /aggregate-diagnostics-summary\.mjs/);
+  assert.match(workflow, /diagnostics-summary\.json/);
   assert.match(workflow, /publish-allowed:/);
   assert.match(workflow, /publish-reason:/);
   assert.match(workflow, /publish-source-sha:/);
@@ -813,6 +818,65 @@ test("aggregate build summary reads uploaded platform manifests", () => {
     assert.equal(summary.platforms[0].artifactName, "libnode-linux-x64-sha");
     assert.ok(summary.platforms[0].observability.lifecycle.stages.build);
     assert.equal(summary.platforms[0].expectedArtifacts.ok, true);
+  } finally {
+    process.env = originalEnv;
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("aggregate diagnostics summary reads uploaded platform diagnostics", () => {
+  const workspace = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-diagnostics-summary-"),
+  );
+  const fixtureSource = path.join(root, "fixtures/libnode-shaped");
+  const fixture = path.join(workspace, "fixtures/libnode-shaped");
+  fs.cpSync(fixtureSource, fixture, { recursive: true });
+
+  const originalEnv = { ...process.env };
+  try {
+    runLifecycle({
+      cwd: fixture,
+      stageName: "install",
+      required: true,
+      workspace,
+    });
+    runLifecycle({
+      cwd: fixture,
+      stageName: "build",
+      required: true,
+      workspace,
+      artifactPaths: ["fixtures/libnode-shaped/dist"],
+      manifestPath:
+        ".buildchain/uploaded/libnode-diagnostics-linux-x64-sha/manifest.json",
+      summaryPath:
+        ".buildchain/uploaded/libnode-diagnostics-linux-x64-sha/summary.json",
+      diagnosticsPath:
+        ".buildchain/uploaded/libnode-diagnostics-linux-x64-sha/diagnostics.json",
+      artifactName: "libnode-linux-x64-sha",
+      platformId: "linux-x64",
+      platformName: "Linux x64",
+    });
+
+    process.env.BUILDCHAIN_DIAGNOSTICS_INPUT = path.join(
+      workspace,
+      ".buildchain/uploaded",
+    );
+    process.env.BUILDCHAIN_DIAGNOSTICS_OUTPUT = path.join(
+      workspace,
+      ".buildchain/artifacts/diagnostics-summary.json",
+    );
+    process.env.BUILDCHAIN_PLATFORM_COUNT = "1";
+    process.env.GITHUB_OUTPUT = path.join(workspace, "github-output.txt");
+    const summary = aggregateDiagnosticsSummaryCli();
+
+    assert.equal(summary.contract, "kungfu-buildchain-diagnostics-summary");
+    assert.equal(summary.count, 1);
+    assert.equal(summary.platforms[0].fileCount, 2);
+    assert.ok(summary.platforms[0].lifecycle.build);
+    assert.ok(fs.existsSync(process.env.BUILDCHAIN_DIAGNOSTICS_OUTPUT));
+    const outputs = fs.readFileSync(process.env.GITHUB_OUTPUT, "utf8");
+    assert.match(outputs, /diagnostics-summary-path=/);
+    assert.match(outputs, /diagnostics-summary-json=/);
   } finally {
     process.env = originalEnv;
     fs.rmSync(workspace, { recursive: true, force: true });
