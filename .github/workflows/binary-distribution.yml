@@ -1,0 +1,192 @@
+name: Binary Distribution
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+      - "v*.*.*-alpha.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to model when manually testing the binary distribution lane"
+        required: true
+        default: "v2.2.0-alpha.0"
+      upload-release:
+        description: "Upload assets to a GitHub Release. Only true tag runs should use this."
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  binary:
+    name: Build ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+    env:
+      BUILDCHAIN_LOG_PATH: .buildchain/logs/events-${{ matrix.platform }}.jsonl
+      BUILDCHAIN_LOG_RUN_ID: binary-${{ github.run_id }}-${{ matrix.platform }}
+      BUILDCHAIN_PLATFORM: ${{ matrix.platform }}
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux-x64
+            os: ubuntu-24.04
+          - platform: darwin-arm64
+            os: macos-latest
+          - platform: windows-x64
+            os: windows-2022
+    steps:
+      - uses: actions/checkout@v7.0.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "24"
+
+      - name: Enable pnpm
+        run: |
+          corepack enable pnpm
+          pnpm --version
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Mark binary matrix start
+        run: >-
+          node bin/buildchain.mjs mark
+          --event binary.matrix.start
+          --phase setup
+          --component workflow
+          --source buildchain
+          --attribute platform=${{ matrix.platform }}
+          --attribute runner=${{ matrix.os }}
+
+      - name: Build standalone binary archive
+        run: >-
+          node bin/buildchain.mjs span
+          --event binary.standalone-build
+          --phase binary
+          --component workflow
+          --source buildchain
+          --attribute platform=${{ matrix.platform }}
+          --
+          node scripts/build-standalone-binary.mjs
+          --version "${{ env.RELEASE_TAG }}"
+          --output-dir dist/binary
+
+      - name: Summarize binary observability
+        shell: bash
+        run: |
+          node bin/buildchain.mjs mark --event binary.matrix.complete --phase evidence --component workflow --source buildchain --attribute platform=${{ matrix.platform }}
+          node bin/buildchain.mjs verify observability-log "${BUILDCHAIN_LOG_PATH}" --min-events 8 --require-phase setup --require-phase binary --require-phase prepare --require-phase package --require-phase archive --require-phase evidence --require-component workflow --require-component standalone-binary --require-event binary.matrix.start --require-event binary.matrix.complete --require-event standalone.build.complete
+          node bin/buildchain.mjs log summary --path "${BUILDCHAIN_LOG_PATH}" --json > "dist/binary/buildchain-log-summary-${BUILDCHAIN_PLATFORM}.json"
+          node -e "import fs from 'node:fs'; fs.copyFileSync(process.env.BUILDCHAIN_LOG_PATH, 'dist/binary/buildchain-log-events-' + process.env.BUILDCHAIN_PLATFORM + '.jsonl');"
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v6.0.0
+        with:
+          name: buildchain-binary-${{ matrix.platform }}
+          path: dist/binary/*
+          if-no-files-found: error
+
+  passport:
+    name: Collect release passport
+    needs: [binary]
+    runs-on: ubuntu-24.04
+    env:
+      BUILDCHAIN_LOG_PATH: .buildchain/logs/passport.jsonl
+      BUILDCHAIN_LOG_RUN_ID: passport-${{ github.run_id }}
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v7.0.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "24"
+
+      - name: Enable pnpm
+        run: |
+          corepack enable pnpm
+          pnpm --version
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download binary artifacts
+        uses: actions/download-artifact@v6.0.0
+        with:
+          pattern: buildchain-binary-*
+          path: dist/binary
+          merge-multiple: true
+
+      - name: Write checksums
+        shell: bash
+        run: >-
+          node bin/buildchain.mjs span
+          --event release-passport.checksums
+          --phase passport
+          --component workflow
+          --source buildchain
+          --
+          bash -lc 'cd dist/binary && sha256sum ./* > checksums.txt'
+
+      - name: Collect release passport
+        env:
+          BUILDCHAIN_RUNNER_KIND: github-hosted
+        run: >-
+          node bin/buildchain.mjs span
+          --event release-passport.collect
+          --phase passport
+          --component workflow
+          --source buildchain
+          --
+          node bin/buildchain.mjs collect github-release
+          --tag "${{ env.RELEASE_TAG }}"
+          --repository "${{ github.repository }}"
+          --source-sha "${{ github.sha }}"
+          --assets-dir dist/binary
+          --output-dir .buildchain/release-passport
+
+      - name: Verify release passport
+        run: >-
+          node bin/buildchain.mjs span
+          --event release-passport.verify
+          --phase passport
+          --component workflow
+          --source buildchain
+          --
+          node bin/buildchain.mjs verify release-passport
+          .buildchain/release-passport/buildchain.release.json
+
+      - name: Summarize passport observability
+        run: |
+          node bin/buildchain.mjs mark --event release-passport.complete --phase evidence --component workflow --source buildchain
+          node bin/buildchain.mjs verify observability-log "${BUILDCHAIN_LOG_PATH}" --min-events 7 --require-phase passport --require-phase evidence --require-component workflow --require-event release-passport.checksums.start --require-event release-passport.checksums.end --require-event release-passport.collect.start --require-event release-passport.collect.end --require-event release-passport.verify.start --require-event release-passport.verify.end --require-event release-passport.complete
+          node bin/buildchain.mjs log summary --path "${BUILDCHAIN_LOG_PATH}" --json > .buildchain/release-passport/buildchain-log-summary-passport.json
+          cp "${BUILDCHAIN_LOG_PATH}" .buildchain/release-passport/buildchain-log-events-passport.jsonl
+
+      - name: Upload release passport artifact
+        uses: actions/upload-artifact@v6.0.0
+        with:
+          name: buildchain-release-passport
+          path: .buildchain/release-passport/*
+          if-no-files-found: error
+
+      - name: Upload GitHub Release assets
+        if: ${{ startsWith(github.ref, 'refs/tags/') || inputs.upload-release }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh release view "$RELEASE_TAG" >/dev/null 2>&1 || \
+            gh release create "$RELEASE_TAG" --verify-tag --title "$RELEASE_TAG" --notes "Buildchain release passport assets for $RELEASE_TAG."
+          gh release upload "$RELEASE_TAG" dist/binary/* .buildchain/release-passport/* --clobber

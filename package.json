@@ -1,6 +1,6 @@
 {
   "name": "@kungfu-tech/buildchain",
-  "version": "2.1.1-alpha.0",
+  "version": "2.2.0-alpha.0",
   "private": false,
   "description": "Kungfu Buildchain reusable workflows, release governance, and CLI tooling.",
   "repository": "https://github.com/kungfu-systems/buildchain",
@@ -14,6 +14,7 @@
     ".": "./packages/core/index.js",
     "./core": "./packages/core/index.js",
     "./logging": "./packages/core/logging.js",
+    "./release-passport": "./packages/core/release-passport.js",
     "./package.json": "./package.json"
   },
   "files": [
@@ -31,9 +32,11 @@
     "docs/migration-inventory.md",
     "docs/ownership.md",
     "docs/publish-transaction.md",
+    "docs/release-passport.md",
     "docs/release-flow.md",
     "docs/release-governance.md",
     "docs/reusable-build-surface.md",
+    "docs/versioning.md",
     "docs/web-surface-deployments.md",
     "actions/*/README.md",
     "fixtures/*/README.md"

@@ -50,4 +50,25 @@ export {
   readBuildchainLogEvents,
   redactBuildchainLogAttributes,
   summarizeBuildchainLogEvents,
+  verifyBuildchainLogEvents,
 } from "./logging.js";
+
+export {
+  AGENT_INDEX_CONTRACT,
+  ARTIFACT_EVIDENCE_CONTRACT,
+  IMPACT_LEDGER_CONTRACT,
+  PRODUCT_MECHANISM_CONTRACT,
+  RELEASE_CHECK_REPORT_CONTRACT,
+  RELEASE_PASSPORT_CONTRACT,
+  collectGitHubReleasePassport,
+  createArtifactEvidence,
+  createReleaseCheckReport,
+  createReleasePassport,
+  explainReleasePassport,
+  makeReleasePassportFixtureAssets,
+  readJsonFromLocation,
+  sha256File,
+  sha256Text,
+  validateKnownReleasePassportContracts,
+  verifyReleasePassport,
+} from "./release-passport.js";

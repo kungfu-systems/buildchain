@@ -51,6 +51,11 @@ future minor refs can each receive many patch releases such as `v2.0.1234`.
 `v2` points at the selected stable major line, while `v2.0` points at the
 latest production patch for that minor line.
 
+Buildchain opens a new minor line when it adds a new compatible welded surface:
+a reusable workflow contract, public CLI command family, published package
+subpath, evidence protocol, or installable binary distribution shape. The local
+decision log lives in [`docs/versioning.md`](docs/versioning.md).
+
 `publish-gate/major` replaces the old ABV `main` channel. It is deliberately
 not named `main` because it is not the active development trunk. Maintainers use
 the same PR flow as other channel promotions: merging
@@ -111,6 +116,9 @@ Buildchain v2 ships these active surfaces:
 - `actions/run-lifecycle` for callers that need the same lifecycle/manifest
   contract inside their own workflows;
 - governance-closed self-promotion through `Buildchain Ref Promotion`.
+- `v2.2` release passport and binary distribution contracts for GitHub Release
+  assets, artifact evidence, impact ledgers, agent indexes, and standalone CLI
+  archives.
 
 Stable consumers should reference actions as:
 

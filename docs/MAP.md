@@ -21,11 +21,13 @@ running artifact), *use* (consume / extend) - and a **status**:
 | How do I install or run the `buildchain` CLI? | [`cli.md`](cli.md) | use | stable |
 | How do I initialize a new repository? | [`cli.md`](cli.md) + [`lifecycle-protocol.md`](lifecycle-protocol.md) | use | stable |
 | Why does Buildchain use branch-driven release governance? | [`release-governance.md`](release-governance.md) | why | stable |
+| How does Buildchain decide patch, minor, and major release lines? | [`versioning.md`](versioning.md) | why | stable |
 | What exact branch/tag state machine runs on alpha, release, and major gate? | [`release-flow.md`](release-flow.md) | verify | stable |
 | What did Buildchain migrate or retire from old action repositories? | [`migration-inventory.md`](migration-inventory.md) | verify | stable |
 | What is the active action and workflow source of truth? | [`ownership.md`](ownership.md) | verify | stable |
 | How do I declare version files and custom lifecycle commands? | [`lifecycle-protocol.md`](lifecycle-protocol.md) | use | stable |
 | How does publish evidence, recovery, and finalization work? | [`publish-transaction.md`](publish-transaction.md) | verify | stable |
+| How do I publish or verify binary release passport artifacts? | [`release-passport.md`](release-passport.md) | use | stable |
 | How do I call the reusable build workflow? | [`reusable-build-surface.md`](reusable-build-surface.md) | use | stable |
 | How do I deploy a site/app preview, staging, or production surface? | [`web-surface-deployments.md`](web-surface-deployments.md) | use | stable |
 | How do I use the active actions directly? | [`../actions/validate-config/README.md`](../actions/validate-config/README.md), [`../actions/run-lifecycle/README.md`](../actions/run-lifecycle/README.md), [`../actions/promote-buildchain-ref/README.md`](../actions/promote-buildchain-ref/README.md) | use | stable |
@@ -40,6 +42,8 @@ running artifact), *use* (consume / extend) - and a **status**:
 - **v2 / v2.0 / v2.0-alpha / exact tags / floating tags** ->
   [`release-governance.md`](release-governance.md) and
   [`release-flow.md`](release-flow.md).
+- **v2.1 vs v2.2 / when to open a new minor line** ->
+  [`versioning.md`](versioning.md).
 - **dry-run / what would happen if this channel PR merges** -> [`cli.md`](cli.md)
   and [`release-flow.md`](release-flow.md).
 - **pnpm / npm / yarn / package-manager adapters** ->
@@ -51,6 +55,8 @@ running artifact), *use* (consume / extend) - and a **status**:
   [`../fixtures/libnode-shaped/README.md`](../fixtures/libnode-shaped/README.md).
 - **Trusted Publishing / npm / publish evidence / recovery** ->
   [`cli.md`](cli.md) and [`publish-transaction.md`](publish-transaction.md).
+- **GitHub Release passport / binary assets / artifact evidence / agent release checks** ->
+  [`release-passport.md`](release-passport.md) and [`cli.md`](cli.md).
 - **sites / web previews / staging / production gates** ->
   [`web-surface-deployments.md`](web-surface-deployments.md).
 

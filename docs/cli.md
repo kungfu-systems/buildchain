@@ -75,12 +75,16 @@ buildchain mark --event configure.ready --phase configure --attribute target=rel
 buildchain span --event native.build --phase build -- cmake --build build
 buildchain log warn --event cache.miss --component conan --attribute token=hidden
 buildchain log summary --json
+buildchain verify observability-log .buildchain/logs/events.jsonl --min-events 4 --require-phase build
 ```
 
 During `buildchain lifecycle run`, child processes receive
 `BUILDCHAIN_LOG_PATH` and `BUILDCHAIN_LOG_RUN_ID`. A shell, Python, CMake, Conan,
 or JavaScript helper can call `buildchain mark` or `buildchain span` mid-build
 and have those events grouped into the same lifecycle summary.
+`buildchain verify observability-log` is a release gate: it fails when the log
+is missing, has too few events, contains error events, or does not include
+required phases, components, or event names.
 
 The event protocol is JSONL and is also available from the SDK:
 
@@ -110,6 +114,40 @@ and the reusable workflow caller. The JSON result is shaped for future
 and `buildchain build-contract` route to the same scripts used by Buildchain's
 GitHub Actions workflows. This keeps local inspection and CI behavior on the
 same implementation path.
+
+`buildchain collect github-release` creates a release passport bundle from
+GitHub Release assets or a local asset directory:
+
+```bash
+buildchain collect github-release \
+  --tag v2.2.0 \
+  --repository kungfu-systems/buildchain \
+  --assets-dir dist \
+  --output-dir .buildchain/release-passport
+```
+
+The bundle includes `buildchain.release.json`, `artifact-evidence.json`,
+`impact.json`, `agent-index.json`, `product-mechanism.json`, `check-report.json`,
+and `llms.txt`. Production binary distribution defaults to GitHub-hosted
+runners so other projects can reproduce the release lane; self-hosted runners
+remain compatibility fixtures and are recorded as runner facts when used.
+
+Buildchain dogfoods its observability toolkit in this lane. The standalone
+builder writes API-generated events, while the workflow uses `buildchain mark`,
+`buildchain span`, `buildchain verify observability-log`, and `buildchain log
+summary`; the event logs and summaries are published as release passport assets.
+
+Verify and explain release passports:
+
+```bash
+buildchain verify release-passport .buildchain/release-passport/buildchain.release.json
+buildchain explain release --passport .buildchain/release-passport/buildchain.release.json --for agent --json
+buildchain inspect release --passport .buildchain/release-passport/buildchain.release.json
+```
+
+The verifier fails closed when required protocol files are absent, artifacts are
+not covered by evidence, or digests disagree. The explanation output is shaped
+for agents: trust, completeness, impact, recovery route, and next action.
 
 `buildchain release --dry-run` explains the release-line state machine before a
 maintainer opens or merges a channel PR:
