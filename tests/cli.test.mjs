@@ -112,6 +112,22 @@ test("lifecycle run writes deterministic artifact manifest", () => {
 [lifecycle.build]
 command = "node -e \\"require('node:fs').mkdirSync('out',{recursive:true});require('node:fs').writeFileSync('out/result.txt','ok')\\""
 `);
+  const processSummaryPath = path.join(cwd, ".buildchain", "diagnostics", "process-summary.json");
+  fs.mkdirSync(path.dirname(processSummaryPath), { recursive: true });
+  fs.writeFileSync(processSummaryPath, `${JSON.stringify({
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-process-sample-report",
+    summary: {
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-process-sample-summary",
+      requestedParallelism: 6,
+      requestedParallelismSource: "explicit",
+      observedConcurrency: { max: 2, ratioToRequestedMax: 0.333 },
+      sampleCount: 1,
+      categories: { compiler: 1 },
+      topCommands: [{ command: "clang++", count: 1 }],
+    },
+  })}\n`);
   const output = runBuildchain([
     "lifecycle",
     "run",
@@ -124,6 +140,8 @@ command = "node -e \\"require('node:fs').mkdirSync('out',{recursive:true});requi
     "fixture",
     "--log-path",
     ".buildchain/logs/events.jsonl",
+    "--process-summary",
+    ".buildchain/diagnostics/process-summary.json",
   ], { cwd });
   const manifest = JSON.parse(output.slice(output.indexOf("{")));
 
@@ -133,8 +151,13 @@ command = "node -e \\"require('node:fs').mkdirSync('out',{recursive:true});requi
   assert.equal(manifest.observability.log.contract, "kungfu-buildchain-log-event");
   assert.equal(manifest.observability.log.summary.sources.buildchain.count, 4);
   assert.equal(manifest.observability.log.summary.sources.user.count, 2);
+  assert.equal(manifest.observability.process.path, ".buildchain/diagnostics/process-summary.json");
   assert.ok(fs.existsSync(path.join(cwd, ".buildchain", "artifacts", "manifest.json")));
   assert.ok(fs.existsSync(path.join(cwd, ".buildchain", "logs", "events.jsonl")));
+  const diagnostics = JSON.parse(fs.readFileSync(path.join(cwd, ".buildchain", "artifacts", "diagnostics.json"), "utf8"));
+  assert.equal(diagnostics.process.requestedParallelism, 6);
+  assert.equal(diagnostics.process.observedConcurrency.max, 2);
+  assert.equal(diagnostics.links.processSummary, ".buildchain/diagnostics/process-summary.json");
 });
 
 test("CLI logging writes redacted JSONL events and summaries", () => {

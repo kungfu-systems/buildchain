@@ -657,6 +657,18 @@ test("runLifecycle writes deterministic artifact manifest", () => {
     process.env.BUILDCHAIN_SOURCE_SHA = "2".repeat(40);
     process.env.BUILDCHAIN_SOURCE_REF =
       "publish-gate/release/v22/v22.22/22.22.3-kf.0";
+    const processSummaryPath = path.join(workspace, ".buildchain/diagnostics/process-summary.json");
+    fs.mkdirSync(path.dirname(processSummaryPath), { recursive: true });
+    fs.writeFileSync(processSummaryPath, `${JSON.stringify({
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-process-sample-summary",
+      requestedParallelism: 8,
+      requestedParallelismSource: "explicit",
+      observedConcurrency: { max: 3, ratioToRequestedMax: 0.375 },
+      sampleCount: 1,
+      categories: { compiler: 2, "build-tool": 1 },
+      topCommands: [{ command: "clang++", count: 2 }],
+    })}\n`);
     runLifecycle({
       cwd: fixture,
       stageName: "install",
@@ -673,6 +685,7 @@ test("runLifecycle writes deterministic artifact manifest", () => {
       artifactName: "libnode-shaped-linux-x64-abc123",
       platformId: "linux-x64",
       platformName: "Linux x64",
+      processSummaryPath: ".buildchain/diagnostics/process-summary.json",
     });
     const manifest = JSON.parse(
       fs.readFileSync(
@@ -738,6 +751,9 @@ test("runLifecycle writes deterministic artifact manifest", () => {
     assert.equal(diagnostics.native.artifactDirs[1].exists, false);
     assert.equal(diagnostics.native.cacheDirs[0].path, ".ccache");
     assert.equal(diagnostics.native.cacheDirs[0].exists, false);
+    assert.equal(diagnostics.process.requestedParallelism, 8);
+    assert.equal(diagnostics.process.observedConcurrency.max, 3);
+    assert.equal(diagnostics.links.processSummary, ".buildchain/diagnostics/process-summary.json");
   } finally {
     process.env = originalEnv;
     fs.rmSync(workspace, { recursive: true, force: true });
@@ -921,6 +937,18 @@ test("run-lifecycle action accepts hyphenated GitHub Action inputs", () => {
       required: true,
       workspace,
     });
+    const processSummaryPath = path.join(workspace, ".buildchain/diagnostics/action-process-summary.json");
+    fs.mkdirSync(path.dirname(processSummaryPath), { recursive: true });
+    fs.writeFileSync(processSummaryPath, `${JSON.stringify({
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-process-sample-summary",
+      requestedParallelism: 4,
+      requestedParallelismSource: "explicit",
+      observedConcurrency: { max: 2, ratioToRequestedMax: 0.5 },
+      sampleCount: 1,
+      categories: { compiler: 1 },
+      topCommands: [{ command: "clang++", count: 1 }],
+    })}\n`);
     const manifestPath = path.join(
       workspace,
       ".buildchain/artifacts/linux-x64/manifest-action.json",
@@ -947,6 +975,7 @@ test("run-lifecycle action accepts hyphenated GitHub Action inputs", () => {
             ".buildchain/artifacts/linux-x64/summary-action.json",
           "INPUT_EXPECTED-ARTIFACTS-JSON":
             '{"minFiles":2,"requiredPaths":["fixture/dist/install.txt","fixture/dist/libnode-shaped.txt"]}',
+          "INPUT_PROCESS-SUMMARY-PATH": ".buildchain/diagnostics/action-process-summary.json",
         },
         encoding: "utf8",
       },
@@ -963,11 +992,20 @@ test("run-lifecycle action accepts hyphenated GitHub Action inputs", () => {
       ),
     );
     const outputs = fs.readFileSync(outputPath, "utf8");
+    const diagnostics = JSON.parse(
+      fs.readFileSync(
+        path.join(workspace, ".buildchain/artifacts/linux-x64/diagnostics.json"),
+        "utf8",
+      ),
+    );
     assert.equal(manifest.artifactName, "libnode-shaped-linux-x64-test");
     assert.equal(manifest.platform.id, "linux-x64");
     assert.equal(summary.artifactName, "libnode-shaped-linux-x64-test");
     assert.match(outputs, /artifact-summary-json=/);
     assert.match(outputs, /expected-artifacts-ok=true/);
+    assert.equal(diagnostics.process.requestedParallelism, 4);
+    assert.equal(diagnostics.process.observedConcurrency.max, 2);
+    assert.equal(diagnostics.links.processSummary, ".buildchain/diagnostics/action-process-summary.json");
     assert.deepEqual(
       manifest.files.map((file) => file.path),
       ["fixture/dist/install.txt", "fixture/dist/libnode-shaped.txt"],

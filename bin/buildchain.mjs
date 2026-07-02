@@ -45,6 +45,7 @@ function usage() {
                       [--require-lifecycle-stages <comma-list>]
   buildchain lifecycle run <stage> [--cwd <dir>] [--required]
                              [--artifact-name <name>] [--artifact-path <path>]...
+                             [--process-summary <json>]
   buildchain npm dry-run [--cwd <dir>] [--expected-tag <tag>] [--registry <url>]
                          [--dist-tag <tag>] [--skip-npm-publish-dry-run] [--json]
   buildchain release --dry-run --target-ref <ref> [--sha <sha>] [--source-ref <ref>]
@@ -538,6 +539,7 @@ async function main(argv = process.argv.slice(2)) {
       artifactPaths,
       expectedArtifactsJson: readFlag(lifecycleArgs, "expected-artifacts-json", ""),
       logPath: readFlag(lifecycleArgs, "log-path", process.env.BUILDCHAIN_LOG_PATH || ".buildchain/logs/events.jsonl"),
+      processSummaryPath: readFlag(lifecycleArgs, "process-summary", ""),
       workspace: process.cwd(),
     });
     printJson(manifest);

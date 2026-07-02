@@ -47,6 +47,10 @@ inputs:
     description: "JSON expectation contract for final artifact files"
     required: false
     default: ""
+  process-summary-path:
+    description: "Optional process sampler summary JSON to embed in diagnostics"
+    required: false
+    default: ""
 outputs:
   manifest-path:
     description: "Path to the generated artifact manifest"

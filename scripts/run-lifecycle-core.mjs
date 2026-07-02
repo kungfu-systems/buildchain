@@ -76,6 +76,28 @@ function collectArtifactFiles(root, patterns) {
   return [...files].sort();
 }
 
+function readProcessSummaryArtifact(filePath) {
+  if (!filePath) {
+    return undefined;
+  }
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`process summary file not found: ${filePath}`);
+  }
+  let artifact;
+  try {
+    artifact = JSON.parse(fs.readFileSync(filePath, "utf8"));
+  } catch (error) {
+    throw new Error(`failed to read process summary file ${filePath}: ${error.message}`);
+  }
+  if (artifact?.contract === "kungfu-buildchain-process-sample-report" && artifact.summary) {
+    return artifact.summary;
+  }
+  if (artifact?.contract === "kungfu-buildchain-process-sample-summary") {
+    return artifact;
+  }
+  throw new Error(`process summary file has unsupported contract: ${artifact?.contract || "unknown"}`);
+}
+
 export function runLifecycle({
   cwd = process.cwd(),
   stageName = "",
@@ -91,6 +113,7 @@ export function runLifecycle({
   expectedArtifactsJson = "",
   workspace = process.cwd(),
   logPath = process.env.BUILDCHAIN_LOG_PATH || ".buildchain/logs/events.jsonl",
+  processSummaryPath = "",
 } = {}) {
   const resolvedCwd = path.resolve(cwd);
   const resolvedWorkspace = path.resolve(workspace);
@@ -101,8 +124,13 @@ export function runLifecycle({
     diagnosticsPath || path.join(path.dirname(manifestPath), "diagnostics.json"),
   );
   const resolvedLogPath = logPath ? path.resolve(resolvedWorkspace, logPath) : "";
+  const resolvedProcessSummaryPath = processSummaryPath ? path.resolve(resolvedWorkspace, processSummaryPath) : "";
   const relativeLogPath = resolvedLogPath ? toPosix(path.relative(resolvedWorkspace, resolvedLogPath)) : "";
+  const relativeProcessSummaryPath = resolvedProcessSummaryPath
+    ? toPosix(path.relative(resolvedWorkspace, resolvedProcessSummaryPath))
+    : "";
   const relativeDiagnosticsPath = toPosix(path.relative(resolvedWorkspace, resolvedDiagnosticsPath));
+  const processSummary = readProcessSummaryArtifact(resolvedProcessSummaryPath);
   const logRunId = crypto.randomUUID();
   const frameworkLog = createBuildchainLogger({
     cwd: resolvedWorkspace,
@@ -303,6 +331,12 @@ export function runLifecycle({
     contract: "kungfu-buildchain-diagnostics",
     path: relativeDiagnosticsPath,
   };
+  if (relativeProcessSummaryPath) {
+    observability.process = {
+      contract: "kungfu-buildchain-process-sample-summary",
+      path: relativeProcessSummaryPath,
+    };
+  }
   const summaryWithObservability = {
     ...summary,
     observability,
@@ -340,10 +374,12 @@ export function runLifecycle({
       logPath: resolvedLogPath,
       artifactPaths,
       lifecycleObservability,
+      processSummary,
       links: {
         manifest: toPosix(path.relative(resolvedWorkspace, resolvedManifestPath)),
         summary: toPosix(path.relative(resolvedWorkspace, resolvedSummaryPath)),
         log: relativeLogPath,
+        ...(relativeProcessSummaryPath ? { processSummary: relativeProcessSummaryPath } : {}),
       },
     }),
   );

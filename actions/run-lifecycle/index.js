@@ -42,6 +42,7 @@ async function main() {
       .map((entry) => entry.trim())
       .filter(Boolean),
     expectedArtifactsJson: getInput("expected-artifacts-json") || "",
+    processSummaryPath: getInput("process-summary-path") || "",
     workspace: process.cwd(),
   });
   setOutput("manifest-path", manifestPath);

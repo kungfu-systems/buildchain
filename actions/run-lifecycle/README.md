@@ -39,3 +39,9 @@ with:
   expected-artifacts-json: >-
     {"minFiles":2,"requiredPaths":["dist/app.tar.gz","dist/checksums.txt"]}
 ```
+
+For long native builds, pass a process sampler report or summary with
+`process-summary-path`. The file can be produced by
+`buildchain sample process-tree --summary-output .buildchain/diagnostics/process-summary.json -- <command>`.
+The lifecycle diagnostics artifact embeds the process summary and links back to
+the source JSON.

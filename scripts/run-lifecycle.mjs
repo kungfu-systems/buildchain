@@ -31,6 +31,7 @@ export function runLifecycleCli() {
     platformName: readArg("platform-name", readArg("platform-id", os.platform())),
     artifactPaths: parseList(process.env.BUILDCHAIN_ARTIFACT_PATHS || ""),
     expectedArtifactsJson: process.env.BUILDCHAIN_EXPECTED_ARTIFACTS_JSON || "",
+    processSummaryPath: readArg("process-summary", process.env.BUILDCHAIN_PROCESS_SUMMARY_PATH || ""),
     workspace: process.cwd(),
   });
 }
