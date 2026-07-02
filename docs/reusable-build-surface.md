@@ -267,11 +267,19 @@ publish side effect:
   uses: kungfu-systems/buildchain/actions/promote-buildchain-ref@v2
   with:
     sha: ${{ needs.build.outputs.publish-source-sha }}
+    target-ref: release/v22/v22.22
     require-publish-source-lock: 'true'
     publish-source-ref: ${{ needs.build.outputs.publish-source-ref }}
     publish-source-sha: ${{ needs.build.outputs.publish-source-sha }}
     publish-source-locked: ${{ needs.build.outputs.publish-source-locked }}
 ```
+
+`target-ref` stays the Buildchain channel promotion target, such as
+`alpha/v22/v22.22`, `release/v22/v22.22`, or `publish-gate/major`.
+`publish-source-ref` is the reviewed source-lock branch that authorized this
+specific package publication. For alpha and release package publications, the
+source-lock branch must point at the exact channel-line commit that promotion is
+validating; it is not a replacement for `target-ref`.
 
 This keeps the version bump commit, publish authorization, and auditable publish
 entrypoint on the Buildchain source-lock protocol. The CLI form

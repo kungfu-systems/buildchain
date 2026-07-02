@@ -186,6 +186,28 @@ test("promote action exposes anchored publish source-lock gate", () => {
   assert.match(implementation, /does not match promotion sha/);
 });
 
+test("publish source-lock docs distinguish source refs from promotion targets", () => {
+  const docs = fs.readFileSync(
+    path.join(root, "docs/reusable-build-surface.md"),
+    "utf8",
+  );
+
+  assert.match(docs, /target-ref: release\/v22\/v22\.22/);
+  assert.match(
+    docs,
+    /`target-ref` stays the Buildchain channel promotion target/,
+  );
+  assert.match(
+    docs,
+    /`publish-source-ref` is the reviewed source-lock branch/,
+  );
+  assert.match(
+    docs,
+    /source-lock branch must point at the exact channel-line commit/,
+  );
+  assert.match(docs, /it is not a replacement for `target-ref`/);
+});
+
 test("runner presets resolve to explicit matrices", () => {
   const hosted = resolveRunnerMatrix({ runnerPreset: "github-hosted" });
   assert.equal(hosted.runnerPreset, "github-hosted");
