@@ -176,8 +176,11 @@ buildchain doctor --json
 ```
 
 It validates `buildchain.toml`, package-manager detection, Git repository state,
-and the reusable workflow caller. The JSON result is shaped for future
-`buildchain.libkungfu.dev` fact ingestion.
+and the reusable workflow caller. For `version.strategy = "anchored"` with
+`version.next = "manual"`, it also embeds the anchored package release contract
+check: anchor manifest readability, configured version files, trusted
+publishing, package publish order, and required lifecycle stages. The JSON
+result is shaped for future `buildchain.libkungfu.dev` fact ingestion.
 
 `buildchain release`, `buildchain web-surface`, `buildchain publish-source`,
 and `buildchain build-contract` route to the same scripts used by Buildchain's

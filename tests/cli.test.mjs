@@ -103,6 +103,15 @@ test("doctor accepts anchored package configs without project section", () => {
     configCheck.details.lifecycleStages.sort(),
     ["build", "install", "publish", "verify"],
   );
+  const anchoredCheck = report.checks.find((check) => check.id === "anchored-package-release.valid");
+  assert.equal(anchoredCheck.status, "pass");
+  assert.equal(anchoredCheck.details.contract, "kungfu-buildchain-anchored-package-release-validation");
+  assert.equal(anchoredCheck.details.summary.versionStrategy.strategy, "anchored");
+  assert.equal(anchoredCheck.details.summary.publish.auth, "trusted-publishing");
+  assert.equal(
+    anchoredCheck.details.checks.find((check) => check.id === "publish.package_set_order").status,
+    "pass",
+  );
 });
 
 test("lifecycle run writes deterministic artifact manifest", () => {

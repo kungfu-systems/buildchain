@@ -29,6 +29,7 @@ import {
   startProcessSampler,
   summarizeDiagnosticsArtifacts,
   summarizeProcessSamples,
+  validateAnchoredPackageRelease,
 } from "../packages/core/diagnostics.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -157,8 +158,9 @@ function runDoctor({ cwd = process.cwd() } = {}) {
   const resolvedCwd = path.resolve(cwd);
   const checks = [];
   checks.push(checkStatus(fs.existsSync(resolvedCwd), "cwd.exists", "working directory exists", { cwd: resolvedCwd }));
+  let validation;
   try {
-    const validation = validateBuildchainConfig(resolvedCwd);
+    validation = validateBuildchainConfig(resolvedCwd);
     checks.push(checkStatus(true, "config.valid", "buildchain.toml is valid", {
       projectType: validation.project?.type || "",
       lifecycleStages: validation.lifecycleStages.map((stage) => stage.name),
@@ -181,6 +183,19 @@ function runDoctor({ cwd = process.cwd() } = {}) {
   checks.push(checkStatus(fs.existsSync(workflowPath), "workflow.build", "reusable workflow caller exists", {
     path: ".github/workflows/build.yml",
   }));
+  if (validation?.version?.strategy === "anchored" && validation.version.next === "manual") {
+    const anchored = validateAnchoredPackageRelease({ cwd: resolvedCwd });
+    checks.push(checkStatus(
+      anchored.ok,
+      "anchored-package-release.valid",
+      "anchored package release contract is valid",
+      {
+        contract: anchored.contract,
+        summary: anchored.summary,
+        checks: anchored.checks,
+      },
+    ));
+  }
   return {
     schemaVersion: 1,
     contract: "kungfu-buildchain-doctor",
