@@ -721,6 +721,23 @@ test("runLifecycle writes deterministic artifact manifest", () => {
     assert.equal(diagnostics.contract, "kungfu-buildchain-diagnostics");
     assert.equal(diagnostics.lifecycleObservability.stages.install.eventCount > 0, true);
     assert.equal(diagnostics.lifecycleObservability.stages.build.eventCount > 0, true);
+    assert.equal(diagnostics.native.enabled, true);
+    assert.equal(diagnostics.native.profile.sampleProcessTree, true);
+    assert.equal(diagnostics.native.profile.compilerCache, "auto");
+    assert.deepEqual(
+      diagnostics.native.profile.expectedTools,
+      ["node", "pnpm", "git", "cmake", "ninja", "ccache", "sccache"],
+    );
+    assert.deepEqual(
+      diagnostics.buildchain.config.diagnostics.native.artifactDirs,
+      ["dist", "build"],
+    );
+    assert.equal(diagnostics.native.artifactDirs[0].path, "dist");
+    assert.equal(diagnostics.native.artifactDirs[0].exists, true);
+    assert.equal(diagnostics.native.artifactDirs[1].path, "build");
+    assert.equal(diagnostics.native.artifactDirs[1].exists, false);
+    assert.equal(diagnostics.native.cacheDirs[0].path, ".ccache");
+    assert.equal(diagnostics.native.cacheDirs[0].exists, false);
   } finally {
     process.env = originalEnv;
     fs.rmSync(workspace, { recursive: true, force: true });
