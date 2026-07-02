@@ -58,6 +58,54 @@ buildchain lifecycle run build \
   --artifact-name "{repo}-{version}-{platform}"
 ```
 
+Lifecycle runs also write a Buildchain observability JSONL log at
+`.buildchain/logs/events.jsonl` by default. Framework events use
+`source=buildchain`; consumer lifecycle commands use `source=user`. This lets a
+maintainer tell apart time spent inside Buildchain's artifact/manifest
+framework from time spent in the repository's own build, test, packaging, or
+publish commands. The artifact manifest and summary embed the observability
+summary for that lifecycle run id, so uploaded artifacts preserve the timing
+facts without mixing in older JSONL events.
+
+`buildchain log`, `buildchain mark`, and `buildchain span` expose the same event
+protocol to repository scripts:
+
+```bash
+buildchain mark --event configure.ready --phase configure --attribute target=release
+buildchain span --event native.build --phase build -- cmake --build build
+buildchain log warn --event cache.miss --component conan --attribute token=hidden
+buildchain log summary --json
+```
+
+During `buildchain lifecycle run`, child processes receive
+`BUILDCHAIN_LOG_PATH` and `BUILDCHAIN_LOG_RUN_ID`. A shell, Python, CMake, Conan,
+or JavaScript helper can call `buildchain mark` or `buildchain span` mid-build
+and have those events grouped into the same lifecycle summary.
+
+The event protocol is JSONL and is also available from the SDK:
+
+```js
+import { createBuildchainLogger } from "@kungfu-tech/buildchain/logging";
+
+const logger = createBuildchainLogger({ source: "user", component: "native-build" });
+logger.mark("configure.ready", { phase: "configure" });
+```
+
+Secret-looking attribute keys such as `token`, `password`, `secret`,
+`authorization`, `cookie`, and `private-key` are redacted before they are written.
+Full command strings are not recorded by `span`; scripts should provide stable
+event names and safe attributes instead.
+
+`buildchain doctor` checks repository readiness before remote side effects:
+
+```bash
+buildchain doctor --json
+```
+
+It validates `buildchain.toml`, package-manager detection, Git repository state,
+and the reusable workflow caller. The JSON result is shaped for future
+`buildchain.libkungfu.dev` fact ingestion.
+
 `buildchain release`, `buildchain web-surface`, `buildchain publish-source`,
 and `buildchain build-contract` route to the same scripts used by Buildchain's
 GitHub Actions workflows. This keeps local inspection and CI behavior on the
@@ -70,6 +118,7 @@ maintainer opens or merges a channel PR:
 buildchain release --dry-run --target-ref alpha/v2/v2.0
 buildchain release --dry-run --target-ref release/v2/v2.0 --sha <verified-sha>
 buildchain release dry-run --target-ref publish-gate/major --source-ref release/v2/v2.0
+buildchain release explain --target-ref alpha/v2/v2.1 --json
 ```
 
 This is a Buildchain-level dry-run, not an npm dry-run. It explains the legal
@@ -77,7 +126,21 @@ source branch, exact release or alpha tags, floating tags, channel branches,
 version-state files, governance checks, and publish transaction behavior that
 would apply if the corresponding PR merge were promoted. It does not move
 branches, move tags, edit files, publish npm packages, or run lifecycle publish
-commands. Pass `--json` for a machine-readable plan.
+commands. `release explain` is the same explanation surface with a clearer name.
+Pass `--json` for a machine-readable plan.
+
+`buildchain transaction inspect` is the top-level recovery inspection command
+for the publish transaction state:
+
+```bash
+buildchain transaction inspect --version v2.1.0-alpha.0
+```
+
+It reads or locally initializes the durable transaction record and validates
+available publish evidence. Remote durable refs and public Git ref finalization
+remain owned by `actions/promote-buildchain-ref`; the CLI inspection surface is
+for preflight and recovery reasoning before a maintainer reruns or resumes a
+promotion.
 
 `buildchain npm dry-run` verifies the package shape before a release tag exists:
 
