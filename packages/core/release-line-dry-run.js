@@ -217,7 +217,7 @@ function explainReleaseLineDryRun({
       { ref: `alpha/v${rule.major}/v${rule.major}.${rule.minor}`, action: "would move to next alpha version-state commit" },
       { ref: `dev/v${rule.major}/v${rule.major}.${rule.minor}`, action: "would move to next alpha version-state commit" },
     );
-    plan.governanceChecks.push("release source tree must match the same-patch exact alpha tag tree except generated version-state files");
+    plan.governanceChecks.push("release source tree must match the same-patch exact alpha tag tree except generated version-state files or anchored/manual version material");
     plan.versionState.targetVersions = [
       exactRelease.replace(/^next v?/, "").replace(/^v/, ""),
       exactAlpha.replace(/^next v?/, "").replace(/^v/, ""),

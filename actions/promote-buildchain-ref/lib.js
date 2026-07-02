@@ -356,6 +356,10 @@ function versionVerificationEnv(versionStrategy, anchorManifest) {
   };
 }
 
+function uniquePaths(paths) {
+  return [...new Set(paths.filter(Boolean))];
+}
+
 function runPublishCommand({ cwd, command, loadedConfig, env }) {
   const lifecyclePublish = getLifecycleStage(loadedConfig, "publish");
   if (command) {
@@ -2374,6 +2378,7 @@ async function promoteBuildchainRefs({
     alphaTag,
     alphaTreeSha,
     allowedPaths,
+    allowDirectAllowedChanges = false,
   }) => {
     const commit = await getCommitInfo(octokit, owner, repo, commitSha);
     if (commit.treeSha === alphaTreeSha) {
@@ -2398,6 +2403,29 @@ async function promoteBuildchainRefs({
         });
       }
       return;
+    }
+    if (allowDirectAllowedChanges && allowedPaths?.length) {
+      let validPromotionPr = false;
+      try {
+        await assertChannelPromotionPr({
+          octokit,
+          owner,
+          repo,
+          sha: commitSha,
+          targetRef,
+        });
+        validPromotionPr = true;
+        await assertOnlyAllowedChangesBetween({
+          baseSha: alphaSha,
+          headSha: commitSha,
+          allowedPaths,
+        });
+        return;
+      } catch (error) {
+        if (validPromotionPr) {
+          throw error;
+        }
+      }
     }
     for (const parentSha of commit.parents) {
       const parent = await getCommitInfo(octokit, owner, repo, parentSha);
@@ -2513,6 +2541,12 @@ async function promoteBuildchainRefs({
     const strategyEnv = versionVerificationEnv(versionStrategy, anchorManifest);
     const manualNext =
       versionStrategy.strategy === "anchored" && versionStrategy.next === "manual";
+    const hasVersionVerification =
+      Boolean(verificationCommand || getLifecycleStage(discovered.config, "verify"));
+    const anchoredReleaseTreePaths =
+      manualNext && anchorManifest && hasVersionVerification
+        ? uniquePaths([...discoveredPaths, anchorManifest.path])
+        : discoveredPaths;
     const changedFiles = manualNext
       ? []
       : updateVersionStateContents(discovered.files, version);
@@ -2553,6 +2587,8 @@ async function promoteBuildchainRefs({
         version,
         action: "anchored-manual",
         files: discoveredPaths,
+        releaseTreeAllowedPaths: anchoredReleaseTreePaths,
+        hasVersionVerification,
         packageManager: discovered.packageManager,
         versionStrategy,
         anchorManifest,
@@ -2580,6 +2616,8 @@ async function promoteBuildchainRefs({
         version,
         action: "existing",
         files: discoveredPaths,
+        releaseTreeAllowedPaths: discoveredPaths,
+        hasVersionVerification,
         packageManager: discovered.packageManager,
         versionStrategy,
         anchorManifest,
@@ -2599,6 +2637,8 @@ async function promoteBuildchainRefs({
         version,
         action: "dry-run",
         files: changedFiles.map((file) => file.path),
+        releaseTreeAllowedPaths: changedFiles.map((file) => file.path),
+        hasVersionVerification,
         packageManager: discovered.packageManager,
         versionStrategy,
         anchorManifest,
@@ -2662,6 +2702,8 @@ async function promoteBuildchainRefs({
       version,
       action: "created",
       files: changedFiles.map((file) => file.path),
+      releaseTreeAllowedPaths: changedFiles.map((file) => file.path),
+      hasVersionVerification,
       packageManager: discovered.packageManager,
       versionStrategy,
       anchorManifest,
@@ -3298,13 +3340,22 @@ async function promoteBuildchainRefs({
       );
     }
     const alphaCommit = await getCommitInfo(octokit, owner, repo, sourceAlphaMaterial.sha);
+    const releaseTreeAllowedPaths =
+      releaseCommit.releaseTreeAllowedPaths || releaseCommit.files;
     await assertReleasePrOrVersionStateParent({
       commitSha: releaseSha,
       targetRef,
       alphaSha: sourceAlphaMaterial.sha,
       alphaTag: sourceAlphaMaterial.tag,
       alphaTreeSha: alphaCommit.treeSha,
-      allowedPaths: releaseCommit.files,
+      allowedPaths: releaseTreeAllowedPaths,
+      allowDirectAllowedChanges:
+        releaseCommit.action === "anchored-manual" &&
+        releaseCommit.versionStrategy?.strategy === "anchored" &&
+        releaseCommit.versionStrategy?.next === "manual" &&
+        releaseCommit.files.length > 0 &&
+        Boolean(releaseCommit.anchorManifest) &&
+        releaseCommit.hasVersionVerification,
     });
   }
   await executePublishTransaction({
