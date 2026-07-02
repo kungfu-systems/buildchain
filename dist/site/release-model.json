@@ -17,6 +17,7 @@
   "npm": {
     "package": "@kungfu-tech/buildchain",
     "command": "./bin/buildchain.mjs",
+    "versionSource": "package.json#version",
     "alphaDistTag": "alpha",
     "stableDistTag": "latest"
   }
