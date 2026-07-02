@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import {
   discoverConfiguredVersionStateFiles,
+  getNativeDiagnosticsProfile,
   loadBuildchainConfig,
   normalizeBuildchainConfig,
   runLifecycleStage,
@@ -235,6 +236,57 @@ main_package = "@kungfu-tech/libnode"
         packageSetOrder: "platforms-first-main-last",
         mainPackage: "@kungfu-tech/libnode",
       });
+    },
+  );
+});
+
+test("buildchain.toml normalizes optional native diagnostics profile", () => {
+  withTempRepo(
+    {
+      "buildchain.toml": `
+schema = 1
+
+[diagnostics.native]
+enabled = true
+sample_process_tree = true
+compiler_cache = "ccache"
+expected_tools = ["ccache", "clang", "cmake"]
+artifact_dirs = ["build", "dist"]
+cache_dirs = [".ccache"]
+
+[lifecycle.build]
+command = "cmake --build build"
+`,
+    },
+    (dir) => {
+      const loaded = loadBuildchainConfig(dir);
+      assert.deepEqual(getNativeDiagnosticsProfile(loaded), {
+        enabled: true,
+        sampleProcessTree: true,
+        compilerCache: "ccache",
+        expectedTools: ["ccache", "clang", "cmake"],
+        artifactDirs: ["build", "dist"],
+        cacheDirs: [".ccache"],
+      });
+    },
+  );
+});
+
+test("buildchain.toml rejects unsupported native diagnostics cache mode", () => {
+  withTempRepo(
+    {
+      "buildchain.toml": `
+schema = 1
+
+[diagnostics.native]
+compiler_cache = "compiler-cache"
+`,
+    },
+    (dir) => {
+      assert.throws(
+        () => loadBuildchainConfig(dir),
+        /diagnostics\.native\.compiler_cache must be one of auto, ccache, sccache, or none/,
+      );
     },
   );
 });

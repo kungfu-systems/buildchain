@@ -4,6 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 const {
   assertAllowedLocalChanges,
@@ -26,7 +27,11 @@ const {
   explainReleaseLineDryRun,
   formatReleaseLineDryRun,
 } = await import("../packages/core/release-line-dry-run.js");
+const {
+  validateRequiredPublishSourceLock,
+} = await import("../actions/promote-buildchain-ref/index.js");
 
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SHA = "a".repeat(40);
 const OTHER_SHA = "b".repeat(40);
 
@@ -232,6 +237,41 @@ test("promotion is limited to buildchain alpha and release line refs", () => {
   assert.throws(
     () => resolveTagsForTarget("release/v1/v1.0", ["v1.1.0"]),
     /not allowed for release promotion/,
+  );
+});
+
+test("promote action validates anchored publish source locks before promotion", () => {
+  const cwd = path.join(root, "fixtures/libnode-shaped");
+  const report = validateRequiredPublishSourceLock({
+    cwd,
+    sha: SHA,
+    publishSourceRef: "publish-gate/release/v22/v22.22/22.22.3-kf.0",
+    publishSourceSha: SHA,
+    publishSourceLocked: "true",
+  });
+  assert.equal(report.ok, true);
+  assert.equal(report.summary.publishSource.channel, "release");
+
+  assert.throws(
+    () => validateRequiredPublishSourceLock({
+      cwd,
+      sha: SHA,
+      publishSourceRef: "release/v22/v22.22",
+      publishSourceSha: SHA,
+      publishSourceLocked: "true",
+    }),
+    /anchored publish source-lock validation failed: .*publish\.source_ref/,
+  );
+
+  assert.throws(
+    () => validateRequiredPublishSourceLock({
+      cwd,
+      sha: SHA,
+      publishSourceRef: "publish-gate/release/v22/v22.22/22.22.3-kf.0",
+      publishSourceSha: OTHER_SHA,
+      publishSourceLocked: "true",
+    }),
+    /does not match promotion sha/,
   );
 });
 

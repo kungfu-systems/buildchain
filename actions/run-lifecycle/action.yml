@@ -43,10 +43,46 @@ inputs:
     description: "Compact artifact summary output path"
     required: false
     default: ".buildchain/artifacts/summary.json"
+  diagnostics-path:
+    description: "Compact diagnostics artifact output path"
+    required: false
+    default: ""
+  manifest-artifact-name:
+    description: "Uploaded platform manifest artifact name recorded in diagnostics links"
+    required: false
+    default: ""
+  diagnostics-artifact-name:
+    description: "Uploaded platform diagnostics artifact name recorded in diagnostics links"
+    required: false
+    default: ""
   expected-artifacts-json:
     description: "JSON expectation contract for final artifact files"
     required: false
     default: ""
+  process-summary-path:
+    description: "Optional process sampler summary JSON to embed in diagnostics"
+    required: false
+    default: ""
+  process-samples-path:
+    description: "Optional process sampler JSONL sidecar path"
+    required: false
+    default: ".buildchain/diagnostics/process-samples.jsonl"
+  sample-process-tree:
+    description: "Wrap the lifecycle command or stage with the process tree sampler"
+    required: false
+    default: "false"
+  process-sample-interval-ms:
+    description: "Process sampler interval in milliseconds"
+    required: false
+    default: "15000"
+  requested-parallelism:
+    description: "Optional expected build parallelism recorded in process diagnostics"
+    required: false
+    default: "0"
+  process-summary-required:
+    description: "Fail when process-summary-path is configured but missing"
+    required: false
+    default: "true"
 outputs:
   manifest-path:
     description: "Path to the generated artifact manifest"

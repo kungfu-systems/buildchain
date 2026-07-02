@@ -27,6 +27,14 @@ pnpm add -D @kungfu-tech/buildchain
 pnpm exec buildchain validate
 ```
 
+Consumers should pin the exact Buildchain version that was validated in their
+repository. When dogfooding a fresh Buildchain release immediately after it is
+published, pnpm may block the install through a minimum release-age policy. In
+that case, add a temporary package/version-specific `minimumReleaseAgeExclude`
+entry, such as `@kungfu-tech/buildchain@2.2.5`, and remove it once the package
+has aged past the normal policy window. Do not replace that with a broad
+registry or scope-wide exclude.
+
 Use the package API directly inside JavaScript build scripts:
 
 ```js
@@ -55,6 +63,10 @@ Supported presets:
 - `--type web-surface` for preview/staging/production site or app deployments.
 - `--type anchored-package` for packages whose version is anchored to an
   explicit upstream release manifest.
+
+The native preset includes an opt-in `[diagnostics.native]` profile with common
+tool/cache/artifact probes. Consumers can keep it enabled, adjust the tool and
+directory lists, or disable it if a repository does not need native diagnostics.
 
 `buildchain validate` parses `buildchain.toml`, checks configured version-state
 files, and can require named lifecycle stages:
@@ -92,6 +104,8 @@ buildchain span --event native.build --phase build -- cmake --build build
 buildchain log warn --event cache.miss --component conan --attribute token=hidden
 buildchain log summary --json
 buildchain verify observability-log .buildchain/logs/events.jsonl --min-events 4 --require-phase build
+buildchain diagnostics summary .buildchain/artifacts/*/diagnostics.json --json
+buildchain sample process-tree --label native-build --interval-ms 15000 -- make -j20
 ```
 
 During `buildchain lifecycle run`, child processes receive
@@ -116,6 +130,61 @@ Secret-looking attribute keys such as `token`, `password`, `secret`,
 Full command strings are not recorded by `span`; scripts should provide stable
 event names and safe attributes instead.
 
+`buildchain diagnostics summary` reads one or more small diagnostics artifacts
+and emits the same cross-platform summary as the diagnostics SDK:
+
+```bash
+buildchain diagnostics summary \
+  .buildchain/artifacts/linux-x64/diagnostics.json \
+  .buildchain/artifacts/macos-arm64/diagnostics.json \
+  --output .buildchain/artifacts/diagnostics-summary.json \
+  --json
+```
+
+The JSON summary keeps per-platform lifecycle stage tables, adds lifecycle
+total durations, carries top slow spans, aggregates warning/error counts, and
+sorts the slowest platforms. Each platform row carries compact runner facts,
+checked tool versions/missing tools, package manager/cache directory details,
+compiler-cache availability, and a compact process sampler summary: requested
+parallelism, observed max active processes, the ratio between them, sample
+count, process categories, and the top sampled command basenames. This lets
+maintainers inspect matrix timing, runner, tool, cache, and concurrency context
+without downloading large platform binaries or process sidecars first.
+When a sibling `diagnostics-manifest.json` is available, the summary also records
+its file list and verifies the listed `diagnostics.json` byte count and sha256.
+Missing, unreadable, or mismatched sidecar manifests are reported through
+`diagnosticsManifestWarningCount` and the per-platform `diagnosticsManifest`
+field without failing the timing rollup.
+The summary also compares each `diagnostics.json` contract to
+`BUILDCHAIN_DIAGNOSTICS_CONTRACT`; mismatches are reported through
+`diagnosticsContractWarningCount` and the per-platform `diagnosticsContract`
+field so reviewers can separate diagnostics schema drift from lifecycle
+warnings or build failures.
+
+Without `--json`, the command prints a compact lifecycle timing table with
+install/build/verify/publish, artifact scan/upload, total, warning, and error
+columns for each platform, plus `jobs` and `active` columns for requested and
+observed process concurrency when sampler data is present.
+
+`buildchain sample process-tree` wraps a long-running command and periodically
+writes process-tree snapshots:
+
+```bash
+buildchain sample process-tree \
+  --label native-build \
+  --interval-ms 15000 \
+  --output .buildchain/diagnostics/process-samples.jsonl \
+  --summary-output .buildchain/diagnostics/process-summary.json \
+  -- \
+  make -j20
+```
+
+The command returns the wrapped command's exit status. The JSONL file contains
+small timestamped samples; the summary JSON records requested parallelism,
+observed concurrency, sampled CPU, command categories, and top command
+basenames. Use it when a native build requests high parallelism but appears to
+spend long stretches in low-concurrency compile, archive, link, or cache steps.
+
 `buildchain doctor` checks repository readiness before remote side effects:
 
 ```bash
@@ -123,8 +192,27 @@ buildchain doctor --json
 ```
 
 It validates `buildchain.toml`, package-manager detection, Git repository state,
-and the reusable workflow caller. The JSON result is shaped for future
-`buildchain.libkungfu.dev` fact ingestion.
+and the reusable workflow caller. For `version.strategy = "anchored"` with
+`version.next = "manual"`, it also embeds the anchored package release contract
+check: anchor manifest readability, configured version files, trusted
+publishing, package publish order, and required lifecycle stages. Add
+`--require-publish-source-lock` inside a publish job when the doctor report
+should also fail unless the job is running from a resolved `publish-gate/*`
+source lock.
+
+Anchored/manual package publish jobs can run the narrower source-lock gate
+directly:
+
+```bash
+buildchain publish-source validate-anchored-release --json
+```
+
+The command requires `BUILDCHAIN_PUBLISH_SOURCE_REF`,
+`BUILDCHAIN_PUBLISH_SOURCE_SHA`, and `BUILDCHAIN_PUBLISH_SOURCE_LOCKED` from the
+reusable build workflow outputs. It fails closed for direct `alpha/*` or
+`release/*` channel-branch publication, and checks the publish-gate consumer
+version against configured version files and the anchor manifest. The JSON
+result is shaped for future `buildchain.libkungfu.dev` fact ingestion.
 
 `buildchain release`, `buildchain web-surface`, `buildchain publish-source`,
 and `buildchain build-contract` route to the same scripts used by Buildchain's
