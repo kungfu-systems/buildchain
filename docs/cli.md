@@ -155,6 +155,11 @@ its file list and verifies the listed `diagnostics.json` byte count and sha256.
 Missing, unreadable, or mismatched sidecar manifests are reported through
 `diagnosticsManifestWarningCount` and the per-platform `diagnosticsManifest`
 field without failing the timing rollup.
+The summary also compares each `diagnostics.json` contract to
+`BUILDCHAIN_DIAGNOSTICS_CONTRACT`; mismatches are reported through
+`diagnosticsContractWarningCount` and the per-platform `diagnosticsContract`
+field so reviewers can separate diagnostics schema drift from lifecycle
+warnings or build failures.
 
 Without `--json`, the command prints a compact lifecycle timing table with
 install/build/verify/publish, artifact scan/upload, total, warning, and error

@@ -171,7 +171,7 @@ on:
         description: "Compact aggregate build summary JSON"
         value: ${{ jobs.summarize.outputs.artifact-summary-json }}
       build-diagnostics-summary-json:
-        description: "Compact aggregate diagnostics summary JSON with lifecycle and sidecar manifest warning totals"
+        description: "Compact aggregate diagnostics summary JSON with lifecycle, diagnostics contract warning, and sidecar manifest warning totals"
         value: ${{ jobs.summarize.outputs.diagnostics-summary-json }}
       trusted-event:
         description: "Whether the event is trusted enough to run build jobs"

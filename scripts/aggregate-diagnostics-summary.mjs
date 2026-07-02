@@ -37,6 +37,7 @@ export function aggregateDiagnosticsSummaryCli() {
       totalWarningCount: summary.totalWarningCount,
       totalErrorCount: summary.totalErrorCount,
       diagnosticsManifestWarningCount: summary.diagnosticsManifestWarningCount,
+      diagnosticsContractWarningCount: summary.diagnosticsContractWarningCount,
       slowestPlatforms: summary.slowestPlatforms,
     }),
   });

@@ -1105,6 +1105,21 @@ function compactDiagnosticsManifestFile(entry = {}) {
   };
 }
 
+function summarizeDiagnosticsContract(diagnostics = {}) {
+  const actual = diagnostics?.contract || "";
+  const warnings = [];
+  if (actual !== BUILDCHAIN_DIAGNOSTICS_CONTRACT) {
+    warnings.push(`unexpected diagnostics artifact contract: ${actual || "unknown"}`);
+  }
+  return {
+    status: warnings.length ? "warning" : "verified",
+    expected: BUILDCHAIN_DIAGNOSTICS_CONTRACT,
+    actual,
+    warningCount: warnings.length,
+    warnings,
+  };
+}
+
 function summarizeDiagnosticsManifest(diagnostics, sourcePath) {
   if (!sourcePath) {
     return undefined;
@@ -1225,6 +1240,7 @@ export function summarizeDiagnosticsArtifacts(inputs = []) {
     const lifecycleTotalDurationMs = sumLifecycleDurationMs(lifecycle);
     const artifactScanDurationMs = Math.round(Number(entry.lifecycleObservability?.artifactScan?.durationMs || 0));
     const artifactUploadDurationMs = Math.round(Number(entry.lifecycleObservability?.artifactUpload?.durationMs || 0));
+    const diagnosticsContract = summarizeDiagnosticsContract(entry);
     const diagnosticsManifest = summarizeDiagnosticsManifest(entry, sourcePath);
     return {
       runner: entry.runner?.github?.runnerOs || entry.runner?.os?.platform || "unknown",
@@ -1242,6 +1258,7 @@ export function summarizeDiagnosticsArtifacts(inputs = []) {
       tools: compactToolSummary(entry.tools || {}, entry.native?.tools || {}),
       cache: compactCacheSummary(entry.cache || {}, entry.native || {}),
       process: entry.process || {},
+      diagnosticsContract,
       ...(diagnosticsManifest ? { diagnosticsManifest } : {}),
       links: entry.links || {},
       warningCount: entry.lifecycleObservability?.warningCount || 0,
@@ -1257,6 +1274,10 @@ export function summarizeDiagnosticsArtifacts(inputs = []) {
     totalErrorCount: platforms.reduce((sum, entry) => sum + entry.errorCount, 0),
     diagnosticsManifestWarningCount: platforms.reduce(
       (sum, entry) => sum + Number(entry.diagnosticsManifest?.warningCount || 0),
+      0,
+    ),
+    diagnosticsContractWarningCount: platforms.reduce(
+      (sum, entry) => sum + Number(entry.diagnosticsContract?.warningCount || 0),
       0,
     ),
     slowestPlatforms: platforms

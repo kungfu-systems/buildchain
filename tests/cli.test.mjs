@@ -8,6 +8,7 @@ import test from "node:test";
 import { createBuildchainLogger } from "@kungfu-tech/buildchain/logging";
 import {
   BUILDCHAIN_ANCHORED_PACKAGE_RELEASE_VALIDATION_CONTRACT,
+  BUILDCHAIN_DIAGNOSTICS_CONTRACT,
   BUILDCHAIN_DIAGNOSTICS_MANIFEST_CONTRACT,
   BUILDCHAIN_DIAGNOSTICS_SUMMARY_CONTRACT,
   BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT,
@@ -501,6 +502,10 @@ test("diagnostics SDK summarizes lifecycle timing across diagnostic artifacts", 
   assert.equal(summary.count, 2);
   assert.equal(summary.totalWarningCount, 1);
   assert.equal(summary.totalErrorCount, 2);
+  assert.equal(summary.diagnosticsContractWarningCount, 2);
+  assert.equal(summary.platforms[0].diagnosticsContract.status, "warning");
+  assert.equal(summary.platforms[0].diagnosticsContract.expected, BUILDCHAIN_DIAGNOSTICS_CONTRACT);
+  assert.equal(summary.platforms[0].diagnosticsContract.actual, "");
   assert.equal(summary.platforms[0].lifecycleTotalDurationMs, 400);
   assert.equal(summary.platforms[0].topSlowSpans[0].event, "native.compile");
   assert.equal(summary.platforms[0].runnerDetails.github.runnerName, "runner-linux");
@@ -536,6 +541,7 @@ test("CLI summarizes diagnostics artifacts into a small cross-platform report", 
   const outputPath = path.join(cwd, "diagnostics-summary.json");
 
   fs.writeFileSync(linuxArtifact, JSON.stringify({
+    contract: BUILDCHAIN_DIAGNOSTICS_CONTRACT,
     runner: {
       github: { actions: true, runnerOs: "Linux", runnerArch: "X64", runnerName: "runner-linux" },
       os: { platform: "linux", release: "6.8", arch: "x64", type: "Linux" },
@@ -608,6 +614,7 @@ test("CLI summarizes diagnostics artifacts into a small cross-platform report", 
     ],
   }, null, 2));
   fs.writeFileSync(macosArtifact, JSON.stringify({
+    contract: "consumer-build-diagnostics",
     runner: { github: { runnerOs: "macOS", runnerArch: "ARM64" } },
     git: { head: "def456abc123" },
     lifecycleObservability: {
@@ -645,6 +652,7 @@ test("CLI summarizes diagnostics artifacts into a small cross-platform report", 
   assert.equal(summary.totalWarningCount, 2);
   assert.equal(summary.totalErrorCount, 1);
   assert.equal(summary.diagnosticsManifestWarningCount, 1);
+  assert.equal(summary.diagnosticsContractWarningCount, 1);
   assert.deepEqual(summary.slowestPlatforms.map((entry) => entry.gitHead), ["abc123def456", "def456abc123"]);
   assert.equal(summary.platforms[0].artifactUploadDurationMs, 62000);
   assert.equal(summary.platforms[0].totalDurationMs, 64250);
@@ -654,8 +662,11 @@ test("CLI summarizes diagnostics artifacts into a small cross-platform report", 
   assert.equal(summary.platforms[0].tools.missing[0], "ninja");
   assert.equal(summary.platforms[0].cache.packageManager.packageManager, "pnpm@11.0.0");
   assert.equal(summary.platforms[0].cache.compilerCaches.ccache.stats.cache_miss, 2);
+  assert.equal(summary.platforms[0].diagnosticsContract.status, "verified");
   assert.equal(summary.platforms[0].diagnosticsManifest.status, "verified");
   assert.equal(summary.platforms[0].diagnosticsManifest.fileCount, 1);
+  assert.equal(summary.platforms[1].diagnosticsContract.status, "warning");
+  assert.equal(summary.platforms[1].diagnosticsContract.actual, "consumer-build-diagnostics");
   assert.equal(summary.platforms[1].diagnosticsManifest.status, "missing");
   assert.equal(summary.platforms[1].diagnosticsManifest.warningCount, 1);
   assert.equal(summary.slowestPlatforms[0].process.requestedParallelism, 20);

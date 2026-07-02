@@ -264,6 +264,9 @@ When the downloaded platform diagnostics include a sibling
 `diagnostics.json` byte count and sha256. Missing or mismatched sidecar manifests
 increment `diagnosticsManifestWarningCount`, so reviewers can distinguish
 diagnostics sidecar drift from lifecycle warnings or build failures.
+The same summary carries `diagnosticsContract` per platform and aggregates
+`diagnosticsContractWarningCount` when a downloaded `diagnostics.json` does not
+match `BUILDCHAIN_DIAGNOSTICS_CONTRACT`.
 
 The diagnostics SDK also exports stable contract constants such as
 `BUILDCHAIN_DIAGNOSTICS_SUMMARY_CONTRACT`,

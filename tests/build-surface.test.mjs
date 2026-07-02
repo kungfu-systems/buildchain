@@ -28,6 +28,7 @@ import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
 import { verifyPublishSourceLockCli } from "../scripts/verify-publish-source-lock.mjs";
 import { validateBuildchainConfig } from "../packages/core/buildchain-config.js";
 import {
+  BUILDCHAIN_DIAGNOSTICS_CONTRACT,
   BUILDCHAIN_DIAGNOSTICS_MANIFEST_CONTRACT,
   BUILDCHAIN_DIAGNOSTICS_SUMMARY_CONTRACT,
   BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT,
@@ -92,6 +93,7 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /build-diagnostics-summary-artifact:/);
   assert.match(workflow, /diagnostics-summary-artifact-name:/);
   assert.match(workflow, /build-diagnostics-summary-json:/);
+  assert.match(workflow, /diagnostics contract warning/);
   assert.match(workflow, /sidecar manifest warning totals/);
   assert.match(workflow, /downloaded-diagnostics/);
   assert.match(workflow, /aggregate-diagnostics-summary\.mjs/);
@@ -1151,9 +1153,12 @@ test("aggregate diagnostics summary reads uploaded platform diagnostics", () => 
 
     assert.equal(summary.contract, BUILDCHAIN_DIAGNOSTICS_SUMMARY_CONTRACT);
     assert.equal(summary.count, 1);
+    assert.equal(summary.diagnosticsContractWarningCount, 0);
     assert.equal(summary.diagnosticsManifestWarningCount, 0);
     assert.equal(summary.platforms[0].fileCount, 2);
     assert.ok(summary.platforms[0].lifecycle.build);
+    assert.equal(summary.platforms[0].diagnosticsContract.status, "verified");
+    assert.equal(summary.platforms[0].diagnosticsContract.actual, BUILDCHAIN_DIAGNOSTICS_CONTRACT);
     assert.equal(summary.platforms[0].diagnosticsManifest.status, "verified");
     assert.equal(summary.platforms[0].diagnosticsManifest.fileCount, 2);
     assert.deepEqual(
@@ -1174,6 +1179,7 @@ test("aggregate diagnostics summary reads uploaded platform diagnostics", () => 
       diagnosticsSummaryOutput.slice("diagnostics-summary-json=".length),
     );
     assert.equal(diagnosticsSummaryJson.diagnosticsManifestWarningCount, 0);
+    assert.equal(diagnosticsSummaryJson.diagnosticsContractWarningCount, 0);
   } finally {
     process.env = originalEnv;
     fs.rmSync(workspace, { recursive: true, force: true });
