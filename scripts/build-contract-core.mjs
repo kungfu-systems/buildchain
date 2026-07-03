@@ -348,6 +348,72 @@ export function verifyPublishSourceLock({
   };
 }
 
+export function resolvePublishChannelTargetRef({
+  sourceRef = "",
+  targetRef = "",
+} = {}) {
+  const requestedTarget = normalizeGitRefName(targetRef);
+  if (requestedTarget) {
+    return requestedTarget;
+  }
+  const parsed = parsePublishSourceRef(sourceRef);
+  if (!parsed.enabled || parsed.anchor) {
+    return "";
+  }
+  if (parsed.channel === "alpha" || parsed.channel === "release") {
+    return `${parsed.channel}/${parsed.line}`;
+  }
+  if (parsed.channel === "major") {
+    return parsed.legacyAlias ? "major-gate" : "publish-gate/major";
+  }
+  return "";
+}
+
+export function verifyPublishChannelRef({
+  sourceRef = "",
+  sourceSha = "",
+  targetRef = "",
+  targetSha = "",
+} = {}) {
+  const parsed = parsePublishSourceRef(sourceRef);
+  const resolvedTargetRef = resolvePublishChannelTargetRef({
+    sourceRef,
+    targetRef,
+  });
+  if (!parsed.enabled || parsed.anchor || !resolvedTargetRef) {
+    return {
+      ok: true,
+      skipped: true,
+      sourceRef: parsed.sourceRef || normalizeGitRefName(sourceRef),
+      targetRef: resolvedTargetRef,
+      reason: !parsed.enabled
+        ? "publish source ref is not configured"
+        : parsed.anchor
+          ? "publish-gate/anchor has no channel target ref"
+          : "publish target channel ref is not configured",
+    };
+  }
+  const expected = assertSha(sourceSha, "sourceSha");
+  const current = assertSha(targetSha, "targetSha");
+  if (expected !== current) {
+    const channelHint =
+      parsed.channel === "alpha" || parsed.channel === "release"
+        ? `Merge the source commit through the channel PR into ${resolvedTargetRef} before running publish verification.`
+        : `Move ${resolvedTargetRef} to the reviewed source commit before running publish verification.`;
+    throw new Error(
+      `publish source-lock target mismatch: ${parsed.sourceRef} is locked at ${expected}, but target channel ref ${resolvedTargetRef} points at ${current}. ${channelHint}`,
+    );
+  }
+  return {
+    ok: true,
+    skipped: false,
+    sourceRef: parsed.sourceRef,
+    sourceSha: expected,
+    targetRef: resolvedTargetRef,
+    targetSha: current,
+  };
+}
+
 function normalizePackageSet(packages) {
   if (!Array.isArray(packages) || packages.length === 0) {
     throw new Error("package set must include at least one package");

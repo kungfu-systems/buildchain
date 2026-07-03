@@ -401,6 +401,15 @@ jobs:
           GITHUB_SHA: ${{ github.sha }}
           GITHUB_TOKEN: ${{ github.token }}
 
+      - name: Verify publish target channel ref
+        run: node .buildchain/runtime/scripts/verify-publish-channel-ref.mjs
+        env:
+          BUILDCHAIN_PUBLISH_SOURCE_REF: ${{ steps.source.outputs.publish-source-ref }}
+          BUILDCHAIN_PUBLISH_SOURCE_SHA: ${{ steps.source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ github.token }}
+
       - name: Reject untrusted event
         if: ${{ steps.trust.outputs.trusted != 'true' && inputs.untrusted-policy == 'fail' }}
         run: exit 1

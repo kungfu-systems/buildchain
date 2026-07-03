@@ -252,10 +252,53 @@ jobs:
               .addRaw(`- rollback ref: \`${shellRef}\`\n`)
               .write();
 
+  apply-input-gate:
+    name: Validate web-surface apply inputs
+    runs-on: ubuntu-24.04
+    needs: runtime
+    steps:
+      - name: Validate apply inputs before build
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_ACTION: ${{ github.event.action }}
+          REF_NAME: ${{ github.ref_name }}
+          PREVIEW_APPLY: ${{ inputs.preview-apply }}
+          PREVIEW_CLEANUP_APPLY: ${{ inputs.preview-cleanup-apply }}
+          PREVIEW_ROLE_ARN: ${{ inputs.preview-aws-role-arn }}
+          STAGING_APPLY: ${{ inputs.staging-apply }}
+          STAGING_ROLE_ARN: ${{ inputs.staging-aws-role-arn }}
+          PRODUCTION_APPLY: ${{ inputs.production-apply }}
+          PRODUCTION_APPROVED: ${{ inputs.production-approved }}
+          PRODUCTION_ROLE_ARN: ${{ inputs.production-aws-role-arn }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "pull_request" ] && [ "$EVENT_ACTION" != "closed" ] && [ "$PREVIEW_APPLY" = "true" ] && [ -z "$PREVIEW_ROLE_ARN" ]; then
+            echo "::error::preview-aws-role-arn is required before preview-apply can build or deploy"
+            exit 1
+          fi
+          if [ "$EVENT_NAME" = "pull_request" ] && [ "$EVENT_ACTION" = "closed" ] && [ "$PREVIEW_CLEANUP_APPLY" = "true" ] && [ -z "$PREVIEW_ROLE_ARN" ]; then
+            echo "::error::preview-aws-role-arn is required before preview-cleanup-apply can run"
+            exit 1
+          fi
+          if [ "$EVENT_NAME" = "push" ] && [ "$REF_NAME" = "main" ] && [ "$STAGING_APPLY" = "true" ] && [ -z "$STAGING_ROLE_ARN" ]; then
+            echo "::error::staging-aws-role-arn is required before staging-apply can build or deploy"
+            exit 1
+          fi
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$PRODUCTION_APPLY" = "true" ] && [ "$PRODUCTION_APPROVED" != "true" ]; then
+            echo "::error::production-apply requires production-approved=true before production build or deploy"
+            exit 1
+          fi
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$PRODUCTION_APPLY" = "true" ] && [ "$PRODUCTION_APPROVED" = "true" ] && [ -z "$PRODUCTION_ROLE_ARN" ]; then
+            echo "::error::production-aws-role-arn is required before production-apply can build or deploy"
+            exit 1
+          fi
+
   plan:
     name: Plan web-surface channel
     runs-on: ubuntu-24.04
-    needs: runtime
+    needs:
+      - runtime
+      - apply-input-gate
     outputs:
       web-surface-channel: ${{ steps.web.outputs.web-surface-channel }}
       web-surface-alias: ${{ steps.web.outputs.web-surface-alias }}

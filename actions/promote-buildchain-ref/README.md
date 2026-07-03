@@ -125,6 +125,11 @@ contract:
 specific package publication. Direct `alpha/*` or `release/*` channel refs are
 not valid publish source locks when `require-publish-source-lock` is enabled,
 and a mismatched `publish-source-sha` fails before any promotion or publish side effects begin.
+The reusable build workflow performs the cheaper channel-ref preflight earlier:
+after source-lock resolution and before the build matrix, it requires the target
+channel ref such as `alpha/v22/v22.22` or `release/v22/v22.22` to already point
+at the locked `publish-source-sha`. If not, maintainers should merge the source
+commit through the channel PR first.
 
 When enabled, the action creates or resumes a release transaction keyed by
 repository, version, source SHA, and target ref. It persists that transaction to

@@ -97,7 +97,7 @@ function usage() {
                   [--path <jsonl>] -- <command> [args...]
   buildchain web-surface ...
   buildchain infra-contract ...
-  buildchain publish-source <lock|manifest|verify-lock|validate-anchored-release> ...
+  buildchain publish-source <lock|manifest|verify-lock|verify-channel-ref|validate-anchored-release> ...
   buildchain build-contract ...
 
 Examples:
@@ -821,6 +821,10 @@ async function main(argv = process.argv.slice(2)) {
     }
     if (mode === "verify-lock") {
       runScript("verify-publish-source-lock.mjs", publishArgs);
+      return;
+    }
+    if (mode === "verify-channel-ref") {
+      runScript("verify-publish-channel-ref.mjs", publishArgs);
       return;
     }
     if (mode === "validate-anchored-release") {
