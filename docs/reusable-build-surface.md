@@ -310,12 +310,14 @@ gate branch moves later.
 
 Before any heavy build matrix is scheduled, the workflow also verifies that the
 target channel ref implied by the source lock already points at
-`publish-source-sha`: `publish-gate/alpha/<line>/<version>` must match
-`alpha/<line>`, and `publish-gate/release/<line>/<version>` must match
-`release/<line>`. If it does not, the run fails fast with a diagnostic telling
-maintainers to merge the source commit through the channel PR first. This keeps
-verify from spending runner time on a source tree that cannot legally enter the
-requested publish channel.
+`publish-source-sha` and that the target channel HEAD came from the required
+merged same-repository channel PR. `publish-gate/alpha/<line>/<version>` must
+match `alpha/<line>` and have PR lineage `dev/<line> -> alpha/<line>`;
+`publish-gate/release/<line>/<version>` must match `release/<line>` and have PR
+lineage `alpha/<line> -> release/<line>`. If either check fails, the run fails
+fast with a diagnostic telling maintainers to merge the source commit through
+the channel PR first. This keeps verify from spending runner time on a source
+tree that cannot legally enter the requested publish channel.
 
 The resolved release manifest is uploaded as an artifact and emitted as
 `release-manifest-json`. It records:

@@ -401,7 +401,7 @@ jobs:
           GITHUB_SHA: ${{ github.sha }}
           GITHUB_TOKEN: ${{ github.token }}
 
-      - name: Verify publish target channel ref
+      - name: Verify publish target channel ref and PR lineage
         run: node .buildchain/runtime/scripts/verify-publish-channel-ref.mjs
         env:
           BUILDCHAIN_PUBLISH_SOURCE_REF: ${{ steps.source.outputs.publish-source-ref }}
