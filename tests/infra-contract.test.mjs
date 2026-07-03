@@ -89,6 +89,120 @@ test("infra-contract terraform-shaped fixture proves the core is not CloudFormat
   });
 });
 
+test("infra-contract custom-command adapter records planned and executed evidence", () => {
+  withFixture("infra-contract-shaped", (fixture) => {
+    fs.writeFileSync(
+      path.join(fixture, "buildchain.toml"),
+      `
+schema = 1
+
+[project]
+type = "infra-contract"
+name = "infra-custom-command"
+
+[infra]
+adapter = "custom-command"
+adoption_mode = "observe-only"
+apply = "disabled"
+desired = ["desired/site-kungfu-tech.json"]
+contract = ["outputs/site-kungfu-tech.json"]
+
+[infra.commands]
+validate = "custom validate"
+plan = "custom plan"
+observe = "custom observe"
+
+[[consumers]]
+repo = "kungfu-systems/site-kungfu-tech"
+path = "infra/outputs.json"
+source = "outputs/site-kungfu-tech.json"
+`,
+    );
+
+    const plannedOnly = createInfraContractPlan({
+      cwd: fixture,
+      sourceSha: "6".repeat(40),
+      plannedAt: "2026-07-03T00:00:00.000Z",
+    });
+    assert.deepEqual(
+      plannedOnly.adapterEvidence.map((entry) => [entry.stage, entry.executed, entry.status]),
+      [
+        ["validate", false, "planned"],
+        ["plan", false, "planned"],
+      ],
+    );
+
+    const calls = [];
+    const runner = (command, options = {}) => {
+      calls.push({ command, cwd: options.cwd });
+      return {
+        status: 0,
+        stdout: JSON.stringify({ command, cwd: path.basename(options.cwd) }),
+        stderr: "",
+      };
+    };
+    const plan = createInfraContractPlan({
+      cwd: fixture,
+      sourceSha: "6".repeat(40),
+      plannedAt: "2026-07-03T00:00:00.000Z",
+      executeAdapterCommands: true,
+      commandRunner: runner,
+    });
+    assert.deepEqual(plan.adapterEvidence.map((entry) => entry.status), ["passed", "passed"]);
+    assert.equal(plan.adapterEvidence[0].output.command, "custom validate");
+
+    const artifact = createInfraContractArtifact({
+      cwd: fixture,
+      plan,
+      observedAt: "2026-07-03T00:00:00.000Z",
+      executeAdapterCommands: true,
+      commandRunner: runner,
+    });
+    assert.equal(artifact.observed.adapterEvidence[0].stage, "observe");
+    assert.equal(artifact.observed.adapterEvidence[0].status, "passed");
+    assert.deepEqual(calls.map((call) => call.command), ["custom validate", "custom plan", "custom observe"]);
+  });
+});
+
+test("infra-contract custom-command adapter fails closed on command failure", () => {
+  withFixture("infra-contract-shaped", (fixture) => {
+    fs.writeFileSync(
+      path.join(fixture, "buildchain.toml"),
+      `
+schema = 1
+
+[project]
+type = "infra-contract"
+name = "infra-custom-command"
+
+[infra]
+adapter = "custom-command"
+adoption_mode = "observe-only"
+apply = "disabled"
+desired = ["desired/site-kungfu-tech.json"]
+contract = ["outputs/site-kungfu-tech.json"]
+
+[infra.commands]
+validate = "custom validate"
+
+[[consumers]]
+repo = "kungfu-systems/site-kungfu-tech"
+path = "infra/outputs.json"
+source = "outputs/site-kungfu-tech.json"
+`,
+    );
+    assert.throws(
+      () => createInfraContractPlan({
+        cwd: fixture,
+        sourceSha: "7".repeat(40),
+        executeAdapterCommands: true,
+        commandRunner: () => ({ status: 2, stdout: "", stderr: "adapter failed" }),
+      }),
+      /adapter validate command failed/,
+    );
+  });
+});
+
 test("infra-contract apply fails closed without an explicit apply contract", () => {
   withFixture("infra-contract-shaped", (fixture) => {
     assert.throws(
