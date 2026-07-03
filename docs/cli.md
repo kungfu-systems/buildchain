@@ -63,7 +63,8 @@ Supported presets:
 - `--type web-surface` for preview/staging/production site or app deployments.
 - `--type infra-contract` for provider-agnostic infrastructure contract
   validation, observation, contract publication, and downstream propagation
-  planning without default mutation.
+  planning without default mutation. Provider adapters expose built-in command
+  plans by default, and only configured `[infra.commands]` hooks can execute.
 - `--type anchored-package` for packages whose version is anchored to an
   explicit upstream release manifest.
 
