@@ -130,10 +130,48 @@ test("infra-contract terraform-shaped fixture proves the core is not CloudFormat
   });
 });
 
-test("infra-contract static provider fixtures cover CloudFormation and Pulumi shapes", () => {
-  for (const [fixtureName, adapter, desiredPath, outputKey] of [
-    ["infra-contract-cloudformation-shaped", "aws-cloudformation", "desired/site-stack.template.json", "bucketName"],
-    ["infra-contract-pulumi-shaped", "pulumi", "desired/pulumi-preview.json", "bucketName"],
+test("infra-contract static provider fixtures cover built-in adapter shapes", () => {
+  for (const [fixtureName, adapter, desiredPath, outputKey, planCommandPattern, observeCommandPattern] of [
+    [
+      "infra-contract-cloudformation-shaped",
+      "aws-cloudformation",
+      "desired/site-stack.template.json",
+      "bucketName",
+      /aws cloudformation create-change-set/,
+      /aws cloudformation describe-stacks/,
+    ],
+    [
+      "infra-contract-opentofu-shaped",
+      "opentofu",
+      "desired/main.tf.json",
+      "bucketName",
+      /tofu plan/,
+      /tofu output -json/,
+    ],
+    [
+      "infra-contract-pulumi-shaped",
+      "pulumi",
+      "desired/pulumi-preview.json",
+      "bucketName",
+      /pulumi preview --json/,
+      /pulumi stack output --json/,
+    ],
+    [
+      "infra-contract-aws-cdk-shaped",
+      "aws-cdk",
+      "desired/cdk.out/manifest.json",
+      "bucketName",
+      /npx cdk diff/,
+      /aws cloudformation describe-stacks/,
+    ],
+    [
+      "infra-contract-aws-cli-shaped",
+      "aws-cli",
+      "desired/request.json",
+      "bucketName",
+      /aws <service> <plan-or-dry-run-operation>/,
+      /aws <service> <describe-operation>/,
+    ],
   ]) {
     withFixture(fixtureName, (fixture) => {
       const summary = validateInfraContractProject(fixture);
@@ -155,6 +193,7 @@ test("infra-contract static provider fixtures cover CloudFormation and Pulumi sh
       assert.deepEqual(plan.adapterEvidence.map((entry) => entry.stage), ["validate", "plan"]);
       assert.equal(plan.adapterEvidence.every((entry) => entry.commandSource === "builtin-plan"), true);
       assert.equal(plan.adapterEvidence.every((entry) => entry.executed === false), true);
+      assert.match(plan.adapterEvidence[1].command, planCommandPattern);
       assert.deepEqual(plan.desiredFiles.map((entry) => entry.path), [desiredPath]);
 
       const artifact = createInfraContractArtifact({
@@ -166,6 +205,7 @@ test("infra-contract static provider fixtures cover CloudFormation and Pulumi sh
       assert.equal(artifact.observed.source, "adapter-observe");
       assert.equal(artifact.observed.files[0].outputs[outputKey].startsWith("example-"), true);
       assert.deepEqual(artifact.observed.adapterEvidence.map((entry) => [entry.stage, entry.executed]), [["observe", false]]);
+      assert.match(artifact.observed.adapterEvidence[0].command, observeCommandPattern);
       assert.equal(artifact.validation.mutationFree, true);
 
       const propagation = createInfraContractPropagationPlan({ cwd: fixture, artifact });
