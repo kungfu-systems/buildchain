@@ -92,6 +92,438 @@ test("init package creates buildchain.toml and reusable workflow", () => {
   assert.match(failure.stderr, /already exists/);
 });
 
+test("init infra-contract creates a directly valid observed contract scaffold", () => {
+  const cwd = tempDir("init-infra-contract");
+  const result = JSON.parse(runBuildchain([
+    "init",
+    "--cwd",
+    cwd,
+    "--type",
+    "infra-contract",
+  ]));
+
+  assert.equal(result.type, "infra-contract");
+  assert.deepEqual(result.written.sort(), [
+    ".github/workflows/build.yml",
+    "buildchain.toml",
+    "infra/desired.json",
+    "infra/outputs.json",
+  ]);
+  assert.match(fs.readFileSync(path.join(cwd, "buildchain.toml"), "utf8"), /type = "infra-contract"/);
+  assert.match(fs.readFileSync(path.join(cwd, "buildchain.toml"), "utf8"), /--mode ci/);
+  const workflow = fs.readFileSync(path.join(cwd, ".github", "workflows", "build.yml"), "utf8");
+  assert.match(workflow, /\.buildchain\/infra-contract-plan\.json/);
+  assert.match(workflow, /\.buildchain\/infra-contract-evidence-verification\.json/);
+
+  const outputPath = path.join(cwd, "infra-validation.json");
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "validate",
+    "--cwd",
+    cwd,
+    "--output",
+    outputPath,
+  ]);
+  const validation = JSON.parse(fs.readFileSync(outputPath, "utf8"));
+  assert.equal(validation.project.type, "infra-contract");
+  assert.equal(validation.infra.adapter, "manual-observed");
+  assert.equal(validation.consumers.length, 1);
+
+  const ciPath = path.join(cwd, ".buildchain", "infra-contract-ci.json");
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "ci",
+    "--cwd",
+    cwd,
+    "--source-sha",
+    "1".repeat(40),
+    "--output",
+    ciPath,
+  ]);
+  const ci = JSON.parse(fs.readFileSync(ciPath, "utf8"));
+  assert.equal(ci.contract, "kungfu-buildchain-infra-contract-ci");
+  assert.equal(ci.mutationAllowed, false);
+  assert.equal(ci.verificationOk, true);
+  assert.equal(fs.existsSync(path.join(cwd, ".buildchain", "infra-contract-plan.json")), true);
+  assert.equal(fs.existsSync(path.join(cwd, ".buildchain", "buildchain.infra-contract.json")), true);
+  assert.equal(fs.existsSync(path.join(cwd, ".buildchain", "infra-contract-propagation-apply.json")), true);
+  const verification = JSON.parse(fs.readFileSync(path.join(cwd, ".buildchain", "infra-contract-evidence-verification.json"), "utf8"));
+  assert.equal(verification.ok, true);
+});
+
+test("infra-contract CLI apply consumes a saved fresh plan", () => {
+  const cwd = tempDir("infra-contract-cli-apply");
+  fs.cpSync(path.join(root, "fixtures/infra-contract-terraform-shaped"), cwd, { recursive: true });
+  fs.writeFileSync(
+    path.join(cwd, "buildchain.toml"),
+    fs.readFileSync(path.join(cwd, "buildchain.toml"), "utf8")
+      .replace('adoption_mode = "observe-only"', 'adoption_mode = "managed-apply"')
+      .replace('apply = "disabled"', 'apply = "manual-approval"')
+      .replace('environment = "preview"', 'environment = "preview"\nidentity_ref = "AWS_ROLE_ARN"'),
+  );
+  const sourceSha = "2".repeat(40);
+  const planPath = path.join(cwd, ".buildchain", "infra-contract-plan.json");
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "plan",
+    "--cwd",
+    cwd,
+    "--source-sha",
+    sourceSha,
+    "--output",
+    planPath,
+  ]);
+  const outputPath = path.join(cwd, ".buildchain", "infra-contract-apply.json");
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "apply",
+    "--cwd",
+    cwd,
+    "--source-sha",
+    sourceSha,
+    "--approval-id",
+    "APPROVED-CLI-1",
+    "--plan",
+    planPath,
+    "--dry-run",
+    "true",
+    "--output",
+    outputPath,
+  ]);
+  const result = JSON.parse(fs.readFileSync(outputPath, "utf8"));
+  assert.equal(result.contract, "kungfu-buildchain-infra-contract-apply");
+  assert.equal(result.status, "planned");
+  assert.equal(result.sourceSha, sourceSha);
+  assert.equal(result.mutationExecuted, false);
+});
+
+test("infra-contract CLI propagation-apply writes a dry-run PR plan", () => {
+  const cwd = tempDir("infra-contract-cli-propagation");
+  fs.cpSync(path.join(root, "fixtures/infra-contract-shaped"), cwd, { recursive: true });
+  const sourceSha = "5".repeat(40);
+  const planPath = path.join(cwd, ".buildchain", "infra-contract-plan.json");
+  const artifactPath = path.join(cwd, ".buildchain", "buildchain.infra-contract.json");
+  const propagationPath = path.join(cwd, ".buildchain", "infra-contract-propagation.json");
+  const outputPath = path.join(cwd, ".buildchain", "infra-contract-propagation-apply.json");
+
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "plan",
+    "--cwd",
+    cwd,
+    "--source-sha",
+    sourceSha,
+    "--output",
+    planPath,
+  ]);
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "contract",
+    "--cwd",
+    cwd,
+    "--source-sha",
+    sourceSha,
+    "--plan",
+    planPath,
+    "--output",
+    artifactPath,
+  ]);
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "propagation-plan",
+    "--cwd",
+    cwd,
+    "--artifact",
+    artifactPath,
+    "--output",
+    propagationPath,
+  ]);
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "propagation-apply",
+    "--cwd",
+    cwd,
+    "--artifact",
+    artifactPath,
+    "--propagation-plan",
+    propagationPath,
+    "--dry-run",
+    "true",
+    "--output",
+    outputPath,
+  ]);
+
+  const result = JSON.parse(fs.readFileSync(outputPath, "utf8"));
+  assert.equal(result.contract, "kungfu-buildchain-infra-contract-propagation-apply");
+  assert.equal(result.status, "planned");
+  assert.equal(result.mutationAllowed, false);
+  assert.equal(result.operations.length, 2);
+});
+
+test("infra-contract CLI evidence-bundle binds artifact and propagation output", () => {
+  const cwd = tempDir("infra-contract-cli-evidence-bundle");
+  fs.cpSync(path.join(root, "fixtures/infra-contract-shaped"), cwd, { recursive: true });
+  const sourceSha = "6".repeat(40);
+  const planPath = path.join(cwd, ".buildchain", "infra-contract-plan.json");
+  const artifactPath = path.join(cwd, ".buildchain", "buildchain.infra-contract.json");
+  const propagationPath = path.join(cwd, ".buildchain", "infra-contract-propagation.json");
+  const propagationResultPath = path.join(cwd, ".buildchain", "infra-contract-propagation-apply.json");
+  const outputPath = path.join(cwd, ".buildchain", "infra-contract-evidence-bundle.json");
+
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "plan",
+    "--cwd",
+    cwd,
+    "--source-sha",
+    sourceSha,
+    "--output",
+    planPath,
+  ]);
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "contract",
+    "--cwd",
+    cwd,
+    "--source-sha",
+    sourceSha,
+    "--plan",
+    planPath,
+    "--output",
+    artifactPath,
+  ]);
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "propagation-plan",
+    "--cwd",
+    cwd,
+    "--artifact",
+    artifactPath,
+    "--output",
+    propagationPath,
+  ]);
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "propagation-apply",
+    "--cwd",
+    cwd,
+    "--artifact",
+    artifactPath,
+    "--propagation-plan",
+    propagationPath,
+    "--dry-run",
+    "true",
+    "--output",
+    propagationResultPath,
+  ]);
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "evidence-bundle",
+    "--artifact",
+    artifactPath,
+    "--propagation-result",
+    propagationResultPath,
+    "--output",
+    outputPath,
+  ]);
+
+  const artifact = JSON.parse(fs.readFileSync(artifactPath, "utf8"));
+  const result = JSON.parse(fs.readFileSync(outputPath, "utf8"));
+  assert.equal(result.contract, "kungfu-buildchain-infra-contract-evidence-bundle");
+  assert.equal(result.artifactHash, artifact.artifactHash);
+  assert.equal(result.lifecycle.apply.required, false);
+  assert.equal(result.lifecycle.propagate.result.status, "planned");
+  assert.match(result.bundleHash, /^[0-9a-f]{64}$/);
+
+  const verification = JSON.parse(runBuildchain([
+    "verify",
+    "infra-contract-evidence-bundle",
+    outputPath,
+    "--json",
+  ]));
+  assert.equal(verification.ok, true);
+  assert.equal(verification.artifactHash, artifact.artifactHash);
+
+  const tamperedPath = path.join(cwd, ".buildchain", "infra-contract-evidence-bundle-tampered.json");
+  fs.writeFileSync(
+    tamperedPath,
+    `${JSON.stringify({
+      ...result,
+      lifecycle: {
+        ...result.lifecycle,
+        contract: {
+          ...result.lifecycle.contract,
+          hash: "0".repeat(64),
+        },
+      },
+    }, null, 2)}\n`,
+  );
+  const failure = runBuildchainFailure([
+    "verify",
+    "infra-contract-evidence-bundle",
+    tamperedPath,
+    "--json",
+  ]);
+  assert.notEqual(failure.status, 0);
+  const failureReport = JSON.parse(failure.stdout);
+  assert.equal(failureReport.ok, false);
+  assert.equal(
+    failureReport.issues.some((issue) => issue.code === "bundle.hash.mismatch"),
+    true,
+  );
+});
+
+test("infra-contract CLI plan can execute custom-command adapter evidence", () => {
+  const cwd = tempDir("infra-contract-cli-custom-command");
+  fs.cpSync(path.join(root, "fixtures/infra-contract-shaped"), cwd, { recursive: true });
+  fs.mkdirSync(path.join(cwd, "scripts"), { recursive: true });
+  fs.writeFileSync(
+    path.join(cwd, "scripts", "adapter.mjs"),
+    "console.log(JSON.stringify({ stage: process.argv[2], ok: true }));\n",
+  );
+  fs.writeFileSync(
+    path.join(cwd, "buildchain.toml"),
+    `
+schema = 1
+
+[project]
+type = "infra-contract"
+name = "infra-custom-command"
+
+[infra]
+adapter = "custom-command"
+adoption_mode = "observe-only"
+apply = "disabled"
+desired = ["desired/site-kungfu-tech.json"]
+contract = ["outputs/site-kungfu-tech.json"]
+
+[infra.commands]
+validate = "node scripts/adapter.mjs validate"
+plan = "node scripts/adapter.mjs plan"
+
+[[consumers]]
+repo = "kungfu-systems/site-kungfu-tech"
+path = "infra/outputs.json"
+source = "outputs/site-kungfu-tech.json"
+`,
+  );
+  const outputPath = path.join(cwd, ".buildchain", "infra-contract-plan.json");
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "plan",
+    "--cwd",
+    cwd,
+    "--source-sha",
+    "8".repeat(40),
+    "--execute-adapter-commands",
+    "true",
+    "--output",
+    outputPath,
+  ]);
+
+  const result = JSON.parse(fs.readFileSync(outputPath, "utf8"));
+  assert.deepEqual(result.adapterEvidence.map((entry) => entry.status), ["passed", "passed"]);
+  assert.equal(result.adapterEvidence[0].output.stage, "validate");
+  assert.equal(result.adapterEvidence[1].output.stage, "plan");
+});
+
+test("infra-contract CLI apply can execute an explicitly approved custom-command adapter", () => {
+  const cwd = tempDir("infra-contract-cli-custom-apply");
+  fs.cpSync(path.join(root, "fixtures/infra-contract-shaped"), cwd, { recursive: true });
+  fs.mkdirSync(path.join(cwd, "scripts"), { recursive: true });
+  fs.writeFileSync(
+    path.join(cwd, "scripts", "adapter.mjs"),
+    "console.log(JSON.stringify({ stage: process.argv[2], ok: true }));\n",
+  );
+  fs.writeFileSync(
+    path.join(cwd, "buildchain.toml"),
+    `
+schema = 1
+
+[project]
+type = "infra-contract"
+name = "infra-custom-command"
+
+[infra]
+adapter = "custom-command"
+adoption_mode = "managed-apply"
+apply = "manual-approval"
+environment = "preview"
+identity_ref = "AWS_ROLE_ARN"
+desired = ["desired/site-kungfu-tech.json"]
+contract = ["outputs/site-kungfu-tech.json"]
+
+[infra.commands]
+validate = "node scripts/adapter.mjs validate"
+plan = "node scripts/adapter.mjs plan"
+apply = "node scripts/adapter.mjs apply"
+
+[[consumers]]
+repo = "kungfu-systems/site-kungfu-tech"
+path = "infra/outputs.json"
+source = "outputs/site-kungfu-tech.json"
+`,
+  );
+  const sourceSha = "9".repeat(40);
+  const planPath = path.join(cwd, ".buildchain", "infra-contract-plan.json");
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "plan",
+    "--cwd",
+    cwd,
+    "--source-sha",
+    sourceSha,
+    "--execute-adapter-commands",
+    "true",
+    "--output",
+    planPath,
+  ]);
+  const outputPath = path.join(cwd, ".buildchain", "infra-contract-apply.json");
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "apply",
+    "--cwd",
+    cwd,
+    "--source-sha",
+    sourceSha,
+    "--approval-id",
+    "APPROVED-CLI-APPLY-1",
+    "--plan",
+    planPath,
+    "--dry-run",
+    "false",
+    "--execute-adapter-commands",
+    "true",
+    "--output",
+    outputPath,
+  ]);
+
+  const result = JSON.parse(fs.readFileSync(outputPath, "utf8"));
+  assert.equal(result.contract, "kungfu-buildchain-infra-contract-apply");
+  assert.equal(result.status, "completed");
+  assert.equal(result.mutationAllowed, true);
+  assert.equal(result.mutationExecuted, true);
+  assert.equal(result.adapterEvidence[0].stage, "apply");
+  assert.equal(result.adapterEvidence[0].status, "passed");
+  assert.equal(result.adapterEvidence[0].output.stage, "apply");
+});
+
 test("validate reads initialized package config", () => {
   const cwd = tempDir("validate-package");
   fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({ name: "fixture", version: "0.1.0" }, null, 2));
@@ -1256,6 +1688,8 @@ test("release passport collect verify and explain form an agent-readable contrac
     "kungfu-systems/buildchain",
     "--source-sha",
     "e".repeat(40),
+    "--product-name",
+    "Libnode",
     "--assets-dir",
     assetsDir,
     "--output-dir",
@@ -1266,6 +1700,7 @@ test("release passport collect verify and explain form an agent-readable contrac
   const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
 
   assert.equal(passport.contract, "kungfu-buildchain-release-passport");
+  assert.equal(passport.product.name, "Libnode");
   assert.equal(passport.runnerPolicy.productionDefault, "github-hosted");
   assert.equal(passport.runnerPolicy.compatibilityFixture, "self-hosted");
   assert.equal(passport.artifacts.length, 2);
@@ -1287,6 +1722,239 @@ test("release passport collect verify and explain form an agent-readable contrac
   assert.equal(explanation.audience, "agent");
   assert.equal(explanation.trust, "pass");
   assert.equal(explanation.nextAction, "install-or-upgrade-after-policy-review");
+});
+
+test("release passport unifies package set publish transaction evidence", () => {
+  const cwd = tempDir("release-passport-unified");
+  const assetsDir = path.join(cwd, "dist");
+  fs.mkdirSync(assetsDir, { recursive: true });
+  fs.writeFileSync(path.join(assetsDir, "buildchain-x86_64-unknown-linux-gnu.tar.gz"), "linux-binary\n");
+  fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({
+    name: "@kungfu-tech/buildchain",
+    version: "2.3.2",
+  }, null, 2));
+
+  const publishEvidencePath = path.join(cwd, "publish-evidence.json");
+  fs.writeFileSync(publishEvidencePath, JSON.stringify({
+    schema: 1,
+    version: "2.3.2",
+    channel: "release",
+    source_sha: "a".repeat(40),
+    release_sha: "b".repeat(40),
+    target_ref: "release/v2/v2.3",
+    release_material_sha: "b".repeat(40),
+    publish_tooling_sha: "c".repeat(40),
+    artifacts: [
+      {
+        group: "node",
+        kind: "npm",
+        name: "@kungfu-tech/buildchain-linux-x64",
+        ref: "2.3.2",
+        digest: "sha512-linux",
+      },
+      {
+        group: "node",
+        kind: "npm",
+        name: "@kungfu-tech/buildchain-darwin-arm64",
+        ref: "2.3.2",
+        digest: "sha512-darwin",
+      },
+      {
+        group: "node",
+        kind: "npm",
+        name: "@kungfu-tech/buildchain-win32-x64",
+        ref: "2.3.2",
+        digest: "sha512-windows",
+      },
+      {
+        group: "node",
+        kind: "npm",
+        name: "@kungfu-tech/buildchain",
+        ref: "2.3.2",
+        digest: "sha512-main",
+      },
+    ],
+  }, null, 2));
+  const transactionPath = path.join(cwd, "transaction.json");
+  fs.writeFileSync(transactionPath, JSON.stringify({
+    command: "finalize",
+    transaction: {
+      id: "kungfu-systems/buildchain:2.3.2:release/v2/v2.3",
+      version: "2.3.2",
+      state: "complete",
+      previous_state: "finalizing",
+      exact_tag: "v2.3.2",
+      release_sha: "b".repeat(40),
+      release_material_sha: "b".repeat(40),
+      state_ref: "refs/heads/buildchain/release-state/2-3-2",
+      evidence_path: ".buildchain/release-evidence/v2.3.2/evidence.json",
+    },
+    validation: {
+      valid: true,
+      errors: [],
+    },
+    durable: {
+      sha: "d".repeat(40),
+    },
+  }, null, 2));
+  const anchorManifestPath = path.join(cwd, "anchor-manifest.json");
+  fs.writeFileSync(anchorManifestPath, JSON.stringify({
+    npmVersion: "2.3.2",
+    nodeVersion: "24.0.0",
+  }, null, 2));
+  const packageSetPath = path.join(cwd, "package-set.json");
+  fs.writeFileSync(packageSetPath, JSON.stringify({
+    order: "platforms-first-main-last",
+    registry: "https://registry.npmjs.org/",
+    main: {
+      name: "@kungfu-tech/buildchain",
+      version: "2.3.2",
+      distTag: "latest",
+      digest: "sha512-main",
+    },
+    platforms: [
+      {
+        name: "@kungfu-tech/buildchain-linux-x64",
+        version: "2.3.2",
+        distTag: "latest",
+        digest: "sha512-linux",
+        platform: "linux-x64",
+      },
+      {
+        name: "@kungfu-tech/buildchain-darwin-arm64",
+        version: "2.3.2",
+        distTag: "latest",
+        digest: "sha512-darwin",
+        platform: "darwin-arm64",
+      },
+      {
+        name: "@kungfu-tech/buildchain-win32-x64",
+        version: "2.3.2",
+        distTag: "latest",
+        digest: "sha512-windows",
+        platform: "win32-x64",
+      },
+    ],
+  }, null, 2));
+  const buildSummaryPath = path.join(cwd, "build-summary.json");
+  fs.writeFileSync(buildSummaryPath, JSON.stringify({
+    contract: "kungfu-buildchain-build-summary",
+    artifactName: "buildchain",
+    platformCount: 3,
+    fileCount: 3,
+    totalBytes: 123,
+  }, null, 2));
+  const linuxManifestPath = path.join(cwd, "linux-manifest.json");
+  const darwinManifestPath = path.join(cwd, "darwin-manifest.json");
+  const windowsManifestPath = path.join(cwd, "windows-manifest.json");
+  fs.writeFileSync(linuxManifestPath, JSON.stringify({
+    artifactName: "buildchain-linux-x64",
+    platform: { id: "linux-x64", name: "Linux x64" },
+    summary: { fileCount: 1, totalBytes: 41 },
+  }, null, 2));
+  fs.writeFileSync(darwinManifestPath, JSON.stringify({
+    artifactName: "buildchain-darwin-arm64",
+    platform: { id: "darwin-arm64", name: "Darwin arm64" },
+    summary: { fileCount: 1, totalBytes: 41 },
+  }, null, 2));
+  fs.writeFileSync(windowsManifestPath, JSON.stringify({
+    artifactName: "buildchain-win32-x64",
+    platform: { id: "win32-x64", name: "Windows x64" },
+    summary: { fileCount: 1, totalBytes: 41 },
+  }, null, 2));
+  const distTagEvidencePath = path.join(cwd, "dist-tag-evidence.json");
+  fs.writeFileSync(distTagEvidencePath, JSON.stringify({
+    schema: 1,
+    contract: "kungfu-buildchain-dist-tag-promotion-evidence",
+    distTag: "latest",
+    packages: [
+      { name: "@kungfu-tech/buildchain", version: "2.3.2", distTag: "latest", role: "main" },
+    ],
+  }, null, 2));
+
+  const collected = JSON.parse(runBuildchain([
+    "collect",
+    "github-release",
+    "--cwd",
+    cwd,
+    "--tag",
+    "v2.3.2",
+    "--repository",
+    "kungfu-systems/buildchain",
+    "--source-sha",
+    "a".repeat(40),
+    "--assets-dir",
+    assetsDir,
+    "--publish-evidence-json",
+    publishEvidencePath,
+    "--transaction-json",
+    transactionPath,
+    "--anchor-manifest-json",
+    anchorManifestPath,
+    "--package-set-json",
+    packageSetPath,
+    "--build-summary-json",
+    buildSummaryPath,
+    "--platform-manifest-json",
+    linuxManifestPath,
+    "--platform-manifest-json",
+    darwinManifestPath,
+    "--platform-manifest-json",
+    windowsManifestPath,
+    "--dist-tag-evidence-json",
+    distTagEvidencePath,
+    "--trusted-publishing-json",
+    JSON.stringify({
+      provider: "npm",
+      enabled: true,
+      auth: "trusted-publishing",
+      workflowRunId: "12345",
+    }),
+    "--release-extra-json",
+    JSON.stringify({
+      channel: "release",
+      targetRef: "release/v2/v2.3",
+      releaseSha: "b".repeat(40),
+    }),
+    "--output-dir",
+    "release-passport",
+    "--json",
+  ], { cwd }));
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+
+  assert.equal(passport.packageSet.main.name, "@kungfu-tech/buildchain");
+  assert.equal(passport.packageSet.main.distTag, "latest");
+  assert.equal(passport.packageSet.platforms.length, 3);
+  assert.equal(passport.publish.packages.length, 4);
+  assert.equal(passport.publish.distTag, "latest");
+  assert.ok(passport.publish.packages.some((entry) =>
+    entry.role === "platform" &&
+    entry.name === "@kungfu-tech/buildchain-darwin-arm64" &&
+    entry.digest === "sha512-darwin",
+  ));
+  assert.equal(passport.release.releaseStateRef, "refs/heads/buildchain/release-state/2-3-2");
+  assert.equal(passport.anchorManifest.fields.npmVersion, "2.3.2");
+  assert.equal(passport.trustedPublishing.provider, "npm");
+  assert.equal(passport.transaction.state, "complete");
+  assert.equal(passport.transaction.previousState, "finalizing");
+  assert.equal(passport.transaction.result.command, "finalize");
+  assert.equal(passport.transaction.result.validation.valid, true);
+  assert.equal(passport.buildSummary.fields.contract, "kungfu-buildchain-build-summary");
+  assert.equal(passport.platformArtifactManifests.length, 3);
+  assert.equal(passport.distTagPromotion.fields.distTag, "latest");
+  assert.ok(passport.artifacts.some((artifact) => artifact.name === "@kungfu-tech/buildchain-linux-x64"));
+  assert.ok(passport.artifacts.some((artifact) => artifact.name === "@kungfu-tech/buildchain"));
+
+  const report = JSON.parse(runBuildchain(["verify", "release-passport", passportPath, "--json"], { cwd }));
+  assert.equal(report.ok, true);
+  assert.equal(report.completeness.packageSetPresent, true);
+  assert.equal(report.completeness.trustedPublishingPresent, true);
+  assert.equal(report.completeness.transactionPresent, true);
+  assert.equal(report.completeness.anchorManifestPresent, true);
+  assert.equal(report.completeness.buildSummaryPresent, true);
+  assert.equal(report.completeness.platformArtifactManifestCount, 3);
+  assert.equal(report.completeness.distTagPromotionEvidencePresent, true);
 });
 
 test("release evidence bundle groups release assets and passport files", () => {
@@ -1368,6 +2036,91 @@ test("release passport verification fails closed on missing artifact evidence", 
   const report = JSON.parse(failure.stdout);
   assert.equal(report.ok, false);
   assert.match(JSON.stringify(report.issues), /artifact\.evidence\.missing/);
+});
+
+test("release passport verification matches publish evidence by artifact ref", () => {
+  const cwd = tempDir("release-passport-publish-ref");
+  const passportPath = path.join(cwd, "buildchain.release.json");
+  fs.writeFileSync(passportPath, JSON.stringify({
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-release-passport",
+    product: {
+      name: "Buildchain",
+      repository: "kungfu-systems/buildchain",
+      mechanism: "product-mechanism.json",
+    },
+    release: {
+      tag: "v2.3.2",
+      sourceSha: "f".repeat(40),
+      releaseSha: "e".repeat(40),
+      targetRef: "release/v2/v2.3",
+    },
+    runnerPolicy: {
+      productionDefault: "github-hosted",
+    },
+    artifacts: [
+      {
+        group: "node",
+        kind: "npm",
+        name: "@kungfu-tech/buildchain",
+        ref: "2.3.2",
+        digest: "sha512-current",
+        evidence: "publish-evidence.json",
+      },
+    ],
+    evidence: {
+      artifactEvidence: "artifact-evidence.json",
+      publishEvidence: "publish-evidence.json",
+      impact: "impact.json",
+      agentIndex: "agent-index.json",
+    },
+  }, null, 2));
+  fs.writeFileSync(path.join(cwd, "artifact-evidence.json"), JSON.stringify({
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-artifact-evidence",
+    artifacts: [],
+  }, null, 2));
+  fs.writeFileSync(path.join(cwd, "publish-evidence.json"), JSON.stringify({
+    schema: 1,
+    version: "2.3.2",
+    channel: "release",
+    source_sha: "f".repeat(40),
+    release_sha: "e".repeat(40),
+    target_ref: "release/v2/v2.3",
+    release_material_sha: "e".repeat(40),
+    publish_tooling_sha: "c".repeat(40),
+    artifacts: [
+      {
+        group: "node",
+        kind: "npm",
+        name: "@kungfu-tech/buildchain",
+        ref: "2.3.2",
+        digest: "sha512-current",
+      },
+      {
+        group: "node",
+        kind: "npm",
+        name: "@kungfu-tech/buildchain",
+        ref: "2.3.1",
+        digest: "sha512-old",
+      },
+    ],
+  }, null, 2));
+  for (const [fileName, contract] of [
+    ["impact.json", "kungfu-buildchain-impact"],
+    ["agent-index.json", "kungfu-buildchain-agent-index"],
+    ["product-mechanism.json", "kungfu-buildchain-product-mechanism"],
+  ]) {
+    fs.writeFileSync(path.join(cwd, fileName), JSON.stringify({
+      schemaVersion: 1,
+      contract,
+    }, null, 2));
+  }
+
+  const report = JSON.parse(runBuildchain(["verify", "release-passport", passportPath, "--json"], { cwd }));
+
+  assert.equal(report.ok, true);
+  assert.equal(report.completeness.evidenceArtifactCount, 2);
 });
 
 test("release dry-run rejects unsupported tag syntax", () => {

@@ -506,6 +506,153 @@ adapter = "aws-s3-cloudfront"
   );
 });
 
+test("buildchain.toml normalizes infra-contract configuration", () => {
+  withTempRepo(
+    {
+      "buildchain.toml": `
+schema = 1
+
+[project]
+type = "infra-contract"
+name = "infra-demo"
+
+[infra]
+adapter = "manual-observed"
+desired = ["desired/site.json"]
+contract = ["outputs/site.json"]
+
+[[consumers]]
+repo = "kungfu-systems/site-demo"
+path = "infra/outputs.json"
+source = "outputs/site.json"
+`,
+      "desired/site.json": "{ \"site\": \"demo\" }\n",
+      "outputs/site.json": "{ \"outputs\": { \"url\": \"https://demo.example\" } }\n",
+    },
+    (dir) => {
+      const summary = validateBuildchainConfig(dir);
+      assert.equal(summary.project.type, "infra-contract");
+      assert.deepEqual(summary.infra, {
+        adapter: "manual-observed",
+        adoptionMode: "manual-observed",
+        applyMode: "disabled",
+        environment: "",
+        identityRef: "",
+        desired: ["desired/site.json"],
+        contract: ["outputs/site.json"],
+        secretRefs: [],
+        commands: undefined,
+      });
+      assert.deepEqual(summary.consumers, [
+        {
+          repo: "kungfu-systems/site-demo",
+          path: "infra/outputs.json",
+          source: "outputs/site.json",
+          branch: "",
+        },
+      ]);
+    },
+  );
+});
+
+test("buildchain.toml rejects infra-contract apply without target environment", () => {
+  withTempRepo(
+    {
+      "buildchain.toml": `
+schema = 1
+
+[project]
+type = "infra-contract"
+name = "infra-demo"
+
+[infra]
+adapter = "terraform"
+adoption_mode = "managed-apply"
+apply = "manual-approval"
+identity_ref = "AWS_ROLE_ARN"
+desired = ["desired/site.json"]
+contract = ["outputs/site.json"]
+
+[[consumers]]
+repo = "kungfu-systems/site-demo"
+path = "infra/outputs.json"
+source = "outputs/site.json"
+`,
+    },
+    (dir) => {
+      assert.throws(
+        () => validateBuildchainConfig(dir),
+        /infra.apply requires infra.environment/,
+      );
+    },
+  );
+});
+
+test("buildchain.toml rejects infra-contract apply without identity reference", () => {
+  withTempRepo(
+    {
+      "buildchain.toml": `
+schema = 1
+
+[project]
+type = "infra-contract"
+name = "infra-demo"
+
+[infra]
+adapter = "terraform"
+adoption_mode = "managed-apply"
+apply = "manual-approval"
+environment = "preview"
+desired = ["desired/site.json"]
+contract = ["outputs/site.json"]
+
+[[consumers]]
+repo = "kungfu-systems/site-demo"
+path = "infra/outputs.json"
+source = "outputs/site.json"
+`,
+    },
+    (dir) => {
+      assert.throws(
+        () => validateBuildchainConfig(dir),
+        /infra.apply requires infra.identity_ref/,
+      );
+    },
+  );
+});
+
+test("buildchain.toml rejects infra-contract apply without managed ownership", () => {
+  withTempRepo(
+    {
+      "buildchain.toml": `
+schema = 1
+
+[project]
+type = "infra-contract"
+name = "infra-demo"
+
+[infra]
+adapter = "terraform"
+adoption_mode = "observe-only"
+apply = "manual-approval"
+desired = ["desired/site.json"]
+contract = ["outputs/site.json"]
+
+[[consumers]]
+repo = "kungfu-systems/site-demo"
+path = "infra/outputs.json"
+source = "outputs/site.json"
+`,
+    },
+    (dir) => {
+      assert.throws(
+        () => validateBuildchainConfig(dir),
+        /infra.apply requires infra.adoption_mode = managed-apply/,
+      );
+    },
+  );
+});
+
 test("buildchain.toml rejects incomplete first-class web-surface host mappings", () => {
   withTempRepo(
     {

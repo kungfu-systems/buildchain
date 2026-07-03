@@ -1,0 +1,13 @@
+{
+  "Service": "s3control",
+  "Operation": "put-public-access-block",
+  "Input": {
+    "AccountId": "123456789012",
+    "PublicAccessBlockConfiguration": {
+      "BlockPublicAcls": true,
+      "IgnorePublicAcls": true,
+      "BlockPublicPolicy": true,
+      "RestrictPublicBuckets": true
+    }
+  }
+}

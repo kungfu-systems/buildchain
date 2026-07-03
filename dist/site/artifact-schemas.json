@@ -22,5 +22,10 @@
     "product-mechanism.json",
     "release-provenance.json",
     "agent-index.json"
+  ],
+  "infraContract": [
+    "infra-contract-plan.json",
+    "buildchain.infra-contract.json",
+    "infra-contract-propagation.json"
   ]
 }

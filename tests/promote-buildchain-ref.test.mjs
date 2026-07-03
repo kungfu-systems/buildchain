@@ -804,6 +804,7 @@ test("release promotion creates source version commits and points refs at them",
   const blobs = [];
   const commits = [];
   const repoUpdates = [];
+  let getCommitCalls = 0;
   const octokit = {
     rest: {
       git: {
@@ -821,9 +822,13 @@ test("release promotion creates source version commits and points refs at them",
               object: { sha: objectSha },
             })),
         }),
-        getCommit: async ({ commit_sha }) => ({
-          data: { tree: { sha: `tree-${commit_sha}` } },
-        }),
+        getCommit: async ({ commit_sha }) => {
+          getCommitCalls += 1;
+          if (getCommitCalls === 1) {
+            throw Object.assign(new Error("other side closed"), { status: 500 });
+          }
+          return { data: { tree: { sha: `tree-${commit_sha}` } } };
+        },
         createBlob: async ({ content }) => {
           const sha = `blob-${blobs.length + 1}`;
           blobs.push({ sha, content });
@@ -866,6 +871,7 @@ test("release promotion creates source version commits and points refs at them",
 
   const releaseSha = commits[0].sha;
   const nextAlphaSha = commits[1].sha;
+  assert.equal(getCommitCalls, 3);
   assert.equal(result.sha, releaseSha);
   assert.equal(result.nextAlphaSha, nextAlphaSha);
   assert.equal(refs.get("heads/release/v1/v1.0"), releaseSha);
@@ -1051,7 +1057,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
 }, null, 2) + "\\n");
 `,
   });
-  const { octokit, refs } = createGitMock({
+  const { octokit, refs, blobs, trees, commits } = createGitMock({
     refs: new Map([
       ["heads/release/v1/v1.0", SHA],
       ["tags/v1.0.0-alpha.0", OTHER_SHA],
@@ -1149,7 +1155,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
 }, null, 2) + "\\n");
 `,
   });
-  const { octokit, refs } = createGitMock({
+  const { octokit, refs, commits } = createGitMock({
     refs: new Map([
       ["heads/alpha/v1/v1.0", SHA],
       ["heads/buildchain/release-state/1-0-0-alpha-0", OTHER_SHA],
@@ -1210,6 +1216,7 @@ command = "node scripts/should-not-run.mjs"
       version: "0.0.0",
       packageManager: "pnpm@11.7.0",
     },
+    ".buildchain/artifacts/build-summary.json": "/home/runner/work/buildchain/buildchain/.buildchain/artifacts/build-summary.json\n",
     "scripts/should-not-run.mjs": "throw new Error('lifecycle.publish should not run');\n",
   });
   const binDir = path.join(cwd, "bin");
@@ -1238,7 +1245,7 @@ exit 64
   );
   fs.chmodSync(path.join(binDir, "npm"), 0o755);
 
-  const { octokit, refs } = createGitMock({
+  const { octokit, refs, blobs, trees, commits } = createGitMock({
     refs: new Map([
       ["heads/release/v1/v1.0", SHA],
       ["tags/v1.0.0-alpha.0", OTHER_SHA],
@@ -1268,6 +1275,23 @@ exit 64
           ref: "1.0.0",
           digest: "sha512-rebuilt",
           role: "platform",
+          platform: "linux-x64",
+        },
+        {
+          kind: "npm",
+          name: "@kungfu-tech/buildchain-darwin-arm64",
+          ref: "1.0.0",
+          digest: "sha512-rebuilt",
+          role: "platform",
+          platform: "darwin-arm64",
+        },
+        {
+          kind: "npm",
+          name: "@kungfu-tech/buildchain-win32-x64",
+          ref: "1.0.0",
+          digest: "sha512-rebuilt",
+          role: "platform",
+          platform: "win32-x64",
         },
         {
           kind: "npm",
@@ -1297,6 +1321,24 @@ exit 64
       {
         group: "",
         kind: "npm",
+        name: "@kungfu-tech/buildchain-darwin-arm64",
+        ref: "1.0.0",
+        digest: "sha512-existing",
+        role: "platform",
+        required: true,
+      },
+      {
+        group: "",
+        kind: "npm",
+        name: "@kungfu-tech/buildchain-win32-x64",
+        ref: "1.0.0",
+        digest: "sha512-existing",
+        role: "platform",
+        required: true,
+      },
+      {
+        group: "",
+        kind: "npm",
         name: "@kungfu-tech/buildchain",
         ref: "1.0.0",
         digest: "sha512-existing",
@@ -1311,9 +1353,26 @@ exit 64
         .filter((line) => line.startsWith("dist-tag add")),
       [
         "dist-tag add @kungfu-tech/buildchain-linux-x64@1.0.0 latest",
+        "dist-tag add @kungfu-tech/buildchain-darwin-arm64@1.0.0 latest",
+        "dist-tag add @kungfu-tech/buildchain-win32-x64@1.0.0 latest",
         "dist-tag add @kungfu-tech/buildchain@1.0.0 latest",
       ],
     );
+    assert.equal(result.publishTransaction.releasePassportPath, ".buildchain/release-passport/buildchain.release.json");
+    assert.equal(result.publishTransaction.releasePassportOutputDir, ".buildchain/release-passport");
+    assert.equal(refs.get("heads/buildchain/release-state/1-0-0"), result.publishTransaction.releasePassportStateSha);
+    const stateCommit = commits.get(result.publishTransaction.releasePassportStateSha);
+    const passportEntry = (trees.get(stateCommit.tree.sha) || []).find((entry) =>
+      entry.path === "release-passport/buildchain.release.json"
+    );
+    assert.ok(passportEntry);
+    const passport = JSON.parse(
+      Buffer.from(blobs.get(passportEntry.sha).content, "base64").toString("utf8"),
+    );
+    assert.equal(passport.packageSet.platforms.length, 3);
+    assert.equal(passport.distTagPromotion.fields.distTag, "latest");
+    assert.equal(passport.release.releaseStateRef, "refs/heads/buildchain/release-state/1-0-0");
+    assert.equal(passport.buildSummary, undefined);
   } finally {
     for (const [key, value] of Object.entries(previousEnv)) {
       if (value === undefined) {
@@ -2293,7 +2352,7 @@ test("publish transaction finalizes current release version-state merge commits"
       packageManager: "pnpm@11.7.0",
     },
   });
-  const { octokit, refs, commits } = createGitMock({
+  const { octokit, refs, blobs, trees, commits } = createGitMock({
     refs: new Map([
       ["heads/release/v1/v1.0", toolingMergeSha],
       ["tags/v1.0.0-alpha.0", alphaSha],
@@ -2310,6 +2369,32 @@ test("publish transaction finalizes current release version-state merge commits"
     parents: [{ sha: mergeSha }, { sha: "3".repeat(40) }],
   });
   const statePath = path.join(cwd, ".buildchain/release-state/1.0.0.json");
+  const evidencePath = path.join(cwd, ".buildchain/release-evidence/v1.0.0/evidence.json");
+  const distTagEvidencePath = path.join(cwd, ".buildchain/release-evidence/v1.0.0/dist-tag-evidence.json");
+  fs.mkdirSync(path.dirname(evidencePath), { recursive: true });
+  fs.writeFileSync(
+    evidencePath,
+    `${JSON.stringify({
+      schema: 1,
+      repository: "kungfu-systems/buildchain",
+      version: "1.0.0",
+      channel: "release",
+      source_sha: oldReleaseSha,
+      release_sha: versionHeadSha,
+      target_ref: "release/v1/v1.0",
+      release_material_sha: versionHeadSha,
+      publish_tooling_sha: versionHeadSha,
+      artifacts: [
+        {
+          group: "node",
+          kind: "npm",
+          name: "@kungfu-tech/buildchain",
+          ref: "1.0.0",
+          digest: "sha512-release",
+        },
+      ],
+    }, null, 2)}\n`,
+  );
   await persistDurableReleaseTransaction({
     octokit,
     owner: "kungfu-systems",
@@ -2332,19 +2417,32 @@ test("publish transaction finalizes current release version-state merge commits"
       lifecycle_identity: "lifecycle.publish",
       state_ref: "buildchain/release-state/1-0-0",
       state_path: statePath,
-      evidence_path: "",
+      evidence_path: evidencePath,
       state: "published",
       previous_state: "publishing",
       actor: "codex",
       run_id: "1",
       superseded_by: "",
       failure: "",
-      artifacts: [],
-      evidence: [],
+      artifacts: [
+        {
+          group: "node",
+          kind: "npm",
+          name: "@kungfu-tech/buildchain",
+          ref: "1.0.0",
+          digest: "sha512-release",
+          role: "main",
+          required: true,
+        },
+      ],
+      evidence: [
+        ".buildchain/release-evidence/v1.0.0/evidence.json",
+        ".buildchain/release-evidence/v1.0.0/dist-tag-evidence.json",
+      ],
       created_at: "2026-07-01T00:00:00.000Z",
       updated_at: "2026-07-01T00:00:00.000Z",
     },
-    evidencePath: "",
+    evidencePath,
   });
 
   const result = await promoteBuildchainRefs({
@@ -2355,6 +2453,19 @@ test("publish transaction finalizes current release version-state merge commits"
     targetRef: "release/v1/v1.0",
     cwd,
     publishTransaction: true,
+    publishAuth: "trusted-publishing",
+    publishDistTag: "latest",
+    publishPackageMain: "@kungfu-tech/buildchain",
+    publishRequiredArtifactsJson: JSON.stringify([
+      {
+        group: "node",
+        kind: "npm",
+        name: "@kungfu-tech/buildchain",
+        ref: "1.0.0",
+        digest: "sha512-release",
+        role: "main",
+      },
+    ]),
     requireVersionState: true,
   });
 
@@ -2369,6 +2480,23 @@ test("publish transaction finalizes current release version-state merge commits"
     result.updates.some((update) => update.action === "stale-publish-transaction"),
     false,
   );
+  assert.equal(result.publishTransaction.releasePassportPath, ".buildchain/release-passport/buildchain.release.json");
+  const stateCommit = commits.get(result.publishTransaction.releasePassportStateSha);
+  const passportEntry = (trees.get(stateCommit.tree.sha) || []).find((entry) =>
+    entry.path === "release-passport/buildchain.release.json"
+  );
+  const checkReportEntry = (trees.get(stateCommit.tree.sha) || []).find((entry) =>
+    entry.path === "release-passport/check-report.json"
+  );
+  assert.ok(passportEntry);
+  assert.ok(checkReportEntry);
+  const passport = JSON.parse(Buffer.from(blobs.get(passportEntry.sha).content, "base64").toString("utf8"));
+  const checkReport = JSON.parse(Buffer.from(blobs.get(checkReportEntry.sha).content, "base64").toString("utf8"));
+  assert.equal(passport.release.sourceSha, oldReleaseSha);
+  assert.equal(passport.trustedPublishing.enabled, true);
+  assert.equal(passport.trustedPublishing.auth, "trusted-publishing");
+  assert.equal(passport.distTagPromotion, undefined);
+  assert.equal(checkReport.ok, true);
 });
 
 test("publish transaction resumes partial release finalization with exact tag on release material", async () => {
