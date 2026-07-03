@@ -60,7 +60,17 @@ function usage() {
   buildchain transaction inspect ...
   buildchain collect github-release --tag <tag> [--repository <owner/repo>]
                                     [--assets-dir <dir>] [--assets-json <json-or-path>]
-                                    [--release-json <json-or-path>] [--output-dir <dir>] [--json]
+                                    [--release-json <json-or-path>] [--package-set-json <json-or-path>]
+                                    [--product-name <name>]
+                                    [--publish-evidence-json <json-or-path>]
+                                    [--trusted-publishing-json <json-or-path>]
+                                    [--transaction-json <json-or-path>]
+                                    [--anchor-manifest-json <json-or-path>]
+                                    [--build-summary-json <json-or-path>]
+                                    [--platform-manifest-json <json-or-path>]...
+                                    [--dist-tag-evidence-json <json-or-path>]
+                                    [--release-extra-json <json-or-path>]
+                                    [--publish-json <json-or-path>] [--output-dir <dir>] [--json]
   buildchain verify release-passport <file-or-url> [--json]
   buildchain verify observability-log <jsonl> [--min-events <n>]
                                              [--require-phase <csv>]
@@ -652,8 +662,19 @@ async function main(argv = process.argv.slice(2)) {
       assetsDir: readFlag(collectArgs, "assets-dir", ""),
       assetsJson: readFlag(collectArgs, "assets-json", ""),
       releaseJson: readFlag(collectArgs, "release-json", ""),
+      productName: readFlag(collectArgs, "product-name", "Buildchain"),
       packageName: readFlag(collectArgs, "package-name", "@kungfu-tech/buildchain"),
       packageVersion: readFlag(collectArgs, "package-version", packageVersion()),
+      packageSetJson: readFlag(collectArgs, "package-set-json", ""),
+      publishEvidenceJson: readFlag(collectArgs, "publish-evidence-json", ""),
+      trustedPublishingJson: readFlag(collectArgs, "trusted-publishing-json", ""),
+      transactionJson: readFlag(collectArgs, "transaction-json", ""),
+      anchorManifestJson: readFlag(collectArgs, "anchor-manifest-json", ""),
+      buildSummaryJson: readFlag(collectArgs, "build-summary-json", ""),
+      platformManifestJsons: readRepeatedFlag(collectArgs, "platform-manifest-json"),
+      distTagEvidenceJson: readFlag(collectArgs, "dist-tag-evidence-json", ""),
+      releaseJsonExtra: readFlag(collectArgs, "release-extra-json", ""),
+      publishJson: readFlag(collectArgs, "publish-json", ""),
       workflow,
     });
     if (readBooleanFlag(collectArgs, "json")) {
