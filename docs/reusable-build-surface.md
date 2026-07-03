@@ -308,6 +308,17 @@ that SHA in every build job, and uses the same SHA in artifact names, manifests,
 and aggregate summaries. Reruns therefore rebuild the same source tree even if a
 gate branch moves later.
 
+Before any heavy build matrix is scheduled, the workflow also verifies that the
+target channel ref implied by the source lock already points at
+`publish-source-sha` and that the target channel HEAD came from the required
+merged same-repository channel PR. `publish-gate/alpha/<line>/<version>` must
+match `alpha/<line>` and have PR lineage `dev/<line> -> alpha/<line>`;
+`publish-gate/release/<line>/<version>` must match `release/<line>` and have PR
+lineage `alpha/<line> -> release/<line>`. If either check fails, the run fails
+fast with a diagnostic telling maintainers to merge the source commit through
+the channel PR first. This keeps verify from spending runner time on a source
+tree that cannot legally enter the requested publish channel.
+
 The resolved release manifest is uploaded as an artifact and emitted as
 `release-manifest-json`. It records:
 
@@ -334,6 +345,18 @@ Publish side-effect jobs should verify the lock immediately before publishing:
 If the branch tip no longer matches the manifest SHA, the publish job must fail
 closed. Moving a gate branch creates a new publish decision and should produce a
 new build run.
+
+Custom publish jobs can also repeat the channel-ref preflight:
+
+```yaml
+- name: Verify publish channel ref still matches
+  run: node .buildchain/runtime/scripts/verify-publish-channel-ref.mjs
+  env:
+    BUILDCHAIN_PUBLISH_SOURCE_REF: ${{ needs.build.outputs.publish-source-ref }}
+    BUILDCHAIN_PUBLISH_SOURCE_SHA: ${{ needs.build.outputs.publish-source-sha }}
+    BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+    GITHUB_TOKEN: ${{ github.token }}
+```
 
 Anchored/manual package release jobs should also make the Buildchain promotion
 action validate that publication is entering through the same

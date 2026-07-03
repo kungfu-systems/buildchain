@@ -10,11 +10,14 @@ import {
   createResolvedReleaseManifest,
   parsePublishSourceRef,
   parseExpectedArtifactsJson,
+  resolvePublishChannelTargetRef,
+  verifyPublishChannelPrLineage,
   planPackageSetPublish,
   resolveArtifactContract,
   resolvePublishGate,
   resolvePublishSourceLock,
   resolveRunnerMatrix,
+  verifyPublishChannelRef,
   verifyPublishSourceLock,
 } from "../scripts/build-contract-core.mjs";
 import { aggregateBuildSummaryCli } from "../scripts/aggregate-build-summary.mjs";
@@ -31,6 +34,7 @@ import {
 } from "../scripts/runtime-ref-core.mjs";
 import { resolvePublishSourceCli } from "../scripts/resolve-publish-source.mjs";
 import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
+import { verifyPublishChannelRefCli } from "../scripts/verify-publish-channel-ref.mjs";
 import { verifyPublishSourceLockCli } from "../scripts/verify-publish-source-lock.mjs";
 import { validateBuildchainConfig } from "../packages/core/buildchain-config.js";
 import {
@@ -81,6 +85,24 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /github\.event\.pull_request\.head\.repo\.full_name/);
   assert.match(workflow, /resolve-publish-gate\.mjs/);
   assert.match(workflow, /resolve-publish-source\.mjs --mode lock/);
+  assert.match(workflow, /Verify publish target channel ref and PR lineage/);
+  assert.match(workflow, /verify-publish-channel-ref\.mjs/);
+  assert.ok(
+    workflow.indexOf("Resolve publish source lock") <
+      workflow.indexOf("Verify publish target channel ref and PR lineage"),
+  );
+  assert.ok(
+    workflow.indexOf("Verify publish target channel ref and PR lineage") <
+      workflow.indexOf("resolve-source:"),
+  );
+  assert.ok(
+    workflow.indexOf("Verify publish target channel ref and PR lineage") <
+      workflow.indexOf("build-native:"),
+  );
+  assert.ok(
+    workflow.indexOf("Verify publish target channel ref and PR lineage") <
+      workflow.indexOf("build-linux-container:"),
+  );
   assert.match(workflow, /resolve-publish-source\.mjs --mode manifest/);
   assert.equal(
     (workflow.match(/Install Buildchain runtime dependencies/g) || []).length,
@@ -170,6 +192,23 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /buildchain-ref:/);
   assert.match(workflow, /Resolve Buildchain runtime/);
   assert.match(workflow, /runtime-sha/);
+  assert.match(workflow, /Validate web-surface apply inputs/);
+  assert.match(workflow, /Validate apply inputs before build/);
+  assert.ok(
+    workflow.indexOf("Validate web-surface apply inputs") <
+      workflow.indexOf("Run caller build"),
+  );
+  assert.match(workflow, /preview-aws-role-arn is required before preview-apply can build or deploy/);
+  assert.match(workflow, /staging-aws-role-arn is required before staging-apply can build or deploy/);
+  assert.match(workflow, /production-apply requires production-approved=true before production build or deploy/);
+  assert.match(workflow, /production-aws-role-arn is required before production-apply can build or deploy/);
+  assert.match(workflow, /production-release-on-main:/);
+  assert.match(workflow, /production-release-label:/);
+  assert.match(workflow, /production-release-head-prefix:/);
+  assert.match(workflow, /Resolve production release PR intent/);
+  assert.match(workflow, /listPullRequestsAssociatedWithCommit/);
+  assert.match(workflow, /associated-release-pr-merged/);
+  assert.match(workflow, /no-associated-release-pr/);
   assert.match(workflow, /Plan pull request preview/);
   assert.match(workflow, /github\.event\.action != 'closed'/);
   assert.match(workflow, /Plan pull request preview cleanup/);
@@ -186,11 +225,14 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /preview-cleanup-apply/);
   assert.match(workflow, /Plan main staging deploy/);
   assert.match(workflow, /github\.ref_name == 'main'/);
+  assert.match(workflow, /needs\.release-intent\.outputs\.production-release-approved == 'true'/);
   assert.match(workflow, /Apply staging deploy/);
   assert.match(workflow, /staging-aws-role-arn is required when staging-apply is true/);
   assert.match(workflow, /Plan gated production deploy/);
   assert.match(workflow, /Apply production deploy/);
-  assert.match(workflow, /inputs\.production-approved && inputs\.production-apply/);
+  assert.match(workflow, /inputs\.production-apply/);
+  assert.match(workflow, /github\.event_name == 'workflow_dispatch' && inputs\.production-approved/);
+  assert.match(workflow, /github\.event_name == 'push' && github\.ref_name == 'main' && inputs\.production-release-on-main/);
   assert.match(workflow, /production-aws-role-arn is required when production-apply is true/);
   assert.match(
     workflow,
@@ -201,6 +243,22 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /actions\/download-artifact@v7\.0\.0/);
   assert.match(workflow, /--runtime-id "\$\{\{ needs\.runtime\.outputs\.runtime-sha \}\}"/);
   assert.match(workflow, /--rollback-pointer "\$\{\{ needs\.runtime\.outputs\.rollback-ref \}\}"/);
+});
+
+test("binary distribution blocks invalid release uploads before the build matrix", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/binary-distribution.yml"),
+    "utf8",
+  );
+  assert.match(workflow, /Binary distribution preflight/);
+  assert.match(workflow, /Reject manual release upload before matrix/);
+  assert.ok(
+    workflow.indexOf("Binary distribution preflight") <
+      workflow.indexOf("Build standalone binary archive"),
+  );
+  assert.match(workflow, /upload-release=true is only allowed on true tag-triggered release runs/);
+  assert.match(workflow, /needs: preflight/);
+  assert.match(workflow, /needs: \[preflight, binary\]/);
 });
 
 test("runtime train override accepts only trusted manual train or exact SHA refs", () => {
@@ -738,6 +796,200 @@ test("verify publish source lock accepts unchanged current push ref", async () =
     sourceRef,
     sourceSha,
   });
+});
+
+test("publish source channel refs must match the locked source sha", async () => {
+  const sourceRef = "publish-gate/alpha/v22/v22.22/22.22.3-kf.0";
+  const sourceSha = "e".repeat(40);
+  assert.equal(
+    resolvePublishChannelTargetRef({ sourceRef }),
+    "alpha/v22/v22.22",
+  );
+  assert.deepEqual(
+    verifyPublishChannelRef({
+      sourceRef,
+      sourceSha,
+      targetSha: sourceSha,
+    }),
+    {
+      ok: true,
+      skipped: false,
+      sourceRef,
+      sourceSha,
+      targetRef: "alpha/v22/v22.22",
+      targetSha: sourceSha,
+    },
+  );
+  assert.throws(
+    () =>
+      verifyPublishChannelRef({
+        sourceRef,
+        sourceSha,
+        targetSha: "f".repeat(40),
+      }),
+    /Merge the source commit through the channel PR into alpha\/v22\/v22\.22/,
+  );
+
+  const seen = [];
+  const fetchImpl = async (url, options) => {
+    seen.push({ url, options });
+    if (url.endsWith(`/commits/${sourceSha}/pulls`)) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => [
+          {
+            number: 123,
+            html_url: "https://github.com/kungfu-systems/libnode/pull/123",
+            merged_at: "2026-07-03T00:00:00Z",
+            base: { ref: "alpha/v22/v22.22" },
+            head: {
+              ref: "dev/v22/v22.22",
+              repo: { full_name: "kungfu-systems/libnode" },
+            },
+          },
+        ],
+      };
+    }
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ object: { sha: sourceSha } }),
+    };
+  };
+  assert.deepEqual(
+    await verifyPublishChannelRefCli({
+      env: {
+        BUILDCHAIN_PUBLISH_SOURCE_REF: sourceRef,
+        BUILDCHAIN_PUBLISH_SOURCE_SHA: sourceSha,
+        BUILDCHAIN_SOURCE_REPOSITORY: "kungfu-systems/libnode",
+        GITHUB_TOKEN: "token",
+      },
+      fetchImpl,
+    }),
+    {
+      ok: true,
+      skipped: false,
+      sourceRef,
+      sourceSha,
+      targetRef: "alpha/v22/v22.22",
+      targetSha: sourceSha,
+      prLineage: {
+        ok: true,
+        skipped: false,
+        sourceRef,
+        sourceSha,
+        targetRef: "alpha/v22/v22.22",
+        expectedHeadRef: "dev/v22/v22.22",
+        pullRequest: {
+          number: 123,
+          url: "https://github.com/kungfu-systems/libnode/pull/123",
+          headRef: "dev/v22/v22.22",
+          baseRef: "alpha/v22/v22.22",
+          mergedAt: "2026-07-03T00:00:00Z",
+        },
+      },
+    },
+  );
+  assert.equal(
+    seen[0].url,
+    "https://api.github.com/repos/kungfu-systems/libnode/git/ref/heads/alpha/v22/v22.22",
+  );
+  assert.equal(seen[0].options.headers.Authorization, "Bearer token");
+  assert.equal(
+    seen[1].url,
+    `https://api.github.com/repos/kungfu-systems/libnode/commits/${sourceSha}/pulls`,
+  );
+
+  await assert.rejects(
+    async () =>
+      await verifyPublishChannelRefCli({
+        env: {
+          BUILDCHAIN_PUBLISH_SOURCE_REF:
+            "publish-gate/release/v22/v22.22/22.22.3-kf.0",
+          BUILDCHAIN_PUBLISH_SOURCE_SHA: sourceSha,
+          BUILDCHAIN_CURRENT_TARGET_SHA: "a".repeat(40),
+          BUILDCHAIN_SOURCE_REPOSITORY: "kungfu-systems/libnode",
+        },
+        fetchImpl,
+      }),
+    /Merge the source commit through the channel PR into release\/v22\/v22\.22/,
+  );
+});
+
+test("publish source channel refs require merged same-repository PR lineage", () => {
+  const sourceRef = "publish-gate/release/v22/v22.22/22.22.3-kf.0";
+  const sourceSha = "e".repeat(40);
+  assert.deepEqual(
+    verifyPublishChannelPrLineage({
+      sourceRef,
+      sourceSha,
+      repository: "kungfu-systems/libnode",
+      pullRequests: [
+        {
+          number: 456,
+          html_url: "https://github.com/kungfu-systems/libnode/pull/456",
+          merged_at: "2026-07-03T00:00:00Z",
+          base: { ref: "release/v22/v22.22" },
+          head: {
+            ref: "alpha/v22/v22.22",
+            repo: { full_name: "kungfu-systems/libnode" },
+          },
+        },
+      ],
+    }),
+    {
+      ok: true,
+      skipped: false,
+      sourceRef,
+      sourceSha,
+      targetRef: "release/v22/v22.22",
+      expectedHeadRef: "alpha/v22/v22.22",
+      pullRequest: {
+        number: 456,
+        url: "https://github.com/kungfu-systems/libnode/pull/456",
+        headRef: "alpha/v22/v22.22",
+        baseRef: "release/v22/v22.22",
+        mergedAt: "2026-07-03T00:00:00Z",
+      },
+    },
+  );
+  assert.throws(
+    () =>
+      verifyPublishChannelPrLineage({
+        sourceRef: "publish-gate/alpha/v22/v22.22/22.22.3-kf.0",
+        sourceSha,
+        repository: "kungfu-systems/libnode",
+        pullRequests: [
+          {
+            merged_at: "2026-07-03T00:00:00Z",
+            base: { ref: "alpha/v22/v22.22" },
+            head: {
+              ref: "feature/direct",
+              repo: { full_name: "kungfu-systems/libnode" },
+            },
+          },
+        ],
+      }),
+    /merged same-repository PR dev\/v22\/v22\.22 -> alpha\/v22\/v22\.22/,
+  );
+  assert.doesNotThrow(() =>
+    verifyPublishChannelPrLineage({
+      sourceRef: "publish-gate/major",
+      sourceSha,
+      repository: "kungfu-systems/buildchain",
+      pullRequests: [
+        {
+          merged_at: "2026-07-03T00:00:00Z",
+          base: { ref: "publish-gate/major" },
+          head: {
+            ref: "release/v22/v22.22",
+            repo: { full_name: "kungfu-systems/buildchain" },
+          },
+        },
+      ],
+    }),
+  );
 });
 
 test("package-set publish plan is platform-first, main-last, and idempotent", () => {

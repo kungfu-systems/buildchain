@@ -16,6 +16,12 @@ The release lane does not upload loose top-level `buildchain` or
 inside their archives, so top-level loose assets would collide when matrix
 artifacts are merged.
 
+Release asset upload is gated before the matrix starts. Manual
+`workflow_dispatch` runs are binary dry-runs only and must keep
+`upload-release=false`; real GitHub Release uploads must come from a true
+`v*` tag-triggered run so an invalid manual upload request cannot spend the
+three-platform build matrix and then fail at `gh release upload`.
+
 Each archive is accompanied by:
 
 - a platform manifest from the standalone binary builder;
@@ -67,4 +73,3 @@ node scripts/create-release-bundle.mjs \
   --output-dir .buildchain/release-passport \
   --tag v0.0.0-local
 ```
-
