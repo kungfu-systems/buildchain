@@ -86,6 +86,14 @@ test("infra-contract terraform-shaped fixture proves the core is not CloudFormat
     assert.equal(plan.adapterCapabilities.plan, true);
     assert.equal(plan.adapterCapabilities.observe, true);
     assert.equal(plan.stages.apply.status, "disabled");
+    assert.deepEqual(
+      plan.adapterEvidence.map((entry) => [entry.stage, entry.commandSource, entry.executed, entry.status]),
+      [
+        ["validate", "builtin-plan", false, "planned"],
+        ["plan", "builtin-plan", false, "planned"],
+      ],
+    );
+    assert.match(plan.adapterEvidence[1].command, /terraform plan/);
     assert.deepEqual(plan.desiredFiles.map((entry) => entry.path), ["desired/main.tf.json"]);
   });
 });
@@ -112,15 +120,20 @@ test("infra-contract static provider fixtures cover CloudFormation and Pulumi sh
       assert.equal(plan.adapterCapabilities.plan, true);
       assert.equal(plan.adapterCapabilities.observe, true);
       assert.equal(plan.stages.apply.status, "disabled");
+      assert.deepEqual(plan.adapterEvidence.map((entry) => entry.stage), ["validate", "plan"]);
+      assert.equal(plan.adapterEvidence.every((entry) => entry.commandSource === "builtin-plan"), true);
+      assert.equal(plan.adapterEvidence.every((entry) => entry.executed === false), true);
       assert.deepEqual(plan.desiredFiles.map((entry) => entry.path), [desiredPath]);
 
       const artifact = createInfraContractArtifact({
         cwd: fixture,
         plan,
         observedAt: "2026-07-03T00:00:00.000Z",
+        executeAdapterCommands: true,
       });
       assert.equal(artifact.observed.source, "adapter-observe");
       assert.equal(artifact.observed.files[0].outputs[outputKey].startsWith("example-"), true);
+      assert.deepEqual(artifact.observed.adapterEvidence.map((entry) => [entry.stage, entry.executed]), [["observe", false]]);
       assert.equal(artifact.validation.mutationFree, true);
 
       const propagation = createInfraContractPropagationPlan({ cwd: fixture, artifact });
@@ -463,6 +476,18 @@ test("infra-contract non custom-command apply stays fail-closed before adapter e
       sourceSha,
       plannedAt: "2026-07-03T00:00:00.000Z",
     });
+    const dryRun = applyInfraContract({
+      cwd: fixture,
+      sourceSha,
+      approvalId: "APPROVED-APPLY-2",
+      dryRun: true,
+      plan,
+      now: "2026-07-03T00:01:00.000Z",
+    });
+    assert.equal(dryRun.adapterEvidence[0].stage, "apply");
+    assert.equal(dryRun.adapterEvidence[0].commandSource, "builtin-plan");
+    assert.equal(dryRun.adapterEvidence[0].executed, false);
+    assert.match(dryRun.adapterEvidence[0].command, /terraform apply/);
     assert.throws(
       () => applyInfraContract({
         cwd: fixture,

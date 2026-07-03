@@ -67,6 +67,13 @@ provider calls:
 - `custom-command` for user-defined validate, plan, observe, and approved apply
   hooks.
 
+For built-in provider adapters, Buildchain records planned adapter command
+evidence for `validate`, `plan`, `apply`, and `observe` when a stage is
+supported. These entries are command plans, not execution. They make the
+adapter handoff auditable before concrete provider executors are implemented,
+and they stay `executed: false` even when `--execute-adapter-commands true` is
+passed. Only `custom-command` hooks can currently execute through Buildchain.
+
 `custom-command` adapters declare command hooks under `[infra.commands]`.
 Buildchain records them as planned adapter evidence by default. Passing
 `--execute-adapter-commands true` to `plan` or `contract` executes the
@@ -145,6 +152,9 @@ no consumers, omit `--propagation-result`.
   mode are explicit.
 - Apply rejects missing, stale, source-mismatched, or input-drifted plan
   artifacts before any adapter mutation can run.
+- Built-in provider adapter command evidence is planned-only until concrete
+  provider executors exist; it is not live validation, plan, observe, or apply
+  execution.
 - Custom-command apply requires saved plan freshness, an approval id,
   `--dry-run false`, and `--execute-adapter-commands true`; nonzero adapter
   exits fail closed and are recorded as adapter evidence.
