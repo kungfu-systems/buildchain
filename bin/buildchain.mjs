@@ -66,6 +66,9 @@ function usage() {
                                     [--trusted-publishing-json <json-or-path>]
                                     [--transaction-json <json-or-path>]
                                     [--anchor-manifest-json <json-or-path>]
+                                    [--build-summary-json <json-or-path>]
+                                    [--platform-manifest-json <json-or-path>]...
+                                    [--dist-tag-evidence-json <json-or-path>]
                                     [--release-extra-json <json-or-path>]
                                     [--publish-json <json-or-path>] [--output-dir <dir>] [--json]
   buildchain verify release-passport <file-or-url> [--json]
@@ -676,6 +679,9 @@ async function main(argv = process.argv.slice(2)) {
       trustedPublishingJson: readFlag(collectArgs, "trusted-publishing-json", ""),
       transactionJson: readFlag(collectArgs, "transaction-json", ""),
       anchorManifestJson: readFlag(collectArgs, "anchor-manifest-json", ""),
+      buildSummaryJson: readFlag(collectArgs, "build-summary-json", ""),
+      platformManifestJsons: readRepeatedFlag(collectArgs, "platform-manifest-json"),
+      distTagEvidenceJson: readFlag(collectArgs, "dist-tag-evidence-json", ""),
       releaseJsonExtra: readFlag(collectArgs, "release-extra-json", ""),
       publishJson: readFlag(collectArgs, "publish-json", ""),
       workflow,

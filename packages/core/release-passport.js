@@ -280,6 +280,34 @@ function normalizeAnchorManifest(meta) {
   };
 }
 
+function normalizeEvidenceDocument(meta, label) {
+  const value = meta?.value;
+  if (!value) {
+    return undefined;
+  }
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`${label} must be a JSON object`);
+  }
+  return {
+    path: optionalString(meta.path),
+    sha256: optionalString(meta.sha256),
+    fields: value,
+  };
+}
+
+function normalizePlatformArtifactManifest(meta, index = 0) {
+  const normalized = normalizeEvidenceDocument(meta, `platformArtifactManifests[${index}]`);
+  if (!normalized) {
+    return undefined;
+  }
+  const fields = normalized.fields || {};
+  return {
+    ...normalized,
+    platform: optionalString(fields.platform?.id || fields.platformId || fields.platform || ""),
+    artifactName: optionalString(fields.artifactName || fields.links?.artifactName || ""),
+  };
+}
+
 function normalizePublishArtifact(artifact = {}, index = 0) {
   const name = nonEmptyString(artifact.name, `publishEvidence.artifacts[${index}].name`);
   return {
@@ -469,6 +497,9 @@ export function createReleasePassport({
   publishEvidence = undefined,
   trustedPublishing = undefined,
   transaction = undefined,
+  buildSummary = undefined,
+  platformArtifactManifests = [],
+  distTagPromotionEvidence = undefined,
   release = {},
   publish = {},
   workflow = {},
@@ -479,6 +510,13 @@ export function createReleasePassport({
   const normalizedPackageSet = normalizePackageSet(packageSet, { packageName, packageVersion, publish });
   const normalizedTrustedPublishing = normalizeTrustedPublishing(trustedPublishing, { workflow, publish });
   const normalizedTransaction = normalizeTransaction(transaction);
+  const normalizedBuildSummary = buildSummary ? normalizeEvidenceDocument(buildSummary, "buildSummary") : undefined;
+  const normalizedPlatformArtifactManifests = (platformArtifactManifests || [])
+    .map((manifest, index) => normalizePlatformArtifactManifest(manifest, index))
+    .filter(Boolean);
+  const normalizedDistTagPromotionEvidence = distTagPromotionEvidence
+    ? normalizeEvidenceDocument(distTagPromotionEvidence, "distTagPromotionEvidence")
+    : undefined;
   const publishArtifacts = normalizedPublishEvidence?.artifacts || [];
   const normalizedPublishSummary = normalizePublishSummary({
     packageSet: normalizedPackageSet,
@@ -549,6 +587,9 @@ export function createReleasePassport({
     ...(anchorManifest ? { anchorManifest } : {}),
     ...(normalizedTrustedPublishing ? { trustedPublishing: normalizedTrustedPublishing } : {}),
     ...(normalizedTransaction ? { transaction: normalizedTransaction } : {}),
+    ...(normalizedBuildSummary ? { buildSummary: normalizedBuildSummary } : {}),
+    ...(normalizedPlatformArtifactManifests.length > 0 ? { platformArtifactManifests: normalizedPlatformArtifactManifests } : {}),
+    ...(normalizedDistTagPromotionEvidence ? { distTagPromotion: normalizedDistTagPromotionEvidence } : {}),
     artifacts: [
       ...artifactEvidence.artifacts.map((asset) => ({
         group: "release",
@@ -574,6 +615,14 @@ export function createReleasePassport({
       artifactEvidence: artifactEvidencePath,
       publishEvidence: publishEvidencePath,
       transactionState: transactionStatePath,
+      buildSummary: normalizedBuildSummary?.path || "",
+      platformArtifactManifests: normalizedPlatformArtifactManifests.map((manifest) => ({
+        path: manifest.path,
+        sha256: manifest.sha256,
+        platform: manifest.platform,
+        artifactName: manifest.artifactName,
+      })),
+      distTagPromotionEvidence: normalizedDistTagPromotionEvidence?.path || "",
       impact: impactPath,
       checkReport: checkReportPath,
       agentIndex: agentIndexPath,
@@ -603,6 +652,9 @@ export function collectGitHubReleasePassport({
   trustedPublishingJson = "",
   transactionJson = "",
   anchorManifestJson = "",
+  buildSummaryJson = "",
+  platformManifestJsons = [],
+  distTagEvidenceJson = "",
   releaseJsonExtra = "",
   publishJson = "",
   workflow = {},
@@ -615,6 +667,11 @@ export function collectGitHubReleasePassport({
   const trustedPublishing = parseJsonInput(trustedPublishingJson, undefined);
   const transactionMeta = parseJsonInputWithMeta(transactionJson, undefined);
   const anchorManifest = normalizeAnchorManifest(parseJsonInputWithMeta(anchorManifestJson, undefined));
+  const buildSummaryMeta = parseJsonInputWithMeta(buildSummaryJson, undefined);
+  const platformManifestMetas = (platformManifestJsons || [])
+    .filter(Boolean)
+    .map((manifestJson) => parseJsonInputWithMeta(manifestJson, undefined));
+  const distTagEvidenceMeta = parseJsonInputWithMeta(distTagEvidenceJson, undefined);
   const publish = parseJsonInput(publishJson, {});
   const assets = [
     ...(Array.isArray(release.assets) ? release.assets : []),
@@ -641,6 +698,24 @@ export function collectGitHubReleasePassport({
     publishEvidence: publishEvidenceMeta.value,
     trustedPublishing,
     transaction: transactionMeta.value,
+    buildSummary: buildSummaryMeta.value
+      ? {
+          ...buildSummaryMeta,
+          path: buildSummaryMeta.path ? path.relative(resolvedOutputDir, buildSummaryMeta.path).split(path.sep).join("/") : "",
+        }
+      : undefined,
+    platformArtifactManifests: platformManifestMetas
+      .filter((meta) => meta.value)
+      .map((meta) => ({
+        ...meta,
+        path: meta.path ? path.relative(resolvedOutputDir, meta.path).split(path.sep).join("/") : "",
+      })),
+    distTagPromotionEvidence: distTagEvidenceMeta.value
+      ? {
+          ...distTagEvidenceMeta,
+          path: distTagEvidenceMeta.path ? path.relative(resolvedOutputDir, distTagEvidenceMeta.path).split(path.sep).join("/") : "",
+        }
+      : undefined,
     release: releaseExtra,
     publish,
     publishEvidencePath: publishEvidenceMeta.path ? path.relative(resolvedOutputDir, publishEvidenceMeta.path).split(path.sep).join("/") : "",
@@ -952,6 +1027,11 @@ export function createReleaseCheckReport({
       trustedPublishingPresent: Boolean(passport?.trustedPublishing),
       transactionPresent: Boolean(passport?.transaction),
       anchorManifestPresent: Boolean(passport?.anchorManifest),
+      buildSummaryPresent: Boolean(passport?.buildSummary),
+      platformArtifactManifestCount: Array.isArray(passport?.platformArtifactManifests)
+        ? passport.platformArtifactManifests.length
+        : 0,
+      distTagPromotionEvidencePresent: Boolean(passport?.distTagPromotion),
       impactPresent: Boolean(impact),
       agentIndexPresent: Boolean(agentIndex),
       productMechanismPresent: Boolean(productMechanism),

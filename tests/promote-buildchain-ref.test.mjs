@@ -1051,7 +1051,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
 }, null, 2) + "\\n");
 `,
   });
-  const { octokit, refs } = createGitMock({
+  const { octokit, refs, blobs, trees, commits } = createGitMock({
     refs: new Map([
       ["heads/release/v1/v1.0", SHA],
       ["tags/v1.0.0-alpha.0", OTHER_SHA],
@@ -1149,7 +1149,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
 }, null, 2) + "\\n");
 `,
   });
-  const { octokit, refs } = createGitMock({
+  const { octokit, refs, blobs, trees, commits } = createGitMock({
     refs: new Map([
       ["heads/alpha/v1/v1.0", SHA],
       ["heads/buildchain/release-state/1-0-0-alpha-0", OTHER_SHA],
@@ -1238,7 +1238,7 @@ exit 64
   );
   fs.chmodSync(path.join(binDir, "npm"), 0o755);
 
-  const { octokit, refs } = createGitMock({
+  const { octokit, refs, blobs, trees, commits } = createGitMock({
     refs: new Map([
       ["heads/release/v1/v1.0", SHA],
       ["tags/v1.0.0-alpha.0", OTHER_SHA],
@@ -1268,6 +1268,23 @@ exit 64
           ref: "1.0.0",
           digest: "sha512-rebuilt",
           role: "platform",
+          platform: "linux-x64",
+        },
+        {
+          kind: "npm",
+          name: "@kungfu-tech/buildchain-darwin-arm64",
+          ref: "1.0.0",
+          digest: "sha512-rebuilt",
+          role: "platform",
+          platform: "darwin-arm64",
+        },
+        {
+          kind: "npm",
+          name: "@kungfu-tech/buildchain-win32-x64",
+          ref: "1.0.0",
+          digest: "sha512-rebuilt",
+          role: "platform",
+          platform: "win32-x64",
         },
         {
           kind: "npm",
@@ -1297,6 +1314,24 @@ exit 64
       {
         group: "",
         kind: "npm",
+        name: "@kungfu-tech/buildchain-darwin-arm64",
+        ref: "1.0.0",
+        digest: "sha512-existing",
+        role: "platform",
+        required: true,
+      },
+      {
+        group: "",
+        kind: "npm",
+        name: "@kungfu-tech/buildchain-win32-x64",
+        ref: "1.0.0",
+        digest: "sha512-existing",
+        role: "platform",
+        required: true,
+      },
+      {
+        group: "",
+        kind: "npm",
         name: "@kungfu-tech/buildchain",
         ref: "1.0.0",
         digest: "sha512-existing",
@@ -1311,9 +1346,25 @@ exit 64
         .filter((line) => line.startsWith("dist-tag add")),
       [
         "dist-tag add @kungfu-tech/buildchain-linux-x64@1.0.0 latest",
+        "dist-tag add @kungfu-tech/buildchain-darwin-arm64@1.0.0 latest",
+        "dist-tag add @kungfu-tech/buildchain-win32-x64@1.0.0 latest",
         "dist-tag add @kungfu-tech/buildchain@1.0.0 latest",
       ],
     );
+    assert.equal(result.publishTransaction.releasePassportPath, ".buildchain/release-passport/buildchain.release.json");
+    assert.equal(result.publishTransaction.releasePassportOutputDir, ".buildchain/release-passport");
+    assert.equal(refs.get("heads/buildchain/release-state/1-0-0"), result.publishTransaction.releasePassportStateSha);
+    const stateCommit = commits.get(result.publishTransaction.releasePassportStateSha);
+    const passportEntry = (trees.get(stateCommit.tree.sha) || []).find((entry) =>
+      entry.path === "release-passport/buildchain.release.json"
+    );
+    assert.ok(passportEntry);
+    const passport = JSON.parse(
+      Buffer.from(blobs.get(passportEntry.sha).content, "base64").toString("utf8"),
+    );
+    assert.equal(passport.packageSet.platforms.length, 3);
+    assert.equal(passport.distTagPromotion.fields.distTag, "latest");
+    assert.equal(passport.release.releaseStateRef, "refs/heads/buildchain/release-state/1-0-0");
   } finally {
     for (const [key, value] of Object.entries(previousEnv)) {
       if (value === undefined) {

@@ -103,6 +103,36 @@ function createUnifiedPassportFixture({
       },
     ],
   });
+  const buildSummaryPath = writeJson(path.join(cwd, "build-summary.json"), {
+    contract: "kungfu-buildchain-build-summary",
+    artifactName: "buildchain",
+    platformCount: 3,
+    fileCount: 3,
+    totalBytes: 123,
+  });
+  const linuxManifestPath = writeJson(path.join(cwd, "linux-manifest.json"), {
+    artifactName: "buildchain-linux-x64",
+    platform: { id: "linux-x64", name: "Linux x64" },
+    summary: { fileCount: 1, totalBytes: 41 },
+  });
+  const darwinManifestPath = writeJson(path.join(cwd, "darwin-manifest.json"), {
+    artifactName: "buildchain-darwin-arm64",
+    platform: { id: "darwin-arm64", name: "Darwin arm64" },
+    summary: { fileCount: 1, totalBytes: 41 },
+  });
+  const windowsManifestPath = writeJson(path.join(cwd, "windows-manifest.json"), {
+    artifactName: "buildchain-win32-x64",
+    platform: { id: "win32-x64", name: "Windows x64" },
+    summary: { fileCount: 1, totalBytes: 41 },
+  });
+  const distTagEvidencePath = writeJson(path.join(cwd, "dist-tag-evidence.json"), {
+    schema: 1,
+    contract: "kungfu-buildchain-dist-tag-promotion-evidence",
+    distTag: "latest",
+    packages: [
+      { name: "@kungfu-tech/buildchain", version: "2.3.2", distTag: "latest", role: "main" },
+    ],
+  });
 
   const collected = collectGitHubReleasePassport({
     cwd,
@@ -114,6 +144,9 @@ function createUnifiedPassportFixture({
     transactionJson: transactionPath,
     anchorManifestJson: anchorManifestPath,
     packageSetJson: packageSetPath,
+    buildSummaryJson: buildSummaryPath,
+    platformManifestJsons: [linuxManifestPath, darwinManifestPath, windowsManifestPath],
+    distTagEvidenceJson: distTagEvidencePath,
     trustedPublishingJson: JSON.stringify({
       provider: "npm",
       enabled: trustedPublishingEnabled,
@@ -140,6 +173,12 @@ test("release passport core verifies unified three-platform npm passport", async
   assert.equal(passport.publish.packages.length, 4);
   assert.equal(passport.publish.distTag, "latest");
   assert.equal(passport.transaction.result.command, "finalize");
+  assert.equal(passport.buildSummary.fields.contract, "kungfu-buildchain-build-summary");
+  assert.equal(passport.platformArtifactManifests.length, 3);
+  assert.equal(passport.distTagPromotion.fields.distTag, "latest");
+  assert.equal(report.completeness.buildSummaryPresent, true);
+  assert.equal(report.completeness.platformArtifactManifestCount, 3);
+  assert.equal(report.completeness.distTagPromotionEvidencePresent, true);
 });
 
 test("release passport core fails closed on incomplete platform package evidence", async () => {
