@@ -864,6 +864,49 @@ async function getGitRefOrUndefined({ octokit, owner, repo, ref }) {
   }
 }
 
+function transientGitHubReadError(error) {
+  const status = Number(error?.status || error?.response?.status || 0);
+  const code = String(error?.code || error?.cause?.code || "");
+  const message = String(error?.message || "");
+  return (
+    status >= 500 ||
+    ["ECONNRESET", "ETIMEDOUT", "UND_ERR_SOCKET", "UND_ERR_HEADERS_TIMEOUT", "UND_ERR_BODY_TIMEOUT"].includes(code) ||
+    /other side closed|socket|timeout|temporarily unavailable/i.test(message)
+  );
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function retryGitHubRead(label, read, { attempts = 4, delayMs = 1000 } = {}) {
+  let lastError;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await read();
+    } catch (error) {
+      lastError = error;
+      if (attempt >= attempts || !transientGitHubReadError(error)) {
+        throw error;
+      }
+      console.warn(`${label} failed with transient GitHub API error (${error.message}); retry ${attempt}/${attempts - 1}`);
+      await wait(delayMs * attempt);
+    }
+  }
+  throw lastError;
+}
+
+async function getGitCommitWithRetry({ octokit, owner, repo, commitSha }) {
+  return retryGitHubRead(
+    `git.getCommit ${commitSha}`,
+    () => octokit.rest.git.getCommit({
+      owner,
+      repo,
+      commit_sha: commitSha,
+    }),
+  );
+}
+
 async function restoreDurableReleaseTransaction({
   octokit,
   owner,
@@ -893,11 +936,7 @@ async function restoreDurableReleaseTransaction({
     ref: `heads/${stateRef}`,
   });
   const commitSha = ref.object?.sha;
-  const { data: commit } = await octokit.rest.git.getCommit({
-    owner,
-    repo,
-    commit_sha: commitSha,
-  });
+  const { data: commit } = await getGitCommitWithRetry({ octokit, owner, repo, commitSha });
   const { data: tree } = await octokit.rest.git.getTree({
     owner,
     repo,
@@ -938,11 +977,7 @@ async function readDurableReleaseTransaction({
     return undefined;
   }
   const commitSha = ref.object?.sha;
-  const { data: commit } = await octokit.rest.git.getCommit({
-    owner,
-    repo,
-    commit_sha: commitSha,
-  });
+  const { data: commit } = await getGitCommitWithRetry({ octokit, owner, repo, commitSha });
   const { data: tree } = await octokit.rest.git.getTree({
     owner,
     repo,
@@ -1027,11 +1062,7 @@ async function persistDurableReleaseTransaction({
     let baseTree;
     const parents = [];
     if (parentSha) {
-      const { data: currentCommit } = await octokit.rest.git.getCommit({
-        owner,
-        repo,
-        commit_sha: parentSha,
-      });
+      const { data: currentCommit } = await getGitCommitWithRetry({ octokit, owner, repo, commitSha: parentSha });
       baseTree = currentCommit.tree?.sha;
       parents.push(parentSha);
     }
@@ -1122,11 +1153,7 @@ async function releaseCommitIncludesTransactionHead({
       return true;
     }
     seen.add(sha);
-    const { data: commit } = await octokit.rest.git.getCommit({
-      owner,
-      repo,
-      commit_sha: sha,
-    });
+    const { data: commit } = await getGitCommitWithRetry({ octokit, owner, repo, commitSha: sha });
     for (const parent of commit.parents || []) {
       if (!seen.has(parent.sha)) {
         queue.push(parent.sha);
@@ -1685,11 +1712,7 @@ async function completeTransactionFinalization(result, actor, runId) {
 }
 
 async function getCommitInfo(octokit, owner, repo, sha) {
-  const { data } = await octokit.rest.git.getCommit({
-    owner,
-    repo,
-    commit_sha: sha,
-  });
+  const { data } = await getGitCommitWithRetry({ octokit, owner, repo, commitSha: sha });
   return {
     treeSha: data.tree?.sha,
     parents: (data.parents || []).map((parent) => parent.sha),
@@ -3031,11 +3054,7 @@ async function promoteBuildchainRefs({
       env: strategyEnv,
     });
 
-    const { data: baseCommit } = await octokit.rest.git.getCommit({
-      owner,
-      repo,
-      commit_sha: baseSha,
-    });
+    const { data: baseCommit } = await getGitCommitWithRetry({ octokit, owner, repo, commitSha: baseSha });
     const tree = [];
     for (const file of changedFiles) {
       const { data: blob } = await octokit.rest.git.createBlob({
