@@ -47,7 +47,7 @@
     {
       "id": "verify-infra-contract-evidence-bundle",
       "usage": "buildchain verify infra-contract-evidence-bundle <file>",
-      "purpose": "Fail closed unless an infra-contract lifecycle evidence bundle is complete and hash-bound."
+      "purpose": "Fail closed unless an infra-contract lifecycle evidence bundle is complete, hash-bound, and validation-consistent."
     },
     {
       "id": "logging",

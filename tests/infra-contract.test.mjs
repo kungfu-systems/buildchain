@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -15,6 +16,36 @@ import {
 } from "../scripts/infra-contract-core.mjs";
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
+
+function sortJson(value) {
+  if (Array.isArray(value)) {
+    return value.map(sortJson);
+  }
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.keys(value)
+        .sort()
+        .map((key) => [key, sortJson(value[key])]),
+    );
+  }
+  return value;
+}
+
+function stableJson(value) {
+  return JSON.stringify(sortJson(value), null, 2);
+}
+
+function sha256(value) {
+  return crypto.createHash("sha256").update(value).digest("hex");
+}
+
+function rehashEvidenceBundle(bundle) {
+  const { bundleHash, ...base } = bundle;
+  return {
+    ...base,
+    bundleHash: sha256(stableJson(base)),
+  };
+}
 
 function withFixture(name, fn) {
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-infra-contract-"));
@@ -786,6 +817,51 @@ test("infra-contract evidence bundle verifier fails closed on tampering", () => 
     );
     assert.equal(
       verification.issues.some((issue) => issue.code === "plan.binding.mismatch"),
+      true,
+    );
+  });
+});
+
+test("infra-contract evidence bundle verifier recomputes validation summary", () => {
+  withFixture("infra-contract-shaped", (fixture) => {
+    const plan = createInfraContractPlan({
+      cwd: fixture,
+      sourceSha: "b".repeat(40),
+      plannedAt: "2026-07-03T00:00:00.000Z",
+    });
+    const artifact = createInfraContractArtifact({
+      cwd: fixture,
+      plan,
+      observedAt: "2026-07-03T00:00:00.000Z",
+    });
+    const propagationPlan = createInfraContractPropagationPlan({ cwd: fixture, artifact });
+    const propagationResult = applyInfraContractPropagation({ cwd: fixture, artifact, propagationPlan });
+    const bundle = createInfraContractEvidenceBundle({
+      artifact,
+      propagationResult,
+      createdAt: "2026-07-03T00:01:00.000Z",
+    });
+    const tampered = rehashEvidenceBundle({
+      ...bundle,
+      validation: {
+        ...bundle.validation,
+        applyResultBound: false,
+        mutationExecuted: true,
+      },
+    });
+
+    const verification = verifyInfraContractEvidenceBundle(tampered);
+    assert.equal(verification.ok, false);
+    assert.equal(
+      verification.issues.some((issue) => issue.code === "bundle.hash.mismatch"),
+      false,
+    );
+    assert.equal(
+      verification.issues.some((issue) => issue.code === "validation.applyResultBound.mismatch"),
+      true,
+    );
+    assert.equal(
+      verification.issues.some((issue) => issue.code === "validation.mutationExecuted.mismatch"),
       true,
     );
   });
