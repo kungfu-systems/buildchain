@@ -321,6 +321,121 @@ test("infra-contract managed apply rejects a plan after desired inputs drift", (
   });
 });
 
+test("infra-contract custom-command apply executes only after explicit gates", () => {
+  withFixture("infra-contract-shaped", (fixture) => {
+    fs.writeFileSync(
+      path.join(fixture, "buildchain.toml"),
+      `
+schema = 1
+
+[project]
+type = "infra-contract"
+name = "infra-custom-command"
+
+[infra]
+adapter = "custom-command"
+adoption_mode = "managed-apply"
+apply = "manual-approval"
+desired = ["desired/site-kungfu-tech.json"]
+contract = ["outputs/site-kungfu-tech.json"]
+
+[infra.commands]
+validate = "custom validate"
+plan = "custom plan"
+apply = "custom apply"
+
+[[consumers]]
+repo = "kungfu-systems/site-kungfu-tech"
+path = "infra/outputs.json"
+source = "outputs/site-kungfu-tech.json"
+`,
+    );
+    const sourceSha = "9".repeat(40);
+    const plan = createInfraContractPlan({
+      cwd: fixture,
+      sourceSha,
+      plannedAt: "2026-07-03T00:00:00.000Z",
+      executeAdapterCommands: true,
+      commandRunner: (command) => ({ status: 0, stdout: JSON.stringify({ command }), stderr: "" }),
+    });
+    assert.equal(plan.adapterEvidence.every((entry) => entry.executed), true);
+
+    const dryRun = applyInfraContract({
+      cwd: fixture,
+      sourceSha,
+      approvalId: "APPROVED-APPLY-1",
+      dryRun: true,
+      plan,
+      now: "2026-07-03T00:01:00.000Z",
+    });
+    assert.equal(dryRun.status, "planned");
+    assert.equal(dryRun.inputHash, plan.inputHash);
+    assert.equal(dryRun.adapterEvidence[0].stage, "apply");
+    assert.equal(dryRun.adapterEvidence[0].executed, false);
+
+    assert.throws(
+      () => applyInfraContract({
+        cwd: fixture,
+        sourceSha,
+        approvalId: "APPROVED-APPLY-1",
+        dryRun: false,
+        plan,
+        now: "2026-07-03T00:01:00.000Z",
+      }),
+      /requires --execute-adapter-commands true/,
+    );
+
+    const calls = [];
+    const result = applyInfraContract({
+      cwd: fixture,
+      sourceSha,
+      approvalId: "APPROVED-APPLY-1",
+      dryRun: false,
+      plan,
+      now: "2026-07-03T00:01:00.000Z",
+      executeAdapterCommands: true,
+      commandRunner: (command) => {
+        calls.push(command);
+        return { status: 0, stdout: JSON.stringify({ stage: "apply", command }), stderr: "" };
+      },
+    });
+    assert.equal(result.status, "completed");
+    assert.equal(result.mutationAllowed, true);
+    assert.equal(result.mutationExecuted, true);
+    assert.deepEqual(calls, ["custom apply"]);
+    assert.equal(result.adapterEvidence[0].status, "passed");
+    assert.equal(result.adapterEvidence[0].output.stage, "apply");
+  });
+});
+
+test("infra-contract non custom-command apply stays fail-closed before adapter execution", () => {
+  withFixture("infra-contract-terraform-shaped", (fixture) => {
+    fs.writeFileSync(
+      path.join(fixture, "buildchain.toml"),
+      fs.readFileSync(path.join(fixture, "buildchain.toml"), "utf8")
+        .replace('adoption_mode = "observe-only"', 'adoption_mode = "managed-apply"')
+        .replace('apply = "disabled"', 'apply = "manual-approval"'),
+    );
+    const sourceSha = "a".repeat(40);
+    const plan = createInfraContractPlan({
+      cwd: fixture,
+      sourceSha,
+      plannedAt: "2026-07-03T00:00:00.000Z",
+    });
+    assert.throws(
+      () => applyInfraContract({
+        cwd: fixture,
+        sourceSha,
+        approvalId: "APPROVED-APPLY-2",
+        dryRun: false,
+        plan,
+        now: "2026-07-03T00:01:00.000Z",
+      }),
+      /apply execution is not implemented for adapter: terraform/,
+    );
+  });
+});
+
 test("infra-contract propagation apply defaults to mutation-free PR operations", () => {
   withFixture("infra-contract-shaped", (fixture) => {
     const plan = createInfraContractPlan({
