@@ -7,6 +7,7 @@ import {
   applyInfraContract,
   applyInfraContractPropagation,
   createInfraContractArtifact,
+  createInfraContractEvidenceBundle,
   createInfraContractPlan,
   createInfraContractPropagationPlan,
   validateInfraContractProject,
@@ -560,5 +561,122 @@ test("infra-contract propagation apply opens consumer PRs only after explicit ap
     } finally {
       fs.rmSync(workspace, { recursive: true, force: true });
     }
+  });
+});
+
+test("infra-contract evidence bundle binds contract and propagation evidence", () => {
+  withFixture("infra-contract-shaped", (fixture) => {
+    const plan = createInfraContractPlan({
+      cwd: fixture,
+      sourceSha: "5".repeat(40),
+      plannedAt: "2026-07-03T00:00:00.000Z",
+    });
+    const artifact = createInfraContractArtifact({
+      cwd: fixture,
+      plan,
+      observedAt: "2026-07-03T00:00:00.000Z",
+    });
+    const propagationPlan = createInfraContractPropagationPlan({ cwd: fixture, artifact });
+    const propagationResult = applyInfraContractPropagation({ cwd: fixture, artifact, propagationPlan });
+    const bundle = createInfraContractEvidenceBundle({
+      artifact,
+      propagationResult,
+      createdAt: "2026-07-03T00:01:00.000Z",
+    });
+
+    assert.equal(bundle.contract, "kungfu-buildchain-infra-contract-evidence-bundle");
+    assert.equal(bundle.artifactHash, artifact.artifactHash);
+    assert.equal(bundle.lifecycle.desired.files.length, 2);
+    assert.equal(bundle.lifecycle.plan.hash, plan.planHash);
+    assert.equal(bundle.lifecycle.approval.required, false);
+    assert.equal(bundle.lifecycle.apply.required, false);
+    assert.equal(bundle.lifecycle.apply.result, null);
+    assert.equal(bundle.lifecycle.observe.files.length, 2);
+    assert.equal(bundle.lifecycle.contract.artifact.artifactHash, artifact.artifactHash);
+    assert.equal(bundle.lifecycle.propagate.result.artifactHash, artifact.artifactHash);
+    assert.equal(bundle.validation.artifactHashVerified, true);
+    assert.match(bundle.bundleHash, /^[0-9a-f]{64}$/);
+  });
+});
+
+test("infra-contract evidence bundle fails closed on mismatched apply or propagation evidence", () => {
+  withFixture("infra-contract-shaped", (fixture) => {
+    fs.writeFileSync(
+      path.join(fixture, "buildchain.toml"),
+      `
+schema = 1
+
+[project]
+type = "infra-contract"
+name = "infra-custom-command"
+
+[infra]
+adapter = "custom-command"
+adoption_mode = "managed-apply"
+apply = "manual-approval"
+desired = ["desired/site-kungfu-tech.json"]
+contract = ["outputs/site-kungfu-tech.json"]
+
+[infra.commands]
+validate = "custom validate"
+plan = "custom plan"
+apply = "custom apply"
+
+[[consumers]]
+repo = "kungfu-systems/site-kungfu-tech"
+path = "infra/outputs.json"
+source = "outputs/site-kungfu-tech.json"
+`,
+    );
+    const sourceSha = "8".repeat(40);
+    const plan = createInfraContractPlan({
+      cwd: fixture,
+      sourceSha,
+      plannedAt: "2026-07-03T00:00:00.000Z",
+    });
+    const artifact = createInfraContractArtifact({
+      cwd: fixture,
+      plan,
+      approvalId: "APPROVED-BUNDLE-1",
+      observedAt: "2026-07-03T00:01:00.000Z",
+    });
+    const applyResult = applyInfraContract({
+      cwd: fixture,
+      sourceSha,
+      approvalId: "APPROVED-BUNDLE-1",
+      dryRun: true,
+      plan,
+      now: "2026-07-03T00:02:00.000Z",
+    });
+    const propagationPlan = createInfraContractPropagationPlan({ cwd: fixture, artifact });
+    const propagationResult = applyInfraContractPropagation({ cwd: fixture, artifact, propagationPlan });
+
+    assert.throws(
+      () => createInfraContractEvidenceBundle({
+        artifact,
+        applyResult: { ...applyResult, planHash: "0".repeat(64) },
+        propagationResult,
+      }),
+      /apply result planHash does not match/,
+    );
+    assert.throws(
+      () => createInfraContractEvidenceBundle({
+        artifact,
+        applyResult,
+        propagationResult: { ...propagationResult, artifactHash: "1".repeat(64) },
+      }),
+      /propagation result artifactHash does not match/,
+    );
+
+    const bundle = createInfraContractEvidenceBundle({
+      artifact,
+      applyResult,
+      propagationResult,
+      createdAt: "2026-07-03T00:03:00.000Z",
+    });
+    assert.equal(bundle.lifecycle.apply.result.planHash, plan.planHash);
+    assert.equal(bundle.lifecycle.propagate.result.status, "planned");
+    assert.equal(bundle.validation.applyResultBound, true);
+    assert.equal(bundle.validation.propagationResultBound, true);
   });
 });

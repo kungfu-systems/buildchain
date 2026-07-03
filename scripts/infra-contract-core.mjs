@@ -9,6 +9,7 @@ const ARTIFACT_CONTRACT = "kungfu-buildchain-infra-contract";
 const PROPAGATION_CONTRACT = "kungfu-buildchain-infra-contract-propagation-plan";
 const PROPAGATION_APPLY_CONTRACT = "kungfu-buildchain-infra-contract-propagation-apply";
 const APPLY_CONTRACT = "kungfu-buildchain-infra-contract-apply";
+const EVIDENCE_BUNDLE_CONTRACT = "kungfu-buildchain-infra-contract-evidence-bundle";
 
 const STATIC_CAPABILITIES = Object.freeze({
   "manual-observed": { validate: true, plan: false, apply: false, observe: true },
@@ -265,6 +266,56 @@ function assertInfraContractPropagationPlan(plan) {
   return plan;
 }
 
+function assertInfraContractArtifact(artifact) {
+  if (!artifact || typeof artifact !== "object" || artifact.contract !== ARTIFACT_CONTRACT) {
+    throw new Error("infra-contract evidence bundle requires a saved infra-contract artifact");
+  }
+  if (!artifact.artifactHash || typeof artifact.artifactHash !== "string") {
+    throw new Error("infra-contract artifact is missing artifactHash");
+  }
+  const { artifactHash, ...artifactBase } = artifact;
+  const computedHash = sha256Buffer(stableJson(artifactBase));
+  if (computedHash !== artifactHash) {
+    throw new Error("infra-contract artifactHash does not match artifact contents");
+  }
+  return artifact;
+}
+
+function assertInfraContractApplyResult({ artifact, applyResult }) {
+  if (!artifact.apply?.enabled) {
+    if (applyResult) {
+      throw new Error("infra-contract apply result was provided but apply is disabled in the artifact");
+    }
+    return null;
+  }
+  if (!applyResult || typeof applyResult !== "object" || applyResult.contract !== APPLY_CONTRACT) {
+    throw new Error("infra-contract evidence bundle requires a saved apply result when apply is enabled");
+  }
+  if (applyResult.sourceSha && applyResult.sourceSha !== artifact.sourceSha) {
+    throw new Error("infra-contract apply result sourceSha does not match the artifact");
+  }
+  if (applyResult.planHash !== artifact.plan?.hash) {
+    throw new Error("infra-contract apply result planHash does not match the artifact plan");
+  }
+  return applyResult;
+}
+
+function assertInfraContractPropagationResult({ artifact, propagationResult }) {
+  if ((artifact.consumers || []).length === 0) {
+    if (propagationResult) {
+      throw new Error("infra-contract propagation result was provided but the artifact has no consumers");
+    }
+    return null;
+  }
+  if (!propagationResult || typeof propagationResult !== "object" || propagationResult.contract !== PROPAGATION_APPLY_CONTRACT) {
+    throw new Error("infra-contract evidence bundle requires a saved propagation apply result when consumers are configured");
+  }
+  if (propagationResult.artifactHash !== artifact.artifactHash) {
+    throw new Error("infra-contract propagation result artifactHash does not match the artifact");
+  }
+  return propagationResult;
+}
+
 function assertFreshApplyPlan({ cwd, plan, sourceSha, now, planMaxAgeMinutes }) {
   const selectedPlan = assertInfraContractPlan(plan);
   const expectedSourceSha = assertSha(sourceSha || selectedPlan.sourceSha, "sourceSha");
@@ -489,6 +540,63 @@ export function createInfraContractPropagationPlan({
       title: "chore(infra): update Buildchain infra contract",
       body: `Update ${consumer.path} from Buildchain infra contract ${selectedArtifact.artifactHash}.`,
     })),
+  };
+}
+
+export function createInfraContractEvidenceBundle({
+  artifact,
+  applyResult,
+  propagationResult,
+  createdAt = new Date().toISOString(),
+} = {}) {
+  const selectedArtifact = assertInfraContractArtifact(artifact);
+  const selectedApplyResult = assertInfraContractApplyResult({
+    artifact: selectedArtifact,
+    applyResult,
+  });
+  const selectedPropagationResult = assertInfraContractPropagationResult({
+    artifact: selectedArtifact,
+    propagationResult,
+  });
+  const bundleBase = {
+    schemaVersion: 1,
+    contract: EVIDENCE_BUNDLE_CONTRACT,
+    createdAt,
+    sourceSha: selectedArtifact.sourceSha,
+    artifactHash: selectedArtifact.artifactHash,
+    lifecycle: {
+      desired: {
+        files: selectedArtifact.desiredFiles,
+      },
+      plan: selectedArtifact.plan,
+      approval: selectedArtifact.approval,
+      apply: {
+        required: Boolean(selectedArtifact.apply?.enabled),
+        runId: selectedArtifact.apply?.runId || "",
+        result: selectedApplyResult,
+      },
+      observe: selectedArtifact.observed,
+      contract: {
+        hash: selectedArtifact.artifactHash,
+        artifact: selectedArtifact,
+      },
+      propagate: {
+        required: (selectedArtifact.consumers || []).length > 0,
+        consumers: selectedArtifact.consumers || [],
+        result: selectedPropagationResult,
+      },
+    },
+    validation: {
+      artifactHashVerified: true,
+      applyResultBound: selectedArtifact.apply?.enabled ? Boolean(selectedApplyResult) : true,
+      propagationResultBound: (selectedArtifact.consumers || []).length > 0 ? Boolean(selectedPropagationResult) : true,
+      mutationExecuted: Boolean(selectedApplyResult?.mutationExecuted),
+      propagationExecuted: Boolean(selectedPropagationResult?.mutationExecuted),
+    },
+  };
+  return {
+    ...bundleBase,
+    bundleHash: sha256Buffer(stableJson(bundleBase)),
   };
 }
 

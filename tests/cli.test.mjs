@@ -241,6 +241,87 @@ test("infra-contract CLI propagation-apply writes a dry-run PR plan", () => {
   assert.equal(result.operations.length, 2);
 });
 
+test("infra-contract CLI evidence-bundle binds artifact and propagation output", () => {
+  const cwd = tempDir("infra-contract-cli-evidence-bundle");
+  fs.cpSync(path.join(root, "fixtures/infra-contract-shaped"), cwd, { recursive: true });
+  const sourceSha = "6".repeat(40);
+  const planPath = path.join(cwd, ".buildchain", "infra-contract-plan.json");
+  const artifactPath = path.join(cwd, ".buildchain", "buildchain.infra-contract.json");
+  const propagationPath = path.join(cwd, ".buildchain", "infra-contract-propagation.json");
+  const propagationResultPath = path.join(cwd, ".buildchain", "infra-contract-propagation-apply.json");
+  const outputPath = path.join(cwd, ".buildchain", "infra-contract-evidence-bundle.json");
+
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "plan",
+    "--cwd",
+    cwd,
+    "--source-sha",
+    sourceSha,
+    "--output",
+    planPath,
+  ]);
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "contract",
+    "--cwd",
+    cwd,
+    "--source-sha",
+    sourceSha,
+    "--plan",
+    planPath,
+    "--output",
+    artifactPath,
+  ]);
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "propagation-plan",
+    "--cwd",
+    cwd,
+    "--artifact",
+    artifactPath,
+    "--output",
+    propagationPath,
+  ]);
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "propagation-apply",
+    "--cwd",
+    cwd,
+    "--artifact",
+    artifactPath,
+    "--propagation-plan",
+    propagationPath,
+    "--dry-run",
+    "true",
+    "--output",
+    propagationResultPath,
+  ]);
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "evidence-bundle",
+    "--artifact",
+    artifactPath,
+    "--propagation-result",
+    propagationResultPath,
+    "--output",
+    outputPath,
+  ]);
+
+  const artifact = JSON.parse(fs.readFileSync(artifactPath, "utf8"));
+  const result = JSON.parse(fs.readFileSync(outputPath, "utf8"));
+  assert.equal(result.contract, "kungfu-buildchain-infra-contract-evidence-bundle");
+  assert.equal(result.artifactHash, artifact.artifactHash);
+  assert.equal(result.lifecycle.apply.required, false);
+  assert.equal(result.lifecycle.propagate.result.status, "planned");
+  assert.match(result.bundleHash, /^[0-9a-f]{64}$/);
+});
+
 test("infra-contract CLI plan can execute custom-command adapter evidence", () => {
   const cwd = tempDir("infra-contract-cli-custom-command");
   fs.cpSync(path.join(root, "fixtures/infra-contract-shaped"), cwd, { recursive: true });

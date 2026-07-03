@@ -14,6 +14,13 @@ requests. Propagation execution is also dry-run by default. Real infrastructure
 mutation and real consumer pull request creation are not PR or ordinary push side
 effects.
 
+After apply and propagation produce their own result JSON, Buildchain can also
+write a lifecycle evidence bundle. The bundle references the immutable contract
+artifact by `artifactHash`, verifies that any apply result matches the artifact's
+`sourceSha` and plan hash, verifies that propagation results target the same
+artifact, and then hashes the combined desired, plan, approval, apply, observe,
+contract, and propagation evidence.
+
 ## Configuration
 
 ```toml
@@ -120,7 +127,15 @@ buildchain infra-contract --mode apply \
   --dry-run false \
   --execute-adapter-commands true \
   --output .buildchain/infra-contract-apply.json
+buildchain infra-contract --mode evidence-bundle \
+  --artifact .buildchain/buildchain.infra-contract.json \
+  --apply-result .buildchain/infra-contract-apply.json \
+  --propagation-result .buildchain/infra-contract-propagation-apply.json \
+  --output .buildchain/infra-contract-evidence-bundle.json
 ```
+
+For projects where apply is disabled, omit `--apply-result`. For projects with
+no consumers, omit `--propagation-result`.
 
 ## Safety
 
@@ -141,3 +156,6 @@ buildchain infra-contract --mode apply \
 - Buildchain never pushes mirrored contract files directly to consumer main
   branches. Real propagation creates reviewable branches and calls
   `gh pr create`.
+- Evidence bundles do not execute adapters, mutate infrastructure, or open PRs.
+  They only verify and hash already saved contract, apply, and propagation
+  outputs.

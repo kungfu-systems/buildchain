@@ -6,6 +6,7 @@ import {
   applyInfraContract,
   applyInfraContractPropagation,
   createInfraContractArtifact,
+  createInfraContractEvidenceBundle,
   createInfraContractPlan,
   createInfraContractPropagationPlan,
   validateInfraContractProject,
@@ -173,6 +174,20 @@ export function infraContractCli() {
     writeGitHubOutputs({
       "infra-propagation-status": result.status,
       "infra-propagation-result-json": JSON.stringify(result),
+    });
+    return result;
+  }
+
+  if (mode === "evidence-bundle") {
+    const result = createInfraContractEvidenceBundle({
+      artifact: readJsonFileArg("artifact"),
+      applyResult: readJsonFileArg("apply-result"),
+      propagationResult: readJsonFileArg("propagation-result"),
+    });
+    writeJson(result, output);
+    writeGitHubOutputs({
+      "infra-evidence-bundle-hash": result.bundleHash,
+      "infra-evidence-bundle-json": JSON.stringify(result),
     });
     return result;
   }
