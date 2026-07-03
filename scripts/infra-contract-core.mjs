@@ -21,6 +21,45 @@ const STATIC_CAPABILITIES = Object.freeze({
   "aws-cli": { validate: true, plan: true, apply: true, observe: true },
 });
 
+const STATIC_ADAPTER_COMMANDS = Object.freeze({
+  "aws-cloudformation": {
+    validate: ({ desiredFile }) => `aws cloudformation validate-template --template-body file://${desiredFile}`,
+    plan: ({ desiredFile }) => `aws cloudformation create-change-set --stack-name <stack-name> --change-set-name <change-set-name> --change-set-type UPDATE --template-body file://${desiredFile}`,
+    apply: () => "aws cloudformation execute-change-set --stack-name <stack-name> --change-set-name <change-set-name>",
+    observe: () => "aws cloudformation describe-stacks --stack-name <stack-name> --query 'Stacks[0].Outputs' --output json",
+  },
+  terraform: {
+    validate: () => "terraform validate -no-color",
+    plan: () => "terraform plan -input=false -out=.buildchain/infra-contract/terraform.tfplan",
+    apply: () => "terraform apply -input=false .buildchain/infra-contract/terraform.tfplan",
+    observe: () => "terraform output -json",
+  },
+  opentofu: {
+    validate: () => "tofu validate -no-color",
+    plan: () => "tofu plan -input=false -out=.buildchain/infra-contract/opentofu.tfplan",
+    apply: () => "tofu apply -input=false .buildchain/infra-contract/opentofu.tfplan",
+    observe: () => "tofu output -json",
+  },
+  pulumi: {
+    validate: () => "pulumi preview --json",
+    plan: () => "pulumi preview --json",
+    apply: () => "pulumi up --yes --json",
+    observe: () => "pulumi stack output --json",
+  },
+  "aws-cdk": {
+    validate: () => "npx cdk synth",
+    plan: () => "npx cdk diff",
+    apply: () => "npx cdk deploy --require-approval never",
+    observe: () => "aws cloudformation describe-stacks --stack-name <cdk-stack-name> --query 'Stacks[0].Outputs' --output json",
+  },
+  "aws-cli": {
+    validate: () => "aws <service> <validate-operation> --cli-input-json file://<desired-file>",
+    plan: () => "aws <service> <plan-or-dry-run-operation> --cli-input-json file://<desired-file>",
+    apply: () => "aws <service> <apply-operation> --cli-input-json file://<approved-plan>",
+    observe: () => "aws <service> <describe-operation> --output json",
+  },
+});
+
 function assertInfraContractConfig(loadedConfig) {
   if (loadedConfig?.config?.project?.type !== "infra-contract") {
     throw new Error('buildchain.toml project.type must be "infra-contract"');
@@ -91,26 +130,50 @@ function redactCommandText(value) {
   return String(value || "").replace(/(token|secret|password|passwd|key)=\S+/gi, "$1=<redacted>");
 }
 
-function collectCustomCommandEvidence({ cwd, config, stages, executeAdapterCommands, runner = runShellCommand }) {
-  if (config.infra.adapter !== "custom-command") {
-    return [];
+function adapterCommandTemplate({ config, stage }) {
+  const configuredCommand = config.infra.commands?.[stage];
+  if (configuredCommand) {
+    return {
+      command: configuredCommand,
+      commandSource: "configured",
+      executable: config.infra.adapter === "custom-command",
+    };
   }
-  const commands = config.infra.commands || {};
+  const adapterCommands = STATIC_ADAPTER_COMMANDS[config.infra.adapter];
+  const commandFactory = adapterCommands?.[stage];
+  if (!commandFactory) {
+    return null;
+  }
+  return {
+    command: commandFactory({
+      desiredFile: config.infra.desired[0] || "<desired-file>",
+      contractFile: config.infra.contract[0] || "<contract-file>",
+    }),
+    commandSource: "builtin-plan",
+    executable: false,
+  };
+}
+
+function collectAdapterEvidence({ cwd, config, stages, executeAdapterCommands, runner = runShellCommand }) {
   return stages
-    .filter((stage) => commands[stage])
-    .map((stage) => {
-      const command = commands[stage];
+    .map((stage) => [stage, adapterCommandTemplate({ config, stage })])
+    .filter(([, template]) => template)
+    .map(([stageName, template]) => {
+      const command = template.command;
+      const willExecute = Boolean(executeAdapterCommands && template.executable);
       const base = {
-        stage,
+        stage: stageName,
+        adapter: config.infra.adapter,
+        commandSource: template.commandSource,
         command: redactCommandText(command),
-        executed: Boolean(executeAdapterCommands),
-        status: executeAdapterCommands ? "pending" : "planned",
+        executed: willExecute,
+        status: willExecute ? "pending" : "planned",
         exitCode: null,
         stdout: "",
         stderr: "",
         output: undefined,
       };
-      if (!executeAdapterCommands) {
+      if (!willExecute) {
         return base;
       }
       const result = runner(command, { cwd });
@@ -395,7 +458,7 @@ export function createInfraContractPlan({
     consumerContracts,
     capabilities,
   });
-  const adapterEvidence = collectCustomCommandEvidence({
+  const adapterEvidence = collectAdapterEvidence({
     cwd,
     config,
     stages: ["validate", "plan"],
@@ -458,7 +521,7 @@ export function createInfraContractArtifact({
   if (selectedPlan.contract !== PLAN_CONTRACT) {
     throw new Error("infra-contract artifact requires an infra-contract plan");
   }
-  const adapterEvidence = collectCustomCommandEvidence({
+  const adapterEvidence = collectAdapterEvidence({
     cwd,
     config,
     stages: ["observe"],
@@ -745,7 +808,7 @@ export function applyInfraContract({
     throw new Error("infra-contract apply requires an approval id before mutation");
   }
   const freshPlan = assertFreshApplyPlan({ cwd, plan, sourceSha, now, planMaxAgeMinutes });
-  const plannedApplyEvidence = collectCustomCommandEvidence({
+  const plannedApplyEvidence = collectAdapterEvidence({
     cwd,
     config,
     stages: ["apply"],
@@ -775,7 +838,7 @@ export function applyInfraContract({
   if (!executeAdapterCommands) {
     throw new Error("infra-contract custom-command apply requires --execute-adapter-commands true before mutation");
   }
-  const adapterEvidence = collectCustomCommandEvidence({
+  const adapterEvidence = collectAdapterEvidence({
     cwd,
     config,
     stages: ["apply"],
