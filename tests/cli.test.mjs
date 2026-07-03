@@ -160,7 +160,8 @@ test("infra-contract CLI apply consumes a saved fresh plan", () => {
     path.join(cwd, "buildchain.toml"),
     fs.readFileSync(path.join(cwd, "buildchain.toml"), "utf8")
       .replace('adoption_mode = "observe-only"', 'adoption_mode = "managed-apply"')
-      .replace('apply = "disabled"', 'apply = "manual-approval"'),
+      .replace('apply = "disabled"', 'apply = "manual-approval"')
+      .replace('environment = "preview"', 'environment = "preview"\nidentity_ref = "AWS_ROLE_ARN"'),
   );
   const sourceSha = "2".repeat(40);
   const planPath = path.join(cwd, ".buildchain", "infra-contract-plan.json");
@@ -461,6 +462,8 @@ name = "infra-custom-command"
 adapter = "custom-command"
 adoption_mode = "managed-apply"
 apply = "manual-approval"
+environment = "preview"
+identity_ref = "AWS_ROLE_ARN"
 desired = ["desired/site-kungfu-tech.json"]
 contract = ["outputs/site-kungfu-tech.json"]
 
