@@ -611,6 +611,23 @@ function releasePassportArtifactFiles(outputDir) {
     .sort((left, right) => left.path.localeCompare(right.path));
 }
 
+function backfillReleasePassportStateSha(outputDir, releaseStateSha) {
+  if (!outputDir || !releaseStateSha) {
+    return undefined;
+  }
+  const passportPath = path.join(outputDir, "buildchain.release.json");
+  const passport = readJsonFileIfExists(passportPath);
+  if (!passport || typeof passport !== "object" || Array.isArray(passport)) {
+    return undefined;
+  }
+  passport.release = passport.release && typeof passport.release === "object" && !Array.isArray(passport.release)
+    ? passport.release
+    : {};
+  passport.release.releaseStateSha = releaseStateSha;
+  writeJsonFile(passportPath, passport);
+  return passportPath;
+}
+
 function splitPathList(value = "") {
   return String(value || "")
     .split(/[\n,]/)
@@ -1619,6 +1636,7 @@ async function collectAndPersistReleasePassport({
   line,
   packageName,
   outputDir,
+  productName,
   buildSummaryPath,
   platformManifestPaths = [],
   enabled = true,
@@ -1655,6 +1673,7 @@ async function collectAndPersistReleasePassport({
     sourceSha: passportSourceSha,
     line,
     outputDir: resolvedOutputDir,
+    productName: productName || "Buildchain",
     packageName: packageName || result.packageSet?.main?.name || "@kungfu-tech/buildchain",
     packageVersion: result.transaction.version,
     packageSetJson: result.packageSet ? JSON.stringify(result.packageSet) : "",
@@ -1706,14 +1725,24 @@ async function collectAndPersistReleasePassport({
     evidencePath: result.evidencePath,
     extraFiles: releasePassportArtifactFiles(collected.outputDir),
   });
+  backfillReleasePassportStateSha(collected.outputDir, durable?.sha || "");
+  const finalDurable = await persistDurableReleaseTransaction({
+    octokit: result.octokit,
+    owner: result.owner,
+    repo: result.repo,
+    cwd: result.cwd,
+    transaction: result.transaction,
+    evidencePath: result.evidencePath,
+    extraFiles: releasePassportArtifactFiles(collected.outputDir),
+  });
   return {
     ...result,
-    durable,
+    durable: finalDurable || durable,
     releasePassport: {
       outputDir: collected.outputDir,
       passportPath: path.join(collected.outputDir, "buildchain.release.json"),
       durablePath: "release-passport/buildchain.release.json",
-      stateSha: durable?.sha || "",
+      stateSha: finalDurable?.sha || durable?.sha || "",
       files: collected.files,
     },
   };
@@ -2361,6 +2390,7 @@ async function promoteBuildchainRefs({
   publishPackageMain = "",
   releasePassport = true,
   releasePassportOutputDir = ".buildchain/release-passport",
+  releasePassportProductName = "Buildchain",
   releasePassportBuildSummaryPath = ".buildchain/artifacts/build-summary.json",
   releasePassportPlatformManifestPaths = "",
   actor = process.env.GITHUB_ACTOR || process.env.USER || "",
@@ -3238,6 +3268,7 @@ async function promoteBuildchainRefs({
       line: line || rule.releasePrefix || "",
       packageName: publishPackageMain,
       outputDir: releasePassportOutputDir,
+      productName: releasePassportProductName,
       buildSummaryPath: releasePassportBuildSummaryPath,
       platformManifestPaths: splitPathList(releasePassportPlatformManifestPaths),
       enabled: Boolean(releasePassport),

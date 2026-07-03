@@ -89,6 +89,9 @@ inputs:
   release-passport-output-dir:
     description: "Directory where the generated buildchain-release-passport files are written"
     default: ".buildchain/release-passport"
+  release-passport-product-name:
+    description: "Product name recorded in buildchain.release.json"
+    default: "Buildchain"
   release-passport-build-summary-path:
     description: "Aggregate build summary JSON to include in buildchain.release.json when present"
     default: ".buildchain/artifacts/build-summary.json"
