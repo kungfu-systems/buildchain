@@ -40,7 +40,7 @@ function usage() {
   return `Usage:
   buildchain --help
   buildchain version
-  buildchain init [--cwd <dir>] [--type package|native|web-surface|anchored-package] [--force]
+  buildchain init [--cwd <dir>] [--type package|native|web-surface|infra-contract|anchored-package] [--force]
                   [--package-manager pnpm|npm|yarn] [--runner-preset <preset>]
                   [--artifact-name <template>]
   buildchain validate [--cwd <dir>] [--require-version-state]
@@ -84,6 +84,7 @@ function usage() {
   buildchain span --event <name> [--phase <phase>] [--component <name>]
                   [--path <jsonl>] -- <command> [args...]
   buildchain web-surface ...
+  buildchain infra-contract ...
   buildchain publish-source <lock|manifest|verify-lock|validate-anchored-release> ...
   buildchain build-contract ...
 
@@ -97,6 +98,7 @@ Examples:
   buildchain collect github-release --tag v2.2.0 --assets-dir dist --output-dir .buildchain/release-passport
   buildchain verify release-passport .buildchain/release-passport/buildchain.release.json
   buildchain verify observability-log .buildchain/logs/events.jsonl --min-events 4 --require-phase build
+  buildchain infra-contract --mode plan --source-sha <sha>
 `;
 }
 
@@ -750,6 +752,11 @@ async function main(argv = process.argv.slice(2)) {
 
   if (command === "web-surface") {
     runScript("web-surface.mjs", args);
+    return;
+  }
+
+  if (command === "infra-contract") {
+    runScript("infra-contract.mjs", args);
     return;
   }
 

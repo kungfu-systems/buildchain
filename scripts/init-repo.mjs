@@ -212,6 +212,63 @@ command = "corepack pnpm run check"
 `;
 }
 
+function infraContractToml(cwd) {
+  const name = repoName(cwd);
+  return `schema = 1
+
+[project]
+type = "infra-contract"
+name = "${name}"
+
+[infra]
+adapter = "manual-observed"
+adoption_mode = "manual-observed"
+apply = "disabled"
+environment = "staging"
+desired = ["infra/desired.json"]
+contract = ["infra/outputs.json"]
+
+[[consumers]]
+repo = "kungfu-systems/site-example"
+path = "infra/outputs.json"
+source = "infra/outputs.json"
+
+[lifecycle.verify]
+command = "buildchain infra-contract --mode validate"
+`;
+}
+
+function infraContractDesiredJson(cwd) {
+  return `${JSON.stringify({
+    service: repoName(cwd),
+    environment: "staging",
+    resources: [
+      {
+        kind: "static-site",
+        name: repoName(cwd),
+        desiredState: {
+          hostname: "staging.example.com",
+          accessControl: "managed-network",
+          owner: "platform",
+        },
+      },
+    ],
+  }, null, 2)}\n`;
+}
+
+function infraContractOutputsJson(cwd) {
+  return `${JSON.stringify({
+    service: repoName(cwd),
+    environment: "staging",
+    observedMode: "manual-observed",
+    outputs: {
+      hostname: "staging.example.com",
+      distributionId: "observed-distribution-id",
+      bucket: "observed-bucket-name",
+    },
+  }, null, 2)}\n`;
+}
+
 function workflowYaml({ runnerPreset, artifactName }) {
   return `name: Build
 
@@ -276,10 +333,13 @@ export function initBuildchainRepo({
     if (type === "web-surface") {
       return webSurfaceToml(resolvedCwd);
     }
+    if (type === "infra-contract") {
+      return infraContractToml(resolvedCwd);
+    }
     if (type === "anchored-package") {
       return anchoredPackageToml(resolvedCwd, manager);
     }
-    throw new Error("init --type must be one of package, native, web-surface, or anchored-package");
+    throw new Error("init --type must be one of package, native, web-surface, infra-contract, or anchored-package");
   })();
 
   const written = [
@@ -292,6 +352,13 @@ export function initBuildchainRepo({
 
   if (type === "anchored-package" && !fs.existsSync(path.join(resolvedCwd, "release.json"))) {
     written.push(writeIfAllowed(path.join(resolvedCwd, "release.json"), "{\n  \"upstream\": \"\",\n  \"version\": \"0.0.0\"\n}\n", { force }));
+  }
+
+  if (type === "infra-contract") {
+    written.push(
+      writeIfAllowed(path.join(resolvedCwd, "infra", "desired.json"), infraContractDesiredJson(resolvedCwd), { force }),
+      writeIfAllowed(path.join(resolvedCwd, "infra", "outputs.json"), infraContractOutputsJson(resolvedCwd), { force }),
+    );
   }
 
   return {

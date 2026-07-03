@@ -121,6 +121,13 @@
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
       "exists": true
+    },
+    {
+      "id": "infra-contract",
+      "title": "Infra Contract",
+      "path": "docs/infra-contract.md",
+      "plane": "use",
+      "exists": true
     }
   ],
   "releaseModel": {

@@ -41,6 +41,7 @@
     "docs/binary-distribution.md",
     "docs/cli.md",
     "docs/install.md",
+    "docs/infra-contract.md",
     "docs/lifecycle-protocol.md",
     "docs/migration-inventory.md",
     "docs/ownership.md",

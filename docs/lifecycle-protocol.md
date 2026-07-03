@@ -352,6 +352,15 @@ See [Web-surface deployments](web-surface-deployments.md) for named surface host
 mappings, the manifest, preview alias, retention, cleanup, and dry-run deploy
 contract.
 
+## Infra-Contract Projects
+
+`project.type = "infra-contract"` is for infrastructure contract repositories
+that need provider-neutral desired, plan, approval, apply, observe, contract,
+and propagation evidence. The initial surface is mutation-free and supports
+manual-observed, observe-only, and mocked adapter fixtures without reading cloud
+state files or executing live infrastructure mutation. See
+[Infra Contract](infra-contract.md).
+
 ## Examples
 
 ### Node Workspace

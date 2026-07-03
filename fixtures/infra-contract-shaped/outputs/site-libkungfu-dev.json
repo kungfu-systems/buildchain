@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "outputs": {
+    "bucketName": "libkungfu-dev-staging",
+    "distributionId": "E-LIBKUNGFU-DEV-STAGING",
+    "stagingUrl": "https://staging.libkungfu.dev"
+  },
+  "provenance": {
+    "adapter": "manual-observed",
+    "reviewedBy": "platform-maintainer",
+    "observedAt": "2026-07-03T00:00:00.000Z"
+  }
+}

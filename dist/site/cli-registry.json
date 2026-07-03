@@ -11,7 +11,7 @@
     },
     {
       "id": "init",
-      "usage": "buildchain init [--type package|native|web-surface|anchored-package]",
+      "usage": "buildchain init [--type package|native|web-surface|infra-contract|anchored-package]",
       "purpose": "Bootstrap a repository with Buildchain configuration and caller workflow files."
     },
     {
@@ -58,6 +58,11 @@
       "id": "npm-dry-run",
       "usage": "buildchain npm dry-run --json",
       "purpose": "Verify npm publish shape before a release transaction."
+    },
+    {
+      "id": "infra-contract",
+      "usage": "buildchain infra-contract --mode validate|plan|contract|propagation-plan",
+      "purpose": "Validate and publish provider-neutral infrastructure contract evidence without default mutation."
     }
   ]
 }

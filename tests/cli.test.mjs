@@ -92,6 +92,41 @@ test("init package creates buildchain.toml and reusable workflow", () => {
   assert.match(failure.stderr, /already exists/);
 });
 
+test("init infra-contract creates a directly valid observed contract scaffold", () => {
+  const cwd = tempDir("init-infra-contract");
+  const result = JSON.parse(runBuildchain([
+    "init",
+    "--cwd",
+    cwd,
+    "--type",
+    "infra-contract",
+  ]));
+
+  assert.equal(result.type, "infra-contract");
+  assert.deepEqual(result.written.sort(), [
+    ".github/workflows/build.yml",
+    "buildchain.toml",
+    "infra/desired.json",
+    "infra/outputs.json",
+  ]);
+  assert.match(fs.readFileSync(path.join(cwd, "buildchain.toml"), "utf8"), /type = "infra-contract"/);
+
+  const outputPath = path.join(cwd, "infra-validation.json");
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "validate",
+    "--cwd",
+    cwd,
+    "--output",
+    outputPath,
+  ]);
+  const validation = JSON.parse(fs.readFileSync(outputPath, "utf8"));
+  assert.equal(validation.project.type, "infra-contract");
+  assert.equal(validation.infra.adapter, "manual-observed");
+  assert.equal(validation.consumers.length, 1);
+});
+
 test("validate reads initialized package config", () => {
   const cwd = tempDir("validate-package");
   fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({ name: "fixture", version: "0.1.0" }, null, 2));

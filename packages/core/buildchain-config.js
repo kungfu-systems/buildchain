@@ -9,7 +9,7 @@ const RESERVED_LIFECYCLE_KEYS = new Set(["env", "shell"]);
 const SUPPORTED_VERSION_FILE_TYPES = new Set(["json", "toml", "regex"]);
 const SUPPORTED_VERSION_STRATEGIES = new Set(["semver", "anchored"]);
 const SUPPORTED_VERSION_NEXT = new Set(["auto", "manual"]);
-const SUPPORTED_PROJECT_TYPES = new Set(["package", "web-surface"]);
+const SUPPORTED_PROJECT_TYPES = new Set(["package", "web-surface", "infra-contract"]);
 const SUPPORTED_PUBLISH_MODES = new Set(["publish-final-version", "promote-existing-version"]);
 const SUPPORTED_PUBLISH_AUTH = new Set(["trusted-publishing", "npm-token"]);
 const SUPPORTED_PACKAGE_SET_ORDER = new Set(["as-provided", "platforms-first-main-last"]);
@@ -23,6 +23,25 @@ const SUPPORTED_DEPLOY_ADAPTERS = new Set([
   "aws-elastic-beanstalk",
   "aws-ecs-service",
 ]);
+const SUPPORTED_INFRA_ADAPTERS = new Set([
+  "manual-observed",
+  "aws-cloudformation",
+  "terraform",
+  "opentofu",
+  "pulumi",
+  "aws-cdk",
+  "aws-cli",
+  "custom-command",
+]);
+const SUPPORTED_INFRA_ADOPTION_MODES = new Set([
+  "validate-only",
+  "plan-only",
+  "observe-only",
+  "manual-observed",
+  "import-planned",
+  "managed-apply",
+]);
+const SUPPORTED_INFRA_APPLY_MODES = new Set(["disabled", "manual-approval", "environment-approval"]);
 
 function posixPath(value) {
   return String(value || "").split(path.sep).join("/");
@@ -117,6 +136,12 @@ export function normalizeBuildchainConfig(config) {
   if (normalized.deploy !== undefined) {
     normalized.deploy = normalizeDeploySection(normalized.deploy, normalized.project);
   }
+  if (normalized.infra !== undefined) {
+    normalized.infra = normalizeInfraSection(normalized.infra);
+  }
+  if (normalized.consumers !== undefined) {
+    normalized.consumers = normalizeConsumersSection(normalized.consumers);
+  }
   if (normalized.surfaces !== undefined) {
     normalized.surfaces = normalizeSurfacesSection(normalized.surfaces);
   }
@@ -130,6 +155,7 @@ export function normalizeBuildchainConfig(config) {
     normalized.diagnostics = normalizeDiagnosticsSection(normalized.diagnostics);
   }
   validateWebSurfaceConfig(normalized);
+  validateInfraContractConfig(normalized);
   return normalized;
 }
 
@@ -211,7 +237,7 @@ function normalizeProjectSection(project) {
   assertPlainObject(project, "project");
   const type = assertString(project.type, "project.type");
   if (!SUPPORTED_PROJECT_TYPES.has(type)) {
-    throw new Error("project.type must be one of package or web-surface");
+    throw new Error("project.type must be one of package, web-surface, or infra-contract");
   }
   const normalized = { type };
   for (const key of ["name", "site"]) {
@@ -220,6 +246,72 @@ function normalizeProjectSection(project) {
     }
   }
   return normalized;
+}
+
+function normalizeInfraSection(infra) {
+  assertPlainObject(infra, "infra");
+  const adapter = assertString(infra.adapter, "infra.adapter");
+  if (!SUPPORTED_INFRA_ADAPTERS.has(adapter)) {
+    throw new Error(
+      "infra.adapter must be one of manual-observed, aws-cloudformation, terraform, opentofu, pulumi, aws-cdk, aws-cli, or custom-command",
+    );
+  }
+  const adoptionMode = infra.adoption_mode === undefined
+    ? (adapter === "manual-observed" ? "manual-observed" : "validate-only")
+    : assertString(infra.adoption_mode, "infra.adoption_mode");
+  if (!SUPPORTED_INFRA_ADOPTION_MODES.has(adoptionMode)) {
+    throw new Error(
+      "infra.adoption_mode must be one of validate-only, plan-only, observe-only, manual-observed, import-planned, or managed-apply",
+    );
+  }
+  const applyMode = infra.apply === undefined
+    ? "disabled"
+    : assertString(infra.apply, "infra.apply");
+  if (!SUPPORTED_INFRA_APPLY_MODES.has(applyMode)) {
+    throw new Error("infra.apply must be one of disabled, manual-approval, or environment-approval");
+  }
+  const normalized = {
+    adapter,
+    adoptionMode,
+    applyMode,
+    environment: infra.environment === undefined ? "" : assertString(infra.environment, "infra.environment"),
+    desired: normalizeStringArray(infra.desired, "infra.desired").map(posixPath),
+    contract: normalizeStringArray(infra.contract, "infra.contract").map(posixPath),
+    secretRefs: normalizeStringArray(infra.secret_refs, "infra.secret_refs"),
+  };
+  if (infra.commands !== undefined) {
+    normalized.commands = normalizeInfraCommands(infra.commands);
+  }
+  assertNoInlineSecretValues(infra, "infra", new Set(["secret_refs", "commands"]));
+  return normalized;
+}
+
+function normalizeInfraCommands(commands) {
+  assertPlainObject(commands, "infra.commands");
+  const normalized = {};
+  for (const stage of ["validate", "plan", "apply", "observe"]) {
+    if (commands[stage] !== undefined) {
+      normalized[stage] = assertString(commands[stage], `infra.commands.${stage}`);
+    }
+  }
+  return normalized;
+}
+
+function normalizeConsumersSection(consumers) {
+  if (!Array.isArray(consumers)) {
+    throw new Error("consumers must be an array of tables");
+  }
+  return consumers.map((consumer, index) => normalizeConsumerConfig(consumer, index));
+}
+
+function normalizeConsumerConfig(consumer, index) {
+  assertPlainObject(consumer, `consumers[${index}]`);
+  return {
+    repo: assertString(consumer.repo, `consumers[${index}].repo`),
+    path: posixPath(assertString(consumer.path, `consumers[${index}].path`)),
+    source: posixPath(assertString(consumer.source, `consumers[${index}].source`)),
+    branch: consumer.branch === undefined ? "" : assertString(consumer.branch, `consumers[${index}].branch`),
+  };
 }
 
 function normalizeChannelsSection(channels) {
@@ -529,6 +621,30 @@ function validateWebSurfaceConfig(config) {
     }
   }
   validateWebSurfaceSurfaces(config);
+}
+
+function validateInfraContractConfig(config) {
+  if (config.project?.type !== "infra-contract") {
+    return;
+  }
+  if (!config.infra) {
+    throw new Error('project.type = "infra-contract" requires [infra]');
+  }
+  if (config.infra.desired.length === 0) {
+    throw new Error('project.type = "infra-contract" requires infra.desired');
+  }
+  if (config.infra.contract.length === 0) {
+    throw new Error('project.type = "infra-contract" requires infra.contract');
+  }
+  if (!Array.isArray(config.consumers) || config.consumers.length === 0) {
+    throw new Error('project.type = "infra-contract" requires at least one [[consumers]] entry');
+  }
+  if (config.infra.applyMode !== "disabled" && config.infra.adoptionMode !== "managed-apply") {
+    throw new Error("infra.apply requires infra.adoption_mode = managed-apply");
+  }
+  if (config.infra.adapter === "manual-observed" && config.infra.applyMode !== "disabled") {
+    throw new Error('infra.adapter = "manual-observed" requires infra.apply = "disabled"');
+  }
 }
 
 function validateWebSurfaceSurfaces(config) {
@@ -891,6 +1007,19 @@ export function validateBuildchainConfig(
           ]),
         )
       : undefined,
+    infra: loadedConfig.config.infra
+      ? {
+          adapter: loadedConfig.config.infra.adapter,
+          adoptionMode: loadedConfig.config.infra.adoptionMode,
+          applyMode: loadedConfig.config.infra.applyMode,
+          environment: loadedConfig.config.infra.environment,
+          desired: loadedConfig.config.infra.desired,
+          contract: loadedConfig.config.infra.contract,
+          secretRefs: loadedConfig.config.infra.secretRefs,
+          commands: loadedConfig.config.infra.commands,
+        }
+      : undefined,
+    consumers: loadedConfig.config.consumers,
     surfaces: loadedConfig.config.surfaces
       ? Object.fromEntries(
           Object.entries(loadedConfig.config.surfaces).map(([name, surface]) => [
