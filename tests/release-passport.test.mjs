@@ -1,0 +1,187 @@
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import test from "node:test";
+import {
+  collectGitHubReleasePassport,
+  verifyReleasePassport,
+} from "../packages/core/release-passport.js";
+
+function tempDir(name) {
+  return fs.mkdtempSync(path.join(os.tmpdir(), `buildchain-${name}-`));
+}
+
+function writeJson(filePath, value) {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`);
+  return filePath;
+}
+
+function createUnifiedPassportFixture({
+  missingPlatformDigest = false,
+  missingPublishArtifact = false,
+  missingPublishVersion = false,
+  trustedPublishingEnabled = true,
+} = {}) {
+  const cwd = tempDir("release-passport-core");
+  const assetsDir = path.join(cwd, "dist");
+  fs.mkdirSync(assetsDir, { recursive: true });
+  fs.writeFileSync(path.join(assetsDir, "buildchain-x86_64-unknown-linux-gnu.tar.gz"), "linux-binary\n");
+  fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({
+    name: "@kungfu-tech/buildchain",
+    version: "2.3.2",
+  }, null, 2));
+
+  const publishEvidencePath = writeJson(path.join(cwd, "publish-evidence.json"), {
+    schema: 1,
+    version: missingPublishVersion ? "" : "2.3.2",
+    channel: "release",
+    source_sha: "a".repeat(40),
+    release_sha: "b".repeat(40),
+    target_ref: "release/v2/v2.3",
+    release_material_sha: "b".repeat(40),
+    publish_tooling_sha: "c".repeat(40),
+    artifacts: [
+      { group: "node", kind: "npm", name: "@kungfu-tech/buildchain", ref: "2.3.2", digest: "sha512-main" },
+      { group: "node", kind: "npm", name: "@kungfu-tech/buildchain-linux-x64", ref: "2.3.2", digest: "sha512-linux" },
+      ...(!missingPublishArtifact
+        ? [{ group: "node", kind: "npm", name: "@kungfu-tech/buildchain-darwin-arm64", ref: "2.3.2", digest: "sha512-darwin" }]
+        : []),
+      { group: "node", kind: "npm", name: "@kungfu-tech/buildchain-win32-x64", ref: "2.3.2", digest: "sha512-windows" },
+    ],
+  });
+  const transactionPath = writeJson(path.join(cwd, "transaction.json"), {
+    command: "finalize",
+    transaction: {
+      id: "kungfu-systems/buildchain:2.3.2:release/v2/v2.3",
+      version: "2.3.2",
+      state: "complete",
+      previous_state: "finalizing",
+      exact_tag: "v2.3.2",
+      release_sha: "b".repeat(40),
+      release_material_sha: "b".repeat(40),
+      state_ref: "refs/heads/buildchain/release-state/2-3-2",
+    },
+    validation: { valid: true, errors: [] },
+    durable: { sha: "d".repeat(40) },
+  });
+  const anchorManifestPath = writeJson(path.join(cwd, "anchor-manifest.json"), {
+    npmVersion: "2.3.2",
+    nodeVersion: "24.0.0",
+  });
+  const packageSetPath = writeJson(path.join(cwd, "package-set.json"), {
+    order: "platforms-first-main-last",
+    registry: "https://registry.npmjs.org/",
+    main: {
+      name: "@kungfu-tech/buildchain",
+      version: "2.3.2",
+      distTag: "latest",
+      digest: "sha512-main",
+    },
+    platforms: [
+      {
+        name: "@kungfu-tech/buildchain-linux-x64",
+        version: "2.3.2",
+        distTag: "latest",
+        digest: "sha512-linux",
+        platform: "linux-x64",
+      },
+      {
+        name: "@kungfu-tech/buildchain-darwin-arm64",
+        version: "2.3.2",
+        distTag: "latest",
+        digest: missingPlatformDigest ? "" : "sha512-darwin",
+        platform: "darwin-arm64",
+      },
+      {
+        name: "@kungfu-tech/buildchain-win32-x64",
+        version: "2.3.2",
+        distTag: "latest",
+        digest: "sha512-windows",
+        platform: "win32-x64",
+      },
+    ],
+  });
+
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v2.3.2",
+    repository: "kungfu-systems/buildchain",
+    sourceSha: "a".repeat(40),
+    assetsDir,
+    publishEvidenceJson: publishEvidencePath,
+    transactionJson: transactionPath,
+    anchorManifestJson: anchorManifestPath,
+    packageSetJson: packageSetPath,
+    trustedPublishingJson: JSON.stringify({
+      provider: "npm",
+      enabled: trustedPublishingEnabled,
+      auth: "trusted-publishing",
+      workflowRunId: "12345",
+    }),
+    releaseJsonExtra: JSON.stringify({
+      channel: "release",
+      targetRef: "release/v2/v2.3",
+      releaseSha: "b".repeat(40),
+    }),
+    outputDir: "release-passport",
+  });
+  return path.join(collected.outputDir, "buildchain.release.json");
+}
+
+test("release passport core verifies unified three-platform npm passport", async () => {
+  const passportPath = createUnifiedPassportFixture();
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+
+  assert.equal(report.ok, true);
+  assert.equal(passport.packageSet.platforms.length, 3);
+  assert.equal(passport.publish.packages.length, 4);
+  assert.equal(passport.publish.distTag, "latest");
+  assert.equal(passport.transaction.result.command, "finalize");
+});
+
+test("release passport core fails closed on incomplete platform package evidence", async () => {
+  const passportPath = createUnifiedPassportFixture({ missingPlatformDigest: true });
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+
+  assert.equal(report.ok, false);
+  assert.match(JSON.stringify(report.issues), /packageSet\.platforms\[1\]\.digest/);
+});
+
+test("release passport core fails closed when package set lacks publish artifact evidence", async () => {
+  const passportPath = createUnifiedPassportFixture({ missingPublishArtifact: true });
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+
+  assert.equal(report.ok, false);
+  assert.match(JSON.stringify(report.issues), /packageSet\.platforms\[1\]\.artifact/);
+});
+
+test("release passport core fails closed on incomplete publish evidence header", async () => {
+  const passportPath = createUnifiedPassportFixture({ missingPublishVersion: true });
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+
+  assert.equal(report.ok, false);
+  assert.match(JSON.stringify(report.issues), /publishEvidence\.version/);
+});
+
+test("release passport core fails closed when trusted publishing is disabled", async () => {
+  const passportPath = createUnifiedPassportFixture({ trustedPublishingEnabled: false });
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+
+  assert.equal(report.ok, false);
+  assert.match(JSON.stringify(report.issues), /trustedPublishing\.enabled/);
+});
+
+test("release passport core fails closed on missing anchor manifest digest", async () => {
+  const passportPath = createUnifiedPassportFixture();
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  passport.anchorManifest.sha256 = "";
+  fs.writeFileSync(passportPath, `${JSON.stringify(passport, null, 2)}\n`);
+
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+
+  assert.equal(report.ok, false);
+  assert.match(JSON.stringify(report.issues), /anchorManifest\.sha256/);
+});
