@@ -582,7 +582,16 @@ function readJsonFileIfExists(filePath) {
   if (!filePath || !fs.existsSync(filePath)) {
     return undefined;
   }
-  return JSON.parse(fs.readFileSync(filePath, "utf8"));
+  try {
+    return JSON.parse(fs.readFileSync(filePath, "utf8"));
+  } catch {
+    return undefined;
+  }
+}
+
+function existingJsonObjectFile(filePath) {
+  const content = readJsonFileIfExists(filePath);
+  return content && typeof content === "object" && !Array.isArray(content) ? filePath : "";
 }
 
 function releasePassportArtifactFiles(outputDir) {
@@ -1625,7 +1634,10 @@ async function collectAndPersistReleasePassport({
     ? resolveMaybeRelative(cwd, buildSummaryPath)
     : path.resolve(cwd, ".buildchain/artifacts/build-summary.json");
   const configuredManifests = existingFiles(platformManifestPaths, cwd);
-  const derivedManifests = platformManifestPathsFromBuildSummary(resolvedBuildSummary, cwd);
+  const buildSummaryJson = existingJsonObjectFile(resolvedBuildSummary);
+  const derivedManifests = buildSummaryJson
+    ? platformManifestPathsFromBuildSummary(buildSummaryJson, cwd)
+    : [];
   const platformManifests = [...new Set([...configuredManifests, ...derivedManifests])];
   const loadedConfig = loadBuildchainConfig(cwd);
   const anchorManifest = loadConfiguredAnchorManifest(cwd, loadedConfig);
@@ -1655,7 +1667,7 @@ async function collectAndPersistReleasePassport({
     }),
     transactionJson: JSON.stringify(transactionJson),
     anchorManifestJson: anchorManifestPath && fs.existsSync(anchorManifestPath) ? anchorManifestPath : "",
-    buildSummaryJson: fs.existsSync(resolvedBuildSummary) ? resolvedBuildSummary : "",
+    buildSummaryJson,
     platformManifestJsons: platformManifests,
     distTagEvidenceJson: result.distTagEvidencePath || "",
     releaseJsonExtra: JSON.stringify({
