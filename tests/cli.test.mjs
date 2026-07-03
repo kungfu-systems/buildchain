@@ -174,6 +174,73 @@ test("infra-contract CLI apply consumes a saved fresh plan", () => {
   assert.equal(result.mutationExecuted, false);
 });
 
+test("infra-contract CLI propagation-apply writes a dry-run PR plan", () => {
+  const cwd = tempDir("infra-contract-cli-propagation");
+  fs.cpSync(path.join(root, "fixtures/infra-contract-shaped"), cwd, { recursive: true });
+  const sourceSha = "5".repeat(40);
+  const planPath = path.join(cwd, ".buildchain", "infra-contract-plan.json");
+  const artifactPath = path.join(cwd, ".buildchain", "buildchain.infra-contract.json");
+  const propagationPath = path.join(cwd, ".buildchain", "infra-contract-propagation.json");
+  const outputPath = path.join(cwd, ".buildchain", "infra-contract-propagation-apply.json");
+
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "plan",
+    "--cwd",
+    cwd,
+    "--source-sha",
+    sourceSha,
+    "--output",
+    planPath,
+  ]);
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "contract",
+    "--cwd",
+    cwd,
+    "--source-sha",
+    sourceSha,
+    "--plan",
+    planPath,
+    "--output",
+    artifactPath,
+  ]);
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "propagation-plan",
+    "--cwd",
+    cwd,
+    "--artifact",
+    artifactPath,
+    "--output",
+    propagationPath,
+  ]);
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "propagation-apply",
+    "--cwd",
+    cwd,
+    "--artifact",
+    artifactPath,
+    "--propagation-plan",
+    propagationPath,
+    "--dry-run",
+    "true",
+    "--output",
+    outputPath,
+  ]);
+
+  const result = JSON.parse(fs.readFileSync(outputPath, "utf8"));
+  assert.equal(result.contract, "kungfu-buildchain-infra-contract-propagation-apply");
+  assert.equal(result.status, "planned");
+  assert.equal(result.mutationAllowed, false);
+  assert.equal(result.operations.length, 2);
+});
+
 test("validate reads initialized package config", () => {
   const cwd = tempDir("validate-package");
   fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({ name: "fixture", version: "0.1.0" }, null, 2));
