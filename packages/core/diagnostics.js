@@ -585,7 +585,7 @@ export function collectProcessTreeSnapshot({ rootPid = process.pid, cwd = proces
   }
   let lines = [];
   try {
-    lines = execFileSync("ps", ["-axo", "pid=,ppid=,pcpu=,comm="], {
+    lines = execFileSync("ps", ["-axo", "pid=,ppid=,pcpu=,comm=,args="], {
       cwd,
       encoding: "utf8",
       stdio: ["ignore", "pipe", "ignore"],
@@ -595,9 +595,16 @@ export function collectProcessTreeSnapshot({ rootPid = process.pid, cwd = proces
     return { rootPid: pid, platform: process.platform, processes: [] };
   }
   const rows = lines.map((line) => {
-    const match = line.trim().match(/^(\d+)\s+(\d+)\s+([0-9.]+)\s+(.+)$/);
+    const match = line.trim().match(/^(\d+)\s+(\d+)\s+([0-9.]+)\s+(\S+)(?:\s+(.*))?$/);
+    const args = match?.[5] || "";
     return match
-      ? { pid: match[1], ppid: match[2], cpu: Number(match[3]), command: path.basename(match[4]) }
+      ? {
+          pid: match[1],
+          ppid: match[2],
+          cpu: Number(match[3]),
+          command: path.basename(match[4]),
+          commandLine: redactCommandLine(args),
+        }
       : undefined;
   }).filter(Boolean);
   const byParent = new Map();
@@ -649,14 +656,18 @@ function firstPositiveInteger(value) {
   return Number.isInteger(number) && number > 0 ? number : 0;
 }
 
+function commandName(value = "") {
+  return path.basename(String(value || "").replace(/[()]/g, "").replace(/\.exe$/i, "")).toLowerCase();
+}
+
 function detectParallelismFromTokens(tokens = []) {
   for (let index = 0; index < tokens.length; index += 1) {
     const token = String(tokens[index] || "");
-    const inlineMatch = token.match(/^(?:-j|--jobs=|--parallel=|\/m:|-m:)(\d+)$/i);
+    const inlineMatch = token.match(/^(?:-j|--jobs=|--parallel=|-jobs|\/m:|\/maxcpucount:|-m:)(\d+)$/i);
     if (inlineMatch) {
       return { value: Number(inlineMatch[1]), source: "command", token };
     }
-    if (/^(?:-j|--jobs|--parallel)$/i.test(token)) {
+    if (/^(?:-j|--jobs|--parallel|-jobs)$/i.test(token)) {
       const value = firstPositiveInteger(tokens[index + 1]);
       if (value) {
         return { value, source: "command", token: `${token} ${tokens[index + 1]}` };
@@ -668,6 +679,51 @@ function detectParallelismFromTokens(tokens = []) {
 
 function shellishTokens(command = "") {
   return String(command || "").match(/"[^"]+"|'[^']+'|\S+/g)?.map((token) => token.replace(/^['"]|['"]$/g, "")) || [];
+}
+
+function redactCommandLine(commandLine = "", pattern = DEFAULT_SECRET_KEY_PATTERN) {
+  const tokens = shellishTokens(commandLine);
+  let redactNext = false;
+  return tokens.map((token) => {
+    const withUrlUserInfo = token.replace(/:\/\/[^/\s:@]+:[^/\s@]+@/g, "://[REDACTED]@");
+    if (redactNext) {
+      redactNext = false;
+      return "[REDACTED]";
+    }
+    const assignment = withUrlUserInfo.match(/^([^=\s]+)=(.*)$/);
+    if (assignment && pattern.test(assignment[1])) {
+      return `${assignment[1]}=[REDACTED]`;
+    }
+    const inlineOption = withUrlUserInfo.match(/^(--?[^=\s]+)=(.*)$/);
+    if (inlineOption && pattern.test(inlineOption[1])) {
+      return `${inlineOption[1]}=[REDACTED]`;
+    }
+    if (/^--?/.test(withUrlUserInfo) && pattern.test(withUrlUserInfo)) {
+      redactNext = true;
+    }
+    return withUrlUserInfo;
+  }).join(" ");
+}
+
+function commandLineFromProcess(entry = {}) {
+  return [
+    entry.commandLine,
+    Array.isArray(entry.args) ? entry.args.join(" ") : entry.args,
+    Array.isArray(entry.argv) ? entry.argv.join(" ") : "",
+    entry.command,
+  ].find((value) => String(value || "").trim()) || "";
+}
+
+function parallelismCandidate({ value, source, token, entry, sample }) {
+  return {
+    value,
+    source,
+    token,
+    pid: entry?.pid ? String(entry.pid) : "",
+    command: commandName(entry?.command || shellishTokens(commandLineFromProcess(entry))[0] || ""),
+    commandLine: commandLineFromProcess(entry),
+    timestamp: sample?.timestamp || "",
+  };
 }
 
 export function detectRequestedParallelism({
@@ -703,6 +759,37 @@ export function detectRequestedParallelism({
   }
 
   return { value: 0, source: "", token: "" };
+}
+
+export function detectRequestedParallelismFromProcessSamples(samples = []) {
+  const candidates = [];
+  const buildToolNames = new Set(["make", "ninja", "cmake", "msbuild", "xcodebuild"]);
+  for (const sample of Array.isArray(samples) ? samples : []) {
+    for (const entry of Array.isArray(sample?.processes) ? sample.processes : []) {
+      const command = commandName(entry.command || shellishTokens(commandLineFromProcess(entry))[0] || "");
+      if (!buildToolNames.has(command)) {
+        continue;
+      }
+      const tokens = shellishTokens(commandLineFromProcess(entry));
+      const detected = detectParallelismFromTokens(tokens);
+      if (detected.value) {
+        candidates.push(parallelismCandidate({
+          ...detected,
+          source: "process-tree",
+          entry,
+          sample,
+        }));
+      }
+    }
+  }
+  candidates.sort((left, right) => right.value - left.value || left.command.localeCompare(right.command));
+  return {
+    value: candidates[0]?.value || 0,
+    source: candidates[0] ? "process-tree" : "",
+    token: candidates[0]?.token || "",
+    evidence: candidates[0] || undefined,
+    candidates,
+  };
 }
 
 export function summarizeProcessSamples({
@@ -768,8 +855,15 @@ export function summarizeProcessSamples({
     ? cpuTotals.reduce((sum, value) => sum + value, 0) / cpuTotals.length
     : 0;
   const explicitRequested = firstPositiveInteger(requestedParallelism);
-  const detectedParallelism = detectRequestedParallelism({ command, args, env });
-  const requested = explicitRequested || detectedParallelism.value;
+  const commandParallelism = detectRequestedParallelism({ command, args, env });
+  const sampledParallelism = detectRequestedParallelismFromProcessSamples(normalizedSamples);
+  const requested = explicitRequested || sampledParallelism.value || commandParallelism.value;
+  const requestedSource = explicitRequested
+    ? "explicit"
+    : sampledParallelism.source || commandParallelism.source;
+  const requestedEvidence = explicitRequested
+    ? { value: explicitRequested, source: "explicit" }
+    : sampledParallelism.evidence || (commandParallelism.value ? commandParallelism : undefined);
 
   return {
     schemaVersion: 1,
@@ -777,7 +871,9 @@ export function summarizeProcessSamples({
     sampleCount: normalizedSamples.length,
     activeCpuThreshold: threshold,
     requestedParallelism: requested,
-    requestedParallelismSource: explicitRequested ? "explicit" : detectedParallelism.source,
+    requestedParallelismSource: requestedSource,
+    requestedParallelismEvidence: requestedEvidence || {},
+    requestedParallelismCandidates: sampledParallelism.candidates.slice(0, 10),
     observedConcurrency: {
       max: observedMax,
       average: Number(observedAverage.toFixed(2)),

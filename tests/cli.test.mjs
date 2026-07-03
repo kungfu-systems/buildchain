@@ -19,6 +19,7 @@ import {
   collectNativeDiagnostics,
   collectRunnerDiagnostics,
   detectRequestedParallelism,
+  detectRequestedParallelismFromProcessSamples,
   formatDiagnosticsSummaryTable,
   startProcessSampler,
   summarizeDiagnosticsArtifacts,
@@ -433,6 +434,73 @@ test("diagnostics SDK summarizes process samples against requested parallelism",
   });
   assert.equal(artifact.process.requestedParallelism, 20);
   assert.equal(artifact.process.observedConcurrency.max, 5);
+});
+
+test("diagnostics SDK infers requested parallelism from sampled process descendants", () => {
+  const samples = [
+    {
+      timestamp: "2026-07-03T00:00:00.000Z",
+      processes: [
+        { pid: "100", command: "zsh", commandLine: "zsh -c scripts/build.sh", cpu: 0.2 },
+        { pid: "101", command: "make", commandLine: "/usr/bin/make -j20 V=1", cpu: 5.3 },
+        { pid: "102", command: "clang++", commandLine: "clang++ -c addon.cc", cpu: 92.5 },
+      ],
+    },
+  ];
+
+  const detected = detectRequestedParallelismFromProcessSamples(samples);
+  assert.equal(detected.value, 20);
+  assert.equal(detected.source, "process-tree");
+  assert.equal(detected.evidence.command, "make");
+  assert.equal(detected.evidence.token, "-j20");
+
+  const summary = summarizeProcessSamples({
+    command: "zsh",
+    args: ["-c", "scripts/build.sh"],
+    env: {},
+    samples,
+  });
+  assert.equal(summary.requestedParallelism, 20);
+  assert.equal(summary.requestedParallelismSource, "process-tree");
+  assert.equal(summary.requestedParallelismEvidence.command, "make");
+  assert.equal(summary.requestedParallelismCandidates.length, 1);
+  assert.equal(summary.observedConcurrency.ratioToRequestedMax, 0.15);
+});
+
+test("diagnostics SDK keeps explicit requested parallelism authoritative over process-tree inference", () => {
+  const summary = summarizeProcessSamples({
+    requestedParallelism: 4,
+    command: "zsh",
+    args: ["-c", "scripts/build.sh"],
+    env: {},
+    samples: [
+      {
+        processes: [
+          { command: "cmake", commandLine: "cmake --build build --parallel 12", cpu: 1 },
+        ],
+      },
+    ],
+  });
+
+  assert.equal(summary.requestedParallelism, 4);
+  assert.equal(summary.requestedParallelismSource, "explicit");
+  assert.equal(summary.requestedParallelismEvidence.source, "explicit");
+  assert.equal(summary.requestedParallelismCandidates[0].value, 12);
+});
+
+test("diagnostics SDK detects common build tool parallel flags from process samples", () => {
+  const detected = detectRequestedParallelismFromProcessSamples([
+    {
+      processes: [
+        { command: "cmake", commandLine: "cmake --build build --parallel=8", cpu: 1 },
+        { command: "MSBuild.exe", commandLine: "MSBuild.exe libnode.sln /m:12", cpu: 1 },
+        { command: "xcodebuild", commandLine: "xcodebuild -jobs 6", cpu: 1 },
+      ],
+    },
+  ]);
+
+  assert.equal(detected.value, 12);
+  assert.equal(detected.candidates.map((entry) => entry.value).join(","), "12,8,6");
 });
 
 test("diagnostics SDK summarizes lifecycle timing across diagnostic artifacts", () => {
