@@ -11,6 +11,7 @@ import {
   parsePublishSourceRef,
   parseExpectedArtifactsJson,
   resolvePublishChannelTargetRef,
+  verifyPublishChannelPrLineage,
   planPackageSetPublish,
   resolveArtifactContract,
   resolvePublishGate,
@@ -84,22 +85,22 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /github\.event\.pull_request\.head\.repo\.full_name/);
   assert.match(workflow, /resolve-publish-gate\.mjs/);
   assert.match(workflow, /resolve-publish-source\.mjs --mode lock/);
-  assert.match(workflow, /Verify publish target channel ref/);
+  assert.match(workflow, /Verify publish target channel ref and PR lineage/);
   assert.match(workflow, /verify-publish-channel-ref\.mjs/);
   assert.ok(
     workflow.indexOf("Resolve publish source lock") <
-      workflow.indexOf("Verify publish target channel ref"),
+      workflow.indexOf("Verify publish target channel ref and PR lineage"),
   );
   assert.ok(
-    workflow.indexOf("Verify publish target channel ref") <
+    workflow.indexOf("Verify publish target channel ref and PR lineage") <
       workflow.indexOf("resolve-source:"),
   );
   assert.ok(
-    workflow.indexOf("Verify publish target channel ref") <
+    workflow.indexOf("Verify publish target channel ref and PR lineage") <
       workflow.indexOf("build-native:"),
   );
   assert.ok(
-    workflow.indexOf("Verify publish target channel ref") <
+    workflow.indexOf("Verify publish target channel ref and PR lineage") <
       workflow.indexOf("build-linux-container:"),
   );
   assert.match(workflow, /resolve-publish-source\.mjs --mode manifest/);
@@ -822,6 +823,24 @@ test("publish source channel refs must match the locked source sha", async () =>
   const seen = [];
   const fetchImpl = async (url, options) => {
     seen.push({ url, options });
+    if (url.endsWith(`/commits/${sourceSha}/pulls`)) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => [
+          {
+            number: 123,
+            html_url: "https://github.com/kungfu-systems/libnode/pull/123",
+            merged_at: "2026-07-03T00:00:00Z",
+            base: { ref: "alpha/v22/v22.22" },
+            head: {
+              ref: "dev/v22/v22.22",
+              repo: { full_name: "kungfu-systems/libnode" },
+            },
+          },
+        ],
+      };
+    }
     return {
       ok: true,
       status: 200,
@@ -845,6 +864,21 @@ test("publish source channel refs must match the locked source sha", async () =>
       sourceSha,
       targetRef: "alpha/v22/v22.22",
       targetSha: sourceSha,
+      prLineage: {
+        ok: true,
+        skipped: false,
+        sourceRef,
+        sourceSha,
+        targetRef: "alpha/v22/v22.22",
+        expectedHeadRef: "dev/v22/v22.22",
+        pullRequest: {
+          number: 123,
+          url: "https://github.com/kungfu-systems/libnode/pull/123",
+          headRef: "dev/v22/v22.22",
+          baseRef: "alpha/v22/v22.22",
+          mergedAt: "2026-07-03T00:00:00Z",
+        },
+      },
     },
   );
   assert.equal(
@@ -852,6 +886,10 @@ test("publish source channel refs must match the locked source sha", async () =>
     "https://api.github.com/repos/kungfu-systems/libnode/git/ref/heads/alpha/v22/v22.22",
   );
   assert.equal(seen[0].options.headers.Authorization, "Bearer token");
+  assert.equal(
+    seen[1].url,
+    `https://api.github.com/repos/kungfu-systems/libnode/commits/${sourceSha}/pulls`,
+  );
 
   await assert.rejects(
     async () =>
@@ -866,6 +904,81 @@ test("publish source channel refs must match the locked source sha", async () =>
         fetchImpl,
       }),
     /Merge the source commit through the channel PR into release\/v22\/v22\.22/,
+  );
+});
+
+test("publish source channel refs require merged same-repository PR lineage", () => {
+  const sourceRef = "publish-gate/release/v22/v22.22/22.22.3-kf.0";
+  const sourceSha = "e".repeat(40);
+  assert.deepEqual(
+    verifyPublishChannelPrLineage({
+      sourceRef,
+      sourceSha,
+      repository: "kungfu-systems/libnode",
+      pullRequests: [
+        {
+          number: 456,
+          html_url: "https://github.com/kungfu-systems/libnode/pull/456",
+          merged_at: "2026-07-03T00:00:00Z",
+          base: { ref: "release/v22/v22.22" },
+          head: {
+            ref: "alpha/v22/v22.22",
+            repo: { full_name: "kungfu-systems/libnode" },
+          },
+        },
+      ],
+    }),
+    {
+      ok: true,
+      skipped: false,
+      sourceRef,
+      sourceSha,
+      targetRef: "release/v22/v22.22",
+      expectedHeadRef: "alpha/v22/v22.22",
+      pullRequest: {
+        number: 456,
+        url: "https://github.com/kungfu-systems/libnode/pull/456",
+        headRef: "alpha/v22/v22.22",
+        baseRef: "release/v22/v22.22",
+        mergedAt: "2026-07-03T00:00:00Z",
+      },
+    },
+  );
+  assert.throws(
+    () =>
+      verifyPublishChannelPrLineage({
+        sourceRef: "publish-gate/alpha/v22/v22.22/22.22.3-kf.0",
+        sourceSha,
+        repository: "kungfu-systems/libnode",
+        pullRequests: [
+          {
+            merged_at: "2026-07-03T00:00:00Z",
+            base: { ref: "alpha/v22/v22.22" },
+            head: {
+              ref: "feature/direct",
+              repo: { full_name: "kungfu-systems/libnode" },
+            },
+          },
+        ],
+      }),
+    /merged same-repository PR dev\/v22\/v22\.22 -> alpha\/v22\/v22\.22/,
+  );
+  assert.doesNotThrow(() =>
+    verifyPublishChannelPrLineage({
+      sourceRef: "publish-gate/major",
+      sourceSha,
+      repository: "kungfu-systems/buildchain",
+      pullRequests: [
+        {
+          merged_at: "2026-07-03T00:00:00Z",
+          base: { ref: "publish-gate/major" },
+          head: {
+            ref: "release/v22/v22.22",
+            repo: { full_name: "kungfu-systems/buildchain" },
+          },
+        },
+      ],
+    }),
   );
 });
 
