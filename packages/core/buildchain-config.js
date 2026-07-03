@@ -275,6 +275,7 @@ function normalizeInfraSection(infra) {
     adoptionMode,
     applyMode,
     environment: infra.environment === undefined ? "" : assertString(infra.environment, "infra.environment"),
+    identityRef: infra.identity_ref === undefined ? "" : assertString(infra.identity_ref, "infra.identity_ref"),
     desired: normalizeStringArray(infra.desired, "infra.desired").map(posixPath),
     contract: normalizeStringArray(infra.contract, "infra.contract").map(posixPath),
     secretRefs: normalizeStringArray(infra.secret_refs, "infra.secret_refs"),
@@ -641,6 +642,12 @@ function validateInfraContractConfig(config) {
   }
   if (config.infra.applyMode !== "disabled" && config.infra.adoptionMode !== "managed-apply") {
     throw new Error("infra.apply requires infra.adoption_mode = managed-apply");
+  }
+  if (config.infra.applyMode !== "disabled" && !config.infra.environment) {
+    throw new Error("infra.apply requires infra.environment");
+  }
+  if (config.infra.applyMode !== "disabled" && !config.infra.identityRef) {
+    throw new Error("infra.apply requires infra.identity_ref");
   }
   if (config.infra.adapter === "manual-observed" && config.infra.applyMode !== "disabled") {
     throw new Error('infra.adapter = "manual-observed" requires infra.apply = "disabled"');
@@ -1013,6 +1020,7 @@ export function validateBuildchainConfig(
           adoptionMode: loadedConfig.config.infra.adoptionMode,
           applyMode: loadedConfig.config.infra.applyMode,
           environment: loadedConfig.config.infra.environment,
+          identityRef: loadedConfig.config.infra.identityRef,
           desired: loadedConfig.config.infra.desired,
           contract: loadedConfig.config.infra.contract,
           secretRefs: loadedConfig.config.infra.secretRefs,

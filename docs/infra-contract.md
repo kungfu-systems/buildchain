@@ -98,12 +98,24 @@ managed-apply
 ```
 
 `apply = "disabled"` is the default. Non-disabled apply requires
-`adoption_mode = "managed-apply"` and an explicit approval id before mutation.
-Apply also requires a saved plan artifact whose `sourceSha`, `plannedAt`, and
-input hash still match the current repository. Real apply execution requires a
-configured `[infra.commands].apply` command, `--dry-run false`, and
-`--execute-adapter-commands true`. Without a configured apply command, built-in
-provider adapters still fail closed before mutation execution.
+`adoption_mode = "managed-apply"`, a non-empty `environment`, a non-empty
+`identity_ref`, and an explicit approval id before mutation. `identity_ref` is a
+provider-neutral reference to the runtime role, service account, or environment
+credential name; it is not a secret value. Apply also requires a saved plan
+artifact whose `sourceSha`, `plannedAt`, and input hash still match the current
+repository. Real apply execution requires a configured `[infra.commands].apply`
+command, `--dry-run false`, and `--execute-adapter-commands true`. Without a
+configured apply command, built-in provider adapters still fail closed before
+mutation execution.
+
+For managed apply, bind the target and runtime identity explicitly:
+
+```toml
+adoption_mode = "managed-apply"
+apply = "manual-approval"
+environment = "preview"
+identity_ref = "AWS_ROLE_ARN"
+```
 
 ## CLI
 
@@ -170,15 +182,16 @@ results are not bound to the same artifact.
   auditable `.buildchain/infra-contract*.json` evidence for reusable workflow
   artifacts.
 - `manual-observed` and observe-only modes cannot apply.
-- Apply fails before mutation unless approval, adapter capability, and ownership
-  mode are explicit.
+- Apply fails before mutation unless approval, target environment, identity
+  reference, adapter capability, and ownership mode are explicit.
 - Apply rejects missing, stale, source-mismatched, or input-drifted plan
   artifacts before any adapter mutation can run.
 - Built-in provider adapter command evidence is planned-only unless the
   repository declares a concrete command for that stage under `[infra.commands]`.
-- Provider apply requires saved plan freshness, an approval id, a configured
-  apply command, `--dry-run false`, and `--execute-adapter-commands true`;
-  nonzero adapter exits fail closed and are recorded as adapter evidence.
+- Provider apply requires saved plan freshness, an approval id, target
+  environment, identity reference, a configured apply command,
+  `--dry-run false`, and `--execute-adapter-commands true`; nonzero adapter
+  exits fail closed and are recorded as adapter evidence.
 - Terraform/OpenTofu state files and Pulumi state or secret JSON files are not
   accepted as contract inputs.
 - Consumers are represented as pull request plans. `propagation-apply` defaults

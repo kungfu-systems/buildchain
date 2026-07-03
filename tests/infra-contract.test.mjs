@@ -344,7 +344,8 @@ test("infra-contract managed apply requires approval before mutation", () => {
       path.join(fixture, "buildchain.toml"),
       fs.readFileSync(path.join(fixture, "buildchain.toml"), "utf8")
         .replace('adoption_mode = "observe-only"', 'adoption_mode = "managed-apply"')
-        .replace('apply = "disabled"', 'apply = "manual-approval"'),
+        .replace('apply = "disabled"', 'apply = "manual-approval"')
+        .replace('environment = "preview"', 'environment = "preview"\nidentity_ref = "AWS_ROLE_ARN"'),
     );
     const plan = createInfraContractPlan({
       cwd: fixture,
@@ -376,7 +377,8 @@ test("infra-contract managed apply requires a saved fresh plan", () => {
       path.join(fixture, "buildchain.toml"),
       fs.readFileSync(path.join(fixture, "buildchain.toml"), "utf8")
         .replace('adoption_mode = "observe-only"', 'adoption_mode = "managed-apply"')
-        .replace('apply = "disabled"', 'apply = "manual-approval"'),
+        .replace('apply = "disabled"', 'apply = "manual-approval"')
+        .replace('environment = "preview"', 'environment = "preview"\nidentity_ref = "AWS_ROLE_ARN"'),
     );
     assert.throws(
       () => applyInfraContract({
@@ -419,13 +421,69 @@ test("infra-contract managed apply requires a saved fresh plan", () => {
   });
 });
 
+test("infra-contract managed apply requires target environment and identity before mutation", () => {
+  withFixture("infra-contract-terraform-shaped", (fixture) => {
+    const configPath = path.join(fixture, "buildchain.toml");
+    const managedConfig = fs.readFileSync(configPath, "utf8")
+      .replace('adoption_mode = "observe-only"', 'adoption_mode = "managed-apply"')
+      .replace('apply = "disabled"', 'apply = "manual-approval"')
+      .replace('environment = "preview"', 'environment = "preview"\nidentity_ref = "AWS_ROLE_ARN"');
+    fs.writeFileSync(configPath, managedConfig);
+    const sourceSha = "b".repeat(40);
+    const plan = createInfraContractPlan({
+      cwd: fixture,
+      sourceSha,
+      plannedAt: "2026-07-03T00:00:00.000Z",
+    });
+
+    let runnerCalls = 0;
+    fs.writeFileSync(configPath, managedConfig.replace('environment = "preview"\n', ""));
+    assert.throws(
+      () => applyInfraContract({
+        cwd: fixture,
+        sourceSha,
+        approvalId: "APPROVED-ENV-1",
+        dryRun: false,
+        plan,
+        now: "2026-07-03T00:01:00.000Z",
+        executeAdapterCommands: true,
+        commandRunner: () => {
+          runnerCalls += 1;
+          return { status: 0, stdout: "", stderr: "" };
+        },
+      }),
+      /infra.apply requires infra.environment/,
+    );
+
+    fs.writeFileSync(configPath, managedConfig.replace('identity_ref = "AWS_ROLE_ARN"\n', ""));
+    assert.throws(
+      () => applyInfraContract({
+        cwd: fixture,
+        sourceSha,
+        approvalId: "APPROVED-IDENTITY-1",
+        dryRun: false,
+        plan,
+        now: "2026-07-03T00:01:00.000Z",
+        executeAdapterCommands: true,
+        commandRunner: () => {
+          runnerCalls += 1;
+          return { status: 0, stdout: "", stderr: "" };
+        },
+      }),
+      /infra.apply requires infra.identity_ref/,
+    );
+    assert.equal(runnerCalls, 0);
+  });
+});
+
 test("infra-contract managed apply rejects a plan after desired inputs drift", () => {
   withFixture("infra-contract-terraform-shaped", (fixture) => {
     fs.writeFileSync(
       path.join(fixture, "buildchain.toml"),
       fs.readFileSync(path.join(fixture, "buildchain.toml"), "utf8")
         .replace('adoption_mode = "observe-only"', 'adoption_mode = "managed-apply"')
-        .replace('apply = "disabled"', 'apply = "manual-approval"'),
+        .replace('apply = "disabled"', 'apply = "manual-approval"')
+        .replace('environment = "preview"', 'environment = "preview"\nidentity_ref = "AWS_ROLE_ARN"'),
     );
     const plan = createInfraContractPlan({
       cwd: fixture,
@@ -462,6 +520,8 @@ name = "infra-custom-command"
 adapter = "custom-command"
 adoption_mode = "managed-apply"
 apply = "manual-approval"
+environment = "preview"
+identity_ref = "AWS_ROLE_ARN"
 desired = ["desired/site-kungfu-tech.json"]
 contract = ["outputs/site-kungfu-tech.json"]
 
@@ -549,6 +609,8 @@ name = "infra-terraform"
 adapter = "terraform"
 adoption_mode = "managed-apply"
 apply = "manual-approval"
+environment = "preview"
+identity_ref = "AWS_ROLE_ARN"
 desired = ["desired/main.tf.json"]
 contract = ["outputs/terraform-output.json"]
 
@@ -650,7 +712,8 @@ test("infra-contract non custom-command apply stays fail-closed before adapter e
       path.join(fixture, "buildchain.toml"),
       fs.readFileSync(path.join(fixture, "buildchain.toml"), "utf8")
         .replace('adoption_mode = "observe-only"', 'adoption_mode = "managed-apply"')
-        .replace('apply = "disabled"', 'apply = "manual-approval"'),
+        .replace('apply = "disabled"', 'apply = "manual-approval"')
+        .replace('environment = "preview"', 'environment = "preview"\nidentity_ref = "AWS_ROLE_ARN"'),
     );
     const sourceSha = "a".repeat(40);
     const plan = createInfraContractPlan({
@@ -922,6 +985,8 @@ name = "infra-custom-command"
 adapter = "custom-command"
 adoption_mode = "managed-apply"
 apply = "manual-approval"
+environment = "preview"
+identity_ref = "AWS_ROLE_ARN"
 desired = ["desired/site-kungfu-tech.json"]
 contract = ["outputs/site-kungfu-tech.json"]
 

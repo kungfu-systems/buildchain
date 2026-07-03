@@ -298,6 +298,7 @@ function createPlanInputFingerprint({ config, sourceSha, desiredFiles, contractF
     adoptionMode: config.infra.adoptionMode,
     applyMode: config.infra.applyMode,
     environment: config.infra.environment,
+    identityRef: config.infra.identityRef,
     desiredFiles: desiredFiles.map(({ json, ...entry }) => entry),
     contractFiles: contractFiles.map(({ json, ...entry }) => entry),
     consumers: consumerContracts.map((consumer) => ({
@@ -482,6 +483,7 @@ export function createInfraContractPlan({
     adoptionMode: config.infra.adoptionMode,
     applyMode: config.infra.applyMode,
     environment: config.infra.environment,
+    identityRef: config.infra.identityRef,
     mutationAllowed: false,
     desiredFiles: desiredFiles.map(({ json, ...entry }) => entry),
     contractFiles: contractFiles.map(({ json, ...entry }) => entry),
@@ -541,6 +543,7 @@ export function createInfraContractArtifact({
     adoptionMode: config.infra.adoptionMode,
     applyMode: config.infra.applyMode,
     environment: config.infra.environment,
+    identityRef: config.infra.identityRef,
     desiredFiles: selectedPlan.desiredFiles,
     plan: {
       hash: selectedPlan.planHash,
@@ -554,6 +557,7 @@ export function createInfraContractArtifact({
     apply: {
       enabled: config.infra.applyMode !== "disabled",
       runId: applyRunId,
+      identityRef: config.infra.identityRef,
     },
     observed: {
       observedAt,
@@ -960,6 +964,12 @@ export function applyInfraContract({
   if (!approvalId) {
     throw new Error("infra-contract apply requires an approval id before mutation");
   }
+  if (!config.infra.environment) {
+    throw new Error("infra-contract apply requires infra.environment before mutation");
+  }
+  if (!config.infra.identityRef) {
+    throw new Error("infra-contract apply requires infra.identity_ref before mutation");
+  }
   const freshPlan = assertFreshApplyPlan({ cwd, plan, sourceSha, now, planMaxAgeMinutes });
   const plannedApplyEvidence = collectAdapterEvidence({
     cwd,
@@ -978,6 +988,8 @@ export function applyInfraContract({
       sourceSha: freshPlan.sourceSha,
       planHash: freshPlan.plan.planHash,
       inputHash: freshPlan.inputHash,
+      environment: config.infra.environment,
+      identityRef: config.infra.identityRef,
       planAgeSeconds: freshPlan.ageSeconds,
       planMaxAgeMinutes: freshPlan.planMaxAgeMinutes,
       mutationAllowed: false,
@@ -1009,6 +1021,8 @@ export function applyInfraContract({
     sourceSha: freshPlan.sourceSha,
     planHash: freshPlan.plan.planHash,
     inputHash: freshPlan.inputHash,
+    environment: config.infra.environment,
+    identityRef: config.infra.identityRef,
     planAgeSeconds: freshPlan.ageSeconds,
     planMaxAgeMinutes: freshPlan.planMaxAgeMinutes,
     mutationAllowed: true,

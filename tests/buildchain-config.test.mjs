@@ -537,6 +537,7 @@ source = "outputs/site.json"
         adoptionMode: "manual-observed",
         applyMode: "disabled",
         environment: "",
+        identityRef: "",
         desired: ["desired/site.json"],
         contract: ["outputs/site.json"],
         secretRefs: [],
@@ -550,6 +551,72 @@ source = "outputs/site.json"
           branch: "",
         },
       ]);
+    },
+  );
+});
+
+test("buildchain.toml rejects infra-contract apply without target environment", () => {
+  withTempRepo(
+    {
+      "buildchain.toml": `
+schema = 1
+
+[project]
+type = "infra-contract"
+name = "infra-demo"
+
+[infra]
+adapter = "terraform"
+adoption_mode = "managed-apply"
+apply = "manual-approval"
+identity_ref = "AWS_ROLE_ARN"
+desired = ["desired/site.json"]
+contract = ["outputs/site.json"]
+
+[[consumers]]
+repo = "kungfu-systems/site-demo"
+path = "infra/outputs.json"
+source = "outputs/site.json"
+`,
+    },
+    (dir) => {
+      assert.throws(
+        () => validateBuildchainConfig(dir),
+        /infra.apply requires infra.environment/,
+      );
+    },
+  );
+});
+
+test("buildchain.toml rejects infra-contract apply without identity reference", () => {
+  withTempRepo(
+    {
+      "buildchain.toml": `
+schema = 1
+
+[project]
+type = "infra-contract"
+name = "infra-demo"
+
+[infra]
+adapter = "terraform"
+adoption_mode = "managed-apply"
+apply = "manual-approval"
+environment = "preview"
+desired = ["desired/site.json"]
+contract = ["outputs/site.json"]
+
+[[consumers]]
+repo = "kungfu-systems/site-demo"
+path = "infra/outputs.json"
+source = "outputs/site.json"
+`,
+    },
+    (dir) => {
+      assert.throws(
+        () => validateBuildchainConfig(dir),
+        /infra.apply requires infra.identity_ref/,
+      );
     },
   );
 });
