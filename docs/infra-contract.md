@@ -54,8 +54,9 @@ custom-command
 Buildchain records them as planned adapter evidence by default. Passing
 `--execute-adapter-commands true` to `plan` or `contract` executes the
 non-mutating `validate`, `plan`, or `observe` hooks and stores their exit status,
-stdout/stderr, and JSON stdout when present. The `apply` hook is still gated by
-the saved-plan apply path and is not executed by ordinary PR validation.
+stdout/stderr, and JSON stdout when present. The `apply` hook is only available
+through the saved-plan apply path and is never executed by ordinary PR
+validation.
 
 Supported adoption modes:
 
@@ -71,8 +72,10 @@ managed-apply
 `apply = "disabled"` is the default. Non-disabled apply requires
 `adoption_mode = "managed-apply"` and an explicit approval id before mutation.
 Apply also requires a saved plan artifact whose `sourceSha`, `plannedAt`, and
-input hash still match the current repository. The current implementation plans
-approved apply but fails closed before adapter mutation execution.
+input hash still match the current repository. Real apply execution is currently
+implemented only for `custom-command`, and it still requires `--dry-run false`
+plus `--execute-adapter-commands true`. Other adapters fail closed before
+mutation execution until their concrete executors are implemented.
 
 ## CLI
 
@@ -100,6 +103,13 @@ buildchain infra-contract --mode apply \
   --approval-id "$APPROVAL_ID" \
   --dry-run true \
   --output .buildchain/infra-contract-apply.json
+buildchain infra-contract --mode apply \
+  --plan .buildchain/infra-contract-plan.json \
+  --source-sha "$GITHUB_SHA" \
+  --approval-id "$APPROVAL_ID" \
+  --dry-run false \
+  --execute-adapter-commands true \
+  --output .buildchain/infra-contract-apply.json
 ```
 
 ## Safety
@@ -110,6 +120,9 @@ buildchain infra-contract --mode apply \
   mode are explicit.
 - Apply rejects missing, stale, source-mismatched, or input-drifted plan
   artifacts before any adapter mutation can run.
+- Custom-command apply requires saved plan freshness, an approval id,
+  `--dry-run false`, and `--execute-adapter-commands true`; nonzero adapter
+  exits fail closed and are recorded as adapter evidence.
 - Terraform/OpenTofu state files and Pulumi state or secret JSON files are not
   accepted as contract inputs.
 - Consumers are represented as pull request plans. `propagation-apply` defaults

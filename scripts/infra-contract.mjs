@@ -188,6 +188,7 @@ export function infraContractCli() {
         "plan-max-age-minutes",
         readNumberEnv("BUILDCHAIN_INFRA_CONTRACT_PLAN_MAX_AGE_MINUTES", 60),
       ),
+      executeAdapterCommands: readBooleanArg("execute-adapter-commands", false),
     });
     writeJson(result, output);
     writeGitHubOutputs({

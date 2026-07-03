@@ -62,7 +62,7 @@
     {
       "id": "infra-contract",
       "usage": "buildchain infra-contract --mode validate|plan|contract|propagation-plan|propagation-apply|apply",
-      "purpose": "Validate and publish provider-neutral infrastructure contract evidence with custom-command evidence, saved-plan apply gates, and dry-run-first propagation."
+      "purpose": "Validate and publish provider-neutral infrastructure contract evidence with custom-command evidence, saved-plan apply gates, explicit custom-command apply, and dry-run-first propagation."
     }
   ]
 }

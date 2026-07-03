@@ -8,6 +8,7 @@ const PLAN_CONTRACT = "kungfu-buildchain-infra-contract-plan";
 const ARTIFACT_CONTRACT = "kungfu-buildchain-infra-contract";
 const PROPAGATION_CONTRACT = "kungfu-buildchain-infra-contract-propagation-plan";
 const PROPAGATION_APPLY_CONTRACT = "kungfu-buildchain-infra-contract-propagation-apply";
+const APPLY_CONTRACT = "kungfu-buildchain-infra-contract-apply";
 
 const STATIC_CAPABILITIES = Object.freeze({
   "manual-observed": { validate: true, plan: false, apply: false, observe: true },
@@ -220,6 +221,30 @@ function stageStatuses({ config, capabilities, planHash = "" }) {
   };
 }
 
+function createPlanInputFingerprint({ config, sourceSha, desiredFiles, contractFiles, consumerContracts, capabilities }) {
+  return sha256Buffer(stableJson({
+    project: {
+      name: config.project.name || "",
+      type: config.project.type,
+    },
+    sourceSha,
+    adapter: config.infra.adapter,
+    adoptionMode: config.infra.adoptionMode,
+    applyMode: config.infra.applyMode,
+    environment: config.infra.environment,
+    desiredFiles: desiredFiles.map(({ json, ...entry }) => entry),
+    contractFiles: contractFiles.map(({ json, ...entry }) => entry),
+    consumers: consumerContracts.map((consumer) => ({
+      repo: consumer.repo,
+      path: consumer.path,
+      source: consumer.source,
+      branch: consumer.branch,
+      sourceSha256: consumer.sourceFile.sha256,
+    })),
+    adapterCapabilities: capabilities,
+  }));
+}
+
 function assertInfraContractPlan(plan) {
   if (!plan || typeof plan !== "object" || plan.contract !== PLAN_CONTRACT) {
     throw new Error("infra-contract apply requires a saved infra-contract plan");
@@ -270,12 +295,15 @@ function assertFreshApplyPlan({ cwd, plan, sourceSha, now, planMaxAgeMinutes }) 
     sourceSha: expectedSourceSha,
     plannedAt: selectedPlan.plannedAt,
   });
-  if (currentPlan.planHash !== selectedPlan.planHash) {
+  const selectedInputHash = selectedPlan.inputHash || selectedPlan.planHash;
+  const currentInputHash = selectedPlan.inputHash ? currentPlan.inputHash : currentPlan.planHash;
+  if (currentInputHash !== selectedInputHash) {
     throw new Error("infra-contract apply plan no longer matches current desired, contract, or consumer inputs");
   }
   return {
     plan: selectedPlan,
     sourceSha: expectedSourceSha,
+    inputHash: currentInputHash,
     ageSeconds: Math.max(0, Math.round(ageMs / 1000)),
     planMaxAgeMinutes: Number(planMaxAgeMinutes),
   };
@@ -303,6 +331,19 @@ export function createInfraContractPlan({
   const desiredFiles = configuredFileRecords(cwd, config.infra.desired);
   const contractFiles = configuredFileRecords(cwd, config.infra.contract);
   const capabilities = adapterCapabilities(config);
+  const consumerContracts = config.consumers.map((consumer) => ({
+    ...consumer,
+    sourceFile: readFileRecord(cwd, consumer.source),
+  }));
+  const selectedSourceSha = assertSha(sourceSha, "sourceSha");
+  const inputHash = createPlanInputFingerprint({
+    config,
+    sourceSha: selectedSourceSha,
+    desiredFiles,
+    contractFiles,
+    consumerContracts,
+    capabilities,
+  });
   const adapterEvidence = collectCustomCommandEvidence({
     cwd,
     config,
@@ -311,10 +352,6 @@ export function createInfraContractPlan({
     runner: commandRunner,
   });
   assertAdapterEvidencePassed(adapterEvidence);
-  const consumerContracts = config.consumers.map((consumer) => ({
-    ...consumer,
-    sourceFile: readFileRecord(cwd, consumer.source),
-  }));
   const base = {
     schemaVersion: 1,
     contract: PLAN_CONTRACT,
@@ -322,8 +359,9 @@ export function createInfraContractPlan({
       name: config.project.name || "",
       type: config.project.type,
     },
-    sourceSha: assertSha(sourceSha, "sourceSha"),
+    sourceSha: selectedSourceSha,
     plannedAt,
+    inputHash,
     adapter: config.infra.adapter,
     adoptionMode: config.infra.adoptionMode,
     applyMode: config.infra.applyMode,
@@ -583,6 +621,8 @@ export function applyInfraContract({
   plan,
   now = new Date().toISOString(),
   planMaxAgeMinutes = 60,
+  executeAdapterCommands = false,
+  commandRunner = runShellCommand,
 } = {}) {
   const loadedConfig = loadBuildchainConfig(cwd);
   const config = assertInfraContractConfig(loadedConfig);
@@ -597,19 +637,57 @@ export function applyInfraContract({
     throw new Error("infra-contract apply requires an approval id before mutation");
   }
   const freshPlan = assertFreshApplyPlan({ cwd, plan, sourceSha, now, planMaxAgeMinutes });
+  const plannedApplyEvidence = collectCustomCommandEvidence({
+    cwd,
+    config,
+    stages: ["apply"],
+    executeAdapterCommands: false,
+    runner: commandRunner,
+  });
   if (dryRun) {
     return {
       schemaVersion: 1,
-      contract: "kungfu-buildchain-infra-contract-apply",
+      contract: APPLY_CONTRACT,
       status: "planned",
       dryRun: true,
       approvalId,
       sourceSha: freshPlan.sourceSha,
       planHash: freshPlan.plan.planHash,
+      inputHash: freshPlan.inputHash,
       planAgeSeconds: freshPlan.ageSeconds,
       planMaxAgeMinutes: freshPlan.planMaxAgeMinutes,
+      mutationAllowed: false,
       mutationExecuted: false,
+      adapterEvidence: plannedApplyEvidence,
     };
   }
-  throw new Error("infra-contract apply execution is not implemented for adapters yet");
+  if (config.infra.adapter !== "custom-command") {
+    throw new Error(`infra-contract apply execution is not implemented for adapter: ${config.infra.adapter}`);
+  }
+  if (!executeAdapterCommands) {
+    throw new Error("infra-contract custom-command apply requires --execute-adapter-commands true before mutation");
+  }
+  const adapterEvidence = collectCustomCommandEvidence({
+    cwd,
+    config,
+    stages: ["apply"],
+    executeAdapterCommands: true,
+    runner: commandRunner,
+  });
+  assertAdapterEvidencePassed(adapterEvidence);
+  return {
+    schemaVersion: 1,
+    contract: APPLY_CONTRACT,
+    status: "completed",
+    dryRun: false,
+    approvalId,
+    sourceSha: freshPlan.sourceSha,
+    planHash: freshPlan.plan.planHash,
+    inputHash: freshPlan.inputHash,
+    planAgeSeconds: freshPlan.ageSeconds,
+    planMaxAgeMinutes: freshPlan.planMaxAgeMinutes,
+    mutationAllowed: true,
+    mutationExecuted: true,
+    adapterEvidence,
+  };
 }

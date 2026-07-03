@@ -296,6 +296,87 @@ source = "outputs/site-kungfu-tech.json"
   assert.equal(result.adapterEvidence[1].output.stage, "plan");
 });
 
+test("infra-contract CLI apply can execute an explicitly approved custom-command adapter", () => {
+  const cwd = tempDir("infra-contract-cli-custom-apply");
+  fs.cpSync(path.join(root, "fixtures/infra-contract-shaped"), cwd, { recursive: true });
+  fs.mkdirSync(path.join(cwd, "scripts"), { recursive: true });
+  fs.writeFileSync(
+    path.join(cwd, "scripts", "adapter.mjs"),
+    "console.log(JSON.stringify({ stage: process.argv[2], ok: true }));\n",
+  );
+  fs.writeFileSync(
+    path.join(cwd, "buildchain.toml"),
+    `
+schema = 1
+
+[project]
+type = "infra-contract"
+name = "infra-custom-command"
+
+[infra]
+adapter = "custom-command"
+adoption_mode = "managed-apply"
+apply = "manual-approval"
+desired = ["desired/site-kungfu-tech.json"]
+contract = ["outputs/site-kungfu-tech.json"]
+
+[infra.commands]
+validate = "node scripts/adapter.mjs validate"
+plan = "node scripts/adapter.mjs plan"
+apply = "node scripts/adapter.mjs apply"
+
+[[consumers]]
+repo = "kungfu-systems/site-kungfu-tech"
+path = "infra/outputs.json"
+source = "outputs/site-kungfu-tech.json"
+`,
+  );
+  const sourceSha = "9".repeat(40);
+  const planPath = path.join(cwd, ".buildchain", "infra-contract-plan.json");
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "plan",
+    "--cwd",
+    cwd,
+    "--source-sha",
+    sourceSha,
+    "--execute-adapter-commands",
+    "true",
+    "--output",
+    planPath,
+  ]);
+  const outputPath = path.join(cwd, ".buildchain", "infra-contract-apply.json");
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "apply",
+    "--cwd",
+    cwd,
+    "--source-sha",
+    sourceSha,
+    "--approval-id",
+    "APPROVED-CLI-APPLY-1",
+    "--plan",
+    planPath,
+    "--dry-run",
+    "false",
+    "--execute-adapter-commands",
+    "true",
+    "--output",
+    outputPath,
+  ]);
+
+  const result = JSON.parse(fs.readFileSync(outputPath, "utf8"));
+  assert.equal(result.contract, "kungfu-buildchain-infra-contract-apply");
+  assert.equal(result.status, "completed");
+  assert.equal(result.mutationAllowed, true);
+  assert.equal(result.mutationExecuted, true);
+  assert.equal(result.adapterEvidence[0].stage, "apply");
+  assert.equal(result.adapterEvidence[0].status, "passed");
+  assert.equal(result.adapterEvidence[0].output.stage, "apply");
+});
+
 test("validate reads initialized package config", () => {
   const cwd = tempDir("validate-package");
   fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({ name: "fixture", version: "0.1.0" }, null, 2));
