@@ -1,0 +1,23 @@
+schema = 1
+
+[project]
+type = "infra-contract"
+name = "infra-kungfu-sites"
+
+[infra]
+adapter = "manual-observed"
+adoption_mode = "manual-observed"
+apply = "disabled"
+environment = "staging"
+desired = ["desired/site-kungfu-tech.json", "desired/site-libkungfu-dev.json"]
+contract = ["outputs/site-kungfu-tech.json", "outputs/site-libkungfu-dev.json"]
+
+[[consumers]]
+repo = "kungfu-systems/site-kungfu-tech"
+path = "infra/outputs.json"
+source = "outputs/site-kungfu-tech.json"
+
+[[consumers]]
+repo = "kungfu-systems/site-libkungfu-dev"
+path = "infra/outputs.json"
+source = "outputs/site-libkungfu-dev.json"

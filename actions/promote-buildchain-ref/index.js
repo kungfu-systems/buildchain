@@ -66,6 +66,10 @@ async function main() {
   const releaseMaterialSha = core.getInput("release-material-sha");
   const publishToolingSha = core.getInput("publish-tooling-sha");
   const publishTransactionOverride = core.getBooleanInput("publish-transaction-override");
+  const releasePassport = core.getBooleanInput("release-passport");
+  const releasePassportOutputDir = core.getInput("release-passport-output-dir");
+  const releasePassportBuildSummaryPath = core.getInput("release-passport-build-summary-path");
+  const releasePassportPlatformManifestPaths = core.getInput("release-passport-platform-manifest-paths");
   const octokit = github.getOctokit(token);
   if (requirePublishSourceLock) {
     const sourceLockReport = validateRequiredPublishSourceLock({
@@ -112,6 +116,10 @@ async function main() {
     publishPackageMain,
     releaseMaterialSha,
     publishToolingSha,
+    releasePassport,
+    releasePassportOutputDir,
+    releasePassportBuildSummaryPath,
+    releasePassportPlatformManifestPaths,
     actor: github.context.actor,
     runId: String(github.context.runId || ""),
     publishTransactionOverride,
@@ -135,6 +143,9 @@ async function main() {
   core.setOutput("transaction-state-sha", result.publishTransaction?.stateSha || "");
   core.setOutput("transaction-state-path", result.publishTransaction?.statePath || "");
   core.setOutput("publish-evidence-path", result.publishTransaction?.evidencePath || "");
+  core.setOutput("release-passport-path", result.publishTransaction?.releasePassportPath || "");
+  core.setOutput("release-passport-output-dir", result.publishTransaction?.releasePassportOutputDir || "");
+  core.setOutput("release-passport-state-sha", result.publishTransaction?.releasePassportStateSha || "");
   core.setOutput(
     "finalization-needed",
     String(result.publishTransaction?.finalizationNeeded === true),

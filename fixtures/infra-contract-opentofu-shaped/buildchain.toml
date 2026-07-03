@@ -1,0 +1,18 @@
+schema = 1
+
+[project]
+type = "infra-contract"
+name = "infra-opentofu-shaped"
+
+[infra]
+adapter = "opentofu"
+adoption_mode = "observe-only"
+apply = "disabled"
+environment = "preview"
+desired = ["desired/main.tf.json"]
+contract = ["outputs/opentofu-output.json"]
+
+[[consumers]]
+repo = "kungfu-systems/site-opentofu-example"
+path = "infra/outputs.json"
+source = "outputs/opentofu-output.json"

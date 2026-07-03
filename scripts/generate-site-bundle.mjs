@@ -52,6 +52,7 @@ function buildSiteBundle() {
     docEntry("release-flow", "Release flow", "docs/release-flow.md", "verify"),
     docEntry("versioning", "Versioning", "docs/versioning.md", "why"),
     docEntry("web-surface-deployments", "Web surface deployments", "docs/web-surface-deployments.md", "use"),
+    docEntry("infra-contract", "Infra Contract", "docs/infra-contract.md", "use"),
   ];
 
   const cliRegistry = {
@@ -61,16 +62,18 @@ function buildSiteBundle() {
     npmPackage: packageJson.name,
     commands: [
       { id: "version", usage: "buildchain version", purpose: "Print the package or embedded binary version." },
-      { id: "init", usage: "buildchain init [--type package|native|web-surface|anchored-package]", purpose: "Bootstrap a repository with Buildchain configuration and caller workflow files." },
+      { id: "init", usage: "buildchain init [--type package|native|web-surface|infra-contract|anchored-package]", purpose: "Bootstrap a repository with Buildchain configuration and caller workflow files." },
       { id: "validate", usage: "buildchain validate [--require-version-state]", purpose: "Validate buildchain.toml and declared lifecycle surfaces." },
       { id: "doctor", usage: "buildchain doctor [--json]", purpose: "Report local integration readiness." },
       { id: "lifecycle", usage: "buildchain lifecycle run <stage>", purpose: "Run configured lifecycle commands and write deterministic artifact manifests." },
       { id: "release-dry-run", usage: "buildchain release --dry-run --target-ref <ref>", purpose: "Explain what a channel merge would publish before the PR is merged." },
       { id: "collect-github-release", usage: "buildchain collect github-release --tag <tag>", purpose: "Collect release assets into a release passport." },
       { id: "verify-release-passport", usage: "buildchain verify release-passport <file-or-url>", purpose: "Fail closed unless a release passport and its evidence are complete." },
+      { id: "verify-infra-contract-evidence-bundle", usage: "buildchain verify infra-contract-evidence-bundle <file>", purpose: "Fail closed unless an infra-contract lifecycle evidence bundle is complete, hash-bound, and validation-consistent." },
       { id: "logging", usage: "buildchain log|mark|span|verify observability-log", purpose: "Emit timestamped build events, summarize logs, and enforce required phases." },
       { id: "diagnostics-summary", usage: "buildchain diagnostics summary <diagnostics.json>...", purpose: "Summarize small diagnostics artifacts into JSON and a cross-platform lifecycle timing table." },
       { id: "npm-dry-run", usage: "buildchain npm dry-run --json", purpose: "Verify npm publish shape before a release transaction." },
+      { id: "infra-contract", usage: "buildchain infra-contract --mode validate|ci|plan|contract|propagation-plan|propagation-apply|apply|evidence-bundle", purpose: "Validate and publish provider-neutral infrastructure contract evidence with a mutation-free CI evidence chain, provider command plans, configured provider command execution, saved-plan apply gates, dry-run-first propagation, and lifecycle evidence bundles." },
     ],
   };
 
@@ -134,6 +137,11 @@ function buildSiteBundle() {
       "product-mechanism.json",
       "release-provenance.json",
       "agent-index.json",
+    ],
+    infraContract: [
+      "infra-contract-plan.json",
+      "buildchain.infra-contract.json",
+      "infra-contract-propagation.json",
     ],
   };
 

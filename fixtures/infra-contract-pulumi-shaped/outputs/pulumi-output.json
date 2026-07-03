@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "outputs": {
+    "bucketName": "example-pulumi-preview",
+    "distributionId": "E-PULUMI-PREVIEW",
+    "stagingUrl": "https://pulumi-preview.example"
+  },
+  "provenance": {
+    "adapter": "pulumi",
+    "source": "static-stack-output-fixture",
+    "observedAt": "2026-07-03T00:00:00.000Z"
+  }
+}

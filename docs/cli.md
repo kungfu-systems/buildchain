@@ -61,6 +61,10 @@ Supported presets:
 - `--type package` for Node package repositories with pnpm, npm, or yarn.
 - `--type native` for CMake-style native projects.
 - `--type web-surface` for preview/staging/production site or app deployments.
+- `--type infra-contract` for provider-agnostic infrastructure contract
+  validation, observation, contract publication, and downstream propagation
+  planning without default mutation. Provider adapters expose built-in command
+  plans by default, and only configured `[infra.commands]` hooks can execute.
 - `--type anchored-package` for packages whose version is anchored to an
   explicit upstream release manifest.
 
@@ -214,8 +218,8 @@ reusable build workflow outputs. It fails closed for direct `alpha/*` or
 version against configured version files and the anchor manifest. The JSON
 result is shaped for future `buildchain.libkungfu.dev` fact ingestion.
 
-`buildchain release`, `buildchain web-surface`, `buildchain publish-source`,
-and `buildchain build-contract` route to the same scripts used by Buildchain's
+`buildchain release`, `buildchain web-surface`, `buildchain infra-contract`,
+`buildchain publish-source`, and `buildchain build-contract` route to the same scripts used by Buildchain's
 GitHub Actions workflows. This keeps local inspection and CI behavior on the
 same implementation path.
 
@@ -236,6 +240,41 @@ and `llms.txt`. Production binary distribution defaults to GitHub-hosted
 runners so other projects can reproduce the release lane; self-hosted runners
 remain compatibility fixtures and are recorded as runner facts when used.
 
+For publish-transaction releases, pass the additional evidence inputs so
+`buildchain.release.json` becomes the unified passport instead of a binary-only
+asset summary:
+
+```bash
+buildchain collect github-release \
+  --tag v2.3.2 \
+  --repository kungfu-systems/buildchain \
+  --assets-dir dist \
+  --publish-evidence-json .buildchain/release-evidence/v2.3.2/evidence.json \
+  --transaction-json .buildchain/release-state/v2.3.2/state.json \
+  --package-set-json package-set.json \
+  --trusted-publishing-json trusted-publishing.json \
+  --anchor-manifest-json libnode.release.json \
+  --build-summary-json .buildchain/artifacts/build-summary.json \
+  --platform-manifest-json .buildchain/artifacts/linux-x64/manifest.json \
+  --platform-manifest-json .buildchain/artifacts/darwin-arm64/manifest.json \
+  --platform-manifest-json .buildchain/artifacts/win32-x64/manifest.json \
+  --dist-tag-evidence-json .buildchain/release-evidence/v2.3.2/dist-tag-evidence.json \
+  --release-extra-json '{"channel":"release","targetRef":"release/v2/v2.3"}' \
+  --output-dir .buildchain/release-passport
+```
+
+The generated passport records the main and platform packages, npm dist-tags,
+published versions, release source/ref state, anchor manifest digest, registry
+artifact digests, trusted publishing evidence, and Buildchain transaction
+result. It also records `buildSummary`, `platformArtifactManifests`, and
+`distTagPromotion` when those JSON inputs are supplied. `packageSet` keeps the
+ordered package set; `publish.packages[]` is the agent-readable npm publication
+summary for each main/platform package. For Buildchain releases, verification
+expects the supplied package set to include the main package plus the three
+platform packages with version, dist-tag, and digest evidence. Verification
+fails closed if supplied sections are internally incomplete or point to
+artifacts without matching evidence.
+
 Buildchain dogfoods its observability toolkit in this lane. The standalone
 builder writes API-generated events, while the workflow uses `buildchain mark`,
 `buildchain span`, `buildchain verify observability-log`, and `buildchain log
@@ -252,6 +291,24 @@ buildchain inspect release --passport .buildchain/release-passport/buildchain.re
 The verifier fails closed when required protocol files are absent, artifacts are
 not covered by evidence, or digests disagree. The explanation output is shaped
 for agents: trust, completeness, impact, recovery route, and next action.
+
+Verify infra-contract lifecycle evidence bundles:
+
+```bash
+buildchain infra-contract --mode ci --source-sha "$GITHUB_SHA"
+buildchain verify infra-contract-evidence-bundle .buildchain/infra-contract-evidence-bundle.json
+```
+
+The infra-contract `ci` mode is mutation-free. It writes validate, plan,
+contract, propagation dry-run, evidence bundle, and verification JSON artifacts
+under `.buildchain/`, giving reusable workflows one standard responsibility
+chain instead of hand-written command sequences.
+
+The infra-contract verifier is read-only. It recomputes the bundle hash and
+checks that desired, plan, approval, apply, observe, contract, and propagate
+evidence remain bound to the same contract artifact. It also recomputes the
+bundle validation summary, so stale or misleading summary booleans fail closed
+even when the bundle hash has been refreshed.
 
 `buildchain release --dry-run` explains the release-line state machine before a
 maintainer opens or merges a channel PR:

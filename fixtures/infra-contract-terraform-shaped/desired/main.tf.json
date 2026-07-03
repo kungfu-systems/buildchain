@@ -1,0 +1,14 @@
+{
+  "resource": {
+    "aws_s3_bucket": {
+      "site": {
+        "bucket": "example-preview"
+      }
+    }
+  },
+  "output": {
+    "bucket_name": {
+      "value": "${aws_s3_bucket.site.bucket}"
+    }
+  }
+}

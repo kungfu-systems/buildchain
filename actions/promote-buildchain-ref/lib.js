@@ -30,6 +30,7 @@ import {
   validatePublishEvidence,
   writeReleaseTransaction,
 } from "../../packages/core/publish-transaction.js";
+import { collectGitHubReleasePassport } from "../../packages/core/release-passport.js";
 
 const COMMIT_IDENTITY = {
   name: "Keren Dong",
@@ -571,6 +572,128 @@ function writeExistingNpmEvidence({
   );
 }
 
+function writeJsonFile(filePath, value) {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`);
+  return filePath;
+}
+
+function readJsonFileIfExists(filePath) {
+  if (!filePath || !fs.existsSync(filePath)) {
+    return undefined;
+  }
+  return JSON.parse(fs.readFileSync(filePath, "utf8"));
+}
+
+function releasePassportArtifactFiles(outputDir) {
+  if (!outputDir || !fs.existsSync(outputDir)) {
+    return [];
+  }
+  return fs
+    .readdirSync(outputDir, { withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => {
+      const filePath = path.join(outputDir, entry.name);
+      return {
+        path: `release-passport/${entry.name}`,
+        content: fs.readFileSync(filePath, "utf8"),
+      };
+    })
+    .sort((left, right) => left.path.localeCompare(right.path));
+}
+
+function splitPathList(value = "") {
+  return String(value || "")
+    .split(/[\n,]/)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+}
+
+function resolveMaybeRelative(cwd, filePath) {
+  return path.isAbsolute(filePath) ? filePath : path.resolve(cwd, filePath);
+}
+
+function existingFiles(paths = [], cwd = process.cwd()) {
+  return paths
+    .map((filePath) => resolveMaybeRelative(cwd, filePath))
+    .filter((filePath) => fs.existsSync(filePath));
+}
+
+function platformManifestPathsFromBuildSummary(buildSummaryPath, cwd = process.cwd()) {
+  const summary = readJsonFileIfExists(buildSummaryPath);
+  if (!summary) {
+    return [];
+  }
+  return (Array.isArray(summary.platforms) ? summary.platforms : [])
+    .map((platform) => platform.manifestPath)
+    .filter(Boolean)
+    .map((manifestPath) => resolveMaybeRelative(cwd, manifestPath))
+    .filter((manifestPath) => fs.existsSync(manifestPath));
+}
+
+function packageSetFromArtifacts({ artifacts = [], contract = {}, registry = "https://registry.npmjs.org/" } = {}) {
+  if (!artifacts.length || contract.packageSetOrder !== "platforms-first-main-last") {
+    return undefined;
+  }
+  const normalized = artifacts.map((artifact) => ({
+    name: artifact.name,
+    version: artifact.ref || artifact.version || "",
+    distTag: contract.distTag || "",
+    digest: artifact.digest || "",
+    registry,
+    platform: artifact.platform || "",
+    action: artifact.action || "",
+  }));
+  const mainPackage = contract.mainPackage || "";
+  const mainIndex = normalized.findIndex((artifact) => artifact.name === mainPackage);
+  if (mainIndex < 0) {
+    return undefined;
+  }
+  const [main] = normalized.splice(mainIndex, 1);
+  return {
+    order: contract.packageSetOrder || "",
+    registry,
+    main,
+    platforms: normalized,
+  };
+}
+
+function writeDistTagPromotionEvidence({
+  evidencePath,
+  mode,
+  auth,
+  distTag,
+  source,
+  artifacts = [],
+}) {
+  const outputPath = path.join(path.dirname(evidencePath), "dist-tag-evidence.json");
+  return writeJsonFile(outputPath, {
+    schema: 1,
+    contract: "kungfu-buildchain-dist-tag-promotion-evidence",
+    mode,
+    auth,
+    distTag,
+    source,
+    packages: artifacts.map((artifact) => ({
+      name: artifact.name,
+      version: artifact.ref || artifact.version || "",
+      distTag,
+      role: artifact.role || "",
+      digest: artifact.digest || "",
+    })),
+  });
+}
+
+function findTransactionEvidencePath({ cwd, transaction, fallbackName }) {
+  for (const entry of transaction?.evidence || []) {
+    const normalized = String(entry || "");
+    if (normalized.endsWith(fallbackName)) {
+      return path.resolve(cwd, normalized);
+    }
+  }
+  return "";
+}
+
 function npmTokenLooksConfigured() {
   return Boolean(process.env.NODE_AUTH_TOKEN || process.env.NPM_TOKEN || process.env.npm_config__authToken);
 }
@@ -751,6 +874,49 @@ async function getGitRefOrUndefined({ octokit, owner, repo, ref }) {
   }
 }
 
+function transientGitHubReadError(error) {
+  const status = Number(error?.status || error?.response?.status || 0);
+  const code = String(error?.code || error?.cause?.code || "");
+  const message = String(error?.message || "");
+  return (
+    status >= 500 ||
+    ["ECONNRESET", "ETIMEDOUT", "UND_ERR_SOCKET", "UND_ERR_HEADERS_TIMEOUT", "UND_ERR_BODY_TIMEOUT"].includes(code) ||
+    /other side closed|socket|timeout|temporarily unavailable/i.test(message)
+  );
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function retryGitHubRead(label, read, { attempts = 4, delayMs = 1000 } = {}) {
+  let lastError;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await read();
+    } catch (error) {
+      lastError = error;
+      if (attempt >= attempts || !transientGitHubReadError(error)) {
+        throw error;
+      }
+      console.warn(`${label} failed with transient GitHub API error (${error.message}); retry ${attempt}/${attempts - 1}`);
+      await wait(delayMs * attempt);
+    }
+  }
+  throw lastError;
+}
+
+async function getGitCommitWithRetry({ octokit, owner, repo, commitSha }) {
+  return retryGitHubRead(
+    `git.getCommit ${commitSha}`,
+    () => octokit.rest.git.getCommit({
+      owner,
+      repo,
+      commit_sha: commitSha,
+    }),
+  );
+}
+
 async function restoreDurableReleaseTransaction({
   octokit,
   owner,
@@ -780,11 +946,7 @@ async function restoreDurableReleaseTransaction({
     ref: `heads/${stateRef}`,
   });
   const commitSha = ref.object?.sha;
-  const { data: commit } = await octokit.rest.git.getCommit({
-    owner,
-    repo,
-    commit_sha: commitSha,
-  });
+  const { data: commit } = await getGitCommitWithRetry({ octokit, owner, repo, commitSha });
   const { data: tree } = await octokit.rest.git.getTree({
     owner,
     repo,
@@ -825,11 +987,7 @@ async function readDurableReleaseTransaction({
     return undefined;
   }
   const commitSha = ref.object?.sha;
-  const { data: commit } = await octokit.rest.git.getCommit({
-    owner,
-    repo,
-    commit_sha: commitSha,
-  });
+  const { data: commit } = await getGitCommitWithRetry({ octokit, owner, repo, commitSha });
   const { data: tree } = await octokit.rest.git.getTree({
     owner,
     repo,
@@ -856,6 +1014,7 @@ async function persistDurableReleaseTransaction({
   cwd,
   transaction,
   evidencePath,
+  extraFiles = [],
 }) {
   if (!octokit || !transaction) {
     return undefined;
@@ -891,16 +1050,29 @@ async function persistDurableReleaseTransaction({
       sha: evidenceBlob.data.sha,
     });
   }
+  for (const file of extraFiles) {
+    if (!file?.path) {
+      continue;
+    }
+    const blob = await octokit.rest.git.createBlob({
+      owner,
+      repo,
+      content: String(file.content || ""),
+      encoding: "utf-8",
+    });
+    treeEntries.push({
+      path: file.path,
+      mode: "100644",
+      type: "blob",
+      sha: blob.data.sha,
+    });
+  }
 
   const createStateCommit = async (parentSha) => {
     let baseTree;
     const parents = [];
     if (parentSha) {
-      const { data: currentCommit } = await octokit.rest.git.getCommit({
-        owner,
-        repo,
-        commit_sha: parentSha,
-      });
+      const { data: currentCommit } = await getGitCommitWithRetry({ octokit, owner, repo, commitSha: parentSha });
       baseTree = currentCommit.tree?.sha;
       parents.push(parentSha);
     }
@@ -991,11 +1163,7 @@ async function releaseCommitIncludesTransactionHead({
       return true;
     }
     seen.add(sha);
-    const { data: commit } = await octokit.rest.git.getCommit({
-      owner,
-      repo,
-      commit_sha: sha,
-    });
+    const { data: commit } = await getGitCommitWithRetry({ octokit, owner, repo, commitSha: sha });
     for (const parent of commit.parents || []) {
       if (!seen.has(parent.sha)) {
         queue.push(parent.sha);
@@ -1230,6 +1398,16 @@ async function runPublishTransaction({
       validation: undefined,
       statePath: resolvedStatePath,
       evidencePath: resolvedEvidencePath,
+      distTagEvidencePath: findTransactionEvidencePath({
+        cwd,
+        transaction,
+        fallbackName: "dist-tag-evidence.json",
+      }),
+      packageSet: packageSetFromArtifacts({
+        artifacts: requiredArtifacts,
+        contract: publishContract,
+      }),
+      publishContract,
       durable,
       octokit,
       owner,
@@ -1239,6 +1417,8 @@ async function runPublishTransaction({
   }
 
   let validation;
+  let publishSource = existingEvidence ? "existing-evidence" : "";
+  let distTagEvidencePath = "";
   try {
     const evidence = existingEvidence || readPublishEvidence(resolvedEvidencePath);
     if (evidence) {
@@ -1280,9 +1460,8 @@ async function runPublishTransaction({
         });
       }
       ({ transaction, durable } = await persistTransaction(transaction));
-      let source;
       if (existingNpmPromotion) {
-        source = promoteExistingNpmArtifacts({
+        publishSource = promoteExistingNpmArtifacts({
           cwd,
           artifacts: requiredArtifacts,
           distTag: publishContract.distTag,
@@ -1299,7 +1478,7 @@ async function runPublishTransaction({
           artifacts: requiredArtifacts,
         });
       } else {
-        source = runPublishCommand({
+        publishSource = runPublishCommand({
           cwd,
           command: publishCommand,
           loadedConfig,
@@ -1322,7 +1501,7 @@ async function runPublishTransaction({
           },
         });
       }
-      if (source === "none") {
+      if (publishSource === "none") {
         throw new Error("publish transaction requires lifecycle.publish, publish-command, or existing evidence");
       }
     }
@@ -1337,6 +1516,14 @@ async function runPublishTransaction({
       publishToolingSha: expected.publishToolingSha,
       requiredArtifacts,
     });
+    distTagEvidencePath = writeDistTagPromotionEvidence({
+      evidencePath: resolvedEvidencePath,
+      mode: publishContract.mode,
+      auth: publishContract.auth,
+      distTag: publishContract.distTag,
+      source: publishSource || "validated-evidence",
+      artifacts: requiredArtifacts,
+    });
     if (transaction.state === "publishing" || transaction.state === "publish_failed") {
       transaction = transitionReleaseTransaction(transaction, "published", {
         actor,
@@ -1347,7 +1534,10 @@ async function runPublishTransaction({
     transaction = {
       ...transaction,
       artifacts: validation.evidence.artifacts,
-      evidence: [path.relative(cwd, resolvedEvidencePath).split(path.sep).join("/")],
+      evidence: [
+        path.relative(cwd, resolvedEvidencePath).split(path.sep).join("/"),
+        path.relative(cwd, distTagEvidencePath).split(path.sep).join("/"),
+      ],
     };
     ({ transaction, durable } = await persistTransaction(transaction));
     return {
@@ -1355,6 +1545,12 @@ async function runPublishTransaction({
       validation,
       statePath: resolvedStatePath,
       evidencePath: resolvedEvidencePath,
+      distTagEvidencePath,
+      packageSet: packageSetFromArtifacts({
+        artifacts: requiredArtifacts,
+        contract: publishContract,
+      }),
+      publishContract,
       durable,
       octokit,
       owner,
@@ -1403,6 +1599,114 @@ async function persistTransactionResult(result, transaction) {
   return { ...result, transaction: persisted, durable };
 }
 
+async function collectAndPersistReleasePassport({
+  result,
+  owner,
+  repo,
+  cwd,
+  sourceSha,
+  targetRef,
+  channel,
+  line,
+  packageName,
+  outputDir,
+  buildSummaryPath,
+  platformManifestPaths = [],
+  enabled = true,
+}) {
+  if (!enabled || !result?.transaction || result.transaction.state !== "complete") {
+    return result;
+  }
+  if (!result.evidencePath || !fs.existsSync(result.evidencePath)) {
+    return result;
+  }
+  const resolvedOutputDir = path.resolve(cwd, outputDir || ".buildchain/release-passport");
+  const resolvedBuildSummary = buildSummaryPath
+    ? resolveMaybeRelative(cwd, buildSummaryPath)
+    : path.resolve(cwd, ".buildchain/artifacts/build-summary.json");
+  const configuredManifests = existingFiles(platformManifestPaths, cwd);
+  const derivedManifests = platformManifestPathsFromBuildSummary(resolvedBuildSummary, cwd);
+  const platformManifests = [...new Set([...configuredManifests, ...derivedManifests])];
+  const loadedConfig = loadBuildchainConfig(cwd);
+  const anchorManifest = loadConfiguredAnchorManifest(cwd, loadedConfig);
+  const anchorManifestPath = anchorManifest?.path ? path.resolve(cwd, anchorManifest.path) : "";
+  const transactionJson = {
+    command: "finalize",
+    transaction: result.transaction,
+    validation: result.validation || { valid: true, errors: [] },
+  };
+  const passportSourceSha = result.transaction.source_sha || sourceSha;
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: result.transaction.exact_tag,
+    repository: `${owner}/${repo}`,
+    sourceSha: passportSourceSha,
+    line,
+    outputDir: resolvedOutputDir,
+    packageName: packageName || result.packageSet?.main?.name || "@kungfu-tech/buildchain",
+    packageVersion: result.transaction.version,
+    packageSetJson: result.packageSet ? JSON.stringify(result.packageSet) : "",
+    publishEvidenceJson: result.evidencePath,
+    trustedPublishingJson: JSON.stringify({
+      provider: "npm",
+      enabled: result.publishContract?.auth === "trusted-publishing",
+      auth: result.publishContract?.auth || "",
+      workflowRunId: result.transaction.run_id || "",
+    }),
+    transactionJson: JSON.stringify(transactionJson),
+    anchorManifestJson: anchorManifestPath && fs.existsSync(anchorManifestPath) ? anchorManifestPath : "",
+    buildSummaryJson: fs.existsSync(resolvedBuildSummary) ? resolvedBuildSummary : "",
+    platformManifestJsons: platformManifests,
+    distTagEvidenceJson: result.distTagEvidencePath || "",
+    releaseJsonExtra: JSON.stringify({
+      channel,
+      targetRef,
+      releaseSha: result.transaction.release_sha,
+      releaseMaterialSha: result.transaction.release_material_sha,
+      publishToolingSha: result.transaction.publish_tooling_sha,
+      releaseStateRef: `refs/heads/${result.transaction.state_ref}`,
+    }),
+    publishJson: JSON.stringify({
+      auth: result.publishContract?.auth || "",
+      distTag: result.publishContract?.distTag || "",
+      packageSetOrder: result.publishContract?.packageSetOrder || "",
+      registry: "https://registry.npmjs.org/",
+    }),
+    workflow: {
+      name: process.env.GITHUB_WORKFLOW || "",
+      runId: result.transaction.run_id || "",
+      runAttempt: process.env.GITHUB_RUN_ATTEMPT || "",
+      url: process.env.GITHUB_SERVER_URL && process.env.GITHUB_REPOSITORY && result.transaction.run_id
+        ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${result.transaction.run_id}`
+        : "",
+      runnerKind: process.env.BUILDCHAIN_RUNNER_KIND || "github-hosted",
+      runnerOs: process.env.RUNNER_OS || process.platform,
+      runnerArch: process.env.RUNNER_ARCH || process.arch,
+      runnerImage: process.env.ImageOS || "",
+    },
+  });
+  const durable = await persistDurableReleaseTransaction({
+    octokit: result.octokit,
+    owner: result.owner,
+    repo: result.repo,
+    cwd: result.cwd,
+    transaction: result.transaction,
+    evidencePath: result.evidencePath,
+    extraFiles: releasePassportArtifactFiles(collected.outputDir),
+  });
+  return {
+    ...result,
+    durable,
+    releasePassport: {
+      outputDir: collected.outputDir,
+      passportPath: path.join(collected.outputDir, "buildchain.release.json"),
+      durablePath: "release-passport/buildchain.release.json",
+      stateSha: durable?.sha || "",
+      files: collected.files,
+    },
+  };
+}
+
 async function beginTransactionFinalization(result, actor, runId) {
   if (!result?.transaction || result.transaction.state === "finalizing" || result.transaction.state === "complete") {
     return result;
@@ -1429,11 +1733,7 @@ async function completeTransactionFinalization(result, actor, runId) {
 }
 
 async function getCommitInfo(octokit, owner, repo, sha) {
-  const { data } = await octokit.rest.git.getCommit({
-    owner,
-    repo,
-    commit_sha: sha,
-  });
+  const { data } = await getGitCommitWithRetry({ octokit, owner, repo, commitSha: sha });
   return {
     treeSha: data.tree?.sha,
     parents: (data.parents || []).map((parent) => parent.sha),
@@ -2047,6 +2347,10 @@ async function promoteBuildchainRefs({
   publishDistTag = "",
   publishPackageSetOrder = "",
   publishPackageMain = "",
+  releasePassport = true,
+  releasePassportOutputDir = ".buildchain/release-passport",
+  releasePassportBuildSummaryPath = ".buildchain/artifacts/build-summary.json",
+  releasePassportPlatformManifestPaths = "",
   actor = process.env.GITHUB_ACTOR || process.env.USER || "",
   runId = process.env.GITHUB_RUN_ID || "",
   publishTransactionOverride = false,
@@ -2771,11 +3075,7 @@ async function promoteBuildchainRefs({
       env: strategyEnv,
     });
 
-    const { data: baseCommit } = await octokit.rest.git.getCommit({
-      owner,
-      repo,
-      commit_sha: baseSha,
-    });
+    const { data: baseCommit } = await getGitCommitWithRetry({ octokit, owner, repo, commitSha: baseSha });
     const tree = [];
     for (const file of changedFiles) {
       const { data: blob } = await octokit.rest.git.createBlob({
@@ -2913,8 +3213,23 @@ async function promoteBuildchainRefs({
     latestPublishTransaction = await beginTransactionFinalization(latestPublishTransaction, actor, runId);
   };
 
-  const markComplete = async () => {
+  const markComplete = async ({ channel, line } = {}) => {
     latestPublishTransaction = await completeTransactionFinalization(latestPublishTransaction, actor, runId);
+    latestPublishTransaction = await collectAndPersistReleasePassport({
+      result: latestPublishTransaction,
+      owner,
+      repo,
+      cwd,
+      sourceSha: sha,
+      targetRef,
+      channel: channel || rule.channel,
+      line: line || rule.releasePrefix || "",
+      packageName: publishPackageMain,
+      outputDir: releasePassportOutputDir,
+      buildSummaryPath: releasePassportBuildSummaryPath,
+      platformManifestPaths: splitPathList(releasePassportPlatformManifestPaths),
+      enabled: Boolean(releasePassport),
+    });
     return latestPublishTransaction;
   };
 
@@ -2933,6 +3248,13 @@ async function promoteBuildchainRefs({
         stateSha: latestPublishTransaction.durable?.sha,
         statePath: path.relative(cwd, latestPublishTransaction.statePath).split(path.sep).join("/"),
         evidencePath: path.relative(cwd, latestPublishTransaction.evidencePath).split(path.sep).join("/"),
+        releasePassportPath: latestPublishTransaction.releasePassport?.passportPath
+          ? path.relative(cwd, latestPublishTransaction.releasePassport.passportPath).split(path.sep).join("/")
+          : "",
+        releasePassportOutputDir: latestPublishTransaction.releasePassport?.outputDir
+          ? path.relative(cwd, latestPublishTransaction.releasePassport.outputDir).split(path.sep).join("/")
+          : "",
+        releasePassportStateSha: latestPublishTransaction.releasePassport?.stateSha || "",
         ...extra,
       },
     };
@@ -3055,7 +3377,7 @@ async function promoteBuildchainRefs({
     await ensureTag(selectedRelease.tag, releaseSha);
     await updateTag(majorRule.minorTag, releaseSha);
     await updateTag(majorRule.majorTag, releaseSha);
-    await markComplete();
+    await markComplete({ channel: majorRule.channel || "major", line: majorRule.releasePrefix });
 
     if (releaseCommit.versionStrategy?.next === "manual") {
       updates.push({
@@ -3065,7 +3387,7 @@ async function promoteBuildchainRefs({
         manifest: releaseCommit.anchorManifest?.path,
         sha: releaseSha,
       });
-      return {
+      return withPublishTransaction({
         owner,
         repo,
         sourceSha: sha,
@@ -3073,19 +3395,7 @@ async function promoteBuildchainRefs({
         nextAlphaRequired: true,
         targetRef,
         updates,
-        publishTransaction: latestPublishTransaction
-          ? {
-              id: latestPublishTransaction.transaction.id,
-              state: latestPublishTransaction.transaction.state,
-              exactTag: latestPublishTransaction.transaction.exact_tag,
-              releaseSha: latestPublishTransaction.transaction.release_sha,
-              stateRef: latestPublishTransaction.transaction.state_ref,
-              stateSha: latestPublishTransaction.durable?.sha,
-              statePath: path.relative(cwd, latestPublishTransaction.statePath).split(path.sep).join("/"),
-              evidencePath: path.relative(cwd, latestPublishTransaction.evidencePath).split(path.sep).join("/"),
-            }
-          : undefined,
-      };
+      });
     }
 
     const explicitAlphaTags = requestedTags

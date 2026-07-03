@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { initBuildchainRepo } from "../scripts/init-repo.mjs";
 import { npmPublishDryRun } from "../scripts/npm-publish-dry-run.mjs";
 import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
+import { verifyInfraContractEvidenceBundle } from "../scripts/infra-contract-core.mjs";
 import { validateBuildchainConfig } from "../packages/core/buildchain-config.js";
 import { detectPackageManager } from "../packages/core/package-manager.js";
 import {
@@ -40,7 +41,7 @@ function usage() {
   return `Usage:
   buildchain --help
   buildchain version
-  buildchain init [--cwd <dir>] [--type package|native|web-surface|anchored-package] [--force]
+  buildchain init [--cwd <dir>] [--type package|native|web-surface|infra-contract|anchored-package] [--force]
                   [--package-manager pnpm|npm|yarn] [--runner-preset <preset>]
                   [--artifact-name <template>]
   buildchain validate [--cwd <dir>] [--require-version-state]
@@ -60,8 +61,19 @@ function usage() {
   buildchain transaction inspect ...
   buildchain collect github-release --tag <tag> [--repository <owner/repo>]
                                     [--assets-dir <dir>] [--assets-json <json-or-path>]
-                                    [--release-json <json-or-path>] [--output-dir <dir>] [--json]
+                                    [--release-json <json-or-path>] [--package-set-json <json-or-path>]
+                                    [--product-name <name>]
+                                    [--publish-evidence-json <json-or-path>]
+                                    [--trusted-publishing-json <json-or-path>]
+                                    [--transaction-json <json-or-path>]
+                                    [--anchor-manifest-json <json-or-path>]
+                                    [--build-summary-json <json-or-path>]
+                                    [--platform-manifest-json <json-or-path>]...
+                                    [--dist-tag-evidence-json <json-or-path>]
+                                    [--release-extra-json <json-or-path>]
+                                    [--publish-json <json-or-path>] [--output-dir <dir>] [--json]
   buildchain verify release-passport <file-or-url> [--json]
+  buildchain verify infra-contract-evidence-bundle <file> [--json]
   buildchain verify observability-log <jsonl> [--min-events <n>]
                                              [--require-phase <csv>]
                                              [--require-component <csv>]
@@ -84,6 +96,7 @@ function usage() {
   buildchain span --event <name> [--phase <phase>] [--component <name>]
                   [--path <jsonl>] -- <command> [args...]
   buildchain web-surface ...
+  buildchain infra-contract ...
   buildchain publish-source <lock|manifest|verify-lock|validate-anchored-release> ...
   buildchain build-contract ...
 
@@ -96,7 +109,15 @@ Examples:
   buildchain span --event native.build -- cmake --build build
   buildchain collect github-release --tag v2.2.0 --assets-dir dist --output-dir .buildchain/release-passport
   buildchain verify release-passport .buildchain/release-passport/buildchain.release.json
+  buildchain verify infra-contract-evidence-bundle .buildchain/infra-contract-evidence-bundle.json
   buildchain verify observability-log .buildchain/logs/events.jsonl --min-events 4 --require-phase build
+  buildchain infra-contract --mode plan --source-sha <sha>
+  buildchain infra-contract --mode ci --source-sha <sha>
+  buildchain infra-contract --mode plan --source-sha <sha> --execute-adapter-commands true
+  buildchain infra-contract --mode apply --plan <plan.json> --source-sha <sha> --approval-id <id>
+  buildchain infra-contract --mode apply --plan <plan.json> --source-sha <sha> --approval-id <id> --dry-run false --execute-adapter-commands true
+  buildchain infra-contract --mode propagation-apply --propagation-plan <plan.json> --dry-run true
+  buildchain infra-contract --mode evidence-bundle --artifact <artifact.json> --propagation-result <result.json>
 `;
 }
 
@@ -652,8 +673,19 @@ async function main(argv = process.argv.slice(2)) {
       assetsDir: readFlag(collectArgs, "assets-dir", ""),
       assetsJson: readFlag(collectArgs, "assets-json", ""),
       releaseJson: readFlag(collectArgs, "release-json", ""),
+      productName: readFlag(collectArgs, "product-name", "Buildchain"),
       packageName: readFlag(collectArgs, "package-name", "@kungfu-tech/buildchain"),
       packageVersion: readFlag(collectArgs, "package-version", packageVersion()),
+      packageSetJson: readFlag(collectArgs, "package-set-json", ""),
+      publishEvidenceJson: readFlag(collectArgs, "publish-evidence-json", ""),
+      trustedPublishingJson: readFlag(collectArgs, "trusted-publishing-json", ""),
+      transactionJson: readFlag(collectArgs, "transaction-json", ""),
+      anchorManifestJson: readFlag(collectArgs, "anchor-manifest-json", ""),
+      buildSummaryJson: readFlag(collectArgs, "build-summary-json", ""),
+      platformManifestJsons: readRepeatedFlag(collectArgs, "platform-manifest-json"),
+      distTagEvidenceJson: readFlag(collectArgs, "dist-tag-evidence-json", ""),
+      releaseJsonExtra: readFlag(collectArgs, "release-extra-json", ""),
+      publishJson: readFlag(collectArgs, "publish-json", ""),
       workflow,
     });
     if (readBooleanFlag(collectArgs, "json")) {
@@ -684,6 +716,24 @@ async function main(argv = process.argv.slice(2)) {
       } else {
         process.stdout.write(`observability log: ${report.ok ? "ok" : "failed"}\n`);
         process.stdout.write(`events: ${report.summary.eventCount}\n`);
+        for (const entry of report.issues) {
+          process.stdout.write(`- ${entry.level}: ${entry.code}: ${entry.message}\n`);
+        }
+      }
+      process.exitCode = report.ok ? 0 : 1;
+      return;
+    }
+    if (subcommand === "infra-contract-evidence-bundle") {
+      if (!location) {
+        throw new Error("usage: buildchain verify infra-contract-evidence-bundle <file>");
+      }
+      const bundle = JSON.parse(fs.readFileSync(path.resolve(location), "utf8"));
+      const report = verifyInfraContractEvidenceBundle(bundle);
+      if (readBooleanFlag(verifyArgs, "json")) {
+        printJson(report);
+      } else {
+        process.stdout.write(`infra contract evidence bundle: ${report.ok ? "ok" : "failed"}\n`);
+        process.stdout.write(`artifact: ${report.artifactHash || "unknown"}\n`);
         for (const entry of report.issues) {
           process.stdout.write(`- ${entry.level}: ${entry.code}: ${entry.message}\n`);
         }
@@ -750,6 +800,11 @@ async function main(argv = process.argv.slice(2)) {
 
   if (command === "web-surface") {
     runScript("web-surface.mjs", args);
+    return;
+  }
+
+  if (command === "infra-contract") {
+    runScript("infra-contract.mjs", args);
     return;
   }
 

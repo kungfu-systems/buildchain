@@ -43,6 +43,7 @@ expected ref flow requires a major bump.
 | 2026-07-02 | Buildchain toolkit observability is a minor surface. | `v2.1` | It adds the public logging SDK, CLI observability commands, and package subpaths that consumers can import. |
 | 2026-07-02 | Release passport and binary distribution are a minor surface. | `v2.2` | They add agent-readable release passport files, artifact evidence, impact ledger, agent index, GitHub Release collection and verification commands, and standalone binary assets. |
 | 2026-07-02 | Web surface host mapping is a minor surface. | `v2.3` | It adds first-class multi-host surface bindings, reusable workflow URL outputs, per-surface deployment overrides, and an agent-readable fixture contract. |
+| 2026-07-03 | Infra contract lifecycle is a minor surface. | `v2.4` | It adds the provider-neutral `infra-contract` CLI command family, project type, adapter capability contract, lifecycle evidence bundle, propagation evidence, CI evidence mode, and consumer-facing contract artifacts. |
 
 ## Runner Policy
 
