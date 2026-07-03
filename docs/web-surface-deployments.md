@@ -373,7 +373,9 @@ The reusable workflow maps GitHub events to Buildchain web-surface semantics:
 The optional `buildchain-ref` input is empty by default. Empty keeps the
 web-surface run on the stable Buildchain runtime selected by the reusable
 workflow ref, normally `@v2`. A trusted maintainer can expose a
-`workflow_dispatch` input and pass it through for one-off train validation:
+`workflow_dispatch` input and pass it through for one-off train validation.
+See [`runtime-train-validation.md`](runtime-train-validation.md) for the shared
+train protocol and notification template:
 
 ```yaml
 on:
@@ -397,9 +399,11 @@ jobs:
 Only trusted `workflow_dispatch` runs by repository actors with write,
 maintain, or admin permission may use a non-empty runtime override. Train refs
 such as `train/v2/v2.3/site-source-of-truth` are temporary validation refs, not
-stable production dependencies. The web-surface deployment manifest records the
-resolved runtime SHA as `runtimeId` and the stable rollback ref as
-`rollbackPointer`.
+stable production dependencies or pending merge targets. They may remain for a
+retention window after release as a fast-use and rollback channel, with old
+trains handled by periodic Buildchain cleanup. The web-surface deployment
+manifest records the resolved runtime SHA as `runtimeId` and the stable
+rollback ref as `rollbackPointer`.
 
 The workflow deliberately plans and emits manifests by default. Live mutation is
 opt-in per channel:

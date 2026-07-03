@@ -103,14 +103,24 @@ release/vX/vX.Y -> publish-gate/major
 ```
 
 - Open normal changes against the relevant `dev/*` branch.
+- When a Buildchain change needs downstream validation before stable refs move,
+  publish a temporary runtime train ref such as
+  `train/v2/v2.3/<capability>` and ask consumers to run trusted
+  `workflow_dispatch` with `buildchain-ref` set to that train. Keep the pull
+  request against the `dev/*` branch; the train is only a validation pointer,
+  not a pending merge target. After validation succeeds, merge into the active
+  `dev/*` mainline and run the requested alpha or release promotion. The train
+  may remain for a retention window as a fast-use and rollback channel; old
+  trains are cleaned by a separate periodic cleanup task.
 - Merging into `alpha/*`, `release/*`, or `publish-gate/major` expresses a
   release intent. Buildchain promotion then creates version-state commits,
   exact tags, floating tags, npm publish evidence, and next-alpha state.
 - Manual promotion dispatch is dry-run only; non-dry-run promotion follows a
   successful protected workflow path.
 
-See [`docs/release-governance.md`](docs/release-governance.md) and
-[`docs/release-flow.md`](docs/release-flow.md).
+See [`docs/release-governance.md`](docs/release-governance.md),
+[`docs/release-flow.md`](docs/release-flow.md), and
+[`docs/runtime-train-validation.md`](docs/runtime-train-validation.md).
 
 ## License
 
