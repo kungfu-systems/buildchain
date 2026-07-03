@@ -180,11 +180,16 @@ or ref finalization needs a later promotion run.
 After a publish transaction reaches `complete`, the action generates the unified
 `buildchain-release-passport` in `.buildchain/release-passport` by default and
 persists those files under `release-passport/` in the durable release-state ref.
+Set `release-passport-product-name` to record the consumer product name, for
+example `Libnode`, instead of the default `Buildchain`.
 When present, the passport includes the aggregate build summary, platform
 artifact manifests, npm publish evidence, dist-tag promotion evidence, the
 release-state ref, trusted publishing metadata, and the Buildchain transaction
-result. Set `release-passport: "false"` only for a controlled recovery run that
-must skip passport generation.
+result. After the first passport upload, Buildchain backfills the durable
+release-state SHA into `buildchain.release.json` and persists the passport
+again, so the consumer-side passport is a complete audit entrypoint. Set
+`release-passport: "false"` only for a controlled recovery run that must skip
+passport generation.
 
 Finalization recovery is anchored to the durable transaction, not to a single
 workflow run SHA. After a generated version-state PR is merged, the current

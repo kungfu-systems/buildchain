@@ -68,6 +68,7 @@ async function main() {
   const publishTransactionOverride = core.getBooleanInput("publish-transaction-override");
   const releasePassport = core.getBooleanInput("release-passport");
   const releasePassportOutputDir = core.getInput("release-passport-output-dir");
+  const releasePassportProductName = core.getInput("release-passport-product-name");
   const releasePassportBuildSummaryPath = core.getInput("release-passport-build-summary-path");
   const releasePassportPlatformManifestPaths = core.getInput("release-passport-platform-manifest-paths");
   const octokit = github.getOctokit(token);
@@ -118,6 +119,7 @@ async function main() {
     publishToolingSha,
     releasePassport,
     releasePassportOutputDir,
+    releasePassportProductName,
     releasePassportBuildSummaryPath,
     releasePassportPlatformManifestPaths,
     actor: github.context.actor,

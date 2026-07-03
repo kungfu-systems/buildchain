@@ -156,7 +156,9 @@ the `release-passport/*` files into the durable `buildchain/release-state/...`
 ref. The passport is the stable release artifact for agents and people: it
 links the package set, npm publish evidence, dist-tag evidence, build summary,
 platform artifact manifests, trusted publishing metadata, release-state ref,
-and transaction result in one schema.
+durable release-state SHA, and transaction result in one schema. Consumer
+repositories can set `release-passport-product-name` so the passport names their
+product instead of the Buildchain default.
 
 ## Evidence
 
