@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "outputs": {
+    "bucketName": "example-cdk-preview",
+    "distributionId": "E-CDK-PREVIEW",
+    "stagingUrl": "https://cdk-preview.example"
+  },
+  "provenance": {
+    "adapter": "aws-cdk",
+    "source": "static-cloudformation-output-fixture",
+    "observedAt": "2026-07-03T00:00:00.000Z"
+  }
+}

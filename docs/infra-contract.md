@@ -63,7 +63,10 @@ provider calls:
 - `manual-observed` for existing reviewed resources;
 - `aws-cloudformation` for template plus stack output shapes;
 - `terraform` for plan/output JSON shapes;
+- `opentofu` for plan/output JSON shapes;
 - `pulumi` for preview/output JSON shapes;
+- `aws-cdk` for synthesized assembly plus stack output shapes;
+- `aws-cli` for generic desired request plus observed response shapes;
 - `custom-command` for user-defined validate, plan, observe, and approved apply
   hooks.
 
