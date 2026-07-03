@@ -62,6 +62,18 @@ inputs:
   publish-package-main:
     description: "Main npm package name for package-set visibility gating"
     default: ""
+  require-publish-source-lock:
+    description: "Require publish side effects to come from a resolved publish-gate source lock"
+    default: "false"
+  publish-source-ref:
+    description: "Resolved publish-gate source ref from the reusable build workflow"
+    default: ""
+  publish-source-sha:
+    description: "Resolved publish-gate source SHA from the reusable build workflow"
+    default: ""
+  publish-source-locked:
+    description: "Whether the reusable build workflow locked the publish source ref"
+    default: ""
   release-material-sha:
     description: "Material SHA that published artifacts must prove. Defaults to the generated release SHA."
     default: ""
@@ -71,6 +83,18 @@ inputs:
   publish-transaction-override:
     description: "Explicitly allow recovery from repair_required, abandoned, or failed_permanently transaction states"
     default: "false"
+  release-passport:
+    description: "Generate and persist the unified buildchain-release-passport after publish transaction completion"
+    default: "true"
+  release-passport-output-dir:
+    description: "Directory where the generated buildchain-release-passport files are written"
+    default: ".buildchain/release-passport"
+  release-passport-build-summary-path:
+    description: "Aggregate build summary JSON to include in buildchain.release.json when present"
+    default: ".buildchain/artifacts/build-summary.json"
+  release-passport-platform-manifest-paths:
+    description: "Optional comma- or newline-separated platform artifact manifest JSON paths to include"
+    default: ""
 outputs:
   sha:
     description: "Final promoted release or alpha commit SHA"
@@ -94,6 +118,12 @@ outputs:
     description: "Release transaction state file path"
   publish-evidence-path:
     description: "Publish evidence file path"
+  release-passport-path:
+    description: "Generated buildchain.release.json path"
+  release-passport-output-dir:
+    description: "Generated buildchain-release-passport directory"
+  release-passport-state-sha:
+    description: "Durable release-state commit SHA after uploading passport files"
   finalization-needed:
     description: "true when publish completed but protected ref finalization still needs a later run"
 runs:

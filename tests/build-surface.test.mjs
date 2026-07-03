@@ -18,14 +18,28 @@ import {
   verifyPublishSourceLock,
 } from "../scripts/build-contract-core.mjs";
 import { aggregateBuildSummaryCli } from "../scripts/aggregate-build-summary.mjs";
+import { aggregateDiagnosticsSummaryCli } from "../scripts/aggregate-diagnostics-summary.mjs";
 import {
   currentGitHubRefSha,
   resolvePublishSourceRefSha,
 } from "../scripts/publish-source-ref-resolver.mjs";
+import {
+  classifyBuildchainRuntimeRef,
+  normalizeRequestedRuntimeRef,
+  resolveRuntimeSelection,
+  validateRuntimeOverrideTrust,
+} from "../scripts/runtime-ref-core.mjs";
 import { resolvePublishSourceCli } from "../scripts/resolve-publish-source.mjs";
 import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
 import { verifyPublishSourceLockCli } from "../scripts/verify-publish-source-lock.mjs";
 import { validateBuildchainConfig } from "../packages/core/buildchain-config.js";
+import {
+  BUILDCHAIN_DIAGNOSTICS_CONTRACT,
+  BUILDCHAIN_DIAGNOSTICS_MANIFEST_CONTRACT,
+  BUILDCHAIN_DIAGNOSTICS_SUMMARY_CONTRACT,
+  BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT,
+  BUILDCHAIN_PROCESS_SAMPLE_SUMMARY_CONTRACT,
+} from "../packages/core/diagnostics.js";
 
 const root = path.resolve(
   path.dirname(new URL(import.meta.url).pathname),
@@ -54,6 +68,12 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /Setup Buildchain Node\.js with fnm/);
   assert.match(workflow, /container:/);
   assert.match(workflow, /require-trusted-event:/);
+  assert.match(workflow, /buildchain-ref:/);
+  assert.match(workflow, /default: ""/);
+  assert.match(workflow, /Resolve Buildchain runtime/);
+  assert.match(workflow, /runtime-sha/);
+  assert.match(workflow, /buildchain-ref override is only allowed for trusted workflow_dispatch runs/);
+  assert.match(workflow, /refs\/heads\/train\/vN\/vN\.M\/<capability>/);
   assert.match(workflow, /publish-channel:/);
   assert.match(workflow, /publish-refs-json:/);
   assert.match(workflow, /publish-source-ref:/);
@@ -62,19 +82,78 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /resolve-publish-gate\.mjs/);
   assert.match(workflow, /resolve-publish-source\.mjs --mode lock/);
   assert.match(workflow, /resolve-publish-source\.mjs --mode manifest/);
+  assert.equal(
+    (workflow.match(/Install Buildchain runtime dependencies/g) || []).length,
+    4,
+  );
+  assert.equal(
+    (workflow.match(/pnpm@11\.7\.0 install --dir \.buildchain\/runtime --prod --frozen-lockfile --ignore-scripts/g) || []).length,
+    4,
+  );
   assert.match(workflow, /install-command:/);
   assert.match(workflow, /build-command:/);
   assert.match(workflow, /verify-command:/);
   assert.match(workflow, /artifact-name:/);
   assert.match(workflow, /artifact-name-template:/);
   assert.match(workflow, /expected-artifacts-json:/);
+  assert.match(workflow, /process-summary-path:/);
+  assert.match(workflow, /sample-process-tree:/);
+  assert.match(workflow, /process-sample-interval-ms:/);
+  assert.match(workflow, /requested-parallelism:/);
+  assert.match(workflow, /process-summary-required:/);
   assert.match(workflow, /manifest\.json/);
   assert.match(workflow, /summary\.json/);
+  assert.match(workflow, /diagnostics\.json/);
+  assert.match(workflow, /diagnostics-manifest\.json/);
+  assert.match(workflow, /events\.jsonl/);
+  assert.match(workflow, /process-summary\.json/);
+  assert.match(workflow, /process-samples\.jsonl/);
+  assert.match(workflow, /-diagnostics-\$\{\{ matrix\.platform\.id \}\}-/);
   assert.match(workflow, /build-summary-artifact:/);
+  assert.match(workflow, /build-diagnostics-summary-artifact:/);
+  assert.match(workflow, /diagnostics-summary-artifact-name:/);
+  assert.match(workflow, /build-diagnostics-summary-json:/);
+  assert.match(workflow, /diagnostics contract warning/);
+  assert.match(workflow, /sidecar manifest warning totals/);
+  assert.match(workflow, /downloaded-diagnostics/);
+  assert.match(workflow, /BUILDCHAIN_RUNTIME_SHA/);
+  assert.match(workflow, /BUILDCHAIN_RUNTIME_TRUST_DECISION/);
+  assert.match(workflow, /aggregate-diagnostics-summary\.mjs/);
+  assert.match(workflow, /diagnostics-summary\.json/);
+  assert.match(workflow, /-diagnostics-summary-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/);
+  assert.match(workflow, /Upload aggregate diagnostics summary/);
+  assert.equal(
+    (workflow.match(/manifest-artifact-name: \$\{\{ inputs\.artifact-name \}\}-manifest-\$\{\{ matrix\.platform\.id \}\}-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/g) || []).length,
+    2,
+  );
+  assert.equal(
+    (workflow.match(/diagnostics-artifact-name: \$\{\{ inputs\.artifact-name \}\}-diagnostics-\$\{\{ matrix\.platform\.id \}\}-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/g) || []).length,
+    2,
+  );
+  assert.equal(
+    (workflow.match(/process-summary-path: \$\{\{ inputs\.process-summary-path \|\| \(inputs\.sample-process-tree && '\.buildchain\/diagnostics\/process-summary\.json'\) \|\| '' \}\}/g) || []).length,
+    4,
+  );
+  assert.equal(
+    (workflow.match(/sample-process-tree: \$\{\{ inputs\.sample-process-tree \}\}/g) || []).length,
+    2,
+  );
+  assert.equal(
+    (workflow.match(/process-summary-required: \$\{\{ inputs\.require-build \}\}/g) || []).length,
+    2,
+  );
+  assert.equal(
+    (workflow.match(/process-summary-required: \$\{\{ inputs\.process-summary-path != '' \|\| inputs\.require-build \}\}/g) || []).length,
+    2,
+  );
   assert.match(workflow, /publish-allowed:/);
   assert.match(workflow, /publish-reason:/);
   assert.match(workflow, /publish-source-sha:/);
   assert.match(workflow, /release-manifest-json:/);
+  assert.equal(
+    (workflow.match(/artifact-summary-json: \$\{\{ steps\.summary\.outputs\.artifact-summary-json \}\}/g) || []).length,
+    1,
+  );
   assert.match(
     workflow,
     /ref: \$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/,
@@ -88,6 +167,9 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
     "utf8",
   );
   assert.match(workflow, /workflow_call:/);
+  assert.match(workflow, /buildchain-ref:/);
+  assert.match(workflow, /Resolve Buildchain runtime/);
+  assert.match(workflow, /runtime-sha/);
   assert.match(workflow, /Plan pull request preview/);
   assert.match(workflow, /github\.event\.action != 'closed'/);
   assert.match(workflow, /Plan pull request preview cleanup/);
@@ -117,6 +199,120 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
   assert.match(workflow, /include-hidden-files: true/);
   assert.match(workflow, /actions\/download-artifact@v7\.0\.0/);
+  assert.match(workflow, /--runtime-id "\$\{\{ needs\.runtime\.outputs\.runtime-sha \}\}"/);
+  assert.match(workflow, /--rollback-pointer "\$\{\{ needs\.runtime\.outputs\.rollback-ref \}\}"/);
+});
+
+test("runtime train override accepts only trusted manual train or exact SHA refs", () => {
+  assert.deepEqual(
+    resolveRuntimeSelection({ requestedRef: "", workflowRef: "kungfu-systems/buildchain/.github/workflows/.build.yml@v2" }),
+    {
+      requestedRef: "",
+      runtimeRef: "v2",
+      runtimeFullRef: "v2",
+      runtimeClass: "stable",
+      runtimeOverride: false,
+      workflowShellRef: "v2",
+      rollbackRef: "v2",
+      trustDecision: "stable-default",
+    },
+  );
+  assert.equal(
+    resolveRuntimeSelection({ requestedRef: "", workflowRef: "kungfu-systems/libnode/.github/workflows/build.yml@main" }).runtimeRef,
+    "v2",
+  );
+  assert.equal(
+    normalizeRequestedRuntimeRef("refs/heads/train/v2/v2.3/runtime-loader").ref,
+    "train/v2/v2.3/runtime-loader",
+  );
+  assert.equal(classifyBuildchainRuntimeRef("train/v2/v2.3/runtime-loader"), "train");
+  assert.equal(classifyBuildchainRuntimeRef("a".repeat(40)), "exact-sha");
+  assert.throws(
+    () => normalizeRequestedRuntimeRef("release/v2/v2.3"),
+    /buildchain-ref override must be/,
+  );
+  assert.deepEqual(
+    validateRuntimeOverrideTrust({
+      requestedRef: "train/v2/v2.3/runtime-loader",
+      eventName: "pull_request",
+      actorPermission: "admin",
+    }),
+    {
+      ok: false,
+      decision: "rejected-untrusted-event",
+      reason: "buildchain-ref override is only allowed for trusted workflow_dispatch runs",
+    },
+  );
+  assert.equal(
+    validateRuntimeOverrideTrust({
+      requestedRef: "train/v2/v2.3/runtime-loader",
+      eventName: "workflow_dispatch",
+      actorPermission: "write",
+    }).decision,
+    "override-accepted",
+  );
+});
+
+test("promote action exposes anchored publish source-lock gate", () => {
+  const action = fs.readFileSync(
+    path.join(root, "actions/promote-buildchain-ref/action.yml"),
+    "utf8",
+  );
+  const implementation = fs.readFileSync(
+    path.join(root, "actions/promote-buildchain-ref/index.js"),
+    "utf8",
+  );
+
+  assert.match(action, /require-publish-source-lock:/);
+  assert.match(action, /publish-source-ref:/);
+  assert.match(action, /publish-source-sha:/);
+  assert.match(action, /publish-source-locked:/);
+  assert.match(implementation, /validateAnchoredPackageRelease/);
+  assert.match(implementation, /requirePublishGateSourceLock: true/);
+  assert.match(implementation, /does not match promotion sha/);
+});
+
+test("publish source-lock docs distinguish source refs from promotion targets", () => {
+  const docs = fs.readFileSync(
+    path.join(root, "docs/reusable-build-surface.md"),
+    "utf8",
+  );
+
+  assert.match(docs, /target-ref: release\/v22\/v22\.22/);
+  assert.match(
+    docs,
+    /`target-ref` stays the Buildchain channel promotion target/,
+  );
+  assert.match(
+    docs,
+    /`publish-source-ref` is the reviewed source-lock branch/,
+  );
+  assert.match(
+    docs,
+    /source-lock branch must point at the exact channel-line commit/,
+  );
+  assert.match(docs, /it is not a replacement for `target-ref`/);
+});
+
+test("promote action docs describe publish source-lock inputs", () => {
+  const docs = fs.readFileSync(
+    path.join(root, "actions/promote-buildchain-ref/README.md"),
+    "utf8",
+  );
+
+  assert.match(docs, /require-publish-source-lock: "true"/);
+  assert.match(
+    docs,
+    /publish-source-ref: \$\{\{ needs\.build\.outputs\.publish-source-ref \}\}/,
+  );
+  assert.match(
+    docs,
+    /publish-source-sha: \$\{\{ needs\.build\.outputs\.publish-source-sha \}\}/,
+  );
+  assert.match(docs, /target-ref: release\/v22\/v22\.22/);
+  assert.match(docs, /`target-ref` remains the channel promotion target/);
+  assert.match(docs, /Direct `alpha\/\*` or `release\/\*` channel refs/);
+  assert.match(docs, /fails before any promotion or publish side effects begin/);
 });
 
 test("runner presets resolve to explicit matrices", () => {
@@ -627,7 +823,7 @@ test("libnode-shaped fixture declares the build lifecycle contract", () => {
   );
   assert.deepEqual(
     summary.lifecycleStages.map((stage) => stage.name),
-    ["install", "build", "verify"],
+    ["install", "build", "verify", "publish"],
   );
 });
 
@@ -646,6 +842,28 @@ test("runLifecycle writes deterministic artifact manifest", () => {
     process.env.BUILDCHAIN_SOURCE_SHA = "2".repeat(40);
     process.env.BUILDCHAIN_SOURCE_REF =
       "publish-gate/release/v22/v22.22/22.22.3-kf.0";
+    const processSummaryPath = path.join(workspace, ".buildchain/diagnostics/process-summary.json");
+    const processSamplesPath = path.join(workspace, ".buildchain/diagnostics/process-samples.jsonl");
+    fs.mkdirSync(path.dirname(processSummaryPath), { recursive: true });
+    fs.writeFileSync(processSamplesPath, `${JSON.stringify({
+      timestamp: "2026-07-02T00:00:00.000Z",
+      processes: [{ command: "clang++", cpu: 25 }],
+    })}\n`);
+    fs.writeFileSync(processSummaryPath, `${JSON.stringify({
+      schemaVersion: 1,
+      contract: BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT,
+      samplesPath: ".buildchain/diagnostics/process-samples.jsonl",
+      summary: {
+        schemaVersion: 1,
+        contract: BUILDCHAIN_PROCESS_SAMPLE_SUMMARY_CONTRACT,
+        requestedParallelism: 8,
+        requestedParallelismSource: "explicit",
+        observedConcurrency: { max: 3, ratioToRequestedMax: 0.375 },
+        sampleCount: 1,
+        categories: { compiler: 2, "build-tool": 1 },
+        topCommands: [{ command: "clang++", count: 2 }],
+      },
+    })}\n`);
     runLifecycle({
       cwd: fixture,
       stageName: "install",
@@ -662,6 +880,7 @@ test("runLifecycle writes deterministic artifact manifest", () => {
       artifactName: "libnode-shaped-linux-x64-abc123",
       platformId: "linux-x64",
       platformName: "Linux x64",
+      processSummaryPath: ".buildchain/diagnostics/process-summary.json",
     });
     const manifest = JSON.parse(
       fs.readFileSync(
@@ -684,6 +903,16 @@ test("runLifecycle writes deterministic artifact manifest", () => {
     );
     assert.equal(manifest.summary.fileCount, 2);
     assert.ok(manifest.summary.totalBytes > 0);
+    assert.ok(manifest.observability.lifecycle.stages.install);
+    assert.ok(manifest.observability.lifecycle.stages.build);
+    assert.equal(
+      manifest.observability.diagnostics.path,
+      ".buildchain/artifacts/linux-x64/diagnostics.json",
+    );
+    assert.equal(
+      manifest.observability.diagnostics.manifestPath,
+      ".buildchain/artifacts/linux-x64/diagnostics-manifest.json",
+    );
     assert.equal(manifest.expectedArtifacts.ok, true);
     assert.deepEqual(
       manifest.files.map((file) => file.path),
@@ -695,8 +924,164 @@ test("runLifecycle writes deterministic artifact manifest", () => {
     assert.ok(
       manifest.files.every((file) => /^[a-f0-9]{64}$/.test(file.sha256)),
     );
+    const diagnostics = JSON.parse(
+      fs.readFileSync(
+        path.join(workspace, ".buildchain/artifacts/linux-x64/diagnostics.json"),
+        "utf8",
+      ),
+    );
+    assert.equal(diagnostics.contract, "kungfu-buildchain-diagnostics");
+    assert.equal(diagnostics.lifecycleObservability.stages.install.eventCount > 0, true);
+    assert.equal(diagnostics.lifecycleObservability.stages.build.eventCount > 0, true);
+    assert.equal(diagnostics.native.enabled, true);
+    assert.equal(diagnostics.native.profile.sampleProcessTree, true);
+    assert.equal(diagnostics.native.profile.compilerCache, "auto");
+    assert.deepEqual(
+      diagnostics.native.profile.expectedTools,
+      ["node", "pnpm", "git", "cmake", "ninja", "ccache", "sccache"],
+    );
+    assert.deepEqual(
+      diagnostics.buildchain.config.diagnostics.native.artifactDirs,
+      ["dist", "build"],
+    );
+    assert.equal(diagnostics.native.artifactDirs[0].path, "dist");
+    assert.equal(diagnostics.native.artifactDirs[0].exists, true);
+    assert.equal(diagnostics.native.artifactDirs[1].path, "build");
+    assert.equal(diagnostics.native.artifactDirs[1].exists, false);
+    assert.equal(diagnostics.native.cacheDirs[0].path, ".ccache");
+    assert.equal(diagnostics.native.cacheDirs[0].exists, false);
+    assert.equal(diagnostics.process.requestedParallelism, 8);
+    assert.equal(diagnostics.process.observedConcurrency.max, 3);
+    assert.equal(diagnostics.links.artifactName, "libnode-shaped-linux-x64-abc123");
+    assert.equal(diagnostics.links.platformId, "linux-x64");
+    assert.equal(diagnostics.links.processSummary, ".buildchain/diagnostics/process-summary.json");
+    assert.equal(diagnostics.links.diagnosticsManifest, ".buildchain/artifacts/linux-x64/diagnostics-manifest.json");
+    assert.equal(diagnostics.links.diagnosticsEvents, ".buildchain/artifacts/linux-x64/events.jsonl");
+    assert.equal(diagnostics.links.diagnosticsProcessSummary, ".buildchain/artifacts/linux-x64/process-summary.json");
+    assert.equal(diagnostics.links.diagnosticsProcessSamples, ".buildchain/artifacts/linux-x64/process-samples.jsonl");
+    const diagnosticsManifest = JSON.parse(
+      fs.readFileSync(
+        path.join(workspace, ".buildchain/artifacts/linux-x64/diagnostics-manifest.json"),
+        "utf8",
+      ),
+    );
+    assert.equal(diagnosticsManifest.contract, BUILDCHAIN_DIAGNOSTICS_MANIFEST_CONTRACT);
+    assert.equal(diagnosticsManifest.artifactName, "libnode-shaped-linux-x64-abc123");
+    assert.equal(diagnosticsManifest.platformId, "linux-x64");
+    assert.equal(diagnosticsManifest.fileCount, 4);
+    assert.deepEqual(
+      diagnosticsManifest.files.map((file) => file.kind),
+      ["diagnostics", "events", "process-summary", "process-samples"],
+    );
+    assert.ok(diagnosticsManifest.files.every((file) => file.bytes > 0));
+    assert.ok(diagnosticsManifest.files.every((file) => /^[a-f0-9]{64}$/.test(file.sha256)));
+    assert.equal(
+      diagnosticsManifest.files.find((file) => file.kind === "diagnostics").path,
+      ".buildchain/artifacts/linux-x64/diagnostics.json",
+    );
+    assert.ok(fs.existsSync(path.join(workspace, ".buildchain/artifacts/linux-x64/events.jsonl")));
+    assert.ok(fs.existsSync(path.join(workspace, ".buildchain/artifacts/linux-x64/diagnostics-manifest.json")));
+    assert.ok(fs.existsSync(path.join(workspace, ".buildchain/artifacts/linux-x64/process-summary.json")));
+    assert.ok(fs.existsSync(path.join(workspace, ".buildchain/artifacts/linux-x64/process-samples.jsonl")));
   } finally {
     process.env = originalEnv;
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("runLifecycle samples a configured lifecycle stage", () => {
+  const workspace = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-sampled-lifecycle-"),
+  );
+  const fixtureSource = path.join(root, "fixtures/libnode-shaped");
+  const fixture = path.join(workspace, "fixtures/libnode-shaped");
+  fs.cpSync(fixtureSource, fixture, { recursive: true });
+
+  try {
+    runLifecycle({
+      cwd: fixture,
+      stageName: "install",
+      required: true,
+      workspace,
+    });
+    runLifecycle({
+      cwd: fixture,
+      stageName: "build",
+      required: true,
+      workspace,
+      artifactPaths: ["fixtures/libnode-shaped/dist"],
+      manifestPath: ".buildchain/artifacts/linux-x64/manifest-sampled.json",
+      summaryPath: ".buildchain/artifacts/linux-x64/summary-sampled.json",
+      diagnosticsPath: ".buildchain/artifacts/linux-x64/diagnostics-sampled.json",
+      artifactName: "libnode-shaped-linux-x64-sampled",
+      platformId: "linux-x64",
+      platformName: "Linux x64",
+      processSummaryPath: ".buildchain/diagnostics/process-summary.json",
+      processSamplesPath: ".buildchain/diagnostics/process-samples.jsonl",
+      sampleProcessTree: true,
+      processSampleIntervalMs: 1000,
+      requestedParallelism: 4,
+    });
+
+    const processSummary = JSON.parse(
+      fs.readFileSync(
+        path.join(workspace, ".buildchain/diagnostics/process-summary.json"),
+        "utf8",
+      ),
+    );
+    const diagnostics = JSON.parse(
+      fs.readFileSync(
+        path.join(workspace, ".buildchain/artifacts/linux-x64/diagnostics-sampled.json"),
+        "utf8",
+      ),
+    );
+    assert.equal(processSummary.contract, BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT);
+    assert.equal(processSummary.summary.requestedParallelism, 4);
+    assert.ok(processSummary.summary.sampleCount >= 1);
+    assert.equal(diagnostics.process.requestedParallelism, 4);
+    assert.equal(diagnostics.links.processSummary, ".buildchain/diagnostics/process-summary.json");
+    assert.equal(diagnostics.links.diagnosticsManifest, ".buildchain/artifacts/linux-x64/diagnostics-manifest.json");
+    assert.equal(diagnostics.links.diagnosticsProcessSummary, ".buildchain/artifacts/linux-x64/process-summary.json");
+    assert.equal(diagnostics.links.diagnosticsProcessSamples, ".buildchain/artifacts/linux-x64/process-samples.jsonl");
+    assert.ok(fs.existsSync(path.join(workspace, ".buildchain/diagnostics/process-samples.jsonl")));
+    assert.ok(fs.existsSync(path.join(workspace, ".buildchain/artifacts/linux-x64/diagnostics-manifest.json")));
+    assert.ok(fs.existsSync(path.join(workspace, ".buildchain/artifacts/linux-x64/process-summary.json")));
+    assert.ok(fs.existsSync(path.join(workspace, ".buildchain/artifacts/linux-x64/process-samples.jsonl")));
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("runLifecycle can treat a missing process summary as optional", () => {
+  const workspace = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-optional-process-summary-"),
+  );
+  const fixtureSource = path.join(root, "fixtures/libnode-shaped");
+  const fixture = path.join(workspace, "fixtures/libnode-shaped");
+  fs.cpSync(fixtureSource, fixture, { recursive: true });
+
+  try {
+    runLifecycle({
+      cwd: fixture,
+      command: 'node -e "console.log(\'optional process summary smoke\')"',
+      required: true,
+      workspace,
+      artifactPaths: ["fixtures/libnode-shaped/dist"],
+      manifestPath: ".buildchain/artifacts/linux-x64/manifest-optional-process.json",
+      diagnosticsPath: ".buildchain/artifacts/linux-x64/diagnostics-optional-process.json",
+      processSummaryPath: ".buildchain/diagnostics/missing-process-summary.json",
+      processSummaryRequired: false,
+    });
+    const diagnostics = JSON.parse(
+      fs.readFileSync(
+        path.join(workspace, ".buildchain/artifacts/linux-x64/diagnostics-optional-process.json"),
+        "utf8",
+      ),
+    );
+    assert.equal(diagnostics.process.sampleCount, 0);
+    assert.equal(diagnostics.links.processSummary, ".buildchain/diagnostics/missing-process-summary.json");
+    assert.equal(diagnostics.links.diagnosticsProcessSummary, undefined);
+  } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
   }
 });
@@ -772,6 +1157,8 @@ test("aggregate build summary reads uploaded platform manifests", () => {
     assert.equal(summary.platformCount, 1);
     assert.equal(summary.fileCount, 2);
     assert.ok(summary.totalBytes > 0);
+    assert.ok(summary.observability.lifecycle.stages.install);
+    assert.ok(summary.observability.lifecycle.stages.build);
     assert.deepEqual(summary.publishGate, {
       trustedEvent: true,
       channel: "release",
@@ -788,7 +1175,88 @@ test("aggregate build summary reads uploaded platform manifests", () => {
       releaseManifest: '{"schema":1}',
     });
     assert.equal(summary.platforms[0].artifactName, "libnode-linux-x64-sha");
+    assert.ok(summary.platforms[0].observability.lifecycle.stages.build);
     assert.equal(summary.platforms[0].expectedArtifacts.ok, true);
+  } finally {
+    process.env = originalEnv;
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("aggregate diagnostics summary reads uploaded platform diagnostics", () => {
+  const workspace = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-diagnostics-summary-"),
+  );
+  const fixtureSource = path.join(root, "fixtures/libnode-shaped");
+  const fixture = path.join(workspace, "fixtures/libnode-shaped");
+  fs.cpSync(fixtureSource, fixture, { recursive: true });
+
+  const originalEnv = { ...process.env };
+  try {
+    runLifecycle({
+      cwd: fixture,
+      stageName: "install",
+      required: true,
+      workspace,
+    });
+    runLifecycle({
+      cwd: fixture,
+      stageName: "build",
+      required: true,
+      workspace,
+      artifactPaths: ["fixtures/libnode-shaped/dist"],
+      manifestPath:
+        ".buildchain/uploaded/libnode-diagnostics-linux-x64-sha/manifest.json",
+      summaryPath:
+        ".buildchain/uploaded/libnode-diagnostics-linux-x64-sha/summary.json",
+      diagnosticsPath:
+        ".buildchain/uploaded/libnode-diagnostics-linux-x64-sha/diagnostics.json",
+      artifactName: "libnode-linux-x64-sha",
+      platformId: "linux-x64",
+      platformName: "Linux x64",
+    });
+
+    process.env.BUILDCHAIN_DIAGNOSTICS_INPUT = path.join(
+      workspace,
+      ".buildchain/uploaded",
+    );
+    process.env.BUILDCHAIN_DIAGNOSTICS_OUTPUT = path.join(
+      workspace,
+      ".buildchain/artifacts/diagnostics-summary.json",
+    );
+    process.env.BUILDCHAIN_PLATFORM_COUNT = "1";
+    process.env.GITHUB_OUTPUT = path.join(workspace, "github-output.txt");
+    const summary = aggregateDiagnosticsSummaryCli();
+
+    assert.equal(summary.contract, BUILDCHAIN_DIAGNOSTICS_SUMMARY_CONTRACT);
+    assert.equal(summary.count, 1);
+    assert.equal(summary.diagnosticsContractWarningCount, 0);
+    assert.equal(summary.diagnosticsManifestWarningCount, 0);
+    assert.equal(summary.platforms[0].fileCount, 2);
+    assert.ok(summary.platforms[0].lifecycle.build);
+    assert.equal(summary.platforms[0].diagnosticsContract.status, "verified");
+    assert.equal(summary.platforms[0].diagnosticsContract.actual, BUILDCHAIN_DIAGNOSTICS_CONTRACT);
+    assert.equal(summary.platforms[0].diagnosticsManifest.status, "verified");
+    assert.equal(summary.platforms[0].diagnosticsManifest.fileCount, 2);
+    assert.deepEqual(
+      summary.platforms[0].diagnosticsManifest.files.map((file) => file.kind),
+      ["diagnostics", "events"],
+    );
+    assert.equal(summary.platforms[0].links.artifactName, "libnode-linux-x64-sha");
+    assert.equal(summary.platforms[0].links.platformId, "linux-x64");
+    assert.ok(fs.existsSync(process.env.BUILDCHAIN_DIAGNOSTICS_OUTPUT));
+    const outputs = fs.readFileSync(process.env.GITHUB_OUTPUT, "utf8");
+    assert.match(outputs, /diagnostics-summary-path=/);
+    assert.match(outputs, /diagnostics-summary-json=/);
+    const diagnosticsSummaryOutput = outputs
+      .split(/\r?\n/)
+      .find((line) => line.startsWith("diagnostics-summary-json="));
+    assert.ok(diagnosticsSummaryOutput);
+    const diagnosticsSummaryJson = JSON.parse(
+      diagnosticsSummaryOutput.slice("diagnostics-summary-json=".length),
+    );
+    assert.equal(diagnosticsSummaryJson.diagnosticsManifestWarningCount, 0);
+    assert.equal(diagnosticsSummaryJson.diagnosticsContractWarningCount, 0);
   } finally {
     process.env = originalEnv;
     fs.rmSync(workspace, { recursive: true, force: true });
@@ -816,6 +1284,18 @@ test("run-lifecycle action accepts hyphenated GitHub Action inputs", () => {
       required: true,
       workspace,
     });
+    const processSummaryPath = path.join(workspace, ".buildchain/diagnostics/action-process-summary.json");
+    fs.mkdirSync(path.dirname(processSummaryPath), { recursive: true });
+    fs.writeFileSync(processSummaryPath, `${JSON.stringify({
+      schemaVersion: 1,
+      contract: BUILDCHAIN_PROCESS_SAMPLE_SUMMARY_CONTRACT,
+      requestedParallelism: 4,
+      requestedParallelismSource: "explicit",
+      observedConcurrency: { max: 2, ratioToRequestedMax: 0.5 },
+      sampleCount: 1,
+      categories: { compiler: 1 },
+      topCommands: [{ command: "clang++", count: 1 }],
+    })}\n`);
     const manifestPath = path.join(
       workspace,
       ".buildchain/artifacts/linux-x64/manifest-action.json",
@@ -833,6 +1313,8 @@ test("run-lifecycle action accepts hyphenated GitHub Action inputs", () => {
           INPUT_STAGE: "verify",
           INPUT_REQUIRED: "true",
           "INPUT_ARTIFACT-NAME": "libnode-shaped-linux-x64-test",
+          "INPUT_MANIFEST-ARTIFACT-NAME": "libnode-manifest-linux-x64-test",
+          "INPUT_DIAGNOSTICS-ARTIFACT-NAME": "libnode-diagnostics-linux-x64-test",
           "INPUT_PLATFORM-ID": "linux-x64",
           "INPUT_PLATFORM-NAME": "Linux x64",
           "INPUT_ARTIFACT-PATHS": "fixture/dist",
@@ -842,6 +1324,7 @@ test("run-lifecycle action accepts hyphenated GitHub Action inputs", () => {
             ".buildchain/artifacts/linux-x64/summary-action.json",
           "INPUT_EXPECTED-ARTIFACTS-JSON":
             '{"minFiles":2,"requiredPaths":["fixture/dist/install.txt","fixture/dist/libnode-shaped.txt"]}',
+          "INPUT_PROCESS-SUMMARY-PATH": ".buildchain/diagnostics/action-process-summary.json",
         },
         encoding: "utf8",
       },
@@ -858,15 +1341,95 @@ test("run-lifecycle action accepts hyphenated GitHub Action inputs", () => {
       ),
     );
     const outputs = fs.readFileSync(outputPath, "utf8");
+    const diagnostics = JSON.parse(
+      fs.readFileSync(
+        path.join(workspace, ".buildchain/artifacts/linux-x64/diagnostics.json"),
+        "utf8",
+      ),
+    );
     assert.equal(manifest.artifactName, "libnode-shaped-linux-x64-test");
     assert.equal(manifest.platform.id, "linux-x64");
     assert.equal(summary.artifactName, "libnode-shaped-linux-x64-test");
     assert.match(outputs, /artifact-summary-json=/);
     assert.match(outputs, /expected-artifacts-ok=true/);
+    assert.equal(diagnostics.process.requestedParallelism, 4);
+    assert.equal(diagnostics.process.observedConcurrency.max, 2);
+    assert.equal(diagnostics.links.artifactName, "libnode-shaped-linux-x64-test");
+    assert.equal(diagnostics.links.manifestArtifactName, "libnode-manifest-linux-x64-test");
+    assert.equal(diagnostics.links.diagnosticsArtifactName, "libnode-diagnostics-linux-x64-test");
+    assert.equal(diagnostics.links.diagnosticsManifest, ".buildchain/artifacts/linux-x64/diagnostics-manifest.json");
+    assert.equal(diagnostics.links.processSummary, ".buildchain/diagnostics/action-process-summary.json");
+    assert.ok(fs.existsSync(path.join(workspace, ".buildchain/artifacts/linux-x64/diagnostics-manifest.json")));
     assert.deepEqual(
       manifest.files.map((file) => file.path),
       ["fixture/dist/install.txt", "fixture/dist/libnode-shaped.txt"],
     );
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("run-lifecycle action samples a configured lifecycle stage from the bundled dist", () => {
+  const workspace = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-action-sampled-"),
+  );
+  const fixtureSource = path.join(root, "fixtures/libnode-shaped");
+  const fixture = path.join(workspace, "fixture");
+  fs.cpSync(fixtureSource, fixture, { recursive: true });
+
+  try {
+    runLifecycle({
+      cwd: fixture,
+      stageName: "install",
+      required: true,
+      workspace,
+    });
+    const outputPath = path.join(workspace, "github-output-sampled.txt");
+    const result = spawnSync(
+      process.execPath,
+      [path.join(root, "actions/run-lifecycle/dist/index.js")],
+      {
+        cwd: workspace,
+        env: {
+          ...process.env,
+          GITHUB_OUTPUT: outputPath,
+          INPUT_CWD: fixture,
+          INPUT_STAGE: "build",
+          INPUT_REQUIRED: "true",
+          "INPUT_ARTIFACT-NAME": "libnode-shaped-linux-x64-sampled-action",
+          "INPUT_PLATFORM-ID": "linux-x64",
+          "INPUT_PLATFORM-NAME": "Linux x64",
+          "INPUT_ARTIFACT-PATHS": "fixture/dist",
+          "INPUT_MANIFEST-PATH":
+            ".buildchain/artifacts/linux-x64/manifest-sampled-action.json",
+          "INPUT_DIAGNOSTICS-PATH":
+            ".buildchain/artifacts/linux-x64/diagnostics-sampled-action.json",
+          "INPUT_PROCESS-SUMMARY-PATH": ".buildchain/diagnostics/action-process-summary.json",
+          "INPUT_PROCESS-SAMPLES-PATH": ".buildchain/diagnostics/action-process-samples.jsonl",
+          "INPUT_SAMPLE-PROCESS-TREE": "true",
+          "INPUT_PROCESS-SAMPLE-INTERVAL-MS": "1000",
+          "INPUT_REQUESTED-PARALLELISM": "6",
+        },
+        encoding: "utf8",
+      },
+    );
+    assert.equal(result.status, 0, result.stderr || result.stdout);
+    const processSummary = JSON.parse(
+      fs.readFileSync(
+        path.join(workspace, ".buildchain/diagnostics/action-process-summary.json"),
+        "utf8",
+      ),
+    );
+    const diagnostics = JSON.parse(
+      fs.readFileSync(
+        path.join(workspace, ".buildchain/artifacts/linux-x64/diagnostics-sampled-action.json"),
+        "utf8",
+      ),
+    );
+    assert.equal(processSummary.contract, BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT);
+    assert.equal(processSummary.summary.requestedParallelism, 6);
+    assert.equal(diagnostics.process.requestedParallelism, 6);
+    assert.ok(fs.existsSync(path.join(workspace, ".buildchain/diagnostics/action-process-samples.jsonl")));
   } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
   }

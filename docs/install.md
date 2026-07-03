@@ -54,6 +54,31 @@ npx buildchain doctor --json
 Alpha releases publish to the `alpha` npm dist-tag. Stable releases publish to
 `latest`. Both are created by the protected Buildchain promotion transaction.
 
+Stable consumers should pin the exact Buildchain version they have validated,
+for example:
+
+```bash
+pnpm add -D @kungfu-tech/buildchain@2.2.5
+```
+
+If a repository dogfoods a just-published Buildchain version and pnpm's release
+age policy blocks the install, use a temporary package/version-specific
+`minimumReleaseAgeExclude` entry instead of weakening the registry policy for
+all packages:
+
+```json
+{
+  "pnpm": {
+    "minimumReleaseAgeExclude": [
+      "@kungfu-tech/buildchain@2.2.5"
+    ]
+  }
+}
+```
+
+Remove that entry after the package is old enough for the repository's normal
+policy. Do not use a broad exclude such as `@kungfu-tech/*` for this case.
+
 ## Repository Integration
 
 ```bash
@@ -75,4 +100,3 @@ buildchain explain release --passport buildchain.release.json --for agent --json
 
 The verifier fails closed when the passport or its sibling evidence files are
 missing required fields or mismatching artifact digests.
-
