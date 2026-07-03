@@ -60,11 +60,74 @@ function runCommand(command, args, options = {}) {
   };
 }
 
+function runShellCommand(command, options = {}) {
+  const shell = process.platform === "win32" ? (process.env.ComSpec || "cmd.exe") : (process.env.SHELL || "/bin/sh");
+  const args = process.platform === "win32" ? ["/d", "/s", "/c", command] : ["-c", command];
+  return runCommand(shell, args, options);
+}
+
 function assertCommandSuccess(result, label) {
   if (result.status !== 0) {
     throw new Error(`${label} failed: ${result.stderr || result.stdout || `exit ${result.status}`}`);
   }
   return result;
+}
+
+function parseOptionalJson(value) {
+  const trimmed = String(value || "").trim();
+  if (!trimmed) {
+    return undefined;
+  }
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    return undefined;
+  }
+}
+
+function redactCommandText(value) {
+  return String(value || "").replace(/(token|secret|password|passwd|key)=\S+/gi, "$1=<redacted>");
+}
+
+function collectCustomCommandEvidence({ cwd, config, stages, executeAdapterCommands, runner = runShellCommand }) {
+  if (config.infra.adapter !== "custom-command") {
+    return [];
+  }
+  const commands = config.infra.commands || {};
+  return stages
+    .filter((stage) => commands[stage])
+    .map((stage) => {
+      const command = commands[stage];
+      const base = {
+        stage,
+        command: redactCommandText(command),
+        executed: Boolean(executeAdapterCommands),
+        status: executeAdapterCommands ? "pending" : "planned",
+        exitCode: null,
+        stdout: "",
+        stderr: "",
+        output: undefined,
+      };
+      if (!executeAdapterCommands) {
+        return base;
+      }
+      const result = runner(command, { cwd });
+      return {
+        ...base,
+        status: result.status === 0 ? "passed" : "failed",
+        exitCode: result.status,
+        stdout: result.stdout,
+        stderr: result.stderr,
+        output: parseOptionalJson(result.stdout),
+      };
+    });
+}
+
+function assertAdapterEvidencePassed(evidence) {
+  const failed = evidence.find((entry) => entry.executed && entry.status !== "passed");
+  if (failed) {
+    throw new Error(`infra adapter ${failed.stage} command failed: ${failed.stderr || failed.stdout || `exit ${failed.exitCode}`}`);
+  }
 }
 
 function stableJson(value) {
@@ -232,12 +295,22 @@ export function createInfraContractPlan({
   cwd = process.cwd(),
   sourceSha = "",
   plannedAt = new Date().toISOString(),
+  executeAdapterCommands = false,
+  commandRunner = runShellCommand,
 } = {}) {
   const loadedConfig = loadBuildchainConfig(cwd);
   const config = assertInfraContractConfig(loadedConfig);
   const desiredFiles = configuredFileRecords(cwd, config.infra.desired);
   const contractFiles = configuredFileRecords(cwd, config.infra.contract);
   const capabilities = adapterCapabilities(config);
+  const adapterEvidence = collectCustomCommandEvidence({
+    cwd,
+    config,
+    stages: ["validate", "plan"],
+    executeAdapterCommands,
+    runner: commandRunner,
+  });
+  assertAdapterEvidencePassed(adapterEvidence);
   const consumerContracts = config.consumers.map((consumer) => ({
     ...consumer,
     sourceFile: readFileRecord(cwd, consumer.source),
@@ -266,6 +339,7 @@ export function createInfraContractPlan({
       sourceSha256: consumer.sourceFile.sha256,
     })),
     adapterCapabilities: capabilities,
+    adapterEvidence,
     requiredApprovals: config.infra.applyMode === "disabled" ? [] : [config.infra.applyMode],
     issues: [],
   };
@@ -286,6 +360,8 @@ export function createInfraContractArtifact({
   applyRunId = "",
   observedAt = new Date().toISOString(),
   rollbackPointer = "",
+  executeAdapterCommands = false,
+  commandRunner = runShellCommand,
 } = {}) {
   const loadedConfig = loadBuildchainConfig(cwd);
   const config = assertInfraContractConfig(loadedConfig);
@@ -293,6 +369,14 @@ export function createInfraContractArtifact({
   if (selectedPlan.contract !== PLAN_CONTRACT) {
     throw new Error("infra-contract artifact requires an infra-contract plan");
   }
+  const adapterEvidence = collectCustomCommandEvidence({
+    cwd,
+    config,
+    stages: ["observe"],
+    executeAdapterCommands,
+    runner: commandRunner,
+  });
+  assertAdapterEvidencePassed(adapterEvidence);
   const normalizedContractFiles = configuredFileRecords(cwd, config.infra.contract);
   const artifactBase = {
     schemaVersion: 1,
@@ -326,6 +410,7 @@ export function createInfraContractArtifact({
         sha256,
         outputs: json?.outputs || json || {},
       })),
+      adapterEvidence,
     },
     consumers: selectedPlan.consumers,
     rollbackPointer,

@@ -50,6 +50,13 @@ aws-cli
 custom-command
 ```
 
+`custom-command` adapters declare command hooks under `[infra.commands]`.
+Buildchain records them as planned adapter evidence by default. Passing
+`--execute-adapter-commands true` to `plan` or `contract` executes the
+non-mutating `validate`, `plan`, or `observe` hooks and stores their exit status,
+stdout/stderr, and JSON stdout when present. The `apply` hook is still gated by
+the saved-plan apply path and is not executed by ordinary PR validation.
+
 Supported adoption modes:
 
 ```text
@@ -72,6 +79,9 @@ approved apply but fails closed before adapter mutation execution.
 ```sh
 buildchain infra-contract --mode validate
 buildchain infra-contract --mode plan --source-sha "$GITHUB_SHA" \
+  --output .buildchain/infra-contract-plan.json
+buildchain infra-contract --mode plan --source-sha "$GITHUB_SHA" \
+  --execute-adapter-commands true \
   --output .buildchain/infra-contract-plan.json
 buildchain infra-contract --mode contract \
   --plan .buildchain/infra-contract-plan.json \

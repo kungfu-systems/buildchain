@@ -241,6 +241,61 @@ test("infra-contract CLI propagation-apply writes a dry-run PR plan", () => {
   assert.equal(result.operations.length, 2);
 });
 
+test("infra-contract CLI plan can execute custom-command adapter evidence", () => {
+  const cwd = tempDir("infra-contract-cli-custom-command");
+  fs.cpSync(path.join(root, "fixtures/infra-contract-shaped"), cwd, { recursive: true });
+  fs.mkdirSync(path.join(cwd, "scripts"), { recursive: true });
+  fs.writeFileSync(
+    path.join(cwd, "scripts", "adapter.mjs"),
+    "console.log(JSON.stringify({ stage: process.argv[2], ok: true }));\n",
+  );
+  fs.writeFileSync(
+    path.join(cwd, "buildchain.toml"),
+    `
+schema = 1
+
+[project]
+type = "infra-contract"
+name = "infra-custom-command"
+
+[infra]
+adapter = "custom-command"
+adoption_mode = "observe-only"
+apply = "disabled"
+desired = ["desired/site-kungfu-tech.json"]
+contract = ["outputs/site-kungfu-tech.json"]
+
+[infra.commands]
+validate = "node scripts/adapter.mjs validate"
+plan = "node scripts/adapter.mjs plan"
+
+[[consumers]]
+repo = "kungfu-systems/site-kungfu-tech"
+path = "infra/outputs.json"
+source = "outputs/site-kungfu-tech.json"
+`,
+  );
+  const outputPath = path.join(cwd, ".buildchain", "infra-contract-plan.json");
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "plan",
+    "--cwd",
+    cwd,
+    "--source-sha",
+    "8".repeat(40),
+    "--execute-adapter-commands",
+    "true",
+    "--output",
+    outputPath,
+  ]);
+
+  const result = JSON.parse(fs.readFileSync(outputPath, "utf8"));
+  assert.deepEqual(result.adapterEvidence.map((entry) => entry.status), ["passed", "passed"]);
+  assert.equal(result.adapterEvidence[0].output.stage, "validate");
+  assert.equal(result.adapterEvidence[1].output.stage, "plan");
+});
+
 test("validate reads initialized package config", () => {
   const cwd = tempDir("validate-package");
   fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({ name: "fixture", version: "0.1.0" }, null, 2));

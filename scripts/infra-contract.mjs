@@ -112,7 +112,11 @@ export function infraContractCli() {
   }
 
   if (mode === "plan") {
-    const result = createInfraContractPlan({ cwd, sourceSha });
+    const result = createInfraContractPlan({
+      cwd,
+      sourceSha,
+      executeAdapterCommands: readBooleanArg("execute-adapter-commands", false),
+    });
     writeJson(result, output);
     writeGitHubOutputs({
       "infra-plan-hash": result.planHash,
@@ -131,6 +135,7 @@ export function infraContractCli() {
       approvalId: readArg("approval-id", ""),
       applyRunId: readArg("apply-run-id", process.env.GITHUB_RUN_ID || ""),
       rollbackPointer: readArg("rollback-pointer", process.env.BUILDCHAIN_ROLLBACK_REF || ""),
+      executeAdapterCommands: readBooleanArg("execute-adapter-commands", false),
     });
     writeJson(result, output);
     writeGitHubOutputs({
