@@ -1,0 +1,12 @@
+{
+  "bucket_name": {
+    "sensitive": false,
+    "type": "string",
+    "value": "example-preview"
+  },
+  "website_url": {
+    "sensitive": false,
+    "type": "string",
+    "value": "https://example-preview.s3-website.example"
+  }
+}

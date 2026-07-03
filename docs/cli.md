@@ -61,6 +61,9 @@ Supported presets:
 - `--type package` for Node package repositories with pnpm, npm, or yarn.
 - `--type native` for CMake-style native projects.
 - `--type web-surface` for preview/staging/production site or app deployments.
+- `--type infra-contract` for provider-agnostic infrastructure contract
+  validation, observation, contract publication, and downstream propagation
+  planning without default mutation.
 - `--type anchored-package` for packages whose version is anchored to an
   explicit upstream release manifest.
 
@@ -214,8 +217,8 @@ reusable build workflow outputs. It fails closed for direct `alpha/*` or
 version against configured version files and the anchor manifest. The JSON
 result is shaped for future `buildchain.libkungfu.dev` fact ingestion.
 
-`buildchain release`, `buildchain web-surface`, `buildchain publish-source`,
-and `buildchain build-contract` route to the same scripts used by Buildchain's
+`buildchain release`, `buildchain web-surface`, `buildchain infra-contract`,
+`buildchain publish-source`, and `buildchain build-contract` route to the same scripts used by Buildchain's
 GitHub Actions workflows. This keeps local inspection and CI behavior on the
 same implementation path.
 

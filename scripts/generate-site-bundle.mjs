@@ -52,6 +52,7 @@ function buildSiteBundle() {
     docEntry("release-flow", "Release flow", "docs/release-flow.md", "verify"),
     docEntry("versioning", "Versioning", "docs/versioning.md", "why"),
     docEntry("web-surface-deployments", "Web surface deployments", "docs/web-surface-deployments.md", "use"),
+    docEntry("infra-contract", "Infra Contract", "docs/infra-contract.md", "use"),
   ];
 
   const cliRegistry = {
@@ -61,7 +62,7 @@ function buildSiteBundle() {
     npmPackage: packageJson.name,
     commands: [
       { id: "version", usage: "buildchain version", purpose: "Print the package or embedded binary version." },
-      { id: "init", usage: "buildchain init [--type package|native|web-surface|anchored-package]", purpose: "Bootstrap a repository with Buildchain configuration and caller workflow files." },
+      { id: "init", usage: "buildchain init [--type package|native|web-surface|infra-contract|anchored-package]", purpose: "Bootstrap a repository with Buildchain configuration and caller workflow files." },
       { id: "validate", usage: "buildchain validate [--require-version-state]", purpose: "Validate buildchain.toml and declared lifecycle surfaces." },
       { id: "doctor", usage: "buildchain doctor [--json]", purpose: "Report local integration readiness." },
       { id: "lifecycle", usage: "buildchain lifecycle run <stage>", purpose: "Run configured lifecycle commands and write deterministic artifact manifests." },
@@ -71,6 +72,7 @@ function buildSiteBundle() {
       { id: "logging", usage: "buildchain log|mark|span|verify observability-log", purpose: "Emit timestamped build events, summarize logs, and enforce required phases." },
       { id: "diagnostics-summary", usage: "buildchain diagnostics summary <diagnostics.json>...", purpose: "Summarize small diagnostics artifacts into JSON and a cross-platform lifecycle timing table." },
       { id: "npm-dry-run", usage: "buildchain npm dry-run --json", purpose: "Verify npm publish shape before a release transaction." },
+      { id: "infra-contract", usage: "buildchain infra-contract --mode validate|plan|contract|propagation-plan", purpose: "Validate and publish provider-neutral infrastructure contract evidence without default mutation." },
     ],
   };
 
@@ -134,6 +136,11 @@ function buildSiteBundle() {
       "product-mechanism.json",
       "release-provenance.json",
       "agent-index.json",
+    ],
+    infraContract: [
+      "infra-contract-plan.json",
+      "buildchain.infra-contract.json",
+      "infra-contract-propagation.json",
     ],
   };
 
