@@ -257,6 +257,16 @@ The verifier fails closed when required protocol files are absent, artifacts are
 not covered by evidence, or digests disagree. The explanation output is shaped
 for agents: trust, completeness, impact, recovery route, and next action.
 
+Verify infra-contract lifecycle evidence bundles:
+
+```bash
+buildchain verify infra-contract-evidence-bundle .buildchain/infra-contract-evidence-bundle.json
+```
+
+The infra-contract verifier is read-only. It recomputes the bundle hash and
+checks that desired, plan, approval, apply, observe, contract, and propagate
+evidence remain bound to the same contract artifact.
+
 `buildchain release --dry-run` explains the release-line state machine before a
 maintainer opens or merges a channel PR:
 

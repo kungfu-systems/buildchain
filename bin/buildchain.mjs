@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { initBuildchainRepo } from "../scripts/init-repo.mjs";
 import { npmPublishDryRun } from "../scripts/npm-publish-dry-run.mjs";
 import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
+import { verifyInfraContractEvidenceBundle } from "../scripts/infra-contract-core.mjs";
 import { validateBuildchainConfig } from "../packages/core/buildchain-config.js";
 import { detectPackageManager } from "../packages/core/package-manager.js";
 import {
@@ -62,6 +63,7 @@ function usage() {
                                     [--assets-dir <dir>] [--assets-json <json-or-path>]
                                     [--release-json <json-or-path>] [--output-dir <dir>] [--json]
   buildchain verify release-passport <file-or-url> [--json]
+  buildchain verify infra-contract-evidence-bundle <file> [--json]
   buildchain verify observability-log <jsonl> [--min-events <n>]
                                              [--require-phase <csv>]
                                              [--require-component <csv>]
@@ -97,6 +99,7 @@ Examples:
   buildchain span --event native.build -- cmake --build build
   buildchain collect github-release --tag v2.2.0 --assets-dir dist --output-dir .buildchain/release-passport
   buildchain verify release-passport .buildchain/release-passport/buildchain.release.json
+  buildchain verify infra-contract-evidence-bundle .buildchain/infra-contract-evidence-bundle.json
   buildchain verify observability-log .buildchain/logs/events.jsonl --min-events 4 --require-phase build
   buildchain infra-contract --mode plan --source-sha <sha>
   buildchain infra-contract --mode plan --source-sha <sha> --execute-adapter-commands true
@@ -691,6 +694,24 @@ async function main(argv = process.argv.slice(2)) {
       } else {
         process.stdout.write(`observability log: ${report.ok ? "ok" : "failed"}\n`);
         process.stdout.write(`events: ${report.summary.eventCount}\n`);
+        for (const entry of report.issues) {
+          process.stdout.write(`- ${entry.level}: ${entry.code}: ${entry.message}\n`);
+        }
+      }
+      process.exitCode = report.ok ? 0 : 1;
+      return;
+    }
+    if (subcommand === "infra-contract-evidence-bundle") {
+      if (!location) {
+        throw new Error("usage: buildchain verify infra-contract-evidence-bundle <file>");
+      }
+      const bundle = JSON.parse(fs.readFileSync(path.resolve(location), "utf8"));
+      const report = verifyInfraContractEvidenceBundle(bundle);
+      if (readBooleanFlag(verifyArgs, "json")) {
+        printJson(report);
+      } else {
+        process.stdout.write(`infra contract evidence bundle: ${report.ok ? "ok" : "failed"}\n`);
+        process.stdout.write(`artifact: ${report.artifactHash || "unknown"}\n`);
         for (const entry of report.issues) {
           process.stdout.write(`- ${entry.level}: ${entry.code}: ${entry.message}\n`);
         }

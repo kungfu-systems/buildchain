@@ -45,6 +45,11 @@
       "purpose": "Fail closed unless a release passport and its evidence are complete."
     },
     {
+      "id": "verify-infra-contract-evidence-bundle",
+      "usage": "buildchain verify infra-contract-evidence-bundle <file>",
+      "purpose": "Fail closed unless an infra-contract lifecycle evidence bundle is complete and hash-bound."
+    },
+    {
       "id": "logging",
       "usage": "buildchain log|mark|span|verify observability-log",
       "purpose": "Emit timestamped build events, summarize logs, and enforce required phases."

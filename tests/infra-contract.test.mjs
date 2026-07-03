@@ -11,6 +11,7 @@ import {
   createInfraContractPlan,
   createInfraContractPropagationPlan,
   validateInfraContractProject,
+  verifyInfraContractEvidenceBundle,
 } from "../scripts/infra-contract-core.mjs";
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
@@ -732,6 +733,61 @@ test("infra-contract evidence bundle binds contract and propagation evidence", (
     assert.equal(bundle.lifecycle.propagate.result.artifactHash, artifact.artifactHash);
     assert.equal(bundle.validation.artifactHashVerified, true);
     assert.match(bundle.bundleHash, /^[0-9a-f]{64}$/);
+
+    const verification = verifyInfraContractEvidenceBundle(bundle);
+    assert.equal(verification.ok, true);
+    assert.equal(verification.artifactHash, artifact.artifactHash);
+    assert.equal(verification.lifecycle.propagate, true);
+  });
+});
+
+test("infra-contract evidence bundle verifier fails closed on tampering", () => {
+  withFixture("infra-contract-shaped", (fixture) => {
+    const plan = createInfraContractPlan({
+      cwd: fixture,
+      sourceSha: "a".repeat(40),
+      plannedAt: "2026-07-03T00:00:00.000Z",
+    });
+    const artifact = createInfraContractArtifact({
+      cwd: fixture,
+      plan,
+      observedAt: "2026-07-03T00:00:00.000Z",
+    });
+    const propagationPlan = createInfraContractPropagationPlan({ cwd: fixture, artifact });
+    const propagationResult = applyInfraContractPropagation({ cwd: fixture, artifact, propagationPlan });
+    const bundle = createInfraContractEvidenceBundle({
+      artifact,
+      propagationResult,
+      createdAt: "2026-07-03T00:01:00.000Z",
+    });
+    const tampered = {
+      ...bundle,
+      lifecycle: {
+        ...bundle.lifecycle,
+        plan: {
+          ...bundle.lifecycle.plan,
+          hash: "1".repeat(64),
+        },
+        contract: {
+          ...bundle.lifecycle.contract,
+          hash: "0".repeat(64),
+        },
+      },
+    };
+    const verification = verifyInfraContractEvidenceBundle(tampered);
+    assert.equal(verification.ok, false);
+    assert.equal(
+      verification.issues.some((issue) => issue.code === "bundle.hash.mismatch"),
+      true,
+    );
+    assert.equal(
+      verification.issues.some((issue) => issue.code === "contract.hash.mismatch"),
+      true,
+    );
+    assert.equal(
+      verification.issues.some((issue) => issue.code === "plan.binding.mismatch"),
+      true,
+    );
   });
 });
 

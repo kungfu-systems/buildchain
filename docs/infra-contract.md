@@ -140,10 +140,17 @@ buildchain infra-contract --mode evidence-bundle \
   --apply-result .buildchain/infra-contract-apply.json \
   --propagation-result .buildchain/infra-contract-propagation-apply.json \
   --output .buildchain/infra-contract-evidence-bundle.json
+buildchain verify infra-contract-evidence-bundle \
+  .buildchain/infra-contract-evidence-bundle.json
 ```
 
 For projects where apply is disabled, omit `--apply-result`. For projects with
 no consumers, omit `--propagation-result`.
+
+The evidence-bundle verifier is read-only. It recomputes the bundle hash,
+checks the contract artifact hash, verifies that desired, plan, approval,
+apply, observe, contract, and propagate evidence are all present, and fails
+closed when apply or propagation results are not bound to the same artifact.
 
 ## Safety
 
@@ -169,3 +176,5 @@ no consumers, omit `--propagation-result`.
 - Evidence bundles do not execute adapters, mutate infrastructure, or open PRs.
   They only verify and hash already saved contract, apply, and propagation
   outputs.
+- `buildchain verify infra-contract-evidence-bundle` is read-only and fails
+  closed when the lifecycle evidence chain is incomplete or tampered.
