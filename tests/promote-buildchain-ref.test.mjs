@@ -1268,6 +1268,7 @@ exit 64
       targetRef: "release/v1/v1.0",
       cwd,
       publishTransaction: true,
+      releasePassportProductName: "Libnode",
       publishRequiredArtifactsJson: JSON.stringify([
         {
           kind: "npm",
@@ -1370,8 +1371,12 @@ exit 64
       Buffer.from(blobs.get(passportEntry.sha).content, "base64").toString("utf8"),
     );
     assert.equal(passport.packageSet.platforms.length, 3);
+    assert.equal(passport.product.name, "Libnode");
     assert.equal(passport.distTagPromotion.fields.distTag, "latest");
     assert.equal(passport.release.releaseStateRef, "refs/heads/buildchain/release-state/1-0-0");
+    assert.match(passport.release.releaseStateSha, /^commit-\d+0+$/);
+    assert.ok(commits.has(passport.release.releaseStateSha));
+    assert.equal(stateCommit.parents[0].sha, passport.release.releaseStateSha);
     assert.equal(passport.buildSummary, undefined);
   } finally {
     for (const [key, value] of Object.entries(previousEnv)) {
