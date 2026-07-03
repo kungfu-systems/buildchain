@@ -684,6 +684,16 @@ function writeDistTagPromotionEvidence({
   });
 }
 
+function findTransactionEvidencePath({ cwd, transaction, fallbackName }) {
+  for (const entry of transaction?.evidence || []) {
+    const normalized = String(entry || "");
+    if (normalized.endsWith(fallbackName)) {
+      return path.resolve(cwd, normalized);
+    }
+  }
+  return "";
+}
+
 function npmTokenLooksConfigured() {
   return Boolean(process.env.NODE_AUTH_TOKEN || process.env.NPM_TOKEN || process.env.npm_config__authToken);
 }
@@ -1388,6 +1398,16 @@ async function runPublishTransaction({
       validation: undefined,
       statePath: resolvedStatePath,
       evidencePath: resolvedEvidencePath,
+      distTagEvidencePath: findTransactionEvidencePath({
+        cwd,
+        transaction,
+        fallbackName: "dist-tag-evidence.json",
+      }),
+      packageSet: packageSetFromArtifacts({
+        artifacts: requiredArtifacts,
+        contract: publishContract,
+      }),
+      publishContract,
       durable,
       octokit,
       owner,
@@ -1615,11 +1635,12 @@ async function collectAndPersistReleasePassport({
     transaction: result.transaction,
     validation: result.validation || { valid: true, errors: [] },
   };
+  const passportSourceSha = result.transaction.source_sha || sourceSha;
   const collected = collectGitHubReleasePassport({
     cwd,
     tag: result.transaction.exact_tag,
     repository: `${owner}/${repo}`,
-    sourceSha,
+    sourceSha: passportSourceSha,
     line,
     outputDir: resolvedOutputDir,
     packageName: packageName || result.packageSet?.main?.name || "@kungfu-tech/buildchain",
