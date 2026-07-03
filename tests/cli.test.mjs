@@ -320,6 +320,43 @@ test("infra-contract CLI evidence-bundle binds artifact and propagation output",
   assert.equal(result.lifecycle.apply.required, false);
   assert.equal(result.lifecycle.propagate.result.status, "planned");
   assert.match(result.bundleHash, /^[0-9a-f]{64}$/);
+
+  const verification = JSON.parse(runBuildchain([
+    "verify",
+    "infra-contract-evidence-bundle",
+    outputPath,
+    "--json",
+  ]));
+  assert.equal(verification.ok, true);
+  assert.equal(verification.artifactHash, artifact.artifactHash);
+
+  const tamperedPath = path.join(cwd, ".buildchain", "infra-contract-evidence-bundle-tampered.json");
+  fs.writeFileSync(
+    tamperedPath,
+    `${JSON.stringify({
+      ...result,
+      lifecycle: {
+        ...result.lifecycle,
+        contract: {
+          ...result.lifecycle.contract,
+          hash: "0".repeat(64),
+        },
+      },
+    }, null, 2)}\n`,
+  );
+  const failure = runBuildchainFailure([
+    "verify",
+    "infra-contract-evidence-bundle",
+    tamperedPath,
+    "--json",
+  ]);
+  assert.notEqual(failure.status, 0);
+  const failureReport = JSON.parse(failure.stdout);
+  assert.equal(failureReport.ok, false);
+  assert.equal(
+    failureReport.issues.some((issue) => issue.code === "bundle.hash.mismatch"),
+    true,
+  );
 });
 
 test("infra-contract CLI plan can execute custom-command adapter evidence", () => {

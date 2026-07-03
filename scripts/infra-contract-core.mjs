@@ -10,6 +10,7 @@ const PROPAGATION_CONTRACT = "kungfu-buildchain-infra-contract-propagation-plan"
 const PROPAGATION_APPLY_CONTRACT = "kungfu-buildchain-infra-contract-propagation-apply";
 const APPLY_CONTRACT = "kungfu-buildchain-infra-contract-apply";
 const EVIDENCE_BUNDLE_CONTRACT = "kungfu-buildchain-infra-contract-evidence-bundle";
+const EVIDENCE_BUNDLE_VERIFICATION_CONTRACT = "kungfu-buildchain-infra-contract-evidence-bundle-verification";
 
 const STATIC_CAPABILITIES = Object.freeze({
   "manual-observed": { validate: true, plan: false, apply: false, observe: true },
@@ -661,6 +662,118 @@ export function createInfraContractEvidenceBundle({
   return {
     ...bundleBase,
     bundleHash: sha256Buffer(stableJson(bundleBase)),
+  };
+}
+
+function verificationIssue(level, code, message) {
+  return { level, code, message };
+}
+
+export function verifyInfraContractEvidenceBundle(bundle) {
+  const issues = [];
+  if (!bundle || typeof bundle !== "object") {
+    return {
+      schemaVersion: 1,
+      contract: EVIDENCE_BUNDLE_VERIFICATION_CONTRACT,
+      ok: false,
+      artifactHash: "",
+      bundleHash: "",
+      lifecycle: {},
+      issues: [verificationIssue("error", "bundle.invalid", "infra-contract evidence bundle must be an object")],
+    };
+  }
+  if (bundle.contract !== EVIDENCE_BUNDLE_CONTRACT) {
+    issues.push(verificationIssue("error", "bundle.contract", `expected ${EVIDENCE_BUNDLE_CONTRACT}`));
+  }
+  if (!bundle.bundleHash || typeof bundle.bundleHash !== "string") {
+    issues.push(verificationIssue("error", "bundle.hash.missing", "evidence bundle is missing bundleHash"));
+  } else {
+    const { bundleHash, ...bundleBase } = bundle;
+    const computedHash = sha256Buffer(stableJson(bundleBase));
+    if (computedHash !== bundleHash) {
+      issues.push(verificationIssue("error", "bundle.hash.mismatch", "evidence bundle hash does not match bundle contents"));
+    }
+  }
+  const lifecycle = bundle.lifecycle && typeof bundle.lifecycle === "object" ? bundle.lifecycle : {};
+  for (const stage of ["desired", "plan", "approval", "apply", "observe", "contract", "propagate"]) {
+    if (!lifecycle[stage]) {
+      issues.push(verificationIssue("error", `lifecycle.${stage}.missing`, `lifecycle.${stage} evidence is missing`));
+    }
+  }
+  const artifact = lifecycle.contract?.artifact;
+  if (!artifact || typeof artifact !== "object") {
+    issues.push(verificationIssue("error", "artifact.missing", "lifecycle.contract.artifact is missing"));
+  } else {
+    try {
+      assertInfraContractArtifact(artifact);
+    } catch (error) {
+      issues.push(verificationIssue("error", "artifact.invalid", error.message));
+    }
+    if (bundle.artifactHash && artifact.artifactHash && bundle.artifactHash !== artifact.artifactHash) {
+      issues.push(verificationIssue("error", "artifact.hash.mismatch", "bundle artifactHash does not match lifecycle contract artifact"));
+    }
+    if (lifecycle.contract?.hash && artifact.artifactHash && lifecycle.contract.hash !== artifact.artifactHash) {
+      issues.push(verificationIssue("error", "contract.hash.mismatch", "lifecycle.contract.hash does not match artifactHash"));
+    }
+    try {
+      assertInfraContractApplyResult({ artifact, applyResult: lifecycle.apply?.result });
+    } catch (error) {
+      issues.push(verificationIssue("error", "apply.binding.invalid", error.message));
+    }
+    try {
+      assertInfraContractPropagationResult({ artifact, propagationResult: lifecycle.propagate?.result });
+    } catch (error) {
+      issues.push(verificationIssue("error", "propagation.binding.invalid", error.message));
+    }
+    if (Array.isArray(artifact.desiredFiles) && Array.isArray(lifecycle.desired?.files)) {
+      const artifactDesired = stableJson(artifact.desiredFiles);
+      const lifecycleDesired = stableJson(lifecycle.desired.files);
+      if (artifactDesired !== lifecycleDesired) {
+        issues.push(verificationIssue("error", "desired.binding.mismatch", "lifecycle desired files do not match contract artifact"));
+      }
+    }
+    if (artifact.plan && lifecycle.plan && stableJson(artifact.plan) !== stableJson(lifecycle.plan)) {
+      issues.push(verificationIssue("error", "plan.binding.mismatch", "lifecycle plan evidence does not match contract artifact"));
+    }
+    if (artifact.approval && lifecycle.approval && stableJson(artifact.approval) !== stableJson(lifecycle.approval)) {
+      issues.push(verificationIssue("error", "approval.binding.mismatch", "lifecycle approval evidence does not match contract artifact"));
+    }
+    if (artifact.observed && lifecycle.observe && stableJson(artifact.observed) !== stableJson(lifecycle.observe)) {
+      issues.push(verificationIssue("error", "observe.binding.mismatch", "lifecycle observe evidence does not match contract artifact"));
+    }
+    if (Array.isArray(artifact.consumers) && Array.isArray(lifecycle.propagate?.consumers)) {
+      const artifactConsumers = stableJson(artifact.consumers);
+      const lifecycleConsumers = stableJson(lifecycle.propagate.consumers);
+      if (artifactConsumers !== lifecycleConsumers) {
+        issues.push(verificationIssue("error", "propagate.consumers.mismatch", "lifecycle propagate consumers do not match contract artifact"));
+      }
+    }
+  }
+  const errorCount = issues.filter((issue) => issue.level === "error").length;
+  return {
+    schemaVersion: 1,
+    contract: EVIDENCE_BUNDLE_VERIFICATION_CONTRACT,
+    ok: errorCount === 0,
+    artifactHash: bundle.artifactHash || "",
+    bundleHash: bundle.bundleHash || "",
+    lifecycle: {
+      desired: Boolean(lifecycle.desired),
+      plan: Boolean(lifecycle.plan),
+      approval: Boolean(lifecycle.approval),
+      apply: Boolean(lifecycle.apply),
+      observe: Boolean(lifecycle.observe),
+      contract: Boolean(lifecycle.contract),
+      propagate: Boolean(lifecycle.propagate),
+    },
+    summary: {
+      errorCount,
+      issueCount: issues.length,
+      applyResultBound: Boolean(bundle.validation?.applyResultBound),
+      propagationResultBound: Boolean(bundle.validation?.propagationResultBound),
+      mutationExecuted: Boolean(bundle.validation?.mutationExecuted),
+      propagationExecuted: Boolean(bundle.validation?.propagationExecuted),
+    },
+    issues,
   };
 }
 
