@@ -1669,7 +1669,7 @@ async function collectAndPersistReleasePassport({
     anchorManifestJson: anchorManifestPath && fs.existsSync(anchorManifestPath) ? anchorManifestPath : "",
     buildSummaryJson,
     platformManifestJsons: platformManifests,
-    distTagEvidenceJson: result.distTagEvidencePath || "",
+    distTagEvidenceJson: existingJsonObjectFile(result.distTagEvidencePath),
     releaseJsonExtra: JSON.stringify({
       channel,
       targetRef,

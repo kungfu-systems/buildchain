@@ -2395,26 +2395,6 @@ test("publish transaction finalizes current release version-state merge commits"
       ],
     }, null, 2)}\n`,
   );
-  fs.writeFileSync(
-    distTagEvidencePath,
-    `${JSON.stringify({
-      schema: 1,
-      contract: "kungfu-buildchain-dist-tag-promotion-evidence",
-      mode: "publish-final-version",
-      auth: "trusted-publishing",
-      distTag: "latest",
-      source: "validated-evidence",
-      packages: [
-        {
-          name: "@kungfu-tech/buildchain",
-          version: "1.0.0",
-          distTag: "latest",
-          role: "main",
-          digest: "sha512-release",
-        },
-      ],
-    }, null, 2)}\n`,
-  );
   await persistDurableReleaseTransaction({
     octokit,
     owner: "kungfu-systems",
@@ -2515,7 +2495,7 @@ test("publish transaction finalizes current release version-state merge commits"
   assert.equal(passport.release.sourceSha, oldReleaseSha);
   assert.equal(passport.trustedPublishing.enabled, true);
   assert.equal(passport.trustedPublishing.auth, "trusted-publishing");
-  assert.equal(passport.distTagPromotion.fields.distTag, "latest");
+  assert.equal(passport.distTagPromotion, undefined);
   assert.equal(checkReport.ok, true);
 });
 
