@@ -356,7 +356,6 @@ jobs:
   web-surface:
     uses: kungfu-systems/buildchain/.github/workflows/.web-surface.yml@v2
     with:
-      buildchain-ref: v2
       build-command: npm run build
       verify-command: npm run check
       artifact-path: dist
@@ -371,6 +370,37 @@ The reusable workflow maps GitHub events to Buildchain web-surface semantics:
 | `push` to `main` | validate, build, verify, and plan `staging` from the merged `main` SHA |
 | `workflow_dispatch` with `production-approved = true` | plan `production` and enter the configured GitHub Environment gate |
 
+The optional `buildchain-ref` input is empty by default. Empty keeps the
+web-surface run on the stable Buildchain runtime selected by the reusable
+workflow ref, normally `@v2`. A trusted maintainer can expose a
+`workflow_dispatch` input and pass it through for one-off train validation:
+
+```yaml
+on:
+  workflow_dispatch:
+    inputs:
+      buildchain-ref:
+        description: "Temporary Buildchain runtime ref for trusted manual validation"
+        required: false
+        default: ""
+
+jobs:
+  web-surface:
+    uses: kungfu-systems/buildchain/.github/workflows/.web-surface.yml@v2
+    with:
+      buildchain-ref: ${{ inputs.buildchain-ref || '' }}
+      build-command: pnpm run build
+      verify-command: pnpm run check
+      artifact-path: dist
+```
+
+Only trusted `workflow_dispatch` runs by repository actors with write,
+maintain, or admin permission may use a non-empty runtime override. Train refs
+such as `train/v2/v2.3/site-source-of-truth` are temporary validation refs, not
+stable production dependencies. The web-surface deployment manifest records the
+resolved runtime SHA as `runtimeId` and the stable rollback ref as
+`rollbackPointer`.
+
 The workflow deliberately plans and emits manifests by default. Live mutation is
 opt-in per channel:
 
@@ -384,7 +414,6 @@ jobs:
   web-surface:
     uses: kungfu-systems/buildchain/.github/workflows/.web-surface.yml@v2
     with:
-      buildchain-ref: v2
       build-command: pnpm run build
       verify-command: pnpm run check
       artifact-path: dist

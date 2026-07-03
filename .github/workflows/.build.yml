@@ -8,7 +8,8 @@ on:
         type: string
         required: false
       buildchain-ref:
-        default: "v2"
+        description: "Optional temporary Buildchain runtime ref for trusted manual validation. Empty uses the stable workflow runtime."
+        default: ""
         type: string
         required: false
       working-directory:
@@ -176,6 +177,21 @@ on:
       trusted-event:
         description: "Whether the event is trusted enough to run build jobs"
         value: ${{ jobs.trust-gate.outputs.trusted-event }}
+      buildchain-runtime-ref:
+        description: "Resolved Buildchain runtime ref"
+        value: ${{ jobs.trust-gate.outputs.buildchain-runtime-ref }}
+      buildchain-runtime-sha:
+        description: "Resolved immutable Buildchain runtime SHA"
+        value: ${{ jobs.trust-gate.outputs.buildchain-runtime-sha }}
+      buildchain-runtime-class:
+        description: "Runtime stability class: stable, alpha, train, exact-sha, or development"
+        value: ${{ jobs.trust-gate.outputs.buildchain-runtime-class }}
+      buildchain-runtime-override:
+        description: "Whether a non-empty buildchain-ref override was used"
+        value: ${{ jobs.trust-gate.outputs.buildchain-runtime-override }}
+      buildchain-runtime-trust-decision:
+        description: "Runtime override trust decision"
+        value: ${{ jobs.trust-gate.outputs.buildchain-runtime-trust-decision }}
       publish-channel:
         description: "Resolved publish channel"
         value: ${{ jobs.trust-gate.outputs.publish-channel }}
@@ -227,12 +243,125 @@ jobs:
       publish-source-channel: ${{ steps.source.outputs.publish-source-channel }}
       publish-source-line: ${{ steps.source.outputs.publish-source-line }}
       publish-source-consumer-version: ${{ steps.source.outputs.publish-source-consumer-version }}
+      buildchain-runtime-ref: ${{ steps.runtime.outputs.runtime-ref }}
+      buildchain-runtime-full-ref: ${{ steps.runtime.outputs.runtime-full-ref }}
+      buildchain-runtime-sha: ${{ steps.runtime.outputs.runtime-sha }}
+      buildchain-runtime-class: ${{ steps.runtime.outputs.runtime-class }}
+      buildchain-runtime-override: ${{ steps.runtime.outputs.runtime-override }}
+      buildchain-runtime-trust-decision: ${{ steps.runtime.outputs.runtime-trust-decision }}
+      buildchain-workflow-shell-ref: ${{ steps.runtime.outputs.workflow-shell-ref }}
+      buildchain-rollback-ref: ${{ steps.runtime.outputs.rollback-ref }}
     steps:
+      - name: Resolve Buildchain runtime
+        id: runtime
+        uses: actions/github-script@v8
+        env:
+          BUILDCHAIN_REPOSITORY: ${{ inputs.buildchain-repository }}
+          BUILDCHAIN_REQUESTED_REF: ${{ inputs.buildchain-ref }}
+          BUILDCHAIN_DEFAULT_REF: v2
+        with:
+          script: |
+            const requested = (process.env.BUILDCHAIN_REQUESTED_REF || "").trim();
+            const repository = (process.env.BUILDCHAIN_REPOSITORY || "kungfu-systems/buildchain").trim();
+            const defaultRef = (process.env.BUILDCHAIN_DEFAULT_REF || "v2").trim();
+            const [runtimeOwner, runtimeRepo] = repository.split("/");
+            if (!runtimeOwner || !runtimeRepo) {
+              throw new Error(`invalid buildchain repository: ${repository}`);
+            }
+            const exactSha = /^[0-9a-f]{40}$/i;
+            const trainRef = /^train\/v\d+\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
+            const workflowRef = process.env.GITHUB_WORKFLOW_REF || "";
+            const shellRef = workflowRef.startsWith(`${repository}/.github/workflows/`)
+              ? (workflowRef.split("@").pop() || defaultRef).trim() || defaultRef
+              : defaultRef;
+            const normalizeClass = (ref) => {
+              const value = String(ref || "").replace(/^refs\/heads\//, "").replace(/^refs\/tags\//, "");
+              if (exactSha.test(value)) return "exact-sha";
+              if (trainRef.test(value)) return "train";
+              if (/^v\d+(?:\.\d+)?$/.test(value) || /^v\d+\.\d+\.\d+$/.test(value)) return "stable";
+              if (/^v\d+(?:\.\d+)?-alpha$/.test(value) || /^v\d+\.\d+\.\d+-alpha\.\d+$/.test(value)) return "alpha";
+              return "development";
+            };
+            let runtimeRef = requested || shellRef;
+            let runtimeFullRef = runtimeRef;
+            let runtimeClass = normalizeClass(runtimeRef);
+            let runtimeOverride = requested !== "";
+            let trustDecision = runtimeOverride ? "override-requested" : "stable-default";
+            if (runtimeOverride) {
+              if (context.eventName !== "workflow_dispatch") {
+                throw new Error("buildchain-ref override is only allowed for trusted workflow_dispatch runs");
+              }
+              const permission = await github.rest.repos.getCollaboratorPermissionLevel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                username: context.actor,
+              });
+              const actorPermission = permission.data.permission || "";
+              if (!["admin", "maintain", "write"].includes(actorPermission)) {
+                throw new Error(`buildchain-ref override requires write, maintain, or admin permission; actor has ${actorPermission || "none"}`);
+              }
+              if (exactSha.test(requested)) {
+                runtimeRef = requested;
+                runtimeFullRef = requested;
+                runtimeClass = "exact-sha";
+              } else {
+                runtimeRef = requested.replace(/^refs\/heads\//, "");
+                if (!trainRef.test(runtimeRef)) {
+                  throw new Error("buildchain-ref override must be train/vN/vN.M/<capability>, refs/heads/train/vN/vN.M/<capability>, or an exact 40-character SHA");
+                }
+                runtimeFullRef = `refs/heads/${runtimeRef}`;
+                runtimeClass = "train";
+              }
+              trustDecision = "override-accepted";
+            }
+            async function resolveRef(ref) {
+              if (exactSha.test(ref)) return ref;
+              const normalized = ref.replace(/^refs\/heads\//, "").replace(/^refs\/tags\//, "");
+              const candidates = ref.startsWith("refs/")
+                ? [ref.replace(/^refs\//, "")]
+                : [`tags/${normalized}`, `heads/${normalized}`];
+              for (const candidate of candidates) {
+                try {
+                  const response = await github.rest.git.getRef({
+                    owner: runtimeOwner,
+                    repo: runtimeRepo,
+                    ref: candidate,
+                  });
+                  return response.data.object.sha;
+                } catch (error) {
+                  if (error.status !== 404) throw error;
+                }
+              }
+              throw new Error(`unable to resolve Buildchain runtime ref: ${ref}`);
+            }
+            const runtimeSha = await resolveRef(runtimeFullRef);
+            const outputs = {
+              "runtime-ref": runtimeRef,
+              "runtime-full-ref": runtimeFullRef,
+              "runtime-sha": runtimeSha,
+              "runtime-class": runtimeClass,
+              "runtime-override": String(runtimeOverride),
+              "runtime-trust-decision": trustDecision,
+              "workflow-shell-ref": shellRef,
+              "rollback-ref": shellRef,
+            };
+            for (const [name, value] of Object.entries(outputs)) core.setOutput(name, value);
+            await core.summary
+              .addHeading("Buildchain runtime")
+              .addRaw(`- workflow shell ref: \`${shellRef}\`\n`)
+              .addRaw(`- requested runtime ref: \`${requested || "(default)"}\`\n`)
+              .addRaw(`- resolved runtime ref: \`${runtimeRef}\`\n`)
+              .addRaw(`- resolved runtime sha: \`${runtimeSha}\`\n`)
+              .addRaw(`- stability: \`${runtimeClass}\`\n`)
+              .addRaw(`- trust decision: \`${trustDecision}\`\n`)
+              .addRaw(`- rollback ref: \`${shellRef}\`\n`)
+              .write();
+
       - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.buildchain-ref }}
+          ref: ${{ steps.runtime.outputs.runtime-sha }}
           path: .buildchain/runtime
           persist-credentials: false
 
@@ -304,7 +433,7 @@ jobs:
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.buildchain-ref }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           path: .buildchain/runtime
           persist-credentials: false
 
@@ -334,6 +463,8 @@ jobs:
   resolve-contract:
     name: Resolve reusable contract
     runs-on: ubuntu-24.04
+    needs:
+      - trust-gate
     outputs:
       runner-preset: ${{ steps.runners.outputs.runner-preset }}
       platforms-json: ${{ steps.runners.outputs.platforms-json }}
@@ -352,7 +483,7 @@ jobs:
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.buildchain-ref }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           path: .buildchain/runtime
           persist-credentials: false
 
@@ -389,7 +520,7 @@ jobs:
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.buildchain-ref }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           path: .buildchain/runtime
           persist-credentials: false
 
@@ -538,7 +669,7 @@ jobs:
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.buildchain-ref }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           path: .buildchain/runtime
           persist-credentials: false
 
@@ -688,7 +819,7 @@ jobs:
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.buildchain-ref }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           path: .buildchain/runtime
           persist-credentials: false
 
@@ -739,6 +870,14 @@ jobs:
           BUILDCHAIN_RELEASE_MANIFEST_JSON: ${{ needs.resolve-source.outputs.release-manifest-json }}
           BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
           BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          BUILDCHAIN_RUNTIME_REQUESTED_REF: ${{ inputs.buildchain-ref }}
+          BUILDCHAIN_RUNTIME_REF: ${{ needs.trust-gate.outputs.buildchain-runtime-ref }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_RUNTIME_CLASS: ${{ needs.trust-gate.outputs.buildchain-runtime-class }}
+          BUILDCHAIN_RUNTIME_OVERRIDE: ${{ needs.trust-gate.outputs.buildchain-runtime-override }}
+          BUILDCHAIN_RUNTIME_TRUST_DECISION: ${{ needs.trust-gate.outputs.buildchain-runtime-trust-decision }}
+          BUILDCHAIN_WORKFLOW_SHELL_REF: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-ref }}
+          BUILDCHAIN_ROLLBACK_REF: ${{ needs.trust-gate.outputs.buildchain-rollback-ref }}
 
       - name: Aggregate diagnostics summary
         id: diagnostics

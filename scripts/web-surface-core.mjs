@@ -584,6 +584,10 @@ export function planWebSurfaceDeploy({
   sourceSha = "",
   artifactHash = "",
   artifactPath = "",
+  runtimeId = "",
+  configFingerprint = "",
+  rollbackPointer = "",
+  rollbackLimitations = "",
   dryRun = true,
   deployedAt = new Date().toISOString(),
 } = {}) {
@@ -608,6 +612,10 @@ export function planWebSurfaceDeploy({
     alias,
     sourceSha,
     artifactHash: resolvedArtifact.artifactHash,
+    runtimeId,
+    configFingerprint,
+    rollbackPointer,
+    rollbackLimitations,
     deployedAt,
   });
   return {

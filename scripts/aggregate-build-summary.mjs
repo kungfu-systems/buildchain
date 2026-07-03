@@ -47,6 +47,16 @@ export function aggregateBuildSummaryCli() {
       consumerVersion: readEnv("BUILDCHAIN_PUBLISH_SOURCE_CONSUMER_VERSION", ""),
       releaseManifest: readEnv("BUILDCHAIN_RELEASE_MANIFEST_JSON", ""),
     },
+    runtime: {
+      workflowShellRef: readEnv("BUILDCHAIN_WORKFLOW_SHELL_REF", ""),
+      requestedRef: readEnv("BUILDCHAIN_RUNTIME_REQUESTED_REF", ""),
+      ref: readEnv("BUILDCHAIN_RUNTIME_REF", ""),
+      sha: readEnv("BUILDCHAIN_RUNTIME_SHA", ""),
+      class: readEnv("BUILDCHAIN_RUNTIME_CLASS", ""),
+      override: readEnv("BUILDCHAIN_RUNTIME_OVERRIDE", "false") === "true",
+      trustDecision: readEnv("BUILDCHAIN_RUNTIME_TRUST_DECISION", ""),
+      rollbackRef: readEnv("BUILDCHAIN_ROLLBACK_REF", ""),
+    },
     platformCount: manifests.length,
     fileCount: manifests.reduce((sum, manifest) => sum + Number(manifest.summary?.fileCount || 0), 0),
     totalBytes: manifests.reduce((sum, manifest) => sum + Number(manifest.summary?.totalBytes || 0), 0),
@@ -92,6 +102,7 @@ export function aggregateBuildSummaryCli() {
       totalBytes: summary.totalBytes,
       publishGate: summary.publishGate,
       publishSource: summary.publishSource,
+      runtime: summary.runtime,
     }),
   });
   return summary;
