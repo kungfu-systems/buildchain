@@ -125,6 +125,11 @@ contract:
 specific package publication. Direct `alpha/*` or `release/*` channel refs are
 not valid publish source locks when `require-publish-source-lock` is enabled,
 and a mismatched `publish-source-sha` fails before any promotion or publish side effects begin.
+The reusable build workflow performs the cheaper channel-ref preflight earlier:
+after source-lock resolution and before the build matrix, it requires the target
+channel ref such as `alpha/v22/v22.22` or `release/v22/v22.22` to already point
+at the locked `publish-source-sha`. If not, maintainers should merge the source
+commit through the channel PR first.
 
 When enabled, the action creates or resumes a release transaction keyed by
 repository, version, source SHA, and target ref. It persists that transaction to
@@ -232,9 +237,10 @@ governance semantics:
 The promotion workflow should use `BUILDCHAIN_PROMOTION_TOKEN` for non-dry-run
 promotion. The token is the buildchain equivalent of the old ABV runner release
 authority: protected branch review and check rules guard human channel merges,
-while this action independently rechecks PR lineage, alpha/release tree
-equivalence, and generated version-state verification before moving channel
-refs and tags.
+while the reusable build trust gate now checks the source-lock channel HEAD and
+merged same-repository PR lineage before heavy build runners start. This action
+still independently rechecks PR lineage, alpha/release tree equivalence, and
+generated version-state verification before moving channel refs and tags.
 
 The tag names intentionally follow the old ABV release semantics:
 exact release tags are `vX.Y.Z`, exact alpha tags are `vX.Y.Z-alpha.N`, floating

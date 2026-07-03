@@ -831,6 +831,57 @@ test("CLI validates anchored publish source lock before package release", () => 
   assert.equal(failure.checks.find((entry) => entry.id === "publish.source_ref").status, "fail");
 });
 
+test("CLI verifies publish source channel ref before release work", () => {
+  const ok = spawnSync(process.execPath, [
+    path.join(root, "bin/buildchain.mjs"),
+    "publish-source",
+    "verify-channel-ref",
+  ], {
+    env: {
+      ...process.env,
+      BUILDCHAIN_PUBLISH_SOURCE_REF:
+        "publish-gate/release/v22/v22.22/22.22.3-kf.0",
+      BUILDCHAIN_PUBLISH_SOURCE_SHA: "c".repeat(40),
+      BUILDCHAIN_CURRENT_TARGET_SHA: "c".repeat(40),
+      BUILDCHAIN_SOURCE_REPOSITORY: "kungfu-systems/libnode",
+      BUILDCHAIN_CURRENT_TARGET_PULLS_JSON: JSON.stringify([
+        {
+          merged_at: "2026-07-03T00:00:00Z",
+          base: { ref: "release/v22/v22.22" },
+          head: {
+            ref: "alpha/v22/v22.22",
+            repo: { full_name: "kungfu-systems/libnode" },
+          },
+        },
+      ]),
+    },
+    encoding: "utf8",
+  });
+  assert.equal(ok.status, 0);
+  assert.equal(JSON.parse(ok.stdout).targetRef, "release/v22/v22.22");
+
+  const mismatch = spawnSync(process.execPath, [
+    path.join(root, "bin/buildchain.mjs"),
+    "publish-source",
+    "verify-channel-ref",
+  ], {
+    env: {
+      ...process.env,
+      BUILDCHAIN_PUBLISH_SOURCE_REF:
+        "publish-gate/alpha/v22/v22.22/22.22.3-kf.0",
+      BUILDCHAIN_PUBLISH_SOURCE_SHA: "c".repeat(40),
+      BUILDCHAIN_CURRENT_TARGET_SHA: "d".repeat(40),
+      BUILDCHAIN_SOURCE_REPOSITORY: "kungfu-systems/libnode",
+    },
+    encoding: "utf8",
+  });
+  assert.notEqual(mismatch.status, 0);
+  assert.match(
+    mismatch.stderr,
+    /Merge the source commit through the channel PR into alpha\/v22\/v22\.22/,
+  );
+});
+
 test("diagnostics SDK summarizes process samples against requested parallelism", () => {
   const summary = summarizeProcessSamples({
     command: "make",

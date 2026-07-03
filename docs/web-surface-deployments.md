@@ -368,6 +368,7 @@ The reusable workflow maps GitHub events to Buildchain web-surface semantics:
 | `pull_request` opened / synchronized / reopened | validate, build, verify, and plan `preview` for `pr-N` |
 | `pull_request` closed | plan apply-mode cleanup for the `pr-N` preview alias and manifest |
 | `push` to `main` | validate, build, verify, and plan `staging` from the merged `main` SHA |
+| `push` to `main` from a matching release PR merge | validate the associated release PR, plan `production`, and enter the configured GitHub Environment gate |
 | `workflow_dispatch` with `production-approved = true` | plan `production` and enter the configured GitHub Environment gate |
 
 The optional `buildchain-ref` input is empty by default. Empty keeps the
@@ -427,6 +428,7 @@ jobs:
       staging-apply: true
       staging-aws-role-arn: arn:aws:iam::123456789012:role/site-staging-github-actions
       production-apply: false
+      production-release-on-main: false
       production-aws-role-arn: arn:aws:iam::123456789012:role/site-production-github-actions
       production-environment: production
 ```
@@ -439,9 +441,41 @@ When enabled, Buildchain owns the full release apply state machine:
   only.
 - Pushes to `main` run staging `deploy-apply --dry-run false` with the staging
   role.
-- Production runs only on `workflow_dispatch` when both `production-approved`
-  and `production-apply` are true, and the job is gated by the configured GitHub
-  Environment.
+- Production runs when `production-apply` is true and either:
+  - a trusted `workflow_dispatch` passes `production-approved=true`; or
+  - `production-release-on-main=true` and the `main` push commit is associated
+    with exactly one same-repository, merged release pull request matching
+    `production-release-label` and `production-release-head-prefix`.
+  The production job is then gated by the configured GitHub Environment.
+
+For release-PR publishing, callers opt in explicitly:
+
+```yaml
+jobs:
+  web-surface:
+    uses: kungfu-systems/buildchain/.github/workflows/.web-surface.yml@v2
+    with:
+      build-command: npm run build
+      verify-command: npm run check
+      artifact-path: dist
+      production-apply: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+      production-release-on-main: true
+      production-release-label: buildchain-release
+      production-release-head-prefix: feature/release-
+      production-aws-role-arn: arn:aws:iam::123456789012:role/site-production-github-actions
+      production-environment: production
+```
+
+The merge button becomes the production approval only for a PR that carries the
+release label and comes from the configured source-branch prefix. Ordinary
+pull requests merged into `main` keep the staging plan behavior and do not
+publish production.
+
+Apply-only inputs are validated before the caller build or verification command
+runs. If the current event would run preview, staging, or production apply,
+missing role inputs or a production apply without `production-approved=true`
+on manual dispatch fail immediately instead of spending the build and plan jobs
+first.
 
 Callers must grant `id-token: write` for OIDC role assumption. Preview comments
 also need `pull-requests: write`. The AWS roles remain caller-owned and should
