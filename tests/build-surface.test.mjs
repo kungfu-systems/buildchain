@@ -201,6 +201,13 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /staging-aws-role-arn is required before staging-apply can build or deploy/);
   assert.match(workflow, /production-apply requires production-approved=true before production build or deploy/);
   assert.match(workflow, /production-aws-role-arn is required before production-apply can build or deploy/);
+  assert.match(workflow, /production-release-on-main:/);
+  assert.match(workflow, /production-release-label:/);
+  assert.match(workflow, /production-release-head-prefix:/);
+  assert.match(workflow, /Resolve production release PR intent/);
+  assert.match(workflow, /listPullRequestsAssociatedWithCommit/);
+  assert.match(workflow, /associated-release-pr-merged/);
+  assert.match(workflow, /no-associated-release-pr/);
   assert.match(workflow, /Plan pull request preview/);
   assert.match(workflow, /github\.event\.action != 'closed'/);
   assert.match(workflow, /Plan pull request preview cleanup/);
@@ -217,11 +224,14 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /preview-cleanup-apply/);
   assert.match(workflow, /Plan main staging deploy/);
   assert.match(workflow, /github\.ref_name == 'main'/);
+  assert.match(workflow, /needs\.release-intent\.outputs\.production-release-approved == 'true'/);
   assert.match(workflow, /Apply staging deploy/);
   assert.match(workflow, /staging-aws-role-arn is required when staging-apply is true/);
   assert.match(workflow, /Plan gated production deploy/);
   assert.match(workflow, /Apply production deploy/);
-  assert.match(workflow, /inputs\.production-approved && inputs\.production-apply/);
+  assert.match(workflow, /inputs\.production-apply/);
+  assert.match(workflow, /github\.event_name == 'workflow_dispatch' && inputs\.production-approved/);
+  assert.match(workflow, /github\.event_name == 'push' && github\.ref_name == 'main' && inputs\.production-release-on-main/);
   assert.match(workflow, /production-aws-role-arn is required when production-apply is true/);
   assert.match(
     workflow,
