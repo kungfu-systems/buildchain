@@ -69,7 +69,7 @@ function buildSiteBundle() {
       { id: "release-dry-run", usage: "buildchain release --dry-run --target-ref <ref>", purpose: "Explain what a channel merge would publish before the PR is merged." },
       { id: "collect-github-release", usage: "buildchain collect github-release --tag <tag>", purpose: "Collect release assets into a release passport." },
       { id: "verify-release-passport", usage: "buildchain verify release-passport <file-or-url>", purpose: "Fail closed unless a release passport and its evidence are complete." },
-      { id: "verify-infra-contract-evidence-bundle", usage: "buildchain verify infra-contract-evidence-bundle <file>", purpose: "Fail closed unless an infra-contract lifecycle evidence bundle is complete and hash-bound." },
+      { id: "verify-infra-contract-evidence-bundle", usage: "buildchain verify infra-contract-evidence-bundle <file>", purpose: "Fail closed unless an infra-contract lifecycle evidence bundle is complete, hash-bound, and validation-consistent." },
       { id: "logging", usage: "buildchain log|mark|span|verify observability-log", purpose: "Emit timestamped build events, summarize logs, and enforce required phases." },
       { id: "diagnostics-summary", usage: "buildchain diagnostics summary <diagnostics.json>...", purpose: "Summarize small diagnostics artifacts into JSON and a cross-platform lifecycle timing table." },
       { id: "npm-dry-run", usage: "buildchain npm dry-run --json", purpose: "Verify npm publish shape before a release transaction." },

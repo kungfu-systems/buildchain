@@ -669,6 +669,28 @@ function verificationIssue(level, code, message) {
   return { level, code, message };
 }
 
+function hasIssueCode(issues, code) {
+  return issues.some((issue) => issue.code === code);
+}
+
+function addValidationMismatch(issues, validation, key, expected) {
+  if (!validation || typeof validation !== "object") {
+    if (!hasIssueCode(issues, "validation.missing")) {
+      issues.push(verificationIssue("error", "validation.missing", "evidence bundle validation summary is missing"));
+    }
+    return;
+  }
+  if (validation[key] !== expected) {
+    issues.push(
+      verificationIssue(
+        "error",
+        `validation.${key}.mismatch`,
+        `validation.${key} must be ${expected}`,
+      ),
+    );
+  }
+}
+
 export function verifyInfraContractEvidenceBundle(bundle) {
   const issues = [];
   if (!bundle || typeof bundle !== "object") {
@@ -695,17 +717,20 @@ export function verifyInfraContractEvidenceBundle(bundle) {
     }
   }
   const lifecycle = bundle.lifecycle && typeof bundle.lifecycle === "object" ? bundle.lifecycle : {};
+  const validation = bundle.validation && typeof bundle.validation === "object" ? bundle.validation : null;
   for (const stage of ["desired", "plan", "approval", "apply", "observe", "contract", "propagate"]) {
     if (!lifecycle[stage]) {
       issues.push(verificationIssue("error", `lifecycle.${stage}.missing`, `lifecycle.${stage} evidence is missing`));
     }
   }
   const artifact = lifecycle.contract?.artifact;
+  let artifactHashVerified = false;
   if (!artifact || typeof artifact !== "object") {
     issues.push(verificationIssue("error", "artifact.missing", "lifecycle.contract.artifact is missing"));
   } else {
     try {
       assertInfraContractArtifact(artifact);
+      artifactHashVerified = true;
     } catch (error) {
       issues.push(verificationIssue("error", "artifact.invalid", error.message));
     }
@@ -748,6 +773,20 @@ export function verifyInfraContractEvidenceBundle(bundle) {
         issues.push(verificationIssue("error", "propagate.consumers.mismatch", "lifecycle propagate consumers do not match contract artifact"));
       }
     }
+  }
+  if (artifact && typeof artifact === "object") {
+    const applyResultBound = !artifact.apply?.enabled
+      ? lifecycle.apply?.result === null || lifecycle.apply?.result === undefined
+      : Boolean(lifecycle.apply?.result) && !hasIssueCode(issues, "apply.binding.invalid");
+    const propagationRequired = (artifact.consumers || []).length > 0;
+    const propagationResultBound = !propagationRequired
+      ? lifecycle.propagate?.result === null || lifecycle.propagate?.result === undefined
+      : Boolean(lifecycle.propagate?.result) && !hasIssueCode(issues, "propagation.binding.invalid");
+    addValidationMismatch(issues, validation, "artifactHashVerified", artifactHashVerified);
+    addValidationMismatch(issues, validation, "applyResultBound", applyResultBound);
+    addValidationMismatch(issues, validation, "propagationResultBound", propagationResultBound);
+    addValidationMismatch(issues, validation, "mutationExecuted", Boolean(lifecycle.apply?.result?.mutationExecuted));
+    addValidationMismatch(issues, validation, "propagationExecuted", Boolean(lifecycle.propagate?.result?.mutationExecuted));
   }
   const errorCount = issues.filter((issue) => issue.level === "error").length;
   return {

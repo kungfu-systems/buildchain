@@ -265,7 +265,9 @@ buildchain verify infra-contract-evidence-bundle .buildchain/infra-contract-evid
 
 The infra-contract verifier is read-only. It recomputes the bundle hash and
 checks that desired, plan, approval, apply, observe, contract, and propagate
-evidence remain bound to the same contract artifact.
+evidence remain bound to the same contract artifact. It also recomputes the
+bundle validation summary, so stale or misleading summary booleans fail closed
+even when the bundle hash has been refreshed.
 
 `buildchain release --dry-run` explains the release-line state machine before a
 maintainer opens or merges a channel PR:
