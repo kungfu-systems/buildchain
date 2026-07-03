@@ -1155,7 +1155,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
 }, null, 2) + "\\n");
 `,
   });
-  const { octokit, refs, blobs, trees, commits } = createGitMock({
+  const { octokit, refs, commits } = createGitMock({
     refs: new Map([
       ["heads/alpha/v1/v1.0", SHA],
       ["heads/buildchain/release-state/1-0-0-alpha-0", OTHER_SHA],
@@ -2350,7 +2350,7 @@ test("publish transaction finalizes current release version-state merge commits"
       packageManager: "pnpm@11.7.0",
     },
   });
-  const { octokit, refs, commits } = createGitMock({
+  const { octokit, refs, blobs, trees, commits } = createGitMock({
     refs: new Map([
       ["heads/release/v1/v1.0", toolingMergeSha],
       ["tags/v1.0.0-alpha.0", alphaSha],
@@ -2367,6 +2367,52 @@ test("publish transaction finalizes current release version-state merge commits"
     parents: [{ sha: mergeSha }, { sha: "3".repeat(40) }],
   });
   const statePath = path.join(cwd, ".buildchain/release-state/1.0.0.json");
+  const evidencePath = path.join(cwd, ".buildchain/release-evidence/v1.0.0/evidence.json");
+  const distTagEvidencePath = path.join(cwd, ".buildchain/release-evidence/v1.0.0/dist-tag-evidence.json");
+  fs.mkdirSync(path.dirname(evidencePath), { recursive: true });
+  fs.writeFileSync(
+    evidencePath,
+    `${JSON.stringify({
+      schema: 1,
+      repository: "kungfu-systems/buildchain",
+      version: "1.0.0",
+      channel: "release",
+      source_sha: oldReleaseSha,
+      release_sha: versionHeadSha,
+      target_ref: "release/v1/v1.0",
+      release_material_sha: versionHeadSha,
+      publish_tooling_sha: versionHeadSha,
+      artifacts: [
+        {
+          group: "node",
+          kind: "npm",
+          name: "@kungfu-tech/buildchain",
+          ref: "1.0.0",
+          digest: "sha512-release",
+        },
+      ],
+    }, null, 2)}\n`,
+  );
+  fs.writeFileSync(
+    distTagEvidencePath,
+    `${JSON.stringify({
+      schema: 1,
+      contract: "kungfu-buildchain-dist-tag-promotion-evidence",
+      mode: "publish-final-version",
+      auth: "trusted-publishing",
+      distTag: "latest",
+      source: "validated-evidence",
+      packages: [
+        {
+          name: "@kungfu-tech/buildchain",
+          version: "1.0.0",
+          distTag: "latest",
+          role: "main",
+          digest: "sha512-release",
+        },
+      ],
+    }, null, 2)}\n`,
+  );
   await persistDurableReleaseTransaction({
     octokit,
     owner: "kungfu-systems",
@@ -2389,19 +2435,32 @@ test("publish transaction finalizes current release version-state merge commits"
       lifecycle_identity: "lifecycle.publish",
       state_ref: "buildchain/release-state/1-0-0",
       state_path: statePath,
-      evidence_path: "",
+      evidence_path: evidencePath,
       state: "published",
       previous_state: "publishing",
       actor: "codex",
       run_id: "1",
       superseded_by: "",
       failure: "",
-      artifacts: [],
-      evidence: [],
+      artifacts: [
+        {
+          group: "node",
+          kind: "npm",
+          name: "@kungfu-tech/buildchain",
+          ref: "1.0.0",
+          digest: "sha512-release",
+          role: "main",
+          required: true,
+        },
+      ],
+      evidence: [
+        ".buildchain/release-evidence/v1.0.0/evidence.json",
+        ".buildchain/release-evidence/v1.0.0/dist-tag-evidence.json",
+      ],
       created_at: "2026-07-01T00:00:00.000Z",
       updated_at: "2026-07-01T00:00:00.000Z",
     },
-    evidencePath: "",
+    evidencePath,
   });
 
   const result = await promoteBuildchainRefs({
@@ -2412,6 +2471,19 @@ test("publish transaction finalizes current release version-state merge commits"
     targetRef: "release/v1/v1.0",
     cwd,
     publishTransaction: true,
+    publishAuth: "trusted-publishing",
+    publishDistTag: "latest",
+    publishPackageMain: "@kungfu-tech/buildchain",
+    publishRequiredArtifactsJson: JSON.stringify([
+      {
+        group: "node",
+        kind: "npm",
+        name: "@kungfu-tech/buildchain",
+        ref: "1.0.0",
+        digest: "sha512-release",
+        role: "main",
+      },
+    ]),
     requireVersionState: true,
   });
 
@@ -2426,6 +2498,23 @@ test("publish transaction finalizes current release version-state merge commits"
     result.updates.some((update) => update.action === "stale-publish-transaction"),
     false,
   );
+  assert.equal(result.publishTransaction.releasePassportPath, ".buildchain/release-passport/buildchain.release.json");
+  const stateCommit = commits.get(result.publishTransaction.releasePassportStateSha);
+  const passportEntry = (trees.get(stateCommit.tree.sha) || []).find((entry) =>
+    entry.path === "release-passport/buildchain.release.json"
+  );
+  const checkReportEntry = (trees.get(stateCommit.tree.sha) || []).find((entry) =>
+    entry.path === "release-passport/check-report.json"
+  );
+  assert.ok(passportEntry);
+  assert.ok(checkReportEntry);
+  const passport = JSON.parse(Buffer.from(blobs.get(passportEntry.sha).content, "base64").toString("utf8"));
+  const checkReport = JSON.parse(Buffer.from(blobs.get(checkReportEntry.sha).content, "base64").toString("utf8"));
+  assert.equal(passport.release.sourceSha, oldReleaseSha);
+  assert.equal(passport.trustedPublishing.enabled, true);
+  assert.equal(passport.trustedPublishing.auth, "trusted-publishing");
+  assert.equal(passport.distTagPromotion.fields.distTag, "latest");
+  assert.equal(checkReport.ok, true);
 });
 
 test("publish transaction resumes partial release finalization with exact tag on release material", async () => {
