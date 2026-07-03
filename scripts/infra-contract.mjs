@@ -27,6 +27,30 @@ function readBooleanArg(name, fallback = true) {
   return value === "true" || value === "1";
 }
 
+function readNumberArg(name, fallback) {
+  const value = readArg(name, "");
+  if (!value) {
+    return fallback;
+  }
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    throw new Error(`--${name} must be a number`);
+  }
+  return parsed;
+}
+
+function readNumberEnv(name, fallback) {
+  const value = process.env[name] || "";
+  if (!value) {
+    return fallback;
+  }
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    throw new Error(`${name} must be a number`);
+  }
+  return parsed;
+}
+
 function writeJson(result, outputPath) {
   const json = `${JSON.stringify(result, null, 2)}\n`;
   if (outputPath) {
@@ -113,6 +137,11 @@ export function infraContractCli() {
       sourceSha,
       approvalId: readArg("approval-id", ""),
       dryRun: readBooleanArg("dry-run", true),
+      plan: readJsonFileArg("plan"),
+      planMaxAgeMinutes: readNumberArg(
+        "plan-max-age-minutes",
+        readNumberEnv("BUILDCHAIN_INFRA_CONTRACT_PLAN_MAX_AGE_MINUTES", 60),
+      ),
     });
     writeJson(result, output);
     writeGitHubOutputs({

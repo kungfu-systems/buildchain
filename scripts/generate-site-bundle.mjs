@@ -72,7 +72,7 @@ function buildSiteBundle() {
       { id: "logging", usage: "buildchain log|mark|span|verify observability-log", purpose: "Emit timestamped build events, summarize logs, and enforce required phases." },
       { id: "diagnostics-summary", usage: "buildchain diagnostics summary <diagnostics.json>...", purpose: "Summarize small diagnostics artifacts into JSON and a cross-platform lifecycle timing table." },
       { id: "npm-dry-run", usage: "buildchain npm dry-run --json", purpose: "Verify npm publish shape before a release transaction." },
-      { id: "infra-contract", usage: "buildchain infra-contract --mode validate|plan|contract|propagation-plan", purpose: "Validate and publish provider-neutral infrastructure contract evidence without default mutation." },
+      { id: "infra-contract", usage: "buildchain infra-contract --mode validate|plan|contract|propagation-plan|apply", purpose: "Validate and publish provider-neutral infrastructure contract evidence with saved-plan apply gates." },
     ],
   };
 

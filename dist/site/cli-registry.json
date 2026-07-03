@@ -61,8 +61,8 @@
     },
     {
       "id": "infra-contract",
-      "usage": "buildchain infra-contract --mode validate|plan|contract|propagation-plan",
-      "purpose": "Validate and publish provider-neutral infrastructure contract evidence without default mutation."
+      "usage": "buildchain infra-contract --mode validate|plan|contract|propagation-plan|apply",
+      "purpose": "Validate and publish provider-neutral infrastructure contract evidence with saved-plan apply gates."
     }
   ]
 }

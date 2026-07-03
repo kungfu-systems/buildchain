@@ -127,6 +127,53 @@ test("init infra-contract creates a directly valid observed contract scaffold", 
   assert.equal(validation.consumers.length, 1);
 });
 
+test("infra-contract CLI apply consumes a saved fresh plan", () => {
+  const cwd = tempDir("infra-contract-cli-apply");
+  fs.cpSync(path.join(root, "fixtures/infra-contract-terraform-shaped"), cwd, { recursive: true });
+  fs.writeFileSync(
+    path.join(cwd, "buildchain.toml"),
+    fs.readFileSync(path.join(cwd, "buildchain.toml"), "utf8")
+      .replace('adoption_mode = "observe-only"', 'adoption_mode = "managed-apply"')
+      .replace('apply = "disabled"', 'apply = "manual-approval"'),
+  );
+  const sourceSha = "2".repeat(40);
+  const planPath = path.join(cwd, ".buildchain", "infra-contract-plan.json");
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "plan",
+    "--cwd",
+    cwd,
+    "--source-sha",
+    sourceSha,
+    "--output",
+    planPath,
+  ]);
+  const outputPath = path.join(cwd, ".buildchain", "infra-contract-apply.json");
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "apply",
+    "--cwd",
+    cwd,
+    "--source-sha",
+    sourceSha,
+    "--approval-id",
+    "APPROVED-CLI-1",
+    "--plan",
+    planPath,
+    "--dry-run",
+    "true",
+    "--output",
+    outputPath,
+  ]);
+  const result = JSON.parse(fs.readFileSync(outputPath, "utf8"));
+  assert.equal(result.contract, "kungfu-buildchain-infra-contract-apply");
+  assert.equal(result.status, "planned");
+  assert.equal(result.sourceSha, sourceSha);
+  assert.equal(result.mutationExecuted, false);
+});
+
 test("validate reads initialized package config", () => {
   const cwd = tempDir("validate-package");
   fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({ name: "fixture", version: "0.1.0" }, null, 2));

@@ -105,8 +105,13 @@ test("infra-contract managed apply requires approval before mutation", () => {
         .replace('adoption_mode = "observe-only"', 'adoption_mode = "managed-apply"')
         .replace('apply = "disabled"', 'apply = "manual-approval"'),
     );
+    const plan = createInfraContractPlan({
+      cwd: fixture,
+      sourceSha: "d".repeat(40),
+      plannedAt: "2026-07-03T00:00:00.000Z",
+    });
     assert.throws(
-      () => applyInfraContract({ cwd: fixture, sourceSha: "d".repeat(40) }),
+      () => applyInfraContract({ cwd: fixture, sourceSha: "d".repeat(40), plan }),
       /requires an approval id before mutation/,
     );
     const planned = applyInfraContract({
@@ -114,8 +119,89 @@ test("infra-contract managed apply requires approval before mutation", () => {
       sourceSha: "d".repeat(40),
       approvalId: "APPROVED-2",
       dryRun: true,
+      plan,
+      now: "2026-07-03T00:05:00.000Z",
     });
     assert.equal(planned.status, "planned");
+    assert.equal(planned.planHash, plan.planHash);
+    assert.equal(planned.planAgeSeconds, 300);
     assert.equal(planned.mutationExecuted, false);
+  });
+});
+
+test("infra-contract managed apply requires a saved fresh plan", () => {
+  withFixture("infra-contract-terraform-shaped", (fixture) => {
+    fs.writeFileSync(
+      path.join(fixture, "buildchain.toml"),
+      fs.readFileSync(path.join(fixture, "buildchain.toml"), "utf8")
+        .replace('adoption_mode = "observe-only"', 'adoption_mode = "managed-apply"')
+        .replace('apply = "disabled"', 'apply = "manual-approval"'),
+    );
+    assert.throws(
+      () => applyInfraContract({
+        cwd: fixture,
+        sourceSha: "e".repeat(40),
+        approvalId: "APPROVED-3",
+        dryRun: true,
+      }),
+      /requires a saved infra-contract plan/,
+    );
+
+    const plan = createInfraContractPlan({
+      cwd: fixture,
+      sourceSha: "e".repeat(40),
+      plannedAt: "2026-07-03T00:00:00.000Z",
+    });
+    assert.throws(
+      () => applyInfraContract({
+        cwd: fixture,
+        sourceSha: "f".repeat(40),
+        approvalId: "APPROVED-3",
+        dryRun: true,
+        plan,
+        now: "2026-07-03T00:01:00.000Z",
+      }),
+      /sourceSha mismatch/,
+    );
+    assert.throws(
+      () => applyInfraContract({
+        cwd: fixture,
+        sourceSha: "e".repeat(40),
+        approvalId: "APPROVED-3",
+        dryRun: true,
+        plan,
+        now: "2026-07-03T02:00:01.000Z",
+        planMaxAgeMinutes: 60,
+      }),
+      /plan is stale/,
+    );
+  });
+});
+
+test("infra-contract managed apply rejects a plan after desired inputs drift", () => {
+  withFixture("infra-contract-terraform-shaped", (fixture) => {
+    fs.writeFileSync(
+      path.join(fixture, "buildchain.toml"),
+      fs.readFileSync(path.join(fixture, "buildchain.toml"), "utf8")
+        .replace('adoption_mode = "observe-only"', 'adoption_mode = "managed-apply"')
+        .replace('apply = "disabled"', 'apply = "manual-approval"'),
+    );
+    const plan = createInfraContractPlan({
+      cwd: fixture,
+      sourceSha: "1".repeat(40),
+      plannedAt: "2026-07-03T00:00:00.000Z",
+    });
+    fs.writeFileSync(path.join(fixture, "desired/main.tf.json"), "{ \"resource\": {} }\n");
+    assert.throws(
+      () => applyInfraContract({
+        cwd: fixture,
+        sourceSha: "1".repeat(40),
+        approvalId: "APPROVED-4",
+        dryRun: true,
+        plan,
+        now: "2026-07-03T00:01:00.000Z",
+      }),
+      /plan no longer matches current desired, contract, or consumer inputs/,
+    );
   });
 });
