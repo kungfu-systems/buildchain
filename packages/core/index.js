@@ -1,6 +1,7 @@
 export {
   discoverConfiguredVersionStateFiles,
   getLifecycleStage,
+  getNativeDiagnosticsProfile,
   getPublishContract,
   getVersionStrategy,
   loadBuildchainConfig,
@@ -52,6 +53,37 @@ export {
   summarizeBuildchainLogEvents,
   verifyBuildchainLogEvents,
 } from "./logging.js";
+
+export {
+  BUILDCHAIN_ANCHORED_PACKAGE_RELEASE_VALIDATION_CONTRACT,
+  BUILDCHAIN_DIAGNOSTICS_CONTRACT,
+  BUILDCHAIN_DIAGNOSTICS_MANIFEST_CONTRACT,
+  BUILDCHAIN_DIAGNOSTICS_SUMMARY_CONTRACT,
+  BUILDCHAIN_LIFECYCLE_OBSERVABILITY_CONTRACT,
+  BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT,
+  BUILDCHAIN_PROCESS_SAMPLE_SUMMARY_CONTRACT,
+  classifyProcessCommand,
+  collectBuildchainDiagnostics,
+  collectCacheDiagnostics,
+  collectCompilerCacheDiagnostics,
+  collectGitDiagnostics,
+  collectNativeDiagnostics,
+  collectProcessTreeSnapshot,
+  collectRunnerDiagnostics,
+  collectToolDiagnostics,
+  createDiagnosticsArtifact,
+  detectRequestedParallelism,
+  detectRequestedParallelismFromProcessSamples,
+  formatDiagnosticsSummaryTable,
+  readDiagnosticsArtifact,
+  redactDiagnosticsValue,
+  startProcessSampler,
+  summarizeDiagnosticsArtifacts,
+  summarizeLifecycleObservability,
+  summarizeProcessSamples,
+  validateAnchoredPackageRelease,
+  writeDiagnosticsArtifact,
+} from "./diagnostics.js";
 
 export {
   AGENT_INDEX_CONTRACT,

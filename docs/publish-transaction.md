@@ -150,6 +150,14 @@ For package sets, `package_set_order = "platforms-first-main-last"` makes the
 main package the visibility gate. Platform package side effects are planned or
 retried first, and the main package or main dist-tag move happens last.
 
+When the transaction reaches `complete`, `actions/promote-buildchain-ref`
+generates `.buildchain/release-passport/buildchain.release.json` and persists
+the `release-passport/*` files into the durable `buildchain/release-state/...`
+ref. The passport is the stable release artifact for agents and people: it
+links the package set, npm publish evidence, dist-tag evidence, build summary,
+platform artifact manifests, trusted publishing metadata, release-state ref,
+and transaction result in one schema.
+
 ## Evidence
 
 The publish lifecycle must write JSON evidence. Buildchain validates common
@@ -188,6 +196,8 @@ The generic contract is intentionally small:
 
 - `version`, `channel`, `source_sha`, `release_sha`, and `target_ref` must match
   the promotion run;
+- dist-tag promotion evidence is written beside the publish evidence as
+  `dist-tag-evidence.json` and is referenced from the generated passport;
 - required artifacts must appear in evidence;
 - evidence used by a GitHub-hosted rerun must either be stored in the durable
   state ref or be reconstructed by a machine-verifiable consumer command;

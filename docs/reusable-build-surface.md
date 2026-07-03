@@ -24,6 +24,7 @@ jobs:
         build/stage
       expected-artifacts-json: >-
         {"minFiles":2,"requiredPaths":["dist/libnode.tar.gz","dist/checksums.txt"]}
+      process-summary-path: .buildchain/diagnostics/process-summary.json
       publish-channel: release
       publish-source-ref: publish-gate/release/v22/v22.22/22.22.3-kf.0
 ```
@@ -108,6 +109,74 @@ Do not use `kungfu-verify` for stages that need CMake, Ninja, ccache, Conan, or
 Docker image publishing. Those should use a heavier native-build image or remain
 on a host runner until their image contract is explicit.
 
+## Buildchain Runtime Override
+
+Stable consumers should keep the reusable workflow pinned to stable refs such as
+`@v2`. The optional `buildchain-ref` input is empty by default; empty means
+Buildchain resolves and executes the stable runtime selected by the workflow
+shell. The full train validation protocol is documented in
+[`runtime-train-validation.md`](runtime-train-validation.md).
+
+For one-off manual validation, a trusted maintainer can run the caller workflow
+with a temporary runtime override:
+
+```yaml
+on:
+  workflow_dispatch:
+    inputs:
+      buildchain-ref:
+        description: "Temporary Buildchain runtime ref for trusted manual validation"
+        required: false
+        default: ""
+
+jobs:
+  build:
+    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2
+    with:
+      buildchain-ref: ${{ inputs.buildchain-ref || '' }}
+```
+
+Allowed override refs are deliberately narrow:
+
+| Ref form | Meaning |
+| --- | --- |
+| `train/v2/v2.3/<capability>` | Temporary capability train under the active minor line |
+| `refs/heads/train/v2/v2.3/<capability>` | Explicit branch ref for the same train |
+| `<40-character SHA>` | Exact immutable Buildchain runtime commit |
+
+Override requests fail closed unless the event is `workflow_dispatch` and the
+actor has write, maintain, or admin permission on the caller repository.
+Pull requests, including same-repository pull requests and fork-originated pull
+requests, cannot use `buildchain-ref` override. This keeps automated PR builds on
+the stable runtime surface.
+
+Every run resolves the runtime ref to an immutable SHA before checkout. The job
+summary and aggregate build summary record the workflow shell ref, requested
+runtime ref, resolved runtime ref, runtime SHA, stability class, trust decision,
+and rollback ref. Train refs are development validation refs: they do not move
+`v2`, `vX.Y`, `vX.Y-alpha`, npm dist-tags, or production release refs, and they
+must not be pinned as long-term production dependencies.
+
+Runtime override validates Buildchain runtime scripts, CLI code, local actions,
+config parsing, and lifecycle behavior. It cannot validate changes that require
+the outer reusable workflow YAML itself to change, such as new jobs,
+permissions, workflow outputs, or matrix topology. Those changes need a canary
+workflow path or a temporary explicit workflow ref.
+
+When a Buildchain maintainer asks for downstream validation, the expected
+request is:
+
+```text
+Buildchain train ready: buildchain-ref=train/v2/v2.3/<capability>.
+Keep uses: ...@v2; run workflow_dispatch with that buildchain-ref and report the runtime evidence summary.
+```
+
+After validation succeeds, the Buildchain change should continue through the
+normal mainline and release path. Do not treat the train as a pending merge
+item; it is only a temporary fast-use, diagnostic, and rollback channel. It may
+remain for a retention window after release, with old trains handled by a
+separate periodic cleanup task.
+
 ## Workflow Outputs
 
 The reusable workflow exposes the resolved contract:
@@ -120,8 +189,15 @@ The reusable workflow exposes the resolved contract:
 | `linux-container-enabled`         | `true` when Linux platforms are routed through a job container                  |
 | `linux-container-image`           | Resolved digest-pinned Linux job container image                                |
 | `build-summary-artifact`          | Uploaded aggregate summary artifact name                                        |
+| `build-diagnostics-summary-artifact` | Uploaded aggregate diagnostics summary artifact name                         |
 | `build-summary-json`              | Compact aggregate JSON with platform count, file count, and byte total          |
+| `build-diagnostics-summary-json`  | Compact aggregate diagnostics JSON with platform, lifecycle warning/error, diagnostics contract warning, and sidecar manifest warning totals |
 | `trusted-event`                   | `true` when the event is trusted enough to reach build runners                  |
+| `buildchain-runtime-ref`          | Runtime ref selected after applying the empty-default or override policy        |
+| `buildchain-runtime-sha`          | Immutable Buildchain runtime commit used by all runtime checkouts               |
+| `buildchain-runtime-class`        | `stable`, `alpha`, `train`, `exact-sha`, or `development`                       |
+| `buildchain-runtime-override`     | `true` when a non-empty `buildchain-ref` override was accepted                  |
+| `buildchain-runtime-trust-decision` | Runtime override trust decision                                               |
 | `publish-channel`                 | Resolved publish channel requested by the caller                                |
 | `publish-allowed`                 | `true` only when this event/ref may publish after verification                  |
 | `publish-reason`                  | Human-readable reason for the publish gate decision                             |
@@ -133,10 +209,29 @@ The reusable workflow exposes the resolved contract:
 | `publish-source-consumer-version` | Consumer package version parsed from source refs                                |
 | `release-manifest-json`           | Resolved release manifest including source lock, version state, and anchor data |
 
-The aggregate summary is intentionally an artifact as well as an output. GitHub
+The aggregate summaries are intentionally artifacts as well as outputs. GitHub
 Actions matrix outputs are not a reliable place to carry every platform's full
 manifest, so Buildchain uploads each platform manifest and then emits one
-aggregate summary artifact after the matrix completes.
+aggregate build summary artifact after the matrix completes. Buildchain uploads
+`diagnostics-summary.json` as a separate aggregate diagnostics summary artifact,
+a compact rollup of each platform's small diagnostics upload. The rollup keeps
+per-platform runner facts, checked tool versions/missing tools, package
+manager/cache directory details, compiler-cache availability, lifecycle timing,
+process sampler context, and links back to the exact platform artifacts. Each
+platform diagnostics upload includes `diagnostics.json`,
+`diagnostics-manifest.json`, the lifecycle `events.jsonl`, and process sampler
+sidecars when enabled, so slow-build diagnosis does not require downloading the
+binary platform artifact or the aggregate build summary. The sidecar manifest
+records the uploaded diagnostics files with bytes and sha256 hashes. Each
+`diagnostics.json` also records the related binary artifact name, manifest
+artifact name, diagnostics artifact name, diagnostics sidecar manifest path, and
+platform id in `links`, so a reviewer can navigate from the small diagnostics
+artifact back to the exact platform outputs when deeper inspection is needed.
+The workflow output `build-diagnostics-summary-json` includes
+`diagnosticsContractWarningCount` and `diagnosticsManifestWarningCount` so
+release jobs can detect drifting diagnostics JSON contracts and missing or
+drifting diagnostics sidecar manifests without downloading the per-platform
+diagnostics artifacts first.
 
 ## Publish Gate
 
@@ -240,6 +335,38 @@ If the branch tip no longer matches the manifest SHA, the publish job must fail
 closed. Moving a gate branch creates a new publish decision and should produce a
 new build run.
 
+Anchored/manual package release jobs should also make the Buildchain promotion
+action validate that publication is entering through the same
+`publish-gate/{alpha,release,major}` source-lock contract before any package
+publish side effect:
+
+```yaml
+- name: Promote release ref and publish npm package set
+  uses: kungfu-systems/buildchain/actions/promote-buildchain-ref@v2
+  with:
+    sha: ${{ needs.build.outputs.publish-source-sha }}
+    target-ref: release/v22/v22.22
+    require-publish-source-lock: 'true'
+    publish-source-ref: ${{ needs.build.outputs.publish-source-ref }}
+    publish-source-sha: ${{ needs.build.outputs.publish-source-sha }}
+    publish-source-locked: ${{ needs.build.outputs.publish-source-locked }}
+```
+
+`target-ref` stays the Buildchain channel promotion target, such as
+`alpha/v22/v22.22`, `release/v22/v22.22`, or `publish-gate/major`.
+`publish-source-ref` is the reviewed source-lock branch that authorized this
+specific package publication. For alpha and release package publications, the
+source-lock branch must point at the exact channel-line commit that promotion is
+validating; it is not a replacement for `target-ref`.
+
+This keeps the version bump commit, publish authorization, and auditable publish
+entrypoint on the Buildchain source-lock protocol. The CLI form
+`buildchain publish-source validate-anchored-release --json` is still useful for
+custom publish scripts, but the preferred GitHub Actions gate is the promotion
+action input above. A publish job that still runs directly from `alpha/*` or
+`release/*` channel branches fails this check because those refs are channel
+state, not publish-gate decisions.
+
 ## Package-Set Publish Plan
 
 Projects that publish multiple packages should treat package publication as a
@@ -280,6 +407,28 @@ with:
   build-command: cmake --build build --config Release
   verify-command: ctest --test-dir build --output-on-failure
 ```
+
+The reusable build workflow samples the build lifecycle by default and carries
+the generated summary into the final verify diagnostics. Callers can override
+the sidecar path or disable sampling:
+
+```yaml
+with:
+  sample-process-tree: true
+  process-summary-path: .buildchain/diagnostics/process-summary.json
+  process-sample-interval-ms: 15000
+  requested-parallelism: 20
+```
+
+When `sample-process-tree` is true, Buildchain wraps either `build-command` or
+the configured `lifecycle.build` stage with `buildchain sample process-tree`.
+The path is relative to the checked-out workspace and is read again during the
+final verify lifecycle. Custom workflows can still write their own sampler
+summary and pass `process-summary-path`; Buildchain reads the file after the
+lifecycle command finishes, so it may be produced during the same invocation.
+When the build stage is optional, the reusable workflow treats the default
+sampler path as optional during verify; an explicitly supplied
+`process-summary-path` remains required.
 
 For custom workflows, use the action directly:
 
@@ -400,7 +549,7 @@ the publish gate: pull requests remain non-publishing events.
 `fixtures/libnode-shaped` is the contract fixture. It has:
 
 - `package.json` version state;
-- `buildchain.toml` with `install`, `build`, and `verify`;
+- `buildchain.toml` with `install`, `build`, `verify`, and `publish`;
 - cross-platform Node scripts that create small `dist/` outputs;
 - `Build Surface Fixture` workflow coverage.
 

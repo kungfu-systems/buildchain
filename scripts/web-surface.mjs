@@ -82,6 +82,10 @@ export function webSurfaceCli() {
       sourceSha,
       artifactHash: readArg("artifact-hash", process.env.BUILDCHAIN_WEB_SURFACE_ARTIFACT_HASH || ""),
       artifactPath: readArg("artifact-path", process.env.BUILDCHAIN_WEB_SURFACE_ARTIFACT_PATH || ""),
+      runtimeId: readArg("runtime-id", process.env.BUILDCHAIN_RUNTIME_ID || ""),
+      configFingerprint: readArg("config-fingerprint", process.env.BUILDCHAIN_CONFIG_FINGERPRINT || ""),
+      rollbackPointer: readArg("rollback-pointer", process.env.BUILDCHAIN_ROLLBACK_REF || ""),
+      rollbackLimitations: readArg("rollback-limitations", process.env.BUILDCHAIN_ROLLBACK_LIMITATIONS || ""),
       dryRun: readBooleanArg("dry-run", true),
     });
     const outputResult = mode === "manifest" ? result.manifest : result;

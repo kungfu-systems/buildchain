@@ -8,7 +8,8 @@ on:
         type: string
         required: false
       buildchain-ref:
-        default: "v2"
+        description: "Optional temporary Buildchain runtime ref for trusted manual validation. Empty uses the stable workflow runtime."
+        default: ""
         type: string
         required: false
       working-directory:
@@ -121,6 +122,26 @@ on:
         default: ""
         type: string
         required: false
+      process-summary-path:
+        description: "Optional process sampler summary JSON path, relative to workspace, to embed in final diagnostics"
+        default: ""
+        type: string
+        required: false
+      sample-process-tree:
+        description: "Wrap the build lifecycle with the process tree sampler"
+        default: true
+        type: boolean
+        required: false
+      process-sample-interval-ms:
+        description: "Process sampler interval in milliseconds"
+        default: 15000
+        type: number
+        required: false
+      requested-parallelism:
+        description: "Optional expected build parallelism recorded in process diagnostics"
+        default: 0
+        type: number
+        required: false
       artifact-retention-days:
         default: 14
         type: number
@@ -144,12 +165,33 @@ on:
       build-summary-artifact:
         description: "Uploaded aggregate build summary artifact name"
         value: ${{ jobs.summarize.outputs.summary-artifact-name }}
+      build-diagnostics-summary-artifact:
+        description: "Uploaded aggregate diagnostics summary artifact name"
+        value: ${{ jobs.summarize.outputs.diagnostics-summary-artifact-name }}
       build-summary-json:
         description: "Compact aggregate build summary JSON"
         value: ${{ jobs.summarize.outputs.artifact-summary-json }}
+      build-diagnostics-summary-json:
+        description: "Compact aggregate diagnostics summary JSON with lifecycle, diagnostics contract warning, and sidecar manifest warning totals"
+        value: ${{ jobs.summarize.outputs.diagnostics-summary-json }}
       trusted-event:
         description: "Whether the event is trusted enough to run build jobs"
         value: ${{ jobs.trust-gate.outputs.trusted-event }}
+      buildchain-runtime-ref:
+        description: "Resolved Buildchain runtime ref"
+        value: ${{ jobs.trust-gate.outputs.buildchain-runtime-ref }}
+      buildchain-runtime-sha:
+        description: "Resolved immutable Buildchain runtime SHA"
+        value: ${{ jobs.trust-gate.outputs.buildchain-runtime-sha }}
+      buildchain-runtime-class:
+        description: "Runtime stability class: stable, alpha, train, exact-sha, or development"
+        value: ${{ jobs.trust-gate.outputs.buildchain-runtime-class }}
+      buildchain-runtime-override:
+        description: "Whether a non-empty buildchain-ref override was used"
+        value: ${{ jobs.trust-gate.outputs.buildchain-runtime-override }}
+      buildchain-runtime-trust-decision:
+        description: "Runtime override trust decision"
+        value: ${{ jobs.trust-gate.outputs.buildchain-runtime-trust-decision }}
       publish-channel:
         description: "Resolved publish channel"
         value: ${{ jobs.trust-gate.outputs.publish-channel }}
@@ -201,12 +243,125 @@ jobs:
       publish-source-channel: ${{ steps.source.outputs.publish-source-channel }}
       publish-source-line: ${{ steps.source.outputs.publish-source-line }}
       publish-source-consumer-version: ${{ steps.source.outputs.publish-source-consumer-version }}
+      buildchain-runtime-ref: ${{ steps.runtime.outputs.runtime-ref }}
+      buildchain-runtime-full-ref: ${{ steps.runtime.outputs.runtime-full-ref }}
+      buildchain-runtime-sha: ${{ steps.runtime.outputs.runtime-sha }}
+      buildchain-runtime-class: ${{ steps.runtime.outputs.runtime-class }}
+      buildchain-runtime-override: ${{ steps.runtime.outputs.runtime-override }}
+      buildchain-runtime-trust-decision: ${{ steps.runtime.outputs.runtime-trust-decision }}
+      buildchain-workflow-shell-ref: ${{ steps.runtime.outputs.workflow-shell-ref }}
+      buildchain-rollback-ref: ${{ steps.runtime.outputs.rollback-ref }}
     steps:
+      - name: Resolve Buildchain runtime
+        id: runtime
+        uses: actions/github-script@v8
+        env:
+          BUILDCHAIN_REPOSITORY: ${{ inputs.buildchain-repository }}
+          BUILDCHAIN_REQUESTED_REF: ${{ inputs.buildchain-ref }}
+          BUILDCHAIN_DEFAULT_REF: v2
+        with:
+          script: |
+            const requested = (process.env.BUILDCHAIN_REQUESTED_REF || "").trim();
+            const repository = (process.env.BUILDCHAIN_REPOSITORY || "kungfu-systems/buildchain").trim();
+            const defaultRef = (process.env.BUILDCHAIN_DEFAULT_REF || "v2").trim();
+            const [runtimeOwner, runtimeRepo] = repository.split("/");
+            if (!runtimeOwner || !runtimeRepo) {
+              throw new Error(`invalid buildchain repository: ${repository}`);
+            }
+            const exactSha = /^[0-9a-f]{40}$/i;
+            const trainRef = /^train\/v\d+\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
+            const workflowRef = process.env.GITHUB_WORKFLOW_REF || "";
+            const shellRef = workflowRef.startsWith(`${repository}/.github/workflows/`)
+              ? (workflowRef.split("@").pop() || defaultRef).trim() || defaultRef
+              : defaultRef;
+            const normalizeClass = (ref) => {
+              const value = String(ref || "").replace(/^refs\/heads\//, "").replace(/^refs\/tags\//, "");
+              if (exactSha.test(value)) return "exact-sha";
+              if (trainRef.test(value)) return "train";
+              if (/^v\d+(?:\.\d+)?$/.test(value) || /^v\d+\.\d+\.\d+$/.test(value)) return "stable";
+              if (/^v\d+(?:\.\d+)?-alpha$/.test(value) || /^v\d+\.\d+\.\d+-alpha\.\d+$/.test(value)) return "alpha";
+              return "development";
+            };
+            let runtimeRef = requested || shellRef;
+            let runtimeFullRef = runtimeRef;
+            let runtimeClass = normalizeClass(runtimeRef);
+            let runtimeOverride = requested !== "";
+            let trustDecision = runtimeOverride ? "override-requested" : "stable-default";
+            if (runtimeOverride) {
+              if (context.eventName !== "workflow_dispatch") {
+                throw new Error("buildchain-ref override is only allowed for trusted workflow_dispatch runs");
+              }
+              const permission = await github.rest.repos.getCollaboratorPermissionLevel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                username: context.actor,
+              });
+              const actorPermission = permission.data.permission || "";
+              if (!["admin", "maintain", "write"].includes(actorPermission)) {
+                throw new Error(`buildchain-ref override requires write, maintain, or admin permission; actor has ${actorPermission || "none"}`);
+              }
+              if (exactSha.test(requested)) {
+                runtimeRef = requested;
+                runtimeFullRef = requested;
+                runtimeClass = "exact-sha";
+              } else {
+                runtimeRef = requested.replace(/^refs\/heads\//, "");
+                if (!trainRef.test(runtimeRef)) {
+                  throw new Error("buildchain-ref override must be train/vN/vN.M/<capability>, refs/heads/train/vN/vN.M/<capability>, or an exact 40-character SHA");
+                }
+                runtimeFullRef = `refs/heads/${runtimeRef}`;
+                runtimeClass = "train";
+              }
+              trustDecision = "override-accepted";
+            }
+            async function resolveRef(ref) {
+              if (exactSha.test(ref)) return ref;
+              const normalized = ref.replace(/^refs\/heads\//, "").replace(/^refs\/tags\//, "");
+              const candidates = ref.startsWith("refs/")
+                ? [ref.replace(/^refs\//, "")]
+                : [`tags/${normalized}`, `heads/${normalized}`];
+              for (const candidate of candidates) {
+                try {
+                  const response = await github.rest.git.getRef({
+                    owner: runtimeOwner,
+                    repo: runtimeRepo,
+                    ref: candidate,
+                  });
+                  return response.data.object.sha;
+                } catch (error) {
+                  if (error.status !== 404) throw error;
+                }
+              }
+              throw new Error(`unable to resolve Buildchain runtime ref: ${ref}`);
+            }
+            const runtimeSha = await resolveRef(runtimeFullRef);
+            const outputs = {
+              "runtime-ref": runtimeRef,
+              "runtime-full-ref": runtimeFullRef,
+              "runtime-sha": runtimeSha,
+              "runtime-class": runtimeClass,
+              "runtime-override": String(runtimeOverride),
+              "runtime-trust-decision": trustDecision,
+              "workflow-shell-ref": shellRef,
+              "rollback-ref": shellRef,
+            };
+            for (const [name, value] of Object.entries(outputs)) core.setOutput(name, value);
+            await core.summary
+              .addHeading("Buildchain runtime")
+              .addRaw(`- workflow shell ref: \`${shellRef}\`\n`)
+              .addRaw(`- requested runtime ref: \`${requested || "(default)"}\`\n`)
+              .addRaw(`- resolved runtime ref: \`${runtimeRef}\`\n`)
+              .addRaw(`- resolved runtime sha: \`${runtimeSha}\`\n`)
+              .addRaw(`- stability: \`${runtimeClass}\`\n`)
+              .addRaw(`- trust decision: \`${trustDecision}\`\n`)
+              .addRaw(`- rollback ref: \`${shellRef}\`\n`)
+              .write();
+
       - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.buildchain-ref }}
+          ref: ${{ steps.runtime.outputs.runtime-sha }}
           path: .buildchain/runtime
           persist-credentials: false
 
@@ -278,7 +433,7 @@ jobs:
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.buildchain-ref }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           path: .buildchain/runtime
           persist-credentials: false
 
@@ -308,6 +463,8 @@ jobs:
   resolve-contract:
     name: Resolve reusable contract
     runs-on: ubuntu-24.04
+    needs:
+      - trust-gate
     outputs:
       runner-preset: ${{ steps.runners.outputs.runner-preset }}
       platforms-json: ${{ steps.runners.outputs.platforms-json }}
@@ -326,7 +483,7 @@ jobs:
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.buildchain-ref }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           path: .buildchain/runtime
           persist-credentials: false
 
@@ -363,9 +520,18 @@ jobs:
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.buildchain-ref }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           path: .buildchain/runtime
           persist-credentials: false
+
+      - name: Setup Node.js
+        if: ${{ inputs.setup-node }}
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Install Buildchain runtime dependencies
+        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
 
       - name: Resolve artifact contract
         id: artifact-contract
@@ -376,12 +542,6 @@ jobs:
           BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
           BUILDCHAIN_PLATFORM_NAME: ${{ matrix.platform.name }}
           BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-
-      - name: Setup Node.js
-        if: ${{ inputs.setup-node }}
-        uses: actions/setup-node@v6.4.0
-        with:
-          node-version: ${{ inputs.node-version }}
 
       - name: Run install lifecycle
         uses: ./.buildchain/runtime/actions/run-lifecycle
@@ -416,6 +576,12 @@ jobs:
           artifact-paths: ${{ inputs.artifact-paths }}
           manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest-build.json
           summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary-build.json
+          process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
+          process-samples-path: .buildchain/diagnostics/process-samples.jsonl
+          sample-process-tree: ${{ inputs.sample-process-tree }}
+          process-sample-interval-ms: ${{ inputs.process-sample-interval-ms }}
+          requested-parallelism: ${{ inputs.requested-parallelism }}
+          process-summary-required: ${{ inputs.require-build }}
 
       - name: Run verify lifecycle
         id: verify-lifecycle
@@ -429,12 +595,16 @@ jobs:
           command: ${{ inputs.verify-command }}
           required: ${{ inputs.require-verify }}
           artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
+          manifest-artifact-name: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          diagnostics-artifact-name: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           platform-id: ${{ matrix.platform.id }}
           platform-name: ${{ matrix.platform.name }}
           artifact-paths: ${{ inputs.artifact-paths }}
           manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
           summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
           expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
+          process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
+          process-summary-required: ${{ inputs.process-summary-path != '' || inputs.require-build }}
 
       - name: Upload deterministic artifact
         uses: actions/upload-artifact@v7.0.1
@@ -444,6 +614,7 @@ jobs:
             ${{ inputs.artifact-paths }}
             .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
             .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
@@ -454,6 +625,20 @@ jobs:
           path: |
             .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
             .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload diagnostics artifact
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: |
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics-manifest.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
+            .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
@@ -484,7 +669,7 @@ jobs:
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.buildchain-ref }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           path: .buildchain/runtime
           persist-credentials: false
 
@@ -499,6 +684,9 @@ jobs:
           corepack enable
         env:
           BUILDCHAIN_NODE_VERSION: ${{ inputs.node-version }}
+
+      - name: Install Buildchain runtime dependencies
+        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
 
       - name: Resolve artifact contract
         id: artifact-contract
@@ -543,6 +731,12 @@ jobs:
           artifact-paths: ${{ inputs.artifact-paths }}
           manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest-build.json
           summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary-build.json
+          process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
+          process-samples-path: .buildchain/diagnostics/process-samples.jsonl
+          sample-process-tree: ${{ inputs.sample-process-tree }}
+          process-sample-interval-ms: ${{ inputs.process-sample-interval-ms }}
+          requested-parallelism: ${{ inputs.requested-parallelism }}
+          process-summary-required: ${{ inputs.require-build }}
 
       - name: Run verify lifecycle
         id: verify-lifecycle
@@ -556,12 +750,16 @@ jobs:
           command: ${{ inputs.verify-command }}
           required: ${{ inputs.require-verify }}
           artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
+          manifest-artifact-name: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          diagnostics-artifact-name: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           platform-id: ${{ matrix.platform.id }}
           platform-name: ${{ matrix.platform.name }}
           artifact-paths: ${{ inputs.artifact-paths }}
           manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
           summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
           expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
+          process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
+          process-summary-required: ${{ inputs.process-summary-path != '' || inputs.require-build }}
 
       - name: Upload deterministic artifact
         uses: actions/upload-artifact@v7.0.1
@@ -571,6 +769,7 @@ jobs:
             ${{ inputs.artifact-paths }}
             .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
             .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
@@ -581,6 +780,20 @@ jobs:
           path: |
             .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
             .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload diagnostics artifact
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: |
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics-manifest.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
+            .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
@@ -596,28 +809,44 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       summary-artifact-name: ${{ steps.names.outputs.summary-artifact-name }}
+      diagnostics-summary-artifact-name: ${{ steps.names.outputs.diagnostics-summary-artifact-name }}
       summary-path: ${{ steps.summary.outputs.summary-path }}
       artifact-summary-json: ${{ steps.summary.outputs.artifact-summary-json }}
+      diagnostics-summary-path: ${{ steps.diagnostics.outputs.diagnostics-summary-path }}
+      diagnostics-summary-json: ${{ steps.diagnostics.outputs.diagnostics-summary-json }}
     steps:
       - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.buildchain-ref }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           path: .buildchain/runtime
           persist-credentials: false
 
+      - name: Install Buildchain runtime dependencies
+        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+
       - name: Resolve summary artifact name
         id: names
-        run: echo "summary-artifact-name=${BUILDCHAIN_SUMMARY_ARTIFACT_NAME}" >> "${GITHUB_OUTPUT}"
+        run: |
+          echo "summary-artifact-name=${BUILDCHAIN_SUMMARY_ARTIFACT_NAME}" >> "${GITHUB_OUTPUT}"
+          echo "diagnostics-summary-artifact-name=${BUILDCHAIN_DIAGNOSTICS_SUMMARY_ARTIFACT_NAME}" >> "${GITHUB_OUTPUT}"
         env:
           BUILDCHAIN_SUMMARY_ARTIFACT_NAME: ${{ inputs.artifact-name }}-summary-${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_DIAGNOSTICS_SUMMARY_ARTIFACT_NAME: ${{ inputs.artifact-name }}-diagnostics-summary-${{ needs.resolve-source.outputs.publish-source-sha }}
 
       - name: Download platform manifests
         uses: actions/download-artifact@v7.0.0
         with:
           pattern: ${{ inputs.artifact-name }}-manifest-*-${{ needs.resolve-source.outputs.publish-source-sha }}
           path: .buildchain/downloaded-manifests
+          merge-multiple: false
+
+      - name: Download platform diagnostics
+        uses: actions/download-artifact@v7.0.0
+        with:
+          pattern: ${{ inputs.artifact-name }}-diagnostics-*-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: .buildchain/downloaded-diagnostics
           merge-multiple: false
 
       - name: Aggregate artifact summary
@@ -641,11 +870,35 @@ jobs:
           BUILDCHAIN_RELEASE_MANIFEST_JSON: ${{ needs.resolve-source.outputs.release-manifest-json }}
           BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
           BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          BUILDCHAIN_RUNTIME_REQUESTED_REF: ${{ inputs.buildchain-ref }}
+          BUILDCHAIN_RUNTIME_REF: ${{ needs.trust-gate.outputs.buildchain-runtime-ref }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_RUNTIME_CLASS: ${{ needs.trust-gate.outputs.buildchain-runtime-class }}
+          BUILDCHAIN_RUNTIME_OVERRIDE: ${{ needs.trust-gate.outputs.buildchain-runtime-override }}
+          BUILDCHAIN_RUNTIME_TRUST_DECISION: ${{ needs.trust-gate.outputs.buildchain-runtime-trust-decision }}
+          BUILDCHAIN_WORKFLOW_SHELL_REF: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-ref }}
+          BUILDCHAIN_ROLLBACK_REF: ${{ needs.trust-gate.outputs.buildchain-rollback-ref }}
+
+      - name: Aggregate diagnostics summary
+        id: diagnostics
+        run: node .buildchain/runtime/scripts/aggregate-diagnostics-summary.mjs
+        env:
+          BUILDCHAIN_DIAGNOSTICS_INPUT: .buildchain/downloaded-diagnostics
+          BUILDCHAIN_DIAGNOSTICS_OUTPUT: .buildchain/artifacts/diagnostics-summary.json
+          BUILDCHAIN_PLATFORM_COUNT: ${{ needs.resolve-contract.outputs.platform-count }}
 
       - name: Upload aggregate build summary
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ steps.names.outputs.summary-artifact-name }}
           path: .buildchain/artifacts/build-summary.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload aggregate diagnostics summary
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.names.outputs.diagnostics-summary-artifact-name }}
+          path: .buildchain/artifacts/diagnostics-summary.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}

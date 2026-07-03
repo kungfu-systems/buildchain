@@ -27,6 +27,7 @@ function setFailed(message) {
 async function main() {
   const manifestPath = getInput("manifest-path") || ".buildchain/artifacts/manifest.json";
   const summaryPath = getInput("summary-path") || ".buildchain/artifacts/summary.json";
+  const diagnosticsPath = getInput("diagnostics-path") || "";
   const manifest = runLifecycle({
     cwd: getInput("cwd") || ".",
     stageName: getInput("stage") || "build",
@@ -34,7 +35,10 @@ async function main() {
     required: getInput("required") === "true",
     manifestPath,
     summaryPath,
+    diagnosticsPath,
     artifactName: getInput("artifact-name") || "buildchain-artifact",
+    manifestArtifactName: getInput("manifest-artifact-name") || "",
+    diagnosticsArtifactName: getInput("diagnostics-artifact-name") || "",
     platformId: getInput("platform-id") || process.env.RUNNER_OS || process.platform,
     platformName: getInput("platform-name") || getInput("platform-id") || process.env.RUNNER_OS || process.platform,
     artifactPaths: String(getInput("artifact-paths") || "")
@@ -42,6 +46,12 @@ async function main() {
       .map((entry) => entry.trim())
       .filter(Boolean),
     expectedArtifactsJson: getInput("expected-artifacts-json") || "",
+    processSummaryPath: getInput("process-summary-path") || "",
+    processSamplesPath: getInput("process-samples-path") || ".buildchain/diagnostics/process-samples.jsonl",
+    sampleProcessTree: getInput("sample-process-tree") === "true",
+    processSampleIntervalMs: Number(getInput("process-sample-interval-ms") || 15000),
+    requestedParallelism: Number(getInput("requested-parallelism") || 0),
+    processSummaryRequired: getInput("process-summary-required") !== "false",
     workspace: process.cwd(),
   });
   setOutput("manifest-path", manifestPath);

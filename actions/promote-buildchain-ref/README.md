@@ -101,6 +101,31 @@ trusted channel workflow:
       ]
 ```
 
+For anchored/manual package repositories that build through the reusable
+workflow, keep the publish entrypoint on the `publish-gate/*` source-lock
+contract:
+
+```yaml
+- uses: kungfu-systems/buildchain/actions/promote-buildchain-ref@v2
+  with:
+    token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+    sha: ${{ needs.build.outputs.publish-source-sha }}
+    target-ref: release/v22/v22.22
+    require-publish-source-lock: "true"
+    publish-source-ref: ${{ needs.build.outputs.publish-source-ref }}
+    publish-source-sha: ${{ needs.build.outputs.publish-source-sha }}
+    publish-source-locked: ${{ needs.build.outputs.publish-source-locked }}
+    publish-transaction: "true"
+    publish-mode: publish-final-version
+    publish-auth: trusted-publishing
+```
+
+`target-ref` remains the channel promotion target that must point at `sha`.
+`publish-source-ref` is the reviewed source-lock branch that authorized this
+specific package publication. Direct `alpha/*` or `release/*` channel refs are
+not valid publish source locks when `require-publish-source-lock` is enabled,
+and a mismatched `publish-source-sha` fails before any promotion or publish side effects begin.
+
 When enabled, the action creates or resumes a release transaction keyed by
 repository, version, source SHA, and target ref. It persists that transaction to
 a machine-managed branch under `buildchain/release-state/<version>`, with
@@ -144,9 +169,22 @@ BUILDCHAIN_PUBLISH_EVIDENCE
 The action outputs `transaction-id`, `transaction-state`,
 `transaction-exact-tag`, `transaction-release-sha`, `transaction-state-ref`,
 `transaction-state-sha`, `transaction-state-path`, `publish-evidence-path`, and
-`finalization-needed`. `transaction-state-ref` is the durable recovery location.
+`release-passport-path`, `release-passport-output-dir`,
+`release-passport-state-sha`, and `finalization-needed`.
+`transaction-state-ref` is the durable recovery location.
+`release-passport-state-sha` is the durable ref commit after the generated
+`release-passport/*` files have been uploaded into that recovery ref.
 `finalization-needed=true` means publish evidence is valid, but protected branch
 or ref finalization needs a later promotion run.
+
+After a publish transaction reaches `complete`, the action generates the unified
+`buildchain-release-passport` in `.buildchain/release-passport` by default and
+persists those files under `release-passport/` in the durable release-state ref.
+When present, the passport includes the aggregate build summary, platform
+artifact manifests, npm publish evidence, dist-tag promotion evidence, the
+release-state ref, trusted publishing metadata, and the Buildchain transaction
+result. Set `release-passport: "false"` only for a controlled recovery run that
+must skip passport generation.
 
 Finalization recovery is anchored to the durable transaction, not to a single
 workflow run SHA. After a generated version-state PR is merged, the current

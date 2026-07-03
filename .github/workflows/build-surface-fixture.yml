@@ -16,7 +16,6 @@ jobs:
   libnode-shaped:
     uses: ./.github/workflows/.build.yml
     with:
-      buildchain-ref: ${{ github.head_ref || github.ref_name }}
       working-directory: fixtures/libnode-shaped
       runner-preset: github-hosted
       linux-container-preset: kungfu-verify

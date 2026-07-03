@@ -36,6 +36,10 @@ See [`docs/cli.md`](docs/cli.md), [`docs/lifecycle-protocol.md`](docs/lifecycle-
 and [`docs/reusable-build-surface.md`](docs/reusable-build-surface.md) for the
 consumer contract.
 
+For temporary validation of an unreleased Buildchain runtime, keep the committed
+workflow ref on `@v2` and use the trusted `workflow_dispatch` `buildchain-ref`
+pass-through. See [`docs/runtime-train-validation.md`](docs/runtime-train-validation.md).
+
 ## Building this repo
 
 Buildchain is a pnpm workspace running on Node 24:
@@ -52,6 +56,13 @@ and rebuilds every action bundle.
 ## Proposing changes
 
 - Open pull requests against the relevant `dev/*` channel branch.
+- If a Buildchain change needs downstream validation before stable refs move,
+  publish a `train/v2/v2.3/<capability>` ref and include the validation request
+  described in [`docs/runtime-train-validation.md`](docs/runtime-train-validation.md).
+  After validation succeeds, do not leave the train as a pending merge item:
+  merge the pull request into the active `dev/*` mainline and run the requested
+  alpha or release promotion. The train may remain for a retention window as a
+  fast-use and rollback channel; periodic cleanup handles old trains.
 - Write commit messages and PR descriptions in English, using lightweight
   [Conventional Commits](https://www.conventionalcommits.org/)
   (`type(scope): summary`).

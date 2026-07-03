@@ -85,6 +85,27 @@ const report = verifyBuildchainLogEvents({
 The package also ships `dist/site/` as the Buildchain-owned fact source for
 `buildchain.libkungfu.dev`.
 
+Native build consumers can import the diagnostics toolkit instead of copying
+repository-local probes:
+
+```js
+import {
+  collectBuildchainDiagnostics,
+  collectRunnerDiagnostics,
+  writeDiagnosticsArtifact,
+} from "@kungfu-tech/buildchain/diagnostics";
+
+writeDiagnosticsArtifact(".buildchain/artifacts/diagnostics.json", {
+  contract: "consumer-build-diagnostics",
+  buildchain: collectBuildchainDiagnostics({ cwd: process.cwd() }),
+  runner: collectRunnerDiagnostics(),
+});
+```
+
+`buildchain lifecycle run` writes a small `diagnostics.json` next to the
+platform manifest. It includes lifecycle-wide observability, runner/tool/cache
+snapshots, Git state, and links to the larger manifest and artifact outputs.
+
 ## Use Buildchain
 
 Bootstrap a repository:

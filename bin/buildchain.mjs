@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -24,6 +24,14 @@ import {
   explainReleasePassport,
   verifyReleasePassport,
 } from "../packages/core/release-passport.js";
+import {
+  BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT,
+  formatDiagnosticsSummaryTable,
+  startProcessSampler,
+  summarizeDiagnosticsArtifacts,
+  summarizeProcessSamples,
+  validateAnchoredPackageRelease,
+} from "../packages/core/diagnostics.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const embeddedPackageVersion = process.env.BUILDCHAIN_EMBEDDED_PACKAGE_VERSION || "";
@@ -39,6 +47,7 @@ function usage() {
                       [--require-lifecycle-stages <comma-list>]
   buildchain lifecycle run <stage> [--cwd <dir>] [--required]
                              [--artifact-name <name>] [--artifact-path <path>]...
+                             [--process-summary <json>]
   buildchain npm dry-run [--cwd <dir>] [--expected-tag <tag>] [--registry <url>]
                          [--dist-tag <tag>] [--skip-npm-publish-dry-run] [--json]
   buildchain release --dry-run --target-ref <ref> [--sha <sha>] [--source-ref <ref>]
@@ -51,7 +60,17 @@ function usage() {
   buildchain transaction inspect ...
   buildchain collect github-release --tag <tag> [--repository <owner/repo>]
                                     [--assets-dir <dir>] [--assets-json <json-or-path>]
-                                    [--release-json <json-or-path>] [--output-dir <dir>] [--json]
+                                    [--release-json <json-or-path>] [--package-set-json <json-or-path>]
+                                    [--product-name <name>]
+                                    [--publish-evidence-json <json-or-path>]
+                                    [--trusted-publishing-json <json-or-path>]
+                                    [--transaction-json <json-or-path>]
+                                    [--anchor-manifest-json <json-or-path>]
+                                    [--build-summary-json <json-or-path>]
+                                    [--platform-manifest-json <json-or-path>]...
+                                    [--dist-tag-evidence-json <json-or-path>]
+                                    [--release-extra-json <json-or-path>]
+                                    [--publish-json <json-or-path>] [--output-dir <dir>] [--json]
   buildchain verify release-passport <file-or-url> [--json]
   buildchain verify observability-log <jsonl> [--min-events <n>]
                                              [--require-phase <csv>]
@@ -59,17 +78,23 @@ function usage() {
                                              [--require-event <csv>] [--allow-errors] [--json]
   buildchain explain release --passport <file-or-url> [--for human|agent] [--json]
   buildchain inspect release --passport <file-or-url> [--json]
-  buildchain doctor [--cwd <dir>] [--json]
+  buildchain doctor [--cwd <dir>] [--require-publish-source-lock] [--json]
   buildchain log <info|warn|error> --event <name> [--phase <phase>]
                  [--component <name>] [--source <name>] [--attribute key=value]...
                  [--path <jsonl>] [--json]
   buildchain log summary [--path <jsonl>] [--json]
+  buildchain diagnostics summary <diagnostics.json>... [--artifact <file>]...
+                                      [--output <file>] [--json]
+  buildchain sample process-tree [--interval-ms <n>] [--label <name>]
+                                 [--output <jsonl>] [--summary-output <json>]
+                                 [--requested-parallelism <n>] [--json]
+                                 -- <command> [args...]
   buildchain mark --event <name> [--phase <phase>] [--component <name>]
                   [--attribute key=value]... [--path <jsonl>] [--json]
   buildchain span --event <name> [--phase <phase>] [--component <name>]
                   [--path <jsonl>] -- <command> [args...]
   buildchain web-surface ...
-  buildchain publish-source <lock|manifest|verify-lock> ...
+  buildchain publish-source <lock|manifest|verify-lock|validate-anchored-release> ...
   buildchain build-contract ...
 
 Examples:
@@ -140,14 +165,15 @@ function checkStatus(ok, id, message, details = {}) {
   return { id, status: ok ? "pass" : "fail", message, details };
 }
 
-function runDoctor({ cwd = process.cwd() } = {}) {
+function runDoctor({ cwd = process.cwd(), requirePublishSourceLock = false } = {}) {
   const resolvedCwd = path.resolve(cwd);
   const checks = [];
   checks.push(checkStatus(fs.existsSync(resolvedCwd), "cwd.exists", "working directory exists", { cwd: resolvedCwd }));
+  let validation;
   try {
-    const validation = validateBuildchainConfig(resolvedCwd);
+    validation = validateBuildchainConfig(resolvedCwd);
     checks.push(checkStatus(true, "config.valid", "buildchain.toml is valid", {
-      projectType: validation.project.type,
+      projectType: validation.project?.type || "",
       lifecycleStages: validation.lifecycleStages.map((stage) => stage.name),
     }));
   } catch (error) {
@@ -168,6 +194,22 @@ function runDoctor({ cwd = process.cwd() } = {}) {
   checks.push(checkStatus(fs.existsSync(workflowPath), "workflow.build", "reusable workflow caller exists", {
     path: ".github/workflows/build.yml",
   }));
+  if (validation?.version?.strategy === "anchored" && validation.version.next === "manual") {
+    const anchored = validateAnchoredPackageRelease({
+      cwd: resolvedCwd,
+      requirePublishGateSourceLock: requirePublishSourceLock,
+    });
+    checks.push(checkStatus(
+      anchored.ok,
+      "anchored-package-release.valid",
+      "anchored package release contract is valid",
+      {
+        contract: anchored.contract,
+        summary: anchored.summary,
+        checks: anchored.checks,
+      },
+    ));
+  }
   return {
     schemaVersion: 1,
     contract: "kungfu-buildchain-doctor",
@@ -195,12 +237,142 @@ function printJson(value) {
   process.stdout.write(`${JSON.stringify(value, null, 2)}\n`);
 }
 
+function writeJsonFile(filePath, value) {
+  if (!filePath) {
+    return "";
+  }
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`);
+  return filePath;
+}
+
+function appendJsonLine(filePath, value) {
+  if (!filePath) {
+    return "";
+  }
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.appendFileSync(filePath, `${JSON.stringify(value)}\n`);
+  return filePath;
+}
+
+function readIntegerFlag(args, name, fallback = 0) {
+  const value = readFlag(args, name, "");
+  if (!value) {
+    return fallback;
+  }
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    throw new Error(`--${name} must be a non-negative integer`);
+  }
+  return parsed;
+}
+
+function readDiagnosticsArtifactInputs(args) {
+  const values = [];
+  for (let index = 0; index < args.length; index += 1) {
+    const entry = args[index];
+    if (entry === "--artifact") {
+      const value = args[index + 1];
+      if (!value || value.startsWith("--")) {
+        throw new Error("buildchain diagnostics summary --artifact requires a file path");
+      }
+      values.push(value);
+      index += 1;
+      continue;
+    }
+    if (entry === "--output") {
+      index += 1;
+      continue;
+    }
+    if (entry === "--json") {
+      continue;
+    }
+    values.push(entry);
+  }
+  return values;
+}
+
 function packageVersion() {
   if (embeddedPackageVersion) {
     return embeddedPackageVersion;
   }
   const packageJson = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
   return packageJson.version;
+}
+
+async function runProcessTreeSample(sampleArgs = []) {
+  const separator = sampleArgs.indexOf("--");
+  const optionArgs = separator === -1 ? sampleArgs : sampleArgs.slice(0, separator);
+  const commandArgs = separator === -1 ? [] : sampleArgs.slice(separator + 1);
+  if (commandArgs.length === 0) {
+    throw new Error("usage: buildchain sample process-tree -- <command> [args...]");
+  }
+  const command = commandArgs[0];
+  const args = commandArgs.slice(1);
+  const label = readFlag(optionArgs, "label", "process-tree");
+  const intervalMs = readIntegerFlag(optionArgs, "interval-ms", 15000);
+  const requestedParallelism = readIntegerFlag(optionArgs, "requested-parallelism", 0);
+  const outputPath = readFlag(optionArgs, "output", ".buildchain/diagnostics/process-samples.jsonl");
+  const summaryOutputPath = readFlag(optionArgs, "summary-output", ".buildchain/diagnostics/process-summary.json");
+  const startedAt = Date.now();
+  const child = spawn(command, args, {
+    cwd: process.cwd(),
+    env: process.env,
+    stdio: "inherit",
+  });
+  const sampler = startProcessSampler({
+    rootPid: child.pid || process.pid,
+    intervalMs,
+    label,
+    command,
+    args,
+    env: process.env,
+    requestedParallelism,
+    onSample(sample) {
+      appendJsonLine(outputPath, sample);
+    },
+  });
+  const result = await new Promise((resolve) => {
+    child.on("error", (error) => resolve({ error, status: 1, signal: "" }));
+    child.on("close", (status, signal) => resolve({ status, signal: signal || "" }));
+  });
+  const samples = sampler.stop();
+  const summary = summarizeProcessSamples({
+    samples,
+    command,
+    args,
+    env: process.env,
+    requestedParallelism,
+  });
+  const report = {
+    schemaVersion: 1,
+    contract: BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT,
+    label,
+    command: path.basename(command),
+    argsCount: args.length,
+    exit: {
+      status: result.status ?? 0,
+      signal: result.signal || "",
+      error: result.error?.message || "",
+    },
+    durationMs: Date.now() - startedAt,
+    samplesPath: outputPath,
+    summaryPath: summaryOutputPath,
+    summary,
+  };
+  writeJsonFile(summaryOutputPath, report);
+  if (readBooleanFlag(optionArgs, "json")) {
+    printJson(report);
+  } else {
+    process.stdout.write(`buildchain process sample: ${summary.sampleCount} samples\n`);
+    process.stdout.write(`observed concurrency max: ${summary.observedConcurrency.max}\n`);
+    process.stdout.write(`wrote: ${outputPath}\n`);
+    process.stdout.write(`wrote: ${summaryOutputPath}\n`);
+  }
+  if (result.error || result.status !== 0) {
+    process.exitCode = result.status || 1;
+  }
+  return report;
 }
 
 async function main(argv = process.argv.slice(2)) {
@@ -241,7 +413,10 @@ async function main(argv = process.argv.slice(2)) {
   }
 
   if (command === "doctor") {
-    const result = runDoctor({ cwd: readFlag(args, "cwd", process.cwd()) });
+    const result = runDoctor({
+      cwd: readFlag(args, "cwd", process.cwd()),
+      requirePublishSourceLock: readBooleanFlag(args, "require-publish-source-lock"),
+    });
     if (readBooleanFlag(args, "json")) {
       printJson(result);
     } else {
@@ -282,6 +457,46 @@ async function main(argv = process.argv.slice(2)) {
     if (readBooleanFlag(logArgs, "json")) {
       printJson(event);
     }
+    return;
+  }
+
+  if (command === "diagnostics") {
+    const [subcommand = "", ...diagnosticsArgs] = args;
+    if (subcommand !== "summary") {
+      throw new Error("usage: buildchain diagnostics summary <diagnostics.json>...");
+    }
+    const inputs = readDiagnosticsArtifactInputs(diagnosticsArgs);
+    if (inputs.length === 0) {
+      throw new Error("buildchain diagnostics summary requires at least one artifact");
+    }
+    const summary = summarizeDiagnosticsArtifacts(inputs);
+    if (summary.count !== inputs.length) {
+      throw new Error(`buildchain diagnostics summary read ${summary.count}/${inputs.length} artifacts`);
+    }
+    const outputPath = readFlag(diagnosticsArgs, "output", "");
+    writeJsonFile(outputPath, summary);
+    if (readBooleanFlag(diagnosticsArgs, "json")) {
+      printJson(summary);
+    } else {
+      process.stdout.write(`buildchain diagnostics summary: ${summary.count} platforms\n`);
+      process.stdout.write(`warnings: ${summary.totalWarningCount} errors: ${summary.totalErrorCount}\n`);
+      if (summary.diagnosticsManifestWarningCount) {
+        process.stdout.write(`diagnostics manifest warnings: ${summary.diagnosticsManifestWarningCount}\n`);
+      }
+      process.stdout.write(`${formatDiagnosticsSummaryTable(summary)}\n`);
+      if (outputPath) {
+        process.stdout.write(`wrote: ${outputPath}\n`);
+      }
+    }
+    return;
+  }
+
+  if (command === "sample") {
+    const [subcommand = "", ...sampleArgs] = args;
+    if (subcommand !== "process-tree") {
+      throw new Error("usage: buildchain sample process-tree -- <command> [args...]");
+    }
+    await runProcessTreeSample(sampleArgs);
     return;
   }
 
@@ -359,6 +574,7 @@ async function main(argv = process.argv.slice(2)) {
       artifactPaths,
       expectedArtifactsJson: readFlag(lifecycleArgs, "expected-artifacts-json", ""),
       logPath: readFlag(lifecycleArgs, "log-path", process.env.BUILDCHAIN_LOG_PATH || ".buildchain/logs/events.jsonl"),
+      processSummaryPath: readFlag(lifecycleArgs, "process-summary", ""),
       workspace: process.cwd(),
     });
     printJson(manifest);
@@ -446,8 +662,19 @@ async function main(argv = process.argv.slice(2)) {
       assetsDir: readFlag(collectArgs, "assets-dir", ""),
       assetsJson: readFlag(collectArgs, "assets-json", ""),
       releaseJson: readFlag(collectArgs, "release-json", ""),
+      productName: readFlag(collectArgs, "product-name", "Buildchain"),
       packageName: readFlag(collectArgs, "package-name", "@kungfu-tech/buildchain"),
       packageVersion: readFlag(collectArgs, "package-version", packageVersion()),
+      packageSetJson: readFlag(collectArgs, "package-set-json", ""),
+      publishEvidenceJson: readFlag(collectArgs, "publish-evidence-json", ""),
+      trustedPublishingJson: readFlag(collectArgs, "trusted-publishing-json", ""),
+      transactionJson: readFlag(collectArgs, "transaction-json", ""),
+      anchorManifestJson: readFlag(collectArgs, "anchor-manifest-json", ""),
+      buildSummaryJson: readFlag(collectArgs, "build-summary-json", ""),
+      platformManifestJsons: readRepeatedFlag(collectArgs, "platform-manifest-json"),
+      distTagEvidenceJson: readFlag(collectArgs, "dist-tag-evidence-json", ""),
+      releaseJsonExtra: readFlag(collectArgs, "release-extra-json", ""),
+      publishJson: readFlag(collectArgs, "publish-json", ""),
       workflow,
     });
     if (readBooleanFlag(collectArgs, "json")) {
@@ -560,6 +787,24 @@ async function main(argv = process.argv.slice(2)) {
     }
     if (mode === "verify-lock") {
       runScript("verify-publish-source-lock.mjs", publishArgs);
+      return;
+    }
+    if (mode === "validate-anchored-release") {
+      const report = validateAnchoredPackageRelease({
+        cwd: readFlag(publishArgs, "cwd", process.cwd()),
+        requirePublishGateSourceLock: true,
+      });
+      if (readBooleanFlag(publishArgs, "json")) {
+        printJson(report);
+      } else {
+        process.stdout.write(`anchored release source lock: ${report.ok ? "ok" : "failed"}\n`);
+        for (const entry of report.checks) {
+          process.stdout.write(`- ${entry.status}: ${entry.id}: ${entry.message}\n`);
+        }
+      }
+      if (!report.ok) {
+        process.exitCode = 1;
+      }
       return;
     }
     throw new Error(`unsupported publish-source command: ${mode}`);
