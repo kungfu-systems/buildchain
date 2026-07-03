@@ -1256,6 +1256,8 @@ test("release passport collect verify and explain form an agent-readable contrac
     "kungfu-systems/buildchain",
     "--source-sha",
     "e".repeat(40),
+    "--product-name",
+    "Libnode",
     "--assets-dir",
     assetsDir,
     "--output-dir",
@@ -1266,6 +1268,7 @@ test("release passport collect verify and explain form an agent-readable contrac
   const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
 
   assert.equal(passport.contract, "kungfu-buildchain-release-passport");
+  assert.equal(passport.product.name, "Libnode");
   assert.equal(passport.runnerPolicy.productionDefault, "github-hosted");
   assert.equal(passport.runnerPolicy.compatibilityFixture, "self-hosted");
   assert.equal(passport.artifacts.length, 2);

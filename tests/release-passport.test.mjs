@@ -22,6 +22,7 @@ function createUnifiedPassportFixture({
   missingPlatformDigest = false,
   missingPublishArtifact = false,
   missingPublishVersion = false,
+  productName = "Buildchain",
   trustedPublishingEnabled = true,
 } = {}) {
   const cwd = tempDir("release-passport-core");
@@ -138,6 +139,7 @@ function createUnifiedPassportFixture({
     cwd,
     tag: "v2.3.2",
     repository: "kungfu-systems/buildchain",
+    productName,
     sourceSha: "a".repeat(40),
     assetsDir,
     publishEvidenceJson: publishEvidencePath,
@@ -179,6 +181,15 @@ test("release passport core verifies unified three-platform npm passport", async
   assert.equal(report.completeness.buildSummaryPresent, true);
   assert.equal(report.completeness.platformArtifactManifestCount, 3);
   assert.equal(report.completeness.distTagPromotionEvidencePresent, true);
+});
+
+test("release passport core preserves supplied product name at root", async () => {
+  const passportPath = createUnifiedPassportFixture({ productName: "Libnode" });
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const productMechanism = JSON.parse(fs.readFileSync(path.join(path.dirname(passportPath), "product-mechanism.json"), "utf8"));
+
+  assert.equal(passport.product.name, "Libnode");
+  assert.equal(productMechanism.product.name, "Libnode");
 });
 
 test("release passport core fails closed on incomplete platform package evidence", async () => {
