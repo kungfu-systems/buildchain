@@ -23,6 +23,12 @@ import {
   currentGitHubRefSha,
   resolvePublishSourceRefSha,
 } from "../scripts/publish-source-ref-resolver.mjs";
+import {
+  classifyBuildchainRuntimeRef,
+  normalizeRequestedRuntimeRef,
+  resolveRuntimeSelection,
+  validateRuntimeOverrideTrust,
+} from "../scripts/runtime-ref-core.mjs";
 import { resolvePublishSourceCli } from "../scripts/resolve-publish-source.mjs";
 import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
 import { verifyPublishSourceLockCli } from "../scripts/verify-publish-source-lock.mjs";
@@ -62,6 +68,12 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /Setup Buildchain Node\.js with fnm/);
   assert.match(workflow, /container:/);
   assert.match(workflow, /require-trusted-event:/);
+  assert.match(workflow, /buildchain-ref:/);
+  assert.match(workflow, /default: ""/);
+  assert.match(workflow, /Resolve Buildchain runtime/);
+  assert.match(workflow, /runtime-sha/);
+  assert.match(workflow, /buildchain-ref override is only allowed for trusted workflow_dispatch runs/);
+  assert.match(workflow, /refs\/heads\/train\/vN\/vN\.M\/<capability>/);
   assert.match(workflow, /publish-channel:/);
   assert.match(workflow, /publish-refs-json:/);
   assert.match(workflow, /publish-source-ref:/);
@@ -104,6 +116,8 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /diagnostics contract warning/);
   assert.match(workflow, /sidecar manifest warning totals/);
   assert.match(workflow, /downloaded-diagnostics/);
+  assert.match(workflow, /BUILDCHAIN_RUNTIME_SHA/);
+  assert.match(workflow, /BUILDCHAIN_RUNTIME_TRUST_DECISION/);
   assert.match(workflow, /aggregate-diagnostics-summary\.mjs/);
   assert.match(workflow, /diagnostics-summary\.json/);
   assert.match(workflow, /-diagnostics-summary-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/);
@@ -153,6 +167,9 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
     "utf8",
   );
   assert.match(workflow, /workflow_call:/);
+  assert.match(workflow, /buildchain-ref:/);
+  assert.match(workflow, /Resolve Buildchain runtime/);
+  assert.match(workflow, /runtime-sha/);
   assert.match(workflow, /Plan pull request preview/);
   assert.match(workflow, /github\.event\.action != 'closed'/);
   assert.match(workflow, /Plan pull request preview cleanup/);
@@ -182,6 +199,58 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
   assert.match(workflow, /include-hidden-files: true/);
   assert.match(workflow, /actions\/download-artifact@v7\.0\.0/);
+  assert.match(workflow, /--runtime-id "\$\{\{ needs\.runtime\.outputs\.runtime-sha \}\}"/);
+  assert.match(workflow, /--rollback-pointer "\$\{\{ needs\.runtime\.outputs\.rollback-ref \}\}"/);
+});
+
+test("runtime train override accepts only trusted manual train or exact SHA refs", () => {
+  assert.deepEqual(
+    resolveRuntimeSelection({ requestedRef: "", workflowRef: "kungfu-systems/buildchain/.github/workflows/.build.yml@v2" }),
+    {
+      requestedRef: "",
+      runtimeRef: "v2",
+      runtimeFullRef: "v2",
+      runtimeClass: "stable",
+      runtimeOverride: false,
+      workflowShellRef: "v2",
+      rollbackRef: "v2",
+      trustDecision: "stable-default",
+    },
+  );
+  assert.equal(
+    resolveRuntimeSelection({ requestedRef: "", workflowRef: "kungfu-systems/libnode/.github/workflows/build.yml@main" }).runtimeRef,
+    "v2",
+  );
+  assert.equal(
+    normalizeRequestedRuntimeRef("refs/heads/train/v2/v2.3/runtime-loader").ref,
+    "train/v2/v2.3/runtime-loader",
+  );
+  assert.equal(classifyBuildchainRuntimeRef("train/v2/v2.3/runtime-loader"), "train");
+  assert.equal(classifyBuildchainRuntimeRef("a".repeat(40)), "exact-sha");
+  assert.throws(
+    () => normalizeRequestedRuntimeRef("release/v2/v2.3"),
+    /buildchain-ref override must be/,
+  );
+  assert.deepEqual(
+    validateRuntimeOverrideTrust({
+      requestedRef: "train/v2/v2.3/runtime-loader",
+      eventName: "pull_request",
+      actorPermission: "admin",
+    }),
+    {
+      ok: false,
+      decision: "rejected-untrusted-event",
+      reason: "buildchain-ref override is only allowed for trusted workflow_dispatch runs",
+    },
+  );
+  assert.equal(
+    validateRuntimeOverrideTrust({
+      requestedRef: "train/v2/v2.3/runtime-loader",
+      eventName: "workflow_dispatch",
+      actorPermission: "write",
+    }).decision,
+    "override-accepted",
+  );
 });
 
 test("promote action exposes anchored publish source-lock gate", () => {

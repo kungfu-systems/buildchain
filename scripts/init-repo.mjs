@@ -216,6 +216,12 @@ function workflowYaml({ runnerPreset, artifactName }) {
   return `name: Build
 
 on:
+  workflow_dispatch:
+    inputs:
+      buildchain-ref:
+        description: "Temporary Buildchain runtime ref for trusted manual validation"
+        required: false
+        default: ""
   pull_request:
   push:
     branches:
@@ -232,6 +238,7 @@ jobs:
     uses: ${BUILDCHAIN_WORKFLOW_REF}
     with:
       working-directory: "."
+      buildchain-ref: \${{ inputs.buildchain-ref || '' }}
       runner-preset: "${runnerPreset}"
       artifact-name-template: "${artifactName}"
       artifact-paths: |

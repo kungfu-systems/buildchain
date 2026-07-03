@@ -21,7 +21,6 @@ jobs:
       find-dependencies: false
       publish-versioning: false
       buildchain-repository: kungfu-systems/buildchain
-      buildchain-ref: ${{ github.head_ref || github.ref_name }}
   
   verify:
     # report status for branch protection rule

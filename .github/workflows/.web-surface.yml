@@ -8,7 +8,8 @@ on:
         type: string
         required: false
       buildchain-ref:
-        default: "v2"
+        description: "Optional temporary Buildchain runtime ref for trusted manual validation. Empty uses the stable workflow runtime."
+        default: ""
         type: string
         required: false
       working-directory:
@@ -114,6 +115,18 @@ on:
       production-apply-result-json:
         description: "Production deploy apply result JSON when production apply ran"
         value: ${{ jobs.production-apply.outputs.production-apply-result-json }}
+      buildchain-runtime-ref:
+        description: "Resolved Buildchain runtime ref"
+        value: ${{ jobs.runtime.outputs.runtime-ref }}
+      buildchain-runtime-sha:
+        description: "Resolved immutable Buildchain runtime SHA"
+        value: ${{ jobs.runtime.outputs.runtime-sha }}
+      buildchain-runtime-class:
+        description: "Runtime stability class: stable, alpha, train, exact-sha, or development"
+        value: ${{ jobs.runtime.outputs.runtime-class }}
+      buildchain-runtime-override:
+        description: "Whether a non-empty buildchain-ref override was used"
+        value: ${{ jobs.runtime.outputs.runtime-override }}
 
 permissions:
   contents: read
@@ -121,9 +134,128 @@ permissions:
   pull-requests: write
 
 jobs:
+  runtime:
+    name: Resolve Buildchain runtime
+    runs-on: ubuntu-24.04
+    outputs:
+      runtime-ref: ${{ steps.runtime.outputs.runtime-ref }}
+      runtime-full-ref: ${{ steps.runtime.outputs.runtime-full-ref }}
+      runtime-sha: ${{ steps.runtime.outputs.runtime-sha }}
+      runtime-class: ${{ steps.runtime.outputs.runtime-class }}
+      runtime-override: ${{ steps.runtime.outputs.runtime-override }}
+      runtime-trust-decision: ${{ steps.runtime.outputs.runtime-trust-decision }}
+      workflow-shell-ref: ${{ steps.runtime.outputs.workflow-shell-ref }}
+      rollback-ref: ${{ steps.runtime.outputs.rollback-ref }}
+    steps:
+      - name: Resolve Buildchain runtime
+        id: runtime
+        uses: actions/github-script@v8
+        env:
+          BUILDCHAIN_REPOSITORY: ${{ inputs.buildchain-repository }}
+          BUILDCHAIN_REQUESTED_REF: ${{ inputs.buildchain-ref }}
+          BUILDCHAIN_DEFAULT_REF: v2
+        with:
+          script: |
+            const requested = (process.env.BUILDCHAIN_REQUESTED_REF || "").trim();
+            const repository = (process.env.BUILDCHAIN_REPOSITORY || "kungfu-systems/buildchain").trim();
+            const defaultRef = (process.env.BUILDCHAIN_DEFAULT_REF || "v2").trim();
+            const [runtimeOwner, runtimeRepo] = repository.split("/");
+            if (!runtimeOwner || !runtimeRepo) {
+              throw new Error(`invalid buildchain repository: ${repository}`);
+            }
+            const exactSha = /^[0-9a-f]{40}$/i;
+            const trainRef = /^train\/v\d+\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
+            const workflowRef = process.env.GITHUB_WORKFLOW_REF || "";
+            const shellRef = workflowRef.startsWith(`${repository}/.github/workflows/`)
+              ? (workflowRef.split("@").pop() || defaultRef).trim() || defaultRef
+              : defaultRef;
+            const normalizeClass = (ref) => {
+              const value = String(ref || "").replace(/^refs\/heads\//, "").replace(/^refs\/tags\//, "");
+              if (exactSha.test(value)) return "exact-sha";
+              if (trainRef.test(value)) return "train";
+              if (/^v\d+(?:\.\d+)?$/.test(value) || /^v\d+\.\d+\.\d+$/.test(value)) return "stable";
+              if (/^v\d+(?:\.\d+)?-alpha$/.test(value) || /^v\d+\.\d+\.\d+-alpha\.\d+$/.test(value)) return "alpha";
+              return "development";
+            };
+            let runtimeRef = requested || shellRef;
+            let runtimeFullRef = runtimeRef;
+            let runtimeClass = normalizeClass(runtimeRef);
+            let runtimeOverride = requested !== "";
+            let trustDecision = runtimeOverride ? "override-requested" : "stable-default";
+            if (runtimeOverride) {
+              if (context.eventName !== "workflow_dispatch") {
+                throw new Error("buildchain-ref override is only allowed for trusted workflow_dispatch runs");
+              }
+              const permission = await github.rest.repos.getCollaboratorPermissionLevel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                username: context.actor,
+              });
+              const actorPermission = permission.data.permission || "";
+              if (!["admin", "maintain", "write"].includes(actorPermission)) {
+                throw new Error(`buildchain-ref override requires write, maintain, or admin permission; actor has ${actorPermission || "none"}`);
+              }
+              if (exactSha.test(requested)) {
+                runtimeRef = requested;
+                runtimeFullRef = requested;
+                runtimeClass = "exact-sha";
+              } else {
+                runtimeRef = requested.replace(/^refs\/heads\//, "");
+                if (!trainRef.test(runtimeRef)) {
+                  throw new Error("buildchain-ref override must be train/vN/vN.M/<capability>, refs/heads/train/vN/vN.M/<capability>, or an exact 40-character SHA");
+                }
+                runtimeFullRef = `refs/heads/${runtimeRef}`;
+                runtimeClass = "train";
+              }
+              trustDecision = "override-accepted";
+            }
+            async function resolveRef(ref) {
+              if (exactSha.test(ref)) return ref;
+              const normalized = ref.replace(/^refs\/heads\//, "").replace(/^refs\/tags\//, "");
+              const candidates = ref.startsWith("refs/")
+                ? [ref.replace(/^refs\//, "")]
+                : [`tags/${normalized}`, `heads/${normalized}`];
+              for (const candidate of candidates) {
+                try {
+                  const response = await github.rest.git.getRef({
+                    owner: runtimeOwner,
+                    repo: runtimeRepo,
+                    ref: candidate,
+                  });
+                  return response.data.object.sha;
+                } catch (error) {
+                  if (error.status !== 404) throw error;
+                }
+              }
+              throw new Error(`unable to resolve Buildchain runtime ref: ${ref}`);
+            }
+            const runtimeSha = await resolveRef(runtimeFullRef);
+            const outputs = {
+              "runtime-ref": runtimeRef,
+              "runtime-full-ref": runtimeFullRef,
+              "runtime-sha": runtimeSha,
+              "runtime-class": runtimeClass,
+              "runtime-override": String(runtimeOverride),
+              "runtime-trust-decision": trustDecision,
+              "workflow-shell-ref": shellRef,
+              "rollback-ref": shellRef,
+            };
+            for (const [name, value] of Object.entries(outputs)) core.setOutput(name, value);
+            await core.summary
+              .addHeading("Buildchain runtime")
+              .addRaw(`- workflow shell ref: \`${shellRef}\`\n`)
+              .addRaw(`- requested runtime ref: \`${requested || "(default)"}\`\n`)
+              .addRaw(`- resolved runtime ref: \`${runtimeRef}\`\n`)
+              .addRaw(`- resolved runtime sha: \`${runtimeSha}\`\n`)
+              .addRaw(`- stability: \`${runtimeClass}\`\n`)
+              .addRaw(`- trust decision: \`${trustDecision}\`\n`)
+              .addRaw(`- rollback ref: \`${shellRef}\`\n`)
+              .write();
+
   plan:
     name: Plan web-surface channel
     runs-on: ubuntu-24.04
+    needs: runtime
     outputs:
       web-surface-channel: ${{ steps.web.outputs.web-surface-channel }}
       web-surface-alias: ${{ steps.web.outputs.web-surface-alias }}
@@ -141,7 +273,7 @@ jobs:
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.buildchain-ref }}
+          ref: ${{ needs.runtime.outputs.runtime-sha }}
           path: .buildchain/runtime
           persist-credentials: false
 
@@ -187,6 +319,9 @@ jobs:
           --source-sha "${{ github.event.pull_request.head.sha }}"
           --pull-number "${{ github.event.pull_request.number }}"
           --artifact-path "${{ inputs.artifact-path }}"
+          --runtime-id "${{ needs.runtime.outputs.runtime-sha }}"
+          --rollback-pointer "${{ needs.runtime.outputs.rollback-ref }}"
+          --rollback-limitations "Buildchain runtime override changes cannot validate outer reusable workflow YAML topology."
           --output .buildchain/web-surface-preview-plan.json
 
       - name: Plan pull request preview cleanup
@@ -213,6 +348,9 @@ jobs:
           --channel staging
           --source-sha "${{ github.sha }}"
           --artifact-path "${{ inputs.artifact-path }}"
+          --runtime-id "${{ needs.runtime.outputs.runtime-sha }}"
+          --rollback-pointer "${{ needs.runtime.outputs.rollback-ref }}"
+          --rollback-limitations "Buildchain runtime override changes cannot validate outer reusable workflow YAML topology."
           --output .buildchain/web-surface-staging-plan.json
 
       - name: Plan gated production deploy
@@ -225,6 +363,9 @@ jobs:
           --channel production
           --source-sha "${{ github.sha }}"
           --artifact-path "${{ inputs.artifact-path }}"
+          --runtime-id "${{ needs.runtime.outputs.runtime-sha }}"
+          --rollback-pointer "${{ needs.runtime.outputs.rollback-ref }}"
+          --rollback-limitations "Buildchain runtime override changes cannot validate outer reusable workflow YAML topology."
           --output .buildchain/web-surface-production-plan.json
 
       - name: Upload web-surface plans
@@ -272,7 +413,9 @@ jobs:
     name: Apply pull request preview
     if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' && inputs.preview-apply }}
     runs-on: ubuntu-24.04
-    needs: plan
+    needs:
+      - plan
+      - runtime
     environment: ${{ inputs.preview-environment }}
     outputs:
       preview-apply-result-json: ${{ steps.apply.outputs.web-surface-apply-result-json }}
@@ -290,7 +433,7 @@ jobs:
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.buildchain-ref }}
+          ref: ${{ needs.runtime.outputs.runtime-sha }}
           path: .buildchain/runtime
           persist-credentials: false
 
@@ -410,7 +553,9 @@ jobs:
     name: Apply pull request preview cleanup
     if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' && inputs.preview-cleanup-apply }}
     runs-on: ubuntu-24.04
-    needs: plan
+    needs:
+      - plan
+      - runtime
     environment: ${{ inputs.preview-environment }}
     outputs:
       preview-cleanup-result-json: ${{ steps.apply.outputs.web-surface-cleanup-result-json }}
@@ -428,7 +573,7 @@ jobs:
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.buildchain-ref }}
+          ref: ${{ needs.runtime.outputs.runtime-sha }}
           path: .buildchain/runtime
           persist-credentials: false
 
@@ -539,7 +684,9 @@ jobs:
     name: Apply staging deploy
     if: ${{ github.event_name == 'push' && github.ref_name == 'main' && inputs.staging-apply }}
     runs-on: ubuntu-24.04
-    needs: plan
+    needs:
+      - plan
+      - runtime
     environment: ${{ inputs.staging-environment }}
     outputs:
       staging-apply-result-json: ${{ steps.apply.outputs.web-surface-apply-result-json }}
@@ -556,7 +703,7 @@ jobs:
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.buildchain-ref }}
+          ref: ${{ needs.runtime.outputs.runtime-sha }}
           path: .buildchain/runtime
           persist-credentials: false
 
@@ -632,7 +779,9 @@ jobs:
     name: Apply production deploy
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.production-approved && inputs.production-apply }}
     runs-on: ubuntu-24.04
-    needs: plan
+    needs:
+      - plan
+      - runtime
     environment: ${{ inputs.production-environment }}
     outputs:
       production-apply-result-json: ${{ steps.apply.outputs.web-surface-apply-result-json }}
@@ -649,7 +798,7 @@ jobs:
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.buildchain-ref }}
+          ref: ${{ needs.runtime.outputs.runtime-sha }}
           path: .buildchain/runtime
           persist-credentials: false
 

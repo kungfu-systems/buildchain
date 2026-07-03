@@ -109,6 +109,59 @@ Do not use `kungfu-verify` for stages that need CMake, Ninja, ccache, Conan, or
 Docker image publishing. Those should use a heavier native-build image or remain
 on a host runner until their image contract is explicit.
 
+## Buildchain Runtime Override
+
+Stable consumers should keep the reusable workflow pinned to stable refs such as
+`@v2`. The optional `buildchain-ref` input is empty by default; empty means
+Buildchain resolves and executes the stable runtime selected by the workflow
+shell.
+
+For one-off manual validation, a trusted maintainer can run the caller workflow
+with a temporary runtime override:
+
+```yaml
+on:
+  workflow_dispatch:
+    inputs:
+      buildchain-ref:
+        description: "Temporary Buildchain runtime ref for trusted manual validation"
+        required: false
+        default: ""
+
+jobs:
+  build:
+    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2
+    with:
+      buildchain-ref: ${{ inputs.buildchain-ref || '' }}
+```
+
+Allowed override refs are deliberately narrow:
+
+| Ref form | Meaning |
+| --- | --- |
+| `train/v2/v2.3/<capability>` | Temporary capability train under the active minor line |
+| `refs/heads/train/v2/v2.3/<capability>` | Explicit branch ref for the same train |
+| `<40-character SHA>` | Exact immutable Buildchain runtime commit |
+
+Override requests fail closed unless the event is `workflow_dispatch` and the
+actor has write, maintain, or admin permission on the caller repository.
+Pull requests, including same-repository pull requests and fork-originated pull
+requests, cannot use `buildchain-ref` override. This keeps automated PR builds on
+the stable runtime surface.
+
+Every run resolves the runtime ref to an immutable SHA before checkout. The job
+summary and aggregate build summary record the workflow shell ref, requested
+runtime ref, resolved runtime ref, runtime SHA, stability class, trust decision,
+and rollback ref. Train refs are development validation refs: they do not move
+`v2`, `vX.Y`, `vX.Y-alpha`, npm dist-tags, or production release refs, and they
+must not be pinned as long-term production dependencies.
+
+Runtime override validates Buildchain runtime scripts, CLI code, local actions,
+config parsing, and lifecycle behavior. It cannot validate changes that require
+the outer reusable workflow YAML itself to change, such as new jobs,
+permissions, workflow outputs, or matrix topology. Those changes need a canary
+workflow path or a temporary explicit workflow ref.
+
 ## Workflow Outputs
 
 The reusable workflow exposes the resolved contract:
@@ -125,6 +178,11 @@ The reusable workflow exposes the resolved contract:
 | `build-summary-json`              | Compact aggregate JSON with platform count, file count, and byte total          |
 | `build-diagnostics-summary-json`  | Compact aggregate diagnostics JSON with platform, lifecycle warning/error, diagnostics contract warning, and sidecar manifest warning totals |
 | `trusted-event`                   | `true` when the event is trusted enough to reach build runners                  |
+| `buildchain-runtime-ref`          | Runtime ref selected after applying the empty-default or override policy        |
+| `buildchain-runtime-sha`          | Immutable Buildchain runtime commit used by all runtime checkouts               |
+| `buildchain-runtime-class`        | `stable`, `alpha`, `train`, `exact-sha`, or `development`                       |
+| `buildchain-runtime-override`     | `true` when a non-empty `buildchain-ref` override was accepted                  |
+| `buildchain-runtime-trust-decision` | Runtime override trust decision                                               |
 | `publish-channel`                 | Resolved publish channel requested by the caller                                |
 | `publish-allowed`                 | `true` only when this event/ref may publish after verification                  |
 | `publish-reason`                  | Human-readable reason for the publish gate decision                             |

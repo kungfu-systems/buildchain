@@ -81,7 +81,12 @@ test("init package creates buildchain.toml and reusable workflow", () => {
   assert.equal(result.packageManager, "npm");
   assert.deepEqual(result.written.sort(), [".github/workflows/build.yml", "buildchain.toml"]);
   assert.match(fs.readFileSync(path.join(cwd, "buildchain.toml"), "utf8"), /npm ci/);
-  assert.match(fs.readFileSync(path.join(cwd, ".github/workflows/build.yml"), "utf8"), /artifact-name-template: "fixture-\{platform\}"/);
+  const workflow = fs.readFileSync(path.join(cwd, ".github/workflows/build.yml"), "utf8");
+  assert.match(workflow, /workflow_dispatch:/);
+  assert.match(workflow, /buildchain-ref:/);
+  assert.match(workflow, /Temporary Buildchain runtime ref/);
+  assert.match(workflow, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| '' \}\}/);
+  assert.match(workflow, /artifact-name-template: "fixture-\{platform\}"/);
   const failure = runBuildchainFailure(["init", "--cwd", cwd]);
   assert.notEqual(failure.status, 0);
   assert.match(failure.stderr, /already exists/);
