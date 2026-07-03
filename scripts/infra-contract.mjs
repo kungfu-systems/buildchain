@@ -10,8 +10,11 @@ import {
   createInfraContractPlan,
   createInfraContractPropagationPlan,
   validateInfraContractProject,
+  verifyInfraContractEvidenceBundle,
 } from "./infra-contract-core.mjs";
 import { writeGitHubOutputs } from "./build-contract-core.mjs";
+
+const INFRA_CONTRACT_CI_CONTRACT = "kungfu-buildchain-infra-contract-ci";
 
 function readArg(name, fallback = "") {
   const index = process.argv.indexOf(`--${name}`);
@@ -74,6 +77,16 @@ function writeJson(result, outputPath) {
   }
 }
 
+function writeJsonFile(result, filePath) {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, `${JSON.stringify(result, null, 2)}\n`);
+  return filePath;
+}
+
+function posixRelative(cwd, filePath) {
+  return path.relative(cwd, filePath).split(path.sep).join("/");
+}
+
 function readJsonFileArg(name) {
   const value = readArg(name, "");
   if (!value) {
@@ -108,6 +121,112 @@ export function infraContractCli() {
       "infra-adapter": result.infra?.adapter || "",
       "infra-adoption-mode": result.infra?.adoptionMode || "",
       "infra-apply-mode": result.infra?.applyMode || "",
+    });
+    return result;
+  }
+
+  if (mode === "ci") {
+    const outputDir = path.resolve(cwd, readArg("output-dir", process.env.BUILDCHAIN_INFRA_CONTRACT_OUTPUT_DIR || ".buildchain"));
+    const files = {
+      validation: path.join(outputDir, "infra-contract-validate.json"),
+      plan: path.join(outputDir, "infra-contract-plan.json"),
+      artifact: path.join(outputDir, "buildchain.infra-contract.json"),
+      propagationPlan: path.join(outputDir, "infra-contract-propagation.json"),
+      propagationResult: path.join(outputDir, "infra-contract-propagation-apply.json"),
+      applyResult: path.join(outputDir, "infra-contract-apply.json"),
+      evidenceBundle: path.join(outputDir, "infra-contract-evidence-bundle.json"),
+      verification: path.join(outputDir, "infra-contract-evidence-verification.json"),
+    };
+    const validation = validateInfraContractProject(cwd);
+    writeJsonFile(validation, files.validation);
+    const executeAdapterCommands = readBooleanArg("execute-adapter-commands", false);
+    const plan = createInfraContractPlan({
+      cwd,
+      sourceSha,
+      executeAdapterCommands,
+    });
+    writeJsonFile(plan, files.plan);
+    const artifact = createInfraContractArtifact({
+      cwd,
+      sourceSha,
+      plan,
+      approvedBy: readArg("approved-by", process.env.GITHUB_ACTOR || ""),
+      approvalId: readArg("approval-id", ""),
+      applyRunId: readArg("apply-run-id", process.env.GITHUB_RUN_ID || ""),
+      rollbackPointer: readArg("rollback-pointer", process.env.BUILDCHAIN_ROLLBACK_REF || ""),
+      executeAdapterCommands,
+    });
+    writeJsonFile(artifact, files.artifact);
+    const propagationPlan = createInfraContractPropagationPlan({
+      cwd,
+      artifact,
+      branchPrefix: readArg("branch-prefix", "buildchain/infra-contract"),
+    });
+    writeJsonFile(propagationPlan, files.propagationPlan);
+    const propagationResult = (artifact.consumers || []).length > 0
+      ? applyInfraContractPropagation({
+        cwd,
+        artifact,
+        propagationPlan,
+        dryRun: true,
+      })
+      : null;
+    if (propagationResult) {
+      writeJsonFile(propagationResult, files.propagationResult);
+    }
+    let applyResult = null;
+    if (artifact.apply?.enabled) {
+      const approvalId = readArg("approval-id", "");
+      if (!approvalId) {
+        throw new Error("infra-contract ci requires --approval-id for apply-enabled contracts");
+      }
+      applyResult = applyInfraContract({
+        cwd,
+        sourceSha,
+        approvalId,
+        dryRun: true,
+        plan,
+        planMaxAgeMinutes: readNumberArg(
+          "plan-max-age-minutes",
+          readNumberEnv("BUILDCHAIN_INFRA_CONTRACT_PLAN_MAX_AGE_MINUTES", 60),
+        ),
+      });
+      writeJsonFile(applyResult, files.applyResult);
+    }
+    const evidenceBundle = createInfraContractEvidenceBundle({
+      artifact,
+      applyResult,
+      propagationResult,
+    });
+    writeJsonFile(evidenceBundle, files.evidenceBundle);
+    const verification = verifyInfraContractEvidenceBundle(evidenceBundle);
+    writeJsonFile(verification, files.verification);
+    if (!verification.ok) {
+      throw new Error(`infra-contract ci evidence verification failed: ${verification.issues.map((issue) => issue.code).join(", ")}`);
+    }
+    const result = {
+      schemaVersion: 1,
+      contract: INFRA_CONTRACT_CI_CONTRACT,
+      cwd,
+      sourceSha,
+      artifactHash: artifact.artifactHash,
+      evidenceBundleHash: evidenceBundle.bundleHash,
+      verificationOk: verification.ok,
+      mutationAllowed: false,
+      mutationExecuted: false,
+      propagationPlanned: Boolean(propagationResult),
+      files: Object.fromEntries(
+        Object.entries(files)
+          .filter(([, filePath]) => fs.existsSync(filePath))
+          .map(([key, filePath]) => [key, posixRelative(cwd, filePath)]),
+      ),
+    };
+    writeJson(result, output);
+    writeGitHubOutputs({
+      "infra-contract-hash": artifact.artifactHash,
+      "infra-evidence-bundle-hash": evidenceBundle.bundleHash,
+      "infra-evidence-verification-ok": String(verification.ok),
+      "infra-ci-json": JSON.stringify(result),
     });
     return result;
   }

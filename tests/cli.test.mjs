@@ -110,6 +110,10 @@ test("init infra-contract creates a directly valid observed contract scaffold", 
     "infra/outputs.json",
   ]);
   assert.match(fs.readFileSync(path.join(cwd, "buildchain.toml"), "utf8"), /type = "infra-contract"/);
+  assert.match(fs.readFileSync(path.join(cwd, "buildchain.toml"), "utf8"), /--mode ci/);
+  const workflow = fs.readFileSync(path.join(cwd, ".github", "workflows", "build.yml"), "utf8");
+  assert.match(workflow, /\.buildchain\/infra-contract-plan\.json/);
+  assert.match(workflow, /\.buildchain\/infra-contract-evidence-verification\.json/);
 
   const outputPath = path.join(cwd, "infra-validation.json");
   runBuildchain([
@@ -125,6 +129,28 @@ test("init infra-contract creates a directly valid observed contract scaffold", 
   assert.equal(validation.project.type, "infra-contract");
   assert.equal(validation.infra.adapter, "manual-observed");
   assert.equal(validation.consumers.length, 1);
+
+  const ciPath = path.join(cwd, ".buildchain", "infra-contract-ci.json");
+  runBuildchain([
+    "infra-contract",
+    "--mode",
+    "ci",
+    "--cwd",
+    cwd,
+    "--source-sha",
+    "1".repeat(40),
+    "--output",
+    ciPath,
+  ]);
+  const ci = JSON.parse(fs.readFileSync(ciPath, "utf8"));
+  assert.equal(ci.contract, "kungfu-buildchain-infra-contract-ci");
+  assert.equal(ci.mutationAllowed, false);
+  assert.equal(ci.verificationOk, true);
+  assert.equal(fs.existsSync(path.join(cwd, ".buildchain", "infra-contract-plan.json")), true);
+  assert.equal(fs.existsSync(path.join(cwd, ".buildchain", "buildchain.infra-contract.json")), true);
+  assert.equal(fs.existsSync(path.join(cwd, ".buildchain", "infra-contract-propagation-apply.json")), true);
+  const verification = JSON.parse(fs.readFileSync(path.join(cwd, ".buildchain", "infra-contract-evidence-verification.json"), "utf8"));
+  assert.equal(verification.ok, true);
 });
 
 test("infra-contract CLI apply consumes a saved fresh plan", () => {
