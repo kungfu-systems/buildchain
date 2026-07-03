@@ -1,0 +1,18 @@
+schema = 1
+
+[project]
+type = "infra-contract"
+name = "infra-pulumi-shaped"
+
+[infra]
+adapter = "pulumi"
+adoption_mode = "observe-only"
+apply = "disabled"
+environment = "preview"
+desired = ["desired/pulumi-preview.json"]
+contract = ["outputs/pulumi-output.json"]
+
+[[consumers]]
+repo = "kungfu-systems/site-pulumi-example"
+path = "infra/outputs.json"
+source = "outputs/pulumi-output.json"
