@@ -136,7 +136,7 @@ function adapterCommandTemplate({ config, stage }) {
     return {
       command: configuredCommand,
       commandSource: "configured",
-      executable: config.infra.adapter === "custom-command",
+      executable: true,
     };
   }
   const adapterCommands = STATIC_ADAPTER_COMMANDS[config.infra.adapter];
@@ -166,6 +166,7 @@ function collectAdapterEvidence({ cwd, config, stages, executeAdapterCommands, r
         adapter: config.infra.adapter,
         commandSource: template.commandSource,
         command: redactCommandText(command),
+        executable: template.executable,
         executed: willExecute,
         status: willExecute ? "pending" : "planned",
         exitCode: null,
@@ -832,11 +833,12 @@ export function applyInfraContract({
       adapterEvidence: plannedApplyEvidence,
     };
   }
-  if (config.infra.adapter !== "custom-command") {
-    throw new Error(`infra-contract apply execution is not implemented for adapter: ${config.infra.adapter}`);
-  }
   if (!executeAdapterCommands) {
-    throw new Error("infra-contract custom-command apply requires --execute-adapter-commands true before mutation");
+    throw new Error("infra-contract apply requires --execute-adapter-commands true before mutation");
+  }
+  const applyTemplate = adapterCommandTemplate({ config, stage: "apply" });
+  if (!applyTemplate?.executable) {
+    throw new Error(`infra-contract apply execution requires infra.commands.apply for adapter: ${config.infra.adapter}`);
   }
   const adapterEvidence = collectAdapterEvidence({
     cwd,

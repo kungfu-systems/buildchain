@@ -462,6 +462,116 @@ source = "outputs/site-kungfu-tech.json"
   });
 });
 
+test("infra-contract provider adapters can execute configured command hooks behind gates", () => {
+  withFixture("infra-contract-terraform-shaped", (fixture) => {
+    fs.writeFileSync(
+      path.join(fixture, "buildchain.toml"),
+      `
+schema = 1
+
+[project]
+type = "infra-contract"
+name = "infra-terraform"
+
+[infra]
+adapter = "terraform"
+adoption_mode = "managed-apply"
+apply = "manual-approval"
+desired = ["desired/main.tf.json"]
+contract = ["outputs/terraform-output.json"]
+
+[infra.commands]
+validate = "terraform validate -no-color"
+plan = "terraform plan -input=false -out=.buildchain/infra-contract/terraform.tfplan"
+observe = "terraform output -json"
+apply = "terraform apply -input=false .buildchain/infra-contract/terraform.tfplan"
+
+[[consumers]]
+repo = "kungfu-systems/site-kungfu-tech"
+path = "infra/outputs.json"
+source = "outputs/terraform-output.json"
+`,
+    );
+    const calls = [];
+    const runner = (command) => {
+      calls.push(command);
+      return { status: 0, stdout: JSON.stringify({ command }), stderr: "" };
+    };
+    const sourceSha = "0".repeat(40);
+    const plan = createInfraContractPlan({
+      cwd: fixture,
+      sourceSha,
+      plannedAt: "2026-07-03T00:00:00.000Z",
+      executeAdapterCommands: true,
+      commandRunner: runner,
+    });
+    assert.deepEqual(
+      plan.adapterEvidence.map((entry) => [entry.stage, entry.commandSource, entry.executable, entry.executed, entry.status]),
+      [
+        ["validate", "configured", true, true, "passed"],
+        ["plan", "configured", true, true, "passed"],
+      ],
+    );
+
+    const artifact = createInfraContractArtifact({
+      cwd: fixture,
+      plan,
+      observedAt: "2026-07-03T00:01:00.000Z",
+      executeAdapterCommands: true,
+      commandRunner: runner,
+    });
+    assert.equal(artifact.observed.adapterEvidence[0].commandSource, "configured");
+    assert.equal(artifact.observed.adapterEvidence[0].executed, true);
+    assert.equal(artifact.observed.adapterEvidence[0].status, "passed");
+
+    const dryRun = applyInfraContract({
+      cwd: fixture,
+      sourceSha,
+      approvalId: "APPROVED-PROVIDER-APPLY-1",
+      dryRun: true,
+      plan,
+      now: "2026-07-03T00:02:00.000Z",
+    });
+    assert.equal(dryRun.status, "planned");
+    assert.equal(dryRun.adapterEvidence[0].commandSource, "configured");
+    assert.equal(dryRun.adapterEvidence[0].executed, false);
+
+    assert.throws(
+      () => applyInfraContract({
+        cwd: fixture,
+        sourceSha,
+        approvalId: "APPROVED-PROVIDER-APPLY-1",
+        dryRun: false,
+        plan,
+        now: "2026-07-03T00:02:00.000Z",
+      }),
+      /requires --execute-adapter-commands true/,
+    );
+
+    const result = applyInfraContract({
+      cwd: fixture,
+      sourceSha,
+      approvalId: "APPROVED-PROVIDER-APPLY-1",
+      dryRun: false,
+      plan,
+      now: "2026-07-03T00:02:00.000Z",
+      executeAdapterCommands: true,
+      commandRunner: runner,
+    });
+    assert.equal(result.status, "completed");
+    assert.equal(result.mutationAllowed, true);
+    assert.equal(result.mutationExecuted, true);
+    assert.equal(result.adapterEvidence[0].commandSource, "configured");
+    assert.equal(result.adapterEvidence[0].output.command, "terraform apply -input=false .buildchain/infra-contract/terraform.tfplan");
+    assert.deepEqual(calls, [
+      "terraform validate -no-color",
+      "terraform plan -input=false -out=.buildchain/infra-contract/terraform.tfplan",
+      "terraform output -json",
+      "terraform apply -input=false .buildchain/infra-contract/terraform.tfplan",
+    ]);
+  });
+});
+
 test("infra-contract non custom-command apply stays fail-closed before adapter execution", () => {
   withFixture("infra-contract-terraform-shaped", (fixture) => {
     fs.writeFileSync(
@@ -496,8 +606,9 @@ test("infra-contract non custom-command apply stays fail-closed before adapter e
         dryRun: false,
         plan,
         now: "2026-07-03T00:01:00.000Z",
+        executeAdapterCommands: true,
       }),
-      /apply execution is not implemented for adapter: terraform/,
+      /apply execution requires infra.commands.apply for adapter: terraform/,
     );
   });
 });

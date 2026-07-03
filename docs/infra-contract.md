@@ -70,17 +70,18 @@ provider calls:
 For built-in provider adapters, Buildchain records planned adapter command
 evidence for `validate`, `plan`, `apply`, and `observe` when a stage is
 supported. These entries are command plans, not execution. They make the
-adapter handoff auditable before concrete provider executors are implemented,
+adapter handoff auditable before a repository opts in to concrete commands,
 and they stay `executed: false` even when `--execute-adapter-commands true` is
-passed. Only `custom-command` hooks can currently execute through Buildchain.
+passed.
 
-`custom-command` adapters declare command hooks under `[infra.commands]`.
-Buildchain records them as planned adapter evidence by default. Passing
+Any adapter can declare concrete command hooks under `[infra.commands]`.
+Configured commands are the only executable provider surface. Buildchain records
+them as planned adapter evidence by default. Passing
 `--execute-adapter-commands true` to `plan` or `contract` executes the
-non-mutating `validate`, `plan`, or `observe` hooks and stores their exit status,
-stdout/stderr, and JSON stdout when present. The `apply` hook is only available
-through the saved-plan apply path and is never executed by ordinary PR
-validation.
+non-mutating `validate`, `plan`, or `observe` hooks and stores their exit
+status, stdout/stderr, and JSON stdout when present. The `apply` hook is only
+available through the saved-plan apply path and is never executed by ordinary
+PR validation.
 
 Supported adoption modes:
 
@@ -96,10 +97,10 @@ managed-apply
 `apply = "disabled"` is the default. Non-disabled apply requires
 `adoption_mode = "managed-apply"` and an explicit approval id before mutation.
 Apply also requires a saved plan artifact whose `sourceSha`, `plannedAt`, and
-input hash still match the current repository. Real apply execution is currently
-implemented only for `custom-command`, and it still requires `--dry-run false`
-plus `--execute-adapter-commands true`. Other adapters fail closed before
-mutation execution until their concrete executors are implemented.
+input hash still match the current repository. Real apply execution requires a
+configured `[infra.commands].apply` command, `--dry-run false`, and
+`--execute-adapter-commands true`. Without a configured apply command, built-in
+provider adapters still fail closed before mutation execution.
 
 ## CLI
 
@@ -152,12 +153,11 @@ no consumers, omit `--propagation-result`.
   mode are explicit.
 - Apply rejects missing, stale, source-mismatched, or input-drifted plan
   artifacts before any adapter mutation can run.
-- Built-in provider adapter command evidence is planned-only until concrete
-  provider executors exist; it is not live validation, plan, observe, or apply
-  execution.
-- Custom-command apply requires saved plan freshness, an approval id,
-  `--dry-run false`, and `--execute-adapter-commands true`; nonzero adapter
-  exits fail closed and are recorded as adapter evidence.
+- Built-in provider adapter command evidence is planned-only unless the
+  repository declares a concrete command for that stage under `[infra.commands]`.
+- Provider apply requires saved plan freshness, an approval id, a configured
+  apply command, `--dry-run false`, and `--execute-adapter-commands true`;
+  nonzero adapter exits fail closed and are recorded as adapter evidence.
 - Terraform/OpenTofu state files and Pulumi state or secret JSON files are not
   accepted as contract inputs.
 - Consumers are represented as pull request plans. `propagation-apply` defaults
