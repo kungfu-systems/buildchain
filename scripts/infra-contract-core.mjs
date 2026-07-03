@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { loadBuildchainConfig, validateBuildchainConfig } from "../packages/core/buildchain-config.js";
@@ -6,6 +7,7 @@ import { loadBuildchainConfig, validateBuildchainConfig } from "../packages/core
 const PLAN_CONTRACT = "kungfu-buildchain-infra-contract-plan";
 const ARTIFACT_CONTRACT = "kungfu-buildchain-infra-contract";
 const PROPAGATION_CONTRACT = "kungfu-buildchain-infra-contract-propagation-plan";
+const PROPAGATION_APPLY_CONTRACT = "kungfu-buildchain-infra-contract-propagation-apply";
 
 const STATIC_CAPABILITIES = Object.freeze({
   "manual-observed": { validate: true, plan: false, apply: false, observe: true },
@@ -40,6 +42,29 @@ function sha256Buffer(value) {
   const hash = crypto.createHash("sha256");
   hash.update(value);
   return hash.digest("hex");
+}
+
+function runCommand(command, args, options = {}) {
+  const result = spawnSync(command, args, {
+    cwd: options.cwd || process.cwd(),
+    input: options.input,
+    encoding: "utf8",
+  });
+  return {
+    command,
+    args,
+    cwd: options.cwd || process.cwd(),
+    status: result.status ?? 1,
+    stdout: result.stdout || "",
+    stderr: result.stderr || result.error?.message || "",
+  };
+}
+
+function assertCommandSuccess(result, label) {
+  if (result.status !== 0) {
+    throw new Error(`${label} failed: ${result.stderr || result.stdout || `exit ${result.status}`}`);
+  }
+  return result;
 }
 
 function stableJson(value) {
@@ -138,6 +163,16 @@ function assertInfraContractPlan(plan) {
   }
   if (!plan.planHash || typeof plan.planHash !== "string") {
     throw new Error("infra-contract apply plan is missing planHash");
+  }
+  return plan;
+}
+
+function assertInfraContractPropagationPlan(plan) {
+  if (!plan || typeof plan !== "object" || plan.contract !== PROPAGATION_CONTRACT) {
+    throw new Error("infra-contract propagation apply requires a saved propagation plan");
+  }
+  if (!plan.artifactHash || typeof plan.artifactHash !== "string") {
+    throw new Error("infra-contract propagation plan is missing artifactHash");
   }
   return plan;
 }
@@ -326,9 +361,132 @@ export function createInfraContractPropagationPlan({
       branch: `${branchPrefix}/${selectedArtifact.artifactHash.slice(0, 12)}`,
       path: consumer.path,
       source: consumer.source,
+      sourceSha256: consumer.sourceSha256,
+      baseBranch: consumer.branch || "main",
       title: "chore(infra): update Buildchain infra contract",
       body: `Update ${consumer.path} from Buildchain infra contract ${selectedArtifact.artifactHash}.`,
     })),
+  };
+}
+
+export function applyInfraContractPropagation({
+  cwd = process.cwd(),
+  artifact,
+  propagationPlan,
+  dryRun = true,
+  approvalId = "",
+  consumerWorkspaces = {},
+  runner = runCommand,
+} = {}) {
+  const selectedPlan = assertInfraContractPropagationPlan(
+    propagationPlan || createInfraContractPropagationPlan({ cwd, artifact }),
+  );
+  if (artifact && artifact.contract !== ARTIFACT_CONTRACT) {
+    throw new Error("infra-contract propagation apply requires an infra-contract artifact");
+  }
+  if (artifact && artifact.artifactHash !== selectedPlan.artifactHash) {
+    throw new Error("infra-contract propagation plan artifactHash does not match the artifact");
+  }
+  if (!dryRun && !approvalId) {
+    throw new Error("infra-contract propagation apply requires an approval id before opening consumer PRs");
+  }
+
+  const operations = selectedPlan.pullRequests.map((request) => {
+    const sourceRecord = readFileRecord(cwd, request.source);
+    if (request.sourceSha256 && request.sourceSha256 !== sourceRecord.sha256) {
+      throw new Error(`infra-contract propagation source drifted for ${request.source}`);
+    }
+    const workspace = consumerWorkspaces[request.repo] || "";
+    const targetPath = assertSafeInfraPath(request.path);
+    const operation = {
+      repo: request.repo,
+      branch: request.branch,
+      baseBranch: request.baseBranch || "main",
+      path: targetPath,
+      source: request.source,
+      sourceSha256: sourceRecord.sha256,
+      workspace,
+      title: request.title,
+      body: request.body,
+      status: dryRun ? "planned" : "pending",
+      executed: false,
+      pullRequestUrl: "",
+      commands: [
+        ["git", "-C", workspace || "<consumer-workspace>", "checkout", "-B", request.branch],
+        ["git", "-C", workspace || "<consumer-workspace>", "add", targetPath],
+        ["git", "-C", workspace || "<consumer-workspace>", "commit", "-m", request.title],
+        ["git", "-C", workspace || "<consumer-workspace>", "push", "-u", "origin", request.branch],
+        ["gh", "pr", "create", "--repo", request.repo, "--base", request.baseBranch || "main", "--head", request.branch],
+      ],
+    };
+
+    if (dryRun) {
+      return operation;
+    }
+
+    if (!workspace) {
+      throw new Error(`infra-contract propagation apply requires --consumer-workspace for ${request.repo}`);
+    }
+    if (!fs.existsSync(workspace) || !fs.statSync(workspace).isDirectory()) {
+      throw new Error(`infra-contract consumer workspace does not exist: ${workspace}`);
+    }
+    const status = assertCommandSuccess(runner("git", ["-C", workspace, "status", "--porcelain"]), `${request.repo} status`);
+    if (status.stdout.trim()) {
+      throw new Error(`infra-contract consumer workspace must be clean before propagation: ${request.repo}`);
+    }
+    assertCommandSuccess(runner("git", ["-C", workspace, "checkout", "-B", request.branch]), `${request.repo} branch`);
+    const targetFile = path.join(workspace, targetPath);
+    fs.mkdirSync(path.dirname(targetFile), { recursive: true });
+    fs.copyFileSync(path.join(cwd, assertSafeInfraPath(request.source)), targetFile);
+    assertCommandSuccess(runner("git", ["-C", workspace, "add", targetPath]), `${request.repo} add`);
+    const diff = runner("git", ["-C", workspace, "diff", "--cached", "--quiet"]);
+    if (diff.status === 0) {
+      return {
+        ...operation,
+        status: "unchanged",
+        executed: true,
+      };
+    }
+    if (diff.status !== 1) {
+      throw new Error(`${request.repo} diff failed: ${diff.stderr || diff.stdout || `exit ${diff.status}`}`);
+    }
+    assertCommandSuccess(runner("git", ["-C", workspace, "commit", "-m", request.title, "-m", request.body]), `${request.repo} commit`);
+    assertCommandSuccess(runner("git", ["-C", workspace, "push", "-u", "origin", request.branch]), `${request.repo} push`);
+    const pr = assertCommandSuccess(
+      runner("gh", [
+        "pr",
+        "create",
+        "--repo",
+        request.repo,
+        "--base",
+        request.baseBranch || "main",
+        "--head",
+        request.branch,
+        "--title",
+        request.title,
+        "--body",
+        request.body,
+      ]),
+      `${request.repo} pr create`,
+    );
+    return {
+      ...operation,
+      status: "opened",
+      executed: true,
+      pullRequestUrl: pr.stdout.trim(),
+    };
+  });
+
+  return {
+    schemaVersion: 1,
+    contract: PROPAGATION_APPLY_CONTRACT,
+    artifactHash: selectedPlan.artifactHash,
+    dryRun,
+    approvalId,
+    mutationAllowed: !dryRun,
+    mutationExecuted: !dryRun && operations.some((operation) => operation.executed),
+    status: dryRun ? "planned" : "completed",
+    operations,
   };
 }
 

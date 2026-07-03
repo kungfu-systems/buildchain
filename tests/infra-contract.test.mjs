@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import {
   applyInfraContract,
+  applyInfraContractPropagation,
   createInfraContractArtifact,
   createInfraContractPlan,
   createInfraContractPropagationPlan,
@@ -203,5 +204,92 @@ test("infra-contract managed apply rejects a plan after desired inputs drift", (
       }),
       /plan no longer matches current desired, contract, or consumer inputs/,
     );
+  });
+});
+
+test("infra-contract propagation apply defaults to mutation-free PR operations", () => {
+  withFixture("infra-contract-shaped", (fixture) => {
+    const plan = createInfraContractPlan({
+      cwd: fixture,
+      sourceSha: "3".repeat(40),
+      plannedAt: "2026-07-03T00:00:00.000Z",
+    });
+    const artifact = createInfraContractArtifact({
+      cwd: fixture,
+      plan,
+      observedAt: "2026-07-03T00:00:00.000Z",
+    });
+    const propagationPlan = createInfraContractPropagationPlan({ cwd: fixture, artifact });
+    const result = applyInfraContractPropagation({ cwd: fixture, artifact, propagationPlan });
+
+    assert.equal(result.contract, "kungfu-buildchain-infra-contract-propagation-apply");
+    assert.equal(result.status, "planned");
+    assert.equal(result.dryRun, true);
+    assert.equal(result.mutationAllowed, false);
+    assert.equal(result.mutationExecuted, false);
+    assert.equal(result.operations.length, 2);
+    assert.equal(result.operations[0].repo, "kungfu-systems/site-kungfu-tech");
+    assert.equal(result.operations[0].status, "planned");
+    assert.match(result.operations[0].commands.at(-1).join(" "), /gh pr create/);
+  });
+});
+
+test("infra-contract propagation apply opens consumer PRs only after explicit approval", () => {
+  withFixture("infra-contract-shaped", (fixture) => {
+    const plan = createInfraContractPlan({
+      cwd: fixture,
+      sourceSha: "4".repeat(40),
+      plannedAt: "2026-07-03T00:00:00.000Z",
+    });
+    const artifact = createInfraContractArtifact({
+      cwd: fixture,
+      plan,
+      observedAt: "2026-07-03T00:00:00.000Z",
+    });
+    const propagationPlan = createInfraContractPropagationPlan({ cwd: fixture, artifact });
+    assert.throws(
+      () => applyInfraContractPropagation({ cwd: fixture, artifact, propagationPlan, dryRun: false }),
+      /requires an approval id/,
+    );
+
+    const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-consumer-"));
+    const workspaces = {
+      "kungfu-systems/site-kungfu-tech": workspace,
+      "kungfu-systems/site-libkungfu-dev": workspace,
+    };
+    const commands = [];
+    const runner = (command, args, options = {}) => {
+      commands.push({ command, args, cwd: options.cwd || "" });
+      if (command === "git" && args.includes("status")) {
+        return { status: 0, stdout: "", stderr: "" };
+      }
+      if (command === "git" && args.includes("diff")) {
+        return { status: 1, stdout: "", stderr: "" };
+      }
+      if (command === "gh") {
+        return { status: 0, stdout: `https://github.com/${args[args.indexOf("--repo") + 1]}/pull/1\n`, stderr: "" };
+      }
+      return { status: 0, stdout: "", stderr: "" };
+    };
+
+    try {
+      const result = applyInfraContractPropagation({
+        cwd: fixture,
+        artifact,
+        propagationPlan,
+        dryRun: false,
+        approvalId: "APPROVED-PROPAGATION-1",
+        consumerWorkspaces: workspaces,
+        runner,
+      });
+      assert.equal(result.status, "completed");
+      assert.equal(result.mutationAllowed, true);
+      assert.equal(result.mutationExecuted, true);
+      assert.equal(result.operations.every((operation) => operation.status === "opened"), true);
+      assert.equal(fs.existsSync(path.join(workspace, "infra", "outputs.json")), true);
+      assert.equal(commands.filter((command) => command.command === "gh").length, 2);
+    } finally {
+      fs.rmSync(workspace, { recursive: true, force: true });
+    }
   });
 });

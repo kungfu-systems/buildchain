@@ -10,7 +10,9 @@ desired -> validate -> plan -> approval -> apply -> observe -> contract -> propa
 The first supported surface is mutation-free: Buildchain validates declarations,
 creates a normalized plan, reads reviewed or adapter-shaped observed outputs,
 publishes a deterministic contract artifact, and plans downstream consumer pull
-requests. Real infrastructure mutation is not a PR or ordinary push side effect.
+requests. Propagation execution is also dry-run by default. Real infrastructure
+mutation and real consumer pull request creation are not PR or ordinary push side
+effects.
 
 ## Configuration
 
@@ -78,6 +80,10 @@ buildchain infra-contract --mode contract \
 buildchain infra-contract --mode propagation-plan \
   --artifact .buildchain/buildchain.infra-contract.json \
   --output .buildchain/infra-contract-propagation.json
+buildchain infra-contract --mode propagation-apply \
+  --propagation-plan .buildchain/infra-contract-propagation.json \
+  --dry-run true \
+  --output .buildchain/infra-contract-propagation-apply.json
 buildchain infra-contract --mode apply \
   --plan .buildchain/infra-contract-plan.json \
   --source-sha "$GITHUB_SHA" \
@@ -96,5 +102,9 @@ buildchain infra-contract --mode apply \
   artifacts before any adapter mutation can run.
 - Terraform/OpenTofu state files and Pulumi state or secret JSON files are not
   accepted as contract inputs.
-- Consumers are represented as pull request plans; Buildchain does not directly
-  push mirrored contract files to consumer main branches.
+- Consumers are represented as pull request plans. `propagation-apply` defaults
+  to dry-run; real PR creation requires `--dry-run false`, `--approval-id`, and
+  explicit `--consumer-workspace owner/repo=/path/to/checkout` mappings.
+- Buildchain never pushes mirrored contract files directly to consumer main
+  branches. Real propagation creates reviewable branches and calls
+  `gh pr create`.

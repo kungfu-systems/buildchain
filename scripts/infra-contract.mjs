@@ -4,6 +4,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import {
   applyInfraContract,
+  applyInfraContractPropagation,
   createInfraContractArtifact,
   createInfraContractPlan,
   createInfraContractPropagationPlan,
@@ -17,6 +18,17 @@ function readArg(name, fallback = "") {
     return fallback;
   }
   return process.argv[index + 1] || "";
+}
+
+function readRepeatedArg(name) {
+  const values = [];
+  for (let index = 0; index < process.argv.length; index += 1) {
+    if (process.argv[index] === `--${name}` && process.argv[index + 1]) {
+      values.push(process.argv[index + 1]);
+      index += 1;
+    }
+  }
+  return values;
 }
 
 function readBooleanArg(name, fallback = true) {
@@ -67,6 +79,18 @@ function readJsonFileArg(name) {
     return null;
   }
   return JSON.parse(fs.readFileSync(path.resolve(value), "utf8"));
+}
+
+function readKeyValueMapArg(name) {
+  const entries = {};
+  for (const value of readRepeatedArg(name)) {
+    const separator = value.indexOf("=");
+    if (separator <= 0) {
+      throw new Error(`--${name} must use key=value`);
+    }
+    entries[value.slice(0, separator)] = value.slice(separator + 1);
+  }
+  return entries;
 }
 
 export function infraContractCli() {
@@ -127,6 +151,23 @@ export function infraContractCli() {
     writeGitHubOutputs({
       "infra-propagation-count": String(result.pullRequests.length),
       "infra-propagation-plan-json": JSON.stringify(result),
+    });
+    return result;
+  }
+
+  if (mode === "propagation-apply") {
+    const result = applyInfraContractPropagation({
+      cwd,
+      artifact: readJsonFileArg("artifact"),
+      propagationPlan: readJsonFileArg("propagation-plan"),
+      dryRun: readBooleanArg("dry-run", true),
+      approvalId: readArg("approval-id", ""),
+      consumerWorkspaces: readKeyValueMapArg("consumer-workspace"),
+    });
+    writeJson(result, output);
+    writeGitHubOutputs({
+      "infra-propagation-status": result.status,
+      "infra-propagation-result-json": JSON.stringify(result),
     });
     return result;
   }

@@ -100,6 +100,7 @@ Examples:
   buildchain verify observability-log .buildchain/logs/events.jsonl --min-events 4 --require-phase build
   buildchain infra-contract --mode plan --source-sha <sha>
   buildchain infra-contract --mode apply --plan <plan.json> --source-sha <sha> --approval-id <id>
+  buildchain infra-contract --mode propagation-apply --propagation-plan <plan.json> --dry-run true
 `;
 }
 
