@@ -35,6 +35,7 @@ running artifact), *use* (consume / extend) - and a **status**:
 | How do I add timestamped logs inside build scripts? | [`toolkit-observability.md`](toolkit-observability.md) | use | stable |
 | What package-owned facts should buildchain.libkungfu.dev render? | [`site-bundle-contract.md`](site-bundle-contract.md) | use | stable |
 | How do I call the reusable build workflow? | [`reusable-build-surface.md`](reusable-build-surface.md) | use | stable |
+| How do I validate an unreleased Buildchain runtime train while keeping `@v2`? | [`runtime-train-validation.md`](runtime-train-validation.md) | use | stable |
 | How do I deploy a site/app preview, staging, or production surface? | [`web-surface-deployments.md`](web-surface-deployments.md) | use | stable |
 | How do I use the active actions directly? | [`../actions/validate-config/README.md`](../actions/validate-config/README.md), [`../actions/run-lifecycle/README.md`](../actions/run-lifecycle/README.md), [`../actions/promote-buildchain-ref/README.md`](../actions/promote-buildchain-ref/README.md) | use | stable |
 | What do the fixture repositories demonstrate? | [`../fixtures/libnode-shaped/README.md`](../fixtures/libnode-shaped/README.md), [`../fixtures/publish-transaction-shaped/README.md`](../fixtures/publish-transaction-shaped/README.md), [`../fixtures/web-surface-shaped/README.md`](../fixtures/web-surface-shaped/README.md) | verify | stable |
@@ -59,6 +60,9 @@ running artifact), *use* (consume / extend) - and a **status**:
 - **libnode / native artifacts / self-hosted runner matrix** ->
   [`reusable-build-surface.md`](reusable-build-surface.md) and
   [`../fixtures/libnode-shaped/README.md`](../fixtures/libnode-shaped/README.md).
+- **runtime train validation / temporary `buildchain-ref` override** ->
+  [`runtime-train-validation.md`](runtime-train-validation.md) and
+  [`reusable-build-surface.md`](reusable-build-surface.md).
 - **standalone binary install / platform archives / GitHub Release bundle** ->
   [`install.md`](install.md), [`binary-distribution.md`](binary-distribution.md),
   and [`release-passport.md`](release-passport.md).

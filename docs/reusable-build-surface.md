@@ -114,7 +114,8 @@ on a host runner until their image contract is explicit.
 Stable consumers should keep the reusable workflow pinned to stable refs such as
 `@v2`. The optional `buildchain-ref` input is empty by default; empty means
 Buildchain resolves and executes the stable runtime selected by the workflow
-shell.
+shell. The full train validation protocol is documented in
+[`runtime-train-validation.md`](runtime-train-validation.md).
 
 For one-off manual validation, a trusted maintainer can run the caller workflow
 with a temporary runtime override:
@@ -161,6 +162,20 @@ config parsing, and lifecycle behavior. It cannot validate changes that require
 the outer reusable workflow YAML itself to change, such as new jobs,
 permissions, workflow outputs, or matrix topology. Those changes need a canary
 workflow path or a temporary explicit workflow ref.
+
+When a Buildchain maintainer asks for downstream validation, the expected
+request is:
+
+```text
+Buildchain train ready: buildchain-ref=train/v2/v2.3/<capability>.
+Keep uses: ...@v2; run workflow_dispatch with that buildchain-ref and report the runtime evidence summary.
+```
+
+After validation succeeds, the Buildchain change should continue through the
+normal mainline and release path. Do not treat the train as a pending merge
+item; it is only a temporary fast-use, diagnostic, and rollback channel. It may
+remain for a retention window after release, with old trains handled by a
+separate periodic cleanup task.
 
 ## Workflow Outputs
 
