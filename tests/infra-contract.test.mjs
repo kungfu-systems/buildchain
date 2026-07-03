@@ -89,6 +89,46 @@ test("infra-contract terraform-shaped fixture proves the core is not CloudFormat
   });
 });
 
+test("infra-contract static provider fixtures cover CloudFormation and Pulumi shapes", () => {
+  for (const [fixtureName, adapter, desiredPath, outputKey] of [
+    ["infra-contract-cloudformation-shaped", "aws-cloudformation", "desired/site-stack.template.json", "bucketName"],
+    ["infra-contract-pulumi-shaped", "pulumi", "desired/pulumi-preview.json", "bucketName"],
+  ]) {
+    withFixture(fixtureName, (fixture) => {
+      const summary = validateInfraContractProject(fixture);
+      assert.equal(summary.infra.adapter, adapter);
+      assert.equal(summary.infra.adoptionMode, "observe-only");
+      assert.equal(summary.infra.applyMode, "disabled");
+
+      const plan = createInfraContractPlan({
+        cwd: fixture,
+        sourceSha: "2".repeat(40),
+        plannedAt: "2026-07-03T00:00:00.000Z",
+      });
+      assert.equal(plan.adapter, adapter);
+      assert.equal(plan.mutationAllowed, false);
+      assert.equal(plan.adapterCapabilities.validate, true);
+      assert.equal(plan.adapterCapabilities.plan, true);
+      assert.equal(plan.adapterCapabilities.observe, true);
+      assert.equal(plan.stages.apply.status, "disabled");
+      assert.deepEqual(plan.desiredFiles.map((entry) => entry.path), [desiredPath]);
+
+      const artifact = createInfraContractArtifact({
+        cwd: fixture,
+        plan,
+        observedAt: "2026-07-03T00:00:00.000Z",
+      });
+      assert.equal(artifact.observed.source, "adapter-observe");
+      assert.equal(artifact.observed.files[0].outputs[outputKey].startsWith("example-"), true);
+      assert.equal(artifact.validation.mutationFree, true);
+
+      const propagation = createInfraContractPropagationPlan({ cwd: fixture, artifact });
+      assert.equal(propagation.mutationAllowed, false);
+      assert.equal(propagation.pullRequests.length, 1);
+    });
+  }
+});
+
 test("infra-contract custom-command adapter records planned and executed evidence", () => {
   withFixture("infra-contract-shaped", (fixture) => {
     fs.writeFileSync(

@@ -50,6 +50,16 @@ aws-cli
 custom-command
 ```
 
+Buildchain's safe fixture set covers the provider-neutral shape without live
+provider calls:
+
+- `manual-observed` for existing reviewed resources;
+- `aws-cloudformation` for template plus stack output shapes;
+- `terraform` for plan/output JSON shapes;
+- `pulumi` for preview/output JSON shapes;
+- `custom-command` for user-defined validate, plan, observe, and approved apply
+  hooks.
+
 `custom-command` adapters declare command hooks under `[infra.commands]`.
 Buildchain records them as planned adapter evidence by default. Passing
 `--execute-adapter-commands true` to `plan` or `contract` executes the
