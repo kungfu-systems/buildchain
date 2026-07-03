@@ -236,6 +236,34 @@ and `llms.txt`. Production binary distribution defaults to GitHub-hosted
 runners so other projects can reproduce the release lane; self-hosted runners
 remain compatibility fixtures and are recorded as runner facts when used.
 
+For publish-transaction releases, pass the additional evidence inputs so
+`buildchain.release.json` becomes the unified passport instead of a binary-only
+asset summary:
+
+```bash
+buildchain collect github-release \
+  --tag v2.3.2 \
+  --repository kungfu-systems/buildchain \
+  --assets-dir dist \
+  --publish-evidence-json .buildchain/release-evidence/v2.3.2/evidence.json \
+  --transaction-json .buildchain/release-state/v2.3.2/state.json \
+  --package-set-json package-set.json \
+  --trusted-publishing-json trusted-publishing.json \
+  --anchor-manifest-json libnode.release.json \
+  --release-extra-json '{"channel":"release","targetRef":"release/v2/v2.3"}' \
+  --output-dir .buildchain/release-passport
+```
+
+The generated passport records the main and platform packages, npm dist-tags,
+published versions, release source/ref state, anchor manifest digest, registry
+artifact digests, trusted publishing evidence, and Buildchain transaction
+result. `packageSet` keeps the ordered package set; `publish.packages[]` is the
+agent-readable npm publication summary for each main/platform package. For
+Buildchain releases, verification expects the supplied package set to include
+the main package plus the three platform packages with version, dist-tag, and
+digest evidence. Verification fails closed if supplied sections are internally
+incomplete or point to artifacts without matching evidence.
+
 Buildchain dogfoods its observability toolkit in this lane. The standalone
 builder writes API-generated events, while the workflow uses `buildchain mark`,
 `buildchain span`, `buildchain verify observability-log`, and `buildchain log
