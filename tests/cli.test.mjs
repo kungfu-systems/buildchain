@@ -1685,6 +1685,8 @@ test("release passport collect verify and explain form an agent-readable contrac
     "kungfu-systems/buildchain",
     "--source-sha",
     "e".repeat(40),
+    "--product-name",
+    "Libnode",
     "--assets-dir",
     assetsDir,
     "--output-dir",
@@ -1695,6 +1697,7 @@ test("release passport collect verify and explain form an agent-readable contrac
   const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
 
   assert.equal(passport.contract, "kungfu-buildchain-release-passport");
+  assert.equal(passport.product.name, "Libnode");
   assert.equal(passport.runnerPolicy.productionDefault, "github-hosted");
   assert.equal(passport.runnerPolicy.compatibilityFixture, "self-hosted");
   assert.equal(passport.artifacts.length, 2);
@@ -1716,6 +1719,239 @@ test("release passport collect verify and explain form an agent-readable contrac
   assert.equal(explanation.audience, "agent");
   assert.equal(explanation.trust, "pass");
   assert.equal(explanation.nextAction, "install-or-upgrade-after-policy-review");
+});
+
+test("release passport unifies package set publish transaction evidence", () => {
+  const cwd = tempDir("release-passport-unified");
+  const assetsDir = path.join(cwd, "dist");
+  fs.mkdirSync(assetsDir, { recursive: true });
+  fs.writeFileSync(path.join(assetsDir, "buildchain-x86_64-unknown-linux-gnu.tar.gz"), "linux-binary\n");
+  fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({
+    name: "@kungfu-tech/buildchain",
+    version: "2.3.2",
+  }, null, 2));
+
+  const publishEvidencePath = path.join(cwd, "publish-evidence.json");
+  fs.writeFileSync(publishEvidencePath, JSON.stringify({
+    schema: 1,
+    version: "2.3.2",
+    channel: "release",
+    source_sha: "a".repeat(40),
+    release_sha: "b".repeat(40),
+    target_ref: "release/v2/v2.3",
+    release_material_sha: "b".repeat(40),
+    publish_tooling_sha: "c".repeat(40),
+    artifacts: [
+      {
+        group: "node",
+        kind: "npm",
+        name: "@kungfu-tech/buildchain-linux-x64",
+        ref: "2.3.2",
+        digest: "sha512-linux",
+      },
+      {
+        group: "node",
+        kind: "npm",
+        name: "@kungfu-tech/buildchain-darwin-arm64",
+        ref: "2.3.2",
+        digest: "sha512-darwin",
+      },
+      {
+        group: "node",
+        kind: "npm",
+        name: "@kungfu-tech/buildchain-win32-x64",
+        ref: "2.3.2",
+        digest: "sha512-windows",
+      },
+      {
+        group: "node",
+        kind: "npm",
+        name: "@kungfu-tech/buildchain",
+        ref: "2.3.2",
+        digest: "sha512-main",
+      },
+    ],
+  }, null, 2));
+  const transactionPath = path.join(cwd, "transaction.json");
+  fs.writeFileSync(transactionPath, JSON.stringify({
+    command: "finalize",
+    transaction: {
+      id: "kungfu-systems/buildchain:2.3.2:release/v2/v2.3",
+      version: "2.3.2",
+      state: "complete",
+      previous_state: "finalizing",
+      exact_tag: "v2.3.2",
+      release_sha: "b".repeat(40),
+      release_material_sha: "b".repeat(40),
+      state_ref: "refs/heads/buildchain/release-state/2-3-2",
+      evidence_path: ".buildchain/release-evidence/v2.3.2/evidence.json",
+    },
+    validation: {
+      valid: true,
+      errors: [],
+    },
+    durable: {
+      sha: "d".repeat(40),
+    },
+  }, null, 2));
+  const anchorManifestPath = path.join(cwd, "anchor-manifest.json");
+  fs.writeFileSync(anchorManifestPath, JSON.stringify({
+    npmVersion: "2.3.2",
+    nodeVersion: "24.0.0",
+  }, null, 2));
+  const packageSetPath = path.join(cwd, "package-set.json");
+  fs.writeFileSync(packageSetPath, JSON.stringify({
+    order: "platforms-first-main-last",
+    registry: "https://registry.npmjs.org/",
+    main: {
+      name: "@kungfu-tech/buildchain",
+      version: "2.3.2",
+      distTag: "latest",
+      digest: "sha512-main",
+    },
+    platforms: [
+      {
+        name: "@kungfu-tech/buildchain-linux-x64",
+        version: "2.3.2",
+        distTag: "latest",
+        digest: "sha512-linux",
+        platform: "linux-x64",
+      },
+      {
+        name: "@kungfu-tech/buildchain-darwin-arm64",
+        version: "2.3.2",
+        distTag: "latest",
+        digest: "sha512-darwin",
+        platform: "darwin-arm64",
+      },
+      {
+        name: "@kungfu-tech/buildchain-win32-x64",
+        version: "2.3.2",
+        distTag: "latest",
+        digest: "sha512-windows",
+        platform: "win32-x64",
+      },
+    ],
+  }, null, 2));
+  const buildSummaryPath = path.join(cwd, "build-summary.json");
+  fs.writeFileSync(buildSummaryPath, JSON.stringify({
+    contract: "kungfu-buildchain-build-summary",
+    artifactName: "buildchain",
+    platformCount: 3,
+    fileCount: 3,
+    totalBytes: 123,
+  }, null, 2));
+  const linuxManifestPath = path.join(cwd, "linux-manifest.json");
+  const darwinManifestPath = path.join(cwd, "darwin-manifest.json");
+  const windowsManifestPath = path.join(cwd, "windows-manifest.json");
+  fs.writeFileSync(linuxManifestPath, JSON.stringify({
+    artifactName: "buildchain-linux-x64",
+    platform: { id: "linux-x64", name: "Linux x64" },
+    summary: { fileCount: 1, totalBytes: 41 },
+  }, null, 2));
+  fs.writeFileSync(darwinManifestPath, JSON.stringify({
+    artifactName: "buildchain-darwin-arm64",
+    platform: { id: "darwin-arm64", name: "Darwin arm64" },
+    summary: { fileCount: 1, totalBytes: 41 },
+  }, null, 2));
+  fs.writeFileSync(windowsManifestPath, JSON.stringify({
+    artifactName: "buildchain-win32-x64",
+    platform: { id: "win32-x64", name: "Windows x64" },
+    summary: { fileCount: 1, totalBytes: 41 },
+  }, null, 2));
+  const distTagEvidencePath = path.join(cwd, "dist-tag-evidence.json");
+  fs.writeFileSync(distTagEvidencePath, JSON.stringify({
+    schema: 1,
+    contract: "kungfu-buildchain-dist-tag-promotion-evidence",
+    distTag: "latest",
+    packages: [
+      { name: "@kungfu-tech/buildchain", version: "2.3.2", distTag: "latest", role: "main" },
+    ],
+  }, null, 2));
+
+  const collected = JSON.parse(runBuildchain([
+    "collect",
+    "github-release",
+    "--cwd",
+    cwd,
+    "--tag",
+    "v2.3.2",
+    "--repository",
+    "kungfu-systems/buildchain",
+    "--source-sha",
+    "a".repeat(40),
+    "--assets-dir",
+    assetsDir,
+    "--publish-evidence-json",
+    publishEvidencePath,
+    "--transaction-json",
+    transactionPath,
+    "--anchor-manifest-json",
+    anchorManifestPath,
+    "--package-set-json",
+    packageSetPath,
+    "--build-summary-json",
+    buildSummaryPath,
+    "--platform-manifest-json",
+    linuxManifestPath,
+    "--platform-manifest-json",
+    darwinManifestPath,
+    "--platform-manifest-json",
+    windowsManifestPath,
+    "--dist-tag-evidence-json",
+    distTagEvidencePath,
+    "--trusted-publishing-json",
+    JSON.stringify({
+      provider: "npm",
+      enabled: true,
+      auth: "trusted-publishing",
+      workflowRunId: "12345",
+    }),
+    "--release-extra-json",
+    JSON.stringify({
+      channel: "release",
+      targetRef: "release/v2/v2.3",
+      releaseSha: "b".repeat(40),
+    }),
+    "--output-dir",
+    "release-passport",
+    "--json",
+  ], { cwd }));
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+
+  assert.equal(passport.packageSet.main.name, "@kungfu-tech/buildchain");
+  assert.equal(passport.packageSet.main.distTag, "latest");
+  assert.equal(passport.packageSet.platforms.length, 3);
+  assert.equal(passport.publish.packages.length, 4);
+  assert.equal(passport.publish.distTag, "latest");
+  assert.ok(passport.publish.packages.some((entry) =>
+    entry.role === "platform" &&
+    entry.name === "@kungfu-tech/buildchain-darwin-arm64" &&
+    entry.digest === "sha512-darwin",
+  ));
+  assert.equal(passport.release.releaseStateRef, "refs/heads/buildchain/release-state/2-3-2");
+  assert.equal(passport.anchorManifest.fields.npmVersion, "2.3.2");
+  assert.equal(passport.trustedPublishing.provider, "npm");
+  assert.equal(passport.transaction.state, "complete");
+  assert.equal(passport.transaction.previousState, "finalizing");
+  assert.equal(passport.transaction.result.command, "finalize");
+  assert.equal(passport.transaction.result.validation.valid, true);
+  assert.equal(passport.buildSummary.fields.contract, "kungfu-buildchain-build-summary");
+  assert.equal(passport.platformArtifactManifests.length, 3);
+  assert.equal(passport.distTagPromotion.fields.distTag, "latest");
+  assert.ok(passport.artifacts.some((artifact) => artifact.name === "@kungfu-tech/buildchain-linux-x64"));
+  assert.ok(passport.artifacts.some((artifact) => artifact.name === "@kungfu-tech/buildchain"));
+
+  const report = JSON.parse(runBuildchain(["verify", "release-passport", passportPath, "--json"], { cwd }));
+  assert.equal(report.ok, true);
+  assert.equal(report.completeness.packageSetPresent, true);
+  assert.equal(report.completeness.trustedPublishingPresent, true);
+  assert.equal(report.completeness.transactionPresent, true);
+  assert.equal(report.completeness.anchorManifestPresent, true);
+  assert.equal(report.completeness.buildSummaryPresent, true);
+  assert.equal(report.completeness.platformArtifactManifestCount, 3);
+  assert.equal(report.completeness.distTagPromotionEvidencePresent, true);
 });
 
 test("release evidence bundle groups release assets and passport files", () => {
@@ -1797,6 +2033,91 @@ test("release passport verification fails closed on missing artifact evidence", 
   const report = JSON.parse(failure.stdout);
   assert.equal(report.ok, false);
   assert.match(JSON.stringify(report.issues), /artifact\.evidence\.missing/);
+});
+
+test("release passport verification matches publish evidence by artifact ref", () => {
+  const cwd = tempDir("release-passport-publish-ref");
+  const passportPath = path.join(cwd, "buildchain.release.json");
+  fs.writeFileSync(passportPath, JSON.stringify({
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-release-passport",
+    product: {
+      name: "Buildchain",
+      repository: "kungfu-systems/buildchain",
+      mechanism: "product-mechanism.json",
+    },
+    release: {
+      tag: "v2.3.2",
+      sourceSha: "f".repeat(40),
+      releaseSha: "e".repeat(40),
+      targetRef: "release/v2/v2.3",
+    },
+    runnerPolicy: {
+      productionDefault: "github-hosted",
+    },
+    artifacts: [
+      {
+        group: "node",
+        kind: "npm",
+        name: "@kungfu-tech/buildchain",
+        ref: "2.3.2",
+        digest: "sha512-current",
+        evidence: "publish-evidence.json",
+      },
+    ],
+    evidence: {
+      artifactEvidence: "artifact-evidence.json",
+      publishEvidence: "publish-evidence.json",
+      impact: "impact.json",
+      agentIndex: "agent-index.json",
+    },
+  }, null, 2));
+  fs.writeFileSync(path.join(cwd, "artifact-evidence.json"), JSON.stringify({
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-artifact-evidence",
+    artifacts: [],
+  }, null, 2));
+  fs.writeFileSync(path.join(cwd, "publish-evidence.json"), JSON.stringify({
+    schema: 1,
+    version: "2.3.2",
+    channel: "release",
+    source_sha: "f".repeat(40),
+    release_sha: "e".repeat(40),
+    target_ref: "release/v2/v2.3",
+    release_material_sha: "e".repeat(40),
+    publish_tooling_sha: "c".repeat(40),
+    artifacts: [
+      {
+        group: "node",
+        kind: "npm",
+        name: "@kungfu-tech/buildchain",
+        ref: "2.3.2",
+        digest: "sha512-current",
+      },
+      {
+        group: "node",
+        kind: "npm",
+        name: "@kungfu-tech/buildchain",
+        ref: "2.3.1",
+        digest: "sha512-old",
+      },
+    ],
+  }, null, 2));
+  for (const [fileName, contract] of [
+    ["impact.json", "kungfu-buildchain-impact"],
+    ["agent-index.json", "kungfu-buildchain-agent-index"],
+    ["product-mechanism.json", "kungfu-buildchain-product-mechanism"],
+  ]) {
+    fs.writeFileSync(path.join(cwd, fileName), JSON.stringify({
+      schemaVersion: 1,
+      contract,
+    }, null, 2));
+  }
+
+  const report = JSON.parse(runBuildchain(["verify", "release-passport", passportPath, "--json"], { cwd }));
+
+  assert.equal(report.ok, true);
+  assert.equal(report.completeness.evidenceArtifactCount, 2);
 });
 
 test("release dry-run rejects unsupported tag syntax", () => {
