@@ -1216,6 +1216,7 @@ command = "node scripts/should-not-run.mjs"
       version: "0.0.0",
       packageManager: "pnpm@11.7.0",
     },
+    ".buildchain/artifacts/build-summary.json": "/home/runner/work/buildchain/buildchain/.buildchain/artifacts/build-summary.json\n",
     "scripts/should-not-run.mjs": "throw new Error('lifecycle.publish should not run');\n",
   });
   const binDir = path.join(cwd, "bin");
@@ -1371,6 +1372,7 @@ exit 64
     assert.equal(passport.packageSet.platforms.length, 3);
     assert.equal(passport.distTagPromotion.fields.distTag, "latest");
     assert.equal(passport.release.releaseStateRef, "refs/heads/buildchain/release-state/1-0-0");
+    assert.equal(passport.buildSummary, undefined);
   } finally {
     for (const [key, value] of Object.entries(previousEnv)) {
       if (value === undefined) {
