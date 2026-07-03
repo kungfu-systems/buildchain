@@ -804,6 +804,7 @@ test("release promotion creates source version commits and points refs at them",
   const blobs = [];
   const commits = [];
   const repoUpdates = [];
+  let getCommitCalls = 0;
   const octokit = {
     rest: {
       git: {
@@ -821,9 +822,13 @@ test("release promotion creates source version commits and points refs at them",
               object: { sha: objectSha },
             })),
         }),
-        getCommit: async ({ commit_sha }) => ({
-          data: { tree: { sha: `tree-${commit_sha}` } },
-        }),
+        getCommit: async ({ commit_sha }) => {
+          getCommitCalls += 1;
+          if (getCommitCalls === 1) {
+            throw Object.assign(new Error("other side closed"), { status: 500 });
+          }
+          return { data: { tree: { sha: `tree-${commit_sha}` } } };
+        },
         createBlob: async ({ content }) => {
           const sha = `blob-${blobs.length + 1}`;
           blobs.push({ sha, content });
@@ -866,6 +871,7 @@ test("release promotion creates source version commits and points refs at them",
 
   const releaseSha = commits[0].sha;
   const nextAlphaSha = commits[1].sha;
+  assert.equal(getCommitCalls, 3);
   assert.equal(result.sha, releaseSha);
   assert.equal(result.nextAlphaSha, nextAlphaSha);
   assert.equal(refs.get("heads/release/v1/v1.0"), releaseSha);
