@@ -443,6 +443,11 @@ When enabled, Buildchain owns the full release apply state machine:
   and `production-apply` are true, and the job is gated by the configured GitHub
   Environment.
 
+Apply-only inputs are validated before the caller build or verification command
+runs. If the current event would run preview, staging, or production apply,
+missing role inputs or a production apply without `production-approved=true`
+fail immediately instead of spending the build and plan jobs first.
+
 Callers must grant `id-token: write` for OIDC role assumption. Preview comments
 also need `pull-requests: write`. The AWS roles remain caller-owned and should
 be scoped by channel: preview can mutate only preview resources, staging can

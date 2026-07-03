@@ -23,8 +23,25 @@ permissions:
   attestations: write
 
 jobs:
+  preflight:
+    name: Binary distribution preflight
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Reject manual release upload before matrix
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          UPLOAD_RELEASE: ${{ inputs.upload-release || false }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$UPLOAD_RELEASE" = "true" ]; then
+            echo "::error::upload-release=true is only allowed on true tag-triggered release runs"
+            echo "::error::Run this workflow from a v* tag, or keep upload-release=false for manual binary dry-runs."
+            exit 1
+          fi
+
   binary:
     name: Build ${{ matrix.platform }}
+    needs: preflight
     runs-on: ${{ matrix.os }}
     env:
       BUILDCHAIN_LOG_PATH: .buildchain/logs/events-${{ matrix.platform }}.jsonl
@@ -101,7 +118,7 @@ jobs:
 
   passport:
     name: Collect release passport
-    needs: [binary]
+    needs: [preflight, binary]
     runs-on: ubuntu-24.04
     env:
       BUILDCHAIN_LOG_PATH: .buildchain/logs/passport.jsonl

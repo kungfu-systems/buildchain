@@ -10,11 +10,13 @@ import {
   createResolvedReleaseManifest,
   parsePublishSourceRef,
   parseExpectedArtifactsJson,
+  resolvePublishChannelTargetRef,
   planPackageSetPublish,
   resolveArtifactContract,
   resolvePublishGate,
   resolvePublishSourceLock,
   resolveRunnerMatrix,
+  verifyPublishChannelRef,
   verifyPublishSourceLock,
 } from "../scripts/build-contract-core.mjs";
 import { aggregateBuildSummaryCli } from "../scripts/aggregate-build-summary.mjs";
@@ -31,6 +33,7 @@ import {
 } from "../scripts/runtime-ref-core.mjs";
 import { resolvePublishSourceCli } from "../scripts/resolve-publish-source.mjs";
 import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
+import { verifyPublishChannelRefCli } from "../scripts/verify-publish-channel-ref.mjs";
 import { verifyPublishSourceLockCli } from "../scripts/verify-publish-source-lock.mjs";
 import { validateBuildchainConfig } from "../packages/core/buildchain-config.js";
 import {
@@ -81,6 +84,24 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /github\.event\.pull_request\.head\.repo\.full_name/);
   assert.match(workflow, /resolve-publish-gate\.mjs/);
   assert.match(workflow, /resolve-publish-source\.mjs --mode lock/);
+  assert.match(workflow, /Verify publish target channel ref/);
+  assert.match(workflow, /verify-publish-channel-ref\.mjs/);
+  assert.ok(
+    workflow.indexOf("Resolve publish source lock") <
+      workflow.indexOf("Verify publish target channel ref"),
+  );
+  assert.ok(
+    workflow.indexOf("Verify publish target channel ref") <
+      workflow.indexOf("resolve-source:"),
+  );
+  assert.ok(
+    workflow.indexOf("Verify publish target channel ref") <
+      workflow.indexOf("build-native:"),
+  );
+  assert.ok(
+    workflow.indexOf("Verify publish target channel ref") <
+      workflow.indexOf("build-linux-container:"),
+  );
   assert.match(workflow, /resolve-publish-source\.mjs --mode manifest/);
   assert.equal(
     (workflow.match(/Install Buildchain runtime dependencies/g) || []).length,
@@ -170,6 +191,16 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /buildchain-ref:/);
   assert.match(workflow, /Resolve Buildchain runtime/);
   assert.match(workflow, /runtime-sha/);
+  assert.match(workflow, /Validate web-surface apply inputs/);
+  assert.match(workflow, /Validate apply inputs before build/);
+  assert.ok(
+    workflow.indexOf("Validate web-surface apply inputs") <
+      workflow.indexOf("Run caller build"),
+  );
+  assert.match(workflow, /preview-aws-role-arn is required before preview-apply can build or deploy/);
+  assert.match(workflow, /staging-aws-role-arn is required before staging-apply can build or deploy/);
+  assert.match(workflow, /production-apply requires production-approved=true before production build or deploy/);
+  assert.match(workflow, /production-aws-role-arn is required before production-apply can build or deploy/);
   assert.match(workflow, /Plan pull request preview/);
   assert.match(workflow, /github\.event\.action != 'closed'/);
   assert.match(workflow, /Plan pull request preview cleanup/);
@@ -201,6 +232,22 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /actions\/download-artifact@v7\.0\.0/);
   assert.match(workflow, /--runtime-id "\$\{\{ needs\.runtime\.outputs\.runtime-sha \}\}"/);
   assert.match(workflow, /--rollback-pointer "\$\{\{ needs\.runtime\.outputs\.rollback-ref \}\}"/);
+});
+
+test("binary distribution blocks invalid release uploads before the build matrix", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/binary-distribution.yml"),
+    "utf8",
+  );
+  assert.match(workflow, /Binary distribution preflight/);
+  assert.match(workflow, /Reject manual release upload before matrix/);
+  assert.ok(
+    workflow.indexOf("Binary distribution preflight") <
+      workflow.indexOf("Build standalone binary archive"),
+  );
+  assert.match(workflow, /upload-release=true is only allowed on true tag-triggered release runs/);
+  assert.match(workflow, /needs: preflight/);
+  assert.match(workflow, /needs: \[preflight, binary\]/);
 });
 
 test("runtime train override accepts only trusted manual train or exact SHA refs", () => {
@@ -738,6 +785,88 @@ test("verify publish source lock accepts unchanged current push ref", async () =
     sourceRef,
     sourceSha,
   });
+});
+
+test("publish source channel refs must match the locked source sha", async () => {
+  const sourceRef = "publish-gate/alpha/v22/v22.22/22.22.3-kf.0";
+  const sourceSha = "e".repeat(40);
+  assert.equal(
+    resolvePublishChannelTargetRef({ sourceRef }),
+    "alpha/v22/v22.22",
+  );
+  assert.deepEqual(
+    verifyPublishChannelRef({
+      sourceRef,
+      sourceSha,
+      targetSha: sourceSha,
+    }),
+    {
+      ok: true,
+      skipped: false,
+      sourceRef,
+      sourceSha,
+      targetRef: "alpha/v22/v22.22",
+      targetSha: sourceSha,
+    },
+  );
+  assert.throws(
+    () =>
+      verifyPublishChannelRef({
+        sourceRef,
+        sourceSha,
+        targetSha: "f".repeat(40),
+      }),
+    /Merge the source commit through the channel PR into alpha\/v22\/v22\.22/,
+  );
+
+  const seen = [];
+  const fetchImpl = async (url, options) => {
+    seen.push({ url, options });
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ object: { sha: sourceSha } }),
+    };
+  };
+  assert.deepEqual(
+    await verifyPublishChannelRefCli({
+      env: {
+        BUILDCHAIN_PUBLISH_SOURCE_REF: sourceRef,
+        BUILDCHAIN_PUBLISH_SOURCE_SHA: sourceSha,
+        BUILDCHAIN_SOURCE_REPOSITORY: "kungfu-systems/libnode",
+        GITHUB_TOKEN: "token",
+      },
+      fetchImpl,
+    }),
+    {
+      ok: true,
+      skipped: false,
+      sourceRef,
+      sourceSha,
+      targetRef: "alpha/v22/v22.22",
+      targetSha: sourceSha,
+    },
+  );
+  assert.equal(
+    seen[0].url,
+    "https://api.github.com/repos/kungfu-systems/libnode/git/ref/heads/alpha/v22/v22.22",
+  );
+  assert.equal(seen[0].options.headers.Authorization, "Bearer token");
+
+  await assert.rejects(
+    async () =>
+      await verifyPublishChannelRefCli({
+        env: {
+          BUILDCHAIN_PUBLISH_SOURCE_REF:
+            "publish-gate/release/v22/v22.22/22.22.3-kf.0",
+          BUILDCHAIN_PUBLISH_SOURCE_SHA: sourceSha,
+          BUILDCHAIN_CURRENT_TARGET_SHA: "a".repeat(40),
+          BUILDCHAIN_SOURCE_REPOSITORY: "kungfu-systems/libnode",
+        },
+        fetchImpl,
+      }),
+    /Merge the source commit through the channel PR into release\/v22\/v22\.22/,
+  );
 });
 
 test("package-set publish plan is platform-first, main-last, and idempotent", () => {
