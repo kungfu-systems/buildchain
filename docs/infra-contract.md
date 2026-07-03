@@ -61,8 +61,9 @@ managed-apply
 
 `apply = "disabled"` is the default. Non-disabled apply requires
 `adoption_mode = "managed-apply"` and an explicit approval id before mutation.
-The current implementation plans approved apply but fails closed before adapter
-mutation execution.
+Apply also requires a saved plan artifact whose `sourceSha`, `plannedAt`, and
+input hash still match the current repository. The current implementation plans
+approved apply but fails closed before adapter mutation execution.
 
 ## CLI
 
@@ -77,6 +78,12 @@ buildchain infra-contract --mode contract \
 buildchain infra-contract --mode propagation-plan \
   --artifact .buildchain/buildchain.infra-contract.json \
   --output .buildchain/infra-contract-propagation.json
+buildchain infra-contract --mode apply \
+  --plan .buildchain/infra-contract-plan.json \
+  --source-sha "$GITHUB_SHA" \
+  --approval-id "$APPROVAL_ID" \
+  --dry-run true \
+  --output .buildchain/infra-contract-apply.json
 ```
 
 ## Safety
@@ -85,6 +92,8 @@ buildchain infra-contract --mode propagation-plan \
 - `manual-observed` and observe-only modes cannot apply.
 - Apply fails before mutation unless approval, adapter capability, and ownership
   mode are explicit.
+- Apply rejects missing, stale, source-mismatched, or input-drifted plan
+  artifacts before any adapter mutation can run.
 - Terraform/OpenTofu state files and Pulumi state or secret JSON files are not
   accepted as contract inputs.
 - Consumers are represented as pull request plans; Buildchain does not directly

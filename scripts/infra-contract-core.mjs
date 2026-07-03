@@ -132,6 +132,57 @@ function stageStatuses({ config, capabilities, planHash = "" }) {
   };
 }
 
+function assertInfraContractPlan(plan) {
+  if (!plan || typeof plan !== "object" || plan.contract !== PLAN_CONTRACT) {
+    throw new Error("infra-contract apply requires a saved infra-contract plan");
+  }
+  if (!plan.planHash || typeof plan.planHash !== "string") {
+    throw new Error("infra-contract apply plan is missing planHash");
+  }
+  return plan;
+}
+
+function assertFreshApplyPlan({ cwd, plan, sourceSha, now, planMaxAgeMinutes }) {
+  const selectedPlan = assertInfraContractPlan(plan);
+  const expectedSourceSha = assertSha(sourceSha || selectedPlan.sourceSha, "sourceSha");
+  if (selectedPlan.sourceSha !== expectedSourceSha) {
+    throw new Error(`infra-contract apply sourceSha mismatch: plan has ${selectedPlan.sourceSha}, expected ${expectedSourceSha}`);
+  }
+  const plannedAtMs = Date.parse(selectedPlan.plannedAt || "");
+  if (!Number.isFinite(plannedAtMs)) {
+    throw new Error("infra-contract apply plan is missing a valid plannedAt timestamp");
+  }
+  const nowMs = Date.parse(now);
+  if (!Number.isFinite(nowMs)) {
+    throw new Error("infra-contract apply requires a valid current timestamp");
+  }
+  const maxAgeMs = Number(planMaxAgeMinutes) * 60 * 1000;
+  if (!Number.isFinite(maxAgeMs) || maxAgeMs <= 0) {
+    throw new Error("infra-contract apply plan max age must be a positive number of minutes");
+  }
+  const ageMs = nowMs - plannedAtMs;
+  if (ageMs < -5 * 60 * 1000) {
+    throw new Error("infra-contract apply plan timestamp is in the future");
+  }
+  if (ageMs > maxAgeMs) {
+    throw new Error(`infra-contract apply plan is stale: plannedAt ${selectedPlan.plannedAt} exceeds ${planMaxAgeMinutes} minute limit`);
+  }
+  const currentPlan = createInfraContractPlan({
+    cwd,
+    sourceSha: expectedSourceSha,
+    plannedAt: selectedPlan.plannedAt,
+  });
+  if (currentPlan.planHash !== selectedPlan.planHash) {
+    throw new Error("infra-contract apply plan no longer matches current desired, contract, or consumer inputs");
+  }
+  return {
+    plan: selectedPlan,
+    sourceSha: expectedSourceSha,
+    ageSeconds: Math.max(0, Math.round(ageMs / 1000)),
+    planMaxAgeMinutes: Number(planMaxAgeMinutes),
+  };
+}
+
 export function validateInfraContractProject(cwd = process.cwd()) {
   const summary = validateBuildchainConfig(cwd, {
     requireConfig: true,
@@ -286,6 +337,9 @@ export function applyInfraContract({
   sourceSha = "",
   approvalId = "",
   dryRun = true,
+  plan,
+  now = new Date().toISOString(),
+  planMaxAgeMinutes = 60,
 } = {}) {
   const loadedConfig = loadBuildchainConfig(cwd);
   const config = assertInfraContractConfig(loadedConfig);
@@ -299,7 +353,7 @@ export function applyInfraContract({
   if (!approvalId) {
     throw new Error("infra-contract apply requires an approval id before mutation");
   }
-  const plan = createInfraContractPlan({ cwd, sourceSha });
+  const freshPlan = assertFreshApplyPlan({ cwd, plan, sourceSha, now, planMaxAgeMinutes });
   if (dryRun) {
     return {
       schemaVersion: 1,
@@ -307,7 +361,10 @@ export function applyInfraContract({
       status: "planned",
       dryRun: true,
       approvalId,
-      planHash: plan.planHash,
+      sourceSha: freshPlan.sourceSha,
+      planHash: freshPlan.plan.planHash,
+      planAgeSeconds: freshPlan.ageSeconds,
+      planMaxAgeMinutes: freshPlan.planMaxAgeMinutes,
       mutationExecuted: false,
     };
   }
