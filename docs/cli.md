@@ -250,6 +250,11 @@ buildchain collect github-release \
   --package-set-json package-set.json \
   --trusted-publishing-json trusted-publishing.json \
   --anchor-manifest-json libnode.release.json \
+  --build-summary-json .buildchain/artifacts/build-summary.json \
+  --platform-manifest-json .buildchain/artifacts/linux-x64/manifest.json \
+  --platform-manifest-json .buildchain/artifacts/darwin-arm64/manifest.json \
+  --platform-manifest-json .buildchain/artifacts/win32-x64/manifest.json \
+  --dist-tag-evidence-json .buildchain/release-evidence/v2.3.2/dist-tag-evidence.json \
   --release-extra-json '{"channel":"release","targetRef":"release/v2/v2.3"}' \
   --output-dir .buildchain/release-passport
 ```
@@ -257,12 +262,14 @@ buildchain collect github-release \
 The generated passport records the main and platform packages, npm dist-tags,
 published versions, release source/ref state, anchor manifest digest, registry
 artifact digests, trusted publishing evidence, and Buildchain transaction
-result. `packageSet` keeps the ordered package set; `publish.packages[]` is the
-agent-readable npm publication summary for each main/platform package. For
-Buildchain releases, verification expects the supplied package set to include
-the main package plus the three platform packages with version, dist-tag, and
-digest evidence. Verification fails closed if supplied sections are internally
-incomplete or point to artifacts without matching evidence.
+result. It also records `buildSummary`, `platformArtifactManifests`, and
+`distTagPromotion` when those JSON inputs are supplied. `packageSet` keeps the
+ordered package set; `publish.packages[]` is the agent-readable npm publication
+summary for each main/platform package. For Buildchain releases, verification
+expects the supplied package set to include the main package plus the three
+platform packages with version, dist-tag, and digest evidence. Verification
+fails closed if supplied sections are internally incomplete or point to
+artifacts without matching evidence.
 
 Buildchain dogfoods its observability toolkit in this lane. The standalone
 builder writes API-generated events, while the workflow uses `buildchain mark`,

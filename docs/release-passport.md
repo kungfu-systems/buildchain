@@ -88,6 +88,11 @@ buildchain collect github-release \
   --transaction-json .buildchain/release-state/v2.2.0/state.json \
   --package-set-json package-set.json \
   --anchor-manifest-json libnode.release.json \
+  --build-summary-json .buildchain/artifacts/build-summary.json \
+  --platform-manifest-json .buildchain/artifacts/linux-x64/manifest.json \
+  --platform-manifest-json .buildchain/artifacts/darwin-arm64/manifest.json \
+  --platform-manifest-json .buildchain/artifacts/win32-x64/manifest.json \
+  --dist-tag-evidence-json .buildchain/release-evidence/v2.2.0/dist-tag-evidence.json \
   --output-dir .buildchain/release-passport
 ```
 
@@ -95,6 +100,8 @@ buildchain collect github-release \
 `publish.packages[]` summarizes each published npm package with its version,
 dist-tag, registry, role, platform, and digest, so agents do not need to stitch
 npm facts back together from the lower-level evidence files.
+`buildSummary`, `platformArtifactManifests`, and `distTagPromotion` preserve the
+build and npm dist-tag evidence chain in the same passport.
 
 Verify a release passport:
 

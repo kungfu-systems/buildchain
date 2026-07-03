@@ -1401,6 +1401,41 @@ test("release passport unifies package set publish transaction evidence", () => 
       },
     ],
   }, null, 2));
+  const buildSummaryPath = path.join(cwd, "build-summary.json");
+  fs.writeFileSync(buildSummaryPath, JSON.stringify({
+    contract: "kungfu-buildchain-build-summary",
+    artifactName: "buildchain",
+    platformCount: 3,
+    fileCount: 3,
+    totalBytes: 123,
+  }, null, 2));
+  const linuxManifestPath = path.join(cwd, "linux-manifest.json");
+  const darwinManifestPath = path.join(cwd, "darwin-manifest.json");
+  const windowsManifestPath = path.join(cwd, "windows-manifest.json");
+  fs.writeFileSync(linuxManifestPath, JSON.stringify({
+    artifactName: "buildchain-linux-x64",
+    platform: { id: "linux-x64", name: "Linux x64" },
+    summary: { fileCount: 1, totalBytes: 41 },
+  }, null, 2));
+  fs.writeFileSync(darwinManifestPath, JSON.stringify({
+    artifactName: "buildchain-darwin-arm64",
+    platform: { id: "darwin-arm64", name: "Darwin arm64" },
+    summary: { fileCount: 1, totalBytes: 41 },
+  }, null, 2));
+  fs.writeFileSync(windowsManifestPath, JSON.stringify({
+    artifactName: "buildchain-win32-x64",
+    platform: { id: "win32-x64", name: "Windows x64" },
+    summary: { fileCount: 1, totalBytes: 41 },
+  }, null, 2));
+  const distTagEvidencePath = path.join(cwd, "dist-tag-evidence.json");
+  fs.writeFileSync(distTagEvidencePath, JSON.stringify({
+    schema: 1,
+    contract: "kungfu-buildchain-dist-tag-promotion-evidence",
+    distTag: "latest",
+    packages: [
+      { name: "@kungfu-tech/buildchain", version: "2.3.2", distTag: "latest", role: "main" },
+    ],
+  }, null, 2));
 
   const collected = JSON.parse(runBuildchain([
     "collect",
@@ -1423,6 +1458,16 @@ test("release passport unifies package set publish transaction evidence", () => 
     anchorManifestPath,
     "--package-set-json",
     packageSetPath,
+    "--build-summary-json",
+    buildSummaryPath,
+    "--platform-manifest-json",
+    linuxManifestPath,
+    "--platform-manifest-json",
+    darwinManifestPath,
+    "--platform-manifest-json",
+    windowsManifestPath,
+    "--dist-tag-evidence-json",
+    distTagEvidencePath,
     "--trusted-publishing-json",
     JSON.stringify({
       provider: "npm",
@@ -1460,6 +1505,9 @@ test("release passport unifies package set publish transaction evidence", () => 
   assert.equal(passport.transaction.previousState, "finalizing");
   assert.equal(passport.transaction.result.command, "finalize");
   assert.equal(passport.transaction.result.validation.valid, true);
+  assert.equal(passport.buildSummary.fields.contract, "kungfu-buildchain-build-summary");
+  assert.equal(passport.platformArtifactManifests.length, 3);
+  assert.equal(passport.distTagPromotion.fields.distTag, "latest");
   assert.ok(passport.artifacts.some((artifact) => artifact.name === "@kungfu-tech/buildchain-linux-x64"));
   assert.ok(passport.artifacts.some((artifact) => artifact.name === "@kungfu-tech/buildchain"));
 
@@ -1469,6 +1517,9 @@ test("release passport unifies package set publish transaction evidence", () => 
   assert.equal(report.completeness.trustedPublishingPresent, true);
   assert.equal(report.completeness.transactionPresent, true);
   assert.equal(report.completeness.anchorManifestPresent, true);
+  assert.equal(report.completeness.buildSummaryPresent, true);
+  assert.equal(report.completeness.platformArtifactManifestCount, 3);
+  assert.equal(report.completeness.distTagPromotionEvidencePresent, true);
 });
 
 test("release evidence bundle groups release assets and passport files", () => {
