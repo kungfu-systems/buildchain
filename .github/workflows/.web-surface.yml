@@ -76,6 +76,21 @@ on:
         default: false
         type: boolean
         required: false
+      production-release-on-main:
+        description: "Treat a reviewed release pull request merge into main as production approval."
+        default: false
+        type: boolean
+        required: false
+      production-release-label:
+        description: "Required pull request label for production release PR merges."
+        default: "buildchain-release"
+        type: string
+        required: false
+      production-release-head-prefix:
+        description: "Optional source branch prefix required for production release PR merges."
+        default: "release/"
+        type: string
+        required: false
       production-aws-role-arn:
         default: ""
         type: string
@@ -252,10 +267,107 @@ jobs:
               .addRaw(`- rollback ref: \`${shellRef}\`\n`)
               .write();
 
+  release-intent:
+    name: Resolve production release PR intent
+    runs-on: ubuntu-24.04
+    outputs:
+      production-release-approved: ${{ steps.intent.outputs.production-release-approved }}
+      production-release-pr: ${{ steps.intent.outputs.production-release-pr }}
+      production-release-source: ${{ steps.intent.outputs.production-release-source }}
+      production-release-reason: ${{ steps.intent.outputs.production-release-reason }}
+    steps:
+      - name: Resolve production release PR intent
+        id: intent
+        uses: actions/github-script@v8
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          PRODUCTION_RELEASE_ON_MAIN: ${{ inputs.production-release-on-main }}
+          PRODUCTION_RELEASE_LABEL: ${{ inputs.production-release-label }}
+          PRODUCTION_RELEASE_HEAD_PREFIX: ${{ inputs.production-release-head-prefix }}
+        with:
+          script: |
+            const defaults = {
+              "production-release-approved": "false",
+              "production-release-pr": "",
+              "production-release-source": "",
+              "production-release-reason": "not-a-main-release-push",
+            };
+            for (const [name, value] of Object.entries(defaults)) core.setOutput(name, value);
+
+            const enabled = process.env.PRODUCTION_RELEASE_ON_MAIN === "true";
+            const eventName = process.env.EVENT_NAME || "";
+            const refName = process.env.REF_NAME || "";
+            if (!enabled || eventName !== "push" || refName !== "main") {
+              await core.summary
+                .addHeading("Buildchain production release PR intent")
+                .addRaw(`- approved: \`false\`\n`)
+                .addRaw(`- reason: \`${enabled ? "not-a-main-push" : "release-pr-publish-disabled"}\`\n`)
+                .write();
+              core.setOutput("production-release-reason", enabled ? "not-a-main-push" : "release-pr-publish-disabled");
+              return;
+            }
+
+            const requiredLabel = (process.env.PRODUCTION_RELEASE_LABEL || "").trim();
+            const requiredHeadPrefix = (process.env.PRODUCTION_RELEASE_HEAD_PREFIX || "").trim();
+            if (!requiredLabel) {
+              throw new Error("production-release-label must be non-empty when production-release-on-main is true");
+            }
+
+            const { owner, repo } = context.repo;
+            const fullName = `${owner}/${repo}`;
+            const associated = await github.paginate(github.rest.repos.listPullRequestsAssociatedWithCommit, {
+              owner,
+              repo,
+              commit_sha: context.sha,
+              per_page: 100,
+            });
+            const candidates = associated.filter((pull) => {
+              const labels = (pull.labels || []).map((label) => label.name);
+              const sameRepoHead = pull.head?.repo?.full_name === fullName;
+              const merged = Boolean(pull.merged_at);
+              const mainBase = pull.base?.ref === "main";
+              const hasLabel = labels.includes(requiredLabel);
+              const headRef = pull.head?.ref || "";
+              const headMatches = !requiredHeadPrefix || headRef.startsWith(requiredHeadPrefix);
+              return merged && sameRepoHead && mainBase && hasLabel && headMatches;
+            });
+
+            if (candidates.length === 0) {
+              core.setOutput("production-release-reason", "no-associated-release-pr");
+              await core.summary
+                .addHeading("Buildchain production release PR intent")
+                .addRaw(`- approved: \`false\`\n`)
+                .addRaw(`- reason: \`no-associated-release-pr\`\n`)
+                .addRaw(`- required label: \`${requiredLabel}\`\n`)
+                .addRaw(`- required head prefix: \`${requiredHeadPrefix || "(none)"}\`\n`)
+                .write();
+              return;
+            }
+            if (candidates.length > 1) {
+              throw new Error(`multiple associated production release PRs matched ${context.sha}: ${candidates.map((pull) => `#${pull.number}`).join(", ")}`);
+            }
+
+            const releasePull = candidates[0];
+            core.setOutput("production-release-approved", "true");
+            core.setOutput("production-release-pr", String(releasePull.number));
+            core.setOutput("production-release-source", releasePull.head.ref || "");
+            core.setOutput("production-release-reason", "associated-release-pr-merged");
+            await core.summary
+              .addHeading("Buildchain production release PR intent")
+              .addRaw(`- approved: \`true\`\n`)
+              .addRaw(`- release PR: #${releasePull.number}\n`)
+              .addRaw(`- source branch: \`${releasePull.head.ref || ""}\`\n`)
+              .addRaw(`- required label: \`${requiredLabel}\`\n`)
+              .addRaw(`- required head prefix: \`${requiredHeadPrefix || "(none)"}\`\n`)
+              .write();
+
   apply-input-gate:
     name: Validate web-surface apply inputs
     runs-on: ubuntu-24.04
-    needs: runtime
+    needs:
+      - runtime
+      - release-intent
     steps:
       - name: Validate apply inputs before build
         env:
@@ -269,6 +381,8 @@ jobs:
           STAGING_ROLE_ARN: ${{ inputs.staging-aws-role-arn }}
           PRODUCTION_APPLY: ${{ inputs.production-apply }}
           PRODUCTION_APPROVED: ${{ inputs.production-approved }}
+          PRODUCTION_RELEASE_ON_MAIN: ${{ inputs.production-release-on-main }}
+          PRODUCTION_RELEASE_APPROVED: ${{ needs.release-intent.outputs.production-release-approved }}
           PRODUCTION_ROLE_ARN: ${{ inputs.production-aws-role-arn }}
         run: |
           set -euo pipefail
@@ -284,11 +398,18 @@ jobs:
             echo "::error::staging-aws-role-arn is required before staging-apply can build or deploy"
             exit 1
           fi
+          production_event_approved=false
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$PRODUCTION_APPROVED" = "true" ]; then
+            production_event_approved=true
+          fi
+          if [ "$EVENT_NAME" = "push" ] && [ "$REF_NAME" = "main" ] && [ "$PRODUCTION_RELEASE_ON_MAIN" = "true" ] && [ "$PRODUCTION_RELEASE_APPROVED" = "true" ]; then
+            production_event_approved=true
+          fi
           if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$PRODUCTION_APPLY" = "true" ] && [ "$PRODUCTION_APPROVED" != "true" ]; then
             echo "::error::production-apply requires production-approved=true before production build or deploy"
             exit 1
           fi
-          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$PRODUCTION_APPLY" = "true" ] && [ "$PRODUCTION_APPROVED" = "true" ] && [ -z "$PRODUCTION_ROLE_ARN" ]; then
+          if [ "$PRODUCTION_APPLY" = "true" ] && [ "$production_event_approved" = "true" ] && [ -z "$PRODUCTION_ROLE_ARN" ]; then
             echo "::error::production-aws-role-arn is required before production-apply can build or deploy"
             exit 1
           fi
@@ -298,6 +419,7 @@ jobs:
     runs-on: ubuntu-24.04
     needs:
       - runtime
+      - release-intent
       - apply-input-gate
     outputs:
       web-surface-channel: ${{ steps.web.outputs.web-surface-channel }}
@@ -383,7 +505,12 @@ jobs:
 
       - name: Plan main staging deploy
         id: staging
-        if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+        if: >-
+          ${{
+            github.event_name == 'push' &&
+            github.ref_name == 'main' &&
+            !(inputs.production-release-on-main && needs.release-intent.outputs.production-release-approved == 'true')
+          }}
         run: >-
           node .buildchain/runtime/scripts/web-surface.mjs
           --mode deploy-plan
@@ -398,7 +525,11 @@ jobs:
 
       - name: Plan gated production deploy
         id: production
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.production-approved }}
+        if: >-
+          ${{
+            (github.event_name == 'workflow_dispatch' && inputs.production-approved) ||
+            (github.event_name == 'push' && github.ref_name == 'main' && inputs.production-release-on-main && needs.release-intent.outputs.production-release-approved == 'true')
+          }}
         run: >-
           node .buildchain/runtime/scripts/web-surface.mjs
           --mode deploy-plan
@@ -820,11 +951,19 @@ jobs:
 
   production-apply:
     name: Apply production deploy
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.production-approved && inputs.production-apply }}
+    if: >-
+      ${{
+        inputs.production-apply &&
+        (
+          (github.event_name == 'workflow_dispatch' && inputs.production-approved) ||
+          (github.event_name == 'push' && github.ref_name == 'main' && inputs.production-release-on-main && needs.release-intent.outputs.production-release-approved == 'true')
+        )
+      }}
     runs-on: ubuntu-24.04
     needs:
       - plan
       - runtime
+      - release-intent
     environment: ${{ inputs.production-environment }}
     outputs:
       production-apply-result-json: ${{ steps.apply.outputs.web-surface-apply-result-json }}
