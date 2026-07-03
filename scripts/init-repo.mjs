@@ -234,7 +234,7 @@ path = "infra/outputs.json"
 source = "infra/outputs.json"
 
 [lifecycle.verify]
-command = "buildchain infra-contract --mode validate"
+command = "buildchain infra-contract --mode ci"
 `;
 }
 
@@ -269,7 +269,21 @@ function infraContractOutputsJson(cwd) {
   }, null, 2)}\n`;
 }
 
-function workflowYaml({ runnerPreset, artifactName }) {
+function workflowArtifactPaths(type) {
+  if (type === "infra-contract") {
+    return `.buildchain/infra-contract-validate.json
+        .buildchain/infra-contract-plan.json
+        .buildchain/buildchain.infra-contract.json
+        .buildchain/infra-contract-propagation.json
+        .buildchain/infra-contract-propagation-apply.json
+        .buildchain/infra-contract-evidence-bundle.json
+        .buildchain/infra-contract-evidence-verification.json`;
+  }
+  return `dist
+        build/stage`;
+}
+
+function workflowYaml({ type, runnerPreset, artifactName }) {
   return `name: Build
 
 on:
@@ -299,8 +313,7 @@ jobs:
       runner-preset: "${runnerPreset}"
       artifact-name-template: "${artifactName}"
       artifact-paths: |
-        dist
-        build/stage
+        ${workflowArtifactPaths(type)}
 `;
 }
 
@@ -345,6 +358,7 @@ export function initBuildchainRepo({
   const written = [
     writeIfAllowed(path.join(resolvedCwd, "buildchain.toml"), toml, { force }),
     writeIfAllowed(path.join(resolvedCwd, ".github", "workflows", "build.yml"), workflowYaml({
+      type,
       runnerPreset,
       artifactName,
     }), { force }),

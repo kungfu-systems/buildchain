@@ -102,6 +102,7 @@ Examples:
   buildchain verify infra-contract-evidence-bundle .buildchain/infra-contract-evidence-bundle.json
   buildchain verify observability-log .buildchain/logs/events.jsonl --min-events 4 --require-phase build
   buildchain infra-contract --mode plan --source-sha <sha>
+  buildchain infra-contract --mode ci --source-sha <sha>
   buildchain infra-contract --mode plan --source-sha <sha> --execute-adapter-commands true
   buildchain infra-contract --mode apply --plan <plan.json> --source-sha <sha> --approval-id <id>
   buildchain infra-contract --mode apply --plan <plan.json> --source-sha <sha> --approval-id <id> --dry-run false --execute-adapter-commands true

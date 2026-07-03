@@ -66,8 +66,8 @@
     },
     {
       "id": "infra-contract",
-      "usage": "buildchain infra-contract --mode validate|plan|contract|propagation-plan|propagation-apply|apply|evidence-bundle",
-      "purpose": "Validate and publish provider-neutral infrastructure contract evidence with provider command plans, configured provider command execution, saved-plan apply gates, dry-run-first propagation, and lifecycle evidence bundles."
+      "usage": "buildchain infra-contract --mode validate|ci|plan|contract|propagation-plan|propagation-apply|apply|evidence-bundle",
+      "purpose": "Validate and publish provider-neutral infrastructure contract evidence with a mutation-free CI evidence chain, provider command plans, configured provider command execution, saved-plan apply gates, dry-run-first propagation, and lifecycle evidence bundles."
     }
   ]
 }

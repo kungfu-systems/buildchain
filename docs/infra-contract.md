@@ -106,6 +106,7 @@ provider adapters still fail closed before mutation execution.
 
 ```sh
 buildchain infra-contract --mode validate
+buildchain infra-contract --mode ci --source-sha "$GITHUB_SHA"
 buildchain infra-contract --mode plan --source-sha "$GITHUB_SHA" \
   --output .buildchain/infra-contract-plan.json
 buildchain infra-contract --mode plan --source-sha "$GITHUB_SHA" \
@@ -144,6 +145,12 @@ buildchain verify infra-contract-evidence-bundle \
   .buildchain/infra-contract-evidence-bundle.json
 ```
 
+`ci` is the default mutation-free lifecycle entrypoint for repositories created
+with `buildchain init --type infra-contract`. It validates the project, writes a
+plan, writes an observed contract artifact, writes a propagation plan, runs
+propagation apply in dry-run mode, creates an evidence bundle, and verifies that
+bundle. It does not execute provider apply commands or open consumer PRs.
+
 For projects where apply is disabled, omit `--apply-result`. For projects with
 no consumers, omit `--propagation-result`.
 
@@ -156,6 +163,9 @@ results are not bound to the same artifact.
 ## Safety
 
 - PR validation is mutation-free.
+- `buildchain infra-contract --mode ci` is mutation-free by default and produces
+  auditable `.buildchain/infra-contract*.json` evidence for reusable workflow
+  artifacts.
 - `manual-observed` and observe-only modes cannot apply.
 - Apply fails before mutation unless approval, adapter capability, and ownership
   mode are explicit.

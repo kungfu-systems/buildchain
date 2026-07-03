@@ -260,8 +260,14 @@ for agents: trust, completeness, impact, recovery route, and next action.
 Verify infra-contract lifecycle evidence bundles:
 
 ```bash
+buildchain infra-contract --mode ci --source-sha "$GITHUB_SHA"
 buildchain verify infra-contract-evidence-bundle .buildchain/infra-contract-evidence-bundle.json
 ```
+
+The infra-contract `ci` mode is mutation-free. It writes validate, plan,
+contract, propagation dry-run, evidence bundle, and verification JSON artifacts
+under `.buildchain/`, giving reusable workflows one standard responsibility
+chain instead of hand-written command sequences.
 
 The infra-contract verifier is read-only. It recomputes the bundle hash and
 checks that desired, plan, approval, apply, observe, contract, and propagate
