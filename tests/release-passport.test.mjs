@@ -24,6 +24,9 @@ function createUnifiedPassportFixture({
   missingPublishVersion = false,
   productName = "Buildchain",
   trustedPublishingEnabled = true,
+  tag = "v2.3.2",
+  packageVersion = "",
+  releaseExtra = {},
 } = {}) {
   const cwd = tempDir("release-passport-core");
   const assetsDir = path.join(cwd, "dist");
@@ -137,9 +140,10 @@ function createUnifiedPassportFixture({
 
   const collected = collectGitHubReleasePassport({
     cwd,
-    tag: "v2.3.2",
+    tag,
     repository: "kungfu-systems/buildchain",
     productName,
+    packageVersion,
     sourceSha: "a".repeat(40),
     assetsDir,
     publishEvidenceJson: publishEvidencePath,
@@ -159,6 +163,7 @@ function createUnifiedPassportFixture({
       channel: "release",
       targetRef: "release/v2/v2.3",
       releaseSha: "b".repeat(40),
+      ...releaseExtra,
     }),
     outputDir: "release-passport",
   });
@@ -190,6 +195,30 @@ test("release passport core preserves supplied product name at root", async () =
 
   assert.equal(passport.product.name, "Libnode");
   assert.equal(productMechanism.product.name, "Libnode");
+});
+
+test("release passport core separates anchored manual internal tags from published versions", async () => {
+  const passportPath = createUnifiedPassportFixture({
+    productName: "Libnode",
+    tag: "v22.22.1-alpha.1",
+    packageVersion: "22.22.3-kf.3-alpha.7",
+    releaseExtra: {
+      channel: "alpha",
+      targetRef: "alpha/v22/v22.22",
+      internalTag: "v22.22.1-alpha.1",
+      internalVersion: "22.22.1-alpha.1",
+      publishedVersion: "22.22.3-kf.3-alpha.7",
+      versionLabel: "22.22.3-kf.3-alpha.7",
+    },
+  });
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+
+  assert.equal(passport.release.tag, "v22.22.1-alpha.1");
+  assert.equal(passport.release.internalTag, "v22.22.1-alpha.1");
+  assert.equal(passport.release.internalVersion, "22.22.1-alpha.1");
+  assert.equal(passport.release.publishedVersion, "22.22.3-kf.3-alpha.7");
+  assert.equal(passport.release.versionLabel, "22.22.3-kf.3-alpha.7");
+  assert.equal(passport.release.package.version, "22.22.3-kf.3-alpha.7");
 });
 
 test("release passport core fails closed on incomplete platform package evidence", async () => {
