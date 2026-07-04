@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -11,6 +13,7 @@ import {
 import { generateReleaseCandidatePassportCli } from "../scripts/generate-release-candidate-passport.mjs";
 import {
   generatePublishRequiredArtifacts,
+  readNpmPackageArtifact,
   selectMergedChannelPullRequest,
   selectPayloadArtifacts,
   selectReleaseCandidateArtifacts,
@@ -22,6 +25,16 @@ import {
 } from "../scripts/workflow-friction-report.mjs";
 
 const SOURCE_SHA = "1111111111111111111111111111111111111111";
+
+function createNpmTarball(root, packageJson, filename) {
+  const source = path.join(root, `${filename}-src`);
+  const packageDir = path.join(source, "package");
+  fs.mkdirSync(packageDir, { recursive: true });
+  fs.writeFileSync(path.join(packageDir, "package.json"), `${JSON.stringify(packageJson, null, 2)}\n`);
+  const tarballPath = path.join(root, filename);
+  execFileSync("tar", ["-czf", tarballPath, "-C", source, "package"], { stdio: "ignore" });
+  return tarballPath;
+}
 
 function sampleBuildSummary() {
   return {
@@ -294,6 +307,68 @@ test("release candidate resolver selects payload artifacts and generates publish
       platform: "linux-x64",
     },
   ]);
+});
+
+test("release candidate resolver generates npm package-set required artifacts from tarballs", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-rc-npm-"));
+  try {
+    const version = "22.22.3-kf.3-alpha.7";
+    const mainTarball = createNpmTarball(
+      workspace,
+      { name: "@kungfu-tech/libnode", version },
+      "libnode-main.tgz",
+    );
+    const linuxTarball = createNpmTarball(
+      workspace,
+      { name: "@kungfu-tech/libnode-linux-x64", version },
+      "libnode-linux.tgz",
+    );
+
+    const mainIntegrity = `sha512-${crypto.createHash("sha512").update(fs.readFileSync(mainTarball)).digest("base64")}`;
+    const linuxIntegrity = `sha512-${crypto.createHash("sha512").update(fs.readFileSync(linuxTarball)).digest("base64")}`;
+
+    assert.deepEqual(
+      readNpmPackageArtifact({
+        tarballPath: mainTarball,
+        mainPackage: "@kungfu-tech/libnode",
+      }),
+      {
+        kind: "npm",
+        name: "@kungfu-tech/libnode",
+        ref: version,
+        digest: mainIntegrity,
+        integrity: mainIntegrity,
+        role: "main",
+      },
+    );
+
+    const required = generatePublishRequiredArtifacts({
+      kind: "npm",
+      tarballPaths: [linuxTarball, mainTarball],
+      mainPackage: "@kungfu-tech/libnode",
+    });
+
+    assert.deepEqual(required, [
+      {
+        kind: "npm",
+        name: "@kungfu-tech/libnode",
+        ref: version,
+        digest: mainIntegrity,
+        integrity: mainIntegrity,
+        role: "main",
+      },
+      {
+        kind: "npm",
+        name: "@kungfu-tech/libnode-linux-x64",
+        ref: version,
+        digest: linuxIntegrity,
+        integrity: linuxIntegrity,
+        role: "platform",
+      },
+    ]);
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
 });
 
 test("workflow friction classifier prioritizes duplicate PRs, heavy builds, and late fail-fast", () => {

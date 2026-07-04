@@ -226,6 +226,7 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /BUILDCHAIN_RC_WORKFLOW_FILE: \$\{\{ inputs\.release-candidate-workflow-file \}\}/);
   assert.match(workflow, /BUILDCHAIN_RC_WORKFLOW_NAME: \$\{\{ inputs\.release-candidate-workflow-name \}\}/);
   assert.match(workflow, /BUILDCHAIN_REQUIRED_ARTIFACT_COUNT: \$\{\{ inputs\.required-artifact-count \}\}/);
+  assert.match(workflow, /BUILDCHAIN_PUBLISH_PACKAGE_MAIN: \$\{\{ inputs\.publish-package-main \}\}/);
   assert.match(workflow, /promote-only-release-candidate: "true"/);
   assert.match(workflow, /release-candidate-passport-path:/);
   assert.match(workflow, /release-candidate-build-summary-path:/);
