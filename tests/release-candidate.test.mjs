@@ -86,6 +86,24 @@ test("release candidate passport records source lock, platform matrix, and build
   assert.equal(validateReleaseCandidatePassport({ passport, buildSummary }).ok, true);
 });
 
+test("release candidate passport derives channel from PR base when publish channel is none", () => {
+  const buildSummary = sampleBuildSummary();
+  const passport = createReleaseCandidatePassport({
+    repository: "kungfu-systems/libnode",
+    pullRequest: { baseRef: "alpha/v22/v22.22" },
+    targetChannel: "none",
+    version: "22.22.3-kf.3-alpha.7",
+    sourceHeadSha: SOURCE_SHA,
+    buildSummary,
+  });
+  assert.equal(passport.target.channel, "alpha");
+  const legacyNone = {
+    ...passport,
+    target: { ...passport.target, channel: "none" },
+  };
+  assert.equal(validateReleaseCandidatePassport({ passport: legacyNone, targetChannel: "alpha" }).ok, true);
+});
+
 test("release candidate validation rejects stale source and summary evidence", () => {
   const buildSummary = sampleBuildSummary();
   const passport = createReleaseCandidatePassport({
