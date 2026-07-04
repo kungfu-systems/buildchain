@@ -329,6 +329,9 @@ if (!Array.isArray(inventory.workflowSources) || inventory.workflowSources.lengt
 if (!Array.isArray(inventory.retiredActionsExcluded) || inventory.retiredActionsExcluded.length === 0) {
   throw new Error("retiredActionsExcluded must list retired legacy actions");
 }
+if (!Array.isArray(inventory.retiredWorkflowsExcluded) || inventory.retiredWorkflowsExcluded.length === 0) {
+  throw new Error("retiredWorkflowsExcluded must list retired legacy workflows");
+}
 
 const actualActions = fs
   .readdirSync(path.join(root, "actions"), { withFileTypes: true })
@@ -353,6 +356,13 @@ for (const retiredRepo of inventory.retiredActionsExcluded || []) {
   const retiredPath = path.join(root, "actions", retiredRepo.replace(/^action-/, ""));
   if (fs.existsSync(retiredPath)) {
     throw new Error(`retired action must not be shipped in buildchain v2: ${retiredRepo}`);
+  }
+}
+
+for (const retiredWorkflow of inventory.retiredWorkflowsExcluded || []) {
+  const retiredPath = path.join(root, retiredWorkflow);
+  if (fs.existsSync(retiredPath)) {
+    throw new Error(`retired workflow must not be shipped in buildchain v2: ${retiredWorkflow}`);
   }
 }
 

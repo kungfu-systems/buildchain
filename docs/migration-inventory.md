@@ -21,13 +21,14 @@ The active Buildchain-native reusable surface is:
 | --- | --- |
 | `.github/workflows/.build.yml` | active reusable build contract: runner presets, trusted event gate, publish source lock, lifecycle commands, deterministic artifacts, aggregate summary, and release manifest outputs |
 
-Other hidden reusable workflow files from the old `workflows` repository may
-still exist in `.github/workflows`. They are retained so the repository can lint
-them, document migration boundaries, and make retired paths fail closed. They
-are not new Buildchain v2 integration targets unless a dedicated document says
-otherwise. In particular, the legacy `.release-new-version.yml` path is not the
-modern publish surface; new publish integrations should use `.build.yml`,
-`buildchain.toml`, `lifecycle.publish`, and publish transaction evidence.
+Hidden reusable workflow files from the old `workflows` repository are retained
+only when they still have an active compatibility or migration boundary. Retired
+PR orchestration paths are not kept in `.github/workflows`; they remain listed
+in the inventory as excluded legacy surfaces. In particular,
+`.batch-pull-request.yml` is removed with the retired batch PR action family,
+and the legacy `.release-new-version.yml` path is not the modern publish
+surface. New publish integrations should use `.build.yml`, `buildchain.toml`,
+`lifecycle.publish`, and publish transaction evidence.
 
 ## Migrated Actions
 
@@ -63,6 +64,15 @@ because the action is part of that retired path.
 | `action-sync-extensions-version` | retired in workflows v2 or backed by retired Airtable/dependency/collaborator/purge mechanism |
 | `action-sync-pr` | retired PR synchronization helper; not part of the Buildchain reusable contract |
 | `action-update-dependencies-version` | retired dependency-version helper; use package-manager adapters and lifecycle commands |
+
+## Retired Workflows Excluded From v2
+
+These legacy workflow entrypoints are intentionally not shipped from the root
+`.github/workflows` directory.
+
+| Previous workflow | Reason |
+| --- | --- |
+| `.batch-pull-request.yml` | retired PR orchestration helper; v2.5 dev integration governance will use a new protected-dev PR protocol instead |
 
 ## Buildchain-Native Actions
 
