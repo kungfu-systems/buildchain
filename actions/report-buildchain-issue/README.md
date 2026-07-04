@@ -61,7 +61,7 @@ steps:
   - uses: kungfu-systems/buildchain/actions/report-buildchain-issue@v2
     if: failure()
     with:
-      token: ${{ github.token }}
+      token: ${{ secrets.BUILDCHAIN_ISSUE_TOKEN || secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
       report-kind: workflow-friction
       target-repository: ${{ github.repository }}
       repository: ${{ github.repository }}

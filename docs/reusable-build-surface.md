@@ -390,6 +390,8 @@ set is missing or ambiguous.
 jobs:
   promote:
     uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v2
+    secrets:
+      buildchain-issue-token: ${{ secrets.BUILDCHAIN_ISSUE_TOKEN }}
     with:
       channel: alpha
       target-ref: alpha/v22/v22.22
@@ -409,6 +411,13 @@ jobs:
       publish-package-main: "@kungfu-tech/libnode"
       release-passport-product-name: Libnode
 ```
+
+`buildchain-issue-token` is optional but recommended for cross-repository
+consumers. It should be a GitHub App installation token or other scoped token
+with `issues: write` on `kungfu-systems/buildchain`. If omitted, the wrapper
+falls back to `BUILDCHAIN_PROMOTION_TOKEN` and then the consumer workflow's
+`github.token`; the last fallback can only report issues when it has write
+access to the target Buildchain repository.
 
 `publish-required-artifacts-json` can still be passed explicitly for custom
 publish targets. For the default `publish-artifact-kind: npm` path, consumers do
