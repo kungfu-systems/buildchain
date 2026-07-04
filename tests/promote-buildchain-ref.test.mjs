@@ -3497,6 +3497,54 @@ test("promoteBuildchainRefs rejects stale target SHA", async () => {
   );
 });
 
+test("promoteBuildchainRefs fails fast when promote-only RC passport source is stale", async () => {
+  const cwd = makeTempWorkspace({
+    ".buildchain/artifacts/release-candidate-passport.json": {
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-release-candidate-passport",
+      repository: "kungfu-systems/buildchain",
+      target: { channel: "alpha", ref: "alpha/v1/v1.0", version: "1.0.0-alpha.0" },
+      source: { headSha: OTHER_SHA, mergeRefSha: OTHER_SHA },
+      platformMatrix: [{ platformId: "linux-x64", artifactName: "buildchain-linux-x64" }],
+      diagnostics: {},
+    },
+  });
+  const calls = [];
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          calls.push(["getRef", ref]);
+          return { data: { object: { sha: SHA } } };
+        },
+        listMatchingRefs: async () => {
+          calls.push(["listMatchingRefs"]);
+          return { data: [] };
+        },
+      },
+    },
+  };
+
+  try {
+    await assert.rejects(
+      promoteBuildchainRefs({
+        octokit,
+        owner: "kungfu-systems",
+        repo: "buildchain",
+        sha: SHA,
+        targetRef: "alpha/v1/v1.0",
+        cwd,
+        versionState: false,
+        promoteOnlyReleaseCandidate: true,
+      }),
+      /release candidate passport validation failed: source head mismatch/,
+    );
+    assert.deepEqual(calls, [["getRef", "heads/alpha/v1/v1.0"]]);
+  } finally {
+    fs.rmSync(cwd, { recursive: true, force: true });
+  }
+});
+
 test("strict alpha promotion requires a protected dev-to-alpha PR", async () => {
   const calls = [];
   const octokit = {

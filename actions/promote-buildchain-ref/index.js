@@ -71,6 +71,10 @@ async function main() {
   const releasePassportProductName = core.getInput("release-passport-product-name");
   const releasePassportBuildSummaryPath = core.getInput("release-passport-build-summary-path");
   const releasePassportPlatformManifestPaths = core.getInput("release-passport-platform-manifest-paths");
+  const promoteOnlyReleaseCandidate = core.getBooleanInput("promote-only-release-candidate");
+  const releaseCandidatePassportPath = core.getInput("release-candidate-passport-path");
+  const releaseCandidateBuildSummaryPath = core.getInput("release-candidate-build-summary-path");
+  const releaseCandidateVersion = core.getInput("release-candidate-version");
   const octokit = github.getOctokit(token);
   if (requirePublishSourceLock) {
     const sourceLockReport = validateRequiredPublishSourceLock({
@@ -122,6 +126,10 @@ async function main() {
     releasePassportProductName,
     releasePassportBuildSummaryPath,
     releasePassportPlatformManifestPaths,
+    promoteOnlyReleaseCandidate,
+    releaseCandidatePassportPath,
+    releaseCandidateBuildSummaryPath,
+    releaseCandidateVersion,
     actor: github.context.actor,
     runId: String(github.context.runId || ""),
     publishTransactionOverride,
