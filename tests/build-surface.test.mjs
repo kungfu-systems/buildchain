@@ -1202,6 +1202,8 @@ test("runLifecycle writes deterministic artifact manifest", () => {
     assert.equal(diagnostics.native.artifactDirs[1].exists, false);
     assert.equal(diagnostics.native.cacheDirs[0].path, ".ccache");
     assert.equal(diagnostics.native.cacheDirs[0].exists, false);
+    assert.equal(diagnostics.nativeCacheDirs[0].path, ".ccache");
+    assert.ok(diagnostics.compilerCaches.ccache);
     assert.equal(diagnostics.process.requestedParallelism, 8);
     assert.equal(diagnostics.process.observedConcurrency.max, 3);
     assert.equal(diagnostics.links.artifactName, "libnode-shaped-linux-x64-abc123");

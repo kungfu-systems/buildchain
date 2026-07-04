@@ -890,7 +890,10 @@ function decodeGitBlob(blob) {
 
 async function getGitRefOrUndefined({ octokit, owner, repo, ref }) {
   try {
-    const { data } = await octokit.rest.git.getRef({ owner, repo, ref });
+    const { data } = await retryGitHubOperation(
+      `git.getRef ${ref}`,
+      () => octokit.rest.git.getRef({ owner, repo, ref }),
+    );
     return data;
   } catch (error) {
     if (notFound(error)) {
@@ -915,11 +918,20 @@ function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function retryGitHubRead(label, read, { attempts = 4, delayMs = 1000 } = {}) {
+function githubRetryDelayMs() {
+  const raw = process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS;
+  if (raw === undefined || raw === "") {
+    return 1000;
+  }
+  const configured = Number(raw);
+  return Number.isFinite(configured) && configured >= 0 ? configured : 1000;
+}
+
+async function retryGitHubOperation(label, operation, { attempts = 4, delayMs = githubRetryDelayMs() } = {}) {
   let lastError;
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
-      return await read();
+      return await operation();
     } catch (error) {
       lastError = error;
       if (attempt >= attempts || !transientGitHubReadError(error)) {
@@ -933,7 +945,7 @@ async function retryGitHubRead(label, read, { attempts = 4, delayMs = 1000 } = {
 }
 
 async function getGitCommitWithRetry({ octokit, owner, repo, commitSha }) {
-  return retryGitHubRead(
+  return retryGitHubOperation(
     `git.getCommit ${commitSha}`,
     () => octokit.rest.git.getCommit({
       owner,
@@ -973,20 +985,26 @@ async function restoreDurableReleaseTransaction({
   });
   const commitSha = ref.object?.sha;
   const { data: commit } = await getGitCommitWithRetry({ octokit, owner, repo, commitSha });
-  const { data: tree } = await octokit.rest.git.getTree({
-    owner,
-    repo,
-    tree_sha: commit.tree.sha,
-    recursive: "1",
-  });
+  const { data: tree } = await retryGitHubOperation(
+    `git.getTree ${stateRef}`,
+    () => octokit.rest.git.getTree({
+      owner,
+      repo,
+      tree_sha: commit.tree.sha,
+      recursive: "1",
+    }),
+  );
   const entryByPath = new Map((tree.tree || []).map((entry) => [entry.path, entry]));
   const evidenceEntry = entryByPath.get("evidence.json");
   if (evidenceEntry) {
-    const { data: evidenceBlob } = await octokit.rest.git.getBlob({
-      owner,
-      repo,
-      file_sha: evidenceEntry.sha,
-    });
+    const { data: evidenceBlob } = await retryGitHubOperation(
+      `git.getBlob ${stateRef}/evidence.json`,
+      () => octokit.rest.git.getBlob({
+        owner,
+        repo,
+        file_sha: evidenceEntry.sha,
+      }),
+    );
     fs.mkdirSync(path.dirname(evidencePath), { recursive: true });
     fs.writeFileSync(evidencePath, decodeGitBlob(evidenceBlob));
   }
@@ -1014,22 +1032,28 @@ async function readDurableReleaseTransaction({
   }
   const commitSha = ref.object?.sha;
   const { data: commit } = await getGitCommitWithRetry({ octokit, owner, repo, commitSha });
-  const { data: tree } = await octokit.rest.git.getTree({
-    owner,
-    repo,
-    tree_sha: commit.tree.sha,
-    recursive: "1",
-  });
+  const { data: tree } = await retryGitHubOperation(
+    `git.getTree ${stateRef}`,
+    () => octokit.rest.git.getTree({
+      owner,
+      repo,
+      tree_sha: commit.tree.sha,
+      recursive: "1",
+    }),
+  );
   const entryByPath = new Map((tree.tree || []).map((entry) => [entry.path, entry]));
   const stateEntry = entryByPath.get("state.json");
   if (!stateEntry) {
     throw new Error(`durable release transaction ${stateRef} is missing state.json`);
   }
-  const { data: stateBlob } = await octokit.rest.git.getBlob({
-    owner,
-    repo,
-    file_sha: stateEntry.sha,
-  });
+  const { data: stateBlob } = await retryGitHubOperation(
+    `git.getBlob ${stateRef}/state.json`,
+    () => octokit.rest.git.getBlob({
+      owner,
+      repo,
+      file_sha: stateEntry.sha,
+    }),
+  );
   return JSON.parse(decodeGitBlob(stateBlob));
 }
 
@@ -1048,12 +1072,15 @@ async function persistDurableReleaseTransaction({
   const refName = durableTransactionHeadRef(transaction);
   const currentRef = await getGitRefOrUndefined({ octokit, owner, repo, ref: refName });
 
-  const stateBlob = await octokit.rest.git.createBlob({
-    owner,
-    repo,
-    content: JSON.stringify(transaction, null, 2) + "\n",
-    encoding: "utf-8",
-  });
+  const stateBlob = await retryGitHubOperation(
+    `git.createBlob ${transaction.state_ref}/state.json`,
+    () => octokit.rest.git.createBlob({
+      owner,
+      repo,
+      content: JSON.stringify(transaction, null, 2) + "\n",
+      encoding: "utf-8",
+    }),
+  );
   const treeEntries = [
     {
       path: "state.json",
@@ -1063,12 +1090,15 @@ async function persistDurableReleaseTransaction({
     },
   ];
   if (evidencePath && fs.existsSync(evidencePath)) {
-    const evidenceBlob = await octokit.rest.git.createBlob({
-      owner,
-      repo,
-      content: fs.readFileSync(evidencePath, "utf8"),
-      encoding: "utf-8",
-    });
+    const evidenceBlob = await retryGitHubOperation(
+      `git.createBlob ${transaction.state_ref}/evidence.json`,
+      () => octokit.rest.git.createBlob({
+        owner,
+        repo,
+        content: fs.readFileSync(evidencePath, "utf8"),
+        encoding: "utf-8",
+      }),
+    );
     treeEntries.push({
       path: "evidence.json",
       mode: "100644",
@@ -1080,12 +1110,15 @@ async function persistDurableReleaseTransaction({
     if (!file?.path) {
       continue;
     }
-    const blob = await octokit.rest.git.createBlob({
-      owner,
-      repo,
-      content: String(file.content || ""),
-      encoding: "utf-8",
-    });
+    const blob = await retryGitHubOperation(
+      `git.createBlob ${transaction.state_ref}/${file.path}`,
+      () => octokit.rest.git.createBlob({
+        owner,
+        repo,
+        content: String(file.content || ""),
+        encoding: "utf-8",
+      }),
+    );
     treeEntries.push({
       path: file.path,
       mode: "100644",
@@ -1102,63 +1135,81 @@ async function persistDurableReleaseTransaction({
       baseTree = currentCommit.tree?.sha;
       parents.push(parentSha);
     }
-    const tree = await octokit.rest.git.createTree({
-      owner,
-      repo,
-      tree: treeEntries,
-      ...(baseTree ? { base_tree: baseTree } : {}),
-    });
-    return octokit.rest.git.createCommit({
-      owner,
-      repo,
-      message: `chore(buildchain): persist release transaction ${transaction.exact_tag}`,
-      tree: tree.data.sha,
-      parents,
-    });
+    const tree = await retryGitHubOperation(
+      `git.createTree ${transaction.state_ref}`,
+      () => octokit.rest.git.createTree({
+        owner,
+        repo,
+        tree: treeEntries,
+        ...(baseTree ? { base_tree: baseTree } : {}),
+      }),
+    );
+    return retryGitHubOperation(
+      `git.createCommit ${transaction.state_ref}`,
+      () => octokit.rest.git.createCommit({
+        owner,
+        repo,
+        message: `chore(buildchain): persist release transaction ${transaction.exact_tag}`,
+        tree: tree.data.sha,
+        parents,
+      }),
+    );
   };
   let commit = await createStateCommit(currentRef?.object?.sha);
   if (currentRef) {
     try {
-      await octokit.rest.git.updateRef({
-        owner,
-        repo,
-        ref: refName,
-        sha: commit.data.sha,
-        force: false,
-      });
+      await retryGitHubOperation(
+        `git.updateRef ${refName}`,
+        () => octokit.rest.git.updateRef({
+          owner,
+          repo,
+          ref: refName,
+          sha: commit.data.sha,
+          force: false,
+        }),
+      );
     } catch (error) {
       if (!nonFastForwardUpdateRejected(error)) {
         throw error;
       }
       const latestRef = await getGitRefOrUndefined({ octokit, owner, repo, ref: refName });
       commit = await createStateCommit(latestRef?.object?.sha);
-      await octokit.rest.git.updateRef({
-        owner,
-        repo,
-        ref: refName,
-        sha: commit.data.sha,
-        force: false,
-      });
+      await retryGitHubOperation(
+        `git.updateRef ${refName}`,
+        () => octokit.rest.git.updateRef({
+          owner,
+          repo,
+          ref: refName,
+          sha: commit.data.sha,
+          force: false,
+        }),
+      );
     }
   } else {
     try {
-      await octokit.rest.git.createRef({
-        owner,
-        repo,
-        ref: `refs/${refName}`,
-        sha: commit.data.sha,
-      });
+      await retryGitHubOperation(
+        `git.createRef ${refName}`,
+        () => octokit.rest.git.createRef({
+          owner,
+          repo,
+          ref: `refs/${refName}`,
+          sha: commit.data.sha,
+        }),
+      );
     } catch (error) {
       if (!referenceAlreadyExists(error)) {
         throw error;
       }
-      await octokit.rest.git.updateRef({
-        owner,
-        repo,
-        ref: refName,
-        sha: commit.data.sha,
-        force: true,
-      });
+      await retryGitHubOperation(
+        `git.updateRef ${refName}`,
+        () => octokit.rest.git.updateRef({
+          owner,
+          repo,
+          ref: refName,
+          sha: commit.data.sha,
+          force: true,
+        }),
+      );
     }
   }
   return {
@@ -1760,8 +1811,19 @@ async function beginTransactionFinalization(result, actor, runId) {
 }
 
 async function completeTransactionFinalization(result, actor, runId) {
-  if (!result?.transaction || result.transaction.state === "complete") {
+  if (!result?.transaction) {
     return result;
+  }
+  if (result.transaction.state === "complete") {
+    if (!result.transaction.failure) {
+      return result;
+    }
+    const cleared = transitionReleaseTransaction(result.transaction, "complete", {
+      actor,
+      runId,
+      failure: "",
+    });
+    return persistTransactionResult(result, cleared);
   }
   const current = result.transaction.state === "published"
     ? transitionReleaseTransaction(result.transaction, "finalizing", { actor, runId })
@@ -3285,6 +3347,7 @@ async function promoteBuildchainRefs({
       publishTransaction: {
         id: latestPublishTransaction.transaction.id,
         state: latestPublishTransaction.transaction.state,
+        failure: latestPublishTransaction.transaction.failure || "",
         exactTag: latestPublishTransaction.transaction.exact_tag,
         releaseSha: latestPublishTransaction.transaction.release_sha,
         stateRef: latestPublishTransaction.transaction.state_ref,
