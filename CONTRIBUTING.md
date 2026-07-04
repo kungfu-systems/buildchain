@@ -103,6 +103,15 @@ release/vX/vX.Y -> publish-gate/major
 ```
 
 - Open normal changes against the relevant `dev/*` branch.
+- Treat `dev/vX/vX.Y` branches as protected development channels. Do not use
+  them for direct ad-hoc commits. Work from `feature/*`, `fix/*`, `chore/*`,
+  `docs/*`, `ci/*`, or `refactor/*` branches and open a PR into the target dev
+  line.
+- Repositories may call
+  `.github/workflows/dev-pr-auto-merge.yml` from their own scheduled or manual
+  wrapper to merge ready, conflict-free dev PRs. The wrapper is policy-gated:
+  required checks, ready/block labels, same-repository heads, approvals,
+  branch prefixes, max merges, and dry-run are all declared inputs.
 - When a Buildchain change needs downstream validation before stable refs move,
   publish a temporary runtime train ref such as
   `train/v2/v2.3/<capability>` and ask consumers to run trusted

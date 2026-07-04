@@ -1,0 +1,152 @@
+name: Dev PR Auto Merge
+
+on:
+  workflow_call:
+    inputs:
+      buildchain-repository:
+        description: "Buildchain runtime repository"
+        default: "kungfu-systems/buildchain"
+        type: string
+        required: false
+      buildchain-ref:
+        description: "Optional Buildchain runtime ref. Empty uses v2."
+        default: "v2"
+        type: string
+        required: false
+      target-branch:
+        description: "Protected dev branch to merge ready PRs into"
+        default: ""
+        type: string
+        required: false
+      required-status-checks:
+        description: "Comma or newline separated required status/check-run name fragments"
+        default: "Verify"
+        type: string
+        required: false
+      ready-label:
+        description: "Required label for PRs eligible to merge. Empty disables the label gate."
+        default: "ready"
+        type: string
+        required: false
+      block-labels:
+        description: "Comma or newline separated labels that block merging"
+        default: "blocked,do-not-merge,work-in-progress"
+        type: string
+        required: false
+      allowed-head-prefixes:
+        description: "Comma or newline separated allowed source branch prefixes"
+        default: "feature/,fix/,chore/,docs/,ci/,refactor/"
+        type: string
+        required: false
+      require-approval:
+        description: "Require at least one current approval and no latest changes-requested review"
+        default: true
+        type: boolean
+        required: false
+      same-repository-only:
+        description: "Reject fork/cross-repository PR heads by default"
+        default: true
+        type: boolean
+        required: false
+      max-merges:
+        description: "Maximum PRs to merge in one run"
+        default: 1
+        type: number
+        required: false
+      merge-method:
+        description: "GitHub merge method: merge, squash, or rebase"
+        default: "merge"
+        type: string
+        required: false
+      dry-run:
+        description: "Plan only; do not merge PRs"
+        default: true
+        type: boolean
+        required: false
+    secrets:
+      github-token:
+        description: "Optional token for reading and merging PRs. Defaults to github.token."
+        required: false
+    outputs:
+      evaluated-count:
+        description: "Number of PRs evaluated"
+        value: ${{ jobs.merge-dev-prs.outputs.evaluated-count }}
+      merged-count:
+        description: "Number of PRs merged, or eligible in dry-run mode"
+        value: ${{ jobs.merge-dev-prs.outputs.merged-count }}
+      skipped-count:
+        description: "Number of PRs skipped"
+        value: ${{ jobs.merge-dev-prs.outputs.skipped-count }}
+      final-base-sha:
+        description: "Final target branch SHA after the run"
+        value: ${{ jobs.merge-dev-prs.outputs.final-base-sha }}
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+  statuses: read
+
+jobs:
+  merge-dev-prs:
+    name: Merge ready dev PRs
+    runs-on: ubuntu-24.04
+    outputs:
+      evaluated-count: ${{ steps.merge.outputs.evaluated-count }}
+      merged-count: ${{ steps.merge.outputs.merged-count }}
+      skipped-count: ${{ steps.merge.outputs.skipped-count }}
+      final-base-sha: ${{ steps.merge.outputs.final-base-sha }}
+    steps:
+      - name: Resolve target branch
+        id: target
+        shell: bash
+        run: |
+          target_branch="${INPUT_TARGET_BRANCH:-${GITHUB_REF_NAME}}"
+          case "${target_branch}" in
+            dev/v*/v*) ;;
+            *)
+              echo "::error::target-branch must be a semver dev branch such as dev/v2/v2.5, got: ${target_branch}"
+              exit 1
+              ;;
+          esac
+          echo "branch=${target_branch}" >> "${GITHUB_OUTPUT}"
+          echo "branch-artifact=${target_branch//\//-}" >> "${GITHUB_OUTPUT}"
+        env:
+          INPUT_TARGET_BRANCH: ${{ inputs.target-branch }}
+
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.buildchain-ref || 'v2' }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "24"
+
+      - name: Run Buildchain dev PR auto-merge
+        id: merge
+        run: node .buildchain/runtime/scripts/dev-pr-auto-merge.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.github-token || github.token }}
+          BUILDCHAIN_DEV_PR_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_DEV_PR_TARGET_BRANCH: ${{ steps.target.outputs.branch }}
+          BUILDCHAIN_DEV_PR_REQUIRED_CHECKS: ${{ inputs.required-status-checks }}
+          BUILDCHAIN_DEV_PR_READY_LABEL: ${{ inputs.ready-label }}
+          BUILDCHAIN_DEV_PR_BLOCK_LABELS: ${{ inputs.block-labels }}
+          BUILDCHAIN_DEV_PR_ALLOWED_HEAD_PREFIXES: ${{ inputs.allowed-head-prefixes }}
+          BUILDCHAIN_DEV_PR_REQUIRE_APPROVAL: ${{ inputs.require-approval }}
+          BUILDCHAIN_DEV_PR_SAME_REPOSITORY_ONLY: ${{ inputs.same-repository-only }}
+          BUILDCHAIN_DEV_PR_MAX_MERGES: ${{ inputs.max-merges }}
+          BUILDCHAIN_DEV_PR_MERGE_METHOD: ${{ inputs.merge-method }}
+          BUILDCHAIN_DEV_PR_DRY_RUN: ${{ inputs.dry-run }}
+          BUILDCHAIN_DEV_PR_OUTPUT_PATH: .buildchain/dev-pr-auto-merge/result.json
+
+      - name: Upload dev PR auto-merge plan
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-dev-pr-auto-merge-${{ steps.target.outputs.branch-artifact }}
+          path: ${{ steps.merge.outputs.result-path }}
+          if-no-files-found: error

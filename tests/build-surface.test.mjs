@@ -251,6 +251,32 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.doesNotMatch(workflow, /fromJSON\(needs\.resolve-contract\.outputs/);
 });
 
+test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/dev-pr-auto-merge.yml"),
+    "utf8",
+  );
+  assert.match(workflow, /workflow_call:/);
+  assert.match(workflow, /target-branch:/);
+  assert.match(workflow, /required-status-checks:/);
+  assert.match(workflow, /ready-label:/);
+  assert.match(workflow, /block-labels:/);
+  assert.match(workflow, /allowed-head-prefixes:/);
+  assert.match(workflow, /require-approval:/);
+  assert.match(workflow, /same-repository-only:/);
+  assert.match(workflow, /max-merges:/);
+  assert.match(workflow, /dry-run:/);
+  assert.match(workflow, /default: true/);
+  assert.match(workflow, /dev\/v\*\/v\*/);
+  assert.match(workflow, /Checkout Buildchain runtime/);
+  assert.match(workflow, /dev-pr-auto-merge\.mjs/);
+  assert.match(workflow, /contents: write/);
+  assert.match(workflow, /pull-requests: write/);
+  assert.match(workflow, /checks: read/);
+  assert.match(workflow, /statuses: read/);
+  assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
+});
+
 test("reusable web-surface workflow exposes preview, cleanup, staging, and production gates", () => {
   const workflow = fs.readFileSync(
     path.join(root, ".github/workflows/.web-surface.yml"),
