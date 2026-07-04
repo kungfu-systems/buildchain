@@ -205,6 +205,41 @@ jobs:
           clean: true
           persist-credentials: false
 
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org/"
+
+      - name: Install promotion dependencies
+        shell: bash
+        run: |
+          case "${PACKAGE_MANAGER}" in
+            pnpm)
+              corepack enable pnpm
+              pnpm install --frozen-lockfile
+              ;;
+            yarn)
+              corepack enable yarn
+              yarn install --immutable || yarn install --frozen-lockfile
+              ;;
+            npm)
+              if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
+                npm ci
+              else
+                npm install
+              fi
+              ;;
+            custom)
+              echo "::notice::Skipping dependency install for custom package manager."
+              ;;
+            *)
+              echo "::error::Unsupported package-manager: ${PACKAGE_MANAGER}"
+              exit 1
+              ;;
+          esac
+        env:
+          PACKAGE_MANAGER: ${{ inputs.package-manager }}
+
       - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
         with:

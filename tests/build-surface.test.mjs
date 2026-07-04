@@ -230,6 +230,9 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /BUILDCHAIN_PUBLISH_PACKAGE_MAIN: \$\{\{ inputs\.publish-package-main \}\}/);
   assert.match(workflow, /derived_channel="alpha"/);
   assert.match(workflow, /INPUT_TARGET_SHA: \$\{\{ inputs\.target-sha \}\}/);
+  assert.match(workflow, /Install promotion dependencies/);
+  assert.match(workflow, /PACKAGE_MANAGER: \$\{\{ inputs\.package-manager \}\}/);
+  assert.match(workflow, /pnpm install --frozen-lockfile/);
   assert.match(workflow, /promote-only-release-candidate: "true"/);
   assert.match(workflow, /release-candidate-passport-path:/);
   assert.match(workflow, /release-candidate-build-summary-path:/);
@@ -575,6 +578,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(workflow, /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.sha \|\| github\.sha \}\}/);
   assert.match(workflow, /target-ref: \$\{\{ github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\] \}\}/);
   assert.match(workflow, /target-sha: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.sha \|\| github\.sha \}\}/);
+  assert.match(workflow, /package-manager: pnpm/);
   assert.match(workflow, /release-candidate-workflow-file: build-surface-fixture\.yml/);
   assert.match(workflow, /release-candidate-workflow-name: Build Surface Fixture/);
   assert.match(workflow, /publish-required-artifacts-json: "\[\]"/);
