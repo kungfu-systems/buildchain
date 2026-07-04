@@ -104,3 +104,19 @@ export {
   validateKnownReleasePassportContracts,
   verifyReleasePassport,
 } from "./release-passport.js";
+
+export {
+  BUILDCHAIN_CONSUMER_ISSUE_CONTRACT,
+  DEFAULT_BUILDCHAIN_ISSUE_REPOSITORY,
+  GitHubIssueRequestError,
+  buildConsumerIssueReport,
+  computeConsumerIssueFingerprint,
+  consumerIssueMarker,
+  createGitHubIssueRequest,
+  normalizeIssueRepository,
+  parseIssueLabels,
+  readOptionalIssueBodyFile,
+  redactIssueText,
+  reportBuildchainIssue,
+  truncateUtf8,
+} from "./issue-reporting.js";

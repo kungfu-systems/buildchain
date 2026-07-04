@@ -37,6 +37,12 @@ importers:
         specifier: 6.0.1
         version: 6.0.1
 
+  actions/report-buildchain-issue:
+    dependencies:
+      '@actions/core':
+        specifier: 1.11.1
+        version: 1.11.1
+
   actions/run-lifecycle:
     dependencies:
       smol-toml:

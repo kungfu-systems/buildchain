@@ -11,6 +11,7 @@
       ".": "./packages/core/index.js",
       "./core": "./packages/core/index.js",
       "./diagnostics": "./packages/core/diagnostics.js",
+      "./issue-reporting": "./packages/core/issue-reporting.js",
       "./logging": "./packages/core/logging.js",
       "./release-passport": "./packages/core/release-passport.js",
       "./site/buildchain-site.json": "./dist/site/buildchain-site.json",
