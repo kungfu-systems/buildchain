@@ -17,6 +17,7 @@ const requiredPaths = [
   "docs/MAP.md",
   "docs/binary-distribution.md",
   "docs/cli.md",
+  "docs/consumer-issue-reporting.md",
   "docs/install.md",
   "docs/product-mechanism.md",
   "docs/release-passport.md",
@@ -69,6 +70,9 @@ if (rootPackage.exports?.["."] !== "./packages/core/index.js") {
 if (rootPackage.exports?.["./diagnostics"] !== "./packages/core/diagnostics.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/diagnostics");
 }
+if (rootPackage.exports?.["./issue-reporting"] !== "./packages/core/issue-reporting.js") {
+  throw new Error("root package must export @kungfu-tech/buildchain/issue-reporting");
+}
 if (rootPackage.exports?.["./logging"] !== "./packages/core/logging.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/logging");
 }
@@ -107,6 +111,9 @@ if (!coreIndexSource.includes("verifyBuildchainLogEvents")) {
 }
 if (!coreIndexSource.includes("collectBuildchainDiagnostics")) {
   throw new Error("packages/core/index.js must export collectBuildchainDiagnostics");
+}
+if (!coreIndexSource.includes("reportBuildchainIssue")) {
+  throw new Error("packages/core/index.js must export reportBuildchainIssue");
 }
 for (const requiredSnippet of [
   "Release passport and binary distribution are a minor surface.",

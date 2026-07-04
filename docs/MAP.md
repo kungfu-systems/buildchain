@@ -38,7 +38,8 @@ running artifact), *use* (consume / extend) - and a **status**:
 | How do I validate an unreleased Buildchain runtime train while keeping `@v2`? | [`runtime-train-validation.md`](runtime-train-validation.md) | use | stable |
 | How do I deploy a site/app preview, staging, or production surface? | [`web-surface-deployments.md`](web-surface-deployments.md) | use | stable |
 | How do I publish observed infrastructure contracts for downstream consumers? | [`infra-contract.md`](infra-contract.md) | use | preview |
-| How do I use the active actions directly? | [`../actions/validate-config/README.md`](../actions/validate-config/README.md), [`../actions/run-lifecycle/README.md`](../actions/run-lifecycle/README.md), [`../actions/promote-buildchain-ref/README.md`](../actions/promote-buildchain-ref/README.md) | use | stable |
+| How do I use the active actions directly? | [`../actions/validate-config/README.md`](../actions/validate-config/README.md), [`../actions/run-lifecycle/README.md`](../actions/run-lifecycle/README.md), [`../actions/promote-buildchain-ref/README.md`](../actions/promote-buildchain-ref/README.md), [`../actions/report-buildchain-issue/README.md`](../actions/report-buildchain-issue/README.md) | use | stable |
+| How can a consumer workflow report a Buildchain-owned failure back to Buildchain? | [`consumer-issue-reporting.md`](consumer-issue-reporting.md) + [`../actions/report-buildchain-issue/README.md`](../actions/report-buildchain-issue/README.md) | use | stable |
 | What do the fixture repositories demonstrate? | [`../fixtures/libnode-shaped/README.md`](../fixtures/libnode-shaped/README.md), [`../fixtures/publish-transaction-shaped/README.md`](../fixtures/publish-transaction-shaped/README.md), [`../fixtures/web-surface-shaped/README.md`](../fixtures/web-surface-shaped/README.md) | verify | stable |
 | What license and contribution terms apply? | [`../LICENSE`](../LICENSE) + [`../LICENSE-POLICY.md`](../LICENSE-POLICY.md) | use | stable |
 | How do I report a vulnerability? | [`../SECURITY.md`](../SECURITY.md) | use | stable |
@@ -64,6 +65,8 @@ running artifact), *use* (consume / extend) - and a **status**:
 - **runtime train validation / temporary `buildchain-ref` override** ->
   [`runtime-train-validation.md`](runtime-train-validation.md) and
   [`reusable-build-surface.md`](reusable-build-surface.md).
+- **consumer workflow feedback / automatic Buildchain GitHub issues** ->
+  [`consumer-issue-reporting.md`](consumer-issue-reporting.md).
 - **infra contract / observed infrastructure outputs / downstream contract propagation** ->
   [`infra-contract.md`](infra-contract.md).
 - **standalone binary install / platform archives / GitHub Release bundle** ->

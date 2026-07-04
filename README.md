@@ -106,6 +106,23 @@ writeDiagnosticsArtifact(".buildchain/artifacts/diagnostics.json", {
 platform manifest. It includes lifecycle-wide observability, runner/tool/cache
 snapshots, Git state, and links to the larger manifest and artifact outputs.
 
+Consumers can report Buildchain-owned workflow failures directly to the
+Buildchain repository with a scoped issue-write token:
+
+```yaml
+- uses: kungfu-systems/buildchain/actions/report-buildchain-issue@v2
+  if: failure()
+  with:
+    token: ${{ steps.buildchain-issue-token.outputs.token }}
+    summary: "Reusable build failed before artifact finalization"
+    failure-code: reusable-build-failed
+    buildchain-ref: v2
+    diagnostics-path: .buildchain/artifacts/diagnostics.json
+```
+
+The action deduplicates by fingerprint, comments on existing open reports, and
+is fail-soft by default so issue reporting does not hide the original failure.
+
 ## Use Buildchain
 
 Bootstrap a repository:
@@ -125,6 +142,7 @@ Buildchain's active GitHub Action surface is deliberately small:
 - `actions/validate-config`
 - `actions/run-lifecycle`
 - `actions/promote-buildchain-ref`
+- `actions/report-buildchain-issue`
 
 The active reusable workflow surfaces are:
 
@@ -234,5 +252,6 @@ npm pack --dry-run --json --registry=https://registry.npmjs.org/
 - [Site bundle contract](docs/site-bundle-contract.md)
 - [Lifecycle protocol](docs/lifecycle-protocol.md)
 - [Reusable build surface](docs/reusable-build-surface.md)
+- [Consumer issue reporting](docs/consumer-issue-reporting.md)
 - [Publish transaction](docs/publish-transaction.md)
 - [Release governance](docs/release-governance.md)
