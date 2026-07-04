@@ -109,6 +109,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Restore promotion runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ github.sha }}
+          path: .buildchain/promotion-runtime
+          persist-credentials: false
+
       - name: Promote buildchain refs
         uses: ./actions/promote-buildchain-ref
         with:
