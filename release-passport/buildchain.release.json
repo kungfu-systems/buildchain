@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-release-passport",
+  "generatedAt": "2026-07-04T04:39:41.539Z",
+  "product": {
+    "name": "Buildchain",
+    "repository": "kungfu-systems/buildchain",
+    "mechanism": "product-mechanism.json"
+  },
+  "release": {
+    "tag": "v2.4.6",
+    "internalTag": "v2.4.6",
+    "internalVersion": "2.4.6",
+    "publishedVersion": "2.4.6",
+    "versionLabel": "2.4.6",
+    "line": "v2.4",
+    "sourceSha": "4568711f2174a83616cac9bd29432a19fd432dca",
+    "channel": "release",
+    "targetRef": "release/v2/v2.4",
+    "releaseSha": "8beed43bd2d2f81dfcd0dee742e3c854df6fc143",
+    "releaseMaterialSha": "8beed43bd2d2f81dfcd0dee742e3c854df6fc143",
+    "publishToolingSha": "8beed43bd2d2f81dfcd0dee742e3c854df6fc143",
+    "releaseStateRef": "refs/heads/buildchain/release-state/2-4-6",
+    "releaseStateSha": "",
+    "package": {
+      "name": "@kungfu-tech/buildchain",
+      "version": "2.4.6"
+    },
+    "exactRef": "refs/tags/v2.4.6"
+  },
+  "workflow": {
+    "name": "Buildchain Ref Promotion",
+    "runId": "28695137933",
+    "runAttempt": "1",
+    "url": "https://github.com/kungfu-systems/buildchain/actions/runs/28695137933"
+  },
+  "runnerPolicy": {
+    "productionDefault": "github-hosted",
+    "compatibilityFixture": "self-hosted",
+    "note": "Runner facts are recorded in artifact evidence; the protocol does not require self-hosted runners."
+  },
+  "trustedPublishing": {
+    "provider": "npm",
+    "enabled": true,
+    "auth": "trusted-publishing",
+    "workflowRunId": "28695137933",
+    "workflowRunAttempt": "1",
+    "evidence": ""
+  },
+  "transaction": {
+    "id": "90796432ea0d015e27f23347abb77fab4a9349df04b1c169137129792881a915",
+    "version": "2.4.6",
+    "state": "complete",
+    "previousState": "finalizing",
+    "exactTag": "v2.4.6",
+    "releaseSha": "8beed43bd2d2f81dfcd0dee742e3c854df6fc143",
+    "releaseMaterialSha": "8beed43bd2d2f81dfcd0dee742e3c854df6fc143",
+    "stateRef": "buildchain/release-state/2-4-6",
+    "statePath": "/home/runner/work/buildchain/buildchain/.buildchain/release-state/v2.4.6.json",
+    "stateSha": "",
+    "evidencePath": "/home/runner/work/buildchain/buildchain/.buildchain/release-evidence/v2.4.6/evidence.json",
+    "updatedAt": "2026-07-04T04:39:39.805Z",
+    "result": {
+      "command": "finalize",
+      "validation": {
+        "valid": true,
+        "errors": []
+      }
+    }
+  },
+  "artifacts": [
+    {
+      "group": "node",
+      "kind": "npm",
+      "name": "@kungfu-tech/buildchain",
+      "ref": "2.4.6",
+      "digest": "sha512-ECjlQO5bZLaPKmPStl9KlKkkyc47qeeQ9241r705TU5CgZk3kF/5UwvKbHuKYP0GiUJE7pmVF2T1EwyZUecvTQ==",
+      "evidence": "../release-evidence/v2.4.6/evidence.json"
+    }
+  ],
+  "evidence": {
+    "artifactEvidence": "artifact-evidence.json",
+    "publishEvidence": "../release-evidence/v2.4.6/evidence.json",
+    "transactionState": "",
+    "buildSummary": "",
+    "platformArtifactManifests": [],
+    "distTagPromotionEvidence": "",
+    "impact": "impact.json",
+    "checkReport": "check-report.json",
+    "agentIndex": "agent-index.json"
+  },
+  "recovery": {
+    "rollback": "Use the previous exact release tag or previous floating channel ref.",
+    "verify": "buildchain verify release-passport buildchain.release.json"
+  }
+}
