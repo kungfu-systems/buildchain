@@ -158,18 +158,24 @@ writeDiagnosticsArtifact(".buildchain/artifacts/diagnostics.json", {
 `collectCacheDiagnostics()` includes package-manager/workspace context, selected
 cache directory stats, and compiler-cache stats from `ccache --show-stats
 --json` plus `sccache --show-stats --stats-format json` when those tools are
-present. Missing cache tools are recorded as unavailable instead of failing the
-diagnostics artifact. Call `collectCompilerCacheDiagnostics()` directly when a
-consumer script only needs compiler cache data.
+present. If a ccache build does not support JSON stats, Buildchain falls back to
+plain `ccache --show-stats` and parses the text counters. Missing cache tools
+are recorded as unavailable instead of failing the diagnostics artifact. Call
+`collectCompilerCacheDiagnostics()` directly when a consumer script only needs
+compiler cache data. Native diagnostics also expose `compilerCaches` and
+`nativeCacheDirs` as top-level fields in each diagnostics artifact and aggregate
+summary, so reviewers do not have to dig through nested cache sections first.
 
 Process samples are intentionally summarized before they become long-lived
 artifacts. The summary records requested parallelism, the source of that value
-(`command`, `env:MAKEFLAGS`, `env:CMAKE_BUILD_PARALLEL_LEVEL`, or `explicit`),
-observed active process concurrency, elapsed sample time, total sampled CPU,
-and conservative command categories such as `compiler`, `archive`, `linker`,
-`build-tool`, and `cache`. This lets native projects distinguish "we asked for
+(`command`, `process-tree`, `env:MAKEFLAGS`,
+`env:CMAKE_BUILD_PARALLEL_LEVEL`, or `explicit`), observed active process
+concurrency, elapsed sample time, total sampled CPU, and conservative command
+categories such as `compiler`, `archive`, `linker`, `build-tool`, and `cache`.
+The sampler detects common `make -j N`, `ninja -j N`, CMake/MSBuild/Xcode job
+flags, and MAKEFLAGS. This lets native projects distinguish "we asked for
 `make -j20`" from "the build graph only kept two active compiler or archive
-children busy during the sampled window" without storing full command lines.
+children busy during the sampled window" without storing environment dumps.
 
 Native repositories can opt into a reusable diagnostics profile in
 `buildchain.toml`:
@@ -304,12 +310,15 @@ buildchain sample process-tree \
   make -j20
 ```
 
-The JSONL sample file stores timestamped process-tree snapshots with command
-basenames, CPU percentages, elapsed time, and requested parallelism context. The
-summary file records observed concurrency, total sampled CPU, command
-categories, and top command basenames. This is intended for diagnosing
-low-utilization tails such as archive/link phases without logging full command
-lines or environment dumps.
+The JSONL sample file stores timestamped process-tree snapshots with full
+redacted command lines, command basenames, CPU percentages when available,
+elapsed time, and requested parallelism context. Unix and macOS snapshots read
+the full `ps args` field instead of truncated `comm` names. Windows snapshots
+read `Win32_Process` command lines through PowerShell so the sampler no longer
+returns an empty process set on Windows runners. The summary file records
+observed concurrency, total sampled CPU, command categories, and top command
+basenames. This is intended for diagnosing low-utilization tails such as
+archive/link phases without logging full environment dumps.
 
 The lifecycle observability summary is stage-wide, not just final-step timing:
 when install and build write to the same Buildchain log, the final platform

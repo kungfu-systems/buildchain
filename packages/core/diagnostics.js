@@ -497,26 +497,70 @@ function parseJsonDiagnostics(value = "") {
   }
 }
 
-function collectCompilerCacheTool({ command, args, cwd, runCommand }) {
-  try {
-    const output = runCommand(command, args, { cwd, timeoutMs: 5000 });
-    const text = String(output || "").trim();
-    const stats = parseJsonDiagnostics(text);
-    return {
-      available: true,
-      command,
-      format: stats ? "json" : "text",
-      stats: stats || {},
-      rawBytes: Buffer.byteLength(text, "utf8"),
-      parseError: stats ? "" : "stats output was not JSON",
-    };
-  } catch (error) {
-    return {
-      available: false,
-      command,
-      error: error?.code || error?.message || "stats command failed",
-    };
+function parseTextStats(value = "") {
+  const stats = {};
+  for (const line of String(value || "").split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      continue;
+    }
+    const match = trimmed.match(/^(.+?)(?:\s{2,}|\t+|:\s+)([-+]?\d+(?:\.\d+)?)(?:\s|$)/);
+    if (!match) {
+      continue;
+    }
+    const key = match[1]
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "");
+    if (!key) {
+      continue;
+    }
+    const number = Number(match[2]);
+    stats[key] = Number.isFinite(number) ? number : match[2];
   }
+  return stats;
+}
+
+function collectCompilerCacheTool({ command, attempts, cwd, runCommand }) {
+  let lastError;
+  for (const attempt of attempts) {
+    const args = attempt.args || [];
+    const expectedFormat = attempt.format || "";
+    try {
+      const output = runCommand(command, args, { cwd, timeoutMs: 5000 });
+      const text = String(output || "").trim();
+      const jsonStats = parseJsonDiagnostics(text);
+      if (jsonStats) {
+        return {
+          available: true,
+          command,
+          args,
+          format: "json",
+          stats: jsonStats,
+          rawBytes: Buffer.byteLength(text, "utf8"),
+          parseError: "",
+        };
+      }
+      const textStats = parseTextStats(text);
+      return {
+        available: true,
+        command,
+        args,
+        format: "text",
+        stats: textStats,
+        rawBytes: Buffer.byteLength(text, "utf8"),
+        parseError: Object.keys(textStats).length ? "" : `${expectedFormat || "stats"} output was not parseable`,
+      };
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  return {
+    available: false,
+    command,
+    error: lastError?.code || lastError?.message || "stats command failed",
+  };
 }
 
 export function collectCompilerCacheDiagnostics({
@@ -527,13 +571,18 @@ export function collectCompilerCacheDiagnostics({
   return {
     ccache: collectCompilerCacheTool({
       command: "ccache",
-      args: ["--show-stats", "--json"],
+      attempts: [
+        { args: ["--show-stats", "--json"], format: "json" },
+        { args: ["--show-stats"], format: "text" },
+      ],
       cwd: resolvedCwd,
       runCommand,
     }),
     sccache: collectCompilerCacheTool({
       command: "sccache",
-      args: ["--show-stats", "--stats-format", "json"],
+      attempts: [
+        { args: ["--show-stats", "--stats-format", "json"], format: "json" },
+      ],
       cwd: resolvedCwd,
       runCommand,
     }),
@@ -578,41 +627,21 @@ export function redactDiagnosticsValue(key, value, pattern = DEFAULT_SECRET_KEY_
   return value;
 }
 
-export function collectProcessTreeSnapshot({ rootPid = process.pid, cwd = process.cwd() } = {}) {
-  const pid = String(rootPid || process.pid);
-  if (process.platform === "win32") {
-    return { rootPid: pid, platform: process.platform, processes: [] };
-  }
-  let lines = [];
-  try {
-    lines = execFileSync("ps", ["-axo", "pid=,ppid=,pcpu=,comm=,args="], {
-      cwd,
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"],
-      timeout: 5000,
-    }).split(/\r?\n/).filter(Boolean);
-  } catch {
-    return { rootPid: pid, platform: process.platform, processes: [] };
-  }
-  const rows = lines.map((line) => {
-    const match = line.trim().match(/^(\d+)\s+(\d+)\s+([0-9.]+)\s+(\S+)(?:\s+(.*))?$/);
-    const args = match?.[5] || "";
-    return match
-      ? {
-          pid: match[1],
-          ppid: match[2],
-          cpu: Number(match[3]),
-          command: path.basename(match[4]),
-          commandLine: redactCommandLine(args),
-        }
-      : undefined;
-  }).filter(Boolean);
+function processCommandFromLine(commandLine = "", fallback = "") {
+  const firstToken = shellishTokens(commandLine)[0] || fallback;
+  return String(firstToken || "")
+    .replace(/[()]/g, "")
+    .split(/[\\/]/)
+    .pop();
+}
+
+function normalizeProcessRows({ rootPid, platform, rows = [] }) {
   const byParent = new Map();
   for (const row of rows) {
     byParent.set(row.ppid, [...(byParent.get(row.ppid) || []), row]);
   }
   const seen = new Set();
-  const stack = [pid];
+  const stack = [String(rootPid)];
   const processes = [];
   while (stack.length) {
     const current = stack.pop();
@@ -625,11 +654,80 @@ export function collectProcessTreeSnapshot({ rootPid = process.pid, cwd = proces
       stack.push(child.pid);
     }
   }
-  return { rootPid: pid, platform: process.platform, processes };
+  return { rootPid: String(rootPid), platform, processes };
+}
+
+function collectWindowsProcessRows({ cwd, runCommand }) {
+  const script = [
+    "$ErrorActionPreference = 'Stop'",
+    "Get-CimInstance Win32_Process |",
+    "Select-Object ProcessId,ParentProcessId,Name,CommandLine |",
+    "ConvertTo-Json -Compress",
+  ].join("; ");
+  const output = runCommand("powershell", ["-NoProfile", "-Command", script], {
+    cwd,
+    timeoutMs: 5000,
+  });
+  const parsed = JSON.parse(String(output || "[]"));
+  const entries = Array.isArray(parsed) ? parsed : [parsed];
+  return entries.map((entry) => {
+    const commandLine = redactCommandLine(entry.CommandLine || entry.Name || "");
+    return {
+      pid: String(entry.ProcessId || ""),
+      ppid: String(entry.ParentProcessId || ""),
+      cpu: 0,
+      command: processCommandFromLine(commandLine, entry.Name || ""),
+      commandLine,
+    };
+  }).filter((entry) => entry.pid && entry.ppid);
+}
+
+export function collectProcessTreeSnapshot({
+  rootPid = process.pid,
+  cwd = process.cwd(),
+  platform = process.platform,
+  runCommand = defaultDiagnosticCommandRunner,
+} = {}) {
+  const pid = String(rootPid || process.pid);
+  if (platform === "win32") {
+    try {
+      return normalizeProcessRows({
+        rootPid: pid,
+        platform,
+        rows: collectWindowsProcessRows({ cwd, runCommand }),
+      });
+    } catch {
+      return { rootPid: pid, platform, processes: [] };
+    }
+  }
+  let lines = [];
+  try {
+    lines = runCommand("ps", ["-axo", "pid=,ppid=,pcpu=,args="], {
+      cwd,
+      timeoutMs: 5000,
+    }).split(/\r?\n/).filter(Boolean);
+  } catch {
+    return { rootPid: pid, platform, processes: [] };
+  }
+  const rows = lines.map((line) => {
+    const match = line.trim().match(/^(\d+)\s+(\d+)\s+([0-9.]+)\s+(.*)$/);
+    const args = match?.[4] || "";
+    const commandLine = redactCommandLine(args);
+    return match
+      ? {
+          pid: match[1],
+          ppid: match[2],
+          cpu: Number(match[3]),
+          command: processCommandFromLine(commandLine),
+          commandLine,
+        }
+      : undefined;
+  }).filter(Boolean);
+  return normalizeProcessRows({ rootPid: pid, platform, rows });
 }
 
 export function classifyProcessCommand(command = "") {
-  const name = path.basename(String(command || "")).toLowerCase();
+  const name = String(command || "").split(/[\\/]/).pop().toLowerCase();
   if (/^(ccache|sccache)$/.test(name)) {
     return "cache";
   }
@@ -657,7 +755,12 @@ function firstPositiveInteger(value) {
 }
 
 function commandName(value = "") {
-  return path.basename(String(value || "").replace(/[()]/g, "").replace(/\.exe$/i, "")).toLowerCase();
+  return String(value || "")
+    .replace(/[()]/g, "")
+    .replace(/\.exe$/i, "")
+    .split(/[\\/]/)
+    .pop()
+    .toLowerCase();
 }
 
 function detectParallelismFromTokens(tokens = []) {
@@ -945,6 +1048,8 @@ export function createDiagnosticsArtifact({
   const events = logPath ? readBuildchainLogEvents(logPath) : [];
   const loadedConfig = loadBuildchainConfig(resolvedCwd);
   const nativeProfile = getNativeDiagnosticsProfile(loadedConfig);
+  const native = collectNativeDiagnostics({ cwd: resolvedCwd, profile: nativeProfile });
+  const cache = collectCacheDiagnostics({ cwd: resolvedCwd, cacheDirs });
   return {
     schemaVersion: 1,
     contract: BUILDCHAIN_DIAGNOSTICS_CONTRACT,
@@ -953,8 +1058,10 @@ export function createDiagnosticsArtifact({
     buildchain: collectBuildchainDiagnostics({ cwd: resolvedCwd, artifactPaths }),
     runner: collectRunnerDiagnostics(),
     tools: collectToolDiagnostics({ cwd: resolvedCwd }),
-    cache: collectCacheDiagnostics({ cwd: resolvedCwd, cacheDirs }),
-    native: collectNativeDiagnostics({ cwd: resolvedCwd, profile: nativeProfile }),
+    cache,
+    native,
+    compilerCaches: native.compilerCaches || cache.compilerCaches || {},
+    nativeCacheDirs: native.cacheDirs || [],
     git: collectGitDiagnostics({ cwd: resolvedCwd }),
     lifecycleObservability: lifecycleObservability || summarizeLifecycleObservability({ events, logPath }),
     process: processSummary || summarizeProcessSamples({ samples: processSamples, requestedParallelism }),
@@ -1353,6 +1460,12 @@ export function summarizeDiagnosticsArtifacts(inputs = []) {
       runnerDetails: compactRunnerDetails(entry.runner || {}),
       tools: compactToolSummary(entry.tools || {}, entry.native?.tools || {}),
       cache: compactCacheSummary(entry.cache || {}, entry.native || {}),
+      compilerCaches: compactCompilerCacheSummary(entry.compilerCaches || entry.native?.compilerCaches || entry.cache?.compilerCaches || {}),
+      nativeCacheDirs: Array.isArray(entry.nativeCacheDirs)
+        ? entry.nativeCacheDirs
+        : Array.isArray(entry.native?.cacheDirs)
+          ? entry.native.cacheDirs
+          : [],
       process: entry.process || {},
       diagnosticsContract,
       ...(diagnosticsManifest ? { diagnosticsManifest } : {}),
