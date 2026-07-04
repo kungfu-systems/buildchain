@@ -43,6 +43,7 @@ running artifact), *use* (consume / extend) - and a **status**:
 | How can a consumer workflow report a Buildchain-owned failure back to Buildchain? | [`consumer-issue-reporting.md`](consumer-issue-reporting.md) + [`../actions/report-buildchain-issue/README.md`](../actions/report-buildchain-issue/README.md) | use | stable |
 | What do the fixture repositories demonstrate? | [`../fixtures/libnode-shaped/README.md`](../fixtures/libnode-shaped/README.md), [`../fixtures/publish-transaction-shaped/README.md`](../fixtures/publish-transaction-shaped/README.md), [`../fixtures/web-surface-shaped/README.md`](../fixtures/web-surface-shaped/README.md) | verify | stable |
 | What license and contribution terms apply? | [`../LICENSE`](../LICENSE) + [`../LICENSE-POLICY.md`](../LICENSE-POLICY.md) | use | stable |
+| What trademark, official-service, and provider-compliance boundaries apply? | [`../TRADEMARK.md`](../TRADEMARK.md) + [`../ACCEPTABLE_USE.md`](../ACCEPTABLE_USE.md) + [`../PROVIDER_COMPLIANCE.md`](../PROVIDER_COMPLIANCE.md) | use | stable |
 | How do I report a vulnerability? | [`../SECURITY.md`](../SECURITY.md) | use | stable |
 
 ## Also asking about
@@ -88,6 +89,10 @@ running artifact), *use* (consume / extend) - and a **status**:
   [`site-bundle-contract.md`](site-bundle-contract.md).
 - **sites / web previews / staging / production gates** ->
   [`web-surface-deployments.md`](web-surface-deployments.md).
+- **trademark / fork / official service / provider compliance / release
+  evidence boundary** -> [`../TRADEMARK.md`](../TRADEMARK.md),
+  [`../ACCEPTABLE_USE.md`](../ACCEPTABLE_USE.md), and
+  [`../PROVIDER_COMPLIANCE.md`](../PROVIDER_COMPLIANCE.md).
 
 ## How this map is maintained
 

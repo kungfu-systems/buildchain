@@ -85,6 +85,19 @@ const report = verifyBuildchainLogEvents({
 The package also ships `dist/site/` as the Buildchain-owned fact source for
 `buildchain.libkungfu.dev`.
 
+## Project Governance
+
+- [`LICENSE-POLICY.md`](LICENSE-POLICY.md) explains the Apache-2.0 project
+  license, DCO-based contributions, and third-party notice boundary.
+- [`TRADEMARK.md`](TRADEMARK.md) explains official project marks and fork
+  identity boundaries.
+- [`ACCEPTABLE_USE.md`](ACCEPTABLE_USE.md) explains acceptable use of official
+  services and maintainer-operated infrastructure.
+- [`PROVIDER_COMPLIANCE.md`](PROVIDER_COMPLIANCE.md) explains the official
+  posture for GitHub, npm, cloud, credential, release evidence, and other
+  provider integrations.
+- [`SECURITY.md`](SECURITY.md) explains private vulnerability reporting.
+
 Native build consumers can import the diagnostics toolkit instead of copying
 repository-local probes:
 
