@@ -539,8 +539,14 @@ test("report issue action exposes workflow-friction feedback mode", () => {
   assert.match(action, /related-runs-json:/);
   assert.match(action, /heavy-builds-json:/);
   assert.match(workflow, /issues: write/);
+  assert.match(workflow, /buildchain-issue-token:/);
   assert.match(workflow, /Classify Buildchain promotion friction/);
   assert.match(workflow, /Report Buildchain promotion friction/);
+  assert.match(
+    workflow,
+    /token: \$\{\{ secrets\['buildchain-issue-token'\] \|\| secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token \}\}/,
+  );
+  assert.doesNotMatch(workflow, /Report Buildchain promotion friction[\s\S]*token: \$\{\{ github\.token \}\}/);
   assert.match(workflow, /body-file: \$\{\{ steps\.friction\.outputs\.body-file \}\}/);
   assert.match(implementation, /Copyable issue body/);
   assert.match(implementation, /buildWorkflowFrictionIssueReport/);
