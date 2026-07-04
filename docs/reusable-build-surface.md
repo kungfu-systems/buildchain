@@ -242,7 +242,9 @@ the artifact source promoted later. Buildchain then uploads
 `<artifact-name>-release-candidate-<publish-source-sha>` artifact name. Promotion
 jobs can pass that passport to `promote-buildchain-ref` with
 `promote-only-release-candidate: "true"` so source, channel, platforms, and the
-aggregate build-summary hash are checked before publish-gate side effects.
+aggregate build-summary hash are checked before publish-gate side effects. The
+passport records the locked commit's Git tree SHA, so a post-merge channel HEAD
+can be accepted only when it is tree-equivalent to the PR-stage build evidence.
 
 ## Publish Gate
 

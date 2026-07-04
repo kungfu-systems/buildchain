@@ -40,6 +40,8 @@ By default issue reporting is fail-soft:
   build failure.
 - transient GitHub API 429/5xx errors and connection failures are retried.
 - if a configured label is missing, issue creation is retried without labels.
+- if issue creation/commenting is still unavailable, the action writes the full
+  copyable issue title, fingerprint, and body into the workflow summary.
 - common token, private-key, password, and authorization values are redacted
   before submission.
 
@@ -69,6 +71,8 @@ steps:
       channel: alpha/v2/v2.4
       source-sha: ${{ github.sha }}
       friction-class: duplicate-build
+      related-runs-json: ${{ steps.classify.outputs.related-runs-json }}
+      heavy-builds-json: ${{ steps.classify.outputs.heavy-builds-json }}
       comment-cooldown-hours: "24"
 ```
 

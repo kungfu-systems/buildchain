@@ -456,7 +456,10 @@ test("reusable build exposes release-candidate passport outputs", () => {
   );
 
   assert.match(workflow, /release-candidate:/);
+  assert.match(workflow, /publish-source-tree-sha:/);
+  assert.match(workflow, /Resolve source tree SHA/);
   assert.match(workflow, /Generate release candidate passport/);
+  assert.match(workflow, /BUILDCHAIN_RC_SOURCE_TREE_HASH/);
   assert.match(workflow, /release-candidate-passport-artifact/);
   assert.match(workflow, /release-candidate-passport-json/);
   assert.match(workflow, /<artifact-name>-release-candidate-|release-candidate-/);
@@ -467,6 +470,10 @@ test("report issue action exposes workflow-friction feedback mode", () => {
     path.join(root, "actions/report-buildchain-issue/action.yml"),
     "utf8",
   );
+  const implementation = fs.readFileSync(
+    path.join(root, "actions/report-buildchain-issue/index.js"),
+    "utf8",
+  );
   const workflow = fs.readFileSync(
     path.join(root, ".github/workflows/buildchain-ref-promotion.yml"),
     "utf8",
@@ -475,8 +482,14 @@ test("report issue action exposes workflow-friction feedback mode", () => {
   assert.match(action, /report-kind:/);
   assert.match(action, /workflow-friction/);
   assert.match(action, /comment-cooldown-hours:/);
+  assert.match(action, /related-runs-json:/);
+  assert.match(action, /heavy-builds-json:/);
   assert.match(workflow, /issues: write/);
+  assert.match(workflow, /Classify Buildchain promotion friction/);
   assert.match(workflow, /Report Buildchain promotion friction/);
+  assert.match(workflow, /body-file: \$\{\{ steps\.friction\.outputs\.body-file \}\}/);
+  assert.match(implementation, /Copyable issue body/);
+  assert.match(implementation, /buildWorkflowFrictionIssueReport/);
 });
 
 test("promote action exposes promote-only release candidate inputs", () => {
@@ -498,6 +511,19 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(action, /release-candidate-build-summary-path:/);
   assert.match(implementation, /promoteOnlyReleaseCandidate/);
   assert.match(docs, /promote-only-release-candidate: "true"/);
+});
+
+test("buildchain ref promotion consumes PR-stage release candidate evidence", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/buildchain-ref-promotion.yml"),
+    "utf8",
+  );
+
+  assert.match(workflow, /Resolve release candidate evidence/);
+  assert.match(workflow, /scripts\/release-candidate-resolver\.mjs/);
+  assert.match(workflow, /promote-only-release-candidate: \$\{\{ steps\.release_candidate\.outputs\.promote-only-release-candidate \}\}/);
+  assert.match(workflow, /release-candidate-passport-path: \$\{\{ steps\.release_candidate\.outputs\.release-candidate-passport-path \}\}/);
+  assert.match(workflow, /release-candidate-build-summary-path: \$\{\{ steps\.release_candidate\.outputs\.release-candidate-build-summary-path \}\}/);
 });
 
 test("publish source-lock docs distinguish source refs from promotion targets", () => {
@@ -1566,6 +1592,7 @@ test("aggregate build summary reads uploaded platform manifests", () => {
     process.env.BUILDCHAIN_PUBLISH_SOURCE_CONSUMER_VERSION = "22.22.3-kf.0";
     process.env.BUILDCHAIN_RELEASE_MANIFEST_JSON = '{"schema":1}';
     process.env.BUILDCHAIN_SOURCE_SHA = "e".repeat(40);
+    process.env.BUILDCHAIN_SOURCE_TREE_SHA = "tree-e";
     process.env.BUILDCHAIN_SOURCE_REF =
       "publish-gate/release/v22/v22.22/22.22.3-kf.0";
     process.env.GITHUB_SHA = "f".repeat(40);
@@ -1574,6 +1601,7 @@ test("aggregate build summary reads uploaded platform manifests", () => {
 
     assert.equal(summary.contract, "kungfu-buildchain-build-summary");
     assert.equal(summary.git.sha, "e".repeat(40));
+    assert.equal(summary.git.treeSha, "tree-e");
     assert.equal(
       summary.git.ref,
       "publish-gate/release/v22/v22.22/22.22.3-kf.0",

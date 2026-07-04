@@ -9,6 +9,15 @@ import {
   validateReleaseCandidatePassport,
 } from "../packages/core/release-candidate.js";
 import { generateReleaseCandidatePassportCli } from "../scripts/generate-release-candidate-passport.mjs";
+import {
+  selectMergedChannelPullRequest,
+  selectReleaseCandidateArtifacts,
+  selectReleaseCandidateRun,
+} from "../scripts/release-candidate-resolver.mjs";
+import {
+  buildWorkflowFrictionBody,
+  selectFrictionClass,
+} from "../scripts/workflow-friction-report.mjs";
 
 const SOURCE_SHA = "1111111111111111111111111111111111111111";
 
@@ -19,6 +28,7 @@ function sampleBuildSummary() {
     git: {
       repository: "kungfu-systems/libnode",
       sha: SOURCE_SHA,
+      treeSha: "tree-source",
       ref: "refs/pull/42/merge",
       runId: "123",
       runAttempt: "1",
@@ -71,6 +81,7 @@ test("release candidate passport records source lock, platform matrix, and build
   assert.equal(passport.target.channel, "alpha");
   assert.equal(passport.target.version, "22.22.3-kf.3-alpha.7");
   assert.equal(passport.source.headSha, SOURCE_SHA);
+  assert.equal(passport.source.treeHash, "tree-source");
   assert.equal(passport.platformMatrix.length, 1);
   assert.equal(validateReleaseCandidatePassport({ passport, buildSummary }).ok, true);
 });
@@ -99,6 +110,75 @@ test("release candidate validation rejects stale source and summary evidence", (
   });
   assert.equal(staleSummary.ok, false);
   assert.match(staleSummary.errors.join("; "), /build summary hash mismatch/);
+});
+
+test("release candidate resolver selects same-repo merged PR run and paired artifacts", () => {
+  const pullRequest = selectMergedChannelPullRequest({
+    targetRef: "refs/heads/alpha/v22/v22.22",
+    repository: "kungfu-systems/buildchain",
+    pullRequests: [
+      {
+        number: 10,
+        state: "open",
+        base: { ref: "alpha/v22/v22.22" },
+        head: { repo: { full_name: "kungfu-systems/buildchain" } },
+      },
+      {
+        number: 11,
+        state: "closed",
+        merged_at: "2026-07-04T01:00:00.000Z",
+        updated_at: "2026-07-04T01:00:00.000Z",
+        base: { ref: "alpha/v22/v22.22" },
+        head: { repo: { full_name: "kungfu-systems/buildchain" } },
+      },
+    ],
+  });
+  assert.equal(pullRequest.number, 11);
+
+  const run = selectReleaseCandidateRun({
+    pullRequest,
+    workflowName: "Build Surface Fixture",
+    runs: [
+      { id: 1, name: "Build Surface Fixture", event: "pull_request", status: "completed", conclusion: "failure", pull_requests: [{ number: 11 }] },
+      { id: 2, name: "Build Surface Fixture", event: "pull_request", status: "completed", conclusion: "success", updated_at: "2026-07-04T02:00:00.000Z", pull_requests: [{ number: 11 }] },
+    ],
+  });
+  assert.equal(run.id, 2);
+
+  const artifacts = selectReleaseCandidateArtifacts({
+    artifacts: [
+      { id: 1, name: `${"libnode"}-summary-${SOURCE_SHA}` },
+      { id: 2, name: `${"libnode"}-release-candidate-${SOURCE_SHA}` },
+    ],
+  });
+  assert.equal(artifacts.sourceSha, SOURCE_SHA);
+  assert.equal(artifacts.summary.id, 1);
+  assert.equal(artifacts.passport.id, 2);
+});
+
+test("workflow friction classifier prioritizes duplicate PRs, heavy builds, and late fail-fast", () => {
+  assert.equal(
+    selectFrictionClass({ duplicatePullRequests: [{}, {}], heavyBuilds: [{}, {}], releaseCandidateOutcome: "failure" }),
+    "duplicate-channel-pr",
+  );
+  assert.equal(
+    selectFrictionClass({ duplicatePullRequests: [{}], heavyBuilds: [{}, {}] }),
+    "duplicate-heavy-build",
+  );
+  assert.equal(
+    selectFrictionClass({ releaseCandidateOutcome: "failure" }),
+    "late-fail-fast",
+  );
+  const body = buildWorkflowFrictionBody({
+    repository: "kungfu-systems/buildchain",
+    targetRef: "alpha/v2/v2.4",
+    targetSha: SOURCE_SHA,
+    frictionClass: "duplicate-heavy-build",
+    heavyBuilds: [{ name: "Build Surface Fixture", durationMs: 1000 }],
+  });
+  assert.match(body, /Buildchain workflow friction evidence/);
+  assert.match(body, /duplicate-heavy-build/);
+  assert.match(body, /Heavy build runs/);
 });
 
 test("generateReleaseCandidatePassportCli writes GitHub outputs for workflow reuse", () => {
