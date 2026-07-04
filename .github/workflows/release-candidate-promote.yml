@@ -137,6 +137,28 @@ on:
         default: false
         type: boolean
         required: false
+    secrets:
+      buildchain-issue-token:
+        description: "Optional token with issues:write on the Buildchain repository for workflow-friction reports"
+        required: false
+      BUILDCHAIN_ISSUE_TOKEN:
+        description: "Optional token with issues:write on the Buildchain repository for workflow-friction reports"
+        required: false
+      buildchain-issue-app-id:
+        description: "Optional GitHub App ID used to mint a Buildchain issue-report token"
+        required: false
+      BUILDCHAIN_ISSUE_APP_ID:
+        description: "Optional GitHub App ID used to mint a Buildchain issue-report token"
+        required: false
+      buildchain-issue-app-private-key:
+        description: "Optional GitHub App private key used to mint a Buildchain issue-report token"
+        required: false
+      BUILDCHAIN_ISSUE_APP_PRIVATE_KEY:
+        description: "Optional GitHub App private key used to mint a Buildchain issue-report token"
+        required: false
+      BUILDCHAIN_PROMOTION_TOKEN:
+        description: "Optional promotion token; also used as a fallback Buildchain issue-report token"
+        required: false
     outputs:
       promoted-sha:
         description: "Promoted channel SHA"
@@ -340,11 +362,39 @@ jobs:
           BUILDCHAIN_RC_RESOLVE_OUTCOME: ${{ steps.rc.outcome }}
           BUILDCHAIN_RC_DIAGNOSIS: ${{ steps.rc.outputs.release-candidate-diagnosis }}
 
+      - name: Resolve Buildchain issue token mode
+        id: issue-token-mode
+        if: ${{ failure() && steps.friction.outcome == 'success' }}
+        shell: bash
+        run: |
+          if [ -n "${DIRECT_TOKEN}" ]; then
+            echo "create-app-token=false" >> "${GITHUB_OUTPUT}"
+          elif [ -n "${APP_ID}" ] && [ -n "${APP_PRIVATE_KEY}" ]; then
+            echo "create-app-token=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "create-app-token=false" >> "${GITHUB_OUTPUT}"
+          fi
+        env:
+          DIRECT_TOKEN: ${{ secrets['buildchain-issue-token'] || secrets.BUILDCHAIN_ISSUE_TOKEN }}
+          APP_ID: ${{ secrets['buildchain-issue-app-id'] || secrets.BUILDCHAIN_ISSUE_APP_ID }}
+          APP_PRIVATE_KEY: ${{ secrets['buildchain-issue-app-private-key'] || secrets.BUILDCHAIN_ISSUE_APP_PRIVATE_KEY }}
+
+      - name: Create Buildchain issue token
+        id: buildchain-issue-app-token
+        if: ${{ failure() && steps.issue-token-mode.outputs.create-app-token == 'true' }}
+        uses: actions/create-github-app-token@v2
+        continue-on-error: true
+        with:
+          app-id: ${{ secrets['buildchain-issue-app-id'] || secrets.BUILDCHAIN_ISSUE_APP_ID }}
+          private-key: ${{ secrets['buildchain-issue-app-private-key'] || secrets.BUILDCHAIN_ISSUE_APP_PRIVATE_KEY }}
+          owner: kungfu-systems
+          repositories: buildchain
+
       - name: Report Buildchain promotion friction
         if: ${{ failure() && steps.friction.outcome == 'success' }}
         uses: ./.buildchain/runtime/actions/report-buildchain-issue
         with:
-          token: ${{ github.token }}
+          token: ${{ steps.buildchain-issue-app-token.outputs.token || secrets['buildchain-issue-token'] || secrets.BUILDCHAIN_ISSUE_TOKEN || secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
           report-kind: workflow-friction
           target-repository: ${{ inputs.buildchain-repository }}
           repository: ${{ github.repository }}
