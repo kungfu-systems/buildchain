@@ -145,6 +145,14 @@ test("release candidate resolver selects same-repo merged PR run and paired arti
   });
   assert.equal(run.id, 2);
 
+  const titledRun = selectReleaseCandidateRun({
+    pullRequest,
+    runs: [
+      { id: 3, name: ".github/workflows/build-surface-fixture.yml", display_title: "Prepare v2.4.7-alpha.1", event: "pull_request", status: "completed", conclusion: "success", updated_at: "2026-07-04T03:00:00.000Z", pull_requests: [{ number: 11 }] },
+    ],
+  });
+  assert.equal(titledRun.id, 3);
+
   const artifacts = selectReleaseCandidateArtifacts({
     artifacts: [
       { id: 1, name: `${"libnode"}-summary-${SOURCE_SHA}` },
