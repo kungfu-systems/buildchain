@@ -583,6 +583,17 @@ jobs:
             echo "web-surface-cleanup-plan-json=$(node -e 'process.stdout.write(JSON.stringify(JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))))' .buildchain/web-surface-cleanup-plan.json)" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Comment release PR staging review URL
+        if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' && inputs.production-release-on-main }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_EVENT_ACTION: ${{ github.event.action }}
+          PRODUCTION_RELEASE_ON_MAIN: ${{ inputs.production-release-on-main }}
+          PRODUCTION_RELEASE_LABEL: ${{ inputs.production-release-label }}
+          PRODUCTION_RELEASE_HEAD_PREFIX: ${{ inputs.production-release-head-prefix }}
+          WORKING_DIRECTORY: ${{ inputs.working-directory }}
+        run: node .buildchain/runtime/scripts/web-surface-release-pr-review.mjs
+
   preview-apply:
     name: Apply pull request preview
     if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' && inputs.preview-apply }}

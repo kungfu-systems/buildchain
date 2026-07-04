@@ -23,6 +23,11 @@ import {
 import { aggregateBuildSummaryCli } from "../scripts/aggregate-build-summary.mjs";
 import { aggregateDiagnosticsSummaryCli } from "../scripts/aggregate-diagnostics-summary.mjs";
 import {
+  RELEASE_REVIEW_MARKER,
+  renderReleaseReviewComment,
+  resolveReleaseReviewState,
+} from "../scripts/web-surface-release-pr-review.mjs";
+import {
   currentGitHubRefSha,
   resolvePublishSourceRefSha,
 } from "../scripts/publish-source-ref-resolver.mjs";
@@ -209,6 +214,8 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /listPullRequestsAssociatedWithCommit/);
   assert.match(workflow, /associated-release-pr-merged/);
   assert.match(workflow, /no-associated-release-pr/);
+  assert.match(workflow, /Comment release PR staging review URL/);
+  assert.match(workflow, /web-surface-release-pr-review\.mjs/);
   assert.match(workflow, /Plan pull request preview/);
   assert.match(workflow, /github\.event\.action != 'closed'/);
   assert.match(workflow, /Plan pull request preview cleanup/);
@@ -243,6 +250,58 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /actions\/download-artifact@v7\.0\.0/);
   assert.match(workflow, /--runtime-id "\$\{\{ needs\.runtime\.outputs\.runtime-sha \}\}"/);
   assert.match(workflow, /--rollback-pointer "\$\{\{ needs\.runtime\.outputs\.rollback-ref \}\}"/);
+});
+
+test("web-surface release PR review comments only on matching release PRs", () => {
+  const payload = {
+    pull_request: {
+      number: 42,
+      labels: [{ name: "buildchain-release" }],
+      base: { ref: "main" },
+      head: {
+        ref: "feature/release-20260704",
+        repo: { full_name: "kungfu-systems/site-kungfu-tech" },
+      },
+    },
+  };
+  const state = resolveReleaseReviewState(payload, {
+    eventName: "pull_request",
+    eventAction: "opened",
+    repository: "kungfu-systems/site-kungfu-tech",
+    productionReleaseOnMain: "true",
+    productionReleaseLabel: "buildchain-release",
+    productionReleaseHeadPrefix: "feature/release-",
+  });
+  assert.equal(state.shouldComment, true);
+  assert.equal(state.pullNumber, 42);
+
+  const missingLabel = resolveReleaseReviewState(
+    { pull_request: { ...payload.pull_request, labels: [] } },
+    {
+      eventName: "pull_request",
+      eventAction: "opened",
+      repository: "kungfu-systems/site-kungfu-tech",
+      productionReleaseOnMain: "true",
+      productionReleaseLabel: "buildchain-release",
+      productionReleaseHeadPrefix: "feature/release-",
+    },
+  );
+  assert.equal(missingLabel.shouldComment, false);
+  assert.equal(missingLabel.reason, "missing-release-label");
+});
+
+test("web-surface release PR review comment names staging and merge approval", () => {
+  const body = renderReleaseReviewComment({
+    stagingUrl: "https://staging.kungfu.tech",
+    productionUrl: "https://kungfu.tech",
+    label: "buildchain-release",
+    headPrefix: "feature/release-",
+  });
+  assert.match(body, new RegExp(RELEASE_REVIEW_MARKER));
+  assert.match(body, /Staging review URL: https:\/\/staging\.kungfu\.tech/);
+  assert.match(body, /Production target: https:\/\/kungfu\.tech/);
+  assert.match(body, /merge this release PR after staging has been verified/);
+  assert.match(body, /same-repository release PR/);
 });
 
 test("binary distribution blocks invalid release uploads before the build matrix", () => {
