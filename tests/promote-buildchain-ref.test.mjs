@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const {
   assertAllowedLocalChanges,
+  assertChannelPromotionPr,
   assertPromotableRepository,
   assertPromotableTargetRef,
   discoverVersionStateFiles,
@@ -249,6 +250,54 @@ test("promotion is limited to buildchain alpha and release line refs", () => {
     () => resolveTagsForTarget("release/v1/v1.0", ["v1.1.0"]),
     /not allowed for release promotion/,
   );
+});
+
+test("channel promotion PR lineage retries transient GitHub API failures", async () => {
+  const originalRetryDelay = process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS;
+  process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS = "0";
+  let calls = 0;
+  const octokit = {
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async ({ commit_sha }) => {
+          calls += 1;
+          assert.equal(commit_sha, SHA);
+          if (calls === 1) {
+            throw transientGitHubError("other side closed");
+          }
+          return {
+            data: [
+              {
+                merged_at: "2026-07-04T00:00:00Z",
+                base: { ref: "alpha/v1/v1.0" },
+                head: {
+                  ref: "dev/v1/v1.0",
+                  repo: { full_name: "kungfu-systems/buildchain" },
+                },
+              },
+            ],
+          };
+        },
+      },
+    },
+  };
+
+  try {
+    await assertChannelPromotionPr({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sha: SHA,
+      targetRef: "alpha/v1/v1.0",
+    });
+    assert.equal(calls, 2);
+  } finally {
+    if (originalRetryDelay === undefined) {
+      delete process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS;
+    } else {
+      process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS = originalRetryDelay;
+    }
+  }
 });
 
 test("release transaction complete transition clears stale failure", () => {

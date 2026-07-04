@@ -1011,6 +1011,17 @@ async function getGitCommitWithRetry({ octokit, owner, repo, commitSha }) {
   );
 }
 
+async function listPullRequestsAssociatedWithCommitWithRetry({ octokit, owner, repo, commitSha }) {
+  return retryGitHubOperation(
+    `repos.listPullRequestsAssociatedWithCommit ${commitSha}`,
+    () => octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+      owner,
+      repo,
+      commit_sha: commitSha,
+    }),
+  );
+}
+
 async function restoreDurableReleaseTransaction({
   octokit,
   owner,
@@ -1914,10 +1925,11 @@ async function assertChannelPromotionPr({
 }) {
   const expectedHeadRef = expectedHeadRefForTarget(targetRef);
   const { data: pullRequests } =
-    await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+    await listPullRequestsAssociatedWithCommitWithRetry({
+      octokit,
       owner,
       repo,
-      commit_sha: sha,
+      commitSha: sha,
     });
   const matchingPullRequest = pullRequests.find((pullRequest) => {
     const baseRef = pullRequest.base?.ref;
@@ -2854,10 +2866,11 @@ async function promoteBuildchainRefs({
 
   const findMatchingReleaseRecoveryPullRequest = async ({ commitSha, targetRef }) => {
     const { data: pullRequests } =
-      await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+      await listPullRequestsAssociatedWithCommitWithRetry({
+        octokit,
         owner,
         repo,
-        commit_sha: commitSha,
+        commitSha,
       });
     return pullRequests.find((pullRequest) => {
       const baseRef = pullRequest.base?.ref;
@@ -2875,10 +2888,11 @@ async function promoteBuildchainRefs({
 
   const findMatchingTargetPullRequest = async ({ commitSha, targetRef }) => {
     const { data: pullRequests } =
-      await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+      await listPullRequestsAssociatedWithCommitWithRetry({
+        octokit,
         owner,
         repo,
-        commit_sha: commitSha,
+        commitSha,
       });
     return pullRequests.find((pullRequest) => {
       const baseRef = pullRequest.base?.ref;
@@ -2906,10 +2920,11 @@ async function promoteBuildchainRefs({
         throw directError;
       }
       const { data: pullRequests } =
-        await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+        await listPullRequestsAssociatedWithCommitWithRetry({
+          octokit,
           owner,
           repo,
-          commit_sha: commitSha,
+          commitSha,
         });
       const matchingVersionStatePullRequest = pullRequests.find((pullRequest) => {
         const baseRef = pullRequest.base?.ref;
