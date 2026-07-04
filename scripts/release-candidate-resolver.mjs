@@ -118,16 +118,21 @@ function outputPath(filePath) {
   return relative.startsWith("../") || relative === ".." ? filePath : relative;
 }
 
-export function selectReleaseCandidateArtifacts({ artifacts = [] }) {
+export function selectReleaseCandidateArtifacts({ artifacts = [], artifactName = "" }) {
+  const expectedPrefix = String(artifactName || "").trim();
   const active = artifacts.filter((artifact) => !artifact.expired);
-  const passports = active.filter((artifact) => /-release-candidate-[0-9a-f]{40}$/i.test(artifact.name || ""));
+  const passports = active
+    .map((artifact) => {
+      const match = String(artifact.name || "").match(/^(.+)-release-candidate-([0-9a-f]{40})$/i);
+      return match ? { artifact, prefix: match[1], sourceSha: match[2] } : undefined;
+    })
+    .filter(Boolean)
+    .filter((candidate) => !expectedPrefix || candidate.prefix === expectedPrefix);
   if (passports.length !== 1) {
-    throw new Error(`expected exactly one release-candidate passport artifact, found ${passports.length}`);
+    const scope = expectedPrefix ? ` for artifact-name ${expectedPrefix}` : "";
+    throw new Error(`expected exactly one release-candidate passport artifact${scope}, found ${passports.length}`);
   }
-  const passport = passports[0];
-  const match = passport.name.match(/^(.+)-release-candidate-([0-9a-f]{40})$/i);
-  const prefix = match?.[1] || "";
-  const sha = match?.[2] || "";
+  const { artifact: passport, prefix, sourceSha: sha } = passports[0];
   const summaries = active.filter((artifact) => artifact.name === `${prefix}-summary-${sha}`);
   if (summaries.length !== 1) {
     throw new Error(`expected exactly one build summary artifact named ${prefix}-summary-${sha}, found ${summaries.length}`);
@@ -164,6 +169,7 @@ export async function resolveReleaseCandidateArtifacts({
   apiUrl = env("GITHUB_API_URL", "https://api.github.com"),
   workflowFile = DEFAULT_WORKFLOW_FILE,
   workflowName = "Build Surface Fixture",
+  artifactName = "",
   outputDir = ".buildchain/release-candidate",
   fetchImpl = globalThis.fetch,
   download = true,
@@ -213,6 +219,7 @@ export async function resolveReleaseCandidateArtifacts({
   });
   const selected = selectReleaseCandidateArtifacts({
     artifacts: Array.isArray(artifactResponse.artifacts) ? artifactResponse.artifacts : [],
+    artifactName,
   });
   const result = {
     enabled: true,
@@ -233,6 +240,7 @@ export async function resolveReleaseCandidateArtifacts({
     artifacts: {
       passport: selected.passport.name,
       summary: selected.summary.name,
+      artifactName: selected.prefix,
       sourceSha: selected.sourceSha,
     },
   };
@@ -287,6 +295,7 @@ export async function resolveReleaseCandidateArtifactsCli() {
     targetSha: env("BUILDCHAIN_TARGET_SHA"),
     workflowFile: env("BUILDCHAIN_RC_WORKFLOW_FILE", DEFAULT_WORKFLOW_FILE),
     workflowName: env("BUILDCHAIN_RC_WORKFLOW_NAME", ""),
+    artifactName: env("BUILDCHAIN_ARTIFACT_NAME"),
     outputDir: env("BUILDCHAIN_RC_OUTPUT_DIR", ".buildchain/release-candidate"),
   });
   writeGitHubOutputs({

@@ -31,6 +31,16 @@ on:
         default: "buildchain-artifact"
         type: string
         required: false
+      release-candidate-workflow-file:
+        description: "PR-stage release-candidate workflow file name"
+        default: "build.yml"
+        type: string
+        required: false
+      release-candidate-workflow-name:
+        description: "PR-stage release-candidate workflow display name"
+        default: "Build"
+        type: string
+        required: false
       artifact-patterns:
         description: "Newline-separated payload artifact patterns expected from the RC bundle"
         default: ""
@@ -144,6 +154,9 @@ jobs:
           BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
           BUILDCHAIN_TARGET_SHA: ${{ steps.target.outputs.sha }}
           BUILDCHAIN_TARGET_REF: ${{ steps.target-ref.outputs.value }}
+          BUILDCHAIN_ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          BUILDCHAIN_RC_WORKFLOW_FILE: ${{ inputs.release-candidate-workflow-file }}
+          BUILDCHAIN_RC_WORKFLOW_NAME: ${{ inputs.release-candidate-workflow-name }}
           BUILDCHAIN_RC_OUTPUT_DIR: .buildchain/release-candidate
 
       - name: Ensure publish-gate ref locks promotion commit
