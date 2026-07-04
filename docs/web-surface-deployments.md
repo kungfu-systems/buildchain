@@ -441,6 +441,10 @@ When enabled, Buildchain owns the full release apply state machine:
   only.
 - Pushes to `main` run staging `deploy-apply --dry-run false` with the staging
   role.
+- Release pull requests that match the configured production gate get a
+  Buildchain review comment with the staging URL and production target, so the
+  operator can verify staging from the PR page and use merge as the approval
+  action.
 - Production runs when `production-apply` is true and either:
   - a trusted `workflow_dispatch` passes `production-approved=true`; or
   - `production-release-on-main=true` and the `main` push commit is associated
