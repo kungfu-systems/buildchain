@@ -22,6 +22,7 @@ const {
   selectAlphaTag,
   selectReleaseTag,
   updateVersionStateContents,
+  validatePromotionReleaseCandidate,
 } = await import("../actions/promote-buildchain-ref/lib.js");
 const {
   explainReleaseLineDryRun,
@@ -3517,6 +3518,10 @@ test("promoteBuildchainRefs fails fast when promote-only RC passport source is s
           calls.push(["getRef", ref]);
           return { data: { object: { sha: SHA } } };
         },
+        getCommit: async ({ commit_sha }) => {
+          calls.push(["getCommit", commit_sha]);
+          return { data: { tree: { sha: `tree-${commit_sha}` }, parents: [] } };
+        },
         listMatchingRefs: async () => {
           calls.push(["listMatchingRefs"]);
           return { data: [] };
@@ -3537,9 +3542,35 @@ test("promoteBuildchainRefs fails fast when promote-only RC passport source is s
         versionState: false,
         promoteOnlyReleaseCandidate: true,
       }),
-      /release candidate passport validation failed: source head mismatch/,
+      /release candidate passport validation failed: source identity mismatch/,
     );
-    assert.deepEqual(calls, [["getRef", "heads/alpha/v1/v1.0"]]);
+    assert.deepEqual(calls, [["getRef", "heads/alpha/v1/v1.0"], ["getCommit", SHA]]);
+  } finally {
+    fs.rmSync(cwd, { recursive: true, force: true });
+  }
+});
+
+test("promote-only RC passport accepts channel merge commit with matching source tree", () => {
+  const cwd = makeTempWorkspace({
+    ".buildchain/artifacts/release-candidate-passport.json": {
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-release-candidate-passport",
+      repository: "kungfu-systems/buildchain",
+      target: { channel: "alpha", ref: "alpha/v1/v1.0", version: "1.0.0-alpha.0" },
+      source: { headSha: OTHER_SHA, mergeRefSha: OTHER_SHA, treeHash: `tree-${SHA}` },
+      platformMatrix: [{ platformId: "linux-x64", artifactName: "buildchain-linux-x64" }],
+      diagnostics: {},
+    },
+  });
+  try {
+    const result = validatePromotionReleaseCandidate({
+      cwd,
+      repository: "kungfu-systems/buildchain",
+      targetChannel: "alpha",
+      sourceHeadSha: SHA,
+      sourceTreeSha: `tree-${SHA}`,
+    });
+    assert.equal(result.platformCount, 1);
   } finally {
     fs.rmSync(cwd, { recursive: true, force: true });
   }

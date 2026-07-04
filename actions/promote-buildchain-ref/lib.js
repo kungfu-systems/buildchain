@@ -644,6 +644,7 @@ function validatePromotionReleaseCandidate({
   targetChannel,
   version = "",
   sourceHeadSha,
+  sourceTreeSha = "",
   requirePlatforms = true,
 }) {
   const resolvedPassportPath = resolveMaybeRelative(cwd, passportPath);
@@ -662,11 +663,24 @@ function validatePromotionReleaseCandidate({
     repository,
     targetChannel,
     version,
-    sourceHeadSha,
     buildSummary,
     requirePlatforms,
   });
-  if (!validation.ok) {
+  const acceptedSourceShas = [
+    passport.source?.headSha,
+    passport.source?.mergeRefSha,
+  ].filter(Boolean);
+  const sourceTreeHash = passport.source?.treeHash || "";
+  if (
+    sourceHeadSha &&
+    !acceptedSourceShas.includes(sourceHeadSha) &&
+    (!sourceTreeSha || sourceTreeHash !== sourceTreeSha)
+  ) {
+    validation.errors.push(
+      `source identity mismatch: target SHA ${sourceHeadSha} did not match RC head/merge SHAs (${acceptedSourceShas.join(", ") || "<none>"}) or target tree ${sourceTreeSha || "<empty>"} did not match RC tree ${sourceTreeHash || "<empty>"}`,
+    );
+  }
+  if (validation.errors.length > 0) {
     throw new Error(`release candidate passport validation failed: ${validation.errors.join("; ")}`);
   }
   return {
@@ -2534,6 +2548,7 @@ async function promoteBuildchainRefs({
   const updates = [];
   let releaseCandidateValidation;
   if (promoteOnlyReleaseCandidate) {
+    const targetCommitInfo = await getCommitInfo(octokit, owner, repo, sha);
     releaseCandidateValidation = validatePromotionReleaseCandidate({
       cwd,
       passportPath: releaseCandidatePassportPath,
@@ -2542,6 +2557,7 @@ async function promoteBuildchainRefs({
       targetChannel: rule.channel,
       version: releaseCandidateVersion,
       sourceHeadSha: sha,
+      sourceTreeSha: targetCommitInfo.treeSha,
     });
     updates.push({
       action: "verified-release-candidate",
@@ -4132,4 +4148,5 @@ export {
   selectReleaseTag,
   stripTagPrefix,
   updateVersionStateContents,
+  validatePromotionReleaseCandidate,
 };

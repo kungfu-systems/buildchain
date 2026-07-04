@@ -246,6 +246,7 @@ export function buildWorkflowFrictionIssueReport(options = {}) {
         heavyBuilds.length ? `## Heavy build jobs\n\n${heavyBuilds.map((job) => `- ${job.name || job}: ${job.durationMs || ""}`).join("\n")}` : "",
         options.diagnosis ? `## Diagnosis\n\n${options.diagnosis}` : "",
         options.nextAction ? `## Suggested next action\n\n${options.nextAction}` : "",
+        options.body ? `## Details\n\n${options.body}` : "",
       ].filter(Boolean).join("\n"),
     ),
     Number(options.maxBodyBytes || DEFAULT_MAX_BODY_BYTES),
