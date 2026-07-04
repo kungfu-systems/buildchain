@@ -18,6 +18,13 @@
       "bundle": "actions/promote-buildchain-ref/dist/index.js"
     },
     {
+      "path": "actions/report-buildchain-issue",
+      "disposition": "buildchain-workflow-friction-reporting",
+      "runtime": "node24",
+      "build": "tsup",
+      "bundle": "actions/report-buildchain-issue/dist/index.js"
+    },
+    {
       "path": "actions/run-lifecycle",
       "disposition": "buildchain-reusable-build-surface",
       "runtime": "node24",
