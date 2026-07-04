@@ -2,9 +2,11 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 
 export const BUILDCHAIN_CONSUMER_ISSUE_CONTRACT = "kungfu-buildchain-consumer-issue";
+export const BUILDCHAIN_WORKFLOW_FRICTION_ISSUE_CONTRACT = "kungfu-buildchain-workflow-friction-issue";
 export const DEFAULT_BUILDCHAIN_ISSUE_REPOSITORY = "kungfu-systems/buildchain";
 
 const DEFAULT_LABELS = ["buildchain-consumer-feedback"];
+const DEFAULT_FRICTION_LABELS = ["buildchain-feedback", "workflow-friction"];
 const DEFAULT_MAX_BODY_BYTES = 60_000;
 const DEFAULT_RETRY_DELAYS_MS = [500, 1_500, 3_000];
 
@@ -73,6 +75,10 @@ export function computeConsumerIssueFingerprint(fields = {}) {
 
 export function consumerIssueMarker(fingerprint) {
   return `buildchain-consumer-issue:fingerprint=${fingerprint}`;
+}
+
+export function workflowFrictionMarker(fingerprint) {
+  return `buildchain-workflow-friction:fingerprint=${fingerprint}`;
 }
 
 export function truncateUtf8(text, maxBytes = DEFAULT_MAX_BODY_BYTES) {
@@ -185,8 +191,95 @@ export function buildConsumerIssueReport(options = {}) {
   };
 }
 
+export function buildWorkflowFrictionIssueReport(options = {}) {
+  const target = normalizeIssueRepository(options.targetRepository);
+  const env = options.env || process.env;
+  const repository = options.repository || env.GITHUB_REPOSITORY || "";
+  const workflow = options.workflow || env.GITHUB_WORKFLOW || "";
+  const runId = options.runId || env.GITHUB_RUN_ID || "";
+  const runAttempt = options.runAttempt || env.GITHUB_RUN_ATTEMPT || "";
+  const runUrl = options.runUrl || githubRunUrl(env, repository, runId);
+  const channel = options.channel || "";
+  const releaseIntent = options.releaseIntent || options.version || "";
+  const sourceRef = options.sourceRef || env.GITHUB_REF || "";
+  const sourceSha = options.sourceSha || env.GITHUB_SHA || "";
+  const frictionClass = options.frictionClass || "workflow-friction";
+  const fingerprint = options.fingerprint || computeConsumerIssueFingerprint({
+    targetRepository: target.fullName,
+    repository,
+    workflow,
+    channel,
+    releaseIntent,
+    sourceRef,
+    sourceSha,
+    frictionClass,
+  });
+  const marker = workflowFrictionMarker(fingerprint);
+  const heavyBuilds = Array.isArray(options.heavyBuilds) ? options.heavyBuilds : [];
+  const relatedRuns = Array.isArray(options.relatedRuns) ? options.relatedRuns : [];
+  const title = redactIssueText(
+    options.title || `[Buildchain feedback] ${frictionClass}: ${repository || "unknown repository"}`,
+  );
+  const body = truncateUtf8(
+    redactIssueText(
+      [
+        `<!-- ${marker} -->`,
+        `# Buildchain workflow friction`,
+        ``,
+        options.summary ? `## Summary\n\n${options.summary}` : "",
+        `## Context`,
+        ``,
+        `- Repository: ${repository || "(unknown)"}`,
+        `- Workflow: ${workflow || "(unknown)"}`,
+        `- Run: ${runUrl || runId || "(unknown)"}`,
+        `- Attempt: ${runAttempt || "(unknown)"}`,
+        `- Pull request: ${options.pullRequest || "(unknown)"}`,
+        `- Channel: ${channel || "(unknown)"}`,
+        `- Release intent: ${releaseIntent || "(unknown)"}`,
+        `- Source ref: ${sourceRef || "(unknown)"}`,
+        `- Source SHA: ${sourceSha || "(unknown)"}`,
+        `- Source tree: ${options.sourceTreeHash || "(unknown)"}`,
+        `- Friction class: ${frictionClass}`,
+        `- Fingerprint: ${fingerprint}`,
+        ``,
+        relatedRuns.length ? `## Related runs\n\n${relatedRuns.map((run) => `- ${run}`).join("\n")}` : "",
+        heavyBuilds.length ? `## Heavy build jobs\n\n${heavyBuilds.map((job) => `- ${job.name || job}: ${job.durationMs || ""}`).join("\n")}` : "",
+        options.diagnosis ? `## Diagnosis\n\n${options.diagnosis}` : "",
+        options.nextAction ? `## Suggested next action\n\n${options.nextAction}` : "",
+      ].filter(Boolean).join("\n"),
+    ),
+    Number(options.maxBodyBytes || DEFAULT_MAX_BODY_BYTES),
+  );
+  const commentBody = truncateUtf8(
+    redactIssueText(
+      [
+        `New matching Buildchain workflow friction observed.`,
+        ``,
+        `- Repository: ${repository || "(unknown)"}`,
+        `- Workflow: ${workflow || "(unknown)"}`,
+        `- Run: ${runUrl || runId || "(unknown)"}`,
+        `- Attempt: ${runAttempt || "(unknown)"}`,
+        `- Friction class: ${frictionClass}`,
+        `- Fingerprint: ${fingerprint}`,
+        options.summary ? `\n${options.summary}` : "",
+      ].join("\n"),
+    ),
+    Number(options.maxBodyBytes || DEFAULT_MAX_BODY_BYTES),
+  );
+  return {
+    contract: BUILDCHAIN_WORKFLOW_FRICTION_ISSUE_CONTRACT,
+    targetRepository: target.fullName,
+    fingerprint,
+    marker,
+    title,
+    body,
+    commentBody,
+    labels: parseIssueLabels(options.labels ?? DEFAULT_FRICTION_LABELS),
+  };
+}
+
 export async function reportBuildchainIssue(options = {}) {
-  const report = buildConsumerIssueReport(options);
+  const report = options.report || buildConsumerIssueReport(options);
   const target = normalizeIssueRepository(report.targetRepository);
   const mode = options.mode || "create-or-comment";
   if (options.dryRun) {
@@ -219,6 +312,26 @@ export async function reportBuildchainIssue(options = {}) {
         report,
       };
     }
+    const cooldown = await evaluateCommentCooldown({
+      request,
+      target,
+      issueNumber: existing.number,
+      cooldownHours: options.commentCooldownHours,
+      now: options.now,
+    });
+    if (cooldown.active) {
+      return {
+        ok: true,
+        action: "cooldown",
+        created: false,
+        commented: false,
+        issueNumber: existing.number,
+        issueUrl: existing.html_url || existing.url || "",
+        fingerprint: report.fingerprint,
+        report,
+        cooldown,
+      };
+    }
     await request({
       method: "POST",
       path: `/repos/${target.owner}/${target.repo}/issues/${existing.number}/comments`,
@@ -249,6 +362,13 @@ export async function reportBuildchainIssue(options = {}) {
     fingerprint: report.fingerprint,
     report,
   };
+}
+
+export async function reportWorkflowFrictionIssue(options = {}) {
+  return reportBuildchainIssue({
+    ...options,
+    report: buildWorkflowFrictionIssueReport(options),
+  });
 }
 
 export function readOptionalIssueBodyFile(filePath) {
@@ -321,11 +441,45 @@ export function createGitHubIssueRequest({
 
 async function findOpenConsumerIssue({ request, target, report }) {
   const query = encodeURIComponent(
-    `repo:${target.fullName} is:issue is:open "${consumerIssueMarker(report.fingerprint)}"`,
+    `repo:${target.fullName} is:issue is:open "${report.marker || consumerIssueMarker(report.fingerprint)}"`,
   );
   const result = await request({ method: "GET", path: `/search/issues?q=${query}&per_page=1` });
   const items = Array.isArray(result.items) ? result.items : [];
   return items[0];
+}
+
+async function evaluateCommentCooldown({
+  request,
+  target,
+  issueNumber,
+  cooldownHours = 0,
+  now = new Date(),
+}) {
+  const hours = Number(cooldownHours || 0);
+  if (!Number.isFinite(hours) || hours <= 0) {
+    return { active: false, cooldownHours: 0 };
+  }
+  const result = await request({
+    method: "GET",
+    path: `/repos/${target.owner}/${target.repo}/issues/${issueNumber}/comments?per_page=100`,
+  });
+  const comments = Array.isArray(result) ? result : [];
+  const latest = comments[comments.length - 1]?.created_at || "";
+  if (!latest) {
+    return { active: false, cooldownHours: hours };
+  }
+  const latestMs = Date.parse(latest);
+  const nowMs = now instanceof Date ? now.getTime() : Date.parse(String(now));
+  if (!Number.isFinite(latestMs) || !Number.isFinite(nowMs)) {
+    return { active: false, cooldownHours: hours, latestCommentAt: latest };
+  }
+  const elapsedHours = (nowMs - latestMs) / 3_600_000;
+  return {
+    active: elapsedHours >= 0 && elapsedHours < hours,
+    cooldownHours: hours,
+    latestCommentAt: latest,
+    elapsedHours,
+  };
 }
 
 async function createIssueWithLabelFallback({ request, target, report }) {

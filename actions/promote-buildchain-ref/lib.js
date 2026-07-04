@@ -31,6 +31,7 @@ import {
   writeReleaseTransaction,
 } from "../../packages/core/publish-transaction.js";
 import { collectGitHubReleasePassport } from "../../packages/core/release-passport.js";
+import { validateReleaseCandidatePassport } from "../../packages/core/release-candidate.js";
 
 const COMMIT_IDENTITY = {
   name: "Keren Dong",
@@ -633,6 +634,47 @@ function splitPathList(value = "") {
     .split(/[\n,]/)
     .map((entry) => entry.trim())
     .filter(Boolean);
+}
+
+function validatePromotionReleaseCandidate({
+  cwd,
+  passportPath = ".buildchain/artifacts/release-candidate-passport.json",
+  buildSummaryPath = ".buildchain/artifacts/build-summary.json",
+  repository,
+  targetChannel,
+  version = "",
+  sourceHeadSha,
+  requirePlatforms = true,
+}) {
+  const resolvedPassportPath = resolveMaybeRelative(cwd, passportPath);
+  if (!fs.existsSync(resolvedPassportPath)) {
+    throw new Error(
+      `promote-only release candidate requires a verified RC passport at ${passportPath}; run the channel PR reusable build first and pass its release-candidate-passport artifact`,
+    );
+  }
+  const passport = JSON.parse(fs.readFileSync(resolvedPassportPath, "utf8"));
+  const resolvedSummaryPath = resolveMaybeRelative(cwd, buildSummaryPath);
+  const buildSummary = fs.existsSync(resolvedSummaryPath)
+    ? JSON.parse(fs.readFileSync(resolvedSummaryPath, "utf8"))
+    : undefined;
+  const validation = validateReleaseCandidatePassport({
+    passport,
+    repository,
+    targetChannel,
+    version,
+    sourceHeadSha,
+    buildSummary,
+    requirePlatforms,
+  });
+  if (!validation.ok) {
+    throw new Error(`release candidate passport validation failed: ${validation.errors.join("; ")}`);
+  }
+  return {
+    passportPath: resolvedPassportPath,
+    buildSummaryPath: buildSummary ? resolvedSummaryPath : "",
+    candidateHash: passport.candidateHash || "",
+    platformCount: Array.isArray(passport.platformMatrix) ? passport.platformMatrix.length : 0,
+  };
 }
 
 function resolveMaybeRelative(cwd, filePath) {
@@ -2461,6 +2503,10 @@ async function promoteBuildchainRefs({
   releasePassportProductName = "Buildchain",
   releasePassportBuildSummaryPath = ".buildchain/artifacts/build-summary.json",
   releasePassportPlatformManifestPaths = "",
+  promoteOnlyReleaseCandidate = false,
+  releaseCandidatePassportPath = ".buildchain/artifacts/release-candidate-passport.json",
+  releaseCandidateBuildSummaryPath = ".buildchain/artifacts/build-summary.json",
+  releaseCandidateVersion = "",
   actor = process.env.GITHUB_ACTOR || process.env.USER || "",
   runId = process.env.GITHUB_RUN_ID || "",
   publishTransactionOverride = false,
@@ -2486,6 +2532,25 @@ async function promoteBuildchainRefs({
   }
 
   const updates = [];
+  let releaseCandidateValidation;
+  if (promoteOnlyReleaseCandidate) {
+    releaseCandidateValidation = validatePromotionReleaseCandidate({
+      cwd,
+      passportPath: releaseCandidatePassportPath,
+      buildSummaryPath: releaseCandidateBuildSummaryPath,
+      repository: `${owner}/${repo}`,
+      targetChannel: rule.channel,
+      version: releaseCandidateVersion,
+      sourceHeadSha: sha,
+    });
+    updates.push({
+      action: "verified-release-candidate",
+      sha,
+      candidateHash: releaseCandidateValidation.candidateHash,
+      platformCount: releaseCandidateValidation.platformCount,
+      passportPath: path.relative(cwd, releaseCandidateValidation.passportPath).split(path.sep).join("/"),
+    });
+  }
 
   const listLineRefs = async (releasePrefix = rule.releasePrefix) => {
     const { data: tagRefs } = await octokit.rest.git.listMatchingRefs({
