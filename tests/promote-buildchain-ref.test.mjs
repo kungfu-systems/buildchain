@@ -1025,6 +1025,120 @@ test("release promotion creates source version commits and points refs at them",
   );
 });
 
+test("release promotion updates default branch before pending next-alpha PR", async () => {
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "0.0.0-alpha.0",
+      packageManager: "pnpm@11.7.0",
+    },
+  });
+  const refs = new Map([
+    ["heads/release/v1/v1.0", SHA],
+    ["heads/alpha/v1/v1.0", SHA],
+  ]);
+  const commits = [];
+  const pullRequests = [];
+  const repoUpdates = [];
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (refs.has(ref)) {
+            return { data: { object: { sha: refs.get(ref) } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async ({ ref }) => ({
+          data: [...refs.entries()]
+            .filter(([name]) => name.startsWith(ref))
+            .map(([name, objectSha]) => ({
+              ref: `refs/${name}`,
+              object: { sha: objectSha },
+            })),
+        }),
+        getCommit: async ({ commit_sha }) => ({
+          data: { tree: { sha: `tree-${commit_sha}` } },
+        }),
+        createBlob: async () => ({ data: { sha: "blob-sha" } }),
+        createTree: async () => ({ data: { sha: "tree-sha" } }),
+        createCommit: async ({ message, parents }) => {
+          const sha = `commit-${commits.length + 1}`.padEnd(40, "0");
+          commits.push({ sha, message, parents });
+          return { data: { sha } };
+        },
+        updateRef: async ({ ref, sha }) => {
+          if (ref === "heads/alpha/v1/v1.0") {
+            const error = new Error('Changes must be made through a pull request. Required status check "check" is expected.');
+            error.status = 422;
+            throw error;
+          }
+          refs.set(ref, sha);
+          return {};
+        },
+        createRef: async ({ ref, sha }) => {
+          refs.set(ref.replace(/^refs\//, ""), sha);
+          return {};
+        },
+      },
+      pulls: {
+        list: async () => ({ data: [] }),
+        create: async ({ title, head, base }) => {
+          const pullRequest = {
+            html_url: "https://github.com/kungfu-systems/buildchain/pull/101",
+            title,
+            head: { ref: head },
+            base: { ref: base },
+          };
+          pullRequests.push(pullRequest);
+          return { data: pullRequest };
+        },
+      },
+      repos: {
+        update: async (input) => {
+          repoUpdates.push(input);
+          return {};
+        },
+      },
+    },
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "release/v1/v1.0",
+    cwd,
+  });
+
+  const releaseSha = commits[0].sha;
+  const nextAlphaSha = commits[1].sha;
+  assert.equal(result.sha, releaseSha);
+  assert.equal(result.nextAlphaSha, nextAlphaSha);
+  assert.equal(result.pendingPullRequest, "https://github.com/kungfu-systems/buildchain/pull/101");
+  assert.equal(refs.get("heads/release/v1/v1.0"), releaseSha);
+  assert.equal(refs.get("tags/v1.0"), releaseSha);
+  assert.equal(refs.get("tags/v1"), releaseSha);
+  assert.equal(refs.get(`heads/${pullRequests[0].head.ref}`), nextAlphaSha);
+  assert.deepEqual(repoUpdates, [
+    {
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      default_branch: "dev/v1/v1.0",
+    },
+  ]);
+  assert.deepEqual(
+    result.updates
+      .filter((update) => update.action === "updated-default-branch" || update.action === "pending-version-state-pr")
+      .map((update) => [update.ref, update.action]),
+    [
+      ["dev/v1/v1.0", "updated-default-branch"],
+      ["alpha/v1/v1.0", "pending-version-state-pr"],
+    ],
+  );
+});
+
 test("publish transaction gates alpha final refs on lifecycle.publish evidence", async () => {
   const cwd = makeTempWorkspace({
     "buildchain.toml": `
