@@ -200,11 +200,21 @@ for (const forbiddenSnippet of [
 }
 for (const requiredSnippet of [
   "id-token: write",
-  "registry-url: \"https://registry.npmjs.org/\"",
-  "publish-transaction: \"true\"",
+  "actions: read",
+  "uses: ./.github/workflows/release-candidate-promote.yml",
+  "target-sha: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}",
+  "publish-required-artifacts-json: \"[]\"",
 ]) {
   if (!buildchainRefPromotionWorkflow.includes(requiredSnippet)) {
     throw new Error(`buildchain ref promotion workflow missing npm transaction snippet: ${requiredSnippet}`);
+  }
+}
+for (const forbiddenSnippet of [
+  "run: node scripts/release-candidate-resolver.mjs",
+  "uses: ./actions/promote-buildchain-ref",
+]) {
+  if (buildchainRefPromotionWorkflow.includes(forbiddenSnippet)) {
+    throw new Error(`buildchain ref promotion workflow must use the declarative wrapper, found manual snippet: ${forbiddenSnippet}`);
   }
 }
 for (const requiredSnippet of [

@@ -4116,6 +4116,10 @@ async function promoteBuildchainRefs({
     nextAlphaSha = nextAlphaCommit.sha;
   }
   if (versionState) {
+    const nextDevRef = `dev/v${rule.major}/v${rule.major}.${rule.minor}`;
+    if (ownsMajorFloatingTag) {
+      await updateDefaultBranch(nextDevRef);
+    }
     const nextAlphaRef = `alpha/v${rule.major}/v${rule.major}.${rule.minor}`;
     const nextAlphaUpdate = await updateBranch(nextAlphaRef, nextAlphaSha, "updated", {
       title: `Prepare ${selectedNextAlpha.tag}`,
@@ -4134,11 +4138,7 @@ async function promoteBuildchainRefs({
         updates,
       });
     }
-    const nextDevRef = `dev/v${rule.major}/v${rule.major}.${rule.minor}`;
     await updateBranch(nextDevRef, nextAlphaSha);
-    if (ownsMajorFloatingTag) {
-      await updateDefaultBranch(nextDevRef);
-    }
   }
   await ensureTag(selectedNextAlpha.tag, nextAlphaSha);
   await updateTag(rule.alphaTag, nextAlphaSha);
