@@ -392,6 +392,10 @@ jobs:
       channel: alpha
       target-ref: alpha/v22/v22.22
       artifact-name: libnode
+      # Defaults to build.yml / Build. Override only when the PR-stage build
+      # workflow uses a different file or display name.
+      release-candidate-workflow-file: build.yml
+      release-candidate-workflow-name: Build
       package-manager: npm
       publish-target: npm
       runner-preset: github-hosted

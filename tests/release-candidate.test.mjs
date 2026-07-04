@@ -209,6 +209,32 @@ test("release candidate resolver selects same-repo merged PR run and paired arti
   assert.equal(artifacts.passport.id, 2);
 });
 
+test("release candidate resolver filters paired artifacts by artifact-name", () => {
+  const artifacts = selectReleaseCandidateArtifacts({
+    artifactName: "libnode",
+    artifacts: [
+      { id: 1, name: `other-summary-${SOURCE_SHA}` },
+      { id: 2, name: `other-release-candidate-${SOURCE_SHA}` },
+      { id: 3, name: `libnode-summary-${SOURCE_SHA}` },
+      { id: 4, name: `libnode-release-candidate-${SOURCE_SHA}` },
+    ],
+  });
+
+  assert.equal(artifacts.sourceSha, SOURCE_SHA);
+  assert.equal(artifacts.summary.id, 3);
+  assert.equal(artifacts.passport.id, 4);
+  assert.throws(
+    () => selectReleaseCandidateArtifacts({
+      artifactName: "missing",
+      artifacts: [
+        { id: 1, name: `libnode-summary-${SOURCE_SHA}` },
+        { id: 2, name: `libnode-release-candidate-${SOURCE_SHA}` },
+      ],
+    }),
+    /expected exactly one release-candidate passport artifact for artifact-name missing, found 0/,
+  );
+});
+
 test("workflow friction classifier prioritizes duplicate PRs, heavy builds, and late fail-fast", () => {
   assert.equal(
     selectFrictionClass({ duplicatePullRequests: [{}, {}], heavyBuilds: [{}, {}], releaseCandidateOutcome: "failure" }),
