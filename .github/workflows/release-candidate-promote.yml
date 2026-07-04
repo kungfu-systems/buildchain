@@ -12,6 +12,11 @@ on:
         default: ""
         type: string
         required: false
+      allow-repository:
+        description: "Repository allowed to promote. Empty defaults to the caller repository."
+        default: ""
+        type: string
+        required: false
       channel:
         description: "Promotion channel: alpha, release, or major. Empty derives from target-ref."
         default: ""
@@ -330,6 +335,7 @@ jobs:
           require-governance: "true"
           require-version-state: "true"
           required-status-check: ${{ inputs.required-status-check }}
+          allow-repository: ${{ inputs.allow-repository || github.repository }}
           publish-transaction: "true"
           publish-command: ${{ inputs.publish-command }}
           publish-required-artifacts-json: ${{ inputs.publish-required-artifacts-json || steps.rc.outputs.publish-required-artifacts-json }}
@@ -361,6 +367,8 @@ jobs:
           BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           BUILDCHAIN_RC_RESOLVE_OUTCOME: ${{ steps.rc.outcome }}
           BUILDCHAIN_RC_DIAGNOSIS: ${{ steps.rc.outputs.release-candidate-diagnosis }}
+          BUILDCHAIN_BUILD_WORKFLOW_FILE: ${{ inputs.release-candidate-workflow-file }}
+          BUILDCHAIN_BUILD_WORKFLOW_NAME: ${{ inputs.release-candidate-workflow-name }}
 
       - name: Resolve Buildchain issue token mode
         id: issue-token-mode

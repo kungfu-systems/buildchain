@@ -141,6 +141,9 @@
       "release/vX/vX.Y",
       "publish-gate/major"
     ],
+    "protectedDevelopmentBranches": [
+      "dev/vX/vX.Y"
+    ],
     "releasePassport": {
       "entrypoint": "buildchain.release.json",
       "bundle": "buildchain-release-bundle.tar.gz",

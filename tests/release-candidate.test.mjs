@@ -21,6 +21,7 @@ import {
 } from "../scripts/release-candidate-resolver.mjs";
 import {
   buildWorkflowFrictionBody,
+  classifyWorkflowFriction,
   selectFrictionClass,
 } from "../scripts/workflow-friction-report.mjs";
 
@@ -394,6 +395,92 @@ test("workflow friction classifier prioritizes duplicate PRs, heavy builds, and 
   assert.match(body, /Buildchain workflow friction evidence/);
   assert.match(body, /duplicate-heavy-build/);
   assert.match(body, /Heavy build runs/);
+});
+
+test("workflow friction classifier falls back when configured workflow file is missing", async () => {
+  const targetSha = "c".repeat(40);
+  const builtSourceSha = "a".repeat(40);
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-friction-"));
+  const seen = [];
+  const fetchImpl = async (url) => {
+    seen.push(url);
+    const jsonResponse = (value, ok = true, status = 200) => ({
+      ok,
+      status,
+      text: async () => JSON.stringify(value),
+    });
+    if (url.endsWith(`/commits/${targetSha}/pulls`)) {
+      return jsonResponse([
+        {
+          number: 42,
+          title: "Promote alpha",
+          html_url: "https://github.com/kungfu-systems/libnode/pull/42",
+          merged_at: "2026-07-04T00:00:00Z",
+          updated_at: "2026-07-04T00:00:00Z",
+          base: { ref: "alpha/v22/v22.22" },
+          head: {
+            sha: builtSourceSha,
+            ref: "dev/v22/v22.22",
+            repo: { full_name: "kungfu-systems/libnode" },
+          },
+        },
+      ]);
+    }
+    if (url.includes("actions/workflows/build-surface-fixture.yml/runs")) {
+      return jsonResponse({ message: "Not Found" }, false, 404);
+    }
+    if (url.includes("actions/runs?event=pull_request")) {
+      return jsonResponse({
+        workflow_runs: [
+          {
+            id: 456,
+            name: "Build",
+            event: "pull_request",
+            status: "completed",
+            conclusion: "success",
+            updated_at: "2026-07-04T00:01:00Z",
+            run_started_at: "2026-07-04T00:00:00Z",
+            pull_requests: [{ number: 42 }],
+          },
+          {
+            id: 999,
+            name: "Docs",
+            event: "pull_request",
+            status: "completed",
+            conclusion: "success",
+            updated_at: "2026-07-04T00:01:00Z",
+            pull_requests: [{ number: 42 }],
+          },
+        ],
+      });
+    }
+    throw new Error(`unexpected url ${url}`);
+  };
+
+  try {
+    const result = await classifyWorkflowFriction({
+      repository: "kungfu-systems/libnode",
+      targetSha,
+      targetRef: "alpha/v22/v22.22",
+      buildWorkflowFile: "build-surface-fixture.yml",
+      buildWorkflowName: "Build",
+      releaseCandidateOutcome: "failure",
+      outputDir: workspace,
+      fetchImpl,
+    });
+
+    assert.equal(result.frictionClass, "late-fail-fast");
+    assert.equal(result.pullRequest, "#42");
+    assert.equal(result.relatedRuns.length, 1);
+    assert.equal(result.heavyBuilds.length, 1);
+    assert.match(result.relatedRuns[0], /Build/);
+    assert.match(result.diagnosis, /workflow file build-surface-fixture\.yml was not found/);
+    assert.match(result.diagnosis, /fell back to repository pull_request workflow runs/);
+    assert.doesNotMatch(result.summary, /auto-classification did not complete/);
+    assert.equal(seen.length, 3);
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
 });
 
 test("generateReleaseCandidatePassportCli writes GitHub outputs for workflow reuse", () => {
