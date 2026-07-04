@@ -28,6 +28,9 @@ const {
   formatReleaseLineDryRun,
 } = await import("../packages/core/release-line-dry-run.js");
 const {
+  transitionReleaseTransaction,
+} = await import("../packages/core/publish-transaction.js");
+const {
   validateRequiredPublishSourceLock,
 } = await import("../actions/promote-buildchain-ref/index.js");
 
@@ -46,6 +49,13 @@ function alreadyExists() {
   return Object.assign(new Error("Reference already exists"), {
     status: 422,
     response: { data: { message: "Reference already exists" } },
+  });
+}
+
+function transientGitHubError(message = "other side closed") {
+  return Object.assign(new Error(message), {
+    status: 500,
+    response: { status: 500, data: { message } },
   });
 }
 
@@ -238,6 +248,55 @@ test("promotion is limited to buildchain alpha and release line refs", () => {
     () => resolveTagsForTarget("release/v1/v1.0", ["v1.1.0"]),
     /not allowed for release promotion/,
   );
+});
+
+test("release transaction complete transition clears stale failure", () => {
+  const record = {
+    schema: 1,
+    id: "tx-stale-failure",
+    repository: "kungfu-systems/buildchain",
+    target_ref: "alpha/v1/v1.0",
+    source_sha: SHA,
+    release_sha: OTHER_SHA,
+    release_material_sha: OTHER_SHA,
+    publish_tooling_sha: OTHER_SHA,
+    version: "1.0.0-alpha.0",
+    exact_tag: "v1.0.0-alpha.0",
+    channel: "alpha",
+    line: "v1.0",
+    version_strategy: "",
+    lifecycle_identity: "lifecycle.publish",
+    state_ref: "buildchain/release-state/1-0-0-alpha-0",
+    state_path: "",
+    evidence_path: "",
+    state: "finalizing",
+    previous_state: "published",
+    actor: "codex",
+    run_id: "1",
+    superseded_by: "",
+    failure: "GitHub API 500: other side closed",
+    artifacts: [],
+    evidence: [],
+    created_at: "2026-07-01T00:00:00.000Z",
+    updated_at: "2026-07-01T00:00:00.000Z",
+  };
+
+  const complete = transitionReleaseTransaction(record, "complete", {
+    actor: "codex",
+    runId: "2",
+  });
+  assert.equal(complete.state, "complete");
+  assert.equal(complete.failure, "");
+
+  const cleanedRerun = transitionReleaseTransaction({
+    ...complete,
+    failure: "GitHub API 500: other side closed",
+  }, "complete", {
+    actor: "codex",
+    runId: "3",
+  });
+  assert.equal(cleanedRerun.state, "complete");
+  assert.equal(cleanedRerun.failure, "");
 });
 
 test("promote action validates anchored publish source locks before promotion", () => {
@@ -987,6 +1046,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   const alphaSha = commitLog[0].sha;
   assert.equal(result.sha, alphaSha);
   assert.equal(result.publishTransaction.state, "complete");
+  assert.equal(result.publishTransaction.failure, "");
   assert.equal(result.publishTransaction.stateRef, "buildchain/release-state/1-0-0-alpha-0");
   assert.equal(refs.has("heads/buildchain/release-state/1-0-0-alpha-0"), true);
   assert.equal(refs.get("tags/v1.0.0-alpha.0"), alphaSha);
@@ -2817,6 +2877,147 @@ test("publish transaction durable ref rebases when update sees a newer head", as
     commits.get(result.sha).parents.map((parent) => parent.sha),
     [racingSha],
   );
+});
+
+test("publish transaction retries transient durable release-state writes", async () => {
+  const originalRetryDelay = process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS;
+  process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS = "0";
+  const cwd = makeTempWorkspace({});
+  const statePath = path.join(cwd, ".buildchain/release-state/1.0.0.json");
+  const transaction = {
+    schema: 1,
+    id: "tx-transient-write",
+    repository: "kungfu-systems/buildchain",
+    target_ref: "release/v1/v1.0",
+    source_sha: SHA,
+    release_sha: OTHER_SHA,
+    release_material_sha: OTHER_SHA,
+    publish_tooling_sha: OTHER_SHA,
+    version: "1.0.0",
+    exact_tag: "v1.0.0",
+    channel: "release",
+    line: "v1.0",
+    version_strategy: "",
+    lifecycle_identity: "lifecycle.publish",
+    state_ref: "buildchain/release-state/1-0-0",
+    state_path: statePath,
+    evidence_path: "",
+    state: "prepared",
+    previous_state: "",
+    actor: "codex",
+    run_id: "1",
+    superseded_by: "",
+    failure: "",
+    artifacts: [],
+    evidence: [],
+    created_at: "2026-07-01T00:00:00.000Z",
+    updated_at: "2026-07-01T00:00:00.000Z",
+  };
+  try {
+    const { octokit, refs } = createGitMock();
+    const originalCreateRef = octokit.rest.git.createRef;
+    let createRefCalls = 0;
+    octokit.rest.git.createRef = async (args) => {
+      createRefCalls += 1;
+      if (createRefCalls === 1) {
+        throw transientGitHubError();
+      }
+      return originalCreateRef(args);
+    };
+
+    const result = await persistDurableReleaseTransaction({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      cwd,
+      transaction,
+      evidencePath: "",
+    });
+
+    assert.equal(createRefCalls, 2);
+    assert.equal(refs.get("heads/buildchain/release-state/1-0-0"), result.sha);
+  } finally {
+    if (originalRetryDelay === undefined) {
+      delete process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS;
+    } else {
+      process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS = originalRetryDelay;
+    }
+  }
+});
+
+test("publish transaction retries transient durable release-state reads", async () => {
+  const originalRetryDelay = process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS;
+  process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS = "0";
+  const sourceCwd = makeTempWorkspace({});
+  const freshCwd = makeTempWorkspace({});
+  const statePath = path.join(sourceCwd, ".buildchain/release-state/1.0.0.json");
+  const { octokit } = createGitMock();
+  try {
+    await persistDurableReleaseTransaction({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      cwd: sourceCwd,
+      transaction: {
+        schema: 1,
+        id: "tx-transient-read",
+        repository: "kungfu-systems/buildchain",
+        target_ref: "release/v1/v1.0",
+        source_sha: SHA,
+        release_sha: OTHER_SHA,
+        release_material_sha: OTHER_SHA,
+        publish_tooling_sha: OTHER_SHA,
+        version: "1.0.0",
+        exact_tag: "v1.0.0",
+        channel: "release",
+        line: "v1.0",
+        version_strategy: "",
+        lifecycle_identity: "lifecycle.publish",
+        state_ref: "buildchain/release-state/1-0-0",
+        state_path: statePath,
+        evidence_path: "",
+        state: "published",
+        previous_state: "publishing",
+        actor: "codex",
+        run_id: "1",
+        superseded_by: "",
+        failure: "",
+        artifacts: [],
+        evidence: [],
+        created_at: "2026-07-01T00:00:00.000Z",
+        updated_at: "2026-07-01T00:00:00.000Z",
+      },
+      evidencePath: "",
+    });
+
+    const originalGetTree = octokit.rest.git.getTree;
+    let getTreeCalls = 0;
+    octokit.rest.git.getTree = async (args) => {
+      getTreeCalls += 1;
+      if (getTreeCalls === 1) {
+        throw transientGitHubError("GitHub API 500: other side closed");
+      }
+      return originalGetTree(args);
+    };
+
+    const restored = await restoreDurableReleaseTransaction({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      stateRef: "buildchain/release-state/1-0-0",
+      statePath: path.join(freshCwd, ".buildchain/release-state/1.0.0.json"),
+      evidencePath: path.join(freshCwd, ".buildchain/release-evidence/1.0.0/evidence.json"),
+    });
+
+    assert.equal(getTreeCalls >= 2, true);
+    assert.equal(restored.id, "tx-transient-read");
+  } finally {
+    if (originalRetryDelay === undefined) {
+      delete process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS;
+    } else {
+      process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS = originalRetryDelay;
+    }
+  }
 });
 
 test("publish transaction fails closed when durable state cannot be persisted", async () => {
