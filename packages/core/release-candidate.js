@@ -80,6 +80,26 @@ function normalizePlatformEntry(platform = {}, index = 0) {
   };
 }
 
+function inferVersionFromReleaseManifest(buildSummary = {}) {
+  const raw = buildSummary.publishSource?.releaseManifest || "";
+  if (!raw) {
+    return "";
+  }
+  try {
+    const manifest = JSON.parse(raw);
+    const versions = [
+      ...new Set(
+        (manifest.versionFiles || [])
+          .map((file) => optionalString(file.version).trim())
+          .filter(Boolean),
+      ),
+    ];
+    return versions.length === 1 ? versions[0] : "";
+  } catch {
+    return "";
+  }
+}
+
 export function createReleaseCandidatePassport({
   repository = "",
   pullRequest = {},
@@ -96,10 +116,12 @@ export function createReleaseCandidatePassport({
 } = {}) {
   const normalizedSummary = buildSummary && typeof buildSummary === "object" ? buildSummary : {};
   const sourceSha = sourceHeadSha || normalizedSummary.publishSource?.sha || normalizedSummary.git?.sha || "";
+  const resolvedTreeHash = optionalString(sourceTreeHash || normalizedSummary.git?.treeSha);
   const channel = normalizeTargetChannel(targetChannel)
     || normalizeTargetChannel(normalizedSummary.publishSource?.channel)
     || normalizeTargetChannel(normalizedSummary.publishGate?.channel)
     || normalizeTargetChannel(pullRequest.baseRef);
+  const resolvedVersion = version || normalizedSummary.publishSource?.consumerVersion || inferVersionFromReleaseManifest(normalizedSummary);
   const candidate = {
     schemaVersion: 1,
     contract: RELEASE_CANDIDATE_PASSPORT_CONTRACT,
@@ -114,13 +136,15 @@ export function createReleaseCandidatePassport({
     target: {
       channel: nonEmptyString(channel, "targetChannel"),
       ref: optionalString(normalizedSummary.publishSource?.ref || normalizedSummary.git?.ref),
-      version: nonEmptyString(version || normalizedSummary.publishSource?.consumerVersion, "version"),
+      version: nonEmptyString(resolvedVersion, "version"),
     },
     source: {
       headSha: nonEmptyString(sourceSha, "sourceHeadSha"),
       baseSha: optionalString(baseSha),
       mergeRefSha: optionalString(mergeRefSha || sourceSha),
-      treeHash: optionalString(sourceTreeHash || normalizedSummary.git?.treeSha),
+      treeHash: resolvedTreeHash,
+      builtSourceSha: nonEmptyString(mergeRefSha || sourceSha, "builtSourceSha"),
+      builtSourceTreeSha: resolvedTreeHash,
     },
     buildchain: {
       ref: optionalString(buildchain.ref || normalizedSummary.runtime?.ref),

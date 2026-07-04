@@ -38,6 +38,12 @@ import {
   resolvePublishSourceRefSha,
 } from "../scripts/publish-source-ref-resolver.mjs";
 import {
+  RELEASE_CANDIDATE_PASSPORT_CONTRACT,
+  createReleaseCandidatePassport,
+} from "../packages/core/release-candidate.js";
+import { validatePromotionReleaseCandidate } from "../actions/promote-buildchain-ref/lib.js";
+import { resolveReleaseCandidateArtifacts } from "../scripts/release-candidate-resolver.mjs";
+import {
   classifyBuildchainRuntimeRef,
   normalizeRequestedRuntimeRef,
   resolveRuntimeSelection,
@@ -144,6 +150,7 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /-diagnostics-\$\{\{ matrix\.platform\.id \}\}-/);
   assert.match(workflow, /build-summary-artifact:/);
   assert.match(workflow, /build-diagnostics-summary-artifact:/);
+  assert.match(workflow, /release-candidate-artifact:/);
   assert.match(workflow, /diagnostics-summary-artifact-name:/);
   assert.match(workflow, /build-diagnostics-summary-json:/);
   assert.match(workflow, /diagnostics contract warning/);
@@ -152,7 +159,10 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /BUILDCHAIN_RUNTIME_SHA/);
   assert.match(workflow, /BUILDCHAIN_RUNTIME_TRUST_DECISION/);
   assert.match(workflow, /aggregate-diagnostics-summary\.mjs/);
+  assert.match(workflow, /generate-release-candidate-passport\.mjs/);
   assert.match(workflow, /diagnostics-summary\.json/);
+  assert.match(workflow, /\$\{\{ inputs\.artifact-name \}\}-release-candidate-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/);
+  assert.match(workflow, /generate-release-candidate-passport\.mjs/);
   assert.match(workflow, /-diagnostics-summary-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/);
   assert.match(workflow, /Upload aggregate diagnostics summary/);
   assert.equal(
@@ -192,6 +202,23 @@ test("reusable build workflow exposes the required surface contract", () => {
     /ref: \$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/,
   );
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
+});
+
+test("release-candidate promote workflow is promote-only and never schedules a heavy build", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/release-candidate-promote.yml"),
+    "utf8",
+  );
+  assert.match(workflow, /workflow_call:/);
+  assert.match(workflow, /release-candidate-resolver\.mjs/);
+  assert.match(workflow, /promote-only-release-candidate: "true"/);
+  assert.match(workflow, /release-candidate-passport-path:/);
+  assert.match(workflow, /release-candidate-build-summary-path:/);
+  assert.match(workflow, /Ensure publish-gate ref locks promotion commit/);
+  assert.doesNotMatch(workflow, /\.github\/workflows\/\.build\.yml/);
+  assert.doesNotMatch(workflow, /build-native:/);
+  assert.doesNotMatch(workflow, /build-linux-container:/);
+  assert.doesNotMatch(workflow, /fromJSON\(needs\.resolve-contract\.outputs/);
 });
 
 test("reusable web-surface workflow exposes preview, cleanup, staging, and production gates", () => {
@@ -1713,6 +1740,186 @@ test("aggregate diagnostics summary reads uploaded platform diagnostics", () => 
     process.env = originalEnv;
     fs.rmSync(workspace, { recursive: true, force: true });
   }
+});
+
+test("release-candidate passport validates tree-equivalent promote-only source locks", () => {
+  const workspace = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-rc-passport-"),
+  );
+  try {
+    const manifestDir = path.join(workspace, ".buildchain/downloaded-manifests/linux");
+    fs.mkdirSync(manifestDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(manifestDir, "manifest.json"),
+      JSON.stringify({
+        artifactName: "libnode-linux-x64",
+        platform: { id: "linux-x64", name: "Linux x64" },
+        summary: { fileCount: 1, totalBytes: 32 },
+        expectedArtifacts: { ok: true },
+      }, null, 2),
+    );
+    fs.mkdirSync(path.join(workspace, ".buildchain/artifacts"), { recursive: true });
+    const buildSummary = {
+      contract: "kungfu-buildchain-build-summary",
+      artifactName: "libnode",
+      git: {
+        repository: "kungfu-systems/libnode",
+        sha: "a".repeat(40),
+        ref: "refs/pull/42/merge",
+        treeSha: "b".repeat(40),
+      },
+      publishGate: { channel: "alpha" },
+      publishSource: {
+        ref: "publish-gate/alpha/v22/v22.22/22.22.3-kf.0",
+        sha: "a".repeat(40),
+        channel: "alpha",
+        line: "v22/v22.22",
+        consumerVersion: "22.22.3-kf.0",
+      },
+      platforms: [{
+        artifactName: "libnode-linux-x64",
+        platform: { id: "linux-x64", name: "Linux x64" },
+        summary: { fileCount: 1, totalBytes: 32 },
+        manifestPath: ".buildchain/downloaded-manifests/linux/manifest.json",
+      }],
+      fileCount: 1,
+      totalBytes: 32,
+    };
+    fs.writeFileSync(
+      path.join(workspace, ".buildchain/artifacts/build-summary.json"),
+      JSON.stringify(buildSummary, null, 2),
+    );
+    const passport = createReleaseCandidatePassport({
+      repository: "kungfu-systems/libnode",
+      pullRequest: {
+        number: 42,
+        url: "https://github.com/kungfu-systems/libnode/pull/42",
+        headRef: "dev/v22/v22.22",
+        baseRef: "alpha/v22/v22.22",
+      },
+      targetChannel: "alpha/v22/v22.22",
+      version: "22.22.3-kf.0",
+      sourceHeadSha: "a".repeat(40),
+      mergeRefSha: "a".repeat(40),
+      sourceTreeHash: "b".repeat(40),
+      buildSummary,
+    });
+    const passportPath = path.join(workspace, ".buildchain/artifacts/release-candidate-passport.json");
+    fs.writeFileSync(passportPath, `${JSON.stringify(passport, null, 2)}\n`);
+    assert.equal(passport.contract, RELEASE_CANDIDATE_PASSPORT_CONTRACT);
+    assert.ok(fs.existsSync(passportPath));
+    const validation = validatePromotionReleaseCandidate({
+      cwd: workspace,
+      passportPath,
+      buildSummaryPath: ".buildchain/artifacts/build-summary.json",
+      repository: "kungfu-systems/libnode",
+      targetChannel: "alpha",
+      version: "22.22.3-kf.0",
+      sourceHeadSha: "c".repeat(40),
+      sourceTreeSha: "b".repeat(40),
+    });
+    assert.equal(validation.builtSourceSha, "a".repeat(40));
+    assert.equal(validation.builtSourceTreeSha, "b".repeat(40));
+    assert.equal(validation.promotionChannelSha, "c".repeat(40));
+    assert.equal(validation.promotionChannelTreeSha, "b".repeat(40));
+    assert.equal(validation.treeEquivalent, true);
+    assert.throws(
+      () =>
+        validatePromotionReleaseCandidate({
+          cwd: workspace,
+          passportPath,
+          buildSummaryPath: ".buildchain/artifacts/build-summary.json",
+          repository: "kungfu-systems/libnode",
+          targetChannel: "alpha",
+          version: "22.22.3-kf.0",
+          sourceHeadSha: "c".repeat(40),
+          sourceTreeSha: "d".repeat(40),
+        }),
+      /source identity mismatch/,
+    );
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("release-candidate resolver requires one merged PR-stage RC artifact", async () => {
+  const targetSha = "c".repeat(40);
+  const builtSourceSha = "a".repeat(40);
+  const seen = [];
+  const fetchImpl = async (url) => {
+    seen.push(url);
+    const jsonResponse = (value) => ({
+      ok: true,
+      status: 200,
+      text: async () => JSON.stringify(value),
+    });
+    if (url.endsWith(`/commits/${targetSha}/pulls`)) {
+      return jsonResponse([
+        {
+          number: 42,
+          html_url: "https://github.com/kungfu-systems/libnode/pull/42",
+          merged_at: "2026-07-04T00:00:00Z",
+          updated_at: "2026-07-04T00:00:00Z",
+          base: { ref: "alpha/v22/v22.22" },
+          head: {
+            sha: builtSourceSha,
+            ref: "dev/v22/v22.22",
+            repo: { full_name: "kungfu-systems/libnode" },
+          },
+        },
+      ]);
+    }
+    if (url.includes("actions/workflows/build-surface-fixture.yml/runs")) {
+      return jsonResponse({
+        workflow_runs: [
+          {
+            id: 456,
+            name: "Build Surface Fixture",
+            event: "pull_request",
+            status: "completed",
+            conclusion: "success",
+            head_sha: builtSourceSha,
+            head_branch: "dev/v22/v22.22",
+            updated_at: "2026-07-04T00:01:00Z",
+            pull_requests: [{ number: 42 }],
+            head_repository: { full_name: "kungfu-systems/libnode" },
+          },
+        ],
+      });
+    }
+    if (url.includes("actions/runs/456/artifacts")) {
+      return jsonResponse({
+        artifacts: [
+          {
+            id: 123,
+            name: `libnode-release-candidate-${builtSourceSha}`,
+            expired: false,
+          },
+          {
+            id: 124,
+            name: `libnode-summary-${builtSourceSha}`,
+            expired: false,
+          },
+        ],
+      });
+    }
+    throw new Error(`unexpected url ${url}`);
+  };
+
+  const result = await resolveReleaseCandidateArtifacts({
+    repository: "kungfu-systems/libnode",
+    targetSha,
+    targetRef: "alpha/v22/v22.22",
+    workflowFile: "build-surface-fixture.yml",
+    workflowName: "Build Surface Fixture",
+    fetchImpl,
+    download: false,
+  });
+  assert.equal(result.artifacts.passport, `libnode-release-candidate-${builtSourceSha}`);
+  assert.equal(result.artifacts.summary, `libnode-summary-${builtSourceSha}`);
+  assert.equal(result.run.id, "456");
+  assert.equal(result.pullRequest.number, 42);
+  assert.equal(seen.length, 3);
 });
 
 test("run-lifecycle action accepts hyphenated GitHub Action inputs", () => {

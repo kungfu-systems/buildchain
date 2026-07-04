@@ -576,6 +576,11 @@ export function createReleasePassport({
       targetRef,
       releaseSha,
       releaseMaterialSha,
+      builtSourceSha: optionalString(release.builtSourceSha || release.built_source_sha),
+      builtSourceTreeSha: optionalString(release.builtSourceTreeSha || release.built_source_tree_sha),
+      promotionChannelSha: optionalString(release.promotionChannelSha || release.promotion_channel_sha),
+      promotionChannelTreeSha: optionalString(release.promotionChannelTreeSha || release.promotion_channel_tree_sha),
+      treeEquivalent: release.treeEquivalent === undefined ? undefined : Boolean(release.treeEquivalent),
       publishToolingSha: optionalString(
         release.publishToolingSha ||
         release.publish_tooling_sha ||

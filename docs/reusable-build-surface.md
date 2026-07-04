@@ -359,6 +359,45 @@ If the branch tip no longer matches the manifest SHA, the publish job must fail
 closed. Moving a gate branch creates a new publish decision and should produce a
 new build run.
 
+## Release Candidate Promote-Only
+
+For native package sets, the PR build is the only heavy build. When a PR targets
+`alpha/<line>` or `release/<line>`, `.build.yml` uploads a release-candidate
+bundle next to the platform artifacts. The bundle contains:
+
+- `release-candidate.passport.json`;
+- the aggregate `build-summary.json`;
+- copied platform manifest evidence for the built platforms.
+
+The passport records two separate source identities:
+
+- `builtSourceSha` / `builtSourceTreeSha`: the PR-stage source that produced the
+  artifacts, usually the PR merge ref;
+- `promotionChannelSha` / `promotionChannelTreeSha`: the post-merge channel
+  commit used for publish authority.
+
+The reusable promote wrapper resolves the merged PR, finds exactly one matching
+PR-stage release-candidate artifact, downloads it, compares the built tree with
+the promotion channel tree, locks `publish-gate/{alpha,release,major}` to the
+promotion channel commit, and then calls `actions/promote-buildchain-ref` with
+`promote-only-release-candidate: "true"`. It does not call `.build.yml`, does
+not create a matrix, and must fail before publish if the RC evidence is missing
+or ambiguous.
+
+```yaml
+jobs:
+  promote:
+    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v2
+    with:
+      channel: alpha
+      target-ref: alpha/v22/v22.22
+      artifact-name: libnode
+      package-manager: npm
+      publish-target: npm
+      runner-preset: github-hosted
+      trusted-publishing: true
+```
+
 Custom publish jobs can also repeat the channel-ref preflight:
 
 ```yaml
