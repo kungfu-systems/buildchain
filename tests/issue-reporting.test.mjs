@@ -1,10 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  BUILDCHAIN_WORKFLOW_FRICTION_ISSUE_CONTRACT,
   buildConsumerIssueReport,
+  buildWorkflowFrictionIssueReport,
   computeConsumerIssueFingerprint,
   createGitHubIssueRequest,
   reportBuildchainIssue,
+  reportWorkflowFrictionIssue,
 } from "../packages/core/issue-reporting.js";
 
 function createMockRequest(responses = []) {
@@ -101,6 +104,70 @@ test("reportBuildchainIssue comments on an existing matching issue", async () =>
   assert.equal(result.commented, true);
   assert.equal(request.calls[1].path, "/repos/kungfu-systems/buildchain/issues/7/comments");
   assert.match(request.calls[1].body.body, /New matching Buildchain consumer report/);
+});
+
+test("reportBuildchainIssue respects comment cooldown on an existing matching issue", async () => {
+  const request = createMockRequest([
+    {
+      total_count: 1,
+      items: [{ number: 7, html_url: "https://github.com/kungfu-systems/buildchain/issues/7" }],
+    },
+    [{ id: 98, created_at: "2026-07-04T03:30:00.000Z" }],
+  ]);
+
+  const result = await reportBuildchainIssue({
+    request,
+    env: {},
+    consumerRepository: "kungfu-systems/libnode",
+    targetRepository: "kungfu-systems/buildchain",
+    failureCode: "reusable-build-failed",
+    commentCooldownHours: 2,
+    now: new Date("2026-07-04T04:00:00.000Z"),
+  });
+
+  assert.equal(result.action, "cooldown");
+  assert.equal(result.commented, false);
+  assert.equal(request.calls.length, 2);
+  assert.match(request.calls[1].path, /issues\/7\/comments/);
+});
+
+test("workflow friction issue reports use their own marker, labels, and redaction", async () => {
+  const report = buildWorkflowFrictionIssueReport({
+    env: {},
+    targetRepository: "kungfu-systems/buildchain",
+    repository: "kungfu-systems/buildchain",
+    workflow: "Buildchain Ref Promotion",
+    runId: "123",
+    frictionClass: "duplicate-pr",
+    summary: "token=ghp_123456789012345678901234567890123456",
+  });
+
+  assert.equal(report.contract, BUILDCHAIN_WORKFLOW_FRICTION_ISSUE_CONTRACT);
+  assert.match(report.marker, /^buildchain-workflow-friction:fingerprint=/);
+  assert.match(report.body, /buildchain-workflow-friction:fingerprint=/);
+  assert.deepEqual(report.labels, ["buildchain-feedback", "workflow-friction"]);
+  assert.doesNotMatch(report.body, /ghp_/);
+  assert.match(report.body, /\[REDACTED\]/);
+});
+
+test("reportWorkflowFrictionIssue searches by workflow friction marker", async () => {
+  const request = createMockRequest([
+    { total_count: 0, items: [] },
+    { number: 11, html_url: "https://github.com/kungfu-systems/buildchain/issues/11" },
+  ]);
+
+  const result = await reportWorkflowFrictionIssue({
+    request,
+    env: {},
+    targetRepository: "kungfu-systems/buildchain",
+    repository: "kungfu-systems/buildchain",
+    workflow: "Buildchain Ref Promotion",
+    frictionClass: "duplicate-build",
+  });
+
+  assert.equal(result.action, "created");
+  assert.match(decodeURIComponent(request.calls[0].path), /buildchain-workflow-friction:fingerprint=/);
+  assert.match(request.calls[1].body.body, /Buildchain workflow friction/);
 });
 
 test("reportBuildchainIssue retries issue creation without labels when labels are missing", async () => {

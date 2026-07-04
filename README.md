@@ -122,6 +122,8 @@ Buildchain repository with a scoped issue-write token:
 
 The action deduplicates by fingerprint, comments on existing open reports, and
 is fail-soft by default so issue reporting does not hide the original failure.
+Use `report-kind: workflow-friction` when Buildchain workflows should report
+their own repeated release friction back to the Buildchain issue tracker.
 
 ## Use Buildchain
 
@@ -252,6 +254,7 @@ npm pack --dry-run --json --registry=https://registry.npmjs.org/
 - [Site bundle contract](docs/site-bundle-contract.md)
 - [Lifecycle protocol](docs/lifecycle-protocol.md)
 - [Reusable build surface](docs/reusable-build-surface.md)
+- [Release candidate passport](docs/release-candidate.md)
 - [Consumer issue reporting](docs/consumer-issue-reporting.md)
 - [Publish transaction](docs/publish-transaction.md)
 - [Release governance](docs/release-governance.md)

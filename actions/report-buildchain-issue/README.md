@@ -1,6 +1,7 @@
 # report-buildchain-issue
 
-Create or update a Buildchain repository issue from a consumer workflow.
+Create or update a Buildchain repository issue from a consumer workflow or from
+Buildchain's own workflow-friction feedback loop.
 
 This action is intended for consumer repositories that need to report
 Buildchain-owned failures with enough evidence for maintainers to act. It
@@ -44,3 +45,33 @@ By default issue reporting is fail-soft:
 
 Use `dry-run: "true"` to verify the computed fingerprint and body shape without
 calling GitHub.
+
+For Buildchain-owned workflow friction, use `report-kind: workflow-friction`.
+This uses a separate marker and default labels so duplicate PRs, duplicate
+builds, transient API failures, stale release-state, or missing RC evidence can
+be grouped without mixing with consumer failure reports:
+
+```yaml
+permissions:
+  issues: write
+
+steps:
+  - uses: kungfu-systems/buildchain/actions/report-buildchain-issue@v2
+    if: failure()
+    with:
+      token: ${{ github.token }}
+      report-kind: workflow-friction
+      target-repository: ${{ github.repository }}
+      repository: ${{ github.repository }}
+      workflow: ${{ github.workflow }}
+      run-id: ${{ github.run_id }}
+      run-attempt: ${{ github.run_attempt }}
+      channel: alpha/v2/v2.4
+      source-sha: ${{ github.sha }}
+      friction-class: duplicate-build
+      comment-cooldown-hours: "24"
+```
+
+`comment-cooldown-hours` is optional. When it is greater than zero, Buildchain
+still deduplicates by fingerprint but skips adding another comment if the
+existing issue already received a recent update.

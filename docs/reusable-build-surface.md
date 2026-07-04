@@ -25,6 +25,7 @@ jobs:
       expected-artifacts-json: >-
         {"minFiles":2,"requiredPaths":["dist/libnode.tar.gz","dist/checksums.txt"]}
       process-summary-path: .buildchain/diagnostics/process-summary.json
+      release-candidate: true
       publish-channel: release
       publish-source-ref: publish-gate/release/v22/v22.22/22.22.3-kf.0
 ```
@@ -190,6 +191,8 @@ The reusable workflow exposes the resolved contract:
 | `linux-container-image`           | Resolved digest-pinned Linux job container image                                |
 | `build-summary-artifact`          | Uploaded aggregate summary artifact name                                        |
 | `build-diagnostics-summary-artifact` | Uploaded aggregate diagnostics summary artifact name                         |
+| `release-candidate-passport-artifact` | Uploaded PR-stage release-candidate passport artifact name when `release-candidate` is enabled |
+| `release-candidate-passport-json` | Compact release-candidate passport JSON when `release-candidate` is enabled     |
 | `build-summary-json`              | Compact aggregate JSON with platform count, file count, and byte total          |
 | `build-diagnostics-summary-json`  | Compact aggregate diagnostics JSON with platform, lifecycle warning/error, diagnostics contract warning, and sidecar manifest warning totals |
 | `trusted-event`                   | `true` when the event is trusted enough to reach build runners                  |
@@ -232,6 +235,14 @@ The workflow output `build-diagnostics-summary-json` includes
 release jobs can detect drifting diagnostics JSON contracts and missing or
 drifting diagnostics sidecar manifests without downloading the per-platform
 diagnostics artifacts first.
+
+Set `release-candidate: true` when the successful reusable build is meant to be
+the artifact source promoted later. Buildchain then uploads
+`release-candidate-passport.json` under the
+`<artifact-name>-release-candidate-<publish-source-sha>` artifact name. Promotion
+jobs can pass that passport to `promote-buildchain-ref` with
+`promote-only-release-candidate: "true"` so source, channel, platforms, and the
+aggregate build-summary hash are checked before publish-gate side effects.
 
 ## Publish Gate
 

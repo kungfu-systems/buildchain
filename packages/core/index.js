@@ -86,6 +86,13 @@ export {
 } from "./diagnostics.js";
 
 export {
+  RELEASE_CANDIDATE_PASSPORT_CONTRACT,
+  createReleaseCandidatePassport,
+  sha256Json,
+  validateReleaseCandidatePassport,
+} from "./release-candidate.js";
+
+export {
   AGENT_INDEX_CONTRACT,
   ARTIFACT_EVIDENCE_CONTRACT,
   IMPACT_LEDGER_CONTRACT,
@@ -107,9 +114,11 @@ export {
 
 export {
   BUILDCHAIN_CONSUMER_ISSUE_CONTRACT,
+  BUILDCHAIN_WORKFLOW_FRICTION_ISSUE_CONTRACT,
   DEFAULT_BUILDCHAIN_ISSUE_REPOSITORY,
   GitHubIssueRequestError,
   buildConsumerIssueReport,
+  buildWorkflowFrictionIssueReport,
   computeConsumerIssueFingerprint,
   consumerIssueMarker,
   createGitHubIssueRequest,
@@ -118,5 +127,7 @@ export {
   readOptionalIssueBodyFile,
   redactIssueText,
   reportBuildchainIssue,
+  reportWorkflowFrictionIssue,
   truncateUtf8,
+  workflowFrictionMarker,
 } from "./issue-reporting.js";
