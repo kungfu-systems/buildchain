@@ -1691,6 +1691,7 @@ async function collectAndPersistReleasePassport({
   buildSummaryPath,
   platformManifestPaths = [],
   enabled = true,
+  releaseCandidateValidation = undefined,
 }) {
   if (!enabled || !result?.transaction || result.transaction.state !== "complete") {
     return result;
@@ -1747,6 +1748,15 @@ async function collectAndPersistReleasePassport({
       releaseMaterialSha: result.transaction.release_material_sha,
       publishToolingSha: result.transaction.publish_tooling_sha,
       releaseStateRef: `refs/heads/${result.transaction.state_ref}`,
+      ...(releaseCandidateValidation
+        ? {
+            builtSourceSha: releaseCandidateValidation.builtSourceSha,
+            builtSourceTreeSha: releaseCandidateValidation.builtSourceTreeSha,
+            promotionChannelSha: releaseCandidateValidation.promotionChannelSha,
+            promotionChannelTreeSha: releaseCandidateValidation.promotionChannelTreeSha,
+            treeEquivalent: releaseCandidateValidation.treeEquivalent,
+          }
+        : {}),
     }),
     publishJson: JSON.stringify({
       auth: result.publishContract?.auth || "",
@@ -2455,6 +2465,7 @@ async function promoteBuildchainRefs({
   releasePassportProductName = "Buildchain",
   releasePassportBuildSummaryPath = ".buildchain/artifacts/build-summary.json",
   releasePassportPlatformManifestPaths = "",
+  releaseCandidateValidation = undefined,
   actor = process.env.GITHUB_ACTOR || process.env.USER || "",
   runId = process.env.GITHUB_RUN_ID || "",
   publishTransactionOverride = false,
@@ -3334,6 +3345,7 @@ async function promoteBuildchainRefs({
       buildSummaryPath: releasePassportBuildSummaryPath,
       platformManifestPaths: splitPathList(releasePassportPlatformManifestPaths),
       enabled: Boolean(releasePassport),
+      releaseCandidateValidation,
     });
     return latestPublishTransaction;
   };

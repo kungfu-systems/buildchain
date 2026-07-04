@@ -98,6 +98,18 @@ inputs:
   release-passport-platform-manifest-paths:
     description: "Optional comma- or newline-separated platform artifact manifest JSON paths to include"
     default: ""
+  promote-only-release-candidate:
+    description: "Require a PR-stage release-candidate passport and forbid rebuilding before publish"
+    default: "false"
+  release-candidate-passport-path:
+    description: "Path to the PR-stage release-candidate passport JSON"
+    default: ""
+  release-candidate-build-summary-path:
+    description: "Path to the PR-stage aggregate build summary JSON"
+    default: ""
+  release-candidate-version:
+    description: "Expected consumer-visible release-candidate version"
+    default: ""
 outputs:
   sha:
     description: "Final promoted release or alpha commit SHA"

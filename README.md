@@ -130,6 +130,9 @@ The active reusable workflow surfaces are:
 
 - `.github/workflows/.build.yml` for deterministic multi-platform build and
   artifact contracts;
+- `.github/workflows/release-candidate-promote.yml` for post-merge
+  promote-only publication from a PR-stage release candidate, without a second
+  heavy build;
 - `.github/workflows/.web-surface.yml` for preview, staging, production, and
   cleanup plans for site/app repositories;
 - `.github/workflows/buildchain-ref-promotion.yml` for protected release
@@ -146,6 +149,10 @@ uses: kungfu-systems/buildchain/actions/validate-config@v2
 
 ```yaml
 uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2
+```
+
+```yaml
+uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v2
 ```
 
 ## Release Model

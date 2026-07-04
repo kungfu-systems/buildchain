@@ -168,6 +168,9 @@ on:
       build-diagnostics-summary-artifact:
         description: "Uploaded aggregate diagnostics summary artifact name"
         value: ${{ jobs.summarize.outputs.diagnostics-summary-artifact-name }}
+      release-candidate-artifact:
+        description: "Uploaded release-candidate bundle artifact name"
+        value: ${{ jobs.summarize.outputs.release-candidate-artifact-name }}
       build-summary-json:
         description: "Compact aggregate build summary JSON"
         value: ${{ jobs.summarize.outputs.artifact-summary-json }}
@@ -819,6 +822,7 @@ jobs:
     outputs:
       summary-artifact-name: ${{ steps.names.outputs.summary-artifact-name }}
       diagnostics-summary-artifact-name: ${{ steps.names.outputs.diagnostics-summary-artifact-name }}
+      release-candidate-artifact-name: ${{ steps.names.outputs.release-candidate-artifact-name }}
       summary-path: ${{ steps.summary.outputs.summary-path }}
       artifact-summary-json: ${{ steps.summary.outputs.artifact-summary-json }}
       diagnostics-summary-path: ${{ steps.diagnostics.outputs.diagnostics-summary-path }}
@@ -832,17 +836,29 @@ jobs:
           path: .buildchain/runtime
           persist-credentials: false
 
+      - name: Checkout built source for release-candidate identity
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          clean: true
+          path: source-for-rc
+          persist-credentials: false
+
       - name: Install Buildchain runtime dependencies
         run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
 
       - name: Resolve summary artifact name
         id: names
         run: |
-          echo "summary-artifact-name=${BUILDCHAIN_SUMMARY_ARTIFACT_NAME}" >> "${GITHUB_OUTPUT}"
-          echo "diagnostics-summary-artifact-name=${BUILDCHAIN_DIAGNOSTICS_SUMMARY_ARTIFACT_NAME}" >> "${GITHUB_OUTPUT}"
+          {
+            echo "summary-artifact-name=${BUILDCHAIN_SUMMARY_ARTIFACT_NAME}"
+            echo "diagnostics-summary-artifact-name=${BUILDCHAIN_DIAGNOSTICS_SUMMARY_ARTIFACT_NAME}"
+            echo "release-candidate-artifact-name=${BUILDCHAIN_RELEASE_CANDIDATE_ARTIFACT_NAME}"
+          } >> "${GITHUB_OUTPUT}"
         env:
           BUILDCHAIN_SUMMARY_ARTIFACT_NAME: ${{ inputs.artifact-name }}-summary-${{ needs.resolve-source.outputs.publish-source-sha }}
           BUILDCHAIN_DIAGNOSTICS_SUMMARY_ARTIFACT_NAME: ${{ inputs.artifact-name }}-diagnostics-summary-${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_RELEASE_CANDIDATE_ARTIFACT_NAME: ${{ inputs.artifact-name }}-release-candidate-pr-${{ github.event.pull_request.number || '0' }}-${{ needs.resolve-source.outputs.publish-source-sha }}
 
       - name: Download platform manifests
         uses: actions/download-artifact@v7.0.0
@@ -896,6 +912,27 @@ jobs:
           BUILDCHAIN_DIAGNOSTICS_OUTPUT: .buildchain/artifacts/diagnostics-summary.json
           BUILDCHAIN_PLATFORM_COUNT: ${{ needs.resolve-contract.outputs.platform-count }}
 
+      - name: Resolve built source tree
+        id: source-tree
+        run: |
+          echo "tree=$(git -C source-for-rc rev-parse 'HEAD^{tree}')" >> "${GITHUB_OUTPUT}"
+
+      - name: Create release-candidate passport
+        run: node .buildchain/runtime/scripts/create-release-candidate-passport.mjs
+        env:
+          BUILDCHAIN_RC_OUTPUT_DIR: .buildchain/release-candidate
+          BUILDCHAIN_RC_BUILD_SUMMARY: .buildchain/artifacts/build-summary.json
+          BUILDCHAIN_RC_PLATFORM_MANIFESTS: .buildchain/downloaded-manifests
+          BUILDCHAIN_ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          BUILDCHAIN_BUILT_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_BUILT_SOURCE_TREE_SHA: ${{ steps.source-tree.outputs.tree }}
+          BUILDCHAIN_BUILT_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          BUILDCHAIN_TARGET_REF: ${{ github.base_ref || needs.resolve-source.outputs.publish-source-ref || github.ref_name }}
+          BUILDCHAIN_PUBLISH_GATE_REF: ${{ needs.resolve-source.outputs.publish-source-ref }}
+          BUILDCHAIN_CHANNEL: ${{ needs.trust-gate.outputs.publish-channel }}
+          BUILDCHAIN_VERSION: ${{ needs.resolve-source.outputs.publish-source-consumer-version }}
+          BUILDCHAIN_PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number || '' }}
+
       - name: Upload aggregate build summary
         uses: actions/upload-artifact@v7.0.1
         with:
@@ -909,5 +946,13 @@ jobs:
         with:
           name: ${{ steps.names.outputs.diagnostics-summary-artifact-name }}
           path: .buildchain/artifacts/diagnostics-summary.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload release-candidate bundle
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.names.outputs.release-candidate-artifact-name }}
+          path: .buildchain/release-candidate
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
