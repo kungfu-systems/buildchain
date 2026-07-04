@@ -57,7 +57,10 @@ first, restores the local working copies, and only then decides whether to
 publish, repair, or finalize.
 
 Every meaningful state transition is written to the durable ref before public
-release refs move. If the durable write fails, the action fails closed.
+release refs move. Release-state GitHub API reads and writes use retry/backoff
+for transient service failures such as HTTP 5xx responses, connection resets,
+timeouts, and "other side closed" socket failures. If the durable write still
+cannot be persisted after retries, the action fails closed.
 
 Durable release-state refs reserve their exact version even when the public exact
 tag was never created. If a later machine run sees a failed or repair-required
@@ -296,6 +299,9 @@ the transaction `release_sha`. Exact tags are accepted when they already point
 at the transaction release/material SHA or the finalized channel head. Floating
 channel tags and dev/alpha refs are then retried idempotently, and the
 transaction is marked `complete` only after those public refs are consistent.
+Writing `complete` clears any stale `failure` value from earlier attempts, so
+the durable `state.json` represents the successful final state instead of the
+last transient error seen before a rerun.
 An exact tag at an unrelated SHA is still a material conflict and blocks
 recovery.
 

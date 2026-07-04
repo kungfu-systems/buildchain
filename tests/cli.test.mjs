@@ -17,6 +17,7 @@ import {
   collectCacheDiagnostics,
   collectCompilerCacheDiagnostics,
   collectNativeDiagnostics,
+  collectProcessTreeSnapshot,
   collectRunnerDiagnostics,
   detectRequestedParallelism,
   detectRequestedParallelismFromProcessSamples,
@@ -1123,6 +1124,7 @@ test("CLI summarizes diagnostics artifacts into a small cross-platform report", 
         },
       },
     },
+    nativeCacheDirs: [{ path: ".ccache", exists: true, type: "directory", bytes: 0 }],
     git: { head: "abc123def456" },
     lifecycleObservability: {
       stages: {
@@ -1218,6 +1220,8 @@ test("CLI summarizes diagnostics artifacts into a small cross-platform report", 
   assert.equal(summary.platforms[0].tools.missing[0], "ninja");
   assert.equal(summary.platforms[0].cache.packageManager.packageManager, "pnpm@11.0.0");
   assert.equal(summary.platforms[0].cache.compilerCaches.ccache.stats.cache_miss, 2);
+  assert.equal(summary.platforms[0].compilerCaches.ccache.stats.cache_miss, 2);
+  assert.equal(summary.platforms[0].nativeCacheDirs[0].path, ".ccache");
   assert.equal(summary.platforms[0].diagnosticsContract.status, "verified");
   assert.equal(summary.platforms[0].diagnosticsManifest.status, "verified");
   assert.equal(summary.platforms[0].diagnosticsManifest.fileCount, 1);
@@ -1260,6 +1264,10 @@ test("diagnostics SDK detects requested parallelism from commands and env", () =
     { value: 20, source: "command", token: "-j20" },
   );
   assert.deepEqual(
+    detectRequestedParallelism({ command: "ninja", args: ["-j", "10"] }),
+    { value: 10, source: "command", token: "-j 10" },
+  );
+  assert.deepEqual(
     detectRequestedParallelism({ command: "cmake", args: ["--build", "build", "--parallel", "8"] }),
     { value: 8, source: "command", token: "--parallel 8" },
   );
@@ -1270,6 +1278,10 @@ test("diagnostics SDK detects requested parallelism from commands and env", () =
   assert.deepEqual(
     detectRequestedParallelism({ env: { CMAKE_BUILD_PARALLEL_LEVEL: "16" } }),
     { value: 16, source: "env:CMAKE_BUILD_PARALLEL_LEVEL", token: "CMAKE_BUILD_PARALLEL_LEVEL" },
+  );
+  assert.deepEqual(
+    detectRequestedParallelism({ env: { MAKEFLAGS: "-j 18 --jobserver-auth=fifo:/tmp/jobserver" } }),
+    { value: 18, source: "env:MAKEFLAGS", token: "-j 18" },
   );
 });
 
@@ -1320,6 +1332,41 @@ test("diagnostics SDK collects compiler cache stats through injectable runners",
   });
   assert.equal(unavailable.ccache.available, false);
   assert.equal(unavailable.sccache.available, false);
+});
+
+test("diagnostics SDK falls back to plain-text ccache stats", () => {
+  const calls = [];
+  const runCommand = (command, args) => {
+    calls.push([command, ...args]);
+    if (command === "ccache" && args.includes("--json")) {
+      const error = new Error("ccache: unrecognized option --json");
+      error.code = "EINVAL";
+      throw error;
+    }
+    if (command === "ccache") {
+      return `
+Cacheable calls:          12 /   20 (60.00%)
+  Hits:                    7 /   12 (58.33%)
+    Direct:                5 /    7 (71.43%)
+  Misses:                  5 /   12 (41.67%)
+`;
+    }
+    if (command === "sccache") {
+      return JSON.stringify({ stats: { compile_requests: 3 } });
+    }
+    throw new Error("unexpected command");
+  };
+
+  const compilerCaches = collectCompilerCacheDiagnostics({ cwd: root, runCommand });
+  assert.equal(compilerCaches.ccache.available, true);
+  assert.equal(compilerCaches.ccache.format, "text");
+  assert.equal(compilerCaches.ccache.stats.cacheable_calls, 12);
+  assert.equal(compilerCaches.ccache.stats.hits, 7);
+  assert.equal(compilerCaches.ccache.parseError, "");
+  assert.deepEqual(calls.slice(0, 2), [
+    ["ccache", "--show-stats", "--json"],
+    ["ccache", "--show-stats"],
+  ]);
 });
 
 test("diagnostics SDK applies optional native diagnostics profile", () => {
@@ -1377,6 +1424,67 @@ test("diagnostics process sampler annotates samples with build concurrency conte
   assert.equal(samples[0].requestedParallelism, 20);
   assert.equal(samples[0].requestedParallelismSource, "command");
   assert.equal(Number.isFinite(samples[0].elapsedMs), true);
+});
+
+test("diagnostics process sampler preserves full command lines on Unix ps output", () => {
+  const snapshot = collectProcessTreeSnapshot({
+    rootPid: "100",
+    platform: "darwin",
+    runCommand(command, args) {
+      assert.equal(command, "ps");
+      assert.deepEqual(args, ["-axo", "pid=,ppid=,pcpu=,args="]);
+      return [
+        "100 1 0.0 /bin/zsh -c scripts/build.sh",
+        "101 100 3.0 /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -jobs 8",
+        "102 101 91.2 /usr/bin/clang++ -c addon.cc",
+      ].join("\n");
+    },
+  });
+
+  assert.equal(snapshot.platform, "darwin");
+  assert.equal(snapshot.processes[0].command, "xcodebuild");
+  assert.equal(
+    snapshot.processes[0].commandLine,
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -jobs 8",
+  );
+  assert.equal(snapshot.processes[1].command, "clang++");
+});
+
+test("diagnostics process sampler reads Windows process descendants", () => {
+  const snapshot = collectProcessTreeSnapshot({
+    rootPid: "400",
+    platform: "win32",
+    runCommand(command, args) {
+      assert.equal(command, "powershell");
+      assert.equal(args[0], "-NoProfile");
+      return JSON.stringify([
+        {
+          ProcessId: 400,
+          ParentProcessId: 1,
+          Name: "powershell.exe",
+          CommandLine: "powershell.exe -File build.ps1",
+        },
+        {
+          ProcessId: 401,
+          ParentProcessId: 400,
+          Name: "MSBuild.exe",
+          CommandLine: "C:\\\\BuildTools\\\\MSBuild.exe libnode.sln /m:12",
+        },
+        {
+          ProcessId: 402,
+          ParentProcessId: 401,
+          Name: "cl.exe",
+          CommandLine: "cl.exe /c addon.cc",
+        },
+      ]);
+    },
+  });
+
+  assert.equal(snapshot.platform, "win32");
+  assert.equal(snapshot.processes.length, 2);
+  assert.equal(snapshot.processes[0].command, "MSBuild.exe");
+  assert.match(snapshot.processes[0].commandLine, /\/m:12/);
+  assert.equal(snapshot.processes[1].command, "cl.exe");
 });
 
 test("CLI samples a long-running process tree and preserves concurrency context", () => {

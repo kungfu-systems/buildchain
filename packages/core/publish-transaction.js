@@ -164,6 +164,9 @@ export function transitionReleaseTransaction(record, nextState, metadata = {}) {
       throw new Error(`cannot transition release transaction from ${currentState} to ${nextState}`);
     }
   }
+  const nextFailure = nextState === "complete"
+    ? optionalString(metadata.failure ?? "")
+    : optionalString(metadata.failure ?? record.failure);
   return {
     ...record,
     previous_state: currentState === nextState ? record.previous_state || "" : currentState,
@@ -171,7 +174,7 @@ export function transitionReleaseTransaction(record, nextState, metadata = {}) {
     actor: optionalString(metadata.actor ?? record.actor),
     run_id: optionalString(metadata.runId ?? record.run_id),
     superseded_by: optionalString(metadata.supersededBy ?? record.superseded_by),
-    failure: optionalString(metadata.failure ?? record.failure),
+    failure: nextFailure,
     updated_at: nowIso(),
   };
 }
