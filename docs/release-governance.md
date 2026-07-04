@@ -219,6 +219,68 @@ Checking out `publish-gate/major` should therefore look like a frozen release
 state, not like a branch where day-to-day source work continues. Day-to-day
 source work continues on `dev/vX/vX.Y`.
 
+## Protected Dev Branches
+
+`dev/vX/vX.Y` is a protected development channel, not a scratch branch. Normal
+source changes should be made on work branches such as `feature/*`, `fix/*`,
+`chore/*`, `docs/*`, `ci/*`, or `refactor/*`, then reviewed through a pull
+request into the target dev line.
+
+This keeps the earliest development channel audit-friendly:
+
+- the version line being changed is visible in the PR base branch;
+- CI and required checks run before the channel moves;
+- branch protection can prevent direct pushes and stale merges;
+- later `dev -> alpha -> release` promotion inherits a reviewable source
+  lineage instead of trying to reconstruct how the dev branch changed.
+
+Buildchain provides the reusable
+`.github/workflows/dev-pr-auto-merge.yml` workflow for repositories that want a
+scheduled or manual "merge ready dev PRs" pass. The consumer repository owns
+the trigger schedule, but the merge decision is declared through workflow
+inputs: target dev branch, required status/check names, ready and block labels,
+allowed work-branch prefixes, review requirements, maximum merges per run,
+merge method, and dry-run mode.
+
+The workflow defaults are conservative. A PR is skipped unless it targets the
+configured dev line, is not a draft, has the ready label, has no block label,
+comes from the same repository, uses an allowed work-branch prefix, has a
+current approval, is mergeable, and has the configured required checks passing.
+After each merge, the next PR is re-evaluated before it can move the protected
+dev branch. This prevents one merge from silently making the next candidate
+stale or conflicting.
+
+Typical consumer wrapper:
+
+```yaml
+name: Merge Ready Dev PRs
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        type: boolean
+        default: true
+
+jobs:
+  merge-dev:
+    uses: kungfu-systems/buildchain/.github/workflows/dev-pr-auto-merge.yml@v2
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: read
+      statuses: read
+    with:
+      target-branch: dev/v2/v2.5
+      required-status-checks: Verify
+      ready-label: ready
+      block-labels: blocked,do-not-merge
+      max-merges: 1
+      dry-run: ${{ inputs.dry-run || false }}
+```
+
 ## Package-Manager Adapters
 
 Old ABV assumed JavaScript repositories with root version state and often

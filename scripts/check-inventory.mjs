@@ -41,6 +41,7 @@ const requiredPaths = [
   ".github/actionlint.yaml",
   ".github/workflows/self-hosted-runner-smoke.yml",
   ".github/workflows/buildchain-ref-promotion.yml",
+  ".github/workflows/dev-pr-auto-merge.yml",
   ".github/workflows/release-candidate-promote.yml",
   ".github/workflows/npm-publish.yml",
   ".github/workflows/binary-distribution.yml",
