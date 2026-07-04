@@ -377,12 +377,14 @@ The passport records two separate source identities:
   commit used for publish authority.
 
 The reusable promote wrapper resolves the merged PR, finds exactly one matching
-PR-stage release-candidate artifact, downloads it, compares the built tree with
-the promotion channel tree, locks `publish-gate/{alpha,release,major}` to the
-promotion channel commit, and then calls `actions/promote-buildchain-ref` with
+PR-stage release-candidate artifact, downloads it with the build summary and
+payload artifacts from the same PR-stage run, validates the payload count,
+compares the built tree with the promotion channel tree, locks
+`publish-gate/{alpha,release,major}` to the promotion channel commit, and then
+calls `actions/promote-buildchain-ref` with
 `promote-only-release-candidate: "true"`. It does not call `.build.yml`, does
-not create a matrix, and must fail before publish if the RC evidence is missing
-or ambiguous.
+not create a matrix, and must fail before publish if the RC evidence or payload
+set is missing or ambiguous.
 
 ```yaml
 jobs:
@@ -400,7 +402,25 @@ jobs:
       publish-target: npm
       runner-preset: github-hosted
       trusted-publishing: true
+      required-status-check: check
+      required-artifact-count: 3
+      publish-dist-tag: alpha
+      publish-package-set-order: platforms-first-main-last
+      publish-package-main: "@kungfu-tech/libnode"
+      release-passport-product-name: Libnode
 ```
+
+`publish-required-artifacts-json` can still be passed explicitly for custom
+publish targets. For the default `publish-artifact-kind: npm` path, consumers do
+not download artifacts or run repository scripts to build publish evidence. The
+wrapper downloads the PR-stage payload artifacts, finds the downloaded `.tgz`
+packages, reads each tarball's `package/package.json` for the real scoped
+package name and version, computes the npm `sha512-...` integrity from the
+tarball bytes, marks the package matching `publish-package-main` as `role:
+main`, marks the rest as `role: platform`, and passes the generated
+`publish-required-artifacts-json` to `promote-buildchain-ref` before any publish
+side effect. Downloaded platform manifests are still passed into the release
+passport unless `release-passport-platform-manifest-paths` is set explicitly.
 
 Custom publish jobs can also repeat the channel-ref preflight:
 

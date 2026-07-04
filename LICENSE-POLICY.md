@@ -38,11 +38,27 @@ Apache-2.0 grants copyright and patent permissions. It does not grant trademark
 rights. Names, logos, domain names, and product marks such as "Kungfu" and
 "Buildchain" may be governed by separate brand guidelines.
 
+See [TRADEMARK.md](TRADEMARK.md) for the official project mark and fork identity
+boundary.
+
 ## Hosted and commercial services
 
 The open source license covers this repository. Hosted services, team features,
 enterprise support, managed deployments, commercial connectors, or other
 services offered by the project maintainers may use separate terms.
+
+See [ACCEPTABLE_USE.md](ACCEPTABLE_USE.md) for acceptable use of official hosted,
+managed, or maintainer-operated services.
+
+## Upstream provider integrations
+
+Official Buildchain integrations should use documented provider APIs, workflow
+surfaces, package-registry flows, cloud APIs, OIDC, and least-privilege
+credentials. They should not bypass provider protections, hide credential
+boundaries, or forge release evidence.
+
+See [PROVIDER_COMPLIANCE.md](PROVIDER_COMPLIANCE.md) for the official provider
+integration posture.
 
 ## Third-party software
 
