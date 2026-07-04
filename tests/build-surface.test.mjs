@@ -216,6 +216,7 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-candidate-workflow-name:/);
   assert.match(workflow, /default: "Build"/);
   assert.match(workflow, /required-status-check:/);
+  assert.match(workflow, /target-sha:/);
   assert.match(workflow, /publish-mode:/);
   assert.match(workflow, /publish-dist-tag:/);
   assert.match(workflow, /publish-package-set-order:/);
@@ -227,6 +228,8 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /BUILDCHAIN_RC_WORKFLOW_NAME: \$\{\{ inputs\.release-candidate-workflow-name \}\}/);
   assert.match(workflow, /BUILDCHAIN_REQUIRED_ARTIFACT_COUNT: \$\{\{ inputs\.required-artifact-count \}\}/);
   assert.match(workflow, /BUILDCHAIN_PUBLISH_PACKAGE_MAIN: \$\{\{ inputs\.publish-package-main \}\}/);
+  assert.match(workflow, /derived_channel="alpha"/);
+  assert.match(workflow, /INPUT_TARGET_SHA: \$\{\{ inputs\.target-sha \}\}/);
   assert.match(workflow, /promote-only-release-candidate: "true"/);
   assert.match(workflow, /release-candidate-passport-path:/);
   assert.match(workflow, /release-candidate-build-summary-path:/);
@@ -523,7 +526,7 @@ test("report issue action exposes workflow-friction feedback mode", () => {
     "utf8",
   );
   const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/buildchain-ref-promotion.yml"),
+    path.join(root, ".github/workflows/release-candidate-promote.yml"),
     "utf8",
   );
 
@@ -567,11 +570,15 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
     "utf8",
   );
 
-  assert.match(workflow, /Resolve release candidate evidence/);
-  assert.match(workflow, /scripts\/release-candidate-resolver\.mjs/);
-  assert.match(workflow, /promote-only-release-candidate: \$\{\{ steps\.release_candidate\.outputs\.promote-only-release-candidate \}\}/);
-  assert.match(workflow, /release-candidate-passport-path: \$\{\{ steps\.release_candidate\.outputs\.release-candidate-passport-path \}\}/);
-  assert.match(workflow, /release-candidate-build-summary-path: \$\{\{ steps\.release_candidate\.outputs\.release-candidate-build-summary-path \}\}/);
+  assert.match(workflow, /uses: \.\/\.github\/workflows\/release-candidate-promote\.yml/);
+  assert.match(workflow, /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.sha \|\| github\.sha \}\}/);
+  assert.match(workflow, /target-ref: \$\{\{ github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\] \}\}/);
+  assert.match(workflow, /target-sha: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.sha \|\| github\.sha \}\}/);
+  assert.match(workflow, /release-candidate-workflow-file: build-surface-fixture\.yml/);
+  assert.match(workflow, /release-candidate-workflow-name: Build Surface Fixture/);
+  assert.match(workflow, /publish-required-artifacts-json: "\[\]"/);
+  assert.doesNotMatch(workflow, /run: node scripts\/release-candidate-resolver\.mjs/);
+  assert.doesNotMatch(workflow, /uses: \.\/actions\/promote-buildchain-ref/);
 });
 
 test("publish source-lock docs distinguish source refs from promotion targets", () => {
