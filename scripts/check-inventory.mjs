@@ -200,6 +200,7 @@ for (const forbiddenSnippet of [
 }
 for (const requiredSnippet of [
   "id-token: write",
+  "actions: read",
   "uses: ./.github/workflows/release-candidate-promote.yml",
   "target-sha: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}",
   "publish-required-artifacts-json: \"[]\"",
