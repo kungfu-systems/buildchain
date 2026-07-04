@@ -1455,8 +1455,9 @@ test("diagnostics process sampler reads Windows process descendants", () => {
     rootPid: "400",
     platform: "win32",
     runCommand(command, args) {
-      assert.equal(command, "powershell");
+      assert.equal(command, "powershell.exe");
       assert.equal(args[0], "-NoProfile");
+      assert.doesNotMatch(args.at(-1), /\|;/);
       return JSON.stringify([
         {
           ProcessId: 400,
@@ -1481,10 +1482,31 @@ test("diagnostics process sampler reads Windows process descendants", () => {
   });
 
   assert.equal(snapshot.platform, "win32");
+  assert.equal(snapshot.rootProcess.command, "powershell.exe");
   assert.equal(snapshot.processes.length, 2);
   assert.equal(snapshot.processes[0].command, "MSBuild.exe");
   assert.match(snapshot.processes[0].commandLine, /\/m:12/);
   assert.equal(snapshot.processes[1].command, "cl.exe");
+});
+
+test("diagnostics process sampler records unavailable Windows sampler state", () => {
+  const snapshot = collectProcessTreeSnapshot({
+    rootPid: "400",
+    platform: "win32",
+    runCommand(command) {
+      throw new Error(`${command} unavailable`);
+    },
+  });
+
+  assert.equal(snapshot.platform, "win32");
+  assert.equal(snapshot.samplerUnavailable, true);
+  assert.match(snapshot.samplerUnavailableReason, /Windows process sampler unavailable/);
+  assert.deepEqual(snapshot.processes, []);
+
+  const summary = summarizeProcessSamples({ samples: [snapshot] });
+  assert.equal(summary.sampler.unavailable, true);
+  assert.equal(summary.sampler.unavailableSamples, 1);
+  assert.equal(summary.sampler.unavailableReasons.length, 1);
 });
 
 test("CLI samples a long-running process tree and preserves concurrency context", () => {
