@@ -117,6 +117,11 @@ on:
           build/stage
         type: string
         required: false
+      release-candidate:
+        description: "Generate and upload a PR-stage release-candidate passport after the full platform matrix succeeds"
+        default: false
+        type: boolean
+        required: false
       expected-artifacts-json:
         description: "Optional JSON expectation contract for final artifact files"
         default: ""
@@ -168,9 +173,15 @@ on:
       build-diagnostics-summary-artifact:
         description: "Uploaded aggregate diagnostics summary artifact name"
         value: ${{ jobs.summarize.outputs.diagnostics-summary-artifact-name }}
+      release-candidate-passport-artifact:
+        description: "Uploaded release-candidate passport artifact name when release-candidate is enabled"
+        value: ${{ jobs.summarize.outputs.release-candidate-passport-artifact-name }}
       release-candidate-artifact:
-        description: "Uploaded release-candidate bundle artifact name"
-        value: ${{ jobs.summarize.outputs.release-candidate-artifact-name }}
+        description: "Uploaded release-candidate passport artifact name when release-candidate is enabled"
+        value: ${{ jobs.summarize.outputs.release-candidate-passport-artifact-name }}
+      release-candidate-passport-json:
+        description: "Compact release-candidate passport JSON when release-candidate is enabled"
+        value: ${{ jobs.summarize.outputs.release-candidate-passport-json }}
       build-summary-json:
         description: "Compact aggregate build summary JSON"
         value: ${{ jobs.summarize.outputs.artifact-summary-json }}
@@ -210,6 +221,9 @@ on:
       publish-source-sha:
         description: "Locked source SHA used for checkout/build/summary"
         value: ${{ jobs.trust-gate.outputs.publish-source-sha }}
+      publish-source-tree-sha:
+        description: "Git tree SHA for the locked source commit used by release-candidate promotion equivalence checks"
+        value: ${{ jobs.resolve-source.outputs.publish-source-tree-sha }}
       publish-source-locked:
         description: "Whether a publish-gate source ref was explicitly locked"
         value: ${{ jobs.trust-gate.outputs.publish-source-locked }}
@@ -426,6 +440,7 @@ jobs:
     outputs:
       publish-source-ref: ${{ steps.manifest.outputs.publish-source-ref }}
       publish-source-sha: ${{ steps.manifest.outputs.publish-source-sha }}
+      publish-source-tree-sha: ${{ steps.source-tree.outputs.publish-source-tree-sha }}
       publish-source-locked: ${{ steps.manifest.outputs.publish-source-locked }}
       publish-source-channel: ${{ steps.manifest.outputs.publish-source-channel }}
       publish-source-line: ${{ steps.manifest.outputs.publish-source-line }}
@@ -463,6 +478,13 @@ jobs:
           BUILDCHAIN_PUBLISH_ANCHOR_REQUEST_JSON: ${{ inputs.publish-anchor-request-json }}
           BUILDCHAIN_PUBLISH_REGISTRY: ${{ inputs.publish-registry }}
           BUILDCHAIN_RELEASE_MANIFEST: .buildchain/artifacts/publish-source-manifest.json
+
+      - name: Resolve source tree SHA
+        id: source-tree
+        shell: bash
+        run: |
+          tree_sha="$(git -C source rev-parse "HEAD^{tree}")"
+          echo "publish-source-tree-sha=${tree_sha}" >> "$GITHUB_OUTPUT"
 
       - name: Upload resolved release manifest
         uses: actions/upload-artifact@v7.0.1
@@ -822,11 +844,12 @@ jobs:
     outputs:
       summary-artifact-name: ${{ steps.names.outputs.summary-artifact-name }}
       diagnostics-summary-artifact-name: ${{ steps.names.outputs.diagnostics-summary-artifact-name }}
-      release-candidate-artifact-name: ${{ steps.names.outputs.release-candidate-artifact-name }}
       summary-path: ${{ steps.summary.outputs.summary-path }}
       artifact-summary-json: ${{ steps.summary.outputs.artifact-summary-json }}
       diagnostics-summary-path: ${{ steps.diagnostics.outputs.diagnostics-summary-path }}
       diagnostics-summary-json: ${{ steps.diagnostics.outputs.diagnostics-summary-json }}
+      release-candidate-passport-artifact-name: ${{ steps.names.outputs.release-candidate-passport-artifact-name }}
+      release-candidate-passport-json: ${{ steps.release-candidate.outputs.release-candidate-passport-json }}
     steps:
       - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
@@ -834,14 +857,6 @@ jobs:
           repository: ${{ inputs.buildchain-repository }}
           ref: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           path: .buildchain/runtime
-          persist-credentials: false
-
-      - name: Checkout built source for release-candidate identity
-        uses: actions/checkout@v7.0.0
-        with:
-          ref: ${{ needs.resolve-source.outputs.publish-source-sha }}
-          clean: true
-          path: source-for-rc
           persist-credentials: false
 
       - name: Install Buildchain runtime dependencies
@@ -853,12 +868,17 @@ jobs:
           {
             echo "summary-artifact-name=${BUILDCHAIN_SUMMARY_ARTIFACT_NAME}"
             echo "diagnostics-summary-artifact-name=${BUILDCHAIN_DIAGNOSTICS_SUMMARY_ARTIFACT_NAME}"
-            echo "release-candidate-artifact-name=${BUILDCHAIN_RELEASE_CANDIDATE_ARTIFACT_NAME}"
+            if [ "${BUILDCHAIN_RC_ENABLED}" = "true" ]; then
+              echo "release-candidate-passport-artifact-name=${BUILDCHAIN_RC_PASSPORT_ARTIFACT_NAME}"
+            else
+              echo "release-candidate-passport-artifact-name="
+            fi
           } >> "${GITHUB_OUTPUT}"
         env:
           BUILDCHAIN_SUMMARY_ARTIFACT_NAME: ${{ inputs.artifact-name }}-summary-${{ needs.resolve-source.outputs.publish-source-sha }}
           BUILDCHAIN_DIAGNOSTICS_SUMMARY_ARTIFACT_NAME: ${{ inputs.artifact-name }}-diagnostics-summary-${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_RELEASE_CANDIDATE_ARTIFACT_NAME: ${{ inputs.artifact-name }}-release-candidate-pr-${{ github.event.pull_request.number || '0' }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_RC_PASSPORT_ARTIFACT_NAME: ${{ inputs.artifact-name }}-release-candidate-${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_RC_ENABLED: ${{ inputs.release-candidate }}
 
       - name: Download platform manifests
         uses: actions/download-artifact@v7.0.0
@@ -894,6 +914,7 @@ jobs:
           BUILDCHAIN_PUBLISH_SOURCE_CONSUMER_VERSION: ${{ needs.resolve-source.outputs.publish-source-consumer-version }}
           BUILDCHAIN_RELEASE_MANIFEST_JSON: ${{ needs.resolve-source.outputs.release-manifest-json }}
           BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
           BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
           BUILDCHAIN_RUNTIME_REQUESTED_REF: ${{ inputs.buildchain-ref }}
           BUILDCHAIN_RUNTIME_REF: ${{ needs.trust-gate.outputs.buildchain-runtime-ref }}
@@ -912,26 +933,26 @@ jobs:
           BUILDCHAIN_DIAGNOSTICS_OUTPUT: .buildchain/artifacts/diagnostics-summary.json
           BUILDCHAIN_PLATFORM_COUNT: ${{ needs.resolve-contract.outputs.platform-count }}
 
-      - name: Resolve built source tree
-        id: source-tree
-        run: |
-          echo "tree=$(git -C source-for-rc rev-parse 'HEAD^{tree}')" >> "${GITHUB_OUTPUT}"
-
-      - name: Create release-candidate passport
-        run: node .buildchain/runtime/scripts/create-release-candidate-passport.mjs
+      - name: Generate release candidate passport
+        id: release-candidate
+        if: ${{ inputs.release-candidate }}
+        run: node .buildchain/runtime/scripts/generate-release-candidate-passport.mjs
         env:
-          BUILDCHAIN_RC_OUTPUT_DIR: .buildchain/release-candidate
-          BUILDCHAIN_RC_BUILD_SUMMARY: .buildchain/artifacts/build-summary.json
-          BUILDCHAIN_RC_PLATFORM_MANIFESTS: .buildchain/downloaded-manifests
-          BUILDCHAIN_ARTIFACT_NAME: ${{ inputs.artifact-name }}
-          BUILDCHAIN_BUILT_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_BUILT_SOURCE_TREE_SHA: ${{ steps.source-tree.outputs.tree }}
-          BUILDCHAIN_BUILT_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
-          BUILDCHAIN_TARGET_REF: ${{ github.base_ref || needs.resolve-source.outputs.publish-source-ref || github.ref_name }}
-          BUILDCHAIN_PUBLISH_GATE_REF: ${{ needs.resolve-source.outputs.publish-source-ref }}
-          BUILDCHAIN_CHANNEL: ${{ needs.trust-gate.outputs.publish-channel }}
-          BUILDCHAIN_VERSION: ${{ needs.resolve-source.outputs.publish-source-consumer-version }}
-          BUILDCHAIN_PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number || '' }}
+          BUILDCHAIN_BUILD_SUMMARY_PATH: .buildchain/artifacts/build-summary.json
+          BUILDCHAIN_RC_PASSPORT_PATH: .buildchain/artifacts/release-candidate-passport.json
+          BUILDCHAIN_RC_TARGET_CHANNEL: ${{ needs.resolve-source.outputs.publish-source-channel || needs.trust-gate.outputs.publish-channel }}
+          BUILDCHAIN_RC_VERSION: ${{ needs.resolve-source.outputs.publish-source-consumer-version }}
+          BUILDCHAIN_RC_SOURCE_HEAD_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_RC_MERGE_REF_SHA: ${{ github.sha }}
+          BUILDCHAIN_RC_SOURCE_TREE_HASH: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
+          BUILDCHAIN_RUNTIME_REF: ${{ needs.trust-gate.outputs.buildchain-runtime-ref }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_WORKFLOW_SHELL_REF: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-ref }}
+          BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          BUILDCHAIN_PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
+          BUILDCHAIN_PULL_REQUEST_URL: ${{ github.event.pull_request.html_url }}
+          BUILDCHAIN_PULL_REQUEST_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          BUILDCHAIN_PULL_REQUEST_BASE_REF: ${{ github.event.pull_request.base.ref }}
 
       - name: Upload aggregate build summary
         uses: actions/upload-artifact@v7.0.1
@@ -949,10 +970,11 @@ jobs:
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
-      - name: Upload release-candidate bundle
+      - name: Upload release candidate passport
+        if: ${{ inputs.release-candidate }}
         uses: actions/upload-artifact@v7.0.1
         with:
-          name: ${{ steps.names.outputs.release-candidate-artifact-name }}
-          path: .buildchain/release-candidate
+          name: ${{ steps.names.outputs.release-candidate-passport-artifact-name }}
+          path: .buildchain/artifacts/release-candidate-passport.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}

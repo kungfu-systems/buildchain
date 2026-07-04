@@ -1,0 +1,151 @@
+name: "Report Buildchain Issue"
+author: "Keren Dong"
+description: "Create or update a Buildchain repository issue from a consumer workflow diagnostic"
+inputs:
+  token:
+    description: "GitHub token with issues:write access to target-repository"
+    required: true
+  report-kind:
+    description: "Report contract: consumer or workflow-friction"
+    default: "consumer"
+  target-repository:
+    description: "Repository that receives Buildchain consumer reports"
+    default: "kungfu-systems/buildchain"
+  title:
+    description: "Issue title. Defaults to a consumer repository and failure-code title"
+    default: ""
+  summary:
+    description: "Short human-readable diagnostic summary"
+    default: ""
+  failure-code:
+    description: "Stable failure bucket used to compute the dedupe fingerprint"
+    default: "consumer-report"
+  fingerprint:
+    description: "Explicit dedupe fingerprint. When empty, Buildchain computes one"
+    default: ""
+  labels:
+    description: "Comma- or newline-separated labels for newly created issues"
+    default: "buildchain-consumer-feedback"
+  mode:
+    description: "create, create-or-comment, or comment"
+    default: "create-or-comment"
+  fail-on-error:
+    description: "Fail the workflow when issue reporting fails"
+    default: "false"
+  dry-run:
+    description: "Build the report and outputs without calling GitHub"
+    default: "false"
+  max-body-bytes:
+    description: "Maximum issue or comment body size before truncation"
+    default: "60000"
+  comment-cooldown-hours:
+    description: "When updating an existing issue, skip duplicate comments if the latest comment is newer than this many hours"
+    default: "0"
+  repository:
+    description: "Repository full name for workflow-friction reports. Defaults to consumer-repository or GITHUB_REPOSITORY"
+    default: ""
+  consumer-repository:
+    description: "Consumer repository full name. Defaults to GITHUB_REPOSITORY"
+    default: ""
+  consumer-ref:
+    description: "Consumer ref. Defaults to GITHUB_REF"
+    default: ""
+  consumer-sha:
+    description: "Consumer commit SHA. Defaults to GITHUB_SHA"
+    default: ""
+  workflow:
+    description: "Consumer workflow name. Defaults to GITHUB_WORKFLOW"
+    default: ""
+  job:
+    description: "Consumer job id. Defaults to GITHUB_JOB"
+    default: ""
+  run-id:
+    description: "Consumer workflow run id. Defaults to GITHUB_RUN_ID"
+    default: ""
+  run-url:
+    description: "Consumer workflow run URL. Defaults to the GitHub Actions run URL"
+    default: ""
+  run-attempt:
+    description: "Workflow run attempt for workflow-friction reports"
+    default: ""
+  pull-request:
+    description: "Pull request URL or number for workflow-friction reports"
+    default: ""
+  channel:
+    description: "Buildchain channel for workflow-friction reports"
+    default: ""
+  release-intent:
+    description: "Release intent or human version label for workflow-friction reports"
+    default: ""
+  version:
+    description: "Product version for workflow-friction reports"
+    default: ""
+  source-ref:
+    description: "Source ref for workflow-friction reports"
+    default: ""
+  source-sha:
+    description: "Source SHA for workflow-friction reports"
+    default: ""
+  source-tree-hash:
+    description: "Source tree hash for workflow-friction reports"
+    default: ""
+  friction-class:
+    description: "Stable workflow-friction bucket used to compute the dedupe fingerprint"
+    default: ""
+  diagnosis:
+    description: "Workflow-friction diagnosis details"
+    default: ""
+  next-action:
+    description: "Suggested next action for workflow-friction reports"
+    default: ""
+  related-runs-json:
+    description: "JSON array of related workflow run labels for workflow-friction reports"
+    default: ""
+  heavy-builds-json:
+    description: "JSON array of heavy build evidence objects for workflow-friction reports"
+    default: ""
+  buildchain-ref:
+    description: "Buildchain ref used by the consumer workflow"
+    default: ""
+  buildchain-version:
+    description: "Buildchain npm or binary version used by the consumer workflow"
+    default: ""
+  artifact-url:
+    description: "Optional artifact URL with supporting evidence"
+    default: ""
+  passport-url:
+    description: "Optional release passport URL"
+    default: ""
+  passport-path:
+    description: "Optional local release passport path"
+    default: ""
+  diagnostics-url:
+    description: "Optional diagnostics artifact URL"
+    default: ""
+  diagnostics-path:
+    description: "Optional diagnostics artifact path"
+    default: ""
+  body:
+    description: "Additional issue body details"
+    default: ""
+  body-file:
+    description: "Optional UTF-8 file appended to the issue body"
+    default: ""
+outputs:
+  ok:
+    description: "true when reporting succeeded or dry-run completed"
+  action:
+    description: "created, commented, found, dry-run, or failed"
+  issue-number:
+    description: "Reported GitHub issue number"
+  issue-url:
+    description: "Reported GitHub issue URL"
+  created:
+    description: "true when a new issue was created"
+  commented:
+    description: "true when an existing issue was commented"
+  fingerprint:
+    description: "Stable dedupe fingerprint"
+runs:
+  using: "node24"
+  main: "dist/index.js"

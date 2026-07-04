@@ -17,6 +17,7 @@ const requiredPaths = [
   "docs/MAP.md",
   "docs/binary-distribution.md",
   "docs/cli.md",
+  "docs/consumer-issue-reporting.md",
   "docs/install.md",
   "docs/product-mechanism.md",
   "docs/release-passport.md",
@@ -27,11 +28,10 @@ const requiredPaths = [
   "scripts/build-standalone-binary.mjs",
   "scripts/create-release-bundle.mjs",
   "scripts/generate-site-bundle.mjs",
+  "scripts/generate-release-candidate-passport.mjs",
   "scripts/npm-publish-dry-run.mjs",
   "scripts/npm-publish-transaction.mjs",
-  "scripts/release-candidate-core.mjs",
   "scripts/release-candidate-resolver.mjs",
-  "scripts/release-candidate-promote-preflight.mjs",
   "scripts/workflow-friction-report.mjs",
   "docs/migration-inventory.md",
   "docs/lifecycle-protocol.md",
@@ -74,6 +74,9 @@ if (rootPackage.exports?.["."] !== "./packages/core/index.js") {
 if (rootPackage.exports?.["./diagnostics"] !== "./packages/core/diagnostics.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/diagnostics");
 }
+if (rootPackage.exports?.["./issue-reporting"] !== "./packages/core/issue-reporting.js") {
+  throw new Error("root package must export @kungfu-tech/buildchain/issue-reporting");
+}
 if (rootPackage.exports?.["./logging"] !== "./packages/core/logging.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/logging");
 }
@@ -112,6 +115,9 @@ if (!coreIndexSource.includes("verifyBuildchainLogEvents")) {
 }
 if (!coreIndexSource.includes("collectBuildchainDiagnostics")) {
   throw new Error("packages/core/index.js must export collectBuildchainDiagnostics");
+}
+if (!coreIndexSource.includes("reportBuildchainIssue")) {
+  throw new Error("packages/core/index.js must export reportBuildchainIssue");
 }
 for (const requiredSnippet of [
   "Release passport and binary distribution are a minor surface.",

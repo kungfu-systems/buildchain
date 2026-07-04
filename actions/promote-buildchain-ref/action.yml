@@ -99,16 +99,16 @@ inputs:
     description: "Optional comma- or newline-separated platform artifact manifest JSON paths to include"
     default: ""
   promote-only-release-candidate:
-    description: "Require a PR-stage release-candidate passport and forbid rebuilding before publish"
+    description: "Fail fast unless a verified PR-stage release-candidate passport matches the promotion source before publish-gate side effects run"
     default: "false"
   release-candidate-passport-path:
-    description: "Path to the PR-stage release-candidate passport JSON"
-    default: ""
+    description: "Path to the PR-stage release-candidate passport JSON used by promote-only-release-candidate"
+    default: ".buildchain/artifacts/release-candidate-passport.json"
   release-candidate-build-summary-path:
-    description: "Path to the PR-stage aggregate build summary JSON"
-    default: ""
+    description: "Optional aggregate build summary JSON whose hash must match the release-candidate passport when present"
+    default: ".buildchain/artifacts/build-summary.json"
   release-candidate-version:
-    description: "Expected consumer-visible release-candidate version"
+    description: "Optional expected product version recorded in the release-candidate passport"
     default: ""
 outputs:
   sha:

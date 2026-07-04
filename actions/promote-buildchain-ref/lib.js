@@ -31,6 +31,7 @@ import {
   writeReleaseTransaction,
 } from "../../packages/core/publish-transaction.js";
 import { collectGitHubReleasePassport } from "../../packages/core/release-passport.js";
+import { validateReleaseCandidatePassport } from "../../packages/core/release-candidate.js";
 
 const COMMIT_IDENTITY = {
   name: "Keren Dong",
@@ -635,6 +636,66 @@ function splitPathList(value = "") {
     .filter(Boolean);
 }
 
+function validatePromotionReleaseCandidate({
+  cwd,
+  passportPath = ".buildchain/artifacts/release-candidate-passport.json",
+  buildSummaryPath = ".buildchain/artifacts/build-summary.json",
+  repository,
+  targetChannel,
+  version = "",
+  sourceHeadSha,
+  sourceTreeSha = "",
+  requirePlatforms = true,
+}) {
+  const resolvedPassportPath = resolveMaybeRelative(cwd, passportPath);
+  if (!fs.existsSync(resolvedPassportPath)) {
+    throw new Error(
+      `promote-only release candidate requires a verified RC passport at ${passportPath}; run the channel PR reusable build first and pass its release-candidate-passport artifact`,
+    );
+  }
+  const passport = JSON.parse(fs.readFileSync(resolvedPassportPath, "utf8"));
+  const resolvedSummaryPath = resolveMaybeRelative(cwd, buildSummaryPath);
+  const buildSummary = fs.existsSync(resolvedSummaryPath)
+    ? JSON.parse(fs.readFileSync(resolvedSummaryPath, "utf8"))
+    : undefined;
+  const validation = validateReleaseCandidatePassport({
+    passport,
+    repository,
+    targetChannel,
+    version,
+    buildSummary,
+    requirePlatforms,
+  });
+  const acceptedSourceShas = [
+    passport.source?.headSha,
+    passport.source?.mergeRefSha,
+  ].filter(Boolean);
+  const sourceTreeHash = passport.source?.treeHash || "";
+  if (
+    sourceHeadSha &&
+    !acceptedSourceShas.includes(sourceHeadSha) &&
+    (!sourceTreeSha || sourceTreeHash !== sourceTreeSha)
+  ) {
+    validation.errors.push(
+      `source identity mismatch: target SHA ${sourceHeadSha} did not match RC head/merge SHAs (${acceptedSourceShas.join(", ") || "<none>"}) or target tree ${sourceTreeSha || "<empty>"} did not match RC tree ${sourceTreeHash || "<empty>"}`,
+    );
+  }
+  if (validation.errors.length > 0) {
+    throw new Error(`release candidate passport validation failed: ${validation.errors.join("; ")}`);
+  }
+  return {
+    passportPath: resolvedPassportPath,
+    buildSummaryPath: buildSummary ? resolvedSummaryPath : "",
+    candidateHash: passport.candidateHash || "",
+    platformCount: Array.isArray(passport.platformMatrix) ? passport.platformMatrix.length : 0,
+    builtSourceSha: passport.source?.mergeRefSha || passport.source?.headSha || "",
+    builtSourceTreeSha: passport.source?.treeHash || "",
+    promotionChannelSha: sourceHeadSha || "",
+    promotionChannelTreeSha: sourceTreeSha || "",
+    treeEquivalent: Boolean(sourceTreeSha && sourceTreeHash && sourceTreeSha === sourceTreeHash),
+  };
+}
+
 function resolveMaybeRelative(cwd, filePath) {
   return path.isAbsolute(filePath) ? filePath : path.resolve(cwd, filePath);
 }
@@ -948,6 +1009,17 @@ async function getGitCommitWithRetry({ octokit, owner, repo, commitSha }) {
   return retryGitHubOperation(
     `git.getCommit ${commitSha}`,
     () => octokit.rest.git.getCommit({
+      owner,
+      repo,
+      commit_sha: commitSha,
+    }),
+  );
+}
+
+async function listPullRequestsAssociatedWithCommitWithRetry({ octokit, owner, repo, commitSha }) {
+  return retryGitHubOperation(
+    `repos.listPullRequestsAssociatedWithCommit ${commitSha}`,
+    () => octokit.rest.repos.listPullRequestsAssociatedWithCommit({
       owner,
       repo,
       commit_sha: commitSha,
@@ -1718,6 +1790,8 @@ async function collectAndPersistReleasePassport({
     validation: result.validation || { valid: true, errors: [] },
   };
   const passportSourceSha = result.transaction.source_sha || sourceSha;
+  const internalVersion = stripTagPrefix(result.transaction.exact_tag || "");
+  const publishedVersion = result.transaction.version || internalVersion;
   const collected = collectGitHubReleasePassport({
     cwd,
     tag: result.transaction.exact_tag,
@@ -1744,10 +1818,12 @@ async function collectAndPersistReleasePassport({
     releaseJsonExtra: JSON.stringify({
       channel,
       targetRef,
+      internalTag: result.transaction.exact_tag,
+      internalVersion,
+      publishedVersion,
+      versionLabel: publishedVersion || result.transaction.exact_tag,
       releaseSha: result.transaction.release_sha,
       releaseMaterialSha: result.transaction.release_material_sha,
-      publishToolingSha: result.transaction.publish_tooling_sha,
-      releaseStateRef: `refs/heads/${result.transaction.state_ref}`,
       ...(releaseCandidateValidation
         ? {
             builtSourceSha: releaseCandidateValidation.builtSourceSha,
@@ -1757,6 +1833,8 @@ async function collectAndPersistReleasePassport({
             treeEquivalent: releaseCandidateValidation.treeEquivalent,
           }
         : {}),
+      publishToolingSha: result.transaction.publish_tooling_sha,
+      releaseStateRef: `refs/heads/${result.transaction.state_ref}`,
     }),
     publishJson: JSON.stringify({
       auth: result.publishContract?.auth || "",
@@ -1862,10 +1940,11 @@ async function assertChannelPromotionPr({
 }) {
   const expectedHeadRef = expectedHeadRefForTarget(targetRef);
   const { data: pullRequests } =
-    await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+    await listPullRequestsAssociatedWithCommitWithRetry({
+      octokit,
       owner,
       repo,
-      commit_sha: sha,
+      commitSha: sha,
     });
   const matchingPullRequest = pullRequests.find((pullRequest) => {
     const baseRef = pullRequest.base?.ref;
@@ -2465,7 +2544,10 @@ async function promoteBuildchainRefs({
   releasePassportProductName = "Buildchain",
   releasePassportBuildSummaryPath = ".buildchain/artifacts/build-summary.json",
   releasePassportPlatformManifestPaths = "",
-  releaseCandidateValidation = undefined,
+  promoteOnlyReleaseCandidate = false,
+  releaseCandidatePassportPath = ".buildchain/artifacts/release-candidate-passport.json",
+  releaseCandidateBuildSummaryPath = ".buildchain/artifacts/build-summary.json",
+  releaseCandidateVersion = "",
   actor = process.env.GITHUB_ACTOR || process.env.USER || "",
   runId = process.env.GITHUB_RUN_ID || "",
   publishTransactionOverride = false,
@@ -2491,6 +2573,27 @@ async function promoteBuildchainRefs({
   }
 
   const updates = [];
+  let releaseCandidateValidation;
+  if (promoteOnlyReleaseCandidate) {
+    const targetCommitInfo = await getCommitInfo(octokit, owner, repo, sha);
+    releaseCandidateValidation = validatePromotionReleaseCandidate({
+      cwd,
+      passportPath: releaseCandidatePassportPath,
+      buildSummaryPath: releaseCandidateBuildSummaryPath,
+      repository: `${owner}/${repo}`,
+      targetChannel: rule.channel,
+      version: releaseCandidateVersion,
+      sourceHeadSha: sha,
+      sourceTreeSha: targetCommitInfo.treeSha,
+    });
+    updates.push({
+      action: "verified-release-candidate",
+      sha,
+      candidateHash: releaseCandidateValidation.candidateHash,
+      platformCount: releaseCandidateValidation.platformCount,
+      passportPath: path.relative(cwd, releaseCandidateValidation.passportPath).split(path.sep).join("/"),
+    });
+  }
 
   const listLineRefs = async (releasePrefix = rule.releasePrefix) => {
     const { data: tagRefs } = await octokit.rest.git.listMatchingRefs({
@@ -2778,10 +2881,11 @@ async function promoteBuildchainRefs({
 
   const findMatchingReleaseRecoveryPullRequest = async ({ commitSha, targetRef }) => {
     const { data: pullRequests } =
-      await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+      await listPullRequestsAssociatedWithCommitWithRetry({
+        octokit,
         owner,
         repo,
-        commit_sha: commitSha,
+        commitSha,
       });
     return pullRequests.find((pullRequest) => {
       const baseRef = pullRequest.base?.ref;
@@ -2799,10 +2903,11 @@ async function promoteBuildchainRefs({
 
   const findMatchingTargetPullRequest = async ({ commitSha, targetRef }) => {
     const { data: pullRequests } =
-      await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+      await listPullRequestsAssociatedWithCommitWithRetry({
+        octokit,
         owner,
         repo,
-        commit_sha: commitSha,
+        commitSha,
       });
     return pullRequests.find((pullRequest) => {
       const baseRef = pullRequest.base?.ref;
@@ -2830,10 +2935,11 @@ async function promoteBuildchainRefs({
         throw directError;
       }
       const { data: pullRequests } =
-        await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+        await listPullRequestsAssociatedWithCommitWithRetry({
+          octokit,
           owner,
           repo,
-          commit_sha: commitSha,
+          commitSha,
         });
       const matchingVersionStatePullRequest = pullRequests.find((pullRequest) => {
         const baseRef = pullRequest.base?.ref;
@@ -4073,4 +4179,5 @@ export {
   selectReleaseTag,
   stripTagPrefix,
   updateVersionStateContents,
+  validatePromotionReleaseCandidate,
 };

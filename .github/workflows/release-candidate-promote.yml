@@ -93,8 +93,8 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       promoted-sha: ${{ steps.target.outputs.sha }}
-      built-source-sha: ${{ steps.preflight.outputs.built-source-sha }}
-      release-candidate-artifact: ${{ steps.rc.outputs.release-candidate-artifact-name }}
+      built-source-sha: ${{ steps.rc.outputs.release-candidate-source-sha }}
+      release-candidate-artifact: ${{ steps.rc.outputs.release-candidate-artifact }}
     steps:
       - name: Resolve target ref
         id: target-ref
@@ -141,33 +141,10 @@ jobs:
         run: node .buildchain/runtime/scripts/release-candidate-resolver.mjs
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          BUILDCHAIN_PROMOTION_CHANNEL_SHA: ${{ steps.target.outputs.sha }}
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_TARGET_SHA: ${{ steps.target.outputs.sha }}
           BUILDCHAIN_TARGET_REF: ${{ steps.target-ref.outputs.value }}
-          BUILDCHAIN_ARTIFACT_NAME: ${{ inputs.artifact-name }}
-
-      - name: Download release-candidate bundle
-        uses: actions/download-artifact@v7.0.0
-        with:
-          name: ${{ steps.rc.outputs.release-candidate-artifact-name }}
-          run-id: ${{ steps.rc.outputs.release-candidate-run-id }}
-          github-token: ${{ github.token }}
-          path: .buildchain/release-candidate
-
-      - name: Resolve promotion tree
-        id: promotion-tree
-        run: |
-          echo "tree=$(git rev-parse 'HEAD^{tree}')" >> "${GITHUB_OUTPUT}"
-
-      - name: Release-candidate preflight
-        id: preflight
-        run: node .buildchain/runtime/scripts/release-candidate-promote-preflight.mjs
-        env:
-          BUILDCHAIN_RC_PASSPORT: .buildchain/release-candidate/release-candidate.passport.json
-          BUILDCHAIN_RC_BUILD_SUMMARY: .buildchain/release-candidate/build-summary.json
-          BUILDCHAIN_PROMOTION_CHANNEL_SHA: ${{ steps.target.outputs.sha }}
-          BUILDCHAIN_PROMOTION_CHANNEL_TREE_SHA: ${{ steps.promotion-tree.outputs.tree }}
-          BUILDCHAIN_TARGET_REF: ${{ steps.target-ref.outputs.value }}
-          BUILDCHAIN_REQUIRED_ARTIFACT_COUNT: ${{ inputs.required-artifact-count }}
+          BUILDCHAIN_RC_OUTPUT_DIR: .buildchain/release-candidate
 
       - name: Ensure publish-gate ref locks promotion commit
         id: publish-gate
@@ -176,7 +153,7 @@ jobs:
           CHANNEL: ${{ inputs.channel }}
           TARGET_REF: ${{ steps.target-ref.outputs.value }}
           TARGET_SHA: ${{ steps.target.outputs.sha }}
-          VERSION: ${{ steps.preflight.outputs.release-candidate-version || 'promotion' }}
+          VERSION: ${{ steps.rc.outputs.release-candidate-version || 'promotion' }}
         with:
           script: |
             const channel = process.env.CHANNEL;
@@ -199,19 +176,6 @@ jobs:
             core.setOutput("ref", gateRef);
             core.setOutput("sha", targetSha);
 
-      - name: Release-candidate publish-gate preflight
-        id: gate-preflight
-        run: node .buildchain/runtime/scripts/release-candidate-promote-preflight.mjs
-        env:
-          BUILDCHAIN_RC_PASSPORT: .buildchain/release-candidate/release-candidate.passport.json
-          BUILDCHAIN_RC_BUILD_SUMMARY: .buildchain/release-candidate/build-summary.json
-          BUILDCHAIN_PROMOTION_CHANNEL_SHA: ${{ steps.target.outputs.sha }}
-          BUILDCHAIN_PROMOTION_CHANNEL_TREE_SHA: ${{ steps.promotion-tree.outputs.tree }}
-          BUILDCHAIN_TARGET_REF: ${{ steps.target-ref.outputs.value }}
-          BUILDCHAIN_PUBLISH_GATE_REF: ${{ steps.publish-gate.outputs.ref }}
-          BUILDCHAIN_PUBLISH_GATE_SHA: ${{ steps.publish-gate.outputs.sha }}
-          BUILDCHAIN_REQUIRED_ARTIFACT_COUNT: ${{ inputs.required-artifact-count }}
-
       - name: Promote-only publish
         uses: ./.buildchain/runtime/actions/promote-buildchain-ref
         with:
@@ -227,6 +191,6 @@ jobs:
           publish-required-artifacts-json: ${{ inputs.publish-required-artifacts-json }}
           publish-auth: ${{ inputs.trusted-publishing && 'trusted-publishing' || 'npm-token' }}
           promote-only-release-candidate: "true"
-          release-candidate-passport-path: .buildchain/release-candidate/release-candidate.passport.json
-          release-candidate-build-summary-path: .buildchain/release-candidate/build-summary.json
-          release-candidate-version: ${{ steps.preflight.outputs.release-candidate-version }}
+          release-candidate-passport-path: ${{ steps.rc.outputs.release-candidate-passport-path }}
+          release-candidate-build-summary-path: ${{ steps.rc.outputs.release-candidate-build-summary-path }}
+          release-candidate-version: ${{ steps.rc.outputs.release-candidate-version }}

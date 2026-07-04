@@ -1,6 +1,5 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
-import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 import { parseTags, promoteBuildchainRefs } from "./lib.js";
 import {
@@ -8,10 +7,6 @@ import {
   formatReleaseLineDryRun,
 } from "../../packages/core/release-line-dry-run.js";
 import { validateAnchoredPackageRelease } from "../../packages/core/diagnostics.js";
-import {
-  readReleaseCandidateBundle,
-  validateReleaseCandidateForPromotion,
-} from "../../scripts/release-candidate-core.mjs";
 
 export function validateRequiredPublishSourceLock({
   cwd = process.cwd(),
@@ -81,27 +76,6 @@ async function main() {
   const releaseCandidateBuildSummaryPath = core.getInput("release-candidate-build-summary-path");
   const releaseCandidateVersion = core.getInput("release-candidate-version");
   const octokit = github.getOctokit(token);
-  let releaseCandidateValidation;
-  if (promoteOnlyReleaseCandidate) {
-    const promotionChannelTreeSha = execFileSync("git", ["rev-parse", "HEAD^{tree}"], {
-      encoding: "utf8",
-    }).trim();
-    const { passport, buildSummary } = readReleaseCandidateBundle({
-      passportPath: releaseCandidatePassportPath,
-      buildSummaryPath: releaseCandidateBuildSummaryPath,
-    });
-    releaseCandidateValidation = validateReleaseCandidateForPromotion({
-      passport,
-      buildSummary,
-      promotionChannelSha: sha,
-      promotionChannelTreeSha,
-      targetRef,
-      expectedVersion: releaseCandidateVersion,
-    });
-    core.info(
-      `release-candidate promote-only validation ok: built ${releaseCandidateValidation.builtSourceSha} -> channel ${releaseCandidateValidation.promotionChannelSha}`,
-    );
-  }
   if (requirePublishSourceLock) {
     const sourceLockReport = validateRequiredPublishSourceLock({
       sha,
@@ -152,7 +126,10 @@ async function main() {
     releasePassportProductName,
     releasePassportBuildSummaryPath,
     releasePassportPlatformManifestPaths,
-    releaseCandidateValidation,
+    promoteOnlyReleaseCandidate,
+    releaseCandidatePassportPath,
+    releaseCandidateBuildSummaryPath,
+    releaseCandidateVersion,
     actor: github.context.actor,
     runId: String(github.context.runId || ""),
     publishTransactionOverride,

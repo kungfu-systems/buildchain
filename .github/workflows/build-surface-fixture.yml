@@ -24,5 +24,6 @@ jobs:
       artifact-paths: |
         fixtures/libnode-shaped/dist
         .buildchain/artifacts
+      release-candidate: true
       expected-artifacts-json: >-
         {"minFiles":2,"requiredPaths":["fixtures/libnode-shaped/dist/install.txt","fixtures/libnode-shaped/dist/libnode-shaped.txt"]}
