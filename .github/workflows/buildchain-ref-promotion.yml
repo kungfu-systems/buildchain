@@ -30,129 +30,36 @@ permissions:
   id-token: write
 
 jobs:
-  promote:
-    if: >-
-      ${{
-        github.event_name == 'workflow_dispatch' ||
-        github.event.workflow_run.conclusion == 'success'
-      }}
+  reject-manual-apply:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs['dry-run'] != 'true' }}
     runs-on: ubuntu-24.04
     steps:
       - name: Reject manual apply
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs['dry-run'] != 'true' }}
         run: |
           echo "::error::Manual buildchain ref promotion is limited to dry-run."
           echo "::error::Merge through alpha/release and let a successful Verify workflow_run promote refs."
           exit 1
 
-      - name: Resolve target SHA
-        id: target
-        env:
-          WORKFLOW_RUN_SHA: ${{ github.event.workflow_run.head_sha }}
-          INPUT_SHA: ${{ inputs.sha }}
-          FALLBACK_SHA: ${{ github.sha }}
-        run: |
-          sha="${WORKFLOW_RUN_SHA:-${INPUT_SHA:-$FALLBACK_SHA}}"
-          echo "sha=${sha}" >> "$GITHUB_OUTPUT"
-
-      - name: Resolve target ref
-        id: target_ref
-        env:
-          WORKFLOW_RUN_BRANCH: ${{ github.event.workflow_run.head_branch }}
-          INPUT_TARGET_REF: ${{ inputs['target-ref'] }}
-        run: |
-          target_ref="${WORKFLOW_RUN_BRANCH:-$INPUT_TARGET_REF}"
-          case "$target_ref" in
-            alpha/v*/v*|release/v*/v*|publish-gate/major|major-gate) ;;
-            *)
-              echo "::error::unsupported target ref: $target_ref"
-              exit 1
-              ;;
-          esac
-          echo "target_ref=${target_ref}" >> "$GITHUB_OUTPUT"
-
-      - name: Checkout target commit
-        uses: actions/checkout@v7.0.0
-        with:
-          ref: ${{ steps.target.outputs.sha }}
-          persist-credentials: false
-
-      - uses: actions/setup-node@v6.4.0
-        with:
-          node-version: "24"
-          registry-url: "https://registry.npmjs.org/"
-
-      - name: Enable pnpm
-        run: |
-          corepack enable pnpm
-          pnpm --version
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Resolve release candidate evidence
-        id: release_candidate
-        run: node scripts/release-candidate-resolver.mjs
-        env:
-          GITHUB_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
-          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
-          BUILDCHAIN_TARGET_REF: ${{ steps.target_ref.outputs.target_ref }}
-          BUILDCHAIN_TARGET_SHA: ${{ steps.target.outputs.sha }}
-
-      - name: Promote buildchain refs
-        uses: ./actions/promote-buildchain-ref
-        with:
-          token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
-          sha: ${{ steps.target.outputs.sha }}
-          target-ref: ${{ steps.target_ref.outputs.target_ref }}
-          dry-run: ${{ inputs['dry-run'] || 'false' }}
-          require-governance: "true"
-          require-version-state: "true"
-          required-status-check: "check"
-          publish-transaction: "true"
-          release-passport-build-summary-path: ${{ steps.release_candidate.outputs.release-candidate-build-summary-path }}
-          promote-only-release-candidate: ${{ steps.release_candidate.outputs.promote-only-release-candidate }}
-          release-candidate-passport-path: ${{ steps.release_candidate.outputs.release-candidate-passport-path }}
-          release-candidate-build-summary-path: ${{ steps.release_candidate.outputs.release-candidate-build-summary-path }}
-          release-candidate-version: ${{ steps.release_candidate.outputs.release-candidate-version }}
-
-      - name: Classify Buildchain promotion friction
-        id: friction
-        if: ${{ failure() && github.event_name != 'workflow_dispatch' }}
-        run: node scripts/workflow-friction-report.mjs
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
-          BUILDCHAIN_TARGET_REF: ${{ steps.target_ref.outputs.target_ref }}
-          BUILDCHAIN_TARGET_SHA: ${{ steps.target.outputs.sha }}
-          BUILDCHAIN_WORKFLOW_NAME: ${{ github.workflow }}
-          BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          BUILDCHAIN_RC_RESOLVE_OUTCOME: ${{ steps.release_candidate.outcome }}
-          BUILDCHAIN_RC_DIAGNOSIS: ${{ steps.release_candidate.outputs.release-candidate-diagnosis }}
-
-      - name: Report Buildchain promotion friction
-        if: ${{ failure() && github.event_name != 'workflow_dispatch' }}
-        uses: ./actions/report-buildchain-issue
-        with:
-          token: ${{ github.token }}
-          report-kind: workflow-friction
-          target-repository: ${{ github.repository }}
-          repository: ${{ github.repository }}
-          workflow: ${{ github.workflow }}
-          run-id: ${{ github.run_id }}
-          run-attempt: ${{ github.run_attempt }}
-          run-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          channel: ${{ steps.target_ref.outputs.target_ref }}
-          source-ref: ${{ github.event.workflow_run.head_branch }}
-          source-sha: ${{ steps.target.outputs.sha }}
-          pull-request: ${{ steps.friction.outputs.pull-request }}
-          friction-class: ${{ steps.friction.outputs.friction-class }}
-          summary: ${{ steps.friction.outputs.summary }}
-          diagnosis: ${{ steps.friction.outputs.diagnosis }}
-          next-action: ${{ steps.friction.outputs.next-action }}
-          body-file: ${{ steps.friction.outputs.body-file }}
-          related-runs-json: ${{ steps.friction.outputs.related-runs-json }}
-          heavy-builds-json: ${{ steps.friction.outputs.heavy-builds-json }}
-          labels: "buildchain-feedback,workflow-friction"
-          comment-cooldown-hours: "24"
-          fail-on-error: "false"
+  promote:
+    if: >-
+      ${{
+        (github.event_name == 'workflow_dispatch' && inputs['dry-run'] == 'true') ||
+        github.event.workflow_run.conclusion == 'success'
+      }}
+    uses: ./.github/workflows/release-candidate-promote.yml
+    secrets: inherit
+    with:
+      buildchain-repository: kungfu-systems/buildchain
+      buildchain-ref: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}
+      target-ref: ${{ github.event.workflow_run.head_branch || inputs['target-ref'] }}
+      target-sha: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}
+      artifact-name: libnode-shaped
+      release-candidate-workflow-file: build-surface-fixture.yml
+      release-candidate-workflow-name: Build Surface Fixture
+      required-status-check: check
+      required-artifact-count: 0
+      publish-required-artifacts-json: "[]"
+      trusted-publishing: true
+      release-passport: true
+      release-passport-product-name: Buildchain
+      dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs['dry-run'] == 'true' }}

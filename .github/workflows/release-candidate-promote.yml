@@ -13,11 +13,17 @@ on:
         type: string
         required: false
       channel:
-        description: "Promotion channel: alpha, release, or major"
+        description: "Promotion channel: alpha, release, or major. Empty derives from target-ref."
+        default: ""
         type: string
-        required: true
+        required: false
       target-ref:
         description: "Channel ref to promote. Defaults to the current ref name."
+        default: ""
+        type: string
+        required: false
+      target-sha:
+        description: "Channel commit SHA to promote. Defaults to the current workflow SHA."
         default: ""
         type: string
         required: false
@@ -145,6 +151,7 @@ on:
 permissions:
   contents: write
   actions: read
+  issues: write
   id-token: write
 
 jobs:
@@ -161,22 +168,35 @@ jobs:
         shell: bash
         run: |
           target_ref="${INPUT_TARGET_REF:-${GITHUB_REF_NAME}}"
+          derived_channel=""
           case "${target_ref}" in
-            alpha/v*/v*|release/v*/v*|publish-gate/major|major-gate) ;;
+            alpha/v*/v*) derived_channel="alpha" ;;
+            release/v*/v*) derived_channel="release" ;;
+            publish-gate/major|major-gate) derived_channel="major" ;;
             *)
               echo "::error::unsupported promote target ref: ${target_ref}"
               exit 1
               ;;
           esac
+          channel="${INPUT_CHANNEL:-${derived_channel}}"
+          if [ "${channel}" != "${derived_channel}" ]; then
+            echo "::error::promotion channel ${channel} does not match target ref ${target_ref} (${derived_channel})"
+            exit 1
+          fi
           echo "value=${target_ref}" >> "${GITHUB_OUTPUT}"
+          echo "channel=${channel}" >> "${GITHUB_OUTPUT}"
         env:
+          INPUT_CHANNEL: ${{ inputs.channel }}
           INPUT_TARGET_REF: ${{ inputs.target-ref }}
 
       - name: Resolve target SHA
         id: target
         shell: bash
         run: |
-          echo "sha=${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
+          target_sha="${INPUT_TARGET_SHA:-${GITHUB_SHA}}"
+          echo "sha=${target_sha}" >> "${GITHUB_OUTPUT}"
+        env:
+          INPUT_TARGET_SHA: ${{ inputs.target-sha }}
 
       - name: Checkout promotion channel commit
         uses: actions/checkout@v7.0.0
@@ -217,7 +237,7 @@ jobs:
         id: publish-gate
         uses: actions/github-script@v8
         env:
-          CHANNEL: ${{ inputs.channel }}
+          CHANNEL: ${{ steps.target-ref.outputs.channel }}
           TARGET_REF: ${{ steps.target-ref.outputs.value }}
           TARGET_SHA: ${{ steps.target.outputs.sha }}
           VERSION: ${{ steps.rc.outputs.release-candidate-version || 'promotion' }}
@@ -270,3 +290,44 @@ jobs:
           release-candidate-passport-path: ${{ steps.rc.outputs.release-candidate-passport-path }}
           release-candidate-build-summary-path: ${{ steps.rc.outputs.release-candidate-build-summary-path }}
           release-candidate-version: ${{ steps.rc.outputs.release-candidate-version }}
+
+      - name: Classify Buildchain promotion friction
+        id: friction
+        if: ${{ failure() && steps.rc.outcome != '' }}
+        run: node .buildchain/runtime/scripts/workflow-friction-report.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_TARGET_REF: ${{ steps.target-ref.outputs.value }}
+          BUILDCHAIN_TARGET_SHA: ${{ steps.target.outputs.sha }}
+          BUILDCHAIN_WORKFLOW_NAME: ${{ github.workflow }}
+          BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          BUILDCHAIN_RC_RESOLVE_OUTCOME: ${{ steps.rc.outcome }}
+          BUILDCHAIN_RC_DIAGNOSIS: ${{ steps.rc.outputs.release-candidate-diagnosis }}
+
+      - name: Report Buildchain promotion friction
+        if: ${{ failure() && steps.friction.outcome == 'success' }}
+        uses: ./.buildchain/runtime/actions/report-buildchain-issue
+        with:
+          token: ${{ github.token }}
+          report-kind: workflow-friction
+          target-repository: ${{ inputs.buildchain-repository }}
+          repository: ${{ github.repository }}
+          workflow: ${{ github.workflow }}
+          run-id: ${{ github.run_id }}
+          run-attempt: ${{ github.run_attempt }}
+          run-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          channel: ${{ steps.target-ref.outputs.value }}
+          source-ref: ${{ github.ref_name }}
+          source-sha: ${{ steps.target.outputs.sha }}
+          pull-request: ${{ steps.friction.outputs.pull-request }}
+          friction-class: ${{ steps.friction.outputs.friction-class }}
+          summary: ${{ steps.friction.outputs.summary }}
+          diagnosis: ${{ steps.friction.outputs.diagnosis }}
+          next-action: ${{ steps.friction.outputs.next-action }}
+          body-file: ${{ steps.friction.outputs.body-file }}
+          related-runs-json: ${{ steps.friction.outputs.related-runs-json }}
+          heavy-builds-json: ${{ steps.friction.outputs.heavy-builds-json }}
+          labels: "buildchain-feedback,workflow-friction"
+          comment-cooldown-hours: "24"
+          fail-on-error: "false"

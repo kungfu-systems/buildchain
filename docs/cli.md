@@ -365,10 +365,14 @@ transaction that promotes release refs:
   workflow and do not publish.
 
 The promotion workflow uses npm Trusted Publishing through GitHub Actions OIDC.
-It runs on a GitHub-hosted runner with `id-token: write`, generates the
-version-state commit, runs `lifecycle.verify`, runs `lifecycle.publish`, writes
-Buildchain publish evidence, validates that evidence, and only then moves exact
-tags and floating refs.
+It runs on a GitHub-hosted runner with `id-token: write`, but it does not
+manually run the release-candidate resolver or promote action. Buildchain's own
+dogfood path calls the declarative `release-candidate-promote.yml` wrapper with
+channel, target ref/SHA, PR-stage workflow, artifact, status-check, and passport
+inputs. The wrapper generates the version-state commit, runs
+`lifecycle.verify`, runs `lifecycle.publish`, writes Buildchain publish
+evidence, validates that evidence, and only then moves exact tags and floating
+refs.
 
 ```bash
 node scripts/npm-publish-transaction.mjs
