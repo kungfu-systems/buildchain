@@ -570,6 +570,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
     "utf8",
   );
 
+  assert.match(workflow, /actions: read/);
   assert.match(workflow, /uses: \.\/\.github\/workflows\/release-candidate-promote\.yml/);
   assert.match(workflow, /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.sha \|\| github\.sha \}\}/);
   assert.match(workflow, /target-ref: \$\{\{ github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\] \}\}/);
