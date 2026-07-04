@@ -137,6 +137,13 @@ on:
         default: false
         type: boolean
         required: false
+    secrets:
+      buildchain-issue-token:
+        description: "Optional token with issues:write on the Buildchain repository for workflow-friction reports"
+        required: false
+      BUILDCHAIN_PROMOTION_TOKEN:
+        description: "Optional promotion token; also used as a fallback Buildchain issue-report token"
+        required: false
     outputs:
       promoted-sha:
         description: "Promoted channel SHA"
@@ -344,7 +351,7 @@ jobs:
         if: ${{ failure() && steps.friction.outcome == 'success' }}
         uses: ./.buildchain/runtime/actions/report-buildchain-issue
         with:
-          token: ${{ github.token }}
+          token: ${{ secrets['buildchain-issue-token'] || secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
           report-kind: workflow-friction
           target-repository: ${{ inputs.buildchain-repository }}
           repository: ${{ github.repository }}
