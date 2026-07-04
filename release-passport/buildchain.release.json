@@ -21,7 +21,7 @@
     "releaseMaterialSha": "a70f41fbe6ce7bce57dd243c3272d96416f4e1d5",
     "publishToolingSha": "a70f41fbe6ce7bce57dd243c3272d96416f4e1d5",
     "releaseStateRef": "refs/heads/buildchain/release-state/2-4-8-alpha-0",
-    "releaseStateSha": "",
+    "releaseStateSha": "fe736873e6153ad557f66645cc6d7348f42d25d5",
     "package": {
       "name": "@kungfu-tech/buildchain",
       "version": "2.4.8-alpha.0"
