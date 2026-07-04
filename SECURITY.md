@@ -35,6 +35,13 @@ Security reports may cover:
 - local file access, path traversal, or unsafe archive handling;
 - credential, token, or private data exposure.
 
+Service-abuse, provider-compliance, credential-handling, misleading official
+identity, or compromised release-evidence reports may also be
+security-sensitive. Use private vulnerability reporting when public disclosure
+would expose credentials, provider account details, user data, or an exploitable
+bypass. See `ACCEPTABLE_USE.md`, `PROVIDER_COMPLIANCE.md`, and `TRADEMARK.md`
+for the related policy boundaries.
+
 ## Public disclosure
 
 Please allow maintainers time to investigate and prepare a fix before public

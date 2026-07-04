@@ -70,11 +70,16 @@ and rebuilds every action bundle.
 - Bugs, feature requests, questions, and documentation issues go through GitHub
   issues; security vulnerabilities use private vulnerability reporting - see
   [`SECURITY.md`](SECURITY.md).
+- Brand, hosted-service, and upstream-provider boundaries are documented in
+  [`TRADEMARK.md`](TRADEMARK.md), [`ACCEPTABLE_USE.md`](ACCEPTABLE_USE.md), and
+  [`PROVIDER_COMPLIANCE.md`](PROVIDER_COMPLIANCE.md).
 
 ## Ground rules
 
 - Never include secrets, credentials, tokens, or private logs in code, commits,
   issues, or pull requests.
+- Do not build or document official release integrations that bypass provider
+  protections, hide credential boundaries, or forge release evidence.
 - Keep generated action bundles in sync with source changes.
 - Keep documentation in sync with behavior, especially release governance and
   reusable workflow contracts.
