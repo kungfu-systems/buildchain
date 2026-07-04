@@ -546,6 +546,8 @@ test("report issue action exposes workflow-friction feedback mode", () => {
   assert.match(workflow, /Resolve Buildchain issue token mode/);
   assert.match(workflow, /Create Buildchain issue token/);
   assert.match(workflow, /uses: actions\/create-github-app-token@v2/);
+  assert.match(workflow, /BUILDCHAIN_BUILD_WORKFLOW_FILE: \$\{\{ inputs\.release-candidate-workflow-file \}\}/);
+  assert.match(workflow, /BUILDCHAIN_BUILD_WORKFLOW_NAME: \$\{\{ inputs\.release-candidate-workflow-name \}\}/);
   assert.match(workflow, /Report Buildchain promotion friction/);
   assert.match(
     workflow,

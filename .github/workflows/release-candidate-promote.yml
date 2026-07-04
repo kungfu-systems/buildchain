@@ -361,6 +361,8 @@ jobs:
           BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           BUILDCHAIN_RC_RESOLVE_OUTCOME: ${{ steps.rc.outcome }}
           BUILDCHAIN_RC_DIAGNOSIS: ${{ steps.rc.outputs.release-candidate-diagnosis }}
+          BUILDCHAIN_BUILD_WORKFLOW_FILE: ${{ inputs.release-candidate-workflow-file }}
+          BUILDCHAIN_BUILD_WORKFLOW_NAME: ${{ inputs.release-candidate-workflow-name }}
 
       - name: Resolve Buildchain issue token mode
         id: issue-token-mode
