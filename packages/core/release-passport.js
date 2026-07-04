@@ -537,6 +537,24 @@ export function createReleasePassport({
     normalizedTransaction?.releaseSha,
   );
   const targetRef = optionalString(release.targetRef || release.target_ref || normalizedPublishEvidence?.targetRef);
+  const packageDisplayVersion = optionalString(
+    packageVersion ||
+    normalizedPackageSet?.main?.version ||
+    normalizedPublishSummary?.packages?.find((entry) => entry.role === "main")?.publishedVersion ||
+    normalizedPublishEvidence?.version ||
+    normalizedTransaction?.version ||
+    readPackageVersion(cwd),
+  );
+  const publishedVersion = optionalString(
+    release.publishedVersion ||
+    release.published_version ||
+    packageDisplayVersion,
+  );
+  const internalVersion = optionalString(
+    release.internalVersion ||
+    release.internal_version ||
+    normalizedTransaction?.version,
+  );
   return {
     schemaVersion: 1,
     contract: RELEASE_PASSPORT_CONTRACT,
@@ -548,6 +566,10 @@ export function createReleasePassport({
     },
     release: {
       tag: normalizedTag,
+      internalTag: optionalString(release.internalTag || release.internal_tag || normalizedTag),
+      internalVersion,
+      publishedVersion,
+      versionLabel: optionalString(release.versionLabel || release.version_label || publishedVersion || normalizedTag),
       line: optionalString(line),
       sourceSha: optionalString(sourceSha),
       channel: optionalString(release.channel || normalizedPublishEvidence?.channel || publish.channel),
@@ -568,7 +590,7 @@ export function createReleasePassport({
       releaseStateSha: optionalString(release.releaseStateSha || release.release_state_sha || normalizedTransaction?.stateSha),
       package: {
         name: packageName,
-        version: packageVersion || readPackageVersion(cwd),
+        version: packageDisplayVersion,
       },
       exactRef: normalizedTag ? `refs/tags/${normalizedTag}` : "",
     },

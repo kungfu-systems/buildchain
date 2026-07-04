@@ -431,6 +431,7 @@ jobs:
       production-release-on-main: false
       production-aws-role-arn: arn:aws:iam::123456789012:role/site-production-github-actions
       production-environment: production
+      release-feedback-actor-privacy: public
 ```
 
 When enabled, Buildchain owns the full release apply state machine:
@@ -440,7 +441,9 @@ When enabled, Buildchain owns the full release apply state machine:
 - Closed PR cleanup runs `cleanup-apply --dry-run false` with the preview role
   only.
 - Pushes to `main` run staging `deploy-apply --dry-run false` with the staging
-  role.
+  role, then write a staging release feedback passport artifact and comment the
+  associated merged PR with the staging URL, source SHA, artifact identity, run
+  URL, and failure context when apply did not complete.
 - Release pull requests that match the configured production gate get a
   Buildchain review comment with the staging URL and production target, so the
   operator can verify staging from the PR page and use merge as the approval
@@ -451,6 +454,24 @@ When enabled, Buildchain owns the full release apply state machine:
     with exactly one same-repository, merged release pull request matching
     `production-release-label` and `production-release-head-prefix`.
   The production job is then gated by the configured GitHub Environment.
+- Production apply writes a production release feedback passport artifact and
+  comments the release PR with the production URL, source SHA, artifact
+  identity, run URL, rollback pointer, and failure context when apply did not
+  complete.
+
+The feedback passport records the release responsibility chain:
+
+- human decision actor;
+- trigger actor;
+- runner/execution actor;
+- OIDC/deploy identity reference;
+- decision type and time;
+- source event, PR number, merge commit, and required gate label/head-prefix.
+
+`release-feedback-actor-privacy` controls actor values in the passport and
+comments. `public` records GitHub actor names, `redacted` records only the actor
+role, and `private-ref` records a stable private reference hash without exposing
+the actor name.
 
 For release-PR publishing, callers opt in explicitly:
 

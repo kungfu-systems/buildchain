@@ -28,6 +28,12 @@ import {
   resolveReleaseReviewState,
 } from "../scripts/web-surface-release-pr-review.mjs";
 import {
+  RELEASE_FEEDBACK_MARKERS,
+  createWebSurfaceReleasePassport,
+  normalizeActorIdentity,
+  renderWebSurfaceReleaseFeedbackComment,
+} from "../scripts/web-surface-release-feedback.mjs";
+import {
   currentGitHubRefSha,
   resolvePublishSourceRefSha,
 } from "../scripts/publish-source-ref-resolver.mjs";
@@ -250,6 +256,12 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /actions\/download-artifact@v7\.0\.0/);
   assert.match(workflow, /--runtime-id "\$\{\{ needs\.runtime\.outputs\.runtime-sha \}\}"/);
   assert.match(workflow, /--rollback-pointer "\$\{\{ needs\.runtime\.outputs\.rollback-ref \}\}"/);
+  assert.match(workflow, /release-feedback-actor-privacy:/);
+  assert.match(workflow, /Comment staging deploy feedback and write passport/);
+  assert.match(workflow, /buildchain-web-surface-staging-release-passport/);
+  assert.match(workflow, /Comment production deploy feedback and write passport/);
+  assert.match(workflow, /buildchain-web-surface-production-release-passport/);
+  assert.match(workflow, /web-surface-release-feedback\.mjs/);
 });
 
 test("web-surface release PR review comments only on matching release PRs", () => {
@@ -302,6 +314,54 @@ test("web-surface release PR review comment names staging and merge approval", (
   assert.match(body, /Production target: https:\/\/kungfu\.tech/);
   assert.match(body, /merge this release PR after staging has been verified/);
   assert.match(body, /same-repository release PR/);
+});
+
+test("web-surface release feedback passport records responsibility and renders status comment", () => {
+  const passport = createWebSurfaceReleasePassport({
+    channel: "production",
+    repository: "kungfu-systems/site-kungfu-tech",
+    sourceSha: "a".repeat(40),
+    result: {
+      status: "success",
+      sourceSha: "a".repeat(40),
+      urls: { default: "https://kungfu.tech" },
+      artifactHash: "sha256:artifact",
+      target: "site-production",
+      manifest: { rollbackPointer: "refs/tags/v2" },
+    },
+    runId: "123",
+    runUrl: "https://github.com/kungfu-systems/site-kungfu-tech/actions/runs/123",
+    runtimeSha: "b".repeat(40),
+    payload: { head_commit: { timestamp: "2026-07-04T00:00:00Z" } },
+    sourceEvent: "push",
+    target: { pullNumber: 42, sourceBranch: "feature/release-site", source: "release-intent" },
+    gate: { label: "buildchain-release", headPrefix: "feature/release-" },
+    privacyMode: "private-ref",
+    actor: "keren",
+    runnerActor: "GitHub Actions",
+    oidcDeployIdentity: "arn:aws:iam::123456789012:role/site-production-github-actions",
+  });
+
+  assert.equal(passport.responsibility.pullRequest, 42);
+  assert.equal(passport.responsibility.sourceEvent, "push");
+  assert.equal(passport.responsibility.requiredGateEvidence.label, "buildchain-release");
+  assert.match(passport.responsibility.humanDecisionActor, /^private-ref:sha256:/);
+  assert.equal(
+    normalizeActorIdentity("keren", { privacyMode: "redacted", kind: "human-decision-actor" }),
+    "human-decision-actor:redacted",
+  );
+
+  const body = renderWebSurfaceReleaseFeedbackComment({
+    channel: "production",
+    passport,
+    target: { pullNumber: 42 },
+    passportArtifact: "buildchain-web-surface-production-release-passport",
+  });
+  assert.match(body, new RegExp(RELEASE_FEEDBACK_MARKERS.production));
+  assert.match(body, /Status: `success`/);
+  assert.match(body, /https:\/\/kungfu\.tech/);
+  assert.match(body, /Rollback pointer: `refs\/tags\/v2`/);
+  assert.match(body, /PR #42/);
 });
 
 test("binary distribution blocks invalid release uploads before the build matrix", () => {
