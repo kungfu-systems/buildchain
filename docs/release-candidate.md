@@ -64,4 +64,9 @@ Buildchain-owned promotion workflow resolves the matching same-repository
 merged channel PR and downloads its PR-stage RC passport automatically before
 promotion starts. The consumer wrapper defaults to a PR-stage workflow file
 named `build.yml` with display name `Build`, and filters the RC passport and
-build summary by the configured `artifact-name` before promotion.
+build summary by the configured `artifact-name` before promotion. It also
+downloads payload artifacts from the same PR-stage run, validates the required
+payload count, passes downloaded platform manifests into the release passport,
+and either forwards an explicit `publish-required-artifacts-json` value or
+generates one from the downloaded payload manifests before calling
+`promote-buildchain-ref`.

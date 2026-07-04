@@ -10,7 +10,9 @@ import {
 } from "../packages/core/release-candidate.js";
 import { generateReleaseCandidatePassportCli } from "../scripts/generate-release-candidate-passport.mjs";
 import {
+  generatePublishRequiredArtifacts,
   selectMergedChannelPullRequest,
+  selectPayloadArtifacts,
   selectReleaseCandidateArtifacts,
   selectReleaseCandidateRun,
 } from "../scripts/release-candidate-resolver.mjs";
@@ -233,6 +235,65 @@ test("release candidate resolver filters paired artifacts by artifact-name", () 
     }),
     /expected exactly one release-candidate passport artifact for artifact-name missing, found 0/,
   );
+});
+
+test("release candidate resolver selects payload artifacts and generates publish requirements", () => {
+  const payloads = selectPayloadArtifacts({
+    artifactName: "libnode",
+    sourceSha: SOURCE_SHA,
+    artifacts: [
+      { id: 1, name: `libnode-release-candidate-${SOURCE_SHA}` },
+      { id: 2, name: `libnode-summary-${SOURCE_SHA}` },
+      { id: 3, name: `libnode-manifest-linux-x64-${SOURCE_SHA}` },
+      { id: 4, name: `libnode-manifest-darwin-arm64-${SOURCE_SHA}` },
+      { id: 5, name: `libnode-diagnostics-linux-x64-${SOURCE_SHA}` },
+      { id: 6, name: `other-manifest-linux-x64-${SOURCE_SHA}` },
+    ],
+  });
+  assert.deepEqual(
+    payloads.map((artifact) => artifact.name),
+    [
+      `libnode-manifest-darwin-arm64-${SOURCE_SHA}`,
+      `libnode-manifest-linux-x64-${SOURCE_SHA}`,
+    ],
+  );
+
+  const customPayloads = selectPayloadArtifacts({
+    artifactName: "libnode",
+    sourceSha: SOURCE_SHA,
+    patterns: `libnode-diagnostics-*-${SOURCE_SHA}`,
+    artifacts: [
+      { id: 1, name: `libnode-manifest-linux-x64-${SOURCE_SHA}` },
+      { id: 2, name: `libnode-diagnostics-linux-x64-${SOURCE_SHA}` },
+    ],
+  });
+  assert.deepEqual(customPayloads.map((artifact) => artifact.id), [2]);
+
+  const required = generatePublishRequiredArtifacts({
+    version: "22.22.3-kf.3-alpha.7",
+    manifests: [
+      {
+        artifactName: "libnode-linux-x64",
+        platform: { id: "linux-x64" },
+        files: [
+          {
+            path: "dist/@kungfu-tech/libnode-linux-x64-22.22.3-kf.3-alpha.7.tgz",
+            sha256: "a".repeat(64),
+          },
+        ],
+      },
+    ],
+  });
+  assert.deepEqual(required, [
+    {
+      kind: "npm",
+      name: "libnode-linux-x64-22.22.3-kf.3-alpha.7",
+      ref: "22.22.3-kf.3-alpha.7",
+      digest: `sha256:${"a".repeat(64)}`,
+      role: "platform",
+      platform: "linux-x64",
+    },
+  ]);
 });
 
 test("workflow friction classifier prioritizes duplicate PRs, heavy builds, and late fail-fast", () => {

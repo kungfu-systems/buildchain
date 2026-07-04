@@ -118,6 +118,97 @@ function outputPath(filePath) {
   return relative.startsWith("../") || relative === ".." ? filePath : relative;
 }
 
+function splitPatterns(value = "") {
+  return String(value || "")
+    .split(/\r?\n|,/)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+}
+
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function artifactPatternToRegExp(pattern) {
+  return new RegExp(`^${String(pattern).split("*").map(escapeRegExp).join(".*")}$`);
+}
+
+export function selectPayloadArtifacts({
+  artifacts = [],
+  artifactName = "",
+  sourceSha = "",
+  patterns = [],
+} = {}) {
+  const prefix = String(artifactName || "").trim();
+  const sha = assertSha(sourceSha, "sourceSha");
+  const active = artifacts.filter((artifact) => !artifact.expired);
+  const excludedNames = new Set([
+    `${prefix}-release-candidate-${sha}`,
+    `${prefix}-summary-${sha}`,
+    `${prefix}-diagnostics-summary-${sha}`,
+  ]);
+  const effectivePatterns = splitPatterns(patterns).length
+    ? splitPatterns(patterns)
+    : [`${prefix}-manifest-*-${sha}`];
+  const matchers = effectivePatterns.map(artifactPatternToRegExp);
+  return active
+    .filter((artifact) => !excludedNames.has(String(artifact.name || "")))
+    .filter((artifact) => matchers.some((matcher) => matcher.test(String(artifact.name || ""))))
+    .sort((left, right) => String(left.name || "").localeCompare(String(right.name || "")));
+}
+
+function findDownloadedFiles(root, filename) {
+  const matches = [];
+  const stack = fs.existsSync(root) ? [root] : [];
+  while (stack.length) {
+    const current = stack.pop();
+    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+      const fullPath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        stack.push(fullPath);
+      } else if (entry.name === filename) {
+        matches.push(fullPath);
+      }
+    }
+  }
+  return matches.sort();
+}
+
+function packageNameFromArtifactPath(filePath) {
+  const basename = path.basename(String(filePath || ""));
+  return basename
+    .replace(/\.tgz$/i, "")
+    .replace(/\.tar\.gz$/i, "")
+    .replace(/\.zip$/i, "");
+}
+
+export function generatePublishRequiredArtifacts({
+  manifests = [],
+  version = "",
+  kind = "npm",
+} = {}) {
+  const ref = String(version || "").trim();
+  if (!ref) {
+    return [];
+  }
+  return manifests.flatMap((manifest) => {
+    const platform = manifest.platform?.id || manifest.platformId || "";
+    const files = Array.isArray(manifest.files) ? manifest.files : [];
+    return files
+      .filter((file) => file?.sha256)
+      .map((file) => ({
+        kind,
+        name: packageNameFromArtifactPath(file.path || file.name || manifest.artifactName || platform),
+        ref,
+        digest: String(file.sha256).startsWith("sha256:")
+          ? String(file.sha256)
+          : `sha256:${file.sha256}`,
+        role: "platform",
+        platform,
+      }));
+  });
+}
+
 export function selectReleaseCandidateArtifacts({ artifacts = [], artifactName = "" }) {
   const expectedPrefix = String(artifactName || "").trim();
   const active = artifacts.filter((artifact) => !artifact.expired);
@@ -170,6 +261,9 @@ export async function resolveReleaseCandidateArtifacts({
   workflowFile = DEFAULT_WORKFLOW_FILE,
   workflowName = "Build Surface Fixture",
   artifactName = "",
+  artifactPatterns = "",
+  requiredArtifactCount = 0,
+  publishArtifactKind = "npm",
   outputDir = ".buildchain/release-candidate",
   fetchImpl = globalThis.fetch,
   download = true,
@@ -221,6 +315,16 @@ export async function resolveReleaseCandidateArtifacts({
     artifacts: Array.isArray(artifactResponse.artifacts) ? artifactResponse.artifacts : [],
     artifactName,
   });
+  const payloadArtifacts = selectPayloadArtifacts({
+    artifacts: Array.isArray(artifactResponse.artifacts) ? artifactResponse.artifacts : [],
+    artifactName: selected.prefix,
+    sourceSha: selected.sourceSha,
+    patterns: artifactPatterns,
+  });
+  const minimumPayloadCount = Number(requiredArtifactCount || 0);
+  if (minimumPayloadCount > 0 && payloadArtifacts.length < minimumPayloadCount) {
+    throw new Error(`expected at least ${minimumPayloadCount} PR-stage payload artifacts, found ${payloadArtifacts.length}`);
+  }
   const result = {
     enabled: true,
     repository: repoInfo.fullName,
@@ -240,6 +344,7 @@ export async function resolveReleaseCandidateArtifacts({
     artifacts: {
       passport: selected.passport.name,
       summary: selected.summary.name,
+      payloads: payloadArtifacts.map((artifact) => artifact.name),
       artifactName: selected.prefix,
       sourceSha: selected.sourceSha,
     },
@@ -252,6 +357,7 @@ export async function resolveReleaseCandidateArtifacts({
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-rc-"));
   const passportDir = path.join(resolvedOutput, "passport");
   const summaryDir = path.join(resolvedOutput, "summary");
+  const payloadDir = path.join(resolvedOutput, "payloads");
   const passportZip = path.join(tempDir, "passport.zip");
   const summaryZip = path.join(tempDir, "summary.zip");
   await githubDownload({
@@ -268,6 +374,18 @@ export async function resolveReleaseCandidateArtifacts({
     outputPath: summaryZip,
     path: `/repos/${repoInfo.owner}/${repoInfo.repo}/actions/artifacts/${selected.summary.id}/zip`,
   });
+  for (const artifact of payloadArtifacts) {
+    const safeName = String(artifact.name || `artifact-${artifact.id}`).replace(/[^A-Za-z0-9._-]/g, "_");
+    const payloadZip = path.join(tempDir, `${safeName}.zip`);
+    await githubDownload({
+      apiUrl,
+      token,
+      fetchImpl,
+      outputPath: payloadZip,
+      path: `/repos/${repoInfo.owner}/${repoInfo.repo}/actions/artifacts/${artifact.id}/zip`,
+    });
+    unzip(payloadZip, path.join(payloadDir, safeName));
+  }
   unzip(passportZip, passportDir);
   unzip(summaryZip, summaryDir);
   fs.rmSync(tempDir, { recursive: true, force: true });
@@ -277,14 +395,32 @@ export async function resolveReleaseCandidateArtifacts({
     throw new Error("downloaded release-candidate artifacts did not contain release-candidate-passport.json and build-summary.json");
   }
   const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const platformManifestPaths = findDownloadedFiles(payloadDir, "manifest.json");
+  if (minimumPayloadCount > 0 && platformManifestPaths.length < minimumPayloadCount) {
+    throw new Error(`expected at least ${minimumPayloadCount} downloaded platform manifests, found ${platformManifestPaths.length}`);
+  }
+  const manifests = platformManifestPaths.map((manifestPath) => JSON.parse(fs.readFileSync(manifestPath, "utf8")));
+  const generatedRequiredArtifacts = generatePublishRequiredArtifacts({
+    manifests,
+    version: passport.target?.version || "",
+    kind: publishArtifactKind,
+  });
+  const requiredArtifactsPath = path.join(resolvedOutput, "publish-required-artifacts.json");
+  fs.writeFileSync(requiredArtifactsPath, `${JSON.stringify(generatedRequiredArtifacts, null, 2)}\n`);
   return {
     ...result,
     paths: {
       passport: outputPath(passportPath),
       buildSummary: outputPath(buildSummaryPath),
+      payloads: outputPath(payloadDir),
+      platformManifests: platformManifestPaths.map(outputPath),
+      publishRequiredArtifacts: outputPath(requiredArtifactsPath),
     },
     version: passport.target?.version || "",
     candidateHash: passport.candidateHash || "",
+    payloadCount: payloadArtifacts.length,
+    platformManifestCount: platformManifestPaths.length,
+    publishRequiredArtifacts: generatedRequiredArtifacts,
   };
 }
 
@@ -296,6 +432,9 @@ export async function resolveReleaseCandidateArtifactsCli() {
     workflowFile: env("BUILDCHAIN_RC_WORKFLOW_FILE", DEFAULT_WORKFLOW_FILE),
     workflowName: env("BUILDCHAIN_RC_WORKFLOW_NAME", ""),
     artifactName: env("BUILDCHAIN_ARTIFACT_NAME"),
+    artifactPatterns: env("BUILDCHAIN_ARTIFACT_PATTERNS"),
+    requiredArtifactCount: env("BUILDCHAIN_REQUIRED_ARTIFACT_COUNT", "0"),
+    publishArtifactKind: env("BUILDCHAIN_PUBLISH_ARTIFACT_KIND", "npm"),
     outputDir: env("BUILDCHAIN_RC_OUTPUT_DIR", ".buildchain/release-candidate"),
   });
   writeGitHubOutputs({
@@ -306,6 +445,12 @@ export async function resolveReleaseCandidateArtifactsCli() {
     "release-candidate-source-sha": result.artifacts?.sourceSha || "",
     "release-candidate-artifact": result.artifacts?.passport || "",
     "release-candidate-build-summary-artifact": result.artifacts?.summary || "",
+    "release-candidate-payload-artifacts": (result.artifacts?.payloads || []).join(","),
+    "release-candidate-payload-dir": result.paths?.payloads || "",
+    "release-candidate-platform-manifest-paths": (result.paths?.platformManifests || []).join(","),
+    "release-candidate-platform-manifest-count": String(result.platformManifestCount || 0),
+    "publish-required-artifacts-json": JSON.stringify(result.publishRequiredArtifacts || []),
+    "publish-required-artifacts-path": result.paths?.publishRequiredArtifacts || "",
     "release-candidate-run-id": result.run?.id || "",
     "release-candidate-run-url": result.run?.url || "",
     "release-candidate-pr": result.pullRequest?.number ? String(result.pullRequest.number) : "",

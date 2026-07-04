@@ -46,6 +46,11 @@ on:
         default: ""
         type: string
         required: false
+      required-status-check:
+        description: "Required protected-branch status check fragment"
+        default: "check"
+        type: string
+        required: false
       publish-target:
         description: "Publish target recorded for audit: npm, github-release, custom"
         default: "npm"
@@ -68,6 +73,51 @@ on:
         required: false
       publish-required-artifacts-json:
         description: "Required publish artifacts JSON passed to the promotion action"
+        default: ""
+        type: string
+        required: false
+      publish-artifact-kind:
+        description: "Artifact kind used when generating publish-required-artifacts-json from payload manifests"
+        default: "npm"
+        type: string
+        required: false
+      publish-mode:
+        description: "Publish mode passed to promote-buildchain-ref"
+        default: ""
+        type: string
+        required: false
+      publish-dist-tag:
+        description: "Expected dist-tag passed to promote-buildchain-ref"
+        default: ""
+        type: string
+        required: false
+      publish-package-set-order:
+        description: "Package-set ordering passed to promote-buildchain-ref"
+        default: "as-provided"
+        type: string
+        required: false
+      publish-package-main:
+        description: "Main package name for package-set ordering"
+        default: ""
+        type: string
+        required: false
+      release-passport:
+        description: "Generate and persist the release passport after publish finalization"
+        default: true
+        type: boolean
+        required: false
+      release-passport-output-dir:
+        description: "Release passport output directory"
+        default: ".buildchain/release-passport"
+        type: string
+        required: false
+      release-passport-product-name:
+        description: "Product name recorded in buildchain.release.json"
+        default: ""
+        type: string
+        required: false
+      release-passport-platform-manifest-paths:
+        description: "Optional platform manifest paths for release passport; defaults to downloaded PR-stage payload manifests"
         default: ""
         type: string
         required: false
@@ -155,8 +205,11 @@ jobs:
           BUILDCHAIN_TARGET_SHA: ${{ steps.target.outputs.sha }}
           BUILDCHAIN_TARGET_REF: ${{ steps.target-ref.outputs.value }}
           BUILDCHAIN_ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          BUILDCHAIN_ARTIFACT_PATTERNS: ${{ inputs.artifact-patterns }}
           BUILDCHAIN_RC_WORKFLOW_FILE: ${{ inputs.release-candidate-workflow-file }}
           BUILDCHAIN_RC_WORKFLOW_NAME: ${{ inputs.release-candidate-workflow-name }}
+          BUILDCHAIN_REQUIRED_ARTIFACT_COUNT: ${{ inputs.required-artifact-count }}
+          BUILDCHAIN_PUBLISH_ARTIFACT_KIND: ${{ inputs.publish-artifact-kind }}
           BUILDCHAIN_RC_OUTPUT_DIR: .buildchain/release-candidate
 
       - name: Ensure publish-gate ref locks promotion commit
@@ -198,11 +251,20 @@ jobs:
           dry-run: ${{ inputs.dry-run }}
           require-governance: "true"
           require-version-state: "true"
-          required-status-check: "check"
+          required-status-check: ${{ inputs.required-status-check }}
           publish-transaction: "true"
           publish-command: ${{ inputs.publish-command }}
-          publish-required-artifacts-json: ${{ inputs.publish-required-artifacts-json }}
+          publish-required-artifacts-json: ${{ inputs.publish-required-artifacts-json || steps.rc.outputs.publish-required-artifacts-json }}
+          publish-mode: ${{ inputs.publish-mode }}
           publish-auth: ${{ inputs.trusted-publishing && 'trusted-publishing' || 'npm-token' }}
+          publish-dist-tag: ${{ inputs.publish-dist-tag }}
+          publish-package-set-order: ${{ inputs.publish-package-set-order }}
+          publish-package-main: ${{ inputs.publish-package-main }}
+          release-passport: ${{ inputs.release-passport }}
+          release-passport-output-dir: ${{ inputs.release-passport-output-dir }}
+          release-passport-product-name: ${{ inputs.release-passport-product-name || inputs.artifact-name }}
+          release-passport-build-summary-path: ${{ steps.rc.outputs.release-candidate-build-summary-path }}
+          release-passport-platform-manifest-paths: ${{ inputs.release-passport-platform-manifest-paths || steps.rc.outputs.release-candidate-platform-manifest-paths }}
           promote-only-release-candidate: "true"
           release-candidate-passport-path: ${{ steps.rc.outputs.release-candidate-passport-path }}
           release-candidate-build-summary-path: ${{ steps.rc.outputs.release-candidate-build-summary-path }}
