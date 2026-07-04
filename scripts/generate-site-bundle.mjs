@@ -84,6 +84,7 @@ function buildSiteBundle() {
       { id: "build", path: ".github/workflows/.build.yml", surface: "reusable-build", status: "active" },
       { id: "web-surface", path: ".github/workflows/.web-surface.yml", surface: "site-app-deployment", status: "active" },
       { id: "buildchain-ref-promotion", path: ".github/workflows/buildchain-ref-promotion.yml", surface: "release-governance", status: "active" },
+      { id: "dev-pr-auto-merge", path: ".github/workflows/dev-pr-auto-merge.yml", surface: "dev-governance", status: "active" },
       { id: "binary-distribution", path: ".github/workflows/binary-distribution.yml", surface: "release-passport", status: "active" },
     ],
     actions: [
@@ -99,6 +100,7 @@ function buildSiteBundle() {
     exactTags: "v-prefixed exact tags are immutable release records.",
     floatingTags: "vX, vX.Y, and vX.Y-alpha are channel pointers updated by Buildchain transactions.",
     channelBranches: ["dev/vX/vX.Y", "alpha/vX/vX.Y", "release/vX/vX.Y", "publish-gate/major"],
+    protectedDevelopmentBranches: ["dev/vX/vX.Y"],
     releasePassport: {
       entrypoint: "buildchain.release.json",
       bundle: "buildchain-release-bundle.tar.gz",

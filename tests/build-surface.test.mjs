@@ -215,6 +215,8 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /default: "build\.yml"/);
   assert.match(workflow, /release-candidate-workflow-name:/);
   assert.match(workflow, /default: "Build"/);
+  assert.match(workflow, /allow-repository:/);
+  assert.match(workflow, /default: ""/);
   assert.match(workflow, /required-status-check:/);
   assert.match(workflow, /target-sha:/);
   assert.match(workflow, /publish-mode:/);
@@ -237,6 +239,7 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-candidate-passport-path:/);
   assert.match(workflow, /release-candidate-build-summary-path:/);
   assert.match(workflow, /required-status-check: \$\{\{ inputs\.required-status-check \}\}/);
+  assert.match(workflow, /allow-repository: \$\{\{ inputs\.allow-repository \|\| github\.repository \}\}/);
   assert.match(workflow, /publish-required-artifacts-json: \$\{\{ inputs\.publish-required-artifacts-json \|\| steps\.rc\.outputs\.publish-required-artifacts-json \}\}/);
   assert.match(workflow, /publish-dist-tag: \$\{\{ inputs\.publish-dist-tag \}\}/);
   assert.match(workflow, /publish-package-set-order: \$\{\{ inputs\.publish-package-set-order \}\}/);
@@ -246,6 +249,32 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.doesNotMatch(workflow, /build-native:/);
   assert.doesNotMatch(workflow, /build-linux-container:/);
   assert.doesNotMatch(workflow, /fromJSON\(needs\.resolve-contract\.outputs/);
+});
+
+test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/dev-pr-auto-merge.yml"),
+    "utf8",
+  );
+  assert.match(workflow, /workflow_call:/);
+  assert.match(workflow, /target-branch:/);
+  assert.match(workflow, /required-status-checks:/);
+  assert.match(workflow, /ready-label:/);
+  assert.match(workflow, /block-labels:/);
+  assert.match(workflow, /allowed-head-prefixes:/);
+  assert.match(workflow, /require-approval:/);
+  assert.match(workflow, /same-repository-only:/);
+  assert.match(workflow, /max-merges:/);
+  assert.match(workflow, /dry-run:/);
+  assert.match(workflow, /default: true/);
+  assert.match(workflow, /dev\/v\*\/v\*/);
+  assert.match(workflow, /Checkout Buildchain runtime/);
+  assert.match(workflow, /dev-pr-auto-merge\.mjs/);
+  assert.match(workflow, /contents: write/);
+  assert.match(workflow, /pull-requests: write/);
+  assert.match(workflow, /checks: read/);
+  assert.match(workflow, /statuses: read/);
+  assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
 });
 
 test("reusable web-surface workflow exposes preview, cleanup, staging, and production gates", () => {
@@ -546,6 +575,8 @@ test("report issue action exposes workflow-friction feedback mode", () => {
   assert.match(workflow, /Resolve Buildchain issue token mode/);
   assert.match(workflow, /Create Buildchain issue token/);
   assert.match(workflow, /uses: actions\/create-github-app-token@v2/);
+  assert.match(workflow, /BUILDCHAIN_BUILD_WORKFLOW_FILE: \$\{\{ inputs\.release-candidate-workflow-file \}\}/);
+  assert.match(workflow, /BUILDCHAIN_BUILD_WORKFLOW_NAME: \$\{\{ inputs\.release-candidate-workflow-name \}\}/);
   assert.match(workflow, /Report Buildchain promotion friction/);
   assert.match(
     workflow,

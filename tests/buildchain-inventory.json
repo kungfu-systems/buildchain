@@ -60,6 +60,9 @@
     "action-sync-pr",
     "action-update-dependencies-version"
   ],
+  "retiredWorkflowsExcluded": [
+    ".github/workflows/.batch-pull-request.yml"
+  ],
   "stableRefs": {
     "actions": "kungfu-systems/buildchain/actions/<name>@v2",
     "workflows": "kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v2"

@@ -24,6 +24,7 @@ running artifact), *use* (consume / extend) - and a **status**:
 | How do I import Buildchain toolkit APIs from JavaScript build code? | [`toolkit-observability.md`](toolkit-observability.md) + [`../packages/core/README.md`](../packages/core/README.md) | use | stable |
 | How do I initialize a new repository? | [`cli.md`](cli.md) + [`lifecycle-protocol.md`](lifecycle-protocol.md) | use | stable |
 | Why does Buildchain use branch-driven release governance? | [`release-governance.md`](release-governance.md) | why | stable |
+| How do protected dev branches and scheduled ready-PR merging work? | [`release-governance.md`](release-governance.md#protected-dev-branches) | use | stable |
 | How does Buildchain decide patch, minor, and major release lines? | [`versioning.md`](versioning.md) | why | stable |
 | What exact branch/tag state machine runs on alpha, release, and major gate? | [`release-flow.md`](release-flow.md) | verify | stable |
 | What did Buildchain migrate or retire from old action repositories? | [`migration-inventory.md`](migration-inventory.md) | verify | stable |
@@ -57,6 +58,8 @@ running artifact), *use* (consume / extend) - and a **status**:
   [`versioning.md`](versioning.md).
 - **dry-run / what would happen if this channel PR merges** -> [`cli.md`](cli.md)
   and [`release-flow.md`](release-flow.md).
+- **protected dev branches / scheduled ready-PR merge** ->
+  [`release-governance.md`](release-governance.md#protected-dev-branches).
 - **pnpm / npm / yarn / package-manager adapters** ->
   [`lifecycle-protocol.md`](lifecycle-protocol.md).
 - **pip / Conan / CMake / custom commands** -> [`lifecycle-protocol.md`](lifecycle-protocol.md)

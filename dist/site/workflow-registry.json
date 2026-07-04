@@ -21,6 +21,12 @@
       "status": "active"
     },
     {
+      "id": "dev-pr-auto-merge",
+      "path": ".github/workflows/dev-pr-auto-merge.yml",
+      "surface": "dev-governance",
+      "status": "active"
+    },
+    {
       "id": "binary-distribution",
       "path": ".github/workflows/binary-distribution.yml",
       "surface": "release-passport",

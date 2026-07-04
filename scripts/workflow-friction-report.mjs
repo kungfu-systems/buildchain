@@ -4,7 +4,17 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { writeGitHubOutputs } from "./build-contract-core.mjs";
 
-const DEFAULT_BUILD_WORKFLOW_FILE = "build-surface-fixture.yml";
+const DEFAULT_BUILD_WORKFLOW_FILE = "build.yml";
+const DEFAULT_BUILD_WORKFLOW_NAME = "Build";
+
+class GitHubApiError extends Error {
+  constructor(message, { status, path: requestPath } = {}) {
+    super(message);
+    this.name = "GitHubApiError";
+    this.status = status;
+    this.path = requestPath;
+  }
+}
 
 function env(name, fallback = "") {
   return process.env[name] || fallback;
@@ -48,9 +58,69 @@ async function githubJson({ apiUrl, token, path: requestPath, fetchImpl = global
   const text = await response.text();
   const body = text ? JSON.parse(text) : {};
   if (!response.ok) {
-    throw new Error(`GitHub API ${requestPath} failed with ${response.status}: ${body.message || text}`);
+    throw new GitHubApiError(`GitHub API ${requestPath} failed with ${response.status}: ${body.message || text}`, {
+      status: response.status,
+      path: requestPath,
+    });
   }
   return body;
+}
+
+function workflowRunMatchesConfiguredWorkflow(run, { buildWorkflowFile = "", buildWorkflowName = "" } = {}) {
+  const expectedName = String(buildWorkflowName || "").trim();
+  const expectedFile = String(buildWorkflowFile || "").trim();
+  const runName = String(run.name || run.workflow_name || "").trim();
+  const runPath = String(run.path || run.workflow_path || "").trim();
+  if (expectedName && runName === expectedName) {
+    return true;
+  }
+  if (expectedFile && (runPath === expectedFile || runPath.endsWith(`/${expectedFile}`))) {
+    return true;
+  }
+  return !expectedName && !expectedFile;
+}
+
+async function listPullRequestWorkflowRuns({
+  apiUrl,
+  token,
+  repo,
+  buildWorkflowFile,
+  buildWorkflowName,
+  fetchImpl,
+}) {
+  const diagnostics = [];
+  const workflowFile = String(buildWorkflowFile || "").trim();
+  if (workflowFile) {
+    try {
+      const runs = await githubJson({
+        apiUrl,
+        token,
+        fetchImpl,
+        path: `/repos/${repo.owner}/${repo.repo}/actions/workflows/${encodeURIComponent(workflowFile)}/runs?event=pull_request&per_page=100`,
+      });
+      return {
+        runs: Array.isArray(runs.workflow_runs) ? runs.workflow_runs : [],
+        diagnostics,
+      };
+    } catch (error) {
+      if (error.status !== 404) {
+        throw error;
+      }
+      diagnostics.push(`Configured PR-stage workflow file ${workflowFile} was not found; fell back to repository pull_request workflow runs.`);
+    }
+  }
+
+  const runs = await githubJson({
+    apiUrl,
+    token,
+    fetchImpl,
+    path: `/repos/${repo.owner}/${repo.repo}/actions/runs?event=pull_request&per_page=100`,
+  });
+  return {
+    runs: (Array.isArray(runs.workflow_runs) ? runs.workflow_runs : [])
+      .filter((run) => workflowRunMatchesConfiguredWorkflow(run, { buildWorkflowFile, buildWorkflowName })),
+    diagnostics,
+  };
 }
 
 function runLabel(run = "") {
@@ -129,6 +199,7 @@ export async function classifyWorkflowFriction({
   token = env("GITHUB_TOKEN"),
   apiUrl = env("GITHUB_API_URL", "https://api.github.com"),
   buildWorkflowFile = DEFAULT_BUILD_WORKFLOW_FILE,
+  buildWorkflowName = DEFAULT_BUILD_WORKFLOW_NAME,
   releaseCandidateOutcome = env("BUILDCHAIN_RC_RESOLVE_OUTCOME"),
   releaseCandidateDiagnosis = env("BUILDCHAIN_RC_DIAGNOSIS"),
   runUrl = env("BUILDCHAIN_WORKFLOW_RUN_URL"),
@@ -154,14 +225,18 @@ export async function classifyWorkflowFriction({
 
   let relatedRuns = [];
   let heavyBuilds = [];
+  let workflowRunDiagnostics = [];
   if (primaryPullRequest?.number) {
-    const runs = await githubJson({
+    const workflowRuns = await listPullRequestWorkflowRuns({
       apiUrl,
       token,
+      repo,
+      buildWorkflowFile,
+      buildWorkflowName,
       fetchImpl,
-      path: `/repos/${repo.owner}/${repo.repo}/actions/workflows/${encodeURIComponent(buildWorkflowFile)}/runs?event=pull_request&per_page=100`,
     });
-    relatedRuns = (Array.isArray(runs.workflow_runs) ? runs.workflow_runs : [])
+    workflowRunDiagnostics = workflowRuns.diagnostics;
+    relatedRuns = workflowRuns.runs
       .filter((run) => (run.pull_requests || []).some((pr) => Number(pr.number || 0) === Number(primaryPullRequest.number)));
     heavyBuilds = relatedRuns.filter((run) => run.status === "completed" && ["success", "failure", "cancelled", "timed_out"].includes(run.conclusion || ""));
   }
@@ -184,6 +259,7 @@ export async function classifyWorkflowFriction({
   if (releaseCandidateDiagnosis) {
     diagnosisParts.push(releaseCandidateDiagnosis);
   }
+  diagnosisParts.push(...workflowRunDiagnostics);
   const diagnosis = diagnosisParts.join(" ") || "Buildchain ref promotion failed after Verify succeeded; inspect the classified evidence and keep the fix in Buildchain.";
   const nextAction = frictionClass === "late-fail-fast"
     ? "Move the missing/stale RC evidence check earlier or make the promotion workflow consume the exact PR-stage RC passport before any publish side effect."
@@ -229,6 +305,7 @@ export async function workflowFrictionReportCli() {
       targetRef: env("BUILDCHAIN_TARGET_REF"),
       targetSha: env("BUILDCHAIN_TARGET_SHA"),
       buildWorkflowFile: env("BUILDCHAIN_BUILD_WORKFLOW_FILE", DEFAULT_BUILD_WORKFLOW_FILE),
+      buildWorkflowName: env("BUILDCHAIN_BUILD_WORKFLOW_NAME", env("BUILDCHAIN_RC_WORKFLOW_NAME", DEFAULT_BUILD_WORKFLOW_NAME)),
       outputDir: env("BUILDCHAIN_FRICTION_OUTPUT_DIR", ".buildchain/workflow-friction"),
     });
   } catch (error) {
