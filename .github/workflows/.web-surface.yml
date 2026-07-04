@@ -99,6 +99,11 @@ on:
         default: "production"
         type: string
         required: false
+      release-feedback-actor-privacy:
+        description: "Actor identity mode for web-surface release feedback passports: public, redacted, or private-ref."
+        default: "public"
+        type: string
+        required: false
     outputs:
       web-surface-channel:
         description: "Planned web-surface channel"
@@ -583,6 +588,17 @@ jobs:
             echo "web-surface-cleanup-plan-json=$(node -e 'process.stdout.write(JSON.stringify(JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))))' .buildchain/web-surface-cleanup-plan.json)" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Comment release PR staging review URL
+        if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' && inputs.production-release-on-main }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_EVENT_ACTION: ${{ github.event.action }}
+          PRODUCTION_RELEASE_ON_MAIN: ${{ inputs.production-release-on-main }}
+          PRODUCTION_RELEASE_LABEL: ${{ inputs.production-release-label }}
+          PRODUCTION_RELEASE_HEAD_PREFIX: ${{ inputs.production-release-head-prefix }}
+          WORKING_DIRECTORY: ${{ inputs.working-directory }}
+        run: node .buildchain/runtime/scripts/web-surface-release-pr-review.mjs
+
   preview-apply:
     name: Apply pull request preview
     if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' && inputs.preview-apply }}
@@ -867,6 +883,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      pull-requests: write
     steps:
       - name: Checkout caller repository
         uses: actions/checkout@v7.0.0
@@ -949,6 +966,31 @@ jobs:
             node -e 'const r=JSON.parse(require("fs").readFileSync(".buildchain/web-surface-staging-apply.json","utf8")); const urls=Object.entries(r.urls||{default:r.url}).map(([s,u])=>"- "+s+": "+u).join("\n"); console.log(urls+"\n- status: "+r.status+"\n- target: "+r.target+"\n- source: "+r.sourceSha+"\n- artifact: "+r.artifactHash)'
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Comment staging deploy feedback and write passport
+        if: ${{ always() }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BUILDCHAIN_WEB_SURFACE_CHANNEL: staging
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.runtime.outputs.runtime-sha }}
+          BUILDCHAIN_ROLLBACK_POINTER: ${{ needs.runtime.outputs.rollback-ref }}
+          APPLY_RESULT_PATH: .buildchain/web-surface-staging-apply.json
+          APPLY_STEP_OUTCOME: ${{ steps.apply.outcome }}
+          JOB_STATUS: ${{ job.status }}
+          OUTPUT_PATH: .buildchain/web-surface-staging-release-passport.json
+          PASSPORT_ARTIFACT_NAME: buildchain-web-surface-staging-release-passport
+          RELEASE_FEEDBACK_ACTOR_PRIVACY: ${{ inputs.release-feedback-actor-privacy }}
+          AWS_ROLE_ARN: ${{ inputs.staging-aws-role-arn }}
+        run: node .buildchain/runtime/scripts/web-surface-release-feedback.mjs
+
+      - name: Upload staging release passport
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-web-surface-staging-release-passport
+          path: .buildchain/web-surface-staging-release-passport.json
+          include-hidden-files: true
+          if-no-files-found: error
+
   production-apply:
     name: Apply production deploy
     if: >-
@@ -970,6 +1012,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      pull-requests: write
     steps:
       - name: Checkout caller repository
         uses: actions/checkout@v7.0.0
@@ -1051,3 +1094,32 @@ jobs:
             echo "## Production apply"
             node -e 'const r=JSON.parse(require("fs").readFileSync(".buildchain/web-surface-production-apply.json","utf8")); const urls=Object.entries(r.urls||{default:r.url}).map(([s,u])=>"- "+s+": "+u).join("\n"); console.log(urls+"\n- status: "+r.status+"\n- target: "+r.target+"\n- source: "+r.sourceSha+"\n- artifact: "+r.artifactHash+"\n- rollback pointer: "+(r.manifest.rollbackPointer || "not configured"))'
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Comment production deploy feedback and write passport
+        if: ${{ always() }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BUILDCHAIN_WEB_SURFACE_CHANNEL: production
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.runtime.outputs.runtime-sha }}
+          BUILDCHAIN_ROLLBACK_POINTER: ${{ needs.runtime.outputs.rollback-ref }}
+          APPLY_RESULT_PATH: .buildchain/web-surface-production-apply.json
+          APPLY_STEP_OUTCOME: ${{ steps.apply.outcome }}
+          JOB_STATUS: ${{ job.status }}
+          OUTPUT_PATH: .buildchain/web-surface-production-release-passport.json
+          PASSPORT_ARTIFACT_NAME: buildchain-web-surface-production-release-passport
+          RELEASE_FEEDBACK_ACTOR_PRIVACY: ${{ inputs.release-feedback-actor-privacy }}
+          PRODUCTION_RELEASE_PR: ${{ needs.release-intent.outputs.production-release-pr }}
+          PRODUCTION_RELEASE_SOURCE: ${{ needs.release-intent.outputs.production-release-source }}
+          PRODUCTION_RELEASE_LABEL: ${{ inputs.production-release-label }}
+          PRODUCTION_RELEASE_HEAD_PREFIX: ${{ inputs.production-release-head-prefix }}
+          AWS_ROLE_ARN: ${{ inputs.production-aws-role-arn }}
+        run: node .buildchain/runtime/scripts/web-surface-release-feedback.mjs
+
+      - name: Upload production release passport
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-web-surface-production-release-passport
+          path: .buildchain/web-surface-production-release-passport.json
+          include-hidden-files: true
+          if-no-files-found: error

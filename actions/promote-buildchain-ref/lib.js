@@ -1717,6 +1717,8 @@ async function collectAndPersistReleasePassport({
     validation: result.validation || { valid: true, errors: [] },
   };
   const passportSourceSha = result.transaction.source_sha || sourceSha;
+  const internalVersion = stripTagPrefix(result.transaction.exact_tag || "");
+  const publishedVersion = result.transaction.version || internalVersion;
   const collected = collectGitHubReleasePassport({
     cwd,
     tag: result.transaction.exact_tag,
@@ -1743,6 +1745,10 @@ async function collectAndPersistReleasePassport({
     releaseJsonExtra: JSON.stringify({
       channel,
       targetRef,
+      internalTag: result.transaction.exact_tag,
+      internalVersion,
+      publishedVersion,
+      versionLabel: publishedVersion || result.transaction.exact_tag,
       releaseSha: result.transaction.release_sha,
       releaseMaterialSha: result.transaction.release_material_sha,
       publishToolingSha: result.transaction.publish_tooling_sha,
