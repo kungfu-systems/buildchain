@@ -102,7 +102,7 @@ export function createReleaseCandidatePassport({
       headSha: nonEmptyString(sourceSha, "sourceHeadSha"),
       baseSha: optionalString(baseSha),
       mergeRefSha: optionalString(mergeRefSha || sourceSha),
-      treeHash: optionalString(sourceTreeHash || sha256Json(normalizedSummary.platforms || [])),
+      treeHash: optionalString(sourceTreeHash || normalizedSummary.git?.treeSha),
     },
     buildchain: {
       ref: optionalString(buildchain.ref || normalizedSummary.runtime?.ref),

@@ -1,8 +1,9 @@
 import * as core from "@actions/core";
 import {
+  buildConsumerIssueReport,
+  buildWorkflowFrictionIssueReport,
   readOptionalIssueBodyFile,
   reportBuildchainIssue,
-  reportWorkflowFrictionIssue,
 } from "../../packages/core/issue-reporting.js";
 
 function input(name) {
@@ -23,6 +24,20 @@ function setResultOutputs(result) {
   core.setOutput("fingerprint", result.fingerprint || "");
 }
 
+function parseJsonArrayInput(name) {
+  const value = input(name);
+  if (!value) {
+    return [];
+  }
+  const parsed = JSON.parse(value);
+  if (!Array.isArray(parsed)) {
+    throw new Error(`${name} must be a JSON array`);
+  }
+  return parsed;
+}
+
+let fallbackReport;
+
 async function main() {
   const bodyFile = input("body-file");
   const bodyParts = [input("body"), readOptionalIssueBodyFile(bodyFile)].filter(Boolean);
@@ -39,8 +54,8 @@ async function main() {
     commentCooldownHours: Number(input("comment-cooldown-hours") || 0),
   };
   const reportKind = input("report-kind") || "consumer";
-  const result = reportKind === "workflow-friction"
-    ? await reportWorkflowFrictionIssue({
+  const reportOptions = reportKind === "workflow-friction"
+    ? {
         ...common,
         repository: input("repository") || input("consumer-repository"),
         workflow: input("workflow"),
@@ -57,9 +72,11 @@ async function main() {
         frictionClass: input("friction-class") || input("failure-code"),
         diagnosis: input("diagnosis"),
         nextAction: input("next-action"),
+        relatedRuns: parseJsonArrayInput("related-runs-json"),
+        heavyBuilds: parseJsonArrayInput("heavy-builds-json"),
         body: bodyParts.join("\n\n"),
-      })
-    : await reportBuildchainIssue({
+      }
+    : {
         ...common,
         failureCode: input("failure-code"),
         consumerRepository: input("consumer-repository"),
@@ -77,7 +94,14 @@ async function main() {
         diagnosticsUrl: input("diagnostics-url"),
         diagnosticsPath: input("diagnostics-path"),
         body: bodyParts.join("\n\n"),
-      });
+      };
+  fallbackReport = reportKind === "workflow-friction"
+    ? buildWorkflowFrictionIssueReport(reportOptions)
+    : buildConsumerIssueReport(reportOptions);
+  const result = await reportBuildchainIssue({
+    ...reportOptions,
+    report: fallbackReport,
+  });
   setResultOutputs(result);
   await core.summary
     .addHeading("Buildchain issue report")
@@ -93,7 +117,8 @@ async function main() {
     .write();
 }
 
-main().catch((error) => {
+main().catch(async (error) => {
+  const report = fallbackReport;
   setResultOutputs({
     ok: false,
     action: "failed",
@@ -101,11 +126,26 @@ main().catch((error) => {
     issueUrl: "",
     created: false,
     commented: false,
-    fingerprint: "",
+    fingerprint: report?.fingerprint || "",
   });
   if (boolInput("fail-on-error")) {
     core.setFailed(error.message);
     return;
   }
   core.warning(`Buildchain issue reporting failed: ${error.message}`);
+  const body = report?.body || [
+    "# Buildchain issue report",
+    "",
+    `Issue reporting failed before a full body could be built: ${error.message}`,
+  ].join("\n");
+  await core.summary
+    .addHeading("Buildchain issue report fallback")
+    .addRaw(`Issue reporting failed: ${error.message}\n\n`)
+    .addRaw(`Title: ${report?.title || "(unavailable)"}\n\n`)
+    .addRaw(`Fingerprint: ${report?.fingerprint || "(unavailable)"}\n\n`)
+    .addRaw("Copyable issue body:\n\n")
+    .addRaw("~~~markdown\n")
+    .addRaw(body)
+    .addRaw("\n~~~\n")
+    .write();
 });
