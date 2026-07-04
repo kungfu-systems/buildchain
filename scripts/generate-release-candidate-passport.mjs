@@ -23,7 +23,7 @@ export function generateReleaseCandidatePassportCli() {
   const sourceSha = env("BUILDCHAIN_RC_SOURCE_HEAD_SHA", buildSummary.publishSource?.sha || buildSummary.git?.sha || "");
   const version = env(
     "BUILDCHAIN_RC_VERSION",
-    buildSummary.publishSource?.consumerVersion || `source-${String(sourceSha).slice(0, 12)}`,
+    buildSummary.publishSource?.consumerVersion || "",
   );
   const passport = createReleaseCandidatePassport({
     repository: env("GITHUB_REPOSITORY", buildSummary.git?.repository || ""),

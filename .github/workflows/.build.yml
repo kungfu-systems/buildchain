@@ -176,6 +176,9 @@ on:
       release-candidate-passport-artifact:
         description: "Uploaded release-candidate passport artifact name when release-candidate is enabled"
         value: ${{ jobs.summarize.outputs.release-candidate-passport-artifact-name }}
+      release-candidate-artifact:
+        description: "Uploaded release-candidate passport artifact name when release-candidate is enabled"
+        value: ${{ jobs.summarize.outputs.release-candidate-passport-artifact-name }}
       release-candidate-passport-json:
         description: "Compact release-candidate passport JSON when release-candidate is enabled"
         value: ${{ jobs.summarize.outputs.release-candidate-passport-json }}
