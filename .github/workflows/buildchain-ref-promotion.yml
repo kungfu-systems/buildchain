@@ -54,6 +54,7 @@ jobs:
       buildchain-ref: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}
       target-ref: ${{ github.event.workflow_run.head_branch || inputs['target-ref'] }}
       target-sha: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}
+      package-manager: pnpm
       artifact-name: libnode-shaped
       release-candidate-workflow-file: build-surface-fixture.yml
       release-candidate-workflow-name: Build Surface Fixture
