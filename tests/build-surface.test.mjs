@@ -215,6 +215,8 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /default: "build\.yml"/);
   assert.match(workflow, /release-candidate-workflow-name:/);
   assert.match(workflow, /default: "Build"/);
+  assert.match(workflow, /allow-repository:/);
+  assert.match(workflow, /default: ""/);
   assert.match(workflow, /required-status-check:/);
   assert.match(workflow, /target-sha:/);
   assert.match(workflow, /publish-mode:/);
@@ -237,6 +239,7 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-candidate-passport-path:/);
   assert.match(workflow, /release-candidate-build-summary-path:/);
   assert.match(workflow, /required-status-check: \$\{\{ inputs\.required-status-check \}\}/);
+  assert.match(workflow, /allow-repository: \$\{\{ inputs\.allow-repository \|\| github\.repository \}\}/);
   assert.match(workflow, /publish-required-artifacts-json: \$\{\{ inputs\.publish-required-artifacts-json \|\| steps\.rc\.outputs\.publish-required-artifacts-json \}\}/);
   assert.match(workflow, /publish-dist-tag: \$\{\{ inputs\.publish-dist-tag \}\}/);
   assert.match(workflow, /publish-package-set-order: \$\{\{ inputs\.publish-package-set-order \}\}/);
