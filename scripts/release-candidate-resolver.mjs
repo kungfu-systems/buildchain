@@ -92,9 +92,20 @@ export function selectMergedChannelPullRequest({ pullRequests = [], targetRef, r
 
 export function selectReleaseCandidateRun({ runs = [], pullRequest, workflowName = "" }) {
   const prNumber = Number(pullRequest?.number || 0);
+  const prHeadSha = String(pullRequest?.head?.sha || pullRequest?.headRefOid || "").trim();
+  const prHeadBranch = normalizeBranch(pullRequest?.head?.ref || pullRequest?.headRefName || "");
+  const prHeadRepository = pullRequest?.head?.repo?.full_name || pullRequest?.headRepository?.nameWithOwner || "";
   const candidates = runs.filter((run) => {
     const runPrs = Array.isArray(run.pull_requests) ? run.pull_requests : [];
-    const matchesPr = runPrs.some((pr) => Number(pr.number || 0) === prNumber);
+    const runHeadBranch = normalizeBranch(run.head_branch || "");
+    const runHeadSha = String(run.head_sha || "").trim();
+    const runHeadRepository = run.head_repository?.full_name || run.headRepository?.nameWithOwner || "";
+    const matchesPrNumber = runPrs.some((pr) => Number(pr.number || 0) === prNumber);
+    const matchesHeadSha = prHeadSha && runHeadSha === prHeadSha;
+    const matchesHeadBranch = prHeadBranch
+      && runHeadBranch === prHeadBranch
+      && (!prHeadRepository || !runHeadRepository || runHeadRepository === prHeadRepository);
+    const matchesPr = matchesPrNumber || matchesHeadSha || matchesHeadBranch;
     const matchesWorkflow = !workflowName || run.name === workflowName || run.workflow_name === workflowName;
     return matchesPr && matchesWorkflow && run.event === "pull_request" && run.status === "completed" && run.conclusion === "success";
   });
