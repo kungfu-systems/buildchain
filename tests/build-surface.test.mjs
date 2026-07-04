@@ -1604,6 +1604,60 @@ test("runLifecycle samples a configured lifecycle stage", () => {
   }
 });
 
+test("runLifecycle records sampled command failure evidence", () => {
+  const workspace = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-sampled-lifecycle-failure-"),
+  );
+  const fixtureSource = path.join(root, "fixtures/libnode-shaped");
+  const fixture = path.join(workspace, "fixtures/libnode-shaped");
+  fs.cpSync(fixtureSource, fixture, { recursive: true });
+
+  try {
+    assert.throws(
+      () => runLifecycle({
+        cwd: fixture,
+        command: [
+          JSON.stringify(process.execPath),
+          "-e",
+          JSON.stringify("console.log('wrapped stdout marker'); console.error('wrapped stderr marker'); process.exit(7);"),
+        ].join(" "),
+        required: true,
+        workspace,
+        logPath: ".buildchain/logs/failing-lifecycle.jsonl",
+        processSummaryPath: ".buildchain/diagnostics/failing-process-summary.json",
+        processSamplesPath: ".buildchain/diagnostics/failing-process-samples.jsonl",
+        sampleProcessTree: true,
+        processSampleIntervalMs: 1000,
+      }),
+      (error) => error.status === 7,
+    );
+
+    const processSummary = JSON.parse(
+      fs.readFileSync(
+        path.join(workspace, ".buildchain/diagnostics/failing-process-summary.json"),
+        "utf8",
+      ),
+    );
+    assert.equal(processSummary.wrappedCommand.exitCode, 7);
+    assert.match(processSummary.wrappedCommand.stdoutTail, /wrapped stdout marker/);
+    assert.match(processSummary.wrappedCommand.stderrTail, /wrapped stderr marker/);
+
+    const events = fs.readFileSync(
+      path.join(workspace, ".buildchain/logs/failing-lifecycle.jsonl"),
+      "utf8",
+    ).trim().split(/\r?\n/).map((line) => JSON.parse(line));
+    const errorEvent = events.find((event) => event.event === "lifecycle.command.error");
+    assert.ok(errorEvent);
+    assert.equal(errorEvent.attributes.status, 7);
+    assert.match(errorEvent.attributes.stdoutTail, /wrapped stdout marker/);
+    assert.match(errorEvent.attributes.stderrTail, /wrapped stderr marker/);
+    assert.equal(errorEvent.attributes.wrappedCommandExitCode, 7);
+    assert.equal(JSON.parse(errorEvent.attributes.wrappedCommand).exitCode, 7);
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
 test("runLifecycle can treat a missing process summary as optional", () => {
   const workspace = fs.mkdtempSync(
     path.join(os.tmpdir(), "buildchain-optional-process-summary-"),

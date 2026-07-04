@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { execFileSync, execSync } from "node:child_process";
+import { execFileSync, execSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -73,12 +73,28 @@ function manifestPathFor(root, filePath) {
 }
 
 function lifecycleErrorAttributes(error, extra = {}) {
-  return {
+  const attributes = {
     ...extra,
     errorName: error.name,
     status: error.status ?? "",
     signal: error.signal || "",
   };
+  if (error.stdoutTail) {
+    attributes.stdoutTail = error.stdoutTail;
+  }
+  if (error.stderrTail) {
+    attributes.stderrTail = error.stderrTail;
+  }
+  if (error.wrappedCommand) {
+    attributes.wrappedCommand = error.wrappedCommand;
+    attributes.wrappedCommandExitCode = error.wrappedCommand.exitCode ?? "";
+    attributes.wrappedCommandSignal = error.wrappedCommand.signal || "";
+    attributes.wrappedCommandError = error.wrappedCommand.error || "";
+  }
+  if (error.samplerUnavailable !== undefined) {
+    attributes.samplerUnavailable = error.samplerUnavailable;
+  }
+  return attributes;
 }
 
 function collectArtifactFiles(root, patterns) {
@@ -120,6 +136,30 @@ function readProcessSummaryArtifact(filePath) {
     };
   }
   throw new Error(`process summary file has unsupported contract: ${artifact?.contract || "unknown"}`);
+}
+
+function readOptionalProcessSummaryArtifact(filePath) {
+  try {
+    return readProcessSummaryArtifact(filePath);
+  } catch {
+    return undefined;
+  }
+}
+
+function attachProcessSampleFailureEvidence(error, processSummaryPath) {
+  const artifact = readOptionalProcessSummaryArtifact(processSummaryPath)?.artifact;
+  const wrappedCommand = artifact?.wrappedCommand;
+  if (wrappedCommand) {
+    error.wrappedCommand = wrappedCommand;
+    error.stdoutTail = wrappedCommand.stdoutTail || "";
+    error.stderrTail = wrappedCommand.stderrTail || "";
+    error.status = wrappedCommand.exitCode ?? error.status;
+    error.signal = wrappedCommand.signal || error.signal || "";
+  }
+  if (artifact?.summary?.sampler) {
+    error.samplerUnavailable = Boolean(artifact.summary.sampler.unavailable);
+  }
+  return error;
 }
 
 function shellCommandArgs(command, shell) {
@@ -170,12 +210,19 @@ function executeSampledShellCommand({
     args.push("--requested-parallelism", String(Number(requestedParallelism)));
   }
   args.push("--", ...shellCommandArgs(command, shell));
-  execFileSync(process.execPath, args, {
+  const result = spawnSync(process.execPath, args, {
     cwd,
     env,
     stdio: "inherit",
     timeout,
   });
+  if (result.error || result.status !== 0 || result.signal) {
+    const error = result.error || new Error(`sampled lifecycle command failed with status ${result.status ?? ""}`);
+    error.status = result.status ?? error.status ?? 1;
+    error.signal = result.signal || error.signal || "";
+    attachProcessSampleFailureEvidence(error, processSummaryPath);
+    throw error;
+  }
 }
 
 function stageCommandText(stage) {
