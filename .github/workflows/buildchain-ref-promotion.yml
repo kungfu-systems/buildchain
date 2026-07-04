@@ -71,16 +71,35 @@ jobs:
           esac
           echo "target_ref=${target_ref}" >> "$GITHUB_OUTPUT"
 
-      - name: Checkout target commit
+      - name: Checkout promotion runtime
         uses: actions/checkout@v7.0.0
         with:
-          ref: ${{ steps.target.outputs.sha }}
+          ref: ${{ github.sha }}
+          path: .buildchain/promotion-runtime
           persist-credentials: false
 
       - uses: actions/setup-node@v6.4.0
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org/"
+
+      - name: Resolve release candidate evidence
+        id: release_candidate
+        run: node .buildchain/promotion-runtime/scripts/release-candidate-resolver.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_TARGET_REF: ${{ steps.target_ref.outputs.target_ref }}
+          BUILDCHAIN_TARGET_SHA: ${{ steps.target.outputs.sha }}
+          BUILDCHAIN_RC_OUTPUT_DIR: ${{ runner.temp }}/buildchain-release-candidate
+          BUILDCHAIN_RC_WORKFLOW_NAME: ""
+
+      - name: Checkout target commit
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ steps.target.outputs.sha }}
+          clean: false
+          persist-credentials: false
 
       - name: Enable pnpm
         run: |
@@ -89,26 +108,6 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      - name: Resolve release candidate evidence
-        id: release_candidate
-        run: |
-          if [ -f scripts/release-candidate-resolver.mjs ]; then
-            node scripts/release-candidate-resolver.mjs
-          else
-            {
-              echo "promote-only-release-candidate=false"
-              echo "release-candidate-passport-path="
-              echo "release-candidate-build-summary-path="
-              echo "release-candidate-version="
-              echo "release-candidate-diagnosis=target commit does not include release-candidate resolver"
-            } >> "$GITHUB_OUTPUT"
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
-          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
-          BUILDCHAIN_TARGET_REF: ${{ steps.target_ref.outputs.target_ref }}
-          BUILDCHAIN_TARGET_SHA: ${{ steps.target.outputs.sha }}
 
       - name: Promote buildchain refs
         uses: ./actions/promote-buildchain-ref
@@ -130,27 +129,7 @@ jobs:
       - name: Classify Buildchain promotion friction
         id: friction
         if: ${{ failure() && github.event_name != 'workflow_dispatch' }}
-        run: |
-          if [ -f scripts/workflow-friction-report.mjs ]; then
-            node scripts/workflow-friction-report.mjs
-          else
-            mkdir -p .buildchain/workflow-friction
-            cat > .buildchain/workflow-friction/issue-body.md <<'EOF'
-          # Buildchain workflow friction evidence
-
-          Promotion failed after Verify, but the target commit does not include the workflow-friction classifier.
-          EOF
-            {
-              echo "friction-class=buildchain-ref-promotion-failed"
-              echo "summary=Buildchain ref promotion failed after Verify."
-              echo "diagnosis=Target commit does not include workflow-friction classifier."
-              echo "next-action=Inspect the promotion logs and backport the classifier if this line still needs automated reporting."
-              echo "pull-request="
-              echo "body-file=.buildchain/workflow-friction/issue-body.md"
-              echo "related-runs-json=[]"
-              echo "heavy-builds-json=[]"
-            } >> "$GITHUB_OUTPUT"
-          fi
+        run: node .buildchain/promotion-runtime/scripts/workflow-friction-report.mjs
         env:
           GITHUB_TOKEN: ${{ github.token }}
           BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
@@ -163,7 +142,7 @@ jobs:
 
       - name: Report Buildchain promotion friction
         if: ${{ failure() && github.event_name != 'workflow_dispatch' }}
-        uses: ./actions/report-buildchain-issue
+        uses: ./.buildchain/promotion-runtime/actions/report-buildchain-issue
         with:
           token: ${{ github.token }}
           report-kind: workflow-friction
