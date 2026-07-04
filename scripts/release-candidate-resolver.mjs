@@ -90,16 +90,32 @@ export function selectMergedChannelPullRequest({ pullRequests = [], targetRef, r
   return candidates[0];
 }
 
-export function selectReleaseCandidateRun({ runs = [], pullRequest, workflowName = "Build Surface Fixture" }) {
+export function selectReleaseCandidateRun({ runs = [], pullRequest, workflowName = "" }) {
   const prNumber = Number(pullRequest?.number || 0);
+  const prHeadSha = String(pullRequest?.head?.sha || pullRequest?.headRefOid || "").trim();
+  const prHeadBranch = normalizeBranch(pullRequest?.head?.ref || pullRequest?.headRefName || "");
+  const prHeadRepository = pullRequest?.head?.repo?.full_name || pullRequest?.headRepository?.nameWithOwner || "";
   const candidates = runs.filter((run) => {
     const runPrs = Array.isArray(run.pull_requests) ? run.pull_requests : [];
-    const matchesPr = runPrs.some((pr) => Number(pr.number || 0) === prNumber);
-    const matchesWorkflow = !workflowName || run.name === workflowName || run.display_title === workflowName;
+    const runHeadBranch = normalizeBranch(run.head_branch || "");
+    const runHeadSha = String(run.head_sha || "").trim();
+    const runHeadRepository = run.head_repository?.full_name || run.headRepository?.nameWithOwner || "";
+    const matchesPrNumber = runPrs.some((pr) => Number(pr.number || 0) === prNumber);
+    const matchesHeadSha = prHeadSha && runHeadSha === prHeadSha;
+    const matchesHeadBranch = prHeadBranch
+      && runHeadBranch === prHeadBranch
+      && (!prHeadRepository || !runHeadRepository || runHeadRepository === prHeadRepository);
+    const matchesPr = matchesPrNumber || matchesHeadSha || matchesHeadBranch;
+    const matchesWorkflow = !workflowName || run.name === workflowName || run.workflow_name === workflowName;
     return matchesPr && matchesWorkflow && run.event === "pull_request" && run.status === "completed" && run.conclusion === "success";
   });
   candidates.sort((left, right) => Date.parse(right.updated_at || right.created_at || "") - Date.parse(left.updated_at || left.created_at || ""));
   return candidates[0];
+}
+
+function outputPath(filePath) {
+  const relative = path.relative(process.cwd(), filePath).split(path.sep).join("/");
+  return relative.startsWith("../") || relative === ".." ? filePath : relative;
 }
 
 export function selectReleaseCandidateArtifacts({ artifacts = [] }) {
@@ -256,8 +272,8 @@ export async function resolveReleaseCandidateArtifacts({
   return {
     ...result,
     paths: {
-      passport: path.relative(process.cwd(), passportPath).split(path.sep).join("/"),
-      buildSummary: path.relative(process.cwd(), buildSummaryPath).split(path.sep).join("/"),
+      passport: outputPath(passportPath),
+      buildSummary: outputPath(buildSummaryPath),
     },
     version: passport.target?.version || "",
     candidateHash: passport.candidateHash || "",
@@ -270,7 +286,7 @@ export async function resolveReleaseCandidateArtifactsCli() {
     targetRef: env("BUILDCHAIN_TARGET_REF"),
     targetSha: env("BUILDCHAIN_TARGET_SHA"),
     workflowFile: env("BUILDCHAIN_RC_WORKFLOW_FILE", DEFAULT_WORKFLOW_FILE),
-    workflowName: env("BUILDCHAIN_RC_WORKFLOW_NAME", "Build Surface Fixture"),
+    workflowName: env("BUILDCHAIN_RC_WORKFLOW_NAME", ""),
     outputDir: env("BUILDCHAIN_RC_OUTPUT_DIR", ".buildchain/release-candidate"),
   });
   writeGitHubOutputs({

@@ -3576,6 +3576,32 @@ test("promote-only RC passport accepts channel merge commit with matching source
   }
 });
 
+test("promote-only RC passport tolerates legacy unbound target channel", () => {
+  const cwd = makeTempWorkspace({
+    ".buildchain/artifacts/release-candidate-passport.json": {
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-release-candidate-passport",
+      repository: "kungfu-systems/buildchain",
+      target: { channel: "none", ref: "", version: "source-aaaaaaaaaaaa" },
+      source: { headSha: SHA, mergeRefSha: SHA, treeHash: `tree-${SHA}` },
+      platformMatrix: [{ platformId: "linux-x64", artifactName: "buildchain-linux-x64" }],
+      diagnostics: {},
+    },
+  });
+  try {
+    const result = validatePromotionReleaseCandidate({
+      cwd,
+      repository: "kungfu-systems/buildchain",
+      targetChannel: "alpha",
+      sourceHeadSha: SHA,
+      sourceTreeSha: `tree-${SHA}`,
+    });
+    assert.equal(result.platformCount, 1);
+  } finally {
+    fs.rmSync(cwd, { recursive: true, force: true });
+  }
+});
+
 test("strict alpha promotion requires a protected dev-to-alpha PR", async () => {
   const calls = [];
   const octokit = {

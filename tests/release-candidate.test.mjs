@@ -86,6 +86,24 @@ test("release candidate passport records source lock, platform matrix, and build
   assert.equal(validateReleaseCandidatePassport({ passport, buildSummary }).ok, true);
 });
 
+test("release candidate passport derives channel from PR base when publish channel is none", () => {
+  const buildSummary = sampleBuildSummary();
+  const passport = createReleaseCandidatePassport({
+    repository: "kungfu-systems/libnode",
+    pullRequest: { baseRef: "alpha/v22/v22.22" },
+    targetChannel: "none",
+    version: "22.22.3-kf.3-alpha.7",
+    sourceHeadSha: SOURCE_SHA,
+    buildSummary,
+  });
+  assert.equal(passport.target.channel, "alpha");
+  const legacyNone = {
+    ...passport,
+    target: { ...passport.target, channel: "none" },
+  };
+  assert.equal(validateReleaseCandidatePassport({ passport: legacyNone, targetChannel: "alpha" }).ok, true);
+});
+
 test("release candidate validation rejects stale source and summary evidence", () => {
   const buildSummary = sampleBuildSummary();
   const passport = createReleaseCandidatePassport({
@@ -144,6 +162,41 @@ test("release candidate resolver selects same-repo merged PR run and paired arti
     ],
   });
   assert.equal(run.id, 2);
+
+  const titledRun = selectReleaseCandidateRun({
+    pullRequest,
+    runs: [
+      { id: 3, name: ".github/workflows/build-surface-fixture.yml", display_title: "Prepare v2.4.7-alpha.1", event: "pull_request", status: "completed", conclusion: "success", updated_at: "2026-07-04T03:00:00.000Z", pull_requests: [{ number: 11 }] },
+    ],
+  });
+  assert.equal(titledRun.id, 3);
+
+  const emptyPullRequestArrayRun = selectReleaseCandidateRun({
+    pullRequest: {
+      ...pullRequest,
+      head: {
+        ref: "buildchain/version-state/alpha-v2-v2.4/f68f8ea5a983",
+        sha: "f68f8ea5a983d1a788436ef9d00a2c9efb1787b8",
+        repo: { full_name: "kungfu-systems/buildchain" },
+      },
+    },
+    runs: [
+      {
+        id: 4,
+        name: "Build Surface Fixture",
+        display_title: "Prepare v2.4.7-alpha.1",
+        event: "pull_request",
+        status: "completed",
+        conclusion: "success",
+        updated_at: "2026-07-04T03:00:00.000Z",
+        head_branch: "buildchain/version-state/alpha-v2-v2.4/f68f8ea5a983",
+        head_sha: "f68f8ea5a983d1a788436ef9d00a2c9efb1787b8",
+        head_repository: { full_name: "kungfu-systems/buildchain" },
+        pull_requests: [],
+      },
+    ],
+  });
+  assert.equal(emptyPullRequestArrayRun.id, 4);
 
   const artifacts = selectReleaseCandidateArtifacts({
     artifacts: [
