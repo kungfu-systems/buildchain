@@ -145,11 +145,13 @@ and fail before publish-gate side effects if it no longer matches:
     release-candidate-build-summary-path: .buildchain/artifacts/build-summary.json
 ```
 
-The action validates repository, channel, source SHA, platform matrix, and the
-aggregate build-summary hash before it writes version state, opens release-state,
-runs publish transaction logic, or moves tags/branches. If validation fails, run
-or attach the verified channel PR build first instead of promoting a stale or
-unproven artifact set.
+The action validates repository, channel, source identity, platform matrix, and
+the aggregate build-summary hash before it writes version state, opens
+release-state, runs publish transaction logic, or moves tags/branches. Source
+identity accepts the exact source SHA, the PR merge ref SHA, or the promoted
+channel HEAD's Git tree SHA matching the passport tree hash. If validation
+fails, run or attach the verified channel PR build first instead of promoting a
+stale or unproven artifact set.
 
 When enabled, the action creates or resumes a release transaction keyed by
 repository, version, source SHA, and target ref. It persists that transaction to

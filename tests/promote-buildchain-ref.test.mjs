@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const {
   assertAllowedLocalChanges,
+  assertChannelPromotionPr,
   assertPromotableRepository,
   assertPromotableTargetRef,
   discoverVersionStateFiles,
@@ -22,6 +23,7 @@ const {
   selectAlphaTag,
   selectReleaseTag,
   updateVersionStateContents,
+  validatePromotionReleaseCandidate,
 } = await import("../actions/promote-buildchain-ref/lib.js");
 const {
   explainReleaseLineDryRun,
@@ -248,6 +250,54 @@ test("promotion is limited to buildchain alpha and release line refs", () => {
     () => resolveTagsForTarget("release/v1/v1.0", ["v1.1.0"]),
     /not allowed for release promotion/,
   );
+});
+
+test("channel promotion PR lineage retries transient GitHub API failures", async () => {
+  const originalRetryDelay = process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS;
+  process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS = "0";
+  let calls = 0;
+  const octokit = {
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async ({ commit_sha }) => {
+          calls += 1;
+          assert.equal(commit_sha, SHA);
+          if (calls === 1) {
+            throw transientGitHubError("other side closed");
+          }
+          return {
+            data: [
+              {
+                merged_at: "2026-07-04T00:00:00Z",
+                base: { ref: "alpha/v1/v1.0" },
+                head: {
+                  ref: "dev/v1/v1.0",
+                  repo: { full_name: "kungfu-systems/buildchain" },
+                },
+              },
+            ],
+          };
+        },
+      },
+    },
+  };
+
+  try {
+    await assertChannelPromotionPr({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sha: SHA,
+      targetRef: "alpha/v1/v1.0",
+    });
+    assert.equal(calls, 2);
+  } finally {
+    if (originalRetryDelay === undefined) {
+      delete process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS;
+    } else {
+      process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS = originalRetryDelay;
+    }
+  }
 });
 
 test("release transaction complete transition clears stale failure", () => {
@@ -3517,6 +3567,10 @@ test("promoteBuildchainRefs fails fast when promote-only RC passport source is s
           calls.push(["getRef", ref]);
           return { data: { object: { sha: SHA } } };
         },
+        getCommit: async ({ commit_sha }) => {
+          calls.push(["getCommit", commit_sha]);
+          return { data: { tree: { sha: `tree-${commit_sha}` }, parents: [] } };
+        },
         listMatchingRefs: async () => {
           calls.push(["listMatchingRefs"]);
           return { data: [] };
@@ -3537,9 +3591,61 @@ test("promoteBuildchainRefs fails fast when promote-only RC passport source is s
         versionState: false,
         promoteOnlyReleaseCandidate: true,
       }),
-      /release candidate passport validation failed: source head mismatch/,
+      /release candidate passport validation failed: source identity mismatch/,
     );
-    assert.deepEqual(calls, [["getRef", "heads/alpha/v1/v1.0"]]);
+    assert.deepEqual(calls, [["getRef", "heads/alpha/v1/v1.0"], ["getCommit", SHA]]);
+  } finally {
+    fs.rmSync(cwd, { recursive: true, force: true });
+  }
+});
+
+test("promote-only RC passport accepts channel merge commit with matching source tree", () => {
+  const cwd = makeTempWorkspace({
+    ".buildchain/artifacts/release-candidate-passport.json": {
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-release-candidate-passport",
+      repository: "kungfu-systems/buildchain",
+      target: { channel: "alpha", ref: "alpha/v1/v1.0", version: "1.0.0-alpha.0" },
+      source: { headSha: OTHER_SHA, mergeRefSha: OTHER_SHA, treeHash: `tree-${SHA}` },
+      platformMatrix: [{ platformId: "linux-x64", artifactName: "buildchain-linux-x64" }],
+      diagnostics: {},
+    },
+  });
+  try {
+    const result = validatePromotionReleaseCandidate({
+      cwd,
+      repository: "kungfu-systems/buildchain",
+      targetChannel: "alpha",
+      sourceHeadSha: SHA,
+      sourceTreeSha: `tree-${SHA}`,
+    });
+    assert.equal(result.platformCount, 1);
+  } finally {
+    fs.rmSync(cwd, { recursive: true, force: true });
+  }
+});
+
+test("promote-only RC passport tolerates legacy unbound target channel", () => {
+  const cwd = makeTempWorkspace({
+    ".buildchain/artifacts/release-candidate-passport.json": {
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-release-candidate-passport",
+      repository: "kungfu-systems/buildchain",
+      target: { channel: "none", ref: "", version: "source-aaaaaaaaaaaa" },
+      source: { headSha: SHA, mergeRefSha: SHA, treeHash: `tree-${SHA}` },
+      platformMatrix: [{ platformId: "linux-x64", artifactName: "buildchain-linux-x64" }],
+      diagnostics: {},
+    },
+  });
+  try {
+    const result = validatePromotionReleaseCandidate({
+      cwd,
+      repository: "kungfu-systems/buildchain",
+      targetChannel: "alpha",
+      sourceHeadSha: SHA,
+      sourceTreeSha: `tree-${SHA}`,
+    });
+    assert.equal(result.platformCount, 1);
   } finally {
     fs.rmSync(cwd, { recursive: true, force: true });
   }

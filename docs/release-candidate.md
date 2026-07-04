@@ -34,7 +34,8 @@ contains:
 - repository and pull request context;
 - target channel, target ref, and product version or a non-publish
   `source-<shortSha>` candidate label;
-- source head SHA, merge ref SHA, and source tree hash;
+- source head SHA, merge ref SHA, and the Git `HEAD^{tree}` SHA for PR merge
+  equivalence after the channel PR lands;
 - Buildchain runtime ref/SHA and workflow shell ref;
 - workflow run id/attempt/url;
 - normalized platform matrix and artifact summaries;
@@ -55,8 +56,10 @@ Promotion workflows that should not rebuild artifacts can enable:
 
 With `promote-only-release-candidate: "true"`, promotion fails before
 version-state, publish transaction, tag, or branch side effects when the
-passport does not match the repository, channel, source SHA, platform matrix,
-or build-summary hash. The diagnostic tells maintainers to run or attach the
-verified channel PR build first instead of allowing publish-gate to discover
-the mismatch late.
-
+passport does not match the repository, channel, source identity, platform
+matrix, or build-summary hash. Source identity accepts the exact PR source SHA,
+the PR merge ref SHA, or an exact Git tree match with the promoted channel HEAD;
+this keeps post-merge channel commits strict without forcing a rebuild. The
+Buildchain-owned promotion workflow resolves the matching same-repository
+merged channel PR and downloads its PR-stage RC passport automatically before
+promotion starts.

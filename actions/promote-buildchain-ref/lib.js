@@ -644,6 +644,7 @@ function validatePromotionReleaseCandidate({
   targetChannel,
   version = "",
   sourceHeadSha,
+  sourceTreeSha = "",
   requirePlatforms = true,
 }) {
   const resolvedPassportPath = resolveMaybeRelative(cwd, passportPath);
@@ -662,11 +663,24 @@ function validatePromotionReleaseCandidate({
     repository,
     targetChannel,
     version,
-    sourceHeadSha,
     buildSummary,
     requirePlatforms,
   });
-  if (!validation.ok) {
+  const acceptedSourceShas = [
+    passport.source?.headSha,
+    passport.source?.mergeRefSha,
+  ].filter(Boolean);
+  const sourceTreeHash = passport.source?.treeHash || "";
+  if (
+    sourceHeadSha &&
+    !acceptedSourceShas.includes(sourceHeadSha) &&
+    (!sourceTreeSha || sourceTreeHash !== sourceTreeSha)
+  ) {
+    validation.errors.push(
+      `source identity mismatch: target SHA ${sourceHeadSha} did not match RC head/merge SHAs (${acceptedSourceShas.join(", ") || "<none>"}) or target tree ${sourceTreeSha || "<empty>"} did not match RC tree ${sourceTreeHash || "<empty>"}`,
+    );
+  }
+  if (validation.errors.length > 0) {
     throw new Error(`release candidate passport validation failed: ${validation.errors.join("; ")}`);
   }
   return {
@@ -990,6 +1004,17 @@ async function getGitCommitWithRetry({ octokit, owner, repo, commitSha }) {
   return retryGitHubOperation(
     `git.getCommit ${commitSha}`,
     () => octokit.rest.git.getCommit({
+      owner,
+      repo,
+      commit_sha: commitSha,
+    }),
+  );
+}
+
+async function listPullRequestsAssociatedWithCommitWithRetry({ octokit, owner, repo, commitSha }) {
+  return retryGitHubOperation(
+    `repos.listPullRequestsAssociatedWithCommit ${commitSha}`,
+    () => octokit.rest.repos.listPullRequestsAssociatedWithCommit({
       owner,
       repo,
       commit_sha: commitSha,
@@ -1900,10 +1925,11 @@ async function assertChannelPromotionPr({
 }) {
   const expectedHeadRef = expectedHeadRefForTarget(targetRef);
   const { data: pullRequests } =
-    await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+    await listPullRequestsAssociatedWithCommitWithRetry({
+      octokit,
       owner,
       repo,
-      commit_sha: sha,
+      commitSha: sha,
     });
   const matchingPullRequest = pullRequests.find((pullRequest) => {
     const baseRef = pullRequest.base?.ref;
@@ -2534,6 +2560,7 @@ async function promoteBuildchainRefs({
   const updates = [];
   let releaseCandidateValidation;
   if (promoteOnlyReleaseCandidate) {
+    const targetCommitInfo = await getCommitInfo(octokit, owner, repo, sha);
     releaseCandidateValidation = validatePromotionReleaseCandidate({
       cwd,
       passportPath: releaseCandidatePassportPath,
@@ -2542,6 +2569,7 @@ async function promoteBuildchainRefs({
       targetChannel: rule.channel,
       version: releaseCandidateVersion,
       sourceHeadSha: sha,
+      sourceTreeSha: targetCommitInfo.treeSha,
     });
     updates.push({
       action: "verified-release-candidate",
@@ -2838,10 +2866,11 @@ async function promoteBuildchainRefs({
 
   const findMatchingReleaseRecoveryPullRequest = async ({ commitSha, targetRef }) => {
     const { data: pullRequests } =
-      await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+      await listPullRequestsAssociatedWithCommitWithRetry({
+        octokit,
         owner,
         repo,
-        commit_sha: commitSha,
+        commitSha,
       });
     return pullRequests.find((pullRequest) => {
       const baseRef = pullRequest.base?.ref;
@@ -2859,10 +2888,11 @@ async function promoteBuildchainRefs({
 
   const findMatchingTargetPullRequest = async ({ commitSha, targetRef }) => {
     const { data: pullRequests } =
-      await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+      await listPullRequestsAssociatedWithCommitWithRetry({
+        octokit,
         owner,
         repo,
-        commit_sha: commitSha,
+        commitSha,
       });
     return pullRequests.find((pullRequest) => {
       const baseRef = pullRequest.base?.ref;
@@ -2890,10 +2920,11 @@ async function promoteBuildchainRefs({
         throw directError;
       }
       const { data: pullRequests } =
-        await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+        await listPullRequestsAssociatedWithCommitWithRetry({
+          octokit,
           owner,
           repo,
-          commit_sha: commitSha,
+          commitSha,
         });
       const matchingVersionStatePullRequest = pullRequests.find((pullRequest) => {
         const baseRef = pullRequest.base?.ref;
@@ -4132,4 +4163,5 @@ export {
   selectReleaseTag,
   stripTagPrefix,
   updateVersionStateContents,
+  validatePromotionReleaseCandidate,
 };

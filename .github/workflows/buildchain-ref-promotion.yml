@@ -90,6 +90,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Resolve release candidate evidence
+        id: release_candidate
+        run: node scripts/release-candidate-resolver.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_TARGET_REF: ${{ steps.target_ref.outputs.target_ref }}
+          BUILDCHAIN_TARGET_SHA: ${{ steps.target.outputs.sha }}
+
       - name: Promote buildchain refs
         uses: ./actions/promote-buildchain-ref
         with:
@@ -101,6 +110,25 @@ jobs:
           require-version-state: "true"
           required-status-check: "check"
           publish-transaction: "true"
+          release-passport-build-summary-path: ${{ steps.release_candidate.outputs.release-candidate-build-summary-path }}
+          promote-only-release-candidate: ${{ steps.release_candidate.outputs.promote-only-release-candidate }}
+          release-candidate-passport-path: ${{ steps.release_candidate.outputs.release-candidate-passport-path }}
+          release-candidate-build-summary-path: ${{ steps.release_candidate.outputs.release-candidate-build-summary-path }}
+          release-candidate-version: ${{ steps.release_candidate.outputs.release-candidate-version }}
+
+      - name: Classify Buildchain promotion friction
+        id: friction
+        if: ${{ failure() && github.event_name != 'workflow_dispatch' }}
+        run: node scripts/workflow-friction-report.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_TARGET_REF: ${{ steps.target_ref.outputs.target_ref }}
+          BUILDCHAIN_TARGET_SHA: ${{ steps.target.outputs.sha }}
+          BUILDCHAIN_WORKFLOW_NAME: ${{ github.workflow }}
+          BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          BUILDCHAIN_RC_RESOLVE_OUTCOME: ${{ steps.release_candidate.outcome }}
+          BUILDCHAIN_RC_DIAGNOSIS: ${{ steps.release_candidate.outputs.release-candidate-diagnosis }}
 
       - name: Report Buildchain promotion friction
         if: ${{ failure() && github.event_name != 'workflow_dispatch' }}
@@ -117,10 +145,14 @@ jobs:
           channel: ${{ steps.target_ref.outputs.target_ref }}
           source-ref: ${{ github.event.workflow_run.head_branch }}
           source-sha: ${{ steps.target.outputs.sha }}
-          friction-class: buildchain-ref-promotion-failed
-          summary: "Buildchain ref promotion failed after a successful Verify workflow_run. This should be investigated as Buildchain workflow friction instead of requiring repeated manual reruns."
-          diagnosis: "Promotion should be idempotent. If the root cause is duplicate PR, duplicate build, transient GitHub API, stale release-state, or missing RC evidence, keep the finding on this deduplicated issue."
-          next-action: "Inspect the run logs and fix the Buildchain workflow contract so the next alpha/release promotion can complete without manual rerun."
+          pull-request: ${{ steps.friction.outputs.pull-request }}
+          friction-class: ${{ steps.friction.outputs.friction-class }}
+          summary: ${{ steps.friction.outputs.summary }}
+          diagnosis: ${{ steps.friction.outputs.diagnosis }}
+          next-action: ${{ steps.friction.outputs.next-action }}
+          body-file: ${{ steps.friction.outputs.body-file }}
+          related-runs-json: ${{ steps.friction.outputs.related-runs-json }}
+          heavy-builds-json: ${{ steps.friction.outputs.heavy-builds-json }}
           labels: "buildchain-feedback,workflow-friction"
           comment-cooldown-hours: "24"
           fail-on-error: "false"

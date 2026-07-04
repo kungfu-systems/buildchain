@@ -98,6 +98,12 @@ inputs:
   next-action:
     description: "Suggested next action for workflow-friction reports"
     default: ""
+  related-runs-json:
+    description: "JSON array of related workflow run labels for workflow-friction reports"
+    default: ""
+  heavy-builds-json:
+    description: "JSON array of heavy build evidence objects for workflow-friction reports"
+    default: ""
   buildchain-ref:
     description: "Buildchain ref used by the consumer workflow"
     default: ""

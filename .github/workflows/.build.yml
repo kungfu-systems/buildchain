@@ -218,6 +218,9 @@ on:
       publish-source-sha:
         description: "Locked source SHA used for checkout/build/summary"
         value: ${{ jobs.trust-gate.outputs.publish-source-sha }}
+      publish-source-tree-sha:
+        description: "Git tree SHA for the locked source commit used by release-candidate promotion equivalence checks"
+        value: ${{ jobs.resolve-source.outputs.publish-source-tree-sha }}
       publish-source-locked:
         description: "Whether a publish-gate source ref was explicitly locked"
         value: ${{ jobs.trust-gate.outputs.publish-source-locked }}
@@ -434,6 +437,7 @@ jobs:
     outputs:
       publish-source-ref: ${{ steps.manifest.outputs.publish-source-ref }}
       publish-source-sha: ${{ steps.manifest.outputs.publish-source-sha }}
+      publish-source-tree-sha: ${{ steps.source-tree.outputs.publish-source-tree-sha }}
       publish-source-locked: ${{ steps.manifest.outputs.publish-source-locked }}
       publish-source-channel: ${{ steps.manifest.outputs.publish-source-channel }}
       publish-source-line: ${{ steps.manifest.outputs.publish-source-line }}
@@ -471,6 +475,13 @@ jobs:
           BUILDCHAIN_PUBLISH_ANCHOR_REQUEST_JSON: ${{ inputs.publish-anchor-request-json }}
           BUILDCHAIN_PUBLISH_REGISTRY: ${{ inputs.publish-registry }}
           BUILDCHAIN_RELEASE_MANIFEST: .buildchain/artifacts/publish-source-manifest.json
+
+      - name: Resolve source tree SHA
+        id: source-tree
+        shell: bash
+        run: |
+          tree_sha="$(git -C source rev-parse "HEAD^{tree}")"
+          echo "publish-source-tree-sha=${tree_sha}" >> "$GITHUB_OUTPUT"
 
       - name: Upload resolved release manifest
         uses: actions/upload-artifact@v7.0.1
@@ -900,6 +911,7 @@ jobs:
           BUILDCHAIN_PUBLISH_SOURCE_CONSUMER_VERSION: ${{ needs.resolve-source.outputs.publish-source-consumer-version }}
           BUILDCHAIN_RELEASE_MANIFEST_JSON: ${{ needs.resolve-source.outputs.release-manifest-json }}
           BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
           BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
           BUILDCHAIN_RUNTIME_REQUESTED_REF: ${{ inputs.buildchain-ref }}
           BUILDCHAIN_RUNTIME_REF: ${{ needs.trust-gate.outputs.buildchain-runtime-ref }}
@@ -929,6 +941,7 @@ jobs:
           BUILDCHAIN_RC_VERSION: ${{ needs.resolve-source.outputs.publish-source-consumer-version }}
           BUILDCHAIN_RC_SOURCE_HEAD_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
           BUILDCHAIN_RC_MERGE_REF_SHA: ${{ github.sha }}
+          BUILDCHAIN_RC_SOURCE_TREE_HASH: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
           BUILDCHAIN_RUNTIME_REF: ${{ needs.trust-gate.outputs.buildchain-runtime-ref }}
           BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           BUILDCHAIN_WORKFLOW_SHELL_REF: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-ref }}
