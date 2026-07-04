@@ -26,6 +26,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
   id-token: write
 
 jobs:
@@ -100,3 +101,26 @@ jobs:
           require-version-state: "true"
           required-status-check: "check"
           publish-transaction: "true"
+
+      - name: Report Buildchain promotion friction
+        if: ${{ failure() && github.event_name != 'workflow_dispatch' }}
+        uses: ./actions/report-buildchain-issue
+        with:
+          token: ${{ github.token }}
+          report-kind: workflow-friction
+          target-repository: ${{ github.repository }}
+          repository: ${{ github.repository }}
+          workflow: ${{ github.workflow }}
+          run-id: ${{ github.run_id }}
+          run-attempt: ${{ github.run_attempt }}
+          run-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          channel: ${{ steps.target_ref.outputs.target_ref }}
+          source-ref: ${{ github.event.workflow_run.head_branch }}
+          source-sha: ${{ steps.target.outputs.sha }}
+          friction-class: buildchain-ref-promotion-failed
+          summary: "Buildchain ref promotion failed after a successful Verify workflow_run. This should be investigated as Buildchain workflow friction instead of requiring repeated manual reruns."
+          diagnosis: "Promotion should be idempotent. If the root cause is duplicate PR, duplicate build, transient GitHub API, stale release-state, or missing RC evidence, keep the finding on this deduplicated issue."
+          next-action: "Inspect the run logs and fix the Buildchain workflow contract so the next alpha/release promotion can complete without manual rerun."
+          labels: "buildchain-feedback,workflow-friction"
+          comment-cooldown-hours: "24"
+          fail-on-error: "false"

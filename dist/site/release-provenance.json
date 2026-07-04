@@ -13,6 +13,7 @@
       "./diagnostics": "./packages/core/diagnostics.js",
       "./issue-reporting": "./packages/core/issue-reporting.js",
       "./logging": "./packages/core/logging.js",
+      "./release-candidate": "./packages/core/release-candidate.js",
       "./release-passport": "./packages/core/release-passport.js",
       "./site/buildchain-site.json": "./dist/site/buildchain-site.json",
       "./site/site-manifest.json": "./dist/site/site-manifest.json",

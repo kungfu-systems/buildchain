@@ -131,6 +131,26 @@ channel ref such as `alpha/v22/v22.22` or `release/v22/v22.22` to already point
 at the locked `publish-source-sha`. If not, maintainers should merge the source
 commit through the channel PR first.
 
+For promote-only release candidates, attach the PR-stage reusable build evidence
+and fail before publish-gate side effects if it no longer matches:
+
+```yaml
+- uses: kungfu-systems/buildchain/actions/promote-buildchain-ref@v2
+  with:
+    token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+    sha: ${{ needs.build.outputs.publish-source-sha }}
+    target-ref: alpha/v22/v22.22
+    promote-only-release-candidate: "true"
+    release-candidate-passport-path: .buildchain/artifacts/release-candidate-passport.json
+    release-candidate-build-summary-path: .buildchain/artifacts/build-summary.json
+```
+
+The action validates repository, channel, source SHA, platform matrix, and the
+aggregate build-summary hash before it writes version state, opens release-state,
+runs publish transaction logic, or moves tags/branches. If validation fails, run
+or attach the verified channel PR build first instead of promoting a stale or
+unproven artifact set.
+
 When enabled, the action creates or resumes a release transaction keyed by
 repository, version, source SHA, and target ref. It persists that transaction to
 a machine-managed branch under `buildchain/release-state/<version>`, with

@@ -449,6 +449,57 @@ test("promote action exposes anchored publish source-lock gate", () => {
   assert.match(implementation, /does not match promotion sha/);
 });
 
+test("reusable build exposes release-candidate passport outputs", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/.build.yml"),
+    "utf8",
+  );
+
+  assert.match(workflow, /release-candidate:/);
+  assert.match(workflow, /Generate release candidate passport/);
+  assert.match(workflow, /release-candidate-passport-artifact/);
+  assert.match(workflow, /release-candidate-passport-json/);
+  assert.match(workflow, /<artifact-name>-release-candidate-|release-candidate-/);
+});
+
+test("report issue action exposes workflow-friction feedback mode", () => {
+  const action = fs.readFileSync(
+    path.join(root, "actions/report-buildchain-issue/action.yml"),
+    "utf8",
+  );
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/buildchain-ref-promotion.yml"),
+    "utf8",
+  );
+
+  assert.match(action, /report-kind:/);
+  assert.match(action, /workflow-friction/);
+  assert.match(action, /comment-cooldown-hours:/);
+  assert.match(workflow, /issues: write/);
+  assert.match(workflow, /Report Buildchain promotion friction/);
+});
+
+test("promote action exposes promote-only release candidate inputs", () => {
+  const action = fs.readFileSync(
+    path.join(root, "actions/promote-buildchain-ref/action.yml"),
+    "utf8",
+  );
+  const implementation = fs.readFileSync(
+    path.join(root, "actions/promote-buildchain-ref/index.js"),
+    "utf8",
+  );
+  const docs = fs.readFileSync(
+    path.join(root, "actions/promote-buildchain-ref/README.md"),
+    "utf8",
+  );
+
+  assert.match(action, /promote-only-release-candidate:/);
+  assert.match(action, /release-candidate-passport-path:/);
+  assert.match(action, /release-candidate-build-summary-path:/);
+  assert.match(implementation, /promoteOnlyReleaseCandidate/);
+  assert.match(docs, /promote-only-release-candidate: "true"/);
+});
+
 test("publish source-lock docs distinguish source refs from promotion targets", () => {
   const docs = fs.readFileSync(
     path.join(root, "docs/reusable-build-surface.md"),
