@@ -58,12 +58,20 @@ permissions:
   issues: write
 
 steps:
+  - uses: actions/create-github-app-token@v2
+    id: buildchain-issue-token
+    with:
+      app-id: ${{ secrets.BUILDCHAIN_ISSUE_APP_ID }}
+      private-key: ${{ secrets.BUILDCHAIN_ISSUE_APP_PRIVATE_KEY }}
+      owner: kungfu-systems
+      repositories: buildchain
+
   - uses: kungfu-systems/buildchain/actions/report-buildchain-issue@v2
     if: failure()
     with:
-      token: ${{ secrets.BUILDCHAIN_ISSUE_TOKEN || secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+      token: ${{ steps.buildchain-issue-token.outputs.token || secrets.BUILDCHAIN_ISSUE_TOKEN || secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
       report-kind: workflow-friction
-      target-repository: ${{ github.repository }}
+      target-repository: kungfu-systems/buildchain
       repository: ${{ github.repository }}
       workflow: ${{ github.workflow }}
       run-id: ${{ github.run_id }}
