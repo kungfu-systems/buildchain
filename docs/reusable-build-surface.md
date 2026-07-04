@@ -410,11 +410,16 @@ jobs:
       release-passport-product-name: Libnode
 ```
 
-`publish-required-artifacts-json` can be passed explicitly when the repository
-already knows the exact package identities and digests. If it is omitted, the
-wrapper generates a conservative requirement list from the downloaded PR-stage
-payload manifests and passes that to `promote-buildchain-ref` before any publish
-side effect. The same downloaded platform manifests are passed into the release
+`publish-required-artifacts-json` can still be passed explicitly for custom
+publish targets. For the default `publish-artifact-kind: npm` path, consumers do
+not download artifacts or run repository scripts to build publish evidence. The
+wrapper downloads the PR-stage payload artifacts, finds the downloaded `.tgz`
+packages, reads each tarball's `package/package.json` for the real scoped
+package name and version, computes the npm `sha512-...` integrity from the
+tarball bytes, marks the package matching `publish-package-main` as `role:
+main`, marks the rest as `role: platform`, and passes the generated
+`publish-required-artifacts-json` to `promote-buildchain-ref` before any publish
+side effect. Downloaded platform manifests are still passed into the release
 passport unless `release-passport-platform-manifest-paths` is set explicitly.
 
 Custom publish jobs can also repeat the channel-ref preflight:

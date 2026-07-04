@@ -68,5 +68,11 @@ build summary by the configured `artifact-name` before promotion. It also
 downloads payload artifacts from the same PR-stage run, validates the required
 payload count, passes downloaded platform manifests into the release passport,
 and either forwards an explicit `publish-required-artifacts-json` value or
-generates one from the downloaded payload manifests before calling
-`promote-buildchain-ref`.
+generates one before calling `promote-buildchain-ref`. The default npm path
+generates that requirement list from the downloaded `.tgz` payloads themselves:
+Buildchain reads `package/package.json` inside each tarball for the real scoped
+package name and version, computes npm-style `sha512-...` integrity over the
+tarball bytes, marks `publish-package-main` as `role: main`, and marks every
+other package as `role: platform`. Consumer workflows therefore stay
+declarative and do not need their own artifact download or publish-evidence
+generation scripts.

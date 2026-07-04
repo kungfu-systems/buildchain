@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -174,6 +175,27 @@ function findDownloadedFiles(root, filename) {
   return matches.sort();
 }
 
+function findDownloadedFilesByExtension(root, extensions = []) {
+  const normalizedExtensions = extensions.map((extension) => String(extension || "").toLowerCase());
+  const matches = [];
+  const stack = fs.existsSync(root) ? [root] : [];
+  while (stack.length) {
+    const current = stack.pop();
+    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+      const fullPath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        stack.push(fullPath);
+        continue;
+      }
+      const lowerName = entry.name.toLowerCase();
+      if (normalizedExtensions.some((extension) => lowerName.endsWith(extension))) {
+        matches.push(fullPath);
+      }
+    }
+  }
+  return matches.sort();
+}
+
 function packageNameFromArtifactPath(filePath) {
   const basename = path.basename(String(filePath || ""));
   return basename
@@ -182,11 +204,66 @@ function packageNameFromArtifactPath(filePath) {
     .replace(/\.zip$/i, "");
 }
 
+function npmIntegrity(filePath) {
+  return `sha512-${crypto.createHash("sha512").update(fs.readFileSync(filePath)).digest("base64")}`;
+}
+
+function readNpmPackageJsonFromTarball(tarballPath) {
+  const candidates = ["package/package.json", "./package/package.json"];
+  const errors = [];
+  for (const candidate of candidates) {
+    try {
+      return JSON.parse(execFileSync("tar", ["-xOf", tarballPath, candidate], { encoding: "utf8" }));
+    } catch (error) {
+      errors.push(error.stderr?.toString?.().trim() || error.message);
+    }
+  }
+  throw new Error(`npm package tarball ${tarballPath} does not contain package/package.json: ${errors.filter(Boolean).join("; ")}`);
+}
+
+export function readNpmPackageArtifact({
+  tarballPath,
+  mainPackage = "",
+  kind = "npm",
+} = {}) {
+  const packageJson = readNpmPackageJsonFromTarball(tarballPath);
+  const name = String(packageJson.name || "").trim();
+  const version = String(packageJson.version || "").trim();
+  if (!name || !version) {
+    throw new Error(`npm package tarball ${tarballPath || "<empty>"} package.json must include name and version`);
+  }
+  const integrity = npmIntegrity(tarballPath);
+  return {
+    kind,
+    name,
+    ref: version,
+    digest: integrity,
+    integrity,
+    role: mainPackage && name === mainPackage ? "main" : "platform",
+  };
+}
+
 export function generatePublishRequiredArtifacts({
   manifests = [],
   version = "",
   kind = "npm",
+  tarballPaths = [],
+  mainPackage = "",
 } = {}) {
+  if (String(kind || "") === "npm" && tarballPaths.length > 0) {
+    const artifacts = tarballPaths
+      .map((tarballPath) => readNpmPackageArtifact({ tarballPath, mainPackage, kind }))
+      .sort((left, right) => `${left.role}:${left.name}`.localeCompare(`${right.role}:${right.name}`));
+    const seen = new Set();
+    for (const artifact of artifacts) {
+      const key = `${artifact.name}@${artifact.ref}`;
+      if (seen.has(key)) {
+        throw new Error(`duplicate npm package tarball for ${key}`);
+      }
+      seen.add(key);
+    }
+    return artifacts;
+  }
   const ref = String(version || "").trim();
   if (!ref) {
     return [];
@@ -264,6 +341,7 @@ export async function resolveReleaseCandidateArtifacts({
   artifactPatterns = "",
   requiredArtifactCount = 0,
   publishArtifactKind = "npm",
+  publishPackageMain = "",
   outputDir = ".buildchain/release-candidate",
   fetchImpl = globalThis.fetch,
   download = true,
@@ -396,14 +474,23 @@ export async function resolveReleaseCandidateArtifacts({
   }
   const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
   const platformManifestPaths = findDownloadedFiles(payloadDir, "manifest.json");
-  if (minimumPayloadCount > 0 && platformManifestPaths.length < minimumPayloadCount) {
-    throw new Error(`expected at least ${minimumPayloadCount} downloaded platform manifests, found ${platformManifestPaths.length}`);
+  const npmTarballPaths = publishArtifactKind === "npm"
+    ? findDownloadedFilesByExtension(payloadDir, [".tgz"])
+    : [];
+  const downloadedRequiredArtifactCount = publishArtifactKind === "npm"
+    ? npmTarballPaths.length
+    : platformManifestPaths.length;
+  if (minimumPayloadCount > 0 && downloadedRequiredArtifactCount < minimumPayloadCount) {
+    const noun = publishArtifactKind === "npm" ? "npm package tarballs" : "platform manifests";
+    throw new Error(`expected at least ${minimumPayloadCount} downloaded ${noun}, found ${downloadedRequiredArtifactCount}`);
   }
   const manifests = platformManifestPaths.map((manifestPath) => JSON.parse(fs.readFileSync(manifestPath, "utf8")));
   const generatedRequiredArtifacts = generatePublishRequiredArtifacts({
     manifests,
     version: passport.target?.version || "",
     kind: publishArtifactKind,
+    tarballPaths: npmTarballPaths,
+    mainPackage: publishPackageMain,
   });
   const requiredArtifactsPath = path.join(resolvedOutput, "publish-required-artifacts.json");
   fs.writeFileSync(requiredArtifactsPath, `${JSON.stringify(generatedRequiredArtifacts, null, 2)}\n`);
@@ -414,12 +501,14 @@ export async function resolveReleaseCandidateArtifacts({
       buildSummary: outputPath(buildSummaryPath),
       payloads: outputPath(payloadDir),
       platformManifests: platformManifestPaths.map(outputPath),
+      npmTarballs: npmTarballPaths.map(outputPath),
       publishRequiredArtifacts: outputPath(requiredArtifactsPath),
     },
     version: passport.target?.version || "",
     candidateHash: passport.candidateHash || "",
     payloadCount: payloadArtifacts.length,
     platformManifestCount: platformManifestPaths.length,
+    npmTarballCount: npmTarballPaths.length,
     publishRequiredArtifacts: generatedRequiredArtifacts,
   };
 }
@@ -435,6 +524,7 @@ export async function resolveReleaseCandidateArtifactsCli() {
     artifactPatterns: env("BUILDCHAIN_ARTIFACT_PATTERNS"),
     requiredArtifactCount: env("BUILDCHAIN_REQUIRED_ARTIFACT_COUNT", "0"),
     publishArtifactKind: env("BUILDCHAIN_PUBLISH_ARTIFACT_KIND", "npm"),
+    publishPackageMain: env("BUILDCHAIN_PUBLISH_PACKAGE_MAIN"),
     outputDir: env("BUILDCHAIN_RC_OUTPUT_DIR", ".buildchain/release-candidate"),
   });
   writeGitHubOutputs({
@@ -449,6 +539,8 @@ export async function resolveReleaseCandidateArtifactsCli() {
     "release-candidate-payload-dir": result.paths?.payloads || "",
     "release-candidate-platform-manifest-paths": (result.paths?.platformManifests || []).join(","),
     "release-candidate-platform-manifest-count": String(result.platformManifestCount || 0),
+    "release-candidate-npm-tarball-paths": (result.paths?.npmTarballs || []).join(","),
+    "release-candidate-npm-tarball-count": String(result.npmTarballCount || 0),
     "publish-required-artifacts-json": JSON.stringify(result.publishRequiredArtifacts || []),
     "publish-required-artifacts-path": result.paths?.publishRequiredArtifacts || "",
     "release-candidate-run-id": result.run?.id || "",
