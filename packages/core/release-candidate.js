@@ -18,6 +18,21 @@ function nonEmptyString(value, label) {
   return normalized;
 }
 
+function normalizeTargetChannel(value) {
+  const normalized = optionalString(value).trim();
+  if (!normalized || normalized === "none") {
+    return "";
+  }
+  const refMatch = normalized.match(/^(alpha|release)\/v\d+\/v\d+\.\d+$/);
+  if (refMatch) {
+    return refMatch[1];
+  }
+  if (normalized === "publish-gate/major" || normalized === "major-gate") {
+    return "major";
+  }
+  return normalized;
+}
+
 function stableJson(value) {
   if (Array.isArray(value)) {
     return `[${value.map(stableJson).join(",")}]`;
@@ -81,7 +96,10 @@ export function createReleaseCandidatePassport({
 } = {}) {
   const normalizedSummary = buildSummary && typeof buildSummary === "object" ? buildSummary : {};
   const sourceSha = sourceHeadSha || normalizedSummary.publishSource?.sha || normalizedSummary.git?.sha || "";
-  const channel = targetChannel || normalizedSummary.publishSource?.channel || normalizedSummary.publishGate?.channel || "";
+  const channel = normalizeTargetChannel(targetChannel)
+    || normalizeTargetChannel(normalizedSummary.publishSource?.channel)
+    || normalizeTargetChannel(normalizedSummary.publishGate?.channel)
+    || normalizeTargetChannel(pullRequest.baseRef);
   const candidate = {
     schemaVersion: 1,
     contract: RELEASE_CANDIDATE_PASSPORT_CONTRACT,
@@ -158,7 +176,11 @@ export function validateReleaseCandidatePassport({
     check(passport.repository === repository, `repository mismatch: expected ${repository}, got ${passport.repository || "<empty>"}`);
   }
   if (targetChannel) {
-    check(passport.target?.channel === targetChannel, `target channel mismatch: expected ${targetChannel}, got ${passport.target?.channel || "<empty>"}`);
+    const expectedChannel = normalizeTargetChannel(targetChannel);
+    const actualChannel = normalizeTargetChannel(passport.target?.channel);
+    if (actualChannel) {
+      check(actualChannel === expectedChannel, `target channel mismatch: expected ${expectedChannel}, got ${actualChannel}`);
+    }
   }
   if (version) {
     check(passport.target?.version === version, `version mismatch: expected ${version}, got ${passport.target?.version || "<empty>"}`);
