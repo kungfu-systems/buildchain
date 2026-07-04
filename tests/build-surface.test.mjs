@@ -211,6 +211,13 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   );
   assert.match(workflow, /workflow_call:/);
   assert.match(workflow, /release-candidate-resolver\.mjs/);
+  assert.match(workflow, /release-candidate-workflow-file:/);
+  assert.match(workflow, /default: "build\.yml"/);
+  assert.match(workflow, /release-candidate-workflow-name:/);
+  assert.match(workflow, /default: "Build"/);
+  assert.match(workflow, /BUILDCHAIN_ARTIFACT_NAME: \$\{\{ inputs\.artifact-name \}\}/);
+  assert.match(workflow, /BUILDCHAIN_RC_WORKFLOW_FILE: \$\{\{ inputs\.release-candidate-workflow-file \}\}/);
+  assert.match(workflow, /BUILDCHAIN_RC_WORKFLOW_NAME: \$\{\{ inputs\.release-candidate-workflow-name \}\}/);
   assert.match(workflow, /promote-only-release-candidate: "true"/);
   assert.match(workflow, /release-candidate-passport-path:/);
   assert.match(workflow, /release-candidate-build-summary-path:/);

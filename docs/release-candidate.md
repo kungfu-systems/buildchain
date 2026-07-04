@@ -62,4 +62,6 @@ the PR merge ref SHA, or an exact Git tree match with the promoted channel HEAD;
 this keeps post-merge channel commits strict without forcing a rebuild. The
 Buildchain-owned promotion workflow resolves the matching same-repository
 merged channel PR and downloads its PR-stage RC passport automatically before
-promotion starts.
+promotion starts. The consumer wrapper defaults to a PR-stage workflow file
+named `build.yml` with display name `Build`, and filters the RC passport and
+build summary by the configured `artifact-name` before promotion.
