@@ -59,7 +59,9 @@ Buildchain implements the same governance loop with:
 
 - `.github/workflows/release-verify.yml` for PR verification;
 - `.github/workflows/buildchain-ref-promotion.yml` for post-verify ref
-  promotion;
+  promotion; this workflow dogfoods the declarative
+  `release-candidate-promote.yml` wrapper and does not hand-wire resolver,
+  artifact download, publish-gate, or promote action steps;
 - `actions/promote-buildchain-ref` for branch, tag, version-state, and
   governance checks;
 - package-manager adapters that can update version state for pnpm, npm, and
@@ -305,9 +307,10 @@ When debugging or extending release behavior, read in this order:
 1. `docs/release-flow.md`
 2. `.github/workflows/release-verify.yml`
 3. `.github/workflows/buildchain-ref-promotion.yml`
-4. `actions/promote-buildchain-ref/README.md`
-5. `actions/promote-buildchain-ref/src/`
-6. `docs/migration-inventory.md`
+4. `.github/workflows/release-candidate-promote.yml`
+5. `actions/promote-buildchain-ref/README.md`
+6. `actions/promote-buildchain-ref/src/`
+7. `docs/migration-inventory.md`
 
 That path gives the policy first, the workflow trigger second, and the action
 implementation last.
