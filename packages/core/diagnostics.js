@@ -637,7 +637,9 @@ function processCommandFromLine(commandLine = "", fallback = "") {
 
 function normalizeProcessRows({ rootPid, platform, rows = [] }) {
   const byParent = new Map();
+  const byPid = new Map();
   for (const row of rows) {
+    byPid.set(row.pid, row);
     byParent.set(row.ppid, [...(byParent.get(row.ppid) || []), row]);
   }
   const seen = new Set();
@@ -654,20 +656,32 @@ function normalizeProcessRows({ rootPid, platform, rows = [] }) {
       stack.push(child.pid);
     }
   }
-  return { rootPid: String(rootPid), platform, processes };
+  return { rootPid: String(rootPid), platform, rootProcess: byPid.get(String(rootPid)) || undefined, processes };
 }
 
 function collectWindowsProcessRows({ cwd, runCommand }) {
   const script = [
-    "$ErrorActionPreference = 'Stop'",
+    "$ErrorActionPreference = 'Stop';",
     "Get-CimInstance Win32_Process |",
     "Select-Object ProcessId,ParentProcessId,Name,CommandLine |",
     "ConvertTo-Json -Compress",
-  ].join("; ");
-  const output = runCommand("powershell", ["-NoProfile", "-Command", script], {
-    cwd,
-    timeoutMs: 5000,
-  });
+  ].join(" ");
+  const errors = [];
+  let output = "";
+  for (const command of ["powershell.exe", "powershell", "pwsh"]) {
+    try {
+      output = runCommand(command, ["-NoProfile", "-NonInteractive", "-Command", script], {
+        cwd,
+        timeoutMs: 5000,
+      });
+      break;
+    } catch (error) {
+      errors.push(`${command}: ${error.message}`);
+    }
+  }
+  if (!output) {
+    throw new Error(`Windows process sampler unavailable: ${errors.join("; ") || "no process query output"}`);
+  }
   const parsed = JSON.parse(String(output || "[]"));
   const entries = Array.isArray(parsed) ? parsed : [parsed];
   return entries.map((entry) => {
@@ -696,8 +710,14 @@ export function collectProcessTreeSnapshot({
         platform,
         rows: collectWindowsProcessRows({ cwd, runCommand }),
       });
-    } catch {
-      return { rootPid: pid, platform, processes: [] };
+    } catch (error) {
+      return {
+        rootPid: pid,
+        platform,
+        processes: [],
+        samplerUnavailable: true,
+        samplerUnavailableReason: error.message,
+      };
     }
   }
   let lines = [];
@@ -706,8 +726,14 @@ export function collectProcessTreeSnapshot({
       cwd,
       timeoutMs: 5000,
     }).split(/\r?\n/).filter(Boolean);
-  } catch {
-    return { rootPid: pid, platform, processes: [] };
+  } catch (error) {
+    return {
+      rootPid: pid,
+      platform,
+      processes: [],
+      samplerUnavailable: true,
+      samplerUnavailableReason: error.message,
+    };
   }
   const rows = lines.map((line) => {
     const match = line.trim().match(/^(\d+)\s+(\d+)\s+([0-9.]+)\s+(.*)$/);
@@ -904,6 +930,7 @@ export function summarizeProcessSamples({
   activeCpuThreshold = 0.1,
 } = {}) {
   const normalizedSamples = Array.isArray(samples) ? samples : [];
+  const unavailableSamples = normalizedSamples.filter((sample) => sample?.samplerUnavailable);
   const activeCounts = [];
   const cpuTotals = [];
   const categoryMax = {};
@@ -972,6 +999,15 @@ export function summarizeProcessSamples({
     schemaVersion: 1,
     contract: BUILDCHAIN_PROCESS_SAMPLE_SUMMARY_CONTRACT,
     sampleCount: normalizedSamples.length,
+    sampler: {
+      unavailable: unavailableSamples.length > 0,
+      unavailableSamples: unavailableSamples.length,
+      unavailableReasons: [...new Set(
+        unavailableSamples
+          .map((sample) => String(sample.samplerUnavailableReason || "").trim())
+          .filter(Boolean),
+      )].slice(0, 5),
+    },
     activeCpuThreshold: threshold,
     requestedParallelism: requested,
     requestedParallelismSource: requestedSource,
@@ -1023,10 +1059,16 @@ export function startProcessSampler({
     return snapshot;
   };
   sample();
-  const timer = setInterval(sample, Math.max(1000, Number(intervalMs || 15000)));
+  const interval = Math.max(1000, Number(intervalMs || 15000));
+  const earlyDelay = Math.min(1000, interval);
+  const earlyTimer = interval > earlyDelay ? setTimeout(sample, earlyDelay) : undefined;
+  const timer = setInterval(sample, interval);
   return {
     samples,
     stop() {
+      if (earlyTimer) {
+        clearTimeout(earlyTimer);
+      }
       clearInterval(timer);
       return samples;
     },

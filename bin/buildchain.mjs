@@ -311,6 +311,21 @@ function packageVersion() {
   return packageJson.version;
 }
 
+function createTailBuffer(limit = 64 * 1024) {
+  let value = "";
+  return {
+    append(chunk) {
+      value += Buffer.isBuffer(chunk) ? chunk.toString("utf8") : String(chunk || "");
+      if (value.length > limit) {
+        value = value.slice(value.length - limit);
+      }
+    },
+    text() {
+      return value;
+    },
+  };
+}
+
 async function runProcessTreeSample(sampleArgs = []) {
   const separator = sampleArgs.indexOf("--");
   const optionArgs = separator === -1 ? sampleArgs : sampleArgs.slice(0, separator);
@@ -326,10 +341,20 @@ async function runProcessTreeSample(sampleArgs = []) {
   const outputPath = readFlag(optionArgs, "output", ".buildchain/diagnostics/process-samples.jsonl");
   const summaryOutputPath = readFlag(optionArgs, "summary-output", ".buildchain/diagnostics/process-summary.json");
   const startedAt = Date.now();
+  const stdoutTail = createTailBuffer();
+  const stderrTail = createTailBuffer();
   const child = spawn(command, args, {
     cwd: process.cwd(),
     env: process.env,
-    stdio: "inherit",
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  child.stdout?.on("data", (chunk) => {
+    stdoutTail.append(chunk);
+    process.stdout.write(chunk);
+  });
+  child.stderr?.on("data", (chunk) => {
+    stderrTail.append(chunk);
+    process.stderr.write(chunk);
   });
   const sampler = startProcessSampler({
     rootPid: child.pid || process.pid,
@@ -345,7 +370,7 @@ async function runProcessTreeSample(sampleArgs = []) {
   });
   const result = await new Promise((resolve) => {
     child.on("error", (error) => resolve({ error, status: 1, signal: "" }));
-    child.on("close", (status, signal) => resolve({ status, signal: signal || "" }));
+    child.on("close", (status, signal) => resolve({ status: status ?? 0, signal: signal || "" }));
   });
   const samples = sampler.stop();
   const summary = summarizeProcessSamples({
@@ -365,6 +390,16 @@ async function runProcessTreeSample(sampleArgs = []) {
       status: result.status ?? 0,
       signal: result.signal || "",
       error: result.error?.message || "",
+    },
+    wrappedCommand: {
+      command,
+      args,
+      rootPid: child.pid || 0,
+      exitCode: result.status ?? 0,
+      signal: result.signal || "",
+      error: result.error?.message || "",
+      stdoutTail: stdoutTail.text(),
+      stderrTail: stderrTail.text(),
     },
     durationMs: Date.now() - startedAt,
     samplesPath: outputPath,
