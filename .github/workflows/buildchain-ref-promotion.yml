@@ -26,6 +26,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
   id-token: write
 
 jobs:
@@ -89,6 +90,26 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Resolve release candidate evidence
+        id: release_candidate
+        run: |
+          if [ -f scripts/release-candidate-resolver.mjs ]; then
+            node scripts/release-candidate-resolver.mjs
+          else
+            {
+              echo "promote-only-release-candidate=false"
+              echo "release-candidate-passport-path="
+              echo "release-candidate-build-summary-path="
+              echo "release-candidate-version="
+              echo "release-candidate-diagnosis=target commit does not include release-candidate resolver"
+            } >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_TARGET_REF: ${{ steps.target_ref.outputs.target_ref }}
+          BUILDCHAIN_TARGET_SHA: ${{ steps.target.outputs.sha }}
+
       - name: Promote buildchain refs
         uses: ./actions/promote-buildchain-ref
         with:
@@ -100,3 +121,69 @@ jobs:
           require-version-state: "true"
           required-status-check: "check"
           publish-transaction: "true"
+          release-passport-build-summary-path: ${{ steps.release_candidate.outputs.release-candidate-build-summary-path }}
+          promote-only-release-candidate: ${{ steps.release_candidate.outputs.promote-only-release-candidate }}
+          release-candidate-passport-path: ${{ steps.release_candidate.outputs.release-candidate-passport-path }}
+          release-candidate-build-summary-path: ${{ steps.release_candidate.outputs.release-candidate-build-summary-path }}
+          release-candidate-version: ${{ steps.release_candidate.outputs.release-candidate-version }}
+
+      - name: Classify Buildchain promotion friction
+        id: friction
+        if: ${{ failure() && github.event_name != 'workflow_dispatch' }}
+        run: |
+          if [ -f scripts/workflow-friction-report.mjs ]; then
+            node scripts/workflow-friction-report.mjs
+          else
+            mkdir -p .buildchain/workflow-friction
+            cat > .buildchain/workflow-friction/issue-body.md <<'EOF'
+          # Buildchain workflow friction evidence
+
+          Promotion failed after Verify, but the target commit does not include the workflow-friction classifier.
+          EOF
+            {
+              echo "friction-class=buildchain-ref-promotion-failed"
+              echo "summary=Buildchain ref promotion failed after Verify."
+              echo "diagnosis=Target commit does not include workflow-friction classifier."
+              echo "next-action=Inspect the promotion logs and backport the classifier if this line still needs automated reporting."
+              echo "pull-request="
+              echo "body-file=.buildchain/workflow-friction/issue-body.md"
+              echo "related-runs-json=[]"
+              echo "heavy-builds-json=[]"
+            } >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_TARGET_REF: ${{ steps.target_ref.outputs.target_ref }}
+          BUILDCHAIN_TARGET_SHA: ${{ steps.target.outputs.sha }}
+          BUILDCHAIN_WORKFLOW_NAME: ${{ github.workflow }}
+          BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          BUILDCHAIN_RC_RESOLVE_OUTCOME: ${{ steps.release_candidate.outcome }}
+          BUILDCHAIN_RC_DIAGNOSIS: ${{ steps.release_candidate.outputs.release-candidate-diagnosis }}
+
+      - name: Report Buildchain promotion friction
+        if: ${{ failure() && github.event_name != 'workflow_dispatch' }}
+        uses: ./actions/report-buildchain-issue
+        with:
+          token: ${{ github.token }}
+          report-kind: workflow-friction
+          target-repository: ${{ github.repository }}
+          repository: ${{ github.repository }}
+          workflow: ${{ github.workflow }}
+          run-id: ${{ github.run_id }}
+          run-attempt: ${{ github.run_attempt }}
+          run-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          channel: ${{ steps.target_ref.outputs.target_ref }}
+          source-ref: ${{ github.event.workflow_run.head_branch }}
+          source-sha: ${{ steps.target.outputs.sha }}
+          pull-request: ${{ steps.friction.outputs.pull-request }}
+          friction-class: ${{ steps.friction.outputs.friction-class }}
+          summary: ${{ steps.friction.outputs.summary }}
+          diagnosis: ${{ steps.friction.outputs.diagnosis }}
+          next-action: ${{ steps.friction.outputs.next-action }}
+          body-file: ${{ steps.friction.outputs.body-file }}
+          related-runs-json: ${{ steps.friction.outputs.related-runs-json }}
+          heavy-builds-json: ${{ steps.friction.outputs.heavy-builds-json }}
+          labels: "buildchain-feedback,workflow-friction"
+          comment-cooldown-hours: "24"
+          fail-on-error: "false"
