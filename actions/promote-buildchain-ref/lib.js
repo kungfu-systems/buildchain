@@ -688,6 +688,11 @@ function validatePromotionReleaseCandidate({
     buildSummaryPath: buildSummary ? resolvedSummaryPath : "",
     candidateHash: passport.candidateHash || "",
     platformCount: Array.isArray(passport.platformMatrix) ? passport.platformMatrix.length : 0,
+    builtSourceSha: passport.source?.mergeRefSha || passport.source?.headSha || "",
+    builtSourceTreeSha: passport.source?.treeHash || "",
+    promotionChannelSha: sourceHeadSha || "",
+    promotionChannelTreeSha: sourceTreeSha || "",
+    treeEquivalent: Boolean(sourceTreeSha && sourceTreeHash && sourceTreeSha === sourceTreeHash),
   };
 }
 
@@ -1758,6 +1763,7 @@ async function collectAndPersistReleasePassport({
   buildSummaryPath,
   platformManifestPaths = [],
   enabled = true,
+  releaseCandidateValidation = undefined,
 }) {
   if (!enabled || !result?.transaction || result.transaction.state !== "complete") {
     return result;
@@ -1818,6 +1824,15 @@ async function collectAndPersistReleasePassport({
       versionLabel: publishedVersion || result.transaction.exact_tag,
       releaseSha: result.transaction.release_sha,
       releaseMaterialSha: result.transaction.release_material_sha,
+      ...(releaseCandidateValidation
+        ? {
+            builtSourceSha: releaseCandidateValidation.builtSourceSha,
+            builtSourceTreeSha: releaseCandidateValidation.builtSourceTreeSha,
+            promotionChannelSha: releaseCandidateValidation.promotionChannelSha,
+            promotionChannelTreeSha: releaseCandidateValidation.promotionChannelTreeSha,
+            treeEquivalent: releaseCandidateValidation.treeEquivalent,
+          }
+        : {}),
       publishToolingSha: result.transaction.publish_tooling_sha,
       releaseStateRef: `refs/heads/${result.transaction.state_ref}`,
     }),
@@ -3436,6 +3451,7 @@ async function promoteBuildchainRefs({
       buildSummaryPath: releasePassportBuildSummaryPath,
       platformManifestPaths: splitPathList(releasePassportPlatformManifestPaths),
       enabled: Boolean(releasePassport),
+      releaseCandidateValidation,
     });
     return latestPublishTransaction;
   };

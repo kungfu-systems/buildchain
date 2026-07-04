@@ -294,6 +294,7 @@ export async function resolveReleaseCandidateArtifactsCli() {
     "release-candidate-passport-path": result.paths?.passport || "",
     "release-candidate-build-summary-path": result.paths?.buildSummary || "",
     "release-candidate-version": result.version || "",
+    "release-candidate-source-sha": result.artifacts?.sourceSha || "",
     "release-candidate-artifact": result.artifacts?.passport || "",
     "release-candidate-build-summary-artifact": result.artifacts?.summary || "",
     "release-candidate-run-id": result.run?.id || "",

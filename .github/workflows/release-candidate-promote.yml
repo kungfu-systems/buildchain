@@ -1,0 +1,196 @@
+name: Release Candidate Promote
+
+on:
+  workflow_call:
+    inputs:
+      buildchain-repository:
+        default: "kungfu-systems/buildchain"
+        type: string
+        required: false
+      buildchain-ref:
+        description: "Optional Buildchain runtime ref. Empty uses the workflow shell ref."
+        default: ""
+        type: string
+        required: false
+      channel:
+        description: "Promotion channel: alpha, release, or major"
+        type: string
+        required: true
+      target-ref:
+        description: "Channel ref to promote. Defaults to the current ref name."
+        default: ""
+        type: string
+        required: false
+      package-manager:
+        description: "Package manager recorded for audit: npm, pnpm, yarn, or custom"
+        default: "npm"
+        type: string
+        required: false
+      artifact-name:
+        description: "Base artifact name used by the PR-stage reusable build"
+        default: "buildchain-artifact"
+        type: string
+        required: false
+      artifact-patterns:
+        description: "Newline-separated payload artifact patterns expected from the RC bundle"
+        default: ""
+        type: string
+        required: false
+      publish-target:
+        description: "Publish target recorded for audit: npm, github-release, custom"
+        default: "npm"
+        type: string
+        required: false
+      runner-preset:
+        description: "Runner preset recorded for audit"
+        default: "github-hosted"
+        type: string
+        required: false
+      trusted-publishing:
+        description: "Whether the publish target uses GitHub OIDC trusted publishing"
+        default: true
+        type: boolean
+        required: false
+      publish-command:
+        description: "Optional publish command. Defaults to lifecycle.publish from buildchain.toml."
+        default: ""
+        type: string
+        required: false
+      publish-required-artifacts-json:
+        description: "Required publish artifacts JSON passed to the promotion action"
+        default: ""
+        type: string
+        required: false
+      required-artifact-count:
+        description: "Minimum platform manifest count required before publish"
+        default: 3
+        type: number
+        required: false
+      dry-run:
+        description: "Plan only; do not publish or move refs"
+        default: false
+        type: boolean
+        required: false
+    outputs:
+      promoted-sha:
+        description: "Promoted channel SHA"
+        value: ${{ jobs.promote.outputs.promoted-sha }}
+      built-source-sha:
+        description: "PR-stage built source SHA"
+        value: ${{ jobs.promote.outputs.built-source-sha }}
+      release-candidate-artifact:
+        description: "Resolved release-candidate artifact name"
+        value: ${{ jobs.promote.outputs.release-candidate-artifact }}
+
+permissions:
+  contents: write
+  actions: read
+  id-token: write
+
+jobs:
+  promote:
+    name: Promote release candidate
+    runs-on: ubuntu-24.04
+    outputs:
+      promoted-sha: ${{ steps.target.outputs.sha }}
+      built-source-sha: ${{ steps.rc.outputs.release-candidate-source-sha }}
+      release-candidate-artifact: ${{ steps.rc.outputs.release-candidate-artifact }}
+    steps:
+      - name: Resolve target ref
+        id: target-ref
+        shell: bash
+        run: |
+          target_ref="${INPUT_TARGET_REF:-${GITHUB_REF_NAME}}"
+          case "${target_ref}" in
+            alpha/v*/v*|release/v*/v*|publish-gate/major|major-gate) ;;
+            *)
+              echo "::error::unsupported promote target ref: ${target_ref}"
+              exit 1
+              ;;
+          esac
+          echo "value=${target_ref}" >> "${GITHUB_OUTPUT}"
+        env:
+          INPUT_TARGET_REF: ${{ inputs.target-ref }}
+
+      - name: Resolve target SHA
+        id: target
+        shell: bash
+        run: |
+          echo "sha=${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
+
+      - name: Checkout promotion channel commit
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ steps.target.outputs.sha }}
+          clean: true
+          persist-credentials: false
+
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.buildchain-ref || 'v2' }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Install Buildchain runtime dependencies
+        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+
+      - name: Resolve PR-stage release candidate
+        id: rc
+        run: node .buildchain/runtime/scripts/release-candidate-resolver.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_TARGET_SHA: ${{ steps.target.outputs.sha }}
+          BUILDCHAIN_TARGET_REF: ${{ steps.target-ref.outputs.value }}
+          BUILDCHAIN_RC_OUTPUT_DIR: .buildchain/release-candidate
+
+      - name: Ensure publish-gate ref locks promotion commit
+        id: publish-gate
+        uses: actions/github-script@v8
+        env:
+          CHANNEL: ${{ inputs.channel }}
+          TARGET_REF: ${{ steps.target-ref.outputs.value }}
+          TARGET_SHA: ${{ steps.target.outputs.sha }}
+          VERSION: ${{ steps.rc.outputs.release-candidate-version || 'promotion' }}
+        with:
+          script: |
+            const channel = process.env.CHANNEL;
+            const targetRef = process.env.TARGET_REF;
+            const targetSha = process.env.TARGET_SHA;
+            const versionHint = process.env.VERSION || "promotion";
+            const gateRef = channel === "major"
+              ? "publish-gate/major"
+              : `publish-gate/${channel}/${targetRef.replace(/^(alpha|release)\//, "")}/${versionHint}`;
+            const ref = `heads/${gateRef}`;
+            try {
+              const current = await github.rest.git.getRef({ owner: context.repo.owner, repo: context.repo.repo, ref });
+              if (current.data.object.sha !== targetSha) {
+                await github.rest.git.updateRef({ owner: context.repo.owner, repo: context.repo.repo, ref, sha: targetSha, force: true });
+              }
+            } catch (error) {
+              if (error.status !== 404) throw error;
+              await github.rest.git.createRef({ owner: context.repo.owner, repo: context.repo.repo, ref: `refs/${ref}`, sha: targetSha });
+            }
+            core.setOutput("ref", gateRef);
+            core.setOutput("sha", targetSha);
+
+      - name: Promote-only publish
+        uses: ./.buildchain/runtime/actions/promote-buildchain-ref
+        with:
+          token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+          sha: ${{ steps.target.outputs.sha }}
+          target-ref: ${{ steps.target-ref.outputs.value }}
+          dry-run: ${{ inputs.dry-run }}
+          require-governance: "true"
+          require-version-state: "true"
+          required-status-check: "check"
+          publish-transaction: "true"
+          publish-command: ${{ inputs.publish-command }}
+          publish-required-artifacts-json: ${{ inputs.publish-required-artifacts-json }}
+          publish-auth: ${{ inputs.trusted-publishing && 'trusted-publishing' || 'npm-token' }}
+          promote-only-release-candidate: "true"
+          release-candidate-passport-path: ${{ steps.rc.outputs.release-candidate-passport-path }}
+          release-candidate-build-summary-path: ${{ steps.rc.outputs.release-candidate-build-summary-path }}
+          release-candidate-version: ${{ steps.rc.outputs.release-candidate-version }}
