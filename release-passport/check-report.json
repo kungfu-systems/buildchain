@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-release-check-report",
+  "checkedAt": "2026-07-05T09:37:13.581Z",
+  "ok": false,
+  "trust": "fail",
+  "surfaceImpactRequirement": {
+    "required": true,
+    "type": "production-release",
+    "reason": "production release passports require surfaceImpacts[] so agents can audit the final version impact",
+    "channel": "release",
+    "targetRef": "release/v2/v2.5"
+  },
+  "completeness": {
+    "artifactCount": 1,
+    "evidenceArtifactCount": 1,
+    "packageSetPresent": false,
+    "trustedPublishingPresent": true,
+    "transactionPresent": true,
+    "anchorManifestPresent": false,
+    "buildSummaryPresent": true,
+    "platformArtifactManifestCount": 3,
+    "distTagPromotionEvidencePresent": false,
+    "impactPresent": true,
+    "agentIndexPresent": true,
+    "productMechanismPresent": true,
+    "surfaceImpactsRequired": true,
+    "surfaceImpactCount": 0,
+    "versionImpact": "unknown"
+  },
+  "issues": [
+    {
+      "level": "error",
+      "code": "impact.surfaceImpacts.required",
+      "message": "surfaceImpacts[] is required for this release passport type",
+      "details": {
+        "required": true,
+        "type": "production-release",
+        "reason": "production release passports require surfaceImpacts[] so agents can audit the final version impact",
+        "channel": "release",
+        "targetRef": "release/v2/v2.5"
+      }
+    }
+  ]
+}
