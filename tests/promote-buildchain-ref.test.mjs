@@ -2830,6 +2830,180 @@ test("publish transaction finalizes current release version-state merge commits"
   assert.equal(checkReport.ok, true);
 });
 
+test("release finalization uses the transaction alpha source after next-alpha advances", async () => {
+  const oldReleaseSha = "4".repeat(40);
+  const alphaZeroSha = "5".repeat(40);
+  const alphaOneSha = "6".repeat(40);
+  const releaseSourceSha = "7".repeat(40);
+  const versionHeadSha = "8".repeat(40);
+  const finalMergeSha = "9".repeat(40);
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "1.0.0",
+      packageManager: "pnpm@11.7.0",
+    },
+  });
+  const { octokit, refs, commits } = createGitMock({
+    refs: new Map([
+      ["heads/release/v1/v1.0", finalMergeSha],
+      ["tags/v1.0.0-alpha.0", alphaZeroSha],
+      ["tags/v1.0.0-alpha.1", alphaOneSha],
+      ["tags/v1.0-alpha", alphaOneSha],
+    ]),
+  });
+  commits.set(alphaZeroSha, {
+    sha: alphaZeroSha,
+    tree: { sha: "alpha-zero-tree" },
+    parents: [],
+  });
+  commits.set(alphaOneSha, {
+    sha: alphaOneSha,
+    tree: { sha: "alpha-one-tree" },
+    parents: [],
+  });
+  commits.set(releaseSourceSha, {
+    sha: releaseSourceSha,
+    tree: { sha: "alpha-zero-tree" },
+    parents: [{ sha: oldReleaseSha }, { sha: alphaZeroSha }],
+  });
+  commits.set(versionHeadSha, {
+    sha: versionHeadSha,
+    tree: { sha: "release-version-tree" },
+    parents: [{ sha: releaseSourceSha }],
+  });
+  commits.set(finalMergeSha, {
+    sha: finalMergeSha,
+    tree: { sha: "final-release-tree" },
+    parents: [{ sha: releaseSourceSha }, { sha: versionHeadSha }],
+  });
+  octokit.rest.repos = {
+    getBranchProtection: async () => ({
+      data: protectedChannel(),
+    }),
+    compareCommitsWithBasehead: async ({ basehead }) => {
+      assert.equal(basehead, `${releaseSourceSha}...${finalMergeSha}`);
+      return { data: { files: [{ filename: "package.json" }] } };
+    },
+    listPullRequestsAssociatedWithCommit: async ({ commit_sha }) => ({
+      data:
+        commit_sha === releaseSourceSha
+          ? [
+              {
+                merged_at: "2026-07-05T00:00:00Z",
+                base: { ref: "release/v1/v1.0" },
+                head: {
+                  ref: "alpha/v1/v1.0",
+                  repo: { full_name: "kungfu-systems/buildchain" },
+                },
+              },
+            ]
+          : [],
+    }),
+  };
+  const statePath = path.join(cwd, ".buildchain/release-state/1.0.0.json");
+  const evidencePath = path.join(cwd, ".buildchain/release-evidence/v1.0.0/evidence.json");
+  fs.mkdirSync(path.dirname(evidencePath), { recursive: true });
+  fs.writeFileSync(
+    evidencePath,
+    `${JSON.stringify({
+      schema: 1,
+      repository: "kungfu-systems/buildchain",
+      version: "1.0.0",
+      channel: "release",
+      source_sha: releaseSourceSha,
+      release_sha: versionHeadSha,
+      target_ref: "release/v1/v1.0",
+      release_material_sha: versionHeadSha,
+      publish_tooling_sha: versionHeadSha,
+      artifacts: [
+        {
+          group: "node",
+          kind: "npm",
+          name: "@kungfu-tech/buildchain",
+          ref: "1.0.0",
+          digest: "sha512-release",
+        },
+      ],
+    }, null, 2)}\n`,
+  );
+  await persistDurableReleaseTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    transaction: {
+      schema: 1,
+      id: "release-finalization-alpha-source",
+      repository: "kungfu-systems/buildchain",
+      target_ref: "release/v1/v1.0",
+      source_sha: releaseSourceSha,
+      release_sha: versionHeadSha,
+      release_material_sha: versionHeadSha,
+      publish_tooling_sha: versionHeadSha,
+      version: "1.0.0",
+      exact_tag: "v1.0.0",
+      channel: "release",
+      line: "v1.0",
+      version_strategy: "",
+      lifecycle_identity: "lifecycle.publish",
+      state_ref: "buildchain/release-state/1-0-0",
+      state_path: statePath,
+      evidence_path: evidencePath,
+      state: "published",
+      previous_state: "publishing",
+      actor: "codex",
+      run_id: "1",
+      superseded_by: "",
+      failure: "",
+      artifacts: [
+        {
+          group: "node",
+          kind: "npm",
+          name: "@kungfu-tech/buildchain",
+          ref: "1.0.0",
+          digest: "sha512-release",
+          role: "main",
+          required: true,
+        },
+      ],
+      evidence: [".buildchain/release-evidence/v1.0.0/evidence.json"],
+      created_at: "2026-07-05T00:00:00.000Z",
+      updated_at: "2026-07-05T00:00:00.000Z",
+    },
+    evidencePath,
+  });
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: finalMergeSha,
+    targetRef: "release/v1/v1.0",
+    cwd,
+    publishTransaction: true,
+    publishAuth: "trusted-publishing",
+    publishDistTag: "latest",
+    publishPackageMain: "@kungfu-tech/buildchain",
+    publishRequiredArtifactsJson: JSON.stringify([
+      {
+        group: "node",
+        kind: "npm",
+        name: "@kungfu-tech/buildchain",
+        ref: "1.0.0",
+        digest: "sha512-release",
+        role: "main",
+      },
+    ]),
+    requireGovernance: true,
+    requireVersionState: true,
+  });
+
+  assert.equal(result.sha, finalMergeSha);
+  assert.equal(result.publishTransaction.state, "complete");
+  assert.equal(refs.get("tags/v1.0.0"), finalMergeSha);
+});
+
 test("publish transaction resumes partial release finalization with exact tag on release material", async () => {
   const oldReleaseSha = "8".repeat(40);
   const alphaSha = "9".repeat(40);
