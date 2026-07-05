@@ -151,6 +151,53 @@ on:
         default: 14
         type: number
         required: false
+      artifact-transfer-mode:
+        description: "Artifact transfer mode: github-artifacts or s3-to-github-artifacts"
+        default: "github-artifacts"
+        type: string
+        required: false
+      artifact-relay-s3-bucket:
+        description: "Optional S3 bucket for artifact relay. Empty may use BUILDCHAIN_ARTIFACT_RELAY_S3_BUCKET repo/org variable."
+        default: ""
+        type: string
+        required: false
+      artifact-relay-s3-region:
+        description: "Optional S3 region for artifact relay. Empty may use BUILDCHAIN_ARTIFACT_RELAY_S3_REGION repo/org variable."
+        default: ""
+        type: string
+        required: false
+      artifact-relay-s3-prefix:
+        description: "Optional S3 key prefix for artifact relay. Empty may use BUILDCHAIN_ARTIFACT_RELAY_S3_PREFIX repo/org variable."
+        default: ""
+        type: string
+        required: false
+      artifact-relay-s3-role-arn:
+        description: "Optional shared OIDC role ARN for S3 relay upload/download. Prefer repo/org variables or secrets."
+        default: ""
+        type: string
+        required: false
+      artifact-relay-s3-upload-role-arn:
+        description: "Optional upload OIDC role ARN for self-hosted build runners."
+        default: ""
+        type: string
+        required: false
+      artifact-relay-s3-download-role-arn:
+        description: "Optional download OIDC role ARN for the GitHub-hosted relay runner."
+        default: ""
+        type: string
+        required: false
+      artifact-relay-s3-oidc-audience:
+        description: "Optional OIDC audience for S3 relay roles. Defaults to sts.amazonaws.com.cn for cn-* regions, otherwise sts.amazonaws.com."
+        default: ""
+        type: string
+        required: false
+    secrets:
+      BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN:
+        required: false
+      BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN:
+        required: false
+      BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN:
+        required: false
     outputs:
       runner-preset:
         description: "Resolved runner preset name"
@@ -242,6 +289,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   trust-gate:
@@ -530,12 +578,101 @@ jobs:
           BUILDCHAIN_LINUX_CONTAINER_PRESET: ${{ inputs.linux-container-preset }}
           BUILDCHAIN_LINUX_CONTAINER_IMAGE: ${{ inputs.linux-container-image }}
 
+  artifact-transfer:
+    name: Resolve artifact transfer
+    runs-on: ubuntu-24.04
+    needs:
+      - trust-gate
+    if: ${{ needs.trust-gate.outputs.trusted == 'true' }}
+    outputs:
+      mode: ${{ steps.transfer.outputs.mode }}
+      s3-bucket: ${{ steps.transfer.outputs.s3-bucket }}
+      s3-region: ${{ steps.transfer.outputs.s3-region }}
+      s3-prefix: ${{ steps.transfer.outputs.s3-prefix }}
+      oidc-audience: ${{ steps.transfer.outputs.oidc-audience }}
+    steps:
+      - name: Resolve artifact transfer mode
+        id: transfer
+        shell: bash
+        run: |
+          mode="${INPUT_TRANSFER_MODE:-github-artifacts}"
+          case "${mode}" in
+            github-artifacts|s3-to-github-artifacts) ;;
+            *)
+              echo "::error::artifact-transfer-mode must be github-artifacts or s3-to-github-artifacts, got: ${mode}"
+              exit 1
+              ;;
+          esac
+          bucket="${INPUT_S3_BUCKET:-${VAR_S3_BUCKET:-}}"
+          region="${INPUT_S3_REGION:-${VAR_S3_REGION:-}}"
+          prefix="${INPUT_S3_PREFIX:-${VAR_S3_PREFIX:-buildchain-artifacts}}"
+          audience="${INPUT_OIDC_AUDIENCE:-${VAR_OIDC_AUDIENCE:-}}"
+          upload_role="${INPUT_S3_UPLOAD_ROLE_ARN:-${VAR_S3_UPLOAD_ROLE_ARN:-${SECRET_S3_UPLOAD_ROLE_ARN:-}}}"
+          download_role="${INPUT_S3_DOWNLOAD_ROLE_ARN:-${VAR_S3_DOWNLOAD_ROLE_ARN:-${SECRET_S3_DOWNLOAD_ROLE_ARN:-}}}"
+          shared_role="${INPUT_S3_ROLE_ARN:-${VAR_S3_ROLE_ARN:-${SECRET_S3_ROLE_ARN:-}}}"
+          if [ "${mode}" = "s3-to-github-artifacts" ]; then
+            if [ -z "${bucket}" ]; then
+              echo "::error::artifact-transfer-mode=s3-to-github-artifacts requires artifact-relay-s3-bucket or BUILDCHAIN_ARTIFACT_RELAY_S3_BUCKET"
+              exit 1
+            fi
+            if [ -z "${region}" ]; then
+              echo "::error::artifact-transfer-mode=s3-to-github-artifacts requires artifact-relay-s3-region or BUILDCHAIN_ARTIFACT_RELAY_S3_REGION"
+              exit 1
+            fi
+            if [ -z "${upload_role}${shared_role}" ]; then
+              echo "::error::artifact-transfer-mode=s3-to-github-artifacts requires an upload role ARN input, variable, or secret"
+              exit 1
+            fi
+            if [ -z "${download_role}${shared_role}" ]; then
+              echo "::error::artifact-transfer-mode=s3-to-github-artifacts requires a download role ARN input, variable, or secret"
+              exit 1
+            fi
+            if [ -z "${audience}" ]; then
+              case "${region}" in
+                cn-*) audience="sts.amazonaws.com.cn" ;;
+                *) audience="sts.amazonaws.com" ;;
+              esac
+            fi
+          else
+            bucket=""
+            region=""
+            prefix=""
+            audience=""
+          fi
+          {
+            echo "mode=${mode}"
+            echo "s3-bucket=${bucket}"
+            echo "s3-region=${region}"
+            echo "s3-prefix=${prefix}"
+            echo "oidc-audience=${audience}"
+          } >> "${GITHUB_OUTPUT}"
+        env:
+          INPUT_TRANSFER_MODE: ${{ inputs.artifact-transfer-mode }}
+          INPUT_S3_BUCKET: ${{ inputs.artifact-relay-s3-bucket }}
+          INPUT_S3_REGION: ${{ inputs.artifact-relay-s3-region }}
+          INPUT_S3_PREFIX: ${{ inputs.artifact-relay-s3-prefix }}
+          INPUT_S3_ROLE_ARN: ${{ inputs.artifact-relay-s3-role-arn }}
+          INPUT_S3_UPLOAD_ROLE_ARN: ${{ inputs.artifact-relay-s3-upload-role-arn }}
+          INPUT_S3_DOWNLOAD_ROLE_ARN: ${{ inputs.artifact-relay-s3-download-role-arn }}
+          INPUT_OIDC_AUDIENCE: ${{ inputs.artifact-relay-s3-oidc-audience }}
+          VAR_S3_BUCKET: ${{ vars.BUILDCHAIN_ARTIFACT_RELAY_S3_BUCKET }}
+          VAR_S3_REGION: ${{ vars.BUILDCHAIN_ARTIFACT_RELAY_S3_REGION }}
+          VAR_S3_PREFIX: ${{ vars.BUILDCHAIN_ARTIFACT_RELAY_S3_PREFIX }}
+          VAR_S3_ROLE_ARN: ${{ vars.BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN }}
+          VAR_S3_UPLOAD_ROLE_ARN: ${{ vars.BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN }}
+          VAR_S3_DOWNLOAD_ROLE_ARN: ${{ vars.BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN }}
+          VAR_OIDC_AUDIENCE: ${{ vars.BUILDCHAIN_ARTIFACT_RELAY_S3_OIDC_AUDIENCE }}
+          SECRET_S3_ROLE_ARN: ${{ secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN }}
+          SECRET_S3_UPLOAD_ROLE_ARN: ${{ secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN }}
+          SECRET_S3_DOWNLOAD_ROLE_ARN: ${{ secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN }}
+
   build-native:
     name: ${{ matrix.platform.name }}
     needs:
       - trust-gate
       - resolve-contract
       - resolve-source
+      - artifact-transfer
     if: ${{ needs.trust-gate.outputs.trusted == 'true' && needs.resolve-contract.outputs.native-platform-count != '0' }}
     strategy:
       fail-fast: false
@@ -640,7 +777,56 @@ jobs:
           process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
           process-summary-required: ${{ inputs.process-summary-path != '' || inputs.require-build }}
 
+      - name: Configure AWS credentials for artifact relay upload
+        if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' }}
+        uses: aws-actions/configure-aws-credentials@v6.1.0
+        with:
+          role-to-assume: ${{ inputs.artifact-relay-s3-upload-role-arn || vars.BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN || secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN || inputs.artifact-relay-s3-role-arn || vars.BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN || secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN }}
+          aws-region: ${{ needs.artifact-transfer.outputs.s3-region }}
+          audience: ${{ needs.artifact-transfer.outputs.oidc-audience }}
+
+      - name: Upload payload to S3 artifact relay
+        id: artifact-relay
+        if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' }}
+        run: node .buildchain/runtime/scripts/artifact-relay-s3.mjs upload
+        env:
+          BUILDCHAIN_ARTIFACT_RELAY_BUCKET: ${{ needs.artifact-transfer.outputs.s3-bucket }}
+          BUILDCHAIN_ARTIFACT_RELAY_REGION: ${{ needs.artifact-transfer.outputs.s3-region }}
+          BUILDCHAIN_ARTIFACT_RELAY_PREFIX: ${{ needs.artifact-transfer.outputs.s3-prefix }}
+          BUILDCHAIN_ARTIFACT_RELAY_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_ARTIFACT_RELAY_PLATFORM_ID: ${{ matrix.platform.id }}
+          BUILDCHAIN_ARTIFACT_RELAY_PLATFORM_NAME: ${{ matrix.platform.name }}
+          BUILDCHAIN_ARTIFACT_RELAY_MANIFEST_PATH: .buildchain/artifacts/${{ matrix.platform.id }}/relay-manifest.json
+          BUILDCHAIN_ARTIFACT_RELAY_PAYLOAD_ARTIFACT_NAME: ${{ steps.artifact-contract.outputs.artifact-name }}
+          BUILDCHAIN_ARTIFACT_RELAY_PAYLOAD_PATHS: |
+            ${{ inputs.artifact-paths }}
+            .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+          BUILDCHAIN_ARTIFACT_RELAY_MANIFEST_ARTIFACT_NAME: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_ARTIFACT_RELAY_MANIFEST_PATHS: |
+            .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+          BUILDCHAIN_ARTIFACT_RELAY_DIAGNOSTICS_ARTIFACT_NAME: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_ARTIFACT_RELAY_DIAGNOSTICS_PATHS: |
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics-manifest.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
+            .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
+
+      - name: Upload artifact relay manifest
+        if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-relay-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: .buildchain/artifacts/${{ matrix.platform.id }}/relay-manifest.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
       - name: Upload deterministic artifact
+        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ steps.artifact-contract.outputs.artifact-name }}
@@ -653,6 +839,7 @@ jobs:
           retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Upload artifact manifest
+        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
@@ -664,6 +851,7 @@ jobs:
           retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Upload diagnostics artifact
+        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
@@ -682,6 +870,7 @@ jobs:
       - trust-gate
       - resolve-contract
       - resolve-source
+      - artifact-transfer
     if: ${{ needs.trust-gate.outputs.trusted == 'true' && needs.resolve-contract.outputs.container-platform-count != '0' }}
     strategy:
       fail-fast: false
@@ -795,7 +984,56 @@ jobs:
           process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
           process-summary-required: ${{ inputs.process-summary-path != '' || inputs.require-build }}
 
+      - name: Configure AWS credentials for artifact relay upload
+        if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' }}
+        uses: aws-actions/configure-aws-credentials@v6.1.0
+        with:
+          role-to-assume: ${{ inputs.artifact-relay-s3-upload-role-arn || vars.BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN || secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN || inputs.artifact-relay-s3-role-arn || vars.BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN || secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN }}
+          aws-region: ${{ needs.artifact-transfer.outputs.s3-region }}
+          audience: ${{ needs.artifact-transfer.outputs.oidc-audience }}
+
+      - name: Upload payload to S3 artifact relay
+        id: artifact-relay
+        if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' }}
+        run: node .buildchain/runtime/scripts/artifact-relay-s3.mjs upload
+        env:
+          BUILDCHAIN_ARTIFACT_RELAY_BUCKET: ${{ needs.artifact-transfer.outputs.s3-bucket }}
+          BUILDCHAIN_ARTIFACT_RELAY_REGION: ${{ needs.artifact-transfer.outputs.s3-region }}
+          BUILDCHAIN_ARTIFACT_RELAY_PREFIX: ${{ needs.artifact-transfer.outputs.s3-prefix }}
+          BUILDCHAIN_ARTIFACT_RELAY_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_ARTIFACT_RELAY_PLATFORM_ID: ${{ matrix.platform.id }}
+          BUILDCHAIN_ARTIFACT_RELAY_PLATFORM_NAME: ${{ matrix.platform.name }}
+          BUILDCHAIN_ARTIFACT_RELAY_MANIFEST_PATH: .buildchain/artifacts/${{ matrix.platform.id }}/relay-manifest.json
+          BUILDCHAIN_ARTIFACT_RELAY_PAYLOAD_ARTIFACT_NAME: ${{ steps.artifact-contract.outputs.artifact-name }}
+          BUILDCHAIN_ARTIFACT_RELAY_PAYLOAD_PATHS: |
+            ${{ inputs.artifact-paths }}
+            .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+          BUILDCHAIN_ARTIFACT_RELAY_MANIFEST_ARTIFACT_NAME: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_ARTIFACT_RELAY_MANIFEST_PATHS: |
+            .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+          BUILDCHAIN_ARTIFACT_RELAY_DIAGNOSTICS_ARTIFACT_NAME: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_ARTIFACT_RELAY_DIAGNOSTICS_PATHS: |
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics-manifest.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
+            .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
+
+      - name: Upload artifact relay manifest
+        if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-relay-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: .buildchain/artifacts/${{ matrix.platform.id }}/relay-manifest.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
       - name: Upload deterministic artifact
+        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ steps.artifact-contract.outputs.artifact-name }}
@@ -808,6 +1046,7 @@ jobs:
           retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Upload artifact manifest
+        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
@@ -819,6 +1058,7 @@ jobs:
           retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Upload diagnostics artifact
+        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
@@ -831,15 +1071,111 @@ jobs:
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
+  relay-artifacts:
+    name: Relay ${{ matrix.platform.name }} artifacts
+    needs:
+      - trust-gate
+      - resolve-contract
+      - resolve-source
+      - artifact-transfer
+      - build-native
+      - build-linux-container
+    if: ${{ always() && needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: ${{ fromJSON(needs.resolve-contract.outputs.platforms-json) }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Install Buildchain runtime dependencies
+        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+
+      - name: Resolve artifact contract
+        id: artifact-contract
+        run: node .buildchain/runtime/scripts/resolve-build-contract.mjs --mode artifact
+        env:
+          BUILDCHAIN_ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          BUILDCHAIN_ARTIFACT_NAME_TEMPLATE: ${{ inputs.artifact-name-template }}
+          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
+          BUILDCHAIN_PLATFORM_NAME: ${{ matrix.platform.name }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+
+      - name: Download artifact relay manifest
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ inputs.artifact-name }}-relay-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: .buildchain/downloaded-relay-manifests/${{ matrix.platform.id }}
+
+      - name: Configure AWS credentials for artifact relay download
+        uses: aws-actions/configure-aws-credentials@v6.1.0
+        with:
+          role-to-assume: ${{ inputs.artifact-relay-s3-download-role-arn || vars.BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN || secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN || inputs.artifact-relay-s3-role-arn || vars.BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN || secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN }}
+          aws-region: ${{ needs.artifact-transfer.outputs.s3-region }}
+          audience: ${{ needs.artifact-transfer.outputs.oidc-audience }}
+
+      - name: Download and verify S3 relay payload
+        id: relay-download
+        run: node .buildchain/runtime/scripts/artifact-relay-s3.mjs download
+        env:
+          BUILDCHAIN_ARTIFACT_RELAY_INPUT_ROOT: .buildchain/downloaded-relay-manifests/${{ matrix.platform.id }}
+          BUILDCHAIN_ARTIFACT_RELAY_OUTPUT_ROOT: .buildchain/relayed-artifacts/${{ matrix.platform.id }}
+          BUILDCHAIN_ARTIFACT_RELAY_REGION: ${{ needs.artifact-transfer.outputs.s3-region }}
+          BUILDCHAIN_ARTIFACT_RELAY_PLATFORM_ID: ${{ matrix.platform.id }}
+
+      - name: Upload deterministic artifact
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.artifact-contract.outputs.artifact-name }}
+          path: ${{ steps.relay-download.outputs.payload-path }}
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload artifact manifest
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: ${{ steps.relay-download.outputs.manifest-path }}
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload diagnostics artifact
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: ${{ steps.relay-download.outputs.diagnostics-path }}
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Cleanup S3 artifact relay payload
+        if: ${{ success() }}
+        run: node .buildchain/runtime/scripts/artifact-relay-s3.mjs cleanup
+        env:
+          BUILDCHAIN_ARTIFACT_RELAY_INPUT_ROOT: .buildchain/downloaded-relay-manifests/${{ matrix.platform.id }}
+          BUILDCHAIN_ARTIFACT_RELAY_REGION: ${{ needs.artifact-transfer.outputs.s3-region }}
+          BUILDCHAIN_ARTIFACT_RELAY_PLATFORM_ID: ${{ matrix.platform.id }}
+
   summarize:
     name: Summarize build contract
     needs:
       - trust-gate
       - resolve-contract
       - resolve-source
+      - artifact-transfer
       - build-native
       - build-linux-container
-    if: ${{ always() && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') }}
+      - relay-artifacts
+    if: ${{ always() && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && (needs.artifact-transfer.outputs.mode == 'github-artifacts' || needs.relay-artifacts.result == 'success') }}
     runs-on: ubuntu-24.04
     outputs:
       summary-artifact-name: ${{ steps.names.outputs.summary-artifact-name }}
@@ -865,10 +1201,30 @@ jobs:
       - name: Resolve summary artifact name
         id: names
         run: |
+          rc_target_channel="${BUILDCHAIN_RC_TARGET_CHANNEL}"
+          if { [ -z "${rc_target_channel}" ] || [ "${rc_target_channel}" = "none" ]; } && [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
+            case "${BUILDCHAIN_RC_PR_BASE_REF}" in
+              alpha/*)
+                rc_target_channel="alpha"
+                ;;
+              release/*)
+                rc_target_channel="release"
+                ;;
+              publish-gate/major|major-gate)
+                rc_target_channel="major"
+                ;;
+            esac
+          fi
+          release_candidate_enabled=false
+          if [ "${BUILDCHAIN_RC_REQUESTED}" = "true" ] && [ -n "${rc_target_channel}" ] && [ "${rc_target_channel}" != "none" ]; then
+            release_candidate_enabled=true
+          fi
           {
             echo "summary-artifact-name=${BUILDCHAIN_SUMMARY_ARTIFACT_NAME}"
             echo "diagnostics-summary-artifact-name=${BUILDCHAIN_DIAGNOSTICS_SUMMARY_ARTIFACT_NAME}"
-            if [ "${BUILDCHAIN_RC_ENABLED}" = "true" ]; then
+            echo "release-candidate-enabled=${release_candidate_enabled}"
+            echo "release-candidate-target-channel=${rc_target_channel}"
+            if [ "${release_candidate_enabled}" = "true" ]; then
               echo "release-candidate-passport-artifact-name=${BUILDCHAIN_RC_PASSPORT_ARTIFACT_NAME}"
             else
               echo "release-candidate-passport-artifact-name="
@@ -878,7 +1234,10 @@ jobs:
           BUILDCHAIN_SUMMARY_ARTIFACT_NAME: ${{ inputs.artifact-name }}-summary-${{ needs.resolve-source.outputs.publish-source-sha }}
           BUILDCHAIN_DIAGNOSTICS_SUMMARY_ARTIFACT_NAME: ${{ inputs.artifact-name }}-diagnostics-summary-${{ needs.resolve-source.outputs.publish-source-sha }}
           BUILDCHAIN_RC_PASSPORT_ARTIFACT_NAME: ${{ inputs.artifact-name }}-release-candidate-${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_RC_ENABLED: ${{ inputs.release-candidate }}
+          BUILDCHAIN_RC_REQUESTED: ${{ inputs.release-candidate }}
+          BUILDCHAIN_RC_TARGET_CHANNEL: ${{ needs.resolve-source.outputs.publish-source-channel || needs.trust-gate.outputs.publish-channel }}
+          BUILDCHAIN_RC_PR_BASE_REF: ${{ github.base_ref || github.event.pull_request.base.ref }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
 
       - name: Download platform manifests
         uses: actions/download-artifact@v7.0.0
@@ -935,12 +1294,12 @@ jobs:
 
       - name: Generate release candidate passport
         id: release-candidate
-        if: ${{ inputs.release-candidate }}
+        if: ${{ steps.names.outputs.release-candidate-enabled == 'true' }}
         run: node .buildchain/runtime/scripts/generate-release-candidate-passport.mjs
         env:
           BUILDCHAIN_BUILD_SUMMARY_PATH: .buildchain/artifacts/build-summary.json
           BUILDCHAIN_RC_PASSPORT_PATH: .buildchain/artifacts/release-candidate-passport.json
-          BUILDCHAIN_RC_TARGET_CHANNEL: ${{ needs.resolve-source.outputs.publish-source-channel || needs.trust-gate.outputs.publish-channel }}
+          BUILDCHAIN_RC_TARGET_CHANNEL: ${{ steps.names.outputs.release-candidate-target-channel }}
           BUILDCHAIN_RC_VERSION: ${{ needs.resolve-source.outputs.publish-source-consumer-version }}
           BUILDCHAIN_RC_SOURCE_HEAD_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
           BUILDCHAIN_RC_MERGE_REF_SHA: ${{ github.sha }}
@@ -971,7 +1330,7 @@ jobs:
           retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Upload release candidate passport
-        if: ${{ inputs.release-candidate }}
+        if: ${{ steps.names.outputs.release-candidate-enabled == 'true' }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ steps.names.outputs.release-candidate-passport-artifact-name }}

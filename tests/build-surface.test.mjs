@@ -23,6 +23,11 @@ import {
 import { aggregateBuildSummaryCli } from "../scripts/aggregate-build-summary.mjs";
 import { aggregateDiagnosticsSummaryCli } from "../scripts/aggregate-diagnostics-summary.mjs";
 import {
+  cleanupRelayArtifacts,
+  downloadRelayArtifacts,
+  uploadRelayArtifacts,
+} from "../scripts/artifact-relay-s3.mjs";
+import {
   RELEASE_REVIEW_MARKER,
   renderReleaseReviewComment,
   resolveReleaseReviewState,
@@ -123,11 +128,11 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /resolve-publish-source\.mjs --mode manifest/);
   assert.equal(
     (workflow.match(/Install Buildchain runtime dependencies/g) || []).length,
-    4,
+    5,
   );
   assert.equal(
     (workflow.match(/pnpm@11\.7\.0 install --dir \.buildchain\/runtime --prod --frozen-lockfile --ignore-scripts/g) || []).length,
-    4,
+    5,
   );
   assert.match(workflow, /install-command:/);
   assert.match(workflow, /build-command:/);
@@ -139,6 +144,23 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /sample-process-tree:/);
   assert.match(workflow, /process-sample-interval-ms:/);
   assert.match(workflow, /requested-parallelism:/);
+  assert.match(workflow, /artifact-transfer-mode:/);
+  assert.match(workflow, /s3-to-github-artifacts/);
+  assert.match(workflow, /artifact-relay-s3-bucket:/);
+  assert.match(workflow, /artifact-relay-s3-region:/);
+  assert.match(workflow, /BUILDCHAIN_ARTIFACT_RELAY_S3_BUCKET/);
+  assert.match(workflow, /BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN/);
+  assert.match(workflow, /BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN/);
+  assert.match(workflow, /id-token: write/);
+  assert.match(workflow, /artifact-transfer:/);
+  assert.match(workflow, /artifact-relay-s3\.mjs upload/);
+  assert.match(workflow, /artifact-relay-s3\.mjs download/);
+  assert.match(workflow, /artifact-relay-s3\.mjs cleanup/);
+  assert.match(workflow, /aws-actions\/configure-aws-credentials@v6\.1\.0/);
+  assert.match(workflow, /artifact-name \}\}-relay-manifest-\$\{\{ matrix\.platform\.id \}\}-/);
+  assert.match(workflow, /relay-artifacts:/);
+  assert.match(workflow, /needs\.artifact-transfer\.outputs\.mode == 'github-artifacts'/);
+  assert.match(workflow, /needs\.artifact-transfer\.outputs\.mode == 's3-to-github-artifacts'/);
   assert.match(workflow, /process-summary-required:/);
   assert.match(workflow, /manifest\.json/);
   assert.match(workflow, /summary\.json/);
@@ -160,6 +182,14 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /BUILDCHAIN_RUNTIME_TRUST_DECISION/);
   assert.match(workflow, /aggregate-diagnostics-summary\.mjs/);
   assert.match(workflow, /generate-release-candidate-passport\.mjs/);
+  assert.match(workflow, /release-candidate-enabled/);
+  assert.match(workflow, /BUILDCHAIN_RC_TARGET_CHANNEL: \$\{\{ needs\.resolve-source\.outputs\.publish-source-channel \|\| needs\.trust-gate\.outputs\.publish-channel \}\}/);
+  assert.match(workflow, /BUILDCHAIN_RC_PR_BASE_REF: \$\{\{ github\.base_ref \|\| github\.event\.pull_request\.base\.ref \}\}/);
+  assert.match(workflow, /release-candidate-target-channel=\$\{rc_target_channel\}/);
+  assert.match(workflow, /alpha\/\*\)/);
+  assert.match(workflow, /release\/\*\)/);
+  assert.match(workflow, /if: \$\{\{ steps\.names\.outputs\.release-candidate-enabled == 'true' \}\}/);
+  assert.match(workflow, /BUILDCHAIN_RC_TARGET_CHANNEL: \$\{\{ steps\.names\.outputs\.release-candidate-target-channel \}\}/);
   assert.match(workflow, /diagnostics-summary\.json/);
   assert.match(workflow, /\$\{\{ inputs\.artifact-name \}\}-release-candidate-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/);
   assert.match(workflow, /generate-release-candidate-passport\.mjs/);
@@ -202,6 +232,103 @@ test("reusable build workflow exposes the required surface contract", () => {
     /ref: \$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/,
   );
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
+});
+
+test("artifact relay uploads to S3 and downloads verified GitHub artifact payloads without aws cli", async () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-artifact-relay-"));
+  const fakeS3Root = path.join(workspace, "fake-s3");
+  fs.mkdirSync(path.join(workspace, "dist"), { recursive: true });
+  fs.mkdirSync(path.join(workspace, ".buildchain", "artifacts", "linux-x64"), { recursive: true });
+  fs.writeFileSync(path.join(workspace, "dist", "package.tgz"), "payload\n");
+  fs.writeFileSync(path.join(workspace, ".buildchain", "artifacts", "linux-x64", "manifest.json"), "{}\n");
+  fs.writeFileSync(path.join(workspace, ".buildchain", "artifacts", "linux-x64", "summary.json"), "{}\n");
+  fs.writeFileSync(path.join(workspace, ".buildchain", "artifacts", "linux-x64", "diagnostics.json"), "{}\n");
+  fs.writeFileSync(path.join(workspace, ".buildchain", "artifacts", "linux-x64", "diagnostics-manifest.json"), "{}\n");
+  fs.writeFileSync(path.join(workspace, ".buildchain", "artifacts", "linux-x64", "events.jsonl"), "");
+
+  const oldPath = process.env.PATH;
+  const oldFakeRoot = process.env.BUILDCHAIN_ARTIFACT_RELAY_FAKE_S3_ROOT;
+  process.env.PATH = "";
+  process.env.BUILDCHAIN_ARTIFACT_RELAY_FAKE_S3_ROOT = fakeS3Root;
+  try {
+    const manifest = await uploadRelayArtifacts({
+      workspace,
+      manifestPath: ".buildchain/artifacts/linux-x64/relay-manifest.json",
+      bucket: "relay-bucket",
+      region: "cn-north-1",
+      prefix: "unit",
+      repository: "kungfu-systems/libnode",
+      runId: "123",
+      runAttempt: "1",
+      sourceSha: "a".repeat(40),
+      platformId: "linux-x64",
+      platformName: "Linux x64",
+      groups: [
+        {
+          role: "payload",
+          artifactName: "libnode-linux-x64",
+          paths: ["dist", ".buildchain/artifacts/linux-x64/manifest.json"],
+          required: true,
+        },
+        {
+          role: "manifest",
+          artifactName: "libnode-manifest-linux-x64",
+          paths: [
+            ".buildchain/artifacts/linux-x64/manifest.json",
+            ".buildchain/artifacts/linux-x64/summary.json",
+            ".buildchain/artifacts/linux-x64/diagnostics.json",
+          ],
+          required: true,
+        },
+        {
+          role: "diagnostics",
+          artifactName: "libnode-diagnostics-linux-x64",
+          paths: [
+            ".buildchain/artifacts/linux-x64/diagnostics.json",
+            ".buildchain/artifacts/linux-x64/diagnostics-manifest.json",
+            ".buildchain/artifacts/linux-x64/events.jsonl",
+          ],
+          required: true,
+        },
+      ],
+    });
+    assert.equal(manifest.contract, "kungfu-buildchain-artifact-relay-s3");
+    assert.equal(manifest.groups.length, 3);
+    assert.ok(fs.existsSync(path.join(fakeS3Root, "relay-bucket")));
+
+    const download = await downloadRelayArtifacts({
+      inputRoot: path.join(workspace, ".buildchain", "artifacts", "linux-x64"),
+      outputRoot: path.join(workspace, "relayed"),
+      region: "cn-north-1",
+      platformId: "linux-x64",
+    });
+    assert.equal(download.objectCount, manifest.groups.reduce((sum, group) => sum + group.fileCount, 0));
+    assert.equal(
+      fs.readFileSync(path.join(workspace, "relayed", "payload", "dist", "package.tgz"), "utf8"),
+      "payload\n",
+    );
+    assert.equal(
+      fs.readFileSync(path.join(workspace, "relayed", "manifest", ".buildchain", "artifacts", "linux-x64", "manifest.json"), "utf8"),
+      "{}\n",
+    );
+    const cleanup = await cleanupRelayArtifacts({
+      inputRoot: path.join(workspace, ".buildchain", "artifacts", "linux-x64"),
+      region: "cn-north-1",
+      platformId: "linux-x64",
+    });
+    assert.equal(cleanup.objectCount, download.objectCount);
+    const remainingObjects = fs
+      .readdirSync(path.join(fakeS3Root, "relay-bucket"), { recursive: true })
+      .filter((entry) => fs.statSync(path.join(fakeS3Root, "relay-bucket", entry)).isFile());
+    assert.deepEqual(remainingObjects, []);
+  } finally {
+    process.env.PATH = oldPath;
+    if (oldFakeRoot === undefined) {
+      delete process.env.BUILDCHAIN_ARTIFACT_RELAY_FAKE_S3_ROOT;
+    } else {
+      process.env.BUILDCHAIN_ARTIFACT_RELAY_FAKE_S3_ROOT = oldFakeRoot;
+    }
+  }
 });
 
 test("release-candidate promote workflow is promote-only and never schedules a heavy build", () => {
@@ -616,6 +743,19 @@ test("reusable build exposes release-candidate passport outputs", () => {
   assert.match(workflow, /release-candidate-passport-artifact/);
   assert.match(workflow, /release-candidate-passport-json/);
   assert.match(workflow, /<artifact-name>-release-candidate-|release-candidate-/);
+});
+
+test("build surface fixture can dogfood artifact transfer modes declaratively", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/build-surface-fixture.yml"),
+    "utf8",
+  );
+  assert.match(workflow, /artifact-transfer-mode:/);
+  assert.match(workflow, /default: "github-artifacts"/);
+  assert.match(workflow, /id-token: write/);
+  assert.match(workflow, /secrets: inherit/);
+  assert.match(workflow, /artifact-transfer-mode: \$\{\{ inputs\.artifact-transfer-mode \|\| 'github-artifacts' \}\}/);
+  assert.doesNotMatch(workflow, /run: node scripts\/artifact-relay-s3\.mjs/);
 });
 
 test("report issue action exposes workflow-friction feedback mode", () => {

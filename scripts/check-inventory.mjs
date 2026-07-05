@@ -29,6 +29,7 @@ const requiredPaths = [
   "scripts/create-release-bundle.mjs",
   "scripts/generate-site-bundle.mjs",
   "scripts/generate-release-candidate-passport.mjs",
+  "scripts/artifact-relay-s3.mjs",
   "scripts/npm-publish-dry-run.mjs",
   "scripts/npm-publish-transaction.mjs",
   "scripts/release-candidate-resolver.mjs",

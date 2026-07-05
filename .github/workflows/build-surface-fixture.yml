@@ -8,17 +8,25 @@ on:
       - alpha/v*/v*.*
       - release/v*/v*.*
   workflow_dispatch:
+    inputs:
+      artifact-transfer-mode:
+        description: "Artifact transfer mode for dogfood validation"
+        required: false
+        default: "github-artifacts"
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   libnode-shaped:
     uses: ./.github/workflows/.build.yml
+    secrets: inherit
     with:
       working-directory: fixtures/libnode-shaped
       runner-preset: github-hosted
       linux-container-preset: kungfu-verify
+      artifact-transfer-mode: ${{ inputs.artifact-transfer-mode || 'github-artifacts' }}
       artifact-name: libnode-shaped
       artifact-name-template: "{artifact}-{platform}-{shortSha}"
       artifact-paths: |

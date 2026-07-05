@@ -4174,6 +4174,110 @@ test("strict alpha promotion opens a version-state PR for protected branches", a
   );
 });
 
+test("strict alpha promotion protects created dev branches with one required approval", async () => {
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "1.0.0-alpha.0",
+      packageManager: "pnpm@11.7.0",
+    },
+  });
+  const versionSha = "d".repeat(40);
+  const refs = new Map([
+    ["heads/alpha/v1/v1.0", SHA],
+    ["tags/v1.0.0", OTHER_SHA],
+  ]);
+  const protections = [];
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (refs.has(ref)) {
+            return { data: { object: { sha: refs.get(ref) } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async ({ ref }) => ({
+          data: [...refs.entries()]
+            .filter(([name]) => name.startsWith(ref))
+            .map(([name, objectSha]) => ({
+              ref: `refs/${name}`,
+              object: { sha: objectSha },
+            })),
+        }),
+        getCommit: async ({ commit_sha }) => ({
+          data: { tree: { sha: `tree-${commit_sha}` } },
+        }),
+        createBlob: async () => ({ data: { sha: "blob-sha" } }),
+        createTree: async () => ({ data: { sha: "tree-sha" } }),
+        createCommit: async () => ({ data: { sha: versionSha } }),
+        updateRef: async ({ ref, sha }) => {
+          refs.set(ref, sha);
+          return {};
+        },
+        createRef: async ({ ref, sha }) => {
+          refs.set(ref.replace(/^refs\//, ""), sha);
+          return {};
+        },
+      },
+      repos: {
+        getBranchProtection: async () => ({
+          data: protectedChannel({
+            required_status_checks: { strict: true, contexts: ["Build"] },
+          }),
+        }),
+        updateBranchProtection: async (request) => {
+          protections.push(request);
+          return { data: {} };
+        },
+        listPullRequestsAssociatedWithCommit: async () => ({
+          data: [
+            {
+              merged_at: "2026-06-29T00:00:00Z",
+              base: { ref: "alpha/v1/v1.0" },
+              head: {
+                ref: "dev/v1/v1.0",
+                repo: { full_name: "kungfu-systems/buildchain" },
+              },
+            },
+          ],
+        }),
+      },
+    },
+  };
+
+  await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    cwd,
+    requireGovernance: true,
+    requireVersionState: true,
+    requiredStatusCheck: "Build",
+  });
+
+  const devProtection = protections.find(
+    (protection) => protection.branch === "dev/v1/v1.0",
+  );
+  assert.ok(devProtection);
+  assert.deepEqual(devProtection.required_status_checks, {
+    strict: true,
+    contexts: ["Build"],
+  });
+  assert.deepEqual(devProtection.required_pull_request_reviews, {
+    dismiss_stale_reviews: false,
+    require_code_owner_reviews: false,
+    required_approving_review_count: 1,
+    require_last_push_approval: false,
+  });
+  assert.equal(devProtection.enforce_admins, true);
+  assert.equal(devProtection.allow_force_pushes, false);
+  assert.equal(devProtection.allow_deletions, false);
+  assert.equal(devProtection.required_conversation_resolution, true);
+});
+
 test("strict alpha promotion accepts reviewed version-state PRs from a legal parent", async () => {
   const versionSha = "c".repeat(40);
   const cwd = makeTempWorkspace({
