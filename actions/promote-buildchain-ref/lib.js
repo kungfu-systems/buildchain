@@ -2111,6 +2111,10 @@ async function ensureManagedChannelBranchProtection({
 }
 
 function latestAlphaForPatch(refs, releasePrefix, patch) {
+  return alphaTagsForPatch(refs, releasePrefix, patch)[0];
+}
+
+function alphaTagsForPatch(refs, releasePrefix, patch) {
   return refs
     .map((ref) => {
       const parsed = parseAlphaPrereleaseTag(ref.ref, releasePrefix);
@@ -2120,7 +2124,7 @@ function latestAlphaForPatch(refs, releasePrefix, patch) {
       return { ...parsed, sha: ref.object?.sha };
     })
     .filter(Boolean)
-    .sort((a, b) => b.prerelease - a.prerelease)[0];
+    .sort((a, b) => b.prerelease - a.prerelease);
 }
 
 function resolveTagsForTarget(targetRef, inputTags) {
@@ -4027,6 +4031,23 @@ async function promoteBuildchainRefs({
     selectedReleaseCandidate.patch,
   );
   let sourceAlphaMaterial = sourceAlpha;
+  if (currentReleaseTransaction?.source_sha) {
+    for (const candidate of alphaTagsForPatch(lineRefs, rule.releasePrefix, selectedReleaseCandidate.patch)) {
+      if (!candidate.sha) {
+        continue;
+      }
+      if (await releaseCommitIncludesTransactionHead({
+        octokit,
+        owner,
+        repo,
+        releaseSha: currentReleaseTransaction.source_sha,
+        transactionReleaseSha: candidate.sha,
+      })) {
+        sourceAlphaMaterial = candidate;
+        break;
+      }
+    }
+  }
   const floatingAlphaSha = sourceAlpha?.sha
     ? await readRefSha(`tags/${rule.alphaTag}`)
     : undefined;
