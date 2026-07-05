@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import {
   collectGitHubReleasePassport,
+  explainReleasePassport,
   verifyReleasePassport,
 } from "../packages/core/release-passport.js";
 
@@ -27,6 +28,7 @@ function createUnifiedPassportFixture({
   tag = "v2.3.2",
   packageVersion = "",
   releaseExtra = {},
+  impact = undefined,
 } = {}) {
   const cwd = tempDir("release-passport-core");
   const assetsDir = path.join(cwd, "dist");
@@ -137,6 +139,7 @@ function createUnifiedPassportFixture({
       { name: "@kungfu-tech/buildchain", version: "2.3.2", distTag: "latest", role: "main" },
     ],
   });
+  const impactPath = impact ? writeJson(path.join(cwd, "impact.json"), impact) : "";
 
   const collected = collectGitHubReleasePassport({
     cwd,
@@ -153,6 +156,7 @@ function createUnifiedPassportFixture({
     buildSummaryJson: buildSummaryPath,
     platformManifestJsons: [linuxManifestPath, darwinManifestPath, windowsManifestPath],
     distTagEvidenceJson: distTagEvidencePath,
+    impactJson: impactPath,
     trustedPublishingJson: JSON.stringify({
       provider: "npm",
       enabled: trustedPublishingEnabled,
@@ -219,6 +223,77 @@ test("release passport core separates anchored manual internal tags from publish
   assert.equal(passport.release.publishedVersion, "22.22.3-kf.3-alpha.7");
   assert.equal(passport.release.versionLabel, "22.22.3-kf.3-alpha.7");
   assert.equal(passport.release.package.version, "22.22.3-kf.3-alpha.7");
+});
+
+test("release passport records surface-aware minor impact for additive KFD registry schema", async () => {
+  const passportPath = createUnifiedPassportFixture({
+    impact: {
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-impact",
+      release: { tag: "v2.3.2", line: "v2.3" },
+      versionImpact: {
+        final: "minor",
+        source: "surface-register",
+        rationale: "KFD content is patch, but registry.kind additively evolves the machine registry schema.",
+      },
+      surfaceImpacts: [
+        {
+          id: "kfd-content",
+          impact: "patch",
+          class: "content",
+          rationale: "KFD-2 adds append-only decision content.",
+        },
+        {
+          id: "kfd-registry-schema",
+          impact: "minor",
+          class: "additive",
+          rationale: "registry.kind is an additive field on the machine-consumed KFD registry surface.",
+        },
+      ],
+      summary: "KFD-2 content is patch; registry schema additive field requires minor-impact review.",
+    },
+  });
+
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const explanation = await explainReleasePassport({ passportLocation: passportPath, forAudience: "agent" });
+
+  assert.equal(report.ok, true);
+  assert.equal(report.completeness.versionImpact, "minor");
+  assert.equal(report.completeness.surfaceImpactCount, 2);
+  assert.equal(passport.versionImpact.final, "minor");
+  assert.equal(passport.surfaceImpacts[1].id, "kfd-registry-schema");
+  assert.equal(explanation.impact.versionImpact.final, "minor");
+  assert.match(explanation.impact.surfaceImpacts[1].rationale, /registry\.kind/);
+});
+
+test("release passport fails closed when final impact is lower than a surface impact", async () => {
+  const passportPath = createUnifiedPassportFixture({
+    impact: {
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-impact",
+      release: { tag: "v2.3.2", line: "v2.3" },
+      versionImpact: {
+        final: "patch",
+        source: "surface-register",
+        rationale: "Incorrectly declared as patch.",
+      },
+      surfaceImpacts: [
+        {
+          id: "kfd-registry-schema",
+          impact: "minor",
+          class: "additive",
+          rationale: "registry.kind additively evolves the machine registry schema.",
+        },
+      ],
+    },
+  });
+
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+
+  assert.equal(report.ok, false);
+  assert.match(JSON.stringify(report.issues), /versionImpact\.final/);
+  assert.match(JSON.stringify(report.issues), /highest surface impact/);
 });
 
 test("release passport core fails closed on incomplete platform package evidence", async () => {

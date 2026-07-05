@@ -20,7 +20,8 @@ latest stable production patch for that minor line.
 
 ## Welded Surfaces
 
-These surfaces require at least a minor bump when first introduced:
+These surfaces are classified independently; the final release impact is the
+highest impact across the affected registered surfaces:
 
 - reusable workflow inputs, outputs, and artifact contracts;
 - public CLI command families and their machine-readable JSON shapes;
@@ -31,20 +32,35 @@ These surfaces require at least a minor bump when first introduced:
   ledger, and agent index files;
 - binary distribution shapes that users can install or automate against.
 
-Additive fields inside an existing welded surface can be patch releases when
-old consumers continue to work and validation remains stricter, not looser.
-Removing fields, changing meanings, weakening trust gates, or changing the
-expected ref flow requires a major bump.
+For each surface:
+
+- content, documentation, or implementation-only work that does not touch a
+  registered surface is patch;
+- additive fields, new commands, new exports, new evidence sections, or new
+  registered surfaces are minor;
+- removals, incompatible renames, changed meanings, newly required fields,
+  weakened trust gates, or changed ref flow are major.
+
+The release passport records this as `surfaceImpacts[]` plus
+`versionImpact.final`. The final impact must equal the highest surface impact,
+so an agent cannot silently label a release patch when one machine surface needs
+minor review.
+
+Example: a KFD document such as KFD-2 is content and remains patch, but adding a
+`kind` field to the machine-consumed KFD `registry.json` is an additive change
+to the `kfd-registry-schema` surface and therefore requires minor-impact
+review. This avoids both false shortcuts: "new KFD means minor" and "all KFD
+repository changes are patch".
 
 ## Decision Log
 
-| Date | Decision | Line | Reason |
-| --- | --- | --- | --- |
-| 2026-07-02 | Buildchain toolkit observability is a minor surface. | `v2.1` | It adds the public logging SDK, CLI observability commands, and package subpaths that consumers can import. |
-| 2026-07-02 | Release passport and binary distribution are a minor surface. | `v2.2` | They add agent-readable release passport files, artifact evidence, impact ledger, agent index, GitHub Release collection and verification commands, and standalone binary assets. |
-| 2026-07-02 | Web surface host mapping is a minor surface. | `v2.3` | It adds first-class multi-host surface bindings, reusable workflow URL outputs, per-surface deployment overrides, and an agent-readable fixture contract. |
-| 2026-07-03 | Infra contract lifecycle is a minor surface. | `v2.4` | It adds the provider-neutral `infra-contract` CLI command family, project type, adapter capability contract, lifecycle evidence bundle, propagation evidence, CI evidence mode, and consumer-facing contract artifacts. |
-| 2026-07-04 | Scheduled integration governance is a minor surface. | `v2.5` | It adds scheduled feature-branch discovery, conflict-free integration, reporting, and agent-visible governance automation for dev-line maintenance. |
+| Date | Action | Line | Faces | Class | Rationale | PR |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2026-07-04 | open-minor | `v2.5` | scheduled-integration-governance | additive | Scheduled integration governance adds scheduled feature-branch discovery, conflict-free integration, reporting, and agent-visible governance automation for dev-line maintenance. | |
+| 2026-07-03 | open-minor | `v2.4` | infra-contract-lifecycle | additive | Infra contract lifecycle adds the provider-neutral `infra-contract` CLI command family, project type, adapter capability contract, lifecycle evidence bundle, propagation evidence, CI evidence mode, and consumer-facing contract artifacts. | |
+| 2026-07-02 | open-minor | `v2.3` | web-surface-host-mapping | additive | Web surface host mapping adds first-class multi-host surface bindings, reusable workflow URL outputs, per-surface deployment overrides, and an agent-readable fixture contract. | |
+| 2026-07-02 | open-minor | `v2.2` | release-passport, binary-distribution | additive | Release passport and binary distribution add agent-readable release passport files, artifact evidence, impact ledger, agent index, GitHub Release collection and verification commands, and standalone binary assets. | |
+| 2026-07-02 | open-minor | `v2.1` | logging-sdk, cli-observability, package-subpaths | additive | Buildchain toolkit observability adds the public logging SDK, CLI observability commands, and package subpaths that consumers can import. | |
 
 ## Runner Policy
 

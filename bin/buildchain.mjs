@@ -67,6 +67,7 @@ function usage() {
                                     [--trusted-publishing-json <json-or-path>]
                                     [--transaction-json <json-or-path>]
                                     [--anchor-manifest-json <json-or-path>]
+                                    [--impact-json <json-or-path>]
                                     [--build-summary-json <json-or-path>]
                                     [--platform-manifest-json <json-or-path>]...
                                     [--dist-tag-evidence-json <json-or-path>]
@@ -716,6 +717,7 @@ async function main(argv = process.argv.slice(2)) {
       trustedPublishingJson: readFlag(collectArgs, "trusted-publishing-json", ""),
       transactionJson: readFlag(collectArgs, "transaction-json", ""),
       anchorManifestJson: readFlag(collectArgs, "anchor-manifest-json", ""),
+      impactJson: readFlag(collectArgs, "impact-json", ""),
       buildSummaryJson: readFlag(collectArgs, "build-summary-json", ""),
       platformManifestJsons: readRepeatedFlag(collectArgs, "platform-manifest-json"),
       distTagEvidenceJson: readFlag(collectArgs, "dist-tag-evidence-json", ""),

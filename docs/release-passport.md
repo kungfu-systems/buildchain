@@ -36,6 +36,10 @@ Additive passport sections:
 
 - `release`: exact tag, line, channel, source SHA, target ref, release SHA,
   release material SHA, publish tooling SHA, and durable release-state ref.
+- `versionImpact`: final patch/minor/major classification, source, and
+  rationale.
+- `surfaceImpacts`: per registered surface classification. The final impact is
+  the highest entry in this list.
 - `packageSet`: main package, platform packages, package-set order, registry,
   versions, dist-tags, and package digests.
 - `anchorManifest`: anchored/manual version manifest path, digest, and fields.
@@ -102,6 +106,11 @@ dist-tag, registry, role, platform, and digest, so agents do not need to stitch
 npm facts back together from the lower-level evidence files.
 `buildSummary`, `platformArtifactManifests`, and `distTagPromotion` preserve the
 build and npm dist-tag evidence chain in the same passport.
+`impact.json` can be supplied with `--impact-json`; when it contains
+`surfaceImpacts[]`, verification fails closed unless `versionImpact.final`
+matches the highest surface impact. For example, KFD-2 content can remain patch
+while an additive `registry.kind` field on the machine-consumed KFD registry
+schema records a minor `kfd-registry-schema` surface impact.
 
 Verify a release passport:
 
