@@ -2343,30 +2343,34 @@ async function resumableAlphaTransactionState({
       }
       throw error;
     }
-    if (
-      transaction &&
-      transaction.target_ref === targetRef &&
-      transaction.exact_tag === candidate.tag &&
-      !["complete", "abandoned", "failed_permanently"].includes(transaction.state) &&
+    const exactTransactionSource =
+      transaction?.source_sha === sourceSha ||
+      transaction?.release_sha === sourceSha ||
+      transaction?.release_material_sha === sourceSha;
+    const transactionInSourceHistory =
+      !transactionHasPublishedMaterial(transaction) &&
       (
-        transaction.source_sha === sourceSha ||
-        transaction.release_sha === sourceSha ||
-        transaction.release_material_sha === sourceSha ||
         await releaseCommitIncludesTransactionHead({
           octokit,
           owner,
           repo,
           releaseSha: sourceSha,
-          transactionReleaseSha: transaction.release_sha,
+          transactionReleaseSha: transaction?.release_sha,
         }) ||
         await releaseCommitIncludesTransactionHead({
           octokit,
           owner,
           repo,
           releaseSha: sourceSha,
-          transactionReleaseSha: transaction.release_material_sha,
+          transactionReleaseSha: transaction?.release_material_sha,
         })
-      )
+      );
+    if (
+      transaction &&
+      transaction.target_ref === targetRef &&
+      transaction.exact_tag === candidate.tag &&
+      !["complete", "abandoned", "failed_permanently"].includes(transaction.state) &&
+      (exactTransactionSource || transactionInSourceHistory)
     ) {
       return {
         ...candidate,
