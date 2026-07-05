@@ -2867,6 +2867,14 @@ async function promoteBuildchainRefs({
         });
         return { updated: false, skipped: true, currentSha };
       }
+      if (protectedUpdate && nonFastForwardUpdateRejected(error)) {
+        return openVersionStatePullRequest({
+          branch,
+          branchSha,
+          title: protectedUpdate.title,
+          body: `${protectedUpdate.body}\n\nThe channel ref was not a fast-forward update, so Buildchain is routing the generated version-state commit through a PR instead of forcing the ref.`,
+        });
+      }
       if (!notFound(error)) {
         throw error;
       }
