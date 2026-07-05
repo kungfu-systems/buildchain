@@ -1429,6 +1429,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
       targetRef: "release/v1/v1.0",
       cwd,
       publishTransaction: true,
+      releasePassportImpactJson: productionImpactJson(),
       publishRequiredArtifactsJson: JSON.stringify([
         {
           kind: "npm",
@@ -1728,6 +1729,121 @@ exit 64
     assert.ok(commits.has(passport.release.releaseStateSha));
     assert.equal(stateCommit.parents[0].sha, passport.release.releaseStateSha);
     assert.equal(passport.buildSummary, undefined);
+  } finally {
+    for (const [key, value] of Object.entries(previousEnv)) {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+  }
+});
+
+test("release passport verification failure blocks durable passport persistence", async () => {
+  const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[publish]
+mode = "promote-existing-version"
+auth = "npm-token"
+dist_tag = "latest"
+main_package = "@kungfu-tech/buildchain"
+
+[lifecycle.publish]
+command = "node scripts/should-not-run.mjs"
+`,
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "0.0.0",
+      packageManager: "pnpm@11.7.0",
+    },
+    ".buildchain/artifacts/build-summary.json": "/home/runner/work/buildchain/buildchain/.buildchain/artifacts/build-summary.json\n",
+    "scripts/should-not-run.mjs": "throw new Error('lifecycle.publish should not run');\n",
+  });
+  const binDir = path.join(cwd, "bin");
+  fs.mkdirSync(binDir);
+  fs.writeFileSync(
+    path.join(binDir, "npm"),
+    `#!/bin/sh
+echo "$@" >> "$NPM_LOG"
+if [ "$1" = "whoami" ]; then
+  printf 'keren\\n'
+  exit 0
+fi
+if [ "$1" = "view" ] && [ "$3" = "dist-tags.latest" ]; then
+  printf '""\\n'
+  exit 0
+fi
+if [ "$1" = "view" ] && [ "$3" = "dist.integrity" ]; then
+  printf '"sha512-existing"\\n'
+  exit 0
+fi
+if [ "$1" = "dist-tag" ] && [ "$2" = "add" ]; then
+  exit 0
+fi
+exit 64
+`,
+  );
+  fs.chmodSync(path.join(binDir, "npm"), 0o755);
+
+  const { octokit, refs, commits, trees } = createGitMock({
+    refs: new Map([
+      ["heads/release/v1/v1.0", SHA],
+      ["tags/v1.0.0-alpha.0", OTHER_SHA],
+    ]),
+  });
+  const previousEnv = {
+    PATH: process.env.PATH,
+    NPM_LOG: process.env.NPM_LOG,
+    NODE_AUTH_TOKEN: process.env.NODE_AUTH_TOKEN,
+  };
+  process.env.PATH = `${binDir}${path.delimiter}${process.env.PATH}`;
+  process.env.NPM_LOG = path.join(cwd, "npm.log");
+  process.env.NODE_AUTH_TOKEN = "test-token";
+  try {
+    await assert.rejects(
+      () => promoteBuildchainRefs({
+        octokit,
+        owner: "kungfu-systems",
+        repo: "buildchain",
+        sha: SHA,
+        targetRef: "release/v1/v1.0",
+        cwd,
+        publishTransaction: true,
+        releasePassportProductName: "Libnode",
+        publishRequiredArtifactsJson: JSON.stringify([
+          {
+            kind: "npm",
+            name: "@kungfu-tech/buildchain",
+            ref: "1.0.0",
+            digest: "sha512-rebuilt",
+            role: "main",
+          },
+        ]),
+      }),
+      /Release passport generated check failed.*impact\.surfaceImpacts\.required/,
+    );
+
+    const stateSha = refs.get("heads/buildchain/release-state/1-0-0");
+    assert.ok(stateSha);
+    const stateCommit = commits.get(stateSha);
+    assert.ok(stateCommit);
+    assert.equal(
+      (trees.get(stateCommit.tree.sha) || []).some((entry) =>
+        entry.path === "release-passport/buildchain.release.json"
+      ),
+      false,
+    );
   } finally {
     for (const [key, value] of Object.entries(previousEnv)) {
       if (value === undefined) {
@@ -3138,6 +3254,7 @@ test("release finalization uses the transaction alpha source after next-alpha ad
     publishAuth: "trusted-publishing",
     publishDistTag: "latest",
     publishPackageMain: "@kungfu-tech/buildchain",
+    releasePassportImpactJson: productionImpactJson(),
     publishRequiredArtifactsJson: JSON.stringify([
       {
         group: "node",
@@ -5602,6 +5719,11 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
     targetRef: "release/v22/v22.22",
     cwd,
     publishTransaction: true,
+    releasePassportImpactJson: productionImpactJson({
+      tag: "v22.22.0",
+      line: "v22.22",
+      rationale: "Production libnode promotion preserves the anchored Node-compatible surface.",
+    }),
     publishRequiredArtifactsJson: JSON.stringify([
       {
         group: "libnode",
