@@ -1201,14 +1201,29 @@ jobs:
       - name: Resolve summary artifact name
         id: names
         run: |
+          rc_target_channel="${BUILDCHAIN_RC_TARGET_CHANNEL}"
+          if { [ -z "${rc_target_channel}" ] || [ "${rc_target_channel}" = "none" ]; } && [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
+            case "${BUILDCHAIN_RC_PR_BASE_REF}" in
+              alpha/*)
+                rc_target_channel="alpha"
+                ;;
+              release/*)
+                rc_target_channel="release"
+                ;;
+              publish-gate/major|major-gate)
+                rc_target_channel="major"
+                ;;
+            esac
+          fi
           release_candidate_enabled=false
-          if [ "${BUILDCHAIN_RC_REQUESTED}" = "true" ] && [ -n "${BUILDCHAIN_RC_TARGET_CHANNEL}" ] && [ "${BUILDCHAIN_RC_TARGET_CHANNEL}" != "none" ]; then
+          if [ "${BUILDCHAIN_RC_REQUESTED}" = "true" ] && [ -n "${rc_target_channel}" ] && [ "${rc_target_channel}" != "none" ]; then
             release_candidate_enabled=true
           fi
           {
             echo "summary-artifact-name=${BUILDCHAIN_SUMMARY_ARTIFACT_NAME}"
             echo "diagnostics-summary-artifact-name=${BUILDCHAIN_DIAGNOSTICS_SUMMARY_ARTIFACT_NAME}"
             echo "release-candidate-enabled=${release_candidate_enabled}"
+            echo "release-candidate-target-channel=${rc_target_channel}"
             if [ "${release_candidate_enabled}" = "true" ]; then
               echo "release-candidate-passport-artifact-name=${BUILDCHAIN_RC_PASSPORT_ARTIFACT_NAME}"
             else
@@ -1221,6 +1236,8 @@ jobs:
           BUILDCHAIN_RC_PASSPORT_ARTIFACT_NAME: ${{ inputs.artifact-name }}-release-candidate-${{ needs.resolve-source.outputs.publish-source-sha }}
           BUILDCHAIN_RC_REQUESTED: ${{ inputs.release-candidate }}
           BUILDCHAIN_RC_TARGET_CHANNEL: ${{ needs.resolve-source.outputs.publish-source-channel || needs.trust-gate.outputs.publish-channel }}
+          BUILDCHAIN_RC_PR_BASE_REF: ${{ github.base_ref || github.event.pull_request.base.ref }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
 
       - name: Download platform manifests
         uses: actions/download-artifact@v7.0.0
@@ -1282,7 +1299,7 @@ jobs:
         env:
           BUILDCHAIN_BUILD_SUMMARY_PATH: .buildchain/artifacts/build-summary.json
           BUILDCHAIN_RC_PASSPORT_PATH: .buildchain/artifacts/release-candidate-passport.json
-          BUILDCHAIN_RC_TARGET_CHANNEL: ${{ needs.resolve-source.outputs.publish-source-channel || needs.trust-gate.outputs.publish-channel }}
+          BUILDCHAIN_RC_TARGET_CHANNEL: ${{ steps.names.outputs.release-candidate-target-channel }}
           BUILDCHAIN_RC_VERSION: ${{ needs.resolve-source.outputs.publish-source-consumer-version }}
           BUILDCHAIN_RC_SOURCE_HEAD_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
           BUILDCHAIN_RC_MERGE_REF_SHA: ${{ github.sha }}
