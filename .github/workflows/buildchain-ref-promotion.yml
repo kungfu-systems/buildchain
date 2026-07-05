@@ -45,7 +45,10 @@ jobs:
     if: >-
       ${{
         (github.event_name == 'workflow_dispatch' && inputs['dry-run'] == 'true') ||
-        github.event.workflow_run.conclusion == 'success'
+        (
+          github.event.workflow_run.conclusion == 'success' &&
+          github.event.workflow_run.event == 'push'
+        )
       }}
     uses: ./.github/workflows/release-candidate-promote.yml
     secrets: inherit
