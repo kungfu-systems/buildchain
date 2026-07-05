@@ -2203,7 +2203,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   assert.equal(refs.get("tags/v1.0.0-alpha.0"), undefined);
 });
 
-test("declared alpha skips stale durable state for a different source", async () => {
+test("alpha promotion skips published durable state reached only through channel history", async () => {
   const staleSourceSha = "7".repeat(40);
   const staleReleaseSha = "8".repeat(40);
   const cwd = makeTempWorkspace({
@@ -2223,7 +2223,7 @@ command = "node scripts/publish.mjs"
 `,
     "package.json": {
       name: "@kungfu-tech/buildchain",
-      version: "1.0.1-alpha.1",
+      version: "1.0.0-alpha.0",
       packageManager: "pnpm@11.7.0",
     },
     "scripts/publish.mjs": `
@@ -2248,12 +2248,18 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
 }, null, 2) + "\\n");
 `,
   });
-  const { octokit, refs } = createGitMock({
+  const { octokit, refs, commits } = createGitMock({
     refs: new Map([
       ["heads/alpha/v1/v1.0", SHA],
       ["heads/dev/v1/v1.0", OTHER_SHA],
       ["tags/v1.0-alpha", OTHER_SHA],
+      ["tags/v1.0.0-alpha.0", OTHER_SHA],
     ]),
+  });
+  commits.set(SHA, {
+    sha: SHA,
+    tree: { sha: `tree-${SHA}` },
+    parents: [{ sha: staleReleaseSha }],
   });
   await persistDurableReleaseTransaction({
     octokit,
@@ -2307,14 +2313,6 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
     targetRef: "alpha/v1/v1.0",
     cwd,
     publishTransaction: true,
-    publishRequiredArtifactsJson: JSON.stringify([
-      {
-        kind: "npm",
-        name: "@kungfu-tech/buildchain",
-        ref: "1.0.1-alpha.2",
-        digest: "sha256:alpha-current",
-      },
-    ]),
   });
 
   assert.equal(result.publishTransaction.state, "complete");
