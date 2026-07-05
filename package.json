@@ -13,6 +13,7 @@
   "exports": {
     ".": "./packages/core/index.js",
     "./core": "./packages/core/index.js",
+    "./artifact-passport": "./packages/core/artifact-passport.js",
     "./diagnostics": "./packages/core/diagnostics.js",
     "./issue-reporting": "./packages/core/issue-reporting.js",
     "./logging": "./packages/core/logging.js",

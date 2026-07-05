@@ -1,8 +1,14 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import http from "node:http";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import {
+  explainArtifactPassport,
+  resolveArtifactSubject,
+  verifyArtifactPassport,
+} from "../packages/core/artifact-passport.js";
 import {
   collectGitHubReleasePassport,
   explainReleasePassport,
@@ -38,6 +44,60 @@ function defaultSurfaceImpactLedger() {
       },
     ],
   };
+}
+
+function createArtifactPassportFixture({ fileName = "Kungfu-2.8.0-windows-x64.exe", content = "binary\n" } = {}) {
+  const cwd = tempDir("artifact-passport");
+  const assetsDir = path.join(cwd, "dist");
+  fs.mkdirSync(assetsDir, { recursive: true });
+  const artifactPath = path.join(assetsDir, fileName);
+  fs.writeFileSync(artifactPath, content);
+  fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({
+    name: "@kungfu-tech/kungfu",
+    version: "2.8.0",
+  }, null, 2));
+  const impactPath = writeJson(path.join(cwd, "impact.json"), defaultSurfaceImpactLedger());
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v2.8.0",
+    repository: "kungfu-systems/kungfu",
+    productName: "Kungfu",
+    sourceSha: "a".repeat(40),
+    assetsDir,
+    outputDir: "release-passport",
+    releaseJsonExtra: JSON.stringify({
+      channel: "release",
+      targetRef: "release/v2/v2.8",
+      releaseSha: "b".repeat(40),
+    }),
+    impactJson: impactPath,
+  });
+  return {
+    cwd,
+    artifactPath,
+    passportPath: path.join(collected.outputDir, "buildchain.release.json"),
+    outputDir: collected.outputDir,
+  };
+}
+
+async function withHttpFixture(files, fn) {
+  const server = http.createServer((request, response) => {
+    const body = files[request.url] || files[decodeURIComponent(request.url || "")];
+    if (body === undefined) {
+      response.writeHead(404);
+      response.end("missing");
+      return;
+    }
+    response.writeHead(200, { "content-type": request.url.endsWith(".json") ? "application/json" : "application/octet-stream" });
+    response.end(body);
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const { port } = server.address();
+  try {
+    return await fn(`http://127.0.0.1:${port}`);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
 }
 
 function createUnifiedPassportFixture({
@@ -211,6 +271,225 @@ test("release passport core verifies unified three-platform npm passport", async
   assert.equal(report.completeness.buildSummaryPresent, true);
   assert.equal(report.completeness.platformArtifactManifestCount, 3);
   assert.equal(report.completeness.distTagPromotionEvidencePresent, true);
+});
+
+test("artifact passport verification passes for a local installer with explicit passport", async () => {
+  const fixture = createArtifactPassportFixture();
+  const report = await verifyArtifactPassport({
+    subject: fixture.artifactPath,
+    passportLocation: fixture.passportPath,
+  });
+
+  assert.equal(report.contract, "kungfu-buildchain-artifact-verification");
+  assert.equal(report.outcome, "pass");
+  assert.equal(report.ok, true);
+  assert.equal(report.subject.kind, "native-installer");
+  assert.equal(report.discovery.method, "explicit-passport");
+  assert.equal(report.match.source, "passport.artifacts");
+});
+
+test("artifact passport discovery follows a sidecar pointer", async () => {
+  const fixture = createArtifactPassportFixture();
+  writeJson(`${fixture.artifactPath}.buildchain-passport.json`, {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-artifact-passport-pointer",
+    passport: path.relative(path.dirname(fixture.artifactPath), fixture.passportPath),
+  });
+
+  const report = await verifyArtifactPassport({
+    subject: fixture.artifactPath,
+    cwd: fixture.cwd,
+  });
+
+  assert.equal(report.ok, true);
+  assert.equal(report.discovery.method, "sidecar-pointer");
+});
+
+test("artifact passport discovery supports local locator indexes", async () => {
+  const fixture = createArtifactPassportFixture();
+  const subject = await resolveArtifactSubject(fixture.artifactPath);
+  writeJson(path.join(fixture.cwd, ".buildchain", "artifact-passport-locators.json"), {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-artifact-passport-locator",
+    locators: [
+      {
+        match: { name: subject.name, digest: subject.digest },
+        passport: path.relative(path.join(fixture.cwd, ".buildchain"), fixture.passportPath),
+      },
+    ],
+  });
+
+  const report = await verifyArtifactPassport({
+    subject: fixture.artifactPath,
+    cwd: fixture.cwd,
+  });
+
+  assert.equal(report.ok, true);
+  assert.equal(report.discovery.method, "local-config-index");
+});
+
+test("artifact passport default GitHub Release discovery can verify release assets", async () => {
+  const fixture = createArtifactPassportFixture({ fileName: "Kungfu-2.8.0-linux-x64.tar.gz" });
+  const releasePath = "/kungfu-systems/kungfu/releases/download/v2.8.0";
+  const passport = fs.readFileSync(fixture.passportPath);
+  const artifactEvidence = fs.readFileSync(path.join(fixture.outputDir, "artifact-evidence.json"));
+  const impact = fs.readFileSync(path.join(fixture.outputDir, "impact.json"));
+  const agentIndex = fs.readFileSync(path.join(fixture.outputDir, "agent-index.json"));
+  const productMechanism = fs.readFileSync(path.join(fixture.outputDir, "product-mechanism.json"));
+  const artifact = fs.readFileSync(fixture.artifactPath);
+
+  await withHttpFixture({
+    [`${releasePath}/Kungfu-2.8.0-linux-x64.tar.gz`]: artifact,
+    [`${releasePath}/buildchain.release.json`]: passport,
+    [`${releasePath}/artifact-evidence.json`]: artifactEvidence,
+    [`${releasePath}/impact.json`]: impact,
+    [`${releasePath}/agent-index.json`]: agentIndex,
+    [`${releasePath}/product-mechanism.json`]: productMechanism,
+  }, async (baseUrl) => {
+    const report = await verifyArtifactPassport({
+      subject: `${baseUrl}${releasePath}/Kungfu-2.8.0-linux-x64.tar.gz`,
+      githubReleaseBaseUrl: baseUrl,
+    });
+    assert.equal(report.ok, true);
+    assert.equal(report.discovery.method, "github-release-default");
+  });
+});
+
+test("artifact passport discovery falls back to a custom locator after GitHub default miss", async () => {
+  const fixture = createArtifactPassportFixture({ fileName: "Kungfu-2.8.0-linux-x64.tar.gz" });
+  const releasePath = "/kungfu-systems/kungfu/releases/download/v2.8.0";
+  const artifact = fs.readFileSync(fixture.artifactPath);
+
+  await withHttpFixture({
+    [`${releasePath}/Kungfu-2.8.0-linux-x64.tar.gz`]: artifact,
+  }, async (baseUrl) => {
+    const subject = await resolveArtifactSubject(`${baseUrl}${releasePath}/Kungfu-2.8.0-linux-x64.tar.gz`);
+    const locatorPath = writeJson(path.join(fixture.cwd, "custom-locator.json"), {
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-artifact-passport-locator",
+      locators: [
+        {
+          match: { name: subject.name, digest: subject.digest },
+          passport: fixture.passportPath,
+        },
+      ],
+    });
+    const report = await verifyArtifactPassport({
+      subject: `${baseUrl}${releasePath}/Kungfu-2.8.0-linux-x64.tar.gz`,
+      githubReleaseBaseUrl: baseUrl,
+      locatorConfig: locatorPath,
+    });
+    assert.equal(report.ok, true);
+    assert.equal(report.discovery.method, "custom-locator");
+    assert.equal(report.discovery.attempts.some((attempt) => attempt.method === "github-release-default" && attempt.status === "miss"), true);
+  });
+});
+
+test("artifact passport verification fails closed on digest mismatch", async () => {
+  const fixture = createArtifactPassportFixture();
+  fs.writeFileSync(fixture.artifactPath, "tampered\n");
+
+  const report = await verifyArtifactPassport({
+    subject: fixture.artifactPath,
+    passportLocation: fixture.passportPath,
+  });
+
+  assert.equal(report.ok, false);
+  assert.equal(report.outcome, "fail");
+  assert.match(JSON.stringify(report.issues), /subject\.digest\.missing/);
+});
+
+test("artifact passport verification is unverifiable without a passport locator", async () => {
+  const cwd = tempDir("artifact-passport-missing");
+  const artifactPath = path.join(cwd, "Kungfu-2.8.0-windows-x64.exe");
+  fs.writeFileSync(artifactPath, "binary\n");
+
+  const report = await verifyArtifactPassport({
+    subject: artifactPath,
+    cwd,
+  });
+
+  assert.equal(report.ok, false);
+  assert.equal(report.outcome, "unverifiable");
+  assert.match(JSON.stringify(report.issues), /passport\.unavailable/);
+});
+
+test("artifact passport verification supports installed npm package directories", async () => {
+  const cwd = tempDir("artifact-passport-npm-dir");
+  const packageDir = path.join(cwd, "node_modules", "@kungfu-tech", "buildchain");
+  fs.mkdirSync(packageDir, { recursive: true });
+  fs.writeFileSync(path.join(packageDir, "package.json"), JSON.stringify({
+    name: "@kungfu-tech/buildchain",
+    version: "2.8.0",
+  }, null, 2));
+  fs.writeFileSync(path.join(packageDir, "index.js"), "export default 1;\n");
+  const subject = await resolveArtifactSubject(packageDir);
+  const assetsDir = path.join(cwd, "dist");
+  fs.mkdirSync(assetsDir, { recursive: true });
+  fs.writeFileSync(path.join(assetsDir, "buildchain-x86_64-unknown-linux-gnu.tar.gz"), "binary\n");
+  const impactPath = writeJson(path.join(cwd, "impact.json"), defaultSurfaceImpactLedger());
+  const packageSetPath = writeJson(path.join(cwd, "package-set.json"), {
+    order: "platforms-first-main-last",
+    registry: "https://registry.npmjs.org/",
+    main: {
+      name: "@kungfu-tech/buildchain",
+      version: "2.8.0",
+      distTag: "latest",
+      digest: subject.digest,
+    },
+    platforms: [
+      { name: "@kungfu-tech/buildchain-linux-x64", version: "2.8.0", distTag: "latest", digest: "sha512-linux", platform: "linux-x64" },
+      { name: "@kungfu-tech/buildchain-darwin-arm64", version: "2.8.0", distTag: "latest", digest: "sha512-darwin", platform: "darwin-arm64" },
+      { name: "@kungfu-tech/buildchain-win32-x64", version: "2.8.0", distTag: "latest", digest: "sha512-windows", platform: "win32-x64" },
+    ],
+  });
+  const publishEvidencePath = writeJson(path.join(cwd, "publish-evidence.json"), {
+    schema: 1,
+    version: "2.8.0",
+    channel: "release",
+    source_sha: "a".repeat(40),
+    release_sha: "b".repeat(40),
+    target_ref: "release/v2/v2.8",
+    release_material_sha: "b".repeat(40),
+    publish_tooling_sha: "c".repeat(40),
+    artifacts: [
+      { group: "node", kind: "npm", name: "@kungfu-tech/buildchain", ref: "2.8.0", digest: subject.digest },
+      { group: "node", kind: "npm", name: "@kungfu-tech/buildchain-linux-x64", ref: "2.8.0", digest: "sha512-linux" },
+      { group: "node", kind: "npm", name: "@kungfu-tech/buildchain-darwin-arm64", ref: "2.8.0", digest: "sha512-darwin" },
+      { group: "node", kind: "npm", name: "@kungfu-tech/buildchain-win32-x64", ref: "2.8.0", digest: "sha512-windows" },
+    ],
+  });
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v2.8.0",
+    repository: "kungfu-systems/buildchain",
+    sourceSha: "a".repeat(40),
+    assetsDir,
+    packageSetJson: packageSetPath,
+    publishEvidenceJson: publishEvidencePath,
+    impactJson: impactPath,
+    releaseJsonExtra: JSON.stringify({
+      channel: "release",
+      targetRef: "release/v2/v2.8",
+      releaseSha: "b".repeat(40),
+    }),
+    outputDir: "release-passport",
+  });
+
+  const report = await verifyArtifactPassport({
+    subject: packageDir,
+    passportLocation: path.join(collected.outputDir, "buildchain.release.json"),
+  });
+  const explanation = await explainArtifactPassport({
+    subject: packageDir,
+    passportLocation: path.join(collected.outputDir, "buildchain.release.json"),
+    forAudience: "agent",
+  });
+
+  assert.equal(report.ok, true);
+  assert.ok(["passport.artifacts", "publish-evidence.artifacts", "packageSet"].includes(report.match.source));
+  assert.equal(explanation.audience, "agent");
+  assert.equal(explanation.nextAction, "use-artifact-after-policy-review");
 });
 
 test("release passport core preserves supplied product name at root", async () => {

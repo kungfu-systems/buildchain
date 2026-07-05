@@ -126,6 +126,9 @@
       "cli": [
         "collect github-release",
         "verify release-passport",
+        "verify artifact",
+        "explain artifact",
+        "inspect artifact",
         "explain release --passport",
         "inspect release --passport"
       ],
