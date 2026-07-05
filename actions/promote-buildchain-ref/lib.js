@@ -1769,6 +1769,7 @@ async function collectAndPersistReleasePassport({
   productName,
   buildSummaryPath,
   platformManifestPaths = [],
+  impactJson = "",
   enabled = true,
   releaseCandidateValidation = undefined,
 }) {
@@ -1819,6 +1820,7 @@ async function collectAndPersistReleasePassport({
     }),
     transactionJson: JSON.stringify(transactionJson),
     anchorManifestJson: anchorManifestPath && fs.existsSync(anchorManifestPath) ? anchorManifestPath : "",
+    impactJson,
     buildSummaryJson,
     platformManifestJsons: platformManifests,
     distTagEvidenceJson: existingJsonObjectFile(result.distTagEvidencePath),
@@ -2605,6 +2607,7 @@ async function promoteBuildchainRefs({
   releasePassportProductName = "Buildchain",
   releasePassportBuildSummaryPath = ".buildchain/artifacts/build-summary.json",
   releasePassportPlatformManifestPaths = "",
+  releasePassportImpactJson = "",
   promoteOnlyReleaseCandidate = false,
   releaseCandidatePassportPath = ".buildchain/artifacts/release-candidate-passport.json",
   releaseCandidateBuildSummaryPath = ".buildchain/artifacts/build-summary.json",
@@ -3544,6 +3547,7 @@ async function promoteBuildchainRefs({
       productName: releasePassportProductName,
       buildSummaryPath: releasePassportBuildSummaryPath,
       platformManifestPaths: splitPathList(releasePassportPlatformManifestPaths),
+      impactJson: releasePassportImpactJson,
       enabled: Boolean(releasePassport),
       releaseCandidateValidation,
     });
