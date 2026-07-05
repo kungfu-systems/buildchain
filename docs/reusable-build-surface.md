@@ -236,6 +236,77 @@ release jobs can detect drifting diagnostics JSON contracts and missing or
 drifting diagnostics sidecar manifests without downloading the per-platform
 diagnostics artifacts first.
 
+## Artifact Transfer Relay
+
+By default, platform jobs upload payloads, manifests, and diagnostics directly
+to GitHub artifacts:
+
+```yaml
+with:
+  artifact-transfer-mode: github-artifacts
+```
+
+Large self-hosted native builds can opt into the first-class S3 relay path:
+
+```yaml
+jobs:
+  build:
+    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2
+    with:
+      runner-preset: kungfu-v4-self-hosted
+      artifact-transfer-mode: s3-to-github-artifacts
+      artifact-relay-s3-bucket: ${{ vars.BUILDCHAIN_ARTIFACT_RELAY_S3_BUCKET }}
+      artifact-relay-s3-region: ${{ vars.BUILDCHAIN_ARTIFACT_RELAY_S3_REGION }}
+      artifact-relay-s3-prefix: ${{ vars.BUILDCHAIN_ARTIFACT_RELAY_S3_PREFIX }}
+```
+
+In relay mode, each self-hosted platform job uploads the heavy payload files to
+S3 and uploads only a small `relay-manifest.json` to GitHub. A GitHub-hosted
+`relay-artifacts` job then assumes the configured download role, downloads the
+payloads from S3, verifies every file by SHA256, and re-uploads the normal
+GitHub artifacts under the same artifact names that direct mode uses. Downstream
+summary, release-candidate, and promote-only workflows therefore continue to
+consume GitHub artifacts and do not need custom S3 logic.
+The relay implementation uses Node.js plus the standard AWS environment
+credentials from GitHub OIDC; runner images and build containers do not need the
+AWS CLI installed.
+
+After the GitHub artifact uploads succeed, Buildchain deletes the S3 objects
+listed in the relay manifest for that platform. If any download, verification,
+or GitHub artifact upload fails, cleanup is skipped so maintainers can inspect
+the retained S3 payload. Configure a short bucket lifecycle expiration as a
+cost and cleanup backstop.
+
+The relay configuration is intentionally generic. Buildchain does not hard-code
+organization buckets, regions, or role ARNs. Callers may pass explicit inputs,
+or set repository/organization variables and secrets using these names:
+
+| Variable or secret | Meaning |
+| --- | --- |
+| `BUILDCHAIN_ARTIFACT_RELAY_S3_BUCKET` | Relay bucket name |
+| `BUILDCHAIN_ARTIFACT_RELAY_S3_REGION` | Relay bucket region |
+| `BUILDCHAIN_ARTIFACT_RELAY_S3_PREFIX` | Relay object prefix; defaults to `buildchain-artifacts` |
+| `BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN` | Shared OIDC role ARN for upload and download |
+| `BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN` | Upload OIDC role ARN for self-hosted build jobs |
+| `BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN` | Download OIDC role ARN for the GitHub-hosted relay job |
+| `BUILDCHAIN_ARTIFACT_RELAY_S3_OIDC_AUDIENCE` | Optional OIDC audience override |
+
+For AWS China regions, Buildchain defaults the OIDC audience to
+`sts.amazonaws.com.cn`; other regions default to `sts.amazonaws.com`. The caller
+workflow must allow `id-token: write`, and the target role trust policy should
+restrict GitHub OIDC claims to the expected organization, repository, workflow,
+and branch/ref. The S3 permissions should be scoped to the relay bucket/prefix
+used by the repository.
+Upload roles need write/delete access under the relay prefix; download roles
+need read access plus delete access for successful cleanup.
+
+Relay mode is opt-in and does not affect forks or open-source users that do not
+configure S3. Missing bucket, region, upload role, or download role values fail
+before the heavy build matrix is scheduled. Buildchain treats S3 as a transport
+cache, not as the final release evidence store; the final audit entry remains
+the GitHub artifact set plus the Buildchain build summary and release-candidate
+passport.
+
 Set `release-candidate: true` when the successful reusable build is meant to be
 the artifact source promoted later. Buildchain then uploads
 `release-candidate-passport.json` under the
