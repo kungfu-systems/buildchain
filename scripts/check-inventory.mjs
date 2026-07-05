@@ -271,6 +271,7 @@ for (const requiredSnippet of [
   "bin/buildchain.mjs log summary",
   "collect github-release",
   "verify release-passport",
+  "verify artifact",
   "scripts/create-release-bundle.mjs",
   "buildchain-release-bundle",
   "gh release upload",
