@@ -91,7 +91,7 @@ export function selectMergedChannelPullRequest({ pullRequests = [], targetRef, r
   return candidates[0];
 }
 
-export function selectReleaseCandidateRun({ runs = [], pullRequest, workflowName = "" }) {
+export function selectReleaseCandidateRuns({ runs = [], pullRequest, workflowName = "" }) {
   const prNumber = Number(pullRequest?.number || 0);
   const prHeadSha = String(pullRequest?.head?.sha || pullRequest?.headRefOid || "").trim();
   const prHeadBranch = normalizeBranch(pullRequest?.head?.ref || pullRequest?.headRefName || "");
@@ -111,7 +111,11 @@ export function selectReleaseCandidateRun({ runs = [], pullRequest, workflowName
     return matchesPr && matchesWorkflow && run.event === "pull_request" && run.status === "completed" && run.conclusion === "success";
   });
   candidates.sort((left, right) => Date.parse(right.updated_at || right.created_at || "") - Date.parse(left.updated_at || left.created_at || ""));
-  return candidates[0];
+  return candidates;
+}
+
+export function selectReleaseCandidateRun({ runs = [], pullRequest, workflowName = "" }) {
+  return selectReleaseCandidateRuns({ runs, pullRequest, workflowName })[0];
 }
 
 function outputPath(filePath) {
@@ -375,24 +379,40 @@ export async function resolveReleaseCandidateArtifacts({
     fetchImpl,
     path: `/repos/${repoInfo.owner}/${repoInfo.repo}/actions/workflows/${encodeURIComponent(workflowFile)}/runs?event=pull_request&status=success&per_page=100`,
   });
-  const run = selectReleaseCandidateRun({
+  const candidateRuns = selectReleaseCandidateRuns({
     runs: Array.isArray(runs.workflow_runs) ? runs.workflow_runs : [],
     pullRequest,
     workflowName,
   });
-  if (!run) {
+  if (!candidateRuns.length) {
     throw new Error(`no successful ${workflowName} pull_request run found for channel PR #${pullRequest.number}`);
   }
-  const artifactResponse = await githubJson({
-    apiUrl,
-    token,
-    fetchImpl,
-    path: `/repos/${repoInfo.owner}/${repoInfo.repo}/actions/runs/${run.id}/artifacts?per_page=100`,
-  });
-  const selected = selectReleaseCandidateArtifacts({
-    artifacts: Array.isArray(artifactResponse.artifacts) ? artifactResponse.artifacts : [],
-    artifactName,
-  });
+  let run;
+  let artifactResponse;
+  let selected;
+  const selectionErrors = [];
+  for (const candidateRun of candidateRuns) {
+    const candidateArtifactResponse = await githubJson({
+      apiUrl,
+      token,
+      fetchImpl,
+      path: `/repos/${repoInfo.owner}/${repoInfo.repo}/actions/runs/${candidateRun.id}/artifacts?per_page=100`,
+    });
+    try {
+      selected = selectReleaseCandidateArtifacts({
+        artifacts: Array.isArray(candidateArtifactResponse.artifacts) ? candidateArtifactResponse.artifacts : [],
+        artifactName,
+      });
+      run = candidateRun;
+      artifactResponse = candidateArtifactResponse;
+      break;
+    } catch (error) {
+      selectionErrors.push(`run ${candidateRun.id}: ${error.message}`);
+    }
+  }
+  if (!run || !artifactResponse || !selected) {
+    throw new Error(`no successful ${workflowName} pull_request run for channel PR #${pullRequest.number} contained release-candidate artifacts: ${selectionErrors.join("; ")}`);
+  }
   const payloadArtifacts = selectPayloadArtifacts({
     artifacts: Array.isArray(artifactResponse.artifacts) ? artifactResponse.artifacts : [],
     artifactName: selected.prefix,
