@@ -2162,8 +2162,15 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
       run_id: "",
       superseded_by: "",
       failure: "",
-      artifacts: [],
-      evidence: [],
+      artifacts: [
+        {
+          kind: "npm",
+          name: "@kungfu-tech/buildchain",
+          ref: "1.0.1-alpha.1",
+          digest: "sha256:stale-alpha",
+        },
+      ],
+      evidence: [".buildchain/release-evidence/v1.0.1-alpha.1/evidence.json"],
       created_at: "2026-07-01T00:00:00.000Z",
       updated_at: "2026-07-01T00:00:00.000Z",
     },
@@ -2194,6 +2201,129 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   assert.equal(refs.get("tags/v1.0-alpha"), SHA);
   assert.equal(refs.has("heads/buildchain/release-state/1-0-1-alpha-0"), true);
   assert.equal(refs.get("tags/v1.0.0-alpha.0"), undefined);
+});
+
+test("declared alpha skips stale durable state for a different source", async () => {
+  const staleSourceSha = "7".repeat(40);
+  const staleReleaseSha = "8".repeat(40);
+  const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[lifecycle.publish]
+command = "node scripts/publish.mjs"
+`,
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "1.0.1-alpha.1",
+      packageManager: "pnpm@11.7.0",
+    },
+    "scripts/publish.mjs": `
+import fs from "node:fs";
+
+fs.mkdirSync(process.env.BUILDCHAIN_EVIDENCE_DIR, { recursive: true });
+fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
+  schema: 1,
+  version: process.env.BUILDCHAIN_VERSION,
+  channel: process.env.BUILDCHAIN_CHANNEL,
+  source_sha: process.env.BUILDCHAIN_SOURCE_SHA,
+  release_sha: process.env.BUILDCHAIN_RELEASE_SHA,
+  target_ref: process.env.BUILDCHAIN_TARGET_REF,
+  release_material_sha: process.env.BUILDCHAIN_RELEASE_MATERIAL_SHA,
+  publish_tooling_sha: process.env.BUILDCHAIN_PUBLISH_TOOLING_SHA,
+  artifacts: [{
+    kind: "npm",
+    name: "@kungfu-tech/buildchain",
+    ref: process.env.BUILDCHAIN_VERSION,
+    digest: "sha256:alpha-current"
+  }]
+}, null, 2) + "\\n");
+`,
+  });
+  const { octokit, refs } = createGitMock({
+    refs: new Map([
+      ["heads/alpha/v1/v1.0", SHA],
+      ["heads/dev/v1/v1.0", OTHER_SHA],
+      ["tags/v1.0-alpha", OTHER_SHA],
+    ]),
+  });
+  await persistDurableReleaseTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    transaction: {
+      schema: 1,
+      id: "stale-alpha-1",
+      repository: "kungfu-systems/buildchain",
+      target_ref: "alpha/v1/v1.0",
+      source_sha: staleSourceSha,
+      release_sha: staleReleaseSha,
+      release_material_sha: staleReleaseSha,
+      publish_tooling_sha: staleReleaseSha,
+      version: "1.0.1-alpha.1",
+      exact_tag: "v1.0.1-alpha.1",
+      channel: "alpha",
+      line: "v1.0",
+      version_strategy: "",
+      lifecycle_identity: "lifecycle.publish",
+      state_ref: "buildchain/release-state/1-0-1-alpha-1",
+      state_path: "",
+      evidence_path: "",
+      state: "published",
+      previous_state: "publishing",
+      actor: "",
+      run_id: "",
+      superseded_by: "",
+      failure: "",
+      artifacts: [
+        {
+          kind: "npm",
+          name: "@kungfu-tech/buildchain",
+          ref: "1.0.1-alpha.1",
+          digest: "sha256:stale-alpha",
+        },
+      ],
+      evidence: [".buildchain/release-evidence/v1.0.1-alpha.1/evidence.json"],
+      created_at: "2026-07-01T00:00:00.000Z",
+      updated_at: "2026-07-01T00:00:00.000Z",
+    },
+    evidencePath: "",
+  });
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    cwd,
+    publishTransaction: true,
+    publishRequiredArtifactsJson: JSON.stringify([
+      {
+        kind: "npm",
+        name: "@kungfu-tech/buildchain",
+        ref: "1.0.1-alpha.2",
+        digest: "sha256:alpha-current",
+      },
+    ]),
+  });
+
+  assert.equal(result.publishTransaction.state, "complete");
+  assert.equal(result.publishTransaction.exactTag, "v1.0.1-alpha.2");
+  assert.equal(refs.get("heads/alpha/v1/v1.0"), result.sha);
+  assert.equal(refs.get("tags/v1.0.1-alpha.2"), result.sha);
+  assert.equal(refs.get("tags/v1.0-alpha"), result.sha);
+  assert.equal(refs.has("tags/v1.0.1-alpha.1"), false);
+  assert.equal(refs.has("heads/buildchain/release-state/1-0-1-alpha-2"), true);
 });
 
 test("publish transaction resumes matching alpha durable state refs", async () => {
