@@ -45,8 +45,8 @@ on:
         value: ${{ jobs.patrol.outputs.planned-count }}
 
 permissions:
-  contents: read
-  pull-requests: read
+  contents: write
+  pull-requests: write
   checks: read
   statuses: read
 
