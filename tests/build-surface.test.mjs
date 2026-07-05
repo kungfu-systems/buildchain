@@ -320,19 +320,31 @@ test("patrol workflow family exposes daily weekly monthly reusable entries and d
   assert.match(daily, /cadence: daily/);
   assert.match(daily, /mode: cadence-default/);
   assert.match(daily, /max-actions:/);
+  assert.match(daily, /contents: write/);
+  assert.match(daily, /pull-requests: write/);
   assert.match(weekly, /workflow_call:/);
   assert.match(weekly, /cadence: weekly/);
+  assert.match(weekly, /contents: write/);
+  assert.match(weekly, /pull-requests: write/);
   assert.match(monthly, /workflow_call:/);
   assert.match(monthly, /cadence: monthly/);
+  assert.match(monthly, /contents: write/);
+  assert.match(monthly, /pull-requests: write/);
 
   assert.match(dogfoodDaily, /schedule:/);
   assert.match(dogfoodDaily, /uses: \.\/\.github\/workflows\/patrol-daily\.yml/);
   assert.match(dogfoodDaily, /target-branch: dev\/v2\/v2\.5/);
   assert.match(dogfoodDaily, /dry-run: \$\{\{ inputs\.dry-run \|\| false \}\}/);
+  assert.match(dogfoodDaily, /contents: write/);
+  assert.match(dogfoodDaily, /pull-requests: write/);
   assert.match(dogfoodWeekly, /schedule:/);
   assert.match(dogfoodWeekly, /uses: \.\/\.github\/workflows\/patrol-weekly\.yml/);
+  assert.match(dogfoodWeekly, /contents: write/);
+  assert.match(dogfoodWeekly, /pull-requests: write/);
   assert.match(dogfoodMonthly, /schedule:/);
   assert.match(dogfoodMonthly, /uses: \.\/\.github\/workflows\/patrol-monthly\.yml/);
+  assert.match(dogfoodMonthly, /contents: write/);
+  assert.match(dogfoodMonthly, /pull-requests: write/);
 });
 
 test("reusable web-surface workflow exposes preview, cleanup, staging, and production gates", () => {
