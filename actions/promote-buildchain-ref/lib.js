@@ -850,6 +850,13 @@ function materialErrorRequiresRepair(error) {
   );
 }
 
+function transactionHasPublishedMaterial(transaction) {
+  return Boolean(
+    (Array.isArray(transaction?.artifacts) && transaction.artifacts.length > 0) ||
+    (Array.isArray(transaction?.evidence) && transaction.evidence.length > 0)
+  );
+}
+
 function ensureTransactionCanResume({
   existing,
   expected,
@@ -2336,30 +2343,34 @@ async function resumableAlphaTransactionState({
       }
       throw error;
     }
-    if (
-      transaction &&
-      transaction.target_ref === targetRef &&
-      transaction.exact_tag === candidate.tag &&
-      !["complete", "abandoned", "failed_permanently"].includes(transaction.state) &&
+    const exactTransactionSource =
+      transaction?.source_sha === sourceSha ||
+      transaction?.release_sha === sourceSha ||
+      transaction?.release_material_sha === sourceSha;
+    const transactionInSourceHistory =
+      !transactionHasPublishedMaterial(transaction) &&
       (
-        transaction.source_sha === sourceSha ||
-        transaction.release_sha === sourceSha ||
-        transaction.release_material_sha === sourceSha ||
         await releaseCommitIncludesTransactionHead({
           octokit,
           owner,
           repo,
           releaseSha: sourceSha,
-          transactionReleaseSha: transaction.release_sha,
+          transactionReleaseSha: transaction?.release_sha,
         }) ||
         await releaseCommitIncludesTransactionHead({
           octokit,
           owner,
           repo,
           releaseSha: sourceSha,
-          transactionReleaseSha: transaction.release_material_sha,
+          transactionReleaseSha: transaction?.release_material_sha,
         })
-      )
+      );
+    if (
+      transaction &&
+      transaction.target_ref === targetRef &&
+      transaction.exact_tag === candidate.tag &&
+      !["complete", "abandoned", "failed_permanently"].includes(transaction.state) &&
+      (exactTransactionSource || transactionInSourceHistory)
     ) {
       return {
         ...candidate,
@@ -2758,6 +2769,10 @@ async function promoteBuildchainRefs({
   const openVersionStatePullRequest = async ({ branch, branchSha, title, body }) => {
     const headBranch = versionStateBranchName(branch, branchSha);
     const headRef = `heads/${headBranch}`;
+    const pullTitle = title || `Update ${branch} version state`;
+    const pullBody =
+      body ||
+      `Route generated version-state commit ${branchSha} through a protected ${branch} pull request.`;
     const existingHeadSha = await readRefSha(headRef);
     if (!existingHeadSha) {
       await octokit.rest.git.createRef({
@@ -2789,10 +2804,10 @@ async function promoteBuildchainRefs({
         await octokit.rest.pulls.create({
           owner,
           repo,
-          title,
+          title: pullTitle,
           head: headBranch,
           base: branch,
-          body,
+          body: pullBody,
           maintainer_can_modify: true,
         })
       ).data;
@@ -3674,7 +3689,10 @@ async function promoteBuildchainRefs({
           updates,
         }, { finalizationNeeded: true });
       }
-      await updateBranch(`release/v${majorRule.major}/v${majorRule.major}.0`, releaseSha);
+      await updateBranch(`release/v${majorRule.major}/v${majorRule.major}.0`, releaseSha, "updated", {
+        title: `Release ${selectedRelease.tag}`,
+        body: `Create the generated version-state commit for ${selectedRelease.tag}.`,
+      });
     }
     await markFinalizing();
     await ensureTag(selectedRelease.tag, releaseSha);
@@ -3734,9 +3752,15 @@ async function promoteBuildchainRefs({
       nextAlphaSha = nextAlphaCommit.sha;
     }
     if (versionState) {
-      await updateBranch(`alpha/v${majorRule.major}/v${majorRule.major}.0`, nextAlphaSha);
+      await updateBranch(`alpha/v${majorRule.major}/v${majorRule.major}.0`, nextAlphaSha, "updated", {
+        title: `Prepare ${selectedNextAlpha.tag}`,
+        body: `Create the generated version-state commit for ${selectedNextAlpha.tag}.`,
+      });
       const nextDevRef = `dev/v${majorRule.major}/v${majorRule.major}.0`;
-      await updateBranch(nextDevRef, nextAlphaSha);
+      await updateBranch(nextDevRef, nextAlphaSha, "updated", {
+        title: `Prepare ${selectedNextAlpha.tag}`,
+        body: `Create the generated version-state commit for ${selectedNextAlpha.tag}.`,
+      });
       await updateDefaultBranch(nextDevRef);
     }
     await ensureTag(selectedNextAlpha.tag, nextAlphaSha);
@@ -3837,15 +3861,27 @@ async function promoteBuildchainRefs({
           transactionReleaseSha: currentAlphaTransaction.release_material_sha,
         })
       );
+    const currentAlphaCanReplaceStaleTransaction =
+      currentAlphaTransactionOpen &&
+      !currentAlphaContainsTransaction &&
+      !transactionHasPublishedMaterial(currentAlphaTransaction);
+    const currentAlphaCanFinalize =
+      currentAlpha &&
+      (
+        !currentAlphaTransactionOpen ||
+        currentAlphaContainsTransaction ||
+        currentAlphaSettled ||
+        currentAlphaCanReplaceStaleTransaction
+      );
     let selectedAlpha = explicitAlphaTags[0]
       ? { tag: explicitAlphaTags[0] }
-      : currentAlphaTransactionOpen && (currentAlphaHasFinalizationRefs || currentAlphaContainsTransaction) && !currentAlphaSettled
+      : currentAlphaTransactionOpen && currentAlphaContainsTransaction && !currentAlphaSettled
         ? currentAlpha
-      : currentAlpha && currentAlphaHasFinalizationRefs && !currentAlphaTagSha
+      : currentAlpha && currentAlphaCanFinalize && currentAlphaHasFinalizationRefs && !currentAlphaTagSha
         ? currentAlpha
       : resumableAlpha
         ? resumableAlpha
-      : currentAlphaTransactionOpen && currentAlpha && !currentAlphaTagSha
+      : currentAlphaTransactionOpen && currentAlpha && currentAlphaContainsTransaction && !currentAlphaTagSha
         ? currentAlpha
       : selectAlphaTag({
           refs: lineRefs,
@@ -3949,7 +3985,11 @@ async function promoteBuildchainRefs({
         `dev/v${rule.major}/v${rule.major}.${rule.minor}`,
         alpha.sha,
         "updated",
-        { allowNonFastForwardSkip: true },
+        {
+          title: `Prepare ${selectedAlpha.tag}`,
+          body: `Create the generated version-state commit for ${selectedAlpha.tag}.`,
+          allowNonFastForwardSkip: true,
+        },
       );
     }
     await markFinalizing();
@@ -4234,7 +4274,10 @@ async function promoteBuildchainRefs({
         updates,
       });
     }
-    await updateBranch(nextDevRef, nextAlphaSha);
+    await updateBranch(nextDevRef, nextAlphaSha, "updated", {
+      title: `Prepare ${selectedNextAlpha.tag}`,
+      body: `Create the generated version-state commit for ${selectedNextAlpha.tag}.`,
+    });
   }
   await ensureTag(selectedNextAlpha.tag, nextAlphaSha);
   await updateTag(rule.alphaTag, nextAlphaSha);

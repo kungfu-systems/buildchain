@@ -252,6 +252,7 @@ buildchain collect github-release \
   --publish-evidence-json .buildchain/release-evidence/v2.3.2/evidence.json \
   --transaction-json .buildchain/release-state/v2.3.2/state.json \
   --package-set-json package-set.json \
+  --impact-json impact.json \
   --trusted-publishing-json trusted-publishing.json \
   --anchor-manifest-json libnode.release.json \
   --build-summary-json .buildchain/artifacts/build-summary.json \
@@ -274,6 +275,13 @@ expects the supplied package set to include the main package plus the three
 platform packages with version, dist-tag, and digest evidence. Verification
 fails closed if supplied sections are internally incomplete or point to
 artifacts without matching evidence.
+
+`--impact-json` supplies the surface-aware impact ledger. When it includes
+`surfaceImpacts[]`, the verifier requires `versionImpact.final` to match the
+highest declared surface impact and copies `versionImpact` plus
+`surfaceImpacts` into `buildchain.release.json`. This lets
+`buildchain explain release --for agent --json` state why a release is patch,
+minor, or major instead of relying on file-path memory.
 
 Buildchain dogfoods its observability toolkit in this lane. The standalone
 builder writes API-generated events, while the workflow uses `buildchain mark`,
