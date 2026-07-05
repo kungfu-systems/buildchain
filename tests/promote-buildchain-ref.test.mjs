@@ -4794,6 +4794,11 @@ test("strict alpha promotion can advance from a generated version-state merge co
         createTree: async () => ({ data: { sha: "tree-sha" } }),
         createCommit: async () => ({ data: { sha: nextVersionSha } }),
         updateRef: async ({ ref, sha }) => {
+          if (ref.startsWith("heads/dev/")) {
+            const error = new Error('Changes must be made through a pull request. Required status check "check" is expected.');
+            error.status = 422;
+            throw error;
+          }
           refs.set(ref, sha);
           return {};
         },
@@ -4822,11 +4827,15 @@ test("strict alpha promotion can advance from a generated version-state merge co
                 ]
               : [],
         }),
-        createPullRequest: async ({ head, base, title }) => {
+      },
+      pulls: {
+        list: async () => ({ data: [] }),
+        create: async ({ title, head, base, body }) => {
           const pullRequest = {
             head: { ref: head },
             base: { ref: base },
             title,
+            body,
             html_url: `https://github.com/kungfu-systems/buildchain/pull/${pullRequests.length + 1}`,
           };
           pullRequests.push(pullRequest);
@@ -4849,10 +4858,13 @@ test("strict alpha promotion can advance from a generated version-state merge co
 
   assert.equal(result.sha, nextVersionSha);
   assert.equal(refs.get("heads/alpha/v1/v1.0"), nextVersionSha);
-  assert.equal(refs.get("heads/dev/v1/v1.0"), nextVersionSha);
+  assert.equal(refs.get("heads/dev/v1/v1.0"), oldAlphaSha);
+  assert.equal(pullRequests[0].base.ref, "dev/v1/v1.0");
+  assert.equal(pullRequests[0].title, "Prepare v1.0.6-alpha.1");
+  assert.match(pullRequests[0].body, /Create the generated version-state commit/);
   assert.equal(refs.get("tags/v1.0.6-alpha.1"), nextVersionSha);
   assert.equal(refs.get("tags/v1.0-alpha"), nextVersionSha);
-  assert.deepEqual(pullRequests, []);
+  assert.equal(refs.get(`heads/${pullRequests[0].head.ref}`), nextVersionSha);
 });
 
 test("strict alpha promotion finalizes tags when dev already advanced", async () => {
