@@ -560,11 +560,12 @@ test("selectAlphaTag creates ABV-style prerelease tags for the minor line", () =
       refs: [
         { ref: "refs/tags/v1.0.0", object: { sha: OTHER_SHA } },
         { ref: "refs/tags/v1.0.1-alpha.0", object: { sha: OTHER_SHA } },
+        { ref: "refs/heads/buildchain/release-state/1-0-1", object: { sha: OTHER_SHA } },
       ],
       releasePrefix: "v1.0",
       sha: SHA,
     }),
-    { tag: "v1.0.1-alpha.1", patch: 1, prerelease: 1, exists: false },
+    { tag: "v1.0.2-alpha.0", patch: 2, prerelease: 0, exists: false },
   );
   assert.deepEqual(
     selectAlphaTag({
