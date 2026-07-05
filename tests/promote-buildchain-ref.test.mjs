@@ -40,6 +40,27 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SHA = "a".repeat(40);
 const OTHER_SHA = "b".repeat(40);
 
+function productionImpactJson({ tag = "v1.0.0", line = "v1.0", rationale = "Production promotion preserves existing registered surfaces." } = {}) {
+  return JSON.stringify({
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-impact",
+    release: { tag, line },
+    versionImpact: {
+      final: "patch",
+      source: "surface-register",
+      rationale,
+    },
+    surfaceImpacts: [
+      {
+        id: "release-governance",
+        impact: "patch",
+        class: "compatible",
+        rationale: "Promotion finalizes release evidence without changing a registered public surface.",
+      },
+    ],
+  });
+}
+
 function notFound() {
   return Object.assign(new Error("Reference does not exist"), {
     status: 422,
@@ -507,11 +528,12 @@ test("selectReleaseTag creates, increments, and reuses canonical v-prefixed rele
       refs: [
         { ref: "refs/tags/1.0.99", object: { sha: OTHER_SHA } },
         { ref: "refs/tags/v1.0.0", object: { sha: OTHER_SHA } },
+        { ref: "refs/heads/buildchain/release-state/1-0-1", object: { sha: OTHER_SHA } },
       ],
       releasePrefix: "v1.0",
       sha: SHA,
     }),
-    { tag: "v1.0.1", patch: 1, exists: false },
+    { tag: "v1.0.2", patch: 2, exists: false },
   );
 });
 
@@ -1595,6 +1617,7 @@ exit 64
       cwd,
       publishTransaction: true,
       releasePassportProductName: "Libnode",
+      releasePassportImpactJson: productionImpactJson(),
       publishRequiredArtifactsJson: JSON.stringify([
         {
           kind: "npm",
@@ -2915,6 +2938,7 @@ test("publish transaction finalizes current release version-state merge commits"
     publishAuth: "trusted-publishing",
     publishDistTag: "latest",
     publishPackageMain: "@kungfu-tech/buildchain",
+    releasePassportImpactJson: productionImpactJson(),
     publishRequiredArtifactsJson: JSON.stringify([
       {
         group: "node",

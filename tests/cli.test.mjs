@@ -2052,6 +2052,25 @@ test("release passport unifies package set publish transaction evidence", () => 
       { name: "@kungfu-tech/buildchain", version: "2.3.2", distTag: "latest", role: "main" },
     ],
   }, null, 2));
+  const impactPath = path.join(cwd, "impact.json");
+  fs.writeFileSync(impactPath, JSON.stringify({
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-impact",
+    release: { tag: "v2.3.2", line: "v2.3" },
+    versionImpact: {
+      final: "patch",
+      source: "surface-register",
+      rationale: "Production release preserves existing registered surfaces.",
+    },
+    surfaceImpacts: [
+      {
+        id: "release-governance",
+        impact: "patch",
+        class: "compatible",
+        rationale: "Release passport and package evidence are complete without changing a registered surface.",
+      },
+    ],
+  }, null, 2));
 
   const collected = JSON.parse(runBuildchain([
     "collect",
@@ -2084,6 +2103,8 @@ test("release passport unifies package set publish transaction evidence", () => 
     windowsManifestPath,
     "--dist-tag-evidence-json",
     distTagEvidencePath,
+    "--impact-json",
+    impactPath,
     "--trusted-publishing-json",
     JSON.stringify({
       provider: "npm",
@@ -2185,6 +2206,20 @@ test("release passport verification fails closed on missing artifact evidence", 
     runnerPolicy: {
       productionDefault: "github-hosted",
     },
+    versionImpact: {
+      final: "patch",
+      source: "surface-register",
+      rationale: "Publish evidence repair preserves existing registered surfaces.",
+    },
+    surfaceImpacts: [
+      {
+        id: "release-evidence",
+        impact: "patch",
+        class: "compatible",
+        rationale: "Artifact evidence is matched by package ref without changing the release evidence contract.",
+        source: "",
+      },
+    ],
     artifacts: [
       {
         name: "buildchain-x86_64-unknown-linux-gnu.tar.gz",
@@ -2239,6 +2274,20 @@ test("release passport verification matches publish evidence by artifact ref", (
     runnerPolicy: {
       productionDefault: "github-hosted",
     },
+    versionImpact: {
+      final: "patch",
+      source: "surface-register",
+      rationale: "Publish evidence repair preserves existing registered surfaces.",
+    },
+    surfaceImpacts: [
+      {
+        id: "release-evidence",
+        impact: "patch",
+        class: "compatible",
+        rationale: "Artifact evidence is matched by package ref without changing the release evidence contract.",
+        source: "",
+      },
+    ],
     artifacts: [
       {
         group: "node",
@@ -2287,8 +2336,25 @@ test("release passport verification matches publish evidence by artifact ref", (
       },
     ],
   }, null, 2));
+  fs.writeFileSync(path.join(cwd, "impact.json"), JSON.stringify({
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-impact",
+    versionImpact: {
+      final: "patch",
+      source: "surface-register",
+      rationale: "Publish evidence repair preserves existing registered surfaces.",
+    },
+    surfaceImpacts: [
+      {
+        id: "release-evidence",
+        impact: "patch",
+        class: "compatible",
+        rationale: "Artifact evidence is matched by package ref without changing the release evidence contract.",
+        source: "",
+      },
+    ],
+  }, null, 2));
   for (const [fileName, contract] of [
-    ["impact.json", "kungfu-buildchain-impact"],
     ["agent-index.json", "kungfu-buildchain-agent-index"],
     ["product-mechanism.json", "kungfu-buildchain-product-mechanism"],
   ]) {

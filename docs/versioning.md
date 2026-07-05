@@ -46,6 +46,11 @@ The release passport records this as `surfaceImpacts[]` plus
 so an agent cannot silently label a release patch when one machine surface needs
 minor review.
 
+`surfaceImpacts[]` is mandatory for production release passports (`release/*`)
+and major publish-gate passports. Alpha, local, and legacy passport contexts
+keep the field optional so temporary validation can proceed without pretending
+to be a production release decision.
+
 Example: a KFD document such as KFD-2 is content and remains patch, but adding a
 `kind` field to the machine-consumed KFD `registry.json` is an additive change
 to the `kfd-registry-schema` surface and therefore requires minor-impact

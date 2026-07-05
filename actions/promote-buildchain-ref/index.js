@@ -71,6 +71,7 @@ async function main() {
   const releasePassportProductName = core.getInput("release-passport-product-name");
   const releasePassportBuildSummaryPath = core.getInput("release-passport-build-summary-path");
   const releasePassportPlatformManifestPaths = core.getInput("release-passport-platform-manifest-paths");
+  const releasePassportImpactJson = core.getInput("release-passport-impact-json");
   const promoteOnlyReleaseCandidate = core.getBooleanInput("promote-only-release-candidate");
   const releaseCandidatePassportPath = core.getInput("release-candidate-passport-path");
   const releaseCandidateBuildSummaryPath = core.getInput("release-candidate-build-summary-path");
@@ -126,6 +127,7 @@ async function main() {
     releasePassportProductName,
     releasePassportBuildSummaryPath,
     releasePassportPlatformManifestPaths,
+    releasePassportImpactJson,
     promoteOnlyReleaseCandidate,
     releaseCandidatePassportPath,
     releaseCandidateBuildSummaryPath,

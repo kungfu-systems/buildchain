@@ -276,10 +276,14 @@ platform packages with version, dist-tag, and digest evidence. Verification
 fails closed if supplied sections are internally incomplete or point to
 artifacts without matching evidence.
 
-`--impact-json` supplies the surface-aware impact ledger. When it includes
-`surfaceImpacts[]`, the verifier requires `versionImpact.final` to match the
-highest declared surface impact and copies `versionImpact` plus
-`surfaceImpacts` into `buildchain.release.json`. This lets
+`--impact-json` supplies the surface-aware impact ledger. Production release
+passports (`release/*`) and major publish-gate passports require
+`surfaceImpacts[]`; alpha, local, and legacy passport contexts keep it
+optional. When `surfaceImpacts[]` is required or supplied, the verifier requires
+each entry to include an id, impact, and rationale, and requires
+`versionImpact.final` to match the highest declared surface impact. The
+collector copies `versionImpact` plus `surfaceImpacts` into
+`buildchain.release.json`. This lets
 `buildchain explain release --for agent --json` state why a release is patch,
 minor, or major instead of relying on file-path memory.
 
