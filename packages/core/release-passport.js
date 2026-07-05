@@ -59,6 +59,43 @@ function highestImpactLevel(levels = []) {
   return highest;
 }
 
+function surfaceImpactRequirement({ passport = {}, impact = {} } = {}) {
+  const release = passport?.release && typeof passport.release === "object" ? passport.release : {};
+  const impactRelease = impact?.release && typeof impact.release === "object" ? impact.release : {};
+  const channel = optionalString(release.channel || impactRelease.channel).toLowerCase();
+  const targetRef = optionalString(
+    release.targetRef ||
+    release.target_ref ||
+    impactRelease.targetRef ||
+    impactRelease.target_ref,
+  ).toLowerCase();
+  if (channel === "release" || targetRef.startsWith("release/")) {
+    return {
+      required: true,
+      type: "production-release",
+      reason: "production release passports require surfaceImpacts[] so agents can audit the final version impact",
+      channel,
+      targetRef,
+    };
+  }
+  if (channel === "major" || targetRef === "publish-gate/major" || targetRef === "major-gate") {
+    return {
+      required: true,
+      type: "major-gate",
+      reason: "major publish gates require surfaceImpacts[] so breaking-surface rationale is explicit",
+      channel,
+      targetRef,
+    };
+  }
+  return {
+    required: false,
+    type: channel || (targetRef ? "non-production-release" : "legacy"),
+    reason: "surfaceImpacts[] is optional for alpha, local, and legacy passport contexts",
+    channel,
+    targetRef,
+  };
+}
+
 function stableJson(value) {
   if (Array.isArray(value)) {
     return `[${value.map(stableJson).join(",")}]`;
@@ -1132,6 +1169,10 @@ export function createReleaseCheckReport({
   const passportSurfaceImpacts = Array.isArray(passport?.surfaceImpacts) ? passport.surfaceImpacts : [];
   const declaredFinalImpact = normalizeImpactLevel(impact?.versionImpact?.final || impact?.classification);
   const computedFinalImpact = highestImpactLevel(surfaceImpacts.map((entry) => entry.impact));
+  const requiredSurfaceImpacts = surfaceImpactRequirement({ passport, impact });
+  if (requiredSurfaceImpacts.required && surfaceImpacts.length === 0) {
+    issues.push(issue("error", "impact.surfaceImpacts.required", "surfaceImpacts[] is required for this release passport type", requiredSurfaceImpacts));
+  }
   if (surfaceImpacts.length > 0) {
     for (const [index, entry] of surfaceImpacts.entries()) {
       if (!entry.id) {
@@ -1167,6 +1208,7 @@ export function createReleaseCheckReport({
     checkedAt,
     ok,
     trust: ok ? "pass" : "fail",
+    surfaceImpactRequirement: requiredSurfaceImpacts,
     completeness: {
       artifactCount: artifacts.length,
       evidenceArtifactCount: evidenceArtifacts.length,
@@ -1182,6 +1224,7 @@ export function createReleaseCheckReport({
       impactPresent: Boolean(impact),
       agentIndexPresent: Boolean(agentIndex),
       productMechanismPresent: Boolean(productMechanism),
+      surfaceImpactsRequired: requiredSurfaceImpacts.required,
       surfaceImpactCount: surfaceImpacts.length,
       versionImpact: impact?.versionImpact?.final || "",
     },
@@ -1278,6 +1321,7 @@ export async function explainReleasePassport({ passportLocation, forAudience = "
     impact: {
       versionImpact: passport.versionImpact || {},
       surfaceImpacts: Array.isArray(passport.surfaceImpacts) ? passport.surfaceImpacts : [],
+      surfaceImpactRequirement: report.surfaceImpactRequirement,
       breaking: Boolean(passport.versionImpact?.final === "major"),
       migrationRequired: Boolean(passport.versionImpact?.final === "major"),
       summary: passport.versionImpact?.rationale || "",

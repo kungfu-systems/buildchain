@@ -106,11 +106,15 @@ dist-tag, registry, role, platform, and digest, so agents do not need to stitch
 npm facts back together from the lower-level evidence files.
 `buildSummary`, `platformArtifactManifests`, and `distTagPromotion` preserve the
 build and npm dist-tag evidence chain in the same passport.
-`impact.json` can be supplied with `--impact-json`; when it contains
-`surfaceImpacts[]`, verification fails closed unless `versionImpact.final`
-matches the highest surface impact. For example, KFD-2 content can remain patch
-while an additive `registry.kind` field on the machine-consumed KFD registry
-schema records a minor `kfd-registry-schema` surface impact.
+`impact.json` can be supplied with `--impact-json`. Production release
+passports (`release/*`) and major publish-gate passports require
+`surfaceImpacts[]`; alpha, local, and legacy passport contexts keep the field
+optional. When `surfaceImpacts[]` is required or supplied, verification fails
+closed unless each entry has an id, impact, and rationale, and
+`versionImpact.final` matches the highest surface impact. For example, KFD-2
+content can remain patch while an additive `registry.kind` field on the
+machine-consumed KFD registry schema records a minor `kfd-registry-schema`
+surface impact.
 
 Verify a release passport:
 
