@@ -36,6 +36,29 @@ function optionalString(value) {
   return value === undefined || value === null ? "" : String(value);
 }
 
+const VERSION_IMPACT_ORDER = new Map([
+  ["unknown", 0],
+  ["patch", 1],
+  ["minor", 2],
+  ["major", 3],
+]);
+
+function normalizeImpactLevel(value, fallback = "unknown") {
+  const normalized = optionalString(value || fallback).toLowerCase();
+  return VERSION_IMPACT_ORDER.has(normalized) ? normalized : optionalString(value || fallback);
+}
+
+function highestImpactLevel(levels = []) {
+  let highest = "unknown";
+  for (const level of levels) {
+    const normalized = normalizeImpactLevel(level);
+    if ((VERSION_IMPACT_ORDER.get(normalized) ?? -1) > (VERSION_IMPACT_ORDER.get(highest) ?? -1)) {
+      highest = normalized;
+    }
+  }
+  return highest;
+}
+
 function stableJson(value) {
   if (Array.isArray(value)) {
     return `[${value.map(stableJson).join(",")}]`;
@@ -123,14 +146,21 @@ function defaultProductMechanism({ repository = "", productName = "Buildchain" }
 }
 
 function defaultImpact({ tag = "", line = "", decision = "unknown" } = {}) {
+  const finalImpact = normalizeImpactLevel(decision);
   return {
     schemaVersion: 1,
     contract: IMPACT_LEDGER_CONTRACT,
     release: { tag, line },
-    classification: decision,
-    breaking: false,
+    versionImpact: {
+      final: finalImpact,
+      source: "default",
+      rationale: "No surface impact classification was supplied.",
+    },
+    surfaceImpacts: [],
+    classification: finalImpact,
+    breaking: finalImpact === "major",
     security: false,
-    migrationRequired: false,
+    migrationRequired: finalImpact === "major",
     summary: "No release impact summary was supplied.",
     recovery: {
       rollback: "Use the previous exact release tag or previous floating channel ref.",
@@ -339,6 +369,55 @@ function normalizePublishEvidence(value = undefined) {
   };
 }
 
+function normalizeSurfaceImpact(entry = {}, index = 0) {
+  const id = nonEmptyString(entry.id || entry.surface || entry.surfaceId, `surfaceImpacts[${index}].id`);
+  const impact = normalizeImpactLevel(entry.impact || entry.classification || entry.versionImpact);
+  return {
+    id,
+    impact,
+    class: optionalString(entry.class || entry.changeClass || entry.change_class),
+    rationale: optionalString(entry.rationale || entry.reason),
+    source: optionalString(entry.source),
+  };
+}
+
+function normalizeImpactLedger(value = undefined, { tag = "", line = "", decision = "unknown" } = {}) {
+  if (!value) {
+    return defaultImpact({ tag, line, decision });
+  }
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("impact must be a JSON object");
+  }
+  const surfaceImpacts = Array.isArray(value.surfaceImpacts)
+    ? value.surfaceImpacts.map((entry, index) => normalizeSurfaceImpact(entry, index))
+    : [];
+  const finalImpact = normalizeImpactLevel(
+    value.versionImpact?.final ||
+    value.versionImpact ||
+    value.classification ||
+    decision,
+  );
+  return {
+    ...value,
+    schemaVersion: Number(value.schemaVersion || 1),
+    contract: value.contract || IMPACT_LEDGER_CONTRACT,
+    release: {
+      tag: optionalString(value.release?.tag || tag),
+      line: optionalString(value.release?.line || line),
+      ...(value.release && typeof value.release === "object" && !Array.isArray(value.release) ? value.release : {}),
+    },
+    versionImpact: {
+      final: finalImpact,
+      source: optionalString(value.versionImpact?.source || value.impactSource || "declared"),
+      rationale: optionalString(value.versionImpact?.rationale || value.rationale || value.summary),
+    },
+    surfaceImpacts,
+    classification: normalizeImpactLevel(value.classification || finalImpact),
+    breaking: value.breaking === undefined ? finalImpact === "major" : Boolean(value.breaking),
+    migrationRequired: value.migrationRequired === undefined ? finalImpact === "major" : Boolean(value.migrationRequired),
+  };
+}
+
 function packageSetEntries(packageSet = undefined) {
   if (!packageSet) {
     return [];
@@ -503,6 +582,7 @@ export function createReleasePassport({
   distTagPromotionEvidence = undefined,
   release = {},
   publish = {},
+  impact = undefined,
   workflow = {},
 } = {}) {
   const normalizedTag = nonEmptyString(tag, "tag");
@@ -518,6 +598,7 @@ export function createReleasePassport({
   const normalizedDistTagPromotionEvidence = distTagPromotionEvidence
     ? normalizeEvidenceDocument(distTagPromotionEvidence, "distTagPromotionEvidence")
     : undefined;
+  const normalizedImpact = normalizeImpactLedger(impact, { tag: normalizedTag, line });
   const publishArtifacts = normalizedPublishEvidence?.artifacts || [];
   const normalizedPublishSummary = normalizePublishSummary({
     packageSet: normalizedPackageSet,
@@ -618,6 +699,8 @@ export function createReleasePassport({
     ...(normalizedBuildSummary ? { buildSummary: normalizedBuildSummary } : {}),
     ...(normalizedPlatformArtifactManifests.length > 0 ? { platformArtifactManifests: normalizedPlatformArtifactManifests } : {}),
     ...(normalizedDistTagPromotionEvidence ? { distTagPromotion: normalizedDistTagPromotionEvidence } : {}),
+    versionImpact: normalizedImpact.versionImpact,
+    surfaceImpacts: normalizedImpact.surfaceImpacts,
     artifacts: [
       ...artifactEvidence.artifacts.map((asset) => ({
         group: "release",
@@ -680,6 +763,7 @@ export function collectGitHubReleasePassport({
   trustedPublishingJson = "",
   transactionJson = "",
   anchorManifestJson = "",
+  impactJson = "",
   buildSummaryJson = "",
   platformManifestJsons = [],
   distTagEvidenceJson = "",
@@ -695,6 +779,7 @@ export function collectGitHubReleasePassport({
   const trustedPublishing = parseJsonInput(trustedPublishingJson, undefined);
   const transactionMeta = parseJsonInputWithMeta(transactionJson, undefined);
   const anchorManifest = normalizeAnchorManifest(parseJsonInputWithMeta(anchorManifestJson, undefined));
+  const impactMeta = parseJsonInputWithMeta(impactJson, undefined);
   const buildSummaryMeta = parseJsonInputWithMeta(buildSummaryJson, undefined);
   const platformManifestMetas = (platformManifestJsons || [])
     .filter(Boolean)
@@ -710,7 +795,7 @@ export function collectGitHubReleasePassport({
   const resolvedOutputDir = path.resolve(cwd, outputDir);
   const productMechanism = defaultProductMechanism({ repository, productName });
   const artifactEvidence = createArtifactEvidence({ assets, repository, tag: resolvedTag, sourceSha, workflow });
-  const impact = defaultImpact({ tag: resolvedTag, line, decision: "unknown" });
+  const impact = normalizeImpactLedger(impactMeta.value, { tag: resolvedTag, line, decision: "unknown" });
   const agentIndex = defaultAgentIndex({ tag: resolvedTag });
   const passport = createReleasePassport({
     cwd,
@@ -747,6 +832,7 @@ export function collectGitHubReleasePassport({
       : undefined,
     release: releaseExtra,
     publish,
+    impact,
     publishEvidencePath: publishEvidenceMeta.path ? path.relative(resolvedOutputDir, publishEvidenceMeta.path).split(path.sep).join("/") : "",
     transactionStatePath: transactionMeta.path ? path.relative(resolvedOutputDir, transactionMeta.path).split(path.sep).join("/") : "",
     workflow,
@@ -1042,6 +1128,38 @@ export function createReleaseCheckReport({
   if (!passport?.runnerPolicy?.productionDefault) {
     issues.push(issue("warning", "runnerPolicy.productionDefault", "runner policy should record the production default"));
   }
+  const surfaceImpacts = Array.isArray(impact?.surfaceImpacts) ? impact.surfaceImpacts : [];
+  const passportSurfaceImpacts = Array.isArray(passport?.surfaceImpacts) ? passport.surfaceImpacts : [];
+  const declaredFinalImpact = normalizeImpactLevel(impact?.versionImpact?.final || impact?.classification);
+  const computedFinalImpact = highestImpactLevel(surfaceImpacts.map((entry) => entry.impact));
+  if (surfaceImpacts.length > 0) {
+    for (const [index, entry] of surfaceImpacts.entries()) {
+      if (!entry.id) {
+        issues.push(issue("error", `impact.surfaceImpacts[${index}].id`, "surface impact id is required"));
+      }
+      if (!VERSION_IMPACT_ORDER.has(entry.impact)) {
+        issues.push(issue("error", `impact.surfaceImpacts[${index}].impact`, "surface impact must be patch, minor, or major"));
+      }
+      if (!entry.rationale) {
+        issues.push(issue("error", `impact.surfaceImpacts[${index}].rationale`, "surface impact rationale is required"));
+      }
+    }
+    if (!impact?.versionImpact?.rationale) {
+      issues.push(issue("error", "impact.versionImpact.rationale", "version impact rationale is required when surface impacts are supplied"));
+    }
+    if (declaredFinalImpact !== computedFinalImpact) {
+      issues.push(issue("error", "impact.versionImpact.final", "versionImpact.final must equal the highest surface impact", {
+        declared: declaredFinalImpact,
+        computed: computedFinalImpact,
+      }));
+    }
+    if (stableJson(passportSurfaceImpacts) !== stableJson(surfaceImpacts)) {
+      issues.push(issue("error", "passport.surfaceImpacts", "passport.surfaceImpacts must mirror impact.surfaceImpacts"));
+    }
+  }
+  if (passport?.versionImpact?.final && impact?.versionImpact?.final && passport.versionImpact.final !== impact.versionImpact.final) {
+    issues.push(issue("error", "passport.versionImpact.final", "passport.versionImpact.final must match impact.versionImpact.final"));
+  }
   const ok = issues.every((entry) => entry.level !== "error");
   return {
     schemaVersion: 1,
@@ -1064,6 +1182,8 @@ export function createReleaseCheckReport({
       impactPresent: Boolean(impact),
       agentIndexPresent: Boolean(agentIndex),
       productMechanismPresent: Boolean(productMechanism),
+      surfaceImpactCount: surfaceImpacts.length,
+      versionImpact: impact?.versionImpact?.final || "",
     },
     issues,
   };
@@ -1156,8 +1276,11 @@ export async function explainReleasePassport({ passportLocation, forAudience = "
     artifactCount: report.completeness.artifactCount,
     runnerPolicy: passport.runnerPolicy,
     impact: {
-      breaking: false,
-      migrationRequired: false,
+      versionImpact: passport.versionImpact || {},
+      surfaceImpacts: Array.isArray(passport.surfaceImpacts) ? passport.surfaceImpacts : [],
+      breaking: Boolean(passport.versionImpact?.final === "major"),
+      migrationRequired: Boolean(passport.versionImpact?.final === "major"),
+      summary: passport.versionImpact?.rationale || "",
     },
     recovery: passport.recovery,
     nextAction,
