@@ -19,6 +19,27 @@ function writeJson(filePath, value) {
   return filePath;
 }
 
+function defaultSurfaceImpactLedger() {
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-impact",
+    release: { tag: "v2.3.2", line: "v2.3" },
+    versionImpact: {
+      final: "patch",
+      source: "surface-register",
+      rationale: "Patch release with no registered surface compatibility change.",
+    },
+    surfaceImpacts: [
+      {
+        id: "release-governance",
+        impact: "patch",
+        class: "compatible",
+        rationale: "Release evidence is complete without changing a registered public surface.",
+      },
+    ],
+  };
+}
+
 function createUnifiedPassportFixture({
   missingPlatformDigest = false,
   missingPublishArtifact = false,
@@ -28,7 +49,7 @@ function createUnifiedPassportFixture({
   tag = "v2.3.2",
   packageVersion = "",
   releaseExtra = {},
-  impact = undefined,
+  impact = defaultSurfaceImpactLedger(),
 } = {}) {
   const cwd = tempDir("release-passport-core");
   const assetsDir = path.join(cwd, "dist");
@@ -42,10 +63,10 @@ function createUnifiedPassportFixture({
   const publishEvidencePath = writeJson(path.join(cwd, "publish-evidence.json"), {
     schema: 1,
     version: missingPublishVersion ? "" : "2.3.2",
-    channel: "release",
+    channel: releaseExtra.channel || "release",
     source_sha: "a".repeat(40),
     release_sha: "b".repeat(40),
-    target_ref: "release/v2/v2.3",
+    target_ref: releaseExtra.targetRef || releaseExtra.target_ref || "release/v2/v2.3",
     release_material_sha: "b".repeat(40),
     publish_tooling_sha: "c".repeat(40),
     artifacts: [
@@ -265,6 +286,33 @@ test("release passport records surface-aware minor impact for additive KFD regis
   assert.equal(passport.surfaceImpacts[1].id, "kfd-registry-schema");
   assert.equal(explanation.impact.versionImpact.final, "minor");
   assert.match(explanation.impact.surfaceImpacts[1].rationale, /registry\.kind/);
+});
+
+test("release passport requires surface impacts for production release passports", async () => {
+  const passportPath = createUnifiedPassportFixture({ impact: null });
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+
+  assert.equal(report.ok, false);
+  assert.equal(report.surfaceImpactRequirement.required, true);
+  assert.equal(report.surfaceImpactRequirement.type, "production-release");
+  assert.match(JSON.stringify(report.issues), /surfaceImpacts\[\] is required/);
+});
+
+test("release passport keeps surface impacts optional for alpha passports", async () => {
+  const passportPath = createUnifiedPassportFixture({
+    impact: null,
+    releaseExtra: {
+      channel: "alpha",
+      targetRef: "alpha/v2/v2.3",
+    },
+  });
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+  const explanation = await explainReleasePassport({ passportLocation: passportPath, forAudience: "agent" });
+
+  assert.equal(report.ok, true);
+  assert.equal(report.surfaceImpactRequirement.required, false);
+  assert.equal(report.completeness.surfaceImpactCount, 0);
+  assert.equal(explanation.impact.surfaceImpactRequirement.required, false);
 });
 
 test("release passport fails closed when final impact is lower than a surface impact", async () => {

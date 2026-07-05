@@ -98,6 +98,9 @@ inputs:
   release-passport-platform-manifest-paths:
     description: "Optional comma- or newline-separated platform artifact manifest JSON paths to include"
     default: ""
+  release-passport-impact-json:
+    description: "Surface-aware impact ledger JSON or path; required when the generated release passport target requires surfaceImpacts[]"
+    default: ""
   promote-only-release-candidate:
     description: "Fail fast unless a verified PR-stage release-candidate passport matches the promotion source before publish-gate side effects run"
     default: "false"
