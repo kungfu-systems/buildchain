@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-impact",
+  "release": {
+    "tag": "v2.5.4",
+    "line": "v2.5"
+  },
+  "classification": "unknown",
+  "breaking": false,
+  "security": false,
+  "migrationRequired": false,
+  "summary": "No release impact summary was supplied.",
+  "recovery": {
+    "rollback": "Use the previous exact release tag or previous floating channel ref.",
+    "block": "Fail closed if release passport verification fails."
+  }
+}
