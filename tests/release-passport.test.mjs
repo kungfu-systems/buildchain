@@ -298,6 +298,23 @@ test("release passport requires surface impacts for production release passports
   assert.match(JSON.stringify(report.issues), /surfaceImpacts\[\] is required/);
 });
 
+test("release passport requires surface impacts for major publish gates", async () => {
+  const passportPath = createUnifiedPassportFixture({
+    impact: null,
+    releaseExtra: {
+      channel: "major",
+      targetRef: "publish-gate/major",
+    },
+  });
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+
+  assert.equal(report.ok, false);
+  assert.equal(report.surfaceImpactRequirement.required, true);
+  assert.equal(report.surfaceImpactRequirement.type, "major-gate");
+  assert.equal(report.surfaceImpactRequirement.targetRef, "publish-gate/major");
+  assert.equal(report.issues.some((entry) => entry.code === "impact.surfaceImpacts.required"), true);
+});
+
 test("release passport keeps surface impacts optional for alpha passports", async () => {
   const passportPath = createUnifiedPassportFixture({
     impact: null,
