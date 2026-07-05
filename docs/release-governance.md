@@ -281,6 +281,61 @@ jobs:
       dry-run: ${{ inputs.dry-run || false }}
 ```
 
+## Buildchain Patrol
+
+`dev-pr-auto-merge.yml` remains the focused merge primitive. For repositories
+that want a stable day-to-day operations contract, Buildchain also exposes a
+patrol workflow family:
+
+| Workflow | Intended cadence | Default intent |
+| --- | --- | --- |
+| `.github/workflows/patrol-daily.yml` | daily | lightweight inspection plus ready dev PR maintenance |
+| `.github/workflows/patrol-weekly.yml` | weekly | release-state, passport, gate, and stale-state health checks as they are added |
+| `.github/workflows/patrol-monthly.yml` | monthly | governance, permission, branch-protection, and workflow drift checks as they are added |
+
+The cadence names describe patrol intensity, not release cadence:
+
+- daily patrol can run every day without implying a daily release;
+- weekly patrol is for medium-cost maintenance and audit checks;
+- monthly patrol is for structural drift checks that should not block ordinary
+  development velocity.
+
+Consumers should schedule thin callers and keep their YAML declarative. For
+example:
+
+```yaml
+name: Buildchain Daily Patrol
+
+on:
+  schedule:
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+
+jobs:
+  patrol:
+    uses: kungfu-systems/buildchain/.github/workflows/patrol-daily.yml@v2
+    with:
+      target-branch: dev/v2/v2.5
+      dry-run: false
+      max-actions: 1
+```
+
+Weekly and monthly callers use the matching wrapper:
+
+```yaml
+jobs:
+  patrol:
+    uses: kungfu-systems/buildchain/.github/workflows/patrol-weekly.yml@v2
+    with:
+      target-branch: dev/v2/v2.5
+      dry-run: true
+```
+
+All three wrappers call the same underlying Buildchain patrol protocol, but the
+separate workflow names keep consumer schedules readable and stable. Buildchain
+can add new checks behind the cadence wrappers without forcing every consumer
+repository to rewrite its schedule YAML.
+
 ## Package-Manager Adapters
 
 Old ABV assumed JavaScript repositories with root version state and often

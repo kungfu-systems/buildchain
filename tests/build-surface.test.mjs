@@ -277,6 +277,64 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
 });
 
+test("patrol workflow family exposes daily weekly monthly reusable entries and dogfood schedules", () => {
+  const engine = fs.readFileSync(
+    path.join(root, ".github/workflows/buildchain-patrol.yml"),
+    "utf8",
+  );
+  const daily = fs.readFileSync(
+    path.join(root, ".github/workflows/patrol-daily.yml"),
+    "utf8",
+  );
+  const weekly = fs.readFileSync(
+    path.join(root, ".github/workflows/patrol-weekly.yml"),
+    "utf8",
+  );
+  const monthly = fs.readFileSync(
+    path.join(root, ".github/workflows/patrol-monthly.yml"),
+    "utf8",
+  );
+  const dogfoodDaily = fs.readFileSync(
+    path.join(root, ".github/workflows/buildchain-patrol-daily.yml"),
+    "utf8",
+  );
+  const dogfoodWeekly = fs.readFileSync(
+    path.join(root, ".github/workflows/buildchain-patrol-weekly.yml"),
+    "utf8",
+  );
+  const dogfoodMonthly = fs.readFileSync(
+    path.join(root, ".github/workflows/buildchain-patrol-monthly.yml"),
+    "utf8",
+  );
+
+  assert.match(engine, /workflow_call:/);
+  assert.match(engine, /cadence:/);
+  assert.match(engine, /mode:/);
+  assert.match(engine, /capabilities:/);
+  assert.match(engine, /buildchain-patrol\.mjs/);
+  assert.match(engine, /BUILDCHAIN_PATROL_CADENCE: \$\{\{ inputs\.cadence \}\}/);
+  assert.match(engine, /BUILDCHAIN_PATROL_DRY_RUN: \$\{\{ inputs\.dry-run \}\}/);
+  assert.match(engine, /actions\/upload-artifact@v7\.0\.1/);
+
+  assert.match(daily, /workflow_call:/);
+  assert.match(daily, /cadence: daily/);
+  assert.match(daily, /mode: cadence-default/);
+  assert.match(daily, /max-actions:/);
+  assert.match(weekly, /workflow_call:/);
+  assert.match(weekly, /cadence: weekly/);
+  assert.match(monthly, /workflow_call:/);
+  assert.match(monthly, /cadence: monthly/);
+
+  assert.match(dogfoodDaily, /schedule:/);
+  assert.match(dogfoodDaily, /uses: \.\/\.github\/workflows\/patrol-daily\.yml/);
+  assert.match(dogfoodDaily, /target-branch: dev\/v2\/v2\.5/);
+  assert.match(dogfoodDaily, /dry-run: \$\{\{ inputs\.dry-run \|\| false \}\}/);
+  assert.match(dogfoodWeekly, /schedule:/);
+  assert.match(dogfoodWeekly, /uses: \.\/\.github\/workflows\/patrol-weekly\.yml/);
+  assert.match(dogfoodMonthly, /schedule:/);
+  assert.match(dogfoodMonthly, /uses: \.\/\.github\/workflows\/patrol-monthly\.yml/);
+});
+
 test("reusable web-surface workflow exposes preview, cleanup, staging, and production gates", () => {
   const workflow = fs.readFileSync(
     path.join(root, ".github/workflows/.web-surface.yml"),
