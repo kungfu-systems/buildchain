@@ -184,7 +184,12 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /generate-release-candidate-passport\.mjs/);
   assert.match(workflow, /release-candidate-enabled/);
   assert.match(workflow, /BUILDCHAIN_RC_TARGET_CHANNEL: \$\{\{ needs\.resolve-source\.outputs\.publish-source-channel \|\| needs\.trust-gate\.outputs\.publish-channel \}\}/);
+  assert.match(workflow, /BUILDCHAIN_RC_PR_BASE_REF: \$\{\{ github\.base_ref \|\| github\.event\.pull_request\.base\.ref \}\}/);
+  assert.match(workflow, /release-candidate-target-channel=\$\{rc_target_channel\}/);
+  assert.match(workflow, /alpha\/\*\)/);
+  assert.match(workflow, /release\/\*\)/);
   assert.match(workflow, /if: \$\{\{ steps\.names\.outputs\.release-candidate-enabled == 'true' \}\}/);
+  assert.match(workflow, /BUILDCHAIN_RC_TARGET_CHANNEL: \$\{\{ steps\.names\.outputs\.release-candidate-target-channel \}\}/);
   assert.match(workflow, /diagnostics-summary\.json/);
   assert.match(workflow, /\$\{\{ inputs\.artifact-name \}\}-release-candidate-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/);
   assert.match(workflow, /generate-release-candidate-passport\.mjs/);
