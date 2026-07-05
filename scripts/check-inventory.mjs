@@ -130,7 +130,9 @@ if (!coreIndexSource.includes("reportBuildchainIssue")) {
   throw new Error("packages/core/index.js must export reportBuildchainIssue");
 }
 for (const requiredSnippet of [
-  "Release passport and binary distribution are a minor surface.",
+  "surfaceImpacts[]",
+  "versionImpact.final",
+  "kfd-registry-schema",
   "`v2.2`",
   "GitHub-hosted runners for production",
   "Self-hosted runners remain compatibility fixtures",
