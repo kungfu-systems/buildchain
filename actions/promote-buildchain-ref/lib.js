@@ -857,6 +857,28 @@ function transactionHasPublishedMaterial(transaction) {
   );
 }
 
+function publishArtifactKey(artifact) {
+  return [
+    artifact?.kind || "",
+    artifact?.name || "",
+    artifact?.ref || "",
+    artifact?.digest || "",
+  ].join("\0");
+}
+
+function transactionCoversRequiredArtifacts(transaction, requiredArtifacts) {
+  if (!Array.isArray(requiredArtifacts) || requiredArtifacts.length === 0) {
+    return true;
+  }
+  if (!transactionHasPublishedMaterial(transaction)) {
+    return true;
+  }
+  const existing = new Set(
+    (transaction.artifacts || []).map((artifact) => publishArtifactKey(artifact)),
+  );
+  return requiredArtifacts.every((artifact) => existing.has(publishArtifactKey(artifact)));
+}
+
 function ensureTransactionCanResume({
   existing,
   expected,
@@ -896,6 +918,9 @@ function canReplaceStaleVersionStateTransaction({
     return true;
   }
   if (!allowVersionStateFinalization) {
+    return false;
+  }
+  if (transactionHasPublishedMaterial(existing)) {
     return false;
   }
   if (
@@ -1476,6 +1501,7 @@ async function runPublishTransaction({
       existing?.exact_tag === exactTag &&
       existing?.target_ref === targetRef &&
       ["published", "finalizing", "complete"].includes(existing.state || "") &&
+      transactionCoversRequiredArtifacts(existing, requiredArtifacts) &&
       (
         await releaseCommitIncludesTransactionHead({
           octokit,
@@ -2186,6 +2212,21 @@ function parseReleasePatchTag(refName, releasePrefix) {
   };
 }
 
+function parseReleaseTransactionStateRef(refName, releasePrefix) {
+  const statePrefix = releasePrefix.replace(/^v/, "").replaceAll(".", "-");
+  const match = String(refName || "").match(
+    new RegExp(`^refs/heads/buildchain/release-state/${statePrefix}-(\\d+)$`),
+  );
+  if (!match) {
+    return undefined;
+  }
+  return {
+    tag: `${releasePrefix}.${Number(match[1])}`,
+    patch: Number(match[1]),
+    occupied: true,
+  };
+}
+
 function parseAlphaPrereleaseTag(refName, releasePrefix) {
   const match = String(refName || "").match(
     new RegExp(
@@ -2407,6 +2448,10 @@ function selectReleaseTag({ refs, releasePrefix, sha }) {
     })
     .filter(Boolean)
     .sort((a, b) => a.patch - b.patch);
+  const occupiedReleaseStates = refs
+    .map((ref) => parseReleaseTransactionStateRef(ref.ref, releasePrefix))
+    .filter(Boolean)
+    .sort((a, b) => a.patch - b.patch);
 
   const existingForSha = releaseTags.find((tag) => tag.sha === sha);
   if (existingForSha) {
@@ -2416,8 +2461,12 @@ function selectReleaseTag({ refs, releasePrefix, sha }) {
       exists: true,
     };
   }
-  const latestPatch =
-    releaseTags.length > 0 ? releaseTags[releaseTags.length - 1].patch : -1;
+  const latestPatch = Math.max(
+    releaseTags.length > 0 ? releaseTags[releaseTags.length - 1].patch : -1,
+    occupiedReleaseStates.length > 0
+      ? occupiedReleaseStates[occupiedReleaseStates.length - 1].patch
+      : -1,
+  );
   return {
     tag: `${releasePrefix}.${latestPatch + 1}`,
     patch: latestPatch + 1,

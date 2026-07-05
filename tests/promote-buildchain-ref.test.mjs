@@ -528,11 +528,12 @@ test("selectReleaseTag creates, increments, and reuses canonical v-prefixed rele
       refs: [
         { ref: "refs/tags/1.0.99", object: { sha: OTHER_SHA } },
         { ref: "refs/tags/v1.0.0", object: { sha: OTHER_SHA } },
+        { ref: "refs/heads/buildchain/release-state/1-0-1", object: { sha: OTHER_SHA } },
       ],
       releasePrefix: "v1.0",
       sha: SHA,
     }),
-    { tag: "v1.0.1", patch: 1, exists: false },
+    { tag: "v1.0.2", patch: 2, exists: false },
   );
 });
 
