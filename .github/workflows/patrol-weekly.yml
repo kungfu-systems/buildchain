@@ -1,0 +1,64 @@
+name: Buildchain Patrol Weekly
+
+on:
+  workflow_call:
+    inputs:
+      buildchain-repository:
+        description: "Buildchain runtime repository"
+        default: "kungfu-systems/buildchain"
+        type: string
+        required: false
+      buildchain-ref:
+        description: "Optional Buildchain runtime ref. Empty uses v2."
+        default: "v2"
+        type: string
+        required: false
+      target-branch:
+        description: "Protected dev branch to inspect"
+        default: ""
+        type: string
+        required: false
+      dry-run:
+        description: "Plan only; do not mutate repository state"
+        default: true
+        type: boolean
+        required: false
+    secrets:
+      github-token:
+        description: "Optional token for repository inspection. Defaults to github.token."
+        required: false
+    outputs:
+      result-path:
+        description: "Patrol result JSON path"
+        value: ${{ jobs.patrol.outputs.result-path }}
+      evaluated-count:
+        description: "Number of PRs evaluated by enabled capabilities"
+        value: ${{ jobs.patrol.outputs.evaluated-count }}
+      action-count:
+        description: "Number of actions taken, or planned in dry-run mode"
+        value: ${{ jobs.patrol.outputs.action-count }}
+      skipped-count:
+        description: "Number of skipped PRs"
+        value: ${{ jobs.patrol.outputs.skipped-count }}
+      planned-count:
+        description: "Number of stable-interface checks not yet implemented"
+        value: ${{ jobs.patrol.outputs.planned-count }}
+
+permissions:
+  contents: read
+  pull-requests: read
+  checks: read
+  statuses: read
+
+jobs:
+  patrol:
+    uses: ./.github/workflows/buildchain-patrol.yml
+    with:
+      buildchain-repository: ${{ inputs.buildchain-repository }}
+      buildchain-ref: ${{ inputs.buildchain-ref }}
+      cadence: weekly
+      mode: cadence-default
+      target-branch: ${{ inputs.target-branch }}
+      dry-run: ${{ inputs.dry-run }}
+    secrets:
+      github-token: ${{ secrets.github-token }}
