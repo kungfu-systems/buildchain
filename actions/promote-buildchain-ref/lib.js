@@ -850,6 +850,13 @@ function materialErrorRequiresRepair(error) {
   );
 }
 
+function transactionHasPublishedMaterial(transaction) {
+  return Boolean(
+    (Array.isArray(transaction?.artifacts) && transaction.artifacts.length > 0) ||
+    (Array.isArray(transaction?.evidence) && transaction.evidence.length > 0)
+  );
+}
+
 function ensureTransactionCanResume({
   existing,
   expected,
@@ -3850,15 +3857,27 @@ async function promoteBuildchainRefs({
           transactionReleaseSha: currentAlphaTransaction.release_material_sha,
         })
       );
+    const currentAlphaCanReplaceStaleTransaction =
+      currentAlphaTransactionOpen &&
+      !currentAlphaContainsTransaction &&
+      !transactionHasPublishedMaterial(currentAlphaTransaction);
+    const currentAlphaCanFinalize =
+      currentAlpha &&
+      (
+        !currentAlphaTransactionOpen ||
+        currentAlphaContainsTransaction ||
+        currentAlphaSettled ||
+        currentAlphaCanReplaceStaleTransaction
+      );
     let selectedAlpha = explicitAlphaTags[0]
       ? { tag: explicitAlphaTags[0] }
-      : currentAlphaTransactionOpen && (currentAlphaHasFinalizationRefs || currentAlphaContainsTransaction) && !currentAlphaSettled
+      : currentAlphaTransactionOpen && currentAlphaContainsTransaction && !currentAlphaSettled
         ? currentAlpha
-      : currentAlpha && currentAlphaHasFinalizationRefs && !currentAlphaTagSha
+      : currentAlpha && currentAlphaCanFinalize && currentAlphaHasFinalizationRefs && !currentAlphaTagSha
         ? currentAlpha
       : resumableAlpha
         ? resumableAlpha
-      : currentAlphaTransactionOpen && currentAlpha && !currentAlphaTagSha
+      : currentAlphaTransactionOpen && currentAlpha && currentAlphaContainsTransaction && !currentAlphaTagSha
         ? currentAlpha
       : selectAlphaTag({
           refs: lineRefs,
