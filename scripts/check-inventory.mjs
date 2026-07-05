@@ -214,6 +214,7 @@ for (const requiredSnippet of [
   "id-token: write",
   "actions: read",
   "uses: ./.github/workflows/release-candidate-promote.yml",
+  "github.event.workflow_run.event == 'push'",
   "target-sha: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}",
   "publish-required-artifacts-json: \"[]\"",
 ]) {
