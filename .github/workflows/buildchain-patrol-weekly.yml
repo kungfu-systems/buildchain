@@ -1,0 +1,32 @@
+name: Buildchain Dogfood Patrol Weekly
+
+on:
+  schedule:
+    - cron: "43 3 * * 1"
+  workflow_dispatch:
+    inputs:
+      buildchain-ref:
+        description: "Temporary Buildchain runtime ref for trusted manual validation"
+        required: false
+        default: ""
+      dry-run:
+        description: "Plan only; do not mutate repository state"
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  pull-requests: read
+  checks: read
+  statuses: read
+
+jobs:
+  patrol:
+    uses: ./.github/workflows/patrol-weekly.yml
+    with:
+      buildchain-ref: ${{ inputs.buildchain-ref || github.sha }}
+      target-branch: dev/v2/v2.5
+      dry-run: ${{ inputs.dry-run || true }}
+    secrets:
+      github-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}

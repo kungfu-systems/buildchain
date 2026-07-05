@@ -1,0 +1,112 @@
+name: Buildchain Patrol Daily
+
+on:
+  workflow_call:
+    inputs:
+      buildchain-repository:
+        description: "Buildchain runtime repository"
+        default: "kungfu-systems/buildchain"
+        type: string
+        required: false
+      buildchain-ref:
+        description: "Optional Buildchain runtime ref. Empty uses v2."
+        default: "v2"
+        type: string
+        required: false
+      target-branch:
+        description: "Protected dev branch to inspect or maintain"
+        default: ""
+        type: string
+        required: false
+      required-status-checks:
+        description: "Comma or newline separated required status/check-run name fragments"
+        default: "Verify"
+        type: string
+        required: false
+      ready-label:
+        description: "Required label for PRs eligible to merge. Empty disables the label gate."
+        default: "ready"
+        type: string
+        required: false
+      block-labels:
+        description: "Comma or newline separated labels that block merging"
+        default: "blocked,do-not-merge,work-in-progress"
+        type: string
+        required: false
+      allowed-head-prefixes:
+        description: "Comma or newline separated allowed source branch prefixes"
+        default: "feature/,fix/,chore/,docs/,ci/,refactor/"
+        type: string
+        required: false
+      require-approval:
+        description: "Require at least one current approval and no latest changes-requested review"
+        default: true
+        type: boolean
+        required: false
+      same-repository-only:
+        description: "Reject fork/cross-repository PR heads by default"
+        default: true
+        type: boolean
+        required: false
+      max-actions:
+        description: "Maximum actions to take in one run"
+        default: 1
+        type: number
+        required: false
+      merge-method:
+        description: "GitHub merge method for ready dev PRs: merge, squash, or rebase"
+        default: "merge"
+        type: string
+        required: false
+      dry-run:
+        description: "Plan only; do not mutate repository state"
+        default: true
+        type: boolean
+        required: false
+    secrets:
+      github-token:
+        description: "Optional token for repository inspection and maintenance. Defaults to github.token."
+        required: false
+    outputs:
+      result-path:
+        description: "Patrol result JSON path"
+        value: ${{ jobs.patrol.outputs.result-path }}
+      evaluated-count:
+        description: "Number of PRs evaluated by enabled capabilities"
+        value: ${{ jobs.patrol.outputs.evaluated-count }}
+      action-count:
+        description: "Number of actions taken, or planned in dry-run mode"
+        value: ${{ jobs.patrol.outputs.action-count }}
+      skipped-count:
+        description: "Number of skipped PRs"
+        value: ${{ jobs.patrol.outputs.skipped-count }}
+      planned-count:
+        description: "Number of stable-interface checks not yet implemented"
+        value: ${{ jobs.patrol.outputs.planned-count }}
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+  statuses: read
+
+jobs:
+  patrol:
+    uses: ./.github/workflows/buildchain-patrol.yml
+    with:
+      buildchain-repository: ${{ inputs.buildchain-repository }}
+      buildchain-ref: ${{ inputs.buildchain-ref }}
+      cadence: daily
+      mode: cadence-default
+      target-branch: ${{ inputs.target-branch }}
+      required-status-checks: ${{ inputs.required-status-checks }}
+      ready-label: ${{ inputs.ready-label }}
+      block-labels: ${{ inputs.block-labels }}
+      allowed-head-prefixes: ${{ inputs.allowed-head-prefixes }}
+      require-approval: ${{ inputs.require-approval }}
+      same-repository-only: ${{ inputs.same-repository-only }}
+      max-actions: ${{ inputs.max-actions }}
+      merge-method: ${{ inputs.merge-method }}
+      dry-run: ${{ inputs.dry-run }}
+    secrets:
+      github-token: ${{ secrets.github-token }}
