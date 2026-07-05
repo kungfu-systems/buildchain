@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-release-passport",
-  "generatedAt": "2026-07-05T06:34:09.098Z",
+  "generatedAt": "2026-07-05T06:35:18.906Z",
   "product": {
     "name": "Buildchain",
     "repository": "kungfu-systems/buildchain",
@@ -26,7 +26,7 @@
     "treeEquivalent": true,
     "publishToolingSha": "1e3b7ed38aad77c0c7525345acd7ddbf119ed114",
     "releaseStateRef": "refs/heads/buildchain/release-state/2-5-4-alpha-1",
-    "releaseStateSha": "902af892eb469d073596564a3a1a0bca42b529c3",
+    "releaseStateSha": "",
     "package": {
       "name": "@kungfu-tech/buildchain",
       "version": "2.5.4-alpha.1"
