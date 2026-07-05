@@ -2545,8 +2545,16 @@ function selectAlphaTag({ refs, releasePrefix, sha, patchAfterRelease }) {
     .map((ref) => parseReleasePatchTag(ref.ref, releasePrefix))
     .filter(Boolean)
     .sort((a, b) => a.patch - b.patch);
-  const latestReleasePatch =
-    releaseTags.length > 0 ? releaseTags[releaseTags.length - 1].patch : -1;
+  const occupiedReleaseStates = refs
+    .map((ref) => parseReleaseTransactionStateRef(ref.ref, releasePrefix))
+    .filter(Boolean)
+    .sort((a, b) => a.patch - b.patch);
+  const latestReleasePatch = Math.max(
+    releaseTags.length > 0 ? releaseTags[releaseTags.length - 1].patch : -1,
+    occupiedReleaseStates.length > 0
+      ? occupiedReleaseStates[occupiedReleaseStates.length - 1].patch
+      : -1,
+  );
   const latestAlpha =
     alphaTags.length > 0 ? alphaTags[alphaTags.length - 1] : undefined;
   if (latestAlpha && latestAlpha.patch >= latestReleasePatch + 1) {
