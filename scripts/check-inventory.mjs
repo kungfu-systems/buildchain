@@ -217,6 +217,8 @@ for (const requiredSnippet of [
   "github.event.workflow_run.event == 'push'",
   "target-sha: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}",
   "publish-required-artifacts-json: \"[]\"",
+  "release-passport-impact-json: >-",
+  "\"surfaceImpacts\":[",
 ]) {
   if (!buildchainRefPromotionWorkflow.includes(requiredSnippet)) {
     throw new Error(`buildchain ref promotion workflow missing npm transaction snippet: ${requiredSnippet}`);
