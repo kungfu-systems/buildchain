@@ -159,22 +159,48 @@ jobs:
           --
           bash -lc 'cd dist/binary && sha256sum ./* > checksums.txt'
 
+      - name: Fetch durable release-state passport
+        if: ${{ startsWith(github.ref, 'refs/tags/') || inputs.upload-release }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .buildchain/release-passport
+          version="${RELEASE_TAG#v}"
+          state="${version//./-}"
+          ref="buildchain/release-state/${state}"
+          git fetch --depth=1 origin "refs/heads/${ref}:refs/remotes/origin/${ref}"
+          git show "refs/remotes/origin/${ref}:release-passport/buildchain.release.json" \
+            > .buildchain/release-passport/authoritative-release-state-passport.json
+          node bin/buildchain.mjs verify release-passport \
+            .buildchain/release-passport/authoritative-release-state-passport.json
+
       - name: Collect release passport
         env:
           BUILDCHAIN_RUNNER_KIND: github-hosted
-        run: >-
-          node bin/buildchain.mjs span
-          --event release-passport.collect
-          --phase passport
-          --component workflow
-          --source buildchain
-          --
-          node bin/buildchain.mjs collect github-release
-          --tag "${{ env.RELEASE_TAG }}"
-          --repository "${{ github.repository }}"
-          --source-sha "${{ github.sha }}"
-          --assets-dir dist/binary
-          --output-dir .buildchain/release-passport
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(
+            collect github-release
+            --tag "${RELEASE_TAG}"
+            --repository "${GITHUB_REPOSITORY}"
+            --source-sha "${GITHUB_SHA}"
+            --assets-dir dist/binary
+            --output-dir .buildchain/release-passport
+          )
+          if [ -f .buildchain/release-passport/authoritative-release-state-passport.json ]; then
+            args+=(
+              --base-passport-json .buildchain/release-passport/authoritative-release-state-passport.json
+              --require-base-kfd
+            )
+          fi
+          node bin/buildchain.mjs span \
+            --event release-passport.collect \
+            --phase passport \
+            --component workflow \
+            --source buildchain \
+            -- \
+            node bin/buildchain.mjs "${args[@]}"
 
       - name: Verify release passport
         run: >-

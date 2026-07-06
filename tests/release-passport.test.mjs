@@ -1193,6 +1193,76 @@ test("Buildchain self KFD claims generate enforceable release passport evidence"
   assert.ok(kfd3.collaborationInterfaces[0].declaredSurfaces.some((surface) => surface.id === "export:./buildchain-kfd-claims"));
 });
 
+test("binary release passport can merge authoritative Buildchain KFD release-state passport", async () => {
+  const root = process.cwd();
+  const outputDir = tempDir("buildchain-kfd-base-passport");
+  const generated = generateBuildchainKfdWitnesses({
+    cwd: root,
+    outputDir,
+    sourceSha: "f".repeat(40),
+    emitOutputs: false,
+  });
+  const output = (name) => path.resolve(root, generated.outputs[name]);
+  const outputList = (name) => String(generated.outputs[name] || "")
+    .split(",")
+    .filter(Boolean)
+    .map((entry) => path.resolve(root, entry));
+  const authoritative = collectGitHubReleasePassport({
+    cwd: root,
+    tag: "v2.8.2",
+    repository: "kungfu-systems/buildchain",
+    productName: "Buildchain",
+    sourceSha: "f".repeat(40),
+    assetsDir: "dist/site",
+    outputDir: path.join(outputDir, "release-state-passport"),
+    releaseJsonExtra: JSON.stringify({
+      channel: "release",
+      targetRef: "release/v2/v2.8",
+      releaseStateSha: "1".repeat(40),
+    }),
+    impactJson: JSON.stringify({
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-impact",
+      versionImpact: { final: "minor", source: "test", rationale: "KFD release-state passport base." },
+      surfaceImpacts: [
+        { id: "kfd-release-state", impact: "minor", class: "release-passport", rationale: "KFD evidence is inherited from durable release state." },
+      ],
+      classification: "minor",
+    }),
+    kfd1WitnessJsons: [output("kfd-1-witness-jsons")],
+    kfd2ClaimJsons: outputList("kfd-2-claim-jsons"),
+    kfd3PrebuildWitnessJsons: [output("kfd-3-prebuild-witness-jsons")],
+    kfd3ArtifactWitnessJsons: [output("kfd-3-artifact-witness-jsons")],
+  });
+  const binaryDir = path.join(outputDir, "dist", "binary");
+  fs.mkdirSync(binaryDir, { recursive: true });
+  fs.writeFileSync(path.join(binaryDir, "buildchain-x86_64-unknown-linux-gnu.tar.gz"), "linux-binary\n");
+  const collected = collectGitHubReleasePassport({
+    cwd: root,
+    tag: "v2.8.2",
+    repository: "kungfu-systems/buildchain",
+    productName: "Buildchain",
+    sourceSha: "2".repeat(40),
+    assetsDir: binaryDir,
+    outputDir: path.join(outputDir, "binary-passport"),
+    basePassportJson: path.join(authoritative.outputDir, "buildchain.release.json"),
+    requireBaseKfd: true,
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+
+  assert.equal(report.ok, true);
+  assert.equal(passport.evidence.kfd1, "kfd-1");
+  assert.equal(passport.evidence.kfd2, "kfd-2");
+  assert.equal(passport.evidence.kfd3, "kfd-3");
+  assert.equal(passport["kfd-1"].status, "passed");
+  assert.equal(passport["kfd-2"].status, "passed");
+  assert.equal(passport["kfd-3"].status, "passed");
+  assert.equal(passport.release.releaseStateSha, "1".repeat(40));
+  assert.ok(passport.artifacts.some((artifact) => artifact.name === "buildchain-x86_64-unknown-linux-gnu.tar.gz"));
+});
+
 test("Buildchain source KFD claim registry is stable across semver version-state bumps", () => {
   const cwd = tempDir("buildchain-self-kfd-stable-claims");
   writeJson(path.join(cwd, "package.json"), {

@@ -281,6 +281,73 @@ function parseJsonInputWithMeta(value, fallback = undefined) {
   };
 }
 
+function mergeAuthoritativePassportBase(passport, basePassport = undefined, { requireKfd = false } = {}) {
+  if (!basePassport) {
+    if (requireKfd) {
+      throw new Error("release passport base with KFD evidence is required");
+    }
+    return passport;
+  }
+  if (typeof basePassport !== "object" || Array.isArray(basePassport)) {
+    throw new Error("release passport base must be a JSON object");
+  }
+  const kfdKeys = ["kfd-1", "kfd-2", "kfd-3"];
+  const missingKfd = kfdKeys.filter((key) => (
+    !basePassport[key] ||
+    typeof basePassport[key] !== "object" ||
+    Array.isArray(basePassport[key])
+  ));
+  if (requireKfd && missingKfd.length > 0) {
+    throw new Error(`release passport base is missing required KFD sections: ${missingKfd.join(", ")}`);
+  }
+  const merged = {
+    ...passport,
+    release: {
+      ...(passport.release && typeof passport.release === "object" && !Array.isArray(passport.release) ? passport.release : {}),
+      ...(basePassport.release && typeof basePassport.release === "object" && !Array.isArray(basePassport.release) ? basePassport.release : {}),
+    },
+    evidence: {
+      ...(passport.evidence && typeof passport.evidence === "object" && !Array.isArray(passport.evidence) ? passport.evidence : {}),
+      kfd1: basePassport.evidence?.kfd1 || passport.evidence?.kfd1 || "",
+      kfd2: basePassport.evidence?.kfd2 || passport.evidence?.kfd2 || "",
+      kfd3: basePassport.evidence?.kfd3 || passport.evidence?.kfd3 || "",
+    },
+  };
+  for (const key of ["versionImpact", "surfaceImpacts"]) {
+    if (basePassport[key] !== undefined) {
+      merged[key] = basePassport[key];
+    }
+  }
+  for (const key of kfdKeys) {
+    if (basePassport[key] && typeof basePassport[key] === "object" && !Array.isArray(basePassport[key])) {
+      merged[key] = basePassport[key];
+    }
+  }
+  return merged;
+}
+
+function mergeAuthoritativeImpactBase(impact, basePassport = undefined) {
+  if (!basePassport || typeof basePassport !== "object" || Array.isArray(basePassport)) {
+    return impact;
+  }
+  const merged = { ...impact };
+  if (basePassport.versionImpact && typeof basePassport.versionImpact === "object" && !Array.isArray(basePassport.versionImpact)) {
+    merged.versionImpact = {
+      ...(impact.versionImpact && typeof impact.versionImpact === "object" && !Array.isArray(impact.versionImpact) ? impact.versionImpact : {}),
+      ...basePassport.versionImpact,
+    };
+  }
+  if (Array.isArray(basePassport.surfaceImpacts)) {
+    merged.surfaceImpacts = basePassport.surfaceImpacts;
+  }
+  for (const key of ["classification", "breaking", "security", "migrationRequired", "summary"]) {
+    if (basePassport[key] !== undefined) {
+      merged[key] = basePassport[key];
+    }
+  }
+  return merged;
+}
+
 function parseJsonCommandOutput({ command = "", cwd = process.cwd(), label = "command" } = {}) {
   const normalized = String(command || "").trim();
   if (!normalized) {
@@ -1054,6 +1121,8 @@ export function collectGitHubReleasePassport({
   kfd3PrebuildWitnessJsons = [],
   kfd3ArtifactWitnessJsons = [],
   kfd3ArtifactVerifyCommand = "",
+  basePassportJson = "",
+  requireBaseKfd = false,
   releaseJsonExtra = "",
   publishJson = "",
   workflow = {},
@@ -1088,6 +1157,7 @@ export function collectGitHubReleasePassport({
     .filter(Boolean)
     .map((witnessJson) => parseJsonInputWithMeta(witnessJson, undefined))
     .filter((meta) => meta.value);
+  const basePassportMeta = parseJsonInputWithMeta(basePassportJson, undefined);
   const kfd3ArtifactCommandMeta = parseJsonCommandOutput({
     command: kfd3ArtifactVerifyCommand,
     cwd,
@@ -1107,7 +1177,10 @@ export function collectGitHubReleasePassport({
   const resolvedOutputDir = path.resolve(cwd, outputDir);
   const productMechanism = defaultProductMechanism({ repository, productName });
   const artifactEvidence = createArtifactEvidence({ assets, repository, tag: resolvedTag, sourceSha, workflow });
-  const impact = normalizeImpactLedger(impactMeta.value, { tag: resolvedTag, line, decision: "unknown" });
+  const impact = mergeAuthoritativeImpactBase(
+    normalizeImpactLedger(impactMeta.value, { tag: resolvedTag, line, decision: "unknown" }),
+    basePassportMeta.value,
+  );
   const agentIndex = defaultAgentIndex({ tag: resolvedTag });
   const kfd1 = createKfd1ReleaseGateEvidence({
     cwd,
@@ -1122,7 +1195,7 @@ export function collectGitHubReleasePassport({
     artifactWitnessMetas: kfd3ArtifactWitnessMetas,
     artifactCommandMeta: kfd3ArtifactCommandMeta.value ? kfd3ArtifactCommandMeta : undefined,
   });
-  const passport = createReleasePassport({
+  const passport = mergeAuthoritativePassportBase(createReleasePassport({
     cwd,
     repository,
     tag: resolvedTag,
@@ -1164,7 +1237,7 @@ export function collectGitHubReleasePassport({
     publishEvidencePath: publishEvidenceMeta.path ? path.relative(resolvedOutputDir, publishEvidenceMeta.path).split(path.sep).join("/") : "",
     transactionStatePath: transactionMeta.path ? path.relative(resolvedOutputDir, transactionMeta.path).split(path.sep).join("/") : "",
     workflow,
-  });
+  }), basePassportMeta.value, { requireKfd: requireBaseKfd });
   const checkReport = createReleaseCheckReport({
     passport,
     artifactEvidence,

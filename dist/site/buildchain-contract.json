@@ -193,7 +193,7 @@
         "release-state SHA is recorded as a durable audit entrance"
       ],
       "breakingDigest": "sha256:b627e1b2ece9b6049517a942c5139e342e6077cdd3d8962d61cef8481b1f70ad",
-      "auditDigest": "sha256:22017d4cbe0d89aecfcada7b93f5cdf2935837b2236ae4aeff23f19dbf3d26cb"
+      "auditDigest": "sha256:40c556f7df33a3c07ba6009c4cd283fad97b82db7026f2dc6db9394efbc1431c"
     },
     {
       "contractVersion": 1,
@@ -242,7 +242,7 @@
         "prose-only public claims downgrade the release trust passport audit"
       ],
       "breakingDigest": "sha256:f0b636eb925ddbf45ff1a8872454ab7b4dd98857cac12bb75217830130e62a16",
-      "auditDigest": "sha256:22017d4cbe0d89aecfcada7b93f5cdf2935837b2236ae4aeff23f19dbf3d26cb"
+      "auditDigest": "sha256:40c556f7df33a3c07ba6009c4cd283fad97b82db7026f2dc6db9394efbc1431c"
     },
     {
       "contractVersion": 1,
@@ -298,7 +298,7 @@
         "CLI commands are stable within the major line unless the contract major changes"
       ],
       "breakingDigest": "sha256:097db3e67509bedda8c6548bf1edfbfcf57f7b5510520b6a7b7e078d7ec087c8",
-      "auditDigest": "sha256:478e656104272675d3be3391158251472e0c2515b3113376ef0e52757b47ace0"
+      "auditDigest": "sha256:1f4b07ac623517209dbdee2992f94d95f7ee96e8f35f13ef620dad8da9d2a6e0"
     },
     {
       "contractVersion": 1,
@@ -342,9 +342,9 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:f3ba17b4a48e7d0f2996fb9f39d5ff7f16f1e2de1958fc07718b04bdf8af5533"
+      "auditDigest": "sha256:c3745538a9b17829bf07db485247f8e86245736798b9e631a935e53073a382d0"
     }
   ],
   "compatibilityDigest": "sha256:36421b592a782decbfe31a7d8d42d70ce1100a56a2c4f4a0ccc21f0617dc72bf",
-  "contractDigest": "sha256:ace5744adddb1f6afa73ad85796b04dc62a8d0d98ea549672800d71ff53a65eb"
+  "contractDigest": "sha256:0991148ae66e86eac30200a37ff71c17ad47d1b8bb043f63219fc07b1db6cd0e"
 }
