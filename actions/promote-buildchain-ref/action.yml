@@ -101,6 +101,9 @@ inputs:
   release-passport-impact-json:
     description: "Surface-aware impact ledger JSON or path; required when the generated release passport target requires surfaceImpacts[]"
     default: ""
+  release-passport-kfd-1-witness-jsons:
+    description: "Newline- or comma-separated KFD-1 contract-world witness JSON paths to include in the release passport"
+    default: ""
   promote-only-release-candidate:
     description: "Fail fast unless a verified PR-stage release-candidate passport matches the promotion source before publish-gate side effects run"
     default: "false"

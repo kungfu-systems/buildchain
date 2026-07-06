@@ -260,6 +260,7 @@ buildchain collect github-release \
   --platform-manifest-json .buildchain/artifacts/darwin-arm64/manifest.json \
   --platform-manifest-json .buildchain/artifacts/win32-x64/manifest.json \
   --dist-tag-evidence-json .buildchain/release-evidence/v2.3.2/dist-tag-evidence.json \
+  --kfd-1-witness-json .buildchain/kfd-1/contract-world.witness.json \
   --release-extra-json '{"channel":"release","targetRef":"release/v2/v2.3"}' \
   --output-dir .buildchain/release-passport
 ```
@@ -275,6 +276,15 @@ expects the supplied package set to include the main package plus the three
 platform packages with version, dist-tag, and digest evidence. Verification
 fails closed if supplied sections are internally incomplete or point to
 artifacts without matching evidence.
+
+`--kfd-1-witness-json` attaches a KFD-1 contract-world release gate. The witness
+is structured JSON: consumers declare the contract world, canonical JSON policy,
+artifact paths, and expected SHA-256 digests. Buildchain imports KFD-owned
+metadata from `@kungfu-tech/kfd`, freezes the witness before build publication,
+then verifies the resulting artifact bytes itself and writes the evidence under
+the KFD-provided top-level key currently named `kfd-1`. Consumers should not
+duplicate this by running repository-specific scripts or invoking the Kungfu
+SDK from their release workflow.
 
 `--impact-json` supplies the surface-aware impact ledger. Production release
 passports (`release/*`) and major publish-gate passports require

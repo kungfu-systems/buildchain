@@ -353,6 +353,8 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-passport-product-name:/);
   assert.match(workflow, /release-passport-impact-json:/);
   assert.match(workflow, /release-passport-impact-json: \$\{\{ inputs\.release-passport-impact-json \}\}/);
+  assert.match(workflow, /release-passport-kfd-1-witness-jsons:/);
+  assert.match(workflow, /release-passport-kfd-1-witness-jsons: \$\{\{ inputs\.release-passport-kfd-1-witness-jsons \}\}/);
   assert.match(workflow, /BUILDCHAIN_ARTIFACT_NAME: \$\{\{ inputs\.artifact-name \}\}/);
   assert.match(workflow, /BUILDCHAIN_ARTIFACT_PATTERNS: \$\{\{ inputs\.artifact-patterns \}\}/);
   assert.match(workflow, /BUILDCHAIN_RC_WORKFLOW_FILE: \$\{\{ inputs\.release-candidate-workflow-file \}\}/);
@@ -857,8 +859,11 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(action, /promote-only-release-candidate:/);
   assert.match(action, /release-candidate-passport-path:/);
   assert.match(action, /release-candidate-build-summary-path:/);
+  assert.match(action, /release-passport-kfd-1-witness-jsons:/);
   assert.match(implementation, /promoteOnlyReleaseCandidate/);
+  assert.match(implementation, /releasePassportKfd1WitnessJsons/);
   assert.match(docs, /promote-only-release-candidate: "true"/);
+  assert.match(docs, /release-passport-kfd-1-witness-jsons/);
 });
 
 test("buildchain ref promotion consumes PR-stage release candidate evidence", () => {
@@ -879,7 +884,8 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(workflow, /publish-required-artifacts-json: "\[\]"/);
   assert.match(workflow, /release-passport-impact-json: >-/);
   assert.match(workflow, /"surfaceImpacts":\[/);
-  assert.match(workflow, /"id":"buildchain-runtime"/);
+  assert.match(workflow, /"id":"kfd-1-contract-world-release-gate"/);
+  assert.match(workflow, /"id":"required-check-protection"/);
   assert.doesNotMatch(workflow, /run: node scripts\/release-candidate-resolver\.mjs/);
   assert.doesNotMatch(workflow, /uses: \.\/actions\/promote-buildchain-ref/);
 });

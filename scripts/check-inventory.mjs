@@ -93,6 +93,9 @@ if (rootPackage.exports?.["./issue-reporting"] !== "./packages/core/issue-report
 if (rootPackage.exports?.["./logging"] !== "./packages/core/logging.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/logging");
 }
+if (rootPackage.exports?.["./kfd-gate"] !== "./packages/core/kfd-gate.js") {
+  throw new Error("root package must export @kungfu-tech/buildchain/kfd-gate");
+}
 if (rootPackage.exports?.["./release-passport"] !== "./packages/core/release-passport.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/release-passport");
 }
@@ -139,15 +142,39 @@ if (!coreIndexSource.includes("reportBuildchainIssue")) {
   throw new Error("packages/core/index.js must export reportBuildchainIssue");
 }
 for (const requiredSnippet of [
+  "createKfd1ReleaseGateEvidence",
+  "resolveKfd1Metadata",
+  "validateKfd1ReleaseGateEvidence",
+]) {
+  if (!coreIndexSource.includes(requiredSnippet)) {
+    throw new Error(`packages/core/index.js must export KFD-1 gate API: ${requiredSnippet}`);
+  }
+}
+for (const requiredSnippet of [
   "surfaceImpacts[]",
   "versionImpact.final",
   "kfd-registry-schema",
+  "`v2.8`",
+  "kfd-1-contract-world-release-gate",
+  "required-check-protection",
   "`v2.2`",
   "GitHub-hosted runners for production",
   "Self-hosted runners remain compatibility fixtures",
 ]) {
   if (!versioningDoc.includes(requiredSnippet)) {
     throw new Error(`versioning doc missing required snippet: ${requiredSnippet}`);
+  }
+}
+const releasePassportDoc = fs.readFileSync(path.join(root, "docs/release-passport.md"), "utf8");
+for (const requiredSnippet of [
+  "--kfd-1-witness-json",
+  "@kungfu-tech/kfd",
+  "currently named `kfd-1`",
+  "Buildchain formatting policy",
+  "Verification fails closed",
+]) {
+  if (!releasePassportDoc.includes(requiredSnippet)) {
+    throw new Error(`release passport doc missing KFD-1 gate snippet: ${requiredSnippet}`);
   }
 }
 for (const [docName, docSource] of Object.entries({ "docs/cli.md": cliDoc, "docs/install.md": installDoc })) {
@@ -227,10 +254,22 @@ for (const requiredSnippet of [
   "target-sha: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}",
   "publish-required-artifacts-json: \"[]\"",
   "release-passport-impact-json: >-",
+  "Buildchain v2.8 promotes KFD-1 contract-world release gates",
+  "kfd-1-contract-world-release-gate",
+  "required-check-protection",
   "\"surfaceImpacts\":[",
 ]) {
   if (!buildchainRefPromotionWorkflow.includes(requiredSnippet)) {
     throw new Error(`buildchain ref promotion workflow missing npm transaction snippet: ${requiredSnippet}`);
+  }
+}
+const releaseCandidatePromoteWorkflow = fs.readFileSync(path.join(root, ".github/workflows/release-candidate-promote.yml"), "utf8");
+for (const requiredSnippet of [
+  "release-passport-kfd-1-witness-jsons:",
+  "release-passport-kfd-1-witness-jsons: ${{ inputs.release-passport-kfd-1-witness-jsons }}",
+]) {
+  if (!releaseCandidatePromoteWorkflow.includes(requiredSnippet)) {
+    throw new Error(`release candidate promote workflow missing KFD-1 gate pass-through: ${requiredSnippet}`);
   }
 }
 for (const forbiddenSnippet of [
