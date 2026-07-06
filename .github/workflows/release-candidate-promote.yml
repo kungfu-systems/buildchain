@@ -152,6 +152,11 @@ on:
         default: ""
         type: string
         required: false
+      release-passport-kfd-2-claim-jsons:
+        description: "Newline- or comma-separated KFD-2 public release trust claim JSON paths passed to the release passport collector"
+        default: ""
+        type: string
+        required: false
       release-passport-kfd-3-prebuild-witness-jsons:
         description: "Newline- or comma-separated KFD-3 collaboration-interface pre-build witness JSON paths passed to the release passport collector"
         default: ""
@@ -450,6 +455,7 @@ jobs:
             }
             core.setOutput("ref", gateRef);
             core.setOutput("sha", targetSha);
+            core.setOutput("locked", "true");
 
       - name: Promote-only publish
         uses: ./.buildchain/runtime/actions/promote-buildchain-ref
@@ -470,6 +476,10 @@ jobs:
           publish-dist-tag: ${{ inputs.publish-dist-tag }}
           publish-package-set-order: ${{ inputs.publish-package-set-order }}
           publish-package-main: ${{ inputs.publish-package-main }}
+          require-publish-source-lock: "true"
+          publish-source-ref: ${{ steps.publish-gate.outputs.ref }}
+          publish-source-sha: ${{ steps.publish-gate.outputs.sha }}
+          publish-source-locked: ${{ steps.publish-gate.outputs.locked }}
           release-passport: ${{ inputs.release-passport }}
           release-passport-output-dir: ${{ inputs.release-passport-output-dir }}
           release-passport-product-name: ${{ inputs.release-passport-product-name || inputs.artifact-name }}
@@ -477,6 +487,7 @@ jobs:
           release-passport-platform-manifest-paths: ${{ inputs.release-passport-platform-manifest-paths || steps.rc.outputs.release-candidate-platform-manifest-paths }}
           release-passport-impact-json: ${{ inputs.release-passport-impact-json }}
           release-passport-kfd-1-witness-jsons: ${{ inputs.release-passport-kfd-1-witness-jsons }}
+          release-passport-kfd-2-claim-jsons: ${{ inputs.release-passport-kfd-2-claim-jsons }}
           release-passport-kfd-3-prebuild-witness-jsons: ${{ inputs.release-passport-kfd-3-prebuild-witness-jsons }}
           release-passport-kfd-3-artifact-witness-jsons: ${{ inputs.release-passport-kfd-3-artifact-witness-jsons }}
           release-passport-kfd-3-artifact-verify-command: ${{ inputs.release-passport-kfd-3-artifact-verify-command }}

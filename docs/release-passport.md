@@ -98,6 +98,7 @@ buildchain collect github-release \
   --platform-manifest-json .buildchain/artifacts/win32-x64/manifest.json \
   --dist-tag-evidence-json .buildchain/release-evidence/v2.2.0/dist-tag-evidence.json \
   --kfd-1-witness-json .buildchain/kfd-1/contract-world.witness.json \
+  --kfd-2-claim-json .buildchain/kfd-2/release-claims.json \
   --output-dir .buildchain/release-passport
 ```
 
@@ -162,6 +163,14 @@ the actual artifact digest observed after the build. Verification fails closed
 when the witness is missing required facts, an artifact cannot be found, or a
 post-build digest does not match the frozen witness.
 
+For the KFD repository itself, the KFD-1 witness can be a self-hosted standard
+contract witness. In that mode KFD owns the standard-contract facts and
+Buildchain verifies declared source standard metadata, schemas, package
+exports, and site-consumption entrypoints against the packaged artifact. The
+passport records source and artifact hash summaries, schema ids, the
+self-hosting boundary, result, residual risk, and responsibility state for
+source ownership, artifact verification, and release-passport proof ownership.
+
 Good KFD-1 witnesses should point at release payload surfaces, not at private
 build-machine state. For Buildchain itself, the natural witness set is the
 release passport schema and implementation, KFD-1 gate implementation,
@@ -171,6 +180,29 @@ The final `buildchain.release.json` file should not be used as an ordinary
 byte-for-byte KFD surface because it contains KFD evidence; instead, the
 passport is audited through release-state SHA, `check-report.json`, and the
 contract files that generate and verify it.
+
+### KFD-2 release trust passport audit
+
+Buildchain can write a KFD-2 release trust passport audit under the top-level
+`kfd-2` section. The section is generated automatically from KFD-1 and KFD-3
+release-gate evidence, and callers may add explicit public release claims with
+`--kfd-2-claim-json`.
+
+Every public claim must bind:
+
+- declared sources;
+- machine-readable evidence;
+- source/evidence/artifact hashes;
+- artifact coordinates;
+- verification results;
+- audit boundary;
+- responsibility state;
+- residual risk, even when the array is empty.
+
+Unbound public claims fail release passport verification. Claims that are
+machine-bound but only supported by prose downgrade the KFD-2 audit and produce
+a warning, so agents can distinguish "verified", "needs review", and "not
+bound to evidence" without reading release notes.
 
 ### KFD-3 collaboration-interface release gate
 
@@ -189,6 +221,9 @@ kungfu sdk collaboration-interface witness --json \
 
 That witness must contain, or point to, the product-owned KFD-3 collaboration
 interface, registry digest, participants, and declared public shipped surfaces.
+KFD repository self-verification can declare the same facts as grouped machine
+surfaces: docs, schemas, standards metadata, package exports, and
+site-consumption contracts.
 After the artifact is built, the product also provides artifact-side evidence,
 either as a JSON file or a command:
 
@@ -214,7 +249,18 @@ The generated release passport records the result under the KFD-provided
 top-level key currently named `kfd-3`. The section includes the KFD package
 version, schema ids/paths, pre-build witness digest, artifact witness digest,
 declared/exposed surface counts, missing declared shipped surfaces, and
-unclassified artifact public surfaces.
+unclassified artifact public surfaces. It also records the KFD-2 trust proof
+view of that evidence: `releaseStatus`, witness file hashes and canonical
+hashes, declared capability verification, reverse audit boundary, residual
+risk, and responsibility state.
+
+The trust proof makes the strongest claim only when the witnesses justify it:
+`No unclassified reachable surface within the declared audit boundary.` If the
+product declares non-exhaustive surfaces, Buildchain keeps the passport
+verifiable but marks the interface `audited` instead of `enforced` and records
+the residual risk explicitly. Draft or partial KFD-3 declarations are
+downgraded; missing declared capabilities, undeclared public artifact surfaces,
+or stale collaboration-interface digests fail the proof.
 
 This makes KFD-3 support usable by readers and agents immediately: they can
 inspect `buildchain.release.json` and know whether the released package

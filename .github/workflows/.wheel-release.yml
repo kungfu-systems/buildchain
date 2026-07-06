@@ -22,17 +22,12 @@ on:
 permissions: write-all
   
 jobs:
-    release:
-      if: ${{ github.event.pull_request.merged }}
+    retired:
       runs-on: ubuntu-24.04
       steps:
-        - name: Checkout source code
-          uses: actions/checkout@v7.0.0
-  
-        - name: Bump Version
-          id: bump_version
-          uses: kungfu-systems/buildchain/actions/bump-version@v2
-          with:
-            token: ${{ secrets.GITHUB_TOKEN }}
-            action: "prebuild"
+        - name: Wheel release workflow retired
+          run: |
+            echo "::error::The workflows v2 wheel release path is retired."
+            echo "::error::Do not use .wheel-release.yml; use a project lifecycle.publish command behind release-candidate-promote.yml@v2 so publish-gate source-lock enforcement applies."
+            exit 1
   

@@ -147,6 +147,9 @@ if (!coreIndexSource.includes("reportBuildchainIssue")) {
 if (!coreIndexSource.includes("createBuildchainContractWorld")) {
   throw new Error("packages/core/index.js must export Buildchain contract lock APIs");
 }
+if (!coreIndexSource.includes("KFD2_RELEASE_TRUST_PASSPORT_CONTRACT")) {
+  throw new Error("packages/core/index.js must export KFD-2 release trust passport contract");
+}
 for (const requiredSnippet of [
   "createKfd1ReleaseGateEvidence",
   "resolveKfd1Metadata",
@@ -183,10 +186,13 @@ for (const requiredSnippet of [
 const releasePassportDoc = fs.readFileSync(path.join(root, "docs/release-passport.md"), "utf8");
 for (const requiredSnippet of [
   "--kfd-1-witness-json",
+  "--kfd-2-claim-json",
   "@kungfu-tech/kfd",
   "currently named `kfd-1`",
   "Buildchain formatting policy",
   "Verification fails closed",
+  "KFD-2 release trust passport audit",
+  "Unbound public claims fail",
   "Floating Buildchain contract lock",
   "buildchain.contract-lock.json",
   "--kfd-3-prebuild-witness-json",
@@ -286,8 +292,11 @@ for (const requiredSnippet of [
   "target-sha: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}",
   "publish-required-artifacts-json: \"[]\"",
   "release-passport-impact-json: >-",
-  "Buildchain v2.8 promotes KFD-1 contract-world release gates",
+  "Buildchain v2.8 promotes KFD self-verification",
   "kfd-1-contract-world-release-gate",
+  "kfd-2-release-trust-passport-audit",
+  "kfd-3-collaboration-interface-trust-proof",
+  "publish-source-lock-enforcement",
   "required-check-protection",
   "\"surfaceImpacts\":[",
 ]) {
@@ -299,13 +308,65 @@ const releaseCandidatePromoteWorkflow = fs.readFileSync(path.join(root, ".github
 for (const requiredSnippet of [
   "release-passport-kfd-1-witness-jsons:",
   "release-passport-kfd-1-witness-jsons: ${{ inputs.release-passport-kfd-1-witness-jsons }}",
+  "release-passport-kfd-2-claim-jsons:",
+  "release-passport-kfd-2-claim-jsons: ${{ inputs.release-passport-kfd-2-claim-jsons }}",
   "release-passport-kfd-3-prebuild-witness-jsons:",
   "release-passport-kfd-3-prebuild-witness-jsons: ${{ inputs.release-passport-kfd-3-prebuild-witness-jsons }}",
   "release-passport-kfd-3-artifact-witness-jsons:",
   "release-passport-kfd-3-artifact-verify-command:",
+  "require-publish-source-lock: \"true\"",
+  "publish-source-ref: ${{ steps.publish-gate.outputs.ref }}",
+  "publish-source-sha: ${{ steps.publish-gate.outputs.sha }}",
+  "publish-source-locked: ${{ steps.publish-gate.outputs.locked }}",
 ]) {
   if (!releaseCandidatePromoteWorkflow.includes(requiredSnippet)) {
     throw new Error(`release candidate promote workflow missing KFD gate pass-through: ${requiredSnippet}`);
+  }
+}
+const workflowDir = path.join(root, ".github/workflows");
+for (const workflowFile of fs.readdirSync(workflowDir).filter((entry) => entry.endsWith(".yml"))) {
+  const workflowPath = path.join(workflowDir, workflowFile);
+  const workflowSource = fs.readFileSync(workflowPath, "utf8");
+  if (!/uses:\s*(?:\.\/\.buildchain\/runtime\/actions\/promote-buildchain-ref|\.\/actions\/promote-buildchain-ref|.*\/actions\/promote-buildchain-ref(?:@|$))/m.test(workflowSource)) {
+    continue;
+  }
+  for (const requiredSnippet of [
+    "require-publish-source-lock:",
+    "publish-source-ref:",
+    "publish-source-sha:",
+    "publish-source-locked:",
+  ]) {
+    if (!workflowSource.includes(requiredSnippet)) {
+      throw new Error(`${workflowFile} calls promote-buildchain-ref without publish source-lock input: ${requiredSnippet}`);
+    }
+  }
+}
+for (const retiredWorkflow of [
+  ".release-new-version.yml",
+  ".release-elastic-beanstalk.yml",
+  ".sam-release.yml",
+  ".wheel-release.yml",
+]) {
+  const retiredSource = fs.readFileSync(path.join(workflowDir, retiredWorkflow), "utf8");
+  for (const requiredSnippet of [
+    "release path is retired",
+    "release-candidate-promote.yml@v2",
+    "publish-gate source-lock enforcement",
+  ]) {
+    if (!retiredSource.includes(requiredSnippet)) {
+      throw new Error(`${retiredWorkflow} must fail closed and point callers at the source-locked release-candidate-promote model: ${requiredSnippet}`);
+    }
+  }
+  for (const forbiddenSnippet of [
+    "npm publish --access=public",
+    "actions/publish-prebuilt@v2",
+    "actions/bump-version@v2",
+    "beanstalk-deploy@",
+    "sam deploy",
+  ]) {
+    if (retiredSource.includes(forbiddenSnippet)) {
+      throw new Error(`${retiredWorkflow} must not keep retired publish side effects: ${forbiddenSnippet}`);
+    }
   }
 }
 for (const forbiddenSnippet of [

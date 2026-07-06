@@ -104,6 +104,9 @@ inputs:
   release-passport-kfd-1-witness-jsons:
     description: "Newline- or comma-separated KFD-1 contract-world witness JSON paths to include in the release passport"
     default: ""
+  release-passport-kfd-2-claim-jsons:
+    description: "Newline- or comma-separated KFD-2 public release trust claim JSON paths to audit in the release passport"
+    default: ""
   release-passport-kfd-3-prebuild-witness-jsons:
     description: "Newline- or comma-separated KFD-3 collaboration-interface pre-build witness JSON paths to include in the release passport"
     default: ""

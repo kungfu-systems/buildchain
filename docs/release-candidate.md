@@ -68,7 +68,12 @@ build summary by the configured `artifact-name` before promotion. It also
 downloads payload artifacts from the same PR-stage run, validates the required
 payload count, passes downloaded platform manifests into the release passport,
 and either forwards an explicit `publish-required-artifacts-json` value or
-generates one before calling `promote-buildchain-ref`. The default npm path
+generates one before calling `promote-buildchain-ref`. Before that call, the
+wrapper creates or updates `publish-gate/{alpha,release,major}` to the
+promotion channel commit and passes that ref, target SHA, and `locked=true` to
+the promote action with `require-publish-source-lock: "true"`. Consumers using
+floating `@v2` therefore get publish-side source-lock drift protection without
+copying resolver or promote YAML. The default npm path
 generates that requirement list from the downloaded `.tgz` payloads themselves:
 Buildchain reads `package/package.json` inside each tarball for the real scoped
 package name and version, computes npm-style `sha512-...` integrity over the
@@ -77,9 +82,9 @@ other package as `role: platform`. Consumer workflows therefore stay
 declarative and do not need their own artifact download or publish-evidence
 generation scripts.
 
-Products that publish a KFD-3 collaboration interface can keep that path
-declarative too. Pass the pre-build witness path and either artifact-side
-witness paths or the product-owned verify command into the wrapper:
+Products that publish KFD release trust evidence can keep that path declarative
+too. Pass KFD-1 self contract witnesses, KFD-2 public claim files, and KFD-3
+pre-build/artifact evidence into the wrapper:
 
 ```yaml
 jobs:
@@ -88,10 +93,14 @@ jobs:
     with:
       channel: alpha
       artifact-name: libnode
+      release-passport-kfd-1-witness-jsons: .buildchain/kfd-1/standard-contract.witness.json
+      release-passport-kfd-2-claim-jsons: .buildchain/kfd-2/release-claims.json
       release-passport-kfd-3-prebuild-witness-jsons: .buildchain/kfd-3/collaboration-interface.prebuild.json
       release-passport-kfd-3-artifact-verify-command: kungfu agent verify --json
 ```
 
-Buildchain forwards those declarations into `promote-buildchain-ref`, compares
-the declared shipped public surfaces with artifact-exposed public surfaces, and
-records the result under the KFD-provided `kfd-3` release passport section.
+Buildchain forwards those declarations into `promote-buildchain-ref`, verifies
+KFD-1 source/artifact contract surfaces, audits KFD-2 public release claims, and
+compares KFD-3 declared shipped public surfaces with artifact-exposed public
+surfaces. The release passport records the results under `kfd-1`, `kfd-2`, and
+the KFD-provided `kfd-3` section.
