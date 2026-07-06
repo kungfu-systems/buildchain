@@ -22,6 +22,13 @@ Release asset upload is gated before the matrix starts. Manual
 `v*` tag-triggered run so an invalid manual upload request cannot spend the
 three-platform build matrix and then fail at `gh release upload`.
 
+GitHub Release metadata is deterministic and tag-derived. Exact alpha tags such
+as `v2.6.2-alpha.0` are created or updated with `prerelease=true` and
+`make_latest=false`; exact stable tags such as `v2.6.1` are created or updated
+with `prerelease=false` and `make_latest=true`. The workflow uses
+`scripts/ensure-github-release.mjs` before asset upload instead of relying on
+GitHub's default latest-release heuristic.
+
 Each archive is accompanied by:
 
 - a platform manifest from the standalone binary builder;
