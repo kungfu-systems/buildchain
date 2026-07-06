@@ -16,8 +16,8 @@
   "state_ref": "buildchain/release-state/2-8-3-alpha-0",
   "state_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-state/v2.8.3-alpha.0.json",
   "evidence_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-evidence/v2.8.3-alpha.0/evidence.json",
-  "state": "finalizing",
-  "previous_state": "published",
+  "state": "complete",
+  "previous_state": "finalizing",
   "actor": "kungfu-origin",
   "run_id": "28807949956",
   "superseded_by": "",
@@ -38,5 +38,5 @@
     ".buildchain/release-evidence/v2.8.3-alpha.0/dist-tag-evidence.json"
   ],
   "created_at": "2026-07-06T16:47:09.600Z",
-  "updated_at": "2026-07-06T16:47:23.485Z"
+  "updated_at": "2026-07-06T16:47:27.610Z"
 }
