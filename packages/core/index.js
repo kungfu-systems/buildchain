@@ -105,6 +105,20 @@ export {
 } from "./artifact-passport.js";
 
 export {
+  BUILDCHAIN_CONTRACT_LOCK,
+  BUILDCHAIN_RUNTIME_CONTRACT_WORLD,
+  contractSummary,
+  createBuildchainContractLock,
+  createBuildchainContractWorld,
+  evaluateBuildchainContractLock,
+  finalizeBuildchainContractWorld,
+  readBuildchainContractLock,
+  readBuildchainContractWorld,
+  renderBuildchainContractDriftIssueBody,
+  sha256Json as sha256BuildchainContractJson,
+} from "./buildchain-contract.js";
+
+export {
   BUILDCHAIN_JSON_FORMATTING_POLICY,
   KFD1_RELEASE_GATE_CONTRACT,
   KFD1_WITNESS_SET_CONTRACT,

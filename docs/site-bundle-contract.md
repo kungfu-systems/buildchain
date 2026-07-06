@@ -17,12 +17,17 @@ dist/site/
   workflow-registry.json
   release-model.json
   artifact-schemas.json
+  buildchain-contract.json
   product-mechanism.json
   release-provenance.json
   agent-index.json
 ```
 
 `buildchain-site.json` is the top-level bundle entrypoint.
+`buildchain-contract.json` is the machine-readable Buildchain runtime contract
+world used by floating-ref contract locks. It records public workflow/action/CLI
+surfaces, compatibility digests, and audit digests for the files that implement
+those surfaces.
 
 ## npm Consumption
 
@@ -61,6 +66,7 @@ The P0 bundle includes:
 - workflow/action registry;
 - release model facts;
 - artifact and evidence schema index;
+- Buildchain runtime contract world for `@v2` floating-ref compatibility checks;
 - product mechanism manifest;
 - release provenance;
 - agent read order.
