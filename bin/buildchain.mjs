@@ -76,6 +76,7 @@ function usage() {
                                     [--build-summary-json <json-or-path>]
                                     [--platform-manifest-json <json-or-path>]...
                                     [--dist-tag-evidence-json <json-or-path>]
+                                    [--kfd-1-witness-json <json-or-path>]...
                                     [--release-extra-json <json-or-path>]
                                     [--publish-json <json-or-path>] [--output-dir <dir>] [--json]
   buildchain verify release-passport <file-or-url> [--json]
@@ -734,6 +735,7 @@ async function main(argv = process.argv.slice(2)) {
       buildSummaryJson: readFlag(collectArgs, "build-summary-json", ""),
       platformManifestJsons: readRepeatedFlag(collectArgs, "platform-manifest-json"),
       distTagEvidenceJson: readFlag(collectArgs, "dist-tag-evidence-json", ""),
+      kfd1WitnessJsons: readRepeatedFlag(collectArgs, "kfd-1-witness-json"),
       releaseJsonExtra: readFlag(collectArgs, "release-extra-json", ""),
       publishJson: readFlag(collectArgs, "publish-json", ""),
       workflow,

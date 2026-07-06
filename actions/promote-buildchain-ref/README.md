@@ -209,6 +209,11 @@ After a publish transaction reaches `complete`, the action generates the unified
 persists those files under `release-passport/` in the durable release-state ref.
 Set `release-passport-product-name` to record the consumer product name, for
 example `Libnode`, instead of the default `Buildchain`.
+Set `release-passport-kfd-1-witness-jsons` to newline-separated KFD-1
+contract-world witness JSON paths when released artifacts must prove
+byte-for-byte KFD contract surfaces. Buildchain imports the KFD metadata from
+`@kungfu-tech/kfd`, freezes the witness, verifies artifact bytes, and writes the
+result under the KFD-provided `kfd-1` passport section.
 When present, the passport includes the aggregate build summary, platform
 artifact manifests, npm publish evidence, dist-tag promotion evidence, the
 release-state ref, trusted publishing metadata, and the Buildchain transaction

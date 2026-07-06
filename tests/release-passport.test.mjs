@@ -14,6 +14,10 @@ import {
   explainReleasePassport,
   verifyReleasePassport,
 } from "../packages/core/release-passport.js";
+import {
+  resolveKfd1Metadata,
+  sha256File as sha256KfdFile,
+} from "../packages/core/kfd-gate.js";
 
 function tempDir(name) {
   return fs.mkdtempSync(path.join(os.tmpdir(), `buildchain-${name}-`));
@@ -23,6 +27,47 @@ function writeJson(filePath, value) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`);
   return filePath;
+}
+
+function createKfdWitnessFixture({ id = "generic-contracts", artifactPath = "config.schema.json", content = "{\"ok\":true}\n", expectedSha256 = "" } = {}) {
+  const cwd = tempDir("kfd-1-gate");
+  const assetsDir = path.join(cwd, "dist");
+  const artifactFile = path.join(assetsDir, artifactPath);
+  fs.mkdirSync(path.dirname(artifactFile), { recursive: true });
+  fs.writeFileSync(artifactFile, content);
+  const metadata = resolveKfd1Metadata();
+  const actualSha256 = sha256KfdFile(artifactFile);
+  const witnessPath = writeJson(path.join(cwd, "kfd-1-witness.json"), {
+    id,
+    standard: metadata.key,
+    source: {
+      repo: id.startsWith("kungfu") ? "kungfu-systems/kungfu" : "example/project",
+      ref: "a".repeat(40),
+    },
+    contractWorld: {
+      schemaId: metadata.schemaIds.contractWorld,
+      digest: `sha256:${actualSha256}`,
+    },
+    canonicalPolicy: {
+      path: "contracts/canonical-policy.json",
+      sha256: actualSha256,
+    },
+    registry: {
+      path: "contracts/registry.json",
+      sha256: actualSha256,
+    },
+    surfaces: [
+      {
+        name: id.startsWith("kungfu") ? "config.schema" : "generic.schema",
+        sourcePath: "src/contracts/config.schema.json",
+        sourceSha256: actualSha256,
+        artifactPath,
+        expectedSha256: expectedSha256 || actualSha256,
+        byteForByte: true,
+      },
+    ],
+  });
+  return { cwd, assetsDir, artifactFile, witnessPath, metadata, actualSha256 };
 }
 
 function defaultSurfaceImpactLedger() {
@@ -565,6 +610,91 @@ test("release passport records surface-aware minor impact for additive KFD regis
   assert.equal(passport.surfaceImpacts[1].id, "kfd-registry-schema");
   assert.equal(explanation.impact.versionImpact.final, "minor");
   assert.match(explanation.impact.surfaceImpacts[1].rationale, /registry\.kind/);
+});
+
+test("release passport records generic KFD-1 contract-world gate evidence from KFD metadata", async () => {
+  const { cwd, assetsDir, witnessPath, metadata, actualSha256 } = createKfdWitnessFixture();
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v1.2.3-alpha.0",
+    repository: "example/project",
+    sourceSha: "a".repeat(40),
+    assetsDir: path.relative(cwd, assetsDir),
+    outputDir: "release-passport",
+    releaseJsonExtra: JSON.stringify({
+      channel: "alpha",
+      targetRef: "alpha/v1/v1.2",
+    }),
+    kfd1WitnessJsons: [witnessPath],
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+
+  assert.equal(report.ok, true);
+  assert.ok(passport[metadata.key]);
+  assert.equal(passport[metadata.key].status, "passed");
+  assert.equal(passport[metadata.key].metadata.schemas.ids.witness, metadata.schemaIds.witness);
+  assert.equal(passport[metadata.key].metadata.package.name, "@kungfu-tech/kfd");
+  assert.equal(passport[metadata.key].formatting.name, "buildchain-release-evidence-json-v1");
+  assert.equal(passport[metadata.key].contractWorlds[0].artifactVerification.surfaces[0].actualSha256, actualSha256);
+  assert.equal(passport.evidence.kfd1, metadata.key);
+});
+
+test("release passport records Kungfu-shaped KFD-1 gate without invoking Kungfu SDK commands", async () => {
+  const { cwd, assetsDir, witnessPath, metadata } = createKfdWitnessFixture({
+    id: "kungfu-config",
+    artifactPath: "Contents/Resources/core/config.schema.json",
+    content: "{\"kungfu\":true}\n",
+  });
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v4.0.0-alpha.0",
+    repository: "kungfu-systems/kungfu",
+    productName: "Kungfu",
+    sourceSha: "b".repeat(40),
+    assetsDir: path.relative(cwd, assetsDir),
+    outputDir: "release-passport",
+    releaseJsonExtra: JSON.stringify({
+      channel: "alpha",
+      targetRef: "alpha/v4/v4.0",
+    }),
+    kfd1WitnessJsons: [witnessPath],
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const implementation = fs.readFileSync(path.resolve("packages/core/kfd-gate.js"), "utf8");
+
+  assert.equal(passport[metadata.key].contractWorlds[0].id, "kungfu-config");
+  assert.equal(passport[metadata.key].contractWorlds[0].artifactVerification.status, "passed");
+  assert.doesNotMatch(implementation, /kfsdk|kungfu\s+sdk|kungfu contract/i);
+});
+
+test("release passport fails closed when KFD-1 artifact digest mismatches the frozen witness", async () => {
+  const { cwd, assetsDir, witnessPath, metadata } = createKfdWitnessFixture({
+    expectedSha256: "0".repeat(64),
+  });
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v1.2.3-alpha.0",
+    repository: "example/project",
+    sourceSha: "c".repeat(40),
+    assetsDir: path.relative(cwd, assetsDir),
+    outputDir: "release-passport",
+    releaseJsonExtra: JSON.stringify({
+      channel: "alpha",
+      targetRef: "alpha/v1/v1.2",
+    }),
+    kfd1WitnessJsons: [witnessPath],
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+
+  assert.equal(passport[metadata.key].status, "failed");
+  assert.equal(report.ok, false);
+  assert.equal(report.issues.some((entry) => entry.code.includes(`${metadata.key}.contractWorlds`)), true);
+  assert.match(JSON.stringify(report.issues), /digest mismatch|artifact verification/i);
 });
 
 test("release passport requires surface impacts for production release passports", async () => {

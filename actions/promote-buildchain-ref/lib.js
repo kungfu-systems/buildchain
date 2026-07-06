@@ -42,6 +42,7 @@ const COMMIT_IDENTITY = {
 };
 const MAJOR_GATE_REF = "publish-gate/major";
 const LEGACY_MAJOR_GATE_REF = "major-gate";
+const GITHUB_ACTIONS_APP_ID = 15368;
 const RELEASE_LINE_RECOVERY_PATHS = [
   "actions/promote-buildchain-ref/",
   "scripts/release-line-policy.mjs",
@@ -1829,6 +1830,7 @@ async function collectAndPersistReleasePassport({
   buildSummaryPath,
   platformManifestPaths = [],
   impactJson = "",
+  kfd1WitnessJsons = [],
   enabled = true,
   releaseCandidateValidation = undefined,
 }) {
@@ -1882,6 +1884,7 @@ async function collectAndPersistReleasePassport({
     transactionJson: JSON.stringify(transactionJson),
     anchorManifestJson: anchorManifestPath && fs.existsSync(anchorManifestPath) ? anchorManifestPath : "",
     impactJson,
+    kfd1WitnessJsons,
     buildSummaryJson,
     platformManifestJsons: platformManifests,
     distTagEvidenceJson: existingJsonObjectFile(result.distTagEvidencePath),
@@ -2161,7 +2164,7 @@ async function ensureManagedChannelBranchProtection({
       branch,
       required_status_checks: {
         strict: true,
-        contexts: [requiredStatusCheck],
+        checks: [{ context: requiredStatusCheck, app_id: GITHUB_ACTIONS_APP_ID }],
       },
       enforce_admins: true,
       required_pull_request_reviews: {
@@ -2702,6 +2705,7 @@ async function promoteBuildchainRefs({
   releasePassportBuildSummaryPath = ".buildchain/artifacts/build-summary.json",
   releasePassportPlatformManifestPaths = "",
   releasePassportImpactJson = "",
+  releasePassportKfd1WitnessJsons = "",
   promoteOnlyReleaseCandidate = false,
   releaseCandidatePassportPath = ".buildchain/artifacts/release-candidate-passport.json",
   releaseCandidateBuildSummaryPath = ".buildchain/artifacts/build-summary.json",
@@ -3642,6 +3646,7 @@ async function promoteBuildchainRefs({
       buildSummaryPath: releasePassportBuildSummaryPath,
       platformManifestPaths: splitPathList(releasePassportPlatformManifestPaths),
       impactJson: releasePassportImpactJson,
+      kfd1WitnessJsons: splitPathList(releasePassportKfd1WitnessJsons),
       enabled: Boolean(releasePassport),
       releaseCandidateValidation,
     });

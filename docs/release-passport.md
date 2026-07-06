@@ -97,6 +97,7 @@ buildchain collect github-release \
   --platform-manifest-json .buildchain/artifacts/darwin-arm64/manifest.json \
   --platform-manifest-json .buildchain/artifacts/win32-x64/manifest.json \
   --dist-tag-evidence-json .buildchain/release-evidence/v2.2.0/dist-tag-evidence.json \
+  --kfd-1-witness-json .buildchain/kfd-1/contract-world.witness.json \
   --output-dir .buildchain/release-passport
 ```
 
@@ -106,6 +107,55 @@ dist-tag, registry, role, platform, and digest, so agents do not need to stitch
 npm facts back together from the lower-level evidence files.
 `buildSummary`, `platformArtifactManifests`, and `distTagPromotion` preserve the
 build and npm dist-tag evidence chain in the same passport.
+
+### KFD-1 contract-world release gate
+
+Buildchain can gate release artifacts with KFD-1 contract-world witnesses. This
+is a structured evidence protocol, not a request for consumers to shell out to
+the Kungfu SDK. The authority chain is:
+
+1. KFD owns the standard metadata and schema ids in `@kungfu-tech/kfd`.
+2. Buildchain imports that metadata, owns the JSON formatting policy, freezes
+   the pre-build witness, and independently verifies post-build artifact bytes.
+3. Consumers only pass declarative witness JSON plus the artifact payloads their
+   build already produced.
+
+The witness JSON names the contract world, the canonical serialization policy,
+and the release surfaces that must be byte-for-byte verified:
+
+```json
+{
+  "id": "kungfu-config",
+  "standard": "kfd-1",
+  "source": "kfd",
+  "contractWorld": {
+    "id": "kungfu-config",
+    "kind": "schema",
+    "name": "Kungfu config schema"
+  },
+  "canonicalPolicy": {
+    "format": "json",
+    "encoding": "utf-8",
+    "indent": 2,
+    "trailingNewline": true
+  },
+  "surfaces": [
+    {
+      "id": "kungfu-config-schema",
+      "artifactPath": "Contents/Resources/core/config.schema.json",
+      "expectedSha256": "..."
+    }
+  ]
+}
+```
+
+`collect github-release` writes the result under the KFD-provided top-level key
+currently named `kfd-1`. Each contract world records the frozen witness digest,
+the KFD package version, KFD schema ids, the Buildchain formatting policy, and
+the actual artifact digest observed after the build. Verification fails closed
+when the witness is missing required facts, an artifact cannot be found, or a
+post-build digest does not match the frozen witness.
+
 `impact.json` can be supplied with `--impact-json`. Production release
 passports (`release/*`) and major publish-gate passports require
 `surfaceImpacts[]`; alpha, local, and legacy passport contexts keep the field

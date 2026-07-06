@@ -5,3 +5,5 @@ onlyBuiltDependencies:
   - esbuild
 allowBuilds:
   esbuild: true
+minimumReleaseAgeExclude:
+  - '@kungfu-tech/kfd@1.0.0-alpha.2'

@@ -14,6 +14,7 @@
       "./diagnostics": "./packages/core/diagnostics.js",
       "./issue-reporting": "./packages/core/issue-reporting.js",
       "./logging": "./packages/core/logging.js",
+      "./kfd-gate": "./packages/core/kfd-gate.js",
       "./release-candidate": "./packages/core/release-candidate.js",
       "./release-passport": "./packages/core/release-passport.js",
       "./release-propagation": "./packages/core/release-propagation.js",
