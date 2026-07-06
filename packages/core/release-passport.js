@@ -4,6 +4,11 @@ import http from "node:http";
 import https from "node:https";
 import os from "node:os";
 import path from "node:path";
+import {
+  createKfd1ReleaseGateEvidence,
+  resolveKfd1Metadata,
+  validateKfd1ReleaseGateEvidence,
+} from "./kfd-gate.js";
 
 export const RELEASE_PASSPORT_CONTRACT = "kungfu-buildchain-release-passport";
 export const ARTIFACT_EVIDENCE_CONTRACT = "kungfu-buildchain-artifact-evidence";
@@ -621,6 +626,7 @@ export function createReleasePassport({
   publish = {},
   impact = undefined,
   workflow = {},
+  kfd1 = undefined,
 } = {}) {
   const normalizedTag = nonEmptyString(tag, "tag");
   const artifactEvidence = createArtifactEvidence({ assets, repository, tag: normalizedTag, sourceSha, workflow });
@@ -636,6 +642,8 @@ export function createReleasePassport({
     ? normalizeEvidenceDocument(distTagPromotionEvidence, "distTagPromotionEvidence")
     : undefined;
   const normalizedImpact = normalizeImpactLedger(impact, { tag: normalizedTag, line });
+  const kfd1Metadata = resolveKfd1Metadata();
+  const normalizedKfd1 = kfd1?.passportSection ? kfd1 : undefined;
   const publishArtifacts = normalizedPublishEvidence?.artifacts || [];
   const normalizedPublishSummary = normalizePublishSummary({
     packageSet: normalizedPackageSet,
@@ -736,6 +744,7 @@ export function createReleasePassport({
     ...(normalizedBuildSummary ? { buildSummary: normalizedBuildSummary } : {}),
     ...(normalizedPlatformArtifactManifests.length > 0 ? { platformArtifactManifests: normalizedPlatformArtifactManifests } : {}),
     ...(normalizedDistTagPromotionEvidence ? { distTagPromotion: normalizedDistTagPromotionEvidence } : {}),
+    ...(normalizedKfd1 ? { [normalizedKfd1.key || kfd1Metadata.key]: normalizedKfd1.passportSection } : {}),
     versionImpact: normalizedImpact.versionImpact,
     surfaceImpacts: normalizedImpact.surfaceImpacts,
     artifacts: [
@@ -771,6 +780,7 @@ export function createReleasePassport({
         artifactName: manifest.artifactName,
       })),
       distTagPromotionEvidence: normalizedDistTagPromotionEvidence?.path || "",
+      kfd1: normalizedKfd1 ? `${normalizedKfd1.key || kfd1Metadata.key}` : "",
       impact: impactPath,
       checkReport: checkReportPath,
       agentIndex: agentIndexPath,
@@ -804,6 +814,7 @@ export function collectGitHubReleasePassport({
   buildSummaryJson = "",
   platformManifestJsons = [],
   distTagEvidenceJson = "",
+  kfd1WitnessJsons = [],
   releaseJsonExtra = "",
   publishJson = "",
   workflow = {},
@@ -822,11 +833,15 @@ export function collectGitHubReleasePassport({
     .filter(Boolean)
     .map((manifestJson) => parseJsonInputWithMeta(manifestJson, undefined));
   const distTagEvidenceMeta = parseJsonInputWithMeta(distTagEvidenceJson, undefined);
+  const kfd1WitnessMetas = (kfd1WitnessJsons || [])
+    .filter(Boolean)
+    .map((witnessJson) => parseJsonInputWithMeta(witnessJson, undefined))
+    .filter((meta) => meta.value);
   const publish = parseJsonInput(publishJson, {});
   const assets = [
     ...(Array.isArray(release.assets) ? release.assets : []),
     ...(Array.isArray(assetsFromJson) ? assetsFromJson : []),
-    ...discoverAssetsFromDir(assetsDir),
+    ...discoverAssetsFromDir(assetsDir ? path.resolve(cwd, assetsDir) : ""),
   ];
   const resolvedTag = tag || release.tag_name || release.name || "";
   const resolvedOutputDir = path.resolve(cwd, outputDir);
@@ -834,6 +849,12 @@ export function collectGitHubReleasePassport({
   const artifactEvidence = createArtifactEvidence({ assets, repository, tag: resolvedTag, sourceSha, workflow });
   const impact = normalizeImpactLedger(impactMeta.value, { tag: resolvedTag, line, decision: "unknown" });
   const agentIndex = defaultAgentIndex({ tag: resolvedTag });
+  const kfd1 = createKfd1ReleaseGateEvidence({
+    cwd,
+    artifactRoot: assetsDir ? path.resolve(cwd, assetsDir) : "",
+    artifacts: assets,
+    witnesses: kfd1WitnessMetas.map((meta) => meta.value),
+  });
   const passport = createReleasePassport({
     cwd,
     repository,
@@ -870,6 +891,7 @@ export function collectGitHubReleasePassport({
     release: releaseExtra,
     publish,
     impact,
+    kfd1,
     publishEvidencePath: publishEvidenceMeta.path ? path.relative(resolvedOutputDir, publishEvidenceMeta.path).split(path.sep).join("/") : "",
     transactionStatePath: transactionMeta.path ? path.relative(resolvedOutputDir, transactionMeta.path).split(path.sep).join("/") : "",
     workflow,
@@ -1170,6 +1192,8 @@ export function createReleaseCheckReport({
   const declaredFinalImpact = normalizeImpactLevel(impact?.versionImpact?.final || impact?.classification);
   const computedFinalImpact = highestImpactLevel(surfaceImpacts.map((entry) => entry.impact));
   const requiredSurfaceImpacts = surfaceImpactRequirement({ passport, impact });
+  const kfd1Metadata = resolveKfd1Metadata();
+  issues.push(...validateKfd1ReleaseGateEvidence(passport?.[kfd1Metadata.key], { metadata: kfd1Metadata }));
   if (requiredSurfaceImpacts.required && surfaceImpacts.length === 0) {
     issues.push(issue("error", "impact.surfaceImpacts.required", "surfaceImpacts[] is required for this release passport type", requiredSurfaceImpacts));
   }

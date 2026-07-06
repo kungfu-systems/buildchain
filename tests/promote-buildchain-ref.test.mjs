@@ -4810,7 +4810,7 @@ test("strict alpha promotion protects created dev branches with one required app
   assert.ok(devProtection);
   assert.deepEqual(devProtection.required_status_checks, {
     strict: true,
-    contexts: ["Build"],
+    checks: [{ context: "Build", app_id: 15368 }],
   });
   assert.deepEqual(devProtection.required_pull_request_reviews, {
     dismiss_stale_reviews: false,

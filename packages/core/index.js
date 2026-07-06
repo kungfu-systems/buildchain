@@ -105,6 +105,17 @@ export {
 } from "./artifact-passport.js";
 
 export {
+  BUILDCHAIN_JSON_FORMATTING_POLICY,
+  KFD1_RELEASE_GATE_CONTRACT,
+  KFD1_WITNESS_SET_CONTRACT,
+  createKfd1ReleaseGateEvidence,
+  normalizeKfd1ContractWorldWitness,
+  resolveKfd1Metadata,
+  sha256Json as sha256KfdJson,
+  validateKfd1ReleaseGateEvidence,
+} from "./kfd-gate.js";
+
+export {
   AGENT_INDEX_CONTRACT,
   ARTIFACT_EVIDENCE_CONTRACT,
   IMPACT_LEDGER_CONTRACT,
