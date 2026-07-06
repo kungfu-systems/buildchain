@@ -351,6 +351,8 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /publish-package-set-order:/);
   assert.match(workflow, /publish-package-main:/);
   assert.match(workflow, /release-passport-product-name:/);
+  assert.match(workflow, /release-passport-impact-json:/);
+  assert.match(workflow, /release-passport-impact-json: \$\{\{ inputs\.release-passport-impact-json \}\}/);
   assert.match(workflow, /BUILDCHAIN_ARTIFACT_NAME: \$\{\{ inputs\.artifact-name \}\}/);
   assert.match(workflow, /BUILDCHAIN_ARTIFACT_PATTERNS: \$\{\{ inputs\.artifact-patterns \}\}/);
   assert.match(workflow, /BUILDCHAIN_RC_WORKFLOW_FILE: \$\{\{ inputs\.release-candidate-workflow-file \}\}/);
@@ -863,6 +865,9 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(workflow, /release-candidate-workflow-file: build-surface-fixture\.yml/);
   assert.match(workflow, /release-candidate-workflow-name: Build Surface Fixture/);
   assert.match(workflow, /publish-required-artifacts-json: "\[\]"/);
+  assert.match(workflow, /release-passport-impact-json: >-/);
+  assert.match(workflow, /"surfaceImpacts":\[/);
+  assert.match(workflow, /"id":"buildchain-runtime"/);
   assert.doesNotMatch(workflow, /run: node scripts\/release-candidate-resolver\.mjs/);
   assert.doesNotMatch(workflow, /uses: \.\/actions\/promote-buildchain-ref/);
 });

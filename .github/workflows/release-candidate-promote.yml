@@ -127,6 +127,11 @@ on:
         default: ""
         type: string
         required: false
+      release-passport-impact-json:
+        description: "Surface-aware release impact JSON or path passed to the release passport collector"
+        default: ""
+        type: string
+        required: false
       release-passport-platform-manifest-paths:
         description: "Optional platform manifest paths for release passport; defaults to downloaded PR-stage payload manifests"
         default: ""
@@ -349,6 +354,7 @@ jobs:
           release-passport-product-name: ${{ inputs.release-passport-product-name || inputs.artifact-name }}
           release-passport-build-summary-path: ${{ steps.rc.outputs.release-candidate-build-summary-path }}
           release-passport-platform-manifest-paths: ${{ inputs.release-passport-platform-manifest-paths || steps.rc.outputs.release-candidate-platform-manifest-paths }}
+          release-passport-impact-json: ${{ inputs.release-passport-impact-json }}
           promote-only-release-candidate: "true"
           release-candidate-passport-path: ${{ steps.rc.outputs.release-candidate-passport-path }}
           release-candidate-build-summary-path: ${{ steps.rc.outputs.release-candidate-build-summary-path }}
