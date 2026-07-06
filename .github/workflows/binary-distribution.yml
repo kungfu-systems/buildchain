@@ -272,9 +272,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
+          release_target="$(git rev-parse "$RELEASE_TAG^{commit}")"
           node scripts/ensure-github-release.mjs \
             --repository "${{ github.repository }}" \
             --tag "$RELEASE_TAG" \
             --title "$RELEASE_TAG" \
-            --notes "Buildchain release passport assets for $RELEASE_TAG."
+            --notes "Buildchain release passport assets for $RELEASE_TAG." \
+            --target "$release_target"
           gh release upload "$RELEASE_TAG" dist/binary/* .buildchain/release-passport/* --clobber
