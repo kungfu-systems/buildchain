@@ -119,7 +119,15 @@ function sourceMetadata({ root, sourceSha = "" } = {}) {
     repo: "kungfu-systems/buildchain",
     ref: sourceSha,
     package: pkg.name || "@kungfu-tech/buildchain",
-    version: pkg.version || "",
+  };
+}
+
+function runtimeContractSummary({ root = process.cwd() } = {}) {
+  const contractWorld = createBuildchainContractWorld({ root });
+  return {
+    contract: contractWorld.contract,
+    compatibilityDigest: contractWorld.compatibilityDigest,
+    majorLine: contractWorld.majorLine,
   };
 }
 
@@ -275,7 +283,6 @@ export function createBuildchainKfdSurfaceRegistry({ root = process.cwd() } = {}
 }
 
 export function createBuildchainKfdClaimRegistry({ root = process.cwd(), sourceSha = "" } = {}) {
-  const contractWorld = createBuildchainContractWorld({ root });
   return {
     schemaVersion: 1,
     contract: BUILDCHAIN_KFD_CLAIM_REGISTRY_CONTRACT,
@@ -288,12 +295,7 @@ export function createBuildchainKfdClaimRegistry({ root = process.cwd(), sourceS
       ...sourceMetadata({ root, sourceSha }),
       sourceModule: "packages/core/buildchain-kfd-claims.js",
     },
-    runtimeContract: {
-      contract: contractWorld.contract,
-      contractDigest: contractWorld.contractDigest,
-      compatibilityDigest: contractWorld.compatibilityDigest,
-      majorLine: contractWorld.majorLine,
-    },
+    runtimeContract: runtimeContractSummary({ root }),
     publicClaims: createBuildchainPublicClaimDefinitions(),
     collaborationSurfaces: createBuildchainKfdSurfaceRegistry({ root }),
   };

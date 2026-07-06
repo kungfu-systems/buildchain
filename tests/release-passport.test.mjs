@@ -20,6 +20,7 @@ import {
   resolveKfd3Metadata,
   sha256File as sha256KfdFile,
 } from "../packages/core/kfd-gate.js";
+import { createBuildchainKfdClaimRegistry } from "../packages/core/buildchain-kfd-claims.js";
 import { generateBuildchainKfdWitnesses } from "../scripts/generate-buildchain-kfd-witnesses.mjs";
 
 function tempDir(name) {
@@ -1190,6 +1191,30 @@ test("Buildchain self KFD claims generate enforceable release passport evidence"
   assert.equal(kfd2.claims.every((claim) => claim.missingBindings.length === 0), true);
   assert.ok(kfd3.collaborationInterfaces[0].declaredSurfaces.some((surface) => surface.id === "site:dist/site/kfd-claims.json"));
   assert.ok(kfd3.collaborationInterfaces[0].declaredSurfaces.some((surface) => surface.id === "export:./buildchain-kfd-claims"));
+});
+
+test("Buildchain source KFD claim registry is stable across semver version-state bumps", () => {
+  const cwd = tempDir("buildchain-self-kfd-stable-claims");
+  writeJson(path.join(cwd, "package.json"), {
+    name: "@kungfu-tech/buildchain",
+    version: "2.8.2-alpha.0",
+    type: "module",
+    repository: { url: "https://github.com/kungfu-systems/buildchain" },
+    exports: {
+      ".": "./packages/core/index.js",
+      "./buildchain-kfd-claims": "./packages/core/buildchain-kfd-claims.js",
+      "./site/kfd-claims.json": "./dist/site/kfd-claims.json",
+    },
+  });
+  const before = createBuildchainKfdClaimRegistry({ root: cwd });
+  const packageJsonPath = path.join(cwd, "package.json");
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+  packageJson.version = "2.8.2-alpha.1";
+  writeJson(packageJsonPath, packageJson);
+  const after = createBuildchainKfdClaimRegistry({ root: cwd });
+  assert.deepEqual(after, before);
+  assert.equal(before.source.version, undefined);
+  assert.equal(before.runtimeContract.contractDigest, undefined);
 });
 
 test("release passport fails closed when KFD self-verification artifact exposes undeclared package or site surfaces", async () => {

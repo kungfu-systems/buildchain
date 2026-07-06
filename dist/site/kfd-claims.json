@@ -10,12 +10,10 @@
     "repo": "kungfu-systems/buildchain",
     "ref": "",
     "package": "@kungfu-tech/buildchain",
-    "version": "2.8.2-alpha.0",
     "sourceModule": "packages/core/buildchain-kfd-claims.js"
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "contractDigest": "sha256:b5aaefc699d5c9a55aa9241f3525b27e109ab06d9cfebf0fedc2c11968a4145c",
     "compatibilityDigest": "sha256:36421b592a782decbfe31a7d8d42d70ce1100a56a2c4f4a0ccc21f0617dc72bf",
     "majorLine": "v2"
   },

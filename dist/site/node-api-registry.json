@@ -74,7 +74,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-kfd-claims",
       "export": "./buildchain-kfd-claims",
       "target": "./packages/core/buildchain-kfd-claims.js",
-      "digest": "sha256:8ccb425b1cb7d82433be80b585d203d028489074dad77fb86e052fe9e99d2acf"
+      "digest": "sha256:03e866a7cf7b9d84c71c2353a0865b301a8656dcbaeb67ea47813897f44a0bbc"
     }
   ],
   "docs": [
