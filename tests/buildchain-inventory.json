@@ -71,7 +71,7 @@
     "buildchain.toml lifecycle.verify",
     "pnpm install --frozen-lockfile",
     "pnpm run check",
-    "GitHub Verify workflow",
+    "GitHub Verify workflow backed by buildchain.toml lifecycle.install and lifecycle.verify",
     "Build Surface Fixture workflow",
     "manual Self-hosted Runner Smoke workflow"
   ],

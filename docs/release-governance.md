@@ -250,6 +250,23 @@ After each merge, the next PR is re-evaluated before it can move the protected
 dev branch. This prevents one merge from silently making the next candidate
 stale or conflicting.
 
+The required check should be the `check` job. Repositories can keep that job
+name stable while changing the actual verification command declaratively in
+`buildchain.toml`:
+
+```toml
+[lifecycle.install]
+command = "cargo fetch --locked"
+
+[lifecycle.verify]
+command = "cargo test --workspace --locked"
+```
+
+Consumers that want Buildchain to own the check wrapper can call
+`.github/workflows/check.yml@v2`. The wrapper runs the declared
+`lifecycle.install` and `lifecycle.verify` stages and fails the `check` job when
+either declaration is missing or the command exits non-zero.
+
 Typical consumer wrapper:
 
 ```yaml
@@ -273,8 +290,8 @@ jobs:
       checks: read
       statuses: read
     with:
-      target-branch: dev/v2/v2.5
-      required-status-checks: Verify
+      target-branch: dev/v2/v2.6
+      required-status-checks: check
       ready-label: ready
       block-labels: blocked,do-not-merge
       max-merges: 1
@@ -315,7 +332,6 @@ jobs:
   patrol:
     uses: kungfu-systems/buildchain/.github/workflows/patrol-daily.yml@v2
     with:
-      target-branch: dev/v2/v2.5
       dry-run: false
       max-actions: 1
 ```
@@ -327,14 +343,14 @@ jobs:
   patrol:
     uses: kungfu-systems/buildchain/.github/workflows/patrol-weekly.yml@v2
     with:
-      target-branch: dev/v2/v2.5
       dry-run: true
 ```
 
-All three wrappers call the same underlying Buildchain patrol protocol, but the
-separate workflow names keep consumer schedules readable and stable. Buildchain
-can add new checks behind the cadence wrappers without forcing every consumer
-repository to rewrite its schedule YAML.
+All three wrappers default to the `v2` floating Buildchain runtime. When
+`target-branch` is omitted, the caller's current/default branch selects the
+active semver dev line, so consumers do not pin patrol to a stale minor branch.
+The separate workflow names keep consumer schedules readable and stable while
+Buildchain adds new checks behind the cadence wrappers.
 
 ## Package-Manager Adapters
 

@@ -25,8 +25,7 @@ jobs:
   patrol:
     uses: ./.github/workflows/patrol-daily.yml
     with:
-      buildchain-ref: ${{ inputs.buildchain-ref || github.sha }}
-      target-branch: dev/v2/v2.5
+      buildchain-ref: ${{ inputs.buildchain-ref || 'v2' }}
       dry-run: ${{ inputs.dry-run || false }}
       max-actions: 1
     secrets:
