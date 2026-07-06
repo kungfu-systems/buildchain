@@ -208,8 +208,13 @@ For Buildchain's own releases, public release claims are not authored in prose
 inside the workflow. The source registry is
 `packages/core/buildchain-kfd-claims.js`, published as
 `dist/site/kfd-claims.json` and exported as
-`@kungfu-tech/buildchain/buildchain-kfd-claims`. During Buildchain promotion,
-`scripts/generate-buildchain-kfd-witnesses.mjs` generates:
+`@kungfu-tech/buildchain/buildchain-kfd-claims`. That registry is the
+version-invariant source of public claims and collaboration surfaces: it does
+not store the exact release version, promotion SHA, or exact runtime contract
+digest. Those run-specific facts belong in the release passport and generated
+witnesses. During Buildchain promotion,
+`scripts/generate-buildchain-kfd-witnesses.mjs` binds the source registry to the
+current source/artifact hashes and generates:
 
 - a KFD-1 self contract-world witness for the packaged docs, schemas, workflows,
   actions, Node exports, and site-consumption facts;
@@ -238,7 +243,9 @@ For Buildchain itself, the declared interface starts in
 registry enumerates public human/agent surfaces across manuals, schema and
 standard metadata, package exports, site-consumption contracts, workflows, and
 actions. `dist/site/kfd-claims.json` is the packaged machine-readable form used
-by downstream sites and by Buildchain's own release passport.
+by downstream sites and by Buildchain's own release passport. Exact release
+version/SHA binding is deliberately deferred to the promotion witness, so the
+source registry can remain stable across semver version-state bumps.
 
 The product remains the fact source. Before build/publish, the product writes a
 pre-build witness:

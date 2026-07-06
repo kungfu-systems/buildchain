@@ -41,7 +41,7 @@
       "path": "docs/release-passport.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:f82ab7761c24ebba232da07fde74f9a35d91ac4835c61f1e7efc7ee1967fe894"
+      "digest": "sha256:4d69798646adb84c6d193b1f32e7dc50e389db8932e63e9cb71489b6015e0333"
     },
     {
       "id": "release-propagation",
