@@ -16,8 +16,8 @@
   "state_ref": "buildchain/release-state/2-8-0",
   "state_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-state/v2.8.0.json",
   "evidence_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-evidence/v2.8.0/evidence.json",
-  "state": "published",
-  "previous_state": "publishing",
+  "state": "finalizing",
+  "previous_state": "published",
   "actor": "dongkeren",
   "run_id": "28780056170",
   "superseded_by": "",
@@ -38,5 +38,5 @@
     ".buildchain/release-evidence/v2.8.0/dist-tag-evidence.json"
   ],
   "created_at": "2026-07-06T09:02:12.366Z",
-  "updated_at": "2026-07-06T09:02:21.758Z"
+  "updated_at": "2026-07-06T09:02:23.756Z"
 }
