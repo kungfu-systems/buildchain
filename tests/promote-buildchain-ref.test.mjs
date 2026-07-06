@@ -707,16 +707,17 @@ test("selectAlphaTag creates ABV-style prerelease tags for the minor line", () =
       refs: [
         { ref: "refs/tags/v1.0.0-alpha.0", object: { sha: SHA } },
         { ref: "refs/tags/v1.0.1-alpha.0", object: { sha: OTHER_SHA } },
+        { ref: "refs/tags/v1.0.1-alpha.1", object: { sha: "b".repeat(40) } },
       ],
       releasePrefix: "v1.0",
       sha: SHA,
       patchAfterRelease: 1,
     }),
     {
-      tag: "v1.0.1-alpha.0",
+      tag: "v1.0.1-alpha.1",
       patch: 1,
-      prerelease: 0,
-      sha: OTHER_SHA,
+      prerelease: 1,
+      sha: "b".repeat(40),
       exists: true,
     },
   );
