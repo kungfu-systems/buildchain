@@ -61,6 +61,7 @@ jobs:
       artifact-name: libnode-shaped
       release-candidate-workflow-file: build-surface-fixture.yml
       release-candidate-workflow-name: Build Surface Fixture
+      github-release: true
       required-status-check: check
       required-artifact-count: 0
       publish-required-artifacts-json: "[]"

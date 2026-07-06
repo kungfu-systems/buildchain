@@ -367,6 +367,9 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /publish-dist-tag:/);
   assert.match(workflow, /publish-package-set-order:/);
   assert.match(workflow, /publish-package-main:/);
+  assert.match(workflow, /github-release:/);
+  assert.match(workflow, /github-release-title:/);
+  assert.match(workflow, /github-release-notes:/);
   assert.match(workflow, /release-passport-product-name:/);
   assert.match(workflow, /release-passport-impact-json:/);
   assert.match(workflow, /release-passport-impact-json: \$\{\{ inputs\.release-passport-impact-json \}\}/);
@@ -404,6 +407,11 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /publish-package-set-order: \$\{\{ inputs\.publish-package-set-order \}\}/);
   assert.match(workflow, /release-passport-platform-manifest-paths: \$\{\{ inputs\.release-passport-platform-manifest-paths \|\| steps\.rc\.outputs\.release-candidate-platform-manifest-paths \}\}/);
   assert.match(workflow, /Ensure publish-gate ref locks promotion commit/);
+  assert.match(workflow, /id: promote/);
+  assert.match(workflow, /Publish GitHub Release evidence/);
+  assert.match(workflow, /scripts\/ensure-github-release\.mjs/);
+  assert.match(workflow, /gh release upload "\$\{RELEASE_TAG\}" "\$\{upload_args\[@\]\}" --clobber/);
+  assert.match(workflow, /Defer GitHub Release evidence/);
   assert.doesNotMatch(workflow, /\.github\/workflows\/\.build\.yml/);
   assert.doesNotMatch(workflow, /build-native:/);
   assert.doesNotMatch(workflow, /build-linux-container:/);
@@ -942,6 +950,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(workflow, /package-manager: pnpm/);
   assert.match(workflow, /release-candidate-workflow-file: build-surface-fixture\.yml/);
   assert.match(workflow, /release-candidate-workflow-name: Build Surface Fixture/);
+  assert.match(workflow, /github-release: true/);
   assert.match(workflow, /publish-required-artifacts-json: "\[\]"/);
   assert.match(workflow, /release-passport-impact-json: >-/);
   assert.match(workflow, /"surfaceImpacts":\[/);
