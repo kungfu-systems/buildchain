@@ -249,9 +249,11 @@ The generated release passport records the result under the KFD-provided
 top-level key currently named `kfd-3`. The section includes the KFD package
 version, schema ids/paths, pre-build witness digest, artifact witness digest,
 declared/exposed surface counts, missing declared shipped surfaces, and
-unclassified artifact public surfaces. It also records the KFD-2 trust proof
-view of that evidence: `releaseStatus`, witness file hashes and canonical
-hashes, declared capability verification, reverse audit boundary, residual
+unclassified artifact public surfaces. Buildchain also projects the same
+collaboration-interface evidence into the top-level `kfd-2` audit as a
+machine-readable `trustProof` object on the generated `kfd-3:*` public claim.
+That proof carries `releaseStatus`, witness file hashes and canonical hashes,
+declared capability verification, reverse audit result and boundary, residual
 risk, and responsibility state.
 
 The trust proof makes the strongest claim only when the witnesses justify it:
