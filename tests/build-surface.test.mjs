@@ -1713,6 +1713,9 @@ test("buildchain semver version state includes generated site contract version",
       "dist/site/buildchain-contract.json#product.version",
     ],
   );
+  assert.ok(
+    summary.lifecycleStages.some((stage) => stage.name === "version-state"),
+  );
 });
 
 test("libnode-shaped fixture declares the build lifecycle contract", () => {

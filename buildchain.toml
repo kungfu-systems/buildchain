@@ -21,5 +21,8 @@ commands = [
   "corepack pnpm@11.7.0 run check",
 ]
 
+[lifecycle.version-state]
+command = "node scripts/generate-site-bundle.mjs"
+
 [lifecycle.publish]
 command = "node scripts/npm-publish-transaction.mjs"
