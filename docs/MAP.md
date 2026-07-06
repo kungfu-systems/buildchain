@@ -12,6 +12,27 @@ running artifact), *use* (consume / extend) - and a **status**:
 - `to write` - planned; the material exists but is not yet a single doc.
 - `retired` - intentionally not part of the active Buildchain v2 surface.
 
+## Capability Coverage
+
+This package should be usable by an agent from the npm artifact alone. The
+machine-readable `dist/site/` bundle is the first fact source; the Markdown
+manuals explain those facts and give operator examples.
+
+| Capability | Machine-readable entry | Manual entry |
+| --- | --- | --- |
+| KFD-1 / KFD-2 / KFD-3 release-passport gates | `dist/site/kfd-claims.json`, `dist/site/buildchain-contract.json`, `dist/site/artifact-schemas.json` | [`release-passport.md`](release-passport.md) |
+| Floating `@v2` drift detection and compatibility issues | `dist/site/buildchain-contract.json` | [`reusable-build-surface.md`](reusable-build-surface.md#floating-ref-contract-lock) |
+| npm publish transactions, evidence, dist-tags, and recovery | `dist/site/release-model.json`, `dist/site/artifact-schemas.json` | [`publish-transaction.md`](publish-transaction.md) |
+| GitHub Release passport/evidence publication | `dist/site/release-model.json`, `dist/site/artifact-schemas.json` | [`release-governance.md`](release-governance.md), [`release-candidate.md`](release-candidate.md) |
+| release propagation for package/site chains | `dist/site/release-model.json` | [`release-propagation.md`](release-propagation.md) |
+| Buildchain CLI manual | `dist/site/cli-registry.json`, `dist/site/manual-registry.json` | [`cli.md`](cli.md) |
+| Node API / package exports | `dist/site/node-api-registry.json`, `dist/site/release-provenance.json` | [`cli.md`](cli.md#node-api-and-package-exports) |
+
+`dist/site/kfd-claims.json` is generated from
+`packages/core/buildchain-kfd-claims.js`. Treat that module and JSON file as the
+source claim registry; this map and the manuals explain those claims but do not
+replace them.
+
 ## Map
 
 | Your question | Document | Plane | Status |

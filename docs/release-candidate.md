@@ -82,13 +82,13 @@ other package as `role: platform`. Consumer workflows therefore stay
 declarative and do not need their own artifact download or publish-evidence
 generation scripts.
 
-When `github-release: true`, the wrapper also owns the GitHub Release side of
-the publish model. Once the release transaction is complete, it creates or
-updates the exact-tag GitHub Release, applies prerelease/latest metadata from
-the semver tag, and uploads the publish evidence file together with the
-generated release passport assets. This keeps npm/registry publication,
-Buildchain release passport persistence, and `release.published` propagation in
-one declarative reusable workflow.
+When `github-release: true`, the wrapper forwards GitHub Release publication to
+the underlying `promote-buildchain-ref` semver model. Once the release
+transaction is complete, the action creates or updates the exact-tag GitHub
+Release, applies prerelease/latest metadata from the semver tag, and uploads the
+publish evidence file together with the generated release passport assets. This
+keeps npm/registry publication, Buildchain release passport persistence, and
+`release.published` propagation in one declarative reusable workflow.
 
 Products that publish KFD release trust evidence can keep that path declarative
 too. Pass KFD-1 self contract witnesses, KFD-2 public claim files, and KFD-3

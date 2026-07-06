@@ -203,6 +203,14 @@ The action outputs `transaction-id`, `transaction-state`,
 `release-passport/*` files have been uploaded into that recovery ref.
 `finalization-needed=true` means publish evidence is valid, but protected branch
 or ref finalization needs a later promotion run.
+Set `github-release: "true"` when the semver promotion should also publish the
+exact-tag GitHub Release. After the release transaction reaches `complete` and
+`finalization-needed` is false, the action creates or updates the GitHub Release
+for `transaction-exact-tag`, applies deterministic semver metadata
+(`prerelease=true` and `make_latest=false` for prerelease tags, latest for stable
+tags), and uploads the publish evidence file plus generated release passport
+assets. If the transaction is not complete yet, the action defers GitHub Release
+publication to the next idempotent promotion run.
 
 After a publish transaction reaches `complete`, the action generates the unified
 `buildchain-release-passport` in `.buildchain/release-passport` by default and

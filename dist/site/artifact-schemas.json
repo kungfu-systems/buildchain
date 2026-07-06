@@ -16,10 +16,13 @@
     "buildchain-site.json",
     "site-manifest.json",
     "cli-registry.json",
+    "manual-registry.json",
+    "node-api-registry.json",
     "workflow-registry.json",
     "release-model.json",
     "artifact-schemas.json",
     "buildchain-contract.json",
+    "kfd-claims.json",
     "product-mechanism.json",
     "release-provenance.json",
     "agent-index.json"

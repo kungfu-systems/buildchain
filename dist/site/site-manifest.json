@@ -17,121 +17,140 @@
       "title": "Install and verify Buildchain",
       "path": "docs/install.md",
       "plane": "use",
-      "exists": true
+      "exists": true,
+      "digest": "sha256:34bc161a26595f95684694d341616e47bfd65b0c51a63225e68a575179636175"
     },
     {
       "id": "release-passport",
       "title": "Release Passport protocol",
       "path": "docs/release-passport.md",
       "plane": "verify",
-      "exists": true
+      "exists": true,
+      "digest": "sha256:f82ab7761c24ebba232da07fde74f9a35d91ac4835c61f1e7efc7ee1967fe894"
     },
     {
       "id": "release-propagation",
       "title": "Release propagation",
       "path": "docs/release-propagation.md",
       "plane": "use",
-      "exists": true
+      "exists": true,
+      "digest": "sha256:10c2bb3bc4ebd692c49fa55f286b77ed3e8caa1526298ad910c00fc80251a893"
     },
     {
       "id": "binary-distribution",
       "title": "Binary distribution contract",
       "path": "docs/binary-distribution.md",
       "plane": "verify",
-      "exists": true
+      "exists": true,
+      "digest": "sha256:36899140a9b2e9ce1565ed41f3d64f73a8829fad3d59a04b9498d9479c85c4be"
     },
     {
       "id": "toolkit-observability",
       "title": "Toolkit observability",
       "path": "docs/toolkit-observability.md",
       "plane": "use",
-      "exists": true
+      "exists": true,
+      "digest": "sha256:239949a75ca81b6002a2e148f7028402dbd98c00e246acd8d0955855781206a1"
     },
     {
       "id": "site-bundle-contract",
       "title": "Site bundle contract",
       "path": "docs/site-bundle-contract.md",
       "plane": "use",
-      "exists": true
+      "exists": true,
+      "digest": "sha256:e6b4f2e76c713063ff750b0a8d6d96595addae2fd48f913744dc86559add0641"
     },
     {
       "id": "product-mechanism",
       "title": "Product mechanism",
       "path": "docs/product-mechanism.md",
       "plane": "why",
-      "exists": true
+      "exists": true,
+      "digest": "sha256:da50022f96f8876bb275a7832190cb1f6ab0fa6aab9d045dda924a7abddc3edf"
     },
     {
       "id": "cli",
       "title": "CLI and npm package",
       "path": "docs/cli.md",
       "plane": "use",
-      "exists": true
+      "exists": true,
+      "digest": "sha256:a8a348181d6419b746e863d1cacc9d6a91aa6ac5cc2b60819843d44487957c49"
     },
     {
       "id": "lifecycle-protocol",
       "title": "Lifecycle protocol",
       "path": "docs/lifecycle-protocol.md",
       "plane": "use",
-      "exists": true
+      "exists": true,
+      "digest": "sha256:02e1be97935c0d9520ea22e8ef0dc61d9b860c347f07127074600cdca02713ce"
     },
     {
       "id": "reusable-build-surface",
       "title": "Reusable build surface",
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
-      "exists": true
+      "exists": true,
+      "digest": "sha256:e5b2222fddd0624b6aff1c999bb156df26eebbd7b365ec65ef3622611dc055ea"
     },
     {
       "id": "publish-transaction",
       "title": "Publish transaction",
       "path": "docs/publish-transaction.md",
       "plane": "verify",
-      "exists": true
+      "exists": true,
+      "digest": "sha256:dd45cf98f0847e3968f150a09bed84aa1f59cb2687ac988e9519f08dc9c91877"
     },
     {
       "id": "release-governance",
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "exists": true
+      "exists": true,
+      "digest": "sha256:8aab1af617e511011974cb63f04240463fc99c427cb3b29e5f5d385c88620464"
     },
     {
       "id": "release-flow",
       "title": "Release flow",
       "path": "docs/release-flow.md",
       "plane": "verify",
-      "exists": true
+      "exists": true,
+      "digest": "sha256:0a2f46501a64905067cc5872b45ac4824f9e632d59bfdfb2f6a794dfc5f959ea"
     },
     {
       "id": "versioning",
       "title": "Versioning",
       "path": "docs/versioning.md",
       "plane": "why",
-      "exists": true
+      "exists": true,
+      "digest": "sha256:77b92fc979cc100beab3f8a13cd791dea992737b986ace505104edff4810a296"
     },
     {
       "id": "web-surface-deployments",
       "title": "Web surface deployments",
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
-      "exists": true
+      "exists": true,
+      "digest": "sha256:614aea65d745e8978d8329545753adf13b8914f84fe35b0148abbd1aff0c0dc2"
     },
     {
       "id": "infra-contract",
       "title": "Infra Contract",
       "path": "docs/infra-contract.md",
       "plane": "use",
-      "exists": true
+      "exists": true,
+      "digest": "sha256:7826e8c70ac2d90ddd8d4e38bcdd1bcfa36eef5106431d7ad94b2fe9c8d3d5dc"
     }
   ],
   "facts": [
     "cli-registry.json",
+    "manual-registry.json",
+    "node-api-registry.json",
     "workflow-registry.json",
     "release-model.json",
     "artifact-schemas.json",
     "product-mechanism.json",
     "release-provenance.json",
+    "kfd-claims.json",
     "agent-index.json"
   ]
 }

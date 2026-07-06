@@ -374,13 +374,17 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-passport-impact-json:/);
   assert.match(workflow, /release-passport-impact-json: \$\{\{ inputs\.release-passport-impact-json \}\}/);
   assert.match(workflow, /release-passport-kfd-1-witness-jsons:/);
-  assert.match(workflow, /release-passport-kfd-1-witness-jsons: \$\{\{ inputs\.release-passport-kfd-1-witness-jsons \}\}/);
+  assert.match(workflow, /release-passport-kfd-1-witness-jsons: \$\{\{ inputs\.release-passport-kfd-1-witness-jsons \|\| steps\.buildchain-self-kfd\.outputs\.kfd-1-witness-jsons \}\}/);
   assert.match(workflow, /release-passport-kfd-2-claim-jsons:/);
-  assert.match(workflow, /release-passport-kfd-2-claim-jsons: \$\{\{ inputs\.release-passport-kfd-2-claim-jsons \}\}/);
+  assert.match(workflow, /release-passport-kfd-2-claim-jsons: \$\{\{ inputs\.release-passport-kfd-2-claim-jsons \|\| steps\.buildchain-self-kfd\.outputs\.kfd-2-claim-jsons \}\}/);
   assert.match(workflow, /release-passport-kfd-3-prebuild-witness-jsons:/);
-  assert.match(workflow, /release-passport-kfd-3-prebuild-witness-jsons: \$\{\{ inputs\.release-passport-kfd-3-prebuild-witness-jsons \}\}/);
+  assert.match(workflow, /release-passport-kfd-3-prebuild-witness-jsons: \$\{\{ inputs\.release-passport-kfd-3-prebuild-witness-jsons \|\| steps\.buildchain-self-kfd\.outputs\.kfd-3-prebuild-witness-jsons \}\}/);
   assert.match(workflow, /release-passport-kfd-3-artifact-witness-jsons:/);
+  assert.match(workflow, /release-passport-kfd-3-artifact-witness-jsons: \$\{\{ inputs\.release-passport-kfd-3-artifact-witness-jsons \|\| steps\.buildchain-self-kfd\.outputs\.kfd-3-artifact-witness-jsons \}\}/);
   assert.match(workflow, /release-passport-kfd-3-artifact-verify-command:/);
+  assert.match(workflow, /release-passport-buildchain-self-kfd:/);
+  assert.match(workflow, /Generate Buildchain self KFD release claims/);
+  assert.match(workflow, /generate-buildchain-kfd-witnesses\.mjs/);
   assert.match(workflow, /core\.setOutput\("locked", "true"\)/);
   assert.match(workflow, /require-publish-source-lock: "true"/);
   assert.match(workflow, /publish-source-ref: \$\{\{ steps\.publish-gate\.outputs\.ref \}\}/);
@@ -406,12 +410,13 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /publish-dist-tag: \$\{\{ inputs\.publish-dist-tag \}\}/);
   assert.match(workflow, /publish-package-set-order: \$\{\{ inputs\.publish-package-set-order \}\}/);
   assert.match(workflow, /release-passport-platform-manifest-paths: \$\{\{ inputs\.release-passport-platform-manifest-paths \|\| steps\.rc\.outputs\.release-candidate-platform-manifest-paths \}\}/);
+  assert.match(workflow, /github-release: \$\{\{ inputs\.github-release \}\}/);
+  assert.match(workflow, /github-release-title: \$\{\{ inputs\.github-release-title \}\}/);
+  assert.match(workflow, /github-release-notes: \$\{\{ inputs\.github-release-notes \}\}/);
   assert.match(workflow, /Ensure publish-gate ref locks promotion commit/);
   assert.match(workflow, /id: promote/);
-  assert.match(workflow, /Publish GitHub Release evidence/);
-  assert.match(workflow, /scripts\/ensure-github-release\.mjs/);
-  assert.match(workflow, /gh release upload "\$\{RELEASE_TAG\}" "\$\{upload_args\[@\]\}" --clobber/);
-  assert.match(workflow, /Defer GitHub Release evidence/);
+  assert.doesNotMatch(workflow, /Publish GitHub Release evidence/);
+  assert.doesNotMatch(workflow, /gh release upload/);
   assert.doesNotMatch(workflow, /\.github\/workflows\/\.build\.yml/);
   assert.doesNotMatch(workflow, /build-native:/);
   assert.doesNotMatch(workflow, /build-linux-container:/);
@@ -966,6 +971,29 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(workflow, /"id":"required-check-protection"/);
   assert.doesNotMatch(workflow, /run: node scripts\/release-candidate-resolver\.mjs/);
   assert.doesNotMatch(workflow, /uses: \.\/actions\/promote-buildchain-ref/);
+});
+
+test("promote-buildchain-ref owns semver GitHub Release publication", () => {
+  const action = fs.readFileSync(
+    path.join(root, "actions/promote-buildchain-ref/action.yml"),
+    "utf8",
+  );
+  const source = fs.readFileSync(
+    path.join(root, "actions/promote-buildchain-ref/index.js"),
+    "utf8",
+  );
+
+  assert.match(action, /github-release:/);
+  assert.match(action, /github-release-title:/);
+  assert.match(action, /github-release-notes:/);
+  assert.match(action, /github-release-url:/);
+  assert.match(action, /github-release-action:/);
+  assert.match(source, /ensureGitHubRelease/);
+  assert.match(source, /publishGitHubReleaseEvidence/);
+  assert.match(source, /collectGitHubReleaseEvidenceAssets/);
+  assert.match(source, /uploadReleaseAsset/);
+  assert.match(source, /transaction-state.*complete/s);
+  assert.match(source, /finalizationNeeded !== true/);
 });
 
 test("publish source-lock docs distinguish source refs from promotion targets", () => {

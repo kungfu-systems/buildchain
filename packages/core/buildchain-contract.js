@@ -129,6 +129,9 @@ export function createBuildchainContractWorld({ root = process.cwd(), packageJso
         "release-passport-kfd-3-artifact-verify-command",
         "buildchain-contract-lock-path",
         "buildchain-contract-drift-issue-mode",
+        "github-release",
+        "github-release-title",
+        "github-release-notes",
       ],
       guarantees: [
         "promotion reuses PR-stage release-candidate artifacts",
@@ -136,6 +139,7 @@ export function createBuildchainContractWorld({ root = process.cwd(), packageJso
         "built source and promotion channel SHA are recorded separately",
         "contract drift is checked before release-candidate resolution and publish",
         "publish-gate source locks are created by the wrapper and enforced by promote-buildchain-ref before publish side effects",
+        "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes",
       ],
     }),
     surface(root, {
@@ -158,11 +162,15 @@ export function createBuildchainContractWorld({ root = process.cwd(), packageJso
         "release-passport-kfd-3-prebuild-witness-jsons",
         "release-passport-kfd-3-artifact-witness-jsons",
         "release-passport-kfd-3-artifact-verify-command",
+        "github-release",
+        "github-release-title",
+        "github-release-notes",
       ],
       guarantees: [
         "protected release refs and durable release-state are finalized by Buildchain",
         "release passport finalization is idempotent after publish side effects",
         "publish transactions can require a resolved publish-gate source lock to prevent floating-ref drift",
+        "semver GitHub Releases are created or updated only after transaction completion, with prerelease/latest metadata derived from the exact tag",
       ],
     }),
     surface(root, {
@@ -271,6 +279,35 @@ export function createBuildchainContractWorld({ root = process.cwd(), packageJso
       ],
       guarantees: [
         "CLI commands are stable within the major line unless the contract major changes",
+      ],
+    }),
+    surface(root, {
+      id: "agent-manual-registry",
+      kind: "site-contract",
+      path: "dist/site/manual-registry.json",
+      requiredInputs: [],
+      requiredOutputs: ["manuals", "requiredAgentManuals"],
+      breakingDefaults: {
+        contract: "kungfu-buildchain-agent-manual-registry",
+      },
+      guarantees: [
+        "agent-facing packaged docs are enumerable from the npm package site bundle",
+        "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation",
+      ],
+    }),
+    surface(root, {
+      id: "node-api-registry",
+      kind: "site-contract",
+      path: "dist/site/node-api-registry.json",
+      requiredInputs: [],
+      requiredOutputs: ["exports"],
+      breakingDefaults: {
+        contract: "kungfu-buildchain-node-api-registry",
+        moduleSystem: "module",
+      },
+      guarantees: [
+        "public Node import surfaces are derived from package.json exports",
+        "agents can discover supported Node APIs without importing internal file paths",
       ],
     }),
   ];

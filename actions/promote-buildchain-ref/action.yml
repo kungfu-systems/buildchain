@@ -116,6 +116,15 @@ inputs:
   release-passport-kfd-3-artifact-verify-command:
     description: "Product-owned command that emits a KFD-3 artifact-side collaboration-interface witness JSON document"
     default: ""
+  github-release:
+    description: "Create/update the exact-tag GitHub Release and upload publish evidence plus release passport assets after a complete release transaction"
+    default: "false"
+  github-release-title:
+    description: "Optional GitHub Release title. Empty defaults to the exact tag."
+    default: ""
+  github-release-notes:
+    description: "Optional GitHub Release notes. Empty uses a Buildchain release-passport asset note."
+    default: ""
   promote-only-release-candidate:
     description: "Fail fast unless a verified PR-stage release-candidate passport matches the promotion source before publish-gate side effects run"
     default: "false"
@@ -159,6 +168,10 @@ outputs:
     description: "Durable release-state commit SHA after uploading passport files"
   finalization-needed:
     description: "true when publish completed but protected ref finalization still needs a later run"
+  github-release-url:
+    description: "HTML URL of the created or updated exact-tag GitHub Release"
+  github-release-action:
+    description: "created, updated, or empty when GitHub Release publication did not run"
 runs:
   using: "node24"
   main: "dist/index.js"
