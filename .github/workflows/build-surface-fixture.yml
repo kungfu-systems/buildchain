@@ -26,7 +26,7 @@ jobs:
       working-directory: fixtures/libnode-shaped
       runner-preset: github-hosted
       linux-container-preset: kungfu-verify
-      artifact-transfer-mode: ${{ inputs.artifact-transfer-mode || 'github-artifacts' }}
+      artifact-transfer-mode: ${{ github.event.inputs['artifact-transfer-mode'] || 'github-artifacts' }}
       artifact-name: libnode-shaped
       artifact-name-template: "{artifact}-{platform}-{shortSha}"
       artifact-paths: |

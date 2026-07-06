@@ -861,7 +861,10 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   assert.match(workflow, /default: "github-artifacts"/);
   assert.match(workflow, /id-token: write/);
   assert.match(workflow, /secrets: inherit/);
-  assert.match(workflow, /artifact-transfer-mode: \$\{\{ inputs\.artifact-transfer-mode \|\| 'github-artifacts' \}\}/);
+  assert.match(
+    workflow,
+    /artifact-transfer-mode: \$\{\{ github\.event\.inputs\['artifact-transfer-mode'\] \|\| 'github-artifacts' \}\}/,
+  );
   assert.doesNotMatch(workflow, /run: node scripts\/artifact-relay-s3\.mjs/);
 });
 
