@@ -50,7 +50,7 @@
       "specifier": "@kungfu-tech/buildchain/kfd-gate",
       "export": "./kfd-gate",
       "target": "./packages/core/kfd-gate.js",
-      "digest": "sha256:6a99ee108c385837ee9f1dbb75848f6ea434b6474977e6e567ae81f8fc9a555c"
+      "digest": "sha256:534707144fa2c440fe6958073a8a161790f12b8fb4695e3b06e43f43a6c87ffb"
     },
     {
       "specifier": "@kungfu-tech/buildchain/release-candidate",
@@ -62,7 +62,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:f1c2d70510f074102c2e9ff87b638b7b9b33edaa88aad8abc1e73e75e46a6af7"
+      "digest": "sha256:3476a0837292b81a6efeb7c989dc1ee975b2bd8e8882273fd4eb5f865d330bc1"
     },
     {
       "specifier": "@kungfu-tech/buildchain/release-propagation",
