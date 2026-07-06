@@ -4,7 +4,7 @@ import path from "node:path";
 
 const DEFAULT_BLOCK_LABELS = ["blocked", "do-not-merge", "work-in-progress"];
 const DEFAULT_ALLOWED_HEAD_PREFIXES = ["feature/", "fix/", "chore/", "docs/", "ci/", "refactor/"];
-const DEFAULT_REQUIRED_CHECKS = ["Verify"];
+const DEFAULT_REQUIRED_CHECKS = ["check"];
 const SUCCESS_STATES = new Set(["success"]);
 const SUCCESS_CONCLUSIONS = new Set(["success", "neutral", "skipped"]);
 

@@ -35,7 +35,7 @@ on:
         required: false
       required-status-checks:
         description: "Comma or newline separated required status/check-run name fragments"
-        default: "Verify"
+        default: "check"
         type: string
         required: false
       ready-label:
@@ -124,7 +124,7 @@ jobs:
           case "${target_branch}" in
             dev/v*/v*) ;;
             *)
-              echo "::error::target-branch must be a semver dev branch such as dev/v2/v2.5, got: ${target_branch}"
+              echo "::error::target-branch must be a semver dev branch such as dev/v2/v2.N, got: ${target_branch}"
               exit 1
               ;;
           esac

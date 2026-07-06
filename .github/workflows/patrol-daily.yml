@@ -20,7 +20,7 @@ on:
         required: false
       required-status-checks:
         description: "Comma or newline separated required status/check-run name fragments"
-        default: "Verify"
+        default: "check"
         type: string
         required: false
       ready-label:

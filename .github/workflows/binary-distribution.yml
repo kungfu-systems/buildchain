@@ -187,6 +187,21 @@ jobs:
           node bin/buildchain.mjs verify release-passport
           .buildchain/release-passport/buildchain.release.json
 
+      - name: Verify release artifacts through passport discovery
+        shell: bash
+        run: |
+          for artifact in dist/binary/*; do
+            test -f "${artifact}" || continue
+            node bin/buildchain.mjs span \
+              --event release-passport.verify-artifact \
+              --phase passport \
+              --component workflow \
+              --source buildchain \
+              -- \
+              node bin/buildchain.mjs verify artifact "${artifact}" \
+                --passport .buildchain/release-passport/buildchain.release.json
+          done
+
       - name: Summarize passport observability
         run: |
           node bin/buildchain.mjs mark --event release-passport.complete --phase evidence --component workflow --source buildchain

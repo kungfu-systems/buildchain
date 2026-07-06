@@ -173,7 +173,7 @@ function explainReleaseLineDryRun({
       "target branch protection must be readable",
       "branch protection must enforce administrators",
       "required pull request review must be enabled",
-      "strict required status check must include the Verify check",
+      "strict required status check must include the check job",
       `source PR must be a merged same-repository PR from ${rule.sourceRef} to ${targetRef}`,
     ],
     publishTransaction: {

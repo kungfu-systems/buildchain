@@ -8,9 +8,12 @@ type = "json"
 path = "package.json"
 key = "version"
 
+[lifecycle.install]
+command = "corepack pnpm@11.7.0 install --frozen-lockfile"
+
 [lifecycle.verify]
 commands = [
-  "pnpm run check",
+  "corepack pnpm@11.7.0 run check",
 ]
 
 [lifecycle.publish]
