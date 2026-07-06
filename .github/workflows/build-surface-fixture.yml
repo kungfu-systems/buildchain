@@ -4,9 +4,9 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     branches:
-      - dev/v*/v*.*
-      - alpha/v*/v*.*
-      - release/v*/v*.*
+      - dev/v*/v*
+      - alpha/v*/v*
+      - release/v*/v*
   workflow_dispatch:
     inputs:
       artifact-transfer-mode:
@@ -16,6 +16,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
   id-token: write
 
 jobs:
@@ -26,7 +27,7 @@ jobs:
       working-directory: fixtures/libnode-shaped
       runner-preset: github-hosted
       linux-container-preset: kungfu-verify
-      artifact-transfer-mode: ${{ inputs.artifact-transfer-mode || 'github-artifacts' }}
+      artifact-transfer-mode: ${{ github.event.inputs['artifact-transfer-mode'] || 'github-artifacts' }}
       artifact-name: libnode-shaped
       artifact-name-template: "{artifact}-{platform}-{shortSha}"
       artifact-paths: |

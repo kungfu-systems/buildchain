@@ -106,7 +106,7 @@ export function selectReleaseCandidateRuns({ runs = [], pullRequest, workflowNam
     const matchesHeadBranch = prHeadBranch
       && runHeadBranch === prHeadBranch
       && (!prHeadRepository || !runHeadRepository || runHeadRepository === prHeadRepository);
-    const matchesPr = matchesPrNumber || matchesHeadSha || matchesHeadBranch;
+    const matchesPr = matchesPrNumber || matchesHeadSha || (!prNumber && !prHeadSha && matchesHeadBranch);
     const matchesWorkflow = !workflowName || run.name === workflowName || run.workflow_name === workflowName;
     return matchesPr && matchesWorkflow && run.event === "pull_request" && run.status === "completed" && run.conclusion === "success";
   });

@@ -24,31 +24,11 @@ on:
 permissions: write-all
 
 jobs:
-  release:
-    if: ${{ github.event.pull_request.merged }}
+  retired:
     runs-on: ubuntu-24.04
     steps:
-      - name: Checkout source code
-        uses: actions/checkout@v7.0.0
-
-      - name: Bump Version
-        id: bump_version
-        uses: kungfu-systems/buildchain/actions/bump-version@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          action: "prebuild"
-
-      - uses: aws-actions/setup-sam@v2
-        with:
-          use-installer: true
-
-      - name: Configure AWS Crendentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:${{inputs.aws-root}}:iam::${{secrets.AWS_ACCOUNT_ID}}:role/${{inputs.aws-role}}
-          role-session-name: github-dev
-          aws-region: ${{ inputs.aws-region }}
-
-      - run: sam build
-      # Prevent prompts and failure when the stack is unchanged
-      - run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
+      - name: SAM release workflow retired
+        run: |
+          echo "::error::The workflows v2 SAM release path is retired."
+          echo "::error::Do not use .sam-release.yml; use a project lifecycle.publish command behind release-candidate-promote.yml@v2 so publish-gate source-lock enforcement applies."
+          exit 1

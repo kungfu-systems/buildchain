@@ -21,6 +21,19 @@ test("Buildchain alpha releases are prereleases and never latest", () => {
   });
 });
 
+test("semver prerelease tags are prereleases and never latest", () => {
+  assert.deepEqual(classifyReleaseTag("v22.22.3-kf.3-alpha.7"), {
+    tag: "v22.22.3-kf.3-alpha.7",
+    prerelease: true,
+    makeLatest: "false",
+  });
+  assert.deepEqual(classifyReleaseTag("v1.2.3-rc.1"), {
+    tag: "v1.2.3-rc.1",
+    prerelease: true,
+    makeLatest: "false",
+  });
+});
+
 test("Buildchain stable releases become the latest release", () => {
   assert.deepEqual(classifyReleaseTag("v2.6.1"), {
     tag: "v2.6.1",
@@ -30,8 +43,8 @@ test("Buildchain stable releases become the latest release", () => {
 });
 
 test("unsupported release tags fail closed", () => {
-  assert.throws(() => classifyReleaseTag("v2.6-alpha"), /Unsupported Buildchain release tag/);
-  assert.throws(() => classifyReleaseTag("latest"), /Unsupported Buildchain release tag/);
+  assert.throws(() => classifyReleaseTag("v2.6-alpha"), /Unsupported semver release tag/);
+  assert.throws(() => classifyReleaseTag("latest"), /Unsupported semver release tag/);
 });
 
 test("ensureGitHubRelease creates alpha releases with explicit metadata", async (t) => {

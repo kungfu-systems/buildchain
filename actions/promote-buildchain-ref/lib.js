@@ -324,17 +324,51 @@ function applyLocalVersionState(cwd, changedFiles) {
   }
 }
 
+function collectAllowedLocalChanges(cwd, allowedPaths) {
+  const allowed = new Set(allowedPaths);
+  const output = execSync("git status --porcelain --untracked-files=all", {
+    cwd,
+    encoding: "utf8",
+  }).trimEnd();
+  const changedPaths = output
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .map((line) => ({
+      status: line.slice(0, 2),
+      path: line.slice(3).trim(),
+    }))
+    .filter((entry) =>
+      allowed.has(entry.path) &&
+      entry.status !== "??" &&
+      !entry.status.includes("D")
+    )
+    .map((entry) => entry.path);
+  return [...new Set(changedPaths)].sort().map((filePath) => ({
+    path: filePath,
+    content: fs.readFileSync(path.join(cwd, filePath), "utf8"),
+  }));
+}
+
 function runVersionVerification({ cwd, command, loadedConfig, version, changedFiles, allowedPaths, env: extraEnv }) {
   const lifecycleVerify = getLifecycleStage(loadedConfig, "verify");
-  if (!command && !lifecycleVerify) {
-    return;
+  const lifecycleVersionState =
+    getLifecycleStage(loadedConfig, "version-state") ||
+    getLifecycleStage(loadedConfig, "version_state");
+  if (!command && !lifecycleVerify && !lifecycleVersionState) {
+    return changedFiles;
   }
   applyLocalVersionState(cwd, changedFiles);
-  const env = {
-    ...process.env,
-    BUILDCHAIN_VERSION: version,
-    ...(extraEnv || {}),
-  };
+  const lifecycleEnv = { BUILDCHAIN_VERSION: version, ...(extraEnv || {}) };
+  if (lifecycleVersionState) {
+    runLifecycleStage({
+      cwd,
+      loadedConfig,
+      name: "version-state",
+      stage: lifecycleVersionState,
+      env: lifecycleEnv,
+    });
+  }
+  const env = { ...process.env, ...lifecycleEnv };
   if (command) {
     execSync(command, { cwd, env, stdio: "inherit", shell: true });
   } else {
@@ -343,10 +377,11 @@ function runVersionVerification({ cwd, command, loadedConfig, version, changedFi
       loadedConfig,
       name: "verify",
       stage: lifecycleVerify,
-      env: { BUILDCHAIN_VERSION: version, ...(extraEnv || {}) },
+      env: lifecycleEnv,
     });
   }
   assertAllowedLocalChanges(cwd, allowedPaths);
+  return collectAllowedLocalChanges(cwd, allowedPaths);
 }
 
 function versionVerificationEnv(versionStrategy, anchorManifest) {
@@ -1831,6 +1866,10 @@ async function collectAndPersistReleasePassport({
   platformManifestPaths = [],
   impactJson = "",
   kfd1WitnessJsons = [],
+  kfd2ClaimJsons = [],
+  kfd3PrebuildWitnessJsons = [],
+  kfd3ArtifactWitnessJsons = [],
+  kfd3ArtifactVerifyCommand = "",
   enabled = true,
   releaseCandidateValidation = undefined,
 }) {
@@ -1885,6 +1924,10 @@ async function collectAndPersistReleasePassport({
     anchorManifestJson: anchorManifestPath && fs.existsSync(anchorManifestPath) ? anchorManifestPath : "",
     impactJson,
     kfd1WitnessJsons,
+    kfd2ClaimJsons,
+    kfd3PrebuildWitnessJsons,
+    kfd3ArtifactWitnessJsons,
+    kfd3ArtifactVerifyCommand,
     buildSummaryJson,
     platformManifestJsons: platformManifests,
     distTagEvidenceJson: existingJsonObjectFile(result.distTagEvidencePath),
@@ -2706,6 +2749,10 @@ async function promoteBuildchainRefs({
   releasePassportPlatformManifestPaths = "",
   releasePassportImpactJson = "",
   releasePassportKfd1WitnessJsons = "",
+  releasePassportKfd2ClaimJsons = "",
+  releasePassportKfd3PrebuildWitnessJsons = "",
+  releasePassportKfd3ArtifactWitnessJsons = "",
+  releasePassportKfd3ArtifactVerifyCommand = "",
   promoteOnlyReleaseCandidate = false,
   releaseCandidatePassportPath = ".buildchain/artifacts/release-candidate-passport.json",
   releaseCandidateBuildSummaryPath = ".buildchain/artifacts/build-summary.json",
@@ -3373,7 +3420,12 @@ async function promoteBuildchainRefs({
       : undefined;
     const publishVersion = manualNext ? configuredVersion || version : version;
     const hasVersionVerification =
-      Boolean(verificationCommand || getLifecycleStage(discovered.config, "verify"));
+      Boolean(
+        verificationCommand ||
+        getLifecycleStage(discovered.config, "verify") ||
+        getLifecycleStage(discovered.config, "version-state") ||
+        getLifecycleStage(discovered.config, "version_state"),
+      );
     const anchoredReleaseTreePaths =
       manualNext && anchorManifest && hasVersionVerification
         ? uniquePaths([...discoveredPaths, anchorManifest.path])
@@ -3395,6 +3447,58 @@ async function promoteBuildchainRefs({
     console.log(
       `> version state changes for ${version}: ${changedPaths.length ? changedPaths.join(", ") : "none"}`,
     );
+    const createVerifiedVersionStateCommit = async (verifiedChangedFiles) => {
+      const { data: baseCommit } = await getGitCommitWithRetry({ octokit, owner, repo, commitSha: baseSha });
+      const tree = [];
+      for (const file of verifiedChangedFiles) {
+        const { data: blob } = await octokit.rest.git.createBlob({
+          owner,
+          repo,
+          content: file.content,
+          encoding: "utf-8",
+        });
+        tree.push({
+          path: file.path,
+          mode: "100644",
+          type: "blob",
+          sha: blob.sha,
+        });
+      }
+      const { data: nextTree } = await octokit.rest.git.createTree({
+        owner,
+        repo,
+        base_tree: baseCommit.tree.sha,
+        tree,
+      });
+      const { data: nextCommit } = await octokit.rest.git.createCommit({
+        owner,
+        repo,
+        message,
+        tree: nextTree.sha,
+        parents: [baseSha],
+        author: COMMIT_IDENTITY,
+        committer: COMMIT_IDENTITY,
+      });
+      updates.push({
+        version,
+        action: "created-version-state",
+        packageManager: discovered.packageManager.name,
+        files: verifiedChangedFiles.map((file) => file.path),
+        sha: nextCommit.sha,
+      });
+      return {
+        sha: nextCommit.sha,
+        version,
+        action: "created",
+        publishVersion,
+        files: verifiedChangedFiles.map((file) => file.path),
+        releaseTreeAllowedPaths: verifiedChangedFiles.map((file) => file.path),
+        hasVersionVerification,
+        packageManager: discovered.packageManager,
+        versionStrategy,
+        anchorManifest,
+      };
+    };
     if (manualNext) {
       runVersionVerification({
         cwd,
@@ -3428,7 +3532,7 @@ async function promoteBuildchainRefs({
       };
     }
     if (changedFiles.length === 0) {
-      runVersionVerification({
+      const verifiedChangedFiles = runVersionVerification({
         cwd,
         command: verificationCommand,
         loadedConfig: discovered.config,
@@ -3437,6 +3541,12 @@ async function promoteBuildchainRefs({
         allowedPaths: discoveredPaths,
         env: strategyEnv,
       });
+      if (verifiedChangedFiles.length > 0) {
+        console.log(
+          `> version state lifecycle changes for ${version}: ${verifiedChangedFiles.map((file) => file.path).join(", ")}`,
+        );
+        return createVerifiedVersionStateCommit(verifiedChangedFiles);
+      }
       updates.push({
         version,
         action: "existing-version-state",
@@ -3481,7 +3591,7 @@ async function promoteBuildchainRefs({
       };
     }
 
-    runVersionVerification({
+    const verifiedChangedFiles = runVersionVerification({
       cwd,
       command: verificationCommand,
       loadedConfig: discovered.config,
@@ -3491,56 +3601,7 @@ async function promoteBuildchainRefs({
       env: strategyEnv,
     });
 
-    const { data: baseCommit } = await getGitCommitWithRetry({ octokit, owner, repo, commitSha: baseSha });
-    const tree = [];
-    for (const file of changedFiles) {
-      const { data: blob } = await octokit.rest.git.createBlob({
-        owner,
-        repo,
-        content: file.content,
-        encoding: "utf-8",
-      });
-      tree.push({
-        path: file.path,
-        mode: "100644",
-        type: "blob",
-        sha: blob.sha,
-      });
-    }
-    const { data: nextTree } = await octokit.rest.git.createTree({
-      owner,
-      repo,
-      base_tree: baseCommit.tree.sha,
-      tree,
-    });
-    const { data: nextCommit } = await octokit.rest.git.createCommit({
-      owner,
-      repo,
-      message,
-      tree: nextTree.sha,
-      parents: [baseSha],
-      author: COMMIT_IDENTITY,
-      committer: COMMIT_IDENTITY,
-    });
-    updates.push({
-      version,
-      action: "created-version-state",
-      packageManager: discovered.packageManager.name,
-      files: changedFiles.map((file) => file.path),
-      sha: nextCommit.sha,
-    });
-    return {
-      sha: nextCommit.sha,
-      version,
-      action: "created",
-      publishVersion,
-      files: changedFiles.map((file) => file.path),
-      releaseTreeAllowedPaths: changedFiles.map((file) => file.path),
-      hasVersionVerification,
-      packageManager: discovered.packageManager,
-      versionStrategy,
-      anchorManifest,
-    };
+    return createVerifiedVersionStateCommit(verifiedChangedFiles);
   };
 
   const shouldPromoteMajorTag = async () => {
@@ -3647,6 +3708,10 @@ async function promoteBuildchainRefs({
       platformManifestPaths: splitPathList(releasePassportPlatformManifestPaths),
       impactJson: releasePassportImpactJson,
       kfd1WitnessJsons: splitPathList(releasePassportKfd1WitnessJsons),
+      kfd2ClaimJsons: splitPathList(releasePassportKfd2ClaimJsons),
+      kfd3PrebuildWitnessJsons: splitPathList(releasePassportKfd3PrebuildWitnessJsons),
+      kfd3ArtifactWitnessJsons: splitPathList(releasePassportKfd3ArtifactWitnessJsons),
+      kfd3ArtifactVerifyCommand: releasePassportKfd3ArtifactVerifyCommand,
       enabled: Boolean(releasePassport),
       releaseCandidateValidation,
     });
@@ -4417,6 +4482,7 @@ export {
   readDurableReleaseTransaction,
   restoreDurableReleaseTransaction,
   resolveTagsForTarget,
+  runVersionVerification,
   selectAlphaTag,
   selectReleaseTag,
   stripTagPrefix,

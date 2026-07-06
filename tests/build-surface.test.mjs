@@ -95,9 +95,16 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /container:/);
   assert.match(workflow, /require-trusted-event:/);
   assert.match(workflow, /buildchain-ref:/);
+  assert.match(workflow, /buildchain-contract-lock-path:/);
+  assert.match(workflow, /buildchain-contract-compatibility-policy:/);
+  assert.match(workflow, /buildchain-contract-drift-issue-mode:/);
   assert.match(workflow, /default: ""/);
   assert.match(workflow, /Resolve Buildchain runtime/);
   assert.match(workflow, /runtime-sha/);
+  assert.match(workflow, /Checkout consumer contract lock/);
+  assert.match(workflow, /buildchain-contract-lock\.mjs check/);
+  assert.match(workflow, /Report consumer Buildchain contract drift/);
+  assert.match(workflow, /buildchain-contract-lock-status:/);
   assert.match(workflow, /buildchain-ref override is only allowed for trusted workflow_dispatch runs/);
   assert.match(workflow, /refs\/heads\/train\/vN\/vN\.M\/<capability>/);
   assert.match(workflow, /publish-channel:/);
@@ -124,6 +131,10 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.ok(
     workflow.indexOf("Verify publish target channel ref and PR lineage") <
       workflow.indexOf("build-linux-container:"),
+  );
+  assert.ok(
+    workflow.indexOf("Check Buildchain contract lock") <
+      workflow.indexOf("build-native:"),
   );
   assert.match(workflow, /resolve-publish-source\.mjs --mode manifest/);
   assert.equal(
@@ -180,6 +191,7 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /downloaded-diagnostics/);
   assert.match(workflow, /BUILDCHAIN_RUNTIME_SHA/);
   assert.match(workflow, /BUILDCHAIN_RUNTIME_TRUST_DECISION/);
+  assert.match(workflow, /BUILDCHAIN_CONTRACT_LOCK_PATH/);
   assert.match(workflow, /aggregate-diagnostics-summary\.mjs/);
   assert.match(workflow, /generate-release-candidate-passport\.mjs/);
   assert.match(workflow, /release-candidate-enabled/);
@@ -342,6 +354,11 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /default: "build\.yml"/);
   assert.match(workflow, /release-candidate-workflow-name:/);
   assert.match(workflow, /default: "Build"/);
+  assert.match(workflow, /buildchain-contract-lock-path:/);
+  assert.match(workflow, /buildchain-contract-drift-issue-mode:/);
+  assert.match(workflow, /Resolve checked out Buildchain runtime/);
+  assert.match(workflow, /Check Buildchain contract lock/);
+  assert.match(workflow, /Report consumer Buildchain contract drift/);
   assert.match(workflow, /allow-repository:/);
   assert.match(workflow, /default: ""/);
   assert.match(workflow, /required-status-check:/);
@@ -350,11 +367,25 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /publish-dist-tag:/);
   assert.match(workflow, /publish-package-set-order:/);
   assert.match(workflow, /publish-package-main:/);
+  assert.match(workflow, /github-release:/);
+  assert.match(workflow, /github-release-title:/);
+  assert.match(workflow, /github-release-notes:/);
   assert.match(workflow, /release-passport-product-name:/);
   assert.match(workflow, /release-passport-impact-json:/);
   assert.match(workflow, /release-passport-impact-json: \$\{\{ inputs\.release-passport-impact-json \}\}/);
   assert.match(workflow, /release-passport-kfd-1-witness-jsons:/);
   assert.match(workflow, /release-passport-kfd-1-witness-jsons: \$\{\{ inputs\.release-passport-kfd-1-witness-jsons \}\}/);
+  assert.match(workflow, /release-passport-kfd-2-claim-jsons:/);
+  assert.match(workflow, /release-passport-kfd-2-claim-jsons: \$\{\{ inputs\.release-passport-kfd-2-claim-jsons \}\}/);
+  assert.match(workflow, /release-passport-kfd-3-prebuild-witness-jsons:/);
+  assert.match(workflow, /release-passport-kfd-3-prebuild-witness-jsons: \$\{\{ inputs\.release-passport-kfd-3-prebuild-witness-jsons \}\}/);
+  assert.match(workflow, /release-passport-kfd-3-artifact-witness-jsons:/);
+  assert.match(workflow, /release-passport-kfd-3-artifact-verify-command:/);
+  assert.match(workflow, /core\.setOutput\("locked", "true"\)/);
+  assert.match(workflow, /require-publish-source-lock: "true"/);
+  assert.match(workflow, /publish-source-ref: \$\{\{ steps\.publish-gate\.outputs\.ref \}\}/);
+  assert.match(workflow, /publish-source-sha: \$\{\{ steps\.publish-gate\.outputs\.sha \}\}/);
+  assert.match(workflow, /publish-source-locked: \$\{\{ steps\.publish-gate\.outputs\.locked \}\}/);
   assert.match(workflow, /BUILDCHAIN_ARTIFACT_NAME: \$\{\{ inputs\.artifact-name \}\}/);
   assert.match(workflow, /BUILDCHAIN_ARTIFACT_PATTERNS: \$\{\{ inputs\.artifact-patterns \}\}/);
   assert.match(workflow, /BUILDCHAIN_RC_WORKFLOW_FILE: \$\{\{ inputs\.release-candidate-workflow-file \}\}/);
@@ -376,10 +407,38 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /publish-package-set-order: \$\{\{ inputs\.publish-package-set-order \}\}/);
   assert.match(workflow, /release-passport-platform-manifest-paths: \$\{\{ inputs\.release-passport-platform-manifest-paths \|\| steps\.rc\.outputs\.release-candidate-platform-manifest-paths \}\}/);
   assert.match(workflow, /Ensure publish-gate ref locks promotion commit/);
+  assert.match(workflow, /id: promote/);
+  assert.match(workflow, /Publish GitHub Release evidence/);
+  assert.match(workflow, /scripts\/ensure-github-release\.mjs/);
+  assert.match(workflow, /gh release upload "\$\{RELEASE_TAG\}" "\$\{upload_args\[@\]\}" --clobber/);
+  assert.match(workflow, /Defer GitHub Release evidence/);
   assert.doesNotMatch(workflow, /\.github\/workflows\/\.build\.yml/);
   assert.doesNotMatch(workflow, /build-native:/);
   assert.doesNotMatch(workflow, /build-linux-container:/);
   assert.doesNotMatch(workflow, /fromJSON\(needs\.resolve-contract\.outputs/);
+});
+
+test("legacy release workflows fail closed instead of bypassing publish-gate source locks", () => {
+  const retiredReleaseWorkflows = [
+    ".release-new-version.yml",
+    ".release-elastic-beanstalk.yml",
+    ".sam-release.yml",
+    ".wheel-release.yml",
+  ];
+  for (const workflowName of retiredReleaseWorkflows) {
+    const workflow = fs.readFileSync(
+      path.join(root, ".github/workflows", workflowName),
+      "utf8",
+    );
+    assert.match(workflow, /release path is retired/);
+    assert.match(workflow, /release-candidate-promote\.yml@v2/);
+    assert.match(workflow, /publish-gate source-lock enforcement/);
+    assert.doesNotMatch(workflow, /npm publish --access=public/);
+    assert.doesNotMatch(workflow, /actions\/publish-prebuilt@v2/);
+    assert.doesNotMatch(workflow, /actions\/bump-version@v2/);
+    assert.doesNotMatch(workflow, /beanstalk-deploy@/);
+    assert.doesNotMatch(workflow, /sam deploy/);
+  }
 });
 
 test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
@@ -754,7 +813,7 @@ test("runtime train override accepts only trusted manual train or exact SHA refs
   );
 });
 
-test("promote action exposes anchored publish source-lock gate", () => {
+test("promote action exposes generic publish source-lock gate", () => {
   const action = fs.readFileSync(
     path.join(root, "actions/promote-buildchain-ref/action.yml"),
     "utf8",
@@ -768,8 +827,8 @@ test("promote action exposes anchored publish source-lock gate", () => {
   assert.match(action, /publish-source-ref:/);
   assert.match(action, /publish-source-sha:/);
   assert.match(action, /publish-source-locked:/);
-  assert.match(implementation, /validateAnchoredPackageRelease/);
-  assert.match(implementation, /requirePublishGateSourceLock: true/);
+  assert.match(implementation, /kungfu-buildchain-publish-source-lock-validation/);
+  assert.match(implementation, /publish-gate\/\{alpha,release,major\}/);
   assert.match(implementation, /does not match promotion sha/);
 });
 
@@ -794,11 +853,19 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
     path.join(root, ".github/workflows/build-surface-fixture.yml"),
     "utf8",
   );
+  assert.match(workflow, /- dev\/v\*\/v\*/);
+  assert.match(workflow, /- alpha\/v\*\/v\*/);
+  assert.match(workflow, /- release\/v\*\/v\*/);
+  assert.doesNotMatch(workflow, /v\*\.\*/);
   assert.match(workflow, /artifact-transfer-mode:/);
   assert.match(workflow, /default: "github-artifacts"/);
+  assert.match(workflow, /issues: write/);
   assert.match(workflow, /id-token: write/);
   assert.match(workflow, /secrets: inherit/);
-  assert.match(workflow, /artifact-transfer-mode: \$\{\{ inputs\.artifact-transfer-mode \|\| 'github-artifacts' \}\}/);
+  assert.match(
+    workflow,
+    /artifact-transfer-mode: \$\{\{ github\.event\.inputs\['artifact-transfer-mode'\] \|\| 'github-artifacts' \}\}/,
+  );
   assert.doesNotMatch(workflow, /run: node scripts\/artifact-relay-s3\.mjs/);
 });
 
@@ -860,10 +927,20 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(action, /release-candidate-passport-path:/);
   assert.match(action, /release-candidate-build-summary-path:/);
   assert.match(action, /release-passport-kfd-1-witness-jsons:/);
+  assert.match(action, /release-passport-kfd-2-claim-jsons:/);
+  assert.match(action, /release-passport-kfd-3-prebuild-witness-jsons:/);
+  assert.match(action, /release-passport-kfd-3-artifact-witness-jsons:/);
+  assert.match(action, /release-passport-kfd-3-artifact-verify-command:/);
   assert.match(implementation, /promoteOnlyReleaseCandidate/);
   assert.match(implementation, /releasePassportKfd1WitnessJsons/);
+  assert.match(implementation, /releasePassportKfd2ClaimJsons/);
+  assert.match(implementation, /releasePassportKfd3PrebuildWitnessJsons/);
+  assert.match(implementation, /releasePassportKfd3ArtifactWitnessJsons/);
+  assert.match(implementation, /releasePassportKfd3ArtifactVerifyCommand/);
   assert.match(docs, /promote-only-release-candidate: "true"/);
   assert.match(docs, /release-passport-kfd-1-witness-jsons/);
+  assert.match(docs, /release-passport-kfd-2-claim-jsons/);
+  assert.match(docs, /release-passport-kfd-3-prebuild-witness-jsons/);
 });
 
 test("buildchain ref promotion consumes PR-stage release candidate evidence", () => {
@@ -881,6 +958,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(workflow, /package-manager: pnpm/);
   assert.match(workflow, /release-candidate-workflow-file: build-surface-fixture\.yml/);
   assert.match(workflow, /release-candidate-workflow-name: Build Surface Fixture/);
+  assert.match(workflow, /github-release: true/);
   assert.match(workflow, /publish-required-artifacts-json: "\[\]"/);
   assert.match(workflow, /release-passport-impact-json: >-/);
   assert.match(workflow, /"surfaceImpacts":\[/);
@@ -1620,6 +1698,23 @@ test("expected artifact JSON normalizes supported checks", () => {
       minTotalBytes: 1,
       requiredPaths: ["dist/a.txt"],
     },
+  );
+});
+
+test("buildchain semver version state includes generated site contract version", () => {
+  const summary = validateBuildchainConfig(root, {
+    requireVersionState: true,
+    requireLifecycleStages: ["install", "verify", "publish"],
+  });
+  assert.deepEqual(
+    summary.versionFiles.map((file) => `${file.path}#${file.key}`),
+    [
+      "package.json#version",
+      "dist/site/buildchain-contract.json#product.version",
+    ],
+  );
+  assert.ok(
+    summary.lifecycleStages.some((stage) => stage.name === "version-state"),
   );
 });
 
