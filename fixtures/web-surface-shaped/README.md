@@ -7,13 +7,14 @@ It proves that `project.type = "web-surface"` can declare preview, staging, and
 production channels, named surface host mappings, deterministic deployment
 manifests, and dry-run deploy and cleanup plans without touching AWS.
 
-The fixture is shaped like a `site-libkungfu-dev` repository with three
+The fixture is shaped like a `site-libkungfu-dev` repository with four
 first-class surfaces:
 
 ```text
 hub        https://libkungfu.dev
 core       https://core.libkungfu.dev
 buildchain https://buildchain.libkungfu.dev
+kfd        https://kfd.libkungfu.dev
 ```
 
 For preview and staging, Buildchain resolves the same surface names to the
