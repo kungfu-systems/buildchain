@@ -5,9 +5,11 @@ import { pathToFileURL } from "node:url";
 import {
   applyWebSurfaceCleanup,
   applyWebSurfaceDeploy,
+  checkWebSurfaceHealth,
   defaultWebSurfaceAlias,
   planWebSurfaceCleanup,
   planWebSurfaceDeploy,
+  preflightWebSurfaceProduction,
   validateWebSurfaceProject,
 } from "./web-surface-core.mjs";
 import { writeGitHubOutputs } from "./build-contract-core.mjs";
@@ -138,6 +140,50 @@ export function webSurfaceCli() {
     return result;
   }
 
+  if (mode === "production-preflight") {
+    const plan = readJsonFileArg("plan");
+    const result = preflightWebSurfaceProduction({
+      cwd,
+      plan,
+      execute: readBooleanArg("execute", false),
+    });
+    return Promise.resolve(result).then((resolved) => {
+      writeJson(resolved, output);
+      writeGitHubOutputs({
+        "web-surface-production-preflight-status": resolved.status,
+        "web-surface-production-preflight-json": JSON.stringify(resolved),
+      });
+      if (resolved.status !== "passed") {
+        throw new Error(`web-surface production preflight failed: ${resolved.checks
+          .filter((check) => check.status === "fail")
+          .map((check) => check.message || check.name)
+          .join("; ")}`);
+      }
+      return resolved;
+    });
+  }
+
+  if (mode === "health-check") {
+    const resultFile = readArg("result", process.env.BUILDCHAIN_WEB_SURFACE_APPLY_RESULT || "");
+    const result = resultFile ? JSON.parse(fs.readFileSync(path.resolve(resultFile), "utf8")) : null;
+    const plan = readJsonFileArg("plan");
+    const health = checkWebSurfaceHealth({ cwd, result, plan });
+    return Promise.resolve(health).then((resolved) => {
+      writeJson(resolved, output);
+      writeGitHubOutputs({
+        "web-surface-health-status": resolved.status,
+        "web-surface-health-json": JSON.stringify(resolved),
+      });
+      if (resolved.status !== "passed") {
+        throw new Error(`web-surface health check failed: ${resolved.checks
+          .filter((check) => check.status === "fail")
+          .map((check) => check.message || check.surface)
+          .join("; ")}`);
+      }
+      return resolved;
+    });
+  }
+
   if (mode === "cleanup-plan") {
     const aliases = readArg("aliases", process.env.BUILDCHAIN_WEB_SURFACE_ALIASES || "")
       .split(",")
@@ -198,7 +244,7 @@ export function webSurfaceCli() {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
-    webSurfaceCli();
+    await Promise.resolve(webSurfaceCli());
   } catch (error) {
     console.error(`::error::${String(error.message || error).replace(/\r?\n/g, "%0A")}`);
     process.exitCode = 1;

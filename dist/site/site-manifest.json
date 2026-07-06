@@ -130,7 +130,7 @@
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:614aea65d745e8978d8329545753adf13b8914f84fe35b0148abbd1aff0c0dc2"
+      "digest": "sha256:796e891819f03f0a7ac91f56f1bb74d9e3443d8bb0bee33a3cd053d70bde6a62"
     },
     {
       "id": "infra-contract",
