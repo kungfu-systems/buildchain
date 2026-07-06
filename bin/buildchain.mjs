@@ -8,6 +8,7 @@ import { initBuildchainRepo } from "../scripts/init-repo.mjs";
 import { npmPublishDryRun } from "../scripts/npm-publish-dry-run.mjs";
 import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
 import { verifyInfraContractEvidenceBundle } from "../scripts/infra-contract-core.mjs";
+import { runReleasePropagationCli } from "../scripts/release-propagation.mjs";
 import { validateBuildchainConfig } from "../packages/core/buildchain-config.js";
 import { detectPackageManager } from "../packages/core/package-manager.js";
 import {
@@ -107,6 +108,7 @@ function usage() {
                   [--path <jsonl>] -- <command> [args...]
   buildchain web-surface ...
   buildchain infra-contract ...
+  buildchain release-propagation <plan|write-lock> ...
   buildchain publish-source <lock|manifest|verify-lock|verify-channel-ref|validate-anchored-release> ...
   buildchain build-contract ...
 
@@ -129,6 +131,7 @@ Examples:
   buildchain infra-contract --mode apply --plan <plan.json> --source-sha <sha> --approval-id <id> --dry-run false --execute-adapter-commands true
   buildchain infra-contract --mode propagation-apply --propagation-plan <plan.json> --dry-run true
   buildchain infra-contract --mode evidence-bundle --artifact <artifact.json> --propagation-result <result.json>
+  buildchain release-propagation plan --graph graph.json --upstream-release release.json --json
 `;
 }
 
@@ -927,6 +930,11 @@ async function main(argv = process.argv.slice(2)) {
 
   if (command === "infra-contract") {
     runScript("infra-contract.mjs", args);
+    return;
+  }
+
+  if (command === "release-propagation") {
+    runReleasePropagationCli(args);
     return;
   }
 

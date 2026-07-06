@@ -17,6 +17,16 @@
     "bundle": "buildchain-release-bundle.tar.gz",
     "contract": "kungfu-buildchain-release-passport"
   },
+  "releasePropagation": {
+    "graphContract": "kungfu-buildchain-release-propagation-graph",
+    "planContract": "kungfu-buildchain-release-propagation-plan",
+    "lockContract": "kungfu-buildchain-release-propagation-lock",
+    "defaultChannelPolicy": "preserve",
+    "defaultChannelMap": {
+      "alpha": "alpha",
+      "release": "release"
+    }
+  },
   "npm": {
     "package": "@kungfu-tech/buildchain",
     "command": "./bin/buildchain.mjs",

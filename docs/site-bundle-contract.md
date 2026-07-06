@@ -68,3 +68,7 @@ The P0 bundle includes:
 Future minor lines can add examples, recipes, fixture indexes, and richer
 schema metadata without breaking existing consumers.
 
+`release-propagation.md` describes the package-to-package or package-to-site
+release chain model. The site bundle exposes that document and the
+`release-propagation` CLI entry so downstream sites can render the current
+Buildchain-owned propagation contract instead of hand-writing it.
