@@ -150,6 +150,9 @@ if (!coreIndexSource.includes("createBuildchainContractWorld")) {
 if (!coreIndexSource.includes("KFD2_RELEASE_TRUST_PASSPORT_CONTRACT")) {
   throw new Error("packages/core/index.js must export KFD-2 release trust passport contract");
 }
+if (!coreIndexSource.includes("KFD2_TRUST_PROOF_CONTRACT")) {
+  throw new Error("packages/core/index.js must export KFD-2 trust proof contract");
+}
 for (const requiredSnippet of [
   "createKfd1ReleaseGateEvidence",
   "resolveKfd1Metadata",

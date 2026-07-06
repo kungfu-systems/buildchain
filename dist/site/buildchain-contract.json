@@ -185,7 +185,7 @@
         "release-state SHA is recorded as a durable audit entrance"
       ],
       "breakingDigest": "sha256:b627e1b2ece9b6049517a942c5139e342e6077cdd3d8962d61cef8481b1f70ad",
-      "auditDigest": "sha256:9668f3e01cfe8ce5b94ebdda24aeeaddbd609d8f4cc7cca33d82cbc59aae66f5"
+      "auditDigest": "sha256:22017d4cbe0d89aecfcada7b93f5cdf2935837b2236ae4aeff23f19dbf3d26cb"
     },
     {
       "contractVersion": 1,
@@ -234,7 +234,7 @@
         "prose-only public claims downgrade the release trust passport audit"
       ],
       "breakingDigest": "sha256:f0b636eb925ddbf45ff1a8872454ab7b4dd98857cac12bb75217830130e62a16",
-      "auditDigest": "sha256:9668f3e01cfe8ce5b94ebdda24aeeaddbd609d8f4cc7cca33d82cbc59aae66f5"
+      "auditDigest": "sha256:22017d4cbe0d89aecfcada7b93f5cdf2935837b2236ae4aeff23f19dbf3d26cb"
     },
     {
       "contractVersion": 1,
@@ -294,5 +294,5 @@
     }
   ],
   "compatibilityDigest": "sha256:ca668f3f73ab0d84db0d489efccf6cd556704b069990a37a0c6c77a6519f754b",
-  "contractDigest": "sha256:f65e20b584786e755a55ae20f976ac11959ac86aa24060a79df927a6aa69f54f"
+  "contractDigest": "sha256:53e534b423079ac3f6809a0dcd0b4b34cbca8b277b266a4c9c62501dc3d2daaa"
 }

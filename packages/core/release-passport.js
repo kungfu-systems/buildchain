@@ -21,6 +21,7 @@ export const AGENT_INDEX_CONTRACT = "kungfu-buildchain-agent-index";
 export const PRODUCT_MECHANISM_CONTRACT = "kungfu-buildchain-product-mechanism";
 export const RELEASE_CHECK_REPORT_CONTRACT = "kungfu-buildchain-release-check-report";
 export const KFD2_RELEASE_TRUST_PASSPORT_CONTRACT = "kungfu-buildchain-kfd-2-release-trust-passport-audit";
+export const KFD2_TRUST_PROOF_CONTRACT = "kungfu-buildchain-kfd-2-trust-proof";
 
 const CONTRACTS = new Set([
   RELEASE_PASSPORT_CONTRACT,
@@ -571,6 +572,9 @@ function normalizeKfd2Claim(raw = {}, index = 0) {
       : {};
   const responsibility = claim.responsibility && typeof claim.responsibility === "object" && !Array.isArray(claim.responsibility) ? claim.responsibility : {};
   const residualRisk = arrayOrEmpty(claim.residualRisk || claim.residual_risk);
+  const trustProof = claim.trustProof && typeof claim.trustProof === "object" && !Array.isArray(claim.trustProof)
+    ? claim.trustProof
+    : undefined;
   const missingBindings = [];
   if (sourceBindings.length === 0) missingBindings.push("declared-sources");
   if (machineEvidence.length === 0) missingBindings.push("machine-readable-evidence");
@@ -597,6 +601,7 @@ function normalizeKfd2Claim(raw = {}, index = 0) {
     auditBoundary,
     responsibility,
     residualRisk,
+    ...(trustProof ? { trustProof } : {}),
     proseOnly,
     missingBindings,
     status,
@@ -642,6 +647,17 @@ function kfd2ClaimFromKfd1World(world = {}, index = 0) {
 }
 
 function kfd2ClaimFromKfd3Interface(entry = {}, index = 0) {
+  const witnessHashes = {
+    prebuildWitnessSha256: entry.preBuildWitnessSha256,
+    artifactWitnessSha256: entry.artifactWitnessSha256,
+    prebuildCanonicalSha256: entry.witnessEvidence?.prebuild?.canonicalSha256 || "",
+    artifactCanonicalSha256: entry.witnessEvidence?.artifact?.canonicalSha256 || "",
+  };
+  const reverseAuditBoundary = entry.reverseAudit?.auditBoundary || entry.auditBoundary;
+  const residualRisk = arrayOrEmpty(entry.residualRisk);
+  const proofResult = entry.trustProof?.result === "pass"
+    ? (residualRisk.length > 0 ? "downgraded" : "passed")
+    : "failed";
   return normalizeKfd2Claim({
     id: `kfd-3:${entry.id || index + 1}`,
     public: true,
@@ -658,10 +674,7 @@ function kfd2ClaimFromKfd3Interface(entry = {}, index = 0) {
       { id: "reverse-audit", result: entry.reverseAudit?.status || "" },
     ],
     hashes: {
-      prebuildWitnessSha256: entry.preBuildWitnessSha256,
-      artifactWitnessSha256: entry.artifactWitnessSha256,
-      prebuildCanonicalSha256: entry.witnessEvidence?.prebuild?.canonicalSha256 || "",
-      artifactCanonicalSha256: entry.witnessEvidence?.artifact?.canonicalSha256 || "",
+      ...witnessHashes,
     },
     artifacts: entry.artifactWitness?.artifact?.name || entry.artifactWitness?.artifact?.path
       ? [entry.artifactWitness.artifact]
@@ -673,10 +686,25 @@ function kfd2ClaimFromKfd3Interface(entry = {}, index = 0) {
     },
     auditBoundary: entry.auditBoundary,
     responsibility: entry.responsibility,
-    residualRisk: entry.residualRisk,
-    status: entry.trustProof?.result === "pass"
-      ? (arrayOrEmpty(entry.residualRisk).length > 0 ? "downgraded" : "passed")
-      : "failed",
+    residualRisk,
+    trustProof: {
+      contract: KFD2_TRUST_PROOF_CONTRACT,
+      source: "kfd-3-collaboration-interface-release-gate",
+      result: proofResult,
+      statement: entry.trustProof?.statement || "",
+      kfd3TrustProof: {
+        contract: entry.trustProof?.contract || "",
+        result: entry.trustProof?.result || "",
+        releaseStatus: entry.trustProof?.releaseStatus || entry.releaseStatus || "",
+      },
+      witnessHashes,
+      declaredCapabilityVerification: entry.declaredCapabilityVerification,
+      reverseAudit: entry.reverseAudit,
+      reverseAuditBoundary,
+      residualRisk,
+      responsibility: entry.responsibility,
+    },
+    status: proofResult,
   }, index);
 }
 
@@ -1219,6 +1247,48 @@ function validateKfd2ReleaseTrustPassportAudit(section, issues) {
         id: claim.id || "",
         proseOnly: Boolean(claim.proseOnly),
       }));
+    }
+    if (String(claim.id || "").startsWith("kfd-3:")) {
+      const trustProof = claim.trustProof && typeof claim.trustProof === "object" && !Array.isArray(claim.trustProof)
+        ? claim.trustProof
+        : undefined;
+      if (!trustProof || trustProof.contract !== KFD2_TRUST_PROOF_CONTRACT) {
+        issues.push(issue("error", `kfd-2.claims[${index}].trustProof`, "KFD-3 generated public claims must include a KFD-2 trust proof", {
+          id: claim.id || "",
+          expectedContract: KFD2_TRUST_PROOF_CONTRACT,
+        }));
+      } else {
+        if (!trustProof.witnessHashes?.prebuildWitnessSha256 || !trustProof.witnessHashes?.artifactWitnessSha256) {
+          issues.push(issue("error", `kfd-2.claims[${index}].trustProof.witnessHashes`, "KFD-2 trust proof must preserve KFD-3 witness hashes", {
+            id: claim.id || "",
+          }));
+        }
+        if (!trustProof.declaredCapabilityVerification?.result) {
+          issues.push(issue("error", `kfd-2.claims[${index}].trustProof.declaredCapabilityVerification`, "KFD-2 trust proof must preserve declared capability verification", {
+            id: claim.id || "",
+          }));
+        }
+        if (!trustProof.reverseAudit?.status) {
+          issues.push(issue("error", `kfd-2.claims[${index}].trustProof.reverseAudit`, "KFD-2 trust proof must preserve reverse audit result", {
+            id: claim.id || "",
+          }));
+        }
+        if (!trustProof.reverseAuditBoundary || typeof trustProof.reverseAuditBoundary !== "object" || Array.isArray(trustProof.reverseAuditBoundary)) {
+          issues.push(issue("error", `kfd-2.claims[${index}].trustProof.reverseAuditBoundary`, "KFD-2 trust proof must preserve the reverse audit boundary", {
+            id: claim.id || "",
+          }));
+        }
+        if (!Array.isArray(trustProof.residualRisk)) {
+          issues.push(issue("error", `kfd-2.claims[${index}].trustProof.residualRisk`, "KFD-2 trust proof must preserve residual risk as an array", {
+            id: claim.id || "",
+          }));
+        }
+        if (!trustProof.responsibility?.registryFactsOwner || !trustProof.responsibility?.artifactVerificationOwner || !trustProof.responsibility?.releasePassportProofOwner) {
+          issues.push(issue("error", `kfd-2.claims[${index}].trustProof.responsibility`, "KFD-2 trust proof must preserve KFD-3 responsibility state", {
+            id: claim.id || "",
+          }));
+        }
+      }
     }
   }
   if (section.status === "failed") {
