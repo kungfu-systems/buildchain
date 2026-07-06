@@ -143,3 +143,15 @@ export {
   truncateUtf8,
   workflowFrictionMarker,
 } from "./issue-reporting.js";
+
+export {
+  RELEASE_PROPAGATION_GRAPH_CONTRACT,
+  RELEASE_PROPAGATION_LOCK_CONTRACT,
+  RELEASE_PROPAGATION_PLAN_CONTRACT,
+  createReleasePropagationLock,
+  normalizeReleasePropagationGraph,
+  planReleasePropagation,
+  readReleasePropagationJson,
+  resolvePropagationChannel,
+  writeReleasePropagationLock,
+} from "./release-propagation.js";

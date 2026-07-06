@@ -45,6 +45,11 @@
       "purpose": "Fail closed unless a release passport and its evidence are complete."
     },
     {
+      "id": "release-propagation",
+      "usage": "buildchain release-propagation <plan|write-lock>",
+      "purpose": "Plan channel-preserving downstream release PRs and write exact upstream release locks."
+    },
+    {
       "id": "verify-infra-contract-evidence-bundle",
       "usage": "buildchain verify infra-contract-evidence-bundle <file>",
       "purpose": "Fail closed unless an infra-contract lifecycle evidence bundle is complete, hash-bound, and validation-consistent."

@@ -27,6 +27,13 @@
       "exists": true
     },
     {
+      "id": "release-propagation",
+      "title": "Release propagation",
+      "path": "docs/release-propagation.md",
+      "plane": "use",
+      "exists": true
+    },
+    {
       "id": "binary-distribution",
       "title": "Binary distribution contract",
       "path": "docs/binary-distribution.md",

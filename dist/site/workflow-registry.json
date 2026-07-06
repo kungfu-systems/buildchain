@@ -21,6 +21,12 @@
       "status": "active"
     },
     {
+      "id": "release-propagation",
+      "path": ".github/workflows/release-propagation.yml",
+      "surface": "release-propagation",
+      "status": "preview"
+    },
+    {
       "id": "dev-pr-auto-merge",
       "path": ".github/workflows/dev-pr-auto-merge.yml",
       "surface": "dev-governance",

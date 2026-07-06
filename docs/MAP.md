@@ -33,6 +33,7 @@ running artifact), *use* (consume / extend) - and a **status**:
 | How do I declare version files and custom lifecycle commands? | [`lifecycle-protocol.md`](lifecycle-protocol.md) | use | stable |
 | How does publish evidence, recovery, and finalization work? | [`publish-transaction.md`](publish-transaction.md) | verify | stable |
 | How do I publish or verify release passport artifacts? | [`release-passport.md`](release-passport.md) | use | stable |
+| How do I propagate finalized upstream releases to downstream package/site PRs? | [`release-propagation.md`](release-propagation.md) | use | preview |
 | How do I prove a PR-stage reusable build is the artifact source promoted later? | [`release-candidate.md`](release-candidate.md) + [`reusable-build-surface.md`](reusable-build-surface.md) | verify | stable |
 | Why are binary release assets archived by platform, and where is the single bundle? | [`binary-distribution.md`](binary-distribution.md) | verify | stable |
 | How do I add timestamped logs inside build scripts? | [`toolkit-observability.md`](toolkit-observability.md) | use | stable |
@@ -87,6 +88,8 @@ running artifact), *use* (consume / extend) - and a **status**:
   and [`release-passport.md`](release-passport.md).
 - **Trusted Publishing / npm / publish evidence / recovery** ->
   [`cli.md`](cli.md) and [`publish-transaction.md`](publish-transaction.md).
+- **release chains / upstream package as source of truth / site synchronization** ->
+  [`release-propagation.md`](release-propagation.md).
 - **GitHub Release passport / binary assets / artifact evidence / agent release checks** ->
   [`release-passport.md`](release-passport.md),
   [`binary-distribution.md`](binary-distribution.md), and [`cli.md`](cli.md).
