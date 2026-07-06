@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-impact",
+  "versionImpact": {
+    "final": "minor",
+    "source": "buildchain-release-governance",
+    "rationale": "Buildchain v2.8 promotes KFD-1 contract-world release gates and GitHub Checks protected-channel governance as a minor runtime line."
+  },
+  "surfaceImpacts": [
+    {
+      "id": "kfd-1-contract-world-release-gate",
+      "impact": "minor",
+      "class": "release-passport",
+      "rationale": "Adds a public KFD-1 witness API and Buildchain-owned release passport evidence for byte-for-byte contract-world verification.",
+      "source": "buildchain-ref-promotion.yml"
+    },
+    {
+      "id": "required-check-protection",
+      "impact": "minor",
+      "class": "release-governance",
+      "rationale": "Repairs managed protected channel branches to require GitHub Actions check runs instead of legacy commit status contexts.",
+      "source": "buildchain-ref-promotion.yml"
+    }
+  ],
+  "classification": "minor",
+  "breaking": false,
+  "security": false,
+  "migrationRequired": false,
+  "summary": "Buildchain v2.8 minor release line for KFD-1 contract-world release gates and protected check governance.",
+  "release": {
+    "tag": "v2.8.0-alpha.0",
+    "line": "v2.8"
+  }
+}
