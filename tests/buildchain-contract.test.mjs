@@ -137,6 +137,24 @@ test("Buildchain contract lock script writes drift issue body for compatible dri
   assert.match(fs.readFileSync(issueBodyPath, "utf8"), /Buildchain contract drift/);
 });
 
+test("contract world exposes KFD-3 collaboration-interface release gate", () => {
+  const contract = createBuildchainContractWorld({
+    root: path.resolve(import.meta.dirname, ".."),
+    packageJson: { name: "@kungfu-tech/buildchain", version: "2.8.0" },
+  });
+  const surface = contract.surfaces.find((entry) => (
+    entry.id === "kfd-3-collaboration-interface-release-gate"
+  ));
+
+  assert.ok(surface);
+  assert.match(surface.requiredInputs.join("\n"), /KFD-3 prebuild witness JSON/);
+  assert.match(surface.requiredInputs.join("\n"), /KFD-3 artifact witness JSON or verify command/);
+  assert.equal(
+    surface.breakingDefaults.releaseGateContract,
+    "kungfu-buildchain-kfd-3-collaboration-interface-release-gate",
+  );
+});
+
 test("write-lock records resolved SHA and contract digest", () => {
   const workspace = tempDir("write-lock");
   const contract = createBuildchainContractWorld({

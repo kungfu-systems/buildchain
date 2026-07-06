@@ -76,3 +76,22 @@ tarball bytes, marks `publish-package-main` as `role: main`, and marks every
 other package as `role: platform`. Consumer workflows therefore stay
 declarative and do not need their own artifact download or publish-evidence
 generation scripts.
+
+Products that publish a KFD-3 collaboration interface can keep that path
+declarative too. Pass the pre-build witness path and either artifact-side
+witness paths or the product-owned verify command into the wrapper:
+
+```yaml
+jobs:
+  promote:
+    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v2
+    with:
+      channel: alpha
+      artifact-name: libnode
+      release-passport-kfd-3-prebuild-witness-jsons: .buildchain/kfd-3/collaboration-interface.prebuild.json
+      release-passport-kfd-3-artifact-verify-command: kungfu agent verify --json
+```
+
+Buildchain forwards those declarations into `promote-buildchain-ref`, compares
+the declared shipped public surfaces with artifact-exposed public surfaces, and
+records the result under the KFD-provided `kfd-3` release passport section.

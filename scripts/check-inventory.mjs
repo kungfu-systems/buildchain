@@ -157,6 +157,15 @@ for (const requiredSnippet of [
   }
 }
 for (const requiredSnippet of [
+  "createKfd3CollaborationInterfaceReleaseGateEvidence",
+  "resolveKfd3Metadata",
+  "validateKfd3CollaborationInterfaceReleaseGateEvidence",
+]) {
+  if (!coreIndexSource.includes(requiredSnippet)) {
+    throw new Error(`packages/core/index.js must export KFD-3 gate API: ${requiredSnippet}`);
+  }
+}
+for (const requiredSnippet of [
   "surfaceImpacts[]",
   "versionImpact.final",
   "kfd-registry-schema",
@@ -180,6 +189,10 @@ for (const requiredSnippet of [
   "Verification fails closed",
   "Floating Buildchain contract lock",
   "buildchain.contract-lock.json",
+  "--kfd-3-prebuild-witness-json",
+  "--kfd-3-artifact-verify-cmd",
+  "currently named `kfd-3`",
+  "KFD-3 collaboration-interface release gate",
 ]) {
   if (!releasePassportDoc.includes(requiredSnippet)) {
     throw new Error(`release passport doc missing KFD-1 gate snippet: ${requiredSnippet}`);
@@ -286,9 +299,13 @@ const releaseCandidatePromoteWorkflow = fs.readFileSync(path.join(root, ".github
 for (const requiredSnippet of [
   "release-passport-kfd-1-witness-jsons:",
   "release-passport-kfd-1-witness-jsons: ${{ inputs.release-passport-kfd-1-witness-jsons }}",
+  "release-passport-kfd-3-prebuild-witness-jsons:",
+  "release-passport-kfd-3-prebuild-witness-jsons: ${{ inputs.release-passport-kfd-3-prebuild-witness-jsons }}",
+  "release-passport-kfd-3-artifact-witness-jsons:",
+  "release-passport-kfd-3-artifact-verify-command:",
 ]) {
   if (!releaseCandidatePromoteWorkflow.includes(requiredSnippet)) {
-    throw new Error(`release candidate promote workflow missing KFD-1 gate pass-through: ${requiredSnippet}`);
+    throw new Error(`release candidate promote workflow missing KFD gate pass-through: ${requiredSnippet}`);
   }
 }
 for (const forbiddenSnippet of [

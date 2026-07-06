@@ -5,8 +5,8 @@
     "ref": "v2",
     "resolvedSha": "a4b2c391443d24349ac83cfe26642ce08108ae7d",
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "contractDigest": "sha256:149920052e5ddeb1809489a78f8f54e4b90c9af1a91b9c43959afedde658e06b",
-    "compatibilityDigest": "sha256:3f179544de090b2023f340c4eb12ce525c904c63f979175d1424358c68cc86dd",
+    "contractDigest": "sha256:87688c5cef8e5563f3f741e950225c0c70a7cd35a6c81d2b7e49e458eca79f6f",
+    "compatibilityDigest": "sha256:282a42fe4b27fcf213f30bba0c69c89f8cc86e5c25aa48b6ea0509d38f928c68",
     "majorLine": "v2",
     "compatibilityPolicy": "major-compatible",
     "acceptedAt": "2026-07-06T00:00:00.000Z",
@@ -40,6 +40,11 @@
         "id": "kfd-1-release-gate",
         "kind": "schema",
         "breakingDigest": "sha256:a9ae5a8b523cd0c2d846a6a77a8317d9dfaa4e4bb1457e1f6c021ea7eae855db"
+      },
+      {
+        "id": "kfd-3-collaboration-interface-release-gate",
+        "kind": "schema",
+        "breakingDigest": "sha256:3bb160a01e89fa2739506969e56d3f8bb9f7ae3c0c9d575a148b3e3b6abfa7ad"
       },
       {
         "id": "buildchain-cli",

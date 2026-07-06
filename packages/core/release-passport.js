@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import http from "node:http";
 import https from "node:https";
@@ -6,8 +7,11 @@ import os from "node:os";
 import path from "node:path";
 import {
   createKfd1ReleaseGateEvidence,
+  createKfd3CollaborationInterfaceReleaseGateEvidence,
   resolveKfd1Metadata,
+  resolveKfd3Metadata,
   validateKfd1ReleaseGateEvidence,
+  validateKfd3CollaborationInterfaceReleaseGateEvidence,
 } from "./kfd-gate.js";
 
 export const RELEASE_PASSPORT_CONTRACT = "kungfu-buildchain-release-passport";
@@ -268,6 +272,36 @@ function parseJsonInputWithMeta(value, fallback = undefined) {
     };
   }
   const parsed = JSON.parse(input);
+  return {
+    value: parsed,
+    path: "",
+    sha256: sha256Text(stableJson(parsed)),
+  };
+}
+
+function parseJsonCommandOutput({ command = "", cwd = process.cwd(), label = "command" } = {}) {
+  const normalized = String(command || "").trim();
+  if (!normalized) {
+    return { value: undefined, path: "", sha256: "" };
+  }
+  const result = spawnSync(normalized, [], {
+    cwd,
+    shell: true,
+    encoding: "utf8",
+    maxBuffer: 16 * 1024 * 1024,
+  });
+  if (result.error) {
+    throw new Error(`${label} failed to start: ${result.error.message}`);
+  }
+  if (result.status !== 0) {
+    const stderr = String(result.stderr || "").trim();
+    throw new Error(`${label} exited with ${result.status}${stderr ? `: ${stderr.slice(-1000)}` : ""}`);
+  }
+  const stdout = String(result.stdout || "").trim();
+  if (!stdout) {
+    throw new Error(`${label} produced no JSON on stdout`);
+  }
+  const parsed = JSON.parse(stdout);
   return {
     value: parsed,
     path: "",
@@ -627,6 +661,7 @@ export function createReleasePassport({
   impact = undefined,
   workflow = {},
   kfd1 = undefined,
+  kfd3 = undefined,
 } = {}) {
   const normalizedTag = nonEmptyString(tag, "tag");
   const artifactEvidence = createArtifactEvidence({ assets, repository, tag: normalizedTag, sourceSha, workflow });
@@ -644,6 +679,7 @@ export function createReleasePassport({
   const normalizedImpact = normalizeImpactLedger(impact, { tag: normalizedTag, line });
   const kfd1Metadata = resolveKfd1Metadata();
   const normalizedKfd1 = kfd1?.passportSection ? kfd1 : undefined;
+  const normalizedKfd3 = kfd3?.passportSection ? kfd3 : undefined;
   const publishArtifacts = normalizedPublishEvidence?.artifacts || [];
   const normalizedPublishSummary = normalizePublishSummary({
     packageSet: normalizedPackageSet,
@@ -745,6 +781,7 @@ export function createReleasePassport({
     ...(normalizedPlatformArtifactManifests.length > 0 ? { platformArtifactManifests: normalizedPlatformArtifactManifests } : {}),
     ...(normalizedDistTagPromotionEvidence ? { distTagPromotion: normalizedDistTagPromotionEvidence } : {}),
     ...(normalizedKfd1 ? { [normalizedKfd1.key || kfd1Metadata.key]: normalizedKfd1.passportSection } : {}),
+    ...(normalizedKfd3 ? { [normalizedKfd3.key || "kfd-3"]: normalizedKfd3.passportSection } : {}),
     versionImpact: normalizedImpact.versionImpact,
     surfaceImpacts: normalizedImpact.surfaceImpacts,
     artifacts: [
@@ -781,6 +818,7 @@ export function createReleasePassport({
       })),
       distTagPromotionEvidence: normalizedDistTagPromotionEvidence?.path || "",
       kfd1: normalizedKfd1 ? `${normalizedKfd1.key || kfd1Metadata.key}` : "",
+      kfd3: normalizedKfd3 ? `${normalizedKfd3.key || kfd3Metadata.key}` : "",
       impact: impactPath,
       checkReport: checkReportPath,
       agentIndex: agentIndexPath,
@@ -815,6 +853,9 @@ export function collectGitHubReleasePassport({
   platformManifestJsons = [],
   distTagEvidenceJson = "",
   kfd1WitnessJsons = [],
+  kfd3PrebuildWitnessJsons = [],
+  kfd3ArtifactWitnessJsons = [],
+  kfd3ArtifactVerifyCommand = "",
   releaseJsonExtra = "",
   publishJson = "",
   workflow = {},
@@ -837,6 +878,23 @@ export function collectGitHubReleasePassport({
     .filter(Boolean)
     .map((witnessJson) => parseJsonInputWithMeta(witnessJson, undefined))
     .filter((meta) => meta.value);
+  const kfd3PrebuildWitnessMetas = (kfd3PrebuildWitnessJsons || [])
+    .filter(Boolean)
+    .map((witnessJson) => parseJsonInputWithMeta(witnessJson, undefined))
+    .filter((meta) => meta.value);
+  const kfd3ArtifactWitnessMetas = (kfd3ArtifactWitnessJsons || [])
+    .filter(Boolean)
+    .map((witnessJson) => parseJsonInputWithMeta(witnessJson, undefined))
+    .filter((meta) => meta.value);
+  const kfd3ArtifactCommandMeta = parseJsonCommandOutput({
+    command: kfd3ArtifactVerifyCommand,
+    cwd,
+    label: "KFD-3 artifact verify command",
+  });
+  const kfd3ArtifactWitnesses = [
+    ...kfd3ArtifactWitnessMetas.map((meta) => meta.value),
+    ...(kfd3ArtifactCommandMeta.value ? [kfd3ArtifactCommandMeta.value] : []),
+  ];
   const publish = parseJsonInput(publishJson, {});
   const assets = [
     ...(Array.isArray(release.assets) ? release.assets : []),
@@ -854,6 +912,10 @@ export function collectGitHubReleasePassport({
     artifactRoot: assetsDir ? path.resolve(cwd, assetsDir) : "",
     artifacts: assets,
     witnesses: kfd1WitnessMetas.map((meta) => meta.value),
+  });
+  const kfd3 = createKfd3CollaborationInterfaceReleaseGateEvidence({
+    prebuildWitnesses: kfd3PrebuildWitnessMetas.map((meta) => meta.value),
+    artifactWitnesses: kfd3ArtifactWitnesses,
   });
   const passport = createReleasePassport({
     cwd,
@@ -892,6 +954,7 @@ export function collectGitHubReleasePassport({
     publish,
     impact,
     kfd1,
+    kfd3,
     publishEvidencePath: publishEvidenceMeta.path ? path.relative(resolvedOutputDir, publishEvidenceMeta.path).split(path.sep).join("/") : "",
     transactionStatePath: transactionMeta.path ? path.relative(resolvedOutputDir, transactionMeta.path).split(path.sep).join("/") : "",
     workflow,
@@ -1194,6 +1257,18 @@ export function createReleaseCheckReport({
   const requiredSurfaceImpacts = surfaceImpactRequirement({ passport, impact });
   const kfd1Metadata = resolveKfd1Metadata();
   issues.push(...validateKfd1ReleaseGateEvidence(passport?.[kfd1Metadata.key], { metadata: kfd1Metadata }));
+  const fallbackKfd3Section = passport?.["kfd-3"];
+  try {
+    const kfd3Metadata = resolveKfd3Metadata();
+    const kfd3Section = passport?.[kfd3Metadata.key] || fallbackKfd3Section;
+    if (kfd3Section) {
+      issues.push(...validateKfd3CollaborationInterfaceReleaseGateEvidence(kfd3Section, { metadata: kfd3Metadata }));
+    }
+  } catch (error) {
+    if (fallbackKfd3Section) {
+      issues.push(issue("error", "kfd-3.metadata", error.message));
+    }
+  }
   if (requiredSurfaceImpacts.required && surfaceImpacts.length === 0) {
     issues.push(issue("error", "impact.surfaceImpacts.required", "surfaceImpacts[] is required for this release passport type", requiredSurfaceImpacts));
   }
