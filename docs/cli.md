@@ -304,6 +304,58 @@ The verifier fails closed when required protocol files are absent, artifacts are
 not covered by evidence, or digests disagree. The explanation output is shaped
 for agents: trust, completeness, impact, recovery route, and next action.
 
+Verify a published artifact by subject:
+
+```bash
+buildchain verify artifact ./Kungfu-2.8.0-windows-x64.exe
+buildchain inspect artifact ./Kungfu-2.8.0-windows-x64.exe --json
+buildchain explain artifact ./Kungfu-2.8.0-windows-x64.exe --for agent --json
+```
+
+`verify artifact` computes or obtains the subject digest, discovers the
+detached release passport, verifies the passport, then requires that the
+subject digest appears in the passport's release assets, package set, publish
+evidence, or artifact evidence. Outcomes are explicit: `pass`, `fail`, or
+`unverifiable`. A filename is only a hint; trust comes from digest equality.
+
+Discovery is fail-closed and ordered:
+
+1. `--passport <file-or-url>`.
+2. Sidecar pointer, such as `<artifact>.buildchain-passport.json`.
+3. Embedded/package pointer, such as `package.json` `buildchain.releasePassport`.
+4. Local config or org index, such as `.buildchain/artifact-passport-locators.json`.
+5. GitHub Release default discovery from `github-release:` subjects, GitHub
+   Release asset URLs, or `--repository <owner/repo> --tag <tag>`.
+6. Custom `--locator-config <json-or-url>`.
+7. `unverifiable` with retry guidance.
+
+Locator files are policy, not protocol. They map subject fields such as
+`name`, `kind`, `version`, `digest`, `repository`, or `tag` to a detached
+passport location:
+
+```json
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-artifact-passport-locator",
+  "locators": [
+    {
+      "match": {
+        "name": "Kungfu-2.8.0-windows-x64.exe",
+        "digest": "sha256:..."
+      },
+      "passport": "../release-passport/buildchain.release.json"
+    }
+  ]
+}
+```
+
+Supported subject shapes include local files and directories, URLs,
+`npm:<name>@<version>`, `oci:...`, `s3:...`,
+`github-release:<owner/repo>@<tag>/<asset>`, and deployment endpoints. Local
+files, directories, and URLs are digestable directly; remote package, OCI,
+object storage, and deployment subjects should provide a digest or resolve to a
+locator that records one.
+
 Verify infra-contract lifecycle evidence bundles:
 
 ```bash

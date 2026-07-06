@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { runDevPrAutoMerge } from "./dev-pr-auto-merge.mjs";
 
-const DEFAULT_TARGET_BRANCH = "dev/v2/v2.5";
+const DEFAULT_TARGET_BRANCH = "";
 const DEFAULT_OUTPUT_PATH = ".buildchain/patrol/result.json";
 const VALID_CADENCES = new Set(["daily", "weekly", "monthly"]);
 const VALID_MODES = new Set(["cadence-default", "inspect", "merge-ready-dev-prs", "cleanup-safe"]);
@@ -47,9 +47,9 @@ function normalizeRepository(value) {
 }
 
 function normalizeTargetBranch(value) {
-  const branch = String(value || DEFAULT_TARGET_BRANCH).replace(/^refs\/heads\//, "");
+  const branch = String(value || process.env.GITHUB_REF_NAME || DEFAULT_TARGET_BRANCH).replace(/^refs\/heads\//, "");
   if (!/^dev\/v\d+\/v\d+\.\d+$/.test(branch)) {
-    throw new Error(`target-branch must be a semver dev branch such as dev/v2/v2.5, got: ${branch}`);
+    throw new Error(`target-branch must be a semver dev branch such as dev/v2/v2.N, got: ${branch || "<empty>"}`);
   }
   return branch;
 }

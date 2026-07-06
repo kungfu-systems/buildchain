@@ -122,6 +122,34 @@ Verify a release passport:
 buildchain verify release-passport .buildchain/release-passport/buildchain.release.json
 ```
 
+Verify a specific artifact by discovering its detached passport:
+
+```bash
+buildchain verify artifact ./Kungfu-2.8.0-windows-x64.exe
+```
+
+Artifact verification is subject-centric. Buildchain identifies the subject,
+computes or obtains its digest, discovers a detached `buildchain.release.json`,
+verifies that release passport and its evidence, then proves the subject digest
+appears in the passport's artifacts, package set, publish evidence, or artifact
+evidence. The command returns `pass`, `fail`, or `unverifiable`; missing
+passports and digest mismatches fail closed.
+
+Discovery is ordered and auditable:
+
+1. explicit `--passport`;
+2. sidecar pointer;
+3. embedded/package pointer;
+4. local config or org index;
+5. GitHub Release default from artifact naming/repository/tag hints;
+6. custom locator;
+7. unverifiable with retry guidance.
+
+For Buildchain-managed GitHub Release lanes, release passport files are
+published as release assets by default when the upload backend is enabled, so a
+GitHub Release asset URL can discover the sibling `buildchain.release.json`
+without a consumer copying YAML resolver logic.
+
 Explain a release to an agent:
 
 ```bash

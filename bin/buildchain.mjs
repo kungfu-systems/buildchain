@@ -26,6 +26,10 @@ import {
   verifyReleasePassport,
 } from "../packages/core/release-passport.js";
 import {
+  explainArtifactPassport,
+  verifyArtifactPassport,
+} from "../packages/core/artifact-passport.js";
+import {
   BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT,
   formatDiagnosticsSummaryTable,
   startProcessSampler,
@@ -74,13 +78,18 @@ function usage() {
                                     [--release-extra-json <json-or-path>]
                                     [--publish-json <json-or-path>] [--output-dir <dir>] [--json]
   buildchain verify release-passport <file-or-url> [--json]
+  buildchain verify artifact <file|dir|url|npm:...|oci:...|github-release:...>
+                             [--passport <file-or-url>] [--locator-config <json>]
+                             [--repository <owner/repo>] [--tag <tag>] [--json]
   buildchain verify infra-contract-evidence-bundle <file> [--json]
   buildchain verify observability-log <jsonl> [--min-events <n>]
                                              [--require-phase <csv>]
                                              [--require-component <csv>]
                                              [--require-event <csv>] [--allow-errors] [--json]
   buildchain explain release --passport <file-or-url> [--for human|agent] [--json]
+  buildchain explain artifact <subject> [--passport <file-or-url>] [--for human|agent] [--json]
   buildchain inspect release --passport <file-or-url> [--json]
+  buildchain inspect artifact <subject> [--passport <file-or-url>] [--json]
   buildchain doctor [--cwd <dir>] [--require-publish-source-lock] [--json]
   buildchain log <info|warn|error> --event <name> [--phase <phase>]
                  [--component <name>] [--source <name>] [--attribute key=value]...
@@ -110,6 +119,7 @@ Examples:
   buildchain span --event native.build -- cmake --build build
   buildchain collect github-release --tag v2.2.0 --assets-dir dist --output-dir .buildchain/release-passport
   buildchain verify release-passport .buildchain/release-passport/buildchain.release.json
+  buildchain verify artifact ./dist/buildchain-x86_64-unknown-linux-gnu.tar.gz --passport .buildchain/release-passport/buildchain.release.json
   buildchain verify infra-contract-evidence-bundle .buildchain/infra-contract-evidence-bundle.json
   buildchain verify observability-log .buildchain/logs/events.jsonl --min-events 4 --require-phase build
   buildchain infra-contract --mode plan --source-sha <sha>
@@ -736,6 +746,34 @@ async function main(argv = process.argv.slice(2)) {
 
   if (command === "verify") {
     const [subcommand = "", location = "", ...verifyArgs] = args;
+    if (subcommand === "artifact") {
+      if (!location) {
+        throw new Error("usage: buildchain verify artifact <subject>");
+      }
+      const report = await verifyArtifactPassport({
+        subject: location,
+        cwd: process.cwd(),
+        passportLocation: readFlag(verifyArgs, "passport", ""),
+        locatorConfig: readFlag(verifyArgs, "locator-config", ""),
+        repository: readFlag(verifyArgs, "repository", ""),
+        tag: readFlag(verifyArgs, "tag", ""),
+        githubReleaseBaseUrl: readFlag(verifyArgs, "github-release-base-url", ""),
+        subjectDigest: readFlag(verifyArgs, "subject-digest", ""),
+        subjectKind: readFlag(verifyArgs, "subject-kind", ""),
+      });
+      if (readBooleanFlag(verifyArgs, "json")) {
+        printJson(report);
+      } else {
+        process.stdout.write(`artifact: ${report.outcome}\n`);
+        process.stdout.write(`subject: ${report.subject?.name || location}\n`);
+        process.stdout.write(`passport: ${report.passport?.location || report.discovery?.passportLocation || "unresolved"}\n`);
+        for (const entry of report.issues) {
+          process.stdout.write(`- ${entry.level}: ${entry.code}: ${entry.message}\n`);
+        }
+      }
+      process.exitCode = report.ok ? 0 : 1;
+      return;
+    }
     if (subcommand === "observability-log") {
       if (!location) {
         throw new Error("usage: buildchain verify observability-log <jsonl>");
@@ -797,6 +835,33 @@ async function main(argv = process.argv.slice(2)) {
 
   if (command === "explain") {
     const [subcommand = "", ...explainArgs] = args;
+    if (subcommand === "artifact") {
+      const subject = explainArgs[0] || "";
+      if (!subject) {
+        throw new Error("usage: buildchain explain artifact <subject>");
+      }
+      const explanation = await explainArtifactPassport({
+        subject,
+        cwd: process.cwd(),
+        passportLocation: readFlag(explainArgs, "passport", ""),
+        locatorConfig: readFlag(explainArgs, "locator-config", ""),
+        repository: readFlag(explainArgs, "repository", ""),
+        tag: readFlag(explainArgs, "tag", ""),
+        githubReleaseBaseUrl: readFlag(explainArgs, "github-release-base-url", ""),
+        subjectDigest: readFlag(explainArgs, "subject-digest", ""),
+        subjectKind: readFlag(explainArgs, "subject-kind", ""),
+        forAudience: readFlag(explainArgs, "for", "human"),
+      });
+      if (readBooleanFlag(explainArgs, "json")) {
+        printJson(explanation);
+      } else {
+        process.stdout.write(`artifact: ${explanation.subject?.name || subject}\n`);
+        process.stdout.write(`trust: ${explanation.trust}\n`);
+        process.stdout.write(`next action: ${explanation.nextAction}\n`);
+      }
+      process.exitCode = explanation.trust === "pass" ? 0 : 1;
+      return;
+    }
     if (subcommand !== "release") {
       throw new Error("usage: buildchain explain release --passport <file-or-url>");
     }
@@ -820,6 +885,26 @@ async function main(argv = process.argv.slice(2)) {
 
   if (command === "inspect") {
     const [subcommand = "", ...inspectArgs] = args;
+    if (subcommand === "artifact") {
+      const subject = inspectArgs[0] || "";
+      if (!subject) {
+        throw new Error("usage: buildchain inspect artifact <subject>");
+      }
+      const report = await verifyArtifactPassport({
+        subject,
+        cwd: process.cwd(),
+        passportLocation: readFlag(inspectArgs, "passport", ""),
+        locatorConfig: readFlag(inspectArgs, "locator-config", ""),
+        repository: readFlag(inspectArgs, "repository", ""),
+        tag: readFlag(inspectArgs, "tag", ""),
+        githubReleaseBaseUrl: readFlag(inspectArgs, "github-release-base-url", ""),
+        subjectDigest: readFlag(inspectArgs, "subject-digest", ""),
+        subjectKind: readFlag(inspectArgs, "subject-kind", ""),
+      });
+      printJson(report);
+      process.exitCode = report.ok ? 0 : 1;
+      return;
+    }
     if (subcommand !== "release") {
       throw new Error("usage: buildchain inspect release --passport <file-or-url>");
     }

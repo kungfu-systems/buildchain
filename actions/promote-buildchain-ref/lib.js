@@ -30,7 +30,10 @@ import {
   validatePublishEvidence,
   writeReleaseTransaction,
 } from "../../packages/core/publish-transaction.js";
-import { collectGitHubReleasePassport } from "../../packages/core/release-passport.js";
+import {
+  collectGitHubReleasePassport,
+  verifyReleasePassport,
+} from "../../packages/core/release-passport.js";
 import { validateReleaseCandidatePassport } from "../../packages/core/release-candidate.js";
 
 const COMMIT_IDENTITY = {
@@ -627,6 +630,36 @@ function backfillReleasePassportStateSha(outputDir, releaseStateSha) {
   passport.release.releaseStateSha = releaseStateSha;
   writeJsonFile(passportPath, passport);
   return passportPath;
+}
+
+function summarizeReleasePassportIssues(report) {
+  return (Array.isArray(report?.issues) ? report.issues : [])
+    .filter((entry) => entry?.level === "error")
+    .map((entry) => {
+      const code = entry?.code || "unknown";
+      const message = entry?.message || "release passport verification error";
+      return `${code}: ${message}`;
+    })
+    .join("; ");
+}
+
+async function verifyCollectedReleasePassport({ collected, cwd, phase = "generated" }) {
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const relativePassportPath = path.relative(cwd, passportPath).split(path.sep).join("/");
+  if (collected.checkReport?.ok !== true) {
+    const issues = summarizeReleasePassportIssues(collected.checkReport);
+    throw new Error(
+      `Release passport ${phase} check failed for ${relativePassportPath}${issues ? `: ${issues}` : ""}`,
+    );
+  }
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+  if (report.ok !== true) {
+    const issues = summarizeReleasePassportIssues(report);
+    throw new Error(
+      `Release passport ${phase} verification failed for ${relativePassportPath}${issues ? `: ${issues}` : ""}`,
+    );
+  }
+  return report;
 }
 
 function splitPathList(value = "") {
@@ -1838,12 +1871,14 @@ async function collectAndPersistReleasePassport({
     packageVersion: result.transaction.version,
     packageSetJson: result.packageSet ? JSON.stringify(result.packageSet) : "",
     publishEvidenceJson: result.evidencePath,
-    trustedPublishingJson: JSON.stringify({
-      provider: "npm",
-      enabled: result.publishContract?.auth === "trusted-publishing",
-      auth: result.publishContract?.auth || "",
-      workflowRunId: result.transaction.run_id || "",
-    }),
+    trustedPublishingJson: result.publishContract?.auth === "trusted-publishing"
+      ? JSON.stringify({
+          provider: "npm",
+          enabled: true,
+          auth: "trusted-publishing",
+          workflowRunId: result.transaction.run_id || "",
+        })
+      : "",
     transactionJson: JSON.stringify(transactionJson),
     anchorManifestJson: anchorManifestPath && fs.existsSync(anchorManifestPath) ? anchorManifestPath : "",
     impactJson,
@@ -1890,6 +1925,7 @@ async function collectAndPersistReleasePassport({
       runnerImage: process.env.ImageOS || "",
     },
   });
+  await verifyCollectedReleasePassport({ collected, cwd, phase: "generated" });
   const durable = await persistDurableReleaseTransaction({
     octokit: result.octokit,
     owner: result.owner,
@@ -1900,6 +1936,7 @@ async function collectAndPersistReleasePassport({
     extraFiles: releasePassportArtifactFiles(collected.outputDir),
   });
   backfillReleasePassportStateSha(collected.outputDir, durable?.sha || "");
+  await verifyCollectedReleasePassport({ collected, cwd, phase: "backfilled" });
   const finalDurable = await persistDurableReleaseTransaction({
     octokit: result.octokit,
     owner: result.owner,

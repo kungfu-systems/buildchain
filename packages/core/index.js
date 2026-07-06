@@ -93,6 +93,18 @@ export {
 } from "./release-candidate.js";
 
 export {
+  ARTIFACT_PASSPORT_LOCATOR_CONTRACT,
+  ARTIFACT_PASSPORT_POINTER_CONTRACT,
+  ARTIFACT_VERIFICATION_CONTRACT,
+  discoverArtifactPassport,
+  explainArtifactPassport,
+  resolveArtifactSubject,
+  sha512IntegrityBuffer,
+  sha512IntegrityFile,
+  verifyArtifactPassport,
+} from "./artifact-passport.js";
+
+export {
   AGENT_INDEX_CONTRACT,
   ARTIFACT_EVIDENCE_CONTRACT,
   IMPACT_LEDGER_CONTRACT,

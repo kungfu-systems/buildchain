@@ -1903,6 +1903,30 @@ test("release passport collect verify and explain form an agent-readable contrac
   assert.equal(explanation.audience, "agent");
   assert.equal(explanation.trust, "pass");
   assert.equal(explanation.nextAction, "install-or-upgrade-after-policy-review");
+
+  const artifactReport = JSON.parse(runBuildchain([
+    "verify",
+    "artifact",
+    path.join(assetsDir, "buildchain-x86_64-unknown-linux-gnu.tar.gz"),
+    "--passport",
+    passportPath,
+    "--json",
+  ], { cwd }));
+  assert.equal(artifactReport.contract, "kungfu-buildchain-artifact-verification");
+  assert.equal(artifactReport.outcome, "pass");
+
+  const artifactExplanation = JSON.parse(runBuildchain([
+    "explain",
+    "artifact",
+    path.join(assetsDir, "buildchain-x86_64-unknown-linux-gnu.tar.gz"),
+    "--passport",
+    passportPath,
+    "--for",
+    "agent",
+    "--json",
+  ], { cwd }));
+  assert.equal(artifactExplanation.audience, "agent");
+  assert.equal(artifactExplanation.nextAction, "use-artifact-after-policy-review");
 });
 
 test("release passport unifies package set publish transaction evidence", () => {
