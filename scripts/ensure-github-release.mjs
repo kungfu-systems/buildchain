@@ -143,6 +143,7 @@ export async function ensureGitHubRelease({
       name: title || existing.data.name || metadata.tag,
       prerelease: metadata.prerelease,
       make_latest: metadata.makeLatest,
+      ...(target ? { target_commitish: target } : {}),
     },
   });
   return { action: "updated", release: patched.data, metadata };
