@@ -77,6 +77,9 @@ function usage() {
                                     [--platform-manifest-json <json-or-path>]...
                                     [--dist-tag-evidence-json <json-or-path>]
                                     [--kfd-1-witness-json <json-or-path>]...
+                                    [--kfd-3-prebuild-witness-json <json-or-path>]...
+                                    [--kfd-3-artifact-witness-json <json-or-path>]...
+                                    [--kfd-3-artifact-verify-cmd <command>]
                                     [--release-extra-json <json-or-path>]
                                     [--publish-json <json-or-path>] [--output-dir <dir>] [--json]
   buildchain verify release-passport <file-or-url> [--json]
@@ -736,6 +739,9 @@ async function main(argv = process.argv.slice(2)) {
       platformManifestJsons: readRepeatedFlag(collectArgs, "platform-manifest-json"),
       distTagEvidenceJson: readFlag(collectArgs, "dist-tag-evidence-json", ""),
       kfd1WitnessJsons: readRepeatedFlag(collectArgs, "kfd-1-witness-json"),
+      kfd3PrebuildWitnessJsons: readRepeatedFlag(collectArgs, "kfd-3-prebuild-witness-json"),
+      kfd3ArtifactWitnessJsons: readRepeatedFlag(collectArgs, "kfd-3-artifact-witness-json"),
+      kfd3ArtifactVerifyCommand: readFlag(collectArgs, "kfd-3-artifact-verify-cmd", ""),
       releaseJsonExtra: readFlag(collectArgs, "release-extra-json", ""),
       publishJson: readFlag(collectArgs, "publish-json", ""),
       workflow,

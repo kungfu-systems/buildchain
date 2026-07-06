@@ -73,6 +73,9 @@
         "release-candidate-workflow-name",
         "publish-required-artifacts-json",
         "release-passport-kfd-1-witness-jsons",
+        "release-passport-kfd-3-prebuild-witness-jsons",
+        "release-passport-kfd-3-artifact-witness-jsons",
+        "release-passport-kfd-3-artifact-verify-command",
         "buildchain-contract-lock-path",
         "buildchain-contract-drift-issue-mode"
       ],
@@ -83,7 +86,7 @@
         "contract drift is checked before release-candidate resolution and publish"
       ],
       "breakingDigest": "sha256:b8a5f8b1e89b6a7d17f546eb79b1eabb389d74af2277f3d69df661549c3a8632",
-      "auditDigest": "sha256:4516a8b3863a7cfc9385b2749748793fc93b012fdd2ca594569fdd9e94ac829a"
+      "auditDigest": "sha256:1fd9d0e9a423357ef3f9b8678503e03b2451667a958520546a845a1dd5d40c5e"
     },
     {
       "contractVersion": 1,
@@ -109,14 +112,17 @@
         "publish-transaction",
         "publish-required-artifacts-json",
         "promote-only-release-candidate",
-        "release-passport-kfd-1-witness-jsons"
+        "release-passport-kfd-1-witness-jsons",
+        "release-passport-kfd-3-prebuild-witness-jsons",
+        "release-passport-kfd-3-artifact-witness-jsons",
+        "release-passport-kfd-3-artifact-verify-command"
       ],
       "guarantees": [
         "protected release refs and durable release-state are finalized by Buildchain",
         "release passport finalization is idempotent after publish side effects"
       ],
       "breakingDigest": "sha256:9da3a56d40db3941a492f965b65434d5674e5ac0f66be972a97f405ba50110b0",
-      "auditDigest": "sha256:d005b0d0e9b3328104a25686d6fa47d13a7434b5c0faf142e4be7995bddead3c"
+      "auditDigest": "sha256:8a80eb264f55801666cbe763e16c489bed1ca0ba3d4663e2403fa5d45ef14095"
     },
     {
       "contractVersion": 1,
@@ -175,7 +181,7 @@
         "release-state SHA is recorded as a durable audit entrance"
       ],
       "breakingDigest": "sha256:b627e1b2ece9b6049517a942c5139e342e6077cdd3d8962d61cef8481b1f70ad",
-      "auditDigest": "sha256:7eae66836fcc0f7345243384bb27985d16ea3fef537e0ddd5a00a2919bccbcbe"
+      "auditDigest": "sha256:57b3ea3fd92200aebb73076ef67aa8c38b929b2952100dff5b4f038dc59a6c3c"
     },
     {
       "contractVersion": 1,
@@ -199,7 +205,34 @@
         "artifact bytes are sha256 checked before passport finalization succeeds"
       ],
       "breakingDigest": "sha256:a9ae5a8b523cd0c2d846a6a77a8317d9dfaa4e4bb1457e1f6c021ea7eae855db",
-      "auditDigest": "sha256:fe1edb46de8f9726e3dd7e0858aab4f08616ce861fbd1aa81f95b4fac5284549"
+      "auditDigest": "sha256:b0879b6157833e17e8e52ff6dc53ebbf44bdf2bb01ae3e8117a5cd0ccdc410fe"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "kfd-3-collaboration-interface-release-gate",
+      "kind": "schema",
+      "path": "packages/core/kfd-gate.js",
+      "requiredInputs": [
+        "KFD-3 prebuild witness JSON",
+        "KFD-3 artifact witness JSON or verify command"
+      ],
+      "requiredOutputs": [
+        "kfd-3 collaboration-interface release gate evidence"
+      ],
+      "breakingDefaults": {
+        "prebuildWitnessContract": "kungfu-buildchain-kfd-3-collaboration-interface-prebuild-witness",
+        "artifactWitnessContract": "kungfu-buildchain-kfd-3-collaboration-interface-artifact-witness",
+        "releaseGateContract": "kungfu-buildchain-kfd-3-collaboration-interface-release-gate"
+      },
+      "guarantees": [
+        "KFD-3 pre-build witnesses must declare participant-facing public surfaces",
+        "artifact witnesses must not expose undeclared public participant-facing surfaces",
+        "collaborationInterface.digest mismatches fail passport verification"
+      ],
+      "breakingDigest": "sha256:3bb160a01e89fa2739506969e56d3f8bb9f7ae3c0c9d575a148b3e3b6abfa7ad",
+      "auditDigest": "sha256:b0879b6157833e17e8e52ff6dc53ebbf44bdf2bb01ae3e8117a5cd0ccdc410fe"
     },
     {
       "contractVersion": 1,
@@ -226,9 +259,9 @@
         "CLI commands are stable within the major line unless the contract major changes"
       ],
       "breakingDigest": "sha256:097db3e67509bedda8c6548bf1edfbfcf57f7b5510520b6a7b7e078d7ec087c8",
-      "auditDigest": "sha256:05f8d9a2ee8eab8f3a6b243415b4b7c5bf8b76d18c8866437ab95e28e0240eab"
+      "auditDigest": "sha256:4ae71db454a7e08f7ce572c9904733d978aa31fa3f13b9456e860818ef212eea"
     }
   ],
-  "compatibilityDigest": "sha256:3f179544de090b2023f340c4eb12ce525c904c63f979175d1424358c68cc86dd",
-  "contractDigest": "sha256:149920052e5ddeb1809489a78f8f54e4b90c9af1a91b9c43959afedde658e06b"
+  "compatibilityDigest": "sha256:282a42fe4b27fcf213f30bba0c69c89f8cc86e5c25aa48b6ea0509d38f928c68",
+  "contractDigest": "sha256:87688c5cef8e5563f3f741e950225c0c70a7cd35a6c81d2b7e49e458eca79f6f"
 }

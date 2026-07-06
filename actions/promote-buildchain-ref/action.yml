@@ -104,6 +104,15 @@ inputs:
   release-passport-kfd-1-witness-jsons:
     description: "Newline- or comma-separated KFD-1 contract-world witness JSON paths to include in the release passport"
     default: ""
+  release-passport-kfd-3-prebuild-witness-jsons:
+    description: "Newline- or comma-separated KFD-3 collaboration-interface pre-build witness JSON paths to include in the release passport"
+    default: ""
+  release-passport-kfd-3-artifact-witness-jsons:
+    description: "Newline- or comma-separated KFD-3 artifact-side collaboration-interface witness JSON paths to include in the release passport"
+    default: ""
+  release-passport-kfd-3-artifact-verify-command:
+    description: "Product-owned command that emits a KFD-3 artifact-side collaboration-interface witness JSON document"
+    default: ""
   promote-only-release-candidate:
     description: "Fail fast unless a verified PR-stage release-candidate passport matches the promotion source before publish-gate side effects run"
     default: "false"

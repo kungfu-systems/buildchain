@@ -261,6 +261,8 @@ buildchain collect github-release \
   --platform-manifest-json .buildchain/artifacts/win32-x64/manifest.json \
   --dist-tag-evidence-json .buildchain/release-evidence/v2.3.2/dist-tag-evidence.json \
   --kfd-1-witness-json .buildchain/kfd-1/contract-world.witness.json \
+  --kfd-3-prebuild-witness-json .buildchain/kfd-3/collaboration-interface.prebuild.json \
+  --kfd-3-artifact-verify-cmd "kungfu agent verify --json" \
   --release-extra-json '{"channel":"release","targetRef":"release/v2/v2.3"}' \
   --output-dir .buildchain/release-passport
 ```
@@ -285,6 +287,24 @@ then verifies the resulting artifact bytes itself and writes the evidence under
 the KFD-provided top-level key currently named `kfd-1`. Consumers should not
 duplicate this by running repository-specific scripts or invoking the Kungfu
 SDK from their release workflow.
+
+`--kfd-3-prebuild-witness-json` attaches a KFD-3 collaboration-interface
+release gate. The product remains the source of truth: it emits a pre-build
+witness that contains or points to its KFD-3 collaboration interface, declared
+participant-facing public surfaces, and registry digest. Buildchain freezes
+that declaration before publication. The artifact side is supplied either by
+`--kfd-3-artifact-witness-json` or by a product-owned command such as
+`--kfd-3-artifact-verify-cmd "kungfu agent verify --json"`. Buildchain then
+checks closure: every declared shipped public surface must be present in the
+artifact witness, and every artifact-exposed participant-facing public surface
+must have been declared. The generated passport writes this evidence under the
+KFD-provided top-level key currently named `kfd-3`.
+
+This gate is useful for agent-facing products because it turns KFD-3 from prose
+into release evidence. A package cannot claim KFD-3 collaboration-interface
+support merely because the docs mention it; the release passport must show the
+frozen declaration, the artifact-side witness digest, and a passing closure
+comparison.
 
 `--impact-json` supplies the surface-aware impact ledger. Production release
 passports (`release/*`) and major publish-gate passports require

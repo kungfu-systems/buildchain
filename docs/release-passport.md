@@ -172,6 +172,55 @@ byte-for-byte KFD surface because it contains KFD evidence; instead, the
 passport is audited through release-state SHA, `check-report.json`, and the
 contract files that generate and verify it.
 
+### KFD-3 collaboration-interface release gate
+
+KFD-3 asks a different release question than KFD-1. KFD-1 proves that named
+payload bytes match one contract world. KFD-3 proves that a product's shipped
+participant-facing collaboration/control surface is closed over its declared
+interface.
+
+The product remains the fact source. Before build/publish, the product writes a
+pre-build witness:
+
+```bash
+kungfu sdk collaboration-interface witness --json \
+  > .buildchain/kfd-3/collaboration-interface.prebuild.json
+```
+
+That witness must contain, or point to, the product-owned KFD-3 collaboration
+interface, registry digest, participants, and declared public shipped surfaces.
+After the artifact is built, the product also provides artifact-side evidence,
+either as a JSON file or a command:
+
+```bash
+buildchain collect github-release \
+  --kfd-3-prebuild-witness-json .buildchain/kfd-3/collaboration-interface.prebuild.json \
+  --kfd-3-artifact-verify-cmd "kungfu agent verify --json"
+```
+
+Buildchain imports the KFD-3 metadata from `@kungfu-tech/kfd`, freezes the
+pre-build witness digest, ingests the artifact witness, and compares the two
+sets:
+
+- every declared `shipped` public participant-facing surface must appear in the
+  artifact witness;
+- every artifact-exposed public participant-facing surface must be declared by
+  the pre-build witness;
+- if both witnesses record `collaborationInterface.digest`, the digests must
+  match;
+- contradictory, missing, stale, or schema-incomplete evidence fails closed.
+
+The generated release passport records the result under the KFD-provided
+top-level key currently named `kfd-3`. The section includes the KFD package
+version, schema ids/paths, pre-build witness digest, artifact witness digest,
+declared/exposed surface counts, missing declared shipped surfaces, and
+unclassified artifact public surfaces.
+
+This makes KFD-3 support usable by readers and agents immediately: they can
+inspect `buildchain.release.json` and know whether the released package
+actually exposes no more and no less than the declared collaboration interface,
+instead of trusting docs or release notes.
+
 ### Floating Buildchain contract lock
 
 KFD-1 protects release payload surfaces. Floating ref contract locks protect the

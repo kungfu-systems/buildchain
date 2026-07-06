@@ -123,6 +123,9 @@ export function createBuildchainContractWorld({ root = process.cwd(), packageJso
         "release-candidate-workflow-name",
         "publish-required-artifacts-json",
         "release-passport-kfd-1-witness-jsons",
+        "release-passport-kfd-3-prebuild-witness-jsons",
+        "release-passport-kfd-3-artifact-witness-jsons",
+        "release-passport-kfd-3-artifact-verify-command",
         "buildchain-contract-lock-path",
         "buildchain-contract-drift-issue-mode",
       ],
@@ -149,6 +152,9 @@ export function createBuildchainContractWorld({ root = process.cwd(), packageJso
         "publish-required-artifacts-json",
         "promote-only-release-candidate",
         "release-passport-kfd-1-witness-jsons",
+        "release-passport-kfd-3-prebuild-witness-jsons",
+        "release-passport-kfd-3-artifact-witness-jsons",
+        "release-passport-kfd-3-artifact-verify-command",
       ],
       guarantees: [
         "protected release refs and durable release-state are finalized by Buildchain",
@@ -201,6 +207,26 @@ export function createBuildchainContractWorld({ root = process.cwd(), packageJso
       guarantees: [
         "KFD-1 witnesses must include at least one artifact byte surface",
         "artifact bytes are sha256 checked before passport finalization succeeds",
+      ],
+    }),
+    surface(root, {
+      id: "kfd-3-collaboration-interface-release-gate",
+      kind: "schema",
+      path: "packages/core/kfd-gate.js",
+      requiredInputs: [
+        "KFD-3 prebuild witness JSON",
+        "KFD-3 artifact witness JSON or verify command",
+      ],
+      requiredOutputs: ["kfd-3 collaboration-interface release gate evidence"],
+      breakingDefaults: {
+        prebuildWitnessContract: "kungfu-buildchain-kfd-3-collaboration-interface-prebuild-witness",
+        artifactWitnessContract: "kungfu-buildchain-kfd-3-collaboration-interface-artifact-witness",
+        releaseGateContract: "kungfu-buildchain-kfd-3-collaboration-interface-release-gate",
+      },
+      guarantees: [
+        "KFD-3 pre-build witnesses must declare participant-facing public surfaces",
+        "artifact witnesses must not expose undeclared public participant-facing surfaces",
+        "collaborationInterface.digest mismatches fail passport verification",
       ],
     }),
     surface(root, {

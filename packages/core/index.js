@@ -122,11 +122,19 @@ export {
   BUILDCHAIN_JSON_FORMATTING_POLICY,
   KFD1_RELEASE_GATE_CONTRACT,
   KFD1_WITNESS_SET_CONTRACT,
+  KFD3_ARTIFACT_WITNESS_CONTRACT,
+  KFD3_PREBUILD_WITNESS_CONTRACT,
+  KFD3_RELEASE_GATE_CONTRACT,
   createKfd1ReleaseGateEvidence,
+  createKfd3CollaborationInterfaceReleaseGateEvidence,
   normalizeKfd1ContractWorldWitness,
+  normalizeKfd3CollaborationInterfaceArtifactWitness,
+  normalizeKfd3CollaborationInterfacePrebuildWitness,
   resolveKfd1Metadata,
+  resolveKfd3Metadata,
   sha256Json as sha256KfdJson,
   validateKfd1ReleaseGateEvidence,
+  validateKfd3CollaborationInterfaceReleaseGateEvidence,
 } from "./kfd-gate.js";
 
 export {

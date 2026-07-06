@@ -73,6 +73,9 @@ async function main() {
   const releasePassportPlatformManifestPaths = core.getInput("release-passport-platform-manifest-paths");
   const releasePassportImpactJson = core.getInput("release-passport-impact-json");
   const releasePassportKfd1WitnessJsons = core.getInput("release-passport-kfd-1-witness-jsons");
+  const releasePassportKfd3PrebuildWitnessJsons = core.getInput("release-passport-kfd-3-prebuild-witness-jsons");
+  const releasePassportKfd3ArtifactWitnessJsons = core.getInput("release-passport-kfd-3-artifact-witness-jsons");
+  const releasePassportKfd3ArtifactVerifyCommand = core.getInput("release-passport-kfd-3-artifact-verify-command");
   const promoteOnlyReleaseCandidate = core.getBooleanInput("promote-only-release-candidate");
   const releaseCandidatePassportPath = core.getInput("release-candidate-passport-path");
   const releaseCandidateBuildSummaryPath = core.getInput("release-candidate-build-summary-path");
@@ -130,6 +133,9 @@ async function main() {
     releasePassportPlatformManifestPaths,
     releasePassportImpactJson,
     releasePassportKfd1WitnessJsons,
+    releasePassportKfd3PrebuildWitnessJsons,
+    releasePassportKfd3ArtifactWitnessJsons,
+    releasePassportKfd3ArtifactVerifyCommand,
     promoteOnlyReleaseCandidate,
     releaseCandidatePassportPath,
     releaseCandidateBuildSummaryPath,

@@ -34,6 +34,7 @@ running artifact), *use* (consume / extend) - and a **status**:
 | How does publish evidence, recovery, and finalization work? | [`publish-transaction.md`](publish-transaction.md) | verify | stable |
 | How do I publish or verify release passport artifacts? | [`release-passport.md`](release-passport.md) | use | stable |
 | How do I gate release artifacts with KFD-1 contract-world witnesses? | [`release-passport.md`](release-passport.md#kfd-1-contract-world-release-gate) | verify/use | stable |
+| How do I gate KFD-3 collaboration-interface releases? | [`release-passport.md`](release-passport.md#kfd-3-collaboration-interface-release-gate) + [`cli.md`](cli.md) | verify/use | stable |
 | How do I keep `@v2` floating refs while detecting Buildchain contract drift? | [`reusable-build-surface.md`](reusable-build-surface.md#floating-ref-contract-lock) | verify/use | stable |
 | How do I propagate finalized upstream releases to downstream package/site PRs? | [`release-propagation.md`](release-propagation.md) | use | preview |
 | How do I prove a PR-stage reusable build is the artifact source promoted later? | [`release-candidate.md`](release-candidate.md) + [`reusable-build-surface.md`](reusable-build-surface.md) | verify | stable |
@@ -94,6 +95,8 @@ running artifact), *use* (consume / extend) - and a **status**:
   [`release-propagation.md`](release-propagation.md).
 - **KFD-1 contract worlds / byte-for-byte release gates** ->
   [`release-passport.md`](release-passport.md#kfd-1-contract-world-release-gate).
+- **KFD-3 collaboration-interface / agent-facing control surface closure** ->
+  [`release-passport.md`](release-passport.md#kfd-3-collaboration-interface-release-gate).
 - **floating `@v2` / contract lock / compatible drift issue** ->
   [`reusable-build-surface.md`](reusable-build-surface.md#floating-ref-contract-lock).
 - **GitHub Release passport / binary assets / artifact evidence / agent release checks** ->
