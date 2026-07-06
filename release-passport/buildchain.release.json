@@ -26,7 +26,7 @@
     "treeEquivalent": true,
     "publishToolingSha": "e18dc6d8acbcd1ff905bac9c8fffeef20e7e50ad",
     "releaseStateRef": "refs/heads/buildchain/release-state/2-6-1",
-    "releaseStateSha": "",
+    "releaseStateSha": "b0c2f87adf258c79d63e073f73eff36166d28b28",
     "package": {
       "name": "@kungfu-tech/buildchain",
       "version": "2.6.1"
