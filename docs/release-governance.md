@@ -435,6 +435,14 @@ from the reusable build outputs. Workflows that only collect passports or run
 dry-run package checks do not move publish refs and are not publish-gate
 publication models.
 
+The same wrapper is the declarative GitHub Release publication entrypoint for
+semver releases. Consumers set `github-release: true`; after the publish
+transaction reaches `complete`, Buildchain creates or updates the exact-tag
+GitHub Release and uploads the generated `buildchain.release.json`,
+release-passport assets, and publish evidence. Semver prerelease tags are marked
+`prerelease=true` and `make_latest=false`; stable semver tags are marked latest.
+This is the supported path for downstream `release.published` propagation.
+
 Buildchain also does not maintain bare exact tags such as `1.0.0`. The supported
 exact release and alpha refs are v-prefixed:
 
