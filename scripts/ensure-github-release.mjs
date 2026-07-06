@@ -168,7 +168,15 @@ async function main() {
   console.log(`github-release-make-latest=${result.metadata.makeLatest}`);
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+function isCliEntrypoint() {
+  const entry = process.argv[1] || "";
+  return (
+    entry.replace(/\\/g, "/").endsWith("/ensure-github-release.mjs") &&
+    import.meta.url === pathToFileURL(entry).href
+  );
+}
+
+if (isCliEntrypoint()) {
   main().catch((error) => {
     console.error(error.message);
     process.exit(1);
