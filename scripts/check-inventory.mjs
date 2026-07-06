@@ -21,6 +21,7 @@ const requiredPaths = [
   "docs/install.md",
   "docs/product-mechanism.md",
   "docs/release-passport.md",
+  "docs/release-propagation.md",
   "docs/site-bundle-contract.md",
   "docs/toolkit-observability.md",
   "docs/versioning.md",
@@ -53,6 +54,7 @@ const requiredPaths = [
   ".github/workflows/buildchain-patrol-weekly.yml",
   ".github/workflows/buildchain-patrol-monthly.yml",
   ".github/workflows/release-candidate-promote.yml",
+  ".github/workflows/release-propagation.yml",
   ".github/workflows/npm-publish.yml",
   ".github/workflows/binary-distribution.yml",
   ".github/workflows/verify.yml",
@@ -94,6 +96,9 @@ if (rootPackage.exports?.["./logging"] !== "./packages/core/logging.js") {
 if (rootPackage.exports?.["./release-passport"] !== "./packages/core/release-passport.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/release-passport");
 }
+if (rootPackage.exports?.["./release-propagation"] !== "./packages/core/release-propagation.js") {
+  throw new Error("root package must export @kungfu-tech/buildchain/release-propagation");
+}
 if (rootPackage.publishConfig?.access !== "public") {
   throw new Error("root package publishConfig.access must be public");
 }
@@ -109,6 +114,9 @@ for (const expectedFile of ["dist/site/", "docs/install.md", "docs/binary-distri
   if (!rootPackage.files?.includes(expectedFile)) {
     throw new Error(`root package files must include ${expectedFile}`);
   }
+}
+if (!rootPackage.files?.includes("docs/release-propagation.md")) {
+  throw new Error("root package files must include docs/release-propagation.md");
 }
 const cliSource = fs.readFileSync(path.join(root, "bin/buildchain.mjs"), "utf8");
 const coreIndexSource = fs.readFileSync(path.join(root, "packages/core/index.js"), "utf8");

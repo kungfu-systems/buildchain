@@ -1,0 +1,18 @@
+{
+  "repository": "kungfu-systems/kfd",
+  "channel": "alpha",
+  "tag": "v1.4.0-alpha.3",
+  "sourceSha": "1111111111111111111111111111111111111111",
+  "package": {
+    "name": "@kungfu-tech/kfd",
+    "version": "1.4.0-alpha.3",
+    "integrity": "sha512-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "releasePassport": {
+    "url": "https://github.com/kungfu-systems/kfd/releases/download/v1.4.0-alpha.3/buildchain.release.json",
+    "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+  },
+  "siteBundle": {
+    "manifestSha256": "3333333333333333333333333333333333333333333333333333333333333333"
+  }
+}
