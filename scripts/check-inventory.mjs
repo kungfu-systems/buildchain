@@ -27,6 +27,7 @@ const requiredPaths = [
   "scripts/release-line-dry-run.mjs",
   "scripts/build-standalone-binary.mjs",
   "scripts/create-release-bundle.mjs",
+  "scripts/ensure-github-release.mjs",
   "scripts/generate-site-bundle.mjs",
   "scripts/generate-release-candidate-passport.mjs",
   "scripts/artifact-relay-s3.mjs",
@@ -276,10 +277,18 @@ for (const requiredSnippet of [
   "verify artifact",
   "scripts/create-release-bundle.mjs",
   "buildchain-release-bundle",
+  "scripts/ensure-github-release.mjs",
   "gh release upload",
 ]) {
   if (!binaryDistributionWorkflow.includes(requiredSnippet)) {
     throw new Error(`binary distribution workflow missing required snippet: ${requiredSnippet}`);
+  }
+}
+for (const forbiddenSnippet of [
+  "gh release create",
+]) {
+  if (binaryDistributionWorkflow.includes(forbiddenSnippet)) {
+    throw new Error(`binary distribution workflow must not use unmanaged release metadata snippet: ${forbiddenSnippet}`);
   }
 }
 if (/runs-on:\s*self-hosted/.test(binaryDistributionWorkflow)) {

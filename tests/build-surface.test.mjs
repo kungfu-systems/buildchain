@@ -690,6 +690,18 @@ test("binary distribution blocks invalid release uploads before the build matrix
   assert.match(workflow, /needs: \[preflight, binary\]/);
 });
 
+test("binary distribution manages GitHub Release metadata explicitly", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/binary-distribution.yml"),
+    "utf8",
+  );
+  assert.match(workflow, /scripts\/ensure-github-release\.mjs/);
+  assert.match(workflow, /--repository "\$\{\{ github\.repository \}\}"/);
+  assert.match(workflow, /--tag "\$RELEASE_TAG"/);
+  assert.match(workflow, /gh release upload "\$RELEASE_TAG"/);
+  assert.doesNotMatch(workflow, /gh release create/);
+});
+
 test("runtime train override accepts only trusted manual train or exact SHA refs", () => {
   assert.deepEqual(
     resolveRuntimeSelection({ requestedRef: "", workflowRef: "kungfu-systems/buildchain/.github/workflows/.build.yml@v2" }),
