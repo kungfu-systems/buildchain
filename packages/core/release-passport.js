@@ -10,6 +10,7 @@ import {
   createKfd3CollaborationInterfaceReleaseGateEvidence,
   resolveKfd1Metadata,
   resolveKfd3Metadata,
+  validateKfd2TrustTaxonomyEntry,
   validateKfd1ReleaseGateEvidence,
   validateKfd3CollaborationInterfaceReleaseGateEvidence,
 } from "./kfd-gate.js";
@@ -625,6 +626,13 @@ function arrayOrEmpty(value) {
   return Array.isArray(value) ? value : [];
 }
 
+function arrayOrSingleton(value) {
+  if (Array.isArray(value)) {
+    return value;
+  }
+  return value && typeof value === "object" ? [value] : [];
+}
+
 function normalizeKfd2Claim(raw = {}, index = 0) {
   const claim = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
   const sourceBindings = arrayOrEmpty(claim.sourceBindings || claim.source_bindings || claim.sources || claim.declaredSources);
@@ -638,7 +646,15 @@ function normalizeKfd2Claim(raw = {}, index = 0) {
       ? claim.audit_boundary
       : {};
   const responsibility = claim.responsibility && typeof claim.responsibility === "object" && !Array.isArray(claim.responsibility) ? claim.responsibility : {};
-  const residualRisk = arrayOrEmpty(claim.residualRisk || claim.residual_risk);
+  const residualRisk = arrayOrSingleton(claim.residualRisk || claim.residual_risk).map((entry, riskIndex) => validateKfd2TrustTaxonomyEntry(entry, {
+    kind: "residualRisk",
+    label: `kfd-2.claims[${index}].residualRisk[${riskIndex}]`,
+  }));
+  const downgradeReasons = arrayOrSingleton(claim.downgradeReasons || claim.downgrade_reasons || claim.downgradeReason || claim.downgrade_reason)
+    .map((entry, reasonIndex) => validateKfd2TrustTaxonomyEntry(entry, {
+      kind: "downgradeReason",
+      label: `kfd-2.claims[${index}].downgradeReasons[${reasonIndex}]`,
+    }));
   const trustProof = claim.trustProof && typeof claim.trustProof === "object" && !Array.isArray(claim.trustProof)
     ? claim.trustProof
     : undefined;
@@ -668,6 +684,7 @@ function normalizeKfd2Claim(raw = {}, index = 0) {
     auditBoundary,
     responsibility,
     residualRisk,
+    downgradeReasons,
     ...(trustProof ? { trustProof } : {}),
     proseOnly,
     missingBindings,
@@ -789,6 +806,7 @@ function createKfd2ReleaseTrustPassportAudit({ explicitClaims = [], kfd1Section 
   }
   const failed = claims.filter((claim) => claim.public && claim.status === "failed");
   const downgraded = claims.filter((claim) => claim.public && (claim.status === "downgraded" || claim.proseOnly));
+  const downgradeReasons = claims.flatMap((claim) => arrayOrEmpty(claim.downgradeReasons));
   return {
     schemaVersion: 1,
     contract: KFD2_RELEASE_TRUST_PASSPORT_CONTRACT,
@@ -798,6 +816,7 @@ function createKfd2ReleaseTrustPassportAudit({ explicitClaims = [], kfd1Section 
       scope: "public release claims visible to humans or agents",
       policy: "public claims must bind declared sources, machine-readable evidence, hashes, artifact coordinates, verification results, audit boundaries, responsibility state, and residual risk",
     },
+    downgradeReasons,
     claims,
     summary: {
       claimCount: claims.length,
@@ -1307,6 +1326,18 @@ function validateKfd2ReleaseTrustPassportAudit(section, issues) {
   if (claims.length === 0) {
     issues.push(issue("error", "kfd-2.claims.empty", "kfd-2 audit must enumerate at least one public release claim"));
   }
+  for (const [reasonIndex, reason] of arrayOrEmpty(section.downgradeReasons).entries()) {
+    try {
+      validateKfd2TrustTaxonomyEntry(reason, {
+        kind: "downgradeReason",
+        label: `kfd-2.downgradeReasons[${reasonIndex}]`,
+      });
+    } catch (error) {
+      issues.push(issue("error", `kfd-2.downgradeReasons[${reasonIndex}]`, error.message, {
+        id: reason?.id || "",
+      }));
+    }
+  }
   for (const [index, claim] of claims.entries()) {
     if (!claim.id || !claim.claim) {
       issues.push(issue("error", `kfd-2.claims[${index}].identity`, "public release claim must include id and statement"));
@@ -1325,6 +1356,30 @@ function validateKfd2ReleaseTrustPassportAudit(section, issues) {
         id: claim.id || "",
         proseOnly: Boolean(claim.proseOnly),
       }));
+    }
+    for (const [riskIndex, risk] of arrayOrSingleton(claim.residualRisk || claim.residual_risk).entries()) {
+      try {
+        validateKfd2TrustTaxonomyEntry(risk, {
+          kind: "residualRisk",
+          label: `kfd-2.claims[${index}].residualRisk[${riskIndex}]`,
+        });
+      } catch (error) {
+        issues.push(issue("error", `kfd-2.claims[${index}].residualRisk[${riskIndex}]`, error.message, {
+          id: risk?.id || claim.id || "",
+        }));
+      }
+    }
+    for (const [reasonIndex, reason] of arrayOrSingleton(claim.downgradeReasons || claim.downgrade_reasons || claim.downgradeReason || claim.downgrade_reason).entries()) {
+      try {
+        validateKfd2TrustTaxonomyEntry(reason, {
+          kind: "downgradeReason",
+          label: `kfd-2.claims[${index}].downgradeReasons[${reasonIndex}]`,
+        });
+      } catch (error) {
+        issues.push(issue("error", `kfd-2.claims[${index}].downgradeReasons[${reasonIndex}]`, error.message, {
+          id: reason?.id || claim.id || "",
+        }));
+      }
     }
     if (String(claim.id || "").startsWith("kfd-3:")) {
       const trustProof = claim.trustProof && typeof claim.trustProof === "object" && !Array.isArray(claim.trustProof)
@@ -1360,6 +1415,19 @@ function validateKfd2ReleaseTrustPassportAudit(section, issues) {
           issues.push(issue("error", `kfd-2.claims[${index}].trustProof.residualRisk`, "KFD-2 trust proof must preserve residual risk as an array", {
             id: claim.id || "",
           }));
+        } else {
+          for (const [riskIndex, risk] of trustProof.residualRisk.entries()) {
+            try {
+              validateKfd2TrustTaxonomyEntry(risk, {
+                kind: "residualRisk",
+                label: `kfd-2.claims[${index}].trustProof.residualRisk[${riskIndex}]`,
+              });
+            } catch (error) {
+              issues.push(issue("error", `kfd-2.claims[${index}].trustProof.residualRisk[${riskIndex}]`, error.message, {
+                id: risk?.id || claim.id || "",
+              }));
+            }
+          }
         }
         if (!trustProof.responsibility?.registryFactsOwner || !trustProof.responsibility?.artifactVerificationOwner || !trustProof.responsibility?.releasePassportProofOwner) {
           issues.push(issue("error", `kfd-2.claims[${index}].trustProof.responsibility`, "KFD-2 trust proof must preserve KFD-3 responsibility state", {

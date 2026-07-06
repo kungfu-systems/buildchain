@@ -4,7 +4,7 @@
   "product": {
     "name": "Buildchain",
     "package": "@kungfu-tech/buildchain",
-    "version": "2.8.4",
+    "version": "2.8.5-alpha.1",
     "repository": "https://github.com/kungfu-systems/buildchain"
   },
   "majorLine": "v2",
@@ -193,7 +193,7 @@
         "release-state SHA is recorded as a durable audit entrance"
       ],
       "breakingDigest": "sha256:b627e1b2ece9b6049517a942c5139e342e6077cdd3d8962d61cef8481b1f70ad",
-      "auditDigest": "sha256:f1c2d70510f074102c2e9ff87b638b7b9b33edaa88aad8abc1e73e75e46a6af7"
+      "auditDigest": "sha256:3476a0837292b81a6efeb7c989dc1ee975b2bd8e8882273fd4eb5f865d330bc1"
     },
     {
       "contractVersion": 1,
@@ -218,7 +218,7 @@
         "KFD self contract witnesses record source/artifact hashes, self-hosting boundary, and responsibility state"
       ],
       "breakingDigest": "sha256:f46c1f67b94957ad956cf70db59a73fd5690bd67c91edf9c2d0eb8f3d1e3cf8d",
-      "auditDigest": "sha256:6a99ee108c385837ee9f1dbb75848f6ea434b6474977e6e567ae81f8fc9a555c"
+      "auditDigest": "sha256:534707144fa2c440fe6958073a8a161790f12b8fb4695e3b06e43f43a6c87ffb"
     },
     {
       "contractVersion": 1,
@@ -242,7 +242,7 @@
         "prose-only public claims downgrade the release trust passport audit"
       ],
       "breakingDigest": "sha256:f0b636eb925ddbf45ff1a8872454ab7b4dd98857cac12bb75217830130e62a16",
-      "auditDigest": "sha256:f1c2d70510f074102c2e9ff87b638b7b9b33edaa88aad8abc1e73e75e46a6af7"
+      "auditDigest": "sha256:3476a0837292b81a6efeb7c989dc1ee975b2bd8e8882273fd4eb5f865d330bc1"
     },
     {
       "contractVersion": 1,
@@ -271,7 +271,7 @@
         "KFD-3 passports expose releaseStatus, witness hashes, declared capability verification, reverse audit boundary, residual risk, and responsibility state"
       ],
       "breakingDigest": "sha256:33654f3444c893754aacc42dde3051f0a371bd17c6ef7c657c579a07159cd7c1",
-      "auditDigest": "sha256:6a99ee108c385837ee9f1dbb75848f6ea434b6474977e6e567ae81f8fc9a555c"
+      "auditDigest": "sha256:534707144fa2c440fe6958073a8a161790f12b8fb4695e3b06e43f43a6c87ffb"
     },
     {
       "contractVersion": 1,
@@ -342,9 +342,9 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:2d1c150464effb5e8ad5d5a6ef78ee71899b8bd74a46c7b7a7a01fec1e35c86a"
+      "auditDigest": "sha256:0660c503639f5ca6d23ba9c7492b31ee9b05f036ffe76ed5dc8b6cb3bfde367b"
     }
   ],
   "compatibilityDigest": "sha256:36421b592a782decbfe31a7d8d42d70ce1100a56a2c4f4a0ccc21f0617dc72bf",
-  "contractDigest": "sha256:0abc137f5c2a592f65e4b629b024f0892d7845558cda3339887a6719ccb82603"
+  "contractDigest": "sha256:05ae2c418b9eddbd53670c00fc2ddd778c13410f6406ac92573026a5414a1539"
 }

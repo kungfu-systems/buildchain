@@ -58,6 +58,14 @@ function readJsonPackageExport(exportPath) {
   return JSON.parse(fs.readFileSync(require.resolve(exportPath), "utf8"));
 }
 
+function tryReadJsonPackageExport(exportPath) {
+  try {
+    return readJsonPackageExport(exportPath);
+  } catch {
+    return undefined;
+  }
+}
+
 function loadKfdPackageMetadata() {
   const packageJson = readJsonPackageExport("@kungfu-tech/kfd/package.json");
   const standards = readJsonPackageExport("@kungfu-tech/kfd/standards.json");
@@ -142,6 +150,50 @@ export function resolveKfd3Metadata({ requireSchemas = false } = {}) {
     schemaIds,
     schemaPaths,
     hasCollaborationSchemas,
+    concepts: { ...(standard.concepts || {}) },
+    metadataSchema: standards.metadataSchema || {},
+    source: standards.source || {},
+  };
+}
+
+export function resolveKfd2Metadata({ requireTrustTaxonomy = false } = {}) {
+  const { packageJson, standards } = loadKfdPackageMetadata();
+  const entries = Object.entries(standards.standards || {});
+  const entry = entries.find(([key, value]) => {
+    const names = [key, value?.key, value?.id, value?.label]
+      .filter(Boolean)
+      .map((name) => String(name).toLowerCase());
+    return names.includes("kfd-2");
+  });
+  if (!entry) {
+    throw new Error("KFD metadata package does not expose KFD-2 metadata");
+  }
+  const [key, standard] = entry;
+  const schemaIds = { ...(standard.schemaIds || {}) };
+  const schemaPaths = { ...(standard.schemaPaths || {}) };
+  const trustTaxonomyPath = schemaPaths.trustTaxonomy || "";
+  const trustTaxonomy = trustTaxonomyPath
+    ? tryReadJsonPackageExport(`@kungfu-tech/kfd/${trustTaxonomyPath}`)
+    : undefined;
+  if (requireTrustTaxonomy && (!schemaIds.trustTaxonomy || !trustTaxonomyPath || !trustTaxonomy)) {
+    throw new Error("KFD metadata package does not expose the KFD-2 trust taxonomy schema");
+  }
+  return {
+    key: standard.key || key,
+    id: standard.id || standard.label || key,
+    label: standard.label || standard.id || key,
+    title: standard.title || "",
+    status: standard.status || "",
+    revision: standard.revision || 0,
+    package: {
+      name: packageJson.name,
+      version: packageJson.version,
+      repository: packageJson.repository?.url || "",
+    },
+    schemaIds,
+    schemaPaths,
+    hasTrustTaxonomySchema: Boolean(schemaIds.trustTaxonomy && trustTaxonomyPath && trustTaxonomy),
+    trustTaxonomy,
     concepts: { ...(standard.concepts || {}) },
     metadataSchema: standards.metadataSchema || {},
     source: standards.source || {},
@@ -391,6 +443,7 @@ function normalizeStringObjectArray(value, label) {
         throw new Error(`${label}[${index}] must be a string or object`);
       }
       return {
+        ...entry,
         id: optionalString(entry.id || entry.name || entry.surface || entry.path || entry.kind || `entry-${index}`),
         kind: optionalString(entry.kind || entry.type),
         reason: optionalString(entry.reason || entry.rationale || entry.note || entry.description),
@@ -398,6 +451,110 @@ function normalizeStringObjectArray(value, label) {
       };
     })
     .filter((entry) => entry.id || entry.reason);
+}
+
+const KFD2_TAXONOMY_FIELDS = ["riskType", "trustImpact", "machineProvability", "agentAction"];
+
+function kfdExtensionGuidance({ taxonomy = undefined, extensionRequests = [] } = {}) {
+  const requestPath = taxonomy?.["x-kfd"]?.extensionPolicy?.requestPath || {};
+  const kfd3Request = Array.isArray(extensionRequests)
+    ? extensionRequests.find((entry) => entry?.requestPath?.kind === "github-issue")
+    : undefined;
+  return {
+    action: taxonomy?.["x-kfd"]?.extensionPolicy?.standardAction || "open-kfd-extension-issue",
+    repository: requestPath.repository || kfd3Request?.requestPath?.target || "https://github.com/kungfu-systems/kfd",
+    issueUrl: requestPath.issueUrl || kfd3Request?.requestPath?.template || "https://github.com/kungfu-systems/kfd/issues/new?title=KFD-2%20trust%20taxonomy%20extension%20request",
+    appliesTo: requestPath.appliesTo || KFD2_TAXONOMY_FIELDS,
+  };
+}
+
+function taxonomyAllowedValues(taxonomy = {}) {
+  const xKfd = taxonomy?.["x-kfd"]?.allowedValues || {};
+  const defs = taxonomy?.$defs || {};
+  return {
+    riskType: new Set(xKfd.riskType || defs.riskType?.enum || []),
+    trustImpact: new Set(xKfd.trustImpact || defs.trustImpact?.enum || []),
+    machineProvability: new Set(xKfd.machineProvability || defs.machineProvability?.enum || []),
+    agentAction: new Set(xKfd.agentAction || defs.agentAction?.enum || []),
+  };
+}
+
+function validateTaxonomyField(entry, field, { allowed, label, guidance }) {
+  const value = optionalString(entry[field]).trim();
+  if (!value) {
+    throw new Error(`${label}.${field} is required by KFD-2 trust taxonomy; do not invent a local private value, ${guidance.action} at ${guidance.issueUrl}`);
+  }
+  if (!allowed[field]?.has(value)) {
+    throw new Error(`${label}.${field}=${value} is not in KFD-2 trust taxonomy; unknown taxonomy values fail validation, ${guidance.action} at ${guidance.issueUrl}`);
+  }
+}
+
+export function validateKfd2TrustTaxonomyEntry(entry, {
+  kind = "residualRisk",
+  label = kind,
+  metadata = resolveKfd2Metadata({ requireTrustTaxonomy: true }),
+  extensionRequests = [],
+} = {}) {
+  const taxonomy = metadata.trustTaxonomy;
+  const taxonomyContract = taxonomy?.contract || taxonomy?.["x-kfd"]?.contract;
+  if (!taxonomy || taxonomyContract !== "kfd-2-trust-taxonomy") {
+    const guidance = kfdExtensionGuidance({ taxonomy, extensionRequests });
+    throw new Error(`${label} requires KFD-2 trust taxonomy from @kungfu-tech/kfd standards.json; ${guidance.action} at ${guidance.issueUrl}`);
+  }
+  if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+    throw new Error(`${label} must be an object validated by KFD-2 trust taxonomy`);
+  }
+  const guidance = kfdExtensionGuidance({ taxonomy, extensionRequests });
+  const defs = taxonomy.$defs || {};
+  const required = defs[kind]?.required || (kind === "residualRisk"
+    ? ["id", "definedBy", "riskType", "trustImpact", "machineProvability", "agentAction", "reason", "owner"]
+    : ["id", "riskType", "trustImpact", "reason"]);
+  for (const field of required) {
+    if (!optionalString(entry[field]).trim()) {
+      throw new Error(`${label}.${field} is required by KFD-2 trust taxonomy; do not add a private local taxonomy value, ${guidance.action} at ${guidance.issueUrl}`);
+    }
+  }
+  const allowed = taxonomyAllowedValues(taxonomy);
+  for (const field of KFD2_TAXONOMY_FIELDS) {
+    if (field in entry || required.includes(field)) {
+      validateTaxonomyField(entry, field, { allowed, label, guidance });
+    }
+  }
+  if (kind === "residualRisk") {
+    const expectedDefinedBy = `${metadata.schemaIds.trustTaxonomy}#/$defs/residualRisk`;
+    if (entry.definedBy !== expectedDefinedBy) {
+      throw new Error(`${label}.definedBy must be ${expectedDefinedBy}; ${guidance.action} at ${guidance.issueUrl}`);
+    }
+  }
+  return {
+    ...entry,
+    taxonomy: {
+      standard: metadata.key,
+      schemaId: metadata.schemaIds.trustTaxonomy,
+      schemaPath: metadata.schemaPaths.trustTaxonomy,
+      contract: taxonomyContract,
+      package: metadata.package,
+    },
+    extensionRequest: entry.extensionRequest || kfdExtensionGuidance({ taxonomy, extensionRequests }),
+  };
+}
+
+function normalizeKfd2TaxonomyEntries(value, {
+  kind = "residualRisk",
+  label = kind,
+  extensionRequests = [],
+} = {}) {
+  const entries = normalizeStringObjectArray(value, label);
+  if (entries.length === 0) {
+    return [];
+  }
+  const metadata = resolveKfd2Metadata({ requireTrustTaxonomy: true });
+  return entries.map((entry, index) => validateKfd2TrustTaxonomyEntry(entry, {
+    kind,
+    label: `${label}[${index}]`,
+    metadata,
+    extensionRequests,
+  }));
 }
 
 function normalizeKfd3AuditBoundary(value = {}, { closure = {}, label = "auditBoundary" } = {}) {
@@ -444,9 +601,10 @@ function normalizeKfd3AuditBoundary(value = {}, { closure = {}, label = "auditBo
   };
 }
 
-function normalizeKfd3ResidualRisk(value = [], { auditBoundary = {} } = {}) {
+function normalizeKfd3ResidualRisk(value = [], { auditBoundary = {}, extensionRequests = [] } = {}) {
   const explicitRisks = normalizeStringObjectArray(value, "residualRisk");
   const boundaryRisks = (auditBoundary.nonExhaustivelyEnumerableSurfaces || []).map((entry) => ({
+    ...entry,
     id: entry.id,
     kind: entry.kind || "non-exhaustive-surface",
     reason: entry.reason || "Surface cannot be exhaustively enumerated by the release passport.",
@@ -456,7 +614,11 @@ function normalizeKfd3ResidualRisk(value = [], { auditBoundary = {} } = {}) {
   for (const entry of [...explicitRisks, ...boundaryRisks]) {
     byId.set(entry.id || entry.reason, entry);
   }
-  return [...byId.values()];
+  return normalizeKfd2TaxonomyEntries([...byId.values()], {
+    kind: "residualRisk",
+    label: "residualRisk",
+    extensionRequests,
+  });
 }
 
 function normalizeKfd3Responsibility(value = {}, { registry = {}, artifactVerifyCommand = "" } = {}) {
@@ -502,6 +664,14 @@ export function normalizeKfd3CollaborationInterfacePrebuildWitness(witness, { me
   }
   const registry = normalizeRegistry(witness.registry || witness.sourceRegistry || witness.source_registry || witness.collaborationInterface?.sourceRegistry || witness.collaboration_interface?.sourceRegistry);
   const closure = witness.collaborationInterface?.closure || witness.collaboration_interface?.closure || {};
+  const extensionRequests = normalizeStringObjectArray(
+    witness.extensionRequests ||
+      witness.extension_requests ||
+      witness.collaborationInterface?.extensionRequests ||
+      witness.collaboration_interface?.extensionRequests ||
+      [],
+    "extensionRequests",
+  );
   const auditBoundary = normalizeKfd3AuditBoundary(witness.auditBoundary || witness.audit_boundary || closure, { closure });
   const expectedArtifactVerification = witness.expectedArtifactVerification && typeof witness.expectedArtifactVerification === "object" && !Array.isArray(witness.expectedArtifactVerification)
     ? { ...witness.expectedArtifactVerification, command: optionalString(witness.expectedArtifactVerification.command) }
@@ -534,8 +704,9 @@ export function normalizeKfd3CollaborationInterfacePrebuildWitness(witness, { me
     auditBoundary,
     residualRisk: normalizeKfd3ResidualRisk(
       witness.residualRisk || witness.residual_risk || witness.auditBoundary?.residualRisk || witness.audit_boundary?.residual_risk || [],
-      { auditBoundary },
+      { auditBoundary, extensionRequests },
     ),
+    extensionRequests,
     responsibility: normalizeKfd3Responsibility(witness.responsibility || witness.owners, {
       registry,
       artifactVerifyCommand: expectedArtifactVerification.command,
@@ -559,6 +730,10 @@ export function normalizeKfd3CollaborationInterfaceArtifactWitness(witness, { me
     throw new Error(`KFD-3 artifact witness standard must match ${metadata.key}`);
   }
   const exposedSurfaces = artifactSurfacesFromWitness(witness).map((surface, index) => normalizeKfd3Surface(surface, index, "exposedSurfaces"));
+  const extensionRequests = normalizeStringObjectArray(
+    witness.extensionRequests || witness.extension_requests || [],
+    "extensionRequests",
+  );
   return {
     schemaVersion: 1,
     contract: KFD3_ARTIFACT_WITNESS_CONTRACT,
@@ -574,6 +749,12 @@ export function normalizeKfd3CollaborationInterfaceArtifactWitness(witness, { me
       witness.collaboration_interface?.digest,
     ),
     exposedSurfaces,
+    residualRisk: normalizeKfd2TaxonomyEntries(witness.residualRisk || witness.residual_risk || [], {
+      kind: "residualRisk",
+      label: "artifactWitness.residualRisk",
+      extensionRequests,
+    }),
+    extensionRequests,
     verifier: witness.verifier && typeof witness.verifier === "object" && !Array.isArray(witness.verifier)
       ? { ...witness.verifier }
       : {},
@@ -1004,7 +1185,11 @@ export function createKfd3CollaborationInterfaceReleaseGateEvidence({
       reasons.push(`support-level-${supportLevel}`);
     }
     const status = reasons.length === 0 ? "passed" : supportLevel === "release" ? "failed" : "downgraded";
-    const residualRisk = prebuildWitness.residualRisk || [];
+    const residualRiskMap = new Map();
+    for (const risk of [...(prebuildWitness.residualRisk || []), ...(artifactWitness?.residualRisk || [])]) {
+      residualRiskMap.set(risk.id || risk.reason, risk);
+    }
+    const residualRisk = [...residualRiskMap.values()];
     const releaseStatus = kfd3ReleaseStatus({ comparisonStatus: status, supportLevel, residualRisk });
     const trustResult = kfd3TrustResult(status);
     const declaredCapabilityVerification = {
