@@ -633,6 +633,45 @@ test("web-surface health check covers kfd and fails closed on production noindex
   });
 });
 
+test("web-surface health check fails production on html robots noindex meta", async () => {
+  await withFixtureAsync(async (fixture) => {
+    fs.mkdirSync(path.join(fixture, "dist"), { recursive: true });
+    fs.writeFileSync(path.join(fixture, "dist", "index.html"), "hello\n");
+    const result = applyWebSurfaceDeploy({
+      cwd: fixture,
+      channel: "production",
+      sourceSha: "b".repeat(40),
+      dryRun: true,
+    });
+    const health = await checkWebSurfaceHealth({
+      cwd: fixture,
+      result,
+      fetchImpl(url) {
+        return {
+          status: 200,
+          url,
+          headers: {
+            get(name) {
+              return name.toLowerCase() === "content-type" ? "text/html" : "";
+            },
+          },
+          text() {
+            return url === "https://kfd.libkungfu.dev"
+              ? '<!doctype html><meta name="robots" content="noindex">'
+              : "<!doctype html>";
+          },
+        };
+      },
+    });
+
+    const kfd = health.checks.find((check) => check.surface === "kfd");
+    assert.equal(health.status, "failed");
+    assert.equal(kfd.noindexHeaderValue, false);
+    assert.equal(kfd.noindexMeta, true);
+    assert.match(kfd.message, /noindex=true/);
+  });
+});
+
 test("web-surface health check fails closed without surface URLs", async () => {
   await withFixtureAsync(async (fixture) => {
     const health = await checkWebSurfaceHealth({

@@ -1036,6 +1036,17 @@ function noindexHeader(headers) {
   return String(value).toLowerCase().includes("noindex");
 }
 
+function noindexMeta(html = "") {
+  const source = String(html || "").toLowerCase();
+  return /<meta\s+[^>]*name=["']robots["'][^>]*content=["'][^"']*noindex/.test(source) ||
+    /<meta\s+[^>]*content=["'][^"']*noindex[^"']*["'][^>]*name=["']robots["']/.test(source);
+}
+
+function htmlLikeResponse(response, url = "") {
+  const contentType = response.headers?.get?.("content-type") || "";
+  return String(contentType).toLowerCase().includes("text/html") || /\/$|\.html(?:$|[?#])/.test(String(url || ""));
+}
+
 export async function checkWebSurfaceHealth({
   result = null,
   plan = null,
@@ -1069,7 +1080,12 @@ export async function checkWebSurfaceHealth({
     try {
       const response = await fetchImpl(url, { redirect: "follow" });
       const expectedNoindex = Boolean(config.channels?.[channel]?.noindex);
-      const noindex = noindexHeader(response.headers);
+      const headerNoindex = noindexHeader(response.headers);
+      const body = htmlLikeResponse(response, url) && typeof response.text === "function"
+        ? await response.text()
+        : "";
+      const metaNoindex = noindexMeta(body);
+      const noindex = headerNoindex || metaNoindex;
       const statusOk = allowedStatuses.includes(response.status);
       const noindexOk = channel !== "production" || expectedNoindex || !noindex;
       checks.push({
@@ -1079,6 +1095,8 @@ export async function checkWebSurfaceHealth({
         httpStatus: response.status,
         finalUrl: response.url || url,
         noindexHeader: noindex,
+        noindexHeaderValue: headerNoindex,
+        noindexMeta: metaNoindex,
         message: statusOk && noindexOk
           ? "surface is reachable"
           : `surface health failed: http=${response.status}, noindex=${noindex}`,
