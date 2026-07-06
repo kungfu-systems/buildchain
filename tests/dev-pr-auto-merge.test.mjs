@@ -20,7 +20,7 @@ function pr(overrides = {}) {
       repo: { full_name: overrides.headRepo ?? "kungfu-systems/buildchain" },
     },
     base: {
-      ref: "dev/v2/v2.5",
+      ref: "dev/v2/v2.6",
     },
   };
 }
@@ -29,7 +29,7 @@ function client({
   pullRequests = [],
   reviews = [{ user: { login: "reviewer" }, state: "APPROVED" }],
   checks = {
-    statuses: [{ context: "Verify", state: "success" }],
+    statuses: [{ context: "check", state: "success" }],
     checkRuns: [],
   },
 } = {}) {
@@ -60,7 +60,7 @@ function client({
 
 const baseOptions = {
   repository: "kungfu-systems/buildchain",
-  targetBranch: "dev/v2/v2.5",
+  targetBranch: "dev/v2/v2.6",
   dryRun: true,
   maxMerges: 2,
   pollMergeableDelayMs: 0,
@@ -79,11 +79,11 @@ test("ready dev PR is selected in dry-run mode without merging", async () => {
 test("policy gates reject unsafe or incomplete dev PRs", async () => {
   const options = {
     repository: "kungfu-systems/buildchain",
-    targetBranch: "dev/v2/v2.5",
+    targetBranch: "dev/v2/v2.6",
     readyLabel: "ready",
     blockLabels: "blocked",
     allowedHeadPrefixes: "feature/,fix/",
-    requiredChecks: "Verify",
+    requiredChecks: "check",
     requireApproval: true,
     sameRepositoryOnly: true,
     dryRun: true,
@@ -116,7 +116,7 @@ test("policy gates reject unsafe or incomplete dev PRs", async () => {
       await evaluatePullRequest(
         pr({ number: 2 }),
         options,
-        client({ checks: { statuses: [{ context: "Verify", state: "failure" }], checkRuns: [] } }),
+        client({ checks: { statuses: [{ context: "check", state: "failure" }], checkRuns: [] } }),
       )
     ).reason,
     "required-checks-not-passing",

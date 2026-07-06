@@ -386,6 +386,7 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.match(workflow, /workflow_call:/);
   assert.match(workflow, /target-branch:/);
   assert.match(workflow, /required-status-checks:/);
+  assert.match(workflow, /default: "check"/);
   assert.match(workflow, /ready-label:/);
   assert.match(workflow, /block-labels:/);
   assert.match(workflow, /allowed-head-prefixes:/);
@@ -460,18 +461,45 @@ test("patrol workflow family exposes daily weekly monthly reusable entries and d
 
   assert.match(dogfoodDaily, /schedule:/);
   assert.match(dogfoodDaily, /uses: \.\/\.github\/workflows\/patrol-daily\.yml/);
-  assert.match(dogfoodDaily, /target-branch: dev\/v2\/v2\.5/);
+  assert.match(dogfoodDaily, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v2' \}\}/);
+  assert.doesNotMatch(dogfoodDaily, /target-branch: dev\/v2\/v2\.\d+/);
   assert.match(dogfoodDaily, /dry-run: \$\{\{ inputs\.dry-run \|\| false \}\}/);
   assert.match(dogfoodDaily, /contents: write/);
   assert.match(dogfoodDaily, /pull-requests: write/);
   assert.match(dogfoodWeekly, /schedule:/);
   assert.match(dogfoodWeekly, /uses: \.\/\.github\/workflows\/patrol-weekly\.yml/);
+  assert.match(dogfoodWeekly, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v2' \}\}/);
+  assert.doesNotMatch(dogfoodWeekly, /target-branch: dev\/v2\/v2\.\d+/);
   assert.match(dogfoodWeekly, /contents: write/);
   assert.match(dogfoodWeekly, /pull-requests: write/);
   assert.match(dogfoodMonthly, /schedule:/);
   assert.match(dogfoodMonthly, /uses: \.\/\.github\/workflows\/patrol-monthly\.yml/);
+  assert.match(dogfoodMonthly, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v2' \}\}/);
+  assert.doesNotMatch(dogfoodMonthly, /target-branch: dev\/v2\/v2\.\d+/);
   assert.match(dogfoodMonthly, /contents: write/);
   assert.match(dogfoodMonthly, /pull-requests: write/);
+});
+
+test("check workflow runs declarative Buildchain lifecycle verify", () => {
+  const reusable = fs.readFileSync(
+    path.join(root, ".github/workflows/check.yml"),
+    "utf8",
+  );
+  const verify = fs.readFileSync(
+    path.join(root, ".github/workflows/verify.yml"),
+    "utf8",
+  );
+
+  assert.match(reusable, /workflow_call:/);
+  assert.match(reusable, /Run declared install lifecycle/);
+  assert.match(reusable, /lifecycle run install/);
+  assert.match(reusable, /Run declared verify lifecycle/);
+  assert.match(reusable, /lifecycle run verify/);
+  assert.match(reusable, /--require-lifecycle-stages install,verify/);
+  assert.match(verify, /Checkout Buildchain runtime/);
+  assert.match(verify, /Validate declared check lifecycle/);
+  assert.match(verify, /lifecycle run install/);
+  assert.match(verify, /lifecycle run verify/);
 });
 
 test("reusable web-surface workflow exposes preview, cleanup, staging, and production gates", () => {

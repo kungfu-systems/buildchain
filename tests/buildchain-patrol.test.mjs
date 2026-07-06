@@ -37,7 +37,7 @@ function client({ pullRequests = [] } = {}) {
     },
     async listCommitChecks() {
       return {
-        statuses: [{ context: "Verify", state: "success" }],
+        statuses: [{ context: "check", state: "success" }],
         checkRuns: [],
       };
     },
@@ -56,7 +56,7 @@ test("daily patrol defaults to inspect plus ready dev PR maintenance", async () 
   const result = await runBuildchainPatrol(
     {
       repository: "kungfu-systems/buildchain",
-      targetBranch: "dev/v2/v2.5",
+      targetBranch: "dev/v2/v2.6",
       cadence: "daily",
       dryRun: true,
       maxActions: 1,
@@ -76,13 +76,13 @@ test("daily patrol defaults to inspect plus ready dev PR maintenance", async () 
 test("weekly and monthly patrol expose stable planned check slots", async () => {
   const weekly = await runBuildchainPatrol({
     repository: "kungfu-systems/buildchain",
-    targetBranch: "dev/v2/v2.5",
+    targetBranch: "dev/v2/v2.6",
     cadence: "weekly",
     dryRun: true,
   });
   const monthly = await runBuildchainPatrol({
     repository: "kungfu-systems/buildchain",
-    targetBranch: "dev/v2/v2.5",
+    targetBranch: "dev/v2/v2.6",
     cadence: "monthly",
     dryRun: true,
   });
