@@ -805,7 +805,7 @@ test("runtime train override accepts only trusted manual train or exact SHA refs
   );
 });
 
-test("promote action exposes anchored publish source-lock gate", () => {
+test("promote action exposes generic publish source-lock gate", () => {
   const action = fs.readFileSync(
     path.join(root, "actions/promote-buildchain-ref/action.yml"),
     "utf8",
@@ -819,8 +819,8 @@ test("promote action exposes anchored publish source-lock gate", () => {
   assert.match(action, /publish-source-ref:/);
   assert.match(action, /publish-source-sha:/);
   assert.match(action, /publish-source-locked:/);
-  assert.match(implementation, /validateAnchoredPackageRelease/);
-  assert.match(implementation, /requirePublishGateSourceLock: true/);
+  assert.match(implementation, /kungfu-buildchain-publish-source-lock-validation/);
+  assert.match(implementation, /publish-gate\/\{alpha,release,major\}/);
   assert.match(implementation, /does not match promotion sha/);
 });
 
