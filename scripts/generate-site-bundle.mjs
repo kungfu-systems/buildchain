@@ -2,6 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { createBuildchainContractWorld } from "../packages/core/buildchain-contract.js";
 
 const SITE_BUNDLE_CONTRACT = "kungfu-buildchain-site-bundle";
 const root = path.resolve(import.meta.dirname, "..");
@@ -146,6 +147,7 @@ function buildSiteBundle() {
       "workflow-registry.json",
       "release-model.json",
       "artifact-schemas.json",
+      "buildchain-contract.json",
       "product-mechanism.json",
       "release-provenance.json",
       "agent-index.json",
@@ -228,6 +230,7 @@ function buildSiteBundle() {
       "cli-registry.json",
       "workflow-registry.json",
       "artifact-schemas.json",
+      "buildchain-contract.json",
     ],
     instruction: "Use this bundle as the package-owned fact source for Buildchain pages. Do not infer current release mechanics from prose alone.",
   };
@@ -252,6 +255,7 @@ function buildSiteBundle() {
     "workflow-registry.json": workflowRegistry,
     "release-model.json": releaseModel,
     "artifact-schemas.json": artifactSchemas,
+    "buildchain-contract.json": createBuildchainContractWorld({ root }),
     "product-mechanism.json": productMechanism,
     "release-provenance.json": releaseProvenance,
     "agent-index.json": agentIndex,

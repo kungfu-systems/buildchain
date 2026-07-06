@@ -1,6 +1,6 @@
 {
   "name": "@kungfu-tech/buildchain",
-  "version": "2.8.0",
+  "version": "2.8.1-alpha.0",
   "private": false,
   "description": "Buildchain Release Passport, release governance, CLI toolkit, and site facts.",
   "repository": "https://github.com/kungfu-systems/buildchain",
@@ -14,6 +14,7 @@
     ".": "./packages/core/index.js",
     "./core": "./packages/core/index.js",
     "./artifact-passport": "./packages/core/artifact-passport.js",
+    "./buildchain-contract": "./packages/core/buildchain-contract.js",
     "./diagnostics": "./packages/core/diagnostics.js",
     "./issue-reporting": "./packages/core/issue-reporting.js",
     "./logging": "./packages/core/logging.js",
@@ -27,6 +28,7 @@
     "./site/workflow-registry.json": "./dist/site/workflow-registry.json",
     "./site/release-model.json": "./dist/site/release-model.json",
     "./site/artifact-schemas.json": "./dist/site/artifact-schemas.json",
+    "./site/buildchain-contract.json": "./dist/site/buildchain-contract.json",
     "./site/product-mechanism.json": "./dist/site/product-mechanism.json",
     "./site/release-provenance.json": "./dist/site/release-provenance.json",
     "./site/agent-index.json": "./dist/site/agent-index.json",
@@ -92,7 +94,7 @@
     "vitest": "^4.1.9"
   },
   "dependencies": {
-    "@kungfu-tech/kfd": "1.0.0-alpha.2",
+    "@kungfu-tech/kfd": "1.0.0-alpha.3",
     "smol-toml": "1.7.0"
   }
 }

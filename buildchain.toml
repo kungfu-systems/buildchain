@@ -8,6 +8,11 @@ type = "json"
 path = "package.json"
 key = "version"
 
+[[version.files]]
+type = "json"
+path = "dist/site/buildchain-contract.json"
+key = "product.version"
+
 [lifecycle.install]
 command = "corepack pnpm@11.7.0 install --frozen-lockfile"
 
@@ -15,6 +20,9 @@ command = "corepack pnpm@11.7.0 install --frozen-lockfile"
 commands = [
   "corepack pnpm@11.7.0 run check",
 ]
+
+[lifecycle.version-state]
+command = "node scripts/generate-site-bundle.mjs"
 
 [lifecycle.publish]
 command = "node scripts/npm-publish-transaction.mjs"

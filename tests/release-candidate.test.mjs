@@ -216,6 +216,66 @@ test("release candidate resolver selects same-repo merged PR run and paired arti
   });
   assert.equal(emptyPullRequestArrayRun.id, 4);
 
+  const reusedBranchPullRequest = {
+    number: 610,
+    head: {
+      ref: "dev/v2/v2.8",
+      sha: "db807d5f4d8e38f439f97e32dcc0768e10d0150d",
+      repo: { full_name: "kungfu-systems/buildchain" },
+    },
+  };
+  const reusedBranchRuns = selectReleaseCandidateRuns({
+    pullRequest: reusedBranchPullRequest,
+    workflowName: "Build Surface Fixture",
+    runs: [
+      {
+        id: 28779551847,
+        name: "Build Surface Fixture",
+        event: "pull_request",
+        status: "completed",
+        conclusion: "success",
+        updated_at: "2026-07-06T12:00:00.000Z",
+        head_branch: "dev/v2/v2.8",
+        head_sha: "0c3b6c05725122d0339053d0837e6384d44b90e5",
+        head_repository: { full_name: "kungfu-systems/buildchain" },
+        pull_requests: [],
+      },
+      {
+        id: 28795133445,
+        name: "Build Surface Fixture",
+        event: "pull_request",
+        status: "completed",
+        conclusion: "success",
+        updated_at: "2026-07-06T13:00:00.000Z",
+        head_branch: "dev/v2/v2.8",
+        head_sha: "db807d5f4d8e38f439f97e32dcc0768e10d0150d",
+        head_repository: { full_name: "kungfu-systems/buildchain" },
+        pull_requests: [],
+      },
+    ],
+  });
+  assert.deepEqual(reusedBranchRuns.map((run) => run.id), [28795133445]);
+
+  const staleOnlyRuns = selectReleaseCandidateRuns({
+    pullRequest: reusedBranchPullRequest,
+    workflowName: "Build Surface Fixture",
+    runs: [
+      {
+        id: 28779551847,
+        name: "Build Surface Fixture",
+        event: "pull_request",
+        status: "completed",
+        conclusion: "success",
+        updated_at: "2026-07-06T12:00:00.000Z",
+        head_branch: "dev/v2/v2.8",
+        head_sha: "0c3b6c05725122d0339053d0837e6384d44b90e5",
+        head_repository: { full_name: "kungfu-systems/buildchain" },
+        pull_requests: [],
+      },
+    ],
+  });
+  assert.deepEqual(staleOnlyRuns, []);
+
   const artifacts = selectReleaseCandidateArtifacts({
     artifacts: [
       { id: 1, name: `${"libnode"}-summary-${SOURCE_SHA}` },
