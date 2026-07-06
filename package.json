@@ -98,7 +98,7 @@
     "vitest": "^4.1.9"
   },
   "dependencies": {
-    "@kungfu-tech/kfd": "1.0.0-alpha.3",
+    "@kungfu-tech/kfd": "github:kungfu-systems/kfd#1731900b81150ae29095329892b8d7d5670f2314",
     "smol-toml": "1.7.0"
   }
 }
