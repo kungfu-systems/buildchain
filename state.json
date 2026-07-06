@@ -16,14 +16,27 @@
   "state_ref": "buildchain/release-state/2-7-0-alpha-0",
   "state_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-state/v2.7.0-alpha.0.json",
   "evidence_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-evidence/v2.7.0-alpha.0/evidence.json",
-  "state": "publishing",
-  "previous_state": "prepared",
+  "state": "published",
+  "previous_state": "publishing",
   "actor": "dongkeren",
   "run_id": "28773760394",
   "superseded_by": "",
   "failure": "",
-  "artifacts": [],
-  "evidence": [],
+  "artifacts": [
+    {
+      "group": "node",
+      "kind": "npm",
+      "name": "@kungfu-tech/buildchain",
+      "ref": "2.7.0-alpha.0",
+      "digest": "sha512-/DKIyr4+Q+Lblr63RPkMvaoknZ1t8A/x4jgLO1cw+dWSWRUvx8T1OyBj3ILbuc/YFy5hxI27tC6j8Cs8UhaSWQ==",
+      "role": "",
+      "required": true
+    }
+  ],
+  "evidence": [
+    ".buildchain/release-evidence/v2.7.0-alpha.0/evidence.json",
+    ".buildchain/release-evidence/v2.7.0-alpha.0/dist-tag-evidence.json"
+  ],
   "created_at": "2026-07-06T07:01:21.501Z",
-  "updated_at": "2026-07-06T07:01:22.942Z"
+  "updated_at": "2026-07-06T07:01:30.738Z"
 }
