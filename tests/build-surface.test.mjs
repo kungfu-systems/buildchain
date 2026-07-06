@@ -95,9 +95,16 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /container:/);
   assert.match(workflow, /require-trusted-event:/);
   assert.match(workflow, /buildchain-ref:/);
+  assert.match(workflow, /buildchain-contract-lock-path:/);
+  assert.match(workflow, /buildchain-contract-compatibility-policy:/);
+  assert.match(workflow, /buildchain-contract-drift-issue-mode:/);
   assert.match(workflow, /default: ""/);
   assert.match(workflow, /Resolve Buildchain runtime/);
   assert.match(workflow, /runtime-sha/);
+  assert.match(workflow, /Checkout consumer contract lock/);
+  assert.match(workflow, /buildchain-contract-lock\.mjs check/);
+  assert.match(workflow, /Report consumer Buildchain contract drift/);
+  assert.match(workflow, /buildchain-contract-lock-status:/);
   assert.match(workflow, /buildchain-ref override is only allowed for trusted workflow_dispatch runs/);
   assert.match(workflow, /refs\/heads\/train\/vN\/vN\.M\/<capability>/);
   assert.match(workflow, /publish-channel:/);
@@ -124,6 +131,10 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.ok(
     workflow.indexOf("Verify publish target channel ref and PR lineage") <
       workflow.indexOf("build-linux-container:"),
+  );
+  assert.ok(
+    workflow.indexOf("Check Buildchain contract lock") <
+      workflow.indexOf("build-native:"),
   );
   assert.match(workflow, /resolve-publish-source\.mjs --mode manifest/);
   assert.equal(
@@ -180,6 +191,7 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /downloaded-diagnostics/);
   assert.match(workflow, /BUILDCHAIN_RUNTIME_SHA/);
   assert.match(workflow, /BUILDCHAIN_RUNTIME_TRUST_DECISION/);
+  assert.match(workflow, /BUILDCHAIN_CONTRACT_LOCK_PATH/);
   assert.match(workflow, /aggregate-diagnostics-summary\.mjs/);
   assert.match(workflow, /generate-release-candidate-passport\.mjs/);
   assert.match(workflow, /release-candidate-enabled/);
@@ -342,6 +354,11 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /default: "build\.yml"/);
   assert.match(workflow, /release-candidate-workflow-name:/);
   assert.match(workflow, /default: "Build"/);
+  assert.match(workflow, /buildchain-contract-lock-path:/);
+  assert.match(workflow, /buildchain-contract-drift-issue-mode:/);
+  assert.match(workflow, /Resolve checked out Buildchain runtime/);
+  assert.match(workflow, /Check Buildchain contract lock/);
+  assert.match(workflow, /Report consumer Buildchain contract drift/);
   assert.match(workflow, /allow-repository:/);
   assert.match(workflow, /default: ""/);
   assert.match(workflow, /required-status-check:/);

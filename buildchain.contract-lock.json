@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-contract-lock",
+  "buildchain": {
+    "ref": "v2",
+    "resolvedSha": "a4b2c391443d24349ac83cfe26642ce08108ae7d",
+    "contract": "kungfu-buildchain-runtime-contract-world",
+    "contractDigest": "sha256:149920052e5ddeb1809489a78f8f54e4b90c9af1a91b9c43959afedde658e06b",
+    "compatibilityDigest": "sha256:3f179544de090b2023f340c4eb12ce525c904c63f979175d1424358c68cc86dd",
+    "majorLine": "v2",
+    "compatibilityPolicy": "major-compatible",
+    "acceptedAt": "2026-07-06T00:00:00.000Z",
+    "surfaces": [
+      {
+        "id": "reusable-build",
+        "kind": "workflow",
+        "breakingDigest": "sha256:6303aa2c2cb8c2cef4301ceea95cc3c426c2aa81d98714aa9bdf2471d63faee1"
+      },
+      {
+        "id": "release-candidate-promote",
+        "kind": "workflow",
+        "breakingDigest": "sha256:b8a5f8b1e89b6a7d17f546eb79b1eabb389d74af2277f3d69df661549c3a8632"
+      },
+      {
+        "id": "promote-buildchain-ref-action",
+        "kind": "action",
+        "breakingDigest": "sha256:9da3a56d40db3941a492f965b65434d5674e5ac0f66be972a97f405ba50110b0"
+      },
+      {
+        "id": "report-buildchain-issue-action",
+        "kind": "action",
+        "breakingDigest": "sha256:575a2cb02cdb2e61bb2e84d5bbaaf64b430aa5d7936645660b592de4549d81b0"
+      },
+      {
+        "id": "release-passport-schema",
+        "kind": "schema",
+        "breakingDigest": "sha256:b627e1b2ece9b6049517a942c5139e342e6077cdd3d8962d61cef8481b1f70ad"
+      },
+      {
+        "id": "kfd-1-release-gate",
+        "kind": "schema",
+        "breakingDigest": "sha256:a9ae5a8b523cd0c2d846a6a77a8317d9dfaa4e4bb1457e1f6c021ea7eae855db"
+      },
+      {
+        "id": "buildchain-cli",
+        "kind": "cli",
+        "breakingDigest": "sha256:097db3e67509bedda8c6548bf1edfbfcf57f7b5510520b6a7b7e078d7ec087c8"
+      }
+    ]
+  }
+}

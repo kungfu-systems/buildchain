@@ -12,6 +12,21 @@ on:
         default: ""
         type: string
         required: false
+      buildchain-contract-lock-path:
+        description: "Consumer-owned Buildchain contract lock path"
+        default: "buildchain.contract-lock.json"
+        type: string
+        required: false
+      buildchain-contract-compatibility-policy:
+        description: "Contract compatibility policy: major-compatible, allow-additive, or exact"
+        default: "major-compatible"
+        type: string
+        required: false
+      buildchain-contract-drift-issue-mode:
+        description: "Consumer issue behavior for Buildchain floating-ref contract drift: off, breaking-only, or compatible-and-breaking"
+        default: "compatible-and-breaking"
+        type: string
+        required: false
       working-directory:
         default: "."
         type: string
@@ -253,6 +268,15 @@ on:
       buildchain-runtime-trust-decision:
         description: "Runtime override trust decision"
         value: ${{ jobs.trust-gate.outputs.buildchain-runtime-trust-decision }}
+      buildchain-contract-lock-status:
+        description: "Floating Buildchain runtime contract lock status"
+        value: ${{ jobs.trust-gate.outputs.buildchain-contract-lock-status }}
+      buildchain-contract-lock-drift:
+        description: "Whether the floating Buildchain runtime SHA or contract digest drifted from the consumer lock"
+        value: ${{ jobs.trust-gate.outputs.buildchain-contract-lock-drift }}
+      buildchain-contract-digest:
+        description: "Current Buildchain runtime contract digest"
+        value: ${{ jobs.trust-gate.outputs.buildchain-contract-digest }}
       publish-channel:
         description: "Resolved publish channel"
         value: ${{ jobs.trust-gate.outputs.publish-channel }}
@@ -289,6 +313,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
   id-token: write
 
 jobs:
@@ -316,6 +341,9 @@ jobs:
       buildchain-runtime-trust-decision: ${{ steps.runtime.outputs.runtime-trust-decision }}
       buildchain-workflow-shell-ref: ${{ steps.runtime.outputs.workflow-shell-ref }}
       buildchain-rollback-ref: ${{ steps.runtime.outputs.rollback-ref }}
+      buildchain-contract-lock-status: ${{ steps.contract-lock.outputs.contract-lock-status }}
+      buildchain-contract-lock-drift: ${{ steps.contract-lock.outputs.contract-lock-drift }}
+      buildchain-contract-digest: ${{ steps.contract-lock.outputs.contract-digest }}
     steps:
       - name: Resolve Buildchain runtime
         id: runtime
@@ -429,6 +457,76 @@ jobs:
           ref: ${{ steps.runtime.outputs.runtime-sha }}
           path: .buildchain/runtime
           persist-credentials: false
+
+      - name: Checkout consumer contract lock
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ github.sha }}
+          clean: true
+          persist-credentials: false
+          path: .buildchain/consumer
+
+      - name: Check Buildchain contract lock
+        id: contract-lock
+        shell: bash
+        run: |
+          if [ -f .buildchain/runtime/scripts/buildchain-contract-lock.mjs ]; then
+            node .buildchain/runtime/scripts/buildchain-contract-lock.mjs check
+          else
+            {
+              echo "contract-lock-status=runtime-contract-unavailable"
+              echo "contract-lock-compatible=true"
+              echo "contract-lock-drift=false"
+              echo "contract-lock-issue-needed=false"
+              echo "contract-lock-issue-body-file="
+              echo "contract-digest="
+              echo "contract-compatibility-digest="
+              echo "accepted-contract-digest="
+              echo "accepted-buildchain-sha="
+              echo "current-buildchain-sha=${BUILDCHAIN_RUNTIME_SHA}"
+            } >> "${GITHUB_OUTPUT}"
+            if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+              {
+                echo "## Buildchain contract lock"
+                echo
+                echo "- Status: \`runtime-contract-unavailable\`"
+                echo "- Runtime ref: \`${BUILDCHAIN_RUNTIME_REF}\`"
+                echo "- Runtime SHA: \`${BUILDCHAIN_RUNTIME_SHA}\`"
+                echo "- Note: the checked-out Buildchain runtime does not yet ship contract lock support."
+              } >> "${GITHUB_STEP_SUMMARY}"
+            fi
+          fi
+        env:
+          BUILDCHAIN_CONTRACT_LOCK_PATH: .buildchain/consumer/${{ inputs.buildchain-contract-lock-path }}
+          BUILDCHAIN_CONTRACT_COMPATIBILITY_POLICY: ${{ inputs.buildchain-contract-compatibility-policy }}
+          BUILDCHAIN_CONTRACT_DRIFT_ISSUE_MODE: ${{ inputs.buildchain-contract-drift-issue-mode }}
+          BUILDCHAIN_RUNTIME_ROOT: .buildchain/runtime
+          BUILDCHAIN_RUNTIME_REF: ${{ steps.runtime.outputs.runtime-ref }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ steps.runtime.outputs.runtime-sha }}
+          BUILDCHAIN_RUNTIME_CLASS: ${{ steps.runtime.outputs.runtime-class }}
+          BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Report consumer Buildchain contract drift
+        if: ${{ always() && steps.contract-lock.outputs.contract-lock-issue-needed == 'true' }}
+        uses: ./.buildchain/runtime/actions/report-buildchain-issue
+        with:
+          token: ${{ github.token }}
+          target-repository: ${{ github.repository }}
+          title: "[Buildchain contract] ${{ github.repository }} drift on ${{ steps.runtime.outputs.runtime-ref }}"
+          failure-code: buildchain-contract-${{ steps.contract-lock.outputs.contract-lock-status }}
+          buildchain-ref: ${{ steps.runtime.outputs.runtime-ref }}
+          buildchain-version: ${{ steps.contract-lock.outputs.contract-digest }}
+          consumer-repository: ${{ github.repository }}
+          consumer-ref: ${{ github.ref }}
+          consumer-sha: ${{ github.sha }}
+          workflow: ${{ github.workflow }}
+          run-id: ${{ github.run_id }}
+          run-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          summary: "Buildchain floating runtime contract drift: ${{ steps.contract-lock.outputs.contract-lock-status }}"
+          body-file: ${{ steps.contract-lock.outputs.contract-lock-issue-body-file }}
+          labels: "buildchain-contract-drift"
+          comment-cooldown-hours: "24"
+          fail-on-error: "false"
 
       - name: Evaluate event trust
         id: trust

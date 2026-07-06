@@ -120,6 +120,12 @@ the Kungfu SDK. The authority chain is:
 3. Consumers only pass declarative witness JSON plus the artifact payloads their
    build already produced.
 
+This gives agents a concrete answer to "what changed and can I trust it?" A
+release can include both normal release passport evidence and KFD-1 evidence:
+the passport proves the release transaction and artifacts are complete, while
+KFD-1 proves selected contract-world surfaces inside those artifacts are the
+byte-for-byte surfaces the release intended to ship.
+
 The witness JSON names the contract world, the canonical serialization policy,
 and the release surfaces that must be byte-for-byte verified:
 
@@ -155,6 +161,31 @@ the KFD package version, KFD schema ids, the Buildchain formatting policy, and
 the actual artifact digest observed after the build. Verification fails closed
 when the witness is missing required facts, an artifact cannot be found, or a
 post-build digest does not match the frozen witness.
+
+Good KFD-1 witnesses should point at release payload surfaces, not at private
+build-machine state. For Buildchain itself, the natural witness set is the
+release passport schema and implementation, KFD-1 gate implementation,
+`dist/site/buildchain-contract.json`, and the npm package payload files that
+expose the public CLI, reusable workflow/action contracts, and site facts.
+The final `buildchain.release.json` file should not be used as an ordinary
+byte-for-byte KFD surface because it contains KFD evidence; instead, the
+passport is audited through release-state SHA, `check-report.json`, and the
+contract files that generate and verify it.
+
+### Floating Buildchain contract lock
+
+KFD-1 protects release payload surfaces. Floating ref contract locks protect the
+consumer's relationship to Buildchain itself. A consumer can keep
+`buildchain.contract-lock.json` with the Buildchain floating ref it accepted,
+the resolved SHA, the contract digest, and the compatibility policy. Each
+Buildchain run reads the actual contract from the checked-out Buildchain ref
+and compares it before heavy build or publish work begins.
+
+Compatible drift, such as optional inputs or extra diagnostics, continues and
+creates a consumer-local issue for review. Breaking drift fails fast. This means
+consumers can use `@v2` without silently accepting incompatible changes, while
+Buildchain maintainers can still ship compatible improvements under the same
+major floating tag.
 
 `impact.json` can be supplied with `--impact-json`. Production release
 passports (`release/*`) and major publish-gate passports require

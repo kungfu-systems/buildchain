@@ -87,6 +87,9 @@ if (rootPackage.exports?.["."] !== "./packages/core/index.js") {
 if (rootPackage.exports?.["./diagnostics"] !== "./packages/core/diagnostics.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/diagnostics");
 }
+if (rootPackage.exports?.["./buildchain-contract"] !== "./packages/core/buildchain-contract.js") {
+  throw new Error("root package must export @kungfu-tech/buildchain/buildchain-contract");
+}
 if (rootPackage.exports?.["./issue-reporting"] !== "./packages/core/issue-reporting.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/issue-reporting");
 }
@@ -141,6 +144,9 @@ if (!coreIndexSource.includes("collectBuildchainDiagnostics")) {
 if (!coreIndexSource.includes("reportBuildchainIssue")) {
   throw new Error("packages/core/index.js must export reportBuildchainIssue");
 }
+if (!coreIndexSource.includes("createBuildchainContractWorld")) {
+  throw new Error("packages/core/index.js must export Buildchain contract lock APIs");
+}
 for (const requiredSnippet of [
   "createKfd1ReleaseGateEvidence",
   "resolveKfd1Metadata",
@@ -172,9 +178,22 @@ for (const requiredSnippet of [
   "currently named `kfd-1`",
   "Buildchain formatting policy",
   "Verification fails closed",
+  "Floating Buildchain contract lock",
+  "buildchain.contract-lock.json",
 ]) {
   if (!releasePassportDoc.includes(requiredSnippet)) {
     throw new Error(`release passport doc missing KFD-1 gate snippet: ${requiredSnippet}`);
+  }
+}
+const reusableBuildSurfaceDoc = fs.readFileSync(path.join(root, "docs/reusable-build-surface.md"), "utf8");
+for (const requiredSnippet of [
+  "Floating Ref Contract Lock",
+  "dist/site/buildchain-contract.json",
+  "buildchain-contract-drift-issue-mode",
+  "compatible drift",
+]) {
+  if (!reusableBuildSurfaceDoc.includes(requiredSnippet)) {
+    throw new Error(`reusable build surface doc missing contract lock snippet: ${requiredSnippet}`);
   }
 }
 for (const [docName, docSource] of Object.entries({ "docs/cli.md": cliDoc, "docs/install.md": installDoc })) {
@@ -388,7 +407,7 @@ for (const artifact of [
   }
 }
 
-for (const siteFile of ["buildchain-site.json", "site-manifest.json", "cli-registry.json", "release-model.json"]) {
+for (const siteFile of ["buildchain-site.json", "site-manifest.json", "cli-registry.json", "release-model.json", "buildchain-contract.json"]) {
   if (!fs.existsSync(path.join(root, "dist", "site", siteFile))) {
     throw new Error(`site bundle missing ${siteFile}`);
   }

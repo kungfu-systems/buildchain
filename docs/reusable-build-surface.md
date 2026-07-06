@@ -164,6 +164,56 @@ the outer reusable workflow YAML itself to change, such as new jobs,
 permissions, workflow outputs, or matrix topology. Those changes need a canary
 workflow path or a temporary explicit workflow ref.
 
+## Floating Ref Contract Lock
+
+Stable consumers should use floating major refs such as `@v2`, but a floating
+ref is not blind trust. Each released Buildchain ref carries a package-owned
+runtime contract world in `dist/site/buildchain-contract.json`. Consumers may
+keep a small lock file, `buildchain.contract-lock.json`, recording the
+Buildchain ref, resolved SHA, contract digest, compatibility digest, accepted
+major line, and compatibility policy they reviewed.
+
+The reusable build trust gate checks this lock before any heavy matrix job:
+
+1. resolve the Buildchain runtime ref, for example `v2`, to an immutable SHA;
+2. read `dist/site/buildchain-contract.json` from that checked-out Buildchain
+   ref;
+3. read the consumer's `buildchain.contract-lock.json`;
+4. compare the accepted contract with the current contract.
+
+SHA drift alone is not a failure. `v2` is expected to advance. Buildchain only
+fails fast when the accepted contract is no longer compatible, for example a
+required input is removed, a required output disappears, a protected behavior
+promise changes, or the major line changes. Additive changes such as optional
+inputs, optional outputs, diagnostics, or documentation updates continue under
+the default `major-compatible` policy.
+
+```yaml
+jobs:
+  build:
+    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2
+    permissions:
+      contents: read
+      issues: write
+      id-token: write
+    with:
+      buildchain-contract-lock-path: buildchain.contract-lock.json
+      buildchain-contract-compatibility-policy: major-compatible
+      buildchain-contract-drift-issue-mode: compatible-and-breaking
+```
+
+When compatible drift is detected, the build continues and Buildchain opens or
+updates a low-priority issue in the consumer repository. The issue records the
+old SHA/digest, new SHA/digest, compatibility result, workflow run, and the next
+action: review the Buildchain release notes and update the lock. When breaking
+drift is detected, the same issue path is used, but the trust gate fails before
+matrix build or publish work starts. If the workflow token cannot write issues,
+Buildchain writes a copyable issue body into the job summary.
+
+The lock is intentionally small. It does not copy the full contract. The full
+contract remains in the Buildchain ref and package; the consumer records only
+what it accepted and the policy used to compare future floating-ref movement.
+
 When a Buildchain maintainer asks for downstream validation, the expected
 request is:
 
@@ -201,6 +251,9 @@ The reusable workflow exposes the resolved contract:
 | `buildchain-runtime-class`        | `stable`, `alpha`, `train`, `exact-sha`, or `development`                       |
 | `buildchain-runtime-override`     | `true` when a non-empty `buildchain-ref` override was accepted                  |
 | `buildchain-runtime-trust-decision` | Runtime override trust decision                                               |
+| `buildchain-contract-lock-status` | `unchanged`, `compatible-drift`, `breaking-drift`, `missing-lock`, `non-floating-runtime`, or first-release `runtime-contract-unavailable` |
+| `buildchain-contract-lock-drift`  | `true` when the floating runtime SHA or contract digest changed                 |
+| `buildchain-contract-digest`      | Current Buildchain runtime contract digest                                      |
 | `publish-channel`                 | Resolved publish channel requested by the caller                                |
 | `publish-allowed`                 | `true` only when this event/ref may publish after verification                  |
 | `publish-reason`                  | Human-readable reason for the publish gate decision                             |
@@ -482,6 +535,8 @@ jobs:
       publish-package-set-order: platforms-first-main-last
       publish-package-main: "@kungfu-tech/libnode"
       release-passport-product-name: Libnode
+      buildchain-contract-lock-path: buildchain.contract-lock.json
+      buildchain-contract-drift-issue-mode: compatible-and-breaking
 ```
 
 `buildchain-issue-app-id` and `buildchain-issue-app-private-key` are optional
@@ -505,6 +560,10 @@ main`, marks the rest as `role: platform`, and passes the generated
 `publish-required-artifacts-json` to `promote-buildchain-ref` before any publish
 side effect. Downloaded platform manifests are still passed into the release
 passport unless `release-passport-platform-manifest-paths` is set explicitly.
+The same Buildchain contract lock check runs before release-candidate
+resolution and before publish. A compatible `v2` drift leaves an issue in the
+consumer repository but does not trigger a second heavy build; an incompatible
+drift fails before publish side effects.
 
 Custom publish jobs can also repeat the channel-ref preflight:
 
