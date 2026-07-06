@@ -2588,7 +2588,9 @@ function selectAlphaTag({ refs, releasePrefix, sha, patchAfterRelease }) {
         exists: true,
       };
     }
-    const prepared = samePatchTags.find((tag) => tag.source === "tag");
+    const prepared = samePatchTags
+      .filter((tag) => tag.source === "tag")
+      .at(-1);
     if (prepared) {
       return {
         tag: prepared.tag,
