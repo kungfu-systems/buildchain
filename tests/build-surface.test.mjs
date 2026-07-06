@@ -853,11 +853,19 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
     path.join(root, ".github/workflows/build-surface-fixture.yml"),
     "utf8",
   );
+  assert.match(workflow, /- dev\/v\*\/v\*/);
+  assert.match(workflow, /- alpha\/v\*\/v\*/);
+  assert.match(workflow, /- release\/v\*\/v\*/);
+  assert.doesNotMatch(workflow, /v\*\.\*/);
   assert.match(workflow, /artifact-transfer-mode:/);
   assert.match(workflow, /default: "github-artifacts"/);
+  assert.match(workflow, /issues: write/);
   assert.match(workflow, /id-token: write/);
   assert.match(workflow, /secrets: inherit/);
-  assert.match(workflow, /artifact-transfer-mode: \$\{\{ inputs\.artifact-transfer-mode \|\| 'github-artifacts' \}\}/);
+  assert.match(
+    workflow,
+    /artifact-transfer-mode: \$\{\{ github\.event\.inputs\['artifact-transfer-mode'\] \|\| 'github-artifacts' \}\}/,
+  );
   assert.doesNotMatch(workflow, /run: node scripts\/artifact-relay-s3\.mjs/);
 });
 
