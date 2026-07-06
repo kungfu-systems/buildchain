@@ -12,6 +12,7 @@ import {
 import {
   collectGitHubReleasePassport,
   explainReleasePassport,
+  KFD2_TRUST_PROOF_CONTRACT,
   verifyReleasePassport,
 } from "../packages/core/release-passport.js";
 import {
@@ -19,6 +20,8 @@ import {
   resolveKfd3Metadata,
   sha256File as sha256KfdFile,
 } from "../packages/core/kfd-gate.js";
+import { createBuildchainKfdClaimRegistry } from "../packages/core/buildchain-kfd-claims.js";
+import { generateBuildchainKfdWitnesses } from "../scripts/generate-buildchain-kfd-witnesses.mjs";
 
 function tempDir(name) {
   return fs.mkdtempSync(path.join(os.tmpdir(), `buildchain-${name}-`));
@@ -1119,7 +1122,99 @@ test("release passport supports KFD repository self-verification surfaces", asyn
   assert.equal(proof.witnessEvidence.artifact.canonicalSha256.length, 64);
   assert.equal(kfd3.trustProof.result, "pass");
   assert.equal(passport["kfd-2"].status, "downgraded");
-  assert.equal(passport["kfd-2"].claims.some((claim) => claim.id === "kfd-3:kfd-repository"), true);
+  const kfd2TrustClaim = passport["kfd-2"].claims.find((claim) => claim.id === "kfd-3:kfd-repository");
+  assert.ok(kfd2TrustClaim);
+  assert.equal(kfd2TrustClaim.status, "downgraded");
+  assert.equal(kfd2TrustClaim.trustProof.contract, KFD2_TRUST_PROOF_CONTRACT);
+  assert.equal(kfd2TrustClaim.trustProof.result, "downgraded");
+  assert.equal(kfd2TrustClaim.trustProof.witnessHashes.prebuildWitnessSha256, proof.preBuildWitnessSha256);
+  assert.equal(kfd2TrustClaim.trustProof.witnessHashes.artifactWitnessSha256, proof.artifactWitnessSha256);
+  assert.equal(kfd2TrustClaim.trustProof.declaredCapabilityVerification.result, "passed");
+  assert.equal(kfd2TrustClaim.trustProof.reverseAudit.status, "passed");
+  assert.equal(kfd2TrustClaim.trustProof.reverseAuditBoundary.nonExhaustivelyEnumerableSurfaces[0].id, "human-language-interpretation");
+  assert.equal(kfd2TrustClaim.trustProof.residualRisk[0].owner, "KFD maintainers");
+  assert.equal(kfd2TrustClaim.trustProof.responsibility.releasePassportProofOwner, "Buildchain");
+});
+
+test("Buildchain self KFD claims generate enforceable release passport evidence", async () => {
+  const root = process.cwd();
+  const outputDir = tempDir("buildchain-self-kfd");
+  const generated = generateBuildchainKfdWitnesses({
+    cwd: root,
+    outputDir,
+    sourceSha: "e".repeat(40),
+    emitOutputs: false,
+  });
+  const output = (name) => path.resolve(root, generated.outputs[name]);
+  const outputList = (name) => String(generated.outputs[name] || "")
+    .split(",")
+    .filter(Boolean)
+    .map((entry) => path.resolve(root, entry));
+  const kfd1Metadata = resolveKfd1Metadata();
+  const kfd3Metadata = resolveKfd3Metadata({ requireSchemas: true });
+  const collected = collectGitHubReleasePassport({
+    cwd: root,
+    tag: "v2.8.2-alpha.0",
+    repository: "kungfu-systems/buildchain",
+    productName: "Buildchain",
+    sourceSha: "e".repeat(40),
+    assetsDir: "dist/site",
+    outputDir: path.join(outputDir, "release-passport"),
+    releaseJsonExtra: JSON.stringify({
+      channel: "alpha",
+      targetRef: "alpha/v2/v2.8",
+    }),
+    kfd1WitnessJsons: [output("kfd-1-witness-jsons")],
+    kfd2ClaimJsons: outputList("kfd-2-claim-jsons"),
+    kfd3PrebuildWitnessJsons: [output("kfd-3-prebuild-witness-jsons")],
+    kfd3ArtifactWitnessJsons: [output("kfd-3-artifact-witness-jsons")],
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+  const kfd1 = passport[kfd1Metadata.key];
+  const kfd3 = passport[kfd3Metadata.key];
+  const kfd2 = passport["kfd-2"];
+
+  assert.equal(report.ok, true);
+  assert.equal(kfd1.status, "passed");
+  assert.equal(kfd1.selfContractVerification.selfHosted, true);
+  assert.equal(kfd1.contractWorlds[0].sourceVerification.status, "passed");
+  assert.equal(kfd1.contractWorlds[0].artifactVerification.status, "passed");
+  assert.equal(kfd3.status, "passed");
+  assert.equal(kfd3.releaseStatus, "enforced");
+  assert.equal(kfd3.trustProof.result, "pass");
+  assert.equal(kfd3.collaborationInterfaces[0].declaredCapabilityVerification.result, "passed");
+  assert.equal(kfd3.collaborationInterfaces[0].reverseAudit.status, "passed");
+  assert.equal(kfd2.status, "passed");
+  assert.equal(kfd2.claims.some((claim) => claim.id === "claim:buildchain-agent-first-source-of-truth"), true);
+  assert.equal(kfd2.claims.every((claim) => claim.missingBindings.length === 0), true);
+  assert.ok(kfd3.collaborationInterfaces[0].declaredSurfaces.some((surface) => surface.id === "site:dist/site/kfd-claims.json"));
+  assert.ok(kfd3.collaborationInterfaces[0].declaredSurfaces.some((surface) => surface.id === "export:./buildchain-kfd-claims"));
+});
+
+test("Buildchain source KFD claim registry is stable across semver version-state bumps", () => {
+  const cwd = tempDir("buildchain-self-kfd-stable-claims");
+  writeJson(path.join(cwd, "package.json"), {
+    name: "@kungfu-tech/buildchain",
+    version: "2.8.2-alpha.0",
+    type: "module",
+    repository: { url: "https://github.com/kungfu-systems/buildchain" },
+    exports: {
+      ".": "./packages/core/index.js",
+      "./buildchain-kfd-claims": "./packages/core/buildchain-kfd-claims.js",
+      "./site/kfd-claims.json": "./dist/site/kfd-claims.json",
+    },
+  });
+  const before = createBuildchainKfdClaimRegistry({ root: cwd });
+  const packageJsonPath = path.join(cwd, "package.json");
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+  packageJson.version = "2.8.2-alpha.1";
+  writeJson(packageJsonPath, packageJson);
+  const after = createBuildchainKfdClaimRegistry({ root: cwd });
+  assert.deepEqual(after, before);
+  assert.equal(before.source.version, undefined);
+  assert.equal(before.runtimeContract.contractDigest, undefined);
 });
 
 test("release passport fails closed when KFD self-verification artifact exposes undeclared package or site surfaces", async () => {
@@ -1254,6 +1349,44 @@ test("release passport downgrades a public KFD-2 claim that is machine-bound but
   assert.equal(passport["kfd-2"].status, "downgraded");
   assert.equal(report.ok, true);
   assert.equal(report.issues.some((entry) => entry.level === "warning" && entry.code.includes("kfd-2")), true);
+});
+
+test("release passport fails closed when a KFD-3-derived KFD-2 claim lacks a trust proof", async () => {
+  const { cwd, assetsDir, actualSha256 } = createKfdWitnessFixture();
+  const claimPath = writeJson(path.join(cwd, "kfd-2-claim.json"), {
+    id: "kfd-3:manual-claim",
+    public: true,
+    claim: "KFD-3 collaboration interface is machine-bound but not projected as a KFD-2 trust proof.",
+    sourceBindings: [{ path: "docs/KFD-3.md", sha256: actualSha256 }],
+    machineEvidence: [{ path: "kfd-3-witness.json", sha256: actualSha256 }],
+    hashes: { prebuildWitnessSha256: actualSha256, artifactWitnessSha256: actualSha256 },
+    artifacts: [{ name: "generic.schema", path: "config.schema.json", sha256: actualSha256 }],
+    verification: { result: "passed" },
+    auditBoundary: { scope: "collaboration-interface" },
+    responsibility: { owner: "KFD maintainers" },
+    residualRisk: [],
+  });
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v1.0.0-alpha.3",
+    repository: "kungfu-systems/kfd",
+    productName: "KFD",
+    sourceSha: "d".repeat(40),
+    assetsDir: path.relative(cwd, assetsDir),
+    outputDir: "release-passport",
+    releaseJsonExtra: JSON.stringify({
+      channel: "alpha",
+      targetRef: "alpha/v1/v1.0",
+    }),
+    kfd2ClaimJsons: [claimPath],
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+
+  assert.equal(passport["kfd-2"].claims[0].missingBindings.length, 0);
+  assert.equal(report.ok, false);
+  assert.match(JSON.stringify(report.issues), /KFD-2 trust proof|kfd-2\.claims\[0\]\.trustProof/);
 });
 
 test("release passport records KFD-3 residual risk without claiming full closure", async () => {

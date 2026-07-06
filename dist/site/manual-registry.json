@@ -1,38 +1,14 @@
 {
   "schemaVersion": 1,
-  "contract": "kungfu-buildchain-site-bundle",
-  "product": {
-    "name": "Buildchain",
-    "formalName": "Buildchain by Kungfu",
-    "category": "Buildchain Release Passport"
-  },
-  "package": {
-    "name": "@kungfu-tech/buildchain",
-    "versionSource": "package.json#version"
-  },
-  "sourceOfTruth": "npm package @kungfu-tech/buildchain/dist/site",
-  "humanFirst": true,
-  "agentFirst": true,
-  "entrypoints": [
-    "cli-registry.json",
-    "manual-registry.json",
-    "node-api-registry.json",
-    "workflow-registry.json",
-    "release-model.json",
-    "artifact-schemas.json",
-    "product-mechanism.json",
-    "release-provenance.json",
-    "kfd-claims.json",
-    "agent-index.json",
-    "site-manifest.json"
-  ],
-  "docs": [
+  "contract": "kungfu-buildchain-agent-manual-registry",
+  "package": "@kungfu-tech/buildchain",
+  "source": "npm package docs/",
+  "manuals": [
     {
       "id": "install",
       "title": "Install and verify Buildchain",
       "path": "docs/install.md",
       "plane": "use",
-      "exists": true,
       "digest": "sha256:34bc161a26595f95684694d341616e47bfd65b0c51a63225e68a575179636175"
     },
     {
@@ -40,7 +16,6 @@
       "title": "Release Passport protocol",
       "path": "docs/release-passport.md",
       "plane": "verify",
-      "exists": true,
       "digest": "sha256:4d69798646adb84c6d193b1f32e7dc50e389db8932e63e9cb71489b6015e0333"
     },
     {
@@ -48,7 +23,6 @@
       "title": "Release propagation",
       "path": "docs/release-propagation.md",
       "plane": "use",
-      "exists": true,
       "digest": "sha256:10c2bb3bc4ebd692c49fa55f286b77ed3e8caa1526298ad910c00fc80251a893"
     },
     {
@@ -56,7 +30,6 @@
       "title": "Binary distribution contract",
       "path": "docs/binary-distribution.md",
       "plane": "verify",
-      "exists": true,
       "digest": "sha256:36899140a9b2e9ce1565ed41f3d64f73a8829fad3d59a04b9498d9479c85c4be"
     },
     {
@@ -64,7 +37,6 @@
       "title": "Toolkit observability",
       "path": "docs/toolkit-observability.md",
       "plane": "use",
-      "exists": true,
       "digest": "sha256:239949a75ca81b6002a2e148f7028402dbd98c00e246acd8d0955855781206a1"
     },
     {
@@ -72,7 +44,6 @@
       "title": "Site bundle contract",
       "path": "docs/site-bundle-contract.md",
       "plane": "use",
-      "exists": true,
       "digest": "sha256:e6b4f2e76c713063ff750b0a8d6d96595addae2fd48f913744dc86559add0641"
     },
     {
@@ -80,7 +51,6 @@
       "title": "Product mechanism",
       "path": "docs/product-mechanism.md",
       "plane": "why",
-      "exists": true,
       "digest": "sha256:da50022f96f8876bb275a7832190cb1f6ab0fa6aab9d045dda924a7abddc3edf"
     },
     {
@@ -88,7 +58,6 @@
       "title": "CLI and npm package",
       "path": "docs/cli.md",
       "plane": "use",
-      "exists": true,
       "digest": "sha256:a8a348181d6419b746e863d1cacc9d6a91aa6ac5cc2b60819843d44487957c49"
     },
     {
@@ -96,7 +65,6 @@
       "title": "Lifecycle protocol",
       "path": "docs/lifecycle-protocol.md",
       "plane": "use",
-      "exists": true,
       "digest": "sha256:02e1be97935c0d9520ea22e8ef0dc61d9b860c347f07127074600cdca02713ce"
     },
     {
@@ -104,7 +72,6 @@
       "title": "Reusable build surface",
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
-      "exists": true,
       "digest": "sha256:e5b2222fddd0624b6aff1c999bb156df26eebbd7b365ec65ef3622611dc055ea"
     },
     {
@@ -112,7 +79,6 @@
       "title": "Publish transaction",
       "path": "docs/publish-transaction.md",
       "plane": "verify",
-      "exists": true,
       "digest": "sha256:dd45cf98f0847e3968f150a09bed84aa1f59cb2687ac988e9519f08dc9c91877"
     },
     {
@@ -120,7 +86,6 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "exists": true,
       "digest": "sha256:8aab1af617e511011974cb63f04240463fc99c427cb3b29e5f5d385c88620464"
     },
     {
@@ -128,7 +93,6 @@
       "title": "Release flow",
       "path": "docs/release-flow.md",
       "plane": "verify",
-      "exists": true,
       "digest": "sha256:0a2f46501a64905067cc5872b45ac4824f9e632d59bfdfb2f6a794dfc5f959ea"
     },
     {
@@ -136,7 +100,6 @@
       "title": "Versioning",
       "path": "docs/versioning.md",
       "plane": "why",
-      "exists": true,
       "digest": "sha256:77b92fc979cc100beab3f8a13cd791dea992737b986ace505104edff4810a296"
     },
     {
@@ -144,7 +107,6 @@
       "title": "Web surface deployments",
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
-      "exists": true,
       "digest": "sha256:614aea65d745e8978d8329545753adf13b8914f84fe35b0148abbd1aff0c0dc2"
     },
     {
@@ -152,56 +114,19 @@
       "title": "Infra Contract",
       "path": "docs/infra-contract.md",
       "plane": "use",
-      "exists": true,
       "digest": "sha256:7826e8c70ac2d90ddd8d4e38bcdd1bcfa36eef5106431d7ad94b2fe9c8d3d5dc"
     }
   ],
-  "releaseModel": {
-    "schemaVersion": 1,
-    "contract": "kungfu-buildchain-release-model",
-    "exactTags": "v-prefixed exact tags are immutable release records.",
-    "floatingTags": "vX, vX.Y, and vX.Y-alpha are channel pointers updated by Buildchain transactions.",
-    "channelBranches": [
-      "dev/vX/vX.Y",
-      "alpha/vX/vX.Y",
-      "release/vX/vX.Y",
-      "publish-gate/major"
-    ],
-    "protectedDevelopmentBranches": [
-      "dev/vX/vX.Y"
-    ],
-    "releasePassport": {
-      "entrypoint": "buildchain.release.json",
-      "bundle": "buildchain-release-bundle.tar.gz",
-      "contract": "kungfu-buildchain-release-passport"
-    },
-    "releasePropagation": {
-      "graphContract": "kungfu-buildchain-release-propagation-graph",
-      "planContract": "kungfu-buildchain-release-propagation-plan",
-      "lockContract": "kungfu-buildchain-release-propagation-lock",
-      "defaultChannelPolicy": "preserve",
-      "defaultChannelMap": {
-        "alpha": "alpha",
-        "release": "release"
-      }
-    },
-    "npm": {
-      "package": "@kungfu-tech/buildchain",
-      "command": "./bin/buildchain.mjs",
-      "versionSource": "package.json#version",
-      "alphaDistTag": "alpha",
-      "stableDistTag": "latest"
-    },
-    "githubRelease": {
-      "exactTagRelease": true,
-      "prereleaseTags": "semver prerelease tags set prerelease=true and make_latest=false",
-      "stableTags": "stable semver tags set make_latest=true",
-      "evidenceAssets": [
-        "publish evidence JSON",
-        "buildchain.release.json",
-        "release passport assets"
-      ],
-      "owner": "promote-buildchain-ref"
-    }
-  }
+  "requiredAgentManuals": [
+    "docs/MAP.md",
+    "docs/install.md",
+    "docs/cli.md",
+    "docs/reusable-build-surface.md",
+    "docs/release-candidate.md",
+    "docs/release-governance.md",
+    "docs/release-passport.md",
+    "docs/publish-transaction.md",
+    "docs/site-bundle-contract.md"
+  ],
+  "guidance": "Agent consumers should use this registry to find packaged Buildchain manuals before inferring behavior from workflow snippets or release notes."
 }

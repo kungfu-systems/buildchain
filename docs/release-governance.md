@@ -62,6 +62,11 @@ Buildchain implements the same governance loop with:
   promotion; this workflow dogfoods the declarative
   `release-candidate-promote.yml` wrapper and does not hand-wire resolver,
   artifact download, publish-gate, or promote action steps;
+- Buildchain self promotion enables `release-passport-buildchain-self-kfd`, so
+  the release passport consumes generated KFD-1 witnesses, KFD-2 public claim
+  JSON, and KFD-3 collaboration-interface witnesses from
+  `packages/core/buildchain-kfd-claims.js` instead of relying on prose release
+  notes;
 - `actions/promote-buildchain-ref` for branch, tag, version-state, and
   governance checks;
 - package-manager adapters that can update version state for pnpm, npm, and
@@ -435,13 +440,16 @@ from the reusable build outputs. Workflows that only collect passports or run
 dry-run package checks do not move publish refs and are not publish-gate
 publication models.
 
-The same wrapper is the declarative GitHub Release publication entrypoint for
-semver releases. Consumers set `github-release: true`; after the publish
-transaction reaches `complete`, Buildchain creates or updates the exact-tag
-GitHub Release and uploads the generated `buildchain.release.json`,
-release-passport assets, and publish evidence. Semver prerelease tags are marked
-`prerelease=true` and `make_latest=false`; stable semver tags are marked latest.
-This is the supported path for downstream `release.published` propagation.
+Semver GitHub Release publication is owned by `promote-buildchain-ref`, not by
+consumer shell glue. Consumers normally use the `release-candidate-promote.yml`
+wrapper and set `github-release: true`; the wrapper passes that declaration to
+the action. After the publish transaction reaches `complete`, Buildchain creates
+or updates the exact-tag GitHub Release and uploads the generated
+`buildchain.release.json`, release-passport assets, and publish evidence. Semver
+prerelease tags are marked `prerelease=true` and `make_latest=false`; stable
+semver tags are marked latest. This is the supported path for downstream
+`release.published` propagation across semver, major, and promote-only release
+candidate publication models.
 
 Buildchain also does not maintain bare exact tags such as `1.0.0`. The supported
 exact release and alpha refs are v-prefixed:

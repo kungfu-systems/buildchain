@@ -204,12 +204,48 @@ machine-bound but only supported by prose downgrade the KFD-2 audit and produce
 a warning, so agents can distinguish "verified", "needs review", and "not
 bound to evidence" without reading release notes.
 
+For Buildchain's own releases, public release claims are not authored in prose
+inside the workflow. The source registry is
+`packages/core/buildchain-kfd-claims.js`, published as
+`dist/site/kfd-claims.json` and exported as
+`@kungfu-tech/buildchain/buildchain-kfd-claims`. That registry is the
+version-invariant source of public claims and collaboration surfaces: it does
+not store the exact release version, promotion SHA, or exact runtime contract
+digest. Those run-specific facts belong in the release passport and generated
+witnesses. During Buildchain promotion,
+`scripts/generate-buildchain-kfd-witnesses.mjs` binds the source registry to the
+current source/artifact hashes and generates:
+
+- a KFD-1 self contract-world witness for the packaged docs, schemas, workflows,
+  actions, Node exports, and site-consumption facts;
+- one KFD-2 claim JSON per public Buildchain release claim;
+- KFD-3 pre-build and artifact witnesses for the same public collaboration
+  surfaces.
+
+The generated claim set covers Buildchain's KFD release passport support,
+agent-first single source of truth, floating `@v2` contract drift protection,
+semver GitHub Release evidence publication, channel-preserving release
+propagation, and npm publish evidence/finalization. Buildchain self promotion
+passes those files into `promote-buildchain-ref`; `verifyReleasePassport()` then
+fails closed if any claim is missing source bindings, machine evidence, hashes,
+artifact coordinates, verification result, audit boundary, responsibility, or
+residual risk.
+
 ### KFD-3 collaboration-interface release gate
 
 KFD-3 asks a different release question than KFD-1. KFD-1 proves that named
 payload bytes match one contract world. KFD-3 proves that a product's shipped
 participant-facing collaboration/control surface is closed over its declared
 interface.
+
+For Buildchain itself, the declared interface starts in
+`packages/core/buildchain-kfd-claims.js`, not in this Markdown file. The
+registry enumerates public human/agent surfaces across manuals, schema and
+standard metadata, package exports, site-consumption contracts, workflows, and
+actions. `dist/site/kfd-claims.json` is the packaged machine-readable form used
+by downstream sites and by Buildchain's own release passport. Exact release
+version/SHA binding is deliberately deferred to the promotion witness, so the
+source registry can remain stable across semver version-state bumps.
 
 The product remains the fact source. Before build/publish, the product writes a
 pre-build witness:
@@ -249,9 +285,11 @@ The generated release passport records the result under the KFD-provided
 top-level key currently named `kfd-3`. The section includes the KFD package
 version, schema ids/paths, pre-build witness digest, artifact witness digest,
 declared/exposed surface counts, missing declared shipped surfaces, and
-unclassified artifact public surfaces. It also records the KFD-2 trust proof
-view of that evidence: `releaseStatus`, witness file hashes and canonical
-hashes, declared capability verification, reverse audit boundary, residual
+unclassified artifact public surfaces. Buildchain also projects the same
+collaboration-interface evidence into the top-level `kfd-2` audit as a
+machine-readable `trustProof` object on the generated `kfd-3:*` public claim.
+That proof carries `releaseStatus`, witness file hashes and canonical hashes,
+declared capability verification, reverse audit result and boundary, residual
 risk, and responsibility state.
 
 The trust proof makes the strongest claim only when the witnesses justify it:

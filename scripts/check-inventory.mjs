@@ -30,6 +30,7 @@ const requiredPaths = [
   "scripts/create-release-bundle.mjs",
   "scripts/ensure-github-release.mjs",
   "scripts/generate-site-bundle.mjs",
+  "scripts/generate-buildchain-kfd-witnesses.mjs",
   "scripts/generate-release-candidate-passport.mjs",
   "scripts/artifact-relay-s3.mjs",
   "scripts/npm-publish-dry-run.mjs",
@@ -105,6 +106,18 @@ if (rootPackage.exports?.["./release-passport"] !== "./packages/core/release-pas
 if (rootPackage.exports?.["./release-propagation"] !== "./packages/core/release-propagation.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/release-propagation");
 }
+if (rootPackage.exports?.["./buildchain-kfd-claims"] !== "./packages/core/buildchain-kfd-claims.js") {
+  throw new Error("root package must export @kungfu-tech/buildchain/buildchain-kfd-claims");
+}
+if (rootPackage.exports?.["./site/manual-registry.json"] !== "./dist/site/manual-registry.json") {
+  throw new Error("root package must export @kungfu-tech/buildchain/site/manual-registry.json");
+}
+if (rootPackage.exports?.["./site/node-api-registry.json"] !== "./dist/site/node-api-registry.json") {
+  throw new Error("root package must export @kungfu-tech/buildchain/site/node-api-registry.json");
+}
+if (rootPackage.exports?.["./site/kfd-claims.json"] !== "./dist/site/kfd-claims.json") {
+  throw new Error("root package must export @kungfu-tech/buildchain/site/kfd-claims.json");
+}
 if (rootPackage.publishConfig?.access !== "public") {
   throw new Error("root package publishConfig.access must be public");
 }
@@ -128,6 +141,7 @@ const cliSource = fs.readFileSync(path.join(root, "bin/buildchain.mjs"), "utf8")
 const coreIndexSource = fs.readFileSync(path.join(root, "packages/core/index.js"), "utf8");
 const versioningDoc = fs.readFileSync(path.join(root, "docs/versioning.md"), "utf8");
 const cliDoc = fs.readFileSync(path.join(root, "docs/cli.md"), "utf8");
+const docsMap = fs.readFileSync(path.join(root, "docs/MAP.md"), "utf8");
 const installDoc = fs.readFileSync(path.join(root, "docs/install.md"), "utf8");
 if (!cliSource.startsWith("#!/usr/bin/env node")) {
   throw new Error("bin/buildchain.mjs must be executable with a node shebang");
@@ -149,6 +163,20 @@ if (!coreIndexSource.includes("createBuildchainContractWorld")) {
 }
 if (!coreIndexSource.includes("KFD2_RELEASE_TRUST_PASSPORT_CONTRACT")) {
   throw new Error("packages/core/index.js must export KFD-2 release trust passport contract");
+}
+if (!coreIndexSource.includes("KFD2_TRUST_PROOF_CONTRACT")) {
+  throw new Error("packages/core/index.js must export KFD-2 trust proof contract");
+}
+for (const requiredSnippet of [
+  "createBuildchainKfdClaimRegistry",
+  "createBuildchainKfd1Witness",
+  "createBuildchainKfd2Claims",
+  "createBuildchainKfd3PrebuildWitness",
+  "BUILDCHAIN_AGENT_MANUALS",
+]) {
+  if (!coreIndexSource.includes(requiredSnippet)) {
+    throw new Error(`packages/core/index.js must export Buildchain self KFD claim API: ${requiredSnippet}`);
+  }
 }
 for (const requiredSnippet of [
   "createKfd1ReleaseGateEvidence",
@@ -202,6 +230,20 @@ for (const requiredSnippet of [
 ]) {
   if (!releasePassportDoc.includes(requiredSnippet)) {
     throw new Error(`release passport doc missing KFD-1 gate snippet: ${requiredSnippet}`);
+  }
+}
+for (const requiredSnippet of [
+  "Capability Coverage",
+  "KFD-1 / KFD-2 / KFD-3",
+  "floating `@v2`",
+  "npm publish transactions",
+  "GitHub Release",
+  "release propagation",
+  "manual-registry.json",
+  "node-api-registry.json",
+]) {
+  if (!docsMap.includes(requiredSnippet)) {
+    throw new Error(`documentation map missing capability coverage snippet: ${requiredSnippet}`);
   }
 }
 const reusableBuildSurfaceDoc = fs.readFileSync(path.join(root, "docs/reusable-build-surface.md"), "utf8");
@@ -291,6 +333,7 @@ for (const requiredSnippet of [
   "github.event.workflow_run.event == 'push'",
   "target-sha: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}",
   "github-release: true",
+  "release-passport-buildchain-self-kfd: true",
   "publish-required-artifacts-json: \"[]\"",
   "release-passport-impact-json: >-",
   "Buildchain v2.8 promotes KFD self-verification",
@@ -308,17 +351,21 @@ for (const requiredSnippet of [
 const releaseCandidatePromoteWorkflow = fs.readFileSync(path.join(root, ".github/workflows/release-candidate-promote.yml"), "utf8");
 for (const requiredSnippet of [
   "release-passport-kfd-1-witness-jsons:",
-  "release-passport-kfd-1-witness-jsons: ${{ inputs.release-passport-kfd-1-witness-jsons }}",
+  "release-passport-kfd-1-witness-jsons: ${{ inputs.release-passport-kfd-1-witness-jsons || steps.buildchain-self-kfd.outputs.kfd-1-witness-jsons }}",
   "release-passport-kfd-2-claim-jsons:",
-  "release-passport-kfd-2-claim-jsons: ${{ inputs.release-passport-kfd-2-claim-jsons }}",
+  "release-passport-kfd-2-claim-jsons: ${{ inputs.release-passport-kfd-2-claim-jsons || steps.buildchain-self-kfd.outputs.kfd-2-claim-jsons }}",
   "release-passport-kfd-3-prebuild-witness-jsons:",
-  "release-passport-kfd-3-prebuild-witness-jsons: ${{ inputs.release-passport-kfd-3-prebuild-witness-jsons }}",
+  "release-passport-kfd-3-prebuild-witness-jsons: ${{ inputs.release-passport-kfd-3-prebuild-witness-jsons || steps.buildchain-self-kfd.outputs.kfd-3-prebuild-witness-jsons }}",
   "release-passport-kfd-3-artifact-witness-jsons:",
+  "release-passport-kfd-3-artifact-witness-jsons: ${{ inputs.release-passport-kfd-3-artifact-witness-jsons || steps.buildchain-self-kfd.outputs.kfd-3-artifact-witness-jsons }}",
   "release-passport-kfd-3-artifact-verify-command:",
+  "release-passport-buildchain-self-kfd:",
+  "Generate Buildchain self KFD release claims",
+  "generate-buildchain-kfd-witnesses.mjs",
   "github-release:",
-  "Publish GitHub Release evidence",
-  "scripts/ensure-github-release.mjs",
-  "gh release upload \"${RELEASE_TAG}\" \"${upload_args[@]}\" --clobber",
+  "github-release: ${{ inputs.github-release }}",
+  "github-release-title: ${{ inputs.github-release-title }}",
+  "github-release-notes: ${{ inputs.github-release-notes }}",
   "require-publish-source-lock: \"true\"",
   "publish-source-ref: ${{ steps.publish-gate.outputs.ref }}",
   "publish-source-sha: ${{ steps.publish-gate.outputs.sha }}",
@@ -372,6 +419,31 @@ for (const retiredWorkflow of [
     if (retiredSource.includes(forbiddenSnippet)) {
       throw new Error(`${retiredWorkflow} must not keep retired publish side effects: ${forbiddenSnippet}`);
     }
+  }
+}
+const promoteBuildchainRefAction = fs.readFileSync(path.join(root, "actions/promote-buildchain-ref/action.yml"), "utf8");
+const promoteBuildchainRefIndex = fs.readFileSync(path.join(root, "actions/promote-buildchain-ref/index.js"), "utf8");
+for (const requiredSnippet of [
+  "github-release:",
+  "github-release-title:",
+  "github-release-notes:",
+  "github-release-url:",
+  "github-release-action:",
+]) {
+  if (!promoteBuildchainRefAction.includes(requiredSnippet)) {
+    throw new Error(`promote-buildchain-ref action missing GitHub Release surface: ${requiredSnippet}`);
+  }
+}
+for (const requiredSnippet of [
+  "ensureGitHubRelease",
+  "publishGitHubReleaseEvidence",
+  "collectGitHubReleaseEvidenceAssets",
+  "uploadReleaseAsset",
+  "result.publishTransaction?.state === \"complete\"",
+  "result.publishTransaction?.finalizationNeeded !== true",
+]) {
+  if (!promoteBuildchainRefIndex.includes(requiredSnippet)) {
+    throw new Error(`promote-buildchain-ref index missing semver GitHub Release implementation: ${requiredSnippet}`);
   }
 }
 for (const forbiddenSnippet of [
@@ -490,7 +562,7 @@ for (const artifact of [
   }
 }
 
-for (const siteFile of ["buildchain-site.json", "site-manifest.json", "cli-registry.json", "release-model.json", "buildchain-contract.json"]) {
+for (const siteFile of ["buildchain-site.json", "site-manifest.json", "cli-registry.json", "manual-registry.json", "node-api-registry.json", "release-model.json", "buildchain-contract.json"]) {
   if (!fs.existsSync(path.join(root, "dist", "site", siteFile))) {
     throw new Error(`site bundle missing ${siteFile}`);
   }

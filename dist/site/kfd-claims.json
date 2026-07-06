@@ -1,0 +1,786 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-kfd-claim-registry",
+  "product": {
+    "name": "Buildchain",
+    "package": "@kungfu-tech/buildchain",
+    "repository": "kungfu-systems/buildchain"
+  },
+  "source": {
+    "repo": "kungfu-systems/buildchain",
+    "ref": "",
+    "package": "@kungfu-tech/buildchain",
+    "sourceModule": "packages/core/buildchain-kfd-claims.js"
+  },
+  "runtimeContract": {
+    "contract": "kungfu-buildchain-runtime-contract-world",
+    "compatibilityDigest": "sha256:36421b592a782decbfe31a7d8d42d70ce1100a56a2c4f4a0ccc21f0617dc72bf",
+    "majorLine": "v2"
+  },
+  "publicClaims": [
+    {
+      "id": "claim:buildchain-kfd-release-passport-support",
+      "claim": "Buildchain release passports support KFD-1 self contract verification, KFD-2 public release claim audits, and KFD-3 collaboration-interface trust proofs.",
+      "sourcePaths": [
+        "packages/core/release-passport.js",
+        "packages/core/kfd-gate.js",
+        "packages/core/buildchain-kfd-claims.js",
+        "docs/release-passport.md"
+      ],
+      "artifactPaths": [
+        "dist/site/buildchain-contract.json",
+        "dist/site/kfd-claims.json",
+        "dist/site/artifact-schemas.json"
+      ]
+    },
+    {
+      "id": "claim:buildchain-agent-first-source-of-truth",
+      "claim": "The npm package ships Buildchain's agent-first manuals, Node API registry, site facts, and release model as the single source of truth for downstream sites and agents.",
+      "sourcePaths": [
+        "scripts/generate-site-bundle.mjs",
+        "packages/core/buildchain-kfd-claims.js",
+        "docs/MAP.md",
+        "docs/site-bundle-contract.md",
+        "docs/cli.md"
+      ],
+      "artifactPaths": [
+        "dist/site/manual-registry.json",
+        "dist/site/node-api-registry.json",
+        "dist/site/buildchain-site.json",
+        "dist/site/site-manifest.json"
+      ]
+    },
+    {
+      "id": "claim:buildchain-floating-contract-lock",
+      "claim": "Consumers using floating Buildchain refs can lock the observed runtime contract and receive drift checks before expensive build or publish work proceeds.",
+      "sourcePaths": [
+        "packages/core/buildchain-contract.js",
+        "scripts/buildchain-contract-lock.mjs",
+        ".github/workflows/.build.yml",
+        ".github/workflows/release-candidate-promote.yml",
+        "docs/reusable-build-surface.md"
+      ],
+      "artifactPaths": [
+        "dist/site/buildchain-contract.json",
+        "dist/site/release-model.json"
+      ]
+    },
+    {
+      "id": "claim:buildchain-semver-github-release",
+      "claim": "Semver promotion can create or update an exact-tag GitHub Release only after the publish transaction completes, and uploads Buildchain release passport/evidence assets.",
+      "sourcePaths": [
+        "actions/promote-buildchain-ref/index.js",
+        "actions/promote-buildchain-ref/action.yml",
+        "scripts/ensure-github-release.mjs",
+        ".github/workflows/release-candidate-promote.yml",
+        "docs/release-governance.md"
+      ],
+      "artifactPaths": [
+        "dist/site/release-model.json",
+        "dist/site/workflow-registry.json"
+      ]
+    },
+    {
+      "id": "claim:buildchain-release-propagation",
+      "claim": "Buildchain can propagate upstream alpha or stable releases to downstream repositories while preserving release channels through exact release locks.",
+      "sourcePaths": [
+        "packages/core/release-propagation.js",
+        "scripts/release-propagation.mjs",
+        ".github/workflows/release-propagation.yml",
+        "docs/release-propagation.md"
+      ],
+      "artifactPaths": [
+        "dist/site/release-model.json",
+        "dist/site/workflow-registry.json"
+      ]
+    },
+    {
+      "id": "claim:buildchain-npm-publish-evidence",
+      "claim": "Buildchain npm publish transactions bind trusted publishing, package-set required artifacts, publish evidence, durable release state, and final release passports.",
+      "sourcePaths": [
+        "scripts/npm-publish-transaction.mjs",
+        "actions/promote-buildchain-ref/index.js",
+        ".github/workflows/release-candidate-promote.yml",
+        "docs/publish-transaction.md"
+      ],
+      "artifactPaths": [
+        "dist/site/release-model.json",
+        "dist/site/artifact-schemas.json"
+      ]
+    }
+  ],
+  "collaborationSurfaces": {
+    "schemaVersion": 1,
+    "contract": "kungfu-buildchain-kfd-collaboration-interface",
+    "groups": {
+      "docs": [
+        {
+          "id": "doc:install",
+          "name": "Install and verify Buildchain",
+          "kind": "documentation",
+          "sourcePath": "docs/install.md",
+          "evidencePath": "docs/install.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
+        },
+        {
+          "id": "doc:release-passport",
+          "name": "Release Passport protocol",
+          "kind": "documentation",
+          "sourcePath": "docs/release-passport.md",
+          "evidencePath": "docs/release-passport.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "verify"
+        },
+        {
+          "id": "doc:release-propagation",
+          "name": "Release propagation",
+          "kind": "documentation",
+          "sourcePath": "docs/release-propagation.md",
+          "evidencePath": "docs/release-propagation.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
+        },
+        {
+          "id": "doc:binary-distribution",
+          "name": "Binary distribution contract",
+          "kind": "documentation",
+          "sourcePath": "docs/binary-distribution.md",
+          "evidencePath": "docs/binary-distribution.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "verify"
+        },
+        {
+          "id": "doc:toolkit-observability",
+          "name": "Toolkit observability",
+          "kind": "documentation",
+          "sourcePath": "docs/toolkit-observability.md",
+          "evidencePath": "docs/toolkit-observability.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
+        },
+        {
+          "id": "doc:site-bundle-contract",
+          "name": "Site bundle contract",
+          "kind": "documentation",
+          "sourcePath": "docs/site-bundle-contract.md",
+          "evidencePath": "docs/site-bundle-contract.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
+        },
+        {
+          "id": "doc:product-mechanism",
+          "name": "Product mechanism",
+          "kind": "documentation",
+          "sourcePath": "docs/product-mechanism.md",
+          "evidencePath": "docs/product-mechanism.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "why"
+        },
+        {
+          "id": "doc:cli",
+          "name": "CLI and npm package",
+          "kind": "documentation",
+          "sourcePath": "docs/cli.md",
+          "evidencePath": "docs/cli.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
+        },
+        {
+          "id": "doc:lifecycle-protocol",
+          "name": "Lifecycle protocol",
+          "kind": "documentation",
+          "sourcePath": "docs/lifecycle-protocol.md",
+          "evidencePath": "docs/lifecycle-protocol.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
+        },
+        {
+          "id": "doc:reusable-build-surface",
+          "name": "Reusable build surface",
+          "kind": "documentation",
+          "sourcePath": "docs/reusable-build-surface.md",
+          "evidencePath": "docs/reusable-build-surface.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
+        },
+        {
+          "id": "doc:publish-transaction",
+          "name": "Publish transaction",
+          "kind": "documentation",
+          "sourcePath": "docs/publish-transaction.md",
+          "evidencePath": "docs/publish-transaction.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "verify"
+        },
+        {
+          "id": "doc:release-governance",
+          "name": "Release governance",
+          "kind": "documentation",
+          "sourcePath": "docs/release-governance.md",
+          "evidencePath": "docs/release-governance.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "why"
+        },
+        {
+          "id": "doc:release-flow",
+          "name": "Release flow",
+          "kind": "documentation",
+          "sourcePath": "docs/release-flow.md",
+          "evidencePath": "docs/release-flow.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "verify"
+        },
+        {
+          "id": "doc:versioning",
+          "name": "Versioning",
+          "kind": "documentation",
+          "sourcePath": "docs/versioning.md",
+          "evidencePath": "docs/versioning.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "why"
+        },
+        {
+          "id": "doc:web-surface-deployments",
+          "name": "Web surface deployments",
+          "kind": "documentation",
+          "sourcePath": "docs/web-surface-deployments.md",
+          "evidencePath": "docs/web-surface-deployments.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
+        },
+        {
+          "id": "doc:infra-contract",
+          "name": "Infra Contract",
+          "kind": "documentation",
+          "sourcePath": "docs/infra-contract.md",
+          "evidencePath": "docs/infra-contract.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
+        }
+      ],
+      "schemas": [
+        {
+          "id": "schema:packages/core/kfd-gate.js",
+          "name": "schema:packages/core/kfd-gate.js",
+          "kind": "schema",
+          "sourcePath": "packages/core/kfd-gate.js",
+          "evidencePath": "packages/core/kfd-gate.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
+          "id": "schema:packages/core/release-passport.js",
+          "name": "schema:packages/core/release-passport.js",
+          "kind": "schema",
+          "sourcePath": "packages/core/release-passport.js",
+          "evidencePath": "packages/core/release-passport.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
+          "id": "schema:packages/core/buildchain-contract.js",
+          "name": "schema:packages/core/buildchain-contract.js",
+          "kind": "schema",
+          "sourcePath": "packages/core/buildchain-contract.js",
+          "evidencePath": "packages/core/buildchain-contract.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
+          "id": "schema:packages/core/buildchain-kfd-claims.js",
+          "name": "schema:packages/core/buildchain-kfd-claims.js",
+          "kind": "schema",
+          "sourcePath": "packages/core/buildchain-kfd-claims.js",
+          "evidencePath": "packages/core/buildchain-kfd-claims.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
+          "id": "schema:dist/site/artifact-schemas.json",
+          "name": "schema:dist/site/artifact-schemas.json",
+          "kind": "schema",
+          "sourcePath": "dist/site/artifact-schemas.json",
+          "evidencePath": "dist/site/artifact-schemas.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
+          "id": "schema:dist/site/buildchain-contract.json",
+          "name": "schema:dist/site/buildchain-contract.json",
+          "kind": "schema",
+          "sourcePath": "dist/site/buildchain-contract.json",
+          "evidencePath": "dist/site/buildchain-contract.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        }
+      ],
+      "standardsMetadata": [
+        {
+          "id": "metadata:package-json",
+          "name": "metadata:package-json",
+          "kind": "standards-metadata",
+          "sourcePath": "package.json",
+          "evidencePath": "package.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
+          "id": "metadata:buildchain-contract-world",
+          "name": "metadata:buildchain-contract-world",
+          "kind": "standards-metadata",
+          "sourcePath": "dist/site/buildchain-contract.json",
+          "evidencePath": "dist/site/buildchain-contract.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
+          "id": "metadata:kfd-claim-registry",
+          "name": "metadata:kfd-claim-registry",
+          "kind": "standards-metadata",
+          "sourcePath": "dist/site/kfd-claims.json",
+          "evidencePath": "dist/site/kfd-claims.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
+          "id": "metadata:release-model",
+          "name": "metadata:release-model",
+          "kind": "standards-metadata",
+          "sourcePath": "dist/site/release-model.json",
+          "evidencePath": "dist/site/release-model.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        }
+      ],
+      "packageExports": [
+        {
+          "id": "export:.",
+          "name": "@kungfu-tech/buildchain",
+          "kind": "package-export",
+          "sourcePath": "packages/core/index.js",
+          "evidencePath": "packages/core/index.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "."
+        },
+        {
+          "id": "export:./core",
+          "name": "@kungfu-tech/buildchain/core",
+          "kind": "package-export",
+          "sourcePath": "packages/core/index.js",
+          "evidencePath": "packages/core/index.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./core"
+        },
+        {
+          "id": "export:./artifact-passport",
+          "name": "@kungfu-tech/buildchain/artifact-passport",
+          "kind": "package-export",
+          "sourcePath": "packages/core/artifact-passport.js",
+          "evidencePath": "packages/core/artifact-passport.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./artifact-passport"
+        },
+        {
+          "id": "export:./buildchain-contract",
+          "name": "@kungfu-tech/buildchain/buildchain-contract",
+          "kind": "package-export",
+          "sourcePath": "packages/core/buildchain-contract.js",
+          "evidencePath": "packages/core/buildchain-contract.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./buildchain-contract"
+        },
+        {
+          "id": "export:./diagnostics",
+          "name": "@kungfu-tech/buildchain/diagnostics",
+          "kind": "package-export",
+          "sourcePath": "packages/core/diagnostics.js",
+          "evidencePath": "packages/core/diagnostics.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./diagnostics"
+        },
+        {
+          "id": "export:./issue-reporting",
+          "name": "@kungfu-tech/buildchain/issue-reporting",
+          "kind": "package-export",
+          "sourcePath": "packages/core/issue-reporting.js",
+          "evidencePath": "packages/core/issue-reporting.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./issue-reporting"
+        },
+        {
+          "id": "export:./logging",
+          "name": "@kungfu-tech/buildchain/logging",
+          "kind": "package-export",
+          "sourcePath": "packages/core/logging.js",
+          "evidencePath": "packages/core/logging.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./logging"
+        },
+        {
+          "id": "export:./kfd-gate",
+          "name": "@kungfu-tech/buildchain/kfd-gate",
+          "kind": "package-export",
+          "sourcePath": "packages/core/kfd-gate.js",
+          "evidencePath": "packages/core/kfd-gate.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./kfd-gate"
+        },
+        {
+          "id": "export:./release-candidate",
+          "name": "@kungfu-tech/buildchain/release-candidate",
+          "kind": "package-export",
+          "sourcePath": "packages/core/release-candidate.js",
+          "evidencePath": "packages/core/release-candidate.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./release-candidate"
+        },
+        {
+          "id": "export:./release-passport",
+          "name": "@kungfu-tech/buildchain/release-passport",
+          "kind": "package-export",
+          "sourcePath": "packages/core/release-passport.js",
+          "evidencePath": "packages/core/release-passport.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./release-passport"
+        },
+        {
+          "id": "export:./release-propagation",
+          "name": "@kungfu-tech/buildchain/release-propagation",
+          "kind": "package-export",
+          "sourcePath": "packages/core/release-propagation.js",
+          "evidencePath": "packages/core/release-propagation.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./release-propagation"
+        },
+        {
+          "id": "export:./buildchain-kfd-claims",
+          "name": "@kungfu-tech/buildchain/buildchain-kfd-claims",
+          "kind": "package-export",
+          "sourcePath": "packages/core/buildchain-kfd-claims.js",
+          "evidencePath": "packages/core/buildchain-kfd-claims.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./buildchain-kfd-claims"
+        }
+      ],
+      "siteConsumptionContracts": [
+        {
+          "id": "site:dist/site/buildchain-site.json",
+          "name": "site:dist/site/buildchain-site.json",
+          "kind": "site-consumption-contract",
+          "sourcePath": "dist/site/buildchain-site.json",
+          "evidencePath": "dist/site/buildchain-site.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
+          "id": "site:dist/site/site-manifest.json",
+          "name": "site:dist/site/site-manifest.json",
+          "kind": "site-consumption-contract",
+          "sourcePath": "dist/site/site-manifest.json",
+          "evidencePath": "dist/site/site-manifest.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
+          "id": "site:dist/site/cli-registry.json",
+          "name": "site:dist/site/cli-registry.json",
+          "kind": "site-consumption-contract",
+          "sourcePath": "dist/site/cli-registry.json",
+          "evidencePath": "dist/site/cli-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
+          "id": "site:dist/site/manual-registry.json",
+          "name": "site:dist/site/manual-registry.json",
+          "kind": "site-consumption-contract",
+          "sourcePath": "dist/site/manual-registry.json",
+          "evidencePath": "dist/site/manual-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
+          "id": "site:dist/site/node-api-registry.json",
+          "name": "site:dist/site/node-api-registry.json",
+          "kind": "site-consumption-contract",
+          "sourcePath": "dist/site/node-api-registry.json",
+          "evidencePath": "dist/site/node-api-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
+          "id": "site:dist/site/workflow-registry.json",
+          "name": "site:dist/site/workflow-registry.json",
+          "kind": "site-consumption-contract",
+          "sourcePath": "dist/site/workflow-registry.json",
+          "evidencePath": "dist/site/workflow-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
+          "id": "site:dist/site/release-model.json",
+          "name": "site:dist/site/release-model.json",
+          "kind": "site-consumption-contract",
+          "sourcePath": "dist/site/release-model.json",
+          "evidencePath": "dist/site/release-model.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
+          "id": "site:dist/site/artifact-schemas.json",
+          "name": "site:dist/site/artifact-schemas.json",
+          "kind": "site-consumption-contract",
+          "sourcePath": "dist/site/artifact-schemas.json",
+          "evidencePath": "dist/site/artifact-schemas.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
+          "id": "site:dist/site/buildchain-contract.json",
+          "name": "site:dist/site/buildchain-contract.json",
+          "kind": "site-consumption-contract",
+          "sourcePath": "dist/site/buildchain-contract.json",
+          "evidencePath": "dist/site/buildchain-contract.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
+          "id": "site:dist/site/product-mechanism.json",
+          "name": "site:dist/site/product-mechanism.json",
+          "kind": "site-consumption-contract",
+          "sourcePath": "dist/site/product-mechanism.json",
+          "evidencePath": "dist/site/product-mechanism.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
+          "id": "site:dist/site/release-provenance.json",
+          "name": "site:dist/site/release-provenance.json",
+          "kind": "site-consumption-contract",
+          "sourcePath": "dist/site/release-provenance.json",
+          "evidencePath": "dist/site/release-provenance.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
+          "id": "site:dist/site/agent-index.json",
+          "name": "site:dist/site/agent-index.json",
+          "kind": "site-consumption-contract",
+          "sourcePath": "dist/site/agent-index.json",
+          "evidencePath": "dist/site/agent-index.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
+          "id": "site:dist/site/kfd-claims.json",
+          "name": "site:dist/site/kfd-claims.json",
+          "kind": "site-consumption-contract",
+          "sourcePath": "dist/site/kfd-claims.json",
+          "evidencePath": "dist/site/kfd-claims.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        }
+      ]
+    },
+    "additionalSurfaces": [
+      {
+        "id": "control:.github/workflows/.build.yml",
+        "name": "control:.github/workflows/.build.yml",
+        "kind": "workflow",
+        "sourcePath": ".github/workflows/.build.yml",
+        "evidencePath": ".github/workflows/.build.yml",
+        "availability": "shipped",
+        "visibility": "public",
+        "participantFacing": true,
+        "public": true
+      },
+      {
+        "id": "control:.github/workflows/release-candidate-promote.yml",
+        "name": "control:.github/workflows/release-candidate-promote.yml",
+        "kind": "workflow",
+        "sourcePath": ".github/workflows/release-candidate-promote.yml",
+        "evidencePath": ".github/workflows/release-candidate-promote.yml",
+        "availability": "shipped",
+        "visibility": "public",
+        "participantFacing": true,
+        "public": true
+      },
+      {
+        "id": "control:.github/workflows/buildchain-ref-promotion.yml",
+        "name": "control:.github/workflows/buildchain-ref-promotion.yml",
+        "kind": "workflow",
+        "sourcePath": ".github/workflows/buildchain-ref-promotion.yml",
+        "evidencePath": ".github/workflows/buildchain-ref-promotion.yml",
+        "availability": "shipped",
+        "visibility": "public",
+        "participantFacing": true,
+        "public": true
+      },
+      {
+        "id": "control:.github/workflows/release-propagation.yml",
+        "name": "control:.github/workflows/release-propagation.yml",
+        "kind": "workflow",
+        "sourcePath": ".github/workflows/release-propagation.yml",
+        "evidencePath": ".github/workflows/release-propagation.yml",
+        "availability": "shipped",
+        "visibility": "public",
+        "participantFacing": true,
+        "public": true
+      },
+      {
+        "id": "control:actions/promote-buildchain-ref/action.yml",
+        "name": "control:actions/promote-buildchain-ref/action.yml",
+        "kind": "action",
+        "sourcePath": "actions/promote-buildchain-ref/action.yml",
+        "evidencePath": "actions/promote-buildchain-ref/action.yml",
+        "availability": "shipped",
+        "visibility": "public",
+        "participantFacing": true,
+        "public": true
+      },
+      {
+        "id": "control:actions/promote-buildchain-ref/index.js",
+        "name": "control:actions/promote-buildchain-ref/index.js",
+        "kind": "action",
+        "sourcePath": "actions/promote-buildchain-ref/index.js",
+        "evidencePath": "actions/promote-buildchain-ref/index.js",
+        "availability": "shipped",
+        "visibility": "public",
+        "participantFacing": true,
+        "public": true
+      }
+    ],
+    "publicSurfaceCount": 57
+  }
+}

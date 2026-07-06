@@ -6,9 +6,12 @@
     "product-mechanism.json",
     "release-model.json",
     "cli-registry.json",
+    "manual-registry.json",
+    "node-api-registry.json",
     "workflow-registry.json",
     "artifact-schemas.json",
-    "buildchain-contract.json"
+    "buildchain-contract.json",
+    "kfd-claims.json"
   ],
   "instruction": "Use this bundle as the package-owned fact source for Buildchain pages. Do not infer current release mechanics from prose alone."
 }

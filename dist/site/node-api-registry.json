@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-node-api-registry",
+  "package": "@kungfu-tech/buildchain",
+  "moduleSystem": "module",
+  "exports": [
+    {
+      "specifier": "@kungfu-tech/buildchain",
+      "export": ".",
+      "target": "./packages/core/index.js",
+      "digest": "sha256:cfbe85e8fcac0f1c525ed99d9d488898575d9ea21cc7855e454b55df49cd2e0e"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/core",
+      "export": "./core",
+      "target": "./packages/core/index.js",
+      "digest": "sha256:cfbe85e8fcac0f1c525ed99d9d488898575d9ea21cc7855e454b55df49cd2e0e"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/artifact-passport",
+      "export": "./artifact-passport",
+      "target": "./packages/core/artifact-passport.js",
+      "digest": "sha256:2f882bf245658fb7a204004d7aa3a22f7e34816e4ba101fb0969a002d05fc12c"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/buildchain-contract",
+      "export": "./buildchain-contract",
+      "target": "./packages/core/buildchain-contract.js",
+      "digest": "sha256:0ec4fb82b4a01f303688a74e020e6b718db248cf0470be25d088e7d669e38679"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/diagnostics",
+      "export": "./diagnostics",
+      "target": "./packages/core/diagnostics.js",
+      "digest": "sha256:d447f864c719632872c9d90f0e30e2b6d45311bc5115d4f3c661d21164d75ebc"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/issue-reporting",
+      "export": "./issue-reporting",
+      "target": "./packages/core/issue-reporting.js",
+      "digest": "sha256:d6e0a450a52b7a4fba84bff855d5370e0cfa2ec3c4be737b3c9099a72f705e2d"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/logging",
+      "export": "./logging",
+      "target": "./packages/core/logging.js",
+      "digest": "sha256:8cc29b88dc7968de3b43d495b54c0b53f90984beb85883705d764c40d4da1b4e"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/kfd-gate",
+      "export": "./kfd-gate",
+      "target": "./packages/core/kfd-gate.js",
+      "digest": "sha256:6a99ee108c385837ee9f1dbb75848f6ea434b6474977e6e567ae81f8fc9a555c"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/release-candidate",
+      "export": "./release-candidate",
+      "target": "./packages/core/release-candidate.js",
+      "digest": "sha256:0aa35ae7482fdb9543214275118da7111c6592b715d2622c525f83f253e5d6dc"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/release-passport",
+      "export": "./release-passport",
+      "target": "./packages/core/release-passport.js",
+      "digest": "sha256:22017d4cbe0d89aecfcada7b93f5cdf2935837b2236ae4aeff23f19dbf3d26cb"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/release-propagation",
+      "export": "./release-propagation",
+      "target": "./packages/core/release-propagation.js",
+      "digest": "sha256:1960be557e57d738cb242ccf3df9ad41cdf156037648a7ab584905b6629f5840"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/buildchain-kfd-claims",
+      "export": "./buildchain-kfd-claims",
+      "target": "./packages/core/buildchain-kfd-claims.js",
+      "digest": "sha256:03e866a7cf7b9d84c71c2353a0865b301a8656dcbaeb67ea47813897f44a0bbc"
+    }
+  ],
+  "docs": [
+    {
+      "id": "cli-and-node-package",
+      "path": "docs/cli.md",
+      "digest": "sha256:a8a348181d6419b746e863d1cacc9d6a91aa6ac5cc2b60819843d44487957c49"
+    },
+    {
+      "id": "site-bundle-contract",
+      "path": "docs/site-bundle-contract.md",
+      "digest": "sha256:e6b4f2e76c713063ff750b0a8d6d96595addae2fd48f913744dc86559add0641"
+    }
+  ],
+  "guidance": "These are the public Node import surfaces shipped by the npm package. Agents should prefer these exports over internal file paths."
+}
