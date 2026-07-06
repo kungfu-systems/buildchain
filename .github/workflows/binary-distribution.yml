@@ -233,6 +233,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          gh release view "$RELEASE_TAG" >/dev/null 2>&1 || \
-            gh release create "$RELEASE_TAG" --verify-tag --title "$RELEASE_TAG" --notes "Buildchain release passport assets for $RELEASE_TAG."
+          node scripts/ensure-github-release.mjs \
+            --repository "${{ github.repository }}" \
+            --tag "$RELEASE_TAG" \
+            --title "$RELEASE_TAG" \
+            --notes "Buildchain release passport assets for $RELEASE_TAG."
           gh release upload "$RELEASE_TAG" dist/binary/* .buildchain/release-passport/* --clobber
