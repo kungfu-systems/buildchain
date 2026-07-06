@@ -109,6 +109,7 @@ test("ensureGitHubRelease patches stable releases with latest metadata", async (
     token: "token",
     repository: "kungfu-systems/buildchain",
     tag: "v2.6.1",
+    target: "b".repeat(40),
   });
 
   assert.equal(result.action, "updated");
@@ -117,5 +118,6 @@ test("ensureGitHubRelease patches stable releases with latest metadata", async (
     name: "v2.6.1",
     prerelease: false,
     make_latest: "true",
+    target_commitish: "b".repeat(40),
   });
 });
