@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { spawnSync } from "node:child_process";
+import dns from "node:dns/promises";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -229,6 +230,14 @@ function cdnWildcardPath(value) {
   return normalized ? `/${normalized}/*` : "/*";
 }
 
+function viewerWildcardPath(binding) {
+  try {
+    return cdnWildcardPath(new URL(binding.url).pathname);
+  } catch {
+    return cdnWildcardPath(binding.objectPrefix);
+  }
+}
+
 function syncStaticArtifactArgs({ artifactRoot, bucket, objectPrefix }) {
   const args = ["s3", "sync", artifactRoot, s3Uri(bucket, objectPrefix), "--delete"];
   if (!objectPrefix) {
@@ -335,6 +344,66 @@ function assertConcreteAwsDeployConfig({ deployConfig, channel, operation }) {
       `web-surface ${operation} apply requires concrete deploy.${channel}.cloudfront_distribution or deploy.${channel}.distribution`,
     );
   }
+}
+
+function urlHost(value = "") {
+  try {
+    return new URL(value).hostname.toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+function wildcardHostMatches(alias = "", host = "") {
+  const normalizedAlias = String(alias || "").toLowerCase();
+  const normalizedHost = String(host || "").toLowerCase();
+  if (!normalizedAlias.startsWith("*.")) return false;
+  const suffix = normalizedAlias.slice(1);
+  return normalizedHost.endsWith(suffix) && normalizedHost.slice(0, -suffix.length).indexOf(".") === -1;
+}
+
+function aliasMatchesHost(aliases = [], host = "") {
+  const normalizedHost = String(host || "").toLowerCase();
+  return aliases.some((alias) => {
+    const normalizedAlias = String(alias || "").toLowerCase();
+    return normalizedAlias === normalizedHost || wildcardHostMatches(normalizedAlias, normalizedHost);
+  });
+}
+
+function parseCloudFrontAliases(stdout = "") {
+  if (!stdout) return [];
+  try {
+    const parsed = JSON.parse(stdout);
+    const aliases = parsed?.Distribution?.DistributionConfig?.Aliases?.Items ||
+      parsed?.DistributionConfig?.Aliases?.Items ||
+      parsed?.Aliases?.Items ||
+      parsed?.Aliases ||
+      [];
+    return Array.isArray(aliases) ? aliases : [];
+  } catch {
+    return [];
+  }
+}
+
+async function defaultDnsResolver(host) {
+  try {
+    const answers = await dns.resolve(host);
+    return answers.map((address) => ({ type: "A", value: address }));
+  } catch (error) {
+    if (error?.code === "ENODATA" || error?.code === "ENOTFOUND") {
+      const answers = await dns.resolve6(host);
+      return answers.map((address) => ({ type: "AAAA", value: address }));
+    }
+    throw error;
+  }
+}
+
+function preflightCheck({ name, status = "pass", details = {}, message = "" }) {
+  return { name, status, message, details };
+}
+
+function preflightStatus(checks) {
+  return checks.some((check) => check.status === "fail") ? "failed" : "passed";
 }
 
 function deployManifestKey(deployConfig, manifest) {
@@ -694,7 +763,7 @@ export function applyWebSurfaceDeploy({
   const primaryBinding = bindings[0] || {};
   const objectPrefix = primaryBinding.objectPrefix || objectPrefixFor(deployConfig, resolvedPlan.manifest.alias || resolvedPlan.manifest.channel);
   const manifestKey = primaryBinding.manifestKey || deployManifestKey(deployConfig, resolvedPlan.manifest);
-  const invalidationPaths = bindings.flatMap((binding) => [cdnWildcardPath(binding.objectPrefix), cdnPath(binding.manifestKey)]);
+  const invalidationPaths = bindings.flatMap((binding) => [viewerWildcardPath(binding), cdnPath(binding.manifestKey)]);
   const operationResults = runAdapterOperations({ operations, dryRun, commandRunner });
   return {
     schemaVersion: 1,
@@ -719,6 +788,365 @@ export function applyWebSurfaceDeploy({
     manifest: resolvedPlan.manifest,
     surfaceBindings: bindings,
     operations: operationResults,
+  };
+}
+
+export async function preflightWebSurfaceProduction({
+  cwd = process.cwd(),
+  plan = null,
+  execute = false,
+  commandRunner = defaultCommandRunner,
+  dnsResolver = defaultDnsResolver,
+  checkedAt = new Date().toISOString(),
+} = {}) {
+  const resolvedPlan = plan ? assertDeployPlan(plan) : planWebSurfaceDeploy({
+    cwd,
+    channel: "production",
+    sourceSha: "0".repeat(40),
+    artifactHash: "0".repeat(64),
+    dryRun: true,
+    deployedAt: checkedAt,
+  });
+  if (resolvedPlan.channel !== "production") {
+    throw new Error("web-surface production preflight requires a production deploy plan");
+  }
+  const loadedConfig = loadBuildchainConfig(cwd);
+  const config = assertWebSurfaceConfig(loadedConfig);
+  const channel = config.channels?.production || {};
+  const deployConfig = config.deploy?.production;
+  if (!deployConfig) {
+    throw new Error("missing deploy.production");
+  }
+  const checks = [];
+  const configuredProductionBindings = resolveSurfaceBindings({
+    config,
+    channelName: "production",
+    alias: "",
+    deployConfig,
+  });
+  const bindings = resolvedPlan.manifest?.surfaceBindings || resolveSurfaceBindings({
+    config,
+    channelName: "production",
+    alias: "",
+    deployConfig,
+  });
+
+  checks.push(preflightCheck({
+    name: "production-channel",
+    status: channel.canonical === true && channel.noindex === false ? "pass" : "fail",
+    details: {
+      canonical: channel.canonical,
+      noindex: channel.noindex,
+    },
+    message: channel.canonical === true && channel.noindex === false
+      ? "production channel is canonical and indexable"
+      : "channels.production must be canonical=true and noindex=false",
+  }));
+
+  const configuredSurfaceNames = configuredProductionBindings.map((binding) => binding.surface).sort();
+  const plannedSurfaceNames = bindings.map((binding) => binding.surface).sort();
+  const missingSurfaces = configuredSurfaceNames.filter((surface) => !plannedSurfaceNames.includes(surface));
+  const extraSurfaces = plannedSurfaceNames.filter((surface) => !configuredSurfaceNames.includes(surface));
+  checks.push(preflightCheck({
+    name: "production-surface-set",
+    status: missingSurfaces.length === 0 && extraSurfaces.length === 0 ? "pass" : "fail",
+    details: {
+      configured: configuredSurfaceNames,
+      planned: plannedSurfaceNames,
+      missing: missingSurfaces,
+      extra: extraSurfaces,
+    },
+    message: missingSurfaces.length === 0 && extraSurfaces.length === 0
+      ? "production plan covers every configured surface"
+      : `production plan surface mismatch: missing=${missingSurfaces.join(",") || "-"} extra=${extraSurfaces.join(",") || "-"}`,
+  }));
+
+  const concreteFailures = [];
+  for (const binding of bindings) {
+    const effectiveDeploy = surfaceDeployConfig(deployConfig, binding.surface);
+    try {
+      assertConcreteAwsDeployConfig({
+        deployConfig: effectiveDeploy,
+        channel: `production.surfaces.${binding.surface}`,
+        operation: "deploy",
+      });
+    } catch (error) {
+      concreteFailures.push(String(error.message || error));
+    }
+  }
+  checks.push(preflightCheck({
+    name: "production-targets",
+    status: concreteFailures.length === 0 ? "pass" : "fail",
+    details: {
+      bindings: bindings.map((binding) => ({
+        surface: binding.surface,
+        bucket: binding.bucket,
+        distributionId: binding.distributionId,
+        objectPrefix: binding.objectPrefix,
+        manifestKey: binding.manifestKey,
+      })),
+      failures: concreteFailures,
+    },
+    message: concreteFailures.length === 0
+      ? "production bucket and CloudFront distribution values are concrete"
+      : concreteFailures.join("; "),
+  }));
+
+  const hosts = bindings.map((binding) => ({
+    surface: binding.surface,
+    url: binding.url,
+    host: urlHost(binding.url),
+    distributionId: binding.distributionId,
+  }));
+  const invalidHosts = hosts.filter((entry) => !entry.host || !entry.url.startsWith("https://"));
+  checks.push(preflightCheck({
+    name: "production-surface-hosts",
+    status: invalidHosts.length === 0 ? "pass" : "fail",
+    details: { hosts, invalidHosts },
+    message: invalidHosts.length === 0
+      ? "all production surfaces declare HTTPS hosts"
+      : `invalid production surface hosts: ${invalidHosts.map((entry) => entry.surface).join(", ")}`,
+  }));
+
+  const awsResults = [];
+  if (execute) {
+    const checkedBuckets = new Set();
+    for (const binding of bindings) {
+      const effectiveDeploy = surfaceDeployConfig(deployConfig, binding.surface);
+      const bucket = binding.bucket || effectiveDeploy.bucket || effectiveDeploy.target || "";
+      if (bucket && !checkedBuckets.has(bucket)) {
+        checkedBuckets.add(bucket);
+        const operation = {
+          action: "preflight-head-bucket",
+          surface: binding.surface,
+          command: "aws",
+          args: ["s3api", "head-bucket", "--bucket", bucket],
+        };
+        awsResults.push(runAdapterOperation({ operation, dryRun: false, commandRunner }));
+      }
+    }
+
+    const checkedDistributions = new Set();
+    for (const binding of bindings) {
+      const distributionId = binding.distributionId || "";
+      if (distributionId && !checkedDistributions.has(distributionId)) {
+        checkedDistributions.add(distributionId);
+        const operation = {
+          action: "preflight-get-distribution",
+          surface: binding.surface,
+          command: "aws",
+          args: ["cloudfront", "get-distribution", "--id", distributionId, "--output", "json"],
+        };
+        awsResults.push(runAdapterOperation({ operation, dryRun: false, commandRunner }));
+      }
+    }
+  }
+
+  const failedAws = awsResults.filter((result) => result.status === "failed");
+  checks.push(preflightCheck({
+    name: "production-aws-access",
+    status: !execute || failedAws.length === 0 ? "pass" : "fail",
+    details: {
+      execute,
+      operations: awsResults.map((result) => ({
+        action: result.action,
+        surface: result.surface,
+        status: result.status,
+        stderr: result.stderr,
+      })),
+    },
+    message: !execute
+      ? "AWS access check planned but not executed"
+      : failedAws.length === 0
+        ? "production role can inspect buckets and CloudFront distributions"
+        : `production AWS access failed: ${failedAws.map((result) => `${result.action}:${result.surface}`).join(", ")}`,
+  }));
+
+  const aliasChecks = [];
+  if (execute) {
+    const aliasesByDistribution = new Map();
+    for (const result of awsResults.filter((entry) => entry.action === "preflight-get-distribution" && entry.status !== "failed")) {
+      const aliases = parseCloudFrontAliases(result.stdout);
+      aliasesByDistribution.set(result.args[result.args.indexOf("--id") + 1], aliases);
+    }
+    for (const host of hosts) {
+      const aliases = aliasesByDistribution.get(host.distributionId) || [];
+      aliasChecks.push({
+        ...host,
+        aliases,
+        matched: aliasMatchesHost(aliases, host.host),
+      });
+    }
+  }
+  const missingAliases = aliasChecks.filter((entry) => !entry.matched);
+  checks.push(preflightCheck({
+    name: "production-cloudfront-aliases",
+    status: !execute || missingAliases.length === 0 ? "pass" : "fail",
+    details: {
+      execute,
+      aliases: aliasChecks,
+    },
+    message: !execute
+      ? "CloudFront alias check planned but not executed"
+      : missingAliases.length === 0
+        ? "production CloudFront aliases cover every surface host"
+        : `missing CloudFront aliases: ${missingAliases.map((entry) => entry.host).join(", ")}`,
+  }));
+
+  const dnsChecks = [];
+  if (execute) {
+    for (const host of hosts) {
+      try {
+        const answers = await dnsResolver(host.host);
+        dnsChecks.push({ ...host, status: "pass", answers });
+      } catch (error) {
+        dnsChecks.push({ ...host, status: "fail", error: String(error.message || error) });
+      }
+    }
+  }
+  const failedDns = dnsChecks.filter((entry) => entry.status === "fail");
+  checks.push(preflightCheck({
+    name: "production-dns",
+    status: !execute || failedDns.length === 0 ? "pass" : "fail",
+    details: {
+      execute,
+      hosts: dnsChecks,
+    },
+    message: !execute
+      ? "DNS check planned but not executed"
+      : failedDns.length === 0
+        ? "production DNS resolves for every surface host"
+        : `production DNS failed: ${failedDns.map((entry) => entry.host).join(", ")}`,
+  }));
+
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-web-surface-production-preflight",
+    checkedAt,
+    execute,
+    channel: "production",
+    status: preflightStatus(checks),
+    url: resolvedPlan.url,
+    urls: resolvedPlan.urls,
+    sourceSha: resolvedPlan.manifest.sourceSha,
+    artifactHash: resolvedPlan.artifact.hash,
+    surfaceBindings: bindings,
+    checks,
+  };
+}
+
+function healthStatus(checks) {
+  return checks.some((check) => check.status === "fail") ? "failed" : "passed";
+}
+
+function noindexHeader(headers) {
+  const value = headers?.get?.("x-robots-tag") || "";
+  return String(value).toLowerCase().includes("noindex");
+}
+
+function noindexMeta(html = "") {
+  const source = String(html || "").toLowerCase();
+  return /<meta\s+[^>]*name=["']robots["'][^>]*content=["'][^"']*noindex/.test(source) ||
+    /<meta\s+[^>]*content=["'][^"']*noindex[^"']*["'][^>]*name=["']robots["']/.test(source);
+}
+
+function htmlLikeResponse(response, url = "") {
+  const contentType = response.headers?.get?.("content-type") || "";
+  return String(contentType).toLowerCase().includes("text/html") || /\/$|\.html(?:$|[?#])/.test(String(url || ""));
+}
+
+export async function checkWebSurfaceHealth({
+  result = null,
+  plan = null,
+  cwd = process.cwd(),
+  fetchImpl = fetch,
+  checkedAt = new Date().toISOString(),
+  allowedStatuses = [200],
+} = {}) {
+  const loadedConfig = loadBuildchainConfig(cwd);
+  const config = assertWebSurfaceConfig(loadedConfig);
+  const manifest = result?.manifest || plan?.manifest;
+  const channel = result?.channel || plan?.channel || manifest?.channel || "production";
+  const urls = result?.urls || plan?.urls || (manifest?.surfaceBindings
+    ? Object.fromEntries(manifest.surfaceBindings.map((binding) => [binding.surface, binding.url]))
+    : {});
+  const bindings = manifest?.surfaceBindings || [];
+  const checks = [];
+  if (Object.keys(urls).length === 0) {
+    checks.push({
+      surface: "__urls__",
+      url: "",
+      status: "fail",
+      httpStatus: 0,
+      finalUrl: "",
+      noindexHeader: false,
+      message: "web-surface health check requires at least one surface URL from an apply result or deploy plan",
+    });
+  }
+
+  for (const [surface, url] of Object.entries(urls)) {
+    try {
+      const response = await fetchImpl(url, { redirect: "follow" });
+      const expectedNoindex = Boolean(config.channels?.[channel]?.noindex);
+      const headerNoindex = noindexHeader(response.headers);
+      const body = htmlLikeResponse(response, url) && typeof response.text === "function"
+        ? await response.text()
+        : "";
+      const metaNoindex = noindexMeta(body);
+      const noindex = headerNoindex || metaNoindex;
+      const statusOk = allowedStatuses.includes(response.status);
+      const noindexOk = channel !== "production" || expectedNoindex || !noindex;
+      checks.push({
+        surface,
+        url,
+        status: statusOk && noindexOk ? "pass" : "fail",
+        httpStatus: response.status,
+        finalUrl: response.url || url,
+        noindexHeader: noindex,
+        noindexHeaderValue: headerNoindex,
+        noindexMeta: metaNoindex,
+        message: statusOk && noindexOk
+          ? "surface is reachable"
+          : `surface health failed: http=${response.status}, noindex=${noindex}`,
+      });
+    } catch (error) {
+      checks.push({
+        surface,
+        url,
+        status: "fail",
+        httpStatus: 0,
+        finalUrl: "",
+        noindexHeader: false,
+        message: String(error.message || error),
+      });
+    }
+  }
+
+  const manifestChecks = bindings.map((binding) => ({
+    surface: binding.surface,
+    manifestKey: binding.manifestKey,
+    bucket: binding.bucket,
+    distributionId: binding.distributionId,
+    status: binding.manifestKey ? "pass" : "fail",
+  }));
+  checks.push({
+    surface: "__manifest__",
+    url: "",
+    status: manifestChecks.length > 0 && manifestChecks.every((entry) => entry.status === "pass") ? "pass" : "fail",
+    manifests: manifestChecks,
+    message: "deployment manifest pointers are recorded for every surface",
+  });
+
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-web-surface-health-check",
+    checkedAt,
+    channel,
+    status: healthStatus(checks),
+    sourceSha: manifest?.sourceSha || result?.sourceSha || "",
+    artifactHash: manifest?.artifactHash || result?.artifactHash || "",
+    urls,
+    checks,
   };
 }
 
@@ -757,7 +1185,7 @@ function deployBindingOperations({ artifactRoot, deployConfig, manifest, binding
         "--distribution-id",
         distribution,
         "--paths",
-        cdnWildcardPath(binding.objectPrefix),
+        viewerWildcardPath(binding),
         cdnPath(binding.manifestKey),
       ],
     });
@@ -994,7 +1422,7 @@ function cleanupEntryOperations({ deployConfig, entry, bucket }) {
           "--distribution-id",
           distribution,
           "--paths",
-          `${cdnPath(binding.objectPrefix)}/*`,
+          viewerWildcardPath(binding),
           cdnPath(binding.manifestKey),
         ],
       });

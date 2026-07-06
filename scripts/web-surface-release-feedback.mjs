@@ -169,6 +169,8 @@ export function createWebSurfaceReleasePassport({
   triggeringActor = "",
   runnerActor = "",
   oidcDeployIdentity = "",
+  productionPreflight = undefined,
+  healthCheck = undefined,
 } = {}) {
   const normalizedStatus = inferStatus({ result, applyOutcome, jobStatus }) || status;
   const decisionType = channel === "production" ? "release-pr-merge-or-manual-approval" : "main-merge-staging";
@@ -222,6 +224,8 @@ export function createWebSurfaceReleasePassport({
     evidence: {
       applyResultBound: Boolean(result),
       failureContext: normalizedStatus === "success" ? "" : optionalString(applyOutcome || jobStatus || "missing-apply-result"),
+      productionPreflight,
+      healthCheck,
     },
   };
 }
@@ -240,6 +244,12 @@ export function renderWebSurfaceReleaseFeedbackComment({
   const title = channel === "production" ? "Buildchain production deploy" : "Buildchain staging deploy";
   const failure = passport.evidence?.failureContext ? [`- Failure context: \`${passport.evidence.failureContext}\``] : [];
   const targetLine = target.pullNumber ? `- Comment target: PR #${target.pullNumber}` : "";
+  const preflight = passport.evidence?.productionPreflight?.status
+    ? `- Production preflight: \`${passport.evidence.productionPreflight.status}\``
+    : "";
+  const health = passport.evidence?.healthCheck?.status
+    ? `- Health check: \`${passport.evidence.healthCheck.status}\``
+    : "";
   return [
     marker,
     `## ${title}`,
@@ -250,6 +260,8 @@ export function renderWebSurfaceReleaseFeedbackComment({
     `- Artifact: \`${release.artifactHash || ""}\``,
     `- Target: \`${release.target || ""}\``,
     `- Rollback pointer: \`${release.rollbackPointer || ""}\``,
+    preflight,
+    health,
     `- Run: ${passport.workflow?.url || ""}`,
     `- Passport artifact: \`${passportArtifact || "buildchain-web-surface-release-passport"}\``,
     targetLine,
@@ -263,6 +275,8 @@ export async function webSurfaceReleaseFeedbackCli(env = process.env, { fetchImp
   const payload = JSON.parse(fs.readFileSync(eventPath, "utf8"));
   const channel = optionalString(env.BUILDCHAIN_WEB_SURFACE_CHANNEL || "staging");
   const result = readJsonIfExists(env.APPLY_RESULT_PATH || "");
+  const productionPreflight = readJsonIfExists(env.PREFLIGHT_RESULT_PATH || "");
+  const healthCheck = readJsonIfExists(env.HEALTH_RESULT_PATH || "");
   const repository = optionalString(env.GITHUB_REPOSITORY);
   const sourceSha = optionalString(result?.sourceSha || env.GITHUB_SHA);
   const workflowRunUrl = runUrl({
@@ -305,6 +319,8 @@ export async function webSurfaceReleaseFeedbackCli(env = process.env, { fetchImp
     triggeringActor: env.GITHUB_TRIGGERING_ACTOR,
     runnerActor: env.RUNNER_NAME || env.GITHUB_ACTOR,
     oidcDeployIdentity: env.DEPLOY_IDENTITY_REF || env.AWS_ROLE_ARN,
+    productionPreflight,
+    healthCheck,
   });
   const outputPath = env.OUTPUT_PATH || `.buildchain/web-surface-${channel}-release-passport.json`;
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });

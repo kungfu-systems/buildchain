@@ -1070,6 +1070,22 @@ jobs:
           aws-region: ${{ inputs.aws-region }}
           role-session-name: buildchain-production-${{ github.run_id }}
 
+      - name: Preflight production readiness
+        id: preflight
+        run: |
+          set -euo pipefail
+          plan_file="$(find .buildchain/downloaded-plans -name web-surface-production-plan.json -print -quit)"
+          if [ -z "$plan_file" ]; then
+            echo "::error::production preflight requested but production plan artifact was not found"
+            exit 1
+          fi
+          node .buildchain/runtime/scripts/web-surface.mjs \
+            --mode production-preflight \
+            --cwd "${{ inputs.working-directory }}" \
+            --plan "$plan_file" \
+            --execute true \
+            --output .buildchain/web-surface-production-preflight.json
+
       - name: Apply production deploy
         id: apply
         run: |
@@ -1088,11 +1104,22 @@ jobs:
             --run-id "${{ github.run_id }}" \
             --output .buildchain/web-surface-production-apply.json
 
+      - name: Health check production deploy
+        id: health
+        run: |
+          set -euo pipefail
+          node .buildchain/runtime/scripts/web-surface.mjs \
+            --mode health-check \
+            --cwd "${{ inputs.working-directory }}" \
+            --result .buildchain/web-surface-production-apply.json \
+            --output .buildchain/web-surface-production-health.json
+
       - name: Summarize production apply
+        if: ${{ always() }}
         run: |
           {
             echo "## Production apply"
-            node -e 'const r=JSON.parse(require("fs").readFileSync(".buildchain/web-surface-production-apply.json","utf8")); const urls=Object.entries(r.urls||{default:r.url}).map(([s,u])=>"- "+s+": "+u).join("\n"); console.log(urls+"\n- status: "+r.status+"\n- target: "+r.target+"\n- source: "+r.sourceSha+"\n- artifact: "+r.artifactHash+"\n- rollback pointer: "+(r.manifest.rollbackPointer || "not configured"))'
+            node -e 'const fs=require("fs"); const read=(p)=>fs.existsSync(p)?JSON.parse(fs.readFileSync(p,"utf8")):{}; const r=read(".buildchain/web-surface-production-apply.json"); const p=read(".buildchain/web-surface-production-preflight.json"); const h=read(".buildchain/web-surface-production-health.json"); const urls=Object.entries(r.urls||{default:r.url||""}).filter(([,u])=>u).map(([s,u])=>"- "+s+": "+u).join("\n"); console.log(urls+"\n- preflight: "+(p.status||"missing")+"\n- deploy status: "+(r.status||"missing")+"\n- health: "+(h.status||"missing")+"\n- target: "+(r.target||"")+"\n- source: "+(r.sourceSha||"")+"\n- artifact: "+(r.artifactHash||"")+"\n- rollback pointer: "+((r.manifest||{}).rollbackPointer || "not configured"))'
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Comment production deploy feedback and write passport
@@ -1103,6 +1130,8 @@ jobs:
           BUILDCHAIN_RUNTIME_SHA: ${{ needs.runtime.outputs.runtime-sha }}
           BUILDCHAIN_ROLLBACK_POINTER: ${{ needs.runtime.outputs.rollback-ref }}
           APPLY_RESULT_PATH: .buildchain/web-surface-production-apply.json
+          PREFLIGHT_RESULT_PATH: .buildchain/web-surface-production-preflight.json
+          HEALTH_RESULT_PATH: .buildchain/web-surface-production-health.json
           APPLY_STEP_OUTCOME: ${{ steps.apply.outcome }}
           JOB_STATUS: ${{ job.status }}
           OUTPUT_PATH: .buildchain/web-surface-production-release-passport.json
