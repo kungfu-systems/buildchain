@@ -173,12 +173,12 @@ test("web-surface deploy apply executes aws s3 and cloudfront commands through r
       "--distribution-id",
       "E-STAGING",
       "--paths",
-      "/staging/*",
+      "/*",
       "/.buildchain/deployments/staging/hub.json",
     ]);
     assert.equal(calls[3].args[3], "s3://libkungfu-dev-staging/staging/core");
     assert.deepEqual(calls[5].args.slice(-2), [
-      "/staging/core/*",
+      "/*",
       "/.buildchain/deployments/staging/core.json",
     ]);
     assert.deepEqual(
@@ -222,7 +222,7 @@ secret_refs = ["CORE_AWS_ROLE_ARN"]
     assert.equal(coreBinding.objectPrefix, "core-staging");
     assert.equal(calls[3].args[3], "s3://libkungfu-dev-core-staging/core-staging");
     assert.deepEqual(calls[5].args.slice(-2), [
-      "/core-staging/*",
+      "/*",
       "/.buildchain/deployments/staging/core.json",
     ]);
   });
@@ -467,8 +467,12 @@ test("web-surface production deploy apply executes against production target", (
       "--distribution-id",
       "E-PRODUCTION",
       "--paths",
-      "/production/*",
+      "/*",
       "/.buildchain/deployments/production/hub.json",
+    ]);
+    assert.deepEqual(calls[11].args.slice(-2), [
+      "/*",
+      "/.buildchain/deployments/production/kfd.json",
     ]);
   });
 });
@@ -829,7 +833,7 @@ test("web-surface cleanup apply executes preview deletion through runner", () =>
       "--distribution-id",
       "E-PREVIEW",
       "--paths",
-      "/pr-123/*",
+      "/*",
       "/.buildchain/deployments/pr-123/hub.json",
     ]);
     assert.deepEqual(calls[3].args, ["s3", "rm", "s3://libkungfu-dev-preview/pr-123/core", "--recursive"]);
