@@ -1701,6 +1701,20 @@ test("expected artifact JSON normalizes supported checks", () => {
   );
 });
 
+test("buildchain semver version state includes generated site contract version", () => {
+  const summary = validateBuildchainConfig(root, {
+    requireVersionState: true,
+    requireLifecycleStages: ["install", "verify", "publish"],
+  });
+  assert.deepEqual(
+    summary.versionFiles.map((file) => `${file.path}#${file.key}`),
+    [
+      "package.json#version",
+      "dist/site/buildchain-contract.json#product.version",
+    ],
+  );
+});
+
 test("libnode-shaped fixture declares the build lifecycle contract", () => {
   const fixture = path.join(root, "fixtures/libnode-shaped");
   const summary = validateBuildchainConfig(fixture, {
