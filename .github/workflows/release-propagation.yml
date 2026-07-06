@@ -1,0 +1,194 @@
+name: Release Propagation
+
+on:
+  workflow_call:
+    inputs:
+      graph-json:
+        description: "Release propagation graph JSON"
+        required: true
+        type: string
+      upstream-release-json:
+        description: "Finalized upstream release envelope JSON"
+        required: true
+        type: string
+      source-node:
+        description: "Optional source node id; inferred from repository/package when omitted"
+        default: ""
+        required: false
+        type: string
+      downstream-target:
+        description: "Target downstream node id or owner/repo"
+        required: true
+        type: string
+      downstream-repository:
+        description: "Downstream owner/repo to checkout and update"
+        required: true
+        type: string
+      downstream-base-ref:
+        description: "Downstream PR base branch"
+        required: true
+        type: string
+      downstream-branch:
+        description: "Downstream update branch"
+        default: "buildchain/release-propagation"
+        required: false
+        type: string
+      lock-path:
+        description: "Optional downstream lock path override"
+        default: ""
+        required: false
+        type: string
+      pr-title:
+        description: "Downstream PR title"
+        default: "chore: consume upstream release"
+        required: false
+        type: string
+      pr-body:
+        description: "Additional downstream PR body"
+        default: ""
+        required: false
+        type: string
+      dry-run:
+        description: "Plan and write lock without pushing a PR"
+        default: true
+        required: false
+        type: boolean
+    secrets:
+      propagation-token:
+        description: "Token with contents:write and pull-requests:write on the downstream repository"
+        required: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  propagate:
+    name: Create downstream release propagation PR
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+
+      - name: Write propagation inputs
+        shell: bash
+        env:
+          GRAPH_JSON: ${{ inputs.graph-json }}
+          UPSTREAM_RELEASE_JSON: ${{ inputs.upstream-release-json }}
+        run: |
+          mkdir -p .buildchain/release-propagation
+          node <<'NODE'
+          const fs = require("fs");
+          fs.writeFileSync(".buildchain/release-propagation/graph.json", `${process.env.GRAPH_JSON}\n`);
+          fs.writeFileSync(".buildchain/release-propagation/upstream-release.json", `${process.env.UPSTREAM_RELEASE_JSON}\n`);
+          NODE
+
+      - name: Plan release propagation
+        id: plan
+        shell: bash
+        run: |
+          node bin/buildchain.mjs release-propagation plan \
+            --graph .buildchain/release-propagation/graph.json \
+            --upstream-release .buildchain/release-propagation/upstream-release.json \
+            --source-node "${{ inputs.source-node }}" \
+            --output .buildchain/release-propagation/plan.json \
+            --json
+          node <<'NODE'
+            const fs = require("fs");
+            const plan = JSON.parse(fs.readFileSync(".buildchain/release-propagation/plan.json", "utf8"));
+            const target = plan.targets.find((entry) => entry.target === process.env.TARGET || entry.repository === process.env.TARGET);
+            if (!target) throw new Error(`no propagation target matched ${process.env.TARGET}`);
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `target=${target.target}\nrepository=${target.repository}\nchannel=${target.channel}\nlock_path=${target.lockPath}\nlock_sha=${target.lock.lockSha256}\n`);
+          NODE
+        env:
+          TARGET: ${{ inputs.downstream-target }}
+
+      - name: Checkout downstream repository
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ inputs.downstream-repository }}
+          token: ${{ secrets['propagation-token'] || github.token }}
+          path: downstream
+          ref: ${{ inputs.downstream-base-ref }}
+
+      - name: Write downstream release lock
+        id: lock
+        shell: bash
+        run: |
+          node bin/buildchain.mjs release-propagation write-lock \
+            --plan .buildchain/release-propagation/plan.json \
+            --target "${{ inputs.downstream-target }}" \
+            --cwd downstream \
+            --output "${{ inputs.lock-path }}" \
+            --json > .buildchain/release-propagation/write-lock.json
+          node <<'NODE'
+            const fs = require("fs");
+            const result = JSON.parse(fs.readFileSync(".buildchain/release-propagation/write-lock.json", "utf8"));
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `path=${result.path}\nlock_sha=${result.lockSha256}\n`);
+          NODE
+
+      - name: Summarize release propagation
+        shell: bash
+        run: |
+          {
+            echo "## Release propagation"
+            echo
+            echo "- Downstream: \`${{ steps.plan.outputs.repository }}\`"
+            echo "- Channel: \`${{ steps.plan.outputs.channel }}\`"
+            echo "- Lock path: \`${{ steps.plan.outputs.lock_path }}\`"
+            echo "- Lock SHA-256: \`${{ steps.lock.outputs.lock_sha }}\`"
+            echo "- Dry run: \`${{ inputs.dry-run }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Create or update downstream PR
+        if: ${{ !inputs.dry-run }}
+        shell: bash
+        working-directory: downstream
+        env:
+          GH_TOKEN: ${{ secrets['propagation-token'] || github.token }}
+          BRANCH: ${{ inputs.downstream-branch }}
+          BASE: ${{ inputs.downstream-base-ref }}
+          TITLE: ${{ inputs.pr-title }}
+          BODY: ${{ inputs.pr-body }}
+          PLAN_PATH: ../.buildchain/release-propagation/plan.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          if git diff --quiet; then
+            echo "No downstream lock changes."
+            exit 0
+          fi
+          git add .
+          git commit -m "$TITLE"
+          git push origin "HEAD:$BRANCH"
+          {
+            echo "$BODY"
+            echo
+            echo "Buildchain release propagation plan:"
+            echo
+            echo '```json'
+            cat "$PLAN_PATH"
+            echo '```'
+          } > ../.buildchain/release-propagation/pr-body.md
+          gh pr create \
+            --repo "${{ inputs.downstream-repository }}" \
+            --base "$BASE" \
+            --head "$BRANCH" \
+            --title "$TITLE" \
+            --body-file ../.buildchain/release-propagation/pr-body.md || \
+          gh pr edit "$BRANCH" \
+            --repo "${{ inputs.downstream-repository }}" \
+            --title "$TITLE" \
+            --body-file ../.buildchain/release-propagation/pr-body.md
+
+      - name: Upload propagation plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: buildchain-release-propagation-plan
+          path: .buildchain/release-propagation/*

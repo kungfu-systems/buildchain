@@ -40,6 +40,7 @@ function buildSiteBundle() {
   const docs = [
     docEntry("install", "Install and verify Buildchain", "docs/install.md", "use"),
     docEntry("release-passport", "Release Passport protocol", "docs/release-passport.md", "verify"),
+    docEntry("release-propagation", "Release propagation", "docs/release-propagation.md", "use"),
     docEntry("binary-distribution", "Binary distribution contract", "docs/binary-distribution.md", "verify"),
     docEntry("toolkit-observability", "Toolkit observability", "docs/toolkit-observability.md", "use"),
     docEntry("site-bundle-contract", "Site bundle contract", "docs/site-bundle-contract.md", "use"),
@@ -69,6 +70,7 @@ function buildSiteBundle() {
       { id: "release-dry-run", usage: "buildchain release --dry-run --target-ref <ref>", purpose: "Explain what a channel merge would publish before the PR is merged." },
       { id: "collect-github-release", usage: "buildchain collect github-release --tag <tag>", purpose: "Collect release assets into a release passport." },
       { id: "verify-release-passport", usage: "buildchain verify release-passport <file-or-url>", purpose: "Fail closed unless a release passport and its evidence are complete." },
+      { id: "release-propagation", usage: "buildchain release-propagation <plan|write-lock>", purpose: "Plan channel-preserving downstream release PRs and write exact upstream release locks." },
       { id: "verify-infra-contract-evidence-bundle", usage: "buildchain verify infra-contract-evidence-bundle <file>", purpose: "Fail closed unless an infra-contract lifecycle evidence bundle is complete, hash-bound, and validation-consistent." },
       { id: "logging", usage: "buildchain log|mark|span|verify observability-log", purpose: "Emit timestamped build events, summarize logs, and enforce required phases." },
       { id: "diagnostics-summary", usage: "buildchain diagnostics summary <diagnostics.json>...", purpose: "Summarize small diagnostics artifacts into JSON and a cross-platform lifecycle timing table." },
@@ -84,6 +86,7 @@ function buildSiteBundle() {
       { id: "build", path: ".github/workflows/.build.yml", surface: "reusable-build", status: "active" },
       { id: "web-surface", path: ".github/workflows/.web-surface.yml", surface: "site-app-deployment", status: "active" },
       { id: "buildchain-ref-promotion", path: ".github/workflows/buildchain-ref-promotion.yml", surface: "release-governance", status: "active" },
+      { id: "release-propagation", path: ".github/workflows/release-propagation.yml", surface: "release-propagation", status: "preview" },
       { id: "dev-pr-auto-merge", path: ".github/workflows/dev-pr-auto-merge.yml", surface: "dev-governance", status: "active" },
       { id: "binary-distribution", path: ".github/workflows/binary-distribution.yml", surface: "release-passport", status: "active" },
     ],
@@ -105,6 +108,13 @@ function buildSiteBundle() {
       entrypoint: "buildchain.release.json",
       bundle: "buildchain-release-bundle.tar.gz",
       contract: "kungfu-buildchain-release-passport",
+    },
+    releasePropagation: {
+      graphContract: "kungfu-buildchain-release-propagation-graph",
+      planContract: "kungfu-buildchain-release-propagation-plan",
+      lockContract: "kungfu-buildchain-release-propagation-lock",
+      defaultChannelPolicy: "preserve",
+      defaultChannelMap: { alpha: "alpha", release: "release" },
     },
     npm: {
       package: packageJson.name,
