@@ -1177,6 +1177,7 @@ export function collectGitHubReleasePassport({
   const resolvedOutputDir = path.resolve(cwd, outputDir);
   const productMechanism = defaultProductMechanism({ repository, productName });
   const artifactEvidence = createArtifactEvidence({ assets, repository, tag: resolvedTag, sourceSha, workflow });
+  const bundledPublishEvidencePath = publishEvidenceMeta.value ? "evidence.json" : "";
   const impact = mergeAuthoritativeImpactBase(
     normalizeImpactLedger(impactMeta.value, { tag: resolvedTag, line, decision: "unknown" }),
     basePassportMeta.value,
@@ -1238,6 +1239,9 @@ export function collectGitHubReleasePassport({
     transactionStatePath: transactionMeta.path ? path.relative(resolvedOutputDir, transactionMeta.path).split(path.sep).join("/") : "",
     workflow,
   }), basePassportMeta.value, { requireKfd: requireBaseKfd });
+  if (bundledPublishEvidencePath) {
+    passport.evidence.publishEvidence = bundledPublishEvidencePath;
+  }
   const checkReport = createReleaseCheckReport({
     passport,
     artifactEvidence,
@@ -1250,6 +1254,7 @@ export function collectGitHubReleasePassport({
   const files = {
     "product-mechanism.json": productMechanism,
     "artifact-evidence.json": artifactEvidence,
+    ...(publishEvidenceMeta.value ? { [bundledPublishEvidencePath]: publishEvidenceMeta.value } : {}),
     "impact.json": impact,
     "agent-index.json": agentIndex,
     "buildchain.release.json": passport,

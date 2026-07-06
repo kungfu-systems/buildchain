@@ -1263,6 +1263,56 @@ test("binary release passport can merge authoritative Buildchain KFD release-sta
   assert.ok(passport.artifacts.some((artifact) => artifact.name === "buildchain-x86_64-unknown-linux-gnu.tar.gz"));
 });
 
+test("release passport collection bundles publish evidence as a sibling audit asset", async () => {
+  const cwd = tempDir("release-passport-flat-publish-evidence");
+  const assetsDir = path.join(cwd, "dist");
+  fs.mkdirSync(assetsDir, { recursive: true });
+  fs.writeFileSync(path.join(assetsDir, "buildchain.tgz"), "package-bytes\n");
+  const publishEvidencePath = writeJson(path.join(cwd, ".buildchain", "release-evidence", "v1.2.3-alpha.4", "evidence.json"), {
+    schema: 1,
+    version: "1.2.3-alpha.4",
+    channel: "alpha",
+    source_sha: "a".repeat(40),
+    release_sha: "b".repeat(40),
+    target_ref: "alpha/v1/v1.2",
+    release_material_sha: "b".repeat(40),
+    publish_tooling_sha: "b".repeat(40),
+    artifacts: [
+      {
+        group: "node",
+        kind: "npm",
+        name: "@kungfu-tech/buildchain",
+        ref: "1.2.3-alpha.4",
+        digest: "sha512-test",
+      },
+    ],
+  });
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v1.2.3-alpha.4",
+    repository: "kungfu-systems/buildchain",
+    productName: "Buildchain",
+    sourceSha: "a".repeat(40),
+    assetsDir,
+    outputDir: path.join(cwd, ".buildchain", "release-passport"),
+    publishEvidenceJson: publishEvidencePath,
+    releaseJsonExtra: JSON.stringify({
+      channel: "alpha",
+      targetRef: "alpha/v1/v1.2",
+      releaseSha: "b".repeat(40),
+      releaseMaterialSha: "b".repeat(40),
+      publishToolingSha: "b".repeat(40),
+    }),
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+
+  assert.equal(passport.evidence.publishEvidence, "evidence.json");
+  assert.equal(fs.existsSync(path.join(collected.outputDir, "evidence.json")), true);
+  assert.equal(report.ok, true);
+});
+
 test("Buildchain source KFD claim registry is stable across semver version-state bumps", () => {
   const cwd = tempDir("buildchain-self-kfd-stable-claims");
   writeJson(path.join(cwd, "package.json"), {
