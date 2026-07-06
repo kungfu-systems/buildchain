@@ -370,10 +370,8 @@ test("release transaction complete transition clears stale failure", () => {
   assert.equal(cleanedRerun.failure, "");
 });
 
-test("promote action validates anchored publish source locks before promotion", () => {
-  const cwd = path.join(root, "fixtures/libnode-shaped");
+test("promote action validates generic publish source locks before promotion", () => {
   const report = validateRequiredPublishSourceLock({
-    cwd,
     sha: SHA,
     publishSourceRef: "publish-gate/release/v22/v22.22/22.22.3-kf.0",
     publishSourceSha: SHA,
@@ -384,18 +382,26 @@ test("promote action validates anchored publish source locks before promotion", 
 
   assert.throws(
     () => validateRequiredPublishSourceLock({
-      cwd,
       sha: SHA,
       publishSourceRef: "release/v22/v22.22",
       publishSourceSha: SHA,
       publishSourceLocked: "true",
     }),
-    /anchored publish source-lock validation failed: .*publish\.source_ref/,
+    /publish source-lock validation failed: .*publish\.source_ref/,
   );
 
   assert.throws(
     () => validateRequiredPublishSourceLock({
-      cwd,
+      sha: SHA,
+      publishSourceRef: "publish-gate/release/v22/v22.22/22.22.3-kf.0",
+      publishSourceSha: SHA,
+      publishSourceLocked: "false",
+    }),
+    /publish source-lock validation failed: .*publish\.source_locked/,
+  );
+
+  assert.throws(
+    () => validateRequiredPublishSourceLock({
       sha: SHA,
       publishSourceRef: "publish-gate/release/v22/v22.22/22.22.3-kf.0",
       publishSourceSha: OTHER_SHA,
