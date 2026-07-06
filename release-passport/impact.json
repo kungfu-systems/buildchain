@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-impact",
+  "versionImpact": {
+    "final": "minor",
+    "source": "buildchain-release-governance",
+    "rationale": "Buildchain v2.6 promotes reusable workflow, release passport, patrol, artifact relay, and protected dev governance changes as a minor runtime line."
+  },
+  "surfaceImpacts": [
+    {
+      "id": "buildchain-runtime",
+      "impact": "minor",
+      "class": "release-governance",
+      "rationale": "The v2.6 runtime line changes the public reusable workflow and release governance surface while preserving v2 compatibility.",
+      "source": "buildchain-ref-promotion.yml"
+    }
+  ],
+  "classification": "minor",
+  "breaking": false,
+  "security": false,
+  "migrationRequired": false,
+  "summary": "Buildchain v2.6 minor release line for release governance and reusable workflow runtime improvements.",
+  "release": {
+    "tag": "v2.6.3-alpha.0",
+    "line": "v2.6"
+  }
+}
