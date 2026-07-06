@@ -859,6 +859,7 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   assert.doesNotMatch(workflow, /v\*\.\*/);
   assert.match(workflow, /artifact-transfer-mode:/);
   assert.match(workflow, /default: "github-artifacts"/);
+  assert.match(workflow, /issues: write/);
   assert.match(workflow, /id-token: write/);
   assert.match(workflow, /secrets: inherit/);
   assert.match(
