@@ -35,6 +35,8 @@ const {
 } = await import("../packages/core/publish-transaction.js");
 const {
   validateRequiredPublishSourceLock,
+  collectGitHubReleaseEvidenceAssets,
+  publishGitHubReleaseEvidence,
 } = await import("../actions/promote-buildchain-ref/index.js");
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -410,6 +412,105 @@ test("promote action validates generic publish source locks before promotion", (
     }),
     /does not match promotion sha/,
   );
+});
+
+test("promote action collects GitHub Release evidence assets fail-closed", () => {
+  const cwd = makeTempWorkspace({
+    ".buildchain/release-evidence/v1.0.0/evidence.json": { ok: true },
+    ".buildchain/release-passport/buildchain.release.json": { release: { tag: "v1.0.0" } },
+    ".buildchain/release-passport/evidence.json": { passport: true },
+  });
+
+  assert.deepEqual(
+    collectGitHubReleaseEvidenceAssets({
+      publishEvidencePath: path.join(cwd, ".buildchain/release-evidence/v1.0.0/evidence.json"),
+      releasePassportPath: path.join(cwd, ".buildchain/release-passport/buildchain.release.json"),
+      releasePassportOutputDir: path.join(cwd, ".buildchain/release-passport"),
+    }).map((entry) => path.relative(cwd, entry).split(path.sep).join("/")),
+    [
+      ".buildchain/release-evidence/v1.0.0/evidence.json",
+      ".buildchain/release-passport/buildchain.release.json",
+      ".buildchain/release-passport/evidence.json",
+    ],
+  );
+
+  assert.throws(
+    () => collectGitHubReleaseEvidenceAssets({
+      publishEvidencePath: path.join(cwd, ".buildchain/release-evidence/v1.0.0/missing.json"),
+      releasePassportPath: path.join(cwd, ".buildchain/release-passport/buildchain.release.json"),
+      releasePassportOutputDir: path.join(cwd, ".buildchain/release-passport"),
+    }),
+    /requires a publish evidence file/,
+  );
+});
+
+test("promote action publishes semver GitHub Release evidence assets", async (t) => {
+  const cwd = makeTempWorkspace({
+    ".buildchain/release-evidence/v1.0.1-alpha.0/evidence.json": { ok: true },
+    ".buildchain/release-passport/buildchain.release.json": { release: { tag: "v1.0.1-alpha.0" } },
+    ".buildchain/release-passport/kfd-2.json": { ok: true },
+  });
+  const uploaded = [];
+  const deleted = [];
+  const originalFetch = globalThis.fetch;
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+  globalThis.fetch = async (url, options = {}) => {
+    if (String(url).endsWith("/releases/tags/v1.0.1-alpha.0")) {
+      return new Response(JSON.stringify({ message: "Not Found" }), { status: 404 });
+    }
+    if (String(url).endsWith("/git/ref/tags/v1.0.1-alpha.0")) {
+      return new Response(JSON.stringify({ object: { sha: SHA } }), { status: 200 });
+    }
+    if (String(url).endsWith("/releases") && options.method === "POST") {
+      const body = JSON.parse(options.body);
+      assert.equal(body.prerelease, true);
+      assert.equal(body.make_latest, "false");
+      assert.equal(body.target_commitish, SHA);
+      return new Response(JSON.stringify({ id: 123, html_url: "https://github.test/release" }), { status: 201 });
+    }
+    throw new Error(`unexpected request: ${options.method || "GET"} ${url}`);
+  };
+  const octokit = {
+    rest: {
+      repos: {
+        listReleaseAssets: async () => ({
+          data: [{ id: 7, name: "evidence.json" }],
+        }),
+        deleteReleaseAsset: async ({ asset_id }) => {
+          deleted.push(asset_id);
+          return {};
+        },
+        uploadReleaseAsset: async ({ name, data }) => {
+          uploaded.push({ name, size: data.length });
+          return {};
+        },
+      },
+    },
+  };
+
+  const result = await publishGitHubReleaseEvidence({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    token: "token",
+    apiUrl: "https://api.github.test",
+    tag: "v1.0.1-alpha.0",
+    target: SHA,
+    publishEvidencePath: path.join(cwd, ".buildchain/release-evidence/v1.0.1-alpha.0/evidence.json"),
+    releasePassportPath: path.join(cwd, ".buildchain/release-passport/buildchain.release.json"),
+    releasePassportOutputDir: path.join(cwd, ".buildchain/release-passport"),
+  });
+
+  assert.equal(result.action, "created");
+  assert.equal(result.assetCount, 3);
+  assert.deepEqual(deleted, [7]);
+  assert.deepEqual(uploaded.map((asset) => asset.name), [
+    "evidence.json",
+    "buildchain.release.json",
+    "kfd-2.json",
+  ]);
 });
 
 test("governance maps channel targets to the only legal PR source", () => {

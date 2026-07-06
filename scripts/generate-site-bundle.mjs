@@ -1,8 +1,13 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
+import crypto from "node:crypto";
 import { pathToFileURL } from "node:url";
 import { createBuildchainContractWorld } from "../packages/core/buildchain-contract.js";
+import {
+  BUILDCHAIN_AGENT_MANUALS,
+  createBuildchainKfdClaimRegistry,
+} from "../packages/core/buildchain-kfd-claims.js";
 
 const SITE_BUNDLE_CONTRACT = "kungfu-buildchain-site-bundle";
 const root = path.resolve(import.meta.dirname, "..");
@@ -21,6 +26,13 @@ function stableJson(value) {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
 
+function sha256File(rel) {
+  const filePath = path.join(root, rel);
+  return fs.existsSync(filePath) && fs.statSync(filePath).isFile()
+    ? `sha256:${crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex")}`
+    : "";
+}
+
 function existingJson(filePath) {
   return fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf8") : "";
 }
@@ -32,30 +44,14 @@ function docEntry(id, title, pathName, plane) {
     path: pathName,
     plane,
     exists: fs.existsSync(path.join(root, pathName)),
+    digest: sha256File(pathName),
   };
 }
 
 function buildSiteBundle() {
   const packageJson = readJson("package.json");
   const inventory = readJson("tests/buildchain-inventory.json");
-  const docs = [
-    docEntry("install", "Install and verify Buildchain", "docs/install.md", "use"),
-    docEntry("release-passport", "Release Passport protocol", "docs/release-passport.md", "verify"),
-    docEntry("release-propagation", "Release propagation", "docs/release-propagation.md", "use"),
-    docEntry("binary-distribution", "Binary distribution contract", "docs/binary-distribution.md", "verify"),
-    docEntry("toolkit-observability", "Toolkit observability", "docs/toolkit-observability.md", "use"),
-    docEntry("site-bundle-contract", "Site bundle contract", "docs/site-bundle-contract.md", "use"),
-    docEntry("product-mechanism", "Product mechanism", "docs/product-mechanism.md", "why"),
-    docEntry("cli", "CLI and npm package", "docs/cli.md", "use"),
-    docEntry("lifecycle-protocol", "Lifecycle protocol", "docs/lifecycle-protocol.md", "use"),
-    docEntry("reusable-build-surface", "Reusable build surface", "docs/reusable-build-surface.md", "use"),
-    docEntry("publish-transaction", "Publish transaction", "docs/publish-transaction.md", "verify"),
-    docEntry("release-governance", "Release governance", "docs/release-governance.md", "why"),
-    docEntry("release-flow", "Release flow", "docs/release-flow.md", "verify"),
-    docEntry("versioning", "Versioning", "docs/versioning.md", "why"),
-    docEntry("web-surface-deployments", "Web surface deployments", "docs/web-surface-deployments.md", "use"),
-    docEntry("infra-contract", "Infra Contract", "docs/infra-contract.md", "use"),
-  ];
+  const docs = BUILDCHAIN_AGENT_MANUALS.map((manual) => docEntry(manual.id, manual.title, manual.path, manual.plane));
 
   const cliRegistry = {
     schemaVersion: 1,
@@ -78,6 +74,52 @@ function buildSiteBundle() {
       { id: "npm-dry-run", usage: "buildchain npm dry-run --json", purpose: "Verify npm publish shape before a release transaction." },
       { id: "infra-contract", usage: "buildchain infra-contract --mode validate|ci|plan|contract|propagation-plan|propagation-apply|apply|evidence-bundle", purpose: "Validate and publish provider-neutral infrastructure contract evidence with a mutation-free CI evidence chain, provider command plans, configured provider command execution, saved-plan apply gates, dry-run-first propagation, and lifecycle evidence bundles." },
     ],
+  };
+
+  const manualRegistry = {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-agent-manual-registry",
+    package: packageJson.name,
+    source: "npm package docs/",
+    manuals: docs.map((entry) => ({
+      id: entry.id,
+      title: entry.title,
+      path: entry.path,
+      plane: entry.plane,
+      digest: entry.digest,
+    })),
+    requiredAgentManuals: [
+      "docs/MAP.md",
+      "docs/install.md",
+      "docs/cli.md",
+      "docs/reusable-build-surface.md",
+      "docs/release-candidate.md",
+      "docs/release-governance.md",
+      "docs/release-passport.md",
+      "docs/publish-transaction.md",
+      "docs/site-bundle-contract.md",
+    ],
+    guidance: "Agent consumers should use this registry to find packaged Buildchain manuals before inferring behavior from workflow snippets or release notes.",
+  };
+
+  const nodeApiRegistry = {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-node-api-registry",
+    package: packageJson.name,
+    moduleSystem: packageJson.type || "module",
+    exports: Object.entries(packageJson.exports || {})
+      .filter(([specifier]) => !specifier.startsWith("./site/") && specifier !== "./package.json")
+      .map(([specifier, target]) => ({
+        specifier: specifier === "." ? packageJson.name : `${packageJson.name}/${specifier.replace(/^\.\//, "")}`,
+        export: specifier,
+        target,
+        digest: typeof target === "string" ? sha256File(target.replace(/^\.\//, "")) : "",
+      })),
+    docs: [
+      { id: "cli-and-node-package", path: "docs/cli.md", digest: sha256File("docs/cli.md") },
+      { id: "site-bundle-contract", path: "docs/site-bundle-contract.md", digest: sha256File("docs/site-bundle-contract.md") },
+    ],
+    guidance: "These are the public Node import surfaces shipped by the npm package. Agents should prefer these exports over internal file paths.",
   };
 
   const workflowRegistry = {
@@ -124,6 +166,17 @@ function buildSiteBundle() {
       alphaDistTag: "alpha",
       stableDistTag: "latest",
     },
+    githubRelease: {
+      exactTagRelease: true,
+      prereleaseTags: "semver prerelease tags set prerelease=true and make_latest=false",
+      stableTags: "stable semver tags set make_latest=true",
+      evidenceAssets: [
+        "publish evidence JSON",
+        "buildchain.release.json",
+        "release passport assets",
+      ],
+      owner: "promote-buildchain-ref",
+    },
   };
 
   const artifactSchemas = {
@@ -144,10 +197,13 @@ function buildSiteBundle() {
       "buildchain-site.json",
       "site-manifest.json",
       "cli-registry.json",
+      "manual-registry.json",
+      "node-api-registry.json",
       "workflow-registry.json",
       "release-model.json",
       "artifact-schemas.json",
       "buildchain-contract.json",
+      "kfd-claims.json",
       "product-mechanism.json",
       "release-provenance.json",
       "agent-index.json",
@@ -211,11 +267,14 @@ function buildSiteBundle() {
     docs,
     facts: [
       "cli-registry.json",
+      "manual-registry.json",
+      "node-api-registry.json",
       "workflow-registry.json",
       "release-model.json",
       "artifact-schemas.json",
       "product-mechanism.json",
       "release-provenance.json",
+      "kfd-claims.json",
       "agent-index.json",
     ],
   };
@@ -228,9 +287,12 @@ function buildSiteBundle() {
       "product-mechanism.json",
       "release-model.json",
       "cli-registry.json",
+      "manual-registry.json",
+      "node-api-registry.json",
       "workflow-registry.json",
       "artifact-schemas.json",
       "buildchain-contract.json",
+      "kfd-claims.json",
     ],
     instruction: "Use this bundle as the package-owned fact source for Buildchain pages. Do not infer current release mechanics from prose alone.",
   };
@@ -252,10 +314,13 @@ function buildSiteBundle() {
     "buildchain-site.json": siteBundle,
     "site-manifest.json": siteManifest,
     "cli-registry.json": cliRegistry,
+    "manual-registry.json": manualRegistry,
+    "node-api-registry.json": nodeApiRegistry,
     "workflow-registry.json": workflowRegistry,
     "release-model.json": releaseModel,
     "artifact-schemas.json": artifactSchemas,
     "buildchain-contract.json": createBuildchainContractWorld({ root }),
+    "kfd-claims.json": createBuildchainKfdClaimRegistry({ root }),
     "product-mechanism.json": productMechanism,
     "release-provenance.json": releaseProvenance,
     "agent-index.json": agentIndex,
@@ -263,7 +328,7 @@ function buildSiteBundle() {
 }
 
 export function writeSiteBundle({ check = false } = {}) {
-  const files = buildSiteBundle();
+  let files = buildSiteBundle();
   const mismatches = [];
   for (const [name, value] of Object.entries(files)) {
     const filePath = path.join(outputDir, name);
@@ -272,12 +337,31 @@ export function writeSiteBundle({ check = false } = {}) {
       if (existingJson(filePath) !== next) {
         mismatches.push(path.relative(root, filePath));
       }
-    } else {
-      writeJson(filePath, value);
     }
   }
   if (mismatches.length > 0) {
     throw new Error(`site bundle is stale: ${mismatches.join(", ")}`);
+  }
+  if (!check) {
+    for (let iteration = 0; iteration < 5; iteration += 1) {
+      for (const [name, value] of Object.entries(files)) {
+        writeJson(path.join(outputDir, name), value);
+      }
+      const nextFiles = buildSiteBundle();
+      const stable = Object.entries(nextFiles).every(([name, value]) => (
+        existingJson(path.join(outputDir, name)) === stableJson(value)
+      ));
+      files = nextFiles;
+      if (stable) {
+        break;
+      }
+      if (iteration === 4) {
+        throw new Error("site bundle did not converge after 5 generations");
+      }
+    }
+    for (const [name, value] of Object.entries(files)) {
+      writeJson(path.join(outputDir, name), value);
+    }
   }
   return {
     schemaVersion: 1,

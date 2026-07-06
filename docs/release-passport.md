@@ -204,12 +204,41 @@ machine-bound but only supported by prose downgrade the KFD-2 audit and produce
 a warning, so agents can distinguish "verified", "needs review", and "not
 bound to evidence" without reading release notes.
 
+For Buildchain's own releases, public release claims are not authored in prose
+inside the workflow. The source registry is
+`packages/core/buildchain-kfd-claims.js`, published as
+`dist/site/kfd-claims.json` and exported as
+`@kungfu-tech/buildchain/buildchain-kfd-claims`. During Buildchain promotion,
+`scripts/generate-buildchain-kfd-witnesses.mjs` generates:
+
+- a KFD-1 self contract-world witness for the packaged docs, schemas, workflows,
+  actions, Node exports, and site-consumption facts;
+- one KFD-2 claim JSON per public Buildchain release claim;
+- KFD-3 pre-build and artifact witnesses for the same public collaboration
+  surfaces.
+
+The generated claim set covers Buildchain's KFD release passport support,
+agent-first single source of truth, floating `@v2` contract drift protection,
+semver GitHub Release evidence publication, channel-preserving release
+propagation, and npm publish evidence/finalization. Buildchain self promotion
+passes those files into `promote-buildchain-ref`; `verifyReleasePassport()` then
+fails closed if any claim is missing source bindings, machine evidence, hashes,
+artifact coordinates, verification result, audit boundary, responsibility, or
+residual risk.
+
 ### KFD-3 collaboration-interface release gate
 
 KFD-3 asks a different release question than KFD-1. KFD-1 proves that named
 payload bytes match one contract world. KFD-3 proves that a product's shipped
 participant-facing collaboration/control surface is closed over its declared
 interface.
+
+For Buildchain itself, the declared interface starts in
+`packages/core/buildchain-kfd-claims.js`, not in this Markdown file. The
+registry enumerates public human/agent surfaces across manuals, schema and
+standard metadata, package exports, site-consumption contracts, workflows, and
+actions. `dist/site/kfd-claims.json` is the packaged machine-readable form used
+by downstream sites and by Buildchain's own release passport.
 
 The product remains the fact source. Before build/publish, the product writes a
 pre-build witness:

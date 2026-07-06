@@ -1,11 +1,14 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
+import fs from "node:fs";
+import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseTags, promoteBuildchainRefs } from "./lib.js";
 import {
   explainReleaseLineDryRun,
   formatReleaseLineDryRun,
 } from "../../packages/core/release-line-dry-run.js";
+import { ensureGitHubRelease } from "../../scripts/ensure-github-release.mjs";
 
 function normalizePublishSourceRef(ref = "") {
   return String(ref || "").trim().replace(/^refs\/heads\//, "").replace(/^refs\/tags\//, "");
@@ -90,6 +93,109 @@ export function validateRequiredPublishSourceLock({
   return sourceLockReport;
 }
 
+function assertFile(pathname, label) {
+  if (!pathname || !fs.existsSync(pathname) || !fs.statSync(pathname).isFile()) {
+    throw new Error(`github-release=true requires ${label}, got '${pathname || ""}'`);
+  }
+}
+
+export function collectGitHubReleaseEvidenceAssets({
+  publishEvidencePath = "",
+  releasePassportPath = "",
+  releasePassportOutputDir = "",
+} = {}) {
+  assertFile(publishEvidencePath, "a publish evidence file");
+  assertFile(releasePassportPath, "buildchain.release.json");
+  if (!releasePassportOutputDir || !fs.existsSync(releasePassportOutputDir) || !fs.statSync(releasePassportOutputDir).isDirectory()) {
+    throw new Error(`github-release=true requires a release passport output directory, got '${releasePassportOutputDir || ""}'`);
+  }
+  const assets = [publishEvidencePath];
+  for (const entry of fs.readdirSync(releasePassportOutputDir).sort()) {
+    const candidate = path.join(releasePassportOutputDir, entry);
+    if (fs.statSync(candidate).isFile()) {
+      assets.push(candidate);
+    }
+  }
+  if (assets.length < 2) {
+    throw new Error(`github-release=true found no release passport assets under ${releasePassportOutputDir}`);
+  }
+  return assets;
+}
+
+async function uploadReleaseAssetClobber({ octokit, owner, repo, releaseId, assetPath }) {
+  const name = path.basename(assetPath);
+  const existing = await octokit.rest.repos.listReleaseAssets({
+    owner,
+    repo,
+    release_id: releaseId,
+    per_page: 100,
+  });
+  for (const asset of existing.data || []) {
+    if (asset.name === name) {
+      await octokit.rest.repos.deleteReleaseAsset({
+        owner,
+        repo,
+        asset_id: asset.id,
+      });
+    }
+  }
+  await octokit.rest.repos.uploadReleaseAsset({
+    owner,
+    repo,
+    release_id: releaseId,
+    name,
+    data: fs.readFileSync(assetPath),
+  });
+}
+
+export async function publishGitHubReleaseEvidence({
+  octokit,
+  owner,
+  repo,
+  token,
+  apiUrl,
+  tag,
+  target,
+  title = "",
+  notes = "",
+  publishEvidencePath = "",
+  releasePassportPath = "",
+  releasePassportOutputDir = "",
+} = {}) {
+  if (!tag) {
+    throw new Error("github-release=true requires promote-buildchain-ref to output transaction-exact-tag");
+  }
+  const assets = collectGitHubReleaseEvidenceAssets({
+    publishEvidencePath,
+    releasePassportPath,
+    releasePassportOutputDir,
+  });
+  const release = await ensureGitHubRelease({
+    apiUrl,
+    token,
+    repository: `${owner}/${repo}`,
+    tag,
+    title: title || tag,
+    notes: notes || `Buildchain release passport assets for ${tag}.`,
+    target,
+  });
+  for (const assetPath of assets) {
+    await uploadReleaseAssetClobber({
+      octokit,
+      owner,
+      repo,
+      releaseId: release.release.id,
+      assetPath,
+    });
+  }
+  return {
+    action: release.action,
+    url: release.release.html_url || "",
+    tag,
+    assetCount: assets.length,
+  };
+}
+
 async function main() {
   const token = core.getInput("token", { required: true });
   const sha = core.getInput("sha", { required: true });
@@ -130,6 +236,9 @@ async function main() {
   const releasePassportKfd3PrebuildWitnessJsons = core.getInput("release-passport-kfd-3-prebuild-witness-jsons");
   const releasePassportKfd3ArtifactWitnessJsons = core.getInput("release-passport-kfd-3-artifact-witness-jsons");
   const releasePassportKfd3ArtifactVerifyCommand = core.getInput("release-passport-kfd-3-artifact-verify-command");
+  const githubRelease = core.getBooleanInput("github-release");
+  const githubReleaseTitle = core.getInput("github-release-title");
+  const githubReleaseNotes = core.getInput("github-release-notes");
   const promoteOnlyReleaseCandidate = core.getBooleanInput("promote-only-release-candidate");
   const releaseCandidatePassportPath = core.getInput("release-candidate-passport-path");
   const releaseCandidateBuildSummaryPath = core.getInput("release-candidate-build-summary-path");
@@ -225,6 +334,32 @@ async function main() {
     "finalization-needed",
     String(result.publishTransaction?.finalizationNeeded === true),
   );
+  let githubReleaseResult;
+  if (githubRelease && !dryRun) {
+    if (result.publishTransaction?.state === "complete" && result.publishTransaction?.finalizationNeeded !== true) {
+      githubReleaseResult = await publishGitHubReleaseEvidence({
+        octokit,
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+        token,
+        apiUrl: process.env.GITHUB_API_URL || "https://api.github.com",
+        tag: result.publishTransaction?.exactTag || "",
+        target: result.publishTransaction?.releaseSha || sha,
+        title: githubReleaseTitle,
+        notes: githubReleaseNotes,
+        publishEvidencePath: result.publishTransaction?.evidencePath || "",
+        releasePassportPath: result.publishTransaction?.releasePassportPath || "",
+        releasePassportOutputDir: result.publishTransaction?.releasePassportOutputDir || "",
+      });
+      core.info(`github release ${githubReleaseResult.action}: ${githubReleaseResult.tag} (${githubReleaseResult.assetCount} assets)`);
+    } else {
+      core.info(
+        `github-release=true is waiting for a complete release transaction before creating or updating the exact-tag GitHub Release; transaction-state=${result.publishTransaction?.state || ""} finalization-needed=${result.publishTransaction?.finalizationNeeded === true}`,
+      );
+    }
+  }
+  core.setOutput("github-release-url", githubReleaseResult?.url || "");
+  core.setOutput("github-release-action", githubReleaseResult?.action || "");
   core.setOutput(
     "tags",
     result.updates
