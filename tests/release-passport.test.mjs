@@ -87,6 +87,19 @@ function createKfd3WitnessFixture({
   fs.mkdirSync(assetsDir, { recursive: true });
   fs.writeFileSync(path.join(assetsDir, "kungfu-package.tgz"), "package\n");
   const metadata = resolveKfd3Metadata({ requireSchemas: true });
+  const riskDefinedBy = "https://kfd.libkungfu.dev/schemas/kfd-2/trust-taxonomy.schema.json#/$defs/residualRisk";
+  const normalizeFixtureRisk = (entry) => ({
+    id: typeof entry === "string" ? entry : entry.id,
+    definedBy: entry.definedBy || riskDefinedBy,
+    riskType: entry.riskType || "partial-machine-coverage-risk",
+    trustImpact: entry.trustImpact || "downgrade-warning",
+    machineProvability: entry.machineProvability || "not-exhaustively-enumerable",
+    agentAction: entry.agentAction || "semantic-review-required",
+    reason: entry.reason || "Non-exhaustive surface remains outside the declared reverse audit boundary.",
+    owner: entry.owner || "Kungfu",
+    kind: entry.kind,
+  });
+  const normalizedNonExhaustiveSurfaces = nonExhaustiveSurfaces.map(normalizeFixtureRisk);
   const prebuildWitnessPath = writeJson(path.join(cwd, "kfd-3-prebuild.json"), {
     id: "kungfu-agent-bridge",
     standard: metadata.key,
@@ -134,14 +147,10 @@ function createKfd3WitnessFixture({
       closure: {
         classificationMode: "closed-world",
         unclassifiedEntrypointsPolicy: "fail",
-        nonExhaustivelyEnumerableSurfaces: nonExhaustiveSurfaces,
+        nonExhaustivelyEnumerableSurfaces: normalizedNonExhaustiveSurfaces,
       },
     },
-    residualRisk: nonExhaustiveSurfaces.map((entry) => ({
-      id: typeof entry === "string" ? entry : entry.id,
-      reason: "Non-exhaustive surface remains outside the declared reverse audit boundary.",
-      owner: "Kungfu",
-    })),
+    residualRisk: normalizedNonExhaustiveSurfaces,
     responsibility: {
       registryFactsOwner: "Kungfu",
       artifactVerificationOwner: "Kungfu agent verify",
@@ -873,6 +882,11 @@ test("release passport supports KFD repository self contract verification", asyn
       residualRisk: [
         {
           id: "prose-interpretation",
+          definedBy: "https://kfd.libkungfu.dev/schemas/kfd-2/trust-taxonomy.schema.json#/$defs/residualRisk",
+          riskType: "natural-language-semantic-risk",
+          trustImpact: "downgrade-warning",
+          machineProvability: "not-machine-verifiable",
+          agentAction: "semantic-review-required",
           reason: "Natural-language standard interpretation remains reviewed but not byte-enumerable.",
           owner: "KFD maintainers",
         },
@@ -1002,6 +1016,17 @@ test("release passport supports KFD repository self-verification surfaces", asyn
   fs.mkdirSync(assetsDir, { recursive: true });
   fs.writeFileSync(path.join(assetsDir, "kfd-package.tgz"), "package\n");
   const metadata = resolveKfd3Metadata({ requireSchemas: true });
+  const riskDefinedBy = "https://kfd.libkungfu.dev/schemas/kfd-2/trust-taxonomy.schema.json#/$defs/residualRisk";
+  const semanticRisk = {
+    id: "human-language-interpretation",
+    definedBy: riskDefinedBy,
+    riskType: "natural-language-semantic-risk",
+    trustImpact: "downgrade-warning",
+    machineProvability: "not-machine-verifiable",
+    agentAction: "semantic-review-required",
+    reason: "Natural-language standard interpretation cannot be fully enumerated from package bytes.",
+    owner: "KFD maintainers",
+  };
   const groupedSurfaces = {
     docs: [{ id: "docs:kfd-3", sourcePath: "docs/KFD-3.md" }],
     schemas: [{ id: "schema:kfd-3-witness", sourcePath: "schemas/kfd-3-witness.schema.json" }],
@@ -1040,21 +1065,14 @@ test("release passport supports KFD repository self-verification surfaces", asyn
         unclassifiedEntrypointsPolicy: "fail",
         nonExhaustivelyEnumerableSurfaces: [
           {
-            id: "human-language-interpretation",
+            ...semanticRisk,
             kind: "semantic-risk",
             reason: "Natural-language standard interpretation is reviewed but not exhaustively enumerable.",
-            owner: "KFD maintainers",
           },
         ],
       },
     },
-    residualRisk: [
-      {
-        id: "human-language-interpretation",
-        reason: "Natural-language standard interpretation cannot be fully enumerated from package bytes.",
-        owner: "KFD maintainers",
-      },
-    ],
+    residualRisk: [semanticRisk],
     responsibility: {
       registryFactsOwner: "KFD",
       artifactVerificationOwner: "KFD package self-verification",
@@ -1471,6 +1489,44 @@ test("release passport downgrades a public KFD-2 claim that is machine-bound but
   assert.equal(report.issues.some((entry) => entry.level === "warning" && entry.code.includes("kfd-2")), true);
 });
 
+test("release passport fails closed when a KFD-2 downgrade reason uses an unknown taxonomy value", () => {
+  const { cwd, assetsDir, actualSha256 } = createKfdWitnessFixture();
+  const claimPath = writeJson(path.join(cwd, "kfd-2-claim.json"), {
+    id: "claim:kfd-private-downgrade-taxonomy",
+    public: true,
+    claim: "KFD release trust is downgraded by a taxonomy value not owned by KFD.",
+    sourceBindings: [{ path: "docs/KFD-2.md", sha256: actualSha256 }],
+    machineEvidence: [{ path: "release-notes.md", sha256: actualSha256 }],
+    hashes: { sourceSha256: actualSha256, evidenceSha256: actualSha256 },
+    artifacts: [{ name: "generic.schema", path: "config.schema.json", sha256: actualSha256 }],
+    verification: { result: "passed" },
+    auditBoundary: { scope: "release notes" },
+    responsibility: { owner: "KFD maintainers" },
+    residualRisk: [],
+    downgradeReason: {
+      id: "private-taxonomy-value",
+      riskType: "local-private-risk",
+      trustImpact: "downgrade-warning",
+      reason: "This intentionally uses a taxonomy value outside KFD.",
+    },
+  });
+
+  assert.throws(() => collectGitHubReleasePassport({
+    cwd,
+    tag: "v1.0.0-alpha.3",
+    repository: "kungfu-systems/kfd",
+    productName: "KFD",
+    sourceSha: "d".repeat(40),
+    assetsDir: path.relative(cwd, assetsDir),
+    outputDir: "release-passport",
+    releaseJsonExtra: JSON.stringify({
+      channel: "alpha",
+      targetRef: "alpha/v1/v1.0",
+    }),
+    kfd2ClaimJsons: [claimPath],
+  }), /local-private-risk|unknown taxonomy values fail validation|github.com\/kungfu-systems\/kfd\/issues\/new/);
+});
+
 test("release passport fails closed when a KFD-3-derived KFD-2 claim lacks a trust proof", async () => {
   const { cwd, assetsDir, actualSha256 } = createKfdWitnessFixture();
   const claimPath = writeJson(path.join(cwd, "kfd-2-claim.json"), {
@@ -1542,6 +1598,81 @@ test("release passport records KFD-3 residual risk without claiming full closure
     "user-scripts",
   );
   assert.notEqual(passport[metadata.key].collaborationInterfaces[0].releaseStatus, "enforced");
+});
+
+test("release passport fails closed when KFD-3 prebuild residual risk lacks taxonomy fields", () => {
+  const { cwd, assetsDir, prebuildWitnessPath, artifactWitnessPath } = createKfd3WitnessFixture();
+  const prebuild = JSON.parse(fs.readFileSync(prebuildWitnessPath, "utf8"));
+  prebuild.extensionRequests = [
+    {
+      id: "taxonomy-extension",
+      participants: ["agent", "maintainer"],
+      trigger: "KFD-2 trust taxonomy lacks the value needed by this KFD-3 witness.",
+      requestPath: {
+        kind: "github-issue",
+        target: "https://github.com/kungfu-systems/kfd",
+        template: "https://github.com/kungfu-systems/kfd/issues/new?title=KFD-2%20trust%20taxonomy%20extension%20request",
+      },
+    },
+  ];
+  prebuild.residualRisk = [
+    {
+      id: "missing-taxonomy",
+      reason: "This risk intentionally omits KFD-2 taxonomy fields.",
+      owner: "KFD maintainers",
+    },
+  ];
+  writeJson(prebuildWitnessPath, prebuild);
+
+  assert.throws(() => collectGitHubReleasePassport({
+    cwd,
+    tag: "v4.0.0-alpha.0",
+    repository: "kungfu-systems/kungfu",
+    productName: "Kungfu",
+    sourceSha: "d".repeat(40),
+    assetsDir: path.relative(cwd, assetsDir),
+    outputDir: "release-passport",
+    releaseJsonExtra: JSON.stringify({
+      channel: "alpha",
+      targetRef: "alpha/v4/v4.0",
+    }),
+    kfd3PrebuildWitnessJsons: [prebuildWitnessPath],
+    kfd3ArtifactWitnessJsons: [artifactWitnessPath],
+  }), /missing-taxonomy|riskType|github.com\/kungfu-systems\/kfd\/issues\/new/);
+});
+
+test("release passport fails closed when KFD-3 artifact residual risk uses an unknown taxonomy value", () => {
+  const { cwd, assetsDir, prebuildWitnessPath, artifactWitnessPath } = createKfd3WitnessFixture();
+  const artifact = JSON.parse(fs.readFileSync(artifactWitnessPath, "utf8"));
+  artifact.residualRisk = [
+    {
+      id: "unknown-artifact-risk",
+      definedBy: "https://kfd.libkungfu.dev/schemas/kfd-2/trust-taxonomy.schema.json#/$defs/residualRisk",
+      riskType: "local-private-risk",
+      trustImpact: "downgrade-warning",
+      machineProvability: "not-machine-verifiable",
+      agentAction: "open-kfd-extension-issue",
+      reason: "This intentionally uses a value not owned by KFD.",
+      owner: "KFD maintainers",
+    },
+  ];
+  writeJson(artifactWitnessPath, artifact);
+
+  assert.throws(() => collectGitHubReleasePassport({
+    cwd,
+    tag: "v4.0.0-alpha.0",
+    repository: "kungfu-systems/kungfu",
+    productName: "Kungfu",
+    sourceSha: "d".repeat(40),
+    assetsDir: path.relative(cwd, assetsDir),
+    outputDir: "release-passport",
+    releaseJsonExtra: JSON.stringify({
+      channel: "alpha",
+      targetRef: "alpha/v4/v4.0",
+    }),
+    kfd3PrebuildWitnessJsons: [prebuildWitnessPath],
+    kfd3ArtifactWitnessJsons: [artifactWitnessPath],
+  }), /local-private-risk|unknown taxonomy values fail validation|github.com\/kungfu-systems\/kfd\/issues\/new/);
 });
 
 test("release passport can collect KFD-3 artifact witness from product verify command", async () => {
