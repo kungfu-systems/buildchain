@@ -230,6 +230,14 @@ function cdnWildcardPath(value) {
   return normalized ? `/${normalized}/*` : "/*";
 }
 
+function viewerWildcardPath(binding) {
+  try {
+    return cdnWildcardPath(new URL(binding.url).pathname);
+  } catch {
+    return cdnWildcardPath(binding.objectPrefix);
+  }
+}
+
 function syncStaticArtifactArgs({ artifactRoot, bucket, objectPrefix }) {
   const args = ["s3", "sync", artifactRoot, s3Uri(bucket, objectPrefix), "--delete"];
   if (!objectPrefix) {
@@ -755,7 +763,7 @@ export function applyWebSurfaceDeploy({
   const primaryBinding = bindings[0] || {};
   const objectPrefix = primaryBinding.objectPrefix || objectPrefixFor(deployConfig, resolvedPlan.manifest.alias || resolvedPlan.manifest.channel);
   const manifestKey = primaryBinding.manifestKey || deployManifestKey(deployConfig, resolvedPlan.manifest);
-  const invalidationPaths = bindings.flatMap((binding) => [cdnWildcardPath(binding.objectPrefix), cdnPath(binding.manifestKey)]);
+  const invalidationPaths = bindings.flatMap((binding) => [viewerWildcardPath(binding), cdnPath(binding.manifestKey)]);
   const operationResults = runAdapterOperations({ operations, dryRun, commandRunner });
   return {
     schemaVersion: 1,
@@ -1177,7 +1185,7 @@ function deployBindingOperations({ artifactRoot, deployConfig, manifest, binding
         "--distribution-id",
         distribution,
         "--paths",
-        cdnWildcardPath(binding.objectPrefix),
+        viewerWildcardPath(binding),
         cdnPath(binding.manifestKey),
       ],
     });
@@ -1414,7 +1422,7 @@ function cleanupEntryOperations({ deployConfig, entry, bucket }) {
           "--distribution-id",
           distribution,
           "--paths",
-          `${cdnPath(binding.objectPrefix)}/*`,
+          viewerWildcardPath(binding),
           cdnPath(binding.manifestKey),
         ],
       });
