@@ -153,6 +153,25 @@ test("contract world exposes KFD-3 collaboration-interface release gate", () => 
     surface.breakingDefaults.releaseGateContract,
     "kungfu-buildchain-kfd-3-collaboration-interface-release-gate",
   );
+  assert.match(surface.guarantees.join("\n"), /releaseStatus, witness hashes/);
+});
+
+test("contract world exposes KFD-2 release trust passport audit", () => {
+  const contract = createBuildchainContractWorld({
+    root: path.resolve(import.meta.dirname, ".."),
+    packageJson: { name: "@kungfu-tech/buildchain", version: "2.8.0" },
+  });
+  const surface = contract.surfaces.find((entry) => (
+    entry.id === "kfd-2-release-trust-passport-audit"
+  ));
+
+  assert.ok(surface);
+  assert.match(surface.requiredInputs.join("\n"), /public release claim evidence/);
+  assert.equal(
+    surface.breakingDefaults.releaseTrustPassportContract,
+    "kungfu-buildchain-kfd-2-release-trust-passport-audit",
+  );
+  assert.match(surface.guarantees.join("\n"), /Unbound public claims fail/i);
 });
 
 test("write-lock records resolved SHA and contract digest", () => {

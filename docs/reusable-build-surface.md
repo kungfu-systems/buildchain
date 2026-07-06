@@ -506,9 +506,13 @@ payload artifacts from the same PR-stage run, validates the payload count,
 compares the built tree with the promotion channel tree, locks
 `publish-gate/{alpha,release,major}` to the promotion channel commit, and then
 calls `actions/promote-buildchain-ref` with
-`promote-only-release-candidate: "true"`. It does not call `.build.yml`, does
-not create a matrix, and must fail before publish if the RC evidence or payload
-set is missing or ambiguous.
+`promote-only-release-candidate: "true"` and
+`require-publish-source-lock: "true"`. The wrapper passes the created
+`publish-gate/*` ref, target SHA, and `locked=true` into the promote action, so
+floating `@v2` consumers receive publish-side source-lock drift protection by
+default. It does not call `.build.yml`, does not create a matrix, and must fail
+before publish if the RC evidence, payload set, or source-lock ref is missing or
+ambiguous.
 
 ```yaml
 jobs:

@@ -214,6 +214,12 @@ contract-world witness JSON paths when released artifacts must prove
 byte-for-byte KFD contract surfaces. Buildchain imports the KFD metadata from
 `@kungfu-tech/kfd`, freezes the witness, verifies artifact bytes, and writes the
 result under the KFD-provided `kfd-1` passport section.
+Set `release-passport-kfd-2-claim-jsons` to newline-separated KFD-2 public
+release trust claim JSON paths when a release makes additional human/agent
+visible claims. Buildchain requires each public claim to bind declared sources,
+machine-readable evidence, hashes, artifact coordinates, verification results,
+audit boundary, responsibility state, and residual risk. Unbound claims fail
+passport verification; prose-only claims downgrade the KFD-2 audit.
 Set `release-passport-kfd-3-prebuild-witness-jsons` to newline-separated KFD-3
 collaboration-interface pre-build witness paths, then provide artifact-side
 evidence with `release-passport-kfd-3-artifact-witness-jsons` or a

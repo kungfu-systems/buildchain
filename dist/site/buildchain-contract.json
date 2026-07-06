@@ -73,6 +73,7 @@
         "release-candidate-workflow-name",
         "publish-required-artifacts-json",
         "release-passport-kfd-1-witness-jsons",
+        "release-passport-kfd-2-claim-jsons",
         "release-passport-kfd-3-prebuild-witness-jsons",
         "release-passport-kfd-3-artifact-witness-jsons",
         "release-passport-kfd-3-artifact-verify-command",
@@ -83,10 +84,11 @@
         "promotion reuses PR-stage release-candidate artifacts",
         "promotion does not run the heavy native build matrix",
         "built source and promotion channel SHA are recorded separately",
-        "contract drift is checked before release-candidate resolution and publish"
+        "contract drift is checked before release-candidate resolution and publish",
+        "publish-gate source locks are created by the wrapper and enforced by promote-buildchain-ref before publish side effects"
       ],
-      "breakingDigest": "sha256:b8a5f8b1e89b6a7d17f546eb79b1eabb389d74af2277f3d69df661549c3a8632",
-      "auditDigest": "sha256:1fd9d0e9a423357ef3f9b8678503e03b2451667a958520546a845a1dd5d40c5e"
+      "breakingDigest": "sha256:1c27595adaa8fbc334b3f7f66605e4544cb8c60ce81a9bb7ee94d6ede93c65ac",
+      "auditDigest": "sha256:6602010eedc9e32f6ac14605a24bc6033a95f941fa348aa7921b8e759e12ccb6"
     },
     {
       "contractVersion": 1,
@@ -113,16 +115,18 @@
         "publish-required-artifacts-json",
         "promote-only-release-candidate",
         "release-passport-kfd-1-witness-jsons",
+        "release-passport-kfd-2-claim-jsons",
         "release-passport-kfd-3-prebuild-witness-jsons",
         "release-passport-kfd-3-artifact-witness-jsons",
         "release-passport-kfd-3-artifact-verify-command"
       ],
       "guarantees": [
         "protected release refs and durable release-state are finalized by Buildchain",
-        "release passport finalization is idempotent after publish side effects"
+        "release passport finalization is idempotent after publish side effects",
+        "publish transactions can require a resolved publish-gate source lock to prevent floating-ref drift"
       ],
-      "breakingDigest": "sha256:9da3a56d40db3941a492f965b65434d5674e5ac0f66be972a97f405ba50110b0",
-      "auditDigest": "sha256:8a80eb264f55801666cbe763e16c489bed1ca0ba3d4663e2403fa5d45ef14095"
+      "breakingDigest": "sha256:fca97ba00248ed436695f12f8fc44404458af462e666aa7b69b4315b32705bdd",
+      "auditDigest": "sha256:014233a4add8a01fbccc40c86821c54d3aa12cd3b1158423ac88cb0e45a352a8"
     },
     {
       "contractVersion": 1,
@@ -181,7 +185,7 @@
         "release-state SHA is recorded as a durable audit entrance"
       ],
       "breakingDigest": "sha256:b627e1b2ece9b6049517a942c5139e342e6077cdd3d8962d61cef8481b1f70ad",
-      "auditDigest": "sha256:57b3ea3fd92200aebb73076ef67aa8c38b929b2952100dff5b4f038dc59a6c3c"
+      "auditDigest": "sha256:9668f3e01cfe8ce5b94ebdda24aeeaddbd609d8f4cc7cca33d82cbc59aae66f5"
     },
     {
       "contractVersion": 1,
@@ -202,10 +206,35 @@
       },
       "guarantees": [
         "KFD-1 witnesses must include at least one artifact byte surface",
-        "artifact bytes are sha256 checked before passport finalization succeeds"
+        "artifact bytes are sha256 checked before passport finalization succeeds",
+        "KFD self contract witnesses record source/artifact hashes, self-hosting boundary, and responsibility state"
       ],
-      "breakingDigest": "sha256:a9ae5a8b523cd0c2d846a6a77a8317d9dfaa4e4bb1457e1f6c021ea7eae855db",
-      "auditDigest": "sha256:b0879b6157833e17e8e52ff6dc53ebbf44bdf2bb01ae3e8117a5cd0ccdc410fe"
+      "breakingDigest": "sha256:f46c1f67b94957ad956cf70db59a73fd5690bd67c91edf9c2d0eb8f3d1e3cf8d",
+      "auditDigest": "sha256:6a99ee108c385837ee9f1dbb75848f6ea434b6474977e6e567ae81f8fc9a555c"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "kfd-2-release-trust-passport-audit",
+      "kind": "schema",
+      "path": "packages/core/release-passport.js",
+      "requiredInputs": [
+        "public release claim evidence"
+      ],
+      "requiredOutputs": [
+        "kfd-2 release trust passport audit"
+      ],
+      "breakingDefaults": {
+        "releaseTrustPassportContract": "kungfu-buildchain-kfd-2-release-trust-passport-audit"
+      },
+      "guarantees": [
+        "public release claims must bind declared sources, machine evidence, hashes, artifacts, verification, audit boundary, responsibility, and residual risk",
+        "unbound public claims fail release passport verification",
+        "prose-only public claims downgrade the release trust passport audit"
+      ],
+      "breakingDigest": "sha256:f0b636eb925ddbf45ff1a8872454ab7b4dd98857cac12bb75217830130e62a16",
+      "auditDigest": "sha256:9668f3e01cfe8ce5b94ebdda24aeeaddbd609d8f4cc7cca33d82cbc59aae66f5"
     },
     {
       "contractVersion": 1,
@@ -229,10 +258,12 @@
       "guarantees": [
         "KFD-3 pre-build witnesses must declare participant-facing public surfaces",
         "artifact witnesses must not expose undeclared public participant-facing surfaces",
-        "collaborationInterface.digest mismatches fail passport verification"
+        "collaborationInterface.digest mismatches fail passport verification",
+        "KFD repository self-verification can declare docs, schemas, standards metadata, package exports, and site-consumption contracts",
+        "KFD-3 passports expose releaseStatus, witness hashes, declared capability verification, reverse audit boundary, residual risk, and responsibility state"
       ],
-      "breakingDigest": "sha256:3bb160a01e89fa2739506969e56d3f8bb9f7ae3c0c9d575a148b3e3b6abfa7ad",
-      "auditDigest": "sha256:b0879b6157833e17e8e52ff6dc53ebbf44bdf2bb01ae3e8117a5cd0ccdc410fe"
+      "breakingDigest": "sha256:33654f3444c893754aacc42dde3051f0a371bd17c6ef7c657c579a07159cd7c1",
+      "auditDigest": "sha256:6a99ee108c385837ee9f1dbb75848f6ea434b6474977e6e567ae81f8fc9a555c"
     },
     {
       "contractVersion": 1,
@@ -259,9 +290,9 @@
         "CLI commands are stable within the major line unless the contract major changes"
       ],
       "breakingDigest": "sha256:097db3e67509bedda8c6548bf1edfbfcf57f7b5510520b6a7b7e078d7ec087c8",
-      "auditDigest": "sha256:4ae71db454a7e08f7ce572c9904733d978aa31fa3f13b9456e860818ef212eea"
+      "auditDigest": "sha256:478e656104272675d3be3391158251472e0c2515b3113376ef0e52757b47ace0"
     }
   ],
-  "compatibilityDigest": "sha256:282a42fe4b27fcf213f30bba0c69c89f8cc86e5c25aa48b6ea0509d38f928c68",
-  "contractDigest": "sha256:87688c5cef8e5563f3f741e950225c0c70a7cd35a6c81d2b7e49e458eca79f6f"
+  "compatibilityDigest": "sha256:ca668f3f73ab0d84db0d489efccf6cd556704b069990a37a0c6c77a6519f754b",
+  "contractDigest": "sha256:f072fa260c2f1f27a670246142045df0160fc0bbe7838cc7f0e206c7cf51b107"
 }

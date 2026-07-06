@@ -5,8 +5,8 @@
     "ref": "v2",
     "resolvedSha": "a4b2c391443d24349ac83cfe26642ce08108ae7d",
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "contractDigest": "sha256:87688c5cef8e5563f3f741e950225c0c70a7cd35a6c81d2b7e49e458eca79f6f",
-    "compatibilityDigest": "sha256:282a42fe4b27fcf213f30bba0c69c89f8cc86e5c25aa48b6ea0509d38f928c68",
+    "contractDigest": "sha256:f072fa260c2f1f27a670246142045df0160fc0bbe7838cc7f0e206c7cf51b107",
+    "compatibilityDigest": "sha256:ca668f3f73ab0d84db0d489efccf6cd556704b069990a37a0c6c77a6519f754b",
     "majorLine": "v2",
     "compatibilityPolicy": "major-compatible",
     "acceptedAt": "2026-07-06T00:00:00.000Z",
@@ -19,12 +19,12 @@
       {
         "id": "release-candidate-promote",
         "kind": "workflow",
-        "breakingDigest": "sha256:b8a5f8b1e89b6a7d17f546eb79b1eabb389d74af2277f3d69df661549c3a8632"
+        "breakingDigest": "sha256:1c27595adaa8fbc334b3f7f66605e4544cb8c60ce81a9bb7ee94d6ede93c65ac"
       },
       {
         "id": "promote-buildchain-ref-action",
         "kind": "action",
-        "breakingDigest": "sha256:9da3a56d40db3941a492f965b65434d5674e5ac0f66be972a97f405ba50110b0"
+        "breakingDigest": "sha256:fca97ba00248ed436695f12f8fc44404458af462e666aa7b69b4315b32705bdd"
       },
       {
         "id": "report-buildchain-issue-action",
@@ -39,12 +39,17 @@
       {
         "id": "kfd-1-release-gate",
         "kind": "schema",
-        "breakingDigest": "sha256:a9ae5a8b523cd0c2d846a6a77a8317d9dfaa4e4bb1457e1f6c021ea7eae855db"
+        "breakingDigest": "sha256:f46c1f67b94957ad956cf70db59a73fd5690bd67c91edf9c2d0eb8f3d1e3cf8d"
+      },
+      {
+        "id": "kfd-2-release-trust-passport-audit",
+        "kind": "schema",
+        "breakingDigest": "sha256:f0b636eb925ddbf45ff1a8872454ab7b4dd98857cac12bb75217830130e62a16"
       },
       {
         "id": "kfd-3-collaboration-interface-release-gate",
         "kind": "schema",
-        "breakingDigest": "sha256:3bb160a01e89fa2739506969e56d3f8bb9f7ae3c0c9d575a148b3e3b6abfa7ad"
+        "breakingDigest": "sha256:33654f3444c893754aacc42dde3051f0a371bd17c6ef7c657c579a07159cd7c1"
       },
       {
         "id": "buildchain-cli",

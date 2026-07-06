@@ -372,10 +372,17 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-passport-impact-json: \$\{\{ inputs\.release-passport-impact-json \}\}/);
   assert.match(workflow, /release-passport-kfd-1-witness-jsons:/);
   assert.match(workflow, /release-passport-kfd-1-witness-jsons: \$\{\{ inputs\.release-passport-kfd-1-witness-jsons \}\}/);
+  assert.match(workflow, /release-passport-kfd-2-claim-jsons:/);
+  assert.match(workflow, /release-passport-kfd-2-claim-jsons: \$\{\{ inputs\.release-passport-kfd-2-claim-jsons \}\}/);
   assert.match(workflow, /release-passport-kfd-3-prebuild-witness-jsons:/);
   assert.match(workflow, /release-passport-kfd-3-prebuild-witness-jsons: \$\{\{ inputs\.release-passport-kfd-3-prebuild-witness-jsons \}\}/);
   assert.match(workflow, /release-passport-kfd-3-artifact-witness-jsons:/);
   assert.match(workflow, /release-passport-kfd-3-artifact-verify-command:/);
+  assert.match(workflow, /core\.setOutput\("locked", "true"\)/);
+  assert.match(workflow, /require-publish-source-lock: "true"/);
+  assert.match(workflow, /publish-source-ref: \$\{\{ steps\.publish-gate\.outputs\.ref \}\}/);
+  assert.match(workflow, /publish-source-sha: \$\{\{ steps\.publish-gate\.outputs\.sha \}\}/);
+  assert.match(workflow, /publish-source-locked: \$\{\{ steps\.publish-gate\.outputs\.locked \}\}/);
   assert.match(workflow, /BUILDCHAIN_ARTIFACT_NAME: \$\{\{ inputs\.artifact-name \}\}/);
   assert.match(workflow, /BUILDCHAIN_ARTIFACT_PATTERNS: \$\{\{ inputs\.artifact-patterns \}\}/);
   assert.match(workflow, /BUILDCHAIN_RC_WORKFLOW_FILE: \$\{\{ inputs\.release-candidate-workflow-file \}\}/);
@@ -401,6 +408,29 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.doesNotMatch(workflow, /build-native:/);
   assert.doesNotMatch(workflow, /build-linux-container:/);
   assert.doesNotMatch(workflow, /fromJSON\(needs\.resolve-contract\.outputs/);
+});
+
+test("legacy release workflows fail closed instead of bypassing publish-gate source locks", () => {
+  const retiredReleaseWorkflows = [
+    ".release-new-version.yml",
+    ".release-elastic-beanstalk.yml",
+    ".sam-release.yml",
+    ".wheel-release.yml",
+  ];
+  for (const workflowName of retiredReleaseWorkflows) {
+    const workflow = fs.readFileSync(
+      path.join(root, ".github/workflows", workflowName),
+      "utf8",
+    );
+    assert.match(workflow, /release path is retired/);
+    assert.match(workflow, /release-candidate-promote\.yml@v2/);
+    assert.match(workflow, /publish-gate source-lock enforcement/);
+    assert.doesNotMatch(workflow, /npm publish --access=public/);
+    assert.doesNotMatch(workflow, /actions\/publish-prebuilt@v2/);
+    assert.doesNotMatch(workflow, /actions\/bump-version@v2/);
+    assert.doesNotMatch(workflow, /beanstalk-deploy@/);
+    assert.doesNotMatch(workflow, /sam deploy/);
+  }
 });
 
 test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
@@ -881,16 +911,19 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(action, /release-candidate-passport-path:/);
   assert.match(action, /release-candidate-build-summary-path:/);
   assert.match(action, /release-passport-kfd-1-witness-jsons:/);
+  assert.match(action, /release-passport-kfd-2-claim-jsons:/);
   assert.match(action, /release-passport-kfd-3-prebuild-witness-jsons:/);
   assert.match(action, /release-passport-kfd-3-artifact-witness-jsons:/);
   assert.match(action, /release-passport-kfd-3-artifact-verify-command:/);
   assert.match(implementation, /promoteOnlyReleaseCandidate/);
   assert.match(implementation, /releasePassportKfd1WitnessJsons/);
+  assert.match(implementation, /releasePassportKfd2ClaimJsons/);
   assert.match(implementation, /releasePassportKfd3PrebuildWitnessJsons/);
   assert.match(implementation, /releasePassportKfd3ArtifactWitnessJsons/);
   assert.match(implementation, /releasePassportKfd3ArtifactVerifyCommand/);
   assert.match(docs, /promote-only-release-candidate: "true"/);
   assert.match(docs, /release-passport-kfd-1-witness-jsons/);
+  assert.match(docs, /release-passport-kfd-2-claim-jsons/);
   assert.match(docs, /release-passport-kfd-3-prebuild-witness-jsons/);
 });
 

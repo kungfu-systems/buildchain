@@ -30,6 +30,13 @@ and the legacy `.release-new-version.yml` path is not the modern publish
 surface. New publish integrations should use `.build.yml`, `buildchain.toml`,
 `lifecycle.publish`, and publish transaction evidence.
 
+Release templates that previously performed direct publishing or deployment are
+now fail-closed when retained for compatibility discovery. They do not call
+legacy publish actions, `npm publish`, or deploy providers directly. Callers must
+migrate to `release-candidate-promote.yml@v2` or a project-owned
+`lifecycle.publish` command behind a publish-gate source lock, so floating
+`@v2` consumers cannot bypass source-lock drift protection.
+
 ## Migrated Actions
 
 No standalone `action-*` repository is shipped as a Buildchain action anymore.
@@ -73,6 +80,10 @@ These legacy workflow entrypoints are intentionally not shipped from the root
 | Previous workflow | Reason |
 | --- | --- |
 | `.batch-pull-request.yml` | retired PR orchestration helper; v2.5 dev integration governance will use a new protected-dev PR protocol instead |
+| `.release-new-version.yml` | retained as a fail-closed compatibility stub; direct publish model replaced by source-locked release-candidate promotion |
+| `.release-elastic-beanstalk.yml` | retained as a fail-closed compatibility stub; deploy side effects must move behind project lifecycle publish and publish-gate source locks |
+| `.sam-release.yml` | retained as a fail-closed compatibility stub; deploy side effects must move behind project lifecycle publish and publish-gate source locks |
+| `.wheel-release.yml` | retained as a fail-closed compatibility stub; package publish side effects must move behind project lifecycle publish and publish-gate source locks |
 
 ## Buildchain-Native Actions
 

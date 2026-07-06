@@ -123,6 +123,7 @@ export function createBuildchainContractWorld({ root = process.cwd(), packageJso
         "release-candidate-workflow-name",
         "publish-required-artifacts-json",
         "release-passport-kfd-1-witness-jsons",
+        "release-passport-kfd-2-claim-jsons",
         "release-passport-kfd-3-prebuild-witness-jsons",
         "release-passport-kfd-3-artifact-witness-jsons",
         "release-passport-kfd-3-artifact-verify-command",
@@ -134,6 +135,7 @@ export function createBuildchainContractWorld({ root = process.cwd(), packageJso
         "promotion does not run the heavy native build matrix",
         "built source and promotion channel SHA are recorded separately",
         "contract drift is checked before release-candidate resolution and publish",
+        "publish-gate source locks are created by the wrapper and enforced by promote-buildchain-ref before publish side effects",
       ],
     }),
     surface(root, {
@@ -152,6 +154,7 @@ export function createBuildchainContractWorld({ root = process.cwd(), packageJso
         "publish-required-artifacts-json",
         "promote-only-release-candidate",
         "release-passport-kfd-1-witness-jsons",
+        "release-passport-kfd-2-claim-jsons",
         "release-passport-kfd-3-prebuild-witness-jsons",
         "release-passport-kfd-3-artifact-witness-jsons",
         "release-passport-kfd-3-artifact-verify-command",
@@ -159,6 +162,7 @@ export function createBuildchainContractWorld({ root = process.cwd(), packageJso
       guarantees: [
         "protected release refs and durable release-state are finalized by Buildchain",
         "release passport finalization is idempotent after publish side effects",
+        "publish transactions can require a resolved publish-gate source lock to prevent floating-ref drift",
       ],
     }),
     surface(root, {
@@ -207,6 +211,22 @@ export function createBuildchainContractWorld({ root = process.cwd(), packageJso
       guarantees: [
         "KFD-1 witnesses must include at least one artifact byte surface",
         "artifact bytes are sha256 checked before passport finalization succeeds",
+        "KFD self contract witnesses record source/artifact hashes, self-hosting boundary, and responsibility state",
+      ],
+    }),
+    surface(root, {
+      id: "kfd-2-release-trust-passport-audit",
+      kind: "schema",
+      path: "packages/core/release-passport.js",
+      requiredInputs: ["public release claim evidence"],
+      requiredOutputs: ["kfd-2 release trust passport audit"],
+      breakingDefaults: {
+        releaseTrustPassportContract: "kungfu-buildchain-kfd-2-release-trust-passport-audit",
+      },
+      guarantees: [
+        "public release claims must bind declared sources, machine evidence, hashes, artifacts, verification, audit boundary, responsibility, and residual risk",
+        "unbound public claims fail release passport verification",
+        "prose-only public claims downgrade the release trust passport audit",
       ],
     }),
     surface(root, {
@@ -227,6 +247,8 @@ export function createBuildchainContractWorld({ root = process.cwd(), packageJso
         "KFD-3 pre-build witnesses must declare participant-facing public surfaces",
         "artifact witnesses must not expose undeclared public participant-facing surfaces",
         "collaborationInterface.digest mismatches fail passport verification",
+        "KFD repository self-verification can declare docs, schemas, standards metadata, package exports, and site-consumption contracts",
+        "KFD-3 passports expose releaseStatus, witness hashes, declared capability verification, reverse audit boundary, residual risk, and responsibility state",
       ],
     }),
     surface(root, {
