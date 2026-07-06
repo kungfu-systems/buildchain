@@ -33,6 +33,7 @@ running artifact), *use* (consume / extend) - and a **status**:
 | How do I declare version files and custom lifecycle commands? | [`lifecycle-protocol.md`](lifecycle-protocol.md) | use | stable |
 | How does publish evidence, recovery, and finalization work? | [`publish-transaction.md`](publish-transaction.md) | verify | stable |
 | How do I publish or verify release passport artifacts? | [`release-passport.md`](release-passport.md) | use | stable |
+| How do I gate release artifacts with KFD-1 contract-world witnesses? | [`release-passport.md`](release-passport.md#kfd-1-contract-world-release-gate) | verify/use | stable |
 | How do I propagate finalized upstream releases to downstream package/site PRs? | [`release-propagation.md`](release-propagation.md) | use | preview |
 | How do I prove a PR-stage reusable build is the artifact source promoted later? | [`release-candidate.md`](release-candidate.md) + [`reusable-build-surface.md`](reusable-build-surface.md) | verify | stable |
 | Why are binary release assets archived by platform, and where is the single bundle? | [`binary-distribution.md`](binary-distribution.md) | verify | stable |
@@ -90,6 +91,8 @@ running artifact), *use* (consume / extend) - and a **status**:
   [`cli.md`](cli.md) and [`publish-transaction.md`](publish-transaction.md).
 - **release chains / upstream package as source of truth / site synchronization** ->
   [`release-propagation.md`](release-propagation.md).
+- **KFD-1 contract worlds / byte-for-byte release gates** ->
+  [`release-passport.md`](release-passport.md#kfd-1-contract-world-release-gate).
 - **GitHub Release passport / binary assets / artifact evidence / agent release checks** ->
   [`release-passport.md`](release-passport.md),
   [`binary-distribution.md`](binary-distribution.md), and [`cli.md`](cli.md).
