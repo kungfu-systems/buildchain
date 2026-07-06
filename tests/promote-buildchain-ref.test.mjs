@@ -20,6 +20,7 @@ const {
   promoteBuildchainRefs,
   restoreDurableReleaseTransaction,
   resolveTagsForTarget,
+  runVersionVerification,
   selectAlphaTag,
   selectReleaseTag,
   updateVersionStateContents,
@@ -725,6 +726,83 @@ test("version verification allows only discovered version-state file changes", (
   assert.doesNotThrow(() =>
     assertAllowedLocalChanges(cwd, ["actions/one/package.json"]),
   );
+});
+
+test("version-state lifecycle can materialize declared derived files before verification", () => {
+  const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[[version.files]]
+type = "json"
+path = "dist/site/buildchain-contract.json"
+key = "product.version"
+
+[lifecycle.version-state]
+command = "node scripts/generate-site-contract.mjs"
+
+[lifecycle.verify]
+command = "node scripts/check-site-contract.mjs"
+`,
+    "package.json": {
+      name: "@kungfu-systems/example",
+      version: "1.0.0-alpha.0",
+      packageManager: "pnpm@11.7.0",
+    },
+    "dist/site/buildchain-contract.json": {
+      product: { version: "1.0.0-alpha.0" },
+      generated: false,
+    },
+    "scripts/generate-site-contract.mjs": `
+import fs from "node:fs";
+const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+fs.writeFileSync("dist/site/buildchain-contract.json", JSON.stringify({
+  product: { version: pkg.version },
+  generated: true
+}, null, 2) + "\\n");
+`,
+    "scripts/check-site-contract.mjs": `
+import assert from "node:assert/strict";
+import fs from "node:fs";
+const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+const contract = JSON.parse(fs.readFileSync("dist/site/buildchain-contract.json", "utf8"));
+assert.equal(contract.product.version, pkg.version);
+assert.equal(contract.generated, true);
+`,
+  });
+  run(["git", "init"], cwd);
+  run(["git", "add", "."], cwd);
+  run(["git", "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-m", "init"], cwd);
+
+  const discovered = discoverVersionStateFiles(cwd);
+  const changedFiles = updateVersionStateContents(discovered.files, "1.0.1-alpha.0");
+  const verifiedChangedFiles = runVersionVerification({
+    cwd,
+    loadedConfig: discovered.config,
+    version: "1.0.1-alpha.0",
+    changedFiles,
+    allowedPaths: discovered.files.map((file) => file.path),
+  });
+
+  assert.deepEqual(
+    verifiedChangedFiles.map((file) => file.path),
+    ["dist/site/buildchain-contract.json", "package.json"],
+  );
+  const contract = JSON.parse(
+    verifiedChangedFiles.find((file) => file.path === "dist/site/buildchain-contract.json").content,
+  );
+  assert.deepEqual(contract, {
+    product: { version: "1.0.1-alpha.0" },
+    generated: true,
+  });
 });
 
 test("release promotion creates v-prefixed release tag and prepares next alpha tag", async () => {
