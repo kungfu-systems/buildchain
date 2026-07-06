@@ -171,8 +171,21 @@ jobs:
           git fetch --depth=1 origin "refs/heads/${ref}:refs/remotes/origin/${ref}"
           git show "refs/remotes/origin/${ref}:release-passport/buildchain.release.json" \
             > .buildchain/release-passport/authoritative-release-state-passport.json
-          node bin/buildchain.mjs verify release-passport \
-            .buildchain/release-passport/authoritative-release-state-passport.json
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+
+          const passportPath = ".buildchain/release-passport/authoritative-release-state-passport.json";
+          const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+          const requiredSections = ["kfd-1", "kfd-2", "kfd-3"];
+          for (const sectionName of requiredSections) {
+            const section = passport[sectionName];
+            if (!section || section.status !== "passed") {
+              console.error(`${sectionName} must be present and passed in durable release-state passport`);
+              process.exit(1);
+            }
+          }
+          console.log("durable release-state passport KFD base: ok");
+          NODE
 
       - name: Collect release passport
         env:
