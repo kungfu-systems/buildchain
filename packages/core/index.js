@@ -105,20 +105,43 @@ export {
 } from "./artifact-passport.js";
 
 export {
+  BUILDCHAIN_CONTRACT_LOCK,
+  BUILDCHAIN_RUNTIME_CONTRACT_WORLD,
+  contractSummary,
+  createBuildchainContractLock,
+  createBuildchainContractWorld,
+  evaluateBuildchainContractLock,
+  finalizeBuildchainContractWorld,
+  readBuildchainContractLock,
+  readBuildchainContractWorld,
+  renderBuildchainContractDriftIssueBody,
+  sha256Json as sha256BuildchainContractJson,
+} from "./buildchain-contract.js";
+
+export {
   BUILDCHAIN_JSON_FORMATTING_POLICY,
   KFD1_RELEASE_GATE_CONTRACT,
   KFD1_WITNESS_SET_CONTRACT,
+  KFD3_ARTIFACT_WITNESS_CONTRACT,
+  KFD3_PREBUILD_WITNESS_CONTRACT,
+  KFD3_RELEASE_GATE_CONTRACT,
   createKfd1ReleaseGateEvidence,
+  createKfd3CollaborationInterfaceReleaseGateEvidence,
   normalizeKfd1ContractWorldWitness,
+  normalizeKfd3CollaborationInterfaceArtifactWitness,
+  normalizeKfd3CollaborationInterfacePrebuildWitness,
   resolveKfd1Metadata,
+  resolveKfd3Metadata,
   sha256Json as sha256KfdJson,
   validateKfd1ReleaseGateEvidence,
+  validateKfd3CollaborationInterfaceReleaseGateEvidence,
 } from "./kfd-gate.js";
 
 export {
   AGENT_INDEX_CONTRACT,
   ARTIFACT_EVIDENCE_CONTRACT,
   IMPACT_LEDGER_CONTRACT,
+  KFD2_RELEASE_TRUST_PASSPORT_CONTRACT,
   PRODUCT_MECHANISM_CONTRACT,
   RELEASE_CHECK_REPORT_CONTRACT,
   RELEASE_PASSPORT_CONTRACT,

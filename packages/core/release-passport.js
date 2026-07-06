@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import http from "node:http";
 import https from "node:https";
@@ -6,8 +7,11 @@ import os from "node:os";
 import path from "node:path";
 import {
   createKfd1ReleaseGateEvidence,
+  createKfd3CollaborationInterfaceReleaseGateEvidence,
   resolveKfd1Metadata,
+  resolveKfd3Metadata,
   validateKfd1ReleaseGateEvidence,
+  validateKfd3CollaborationInterfaceReleaseGateEvidence,
 } from "./kfd-gate.js";
 
 export const RELEASE_PASSPORT_CONTRACT = "kungfu-buildchain-release-passport";
@@ -16,6 +20,7 @@ export const IMPACT_LEDGER_CONTRACT = "kungfu-buildchain-impact";
 export const AGENT_INDEX_CONTRACT = "kungfu-buildchain-agent-index";
 export const PRODUCT_MECHANISM_CONTRACT = "kungfu-buildchain-product-mechanism";
 export const RELEASE_CHECK_REPORT_CONTRACT = "kungfu-buildchain-release-check-report";
+export const KFD2_RELEASE_TRUST_PASSPORT_CONTRACT = "kungfu-buildchain-kfd-2-release-trust-passport-audit";
 
 const CONTRACTS = new Set([
   RELEASE_PASSPORT_CONTRACT,
@@ -275,6 +280,36 @@ function parseJsonInputWithMeta(value, fallback = undefined) {
   };
 }
 
+function parseJsonCommandOutput({ command = "", cwd = process.cwd(), label = "command" } = {}) {
+  const normalized = String(command || "").trim();
+  if (!normalized) {
+    return { value: undefined, path: "", sha256: "" };
+  }
+  const result = spawnSync(normalized, [], {
+    cwd,
+    shell: true,
+    encoding: "utf8",
+    maxBuffer: 16 * 1024 * 1024,
+  });
+  if (result.error) {
+    throw new Error(`${label} failed to start: ${result.error.message}`);
+  }
+  if (result.status !== 0) {
+    const stderr = String(result.stderr || "").trim();
+    throw new Error(`${label} exited with ${result.status}${stderr ? `: ${stderr.slice(-1000)}` : ""}`);
+  }
+  const stdout = String(result.stdout || "").trim();
+  if (!stdout) {
+    throw new Error(`${label} produced no JSON on stdout`);
+  }
+  const parsed = JSON.parse(stdout);
+  return {
+    value: parsed,
+    path: "",
+    sha256: sha256Text(stableJson(parsed)),
+  };
+}
+
 function discoverAssetsFromDir(dir) {
   if (!dir || !fs.existsSync(dir)) {
     return [];
@@ -518,6 +553,166 @@ function normalizeTrustedPublishing(value = undefined, { workflow = {}, publish 
   };
 }
 
+function arrayOrEmpty(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function normalizeKfd2Claim(raw = {}, index = 0) {
+  const claim = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+  const sourceBindings = arrayOrEmpty(claim.sourceBindings || claim.source_bindings || claim.sources || claim.declaredSources);
+  const machineEvidence = arrayOrEmpty(claim.machineEvidence || claim.machine_evidence || claim.evidence);
+  const hashes = claim.hashes && typeof claim.hashes === "object" && !Array.isArray(claim.hashes) ? claim.hashes : {};
+  const artifacts = arrayOrEmpty(claim.artifacts || claim.artifactCoordinates || claim.artifact_coordinates);
+  const verification = claim.verification && typeof claim.verification === "object" && !Array.isArray(claim.verification) ? claim.verification : {};
+  const auditBoundary = claim.auditBoundary && typeof claim.auditBoundary === "object" && !Array.isArray(claim.auditBoundary)
+    ? claim.auditBoundary
+    : claim.audit_boundary && typeof claim.audit_boundary === "object" && !Array.isArray(claim.audit_boundary)
+      ? claim.audit_boundary
+      : {};
+  const responsibility = claim.responsibility && typeof claim.responsibility === "object" && !Array.isArray(claim.responsibility) ? claim.responsibility : {};
+  const residualRisk = arrayOrEmpty(claim.residualRisk || claim.residual_risk);
+  const missingBindings = [];
+  if (sourceBindings.length === 0) missingBindings.push("declared-sources");
+  if (machineEvidence.length === 0) missingBindings.push("machine-readable-evidence");
+  if (Object.keys(hashes).length === 0) missingBindings.push("hashes");
+  if (artifacts.length === 0) missingBindings.push("artifact-coordinates");
+  if (!verification.result && !verification.status) missingBindings.push("verification-result");
+  if (Object.keys(auditBoundary).length === 0) missingBindings.push("audit-boundary");
+  if (!responsibility.owner && !responsibility.sourceOwner && !responsibility.sourceContractOwner && !responsibility.releasePassportProofOwner) {
+    missingBindings.push("responsibility-state");
+  }
+  if (!Array.isArray(claim.residualRisk || claim.residual_risk)) missingBindings.push("residual-risk");
+  const proseOnly = Boolean(claim.proseOnly || claim.prose_only || claim.support === "prose" || claim.supportLevel === "prose");
+  const explicitStatus = optionalString(claim.status || claim.result);
+  const status = explicitStatus || (missingBindings.length > 0 ? "failed" : (proseOnly || residualRisk.length > 0) ? "downgraded" : "passed");
+  return {
+    id: optionalString(claim.id || `claim-${index + 1}`),
+    public: claim.public === undefined ? true : Boolean(claim.public),
+    claim: optionalString(claim.claim || claim.statement || claim.summary),
+    sourceBindings,
+    machineEvidence,
+    hashes,
+    artifacts,
+    verification,
+    auditBoundary,
+    responsibility,
+    residualRisk,
+    proseOnly,
+    missingBindings,
+    status,
+  };
+}
+
+function kfd2ClaimFromKfd1World(world = {}, index = 0) {
+  const sourceSurfaces = arrayOrEmpty(world.sourceVerification?.surfaces);
+  const artifactSurfaces = arrayOrEmpty(world.artifactVerification?.surfaces);
+  return normalizeKfd2Claim({
+    id: `kfd-1:${world.id || index + 1}`,
+    public: true,
+    claim: `KFD-1 contract world ${world.id || index + 1} is verified from declared source surfaces to packaged artifact bytes.`,
+    sourceBindings: sourceSurfaces.map((surface) => ({
+      id: surface.name,
+      path: surface.sourcePath,
+      sha256: surface.actualSha256 || surface.expectedSha256,
+    })),
+    machineEvidence: [
+      { id: "kfd-1-witness", sha256: world.preBuildWitnessSha256 },
+      { id: "source-verification", status: world.sourceVerification?.status || "" },
+      { id: "artifact-verification", status: world.artifactVerification?.status || "" },
+    ],
+    hashes: {
+      witnessSha256: world.preBuildWitnessSha256,
+      sourceSha256: world.sourceHashes?.sha256 || "",
+      artifactSha256: world.artifactHashes?.sha256 || "",
+    },
+    artifacts: artifactSurfaces.map((surface) => ({
+      id: surface.name,
+      path: surface.artifactPath,
+      sha256: surface.actualSha256,
+    })),
+    verification: {
+      result: world.result === "passed" ? "passed" : "failed",
+      source: world.sourceVerification?.status || "",
+      artifact: world.artifactVerification?.status || "",
+    },
+    auditBoundary: world.selfHostingBoundary,
+    responsibility: world.responsibility,
+    residualRisk: world.selfHostingBoundary?.residualRisk || [],
+  }, index);
+}
+
+function kfd2ClaimFromKfd3Interface(entry = {}, index = 0) {
+  return normalizeKfd2Claim({
+    id: `kfd-3:${entry.id || index + 1}`,
+    public: true,
+    claim: `KFD-3 collaboration interface ${entry.id || index + 1} exposes only declared public participant-facing shipped surfaces within its audit boundary.`,
+    sourceBindings: arrayOrEmpty(entry.declaredSurfaces).map((surface) => ({
+      id: surface.id,
+      kind: surface.kind,
+      sourcePath: surface.sourcePath,
+    })),
+    machineEvidence: [
+      { id: "prebuild-witness", ...entry.witnessEvidence?.prebuild },
+      { id: "artifact-witness", ...entry.witnessEvidence?.artifact },
+      { id: "declared-capability-verification", result: entry.declaredCapabilityVerification?.result || "" },
+      { id: "reverse-audit", result: entry.reverseAudit?.status || "" },
+    ],
+    hashes: {
+      prebuildWitnessSha256: entry.preBuildWitnessSha256,
+      artifactWitnessSha256: entry.artifactWitnessSha256,
+      prebuildCanonicalSha256: entry.witnessEvidence?.prebuild?.canonicalSha256 || "",
+      artifactCanonicalSha256: entry.witnessEvidence?.artifact?.canonicalSha256 || "",
+    },
+    artifacts: entry.artifactWitness?.artifact?.name || entry.artifactWitness?.artifact?.path
+      ? [entry.artifactWitness.artifact]
+      : arrayOrEmpty(entry.exposedSurfaces).map((surface) => ({ id: surface.id, kind: surface.kind })),
+    verification: {
+      result: entry.comparison?.status === "passed" ? "passed" : "failed",
+      declaredCapabilityVerification: entry.declaredCapabilityVerification?.result || "",
+      reverseAudit: entry.reverseAudit?.status || "",
+    },
+    auditBoundary: entry.auditBoundary,
+    responsibility: entry.responsibility,
+    residualRisk: entry.residualRisk,
+    status: entry.trustProof?.result === "pass"
+      ? (arrayOrEmpty(entry.residualRisk).length > 0 ? "downgraded" : "passed")
+      : "failed",
+  }, index);
+}
+
+function createKfd2ReleaseTrustPassportAudit({ explicitClaims = [], kfd1Section = undefined, kfd3Section = undefined, verifiedAt = nowIso() } = {}) {
+  const generatedClaims = [
+    ...arrayOrEmpty(kfd1Section?.contractWorlds).map((world, index) => kfd2ClaimFromKfd1World(world, index)),
+    ...arrayOrEmpty(kfd3Section?.collaborationInterfaces).map((entry, index) => kfd2ClaimFromKfd3Interface(entry, index)),
+  ];
+  const claims = [
+    ...generatedClaims,
+    ...explicitClaims.map((claim, index) => normalizeKfd2Claim(claim, generatedClaims.length + index)),
+  ];
+  if (claims.length === 0) {
+    return undefined;
+  }
+  const failed = claims.filter((claim) => claim.public && claim.status === "failed");
+  const downgraded = claims.filter((claim) => claim.public && (claim.status === "downgraded" || claim.proseOnly));
+  return {
+    schemaVersion: 1,
+    contract: KFD2_RELEASE_TRUST_PASSPORT_CONTRACT,
+    status: failed.length > 0 ? "failed" : downgraded.length > 0 ? "downgraded" : "passed",
+    verifiedAt,
+    auditBoundary: {
+      scope: "public release claims visible to humans or agents",
+      policy: "public claims must bind declared sources, machine-readable evidence, hashes, artifact coordinates, verification results, audit boundaries, responsibility state, and residual risk",
+    },
+    claims,
+    summary: {
+      claimCount: claims.length,
+      failed: failed.length,
+      downgraded: downgraded.length,
+      proseOnly: claims.filter((claim) => claim.proseOnly).length,
+    },
+  };
+}
+
 function normalizeTransactionResult(value = {}) {
   const result = {};
   if (value.command) {
@@ -627,6 +822,8 @@ export function createReleasePassport({
   impact = undefined,
   workflow = {},
   kfd1 = undefined,
+  kfd2Claims = [],
+  kfd3 = undefined,
 } = {}) {
   const normalizedTag = nonEmptyString(tag, "tag");
   const artifactEvidence = createArtifactEvidence({ assets, repository, tag: normalizedTag, sourceSha, workflow });
@@ -644,6 +841,12 @@ export function createReleasePassport({
   const normalizedImpact = normalizeImpactLedger(impact, { tag: normalizedTag, line });
   const kfd1Metadata = resolveKfd1Metadata();
   const normalizedKfd1 = kfd1?.passportSection ? kfd1 : undefined;
+  const normalizedKfd3 = kfd3?.passportSection ? kfd3 : undefined;
+  const normalizedKfd2 = createKfd2ReleaseTrustPassportAudit({
+    explicitClaims: kfd2Claims,
+    kfd1Section: normalizedKfd1?.passportSection,
+    kfd3Section: normalizedKfd3?.passportSection,
+  });
   const publishArtifacts = normalizedPublishEvidence?.artifacts || [];
   const normalizedPublishSummary = normalizePublishSummary({
     packageSet: normalizedPackageSet,
@@ -745,6 +948,8 @@ export function createReleasePassport({
     ...(normalizedPlatformArtifactManifests.length > 0 ? { platformArtifactManifests: normalizedPlatformArtifactManifests } : {}),
     ...(normalizedDistTagPromotionEvidence ? { distTagPromotion: normalizedDistTagPromotionEvidence } : {}),
     ...(normalizedKfd1 ? { [normalizedKfd1.key || kfd1Metadata.key]: normalizedKfd1.passportSection } : {}),
+    ...(normalizedKfd2 ? { "kfd-2": normalizedKfd2 } : {}),
+    ...(normalizedKfd3 ? { [normalizedKfd3.key || "kfd-3"]: normalizedKfd3.passportSection } : {}),
     versionImpact: normalizedImpact.versionImpact,
     surfaceImpacts: normalizedImpact.surfaceImpacts,
     artifacts: [
@@ -781,6 +986,8 @@ export function createReleasePassport({
       })),
       distTagPromotionEvidence: normalizedDistTagPromotionEvidence?.path || "",
       kfd1: normalizedKfd1 ? `${normalizedKfd1.key || kfd1Metadata.key}` : "",
+      kfd2: normalizedKfd2 ? "kfd-2" : "",
+      kfd3: normalizedKfd3 ? `${normalizedKfd3.key || "kfd-3"}` : "",
       impact: impactPath,
       checkReport: checkReportPath,
       agentIndex: agentIndexPath,
@@ -815,6 +1022,10 @@ export function collectGitHubReleasePassport({
   platformManifestJsons = [],
   distTagEvidenceJson = "",
   kfd1WitnessJsons = [],
+  kfd2ClaimJsons = [],
+  kfd3PrebuildWitnessJsons = [],
+  kfd3ArtifactWitnessJsons = [],
+  kfd3ArtifactVerifyCommand = "",
   releaseJsonExtra = "",
   publishJson = "",
   workflow = {},
@@ -837,6 +1048,27 @@ export function collectGitHubReleasePassport({
     .filter(Boolean)
     .map((witnessJson) => parseJsonInputWithMeta(witnessJson, undefined))
     .filter((meta) => meta.value);
+  const kfd2ClaimMetas = (kfd2ClaimJsons || [])
+    .filter(Boolean)
+    .map((claimJson) => parseJsonInputWithMeta(claimJson, undefined))
+    .filter((meta) => meta.value);
+  const kfd3PrebuildWitnessMetas = (kfd3PrebuildWitnessJsons || [])
+    .filter(Boolean)
+    .map((witnessJson) => parseJsonInputWithMeta(witnessJson, undefined))
+    .filter((meta) => meta.value);
+  const kfd3ArtifactWitnessMetas = (kfd3ArtifactWitnessJsons || [])
+    .filter(Boolean)
+    .map((witnessJson) => parseJsonInputWithMeta(witnessJson, undefined))
+    .filter((meta) => meta.value);
+  const kfd3ArtifactCommandMeta = parseJsonCommandOutput({
+    command: kfd3ArtifactVerifyCommand,
+    cwd,
+    label: "KFD-3 artifact verify command",
+  });
+  const kfd3ArtifactWitnesses = [
+    ...kfd3ArtifactWitnessMetas.map((meta) => meta.value),
+    ...(kfd3ArtifactCommandMeta.value ? [kfd3ArtifactCommandMeta.value] : []),
+  ];
   const publish = parseJsonInput(publishJson, {});
   const assets = [
     ...(Array.isArray(release.assets) ? release.assets : []),
@@ -854,6 +1086,13 @@ export function collectGitHubReleasePassport({
     artifactRoot: assetsDir ? path.resolve(cwd, assetsDir) : "",
     artifacts: assets,
     witnesses: kfd1WitnessMetas.map((meta) => meta.value),
+  });
+  const kfd3 = createKfd3CollaborationInterfaceReleaseGateEvidence({
+    prebuildWitnesses: kfd3PrebuildWitnessMetas.map((meta) => meta.value),
+    artifactWitnesses: kfd3ArtifactWitnesses,
+    prebuildWitnessMetas: kfd3PrebuildWitnessMetas,
+    artifactWitnessMetas: kfd3ArtifactWitnessMetas,
+    artifactCommandMeta: kfd3ArtifactCommandMeta.value ? kfd3ArtifactCommandMeta : undefined,
   });
   const passport = createReleasePassport({
     cwd,
@@ -892,6 +1131,8 @@ export function collectGitHubReleasePassport({
     publish,
     impact,
     kfd1,
+    kfd2Claims: kfd2ClaimMetas.map((meta) => meta.value),
+    kfd3,
     publishEvidencePath: publishEvidenceMeta.path ? path.relative(resolvedOutputDir, publishEvidenceMeta.path).split(path.sep).join("/") : "",
     transactionStatePath: transactionMeta.path ? path.relative(resolvedOutputDir, transactionMeta.path).split(path.sep).join("/") : "",
     workflow,
@@ -942,6 +1183,50 @@ function validateContract(value, expectedContract, label, issues) {
   }
   if (value.contract !== expectedContract) {
     issues.push(issue("error", `${label}.contract`, `${label}.contract must be ${expectedContract}`));
+  }
+}
+
+function validateKfd2ReleaseTrustPassportAudit(section, issues) {
+  if (!section) {
+    return;
+  }
+  if (typeof section !== "object" || Array.isArray(section)) {
+    issues.push(issue("error", "kfd-2.object", "kfd-2 release trust passport audit must be a JSON object"));
+    return;
+  }
+  if (section.contract !== KFD2_RELEASE_TRUST_PASSPORT_CONTRACT) {
+    issues.push(issue("error", "kfd-2.contract", `kfd-2 contract must be ${KFD2_RELEASE_TRUST_PASSPORT_CONTRACT}`));
+  }
+  const claims = Array.isArray(section.claims) ? section.claims : [];
+  if (claims.length === 0) {
+    issues.push(issue("error", "kfd-2.claims.empty", "kfd-2 audit must enumerate at least one public release claim"));
+  }
+  for (const [index, claim] of claims.entries()) {
+    if (!claim.id || !claim.claim) {
+      issues.push(issue("error", `kfd-2.claims[${index}].identity`, "public release claim must include id and statement"));
+    }
+    if (claim.public === false) {
+      continue;
+    }
+    const missing = Array.isArray(claim.missingBindings) ? claim.missingBindings : [];
+    if (missing.length > 0 || claim.status === "failed") {
+      issues.push(issue("error", `kfd-2.claims[${index}].bindings`, "public release claim is missing machine-verifiable trust bindings", {
+        id: claim.id || "",
+        missingBindings: missing,
+      }));
+    } else if (claim.status === "downgraded" || claim.proseOnly) {
+      issues.push(issue("warning", `kfd-2.claims[${index}].downgraded`, "public release claim is downgraded and needs human review", {
+        id: claim.id || "",
+        proseOnly: Boolean(claim.proseOnly),
+      }));
+    }
+  }
+  if (section.status === "failed") {
+    issues.push(issue("error", "kfd-2.status", "kfd-2 release trust passport audit must not contain failed public claims"));
+  } else if (section.status === "downgraded") {
+    issues.push(issue("warning", "kfd-2.status", "kfd-2 release trust passport audit is downgraded by prose-only or residual-risk claims"));
+  } else if (section.status !== "passed") {
+    issues.push(issue("error", "kfd-2.status", "kfd-2 status must be passed, downgraded, or failed"));
   }
 }
 
@@ -1194,6 +1479,19 @@ export function createReleaseCheckReport({
   const requiredSurfaceImpacts = surfaceImpactRequirement({ passport, impact });
   const kfd1Metadata = resolveKfd1Metadata();
   issues.push(...validateKfd1ReleaseGateEvidence(passport?.[kfd1Metadata.key], { metadata: kfd1Metadata }));
+  validateKfd2ReleaseTrustPassportAudit(passport?.["kfd-2"], issues);
+  const fallbackKfd3Section = passport?.["kfd-3"];
+  try {
+    const kfd3Metadata = resolveKfd3Metadata();
+    const kfd3Section = passport?.[kfd3Metadata.key] || fallbackKfd3Section;
+    if (kfd3Section) {
+      issues.push(...validateKfd3CollaborationInterfaceReleaseGateEvidence(kfd3Section, { metadata: kfd3Metadata }));
+    }
+  } catch (error) {
+    if (fallbackKfd3Section) {
+      issues.push(issue("error", "kfd-3.metadata", error.message));
+    }
+  }
   if (requiredSurfaceImpacts.required && surfaceImpacts.length === 0) {
     issues.push(issue("error", "impact.surfaceImpacts.required", "surfaceImpacts[] is required for this release passport type", requiredSurfaceImpacts));
   }

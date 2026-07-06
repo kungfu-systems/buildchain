@@ -16,6 +16,7 @@ import {
 } from "../packages/core/release-passport.js";
 import {
   resolveKfd1Metadata,
+  resolveKfd3Metadata,
   sha256File as sha256KfdFile,
 } from "../packages/core/kfd-gate.js";
 
@@ -68,6 +69,114 @@ function createKfdWitnessFixture({ id = "generic-contracts", artifactPath = "con
     ],
   });
   return { cwd, assetsDir, artifactFile, witnessPath, metadata, actualSha256 };
+}
+
+function createKfd3WitnessFixture({
+  reachableEntrypoints = ["agent-verify"],
+  declaredSurfaceId = "agent-verify",
+  artifactDigest = "sha256:ci-digest",
+  prebuildDigest = "sha256:ci-digest",
+  supportLevel = "release",
+  nonExhaustiveSurfaces = [],
+} = {}) {
+  const cwd = tempDir("kfd-3-gate");
+  const assetsDir = path.join(cwd, "dist");
+  fs.mkdirSync(assetsDir, { recursive: true });
+  fs.writeFileSync(path.join(assetsDir, "kungfu-package.tgz"), "package\n");
+  const metadata = resolveKfd3Metadata({ requireSchemas: true });
+  const prebuildWitnessPath = writeJson(path.join(cwd, "kfd-3-prebuild.json"), {
+    id: "kungfu-agent-bridge",
+    standard: metadata.key,
+    supportLevel,
+    source: {
+      repo: "kungfu-systems/kungfu",
+      ref: "a".repeat(40),
+    },
+    sourceRegistry: {
+      path: "src/agent/collaboration-interface.json",
+      sha256: "1".repeat(64),
+    },
+    collaborationInterfaceDigest: prebuildDigest,
+    collaborationInterface: {
+      schemaVersion: 1,
+      contract: "kfd-3-collaboration-interface",
+      standard: metadata.key,
+      product: {
+        name: "Kungfu",
+        version: "4.0.0-alpha.0",
+        repository: "kungfu-systems/kungfu",
+      },
+      sourceRegistry: {
+        path: "src/agent/collaboration-interface.json",
+        sha256: "1".repeat(64),
+      },
+      participants: [
+        { id: "agent", kind: "agent", description: "Automation agent using the public bridge." },
+      ],
+      minimalEntrypoints: [
+        { id: "agent-verify", surface: "agent-verify", participants: ["agent"], purpose: "Verify shipped agent-facing controls." },
+      ],
+      surfaces: [
+        {
+          id: declaredSurfaceId,
+          kind: "cli-command",
+          participants: ["agent"],
+          value: "Artifact-level KFD-3 verification command.",
+          discoverability: { fromMinimalEntrypoint: true, path: "docs/MAP.md" },
+          maturity: "stable",
+        },
+      ],
+      transparentConstraints: [],
+      choicePaths: [],
+      closure: {
+        classificationMode: "closed-world",
+        unclassifiedEntrypointsPolicy: "fail",
+        nonExhaustivelyEnumerableSurfaces: nonExhaustiveSurfaces,
+      },
+    },
+    residualRisk: nonExhaustiveSurfaces.map((entry) => ({
+      id: typeof entry === "string" ? entry : entry.id,
+      reason: "Non-exhaustive surface remains outside the declared reverse audit boundary.",
+      owner: "Kungfu",
+    })),
+    responsibility: {
+      registryFactsOwner: "Kungfu",
+      artifactVerificationOwner: "Kungfu agent verify",
+      releasePassportProofOwner: "Buildchain",
+    },
+  });
+  const artifactWitness = {
+    id: "kungfu-agent-bridge",
+    standard: metadata.key,
+    collaborationInterface: {
+      schemaId: metadata.schemaIds.collaborationInterface,
+      digest: artifactDigest,
+    },
+    sourceRegistry: {
+      path: "src/agent/collaboration-interface.json",
+      sha256: "1".repeat(64),
+    },
+    artifact: {
+      name: "kungfu-package.tgz",
+      path: "dist/kungfu-package.tgz",
+      digest: `sha256:${"2".repeat(64)}`,
+    },
+    evidence: {
+      minimalEntrypoints: [{ path: "docs/MAP.md", sha256: "3".repeat(64) }],
+      discoverability: [],
+      transparentConstraints: [],
+      choicePaths: [],
+    },
+    closure: {
+      classificationMode: "closed-world",
+      reachableEntrypoints,
+      classifiedEntrypoints: reachableEntrypoints,
+      unclassifiedEntrypoints: [],
+    },
+    result: "pass",
+  };
+  const artifactWitnessPath = writeJson(path.join(cwd, "kfd-3-artifact.json"), artifactWitness);
+  return { cwd, assetsDir, prebuildWitnessPath, artifactWitnessPath, artifactWitness, metadata };
 }
 
 function defaultSurfaceImpactLedger() {
@@ -670,6 +779,148 @@ test("release passport records Kungfu-shaped KFD-1 gate without invoking Kungfu 
   assert.doesNotMatch(implementation, /kfsdk|kungfu\s+sdk|kungfu contract/i);
 });
 
+test("release passport supports KFD repository self contract verification", async () => {
+  const cwd = tempDir("kfd-1-self-contract");
+  const assetsDir = path.join(cwd, "dist");
+  fs.mkdirSync(assetsDir, { recursive: true });
+  fs.writeFileSync(path.join(assetsDir, "kfd-package.tgz"), "package\n");
+  const metadata = resolveKfd1Metadata();
+  const surfaceSpecs = [
+    {
+      group: "docs",
+      id: "docs:kfd-1",
+      sourcePath: "docs/KFD-1.md",
+      artifactPath: "package/docs/KFD-1.md",
+      content: "# KFD-1\n",
+    },
+    {
+      group: "schemas",
+      id: "schema:kfd-1-witness",
+      sourcePath: "schemas/kfd-1-witness.schema.json",
+      artifactPath: "package/schemas/kfd-1-witness.schema.json",
+      content: "{\"type\":\"object\"}\n",
+    },
+    {
+      group: "standardsMetadata",
+      id: "metadata:standards",
+      sourcePath: "registry.json",
+      artifactPath: "package/registry.json",
+      content: "{\"standards\":[\"kfd-1\"]}\n",
+    },
+    {
+      group: "packageExports",
+      id: "export:kfd-metadata",
+      sourcePath: "package.exports.json",
+      artifactPath: "package/package.exports.json",
+      content: "{\"./metadata\":\"./dist/metadata.js\"}\n",
+    },
+    {
+      group: "siteConsumptionContracts",
+      id: "site:kfd-standards-index",
+      sourcePath: "site/standards.json",
+      artifactPath: "package/dist/site/standards.json",
+      content: "{\"kfd\":true}\n",
+    },
+  ];
+  const standardContract = {
+    id: "kfd-standard-contract",
+    path: "registry.json",
+    docs: [],
+    schemas: [],
+    standardsMetadata: [],
+    packageExports: [],
+    siteConsumptionContracts: [],
+  };
+  for (const spec of surfaceSpecs) {
+    const sourceFile = path.join(cwd, spec.sourcePath);
+    const artifactFile = path.join(assetsDir, spec.artifactPath);
+    fs.mkdirSync(path.dirname(sourceFile), { recursive: true });
+    fs.mkdirSync(path.dirname(artifactFile), { recursive: true });
+    fs.writeFileSync(sourceFile, spec.content);
+    fs.writeFileSync(artifactFile, spec.content);
+    const sha256 = sha256KfdFile(sourceFile);
+    standardContract[spec.group].push({
+      id: spec.id,
+      sourcePath: spec.sourcePath,
+      sourceSha256: sha256,
+      artifactPath: spec.artifactPath,
+      expectedSha256: sha256,
+    });
+  }
+  standardContract.sha256 = sha256KfdFile(path.join(cwd, "registry.json"));
+  const witnessPath = writeJson(path.join(cwd, "kfd-1-self-contract.json"), {
+    id: "kfd-standard-contract",
+    standard: metadata.key,
+    source: {
+      repo: "kungfu-systems/kfd",
+      ref: "a".repeat(40),
+    },
+    contractWorld: {
+      id: "kfd-standard-contract",
+      schemaId: metadata.schemaIds.contractWorld,
+      digest: `sha256:${standardContract.sha256}`,
+      owner: "KFD maintainers",
+      selfHosted: true,
+    },
+    standardContract,
+    selfHostingBoundary: {
+      mode: "self-hosted-standard-contract",
+      sourceScope: "KFD source standards, schemas, package exports, and site contracts",
+      artifactScope: "npm package and site-consumption payload",
+      residualRisk: [
+        {
+          id: "prose-interpretation",
+          reason: "Natural-language standard interpretation remains reviewed but not byte-enumerable.",
+          owner: "KFD maintainers",
+        },
+      ],
+    },
+    responsibility: {
+      sourceContractOwner: "KFD maintainers",
+      artifactVerificationOwner: "Buildchain KFD-1 gate",
+      releasePassportProofOwner: "Buildchain",
+    },
+  });
+
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v1.0.0-alpha.3",
+    repository: "kungfu-systems/kfd",
+    productName: "KFD",
+    sourceSha: "c".repeat(40),
+    assetsDir: path.relative(cwd, assetsDir),
+    outputDir: "release-passport",
+    releaseJsonExtra: JSON.stringify({
+      channel: "alpha",
+      targetRef: "alpha/v1/v1.0",
+    }),
+    kfd1WitnessJsons: [witnessPath],
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+  const world = passport[metadata.key].contractWorlds[0];
+
+  assert.equal(report.ok, true);
+  assert.equal(passport[metadata.key].status, "passed");
+  assert.equal(passport[metadata.key].selfContractVerification.result, "pass");
+  assert.equal(passport[metadata.key].selfContractVerification.selfHosted, true);
+  assert.equal(passport["kfd-2"].status, "downgraded");
+  assert.equal(passport["kfd-2"].claims.some((claim) => claim.id === "kfd-1:kfd-standard-contract"), true);
+  assert.equal(world.result, "passed");
+  assert.equal(world.sourceVerification.required, true);
+  assert.equal(world.sourceVerification.status, "passed");
+  assert.equal(world.sourceVerification.surfaces.length, 5);
+  assert.equal(world.artifactVerification.surfaces.length, 5);
+  assert.equal(world.sourceHashes.sha256.length, 64);
+  assert.equal(world.artifactHashes.sha256.length, 64);
+  assert.equal(world.standardContract.schemaId, metadata.schemaIds.contractWorld);
+  assert.equal(world.selfHostingBoundary.mode, "self-hosted-standard-contract");
+  assert.equal(world.selfHostingBoundary.residualRisk[0].id, "prose-interpretation");
+  assert.equal(world.responsibility.sourceContractOwner, "KFD maintainers");
+  assert.equal(world.responsibility.releasePassportProofOwner, "Buildchain");
+});
+
 test("release passport fails closed when KFD-1 artifact digest mismatches the frozen witness", async () => {
   const { cwd, assetsDir, witnessPath, metadata } = createKfdWitnessFixture({
     expectedSha256: "0".repeat(64),
@@ -695,6 +946,521 @@ test("release passport fails closed when KFD-1 artifact digest mismatches the fr
   assert.equal(report.ok, false);
   assert.equal(report.issues.some((entry) => entry.code.includes(`${metadata.key}.contractWorlds`)), true);
   assert.match(JSON.stringify(report.issues), /digest mismatch|artifact verification/i);
+});
+
+test("release passport records KFD-3 collaboration-interface closure evidence", async () => {
+  const { cwd, assetsDir, prebuildWitnessPath, artifactWitnessPath, metadata } = createKfd3WitnessFixture();
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v4.0.0-alpha.0",
+    repository: "kungfu-systems/kungfu",
+    productName: "Kungfu",
+    sourceSha: "d".repeat(40),
+    assetsDir: path.relative(cwd, assetsDir),
+    outputDir: "release-passport",
+    releaseJsonExtra: JSON.stringify({
+      channel: "alpha",
+      targetRef: "alpha/v4/v4.0",
+    }),
+    kfd3PrebuildWitnessJsons: [prebuildWitnessPath],
+    kfd3ArtifactWitnessJsons: [artifactWitnessPath],
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+
+  assert.equal(report.ok, true);
+  assert.equal(passport[metadata.key].status, "passed");
+  assert.equal(passport[metadata.key].metadata.schemas.ids.witness, metadata.schemaIds.witness);
+  assert.equal(passport[metadata.key].metadata.schemas.hasCollaborationSchemas, true);
+  assert.equal(passport[metadata.key].collaborationInterfaces[0].comparison.status, "passed");
+  assert.equal(passport[metadata.key].collaborationInterfaces[0].comparison.declaredShippedPublicSurfaceCount, 1);
+  assert.equal(passport[metadata.key].releaseStatus, "enforced");
+  assert.equal(passport[metadata.key].trustProof.result, "pass");
+  assert.equal(passport[metadata.key].trustProof.audited, true);
+  assert.equal(passport[metadata.key].collaborationInterfaces[0].trustProof.result, "pass");
+  assert.equal(passport[metadata.key].collaborationInterfaces[0].trustProof.releaseStatus, "enforced");
+  assert.equal(
+    passport[metadata.key].collaborationInterfaces[0].trustProof.statement,
+    "No unclassified reachable surface within the declared audit boundary.",
+  );
+  assert.equal(passport[metadata.key].collaborationInterfaces[0].declaredCapabilityVerification.result, "passed");
+  assert.equal(passport[metadata.key].collaborationInterfaces[0].reverseAudit.status, "passed");
+  assert.equal(passport[metadata.key].collaborationInterfaces[0].witnessEvidence.prebuild.path.endsWith("kfd-3-prebuild.json"), true);
+  assert.equal(passport[metadata.key].collaborationInterfaces[0].witnessEvidence.prebuild.sha256.length, 64);
+  assert.equal(passport[metadata.key].collaborationInterfaces[0].witnessEvidence.prebuild.canonicalSha256.length, 64);
+  assert.equal(passport[metadata.key].collaborationInterfaces[0].responsibility.registryFactsOwner, "Kungfu");
+  assert.equal(passport.evidence.kfd3, metadata.key);
+});
+
+test("release passport supports KFD repository self-verification surfaces", async () => {
+  const cwd = tempDir("kfd-3-self-verification");
+  const assetsDir = path.join(cwd, "dist");
+  fs.mkdirSync(assetsDir, { recursive: true });
+  fs.writeFileSync(path.join(assetsDir, "kfd-package.tgz"), "package\n");
+  const metadata = resolveKfd3Metadata({ requireSchemas: true });
+  const groupedSurfaces = {
+    docs: [{ id: "docs:kfd-3", sourcePath: "docs/KFD-3.md" }],
+    schemas: [{ id: "schema:kfd-3-witness", sourcePath: "schemas/kfd-3-witness.schema.json" }],
+    standardsMetadata: [{ id: "metadata:registry", sourcePath: "registry.json" }],
+    packageExports: [{ id: "export:kfd-metadata", sourcePath: "package.json#exports" }],
+    siteConsumptionContracts: [{ id: "site:kfd-standards-index", sourcePath: "dist/site/standards.json" }],
+  };
+  const prebuildWitnessPath = writeJson(path.join(cwd, "kfd-3-prebuild.json"), {
+    id: "kfd-repository",
+    standard: metadata.key,
+    supportLevel: "release",
+    source: {
+      repo: "kungfu-systems/kfd",
+      ref: "a".repeat(40),
+    },
+    sourceRegistry: {
+      id: "KFD",
+      path: "registry.json",
+      sha256: "1".repeat(64),
+    },
+    collaborationInterfaceDigest: "sha256:kfd-self-verification",
+    collaborationInterface: {
+      schemaVersion: 1,
+      contract: "kfd-3-collaboration-interface",
+      product: {
+        name: "KFD",
+        repository: "kungfu-systems/kfd",
+      },
+      participants: [
+        { id: "human", kind: "human" },
+        { id: "agent", kind: "agent" },
+      ],
+      ...groupedSurfaces,
+      closure: {
+        classificationMode: "closed-world",
+        unclassifiedEntrypointsPolicy: "fail",
+        nonExhaustivelyEnumerableSurfaces: [
+          {
+            id: "human-language-interpretation",
+            kind: "semantic-risk",
+            reason: "Natural-language standard interpretation is reviewed but not exhaustively enumerable.",
+            owner: "KFD maintainers",
+          },
+        ],
+      },
+    },
+    residualRisk: [
+      {
+        id: "human-language-interpretation",
+        reason: "Natural-language standard interpretation cannot be fully enumerated from package bytes.",
+        owner: "KFD maintainers",
+      },
+    ],
+    responsibility: {
+      registryFactsOwner: "KFD",
+      artifactVerificationOwner: "KFD package self-verification",
+      releasePassportProofOwner: "Buildchain",
+    },
+  });
+  const artifactWitnessPath = writeJson(path.join(cwd, "kfd-3-artifact.json"), {
+    id: "kfd-repository",
+    standard: metadata.key,
+    collaborationInterface: {
+      schemaId: metadata.schemaIds.collaborationInterface,
+      digest: "sha256:kfd-self-verification",
+    },
+    sourceRegistry: {
+      id: "KFD",
+      path: "registry.json",
+      sha256: "1".repeat(64),
+    },
+    artifact: {
+      name: "kfd-package.tgz",
+      path: "dist/kfd-package.tgz",
+      digest: `sha256:${"2".repeat(64)}`,
+    },
+    ...groupedSurfaces,
+    verifier: {
+      name: "kfd self-verification",
+    },
+  });
+
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v1.0.0-alpha.3",
+    repository: "kungfu-systems/kfd",
+    productName: "KFD",
+    sourceSha: "d".repeat(40),
+    assetsDir: path.relative(cwd, assetsDir),
+    outputDir: "release-passport",
+    releaseJsonExtra: JSON.stringify({
+      channel: "alpha",
+      targetRef: "alpha/v1/v1.0",
+    }),
+    kfd3PrebuildWitnessJsons: [prebuildWitnessPath],
+    kfd3ArtifactWitnessJsons: [artifactWitnessPath],
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+  const kfd3 = passport[metadata.key];
+  const proof = kfd3.collaborationInterfaces[0];
+
+  assert.equal(report.ok, true);
+  assert.equal(kfd3.status, "passed");
+  assert.equal(kfd3.releaseStatus, "audited");
+  assert.equal(proof.comparison.declaredShippedPublicSurfaceCount, 5);
+  assert.deepEqual(
+    proof.declaredSurfaces.map((surface) => surface.kind).sort(),
+    ["documentation", "package-export", "schema", "site-consumption-contract", "standards-metadata"],
+  );
+  assert.equal(proof.reverseAudit.status, "passed");
+  assert.equal(proof.reverseAudit.nonExhaustivelyEnumerableSurfaces[0].id, "human-language-interpretation");
+  assert.equal(proof.residualRisk[0].owner, "KFD maintainers");
+  assert.equal(proof.responsibility.registryFactsOwner, "KFD");
+  assert.equal(proof.responsibility.releasePassportProofOwner, "Buildchain");
+  assert.equal(proof.witnessEvidence.prebuild.canonicalSha256.length, 64);
+  assert.equal(proof.witnessEvidence.artifact.canonicalSha256.length, 64);
+  assert.equal(kfd3.trustProof.result, "pass");
+  assert.equal(passport["kfd-2"].status, "downgraded");
+  assert.equal(passport["kfd-2"].claims.some((claim) => claim.id === "kfd-3:kfd-repository"), true);
+});
+
+test("release passport fails closed when KFD self-verification artifact exposes undeclared package or site surfaces", async () => {
+  const cwd = tempDir("kfd-3-self-verification-fail");
+  const assetsDir = path.join(cwd, "dist");
+  fs.mkdirSync(assetsDir, { recursive: true });
+  fs.writeFileSync(path.join(assetsDir, "kfd-package.tgz"), "package\n");
+  const metadata = resolveKfd3Metadata({ requireSchemas: true });
+  const prebuildWitnessPath = writeJson(path.join(cwd, "kfd-3-prebuild.json"), {
+    id: "kfd-repository",
+    standard: metadata.key,
+    sourceRegistry: {
+      id: "KFD",
+      path: "registry.json",
+      sha256: "1".repeat(64),
+    },
+    collaborationInterface: {
+      packageExports: [{ id: "export:kfd-metadata" }],
+      siteConsumptionContracts: [{ id: "site:kfd-standards-index" }],
+      closure: {
+        classificationMode: "closed-world",
+        unclassifiedEntrypointsPolicy: "fail",
+      },
+    },
+  });
+  const artifactWitnessPath = writeJson(path.join(cwd, "kfd-3-artifact.json"), {
+    id: "kfd-repository",
+    standard: metadata.key,
+    packageExports: [
+      { id: "export:kfd-metadata" },
+      { id: "export:undocumented-internal" },
+    ],
+    siteConsumptionContracts: [
+      { id: "site:kfd-standards-index" },
+      { id: "site:undocumented-feed" },
+    ],
+  });
+
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v1.0.0-alpha.3",
+    repository: "kungfu-systems/kfd",
+    productName: "KFD",
+    sourceSha: "d".repeat(40),
+    assetsDir: path.relative(cwd, assetsDir),
+    outputDir: "release-passport",
+    releaseJsonExtra: JSON.stringify({
+      channel: "alpha",
+      targetRef: "alpha/v1/v1.0",
+    }),
+    kfd3PrebuildWitnessJsons: [prebuildWitnessPath],
+    kfd3ArtifactWitnessJsons: [artifactWitnessPath],
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+  const proof = passport[metadata.key].collaborationInterfaces[0];
+
+  assert.equal(report.ok, false);
+  assert.deepEqual(proof.comparison.unclassifiedArtifactPublic, [
+    "export:undocumented-internal",
+    "site:undocumented-feed",
+  ]);
+  assert.equal(proof.reverseAudit.status, "failed");
+  assert.equal(proof.trustProof.result, "fail");
+});
+
+test("release passport fails closed when a public KFD-2 release claim is unbound", async () => {
+  const { cwd, assetsDir } = createKfdWitnessFixture();
+  const claimPath = writeJson(path.join(cwd, "kfd-2-claim.json"), {
+    id: "claim:public-kfd-release-trust",
+    public: true,
+    claim: "KFD release is fully machine-verifiable.",
+  });
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v1.0.0-alpha.3",
+    repository: "kungfu-systems/kfd",
+    productName: "KFD",
+    sourceSha: "d".repeat(40),
+    assetsDir: path.relative(cwd, assetsDir),
+    outputDir: "release-passport",
+    releaseJsonExtra: JSON.stringify({
+      channel: "alpha",
+      targetRef: "alpha/v1/v1.0",
+    }),
+    kfd2ClaimJsons: [claimPath],
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+
+  assert.equal(passport["kfd-2"].status, "failed");
+  assert.equal(report.ok, false);
+  assert.match(JSON.stringify(report.issues), /declared-sources|machine-readable-evidence|kfd-2/);
+});
+
+test("release passport downgrades a public KFD-2 claim that is machine-bound but prose-supported", async () => {
+  const { cwd, assetsDir, actualSha256 } = createKfdWitnessFixture();
+  const claimPath = writeJson(path.join(cwd, "kfd-2-claim.json"), {
+    id: "claim:kfd-prose-explanation",
+    public: true,
+    claim: "KFD release notes explain the trust boundary.",
+    support: "prose",
+    sourceBindings: [{ path: "docs/KFD-2.md", sha256: actualSha256 }],
+    machineEvidence: [{ path: "release-notes.md", sha256: actualSha256 }],
+    hashes: { sourceSha256: actualSha256, evidenceSha256: actualSha256 },
+    artifacts: [{ name: "generic.schema", path: "config.schema.json", sha256: actualSha256 }],
+    verification: { result: "passed" },
+    auditBoundary: { scope: "release notes" },
+    responsibility: { owner: "KFD maintainers" },
+    residualRisk: [],
+  });
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v1.0.0-alpha.3",
+    repository: "kungfu-systems/kfd",
+    productName: "KFD",
+    sourceSha: "d".repeat(40),
+    assetsDir: path.relative(cwd, assetsDir),
+    outputDir: "release-passport",
+    releaseJsonExtra: JSON.stringify({
+      channel: "alpha",
+      targetRef: "alpha/v1/v1.0",
+    }),
+    kfd2ClaimJsons: [claimPath],
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+
+  assert.equal(passport["kfd-2"].status, "downgraded");
+  assert.equal(report.ok, true);
+  assert.equal(report.issues.some((entry) => entry.level === "warning" && entry.code.includes("kfd-2")), true);
+});
+
+test("release passport records KFD-3 residual risk without claiming full closure", async () => {
+  const { cwd, assetsDir, prebuildWitnessPath, artifactWitnessPath, metadata } = createKfd3WitnessFixture({
+    nonExhaustiveSurfaces: [{ id: "user-scripts", kind: "extension-point", reason: "User-provided scripts are not enumerable." }],
+  });
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v4.0.0-alpha.0",
+    repository: "kungfu-systems/kungfu",
+    productName: "Kungfu",
+    sourceSha: "d".repeat(40),
+    assetsDir: path.relative(cwd, assetsDir),
+    outputDir: "release-passport",
+    releaseJsonExtra: JSON.stringify({
+      channel: "alpha",
+      targetRef: "alpha/v4/v4.0",
+    }),
+    kfd3PrebuildWitnessJsons: [prebuildWitnessPath],
+    kfd3ArtifactWitnessJsons: [artifactWitnessPath],
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+
+  assert.equal(report.ok, true);
+  assert.equal(passport[metadata.key].status, "passed");
+  assert.equal(passport[metadata.key].releaseStatus, "audited");
+  assert.equal(passport[metadata.key].collaborationInterfaces[0].releaseStatus, "audited");
+  assert.equal(passport[metadata.key].collaborationInterfaces[0].residualRisk[0].id, "user-scripts");
+  assert.equal(
+    passport[metadata.key].collaborationInterfaces[0].reverseAudit.nonExhaustivelyEnumerableSurfaces[0].id,
+    "user-scripts",
+  );
+  assert.notEqual(passport[metadata.key].collaborationInterfaces[0].releaseStatus, "enforced");
+});
+
+test("release passport can collect KFD-3 artifact witness from product verify command", async () => {
+  const { cwd, assetsDir, prebuildWitnessPath, artifactWitness, metadata } = createKfd3WitnessFixture();
+  const commandFixturePath = writeJson(path.join(cwd, "emit-artifact-witness.mjs"), artifactWitness);
+  fs.writeFileSync(commandFixturePath, `process.stdout.write(${JSON.stringify(JSON.stringify(artifactWitness))});\n`);
+
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v4.0.0-alpha.0",
+    repository: "kungfu-systems/kungfu",
+    productName: "Kungfu",
+    sourceSha: "d".repeat(40),
+    assetsDir: path.relative(cwd, assetsDir),
+    outputDir: "release-passport",
+    releaseJsonExtra: JSON.stringify({
+      channel: "alpha",
+      targetRef: "alpha/v4/v4.0",
+    }),
+    kfd3PrebuildWitnessJsons: [prebuildWitnessPath],
+    kfd3ArtifactVerifyCommand: `${process.execPath} ${commandFixturePath}`,
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+
+  assert.equal(report.ok, true);
+  assert.equal(passport[metadata.key].collaborationInterfaces[0].artifactWitness.id, "kungfu-agent-bridge");
+});
+
+test("release passport fails closed when KFD-3 declared shipped surface is absent from artifact", async () => {
+  const { cwd, assetsDir, prebuildWitnessPath, artifactWitnessPath, metadata } = createKfd3WitnessFixture({
+    reachableEntrypoints: [],
+  });
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v4.0.0-alpha.0",
+    repository: "kungfu-systems/kungfu",
+    productName: "Kungfu",
+    sourceSha: "e".repeat(40),
+    assetsDir: path.relative(cwd, assetsDir),
+    outputDir: "release-passport",
+    releaseJsonExtra: JSON.stringify({
+      channel: "alpha",
+      targetRef: "alpha/v4/v4.0",
+    }),
+    kfd3PrebuildWitnessJsons: [prebuildWitnessPath],
+    kfd3ArtifactWitnessJsons: [artifactWitnessPath],
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+
+  assert.equal(passport[metadata.key].status, "failed");
+  assert.equal(report.ok, false);
+  assert.equal(passport[metadata.key].collaborationInterfaces[0].declaredCapabilityVerification.result, "failed");
+  assert.equal(passport[metadata.key].collaborationInterfaces[0].trustProof.result, "fail");
+  assert.match(JSON.stringify(report.issues), /missing declared shipped|missingDeclaredShipped|declared-shipped-surface-missing/i);
+});
+
+test("release passport fails closed when KFD-3 artifact exposes undeclared public surface", async () => {
+  const { cwd, assetsDir, prebuildWitnessPath, artifactWitnessPath, metadata } = createKfd3WitnessFixture({
+    reachableEntrypoints: ["agent-verify", "hidden-command"],
+  });
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v4.0.0-alpha.0",
+    repository: "kungfu-systems/kungfu",
+    productName: "Kungfu",
+    sourceSha: "f".repeat(40),
+    assetsDir: path.relative(cwd, assetsDir),
+    outputDir: "release-passport",
+    releaseJsonExtra: JSON.stringify({
+      channel: "alpha",
+      targetRef: "alpha/v4/v4.0",
+    }),
+    kfd3PrebuildWitnessJsons: [prebuildWitnessPath],
+    kfd3ArtifactWitnessJsons: [artifactWitnessPath],
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+
+  assert.equal(passport[metadata.key].status, "failed");
+  assert.equal(report.ok, false);
+  assert.equal(passport[metadata.key].collaborationInterfaces[0].reverseAudit.status, "failed");
+  assert.equal(passport[metadata.key].collaborationInterfaces[0].trustProof.result, "fail");
+  assert.match(JSON.stringify(report.issues), /hidden-command|unclassifiedArtifactPublic|not declared/i);
+});
+
+test("release passport fails closed when KFD-3 artifact witness points at stale collaboration-interface digest", async () => {
+  const { cwd, assetsDir, prebuildWitnessPath, artifactWitnessPath, metadata } = createKfd3WitnessFixture({
+    artifactDigest: "sha256:stale",
+  });
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v4.0.0-alpha.0",
+    repository: "kungfu-systems/kungfu",
+    productName: "Kungfu",
+    sourceSha: "a".repeat(40),
+    assetsDir: path.relative(cwd, assetsDir),
+    outputDir: "release-passport",
+    releaseJsonExtra: JSON.stringify({
+      channel: "alpha",
+      targetRef: "alpha/v4/v4.0",
+    }),
+    kfd3PrebuildWitnessJsons: [prebuildWitnessPath],
+    kfd3ArtifactWitnessJsons: [artifactWitnessPath],
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+
+  assert.equal(passport[metadata.key].status, "failed");
+  assert.equal(report.ok, false);
+  assert.match(JSON.stringify(passport[metadata.key].collaborationInterfaces[0].comparison.reasons), /collaboration-interface-digest-mismatch/);
+});
+
+test("release passport rejects invalid KFD-3 prebuild witness without declared surfaces", () => {
+  const { cwd, assetsDir, artifactWitnessPath, metadata } = createKfd3WitnessFixture();
+  const invalidPrebuild = writeJson(path.join(cwd, "invalid-kfd-3-prebuild.json"), {
+    id: "kungfu-agent-bridge",
+    standard: metadata.key,
+    supportLevel: "release",
+  });
+
+  assert.throws(() => collectGitHubReleasePassport({
+    cwd,
+    tag: "v4.0.0-alpha.0",
+    repository: "kungfu-systems/kungfu",
+    productName: "Kungfu",
+    sourceSha: "b".repeat(40),
+    assetsDir: path.relative(cwd, assetsDir),
+    outputDir: "release-passport",
+    releaseJsonExtra: JSON.stringify({
+      channel: "alpha",
+      targetRef: "alpha/v4/v4.0",
+    }),
+    kfd3PrebuildWitnessJsons: [invalidPrebuild],
+    kfd3ArtifactWitnessJsons: [artifactWitnessPath],
+  }), /declare at least one collaboration\/control surface/);
+});
+
+test("release passport records KFD-3 draft downgrade as trust proof failure", async () => {
+  const { cwd, assetsDir, prebuildWitnessPath, artifactWitnessPath, metadata } = createKfd3WitnessFixture({
+    supportLevel: "draft",
+  });
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v4.0.0-alpha.0",
+    repository: "kungfu-systems/kungfu",
+    productName: "Kungfu",
+    sourceSha: "c".repeat(40),
+    assetsDir: path.relative(cwd, assetsDir),
+    outputDir: "release-passport",
+    releaseJsonExtra: JSON.stringify({
+      channel: "alpha",
+      targetRef: "alpha/v4/v4.0",
+    }),
+    kfd3PrebuildWitnessJsons: [prebuildWitnessPath],
+    kfd3ArtifactWitnessJsons: [artifactWitnessPath],
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+
+  assert.equal(passport[metadata.key].status, "failed");
+  assert.equal(passport[metadata.key].releaseStatus, "draft");
+  assert.equal(passport[metadata.key].collaborationInterfaces[0].comparison.status, "downgraded");
+  assert.equal(passport[metadata.key].collaborationInterfaces[0].trustProof.result, "downgraded");
+  assert.equal(report.ok, false);
+  assert.match(JSON.stringify(report.issues), /support-level-draft|downgraded/);
 });
 
 test("release passport requires surface impacts for production release passports", async () => {

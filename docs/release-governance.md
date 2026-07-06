@@ -425,6 +425,16 @@ consumer repository still owns registry truth: npm, PyPI, OCI, S3, Conan, CMake
 packaging, download pages, dist-tags, and similar side effects must be
 implemented by project lifecycle commands that emit Buildchain publish evidence.
 
+Every Buildchain publish model that can run registry side effects must bind the
+publish entrypoint to an immutable `publish-gate/*` source lock. The reusable
+`release-candidate-promote.yml@v2` wrapper creates or updates that gate ref and
+passes `require-publish-source-lock`, `publish-source-ref`,
+`publish-source-sha`, and `publish-source-locked` to
+`promote-buildchain-ref`. Direct action callers must pass the same four inputs
+from the reusable build outputs. Workflows that only collect passports or run
+dry-run package checks do not move publish refs and are not publish-gate
+publication models.
+
 Buildchain also does not maintain bare exact tags such as `1.0.0`. The supported
 exact release and alpha refs are v-prefixed:
 

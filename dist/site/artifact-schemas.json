@@ -19,6 +19,7 @@
     "workflow-registry.json",
     "release-model.json",
     "artifact-schemas.json",
+    "buildchain-contract.json",
     "product-mechanism.json",
     "release-provenance.json",
     "agent-index.json"

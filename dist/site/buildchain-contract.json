@@ -1,0 +1,298 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-runtime-contract-world",
+  "product": {
+    "name": "Buildchain",
+    "package": "@kungfu-tech/buildchain",
+    "version": "2.8.0-alpha.0",
+    "repository": "https://github.com/kungfu-systems/buildchain"
+  },
+  "majorLine": "v2",
+  "compatibilityPolicy": "major-compatible",
+  "surfaces": [
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "reusable-build",
+      "kind": "workflow",
+      "path": ".github/workflows/.build.yml",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/.build.yml@v2",
+      "requiredInputs": [],
+      "requiredOutputs": [
+        "buildchain-runtime-sha",
+        "publish-source-sha",
+        "build-summary-artifact",
+        "release-candidate-artifact"
+      ],
+      "breakingDefaults": {
+        "buildchainRefDefault": "workflow-shell-ref-or-v2",
+        "promoteOnlyHeavyBuildPolicy": "pr-stage-only"
+      },
+      "optionalInputs": [
+        "buildchain-ref",
+        "runner-preset",
+        "platforms-json",
+        "release-candidate",
+        "artifact-transfer-mode",
+        "buildchain-contract-lock-path",
+        "buildchain-contract-drift-issue-mode"
+      ],
+      "guarantees": [
+        "runtime floating refs are resolved to immutable SHAs before matrix jobs",
+        "publish source locks are verified before heavy build jobs",
+        "release-candidate builds do not publish registry artifacts",
+        "contract drift is checked before heavy build jobs for stable floating refs"
+      ],
+      "breakingDigest": "sha256:6303aa2c2cb8c2cef4301ceea95cc3c426c2aa81d98714aa9bdf2471d63faee1",
+      "auditDigest": "sha256:93f8e59720cdfc8de2d04c1e76933932a28dfbaec80c26a5cf4266c85199322c"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "release-candidate-promote",
+      "kind": "workflow",
+      "path": ".github/workflows/release-candidate-promote.yml",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v2",
+      "requiredInputs": [
+        "channel"
+      ],
+      "requiredOutputs": [
+        "promoted-sha",
+        "built-source-sha",
+        "release-candidate-artifact"
+      ],
+      "breakingDefaults": {
+        "promoteOnlyReleaseCandidate": true,
+        "requiredStatusCheck": "check"
+      },
+      "optionalInputs": [
+        "buildchain-ref",
+        "release-candidate-workflow-file",
+        "release-candidate-workflow-name",
+        "publish-required-artifacts-json",
+        "release-passport-kfd-1-witness-jsons",
+        "release-passport-kfd-2-claim-jsons",
+        "release-passport-kfd-3-prebuild-witness-jsons",
+        "release-passport-kfd-3-artifact-witness-jsons",
+        "release-passport-kfd-3-artifact-verify-command",
+        "buildchain-contract-lock-path",
+        "buildchain-contract-drift-issue-mode"
+      ],
+      "guarantees": [
+        "promotion reuses PR-stage release-candidate artifacts",
+        "promotion does not run the heavy native build matrix",
+        "built source and promotion channel SHA are recorded separately",
+        "contract drift is checked before release-candidate resolution and publish",
+        "publish-gate source locks are created by the wrapper and enforced by promote-buildchain-ref before publish side effects"
+      ],
+      "breakingDigest": "sha256:1c27595adaa8fbc334b3f7f66605e4544cb8c60ce81a9bb7ee94d6ede93c65ac",
+      "auditDigest": "sha256:6602010eedc9e32f6ac14605a24bc6033a95f941fa348aa7921b8e759e12ccb6"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "promote-buildchain-ref-action",
+      "kind": "action",
+      "path": "actions/promote-buildchain-ref/action.yml",
+      "publicRef": "kungfu-systems/buildchain/actions/promote-buildchain-ref@v2",
+      "requiredInputs": [
+        "token",
+        "sha",
+        "target-ref"
+      ],
+      "requiredOutputs": [
+        "sha"
+      ],
+      "breakingDefaults": {
+        "requireGovernance": false,
+        "releasePassport": true
+      },
+      "optionalInputs": [
+        "publish-transaction",
+        "publish-required-artifacts-json",
+        "promote-only-release-candidate",
+        "release-passport-kfd-1-witness-jsons",
+        "release-passport-kfd-2-claim-jsons",
+        "release-passport-kfd-3-prebuild-witness-jsons",
+        "release-passport-kfd-3-artifact-witness-jsons",
+        "release-passport-kfd-3-artifact-verify-command"
+      ],
+      "guarantees": [
+        "protected release refs and durable release-state are finalized by Buildchain",
+        "release passport finalization is idempotent after publish side effects",
+        "publish transactions can require a resolved publish-gate source lock to prevent floating-ref drift"
+      ],
+      "breakingDigest": "sha256:fca97ba00248ed436695f12f8fc44404458af462e666aa7b69b4315b32705bdd",
+      "auditDigest": "sha256:014233a4add8a01fbccc40c86821c54d3aa12cd3b1158423ac88cb0e45a352a8"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "report-buildchain-issue-action",
+      "kind": "action",
+      "path": "actions/report-buildchain-issue/action.yml",
+      "publicRef": "kungfu-systems/buildchain/actions/report-buildchain-issue@v2",
+      "requiredInputs": [
+        "token"
+      ],
+      "requiredOutputs": [
+        "ok",
+        "action",
+        "issue-url",
+        "fingerprint"
+      ],
+      "breakingDefaults": {
+        "failOnError": false,
+        "mode": "create-or-comment"
+      },
+      "optionalInputs": [
+        "report-kind",
+        "target-repository",
+        "body-file",
+        "comment-cooldown-hours"
+      ],
+      "guarantees": [
+        "issue reporting is fail-soft by default",
+        "GitHub API 429 and 5xx failures are retried",
+        "missing issue permissions produce a copyable summary fallback"
+      ],
+      "breakingDigest": "sha256:575a2cb02cdb2e61bb2e84d5bbaaf64b430aa5d7936645660b592de4549d81b0",
+      "auditDigest": "sha256:512ccfeb7deedd950da87b112d25aa8667e081775b3b604f121374d25420eec1"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "release-passport-schema",
+      "kind": "schema",
+      "path": "packages/core/release-passport.js",
+      "requiredInputs": [
+        "buildchain.release.json"
+      ],
+      "requiredOutputs": [
+        "check-report.json"
+      ],
+      "breakingDefaults": {
+        "schemaVersion": 1,
+        "contract": "kungfu-buildchain-release-passport"
+      },
+      "guarantees": [
+        "release passport verification fails closed for malformed required evidence",
+        "release-state SHA is recorded as a durable audit entrance"
+      ],
+      "breakingDigest": "sha256:b627e1b2ece9b6049517a942c5139e342e6077cdd3d8962d61cef8481b1f70ad",
+      "auditDigest": "sha256:9668f3e01cfe8ce5b94ebdda24aeeaddbd609d8f4cc7cca33d82cbc59aae66f5"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "kfd-1-release-gate",
+      "kind": "schema",
+      "path": "packages/core/kfd-gate.js",
+      "requiredInputs": [
+        "KFD-1 witness JSON"
+      ],
+      "requiredOutputs": [
+        "kfd-1 release gate evidence"
+      ],
+      "breakingDefaults": {
+        "witnessContract": "kungfu-buildchain-kfd-1-witness-set",
+        "releaseGateContract": "kungfu-buildchain-kfd-1-release-gate"
+      },
+      "guarantees": [
+        "KFD-1 witnesses must include at least one artifact byte surface",
+        "artifact bytes are sha256 checked before passport finalization succeeds",
+        "KFD self contract witnesses record source/artifact hashes, self-hosting boundary, and responsibility state"
+      ],
+      "breakingDigest": "sha256:f46c1f67b94957ad956cf70db59a73fd5690bd67c91edf9c2d0eb8f3d1e3cf8d",
+      "auditDigest": "sha256:6a99ee108c385837ee9f1dbb75848f6ea434b6474977e6e567ae81f8fc9a555c"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "kfd-2-release-trust-passport-audit",
+      "kind": "schema",
+      "path": "packages/core/release-passport.js",
+      "requiredInputs": [
+        "public release claim evidence"
+      ],
+      "requiredOutputs": [
+        "kfd-2 release trust passport audit"
+      ],
+      "breakingDefaults": {
+        "releaseTrustPassportContract": "kungfu-buildchain-kfd-2-release-trust-passport-audit"
+      },
+      "guarantees": [
+        "public release claims must bind declared sources, machine evidence, hashes, artifacts, verification, audit boundary, responsibility, and residual risk",
+        "unbound public claims fail release passport verification",
+        "prose-only public claims downgrade the release trust passport audit"
+      ],
+      "breakingDigest": "sha256:f0b636eb925ddbf45ff1a8872454ab7b4dd98857cac12bb75217830130e62a16",
+      "auditDigest": "sha256:9668f3e01cfe8ce5b94ebdda24aeeaddbd609d8f4cc7cca33d82cbc59aae66f5"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "kfd-3-collaboration-interface-release-gate",
+      "kind": "schema",
+      "path": "packages/core/kfd-gate.js",
+      "requiredInputs": [
+        "KFD-3 prebuild witness JSON",
+        "KFD-3 artifact witness JSON or verify command"
+      ],
+      "requiredOutputs": [
+        "kfd-3 collaboration-interface release gate evidence"
+      ],
+      "breakingDefaults": {
+        "prebuildWitnessContract": "kungfu-buildchain-kfd-3-collaboration-interface-prebuild-witness",
+        "artifactWitnessContract": "kungfu-buildchain-kfd-3-collaboration-interface-artifact-witness",
+        "releaseGateContract": "kungfu-buildchain-kfd-3-collaboration-interface-release-gate"
+      },
+      "guarantees": [
+        "KFD-3 pre-build witnesses must declare participant-facing public surfaces",
+        "artifact witnesses must not expose undeclared public participant-facing surfaces",
+        "collaborationInterface.digest mismatches fail passport verification",
+        "KFD repository self-verification can declare docs, schemas, standards metadata, package exports, and site-consumption contracts",
+        "KFD-3 passports expose releaseStatus, witness hashes, declared capability verification, reverse audit boundary, residual risk, and responsibility state"
+      ],
+      "breakingDigest": "sha256:33654f3444c893754aacc42dde3051f0a371bd17c6ef7c657c579a07159cd7c1",
+      "auditDigest": "sha256:6a99ee108c385837ee9f1dbb75848f6ea434b6474977e6e567ae81f8fc9a555c"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "buildchain-cli",
+      "kind": "cli",
+      "path": "bin/buildchain.mjs",
+      "requiredInputs": [],
+      "requiredOutputs": [],
+      "breakingDefaults": {
+        "binary": "buildchain",
+        "moduleSystem": "esm"
+      },
+      "optionalInputs": [
+        "validate",
+        "lifecycle",
+        "collect github-release",
+        "verify release-passport",
+        "release-propagation",
+        "infra-contract"
+      ],
+      "guarantees": [
+        "CLI commands are stable within the major line unless the contract major changes"
+      ],
+      "breakingDigest": "sha256:097db3e67509bedda8c6548bf1edfbfcf57f7b5510520b6a7b7e078d7ec087c8",
+      "auditDigest": "sha256:478e656104272675d3be3391158251472e0c2515b3113376ef0e52757b47ace0"
+    }
+  ],
+  "compatibilityDigest": "sha256:ca668f3f73ab0d84db0d489efccf6cd556704b069990a37a0c6c77a6519f754b",
+  "contractDigest": "sha256:f072fa260c2f1f27a670246142045df0160fc0bbe7838cc7f0e206c7cf51b107"
+}
