@@ -4,7 +4,7 @@
   "product": {
     "name": "Buildchain",
     "package": "@kungfu-tech/buildchain",
-    "version": "2.8.2",
+    "version": "2.8.3-alpha.4",
     "repository": "https://github.com/kungfu-systems/buildchain"
   },
   "majorLine": "v2",
@@ -193,7 +193,7 @@
         "release-state SHA is recorded as a durable audit entrance"
       ],
       "breakingDigest": "sha256:b627e1b2ece9b6049517a942c5139e342e6077cdd3d8962d61cef8481b1f70ad",
-      "auditDigest": "sha256:22017d4cbe0d89aecfcada7b93f5cdf2935837b2236ae4aeff23f19dbf3d26cb"
+      "auditDigest": "sha256:f1c2d70510f074102c2e9ff87b638b7b9b33edaa88aad8abc1e73e75e46a6af7"
     },
     {
       "contractVersion": 1,
@@ -242,7 +242,7 @@
         "prose-only public claims downgrade the release trust passport audit"
       ],
       "breakingDigest": "sha256:f0b636eb925ddbf45ff1a8872454ab7b4dd98857cac12bb75217830130e62a16",
-      "auditDigest": "sha256:22017d4cbe0d89aecfcada7b93f5cdf2935837b2236ae4aeff23f19dbf3d26cb"
+      "auditDigest": "sha256:f1c2d70510f074102c2e9ff87b638b7b9b33edaa88aad8abc1e73e75e46a6af7"
     },
     {
       "contractVersion": 1,
@@ -298,7 +298,7 @@
         "CLI commands are stable within the major line unless the contract major changes"
       ],
       "breakingDigest": "sha256:097db3e67509bedda8c6548bf1edfbfcf57f7b5510520b6a7b7e078d7ec087c8",
-      "auditDigest": "sha256:478e656104272675d3be3391158251472e0c2515b3113376ef0e52757b47ace0"
+      "auditDigest": "sha256:1f4b07ac623517209dbdee2992f94d95f7ee96e8f35f13ef620dad8da9d2a6e0"
     },
     {
       "contractVersion": 1,
@@ -320,7 +320,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:7fbde28193df754afda019e218defb5d08aa2c64298382d277927faba5468240"
+      "auditDigest": "sha256:6f4d02f7852b46b293bbb3fb63c678a57dffdcb93598fd3bac5298796e624b63"
     },
     {
       "contractVersion": 1,
@@ -342,9 +342,9 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:f3ba17b4a48e7d0f2996fb9f39d5ff7f16f1e2de1958fc07718b04bdf8af5533"
+      "auditDigest": "sha256:2d1c150464effb5e8ad5d5a6ef78ee71899b8bd74a46c7b7a7a01fec1e35c86a"
     }
   ],
   "compatibilityDigest": "sha256:36421b592a782decbfe31a7d8d42d70ce1100a56a2c4f4a0ccc21f0617dc72bf",
-  "contractDigest": "sha256:12d39a2256bc4b93c81aa3ba1ce62ccc35fbb5054fca395815d77d8902aa42fe"
+  "contractDigest": "sha256:ad14c1b9172dd0ca690f3b02f1b99614a15cc753f8b11f8c43581d00a3e32a0e"
 }

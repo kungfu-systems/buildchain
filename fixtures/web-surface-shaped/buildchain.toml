@@ -43,6 +43,12 @@ production_url = "https://buildchain.libkungfu.dev"
 staging_url = "https://buildchain.staging.libkungfu.dev"
 preview_url_pattern = "https://buildchain-{alias}.preview.libkungfu.dev"
 
+[surfaces.kfd]
+path = "/kfd/"
+production_url = "https://kfd.libkungfu.dev"
+staging_url = "https://kfd.staging.libkungfu.dev"
+preview_url_pattern = "https://kfd-{alias}.preview.libkungfu.dev"
+
 [deploy.preview]
 adapter = "aws-s3-cloudfront"
 bucket = "libkungfu-dev-preview"

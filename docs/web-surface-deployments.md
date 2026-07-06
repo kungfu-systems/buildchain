@@ -64,10 +64,10 @@ secret_refs = ["AWS_ROLE_ARN"]
 ### Multi-Surface Host Mapping
 
 Some site repositories publish more than one first-class web surface from the
-same artifact. For example, a developer substrate site may have a hub plus
-separate hostnames for core and Buildchain documentation. These are not just
-navigation paths; staging and preview should be able to verify host-level
-behavior for each surface.
+same artifact. For example, `site-libkungfu-dev` has a hub plus separate
+hostnames for core, Buildchain, and Kung Fu Decisions. These are not just
+navigation paths; staging, production preflight, and post-deploy health checks
+must verify host-level behavior for each surface.
 
 Declare named surfaces with per-channel URLs:
 
@@ -89,6 +89,12 @@ path = "/buildchain/"
 production_url = "https://buildchain.libkungfu.dev"
 staging_url = "https://buildchain.staging.libkungfu.dev"
 preview_url_pattern = "https://buildchain-{alias}.preview.libkungfu.dev"
+
+[surfaces.kfd]
+path = "/kfd/"
+production_url = "https://kfd.libkungfu.dev"
+staging_url = "https://kfd.staging.libkungfu.dev"
+preview_url_pattern = "https://kfd-{alias}.preview.libkungfu.dev"
 ```
 
 Buildchain resolves every `(channel, surface)` pair. A preview alias such as
@@ -98,6 +104,7 @@ Buildchain resolves every `(channel, surface)` pair. A preview alias such as
 hub:        https://pr-12.preview.libkungfu.dev
 core:       https://core-pr-12.preview.libkungfu.dev
 buildchain: https://buildchain-pr-12.preview.libkungfu.dev
+kfd:        https://kfd-pr-12.preview.libkungfu.dev
 ```
 
 When `surfaces` is omitted, Buildchain preserves the legacy single-surface
@@ -324,6 +331,48 @@ Buildchain records the failed operation, stops subsequent adapter operations,
 and exits non-zero after writing the result JSON. Buildchain records secret
 reference names only; the runner must provide the AWS CLI and credentials
 outside Buildchain, typically through OIDC and the declared `secret_refs`.
+
+## Production Preflight And Health
+
+Production promotion is not just `deploy-apply --channel production`. Before a
+live production apply, the reusable workflow runs:
+
+```bash
+node scripts/web-surface.mjs \
+  --mode production-preflight \
+  --cwd fixtures/web-surface-shaped \
+  --plan .buildchain/web-surface-production-plan.json \
+  --execute true \
+  --output .buildchain/web-surface-production-preflight.json
+```
+
+The production preflight checks that:
+
+- `channels.production` is canonical and indexable;
+- every surface has concrete production bucket and CloudFront targets;
+- every production surface URL is HTTPS;
+- the production AWS role can inspect the declared bucket and distribution;
+- CloudFront aliases cover every surface host, including product hosts such as
+  `kfd.libkungfu.dev`;
+- DNS resolves for every surface host.
+
+After production apply, the workflow runs:
+
+```bash
+node scripts/web-surface.mjs \
+  --mode health-check \
+  --cwd fixtures/web-surface-shaped \
+  --result .buildchain/web-surface-production-apply.json \
+  --output .buildchain/web-surface-production-health.json
+```
+
+The health check fetches every surface URL from the apply result and fails
+production if a response is unreachable, returns an unexpected status, or still
+sends `x-robots-tag: noindex`. It also verifies that each surface binding
+recorded a deployment manifest pointer. The production release passport embeds
+the deploy plan, apply result, production preflight, and health check so a
+reviewer or agent can audit why the production site changed and whether every
+declared host was actually covered.
 
 ## Cleanup Plans
 

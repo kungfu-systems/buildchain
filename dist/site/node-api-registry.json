@@ -62,7 +62,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:22017d4cbe0d89aecfcada7b93f5cdf2935837b2236ae4aeff23f19dbf3d26cb"
+      "digest": "sha256:f1c2d70510f074102c2e9ff87b638b7b9b33edaa88aad8abc1e73e75e46a6af7"
     },
     {
       "specifier": "@kungfu-tech/buildchain/release-propagation",
