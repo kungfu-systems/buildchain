@@ -33,5 +33,16 @@
     "versionSource": "package.json#version",
     "alphaDistTag": "alpha",
     "stableDistTag": "latest"
+  },
+  "githubRelease": {
+    "exactTagRelease": true,
+    "prereleaseTags": "semver prerelease tags set prerelease=true and make_latest=false",
+    "stableTags": "stable semver tags set make_latest=true",
+    "evidenceAssets": [
+      "publish evidence JSON",
+      "buildchain.release.json",
+      "release passport assets"
+    ],
+    "owner": "promote-buildchain-ref"
   }
 }

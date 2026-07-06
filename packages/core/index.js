@@ -138,6 +138,19 @@ export {
 } from "./kfd-gate.js";
 
 export {
+  BUILDCHAIN_AGENT_MANUALS,
+  BUILDCHAIN_KFD_CLAIM_REGISTRY_CONTRACT,
+  BUILDCHAIN_KFD_COLLABORATION_INTERFACE_CONTRACT,
+  createBuildchainKfd1Witness,
+  createBuildchainKfd2Claims,
+  createBuildchainKfd3ArtifactWitness,
+  createBuildchainKfd3PrebuildWitness,
+  createBuildchainKfdClaimRegistry,
+  createBuildchainKfdSurfaceRegistry,
+  createBuildchainPublicClaimDefinitions,
+} from "./buildchain-kfd-claims.js";
+
+export {
   AGENT_INDEX_CONTRACT,
   ARTIFACT_EVIDENCE_CONTRACT,
   IMPACT_LEDGER_CONTRACT,

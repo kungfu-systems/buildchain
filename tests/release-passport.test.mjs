@@ -20,6 +20,7 @@ import {
   resolveKfd3Metadata,
   sha256File as sha256KfdFile,
 } from "../packages/core/kfd-gate.js";
+import { generateBuildchainKfdWitnesses } from "../scripts/generate-buildchain-kfd-witnesses.mjs";
 
 function tempDir(name) {
   return fs.mkdtempSync(path.join(os.tmpdir(), `buildchain-${name}-`));
@@ -1132,6 +1133,63 @@ test("release passport supports KFD repository self-verification surfaces", asyn
   assert.equal(kfd2TrustClaim.trustProof.reverseAuditBoundary.nonExhaustivelyEnumerableSurfaces[0].id, "human-language-interpretation");
   assert.equal(kfd2TrustClaim.trustProof.residualRisk[0].owner, "KFD maintainers");
   assert.equal(kfd2TrustClaim.trustProof.responsibility.releasePassportProofOwner, "Buildchain");
+});
+
+test("Buildchain self KFD claims generate enforceable release passport evidence", async () => {
+  const root = process.cwd();
+  const outputDir = tempDir("buildchain-self-kfd");
+  const generated = generateBuildchainKfdWitnesses({
+    cwd: root,
+    outputDir,
+    sourceSha: "e".repeat(40),
+    emitOutputs: false,
+  });
+  const output = (name) => path.resolve(root, generated.outputs[name]);
+  const outputList = (name) => String(generated.outputs[name] || "")
+    .split(",")
+    .filter(Boolean)
+    .map((entry) => path.resolve(root, entry));
+  const kfd1Metadata = resolveKfd1Metadata();
+  const kfd3Metadata = resolveKfd3Metadata({ requireSchemas: true });
+  const collected = collectGitHubReleasePassport({
+    cwd: root,
+    tag: "v2.8.2-alpha.0",
+    repository: "kungfu-systems/buildchain",
+    productName: "Buildchain",
+    sourceSha: "e".repeat(40),
+    assetsDir: "dist/site",
+    outputDir: path.join(outputDir, "release-passport"),
+    releaseJsonExtra: JSON.stringify({
+      channel: "alpha",
+      targetRef: "alpha/v2/v2.8",
+    }),
+    kfd1WitnessJsons: [output("kfd-1-witness-jsons")],
+    kfd2ClaimJsons: outputList("kfd-2-claim-jsons"),
+    kfd3PrebuildWitnessJsons: [output("kfd-3-prebuild-witness-jsons")],
+    kfd3ArtifactWitnessJsons: [output("kfd-3-artifact-witness-jsons")],
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+  const kfd1 = passport[kfd1Metadata.key];
+  const kfd3 = passport[kfd3Metadata.key];
+  const kfd2 = passport["kfd-2"];
+
+  assert.equal(report.ok, true);
+  assert.equal(kfd1.status, "passed");
+  assert.equal(kfd1.selfContractVerification.selfHosted, true);
+  assert.equal(kfd1.contractWorlds[0].sourceVerification.status, "passed");
+  assert.equal(kfd1.contractWorlds[0].artifactVerification.status, "passed");
+  assert.equal(kfd3.status, "passed");
+  assert.equal(kfd3.releaseStatus, "enforced");
+  assert.equal(kfd3.trustProof.result, "pass");
+  assert.equal(kfd3.collaborationInterfaces[0].declaredCapabilityVerification.result, "passed");
+  assert.equal(kfd3.collaborationInterfaces[0].reverseAudit.status, "passed");
+  assert.equal(kfd2.status, "passed");
+  assert.equal(kfd2.claims.some((claim) => claim.id === "claim:buildchain-agent-first-source-of-truth"), true);
+  assert.equal(kfd2.claims.every((claim) => claim.missingBindings.length === 0), true);
+  assert.ok(kfd3.collaborationInterfaces[0].declaredSurfaces.some((surface) => surface.id === "site:dist/site/kfd-claims.json"));
+  assert.ok(kfd3.collaborationInterfaces[0].declaredSurfaces.some((surface) => surface.id === "export:./buildchain-kfd-claims"));
 });
 
 test("release passport fails closed when KFD self-verification artifact exposes undeclared package or site surfaces", async () => {

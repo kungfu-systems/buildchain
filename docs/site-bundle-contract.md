@@ -14,10 +14,13 @@ dist/site/
   buildchain-site.json
   site-manifest.json
   cli-registry.json
+  manual-registry.json
+  node-api-registry.json
   workflow-registry.json
   release-model.json
   artifact-schemas.json
   buildchain-contract.json
+  kfd-claims.json
   product-mechanism.json
   release-provenance.json
   agent-index.json
@@ -28,6 +31,15 @@ dist/site/
 world used by floating-ref contract locks. It records public workflow/action/CLI
 surfaces, compatibility digests, and audit digests for the files that implement
 those surfaces.
+`manual-registry.json` enumerates the packaged Markdown manuals with source
+digests so an agent can find complete operating documentation from the npm
+artifact. `node-api-registry.json` enumerates public Node import surfaces from
+`package.json#exports`, so agents do not have to infer supported APIs from
+internal paths.
+`kfd-claims.json` is the Buildchain-owned KFD claim registry. It is generated
+from `packages/core/buildchain-kfd-claims.js` and enumerates the public release
+claims plus the KFD-3 collaboration surfaces that Buildchain self-verifies
+during release promotion.
 
 ## npm Consumption
 
@@ -63,10 +75,16 @@ The P0 bundle includes:
 
 - site manifest;
 - CLI command registry;
+- manual registry for packaged agent-facing documentation;
+- Node API registry for public package exports;
 - workflow/action registry;
 - release model facts;
 - artifact and evidence schema index;
-- Buildchain runtime contract world for `@v2` floating-ref compatibility checks;
+- Buildchain runtime contract world for `@v2` floating-ref compatibility checks,
+  KFD-1/KFD-2/KFD-3 release gates, GitHub Release evidence publication, and
+  site-consumption contracts;
+- Buildchain KFD claim registry for release-passport self verification and
+  agent-first public claim discovery;
 - product mechanism manifest;
 - release provenance;
 - agent read order.

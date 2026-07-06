@@ -51,6 +51,31 @@ non-JavaScript environments. JavaScript code that already depends on
 `@kungfu-tech/buildchain` should import the toolkit API instead of spawning
 `npx buildchain` or a downloaded binary.
 
+## Node API and Package Exports
+
+Buildchain's public Node API is the package `exports` surface, not arbitrary
+internal file paths. The npm package also ships
+`dist/site/node-api-registry.json` and exports it as
+`@kungfu-tech/buildchain/site/node-api-registry.json` so agents can enumerate
+the supported imports from the installed package.
+
+Current public import families include:
+
+```js
+import * as buildchain from "@kungfu-tech/buildchain";
+import { createBuildchainLogger } from "@kungfu-tech/buildchain/logging";
+import { verifyKfd1ReleaseGate } from "@kungfu-tech/buildchain/kfd-gate";
+import { verifyReleasePassport } from "@kungfu-tech/buildchain/release-passport";
+import { createReleasePropagationPlan } from "@kungfu-tech/buildchain/release-propagation";
+import contractWorld from "@kungfu-tech/buildchain/site/buildchain-contract.json" with { type: "json" };
+import manualRegistry from "@kungfu-tech/buildchain/site/manual-registry.json" with { type: "json" };
+import nodeApiRegistry from "@kungfu-tech/buildchain/site/node-api-registry.json" with { type: "json" };
+```
+
+Use `dist/site/manual-registry.json` to find the packaged operating manuals and
+their SHA-256 digests. Use `dist/site/buildchain-contract.json` to verify the
+floating-ref contract world for a runtime such as `@v2`.
+
 ## Commands
 
 `buildchain init` writes a starter `buildchain.toml` and a reusable workflow
