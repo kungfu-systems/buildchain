@@ -533,6 +533,7 @@ jobs:
       publish-target: npm
       runner-preset: github-hosted
       trusted-publishing: true
+      github-release: true
       required-status-check: check
       required-artifact-count: 3
       publish-dist-tag: alpha
@@ -568,6 +569,18 @@ The same Buildchain contract lock check runs before release-candidate
 resolution and before publish. A compatible `v2` drift leaves an issue in the
 consumer repository but does not trigger a second heavy build; an incompatible
 drift fails before publish side effects.
+
+Set `github-release: true` when the promoted exact tag should also publish a
+GitHub Release. After `promote-buildchain-ref` reports a complete release
+transaction, the wrapper creates or updates the exact-tag release, marks semver
+prerelease tags such as `v1.2.3-alpha.0`, `v1.2.3-rc.1`, or
+`v22.22.3-kf.3-alpha.7` as `prerelease=true` and `make_latest=false`, marks
+stable semver tags as latest, and uploads the publish evidence file plus every
+file in the generated release passport directory, including
+`buildchain.release.json` and `check-report.json`. Consumers do not need to
+hand-write `gh release` logic to trigger `release.published` propagation.
+If the transaction still needs protected-ref finalization, the wrapper defers
+GitHub Release creation until the later run that reaches `state=complete`.
 
 Custom publish jobs can also repeat the channel-ref preflight:
 

@@ -88,7 +88,7 @@
         "publish-gate source locks are created by the wrapper and enforced by promote-buildchain-ref before publish side effects"
       ],
       "breakingDigest": "sha256:1c27595adaa8fbc334b3f7f66605e4544cb8c60ce81a9bb7ee94d6ede93c65ac",
-      "auditDigest": "sha256:6602010eedc9e32f6ac14605a24bc6033a95f941fa348aa7921b8e759e12ccb6"
+      "auditDigest": "sha256:4fddfd83cd8a90c45c1356561f38985b5a29f1cdb04ca969639867b6ee6869d0"
     },
     {
       "contractVersion": 1,
@@ -294,5 +294,5 @@
     }
   ],
   "compatibilityDigest": "sha256:ca668f3f73ab0d84db0d489efccf6cd556704b069990a37a0c6c77a6519f754b",
-  "contractDigest": "sha256:f072fa260c2f1f27a670246142045df0160fc0bbe7838cc7f0e206c7cf51b107"
+  "contractDigest": "sha256:83f14e24fd1d4da2c3a96d38f346f28fc059ef2c53748517fc8e205638c5e4ef"
 }

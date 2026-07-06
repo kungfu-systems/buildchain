@@ -82,6 +82,21 @@ on:
         default: "npm"
         type: string
         required: false
+      github-release:
+        description: "Create/update the exact-tag GitHub Release and upload Buildchain release passport/evidence assets after a complete release transaction"
+        default: false
+        type: boolean
+        required: false
+      github-release-title:
+        description: "Optional GitHub Release title. Empty defaults to the exact tag."
+        default: ""
+        type: string
+        required: false
+      github-release-notes:
+        description: "Optional GitHub Release notes. Empty uses a Buildchain release-passport asset note."
+        default: ""
+        type: string
+        required: false
       runner-preset:
         description: "Runner preset recorded for audit"
         default: "github-hosted"
@@ -458,6 +473,7 @@ jobs:
             core.setOutput("locked", "true");
 
       - name: Promote-only publish
+        id: promote
         uses: ./.buildchain/runtime/actions/promote-buildchain-ref
         with:
           token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
@@ -495,6 +511,64 @@ jobs:
           release-candidate-passport-path: ${{ steps.rc.outputs.release-candidate-passport-path }}
           release-candidate-build-summary-path: ${{ steps.rc.outputs.release-candidate-build-summary-path }}
           release-candidate-version: ${{ steps.rc.outputs.release-candidate-version }}
+
+      - name: Publish GitHub Release evidence
+        if: ${{ inputs.github-release && !inputs.dry-run && steps.promote.outputs.transaction-state == 'complete' && steps.promote.outputs.finalization-needed != 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+          GITHUB_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+          RELEASE_TAG: ${{ steps.promote.outputs.transaction-exact-tag }}
+          RELEASE_TITLE: ${{ inputs.github-release-title }}
+          RELEASE_NOTES: ${{ inputs.github-release-notes }}
+          RELEASE_TARGET: ${{ steps.promote.outputs.transaction-release-sha || steps.target.outputs.sha }}
+          PUBLISH_EVIDENCE_PATH: ${{ steps.promote.outputs.publish-evidence-path }}
+          RELEASE_PASSPORT_PATH: ${{ steps.promote.outputs.release-passport-path }}
+          RELEASE_PASSPORT_OUTPUT_DIR: ${{ steps.promote.outputs.release-passport-output-dir }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${RELEASE_TAG}" ]; then
+            echo "::error::github-release=true requires promote-buildchain-ref to output transaction-exact-tag"
+            exit 1
+          fi
+          if [ -z "${PUBLISH_EVIDENCE_PATH}" ] || [ ! -f "${PUBLISH_EVIDENCE_PATH}" ]; then
+            echo "::error::github-release=true requires a publish evidence file, got '${PUBLISH_EVIDENCE_PATH}'"
+            exit 1
+          fi
+          if [ -z "${RELEASE_PASSPORT_PATH}" ] || [ ! -f "${RELEASE_PASSPORT_PATH}" ]; then
+            echo "::error::github-release=true requires buildchain.release.json, got '${RELEASE_PASSPORT_PATH}'"
+            exit 1
+          fi
+          if [ -z "${RELEASE_PASSPORT_OUTPUT_DIR}" ] || [ ! -d "${RELEASE_PASSPORT_OUTPUT_DIR}" ]; then
+            echo "::error::github-release=true requires a release passport output directory, got '${RELEASE_PASSPORT_OUTPUT_DIR}'"
+            exit 1
+          fi
+          title="${RELEASE_TITLE:-${RELEASE_TAG}}"
+          notes="${RELEASE_NOTES:-Buildchain release passport assets for ${RELEASE_TAG}.}"
+          node .buildchain/runtime/scripts/ensure-github-release.mjs \
+            --repository "${GITHUB_REPOSITORY}" \
+            --tag "${RELEASE_TAG}" \
+            --title "${title}" \
+            --notes "${notes}" \
+            --target "${RELEASE_TARGET}"
+          upload_args=("${PUBLISH_EVIDENCE_PATH}")
+          shopt -s nullglob
+          for asset in "${RELEASE_PASSPORT_OUTPUT_DIR}"/*; do
+            [ -f "${asset}" ] || continue
+            upload_args+=("${asset}")
+          done
+          shopt -u nullglob
+          if [ "${#upload_args[@]}" -lt 2 ]; then
+            echo "::error::github-release=true found no release passport assets under ${RELEASE_PASSPORT_OUTPUT_DIR}"
+            exit 1
+          fi
+          gh release upload "${RELEASE_TAG}" "${upload_args[@]}" --clobber
+
+      - name: Defer GitHub Release evidence
+        if: ${{ inputs.github-release && !inputs.dry-run && (steps.promote.outputs.transaction-state != 'complete' || steps.promote.outputs.finalization-needed == 'true') }}
+        run: |
+          echo "::notice::github-release=true is waiting for a complete release transaction before creating or updating the exact-tag GitHub Release."
+          echo "::notice::transaction-state=${{ steps.promote.outputs.transaction-state }} finalization-needed=${{ steps.promote.outputs.finalization-needed }}"
 
       - name: Classify Buildchain promotion friction
         id: friction

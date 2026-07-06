@@ -3,15 +3,15 @@ import { pathToFileURL } from "node:url";
 
 export function classifyReleaseTag(tag) {
   const normalized = String(tag || "").trim();
-  const match = normalized.match(/^v\d+\.\d+\.\d+(?:-alpha\.\d+)?$/);
+  const match = normalized.match(/^v\d+\.\d+\.\d+(?:-[0-9A-Za-z][0-9A-Za-z.-]*)?$/);
   if (!match) {
-    throw new Error(`Unsupported Buildchain release tag: ${tag}`);
+    throw new Error(`Unsupported semver release tag: ${tag}`);
   }
-  const alpha = normalized.includes("-alpha.");
+  const prerelease = normalized.includes("-");
   return {
     tag: normalized,
-    prerelease: alpha,
-    makeLatest: alpha ? "false" : "true",
+    prerelease,
+    makeLatest: prerelease ? "false" : "true",
   };
 }
 
