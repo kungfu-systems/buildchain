@@ -761,6 +761,11 @@ test("binary distribution manages GitHub Release metadata explicitly", () => {
     path.join(root, ".github/workflows/binary-distribution.yml"),
     "utf8",
   );
+  assert.match(workflow, /Fetch durable release-state passport/);
+  assert.match(workflow, /refs\/heads\/\$\{ref\}:refs\/remotes\/origin\/\$\{ref\}/);
+  assert.match(workflow, /authoritative-release-state-passport\.json/);
+  assert.match(workflow, /--base-passport-json \.buildchain\/release-passport\/authoritative-release-state-passport\.json/);
+  assert.match(workflow, /--require-base-kfd/);
   assert.match(workflow, /scripts\/ensure-github-release\.mjs/);
   assert.match(workflow, /--repository "\$\{\{ github\.repository \}\}"/);
   assert.match(workflow, /--tag "\$RELEASE_TAG"/);
