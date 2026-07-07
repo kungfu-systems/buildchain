@@ -35,6 +35,12 @@ import {
   verifyReleasePassport,
 } from "../../packages/core/release-passport.js";
 import { validateReleaseCandidatePassport } from "../../packages/core/release-candidate.js";
+import {
+  createBuildchainKfd1Witness,
+  createBuildchainKfd2Claims,
+  createBuildchainKfd3ArtifactWitness,
+  createBuildchainKfd3PrebuildWitness,
+} from "../../packages/core/buildchain-kfd-claims.js";
 
 const COMMIT_IDENTITY = {
   name: "Keren Dong",
@@ -616,6 +622,10 @@ function writeJsonFile(filePath, value) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`);
   return filePath;
+}
+
+function toRepoRelative(cwd, filePath) {
+  return path.relative(cwd, filePath).split(path.sep).join("/");
 }
 
 function readJsonFileIfExists(filePath) {
@@ -1850,6 +1860,41 @@ async function persistTransactionResult(result, transaction) {
   return { ...result, transaction: persisted, durable };
 }
 
+function generateBuildchainSelfKfdInputs({
+  cwd,
+  outputDir = ".buildchain/kfd",
+  sourceSha = "",
+} = {}) {
+  const resolvedOutputDir = path.resolve(cwd, outputDir);
+  const paths = {
+    kfd1Witness: path.join(resolvedOutputDir, "buildchain-kfd-1-witness.json"),
+    kfd3PrebuildWitness: path.join(resolvedOutputDir, "buildchain-kfd-3-prebuild-witness.json"),
+    kfd3ArtifactWitness: path.join(resolvedOutputDir, "buildchain-kfd-3-artifact-witness.json"),
+    kfd2ClaimsDir: path.join(resolvedOutputDir, "kfd-2-claims"),
+  };
+  writeJsonFile(paths.kfd1Witness, createBuildchainKfd1Witness({ root: cwd, sourceSha }));
+  writeJsonFile(paths.kfd3PrebuildWitness, createBuildchainKfd3PrebuildWitness({ root: cwd, sourceSha }));
+  writeJsonFile(paths.kfd3ArtifactWitness, createBuildchainKfd3ArtifactWitness({ root: cwd, sourceSha }));
+  const witnessFiles = {
+    "kfd-1-witness": toRepoRelative(cwd, paths.kfd1Witness),
+    "kfd-3-prebuild-witness": toRepoRelative(cwd, paths.kfd3PrebuildWitness),
+    "kfd-3-artifact-witness": toRepoRelative(cwd, paths.kfd3ArtifactWitness),
+  };
+  const kfd2ClaimJsons = createBuildchainKfd2Claims({ root: cwd, witnessFiles }).map((claim) => {
+    const slug = String(claim.id || "claim")
+      .replace(/^claim:/, "")
+      .replace(/[^0-9A-Za-z._-]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "claim";
+    return writeJsonFile(path.join(paths.kfd2ClaimsDir, `${slug}.json`), claim);
+  });
+  return {
+    kfd1WitnessJsons: [paths.kfd1Witness],
+    kfd2ClaimJsons,
+    kfd3PrebuildWitnessJsons: [paths.kfd3PrebuildWitness],
+    kfd3ArtifactWitnessJsons: [paths.kfd3ArtifactWitness],
+  };
+}
+
 async function collectAndPersistReleasePassport({
   result,
   owner,
@@ -1870,6 +1915,7 @@ async function collectAndPersistReleasePassport({
   kfd3PrebuildWitnessJsons = [],
   kfd3ArtifactWitnessJsons = [],
   kfd3ArtifactVerifyCommand = "",
+  buildchainSelfKfd = false,
   enabled = true,
   releaseCandidateValidation = undefined,
 }) {
@@ -1900,6 +1946,24 @@ async function collectAndPersistReleasePassport({
   const passportSourceSha = result.transaction.source_sha || sourceSha;
   const internalVersion = stripTagPrefix(result.transaction.exact_tag || "");
   const publishedVersion = result.transaction.version || internalVersion;
+  const selfKfd = buildchainSelfKfd
+    ? generateBuildchainSelfKfdInputs({
+        cwd,
+        sourceSha: passportSourceSha,
+      })
+    : undefined;
+  const resolvedKfd1WitnessJsons = kfd1WitnessJsons.length > 0
+    ? kfd1WitnessJsons
+    : selfKfd?.kfd1WitnessJsons || [];
+  const resolvedKfd2ClaimJsons = kfd2ClaimJsons.length > 0
+    ? kfd2ClaimJsons
+    : selfKfd?.kfd2ClaimJsons || [];
+  const resolvedKfd3PrebuildWitnessJsons = kfd3PrebuildWitnessJsons.length > 0
+    ? kfd3PrebuildWitnessJsons
+    : selfKfd?.kfd3PrebuildWitnessJsons || [];
+  const resolvedKfd3ArtifactWitnessJsons = kfd3ArtifactWitnessJsons.length > 0
+    ? kfd3ArtifactWitnessJsons
+    : selfKfd?.kfd3ArtifactWitnessJsons || [];
   const collected = collectGitHubReleasePassport({
     cwd,
     tag: result.transaction.exact_tag,
@@ -1923,10 +1987,10 @@ async function collectAndPersistReleasePassport({
     transactionJson: JSON.stringify(transactionJson),
     anchorManifestJson: anchorManifestPath && fs.existsSync(anchorManifestPath) ? anchorManifestPath : "",
     impactJson,
-    kfd1WitnessJsons,
-    kfd2ClaimJsons,
-    kfd3PrebuildWitnessJsons,
-    kfd3ArtifactWitnessJsons,
+    kfd1WitnessJsons: resolvedKfd1WitnessJsons,
+    kfd2ClaimJsons: resolvedKfd2ClaimJsons,
+    kfd3PrebuildWitnessJsons: resolvedKfd3PrebuildWitnessJsons,
+    kfd3ArtifactWitnessJsons: resolvedKfd3ArtifactWitnessJsons,
     kfd3ArtifactVerifyCommand,
     buildSummaryJson,
     platformManifestJsons: platformManifests,
@@ -2906,6 +2970,7 @@ async function promoteBuildchainRefs({
   releasePassportKfd3PrebuildWitnessJsons = "",
   releasePassportKfd3ArtifactWitnessJsons = "",
   releasePassportKfd3ArtifactVerifyCommand = "",
+  releasePassportBuildchainSelfKfd = false,
   promoteOnlyReleaseCandidate = false,
   releaseCandidatePassportPath = ".buildchain/artifacts/release-candidate-passport.json",
   releaseCandidateBuildSummaryPath = ".buildchain/artifacts/build-summary.json",
@@ -3819,6 +3884,7 @@ async function promoteBuildchainRefs({
       kfd3PrebuildWitnessJsons: splitPathList(releasePassportKfd3PrebuildWitnessJsons),
       kfd3ArtifactWitnessJsons: splitPathList(releasePassportKfd3ArtifactWitnessJsons),
       kfd3ArtifactVerifyCommand: releasePassportKfd3ArtifactVerifyCommand,
+      buildchainSelfKfd: Boolean(releasePassportBuildchainSelfKfd),
       enabled: Boolean(releasePassport),
       releaseCandidateValidation,
     });
