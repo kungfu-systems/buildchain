@@ -13,6 +13,16 @@ type = "json"
 path = "dist/site/buildchain-contract.json"
 key = "product.version"
 
+[[version.files]]
+type = "json"
+path = "dist/site/buildchain-site.json"
+key = "package.version"
+
+[[version.files]]
+type = "json"
+path = "dist/site/site-manifest.json"
+key = "package.version"
+
 [lifecycle.install]
 command = "corepack pnpm@11.7.0 install --frozen-lockfile"
 

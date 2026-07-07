@@ -8,13 +8,13 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:cfbe85e8fcac0f1c525ed99d9d488898575d9ea21cc7855e454b55df49cd2e0e"
+      "digest": "sha256:5b77fefabfad124ae3a7a68651a1ff54e3c88e71ae542814ca69a927cd867d15"
     },
     {
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:cfbe85e8fcac0f1c525ed99d9d488898575d9ea21cc7855e454b55df49cd2e0e"
+      "digest": "sha256:5b77fefabfad124ae3a7a68651a1ff54e3c88e71ae542814ca69a927cd867d15"
     },
     {
       "specifier": "@kungfu-tech/buildchain/artifact-passport",
@@ -62,13 +62,19 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:3476a0837292b81a6efeb7c989dc1ee975b2bd8e8882273fd4eb5f865d330bc1"
+      "digest": "sha256:79520e72824eb0245446f516fe6abe9faab0ec247c6d6cec7ac5fd62ab1f48ee"
     },
     {
       "specifier": "@kungfu-tech/buildchain/release-propagation",
       "export": "./release-propagation",
       "target": "./packages/core/release-propagation.js",
       "digest": "sha256:1960be557e57d738cb242ccf3df9ad41cdf156037648a7ab584905b6629f5840"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/surface-manifest",
+      "export": "./surface-manifest",
+      "target": "./packages/core/surface-manifest.js",
+      "digest": "sha256:66dbece7b671c69fb0bb69c7818cdedb480b81e627a275c232435ff1fa950351"
     },
     {
       "specifier": "@kungfu-tech/buildchain/buildchain-kfd-claims",
@@ -86,7 +92,7 @@
     {
       "id": "site-bundle-contract",
       "path": "docs/site-bundle-contract.md",
-      "digest": "sha256:1977091fc18b816208e7af50a177fd15e114498bfa49041573812405b46585aa"
+      "digest": "sha256:466318ea255da5a3c70a260773384341afb91b929135f2253ecd8f4e6dae7f7b"
     }
   ],
   "guidance": "These are the public Node import surfaces shipped by the npm package. Agents should prefer these exports over internal file paths."
