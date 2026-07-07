@@ -363,6 +363,7 @@ for (const requiredSnippet of [
   "Generate Buildchain self KFD release claims",
   "generate-buildchain-kfd-witnesses.mjs",
   "github-release:",
+  "default: true",
   "github-release: ${{ inputs.github-release }}",
   "github-release-title: ${{ inputs.github-release-title }}",
   "github-release-notes: ${{ inputs.github-release-notes }}",

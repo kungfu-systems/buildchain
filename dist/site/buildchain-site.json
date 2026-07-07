@@ -105,7 +105,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:e5b2222fddd0624b6aff1c999bb156df26eebbd7b365ec65ef3622611dc055ea"
+      "digest": "sha256:8c3e7a5e099c8eb0715bb6f58af90d261f8cb83d384f3281b8763f340277582b"
     },
     {
       "id": "publish-transaction",
@@ -121,7 +121,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:8aab1af617e511011974cb63f04240463fc99c427cb3b29e5f5d385c88620464"
+      "digest": "sha256:c7348c64e83ea1d154955e2fc0f7318a1c5582a3dfa6bdc5728958ddb418e92d"
     },
     {
       "id": "release-flow",

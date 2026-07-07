@@ -84,7 +84,7 @@ on:
         required: false
       github-release:
         description: "Create/update the exact-tag GitHub Release and upload Buildchain release passport/evidence assets after a complete release transaction"
-        default: false
+        default: true
         type: boolean
         required: false
       github-release-title:
