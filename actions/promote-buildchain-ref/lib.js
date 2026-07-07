@@ -390,10 +390,21 @@ function runVersionVerification({ cwd, command, loadedConfig, version, changedFi
   return collectAllowedLocalChanges(cwd, allowedPaths);
 }
 
-function versionVerificationEnv(versionStrategy, anchorManifest) {
+function versionVerificationEnv(versionStrategy, anchorManifest, { generatedAt = "", sourceSha = "" } = {}) {
   return {
     BUILDCHAIN_VERSION_STRATEGY: versionStrategy.strategy,
     BUILDCHAIN_VERSION_NEXT: versionStrategy.next,
+    ...(generatedAt
+      ? {
+          BUILDCHAIN_SITE_GENERATED_AT: generatedAt,
+          BUILDCHAIN_SITE_PUBLISHED_AT: generatedAt,
+          BUILDCHAIN_SITE_TIMESTAMP_POLICY: "ci-injected",
+          BUILDCHAIN_SURFACE_GENERATED_AT: generatedAt,
+          BUILDCHAIN_SURFACE_PUBLISHED_AT: generatedAt,
+          BUILDCHAIN_SURFACE_TIMESTAMP_POLICY: "ci-injected",
+        }
+      : {}),
+    ...(sourceSha ? { BUILDCHAIN_SOURCE_SHA: sourceSha } : {}),
     ...(anchorManifest
       ? {
           BUILDCHAIN_ANCHOR_MANIFEST: anchorManifest.path,
@@ -1474,6 +1485,7 @@ async function runPublishTransaction({
   runId = "",
   explicitOverride = false,
   allowVersionStateFinalization = false,
+  promotionGeneratedAt = new Date().toISOString(),
 }) {
   const lifecyclePublish = getLifecycleStage(loadedConfig, "publish");
   const enabled = Boolean(publishTransaction || publishCommand || lifecyclePublish);
@@ -1753,6 +1765,12 @@ async function runPublishTransaction({
             BUILDCHAIN_RELEASE_SHA: releaseSha,
             BUILDCHAIN_RELEASE_MATERIAL_SHA: expected.releaseMaterialSha,
             BUILDCHAIN_PUBLISH_TOOLING_SHA: expected.publishToolingSha,
+            BUILDCHAIN_SITE_GENERATED_AT: promotionGeneratedAt,
+            BUILDCHAIN_SITE_PUBLISHED_AT: promotionGeneratedAt,
+            BUILDCHAIN_SITE_TIMESTAMP_POLICY: "ci-injected",
+            BUILDCHAIN_SURFACE_GENERATED_AT: promotionGeneratedAt,
+            BUILDCHAIN_SURFACE_PUBLISHED_AT: promotionGeneratedAt,
+            BUILDCHAIN_SURFACE_TIMESTAMP_POLICY: "ci-injected",
             BUILDCHAIN_PUBLISH_EVIDENCE: resolvedEvidencePath,
             BUILDCHAIN_PUBLISH_MODE: publishContract.mode,
             BUILDCHAIN_PUBLISH_AUTH: publishContract.auth,
@@ -3001,6 +3019,7 @@ async function promoteBuildchainRefs({
   }
 
   const updates = [];
+  const promotionGeneratedAt = new Date().toISOString();
   let releaseCandidateValidation;
   if (promoteOnlyReleaseCandidate) {
     const targetCommitInfo = await getCommitInfo(octokit, owner, repo, sha);
@@ -3586,7 +3605,10 @@ async function promoteBuildchainRefs({
     const discoveredPaths = discovered.files.map((file) => file.path);
     const versionStrategy = getVersionStrategy(discovered.config);
     const anchorManifest = loadConfiguredAnchorManifest(cwd, discovered.config);
-    const strategyEnv = versionVerificationEnv(versionStrategy, anchorManifest);
+    const strategyEnv = versionVerificationEnv(versionStrategy, anchorManifest, {
+      generatedAt: promotionGeneratedAt,
+      sourceSha: sha,
+    });
     const manualNext =
       versionStrategy.strategy === "anchored" && versionStrategy.next === "manual";
     const configuredVersion = manualNext
@@ -3842,6 +3864,7 @@ async function promoteBuildchainRefs({
       runId,
       explicitOverride: publishTransactionOverride,
       allowVersionStateFinalization,
+      promotionGeneratedAt,
     });
     if (latestPublishTransaction) {
       updates.push({

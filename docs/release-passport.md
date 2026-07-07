@@ -47,6 +47,10 @@ Additive passport sections:
   trusted publishing was enabled.
 - `transaction`: durable Buildchain release transaction id, state, exact tag,
   release SHA, state ref, and state SHA.
+- `surfaceTimestampPolicy`: the common Buildchain surface manifest timestamp
+  policy. It records real CI/release generation and publication times,
+  reproducibility inputs, source revision or source-date-epoch, and whether
+  timestamp fields participate in the release artifact digest.
 - `artifacts`: release assets and registry artifacts in one list, each pointing
   back to the evidence file that proves its digest.
 

@@ -203,3 +203,9 @@ export {
   resolvePropagationChannel,
   writeReleasePropagationLock,
 } from "./release-propagation.js";
+
+export {
+  SURFACE_TIMESTAMP_POLICY_CONTRACT,
+  applySurfaceTimestampPolicy,
+  createSurfaceTimestampPolicy,
+} from "./surface-manifest.js";

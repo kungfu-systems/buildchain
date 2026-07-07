@@ -8,6 +8,7 @@ import {
   BUILDCHAIN_AGENT_MANUALS,
   createBuildchainKfdClaimRegistry,
 } from "../packages/core/buildchain-kfd-claims.js";
+import { createSurfaceTimestampPolicy } from "../packages/core/surface-manifest.js";
 
 const SITE_BUNDLE_CONTRACT = "kungfu-buildchain-site-bundle";
 const README_PATH = "README.md";
@@ -29,6 +30,10 @@ function writeJson(filePath, value) {
 
 function stableJson(value) {
   return `${JSON.stringify(value, null, 2)}\n`;
+}
+
+function env(name) {
+  return String(process.env[name] || "").trim();
 }
 
 function sha256File(rel) {
@@ -215,6 +220,30 @@ function buildSiteBundle() {
   const readme = parseReadme(readText(README_PATH));
   const docs = BUILDCHAIN_AGENT_MANUALS.map((manual) => docEntry(manual.id, manual.title, manual.path, manual.plane));
   const pages = buildSitePages();
+  const generatedAtInput = env("BUILDCHAIN_SITE_GENERATED_AT") || env("BUILDCHAIN_SURFACE_GENERATED_AT");
+  const publishedAtInput = env("BUILDCHAIN_SITE_PUBLISHED_AT") || env("BUILDCHAIN_SURFACE_PUBLISHED_AT");
+  const timestampPolicyInput = env("BUILDCHAIN_SITE_TIMESTAMP_POLICY") || env("BUILDCHAIN_SURFACE_TIMESTAMP_POLICY");
+  const sourceRevisionInput =
+    env("BUILDCHAIN_SOURCE_SHA") ||
+    (generatedAtInput || publishedAtInput || timestampPolicyInput ? env("GITHUB_SHA") : "");
+  const timestampPolicy = createSurfaceTimestampPolicy({
+    generatedAt: generatedAtInput,
+    publishedAt: publishedAtInput,
+    sourceDateEpoch: env("SOURCE_DATE_EPOCH") || "0",
+    sourceRevision: sourceRevisionInput,
+    timestampPolicy: timestampPolicyInput,
+    deterministicInputs: [
+      "README.md",
+      "docs/*.md",
+      "actions/*/README.md",
+      "fixtures/*/README.md",
+      "packages/core/README.md",
+      "package.json#exports",
+      "tests/buildchain-inventory.json",
+    ],
+    timestampFieldsParticipateInArtifactDigest: true,
+    artifactDigestScope: "npm package dist/site JSON files",
+  });
 
   const cliRegistry = {
     schemaVersion: 1,
@@ -438,6 +467,7 @@ function buildSiteBundle() {
   const siteManifest = {
     schemaVersion: 1,
     contract: "kungfu-buildchain-site-manifest",
+    ...timestampPolicy,
     product: {
       name: "Buildchain",
       formalName: "Buildchain by Kungfu",
@@ -445,6 +475,7 @@ function buildSiteBundle() {
     },
     package: {
       name: packageJson.name,
+      version: packageJson.version,
       versionSource: "package.json#version",
     },
     entrypoint: "buildchain-site.json",
@@ -549,6 +580,7 @@ function buildSiteBundle() {
   const siteBundle = {
     schemaVersion: 1,
     contract: SITE_BUNDLE_CONTRACT,
+    ...timestampPolicy,
     product: siteManifest.product,
     package: siteManifest.package,
     source: {

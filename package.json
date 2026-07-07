@@ -22,6 +22,7 @@
     "./release-candidate": "./packages/core/release-candidate.js",
     "./release-passport": "./packages/core/release-passport.js",
     "./release-propagation": "./packages/core/release-propagation.js",
+    "./surface-manifest": "./packages/core/surface-manifest.js",
     "./buildchain-kfd-claims": "./packages/core/buildchain-kfd-claims.js",
     "./site/buildchain-site.json": "./dist/site/buildchain-site.json",
     "./site/site-manifest.json": "./dist/site/site-manifest.json",
