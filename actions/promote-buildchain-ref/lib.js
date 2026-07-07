@@ -3251,6 +3251,48 @@ async function promoteBuildchainRefs({
       });
       return { updated: false, pending: true, currentSha, pullRequest };
     };
+    const createVersionStateMergeCommit = async () => {
+      const allowedPaths = protectedUpdate?.allowMergeCommitOnNonFastForwardPaths || [];
+      if (!allowedPaths.length) {
+        return undefined;
+      }
+      await assertOnlyAllowedChangesBetween({
+        baseSha: currentSha,
+        headSha: branchSha,
+        allowedPaths,
+      });
+      const { data: generatedCommit } = await getGitCommitWithRetry({
+        octokit,
+        owner,
+        repo,
+        commitSha: branchSha,
+      });
+      const { data: mergeCommit } = await retryGitHubOperation(
+        `git.createCommit ${branch} generated version-state merge`,
+        () => octokit.rest.git.createCommit({
+          owner,
+          repo,
+          message:
+            protectedUpdate?.mergeMessage ||
+            `${protectedUpdate?.title || "Apply generated version-state"}\n\n` +
+              `Buildchain generated this merge commit to fast-forward ${branch} after ` +
+              "the channel had diverged only by generated version-state files.",
+          tree: generatedCommit.tree.sha,
+          parents: [currentSha, branchSha],
+          author: COMMIT_IDENTITY,
+          committer: COMMIT_IDENTITY,
+        }),
+      );
+      updates.push({
+        ref: branch,
+        action: "created-version-state-merge",
+        sha: mergeCommit.sha,
+        sourceSha: branchSha,
+        currentSha,
+        files: allowedPaths,
+      });
+      return mergeCommit.sha;
+    };
     if (protectedUpdate && currentSha) {
       const createdCheck = await createGeneratedVersionStateCheck({
         octokit: statusCheckOctokit,
@@ -3294,6 +3336,41 @@ async function promoteBuildchainRefs({
       }
       return { updated: true };
     } catch (error) {
+      if (
+        protectedUpdate?.allowMergeCommitOnNonFastForward &&
+        currentSha &&
+        nonFastForwardUpdateRejected(error)
+      ) {
+        const mergeSha = await createVersionStateMergeCommit();
+        if (mergeSha) {
+          const createdMergeCheck = await createGeneratedVersionStateCheck({
+            octokit: statusCheckOctokit,
+            owner,
+            repo,
+            branch,
+            branchSha: mergeSha,
+            currentSha,
+            requiredStatusCheck,
+          });
+          if (createdMergeCheck) {
+            updates.push({
+              ref: branch,
+              action: "generated-status-check",
+              check: requiredStatusCheck,
+              sha: mergeSha,
+            });
+          }
+          await branchWriteOctokit.rest.git.updateRef({
+            owner,
+            repo,
+            ref: `heads/${branch}`,
+            sha: mergeSha,
+            force: false,
+          });
+          updates.push({ ref: branch, action, sha: mergeSha });
+          return { updated: true, mergeSha };
+        }
+      }
       if (protectedUpdate?.allowNonFastForwardSkip && nonFastForwardUpdateRejected(error)) {
         updates.push({
           ref: branch,
@@ -4739,6 +4816,7 @@ async function promoteBuildchainRefs({
       });
   const nextAlphaVersion = stripTagPrefix(selectedNextAlpha.tag);
   let nextAlphaSha = versionState ? selectedNextAlpha.sha : sha;
+  let nextAlphaVersionStateFiles = [];
   if (versionState && selectedNextAlpha.exists && nextAlphaSha) {
     updates.push({
       version: nextAlphaVersion,
@@ -4754,6 +4832,7 @@ async function promoteBuildchainRefs({
       message: `chore(release): prepare ${selectedNextAlpha.tag}`,
     });
     nextAlphaSha = nextAlphaCommit.sha;
+    nextAlphaVersionStateFiles = nextAlphaCommit.files || [];
   }
   if (versionState) {
     const nextDevRef = `dev/v${rule.major}/v${rule.major}.${rule.minor}`;
@@ -4782,6 +4861,8 @@ async function promoteBuildchainRefs({
     await updateBranch(nextDevRef, nextAlphaSha, "updated", {
       title: `Prepare ${selectedNextAlpha.tag}`,
       body: `Create the generated version-state commit for ${selectedNextAlpha.tag}.`,
+      allowMergeCommitOnNonFastForward: true,
+      allowMergeCommitOnNonFastForwardPaths: nextAlphaVersionStateFiles,
     });
   }
   await ensureTag(selectedNextAlpha.tag, nextAlphaSha);
