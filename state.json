@@ -16,14 +16,27 @@
   "state_ref": "buildchain/release-state/2-8-8-alpha-2",
   "state_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-state/v2.8.8-alpha.2.json",
   "evidence_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-evidence/v2.8.8-alpha.2/evidence.json",
-  "state": "publishing",
-  "previous_state": "prepared",
+  "state": "published",
+  "previous_state": "publishing",
   "actor": "dongkeren",
   "run_id": "28841228008",
   "superseded_by": "",
   "failure": "",
-  "artifacts": [],
-  "evidence": [],
+  "artifacts": [
+    {
+      "group": "node",
+      "kind": "npm",
+      "name": "@kungfu-tech/buildchain",
+      "ref": "2.8.8-alpha.2",
+      "digest": "sha512-Phq/W6mOv9yj+h+bRAY0XfNasz6mu59ts9u/vdNiLMMKW4u8U0ois7yyAUOwxTSvMql2+IS8m1SgExqMBq73yA==",
+      "role": "",
+      "required": true
+    }
+  ],
+  "evidence": [
+    ".buildchain/release-evidence/v2.8.8-alpha.2/evidence.json",
+    ".buildchain/release-evidence/v2.8.8-alpha.2/dist-tag-evidence.json"
+  ],
   "created_at": "2026-07-07T04:20:37.604Z",
-  "updated_at": "2026-07-07T04:20:38.862Z"
+  "updated_at": "2026-07-07T04:20:47.524Z"
 }
