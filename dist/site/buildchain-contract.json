@@ -134,7 +134,7 @@
         "breaking contract drift fails closed before rendering, deployment, or release publication"
       ],
       "breakingDigest": "sha256:82ee63cb336e40d832dfff4a1c5e6cbfa221a4fc8b2359990033bc931bffc43a",
-      "auditDigest": "sha256:5416c9f4112bf24e7cef556f792034842252f65dcf9e8adf338ddc85a5137ada"
+      "auditDigest": "sha256:8de5899084cd0eebc93f5ac549b73c5ff313ac43067875d08b4ca8607d81fbf8"
     },
     {
       "contractVersion": 1,
@@ -235,7 +235,7 @@
         "release-state SHA is recorded as a durable audit entrance"
       ],
       "breakingDigest": "sha256:b627e1b2ece9b6049517a942c5139e342e6077cdd3d8962d61cef8481b1f70ad",
-      "auditDigest": "sha256:4d88ba7178753d2d1488f6393fee7c086dfb660f42e6507db718dccd38bf8a34"
+      "auditDigest": "sha256:e4a79237c0363b60fe084393068f6bc7da526bb9c5912b60d747b75364506b32"
     },
     {
       "contractVersion": 1,
@@ -284,7 +284,7 @@
         "prose-only public claims downgrade the release trust passport audit"
       ],
       "breakingDigest": "sha256:f0b636eb925ddbf45ff1a8872454ab7b4dd98857cac12bb75217830130e62a16",
-      "auditDigest": "sha256:4d88ba7178753d2d1488f6393fee7c086dfb660f42e6507db718dccd38bf8a34"
+      "auditDigest": "sha256:e4a79237c0363b60fe084393068f6bc7da526bb9c5912b60d747b75364506b32"
     },
     {
       "contractVersion": 1,
@@ -332,6 +332,8 @@
         "validate",
         "lifecycle",
         "badges readme",
+        "homebrew update-formula",
+        "homebrew check",
         "collect github-release",
         "verify release-passport",
         "release-propagation",
@@ -342,7 +344,42 @@
         "README badge block checks and writes are generated from machine-readable repository facts"
       ],
       "breakingDigest": "sha256:90a73892b2d6c214048448d5f45df75639bdf7b7e8fefd9c596e04b087407bcc",
-      "auditDigest": "sha256:af247c9ce9227e64e07344fee30d718646ed66ada69b6e1d6155a7f33ff1005e"
+      "auditDigest": "sha256:b7cd109f1c81166fb912eced4b6d9aaa838ac537242197efd221e209da638d79"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "homebrew-distribution-index",
+      "kind": "node-api",
+      "path": "packages/core/homebrew.js",
+      "requiredInputs": [
+        "upstream release passport"
+      ],
+      "requiredOutputs": [
+        "kungfu-buildchain-homebrew-tap-facts",
+        "kungfu-buildchain-homebrew-tap-manifest",
+        "Formula/*.rb"
+      ],
+      "breakingDefaults": {
+        "projectType": "distribution-index",
+        "tapManifest": "tap-manifest.json",
+        "kfdPassedSource": "verified upstream release passport"
+      },
+      "optionalInputs": [
+        "buildchain.toml [project] type=distribution-index",
+        "Formula path",
+        "manifest path",
+        "release passport URL or local path"
+      ],
+      "guarantees": [
+        "Formula metadata is a deterministic projection of upstream release passport evidence",
+        "tap-manifest.json is checked against upstream version, URLs, SHA-256 digests, and KFD status",
+        "KFD passed claims fail closed unless the upstream release passport verifies the corresponding section",
+        "CLI and JavaScript callers use the same Node API implementation"
+      ],
+      "breakingDigest": "sha256:148c0387ff4cea76433bbde80cd9d77c5aa67e1a29856ced33e4d819366f2213",
+      "auditDigest": "sha256:0e978219bd6fca754d80a616d538d5825b116eec78b65857bbe5063b8c84d933"
     },
     {
       "contractVersion": 1,
@@ -397,7 +434,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:99fd5e862e5a29eb10b0ec5a7a5e06d9ab7a594bd7b345bfcb8d45a0a099b9fc"
+      "auditDigest": "sha256:77b5234de4d1ac60b8291e63b21562cdf88c1ab33a369e1f0cccb1e75a62e492"
     },
     {
       "contractVersion": 1,
@@ -419,9 +456,9 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:e1fae05f9ab0186e9423464b7e4bcb9bfefe4185fe0925a0b95368fb97f1cd41"
+      "auditDigest": "sha256:587d0f465af8e3f1d871e469601999f57ac4911f3a84973fc6910b2db7555667"
     }
   ],
-  "compatibilityDigest": "sha256:217f7764849bf779cbc70aea9da59429a44c68f5f7131b26593bb18a6e7ffb18",
-  "contractDigest": "sha256:242f4e40e1768fddb28264561efcfaf3a206b3907c35f08143d4b98a4e13b527"
+  "compatibilityDigest": "sha256:407d6d5ee6a96a34d2cc30db9ac64cf4b1819ab6d77bd7a57a07a124f22101ca",
+  "contractDigest": "sha256:8fcc55f2451450ae611569f2885130d296b3d0e8b4ba40e7257f76d7e35c93e8"
 }

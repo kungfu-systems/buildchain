@@ -44,5 +44,13 @@
       "release passport assets"
     ],
     "owner": "promote-buildchain-ref"
+  },
+  "distributionIndexes": {
+    "homebrewTap": {
+      "projectType": "distribution-index",
+      "manifest": "tap-manifest.json",
+      "command": "buildchain homebrew check",
+      "sourceOfTruth": "upstream release passport and sibling evidence"
+    }
   }
 }

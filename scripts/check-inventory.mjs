@@ -14,10 +14,12 @@ const requiredPaths = [
   ".github/ISSUE_TEMPLATE/config.yml",
   ".github/pull_request_template.md",
   "bin/buildchain.mjs",
+  "packages/core/homebrew.js",
   "docs/MAP.md",
   "docs/binary-distribution.md",
   "docs/cli.md",
   "docs/consumer-issue-reporting.md",
+  "docs/homebrew.md",
   "docs/install.md",
   "docs/product-mechanism.md",
   "docs/readme-badges.md",
@@ -105,6 +107,9 @@ if (rootPackage.exports?.["."] !== "./packages/core/index.js") {
 }
 if (rootPackage.exports?.["./diagnostics"] !== "./packages/core/diagnostics.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/diagnostics");
+}
+if (rootPackage.exports?.["./homebrew"] !== "./packages/core/homebrew.js") {
+  throw new Error("root package must export @kungfu-tech/buildchain/homebrew");
 }
 if (rootPackage.exports?.["./buildchain-contract"] !== "./packages/core/buildchain-contract.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/buildchain-contract");
@@ -211,6 +216,16 @@ for (const requiredSnippet of [
 ]) {
   if (!coreIndexSource.includes(requiredSnippet)) {
     throw new Error(`packages/core/index.js must export README badge API: ${requiredSnippet}`);
+  }
+}
+for (const requiredSnippet of [
+  "collectHomebrewTapFacts",
+  "renderHomebrewFormula",
+  "checkHomebrewTap",
+  "updateHomebrewTap",
+]) {
+  if (!coreIndexSource.includes(requiredSnippet)) {
+    throw new Error(`packages/core/index.js must export Homebrew API: ${requiredSnippet}`);
   }
 }
 if (siteBundle.contract !== "kungfu-buildchain-site-bundle") {
@@ -388,6 +403,7 @@ for (const requiredSnippet of [
   "npm publish transactions",
   "GitHub Release",
   "release propagation",
+  "Homebrew tap distribution indexes",
   "manual-registry.json",
   "node-api-registry.json",
   "README badge",
@@ -407,6 +423,19 @@ for (const requiredSnippet of [
 ]) {
   if (!readmeBadgesDoc.includes(requiredSnippet)) {
     throw new Error(`README badges doc missing required snippet: ${requiredSnippet}`);
+  }
+}
+const homebrewDoc = fs.readFileSync(path.join(root, "docs/homebrew.md"), "utf8");
+for (const requiredSnippet of [
+  "project.type = \"distribution-index\"",
+  "buildchain homebrew update-formula",
+  "buildchain homebrew check",
+  "collectHomebrewTapFacts",
+  "kungfu-buildchain-homebrew-tap-manifest",
+  "KFD passed",
+]) {
+  if (!homebrewDoc.includes(requiredSnippet)) {
+    throw new Error(`Homebrew doc missing required snippet: ${requiredSnippet}`);
   }
 }
 const reusableBuildSurfaceDoc = fs.readFileSync(path.join(root, "docs/reusable-build-surface.md"), "utf8");
@@ -435,6 +464,9 @@ for (const requiredSnippet of [
   "buildchain badges readme --check",
   "buildchain badges readme --write",
   "@kungfu-tech/buildchain/readme-badges",
+  "buildchain homebrew update-formula",
+  "buildchain homebrew check",
+  "@kungfu-tech/buildchain/homebrew",
 ]) {
   if (!cliDoc.includes(requiredSnippet)) {
     throw new Error(`CLI doc missing README badge command snippet: ${requiredSnippet}`);

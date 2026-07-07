@@ -774,6 +774,16 @@ jobs:
             --run-id "${{ github.run_id }}" \
             --output .buildchain/web-surface-preview-apply.json
 
+      - name: Health check preview deploy
+        id: health
+        run: |
+          set -euo pipefail
+          node .buildchain/runtime/scripts/web-surface.mjs \
+            --mode health-check \
+            --cwd "${{ inputs.working-directory }}" \
+            --result .buildchain/web-surface-preview-apply.json \
+            --output .buildchain/web-surface-preview-health.json
+
       - name: Comment preview URL
         if: ${{ inputs.preview-comment }}
         uses: actions/github-script@v8
@@ -819,10 +829,11 @@ jobs:
             }
 
       - name: Summarize preview apply
+        if: ${{ always() }}
         run: |
           {
             echo "## Preview apply"
-            node -e 'const r=JSON.parse(require("fs").readFileSync(".buildchain/web-surface-preview-apply.json","utf8")); const urls=Object.entries(r.urls||{default:r.url}).map(([s,u])=>"- "+s+": "+u).join("\n"); console.log(urls+"\n- status: "+r.status+"\n- target: "+r.target+"\n- manifest: "+r.manifestKey)'
+            node -e 'const fs=require("fs"); const read=(p)=>fs.existsSync(p)?JSON.parse(fs.readFileSync(p,"utf8")):{}; const r=read(".buildchain/web-surface-preview-apply.json"); const h=read(".buildchain/web-surface-preview-health.json"); const urls=Object.entries(r.urls||{default:r.url||""}).filter(([,u])=>u).map(([s,u])=>"- "+s+": "+u).join("\n"); console.log(urls+"\n- status: "+(r.status||"missing")+"\n- health: "+(h.status||"missing")+"\n- target: "+(r.target||"")+"\n- manifest: "+(r.manifestKey||""))'
           } >> "$GITHUB_STEP_SUMMARY"
 
   preview-cleanup:
@@ -1045,11 +1056,22 @@ jobs:
             --run-id "${{ github.run_id }}" \
             --output .buildchain/web-surface-staging-apply.json
 
+      - name: Health check staging deploy
+        id: health
+        run: |
+          set -euo pipefail
+          node .buildchain/runtime/scripts/web-surface.mjs \
+            --mode health-check \
+            --cwd "${{ inputs.working-directory }}" \
+            --result .buildchain/web-surface-staging-apply.json \
+            --output .buildchain/web-surface-staging-health.json
+
       - name: Summarize staging apply
+        if: ${{ always() }}
         run: |
           {
             echo "## Staging apply"
-            node -e 'const r=JSON.parse(require("fs").readFileSync(".buildchain/web-surface-staging-apply.json","utf8")); const urls=Object.entries(r.urls||{default:r.url}).map(([s,u])=>"- "+s+": "+u).join("\n"); console.log(urls+"\n- status: "+r.status+"\n- target: "+r.target+"\n- source: "+r.sourceSha+"\n- artifact: "+r.artifactHash)'
+            node -e 'const fs=require("fs"); const read=(p)=>fs.existsSync(p)?JSON.parse(fs.readFileSync(p,"utf8")):{}; const r=read(".buildchain/web-surface-staging-apply.json"); const h=read(".buildchain/web-surface-staging-health.json"); const urls=Object.entries(r.urls||{default:r.url||""}).filter(([,u])=>u).map(([s,u])=>"- "+s+": "+u).join("\n"); console.log(urls+"\n- status: "+(r.status||"missing")+"\n- health: "+(h.status||"missing")+"\n- target: "+(r.target||"")+"\n- source: "+(r.sourceSha||"")+"\n- artifact: "+(r.artifactHash||""))'
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Comment staging deploy feedback and write passport
@@ -1060,6 +1082,7 @@ jobs:
           BUILDCHAIN_RUNTIME_SHA: ${{ needs.runtime.outputs.runtime-sha }}
           BUILDCHAIN_ROLLBACK_POINTER: ${{ needs.runtime.outputs.rollback-ref }}
           APPLY_RESULT_PATH: .buildchain/web-surface-staging-apply.json
+          HEALTH_RESULT_PATH: .buildchain/web-surface-staging-health.json
           APPLY_STEP_OUTCOME: ${{ steps.apply.outcome }}
           JOB_STATUS: ${{ job.status }}
           OUTPUT_PATH: .buildchain/web-surface-staging-release-passport.json

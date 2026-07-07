@@ -1465,9 +1465,15 @@ function validateKfd2ReleaseTrustPassportAudit(section, issues) {
   }
 }
 
-function resolveSiblingJson(basePath, relativePath) {
-  if (!basePath || !relativePath || /^https?:\/\//.test(relativePath)) {
+async function resolveSiblingJson(basePath, relativePath) {
+  if (!basePath || !relativePath) {
     return undefined;
+  }
+  if (/^https?:\/\//.test(relativePath)) {
+    return readJsonFromLocation(relativePath);
+  }
+  if (/^https?:\/\//.test(basePath)) {
+    return readJsonFromLocation(new URL(relativePath, basePath).toString());
   }
   const candidate = path.resolve(path.dirname(basePath), relativePath);
   if (!fs.existsSync(candidate)) {
@@ -1838,27 +1844,27 @@ export async function verifyReleasePassport({
   productMechanismLocation = "",
 } = {}) {
   const passport = await readJsonFromLocation(passportLocation);
-  const basePath = /^https?:\/\//.test(passportLocation) ? "" : path.resolve(passportLocation);
+  const basePath = /^https?:\/\//.test(passportLocation) ? passportLocation : path.resolve(passportLocation);
   const artifactEvidence =
     artifactEvidenceLocation
       ? await readJsonFromLocation(artifactEvidenceLocation)
-      : resolveSiblingJson(basePath, passport.evidence?.artifactEvidence) || {};
+      : await resolveSiblingJson(basePath, passport.evidence?.artifactEvidence) || {};
   const publishEvidence =
     publishEvidenceLocation
       ? await readJsonFromLocation(publishEvidenceLocation)
-      : resolveSiblingJson(basePath, passport.evidence?.publishEvidence) || {};
+      : await resolveSiblingJson(basePath, passport.evidence?.publishEvidence) || {};
   const impact =
     impactLocation
       ? await readJsonFromLocation(impactLocation)
-      : resolveSiblingJson(basePath, passport.evidence?.impact) || {};
+      : await resolveSiblingJson(basePath, passport.evidence?.impact) || {};
   const agentIndex =
     agentIndexLocation
       ? await readJsonFromLocation(agentIndexLocation)
-      : resolveSiblingJson(basePath, passport.evidence?.agentIndex) || {};
+      : await resolveSiblingJson(basePath, passport.evidence?.agentIndex) || {};
   const productMechanism =
     productMechanismLocation
       ? await readJsonFromLocation(productMechanismLocation)
-      : resolveSiblingJson(basePath, passport.product?.mechanism) || {};
+      : await resolveSiblingJson(basePath, passport.product?.mechanism) || {};
   return createReleaseCheckReport({
     passport,
     artifactEvidence,

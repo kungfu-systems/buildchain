@@ -240,6 +240,31 @@ main_package = "@kungfu-tech/libnode"
   );
 });
 
+test("buildchain.toml accepts distribution-index project type", () => {
+  withTempRepo(
+    {
+      "buildchain.toml": `
+schema = 1
+
+[project]
+type = "distribution-index"
+name = "homebrew-tap"
+
+[lifecycle.verify]
+command = "buildchain homebrew check"
+`,
+    },
+    (dir) => {
+      const summary = validateBuildchainConfig(dir);
+      assert.deepEqual(summary.project, {
+        type: "distribution-index",
+        name: "homebrew-tap",
+      });
+      assert.deepEqual(summary.lifecycleStages.map((stage) => stage.name), ["verify"]);
+    },
+  );
+});
+
 test("buildchain.toml normalizes optional native diagnostics profile", () => {
   withTempRepo(
     {

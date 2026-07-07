@@ -16,6 +16,7 @@
     "./artifact-passport": "./packages/core/artifact-passport.js",
     "./buildchain-contract": "./packages/core/buildchain-contract.js",
     "./diagnostics": "./packages/core/diagnostics.js",
+    "./homebrew": "./packages/core/homebrew.js",
     "./issue-reporting": "./packages/core/issue-reporting.js",
     "./readme-badges": "./packages/core/readme-badges.js",
     "./logging": "./packages/core/logging.js",
