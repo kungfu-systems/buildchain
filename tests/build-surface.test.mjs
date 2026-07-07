@@ -900,6 +900,39 @@ test("promote action exposes generic publish source-lock gate", () => {
   assert.match(implementation, /does not match promotion sha/);
 });
 
+test("promote wrapper exposes controlled branch-protection review bypass", () => {
+  const action = fs.readFileSync(
+    path.join(root, "actions/promote-buildchain-ref/action.yml"),
+    "utf8",
+  );
+  const implementation = fs.readFileSync(
+    path.join(root, "actions/promote-buildchain-ref/index.js"),
+    "utf8",
+  );
+  const wrapper = fs.readFileSync(
+    path.join(root, ".github/workflows/release-candidate-promote.yml"),
+    "utf8",
+  );
+
+  assert.match(action, /branch-protection-bypass-apps:/);
+  assert.match(action, /branch-protection-bypass-users:/);
+  assert.match(action, /branch-protection-bypass-teams:/);
+  assert.match(implementation, /branchProtectionBypassApps/);
+  assert.match(wrapper, /branch-protection-bypass-apps:/);
+  assert.match(wrapper, /default: "github-actions"/);
+  assert.match(wrapper, /branch-protection-bypass-users:/);
+  assert.match(wrapper, /branch-protection-bypass-teams:/);
+  assert.match(wrapper, /branch-protection-bypass-apps: \$\{\{ inputs\.branch-protection-bypass-apps \}\}/);
+
+  const selfPromotion = fs.readFileSync(
+    path.join(root, ".github/workflows/buildchain-ref-promotion.yml"),
+    "utf8",
+  );
+  assert.match(selfPromotion, /BUILDCHAIN_PROMOTION_BYPASS_APPS/);
+  assert.match(selfPromotion, /BUILDCHAIN_PROMOTION_BYPASS_USERS/);
+  assert.match(selfPromotion, /BUILDCHAIN_PROMOTION_BYPASS_TEAMS/);
+});
+
 test("reusable build exposes release-candidate passport outputs", () => {
   const workflow = fs.readFileSync(
     path.join(root, ".github/workflows/.build.yml"),
