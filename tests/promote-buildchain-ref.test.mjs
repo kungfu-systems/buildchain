@@ -1334,7 +1334,7 @@ test("release promotion updates default branch before direct next-alpha sync", a
   );
 });
 
-test("release finalization opens a pending PR based on the current next-alpha head", async () => {
+test("release finalization merges protected alpha next-alpha ancestry", async () => {
   const cwd = makeTempWorkspace({
     "package.json": {
       name: "@kungfu-tech/buildchain",
@@ -1368,6 +1368,9 @@ test("release finalization opens a pending PR based on the current next-alpha he
         getCommit: async ({ commit_sha }) => ({
           data: { tree: { sha: `tree-${commit_sha}` } },
         }),
+        getTree: async () => ({
+          data: { tree: [] },
+        }),
         createBlob: async () => ({ data: { sha: "blob-sha" } }),
         createTree: async () => ({ data: { sha: "tree-sha" } }),
         createCommit: async ({ message, parents }) => {
@@ -1376,7 +1379,7 @@ test("release finalization opens a pending PR based on the current next-alpha he
           return { data: { sha } };
         },
         updateRef: async ({ ref, sha }) => {
-          if (ref === "heads/alpha/v1/v1.0") {
+          if (ref === "heads/alpha/v1/v1.0" && sha.startsWith("commit-2")) {
             const error = new Error("Update is not a fast forward");
             error.status = 422;
             error.response = { data: { message: "Update is not a fast forward" } };
@@ -1434,19 +1437,19 @@ test("release finalization opens a pending PR based on the current next-alpha he
 
   const releaseSha = commits[0].sha;
   const nextAlphaSha = commits[1].sha;
+  const nextAlphaMergeSha = commits[2].sha;
   assert.equal(refs.get("heads/release/v1/v1.0"), releaseSha);
-  assert.notEqual(refs.get("heads/alpha/v1/v1.0"), nextAlphaSha);
-  assert.deepEqual(commits[1].parents, [OTHER_SHA]);
-  assert.equal(
-    refs.get(`heads/${versionStateBranchName("alpha/v1/v1.0", nextAlphaSha)}`),
-    nextAlphaSha,
-  );
-  assert.equal(createdPullRequest.base, "alpha/v1/v1.0");
-  assert.equal(createdPullRequest.head, versionStateBranchName("alpha/v1/v1.0", nextAlphaSha));
-  assert.equal(result.pendingPullRequest, createdPullRequest.html_url);
+  assert.equal(refs.get("heads/alpha/v1/v1.0"), nextAlphaMergeSha);
+  assert.deepEqual(commits[1].parents, [releaseSha]);
+  assert.deepEqual(commits[2].parents, [OTHER_SHA, nextAlphaSha]);
+  assert.equal(createdPullRequest, undefined);
+  assert.equal(result.nextAlphaSha, nextAlphaMergeSha);
   assert.equal(
     result.updates.some(
-      (update) => update.ref === "alpha/v1/v1.0" && update.action === "pending-version-state-pr",
+      (update) =>
+        update.ref === "alpha/v1/v1.0" &&
+        update.action === "created-version-state-merge" &&
+        update.sha === nextAlphaMergeSha,
     ),
     true,
   );
@@ -3602,6 +3605,124 @@ test("release finalization merges generated next-alpha state into diverged dev",
         update.currentSha === devHeadSha,
     ),
   );
+});
+
+test("release finalization merges release ancestry into generated next-alpha", async () => {
+  const releaseHeadSha = SHA;
+  const alphaHeadSha = "a".repeat(40);
+  const devHeadSha = "b".repeat(40);
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "1.0.0-alpha.0",
+      packageManager: "pnpm@11.7.0",
+    },
+  });
+  const { octokit, refs, commits, trees, commitLog } = createGitMock({
+    refs: new Map([
+      ["heads/release/v1/v1.0", releaseHeadSha],
+      ["heads/alpha/v1/v1.0", alphaHeadSha],
+      ["heads/dev/v1/v1.0", devHeadSha],
+      ["tags/v1.0.0-alpha.0", alphaHeadSha],
+      ["tags/v1.0-alpha", alphaHeadSha],
+    ]),
+  });
+  const originalPackageBlob = "blob-package-alpha-0";
+  const sharedActionBlob = "blob-action-current";
+  trees.set("alpha-tree", [
+    { path: "package.json", mode: "100644", type: "blob", sha: originalPackageBlob },
+    {
+      path: "actions/promote-buildchain-ref/lib.js",
+      mode: "100644",
+      type: "blob",
+      sha: sharedActionBlob,
+    },
+  ]);
+  trees.set("release-tree", [
+    { path: "package.json", mode: "100644", type: "blob", sha: originalPackageBlob },
+    {
+      path: "actions/promote-buildchain-ref/lib.js",
+      mode: "100644",
+      type: "blob",
+      sha: sharedActionBlob,
+    },
+  ]);
+  trees.set("dev-tree", [
+    { path: "package.json", mode: "100644", type: "blob", sha: originalPackageBlob },
+    {
+      path: "actions/promote-buildchain-ref/lib.js",
+      mode: "100644",
+      type: "blob",
+      sha: sharedActionBlob,
+    },
+  ]);
+  commits.set(releaseHeadSha, {
+    sha: releaseHeadSha,
+    tree: { sha: "release-tree" },
+    parents: [],
+  });
+  commits.set(alphaHeadSha, {
+    sha: alphaHeadSha,
+    tree: { sha: "alpha-tree" },
+    parents: [],
+  });
+  commits.set(devHeadSha, {
+    sha: devHeadSha,
+    tree: { sha: "dev-tree" },
+    parents: [],
+  });
+  const originalUpdateRef = octokit.rest.git.updateRef;
+  octokit.rest.git.updateRef = async (request) => {
+    if (request.ref === "heads/alpha/v1/v1.0") {
+      const commit = commits.get(request.sha);
+      if (commit?.parents?.length === 1) {
+        throw Object.assign(new Error("Update is not a fast forward"), {
+          status: 422,
+          response: { data: { message: "Update is not a fast forward" } },
+        });
+      }
+    }
+    return originalUpdateRef(request);
+  };
+  octokit.rest.checks = {
+    create: async () => ({ data: { id: 1 } }),
+  };
+  octokit.rest.repos = {
+    getBranchProtection: async () => ({
+      data: protectedChannel(),
+    }),
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: releaseHeadSha,
+    targetRef: "release/v1/v1.0",
+    cwd,
+    requiredStatusCheck: "check",
+  });
+
+  const releaseVersionCommit = commitLog.find((commit) =>
+    commit.message === "chore(release): release v1.0.0",
+  );
+  const nextAlphaCommit = commitLog.find((commit) =>
+    commit.message === "chore(release): prepare v1.0.1-alpha.0",
+  );
+  const alphaMergeCommit = commitLog.find((commit) =>
+    commit.parents.length === 2 &&
+    commit.parents[0] === alphaHeadSha &&
+    commit.parents[1] === nextAlphaCommit.sha,
+  );
+  assert.ok(releaseVersionCommit);
+  assert.ok(nextAlphaCommit);
+  assert.ok(alphaMergeCommit);
+  assert.equal(nextAlphaCommit.parents[0], releaseVersionCommit.sha);
+  assert.equal(refs.get("heads/alpha/v1/v1.0"), alphaMergeCommit.sha);
+  assert.equal(refs.get("heads/dev/v1/v1.0"), alphaMergeCommit.sha);
+  assert.equal(refs.get("tags/v1.0.1-alpha.0"), alphaMergeCommit.sha);
+  assert.equal(refs.get("tags/v1.0-alpha"), alphaMergeCommit.sha);
+  assert.equal(result.nextAlphaSha, alphaMergeCommit.sha);
 });
 
 test("release promotion uses frozen PR alpha evidence when a later same-patch alpha exists", async () => {
