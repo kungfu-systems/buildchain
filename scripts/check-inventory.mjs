@@ -440,6 +440,8 @@ for (const requiredSnippet of [
   "actions: read",
   "uses: ./.github/workflows/release-candidate-promote.yml",
   "github.event.workflow_run.event == 'push'",
+  "!startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v')",
+  "!startsWith(github.event.workflow_run.display_title, 'chore(release): release v')",
   "target-sha: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}",
   "github-release: true",
   "release-passport-buildchain-self-kfd: true",
