@@ -17,6 +17,7 @@
     "./buildchain-contract": "./packages/core/buildchain-contract.js",
     "./diagnostics": "./packages/core/diagnostics.js",
     "./issue-reporting": "./packages/core/issue-reporting.js",
+    "./readme-badges": "./packages/core/readme-badges.js",
     "./logging": "./packages/core/logging.js",
     "./kfd-gate": "./packages/core/kfd-gate.js",
     "./release-candidate": "./packages/core/release-candidate.js",

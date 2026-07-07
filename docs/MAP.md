@@ -25,6 +25,7 @@ manuals explain those facts and give operator examples.
 | npm publish transactions, evidence, dist-tags, and recovery | `dist/site/release-model.json`, `dist/site/artifact-schemas.json` | [`publish-transaction.md`](publish-transaction.md) |
 | GitHub Release passport/evidence publication | `dist/site/release-model.json`, `dist/site/artifact-schemas.json` | [`release-governance.md`](release-governance.md), [`release-candidate.md`](release-candidate.md) |
 | release propagation for package/site chains | `dist/site/release-model.json` | [`release-propagation.md`](release-propagation.md) |
+| Generated README badge blocks and badge facts | `dist/site/node-api-registry.json`, `dist/site/manual-registry.json`, `kungfu-buildchain-readme-badge-facts` | [`readme-badges.md`](readme-badges.md) |
 | Buildchain CLI manual | `dist/site/cli-registry.json`, `dist/site/manual-registry.json` | [`cli.md`](cli.md) |
 | Node API / package exports | `dist/site/node-api-registry.json`, `dist/site/release-provenance.json` | [`cli.md`](cli.md#node-api-and-package-exports) |
 
@@ -59,6 +60,7 @@ replace them.
 | How do I gate KFD-3 collaboration-interface releases? | [`release-passport.md`](release-passport.md#kfd-3-collaboration-interface-release-gate) + [`cli.md`](cli.md) | verify/use | stable |
 | How do I keep `@v2` floating refs while detecting Buildchain contract drift? | [`reusable-build-surface.md`](reusable-build-surface.md#floating-ref-contract-lock) | verify/use | stable |
 | How do I propagate finalized upstream releases to downstream package/site PRs? | [`release-propagation.md`](release-propagation.md) | use | preview |
+| How do I generate README status badges without hand-maintaining Markdown? | [`readme-badges.md`](readme-badges.md) + [`cli.md`](cli.md) | use | stable |
 | How do I prove a PR-stage reusable build is the artifact source promoted later? | [`release-candidate.md`](release-candidate.md) + [`reusable-build-surface.md`](reusable-build-surface.md) | verify | stable |
 | Why are binary release assets archived by platform, and where is the single bundle? | [`binary-distribution.md`](binary-distribution.md) | verify | stable |
 | How do I add timestamped logs inside build scripts? | [`toolkit-observability.md`](toolkit-observability.md) | use | stable |
@@ -115,6 +117,8 @@ replace them.
   [`cli.md`](cli.md) and [`publish-transaction.md`](publish-transaction.md).
 - **release chains / upstream package as source of truth / site synchronization** ->
   [`release-propagation.md`](release-propagation.md).
+- **README status badges / KFD badge blocks / badge facts JSON** ->
+  [`readme-badges.md`](readme-badges.md) and [`cli.md`](cli.md).
 - **KFD-1 contract worlds / byte-for-byte release gates** ->
   [`release-passport.md`](release-passport.md#kfd-1-contract-world-release-gate).
 - **KFD-2 public release trust claim audit** ->

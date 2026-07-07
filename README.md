@@ -1,16 +1,16 @@
 # Buildchain
 
-[![Verify](https://github.com/kungfu-systems/buildchain/actions/workflows/verify.yml/badge.svg?branch=dev%2Fv2%2Fv2.8)](https://github.com/kungfu-systems/buildchain/actions/workflows/verify.yml)
-[![Release Gate](https://github.com/kungfu-systems/buildchain/actions/workflows/buildchain-ref-promotion.yml/badge.svg)](https://github.com/kungfu-systems/buildchain/actions/workflows/buildchain-ref-promotion.yml)
-[![npm latest](https://img.shields.io/npm/v/%40kungfu-tech%2Fbuildchain/latest?label=npm%20latest)](https://www.npmjs.com/package/@kungfu-tech/buildchain)
-[![npm alpha](https://img.shields.io/npm/v/%40kungfu-tech%2Fbuildchain/alpha?label=npm%20alpha)](https://www.npmjs.com/package/@kungfu-tech/buildchain?activeTab=versions)
-[![GitHub Release](https://img.shields.io/github/v/release/kungfu-systems/buildchain?label=release)](https://github.com/kungfu-systems/buildchain/releases)
-[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![KFD-1](https://img.shields.io/badge/KFD--1-contract%20world-2ea44f.svg)](docs/release-passport.md#kfd-1-contract-world-release-gate)
-[![KFD-2](https://img.shields.io/badge/KFD--2-trust%20passport-0969da.svg)](docs/release-passport.md#kfd-2-release-trust-passport-audit)
-[![KFD-3](https://img.shields.io/badge/KFD--3-collaboration%20interface-8250df.svg)](docs/release-passport.md#kfd-3-collaboration-interface-release-gate)
-![Status: Stable](https://img.shields.io/badge/status-stable-brightgreen.svg)
-![Platforms: macOS | Linux | Windows](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey.svg)
+<!-- buildchain:badges:start -->
+[![KFD-1: passed](https://img.shields.io/badge/KFD--1-contract%20world%20passed-2ea44f.svg)](https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json)
+[![KFD-2: passed](https://img.shields.io/badge/KFD--2-trust%20passport%20passed-2ea44f.svg)](https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json)
+[![KFD-3: passed](https://img.shields.io/badge/KFD--3-collaboration%20interface%20passed-2ea44f.svg)](https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json)
+[![Release Passport: passed](https://img.shields.io/badge/release%20passport-passed-2ea44f.svg)](https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-0969da.svg)](https://github.com/kungfu-systems/buildchain/blob/HEAD/LICENSE)
+[![Platform: macOS | Linux | Windows](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-6e7781.svg)](https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json)
+[![Verify](https://github.com/kungfu-systems/buildchain/actions/workflows/verify.yml/badge.svg)](https://github.com/kungfu-systems/buildchain/actions/workflows/verify.yml)
+[![Buildchain Ref Promotion](https://github.com/kungfu-systems/buildchain/actions/workflows/buildchain-ref-promotion.yml/badge.svg)](https://github.com/kungfu-systems/buildchain/actions/workflows/buildchain-ref-promotion.yml)
+[![Binary Distribution](https://github.com/kungfu-systems/buildchain/actions/workflows/binary-distribution.yml/badge.svg)](https://github.com/kungfu-systems/buildchain/actions/workflows/binary-distribution.yml)
+<!-- buildchain:badges:end -->
 
 Buildchain Release Passport is a mature product release record for artifacts
 that users or agents depend on.
@@ -96,6 +96,14 @@ const report = verifyBuildchainLogEvents({
 
 The package also ships `dist/site/` as the Buildchain-owned fact source for
 `buildchain.libkungfu.dev`.
+
+Repositories can also generate README status badges from Buildchain-owned facts
+instead of hand-maintaining badge Markdown:
+
+```bash
+buildchain badges readme --check
+buildchain badges readme --write
+```
 
 ## Project Governance
 

@@ -1789,13 +1789,22 @@ export function createReleaseCheckReport({
   };
 }
 
-export async function readJsonFromLocation(location) {
+export async function readJsonFromLocation(location, redirectCount = 0) {
   const input = nonEmptyString(location, "location");
+  if (redirectCount > 5) {
+    throw new Error(`too many redirects while reading ${input}`);
+  }
   if (/^https?:\/\//.test(input)) {
     const client = input.startsWith("https:") ? https : http;
     return new Promise((resolve, reject) => {
       client
         .get(input, (response) => {
+          if ([301, 302, 303, 307, 308].includes(response.statusCode) && response.headers.location) {
+            const nextLocation = new URL(response.headers.location, input).toString();
+            response.resume();
+            readJsonFromLocation(nextLocation, redirectCount + 1).then(resolve, reject);
+            return;
+          }
           if (response.statusCode < 200 || response.statusCode >= 300) {
             reject(new Error(`HTTP ${response.statusCode} while reading ${input}`));
             response.resume();

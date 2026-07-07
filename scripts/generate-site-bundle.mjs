@@ -356,6 +356,7 @@ function buildSiteBundle() {
       })),
     docs: [
       { id: "cli-and-node-package", path: "docs/cli.md", digest: sha256File("docs/cli.md") },
+      { id: "readme-badges", path: "docs/readme-badges.md", digest: sha256File("docs/readme-badges.md") },
       { id: "site-bundle-contract", path: "docs/site-bundle-contract.md", digest: sha256File("docs/site-bundle-contract.md") },
     ],
     guidance: "These are the public Node import surfaces shipped by the npm package. Agents should prefer these exports over internal file paths.",
