@@ -78,6 +78,10 @@ function alreadyExists() {
   });
 }
 
+function versionStateBranchName(branch, sha) {
+  return `buildchain/version-state/${branch.replaceAll("/", "-")}/${sha.slice(0, 12)}`;
+}
+
 function transientGitHubError(message = "other side closed") {
   return Object.assign(new Error(message), {
     status: 500,
@@ -1330,7 +1334,7 @@ test("release promotion updates default branch before direct next-alpha sync", a
   );
 });
 
-test("release finalization opens a pending PR for non-fast-forward next-alpha updates", async () => {
+test("release finalization opens a pending PR based on the current next-alpha head", async () => {
   const cwd = makeTempWorkspace({
     "package.json": {
       name: "@kungfu-tech/buildchain",
@@ -1388,18 +1392,33 @@ test("release finalization opens a pending PR for non-fast-forward next-alpha up
       },
       pulls: {
         list: async () => ({ data: [] }),
-        create: async (input) => {
-          createdPullRequest = input;
-          return {
-            data: {
-              html_url: "https://github.com/kungfu-systems/buildchain/pull/123",
-              url: "https://api.github.com/repos/kungfu-systems/buildchain/pulls/123",
-            },
+        create: async ({ head, base, title }) => {
+          createdPullRequest = {
+            html_url: `https://github.com/kungfu-systems/buildchain/pull/test`,
+            head,
+            base,
+            title,
           };
+          return { data: createdPullRequest };
         },
       },
       repos: {
         update: async () => ({}),
+        listPullRequestsAssociatedWithCommit: async ({ commit_sha }) => {
+          assert.equal(commit_sha, SHA);
+          return {
+            data: [
+              {
+                merged_at: "2026-06-30T00:00:00Z",
+                base: { ref: "publish-gate/major" },
+                head: {
+                  ref: "release/v1/v1.0",
+                  repo: { full_name: "kungfu-systems/buildchain" },
+                },
+              },
+            ],
+          };
+        },
       },
     },
   };
@@ -1417,20 +1436,20 @@ test("release finalization opens a pending PR for non-fast-forward next-alpha up
   const nextAlphaSha = commits[1].sha;
   assert.equal(refs.get("heads/release/v1/v1.0"), releaseSha);
   assert.notEqual(refs.get("heads/alpha/v1/v1.0"), nextAlphaSha);
+  assert.deepEqual(commits[1].parents, [OTHER_SHA]);
   assert.equal(
-    refs.get(`heads/buildchain/version-state/alpha-v1-v1.0/${nextAlphaSha.slice(0, 12)}`),
+    refs.get(`heads/${versionStateBranchName("alpha/v1/v1.0", nextAlphaSha)}`),
     nextAlphaSha,
   );
   assert.equal(createdPullRequest.base, "alpha/v1/v1.0");
+  assert.equal(createdPullRequest.head, versionStateBranchName("alpha/v1/v1.0", nextAlphaSha));
+  assert.equal(result.pendingPullRequest, createdPullRequest.html_url);
   assert.equal(
-    createdPullRequest.head,
-    `buildchain/version-state/alpha-v1-v1.0/${nextAlphaSha.slice(0, 12)}`,
+    result.updates.some(
+      (update) => update.ref === "alpha/v1/v1.0" && update.action === "pending-version-state-pr",
+    ),
+    true,
   );
-  assert.equal(
-    result.pendingPullRequest,
-    "https://github.com/kungfu-systems/buildchain/pull/123",
-  );
-  assert.equal(result.nextAlphaSha, nextAlphaSha);
 });
 
 test("publish transaction gates alpha final refs on lifecycle.publish evidence", async () => {
@@ -4282,6 +4301,122 @@ test("publish-gate/major promotion publishes next major production and prepares 
   );
 });
 
+test("publish-gate/major finalization opens next-alpha PR from current alpha head", async () => {
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "1.0.10",
+      packageManager: "pnpm@11.7.0",
+    },
+  });
+  const currentAlphaSha = OTHER_SHA;
+  const refs = new Map([
+    ["heads/publish-gate/major", SHA],
+    ["heads/alpha/v2/v2.0", currentAlphaSha],
+  ]);
+  const commits = [];
+  let createdPullRequest;
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (refs.has(ref)) {
+            return { data: { object: { sha: refs.get(ref) } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async ({ ref }) => ({
+          data: [...refs.entries()]
+            .filter(([name]) => name.startsWith(ref))
+            .map(([name, objectSha]) => ({
+              ref: `refs/${name}`,
+              object: { sha: objectSha },
+            })),
+        }),
+        getCommit: async ({ commit_sha }) => ({
+          data: { tree: { sha: `tree-${commit_sha}` }, parents: [] },
+        }),
+        createBlob: async () => ({ data: { sha: "blob-sha" } }),
+        createTree: async () => ({ data: { sha: "tree-sha" } }),
+        createCommit: async ({ message, parents }) => {
+          const sha = `commit-${commits.length + 1}`.padEnd(40, "0");
+          commits.push({ sha, message, parents });
+          return { data: { sha } };
+        },
+        updateRef: async ({ ref, sha }) => {
+          if (ref === "heads/alpha/v2/v2.0") {
+            const error = new Error("Update is not a fast forward");
+            error.status = 422;
+            error.response = { data: { message: "Update is not a fast forward" } };
+            throw error;
+          }
+          refs.set(ref, sha);
+          return {};
+        },
+        createRef: async ({ ref, sha }) => {
+          refs.set(ref.replace(/^refs\//, ""), sha);
+          return {};
+        },
+      },
+      pulls: {
+        list: async () => ({ data: [] }),
+        create: async ({ head, base, title }) => {
+          createdPullRequest = {
+            html_url: "https://github.com/kungfu-systems/buildchain/pull/major-next-alpha",
+            head,
+            base,
+            title,
+          };
+          return { data: createdPullRequest };
+        },
+      },
+      repos: {
+        update: async () => ({}),
+        listPullRequestsAssociatedWithCommit: async ({ commit_sha }) => {
+          assert.equal(commit_sha, SHA);
+          return {
+            data: [
+              {
+                merged_at: "2026-06-30T00:00:00Z",
+                base: { ref: "publish-gate/major" },
+                head: {
+                  ref: "release/v1/v1.0",
+                  repo: { full_name: "kungfu-systems/buildchain" },
+                },
+              },
+            ],
+          };
+        },
+      },
+    },
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "publish-gate/major",
+    cwd,
+  });
+
+  const releaseSha = commits[0].sha;
+  const nextAlphaSha = commits[1].sha;
+  assert.equal(refs.get("heads/publish-gate/major"), releaseSha);
+  assert.equal(refs.get("heads/release/v2/v2.0"), releaseSha);
+  assert.equal(refs.get("heads/alpha/v2/v2.0"), currentAlphaSha);
+  assert.deepEqual(commits[1].parents, [currentAlphaSha]);
+  assert.equal(
+    refs.get(`heads/${versionStateBranchName("alpha/v2/v2.0", nextAlphaSha)}`),
+    nextAlphaSha,
+  );
+  assert.equal(createdPullRequest.base, "alpha/v2/v2.0");
+  assert.equal(createdPullRequest.head, versionStateBranchName("alpha/v2/v2.0", nextAlphaSha));
+  assert.equal(result.sha, releaseSha);
+  assert.equal(result.nextAlphaSha, nextAlphaSha);
+  assert.equal(result.pendingPullRequest, createdPullRequest.html_url);
+});
+
 test("release promotion rerun reuses prepared next alpha version commit", async () => {
   const releaseSha = "c".repeat(40);
   const nextAlphaSha = "d".repeat(40);
@@ -4945,7 +5080,7 @@ test("strict alpha promotion fails fast when direct version-state sync is not au
       requireGovernance: true,
       requireVersionState: true,
     }),
-    /generated version-state update.*rejected by branch protection.*version-state PRs/,
+    /generated version-state update.*rejected by branch protection.*without a post-publish human PR/,
   );
   assert.equal(createdPullRequest, false);
 });

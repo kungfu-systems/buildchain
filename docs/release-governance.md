@@ -419,8 +419,11 @@ status checks are satisfied by machine-verifiable Buildchain evidence rather
 than a human PR. The protected ref PATCH itself uses the generated ref update
 token; the reusable wrapper defaults it to
 `secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token`. If direct generated
-bookkeeping is still rejected, Buildchain fails with a token/protection
-diagnostic instead of creating a post-publish PR.
+release finalization bookkeeping is still rejected, Buildchain creates or
+reuses a same-repository `buildchain/version-state/*` PR based on the current
+target channel head and records `finalization-needed=true` in the durable
+transaction output. Strict alpha bookkeeping still fails with a
+token/protection diagnostic instead of creating a post-publish PR.
 Buildchain's own promotion workflow reads `BUILDCHAIN_PROMOTION_BYPASS_APPS`,
 `BUILDCHAIN_PROMOTION_BYPASS_USERS`, and
 `BUILDCHAIN_PROMOTION_BYPASS_TEAMS` repository variables so the declared bypass
