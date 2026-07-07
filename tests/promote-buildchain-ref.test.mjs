@@ -3473,7 +3473,7 @@ test("release finalization merges generated next-alpha state into diverged dev",
       packageManager: "pnpm@11.7.0",
     },
   });
-  const { octokit, refs, commits, commitLog } = createGitMock({
+  const { octokit, refs, commits, trees, commitLog } = createGitMock({
     refs: new Map([
       ["heads/release/v1/v1.0", releaseHeadSha],
       ["heads/alpha/v1/v1.0", alphaHeadSha],
@@ -3482,6 +3482,26 @@ test("release finalization merges generated next-alpha state into diverged dev",
       ["tags/v1.0-alpha", alphaHeadSha],
     ]),
   });
+  const originalPackageBlob = "blob-package-alpha-0";
+  const sharedActionBlob = "blob-action-current";
+  trees.set("alpha-tree", [
+    { path: "package.json", mode: "100644", type: "blob", sha: originalPackageBlob },
+    {
+      path: "actions/promote-buildchain-ref/lib.js",
+      mode: "100644",
+      type: "blob",
+      sha: sharedActionBlob,
+    },
+  ]);
+  trees.set("dev-tree", [
+    { path: "package.json", mode: "100644", type: "blob", sha: originalPackageBlob },
+    {
+      path: "actions/promote-buildchain-ref/lib.js",
+      mode: "100644",
+      type: "blob",
+      sha: sharedActionBlob,
+    },
+  ]);
   commits.set(releaseHeadSha, {
     sha: releaseHeadSha,
     tree: { sha: "alpha-tree" },
@@ -3523,7 +3543,14 @@ test("release finalization merges generated next-alpha state into diverged dev",
     }),
     compareCommitsWithBasehead: async ({ basehead }) => {
       assert.match(basehead, new RegExp(`^${devHeadSha}\\.\\.\\.commit-\\d+0+$`));
-      return { data: { files: [{ filename: "package.json" }] } };
+      return {
+        data: {
+          files: [
+            { filename: "package.json" },
+            { filename: "actions/promote-buildchain-ref/lib.js" },
+          ],
+        },
+      };
     },
   };
 
@@ -3640,13 +3667,11 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
     tree: { sha: "alpha-zero-tree" },
     parents: [],
   });
-  let comparedBasehead = "";
   octokit.rest.repos = {
     getBranchProtection: async () => ({
       data: protectedChannel(),
     }),
-    compareCommitsWithBasehead: async ({ basehead }) => {
-      comparedBasehead = basehead;
+    compareCommitsWithBasehead: async () => {
       return { data: { files: [{ filename: "package.json" }] } };
     },
     listPullRequestsAssociatedWithCommit: async ({ commit_sha }) => ({
@@ -3695,7 +3720,6 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   });
 
   assert.equal(result.publishTransaction.exactTag, "v1.0.0");
-  assert.match(comparedBasehead, new RegExp(`^${releaseMergeSha}\\.\\.\\.`));
   assert.equal(refs.get("tags/v1.0.0"), result.sha);
 });
 
@@ -6137,7 +6161,16 @@ assert.equal(pkg.version, anchor.npmVersion);
     ["heads/release/v22/v22.22", SHA],
     ["tags/v22.22.0-alpha.0", alphaSha],
   ]);
-  const comparedBaseheads = [];
+  const trees = new Map([
+    ["alpha-tree", [
+      { path: "package.json", mode: "100644", type: "blob", sha: "blob-package-alpha" },
+      { path: "libnode.release.json", mode: "100644", type: "blob", sha: "blob-anchor-alpha" },
+    ]],
+    ["release-tree", [
+      { path: "package.json", mode: "100644", type: "blob", sha: "blob-package-release" },
+      { path: "libnode.release.json", mode: "100644", type: "blob", sha: "blob-anchor-release" },
+    ]],
+  ]);
   const octokit = {
     rest: {
       git: {
@@ -6160,6 +6193,9 @@ assert.equal(pkg.version, anchor.npmVersion);
             tree: { sha: commit_sha === alphaSha ? "alpha-tree" : "release-tree" },
             parents: commit_sha === SHA ? [{ sha: alphaSha }] : [],
           },
+        }),
+        getTree: async ({ tree_sha }) => ({
+          data: { tree: trees.get(tree_sha) || [] },
         }),
         createBlob: async () => {
           throw new Error("anchored manual release should not create version blobs");
@@ -6197,8 +6233,7 @@ assert.equal(pkg.version, anchor.npmVersion);
               ]
             : [],
         }),
-        compareCommitsWithBasehead: async ({ basehead }) => {
-          comparedBaseheads.push(basehead);
+        compareCommitsWithBasehead: async () => {
           return {
             data: {
               files: [
@@ -6228,7 +6263,6 @@ assert.equal(pkg.version, anchor.npmVersion);
   assert.equal(refs.get("tags/v22.22.0"), SHA);
   assert.equal(refs.get("tags/v22.22"), SHA);
   assert.equal(refs.get("tags/v22"), SHA);
-  assert.deepEqual(comparedBaseheads, [`${alphaSha}...${SHA}`]);
 });
 
 test("strict anchored release promotion accepts reviewed target PR with only version material changes", async () => {
@@ -6282,7 +6316,16 @@ assert.equal(pkg.version, anchor.npmVersion);
     ["heads/release/v22/v22.22", SHA],
     ["tags/v22.22.0-alpha.2", alphaSha],
   ]);
-  const comparedBaseheads = [];
+  const trees = new Map([
+    ["alpha-tree", [
+      { path: "package.json", mode: "100644", type: "blob", sha: "blob-package-alpha" },
+      { path: "libnode.release.json", mode: "100644", type: "blob", sha: "blob-anchor-alpha" },
+    ]],
+    ["release-tree", [
+      { path: "package.json", mode: "100644", type: "blob", sha: "blob-package-release" },
+      { path: "libnode.release.json", mode: "100644", type: "blob", sha: "blob-anchor-release" },
+    ]],
+  ]);
   const octokit = {
     rest: {
       git: {
@@ -6308,6 +6351,9 @@ assert.equal(pkg.version, anchor.npmVersion);
                 ? [{ sha: releaseBaseSha }, { sha: featureParentSha }]
                 : [],
           },
+        }),
+        getTree: async ({ tree_sha }) => ({
+          data: { tree: trees.get(tree_sha) || [] },
         }),
         createBlob: async () => {
           throw new Error("anchored manual release should not create version blobs");
@@ -6346,8 +6392,7 @@ assert.equal(pkg.version, anchor.npmVersion);
                 ]
               : [],
         }),
-        compareCommitsWithBasehead: async ({ basehead }) => {
-          comparedBaseheads.push(basehead);
+        compareCommitsWithBasehead: async () => {
           return {
             data: {
               files: [
@@ -6375,7 +6420,6 @@ assert.equal(pkg.version, anchor.npmVersion);
   assert.equal(result.sha, SHA);
   assert.equal(result.nextAlphaRequired, true);
   assert.equal(refs.get("tags/v22.22.0"), SHA);
-  assert.deepEqual(comparedBaseheads, [`${alphaSha}...${SHA}`]);
 });
 
 test("anchored manual publish transactions use declared package version for durable state", async () => {

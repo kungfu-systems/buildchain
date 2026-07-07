@@ -3419,18 +3419,62 @@ async function promoteBuildchainRefs({
   };
 
   const assertOnlyAllowedChangesBetween = async ({ baseSha, headSha, allowedPaths }) => {
-    const { data: comparison } = await octokit.rest.repos.compareCommitsWithBasehead({
-      owner,
-      repo,
-      basehead: `${baseSha}...${headSha}`,
+    const changedPaths = await listChangedPathsBetweenTrees({
+      baseSha,
+      headSha,
     });
-    const changedPaths = (comparison.files || []).map((file) => file.filename);
     const unexpected = changedPaths.filter((file) => !allowedPaths.includes(file));
     if (unexpected.length > 0) {
       throw new Error(
         `Version-state PR changed files outside declared version state: ${unexpected.join(", ")}`,
       );
     }
+  };
+
+  const listChangedPathsBetweenTrees = async ({ baseSha, headSha }) => {
+    const [baseCommitResult, headCommitResult] = await Promise.all([
+      getGitCommitWithRetry({ octokit, owner, repo, commitSha: baseSha }),
+      getGitCommitWithRetry({ octokit, owner, repo, commitSha: headSha }),
+    ]);
+    const [baseTreeResult, headTreeResult] = await Promise.all([
+      retryGitHubOperation(
+        `git.getTree ${baseSha} recursive`,
+        () => octokit.rest.git.getTree({
+          owner,
+          repo,
+          tree_sha: baseCommitResult.data.tree.sha,
+          recursive: "1",
+        }),
+      ),
+      retryGitHubOperation(
+        `git.getTree ${headSha} recursive`,
+        () => octokit.rest.git.getTree({
+          owner,
+          repo,
+          tree_sha: headCommitResult.data.tree.sha,
+          recursive: "1",
+        }),
+      ),
+    ]);
+    const toTreeMap = (tree) => {
+      const entries = new Map();
+      for (const entry of tree || []) {
+        if (!entry?.path || entry.type === "tree") {
+          continue;
+        }
+        entries.set(
+          entry.path,
+          `${entry.type || ""}:${entry.mode || ""}:${entry.sha || ""}`,
+        );
+      }
+      return entries;
+    };
+    const baseEntries = toTreeMap(baseTreeResult.data.tree);
+    const headEntries = toTreeMap(headTreeResult.data.tree);
+    const paths = new Set([...baseEntries.keys(), ...headEntries.keys()]);
+    return [...paths]
+      .filter((file) => baseEntries.get(file) !== headEntries.get(file))
+      .sort();
   };
 
   const assertOnlyAllowedReleaseRecoveryChangesBetween = async ({
