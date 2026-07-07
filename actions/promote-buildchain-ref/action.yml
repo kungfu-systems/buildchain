@@ -29,6 +29,15 @@ inputs:
   required-status-check:
     description: "Status check name fragment required by protected channel branches"
     default: "check"
+  branch-protection-bypass-apps:
+    description: "Comma- or newline-separated GitHub App slugs allowed to bypass pull-request review on Buildchain-managed channel branches while required approval remains enforced for humans"
+    default: ""
+  branch-protection-bypass-users:
+    description: "Comma- or newline-separated GitHub users allowed to bypass pull-request review on Buildchain-managed channel branches while required approval remains enforced for humans"
+    default: ""
+  branch-protection-bypass-teams:
+    description: "Comma- or newline-separated GitHub team slugs allowed to bypass pull-request review on Buildchain-managed channel branches while required approval remains enforced for humans"
+    default: ""
   allow-repository:
     description: "Repository allowed to promote"
     default: "kungfu-systems/buildchain"

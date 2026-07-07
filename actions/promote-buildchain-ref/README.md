@@ -74,12 +74,23 @@ release, it sets `next-anchor-required=true` and does not auto-create the next
 alpha branch or tag. The repository must create the next upstream anchor line
 explicitly, then run the normal channel promotion flow for that line.
 
-When branch protection requires pull requests, generated version-state commits
-are also routed through pull requests. The action creates an internal
+When branch protection requires pull requests and the promotion identity is not
+allowed to bypass pull-request review, generated version-state commits are
+routed through pull requests. The action creates an internal
 `buildchain/version-state/...` branch and PR, then stops before moving tags. Once
 that PR is reviewed, checked, and merged, the next promotion run verifies that
 the merge only changed declared version-state files from the legal source
 parent, then moves exact and floating refs.
+
+For Buildchain-owned automation, callers may pass
+`branch-protection-bypass-apps`, `branch-protection-bypass-users`, or
+`branch-protection-bypass-teams`. The action still configures managed
+`dev/vN/vN.M`, `alpha/vN/vN.M`, and `release/vN/vN.M` branches with one
+required approving review, strict GitHub Actions checks, admin enforcement,
+conversation resolution, no force pushes, and no deletions; the bypass
+allowance only lets the named automation identity apply generated version-state
+or channel bookkeeping without a second human review after the reviewed channel
+PR has already merged. Direct action calls default to no bypass allowance.
 
 ## Publish Transactions
 
@@ -289,6 +300,10 @@ while the reusable build trust gate now checks the source-lock channel HEAD and
 merged same-repository PR lineage before heavy build runners start. This action
 still independently rechecks PR lineage, alpha/release tree equivalence, and
 generated version-state verification before moving channel refs and tags.
+The reusable `release-candidate-promote.yml` wrapper defaults
+`branch-protection-bypass-apps` to `github-actions`, so flow-internal promotion
+can complete generated `dev`/`alpha`/`release` bookkeeping while ordinary human
+pushes and PR merges remain governed by the one-review branch protection rule.
 
 The tag names intentionally follow the old ABV release semantics:
 exact release tags are `vX.Y.Z`, exact alpha tags are `vX.Y.Z-alpha.N`, floating

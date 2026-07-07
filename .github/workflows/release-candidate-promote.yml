@@ -77,6 +77,21 @@ on:
         default: "check"
         type: string
         required: false
+      branch-protection-bypass-apps:
+        description: "GitHub App slugs allowed to bypass pull-request review for Buildchain-managed generated channel ref updates"
+        default: "github-actions"
+        type: string
+        required: false
+      branch-protection-bypass-users:
+        description: "GitHub users allowed to bypass pull-request review for Buildchain-managed generated channel ref updates"
+        default: ""
+        type: string
+        required: false
+      branch-protection-bypass-teams:
+        description: "GitHub team slugs allowed to bypass pull-request review for Buildchain-managed generated channel ref updates"
+        default: ""
+        type: string
+        required: false
       publish-target:
         description: "Publish target recorded for audit: npm, github-release, custom"
         default: "npm"
@@ -496,6 +511,9 @@ jobs:
           require-governance: "true"
           require-version-state: "true"
           required-status-check: ${{ inputs.required-status-check }}
+          branch-protection-bypass-apps: ${{ inputs.branch-protection-bypass-apps }}
+          branch-protection-bypass-users: ${{ inputs.branch-protection-bypass-users }}
+          branch-protection-bypass-teams: ${{ inputs.branch-protection-bypass-teams }}
           allow-repository: ${{ inputs.allow-repository || github.repository }}
           publish-transaction: "true"
           publish-command: ${{ inputs.publish-command }}

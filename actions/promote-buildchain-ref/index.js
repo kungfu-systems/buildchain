@@ -207,6 +207,9 @@ async function main() {
   const requireVersionState = core.getBooleanInput("require-version-state");
   const verificationCommand = core.getInput("verification-command");
   const requiredStatusCheck = core.getInput("required-status-check") || "check";
+  const branchProtectionBypassApps = core.getInput("branch-protection-bypass-apps");
+  const branchProtectionBypassUsers = core.getInput("branch-protection-bypass-users");
+  const branchProtectionBypassTeams = core.getInput("branch-protection-bypass-teams");
   const allowRepository = core.getInput("allow-repository") || "kungfu-systems/buildchain";
   const publishTransaction = core.getBooleanInput("publish-transaction");
   const publishCommand = core.getInput("publish-command");
@@ -277,6 +280,9 @@ async function main() {
     requireVersionState,
     verificationCommand,
     requiredStatusCheck,
+    branchProtectionBypassApps,
+    branchProtectionBypassUsers,
+    branchProtectionBypassTeams,
     publishTransaction,
     publishCommand,
     publishEvidencePath,
