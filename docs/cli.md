@@ -65,6 +65,7 @@ Current public import families include:
 import * as buildchain from "@kungfu-tech/buildchain";
 import { createBuildchainLogger } from "@kungfu-tech/buildchain/logging";
 import { verifyKfd1ReleaseGate } from "@kungfu-tech/buildchain/kfd-gate";
+import { collectReadmeBadgeFacts } from "@kungfu-tech/buildchain/readme-badges";
 import { verifyReleasePassport } from "@kungfu-tech/buildchain/release-passport";
 import { createReleasePropagationPlan } from "@kungfu-tech/buildchain/release-propagation";
 import contractWorld from "@kungfu-tech/buildchain/site/buildchain-contract.json" with { type: "json" };
@@ -244,9 +245,26 @@ version against configured version files and the anchor manifest. The JSON
 result is shaped for future `buildchain.libkungfu.dev` fact ingestion.
 
 `buildchain release`, `buildchain web-surface`, `buildchain infra-contract`,
-`buildchain publish-source`, and `buildchain build-contract` route to the same scripts used by Buildchain's
-GitHub Actions workflows. This keeps local inspection and CI behavior on the
-same implementation path.
+`buildchain publish-source`, `buildchain badges`, and `buildchain build-contract`
+route to the same implementation used by Buildchain's package APIs or GitHub
+Actions workflows. This keeps local inspection and CI behavior on the same
+implementation path.
+
+Generate, check, or update the managed README badge block:
+
+```bash
+buildchain badges readme --json
+buildchain badges readme --check
+buildchain badges readme --write
+```
+
+The `--json` form emits the `kungfu-buildchain-readme-badge-facts` object.
+`--check` fails closed when the README marker block is missing or stale.
+`--write` inserts or replaces only the marked block. KFD passed badges come
+from the repository's own verified release passport; unreleased repositories
+downgrade to explicit local declarations such as `declared`, `aligned`, or
+`planned`. See [`readme-badges.md`](readme-badges.md) for the marker contract
+and `[badges]` configuration.
 
 `buildchain collect github-release` creates a release passport bundle from
 GitHub Release assets or a local asset directory:

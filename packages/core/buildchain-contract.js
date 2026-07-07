@@ -272,6 +272,7 @@ export function createBuildchainContractWorld({ root = process.cwd(), packageJso
       optionalInputs: [
         "validate",
         "lifecycle",
+        "badges readme",
         "collect github-release",
         "verify release-passport",
         "release-propagation",
@@ -279,6 +280,31 @@ export function createBuildchainContractWorld({ root = process.cwd(), packageJso
       ],
       guarantees: [
         "CLI commands are stable within the major line unless the contract major changes",
+        "README badge block checks and writes are generated from machine-readable repository facts",
+      ],
+    }),
+    surface(root, {
+      id: "readme-badge-facts",
+      kind: "node-api",
+      path: "packages/core/readme-badges.js",
+      requiredInputs: ["repository checkout"],
+      requiredOutputs: ["kungfu-buildchain-readme-badge-facts"],
+      breakingDefaults: {
+        markerStart: "<!-- buildchain:badges:start -->",
+        markerEnd: "<!-- buildchain:badges:end -->",
+        kfdPassedSource: "verified repository-owned release passport",
+      },
+      optionalInputs: [
+        "buildchain.toml [badges]",
+        "release passport URL or local path",
+        "workflow file list",
+        "platform declarations",
+      ],
+      guarantees: [
+        "README badge Markdown is a deterministic projection of badge facts",
+        "KFD passed badges require the repository's own verified release passport section",
+        "unreleased repositories downgrade KFD status to explicit non-passed declarations",
+        "CLI and JavaScript callers use the same Node API implementation",
       ],
     }),
     surface(root, {

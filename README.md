@@ -1,5 +1,17 @@
 # Buildchain
 
+<!-- buildchain:badges:start -->
+[![KFD-1: passed](https://img.shields.io/badge/KFD--1-contract%20world%20passed-2ea44f.svg)](https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json)
+[![KFD-2: passed](https://img.shields.io/badge/KFD--2-trust%20passport%20passed-2ea44f.svg)](https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json)
+[![KFD-3: passed](https://img.shields.io/badge/KFD--3-collaboration%20interface%20passed-2ea44f.svg)](https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json)
+[![Release Passport: passed](https://img.shields.io/badge/release%20passport-passed-2ea44f.svg)](https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-0969da.svg)](https://github.com/kungfu-systems/buildchain/blob/HEAD/LICENSE)
+[![Platform: macOS | Linux | Windows](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-6e7781.svg)](https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json)
+[![Verify](https://github.com/kungfu-systems/buildchain/actions/workflows/verify.yml/badge.svg)](https://github.com/kungfu-systems/buildchain/actions/workflows/verify.yml)
+[![Buildchain Ref Promotion](https://github.com/kungfu-systems/buildchain/actions/workflows/buildchain-ref-promotion.yml/badge.svg)](https://github.com/kungfu-systems/buildchain/actions/workflows/buildchain-ref-promotion.yml)
+[![Binary Distribution](https://github.com/kungfu-systems/buildchain/actions/workflows/binary-distribution.yml/badge.svg)](https://github.com/kungfu-systems/buildchain/actions/workflows/binary-distribution.yml)
+<!-- buildchain:badges:end -->
+
 Buildchain Release Passport is a mature product release record for artifacts
 that users or agents depend on.
 
@@ -84,6 +96,14 @@ const report = verifyBuildchainLogEvents({
 
 The package also ships `dist/site/` as the Buildchain-owned fact source for
 `buildchain.libkungfu.dev`.
+
+Repositories can also generate README status badges from Buildchain-owned facts
+instead of hand-maintaining badge Markdown:
+
+```bash
+buildchain badges readme --check
+buildchain badges readme --write
+```
 
 ## Project Governance
 

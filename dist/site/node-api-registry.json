@@ -8,13 +8,13 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:5b77fefabfad124ae3a7a68651a1ff54e3c88e71ae542814ca69a927cd867d15"
+      "digest": "sha256:03a105b02f8862c4f71affcb96b1a1e7b6d9c4e61f11b714a9287bfa8dd7dff8"
     },
     {
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:5b77fefabfad124ae3a7a68651a1ff54e3c88e71ae542814ca69a927cd867d15"
+      "digest": "sha256:03a105b02f8862c4f71affcb96b1a1e7b6d9c4e61f11b714a9287bfa8dd7dff8"
     },
     {
       "specifier": "@kungfu-tech/buildchain/artifact-passport",
@@ -26,7 +26,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-contract",
       "export": "./buildchain-contract",
       "target": "./packages/core/buildchain-contract.js",
-      "digest": "sha256:0ec4fb82b4a01f303688a74e020e6b718db248cf0470be25d088e7d669e38679"
+      "digest": "sha256:8567f24a427a38bb4aad598d6574701b8a7e06ba54ff21876567236be2fa84ba"
     },
     {
       "specifier": "@kungfu-tech/buildchain/diagnostics",
@@ -39,6 +39,12 @@
       "export": "./issue-reporting",
       "target": "./packages/core/issue-reporting.js",
       "digest": "sha256:d6e0a450a52b7a4fba84bff855d5370e0cfa2ec3c4be737b3c9099a72f705e2d"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/readme-badges",
+      "export": "./readme-badges",
+      "target": "./packages/core/readme-badges.js",
+      "digest": "sha256:a3400b0083430782d4fda283b21d308327eaed969053aa5b88a8b946bf83d4b3"
     },
     {
       "specifier": "@kungfu-tech/buildchain/logging",
@@ -62,7 +68,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:79520e72824eb0245446f516fe6abe9faab0ec247c6d6cec7ac5fd62ab1f48ee"
+      "digest": "sha256:4d88ba7178753d2d1488f6393fee7c086dfb660f42e6507db718dccd38bf8a34"
     },
     {
       "specifier": "@kungfu-tech/buildchain/release-propagation",
@@ -80,14 +86,19 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-kfd-claims",
       "export": "./buildchain-kfd-claims",
       "target": "./packages/core/buildchain-kfd-claims.js",
-      "digest": "sha256:18eadb7fc9415189b4b590204b89b4d241a307c00f20db6ed2728b4d89cec9b2"
+      "digest": "sha256:be59731a8215bd4d6f5e2fed4c1f38c9c84fd980d96610c39a33fda05f4dcdc5"
     }
   ],
   "docs": [
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:a8a348181d6419b746e863d1cacc9d6a91aa6ac5cc2b60819843d44487957c49"
+      "digest": "sha256:c7928797300772ed5240ef69529af99298c32dbb74c3be7fbcad5ae0786576ce"
+    },
+    {
+      "id": "readme-badges",
+      "path": "docs/readme-badges.md",
+      "digest": "sha256:3f4a44ea7f3b70cadc78a343fe53ade74b78fa369c19630cc9b926c1e460f66f"
     },
     {
       "id": "site-bundle-contract",

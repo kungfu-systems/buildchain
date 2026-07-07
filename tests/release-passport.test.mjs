@@ -14,6 +14,7 @@ import {
   createReleasePassport,
   explainReleasePassport,
   KFD2_TRUST_PROOF_CONTRACT,
+  readJsonFromLocation,
   verifyReleasePassport,
 } from "../packages/core/release-passport.js";
 import {
@@ -274,6 +275,11 @@ async function withHttpFixture(files, fn) {
       response.end("missing");
       return;
     }
+    if (body && typeof body === "object" && body.status) {
+      response.writeHead(body.status, body.headers || (body.location ? { location: body.location } : {}));
+      response.end(body.body || "");
+      return;
+    }
     response.writeHead(200, { "content-type": request.url.endsWith(".json") ? "application/json" : "application/octet-stream" });
     response.end(body);
   });
@@ -285,6 +291,23 @@ async function withHttpFixture(files, fn) {
     await new Promise((resolve) => server.close(resolve));
   }
 }
+
+test("release passport JSON reader follows GitHub-style redirects", async () => {
+  await withHttpFixture({
+    "/latest/download/buildchain.release.json": {
+      status: 302,
+      location: "/download/v2.8.8/buildchain.release.json",
+    },
+    "/download/v2.8.8/buildchain.release.json": JSON.stringify({
+      contract: "redirect-fixture",
+      ok: true,
+    }),
+  }, async (baseUrl) => {
+    const value = await readJsonFromLocation(`${baseUrl}/latest/download/buildchain.release.json`);
+    assert.equal(value.contract, "redirect-fixture");
+    assert.equal(value.ok, true);
+  });
+});
 
 function createUnifiedPassportFixture({
   missingPlatformDigest = false,

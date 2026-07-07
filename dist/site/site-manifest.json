@@ -50,7 +50,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:b5cfef531ba8ca655d8d66ffe0e530a0ca2c971daad5880943d2b824216ed043"
+      "digest": "sha256:46fa21a0fd496ba1b2afc4209e4e923aba3656e4fe83f757108f24ceef977741"
     },
     {
       "id": "install",
@@ -75,6 +75,14 @@
       "plane": "use",
       "exists": true,
       "digest": "sha256:190e3537075f37cf8a7e52bf8254606e1d9450d87c5a81dc11df8b56a7d03065"
+    },
+    {
+      "id": "readme-badges",
+      "title": "README badge blocks",
+      "path": "docs/readme-badges.md",
+      "plane": "use",
+      "exists": true,
+      "digest": "sha256:3f4a44ea7f3b70cadc78a343fe53ade74b78fa369c19630cc9b926c1e460f66f"
     },
     {
       "id": "binary-distribution",
@@ -146,7 +154,7 @@
       "path": "docs/cli.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:a8a348181d6419b746e863d1cacc9d6a91aa6ac5cc2b60819843d44487957c49"
+      "digest": "sha256:c7928797300772ed5240ef69529af99298c32dbb74c3be7fbcad5ae0786576ce"
     },
     {
       "id": "lifecycle-protocol",
