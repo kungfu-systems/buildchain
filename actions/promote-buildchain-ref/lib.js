@@ -2217,6 +2217,57 @@ function branchProtectionBypassAllowances({
   return allowances;
 }
 
+async function resolveAuthenticatedBypassAllowances({
+  octokit,
+  allowances,
+} = {}) {
+  const resolved = {
+    apps: [...(allowances?.apps || [])],
+    users: [...(allowances?.users || [])],
+    teams: [...(allowances?.teams || [])],
+  };
+  const addUnique = (key, value) => {
+    const normalized = String(value || "").trim();
+    if (normalized && !resolved[key].includes(normalized)) {
+      resolved[key].push(normalized);
+    }
+  };
+
+  if (typeof octokit?.rest?.users?.getAuthenticated === "function") {
+    try {
+      const { data } = await retryGitHubOperation(
+        "users.getAuthenticated",
+        () => octokit.rest.users.getAuthenticated(),
+      );
+      addUnique("users", data?.login);
+    } catch (error) {
+      console.log(
+        `buildchain: unable to resolve authenticated promotion user for branch-protection bypass: ${error.message}`,
+      );
+    }
+  }
+
+  if (typeof octokit?.rest?.apps?.getAuthenticated === "function") {
+    try {
+      const { data } = await retryGitHubOperation(
+        "apps.getAuthenticated",
+        () => octokit.rest.apps.getAuthenticated(),
+      );
+      addUnique("apps", data?.slug || data?.name);
+    } catch (error) {
+      console.log(
+        `buildchain: unable to resolve authenticated promotion app for branch-protection bypass: ${error.message}`,
+      );
+    }
+  }
+
+  return (
+    resolved.apps.length || resolved.users.length || resolved.teams.length
+      ? resolved
+      : undefined
+  );
+}
+
 async function ensureManagedChannelBranchProtection({
   octokit,
   owner,
@@ -2233,10 +2284,14 @@ async function ensureManagedChannelBranchProtection({
   if (typeof octokit.rest.repos?.updateBranchProtection !== "function") {
     return;
   }
-  const bypassAllowances = branchProtectionBypassAllowances({
+  const configuredBypassAllowances = branchProtectionBypassAllowances({
     apps: branchProtectionBypassApps,
     users: branchProtectionBypassUsers,
     teams: branchProtectionBypassTeams,
+  });
+  const bypassAllowances = await resolveAuthenticatedBypassAllowances({
+    octokit,
+    allowances: configuredBypassAllowances,
   });
   await retryGitHubOperation(
     `repos.updateBranchProtection ${branch}`,
@@ -2727,6 +2782,14 @@ function protectedBranchUpdateRejected(error) {
   );
 }
 
+function protectedBranchDirectUpdateError({ branch, branchSha, error }) {
+  const message = error?.response?.data?.message || error?.message || String(error || "");
+  return new Error(
+    `Buildchain generated version-state update for ${branch} -> ${branchSha} was rejected by branch protection: ${message}. ` +
+      "Promotion must complete without a post-publish human PR; configure BUILDCHAIN_PROMOTION_TOKEN as a direct-write release authority and let Buildchain add that token's authenticated user or app to the managed branch-protection bypass allowlist.",
+  );
+}
+
 function nonFastForwardUpdateRejected(error) {
   const status = error?.status || error?.response?.status;
   const message = error?.response?.data?.message || error?.message || "";
@@ -2961,64 +3024,6 @@ async function promoteBuildchainRefs({
     }
   };
 
-  const openVersionStatePullRequest = async ({ branch, branchSha, title, body }) => {
-    const headBranch = versionStateBranchName(branch, branchSha);
-    const headRef = `heads/${headBranch}`;
-    const pullTitle = title || `Update ${branch} version state`;
-    const pullBody =
-      body ||
-      `Route generated version-state commit ${branchSha} through a protected ${branch} pull request.`;
-    const existingHeadSha = await readRefSha(headRef);
-    if (!existingHeadSha) {
-      await octokit.rest.git.createRef({
-        owner,
-        repo,
-        ref: `refs/${headRef}`,
-        sha: branchSha,
-      });
-    } else if (existingHeadSha !== branchSha) {
-      await octokit.rest.git.updateRef({
-        owner,
-        repo,
-        ref: headRef,
-        sha: branchSha,
-        force: true,
-      });
-    }
-
-    const { data: openPulls } = await octokit.rest.pulls.list({
-      owner,
-      repo,
-      state: "open",
-      head: `${owner}:${headBranch}`,
-      base: branch,
-    });
-    const pullRequest =
-      openPulls[0] ||
-      (
-        await octokit.rest.pulls.create({
-          owner,
-          repo,
-          title: pullTitle,
-          head: headBranch,
-          base: branch,
-          body: pullBody,
-          maintainer_can_modify: true,
-        })
-      ).data;
-    updates.push({
-      ref: branch,
-      action: "pending-version-state-pr",
-      sha: branchSha,
-      pullRequest: pullRequest.html_url || pullRequest.url,
-    });
-    return {
-      pending: true,
-      branch: headBranch,
-      pullRequest,
-    };
-  };
-
   const updateBranch = async (branch, branchSha, action = "updated", protectedUpdate) => {
     if (dryRun) {
       updates.push({ ref: branch, action: "dry-run", sha: branchSha });
@@ -3067,11 +3072,10 @@ async function promoteBuildchainRefs({
       return { updated: true };
     } catch (error) {
       if (protectedUpdate && protectedBranchUpdateRejected(error)) {
-        return openVersionStatePullRequest({
+        throw protectedBranchDirectUpdateError({
           branch,
           branchSha,
-          title: protectedUpdate.title,
-          body: protectedUpdate.body,
+          error,
         });
       }
       if (protectedUpdate?.allowNonFastForwardSkip && nonFastForwardUpdateRejected(error)) {
@@ -3084,12 +3088,10 @@ async function promoteBuildchainRefs({
         return { updated: false, skipped: true, currentSha };
       }
       if (protectedUpdate && nonFastForwardUpdateRejected(error)) {
-        return openVersionStatePullRequest({
-          branch,
-          branchSha,
-          title: protectedUpdate.title,
-          body: `${protectedUpdate.body}\n\nThe channel ref was not a fast-forward update, so Buildchain is routing the generated version-state commit through a PR instead of forcing the ref.`,
-        });
+        throw new Error(
+          `Buildchain generated version-state update for ${branch} -> ${branchSha} is not a fast-forward update. ` +
+            "Promotion cannot open a post-publish human PR; repair channel lineage and rerun promotion so Buildchain can complete direct generated bookkeeping.",
+        );
       }
       if (!notFound(error)) {
         throw error;

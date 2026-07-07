@@ -148,17 +148,20 @@ Buildchain then:
 This keeps the test channel self-describing. If a consumer checks out
 `v2.0-alpha`, the manifests and exact alpha tag agree.
 
-If `dev/vX/vX.Y` has already advanced while the generated alpha version-state PR
-was under review, Buildchain records `skipped-non-fast-forward` for the dev sync
-and still completes the exact and floating alpha tags for the reviewed alpha
-commit. Later dev changes must go through their own dev-to-alpha promotion
-instead of rewinding dev.
+If `dev/vX/vX.Y` has already advanced before generated alpha version-state
+bookkeeping can sync back, Buildchain records `skipped-non-fast-forward` for the
+dev sync and still completes the exact and floating alpha tags for the reviewed
+alpha commit. Later dev changes must go through their own dev-to-alpha
+promotion instead of rewinding dev. The normal path is direct: after alpha
+merges, Buildchain applies the generated version-state commit to alpha and then
+fast-forwards dev to the same commit without a human version-state PR.
 
-If alpha finalization is resumed after the version-state PR is merged,
-Buildchain accepts the current alpha head as a merge commit that contains the
-recorded release material. An already-created exact alpha tag may point at the
-transaction release/material SHA or at the finalized alpha head; missing
-floating alpha tags are retried before the transaction becomes `complete`.
+If alpha finalization is resumed after generated version-state bookkeeping was
+partially applied, Buildchain accepts the current alpha head as the generated
+commit, or as a historical merge commit that contains the recorded release
+material. An already-created exact alpha tag may point at the transaction
+release/material SHA or at the finalized alpha head; missing floating alpha
+tags are retried before the transaction becomes `complete`.
 
 ## Release Semantics
 
@@ -188,11 +191,12 @@ The production channel and the test channel therefore intentionally diverge
 after release: production stays on the release commit, while alpha/dev continue
 at the next prerelease commit.
 
-If release finalization is resumed after the version-state PR is merged,
-Buildchain applies the same recovery rule: the current release head may be a
-merge commit that contains the recorded release material, existing exact tags
-and alpha/dev refs are accepted when they match the transaction, and missing
-floating `vX.Y` or `vX` tags are retried idempotently before completion.
+If release finalization is resumed after generated version-state bookkeeping was
+partially applied, Buildchain applies the same recovery rule: the current
+release head may be the generated commit, or a historical merge commit that
+contains the recorded release material, existing exact tags and alpha/dev refs
+are accepted when they match the transaction, and missing floating `vX.Y` or
+`vX` tags are retried idempotently before completion.
 
 ## Major Gate Semantics
 
@@ -405,15 +409,16 @@ automation identity apply generated version-state or post-publish channel
 bookkeeping after the reviewed channel PR has merged. Direct
 `promote-buildchain-ref` callers must opt into the same controlled bypass with
 `branch-protection-bypass-apps`, `branch-protection-bypass-users`, or
-`branch-protection-bypass-teams`; otherwise Buildchain creates a version-state
-PR instead of failing on protected-branch PATCH rejection. Buildchain's own
-promotion workflow reads `BUILDCHAIN_PROMOTION_BYPASS_APPS`,
+`branch-protection-bypass-teams`; the action also adds the current promotion
+token's authenticated user or app to the managed bypass allowlist. If direct
+generated bookkeeping is still rejected, Buildchain fails with a
+token/protection diagnostic instead of creating a post-publish PR. Buildchain's
+own promotion workflow reads `BUILDCHAIN_PROMOTION_BYPASS_APPS`,
 `BUILDCHAIN_PROMOTION_BYPASS_USERS`, and
 `BUILDCHAIN_PROMOTION_BYPASS_TEAMS` repository variables so the declared bypass
-identity can match the actual `BUILDCHAIN_PROMOTION_TOKEN` actor. After that PR
-is reviewed, checked, and merged, the next promotion run verifies that only
-declared version-state files changed from the legally merged source parent, then
-moves the exact and floating tags.
+identity can match the actual `BUILDCHAIN_PROMOTION_TOKEN` actor, but consumers
+do not need to duplicate that actor manually when the token identity is
+discoverable.
 
 ## What This Guarantees
 
