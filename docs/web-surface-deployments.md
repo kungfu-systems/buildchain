@@ -264,12 +264,32 @@ rollback:
       "alias": "sha-abcdef123456",
       "url": "https://sha-abcdef123456.preview.libkungfu.dev",
       "sourcePath": "/",
+      "artifactPathPrefix": "",
+      "viewerPathPrefix": "/",
+      "directoryIndex": "index.html",
+      "directoryIndexResolution": true,
       "canonicalUrl": "https://libkungfu.dev",
       "bucket": "libkungfu-dev-preview",
       "distributionId": "E-PREVIEW",
       "originPath": "",
       "objectPrefix": "sha-abcdef123456",
       "manifestKey": ".buildchain/deployments/sha-abcdef123456/hub.json",
+      "routing": {
+        "contract": "kungfu-buildchain-web-surface-path-prefix-rewrite",
+        "viewerPathPrefix": "/",
+        "artifactPathPrefix": "",
+        "objectPrefix": "sha-abcdef123456",
+        "directoryIndex": "index.html",
+        "directoryIndexResolution": true
+      },
+      "smokeUrls": [
+        {
+          "kind": "root",
+          "requestPath": "/",
+          "url": "https://sha-abcdef123456.preview.libkungfu.dev/",
+          "required": true
+        }
+      ],
       "noindex": true,
       "accessControl": "none"
     }
@@ -343,6 +363,19 @@ node scripts/web-surface.mjs \
   --output .buildchain/web-surface-staging-apply.json
 ```
 
+For multi-surface sites, each surface host is treated as a root-relative view
+of that surface's artifact path prefix. For example, a `buildchain` surface with
+`path = "/buildchain/"` and preview URL
+`https://buildchain-pr-29.preview.libkungfu.dev` syncs the artifact subtree
+`dist/buildchain/` to the preview object prefix `pr-29/buildchain`. A viewer
+request for `https://buildchain-pr-29.preview.libkungfu.dev/docs/` therefore
+resolves against the artifact's `dist/buildchain/docs/index.html`, not
+`dist/docs/index.html` and not the hub surface root. The deployment manifest
+records this as `routing.contract =
+"kungfu-buildchain-web-surface-path-prefix-rewrite"` with
+`viewerPathPrefix = "/"`, `artifactPathPrefix = "buildchain"`, and
+`directoryIndexResolution = true`.
+
 It can also execute a previously saved deploy plan. In that mode Buildchain
 recomputes the local artifact hash before running AWS commands and fails closed
 if the artifact no longer matches the saved plan:
@@ -414,7 +447,7 @@ The production preflight checks that:
   `kfd.libkungfu.dev`;
 - DNS resolves for every surface host.
 
-After production apply, the workflow runs:
+After preview, staging, and production apply, the workflow runs:
 
 ```bash
 node scripts/web-surface.mjs \
@@ -424,13 +457,18 @@ node scripts/web-surface.mjs \
   --output .buildchain/web-surface-production-health.json
 ```
 
-The health check fetches every surface URL from the apply result and fails
-production if a response is unreachable, returns an unexpected status, or still
-sends `x-robots-tag: noindex`. It also verifies that each surface binding
-recorded a deployment manifest pointer. The production release passport embeds
-the deploy plan, apply result, production preflight, and health check so a
-reviewer or agent can audit why the production site changed and whether every
-declared host was actually covered.
+The health check fetches every surface root URL and the nested smoke URLs
+recorded in each surface binding. Nested smoke URLs are derived from the
+artifact files under the surface path prefix, with directory index resolution
+such as `dist/buildchain/docs/index.html` becoming `/docs/` on the buildchain
+preview host. This fails closed when a deploy reports success but a child page
+returns 403 or another unexpected status. Production additionally fails if a
+response is unreachable, returns an unexpected status, or still sends
+`x-robots-tag: noindex`. The health check also verifies that each surface
+binding recorded a deployment manifest pointer. The production release passport
+embeds the deploy plan, apply result, production preflight, and health check so
+a reviewer or agent can audit why the production site changed and whether every
+declared host and nested route was actually covered.
 
 ## Cleanup Plans
 

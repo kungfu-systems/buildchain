@@ -201,6 +201,44 @@ test("web-surface deploy apply executes aws s3 and cloudfront commands through r
   });
 });
 
+test("web-surface deploy apply rewrites surface host roots to artifact path prefixes", () => {
+  withFixture((fixture) => {
+    fs.mkdirSync(path.join(fixture, "dist", "buildchain", "docs"), { recursive: true });
+    fs.writeFileSync(path.join(fixture, "dist", "index.html"), "hub\n");
+    fs.writeFileSync(path.join(fixture, "dist", "buildchain", "index.html"), "buildchain\n");
+    fs.writeFileSync(path.join(fixture, "dist", "buildchain", "docs", "index.html"), "docs\n");
+    const calls = [];
+    const result = applyWebSurfaceDeploy({
+      cwd: fixture,
+      channel: "preview",
+      alias: "pr-29",
+      sourceSha: "b".repeat(40),
+      dryRun: false,
+      appliedAt: "2026-07-01T00:00:00.000Z",
+      commandRunner(operation) {
+        calls.push(operation);
+        return { exitCode: 0, stdout: `${operation.action}\n`, stderr: "" };
+      },
+    });
+
+    const buildchainBinding = result.surfaceBindings.find((binding) => binding.surface === "buildchain");
+    const buildchainSync = calls.find((call) => call.action === "sync-static-artifact" && call.surface === "buildchain");
+    assert.equal(buildchainBinding.url, "https://buildchain-pr-29.preview.libkungfu.dev");
+    assert.equal(buildchainBinding.artifactPathPrefix, "buildchain");
+    assert.equal(buildchainBinding.routing.viewerPathPrefix, "/");
+    assert.equal(buildchainBinding.routing.artifactPathPrefix, "buildchain");
+    assert.deepEqual(
+      buildchainBinding.smokeUrls.map((entry) => [entry.kind, entry.requestPath, entry.url]),
+      [
+        ["root", "/", "https://buildchain-pr-29.preview.libkungfu.dev/"],
+        ["nested", "/docs/", "https://buildchain-pr-29.preview.libkungfu.dev/docs/"],
+      ],
+    );
+    assert.equal(buildchainSync.args[2], path.join(fixture, "dist", "buildchain"));
+    assert.equal(buildchainSync.args[3], "s3://libkungfu-dev-preview/pr-29/buildchain");
+  });
+});
+
 test("web-surface deploy apply honors per-surface deploy overrides", () => {
   withFixture((fixture) => {
     const configPath = path.join(fixture, "buildchain.toml");
@@ -634,7 +672,7 @@ test("web-surface health check covers kfd and fails closed on production noindex
           url,
           headers: {
             get(name) {
-              return name.toLowerCase() === "x-robots-tag" && url === "https://kfd.libkungfu.dev"
+              return name.toLowerCase() === "x-robots-tag" && url === "https://kfd.libkungfu.dev/"
                 ? "noindex"
                 : "";
             },
@@ -646,7 +684,51 @@ test("web-surface health check covers kfd and fails closed on production noindex
     assert.equal(health.contract, "kungfu-buildchain-web-surface-health-check");
     assert.equal(health.status, "failed");
     assert.equal(health.urls.kfd, "https://kfd.libkungfu.dev");
-    assert.match(health.checks.find((check) => check.surface === "kfd").message, /noindex=true/);
+    assert.match(health.checks.find((check) => check.surface === "kfd" && check.kind === "root").message, /noindex=true/);
+  });
+});
+
+test("web-surface health check smokes root and nested surface URLs", async () => {
+  await withFixtureAsync(async (fixture) => {
+    fs.mkdirSync(path.join(fixture, "dist", "buildchain", "docs"), { recursive: true });
+    fs.writeFileSync(path.join(fixture, "dist", "index.html"), "hub\n");
+    fs.writeFileSync(path.join(fixture, "dist", "buildchain", "index.html"), "buildchain\n");
+    fs.writeFileSync(path.join(fixture, "dist", "buildchain", "docs", "index.html"), "docs\n");
+    const result = applyWebSurfaceDeploy({
+      cwd: fixture,
+      channel: "preview",
+      alias: "pr-29",
+      sourceSha: "b".repeat(40),
+      dryRun: true,
+    });
+    const fetched = [];
+    const health = await checkWebSurfaceHealth({
+      cwd: fixture,
+      result,
+      checkedAt: "2026-07-01T00:00:00.000Z",
+      fetchImpl(url) {
+        fetched.push(url);
+        return {
+          status: url === "https://buildchain-pr-29.preview.libkungfu.dev/docs/" ? 403 : 200,
+          url,
+          headers: {
+            get() {
+              return "";
+            },
+          },
+          text() {
+            return "<!doctype html>";
+          },
+        };
+      },
+    });
+
+    const nested = health.checks.find((check) => check.surface === "buildchain" && check.kind === "nested");
+    assert.equal(health.status, "failed");
+    assert.equal(nested.url, "https://buildchain-pr-29.preview.libkungfu.dev/docs/");
+    assert.equal(nested.httpStatus, 403);
+    assert.ok(fetched.includes("https://buildchain-pr-29.preview.libkungfu.dev/"));
+    assert.ok(fetched.includes("https://buildchain-pr-29.preview.libkungfu.dev/docs/"));
   });
 });
 
@@ -673,7 +755,7 @@ test("web-surface health check fails production on html robots noindex meta", as
             },
           },
           text() {
-            return url === "https://kfd.libkungfu.dev"
+            return url === "https://kfd.libkungfu.dev/"
               ? '<!doctype html><meta name="robots" content="noindex">'
               : "<!doctype html>";
           },
@@ -681,7 +763,7 @@ test("web-surface health check fails production on html robots noindex meta", as
       },
     });
 
-    const kfd = health.checks.find((check) => check.surface === "kfd");
+    const kfd = health.checks.find((check) => check.surface === "kfd" && check.kind === "root");
     assert.equal(health.status, "failed");
     assert.equal(kfd.noindexHeaderValue, false);
     assert.equal(kfd.noindexMeta, true);

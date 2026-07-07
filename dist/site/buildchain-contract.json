@@ -134,7 +134,7 @@
         "breaking contract drift fails closed before rendering, deployment, or release publication"
       ],
       "breakingDigest": "sha256:82ee63cb336e40d832dfff4a1c5e6cbfa221a4fc8b2359990033bc931bffc43a",
-      "auditDigest": "sha256:5416c9f4112bf24e7cef556f792034842252f65dcf9e8adf338ddc85a5137ada"
+      "auditDigest": "sha256:8de5899084cd0eebc93f5ac549b73c5ff313ac43067875d08b4ca8607d81fbf8"
     },
     {
       "contractVersion": 1,
@@ -434,7 +434,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:66003c23739fc6e7ddb94b68ae4b40fada84d486ae420b3aa408939f5cb344ff"
+      "auditDigest": "sha256:77b5234de4d1ac60b8291e63b21562cdf88c1ab33a369e1f0cccb1e75a62e492"
     },
     {
       "contractVersion": 1,
@@ -460,5 +460,5 @@
     }
   ],
   "compatibilityDigest": "sha256:407d6d5ee6a96a34d2cc30db9ac64cf4b1819ab6d77bd7a57a07a124f22101ca",
-  "contractDigest": "sha256:0d09ff0fd38672c82bf1a526d9f9ba481b504b1ca33469a1a08132243a3a6cb8"
+  "contractDigest": "sha256:8fcc55f2451450ae611569f2885130d296b3d0e8b4ba40e7257f76d7e35c93e8"
 }

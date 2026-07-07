@@ -213,6 +213,23 @@ function joinS3Key(...parts) {
   return normalizeS3Key(parts.filter(Boolean).join("/"));
 }
 
+function joinUrlPath(...parts) {
+  const raw = parts.join("/");
+  const normalized = normalizeS3Key(raw);
+  if (!normalized) {
+    return "/";
+  }
+  return raw.endsWith("/") ? `/${normalized}/` : `/${normalized}`;
+}
+
+function urlWithPath(baseUrl, requestPath) {
+  const url = new URL(baseUrl);
+  url.pathname = joinUrlPath(requestPath);
+  url.search = "";
+  url.hash = "";
+  return url.toString();
+}
+
 function s3Uri(bucket, key = "") {
   if (!bucket) {
     throw new Error("aws-s3-cloudfront adapter requires a bucket or target");
@@ -237,6 +254,19 @@ function viewerWildcardPath(binding) {
   } catch {
     return cdnWildcardPath(binding.objectPrefix);
   }
+}
+
+function surfaceArtifactPrefix(binding) {
+  return normalizeS3Key(binding.sourcePath);
+}
+
+function surfaceArtifactRootFor({ artifactRoot, binding }) {
+  const prefix = normalizeS3Key(binding.artifactPathPrefix || surfaceArtifactPrefix(binding));
+  const root = prefix ? path.join(artifactRoot, prefix) : artifactRoot;
+  if (fs.existsSync(root)) {
+    return root;
+  }
+  return artifactRoot;
 }
 
 function syncStaticArtifactArgs({ artifactRoot, bucket, objectPrefix }) {
@@ -528,6 +558,10 @@ function resolveSurfaceBindings({ config, channelName, alias, deployConfig }) {
       alias,
       url,
       sourcePath: normalizeSurfacePath(surface.path),
+      artifactPathPrefix: surfaceArtifactPrefix({ sourcePath: surface.path }),
+      viewerPathPrefix: "/",
+      directoryIndex: "index.html",
+      directoryIndexResolution: true,
       canonicalUrl: surface.productionUrl || (channelName === "production" ? url : ""),
       pathOnly: Boolean(surface.pathOnly),
       bucket,
@@ -541,6 +575,91 @@ function resolveSurfaceBindings({ config, channelName, alias, deployConfig }) {
   }).map((binding) => ({
     ...binding,
     manifestKey: deploySurfaceManifestKey(deployConfig, binding),
+  }));
+}
+
+function relativeArtifactPath({ artifactPath, filePath }) {
+  const normalizedArtifact = normalizeS3Key(artifactPath);
+  const normalizedFile = normalizeS3Key(filePath);
+  if (!normalizedArtifact) {
+    return normalizedFile;
+  }
+  return normalizedFile === normalizedArtifact
+    ? ""
+    : normalizedFile.startsWith(`${normalizedArtifact}/`)
+      ? normalizedFile.slice(normalizedArtifact.length + 1)
+      : normalizedFile;
+}
+
+function requestPathFromArtifactPath({ binding, artifactPath, filePath }) {
+  const relative = relativeArtifactPath({ artifactPath, filePath });
+  const prefix = normalizeS3Key(binding.artifactPathPrefix || surfaceArtifactPrefix(binding));
+  if (prefix && relative !== prefix && !relative.startsWith(`${prefix}/`)) {
+    return "";
+  }
+  const surfaceRelative = prefix
+    ? relative.slice(prefix.length).replace(/^\/+/, "")
+    : relative;
+  if (!surfaceRelative || surfaceRelative === "index.html") {
+    return "/";
+  }
+  if (surfaceRelative.endsWith("/index.html")) {
+    const directoryPath = normalizeS3Key(surfaceRelative.slice(0, -"index.html".length));
+    return directoryPath ? `/${directoryPath}/` : "/";
+  }
+  return joinUrlPath(surfaceRelative);
+}
+
+function smokeUrlsForBinding({ binding, artifactPath, files }) {
+  const rootUrl = urlWithPath(binding.url, "/");
+  const candidates = (files || [])
+    .map((file) => requestPathFromArtifactPath({ binding, artifactPath, filePath: file.path }))
+    .filter(Boolean)
+    .filter((requestPath) => requestPath !== "/")
+    .filter((requestPath) => requestPath.endsWith("/") || requestPath.endsWith(".html"))
+    .sort();
+  const nestedPath = candidates[0] || "";
+  return [
+    {
+      kind: "root",
+      requestPath: "/",
+      url: rootUrl,
+      required: true,
+    },
+    ...(nestedPath
+      ? [{
+          kind: "nested",
+          requestPath: nestedPath,
+          url: urlWithPath(binding.url, nestedPath),
+          required: true,
+        }]
+      : [{
+          kind: "nested",
+          requestPath: "",
+          url: "",
+          required: true,
+          missing: true,
+          message: "no nested HTML route was found under this surface artifact prefix",
+        }]),
+  ];
+}
+
+function withSurfaceRoutingEvidence(bindings, { artifactPath, files }) {
+  return bindings.map((binding) => ({
+    ...binding,
+    artifactPathPrefix: normalizeS3Key(binding.artifactPathPrefix || surfaceArtifactPrefix(binding)),
+    viewerPathPrefix: binding.viewerPathPrefix || "/",
+    directoryIndex: binding.directoryIndex || "index.html",
+    directoryIndexResolution: binding.directoryIndexResolution !== false,
+    routing: {
+      contract: "kungfu-buildchain-web-surface-path-prefix-rewrite",
+      viewerPathPrefix: binding.viewerPathPrefix || "/",
+      artifactPathPrefix: normalizeS3Key(binding.artifactPathPrefix || surfaceArtifactPrefix(binding)),
+      objectPrefix: binding.objectPrefix,
+      directoryIndex: binding.directoryIndex || "index.html",
+      directoryIndexResolution: binding.directoryIndexResolution !== false,
+    },
+    smokeUrls: smokeUrlsForBinding({ binding, artifactPath, files }),
   }));
 }
 
@@ -706,6 +825,11 @@ export function planWebSurfaceDeploy({
     rollbackLimitations,
     deployedAt,
   });
+  const surfaceBindings = withSurfaceRoutingEvidence(manifest.surfaceBindings, {
+    artifactPath: artifactPath || deployConfig.artifactPath || ".",
+    files: resolvedArtifact.files,
+  });
+  manifest.surfaceBindings = surfaceBindings;
   return {
     schemaVersion: 1,
     contract: "kungfu-buildchain-web-surface-deploy-plan",
@@ -714,14 +838,14 @@ export function planWebSurfaceDeploy({
     channel,
     alias,
     url: manifest.url,
-    urls: Object.fromEntries(manifest.surfaceBindings.map((binding) => [binding.surface, binding.url])),
+    urls: Object.fromEntries(surfaceBindings.map((binding) => [binding.surface, binding.url])),
     artifact: {
       path: artifactPath || deployConfig.artifactPath || ".",
       hash: resolvedArtifact.artifactHash,
       files: resolvedArtifact.files,
     },
     manifest,
-    surfaceBindings: manifest.surfaceBindings,
+    surfaceBindings,
     steps: planAdapterSteps(deployConfig.adapter, deployConfig, manifest),
   };
 }
@@ -763,7 +887,11 @@ export function applyWebSurfaceDeploy({
   }
   const bucket = deployConfig.bucket || deployConfig.target || "";
   const artifactRoot = path.resolve(cwd, resolvedPlan.artifact.path);
-  const bindings = resolvedPlan.manifest.surfaceBindings || [];
+  const bindings = withSurfaceRoutingEvidence(resolvedPlan.manifest.surfaceBindings || [], {
+    artifactPath: resolvedPlan.artifact.path,
+    files: resolvedPlan.artifact.files || [],
+  });
+  resolvedPlan.manifest.surfaceBindings = bindings;
   if (!dryRun) {
     for (const binding of bindings) {
       assertConcreteAwsDeployConfig({
@@ -1103,7 +1231,45 @@ export async function checkWebSurfaceHealth({
     });
   }
 
-  for (const [surface, url] of Object.entries(urls)) {
+  const smokeTargets = bindings.length > 0
+    ? bindings.flatMap((binding) => {
+        const smokeUrls = Array.isArray(binding.smokeUrls) && binding.smokeUrls.length > 0
+          ? binding.smokeUrls
+          : [{ kind: "root", requestPath: "/", url: binding.url || urls[binding.surface] || "", required: true }];
+        return smokeUrls.map((smoke) => ({
+          surface: binding.surface,
+          kind: smoke.kind || "root",
+          requestPath: smoke.requestPath || "",
+          url: smoke.url || "",
+          required: smoke.required !== false,
+          missing: Boolean(smoke.missing),
+          message: smoke.message || "",
+        }));
+      })
+    : Object.entries(urls).map(([surface, url]) => ({
+        surface,
+        kind: "root",
+        requestPath: "/",
+        url,
+        required: true,
+      }));
+
+  for (const target of smokeTargets) {
+    const { surface, url } = target;
+    if (!url || target.missing) {
+      checks.push({
+        surface,
+        kind: target.kind,
+        requestPath: target.requestPath,
+        url: url || "",
+        status: "fail",
+        httpStatus: 0,
+        finalUrl: "",
+        noindexHeader: false,
+        message: target.message || "web-surface smoke URL is missing",
+      });
+      continue;
+    }
     try {
       const response = await fetchImpl(url, { redirect: "follow" });
       const expectedNoindex = Boolean(config.channels?.[channel]?.noindex);
@@ -1117,6 +1283,8 @@ export async function checkWebSurfaceHealth({
       const noindexOk = channel !== "production" || expectedNoindex || !noindex;
       checks.push({
         surface,
+        kind: target.kind,
+        requestPath: target.requestPath,
         url,
         status: statusOk && noindexOk ? "pass" : "fail",
         httpStatus: response.status,
@@ -1131,6 +1299,8 @@ export async function checkWebSurfaceHealth({
     } catch (error) {
       checks.push({
         surface,
+        kind: target.kind,
+        requestPath: target.requestPath,
         url,
         status: "fail",
         httpStatus: 0,
@@ -1173,12 +1343,14 @@ function deployBindingOperations({ artifactRoot, deployConfig, manifest, binding
   const effectiveDeploy = surfaceDeployConfig(deployConfig, binding.surface);
   const bucket = binding.bucket || effectiveDeploy.bucket || effectiveDeploy.target || "";
   const distribution = binding.distributionId || effectiveDeploy.cloudfront_distribution || effectiveDeploy.distribution || "";
+  const surfaceArtifactRoot = surfaceArtifactRootFor({ artifactRoot, binding });
   const operations = [
     {
       action: "sync-static-artifact",
       surface: binding.surface,
       command: "aws",
-      args: syncStaticArtifactArgs({ artifactRoot, bucket, objectPrefix: binding.objectPrefix }),
+      args: syncStaticArtifactArgs({ artifactRoot: surfaceArtifactRoot, bucket, objectPrefix: binding.objectPrefix }),
+      routing: binding.routing,
     },
     {
       action: "write-deployment-manifest",
