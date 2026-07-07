@@ -5,6 +5,13 @@
   "source": "npm package docs/",
   "manuals": [
     {
+      "id": "map",
+      "title": "Buildchain documentation map",
+      "path": "docs/MAP.md",
+      "plane": "use",
+      "digest": "sha256:b5cfef531ba8ca655d8d66ffe0e530a0ca2c971daad5880943d2b824216ed043"
+    },
+    {
       "id": "install",
       "title": "Install and verify Buildchain",
       "path": "docs/install.md",
@@ -33,6 +40,20 @@
       "digest": "sha256:36899140a9b2e9ce1565ed41f3d64f73a8829fad3d59a04b9498d9479c85c4be"
     },
     {
+      "id": "consumer-issue-reporting",
+      "title": "Consumer issue reporting",
+      "path": "docs/consumer-issue-reporting.md",
+      "plane": "use",
+      "digest": "sha256:8e2159312e47b42ab0bb644cb195362150acc8872e6ac0e7380ece0c5cf36955"
+    },
+    {
+      "id": "infra-contract",
+      "title": "Infra Contract",
+      "path": "docs/infra-contract.md",
+      "plane": "use",
+      "digest": "sha256:7826e8c70ac2d90ddd8d4e38bcdd1bcfa36eef5106431d7ad94b2fe9c8d3d5dc"
+    },
+    {
       "id": "toolkit-observability",
       "title": "Toolkit observability",
       "path": "docs/toolkit-observability.md",
@@ -44,7 +65,21 @@
       "title": "Site bundle contract",
       "path": "docs/site-bundle-contract.md",
       "plane": "use",
-      "digest": "sha256:e6b4f2e76c713063ff750b0a8d6d96595addae2fd48f913744dc86559add0641"
+      "digest": "sha256:1977091fc18b816208e7af50a177fd15e114498bfa49041573812405b46585aa"
+    },
+    {
+      "id": "migration-inventory",
+      "title": "Migration inventory",
+      "path": "docs/migration-inventory.md",
+      "plane": "verify",
+      "digest": "sha256:80018cf78785431e67bbc5278d82dda80d0baa320cdb5e4abda26a0b05e5c0bc"
+    },
+    {
+      "id": "ownership",
+      "title": "Ownership",
+      "path": "docs/ownership.md",
+      "plane": "why",
+      "digest": "sha256:49074fb520c404d3c9f5b49b33562d4bdc4e3ed407cf22543fa8e19e312a6b8e"
     },
     {
       "id": "product-mechanism",
@@ -96,6 +131,13 @@
       "digest": "sha256:0a2f46501a64905067cc5872b45ac4824f9e632d59bfdfb2f6a794dfc5f959ea"
     },
     {
+      "id": "runtime-train-validation",
+      "title": "Runtime train validation",
+      "path": "docs/runtime-train-validation.md",
+      "plane": "verify",
+      "digest": "sha256:bb053594407bd0f78aa43352a249a2ffa19825374147cc712cd56ca6ad50dfa3"
+    },
+    {
       "id": "versioning",
       "title": "Versioning",
       "path": "docs/versioning.md",
@@ -107,14 +149,7 @@
       "title": "Web surface deployments",
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
-      "digest": "sha256:796e891819f03f0a7ac91f56f1bb74d9e3443d8bb0bee33a3cd053d70bde6a62"
-    },
-    {
-      "id": "infra-contract",
-      "title": "Infra Contract",
-      "path": "docs/infra-contract.md",
-      "plane": "use",
-      "digest": "sha256:7826e8c70ac2d90ddd8d4e38bcdd1bcfa36eef5106431d7ad94b2fe9c8d3d5dc"
+      "digest": "sha256:61891635707e9ed27b8754b83713db61cf9a7a6bdf65beb6a9ac8aa39356e168"
     }
   ],
   "requiredAgentManuals": [
@@ -126,7 +161,11 @@
     "docs/release-governance.md",
     "docs/release-passport.md",
     "docs/publish-transaction.md",
-    "docs/site-bundle-contract.md"
+    "docs/site-bundle-contract.md",
+    "docs/runtime-train-validation.md",
+    "docs/consumer-issue-reporting.md",
+    "docs/ownership.md",
+    "docs/migration-inventory.md"
   ],
   "guidance": "Agent consumers should use this registry to find packaged Buildchain manuals before inferring behavior from workflow snippets or release notes."
 }

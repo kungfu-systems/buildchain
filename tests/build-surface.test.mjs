@@ -33,6 +33,10 @@ import {
   resolveReleaseReviewState,
 } from "../scripts/web-surface-release-pr-review.mjs";
 import {
+  releaseBranchName,
+  renderProductionReleasePrBody,
+} from "../scripts/web-surface-production-release-pr.mjs";
+import {
   RELEASE_FEEDBACK_MARKERS,
   createWebSurfaceReleasePassport,
   normalizeActorIdentity,
@@ -593,6 +597,7 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /production-release-on-main:/);
   assert.match(workflow, /production-release-label:/);
   assert.match(workflow, /production-release-head-prefix:/);
+  assert.match(workflow, /production-release-branch-channel:/);
   assert.match(workflow, /Resolve production release PR intent/);
   assert.match(workflow, /listPullRequestsAssociatedWithCommit/);
   assert.match(workflow, /associated-release-pr-merged/);
@@ -617,7 +622,15 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /github\.ref_name == 'main'/);
   assert.match(workflow, /needs\.release-intent\.outputs\.production-release-approved == 'true'/);
   assert.match(workflow, /Apply staging deploy/);
+  assert.match(workflow, /needs\.plan\.outputs\.web-surface-channel == 'staging'/);
   assert.match(workflow, /staging-aws-role-arn is required when staging-apply is true/);
+  assert.match(workflow, /Open production release PR/);
+  assert.match(workflow, /web-surface-production-release-pr\.mjs/);
+  assert.match(workflow, /needs\.staging-apply\.result == 'success'/);
+  assert.match(workflow, /needs\.release-intent\.outputs\.production-release-approved != 'true'/);
+  assert.match(workflow, /production-release-pr-url/);
+  assert.match(workflow, /contents: write/);
+  assert.match(workflow, /issues: write/);
   assert.match(workflow, /Plan gated production deploy/);
   assert.match(workflow, /Apply production deploy/);
   assert.match(workflow, /inputs\.production-apply/);
@@ -639,6 +652,39 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /Comment production deploy feedback and write passport/);
   assert.match(workflow, /buildchain-web-surface-production-release-passport/);
   assert.match(workflow, /web-surface-release-feedback\.mjs/);
+});
+
+test("web-surface production release PR body carries staging evidence", () => {
+  const sourceSha = "abcdef1234567890abcdef1234567890abcdef12";
+  const branch = releaseBranchName({
+    prefix: "release/",
+    channel: "production",
+    sourceSha,
+  });
+  assert.equal(branch, "release/production-abcdef123456");
+  const body = renderProductionReleasePrBody({
+    stagingResult: {
+      urls: {
+        hub: "https://staging.libkungfu.dev",
+        buildchain: "https://buildchain.staging.libkungfu.dev",
+      },
+      artifactHash: "sha256:artifact",
+    },
+    sourceSha,
+    artifactHash: "sha256:artifact",
+    releasePassportArtifact: "buildchain-web-surface-staging-release-passport",
+    workflowRunUrl: "https://github.com/kungfu-systems/site/actions/runs/123",
+    productionReleaseLabel: "buildchain-release",
+    branchName: branch,
+  });
+  assert.match(body, /buildchain:web-surface-production-release-pr/);
+  assert.match(body, /https:\/\/staging\.libkungfu\.dev/);
+  assert.match(body, /https:\/\/buildchain\.staging\.libkungfu\.dev/);
+  assert.match(body, /abcdef1234567890abcdef1234567890abcdef12/);
+  assert.match(body, /sha256:artifact/);
+  assert.match(body, /buildchain-web-surface-staging-release-passport/);
+  assert.match(body, /buildchain-release/);
+  assert.match(body, /release\/production-abcdef123456/);
 });
 
 test("web-surface release PR review comments only on matching release PRs", () => {

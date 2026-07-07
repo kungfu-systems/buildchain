@@ -241,6 +241,7 @@ their own code.
 
 - `buildchain-site.json`
 - `site-manifest.json`
+- `page-registry.json`
 - `cli-registry.json`
 - `workflow-registry.json`
 - `release-model.json`
@@ -251,7 +252,34 @@ their own code.
 
 `buildchain.libkungfu.dev` should render from these package-owned facts, then
 layer presentation around them. The site should not hand-write Buildchain's
-current release mechanics.
+current release mechanics. `page-registry.json` is the complete markdown page
+source for the public site: README homepage content, all packaged `docs/*.md`
+manuals, action READMEs, the Node API package overview, and fixture guides.
+
+## Homepage Content Contract
+
+This README is also the homepage text source for `buildchain.libkungfu.dev`.
+When a site repository consumes the `@kungfu-tech/buildchain` npm package, it
+should use the generated `dist/site/buildchain-site.json` homepage fields
+instead of parsing this README or maintaining separate homepage copy.
+
+The first screen should be derived from:
+
+- Page identity: the top-level heading.
+- Lead: the opening paragraph that defines Buildchain Release Passport.
+- Trust signal: the start of `Install and Verify`, especially passport-first
+  binary verification.
+- Use signal: the start of `Use Buildchain`, especially the reusable workflow
+  and action surfaces.
+
+The package-owned site bundle exposes ordered `homepage.sections`,
+`homepage.displayPlan`, `homepage.rendererContract`, and a complete
+`pages` collection mirrored from `page-registry.json`. A site renderer may adapt
+layout, navigation, typography, examples, and visual assets, but it should not
+maintain separate wording for Buildchain's release mechanics, workflow surface,
+operation manuals, Node API overview, fixture guides, or release-passport trust
+model. Renderer-contract text is machine/implementation metadata, not ordinary
+homepage content.
 
 ## Local Verification
 

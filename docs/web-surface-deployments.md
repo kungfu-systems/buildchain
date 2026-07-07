@@ -416,7 +416,7 @@ The reusable workflow maps GitHub events to Buildchain web-surface semantics:
 | --- | --- |
 | `pull_request` opened / synchronized / reopened | validate, build, verify, and plan `preview` for `pr-N` |
 | `pull_request` closed | plan apply-mode cleanup for the `pr-N` preview alias and manifest |
-| `push` to `main` | validate, build, verify, and plan `staging` from the merged `main` SHA |
+| `push` to `main` | validate, build, verify, plan and apply `staging` from the merged `main` SHA, then optionally open a production release PR |
 | `push` to `main` from a matching release PR merge | validate the associated release PR, plan `production`, and enter the configured GitHub Environment gate |
 | `workflow_dispatch` with `production-approved = true` | plan `production` and enter the configured GitHub Environment gate |
 
@@ -493,10 +493,18 @@ When enabled, Buildchain owns the full release apply state machine:
   role, then write a staging release feedback passport artifact and comment the
   associated merged PR with the staging URL, source SHA, artifact identity, run
   URL, and failure context when apply did not complete.
+- When `production-release-on-main=true`, successful staging applies open or
+  update a Buildchain-owned release PR from
+  `release/<channel>-<short-sha>` to `main`, unless the current push already
+  came from a matching release PR merge. The release PR contains one empty
+  release-intent commit, carries `production-release-label`, and includes the
+  staging URLs, source SHA, artifact hash, and staging release-passport artifact
+  link in the PR body.
 - Release pull requests that match the configured production gate get a
   Buildchain review comment with the staging URL and production target, so the
   operator can verify staging from the PR page and use merge as the approval
-  action.
+  action. Consumers do not need to hand-write `gh pr create` or production
+  release-intent glue.
 - Production runs when `production-apply` is true and either:
   - a trusted `workflow_dispatch` passes `production-approved=true`; or
   - `production-release-on-main=true` and the `main` push commit is associated
@@ -535,15 +543,17 @@ jobs:
       production-apply: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
       production-release-on-main: true
       production-release-label: buildchain-release
-      production-release-head-prefix: feature/release-
+      production-release-head-prefix: release/
+      production-release-branch-channel: production
       production-aws-role-arn: arn:aws:iam::123456789012:role/site-production-github-actions
       production-environment: production
 ```
 
 The merge button becomes the production approval only for a PR that carries the
-release label and comes from the configured source-branch prefix. Ordinary
-pull requests merged into `main` keep the staging plan behavior and do not
-publish production.
+release label and comes from the configured source-branch prefix. Ordinary pull
+requests merged into `main` deploy staging and open a release-intent PR; merging
+that release PR triggers production. A release PR merge push does not open
+another release PR.
 
 Apply-only inputs are validated before the caller build or verification command
 runs. If the current event would run preview, staging, or production apply,
@@ -552,9 +562,12 @@ on manual dispatch fail immediately instead of spending the build and plan jobs
 first.
 
 Callers must grant `id-token: write` for OIDC role assumption. Preview comments
-also need `pull-requests: write`. The AWS roles remain caller-owned and should
-be scoped by channel: preview can mutate only preview resources, staging can
-mutate only staging resources, and production can mutate only production
+need `pull-requests: write`. Automatic release PR creation also needs
+`contents: write`, `pull-requests: write`, and `issues: write` so Buildchain can
+create the release branch, write the empty release-intent commit, open or update
+the PR, and apply the release label. The AWS roles remain caller-owned and
+should be scoped by channel: preview can mutate only preview resources, staging
+can mutate only staging resources, and production can mutate only production
 resources.
 
 Apply mode fails closed when the deploy config still contains placeholder AWS

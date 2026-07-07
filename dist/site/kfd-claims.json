@@ -46,6 +46,7 @@
       "artifactPaths": [
         "dist/site/manual-registry.json",
         "dist/site/node-api-registry.json",
+        "dist/site/page-registry.json",
         "dist/site/buildchain-site.json",
         "dist/site/site-manifest.json"
       ]
@@ -115,11 +116,11 @@
     "groups": {
       "docs": [
         {
-          "id": "doc:install",
-          "name": "Install and verify Buildchain",
+          "id": "doc:README.md",
+          "name": "README.md",
           "kind": "documentation",
-          "sourcePath": "docs/install.md",
-          "evidencePath": "docs/install.md",
+          "sourcePath": "README.md",
+          "evidencePath": "README.md",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
@@ -127,23 +128,59 @@
           "plane": "use"
         },
         {
-          "id": "doc:release-passport",
-          "name": "Release Passport protocol",
+          "id": "doc:actions/promote-buildchain-ref/README.md",
+          "name": "actions/promote-buildchain-ref/README.md",
           "kind": "documentation",
-          "sourcePath": "docs/release-passport.md",
-          "evidencePath": "docs/release-passport.md",
+          "sourcePath": "actions/promote-buildchain-ref/README.md",
+          "evidencePath": "actions/promote-buildchain-ref/README.md",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "plane": "verify"
+          "plane": "action"
         },
         {
-          "id": "doc:release-propagation",
-          "name": "Release propagation",
+          "id": "doc:actions/report-buildchain-issue/README.md",
+          "name": "actions/report-buildchain-issue/README.md",
           "kind": "documentation",
-          "sourcePath": "docs/release-propagation.md",
-          "evidencePath": "docs/release-propagation.md",
+          "sourcePath": "actions/report-buildchain-issue/README.md",
+          "evidencePath": "actions/report-buildchain-issue/README.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "action"
+        },
+        {
+          "id": "doc:actions/run-lifecycle/README.md",
+          "name": "actions/run-lifecycle/README.md",
+          "kind": "documentation",
+          "sourcePath": "actions/run-lifecycle/README.md",
+          "evidencePath": "actions/run-lifecycle/README.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "action"
+        },
+        {
+          "id": "doc:actions/validate-config/README.md",
+          "name": "actions/validate-config/README.md",
+          "kind": "documentation",
+          "sourcePath": "actions/validate-config/README.md",
+          "evidencePath": "actions/validate-config/README.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "action"
+        },
+        {
+          "id": "doc:docs/MAP.md",
+          "name": "Buildchain documentation map",
+          "kind": "documentation",
+          "sourcePath": "docs/MAP.md",
+          "evidencePath": "docs/MAP.md",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
@@ -151,7 +188,7 @@
           "plane": "use"
         },
         {
-          "id": "doc:binary-distribution",
+          "id": "doc:docs/binary-distribution.md",
           "name": "Binary distribution contract",
           "kind": "documentation",
           "sourcePath": "docs/binary-distribution.md",
@@ -163,43 +200,7 @@
           "plane": "verify"
         },
         {
-          "id": "doc:toolkit-observability",
-          "name": "Toolkit observability",
-          "kind": "documentation",
-          "sourcePath": "docs/toolkit-observability.md",
-          "evidencePath": "docs/toolkit-observability.md",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "plane": "use"
-        },
-        {
-          "id": "doc:site-bundle-contract",
-          "name": "Site bundle contract",
-          "kind": "documentation",
-          "sourcePath": "docs/site-bundle-contract.md",
-          "evidencePath": "docs/site-bundle-contract.md",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "plane": "use"
-        },
-        {
-          "id": "doc:product-mechanism",
-          "name": "Product mechanism",
-          "kind": "documentation",
-          "sourcePath": "docs/product-mechanism.md",
-          "evidencePath": "docs/product-mechanism.md",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "plane": "why"
-        },
-        {
-          "id": "doc:cli",
+          "id": "doc:docs/cli.md",
           "name": "CLI and npm package",
           "kind": "documentation",
           "sourcePath": "docs/cli.md",
@@ -211,7 +212,43 @@
           "plane": "use"
         },
         {
-          "id": "doc:lifecycle-protocol",
+          "id": "doc:docs/consumer-issue-reporting.md",
+          "name": "Consumer issue reporting",
+          "kind": "documentation",
+          "sourcePath": "docs/consumer-issue-reporting.md",
+          "evidencePath": "docs/consumer-issue-reporting.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
+        },
+        {
+          "id": "doc:docs/infra-contract.md",
+          "name": "Infra Contract",
+          "kind": "documentation",
+          "sourcePath": "docs/infra-contract.md",
+          "evidencePath": "docs/infra-contract.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
+        },
+        {
+          "id": "doc:docs/install.md",
+          "name": "Install and verify Buildchain",
+          "kind": "documentation",
+          "sourcePath": "docs/install.md",
+          "evidencePath": "docs/install.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
+        },
+        {
+          "id": "doc:docs/lifecycle-protocol.md",
           "name": "Lifecycle protocol",
           "kind": "documentation",
           "sourcePath": "docs/lifecycle-protocol.md",
@@ -223,19 +260,43 @@
           "plane": "use"
         },
         {
-          "id": "doc:reusable-build-surface",
-          "name": "Reusable build surface",
+          "id": "doc:docs/migration-inventory.md",
+          "name": "Migration inventory",
           "kind": "documentation",
-          "sourcePath": "docs/reusable-build-surface.md",
-          "evidencePath": "docs/reusable-build-surface.md",
+          "sourcePath": "docs/migration-inventory.md",
+          "evidencePath": "docs/migration-inventory.md",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "plane": "use"
+          "plane": "verify"
         },
         {
-          "id": "doc:publish-transaction",
+          "id": "doc:docs/ownership.md",
+          "name": "Ownership",
+          "kind": "documentation",
+          "sourcePath": "docs/ownership.md",
+          "evidencePath": "docs/ownership.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "why"
+        },
+        {
+          "id": "doc:docs/product-mechanism.md",
+          "name": "Product mechanism",
+          "kind": "documentation",
+          "sourcePath": "docs/product-mechanism.md",
+          "evidencePath": "docs/product-mechanism.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "why"
+        },
+        {
+          "id": "doc:docs/publish-transaction.md",
           "name": "Publish transaction",
           "kind": "documentation",
           "sourcePath": "docs/publish-transaction.md",
@@ -247,19 +308,7 @@
           "plane": "verify"
         },
         {
-          "id": "doc:release-governance",
-          "name": "Release governance",
-          "kind": "documentation",
-          "sourcePath": "docs/release-governance.md",
-          "evidencePath": "docs/release-governance.md",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "plane": "why"
-        },
-        {
-          "id": "doc:release-flow",
+          "id": "doc:docs/release-flow.md",
           "name": "Release flow",
           "kind": "documentation",
           "sourcePath": "docs/release-flow.md",
@@ -271,7 +320,91 @@
           "plane": "verify"
         },
         {
-          "id": "doc:versioning",
+          "id": "doc:docs/release-governance.md",
+          "name": "Release governance",
+          "kind": "documentation",
+          "sourcePath": "docs/release-governance.md",
+          "evidencePath": "docs/release-governance.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "why"
+        },
+        {
+          "id": "doc:docs/release-passport.md",
+          "name": "Release Passport protocol",
+          "kind": "documentation",
+          "sourcePath": "docs/release-passport.md",
+          "evidencePath": "docs/release-passport.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "verify"
+        },
+        {
+          "id": "doc:docs/release-propagation.md",
+          "name": "Release propagation",
+          "kind": "documentation",
+          "sourcePath": "docs/release-propagation.md",
+          "evidencePath": "docs/release-propagation.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
+        },
+        {
+          "id": "doc:docs/reusable-build-surface.md",
+          "name": "Reusable build surface",
+          "kind": "documentation",
+          "sourcePath": "docs/reusable-build-surface.md",
+          "evidencePath": "docs/reusable-build-surface.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
+        },
+        {
+          "id": "doc:docs/runtime-train-validation.md",
+          "name": "Runtime train validation",
+          "kind": "documentation",
+          "sourcePath": "docs/runtime-train-validation.md",
+          "evidencePath": "docs/runtime-train-validation.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "verify"
+        },
+        {
+          "id": "doc:docs/site-bundle-contract.md",
+          "name": "Site bundle contract",
+          "kind": "documentation",
+          "sourcePath": "docs/site-bundle-contract.md",
+          "evidencePath": "docs/site-bundle-contract.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
+        },
+        {
+          "id": "doc:docs/toolkit-observability.md",
+          "name": "Toolkit observability",
+          "kind": "documentation",
+          "sourcePath": "docs/toolkit-observability.md",
+          "evidencePath": "docs/toolkit-observability.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
+        },
+        {
+          "id": "doc:docs/versioning.md",
           "name": "Versioning",
           "kind": "documentation",
           "sourcePath": "docs/versioning.md",
@@ -283,7 +416,7 @@
           "plane": "why"
         },
         {
-          "id": "doc:web-surface-deployments",
+          "id": "doc:docs/web-surface-deployments.md",
           "name": "Web surface deployments",
           "kind": "documentation",
           "sourcePath": "docs/web-surface-deployments.md",
@@ -295,11 +428,143 @@
           "plane": "use"
         },
         {
-          "id": "doc:infra-contract",
-          "name": "Infra Contract",
+          "id": "doc:fixtures/infra-contract-aws-cdk-shaped/README.md",
+          "name": "fixtures/infra-contract-aws-cdk-shaped/README.md",
           "kind": "documentation",
-          "sourcePath": "docs/infra-contract.md",
-          "evidencePath": "docs/infra-contract.md",
+          "sourcePath": "fixtures/infra-contract-aws-cdk-shaped/README.md",
+          "evidencePath": "fixtures/infra-contract-aws-cdk-shaped/README.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "fixture"
+        },
+        {
+          "id": "doc:fixtures/infra-contract-aws-cli-shaped/README.md",
+          "name": "fixtures/infra-contract-aws-cli-shaped/README.md",
+          "kind": "documentation",
+          "sourcePath": "fixtures/infra-contract-aws-cli-shaped/README.md",
+          "evidencePath": "fixtures/infra-contract-aws-cli-shaped/README.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "fixture"
+        },
+        {
+          "id": "doc:fixtures/infra-contract-cloudformation-shaped/README.md",
+          "name": "fixtures/infra-contract-cloudformation-shaped/README.md",
+          "kind": "documentation",
+          "sourcePath": "fixtures/infra-contract-cloudformation-shaped/README.md",
+          "evidencePath": "fixtures/infra-contract-cloudformation-shaped/README.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "fixture"
+        },
+        {
+          "id": "doc:fixtures/infra-contract-opentofu-shaped/README.md",
+          "name": "fixtures/infra-contract-opentofu-shaped/README.md",
+          "kind": "documentation",
+          "sourcePath": "fixtures/infra-contract-opentofu-shaped/README.md",
+          "evidencePath": "fixtures/infra-contract-opentofu-shaped/README.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "fixture"
+        },
+        {
+          "id": "doc:fixtures/infra-contract-pulumi-shaped/README.md",
+          "name": "fixtures/infra-contract-pulumi-shaped/README.md",
+          "kind": "documentation",
+          "sourcePath": "fixtures/infra-contract-pulumi-shaped/README.md",
+          "evidencePath": "fixtures/infra-contract-pulumi-shaped/README.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "fixture"
+        },
+        {
+          "id": "doc:fixtures/infra-contract-shaped/README.md",
+          "name": "fixtures/infra-contract-shaped/README.md",
+          "kind": "documentation",
+          "sourcePath": "fixtures/infra-contract-shaped/README.md",
+          "evidencePath": "fixtures/infra-contract-shaped/README.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "fixture"
+        },
+        {
+          "id": "doc:fixtures/infra-contract-terraform-shaped/README.md",
+          "name": "fixtures/infra-contract-terraform-shaped/README.md",
+          "kind": "documentation",
+          "sourcePath": "fixtures/infra-contract-terraform-shaped/README.md",
+          "evidencePath": "fixtures/infra-contract-terraform-shaped/README.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "fixture"
+        },
+        {
+          "id": "doc:fixtures/libnode-shaped/README.md",
+          "name": "fixtures/libnode-shaped/README.md",
+          "kind": "documentation",
+          "sourcePath": "fixtures/libnode-shaped/README.md",
+          "evidencePath": "fixtures/libnode-shaped/README.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "fixture"
+        },
+        {
+          "id": "doc:fixtures/publish-transaction-shaped/README.md",
+          "name": "fixtures/publish-transaction-shaped/README.md",
+          "kind": "documentation",
+          "sourcePath": "fixtures/publish-transaction-shaped/README.md",
+          "evidencePath": "fixtures/publish-transaction-shaped/README.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "fixture"
+        },
+        {
+          "id": "doc:fixtures/release-propagation-shaped/README.md",
+          "name": "fixtures/release-propagation-shaped/README.md",
+          "kind": "documentation",
+          "sourcePath": "fixtures/release-propagation-shaped/README.md",
+          "evidencePath": "fixtures/release-propagation-shaped/README.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "fixture"
+        },
+        {
+          "id": "doc:fixtures/web-surface-shaped/README.md",
+          "name": "fixtures/web-surface-shaped/README.md",
+          "kind": "documentation",
+          "sourcePath": "fixtures/web-surface-shaped/README.md",
+          "evidencePath": "fixtures/web-surface-shaped/README.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "fixture"
+        },
+        {
+          "id": "doc:packages/core/README.md",
+          "name": "packages/core/README.md",
+          "kind": "documentation",
+          "sourcePath": "packages/core/README.md",
+          "evidencePath": "packages/core/README.md",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
@@ -591,6 +856,17 @@
           "public": true
         },
         {
+          "id": "site:dist/site/page-registry.json",
+          "name": "site:dist/site/page-registry.json",
+          "kind": "site-consumption-contract",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
           "id": "site:dist/site/cli-registry.json",
           "name": "site:dist/site/cli-registry.json",
           "kind": "site-consumption-contract",
@@ -781,6 +1057,6 @@
         "public": true
       }
     ],
-    "publicSurfaceCount": 57
+    "publicSurfaceCount": 80
   }
 }
