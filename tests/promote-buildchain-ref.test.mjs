@@ -4804,7 +4804,7 @@ test("strict alpha promotion no-ops settled generated version-state commits", as
   ]);
 });
 
-test("strict alpha promotion opens a version-state PR for protected branches", async () => {
+test("strict alpha promotion opens a version-state PR for approval-protected branches", async () => {
   const cwd = makeTempWorkspace({
     "package.json": {
       name: "@kungfu-tech/buildchain",
@@ -4843,7 +4843,9 @@ test("strict alpha promotion opens a version-state PR for protected branches", a
         createCommit: async () => ({ data: { sha: versionSha } }),
         updateRef: async ({ ref }) => {
           if (ref === "heads/alpha/v1/v1.0") {
-            const error = new Error('Changes must be made through a pull request. Required status check "check" is expected.');
+            const error = new Error(
+              "At least 1 approving review is required by reviewers with write access.",
+            );
             error.status = 422;
             throw error;
           }
@@ -4917,6 +4919,7 @@ test("strict alpha promotion protects created dev branches with one required app
   const versionSha = "d".repeat(40);
   const refs = new Map([
     ["heads/alpha/v1/v1.0", SHA],
+    ["heads/dev/v1/v1.0", OTHER_SHA],
     ["tags/v1.0.0", OTHER_SHA],
   ]);
   const protections = [];
@@ -4944,6 +4947,12 @@ test("strict alpha promotion protects created dev branches with one required app
         createTree: async () => ({ data: { sha: "tree-sha" } }),
         createCommit: async () => ({ data: { sha: versionSha } }),
         updateRef: async ({ ref, sha }) => {
+          if (ref === "heads/dev/v1/v1.0") {
+            assert.ok(
+              protections.find((protection) => protection.branch === "dev/v1/v1.0"),
+              "managed dev branch protection should be updated before ref PATCH",
+            );
+          }
           refs.set(ref, sha);
           return {};
         },
@@ -4988,6 +4997,9 @@ test("strict alpha promotion protects created dev branches with one required app
     requireGovernance: true,
     requireVersionState: true,
     requiredStatusCheck: "Build",
+    branchProtectionBypassApps: "github-actions, buildchain-promotion",
+    branchProtectionBypassUsers: "release-bot",
+    branchProtectionBypassTeams: "release-engineering",
   });
 
   const devProtection = protections.find(
@@ -5003,6 +5015,11 @@ test("strict alpha promotion protects created dev branches with one required app
     require_code_owner_reviews: false,
     required_approving_review_count: 1,
     require_last_push_approval: false,
+    bypass_pull_request_allowances: {
+      apps: ["github-actions", "buildchain-promotion"],
+      users: ["release-bot"],
+      teams: ["release-engineering"],
+    },
   });
   assert.equal(devProtection.enforce_admins, true);
   assert.equal(devProtection.allow_force_pushes, false);

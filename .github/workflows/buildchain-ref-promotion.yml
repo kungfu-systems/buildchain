@@ -63,6 +63,9 @@ jobs:
       release-candidate-workflow-name: Build Surface Fixture
       github-release: true
       required-status-check: check
+      branch-protection-bypass-apps: ${{ vars.BUILDCHAIN_PROMOTION_BYPASS_APPS || 'github-actions' }}
+      branch-protection-bypass-users: ${{ vars.BUILDCHAIN_PROMOTION_BYPASS_USERS }}
+      branch-protection-bypass-teams: ${{ vars.BUILDCHAIN_PROMOTION_BYPASS_TEAMS }}
       required-artifact-count: 0
       publish-required-artifacts-json: "[]"
       trusted-publishing: true

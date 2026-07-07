@@ -2186,12 +2186,46 @@ function isManagedChannelBranch(ref) {
   return /^(dev|alpha|release)\/v\d+\/v\d+\.\d+$/.test(String(ref || ""));
 }
 
+function parseBranchProtectionBypassList(value = "") {
+  return [
+    ...new Set(
+      String(value || "")
+        .split(/[,\n]/)
+        .map((entry) => entry.trim())
+        .filter(Boolean),
+    ),
+  ];
+}
+
+function branchProtectionBypassAllowances({
+  apps = "",
+  users = "",
+  teams = "",
+} = {}) {
+  const allowances = {
+    apps: parseBranchProtectionBypassList(apps),
+    users: parseBranchProtectionBypassList(users),
+    teams: parseBranchProtectionBypassList(teams),
+  };
+  if (
+    allowances.apps.length === 0 &&
+    allowances.users.length === 0 &&
+    allowances.teams.length === 0
+  ) {
+    return undefined;
+  }
+  return allowances;
+}
+
 async function ensureManagedChannelBranchProtection({
   octokit,
   owner,
   repo,
   branch,
   requiredStatusCheck = "check",
+  branchProtectionBypassApps = "",
+  branchProtectionBypassUsers = "",
+  branchProtectionBypassTeams = "",
 }) {
   if (!isManagedChannelBranch(branch)) {
     return;
@@ -2199,6 +2233,11 @@ async function ensureManagedChannelBranchProtection({
   if (typeof octokit.rest.repos?.updateBranchProtection !== "function") {
     return;
   }
+  const bypassAllowances = branchProtectionBypassAllowances({
+    apps: branchProtectionBypassApps,
+    users: branchProtectionBypassUsers,
+    teams: branchProtectionBypassTeams,
+  });
   await retryGitHubOperation(
     `repos.updateBranchProtection ${branch}`,
     () => octokit.rest.repos.updateBranchProtection({
@@ -2215,6 +2254,9 @@ async function ensureManagedChannelBranchProtection({
         require_code_owner_reviews: false,
         required_approving_review_count: 1,
         require_last_push_approval: false,
+        ...(bypassAllowances
+          ? { bypass_pull_request_allowances: bypassAllowances }
+          : {}),
       },
       restrictions: null,
       required_linear_history: false,
@@ -2681,7 +2723,7 @@ function protectedBranchUpdateRejected(error) {
   const message = error?.response?.data?.message || error?.message || "";
   return (
     status === 422 &&
-    /Changes must be made through a pull request|Required status check/i.test(message)
+    /Changes must be made through a pull request|Required status check|approving review is required/i.test(message)
   );
 }
 
@@ -2732,6 +2774,9 @@ async function promoteBuildchainRefs({
   requireGovernance = false,
   verificationCommand = "",
   requiredStatusCheck = "check",
+  branchProtectionBypassApps = "",
+  branchProtectionBypassUsers = "",
+  branchProtectionBypassTeams = "",
   publishTransaction = false,
   publishCommand = "",
   publishEvidencePath = "",
@@ -2979,16 +3024,22 @@ async function promoteBuildchainRefs({
       updates.push({ ref: branch, action: "dry-run", sha: branchSha });
       return { updated: true };
     }
+    const ensureChannelProtection = () => ensureManagedChannelBranchProtection({
+      octokit,
+      owner,
+      repo,
+      branch,
+      requiredStatusCheck,
+      branchProtectionBypassApps,
+      branchProtectionBypassUsers,
+      branchProtectionBypassTeams,
+    });
     const currentSha = await readRefSha(`heads/${branch}`);
+    if (currentSha) {
+      await ensureChannelProtection();
+    }
     if (currentSha === branchSha) {
       updates.push({ ref: branch, action: "existing", sha: branchSha });
-      await ensureManagedChannelBranchProtection({
-        octokit,
-        owner,
-        repo,
-        branch,
-        requiredStatusCheck,
-      });
       return { updated: true, existing: true };
     }
     try {
@@ -3010,13 +3061,9 @@ async function promoteBuildchainRefs({
         });
         updates.push({ ref: branch, action: "created", sha: branchSha });
       }
-      await ensureManagedChannelBranchProtection({
-        octokit,
-        owner,
-        repo,
-        branch,
-        requiredStatusCheck,
-      });
+      if (!currentSha) {
+        await ensureChannelProtection();
+      }
       return { updated: true };
     } catch (error) {
       if (protectedUpdate && protectedBranchUpdateRejected(error)) {
@@ -3054,13 +3101,7 @@ async function promoteBuildchainRefs({
         sha: branchSha,
       });
       updates.push({ ref: branch, action: "created", sha: branchSha });
-      await ensureManagedChannelBranchProtection({
-        octokit,
-        owner,
-        repo,
-        branch,
-        requiredStatusCheck,
-      });
+      await ensureChannelProtection();
       return { updated: true };
     }
   };
