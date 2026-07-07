@@ -14,7 +14,7 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:85e27de8d34ceac1652d9374697ea5a1a7a08666d2ba7ae377b9afdd14e2ca1f",
+    "compatibilityDigest": "sha256:217f7764849bf779cbc70aea9da59429a44c68f5f7131b26593bb18a6e7ffb18",
     "majorLine": "v2"
   },
   "publicClaims": [
@@ -39,9 +39,11 @@
       "sourcePaths": [
         "scripts/generate-site-bundle.mjs",
         "packages/core/buildchain-kfd-claims.js",
+        "packages/core/readme-badges.js",
         "docs/MAP.md",
         "docs/site-bundle-contract.md",
-        "docs/cli.md"
+        "docs/cli.md",
+        "docs/readme-badges.md"
       ],
       "artifactPaths": [
         "dist/site/manual-registry.json",
@@ -49,6 +51,22 @@
         "dist/site/page-registry.json",
         "dist/site/buildchain-site.json",
         "dist/site/site-manifest.json"
+      ]
+    },
+    {
+      "id": "claim:buildchain-readme-badge-facts",
+      "claim": "Buildchain README status badges are generated from repository-owned facts and verified release-passport evidence, not hand-maintained README prose.",
+      "sourcePaths": [
+        "packages/core/readme-badges.js",
+        "bin/buildchain.mjs",
+        "docs/readme-badges.md",
+        "docs/cli.md",
+        "buildchain.toml"
+      ],
+      "artifactPaths": [
+        "dist/site/node-api-registry.json",
+        "dist/site/manual-registry.json",
+        "dist/site/buildchain-contract.json"
       ]
     },
     {
@@ -306,6 +324,18 @@
           "participantFacing": true,
           "public": true,
           "plane": "verify"
+        },
+        {
+          "id": "doc:docs/readme-badges.md",
+          "name": "README badge blocks",
+          "kind": "documentation",
+          "sourcePath": "docs/readme-badges.md",
+          "evidencePath": "docs/readme-badges.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
         },
         {
           "id": "doc:docs/release-flow.md",
@@ -760,6 +790,18 @@
           "packageExport": "./issue-reporting"
         },
         {
+          "id": "export:./readme-badges",
+          "name": "@kungfu-tech/buildchain/readme-badges",
+          "kind": "package-export",
+          "sourcePath": "packages/core/readme-badges.js",
+          "evidencePath": "packages/core/readme-badges.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./readme-badges"
+        },
+        {
           "id": "export:./logging",
           "name": "@kungfu-tech/buildchain/logging",
           "kind": "package-export",
@@ -1069,6 +1111,6 @@
         "public": true
       }
     ],
-    "publicSurfaceCount": 81
+    "publicSurfaceCount": 83
   }
 }

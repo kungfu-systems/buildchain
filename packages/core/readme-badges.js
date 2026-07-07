@@ -1,0 +1,450 @@
+import fs from "node:fs";
+import path from "node:path";
+import { spawnSync } from "node:child_process";
+import crypto from "node:crypto";
+import { loadBuildchainConfig } from "./buildchain-config.js";
+import {
+  readJsonFromLocation,
+  verifyReleasePassport,
+} from "./release-passport.js";
+
+export const README_BADGE_FACTS_CONTRACT = "kungfu-buildchain-readme-badge-facts";
+export const README_BADGE_BLOCK_START = "<!-- buildchain:badges:start -->";
+export const README_BADGE_BLOCK_END = "<!-- buildchain:badges:end -->";
+
+const KFD_KEYS = [
+  { key: "kfd-1", id: "kfd1", label: "KFD-1", text: "contract world" },
+  { key: "kfd-2", id: "kfd2", label: "KFD-2", text: "trust passport" },
+  { key: "kfd-3", id: "kfd3", label: "KFD-3", text: "collaboration interface" },
+];
+
+const STATE_COLORS = {
+  passed: "2ea44f",
+  aligned: "0969da",
+  declared: "6e7781",
+  planned: "bf8700",
+  draft: "8250df",
+  downgraded: "bf8700",
+  failed: "cf222e",
+  missing: "6e7781",
+  unknown: "6e7781",
+};
+
+function readJsonIfExists(filePath) {
+  if (!filePath || !fs.existsSync(filePath)) {
+    return undefined;
+  }
+  return JSON.parse(fs.readFileSync(filePath, "utf8"));
+}
+
+function readTextIfExists(filePath) {
+  return fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf8") : "";
+}
+
+function sha256File(filePath) {
+  return crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");
+}
+
+function posixPath(value) {
+  return String(value || "").split(path.sep).join("/");
+}
+
+function encodeBadge(value) {
+  return encodeURIComponent(String(value || ""))
+    .replace(/-/g, "--")
+    .replace(/_/g, "__");
+}
+
+function badgeUrl({ label, message, color }) {
+  return `https://img.shields.io/badge/${encodeBadge(label)}-${encodeBadge(message)}-${color || "6e7781"}.svg`;
+}
+
+function normalizeState(value, fallback = "planned") {
+  const normalized = String(value || fallback).trim().toLowerCase();
+  if (["passed", "aligned", "declared", "planned", "draft", "downgraded", "failed", "missing"].includes(normalized)) {
+    return normalized;
+  }
+  return fallback;
+}
+
+function normalizeDeclarationState(value, fallback = "planned") {
+  const normalized = normalizeState(value, fallback);
+  return normalized === "passed" ? "declared" : normalized;
+}
+
+function normalizeStringArray(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value
+    .map((entry) => String(entry || "").trim())
+    .filter(Boolean);
+}
+
+function readRepositoryFromGit(cwd) {
+  const remote = spawnSync("git", ["config", "--get", "remote.origin.url"], {
+    cwd,
+    encoding: "utf8",
+  });
+  const value = remote.status === 0 ? remote.stdout.trim() : "";
+  const match = value.match(/github\.com[:/]([^/\s]+)\/([^/\s.]+)(?:\.git)?$/);
+  if (!match) {
+    return { fullName: "", owner: "", name: "", url: "" };
+  }
+  const fullName = `${match[1]}/${match[2]}`;
+  return {
+    fullName,
+    owner: match[1],
+    name: match[2],
+    url: `https://github.com/${fullName}`,
+  };
+}
+
+function normalizePackageRepository(repository) {
+  const value = typeof repository === "string" ? repository : repository?.url || "";
+  const match = String(value).match(/github\.com[:/]([^/\s]+)\/([^/\s.]+)(?:\.git)?/);
+  if (!match) {
+    return undefined;
+  }
+  const fullName = `${match[1]}/${match[2]}`;
+  return {
+    fullName,
+    owner: match[1],
+    name: match[2],
+    url: `https://github.com/${fullName}`,
+  };
+}
+
+function discoverWorkflowFacts({ cwd, repository, badgeConfig = {} }) {
+  const workflowDir = path.join(cwd, ".github", "workflows");
+  const configured = normalizeStringArray(badgeConfig.workflows);
+  const defaults = ["verify.yml", "build.yml", "buildchain-ref-promotion.yml"];
+  const names = configured.length > 0 ? configured : defaults;
+  if (!fs.existsSync(workflowDir)) {
+    return [];
+  }
+  return names
+    .map((file) => {
+      const workflowPath = path.join(workflowDir, file);
+      if (!fs.existsSync(workflowPath)) {
+        return undefined;
+      }
+      const source = fs.readFileSync(workflowPath, "utf8");
+      const nameMatch = source.match(/^name:\s*["']?(.+?)["']?\s*$/m);
+      const name = String(nameMatch?.[1] || path.basename(file, path.extname(file))).trim();
+      return {
+        file,
+        name,
+        badgeUrl: repository.fullName
+          ? `https://github.com/${repository.fullName}/actions/workflows/${file}/badge.svg`
+          : "",
+        url: repository.fullName
+          ? `https://github.com/${repository.fullName}/actions/workflows/${file}`
+          : "",
+      };
+    })
+    .filter(Boolean);
+}
+
+function defaultReleasePassportLocation({ cwd, repository, badgeConfig = {} }) {
+  const configured = badgeConfig.release_passport_url || badgeConfig.releasePassportUrl || badgeConfig.release_passport || "";
+  if (configured) {
+    return String(configured);
+  }
+  const localCandidates = [
+    "buildchain.release.json",
+    ".buildchain/release-passport/buildchain.release.json",
+  ];
+  for (const candidate of localCandidates) {
+    const filePath = path.join(cwd, candidate);
+    if (fs.existsSync(filePath)) {
+      return candidate;
+    }
+  }
+  return repository.fullName
+    ? `https://github.com/${repository.fullName}/releases/latest/download/buildchain.release.json`
+    : "";
+}
+
+function siblingUrl(location, filename) {
+  if (!/^https?:\/\//.test(location)) {
+    return "";
+  }
+  return `${location.replace(/\/[^/]*$/, "")}/${filename}`;
+}
+
+async function readPassportAndReport({ cwd, location }) {
+  if (!location) {
+    return { passport: undefined, report: undefined, error: "" };
+  }
+  const resolvedLocation = /^https?:\/\//.test(location) ? location : path.resolve(cwd, location);
+  try {
+    const passport = await readJsonFromLocation(resolvedLocation);
+    const report = await verifyReleasePassport({
+      passportLocation: resolvedLocation,
+      artifactEvidenceLocation: siblingUrl(resolvedLocation, "artifact-evidence.json"),
+      impactLocation: siblingUrl(resolvedLocation, "impact.json"),
+      agentIndexLocation: siblingUrl(resolvedLocation, "agent-index.json"),
+      productMechanismLocation: siblingUrl(resolvedLocation, "product-mechanism.json"),
+    });
+    return { passport, report, error: "" };
+  } catch (error) {
+    return { passport: undefined, report: undefined, error: error.message };
+  }
+}
+
+function kfdSectionPassed({ passport, report, key }) {
+  if (!passport || !report?.ok) {
+    return false;
+  }
+  const section = passport[key] || (key === "kfd-1" ? passport.kfd1 : undefined) || (key === "kfd-3" ? passport.kfd3 : undefined);
+  return section?.status === "passed";
+}
+
+function declaredKfdState({ badgeConfig = {}, key, id }) {
+  const kfdConfig = badgeConfig.kfd && typeof badgeConfig.kfd === "object" ? badgeConfig.kfd : {};
+  return normalizeDeclarationState(
+    badgeConfig[key] ||
+      badgeConfig[id] ||
+      badgeConfig[key.replace("-", "_")] ||
+      kfdConfig[key] ||
+      kfdConfig[id] ||
+      kfdConfig[key.replace("kfd-", "")],
+    "planned",
+  );
+}
+
+function releasePassportState({ report, error, badgeConfig = {} }) {
+  if (report?.ok) {
+    return "passed";
+  }
+  if (error) {
+    return normalizeDeclarationState(badgeConfig.release_passport_state || badgeConfig.releasePassportState, "declared");
+  }
+  return normalizeDeclarationState(badgeConfig.release_passport_state || badgeConfig.releasePassportState, "planned");
+}
+
+function licenseFromFiles(cwd, packageJson) {
+  if (packageJson.license) {
+    return String(packageJson.license);
+  }
+  const licenseFile = fs.readdirSync(cwd).find((entry) => /^licen[sc]e($|\.)/i.test(entry));
+  return licenseFile ? licenseFile.replace(/^LICENSE[.-]?/i, "") || "present" : "";
+}
+
+function collectPlatformFacts({ badgeConfig = {}, passport = undefined }) {
+  const configured = normalizeStringArray(badgeConfig.platforms);
+  if (configured.length > 0) {
+    return configured;
+  }
+  const assets = Array.isArray(passport?.artifacts) ? passport.artifacts : [];
+  const platforms = new Set();
+  for (const asset of assets) {
+    const platform = String(asset.platform || "").trim();
+    if (platform) {
+      platforms.add(platform);
+    }
+  }
+  return [...platforms].sort();
+}
+
+function localFactFileSummary(cwd, candidates = []) {
+  for (const relPath of candidates) {
+    const filePath = path.join(cwd, relPath);
+    if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
+      continue;
+    }
+    try {
+      const value = JSON.parse(fs.readFileSync(filePath, "utf8"));
+      return {
+        location: relPath,
+        sha256: sha256File(filePath),
+        contract: value.contract || "",
+        claimCount: Array.isArray(value.publicClaims) ? value.publicClaims.length : undefined,
+        category: value.category || "",
+      };
+    } catch (error) {
+      return {
+        location: relPath,
+        error: error.message,
+      };
+    }
+  }
+  return undefined;
+}
+
+function buildBadgeEntries(facts) {
+  const entries = [];
+  for (const kfd of facts.kfd) {
+    entries.push({
+      id: kfd.key,
+      alt: `${kfd.label}: ${kfd.state}`,
+      image: badgeUrl({
+        label: kfd.label,
+        message: `${kfd.text} ${kfd.state}`,
+        color: STATE_COLORS[kfd.state] || STATE_COLORS.unknown,
+      }),
+      link: kfd.url,
+    });
+  }
+  entries.push({
+    id: "release-passport",
+    alt: `Release Passport: ${facts.releasePassport.state}`,
+    image: badgeUrl({
+      label: "release passport",
+      message: facts.releasePassport.state,
+      color: STATE_COLORS[facts.releasePassport.state] || STATE_COLORS.unknown,
+    }),
+    link: facts.releasePassport.url,
+  });
+  if (facts.package.license) {
+    entries.push({
+      id: "license",
+      alt: `License: ${facts.package.license}`,
+      image: badgeUrl({ label: "license", message: facts.package.license, color: "0969da" }),
+      link: facts.repository.url ? `${facts.repository.url}/blob/HEAD/LICENSE` : "",
+    });
+  }
+  if (facts.platforms.length > 0) {
+    entries.push({
+      id: "platform",
+      alt: `Platform: ${facts.platforms.join(" | ")}`,
+      image: badgeUrl({ label: "platform", message: facts.platforms.join(" | "), color: "6e7781" }),
+      link: facts.releasePassport.url,
+    });
+  }
+  for (const workflow of facts.workflows) {
+    entries.push({
+      id: `workflow:${workflow.file}`,
+      alt: workflow.name,
+      image: workflow.badgeUrl,
+      link: workflow.url,
+    });
+  }
+  return entries;
+}
+
+export async function collectReadmeBadgeFacts({ cwd = process.cwd() } = {}) {
+  const resolvedCwd = path.resolve(cwd);
+  const loadedConfig = loadBuildchainConfig(resolvedCwd);
+  const badgeConfig = loadedConfig?.config?.badges && typeof loadedConfig.config.badges === "object"
+    ? loadedConfig.config.badges
+    : {};
+  const packageJson = readJsonIfExists(path.join(resolvedCwd, "package.json")) || {};
+  const packageRepository = normalizePackageRepository(packageJson.repository);
+  const repository = packageRepository || readRepositoryFromGit(resolvedCwd);
+  const releasePassportLocation = defaultReleasePassportLocation({ cwd: resolvedCwd, repository, badgeConfig });
+  const { passport, report, error } = await readPassportAndReport({
+    cwd: resolvedCwd,
+    location: releasePassportLocation,
+  });
+  const releasePassportUrl = /^https?:\/\//.test(releasePassportLocation)
+    ? releasePassportLocation
+    : repository.fullName && releasePassportLocation
+      ? `${repository.url}/blob/HEAD/${posixPath(releasePassportLocation)}`
+      : releasePassportLocation;
+  const releaseState = releasePassportState({ report, error, badgeConfig });
+  const kfd = KFD_KEYS.map((entry) => {
+    const passed = kfdSectionPassed({ passport, report, key: entry.key });
+    const state = passed ? "passed" : declaredKfdState({ badgeConfig, key: entry.key, id: entry.id });
+    return {
+      key: entry.key,
+      label: entry.label,
+      text: entry.text,
+      state,
+      source: passed ? "release-passport" : "declaration",
+      url: releasePassportUrl,
+    };
+  });
+  const facts = {
+    schemaVersion: 1,
+    contract: README_BADGE_FACTS_CONTRACT,
+    cwd: resolvedCwd,
+    repository,
+    package: {
+      name: packageJson.name || "",
+      version: packageJson.version || "",
+      license: licenseFromFiles(resolvedCwd, packageJson),
+    },
+    releasePassport: {
+      location: releasePassportLocation,
+      url: releasePassportUrl,
+      state: releaseState,
+      verified: Boolean(report?.ok),
+      error,
+      reportSummary: report ? {
+        ok: report.ok,
+        trust: report.trust,
+        issueCount: Array.isArray(report.issues) ? report.issues.length : 0,
+      } : undefined,
+    },
+    kfdClaimRegistry: localFactFileSummary(resolvedCwd, [
+      "dist/site/kfd-claims.json",
+      ".buildchain/kfd-claims.json",
+    ]),
+    productMechanism: localFactFileSummary(resolvedCwd, [
+      "dist/site/product-mechanism.json",
+      "product-mechanism.json",
+      ".buildchain/product-mechanism.json",
+    ]),
+    kfd,
+    platforms: collectPlatformFacts({ badgeConfig, passport }),
+    workflows: discoverWorkflowFacts({ cwd: resolvedCwd, repository, badgeConfig }),
+    badges: [],
+  };
+  facts.badges = buildBadgeEntries(facts);
+  return facts;
+}
+
+export function renderReadmeBadgeBlock(facts) {
+  const lines = [
+    README_BADGE_BLOCK_START,
+    ...facts.badges.map((badge) => (
+      badge.link
+        ? `[![${badge.alt}](${badge.image})](${badge.link})`
+        : `![${badge.alt}](${badge.image})`
+    )),
+    README_BADGE_BLOCK_END,
+  ];
+  return `${lines.join("\n")}\n`;
+}
+
+function badgeBlockRegex() {
+  return new RegExp(`${README_BADGE_BLOCK_START.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}[\\s\\S]*?${README_BADGE_BLOCK_END.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\n?`);
+}
+
+export function checkReadmeBadgeBlock({ readmeText, facts } = {}) {
+  const expected = renderReadmeBadgeBlock(facts);
+  const match = String(readmeText || "").match(badgeBlockRegex());
+  const actual = match ? match[0] : "";
+  const normalizedActual = actual.endsWith("\n") ? actual : `${actual}\n`;
+  const ok = normalizedActual === expected;
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-readme-badge-check",
+    ok,
+    missing: !match,
+    stale: Boolean(match) && !ok,
+    expected,
+    actual,
+    facts,
+    message: ok ? "README badge block is current" : (match ? "README badge block is stale" : "README badge block is missing"),
+  };
+}
+
+export function updateReadmeBadgeBlock({ readmeText, facts } = {}) {
+  const source = String(readmeText || "");
+  const block = renderReadmeBadgeBlock(facts);
+  if (badgeBlockRegex().test(source)) {
+    return source.replace(badgeBlockRegex(), block);
+  }
+  const h1 = source.match(/^# .+\n+/);
+  if (h1) {
+    return `${h1[0]}${block}\n${source.slice(h1[0].length)}`;
+  }
+  return `${block}\n${source}`;
+}
+
+export function readReadme({ cwd = process.cwd(), readmePath = "README.md" } = {}) {
+  return readTextIfExists(path.resolve(cwd, readmePath));
+}

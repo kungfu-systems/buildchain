@@ -193,6 +193,17 @@ export {
 } from "./issue-reporting.js";
 
 export {
+  README_BADGE_BLOCK_END,
+  README_BADGE_BLOCK_START,
+  README_BADGE_FACTS_CONTRACT,
+  checkReadmeBadgeBlock,
+  collectReadmeBadgeFacts,
+  readReadme,
+  renderReadmeBadgeBlock,
+  updateReadmeBadgeBlock,
+} from "./readme-badges.js";
+
+export {
   RELEASE_PROPAGATION_GRAPH_CONTRACT,
   RELEASE_PROPAGATION_LOCK_CONTRACT,
   RELEASE_PROPAGATION_PLAN_CONTRACT,

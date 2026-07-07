@@ -36,3 +36,11 @@ command = "node scripts/generate-site-bundle.mjs"
 
 [lifecycle.publish]
 command = "node scripts/npm-publish-transaction.mjs"
+
+[badges]
+release_passport = "https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json"
+kfd_1 = "declared"
+kfd_2 = "declared"
+kfd_3 = "declared"
+platforms = ["macOS", "Linux", "Windows"]
+workflows = ["verify.yml", "buildchain-ref-promotion.yml", "binary-distribution.yml"]

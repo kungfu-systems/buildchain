@@ -11,6 +11,7 @@ export const BUILDCHAIN_AGENT_MANUALS = Object.freeze([
   { id: "install", title: "Install and verify Buildchain", path: "docs/install.md", plane: "use" },
   { id: "release-passport", title: "Release Passport protocol", path: "docs/release-passport.md", plane: "verify" },
   { id: "release-propagation", title: "Release propagation", path: "docs/release-propagation.md", plane: "use" },
+  { id: "readme-badges", title: "README badge blocks", path: "docs/readme-badges.md", plane: "use" },
   { id: "binary-distribution", title: "Binary distribution contract", path: "docs/binary-distribution.md", plane: "verify" },
   { id: "consumer-issue-reporting", title: "Consumer issue reporting", path: "docs/consumer-issue-reporting.md", plane: "use" },
   { id: "infra-contract", title: "Infra Contract", path: "docs/infra-contract.md", plane: "use" },
@@ -195,9 +196,11 @@ export function createBuildchainPublicClaimDefinitions() {
       sourcePaths: [
         "scripts/generate-site-bundle.mjs",
         "packages/core/buildchain-kfd-claims.js",
+        "packages/core/readme-badges.js",
         "docs/MAP.md",
         "docs/site-bundle-contract.md",
         "docs/cli.md",
+        "docs/readme-badges.md",
       ],
       artifactPaths: [
         "dist/site/manual-registry.json",
@@ -205,6 +208,22 @@ export function createBuildchainPublicClaimDefinitions() {
         "dist/site/page-registry.json",
         "dist/site/buildchain-site.json",
         "dist/site/site-manifest.json",
+      ],
+    },
+    {
+      id: "claim:buildchain-readme-badge-facts",
+      claim: "Buildchain README status badges are generated from repository-owned facts and verified release-passport evidence, not hand-maintained README prose.",
+      sourcePaths: [
+        "packages/core/readme-badges.js",
+        "bin/buildchain.mjs",
+        "docs/readme-badges.md",
+        "docs/cli.md",
+        "buildchain.toml",
+      ],
+      artifactPaths: [
+        "dist/site/node-api-registry.json",
+        "dist/site/manual-registry.json",
+        "dist/site/buildchain-contract.json",
       ],
     },
     {

@@ -235,7 +235,7 @@
         "release-state SHA is recorded as a durable audit entrance"
       ],
       "breakingDigest": "sha256:b627e1b2ece9b6049517a942c5139e342e6077cdd3d8962d61cef8481b1f70ad",
-      "auditDigest": "sha256:79520e72824eb0245446f516fe6abe9faab0ec247c6d6cec7ac5fd62ab1f48ee"
+      "auditDigest": "sha256:4d88ba7178753d2d1488f6393fee7c086dfb660f42e6507db718dccd38bf8a34"
     },
     {
       "contractVersion": 1,
@@ -284,7 +284,7 @@
         "prose-only public claims downgrade the release trust passport audit"
       ],
       "breakingDigest": "sha256:f0b636eb925ddbf45ff1a8872454ab7b4dd98857cac12bb75217830130e62a16",
-      "auditDigest": "sha256:79520e72824eb0245446f516fe6abe9faab0ec247c6d6cec7ac5fd62ab1f48ee"
+      "auditDigest": "sha256:4d88ba7178753d2d1488f6393fee7c086dfb660f42e6507db718dccd38bf8a34"
     },
     {
       "contractVersion": 1,
@@ -331,16 +331,51 @@
       "optionalInputs": [
         "validate",
         "lifecycle",
+        "badges readme",
         "collect github-release",
         "verify release-passport",
         "release-propagation",
         "infra-contract"
       ],
       "guarantees": [
-        "CLI commands are stable within the major line unless the contract major changes"
+        "CLI commands are stable within the major line unless the contract major changes",
+        "README badge block checks and writes are generated from machine-readable repository facts"
       ],
-      "breakingDigest": "sha256:097db3e67509bedda8c6548bf1edfbfcf57f7b5510520b6a7b7e078d7ec087c8",
-      "auditDigest": "sha256:1f4b07ac623517209dbdee2992f94d95f7ee96e8f35f13ef620dad8da9d2a6e0"
+      "breakingDigest": "sha256:90a73892b2d6c214048448d5f45df75639bdf7b7e8fefd9c596e04b087407bcc",
+      "auditDigest": "sha256:af247c9ce9227e64e07344fee30d718646ed66ada69b6e1d6155a7f33ff1005e"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "readme-badge-facts",
+      "kind": "node-api",
+      "path": "packages/core/readme-badges.js",
+      "requiredInputs": [
+        "repository checkout"
+      ],
+      "requiredOutputs": [
+        "kungfu-buildchain-readme-badge-facts"
+      ],
+      "breakingDefaults": {
+        "markerStart": "<!-- buildchain:badges:start -->",
+        "markerEnd": "<!-- buildchain:badges:end -->",
+        "kfdPassedSource": "verified repository-owned release passport"
+      },
+      "optionalInputs": [
+        "buildchain.toml [badges]",
+        "release passport URL or local path",
+        "workflow file list",
+        "platform declarations"
+      ],
+      "guarantees": [
+        "README badge Markdown is a deterministic projection of badge facts",
+        "KFD passed badges require the repository's own verified release passport section",
+        "unreleased repositories downgrade KFD status to explicit non-passed declarations",
+        "CLI and JavaScript callers use the same Node API implementation"
+      ],
+      "breakingDigest": "sha256:bcd72ad6dfba8013c96f8b2f7b0a307d2e7713972a1219348f0d5ecc493939a0",
+      "auditDigest": "sha256:a3400b0083430782d4fda283b21d308327eaed969053aa5b88a8b946bf83d4b3"
     },
     {
       "contractVersion": 1,
@@ -362,7 +397,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:fd6753b3d3cd7561cd5f137f78fafa70ad7a6cc014b9f5c021c12e835c8a7a60"
+      "auditDigest": "sha256:99fd5e862e5a29eb10b0ec5a7a5e06d9ab7a594bd7b345bfcb8d45a0a099b9fc"
     },
     {
       "contractVersion": 1,
@@ -384,9 +419,9 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:8002cc53fb052c49e519cf2466d41b9f76a6241bcc8354520fad5121a7b78065"
+      "auditDigest": "sha256:e1fae05f9ab0186e9423464b7e4bcb9bfefe4185fe0925a0b95368fb97f1cd41"
     }
   ],
-  "compatibilityDigest": "sha256:85e27de8d34ceac1652d9374697ea5a1a7a08666d2ba7ae377b9afdd14e2ca1f",
-  "contractDigest": "sha256:c924f18ec9bdf268c2fecf68924e4aaef35bea68ab8a2165d199e314d072263b"
+  "compatibilityDigest": "sha256:217f7764849bf779cbc70aea9da59429a44c68f5f7131b26593bb18a6e7ffb18",
+  "contractDigest": "sha256:c57fbd3a61738bef5d701ad2e76f91d4113bef6f1d65fa6ab77f0c0027890526"
 }
