@@ -80,6 +80,12 @@ Published CI/release artifacts should inject real timestamps with
 `BUILDCHAIN_SURFACE_*` variables, so public manifests do not expose epoch time
 as if it were a real metadata time.
 
+Version-state branches may already contain a generated manifest for the current
+package version with `timestampPolicy: ci-injected`. In that case
+`generate-site-bundle.mjs --check` preserves the existing timestamp policy as
+the deterministic input instead of rewriting public release metadata back to
+epoch time.
+
 ## npm Consumption
 
 ```bash

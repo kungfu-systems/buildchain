@@ -47,6 +47,26 @@ function existingJson(filePath) {
   return fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf8") : "";
 }
 
+function readExistingSiteTimestampPolicy(packageVersion) {
+  const manifestPath = path.join(outputDir, "site-manifest.json");
+  if (!fs.existsSync(manifestPath)) return null;
+  try {
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    if (manifest?.package?.version !== packageVersion) return null;
+    if (manifest?.timestampPolicy !== "ci-injected") return null;
+    if (!manifest?.generatedAt || manifest.generatedAt === "1970-01-01T00:00:00.000Z") return null;
+    return {
+      generatedAt: manifest.generatedAt,
+      publishedAt: manifest.publishedAt || manifest.generatedAt,
+      sourceDateEpoch: manifest.sourceDateEpoch,
+      sourceRevision: manifest.sourceRevision,
+      timestampPolicy: manifest.timestampPolicy,
+    };
+  } catch {
+    return null;
+  }
+}
+
 function normalizeMarkdown(value) {
   return String(value || "").replace(/\r\n/g, "\n").trim();
 }
@@ -220,18 +240,26 @@ function buildSiteBundle() {
   const readme = parseReadme(readText(README_PATH));
   const docs = BUILDCHAIN_AGENT_MANUALS.map((manual) => docEntry(manual.id, manual.title, manual.path, manual.plane));
   const pages = buildSitePages();
+  const preservedTimestampPolicy = readExistingSiteTimestampPolicy(packageJson.version);
   const generatedAtInput = env("BUILDCHAIN_SITE_GENERATED_AT") || env("BUILDCHAIN_SURFACE_GENERATED_AT");
   const publishedAtInput = env("BUILDCHAIN_SITE_PUBLISHED_AT") || env("BUILDCHAIN_SURFACE_PUBLISHED_AT");
   const timestampPolicyInput = env("BUILDCHAIN_SITE_TIMESTAMP_POLICY") || env("BUILDCHAIN_SURFACE_TIMESTAMP_POLICY");
+  const sourceRevisionEnv = env("BUILDCHAIN_SOURCE_SHA");
+  const shouldPreserveExistingTimestampPolicy =
+    !generatedAtInput && !publishedAtInput && !timestampPolicyInput && !sourceRevisionEnv;
   const sourceRevisionInput =
-    env("BUILDCHAIN_SOURCE_SHA") ||
-    (generatedAtInput || publishedAtInput || timestampPolicyInput ? env("GITHUB_SHA") : "");
+    sourceRevisionEnv ||
+    (generatedAtInput || publishedAtInput || timestampPolicyInput
+      ? env("GITHUB_SHA")
+      : shouldPreserveExistingTimestampPolicy
+        ? preservedTimestampPolicy?.sourceRevision || ""
+        : "");
   const timestampPolicy = createSurfaceTimestampPolicy({
-    generatedAt: generatedAtInput,
-    publishedAt: publishedAtInput,
-    sourceDateEpoch: env("SOURCE_DATE_EPOCH") || "0",
+    generatedAt: generatedAtInput || (shouldPreserveExistingTimestampPolicy ? preservedTimestampPolicy?.generatedAt : ""),
+    publishedAt: publishedAtInput || (shouldPreserveExistingTimestampPolicy ? preservedTimestampPolicy?.publishedAt : ""),
+    sourceDateEpoch: env("SOURCE_DATE_EPOCH") || (shouldPreserveExistingTimestampPolicy ? preservedTimestampPolicy?.sourceDateEpoch : "") || "0",
     sourceRevision: sourceRevisionInput,
-    timestampPolicy: timestampPolicyInput,
+    timestampPolicy: timestampPolicyInput || (shouldPreserveExistingTimestampPolicy ? preservedTimestampPolicy?.timestampPolicy : ""),
     deterministicInputs: [
       "README.md",
       "docs/*.md",
