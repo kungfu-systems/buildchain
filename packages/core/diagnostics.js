@@ -33,6 +33,8 @@ export const BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT =
   "kungfu-buildchain-process-sample-report";
 export const BUILDCHAIN_PROCESS_SAMPLE_SUMMARY_CONTRACT =
   "kungfu-buildchain-process-sample-summary";
+export const BUILDCHAIN_LOCKED_SOURCE_CHECKOUT_CONTRACT =
+  "kungfu-buildchain-locked-source-checkout-cache";
 
 const DEFAULT_SECRET_KEY_PATTERN =
   /(authorization|cookie|credential|password|passwd|private[_-]?key|secret|token|api[_-]?key)/i;
@@ -1084,6 +1086,7 @@ export function createDiagnosticsArtifact({
   processSamples = [],
   processSummary = undefined,
   requestedParallelism = 0,
+  sourceCheckout = undefined,
   links = {},
 } = {}) {
   const resolvedCwd = path.resolve(cwd);
@@ -1107,6 +1110,7 @@ export function createDiagnosticsArtifact({
     git: collectGitDiagnostics({ cwd: resolvedCwd }),
     lifecycleObservability: lifecycleObservability || summarizeLifecycleObservability({ events, logPath }),
     process: processSummary || summarizeProcessSamples({ samples: processSamples, requestedParallelism }),
+    ...(sourceCheckout ? { sourceCheckout } : {}),
     links,
   };
 }
@@ -1509,6 +1513,18 @@ export function summarizeDiagnosticsArtifacts(inputs = []) {
           ? entry.native.cacheDirs
           : [],
       process: entry.process || {},
+      sourceCheckout: entry.sourceCheckout
+        ? {
+            mode: entry.sourceCheckout.policy?.mode || "",
+            transport: entry.sourceCheckout.cache?.transport || "",
+            hit: Boolean(entry.sourceCheckout.cache?.hit),
+            fallbackUsed: Boolean(entry.sourceCheckout.cache?.fallbackUsed),
+            fallbackReason: entry.sourceCheckout.cache?.fallbackReason || "",
+            durationMs: Number(entry.sourceCheckout.durationMs || 0),
+            headOk: Boolean(entry.sourceCheckout.verification?.headOk),
+            treeOk: Boolean(entry.sourceCheckout.verification?.treeOk),
+          }
+        : undefined,
       diagnosticsContract,
       ...(diagnosticsManifest ? { diagnosticsManifest } : {}),
       links: entry.links || {},
