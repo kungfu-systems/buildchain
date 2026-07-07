@@ -65,8 +65,10 @@ Buildchain implements the same governance loop with:
   `release-candidate-promote.yml` wrapper and does not hand-wire resolver,
   artifact download, publish-gate, or promote action steps;
 - Buildchain self promotion enables `release-passport-buildchain-self-kfd`, so
-  the release passport consumes generated KFD-1 witnesses, KFD-2 public claim
-  JSON, and KFD-3 collaboration-interface witnesses from
+  the promote action generates KFD-1 witnesses, KFD-2 public claim JSON, and
+  KFD-3 collaboration-interface witnesses from the final version-state workspace
+  before release passport finalization. The witness hashes therefore bind to the
+  exact published package and site facts from
   `packages/core/buildchain-kfd-claims.js` instead of relying on prose release
   notes;
 - `actions/promote-buildchain-ref` for branch, tag, version-state, and
