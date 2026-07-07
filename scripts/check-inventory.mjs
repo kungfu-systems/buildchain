@@ -79,6 +79,22 @@ if (rootPackage.name !== "@kungfu-tech/buildchain") {
 if (rootPackage.private !== false) {
   throw new Error("root package must be publishable with private=false");
 }
+const packageDependencySections = ["dependencies", "optionalDependencies", "peerDependencies"];
+const exoticDependencyPattern =
+  /^(?:git(?:\+ssh|\+https|\+http|\+file)?:|github:|gitlab:|bitbucket:|https?:|file:|link:|workspace:)/i;
+for (const sectionName of packageDependencySections) {
+  const section = rootPackage[sectionName] || {};
+  for (const [dependencyName, specifier] of Object.entries(section)) {
+    if (typeof specifier !== "string") {
+      throw new Error(`package ${sectionName}.${dependencyName} must use a string version specifier`);
+    }
+    if (exoticDependencyPattern.test(specifier.trim())) {
+      throw new Error(
+        `package ${sectionName}.${dependencyName} must use an auditable npm registry version, not exotic specifier: ${specifier}`,
+      );
+    }
+  }
+}
 if (rootPackage.bin?.buildchain !== "./bin/buildchain.mjs") {
   throw new Error("root package must expose the buildchain CLI");
 }
@@ -109,6 +125,15 @@ if (rootPackage.exports?.["./release-propagation"] !== "./packages/core/release-
 if (rootPackage.exports?.["./buildchain-kfd-claims"] !== "./packages/core/buildchain-kfd-claims.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/buildchain-kfd-claims");
 }
+if (rootPackage.exports?.["./site/buildchain-site.json"] !== "./dist/site/buildchain-site.json") {
+  throw new Error("root package must export @kungfu-tech/buildchain/site/buildchain-site.json");
+}
+if (rootPackage.exports?.["./site/site-manifest.json"] !== "./dist/site/site-manifest.json") {
+  throw new Error("root package must export @kungfu-tech/buildchain/site/site-manifest.json");
+}
+if (rootPackage.exports?.["./site/page-registry.json"] !== "./dist/site/page-registry.json") {
+  throw new Error("root package must export @kungfu-tech/buildchain/site/page-registry.json");
+}
 if (rootPackage.exports?.["./site/manual-registry.json"] !== "./dist/site/manual-registry.json") {
   throw new Error("root package must export @kungfu-tech/buildchain/site/manual-registry.json");
 }
@@ -124,18 +149,15 @@ if (rootPackage.publishConfig?.access !== "public") {
 if (rootPackage.publishConfig?.registry !== "https://registry.npmjs.org/") {
   throw new Error("root package publishConfig.registry must be npmjs");
 }
-for (const expectedFile of ["bin/", "scripts/*.mjs", "packages/core/", "docs/MAP.md", "docs/cli.md"]) {
+for (const expectedFile of ["bin/", "scripts/*.mjs", "packages/core/", "docs/*.md"]) {
   if (!rootPackage.files?.includes(expectedFile)) {
     throw new Error(`root package files must include ${expectedFile}`);
   }
 }
-for (const expectedFile of ["dist/site/", "docs/install.md", "docs/binary-distribution.md", "docs/site-bundle-contract.md"]) {
+for (const expectedFile of ["dist/site/", "actions/*/README.md", "fixtures/*/README.md"]) {
   if (!rootPackage.files?.includes(expectedFile)) {
     throw new Error(`root package files must include ${expectedFile}`);
   }
-}
-if (!rootPackage.files?.includes("docs/release-propagation.md")) {
-  throw new Error("root package files must include docs/release-propagation.md");
 }
 const cliSource = fs.readFileSync(path.join(root, "bin/buildchain.mjs"), "utf8");
 const coreIndexSource = fs.readFileSync(path.join(root, "packages/core/index.js"), "utf8");
@@ -143,6 +165,9 @@ const versioningDoc = fs.readFileSync(path.join(root, "docs/versioning.md"), "ut
 const cliDoc = fs.readFileSync(path.join(root, "docs/cli.md"), "utf8");
 const docsMap = fs.readFileSync(path.join(root, "docs/MAP.md"), "utf8");
 const installDoc = fs.readFileSync(path.join(root, "docs/install.md"), "utf8");
+const siteBundle = JSON.parse(fs.readFileSync(path.join(root, "dist/site/buildchain-site.json"), "utf8"));
+const siteManifest = JSON.parse(fs.readFileSync(path.join(root, "dist/site/site-manifest.json"), "utf8"));
+const pageRegistry = JSON.parse(fs.readFileSync(path.join(root, "dist/site/page-registry.json"), "utf8"));
 if (!cliSource.startsWith("#!/usr/bin/env node")) {
   throw new Error("bin/buildchain.mjs must be executable with a node shebang");
 }
@@ -166,6 +191,89 @@ if (!coreIndexSource.includes("KFD2_RELEASE_TRUST_PASSPORT_CONTRACT")) {
 }
 if (!coreIndexSource.includes("KFD2_TRUST_PROOF_CONTRACT")) {
   throw new Error("packages/core/index.js must export KFD-2 trust proof contract");
+}
+if (siteBundle.contract !== "kungfu-buildchain-site-bundle") {
+  throw new Error("buildchain-site.json must expose the Buildchain site bundle contract");
+}
+if (siteBundle.source?.homepageTextSource !== "README.md") {
+  throw new Error("buildchain-site.json source.homepageTextSource must be README.md");
+}
+if (siteManifest.source?.homepageTextSource !== "README.md") {
+  throw new Error("site-manifest.json source.homepageTextSource must be README.md");
+}
+if (siteBundle.homepage?.title !== "Buildchain") {
+  throw new Error("buildchain-site.json homepage.title must match README H1");
+}
+if (!Array.isArray(siteBundle.homepage?.sections) || siteBundle.homepage.sections.length < 5) {
+  throw new Error("buildchain-site.json homepage.sections must expose README-derived sections");
+}
+for (const requiredSection of ["install-and-verify", "use-buildchain", "release-model", "toolkit-observability", "site-fact-source"]) {
+  if (!siteBundle.homepage.sections.some((entry) => entry.id === requiredSection && entry.sourcePath === "README.md" && entry.markdown)) {
+    throw new Error(`buildchain-site.json homepage.sections must include README projection ${requiredSection}`);
+  }
+}
+if (siteBundle.homepage.sections.some((entry) => entry.id === "homepage-content-contract")) {
+  throw new Error("buildchain-site.json homepage.sections must not render the renderer contract as homepage content");
+}
+if (
+  siteBundle.homepage?.rendererContract?.id !== "homepage-content-contract" ||
+  siteBundle.homepage?.rendererContract?.renderAsHomepageContent !== false ||
+  !siteBundle.homepage?.rendererContract?.markdown
+) {
+  throw new Error("buildchain-site.json homepage.rendererContract must expose README renderer contract outside homepage.sections");
+}
+if (!siteBundle.homepage?.displayPlan?.firstScreen?.include?.includes("install-and-verify")) {
+  throw new Error("buildchain-site.json homepage.displayPlan firstScreen must include install-and-verify");
+}
+if (!Array.isArray(siteBundle.renderingBoundary?.ownedByBuildchain) || !siteBundle.renderingBoundary.ownedByBuildchain.includes("homepage section projection from README.md")) {
+  throw new Error("buildchain-site.json renderingBoundary.ownedByBuildchain must include README projection ownership");
+}
+if (!Array.isArray(siteBundle.renderingBoundary?.ownedBySite) || !siteBundle.renderingBoundary.ownedBySite.includes("markdown-to-HTML renderer")) {
+  throw new Error("buildchain-site.json renderingBoundary.ownedBySite must include markdown-to-HTML renderer");
+}
+if (pageRegistry.contract !== "kungfu-buildchain-site-page-registry") {
+  throw new Error("page-registry.json must expose the site page registry contract");
+}
+if (siteBundle.pageRegistry?.path !== "page-registry.json" || siteBundle.pageRegistry?.pageCount !== pageRegistry.pageCount) {
+  throw new Error("buildchain-site.json must link to page-registry.json with matching page count");
+}
+if (!siteManifest.facts?.includes("page-registry.json") || !siteBundle.entrypoints?.includes("page-registry.json")) {
+  throw new Error("site bundle entrypoints must include page-registry.json");
+}
+function immediateReadmes(dir) {
+  const absoluteDir = path.join(root, dir);
+  if (!fs.existsSync(absoluteDir)) return [];
+  return fs.readdirSync(absoluteDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => `${dir}/${entry.name}/README.md`)
+    .filter((relPath) => fs.existsSync(path.join(root, relPath)))
+    .sort();
+}
+const expectedPageSources = [
+  "README.md",
+  ...fs.readdirSync(path.join(root, "docs")).filter((name) => name.endsWith(".md")).sort().map((name) => `docs/${name}`),
+  ...immediateReadmes("actions"),
+  "packages/core/README.md",
+  ...immediateReadmes("fixtures"),
+].sort();
+const registryPageSources = [...new Set((pageRegistry.pages || []).map((page) => page.sourcePath))].sort();
+const bundlePageSources = [...new Set((siteBundle.pages || []).map((page) => page.sourcePath))].sort();
+if (JSON.stringify(registryPageSources) !== JSON.stringify(expectedPageSources)) {
+  throw new Error(`page-registry.json must include every public markdown page: expected ${expectedPageSources.length}, got ${registryPageSources.length}`);
+}
+if (JSON.stringify(bundlePageSources) !== JSON.stringify(expectedPageSources)) {
+  throw new Error(`buildchain-site.json pages must include every public markdown page: expected ${expectedPageSources.length}, got ${bundlePageSources.length}`);
+}
+for (const page of pageRegistry.pages || []) {
+  if (!page.id || !page.route || !page.title || !page.category || !page.sourcePath || !page.digest || !page.markdown) {
+    throw new Error(`page-registry.json page is incomplete: ${page.sourcePath || page.id || "<unknown>"}`);
+  }
+}
+if (!pageRegistry.pages?.some((page) => page.sourcePath === "actions/promote-buildchain-ref/README.md")) {
+  throw new Error("page-registry.json must include action manuals");
+}
+if (!pageRegistry.pages?.some((page) => page.sourcePath === "packages/core/README.md" && page.category === "api")) {
+  throw new Error("page-registry.json must include Node API overview");
 }
 for (const requiredSnippet of [
   "createBuildchainKfdClaimRegistry",
