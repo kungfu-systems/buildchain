@@ -3,6 +3,7 @@
   "contract": "kungfu-buildchain-site-agent-index",
   "readOrder": [
     "site-manifest.json",
+    "page-registry.json",
     "product-mechanism.json",
     "release-model.json",
     "cli-registry.json",

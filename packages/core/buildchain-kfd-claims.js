@@ -7,12 +7,17 @@ export const BUILDCHAIN_KFD_CLAIM_REGISTRY_CONTRACT = "kungfu-buildchain-kfd-cla
 export const BUILDCHAIN_KFD_COLLABORATION_INTERFACE_CONTRACT = "kungfu-buildchain-kfd-collaboration-interface";
 
 export const BUILDCHAIN_AGENT_MANUALS = Object.freeze([
+  { id: "map", title: "Buildchain documentation map", path: "docs/MAP.md", plane: "use" },
   { id: "install", title: "Install and verify Buildchain", path: "docs/install.md", plane: "use" },
   { id: "release-passport", title: "Release Passport protocol", path: "docs/release-passport.md", plane: "verify" },
   { id: "release-propagation", title: "Release propagation", path: "docs/release-propagation.md", plane: "use" },
   { id: "binary-distribution", title: "Binary distribution contract", path: "docs/binary-distribution.md", plane: "verify" },
+  { id: "consumer-issue-reporting", title: "Consumer issue reporting", path: "docs/consumer-issue-reporting.md", plane: "use" },
+  { id: "infra-contract", title: "Infra Contract", path: "docs/infra-contract.md", plane: "use" },
   { id: "toolkit-observability", title: "Toolkit observability", path: "docs/toolkit-observability.md", plane: "use" },
   { id: "site-bundle-contract", title: "Site bundle contract", path: "docs/site-bundle-contract.md", plane: "use" },
+  { id: "migration-inventory", title: "Migration inventory", path: "docs/migration-inventory.md", plane: "verify" },
+  { id: "ownership", title: "Ownership", path: "docs/ownership.md", plane: "why" },
   { id: "product-mechanism", title: "Product mechanism", path: "docs/product-mechanism.md", plane: "why" },
   { id: "cli", title: "CLI and npm package", path: "docs/cli.md", plane: "use" },
   { id: "lifecycle-protocol", title: "Lifecycle protocol", path: "docs/lifecycle-protocol.md", plane: "use" },
@@ -20,14 +25,15 @@ export const BUILDCHAIN_AGENT_MANUALS = Object.freeze([
   { id: "publish-transaction", title: "Publish transaction", path: "docs/publish-transaction.md", plane: "verify" },
   { id: "release-governance", title: "Release governance", path: "docs/release-governance.md", plane: "why" },
   { id: "release-flow", title: "Release flow", path: "docs/release-flow.md", plane: "verify" },
+  { id: "runtime-train-validation", title: "Runtime train validation", path: "docs/runtime-train-validation.md", plane: "verify" },
   { id: "versioning", title: "Versioning", path: "docs/versioning.md", plane: "why" },
   { id: "web-surface-deployments", title: "Web surface deployments", path: "docs/web-surface-deployments.md", plane: "use" },
-  { id: "infra-contract", title: "Infra Contract", path: "docs/infra-contract.md", plane: "use" },
 ]);
 
 const SITE_CONTRACT_FILES = Object.freeze([
   "dist/site/buildchain-site.json",
   "dist/site/site-manifest.json",
+  "dist/site/page-registry.json",
   "dist/site/cli-registry.json",
   "dist/site/manual-registry.json",
   "dist/site/node-api-registry.json",
@@ -67,6 +73,26 @@ const EXTRA_KFD1_FILES = Object.freeze([
   "scripts/generate-site-bundle.mjs",
   "scripts/ensure-github-release.mjs",
 ]);
+
+function immediateReadmes(root, dir) {
+  const absoluteDir = path.join(root, dir);
+  if (!fs.existsSync(absoluteDir)) return [];
+  return fs.readdirSync(absoluteDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => `${dir}/${entry.name}/README.md`)
+    .filter((relPath) => fileExists(root, relPath))
+    .sort();
+}
+
+function publicDocumentationFiles(root) {
+  return uniquePaths([
+    ...BUILDCHAIN_AGENT_MANUALS.map((entry) => entry.path),
+    "README.md",
+    "packages/core/README.md",
+    ...immediateReadmes(root, "actions"),
+    ...immediateReadmes(root, "fixtures"),
+  ]);
+}
 
 function readJson(root, relPath, fallback = {}) {
   const filePath = path.join(root, relPath);
@@ -176,6 +202,7 @@ export function createBuildchainPublicClaimDefinitions() {
       artifactPaths: [
         "dist/site/manual-registry.json",
         "dist/site/node-api-registry.json",
+        "dist/site/page-registry.json",
         "dist/site/buildchain-site.json",
         "dist/site/site-manifest.json",
       ],
@@ -254,10 +281,14 @@ export function createBuildchainKfdSurfaceRegistry({ root = process.cwd() } = {}
         name: specifier === "." ? pkg.name : `${pkg.name}/${specifier.replace(/^\.\//, "")}`,
       },
     ));
-  const docs = BUILDCHAIN_AGENT_MANUALS.map((manual) => surface(`doc:${manual.id}`, "documentation", manual.path, {
-    name: manual.title,
-    plane: manual.plane,
-  }));
+  const manualTitles = new Map(BUILDCHAIN_AGENT_MANUALS.map((manual) => [manual.path, manual]));
+  const docs = publicDocumentationFiles(root).map((relPath) => {
+    const manual = manualTitles.get(relPath);
+    return surface(`doc:${relPath}`, "documentation", relPath, {
+      name: manual?.title || relPath,
+      plane: manual?.plane || (relPath.startsWith("actions/") ? "action" : relPath.startsWith("fixtures/") ? "fixture" : "use"),
+    });
+  });
   const schemas = SCHEMA_AND_STANDARD_FILES.map((relPath) => surface(`schema:${relPath}`, "schema", relPath));
   const standardsMetadata = [
     surface("metadata:package-json", "standards-metadata", "package.json"),
@@ -305,7 +336,7 @@ export function createBuildchainKfd1Witness({ root = process.cwd(), sourceSha = 
   const registry = createBuildchainKfdClaimRegistry({ root, sourceSha });
   const registrySha256 = sha256Json(registry);
   const paths = uniquePaths([
-    ...BUILDCHAIN_AGENT_MANUALS.map((entry) => entry.path),
+    ...publicDocumentationFiles(root),
     ...SCHEMA_AND_STANDARD_FILES,
     ...SITE_CONTRACT_FILES,
     ...WORKFLOW_AND_ACTION_FILES,

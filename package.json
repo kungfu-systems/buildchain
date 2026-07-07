@@ -25,6 +25,7 @@
     "./buildchain-kfd-claims": "./packages/core/buildchain-kfd-claims.js",
     "./site/buildchain-site.json": "./dist/site/buildchain-site.json",
     "./site/site-manifest.json": "./dist/site/site-manifest.json",
+    "./site/page-registry.json": "./dist/site/page-registry.json",
     "./site/cli-registry.json": "./dist/site/cli-registry.json",
     "./site/manual-registry.json": "./dist/site/manual-registry.json",
     "./site/node-api-registry.json": "./dist/site/node-api-registry.json",
@@ -48,27 +49,7 @@
     "dist/site/",
     "README.md",
     "SECURITY.md",
-    "docs/MAP.md",
-    "docs/binary-distribution.md",
-    "docs/cli.md",
-    "docs/install.md",
-    "docs/infra-contract.md",
-    "docs/consumer-issue-reporting.md",
-    "docs/lifecycle-protocol.md",
-    "docs/migration-inventory.md",
-    "docs/ownership.md",
-    "docs/product-mechanism.md",
-    "docs/publish-transaction.md",
-    "docs/release-passport.md",
-    "docs/release-propagation.md",
-    "docs/release-candidate.md",
-    "docs/release-flow.md",
-    "docs/release-governance.md",
-    "docs/reusable-build-surface.md",
-    "docs/site-bundle-contract.md",
-    "docs/toolkit-observability.md",
-    "docs/versioning.md",
-    "docs/web-surface-deployments.md",
+    "docs/*.md",
     "actions/*/README.md",
     "fixtures/*/README.md"
   ],
@@ -98,7 +79,7 @@
     "vitest": "^4.1.9"
   },
   "dependencies": {
-    "@kungfu-tech/kfd": "github:kungfu-systems/kfd#1731900b81150ae29095329892b8d7d5670f2314",
+    "@kungfu-tech/kfd": "1.0.0-alpha.16",
     "smol-toml": "1.7.0"
   }
 }
