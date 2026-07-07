@@ -4868,10 +4868,8 @@ async function promoteBuildchainRefs({
       sha: nextAlphaSha,
     });
   } else if (versionState) {
-    const nextAlphaRef = `alpha/v${rule.major}/v${rule.major}.${rule.minor}`;
-    const nextAlphaBaseSha = await readRefSha(`heads/${nextAlphaRef}`) || releaseSha;
     const nextAlphaCommit = await createVersionStateCommit({
-      baseSha: nextAlphaBaseSha,
+      baseSha: releaseSha,
       version: nextAlphaVersion,
       message: `chore(release): prepare ${selectedNextAlpha.tag}`,
     });
@@ -4888,6 +4886,8 @@ async function promoteBuildchainRefs({
       title: `Prepare ${selectedNextAlpha.tag}`,
       body: `Create the generated version-state commit for ${selectedNextAlpha.tag}.`,
       allowPendingPullRequest: true,
+      allowMergeCommitOnNonFastForward: true,
+      allowMergeCommitOnNonFastForwardPaths: nextAlphaVersionStateFiles,
     });
     if (nextAlphaUpdate.pending) {
       return withPublishTransaction({
@@ -4901,6 +4901,9 @@ async function promoteBuildchainRefs({
           nextAlphaUpdate.pullRequest.html_url || nextAlphaUpdate.pullRequest.url,
         updates,
       });
+    }
+    if (nextAlphaUpdate.mergeSha) {
+      nextAlphaSha = nextAlphaUpdate.mergeSha;
     }
     await updateBranch(nextDevRef, nextAlphaSha, "updated", {
       title: `Prepare ${selectedNextAlpha.tag}`,
