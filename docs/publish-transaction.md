@@ -289,14 +289,17 @@ If protected branch finalization is interrupted after publish evidence is
 valid, the transaction can stop in `finalizing` and output
 `finalization-needed=true`. A later run resumes from the same transaction state
 and completes ref movement without republishing matching artifacts. New
-Buildchain-managed promotions must finish generated version-state bookkeeping
-with the promotion token directly; they must not require a post-publish human
-PR. Before patching a protected generated bookkeeping ref, Buildchain emits the
-configured required check on the exact generated version-state commit so strict
-branch protection can validate the automation path without a second build, then
-uses the generated ref update token for the protected ref PATCH. The reusable
-wrapper defaults that token to `secrets.BUILDCHAIN_PROMOTION_TOKEN ||
-github.token`.
+Buildchain-managed promotions first try to finish generated version-state
+bookkeeping with the promotion token directly. Before patching a protected
+generated bookkeeping ref, Buildchain emits the configured required check on
+the exact generated version-state commit so strict branch protection can
+validate the automation path without a second build, then uses the generated
+ref update token for the protected ref PATCH. If release finalization
+bookkeeping is still rejected, Buildchain creates or reuses a same-repository
+`buildchain/version-state/*` PR based on the current target channel head and
+leaves the transaction resumable with `finalization-needed=true`. Strict alpha
+bookkeeping remains fail-fast. The reusable wrapper defaults that token to
+`secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token`.
 
 If finalization fails after an exact Git tag, a channel branch, or dev/alpha
 sync ref has already moved, the next run reads the durable `finalizing` state

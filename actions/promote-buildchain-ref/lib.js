@@ -2869,7 +2869,7 @@ function protectedBranchDirectUpdateError({ branch, branchSha, error }) {
   const message = error?.response?.data?.message || error?.message || String(error || "");
   return new Error(
     `Buildchain generated version-state update for ${branch} -> ${branchSha} was rejected by branch protection: ${message}. ` +
-      "Promotion could not create a generated version-state PR; configure BUILDCHAIN_PROMOTION_TOKEN as a direct-write release authority or allow Buildchain to create same-repository version-state PRs for protected generated bookkeeping.",
+      "Promotion must complete without a post-publish human PR; configure BUILDCHAIN_PROMOTION_TOKEN as a direct-write release authority and allow Buildchain to create the generated version-state required check before updating the protected ref.",
   );
 }
 
@@ -3176,6 +3176,7 @@ async function promoteBuildchainRefs({
       updates.push({ ref: branch, action: "existing", sha: branchSha });
       return { updated: true, existing: true };
     }
+    const branchWriteOctokit = protectedUpdate ? (refUpdateOctokit || octokit) : octokit;
     const openVersionStatePullRequest = async ({ error }) => {
       const message = error?.response?.data?.message || error?.message || String(error || "");
       if (
@@ -3269,7 +3270,6 @@ async function promoteBuildchainRefs({
         });
       }
     }
-    const branchWriteOctokit = protectedUpdate ? (refUpdateOctokit || octokit) : octokit;
     try {
       if (currentSha) {
         await branchWriteOctokit.rest.git.updateRef({
@@ -4111,6 +4111,7 @@ async function promoteBuildchainRefs({
       const gateUpdate = await updateBranch(targetRef, releaseSha, "updated", {
         title: `Release ${selectedRelease.tag}`,
         body: `Create the generated version-state commit for ${selectedRelease.tag}.`,
+        allowPendingPullRequest: true,
       });
       if (gateUpdate.pending) {
         return withPublishTransaction({
@@ -4123,10 +4124,23 @@ async function promoteBuildchainRefs({
           updates,
         }, { finalizationNeeded: true });
       }
-      await updateBranch(`release/v${majorRule.major}/v${majorRule.major}.0`, releaseSha, "updated", {
+      const releaseBranchUpdate = await updateBranch(`release/v${majorRule.major}/v${majorRule.major}.0`, releaseSha, "updated", {
         title: `Release ${selectedRelease.tag}`,
         body: `Create the generated version-state commit for ${selectedRelease.tag}.`,
+        allowPendingPullRequest: true,
       });
+      if (releaseBranchUpdate.pending) {
+        return withPublishTransaction({
+          owner,
+          repo,
+          sourceSha: sha,
+          sha: releaseSha,
+          targetRef,
+          pendingPullRequest:
+            releaseBranchUpdate.pullRequest.html_url || releaseBranchUpdate.pullRequest.url,
+          updates,
+        }, { finalizationNeeded: true });
+      }
     }
     await markFinalizing();
     await ensureTag(selectedRelease.tag, releaseSha);
@@ -4178,18 +4192,34 @@ async function promoteBuildchainRefs({
         sha: nextAlphaSha,
       });
     } else if (versionState) {
+      const nextAlphaRef = `alpha/v${majorRule.major}/v${majorRule.major}.0`;
+      const nextAlphaBaseSha = await readRefSha(`heads/${nextAlphaRef}`) || releaseSha;
       const nextAlphaCommit = await createVersionStateCommit({
-        baseSha: releaseSha,
+        baseSha: nextAlphaBaseSha,
         version: nextAlphaVersion,
         message: `chore(release): prepare ${selectedNextAlpha.tag}`,
       });
       nextAlphaSha = nextAlphaCommit.sha;
     }
     if (versionState) {
-      await updateBranch(`alpha/v${majorRule.major}/v${majorRule.major}.0`, nextAlphaSha, "updated", {
+      const nextAlphaUpdate = await updateBranch(`alpha/v${majorRule.major}/v${majorRule.major}.0`, nextAlphaSha, "updated", {
         title: `Prepare ${selectedNextAlpha.tag}`,
         body: `Create the generated version-state commit for ${selectedNextAlpha.tag}.`,
+        allowPendingPullRequest: true,
       });
+      if (nextAlphaUpdate.pending) {
+        return withPublishTransaction({
+          owner,
+          repo,
+          sourceSha: sha,
+          sha: releaseSha,
+          nextAlphaSha,
+          targetRef,
+          pendingPullRequest:
+            nextAlphaUpdate.pullRequest.html_url || nextAlphaUpdate.pullRequest.url,
+          updates,
+        }, { finalizationNeeded: true });
+      }
       const nextDevRef = `dev/v${majorRule.major}/v${majorRule.major}.0`;
       await updateBranch(nextDevRef, nextAlphaSha, "updated", {
         title: `Prepare ${selectedNextAlpha.tag}`,
@@ -4594,6 +4624,7 @@ async function promoteBuildchainRefs({
     const targetUpdate = await updateBranch(targetRef, releaseSha, "updated", {
       title: `Release ${selectedReleaseCandidate.tag}`,
       body: `Create the generated version-state commit for ${selectedReleaseCandidate.tag}.`,
+      allowPendingPullRequest: true,
     });
     if (targetUpdate.pending) {
       return withPublishTransaction({
@@ -4678,8 +4709,10 @@ async function promoteBuildchainRefs({
       sha: nextAlphaSha,
     });
   } else if (versionState) {
+    const nextAlphaRef = `alpha/v${rule.major}/v${rule.major}.${rule.minor}`;
+    const nextAlphaBaseSha = await readRefSha(`heads/${nextAlphaRef}`) || releaseSha;
     const nextAlphaCommit = await createVersionStateCommit({
-      baseSha: releaseSha,
+      baseSha: nextAlphaBaseSha,
       version: nextAlphaVersion,
       message: `chore(release): prepare ${selectedNextAlpha.tag}`,
     });
