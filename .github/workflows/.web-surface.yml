@@ -91,6 +91,11 @@ on:
         default: "release/"
         type: string
         required: false
+      production-release-branch-channel:
+        description: "Branch channel slug for Buildchain-opened production release PRs."
+        default: "production"
+        type: string
+        required: false
       production-aws-role-arn:
         default: ""
         type: string
@@ -135,6 +140,9 @@ on:
       production-apply-result-json:
         description: "Production deploy apply result JSON when production apply ran"
         value: ${{ jobs.production-apply.outputs.production-apply-result-json }}
+      production-release-pr-url:
+        description: "Production release PR URL opened after staging apply"
+        value: ${{ jobs.open-production-release-pr.outputs.production-release-pr-url }}
       buildchain-runtime-ref:
         description: "Resolved Buildchain runtime ref"
         value: ${{ jobs.runtime.outputs.runtime-ref }}
@@ -872,7 +880,7 @@ jobs:
 
   staging-apply:
     name: Apply staging deploy
-    if: ${{ github.event_name == 'push' && github.ref_name == 'main' && inputs.staging-apply }}
+    if: ${{ github.event_name == 'push' && github.ref_name == 'main' && inputs.staging-apply && needs.plan.outputs.web-surface-channel == 'staging' }}
     runs-on: ubuntu-24.04
     needs:
       - plan
@@ -990,6 +998,64 @@ jobs:
           path: .buildchain/web-surface-staging-release-passport.json
           include-hidden-files: true
           if-no-files-found: error
+
+  open-production-release-pr:
+    name: Open production release PR
+    if: >-
+      ${{
+        github.event_name == 'push' &&
+        github.ref_name == 'main' &&
+        inputs.staging-apply &&
+        inputs.production-release-on-main &&
+        needs.staging-apply.result == 'success' &&
+        needs.release-intent.outputs.production-release-approved != 'true'
+      }}
+    runs-on: ubuntu-24.04
+    needs:
+      - runtime
+      - release-intent
+      - staging-apply
+    outputs:
+      production-release-pr-url: ${{ steps.open.outputs.production-release-pr-url }}
+      production-release-pr: ${{ steps.open.outputs.production-release-pr }}
+      production-release-branch: ${{ steps.open.outputs.production-release-branch }}
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.runtime.outputs.runtime-sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Enable pnpm
+        run: |
+          corepack enable pnpm
+          pnpm --version
+
+      - name: Install Buildchain runtime
+        working-directory: .buildchain/runtime
+        run: pnpm install --frozen-lockfile
+
+      - name: Open production release PR
+        id: open
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          STAGING_APPLY_RESULT_JSON: ${{ needs.staging-apply.outputs.staging-apply-result-json }}
+          PRODUCTION_RELEASE_LABEL: ${{ inputs.production-release-label }}
+          PRODUCTION_RELEASE_HEAD_PREFIX: ${{ inputs.production-release-head-prefix }}
+          PRODUCTION_RELEASE_CHANNEL: ${{ inputs.production-release-branch-channel }}
+          RELEASE_PASSPORT_ARTIFACT: buildchain-web-surface-staging-release-passport
+        run: node .buildchain/runtime/scripts/web-surface-production-release-pr.mjs
 
   production-apply:
     name: Apply production deploy

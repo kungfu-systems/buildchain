@@ -38,6 +38,7 @@ const requiredPaths = [
   "scripts/release-candidate-resolver.mjs",
   "scripts/buildchain-patrol.mjs",
   "scripts/workflow-friction-report.mjs",
+  "scripts/web-surface-production-release-pr.mjs",
   "docs/migration-inventory.md",
   "docs/lifecycle-protocol.md",
   "docs/ownership.md",
