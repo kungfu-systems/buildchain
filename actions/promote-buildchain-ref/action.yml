@@ -29,6 +29,9 @@ inputs:
   required-status-check:
     description: "Status check name fragment required by protected channel branches"
     default: "check"
+  generated-status-check-token:
+    description: "GitHub token used to create the generated version-state required check before direct protected branch updates. Defaults to token."
+    default: ""
   branch-protection-bypass-apps:
     description: "Comma- or newline-separated GitHub App slugs allowed to bypass pull-request review on Buildchain-managed channel branches while required approval remains enforced for humans"
     default: ""

@@ -77,10 +77,13 @@ explicitly, then run the normal channel promotion flow for that line.
 When branch protection requires pull requests, generated version-state commits
 must still complete inside the promotion automation. The action updates
 Buildchain-managed channel protection before generated bookkeeping, adds the
-authenticated promotion token user or app to the bypass allowlist, then applies
-the generated version-state commit directly. If GitHub still rejects the direct
-update, promotion fails with a configuration diagnostic instead of opening a
-post-publish human PR.
+authenticated promotion token user or app to the bypass allowlist, creates the
+configured required check on the exact generated version-state commit, then
+applies that commit directly. If GitHub still rejects the direct update,
+promotion fails with a configuration diagnostic instead of opening a
+post-publish human PR. Reusable wrapper callers should allow `checks: write` so
+the generated check is owned by GitHub Actions and matches the managed branch
+protection rule.
 
 For Buildchain-owned automation, callers may pass
 `branch-protection-bypass-apps`, `branch-protection-bypass-users`, or

@@ -2786,8 +2786,50 @@ function protectedBranchDirectUpdateError({ branch, branchSha, error }) {
   const message = error?.response?.data?.message || error?.message || String(error || "");
   return new Error(
     `Buildchain generated version-state update for ${branch} -> ${branchSha} was rejected by branch protection: ${message}. ` +
-      "Promotion must complete without a post-publish human PR; configure BUILDCHAIN_PROMOTION_TOKEN as a direct-write release authority and let Buildchain add that token's authenticated user or app to the managed branch-protection bypass allowlist.",
+      "Promotion must complete without a post-publish human PR; configure BUILDCHAIN_PROMOTION_TOKEN as a direct-write release authority and allow Buildchain to create the generated version-state required check before updating the protected ref.",
   );
+}
+
+async function createGeneratedVersionStateCheck({
+  octokit,
+  owner,
+  repo,
+  branch,
+  branchSha,
+  currentSha,
+  requiredStatusCheck,
+}) {
+  if (!isManagedChannelBranch(branch)) {
+    return false;
+  }
+  if (!requiredStatusCheck) {
+    return false;
+  }
+  if (typeof octokit?.rest?.checks?.create !== "function") {
+    console.log(
+      `buildchain: unable to create generated version-state check '${requiredStatusCheck}' for ${branchSha}; checks.create is unavailable`,
+    );
+    return false;
+  }
+  await retryGitHubOperation(
+    `checks.create ${requiredStatusCheck} ${branchSha}`,
+    () => octokit.rest.checks.create({
+      owner,
+      repo,
+      name: requiredStatusCheck,
+      head_sha: branchSha,
+      status: "completed",
+      conclusion: "success",
+      output: {
+        title: "Buildchain generated version-state verification",
+        summary:
+          `Buildchain verified generated version-state commit ${branchSha} for ${branch} before direct protected ref update.\n\n` +
+          `Previous branch head: ${currentSha || "new branch"}\n\n` +
+          "This check is emitted only after promote-buildchain-ref has generated the commit through the declared version-state files and verification gate.",
+      },
+    }),
+  );
+  return true;
 }
 
 function nonFastForwardUpdateRejected(error) {
@@ -2837,6 +2879,7 @@ async function promoteBuildchainRefs({
   requireGovernance = false,
   verificationCommand = "",
   requiredStatusCheck = "check",
+  statusCheckOctokit = octokit,
   branchProtectionBypassApps = "",
   branchProtectionBypassUsers = "",
   branchProtectionBypassTeams = "",
@@ -3046,6 +3089,25 @@ async function promoteBuildchainRefs({
     if (currentSha === branchSha) {
       updates.push({ ref: branch, action: "existing", sha: branchSha });
       return { updated: true, existing: true };
+    }
+    if (protectedUpdate && currentSha) {
+      const createdCheck = await createGeneratedVersionStateCheck({
+        octokit: statusCheckOctokit,
+        owner,
+        repo,
+        branch,
+        branchSha,
+        currentSha,
+        requiredStatusCheck,
+      });
+      if (createdCheck) {
+        updates.push({
+          ref: branch,
+          action: "generated-status-check",
+          check: requiredStatusCheck,
+          sha: branchSha,
+        });
+      }
     }
     try {
       if (currentSha) {

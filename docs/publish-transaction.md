@@ -291,7 +291,9 @@ valid, the transaction can stop in `finalizing` and output
 and completes ref movement without republishing matching artifacts. New
 Buildchain-managed promotions must finish generated version-state bookkeeping
 with the promotion token directly; they must not require a post-publish human
-PR.
+PR. Before patching a protected generated bookkeeping ref, Buildchain emits the
+configured required check on the exact generated version-state commit so strict
+branch protection can validate the automation path without a second build.
 
 If finalization fails after an exact Git tag, a channel branch, or dev/alpha
 sync ref has already moved, the next run reads the durable `finalizing` state
