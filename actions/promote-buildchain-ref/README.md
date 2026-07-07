@@ -75,15 +75,18 @@ alpha branch or tag. The repository must create the next upstream anchor line
 explicitly, then run the normal channel promotion flow for that line.
 
 When branch protection requires pull requests, generated version-state commits
-must still complete inside the promotion automation. The action updates
+still run through promotion automation first. The action updates
 Buildchain-managed channel protection before generated bookkeeping, adds the
 authenticated promotion token user or app to the bypass allowlist, creates the
 configured required check on the exact generated version-state commit, then
-applies that commit directly. If GitHub still rejects the direct update,
-promotion fails with a configuration diagnostic instead of opening a
-post-publish human PR. Reusable wrapper callers should allow `checks: write` so
-the generated check is owned by GitHub Actions and matches the managed branch
-protection rule.
+tries to apply that commit directly. If GitHub still rejects release
+finalization bookkeeping, Buildchain creates or reuses a same-repository
+`buildchain/version-state/*` PR based on the current target channel head and
+returns `finalization-needed=true`; a later idempotent promotion run can resume
+from the durable transaction state. Strict alpha promotion still fails with a
+configuration diagnostic instead of opening a post-publish human PR. Reusable
+wrapper callers should allow `checks: write` so the generated check is owned by
+GitHub Actions and matches the managed branch protection rule.
 
 For Buildchain-owned automation, callers may pass
 `branch-protection-bypass-apps`, `branch-protection-bypass-users`, or
@@ -220,8 +223,10 @@ The action outputs `transaction-id`, `transaction-state`,
 `release-passport-state-sha` is the durable ref commit after the generated
 `release-passport/*` files have been uploaded into that recovery ref.
 `finalization-needed=true` means publish evidence is valid, but protected branch
-or ref finalization needs a later idempotent promotion run. It must not require
-a human version-state PR.
+or ref finalization needs a later idempotent promotion run. For release
+finalization, Buildchain may create a same-repository generated version-state
+PR when GitHub rejects the direct protected ref update; that PR is Buildchain
+bookkeeping, not a consumer-authored release change.
 Set `github-release: "true"` when the semver promotion should also publish the
 exact-tag GitHub Release. After the release transaction reaches `complete` and
 `finalization-needed` is false, the action creates or updates the GitHub Release
