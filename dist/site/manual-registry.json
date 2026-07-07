@@ -23,7 +23,7 @@
       "title": "Release propagation",
       "path": "docs/release-propagation.md",
       "plane": "use",
-      "digest": "sha256:10c2bb3bc4ebd692c49fa55f286b77ed3e8caa1526298ad910c00fc80251a893"
+      "digest": "sha256:190e3537075f37cf8a7e52bf8254606e1d9450d87c5a81dc11df8b56a7d03065"
     },
     {
       "id": "binary-distribution",

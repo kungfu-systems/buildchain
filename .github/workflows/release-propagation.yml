@@ -3,6 +3,16 @@ name: Release Propagation
 on:
   workflow_call:
     inputs:
+      buildchain-repository:
+        description: "Buildchain runtime repository"
+        default: "kungfu-systems/buildchain"
+        required: false
+        type: string
+      buildchain-ref:
+        description: "Optional Buildchain runtime ref. Empty uses v2."
+        default: "v2"
+        required: false
+        type: string
       graph-json:
         description: "Release propagation graph JSON"
         required: true
@@ -68,12 +78,23 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout Buildchain runtime
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.buildchain-ref || 'v2' }}
+          path: .buildchain/runtime
+          persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6.4.0
         with:
           node-version: "24"
+
+      - name: Enable package manager shims
+        run: corepack enable pnpm
+
+      - name: Install Buildchain runtime dependencies
+        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
 
       - name: Write propagation inputs
         shell: bash
@@ -92,7 +113,7 @@ jobs:
         id: plan
         shell: bash
         run: |
-          node bin/buildchain.mjs release-propagation plan \
+          node .buildchain/runtime/bin/buildchain.mjs release-propagation plan \
             --graph .buildchain/release-propagation/graph.json \
             --upstream-release .buildchain/release-propagation/upstream-release.json \
             --source-node "${{ inputs.source-node }}" \
@@ -109,7 +130,7 @@ jobs:
           TARGET: ${{ inputs.downstream-target }}
 
       - name: Checkout downstream repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.downstream-repository }}
           token: ${{ secrets['propagation-token'] || github.token }}
@@ -120,7 +141,7 @@ jobs:
         id: lock
         shell: bash
         run: |
-          node bin/buildchain.mjs release-propagation write-lock \
+          node .buildchain/runtime/bin/buildchain.mjs release-propagation write-lock \
             --plan .buildchain/release-propagation/plan.json \
             --target "${{ inputs.downstream-target }}" \
             --cwd downstream \

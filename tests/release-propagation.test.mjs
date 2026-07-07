@@ -13,6 +13,7 @@ import {
 const root = path.resolve(import.meta.dirname, "..");
 const bin = path.join(root, "bin", "buildchain.mjs");
 const fixture = path.join(root, "fixtures", "release-propagation-shaped");
+const workflowPath = path.join(root, ".github", "workflows", "release-propagation.yml");
 
 function readJson(rel) {
   return JSON.parse(fs.readFileSync(path.join(fixture, rel), "utf8"));
@@ -143,4 +144,21 @@ test("release propagation CLI fails fast when target is ambiguous", () => {
 
   assert.notEqual(failure.status, 0);
   assert.match(failure.stderr, /expected exactly one propagation target/);
+});
+
+test("release propagation reusable workflow invokes the checked out Buildchain runtime", () => {
+  const workflow = fs.readFileSync(workflowPath, "utf8");
+
+  assert.match(workflow, /buildchain-repository:/);
+  assert.match(workflow, /buildchain-ref:/);
+  assert.match(workflow, /repository: \$\{\{ inputs\.buildchain-repository \}\}/);
+  assert.match(workflow, /ref: \$\{\{ inputs\.buildchain-ref \|\| 'v2' \}\}/);
+  assert.match(workflow, /path: \.buildchain\/runtime/);
+  assert.match(workflow, /Install Buildchain runtime dependencies/);
+  assert.match(workflow, /pnpm@11\.7\.0 install --dir \.buildchain\/runtime --prod --frozen-lockfile --ignore-scripts/);
+  assert.equal(workflow.includes("node bin/buildchain.mjs release-propagation"), false);
+  assert.equal(
+    (workflow.match(/node \.buildchain\/runtime\/bin\/buildchain\.mjs release-propagation/g) || []).length,
+    2,
+  );
 });
