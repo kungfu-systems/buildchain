@@ -923,11 +923,14 @@ test("promote wrapper exposes controlled branch-protection review bypass", () =>
   assert.match(wrapper, /branch-protection-bypass-users:/);
   assert.match(wrapper, /branch-protection-bypass-teams:/);
   assert.match(wrapper, /branch-protection-bypass-apps: \$\{\{ inputs\.branch-protection-bypass-apps \}\}/);
+  assert.match(wrapper, /checks: write/);
+  assert.match(wrapper, /generated-status-check-token: \$\{\{ github\.token \}\}/);
 
   const selfPromotion = fs.readFileSync(
     path.join(root, ".github/workflows/buildchain-ref-promotion.yml"),
     "utf8",
   );
+  assert.match(selfPromotion, /checks: write/);
   assert.match(selfPromotion, /BUILDCHAIN_PROMOTION_BYPASS_APPS/);
   assert.match(selfPromotion, /BUILDCHAIN_PROMOTION_BYPASS_USERS/);
   assert.match(selfPromotion, /BUILDCHAIN_PROMOTION_BYPASS_TEAMS/);
