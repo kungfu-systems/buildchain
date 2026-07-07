@@ -151,6 +151,38 @@ Buildchain validates these hard constraints:
 - secret material must be declared as reference names, such as
   `secret_refs = ["AWS_ROLE_ARN"]`; inline secret-like deploy keys are rejected.
 
+### Floating Runtime Contract Lock
+
+Web-surface repositories can consume the stable Buildchain workflow shell with a
+floating ref, such as:
+
+```yaml
+jobs:
+  web:
+    uses: kungfu-systems/buildchain/.github/workflows/.web-surface.yml@v2
+    with:
+      buildchain-contract-lock-path: buildchain.contract-lock.json
+      buildchain-contract-compatibility-policy: major-compatible
+      buildchain-contract-drift-issue-mode: compatible-and-breaking
+      build-command: pnpm build
+      artifact-path: dist
+```
+
+The caller repository commits `buildchain.contract-lock.json` after reviewing an
+accepted Buildchain runtime SHA and contract digest. The reusable workflow then
+resolves the floating runtime to an immutable SHA, checks the lock before the
+caller build command, and applies these rules:
+
+- unchanged lock: continue without feedback;
+- compatible drift: continue, write the drift summary, and open or update a
+  caller-repository issue when permissions allow;
+- breaking drift: fail closed before rendering, deployment planning, deploy
+  apply, or release publication.
+
+The caller no longer needs to run `scripts/buildchain-contract-lock.mjs` inside
+its own build command. That check belongs to Buildchain because the actual
+contract world is stored in the Buildchain runtime ref being used.
+
 Supported adapter names are:
 
 | Adapter | Initial use |

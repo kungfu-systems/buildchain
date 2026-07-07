@@ -1,9 +1,10 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-site-manifest",
-  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "generatedAt": "2026-07-07T13:50:19.556Z",
+  "publishedAt": "2026-07-07T13:50:19.556Z",
   "reproducible": true,
-  "timestampPolicy": "source-date-epoch",
+  "timestampPolicy": "ci-injected",
   "deterministicInputs": [
     "README.md",
     "docs/*.md",
@@ -12,11 +13,13 @@
     "packages/core/README.md",
     "package.json#exports",
     "tests/buildchain-inventory.json",
+    "sourceRevision",
     "sourceDateEpoch",
     "package content",
     "declared Buildchain surface manifest contract"
   ],
   "sourceDateEpoch": "0",
+  "sourceRevision": "2c3127f2954960ad89f5658a090fb9fe19b442ce",
   "timestampPolicyDetails": {
     "contract": "kungfu-buildchain-surface-timestamp-policy",
     "timestampFields": [
@@ -34,7 +37,7 @@
   },
   "package": {
     "name": "@kungfu-tech/buildchain",
-    "version": "2.8.8-alpha.6",
+    "version": "2.8.16-alpha.0",
     "versionSource": "package.json#version"
   },
   "entrypoint": "buildchain-site.json",
@@ -162,7 +165,7 @@
       "path": "docs/lifecycle-protocol.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:43dcaaa53efa8b7e6cdcdaa92a0d39d3ee263b840ed2bfea0a47fe4af922cd59"
+      "digest": "sha256:c76516894cf540da9a6722ba96c475386901ab448ab71ede5850a185f6a716c9"
     },
     {
       "id": "reusable-build-surface",
@@ -178,7 +181,7 @@
       "path": "docs/publish-transaction.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:94844f7bb38dbd85c02f1bc9d55e34dcebd9fc96585789766e8075ac635bc6c0"
+      "digest": "sha256:c3fc5c49180db9167e1cf5bc5ff403e5a21cb55d1ba750bd0cfcd2429ad825b2"
     },
     {
       "id": "release-governance",
@@ -186,7 +189,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:7fb654a147104125eccbbbcccdeb28c5cad5a6097731e560e72919b9231f985f"
+      "digest": "sha256:15fa0295ae2d97a2fd4ca17024d3da62df1057c9118b77a7e6b7550a404cd27b"
     },
     {
       "id": "release-flow",
@@ -218,7 +221,7 @@
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:5b374e65dc2740748205db597a7cd9779d71daa1b30ad46e542f95b093e56c98"
+      "digest": "sha256:f42cc7a81dbeb1b31bec21de61e9807af317bda4055f693ab807b15d9ec77367"
     }
   ],
   "facts": [

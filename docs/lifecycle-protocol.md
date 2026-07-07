@@ -253,9 +253,12 @@ check on the exact generated version-state commit before patching the protected
 ref, then applies the protected ref update with the declared generated ref
 update token. The reusable wrapper uses
 `secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token` for that protected
-bookkeeping update. If the direct generated update is rejected, promotion fails
-with a token/protection diagnostic instead of asking humans to review a
-post-publish version-state PR.
+bookkeeping update. If release finalization bookkeeping is still rejected,
+Buildchain creates or reuses a same-repository `buildchain/version-state/*` PR
+from the current target channel head and reports `finalization-needed=true` so
+a later idempotent promotion run can resume. Strict alpha bookkeeping remains
+fail-fast with a token/protection diagnostic instead of asking humans to review
+a post-publish version-state PR.
 
 For `version.strategy = "anchored"` with `version.next = "manual"`, release
 promotion does not generate a Buildchain-owned version-state commit. In that

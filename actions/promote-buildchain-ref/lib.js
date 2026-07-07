@@ -3176,6 +3176,123 @@ async function promoteBuildchainRefs({
       updates.push({ ref: branch, action: "existing", sha: branchSha });
       return { updated: true, existing: true };
     }
+    const branchWriteOctokit = protectedUpdate ? (refUpdateOctokit || octokit) : octokit;
+    const openVersionStatePullRequest = async ({ error }) => {
+      const message = error?.response?.data?.message || error?.message || String(error || "");
+      if (
+        !protectedUpdate?.allowPendingPullRequest ||
+        !protectedUpdate?.title ||
+        typeof octokit.rest.pulls?.create !== "function"
+      ) {
+        throw protectedBranchDirectUpdateError({ branch, branchSha, error });
+      }
+      const versionStateBranch = versionStateBranchName(branch, branchSha);
+      const versionStateRef = `heads/${versionStateBranch}`;
+      const existingVersionStateSha = await readRefSha(versionStateRef);
+      if (existingVersionStateSha && existingVersionStateSha !== branchSha) {
+        throw new Error(
+          `Buildchain generated version-state branch ${versionStateBranch} points at ${existingVersionStateSha}, not ${branchSha}`,
+        );
+      }
+      if (!existingVersionStateSha) {
+        await branchWriteOctokit.rest.git.createRef({
+          owner,
+          repo,
+          ref: `refs/${versionStateRef}`,
+          sha: branchSha,
+        });
+        updates.push({
+          ref: versionStateBranch,
+          action: "created-version-state-pr-head",
+          sha: branchSha,
+        });
+      }
+      if (typeof octokit.rest.pulls?.list === "function") {
+        const { data: existingPullRequests } = await octokit.rest.pulls.list({
+          owner,
+          repo,
+          state: "open",
+          base: branch,
+          head: `${owner}:${versionStateBranch}`,
+        });
+        const existingPullRequest = (existingPullRequests || [])[0];
+        if (existingPullRequest) {
+          updates.push({
+            ref: branch,
+            action: "pending-version-state-pr",
+            sha: branchSha,
+            pullRequest: existingPullRequest.html_url || existingPullRequest.url,
+          });
+          return {
+            updated: false,
+            pending: true,
+            currentSha,
+            pullRequest: existingPullRequest,
+          };
+        }
+      }
+      const { data: pullRequest } = await octokit.rest.pulls.create({
+        owner,
+        repo,
+        title: protectedUpdate.title,
+        body:
+          `${protectedUpdate.body || protectedUpdate.title}\n\n` +
+          `Buildchain generated this PR because protected branch ${branch} rejected direct generated bookkeeping.\n\n` +
+          `Rejected update: ${currentSha || "new branch"} -> ${branchSha}\n\n` +
+          `GitHub response: ${message}`,
+        head: versionStateBranch,
+        base: branch,
+      });
+      updates.push({
+        ref: branch,
+        action: "pending-version-state-pr",
+        sha: branchSha,
+        pullRequest: pullRequest.html_url || pullRequest.url,
+      });
+      return { updated: false, pending: true, currentSha, pullRequest };
+    };
+    const createVersionStateMergeCommit = async () => {
+      const allowedPaths = protectedUpdate?.allowMergeCommitOnNonFastForwardPaths || [];
+      if (!allowedPaths.length) {
+        return undefined;
+      }
+      await assertOnlyAllowedChangesBetween({
+        baseSha: currentSha,
+        headSha: branchSha,
+        allowedPaths,
+      });
+      const { data: generatedCommit } = await getGitCommitWithRetry({
+        octokit,
+        owner,
+        repo,
+        commitSha: branchSha,
+      });
+      const { data: mergeCommit } = await retryGitHubOperation(
+        `git.createCommit ${branch} generated version-state merge`,
+        () => octokit.rest.git.createCommit({
+          owner,
+          repo,
+          message:
+            protectedUpdate?.mergeMessage ||
+            `${protectedUpdate?.title || "Apply generated version-state"}\n\n` +
+              `Buildchain generated this merge commit to fast-forward ${branch} after ` +
+              "the channel had diverged only by generated version-state files.",
+          tree: generatedCommit.tree.sha,
+          parents: [currentSha, branchSha],
+          author: COMMIT_IDENTITY,
+          committer: COMMIT_IDENTITY,
+        }),
+      );
+      updates.push({
+        ref: branch,
+        action: "created-version-state-merge",
+        sha: mergeCommit.sha,
+        sourceSha: branchSha,
+        currentSha,
+        files: allowedPaths,
+      });
+      return mergeCommit.sha;
+    };
     if (protectedUpdate && currentSha) {
       const createdCheck = await createGeneratedVersionStateCheck({
         octokit: statusCheckOctokit,
@@ -3195,7 +3312,6 @@ async function promoteBuildchainRefs({
         });
       }
     }
-    const branchWriteOctokit = protectedUpdate ? (refUpdateOctokit || octokit) : octokit;
     try {
       if (currentSha) {
         await branchWriteOctokit.rest.git.updateRef({
@@ -3220,12 +3336,40 @@ async function promoteBuildchainRefs({
       }
       return { updated: true };
     } catch (error) {
-      if (protectedUpdate && protectedBranchUpdateRejected(error)) {
-        throw protectedBranchDirectUpdateError({
-          branch,
-          branchSha,
-          error,
-        });
+      if (
+        protectedUpdate?.allowMergeCommitOnNonFastForward &&
+        currentSha &&
+        nonFastForwardUpdateRejected(error)
+      ) {
+        const mergeSha = await createVersionStateMergeCommit();
+        if (mergeSha) {
+          const createdMergeCheck = await createGeneratedVersionStateCheck({
+            octokit: statusCheckOctokit,
+            owner,
+            repo,
+            branch,
+            branchSha: mergeSha,
+            currentSha,
+            requiredStatusCheck,
+          });
+          if (createdMergeCheck) {
+            updates.push({
+              ref: branch,
+              action: "generated-status-check",
+              check: requiredStatusCheck,
+              sha: mergeSha,
+            });
+          }
+          await branchWriteOctokit.rest.git.updateRef({
+            owner,
+            repo,
+            ref: `heads/${branch}`,
+            sha: mergeSha,
+            force: false,
+          });
+          updates.push({ ref: branch, action, sha: mergeSha });
+          return { updated: true, mergeSha };
+        }
       }
       if (protectedUpdate?.allowNonFastForwardSkip && nonFastForwardUpdateRejected(error)) {
         updates.push({
@@ -3236,11 +3380,11 @@ async function promoteBuildchainRefs({
         });
         return { updated: false, skipped: true, currentSha };
       }
-      if (protectedUpdate && nonFastForwardUpdateRejected(error)) {
-        throw new Error(
-          `Buildchain generated version-state update for ${branch} -> ${branchSha} is not a fast-forward update. ` +
-            "Promotion cannot open a post-publish human PR; repair channel lineage and rerun promotion so Buildchain can complete direct generated bookkeeping.",
-        );
+      if (
+        protectedUpdate &&
+        (protectedBranchUpdateRejected(error) || nonFastForwardUpdateRejected(error))
+      ) {
+        return openVersionStatePullRequest({ error });
       }
       if (!notFound(error)) {
         throw error;
@@ -3275,18 +3419,62 @@ async function promoteBuildchainRefs({
   };
 
   const assertOnlyAllowedChangesBetween = async ({ baseSha, headSha, allowedPaths }) => {
-    const { data: comparison } = await octokit.rest.repos.compareCommitsWithBasehead({
-      owner,
-      repo,
-      basehead: `${baseSha}...${headSha}`,
+    const changedPaths = await listChangedPathsBetweenTrees({
+      baseSha,
+      headSha,
     });
-    const changedPaths = (comparison.files || []).map((file) => file.filename);
     const unexpected = changedPaths.filter((file) => !allowedPaths.includes(file));
     if (unexpected.length > 0) {
       throw new Error(
         `Version-state PR changed files outside declared version state: ${unexpected.join(", ")}`,
       );
     }
+  };
+
+  const listChangedPathsBetweenTrees = async ({ baseSha, headSha }) => {
+    const [baseCommitResult, headCommitResult] = await Promise.all([
+      getGitCommitWithRetry({ octokit, owner, repo, commitSha: baseSha }),
+      getGitCommitWithRetry({ octokit, owner, repo, commitSha: headSha }),
+    ]);
+    const [baseTreeResult, headTreeResult] = await Promise.all([
+      retryGitHubOperation(
+        `git.getTree ${baseSha} recursive`,
+        () => octokit.rest.git.getTree({
+          owner,
+          repo,
+          tree_sha: baseCommitResult.data.tree.sha,
+          recursive: "1",
+        }),
+      ),
+      retryGitHubOperation(
+        `git.getTree ${headSha} recursive`,
+        () => octokit.rest.git.getTree({
+          owner,
+          repo,
+          tree_sha: headCommitResult.data.tree.sha,
+          recursive: "1",
+        }),
+      ),
+    ]);
+    const toTreeMap = (tree) => {
+      const entries = new Map();
+      for (const entry of tree || []) {
+        if (!entry?.path || entry.type === "tree") {
+          continue;
+        }
+        entries.set(
+          entry.path,
+          `${entry.type || ""}:${entry.mode || ""}:${entry.sha || ""}`,
+        );
+      }
+      return entries;
+    };
+    const baseEntries = toTreeMap(baseTreeResult.data.tree);
+    const headEntries = toTreeMap(headTreeResult.data.tree);
+    const paths = new Set([...baseEntries.keys(), ...headEntries.keys()]);
+    return [...paths]
+      .filter((file) => baseEntries.get(file) !== headEntries.get(file))
+      .sort();
   };
 
   const assertOnlyAllowedReleaseRecoveryChangesBetween = async ({
@@ -3354,6 +3542,38 @@ async function promoteBuildchainRefs({
         headRepo === `${owner}/${repo}`
       );
     });
+  };
+
+  const findAlphaMaterialFromPromotionPullRequest = async ({ commitSha, targetRef, releasePrefix, patch }) => {
+    if (typeof octokit.rest.repos?.listPullRequestsAssociatedWithCommit !== "function") {
+      return undefined;
+    }
+    const pullRequest = await findMatchingTargetPullRequest({ commitSha, targetRef });
+    const pullRequestHeadSha = pullRequest?.head?.sha;
+    if (!pullRequestHeadSha) {
+      return undefined;
+    }
+    for (const candidate of alphaTagsForPatch(lineRefs, releasePrefix, patch)) {
+      if (!candidate.sha) {
+        continue;
+      }
+      if (
+        await releaseCommitIncludesTransactionHead({
+          octokit,
+          owner,
+          repo,
+          releaseSha: pullRequestHeadSha,
+          transactionReleaseSha: candidate.sha,
+        })
+      ) {
+        return {
+          ...candidate,
+          source: "promotion-pr-head",
+          promotionPullRequestHeadSha: pullRequestHeadSha,
+        };
+      }
+    }
+    return undefined;
   };
 
   const assertPromotionPrOrVersionStateParent = async ({ commitSha, targetRef, allowedPaths }) => {
@@ -4044,6 +4264,7 @@ async function promoteBuildchainRefs({
       const gateUpdate = await updateBranch(targetRef, releaseSha, "updated", {
         title: `Release ${selectedRelease.tag}`,
         body: `Create the generated version-state commit for ${selectedRelease.tag}.`,
+        allowPendingPullRequest: true,
       });
       if (gateUpdate.pending) {
         return withPublishTransaction({
@@ -4056,10 +4277,23 @@ async function promoteBuildchainRefs({
           updates,
         }, { finalizationNeeded: true });
       }
-      await updateBranch(`release/v${majorRule.major}/v${majorRule.major}.0`, releaseSha, "updated", {
+      const releaseBranchUpdate = await updateBranch(`release/v${majorRule.major}/v${majorRule.major}.0`, releaseSha, "updated", {
         title: `Release ${selectedRelease.tag}`,
         body: `Create the generated version-state commit for ${selectedRelease.tag}.`,
+        allowPendingPullRequest: true,
       });
+      if (releaseBranchUpdate.pending) {
+        return withPublishTransaction({
+          owner,
+          repo,
+          sourceSha: sha,
+          sha: releaseSha,
+          targetRef,
+          pendingPullRequest:
+            releaseBranchUpdate.pullRequest.html_url || releaseBranchUpdate.pullRequest.url,
+          updates,
+        }, { finalizationNeeded: true });
+      }
     }
     await markFinalizing();
     await ensureTag(selectedRelease.tag, releaseSha);
@@ -4111,18 +4345,34 @@ async function promoteBuildchainRefs({
         sha: nextAlphaSha,
       });
     } else if (versionState) {
+      const nextAlphaRef = `alpha/v${majorRule.major}/v${majorRule.major}.0`;
+      const nextAlphaBaseSha = await readRefSha(`heads/${nextAlphaRef}`) || releaseSha;
       const nextAlphaCommit = await createVersionStateCommit({
-        baseSha: releaseSha,
+        baseSha: nextAlphaBaseSha,
         version: nextAlphaVersion,
         message: `chore(release): prepare ${selectedNextAlpha.tag}`,
       });
       nextAlphaSha = nextAlphaCommit.sha;
     }
     if (versionState) {
-      await updateBranch(`alpha/v${majorRule.major}/v${majorRule.major}.0`, nextAlphaSha, "updated", {
+      const nextAlphaUpdate = await updateBranch(`alpha/v${majorRule.major}/v${majorRule.major}.0`, nextAlphaSha, "updated", {
         title: `Prepare ${selectedNextAlpha.tag}`,
         body: `Create the generated version-state commit for ${selectedNextAlpha.tag}.`,
+        allowPendingPullRequest: true,
       });
+      if (nextAlphaUpdate.pending) {
+        return withPublishTransaction({
+          owner,
+          repo,
+          sourceSha: sha,
+          sha: releaseSha,
+          nextAlphaSha,
+          targetRef,
+          pendingPullRequest:
+            nextAlphaUpdate.pullRequest.html_url || nextAlphaUpdate.pullRequest.url,
+          updates,
+        }, { finalizationNeeded: true });
+      }
       const nextDevRef = `dev/v${majorRule.major}/v${majorRule.major}.0`;
       await updateBranch(nextDevRef, nextAlphaSha, "updated", {
         title: `Prepare ${selectedNextAlpha.tag}`,
@@ -4437,7 +4687,12 @@ async function promoteBuildchainRefs({
     rule.releasePrefix,
     selectedReleaseCandidate.patch,
   );
-  let sourceAlphaMaterial = sourceAlpha;
+  let sourceAlphaMaterial = await findAlphaMaterialFromPromotionPullRequest({
+    commitSha: sha,
+    targetRef,
+    releasePrefix: rule.releasePrefix,
+    patch: selectedReleaseCandidate.patch,
+  }) || sourceAlpha;
   if (currentReleaseTransaction?.source_sha) {
     for (const candidate of alphaTagsForPatch(lineRefs, rule.releasePrefix, selectedReleaseCandidate.patch)) {
       if (!candidate.sha) {
@@ -4527,6 +4782,7 @@ async function promoteBuildchainRefs({
     const targetUpdate = await updateBranch(targetRef, releaseSha, "updated", {
       title: `Release ${selectedReleaseCandidate.tag}`,
       body: `Create the generated version-state commit for ${selectedReleaseCandidate.tag}.`,
+      allowPendingPullRequest: true,
     });
     if (targetUpdate.pending) {
       return withPublishTransaction({
@@ -4604,6 +4860,7 @@ async function promoteBuildchainRefs({
       });
   const nextAlphaVersion = stripTagPrefix(selectedNextAlpha.tag);
   let nextAlphaSha = versionState ? selectedNextAlpha.sha : sha;
+  let nextAlphaVersionStateFiles = [];
   if (versionState && selectedNextAlpha.exists && nextAlphaSha) {
     updates.push({
       version: nextAlphaVersion,
@@ -4617,6 +4874,7 @@ async function promoteBuildchainRefs({
       message: `chore(release): prepare ${selectedNextAlpha.tag}`,
     });
     nextAlphaSha = nextAlphaCommit.sha;
+    nextAlphaVersionStateFiles = nextAlphaCommit.files || [];
   }
   if (versionState) {
     const nextDevRef = `dev/v${rule.major}/v${rule.major}.${rule.minor}`;
@@ -4627,6 +4885,9 @@ async function promoteBuildchainRefs({
     const nextAlphaUpdate = await updateBranch(nextAlphaRef, nextAlphaSha, "updated", {
       title: `Prepare ${selectedNextAlpha.tag}`,
       body: `Create the generated version-state commit for ${selectedNextAlpha.tag}.`,
+      allowPendingPullRequest: true,
+      allowMergeCommitOnNonFastForward: true,
+      allowMergeCommitOnNonFastForwardPaths: nextAlphaVersionStateFiles,
     });
     if (nextAlphaUpdate.pending) {
       return withPublishTransaction({
@@ -4641,9 +4902,14 @@ async function promoteBuildchainRefs({
         updates,
       });
     }
+    if (nextAlphaUpdate.mergeSha) {
+      nextAlphaSha = nextAlphaUpdate.mergeSha;
+    }
     await updateBranch(nextDevRef, nextAlphaSha, "updated", {
       title: `Prepare ${selectedNextAlpha.tag}`,
       body: `Create the generated version-state commit for ${selectedNextAlpha.tag}.`,
+      allowMergeCommitOnNonFastForward: true,
+      allowMergeCommitOnNonFastForwardPaths: nextAlphaVersionStateFiles,
     });
   }
   await ensureTag(selectedNextAlpha.tag, nextAlphaSha);

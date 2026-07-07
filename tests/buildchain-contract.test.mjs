@@ -174,6 +174,24 @@ test("contract world exposes KFD-2 release trust passport audit", () => {
   assert.match(surface.guarantees.join("\n"), /Unbound public claims fail/i);
 });
 
+test("contract world exposes web-surface floating contract lock gate", () => {
+  const contract = createBuildchainContractWorld({
+    root: path.resolve(import.meta.dirname, ".."),
+    packageJson: { name: "@kungfu-tech/buildchain", version: "2.8.0" },
+  });
+  const surface = contract.surfaces.find((entry) => entry.id === "web-surface");
+
+  assert.ok(surface);
+  assert.equal(surface.path, ".github/workflows/.web-surface.yml");
+  assert.match(surface.publicRef, /\.github\/workflows\/\.web-surface\.yml@v2/);
+  assert.match(surface.optionalInputs.join("\n"), /buildchain-contract-lock-path/);
+  assert.match(surface.optionalInputs.join("\n"), /buildchain-contract-compatibility-policy/);
+  assert.match(surface.optionalInputs.join("\n"), /buildchain-contract-drift-issue-mode/);
+  assert.equal(surface.breakingDefaults.breakingDriftPolicy, "fail-closed-before-build");
+  assert.match(surface.guarantees.join("\n"), /before caller build/);
+  assert.match(surface.guarantees.join("\n"), /breaking contract drift fails closed/);
+});
+
 test("write-lock records resolved SHA and contract digest", () => {
   const workspace = tempDir("write-lock");
   const contract = createBuildchainContractWorld({
