@@ -3423,6 +3423,38 @@ async function promoteBuildchainRefs({
     });
   };
 
+  const findAlphaMaterialFromPromotionPullRequest = async ({ commitSha, targetRef, releasePrefix, patch }) => {
+    if (typeof octokit.rest.repos?.listPullRequestsAssociatedWithCommit !== "function") {
+      return undefined;
+    }
+    const pullRequest = await findMatchingTargetPullRequest({ commitSha, targetRef });
+    const pullRequestHeadSha = pullRequest?.head?.sha;
+    if (!pullRequestHeadSha) {
+      return undefined;
+    }
+    for (const candidate of alphaTagsForPatch(lineRefs, releasePrefix, patch)) {
+      if (!candidate.sha) {
+        continue;
+      }
+      if (
+        await releaseCommitIncludesTransactionHead({
+          octokit,
+          owner,
+          repo,
+          releaseSha: pullRequestHeadSha,
+          transactionReleaseSha: candidate.sha,
+        })
+      ) {
+        return {
+          ...candidate,
+          source: "promotion-pr-head",
+          promotionPullRequestHeadSha: pullRequestHeadSha,
+        };
+      }
+    }
+    return undefined;
+  };
+
   const assertPromotionPrOrVersionStateParent = async ({ commitSha, targetRef, allowedPaths }) => {
     try {
       await assertChannelPromotionPr({
@@ -4534,7 +4566,12 @@ async function promoteBuildchainRefs({
     rule.releasePrefix,
     selectedReleaseCandidate.patch,
   );
-  let sourceAlphaMaterial = sourceAlpha;
+  let sourceAlphaMaterial = await findAlphaMaterialFromPromotionPullRequest({
+    commitSha: sha,
+    targetRef,
+    releasePrefix: rule.releasePrefix,
+    patch: selectedReleaseCandidate.patch,
+  }) || sourceAlpha;
   if (currentReleaseTransaction?.source_sha) {
     for (const candidate of alphaTagsForPatch(lineRefs, rule.releasePrefix, selectedReleaseCandidate.patch)) {
       if (!candidate.sha) {
