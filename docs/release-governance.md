@@ -410,10 +410,13 @@ bookkeeping after the reviewed channel PR has merged. Direct
 `promote-buildchain-ref` callers must opt into the same controlled bypass with
 `branch-protection-bypass-apps`, `branch-protection-bypass-users`, or
 `branch-protection-bypass-teams`; the action also adds the current promotion
-token's authenticated user or app to the managed bypass allowlist. If direct
-generated bookkeeping is still rejected, Buildchain fails with a
-token/protection diagnostic instead of creating a post-publish PR. Buildchain's
-own promotion workflow reads `BUILDCHAIN_PROMOTION_BYPASS_APPS`,
+token's authenticated user or app to the managed bypass allowlist. Before
+patching a protected generated bookkeeping ref, the action creates the
+configured required check on the exact generated version-state commit, so strict
+status checks are satisfied by machine-verifiable Buildchain evidence rather
+than a human PR. If direct generated bookkeeping is still rejected, Buildchain
+fails with a token/protection diagnostic instead of creating a post-publish PR.
+Buildchain's own promotion workflow reads `BUILDCHAIN_PROMOTION_BYPASS_APPS`,
 `BUILDCHAIN_PROMOTION_BYPASS_USERS`, and
 `BUILDCHAIN_PROMOTION_BYPASS_TEAMS` repository variables so the declared bypass
 identity can match the actual `BUILDCHAIN_PROMOTION_TOKEN` actor, but consumers

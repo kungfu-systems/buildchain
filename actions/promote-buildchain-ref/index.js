@@ -207,6 +207,7 @@ async function main() {
   const requireVersionState = core.getBooleanInput("require-version-state");
   const verificationCommand = core.getInput("verification-command");
   const requiredStatusCheck = core.getInput("required-status-check") || "check";
+  const generatedStatusCheckToken = core.getInput("generated-status-check-token") || token;
   const branchProtectionBypassApps = core.getInput("branch-protection-bypass-apps");
   const branchProtectionBypassUsers = core.getInput("branch-protection-bypass-users");
   const branchProtectionBypassTeams = core.getInput("branch-protection-bypass-teams");
@@ -247,6 +248,8 @@ async function main() {
   const releaseCandidateBuildSummaryPath = core.getInput("release-candidate-build-summary-path");
   const releaseCandidateVersion = core.getInput("release-candidate-version");
   const octokit = github.getOctokit(token);
+  const statusCheckOctokit =
+    generatedStatusCheckToken === token ? octokit : github.getOctokit(generatedStatusCheckToken);
   if (requirePublishSourceLock) {
     const sourceLockReport = validateRequiredPublishSourceLock({
       sha,
@@ -280,6 +283,7 @@ async function main() {
     requireVersionState,
     verificationCommand,
     requiredStatusCheck,
+    statusCheckOctokit,
     branchProtectionBypassApps,
     branchProtectionBypassUsers,
     branchProtectionBypassTeams,
