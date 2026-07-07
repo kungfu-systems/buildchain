@@ -32,6 +32,9 @@ inputs:
   generated-status-check-token:
     description: "GitHub token used to create the generated version-state required check before direct protected branch updates. Defaults to token."
     default: ""
+  generated-ref-update-token:
+    description: "GitHub token used to update Buildchain-generated protected version-state refs. Defaults to token."
+    default: ""
   branch-protection-bypass-apps:
     description: "Comma- or newline-separated GitHub App slugs allowed to bypass pull-request review on Buildchain-managed channel branches while required approval remains enforced for humans"
     default: ""

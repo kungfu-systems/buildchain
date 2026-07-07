@@ -4865,6 +4865,126 @@ test("strict alpha promotion fails fast when direct version-state sync is not au
   assert.equal(createdPullRequest, false);
 });
 
+test("strict alpha promotion uses generated ref update token for protected version-state sync", async () => {
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "1.0.0-alpha.0",
+      packageManager: "pnpm@11.7.0",
+    },
+  });
+  const versionSha = "d".repeat(40);
+  const refs = new Map([
+    ["heads/alpha/v1/v1.0", SHA],
+    ["heads/dev/v1/v1.0", OTHER_SHA],
+    ["tags/v1.0.0", OTHER_SHA],
+  ]);
+  const bypassWrites = [];
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (refs.has(ref)) {
+            return { data: { object: { sha: refs.get(ref) } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async ({ ref }) => ({
+          data: [...refs.entries()]
+            .filter(([name]) => name.startsWith(ref))
+            .map(([name, objectSha]) => ({
+              ref: `refs/${name}`,
+              object: { sha: objectSha },
+            })),
+        }),
+        getCommit: async ({ commit_sha }) => ({
+          data: { tree: { sha: `tree-${commit_sha}` } },
+        }),
+        createBlob: async () => ({ data: { sha: "blob-sha" } }),
+        createTree: async () => ({ data: { sha: "tree-sha" } }),
+        createCommit: async () => ({ data: { sha: versionSha } }),
+        updateRef: async ({ ref, sha }) => {
+          if (ref.startsWith("heads/")) {
+            const error = new Error(
+              "At least 1 approving review is required by reviewers with write access.",
+            );
+            error.status = 422;
+            throw error;
+          }
+          refs.set(ref, sha);
+          return {};
+        },
+        createRef: async ({ ref, sha }) => {
+          refs.set(ref.replace(/^refs\//, ""), sha);
+          return {};
+        },
+      },
+      checks: {
+        create: async () => ({ data: { id: 1 } }),
+      },
+      users: {
+        getAuthenticated: async () => ({ data: { login: "release-bot" } }),
+      },
+      apps: {
+        getAuthenticated: async () => ({ data: { slug: "buildchain-promotion" } }),
+      },
+      repos: {
+        getBranchProtection: async () => ({ data: protectedChannel() }),
+        updateBranchProtection: async () => ({ data: {} }),
+        listPullRequestsAssociatedWithCommit: async () => ({
+          data: [
+            {
+              merged_at: "2026-06-29T00:00:00Z",
+              base: { ref: "alpha/v1/v1.0" },
+              head: {
+                ref: "dev/v1/v1.0",
+                repo: { full_name: "kungfu-systems/buildchain" },
+              },
+            },
+          ],
+        }),
+      },
+    },
+  };
+  const refUpdateOctokit = {
+    rest: {
+      git: {
+        updateRef: async ({ ref, sha }) => {
+          bypassWrites.push(["updateRef", ref, sha]);
+          refs.set(ref, sha);
+          return {};
+        },
+        createRef: async ({ ref, sha }) => {
+          bypassWrites.push(["createRef", ref, sha]);
+          refs.set(ref.replace(/^refs\//, ""), sha);
+          return {};
+        },
+      },
+    },
+  };
+
+  await promoteBuildchainRefs({
+    octokit,
+    refUpdateOctokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    cwd,
+    requireGovernance: true,
+    requireVersionState: true,
+  });
+
+  assert.deepEqual(
+    bypassWrites.filter((write) => write[1].startsWith("heads/")),
+    [
+      ["updateRef", "heads/dev/v1/v1.0", SHA],
+    ],
+  );
+  assert.equal(refs.get("heads/alpha/v1/v1.0"), SHA);
+  assert.equal(refs.get("heads/dev/v1/v1.0"), SHA);
+});
+
 test("strict alpha promotion protects created dev branches with one required approval", async () => {
   const cwd = makeTempWorkspace({
     "package.json": {

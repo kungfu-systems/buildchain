@@ -2944,6 +2944,7 @@ async function promoteBuildchainRefs({
   verificationCommand = "",
   requiredStatusCheck = "check",
   statusCheckOctokit = octokit,
+  refUpdateOctokit = octokit,
   branchProtectionBypassApps = "",
   branchProtectionBypassUsers = "",
   branchProtectionBypassTeams = "",
@@ -3174,9 +3175,10 @@ async function promoteBuildchainRefs({
         });
       }
     }
+    const branchWriteOctokit = protectedUpdate ? (refUpdateOctokit || octokit) : octokit;
     try {
       if (currentSha) {
-        await octokit.rest.git.updateRef({
+        await branchWriteOctokit.rest.git.updateRef({
           owner,
           repo,
           ref: `heads/${branch}`,
@@ -3185,7 +3187,7 @@ async function promoteBuildchainRefs({
         });
         updates.push({ ref: branch, action, sha: branchSha });
       } else {
-        await octokit.rest.git.createRef({
+        await branchWriteOctokit.rest.git.createRef({
           owner,
           repo,
           ref: `refs/heads/${branch}`,
@@ -3223,7 +3225,7 @@ async function promoteBuildchainRefs({
       if (!notFound(error)) {
         throw error;
       }
-      await octokit.rest.git.createRef({
+      await branchWriteOctokit.rest.git.createRef({
         owner,
         repo,
         ref: `refs/heads/${branch}`,
