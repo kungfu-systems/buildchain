@@ -27,6 +27,17 @@ dist/site/
 ```
 
 `buildchain-site.json` is the top-level bundle entrypoint.
+It includes a `homepage` object generated from `README.md`, including
+`homepage.sections`, `homepage.displayPlan`, and a
+`homepage.rendererContract` that is implementation metadata rather than
+ordinary homepage copy. Site repositories should consume those fields instead
+of parsing `README.md` themselves.
+It also includes a `pages` collection that mirrors `page-registry.json`, so a
+site repository can build the full Buildchain public documentation surface from
+the npm package without scanning the source checkout.
+`page-registry.json` is the complete page fact source: README homepage content,
+all packaged `docs/*.md` manuals, action README files, the Node API package
+overview, and fixture guides.
 `buildchain-contract.json` is the machine-readable Buildchain runtime contract
 world used by floating-ref contract locks. It records public workflow/action/CLI
 surfaces, compatibility digests, and audit digests for the files that implement
@@ -73,6 +84,9 @@ this gate, so release candidates cannot publish an out-of-date site bundle.
 
 The P0 bundle includes:
 
+- README-derived homepage fields and display plan;
+- complete markdown page registry for public Buildchain docs, action manuals,
+  Node API overview, and fixtures;
 - site manifest;
 - CLI command registry;
 - manual registry for packaged agent-facing documentation;
@@ -96,3 +110,19 @@ schema metadata without breaking existing consumers.
 release chain model. The site bundle exposes that document and the
 `release-propagation` CLI entry so downstream sites can render the current
 Buildchain-owned propagation contract instead of hand-writing it.
+
+## Rendering Boundary
+
+Buildchain owns the homepage wording, section ordering intent, complete
+markdown page registry, release model facts, workflow/action registry, CLI
+registry, manual registry, Node API registry, KFD claim registry, and
+release-passport evidence vocabulary. The site owns HTML, CSS, responsive
+layout, navigation, visual assets, decorative media, markdown-to-HTML rendering,
+and progressive disclosure within the Buildchain-provided
+`homepage.displayPlan` and page metadata.
+
+The page registry is also part of Buildchain's KFD-3 collaboration-interface
+surface. Releases declare it as a site-consumption contract, and Buildchain's
+KFD-3 witness generation includes the underlying markdown sources as public
+documentation surfaces. If a page is public enough for the site to render, it
+must be declared and hash-bound in the package-owned site bundle.
