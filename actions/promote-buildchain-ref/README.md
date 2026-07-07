@@ -253,6 +253,12 @@ product-owned `release-passport-kfd-3-artifact-verify-command` such as
 `kungfu agent verify --json`. Buildchain compares declared shipped public
 surfaces with artifact-exposed public surfaces and writes the result under the
 KFD-provided `kfd-3` passport section.
+Buildchain's own release workflow sets `release-passport-buildchain-self-kfd:
+"true"`. In that mode the action generates Buildchain-owned KFD-1/2/3 witnesses
+inside the final version-state workspace, after the release transaction has
+materialized generated files such as `package.json` and `dist/site/*`. This
+keeps self-hosted KFD witness hashes bound to the exact published package
+instead of to a pre-promotion checkout.
 When present, the passport includes the aggregate build summary, platform
 artifact manifests, npm publish evidence, dist-tag promotion evidence, the
 release-state ref, trusted publishing metadata, and the Buildchain transaction

@@ -493,14 +493,6 @@ jobs:
             core.setOutput("sha", targetSha);
             core.setOutput("locked", "true");
 
-      - name: Generate Buildchain self KFD release claims
-        id: buildchain-self-kfd
-        if: ${{ inputs.release-passport-buildchain-self-kfd }}
-        shell: bash
-        run: node .buildchain/runtime/scripts/generate-buildchain-kfd-witnesses.mjs --cwd "${PWD}" --output-dir .buildchain/kfd --source-sha "${TARGET_SHA}"
-        env:
-          TARGET_SHA: ${{ steps.target.outputs.sha }}
-
       - name: Promote-only publish
         id: promote
         uses: ./.buildchain/runtime/actions/promote-buildchain-ref
@@ -535,11 +527,12 @@ jobs:
           release-passport-build-summary-path: ${{ steps.rc.outputs.release-candidate-build-summary-path }}
           release-passport-platform-manifest-paths: ${{ inputs.release-passport-platform-manifest-paths || steps.rc.outputs.release-candidate-platform-manifest-paths }}
           release-passport-impact-json: ${{ inputs.release-passport-impact-json }}
-          release-passport-kfd-1-witness-jsons: ${{ inputs.release-passport-kfd-1-witness-jsons || steps.buildchain-self-kfd.outputs.kfd-1-witness-jsons }}
-          release-passport-kfd-2-claim-jsons: ${{ inputs.release-passport-kfd-2-claim-jsons || steps.buildchain-self-kfd.outputs.kfd-2-claim-jsons }}
-          release-passport-kfd-3-prebuild-witness-jsons: ${{ inputs.release-passport-kfd-3-prebuild-witness-jsons || steps.buildchain-self-kfd.outputs.kfd-3-prebuild-witness-jsons }}
-          release-passport-kfd-3-artifact-witness-jsons: ${{ inputs.release-passport-kfd-3-artifact-witness-jsons || steps.buildchain-self-kfd.outputs.kfd-3-artifact-witness-jsons }}
+          release-passport-kfd-1-witness-jsons: ${{ inputs.release-passport-kfd-1-witness-jsons }}
+          release-passport-kfd-2-claim-jsons: ${{ inputs.release-passport-kfd-2-claim-jsons }}
+          release-passport-kfd-3-prebuild-witness-jsons: ${{ inputs.release-passport-kfd-3-prebuild-witness-jsons }}
+          release-passport-kfd-3-artifact-witness-jsons: ${{ inputs.release-passport-kfd-3-artifact-witness-jsons }}
           release-passport-kfd-3-artifact-verify-command: ${{ inputs.release-passport-kfd-3-artifact-verify-command }}
+          release-passport-buildchain-self-kfd: ${{ inputs.release-passport-buildchain-self-kfd }}
           github-release: ${{ inputs.github-release }}
           github-release-title: ${{ inputs.github-release-title }}
           github-release-notes: ${{ inputs.github-release-notes }}

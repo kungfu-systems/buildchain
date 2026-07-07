@@ -121,7 +121,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:eaeee4961209dc6adf84c0bfb9f0cd64bc9fc9fe81856e011c612c8fba50093e"
+      "digest": "sha256:85f25aadbadcd8579b3e29204d5ce70dd8831ac3960dfc3d17a547537eb267bd"
     },
     {
       "id": "release-flow",
