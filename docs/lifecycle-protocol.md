@@ -248,9 +248,12 @@ applied by the promotion automation after the reviewed channel PR has merged.
 Buildchain keeps review requirements, conversation resolution, strict status
 checks, and admin enforcement for human channel changes, but adds the
 authenticated promotion token user or app to the managed bypass allowlist for
-generated release bookkeeping. If the direct generated update is rejected,
-promotion fails with a token/protection diagnostic instead of asking humans to
-review a post-publish version-state PR.
+generated release bookkeeping. Buildchain also creates the configured required
+check on the exact generated version-state commit before patching the protected
+ref, so the automated bookkeeping remains compatible with strict required
+checks. If the direct generated update is rejected, promotion fails with a
+token/protection diagnostic instead of asking humans to review a post-publish
+version-state PR.
 
 For `version.strategy = "anchored"` with `version.next = "manual"`, release
 promotion does not generate a Buildchain-owned version-state commit. In that
