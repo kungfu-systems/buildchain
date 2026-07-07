@@ -160,6 +160,7 @@ jobs:
           bash -lc 'cd dist/binary && sha256sum ./* > checksums.txt'
 
       - name: Fetch durable release-state passport
+        id: fetch-durable-release-state
         if: ${{ startsWith(github.ref, 'refs/tags/') || inputs.upload-release }}
         shell: bash
         run: |
@@ -168,6 +169,16 @@ jobs:
           version="${RELEASE_TAG#v}"
           state="${version//./-}"
           ref="buildchain/release-state/${state}"
+          if ! git ls-remote --exit-code --heads origin "${ref}" >/dev/null 2>&1; then
+            if [[ "${version}" == *"-alpha.0" ]]; then
+              echo "found=false" >> "${GITHUB_OUTPUT}"
+              echo "::notice::No durable release-state ref ${ref}; treating ${RELEASE_TAG} as a prepare-only next-alpha tag."
+              exit 0
+            fi
+            echo "::error::Missing durable release-state ref ${ref} for release tag ${RELEASE_TAG}"
+            exit 1
+          fi
+          echo "found=true" >> "${GITHUB_OUTPUT}"
           git fetch --depth=1 origin "refs/heads/${ref}:refs/remotes/origin/${ref}"
           git show "refs/remotes/origin/${ref}:release-passport/buildchain.release.json" \
             > .buildchain/release-passport/authoritative-release-state-passport.json
@@ -267,7 +278,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload GitHub Release assets
-        if: ${{ startsWith(github.ref, 'refs/tags/') || inputs.upload-release }}
+        if: ${{ (startsWith(github.ref, 'refs/tags/') || inputs.upload-release) && steps.fetch-durable-release-state.outputs.found != 'false' }}
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
