@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:46fa21a0fd496ba1b2afc4209e4e923aba3656e4fe83f757108f24ceef977741"
+      "digest": "sha256:f4300eed89765cee0df38eb92de4d9d3adce4fbf954c735aead3bea74f05d975"
     },
     {
       "id": "install",
@@ -86,6 +86,14 @@
       "plane": "use",
       "exists": true,
       "digest": "sha256:3f4a44ea7f3b70cadc78a343fe53ade74b78fa369c19630cc9b926c1e460f66f"
+    },
+    {
+      "id": "homebrew",
+      "title": "Homebrew distribution indexes",
+      "path": "docs/homebrew.md",
+      "plane": "use",
+      "exists": true,
+      "digest": "sha256:2fc4e8411f35ca86d19d61c7843b9a1fa440f7afea25df13d3aa03342f09f90c"
     },
     {
       "id": "binary-distribution",
@@ -157,7 +165,7 @@
       "path": "docs/cli.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:c7928797300772ed5240ef69529af99298c32dbb74c3be7fbcad5ae0786576ce"
+      "digest": "sha256:cfb0bf32f2b8b44bf352e79c27e34b7980e0f66e5fa10e4f202975fbb4780ad1"
     },
     {
       "id": "lifecycle-protocol",

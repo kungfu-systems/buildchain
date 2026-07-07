@@ -12,6 +12,7 @@ export const BUILDCHAIN_AGENT_MANUALS = Object.freeze([
   { id: "release-passport", title: "Release Passport protocol", path: "docs/release-passport.md", plane: "verify" },
   { id: "release-propagation", title: "Release propagation", path: "docs/release-propagation.md", plane: "use" },
   { id: "readme-badges", title: "README badge blocks", path: "docs/readme-badges.md", plane: "use" },
+  { id: "homebrew", title: "Homebrew distribution indexes", path: "docs/homebrew.md", plane: "use" },
   { id: "binary-distribution", title: "Binary distribution contract", path: "docs/binary-distribution.md", plane: "verify" },
   { id: "consumer-issue-reporting", title: "Consumer issue reporting", path: "docs/consumer-issue-reporting.md", plane: "use" },
   { id: "infra-contract", title: "Infra Contract", path: "docs/infra-contract.md", plane: "use" },
@@ -70,6 +71,7 @@ const EXTRA_KFD1_FILES = Object.freeze([
   "package.json",
   "bin/buildchain.mjs",
   "packages/core/index.js",
+  "packages/core/homebrew.js",
   "packages/core/release-propagation.js",
   "scripts/generate-site-bundle.mjs",
   "scripts/ensure-github-release.mjs",
@@ -219,6 +221,22 @@ export function createBuildchainPublicClaimDefinitions() {
         "docs/readme-badges.md",
         "docs/cli.md",
         "buildchain.toml",
+      ],
+      artifactPaths: [
+        "dist/site/node-api-registry.json",
+        "dist/site/manual-registry.json",
+        "dist/site/buildchain-contract.json",
+      ],
+    },
+    {
+      id: "claim:buildchain-homebrew-distribution-index",
+      claim: "Buildchain Homebrew tap support generates and verifies Formula metadata as a distribution-index projection of upstream release passport evidence.",
+      sourcePaths: [
+        "packages/core/homebrew.js",
+        "bin/buildchain.mjs",
+        "docs/homebrew.md",
+        "docs/cli.md",
+        "packages/core/buildchain-config.js",
       ],
       artifactPaths: [
         "dist/site/node-api-registry.json",

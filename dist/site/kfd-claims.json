@@ -14,7 +14,7 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:217f7764849bf779cbc70aea9da59429a44c68f5f7131b26593bb18a6e7ffb18",
+    "compatibilityDigest": "sha256:407d6d5ee6a96a34d2cc30db9ac64cf4b1819ab6d77bd7a57a07a124f22101ca",
     "majorLine": "v2"
   },
   "publicClaims": [
@@ -62,6 +62,22 @@
         "docs/readme-badges.md",
         "docs/cli.md",
         "buildchain.toml"
+      ],
+      "artifactPaths": [
+        "dist/site/node-api-registry.json",
+        "dist/site/manual-registry.json",
+        "dist/site/buildchain-contract.json"
+      ]
+    },
+    {
+      "id": "claim:buildchain-homebrew-distribution-index",
+      "claim": "Buildchain Homebrew tap support generates and verifies Formula metadata as a distribution-index projection of upstream release passport evidence.",
+      "sourcePaths": [
+        "packages/core/homebrew.js",
+        "bin/buildchain.mjs",
+        "docs/homebrew.md",
+        "docs/cli.md",
+        "packages/core/buildchain-config.js"
       ],
       "artifactPaths": [
         "dist/site/node-api-registry.json",
@@ -235,6 +251,18 @@
           "kind": "documentation",
           "sourcePath": "docs/consumer-issue-reporting.md",
           "evidencePath": "docs/consumer-issue-reporting.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
+        },
+        {
+          "id": "doc:docs/homebrew.md",
+          "name": "Homebrew distribution indexes",
+          "kind": "documentation",
+          "sourcePath": "docs/homebrew.md",
+          "evidencePath": "docs/homebrew.md",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
@@ -778,6 +806,18 @@
           "packageExport": "./diagnostics"
         },
         {
+          "id": "export:./homebrew",
+          "name": "@kungfu-tech/buildchain/homebrew",
+          "kind": "package-export",
+          "sourcePath": "packages/core/homebrew.js",
+          "evidencePath": "packages/core/homebrew.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./homebrew"
+        },
+        {
           "id": "export:./issue-reporting",
           "name": "@kungfu-tech/buildchain/issue-reporting",
           "kind": "package-export",
@@ -1111,6 +1151,6 @@
         "public": true
       }
     ],
-    "publicSurfaceCount": 83
+    "publicSurfaceCount": 85
   }
 }

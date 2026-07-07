@@ -204,6 +204,16 @@ export {
 } from "./readme-badges.js";
 
 export {
+  HOMEBREW_TAP_CHECK_CONTRACT,
+  HOMEBREW_TAP_FACTS_CONTRACT,
+  HOMEBREW_TAP_MANIFEST_CONTRACT,
+  checkHomebrewTap,
+  collectHomebrewTapFacts,
+  renderHomebrewFormula,
+  updateHomebrewTap,
+} from "./homebrew.js";
+
+export {
   RELEASE_PROPAGATION_GRAPH_CONTRACT,
   RELEASE_PROPAGATION_LOCK_CONTRACT,
   RELEASE_PROPAGATION_PLAN_CONTRACT,

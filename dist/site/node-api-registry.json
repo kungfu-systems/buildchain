@@ -8,13 +8,13 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:03a105b02f8862c4f71affcb96b1a1e7b6d9c4e61f11b714a9287bfa8dd7dff8"
+      "digest": "sha256:d3a30e60a7374b1742604d3b97970c7f8f2d7b1fcfe58d9459fb0703197bc0d1"
     },
     {
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:03a105b02f8862c4f71affcb96b1a1e7b6d9c4e61f11b714a9287bfa8dd7dff8"
+      "digest": "sha256:d3a30e60a7374b1742604d3b97970c7f8f2d7b1fcfe58d9459fb0703197bc0d1"
     },
     {
       "specifier": "@kungfu-tech/buildchain/artifact-passport",
@@ -26,13 +26,19 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-contract",
       "export": "./buildchain-contract",
       "target": "./packages/core/buildchain-contract.js",
-      "digest": "sha256:bc986fd726bf275804107b358d28113d3fa54150515d9c7e3f6f75e6f802054c"
+      "digest": "sha256:b3c4164d08acc2d3d56783d695e47feceb3e134b7e87e80294ea05a87e7921d7"
     },
     {
       "specifier": "@kungfu-tech/buildchain/diagnostics",
       "export": "./diagnostics",
       "target": "./packages/core/diagnostics.js",
       "digest": "sha256:d447f864c719632872c9d90f0e30e2b6d45311bc5115d4f3c661d21164d75ebc"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/homebrew",
+      "export": "./homebrew",
+      "target": "./packages/core/homebrew.js",
+      "digest": "sha256:0e978219bd6fca754d80a616d538d5825b116eec78b65857bbe5063b8c84d933"
     },
     {
       "specifier": "@kungfu-tech/buildchain/issue-reporting",
@@ -68,7 +74,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:4d88ba7178753d2d1488f6393fee7c086dfb660f42e6507db718dccd38bf8a34"
+      "digest": "sha256:e4a79237c0363b60fe084393068f6bc7da526bb9c5912b60d747b75364506b32"
     },
     {
       "specifier": "@kungfu-tech/buildchain/release-propagation",
@@ -86,19 +92,24 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-kfd-claims",
       "export": "./buildchain-kfd-claims",
       "target": "./packages/core/buildchain-kfd-claims.js",
-      "digest": "sha256:be59731a8215bd4d6f5e2fed4c1f38c9c84fd980d96610c39a33fda05f4dcdc5"
+      "digest": "sha256:312af73566f569dff2026e9602d40269a06534915dea22d03895a21182ba3f6f"
     }
   ],
   "docs": [
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:c7928797300772ed5240ef69529af99298c32dbb74c3be7fbcad5ae0786576ce"
+      "digest": "sha256:cfb0bf32f2b8b44bf352e79c27e34b7980e0f66e5fa10e4f202975fbb4780ad1"
     },
     {
       "id": "readme-badges",
       "path": "docs/readme-badges.md",
       "digest": "sha256:3f4a44ea7f3b70cadc78a343fe53ade74b78fa369c19630cc9b926c1e460f66f"
+    },
+    {
+      "id": "homebrew",
+      "path": "docs/homebrew.md",
+      "digest": "sha256:2fc4e8411f35ca86d19d61c7843b9a1fa440f7afea25df13d3aa03342f09f90c"
     },
     {
       "id": "site-bundle-contract",

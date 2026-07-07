@@ -293,6 +293,7 @@ function buildSiteBundle() {
       { id: "diagnostics-summary", usage: "buildchain diagnostics summary <diagnostics.json>...", purpose: "Summarize small diagnostics artifacts into JSON and a cross-platform lifecycle timing table." },
       { id: "npm-dry-run", usage: "buildchain npm dry-run --json", purpose: "Verify npm publish shape before a release transaction." },
       { id: "infra-contract", usage: "buildchain infra-contract --mode validate|ci|plan|contract|propagation-plan|propagation-apply|apply|evidence-bundle", purpose: "Validate and publish provider-neutral infrastructure contract evidence with a mutation-free CI evidence chain, provider command plans, configured provider command execution, saved-plan apply gates, dry-run-first propagation, and lifecycle evidence bundles." },
+      { id: "homebrew", usage: "buildchain homebrew update-formula|check", purpose: "Generate and verify Homebrew tap Formula metadata as a distribution-index projection of upstream release passport evidence." },
     ],
   };
 
@@ -317,6 +318,7 @@ function buildSiteBundle() {
       "docs/release-governance.md",
       "docs/release-passport.md",
       "docs/publish-transaction.md",
+      "docs/homebrew.md",
       "docs/site-bundle-contract.md",
       "docs/runtime-train-validation.md",
       "docs/consumer-issue-reporting.md",
@@ -357,6 +359,7 @@ function buildSiteBundle() {
     docs: [
       { id: "cli-and-node-package", path: "docs/cli.md", digest: sha256File("docs/cli.md") },
       { id: "readme-badges", path: "docs/readme-badges.md", digest: sha256File("docs/readme-badges.md") },
+      { id: "homebrew", path: "docs/homebrew.md", digest: sha256File("docs/homebrew.md") },
       { id: "site-bundle-contract", path: "docs/site-bundle-contract.md", digest: sha256File("docs/site-bundle-contract.md") },
     ],
     guidance: "These are the public Node import surfaces shipped by the npm package. Agents should prefer these exports over internal file paths.",
@@ -417,6 +420,14 @@ function buildSiteBundle() {
         "release passport assets",
       ],
       owner: "promote-buildchain-ref",
+    },
+    distributionIndexes: {
+      homebrewTap: {
+        projectType: "distribution-index",
+        manifest: "tap-manifest.json",
+        command: "buildchain homebrew check",
+        sourceOfTruth: "upstream release passport and sibling evidence",
+      },
     },
   };
 
