@@ -31,6 +31,18 @@ import {
   verifyArtifactPassport,
 } from "../packages/core/artifact-passport.js";
 import {
+  checkReadmeBadgeBlock,
+  collectReadmeBadgeFacts,
+  readReadme,
+  updateReadmeBadgeBlock,
+} from "../packages/core/readme-badges.js";
+import {
+  checkHomebrewTap,
+  collectHomebrewTapFacts,
+  renderHomebrewFormula,
+  updateHomebrewTap,
+} from "../packages/core/homebrew.js";
+import {
   BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT,
   formatDiagnosticsSummaryTable,
   startProcessSampler,
@@ -115,6 +127,9 @@ function usage() {
   buildchain web-surface ...
   buildchain infra-contract ...
   buildchain release-propagation <plan|write-lock> ...
+  buildchain badges readme [--cwd <dir>] [--readme <path>] [--check] [--write] [--json]
+  buildchain homebrew update-formula --package <name> --release-passport <file-or-url> [--write] [--json]
+  buildchain homebrew check [--cwd <dir>] [--package <name>] [--release-passport <file-or-url>] [--json]
   buildchain publish-source <lock|manifest|verify-lock|verify-channel-ref|validate-anchored-release> ...
   buildchain build-contract ...
 
@@ -275,6 +290,131 @@ function writeJsonFile(filePath, value) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`);
   return filePath;
+}
+
+async function runReadmeBadgesCli(args = []) {
+  const [subcommand = "", surface = "", ...badgeArgs] = args;
+  if (subcommand !== "readme" || (surface && surface.startsWith("--") === false)) {
+    throw new Error("usage: buildchain badges readme [--cwd <dir>] [--readme <path>] [--check] [--write] [--json]");
+  }
+  const effectiveArgs = surface ? [surface, ...badgeArgs] : badgeArgs;
+  const cwd = path.resolve(readFlag(effectiveArgs, "cwd", process.cwd()));
+  const readmePath = readFlag(effectiveArgs, "readme", "README.md");
+  const facts = await collectReadmeBadgeFacts({ cwd });
+  if (readBooleanFlag(effectiveArgs, "json") && !readBooleanFlag(effectiveArgs, "check") && !readBooleanFlag(effectiveArgs, "write")) {
+    printJson(facts);
+    return;
+  }
+  const readmeText = readReadme({ cwd, readmePath });
+  if (!readmeText) {
+    throw new Error(`README not found: ${path.join(cwd, readmePath)}`);
+  }
+  const check = checkReadmeBadgeBlock({ readmeText, facts });
+  if (readBooleanFlag(effectiveArgs, "write")) {
+    const next = updateReadmeBadgeBlock({ readmeText, facts });
+    fs.writeFileSync(path.join(cwd, readmePath), next);
+    const result = {
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-readme-badge-write",
+      ok: true,
+      changed: next !== readmeText,
+      readmePath,
+      facts,
+    };
+    if (readBooleanFlag(effectiveArgs, "json")) {
+      printJson(result);
+    } else {
+      process.stdout.write(`buildchain badges readme: ${result.changed ? "updated" : "current"}\n`);
+    }
+    return;
+  }
+  if (readBooleanFlag(effectiveArgs, "check")) {
+    if (readBooleanFlag(effectiveArgs, "json")) {
+      printJson(check);
+    } else {
+      process.stdout.write(`buildchain badges readme: ${check.ok ? "ok" : "failed"}\n`);
+      if (!check.ok) {
+        process.stdout.write(`${check.message}\n`);
+      }
+    }
+    if (!check.ok) {
+      process.exitCode = 1;
+    }
+    return;
+  }
+  printJson(facts);
+}
+
+async function runHomebrewCli(args = []) {
+  const [subcommand = "", ...homebrewArgs] = args;
+  const cwd = path.resolve(readFlag(homebrewArgs, "cwd", process.cwd()));
+  const packageName = readFlag(homebrewArgs, "package", "buildchain");
+  const releasePassport = readFlag(homebrewArgs, "release-passport", "");
+  const manifestPath = readFlag(homebrewArgs, "manifest", "tap-manifest.json");
+  const formulaPath = readFlag(homebrewArgs, "formula", "");
+  const json = readBooleanFlag(homebrewArgs, "json");
+  if (subcommand === "update-formula") {
+    if (!releasePassport) {
+      throw new Error("buildchain homebrew update-formula requires --release-passport <file-or-url>");
+    }
+    if (readBooleanFlag(homebrewArgs, "write")) {
+      const result = await updateHomebrewTap({
+        cwd,
+        packageName,
+        releasePassport,
+        manifestPath,
+        formulaPath,
+        write: true,
+      });
+      if (json) {
+        printJson(result);
+      } else {
+        process.stdout.write(`buildchain homebrew update-formula: wrote ${result.written.join(", ")}\n`);
+      }
+      return;
+    }
+    const facts = await collectHomebrewTapFacts({
+      cwd,
+      packageName,
+      releasePassport,
+      manifestPath,
+      formulaPath,
+    });
+    if (json) {
+      printJson({
+        schemaVersion: 1,
+        contract: "kungfu-buildchain-homebrew-formula-render",
+        facts,
+        formula: renderHomebrewFormula(facts),
+        manifest: facts.manifestProjection,
+      });
+    } else {
+      process.stdout.write(renderHomebrewFormula(facts));
+    }
+    return;
+  }
+  if (subcommand === "check") {
+    const report = await checkHomebrewTap({
+      cwd,
+      packageName,
+      releasePassport,
+      manifestPath,
+      formulaPath,
+    });
+    if (json) {
+      printJson(report);
+    } else {
+      process.stdout.write(`buildchain homebrew check: ${report.ok ? "ok" : "failed"}\n`);
+      for (const check of report.checks) {
+        process.stdout.write(`- ${check.status}: ${check.id}: ${check.message}\n`);
+      }
+    }
+    if (!report.ok) {
+      process.exitCode = 1;
+    }
+    return;
+  }
+  throw new Error("usage: buildchain homebrew <update-formula|check> ...");
 }
 
 function appendJsonLine(filePath, value) {
@@ -948,6 +1088,16 @@ async function main(argv = process.argv.slice(2)) {
 
   if (command === "release-propagation") {
     runReleasePropagationCli(args);
+    return;
+  }
+
+  if (command === "badges") {
+    await runReadmeBadgesCli(args);
+    return;
+  }
+
+  if (command === "homebrew") {
+    await runHomebrewCli(args);
     return;
   }
 

@@ -14,7 +14,7 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:85e27de8d34ceac1652d9374697ea5a1a7a08666d2ba7ae377b9afdd14e2ca1f",
+    "compatibilityDigest": "sha256:407d6d5ee6a96a34d2cc30db9ac64cf4b1819ab6d77bd7a57a07a124f22101ca",
     "majorLine": "v2"
   },
   "publicClaims": [
@@ -39,9 +39,11 @@
       "sourcePaths": [
         "scripts/generate-site-bundle.mjs",
         "packages/core/buildchain-kfd-claims.js",
+        "packages/core/readme-badges.js",
         "docs/MAP.md",
         "docs/site-bundle-contract.md",
-        "docs/cli.md"
+        "docs/cli.md",
+        "docs/readme-badges.md"
       ],
       "artifactPaths": [
         "dist/site/manual-registry.json",
@@ -49,6 +51,38 @@
         "dist/site/page-registry.json",
         "dist/site/buildchain-site.json",
         "dist/site/site-manifest.json"
+      ]
+    },
+    {
+      "id": "claim:buildchain-readme-badge-facts",
+      "claim": "Buildchain README status badges are generated from repository-owned facts and verified release-passport evidence, not hand-maintained README prose.",
+      "sourcePaths": [
+        "packages/core/readme-badges.js",
+        "bin/buildchain.mjs",
+        "docs/readme-badges.md",
+        "docs/cli.md",
+        "buildchain.toml"
+      ],
+      "artifactPaths": [
+        "dist/site/node-api-registry.json",
+        "dist/site/manual-registry.json",
+        "dist/site/buildchain-contract.json"
+      ]
+    },
+    {
+      "id": "claim:buildchain-homebrew-distribution-index",
+      "claim": "Buildchain Homebrew tap support generates and verifies Formula metadata as a distribution-index projection of upstream release passport evidence.",
+      "sourcePaths": [
+        "packages/core/homebrew.js",
+        "bin/buildchain.mjs",
+        "docs/homebrew.md",
+        "docs/cli.md",
+        "packages/core/buildchain-config.js"
+      ],
+      "artifactPaths": [
+        "dist/site/node-api-registry.json",
+        "dist/site/manual-registry.json",
+        "dist/site/buildchain-contract.json"
       ]
     },
     {
@@ -224,6 +258,18 @@
           "plane": "use"
         },
         {
+          "id": "doc:docs/homebrew.md",
+          "name": "Homebrew distribution indexes",
+          "kind": "documentation",
+          "sourcePath": "docs/homebrew.md",
+          "evidencePath": "docs/homebrew.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
+        },
+        {
           "id": "doc:docs/infra-contract.md",
           "name": "Infra Contract",
           "kind": "documentation",
@@ -306,6 +352,18 @@
           "participantFacing": true,
           "public": true,
           "plane": "verify"
+        },
+        {
+          "id": "doc:docs/readme-badges.md",
+          "name": "README badge blocks",
+          "kind": "documentation",
+          "sourcePath": "docs/readme-badges.md",
+          "evidencePath": "docs/readme-badges.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
         },
         {
           "id": "doc:docs/release-flow.md",
@@ -748,6 +806,18 @@
           "packageExport": "./diagnostics"
         },
         {
+          "id": "export:./homebrew",
+          "name": "@kungfu-tech/buildchain/homebrew",
+          "kind": "package-export",
+          "sourcePath": "packages/core/homebrew.js",
+          "evidencePath": "packages/core/homebrew.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./homebrew"
+        },
+        {
           "id": "export:./issue-reporting",
           "name": "@kungfu-tech/buildchain/issue-reporting",
           "kind": "package-export",
@@ -758,6 +828,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./issue-reporting"
+        },
+        {
+          "id": "export:./readme-badges",
+          "name": "@kungfu-tech/buildchain/readme-badges",
+          "kind": "package-export",
+          "sourcePath": "packages/core/readme-badges.js",
+          "evidencePath": "packages/core/readme-badges.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./readme-badges"
         },
         {
           "id": "export:./logging",
@@ -1069,6 +1151,6 @@
         "public": true
       }
     ],
-    "publicSurfaceCount": 81
+    "publicSurfaceCount": 85
   }
 }

@@ -14,12 +14,15 @@ const requiredPaths = [
   ".github/ISSUE_TEMPLATE/config.yml",
   ".github/pull_request_template.md",
   "bin/buildchain.mjs",
+  "packages/core/homebrew.js",
   "docs/MAP.md",
   "docs/binary-distribution.md",
   "docs/cli.md",
   "docs/consumer-issue-reporting.md",
+  "docs/homebrew.md",
   "docs/install.md",
   "docs/product-mechanism.md",
+  "docs/readme-badges.md",
   "docs/release-passport.md",
   "docs/release-propagation.md",
   "docs/site-bundle-contract.md",
@@ -105,11 +108,17 @@ if (rootPackage.exports?.["."] !== "./packages/core/index.js") {
 if (rootPackage.exports?.["./diagnostics"] !== "./packages/core/diagnostics.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/diagnostics");
 }
+if (rootPackage.exports?.["./homebrew"] !== "./packages/core/homebrew.js") {
+  throw new Error("root package must export @kungfu-tech/buildchain/homebrew");
+}
 if (rootPackage.exports?.["./buildchain-contract"] !== "./packages/core/buildchain-contract.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/buildchain-contract");
 }
 if (rootPackage.exports?.["./issue-reporting"] !== "./packages/core/issue-reporting.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/issue-reporting");
+}
+if (rootPackage.exports?.["./readme-badges"] !== "./packages/core/readme-badges.js") {
+  throw new Error("root package must export @kungfu-tech/buildchain/readme-badges");
 }
 if (rootPackage.exports?.["./logging"] !== "./packages/core/logging.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/logging");
@@ -198,6 +207,26 @@ if (!coreIndexSource.includes("KFD2_TRUST_PROOF_CONTRACT")) {
 }
 if (!coreIndexSource.includes("createSurfaceTimestampPolicy")) {
   throw new Error("packages/core/index.js must export surface manifest timestamp policy APIs");
+}
+for (const requiredSnippet of [
+  "collectReadmeBadgeFacts",
+  "renderReadmeBadgeBlock",
+  "checkReadmeBadgeBlock",
+  "updateReadmeBadgeBlock",
+]) {
+  if (!coreIndexSource.includes(requiredSnippet)) {
+    throw new Error(`packages/core/index.js must export README badge API: ${requiredSnippet}`);
+  }
+}
+for (const requiredSnippet of [
+  "collectHomebrewTapFacts",
+  "renderHomebrewFormula",
+  "checkHomebrewTap",
+  "updateHomebrewTap",
+]) {
+  if (!coreIndexSource.includes(requiredSnippet)) {
+    throw new Error(`packages/core/index.js must export Homebrew API: ${requiredSnippet}`);
+  }
 }
 if (siteBundle.contract !== "kungfu-buildchain-site-bundle") {
   throw new Error("buildchain-site.json must expose the Buildchain site bundle contract");
@@ -374,11 +403,39 @@ for (const requiredSnippet of [
   "npm publish transactions",
   "GitHub Release",
   "release propagation",
+  "Homebrew tap distribution indexes",
   "manual-registry.json",
   "node-api-registry.json",
+  "README badge",
 ]) {
   if (!docsMap.includes(requiredSnippet)) {
     throw new Error(`documentation map missing capability coverage snippet: ${requiredSnippet}`);
+  }
+}
+const readmeBadgesDoc = fs.readFileSync(path.join(root, "docs/readme-badges.md"), "utf8");
+for (const requiredSnippet of [
+  "buildchain badges readme --check",
+  "collectReadmeBadgeFacts",
+  "kungfu-buildchain-readme-badge-facts",
+  "KFD passed",
+  "release passport",
+  "<!-- buildchain:badges:start -->",
+]) {
+  if (!readmeBadgesDoc.includes(requiredSnippet)) {
+    throw new Error(`README badges doc missing required snippet: ${requiredSnippet}`);
+  }
+}
+const homebrewDoc = fs.readFileSync(path.join(root, "docs/homebrew.md"), "utf8");
+for (const requiredSnippet of [
+  "project.type = \"distribution-index\"",
+  "buildchain homebrew update-formula",
+  "buildchain homebrew check",
+  "collectHomebrewTapFacts",
+  "kungfu-buildchain-homebrew-tap-manifest",
+  "KFD passed",
+]) {
+  if (!homebrewDoc.includes(requiredSnippet)) {
+    throw new Error(`Homebrew doc missing required snippet: ${requiredSnippet}`);
   }
 }
 const reusableBuildSurfaceDoc = fs.readFileSync(path.join(root, "docs/reusable-build-surface.md"), "utf8");
@@ -401,6 +458,18 @@ for (const [docName, docSource] of Object.entries({ "docs/cli.md": cliDoc, "docs
     if (!docSource.includes(requiredSnippet)) {
       throw new Error(`${docName} missing fresh Buildchain package pin guidance: ${requiredSnippet}`);
     }
+  }
+}
+for (const requiredSnippet of [
+  "buildchain badges readme --check",
+  "buildchain badges readme --write",
+  "@kungfu-tech/buildchain/readme-badges",
+  "buildchain homebrew update-formula",
+  "buildchain homebrew check",
+  "@kungfu-tech/buildchain/homebrew",
+]) {
+  if (!cliDoc.includes(requiredSnippet)) {
+    throw new Error(`CLI doc missing README badge command snippet: ${requiredSnippet}`);
   }
 }
 const releaseLineDryRunScript = fs.readFileSync(path.join(root, "scripts/release-line-dry-run.mjs"), "utf8");

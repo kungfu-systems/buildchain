@@ -1,6 +1,6 @@
 {
   "name": "@kungfu-tech/buildchain",
-  "version": "2.8.15",
+  "version": "2.8.16-alpha.2",
   "private": false,
   "description": "Buildchain Release Passport, release governance, CLI toolkit, and site facts.",
   "repository": "https://github.com/kungfu-systems/buildchain",
@@ -16,7 +16,9 @@
     "./artifact-passport": "./packages/core/artifact-passport.js",
     "./buildchain-contract": "./packages/core/buildchain-contract.js",
     "./diagnostics": "./packages/core/diagnostics.js",
+    "./homebrew": "./packages/core/homebrew.js",
     "./issue-reporting": "./packages/core/issue-reporting.js",
+    "./readme-badges": "./packages/core/readme-badges.js",
     "./logging": "./packages/core/logging.js",
     "./kfd-gate": "./packages/core/kfd-gate.js",
     "./release-candidate": "./packages/core/release-candidate.js",

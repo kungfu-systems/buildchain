@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:b5cfef531ba8ca655d8d66ffe0e530a0ca2c971daad5880943d2b824216ed043"
+      "digest": "sha256:f4300eed89765cee0df38eb92de4d9d3adce4fbf954c735aead3bea74f05d975"
     },
     {
       "id": "install",
@@ -31,6 +31,20 @@
       "path": "docs/release-propagation.md",
       "plane": "use",
       "digest": "sha256:190e3537075f37cf8a7e52bf8254606e1d9450d87c5a81dc11df8b56a7d03065"
+    },
+    {
+      "id": "readme-badges",
+      "title": "README badge blocks",
+      "path": "docs/readme-badges.md",
+      "plane": "use",
+      "digest": "sha256:3f4a44ea7f3b70cadc78a343fe53ade74b78fa369c19630cc9b926c1e460f66f"
+    },
+    {
+      "id": "homebrew",
+      "title": "Homebrew distribution indexes",
+      "path": "docs/homebrew.md",
+      "plane": "use",
+      "digest": "sha256:2fc4e8411f35ca86d19d61c7843b9a1fa440f7afea25df13d3aa03342f09f90c"
     },
     {
       "id": "binary-distribution",
@@ -93,7 +107,7 @@
       "title": "CLI and npm package",
       "path": "docs/cli.md",
       "plane": "use",
-      "digest": "sha256:a8a348181d6419b746e863d1cacc9d6a91aa6ac5cc2b60819843d44487957c49"
+      "digest": "sha256:cfb0bf32f2b8b44bf352e79c27e34b7980e0f66e5fa10e4f202975fbb4780ad1"
     },
     {
       "id": "lifecycle-protocol",
@@ -149,7 +163,7 @@
       "title": "Web surface deployments",
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
-      "digest": "sha256:f42cc7a81dbeb1b31bec21de61e9807af317bda4055f693ab807b15d9ec77367"
+      "digest": "sha256:4c7334fe2284fec3c1249124b0ff85f1242eb7a76d4b2c537c8b2cb6e0e598c1"
     }
   ],
   "requiredAgentManuals": [
@@ -161,6 +175,7 @@
     "docs/release-governance.md",
     "docs/release-passport.md",
     "docs/publish-transaction.md",
+    "docs/homebrew.md",
     "docs/site-bundle-contract.md",
     "docs/runtime-train-validation.md",
     "docs/consumer-issue-reporting.md",
