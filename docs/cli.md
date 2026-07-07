@@ -64,6 +64,7 @@ Current public import families include:
 ```js
 import * as buildchain from "@kungfu-tech/buildchain";
 import { createBuildchainLogger } from "@kungfu-tech/buildchain/logging";
+import { checkHomebrewTap } from "@kungfu-tech/buildchain/homebrew";
 import { verifyKfd1ReleaseGate } from "@kungfu-tech/buildchain/kfd-gate";
 import { collectReadmeBadgeFacts } from "@kungfu-tech/buildchain/readme-badges";
 import { verifyReleasePassport } from "@kungfu-tech/buildchain/release-passport";
@@ -91,6 +92,8 @@ Supported presets:
   validation, observation, contract publication, and downstream propagation
   planning without default mutation. Provider adapters expose built-in command
   plans by default, and only configured `[infra.commands]` hooks can execute.
+- `--type distribution-index` for Homebrew taps and other index repositories
+  whose files are projections of upstream release passport evidence.
 - `--type anchored-package` for packages whose version is anchored to an
   explicit upstream release manifest.
 
@@ -245,10 +248,10 @@ version against configured version files and the anchor manifest. The JSON
 result is shaped for future `buildchain.libkungfu.dev` fact ingestion.
 
 `buildchain release`, `buildchain web-surface`, `buildchain infra-contract`,
-`buildchain publish-source`, `buildchain badges`, and `buildchain build-contract`
-route to the same implementation used by Buildchain's package APIs or GitHub
-Actions workflows. This keeps local inspection and CI behavior on the same
-implementation path.
+`buildchain publish-source`, `buildchain badges`, `buildchain homebrew`, and
+`buildchain build-contract` route to the same implementation used by
+Buildchain's package APIs or GitHub Actions workflows. This keeps local
+inspection and CI behavior on the same implementation path.
 
 Generate, check, or update the managed README badge block:
 
@@ -265,6 +268,22 @@ from the repository's own verified release passport; unreleased repositories
 downgrade to explicit local declarations such as `declared`, `aligned`, or
 `planned`. See [`readme-badges.md`](readme-badges.md) for the marker contract
 and `[badges]` configuration.
+
+Generate or check Homebrew tap projections from upstream release passports:
+
+```bash
+buildchain homebrew update-formula \
+  --package buildchain \
+  --release-passport https://github.com/kungfu-systems/buildchain/releases/download/v2.8.15/buildchain.release.json \
+  --write
+
+buildchain homebrew check --json
+```
+
+`update-formula` writes `Formula/buildchain.rb` and `tap-manifest.json` from
+upstream release passport evidence. `check` fails closed when the Formula,
+manifest, artifact digests, or KFD status drift from the upstream passport. See
+[`homebrew.md`](homebrew.md) for the distribution-index project contract.
 
 `buildchain collect github-release` creates a release passport bundle from
 GitHub Release assets or a local asset directory:

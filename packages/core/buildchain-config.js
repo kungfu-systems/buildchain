@@ -9,7 +9,7 @@ const RESERVED_LIFECYCLE_KEYS = new Set(["env", "shell"]);
 const SUPPORTED_VERSION_FILE_TYPES = new Set(["json", "toml", "regex"]);
 const SUPPORTED_VERSION_STRATEGIES = new Set(["semver", "anchored"]);
 const SUPPORTED_VERSION_NEXT = new Set(["auto", "manual"]);
-const SUPPORTED_PROJECT_TYPES = new Set(["package", "web-surface", "infra-contract"]);
+const SUPPORTED_PROJECT_TYPES = new Set(["package", "web-surface", "infra-contract", "distribution-index"]);
 const SUPPORTED_PUBLISH_MODES = new Set(["publish-final-version", "promote-existing-version"]);
 const SUPPORTED_PUBLISH_AUTH = new Set(["trusted-publishing", "npm-token"]);
 const SUPPORTED_PACKAGE_SET_ORDER = new Set(["as-provided", "platforms-first-main-last"]);
@@ -237,7 +237,7 @@ function normalizeProjectSection(project) {
   assertPlainObject(project, "project");
   const type = assertString(project.type, "project.type");
   if (!SUPPORTED_PROJECT_TYPES.has(type)) {
-    throw new Error("project.type must be one of package, web-surface, or infra-contract");
+    throw new Error("project.type must be one of package, web-surface, infra-contract, or distribution-index");
   }
   const normalized = { type };
   for (const key of ["name", "site"]) {
