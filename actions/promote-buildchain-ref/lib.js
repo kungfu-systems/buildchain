@@ -2150,24 +2150,25 @@ async function assertChannelPromotionPr({
     const baseRef = pullRequest.base?.ref;
     const headRef = pullRequest.head?.ref;
     const headRepo = pullRequest.head?.repo?.full_name;
+    const matchingVersionStateTarget = parseVersionStateBranchName(headRef);
     if (getPromotionRule(targetRef).channel === "major") {
       return (
         pullRequest.merged_at &&
         baseRef === targetRef &&
-        parseReleaseLineRef(headRef) &&
+        (parseReleaseLineRef(headRef) || matchingVersionStateTarget === targetRef) &&
         headRepo === `${owner}/${repo}`
       );
     }
     return (
       pullRequest.merged_at &&
       baseRef === targetRef &&
-      headRef === expectedHeadRef &&
+      (headRef === expectedHeadRef || matchingVersionStateTarget === targetRef) &&
       headRepo === `${owner}/${repo}`
     );
   });
   if (!matchingPullRequest) {
     throw new Error(
-      `Promotion source ${sha} must come from a merged same-repository PR ${expectedHeadRef} -> ${targetRef}`,
+      `Promotion source ${sha} must come from a merged same-repository PR ${expectedHeadRef} -> ${targetRef} or buildchain/version-state/* -> ${targetRef}`,
     );
   }
   return matchingPullRequest;
