@@ -2869,7 +2869,7 @@ function protectedBranchDirectUpdateError({ branch, branchSha, error }) {
   const message = error?.response?.data?.message || error?.message || String(error || "");
   return new Error(
     `Buildchain generated version-state update for ${branch} -> ${branchSha} was rejected by branch protection: ${message}. ` +
-      "Promotion must complete without a post-publish human PR; configure BUILDCHAIN_PROMOTION_TOKEN as a direct-write release authority and allow Buildchain to create the generated version-state required check before updating the protected ref.",
+      "Promotion could not create a generated version-state PR; configure BUILDCHAIN_PROMOTION_TOKEN as a direct-write release authority or allow Buildchain to create same-repository version-state PRs for protected generated bookkeeping.",
   );
 }
 
@@ -3176,6 +3176,80 @@ async function promoteBuildchainRefs({
       updates.push({ ref: branch, action: "existing", sha: branchSha });
       return { updated: true, existing: true };
     }
+    const openVersionStatePullRequest = async ({ error }) => {
+      const message = error?.response?.data?.message || error?.message || String(error || "");
+      if (
+        !protectedUpdate?.allowPendingPullRequest ||
+        !protectedUpdate?.title ||
+        typeof octokit.rest.pulls?.create !== "function"
+      ) {
+        throw protectedBranchDirectUpdateError({ branch, branchSha, error });
+      }
+      const versionStateBranch = versionStateBranchName(branch, branchSha);
+      const versionStateRef = `heads/${versionStateBranch}`;
+      const existingVersionStateSha = await readRefSha(versionStateRef);
+      if (existingVersionStateSha && existingVersionStateSha !== branchSha) {
+        throw new Error(
+          `Buildchain generated version-state branch ${versionStateBranch} points at ${existingVersionStateSha}, not ${branchSha}`,
+        );
+      }
+      if (!existingVersionStateSha) {
+        await branchWriteOctokit.rest.git.createRef({
+          owner,
+          repo,
+          ref: `refs/${versionStateRef}`,
+          sha: branchSha,
+        });
+        updates.push({
+          ref: versionStateBranch,
+          action: "created-version-state-pr-head",
+          sha: branchSha,
+        });
+      }
+      if (typeof octokit.rest.pulls?.list === "function") {
+        const { data: existingPullRequests } = await octokit.rest.pulls.list({
+          owner,
+          repo,
+          state: "open",
+          base: branch,
+          head: `${owner}:${versionStateBranch}`,
+        });
+        const existingPullRequest = (existingPullRequests || [])[0];
+        if (existingPullRequest) {
+          updates.push({
+            ref: branch,
+            action: "pending-version-state-pr",
+            sha: branchSha,
+            pullRequest: existingPullRequest.html_url || existingPullRequest.url,
+          });
+          return {
+            updated: false,
+            pending: true,
+            currentSha,
+            pullRequest: existingPullRequest,
+          };
+        }
+      }
+      const { data: pullRequest } = await octokit.rest.pulls.create({
+        owner,
+        repo,
+        title: protectedUpdate.title,
+        body:
+          `${protectedUpdate.body || protectedUpdate.title}\n\n` +
+          `Buildchain generated this PR because protected branch ${branch} rejected direct generated bookkeeping.\n\n` +
+          `Rejected update: ${currentSha || "new branch"} -> ${branchSha}\n\n` +
+          `GitHub response: ${message}`,
+        head: versionStateBranch,
+        base: branch,
+      });
+      updates.push({
+        ref: branch,
+        action: "pending-version-state-pr",
+        sha: branchSha,
+        pullRequest: pullRequest.html_url || pullRequest.url,
+      });
+      return { updated: false, pending: true, currentSha, pullRequest };
+    };
     if (protectedUpdate && currentSha) {
       const createdCheck = await createGeneratedVersionStateCheck({
         octokit: statusCheckOctokit,
@@ -3220,13 +3294,6 @@ async function promoteBuildchainRefs({
       }
       return { updated: true };
     } catch (error) {
-      if (protectedUpdate && protectedBranchUpdateRejected(error)) {
-        throw protectedBranchDirectUpdateError({
-          branch,
-          branchSha,
-          error,
-        });
-      }
       if (protectedUpdate?.allowNonFastForwardSkip && nonFastForwardUpdateRejected(error)) {
         updates.push({
           ref: branch,
@@ -3236,11 +3303,11 @@ async function promoteBuildchainRefs({
         });
         return { updated: false, skipped: true, currentSha };
       }
-      if (protectedUpdate && nonFastForwardUpdateRejected(error)) {
-        throw new Error(
-          `Buildchain generated version-state update for ${branch} -> ${branchSha} is not a fast-forward update. ` +
-            "Promotion cannot open a post-publish human PR; repair channel lineage and rerun promotion so Buildchain can complete direct generated bookkeeping.",
-        );
+      if (
+        protectedUpdate &&
+        (protectedBranchUpdateRejected(error) || nonFastForwardUpdateRejected(error))
+      ) {
+        return openVersionStatePullRequest({ error });
       }
       if (!notFound(error)) {
         throw error;
@@ -4627,6 +4694,7 @@ async function promoteBuildchainRefs({
     const nextAlphaUpdate = await updateBranch(nextAlphaRef, nextAlphaSha, "updated", {
       title: `Prepare ${selectedNextAlpha.tag}`,
       body: `Create the generated version-state commit for ${selectedNextAlpha.tag}.`,
+      allowPendingPullRequest: true,
     });
     if (nextAlphaUpdate.pending) {
       return withPublishTransaction({

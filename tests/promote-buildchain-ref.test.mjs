@@ -1330,7 +1330,7 @@ test("release promotion updates default branch before direct next-alpha sync", a
   );
 });
 
-test("release finalization fails fast on non-fast-forward next-alpha updates", async () => {
+test("release finalization opens a pending PR for non-fast-forward next-alpha updates", async () => {
   const cwd = makeTempWorkspace({
     "package.json": {
       name: "@kungfu-tech/buildchain",
@@ -1343,7 +1343,7 @@ test("release finalization fails fast on non-fast-forward next-alpha updates", a
     ["heads/alpha/v1/v1.0", OTHER_SHA],
   ]);
   const commits = [];
-  let createdPullRequest = false;
+  let createdPullRequest;
   const octokit = {
     rest: {
       git: {
@@ -1388,9 +1388,14 @@ test("release finalization fails fast on non-fast-forward next-alpha updates", a
       },
       pulls: {
         list: async () => ({ data: [] }),
-        create: async () => {
-          createdPullRequest = true;
-          throw new Error("test should not create a version-state PR");
+        create: async (input) => {
+          createdPullRequest = input;
+          return {
+            data: {
+              html_url: "https://github.com/kungfu-systems/buildchain/pull/123",
+              url: "https://api.github.com/repos/kungfu-systems/buildchain/pulls/123",
+            },
+          };
         },
       },
       repos: {
@@ -1399,23 +1404,33 @@ test("release finalization fails fast on non-fast-forward next-alpha updates", a
     },
   };
 
-  await assert.rejects(
-    () => promoteBuildchainRefs({
-      octokit,
-      owner: "kungfu-systems",
-      repo: "buildchain",
-      sha: SHA,
-      targetRef: "release/v1/v1.0",
-      cwd,
-    }),
-    /not a fast-forward update.*cannot open a post-publish human PR/,
-  );
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "release/v1/v1.0",
+    cwd,
+  });
 
   const releaseSha = commits[0].sha;
   const nextAlphaSha = commits[1].sha;
   assert.equal(refs.get("heads/release/v1/v1.0"), releaseSha);
   assert.notEqual(refs.get("heads/alpha/v1/v1.0"), nextAlphaSha);
-  assert.equal(createdPullRequest, false);
+  assert.equal(
+    refs.get(`heads/buildchain/version-state/alpha-v1-v1.0/${nextAlphaSha.slice(0, 12)}`),
+    nextAlphaSha,
+  );
+  assert.equal(createdPullRequest.base, "alpha/v1/v1.0");
+  assert.equal(
+    createdPullRequest.head,
+    `buildchain/version-state/alpha-v1-v1.0/${nextAlphaSha.slice(0, 12)}`,
+  );
+  assert.equal(
+    result.pendingPullRequest,
+    "https://github.com/kungfu-systems/buildchain/pull/123",
+  );
+  assert.equal(result.nextAlphaSha, nextAlphaSha);
 });
 
 test("publish transaction gates alpha final refs on lifecycle.publish evidence", async () => {
@@ -4930,7 +4945,7 @@ test("strict alpha promotion fails fast when direct version-state sync is not au
       requireGovernance: true,
       requireVersionState: true,
     }),
-    /generated version-state update.*rejected by branch protection.*without a post-publish human PR/,
+    /generated version-state update.*rejected by branch protection.*version-state PRs/,
   );
   assert.equal(createdPullRequest, false);
 });
