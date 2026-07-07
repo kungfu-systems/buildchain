@@ -85,7 +85,7 @@
       "path": "docs/readme-badges.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:3f4a44ea7f3b70cadc78a343fe53ade74b78fa369c19630cc9b926c1e460f66f"
+      "digest": "sha256:305d09bcedd53c1ad538b9fdef431f4dbb3ae15baeb3a2a797c220462368167f"
     },
     {
       "id": "homebrew",
