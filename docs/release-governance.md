@@ -442,7 +442,8 @@ publication models.
 
 Semver GitHub Release publication is owned by `promote-buildchain-ref`, not by
 consumer shell glue. Consumers normally use the `release-candidate-promote.yml`
-wrapper and set `github-release: true`; the wrapper passes that declaration to
+wrapper, where GitHub Release publication is enabled by default and can be
+disabled with `github-release: false`; the wrapper passes that declaration to
 the action. After the publish transaction reaches `complete`, Buildchain creates
 or updates the exact-tag GitHub Release and uploads the generated
 `buildchain.release.json`, release-passport assets, and publish evidence. Semver
