@@ -48,7 +48,9 @@ jobs:
         (github.event_name == 'workflow_dispatch' && inputs['dry-run'] == 'true') ||
         (
           github.event.workflow_run.conclusion == 'success' &&
-          github.event.workflow_run.event == 'push'
+          github.event.workflow_run.event == 'push' &&
+          !startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v') &&
+          !startsWith(github.event.workflow_run.display_title, 'chore(release): release v')
         )
       }}
     uses: ./.github/workflows/release-candidate-promote.yml
