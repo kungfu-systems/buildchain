@@ -100,7 +100,7 @@
       "title": "Lifecycle protocol",
       "path": "docs/lifecycle-protocol.md",
       "plane": "use",
-      "digest": "sha256:02e1be97935c0d9520ea22e8ef0dc61d9b860c347f07127074600cdca02713ce"
+      "digest": "sha256:4d1ab96137beea2497b838018dcce793081c09dbcbbfd8ed2123cc58749f95cb"
     },
     {
       "id": "reusable-build-surface",
@@ -114,14 +114,14 @@
       "title": "Publish transaction",
       "path": "docs/publish-transaction.md",
       "plane": "verify",
-      "digest": "sha256:dd45cf98f0847e3968f150a09bed84aa1f59cb2687ac988e9519f08dc9c91877"
+      "digest": "sha256:d4758e222935f595f7d8a73fe2c33383898c0f760c5e5051c4f772db06491e7c"
     },
     {
       "id": "release-governance",
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:53b60bc28d93a230f3e641fe7c991b5a835cb1987b84a3e9b30da57b3be3b89b"
+      "digest": "sha256:53c969c38ede9c68e279ca191f2d5661e1d943225d7faa798179569670434ef9"
     },
     {
       "id": "release-flow",
