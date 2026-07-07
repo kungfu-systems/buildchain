@@ -5,6 +5,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { loadBuildchainConfig, validateBuildchainConfig } from "../packages/core/buildchain-config.js";
+import { createSurfaceTimestampPolicy } from "../packages/core/surface-manifest.js";
 
 const DEFAULT_RETENTION = Object.freeze({
   preview: {
@@ -609,9 +610,27 @@ export function createWebSurfaceDeploymentManifest({
     deployConfig,
   });
   const primaryBinding = surfaceBindings[0];
+  const timestampPolicy = createSurfaceTimestampPolicy({
+    generatedAt: deployedAt,
+    publishedAt: deployedAt,
+    sourceRevision: sourceSha,
+    timestampPolicy: "ci-injected",
+    deterministicInputs: [
+      "web-surface artifact content",
+      "buildchain.toml web-surface channels/deploy/surfaces",
+      "sourceSha",
+      "artifactHash",
+      "deployment channel",
+      "deployment alias",
+    ],
+    timestampFields: ["generatedAt", "publishedAt", "deployedAt"],
+    timestampFieldsParticipateInArtifactDigest: false,
+    artifactDigestScope: "web-surface artifactHash excludes deployment manifest timestamps",
+  });
   return {
     schemaVersion: 1,
     contract: "kungfu-buildchain-web-surface-deployment",
+    ...timestampPolicy,
     site: config.project.site || config.project.name || "",
     channel,
     alias,

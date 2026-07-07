@@ -25,7 +25,9 @@ If any one of these facts is updated by hand, the system can split:
 - an alpha can be promoted to production even though the release tree is not the
   same tree that was tested;
 - a protected branch merge can succeed while the follow-up version commit is
-  missing.
+  missing, or a flow-internal generated `dev`/`alpha`/`release` ref update can
+  fail after publish because the automation identity was not declared in the
+  branch-protection review bypass allowance.
 
 The older ABV workflow addressed this by letting GitHub PRs drive release
 state. Buildchain keeps that choice because it makes release intent reviewable,
@@ -63,8 +65,10 @@ Buildchain implements the same governance loop with:
   `release-candidate-promote.yml` wrapper and does not hand-wire resolver,
   artifact download, publish-gate, or promote action steps;
 - Buildchain self promotion enables `release-passport-buildchain-self-kfd`, so
-  the release passport consumes generated KFD-1 witnesses, KFD-2 public claim
-  JSON, and KFD-3 collaboration-interface witnesses from
+  the promote action generates KFD-1 witnesses, KFD-2 public claim JSON, and
+  KFD-3 collaboration-interface witnesses from the final version-state workspace
+  before release passport finalization. The witness hashes therefore bind to the
+  exact published package and site facts from
   `packages/core/buildchain-kfd-claims.js` instead of relying on prose release
   notes;
 - `actions/promote-buildchain-ref` for branch, tag, version-state, and
@@ -146,17 +150,20 @@ Buildchain then:
 This keeps the test channel self-describing. If a consumer checks out
 `v2.0-alpha`, the manifests and exact alpha tag agree.
 
-If `dev/vX/vX.Y` has already advanced while the generated alpha version-state PR
-was under review, Buildchain records `skipped-non-fast-forward` for the dev sync
-and still completes the exact and floating alpha tags for the reviewed alpha
-commit. Later dev changes must go through their own dev-to-alpha promotion
-instead of rewinding dev.
+If `dev/vX/vX.Y` has already advanced before generated alpha version-state
+bookkeeping can sync back, Buildchain records `skipped-non-fast-forward` for the
+dev sync and still completes the exact and floating alpha tags for the reviewed
+alpha commit. Later dev changes must go through their own dev-to-alpha
+promotion instead of rewinding dev. The normal path is direct: after alpha
+merges, Buildchain applies the generated version-state commit to alpha and then
+fast-forwards dev to the same commit without a human version-state PR.
 
-If alpha finalization is resumed after the version-state PR is merged,
-Buildchain accepts the current alpha head as a merge commit that contains the
-recorded release material. An already-created exact alpha tag may point at the
-transaction release/material SHA or at the finalized alpha head; missing
-floating alpha tags are retried before the transaction becomes `complete`.
+If alpha finalization is resumed after generated version-state bookkeeping was
+partially applied, Buildchain accepts the current alpha head as the generated
+commit, or as a historical merge commit that contains the recorded release
+material. An already-created exact alpha tag may point at the transaction
+release/material SHA or at the finalized alpha head; missing floating alpha
+tags are retried before the transaction becomes `complete`.
 
 ## Release Semantics
 
@@ -186,11 +193,12 @@ The production channel and the test channel therefore intentionally diverge
 after release: production stays on the release commit, while alpha/dev continue
 at the next prerelease commit.
 
-If release finalization is resumed after the version-state PR is merged,
-Buildchain applies the same recovery rule: the current release head may be a
-merge commit that contains the recorded release material, existing exact tags
-and alpha/dev refs are accepted when they match the transaction, and missing
-floating `vX.Y` or `vX` tags are retried idempotently before completion.
+If release finalization is resumed after generated version-state bookkeeping was
+partially applied, Buildchain applies the same recovery rule: the current
+release head may be the generated commit, or a historical merge commit that
+contains the recorded release material, existing exact tags and alpha/dev refs
+are accepted when they match the transaction, and missing floating `vX.Y` or
+`vX` tags are retried idempotently before completion.
 
 ## Major Gate Semantics
 
@@ -393,12 +401,32 @@ The verify stage runs after generated version-state changes are applied locally
 and before any release refs move. If `verification-command` is passed directly
 to the action, that explicit command overrides `lifecycle.verify`.
 
-Protected release-line branches keep their normal review gate. When generated
-version state would move a protected alpha or release branch, Buildchain creates
-a version-state PR instead of bypassing branch protection. After that PR is
-reviewed, checked, and merged, the next promotion run verifies that only
-declared version-state files changed from the legally merged source parent, then
-moves the exact and floating tags.
+Protected release-line branches keep their normal human review gate. Managed
+`dev/vN/vN.M`, `alpha/vN/vN.M`, and `release/vN/vN.M` branches are configured
+with one required approving review, strict GitHub Actions checks, administrator
+enforcement, conversation resolution, no force pushes, and no deletions. The
+reusable `release-candidate-promote.yml` wrapper defaults
+`branch-protection-bypass-apps` to `github-actions`, which lets the workflow's
+automation identity apply generated version-state or post-publish channel
+bookkeeping after the reviewed channel PR has merged. Direct
+`promote-buildchain-ref` callers must opt into the same controlled bypass with
+`branch-protection-bypass-apps`, `branch-protection-bypass-users`, or
+`branch-protection-bypass-teams`; the action also adds the current promotion
+token's authenticated user or app to the managed bypass allowlist. Before
+patching a protected generated bookkeeping ref, the action creates the
+configured required check on the exact generated version-state commit, so strict
+status checks are satisfied by machine-verifiable Buildchain evidence rather
+than a human PR. The protected ref PATCH itself uses the generated ref update
+token; the reusable wrapper defaults it to
+`secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token`. If direct generated
+bookkeeping is still rejected, Buildchain fails with a token/protection
+diagnostic instead of creating a post-publish PR.
+Buildchain's own promotion workflow reads `BUILDCHAIN_PROMOTION_BYPASS_APPS`,
+`BUILDCHAIN_PROMOTION_BYPASS_USERS`, and
+`BUILDCHAIN_PROMOTION_BYPASS_TEAMS` repository variables so the declared bypass
+identity can match the actual `BUILDCHAIN_PROMOTION_TOKEN` actor, but consumers
+do not need to duplicate that actor manually when the token identity is
+discoverable.
 
 ## What This Guarantees
 
@@ -414,6 +442,9 @@ When the loop succeeds, maintainers and consumers can rely on these facts:
 - version manifests match the tag visible from the same commit;
 - production releases are derived from the alpha tree that was tested;
 - manual non-dry-run promotion cannot bypass PR review and verification;
+- flow-internal automation bypasses apply only to declared GitHub Apps, users,
+  or teams on Buildchain-managed channel branch protection, while one-review
+  protection remains enforced for humans;
 - admin users cannot make a channel promotion valid by temporarily bypassing
   branch protection.
 

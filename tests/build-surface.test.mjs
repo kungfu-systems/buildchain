@@ -379,17 +379,16 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-passport-impact-json:/);
   assert.match(workflow, /release-passport-impact-json: \$\{\{ inputs\.release-passport-impact-json \}\}/);
   assert.match(workflow, /release-passport-kfd-1-witness-jsons:/);
-  assert.match(workflow, /release-passport-kfd-1-witness-jsons: \$\{\{ inputs\.release-passport-kfd-1-witness-jsons \|\| steps\.buildchain-self-kfd\.outputs\.kfd-1-witness-jsons \}\}/);
+  assert.match(workflow, /release-passport-kfd-1-witness-jsons: \$\{\{ inputs\.release-passport-kfd-1-witness-jsons \}\}/);
   assert.match(workflow, /release-passport-kfd-2-claim-jsons:/);
-  assert.match(workflow, /release-passport-kfd-2-claim-jsons: \$\{\{ inputs\.release-passport-kfd-2-claim-jsons \|\| steps\.buildchain-self-kfd\.outputs\.kfd-2-claim-jsons \}\}/);
+  assert.match(workflow, /release-passport-kfd-2-claim-jsons: \$\{\{ inputs\.release-passport-kfd-2-claim-jsons \}\}/);
   assert.match(workflow, /release-passport-kfd-3-prebuild-witness-jsons:/);
-  assert.match(workflow, /release-passport-kfd-3-prebuild-witness-jsons: \$\{\{ inputs\.release-passport-kfd-3-prebuild-witness-jsons \|\| steps\.buildchain-self-kfd\.outputs\.kfd-3-prebuild-witness-jsons \}\}/);
+  assert.match(workflow, /release-passport-kfd-3-prebuild-witness-jsons: \$\{\{ inputs\.release-passport-kfd-3-prebuild-witness-jsons \}\}/);
   assert.match(workflow, /release-passport-kfd-3-artifact-witness-jsons:/);
-  assert.match(workflow, /release-passport-kfd-3-artifact-witness-jsons: \$\{\{ inputs\.release-passport-kfd-3-artifact-witness-jsons \|\| steps\.buildchain-self-kfd\.outputs\.kfd-3-artifact-witness-jsons \}\}/);
+  assert.match(workflow, /release-passport-kfd-3-artifact-witness-jsons: \$\{\{ inputs\.release-passport-kfd-3-artifact-witness-jsons \}\}/);
   assert.match(workflow, /release-passport-kfd-3-artifact-verify-command:/);
   assert.match(workflow, /release-passport-buildchain-self-kfd:/);
-  assert.match(workflow, /Generate Buildchain self KFD release claims/);
-  assert.match(workflow, /generate-buildchain-kfd-witnesses\.mjs/);
+  assert.match(workflow, /release-passport-buildchain-self-kfd: \$\{\{ inputs\.release-passport-buildchain-self-kfd \}\}/);
   assert.match(workflow, /core\.setOutput\("locked", "true"\)/);
   assert.match(workflow, /require-publish-source-lock: "true"/);
   assert.match(workflow, /publish-source-ref: \$\{\{ steps\.publish-gate\.outputs\.ref \}\}/);
@@ -900,6 +899,46 @@ test("promote action exposes generic publish source-lock gate", () => {
   assert.match(implementation, /does not match promotion sha/);
 });
 
+test("promote wrapper exposes controlled branch-protection review bypass", () => {
+  const action = fs.readFileSync(
+    path.join(root, "actions/promote-buildchain-ref/action.yml"),
+    "utf8",
+  );
+  const implementation = fs.readFileSync(
+    path.join(root, "actions/promote-buildchain-ref/index.js"),
+    "utf8",
+  );
+  const wrapper = fs.readFileSync(
+    path.join(root, ".github/workflows/release-candidate-promote.yml"),
+    "utf8",
+  );
+
+  assert.match(action, /branch-protection-bypass-apps:/);
+  assert.match(action, /branch-protection-bypass-users:/);
+  assert.match(action, /branch-protection-bypass-teams:/);
+  assert.match(action, /generated-ref-update-token:/);
+  assert.match(implementation, /branchProtectionBypassApps/);
+  assert.match(implementation, /generatedRefUpdateToken/);
+  assert.match(implementation, /refUpdateOctokit/);
+  assert.match(wrapper, /branch-protection-bypass-apps:/);
+  assert.match(wrapper, /default: "github-actions"/);
+  assert.match(wrapper, /branch-protection-bypass-users:/);
+  assert.match(wrapper, /branch-protection-bypass-teams:/);
+  assert.match(wrapper, /branch-protection-bypass-apps: \$\{\{ inputs\.branch-protection-bypass-apps \}\}/);
+  assert.match(wrapper, /checks: write/);
+  assert.match(wrapper, /generated-status-check-token: \$\{\{ github\.token \}\}/);
+  assert.match(wrapper, /generated-ref-update-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token \}\}/);
+
+  const selfPromotion = fs.readFileSync(
+    path.join(root, ".github/workflows/buildchain-ref-promotion.yml"),
+    "utf8",
+  );
+  assert.match(selfPromotion, /checks: write/);
+  assert.match(selfPromotion, /BUILDCHAIN_PROMOTION_BYPASS_APPS/);
+  assert.match(selfPromotion, /BUILDCHAIN_PROMOTION_BYPASS_USERS/);
+  assert.match(selfPromotion, /BUILDCHAIN_PROMOTION_BYPASS_TEAMS/);
+});
+
 test("reusable build exposes release-candidate passport outputs", () => {
   const workflow = fs.readFileSync(
     path.join(root, ".github/workflows/.build.yml"),
@@ -999,12 +1038,14 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(action, /release-passport-kfd-3-prebuild-witness-jsons:/);
   assert.match(action, /release-passport-kfd-3-artifact-witness-jsons:/);
   assert.match(action, /release-passport-kfd-3-artifact-verify-command:/);
+  assert.match(action, /release-passport-buildchain-self-kfd:/);
   assert.match(implementation, /promoteOnlyReleaseCandidate/);
   assert.match(implementation, /releasePassportKfd1WitnessJsons/);
   assert.match(implementation, /releasePassportKfd2ClaimJsons/);
   assert.match(implementation, /releasePassportKfd3PrebuildWitnessJsons/);
   assert.match(implementation, /releasePassportKfd3ArtifactWitnessJsons/);
   assert.match(implementation, /releasePassportKfd3ArtifactVerifyCommand/);
+  assert.match(implementation, /releasePassportBuildchainSelfKfd/);
   assert.match(docs, /promote-only-release-candidate: "true"/);
   assert.match(docs, /release-passport-kfd-1-witness-jsons/);
   assert.match(docs, /release-passport-kfd-2-claim-jsons/);
@@ -1020,6 +1061,8 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(workflow, /actions: read/);
   assert.match(workflow, /uses: \.\/\.github\/workflows\/release-candidate-promote\.yml/);
   assert.match(workflow, /github\.event\.workflow_run\.event == 'push'/);
+  assert.match(workflow, /!startsWith\(github\.event\.workflow_run\.display_title, 'chore\(release\): prepare v'\)/);
+  assert.match(workflow, /!startsWith\(github\.event\.workflow_run\.display_title, 'chore\(release\): release v'\)/);
   assert.match(workflow, /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.sha \|\| github\.sha \}\}/);
   assert.match(workflow, /target-ref: \$\{\{ github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\] \}\}/);
   assert.match(workflow, /target-sha: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.sha \|\| github\.sha \}\}/);
@@ -1802,6 +1845,8 @@ test("buildchain semver version state includes generated site contract version",
     [
       "package.json#version",
       "dist/site/buildchain-contract.json#product.version",
+      "dist/site/buildchain-site.json#package.version",
+      "dist/site/site-manifest.json#package.version",
     ],
   );
   assert.ok(

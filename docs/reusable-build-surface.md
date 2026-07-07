@@ -510,8 +510,17 @@ calls `actions/promote-buildchain-ref` with
 `require-publish-source-lock: "true"`. The wrapper passes the created
 `publish-gate/*` ref, target SHA, and `locked=true` into the promote action, so
 floating `@v2` consumers receive publish-side source-lock drift protection by
-default. It does not call `.build.yml`, does not create a matrix, and must fail
-before publish if the RC evidence, payload set, or source-lock ref is missing or
+default. It also defaults `branch-protection-bypass-apps` to `github-actions`
+so the workflow automation can apply generated version-state and channel
+bookkeeping on protected `dev`/`alpha`/`release` branches after the reviewed
+channel PR has merged; consumers using a different promotion identity can pass
+`branch-protection-bypass-users`, `branch-protection-bypass-teams`, or a
+different app slug declaratively. The wrapper uses
+`secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token` as the generated ref update
+token for protected bookkeeping PATCH calls, so a bypass-capable promotion token
+can sync dev immediately after alpha/release publish without a post-publish PR.
+It does not call `.build.yml`, does not create a matrix, and must fail before
+publish if the RC evidence, payload set, or source-lock ref is missing or
 ambiguous.
 
 ```yaml

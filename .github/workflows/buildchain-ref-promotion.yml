@@ -27,6 +27,7 @@ on:
 permissions:
   contents: write
   actions: read
+  checks: write
   issues: write
   id-token: write
 
@@ -47,7 +48,9 @@ jobs:
         (github.event_name == 'workflow_dispatch' && inputs['dry-run'] == 'true') ||
         (
           github.event.workflow_run.conclusion == 'success' &&
-          github.event.workflow_run.event == 'push'
+          github.event.workflow_run.event == 'push' &&
+          !startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v') &&
+          !startsWith(github.event.workflow_run.display_title, 'chore(release): release v')
         )
       }}
     uses: ./.github/workflows/release-candidate-promote.yml
@@ -63,6 +66,9 @@ jobs:
       release-candidate-workflow-name: Build Surface Fixture
       github-release: true
       required-status-check: check
+      branch-protection-bypass-apps: ${{ vars.BUILDCHAIN_PROMOTION_BYPASS_APPS || 'github-actions' }}
+      branch-protection-bypass-users: ${{ vars.BUILDCHAIN_PROMOTION_BYPASS_USERS }}
+      branch-protection-bypass-teams: ${{ vars.BUILDCHAIN_PROMOTION_BYPASS_TEAMS }}
       required-artifact-count: 0
       publish-required-artifacts-json: "[]"
       trusted-publishing: true

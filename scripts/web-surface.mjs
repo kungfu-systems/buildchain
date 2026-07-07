@@ -77,6 +77,10 @@ export function webSurfaceCli() {
       "alias",
       process.env.BUILDCHAIN_WEB_SURFACE_ALIAS || defaultWebSurfaceAlias({ channel, sourceSha, pullNumber }),
     );
+    const generatedAt = readArg(
+      "generated-at",
+      process.env.BUILDCHAIN_SITE_GENERATED_AT || process.env.BUILDCHAIN_SURFACE_GENERATED_AT || "",
+    );
     const result = planWebSurfaceDeploy({
       cwd,
       channel,
@@ -89,6 +93,7 @@ export function webSurfaceCli() {
       rollbackPointer: readArg("rollback-pointer", process.env.BUILDCHAIN_ROLLBACK_REF || ""),
       rollbackLimitations: readArg("rollback-limitations", process.env.BUILDCHAIN_ROLLBACK_LIMITATIONS || ""),
       dryRun: readBooleanArg("dry-run", true),
+      ...(generatedAt ? { deployedAt: generatedAt } : {}),
     });
     const outputResult = mode === "manifest" ? result.manifest : result;
     writeJson(outputResult, output);
@@ -111,6 +116,10 @@ export function webSurfaceCli() {
           "alias",
           process.env.BUILDCHAIN_WEB_SURFACE_ALIAS || defaultWebSurfaceAlias({ channel, sourceSha, pullNumber }),
         );
+    const publishedAt = readArg(
+      "published-at",
+      process.env.BUILDCHAIN_SITE_PUBLISHED_AT || process.env.BUILDCHAIN_SURFACE_PUBLISHED_AT || "",
+    );
     const result = applyWebSurfaceDeploy({
       cwd,
       channel,
@@ -122,6 +131,7 @@ export function webSurfaceCli() {
       dryRun: readBooleanArg("dry-run", true),
       actor: readArg("actor", process.env.GITHUB_ACTOR || ""),
       runId: readArg("run-id", process.env.GITHUB_RUN_ID || ""),
+      ...(publishedAt ? { appliedAt: publishedAt } : {}),
     });
     writeJson(result, output);
     writeGitHubOutputs({

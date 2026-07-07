@@ -207,6 +207,11 @@ async function main() {
   const requireVersionState = core.getBooleanInput("require-version-state");
   const verificationCommand = core.getInput("verification-command");
   const requiredStatusCheck = core.getInput("required-status-check") || "check";
+  const generatedStatusCheckToken = core.getInput("generated-status-check-token") || token;
+  const generatedRefUpdateToken = core.getInput("generated-ref-update-token") || token;
+  const branchProtectionBypassApps = core.getInput("branch-protection-bypass-apps");
+  const branchProtectionBypassUsers = core.getInput("branch-protection-bypass-users");
+  const branchProtectionBypassTeams = core.getInput("branch-protection-bypass-teams");
   const allowRepository = core.getInput("allow-repository") || "kungfu-systems/buildchain";
   const publishTransaction = core.getBooleanInput("publish-transaction");
   const publishCommand = core.getInput("publish-command");
@@ -236,6 +241,7 @@ async function main() {
   const releasePassportKfd3PrebuildWitnessJsons = core.getInput("release-passport-kfd-3-prebuild-witness-jsons");
   const releasePassportKfd3ArtifactWitnessJsons = core.getInput("release-passport-kfd-3-artifact-witness-jsons");
   const releasePassportKfd3ArtifactVerifyCommand = core.getInput("release-passport-kfd-3-artifact-verify-command");
+  const releasePassportBuildchainSelfKfd = core.getBooleanInput("release-passport-buildchain-self-kfd");
   const githubRelease = core.getBooleanInput("github-release");
   const githubReleaseTitle = core.getInput("github-release-title");
   const githubReleaseNotes = core.getInput("github-release-notes");
@@ -244,6 +250,10 @@ async function main() {
   const releaseCandidateBuildSummaryPath = core.getInput("release-candidate-build-summary-path");
   const releaseCandidateVersion = core.getInput("release-candidate-version");
   const octokit = github.getOctokit(token);
+  const statusCheckOctokit =
+    generatedStatusCheckToken === token ? octokit : github.getOctokit(generatedStatusCheckToken);
+  const refUpdateOctokit =
+    generatedRefUpdateToken === token ? octokit : github.getOctokit(generatedRefUpdateToken);
   if (requirePublishSourceLock) {
     const sourceLockReport = validateRequiredPublishSourceLock({
       sha,
@@ -277,6 +287,11 @@ async function main() {
     requireVersionState,
     verificationCommand,
     requiredStatusCheck,
+    statusCheckOctokit,
+    refUpdateOctokit,
+    branchProtectionBypassApps,
+    branchProtectionBypassUsers,
+    branchProtectionBypassTeams,
     publishTransaction,
     publishCommand,
     publishEvidencePath,
@@ -300,6 +315,7 @@ async function main() {
     releasePassportKfd3PrebuildWitnessJsons,
     releasePassportKfd3ArtifactWitnessJsons,
     releasePassportKfd3ArtifactVerifyCommand,
+    releasePassportBuildchainSelfKfd,
     promoteOnlyReleaseCandidate,
     releaseCandidatePassportPath,
     releaseCandidateBuildSummaryPath,

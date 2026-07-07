@@ -11,6 +11,7 @@ import {
 } from "../packages/core/artifact-passport.js";
 import {
   collectGitHubReleasePassport,
+  createReleasePassport,
   explainReleasePassport,
   KFD2_TRUST_PROOF_CONTRACT,
   verifyReleasePassport,
@@ -32,6 +33,25 @@ function writeJson(filePath, value) {
   fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`);
   return filePath;
 }
+
+test("release passport records surface timestamp reproducibility policy", () => {
+  const passport = createReleasePassport({
+    repository: "kungfu-systems/buildchain",
+    tag: "v2.8.8-alpha.7",
+    sourceSha: "a".repeat(40),
+    assets: [{ name: "buildchain.release.json", sha256: "b".repeat(64) }],
+    release: { publishedAt: "2026-07-07T06:00:00Z" },
+  });
+
+  assert.equal(passport.surfaceTimestampPolicy.timestampPolicy, "ci-injected");
+  assert.equal(passport.surfaceTimestampPolicy.publishedAt, "2026-07-07T06:00:00.000Z");
+  assert.equal(passport.surfaceTimestampPolicy.sourceRevision, "a".repeat(40));
+  assert.equal(passport.surfaceTimestampPolicy.reproducible, true);
+  assert.equal(
+    passport.surfaceTimestampPolicy.timestampPolicyDetails.timestampFieldsParticipateInArtifactDigest,
+    true,
+  );
+});
 
 function createKfdWitnessFixture({ id = "generic-contracts", artifactPath = "config.schema.json", content = "{\"ok\":true}\n", expectedSha256 = "" } = {}) {
   const cwd = tempDir("kfd-1-gate");

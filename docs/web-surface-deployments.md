@@ -195,6 +195,25 @@ rollback:
   "channel": "preview",
   "alias": "sha-abcdef123456",
   "url": "https://sha-abcdef123456.preview.libkungfu.dev",
+  "generatedAt": "2026-07-01T00:00:00.000Z",
+  "publishedAt": "2026-07-01T00:00:00.000Z",
+  "reproducible": true,
+  "timestampPolicy": "ci-injected",
+  "deterministicInputs": [
+    "web-surface artifact content",
+    "buildchain.toml web-surface channels/deploy/surfaces",
+    "sourceSha",
+    "artifactHash",
+    "deployment channel",
+    "deployment alias"
+  ],
+  "sourceRevision": "...",
+  "timestampPolicyDetails": {
+    "contract": "kungfu-buildchain-surface-timestamp-policy",
+    "timestampFields": ["generatedAt", "publishedAt", "deployedAt"],
+    "timestampFieldsParticipateInArtifactDigest": false,
+    "artifactDigestScope": "web-surface artifactHash excludes deployment manifest timestamps"
+  },
   "sourceSha": "...",
   "artifactHash": "...",
   "deployTarget": "libkungfu-dev-preview",
@@ -230,6 +249,13 @@ Dynamic adapters can also fill `runtimeId`, `configFingerprint`,
 `healthCheck`, `migrationState`, `rollbackPointer`, and
 `rollbackLimitations`. Buildchain records secret reference names only, never
 secret values.
+
+The timestamp policy is shared with package site bundles. Public deployment
+manifests should expose real workflow generation/publication times while
+separately declaring why the deployed artifact remains reproducible. For
+web-surface deployment manifests, `artifactHash` is the static site artifact
+digest and does not include deployment timestamp fields; the manifest itself
+still records those fields for human and agent audit.
 
 ## Deploy Plans
 

@@ -123,6 +123,9 @@ if (rootPackage.exports?.["./release-passport"] !== "./packages/core/release-pas
 if (rootPackage.exports?.["./release-propagation"] !== "./packages/core/release-propagation.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/release-propagation");
 }
+if (rootPackage.exports?.["./surface-manifest"] !== "./packages/core/surface-manifest.js") {
+  throw new Error("root package must export @kungfu-tech/buildchain/surface-manifest");
+}
 if (rootPackage.exports?.["./buildchain-kfd-claims"] !== "./packages/core/buildchain-kfd-claims.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/buildchain-kfd-claims");
 }
@@ -193,8 +196,17 @@ if (!coreIndexSource.includes("KFD2_RELEASE_TRUST_PASSPORT_CONTRACT")) {
 if (!coreIndexSource.includes("KFD2_TRUST_PROOF_CONTRACT")) {
   throw new Error("packages/core/index.js must export KFD-2 trust proof contract");
 }
+if (!coreIndexSource.includes("createSurfaceTimestampPolicy")) {
+  throw new Error("packages/core/index.js must export surface manifest timestamp policy APIs");
+}
 if (siteBundle.contract !== "kungfu-buildchain-site-bundle") {
   throw new Error("buildchain-site.json must expose the Buildchain site bundle contract");
+}
+if (siteBundle.package?.version !== rootPackage.version) {
+  throw new Error("buildchain-site.json package.version must match package.json version");
+}
+if (siteManifest.package?.version !== rootPackage.version) {
+  throw new Error("site-manifest.json package.version must match package.json version");
 }
 if (siteBundle.source?.homepageTextSource !== "README.md") {
   throw new Error("buildchain-site.json source.homepageTextSource must be README.md");
@@ -240,6 +252,20 @@ if (siteBundle.pageRegistry?.path !== "page-registry.json" || siteBundle.pageReg
 }
 if (!siteManifest.facts?.includes("page-registry.json") || !siteBundle.entrypoints?.includes("page-registry.json")) {
   throw new Error("site bundle entrypoints must include page-registry.json");
+}
+for (const [name, manifest] of [["buildchain-site.json", siteBundle], ["site-manifest.json", siteManifest]]) {
+  if (!manifest.generatedAt) {
+    throw new Error(`${name} must expose generatedAt`);
+  }
+  if (manifest.timestampPolicy === "ci-injected" && manifest.generatedAt === "1970-01-01T00:00:00.000Z") {
+    throw new Error(`${name} must not use epoch generatedAt when timestampPolicy=ci-injected`);
+  }
+  if (!manifest.timestampPolicy || !manifest.reproducible || !Array.isArray(manifest.deterministicInputs)) {
+    throw new Error(`${name} must expose the Buildchain surface timestamp/reproducibility policy`);
+  }
+  if (manifest.timestampPolicyDetails?.contract !== "kungfu-buildchain-surface-timestamp-policy") {
+    throw new Error(`${name} must expose timestampPolicyDetails.contract`);
+  }
 }
 function immediateReadmes(dir) {
   const absoluteDir = path.join(root, dir);
@@ -440,6 +466,8 @@ for (const requiredSnippet of [
   "actions: read",
   "uses: ./.github/workflows/release-candidate-promote.yml",
   "github.event.workflow_run.event == 'push'",
+  "!startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v')",
+  "!startsWith(github.event.workflow_run.display_title, 'chore(release): release v')",
   "target-sha: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}",
   "github-release: true",
   "release-passport-buildchain-self-kfd: true",
@@ -460,17 +488,16 @@ for (const requiredSnippet of [
 const releaseCandidatePromoteWorkflow = fs.readFileSync(path.join(root, ".github/workflows/release-candidate-promote.yml"), "utf8");
 for (const requiredSnippet of [
   "release-passport-kfd-1-witness-jsons:",
-  "release-passport-kfd-1-witness-jsons: ${{ inputs.release-passport-kfd-1-witness-jsons || steps.buildchain-self-kfd.outputs.kfd-1-witness-jsons }}",
+  "release-passport-kfd-1-witness-jsons: ${{ inputs.release-passport-kfd-1-witness-jsons }}",
   "release-passport-kfd-2-claim-jsons:",
-  "release-passport-kfd-2-claim-jsons: ${{ inputs.release-passport-kfd-2-claim-jsons || steps.buildchain-self-kfd.outputs.kfd-2-claim-jsons }}",
+  "release-passport-kfd-2-claim-jsons: ${{ inputs.release-passport-kfd-2-claim-jsons }}",
   "release-passport-kfd-3-prebuild-witness-jsons:",
-  "release-passport-kfd-3-prebuild-witness-jsons: ${{ inputs.release-passport-kfd-3-prebuild-witness-jsons || steps.buildchain-self-kfd.outputs.kfd-3-prebuild-witness-jsons }}",
+  "release-passport-kfd-3-prebuild-witness-jsons: ${{ inputs.release-passport-kfd-3-prebuild-witness-jsons }}",
   "release-passport-kfd-3-artifact-witness-jsons:",
-  "release-passport-kfd-3-artifact-witness-jsons: ${{ inputs.release-passport-kfd-3-artifact-witness-jsons || steps.buildchain-self-kfd.outputs.kfd-3-artifact-witness-jsons }}",
+  "release-passport-kfd-3-artifact-witness-jsons: ${{ inputs.release-passport-kfd-3-artifact-witness-jsons }}",
   "release-passport-kfd-3-artifact-verify-command:",
   "release-passport-buildchain-self-kfd:",
-  "Generate Buildchain self KFD release claims",
-  "generate-buildchain-kfd-witnesses.mjs",
+  "release-passport-buildchain-self-kfd: ${{ inputs.release-passport-buildchain-self-kfd }}",
   "github-release:",
   "default: true",
   "github-release: ${{ inputs.github-release }}",

@@ -35,6 +35,12 @@ import {
   verifyReleasePassport,
 } from "../../packages/core/release-passport.js";
 import { validateReleaseCandidatePassport } from "../../packages/core/release-candidate.js";
+import {
+  createBuildchainKfd1Witness,
+  createBuildchainKfd2Claims,
+  createBuildchainKfd3ArtifactWitness,
+  createBuildchainKfd3PrebuildWitness,
+} from "../../packages/core/buildchain-kfd-claims.js";
 
 const COMMIT_IDENTITY = {
   name: "Keren Dong",
@@ -384,10 +390,21 @@ function runVersionVerification({ cwd, command, loadedConfig, version, changedFi
   return collectAllowedLocalChanges(cwd, allowedPaths);
 }
 
-function versionVerificationEnv(versionStrategy, anchorManifest) {
+function versionVerificationEnv(versionStrategy, anchorManifest, { generatedAt = "", sourceSha = "" } = {}) {
   return {
     BUILDCHAIN_VERSION_STRATEGY: versionStrategy.strategy,
     BUILDCHAIN_VERSION_NEXT: versionStrategy.next,
+    ...(generatedAt
+      ? {
+          BUILDCHAIN_SITE_GENERATED_AT: generatedAt,
+          BUILDCHAIN_SITE_PUBLISHED_AT: generatedAt,
+          BUILDCHAIN_SITE_TIMESTAMP_POLICY: "ci-injected",
+          BUILDCHAIN_SURFACE_GENERATED_AT: generatedAt,
+          BUILDCHAIN_SURFACE_PUBLISHED_AT: generatedAt,
+          BUILDCHAIN_SURFACE_TIMESTAMP_POLICY: "ci-injected",
+        }
+      : {}),
+    ...(sourceSha ? { BUILDCHAIN_SOURCE_SHA: sourceSha } : {}),
     ...(anchorManifest
       ? {
           BUILDCHAIN_ANCHOR_MANIFEST: anchorManifest.path,
@@ -616,6 +633,10 @@ function writeJsonFile(filePath, value) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`);
   return filePath;
+}
+
+function toRepoRelative(cwd, filePath) {
+  return path.relative(cwd, filePath).split(path.sep).join("/");
 }
 
 function readJsonFileIfExists(filePath) {
@@ -1464,6 +1485,7 @@ async function runPublishTransaction({
   runId = "",
   explicitOverride = false,
   allowVersionStateFinalization = false,
+  promotionGeneratedAt = new Date().toISOString(),
 }) {
   const lifecyclePublish = getLifecycleStage(loadedConfig, "publish");
   const enabled = Boolean(publishTransaction || publishCommand || lifecyclePublish);
@@ -1743,6 +1765,12 @@ async function runPublishTransaction({
             BUILDCHAIN_RELEASE_SHA: releaseSha,
             BUILDCHAIN_RELEASE_MATERIAL_SHA: expected.releaseMaterialSha,
             BUILDCHAIN_PUBLISH_TOOLING_SHA: expected.publishToolingSha,
+            BUILDCHAIN_SITE_GENERATED_AT: promotionGeneratedAt,
+            BUILDCHAIN_SITE_PUBLISHED_AT: promotionGeneratedAt,
+            BUILDCHAIN_SITE_TIMESTAMP_POLICY: "ci-injected",
+            BUILDCHAIN_SURFACE_GENERATED_AT: promotionGeneratedAt,
+            BUILDCHAIN_SURFACE_PUBLISHED_AT: promotionGeneratedAt,
+            BUILDCHAIN_SURFACE_TIMESTAMP_POLICY: "ci-injected",
             BUILDCHAIN_PUBLISH_EVIDENCE: resolvedEvidencePath,
             BUILDCHAIN_PUBLISH_MODE: publishContract.mode,
             BUILDCHAIN_PUBLISH_AUTH: publishContract.auth,
@@ -1850,6 +1878,41 @@ async function persistTransactionResult(result, transaction) {
   return { ...result, transaction: persisted, durable };
 }
 
+function generateBuildchainSelfKfdInputs({
+  cwd,
+  outputDir = ".buildchain/kfd",
+  sourceSha = "",
+} = {}) {
+  const resolvedOutputDir = path.resolve(cwd, outputDir);
+  const paths = {
+    kfd1Witness: path.join(resolvedOutputDir, "buildchain-kfd-1-witness.json"),
+    kfd3PrebuildWitness: path.join(resolvedOutputDir, "buildchain-kfd-3-prebuild-witness.json"),
+    kfd3ArtifactWitness: path.join(resolvedOutputDir, "buildchain-kfd-3-artifact-witness.json"),
+    kfd2ClaimsDir: path.join(resolvedOutputDir, "kfd-2-claims"),
+  };
+  writeJsonFile(paths.kfd1Witness, createBuildchainKfd1Witness({ root: cwd, sourceSha }));
+  writeJsonFile(paths.kfd3PrebuildWitness, createBuildchainKfd3PrebuildWitness({ root: cwd, sourceSha }));
+  writeJsonFile(paths.kfd3ArtifactWitness, createBuildchainKfd3ArtifactWitness({ root: cwd, sourceSha }));
+  const witnessFiles = {
+    "kfd-1-witness": toRepoRelative(cwd, paths.kfd1Witness),
+    "kfd-3-prebuild-witness": toRepoRelative(cwd, paths.kfd3PrebuildWitness),
+    "kfd-3-artifact-witness": toRepoRelative(cwd, paths.kfd3ArtifactWitness),
+  };
+  const kfd2ClaimJsons = createBuildchainKfd2Claims({ root: cwd, witnessFiles }).map((claim) => {
+    const slug = String(claim.id || "claim")
+      .replace(/^claim:/, "")
+      .replace(/[^0-9A-Za-z._-]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "claim";
+    return writeJsonFile(path.join(paths.kfd2ClaimsDir, `${slug}.json`), claim);
+  });
+  return {
+    kfd1WitnessJsons: [paths.kfd1Witness],
+    kfd2ClaimJsons,
+    kfd3PrebuildWitnessJsons: [paths.kfd3PrebuildWitness],
+    kfd3ArtifactWitnessJsons: [paths.kfd3ArtifactWitness],
+  };
+}
+
 async function collectAndPersistReleasePassport({
   result,
   owner,
@@ -1870,6 +1933,7 @@ async function collectAndPersistReleasePassport({
   kfd3PrebuildWitnessJsons = [],
   kfd3ArtifactWitnessJsons = [],
   kfd3ArtifactVerifyCommand = "",
+  buildchainSelfKfd = false,
   enabled = true,
   releaseCandidateValidation = undefined,
 }) {
@@ -1900,6 +1964,24 @@ async function collectAndPersistReleasePassport({
   const passportSourceSha = result.transaction.source_sha || sourceSha;
   const internalVersion = stripTagPrefix(result.transaction.exact_tag || "");
   const publishedVersion = result.transaction.version || internalVersion;
+  const selfKfd = buildchainSelfKfd
+    ? generateBuildchainSelfKfdInputs({
+        cwd,
+        sourceSha: passportSourceSha,
+      })
+    : undefined;
+  const resolvedKfd1WitnessJsons = kfd1WitnessJsons.length > 0
+    ? kfd1WitnessJsons
+    : selfKfd?.kfd1WitnessJsons || [];
+  const resolvedKfd2ClaimJsons = kfd2ClaimJsons.length > 0
+    ? kfd2ClaimJsons
+    : selfKfd?.kfd2ClaimJsons || [];
+  const resolvedKfd3PrebuildWitnessJsons = kfd3PrebuildWitnessJsons.length > 0
+    ? kfd3PrebuildWitnessJsons
+    : selfKfd?.kfd3PrebuildWitnessJsons || [];
+  const resolvedKfd3ArtifactWitnessJsons = kfd3ArtifactWitnessJsons.length > 0
+    ? kfd3ArtifactWitnessJsons
+    : selfKfd?.kfd3ArtifactWitnessJsons || [];
   const collected = collectGitHubReleasePassport({
     cwd,
     tag: result.transaction.exact_tag,
@@ -1923,10 +2005,10 @@ async function collectAndPersistReleasePassport({
     transactionJson: JSON.stringify(transactionJson),
     anchorManifestJson: anchorManifestPath && fs.existsSync(anchorManifestPath) ? anchorManifestPath : "",
     impactJson,
-    kfd1WitnessJsons,
-    kfd2ClaimJsons,
-    kfd3PrebuildWitnessJsons,
-    kfd3ArtifactWitnessJsons,
+    kfd1WitnessJsons: resolvedKfd1WitnessJsons,
+    kfd2ClaimJsons: resolvedKfd2ClaimJsons,
+    kfd3PrebuildWitnessJsons: resolvedKfd3PrebuildWitnessJsons,
+    kfd3ArtifactWitnessJsons: resolvedKfd3ArtifactWitnessJsons,
     kfd3ArtifactVerifyCommand,
     buildSummaryJson,
     platformManifestJsons: platformManifests,
@@ -2186,12 +2268,97 @@ function isManagedChannelBranch(ref) {
   return /^(dev|alpha|release)\/v\d+\/v\d+\.\d+$/.test(String(ref || ""));
 }
 
+function parseBranchProtectionBypassList(value = "") {
+  return [
+    ...new Set(
+      String(value || "")
+        .split(/[,\n]/)
+        .map((entry) => entry.trim())
+        .filter(Boolean),
+    ),
+  ];
+}
+
+function branchProtectionBypassAllowances({
+  apps = "",
+  users = "",
+  teams = "",
+} = {}) {
+  const allowances = {
+    apps: parseBranchProtectionBypassList(apps),
+    users: parseBranchProtectionBypassList(users),
+    teams: parseBranchProtectionBypassList(teams),
+  };
+  if (
+    allowances.apps.length === 0 &&
+    allowances.users.length === 0 &&
+    allowances.teams.length === 0
+  ) {
+    return undefined;
+  }
+  return allowances;
+}
+
+async function resolveAuthenticatedBypassAllowances({
+  octokit,
+  allowances,
+} = {}) {
+  const resolved = {
+    apps: [...(allowances?.apps || [])],
+    users: [...(allowances?.users || [])],
+    teams: [...(allowances?.teams || [])],
+  };
+  const addUnique = (key, value) => {
+    const normalized = String(value || "").trim();
+    if (normalized && !resolved[key].includes(normalized)) {
+      resolved[key].push(normalized);
+    }
+  };
+
+  if (typeof octokit?.rest?.users?.getAuthenticated === "function") {
+    try {
+      const { data } = await retryGitHubOperation(
+        "users.getAuthenticated",
+        () => octokit.rest.users.getAuthenticated(),
+      );
+      addUnique("users", data?.login);
+    } catch (error) {
+      console.log(
+        `buildchain: unable to resolve authenticated promotion user for branch-protection bypass: ${error.message}`,
+      );
+    }
+  }
+
+  if (typeof octokit?.rest?.apps?.getAuthenticated === "function") {
+    try {
+      const { data } = await retryGitHubOperation(
+        "apps.getAuthenticated",
+        () => octokit.rest.apps.getAuthenticated(),
+      );
+      addUnique("apps", data?.slug || data?.name);
+    } catch (error) {
+      console.log(
+        `buildchain: unable to resolve authenticated promotion app for branch-protection bypass: ${error.message}`,
+      );
+    }
+  }
+
+  return (
+    resolved.apps.length || resolved.users.length || resolved.teams.length
+      ? resolved
+      : undefined
+  );
+}
+
 async function ensureManagedChannelBranchProtection({
   octokit,
   owner,
   repo,
   branch,
   requiredStatusCheck = "check",
+  branchProtectionBypassApps = "",
+  branchProtectionBypassUsers = "",
+  branchProtectionBypassTeams = "",
 }) {
   if (!isManagedChannelBranch(branch)) {
     return;
@@ -2199,6 +2366,15 @@ async function ensureManagedChannelBranchProtection({
   if (typeof octokit.rest.repos?.updateBranchProtection !== "function") {
     return;
   }
+  const configuredBypassAllowances = branchProtectionBypassAllowances({
+    apps: branchProtectionBypassApps,
+    users: branchProtectionBypassUsers,
+    teams: branchProtectionBypassTeams,
+  });
+  const bypassAllowances = await resolveAuthenticatedBypassAllowances({
+    octokit,
+    allowances: configuredBypassAllowances,
+  });
   await retryGitHubOperation(
     `repos.updateBranchProtection ${branch}`,
     () => octokit.rest.repos.updateBranchProtection({
@@ -2215,6 +2391,9 @@ async function ensureManagedChannelBranchProtection({
         require_code_owner_reviews: false,
         required_approving_review_count: 1,
         require_last_push_approval: false,
+        ...(bypassAllowances
+          ? { bypass_pull_request_allowances: bypassAllowances }
+          : {}),
       },
       restrictions: null,
       required_linear_history: false,
@@ -2681,8 +2860,58 @@ function protectedBranchUpdateRejected(error) {
   const message = error?.response?.data?.message || error?.message || "";
   return (
     status === 422 &&
-    /Changes must be made through a pull request|Required status check/i.test(message)
+    /Changes must be made through a pull request|Required status check|approving review is required/i.test(message)
   );
+}
+
+function protectedBranchDirectUpdateError({ branch, branchSha, error }) {
+  const message = error?.response?.data?.message || error?.message || String(error || "");
+  return new Error(
+    `Buildchain generated version-state update for ${branch} -> ${branchSha} was rejected by branch protection: ${message}. ` +
+      "Promotion must complete without a post-publish human PR; configure BUILDCHAIN_PROMOTION_TOKEN as a direct-write release authority and allow Buildchain to create the generated version-state required check before updating the protected ref.",
+  );
+}
+
+async function createGeneratedVersionStateCheck({
+  octokit,
+  owner,
+  repo,
+  branch,
+  branchSha,
+  currentSha,
+  requiredStatusCheck,
+}) {
+  if (!isManagedChannelBranch(branch)) {
+    return false;
+  }
+  if (!requiredStatusCheck) {
+    return false;
+  }
+  if (typeof octokit?.rest?.checks?.create !== "function") {
+    console.log(
+      `buildchain: unable to create generated version-state check '${requiredStatusCheck}' for ${branchSha}; checks.create is unavailable`,
+    );
+    return false;
+  }
+  await retryGitHubOperation(
+    `checks.create ${requiredStatusCheck} ${branchSha}`,
+    () => octokit.rest.checks.create({
+      owner,
+      repo,
+      name: requiredStatusCheck,
+      head_sha: branchSha,
+      status: "completed",
+      conclusion: "success",
+      output: {
+        title: "Buildchain generated version-state verification",
+        summary:
+          `Buildchain verified generated version-state commit ${branchSha} for ${branch} before direct protected ref update.\n\n` +
+          `Previous branch head: ${currentSha || "new branch"}\n\n` +
+          "This check is emitted only after promote-buildchain-ref has generated the commit through the declared version-state files and verification gate.",
+      },
+    }),
+  );
+  return true;
 }
 
 function nonFastForwardUpdateRejected(error) {
@@ -2732,6 +2961,11 @@ async function promoteBuildchainRefs({
   requireGovernance = false,
   verificationCommand = "",
   requiredStatusCheck = "check",
+  statusCheckOctokit = octokit,
+  refUpdateOctokit = octokit,
+  branchProtectionBypassApps = "",
+  branchProtectionBypassUsers = "",
+  branchProtectionBypassTeams = "",
   publishTransaction = false,
   publishCommand = "",
   publishEvidencePath = "",
@@ -2755,6 +2989,7 @@ async function promoteBuildchainRefs({
   releasePassportKfd3PrebuildWitnessJsons = "",
   releasePassportKfd3ArtifactWitnessJsons = "",
   releasePassportKfd3ArtifactVerifyCommand = "",
+  releasePassportBuildchainSelfKfd = false,
   promoteOnlyReleaseCandidate = false,
   releaseCandidatePassportPath = ".buildchain/artifacts/release-candidate-passport.json",
   releaseCandidateBuildSummaryPath = ".buildchain/artifacts/build-summary.json",
@@ -2784,6 +3019,7 @@ async function promoteBuildchainRefs({
   }
 
   const updates = [];
+  const promotionGeneratedAt = new Date().toISOString();
   let releaseCandidateValidation;
   if (promoteOnlyReleaseCandidate) {
     const targetCommitInfo = await getCommitInfo(octokit, owner, repo, sha);
@@ -2916,84 +3152,52 @@ async function promoteBuildchainRefs({
     }
   };
 
-  const openVersionStatePullRequest = async ({ branch, branchSha, title, body }) => {
-    const headBranch = versionStateBranchName(branch, branchSha);
-    const headRef = `heads/${headBranch}`;
-    const pullTitle = title || `Update ${branch} version state`;
-    const pullBody =
-      body ||
-      `Route generated version-state commit ${branchSha} through a protected ${branch} pull request.`;
-    const existingHeadSha = await readRefSha(headRef);
-    if (!existingHeadSha) {
-      await octokit.rest.git.createRef({
-        owner,
-        repo,
-        ref: `refs/${headRef}`,
-        sha: branchSha,
-      });
-    } else if (existingHeadSha !== branchSha) {
-      await octokit.rest.git.updateRef({
-        owner,
-        repo,
-        ref: headRef,
-        sha: branchSha,
-        force: true,
-      });
-    }
-
-    const { data: openPulls } = await octokit.rest.pulls.list({
-      owner,
-      repo,
-      state: "open",
-      head: `${owner}:${headBranch}`,
-      base: branch,
-    });
-    const pullRequest =
-      openPulls[0] ||
-      (
-        await octokit.rest.pulls.create({
-          owner,
-          repo,
-          title: pullTitle,
-          head: headBranch,
-          base: branch,
-          body: pullBody,
-          maintainer_can_modify: true,
-        })
-      ).data;
-    updates.push({
-      ref: branch,
-      action: "pending-version-state-pr",
-      sha: branchSha,
-      pullRequest: pullRequest.html_url || pullRequest.url,
-    });
-    return {
-      pending: true,
-      branch: headBranch,
-      pullRequest,
-    };
-  };
-
   const updateBranch = async (branch, branchSha, action = "updated", protectedUpdate) => {
     if (dryRun) {
       updates.push({ ref: branch, action: "dry-run", sha: branchSha });
       return { updated: true };
     }
+    const ensureChannelProtection = () => ensureManagedChannelBranchProtection({
+      octokit,
+      owner,
+      repo,
+      branch,
+      requiredStatusCheck,
+      branchProtectionBypassApps,
+      branchProtectionBypassUsers,
+      branchProtectionBypassTeams,
+    });
     const currentSha = await readRefSha(`heads/${branch}`);
+    if (currentSha) {
+      await ensureChannelProtection();
+    }
     if (currentSha === branchSha) {
       updates.push({ ref: branch, action: "existing", sha: branchSha });
-      await ensureManagedChannelBranchProtection({
-        octokit,
+      return { updated: true, existing: true };
+    }
+    if (protectedUpdate && currentSha) {
+      const createdCheck = await createGeneratedVersionStateCheck({
+        octokit: statusCheckOctokit,
         owner,
         repo,
         branch,
+        branchSha,
+        currentSha,
         requiredStatusCheck,
       });
-      return { updated: true, existing: true };
+      if (createdCheck) {
+        updates.push({
+          ref: branch,
+          action: "generated-status-check",
+          check: requiredStatusCheck,
+          sha: branchSha,
+        });
+      }
     }
+    const branchWriteOctokit = protectedUpdate ? (refUpdateOctokit || octokit) : octokit;
     try {
       if (currentSha) {
-        await octokit.rest.git.updateRef({
+        await branchWriteOctokit.rest.git.updateRef({
           owner,
           repo,
           ref: `heads/${branch}`,
@@ -3002,7 +3206,7 @@ async function promoteBuildchainRefs({
         });
         updates.push({ ref: branch, action, sha: branchSha });
       } else {
-        await octokit.rest.git.createRef({
+        await branchWriteOctokit.rest.git.createRef({
           owner,
           repo,
           ref: `refs/heads/${branch}`,
@@ -3010,21 +3214,16 @@ async function promoteBuildchainRefs({
         });
         updates.push({ ref: branch, action: "created", sha: branchSha });
       }
-      await ensureManagedChannelBranchProtection({
-        octokit,
-        owner,
-        repo,
-        branch,
-        requiredStatusCheck,
-      });
+      if (!currentSha) {
+        await ensureChannelProtection();
+      }
       return { updated: true };
     } catch (error) {
       if (protectedUpdate && protectedBranchUpdateRejected(error)) {
-        return openVersionStatePullRequest({
+        throw protectedBranchDirectUpdateError({
           branch,
           branchSha,
-          title: protectedUpdate.title,
-          body: protectedUpdate.body,
+          error,
         });
       }
       if (protectedUpdate?.allowNonFastForwardSkip && nonFastForwardUpdateRejected(error)) {
@@ -3037,30 +3236,22 @@ async function promoteBuildchainRefs({
         return { updated: false, skipped: true, currentSha };
       }
       if (protectedUpdate && nonFastForwardUpdateRejected(error)) {
-        return openVersionStatePullRequest({
-          branch,
-          branchSha,
-          title: protectedUpdate.title,
-          body: `${protectedUpdate.body}\n\nThe channel ref was not a fast-forward update, so Buildchain is routing the generated version-state commit through a PR instead of forcing the ref.`,
-        });
+        throw new Error(
+          `Buildchain generated version-state update for ${branch} -> ${branchSha} is not a fast-forward update. ` +
+            "Promotion cannot open a post-publish human PR; repair channel lineage and rerun promotion so Buildchain can complete direct generated bookkeeping.",
+        );
       }
       if (!notFound(error)) {
         throw error;
       }
-      await octokit.rest.git.createRef({
+      await branchWriteOctokit.rest.git.createRef({
         owner,
         repo,
         ref: `refs/heads/${branch}`,
         sha: branchSha,
       });
       updates.push({ ref: branch, action: "created", sha: branchSha });
-      await ensureManagedChannelBranchProtection({
-        octokit,
-        owner,
-        repo,
-        branch,
-        requiredStatusCheck,
-      });
+      await ensureChannelProtection();
       return { updated: true };
     }
   };
@@ -3414,7 +3605,10 @@ async function promoteBuildchainRefs({
     const discoveredPaths = discovered.files.map((file) => file.path);
     const versionStrategy = getVersionStrategy(discovered.config);
     const anchorManifest = loadConfiguredAnchorManifest(cwd, discovered.config);
-    const strategyEnv = versionVerificationEnv(versionStrategy, anchorManifest);
+    const strategyEnv = versionVerificationEnv(versionStrategy, anchorManifest, {
+      generatedAt: promotionGeneratedAt,
+      sourceSha: sha,
+    });
     const manualNext =
       versionStrategy.strategy === "anchored" && versionStrategy.next === "manual";
     const configuredVersion = manualNext
@@ -3670,6 +3864,7 @@ async function promoteBuildchainRefs({
       runId,
       explicitOverride: publishTransactionOverride,
       allowVersionStateFinalization,
+      promotionGeneratedAt,
     });
     if (latestPublishTransaction) {
       updates.push({
@@ -3714,6 +3909,7 @@ async function promoteBuildchainRefs({
       kfd3PrebuildWitnessJsons: splitPathList(releasePassportKfd3PrebuildWitnessJsons),
       kfd3ArtifactWitnessJsons: splitPathList(releasePassportKfd3ArtifactWitnessJsons),
       kfd3ArtifactVerifyCommand: releasePassportKfd3ArtifactVerifyCommand,
+      buildchainSelfKfd: Boolean(releasePassportBuildchainSelfKfd),
       enabled: Boolean(releasePassport),
       releaseCandidateValidation,
     });

@@ -244,11 +244,18 @@ version-state files changed. This prevents verification from quietly adding
 extra source changes to the release commit.
 
 On protected alpha and release branches, the generated version-state commit is
-merged through a normal pull request. This keeps review requirements,
-conversation resolution, strict status checks, and admin enforcement intact.
-After that PR lands, Buildchain verifies that the version-state PR changed only
-declared version files from the legal channel-promotion parent before it moves
-tags.
+applied by the promotion automation after the reviewed channel PR has merged.
+Buildchain keeps review requirements, conversation resolution, strict status
+checks, and admin enforcement for human channel changes, but adds the
+authenticated promotion token user or app to the managed bypass allowlist for
+generated release bookkeeping. Buildchain also creates the configured required
+check on the exact generated version-state commit before patching the protected
+ref, then applies the protected ref update with the declared generated ref
+update token. The reusable wrapper uses
+`secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token` for that protected
+bookkeeping update. If the direct generated update is rejected, promotion fails
+with a token/protection diagnostic instead of asking humans to review a
+post-publish version-state PR.
 
 For `version.strategy = "anchored"` with `version.next = "manual"`, release
 promotion does not generate a Buildchain-owned version-state commit. In that

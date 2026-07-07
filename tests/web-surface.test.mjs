@@ -80,6 +80,19 @@ test("web-surface deploy plan emits deterministic manifest without touching AWS"
     });
     assert.equal(plan.manifest.site, "libkungfu-dev");
     assert.equal(plan.manifest.sourceSha, sourceSha);
+    assert.equal(plan.manifest.generatedAt, "2026-07-01T00:00:00.000Z");
+    assert.equal(plan.manifest.publishedAt, "2026-07-01T00:00:00.000Z");
+    assert.equal(plan.manifest.reproducible, true);
+    assert.equal(plan.manifest.timestampPolicy, "ci-injected");
+    assert.equal(plan.manifest.sourceRevision, sourceSha);
+    assert.equal(
+      plan.manifest.timestampPolicyDetails.timestampFieldsParticipateInArtifactDigest,
+      false,
+    );
+    assert.match(
+      plan.manifest.timestampPolicyDetails.artifactDigestScope,
+      /excludes deployment manifest timestamps/,
+    );
     assert.equal(plan.manifest.surfaceBindings.length, 4);
     assert.deepEqual(
       plan.manifest.surfaceBindings.map((binding) => [binding.surface, binding.sourcePath, binding.canonicalUrl]),

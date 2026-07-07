@@ -820,6 +820,18 @@
           "packageExport": "./release-propagation"
         },
         {
+          "id": "export:./surface-manifest",
+          "name": "@kungfu-tech/buildchain/surface-manifest",
+          "kind": "package-export",
+          "sourcePath": "packages/core/surface-manifest.js",
+          "evidencePath": "packages/core/surface-manifest.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./surface-manifest"
+        },
+        {
           "id": "export:./buildchain-kfd-claims",
           "name": "@kungfu-tech/buildchain/buildchain-kfd-claims",
           "kind": "package-export",
@@ -1057,6 +1069,6 @@
         "public": true
       }
     ],
-    "publicSurfaceCount": 80
+    "publicSurfaceCount": 81
   }
 }

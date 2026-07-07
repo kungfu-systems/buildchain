@@ -1,6 +1,35 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-site-manifest",
+  "generatedAt": "2026-07-07T05:58:59.518Z",
+  "publishedAt": "2026-07-07T05:58:59.518Z",
+  "reproducible": true,
+  "timestampPolicy": "ci-injected",
+  "deterministicInputs": [
+    "README.md",
+    "docs/*.md",
+    "actions/*/README.md",
+    "fixtures/*/README.md",
+    "packages/core/README.md",
+    "package.json#exports",
+    "tests/buildchain-inventory.json",
+    "sourceRevision",
+    "sourceDateEpoch",
+    "package content",
+    "declared Buildchain surface manifest contract"
+  ],
+  "sourceDateEpoch": "0",
+  "sourceRevision": "5fdcc9bfde15861e9fd12a29f880bcd3ffc8d719",
+  "timestampPolicyDetails": {
+    "contract": "kungfu-buildchain-surface-timestamp-policy",
+    "timestampFields": [
+      "generatedAt",
+      "publishedAt"
+    ],
+    "timestampFieldsParticipateInArtifactDigest": true,
+    "artifactDigestScope": "npm package dist/site JSON files",
+    "note": "Human-readable timestamps are separate from reproducibility inputs; do not infer reproducibility from epoch timestamps."
+  },
   "product": {
     "name": "Buildchain",
     "formalName": "Buildchain by Kungfu",
@@ -8,6 +37,7 @@
   },
   "package": {
     "name": "@kungfu-tech/buildchain",
+    "version": "2.8.8-alpha.7",
     "versionSource": "package.json#version"
   },
   "entrypoint": "buildchain-site.json",
@@ -39,7 +69,7 @@
       "path": "docs/release-passport.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:4d69798646adb84c6d193b1f32e7dc50e389db8932e63e9cb71489b6015e0333"
+      "digest": "sha256:56c9000305e9dc23993e6c401568c4063dd496c3586382a44cd44db108a95094"
     },
     {
       "id": "release-propagation",
@@ -87,7 +117,7 @@
       "path": "docs/site-bundle-contract.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:1977091fc18b816208e7af50a177fd15e114498bfa49041573812405b46585aa"
+      "digest": "sha256:fa8bdf597ddf87d89629c133318d54f89c5f291d32427189fb3483bc81efc6b7"
     },
     {
       "id": "migration-inventory",
@@ -127,7 +157,7 @@
       "path": "docs/lifecycle-protocol.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:02e1be97935c0d9520ea22e8ef0dc61d9b860c347f07127074600cdca02713ce"
+      "digest": "sha256:43dcaaa53efa8b7e6cdcdaa92a0d39d3ee263b840ed2bfea0a47fe4af922cd59"
     },
     {
       "id": "reusable-build-surface",
@@ -135,7 +165,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:8c3e7a5e099c8eb0715bb6f58af90d261f8cb83d384f3281b8763f340277582b"
+      "digest": "sha256:165011e2a932461805925c714c2c1c07f1ee60c4b3a614b6dcdda4b81ec22d68"
     },
     {
       "id": "publish-transaction",
@@ -143,7 +173,7 @@
       "path": "docs/publish-transaction.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:dd45cf98f0847e3968f150a09bed84aa1f59cb2687ac988e9519f08dc9c91877"
+      "digest": "sha256:94844f7bb38dbd85c02f1bc9d55e34dcebd9fc96585789766e8075ac635bc6c0"
     },
     {
       "id": "release-governance",
@@ -151,7 +181,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:c7348c64e83ea1d154955e2fc0f7318a1c5582a3dfa6bdc5728958ddb418e92d"
+      "digest": "sha256:7fb654a147104125eccbbbcccdeb28c5cad5a6097731e560e72919b9231f985f"
     },
     {
       "id": "release-flow",
@@ -183,7 +213,7 @@
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:61891635707e9ed27b8754b83713db61cf9a7a6bdf65beb6a9ac8aa39356e168"
+      "digest": "sha256:5b374e65dc2740748205db597a7cd9779d71daa1b30ad46e542f95b093e56c98"
     }
   ],
   "facts": [

@@ -75,11 +75,28 @@ alpha branch or tag. The repository must create the next upstream anchor line
 explicitly, then run the normal channel promotion flow for that line.
 
 When branch protection requires pull requests, generated version-state commits
-are also routed through pull requests. The action creates an internal
-`buildchain/version-state/...` branch and PR, then stops before moving tags. Once
-that PR is reviewed, checked, and merged, the next promotion run verifies that
-the merge only changed declared version-state files from the legal source
-parent, then moves exact and floating refs.
+must still complete inside the promotion automation. The action updates
+Buildchain-managed channel protection before generated bookkeeping, adds the
+authenticated promotion token user or app to the bypass allowlist, creates the
+configured required check on the exact generated version-state commit, then
+applies that commit directly. If GitHub still rejects the direct update,
+promotion fails with a configuration diagnostic instead of opening a
+post-publish human PR. Reusable wrapper callers should allow `checks: write` so
+the generated check is owned by GitHub Actions and matches the managed branch
+protection rule.
+
+For Buildchain-owned automation, callers may pass
+`branch-protection-bypass-apps`, `branch-protection-bypass-users`, or
+`branch-protection-bypass-teams`. The action still configures managed
+`dev/vN/vN.M`, `alpha/vN/vN.M`, and `release/vN/vN.M` branches with one
+required approving review, strict GitHub Actions checks, admin enforcement,
+conversation resolution, no force pushes, and no deletions; the bypass
+allowance only lets the named automation identity apply generated version-state
+or channel bookkeeping without a second human review after the reviewed channel
+PR has already merged. Direct action calls automatically include the current
+promotion token's authenticated user or app when GitHub exposes it; explicit
+inputs are supplemental allowlist entries for less discoverable release
+authorities.
 
 ## Publish Transactions
 
@@ -90,6 +107,7 @@ trusted channel workflow:
 - uses: kungfu-systems/buildchain/actions/promote-buildchain-ref@v2
   with:
     token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+    generated-ref-update-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
     sha: ${{ github.sha }}
     target-ref: release/v2/v2.0
     publish-transaction: "true"
@@ -202,7 +220,8 @@ The action outputs `transaction-id`, `transaction-state`,
 `release-passport-state-sha` is the durable ref commit after the generated
 `release-passport/*` files have been uploaded into that recovery ref.
 `finalization-needed=true` means publish evidence is valid, but protected branch
-or ref finalization needs a later promotion run.
+or ref finalization needs a later idempotent promotion run. It must not require
+a human version-state PR.
 Set `github-release: "true"` when the semver promotion should also publish the
 exact-tag GitHub Release. After the release transaction reaches `complete` and
 `finalization-needed` is false, the action creates or updates the GitHub Release
@@ -235,6 +254,12 @@ product-owned `release-passport-kfd-3-artifact-verify-command` such as
 `kungfu agent verify --json`. Buildchain compares declared shipped public
 surfaces with artifact-exposed public surfaces and writes the result under the
 KFD-provided `kfd-3` passport section.
+Buildchain's own release workflow sets `release-passport-buildchain-self-kfd:
+"true"`. In that mode the action generates Buildchain-owned KFD-1/2/3 witnesses
+inside the final version-state workspace, after the release transaction has
+materialized generated files such as `package.json` and `dist/site/*`. This
+keeps self-hosted KFD witness hashes bound to the exact published package
+instead of to a pre-promotion checkout.
 When present, the passport includes the aggregate build summary, platform
 artifact manifests, npm publish evidence, dist-tag promotion evidence, the
 release-state ref, trusted publishing metadata, and the Buildchain transaction
@@ -245,13 +270,14 @@ again, so the consumer-side passport is a complete audit entrypoint. Set
 passport generation.
 
 Finalization recovery is anchored to the durable transaction, not to a single
-workflow run SHA. After a generated version-state PR is merged, the current
-channel head can be a merge commit that contains or corresponds to the recorded
-`release_material_sha`; it does not have to equal the original `source_sha` or
-the transaction `release_sha`. Reruns accept exact tags that already point at
-the transaction release/material SHA or the finalized channel head, and continue
-moving any missing floating tags or dev/alpha refs before marking the
-transaction `complete`.
+workflow run SHA. After generated version-state bookkeeping is applied, the
+current channel head can be the generated version-state commit or a historical
+merge commit that contains or corresponds to the recorded `release_material_sha`;
+it does not have to equal the original `source_sha` or the transaction
+`release_sha`. Reruns accept exact tags that already point at the transaction
+release/material SHA or the finalized channel head, and continue moving any
+missing floating tags or dev/alpha refs before marking the transaction
+`complete`.
 
 Normal reruns accept already-published artifacts only when evidence matches.
 Missing required artifacts can be published on the next run. Conflicting
@@ -289,6 +315,19 @@ while the reusable build trust gate now checks the source-lock channel HEAD and
 merged same-repository PR lineage before heavy build runners start. This action
 still independently rechecks PR lineage, alpha/release tree equivalence, and
 generated version-state verification before moving channel refs and tags.
+Generated version-state direct ref updates can use a separate
+`generated-ref-update-token`; the reusable wrapper defaults it to
+`secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token`. Consumers that protect
+`dev/*`, `alpha/*`, or `release/*` with one required review should configure
+`BUILDCHAIN_PROMOTION_TOKEN` as the bypass-capable release authority, so
+post-publish dev/alpha/release bookkeeping completes without a human PR.
+The reusable `release-candidate-promote.yml` wrapper defaults
+`branch-protection-bypass-apps` to `github-actions`, so flow-internal promotion
+can complete generated `dev`/`alpha`/`release` bookkeeping while ordinary human
+pushes and PR merges remain governed by the one-review branch protection rule.
+The promotion action also auto-discovers the current token's authenticated user
+or app and adds it to the managed bypass allowlist, so consumers do not have to
+declare the same release authority twice.
 
 The tag names intentionally follow the old ABV release semantics:
 exact release tags are `vX.Y.Z`, exact alpha tags are `vX.Y.Z-alpha.N`, floating
