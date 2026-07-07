@@ -45,7 +45,7 @@
         "contract drift is checked before heavy build jobs for stable floating refs"
       ],
       "breakingDigest": "sha256:6303aa2c2cb8c2cef4301ceea95cc3c426c2aa81d98714aa9bdf2471d63faee1",
-      "auditDigest": "sha256:7e00ee6fdb2a47097ee6bfb1efe43a34a4c378d108475779abf1f05114e2187a"
+      "auditDigest": "sha256:7c456219712222f67a4d7b4ee13183c2f9e42d7ac518100ff413419c189fc2d4"
     },
     {
       "contractVersion": 1,
@@ -460,5 +460,5 @@
     }
   ],
   "compatibilityDigest": "sha256:407d6d5ee6a96a34d2cc30db9ac64cf4b1819ab6d77bd7a57a07a124f22101ca",
-  "contractDigest": "sha256:367266603245cda77088bb0860847cdc7cc7eed6bb771e5d872871ce43d10d94"
+  "contractDigest": "sha256:62d46029c0f18df57f7adec54c580aa16d188036240c9d0bee40368cc970a9cd"
 }

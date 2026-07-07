@@ -101,25 +101,49 @@ function ensureCheckoutTarget(targetPath, workspace) {
 }
 
 function git(args, { cwd, env = {}, timeoutMs = 60000, stdio = ["ignore", "pipe", "pipe"] } = {}) {
-  const output = execFileSync("git", args, {
-    cwd,
-    env: { ...process.env, ...env },
-    encoding: "utf8",
-    stdio,
-    timeout: timeoutMs,
-  });
-  return output ? String(output).trim() : "";
+  try {
+    const output = execFileSync("git", args, {
+      cwd,
+      env: { ...process.env, ...env },
+      encoding: "utf8",
+      stdio,
+      timeout: timeoutMs,
+    });
+    return output ? String(output).trim() : "";
+  } catch (error) {
+    const stderr = error?.stderr ? String(error.stderr).trim() : "";
+    const stdout = error?.stdout ? String(error.stdout).trim() : "";
+    const detail = [stderr, stdout].filter(Boolean).join("\n").trim();
+    if (detail && !String(error.message || "").includes(detail)) {
+      error.message = `${error.message}\n${detail}`;
+    }
+    throw error;
+  }
 }
 
 function githubAuthEnv(token = "") {
   if (!token) {
     return {};
   }
+  const encoded = Buffer.from(`x-access-token:${token}`).toString("base64");
   return {
     GIT_CONFIG_COUNT: "1",
     GIT_CONFIG_KEY_0: "http.https://github.com/.extraheader",
-    GIT_CONFIG_VALUE_0: `AUTHORIZATION: bearer ${token}`,
+    GIT_CONFIG_VALUE_0: `AUTHORIZATION: basic ${encoded}`,
   };
+}
+
+function markSafeDirectory(targetPath, timeoutMs) {
+  try {
+    git(["config", "--global", "--add", "safe.directory", path.resolve(targetPath)], {
+      cwd: targetPath,
+      timeoutMs,
+      stdio: "ignore",
+    });
+  } catch {
+    // Git safe.directory is best-effort. If the runner disallows global config,
+    // the next git command will fail with the original actionable error.
+  }
 }
 
 function gitObjectDirectory(referencePath) {
@@ -222,7 +246,7 @@ export function lockedSourceCheckout({
   repository = readEnv("GITHUB_REPOSITORY"),
   sourceSha = readEnv("BUILDCHAIN_SOURCE_SHA"),
   sourceTreeSha = readEnv("BUILDCHAIN_SOURCE_TREE_SHA"),
-  fetchRef = readEnv("GITHUB_REF"),
+  fetchRef = readEnv("BUILDCHAIN_SOURCE_REF", readEnv("GITHUB_REF")),
   mode = readEnv("BUILDCHAIN_CHECKOUT_CACHE_MODE", "off"),
   mirrorUrlTemplate = readEnv("BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE"),
   referenceRepositoryTemplate = readEnv("BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE"),
@@ -245,6 +269,7 @@ export function lockedSourceCheckout({
   git(["init"], { cwd: targetPath, timeoutMs });
   const renderedMirrorUrl = renderTemplate(mirrorUrlTemplate, { ...repoParts, sha });
   const renderedReferenceRepository = renderTemplate(referenceRepositoryTemplate, { ...repoParts, sha });
+  markSafeDirectory(targetPath, timeoutMs);
   const evidence = {
     schemaVersion: 1,
     contract: LOCKED_SOURCE_CHECKOUT_CONTRACT,

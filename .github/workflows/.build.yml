@@ -821,6 +821,7 @@ jobs:
         run: node .buildchain/runtime/scripts/locked-source-checkout.mjs
         env:
           BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
           BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
           BUILDCHAIN_CHECKOUT_CACHE_MODE: ${{ inputs.checkout-cache-mode }}
           BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE: ${{ inputs.checkout-cache-mirror-url-template || vars.BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE }}
@@ -1036,6 +1037,7 @@ jobs:
         run: node .buildchain/runtime/scripts/locked-source-checkout.mjs
         env:
           BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
           BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
           BUILDCHAIN_CHECKOUT_CACHE_MODE: ${{ inputs.checkout-cache-mode }}
           BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE: ${{ inputs.checkout-cache-mirror-url-template || vars.BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE }}
