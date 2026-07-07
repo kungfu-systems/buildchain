@@ -293,7 +293,10 @@ Buildchain-managed promotions must finish generated version-state bookkeeping
 with the promotion token directly; they must not require a post-publish human
 PR. Before patching a protected generated bookkeeping ref, Buildchain emits the
 configured required check on the exact generated version-state commit so strict
-branch protection can validate the automation path without a second build.
+branch protection can validate the automation path without a second build, then
+uses the generated ref update token for the protected ref PATCH. The reusable
+wrapper defaults that token to `secrets.BUILDCHAIN_PROMOTION_TOKEN ||
+github.token`.
 
 If finalization fails after an exact Git tag, a channel branch, or dev/alpha
 sync ref has already moved, the next run reads the durable `finalizing` state
