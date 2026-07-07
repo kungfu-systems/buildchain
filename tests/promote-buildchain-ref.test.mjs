@@ -4708,6 +4708,76 @@ test("strict alpha promotion rejects missing PR lineage", async () => {
   );
 });
 
+test("strict alpha promotion accepts same-line version-state PR lineage", async () => {
+  const refs = new Map([
+    ["heads/alpha/v1/v1.0", SHA],
+  ]);
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (refs.has(ref)) {
+            return { data: { object: { sha: refs.get(ref) } } };
+          }
+          throw notFound();
+        },
+        getCommit: async ({ commit_sha }) => ({
+          data: { tree: { sha: `tree-${commit_sha}` } },
+        }),
+        createBlob: async () => ({ data: { sha: "blob-sha" } }),
+        createTree: async () => ({ data: { sha: "tree-sha" } }),
+        createCommit: async () => ({ data: { sha: "state-sha" } }),
+        listMatchingRefs: async ({ ref }) => {
+          if (ref === "tags/v1.0.") {
+            return { data: [{ ref: "refs/tags/v1.0.0", object: { sha: OTHER_SHA } }] };
+          }
+          return { data: [] };
+        },
+        createRef: async ({ ref, sha }) => {
+          refs.set(ref.replace(/^refs\//, ""), sha);
+          return {};
+        },
+        updateRef: async ({ ref, sha }) => {
+          refs.set(ref, sha);
+          return {};
+        },
+      },
+      repos: {
+        getBranchProtection: async () => ({
+          data: protectedChannel(),
+        }),
+        listPullRequestsAssociatedWithCommit: async () => ({
+          data: [
+            {
+              merged_at: "2026-07-07T00:00:00Z",
+              base: { ref: "alpha/v1/v1.0" },
+              head: {
+                ref: "buildchain/version-state/alpha-v1-v1.0/123456789abc",
+                repo: { full_name: "kungfu-systems/buildchain" },
+              },
+            },
+          ],
+        }),
+      },
+    },
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    cwd: makeTempWorkspace({}),
+    versionState: false,
+    requireGovernance: true,
+  });
+
+  assert.equal(result.sha, SHA);
+  assert.equal(refs.get("tags/v1.0.1-alpha.0"), SHA);
+  assert.equal(refs.get("tags/v1.0-alpha"), SHA);
+});
+
 test("strict alpha promotion no-ops settled generated version-state commits", async () => {
   const refs = new Map([
     ["heads/alpha/v1/v1.0", SHA],
