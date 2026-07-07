@@ -127,6 +127,7 @@ jobs:
   propagate-site:
     uses: kungfu-systems/buildchain/.github/workflows/release-propagation.yml@v2
     with:
+      buildchain-ref: v2
       graph-json: ${{ needs.release.outputs.propagation-graph-json }}
       upstream-release-json: ${{ needs.release.outputs.upstream-release-json }}
       downstream-target: site-libkungfu-dev
@@ -137,11 +138,15 @@ jobs:
       propagation-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
 ```
 
-The workflow plans propagation, checks out the downstream repository, writes the
-exact lock, and opens or updates a PR. It does not publish the downstream
-release directly. The downstream repository keeps its normal Buildchain
-governance: the PR updates source-of-truth facts, then downstream alpha or
-release publication runs through its own protected channel.
+The workflow checks out the Buildchain runtime selected by
+`buildchain-repository` and `buildchain-ref` into `.buildchain/runtime`, invokes
+that runtime for the propagation plan and lock write, then checks out the
+downstream repository, writes the exact lock, and opens or updates a PR. It does
+not publish the downstream release directly. The downstream repository keeps its
+normal Buildchain governance: the PR updates source-of-truth facts, then
+downstream alpha or release publication runs through its own protected channel.
+For unreleased runtime validation, keep the caller's reusable workflow reference
+on `@v2` and pass a temporary train ref through `buildchain-ref`.
 
 ## kfd to site-libkungfu-dev
 
