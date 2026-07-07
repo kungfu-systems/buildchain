@@ -107,6 +107,7 @@ trusted channel workflow:
 - uses: kungfu-systems/buildchain/actions/promote-buildchain-ref@v2
   with:
     token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+    generated-ref-update-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
     sha: ${{ github.sha }}
     target-ref: release/v2/v2.0
     publish-transaction: "true"
@@ -314,6 +315,12 @@ while the reusable build trust gate now checks the source-lock channel HEAD and
 merged same-repository PR lineage before heavy build runners start. This action
 still independently rechecks PR lineage, alpha/release tree equivalence, and
 generated version-state verification before moving channel refs and tags.
+Generated version-state direct ref updates can use a separate
+`generated-ref-update-token`; the reusable wrapper defaults it to
+`secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token`. Consumers that protect
+`dev/*`, `alpha/*`, or `release/*` with one required review should configure
+`BUILDCHAIN_PROMOTION_TOKEN` as the bypass-capable release authority, so
+post-publish dev/alpha/release bookkeeping completes without a human PR.
 The reusable `release-candidate-promote.yml` wrapper defaults
 `branch-protection-bypass-apps` to `github-actions`, so flow-internal promotion
 can complete generated `dev`/`alpha`/`release` bookkeeping while ordinary human
