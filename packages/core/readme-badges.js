@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import crypto from "node:crypto";
+import { createRequire } from "node:module";
 import { loadBuildchainConfig } from "./buildchain-config.js";
 import {
   readJsonFromLocation,
@@ -17,6 +18,14 @@ const KFD_KEYS = [
   { key: "kfd-2", id: "kfd2", label: "KFD-2", text: "trust passport" },
   { key: "kfd-3", id: "kfd3", label: "KFD-3", text: "collaboration interface" },
 ];
+
+const KFD_BADGE_CONCEPTS = {
+  "kfd-1": "contractWorld",
+  "kfd-2": "releaseTrustPassport",
+  "kfd-3": "collaborationInterface",
+};
+
+const requireFromHere = createRequire(import.meta.url);
 
 const STATE_COLORS = {
   passed: "2ea44f",
@@ -35,6 +44,18 @@ function readJsonIfExists(filePath) {
     return undefined;
   }
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
+}
+
+function readPackageJsonForResolvedFile(filePath) {
+  let current = path.dirname(filePath);
+  while (current && current !== path.dirname(current)) {
+    const packagePath = path.join(current, "package.json");
+    if (fs.existsSync(packagePath)) {
+      return readJsonIfExists(packagePath) || {};
+    }
+    current = path.dirname(current);
+  }
+  return {};
 }
 
 function readTextIfExists(filePath) {
@@ -79,6 +100,128 @@ function normalizeStringArray(value) {
   return value
     .map((entry) => String(entry || "").trim())
     .filter(Boolean);
+}
+
+function resolveLocalFactPath({ cwd, location }) {
+  const value = String(location || "").trim();
+  if (!value || /^https?:\/\//.test(value)) {
+    return "";
+  }
+  return path.isAbsolute(value) ? value : path.resolve(cwd, value);
+}
+
+function kfdStandardsLocation({ cwd, badgeConfig = {} }) {
+  return String(
+    badgeConfig.kfd_standards ||
+    badgeConfig.kfdStandards ||
+    badgeConfig.kfd_standards_path ||
+    badgeConfig.kfdStandardsPath ||
+    process.env.BUILDCHAIN_KFD_STANDARDS_PATH ||
+    "",
+  ).trim();
+}
+
+async function loadKfdStandards({ cwd, badgeConfig = {} }) {
+  const configured = kfdStandardsLocation({ cwd, badgeConfig });
+  if (configured) {
+    const localPath = resolveLocalFactPath({ cwd, location: configured });
+    const value = /^https?:\/\//.test(configured)
+      ? await readJsonFromLocation(configured)
+      : readJsonIfExists(localPath);
+    if (!value || typeof value !== "object") {
+      throw new Error(`KFD standards metadata is not readable: ${configured}`);
+    }
+    return {
+      location: configured,
+      resolvedPath: localPath,
+      source: /^https?:\/\//.test(configured) ? "configured-url" : "configured-path",
+      sha256: localPath && fs.existsSync(localPath) ? sha256File(localPath) : hashText(JSON.stringify(value)),
+      package: {},
+      value,
+      error: "",
+    };
+  }
+  try {
+    const resolvedPath = requireFromHere.resolve("@kungfu-tech/kfd/standards.json", {
+      paths: [cwd],
+    });
+    const value = readJsonIfExists(resolvedPath);
+    const packageJson = readPackageJsonForResolvedFile(resolvedPath);
+    return {
+      location: "@kungfu-tech/kfd/standards.json",
+      resolvedPath,
+      source: "package-export",
+      sha256: sha256File(resolvedPath),
+      package: {
+        name: packageJson.name || "@kungfu-tech/kfd",
+        version: packageJson.version || "",
+      },
+      value,
+      error: "",
+    };
+  } catch (error) {
+    return {
+      location: "@kungfu-tech/kfd/standards.json",
+      resolvedPath: "",
+      source: "fallback",
+      sha256: "",
+      package: {},
+      value: undefined,
+      error: error.message,
+    };
+  }
+}
+
+function summarizeKfdStandards(loaded) {
+  const standards = loaded?.value?.standards && typeof loaded.value.standards === "object"
+    ? loaded.value.standards
+    : {};
+  const summary = {
+    contract: loaded?.value?.contract || "",
+    schemaVersion: loaded?.value?.schemaVersion || undefined,
+    metadataSchema: loaded?.value?.metadataSchema || undefined,
+    source: loaded?.source || "fallback",
+    location: loaded?.location || "",
+    sha256: loaded?.sha256 || "",
+    package: loaded?.package || {},
+    error: loaded?.error || "",
+    standards: {},
+  };
+  for (const fallback of KFD_KEYS) {
+    const standard = standards[fallback.key] || {};
+    const conceptKey = KFD_BADGE_CONCEPTS[fallback.key];
+    summary.standards[fallback.key] = {
+      key: standard.key || fallback.key,
+      id: standard.id || fallback.label,
+      label: standard.label || fallback.label,
+      title: standard.title || "",
+      status: standard.status || "",
+      revision: standard.revision || undefined,
+      documentUrl: standard.document?.url || "",
+      documentPath: standard.document?.path || "",
+      documentSha256: standard.document?.sha256 || "",
+      badgeText: standard.concepts?.[conceptKey] || fallback.text,
+      interfaceContract: conceptKey ? standard.interfaces?.[conceptKey]?.contract || "" : "",
+      schemaId: conceptKey ? standard.interfaces?.[conceptKey]?.schemaId || standard.schemaIds?.[conceptKey] || "" : "",
+    };
+  }
+  return summary;
+}
+
+function kfdBadgeSpecs(kfdStandards) {
+  return KFD_KEYS.map((fallback) => {
+    const standard = kfdStandards?.standards?.[fallback.key] || {};
+    return {
+      ...fallback,
+      label: standard.label || fallback.label,
+      text: standard.badgeText || fallback.text,
+      title: standard.title || "",
+      standardDocumentUrl: standard.documentUrl || "",
+      standardDocumentSha256: standard.documentSha256 || "",
+      interfaceContract: standard.interfaceContract || "",
+      schemaId: standard.schemaId || "",
+    };
+  });
 }
 
 function readRepositoryFromGit(cwd) {
@@ -289,10 +432,10 @@ function buildBadgeEntries(facts) {
   }
   entries.push({
     id: "release-passport",
-    alt: `Release Passport: ${facts.releasePassport.state}`,
+    alt: `Buildchain Release Passport: ${facts.releasePassport.state}`,
     image: badgeUrl({
-      label: "release passport",
-      message: facts.releasePassport.state,
+      label: "buildchain",
+      message: `release passport ${facts.releasePassport.state}`,
       color: STATE_COLORS[facts.releasePassport.state] || STATE_COLORS.unknown,
     }),
     link: facts.releasePassport.url,
@@ -344,13 +487,19 @@ export async function collectReadmeBadgeFacts({ cwd = process.cwd() } = {}) {
       ? `${repository.url}/blob/HEAD/${posixPath(releasePassportLocation)}`
       : releasePassportLocation;
   const releaseState = releasePassportState({ report, error, badgeConfig });
-  const kfd = KFD_KEYS.map((entry) => {
+  const kfdStandards = summarizeKfdStandards(await loadKfdStandards({ cwd: resolvedCwd, badgeConfig }));
+  const kfd = kfdBadgeSpecs(kfdStandards).map((entry) => {
     const passed = kfdSectionPassed({ passport, report, key: entry.key });
     const state = passed ? "passed" : declaredKfdState({ badgeConfig, key: entry.key, id: entry.id });
     return {
       key: entry.key,
       label: entry.label,
       text: entry.text,
+      title: entry.title,
+      standardDocumentUrl: entry.standardDocumentUrl,
+      standardDocumentSha256: entry.standardDocumentSha256,
+      interfaceContract: entry.interfaceContract,
+      schemaId: entry.schemaId,
       state,
       source: passed ? "release-passport" : "declaration",
       url: releasePassportUrl,
@@ -382,6 +531,7 @@ export async function collectReadmeBadgeFacts({ cwd = process.cwd() } = {}) {
       "dist/site/kfd-claims.json",
       ".buildchain/kfd-claims.json",
     ]),
+    kfdStandards,
     productMechanism: localFactFileSummary(resolvedCwd, [
       "dist/site/product-mechanism.json",
       "product-mechanism.json",

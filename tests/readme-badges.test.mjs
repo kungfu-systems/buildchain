@@ -56,6 +56,76 @@ function writeJson(filePath, value) {
   return filePath;
 }
 
+function minimalKfdStandards() {
+  return {
+    schemaVersion: 1,
+    contract: "kfd-standards-metadata",
+    metadataSchema: {
+      id: "https://kfd.libkungfu.dev/schemas/kfd-standards.schema.json",
+      path: "schemas/kfd-standards.schema.json",
+      version: "1",
+    },
+    standards: {
+      "kfd-1": {
+        key: "kfd-1",
+        id: "KFD-1",
+        label: "KFD-1",
+        title: "Facts must not drift",
+        document: { path: "decisions/kfd-1.md", url: "https://kfd.libkungfu.dev/1", sha256: "1".repeat(64) },
+        concepts: { contractWorld: "contract world" },
+        interfaces: {
+          contractWorld: {
+            contract: "kfd-1-contract-world",
+            schemaId: "https://kfd.libkungfu.dev/schemas/kfd-1/contract-world.schema.json",
+          },
+        },
+      },
+      "kfd-2": {
+        key: "kfd-2",
+        id: "KFD-2",
+        label: "KFD-2",
+        title: "Trust must start from facts",
+        document: { path: "decisions/kfd-2.md", url: "https://kfd.libkungfu.dev/2", sha256: "2".repeat(64) },
+        concepts: { releaseTrustPassport: "release trust passport" },
+        interfaces: {
+          releaseTrustPassport: {
+            contract: "kfd-2-release-trust-passport",
+            schemaId: "https://kfd.libkungfu.dev/schemas/kfd-2/release-trust-passport.schema.json",
+          },
+        },
+      },
+      "kfd-3": {
+        key: "kfd-3",
+        id: "KFD-3",
+        label: "KFD-3",
+        title: "Cooperation must start from trusted value",
+        document: { path: "decisions/kfd-3.md", url: "https://kfd.libkungfu.dev/3", sha256: "3".repeat(64) },
+        concepts: { collaborationInterface: "collaboration interface" },
+        interfaces: {
+          collaborationInterface: {
+            contract: "kfd-3-collaboration-interface",
+            schemaId: "https://kfd.libkungfu.dev/schemas/kfd-3/collaboration-interface.schema.json",
+          },
+        },
+      },
+    },
+  };
+}
+
+function writeKfdPackage(cwd, standards = minimalKfdStandards()) {
+  const packageDir = path.join(cwd, "node_modules", "@kungfu-tech", "kfd");
+  writeJson(path.join(packageDir, "standards.json"), standards);
+  writeJson(path.join(packageDir, "package.json"), {
+    name: "@kungfu-tech/kfd",
+    version: "1.0.0-alpha.test",
+    exports: {
+      "./standards.json": "./standards.json",
+      "./package.json": "./package.json",
+    },
+  });
+  return packageDir;
+}
+
 function createMinimalKfdPassportRepo() {
   const cwd = writeFixtureRepo({
     badges: 'release_passport = ".buildchain/release-passport/buildchain.release.json"\n',
@@ -156,7 +226,8 @@ test("readme badge block inserts into a fresh README", async () => {
 
   assert.match(updated, /<!-- buildchain:badges:start -->/);
   assert.match(updated, /KFD-1: declared/);
-  assert.match(updated, /release passport.*declared|release%20passport-declared/);
+  assert.match(updated, /Buildchain Release Passport: declared/);
+  assert.match(updated, /buildchain-release%20passport%20declared/);
   assert.match(updated, /^# Badge Fixture\n\n?<!-- buildchain:badges:start -->/);
 });
 
@@ -199,6 +270,25 @@ test("repositories without a verified passport cannot display KFD passed", async
   assert.equal(facts.kfd.some((entry) => entry.state === "passed"), false);
   assert.equal(facts.releasePassport.state, "declared");
   assert.match(renderReadmeBadgeBlock(facts), /KFD-1: declared/);
+});
+
+test("KFD badge text and provenance come from the KFD standards package", async () => {
+  const cwd = writeFixtureRepo({
+    badges: 'kfd_1 = "declared"\nkfd_2 = "aligned"\nkfd_3 = "planned"\n',
+  });
+  writeKfdPackage(cwd);
+
+  const facts = await collectReadmeBadgeFacts({ cwd });
+  const kfd2 = facts.kfd.find((entry) => entry.key === "kfd-2");
+
+  assert.equal(facts.kfdStandards.contract, "kfd-standards-metadata");
+  assert.equal(facts.kfdStandards.source, "package-export");
+  assert.equal(facts.kfdStandards.package.name, "@kungfu-tech/kfd");
+  assert.equal(facts.kfdStandards.package.version, "1.0.0-alpha.test");
+  assert.equal(kfd2.text, "release trust passport");
+  assert.equal(kfd2.standardDocumentUrl, "https://kfd.libkungfu.dev/2");
+  assert.equal(kfd2.interfaceContract, "kfd-2-release-trust-passport");
+  assert.match(renderReadmeBadgeBlock(facts), /release%20trust%20passport%20aligned/);
 });
 
 test("verified repository passport backs KFD passed badges and repo-specific links", async () => {

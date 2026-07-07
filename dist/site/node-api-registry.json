@@ -50,7 +50,7 @@
       "specifier": "@kungfu-tech/buildchain/readme-badges",
       "export": "./readme-badges",
       "target": "./packages/core/readme-badges.js",
-      "digest": "sha256:a3400b0083430782d4fda283b21d308327eaed969053aa5b88a8b946bf83d4b3"
+      "digest": "sha256:6a185305f4fbdb5b55ab3573c4327bd80a4c954f765fa9da68614b6808523a22"
     },
     {
       "specifier": "@kungfu-tech/buildchain/logging",
@@ -104,7 +104,7 @@
     {
       "id": "readme-badges",
       "path": "docs/readme-badges.md",
-      "digest": "sha256:3f4a44ea7f3b70cadc78a343fe53ade74b78fa369c19630cc9b926c1e460f66f"
+      "digest": "sha256:305d09bcedd53c1ad538b9fdef431f4dbb3ae15baeb3a2a797c220462368167f"
     },
     {
       "id": "homebrew",

@@ -417,7 +417,9 @@ for (const requiredSnippet of [
   "buildchain badges readme --check",
   "collectReadmeBadgeFacts",
   "kungfu-buildchain-readme-badge-facts",
+  "@kungfu-tech/kfd/standards.json",
   "KFD passed",
+  "Buildchain Release Passport",
   "release passport",
   "<!-- buildchain:badges:start -->",
 ]) {
