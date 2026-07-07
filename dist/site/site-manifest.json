@@ -117,7 +117,7 @@
       "path": "docs/site-bundle-contract.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:466318ea255da5a3c70a260773384341afb91b929135f2253ecd8f4e6dae7f7b"
+      "digest": "sha256:fa8bdf597ddf87d89629c133318d54f89c5f291d32427189fb3483bc81efc6b7"
     },
     {
       "id": "migration-inventory",
