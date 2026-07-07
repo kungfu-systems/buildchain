@@ -149,7 +149,7 @@
       "title": "Web surface deployments",
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
-      "digest": "sha256:5b374e65dc2740748205db597a7cd9779d71daa1b30ad46e542f95b093e56c98"
+      "digest": "sha256:f42cc7a81dbeb1b31bec21de61e9807af317bda4055f693ab807b15d9ec77367"
     }
   ],
   "requiredAgentManuals": [
