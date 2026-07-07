@@ -3462,6 +3462,121 @@ test("release finalization uses the transaction alpha source after next-alpha ad
   assert.equal(refs.get("tags/v1.0.0"), finalMergeSha);
 });
 
+test("release finalization merges generated next-alpha state into diverged dev", async () => {
+  const releaseHeadSha = SHA;
+  const alphaHeadSha = "a".repeat(40);
+  const devHeadSha = "b".repeat(40);
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "1.0.0-alpha.0",
+      packageManager: "pnpm@11.7.0",
+    },
+  });
+  const { octokit, refs, commits, commitLog } = createGitMock({
+    refs: new Map([
+      ["heads/release/v1/v1.0", releaseHeadSha],
+      ["heads/alpha/v1/v1.0", alphaHeadSha],
+      ["heads/dev/v1/v1.0", devHeadSha],
+      ["tags/v1.0.0-alpha.0", alphaHeadSha],
+      ["tags/v1.0-alpha", alphaHeadSha],
+    ]),
+  });
+  commits.set(releaseHeadSha, {
+    sha: releaseHeadSha,
+    tree: { sha: "alpha-tree" },
+    parents: [{ sha: alphaHeadSha }],
+  });
+  commits.set(alphaHeadSha, {
+    sha: alphaHeadSha,
+    tree: { sha: "alpha-tree" },
+    parents: [],
+  });
+  commits.set(devHeadSha, {
+    sha: devHeadSha,
+    tree: { sha: "dev-tree" },
+    parents: [],
+  });
+  const checkRuns = [];
+  const originalUpdateRef = octokit.rest.git.updateRef;
+  octokit.rest.git.updateRef = async (request) => {
+    if (request.ref === "heads/dev/v1/v1.0") {
+      const commit = commits.get(request.sha);
+      if (commit?.parents?.length === 1) {
+        throw Object.assign(new Error("Update is not a fast forward"), {
+          status: 422,
+          response: { data: { message: "Update is not a fast forward" } },
+        });
+      }
+    }
+    return originalUpdateRef(request);
+  };
+  octokit.rest.checks = {
+    create: async (request) => {
+      checkRuns.push(request);
+      return { data: { id: checkRuns.length } };
+    },
+  };
+  octokit.rest.repos = {
+    getBranchProtection: async () => ({
+      data: protectedChannel(),
+    }),
+    compareCommitsWithBasehead: async ({ basehead }) => {
+      assert.match(basehead, new RegExp(`^${devHeadSha}\\.\\.\\.commit-\\d+0+$`));
+      return { data: { files: [{ filename: "package.json" }] } };
+    },
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: releaseHeadSha,
+    targetRef: "release/v1/v1.0",
+    cwd,
+    requiredStatusCheck: "check",
+  });
+
+  const releaseVersionCommit = commitLog.find((commit) =>
+    commit.message === "chore(release): release v1.0.0",
+  );
+  const nextAlphaCommit = commitLog.find((commit) =>
+    commit.message === "chore(release): prepare v1.0.1-alpha.0",
+  );
+  const devMergeCommit = commitLog.find((commit) =>
+    commit.parents.length === 2 &&
+    commit.parents[0] === devHeadSha &&
+    commit.parents[1] === nextAlphaCommit.sha,
+  );
+  assert.ok(releaseVersionCommit);
+  assert.ok(nextAlphaCommit);
+  assert.ok(devMergeCommit);
+  assert.equal(result.sha, releaseVersionCommit.sha);
+  assert.equal(result.nextAlphaSha, nextAlphaCommit.sha);
+  assert.equal(refs.get("heads/alpha/v1/v1.0"), nextAlphaCommit.sha);
+  assert.equal(refs.get("heads/dev/v1/v1.0"), devMergeCommit.sha);
+  assert.ok(
+    checkRuns.some(
+      (check) => check.name === "check" && check.head_sha === nextAlphaCommit.sha,
+    ),
+  );
+  assert.ok(
+    checkRuns.some(
+      (check) => check.name === "check" && check.head_sha === devMergeCommit.sha,
+    ),
+  );
+  assert.ok(
+    result.updates.some(
+      (update) =>
+        update.ref === "dev/v1/v1.0" &&
+        update.action === "created-version-state-merge" &&
+        update.sha === devMergeCommit.sha &&
+        update.sourceSha === nextAlphaCommit.sha &&
+        update.currentSha === devHeadSha,
+    ),
+  );
+});
+
 test("release promotion uses frozen PR alpha evidence when a later same-patch alpha exists", async () => {
   const oldReleaseSha = "4".repeat(40);
   const alphaZeroSha = "5".repeat(40);
