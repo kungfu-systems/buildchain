@@ -26,7 +26,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-contract",
       "export": "./buildchain-contract",
       "target": "./packages/core/buildchain-contract.js",
-      "digest": "sha256:0ec4fb82b4a01f303688a74e020e6b718db248cf0470be25d088e7d669e38679"
+      "digest": "sha256:55a47f7476e7307fffdc29b5af6acf4f40d57987557cf470f26611414d927d5b"
     },
     {
       "specifier": "@kungfu-tech/buildchain/diagnostics",

@@ -108,7 +108,7 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /Checkout consumer contract lock/);
   assert.match(workflow, /buildchain-contract-lock\.mjs check/);
   assert.match(workflow, /Report consumer Buildchain contract drift/);
-  assert.match(workflow, /buildchain-contract-lock-status:/);
+  assert.match(workflow, /contract-lock-status=/);
   assert.match(workflow, /buildchain-ref override is only allowed for trusted workflow_dispatch runs/);
   assert.match(workflow, /refs\/heads\/train\/vN\/vN\.M\/<capability>/);
   assert.match(workflow, /publish-channel:/);
@@ -581,12 +581,25 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   );
   assert.match(workflow, /workflow_call:/);
   assert.match(workflow, /buildchain-ref:/);
+  assert.match(workflow, /buildchain-contract-lock-path:/);
+  assert.match(workflow, /buildchain-contract-compatibility-policy:/);
+  assert.match(workflow, /buildchain-contract-drift-issue-mode:/);
+  assert.match(workflow, /default: "major-compatible"/);
+  assert.match(workflow, /default: "compatible-and-breaking"/);
   assert.match(workflow, /Resolve Buildchain runtime/);
   assert.match(workflow, /runtime-sha/);
   assert.match(workflow, /Validate web-surface apply inputs/);
   assert.match(workflow, /Validate apply inputs before build/);
+  assert.match(workflow, /Check Buildchain contract lock/);
+  assert.match(workflow, /buildchain-contract-lock\.mjs check/);
+  assert.match(workflow, /Report consumer Buildchain contract drift/);
+  assert.match(workflow, /contract-lock-status=/);
   assert.ok(
     workflow.indexOf("Validate web-surface apply inputs") <
+      workflow.indexOf("Run caller build"),
+  );
+  assert.ok(
+    workflow.indexOf("Check Buildchain contract lock") <
       workflow.indexOf("Run caller build"),
   );
   assert.match(workflow, /preview-aws-role-arn is required before preview-apply can build or deploy/);
