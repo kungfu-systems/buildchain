@@ -444,6 +444,10 @@ for (const requiredSnippet of [
   "dist/site/buildchain-contract.json",
   "buildchain-contract-drift-issue-mode",
   "compatible drift",
+  "Locked Source Checkout Cache",
+  "checkout-cache-mode",
+  "BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE",
+  "sourceCheckout",
 ]) {
   if (!reusableBuildSurfaceDoc.includes(requiredSnippet)) {
     throw new Error(`reusable build surface doc missing contract lock snippet: ${requiredSnippet}`);

@@ -28,6 +28,8 @@ jobs:
       runner-preset: github-hosted
       linux-container-preset: kungfu-verify
       artifact-transfer-mode: ${{ github.event.inputs['artifact-transfer-mode'] || 'github-artifacts' }}
+      checkout-cache-mode: auto
+      checkout-cache-fallback: github
       artifact-name: libnode-shaped
       artifact-name-template: "{artifact}-{platform}-{shortSha}"
       artifact-paths: |

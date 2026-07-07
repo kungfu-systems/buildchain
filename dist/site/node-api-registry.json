@@ -8,13 +8,13 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:d3a30e60a7374b1742604d3b97970c7f8f2d7b1fcfe58d9459fb0703197bc0d1"
+      "digest": "sha256:7a2f45e2a78e5201731ab710fdac2ce0f26dd3e8a13b5d2c91b98d630414b369"
     },
     {
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:d3a30e60a7374b1742604d3b97970c7f8f2d7b1fcfe58d9459fb0703197bc0d1"
+      "digest": "sha256:7a2f45e2a78e5201731ab710fdac2ce0f26dd3e8a13b5d2c91b98d630414b369"
     },
     {
       "specifier": "@kungfu-tech/buildchain/artifact-passport",
@@ -32,7 +32,7 @@
       "specifier": "@kungfu-tech/buildchain/diagnostics",
       "export": "./diagnostics",
       "target": "./packages/core/diagnostics.js",
-      "digest": "sha256:d447f864c719632872c9d90f0e30e2b6d45311bc5115d4f3c661d21164d75ebc"
+      "digest": "sha256:a0e54f60ec24d9c15529a8dbad33129c8ec537e9f34203119d876d1e2fb26fe7"
     },
     {
       "specifier": "@kungfu-tech/buildchain/homebrew",

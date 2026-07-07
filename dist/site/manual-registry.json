@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:f4300eed89765cee0df38eb92de4d9d3adce4fbf954c735aead3bea74f05d975"
+      "digest": "sha256:03f52660d03223fff7daf500f995645d78a46fffd8cddec9d8c01bbee0863145"
     },
     {
       "id": "install",
@@ -121,7 +121,7 @@
       "title": "Reusable build surface",
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
-      "digest": "sha256:165011e2a932461805925c714c2c1c07f1ee60c4b3a614b6dcdda4b81ec22d68"
+      "digest": "sha256:e76aefe23b83f1b99b8c13cee1ca99760fd9902a41fbec25e193426329826340"
     },
     {
       "id": "publish-transaction",
