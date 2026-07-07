@@ -14,6 +14,7 @@ import {
   validateKfd1ReleaseGateEvidence,
   validateKfd3CollaborationInterfaceReleaseGateEvidence,
 } from "./kfd-gate.js";
+import { createSurfaceTimestampPolicy } from "./surface-manifest.js";
 
 export const RELEASE_PASSPORT_CONTRACT = "kungfu-buildchain-release-passport";
 export const ARTIFACT_EVIDENCE_CONTRACT = "kungfu-buildchain-artifact-evidence";
@@ -953,6 +954,7 @@ export function createReleasePassport({
     ? normalizeEvidenceDocument(distTagPromotionEvidence, "distTagPromotionEvidence")
     : undefined;
   const normalizedImpact = normalizeImpactLedger(impact, { tag: normalizedTag, line });
+  const generatedAt = nowIso();
   const kfd1Metadata = resolveKfd1Metadata();
   const normalizedKfd1 = kfd1?.passportSection ? kfd1 : undefined;
   const normalizedKfd3 = kfd3?.passportSection ? kfd3 : undefined;
@@ -1001,7 +1003,24 @@ export function createReleasePassport({
   return {
     schemaVersion: 1,
     contract: RELEASE_PASSPORT_CONTRACT,
-    generatedAt: nowIso(),
+    generatedAt,
+    surfaceTimestampPolicy: createSurfaceTimestampPolicy({
+      generatedAt,
+      publishedAt: optionalString(release.publishedAt || release.published_at || normalizedPublishEvidence?.publishedAt),
+      sourceRevision: optionalString(sourceSha || releaseSha || normalizedTransaction?.releaseSha),
+      timestampPolicy: "ci-injected",
+      deterministicInputs: [
+        "release.sourceSha",
+        "release.releaseSha",
+        "release.releaseMaterialSha",
+        "artifact-evidence.json",
+        "publish evidence",
+        "release-state transaction",
+      ],
+      timestampFields: ["generatedAt", "publishedAt", "surfaceTimestampPolicy.generatedAt", "surfaceTimestampPolicy.publishedAt"],
+      timestampFieldsParticipateInArtifactDigest: true,
+      artifactDigestScope: "release passport JSON and release evidence bundle",
+    }),
     product: {
       name: optionalString(productName || "Buildchain"),
       repository: optionalString(repository),

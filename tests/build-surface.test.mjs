@@ -1845,6 +1845,8 @@ test("buildchain semver version state includes generated site contract version",
     [
       "package.json#version",
       "dist/site/buildchain-contract.json#product.version",
+      "dist/site/buildchain-site.json#package.version",
+      "dist/site/site-manifest.json#package.version",
     ],
   );
   assert.ok(

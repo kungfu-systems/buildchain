@@ -52,6 +52,34 @@ from `packages/core/buildchain-kfd-claims.js` and enumerates the public release
 claims plus the KFD-3 collaboration surfaces that Buildchain self-verifies
 during release promotion.
 
+## Timestamp and Reproducibility Policy
+
+Every Buildchain-owned surface manifest uses the same timestamp policy fields:
+
+- `generatedAt`: when the manifest JSON was generated.
+- `publishedAt`: when the surface was published, when known.
+- `reproducible`: whether the manifest declares its reproducibility inputs.
+- `timestampPolicy`: `ci-injected` for release/workflow-generated public
+  artifacts, or `source-date-epoch` for local deterministic source checks.
+- `deterministicInputs`: the source files, revisions, package metadata, and
+  declared Buildchain contracts that determine the manifest bytes.
+- `sourceDateEpoch` / `sourceRevision`: the deterministic time input or source
+  revision used to reproduce the manifest.
+- `timestampPolicyDetails.timestampFieldsParticipateInArtifactDigest`: whether
+  timestamp fields are included in the artifact digest being audited.
+
+The policy is defined by `@kungfu-tech/buildchain/surface-manifest` and applies
+to the root site bundle, `site-manifest.json`, and web-surface deployment
+manifests for named surfaces such as KFD, Buildchain, and Core. Site
+repositories should render these fields; they should not invent their own
+manifest time semantics.
+
+Source checkouts may use `SOURCE_DATE_EPOCH` for deterministic local checks.
+Published CI/release artifacts should inject real timestamps with
+`BUILDCHAIN_SITE_GENERATED_AT` / `BUILDCHAIN_SITE_PUBLISHED_AT` or the matching
+`BUILDCHAIN_SURFACE_*` variables, so public manifests do not expose epoch time
+as if it were a real metadata time.
+
 ## npm Consumption
 
 ```bash
