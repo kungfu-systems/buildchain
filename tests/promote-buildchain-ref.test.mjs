@@ -3462,6 +3462,128 @@ test("release finalization uses the transaction alpha source after next-alpha ad
   assert.equal(refs.get("tags/v1.0.0"), finalMergeSha);
 });
 
+test("release promotion uses frozen PR alpha evidence when a later same-patch alpha exists", async () => {
+  const oldReleaseSha = "4".repeat(40);
+  const alphaZeroSha = "5".repeat(40);
+  const alphaOneSha = "6".repeat(40);
+  const promotionHeadSha = "7".repeat(40);
+  const releaseMergeSha = "8".repeat(40);
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "1.0.0-alpha.0",
+      packageManager: "pnpm@11.7.0",
+    },
+    "scripts/publish.mjs": `
+import fs from "node:fs";
+
+fs.mkdirSync(process.env.BUILDCHAIN_EVIDENCE_DIR, { recursive: true });
+fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
+  schema: 1,
+  version: process.env.BUILDCHAIN_VERSION,
+  channel: process.env.BUILDCHAIN_CHANNEL,
+  source_sha: process.env.BUILDCHAIN_SOURCE_SHA,
+  release_sha: process.env.BUILDCHAIN_RELEASE_SHA,
+  target_ref: process.env.BUILDCHAIN_TARGET_REF,
+  release_material_sha: process.env.BUILDCHAIN_RELEASE_MATERIAL_SHA,
+  publish_tooling_sha: process.env.BUILDCHAIN_PUBLISH_TOOLING_SHA,
+  artifacts: [{
+    group: "node",
+    kind: "npm",
+    name: "@kungfu-tech/buildchain",
+    ref: process.env.BUILDCHAIN_VERSION,
+    digest: "sha512-release"
+  }]
+}, null, 2) + "\\n");
+`,
+  });
+  const { octokit, refs, commits } = createGitMock({
+    refs: new Map([
+      ["heads/release/v1/v1.0", releaseMergeSha],
+      ["tags/v1.0.0-alpha.0", alphaZeroSha],
+      ["tags/v1.0.0-alpha.1", alphaOneSha],
+      ["tags/v1.0-alpha", alphaOneSha],
+    ]),
+  });
+  commits.set(alphaZeroSha, {
+    sha: alphaZeroSha,
+    tree: { sha: "alpha-zero-tree" },
+    parents: [],
+  });
+  commits.set(alphaOneSha, {
+    sha: alphaOneSha,
+    tree: { sha: "alpha-one-tree" },
+    parents: [{ sha: alphaZeroSha }],
+  });
+  commits.set(promotionHeadSha, {
+    sha: promotionHeadSha,
+    tree: { sha: "alpha-zero-tree" },
+    parents: [{ sha: oldReleaseSha }, { sha: alphaZeroSha }],
+  });
+  commits.set(releaseMergeSha, {
+    sha: releaseMergeSha,
+    tree: { sha: "alpha-zero-tree" },
+    parents: [],
+  });
+  let comparedBasehead = "";
+  octokit.rest.repos = {
+    getBranchProtection: async () => ({
+      data: protectedChannel(),
+    }),
+    compareCommitsWithBasehead: async ({ basehead }) => {
+      comparedBasehead = basehead;
+      return { data: { files: [{ filename: "package.json" }] } };
+    },
+    listPullRequestsAssociatedWithCommit: async ({ commit_sha }) => ({
+      data:
+        commit_sha === releaseMergeSha
+          ? [
+              {
+                merged_at: "2026-07-07T00:00:00Z",
+                base: { ref: "release/v1/v1.0" },
+                head: {
+                  ref: "alpha/v1/v1.0",
+                  sha: promotionHeadSha,
+                  repo: { full_name: "kungfu-systems/buildchain" },
+                },
+              },
+            ]
+          : [],
+    }),
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: releaseMergeSha,
+    targetRef: "release/v1/v1.0",
+    cwd,
+    publishTransaction: true,
+    publishCommand: "node scripts/publish.mjs",
+    publishAuth: "trusted-publishing",
+    publishDistTag: "latest",
+    publishPackageMain: "@kungfu-tech/buildchain",
+    releasePassportImpactJson: productionImpactJson(),
+    publishRequiredArtifactsJson: JSON.stringify([
+      {
+        group: "node",
+        kind: "npm",
+        name: "@kungfu-tech/buildchain",
+        ref: "1.0.0",
+        digest: "sha512-release",
+        role: "main",
+      },
+    ]),
+    requireGovernance: true,
+    requireVersionState: true,
+  });
+
+  assert.equal(result.publishTransaction.exactTag, "v1.0.0");
+  assert.match(comparedBasehead, new RegExp(`^${releaseMergeSha}\\.\\.\\.`));
+  assert.equal(refs.get("tags/v1.0.0"), result.sha);
+});
+
 test("publish transaction resumes partial release finalization with exact tag on release material", async () => {
   const oldReleaseSha = "8".repeat(40);
   const alphaSha = "9".repeat(40);
