@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-impact",
+  "versionImpact": {
+    "final": "minor",
+    "source": "buildchain-release-governance",
+    "rationale": "Buildchain v2.8 promotes KFD self-verification, KFD-2 release trust passport audits, KFD-3 collaboration-interface trust proofs, publish source-lock enforcement, and GitHub Checks protected-channel governance as a minor runtime line."
+  },
+  "surfaceImpacts": [
+    {
+      "id": "kfd-1-contract-world-release-gate",
+      "impact": "minor",
+      "class": "release-passport",
+      "rationale": "Adds KFD-1 self contract verification with source/artifact hashes, schema IDs, self-hosting boundary, result, and responsibility state.",
+      "source": "buildchain-ref-promotion.yml"
+    },
+    {
+      "id": "kfd-2-release-trust-passport-audit",
+      "impact": "minor",
+      "class": "release-passport",
+      "rationale": "Adds public release claim auditing that fails unbound claims and downgrades prose-only claims.",
+      "source": "buildchain-ref-promotion.yml"
+    },
+    {
+      "id": "kfd-3-collaboration-interface-trust-proof",
+      "impact": "minor",
+      "class": "release-passport",
+      "rationale": "Adds KFD-3 self-verification for docs, schemas, standards metadata, package exports, site-consumption contracts, witness hashes, audit boundary, residual risk, and responsibility state.",
+      "source": "buildchain-ref-promotion.yml"
+    },
+    {
+      "id": "publish-source-lock-enforcement",
+      "impact": "minor",
+      "class": "release-governance",
+      "rationale": "Forces release-candidate promote wrappers to pass publish-gate source-lock inputs into promote-buildchain-ref before publish side effects.",
+      "source": "buildchain-ref-promotion.yml"
+    },
+    {
+      "id": "required-check-protection",
+      "impact": "minor",
+      "class": "release-governance",
+      "rationale": "Repairs managed protected channel branches to require GitHub Actions check runs instead of legacy commit status contexts.",
+      "source": "buildchain-ref-promotion.yml"
+    }
+  ],
+  "classification": "minor",
+  "breaking": false,
+  "security": false,
+  "migrationRequired": false,
+  "summary": "Buildchain v2.8 minor release line for KFD release trust gates, publish source-lock enforcement, and protected check governance.",
+  "release": {
+    "tag": "v2.8.10-alpha.3",
+    "line": "v2.8"
+  }
+}
