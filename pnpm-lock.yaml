@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@kungfu-tech/kfd':
-        specifier: github:kungfu-systems/kfd#1731900b81150ae29095329892b8d7d5670f2314
-        version: https://codeload.github.com/kungfu-systems/kfd/tar.gz/1731900b81150ae29095329892b8d7d5670f2314
+        specifier: 1.0.0-alpha.16
+        version: 1.0.0-alpha.16
       smol-toml:
         specifier: 1.7.0
         version: 1.7.0
@@ -264,9 +264,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@kungfu-tech/kfd@https://codeload.github.com/kungfu-systems/kfd/tar.gz/1731900b81150ae29095329892b8d7d5670f2314':
-    resolution: {gitHosted: true, integrity: sha512-6Auk8fgrHnCHHoEp9z92j9oZpjjsH7XI3BxIWshDoHC1+Z9xkUs+bwVqaZKU/5Mq2xb3kOW0coZDE3gEGmMB3A==, tarball: https://codeload.github.com/kungfu-systems/kfd/tar.gz/1731900b81150ae29095329892b8d7d5670f2314}
-    version: 1.0.0-alpha.12
+  '@kungfu-tech/kfd@1.0.0-alpha.16':
+    resolution: {integrity: sha512-u2tHV9YRTr3U3hvB979SGX5WXoIPSjAWYk5li/5bOPvDyl3w4JZrf1b8c/CEIJi/vNXlylBUJQ1eLZEpWQlqUw==}
 
   '@napi-rs/wasm-runtime@1.1.6':
     resolution: {integrity: sha512-ZLv/JdUfkvOy9eCnnBaGfiO+XimbjebAeO+MRQqD/B+FR1tnRN0tpKSJHRbE8sFfS6aqsXZ67TQjfwfsxULVbg==}
@@ -1214,7 +1213,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@kungfu-tech/kfd@https://codeload.github.com/kungfu-systems/kfd/tar.gz/1731900b81150ae29095329892b8d7d5670f2314': {}
+  '@kungfu-tech/kfd@1.0.0-alpha.16': {}
 
   '@napi-rs/wasm-runtime@1.1.6(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)':
     dependencies:

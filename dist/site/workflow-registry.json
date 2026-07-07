@@ -54,6 +54,11 @@
       "id": "promote-buildchain-ref",
       "path": "actions/promote-buildchain-ref",
       "status": "active"
+    },
+    {
+      "id": "report-buildchain-issue",
+      "path": "actions/report-buildchain-issue",
+      "status": "active"
     }
   ]
 }

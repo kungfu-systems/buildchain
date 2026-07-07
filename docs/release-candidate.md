@@ -82,13 +82,14 @@ other package as `role: platform`. Consumer workflows therefore stay
 declarative and do not need their own artifact download or publish-evidence
 generation scripts.
 
-When `github-release: true`, the wrapper forwards GitHub Release publication to
-the underlying `promote-buildchain-ref` semver model. Once the release
-transaction is complete, the action creates or updates the exact-tag GitHub
-Release, applies prerelease/latest metadata from the semver tag, and uploads the
-publish evidence file together with the generated release passport assets. This
-keeps npm/registry publication, Buildchain release passport persistence, and
-`release.published` propagation in one declarative reusable workflow.
+By default, the wrapper forwards GitHub Release publication to the underlying
+`promote-buildchain-ref` semver model. Once the release transaction is complete,
+the action creates or updates the exact-tag GitHub Release, applies
+prerelease/latest metadata from the semver tag, and uploads the publish evidence
+file together with the generated release passport assets. This keeps
+npm/registry publication, Buildchain release passport persistence, and
+`release.published` propagation in one declarative reusable workflow. Consumers
+that do not publish GitHub Releases can opt out with `github-release: false`.
 
 Products that publish KFD release trust evidence can keep that path declarative
 too. Pass KFD-1 self contract witnesses, KFD-2 public claim files, and KFD-3
@@ -101,7 +102,6 @@ jobs:
     with:
       channel: alpha
       artifact-name: libnode
-      github-release: true
       release-passport-kfd-1-witness-jsons: .buildchain/kfd-1/standard-contract.witness.json
       release-passport-kfd-2-claim-jsons: .buildchain/kfd-2/release-claims.json
       release-passport-kfd-3-prebuild-witness-jsons: .buildchain/kfd-3/collaboration-interface.prebuild.json
