@@ -173,7 +173,7 @@
       "path": "docs/cli.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:2f55874feb9acecce1c471b96e07bb9a198a8da93efd0f859d69f353bf9c36a8"
+      "digest": "sha256:0319318fb5573bd4d8dd596edeba2aff25b2ca18fc65cedfec43be5a6bdfb702"
     },
     {
       "id": "build-facts",
@@ -189,7 +189,7 @@
       "path": "docs/kfd-support.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:4bb33e408a2129e1534e92bea78d3cc0e4d8f986b0fbb27fe73ae6eae46b9ca3"
+      "digest": "sha256:5edc5926da7f18c672eca1d4e272cb7d807fda6040484c5455d88b2907e42cd7"
     },
     {
       "id": "lifecycle-protocol",

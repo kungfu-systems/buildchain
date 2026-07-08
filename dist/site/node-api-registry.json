@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:22dd10ba022b722440e75636ea165317ee2aedb737531e20f14a9e6e7fe299c4",
+      "digest": "sha256:6c48d8209217f7e3399e9cdcb94e8e66994c9316454fccc1df6a8e0432505064",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:22dd10ba022b722440e75636ea165317ee2aedb737531e20f14a9e6e7fe299c4",
+      "digest": "sha256:6c48d8209217f7e3399e9cdcb94e8e66994c9316454fccc1df6a8e0432505064",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -122,11 +122,11 @@
       "maturity": "stable"
     },
     {
-      "specifier": "@kungfu-tech/buildchain/kfd-3-surfaces",
-      "export": "./kfd-3-surfaces",
-      "target": "./packages/core/kfd3-surface-register.js",
-      "digest": "sha256:dc0d041257e0080147fbaa0a2d61e7f0a7ec3031a94311c58ea6b3e0fb78c18b",
-      "summary": "KFD-3 detection, registration, audit, witness, and capability query APIs.",
+      "specifier": "@kungfu-tech/buildchain/kfd",
+      "export": "./kfd",
+      "target": "./packages/core/kfd.js",
+      "digest": "sha256:46eed679234c690c92ea0df5b847efb03bdaa0b6388512a4e7819cadd45dca0e",
+      "summary": "Unified KFD standards, schema discovery, KFD-1/KFD-2/KFD-3/KFD-4 grouped APIs, and Buildchain KFD claim helpers.",
       "capabilityGroup": "kfd-trust",
       "audience": [
         "developer",
@@ -164,7 +164,7 @@
       "specifier": "@kungfu-tech/buildchain/public-surface-audit",
       "export": "./public-surface-audit",
       "target": "./packages/core/public-surface-audit.js",
-      "digest": "sha256:c9fbbfa5a4d78ff4bfb4b5570fedc5dcfc9e0a43f01ac5c3bbc2298d086a6346",
+      "digest": "sha256:22b8354a876962400f47070b5917141faace5589c2b40fe54ed004816d6735d4",
       "summary": "Reverse audit APIs for CLI, workflow, action, site page, and documentation command surfaces.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -269,7 +269,7 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:2f55874feb9acecce1c471b96e07bb9a198a8da93efd0f859d69f353bf9c36a8"
+      "digest": "sha256:0319318fb5573bd4d8dd596edeba2aff25b2ca18fc65cedfec43be5a6bdfb702"
     },
     {
       "id": "build-facts",
@@ -279,7 +279,7 @@
     {
       "id": "kfd-support",
       "path": "docs/kfd-support.md",
-      "digest": "sha256:4bb33e408a2129e1534e92bea78d3cc0e4d8f986b0fbb27fe73ae6eae46b9ca3"
+      "digest": "sha256:5edc5926da7f18c672eca1d4e272cb7d807fda6040484c5455d88b2907e42cd7"
     },
     {
       "id": "readme-badges",

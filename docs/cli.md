@@ -173,23 +173,27 @@ import {
 assertPublicSurfaceReverseAudit(collectPublicSurfaceReverseAudit({ root: process.cwd() }));
 ```
 
-`buildchain kfd-3` is the product-facing registration and query entrypoint for
-KFD-3 surfaces. It is separate from Buildchain's self reverse audit: products
+`buildchain kfd` is the product-facing KFD namespace. Schema commands expose the
+machine-readable KFD standards shipped by `@kungfu-tech/kfd`, while versioned
+subcommands host concrete product workflows such as KFD-3 public surface
+registration. KFD-3 is separate from Buildchain's self reverse audit: products
 can detect standard public surfaces, register the accepted boundary, audit the
 current source or artifact tree, generate a release-passport-compatible witness,
 and expose a capability map for agents:
 
 ```bash
-buildchain kfd-3 detect --kind node-api --kind cli --json
-buildchain kfd-3 register node-api --product Buildchain
-buildchain kfd-3 audit --json
-buildchain kfd-3 witness --kind prebuild --output .buildchain/kfd-3/collaboration-interface.prebuild.json
-buildchain kfd-3 query buildchain --json
+buildchain kfd schema list --json
+buildchain kfd schema show kfd-3 --json
+buildchain kfd 3 detect --kind node-api --kind cli --json
+buildchain kfd 3 register node-api --product Buildchain
+buildchain kfd 3 audit --json
+buildchain kfd 3 witness --kind prebuild --output .buildchain/kfd-3/collaboration-interface.prebuild.json
+buildchain kfd 3 query buildchain --json
 ```
 
-The public Node API is exported from
-`@kungfu-tech/buildchain/kfd-3-surfaces`. See [`kfd-support.md`](kfd-support.md)
-for the detected / declared / enforced model and the agent query flow.
+The public Node API is exported from `@kungfu-tech/buildchain/kfd`. See
+[`kfd-support.md`](kfd-support.md) for the detected / declared / enforced model
+and the agent query flow.
 
 Lifecycle runs also write a Buildchain observability JSONL log at
 `.buildchain/logs/events.jsonl` by default. Framework events use

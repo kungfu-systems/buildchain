@@ -258,6 +258,19 @@ export {
 } from "./homebrew.js";
 
 export {
+  buildchainKfdClaims,
+  discoverKfdStandards,
+  kfd1,
+  kfd2,
+  kfd3,
+  kfd4,
+  listKfdSchemas,
+  normalizeKfdStandardId,
+  readKfdSchema,
+  schemas,
+} from "./kfd.js";
+
+export {
   KFD3_CAPABILITY_QUERY_CONTRACT,
   KFD3_DEFAULT_REGISTRY_PATH,
   KFD3_SURFACE_AUDIT_CONTRACT,
