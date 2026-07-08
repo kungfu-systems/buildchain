@@ -72,6 +72,7 @@ import {
   kfd1,
   kfd2,
   layout as buildchainLayout,
+  listKfdUpstreamRoles,
   listKfdSchemas,
   normalizeKfdStandardId,
   readKfdSchema,
@@ -164,6 +165,7 @@ function usage() {
   buildchain kfd migrate-layout [--cwd <dir>] [--write] [--force] [--json]
   buildchain kfd schema list [--standard kfd-1|kfd-2|kfd-3|kfd-4] [--json]
   buildchain kfd schema show <kfd-1|kfd-2|kfd-3|kfd-4> [--schema <name>] [--json]
+  buildchain kfd upstream roles [--json]
   buildchain kfd upstream collect [--cwd <dir>] [--output <file>] [--json]
   buildchain kfd upstream check [--cwd <dir>] [--aggregate-json <file-or-json>] [--json]
   buildchain kfd aggregate [--cwd <dir>] [--json]
@@ -893,6 +895,18 @@ async function runKfdCli(args = []) {
     const effectiveAction = action || "collect";
     const cwd = path.resolve(readFlag(upstreamArgs, "cwd", process.cwd()));
     const json = readBooleanFlag(upstreamArgs, "json");
+    if (effectiveAction === "roles") {
+      const result = listKfdUpstreamRoles();
+      if (json) {
+        printJson(result);
+      } else {
+        process.stdout.write("KFD upstream roles:\n");
+        for (const entry of result.roles) {
+          process.stdout.write(`- ${entry.role}: ${entry.description}\n`);
+        }
+      }
+      return;
+    }
     if (effectiveAction === "collect") {
       const result = collectKfdUpstreamFacts({ cwd });
       const output = readFlag(upstreamArgs, "output", "");
@@ -926,7 +940,7 @@ async function runKfdCli(args = []) {
       }
       return;
     }
-    throw new Error("usage: buildchain kfd upstream <collect|check> ...");
+    throw new Error("usage: buildchain kfd upstream <roles|collect|check> ...");
   }
 
   if (subcommand === "aggregate") {

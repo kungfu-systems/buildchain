@@ -16,6 +16,9 @@
     {
       "id": "kfd",
       "role": "standard-and-schema-provider",
+      "roleSource": "known-package",
+      "roleReason": "@kungfu-tech/kfd is a Buildchain-known KFD upstream package.",
+      "roleValid": true,
       "package": {
         "name": "@kungfu-tech/kfd",
         "version": "1.0.0-alpha.21"
