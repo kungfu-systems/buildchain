@@ -169,7 +169,7 @@ workflow path or a temporary explicit workflow ref.
 Stable consumers should use floating major refs such as `@v2`, but a floating
 ref is not blind trust. Each released Buildchain ref carries a package-owned
 runtime contract world in `dist/site/buildchain-contract.json`. Consumers may
-keep a small lock file, `buildchain.contract-lock.json`, recording the
+keep a small lock file, `.buildchain/contract-lock.json`, recording the
 Buildchain ref, resolved SHA, contract digest, compatibility digest, accepted
 major line, and compatibility policy they reviewed.
 
@@ -178,7 +178,7 @@ The reusable build trust gate checks this lock before any heavy matrix job:
 1. resolve the Buildchain runtime ref, for example `v2`, to an immutable SHA;
 2. read `dist/site/buildchain-contract.json` from that checked-out Buildchain
    ref;
-3. read the consumer's `buildchain.contract-lock.json`;
+3. read the consumer's `.buildchain/contract-lock.json`;
 4. compare the accepted contract with the current contract.
 
 SHA drift alone is not a failure. `v2` is expected to advance. Buildchain only
@@ -197,7 +197,7 @@ jobs:
       issues: write
       id-token: write
     with:
-      buildchain-contract-lock-path: buildchain.contract-lock.json
+      buildchain-contract-lock-path: .buildchain/contract-lock.json
       buildchain-contract-compatibility-policy: major-compatible
       buildchain-contract-drift-issue-mode: compatible-and-breaking
 ```
@@ -252,7 +252,7 @@ repository or organization variables named
 private LAN topology out of repository YAML.
 
 Do not read cache URLs or reference paths from PR-controlled files such as
-`buildchain.toml`. These values are trusted workflow inputs or repo/org
+`.buildchain/buildchain.toml`. These values are trusted workflow inputs or repo/org
 variables. Buildchain does not pass GitHub credentials to cache mirrors or
 reference repositories. If it must fall back to GitHub, the workflow token is
 used only for the GitHub fetch path.
@@ -598,7 +598,7 @@ jobs:
       publish-package-set-order: platforms-first-main-last
       publish-package-main: "@kungfu-tech/libnode"
       release-passport-product-name: Libnode
-      buildchain-contract-lock-path: buildchain.contract-lock.json
+      buildchain-contract-lock-path: .buildchain/contract-lock.json
       buildchain-contract-drift-issue-mode: compatible-and-breaking
 ```
 
@@ -705,7 +705,7 @@ package before all platform artifacts for the same source SHA are available.
 
 ## Command Sources
 
-The workflow runs `buildchain.toml` lifecycle stages by default:
+The workflow runs `.buildchain/buildchain.toml` lifecycle stages by default:
 
 ```toml
 [lifecycle.install]
@@ -870,7 +870,7 @@ the publish gate: pull requests remain non-publishing events.
 `fixtures/libnode-shaped` is the contract fixture. It has:
 
 - `package.json` version state;
-- `buildchain.toml` with `install`, `build`, `verify`, and `publish`;
+- `.buildchain/buildchain.toml` with `install`, `build`, `verify`, and `publish`;
 - cross-platform Node scripts that create small `dist/` outputs;
 - `Build Surface Fixture` workflow coverage.
 

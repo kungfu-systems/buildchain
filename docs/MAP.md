@@ -38,10 +38,10 @@ workflow, action, and Node API export also carries a `capabilityGroup`,
 
 | Capability | Machine-readable entry | Manual entry |
 | --- | --- | --- |
-| Capability-grouped KFD-3 navigation | `dist/site/capability-registry.json`, `dist/site/page-registry.json`, `dist/site/manual-registry.json`, `dist/site/cli-registry.json`, `dist/site/node-api-registry.json` | this map, [`site-bundle-contract.md`](site-bundle-contract.md), [`kfd-support.md`](kfd-support.md) |
+| Capability-grouped KFD navigation | `dist/site/capability-registry.json`, `dist/site/page-registry.json`, `dist/site/manual-registry.json`, `dist/site/cli-registry.json`, `dist/site/node-api-registry.json` | this map, [`site-bundle-contract.md`](site-bundle-contract.md), [`kfd-support.md`](kfd-support.md) |
 | KFD-1 / KFD-2 / KFD-3 release-passport gates | `dist/site/kfd-claims.json`, `dist/site/buildchain-contract.json`, `dist/site/artifact-schemas.json` | [`release-passport.md`](release-passport.md) |
 | KFD-3 public surface reverse audit | `dist/site/public-surface-audit.json`, `dist/site/cli-registry.json`, `dist/site/workflow-registry.json`, `dist/site/page-registry.json` | [`cli.md`](cli.md), [`site-bundle-contract.md`](site-bundle-contract.md) |
-| KFD-3 surface registration and capability query | `buildchain.kfd3.json`, `dist/site/kfd-claims.json`, `buildchain.release.json` | [`kfd-support.md`](kfd-support.md) |
+| KFD-1 / KFD-2 / KFD-3 first-class CLI and Node API | `.buildchain/kfd/kfd-3-surfaces.json`, `dist/site/kfd-claims.json`, `buildchain.release.json`, KFD schemas from `@kungfu-tech/kfd` | [`kfd-support.md`](kfd-support.md), [`cli.md`](cli.md#commands) |
 | Floating `@v2` drift detection and compatibility issues | `dist/site/buildchain-contract.json` | [`reusable-build-surface.md`](reusable-build-surface.md#floating-ref-contract-lock) |
 | npm publish transactions, evidence, dist-tags, and recovery | `dist/site/release-model.json`, `dist/site/artifact-schemas.json` | [`publish-transaction.md`](publish-transaction.md) |
 | Git/source/version/module/product build facts | `dist/site/node-api-registry.json`, `dist/site/cli-registry.json`, `kungfu-buildchain-module-build-facts`, `kungfu-buildchain-product-build-facts` | [`build-facts.md`](build-facts.md) |

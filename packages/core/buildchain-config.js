@@ -3,8 +3,12 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { parse, stringify } from "smol-toml";
+import {
+  BUILDCHAIN_CONFIG_PATH,
+  resolveBuildchainConfigPath,
+} from "./buildchain-layout.js";
 
-const CONFIG_FILE = "buildchain.toml";
+const CONFIG_FILE = BUILDCHAIN_CONFIG_PATH;
 const RESERVED_LIFECYCLE_KEYS = new Set(["env", "shell"]);
 const SUPPORTED_VERSION_FILE_TYPES = new Set(["json", "toml", "regex"]);
 const SUPPORTED_VERSION_STRATEGIES = new Set(["semver", "anchored"]);
@@ -97,7 +101,8 @@ function setByDottedKey(target, key, value) {
 }
 
 export function loadBuildchainConfig(cwd = process.cwd()) {
-  const filePath = path.join(cwd, CONFIG_FILE);
+  const configPath = resolveBuildchainConfigPath(cwd);
+  const filePath = path.join(cwd, configPath);
   if (!fs.existsSync(filePath)) {
     return undefined;
   }
@@ -106,13 +111,13 @@ export function loadBuildchainConfig(cwd = process.cwd()) {
   try {
     config = parse(source);
   } catch (error) {
-    throw new Error(`${CONFIG_FILE} parse failed: ${error.message}`);
+    throw new Error(`${configPath} parse failed: ${error.message}`);
   }
   if (config.schema !== 1) {
-    throw new Error(`${CONFIG_FILE} schema must be 1`);
+    throw new Error(`${configPath} schema must be 1`);
   }
   return {
-    path: CONFIG_FILE,
+    path: configPath,
     filePath,
     config: normalizeBuildchainConfig(config),
   };

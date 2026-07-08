@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:67a0e6b63a943904eacbf7d26227e3c9ad650d17e8aa937c40b3fdad8f389fdd"
+      "digest": "sha256:b12caa887a325820c591d462ae2c0a4521eda001cb71d3def72e9b55924f892f"
     },
     {
       "id": "install",
@@ -61,7 +61,7 @@
       "path": "docs/install.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:34bc161a26595f95684694d341616e47bfd65b0c51a63225e68a575179636175"
+      "digest": "sha256:2600738a92b5853bc26d4e01211f0c07b8b36a21d4d72ca809bc6032dff5dc5f"
     },
     {
       "id": "release-passport",
@@ -69,7 +69,7 @@
       "path": "docs/release-passport.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:ca764740841b364ff7cfea79b87221d29c09df09fee6d19e78ed4b0b173bfad3"
+      "digest": "sha256:332f058d9a016cc31c709a3447a56dc43ffd0c5e6cdbcd15f9a62f61bb16eb15"
     },
     {
       "id": "release-candidate",
@@ -93,7 +93,7 @@
       "path": "docs/readme-badges.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:ddaf49a7d6e6c11aea8d21d1ba736159897e16207cd74af0044014425faf8a2c"
+      "digest": "sha256:d032ddd27db62bdb21031cbd0673d9ae61af0250c12522fe6106e7aff835fb21"
     },
     {
       "id": "homebrew",
@@ -173,7 +173,7 @@
       "path": "docs/cli.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:0319318fb5573bd4d8dd596edeba2aff25b2ca18fc65cedfec43be5a6bdfb702"
+      "digest": "sha256:b6bc32831d202d5c542d72f6e63322f632014751e7db00862b28fb9ce5318fd3"
     },
     {
       "id": "build-facts",
@@ -189,7 +189,7 @@
       "path": "docs/kfd-support.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:5edc5926da7f18c672eca1d4e272cb7d807fda6040484c5455d88b2907e42cd7"
+      "digest": "sha256:704efbf7be24d641d8b119737eb33b3e98fea8c55cf434f7f475160809f4e3a4"
     },
     {
       "id": "lifecycle-protocol",
@@ -197,7 +197,7 @@
       "path": "docs/lifecycle-protocol.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:c76516894cf540da9a6722ba96c475386901ab448ab71ede5850a185f6a716c9"
+      "digest": "sha256:191d706801abe5cea7927042b9cd7989f19cf868e726f8ac5852dff9490aa14f"
     },
     {
       "id": "reusable-build-surface",
@@ -205,7 +205,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:a3f979fcede4450dabe5b8d6182395993c9f28559f7176b071a6ff9db565a355"
+      "digest": "sha256:5f56d66ad2798bc46acde3f8091c2e5ccee80412c1b26b70c8197ff9c7f6a406"
     },
     {
       "id": "publish-transaction",
@@ -213,7 +213,7 @@
       "path": "docs/publish-transaction.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:c3fc5c49180db9167e1cf5bc5ff403e5a21cb55d1ba750bd0cfcd2429ad825b2"
+      "digest": "sha256:2523dd9a81e837918afae30c203349a7b29f00fdf953962a6db360fd95e0c6cb"
     },
     {
       "id": "release-governance",
@@ -253,7 +253,7 @@
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:58673b84879a219572fe39aa8b4d01cfc34fabf664b3318753d61043821edaff"
+      "digest": "sha256:399efd7424fb78a9f29debea0a0155ebea9c9579589e41302ad7e1d6454342f9"
     }
   ],
   "facts": [

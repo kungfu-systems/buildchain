@@ -65,6 +65,10 @@ import {
   writeKungfuBuildInfoProjection,
 } from "../packages/core/build-facts.js";
 import {
+  collectKfdStatus,
+  kfd1,
+  kfd2,
+  layout as buildchainLayout,
   listKfdSchemas,
   normalizeKfdStandardId,
   readKfdSchema,
@@ -153,10 +157,18 @@ function usage() {
                              [--output <file>] [--json]
   buildchain facts verify [--cwd <dir>] --fact <file> [--json]
   buildchain kfd ...
+  buildchain kfd status [--cwd <dir>] [--json]
+  buildchain kfd migrate-layout [--cwd <dir>] [--write] [--force] [--json]
   buildchain kfd schema list [--standard kfd-1|kfd-2|kfd-3|kfd-4] [--json]
   buildchain kfd schema show <kfd-1|kfd-2|kfd-3|kfd-4> [--schema <name>] [--json]
   buildchain kfd 1 schema [--schema <name>] [--json]
+  buildchain kfd 1 witness [--cwd <dir>] [--source-sha <sha>] [--output <file>] [--json]
+  buildchain kfd 1 gate --witness-json <file-or-json>... [--cwd <dir>] [--artifact-root <dir>]
+                        [--output <file>] [--json]
+  buildchain kfd 1 verify --gate-json <file-or-json> [--json]
   buildchain kfd 2 schema [--schema <name>] [--json]
+  buildchain kfd 2 taxonomy --entry-json <file-or-json>... [--kind residualRisk|downgradeReason] [--json]
+  buildchain kfd 2 claims [--cwd <dir>] [--output-dir <dir>] [--json]
   buildchain kfd 3 ...
   buildchain kfd 3 detect [--cwd <dir>] [--kind <kind>]... [--artifact <path>] [--json]
   buildchain kfd 3 register <node-api|python-api|cli|binary|documentation|site-bundle>
@@ -207,7 +219,10 @@ Examples:
   buildchain infra-contract --mode propagation-apply --propagation-plan <plan.json> --dry-run true
   buildchain infra-contract --mode evidence-bundle --artifact <artifact.json> --propagation-result <result.json>
   buildchain release-propagation plan --graph graph.json --upstream-release release.json --json
+  buildchain kfd status --json
   buildchain kfd schema list --json
+  buildchain kfd 1 witness --json
+  buildchain kfd 2 claims --json
   buildchain kfd 3 query buildchain --json
 `;
 }
@@ -346,6 +361,25 @@ function writeJsonFile(filePath, value) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`);
   return filePath;
+}
+
+function readJsonInput(value, { cwd = process.cwd(), label = "json" } = {}) {
+  const input = String(value || "").trim();
+  if (!input) {
+    throw new Error(`${label} is required`);
+  }
+  const filePath = path.isAbsolute(input) ? input : path.join(cwd, input);
+  if (fs.existsSync(filePath)) {
+    return JSON.parse(fs.readFileSync(filePath, "utf8"));
+  }
+  return JSON.parse(input);
+}
+
+function readRepeatedJsonInputs(args, name, { cwd = process.cwd(), label = name } = {}) {
+  return readRepeatedFlag(args, name).map((value, index) => readJsonInput(value, {
+    cwd,
+    label: `${label}[${index}]`,
+  }));
 }
 
 async function runReadmeBadgesCli(args = []) {
@@ -494,7 +528,7 @@ async function runKfd3Cli(args = []) {
   }
   const effectiveArgs = maybeKindOrProduct && maybeKindOrProduct.startsWith("--") ? [maybeKindOrProduct, ...rest] : rest;
   const cwd = path.resolve(readFlag(effectiveArgs, "cwd", process.cwd()));
-  const registryPath = readFlag(effectiveArgs, "registry", "buildchain.kfd3.json");
+  const registryPath = readFlag(effectiveArgs, "registry", "");
   const artifactPath = readFlag(effectiveArgs, "artifact", "");
   const json = readBooleanFlag(effectiveArgs, "json");
 
@@ -589,10 +623,181 @@ async function runKfd3Cli(args = []) {
   }
 }
 
+function printKfdSchemaOrJson({ result, json }) {
+  if (json) {
+    printJson(result);
+  } else {
+    process.stdout.write(JSON.stringify(result.schema, null, 2));
+    process.stdout.write("\n");
+  }
+}
+
+function runKfd1Cli(args = []) {
+  const [rawAction = "schema", ...rest] = args;
+  const action = rawAction || "schema";
+  const cwd = path.resolve(readFlag(rest, "cwd", process.cwd()));
+  const json = readBooleanFlag(rest, "json");
+  if (action === "schema") {
+    printKfdSchemaOrJson({
+      result: readKfdSchema({ standard: "kfd-1", schema: readFlag(rest, "schema", "") }),
+      json,
+    });
+    return;
+  }
+  if (action === "witness") {
+    const witness = kfd1.createBuildchainWitness({
+      root: cwd,
+      sourceSha: readFlag(rest, "source-sha", process.env.GITHUB_SHA || ""),
+    });
+    const output = readFlag(rest, "output", "");
+    if (output) {
+      writeJsonFile(path.resolve(cwd, output), witness);
+    }
+    if (json || !output) {
+      printJson(witness);
+    } else {
+      process.stdout.write(`kfd 1 witness: wrote ${output}\n`);
+    }
+    return;
+  }
+  if (action === "gate") {
+    const witnesses = readRepeatedJsonInputs(rest, "witness-json", { cwd, label: "kfd-1 witness" });
+    if (witnesses.length === 0) {
+      throw new Error("buildchain kfd 1 gate requires at least one --witness-json");
+    }
+    const gate = kfd1.createReleaseGateEvidence({
+      cwd,
+      artifactRoot: readFlag(rest, "artifact-root", ""),
+      witnesses,
+    });
+    const output = readFlag(rest, "output", "");
+    if (output) {
+      writeJsonFile(path.resolve(cwd, output), gate);
+    }
+    if (json || !output) {
+      printJson(gate);
+    } else {
+      process.stdout.write(`kfd 1 gate: wrote ${output}\n`);
+    }
+    return;
+  }
+  if (action === "verify") {
+    const gate = readJsonInput(readFlag(rest, "gate-json", ""), { cwd, label: "kfd-1 gate" });
+    const issues = kfd1.validateReleaseGateEvidence(gate);
+    const result = {
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-kfd-1-verify-result",
+      ok: issues.length === 0,
+      issues,
+    };
+    if (json) {
+      printJson(result);
+    } else {
+      process.stdout.write(`kfd 1 verify: ${result.ok ? "ok" : "failed"}\n`);
+      for (const issue of issues) {
+        process.stdout.write(`- ${issue.level || "error"}: ${issue.code || "kfd-1"}: ${issue.message || issue}\n`);
+      }
+    }
+    if (!result.ok) {
+      process.exitCode = 1;
+    }
+    return;
+  }
+  throw new Error("usage: buildchain kfd 1 <schema|witness|gate|verify> ...");
+}
+
+function runKfd2Cli(args = []) {
+  const [rawAction = "schema", ...rest] = args;
+  const action = rawAction || "schema";
+  const cwd = path.resolve(readFlag(rest, "cwd", process.cwd()));
+  const json = readBooleanFlag(rest, "json");
+  if (action === "schema") {
+    printKfdSchemaOrJson({
+      result: readKfdSchema({ standard: "kfd-2", schema: readFlag(rest, "schema", "") }),
+      json,
+    });
+    return;
+  }
+  if (action === "taxonomy") {
+    const kind = readFlag(rest, "kind", "residualRisk");
+    const entries = readRepeatedJsonInputs(rest, "entry-json", { cwd, label: "kfd-2 taxonomy entry" });
+    const result = {
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-kfd-2-taxonomy-validation",
+      ok: true,
+      kind,
+      entries: kfd2.validateTaxonomyEntries({ entries, kind }),
+    };
+    if (json) {
+      printJson(result);
+    } else {
+      process.stdout.write(`kfd 2 taxonomy: ${result.entries.length} ${kind} entries ok\n`);
+    }
+    return;
+  }
+  if (action === "claims") {
+    const claims = kfd2.createBuildchainClaims({ root: cwd });
+    const outputDir = readFlag(rest, "output-dir", "");
+    if (outputDir) {
+      for (const claim of claims) {
+        const slug = String(claim.id || "claim").replace(/[^a-z0-9._-]+/gi, "-");
+        writeJsonFile(path.resolve(cwd, outputDir, `${slug}.json`), claim);
+      }
+    }
+    const result = {
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-kfd-2-claims",
+      count: claims.length,
+      claims,
+    };
+    if (json || !outputDir) {
+      printJson(result);
+    } else {
+      process.stdout.write(`kfd 2 claims: wrote ${claims.length} claims to ${outputDir}\n`);
+    }
+    return;
+  }
+  throw new Error("usage: buildchain kfd 2 <schema|taxonomy|claims> ...");
+}
+
 async function runKfdCli(args = []) {
   const [subcommand = "", maybeStandardOrAction = "", ...rest] = args;
   if (!subcommand) {
-    throw new Error("usage: buildchain kfd <schema|1|2|3|4> ...");
+    throw new Error("usage: buildchain kfd <status|migrate-layout|schema|1|2|3|4> ...");
+  }
+
+  if (subcommand === "status") {
+    const effectiveArgs = maybeStandardOrAction && maybeStandardOrAction.startsWith("--") ? [maybeStandardOrAction, ...rest] : rest;
+    const cwd = path.resolve(readFlag(effectiveArgs, "cwd", process.cwd()));
+    const result = collectKfdStatus({ cwd });
+    if (readBooleanFlag(effectiveArgs, "json")) {
+      printJson(result);
+    } else {
+      process.stdout.write(`kfd status: layout=${result.layout.status}\n`);
+      for (const [standard, capabilities] of Object.entries(result.support)) {
+        process.stdout.write(`- ${standard}: ${capabilities.join(", ")}\n`);
+      }
+    }
+    return;
+  }
+
+  if (subcommand === "migrate-layout") {
+    const effectiveArgs = maybeStandardOrAction && maybeStandardOrAction.startsWith("--") ? [maybeStandardOrAction, ...rest] : rest;
+    const cwd = path.resolve(readFlag(effectiveArgs, "cwd", process.cwd()));
+    const result = buildchainLayout.migrate({
+      cwd,
+      write: readBooleanFlag(effectiveArgs, "write"),
+      force: readBooleanFlag(effectiveArgs, "force"),
+    });
+    if (readBooleanFlag(effectiveArgs, "json")) {
+      printJson(result);
+    } else {
+      process.stdout.write(`kfd migrate-layout: ${result.status}${result.write ? " (write)" : " (dry-run)"}\n`);
+      for (const move of result.moves) {
+        process.stdout.write(`- ${move.from} -> ${move.to}\n`);
+      }
+    }
+    return;
   }
 
   if (subcommand === "schema") {
@@ -629,26 +834,29 @@ async function runKfdCli(args = []) {
   }
 
   const standard = normalizeKfdStandardId(subcommand);
+  if (standard === "kfd-1") {
+    runKfd1Cli([maybeStandardOrAction, ...rest]);
+    return;
+  }
+  if (standard === "kfd-2") {
+    runKfd2Cli([maybeStandardOrAction, ...rest]);
+    return;
+  }
   if (standard === "kfd-3") {
     await runKfd3Cli([maybeStandardOrAction, ...rest]);
     return;
   }
-  if (["kfd-1", "kfd-2", "kfd-4"].includes(standard)) {
+  if (standard === "kfd-4") {
     const action = maybeStandardOrAction || "schema";
     if (action === "schema") {
       const schemaArgs = rest;
       const json = readBooleanFlag(schemaArgs, "json");
-      const result = readKfdSchema({ standard, schema: readFlag(schemaArgs, "schema", "") });
-      if (json) {
-        printJson(result);
-      } else {
-        process.stdout.write(JSON.stringify(result.schema, null, 2));
-        process.stdout.write("\n");
-      }
+      printKfdSchemaOrJson({ result: readKfdSchema({ standard, schema: readFlag(schemaArgs, "schema", "") }), json });
       return;
     }
+    throw new Error("KFD-4 is currently schema-only in Buildchain; use: buildchain kfd 4 schema");
   }
-  throw new Error("usage: buildchain kfd <schema|1|2|3|4> ...");
+  throw new Error("usage: buildchain kfd <status|migrate-layout|schema|1|2|3|4> ...");
 }
 
 async function runBuildFactsCli(args = []) {

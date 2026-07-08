@@ -1,0 +1,157 @@
+import fs from "node:fs";
+import path from "node:path";
+
+export const BUILDCHAIN_DIR = ".buildchain";
+export const BUILDCHAIN_CONFIG_PATH = ".buildchain/buildchain.toml";
+export const LEGACY_BUILDCHAIN_CONFIG_PATH = "buildchain.toml";
+export const BUILDCHAIN_CONTRACT_LOCK_PATH = ".buildchain/contract-lock.json";
+export const LEGACY_BUILDCHAIN_CONTRACT_LOCK_PATH = "buildchain.contract-lock.json";
+export const BUILDCHAIN_KFD3_SURFACE_REGISTRY_PATH = ".buildchain/kfd/kfd-3-surfaces.json";
+export const LEGACY_BUILDCHAIN_KFD3_SURFACE_REGISTRY_PATH = "buildchain.kfd3.json";
+export const BUILDCHAIN_RELEASE_PASSPORT_PATH = ".buildchain/release-passport/buildchain.release.json";
+export const LEGACY_BUILDCHAIN_RELEASE_PASSPORT_PATH = "buildchain.release.json";
+
+export const BUILDCHAIN_GENERATED_DIRS = Object.freeze([
+  ".buildchain/artifacts",
+  ".buildchain/diagnostics",
+  ".buildchain/logs",
+  ".buildchain/tmp",
+  ".buildchain/runtime",
+  ".buildchain/release-state",
+  ".buildchain/release-evidence",
+  ".buildchain/downloaded-manifests",
+  ".buildchain/downloaded-diagnostics",
+  ".buildchain/downloaded-relay-manifests",
+  ".buildchain/relayed-artifacts",
+]);
+
+export function toPosixPath(value) {
+  return String(value || "").split(path.sep).join("/");
+}
+
+export function repoPath(cwd, relativePath) {
+  return path.join(cwd, relativePath);
+}
+
+export function firstExistingRepoPath(cwd, candidates = []) {
+  for (const candidate of candidates) {
+    if (fs.existsSync(repoPath(cwd, candidate))) {
+      return candidate;
+    }
+  }
+  return candidates[0] || "";
+}
+
+export function resolveBuildchainConfigPath(cwd = process.cwd()) {
+  return firstExistingRepoPath(cwd, [
+    BUILDCHAIN_CONFIG_PATH,
+    LEGACY_BUILDCHAIN_CONFIG_PATH,
+  ]);
+}
+
+export function resolveBuildchainContractLockPath(cwd = process.cwd()) {
+  return firstExistingRepoPath(cwd, [
+    BUILDCHAIN_CONTRACT_LOCK_PATH,
+    LEGACY_BUILDCHAIN_CONTRACT_LOCK_PATH,
+  ]);
+}
+
+export function resolveKfd3SurfaceRegistryPath(cwd = process.cwd()) {
+  return firstExistingRepoPath(cwd, [
+    BUILDCHAIN_KFD3_SURFACE_REGISTRY_PATH,
+    LEGACY_BUILDCHAIN_KFD3_SURFACE_REGISTRY_PATH,
+  ]);
+}
+
+export function resolveReleasePassportPath(cwd = process.cwd()) {
+  return firstExistingRepoPath(cwd, [
+    BUILDCHAIN_RELEASE_PASSPORT_PATH,
+    LEGACY_BUILDCHAIN_RELEASE_PASSPORT_PATH,
+  ]);
+}
+
+export function discoverBuildchainRepoFiles(cwd = process.cwd()) {
+  const files = [
+    {
+      kind: "config",
+      canonical: BUILDCHAIN_CONFIG_PATH,
+      legacy: LEGACY_BUILDCHAIN_CONFIG_PATH,
+      tracked: true,
+    },
+    {
+      kind: "contract-lock",
+      canonical: BUILDCHAIN_CONTRACT_LOCK_PATH,
+      legacy: LEGACY_BUILDCHAIN_CONTRACT_LOCK_PATH,
+      tracked: true,
+    },
+    {
+      kind: "kfd-3-surface-registry",
+      canonical: BUILDCHAIN_KFD3_SURFACE_REGISTRY_PATH,
+      legacy: LEGACY_BUILDCHAIN_KFD3_SURFACE_REGISTRY_PATH,
+      tracked: true,
+    },
+    {
+      kind: "release-passport",
+      canonical: BUILDCHAIN_RELEASE_PASSPORT_PATH,
+      legacy: LEGACY_BUILDCHAIN_RELEASE_PASSPORT_PATH,
+      tracked: false,
+    },
+  ];
+  return files.map((entry) => {
+    const canonicalExists = fs.existsSync(repoPath(cwd, entry.canonical));
+    const legacyExists = fs.existsSync(repoPath(cwd, entry.legacy));
+    return {
+      ...entry,
+      canonicalExists,
+      legacyExists,
+      activePath: canonicalExists ? entry.canonical : legacyExists ? entry.legacy : entry.canonical,
+      migrationNeeded: !canonicalExists && legacyExists,
+    };
+  });
+}
+
+export function planBuildchainLayoutMigration({ cwd = process.cwd() } = {}) {
+  const entries = discoverBuildchainRepoFiles(cwd);
+  const moves = entries
+    .filter((entry) => entry.migrationNeeded)
+    .map((entry) => ({
+      kind: entry.kind,
+      from: entry.legacy,
+      to: entry.canonical,
+      tracked: entry.tracked,
+    }));
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-repository-layout-migration",
+    cwd: path.resolve(cwd),
+    canonicalRoot: BUILDCHAIN_DIR,
+    status: moves.length > 0 ? "migration-needed" : "current",
+    files: entries,
+    generatedDirs: BUILDCHAIN_GENERATED_DIRS,
+    moves,
+  };
+}
+
+export function migrateBuildchainLayout({ cwd = process.cwd(), write = false, force = false } = {}) {
+  const plan = planBuildchainLayoutMigration({ cwd });
+  const applied = [];
+  if (write) {
+    for (const move of plan.moves) {
+      const from = repoPath(cwd, move.from);
+      const to = repoPath(cwd, move.to);
+      if (fs.existsSync(to) && !force) {
+        throw new Error(`${move.to} already exists; pass --force to overwrite`);
+      }
+      fs.mkdirSync(path.dirname(to), { recursive: true });
+      fs.renameSync(from, to);
+      applied.push(move);
+    }
+  }
+  return {
+    ...plan,
+    write,
+    force,
+    status: write && applied.length === plan.moves.length ? "applied" : plan.status,
+    applied,
+  };
+}
