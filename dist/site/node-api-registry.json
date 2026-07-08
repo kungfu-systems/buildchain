@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:587d05df468462b29ebde8d584b97afa1a569db6a4f269a15e552c7c164d1aaa"
+      "digest": "sha256:91dac9241f8e9aa02df360a0720d3998cf8eca27910517d8afabcb4a97e019e1"
     },
     {
       "specifier": "@kungfu-tech/buildchain/badges",
@@ -26,7 +26,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:587d05df468462b29ebde8d584b97afa1a569db6a4f269a15e552c7c164d1aaa"
+      "digest": "sha256:91dac9241f8e9aa02df360a0720d3998cf8eca27910517d8afabcb4a97e019e1"
     },
     {
       "specifier": "@kungfu-tech/buildchain/artifact-passport",
@@ -59,6 +59,12 @@
       "digest": "sha256:d6e0a450a52b7a4fba84bff855d5370e0cfa2ec3c4be737b3c9099a72f705e2d"
     },
     {
+      "specifier": "@kungfu-tech/buildchain/kfd-3-surfaces",
+      "export": "./kfd-3-surfaces",
+      "target": "./packages/core/kfd3-surface-register.js",
+      "digest": "sha256:dc0d041257e0080147fbaa0a2d61e7f0a7ec3031a94311c58ea6b3e0fb78c18b"
+    },
+    {
       "specifier": "@kungfu-tech/buildchain/release-line-bootstrap",
       "export": "./release-line-bootstrap",
       "target": "./packages/core/release-line-bootstrap.js",
@@ -74,7 +80,7 @@
       "specifier": "@kungfu-tech/buildchain/public-surface-audit",
       "export": "./public-surface-audit",
       "target": "./packages/core/public-surface-audit.js",
-      "digest": "sha256:d428109652f5604240d37b8e9a17c179dd72215206a74cdfb6b3d0647b499827"
+      "digest": "sha256:c9fbbfa5a4d78ff4bfb4b5570fedc5dcfc9e0a43f01ac5c3bbc2298d086a6346"
     },
     {
       "specifier": "@kungfu-tech/buildchain/logging",
@@ -116,19 +122,24 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-kfd-claims",
       "export": "./buildchain-kfd-claims",
       "target": "./packages/core/buildchain-kfd-claims.js",
-      "digest": "sha256:eb7826e9b451799be4912d578207c04949cd533b560640fd4f4609f439acb6dd"
+      "digest": "sha256:223fcf5de2b2c0dd31012d6ed2f27187d2a5472a5ccede5884eb15ae6d43dffc"
     }
   ],
   "docs": [
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:1922537563582f59e08b7c69c8a1549ea2b438229097b1111110b421a7ad84d8"
+      "digest": "sha256:85e014b7e053b74b620e5b438d54453e20b22f758a33dfd5ae970403fa41d9d7"
     },
     {
       "id": "build-facts",
       "path": "docs/build-facts.md",
       "digest": "sha256:75dcf7a6628dac9e982a455de9966044ae771611d4efc04e7264a2d4adb0bd3e"
+    },
+    {
+      "id": "kfd-support",
+      "path": "docs/kfd-support.md",
+      "digest": "sha256:4bb33e408a2129e1534e92bea78d3cc0e4d8f986b0fbb27fe73ae6eae46b9ca3"
     },
     {
       "id": "readme-badges",

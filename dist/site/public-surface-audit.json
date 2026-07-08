@@ -3,11 +3,11 @@
   "contract": "kungfu-buildchain-public-surface-reverse-audit",
   "status": "passed",
   "summary": {
-    "cliCommandCount": 46,
+    "cliCommandCount": 52,
     "workflowCount": 35,
     "actionCount": 4,
-    "sitePageCount": 42,
-    "docCommandRefCount": 164,
+    "sitePageCount": 43,
+    "docCommandRefCount": 180,
     "failureCount": 0
   },
   "enumerated": {
@@ -126,6 +126,36 @@
         "id": "inspect-release",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain inspect release --passport <file-or-url> [--json]"
+      },
+      {
+        "id": "kfd-3",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd-3"
+      },
+      {
+        "id": "kfd-3-audit",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd-3 audit [--cwd <dir>] [--registry <path>] [--artifact <path>] [--json]"
+      },
+      {
+        "id": "kfd-3-detect",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd-3 detect [--cwd <dir>] [--kind <kind>]... [--artifact <path>] [--json]"
+      },
+      {
+        "id": "kfd-3-query",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd-3 query [<product>] [--cwd <dir>] [--registry <path>]"
+      },
+      {
+        "id": "kfd-3-register",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd-3 register <node-api|python-api|cli|binary|documentation|site-bundle>"
+      },
+      {
+        "id": "kfd-3-witness",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd-3 witness [--cwd <dir>] [--registry <path>] [--kind prebuild|artifact]"
       },
       {
         "id": "lifecycle",
@@ -1044,6 +1074,10 @@
         "category": "manual"
       },
       {
+        "id": "manual:kfd-support",
+        "category": "manual"
+      },
+      {
         "id": "manual:lifecycle-protocol",
         "category": "manual"
       },
@@ -1537,6 +1571,86 @@
         "command": "buildchain inspect release"
       },
       {
+        "id": "kfd-3-audit",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd-3 audit"
+      },
+      {
+        "id": "kfd-3-audit",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd-3 audit"
+      },
+      {
+        "id": "kfd-3-detect",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd-3 detect"
+      },
+      {
+        "id": "kfd-3-detect",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd-3 detect"
+      },
+      {
+        "id": "kfd-3-detect",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd-3 detect"
+      },
+      {
+        "id": "kfd-3-query",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd-3 query"
+      },
+      {
+        "id": "kfd-3-query",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd-3 query"
+      },
+      {
+        "id": "kfd-3-query",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd-3 query"
+      },
+      {
+        "id": "kfd-3-query",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd-3 query"
+      },
+      {
+        "id": "kfd-3-register",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd-3 register"
+      },
+      {
+        "id": "kfd-3-register",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd-3 register"
+      },
+      {
+        "id": "kfd-3-register",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd-3 register"
+      },
+      {
+        "id": "kfd-3-register",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd-3 register"
+      },
+      {
+        "id": "kfd-3-witness",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd-3 witness"
+      },
+      {
+        "id": "kfd-3-witness",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd-3 witness"
+      },
+      {
+        "id": "kfd-3",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd-3"
+      },
+      {
         "id": "lifecycle",
         "path": "docs/cli.md",
         "command": "buildchain lifecycle run"
@@ -1947,9 +2061,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "7119de47a94f1b5903b79b7e6281cb205edce8712631efbc5e243ada3d64e817",
+    "cliRegistryDigest": "d86d5cc6f0ef0e711a81edc8dec6178cd3f16f0c46ec4fdadbe8133bdc69789d",
     "workflowRegistryDigest": "a53dd3b746f8d697eaa79fb23efcbbeaa6018efb2c3af0d875526ab6bef939ad",
-    "pageRegistryDigest": "26ec63af6a85354720e125a3ba5bb23a8af135d7b8a9dcc6421d5ee6139b4326"
+    "pageRegistryDigest": "cc924ef3676e16237f73fb00818fa2112fa02a78a5a8229d33b879c0715dcb0e"
   },
   "comparison": {
     "missingCliRegistry": [],
