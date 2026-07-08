@@ -1478,6 +1478,18 @@ function transactionAcceptedExactTagShas(transaction, publicSha) {
   ]);
 }
 
+function releaseTagForPublishedVersion(version = "") {
+  const value = String(version || "").trim();
+  if (!value) {
+    return "";
+  }
+  return value.startsWith("v") ? value : `v${value}`;
+}
+
+function publicReleaseTagForTransaction(transaction = {}) {
+  return releaseTagForPublishedVersion(transaction.version) || transaction.exact_tag || "";
+}
+
 async function runPublishTransaction({
   octokit,
   owner,
@@ -1986,6 +1998,7 @@ async function collectAndPersistReleasePassport({
   const passportSourceSha = result.transaction.source_sha || sourceSha;
   const internalVersion = stripTagPrefix(result.transaction.exact_tag || "");
   const publishedVersion = result.transaction.version || internalVersion;
+  const publicReleaseTag = publicReleaseTagForTransaction(result.transaction);
   const selfKfd = buildchainSelfKfd
     ? generateBuildchainSelfKfdInputs({
         cwd,
@@ -2006,7 +2019,7 @@ async function collectAndPersistReleasePassport({
     : selfKfd?.kfd3ArtifactWitnessJsons || [];
   const collected = collectGitHubReleasePassport({
     cwd,
-    tag: result.transaction.exact_tag,
+    tag: publicReleaseTag,
     repository: `${owner}/${repo}`,
     sourceSha: passportSourceSha,
     line,
@@ -2038,6 +2051,7 @@ async function collectAndPersistReleasePassport({
     releaseJsonExtra: JSON.stringify({
       channel,
       targetRef,
+      publicTag: publicReleaseTag,
       internalTag: result.transaction.exact_tag,
       internalVersion,
       publishedVersion,
@@ -2098,6 +2112,7 @@ async function collectAndPersistReleasePassport({
   });
   return {
     ...result,
+    publicReleaseTag,
     durable: finalDurable || durable,
     releasePassport: {
       outputDir: collected.outputDir,
@@ -4175,6 +4190,8 @@ async function promoteBuildchainRefs({
         state: latestPublishTransaction.transaction.state,
         failure: latestPublishTransaction.transaction.failure || "",
         exactTag: latestPublishTransaction.transaction.exact_tag,
+        publicReleaseTag: latestPublishTransaction.publicReleaseTag ||
+          publicReleaseTagForTransaction(latestPublishTransaction.transaction),
         releaseSha: latestPublishTransaction.transaction.release_sha,
         stateRef: latestPublishTransaction.transaction.state_ref,
         stateSha: latestPublishTransaction.durable?.sha,

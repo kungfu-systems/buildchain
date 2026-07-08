@@ -207,7 +207,7 @@ export function createBuildchainContractWorld({ root = process.cwd(), packageJso
         "protected release refs and durable release-state are finalized by Buildchain",
         "release passport finalization is idempotent after publish side effects",
         "publish transactions can require a resolved publish-gate source lock to prevent floating-ref drift",
-        "semver GitHub Releases are created or updated only after transaction completion, with prerelease/latest metadata derived from the exact tag",
+        "semver GitHub Releases are created or updated only after transaction completion, with prerelease/latest metadata derived from the public release tag",
       ],
     }),
     surface(root, {

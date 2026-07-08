@@ -60,7 +60,7 @@
       "specifier": "@kungfu-tech/buildchain/artifact-passport",
       "export": "./artifact-passport",
       "target": "./packages/core/artifact-passport.js",
-      "digest": "sha256:2f882bf245658fb7a204004d7aa3a22f7e34816e4ba101fb0969a002d05fc12c",
+      "digest": "sha256:beb4da1f056630bf7e19b709374a327c0004e87d541e03ac1eddfa8c65bb66c4",
       "summary": "Artifact passport digest and evidence helper APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -73,7 +73,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-contract",
       "export": "./buildchain-contract",
       "target": "./packages/core/buildchain-contract.js",
-      "digest": "sha256:b3c4164d08acc2d3d56783d695e47feceb3e134b7e87e80294ea05a87e7921d7",
+      "digest": "sha256:54eea325e5c33972670a702ce03d0553944614e0bbb6673f89ca13cff7d616ed",
       "summary": "Runtime contract world and compatibility digest APIs for floating-ref drift checks.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -216,7 +216,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:ce36cc21cfd3e0508a2a816292863dc2e11f19146b2624ef066fc9aaa4f4190e",
+      "digest": "sha256:e4218271c4e24ea9b4a5bab04b4d0364c92774075a07d474e05a234eaceae2b1",
       "summary": "Release passport collection, verification, explanation, and evidence APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -255,7 +255,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-kfd-claims",
       "export": "./buildchain-kfd-claims",
       "target": "./packages/core/buildchain-kfd-claims.js",
-      "digest": "sha256:fa934cd170be8f729c05aec3e2df52ed5765445d2dffaeb391f1d367f6a09195",
+      "digest": "sha256:e800194bd945e6727d2e467d3dc155e0df95c656d58047590d12e5174ca84463",
       "summary": "Buildchain self KFD claim registry, witnesses, and public claim APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [

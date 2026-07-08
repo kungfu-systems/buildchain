@@ -392,7 +392,7 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /publish-package-set-order:/);
   assert.match(workflow, /publish-package-main:/);
   assert.match(workflow, /github-release:/);
-  assert.match(workflow, /github-release:\n\s+description: "Create\/update the exact-tag GitHub Release and upload Buildchain release passport\/evidence assets after a complete release transaction"\n\s+default: true/);
+  assert.match(workflow, /github-release:\n\s+description: "Create\/update the public GitHub Release and upload Buildchain release passport\/evidence assets after a complete release transaction"\n\s+default: true/);
   assert.match(workflow, /github-release-title:/);
   assert.match(workflow, /github-release-notes:/);
   assert.match(workflow, /release-passport-product-name:/);
@@ -1133,6 +1133,7 @@ test("promote-buildchain-ref owns semver GitHub Release publication", () => {
   assert.match(action, /github-release:/);
   assert.match(action, /github-release-title:/);
   assert.match(action, /github-release-notes:/);
+  assert.match(action, /public-release-tag:/);
   assert.match(action, /github-release-url:/);
   assert.match(action, /github-release-action:/);
   assert.match(source, /ensureGitHubRelease/);

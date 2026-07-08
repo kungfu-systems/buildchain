@@ -163,7 +163,7 @@ export async function publishGitHubReleaseEvidence({
   releasePassportOutputDir = "",
 } = {}) {
   if (!tag) {
-    throw new Error("github-release=true requires promote-buildchain-ref to output transaction-exact-tag");
+    throw new Error("github-release=true requires promote-buildchain-ref to resolve a public release tag");
   }
   const assets = collectGitHubReleaseEvidenceAssets({
     publishEvidencePath,
@@ -338,6 +338,7 @@ async function main() {
   core.setOutput("transaction-id", result.publishTransaction?.id || "");
   core.setOutput("transaction-state", result.publishTransaction?.state || "");
   core.setOutput("transaction-exact-tag", result.publishTransaction?.exactTag || "");
+  core.setOutput("public-release-tag", result.publishTransaction?.publicReleaseTag || result.publishTransaction?.exactTag || "");
   core.setOutput("transaction-release-sha", result.publishTransaction?.releaseSha || "");
   core.setOutput("transaction-state-ref", result.publishTransaction?.stateRef || "");
   core.setOutput("transaction-state-sha", result.publishTransaction?.stateSha || "");
@@ -359,7 +360,7 @@ async function main() {
         repo: github.context.repo.repo,
         token,
         apiUrl: process.env.GITHUB_API_URL || "https://api.github.com",
-        tag: result.publishTransaction?.exactTag || "",
+        tag: result.publishTransaction?.publicReleaseTag || result.publishTransaction?.exactTag || "",
         target: result.publishTransaction?.releaseSha || sha,
         title: githubReleaseTitle,
         notes: githubReleaseNotes,
@@ -370,7 +371,7 @@ async function main() {
       core.info(`github release ${githubReleaseResult.action}: ${githubReleaseResult.tag} (${githubReleaseResult.assetCount} assets)`);
     } else {
       core.info(
-        `github-release=true is waiting for a complete release transaction before creating or updating the exact-tag GitHub Release; transaction-state=${result.publishTransaction?.state || ""} finalization-needed=${result.publishTransaction?.finalizationNeeded === true}`,
+        `github-release=true is waiting for a complete release transaction before creating or updating the public GitHub Release; transaction-state=${result.publishTransaction?.state || ""} finalization-needed=${result.publishTransaction?.finalizationNeeded === true}`,
       );
     }
   }

@@ -98,12 +98,12 @@ on:
         type: string
         required: false
       github-release:
-        description: "Create/update the exact-tag GitHub Release and upload Buildchain release passport/evidence assets after a complete release transaction"
+        description: "Create/update the public GitHub Release and upload Buildchain release passport/evidence assets after a complete release transaction"
         default: true
         type: boolean
         required: false
       github-release-title:
-        description: "Optional GitHub Release title. Empty defaults to the exact tag."
+        description: "Optional GitHub Release title. Empty defaults to the public release tag."
         default: ""
         type: string
         required: false

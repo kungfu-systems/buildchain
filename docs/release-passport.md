@@ -34,8 +34,11 @@ digests, trusted publishing evidence, and transaction result.
 
 Additive passport sections:
 
-- `release`: exact tag, line, channel, source SHA, target ref, release SHA,
-  release material SHA, publish tooling SHA, and durable release-state ref.
+- `release`: public release tag, internal transaction tag, line, channel,
+  source SHA, target ref, release SHA, release material SHA, publish tooling
+  SHA, and durable release-state ref. Anchored/manual package releases use the
+  published package version for the public tag while preserving the internal
+  exact transaction tag for Buildchain recovery.
 - `versionImpact`: final patch/minor/major classification, source, and
   rationale.
 - `surfaceImpacts`: per registered surface classification. The final impact is
