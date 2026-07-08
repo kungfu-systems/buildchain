@@ -4,7 +4,7 @@
   "product": {
     "name": "Buildchain",
     "package": "@kungfu-tech/buildchain",
-    "version": "2.9.1",
+    "version": "2.10.0-alpha.0",
     "repository": "https://github.com/kungfu-systems/buildchain"
   },
   "majorLine": "v2",
@@ -134,7 +134,7 @@
         "breaking contract drift fails closed before rendering, deployment, or release publication"
       ],
       "breakingDigest": "sha256:82ee63cb336e40d832dfff4a1c5e6cbfa221a4fc8b2359990033bc931bffc43a",
-      "auditDigest": "sha256:8de5899084cd0eebc93f5ac549b73c5ff313ac43067875d08b4ca8607d81fbf8"
+      "auditDigest": "sha256:46cd44208497d20495c3bc392a1a40ddd419216d8b1ce41198c8eda5b2645c08"
     },
     {
       "contractVersion": 1,
@@ -344,7 +344,7 @@
         "README badge block checks and writes are generated from machine-readable repository facts"
       ],
       "breakingDigest": "sha256:90a73892b2d6c214048448d5f45df75639bdf7b7e8fefd9c596e04b087407bcc",
-      "auditDigest": "sha256:8e4538461494045932ca878773403dd27d02d8f4f6e13faa90a19f6534cf9ffe"
+      "auditDigest": "sha256:1bdab893fbb6af1d1d0b840e3583fafb874522c2dde1ae39f393f3fa97b1ef72"
     },
     {
       "contractVersion": 1,
@@ -434,7 +434,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:2cc5b516507336464f2e75e9f74d64e9bb4c01efedeff1787e0fe533c3935934"
+      "auditDigest": "sha256:193ec349e8cf50bc85c3bc12e494bf3d3a7767d0f0baa1b6536e5dae09e22653"
     },
     {
       "contractVersion": 1,
@@ -456,9 +456,9 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:1d42b05c7ebd9ad02ffd18c7d8a2641853d17552cb87706a1d859a98c7e65c98"
+      "auditDigest": "sha256:b3ac83608558e4d1253c8b75a4da5950a73a791da76d0a06c235eb615c6b246c"
     }
   ],
   "compatibilityDigest": "sha256:407d6d5ee6a96a34d2cc30db9ac64cf4b1819ab6d77bd7a57a07a124f22101ca",
-  "contractDigest": "sha256:3a82cbfd0cf15f85dac51b6ab03e3c3ce20ca2f3355d5319d969c43758ebb900"
+  "contractDigest": "sha256:e6e4d950aa090aef131cf9944f2409983dfde9f8b045bdf2329f1565384ed64b"
 }

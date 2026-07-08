@@ -257,6 +257,21 @@ export {
 } from "./homebrew.js";
 
 export {
+  KFD3_CAPABILITY_QUERY_CONTRACT,
+  KFD3_DEFAULT_REGISTRY_PATH,
+  KFD3_SURFACE_AUDIT_CONTRACT,
+  KFD3_SURFACE_DETECTION_CONTRACT,
+  KFD3_SURFACE_REGISTRY_CONTRACT,
+  auditKfd3Surfaces,
+  createKfd3SurfaceWitness,
+  detectKfd3Surfaces,
+  queryKfd3Capabilities,
+  readKfd3SurfaceRegistry,
+  registerKfd3Surfaces,
+  writeKfd3SurfaceRegistry,
+} from "./kfd3-surface-register.js";
+
+export {
   RELEASE_PROPAGATION_GRAPH_CONTRACT,
   RELEASE_PROPAGATION_LOCK_CONTRACT,
   RELEASE_PROPAGATION_PLAN_CONTRACT,

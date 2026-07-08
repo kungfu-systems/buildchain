@@ -126,6 +126,9 @@ if (rootPackage.exports?.["./buildchain-contract"] !== "./packages/core/buildcha
 if (rootPackage.exports?.["./issue-reporting"] !== "./packages/core/issue-reporting.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/issue-reporting");
 }
+if (rootPackage.exports?.["./kfd-3-surfaces"] !== "./packages/core/kfd3-surface-register.js") {
+  throw new Error("root package must export @kungfu-tech/buildchain/kfd-3-surfaces");
+}
 if (rootPackage.exports?.["./release-line-bootstrap"] !== "./packages/core/release-line-bootstrap.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/release-line-bootstrap");
 }
@@ -242,6 +245,17 @@ for (const requiredSnippet of [
 ]) {
   if (!coreIndexSource.includes(requiredSnippet)) {
     throw new Error(`packages/core/index.js must export Build Facts API: ${requiredSnippet}`);
+  }
+}
+for (const requiredSnippet of [
+  "detectKfd3Surfaces",
+  "registerKfd3Surfaces",
+  "auditKfd3Surfaces",
+  "createKfd3SurfaceWitness",
+  "queryKfd3Capabilities",
+]) {
+  if (!coreIndexSource.includes(requiredSnippet)) {
+    throw new Error(`packages/core/index.js must export KFD-3 surface API: ${requiredSnippet}`);
   }
 }
 for (const requiredSnippet of [

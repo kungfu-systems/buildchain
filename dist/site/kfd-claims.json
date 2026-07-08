@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "2d7f25b1aa4e44aa31f3662355500efbd2544312713b2395737ca0194e5d5383",
+    "sha256": "55c8c3ee6230e1a91eaf16542e1a7e7d51a9414fc716f1aa29285c6a5e875c2d",
     "summary": {
-      "cliCommandCount": 46,
+      "cliCommandCount": 52,
       "workflowCount": 35,
       "actionCount": 4,
-      "sitePageCount": 42,
-      "docCommandRefCount": 164,
+      "sitePageCount": 43,
+      "docCommandRefCount": 180,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -90,6 +90,22 @@
         "dist/site/workflow-registry.json",
         "dist/site/page-registry.json",
         "dist/site/kfd-claims.json"
+      ]
+    },
+    {
+      "id": "claim:buildchain-kfd-3-surface-registration",
+      "claim": "Buildchain provides KFD-3 surface detection, registration, audit, witness, and query APIs so products can declare agent-facing public capability surfaces without hand-writing full witness registries.",
+      "sourcePaths": [
+        "packages/core/kfd3-surface-register.js",
+        "bin/buildchain.mjs",
+        "docs/kfd-support.md",
+        "docs/cli.md"
+      ],
+      "artifactPaths": [
+        "dist/site/cli-registry.json",
+        "dist/site/node-api-registry.json",
+        "dist/site/kfd-claims.json",
+        "dist/site/public-surface-audit.json"
       ]
     },
     {
@@ -190,13 +206,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "2d7f25b1aa4e44aa31f3662355500efbd2544312713b2395737ca0194e5d5383",
+      "sha256": "55c8c3ee6230e1a91eaf16542e1a7e7d51a9414fc716f1aa29285c6a5e875c2d",
       "summary": {
-        "cliCommandCount": 46,
+        "cliCommandCount": 52,
         "workflowCount": 35,
         "actionCount": 4,
-        "sitePageCount": 42,
-        "docCommandRefCount": 164,
+        "sitePageCount": 43,
+        "docCommandRefCount": 180,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -365,6 +381,18 @@
           "participantFacing": true,
           "public": true,
           "plane": "use"
+        },
+        {
+          "id": "doc:docs/kfd-support.md",
+          "name": "KFD support and KFD-3 surface registration",
+          "kind": "documentation",
+          "sourcePath": "docs/kfd-support.md",
+          "evidencePath": "docs/kfd-support.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "verify"
         },
         {
           "id": "doc:docs/lifecycle-protocol.md",
@@ -749,6 +777,17 @@
           "public": true
         },
         {
+          "id": "schema:packages/core/kfd3-surface-register.js",
+          "name": "schema:packages/core/kfd3-surface-register.js",
+          "kind": "schema",
+          "sourcePath": "packages/core/kfd3-surface-register.js",
+          "evidencePath": "packages/core/kfd3-surface-register.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
           "id": "schema:packages/core/public-surface-audit.js",
           "name": "schema:packages/core/public-surface-audit.js",
           "kind": "schema",
@@ -936,6 +975,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./issue-reporting"
+        },
+        {
+          "id": "export:./kfd-3-surfaces",
+          "name": "@kungfu-tech/buildchain/kfd-3-surfaces",
+          "kind": "package-export",
+          "sourcePath": "packages/core/kfd3-surface-register.js",
+          "evidencePath": "packages/core/kfd3-surface-register.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./kfd-3-surfaces"
         },
         {
           "id": "export:./release-line-bootstrap",
@@ -1493,6 +1544,78 @@
         {
           "id": "cli:inspect-release",
           "name": "buildchain inspect release --passport <file-or-url> [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:kfd-3",
+          "name": "buildchain kfd-3",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:kfd-3-audit",
+          "name": "buildchain kfd-3 audit [--cwd <dir>] [--registry <path>] [--artifact <path>] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:kfd-3-detect",
+          "name": "buildchain kfd-3 detect [--cwd <dir>] [--kind <kind>]... [--artifact <path>] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:kfd-3-query",
+          "name": "buildchain kfd-3 query [<product>] [--cwd <dir>] [--registry <path>]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:kfd-3-register",
+          "name": "buildchain kfd-3 register <node-api|python-api|cli|binary|documentation|site-bundle>",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:kfd-3-witness",
+          "name": "buildchain kfd-3 witness [--cwd <dir>] [--registry <path>] [--kind prebuild|artifact]",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -3070,6 +3193,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:kfd-support",
+          "name": "site-page:manual:kfd-support",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:lifecycle-protocol",
           "name": "site-page:manual:lifecycle-protocol",
           "kind": "site-page",
@@ -3367,6 +3502,6 @@
         "public": true
       }
     ],
-    "publicSurfaceCount": 219
+    "publicSurfaceCount": 229
   }
 }

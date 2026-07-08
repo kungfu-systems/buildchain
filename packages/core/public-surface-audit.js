@@ -59,6 +59,7 @@ function commandId(first = "", second = "") {
   if (head === "log" && sub) return "logging";
   if (head === "diagnostics" && sub) return `diagnostics-${sub}`;
   if (head === "facts" && sub) return "build-facts";
+  if (head === "kfd-3" && sub) return `kfd-3-${sub}`;
   if (head === "sample" && sub) return `sample-${sub}`;
   if (head === "badges" && sub) return `badges-${sub}`;
   if (head === "homebrew" && sub) return `homebrew-${sub}`;

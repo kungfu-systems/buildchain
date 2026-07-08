@@ -144,6 +144,42 @@
       "purpose": "Inspect release passport evidence."
     },
     {
+      "id": "kfd-3",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd-3",
+      "purpose": "Public Buildchain CLI surface. Add a specific purpose in scripts/generate-site-bundle.mjs when this command graduates."
+    },
+    {
+      "id": "kfd-3-audit",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd-3 audit [--cwd <dir>] [--registry <path>] [--artifact <path>] [--json]",
+      "purpose": "Compare detected, declared, and enforced KFD-3 public surfaces."
+    },
+    {
+      "id": "kfd-3-detect",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd-3 detect [--cwd <dir>] [--kind <kind>]... [--artifact <path>] [--json]",
+      "purpose": "Detect standard KFD-3 public surface candidates from source and artifact metadata."
+    },
+    {
+      "id": "kfd-3-query",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd-3 query [<product>] [--cwd <dir>] [--registry <path>]",
+      "purpose": "Return an agent-readable KFD-3 capability map for a product, registry, or release passport."
+    },
+    {
+      "id": "kfd-3-register",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd-3 register <node-api|python-api|cli|binary|documentation|site-bundle>",
+      "purpose": "Declare detected KFD-3 public surfaces into a product-owned surface registry."
+    },
+    {
+      "id": "kfd-3-witness",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd-3 witness [--cwd <dir>] [--registry <path>] [--kind prebuild|artifact]",
+      "purpose": "Generate release-passport-compatible KFD-3 surface witnesses from a product registry."
+    },
+    {
       "id": "lifecycle",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain lifecycle run <stage> [--cwd <dir>] [--required]",

@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-release-line-bootstrap",
+  "dryRun": true,
+  "cwd": "/home/runner/work/buildchain/buildchain",
+  "line": "v2.10",
+  "major": 2,
+  "minor": 10,
+  "initialVersion": "2.10.0-alpha.0",
+  "source": {
+    "ref": "release/v2/v2.9",
+    "sha": "6990341aaf93b51b936e5e66f380488d593daf6e"
+  },
+  "refs": {
+    "dev": "dev/v2/v2.10",
+    "alpha": "alpha/v2/v2.10",
+    "release": "release/v2/v2.10",
+    "bootstrap": "buildchain/release-line/v2.10"
+  },
+  "versionState": {
+    "files": [
+      "package.json",
+      "dist/site/buildchain-contract.json",
+      "dist/site/buildchain-site.json",
+      "dist/site/site-manifest.json"
+    ],
+    "lifecycle": "version-state"
+  },
+  "protection": {
+    "requiredStatusCheck": "check",
+    "strictStatusChecks": true,
+    "requiredApprovingReviewCount": 1,
+    "requiredConversationResolution": true,
+    "enforceAdmins": true,
+    "protectedRefs": [
+      "dev/v2/v2.10",
+      "alpha/v2/v2.10",
+      "release/v2/v2.10"
+    ]
+  },
+  "repositoryActions": [
+    {
+      "action": "create-or-verify-source-ref",
+      "ref": "release/v2/v2.9"
+    },
+    {
+      "action": "commit-initial-version-state",
+      "ref": "buildchain/release-line/v2.10",
+      "version": "2.10.0-alpha.0"
+    },
+    {
+      "action": "create-dev-branch",
+      "ref": "dev/v2/v2.10",
+      "from": "buildchain/release-line/v2.10"
+    },
+    {
+      "action": "create-alpha-branch",
+      "ref": "alpha/v2/v2.10",
+      "from": "release/v2/v2.9"
+    },
+    {
+      "action": "create-release-branch",
+      "ref": "release/v2/v2.10",
+      "from": "release/v2/v2.9"
+    },
+    {
+      "action": "set-default-branch",
+      "ref": "dev/v2/v2.10"
+    },
+    {
+      "action": "protect-branch",
+      "ref": "dev/v2/v2.10"
+    },
+    {
+      "action": "protect-branch",
+      "ref": "alpha/v2/v2.10"
+    },
+    {
+      "action": "protect-branch",
+      "ref": "release/v2/v2.10"
+    },
+    {
+      "action": "open-alpha-pr",
+      "head": "dev/v2/v2.10",
+      "base": "alpha/v2/v2.10"
+    }
+  ],
+  "notes": [
+    "This bootstrap creates the new minor line before the first alpha promotion.",
+    "The source ref stays as the baseline for alpha/release until reviewed channel PRs move them.",
+    "The dev branch receives only the initial version-state commit and becomes the active line when setDefault is true."
+  ]
+}

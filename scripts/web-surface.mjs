@@ -50,8 +50,57 @@ function readJsonFileArg(name) {
 
 function assertApplySucceeded(result) {
   if (result.status === "failed") {
+    printApplyFailureSummary(result);
     throw new Error(`web-surface ${result.contract} failed; see apply result for operation details`);
   }
+}
+
+function operationFailureSummary(result) {
+  const failed = (result.operations || []).find((operation) => operation.status === "failed");
+  if (!failed) {
+    return "";
+  }
+  const stderr = String(failed.stderr || "").trim();
+  const stdout = String(failed.stdout || "").trim();
+  return [
+    `web-surface failed operation: ${failed.action || "unknown"}`,
+    `surface: ${failed.surface || "unknown"}`,
+    failed.command ? `command: ${failed.command} ${(failed.args || []).join(" ")}` : "",
+    failed.exitCode !== null && failed.exitCode !== undefined ? `exitCode: ${failed.exitCode}` : "",
+    stderr ? `stderr: ${stderr}` : "",
+    stdout ? `stdout: ${stdout}` : "",
+  ].filter(Boolean).join("\n");
+}
+
+function printApplyFailureSummary(result) {
+  const summary = operationFailureSummary(result);
+  if (summary) {
+    console.error(summary);
+  }
+}
+
+function writeFailureResult({ output, mode, cwd, error }) {
+  if (!output) {
+    return null;
+  }
+  const resolvedOutput = path.resolve(output);
+  if (fs.existsSync(resolvedOutput)) {
+    return JSON.parse(fs.readFileSync(resolvedOutput, "utf8"));
+  }
+  const result = {
+    schemaVersion: 1,
+    contract: mode === "cleanup-apply"
+      ? "kungfu-buildchain-web-surface-cleanup-apply"
+      : "kungfu-buildchain-web-surface-deploy-apply",
+    status: "failed",
+    error: {
+      message: String(error?.message || error),
+    },
+    cwd,
+    generatedAt: new Date().toISOString(),
+  };
+  writeJson(result, resolvedOutput);
+  return result;
 }
 
 export function webSurfaceCli() {
@@ -120,34 +169,39 @@ export function webSurfaceCli() {
       "published-at",
       process.env.BUILDCHAIN_SITE_PUBLISHED_AT || process.env.BUILDCHAIN_SURFACE_PUBLISHED_AT || "",
     );
-    const result = applyWebSurfaceDeploy({
-      cwd,
-      channel,
-      alias,
-      sourceSha,
-      artifactHash: readArg("artifact-hash", process.env.BUILDCHAIN_WEB_SURFACE_ARTIFACT_HASH || ""),
-      artifactPath: readArg("artifact-path", process.env.BUILDCHAIN_WEB_SURFACE_ARTIFACT_PATH || ""),
-      plan,
-      dryRun: readBooleanArg("dry-run", true),
-      actor: readArg("actor", process.env.GITHUB_ACTOR || ""),
-      runId: readArg("run-id", process.env.GITHUB_RUN_ID || ""),
-      ...(publishedAt ? { appliedAt: publishedAt } : {}),
-    });
-    writeJson(result, output);
-    writeGitHubOutputs({
-      "web-surface-channel": result.channel,
-      "web-surface-alias": result.alias,
-      "web-surface-url": result.url,
-      "web-surface-urls-json": JSON.stringify(result.urls || {}),
-      "web-surface-artifact-hash": result.artifactHash,
-      "web-surface-apply-mode": result.applyMode,
-      "web-surface-apply-status": result.status,
-      "web-surface-manifest-json": JSON.stringify(result.manifest),
-      "web-surface-bindings-json": JSON.stringify(result.surfaceBindings || []),
-      "web-surface-apply-result-json": JSON.stringify(result),
-    });
-    assertApplySucceeded(result);
-    return result;
+    try {
+      const result = applyWebSurfaceDeploy({
+        cwd,
+        channel,
+        alias,
+        sourceSha,
+        artifactHash: readArg("artifact-hash", process.env.BUILDCHAIN_WEB_SURFACE_ARTIFACT_HASH || ""),
+        artifactPath: readArg("artifact-path", process.env.BUILDCHAIN_WEB_SURFACE_ARTIFACT_PATH || ""),
+        plan,
+        dryRun: readBooleanArg("dry-run", true),
+        actor: readArg("actor", process.env.GITHUB_ACTOR || ""),
+        runId: readArg("run-id", process.env.GITHUB_RUN_ID || ""),
+        ...(publishedAt ? { appliedAt: publishedAt } : {}),
+      });
+      writeJson(result, output);
+      writeGitHubOutputs({
+        "web-surface-channel": result.channel,
+        "web-surface-alias": result.alias,
+        "web-surface-url": result.url,
+        "web-surface-urls-json": JSON.stringify(result.urls || {}),
+        "web-surface-artifact-hash": result.artifactHash,
+        "web-surface-apply-mode": result.applyMode,
+        "web-surface-apply-status": result.status,
+        "web-surface-manifest-json": JSON.stringify(result.manifest),
+        "web-surface-bindings-json": JSON.stringify(result.surfaceBindings || []),
+        "web-surface-apply-result-json": JSON.stringify(result),
+      });
+      assertApplySucceeded(result);
+      return result;
+    } catch (error) {
+      writeFailureResult({ output, mode, cwd, error });
+      throw error;
+    }
   }
 
   if (mode === "production-preflight") {
