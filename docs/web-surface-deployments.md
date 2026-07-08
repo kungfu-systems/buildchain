@@ -384,15 +384,15 @@ and `pr-29/buildchain/docs/`. This makes surface-host requests for `/` and
 `/docs/` resolve to the surface's `index.html` files even when the CloudFront
 origin is an S3 REST origin rather than an S3 website endpoint.
 
-For host-per-surface previews, Buildchain also ensures each configured
-CloudFront distribution has `DefaultRootObject = "index.html"` before syncing
-the surface payload. This is required because the child surface host root
-request (`https://buildchain-pr-29.preview.libkungfu.dev/`) must first resolve
-to `/index.html`; the existing host/prefix mapping can then serve the object
-`pr-29/buildchain/index.html`, the same object that explicit
-`/index.html` requests already reach. The operation is idempotent per
-distribution and is emitted once even when multiple surfaces share the same
-CloudFront distribution.
+Buildchain does not mutate the shared CloudFront distribution as part of a
+consumer preview apply. In particular, it does not require preview roles to
+update `DefaultRootObject`. Shared distribution and origin-request routing are
+infrastructure prerequisites; the consumer workflow owns only its surface
+payload, prefix alias objects, deployment manifests, invalidations, and health
+checks. If root or nested surface routing still fails, the reusable workflow
+uploads `buildchain-web-surface-*-diagnostics` artifacts containing the apply
+and health JSON so the failing AWS operation or HTTP check is visible from the
+consumer run.
 
 It can also execute a previously saved deploy plan. In that mode Buildchain
 recomputes the local artifact hash before running AWS commands and fails closed

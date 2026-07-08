@@ -648,6 +648,8 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /web-surface-urls-json/);
   assert.match(workflow, /Preview deployed:/);
   assert.match(workflow, /preview-apply-result-json/);
+  assert.match(workflow, /Upload preview apply diagnostics/);
+  assert.match(workflow, /buildchain-web-surface-preview-diagnostics/);
   assert.match(workflow, /Apply pull request preview cleanup/);
   assert.match(workflow, /preview-cleanup-apply/);
   assert.match(workflow, /Plan main staging deploy/);
@@ -656,6 +658,8 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /Apply staging deploy/);
   assert.match(workflow, /needs\.plan\.outputs\.web-surface-channel == 'staging'/);
   assert.match(workflow, /staging-aws-role-arn is required when staging-apply is true/);
+  assert.match(workflow, /Upload staging apply diagnostics/);
+  assert.match(workflow, /buildchain-web-surface-staging-diagnostics/);
   assert.match(workflow, /Open production release PR/);
   assert.match(workflow, /web-surface-production-release-pr\.mjs/);
   assert.match(workflow, /needs\.staging-apply\.result == 'success'/);
@@ -669,6 +673,8 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /github\.event_name == 'workflow_dispatch' && inputs\.production-approved/);
   assert.match(workflow, /github\.event_name == 'push' && github\.ref_name == 'main' && inputs\.production-release-on-main/);
   assert.match(workflow, /production-aws-role-arn is required when production-apply is true/);
+  assert.match(workflow, /Upload production apply diagnostics/);
+  assert.match(workflow, /buildchain-web-surface-production-diagnostics/);
   assert.match(
     workflow,
     /environment: \$\{\{ inputs\.production-environment \}\}/,
