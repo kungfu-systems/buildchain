@@ -31,9 +31,12 @@ import {
   verifyArtifactPassport,
 } from "../packages/core/artifact-passport.js";
 import {
+  checkBadgeBundleBlock,
   checkReadmeBadgeBlock,
+  collectBadgeBundleFacts,
   collectReadmeBadgeFacts,
   readReadme,
+  updateBadgeBundleBlock,
   updateReadmeBadgeBlock,
 } from "../packages/core/readme-badges.js";
 import {
@@ -128,6 +131,7 @@ function usage() {
   buildchain infra-contract ...
   buildchain release-propagation <plan|write-lock> ...
   buildchain badges readme [--cwd <dir>] [--readme <path>] [--check] [--write] [--json]
+  buildchain badges bundle [--cwd <dir>] [--readme <path>] [--claims <csv>] [--check] [--write] [--json]
   buildchain homebrew update-formula --package <name> --release-passport <file-or-url> [--write] [--json]
   buildchain homebrew check [--cwd <dir>] [--package <name>] [--release-passport <file-or-url>] [--json]
   buildchain publish-source <lock|manifest|verify-lock|verify-channel-ref|validate-anchored-release> ...
@@ -294,13 +298,20 @@ function writeJsonFile(filePath, value) {
 
 async function runReadmeBadgesCli(args = []) {
   const [subcommand = "", surface = "", ...badgeArgs] = args;
-  if (subcommand !== "readme" || (surface && surface.startsWith("--") === false)) {
-    throw new Error("usage: buildchain badges readme [--cwd <dir>] [--readme <path>] [--check] [--write] [--json]");
+  if (!["readme", "bundle"].includes(subcommand) || (surface && surface.startsWith("--") === false)) {
+    throw new Error("usage: buildchain badges <readme|bundle> [--cwd <dir>] [--readme <path>] [--claims <csv>] [--check] [--write] [--json]");
   }
   const effectiveArgs = surface ? [surface, ...badgeArgs] : badgeArgs;
   const cwd = path.resolve(readFlag(effectiveArgs, "cwd", process.cwd()));
   const readmePath = readFlag(effectiveArgs, "readme", "README.md");
-  const facts = await collectReadmeBadgeFacts({ cwd });
+  const claims = readFlag(effectiveArgs, "claims", "");
+  const isBundle = subcommand === "bundle";
+  const facts = isBundle
+    ? await collectBadgeBundleFacts({ cwd, claims })
+    : await collectReadmeBadgeFacts({ cwd });
+  const checkBlock = isBundle ? checkBadgeBundleBlock : checkReadmeBadgeBlock;
+  const updateBlock = isBundle ? updateBadgeBundleBlock : updateReadmeBadgeBlock;
+  const commandLabel = `buildchain badges ${subcommand}`;
   if (readBooleanFlag(effectiveArgs, "json") && !readBooleanFlag(effectiveArgs, "check") && !readBooleanFlag(effectiveArgs, "write")) {
     printJson(facts);
     return;
@@ -309,13 +320,13 @@ async function runReadmeBadgesCli(args = []) {
   if (!readmeText) {
     throw new Error(`README not found: ${path.join(cwd, readmePath)}`);
   }
-  const check = checkReadmeBadgeBlock({ readmeText, facts });
+  const check = checkBlock({ readmeText, facts });
   if (readBooleanFlag(effectiveArgs, "write")) {
-    const next = updateReadmeBadgeBlock({ readmeText, facts });
+    const next = updateBlock({ readmeText, facts });
     fs.writeFileSync(path.join(cwd, readmePath), next);
     const result = {
       schemaVersion: 1,
-      contract: "kungfu-buildchain-readme-badge-write",
+      contract: isBundle ? "kungfu-buildchain-badge-bundle-write" : "kungfu-buildchain-readme-badge-write",
       ok: true,
       changed: next !== readmeText,
       readmePath,
@@ -324,7 +335,7 @@ async function runReadmeBadgesCli(args = []) {
     if (readBooleanFlag(effectiveArgs, "json")) {
       printJson(result);
     } else {
-      process.stdout.write(`buildchain badges readme: ${result.changed ? "updated" : "current"}\n`);
+      process.stdout.write(`${commandLabel}: ${result.changed ? "updated" : "current"}\n`);
     }
     return;
   }
@@ -332,7 +343,7 @@ async function runReadmeBadgesCli(args = []) {
     if (readBooleanFlag(effectiveArgs, "json")) {
       printJson(check);
     } else {
-      process.stdout.write(`buildchain badges readme: ${check.ok ? "ok" : "failed"}\n`);
+      process.stdout.write(`${commandLabel}: ${check.ok ? "ok" : "failed"}\n`);
       if (!check.ok) {
         process.stdout.write(`${check.message}\n`);
       }
