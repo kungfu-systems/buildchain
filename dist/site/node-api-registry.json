@@ -125,8 +125,8 @@
       "specifier": "@kungfu-tech/buildchain/kfd",
       "export": "./kfd",
       "target": "./packages/core/kfd.js",
-      "digest": "sha256:e9170c1e56d2729cf530f953df9ade21963faa9a756ba5fbd0cdd03d8b781cb3",
-      "summary": "Unified KFD standards, schema discovery, KFD-1/KFD-2/KFD-3 grouped APIs, KFD-4 schema discovery, and Buildchain KFD claim helpers.",
+      "digest": "sha256:0f5882eb4d72e71e90903702d1c00c277a3455074bc0efd9a4e502bd20a59d1c",
+      "summary": "Unified KFD standards, schema discovery, KFD-1/KFD-2/KFD-3 grouped APIs, KFD-4 schema discovery, upstream KFD aggregate facts, and Buildchain KFD claim helpers.",
       "capabilityGroup": "kfd-trust",
       "audience": [
         "developer",
@@ -268,7 +268,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-kfd-claims",
       "export": "./buildchain-kfd-claims",
       "target": "./packages/core/buildchain-kfd-claims.js",
-      "digest": "sha256:e800194bd945e6727d2e467d3dc155e0df95c656d58047590d12e5174ca84463",
+      "digest": "sha256:a61fd06fa065808eb6b1205b0748ae8801525dbb22cb902122b62fddde48c355",
       "summary": "Buildchain self KFD claim registry, witnesses, and public claim APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -292,7 +292,7 @@
     {
       "id": "kfd-support",
       "path": "docs/kfd-support.md",
-      "digest": "sha256:d1fdec0890884340e4e8108c17b62866c08dc95771075e3e285532b5a7b0ee5a"
+      "digest": "sha256:ef792dbebe0909240829643ac28c02754e88e499bb5a27dafaed08fc18e5aab5"
     },
     {
       "id": "readme-badges",

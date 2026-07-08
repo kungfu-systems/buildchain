@@ -65,7 +65,10 @@ import {
   writeKungfuBuildInfoProjection,
 } from "../packages/core/build-facts.js";
 import {
+  checkKfdUpstreamFacts,
+  collectKfdAggregate,
   collectKfdStatus,
+  collectKfdUpstreamFacts,
   kfd1,
   kfd2,
   layout as buildchainLayout,
@@ -161,6 +164,9 @@ function usage() {
   buildchain kfd migrate-layout [--cwd <dir>] [--write] [--force] [--json]
   buildchain kfd schema list [--standard kfd-1|kfd-2|kfd-3|kfd-4] [--json]
   buildchain kfd schema show <kfd-1|kfd-2|kfd-3|kfd-4> [--schema <name>] [--json]
+  buildchain kfd upstream collect [--cwd <dir>] [--output <file>] [--json]
+  buildchain kfd upstream check [--cwd <dir>] [--aggregate-json <file-or-json>] [--json]
+  buildchain kfd aggregate [--cwd <dir>] [--json]
   buildchain kfd 1 schema [--schema <name>] [--json]
   buildchain kfd 1 witness [--cwd <dir>] [--source-sha <sha>] [--output <file>] [--json]
   buildchain kfd 1 gate --witness-json <file-or-json>... [--cwd <dir>] [--artifact-root <dir>]
@@ -226,6 +232,8 @@ Examples:
   buildchain kfd 1 witness --json
   buildchain kfd 2 claims --json
   buildchain kfd 2 trust-assessment --json
+  buildchain kfd upstream collect --json
+  buildchain kfd aggregate --json
   buildchain kfd 3 query buildchain --json
 `;
 }
@@ -810,7 +818,7 @@ function runKfd2Cli(args = []) {
 async function runKfdCli(args = []) {
   const [subcommand = "", maybeStandardOrAction = "", ...rest] = args;
   if (!subcommand) {
-    throw new Error("usage: buildchain kfd <status|migrate-layout|schema|1|2|3|4> ...");
+    throw new Error("usage: buildchain kfd <status|migrate-layout|schema|upstream|aggregate|1|2|3|4> ...");
   }
 
   if (subcommand === "status") {
@@ -880,6 +888,59 @@ async function runKfdCli(args = []) {
     throw new Error("usage: buildchain kfd schema <list|show> ...");
   }
 
+  if (subcommand === "upstream") {
+    const [action = "", ...upstreamArgs] = [maybeStandardOrAction, ...rest];
+    const effectiveAction = action || "collect";
+    const cwd = path.resolve(readFlag(upstreamArgs, "cwd", process.cwd()));
+    const json = readBooleanFlag(upstreamArgs, "json");
+    if (effectiveAction === "collect") {
+      const result = collectKfdUpstreamFacts({ cwd });
+      const output = readFlag(upstreamArgs, "output", "");
+      if (output) {
+        fs.mkdirSync(path.dirname(path.resolve(cwd, output)), { recursive: true });
+        fs.writeFileSync(path.resolve(cwd, output), `${JSON.stringify(result, null, 2)}\n`);
+      }
+      if (json || !output) {
+        printJson(result);
+      } else {
+        process.stdout.write(`kfd upstream collect: wrote ${output}\n`);
+      }
+      return;
+    }
+    if (effectiveAction === "check") {
+      const aggregateInput = readFlag(upstreamArgs, "aggregate-json", "");
+      const aggregate = aggregateInput
+        ? readJsonInput(aggregateInput, { cwd, label: "kfd upstream aggregate" })
+        : collectKfdUpstreamFacts({ cwd });
+      const result = checkKfdUpstreamFacts(aggregate);
+      if (json) {
+        printJson(result);
+      } else {
+        process.stdout.write(`kfd upstream check: ${result.status} (${result.upstreamCount} upstreams)\n`);
+        for (const entry of result.issues) {
+          process.stdout.write(`- ${entry.level}: ${entry.code}: ${entry.message}\n`);
+        }
+      }
+      if (!result.ok) {
+        process.exitCode = 1;
+      }
+      return;
+    }
+    throw new Error("usage: buildchain kfd upstream <collect|check> ...");
+  }
+
+  if (subcommand === "aggregate") {
+    const effectiveArgs = maybeStandardOrAction && maybeStandardOrAction.startsWith("--") ? [maybeStandardOrAction, ...rest] : rest;
+    const cwd = path.resolve(readFlag(effectiveArgs, "cwd", process.cwd()));
+    const result = collectKfdAggregate({ cwd });
+    if (readBooleanFlag(effectiveArgs, "json")) {
+      printJson(result);
+    } else {
+      process.stdout.write(`kfd aggregate: upstream=${result.upstream.summary.upstreamCount}, status=${result.upstreamCheck.status}\n`);
+    }
+    return;
+  }
+
   const standard = normalizeKfdStandardId(subcommand);
   if (standard === "kfd-1") {
     runKfd1Cli([maybeStandardOrAction, ...rest]);
@@ -903,7 +964,7 @@ async function runKfdCli(args = []) {
     }
     throw new Error("KFD-4 is currently schema-only in Buildchain; use: buildchain kfd 4 schema");
   }
-  throw new Error("usage: buildchain kfd <status|migrate-layout|schema|1|2|3|4> ...");
+  throw new Error("usage: buildchain kfd <status|migrate-layout|schema|upstream|aggregate|1|2|3|4> ...");
 }
 
 async function runBuildFactsCli(args = []) {

@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "6431d84ece43e64ec51f31f4a563501181253bd02fcc1789164102158e50c119",
+    "sha256": "6a28bc9e41eab809d41a7cccf8a8d27e0761d4a114470a374cf4e3ee69c8650f",
     "summary": {
-      "cliCommandCount": 67,
+      "cliCommandCount": 69,
       "workflowCount": 35,
       "actionCount": 4,
       "sitePageCount": 43,
-      "docCommandRefCount": 214,
+      "docCommandRefCount": 221,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -207,13 +207,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "6431d84ece43e64ec51f31f4a563501181253bd02fcc1789164102158e50c119",
+      "sha256": "6a28bc9e41eab809d41a7cccf8a8d27e0761d4a114470a374cf4e3ee69c8650f",
       "summary": {
-        "cliCommandCount": 67,
+        "cliCommandCount": 69,
         "workflowCount": 35,
         "actionCount": 4,
         "sitePageCount": 43,
-        "docCommandRefCount": 214,
+        "docCommandRefCount": 221,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -1310,6 +1310,17 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true
+        },
+        {
+          "id": "site:dist/site/kfd-upstream-aggregate.json",
+          "name": "site:dist/site/kfd-upstream-aggregate.json",
+          "kind": "site-consumption-contract",
+          "sourcePath": "dist/site/kfd-upstream-aggregate.json",
+          "evidencePath": "dist/site/kfd-upstream-aggregate.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
         }
       ],
       "reverseEnumeratedSurfaces": [
@@ -1794,6 +1805,18 @@
           "reverseAuditSource": "bin/buildchain.mjs"
         },
         {
+          "id": "cli:kfd-aggregate",
+          "name": "buildchain kfd aggregate [--cwd <dir>] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
           "id": "cli:kfd-migrate-layout",
           "name": "buildchain kfd migrate-layout [--cwd <dir>] [--write] [--force] [--json]",
           "kind": "cli-command",
@@ -1832,6 +1855,18 @@
         {
           "id": "cli:kfd-status",
           "name": "buildchain kfd status [--cwd <dir>] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:kfd-upstream",
+          "name": "buildchain kfd upstream collect [--cwd <dir>] [--output <file>] [--json]",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -3722,6 +3757,6 @@
         "public": true
       }
     ],
-    "publicSurfaceCount": 247
+    "publicSurfaceCount": 250
   }
 }

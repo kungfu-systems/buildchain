@@ -14,6 +14,7 @@
     "public-surface-audit.json",
     "artifact-schemas.json",
     "buildchain-contract.json",
+    "kfd-upstream-aggregate.json",
     "kfd-claims.json",
     "badge-endpoint-registry.json"
   ],
