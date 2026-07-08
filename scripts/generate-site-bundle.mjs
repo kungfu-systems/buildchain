@@ -403,6 +403,8 @@ function cliCommandMeta(id) {
     "kfd-2-claims": { group: "kfd-trust", purpose: "Generate Buildchain's KFD-2 public trust claim evidence." },
     "kfd-2-schema": { group: "kfd-trust", purpose: "Print the default KFD-2 schema exposed by the KFD package standards metadata." },
     "kfd-2-taxonomy": { group: "kfd-trust", purpose: "Validate KFD-2 trust taxonomy entries from the KFD package standards metadata." },
+    "kfd-2-trust-assessment": { group: "kfd-trust", purpose: "Expose and validate the KFD package foundation KFD-2 trust assessment." },
+    "kfd-2-trust-claims": { group: "kfd-trust", purpose: "Expose and validate the KFD package foundation KFD-2 trust claims." },
     "kfd-3": { group: "kfd-trust", purpose: "Inspect KFD-3 surface detection, registry, witness, audit, and query command families under the unified KFD namespace." },
     "kfd-3-audit": { group: "kfd-trust", purpose: "Compare detected, declared, and enforced KFD-3 public surfaces." },
     "kfd-3-detect": { group: "kfd-trust", purpose: "Detect standard KFD-3 public surface candidates from source and artifact metadata." },

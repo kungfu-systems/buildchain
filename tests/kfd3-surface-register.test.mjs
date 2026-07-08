@@ -128,12 +128,19 @@ test("KFD CLI exposes all KFD standards through the unified schema namespace", (
   assert.equal(kfd1Schema.contract, "kungfu-buildchain-kfd-schema");
   const cliSchema = JSON.parse(runBuildchain(["kfd", "1", "schema", "--json"]));
   assert.equal(cliSchema.standard, "kfd-1");
+
+  const kfd2Schemas = listKfdSchemas({ standard: "kfd-2" });
+  assert.ok(kfd2Schemas.schemas.some((entry) => entry.name === "trustClaims"));
+  assert.ok(kfd2Schemas.schemas.some((entry) => entry.name === "trustAssessment"));
+
+  const kfd4Schemas = listKfdSchemas({ standard: "kfd-4" });
+  assert.ok(kfd4Schemas.schemas.some((entry) => entry.name === "observerPerspective"));
 });
 
 test("Buildchain dogfoods KFD-1, KFD-2, and KFD-3 first-class APIs", async () => {
   const status = collectKfdStatus({ cwd: root });
   assert.deepEqual(status.support["kfd-1"], ["schema", "witness", "gate", "verify"]);
-  assert.deepEqual(status.support["kfd-2"], ["schema", "taxonomy", "claims"]);
+  assert.deepEqual(status.support["kfd-2"], ["schema", "taxonomy", "claims", "trust-claims", "trust-assessment"]);
   assert.deepEqual(status.support["kfd-3"], ["schema", "detect", "register", "audit", "witness", "query"]);
   assert.deepEqual(status.support["kfd-4"], ["schema"]);
 
@@ -146,6 +153,24 @@ test("Buildchain dogfoods KFD-1, KFD-2, and KFD-3 first-class APIs", async () =>
   assert.ok(claims.every((entry) => entry.public === true));
   assert.ok(claims.every((entry) => Array.isArray(entry.machineEvidence)));
 
+  const foundationTrustClaims = kfd2.readFoundationTrustClaims();
+  const trustClaimsValidation = kfd2.validateTrustClaims(foundationTrustClaims);
+  assert.equal(foundationTrustClaims.contract, "kfd-2-trust-claims");
+  assert.equal(trustClaimsValidation.ok, true);
+
+  const foundationTrustAssessment = kfd2.readFoundationTrustAssessment();
+  const trustAssessmentValidation = kfd2.validateTrustAssessment(foundationTrustAssessment);
+  assert.equal(foundationTrustAssessment.contract, "kfd-2-trust-assessment");
+  assert.equal(trustAssessmentValidation.ok, true);
+
+  const cliTrustClaims = JSON.parse(runBuildchain(["kfd", "2", "trust-claims", "--json"]));
+  assert.equal(cliTrustClaims.contract, "kungfu-buildchain-kfd-2-trust-claims");
+  assert.equal(cliTrustClaims.validation.ok, true);
+
+  const cliTrustAssessment = JSON.parse(runBuildchain(["kfd", "2", "trust-assessment", "--json"]));
+  assert.equal(cliTrustAssessment.contract, "kungfu-buildchain-kfd-2-trust-assessment");
+  assert.equal(cliTrustAssessment.validation.ok, true);
+
   const query = await kfd3.queryCapabilities({ cwd: root, product: "buildchain" });
 
   assert.equal(query.product, "Buildchain");
@@ -155,4 +180,5 @@ test("Buildchain dogfoods KFD-1, KFD-2, and KFD-3 first-class APIs", async () =>
   assert.equal(kfd4.status, "schema-only");
   const kfd4Schema = readKfdSchema({ standard: "kfd-4" });
   assert.equal(kfd4Schema.standard, "kfd-4");
+  assert.equal(readKfdSchema({ standard: "kfd-4", schema: "observerPerspective" }).name, "observerPerspective");
 });
