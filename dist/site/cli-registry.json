@@ -3,86 +3,283 @@
   "contract": "kungfu-buildchain-cli-registry",
   "binary": "buildchain",
   "npmPackage": "@kungfu-tech/buildchain",
+  "commandSource": "bin/buildchain.mjs reverse enumeration",
   "commands": [
     {
+      "id": "badges",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain badges",
+      "purpose": "Public Buildchain CLI surface. Add a specific purpose in scripts/generate-site-bundle.mjs when this command graduates."
+    },
+    {
+      "id": "badges-bundle",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain badges bundle [--cwd <dir>] [--readme <path>] [--claims <csv>] [--check] [--write] [--json]",
+      "purpose": "Generate or verify the combined KFD and Release Passport badge bundle."
+    },
+    {
+      "id": "badges-readme",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain badges readme [--cwd <dir>] [--readme <path>] [--check] [--write] [--json]",
+      "purpose": "Generate or verify managed README badge blocks."
+    },
+    {
+      "id": "build-contract",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain build-contract ...",
+      "purpose": "Resolve Buildchain runtime contract metadata."
+    },
+    {
+      "id": "build-facts",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain facts module [--cwd <dir>] [--module <id>] [--module-root <path>]",
+      "purpose": "Collect and verify Git source, version, module output, product artifact, and legacy Kungfu buildinfo facts."
+    },
+    {
+      "id": "collect",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain collect",
+      "purpose": "Public Buildchain CLI surface. Add a specific purpose in scripts/generate-site-bundle.mjs when this command graduates."
+    },
+    {
+      "id": "collect-github-release",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain collect github-release --tag <tag> [--repository <owner/repo>]",
+      "purpose": "Collect release assets into a release passport."
+    },
+    {
+      "id": "diagnostics",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain diagnostics",
+      "purpose": "Public Buildchain CLI surface. Add a specific purpose in scripts/generate-site-bundle.mjs when this command graduates."
+    },
+    {
+      "id": "diagnostics-summary",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain diagnostics summary <diagnostics.json>... [--artifact <file>]...",
+      "purpose": "Summarize diagnostics artifacts into JSON and cross-platform lifecycle timing tables."
+    },
+    {
+      "id": "doctor",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain doctor [--cwd <dir>] [--require-publish-source-lock] [--json]",
+      "purpose": "Report local integration readiness."
+    },
+    {
+      "id": "explain",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain explain",
+      "purpose": "Public Buildchain CLI surface. Add a specific purpose in scripts/generate-site-bundle.mjs when this command graduates."
+    },
+    {
+      "id": "explain-artifact",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain explain artifact <subject> [--passport <file-or-url>] [--for human|agent] [--json]",
+      "purpose": "Explain artifact evidence for humans or agents."
+    },
+    {
+      "id": "explain-release",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain explain release --passport <file-or-url> [--for human|agent] [--json]",
+      "purpose": "Explain a release passport for humans or agents."
+    },
+    {
+      "id": "facts",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain facts",
+      "purpose": "Public Buildchain CLI surface. Add a specific purpose in scripts/generate-site-bundle.mjs when this command graduates."
+    },
+    {
+      "id": "help",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain --help",
+      "purpose": "Print Buildchain CLI help."
+    },
+    {
+      "id": "homebrew",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain homebrew",
+      "purpose": "Public Buildchain CLI surface. Add a specific purpose in scripts/generate-site-bundle.mjs when this command graduates."
+    },
+    {
+      "id": "homebrew-check",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain homebrew check [--cwd <dir>] [--package <name>] [--release-passport <file-or-url>] [--json]",
+      "purpose": "Verify Homebrew tap metadata against upstream release passport evidence."
+    },
+    {
+      "id": "homebrew-update-formula",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain homebrew update-formula --package <name> --release-passport <file-or-url> [--write] [--json]",
+      "purpose": "Generate Homebrew Formula metadata from upstream release passport evidence."
+    },
+    {
+      "id": "infra-contract",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain infra-contract ...",
+      "purpose": "Validate and publish provider-neutral infrastructure contract evidence."
+    },
+    {
+      "id": "init",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain init [--cwd <dir>] [--type package|native|web-surface|infra-contract|anchored-package] [--force]",
+      "purpose": "Bootstrap a repository with Buildchain configuration and caller workflow files."
+    },
+    {
+      "id": "inspect",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain inspect",
+      "purpose": "Public Buildchain CLI surface. Add a specific purpose in scripts/generate-site-bundle.mjs when this command graduates."
+    },
+    {
+      "id": "inspect-artifact",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain inspect artifact <subject> [--passport <file-or-url>] [--json]",
+      "purpose": "Inspect artifact evidence."
+    },
+    {
+      "id": "inspect-release",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain inspect release --passport <file-or-url> [--json]",
+      "purpose": "Inspect release passport evidence."
+    },
+    {
+      "id": "lifecycle",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain lifecycle run <stage> [--cwd <dir>] [--required]",
+      "purpose": "Run configured lifecycle commands and write deterministic artifact manifests."
+    },
+    {
+      "id": "log",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain log",
+      "purpose": "Public Buildchain CLI surface. Add a specific purpose in scripts/generate-site-bundle.mjs when this command graduates."
+    },
+    {
+      "id": "logging",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain log <info|warn|error> --event <name> [--phase <phase>]",
+      "purpose": "Emit timestamped build events, summarize logs, and enforce required phases."
+    },
+    {
+      "id": "mark",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain mark --event <name> [--phase <phase>] [--component <name>]",
+      "purpose": "Emit a single Buildchain log event."
+    },
+    {
+      "id": "npm",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain npm",
+      "purpose": "Public Buildchain CLI surface. Add a specific purpose in scripts/generate-site-bundle.mjs when this command graduates."
+    },
+    {
+      "id": "npm-dry-run",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain npm dry-run [--cwd <dir>] [--expected-tag <tag>] [--registry <url>]",
+      "purpose": "Verify npm publish shape before a release transaction."
+    },
+    {
+      "id": "publish-source",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain publish-source <lock|manifest|verify-lock|verify-channel-ref|validate-anchored-release> ...",
+      "purpose": "Create, inspect, or verify publish-gate source-lock refs."
+    },
+    {
+      "id": "release-dry-run",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain release --dry-run --target-ref <ref> [--sha <sha>] [--source-ref <ref>]",
+      "purpose": "Explain what a channel merge would publish before the PR is merged."
+    },
+    {
+      "id": "release-line-open",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain release line open --major <n> --minor <n> [--source-ref <ref>]",
+      "purpose": "Plan or write the initial version-state commit for a new minor release line."
+    },
+    {
+      "id": "release-propagation",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain release-propagation <plan|write-lock> ...",
+      "purpose": "Plan channel-preserving downstream release PRs and write exact upstream release locks."
+    },
+    {
+      "id": "release-transaction",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain release <inspect|recover|finalize|abort> ...",
+      "purpose": "Inspect, recover, finalize, or abort durable release transactions."
+    },
+    {
+      "id": "sample",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain sample",
+      "purpose": "Public Buildchain CLI surface. Add a specific purpose in scripts/generate-site-bundle.mjs when this command graduates."
+    },
+    {
+      "id": "sample-process-tree",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain sample process-tree [--interval-ms <n>] [--label <name>]",
+      "purpose": "Sample process-tree diagnostics for a wrapped command."
+    },
+    {
+      "id": "span",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain span --event <name> [--phase <phase>] [--component <name>]",
+      "purpose": "Run a command inside a Buildchain log span."
+    },
+    {
+      "id": "transaction-inspect",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain transaction inspect ...",
+      "purpose": "Inspect durable release transaction state."
+    },
+    {
+      "id": "validate",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain validate [--cwd <dir>] [--require-version-state]",
+      "purpose": "Validate buildchain.toml and declared lifecycle surfaces."
+    },
+    {
+      "id": "verify",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain verify",
+      "purpose": "Public Buildchain CLI surface. Add a specific purpose in scripts/generate-site-bundle.mjs when this command graduates."
+    },
+    {
+      "id": "verify-artifact",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain verify artifact <file|dir|url|npm:...|oci:...|github-release:...>",
+      "purpose": "Verify artifact subjects against release passport evidence."
+    },
+    {
+      "id": "verify-infra-contract-evidence-bundle",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain verify infra-contract-evidence-bundle <file> [--json]",
+      "purpose": "Fail closed unless an infra-contract lifecycle evidence bundle is complete, hash-bound, and validation-consistent."
+    },
+    {
+      "id": "verify-observability-log",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain verify observability-log <jsonl> [--min-events <n>]",
+      "purpose": "Verify Buildchain observability log events."
+    },
+    {
+      "id": "verify-release-passport",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain verify release-passport <file-or-url> [--json]",
+      "purpose": "Fail closed unless a release passport and its evidence are complete."
+    },
+    {
       "id": "version",
+      "source": "bin/buildchain.mjs",
       "usage": "buildchain version",
       "purpose": "Print the package or embedded binary version."
     },
     {
-      "id": "init",
-      "usage": "buildchain init [--type package|native|web-surface|infra-contract|anchored-package]",
-      "purpose": "Bootstrap a repository with Buildchain configuration and caller workflow files."
-    },
-    {
-      "id": "validate",
-      "usage": "buildchain validate [--require-version-state]",
-      "purpose": "Validate buildchain.toml and declared lifecycle surfaces."
-    },
-    {
-      "id": "doctor",
-      "usage": "buildchain doctor [--json]",
-      "purpose": "Report local integration readiness."
-    },
-    {
-      "id": "lifecycle",
-      "usage": "buildchain lifecycle run <stage>",
-      "purpose": "Run configured lifecycle commands and write deterministic artifact manifests."
-    },
-    {
-      "id": "release-dry-run",
-      "usage": "buildchain release --dry-run --target-ref <ref>",
-      "purpose": "Explain what a channel merge would publish before the PR is merged."
-    },
-    {
-      "id": "collect-github-release",
-      "usage": "buildchain collect github-release --tag <tag>",
-      "purpose": "Collect release assets into a release passport."
-    },
-    {
-      "id": "verify-release-passport",
-      "usage": "buildchain verify release-passport <file-or-url>",
-      "purpose": "Fail closed unless a release passport and its evidence are complete."
-    },
-    {
-      "id": "release-propagation",
-      "usage": "buildchain release-propagation <plan|write-lock>",
-      "purpose": "Plan channel-preserving downstream release PRs and write exact upstream release locks."
-    },
-    {
-      "id": "verify-infra-contract-evidence-bundle",
-      "usage": "buildchain verify infra-contract-evidence-bundle <file>",
-      "purpose": "Fail closed unless an infra-contract lifecycle evidence bundle is complete, hash-bound, and validation-consistent."
-    },
-    {
-      "id": "logging",
-      "usage": "buildchain log|mark|span|verify observability-log",
-      "purpose": "Emit timestamped build events, summarize logs, and enforce required phases."
-    },
-    {
-      "id": "diagnostics-summary",
-      "usage": "buildchain diagnostics summary <diagnostics.json>...",
-      "purpose": "Summarize small diagnostics artifacts into JSON and a cross-platform lifecycle timing table."
-    },
-    {
-      "id": "build-facts",
-      "usage": "buildchain facts module|aggregate|verify",
-      "purpose": "Collect and verify Git source, version, module output, product artifact, and legacy Kungfu buildinfo facts."
-    },
-    {
-      "id": "npm-dry-run",
-      "usage": "buildchain npm dry-run --json",
-      "purpose": "Verify npm publish shape before a release transaction."
-    },
-    {
-      "id": "infra-contract",
-      "usage": "buildchain infra-contract --mode validate|ci|plan|contract|propagation-plan|propagation-apply|apply|evidence-bundle",
-      "purpose": "Validate and publish provider-neutral infrastructure contract evidence with a mutation-free CI evidence chain, provider command plans, configured provider command execution, saved-plan apply gates, dry-run-first propagation, and lifecycle evidence bundles."
-    },
-    {
-      "id": "homebrew",
-      "usage": "buildchain homebrew update-formula|check",
-      "purpose": "Generate and verify Homebrew tap Formula metadata as a distribution-index projection of upstream release passport evidence."
+      "id": "web-surface",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain web-surface ...",
+      "purpose": "Plan, verify, and apply Buildchain web-surface deployments."
     }
   ]
 }

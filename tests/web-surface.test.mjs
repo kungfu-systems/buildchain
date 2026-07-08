@@ -109,6 +109,7 @@ test("web-surface deploy plan emits deterministic manifest without touching AWS"
     assert.deepEqual(
       plan.steps.map((step) => step.action),
       [
+        "ensure-cloudfront-default-root-object",
         "sync-static-artifact",
         "write-deployment-manifest",
         "invalidate-cdn",
@@ -149,8 +150,9 @@ test("web-surface deploy apply defaults to dry-run operations", () => {
     assert.equal(result.surfaceBindings.length, 4);
     assert.deepEqual(
       result.operations.map((operation) => operation.executed),
-      Array.from({ length: 20 }, () => false),
+      Array.from({ length: 21 }, () => false),
     );
+    assert.equal(result.operations.filter((operation) => operation.action === "ensure-cloudfront-default-root-object").length, 1);
   });
 });
 
@@ -174,9 +176,14 @@ test("web-surface deploy apply executes aws s3 and cloudfront commands through r
     assert.equal(result.applyMode, "apply");
     assert.equal(result.status, "applied");
     assert.equal(result.target, "libkungfu-dev-staging");
-    assert.equal(result.operations.length, 20);
-    assert.deepEqual(calls[0].args.slice(0, 3), ["s3", "sync", path.join(fixture, "dist")]);
-    assert.equal(calls[0].args[3], "s3://libkungfu-dev-staging/staging");
+    assert.equal(result.operations.length, 21);
+    const defaultRoot = calls.find((call) => call.action === "ensure-cloudfront-default-root-object");
+    assert.equal(defaultRoot.command, "bash");
+    assert.match(defaultRoot.args.join("\n"), /DefaultRootObject/);
+    assert.equal(defaultRoot.routing.defaultRootObject, "index.html");
+    const hubSync = calls.find((call) => call.action === "sync-static-artifact" && call.surface === "hub");
+    assert.deepEqual(hubSync.args.slice(0, 3), ["s3", "sync", path.join(fixture, "dist")]);
+    assert.equal(hubSync.args[3], "s3://libkungfu-dev-staging/staging");
     const hubManifest = calls.find((call) => call.action === "write-deployment-manifest" && call.surface === "hub");
     assert.equal(hubManifest.args[0], "s3");
     assert.equal(hubManifest.args[2], "-");
@@ -200,7 +207,7 @@ test("web-surface deploy apply executes aws s3 and cloudfront commands through r
     ]);
     assert.deepEqual(
       result.operations.map((operation) => operation.executed),
-      Array.from({ length: 20 }, () => true),
+      Array.from({ length: 21 }, () => true),
     );
   });
 });
@@ -359,7 +366,8 @@ test("web-surface deploy apply can execute a saved deploy plan", () => {
     assert.equal(result.status, "applied");
     assert.equal(result.sourceSha, "b".repeat(40));
     assert.equal(result.artifactHash, plan.artifact.hash);
-    assert.equal(calls[0].args[3], "s3://libkungfu-dev-staging/staging");
+    const hubSync = calls.find((call) => call.action === "sync-static-artifact" && call.surface === "hub");
+    assert.equal(hubSync.args[3], "s3://libkungfu-dev-staging/staging");
   });
 });
 
@@ -389,7 +397,8 @@ test("web-surface deploy apply honors explicit bucket-root prefix", () => {
     });
 
     assert.equal(result.objectPrefix, "");
-    assert.deepEqual(calls[0].args, [
+    const hubSync = calls.find((call) => call.action === "sync-static-artifact" && call.surface === "hub");
+    assert.deepEqual(hubSync.args, [
       "s3",
       "sync",
       path.join(fixture, "dist"),
@@ -568,7 +577,8 @@ test("web-surface production deploy apply executes against production target", (
     assert.equal(result.status, "applied");
     assert.equal(result.objectPrefix, "production");
     assert.equal(result.manifestKey, ".buildchain/deployments/production/hub.json");
-    assert.equal(calls[0].args[3], "s3://libkungfu-dev-production/production");
+    const hubSync = calls.find((call) => call.action === "sync-static-artifact" && call.surface === "hub");
+    assert.equal(hubSync.args[3], "s3://libkungfu-dev-production/production");
     const hubInvalidation = calls.find((call) => call.action === "invalidate-cdn" && call.surface === "hub");
     const kfdInvalidation = calls.find((call) => call.action === "invalidate-cdn" && call.surface === "kfd");
     assert.deepEqual(hubInvalidation.args, [
