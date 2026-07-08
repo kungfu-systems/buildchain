@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:3712026dcfcf44c16bc4def2acf246caee1ec036543c0fea265fa17b19d4de31"
+      "digest": "sha256:67a0e6b63a943904eacbf7d26227e3c9ad650d17e8aa937c40b3fdad8f389fdd"
     },
     {
       "id": "install",
@@ -70,6 +70,14 @@
       "plane": "verify",
       "exists": true,
       "digest": "sha256:75d8bade4b0b96b26941b11835c2debcdada8f1723412935fb8ae6884f08f9f3"
+    },
+    {
+      "id": "release-candidate",
+      "title": "Release Candidate Passport",
+      "path": "docs/release-candidate.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:6b5107cded122925e8560a9b117ff1c96f5cf05d934caf83d7e4b2a4d777175e"
     },
     {
       "id": "release-propagation",
@@ -133,7 +141,7 @@
       "path": "docs/site-bundle-contract.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:595ad74e82f179844da7bb3545b1fa7a0cd99c083160b7ed08861dfb5b2603ab"
+      "digest": "sha256:6b5bc2ee0f785b16d762f140f14a9163c07caf0d424200c2ececc74f7bb2271c"
     },
     {
       "id": "migration-inventory",
@@ -165,7 +173,7 @@
       "path": "docs/cli.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:85e014b7e053b74b620e5b438d54453e20b22f758a33dfd5ae970403fa41d9d7"
+      "digest": "sha256:2f55874feb9acecce1c471b96e07bb9a198a8da93efd0f859d69f353bf9c36a8"
     },
     {
       "id": "build-facts",
@@ -250,6 +258,7 @@
   ],
   "facts": [
     "page-registry.json",
+    "capability-registry.json",
     "cli-registry.json",
     "manual-registry.json",
     "node-api-registry.json",

@@ -9,313 +9,625 @@
       "id": "badges",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain badges",
-      "purpose": "Public Buildchain CLI surface. Add a specific purpose in scripts/generate-site-bundle.mjs when this command graduates."
+      "purpose": "Inspect README badge command families.",
+      "capabilityGroup": "distribution-indexes",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "badges-bundle",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain badges bundle [--cwd <dir>] [--readme <path>] [--claims <csv>] [--check] [--write] [--json]",
-      "purpose": "Generate or verify the combined KFD and Release Passport badge bundle."
+      "purpose": "Generate or verify the combined KFD and Release Passport badge bundle.",
+      "capabilityGroup": "distribution-indexes",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "badges-readme",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain badges readme [--cwd <dir>] [--readme <path>] [--check] [--write] [--json]",
-      "purpose": "Generate or verify managed README badge blocks."
+      "purpose": "Generate or verify managed README badge blocks.",
+      "capabilityGroup": "distribution-indexes",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "build-contract",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain build-contract ...",
-      "purpose": "Resolve Buildchain runtime contract metadata."
+      "purpose": "Resolve Buildchain runtime contract metadata for floating-ref drift checks.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "build-facts",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain facts module [--cwd <dir>] [--module <id>] [--module-root <path>]",
-      "purpose": "Collect and verify Git source, version, module output, product artifact, and legacy Kungfu buildinfo facts."
+      "purpose": "Collect and verify Git source, version, module output, product artifact, and legacy Kungfu buildinfo facts.",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "collect",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain collect",
-      "purpose": "Public Buildchain CLI surface. Add a specific purpose in scripts/generate-site-bundle.mjs when this command graduates."
+      "purpose": "Inspect release evidence collection command families.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "collect-github-release",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain collect github-release --tag <tag> [--repository <owner/repo>]",
-      "purpose": "Collect release assets into a release passport."
+      "purpose": "Collect GitHub Release assets into a release passport.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "diagnostics",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain diagnostics",
-      "purpose": "Public Buildchain CLI surface. Add a specific purpose in scripts/generate-site-bundle.mjs when this command graduates."
+      "purpose": "Inspect diagnostics command families.",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "diagnostics-summary",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain diagnostics summary <diagnostics.json>... [--artifact <file>]...",
-      "purpose": "Summarize diagnostics artifacts into JSON and cross-platform lifecycle timing tables."
+      "purpose": "Summarize diagnostics artifacts into JSON and cross-platform lifecycle timing tables.",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "doctor",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain doctor [--cwd <dir>] [--require-publish-source-lock] [--json]",
-      "purpose": "Report local integration readiness."
+      "purpose": "Report local integration readiness.",
+      "capabilityGroup": "getting-started",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "explain",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain explain",
-      "purpose": "Public Buildchain CLI surface. Add a specific purpose in scripts/generate-site-bundle.mjs when this command graduates."
+      "purpose": "Inspect release and artifact explanation command families.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "explain-artifact",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain explain artifact <subject> [--passport <file-or-url>] [--for human|agent] [--json]",
-      "purpose": "Explain artifact evidence for humans or agents."
+      "purpose": "Explain artifact evidence for humans or agents.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "explain-release",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain explain release --passport <file-or-url> [--for human|agent] [--json]",
-      "purpose": "Explain a release passport for humans or agents."
+      "purpose": "Explain a release passport for humans or agents.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "facts",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain facts",
-      "purpose": "Public Buildchain CLI surface. Add a specific purpose in scripts/generate-site-bundle.mjs when this command graduates."
+      "purpose": "Inspect build facts command families.",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "help",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain --help",
-      "purpose": "Print Buildchain CLI help."
+      "purpose": "Print Buildchain CLI help.",
+      "capabilityGroup": "getting-started",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "homebrew",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain homebrew",
-      "purpose": "Public Buildchain CLI surface. Add a specific purpose in scripts/generate-site-bundle.mjs when this command graduates."
+      "purpose": "Inspect Homebrew distribution-index command families.",
+      "capabilityGroup": "distribution-indexes",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "homebrew-check",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain homebrew check [--cwd <dir>] [--package <name>] [--release-passport <file-or-url>] [--json]",
-      "purpose": "Verify Homebrew tap metadata against upstream release passport evidence."
+      "purpose": "Verify Homebrew tap metadata against upstream release passport evidence.",
+      "capabilityGroup": "distribution-indexes",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "homebrew-update-formula",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain homebrew update-formula --package <name> --release-passport <file-or-url> [--write] [--json]",
-      "purpose": "Generate Homebrew Formula metadata from upstream release passport evidence."
+      "purpose": "Generate Homebrew Formula metadata from upstream release passport evidence.",
+      "capabilityGroup": "distribution-indexes",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "infra-contract",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain infra-contract ...",
-      "purpose": "Validate and publish provider-neutral infrastructure contract evidence."
+      "purpose": "Validate and publish provider-neutral infrastructure contract evidence.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "init",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain init [--cwd <dir>] [--type package|native|web-surface|infra-contract|anchored-package] [--force]",
-      "purpose": "Bootstrap a repository with Buildchain configuration and caller workflow files."
+      "purpose": "Bootstrap a repository with Buildchain configuration and caller workflow files.",
+      "capabilityGroup": "getting-started",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "inspect",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain inspect",
-      "purpose": "Public Buildchain CLI surface. Add a specific purpose in scripts/generate-site-bundle.mjs when this command graduates."
+      "purpose": "Inspect release and artifact evidence command families.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "inspect-artifact",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain inspect artifact <subject> [--passport <file-or-url>] [--json]",
-      "purpose": "Inspect artifact evidence."
+      "purpose": "Inspect artifact evidence.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "inspect-release",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain inspect release --passport <file-or-url> [--json]",
-      "purpose": "Inspect release passport evidence."
+      "purpose": "Inspect release passport evidence.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "kfd-3",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain kfd-3",
-      "purpose": "Public Buildchain CLI surface. Add a specific purpose in scripts/generate-site-bundle.mjs when this command graduates."
+      "purpose": "Inspect KFD-3 surface detection, registry, witness, audit, and query command families.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "kfd-3-audit",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain kfd-3 audit [--cwd <dir>] [--registry <path>] [--artifact <path>] [--json]",
-      "purpose": "Compare detected, declared, and enforced KFD-3 public surfaces."
+      "purpose": "Compare detected, declared, and enforced KFD-3 public surfaces.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "kfd-3-detect",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain kfd-3 detect [--cwd <dir>] [--kind <kind>]... [--artifact <path>] [--json]",
-      "purpose": "Detect standard KFD-3 public surface candidates from source and artifact metadata."
+      "purpose": "Detect standard KFD-3 public surface candidates from source and artifact metadata.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "kfd-3-query",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain kfd-3 query [<product>] [--cwd <dir>] [--registry <path>]",
-      "purpose": "Return an agent-readable KFD-3 capability map for a product, registry, or release passport."
+      "purpose": "Return an agent-readable KFD-3 capability map for a product, registry, or release passport.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "kfd-3-register",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain kfd-3 register <node-api|python-api|cli|binary|documentation|site-bundle>",
-      "purpose": "Declare detected KFD-3 public surfaces into a product-owned surface registry."
+      "purpose": "Declare detected KFD-3 public surfaces into a product-owned surface registry.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "kfd-3-witness",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain kfd-3 witness [--cwd <dir>] [--registry <path>] [--kind prebuild|artifact]",
-      "purpose": "Generate release-passport-compatible KFD-3 surface witnesses from a product registry."
+      "purpose": "Generate release-passport-compatible KFD-3 surface witnesses from a product registry.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "lifecycle",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain lifecycle run <stage> [--cwd <dir>] [--required]",
-      "purpose": "Run configured lifecycle commands and write deterministic artifact manifests."
+      "purpose": "Run configured lifecycle commands and write deterministic artifact manifests.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "log",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain log",
-      "purpose": "Public Buildchain CLI surface. Add a specific purpose in scripts/generate-site-bundle.mjs when this command graduates."
+      "purpose": "Inspect Buildchain logging command families.",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "logging",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain log <info|warn|error> --event <name> [--phase <phase>]",
-      "purpose": "Emit timestamped build events, summarize logs, and enforce required phases."
+      "purpose": "Emit timestamped build events, summarize logs, and enforce required phases.",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "mark",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain mark --event <name> [--phase <phase>] [--component <name>]",
-      "purpose": "Emit a single Buildchain log event."
+      "purpose": "Emit a single Buildchain log event.",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "npm",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain npm",
-      "purpose": "Public Buildchain CLI surface. Add a specific purpose in scripts/generate-site-bundle.mjs when this command graduates."
+      "purpose": "Inspect npm publishing command families.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "npm-dry-run",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain npm dry-run [--cwd <dir>] [--expected-tag <tag>] [--registry <url>]",
-      "purpose": "Verify npm publish shape before a release transaction."
+      "purpose": "Verify npm publish shape before a release transaction.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "publish-source",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain publish-source <lock|manifest|verify-lock|verify-channel-ref|validate-anchored-release> ...",
-      "purpose": "Create, inspect, or verify publish-gate source-lock refs."
+      "purpose": "Create, inspect, or verify publish-gate source-lock refs.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "release-dry-run",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain release --dry-run --target-ref <ref> [--sha <sha>] [--source-ref <ref>]",
-      "purpose": "Explain what a channel merge would publish before the PR is merged."
+      "purpose": "Explain what a channel merge would publish before the PR is merged.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "release-line-open",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain release line open --major <n> --minor <n> [--source-ref <ref>]",
-      "purpose": "Plan or write the initial version-state commit for a new minor release line."
+      "purpose": "Plan or write the initial version-state commit for a new minor release line.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "release-propagation",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain release-propagation <plan|write-lock> ...",
-      "purpose": "Plan channel-preserving downstream release PRs and write exact upstream release locks."
+      "purpose": "Plan channel-preserving downstream release PRs and write exact upstream release locks.",
+      "capabilityGroup": "site-and-propagation",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "release-transaction",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain release <inspect|recover|finalize|abort> ...",
-      "purpose": "Inspect, recover, finalize, or abort durable release transactions."
+      "purpose": "Inspect, recover, finalize, or abort durable release transactions.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "sample",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain sample",
-      "purpose": "Public Buildchain CLI surface. Add a specific purpose in scripts/generate-site-bundle.mjs when this command graduates."
+      "purpose": "Inspect sampler command families.",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "sample-process-tree",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain sample process-tree [--interval-ms <n>] [--label <name>]",
-      "purpose": "Sample process-tree diagnostics for a wrapped command."
+      "purpose": "Sample process-tree diagnostics for a wrapped command.",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "span",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain span --event <name> [--phase <phase>] [--component <name>]",
-      "purpose": "Run a command inside a Buildchain log span."
+      "purpose": "Run a command inside a Buildchain log span.",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "transaction-inspect",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain transaction inspect ...",
-      "purpose": "Inspect durable release transaction state."
+      "purpose": "Inspect durable release transaction state.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "validate",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain validate [--cwd <dir>] [--require-version-state]",
-      "purpose": "Validate buildchain.toml and declared lifecycle surfaces."
+      "purpose": "Validate buildchain.toml and declared lifecycle surfaces.",
+      "capabilityGroup": "getting-started",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "verify",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain verify",
-      "purpose": "Public Buildchain CLI surface. Add a specific purpose in scripts/generate-site-bundle.mjs when this command graduates."
+      "purpose": "Inspect release and artifact verification command families.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "verify-artifact",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain verify artifact <file|dir|url|npm:...|oci:...|github-release:...>",
-      "purpose": "Verify artifact subjects against release passport evidence."
+      "purpose": "Verify artifact subjects against release passport evidence.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "verify-infra-contract-evidence-bundle",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain verify infra-contract-evidence-bundle <file> [--json]",
-      "purpose": "Fail closed unless an infra-contract lifecycle evidence bundle is complete, hash-bound, and validation-consistent."
+      "purpose": "Fail closed unless an infra-contract lifecycle evidence bundle is complete, hash-bound, and validation-consistent.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "verify-observability-log",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain verify observability-log <jsonl> [--min-events <n>]",
-      "purpose": "Verify Buildchain observability log events."
+      "purpose": "Verify Buildchain observability log events.",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "verify-release-passport",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain verify release-passport <file-or-url> [--json]",
-      "purpose": "Fail closed unless a release passport and its evidence are complete."
+      "purpose": "Fail closed unless a release passport and its evidence are complete.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "version",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain version",
-      "purpose": "Print the package or embedded binary version."
+      "purpose": "Print the package or embedded binary version.",
+      "capabilityGroup": "getting-started",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     },
     {
       "id": "web-surface",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain web-surface ...",
-      "purpose": "Plan, verify, and apply Buildchain web-surface deployments."
+      "purpose": "Plan, verify, and apply Buildchain web-surface deployments.",
+      "capabilityGroup": "site-and-propagation",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
     }
   ]
 }

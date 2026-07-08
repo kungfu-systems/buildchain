@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "fddae6b9690e6a5ccc242d66028b0ddae0b63b3d70d28dba50ab745c8b09f613",
+    "sha256": "d45a224079b1819c319aba9f82d3ea8555a489bc4878a04ff586f528f1bd1255",
     "summary": {
       "cliCommandCount": 52,
       "workflowCount": 35,
@@ -71,6 +71,7 @@
         "dist/site/manual-registry.json",
         "dist/site/node-api-registry.json",
         "dist/site/page-registry.json",
+        "dist/site/capability-registry.json",
         "dist/site/buildchain-site.json",
         "dist/site/site-manifest.json"
       ]
@@ -206,7 +207,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "fddae6b9690e6a5ccc242d66028b0ddae0b63b3d70d28dba50ab745c8b09f613",
+      "sha256": "d45a224079b1819c319aba9f82d3ea8555a489bc4878a04ff586f528f1bd1255",
       "summary": {
         "cliCommandCount": 52,
         "workflowCount": 35,
@@ -465,6 +466,18 @@
           "participantFacing": true,
           "public": true,
           "plane": "use"
+        },
+        {
+          "id": "doc:docs/release-candidate.md",
+          "name": "Release Candidate Passport",
+          "kind": "documentation",
+          "sourcePath": "docs/release-candidate.md",
+          "evidencePath": "docs/release-candidate.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "verify"
         },
         {
           "id": "doc:docs/release-flow.md",
@@ -1138,6 +1151,17 @@
           "kind": "site-consumption-contract",
           "sourcePath": "dist/site/page-registry.json",
           "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
+          "id": "site:dist/site/capability-registry.json",
+          "name": "site:dist/site/capability-registry.json",
+          "kind": "site-consumption-contract",
+          "sourcePath": "dist/site/capability-registry.json",
+          "evidencePath": "dist/site/capability-registry.json",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
@@ -3502,6 +3526,6 @@
         "public": true
       }
     ],
-    "publicSurfaceCount": 229
+    "publicSurfaceCount": 231
   }
 }
