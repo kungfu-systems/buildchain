@@ -103,6 +103,42 @@ function writeFailureResult({ output, mode, cwd, error }) {
   return result;
 }
 
+export function compactWebSurfaceApplyResult(result = {}) {
+  const manifest = result.manifest && typeof result.manifest === "object" ? result.manifest : {};
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-web-surface-deploy-apply-summary",
+    sourceContract: result.contract || "",
+    channel: result.channel || manifest.channel || "",
+    alias: result.alias || manifest.alias || "",
+    applyMode: result.applyMode || "",
+    status: result.status || "",
+    actor: result.actor || "",
+    runId: result.runId || "",
+    appliedAt: result.appliedAt || "",
+    url: result.url || "",
+    urls: result.urls && typeof result.urls === "object" ? result.urls : {},
+    sourceSha: result.sourceSha || manifest.sourceSha || "",
+    artifactHash: result.artifactHash || manifest.artifactHash || "",
+    adapter: result.adapter || "",
+    target: result.target || "",
+    objectPrefix: result.objectPrefix || "",
+    manifestKey: result.manifestKey || "",
+    invalidationPaths: Array.isArray(result.invalidationPaths) ? result.invalidationPaths : [],
+    surfaceBindings: Array.isArray(result.surfaceBindings)
+      ? result.surfaceBindings.map((binding) => ({
+          surface: binding.surface || "",
+          pathPrefix: binding.pathPrefix || "",
+          objectPrefix: binding.objectPrefix || "",
+          url: binding.url || "",
+          manifestKey: binding.manifestKey || "",
+          accessControl: binding.accessControl || "",
+          healthStrategy: binding.healthStrategy || "",
+        }))
+      : [],
+  };
+}
+
 export function webSurfaceCli() {
   const mode = readArg("mode", process.env.BUILDCHAIN_WEB_SURFACE_MODE || "validate");
   const cwd = readArg("cwd", process.env.BUILDCHAIN_WORKDIR || process.cwd());
@@ -184,6 +220,7 @@ export function webSurfaceCli() {
         ...(publishedAt ? { appliedAt: publishedAt } : {}),
       });
       writeJson(result, output);
+      const applySummary = compactWebSurfaceApplyResult(result);
       writeGitHubOutputs({
         "web-surface-channel": result.channel,
         "web-surface-alias": result.alias,
@@ -194,7 +231,8 @@ export function webSurfaceCli() {
         "web-surface-apply-status": result.status,
         "web-surface-manifest-json": JSON.stringify(result.manifest),
         "web-surface-bindings-json": JSON.stringify(result.surfaceBindings || []),
-        "web-surface-apply-result-json": JSON.stringify(result),
+        "web-surface-apply-summary-json": JSON.stringify(applySummary),
+        "web-surface-apply-result-json": JSON.stringify(applySummary),
       });
       assertApplySucceeded(result);
       return result;
