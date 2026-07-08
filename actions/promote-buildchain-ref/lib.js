@@ -2738,6 +2738,75 @@ async function resumableAlphaTransactionState({
   return undefined;
 }
 
+async function resumableReleaseTransactionState({
+  octokit,
+  owner,
+  repo,
+  refs,
+  releasePrefix,
+  targetRef,
+  sourceSha,
+}) {
+  const candidates = refs
+    .map((ref) => parseReleaseTransactionStateRef(ref.ref, releasePrefix))
+    .filter(Boolean)
+    .sort((a, b) => b.patch - a.patch);
+  for (const candidate of candidates) {
+    const version = stripTagPrefix(candidate.tag);
+    let transaction;
+    try {
+      transaction = await readDurableReleaseTransaction({
+        octokit,
+        owner,
+        repo,
+        stateRef: releaseTransactionStateRef(version),
+      });
+    } catch (error) {
+      const message = error?.message || "";
+      if (notFound(error) || /missing state\.json/i.test(message)) {
+        continue;
+      }
+      throw error;
+    }
+    const exactTransactionSource =
+      transaction?.source_sha === sourceSha ||
+      transaction?.release_sha === sourceSha ||
+      transaction?.release_material_sha === sourceSha;
+    const transactionInSourceHistory =
+      !transactionHasPublishedMaterial(transaction) &&
+      (
+        await releaseCommitIncludesTransactionHead({
+          octokit,
+          owner,
+          repo,
+          releaseSha: sourceSha,
+          transactionReleaseSha: transaction?.release_sha,
+        }) ||
+        await releaseCommitIncludesTransactionHead({
+          octokit,
+          owner,
+          repo,
+          releaseSha: sourceSha,
+          transactionReleaseSha: transaction?.release_material_sha,
+        })
+      );
+    if (
+      transaction &&
+      transaction.target_ref === targetRef &&
+      transaction.exact_tag === candidate.tag &&
+      !["complete", "abandoned", "failed_permanently"].includes(transaction.state) &&
+      (exactTransactionSource || transactionInSourceHistory)
+    ) {
+      return {
+        ...candidate,
+        version,
+        transaction,
+      };
+    }
+  }
+  return undefined;
+}
+
 function parseAlphaPrereleaseRef(refName, releasePrefix) {
   const tag = parseAlphaPrereleaseTag(refName, releasePrefix);
   if (tag) {
@@ -4692,15 +4761,27 @@ async function promoteBuildchainRefs({
         patch: Number(explicitReleaseTags[0].split(".").pop()),
       }
     : undefined;
+  const resumableRelease = selectedRelease
+    ? undefined
+    : await resumableReleaseTransactionState({
+        octokit,
+        owner,
+        repo,
+        refs: lineRefs,
+        releasePrefix: rule.releasePrefix,
+        targetRef,
+        sourceSha: sha,
+      });
   const currentRelease = selectedRelease
     ? undefined
-    : currentReleaseVersionState({
+    : resumableRelease || currentReleaseVersionState({
         cwd,
         refs: lineRefs,
         releasePrefix: rule.releasePrefix,
       });
   const currentReleaseTransaction = currentRelease
-    ? await readDurableTransactionForVersion({
+    ? currentRelease.transaction ||
+      await readDurableTransactionForVersion({
         octokit,
         owner,
         repo,
