@@ -101,6 +101,8 @@ Repositories can also generate README status badges from Buildchain-owned facts
 instead of hand-maintaining badge Markdown:
 
 ```bash
+buildchain badges bundle --check
+buildchain badges bundle --write
 buildchain badges readme --check
 buildchain badges readme --write
 ```

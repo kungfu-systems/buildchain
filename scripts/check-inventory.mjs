@@ -15,7 +15,9 @@ const requiredPaths = [
   ".github/pull_request_template.md",
   "bin/buildchain.mjs",
   "packages/core/homebrew.js",
+  "packages/core/build-facts.js",
   "docs/MAP.md",
+  "docs/build-facts.md",
   "docs/binary-distribution.md",
   "docs/cli.md",
   "docs/consumer-issue-reporting.md",
@@ -120,6 +122,12 @@ if (rootPackage.exports?.["./issue-reporting"] !== "./packages/core/issue-report
 if (rootPackage.exports?.["./readme-badges"] !== "./packages/core/readme-badges.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/readme-badges");
 }
+if (rootPackage.exports?.["./badges"] !== "./packages/core/badges.js") {
+  throw new Error("root package must export @kungfu-tech/buildchain/badges");
+}
+if (rootPackage.exports?.["./build-facts"] !== "./packages/core/build-facts.js") {
+  throw new Error("root package must export @kungfu-tech/buildchain/build-facts");
+}
 if (rootPackage.exports?.["./logging"] !== "./packages/core/logging.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/logging");
 }
@@ -210,6 +218,20 @@ if (!coreIndexSource.includes("createSurfaceTimestampPolicy")) {
   throw new Error("packages/core/index.js must export surface manifest timestamp policy APIs");
 }
 for (const requiredSnippet of [
+  "collectModuleBuildFacts",
+  "aggregateBuildFacts",
+  "verifyBuildFacts",
+  "writeKungfuBuildInfoProjection",
+]) {
+  if (!coreIndexSource.includes(requiredSnippet)) {
+    throw new Error(`packages/core/index.js must export Build Facts API: ${requiredSnippet}`);
+  }
+}
+for (const requiredSnippet of [
+  "collectBadgeBundleFacts",
+  "renderBadgeBundleBlock",
+  "checkBadgeBundleBlock",
+  "updateBadgeBundleBlock",
   "collectReadmeBadgeFacts",
   "renderReadmeBadgeBlock",
   "checkReadmeBadgeBlock",
@@ -387,6 +409,8 @@ for (const requiredSnippet of [
   "Verification fails closed",
   "KFD-2 release trust passport audit",
   "Unbound public claims fail",
+  "buildFacts[]",
+  "--build-facts-json",
   "Floating Buildchain contract lock",
   "buildchain.contract-lock.json",
   "--kfd-3-prebuild-witness-json",
@@ -403,6 +427,7 @@ for (const requiredSnippet of [
   "KFD-1 / KFD-2 / KFD-3",
   "floating `@v2`",
   "npm publish transactions",
+  "Git/source/version/module/product build facts",
   "GitHub Release",
   "release propagation",
   "Homebrew tap distribution indexes",
@@ -416,6 +441,11 @@ for (const requiredSnippet of [
 }
 const readmeBadgesDoc = fs.readFileSync(path.join(root, "docs/readme-badges.md"), "utf8");
 for (const requiredSnippet of [
+  "buildchain badges bundle --check",
+  "collectBadgeBundleFacts",
+  "kungfu-buildchain-badge-bundle-facts",
+  "@kungfu-tech/buildchain/badges",
+  "[badges.bundle]",
   "buildchain badges readme --check",
   "collectReadmeBadgeFacts",
   "kungfu-buildchain-readme-badge-facts",
@@ -472,8 +502,11 @@ for (const [docName, docSource] of Object.entries({ "docs/cli.md": cliDoc, "docs
   }
 }
 for (const requiredSnippet of [
+  "buildchain badges bundle --check",
+  "buildchain badges bundle --write",
   "buildchain badges readme --check",
   "buildchain badges readme --write",
+  "@kungfu-tech/buildchain/badges",
   "@kungfu-tech/buildchain/readme-badges",
   "buildchain homebrew update-formula",
   "buildchain homebrew check",
@@ -553,12 +586,10 @@ for (const requiredSnippet of [
   "release-passport-buildchain-self-kfd: true",
   "publish-required-artifacts-json: \"[]\"",
   "release-passport-impact-json: >-",
-  "Buildchain v2.8 promotes KFD self-verification",
-  "kfd-1-contract-world-release-gate",
-  "kfd-2-release-trust-passport-audit",
-  "kfd-3-collaboration-interface-trust-proof",
-  "publish-source-lock-enforcement",
-  "required-check-protection",
+  "Buildchain v2.9 adds Build Facts as a public contract",
+  "build-facts-contract",
+  "trust-badge-bundle",
+  "web-surface-directory-index-aliases",
   "\"surfaceImpacts\":[",
 ]) {
   if (!buildchainRefPromotionWorkflow.includes(requiredSnippet)) {

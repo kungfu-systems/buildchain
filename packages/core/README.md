@@ -12,10 +12,12 @@ Current shared surfaces:
 - toolkit observability logging through `@kungfu-tech/buildchain/logging`;
 - toolkit diagnostics and native profile collection through
   `@kungfu-tech/buildchain/diagnostics`;
+- source/version/module/product build facts through
+  `@kungfu-tech/buildchain/build-facts`;
 - release passport creation and verification through
   `@kungfu-tech/buildchain/release-passport`.
-- managed README badge facts and marker blocks through
-  `@kungfu-tech/buildchain/readme-badges`.
+- managed KFD / Release Passport badge bundle facts and README marker blocks
+  through `@kungfu-tech/buildchain/badges`.
 
 ## Toolkit Imports
 
@@ -52,16 +54,30 @@ const { createBuildchainLogger } = await import("@kungfu-tech/buildchain/logging
 const { collectRunnerDiagnostics } = await import("@kungfu-tech/buildchain/diagnostics");
 ```
 
+Build facts consumers can collect source-bound module/product facts before
+publishing and pass those facts into the release passport:
+
+```js
+import { collectModuleBuildFacts, writeBuildFacts } from "@kungfu-tech/buildchain/build-facts";
+
+const fact = collectModuleBuildFacts({ moduleId: "native-core" });
+writeBuildFacts({ fact, output: ".buildchain/facts/native-core.json" });
+```
+
 Web-surface validation stays in core because both local scripts and GitHub
 Actions need the same fail-closed interpretation of project, channel, deploy,
 retention, and staging security declarations.
 
-README badge consumers should import the public subpath and treat Markdown as a
-projection of the returned facts:
+README badge consumers should import the public badge subpath and treat
+Markdown as a projection of the returned facts:
 
 ```js
-import { collectReadmeBadgeFacts, renderReadmeBadgeBlock } from "@kungfu-tech/buildchain/readme-badges";
+import { collectBadgeBundleFacts, renderBadgeBundleBlock } from "@kungfu-tech/buildchain/badges";
 
-const facts = await collectReadmeBadgeFacts({ cwd: process.cwd() });
-const markdown = renderReadmeBadgeBlock(facts);
+const facts = await collectBadgeBundleFacts({ cwd: process.cwd() });
+const markdown = renderBadgeBundleBlock(facts);
 ```
+
+The older `@kungfu-tech/buildchain/readme-badges` subpath remains available for
+callers that need the full README badge surface instead of the default
+KFD-1 / KFD-2 / KFD-3 / Release Passport bundle.

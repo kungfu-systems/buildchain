@@ -234,6 +234,18 @@
           "plane": "verify"
         },
         {
+          "id": "doc:docs/build-facts.md",
+          "name": "Build Facts",
+          "kind": "documentation",
+          "sourcePath": "docs/build-facts.md",
+          "evidencePath": "docs/build-facts.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
+        },
+        {
           "id": "doc:docs/cli.md",
           "name": "CLI and npm package",
           "kind": "documentation",
@@ -758,6 +770,30 @@
           "packageExport": "."
         },
         {
+          "id": "export:./badges",
+          "name": "@kungfu-tech/buildchain/badges",
+          "kind": "package-export",
+          "sourcePath": "packages/core/badges.js",
+          "evidencePath": "packages/core/badges.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./badges"
+        },
+        {
+          "id": "export:./build-facts",
+          "name": "@kungfu-tech/buildchain/build-facts",
+          "kind": "package-export",
+          "sourcePath": "packages/core/build-facts.js",
+          "evidencePath": "packages/core/build-facts.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./build-facts"
+        },
+        {
           "id": "export:./core",
           "name": "@kungfu-tech/buildchain/core",
           "kind": "package-export",
@@ -1151,6 +1187,6 @@
         "public": true
       }
     ],
-    "publicSurfaceCount": 85
+    "publicSurfaceCount": 88
   }
 }

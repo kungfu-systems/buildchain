@@ -51,6 +51,9 @@ Additive passport sections:
   policy. It records real CI/release generation and publication times,
   reproducibility inputs, source revision or source-date-epoch, and whether
   timestamp fields participate in the release artifact digest.
+- `buildFacts`: module/product build facts that bind Git source digests,
+  version sources, lifecycle invocations, platforms, outputs, product
+  artifacts, and verification results to the release.
 - `artifacts`: release assets and registry artifacts in one list, each pointing
   back to the evidence file that proves its digest.
 
@@ -97,6 +100,8 @@ buildchain collect github-release \
   --package-set-json package-set.json \
   --anchor-manifest-json libnode.release.json \
   --build-summary-json .buildchain/artifacts/build-summary.json \
+  --build-facts-json .buildchain/facts/native-core.json \
+  --build-facts-json .buildchain/facts/product.json \
   --platform-manifest-json .buildchain/artifacts/linux-x64/manifest.json \
   --platform-manifest-json .buildchain/artifacts/darwin-arm64/manifest.json \
   --platform-manifest-json .buildchain/artifacts/win32-x64/manifest.json \
@@ -111,7 +116,12 @@ buildchain collect github-release \
 dist-tag, registry, role, platform, and digest, so agents do not need to stitch
 npm facts back together from the lower-level evidence files.
 `buildSummary`, `platformArtifactManifests`, and `distTagPromotion` preserve the
-build and npm dist-tag evidence chain in the same passport.
+build and npm dist-tag evidence chain in the same passport. `buildFacts[]`
+records first-class module/product build facts, while
+`evidence.buildFacts[]` gives agents compact paths, SHA-256 hashes, contracts,
+ids, and digests for quick audit traversal. See
+[`build-facts.md`](build-facts.md) for the fact collection and verification
+contract.
 
 ### KFD-1 contract-world release gate
 

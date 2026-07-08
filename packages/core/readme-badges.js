@@ -10,9 +10,16 @@ import {
 } from "./release-passport.js";
 
 export const README_BADGE_FACTS_CONTRACT = "kungfu-buildchain-readme-badge-facts";
+export const BADGE_BUNDLE_FACTS_CONTRACT = "kungfu-buildchain-badge-bundle-facts";
 export const README_BADGE_BLOCK_START = "<!-- buildchain:badges:start -->";
 export const README_BADGE_BLOCK_END = "<!-- buildchain:badges:end -->";
 export const README_BADGE_HOSTED_BASE_URL = "https://buildchain.libkungfu.dev/badges/v1";
+export const BADGE_BUNDLE_DEFAULT_CLAIMS = [
+  "kfd-1",
+  "kfd-2",
+  "kfd-3",
+  "release-passport",
+];
 
 const KFD_KEYS = [
   { key: "kfd-1", id: "kfd1", label: "KFD-1", text: "contract world" },
@@ -46,6 +53,22 @@ const BUILDCHAIN_BADGE_IDS = [
   "kfd-3",
   "buildchain-release-passport",
 ];
+
+const BADGE_BUNDLE_CLAIM_ALIASES = {
+  kfd1: "kfd-1",
+  "kfd_1": "kfd-1",
+  "kfd-1": "kfd-1",
+  kfd2: "kfd-2",
+  "kfd_2": "kfd-2",
+  "kfd-2": "kfd-2",
+  kfd3: "kfd-3",
+  "kfd_3": "kfd-3",
+  "kfd-3": "kfd-3",
+  passport: "release-passport",
+  "release_passport": "release-passport",
+  "release-passport": "release-passport",
+  "buildchain-release-passport": "release-passport",
+};
 
 const BUILDCHAIN_BADGE_LOGO_PLACEHOLDER = {
   contract: "kungfu-buildchain-badge-logo-policy",
@@ -81,6 +104,10 @@ function readTextIfExists(filePath) {
 
 function sha256File(filePath) {
   return crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");
+}
+
+function hashText(value) {
+  return crypto.createHash("sha256").update(String(value || "")).digest("hex");
 }
 
 function posixPath(value) {
@@ -172,6 +199,51 @@ function normalizeStringArray(value) {
   return value
     .map((entry) => String(entry || "").trim())
     .filter(Boolean);
+}
+
+function splitClaimList(value) {
+  if (Array.isArray(value)) {
+    return value;
+  }
+  if (typeof value === "string") {
+    return value.split(",");
+  }
+  return [];
+}
+
+function normalizeBadgeBundleClaims(value, fallback = BADGE_BUNDLE_DEFAULT_CLAIMS) {
+  const selected = [];
+  const unknown = [];
+  for (const claim of splitClaimList(value)) {
+    const key = String(claim || "").trim().toLowerCase();
+    if (!key) {
+      continue;
+    }
+    const normalized = BADGE_BUNDLE_CLAIM_ALIASES[key];
+    if (!normalized) {
+      unknown.push(key);
+      continue;
+    }
+    if (!selected.includes(normalized)) {
+      selected.push(normalized);
+    }
+  }
+  if (unknown.length > 0) {
+    throw new Error(`unsupported badge bundle claim(s): ${unknown.join(", ")}`);
+  }
+  return selected.length > 0 ? selected : [...fallback];
+}
+
+function badgeBundleConfig(badgeConfig = {}) {
+  const configured = badgeConfig.bundle && typeof badgeConfig.bundle === "object"
+    ? badgeConfig.bundle
+    : {};
+  return {
+    enabled: configured.enabled === undefined ? true : Boolean(configured.enabled),
+    claims: normalizeBadgeBundleClaims(configured.claims || badgeConfig.bundle_claims || badgeConfig.bundleClaims),
+    mode: String(configured.mode || "readme"),
+    hosted: configured.hosted === undefined ? true : Boolean(configured.hosted),
+  };
 }
 
 function resolveLocalFactPath({ cwd, location }) {
@@ -531,6 +603,46 @@ function buildBadgeEntries(facts, { badgeConfig = {} } = {}) {
   return entries;
 }
 
+function buildBadgeBundleEntries(readmeFacts, bundle) {
+  const selected = new Set(bundle.claims);
+  const entries = [];
+  for (const kfd of readmeFacts.kfd) {
+    if (!selected.has(kfd.key)) {
+      continue;
+    }
+    entries.push({
+      id: kfd.key,
+      claim: kfd.key,
+      alt: `${kfd.label}: ${kfd.state}`,
+      image: readmeFacts.badges.find((badge) => badge.id === kfd.key)?.image || "",
+      link: kfd.url,
+      state: kfd.state,
+      source: kfd.source,
+      standard: {
+        title: kfd.title,
+        documentUrl: kfd.standardDocumentUrl,
+        documentSha256: kfd.standardDocumentSha256,
+        interfaceContract: kfd.interfaceContract,
+        schemaId: kfd.schemaId,
+      },
+    });
+  }
+  if (selected.has("release-passport")) {
+    const badge = readmeFacts.badges.find((entry) => entry.id === "buildchain-release-passport");
+    entries.push({
+      id: "buildchain-release-passport",
+      claim: "release-passport",
+      alt: `Buildchain Release Passport: ${readmeFacts.releasePassport.state}`,
+      image: badge?.image || "",
+      link: readmeFacts.releasePassport.url,
+      state: readmeFacts.releasePassport.state,
+      source: readmeFacts.releasePassport.verified ? "release-passport" : "declaration",
+      releasePassport: readmeFacts.releasePassport,
+    });
+  }
+  return entries;
+}
+
 export async function collectReadmeBadgeFacts({ cwd = process.cwd() } = {}) {
   const resolvedCwd = path.resolve(cwd);
   const loadedConfig = loadBuildchainConfig(resolvedCwd);
@@ -610,13 +722,46 @@ export async function collectReadmeBadgeFacts({ cwd = process.cwd() } = {}) {
       hostedBadgeIds: BUILDCHAIN_BADGE_IDS,
       logoPolicy: BUILDCHAIN_BADGE_LOGO_PLACEHOLDER,
     },
+    badgeBundle: badgeBundleConfig(badgeConfig),
     badges: [],
   };
   facts.badges = buildBadgeEntries(facts, { badgeConfig });
   return facts;
 }
 
-export function renderReadmeBadgeBlock(facts) {
+export async function collectBadgeBundleFacts({ cwd = process.cwd(), claims = undefined } = {}) {
+  const readmeFacts = await collectReadmeBadgeFacts({ cwd });
+  const config = {
+    ...readmeFacts.badgeBundle,
+    claims: normalizeBadgeBundleClaims(claims, readmeFacts.badgeBundle.claims),
+  };
+  const badges = buildBadgeBundleEntries(readmeFacts, config);
+  return {
+    schemaVersion: 1,
+    contract: BADGE_BUNDLE_FACTS_CONTRACT,
+    cwd: readmeFacts.cwd,
+    repository: readmeFacts.repository,
+    package: readmeFacts.package,
+    sourceFactsContract: readmeFacts.contract,
+    sourceFactsSha256: hashText(JSON.stringify(readmeFacts)),
+    policy: {
+      defaultClaims: [...BADGE_BUNDLE_DEFAULT_CLAIMS],
+      claims: config.claims,
+      hosted: config.hosted,
+      mode: config.mode,
+      passedRequiresRepositoryPassport: true,
+      consumerActionForLogoChange: "none",
+    },
+    releasePassport: readmeFacts.releasePassport,
+    kfdStandards: readmeFacts.kfdStandards,
+    kfdClaimRegistry: readmeFacts.kfdClaimRegistry,
+    productMechanism: readmeFacts.productMechanism,
+    badgeRuntime: readmeFacts.badgeRuntime,
+    badges,
+  };
+}
+
+function renderBadgeMarkdownBlock(facts) {
   const lines = [
     README_BADGE_BLOCK_START,
     ...facts.badges.map((badge) => (
@@ -629,12 +774,20 @@ export function renderReadmeBadgeBlock(facts) {
   return `${lines.join("\n")}\n`;
 }
 
+export function renderReadmeBadgeBlock(facts) {
+  return renderBadgeMarkdownBlock(facts);
+}
+
+export function renderBadgeBundleBlock(facts) {
+  return renderBadgeMarkdownBlock(facts);
+}
+
 function badgeBlockRegex() {
   return new RegExp(`${README_BADGE_BLOCK_START.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}[\\s\\S]*?${README_BADGE_BLOCK_END.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\n?`);
 }
 
 export function checkReadmeBadgeBlock({ readmeText, facts } = {}) {
-  const expected = renderReadmeBadgeBlock(facts);
+  const expected = renderBadgeMarkdownBlock(facts);
   const match = String(readmeText || "").match(badgeBlockRegex());
   const actual = match ? match[0] : "";
   const normalizedActual = actual.endsWith("\n") ? actual : `${actual}\n`;
@@ -652,6 +805,13 @@ export function checkReadmeBadgeBlock({ readmeText, facts } = {}) {
   };
 }
 
+export function checkBadgeBundleBlock({ readmeText, facts } = {}) {
+  return {
+    ...checkReadmeBadgeBlock({ readmeText, facts }),
+    contract: "kungfu-buildchain-badge-bundle-check",
+  };
+}
+
 export function updateReadmeBadgeBlock({ readmeText, facts } = {}) {
   const source = String(readmeText || "");
   const block = renderReadmeBadgeBlock(facts);
@@ -663,6 +823,10 @@ export function updateReadmeBadgeBlock({ readmeText, facts } = {}) {
     return `${h1[0]}${block}\n${source.slice(h1[0].length)}`;
   }
   return `${block}\n${source}`;
+}
+
+export function updateBadgeBundleBlock({ readmeText, facts } = {}) {
+  return updateReadmeBadgeBlock({ readmeText, facts });
 }
 
 export function readReadme({ cwd = process.cwd(), readmePath = "README.md" } = {}) {
