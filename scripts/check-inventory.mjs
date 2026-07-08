@@ -632,8 +632,9 @@ for (const requiredSnippet of [
   "publish-required-artifacts-json: \"[]\"",
   "release-passport-impact-json: >-",
   "Buildchain v2.10 patch release accepts strict publish-gate channel-lineage PRs",
+  "directory_index_rewrite = external",
   "publish-gate-channel-lineage",
-  "web-surface-cloudfront-directory-index-rewrite",
+  "web-surface-external-directory-index-rewrite",
   "\"surfaceImpacts\":[",
 ]) {
   if (!buildchainRefPromotionWorkflow.includes(requiredSnippet)) {

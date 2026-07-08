@@ -59,6 +59,10 @@ bucket = "kungfu-tech-preview"
 cloudfront_distribution = "E-PREVIEW"
 artifact_path = "dist"
 secret_refs = ["AWS_ROLE_ARN"]
+# Optional. Defaults to "buildchain".
+# Use "external" when an existing viewer-request CloudFront Function already
+# owns preview alias, surface-prefix, and directory-index routing.
+directory_index_rewrite = "buildchain"
 ```
 
 ### Multi-Surface Host Mapping
@@ -376,10 +380,12 @@ records this as `routing.contract =
 `viewerPathPrefix = "/"`, `artifactPathPrefix = "buildchain"`, and
 `directoryIndexResolution = true`.
 
-When a surface uses an S3 object prefix, Buildchain installs or updates one
-CloudFront viewer-request function per distribution before uploading payloads.
-The function rewrites any request path ending in `/` to the corresponding
-`index.html`, so `https://buildchain-pr-29.preview.libkungfu.dev/` resolves to
+When a surface uses an S3 object prefix, directory-index routing must be handled
+at the viewer-request layer. By default, `directory_index_rewrite =
+"buildchain"` makes Buildchain install or update one CloudFront Function per
+distribution before uploading payloads. The function rewrites any request path
+ending in `/` to the corresponding `index.html`, so
+`https://buildchain-pr-29.preview.libkungfu.dev/` resolves to
 `pr-29/buildchain/index.html` and
 `https://buildchain-pr-29.preview.libkungfu.dev/docs/` resolves to
 `pr-29/buildchain/docs/index.html`. This keeps multi-host preview roots
@@ -387,14 +393,25 @@ compatible with S3 REST origins, where copying alias objects such as
 `pr-29/buildchain` or `pr-29/buildchain/` is not a reliable substitute for an
 edge rewrite.
 
+If the distribution already has a viewer-request function that owns preview
+alias routing and surface-prefix routing, set `directory_index_rewrite =
+"external"` on the deploy channel or surface override. In that mode Buildchain
+does not create, update, or attach a generic directory-index function. Instead,
+the deployment manifest records `directoryIndexRewrite = "external"` and
+`directoryIndexStrategy = "external-viewer-request-function"`, then the normal
+health check still verifies every required root and nested surface URL. This is
+the correct contract for shared preview distributions such as
+`site-libkungfu-dev`, where a generic function cannot replace the existing
+prefix router.
+
 Buildchain still writes directory-index alias objects during apply as
-compatibility evidence, but root correctness comes from the CloudFront function,
-not from extensionless S3 keys. If a distribution already has a different
-viewer-request function, apply fails closed and records that conflict in the
-apply result instead of silently serving 403s. The reusable workflow uploads
-`buildchain-web-surface-*-diagnostics` artifacts containing the apply and health
-JSON so the failing AWS operation or HTTP check is visible from the consumer
-run.
+compatibility evidence, but root correctness comes from the viewer-request
+rewrite contract, not from extensionless S3 keys. If Buildchain-managed mode
+finds a distribution with a different viewer-request function, apply fails
+closed and records that conflict in the apply result instead of silently serving
+403s. The reusable workflow uploads `buildchain-web-surface-*-diagnostics`
+artifacts containing the apply and health JSON so the failing AWS operation or
+HTTP check is visible from the consumer run.
 
 It can also execute a previously saved deploy plan. In that mode Buildchain
 recomputes the local artifact hash before running AWS commands and fails closed
