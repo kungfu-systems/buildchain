@@ -12,7 +12,8 @@
     "workflow-registry.json",
     "artifact-schemas.json",
     "buildchain-contract.json",
-    "kfd-claims.json"
+    "kfd-claims.json",
+    "badge-endpoint-registry.json"
   ],
   "instruction": "Use this bundle as the package-owned fact source for Buildchain pages. Do not infer current release mechanics from prose alone."
 }

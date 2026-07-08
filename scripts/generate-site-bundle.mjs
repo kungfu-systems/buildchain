@@ -8,6 +8,9 @@ import {
   BUILDCHAIN_AGENT_MANUALS,
   createBuildchainKfdClaimRegistry,
 } from "../packages/core/buildchain-kfd-claims.js";
+import {
+  createReadmeBadgeEndpointRegistry,
+} from "../packages/core/readme-badges.js";
 import { createSurfaceTimestampPolicy } from "../packages/core/surface-manifest.js";
 
 const SITE_BUNDLE_CONTRACT = "kungfu-buildchain-site-bundle";
@@ -448,6 +451,7 @@ function buildSiteBundle() {
     site: [
       "buildchain-site.json",
       "site-manifest.json",
+      "badge-endpoint-registry.json",
       "page-registry.json",
       "cli-registry.json",
       "manual-registry.json",
@@ -533,6 +537,7 @@ function buildSiteBundle() {
       "workflow-registry.json",
       "release-model.json",
       "artifact-schemas.json",
+      "badge-endpoint-registry.json",
       "product-mechanism.json",
       "release-provenance.json",
       "kfd-claims.json",
@@ -555,9 +560,17 @@ function buildSiteBundle() {
       "artifact-schemas.json",
       "buildchain-contract.json",
       "kfd-claims.json",
+      "badge-endpoint-registry.json",
     ],
     instruction: "Use this bundle as the package-owned fact source for Buildchain pages. Do not infer current release mechanics from prose alone.",
   };
+  const badgeEndpointRegistry = createReadmeBadgeEndpointRegistry({
+    kfdSpecs: [
+      { key: "kfd-1", label: "KFD-1", text: "contract world" },
+      { key: "kfd-2", label: "KFD-2", text: "release trust passport" },
+      { key: "kfd-3", label: "KFD-3", text: "collaboration interface" },
+    ],
+  });
 
   const homepageSections = [
     homepageSection({
@@ -701,11 +714,15 @@ function buildSiteBundle() {
     "workflow-registry.json": workflowRegistry,
     "release-model.json": releaseModel,
     "artifact-schemas.json": artifactSchemas,
+    "badge-endpoint-registry.json": badgeEndpointRegistry,
     "buildchain-contract.json": createBuildchainContractWorld({ root }),
     "kfd-claims.json": createBuildchainKfdClaimRegistry({ root }),
     "product-mechanism.json": productMechanism,
     "release-provenance.json": releaseProvenance,
     "agent-index.json": agentIndex,
+    ...Object.fromEntries(badgeEndpointRegistry.badges.flatMap((badge) => (
+      badge.states.map((state) => [state.path, state.payload])
+    ))),
   };
 }
 

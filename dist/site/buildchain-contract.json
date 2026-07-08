@@ -412,7 +412,7 @@
         "CLI and JavaScript callers use the same Node API implementation"
       ],
       "breakingDigest": "sha256:bcd72ad6dfba8013c96f8b2f7b0a307d2e7713972a1219348f0d5ecc493939a0",
-      "auditDigest": "sha256:6a185305f4fbdb5b55ab3573c4327bd80a4c954f765fa9da68614b6808523a22"
+      "auditDigest": "sha256:35c42750bbdede7d85b71444d1d09cd6c7ce40ecd8868c86d869855764dad0c2"
     },
     {
       "contractVersion": 1,
@@ -434,7 +434,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:1b8db38938456f163ef089e3ab5435e266288090191aa468b8e9bc05f9067dc1"
+      "auditDigest": "sha256:f3bb661b2260d2be500d8707bdb01b623e8125cdb36e874dc217bc0873422b39"
     },
     {
       "contractVersion": 1,
@@ -456,9 +456,9 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:4de177a4b455c1116d783071d60a0fa23a471177ccab67dded204dcaa9a8be84"
+      "auditDigest": "sha256:b92a9b199a69ac78e55da9bc28e6bd2922233861b70205a2de45eed65cfc81c6"
     }
   ],
   "compatibilityDigest": "sha256:407d6d5ee6a96a34d2cc30db9ac64cf4b1819ab6d77bd7a57a07a124f22101ca",
-  "contractDigest": "sha256:d798161597bf60d25160b71ef97fd705e6768b3e59b7c761a29027bb4728faee"
+  "contractDigest": "sha256:f309d3753cdb398bf7eb2fd0d383affd0b8b5dbcd05f6eb9a0f95be8b7594555"
 }

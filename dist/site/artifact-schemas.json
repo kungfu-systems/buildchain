@@ -15,6 +15,7 @@
   "site": [
     "buildchain-site.json",
     "site-manifest.json",
+    "badge-endpoint-registry.json",
     "page-registry.json",
     "cli-registry.json",
     "manual-registry.json",
