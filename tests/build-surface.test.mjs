@@ -1115,7 +1115,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(workflow, /release-passport-impact-json: >-/);
   assert.match(workflow, /"surfaceImpacts":\[/);
   assert.match(workflow, /"id":"publish-gate-channel-lineage"/);
-  assert.match(workflow, /"id":"web-surface-cloudfront-directory-index-rewrite"/);
+  assert.match(workflow, /"id":"web-surface-external-directory-index-rewrite"/);
   assert.doesNotMatch(workflow, /run: node scripts\/release-candidate-resolver\.mjs/);
   assert.doesNotMatch(workflow, /uses: \.\/actions\/promote-buildchain-ref/);
 });

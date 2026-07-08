@@ -160,6 +160,66 @@ test("web-surface deploy apply defaults to dry-run operations", () => {
   });
 });
 
+test("web-surface deploy apply can treat directory index rewrite as externally managed", () => {
+  withFixture((fixture) => {
+    const configPath = path.join(fixture, "buildchain.toml");
+    fs.writeFileSync(
+      configPath,
+      fs.readFileSync(configPath, "utf8").replace(
+        "[deploy.preview]\nadapter = \"aws-s3-cloudfront\"",
+        "[deploy.preview]\nadapter = \"aws-s3-cloudfront\"\ndirectory_index_rewrite = \"external\"",
+      ),
+    );
+    fs.mkdirSync(path.join(fixture, "dist", "buildchain", "docs"), { recursive: true });
+    fs.writeFileSync(path.join(fixture, "dist", "index.html"), "hello\n");
+    fs.writeFileSync(path.join(fixture, "dist", "buildchain", "index.html"), "buildchain\n");
+    fs.writeFileSync(path.join(fixture, "dist", "buildchain", "docs", "index.html"), "docs\n");
+
+    const plan = planWebSurfaceDeploy({
+      cwd: fixture,
+      channel: "preview",
+      alias: "pr-29",
+      sourceSha: "a".repeat(40),
+      deployedAt: "2026-07-01T00:00:00.000Z",
+    });
+    assert.equal(
+      plan.steps.some((step) => step.action === "ensure-cloudfront-directory-index-rewrite"),
+      false,
+    );
+    assert.deepEqual(
+      [...new Set(plan.manifest.surfaceBindings.map((binding) => binding.directoryIndexRewrite))],
+      ["external"],
+    );
+    assert.deepEqual(
+      [...new Set(plan.manifest.surfaceBindings.map((binding) => binding.routing.directoryIndexStrategy))],
+      ["external-viewer-request-function"],
+    );
+    const buildchainBinding = plan.manifest.surfaceBindings.find((binding) => binding.surface === "buildchain");
+    assert.equal(buildchainBinding.routing.directoryIndexManagedBy, "external");
+    assert.deepEqual(
+      buildchainBinding.smokeUrls.map((entry) => [entry.kind, entry.requestPath]),
+      [
+        ["root", "/"],
+        ["nested", "/docs/"],
+      ],
+    );
+
+    const result = applyWebSurfaceDeploy({
+      cwd: fixture,
+      channel: "preview",
+      alias: "pr-29",
+      sourceSha: "a".repeat(40),
+      dryRun: true,
+      appliedAt: "2026-07-01T00:00:00.000Z",
+    });
+    assert.equal(
+      result.operations.some((operation) => operation.action === "ensure-cloudfront-directory-index-rewrite"),
+      false,
+    );
+    assert.equal(result.operations.some((operation) => operation.action === "sync-static-artifact"), true);
+  });
+});
+
 test("web-surface deploy apply executes aws s3 and cloudfront commands through runner", () => {
   withFixture((fixture) => {
     fs.mkdirSync(path.join(fixture, "dist"), { recursive: true });
