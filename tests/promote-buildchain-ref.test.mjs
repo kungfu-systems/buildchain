@@ -834,7 +834,7 @@ test("version verification allows only discovered version-state file changes", (
   );
 });
 
-test("version verification ignores downloaded release-candidate evidence", () => {
+test("version verification ignores generated buildchain evidence", () => {
   const cwd = makeTempWorkspace({
     "package.json": {
       name: "@kungfu-systems/example",
@@ -853,6 +853,20 @@ test("version verification ignores downloaded release-candidate evidence", () =>
   fs.mkdirSync(path.join(cwd, ".buildchain/release-candidate/passport"), { recursive: true });
   fs.writeFileSync(
     path.join(cwd, ".buildchain/release-candidate/passport/release-candidate-passport.json"),
+    "{}\n",
+  );
+  fs.mkdirSync(path.join(cwd, ".buildchain/kfd/kfd-2-claims"), { recursive: true });
+  fs.writeFileSync(
+    path.join(cwd, ".buildchain/kfd/buildchain-kfd-1-witness.json"),
+    "{}\n",
+  );
+  fs.writeFileSync(
+    path.join(cwd, ".buildchain/kfd/kfd-2-claims/buildchain-npm-publish-evidence.json"),
+    "{}\n",
+  );
+  fs.mkdirSync(path.join(cwd, ".buildchain/release-passport"), { recursive: true });
+  fs.writeFileSync(
+    path.join(cwd, ".buildchain/release-passport/buildchain.release.json"),
     "{}\n",
   );
 
