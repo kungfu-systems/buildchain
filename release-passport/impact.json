@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-impact",
+  "versionImpact": {
+    "final": "minor",
+    "source": "buildchain-release-governance",
+    "rationale": "Buildchain v2.9 adds Build Facts as a public contract, exposes managed trust badge bundle generation, and fixes web-surface multi-host directory index routing for S3/CloudFront deployments."
+  },
+  "surfaceImpacts": [
+    {
+      "id": "build-facts-contract",
+      "impact": "minor",
+      "class": "release-passport",
+      "rationale": "Adds public CLI and Node API build facts, module/product fact contracts, release-passport evidence, and Kungfu legacy buildinfo projection from the same source facts.",
+      "source": "buildchain-ref-promotion.yml"
+    },
+    {
+      "id": "trust-badge-bundle",
+      "impact": "minor",
+      "class": "agent-facing-docs",
+      "rationale": "Adds a single managed badge bundle entrypoint for KFD-1, KFD-2, KFD-3, and Buildchain Release Passport status with machine-readable badge facts.",
+      "source": "buildchain-ref-promotion.yml"
+    },
+    {
+      "id": "web-surface-directory-index-aliases",
+      "impact": "patch",
+      "class": "web-surface-deployment",
+      "rationale": "Fixes multi-surface preview and production hosts so root and nested directory requests resolve to the surface index.html through explicit S3 alias objects.",
+      "source": "buildchain-ref-promotion.yml"
+    }
+  ],
+  "classification": "minor",
+  "breaking": false,
+  "security": false,
+  "migrationRequired": false,
+  "summary": "Buildchain v2.9 minor release line for Build Facts, trust badge bundles, and web-surface directory index routing.",
+  "release": {
+    "tag": "v2.9.1-alpha.1",
+    "line": "v2.9"
+  }
+}
