@@ -36,7 +36,7 @@
       "title": "Release Passport protocol",
       "path": "docs/release-passport.md",
       "plane": "verify",
-      "digest": "sha256:75d8bade4b0b96b26941b11835c2debcdada8f1723412935fb8ae6884f08f9f3",
+      "digest": "sha256:ca764740841b364ff7cfea79b87221d29c09df09fee6d19e78ed4b0b173bfad3",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",
@@ -50,7 +50,7 @@
       "title": "Release Candidate Passport",
       "path": "docs/release-candidate.md",
       "plane": "verify",
-      "digest": "sha256:6b5107cded122925e8560a9b117ff1c96f5cf05d934caf83d7e4b2a4d777175e",
+      "digest": "sha256:391f14569c7d2a43dd9986c6a29462d674a77338dac6a4ac89c79a4c3d6c4947",
       "capabilityGroup": "reusable-build",
       "audience": [
         "release-operator",
@@ -273,7 +273,7 @@
       "title": "Reusable build surface",
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
-      "digest": "sha256:e76aefe23b83f1b99b8c13cee1ca99760fd9902a41fbec25e193426329826340",
+      "digest": "sha256:a3f979fcede4450dabe5b8d6182395993c9f28559f7176b071a6ff9db565a355",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -300,7 +300,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:15fa0295ae2d97a2fd4ca17024d3da62df1057c9118b77a7e6b7550a404cd27b",
+      "digest": "sha256:69218a4749170e1f84b82f211d57187a7ff33f1a510aced587e240d1d901b9e7",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",

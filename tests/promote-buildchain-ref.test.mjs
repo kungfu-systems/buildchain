@@ -6716,7 +6716,18 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   assert.equal(result.nextAlphaRequired, true);
   assert.equal(result.publishTransaction.state, "complete");
   assert.equal(result.publishTransaction.exactTag, "v22.22.0");
+  assert.equal(result.publishTransaction.publicReleaseTag, "v22.22.3-kf.3");
   assert.equal(result.publishTransaction.stateRef, "buildchain/release-state/22-22-3-kf-3");
+  assert.equal(result.publishTransaction.releasePassportPath, ".buildchain/release-passport/buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(path.join(cwd, result.publishTransaction.releasePassportPath), "utf8"));
+  assert.equal(passport.release.tag, "v22.22.3-kf.3");
+  assert.equal(passport.release.publicTag, "v22.22.3-kf.3");
+  assert.equal(passport.release.internalTag, "v22.22.0");
+  assert.equal(passport.release.internalVersion, "22.22.0");
+  assert.equal(passport.release.publishedVersion, "22.22.3-kf.3");
+  assert.equal(passport.transaction.exactTag, "v22.22.0");
+  assert.equal(passport.transaction.version, "22.22.3-kf.3");
+  assert.equal(passport.release.releaseStateRef, "refs/heads/buildchain/release-state/22-22-3-kf-3");
   assert.equal(refs.has("heads/buildchain/release-state/22-22-3-kf-3"), true);
   assert.equal(refs.has("heads/buildchain/release-state/22-22-0"), false);
   assert.equal(refs.get("tags/v22.22.0"), SHA);
