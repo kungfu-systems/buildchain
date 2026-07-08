@@ -205,17 +205,307 @@ function sitePage(relPath, category, routePrefix, extra = {}) {
   const slug = extra.slug || (baseName.toLowerCase() === "readme" ? slugify(parentName) : slugify(baseName));
   const route = extra.route || `${routePrefix}/${slug}`;
   const title = markdownTitle(markdown, extra.title || slug);
+  const meta = pageCapabilityMeta(relPath, category);
   return {
     id: extra.id || `${category}:${slug}`,
     title,
     route,
     category,
+    capabilityGroup: meta.capabilityGroup,
+    audience: meta.audience,
+    maturity: meta.maturity,
     sourcePath: relPath,
     digest: sha256File(relPath),
     headings: markdownHeadings(markdown),
     markdown,
     ...extra,
   };
+}
+
+const CAPABILITY_GROUPS = Object.freeze([
+  {
+    id: "getting-started",
+    title: "Getting Started",
+    summary: "Install Buildchain, understand the product mechanism, and choose the right entrypoint.",
+    audience: ["consumer", "agent"],
+    maturity: "stable",
+  },
+  {
+    id: "release-passport-trust",
+    title: "Release Passport and Trust",
+    summary: "Create, verify, explain, and publish release passports, KFD trust evidence, GitHub Releases, and binary assets.",
+    audience: ["release-operator", "agent"],
+    maturity: "stable",
+  },
+  {
+    id: "reusable-build",
+    title: "Reusable Build and Lifecycle",
+    summary: "Run reusable package/native builds, lifecycle stages, release candidates, source locks, and self-hosted artifact transfer.",
+    audience: ["consumer", "release-operator"],
+    maturity: "stable",
+  },
+  {
+    id: "kfd-trust",
+    title: "KFD Trust and Surface Closure",
+    summary: "Discover KFD-1, KFD-2, and KFD-3 support, public surface reverse audits, and product capability queries.",
+    audience: ["agent", "maintainer"],
+    maturity: "stable",
+  },
+  {
+    id: "site-and-propagation",
+    title: "Site Bundle, Web Surfaces, and Propagation",
+    summary: "Publish package-owned site facts, web-surface previews/staging/production, and downstream release propagation.",
+    audience: ["site", "release-operator", "agent"],
+    maturity: "stable",
+  },
+  {
+    id: "distribution-indexes",
+    title: "Distribution Indexes and Badges",
+    summary: "Generate README badge facts and distribution-index projections such as Homebrew taps from release passport evidence.",
+    audience: ["consumer", "site", "agent"],
+    maturity: "stable",
+  },
+  {
+    id: "observability-diagnostics",
+    title: "Build Facts, Observability, and Diagnostics",
+    summary: "Collect source/module/product facts, lifecycle logs, diagnostics summaries, and process-tree evidence.",
+    audience: ["maintainer", "agent"],
+    maturity: "stable",
+  },
+  {
+    id: "governance-versioning",
+    title: "Governance, Versioning, and Runtime Drift",
+    summary: "Operate protected dev lines, semver line bootstrap, runtime trains, floating-ref contract locks, and ownership boundaries.",
+    audience: ["maintainer", "release-operator"],
+    maturity: "stable",
+  },
+  {
+    id: "api-cli-reference",
+    title: "CLI and Node API Reference",
+    summary: "Enumerate supported CLI commands, Node package exports, workflow/action inputs, and packaged manuals.",
+    audience: ["agent", "developer"],
+    maturity: "stable",
+  },
+]);
+
+const CAPABILITY_GROUP_BY_ID = new Map(CAPABILITY_GROUPS.map((group) => [group.id, group]));
+
+function capabilityGroup(id) {
+  if (!CAPABILITY_GROUP_BY_ID.has(id)) {
+    throw new Error(`unknown capability group: ${id}`);
+  }
+  return id;
+}
+
+const manualMetaById = new Map(Object.entries({
+  map: { capabilityGroup: "getting-started", audience: ["agent", "consumer"], maturity: "stable", order: 10 },
+  install: { capabilityGroup: "getting-started", audience: ["consumer"], maturity: "stable", order: 20 },
+  "product-mechanism": { capabilityGroup: "getting-started", audience: ["agent", "maintainer"], maturity: "stable", order: 30 },
+  cli: { capabilityGroup: "api-cli-reference", audience: ["agent", "developer"], maturity: "stable", order: 40 },
+  "release-passport": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "stable", order: 100 },
+  "binary-distribution": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "stable", order: 110 },
+  "publish-transaction": { capabilityGroup: "release-passport-trust", audience: ["release-operator"], maturity: "stable", order: 120 },
+  "release-candidate": { capabilityGroup: "reusable-build", audience: ["release-operator", "consumer"], maturity: "stable", order: 130 },
+  "reusable-build-surface": { capabilityGroup: "reusable-build", audience: ["consumer", "release-operator"], maturity: "stable", order: 200 },
+  "lifecycle-protocol": { capabilityGroup: "reusable-build", audience: ["consumer", "developer"], maturity: "stable", order: 210 },
+  "runtime-train-validation": { capabilityGroup: "governance-versioning", audience: ["maintainer", "consumer"], maturity: "stable", order: 220 },
+  "kfd-support": { capabilityGroup: "kfd-trust", audience: ["agent", "maintainer"], maturity: "stable", order: 300 },
+  "site-bundle-contract": { capabilityGroup: "site-and-propagation", audience: ["site", "agent"], maturity: "stable", order: 400 },
+  "web-surface-deployments": { capabilityGroup: "site-and-propagation", audience: ["site", "release-operator"], maturity: "stable", order: 410 },
+  "release-propagation": { capabilityGroup: "site-and-propagation", audience: ["release-operator", "agent"], maturity: "preview", order: 420 },
+  "readme-badges": { capabilityGroup: "distribution-indexes", audience: ["consumer", "site"], maturity: "stable", order: 500 },
+  homebrew: { capabilityGroup: "distribution-indexes", audience: ["consumer", "release-operator"], maturity: "stable", order: 510 },
+  "build-facts": { capabilityGroup: "observability-diagnostics", audience: ["maintainer", "agent"], maturity: "stable", order: 600 },
+  "toolkit-observability": { capabilityGroup: "observability-diagnostics", audience: ["developer", "maintainer"], maturity: "stable", order: 610 },
+  "consumer-issue-reporting": { capabilityGroup: "observability-diagnostics", audience: ["consumer", "maintainer"], maturity: "stable", order: 620 },
+  "release-governance": { capabilityGroup: "governance-versioning", audience: ["maintainer", "release-operator"], maturity: "stable", order: 700 },
+  "release-flow": { capabilityGroup: "governance-versioning", audience: ["release-operator", "agent"], maturity: "stable", order: 710 },
+  versioning: { capabilityGroup: "governance-versioning", audience: ["maintainer"], maturity: "stable", order: 720 },
+  ownership: { capabilityGroup: "governance-versioning", audience: ["maintainer"], maturity: "stable", order: 730 },
+  "migration-inventory": { capabilityGroup: "governance-versioning", audience: ["maintainer", "agent"], maturity: "stable", order: 740 },
+  "infra-contract": { capabilityGroup: "governance-versioning", audience: ["maintainer", "consumer"], maturity: "preview", order: 750 },
+}).map(([id, meta]) => [id, { ...meta, capabilityGroup: capabilityGroup(meta.capabilityGroup) }]));
+
+function manualMeta(id) {
+  const meta = manualMetaById.get(id);
+  if (!meta) {
+    throw new Error(`missing manual capability metadata: ${id}`);
+  }
+  return meta;
+}
+
+function pageCapabilityMeta(relPath, category) {
+  if (relPath === README_PATH) {
+    return { capabilityGroup: capabilityGroup("getting-started"), audience: ["consumer", "agent"], maturity: "stable" };
+  }
+  const manual = BUILDCHAIN_AGENT_MANUALS.find((entry) => entry.path === relPath);
+  if (manual) {
+    return manualMeta(manual.id);
+  }
+  if (category === "action") {
+    return { capabilityGroup: capabilityGroup("api-cli-reference"), audience: ["developer", "agent"], maturity: "stable" };
+  }
+  if (category === "fixture") {
+    return { capabilityGroup: capabilityGroup("reusable-build"), audience: ["developer", "agent"], maturity: "stable" };
+  }
+  if (category === "api") {
+    return { capabilityGroup: capabilityGroup("api-cli-reference"), audience: ["developer", "agent"], maturity: "stable" };
+  }
+  return { capabilityGroup: capabilityGroup("getting-started"), audience: ["agent"], maturity: "stable" };
+}
+
+function cliCommandMeta(id) {
+  const map = new Map(Object.entries({
+    badges: { group: "distribution-indexes", purpose: "Inspect README badge command families." },
+    "badges-bundle": { group: "distribution-indexes", purpose: "Generate or verify the combined KFD and Release Passport badge bundle." },
+    "badges-readme": { group: "distribution-indexes", purpose: "Generate or verify managed README badge blocks." },
+    "build-contract": { group: "governance-versioning", purpose: "Resolve Buildchain runtime contract metadata for floating-ref drift checks." },
+    "build-facts": { group: "observability-diagnostics", purpose: "Collect and verify Git source, version, module output, product artifact, and legacy Kungfu buildinfo facts." },
+    collect: { group: "release-passport-trust", purpose: "Inspect release evidence collection command families." },
+    "collect-github-release": { group: "release-passport-trust", purpose: "Collect GitHub Release assets into a release passport." },
+    diagnostics: { group: "observability-diagnostics", purpose: "Inspect diagnostics command families." },
+    "diagnostics-summary": { group: "observability-diagnostics", purpose: "Summarize diagnostics artifacts into JSON and cross-platform lifecycle timing tables." },
+    doctor: { group: "getting-started", purpose: "Report local integration readiness." },
+    explain: { group: "release-passport-trust", purpose: "Inspect release and artifact explanation command families." },
+    "explain-artifact": { group: "release-passport-trust", purpose: "Explain artifact evidence for humans or agents." },
+    "explain-release": { group: "release-passport-trust", purpose: "Explain a release passport for humans or agents." },
+    facts: { group: "observability-diagnostics", purpose: "Inspect build facts command families." },
+    help: { group: "getting-started", purpose: "Print Buildchain CLI help." },
+    homebrew: { group: "distribution-indexes", purpose: "Inspect Homebrew distribution-index command families." },
+    "homebrew-check": { group: "distribution-indexes", purpose: "Verify Homebrew tap metadata against upstream release passport evidence." },
+    "homebrew-update-formula": { group: "distribution-indexes", purpose: "Generate Homebrew Formula metadata from upstream release passport evidence." },
+    "infra-contract": { group: "governance-versioning", purpose: "Validate and publish provider-neutral infrastructure contract evidence." },
+    init: { group: "getting-started", purpose: "Bootstrap a repository with Buildchain configuration and caller workflow files." },
+    inspect: { group: "release-passport-trust", purpose: "Inspect release and artifact evidence command families." },
+    "inspect-artifact": { group: "release-passport-trust", purpose: "Inspect artifact evidence." },
+    "inspect-release": { group: "release-passport-trust", purpose: "Inspect release passport evidence." },
+    "kfd-3": { group: "kfd-trust", purpose: "Inspect KFD-3 surface detection, registry, witness, audit, and query command families." },
+    "kfd-3-audit": { group: "kfd-trust", purpose: "Compare detected, declared, and enforced KFD-3 public surfaces." },
+    "kfd-3-detect": { group: "kfd-trust", purpose: "Detect standard KFD-3 public surface candidates from source and artifact metadata." },
+    "kfd-3-query": { group: "kfd-trust", purpose: "Return an agent-readable KFD-3 capability map for a product, registry, or release passport." },
+    "kfd-3-register": { group: "kfd-trust", purpose: "Declare detected KFD-3 public surfaces into a product-owned surface registry." },
+    "kfd-3-witness": { group: "kfd-trust", purpose: "Generate release-passport-compatible KFD-3 surface witnesses from a product registry." },
+    lifecycle: { group: "reusable-build", purpose: "Run configured lifecycle commands and write deterministic artifact manifests." },
+    log: { group: "observability-diagnostics", purpose: "Inspect Buildchain logging command families." },
+    logging: { group: "observability-diagnostics", purpose: "Emit timestamped build events, summarize logs, and enforce required phases." },
+    mark: { group: "observability-diagnostics", purpose: "Emit a single Buildchain log event." },
+    npm: { group: "release-passport-trust", purpose: "Inspect npm publishing command families." },
+    "npm-dry-run": { group: "release-passport-trust", purpose: "Verify npm publish shape before a release transaction." },
+    "publish-source": { group: "release-passport-trust", purpose: "Create, inspect, or verify publish-gate source-lock refs." },
+    "release-dry-run": { group: "governance-versioning", purpose: "Explain what a channel merge would publish before the PR is merged." },
+    "release-line-open": { group: "governance-versioning", purpose: "Plan or write the initial version-state commit for a new minor release line." },
+    "release-propagation": { group: "site-and-propagation", purpose: "Plan channel-preserving downstream release PRs and write exact upstream release locks." },
+    "release-transaction": { group: "release-passport-trust", purpose: "Inspect, recover, finalize, or abort durable release transactions." },
+    sample: { group: "observability-diagnostics", purpose: "Inspect sampler command families." },
+    "sample-process-tree": { group: "observability-diagnostics", purpose: "Sample process-tree diagnostics for a wrapped command." },
+    span: { group: "observability-diagnostics", purpose: "Run a command inside a Buildchain log span." },
+    "transaction-inspect": { group: "release-passport-trust", purpose: "Inspect durable release transaction state." },
+    validate: { group: "getting-started", purpose: "Validate buildchain.toml and declared lifecycle surfaces." },
+    verify: { group: "release-passport-trust", purpose: "Inspect release and artifact verification command families." },
+    "verify-artifact": { group: "release-passport-trust", purpose: "Verify artifact subjects against release passport evidence." },
+    "verify-infra-contract-evidence-bundle": { group: "governance-versioning", purpose: "Fail closed unless an infra-contract lifecycle evidence bundle is complete, hash-bound, and validation-consistent." },
+    "verify-observability-log": { group: "observability-diagnostics", purpose: "Verify Buildchain observability log events." },
+    "verify-release-passport": { group: "release-passport-trust", purpose: "Fail closed unless a release passport and its evidence are complete." },
+    version: { group: "getting-started", purpose: "Print the package or embedded binary version." },
+    "web-surface": { group: "site-and-propagation", purpose: "Plan, verify, and apply Buildchain web-surface deployments." },
+  }));
+  const meta = map.get(id);
+  if (!meta) {
+    throw new Error(`missing CLI command capability metadata: ${id}`);
+  }
+  return { capabilityGroup: capabilityGroup(meta.group), purpose: meta.purpose, audience: ["agent", "operator"], maturity: "stable" };
+}
+
+function nodeApiMeta(exportName) {
+  const map = new Map(Object.entries({
+    ".": { group: "api-cli-reference", summary: "Root toolkit export for Buildchain's public Node API." },
+    "./core": { group: "api-cli-reference", summary: "Alias for the root public toolkit export." },
+    "./badges": { group: "distribution-indexes", summary: "Badge bundle facts, rendering, checking, and update APIs." },
+    "./readme-badges": { group: "distribution-indexes", summary: "Managed README badge block facts, rendering, drift checks, and updates." },
+    "./homebrew": { group: "distribution-indexes", summary: "Homebrew tap fact collection, Formula rendering, update, and check APIs." },
+    "./build-facts": { group: "observability-diagnostics", summary: "Git source, version, module output, product artifact, and legacy Kungfu build fact APIs." },
+    "./diagnostics": { group: "observability-diagnostics", summary: "Native diagnostics collection, summarization, cache, compiler, and process-sampler APIs." },
+    "./logging": { group: "observability-diagnostics", summary: "Buildchain JSONL logging, span, summary, and verification APIs." },
+    "./artifact-passport": { group: "release-passport-trust", summary: "Artifact passport digest and evidence helper APIs." },
+    "./release-passport": { group: "release-passport-trust", summary: "Release passport collection, verification, explanation, and evidence APIs." },
+    "./release-candidate": { group: "reusable-build", summary: "PR-stage release-candidate artifact, passport, and promote-only resolver APIs." },
+    "./release-propagation": { group: "site-and-propagation", summary: "Release propagation graph, plan, and exact upstream lock APIs." },
+    "./release-line-bootstrap": { group: "governance-versioning", summary: "Semver release-line bootstrap planning and version-state APIs." },
+    "./buildchain-contract": { group: "governance-versioning", summary: "Runtime contract world and compatibility digest APIs for floating-ref drift checks." },
+    "./surface-manifest": { group: "site-and-propagation", summary: "Surface manifest timestamp and reproducibility policy APIs." },
+    "./issue-reporting": { group: "observability-diagnostics", summary: "Buildchain-owned issue reporting API for workflow friction feedback." },
+    "./kfd-3-surfaces": { group: "kfd-trust", summary: "KFD-3 detection, registration, audit, witness, and capability query APIs." },
+    "./public-surface-audit": { group: "kfd-trust", summary: "Reverse audit APIs for CLI, workflow, action, site page, and documentation command surfaces." },
+    "./kfd-gate": { group: "kfd-trust", summary: "KFD-1/KFD-2/KFD-3 release gate evidence and validation APIs." },
+    "./buildchain-kfd-claims": { group: "kfd-trust", summary: "Buildchain self KFD claim registry, witnesses, and public claim APIs." },
+  }));
+  const meta = map.get(exportName);
+  if (!meta) {
+    throw new Error(`missing Node API capability metadata: ${exportName}`);
+  }
+  return { capabilityGroup: capabilityGroup(meta.group), summary: meta.summary, audience: ["developer", "agent"], maturity: "stable" };
+}
+
+function buildCapabilityRegistry({ docs, pages, cliRegistry, manualRegistry, nodeApiRegistry, workflowRegistry }) {
+  const groupCounts = new Map(CAPABILITY_GROUPS.map((group) => [group.id, {
+    manualCount: 0,
+    pageCount: 0,
+    cliCommandCount: 0,
+    nodeApiCount: 0,
+    workflowCount: 0,
+    actionCount: 0,
+  }]));
+  for (const entry of manualRegistry.manuals) groupCounts.get(entry.capabilityGroup).manualCount += 1;
+  for (const entry of pages) groupCounts.get(entry.capabilityGroup).pageCount += 1;
+  for (const entry of cliRegistry.commands) groupCounts.get(entry.capabilityGroup).cliCommandCount += 1;
+  for (const entry of nodeApiRegistry.exports) groupCounts.get(entry.capabilityGroup).nodeApiCount += 1;
+  for (const entry of workflowRegistry.workflows) {
+    const group = workflowCapabilityGroup(entry);
+    groupCounts.get(group).workflowCount += 1;
+  }
+  for (const entry of workflowRegistry.actions) {
+    const group = actionCapabilityGroup(entry.id);
+    groupCounts.get(group).actionCount += 1;
+  }
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-capability-registry",
+    package: readJson("package.json").name,
+    sourceOfTruth: "npm package @kungfu-tech/buildchain/dist/site/capability-registry.json",
+    groups: CAPABILITY_GROUPS.map((group) => ({
+      ...group,
+      counts: groupCounts.get(group.id),
+      manuals: docs.filter((entry) => manualMeta(entry.id).capabilityGroup === group.id).map((entry) => entry.path),
+      factSources: [
+        "page-registry.json",
+        "manual-registry.json",
+        "cli-registry.json",
+        "node-api-registry.json",
+        "workflow-registry.json",
+        "kfd-claims.json",
+      ],
+    })),
+    navigationPolicy: {
+      defaultOrder: CAPABILITY_GROUPS.map((group) => group.id),
+      rule: "Render Buildchain documentation by capability group first, then by manual order or command/API registry within the selected group.",
+    },
+  };
+}
+
+function workflowCapabilityGroup(entry) {
+  if (["web-surface", "release-propagation"].includes(entry.id)) return capabilityGroup("site-and-propagation");
+  if (["build", "release-candidate-promote"].includes(entry.id)) return capabilityGroup("reusable-build");
+  if (["buildchain-ref-promotion", "release-line-bootstrap"].includes(entry.id)) return capabilityGroup("release-passport-trust");
+  if (entry.id.includes("patrol") || entry.id.includes("dev-pr-auto-merge")) return capabilityGroup("governance-versioning");
+  if (entry.status === "repository-internal" || entry.status === "compatibility-fixture") return capabilityGroup("api-cli-reference");
+  return capabilityGroup("api-cli-reference");
+}
+
+function actionCapabilityGroup(id) {
+  if (id === "promote-buildchain-ref") return capabilityGroup("release-passport-trust");
+  if (id === "run-lifecycle" || id === "validate-config") return capabilityGroup("reusable-build");
+  if (id === "report-buildchain-issue") return capabilityGroup("observability-diagnostics");
+  return capabilityGroup("api-cli-reference");
 }
 
 function buildSitePages() {
@@ -282,58 +572,22 @@ function buildSiteBundle() {
     artifactDigestScope: "npm package dist/site JSON files",
   });
 
-  const cliPurposeById = new Map([
-    ["version", "Print the package or embedded binary version."],
-    ["help", "Print Buildchain CLI help."],
-    ["init", "Bootstrap a repository with Buildchain configuration and caller workflow files."],
-    ["validate", "Validate buildchain.toml and declared lifecycle surfaces."],
-    ["doctor", "Report local integration readiness."],
-    ["lifecycle", "Run configured lifecycle commands and write deterministic artifact manifests."],
-    ["release-dry-run", "Explain what a channel merge would publish before the PR is merged."],
-    ["release-line-open", "Plan or write the initial version-state commit for a new minor release line."],
-    ["release-transaction", "Inspect, recover, finalize, or abort durable release transactions."],
-    ["transaction-inspect", "Inspect durable release transaction state."],
-    ["collect-github-release", "Collect release assets into a release passport."],
-    ["verify-release-passport", "Fail closed unless a release passport and its evidence are complete."],
-    ["verify-artifact", "Verify artifact subjects against release passport evidence."],
-    ["verify-infra-contract-evidence-bundle", "Fail closed unless an infra-contract lifecycle evidence bundle is complete, hash-bound, and validation-consistent."],
-    ["verify-observability-log", "Verify Buildchain observability log events."],
-    ["explain-release", "Explain a release passport for humans or agents."],
-    ["explain-artifact", "Explain artifact evidence for humans or agents."],
-    ["inspect-release", "Inspect release passport evidence."],
-    ["inspect-artifact", "Inspect artifact evidence."],
-    ["release-propagation", "Plan channel-preserving downstream release PRs and write exact upstream release locks."],
-    ["logging", "Emit timestamped build events, summarize logs, and enforce required phases."],
-    ["mark", "Emit a single Buildchain log event."],
-    ["span", "Run a command inside a Buildchain log span."],
-    ["diagnostics-summary", "Summarize diagnostics artifacts into JSON and cross-platform lifecycle timing tables."],
-    ["build-facts", "Collect and verify Git source, version, module output, product artifact, and legacy Kungfu buildinfo facts."],
-    ["kfd-3-detect", "Detect standard KFD-3 public surface candidates from source and artifact metadata."],
-    ["kfd-3-register", "Declare detected KFD-3 public surfaces into a product-owned surface registry."],
-    ["kfd-3-audit", "Compare detected, declared, and enforced KFD-3 public surfaces."],
-    ["kfd-3-witness", "Generate release-passport-compatible KFD-3 surface witnesses from a product registry."],
-    ["kfd-3-query", "Return an agent-readable KFD-3 capability map for a product, registry, or release passport."],
-    ["sample-process-tree", "Sample process-tree diagnostics for a wrapped command."],
-    ["npm-dry-run", "Verify npm publish shape before a release transaction."],
-    ["infra-contract", "Validate and publish provider-neutral infrastructure contract evidence."],
-    ["web-surface", "Plan, verify, and apply Buildchain web-surface deployments."],
-    ["badges-readme", "Generate or verify managed README badge blocks."],
-    ["badges-bundle", "Generate or verify the combined KFD and Release Passport badge bundle."],
-    ["homebrew-update-formula", "Generate Homebrew Formula metadata from upstream release passport evidence."],
-    ["homebrew-check", "Verify Homebrew tap metadata against upstream release passport evidence."],
-    ["publish-source", "Create, inspect, or verify publish-gate source-lock refs."],
-    ["build-contract", "Resolve Buildchain runtime contract metadata."],
-  ]);
   const cliRegistry = {
     schemaVersion: 1,
     contract: "kungfu-buildchain-cli-registry",
     binary: "buildchain",
     npmPackage: packageJson.name,
     commandSource: "bin/buildchain.mjs reverse enumeration",
-    commands: enumerateCliCommandsFromBin({ root }).map((entry) => ({
-      ...entry,
-      purpose: cliPurposeById.get(entry.id) || "Public Buildchain CLI surface. Add a specific purpose in scripts/generate-site-bundle.mjs when this command graduates.",
-    })),
+    commands: enumerateCliCommandsFromBin({ root }).map((entry) => {
+      const meta = cliCommandMeta(entry.id);
+      return {
+        ...entry,
+        purpose: meta.purpose,
+        capabilityGroup: meta.capabilityGroup,
+        audience: meta.audience,
+        maturity: meta.maturity,
+      };
+    }),
   };
 
   const manualRegistry = {
@@ -341,13 +595,20 @@ function buildSiteBundle() {
     contract: "kungfu-buildchain-agent-manual-registry",
     package: packageJson.name,
     source: "npm package docs/",
-    manuals: docs.map((entry) => ({
-      id: entry.id,
-      title: entry.title,
-      path: entry.path,
-      plane: entry.plane,
-      digest: entry.digest,
-    })),
+    manuals: docs.map((entry) => {
+      const meta = manualMeta(entry.id);
+      return {
+        id: entry.id,
+        title: entry.title,
+        path: entry.path,
+        plane: entry.plane,
+        digest: entry.digest,
+        capabilityGroup: meta.capabilityGroup,
+        audience: meta.audience,
+        maturity: meta.maturity,
+        order: meta.order,
+      };
+    }),
     requiredAgentManuals: [
       "docs/MAP.md",
       "docs/install.md",
@@ -381,6 +642,7 @@ function buildSiteBundle() {
     },
     pageCount: pages.length,
     categories: [...new Set(pages.map((page) => page.category))].sort(),
+    capabilityGroups: CAPABILITY_GROUPS.map((group) => group.id),
     pages,
   };
 
@@ -391,12 +653,19 @@ function buildSiteBundle() {
     moduleSystem: packageJson.type || "module",
     exports: Object.entries(packageJson.exports || {})
       .filter(([specifier]) => !specifier.startsWith("./site/") && specifier !== "./package.json")
-      .map(([specifier, target]) => ({
-        specifier: specifier === "." ? packageJson.name : `${packageJson.name}/${specifier.replace(/^\.\//, "")}`,
-        export: specifier,
-        target,
-        digest: typeof target === "string" ? sha256File(target.replace(/^\.\//, "")) : "",
-      })),
+      .map(([specifier, target]) => {
+        const meta = nodeApiMeta(specifier);
+        return {
+          specifier: specifier === "." ? packageJson.name : `${packageJson.name}/${specifier.replace(/^\.\//, "")}`,
+          export: specifier,
+          target,
+          digest: typeof target === "string" ? sha256File(target.replace(/^\.\//, "")) : "",
+          summary: meta.summary,
+          capabilityGroup: meta.capabilityGroup,
+          audience: meta.audience,
+          maturity: meta.maturity,
+        };
+      }),
     docs: [
       { id: "cli-and-node-package", path: "docs/cli.md", digest: sha256File("docs/cli.md") },
       { id: "build-facts", path: "docs/build-facts.md", digest: sha256File("docs/build-facts.md") },
@@ -439,12 +708,17 @@ function buildSiteBundle() {
       return {
         ...entry,
         surface: surfaceById.get(entry.id) || (entry.path.includes("/.") ? "reusable-workflow" : "repository-workflow"),
+        capabilityGroup: workflowCapabilityGroup({
+          ...entry,
+          status: statusById.get(entry.id) || "active",
+        }),
         status: statusById.get(entry.id) || "active",
       };
     }),
     actionSource: "actions/*/action.yml reverse input enumeration",
     actions: enumerateActionInputs({ root }).map((entry) => ({
       ...entry,
+      capabilityGroup: actionCapabilityGroup(entry.id),
       status: "active",
     })),
   };
@@ -453,6 +727,14 @@ function buildSiteBundle() {
     cliRegistry,
     workflowRegistry,
     pageRegistry,
+  });
+  const capabilityRegistry = buildCapabilityRegistry({
+    docs,
+    pages,
+    cliRegistry,
+    manualRegistry,
+    nodeApiRegistry,
+    workflowRegistry,
   });
 
   const releaseModel = {
@@ -521,6 +803,7 @@ function buildSiteBundle() {
       "site-manifest.json",
       "badge-endpoint-registry.json",
       "page-registry.json",
+      "capability-registry.json",
       "cli-registry.json",
       "manual-registry.json",
       "node-api-registry.json",
@@ -600,6 +883,7 @@ function buildSiteBundle() {
     docs,
     facts: [
       "page-registry.json",
+      "capability-registry.json",
       "cli-registry.json",
       "manual-registry.json",
       "node-api-registry.json",
@@ -620,6 +904,7 @@ function buildSiteBundle() {
     contract: "kungfu-buildchain-site-agent-index",
     readOrder: [
       "site-manifest.json",
+      "capability-registry.json",
       "page-registry.json",
       "product-mechanism.json",
       "release-model.json",
@@ -724,6 +1009,12 @@ function buildSiteBundle() {
     humanFirst: true,
     agentFirst: true,
     entrypoints: siteManifest.facts.concat(["site-manifest.json"]),
+    capabilityRegistry: {
+      path: "capability-registry.json",
+      contract: capabilityRegistry.contract,
+      groupCount: capabilityRegistry.groups.length,
+      defaultOrder: capabilityRegistry.navigationPolicy.defaultOrder,
+    },
     pages,
     pageRegistry: {
       path: "page-registry.json",
@@ -755,6 +1046,7 @@ function buildSiteBundle() {
         "homepage title and text",
         "homepage section projection from README.md",
         "complete markdown page registry for Buildchain public docs, action manuals, Node API overview, and fixtures",
+        "capability-grouped navigation registry for docs, CLI, Node API, workflows, actions, and KFD claims",
         "release model facts",
         "workflow and action registries",
         "CLI command registry",
@@ -780,6 +1072,7 @@ function buildSiteBundle() {
     "buildchain-site.json": siteBundle,
     "site-manifest.json": siteManifest,
     "page-registry.json": pageRegistry,
+    "capability-registry.json": capabilityRegistry,
     "cli-registry.json": cliRegistry,
     "manual-registry.json": manualRegistry,
     "node-api-registry.json": nodeApiRegistry,

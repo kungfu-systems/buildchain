@@ -1,0 +1,302 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-capability-registry",
+  "package": "@kungfu-tech/buildchain",
+  "sourceOfTruth": "npm package @kungfu-tech/buildchain/dist/site/capability-registry.json",
+  "groups": [
+    {
+      "id": "getting-started",
+      "title": "Getting Started",
+      "summary": "Install Buildchain, understand the product mechanism, and choose the right entrypoint.",
+      "audience": [
+        "consumer",
+        "agent"
+      ],
+      "maturity": "stable",
+      "counts": {
+        "manualCount": 3,
+        "pageCount": 4,
+        "cliCommandCount": 5,
+        "nodeApiCount": 0,
+        "workflowCount": 0,
+        "actionCount": 0
+      },
+      "manuals": [
+        "docs/MAP.md",
+        "docs/install.md",
+        "docs/product-mechanism.md"
+      ],
+      "factSources": [
+        "page-registry.json",
+        "manual-registry.json",
+        "cli-registry.json",
+        "node-api-registry.json",
+        "workflow-registry.json",
+        "kfd-claims.json"
+      ]
+    },
+    {
+      "id": "release-passport-trust",
+      "title": "Release Passport and Trust",
+      "summary": "Create, verify, explain, and publish release passports, KFD trust evidence, GitHub Releases, and binary assets.",
+      "audience": [
+        "release-operator",
+        "agent"
+      ],
+      "maturity": "stable",
+      "counts": {
+        "manualCount": 3,
+        "pageCount": 3,
+        "cliCommandCount": 16,
+        "nodeApiCount": 2,
+        "workflowCount": 2,
+        "actionCount": 1
+      },
+      "manuals": [
+        "docs/release-passport.md",
+        "docs/binary-distribution.md",
+        "docs/publish-transaction.md"
+      ],
+      "factSources": [
+        "page-registry.json",
+        "manual-registry.json",
+        "cli-registry.json",
+        "node-api-registry.json",
+        "workflow-registry.json",
+        "kfd-claims.json"
+      ]
+    },
+    {
+      "id": "reusable-build",
+      "title": "Reusable Build and Lifecycle",
+      "summary": "Run reusable package/native builds, lifecycle stages, release candidates, source locks, and self-hosted artifact transfer.",
+      "audience": [
+        "consumer",
+        "release-operator"
+      ],
+      "maturity": "stable",
+      "counts": {
+        "manualCount": 3,
+        "pageCount": 14,
+        "cliCommandCount": 1,
+        "nodeApiCount": 1,
+        "workflowCount": 1,
+        "actionCount": 2
+      },
+      "manuals": [
+        "docs/release-candidate.md",
+        "docs/lifecycle-protocol.md",
+        "docs/reusable-build-surface.md"
+      ],
+      "factSources": [
+        "page-registry.json",
+        "manual-registry.json",
+        "cli-registry.json",
+        "node-api-registry.json",
+        "workflow-registry.json",
+        "kfd-claims.json"
+      ]
+    },
+    {
+      "id": "kfd-trust",
+      "title": "KFD Trust and Surface Closure",
+      "summary": "Discover KFD-1, KFD-2, and KFD-3 support, public surface reverse audits, and product capability queries.",
+      "audience": [
+        "agent",
+        "maintainer"
+      ],
+      "maturity": "stable",
+      "counts": {
+        "manualCount": 1,
+        "pageCount": 1,
+        "cliCommandCount": 6,
+        "nodeApiCount": 4,
+        "workflowCount": 0,
+        "actionCount": 0
+      },
+      "manuals": [
+        "docs/kfd-support.md"
+      ],
+      "factSources": [
+        "page-registry.json",
+        "manual-registry.json",
+        "cli-registry.json",
+        "node-api-registry.json",
+        "workflow-registry.json",
+        "kfd-claims.json"
+      ]
+    },
+    {
+      "id": "site-and-propagation",
+      "title": "Site Bundle, Web Surfaces, and Propagation",
+      "summary": "Publish package-owned site facts, web-surface previews/staging/production, and downstream release propagation.",
+      "audience": [
+        "site",
+        "release-operator",
+        "agent"
+      ],
+      "maturity": "stable",
+      "counts": {
+        "manualCount": 3,
+        "pageCount": 3,
+        "cliCommandCount": 2,
+        "nodeApiCount": 2,
+        "workflowCount": 1,
+        "actionCount": 0
+      },
+      "manuals": [
+        "docs/release-propagation.md",
+        "docs/site-bundle-contract.md",
+        "docs/web-surface-deployments.md"
+      ],
+      "factSources": [
+        "page-registry.json",
+        "manual-registry.json",
+        "cli-registry.json",
+        "node-api-registry.json",
+        "workflow-registry.json",
+        "kfd-claims.json"
+      ]
+    },
+    {
+      "id": "distribution-indexes",
+      "title": "Distribution Indexes and Badges",
+      "summary": "Generate README badge facts and distribution-index projections such as Homebrew taps from release passport evidence.",
+      "audience": [
+        "consumer",
+        "site",
+        "agent"
+      ],
+      "maturity": "stable",
+      "counts": {
+        "manualCount": 2,
+        "pageCount": 2,
+        "cliCommandCount": 6,
+        "nodeApiCount": 3,
+        "workflowCount": 0,
+        "actionCount": 0
+      },
+      "manuals": [
+        "docs/readme-badges.md",
+        "docs/homebrew.md"
+      ],
+      "factSources": [
+        "page-registry.json",
+        "manual-registry.json",
+        "cli-registry.json",
+        "node-api-registry.json",
+        "workflow-registry.json",
+        "kfd-claims.json"
+      ]
+    },
+    {
+      "id": "observability-diagnostics",
+      "title": "Build Facts, Observability, and Diagnostics",
+      "summary": "Collect source/module/product facts, lifecycle logs, diagnostics summaries, and process-tree evidence.",
+      "audience": [
+        "maintainer",
+        "agent"
+      ],
+      "maturity": "stable",
+      "counts": {
+        "manualCount": 3,
+        "pageCount": 3,
+        "cliCommandCount": 11,
+        "nodeApiCount": 4,
+        "workflowCount": 0,
+        "actionCount": 1
+      },
+      "manuals": [
+        "docs/consumer-issue-reporting.md",
+        "docs/toolkit-observability.md",
+        "docs/build-facts.md"
+      ],
+      "factSources": [
+        "page-registry.json",
+        "manual-registry.json",
+        "cli-registry.json",
+        "node-api-registry.json",
+        "workflow-registry.json",
+        "kfd-claims.json"
+      ]
+    },
+    {
+      "id": "governance-versioning",
+      "title": "Governance, Versioning, and Runtime Drift",
+      "summary": "Operate protected dev lines, semver line bootstrap, runtime trains, floating-ref contract locks, and ownership boundaries.",
+      "audience": [
+        "maintainer",
+        "release-operator"
+      ],
+      "maturity": "stable",
+      "counts": {
+        "manualCount": 7,
+        "pageCount": 7,
+        "cliCommandCount": 5,
+        "nodeApiCount": 2,
+        "workflowCount": 8,
+        "actionCount": 0
+      },
+      "manuals": [
+        "docs/infra-contract.md",
+        "docs/migration-inventory.md",
+        "docs/ownership.md",
+        "docs/release-governance.md",
+        "docs/release-flow.md",
+        "docs/runtime-train-validation.md",
+        "docs/versioning.md"
+      ],
+      "factSources": [
+        "page-registry.json",
+        "manual-registry.json",
+        "cli-registry.json",
+        "node-api-registry.json",
+        "workflow-registry.json",
+        "kfd-claims.json"
+      ]
+    },
+    {
+      "id": "api-cli-reference",
+      "title": "CLI and Node API Reference",
+      "summary": "Enumerate supported CLI commands, Node package exports, workflow/action inputs, and packaged manuals.",
+      "audience": [
+        "agent",
+        "developer"
+      ],
+      "maturity": "stable",
+      "counts": {
+        "manualCount": 1,
+        "pageCount": 6,
+        "cliCommandCount": 0,
+        "nodeApiCount": 2,
+        "workflowCount": 23,
+        "actionCount": 0
+      },
+      "manuals": [
+        "docs/cli.md"
+      ],
+      "factSources": [
+        "page-registry.json",
+        "manual-registry.json",
+        "cli-registry.json",
+        "node-api-registry.json",
+        "workflow-registry.json",
+        "kfd-claims.json"
+      ]
+    }
+  ],
+  "navigationPolicy": {
+    "defaultOrder": [
+      "getting-started",
+      "release-passport-trust",
+      "reusable-build",
+      "kfd-trust",
+      "site-and-propagation",
+      "distribution-indexes",
+      "observability-diagnostics",
+      "governance-versioning",
+      "api-cli-reference"
+    ],
+    "rule": "Render Buildchain documentation by capability group first, then by manual order or command/API registry within the selected group."
+  }
+}

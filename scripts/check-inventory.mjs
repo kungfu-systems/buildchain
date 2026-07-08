@@ -171,6 +171,9 @@ if (rootPackage.exports?.["./site/site-manifest.json"] !== "./dist/site/site-man
 if (rootPackage.exports?.["./site/page-registry.json"] !== "./dist/site/page-registry.json") {
   throw new Error("root package must export @kungfu-tech/buildchain/site/page-registry.json");
 }
+if (rootPackage.exports?.["./site/capability-registry.json"] !== "./dist/site/capability-registry.json") {
+  throw new Error("root package must export @kungfu-tech/buildchain/site/capability-registry.json");
+}
 if (rootPackage.exports?.["./site/manual-registry.json"] !== "./dist/site/manual-registry.json") {
   throw new Error("root package must export @kungfu-tech/buildchain/site/manual-registry.json");
 }
@@ -208,6 +211,7 @@ const installDoc = fs.readFileSync(path.join(root, "docs/install.md"), "utf8");
 const siteBundle = JSON.parse(fs.readFileSync(path.join(root, "dist/site/buildchain-site.json"), "utf8"));
 const siteManifest = JSON.parse(fs.readFileSync(path.join(root, "dist/site/site-manifest.json"), "utf8"));
 const pageRegistry = JSON.parse(fs.readFileSync(path.join(root, "dist/site/page-registry.json"), "utf8"));
+const capabilityRegistry = JSON.parse(fs.readFileSync(path.join(root, "dist/site/capability-registry.json"), "utf8"));
 const badgeEndpointRegistry = JSON.parse(fs.readFileSync(path.join(root, "dist/site/badge-endpoint-registry.json"), "utf8"));
 const publicSurfaceAudit = JSON.parse(fs.readFileSync(path.join(root, "dist/site/public-surface-audit.json"), "utf8"));
 if (!cliSource.startsWith("#!/usr/bin/env node")) {
@@ -334,6 +338,15 @@ if (pageRegistry.contract !== "kungfu-buildchain-site-page-registry") {
 if (siteBundle.pageRegistry?.path !== "page-registry.json" || siteBundle.pageRegistry?.pageCount !== pageRegistry.pageCount) {
   throw new Error("buildchain-site.json must link to page-registry.json with matching page count");
 }
+if (capabilityRegistry.contract !== "kungfu-buildchain-capability-registry") {
+  throw new Error("capability-registry.json must expose the Buildchain capability registry contract");
+}
+if (siteBundle.capabilityRegistry?.path !== "capability-registry.json" || siteBundle.capabilityRegistry?.groupCount !== capabilityRegistry.groups?.length) {
+  throw new Error("buildchain-site.json must link to capability-registry.json with matching group count");
+}
+if (!siteManifest.facts?.includes("capability-registry.json") || !siteBundle.entrypoints?.includes("capability-registry.json")) {
+  throw new Error("site bundle entrypoints must include capability-registry.json");
+}
 if (!siteManifest.facts?.includes("page-registry.json") || !siteBundle.entrypoints?.includes("page-registry.json")) {
   throw new Error("site bundle entrypoints must include page-registry.json");
 }
@@ -388,8 +401,35 @@ if (JSON.stringify(bundlePageSources) !== JSON.stringify(expectedPageSources)) {
   throw new Error(`buildchain-site.json pages must include every public markdown page: expected ${expectedPageSources.length}, got ${bundlePageSources.length}`);
 }
 for (const page of pageRegistry.pages || []) {
-  if (!page.id || !page.route || !page.title || !page.category || !page.sourcePath || !page.digest || !page.markdown) {
+  if (!page.id || !page.route || !page.title || !page.category || !page.capabilityGroup || !Array.isArray(page.audience) || !page.maturity || !page.sourcePath || !page.digest || !page.markdown) {
     throw new Error(`page-registry.json page is incomplete: ${page.sourcePath || page.id || "<unknown>"}`);
+  }
+}
+const capabilityGroupIds = new Set((capabilityRegistry.groups || []).map((group) => group.id));
+if (capabilityGroupIds.size < 6) {
+  throw new Error("capability-registry.json must expose grouped Buildchain capabilities");
+}
+for (const page of pageRegistry.pages || []) {
+  if (!capabilityGroupIds.has(page.capabilityGroup)) {
+    throw new Error(`page-registry.json page references unknown capability group: ${page.sourcePath || page.id}`);
+  }
+}
+const manualRegistry = JSON.parse(fs.readFileSync(path.join(root, "dist/site/manual-registry.json"), "utf8"));
+for (const manual of manualRegistry.manuals || []) {
+  if (!manual.capabilityGroup || !capabilityGroupIds.has(manual.capabilityGroup) || !Array.isArray(manual.audience) || !manual.maturity || typeof manual.order !== "number") {
+    throw new Error(`manual-registry.json manual missing capability metadata: ${manual.path || manual.id}`);
+  }
+}
+const cliRegistry = JSON.parse(fs.readFileSync(path.join(root, "dist/site/cli-registry.json"), "utf8"));
+for (const command of cliRegistry.commands || []) {
+  if (!command.capabilityGroup || !capabilityGroupIds.has(command.capabilityGroup) || !Array.isArray(command.audience) || !command.maturity || !command.purpose || command.purpose.includes("Add a specific purpose")) {
+    throw new Error(`cli-registry.json command missing capability metadata: ${command.id || command.usage}`);
+  }
+}
+const nodeApiRegistry = JSON.parse(fs.readFileSync(path.join(root, "dist/site/node-api-registry.json"), "utf8"));
+for (const exported of nodeApiRegistry.exports || []) {
+  if (!exported.capabilityGroup || !capabilityGroupIds.has(exported.capabilityGroup) || !Array.isArray(exported.audience) || !exported.maturity || !exported.summary) {
+    throw new Error(`node-api-registry.json export missing capability metadata: ${exported.export || exported.specifier}`);
   }
 }
 if (!pageRegistry.pages?.some((page) => page.sourcePath === "actions/promote-buildchain-ref/README.md")) {
@@ -476,6 +516,7 @@ for (const requiredSnippet of [
   "GitHub Release",
   "release propagation",
   "Homebrew tap distribution indexes",
+  "capability-registry.json",
   "manual-registry.json",
   "node-api-registry.json",
   "README badge",
@@ -865,7 +906,7 @@ if (!badgeEndpointRegistry.badges?.some((entry) => entry.id === "buildchain-rele
   throw new Error("badge endpoint registry must include Buildchain Release Passport badge");
 }
 
-for (const siteFile of ["buildchain-site.json", "site-manifest.json", "badge-endpoint-registry.json", "cli-registry.json", "manual-registry.json", "node-api-registry.json", "workflow-registry.json", "public-surface-audit.json", "release-model.json", "buildchain-contract.json"]) {
+for (const siteFile of ["buildchain-site.json", "site-manifest.json", "badge-endpoint-registry.json", "page-registry.json", "capability-registry.json", "cli-registry.json", "manual-registry.json", "node-api-registry.json", "workflow-registry.json", "public-surface-audit.json", "release-model.json", "buildchain-contract.json"]) {
   if (!fs.existsSync(path.join(root, "dist", "site", siteFile))) {
     throw new Error(`site bundle missing ${siteFile}`);
   }

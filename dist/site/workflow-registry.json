@@ -58,6 +58,7 @@
       ],
       "inputCount": 48,
       "surface": "reusable-workflow",
+      "capabilityGroup": "api-cli-reference",
       "status": "active"
     },
     {
@@ -66,6 +67,7 @@
       "inputs": [],
       "inputCount": 0,
       "surface": "reusable-workflow",
+      "capabilityGroup": "api-cli-reference",
       "status": "active"
     },
     {
@@ -76,6 +78,7 @@
       ],
       "inputCount": 1,
       "surface": "reusable-workflow",
+      "capabilityGroup": "api-cli-reference",
       "status": "active"
     },
     {
@@ -88,6 +91,7 @@
       ],
       "inputCount": 3,
       "surface": "reusable-workflow",
+      "capabilityGroup": "api-cli-reference",
       "status": "active"
     },
     {
@@ -124,6 +128,7 @@
       ],
       "inputCount": 27,
       "surface": "reusable-workflow",
+      "capabilityGroup": "api-cli-reference",
       "status": "active"
     },
     {
@@ -174,6 +179,7 @@
       ],
       "inputCount": 41,
       "surface": "reusable-workflow",
+      "capabilityGroup": "api-cli-reference",
       "status": "active"
     },
     {
@@ -187,6 +193,7 @@
       ],
       "inputCount": 4,
       "surface": "reusable-workflow",
+      "capabilityGroup": "api-cli-reference",
       "status": "active"
     },
     {
@@ -200,6 +207,7 @@
       ],
       "inputCount": 4,
       "surface": "reusable-workflow",
+      "capabilityGroup": "api-cli-reference",
       "status": "active"
     },
     {
@@ -222,6 +230,7 @@
       ],
       "inputCount": 13,
       "surface": "reusable-workflow",
+      "capabilityGroup": "api-cli-reference",
       "status": "active"
     },
     {
@@ -235,6 +244,7 @@
       ],
       "inputCount": 4,
       "surface": "reusable-workflow",
+      "capabilityGroup": "api-cli-reference",
       "status": "active"
     },
     {
@@ -272,6 +282,7 @@
       ],
       "inputCount": 28,
       "surface": "reusable-workflow",
+      "capabilityGroup": "api-cli-reference",
       "status": "active"
     },
     {
@@ -284,6 +295,7 @@
       ],
       "inputCount": 3,
       "surface": "reusable-workflow",
+      "capabilityGroup": "api-cli-reference",
       "status": "active"
     },
     {
@@ -298,6 +310,7 @@
       ],
       "inputCount": 5,
       "surface": "reusable-workflow",
+      "capabilityGroup": "api-cli-reference",
       "status": "active"
     },
     {
@@ -309,6 +322,7 @@
       ],
       "inputCount": 2,
       "surface": "release-passport",
+      "capabilityGroup": "api-cli-reference",
       "status": "active"
     },
     {
@@ -319,6 +333,7 @@
       ],
       "inputCount": 1,
       "surface": "repository-workflow",
+      "capabilityGroup": "api-cli-reference",
       "status": "repository-internal"
     },
     {
@@ -330,6 +345,7 @@
       ],
       "inputCount": 2,
       "surface": "repository-patrol",
+      "capabilityGroup": "governance-versioning",
       "status": "active"
     },
     {
@@ -341,6 +357,7 @@
       ],
       "inputCount": 2,
       "surface": "repository-patrol",
+      "capabilityGroup": "governance-versioning",
       "status": "active"
     },
     {
@@ -352,6 +369,7 @@
       ],
       "inputCount": 2,
       "surface": "repository-patrol",
+      "capabilityGroup": "governance-versioning",
       "status": "active"
     },
     {
@@ -376,6 +394,7 @@
       ],
       "inputCount": 15,
       "surface": "repository-patrol",
+      "capabilityGroup": "governance-versioning",
       "status": "active"
     },
     {
@@ -388,6 +407,7 @@
       ],
       "inputCount": 3,
       "surface": "release-governance",
+      "capabilityGroup": "release-passport-trust",
       "status": "active"
     },
     {
@@ -401,6 +421,7 @@
       ],
       "inputCount": 4,
       "surface": "repository-workflow",
+      "capabilityGroup": "api-cli-reference",
       "status": "repository-internal"
     },
     {
@@ -416,6 +437,7 @@
       ],
       "inputCount": 6,
       "surface": "repository-workflow",
+      "capabilityGroup": "api-cli-reference",
       "status": "active"
     },
     {
@@ -437,6 +459,7 @@
       ],
       "inputCount": 12,
       "surface": "dev-governance",
+      "capabilityGroup": "governance-versioning",
       "status": "active"
     },
     {
@@ -448,6 +471,7 @@
       ],
       "inputCount": 2,
       "surface": "repository-workflow",
+      "capabilityGroup": "api-cli-reference",
       "status": "active"
     },
     {
@@ -469,6 +493,7 @@
       ],
       "inputCount": 12,
       "surface": "repository-patrol",
+      "capabilityGroup": "governance-versioning",
       "status": "active"
     },
     {
@@ -482,6 +507,7 @@
       ],
       "inputCount": 4,
       "surface": "repository-patrol",
+      "capabilityGroup": "governance-versioning",
       "status": "active"
     },
     {
@@ -495,6 +521,7 @@
       ],
       "inputCount": 4,
       "surface": "repository-patrol",
+      "capabilityGroup": "governance-versioning",
       "status": "active"
     },
     {
@@ -548,6 +575,7 @@
       ],
       "inputCount": 44,
       "surface": "release-governance",
+      "capabilityGroup": "reusable-build",
       "status": "active"
     },
     {
@@ -565,6 +593,7 @@
       ],
       "inputCount": 8,
       "surface": "release-governance",
+      "capabilityGroup": "release-passport-trust",
       "status": "active"
     },
     {
@@ -573,6 +602,7 @@
       "inputs": [],
       "inputCount": 0,
       "surface": "repository-workflow",
+      "capabilityGroup": "api-cli-reference",
       "status": "active"
     },
     {
@@ -595,6 +625,7 @@
       ],
       "inputCount": 13,
       "surface": "release-propagation",
+      "capabilityGroup": "site-and-propagation",
       "status": "preview"
     },
     {
@@ -603,6 +634,7 @@
       "inputs": [],
       "inputCount": 0,
       "surface": "repository-workflow",
+      "capabilityGroup": "api-cli-reference",
       "status": "active"
     },
     {
@@ -613,6 +645,7 @@
       ],
       "inputCount": 1,
       "surface": "repository-workflow",
+      "capabilityGroup": "api-cli-reference",
       "status": "active"
     },
     {
@@ -621,6 +654,7 @@
       "inputs": [],
       "inputCount": 0,
       "surface": "repository-workflow",
+      "capabilityGroup": "api-cli-reference",
       "status": "compatibility-fixture"
     },
     {
@@ -629,6 +663,7 @@
       "inputs": [],
       "inputCount": 0,
       "surface": "repository-workflow",
+      "capabilityGroup": "api-cli-reference",
       "status": "active"
     }
   ],
@@ -691,6 +726,7 @@
         "verification-command"
       ],
       "inputCount": 51,
+      "capabilityGroup": "release-passport-trust",
       "status": "active"
     },
     {
@@ -742,6 +778,7 @@
         "workflow"
       ],
       "inputCount": 43,
+      "capabilityGroup": "observability-diagnostics",
       "status": "active"
     },
     {
@@ -770,6 +807,7 @@
         "summary-path"
       ],
       "inputCount": 20,
+      "capabilityGroup": "reusable-build",
       "status": "active"
     },
     {
@@ -781,6 +819,7 @@
         "require-version-state"
       ],
       "inputCount": 3,
+      "capabilityGroup": "reusable-build",
       "status": "active"
     }
   ]

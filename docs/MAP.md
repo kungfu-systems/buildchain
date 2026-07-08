@@ -18,8 +18,27 @@ This package should be usable by an agent from the npm artifact alone. The
 machine-readable `dist/site/` bundle is the first fact source; the Markdown
 manuals explain those facts and give operator examples.
 
+`dist/site/capability-registry.json` is the capability navigation entrypoint.
+It groups the public surface into stable product areas so sites and agents do
+not have to infer structure from file names. Each page, manual, CLI command,
+workflow, action, and Node API export also carries a `capabilityGroup`,
+`audience`, and `maturity` field in its own registry.
+
+| Capability group | Primary facts | Primary manuals |
+| --- | --- | --- |
+| Getting Started | `capability-registry.json`, `product-mechanism.json` | [`install.md`](install.md), [`product-mechanism.md`](product-mechanism.md), [`cli.md`](cli.md) |
+| Release Passport and Trust | `release-model.json`, `artifact-schemas.json`, `kfd-claims.json` | [`release-passport.md`](release-passport.md), [`release-candidate.md`](release-candidate.md), [`publish-transaction.md`](publish-transaction.md), [`binary-distribution.md`](binary-distribution.md) |
+| Reusable Build and Lifecycle | `workflow-registry.json`, `release-model.json` | [`reusable-build-surface.md`](reusable-build-surface.md), [`lifecycle-protocol.md`](lifecycle-protocol.md) |
+| KFD Trust and Surface Closure | `kfd-claims.json`, `public-surface-audit.json`, `cli-registry.json`, `node-api-registry.json` | [`kfd-support.md`](kfd-support.md), [`release-passport.md`](release-passport.md) |
+| Site Bundle, Web Surfaces, and Propagation | `buildchain-site.json`, `site-manifest.json`, `page-registry.json`, `release-model.json` | [`site-bundle-contract.md`](site-bundle-contract.md), [`web-surface-deployments.md`](web-surface-deployments.md), [`release-propagation.md`](release-propagation.md) |
+| Distribution Indexes and Badges | `badge-endpoint-registry.json`, `node-api-registry.json`, `manual-registry.json` | [`readme-badges.md`](readme-badges.md), [`homebrew.md`](homebrew.md) |
+| Build Facts, Observability, and Diagnostics | `cli-registry.json`, `node-api-registry.json`, lifecycle artifacts | [`build-facts.md`](build-facts.md), [`toolkit-observability.md`](toolkit-observability.md), [`consumer-issue-reporting.md`](consumer-issue-reporting.md) |
+| Governance, Versioning, and Runtime Drift | `buildchain-contract.json`, `workflow-registry.json`, `release-model.json` | [`release-governance.md`](release-governance.md), [`release-flow.md`](release-flow.md), [`versioning.md`](versioning.md), [`runtime-train-validation.md`](runtime-train-validation.md) |
+| CLI and Node API Reference | `cli-registry.json`, `node-api-registry.json`, `workflow-registry.json`, `manual-registry.json` | [`cli.md`](cli.md), [`../packages/core/README.md`](../packages/core/README.md) |
+
 | Capability | Machine-readable entry | Manual entry |
 | --- | --- | --- |
+| Capability-grouped KFD-3 navigation | `dist/site/capability-registry.json`, `dist/site/page-registry.json`, `dist/site/manual-registry.json`, `dist/site/cli-registry.json`, `dist/site/node-api-registry.json` | this map, [`site-bundle-contract.md`](site-bundle-contract.md), [`kfd-support.md`](kfd-support.md) |
 | KFD-1 / KFD-2 / KFD-3 release-passport gates | `dist/site/kfd-claims.json`, `dist/site/buildchain-contract.json`, `dist/site/artifact-schemas.json` | [`release-passport.md`](release-passport.md) |
 | KFD-3 public surface reverse audit | `dist/site/public-surface-audit.json`, `dist/site/cli-registry.json`, `dist/site/workflow-registry.json`, `dist/site/page-registry.json` | [`cli.md`](cli.md), [`site-bundle-contract.md`](site-bundle-contract.md) |
 | KFD-3 surface registration and capability query | `buildchain.kfd3.json`, `dist/site/kfd-claims.json`, `buildchain.release.json` | [`kfd-support.md`](kfd-support.md) |
