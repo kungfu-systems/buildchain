@@ -134,7 +134,7 @@
         "breaking contract drift fails closed before rendering, deployment, or release publication"
       ],
       "breakingDigest": "sha256:82ee63cb336e40d832dfff4a1c5e6cbfa221a4fc8b2359990033bc931bffc43a",
-      "auditDigest": "sha256:46cd44208497d20495c3bc392a1a40ddd419216d8b1ce41198c8eda5b2645c08"
+      "auditDigest": "sha256:c7ccd61dcad7420276d5c13549ccbbd7f9afee30eab28ff09fe3d59b2a3f638f"
     },
     {
       "contractVersion": 1,
@@ -460,5 +460,5 @@
     }
   ],
   "compatibilityDigest": "sha256:967df7e854fdf582294ddfb6403eff25c00db9518a24051e7d47cbd75527c785",
-  "contractDigest": "sha256:bdf0a562129beb9841765ca41f5b4a6e1301653de9125bfe5b6c05ed30459fce"
+  "contractDigest": "sha256:cfb20def439af9ddebf06fa1185fea7208a371470d6f909f8b201e3938bbbe7c"
 }

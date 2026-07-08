@@ -1077,6 +1077,13 @@ jobs:
             --result .buildchain/web-surface-staging-apply.json \
             --output .buildchain/web-surface-staging-health.json
 
+      - name: Write staging release PR summary
+        run: >-
+          node .buildchain/runtime/scripts/web-surface-production-release-pr.mjs
+          write-summary
+          --input .buildchain/web-surface-staging-apply.json
+          --output .buildchain/web-surface-staging-release-pr-summary.json
+
       - name: Summarize staging apply
         if: ${{ always() }}
         run: |
@@ -1095,6 +1102,14 @@ jobs:
             .buildchain/web-surface-staging-health.json
           include-hidden-files: true
           if-no-files-found: warn
+
+      - name: Upload staging release PR summary
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-web-surface-staging-release-pr-summary
+          path: .buildchain/web-surface-staging-release-pr-summary.json
+          include-hidden-files: true
+          if-no-files-found: error
 
       - name: Comment staging deploy feedback and write passport
         if: ${{ always() }}
@@ -1169,11 +1184,17 @@ jobs:
         working-directory: .buildchain/runtime
         run: pnpm install --frozen-lockfile
 
+      - name: Download staging release PR summary
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: buildchain-web-surface-staging-release-pr-summary
+          path: .buildchain/staging-release-pr-summary
+
       - name: Open production release PR
         id: open
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          STAGING_APPLY_RESULT_JSON: ${{ needs.staging-apply.outputs.staging-apply-result-json }}
+          STAGING_RELEASE_PR_SUMMARY_PATH: .buildchain/staging-release-pr-summary/web-surface-staging-release-pr-summary.json
           PRODUCTION_RELEASE_LABEL: ${{ inputs.production-release-label }}
           PRODUCTION_RELEASE_HEAD_PREFIX: ${{ inputs.production-release-head-prefix }}
           PRODUCTION_RELEASE_CHANNEL: ${{ inputs.production-release-branch-channel }}

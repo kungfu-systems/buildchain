@@ -33,9 +33,12 @@ import {
   resolveReleaseReviewState,
 } from "../scripts/web-surface-release-pr-review.mjs";
 import {
+  compactProductionReleasePrSummary,
   releaseBranchName,
+  readStagingReleasePrSummary,
   renderProductionReleasePrBody,
 } from "../scripts/web-surface-production-release-pr.mjs";
+import { compactWebSurfaceApplyResult } from "../scripts/web-surface.mjs";
 import {
   RELEASE_FEEDBACK_MARKERS,
   createWebSurfaceReleasePassport,
@@ -658,12 +661,22 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /Apply staging deploy/);
   assert.match(workflow, /needs\.plan\.outputs\.web-surface-channel == 'staging'/);
   assert.match(workflow, /staging-aws-role-arn is required when staging-apply is true/);
+  assert.match(workflow, /Write staging release PR summary/);
+  assert.match(workflow, /web-surface-staging-release-pr-summary\.json/);
   assert.match(workflow, /Upload staging apply diagnostics/);
   assert.match(workflow, /buildchain-web-surface-staging-diagnostics/);
+  assert.match(workflow, /Upload staging release PR summary/);
+  assert.match(workflow, /buildchain-web-surface-staging-release-pr-summary/);
   assert.match(workflow, /Open production release PR/);
   assert.match(workflow, /web-surface-production-release-pr\.mjs/);
   assert.match(workflow, /needs\.staging-apply\.result == 'success'/);
   assert.match(workflow, /needs\.release-intent\.outputs\.production-release-approved != 'true'/);
+  assert.match(workflow, /Download staging release PR summary/);
+  assert.match(workflow, /STAGING_RELEASE_PR_SUMMARY_PATH/);
+  assert.doesNotMatch(
+    workflow,
+    /STAGING_APPLY_RESULT_JSON:\s*\$\{\{ needs\.staging-apply\.outputs\.staging-apply-result-json \}\}/,
+  );
   assert.match(workflow, /production-release-pr-url/);
   assert.match(workflow, /contents: write/);
   assert.match(workflow, /issues: write/);
@@ -690,6 +703,66 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /Comment production deploy feedback and write passport/);
   assert.match(workflow, /buildchain-web-surface-production-release-passport/);
   assert.match(workflow, /web-surface-release-feedback\.mjs/);
+});
+
+test("web-surface apply GitHub output summary omits operation logs", () => {
+  const summary = compactWebSurfaceApplyResult({
+    contract: "kungfu-buildchain-web-surface-deploy-apply",
+    channel: "staging",
+    status: "applied",
+    url: "https://staging.libkungfu.dev",
+    urls: { default: "https://staging.libkungfu.dev" },
+    sourceSha: "abcdef1234567890abcdef1234567890abcdef12",
+    artifactHash: "sha256:artifact",
+    operations: [
+      {
+        action: "aws",
+        stdout: "x".repeat(1000),
+        stderr: "y".repeat(1000),
+      },
+    ],
+    surfaceBindings: [
+      {
+        surface: "default",
+        url: "https://staging.libkungfu.dev",
+        objectPrefix: "staging/default",
+      },
+    ],
+  });
+  assert.equal(summary.channel, "staging");
+  assert.equal(summary.sourceSha, "abcdef1234567890abcdef1234567890abcdef12");
+  assert.equal(summary.artifactHash, "sha256:artifact");
+  assert.equal(summary.operations, undefined);
+  assert.equal(summary.stdout, undefined);
+  assert.equal(summary.stderr, undefined);
+  assert.deepEqual(summary.urls, { default: "https://staging.libkungfu.dev" });
+});
+
+test("production release PR summary can be read from artifact file", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-release-pr-summary-"));
+  const summaryPath = path.join(dir, "web-surface-staging-release-pr-summary.json");
+  const fullApplyResult = {
+    channel: "staging",
+    status: "applied",
+    urls: {
+      core: "https://core.staging.libkungfu.dev",
+      buildchain: "https://buildchain.staging.libkungfu.dev",
+    },
+    sourceSha: "abcdef1234567890abcdef1234567890abcdef12",
+    artifactHash: "sha256:artifact",
+    operations: [{ stdout: "large-output" }],
+  };
+  fs.writeFileSync(summaryPath, `${JSON.stringify(compactProductionReleasePrSummary(fullApplyResult), null, 2)}\n`);
+  const summary = readStagingReleasePrSummary({
+    STAGING_RELEASE_PR_SUMMARY_PATH: summaryPath,
+  });
+  assert.equal(summary.sourceSha, "abcdef1234567890abcdef1234567890abcdef12");
+  assert.equal(summary.artifactHash, "sha256:artifact");
+  assert.equal(summary.operations, undefined);
+  assert.deepEqual(summary.urls, {
+    core: "https://core.staging.libkungfu.dev",
+    buildchain: "https://buildchain.staging.libkungfu.dev",
+  });
 });
 
 test("web-surface production release PR body carries staging evidence", () => {
