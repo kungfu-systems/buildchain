@@ -181,6 +181,7 @@ const installDoc = fs.readFileSync(path.join(root, "docs/install.md"), "utf8");
 const siteBundle = JSON.parse(fs.readFileSync(path.join(root, "dist/site/buildchain-site.json"), "utf8"));
 const siteManifest = JSON.parse(fs.readFileSync(path.join(root, "dist/site/site-manifest.json"), "utf8"));
 const pageRegistry = JSON.parse(fs.readFileSync(path.join(root, "dist/site/page-registry.json"), "utf8"));
+const badgeEndpointRegistry = JSON.parse(fs.readFileSync(path.join(root, "dist/site/badge-endpoint-registry.json"), "utf8"));
 if (!cliSource.startsWith("#!/usr/bin/env node")) {
   throw new Error("bin/buildchain.mjs must be executable with a node shebang");
 }
@@ -213,6 +214,7 @@ for (const requiredSnippet of [
   "renderReadmeBadgeBlock",
   "checkReadmeBadgeBlock",
   "updateReadmeBadgeBlock",
+  "createReadmeBadgeEndpointRegistry",
 ]) {
   if (!coreIndexSource.includes(requiredSnippet)) {
     throw new Error(`packages/core/index.js must export README badge API: ${requiredSnippet}`);
@@ -418,6 +420,9 @@ for (const requiredSnippet of [
   "collectReadmeBadgeFacts",
   "kungfu-buildchain-readme-badge-facts",
   "@kungfu-tech/kfd/standards.json",
+  "badge-endpoint-registry.json",
+  "badge_endpoint_base_url",
+  "Buildchain-owned badges use stable hosted image URLs",
   "KFD passed",
   "Buildchain Release Passport",
   "release passport",
@@ -774,7 +779,17 @@ for (const artifact of [
   }
 }
 
-for (const siteFile of ["buildchain-site.json", "site-manifest.json", "cli-registry.json", "manual-registry.json", "node-api-registry.json", "release-model.json", "buildchain-contract.json"]) {
+if (badgeEndpointRegistry.contract !== "kungfu-buildchain-readme-badge-endpoint-registry") {
+  throw new Error("badge-endpoint-registry.json must expose the README badge endpoint registry contract");
+}
+if (badgeEndpointRegistry.consumerActionForLogoChange !== "none") {
+  throw new Error("badge endpoint registry must declare no consumer action for logo changes");
+}
+if (!badgeEndpointRegistry.badges?.some((entry) => entry.id === "buildchain-release-passport")) {
+  throw new Error("badge endpoint registry must include Buildchain Release Passport badge");
+}
+
+for (const siteFile of ["buildchain-site.json", "site-manifest.json", "badge-endpoint-registry.json", "cli-registry.json", "manual-registry.json", "node-api-registry.json", "release-model.json", "buildchain-contract.json"]) {
   if (!fs.existsSync(path.join(root, "dist", "site", siteFile))) {
     throw new Error(`site bundle missing ${siteFile}`);
   }

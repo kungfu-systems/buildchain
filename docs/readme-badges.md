@@ -101,6 +101,26 @@ that can be verified. It does not report the upstream `kungfu-systems/buildchain
 repository status. Buildchain's own README dogfoods the same rule because its
 configured `release_passport` points at Buildchain's own release passport.
 
+Buildchain-owned badges use stable hosted image URLs by default:
+
+```text
+https://buildchain.libkungfu.dev/badges/v1/{badge}/{state}.svg
+```
+
+The URL is part of the Buildchain badge contract. Consumers do not need to
+regenerate README files when Buildchain replaces the placeholder badge logo
+with a formal logo; the hosted endpoint owns logo rendering. The package-owned
+site bundle publishes `badge-endpoint-registry.json` plus Shields-compatible
+JSON payloads under `badges/v1/**` so the site repository can serve or render
+the exact SVG endpoints without inventing badge facts.
+
+Forks or private deployments can override the image host with:
+
+```toml
+[badges]
+badge_endpoint_base_url = "https://example.com/buildchain-badges/v1"
+```
+
 `kfd_standards` is optional. If omitted, Buildchain tries the installed
 `@kungfu-tech/kfd/standards.json` package export. Use the explicit path or URL
 only when a repository deliberately vendors KFD standards metadata or validates

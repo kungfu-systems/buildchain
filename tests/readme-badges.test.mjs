@@ -8,6 +8,7 @@ import test from "node:test";
 import {
   checkReadmeBadgeBlock,
   collectReadmeBadgeFacts,
+  createReadmeBadgeEndpointRegistry,
   renderReadmeBadgeBlock,
   updateReadmeBadgeBlock,
 } from "@kungfu-tech/buildchain/readme-badges";
@@ -227,7 +228,7 @@ test("readme badge block inserts into a fresh README", async () => {
   assert.match(updated, /<!-- buildchain:badges:start -->/);
   assert.match(updated, /KFD-1: declared/);
   assert.match(updated, /Buildchain Release Passport: declared/);
-  assert.match(updated, /buildchain-release%20passport%20declared/);
+  assert.match(updated, /https:\/\/buildchain\.libkungfu\.dev\/badges\/v1\/buildchain-release-passport\/declared\.svg/);
   assert.match(updated, /^# Badge Fixture\n\n?<!-- buildchain:badges:start -->/);
 });
 
@@ -288,7 +289,25 @@ test("KFD badge text and provenance come from the KFD standards package", async 
   assert.equal(kfd2.text, "release trust passport");
   assert.equal(kfd2.standardDocumentUrl, "https://kfd.libkungfu.dev/2");
   assert.equal(kfd2.interfaceContract, "kfd-2-release-trust-passport");
-  assert.match(renderReadmeBadgeBlock(facts), /release%20trust%20passport%20aligned/);
+  assert.match(renderReadmeBadgeBlock(facts), /https:\/\/buildchain\.libkungfu\.dev\/badges\/v1\/kfd-2\/aligned\.svg/);
+});
+
+test("Buildchain-owned badge endpoints are stable and logo-swappable without consumer reruns", () => {
+  const registry = createReadmeBadgeEndpointRegistry({
+    kfdSpecs: [
+      { key: "kfd-1", label: "KFD-1", text: "contract world" },
+      { key: "kfd-2", label: "KFD-2", text: "release trust passport" },
+      { key: "kfd-3", label: "KFD-3", text: "collaboration interface" },
+    ],
+  });
+  const releasePassport = registry.badges.find((entry) => entry.id === "buildchain-release-passport");
+  const passed = releasePassport.states.find((entry) => entry.state === "passed");
+
+  assert.equal(registry.consumerActionForLogoChange, "none");
+  assert.equal(registry.logoPolicy.futureLogoUpdateRequiresConsumerAction, false);
+  assert.equal(passed.svgPath, "badges/v1/buildchain-release-passport/passed.svg");
+  assert.equal(passed.path, "badges/v1/buildchain-release-passport/passed.json");
+  assert.equal(passed.payload.message, "release passport passed");
 });
 
 test("verified repository passport backs KFD passed badges and repo-specific links", async () => {

@@ -37,7 +37,7 @@
       "title": "README badge blocks",
       "path": "docs/readme-badges.md",
       "plane": "use",
-      "digest": "sha256:305d09bcedd53c1ad538b9fdef431f4dbb3ae15baeb3a2a797c220462368167f"
+      "digest": "sha256:c886d5d469d143571ae68497643be754b1616b562fddc780a5708f49b4c46242"
     },
     {
       "id": "homebrew",
@@ -163,7 +163,7 @@
       "title": "Web surface deployments",
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
-      "digest": "sha256:4c7334fe2284fec3c1249124b0ff85f1242eb7a76d4b2c537c8b2cb6e0e598c1"
+      "digest": "sha256:5063ebb76db3cd36797561782e6c741e30d60bfa0dac8f798dbbd34c4ab2b3c0"
     }
   ],
   "requiredAgentManuals": [
