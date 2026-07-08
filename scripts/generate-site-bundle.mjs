@@ -11,6 +11,12 @@ import {
 import {
   createReadmeBadgeEndpointRegistry,
 } from "../packages/core/readme-badges.js";
+import {
+  collectPublicSurfaceReverseAudit,
+  enumerateActionInputs,
+  enumerateCliCommandsFromBin,
+  enumerateWorkflowInputs,
+} from "../packages/core/public-surface-audit.js";
 import { createSurfaceTimestampPolicy } from "../packages/core/surface-manifest.js";
 
 const SITE_BUNDLE_CONTRACT = "kungfu-buildchain-site-bundle";
@@ -276,29 +282,53 @@ function buildSiteBundle() {
     artifactDigestScope: "npm package dist/site JSON files",
   });
 
+  const cliPurposeById = new Map([
+    ["version", "Print the package or embedded binary version."],
+    ["help", "Print Buildchain CLI help."],
+    ["init", "Bootstrap a repository with Buildchain configuration and caller workflow files."],
+    ["validate", "Validate buildchain.toml and declared lifecycle surfaces."],
+    ["doctor", "Report local integration readiness."],
+    ["lifecycle", "Run configured lifecycle commands and write deterministic artifact manifests."],
+    ["release-dry-run", "Explain what a channel merge would publish before the PR is merged."],
+    ["release-line-open", "Plan or write the initial version-state commit for a new minor release line."],
+    ["release-transaction", "Inspect, recover, finalize, or abort durable release transactions."],
+    ["transaction-inspect", "Inspect durable release transaction state."],
+    ["collect-github-release", "Collect release assets into a release passport."],
+    ["verify-release-passport", "Fail closed unless a release passport and its evidence are complete."],
+    ["verify-artifact", "Verify artifact subjects against release passport evidence."],
+    ["verify-infra-contract-evidence-bundle", "Fail closed unless an infra-contract lifecycle evidence bundle is complete, hash-bound, and validation-consistent."],
+    ["verify-observability-log", "Verify Buildchain observability log events."],
+    ["explain-release", "Explain a release passport for humans or agents."],
+    ["explain-artifact", "Explain artifact evidence for humans or agents."],
+    ["inspect-release", "Inspect release passport evidence."],
+    ["inspect-artifact", "Inspect artifact evidence."],
+    ["release-propagation", "Plan channel-preserving downstream release PRs and write exact upstream release locks."],
+    ["logging", "Emit timestamped build events, summarize logs, and enforce required phases."],
+    ["mark", "Emit a single Buildchain log event."],
+    ["span", "Run a command inside a Buildchain log span."],
+    ["diagnostics-summary", "Summarize diagnostics artifacts into JSON and cross-platform lifecycle timing tables."],
+    ["build-facts", "Collect and verify Git source, version, module output, product artifact, and legacy Kungfu buildinfo facts."],
+    ["sample-process-tree", "Sample process-tree diagnostics for a wrapped command."],
+    ["npm-dry-run", "Verify npm publish shape before a release transaction."],
+    ["infra-contract", "Validate and publish provider-neutral infrastructure contract evidence."],
+    ["web-surface", "Plan, verify, and apply Buildchain web-surface deployments."],
+    ["badges-readme", "Generate or verify managed README badge blocks."],
+    ["badges-bundle", "Generate or verify the combined KFD and Release Passport badge bundle."],
+    ["homebrew-update-formula", "Generate Homebrew Formula metadata from upstream release passport evidence."],
+    ["homebrew-check", "Verify Homebrew tap metadata against upstream release passport evidence."],
+    ["publish-source", "Create, inspect, or verify publish-gate source-lock refs."],
+    ["build-contract", "Resolve Buildchain runtime contract metadata."],
+  ]);
   const cliRegistry = {
     schemaVersion: 1,
     contract: "kungfu-buildchain-cli-registry",
     binary: "buildchain",
     npmPackage: packageJson.name,
-    commands: [
-      { id: "version", usage: "buildchain version", purpose: "Print the package or embedded binary version." },
-      { id: "init", usage: "buildchain init [--type package|native|web-surface|infra-contract|anchored-package]", purpose: "Bootstrap a repository with Buildchain configuration and caller workflow files." },
-      { id: "validate", usage: "buildchain validate [--require-version-state]", purpose: "Validate buildchain.toml and declared lifecycle surfaces." },
-      { id: "doctor", usage: "buildchain doctor [--json]", purpose: "Report local integration readiness." },
-      { id: "lifecycle", usage: "buildchain lifecycle run <stage>", purpose: "Run configured lifecycle commands and write deterministic artifact manifests." },
-      { id: "release-dry-run", usage: "buildchain release --dry-run --target-ref <ref>", purpose: "Explain what a channel merge would publish before the PR is merged." },
-      { id: "collect-github-release", usage: "buildchain collect github-release --tag <tag>", purpose: "Collect release assets into a release passport." },
-      { id: "verify-release-passport", usage: "buildchain verify release-passport <file-or-url>", purpose: "Fail closed unless a release passport and its evidence are complete." },
-      { id: "release-propagation", usage: "buildchain release-propagation <plan|write-lock>", purpose: "Plan channel-preserving downstream release PRs and write exact upstream release locks." },
-      { id: "verify-infra-contract-evidence-bundle", usage: "buildchain verify infra-contract-evidence-bundle <file>", purpose: "Fail closed unless an infra-contract lifecycle evidence bundle is complete, hash-bound, and validation-consistent." },
-      { id: "logging", usage: "buildchain log|mark|span|verify observability-log", purpose: "Emit timestamped build events, summarize logs, and enforce required phases." },
-      { id: "diagnostics-summary", usage: "buildchain diagnostics summary <diagnostics.json>...", purpose: "Summarize small diagnostics artifacts into JSON and a cross-platform lifecycle timing table." },
-      { id: "build-facts", usage: "buildchain facts module|aggregate|verify", purpose: "Collect and verify Git source, version, module output, product artifact, and legacy Kungfu buildinfo facts." },
-      { id: "npm-dry-run", usage: "buildchain npm dry-run --json", purpose: "Verify npm publish shape before a release transaction." },
-      { id: "infra-contract", usage: "buildchain infra-contract --mode validate|ci|plan|contract|propagation-plan|propagation-apply|apply|evidence-bundle", purpose: "Validate and publish provider-neutral infrastructure contract evidence with a mutation-free CI evidence chain, provider command plans, configured provider command execution, saved-plan apply gates, dry-run-first propagation, and lifecycle evidence bundles." },
-      { id: "homebrew", usage: "buildchain homebrew update-formula|check", purpose: "Generate and verify Homebrew tap Formula metadata as a distribution-index projection of upstream release passport evidence." },
-    ],
+    commandSource: "bin/buildchain.mjs reverse enumeration",
+    commands: enumerateCliCommandsFromBin({ root }).map((entry) => ({
+      ...entry,
+      purpose: cliPurposeById.get(entry.id) || "Public Buildchain CLI surface. Add a specific purpose in scripts/generate-site-bundle.mjs when this command graduates.",
+    })),
   };
 
   const manualRegistry = {
@@ -374,21 +404,49 @@ function buildSiteBundle() {
   const workflowRegistry = {
     schemaVersion: 1,
     contract: "kungfu-buildchain-workflow-registry",
-    workflows: [
-      { id: "build", path: ".github/workflows/.build.yml", surface: "reusable-build", status: "active" },
-      { id: "web-surface", path: ".github/workflows/.web-surface.yml", surface: "site-app-deployment", status: "active" },
-      { id: "buildchain-ref-promotion", path: ".github/workflows/buildchain-ref-promotion.yml", surface: "release-governance", status: "active" },
-      { id: "release-propagation", path: ".github/workflows/release-propagation.yml", surface: "release-propagation", status: "preview" },
-      { id: "dev-pr-auto-merge", path: ".github/workflows/dev-pr-auto-merge.yml", surface: "dev-governance", status: "active" },
-      { id: "binary-distribution", path: ".github/workflows/binary-distribution.yml", surface: "release-passport", status: "active" },
-    ],
-    actions: [
-      { id: "validate-config", path: "actions/validate-config", status: "active" },
-      { id: "run-lifecycle", path: "actions/run-lifecycle", status: "active" },
-      { id: "promote-buildchain-ref", path: "actions/promote-buildchain-ref", status: "active" },
-      { id: "report-buildchain-issue", path: "actions/report-buildchain-issue", status: "active" },
-    ],
+    workflowSource: ".github/workflows reverse input enumeration",
+    workflows: enumerateWorkflowInputs({ root }).map((entry) => {
+      const surfaceById = new Map([
+        ["build", "reusable-build"],
+        ["web-surface", "site-app-deployment"],
+        ["buildchain-ref-promotion", "release-governance"],
+        ["release-line-bootstrap", "release-governance"],
+        ["release-candidate-promote", "release-governance"],
+        ["release-propagation", "release-propagation"],
+        ["dev-pr-auto-merge", "dev-governance"],
+        ["binary-distribution", "release-passport"],
+        ["buildchain-patrol", "repository-patrol"],
+        ["buildchain-patrol-daily", "repository-patrol"],
+        ["buildchain-patrol-weekly", "repository-patrol"],
+        ["buildchain-patrol-monthly", "repository-patrol"],
+        ["patrol-daily", "repository-patrol"],
+        ["patrol-weekly", "repository-patrol"],
+        ["patrol-monthly", "repository-patrol"],
+      ]);
+      const statusById = new Map([
+        ["release-propagation", "preview"],
+        ["candidate-lab", "repository-internal"],
+        ["build-surface-fixture", "repository-internal"],
+        ["self-hosted-runner-smoke", "compatibility-fixture"],
+      ]);
+      return {
+        ...entry,
+        surface: surfaceById.get(entry.id) || (entry.path.includes("/.") ? "reusable-workflow" : "repository-workflow"),
+        status: statusById.get(entry.id) || "active",
+      };
+    }),
+    actionSource: "actions/*/action.yml reverse input enumeration",
+    actions: enumerateActionInputs({ root }).map((entry) => ({
+      ...entry,
+      status: "active",
+    })),
   };
+  const publicSurfaceAudit = collectPublicSurfaceReverseAudit({
+    root,
+    cliRegistry,
+    workflowRegistry,
+    pageRegistry,
+  });
 
   const releaseModel = {
     schemaVersion: 1,
@@ -460,6 +518,7 @@ function buildSiteBundle() {
       "manual-registry.json",
       "node-api-registry.json",
       "workflow-registry.json",
+      "public-surface-audit.json",
       "release-model.json",
       "artifact-schemas.json",
       "buildchain-contract.json",
@@ -538,6 +597,7 @@ function buildSiteBundle() {
       "manual-registry.json",
       "node-api-registry.json",
       "workflow-registry.json",
+      "public-surface-audit.json",
       "release-model.json",
       "artifact-schemas.json",
       "badge-endpoint-registry.json",
@@ -560,6 +620,7 @@ function buildSiteBundle() {
       "manual-registry.json",
       "node-api-registry.json",
       "workflow-registry.json",
+      "public-surface-audit.json",
       "artifact-schemas.json",
       "buildchain-contract.json",
       "kfd-claims.json",
@@ -690,6 +751,7 @@ function buildSiteBundle() {
         "release model facts",
         "workflow and action registries",
         "CLI command registry",
+        "public surface reverse audit",
         "manual and Node API registries",
         "KFD claim registry",
         "release-passport evidence vocabulary",
@@ -715,6 +777,7 @@ function buildSiteBundle() {
     "manual-registry.json": manualRegistry,
     "node-api-registry.json": nodeApiRegistry,
     "workflow-registry.json": workflowRegistry,
+    "public-surface-audit.json": publicSurfaceAudit,
     "release-model.json": releaseModel,
     "artifact-schemas.json": artifactSchemas,
     "badge-endpoint-registry.json": badgeEndpointRegistry,

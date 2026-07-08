@@ -1,0 +1,1969 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-public-surface-reverse-audit",
+  "status": "passed",
+  "summary": {
+    "cliCommandCount": 46,
+    "workflowCount": 35,
+    "actionCount": 4,
+    "sitePageCount": 42,
+    "docCommandRefCount": 164,
+    "failureCount": 0
+  },
+  "enumerated": {
+    "cliCommands": [
+      {
+        "id": "badges",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain badges"
+      },
+      {
+        "id": "badges-bundle",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain badges bundle [--cwd <dir>] [--readme <path>] [--claims <csv>] [--check] [--write] [--json]"
+      },
+      {
+        "id": "badges-readme",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain badges readme [--cwd <dir>] [--readme <path>] [--check] [--write] [--json]"
+      },
+      {
+        "id": "build-contract",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain build-contract ..."
+      },
+      {
+        "id": "build-facts",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain facts module [--cwd <dir>] [--module <id>] [--module-root <path>]"
+      },
+      {
+        "id": "collect",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain collect"
+      },
+      {
+        "id": "collect-github-release",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain collect github-release --tag <tag> [--repository <owner/repo>]"
+      },
+      {
+        "id": "diagnostics",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain diagnostics"
+      },
+      {
+        "id": "diagnostics-summary",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain diagnostics summary <diagnostics.json>... [--artifact <file>]..."
+      },
+      {
+        "id": "doctor",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain doctor [--cwd <dir>] [--require-publish-source-lock] [--json]"
+      },
+      {
+        "id": "explain",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain explain"
+      },
+      {
+        "id": "explain-artifact",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain explain artifact <subject> [--passport <file-or-url>] [--for human|agent] [--json]"
+      },
+      {
+        "id": "explain-release",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain explain release --passport <file-or-url> [--for human|agent] [--json]"
+      },
+      {
+        "id": "facts",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain facts"
+      },
+      {
+        "id": "help",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain --help"
+      },
+      {
+        "id": "homebrew",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain homebrew"
+      },
+      {
+        "id": "homebrew-check",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain homebrew check [--cwd <dir>] [--package <name>] [--release-passport <file-or-url>] [--json]"
+      },
+      {
+        "id": "homebrew-update-formula",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain homebrew update-formula --package <name> --release-passport <file-or-url> [--write] [--json]"
+      },
+      {
+        "id": "infra-contract",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain infra-contract ..."
+      },
+      {
+        "id": "init",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain init [--cwd <dir>] [--type package|native|web-surface|infra-contract|anchored-package] [--force]"
+      },
+      {
+        "id": "inspect",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain inspect"
+      },
+      {
+        "id": "inspect-artifact",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain inspect artifact <subject> [--passport <file-or-url>] [--json]"
+      },
+      {
+        "id": "inspect-release",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain inspect release --passport <file-or-url> [--json]"
+      },
+      {
+        "id": "lifecycle",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain lifecycle run <stage> [--cwd <dir>] [--required]"
+      },
+      {
+        "id": "log",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain log"
+      },
+      {
+        "id": "logging",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain log <info|warn|error> --event <name> [--phase <phase>]"
+      },
+      {
+        "id": "mark",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain mark --event <name> [--phase <phase>] [--component <name>]"
+      },
+      {
+        "id": "npm",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain npm"
+      },
+      {
+        "id": "npm-dry-run",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain npm dry-run [--cwd <dir>] [--expected-tag <tag>] [--registry <url>]"
+      },
+      {
+        "id": "publish-source",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain publish-source <lock|manifest|verify-lock|verify-channel-ref|validate-anchored-release> ..."
+      },
+      {
+        "id": "release-dry-run",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain release --dry-run --target-ref <ref> [--sha <sha>] [--source-ref <ref>]"
+      },
+      {
+        "id": "release-line-open",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain release line open --major <n> --minor <n> [--source-ref <ref>]"
+      },
+      {
+        "id": "release-propagation",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain release-propagation <plan|write-lock> ..."
+      },
+      {
+        "id": "release-transaction",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain release <inspect|recover|finalize|abort> ..."
+      },
+      {
+        "id": "sample",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain sample"
+      },
+      {
+        "id": "sample-process-tree",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain sample process-tree [--interval-ms <n>] [--label <name>]"
+      },
+      {
+        "id": "span",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain span --event <name> [--phase <phase>] [--component <name>]"
+      },
+      {
+        "id": "transaction-inspect",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain transaction inspect ..."
+      },
+      {
+        "id": "validate",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain validate [--cwd <dir>] [--require-version-state]"
+      },
+      {
+        "id": "verify",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain verify"
+      },
+      {
+        "id": "verify-artifact",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain verify artifact <file|dir|url|npm:...|oci:...|github-release:...>"
+      },
+      {
+        "id": "verify-infra-contract-evidence-bundle",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain verify infra-contract-evidence-bundle <file> [--json]"
+      },
+      {
+        "id": "verify-observability-log",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain verify observability-log <jsonl> [--min-events <n>]"
+      },
+      {
+        "id": "verify-release-passport",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain verify release-passport <file-or-url> [--json]"
+      },
+      {
+        "id": "version",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain version"
+      },
+      {
+        "id": "web-surface",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain web-surface ..."
+      }
+    ],
+    "workflowInputs": [
+      {
+        "id": ".build",
+        "path": ".github/workflows/.build.yml",
+        "inputs": [
+          "artifact-name",
+          "artifact-name-template",
+          "artifact-paths",
+          "artifact-relay-s3-bucket",
+          "artifact-relay-s3-download-role-arn",
+          "artifact-relay-s3-oidc-audience",
+          "artifact-relay-s3-prefix",
+          "artifact-relay-s3-region",
+          "artifact-relay-s3-role-arn",
+          "artifact-relay-s3-upload-role-arn",
+          "artifact-retention-days",
+          "artifact-transfer-mode",
+          "build-command",
+          "buildchain-contract-compatibility-policy",
+          "buildchain-contract-drift-issue-mode",
+          "buildchain-contract-lock-path",
+          "buildchain-ref",
+          "buildchain-repository",
+          "checkout-cache-fallback",
+          "checkout-cache-mirror-url-template",
+          "checkout-cache-mode",
+          "checkout-cache-reference-repository-template",
+          "checkout-cache-timeout-seconds",
+          "expected-artifacts-json",
+          "install-command",
+          "linux-container-image",
+          "linux-container-preset",
+          "node-version",
+          "platforms-json",
+          "process-sample-interval-ms",
+          "process-summary-path",
+          "publish-anchor-request-json",
+          "publish-channel",
+          "publish-refs-json",
+          "publish-registry",
+          "publish-source-ref",
+          "release-candidate",
+          "requested-parallelism",
+          "require-build",
+          "require-install",
+          "require-trusted-event",
+          "require-verify",
+          "runner-preset",
+          "sample-process-tree",
+          "setup-node",
+          "untrusted-policy",
+          "verify-command",
+          "working-directory"
+        ],
+        "inputCount": 48
+      },
+      {
+        "id": ".bump-minor-version",
+        "path": ".github/workflows/.bump-minor-version.yml",
+        "inputs": [],
+        "inputCount": 0
+      },
+      {
+        "id": ".release-docker",
+        "path": ".github/workflows/.release-docker.yml",
+        "inputs": [
+          "image-name"
+        ],
+        "inputCount": 1
+      },
+      {
+        "id": ".release-elastic-beanstalk",
+        "path": ".github/workflows/.release-elastic-beanstalk.yml",
+        "inputs": [
+          "aws-region",
+          "eb-application-name",
+          "eb-environment-name"
+        ],
+        "inputCount": 3
+      },
+      {
+        "id": ".release-new-version",
+        "path": ".github/workflows/.release-new-version.yml",
+        "inputs": [
+          "action-bump-version-path",
+          "action-bump-version-ref",
+          "action-bump-version-repository",
+          "aws-ci-region",
+          "aws-user-region",
+          "bucket-release-ci",
+          "bucket-release-user",
+          "bucket-staging-ci",
+          "bucket-staging-user",
+          "clean-release-ci",
+          "clean-release-user",
+          "close-issues",
+          "cloudfront-id-ci",
+          "cloudfront-id-user",
+          "cloudfront-paths-ci",
+          "cloudfront-paths-user",
+          "create-release-note",
+          "max-preview-links",
+          "need-qa-automated",
+          "node-version",
+          "protect-dev-branches",
+          "publish-aws-ci",
+          "publish-aws-user",
+          "publish-github-npm",
+          "publish-npmjs",
+          "publish-release-note",
+          "sync-extensions-version"
+        ],
+        "inputCount": 27
+      },
+      {
+        "id": ".release-verify",
+        "path": ".github/workflows/.release-verify.yml",
+        "inputs": [
+          "auto-approve-enabled",
+          "aws-ci-region",
+          "aws-user-region",
+          "bucket-staging-ci",
+          "bucket-staging-user",
+          "build-container-enabled",
+          "build-runner-linux",
+          "build-runner-linux-labels",
+          "build-runner-macos",
+          "build-runner-macos-labels",
+          "build-runner-windows",
+          "build-runner-windows-labels",
+          "build-timeout-minutes",
+          "buildchain-ref",
+          "buildchain-repository",
+          "builder-container",
+          "code-signing-macos",
+          "code-signing-windows",
+          "collaborator-automation-enabled",
+          "enable-linux",
+          "enable-macos",
+          "enable-windows",
+          "find-dependencies",
+          "java-version",
+          "manager",
+          "max-build-attempts",
+          "max-preview-links",
+          "node-version",
+          "pipenv-version",
+          "poetry-version",
+          "prebuild",
+          "preview-files",
+          "publish-aws-ci",
+          "publish-aws-user",
+          "publish-github-npm",
+          "publish-versioning",
+          "python-version",
+          "setup-env-timeout-minutes",
+          "setup-python-enabled",
+          "use-pipenv",
+          "use-poetry"
+        ],
+        "inputCount": 41
+      },
+      {
+        "id": ".sam-release",
+        "path": ".github/workflows/.sam-release.yml",
+        "inputs": [
+          "aws-region",
+          "aws-role",
+          "aws-root",
+          "bucket-release"
+        ],
+        "inputCount": 4
+      },
+      {
+        "id": ".sam-verify",
+        "path": ".github/workflows/.sam-verify.yml",
+        "inputs": [
+          "aws-region",
+          "aws-role",
+          "aws-root",
+          "manager"
+        ],
+        "inputCount": 4
+      },
+      {
+        "id": ".sync-release-page",
+        "path": ".github/workflows/.sync-release-page.yml",
+        "inputs": [
+          "aws-region",
+          "aws-role-arn",
+          "base-id",
+          "bucket-release",
+          "cloudfront-id",
+          "exclude",
+          "lower-edge",
+          "product",
+          "product-name",
+          "release-path",
+          "release-url",
+          "repo",
+          "upper-edge"
+        ],
+        "inputCount": 13
+      },
+      {
+        "id": ".sync-remote-git",
+        "path": ".github/workflows/.sync-remote-git.yml",
+        "inputs": [
+          "force",
+          "remote-host",
+          "remote-path",
+          "remote-repo"
+        ],
+        "inputCount": 4
+      },
+      {
+        "id": ".web-surface",
+        "path": ".github/workflows/.web-surface.yml",
+        "inputs": [
+          "artifact-path",
+          "aws-region",
+          "build-command",
+          "buildchain-contract-compatibility-policy",
+          "buildchain-contract-drift-issue-mode",
+          "buildchain-contract-lock-path",
+          "buildchain-ref",
+          "buildchain-repository",
+          "node-version",
+          "preview-apply",
+          "preview-aws-role-arn",
+          "preview-cleanup-apply",
+          "preview-comment",
+          "preview-environment",
+          "production-apply",
+          "production-approved",
+          "production-aws-role-arn",
+          "production-environment",
+          "production-release-branch-channel",
+          "production-release-head-prefix",
+          "production-release-label",
+          "production-release-on-main",
+          "release-feedback-actor-privacy",
+          "staging-apply",
+          "staging-aws-role-arn",
+          "staging-environment",
+          "verify-command",
+          "working-directory"
+        ],
+        "inputCount": 28
+      },
+      {
+        "id": ".wheel-release",
+        "path": ".github/workflows/.wheel-release.yml",
+        "inputs": [
+          "aws-region",
+          "aws-user-region",
+          "bucket-release"
+        ],
+        "inputCount": 3
+      },
+      {
+        "id": ".wheel-verify",
+        "path": ".github/workflows/.wheel-verify.yml",
+        "inputs": [
+          "aws-user-region",
+          "bucket-release",
+          "max-preview-links",
+          "node-version",
+          "preview-files"
+        ],
+        "inputCount": 5
+      },
+      {
+        "id": "binary-distribution",
+        "path": ".github/workflows/binary-distribution.yml",
+        "inputs": [
+          "tag",
+          "upload-release"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "build-surface-fixture",
+        "path": ".github/workflows/build-surface-fixture.yml",
+        "inputs": [
+          "artifact-transfer-mode"
+        ],
+        "inputCount": 1
+      },
+      {
+        "id": "buildchain-patrol-daily",
+        "path": ".github/workflows/buildchain-patrol-daily.yml",
+        "inputs": [
+          "buildchain-ref",
+          "dry-run"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "buildchain-patrol-monthly",
+        "path": ".github/workflows/buildchain-patrol-monthly.yml",
+        "inputs": [
+          "buildchain-ref",
+          "dry-run"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "buildchain-patrol-weekly",
+        "path": ".github/workflows/buildchain-patrol-weekly.yml",
+        "inputs": [
+          "buildchain-ref",
+          "dry-run"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "buildchain-patrol",
+        "path": ".github/workflows/buildchain-patrol.yml",
+        "inputs": [
+          "allowed-head-prefixes",
+          "block-labels",
+          "buildchain-ref",
+          "buildchain-repository",
+          "cadence",
+          "capabilities",
+          "dry-run",
+          "max-actions",
+          "merge-method",
+          "mode",
+          "ready-label",
+          "require-approval",
+          "required-status-checks",
+          "same-repository-only",
+          "target-branch"
+        ],
+        "inputCount": 15
+      },
+      {
+        "id": "buildchain-ref-promotion",
+        "path": ".github/workflows/buildchain-ref-promotion.yml",
+        "inputs": [
+          "dry-run",
+          "sha",
+          "target-ref"
+        ],
+        "inputCount": 3
+      },
+      {
+        "id": "candidate-lab",
+        "path": ".github/workflows/candidate-lab.yml",
+        "inputs": [
+          "buildchain_ref",
+          "legacy_workflows_ref",
+          "publish",
+          "target_fixture"
+        ],
+        "inputCount": 4
+      },
+      {
+        "id": "check",
+        "path": ".github/workflows/check.yml",
+        "inputs": [
+          "buildchain-ref",
+          "buildchain-repository",
+          "node-version",
+          "require-version-state",
+          "upload-artifacts",
+          "working-directory"
+        ],
+        "inputCount": 6
+      },
+      {
+        "id": "dev-pr-auto-merge",
+        "path": ".github/workflows/dev-pr-auto-merge.yml",
+        "inputs": [
+          "allowed-head-prefixes",
+          "block-labels",
+          "buildchain-ref",
+          "buildchain-repository",
+          "dry-run",
+          "max-merges",
+          "merge-method",
+          "ready-label",
+          "require-approval",
+          "required-status-checks",
+          "same-repository-only",
+          "target-branch"
+        ],
+        "inputCount": 12
+      },
+      {
+        "id": "npm-publish",
+        "path": ".github/workflows/npm-publish.yml",
+        "inputs": [
+          "ref",
+          "run-check"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "patrol-daily",
+        "path": ".github/workflows/patrol-daily.yml",
+        "inputs": [
+          "allowed-head-prefixes",
+          "block-labels",
+          "buildchain-ref",
+          "buildchain-repository",
+          "dry-run",
+          "max-actions",
+          "merge-method",
+          "ready-label",
+          "require-approval",
+          "required-status-checks",
+          "same-repository-only",
+          "target-branch"
+        ],
+        "inputCount": 12
+      },
+      {
+        "id": "patrol-monthly",
+        "path": ".github/workflows/patrol-monthly.yml",
+        "inputs": [
+          "buildchain-ref",
+          "buildchain-repository",
+          "dry-run",
+          "target-branch"
+        ],
+        "inputCount": 4
+      },
+      {
+        "id": "patrol-weekly",
+        "path": ".github/workflows/patrol-weekly.yml",
+        "inputs": [
+          "buildchain-ref",
+          "buildchain-repository",
+          "dry-run",
+          "target-branch"
+        ],
+        "inputCount": 4
+      },
+      {
+        "id": "release-candidate-promote",
+        "path": ".github/workflows/release-candidate-promote.yml",
+        "inputs": [
+          "allow-repository",
+          "artifact-name",
+          "artifact-patterns",
+          "branch-protection-bypass-apps",
+          "branch-protection-bypass-teams",
+          "branch-protection-bypass-users",
+          "buildchain-contract-compatibility-policy",
+          "buildchain-contract-drift-issue-mode",
+          "buildchain-contract-lock-path",
+          "buildchain-ref",
+          "buildchain-repository",
+          "channel",
+          "dry-run",
+          "github-release",
+          "github-release-notes",
+          "github-release-title",
+          "package-manager",
+          "publish-artifact-kind",
+          "publish-command",
+          "publish-dist-tag",
+          "publish-mode",
+          "publish-package-main",
+          "publish-package-set-order",
+          "publish-required-artifacts-json",
+          "publish-target",
+          "release-candidate-workflow-file",
+          "release-candidate-workflow-name",
+          "release-passport",
+          "release-passport-buildchain-self-kfd",
+          "release-passport-impact-json",
+          "release-passport-kfd-1-witness-jsons",
+          "release-passport-kfd-2-claim-jsons",
+          "release-passport-kfd-3-artifact-verify-command",
+          "release-passport-kfd-3-artifact-witness-jsons",
+          "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-output-dir",
+          "release-passport-platform-manifest-paths",
+          "release-passport-product-name",
+          "required-artifact-count",
+          "required-status-check",
+          "runner-preset",
+          "target-ref",
+          "target-sha",
+          "trusted-publishing"
+        ],
+        "inputCount": 44
+      },
+      {
+        "id": "release-line-bootstrap",
+        "path": ".github/workflows/release-line-bootstrap.yml",
+        "inputs": [
+          "apply",
+          "create-alpha-pr",
+          "initial-version",
+          "major",
+          "minor",
+          "required-status-check",
+          "set-default-branch",
+          "source-ref"
+        ],
+        "inputCount": 8
+      },
+      {
+        "id": "release-new-version",
+        "path": ".github/workflows/release-new-version.yml",
+        "inputs": [],
+        "inputCount": 0
+      },
+      {
+        "id": "release-propagation",
+        "path": ".github/workflows/release-propagation.yml",
+        "inputs": [
+          "buildchain-ref",
+          "buildchain-repository",
+          "downstream-base-ref",
+          "downstream-branch",
+          "downstream-repository",
+          "downstream-target",
+          "dry-run",
+          "graph-json",
+          "lock-path",
+          "pr-body",
+          "pr-title",
+          "source-node",
+          "upstream-release-json"
+        ],
+        "inputCount": 13
+      },
+      {
+        "id": "release-verify",
+        "path": ".github/workflows/release-verify.yml",
+        "inputs": [],
+        "inputCount": 0
+      },
+      {
+        "id": "schedule-purge-artifacts",
+        "path": ".github/workflows/schedule-purge-artifacts.yml",
+        "inputs": [
+          "enable-legacy-purge"
+        ],
+        "inputCount": 1
+      },
+      {
+        "id": "self-hosted-runner-smoke",
+        "path": ".github/workflows/self-hosted-runner-smoke.yml",
+        "inputs": [],
+        "inputCount": 0
+      },
+      {
+        "id": "verify",
+        "path": ".github/workflows/verify.yml",
+        "inputs": [],
+        "inputCount": 0
+      }
+    ],
+    "actionInputs": [
+      {
+        "id": "promote-buildchain-ref",
+        "path": "actions/promote-buildchain-ref/action.yml",
+        "inputs": [
+          "allow-repository",
+          "branch-protection-bypass-apps",
+          "branch-protection-bypass-teams",
+          "branch-protection-bypass-users",
+          "dry-run",
+          "generated-ref-update-token",
+          "generated-status-check-token",
+          "github-release",
+          "github-release-notes",
+          "github-release-title",
+          "promote-only-release-candidate",
+          "publish-auth",
+          "publish-command",
+          "publish-dist-tag",
+          "publish-evidence-path",
+          "publish-mode",
+          "publish-package-main",
+          "publish-package-set-order",
+          "publish-required-artifacts-json",
+          "publish-source-locked",
+          "publish-source-ref",
+          "publish-source-sha",
+          "publish-tooling-sha",
+          "publish-transaction",
+          "publish-transaction-override",
+          "release-candidate-build-summary-path",
+          "release-candidate-passport-path",
+          "release-candidate-version",
+          "release-material-sha",
+          "release-passport",
+          "release-passport-build-summary-path",
+          "release-passport-buildchain-self-kfd",
+          "release-passport-impact-json",
+          "release-passport-kfd-1-witness-jsons",
+          "release-passport-kfd-2-claim-jsons",
+          "release-passport-kfd-3-artifact-verify-command",
+          "release-passport-kfd-3-artifact-witness-jsons",
+          "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-output-dir",
+          "release-passport-platform-manifest-paths",
+          "release-passport-product-name",
+          "require-governance",
+          "require-publish-source-lock",
+          "require-version-state",
+          "required-status-check",
+          "sha",
+          "tags",
+          "target-ref",
+          "token",
+          "transaction-state-path",
+          "verification-command"
+        ],
+        "inputCount": 51
+      },
+      {
+        "id": "report-buildchain-issue",
+        "path": "actions/report-buildchain-issue/action.yml",
+        "inputs": [
+          "artifact-url",
+          "body",
+          "body-file",
+          "buildchain-ref",
+          "buildchain-version",
+          "channel",
+          "comment-cooldown-hours",
+          "consumer-ref",
+          "consumer-repository",
+          "consumer-sha",
+          "diagnosis",
+          "diagnostics-path",
+          "diagnostics-url",
+          "dry-run",
+          "fail-on-error",
+          "failure-code",
+          "fingerprint",
+          "friction-class",
+          "heavy-builds-json",
+          "job",
+          "labels",
+          "max-body-bytes",
+          "mode",
+          "next-action",
+          "passport-path",
+          "passport-url",
+          "pull-request",
+          "related-runs-json",
+          "release-intent",
+          "report-kind",
+          "repository",
+          "run-attempt",
+          "run-id",
+          "run-url",
+          "source-ref",
+          "source-sha",
+          "source-tree-hash",
+          "summary",
+          "target-repository",
+          "title",
+          "token",
+          "version",
+          "workflow"
+        ],
+        "inputCount": 43
+      },
+      {
+        "id": "run-lifecycle",
+        "path": "actions/run-lifecycle/action.yml",
+        "inputs": [
+          "artifact-name",
+          "artifact-paths",
+          "command",
+          "cwd",
+          "diagnostics-artifact-name",
+          "diagnostics-path",
+          "expected-artifacts-json",
+          "manifest-artifact-name",
+          "manifest-path",
+          "platform-id",
+          "platform-name",
+          "process-sample-interval-ms",
+          "process-samples-path",
+          "process-summary-path",
+          "process-summary-required",
+          "requested-parallelism",
+          "required",
+          "sample-process-tree",
+          "stage",
+          "summary-path"
+        ],
+        "inputCount": 20
+      },
+      {
+        "id": "validate-config",
+        "path": "actions/validate-config/action.yml",
+        "inputs": [
+          "config-required",
+          "require-lifecycle-stages",
+          "require-version-state"
+        ],
+        "inputCount": 3
+      }
+    ],
+    "sitePages": [
+      {
+        "id": "action:promote-buildchain-ref",
+        "category": "action"
+      },
+      {
+        "id": "action:report-buildchain-issue",
+        "category": "action"
+      },
+      {
+        "id": "action:run-lifecycle",
+        "category": "action"
+      },
+      {
+        "id": "action:validate-config",
+        "category": "action"
+      },
+      {
+        "id": "api:node-package",
+        "category": "api"
+      },
+      {
+        "id": "fixture:infra-contract-aws-cdk-shaped",
+        "category": "fixture"
+      },
+      {
+        "id": "fixture:infra-contract-aws-cli-shaped",
+        "category": "fixture"
+      },
+      {
+        "id": "fixture:infra-contract-cloudformation-shaped",
+        "category": "fixture"
+      },
+      {
+        "id": "fixture:infra-contract-opentofu-shaped",
+        "category": "fixture"
+      },
+      {
+        "id": "fixture:infra-contract-pulumi-shaped",
+        "category": "fixture"
+      },
+      {
+        "id": "fixture:infra-contract-shaped",
+        "category": "fixture"
+      },
+      {
+        "id": "fixture:infra-contract-terraform-shaped",
+        "category": "fixture"
+      },
+      {
+        "id": "fixture:libnode-shaped",
+        "category": "fixture"
+      },
+      {
+        "id": "fixture:publish-transaction-shaped",
+        "category": "fixture"
+      },
+      {
+        "id": "fixture:release-propagation-shaped",
+        "category": "fixture"
+      },
+      {
+        "id": "fixture:web-surface-shaped",
+        "category": "fixture"
+      },
+      {
+        "id": "manual:binary-distribution",
+        "category": "manual"
+      },
+      {
+        "id": "manual:build-facts",
+        "category": "manual"
+      },
+      {
+        "id": "manual:cli",
+        "category": "manual"
+      },
+      {
+        "id": "manual:consumer-issue-reporting",
+        "category": "manual"
+      },
+      {
+        "id": "manual:homebrew",
+        "category": "manual"
+      },
+      {
+        "id": "manual:infra-contract",
+        "category": "manual"
+      },
+      {
+        "id": "manual:install",
+        "category": "manual"
+      },
+      {
+        "id": "manual:lifecycle-protocol",
+        "category": "manual"
+      },
+      {
+        "id": "manual:map",
+        "category": "manual"
+      },
+      {
+        "id": "manual:migration-inventory",
+        "category": "manual"
+      },
+      {
+        "id": "manual:ownership",
+        "category": "manual"
+      },
+      {
+        "id": "manual:product-mechanism",
+        "category": "manual"
+      },
+      {
+        "id": "manual:publish-transaction",
+        "category": "manual"
+      },
+      {
+        "id": "manual:readme-badges",
+        "category": "manual"
+      },
+      {
+        "id": "manual:release-candidate",
+        "category": "manual"
+      },
+      {
+        "id": "manual:release-flow",
+        "category": "manual"
+      },
+      {
+        "id": "manual:release-governance",
+        "category": "manual"
+      },
+      {
+        "id": "manual:release-passport",
+        "category": "manual"
+      },
+      {
+        "id": "manual:release-propagation",
+        "category": "manual"
+      },
+      {
+        "id": "manual:reusable-build-surface",
+        "category": "manual"
+      },
+      {
+        "id": "manual:runtime-train-validation",
+        "category": "manual"
+      },
+      {
+        "id": "manual:site-bundle-contract",
+        "category": "manual"
+      },
+      {
+        "id": "manual:toolkit-observability",
+        "category": "manual"
+      },
+      {
+        "id": "manual:versioning",
+        "category": "manual"
+      },
+      {
+        "id": "manual:web-surface-deployments",
+        "category": "manual"
+      },
+      {
+        "id": "overview:home",
+        "category": "overview"
+      }
+    ],
+    "docCommandRefs": [
+      {
+        "id": "badges-bundle",
+        "path": "docs/cli.md",
+        "command": "buildchain badges bundle"
+      },
+      {
+        "id": "badges-bundle",
+        "path": "docs/cli.md",
+        "command": "buildchain badges bundle"
+      },
+      {
+        "id": "badges-bundle",
+        "path": "docs/cli.md",
+        "command": "buildchain badges bundle"
+      },
+      {
+        "id": "badges-bundle",
+        "path": "docs/cli.md",
+        "command": "buildchain badges bundle"
+      },
+      {
+        "id": "badges-bundle",
+        "path": "docs/cli.md",
+        "command": "buildchain badges bundle"
+      },
+      {
+        "id": "badges-bundle",
+        "path": "docs/readme-badges.md",
+        "command": "buildchain badges bundle"
+      },
+      {
+        "id": "badges-bundle",
+        "path": "docs/readme-badges.md",
+        "command": "buildchain badges bundle"
+      },
+      {
+        "id": "badges-bundle",
+        "path": "docs/readme-badges.md",
+        "command": "buildchain badges bundle"
+      },
+      {
+        "id": "badges-bundle",
+        "path": "docs/readme-badges.md",
+        "command": "buildchain badges bundle"
+      },
+      {
+        "id": "badges-bundle",
+        "path": "docs/readme-badges.md",
+        "command": "buildchain badges bundle"
+      },
+      {
+        "id": "badges-bundle",
+        "path": "docs/readme-badges.md",
+        "command": "buildchain badges bundle"
+      },
+      {
+        "id": "badges-bundle",
+        "path": "README.md",
+        "command": "buildchain badges bundle"
+      },
+      {
+        "id": "badges-bundle",
+        "path": "README.md",
+        "command": "buildchain badges bundle"
+      },
+      {
+        "id": "badges-readme",
+        "path": "docs/cli.md",
+        "command": "buildchain badges readme"
+      },
+      {
+        "id": "badges-readme",
+        "path": "docs/cli.md",
+        "command": "buildchain badges readme"
+      },
+      {
+        "id": "badges-readme",
+        "path": "docs/cli.md",
+        "command": "buildchain badges readme"
+      },
+      {
+        "id": "badges-readme",
+        "path": "docs/readme-badges.md",
+        "command": "buildchain badges readme"
+      },
+      {
+        "id": "badges-readme",
+        "path": "docs/readme-badges.md",
+        "command": "buildchain badges readme"
+      },
+      {
+        "id": "badges-readme",
+        "path": "docs/readme-badges.md",
+        "command": "buildchain badges readme"
+      },
+      {
+        "id": "badges-readme",
+        "path": "docs/readme-badges.md",
+        "command": "buildchain badges readme"
+      },
+      {
+        "id": "badges-readme",
+        "path": "docs/readme-badges.md",
+        "command": "buildchain badges readme"
+      },
+      {
+        "id": "badges-readme",
+        "path": "README.md",
+        "command": "buildchain badges readme"
+      },
+      {
+        "id": "badges-readme",
+        "path": "README.md",
+        "command": "buildchain badges readme"
+      },
+      {
+        "id": "badges",
+        "path": "docs/cli.md",
+        "command": "buildchain badges"
+      },
+      {
+        "id": "build-contract",
+        "path": "docs/cli.md",
+        "command": "buildchain build-contract"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/build-facts.md",
+        "command": "buildchain facts module"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/build-facts.md",
+        "command": "buildchain facts module"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/build-facts.md",
+        "command": "buildchain facts module"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/build-facts.md",
+        "command": "buildchain facts aggregate"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/build-facts.md",
+        "command": "buildchain facts verify"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli.md",
+        "command": "buildchain facts module"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli.md",
+        "command": "buildchain facts aggregate"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli.md",
+        "command": "buildchain facts verify"
+      },
+      {
+        "id": "collect-github-release",
+        "path": "docs/binary-distribution.md",
+        "command": "buildchain collect github-release"
+      },
+      {
+        "id": "collect-github-release",
+        "path": "docs/build-facts.md",
+        "command": "buildchain collect github-release"
+      },
+      {
+        "id": "collect-github-release",
+        "path": "docs/cli.md",
+        "command": "buildchain collect github-release"
+      },
+      {
+        "id": "collect-github-release",
+        "path": "docs/cli.md",
+        "command": "buildchain collect github-release"
+      },
+      {
+        "id": "collect-github-release",
+        "path": "docs/cli.md",
+        "command": "buildchain collect github-release"
+      },
+      {
+        "id": "collect-github-release",
+        "path": "docs/cli.md",
+        "command": "buildchain collect github-release"
+      },
+      {
+        "id": "collect-github-release",
+        "path": "docs/release-passport.md",
+        "command": "buildchain collect github-release"
+      },
+      {
+        "id": "collect-github-release",
+        "path": "docs/release-passport.md",
+        "command": "buildchain collect github-release"
+      },
+      {
+        "id": "diagnostics-summary",
+        "path": "docs/cli.md",
+        "command": "buildchain diagnostics summary"
+      },
+      {
+        "id": "diagnostics-summary",
+        "path": "docs/cli.md",
+        "command": "buildchain diagnostics summary"
+      },
+      {
+        "id": "diagnostics-summary",
+        "path": "docs/cli.md",
+        "command": "buildchain diagnostics summary"
+      },
+      {
+        "id": "diagnostics-summary",
+        "path": "docs/toolkit-observability.md",
+        "command": "buildchain diagnostics summary"
+      },
+      {
+        "id": "doctor",
+        "path": "docs/cli.md",
+        "command": "buildchain doctor --json"
+      },
+      {
+        "id": "doctor",
+        "path": "docs/cli.md",
+        "command": "buildchain doctor"
+      },
+      {
+        "id": "doctor",
+        "path": "docs/install.md",
+        "command": "buildchain doctor --json"
+      },
+      {
+        "id": "doctor",
+        "path": "README.md",
+        "command": "buildchain doctor --json"
+      },
+      {
+        "id": "explain-artifact",
+        "path": "docs/cli.md",
+        "command": "buildchain explain artifact"
+      },
+      {
+        "id": "explain-release",
+        "path": "docs/cli.md",
+        "command": "buildchain explain release"
+      },
+      {
+        "id": "explain-release",
+        "path": "docs/cli.md",
+        "command": "buildchain explain release"
+      },
+      {
+        "id": "explain-release",
+        "path": "docs/install.md",
+        "command": "buildchain explain release"
+      },
+      {
+        "id": "explain-release",
+        "path": "docs/release-passport.md",
+        "command": "buildchain explain release"
+      },
+      {
+        "id": "facts",
+        "path": "docs/cli.md",
+        "command": "buildchain facts"
+      },
+      {
+        "id": "help",
+        "path": "docs/cli.md",
+        "command": "buildchain --help npx"
+      },
+      {
+        "id": "homebrew-check",
+        "path": "docs/cli.md",
+        "command": "buildchain homebrew check"
+      },
+      {
+        "id": "homebrew-check",
+        "path": "docs/homebrew.md",
+        "command": "buildchain homebrew check"
+      },
+      {
+        "id": "homebrew-check",
+        "path": "docs/homebrew.md",
+        "command": "buildchain homebrew check"
+      },
+      {
+        "id": "homebrew-update-formula",
+        "path": "docs/cli.md",
+        "command": "buildchain homebrew update-formula"
+      },
+      {
+        "id": "homebrew-update-formula",
+        "path": "docs/homebrew.md",
+        "command": "buildchain homebrew update-formula"
+      },
+      {
+        "id": "homebrew",
+        "path": "docs/cli.md",
+        "command": "buildchain homebrew"
+      },
+      {
+        "id": "infra-contract",
+        "path": "docs/cli.md",
+        "command": "buildchain infra-contract --mode"
+      },
+      {
+        "id": "infra-contract",
+        "path": "docs/cli.md",
+        "command": "buildchain infra-contract"
+      },
+      {
+        "id": "infra-contract",
+        "path": "docs/infra-contract.md",
+        "command": "buildchain infra-contract --mode"
+      },
+      {
+        "id": "infra-contract",
+        "path": "docs/infra-contract.md",
+        "command": "buildchain infra-contract --mode"
+      },
+      {
+        "id": "infra-contract",
+        "path": "docs/infra-contract.md",
+        "command": "buildchain infra-contract --mode"
+      },
+      {
+        "id": "infra-contract",
+        "path": "docs/infra-contract.md",
+        "command": "buildchain infra-contract --mode"
+      },
+      {
+        "id": "infra-contract",
+        "path": "docs/infra-contract.md",
+        "command": "buildchain infra-contract --mode"
+      },
+      {
+        "id": "infra-contract",
+        "path": "docs/infra-contract.md",
+        "command": "buildchain infra-contract --mode"
+      },
+      {
+        "id": "infra-contract",
+        "path": "docs/infra-contract.md",
+        "command": "buildchain infra-contract --mode"
+      },
+      {
+        "id": "infra-contract",
+        "path": "docs/infra-contract.md",
+        "command": "buildchain infra-contract --mode"
+      },
+      {
+        "id": "infra-contract",
+        "path": "docs/infra-contract.md",
+        "command": "buildchain infra-contract --mode"
+      },
+      {
+        "id": "infra-contract",
+        "path": "docs/infra-contract.md",
+        "command": "buildchain infra-contract --mode"
+      },
+      {
+        "id": "infra-contract",
+        "path": "docs/infra-contract.md",
+        "command": "buildchain infra-contract --mode"
+      },
+      {
+        "id": "infra-contract",
+        "path": "docs/lifecycle-protocol.md",
+        "command": "buildchain infra-contract --mode"
+      },
+      {
+        "id": "init",
+        "path": "docs/cli.md",
+        "command": "buildchain init"
+      },
+      {
+        "id": "init",
+        "path": "docs/infra-contract.md",
+        "command": "buildchain init --type"
+      },
+      {
+        "id": "init",
+        "path": "docs/install.md",
+        "command": "buildchain init --type"
+      },
+      {
+        "id": "init",
+        "path": "docs/lifecycle-protocol.md",
+        "command": "buildchain init --type"
+      },
+      {
+        "id": "init",
+        "path": "README.md",
+        "command": "buildchain init --type"
+      },
+      {
+        "id": "inspect-artifact",
+        "path": "docs/cli.md",
+        "command": "buildchain inspect artifact"
+      },
+      {
+        "id": "inspect-release",
+        "path": "docs/cli.md",
+        "command": "buildchain inspect release"
+      },
+      {
+        "id": "lifecycle",
+        "path": "docs/cli.md",
+        "command": "buildchain lifecycle run"
+      },
+      {
+        "id": "lifecycle",
+        "path": "docs/cli.md",
+        "command": "buildchain lifecycle run"
+      },
+      {
+        "id": "lifecycle",
+        "path": "docs/cli.md",
+        "command": "buildchain lifecycle run"
+      },
+      {
+        "id": "lifecycle",
+        "path": "docs/toolkit-observability.md",
+        "command": "buildchain lifecycle run"
+      },
+      {
+        "id": "lifecycle",
+        "path": "docs/toolkit-observability.md",
+        "command": "buildchain lifecycle run"
+      },
+      {
+        "id": "lifecycle",
+        "path": "README.md",
+        "command": "buildchain lifecycle run"
+      },
+      {
+        "id": "log",
+        "path": "docs/cli.md",
+        "command": "buildchain log"
+      },
+      {
+        "id": "logging",
+        "path": "docs/cli.md",
+        "command": "buildchain log warn"
+      },
+      {
+        "id": "logging",
+        "path": "docs/cli.md",
+        "command": "buildchain log summary"
+      },
+      {
+        "id": "logging",
+        "path": "docs/release-passport.md",
+        "command": "buildchain log summary"
+      },
+      {
+        "id": "logging",
+        "path": "docs/toolkit-observability.md",
+        "command": "buildchain log summary"
+      },
+      {
+        "id": "logging",
+        "path": "README.md",
+        "command": "buildchain log summary"
+      },
+      {
+        "id": "mark",
+        "path": "docs/cli.md",
+        "command": "buildchain mark --event"
+      },
+      {
+        "id": "mark",
+        "path": "docs/cli.md",
+        "command": "buildchain mark"
+      },
+      {
+        "id": "mark",
+        "path": "docs/cli.md",
+        "command": "buildchain mark"
+      },
+      {
+        "id": "mark",
+        "path": "docs/cli.md",
+        "command": "buildchain mark"
+      },
+      {
+        "id": "mark",
+        "path": "docs/release-passport.md",
+        "command": "buildchain mark"
+      },
+      {
+        "id": "mark",
+        "path": "docs/toolkit-observability.md",
+        "command": "buildchain mark"
+      },
+      {
+        "id": "mark",
+        "path": "README.md",
+        "command": "buildchain mark --event"
+      },
+      {
+        "id": "npm-dry-run",
+        "path": "docs/cli.md",
+        "command": "buildchain npm dry-run"
+      },
+      {
+        "id": "npm-dry-run",
+        "path": "docs/cli.md",
+        "command": "buildchain npm dry-run"
+      },
+      {
+        "id": "publish-source",
+        "path": "docs/cli.md",
+        "command": "buildchain publish-source validate-anchored-release"
+      },
+      {
+        "id": "publish-source",
+        "path": "docs/cli.md",
+        "command": "buildchain publish-source"
+      },
+      {
+        "id": "publish-source",
+        "path": "docs/reusable-build-surface.md",
+        "command": "buildchain publish-source validate-anchored-release"
+      },
+      {
+        "id": "release-dry-run",
+        "path": "actions/promote-buildchain-ref/README.md",
+        "command": "buildchain release --dry-run"
+      },
+      {
+        "id": "release-dry-run",
+        "path": "docs/cli.md",
+        "command": "buildchain release --dry-run"
+      },
+      {
+        "id": "release-dry-run",
+        "path": "docs/cli.md",
+        "command": "buildchain release --dry-run"
+      },
+      {
+        "id": "release-dry-run",
+        "path": "docs/cli.md",
+        "command": "buildchain release dry-run"
+      },
+      {
+        "id": "release-dry-run",
+        "path": "docs/cli.md",
+        "command": "buildchain release explain"
+      },
+      {
+        "id": "release-dry-run",
+        "path": "docs/cli.md",
+        "command": "buildchain release --dry-run"
+      },
+      {
+        "id": "release-dry-run",
+        "path": "docs/install.md",
+        "command": "buildchain release --dry-run"
+      },
+      {
+        "id": "release-dry-run",
+        "path": "README.md",
+        "command": "buildchain release --dry-run"
+      },
+      {
+        "id": "release-line-open",
+        "path": "docs/cli.md",
+        "command": "buildchain release line"
+      },
+      {
+        "id": "release-line-open",
+        "path": "docs/cli.md",
+        "command": "buildchain release line"
+      },
+      {
+        "id": "release-line-open",
+        "path": "docs/cli.md",
+        "command": "buildchain release line"
+      },
+      {
+        "id": "release-line-open",
+        "path": "docs/release-flow.md",
+        "command": "buildchain release line"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation plan"
+      },
+      {
+        "id": "release-propagation",
+        "path": "docs/release-propagation.md",
+        "command": "buildchain release-propagation write-lock"
+      },
+      {
+        "id": "release-transaction",
+        "path": "docs/cli.md",
+        "command": "buildchain release"
+      },
+      {
+        "id": "sample-process-tree",
+        "path": "actions/run-lifecycle/README.md",
+        "command": "buildchain sample process-tree"
+      },
+      {
+        "id": "sample-process-tree",
+        "path": "docs/cli.md",
+        "command": "buildchain sample process-tree"
+      },
+      {
+        "id": "sample-process-tree",
+        "path": "docs/cli.md",
+        "command": "buildchain sample process-tree"
+      },
+      {
+        "id": "sample-process-tree",
+        "path": "docs/cli.md",
+        "command": "buildchain sample process-tree"
+      },
+      {
+        "id": "sample-process-tree",
+        "path": "docs/reusable-build-surface.md",
+        "command": "buildchain sample process-tree"
+      },
+      {
+        "id": "sample-process-tree",
+        "path": "docs/toolkit-observability.md",
+        "command": "buildchain sample process-tree"
+      },
+      {
+        "id": "sample-process-tree",
+        "path": "docs/toolkit-observability.md",
+        "command": "buildchain sample process-tree"
+      },
+      {
+        "id": "span",
+        "path": "docs/cli.md",
+        "command": "buildchain span --event"
+      },
+      {
+        "id": "span",
+        "path": "docs/cli.md",
+        "command": "buildchain span"
+      },
+      {
+        "id": "span",
+        "path": "docs/cli.md",
+        "command": "buildchain span"
+      },
+      {
+        "id": "span",
+        "path": "docs/cli.md",
+        "command": "buildchain span"
+      },
+      {
+        "id": "span",
+        "path": "docs/release-passport.md",
+        "command": "buildchain span"
+      },
+      {
+        "id": "span",
+        "path": "docs/toolkit-observability.md",
+        "command": "buildchain span"
+      },
+      {
+        "id": "span",
+        "path": "README.md",
+        "command": "buildchain span --event"
+      },
+      {
+        "id": "transaction-inspect",
+        "path": "docs/cli.md",
+        "command": "buildchain transaction inspect"
+      },
+      {
+        "id": "transaction-inspect",
+        "path": "docs/cli.md",
+        "command": "buildchain transaction inspect"
+      },
+      {
+        "id": "validate",
+        "path": "docs/cli.md",
+        "command": "buildchain validate --require-version-state"
+      },
+      {
+        "id": "validate",
+        "path": "docs/cli.md",
+        "command": "buildchain validate"
+      },
+      {
+        "id": "validate",
+        "path": "docs/cli.md",
+        "command": "buildchain validate"
+      },
+      {
+        "id": "validate",
+        "path": "docs/install.md",
+        "command": "buildchain validate --require-version-state"
+      },
+      {
+        "id": "validate",
+        "path": "README.md",
+        "command": "buildchain validate --require-version-state"
+      },
+      {
+        "id": "verify-artifact",
+        "path": "docs/cli.md",
+        "command": "buildchain verify artifact"
+      },
+      {
+        "id": "verify-artifact",
+        "path": "docs/release-passport.md",
+        "command": "buildchain verify artifact"
+      },
+      {
+        "id": "verify-infra-contract-evidence-bundle",
+        "path": "docs/cli.md",
+        "command": "buildchain verify infra-contract-evidence-bundle"
+      },
+      {
+        "id": "verify-infra-contract-evidence-bundle",
+        "path": "docs/infra-contract.md",
+        "command": "buildchain verify infra-contract-evidence-bundle"
+      },
+      {
+        "id": "verify-infra-contract-evidence-bundle",
+        "path": "docs/infra-contract.md",
+        "command": "buildchain verify infra-contract-evidence-bundle"
+      },
+      {
+        "id": "verify-observability-log",
+        "path": "docs/cli.md",
+        "command": "buildchain verify observability-log"
+      },
+      {
+        "id": "verify-observability-log",
+        "path": "docs/cli.md",
+        "command": "buildchain verify observability-log"
+      },
+      {
+        "id": "verify-observability-log",
+        "path": "docs/cli.md",
+        "command": "buildchain verify observability-log"
+      },
+      {
+        "id": "verify-observability-log",
+        "path": "docs/release-passport.md",
+        "command": "buildchain verify observability-log"
+      },
+      {
+        "id": "verify-observability-log",
+        "path": "docs/toolkit-observability.md",
+        "command": "buildchain verify observability-log"
+      },
+      {
+        "id": "verify-observability-log",
+        "path": "docs/toolkit-observability.md",
+        "command": "buildchain verify observability-log"
+      },
+      {
+        "id": "verify-observability-log",
+        "path": "README.md",
+        "command": "buildchain verify observability-log"
+      },
+      {
+        "id": "verify-release-passport",
+        "path": "docs/cli.md",
+        "command": "buildchain verify release-passport"
+      },
+      {
+        "id": "verify-release-passport",
+        "path": "docs/install.md",
+        "command": "buildchain verify release-passport"
+      },
+      {
+        "id": "verify-release-passport",
+        "path": "docs/install.md",
+        "command": "buildchain verify release-passport"
+      },
+      {
+        "id": "verify-release-passport",
+        "path": "docs/install.md",
+        "command": "buildchain verify release-passport"
+      },
+      {
+        "id": "verify-release-passport",
+        "path": "docs/release-passport.md",
+        "command": "buildchain verify release-passport"
+      },
+      {
+        "id": "verify-release-passport",
+        "path": "README.md",
+        "command": "buildchain verify release-passport"
+      },
+      {
+        "id": "version",
+        "path": "docs/install.md",
+        "command": "buildchain version npx"
+      },
+      {
+        "id": "version",
+        "path": "README.md",
+        "command": "buildchain version npx"
+      },
+      {
+        "id": "web-surface",
+        "path": "docs/cli.md",
+        "command": "buildchain web-surface"
+      }
+    ]
+  },
+  "declared": {
+    "cliRegistryPath": "dist/site/cli-registry.json",
+    "workflowRegistryPath": "dist/site/workflow-registry.json",
+    "pageRegistryPath": "dist/site/page-registry.json",
+    "cliRegistryDigest": "7119de47a94f1b5903b79b7e6281cb205edce8712631efbc5e243ada3d64e817",
+    "workflowRegistryDigest": "a53dd3b746f8d697eaa79fb23efcbbeaa6018efb2c3af0d875526ab6bef939ad",
+    "pageRegistryDigest": "26ec63af6a85354720e125a3ba5bb23a8af135d7b8a9dcc6421d5ee6139b4326"
+  },
+  "comparison": {
+    "missingCliRegistry": [],
+    "missingWorkflowRegistry": [],
+    "missingActionRegistry": [],
+    "missingPageRegistry": [],
+    "unknownDocCommandRefs": []
+  },
+  "auditBoundary": {
+    "mode": "closed-world-enumerable",
+    "scope": "Buildchain CLI usage/dispatch, reusable workflow inputs, action inputs, site pages, and documentation command references",
+    "residualRisk": [
+      "Shell commands delegated through helper scripts are only counted when exposed through bin/buildchain.mjs usage or docs.",
+      "YAML parsing is limited to first-class action/workflow inputs, not arbitrary step environment variables."
+    ]
+  }
+}

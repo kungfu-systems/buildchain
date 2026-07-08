@@ -1,5 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
+import {
+  assertPublicSurfaceReverseAudit,
+  collectPublicSurfaceReverseAudit,
+} from "../packages/core/public-surface-audit.js";
 
 const root = process.cwd();
 const sharedActionTsupConfig = fs.readFileSync(path.join(root, "scripts/tsup-action.config.mjs"), "utf8");
@@ -16,6 +20,8 @@ const requiredPaths = [
   "bin/buildchain.mjs",
   "packages/core/homebrew.js",
   "packages/core/build-facts.js",
+  "packages/core/release-line-bootstrap.js",
+  "packages/core/public-surface-audit.js",
   "docs/MAP.md",
   "docs/build-facts.md",
   "docs/binary-distribution.md",
@@ -52,6 +58,7 @@ const requiredPaths = [
   ".github/actionlint.yaml",
   ".github/workflows/self-hosted-runner-smoke.yml",
   ".github/workflows/buildchain-ref-promotion.yml",
+  ".github/workflows/release-line-bootstrap.yml",
   ".github/workflows/dev-pr-auto-merge.yml",
   ".github/workflows/buildchain-patrol.yml",
   ".github/workflows/patrol-daily.yml",
@@ -119,6 +126,9 @@ if (rootPackage.exports?.["./buildchain-contract"] !== "./packages/core/buildcha
 if (rootPackage.exports?.["./issue-reporting"] !== "./packages/core/issue-reporting.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/issue-reporting");
 }
+if (rootPackage.exports?.["./release-line-bootstrap"] !== "./packages/core/release-line-bootstrap.js") {
+  throw new Error("root package must export @kungfu-tech/buildchain/release-line-bootstrap");
+}
 if (rootPackage.exports?.["./readme-badges"] !== "./packages/core/readme-badges.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/readme-badges");
 }
@@ -146,6 +156,9 @@ if (rootPackage.exports?.["./surface-manifest"] !== "./packages/core/surface-man
 if (rootPackage.exports?.["./buildchain-kfd-claims"] !== "./packages/core/buildchain-kfd-claims.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/buildchain-kfd-claims");
 }
+if (rootPackage.exports?.["./public-surface-audit"] !== "./packages/core/public-surface-audit.js") {
+  throw new Error("root package must export @kungfu-tech/buildchain/public-surface-audit");
+}
 if (rootPackage.exports?.["./site/buildchain-site.json"] !== "./dist/site/buildchain-site.json") {
   throw new Error("root package must export @kungfu-tech/buildchain/site/buildchain-site.json");
 }
@@ -163,6 +176,9 @@ if (rootPackage.exports?.["./site/node-api-registry.json"] !== "./dist/site/node
 }
 if (rootPackage.exports?.["./site/kfd-claims.json"] !== "./dist/site/kfd-claims.json") {
   throw new Error("root package must export @kungfu-tech/buildchain/site/kfd-claims.json");
+}
+if (rootPackage.exports?.["./site/public-surface-audit.json"] !== "./dist/site/public-surface-audit.json") {
+  throw new Error("root package must export @kungfu-tech/buildchain/site/public-surface-audit.json");
 }
 if (rootPackage.publishConfig?.access !== "public") {
   throw new Error("root package publishConfig.access must be public");
@@ -190,6 +206,7 @@ const siteBundle = JSON.parse(fs.readFileSync(path.join(root, "dist/site/buildch
 const siteManifest = JSON.parse(fs.readFileSync(path.join(root, "dist/site/site-manifest.json"), "utf8"));
 const pageRegistry = JSON.parse(fs.readFileSync(path.join(root, "dist/site/page-registry.json"), "utf8"));
 const badgeEndpointRegistry = JSON.parse(fs.readFileSync(path.join(root, "dist/site/badge-endpoint-registry.json"), "utf8"));
+const publicSurfaceAudit = JSON.parse(fs.readFileSync(path.join(root, "dist/site/public-surface-audit.json"), "utf8"));
 if (!cliSource.startsWith("#!/usr/bin/env node")) {
   throw new Error("bin/buildchain.mjs must be executable with a node shebang");
 }
@@ -306,6 +323,18 @@ if (siteBundle.pageRegistry?.path !== "page-registry.json" || siteBundle.pageReg
 if (!siteManifest.facts?.includes("page-registry.json") || !siteBundle.entrypoints?.includes("page-registry.json")) {
   throw new Error("site bundle entrypoints must include page-registry.json");
 }
+if (!siteManifest.facts?.includes("public-surface-audit.json") || !siteBundle.entrypoints?.includes("public-surface-audit.json")) {
+  throw new Error("site bundle entrypoints must include public-surface-audit.json");
+}
+if (publicSurfaceAudit.contract !== "kungfu-buildchain-public-surface-reverse-audit") {
+  throw new Error("public-surface-audit.json must expose the reverse audit contract");
+}
+assertPublicSurfaceReverseAudit(publicSurfaceAudit);
+const livePublicSurfaceAudit = collectPublicSurfaceReverseAudit({ root });
+assertPublicSurfaceReverseAudit(livePublicSurfaceAudit);
+if (JSON.stringify(publicSurfaceAudit.summary) !== JSON.stringify(livePublicSurfaceAudit.summary)) {
+  throw new Error("public-surface-audit.json summary is stale; run pnpm run generate:site");
+}
 for (const [name, manifest] of [["buildchain-site.json", siteBundle], ["site-manifest.json", siteManifest]]) {
   if (!manifest.generatedAt) {
     throw new Error(`${name} must expose generatedAt`);
@@ -361,6 +390,8 @@ for (const requiredSnippet of [
   "createBuildchainKfd2Claims",
   "createBuildchainKfd3PrebuildWitness",
   "BUILDCHAIN_AGENT_MANUALS",
+  "collectPublicSurfaceReverseAudit",
+  "assertPublicSurfaceReverseAudit",
 ]) {
   if (!coreIndexSource.includes(requiredSnippet)) {
     throw new Error(`packages/core/index.js must export Buildchain self KFD claim API: ${requiredSnippet}`);
@@ -820,7 +851,7 @@ if (!badgeEndpointRegistry.badges?.some((entry) => entry.id === "buildchain-rele
   throw new Error("badge endpoint registry must include Buildchain Release Passport badge");
 }
 
-for (const siteFile of ["buildchain-site.json", "site-manifest.json", "badge-endpoint-registry.json", "cli-registry.json", "manual-registry.json", "node-api-registry.json", "release-model.json", "buildchain-contract.json"]) {
+for (const siteFile of ["buildchain-site.json", "site-manifest.json", "badge-endpoint-registry.json", "cli-registry.json", "manual-registry.json", "node-api-registry.json", "workflow-registry.json", "public-surface-audit.json", "release-model.json", "buildchain-contract.json"]) {
   if (!fs.existsSync(path.join(root, "dist", "site", siteFile))) {
     throw new Error(`site bundle missing ${siteFile}`);
   }

@@ -1,0 +1,214 @@
+name: Release Line Bootstrap
+
+on:
+  workflow_dispatch:
+    inputs:
+      major:
+        description: "Semver major number, for example 2"
+        required: true
+        type: string
+      minor:
+        description: "Semver minor number, for example 10"
+        required: true
+        type: string
+      source-ref:
+        description: "Existing ref used as the baseline for alpha/release branches"
+        required: true
+        type: string
+      initial-version:
+        description: "Initial dev version. Defaults to <major>.<minor>.0-alpha.0"
+        required: false
+        default: ""
+        type: string
+      apply:
+        description: "Create refs, protection, default branch, and alpha PR"
+        required: false
+        default: false
+        type: boolean
+      required-status-check:
+        description: "Required branch-protection check name"
+        required: false
+        default: "check"
+        type: string
+      create-alpha-pr:
+        description: "Open dev -> alpha channel PR"
+        required: false
+        default: true
+        type: boolean
+      set-default-branch:
+        description: "Switch repository default branch to the new dev line"
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bootstrap:
+    name: Bootstrap release line
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+      BUILDCHAIN_MAJOR: ${{ inputs.major }}
+      BUILDCHAIN_MINOR: ${{ inputs.minor }}
+      BUILDCHAIN_SOURCE_REF: ${{ inputs.source-ref }}
+      BUILDCHAIN_INITIAL_VERSION: ${{ inputs.initial-version }}
+      BUILDCHAIN_REQUIRED_STATUS_CHECK: ${{ inputs.required-status-check }}
+      BUILDCHAIN_CREATE_ALPHA_PR: ${{ inputs.create-alpha-pr }}
+      BUILDCHAIN_SET_DEFAULT_BRANCH: ${{ inputs.set-default-branch }}
+      BUILDCHAIN_APPLY: ${{ inputs.apply }}
+    steps:
+      - name: Checkout source ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source-ref }}
+          fetch-depth: 0
+          token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Plan release line
+        id: plan
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(
+            release line open
+            --major "$BUILDCHAIN_MAJOR"
+            --minor "$BUILDCHAIN_MINOR"
+            --source-ref "$BUILDCHAIN_SOURCE_REF"
+            --required-status-check "$BUILDCHAIN_REQUIRED_STATUS_CHECK"
+            --json
+          )
+          if [[ -n "$BUILDCHAIN_INITIAL_VERSION" ]]; then
+            args+=(--initial-version "$BUILDCHAIN_INITIAL_VERSION")
+          fi
+          if [[ "$BUILDCHAIN_CREATE_ALPHA_PR" != "true" ]]; then
+            args+=(--no-alpha-pr)
+          fi
+          if [[ "$BUILDCHAIN_SET_DEFAULT_BRANCH" != "true" ]]; then
+            args+=(--no-set-default)
+          fi
+          node bin/buildchain.mjs "${args[@]}" | tee .buildchain-release-line-plan.json
+          {
+            echo "line=$(jq -r '.line' .buildchain-release-line-plan.json)"
+            echo "dev_ref=$(jq -r '.refs.dev' .buildchain-release-line-plan.json)"
+            echo "alpha_ref=$(jq -r '.refs.alpha' .buildchain-release-line-plan.json)"
+            echo "release_ref=$(jq -r '.refs.release' .buildchain-release-line-plan.json)"
+            echo "bootstrap_ref=$(jq -r '.refs.bootstrap' .buildchain-release-line-plan.json)"
+            echo "source_sha=$(git rev-parse HEAD)"
+            echo "initial_version=$(jq -r '.initialVersion' .buildchain-release-line-plan.json)"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Summarize dry run
+        if: ${{ inputs.apply != true }}
+        shell: bash
+        run: |
+          {
+            echo "## Release line bootstrap dry run"
+            echo
+            echo "- line: ${{ steps.plan.outputs.line }}"
+            echo "- source: $BUILDCHAIN_SOURCE_REF @ ${{ steps.plan.outputs.source_sha }}"
+            echo "- dev: ${{ steps.plan.outputs.dev_ref }}"
+            echo "- alpha: ${{ steps.plan.outputs.alpha_ref }}"
+            echo "- release: ${{ steps.plan.outputs.release_ref }}"
+            echo "- initial version: ${{ steps.plan.outputs.initial_version }}"
+            echo
+            echo "Re-run with \`apply=true\` to create refs, protection, default branch, and alpha PR."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Write initial version state
+        if: ${{ inputs.apply == true }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(
+            release line open
+            --major "$BUILDCHAIN_MAJOR"
+            --minor "$BUILDCHAIN_MINOR"
+            --source-ref "$BUILDCHAIN_SOURCE_REF"
+            --write
+            --json
+          )
+          if [[ -n "$BUILDCHAIN_INITIAL_VERSION" ]]; then
+            args+=(--initial-version "$BUILDCHAIN_INITIAL_VERSION")
+          fi
+          node bin/buildchain.mjs "${args[@]}" | tee .buildchain-release-line-write.json
+
+      - name: Commit and push release line refs
+        if: ${{ inputs.apply == true }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          dev_ref="${{ steps.plan.outputs.dev_ref }}"
+          alpha_ref="${{ steps.plan.outputs.alpha_ref }}"
+          release_ref="${{ steps.plan.outputs.release_ref }}"
+          bootstrap_ref="${{ steps.plan.outputs.bootstrap_ref }}"
+          source_sha="${{ steps.plan.outputs.source_sha }}"
+          line="${{ steps.plan.outputs.line }}"
+          git config user.name "Keren Dong"
+          git config user.email "keren.dong@kungfu.link"
+          readarray -t changed_files < <(jq -r '.changedFiles[]' .buildchain-release-line-write.json)
+          git add -- "${changed_files[@]}"
+          git commit -s -m "chore(release): open ${line}"
+          git push origin "HEAD:refs/heads/${bootstrap_ref}"
+          git push origin "HEAD:refs/heads/${dev_ref}"
+          git push origin "${source_sha}:refs/heads/${alpha_ref}"
+          git push origin "${source_sha}:refs/heads/${release_ref}"
+
+      - name: Protect release line branches
+        if: ${{ inputs.apply == true }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for branch in "${{ steps.plan.outputs.dev_ref }}" "${{ steps.plan.outputs.alpha_ref }}" "${{ steps.plan.outputs.release_ref }}"; do
+            jq -n \
+              --arg context "$BUILDCHAIN_REQUIRED_STATUS_CHECK" \
+              '{
+                required_status_checks: { strict: true, contexts: [$context] },
+                enforce_admins: true,
+                required_pull_request_reviews: {
+                  required_approving_review_count: 1,
+                  require_code_owner_reviews: false,
+                  require_last_push_approval: false,
+                  bypass_pull_request_allowances: {}
+                },
+                restrictions: null,
+                required_conversation_resolution: true
+              }' |
+              gh api --method PUT "repos/${GITHUB_REPOSITORY}/branches/${branch}/protection" --input -
+          done
+
+      - name: Set default branch
+        if: ${{ inputs.apply == true && inputs.set-default-branch == true }}
+        run: gh repo edit "$GITHUB_REPOSITORY" --default-branch "${{ steps.plan.outputs.dev_ref }}"
+
+      - name: Open alpha channel PR
+        if: ${{ inputs.apply == true && inputs.create-alpha-pr == true }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          dev_ref="${{ steps.plan.outputs.dev_ref }}"
+          alpha_ref="${{ steps.plan.outputs.alpha_ref }}"
+          line="${{ steps.plan.outputs.line }}"
+          if gh pr list --base "$alpha_ref" --head "$dev_ref" --state open --json number --jq '.[0].number' | grep -q '[0-9]'; then
+            echo "Alpha PR already exists for ${dev_ref} -> ${alpha_ref}."
+            exit 0
+          fi
+          gh pr create \
+            --base "$alpha_ref" \
+            --head "$dev_ref" \
+            --title "chore(release): promote ${line} alpha" \
+            --body "Buildchain release line bootstrap opened ${line}. Merge this channel PR to publish the first alpha for the new minor line."

@@ -138,6 +138,11 @@ export {
 } from "./buildchain-contract.js";
 
 export {
+  planReleaseLineBootstrap,
+  writeReleaseLineBootstrapVersionState,
+} from "./release-line-bootstrap.js";
+
+export {
   BUILDCHAIN_JSON_FORMATTING_POLICY,
   KFD1_RELEASE_GATE_CONTRACT,
   KFD1_WITNESS_SET_CONTRACT,
@@ -168,6 +173,17 @@ export {
   createBuildchainKfdSurfaceRegistry,
   createBuildchainPublicClaimDefinitions,
 } from "./buildchain-kfd-claims.js";
+
+export {
+  BUILDCHAIN_PUBLIC_SURFACE_AUDIT_CONTRACT,
+  assertPublicSurfaceReverseAudit,
+  collectPublicSurfaceReverseAudit,
+  enumerateActionInputs,
+  enumerateCliCommandsFromBin,
+  enumerateDocCommandRefs,
+  enumerateSitePages,
+  enumerateWorkflowInputs,
+} from "./public-surface-audit.js";
 
 export {
   AGENT_INDEX_CONTRACT,
