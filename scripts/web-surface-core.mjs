@@ -1349,8 +1349,72 @@ function managedNetworkHealthEvidence({ target, result, plan }) {
   };
 }
 
-function managedNetworkHealthCheck({ target, result, plan }) {
+function managedNetworkTargetObjectKey(target) {
+  const requestPath = String(target.requestPath || "/");
+  let relative = requestPath.replace(/^\/+/, "");
+  if (!relative) {
+    relative = "index.html";
+  } else if (requestPath.endsWith("/")) {
+    relative = `${relative.replace(/\/+$/, "")}/index.html`;
+  }
+  return joinS3Key(target.objectPrefix, relative);
+}
+
+function managedNetworkHeadObject({ target, kind, key, commandRunner }) {
+  return runAdapterOperation({
+    operation: {
+      action: `health-head-${kind}`,
+      surface: target.surface,
+      command: "aws",
+      args: ["s3api", "head-object", "--bucket", target.bucket, "--key", key],
+    },
+    dryRun: false,
+    commandRunner,
+  });
+}
+
+function managedNetworkS3HealthCheck({ target, evidence, commandRunner }) {
+  const objectKey = managedNetworkTargetObjectKey(target);
+  const headResults = [
+    managedNetworkHeadObject({ target, kind: "manifest", key: target.manifestKey, commandRunner }),
+    managedNetworkHeadObject({ target, kind: "object", key: objectKey, commandRunner }),
+  ];
+  const failed = headResults.filter((operation) => operation.status === "failed");
+  return {
+    surface: target.surface,
+    kind: target.kind,
+    requestPath: target.requestPath,
+    url: target.url,
+    accessControl: "managed-network",
+    healthStrategy: "s3-object",
+    status: evidence.status === "pass" && failed.length === 0 ? "pass" : "fail",
+    httpStatus: null,
+    finalUrl: "",
+    noindexHeader: false,
+    manifestKey: target.manifestKey || "",
+    bucket: target.bucket || "",
+    objectPrefix: target.objectPrefix || "",
+    objectKey,
+    evidence,
+    s3Checks: headResults.map((operation) => ({
+      action: operation.action,
+      bucket: target.bucket,
+      key: operation.args?.[operation.args.indexOf("--key") + 1] || "",
+      status: operation.status,
+      exitCode: operation.exitCode,
+      stderr: operation.stderr || "",
+    })),
+    message: evidence.status === "pass" && failed.length === 0
+      ? "managed-network surface health verified from S3 manifest and object head checks; direct public fetch skipped"
+      : `managed-network S3 object health failed: ${failed.map((operation) => `${operation.action}:${operation.stderr || operation.exitCode}`).join("; ") || "missing deployment evidence"}`,
+  };
+}
+
+function managedNetworkHealthCheck({ target, result, plan, commandRunner, verifyS3Objects = true }) {
   const evidence = managedNetworkHealthEvidence({ target, result, plan });
+  if (verifyS3Objects && result?.status === "applied" && evidence.status === "pass") {
+    return managedNetworkS3HealthCheck({ target, evidence, commandRunner });
+  }
   return {
     surface: target.surface,
     kind: target.kind,
@@ -1380,6 +1444,8 @@ export async function checkWebSurfaceHealth({
   checkedAt = new Date().toISOString(),
   allowedStatuses = [200],
   allowedManagedNetworkRunner = false,
+  managedNetworkS3ObjectVerification = true,
+  commandRunner = defaultCommandRunner,
 } = {}) {
   const loadedConfig = loadBuildchainConfig(cwd);
   const config = assertWebSurfaceConfig(loadedConfig);
@@ -1447,7 +1513,13 @@ export async function checkWebSurfaceHealth({
       continue;
     }
     if (target.accessControl === "managed-network" && !allowedManagedNetworkRunner) {
-      checks.push(managedNetworkHealthCheck({ target, result, plan }));
+      checks.push(managedNetworkHealthCheck({
+        target,
+        result,
+        plan,
+        commandRunner,
+        verifyS3Objects: managedNetworkS3ObjectVerification,
+      }));
       continue;
     }
     try {
