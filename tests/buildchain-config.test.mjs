@@ -531,6 +531,55 @@ adapter = "aws-s3-cloudfront"
   );
 });
 
+test("buildchain.toml validates externally managed web-surface directory index rewrites", () => {
+  withTempRepo(
+    {
+      "buildchain.toml": `
+schema = 1
+
+[project]
+type = "web-surface"
+name = "site-libkungfu-dev"
+site = "libkungfu-dev"
+
+[channels.preview]
+url_pattern = "https://{alias}.preview.libkungfu.dev"
+
+[channels.staging]
+url = "https://staging.libkungfu.dev"
+access_control = "managed-network"
+edge_auth = "none"
+noindex = true
+
+[channels.production]
+url = "https://libkungfu.dev"
+noindex = false
+
+[surfaces.hub]
+path = "/"
+production_url = "https://libkungfu.dev"
+staging_url = "https://staging.libkungfu.dev"
+preview_url_pattern = "https://{alias}.preview.libkungfu.dev"
+
+[deploy.preview]
+adapter = "aws-s3-cloudfront"
+directory_index_rewrite = "external"
+
+[deploy.staging]
+adapter = "aws-s3-cloudfront"
+
+[deploy.production]
+adapter = "aws-s3-cloudfront"
+`,
+    },
+    (dir) => {
+      const summary = validateBuildchainConfig(dir);
+      assert.equal(summary.deploy.preview.directoryIndexRewrite, "external");
+      assert.equal(summary.deploy.staging.directoryIndexRewrite, "buildchain");
+    },
+  );
+});
+
 test("buildchain.toml normalizes infra-contract configuration", () => {
   withTempRepo(
     {

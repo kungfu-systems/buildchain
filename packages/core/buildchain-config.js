@@ -23,6 +23,7 @@ const SUPPORTED_DEPLOY_ADAPTERS = new Set([
   "aws-elastic-beanstalk",
   "aws-ecs-service",
 ]);
+const SUPPORTED_DIRECTORY_INDEX_REWRITE = new Set(["buildchain", "external"]);
 const SUPPORTED_INFRA_ADAPTERS = new Set([
   "manual-observed",
   "aws-cloudformation",
@@ -536,9 +537,16 @@ function normalizeDeployConfig(name, config) {
   if (!SUPPORTED_DEPLOY_ADAPTERS.has(adapter)) {
     throw new Error(`deploy.${name}.adapter must be one of aws-s3-cloudfront, aws-elastic-beanstalk, or aws-ecs-service`);
   }
+  const directoryIndexRewrite = config.directory_index_rewrite === undefined
+    ? "buildchain"
+    : assertString(config.directory_index_rewrite, `deploy.${name}.directory_index_rewrite`);
+  if (!SUPPORTED_DIRECTORY_INDEX_REWRITE.has(directoryIndexRewrite)) {
+    throw new Error(`deploy.${name}.directory_index_rewrite must be one of buildchain or external`);
+  }
   const normalized = {
     ...config,
     adapter,
+    directoryIndexRewrite,
     artifactPath: config.artifact_path === undefined
       ? undefined
       : posixPath(assertString(config.artifact_path, `deploy.${name}.artifact_path`)),
@@ -547,6 +555,7 @@ function normalizeDeployConfig(name, config) {
       ? undefined
       : normalizeDeploySurfaceOverrides(name, config.surfaces),
   };
+  delete normalized.directory_index_rewrite;
   delete normalized.artifact_path;
   delete normalized.secret_refs;
   if (normalized.surfaces === undefined) {
@@ -569,8 +578,15 @@ function normalizeDeploySurfaceOverrides(channelName, surfaces) {
 function normalizeDeploySurfaceOverride(channelName, surfaceName, override) {
   assertPlainObject(override, `deploy.${channelName}.surfaces.${surfaceName}`);
   const label = `deploy.${channelName}.surfaces.${surfaceName}`;
+  const directoryIndexRewrite = override.directory_index_rewrite === undefined
+    ? undefined
+    : assertString(override.directory_index_rewrite, `${label}.directory_index_rewrite`);
+  if (directoryIndexRewrite !== undefined && !SUPPORTED_DIRECTORY_INDEX_REWRITE.has(directoryIndexRewrite)) {
+    throw new Error(`${label}.directory_index_rewrite must be one of buildchain or external`);
+  }
   const normalized = {
     ...override,
+    directoryIndexRewrite,
     artifactPath: override.artifact_path === undefined
       ? undefined
       : posixPath(assertString(override.artifact_path, `${label}.artifact_path`)),
@@ -579,6 +595,7 @@ function normalizeDeploySurfaceOverride(channelName, surfaceName, override) {
       : assertString(override.origin_path, `${label}.origin_path`),
     secretRefs: normalizeStringArray(override.secret_refs, `${label}.secret_refs`),
   };
+  delete normalized.directory_index_rewrite;
   delete normalized.artifact_path;
   delete normalized.origin_path;
   delete normalized.secret_refs;
@@ -590,6 +607,9 @@ function normalizeDeploySurfaceOverride(channelName, surfaceName, override) {
   }
   if (normalized.secretRefs.length === 0) {
     delete normalized.secretRefs;
+  }
+  if (normalized.directoryIndexRewrite === undefined) {
+    delete normalized.directoryIndexRewrite;
   }
   assertNoInlineSecretValues(override, label, new Set(["secret_refs"]));
   return normalized;
@@ -1123,6 +1143,7 @@ export function validateBuildchainConfig(
             {
               adapter: deploy.adapter,
               artifactPath: deploy.artifactPath,
+              directoryIndexRewrite: deploy.directoryIndexRewrite,
               secretRefs: deploy.secretRefs,
             },
           ]),
