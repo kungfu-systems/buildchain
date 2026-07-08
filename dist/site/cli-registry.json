@@ -282,10 +282,106 @@
       "maturity": "stable"
     },
     {
+      "id": "kfd",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd ...",
+      "purpose": "Inspect KFD standards, schemas, and versioned KFD command families.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-1-gate",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 1 gate --witness-json <file-or-json>... [--cwd <dir>] [--artifact-root <dir>]",
+      "purpose": "Generate KFD-1 release gate evidence from declared contract-world witnesses.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-1-schema",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 1 schema [--schema <name>] [--json]",
+      "purpose": "Print the default KFD-1 schema exposed by the KFD package standards metadata.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-1-verify",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 1 verify --gate-json <file-or-json> [--json]",
+      "purpose": "Validate KFD-1 release gate evidence.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-1-witness",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 1 witness [--cwd <dir>] [--source-sha <sha>] [--output <file>] [--json]",
+      "purpose": "Generate Buildchain's KFD-1 self contract-world witness.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-2-claims",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 2 claims [--cwd <dir>] [--output-dir <dir>] [--json]",
+      "purpose": "Generate Buildchain's KFD-2 public trust claim evidence.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-2-schema",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 2 schema [--schema <name>] [--json]",
+      "purpose": "Print the default KFD-2 schema exposed by the KFD package standards metadata.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-2-taxonomy",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 2 taxonomy --entry-json <file-or-json>... [--kind residualRisk|downgradeReason] [--json]",
+      "purpose": "Validate KFD-2 trust taxonomy entries from the KFD package standards metadata.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
       "id": "kfd-3",
       "source": "bin/buildchain.mjs",
-      "usage": "buildchain kfd-3",
-      "purpose": "Inspect KFD-3 surface detection, registry, witness, audit, and query command families.",
+      "usage": "buildchain kfd 3 ...",
+      "purpose": "Inspect KFD-3 surface detection, registry, witness, audit, and query command families under the unified KFD namespace.",
       "capabilityGroup": "kfd-trust",
       "audience": [
         "agent",
@@ -296,7 +392,7 @@
     {
       "id": "kfd-3-audit",
       "source": "bin/buildchain.mjs",
-      "usage": "buildchain kfd-3 audit [--cwd <dir>] [--registry <path>] [--artifact <path>] [--json]",
+      "usage": "buildchain kfd 3 audit [--cwd <dir>] [--registry <path>] [--artifact <path>] [--json]",
       "purpose": "Compare detected, declared, and enforced KFD-3 public surfaces.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -308,7 +404,7 @@
     {
       "id": "kfd-3-detect",
       "source": "bin/buildchain.mjs",
-      "usage": "buildchain kfd-3 detect [--cwd <dir>] [--kind <kind>]... [--artifact <path>] [--json]",
+      "usage": "buildchain kfd 3 detect [--cwd <dir>] [--kind <kind>]... [--artifact <path>] [--json]",
       "purpose": "Detect standard KFD-3 public surface candidates from source and artifact metadata.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -320,7 +416,7 @@
     {
       "id": "kfd-3-query",
       "source": "bin/buildchain.mjs",
-      "usage": "buildchain kfd-3 query [<product>] [--cwd <dir>] [--registry <path>]",
+      "usage": "buildchain kfd 3 query [<product>] [--cwd <dir>] [--registry <path>]",
       "purpose": "Return an agent-readable KFD-3 capability map for a product, registry, or release passport.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -332,7 +428,7 @@
     {
       "id": "kfd-3-register",
       "source": "bin/buildchain.mjs",
-      "usage": "buildchain kfd-3 register <node-api|python-api|cli|binary|documentation|site-bundle>",
+      "usage": "buildchain kfd 3 register <node-api|python-api|cli|binary|documentation|site-bundle>",
       "purpose": "Declare detected KFD-3 public surfaces into a product-owned surface registry.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -344,8 +440,68 @@
     {
       "id": "kfd-3-witness",
       "source": "bin/buildchain.mjs",
-      "usage": "buildchain kfd-3 witness [--cwd <dir>] [--registry <path>] [--kind prebuild|artifact]",
+      "usage": "buildchain kfd 3 witness [--cwd <dir>] [--registry <path>] [--kind prebuild|artifact]",
       "purpose": "Generate release-passport-compatible KFD-3 surface witnesses from a product registry.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-4-schema",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 4 schema [--schema <name>] [--json]",
+      "purpose": "Print the default KFD-4 schema exposed by the KFD package standards metadata.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-migrate-layout",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd migrate-layout [--cwd <dir>] [--write] [--force] [--json]",
+      "purpose": "Plan or apply migration of legacy root Buildchain files into .buildchain/.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-schema-list",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd schema list [--standard kfd-1|kfd-2|kfd-3|kfd-4] [--json]",
+      "purpose": "List machine-readable schemas exposed by the KFD package standards metadata.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-schema-show",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd schema show <kfd-1|kfd-2|kfd-3|kfd-4> [--schema <name>] [--json]",
+      "purpose": "Print a machine-readable KFD schema from the KFD package standards metadata.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-status",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd status [--cwd <dir>] [--json]",
+      "purpose": "Report implemented KFD support and the active .buildchain repository layout.",
       "capabilityGroup": "kfd-trust",
       "audience": [
         "agent",
@@ -537,7 +693,7 @@
       "id": "validate",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain validate [--cwd <dir>] [--require-version-state]",
-      "purpose": "Validate buildchain.toml and declared lifecycle surfaces.",
+      "purpose": "Validate .buildchain/buildchain.toml and declared lifecycle surfaces.",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",

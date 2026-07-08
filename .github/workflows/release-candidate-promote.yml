@@ -14,7 +14,7 @@ on:
         required: false
       buildchain-contract-lock-path:
         description: "Consumer-owned Buildchain contract lock path"
-        default: "buildchain.contract-lock.json"
+        default: ".buildchain/contract-lock.json"
         type: string
         required: false
       buildchain-contract-compatibility-policy:

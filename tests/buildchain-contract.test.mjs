@@ -113,9 +113,10 @@ test("Buildchain contract lock script writes drift issue body for compatible dri
         : surface
     )),
   });
-  const lockPath = path.join(workspace, "buildchain.contract-lock.json");
+  const lockPath = path.join(workspace, ".buildchain", "contract-lock.json");
   const contractPath = path.join(runtime, "dist", "site", "buildchain-contract.json");
   const issueBodyPath = path.join(workspace, "issue.md");
+  fs.mkdirSync(path.dirname(lockPath), { recursive: true });
   fs.writeFileSync(lockPath, `${JSON.stringify(lock, null, 2)}\n`);
   fs.writeFileSync(contractPath, `${JSON.stringify(additive, null, 2)}\n`);
 
@@ -199,7 +200,7 @@ test("write-lock records resolved SHA and contract digest", () => {
     packageJson: { name: "@kungfu-tech/buildchain", version: "2.8.0" },
   });
   const contractPath = path.join(workspace, "buildchain-contract.json");
-  const lockPath = path.join(workspace, "buildchain.contract-lock.json");
+  const lockPath = path.join(workspace, ".buildchain", "contract-lock.json");
   fs.writeFileSync(contractPath, `${JSON.stringify(contract, null, 2)}\n`);
 
   const lock = writeBuildchainContractLock({
@@ -219,7 +220,7 @@ test("contract drift issue body explains compatible and breaking next actions", 
   const body = renderBuildchainContractDriftIssueBody({
     repository: "kungfu-systems/libnode",
     workflow: "Build",
-    lockPath: "buildchain.contract-lock.json",
+    lockPath: ".buildchain/contract-lock.json",
     evaluation: {
       status: "compatible-drift",
       compatible: true,
@@ -231,5 +232,6 @@ test("contract drift issue body explains compatible and breaking next actions", 
   });
 
   assert.match(body, /Buildchain contract drift/);
+  assert.match(body, /\.buildchain\/contract-lock\.json/);
   assert.match(body, /Review the Buildchain release notes/);
 });

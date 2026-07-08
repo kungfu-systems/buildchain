@@ -1,6 +1,6 @@
 {
   "name": "@kungfu-tech/buildchain",
-  "version": "2.10.4",
+  "version": "2.10.5-alpha.1",
   "private": false,
   "description": "Buildchain Release Passport, release governance, CLI toolkit, and site facts.",
   "repository": "https://github.com/kungfu-systems/buildchain",
@@ -20,7 +20,8 @@
     "./diagnostics": "./packages/core/diagnostics.js",
     "./homebrew": "./packages/core/homebrew.js",
     "./issue-reporting": "./packages/core/issue-reporting.js",
-    "./kfd-3-surfaces": "./packages/core/kfd3-surface-register.js",
+    "./kfd": "./packages/core/kfd.js",
+    "./buildchain-layout": "./packages/core/buildchain-layout.js",
     "./release-line-bootstrap": "./packages/core/release-line-bootstrap.js",
     "./readme-badges": "./packages/core/readme-badges.js",
     "./public-surface-audit": "./packages/core/public-surface-audit.js",

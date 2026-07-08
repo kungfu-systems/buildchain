@@ -111,6 +111,21 @@ on:
         default: "production"
         type: string
         required: false
+      production-release-pr-mode:
+        description: "Production release PR handoff mode: auto, summary-only, or disabled."
+        default: "auto"
+        type: string
+        required: false
+      production-release-pr-token:
+        description: "Optional token used only for production release PR branch/PR/label creation. Empty falls back to github.token."
+        default: ""
+        type: string
+        required: false
+      fail-on-release-pr-error:
+        description: "Fail the workflow when automatic production release PR creation cannot complete."
+        default: false
+        type: boolean
+        required: false
       production-aws-role-arn:
         default: ""
         type: string
@@ -158,6 +173,9 @@ on:
       production-release-pr-url:
         description: "Production release PR URL opened after staging apply"
         value: ${{ jobs.open-production-release-pr.outputs.production-release-pr-url }}
+      release-pr-status:
+        description: "Production release PR handoff status: created, updated, permission-denied, summary-only, disabled, or failed"
+        value: ${{ jobs.open-production-release-pr.outputs.release-pr-status }}
       buildchain-runtime-ref:
         description: "Resolved Buildchain runtime ref"
         value: ${{ jobs.runtime.outputs.runtime-ref }}
@@ -1154,6 +1172,8 @@ jobs:
       - release-intent
       - staging-apply
     outputs:
+      release-pr-status: ${{ steps.open.outputs.release-pr-status }}
+      production-release-pr-status: ${{ steps.open.outputs.production-release-pr-status }}
       production-release-pr-url: ${{ steps.open.outputs.production-release-pr-url }}
       production-release-pr: ${{ steps.open.outputs.production-release-pr }}
       production-release-branch: ${{ steps.open.outputs.production-release-branch }}
@@ -1190,16 +1210,39 @@ jobs:
           name: buildchain-web-surface-staging-release-pr-summary
           path: .buildchain/staging-release-pr-summary
 
+      - name: Download staging release passport
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: buildchain-web-surface-staging-release-passport
+          path: .buildchain/staging-release-passport
+
       - name: Open production release PR
         id: open
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ inputs.production-release-pr-token != '' && inputs.production-release-pr-token || github.token }}
           STAGING_RELEASE_PR_SUMMARY_PATH: .buildchain/staging-release-pr-summary/web-surface-staging-release-pr-summary.json
+          PRODUCTION_RELEASE_PR_SUMMARY_PATH: .buildchain/production-release-pr/handoff.json
+          PRODUCTION_RELEASE_PR_BODY_PATH: .buildchain/production-release-pr/body.md
+          PRODUCTION_RELEASE_PR_MODE: ${{ inputs.production-release-pr-mode }}
+          FAIL_ON_RELEASE_PR_ERROR: ${{ inputs.fail-on-release-pr-error }}
           PRODUCTION_RELEASE_LABEL: ${{ inputs.production-release-label }}
           PRODUCTION_RELEASE_HEAD_PREFIX: ${{ inputs.production-release-head-prefix }}
           PRODUCTION_RELEASE_CHANNEL: ${{ inputs.production-release-branch-channel }}
           RELEASE_PASSPORT_ARTIFACT: buildchain-web-surface-staging-release-passport
         run: node .buildchain/runtime/scripts/web-surface-production-release-pr.mjs
+
+      - name: Upload production release PR handoff
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-web-surface-production-release-pr-handoff
+          path: |
+            .buildchain/production-release-pr/handoff.json
+            .buildchain/production-release-pr/body.md
+            .buildchain/staging-release-pr-summary/web-surface-staging-release-pr-summary.json
+            .buildchain/staging-release-passport/web-surface-staging-release-passport.json
+          include-hidden-files: true
+          if-no-files-found: warn
 
   production-apply:
     name: Apply production deploy

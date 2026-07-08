@@ -40,9 +40,11 @@ function listDirectories(root, dir) {
     .sort();
 }
 
-function commandId(first = "", second = "") {
+function commandId(first = "", second = "", third = "") {
   const head = String(first || "").trim();
   const sub = String(second || "").trim();
+  const leaf = String(third || "").trim();
+  const normalizedLeaf = leaf === "..." ? "" : leaf;
   if (!head) return "";
   if (["-h", "--help", "help"].includes(head)) return "help";
   if (["-v", "--version", "version"].includes(head)) return "version";
@@ -59,7 +61,12 @@ function commandId(first = "", second = "") {
   if (head === "log" && sub) return "logging";
   if (head === "diagnostics" && sub) return `diagnostics-${sub}`;
   if (head === "facts" && sub) return "build-facts";
-  if (head === "kfd-3" && sub) return `kfd-3-${sub}`;
+  if (head === "kfd") {
+    if (!sub || sub === "...") return "kfd";
+    if (sub === "schema") return normalizedLeaf ? `kfd-schema-${normalizedLeaf}` : "kfd-schema";
+    if (/^[1-9][0-9]*$/.test(sub)) return normalizedLeaf ? `kfd-${sub}-${normalizedLeaf}` : `kfd-${sub}`;
+    return `kfd-${sub}`;
+  }
   if (head === "sample" && sub) return `sample-${sub}`;
   if (head === "badges" && sub) return `badges-${sub}`;
   if (head === "homebrew" && sub) return `homebrew-${sub}`;
@@ -77,10 +84,10 @@ export function enumerateCliCommandsFromBin({ root = process.cwd(), binPath = "b
   const usage = usageMatch?.[1] || "";
   const usageCommands = [];
   for (const line of usage.split(/\r?\n/)) {
-    const match = line.trim().match(/^buildchain\s+([^\s]+)(?:\s+([^\s]+))?/);
+    const match = line.trim().match(/^buildchain\s+([^\s]+)(?:\s+([^\s]+))?(?:\s+([^\s]+))?/);
     if (!match) continue;
     usageCommands.push({
-      id: commandId(match[1], match[2]),
+      id: commandId(match[1], match[2], match[3]),
       usage: line.trim().replace(/\s+/g, " "),
     });
   }
@@ -180,15 +187,15 @@ export function enumerateDocCommandRefs({ root = process.cwd() } = {}) {
             .filter((line) => /^(?:[$>]\s*)?(?:npx\s+(?:@kungfu-tech\/buildchain|buildchain)\s+|node\s+bin\/buildchain\.mjs\s+|buildchain\s+)/.test(line))
             .join("\n")
         : segment.text;
-      for (const match of commandText.matchAll(/(?:^|[\s$>])(?:npx\s+(?:@kungfu-tech\/buildchain|buildchain)\s+|node\s+bin\/buildchain\.mjs\s+|buildchain\s+)([a-z0-9][a-z0-9-]*|--help|--version|-h|-v)(?:\s+([a-z0-9][a-z0-9-]*|--[a-z0-9-]+))?/gm)) {
-        const id = commandId(match[1], match[2]);
+      for (const match of commandText.matchAll(/(?:^|[\s$>])(?:npx\s+(?:@kungfu-tech\/buildchain|buildchain)\s+|node\s+bin\/buildchain\.mjs\s+|buildchain\s+)([a-z0-9][a-z0-9-]*|--help|--version|-h|-v)(?:\s+([a-z0-9][a-z0-9-]*|--[a-z0-9-]+))?(?:\s+([a-z0-9][a-z0-9-]*|--[a-z0-9-]+))?/gm)) {
+        const id = commandId(match[1], match[2], match[3]);
         if (segment.kind === "inline" && !knownCommandIds.has(id)) {
           continue;
         }
         refs.push({
           id,
           path: relPath,
-          command: `buildchain ${match[1]}${match[2] ? ` ${match[2]}` : ""}`,
+          command: `buildchain ${match[1]}${match[2] ? ` ${match[2]}` : ""}${match[3] ? ` ${match[3]}` : ""}`,
         });
       }
     }

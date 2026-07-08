@@ -834,6 +834,37 @@ test("version verification allows only discovered version-state file changes", (
   );
 });
 
+test("version verification ignores downloaded release-candidate evidence", () => {
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-systems/example",
+      version: "1.0.0-alpha.0",
+    },
+    "README.md": "fixture\n",
+  });
+  run(["git", "init"], cwd);
+  run(["git", "add", "."], cwd);
+  run(["git", "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-m", "init"], cwd);
+
+  fs.writeFileSync(
+    path.join(cwd, "package.json"),
+    JSON.stringify({ name: "@kungfu-systems/example", version: "1.0.1-alpha.0" }, null, 2) + "\n",
+  );
+  fs.mkdirSync(path.join(cwd, ".buildchain/release-candidate/passport"), { recursive: true });
+  fs.writeFileSync(
+    path.join(cwd, ".buildchain/release-candidate/passport/release-candidate-passport.json"),
+    "{}\n",
+  );
+
+  assert.doesNotThrow(() => assertAllowedLocalChanges(cwd, ["package.json"]));
+
+  fs.writeFileSync(path.join(cwd, ".buildchain/other.json"), "{}\n");
+  assert.throws(
+    () => assertAllowedLocalChanges(cwd, ["package.json"]),
+    /\.buildchain\/other\.json/,
+  );
+});
+
 test("version-state lifecycle can materialize declared derived files before verification", () => {
   const cwd = makeTempWorkspace({
     "buildchain.toml": `

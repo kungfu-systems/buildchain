@@ -336,7 +336,7 @@ instead of trusting docs or release notes.
 
 KFD-1 protects release payload surfaces. Floating ref contract locks protect the
 consumer's relationship to Buildchain itself. A consumer can keep
-`buildchain.contract-lock.json` with the Buildchain floating ref it accepted,
+`.buildchain/contract-lock.json` with the Buildchain floating ref it accepted,
 the resolved SHA, the contract digest, and the compatibility policy. Each
 Buildchain run reads the actual contract from the checked-out Buildchain ref
 and compares it before heavy build or publish work begins.
