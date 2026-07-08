@@ -149,7 +149,7 @@ test("web-surface deploy apply defaults to dry-run operations", () => {
     assert.equal(result.surfaceBindings.length, 4);
     assert.deepEqual(
       result.operations.map((operation) => operation.executed),
-      [false, false, false, false, false, false, false, false, false, false, false, false],
+      Array.from({ length: 20 }, () => false),
     );
   });
 });
@@ -174,13 +174,15 @@ test("web-surface deploy apply executes aws s3 and cloudfront commands through r
     assert.equal(result.applyMode, "apply");
     assert.equal(result.status, "applied");
     assert.equal(result.target, "libkungfu-dev-staging");
-    assert.equal(result.operations.length, 12);
+    assert.equal(result.operations.length, 20);
     assert.deepEqual(calls[0].args.slice(0, 3), ["s3", "sync", path.join(fixture, "dist")]);
     assert.equal(calls[0].args[3], "s3://libkungfu-dev-staging/staging");
-    assert.equal(calls[1].args[0], "s3");
-    assert.equal(calls[1].args[2], "-");
-    assert.match(calls[1].stdin, /"channel": "staging"/);
-    assert.deepEqual(calls[2].args, [
+    const hubManifest = calls.find((call) => call.action === "write-deployment-manifest" && call.surface === "hub");
+    assert.equal(hubManifest.args[0], "s3");
+    assert.equal(hubManifest.args[2], "-");
+    assert.match(hubManifest.stdin, /"channel": "staging"/);
+    const hubInvalidation = calls.find((call) => call.action === "invalidate-cdn" && call.surface === "hub");
+    assert.deepEqual(hubInvalidation.args, [
       "cloudfront",
       "create-invalidation",
       "--distribution-id",
@@ -189,14 +191,16 @@ test("web-surface deploy apply executes aws s3 and cloudfront commands through r
       "/*",
       "/.buildchain/deployments/staging/hub.json",
     ]);
-    assert.equal(calls[3].args[3], "s3://libkungfu-dev-staging/staging/core");
-    assert.deepEqual(calls[5].args.slice(-2), [
+    const coreSync = calls.find((call) => call.action === "sync-static-artifact" && call.surface === "core");
+    const coreInvalidation = calls.find((call) => call.action === "invalidate-cdn" && call.surface === "core");
+    assert.equal(coreSync.args[3], "s3://libkungfu-dev-staging/staging/core");
+    assert.deepEqual(coreInvalidation.args.slice(-2), [
       "/*",
       "/.buildchain/deployments/staging/core.json",
     ]);
     assert.deepEqual(
       result.operations.map((operation) => operation.executed),
-      [true, true, true, true, true, true, true, true, true, true, true, true],
+      Array.from({ length: 20 }, () => true),
     );
   });
 });
@@ -223,6 +227,13 @@ test("web-surface deploy apply rewrites surface host roots to artifact path pref
 
     const buildchainBinding = result.surfaceBindings.find((binding) => binding.surface === "buildchain");
     const buildchainSync = calls.find((call) => call.action === "sync-static-artifact" && call.surface === "buildchain");
+    const buildchainAliases = calls
+      .filter((call) => call.action === "write-directory-index-alias" && call.surface === "buildchain")
+      .map((call) => ({
+        key: call.args[call.args.indexOf("--key") + 1],
+        body: call.args[call.args.indexOf("--body") + 1],
+      }))
+      .sort((left, right) => left.key.localeCompare(right.key));
     assert.equal(buildchainBinding.url, "https://buildchain-pr-29.preview.libkungfu.dev");
     assert.equal(buildchainBinding.artifactPathPrefix, "buildchain");
     assert.equal(buildchainBinding.routing.viewerPathPrefix, "/");
@@ -236,6 +247,24 @@ test("web-surface deploy apply rewrites surface host roots to artifact path pref
     );
     assert.equal(buildchainSync.args[2], path.join(fixture, "dist", "buildchain"));
     assert.equal(buildchainSync.args[3], "s3://libkungfu-dev-preview/pr-29/buildchain");
+    assert.deepEqual(buildchainAliases, [
+      {
+        key: "pr-29/buildchain",
+        body: path.join(fixture, "dist", "buildchain", "index.html"),
+      },
+      {
+        key: "pr-29/buildchain/",
+        body: path.join(fixture, "dist", "buildchain", "index.html"),
+      },
+      {
+        key: "pr-29/buildchain/docs",
+        body: path.join(fixture, "dist", "buildchain", "docs", "index.html"),
+      },
+      {
+        key: "pr-29/buildchain/docs/",
+        body: path.join(fixture, "dist", "buildchain", "docs", "index.html"),
+      },
+    ]);
   });
 });
 
@@ -296,8 +325,10 @@ secret_refs = ["CORE_AWS_ROLE_ARN"]
     assert.equal(coreBinding.distributionId, "E-CORE-STAGING");
     assert.equal(coreBinding.originPath, "/core");
     assert.equal(coreBinding.objectPrefix, "core-staging");
-    assert.equal(calls[3].args[3], "s3://libkungfu-dev-core-staging/core-staging");
-    assert.deepEqual(calls[5].args.slice(-2), [
+    const coreSync = calls.find((call) => call.action === "sync-static-artifact" && call.surface === "core");
+    const coreInvalidation = calls.find((call) => call.action === "invalidate-cdn" && call.surface === "core");
+    assert.equal(coreSync.args[3], "s3://libkungfu-dev-core-staging/core-staging");
+    assert.deepEqual(coreInvalidation.args.slice(-2), [
       "/*",
       "/.buildchain/deployments/staging/core.json",
     ]);
@@ -367,7 +398,8 @@ test("web-surface deploy apply honors explicit bucket-root prefix", () => {
       "--exclude",
       ".buildchain/*",
     ]);
-    assert.deepEqual(calls[2].args.slice(-2), ["/*", "/.buildchain/deployments/staging/hub.json"]);
+    const hubInvalidation = calls.find((call) => call.action === "invalidate-cdn" && call.surface === "hub");
+    assert.deepEqual(hubInvalidation.args.slice(-2), ["/*", "/.buildchain/deployments/staging/hub.json"]);
   });
 });
 
@@ -537,7 +569,9 @@ test("web-surface production deploy apply executes against production target", (
     assert.equal(result.objectPrefix, "production");
     assert.equal(result.manifestKey, ".buildchain/deployments/production/hub.json");
     assert.equal(calls[0].args[3], "s3://libkungfu-dev-production/production");
-    assert.deepEqual(calls[2].args, [
+    const hubInvalidation = calls.find((call) => call.action === "invalidate-cdn" && call.surface === "hub");
+    const kfdInvalidation = calls.find((call) => call.action === "invalidate-cdn" && call.surface === "kfd");
+    assert.deepEqual(hubInvalidation.args, [
       "cloudfront",
       "create-invalidation",
       "--distribution-id",
@@ -546,7 +580,7 @@ test("web-surface production deploy apply executes against production target", (
       "/*",
       "/.buildchain/deployments/production/hub.json",
     ]);
-    assert.deepEqual(calls[11].args.slice(-2), [
+    assert.deepEqual(kfdInvalidation.args.slice(-2), [
       "/*",
       "/.buildchain/deployments/production/kfd.json",
     ]);
