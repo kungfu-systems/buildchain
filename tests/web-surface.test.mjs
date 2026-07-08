@@ -109,6 +109,7 @@ test("web-surface deploy plan emits deterministic manifest without touching AWS"
     assert.deepEqual(
       plan.steps.map((step) => step.action),
       [
+        "ensure-cloudfront-directory-index-rewrite",
         "sync-static-artifact",
         "write-deployment-manifest",
         "invalidate-cdn",
@@ -149,7 +150,11 @@ test("web-surface deploy apply defaults to dry-run operations", () => {
     assert.equal(result.surfaceBindings.length, 4);
     assert.deepEqual(
       result.operations.map((operation) => operation.executed),
-      Array.from({ length: 20 }, () => false),
+      Array.from({ length: 21 }, () => false),
+    );
+    assert.equal(
+      result.operations.filter((operation) => operation.action === "ensure-cloudfront-directory-index-rewrite").length,
+      1,
     );
     assert.equal(result.operations.filter((operation) => operation.action === "ensure-cloudfront-default-root-object").length, 0);
   });
@@ -175,7 +180,16 @@ test("web-surface deploy apply executes aws s3 and cloudfront commands through r
     assert.equal(result.applyMode, "apply");
     assert.equal(result.status, "applied");
     assert.equal(result.target, "libkungfu-dev-staging");
-    assert.equal(result.operations.length, 20);
+    assert.equal(result.operations.length, 21);
+    const rewrite = calls.find((call) => call.action === "ensure-cloudfront-directory-index-rewrite");
+    assert.equal(rewrite.command, "node");
+    assert.equal(path.basename(rewrite.args[0]), "web-surface-cloudfront-rewrite.mjs");
+    assert.deepEqual(rewrite.args.slice(1), [
+      "--distribution-id",
+      "E-STAGING",
+      "--function-name",
+      "buildchain-web-surface-index-E-STAGING",
+    ]);
     assert.equal(calls.some((call) => call.action === "ensure-cloudfront-default-root-object"), false);
     const hubSync = calls.find((call) => call.action === "sync-static-artifact" && call.surface === "hub");
     assert.deepEqual(hubSync.args.slice(0, 3), ["s3", "sync", path.join(fixture, "dist")]);
@@ -203,7 +217,7 @@ test("web-surface deploy apply executes aws s3 and cloudfront commands through r
     ]);
     assert.deepEqual(
       result.operations.map((operation) => operation.executed),
-      Array.from({ length: 20 }, () => true),
+      Array.from({ length: 21 }, () => true),
     );
   });
 });
@@ -1133,9 +1147,10 @@ test("web-surface CLI deploy-apply preserves failed operation diagnostics", () =
       assert.throws(() => webSurfaceCli(), /see apply result/);
       const result = JSON.parse(fs.readFileSync(output, "utf8"));
       assert.equal(result.status, "failed");
-      assert.equal(result.operations[0].action, "sync-static-artifact");
-      assert.equal(result.operations[0].surface, "hub");
-      assert.deepEqual(result.operations[0].args.slice(0, 2), ["s3", "sync"]);
+      assert.equal(result.operations[0].action, "ensure-cloudfront-directory-index-rewrite");
+      assert.equal(result.operations[0].surface, "__distribution__");
+      assert.equal(result.operations[0].command, "node");
+      assert.equal(path.basename(result.operations[0].args[0]), "web-surface-cloudfront-rewrite.mjs");
       assert.match(result.operations[0].stderr, /aws|ENOENT|exit code/);
     } finally {
       process.argv = originalArgv;

@@ -4,8 +4,11 @@ import dns from "node:dns/promises";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { loadBuildchainConfig, validateBuildchainConfig } from "../packages/core/buildchain-config.js";
 import { createSurfaceTimestampPolicy } from "../packages/core/surface-manifest.js";
+
+const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 
 const DEFAULT_RETENTION = Object.freeze({
   preview: {
@@ -322,6 +325,47 @@ function directoryIndexAliasOperations({ surfaceArtifactRoot, bucket, binding })
         },
       }));
     });
+}
+
+function cloudFrontDirectoryIndexFunctionName(distributionId = "") {
+  const suffix = String(distributionId || "")
+    .replace(/[^0-9A-Za-z-]/g, "-")
+    .slice(0, 48);
+  return `buildchain-web-surface-index-${suffix || "distribution"}`;
+}
+
+function cloudFrontDirectoryIndexRewriteOperations(bindings) {
+  const seen = new Set();
+  const helper = path.join(moduleDir, "web-surface-cloudfront-rewrite.mjs");
+  return bindings
+    .map((binding) => binding.distributionId || "")
+    .filter(Boolean)
+    .filter((distributionId) => {
+      if (seen.has(distributionId)) {
+        return false;
+      }
+      seen.add(distributionId);
+      return true;
+    })
+    .map((distributionId) => ({
+      action: "ensure-cloudfront-directory-index-rewrite",
+      surface: "__distribution__",
+      command: "node",
+      args: [
+        helper,
+        "--distribution-id",
+        distributionId,
+        "--function-name",
+        cloudFrontDirectoryIndexFunctionName(distributionId),
+      ],
+      routing: {
+        contract: "kungfu-buildchain-web-surface-directory-index-rewrite",
+        strategy: "cloudfront-function",
+        distributionId,
+        functionName: cloudFrontDirectoryIndexFunctionName(distributionId),
+        requestRewrite: "viewer request paths ending in / are rewritten to /index.html",
+      },
+    }));
 }
 
 function defaultCommandRunner({ command, args, stdin = "" }) {
@@ -698,6 +742,7 @@ function withSurfaceRoutingEvidence(bindings, { artifactPath, files }) {
       objectPrefix: binding.objectPrefix,
       directoryIndex: binding.directoryIndex || "index.html",
       directoryIndexResolution: binding.directoryIndexResolution !== false,
+      directoryIndexStrategy: "cloudfront-function",
     },
     smokeUrls: smokeUrlsForBinding({ binding, artifactPath, files }),
   }));
@@ -942,6 +987,7 @@ export function applyWebSurfaceDeploy({
     }
   }
   const operations = [
+    ...cloudFrontDirectoryIndexRewriteOperations(bindings),
     ...bindings.flatMap((binding) => deployBindingOperations({
       artifactRoot,
       deployConfig,
@@ -1430,6 +1476,12 @@ function deployBindingOperations({ artifactRoot, deployConfig, manifest, binding
 function planAdapterSteps(adapter, deployConfig, manifest) {
   if (adapter === "aws-s3-cloudfront") {
     return [
+      ...cloudFrontDirectoryIndexRewriteOperations(manifest.surfaceBindings || []).map((operation) => ({
+        action: operation.action,
+        distribution: operation.routing.distributionId,
+        functionName: operation.routing.functionName,
+        strategy: operation.routing.strategy,
+      })),
       ...manifest.surfaceBindings.flatMap((binding) => [
         {
           action: "sync-static-artifact",
