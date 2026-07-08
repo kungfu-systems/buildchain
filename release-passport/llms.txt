@@ -1,0 +1,6 @@
+# Buildchain Release Passport
+
+Release: v2.9.1
+
+Start with buildchain.release.json. Verify artifact-evidence.json before installing binaries.
+If verification fails, do not install or promote this release.
