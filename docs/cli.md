@@ -64,6 +64,7 @@ Current public import families include:
 ```js
 import * as buildchain from "@kungfu-tech/buildchain";
 import { createBuildchainLogger } from "@kungfu-tech/buildchain/logging";
+import { collectModuleBuildFacts } from "@kungfu-tech/buildchain/build-facts";
 import { checkHomebrewTap } from "@kungfu-tech/buildchain/homebrew";
 import { verifyKfd1ReleaseGate } from "@kungfu-tech/buildchain/kfd-gate";
 import { collectBadgeBundleFacts } from "@kungfu-tech/buildchain/badges";
@@ -199,6 +200,30 @@ Without `--json`, the command prints a compact lifecycle timing table with
 install/build/verify/publish, artifact scan/upload, total, warning, and error
 columns for each platform, plus `jobs` and `active` columns for requested and
 observed process concurrency when sampler data is present.
+
+`buildchain facts` collects and verifies source/version/output facts for
+modules and products:
+
+```bash
+buildchain facts module \
+  --module native-core \
+  --output .buildchain/facts/native-core.json \
+  --legacy-kungfu-buildinfo framework/core/src/kungfu/yijinjing/kungfubuildinfo.json
+
+buildchain facts aggregate \
+  --product kungfu \
+  --module-fact .buildchain/facts/native-core.json \
+  --artifact dist/kungfu.zip \
+  --output .buildchain/facts/kungfu.json
+
+buildchain facts verify --fact .buildchain/facts/kungfu.json
+```
+
+The same implementation is available from
+`@kungfu-tech/buildchain/build-facts`. Release passports can include these
+facts with repeated `--build-facts-json` arguments to
+`buildchain collect github-release`. See
+[`build-facts.md`](build-facts.md) for the config schema and Node API.
 
 `buildchain sample process-tree` wraps a long-running command and periodically
 writes process-tree snapshots:

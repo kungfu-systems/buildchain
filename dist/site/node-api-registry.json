@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:78f6ff5d437c35431a5d71a8328b32be9e05d17b53a6846b81b3e28eabb9e56e"
+      "digest": "sha256:b2473e46d2d6cef4986f2ce7b005dd0f92f0ead0f5acff17592e7eb290934ea9"
     },
     {
       "specifier": "@kungfu-tech/buildchain/badges",
@@ -17,10 +17,16 @@
       "digest": "sha256:207ebe604c6f109f61816932fbadaf95fcf96a075a60d79dce4a90629337e2c9"
     },
     {
+      "specifier": "@kungfu-tech/buildchain/build-facts",
+      "export": "./build-facts",
+      "target": "./packages/core/build-facts.js",
+      "digest": "sha256:b7b4204610fef46731f840f33f4a8bf66c0100c149e63bf6e78241f7e8a99f27"
+    },
+    {
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:78f6ff5d437c35431a5d71a8328b32be9e05d17b53a6846b81b3e28eabb9e56e"
+      "digest": "sha256:b2473e46d2d6cef4986f2ce7b005dd0f92f0ead0f5acff17592e7eb290934ea9"
     },
     {
       "specifier": "@kungfu-tech/buildchain/artifact-passport",
@@ -80,7 +86,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:e4a79237c0363b60fe084393068f6bc7da526bb9c5912b60d747b75364506b32"
+      "digest": "sha256:ce36cc21cfd3e0508a2a816292863dc2e11f19146b2624ef066fc9aaa4f4190e"
     },
     {
       "specifier": "@kungfu-tech/buildchain/release-propagation",
@@ -98,14 +104,19 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-kfd-claims",
       "export": "./buildchain-kfd-claims",
       "target": "./packages/core/buildchain-kfd-claims.js",
-      "digest": "sha256:312af73566f569dff2026e9602d40269a06534915dea22d03895a21182ba3f6f"
+      "digest": "sha256:76f349063e301dcf3707b4dbf768f100c13130b921da181246b74afbe48213c9"
     }
   ],
   "docs": [
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:a8db321b281bea50e055e9357179cccffe12fd9c4b1d7eb9f7dc018108e676c6"
+      "digest": "sha256:60686b5b4d5fe7f3944cb53ab709231fd00bb02b6d51770f1fe8b018122afd8f"
+    },
+    {
+      "id": "build-facts",
+      "path": "docs/build-facts.md",
+      "digest": "sha256:75dcf7a6628dac9e982a455de9966044ae771611d4efc04e7264a2d4adb0bd3e"
     },
     {
       "id": "readme-badges",

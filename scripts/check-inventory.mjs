@@ -15,7 +15,9 @@ const requiredPaths = [
   ".github/pull_request_template.md",
   "bin/buildchain.mjs",
   "packages/core/homebrew.js",
+  "packages/core/build-facts.js",
   "docs/MAP.md",
+  "docs/build-facts.md",
   "docs/binary-distribution.md",
   "docs/cli.md",
   "docs/consumer-issue-reporting.md",
@@ -123,6 +125,9 @@ if (rootPackage.exports?.["./readme-badges"] !== "./packages/core/readme-badges.
 if (rootPackage.exports?.["./badges"] !== "./packages/core/badges.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/badges");
 }
+if (rootPackage.exports?.["./build-facts"] !== "./packages/core/build-facts.js") {
+  throw new Error("root package must export @kungfu-tech/buildchain/build-facts");
+}
 if (rootPackage.exports?.["./logging"] !== "./packages/core/logging.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/logging");
 }
@@ -211,6 +216,16 @@ if (!coreIndexSource.includes("KFD2_TRUST_PROOF_CONTRACT")) {
 }
 if (!coreIndexSource.includes("createSurfaceTimestampPolicy")) {
   throw new Error("packages/core/index.js must export surface manifest timestamp policy APIs");
+}
+for (const requiredSnippet of [
+  "collectModuleBuildFacts",
+  "aggregateBuildFacts",
+  "verifyBuildFacts",
+  "writeKungfuBuildInfoProjection",
+]) {
+  if (!coreIndexSource.includes(requiredSnippet)) {
+    throw new Error(`packages/core/index.js must export Build Facts API: ${requiredSnippet}`);
+  }
 }
 for (const requiredSnippet of [
   "collectBadgeBundleFacts",
@@ -394,6 +409,8 @@ for (const requiredSnippet of [
   "Verification fails closed",
   "KFD-2 release trust passport audit",
   "Unbound public claims fail",
+  "buildFacts[]",
+  "--build-facts-json",
   "Floating Buildchain contract lock",
   "buildchain.contract-lock.json",
   "--kfd-3-prebuild-witness-json",
@@ -410,6 +427,7 @@ for (const requiredSnippet of [
   "KFD-1 / KFD-2 / KFD-3",
   "floating `@v2`",
   "npm publish transactions",
+  "Git/source/version/module/product build facts",
   "GitHub Release",
   "release propagation",
   "Homebrew tap distribution indexes",

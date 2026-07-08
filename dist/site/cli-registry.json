@@ -65,6 +65,11 @@
       "purpose": "Summarize small diagnostics artifacts into JSON and a cross-platform lifecycle timing table."
     },
     {
+      "id": "build-facts",
+      "usage": "buildchain facts module|aggregate|verify",
+      "purpose": "Collect and verify Git source, version, module output, product artifact, and legacy Kungfu buildinfo facts."
+    },
+    {
       "id": "npm-dry-run",
       "usage": "buildchain npm dry-run --json",
       "purpose": "Verify npm publish shape before a release transaction."
