@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "e0b9ed498fb4d9c890f2c0f8ea5a94fce690bf796d7dc43523e1ec4caa7f33df",
+    "sha256": "f9ae0512372a5967f58aafc3eb0e28b1a35a56631caa4b59df7e200b72f4b4f0",
     "summary": {
       "cliCommandCount": 65,
       "workflowCount": 35,
@@ -207,7 +207,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "e0b9ed498fb4d9c890f2c0f8ea5a94fce690bf796d7dc43523e1ec4caa7f33df",
+      "sha256": "f9ae0512372a5967f58aafc3eb0e28b1a35a56631caa4b59df7e200b72f4b4f0",
       "summary": {
         "cliCommandCount": 65,
         "workflowCount": 35,
@@ -2397,7 +2397,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 28,
+          "inputCount": 31,
           "inputs": [
             "artifact-path",
             "aws-region",
@@ -2407,6 +2407,7 @@
             "buildchain-contract-lock-path",
             "buildchain-ref",
             "buildchain-repository",
+            "fail-on-release-pr-error",
             "node-version",
             "preview-apply",
             "preview-aws-role-arn",
@@ -2421,6 +2422,8 @@
             "production-release-head-prefix",
             "production-release-label",
             "production-release-on-main",
+            "production-release-pr-mode",
+            "production-release-pr-token",
             "release-feedback-actor-privacy",
             "staging-apply",
             "staging-aws-role-arn",

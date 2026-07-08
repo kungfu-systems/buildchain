@@ -30,6 +30,14 @@ function parseJson(value, name) {
   }
 }
 
+function parseBoolean(value, defaultValue = false) {
+  const normalized = optionalString(value).toLowerCase();
+  if (!normalized) return defaultValue;
+  if (["1", "true", "yes", "on"].includes(normalized)) return true;
+  if (["0", "false", "no", "off"].includes(normalized)) return false;
+  throw new Error(`expected boolean value, got: ${value}`);
+}
+
 function readArg(name, fallback = "") {
   const index = process.argv.indexOf(`--${name}`);
   if (index === -1) return fallback;
@@ -49,6 +57,12 @@ function writeJsonFile(filePath, value) {
   const resolved = path.resolve(requiredString(filePath, "output"));
   fs.mkdirSync(path.dirname(resolved), { recursive: true });
   fs.writeFileSync(resolved, `${JSON.stringify(value, null, 2)}\n`);
+}
+
+function writeTextFile(filePath, value) {
+  const resolved = path.resolve(requiredString(filePath, "filePath"));
+  fs.mkdirSync(path.dirname(resolved), { recursive: true });
+  fs.writeFileSync(resolved, String(value));
 }
 
 function runUrl({ serverUrl = "", repository = "", runId = "" } = {}) {
@@ -151,6 +165,113 @@ ${urlLines.join("\n")}
 - Release branch: \`${branchName}\`
 
 This PR intentionally contains one empty release-intent commit.`;
+}
+
+export function createProductionReleasePrHandoff({
+  repository,
+  sourceSha,
+  stagingResult = {},
+  productionReleaseLabel = "buildchain-release",
+  productionReleaseHeadPrefix = "release/",
+  productionReleaseChannel = "production",
+  runId = "",
+  serverUrl = "https://github.com",
+  releasePassportArtifact = "buildchain-web-surface-staging-release-passport",
+} = {}) {
+  const [owner, repo] = requiredString(repository, "repository").split("/");
+  if (!owner || !repo) throw new Error(`invalid repository: ${repository}`);
+  const normalizedSourceSha = requiredString(sourceSha, "sourceSha");
+  const label = requiredString(productionReleaseLabel, "productionReleaseLabel");
+  const branchName = releaseBranchName({
+    prefix: productionReleaseHeadPrefix || "release/",
+    channel: productionReleaseChannel || "production",
+    sourceSha: normalizedSourceSha,
+  });
+  const workflowRunUrl = runUrl({ serverUrl, repository, runId });
+  const title = `Release production from ${normalizedSourceSha.slice(0, 12)}`;
+  const body = renderProductionReleasePrBody({
+    stagingResult,
+    sourceSha: normalizedSourceSha,
+    artifactHash: stagingResult.artifactHash || "",
+    releasePassportArtifact,
+    workflowRunUrl,
+    productionReleaseLabel: label,
+    branchName,
+  });
+  const emptyCommitMessage = `buildchain release intent: ${productionReleaseChannel} ${normalizedSourceSha.slice(0, 12)}`;
+  const bodyPath = ".buildchain/production-release-pr/body.md";
+  const manualCommand = [
+    "git fetch origin main",
+    `git switch -C ${branchName} ${normalizedSourceSha}`,
+    `git commit --allow-empty -m ${JSON.stringify(emptyCommitMessage)}`,
+    `git push origin HEAD:${branchName}`,
+    `gh pr create --repo ${repository} --base main --head ${branchName} --title ${JSON.stringify(title)} --body-file ${bodyPath}`,
+  ].join(" && ");
+  return {
+    contract: "kungfu-buildchain-web-surface-production-release-pr-handoff",
+    schemaVersion: 1,
+    repository,
+    owner,
+    repo,
+    base: "main",
+    head: `${owner}:${branchName}`,
+    branchName,
+    sourceSha: normalizedSourceSha,
+    title,
+    body,
+    label,
+    productionReleaseChannel,
+    releasePassportArtifact,
+    workflowRunUrl,
+    manualCommand,
+    staging: {
+      channel: stagingResult.channel || "",
+      status: stagingResult.status || "",
+      urls: urlsFromResult(stagingResult),
+      artifactHash: stagingResult.artifactHash || "",
+      target: stagingResult.target || "",
+      manifestKey: stagingResult.manifestKey || "",
+    },
+  };
+}
+
+function classifyReleasePrError(error) {
+  const message = String(error?.message || error || "");
+  if (
+    error?.status === 403 &&
+    /not permitted to create or approve pull requests|Resource not accessible by integration|permission|forbidden/i.test(message)
+  ) {
+    return "permission-denied";
+  }
+  return "failed";
+}
+
+function renderStepSummary(result = {}) {
+  const status = result.status || result.action || "unknown";
+  const lines = [
+    "## Buildchain production release PR handoff",
+    "",
+    `- status: \`${status}\``,
+    `- mode: \`${result.mode || "auto"}\``,
+    `- source: \`${result.sourceSha || ""}\``,
+    `- release branch: \`${result.branchName || ""}\``,
+  ];
+  if (result.pullUrl) lines.push(`- pull request: ${result.pullUrl}`);
+  if (result.error?.message) lines.push(`- error: \`${result.error.message.replace(/`/g, "'")}\``);
+  if (result.manualCommand) {
+    lines.push("", "Manual PR creation command:", "", "```bash", result.manualCommand, "```");
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+function writeGitHubOutputs(env, outputs) {
+  for (const [name, value] of Object.entries(outputs)) {
+    const normalized = String(value ?? "");
+    console.log(`${name}=${normalized}`);
+    if (env.GITHUB_OUTPUT) {
+      fs.appendFileSync(env.GITHUB_OUTPUT, `${name}=${normalized}\n`);
+    }
+  }
 }
 
 async function githubJson({ apiUrl, token, method = "GET", path, body }) {
@@ -264,28 +385,19 @@ export async function openProductionReleasePr({
   serverUrl = "https://github.com",
   releasePassportArtifact = "buildchain-web-surface-staging-release-passport",
 } = {}) {
-  const [owner, repo] = requiredString(repository, "repository").split("/");
-  if (!owner || !repo) throw new Error(`invalid repository: ${repository}`);
-  const normalizedToken = requiredString(token, "token");
-  const normalizedSourceSha = requiredString(sourceSha, "sourceSha");
-  const label = requiredString(productionReleaseLabel, "productionReleaseLabel");
-  const branchName = releaseBranchName({
-    prefix: productionReleaseHeadPrefix || "release/",
-    channel: productionReleaseChannel || "production",
-    sourceSha: normalizedSourceSha,
-  });
-  const workflowRunUrl = runUrl({ serverUrl, repository, runId });
-  const body = renderProductionReleasePrBody({
+  const handoff = createProductionReleasePrHandoff({
+    repository,
+    sourceSha,
     stagingResult,
-    sourceSha: normalizedSourceSha,
-    artifactHash: stagingResult.artifactHash || "",
+    productionReleaseLabel,
+    productionReleaseHeadPrefix,
+    productionReleaseChannel,
+    runId,
+    serverUrl,
     releasePassportArtifact,
-    workflowRunUrl,
-    productionReleaseLabel: label,
-    branchName,
   });
-  const title = `Release production from ${normalizedSourceSha.slice(0, 12)}`;
-  const head = `${owner}:${branchName}`;
+  const { owner, repo, branchName, title, body, head } = handoff;
+  const normalizedToken = requiredString(token, "token");
   const existing = await githubJson({
     apiUrl,
     token: normalizedToken,
@@ -300,13 +412,14 @@ export async function openProductionReleasePr({
       path: `/repos/${owner}/${repo}/pulls/${pull.number}`,
       body: { title, body },
     });
-    await addLabel({ apiUrl, token: normalizedToken, owner, repo, pullNumber: pull.number, label });
+    await addLabel({ apiUrl, token: normalizedToken, owner, repo, pullNumber: pull.number, label: handoff.label });
     return {
       action: "updated",
+      status: "updated",
+      ...handoff,
       branchName,
       pullNumber: pull.number,
       pullUrl: pull.html_url,
-      sourceSha: normalizedSourceSha,
     };
   }
 
@@ -316,8 +429,8 @@ export async function openProductionReleasePr({
     owner,
     repo,
     branchName,
-    sourceSha: normalizedSourceSha,
-    message: `buildchain release intent: ${productionReleaseChannel} ${normalizedSourceSha.slice(0, 12)}`,
+    sourceSha: handoff.sourceSha,
+    message: `buildchain release intent: ${productionReleaseChannel} ${handoff.sourceSha.slice(0, 12)}`,
   });
   const pull = await githubJson({
     apiUrl,
@@ -332,23 +445,27 @@ export async function openProductionReleasePr({
       maintainer_can_modify: true,
     },
   });
-  await addLabel({ apiUrl, token: normalizedToken, owner, repo, pullNumber: pull.number, label });
+  await addLabel({ apiUrl, token: normalizedToken, owner, repo, pullNumber: pull.number, label: handoff.label });
   return {
     action: "created",
+    status: "created",
+    ...handoff,
     branchName,
     commitSha,
     pullNumber: pull.number,
     pullUrl: pull.html_url,
-    sourceSha: normalizedSourceSha,
   };
 }
 
 export async function webSurfaceProductionReleasePrCli(env = process.env) {
   const stagingResult = readStagingReleasePrSummary(env);
   const sourceSha = optionalString(stagingResult.sourceSha) || requiredString(env.GITHUB_SHA, "GITHUB_SHA");
-  const result = await openProductionReleasePr({
-    apiUrl: env.GITHUB_API_URL || "https://api.github.com",
-    token: env.GITHUB_TOKEN,
+  const mode = optionalString(env.PRODUCTION_RELEASE_PR_MODE || "auto") || "auto";
+  if (!["auto", "summary-only", "disabled"].includes(mode)) {
+    throw new Error("PRODUCTION_RELEASE_PR_MODE must be auto, summary-only, or disabled");
+  }
+  const failOnReleasePrError = parseBoolean(env.FAIL_ON_RELEASE_PR_ERROR, false);
+  const handoff = createProductionReleasePrHandoff({
     repository: env.GITHUB_REPOSITORY,
     sourceSha,
     stagingResult,
@@ -359,19 +476,75 @@ export async function webSurfaceProductionReleasePrCli(env = process.env) {
     serverUrl: env.GITHUB_SERVER_URL || "https://github.com",
     releasePassportArtifact: env.RELEASE_PASSPORT_ARTIFACT || "buildchain-web-surface-staging-release-passport",
   });
-  for (const [name, value] of Object.entries({
+
+  const bodyPath = optionalString(env.PRODUCTION_RELEASE_PR_BODY_PATH) || ".buildchain/production-release-pr/body.md";
+  const summaryPath = optionalString(env.PRODUCTION_RELEASE_PR_SUMMARY_PATH) || ".buildchain/production-release-pr/handoff.json";
+  writeTextFile(bodyPath, `${handoff.body}\n`);
+
+  let result = {
+    ...handoff,
+    mode,
+    status: mode,
+    action: "skipped",
+    pullNumber: "",
+    pullUrl: "",
+    bodyPath,
+    summaryPath,
+  };
+
+  if (mode === "auto") {
+    try {
+      result = {
+        ...result,
+        ...(await openProductionReleasePr({
+          apiUrl: env.GITHUB_API_URL || "https://api.github.com",
+          token: env.GITHUB_TOKEN,
+          repository: env.GITHUB_REPOSITORY,
+          sourceSha,
+          stagingResult,
+          productionReleaseLabel: env.PRODUCTION_RELEASE_LABEL || "buildchain-release",
+          productionReleaseHeadPrefix: env.PRODUCTION_RELEASE_HEAD_PREFIX || "release/",
+          productionReleaseChannel: env.PRODUCTION_RELEASE_CHANNEL || "production",
+          runId: env.GITHUB_RUN_ID,
+          serverUrl: env.GITHUB_SERVER_URL || "https://github.com",
+          releasePassportArtifact: env.RELEASE_PASSPORT_ARTIFACT || "buildchain-web-surface-staging-release-passport",
+        })),
+        mode,
+      };
+    } catch (error) {
+      const status = classifyReleasePrError(error);
+      result = {
+        ...result,
+        status,
+        action: status,
+        error: {
+          status: error.status || "",
+          message: error.message || String(error),
+        },
+      };
+      if (status !== "permission-denied" || failOnReleasePrError) {
+        writeJsonFile(summaryPath, result);
+        if (env.GITHUB_STEP_SUMMARY) fs.appendFileSync(env.GITHUB_STEP_SUMMARY, renderStepSummary(result));
+        throw error;
+      }
+    }
+  }
+
+  writeJsonFile(summaryPath, result);
+  if (env.GITHUB_STEP_SUMMARY) {
+    fs.appendFileSync(env.GITHUB_STEP_SUMMARY, renderStepSummary(result));
+  }
+  writeGitHubOutputs(env, {
+    "release-pr-status": result.status,
+    "production-release-pr-status": result.status,
     "production-release-pr-action": result.action,
     "production-release-pr": String(result.pullNumber || ""),
     "production-release-pr-url": result.pullUrl || "",
     "production-release-branch": result.branchName || "",
     "production-release-source-sha": result.sourceSha || "",
-  })) {
-    console.log(`${name}=${value}`);
-    if (env.GITHUB_OUTPUT) {
-      const fs = await import("node:fs");
-      fs.appendFileSync(env.GITHUB_OUTPUT, `${name}=${value}\n`);
-    }
-  }
+    "production-release-pr-summary-path": summaryPath,
+    "production-release-pr-body-path": bodyPath,
+  });
   return result;
 }
 

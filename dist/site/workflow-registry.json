@@ -259,6 +259,7 @@
         "buildchain-contract-lock-path",
         "buildchain-ref",
         "buildchain-repository",
+        "fail-on-release-pr-error",
         "node-version",
         "preview-apply",
         "preview-aws-role-arn",
@@ -273,6 +274,8 @@
         "production-release-head-prefix",
         "production-release-label",
         "production-release-on-main",
+        "production-release-pr-mode",
+        "production-release-pr-token",
         "release-feedback-actor-privacy",
         "staging-apply",
         "staging-aws-role-arn",
@@ -280,7 +283,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 28,
+      "inputCount": 31,
       "surface": "reusable-workflow",
       "capabilityGroup": "api-cli-reference",
       "status": "active"
