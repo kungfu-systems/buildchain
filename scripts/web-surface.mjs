@@ -231,7 +231,22 @@ export function webSurfaceCli() {
     const resultFile = readArg("result", process.env.BUILDCHAIN_WEB_SURFACE_APPLY_RESULT || "");
     const result = resultFile ? JSON.parse(fs.readFileSync(path.resolve(resultFile), "utf8")) : null;
     const plan = readJsonFileArg("plan");
-    const health = checkWebSurfaceHealth({ cwd, result, plan });
+    const envAllowedManagedNetworkRunner = process.env.BUILDCHAIN_WEB_SURFACE_HEALTH_ALLOWED_RUNNER === "true" ||
+      process.env.BUILDCHAIN_WEB_SURFACE_HEALTH_ALLOWED_RUNNER === "1";
+    const health = checkWebSurfaceHealth({
+      cwd,
+      result,
+      plan,
+      allowedManagedNetworkRunner: readBooleanArg(
+        "allowed-managed-network-runner",
+        envAllowedManagedNetworkRunner,
+      ),
+      managedNetworkS3ObjectVerification: readBooleanArg(
+        "managed-network-s3-object-verification",
+        process.env.BUILDCHAIN_WEB_SURFACE_HEALTH_S3_OBJECTS !== "false" &&
+          process.env.BUILDCHAIN_WEB_SURFACE_HEALTH_S3_OBJECTS !== "0",
+      ),
+    });
     return Promise.resolve(health).then((resolved) => {
       writeJson(resolved, output);
       writeGitHubOutputs({

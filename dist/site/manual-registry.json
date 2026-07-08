@@ -9,175 +9,360 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:3712026dcfcf44c16bc4def2acf246caee1ec036543c0fea265fa17b19d4de31"
+      "digest": "sha256:67a0e6b63a943904eacbf7d26227e3c9ad650d17e8aa937c40b3fdad8f389fdd",
+      "capabilityGroup": "getting-started",
+      "audience": [
+        "agent",
+        "consumer"
+      ],
+      "maturity": "stable",
+      "order": 10
     },
     {
       "id": "install",
       "title": "Install and verify Buildchain",
       "path": "docs/install.md",
       "plane": "use",
-      "digest": "sha256:34bc161a26595f95684694d341616e47bfd65b0c51a63225e68a575179636175"
+      "digest": "sha256:34bc161a26595f95684694d341616e47bfd65b0c51a63225e68a575179636175",
+      "capabilityGroup": "getting-started",
+      "audience": [
+        "consumer"
+      ],
+      "maturity": "stable",
+      "order": 20
     },
     {
       "id": "release-passport",
       "title": "Release Passport protocol",
       "path": "docs/release-passport.md",
       "plane": "verify",
-      "digest": "sha256:75d8bade4b0b96b26941b11835c2debcdada8f1723412935fb8ae6884f08f9f3"
+      "digest": "sha256:75d8bade4b0b96b26941b11835c2debcdada8f1723412935fb8ae6884f08f9f3",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "release-operator",
+        "agent"
+      ],
+      "maturity": "stable",
+      "order": 100
+    },
+    {
+      "id": "release-candidate",
+      "title": "Release Candidate Passport",
+      "path": "docs/release-candidate.md",
+      "plane": "verify",
+      "digest": "sha256:6b5107cded122925e8560a9b117ff1c96f5cf05d934caf83d7e4b2a4d777175e",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "release-operator",
+        "consumer"
+      ],
+      "maturity": "stable",
+      "order": 130
     },
     {
       "id": "release-propagation",
       "title": "Release propagation",
       "path": "docs/release-propagation.md",
       "plane": "use",
-      "digest": "sha256:190e3537075f37cf8a7e52bf8254606e1d9450d87c5a81dc11df8b56a7d03065"
+      "digest": "sha256:190e3537075f37cf8a7e52bf8254606e1d9450d87c5a81dc11df8b56a7d03065",
+      "capabilityGroup": "site-and-propagation",
+      "audience": [
+        "release-operator",
+        "agent"
+      ],
+      "maturity": "preview",
+      "order": 420
     },
     {
       "id": "readme-badges",
       "title": "README badge blocks",
       "path": "docs/readme-badges.md",
       "plane": "use",
-      "digest": "sha256:06eaef737dcc73a6526d856d79275ee87af9670f0e2be39a5596758bfc3527c9"
+      "digest": "sha256:06eaef737dcc73a6526d856d79275ee87af9670f0e2be39a5596758bfc3527c9",
+      "capabilityGroup": "distribution-indexes",
+      "audience": [
+        "consumer",
+        "site"
+      ],
+      "maturity": "stable",
+      "order": 500
     },
     {
       "id": "homebrew",
       "title": "Homebrew distribution indexes",
       "path": "docs/homebrew.md",
       "plane": "use",
-      "digest": "sha256:2fc4e8411f35ca86d19d61c7843b9a1fa440f7afea25df13d3aa03342f09f90c"
+      "digest": "sha256:2fc4e8411f35ca86d19d61c7843b9a1fa440f7afea25df13d3aa03342f09f90c",
+      "capabilityGroup": "distribution-indexes",
+      "audience": [
+        "consumer",
+        "release-operator"
+      ],
+      "maturity": "stable",
+      "order": 510
     },
     {
       "id": "binary-distribution",
       "title": "Binary distribution contract",
       "path": "docs/binary-distribution.md",
       "plane": "verify",
-      "digest": "sha256:36899140a9b2e9ce1565ed41f3d64f73a8829fad3d59a04b9498d9479c85c4be"
+      "digest": "sha256:36899140a9b2e9ce1565ed41f3d64f73a8829fad3d59a04b9498d9479c85c4be",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "release-operator",
+        "agent"
+      ],
+      "maturity": "stable",
+      "order": 110
     },
     {
       "id": "consumer-issue-reporting",
       "title": "Consumer issue reporting",
       "path": "docs/consumer-issue-reporting.md",
       "plane": "use",
-      "digest": "sha256:8e2159312e47b42ab0bb644cb195362150acc8872e6ac0e7380ece0c5cf36955"
+      "digest": "sha256:8e2159312e47b42ab0bb644cb195362150acc8872e6ac0e7380ece0c5cf36955",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "consumer",
+        "maintainer"
+      ],
+      "maturity": "stable",
+      "order": 620
     },
     {
       "id": "infra-contract",
       "title": "Infra Contract",
       "path": "docs/infra-contract.md",
       "plane": "use",
-      "digest": "sha256:7826e8c70ac2d90ddd8d4e38bcdd1bcfa36eef5106431d7ad94b2fe9c8d3d5dc"
+      "digest": "sha256:7826e8c70ac2d90ddd8d4e38bcdd1bcfa36eef5106431d7ad94b2fe9c8d3d5dc",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "maintainer",
+        "consumer"
+      ],
+      "maturity": "preview",
+      "order": 750
     },
     {
       "id": "toolkit-observability",
       "title": "Toolkit observability",
       "path": "docs/toolkit-observability.md",
       "plane": "use",
-      "digest": "sha256:239949a75ca81b6002a2e148f7028402dbd98c00e246acd8d0955855781206a1"
+      "digest": "sha256:239949a75ca81b6002a2e148f7028402dbd98c00e246acd8d0955855781206a1",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "developer",
+        "maintainer"
+      ],
+      "maturity": "stable",
+      "order": 610
     },
     {
       "id": "site-bundle-contract",
       "title": "Site bundle contract",
       "path": "docs/site-bundle-contract.md",
       "plane": "use",
-      "digest": "sha256:595ad74e82f179844da7bb3545b1fa7a0cd99c083160b7ed08861dfb5b2603ab"
+      "digest": "sha256:6b5bc2ee0f785b16d762f140f14a9163c07caf0d424200c2ececc74f7bb2271c",
+      "capabilityGroup": "site-and-propagation",
+      "audience": [
+        "site",
+        "agent"
+      ],
+      "maturity": "stable",
+      "order": 400
     },
     {
       "id": "migration-inventory",
       "title": "Migration inventory",
       "path": "docs/migration-inventory.md",
       "plane": "verify",
-      "digest": "sha256:80018cf78785431e67bbc5278d82dda80d0baa320cdb5e4abda26a0b05e5c0bc"
+      "digest": "sha256:80018cf78785431e67bbc5278d82dda80d0baa320cdb5e4abda26a0b05e5c0bc",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "maintainer",
+        "agent"
+      ],
+      "maturity": "stable",
+      "order": 740
     },
     {
       "id": "ownership",
       "title": "Ownership",
       "path": "docs/ownership.md",
       "plane": "why",
-      "digest": "sha256:49074fb520c404d3c9f5b49b33562d4bdc4e3ed407cf22543fa8e19e312a6b8e"
+      "digest": "sha256:49074fb520c404d3c9f5b49b33562d4bdc4e3ed407cf22543fa8e19e312a6b8e",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "maintainer"
+      ],
+      "maturity": "stable",
+      "order": 730
     },
     {
       "id": "product-mechanism",
       "title": "Product mechanism",
       "path": "docs/product-mechanism.md",
       "plane": "why",
-      "digest": "sha256:da50022f96f8876bb275a7832190cb1f6ab0fa6aab9d045dda924a7abddc3edf"
+      "digest": "sha256:da50022f96f8876bb275a7832190cb1f6ab0fa6aab9d045dda924a7abddc3edf",
+      "capabilityGroup": "getting-started",
+      "audience": [
+        "agent",
+        "maintainer"
+      ],
+      "maturity": "stable",
+      "order": 30
     },
     {
       "id": "cli",
       "title": "CLI and npm package",
       "path": "docs/cli.md",
       "plane": "use",
-      "digest": "sha256:85e014b7e053b74b620e5b438d54453e20b22f758a33dfd5ae970403fa41d9d7"
+      "digest": "sha256:2f55874feb9acecce1c471b96e07bb9a198a8da93efd0f859d69f353bf9c36a8",
+      "capabilityGroup": "api-cli-reference",
+      "audience": [
+        "agent",
+        "developer"
+      ],
+      "maturity": "stable",
+      "order": 40
     },
     {
       "id": "build-facts",
       "title": "Build Facts",
       "path": "docs/build-facts.md",
       "plane": "use",
-      "digest": "sha256:75dcf7a6628dac9e982a455de9966044ae771611d4efc04e7264a2d4adb0bd3e"
+      "digest": "sha256:75dcf7a6628dac9e982a455de9966044ae771611d4efc04e7264a2d4adb0bd3e",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "maintainer",
+        "agent"
+      ],
+      "maturity": "stable",
+      "order": 600
     },
     {
       "id": "kfd-support",
       "title": "KFD support and KFD-3 surface registration",
       "path": "docs/kfd-support.md",
       "plane": "verify",
-      "digest": "sha256:4bb33e408a2129e1534e92bea78d3cc0e4d8f986b0fbb27fe73ae6eae46b9ca3"
+      "digest": "sha256:4bb33e408a2129e1534e92bea78d3cc0e4d8f986b0fbb27fe73ae6eae46b9ca3",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "maintainer"
+      ],
+      "maturity": "stable",
+      "order": 300
     },
     {
       "id": "lifecycle-protocol",
       "title": "Lifecycle protocol",
       "path": "docs/lifecycle-protocol.md",
       "plane": "use",
-      "digest": "sha256:c76516894cf540da9a6722ba96c475386901ab448ab71ede5850a185f6a716c9"
+      "digest": "sha256:c76516894cf540da9a6722ba96c475386901ab448ab71ede5850a185f6a716c9",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "consumer",
+        "developer"
+      ],
+      "maturity": "stable",
+      "order": 210
     },
     {
       "id": "reusable-build-surface",
       "title": "Reusable build surface",
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
-      "digest": "sha256:e76aefe23b83f1b99b8c13cee1ca99760fd9902a41fbec25e193426329826340"
+      "digest": "sha256:e76aefe23b83f1b99b8c13cee1ca99760fd9902a41fbec25e193426329826340",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "consumer",
+        "release-operator"
+      ],
+      "maturity": "stable",
+      "order": 200
     },
     {
       "id": "publish-transaction",
       "title": "Publish transaction",
       "path": "docs/publish-transaction.md",
       "plane": "verify",
-      "digest": "sha256:c3fc5c49180db9167e1cf5bc5ff403e5a21cb55d1ba750bd0cfcd2429ad825b2"
+      "digest": "sha256:c3fc5c49180db9167e1cf5bc5ff403e5a21cb55d1ba750bd0cfcd2429ad825b2",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "release-operator"
+      ],
+      "maturity": "stable",
+      "order": 120
     },
     {
       "id": "release-governance",
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:15fa0295ae2d97a2fd4ca17024d3da62df1057c9118b77a7e6b7550a404cd27b"
+      "digest": "sha256:15fa0295ae2d97a2fd4ca17024d3da62df1057c9118b77a7e6b7550a404cd27b",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "maintainer",
+        "release-operator"
+      ],
+      "maturity": "stable",
+      "order": 700
     },
     {
       "id": "release-flow",
       "title": "Release flow",
       "path": "docs/release-flow.md",
       "plane": "verify",
-      "digest": "sha256:feb1e056975a4ffb714d8fc0583a0f6fd8ed774c30ca168c27d5e6baf02f1cde"
+      "digest": "sha256:feb1e056975a4ffb714d8fc0583a0f6fd8ed774c30ca168c27d5e6baf02f1cde",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "release-operator",
+        "agent"
+      ],
+      "maturity": "stable",
+      "order": 710
     },
     {
       "id": "runtime-train-validation",
       "title": "Runtime train validation",
       "path": "docs/runtime-train-validation.md",
       "plane": "verify",
-      "digest": "sha256:bb053594407bd0f78aa43352a249a2ffa19825374147cc712cd56ca6ad50dfa3"
+      "digest": "sha256:bb053594407bd0f78aa43352a249a2ffa19825374147cc712cd56ca6ad50dfa3",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "maintainer",
+        "consumer"
+      ],
+      "maturity": "stable",
+      "order": 220
     },
     {
       "id": "versioning",
       "title": "Versioning",
       "path": "docs/versioning.md",
       "plane": "why",
-      "digest": "sha256:2c79f7d1a072a40c75d889beac38ae843b2170587fc570ce40722d3968b6506e"
+      "digest": "sha256:2c79f7d1a072a40c75d889beac38ae843b2170587fc570ce40722d3968b6506e",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "maintainer"
+      ],
+      "maturity": "stable",
+      "order": 720
     },
     {
       "id": "web-surface-deployments",
       "title": "Web surface deployments",
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
-      "digest": "sha256:3a11e4c38c058181ab6d36242a8898e13a3a452304838e806c2d1b86d1348a83"
+      "digest": "sha256:58673b84879a219572fe39aa8b4d01cfc34fabf664b3318753d61043821edaff",
+      "capabilityGroup": "site-and-propagation",
+      "audience": [
+        "site",
+        "release-operator"
+      ],
+      "maturity": "stable",
+      "order": 410
     }
   ],
   "requiredAgentManuals": [

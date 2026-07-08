@@ -34,6 +34,7 @@
     "./site/buildchain-site.json": "./dist/site/buildchain-site.json",
     "./site/site-manifest.json": "./dist/site/site-manifest.json",
     "./site/page-registry.json": "./dist/site/page-registry.json",
+    "./site/capability-registry.json": "./dist/site/capability-registry.json",
     "./site/cli-registry.json": "./dist/site/cli-registry.json",
     "./site/manual-registry.json": "./dist/site/manual-registry.json",
     "./site/node-api-registry.json": "./dist/site/node-api-registry.json",

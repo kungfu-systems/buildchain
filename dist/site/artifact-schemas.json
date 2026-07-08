@@ -17,6 +17,7 @@
     "site-manifest.json",
     "badge-endpoint-registry.json",
     "page-registry.json",
+    "capability-registry.json",
     "cli-registry.json",
     "manual-registry.json",
     "node-api-registry.json",
