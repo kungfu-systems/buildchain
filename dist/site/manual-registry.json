@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:10292c42c2778e9d164c698a0967c8ae3c50d5e4814170bd5c1426b0d240000a"
+      "digest": "sha256:3712026dcfcf44c16bc4def2acf246caee1ec036543c0fea265fa17b19d4de31"
     },
     {
       "id": "install",
@@ -107,7 +107,7 @@
       "title": "CLI and npm package",
       "path": "docs/cli.md",
       "plane": "use",
-      "digest": "sha256:1922537563582f59e08b7c69c8a1549ea2b438229097b1111110b421a7ad84d8"
+      "digest": "sha256:85e014b7e053b74b620e5b438d54453e20b22f758a33dfd5ae970403fa41d9d7"
     },
     {
       "id": "build-facts",
@@ -115,6 +115,13 @@
       "path": "docs/build-facts.md",
       "plane": "use",
       "digest": "sha256:75dcf7a6628dac9e982a455de9966044ae771611d4efc04e7264a2d4adb0bd3e"
+    },
+    {
+      "id": "kfd-support",
+      "title": "KFD support and KFD-3 surface registration",
+      "path": "docs/kfd-support.md",
+      "plane": "verify",
+      "digest": "sha256:4bb33e408a2129e1534e92bea78d3cc0e4d8f986b0fbb27fe73ae6eae46b9ca3"
     },
     {
       "id": "lifecycle-protocol",
@@ -178,6 +185,7 @@
     "docs/install.md",
     "docs/cli.md",
     "docs/build-facts.md",
+    "docs/kfd-support.md",
     "docs/reusable-build-surface.md",
     "docs/release-candidate.md",
     "docs/release-governance.md",
