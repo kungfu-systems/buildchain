@@ -8,13 +8,19 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:af5d9dc00da4361e8db61152cd2c26874c04c2470b7c684c77d9b237ccc3cb62"
+      "digest": "sha256:78f6ff5d437c35431a5d71a8328b32be9e05d17b53a6846b81b3e28eabb9e56e"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/badges",
+      "export": "./badges",
+      "target": "./packages/core/badges.js",
+      "digest": "sha256:207ebe604c6f109f61816932fbadaf95fcf96a075a60d79dce4a90629337e2c9"
     },
     {
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:af5d9dc00da4361e8db61152cd2c26874c04c2470b7c684c77d9b237ccc3cb62"
+      "digest": "sha256:78f6ff5d437c35431a5d71a8328b32be9e05d17b53a6846b81b3e28eabb9e56e"
     },
     {
       "specifier": "@kungfu-tech/buildchain/artifact-passport",
@@ -50,7 +56,7 @@
       "specifier": "@kungfu-tech/buildchain/readme-badges",
       "export": "./readme-badges",
       "target": "./packages/core/readme-badges.js",
-      "digest": "sha256:35c42750bbdede7d85b71444d1d09cd6c7ce40ecd8868c86d869855764dad0c2"
+      "digest": "sha256:3d4b61918f31a24de8fb11b15a9544df2c9696f6bd8c7efb1e373f0745cb3ce0"
     },
     {
       "specifier": "@kungfu-tech/buildchain/logging",
@@ -99,12 +105,12 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:cfb0bf32f2b8b44bf352e79c27e34b7980e0f66e5fa10e4f202975fbb4780ad1"
+      "digest": "sha256:a8db321b281bea50e055e9357179cccffe12fd9c4b1d7eb9f7dc018108e676c6"
     },
     {
       "id": "readme-badges",
       "path": "docs/readme-badges.md",
-      "digest": "sha256:c886d5d469d143571ae68497643be754b1616b562fddc780a5708f49b4c46242"
+      "digest": "sha256:06eaef737dcc73a6526d856d79275ee87af9670f0e2be39a5596758bfc3527c9"
     },
     {
       "id": "homebrew",

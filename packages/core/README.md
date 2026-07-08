@@ -14,8 +14,8 @@ Current shared surfaces:
   `@kungfu-tech/buildchain/diagnostics`;
 - release passport creation and verification through
   `@kungfu-tech/buildchain/release-passport`.
-- managed README badge facts and marker blocks through
-  `@kungfu-tech/buildchain/readme-badges`.
+- managed KFD / Release Passport badge bundle facts and README marker blocks
+  through `@kungfu-tech/buildchain/badges`.
 
 ## Toolkit Imports
 
@@ -56,12 +56,16 @@ Web-surface validation stays in core because both local scripts and GitHub
 Actions need the same fail-closed interpretation of project, channel, deploy,
 retention, and staging security declarations.
 
-README badge consumers should import the public subpath and treat Markdown as a
-projection of the returned facts:
+README badge consumers should import the public badge subpath and treat
+Markdown as a projection of the returned facts:
 
 ```js
-import { collectReadmeBadgeFacts, renderReadmeBadgeBlock } from "@kungfu-tech/buildchain/readme-badges";
+import { collectBadgeBundleFacts, renderBadgeBundleBlock } from "@kungfu-tech/buildchain/badges";
 
-const facts = await collectReadmeBadgeFacts({ cwd: process.cwd() });
-const markdown = renderReadmeBadgeBlock(facts);
+const facts = await collectBadgeBundleFacts({ cwd: process.cwd() });
+const markdown = renderBadgeBundleBlock(facts);
 ```
+
+The older `@kungfu-tech/buildchain/readme-badges` subpath remains available for
+callers that need the full README badge surface instead of the default
+KFD-1 / KFD-2 / KFD-3 / Release Passport bundle.

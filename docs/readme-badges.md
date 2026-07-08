@@ -22,12 +22,19 @@ Use the public package export:
 
 ```js
 import {
+  collectBadgeBundleFacts,
   collectReadmeBadgeFacts,
+  renderBadgeBundleBlock,
   renderReadmeBadgeBlock,
+  checkBadgeBundleBlock,
   checkReadmeBadgeBlock,
+  updateBadgeBundleBlock,
   updateReadmeBadgeBlock,
-} from "@kungfu-tech/buildchain/readme-badges";
+} from "@kungfu-tech/buildchain/badges";
 ```
+
+`@kungfu-tech/buildchain/readme-badges` remains available for compatibility,
+but new integrations should use `@kungfu-tech/buildchain/badges`.
 
 `collectReadmeBadgeFacts({ cwd })` returns a machine-readable object with
 contract `kungfu-buildchain-readme-badge-facts`. It collects repository
@@ -50,6 +57,13 @@ managed block.
 
 The Node API is the implementation source. The CLI delegates to it.
 
+`collectBadgeBundleFacts({ cwd, claims })` is the trust-badge bundle API. It
+uses the same repository facts, but returns contract
+`kungfu-buildchain-badge-bundle-facts` and only renders the Buildchain trust
+claims: `kfd-1`, `kfd-2`, `kfd-3`, and `release-passport`. Those four claims are
+enabled by default. Callers can pass `claims: "kfd-1,release-passport"` or an
+array to narrow the bundle without hand-writing badge Markdown.
+
 ## CLI
 
 Generate facts as JSON:
@@ -70,9 +84,23 @@ Insert or replace the block:
 buildchain badges readme --write
 ```
 
+Generate only the Buildchain trust badge bundle:
+
+```bash
+buildchain badges bundle --json
+buildchain badges bundle --check
+buildchain badges bundle --write
+```
+
+Narrow the bundle to specific claims:
+
+```bash
+buildchain badges bundle --claims kfd-1,release-passport --write
+```
+
 All commands accept `--cwd <dir>` and `--readme <path>`. Repositories can add
-`buildchain badges readme --check` to CI so badge drift is detected like any
-other generated release-facing surface.
+`buildchain badges bundle --check` or `buildchain badges readme --check` to CI
+so badge drift is detected like any other generated release-facing surface.
 
 ## Configuration
 
@@ -88,6 +116,9 @@ kfd_2 = "planned"
 kfd_3 = "aligned"
 platforms = ["macOS", "Linux", "Windows"]
 workflows = ["verify.yml", "build.yml"]
+
+[badges.bundle]
+claims = ["kfd-1", "kfd-2", "kfd-3", "release-passport"]
 ```
 
 `release_passport` may be a local path or URL. If omitted, Buildchain tries
@@ -152,6 +183,12 @@ Recommended CI gate:
 
 ```bash
 buildchain badges readme --check
+```
+
+or, when the repository only wants the Buildchain trust bundle:
+
+```bash
+buildchain badges bundle --check
 ```
 
 The check fails when:

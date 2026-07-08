@@ -120,6 +120,9 @@ if (rootPackage.exports?.["./issue-reporting"] !== "./packages/core/issue-report
 if (rootPackage.exports?.["./readme-badges"] !== "./packages/core/readme-badges.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/readme-badges");
 }
+if (rootPackage.exports?.["./badges"] !== "./packages/core/badges.js") {
+  throw new Error("root package must export @kungfu-tech/buildchain/badges");
+}
 if (rootPackage.exports?.["./logging"] !== "./packages/core/logging.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/logging");
 }
@@ -210,6 +213,10 @@ if (!coreIndexSource.includes("createSurfaceTimestampPolicy")) {
   throw new Error("packages/core/index.js must export surface manifest timestamp policy APIs");
 }
 for (const requiredSnippet of [
+  "collectBadgeBundleFacts",
+  "renderBadgeBundleBlock",
+  "checkBadgeBundleBlock",
+  "updateBadgeBundleBlock",
   "collectReadmeBadgeFacts",
   "renderReadmeBadgeBlock",
   "checkReadmeBadgeBlock",
@@ -416,6 +423,11 @@ for (const requiredSnippet of [
 }
 const readmeBadgesDoc = fs.readFileSync(path.join(root, "docs/readme-badges.md"), "utf8");
 for (const requiredSnippet of [
+  "buildchain badges bundle --check",
+  "collectBadgeBundleFacts",
+  "kungfu-buildchain-badge-bundle-facts",
+  "@kungfu-tech/buildchain/badges",
+  "[badges.bundle]",
   "buildchain badges readme --check",
   "collectReadmeBadgeFacts",
   "kungfu-buildchain-readme-badge-facts",
@@ -472,8 +484,11 @@ for (const [docName, docSource] of Object.entries({ "docs/cli.md": cliDoc, "docs
   }
 }
 for (const requiredSnippet of [
+  "buildchain badges bundle --check",
+  "buildchain badges bundle --write",
   "buildchain badges readme --check",
   "buildchain badges readme --write",
+  "@kungfu-tech/buildchain/badges",
   "@kungfu-tech/buildchain/readme-badges",
   "buildchain homebrew update-formula",
   "buildchain homebrew check",

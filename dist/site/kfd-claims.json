@@ -758,6 +758,18 @@
           "packageExport": "."
         },
         {
+          "id": "export:./badges",
+          "name": "@kungfu-tech/buildchain/badges",
+          "kind": "package-export",
+          "sourcePath": "packages/core/badges.js",
+          "evidencePath": "packages/core/badges.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./badges"
+        },
+        {
           "id": "export:./core",
           "name": "@kungfu-tech/buildchain/core",
           "kind": "package-export",
@@ -1151,6 +1163,6 @@
         "public": true
       }
     ],
-    "publicSurfaceCount": 85
+    "publicSurfaceCount": 86
   }
 }
