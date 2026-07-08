@@ -68,31 +68,39 @@ decision. Existing consumers are unaffected until they opt in.
 
 ## CLI
 
+Inspect KFD-owned schema facts:
+
+```bash
+buildchain kfd schema list --json
+buildchain kfd schema show kfd-1 --json
+buildchain kfd 4 schema --json
+```
+
 Detect public surface candidates:
 
 ```bash
-buildchain kfd-3 detect --json
-buildchain kfd-3 detect --kind node-api --kind cli --json
+buildchain kfd 3 detect --json
+buildchain kfd 3 detect --kind node-api --kind cli --json
 ```
 
 Register standard surface classes:
 
 ```bash
-buildchain kfd-3 register node-api --product Buildchain
-buildchain kfd-3 register cli
-buildchain kfd-3 register python-api --artifact dist/wheel-unpacked
+buildchain kfd 3 register node-api --product Buildchain
+buildchain kfd 3 register cli
+buildchain kfd 3 register python-api --artifact dist/wheel-unpacked
 ```
 
 Audit detected, declared, and enforced surfaces:
 
 ```bash
-buildchain kfd-3 audit --json
+buildchain kfd 3 audit --json
 ```
 
 Generate a witness for release passport collection:
 
 ```bash
-buildchain kfd-3 witness \
+buildchain kfd 3 witness \
   --kind prebuild \
   --output .buildchain/kfd-3/collaboration-interface.prebuild.json
 ```
@@ -100,8 +108,8 @@ buildchain kfd-3 witness \
 Query capability facts for agents or downstream sites:
 
 ```bash
-buildchain kfd-3 query buildchain --json
-buildchain kfd-3 query --passport buildchain.release.json --json
+buildchain kfd 3 query buildchain --json
+buildchain kfd 3 query --passport buildchain.release.json --json
 ```
 
 ## Node API
@@ -110,15 +118,13 @@ The CLI is a thin wrapper over the public Node API:
 
 ```js
 import {
-  auditKfd3Surfaces,
-  createKfd3SurfaceWitness,
-  detectKfd3Surfaces,
-  queryKfd3Capabilities,
-  registerKfd3Surfaces,
-} from "@kungfu-tech/buildchain/kfd-3-surfaces";
+  kfd3,
+  listKfdSchemas,
+  readKfdSchema,
+} from "@kungfu-tech/buildchain/kfd";
 ```
 
-Agents should prefer `queryKfd3Capabilities()` when deciding whether a product
+Agents should prefer `kfd3.queryCapabilities()` when deciding whether a product
 capability is usable. The query result connects each capability to:
 
 - KFD-3 surface identity and state;
@@ -148,7 +154,7 @@ Buildchain dogfoods this model in two ways:
 
 - `dist/site/kfd-claims.json` declares Buildchain's own KFD-3 collaboration
   surface;
-- `buildchain kfd-3 query buildchain --json` resolves the packaged
+- `buildchain kfd 3 query buildchain --json` resolves the packaged
   Buildchain capability map from that site fact source.
 
 This lets downstream agents discover Buildchain's supported CLI, Node API,

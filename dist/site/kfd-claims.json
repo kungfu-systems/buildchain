@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "8643f99a115112c2fa97081d7ba9bb7c8d6a4be74df40a5d50410e417d4f2856",
+    "sha256": "620d45e0930930cefb38df379f01fabeb451b0a5ad8f677f1704eede4abcad47",
     "summary": {
-      "cliCommandCount": 52,
+      "cliCommandCount": 58,
       "workflowCount": 35,
       "actionCount": 4,
       "sitePageCount": 43,
-      "docCommandRefCount": 180,
+      "docCommandRefCount": 181,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -207,13 +207,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "8643f99a115112c2fa97081d7ba9bb7c8d6a4be74df40a5d50410e417d4f2856",
+      "sha256": "620d45e0930930cefb38df379f01fabeb451b0a5ad8f677f1704eede4abcad47",
       "summary": {
-        "cliCommandCount": 52,
+        "cliCommandCount": 58,
         "workflowCount": 35,
         "actionCount": 4,
         "sitePageCount": 43,
-        "docCommandRefCount": 180,
+        "docCommandRefCount": 181,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -990,16 +990,16 @@
           "packageExport": "./issue-reporting"
         },
         {
-          "id": "export:./kfd-3-surfaces",
-          "name": "@kungfu-tech/buildchain/kfd-3-surfaces",
+          "id": "export:./kfd",
+          "name": "@kungfu-tech/buildchain/kfd",
           "kind": "package-export",
-          "sourcePath": "packages/core/kfd3-surface-register.js",
-          "evidencePath": "packages/core/kfd3-surface-register.js",
+          "sourcePath": "packages/core/kfd.js",
+          "evidencePath": "packages/core/kfd.js",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "packageExport": "./kfd-3-surfaces"
+          "packageExport": "./kfd"
         },
         {
           "id": "export:./release-line-bootstrap",
@@ -1578,8 +1578,44 @@
           "reverseAuditSource": "bin/buildchain.mjs"
         },
         {
+          "id": "cli:kfd",
+          "name": "buildchain kfd ...",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:kfd-1-schema",
+          "name": "buildchain kfd 1 schema [--schema <name>] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:kfd-2-schema",
+          "name": "buildchain kfd 2 schema [--schema <name>] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
           "id": "cli:kfd-3",
-          "name": "buildchain kfd-3",
+          "name": "buildchain kfd 3 ...",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -1591,7 +1627,7 @@
         },
         {
           "id": "cli:kfd-3-audit",
-          "name": "buildchain kfd-3 audit [--cwd <dir>] [--registry <path>] [--artifact <path>] [--json]",
+          "name": "buildchain kfd 3 audit [--cwd <dir>] [--registry <path>] [--artifact <path>] [--json]",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -1603,7 +1639,7 @@
         },
         {
           "id": "cli:kfd-3-detect",
-          "name": "buildchain kfd-3 detect [--cwd <dir>] [--kind <kind>]... [--artifact <path>] [--json]",
+          "name": "buildchain kfd 3 detect [--cwd <dir>] [--kind <kind>]... [--artifact <path>] [--json]",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -1615,7 +1651,7 @@
         },
         {
           "id": "cli:kfd-3-query",
-          "name": "buildchain kfd-3 query [<product>] [--cwd <dir>] [--registry <path>]",
+          "name": "buildchain kfd 3 query [<product>] [--cwd <dir>] [--registry <path>]",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -1627,7 +1663,7 @@
         },
         {
           "id": "cli:kfd-3-register",
-          "name": "buildchain kfd-3 register <node-api|python-api|cli|binary|documentation|site-bundle>",
+          "name": "buildchain kfd 3 register <node-api|python-api|cli|binary|documentation|site-bundle>",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -1639,7 +1675,43 @@
         },
         {
           "id": "cli:kfd-3-witness",
-          "name": "buildchain kfd-3 witness [--cwd <dir>] [--registry <path>] [--kind prebuild|artifact]",
+          "name": "buildchain kfd 3 witness [--cwd <dir>] [--registry <path>] [--kind prebuild|artifact]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:kfd-4-schema",
+          "name": "buildchain kfd 4 schema [--schema <name>] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:kfd-schema-list",
+          "name": "buildchain kfd schema list [--standard kfd-1|kfd-2|kfd-3|kfd-4] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:kfd-schema-show",
+          "name": "buildchain kfd schema show <kfd-1|kfd-2|kfd-3|kfd-4> [--schema <name>] [--json]",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -3526,6 +3598,6 @@
         "public": true
       }
     ],
-    "publicSurfaceCount": 231
+    "publicSurfaceCount": 237
   }
 }

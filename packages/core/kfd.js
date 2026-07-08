@@ -1,0 +1,177 @@
+import fs from "node:fs";
+import { createRequire } from "node:module";
+
+import {
+  createBuildchainKfd1Witness,
+  createBuildchainKfd2Claims,
+  createBuildchainKfd3ArtifactWitness,
+  createBuildchainKfd3PrebuildWitness,
+  createBuildchainKfdClaimRegistry,
+  createBuildchainKfdSurfaceRegistry,
+  createBuildchainPublicClaimDefinitions,
+} from "./buildchain-kfd-claims.js";
+import {
+  createKfd1ReleaseGateEvidence,
+  createKfd3CollaborationInterfaceReleaseGateEvidence,
+  normalizeKfd1ContractWorldWitness,
+  normalizeKfd3CollaborationInterfaceArtifactWitness,
+  normalizeKfd3CollaborationInterfacePrebuildWitness,
+  resolveKfd1Metadata,
+  resolveKfd2Metadata,
+  resolveKfd3Metadata,
+  validateKfd1ReleaseGateEvidence,
+  validateKfd2TrustTaxonomyEntry,
+  validateKfd3CollaborationInterfaceReleaseGateEvidence,
+} from "./kfd-gate.js";
+import {
+  auditKfd3Surfaces,
+  createKfd3SurfaceWitness,
+  detectKfd3Surfaces,
+  queryKfd3Capabilities,
+  readKfd3SurfaceRegistry,
+  registerKfd3Surfaces,
+  writeKfd3SurfaceRegistry,
+} from "./kfd3-surface-register.js";
+
+const require = createRequire(import.meta.url);
+
+function readJsonPackageExport(exportPath) {
+  return JSON.parse(fs.readFileSync(require.resolve(exportPath), "utf8"));
+}
+
+export function normalizeKfdStandardId(value) {
+  const raw = String(value || "").trim().toLowerCase();
+  const match = raw.match(/^(?:kfd[-\s]?)?([1-9][0-9]*)$/);
+  if (!match) {
+    throw new Error(`unsupported KFD standard: ${value}`);
+  }
+  return `kfd-${match[1]}`;
+}
+
+export function discoverKfdStandards() {
+  const packageJson = readJsonPackageExport("@kungfu-tech/kfd/package.json");
+  const standards = readJsonPackageExport("@kungfu-tech/kfd/standards.json");
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-kfd-standard-discovery",
+    package: {
+      name: packageJson.name,
+      version: packageJson.version,
+      repository: packageJson.repository?.url || "",
+    },
+    metadataSchema: standards.metadataSchema || {},
+    source: standards.source || {},
+    standards: Object.entries(standards.standards || {})
+      .map(([key, value]) => ({
+        key: value?.key || key,
+        id: value?.id || value?.label || key,
+        label: value?.label || value?.id || key,
+        title: value?.title || "",
+        status: value?.status || "",
+        revision: value?.revision || 0,
+        schemaIds: { ...(value?.schemaIds || {}) },
+        schemaPaths: { ...(value?.schemaPaths || {}) },
+      }))
+      .sort((a, b) => a.key.localeCompare(b.key)),
+  };
+}
+
+export function listKfdSchemas({ standard = "" } = {}) {
+  const discovery = discoverKfdStandards();
+  const selectedStandard = standard ? normalizeKfdStandardId(standard) : "";
+  const schemas = [];
+  for (const entry of discovery.standards) {
+    if (selectedStandard && normalizeKfdStandardId(entry.key) !== selectedStandard) continue;
+    const names = [...new Set([
+      ...Object.keys(entry.schemaIds || {}),
+      ...Object.keys(entry.schemaPaths || {}),
+    ])].sort();
+    for (const name of names) {
+      schemas.push({
+        standard: entry.key,
+        name,
+        schemaId: entry.schemaIds?.[name] || "",
+        schemaPath: entry.schemaPaths?.[name] || "",
+      });
+    }
+  }
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-kfd-schema-list",
+    package: discovery.package,
+    standard: selectedStandard || "",
+    schemas,
+  };
+}
+
+export function readKfdSchema({ standard, schema = "" } = {}) {
+  const selectedStandard = normalizeKfdStandardId(standard);
+  const schemaList = listKfdSchemas({ standard: selectedStandard }).schemas;
+  const selectedSchema = schema
+    ? schemaList.find((entry) => entry.name === schema || entry.schemaId === schema || entry.schemaPath === schema)
+    : schemaList[0];
+  if (!selectedSchema?.schemaPath) {
+    throw new Error(`KFD schema not found for ${selectedStandard}${schema ? `:${schema}` : ""}`);
+  }
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-kfd-schema",
+    standard: selectedStandard,
+    name: selectedSchema.name,
+    schemaId: selectedSchema.schemaId,
+    schemaPath: selectedSchema.schemaPath,
+    schema: readJsonPackageExport(`@kungfu-tech/kfd/${selectedSchema.schemaPath}`),
+  };
+}
+
+export const schemas = Object.freeze({
+  discover: discoverKfdStandards,
+  list: listKfdSchemas,
+  read: readKfdSchema,
+});
+
+export const kfd1 = Object.freeze({
+  resolveMetadata: resolveKfd1Metadata,
+  normalizeContractWorldWitness: normalizeKfd1ContractWorldWitness,
+  createReleaseGateEvidence: createKfd1ReleaseGateEvidence,
+  validateReleaseGateEvidence: validateKfd1ReleaseGateEvidence,
+  createBuildchainWitness: createBuildchainKfd1Witness,
+});
+
+export const kfd2 = Object.freeze({
+  resolveMetadata: resolveKfd2Metadata,
+  validateTrustTaxonomyEntry: validateKfd2TrustTaxonomyEntry,
+  createBuildchainClaims: createBuildchainKfd2Claims,
+  createBuildchainPublicClaimDefinitions,
+});
+
+export const kfd3 = Object.freeze({
+  resolveMetadata: resolveKfd3Metadata,
+  normalizePrebuildWitness: normalizeKfd3CollaborationInterfacePrebuildWitness,
+  normalizeArtifactWitness: normalizeKfd3CollaborationInterfaceArtifactWitness,
+  createReleaseGateEvidence: createKfd3CollaborationInterfaceReleaseGateEvidence,
+  validateReleaseGateEvidence: validateKfd3CollaborationInterfaceReleaseGateEvidence,
+  detectSurfaces: detectKfd3Surfaces,
+  registerSurfaces: registerKfd3Surfaces,
+  auditSurfaces: auditKfd3Surfaces,
+  createSurfaceWitness: createKfd3SurfaceWitness,
+  queryCapabilities: queryKfd3Capabilities,
+  readSurfaceRegistry: readKfd3SurfaceRegistry,
+  writeSurfaceRegistry: writeKfd3SurfaceRegistry,
+  createBuildchainPrebuildWitness: createBuildchainKfd3PrebuildWitness,
+  createBuildchainArtifactWitness: createBuildchainKfd3ArtifactWitness,
+  createBuildchainSurfaceRegistry: createBuildchainKfdSurfaceRegistry,
+});
+
+export const kfd4 = Object.freeze({
+  schemas: {
+    list: (options = {}) => listKfdSchemas({ ...options, standard: "kfd-4" }),
+    read: (options = {}) => readKfdSchema({ ...options, standard: "kfd-4" }),
+  },
+});
+
+export const buildchainKfdClaims = Object.freeze({
+  createClaimRegistry: createBuildchainKfdClaimRegistry,
+  createSurfaceRegistry: createBuildchainKfdSurfaceRegistry,
+  createPublicClaimDefinitions: createBuildchainPublicClaimDefinitions,
+});

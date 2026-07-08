@@ -65,6 +65,11 @@ import {
   writeKungfuBuildInfoProjection,
 } from "../packages/core/build-facts.js";
 import {
+  listKfdSchemas,
+  normalizeKfdStandardId,
+  readKfdSchema,
+} from "../packages/core/kfd.js";
+import {
   auditKfd3Surfaces,
   createKfd3SurfaceWitness,
   detectKfd3Surfaces,
@@ -147,15 +152,22 @@ function usage() {
                              [--module-fact <file>]... [--artifact <path>]...
                              [--output <file>] [--json]
   buildchain facts verify [--cwd <dir>] --fact <file> [--json]
-  buildchain kfd-3 detect [--cwd <dir>] [--kind <kind>]... [--artifact <path>] [--json]
-  buildchain kfd-3 register <node-api|python-api|cli|binary|documentation|site-bundle>
+  buildchain kfd ...
+  buildchain kfd schema list [--standard kfd-1|kfd-2|kfd-3|kfd-4] [--json]
+  buildchain kfd schema show <kfd-1|kfd-2|kfd-3|kfd-4> [--schema <name>] [--json]
+  buildchain kfd 1 schema [--schema <name>] [--json]
+  buildchain kfd 2 schema [--schema <name>] [--json]
+  buildchain kfd 3 ...
+  buildchain kfd 3 detect [--cwd <dir>] [--kind <kind>]... [--artifact <path>] [--json]
+  buildchain kfd 3 register <node-api|python-api|cli|binary|documentation|site-bundle>
                            [--cwd <dir>] [--registry <path>] [--artifact <path>]
                            [--product <name>] [--json]
-  buildchain kfd-3 audit [--cwd <dir>] [--registry <path>] [--artifact <path>] [--json]
-  buildchain kfd-3 witness [--cwd <dir>] [--registry <path>] [--kind prebuild|artifact]
+  buildchain kfd 3 audit [--cwd <dir>] [--registry <path>] [--artifact <path>] [--json]
+  buildchain kfd 3 witness [--cwd <dir>] [--registry <path>] [--kind prebuild|artifact]
                             [--source-sha <sha>] [--artifact <path>] [--output <file>] [--json]
-  buildchain kfd-3 query [<product>] [--cwd <dir>] [--registry <path>]
+  buildchain kfd 3 query [<product>] [--cwd <dir>] [--registry <path>]
                           [--passport <file-or-url>] [--artifact <path>] [--json]
+  buildchain kfd 4 schema [--schema <name>] [--json]
   buildchain sample process-tree [--interval-ms <n>] [--label <name>]
                                  [--output <jsonl>] [--summary-output <json>]
                                  [--requested-parallelism <n>] [--json]
@@ -195,7 +207,8 @@ Examples:
   buildchain infra-contract --mode propagation-apply --propagation-plan <plan.json> --dry-run true
   buildchain infra-contract --mode evidence-bundle --artifact <artifact.json> --propagation-result <result.json>
   buildchain release-propagation plan --graph graph.json --upstream-release release.json --json
-  buildchain kfd-3 query buildchain --json
+  buildchain kfd schema list --json
+  buildchain kfd 3 query buildchain --json
 `;
 }
 
@@ -477,7 +490,7 @@ function kfd3Kinds(args = []) {
 async function runKfd3Cli(args = []) {
   const [subcommand = "", maybeKindOrProduct = "", ...rest] = args;
   if (!["detect", "register", "audit", "witness", "query"].includes(subcommand)) {
-    throw new Error("usage: buildchain kfd-3 <detect|register|audit|witness|query> ...");
+    throw new Error("usage: buildchain kfd 3 <detect|register|audit|witness|query> ...");
   }
   const effectiveArgs = maybeKindOrProduct && maybeKindOrProduct.startsWith("--") ? [maybeKindOrProduct, ...rest] : rest;
   const cwd = path.resolve(readFlag(effectiveArgs, "cwd", process.cwd()));
@@ -490,7 +503,7 @@ async function runKfd3Cli(args = []) {
     if (json) {
       printJson(result);
     } else {
-      process.stdout.write(`kfd-3 detect: ${result.summary.surfaceCount} surfaces\n`);
+      process.stdout.write(`kfd 3 detect: ${result.summary.surfaceCount} surfaces\n`);
       for (const entry of result.surfaces) {
         process.stdout.write(`- ${entry.kind}: ${entry.id} (${entry.detectionMethod})\n`);
       }
@@ -501,7 +514,7 @@ async function runKfd3Cli(args = []) {
   if (subcommand === "register") {
     const registerKind = maybeKindOrProduct && !maybeKindOrProduct.startsWith("--") ? maybeKindOrProduct : "";
     if (!registerKind) {
-      throw new Error("usage: buildchain kfd-3 register <node-api|python-api|cli|binary|documentation|site-bundle>");
+      throw new Error("usage: buildchain kfd 3 register <node-api|python-api|cli|binary|documentation|site-bundle>");
     }
     const result = registerKfd3Surfaces({
       cwd,
@@ -515,7 +528,7 @@ async function runKfd3Cli(args = []) {
     if (json) {
       printJson(result);
     } else {
-      process.stdout.write(`kfd-3 register: ${result.registeredCount} ${registerKind} surfaces -> ${registryPath}\n`);
+      process.stdout.write(`kfd 3 register: ${result.registeredCount} ${registerKind} surfaces -> ${registryPath}\n`);
     }
     return;
   }
@@ -525,7 +538,7 @@ async function runKfd3Cli(args = []) {
     if (json) {
       printJson(report);
     } else {
-      process.stdout.write(`kfd-3 audit: ${report.status}\n`);
+      process.stdout.write(`kfd 3 audit: ${report.status}\n`);
       process.stdout.write(`detected=${report.summary.detected} declared=${report.summary.declared} enforced=${report.summary.enforced}\n`);
       for (const issue of report.issues) {
         process.stdout.write(`- ${issue.level}: ${issue.code}: ${issue.surfaceId}\n`);
@@ -552,7 +565,7 @@ async function runKfd3Cli(args = []) {
     if (json || !output) {
       printJson(witness);
     } else {
-      process.stdout.write(`kfd-3 witness: wrote ${output}\n`);
+      process.stdout.write(`kfd 3 witness: wrote ${output}\n`);
     }
     return;
   }
@@ -568,12 +581,74 @@ async function runKfd3Cli(args = []) {
   if (json) {
     printJson(result);
   } else {
-    process.stdout.write(`kfd-3 query: ${result.product} (${result.status || result.kfd?.kfd3 || "unknown"})\n`);
+    process.stdout.write(`kfd 3 query: ${result.product} (${result.status || result.kfd?.kfd3 || "unknown"})\n`);
     process.stdout.write(`capabilities: ${result.capabilities?.length || 0}\n`);
     for (const entry of result.capabilities || []) {
       process.stdout.write(`- ${entry.kind}: ${entry.id} [${entry.state || "declared"}]\n`);
     }
   }
+}
+
+async function runKfdCli(args = []) {
+  const [subcommand = "", maybeStandardOrAction = "", ...rest] = args;
+  if (!subcommand) {
+    throw new Error("usage: buildchain kfd <schema|1|2|3|4> ...");
+  }
+
+  if (subcommand === "schema") {
+    const [schemaCommand = "", maybeStandard = "", ...schemaRest] = [maybeStandardOrAction, ...rest];
+    const effectiveArgs = maybeStandard && maybeStandard.startsWith("--") ? [maybeStandard, ...schemaRest] : schemaRest;
+    const json = readBooleanFlag(effectiveArgs, "json");
+    if (schemaCommand === "list") {
+      const result = listKfdSchemas({ standard: readFlag(effectiveArgs, "standard", "") });
+      if (json) {
+        printJson(result);
+      } else {
+        process.stdout.write(`kfd schema list: ${result.schemas.length} schemas\n`);
+        for (const entry of result.schemas) {
+          process.stdout.write(`- ${entry.standard}:${entry.name} ${entry.schemaId || entry.schemaPath}\n`);
+        }
+      }
+      return;
+    }
+    if (schemaCommand === "show") {
+      const standard = maybeStandard && !maybeStandard.startsWith("--") ? maybeStandard : readFlag(effectiveArgs, "standard", "");
+      if (!standard) {
+        throw new Error("usage: buildchain kfd schema show <kfd-1|kfd-2|kfd-3|kfd-4> [--schema <name>]");
+      }
+      const result = readKfdSchema({ standard, schema: readFlag(effectiveArgs, "schema", "") });
+      if (json) {
+        printJson(result);
+      } else {
+        process.stdout.write(JSON.stringify(result.schema, null, 2));
+        process.stdout.write("\n");
+      }
+      return;
+    }
+    throw new Error("usage: buildchain kfd schema <list|show> ...");
+  }
+
+  const standard = normalizeKfdStandardId(subcommand);
+  if (standard === "kfd-3") {
+    await runKfd3Cli([maybeStandardOrAction, ...rest]);
+    return;
+  }
+  if (["kfd-1", "kfd-2", "kfd-4"].includes(standard)) {
+    const action = maybeStandardOrAction || "schema";
+    if (action === "schema") {
+      const schemaArgs = rest;
+      const json = readBooleanFlag(schemaArgs, "json");
+      const result = readKfdSchema({ standard, schema: readFlag(schemaArgs, "schema", "") });
+      if (json) {
+        printJson(result);
+      } else {
+        process.stdout.write(JSON.stringify(result.schema, null, 2));
+        process.stdout.write("\n");
+      }
+      return;
+    }
+  }
+  throw new Error("usage: buildchain kfd <schema|1|2|3|4> ...");
 }
 
 async function runBuildFactsCli(args = []) {
@@ -940,8 +1015,8 @@ async function main(argv = process.argv.slice(2)) {
     return;
   }
 
-  if (command === "kfd-3") {
-    await runKfd3Cli(args);
+  if (command === "kfd") {
+    await runKfdCli(args);
     return;
   }
 

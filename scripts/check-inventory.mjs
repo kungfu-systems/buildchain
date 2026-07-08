@@ -126,8 +126,8 @@ if (rootPackage.exports?.["./buildchain-contract"] !== "./packages/core/buildcha
 if (rootPackage.exports?.["./issue-reporting"] !== "./packages/core/issue-reporting.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/issue-reporting");
 }
-if (rootPackage.exports?.["./kfd-3-surfaces"] !== "./packages/core/kfd3-surface-register.js") {
-  throw new Error("root package must export @kungfu-tech/buildchain/kfd-3-surfaces");
+if (rootPackage.exports?.["./kfd"] !== "./packages/core/kfd.js") {
+  throw new Error("root package must export @kungfu-tech/buildchain/kfd");
 }
 if (rootPackage.exports?.["./release-line-bootstrap"] !== "./packages/core/release-line-bootstrap.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/release-line-bootstrap");

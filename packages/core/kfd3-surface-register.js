@@ -376,7 +376,7 @@ export function writeKfd3SurfaceRegistry({ cwd = process.cwd(), registryPath = K
       state: entry.state || "declared",
       declaration: entry.declaration || {
         owner: "product",
-        source: "buildchain kfd-3 register",
+        source: "buildchain kfd 3 register",
       },
     })),
     policy: registry.policy || {
