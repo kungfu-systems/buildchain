@@ -565,6 +565,7 @@
           "buildchain-contract-lock-path",
           "buildchain-ref",
           "buildchain-repository",
+          "fail-on-release-pr-error",
           "node-version",
           "preview-apply",
           "preview-aws-role-arn",
@@ -579,6 +580,8 @@
           "production-release-head-prefix",
           "production-release-label",
           "production-release-on-main",
+          "production-release-pr-mode",
+          "production-release-pr-token",
           "release-feedback-actor-privacy",
           "staging-apply",
           "staging-aws-role-arn",
@@ -586,7 +589,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 28
+        "inputCount": 31
       },
       {
         "id": ".wheel-release",
@@ -2267,8 +2270,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "8a692573ad139a250fd77014b7874141dfb4d492ceee2dae46cdf1a631c32909",
-    "workflowRegistryDigest": "b24b2a68ae83941cbb6a719a62b4eafbd0f5e859e5810ae766ce9a5db69ddfae",
-    "pageRegistryDigest": "58d12a0d2198503c9ad12418431ca90a95f65675f80d61f622393a62c14256ca"
+    "workflowRegistryDigest": "9aecc7abd02f397d0ab4ad210aef50b5df045262415ff25398dd0f5f57fc998e",
+    "pageRegistryDigest": "95734209e1b6f47e888a93c75306aa90a6bb9452231451eb44e3cf83336eca5d"
   },
   "comparison": {
     "missingCliRegistry": [],

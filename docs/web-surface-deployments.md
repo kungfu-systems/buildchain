@@ -657,6 +657,14 @@ When enabled, Buildchain owns the full release apply state machine:
   release-intent commit, carries `production-release-label`, and includes the
   staging URLs, source SHA, artifact hash, and staging release-passport artifact
   link in the PR body.
+- Production release PR handoff is permission-aware. Staging apply and staging
+  health remain successful even when the repository or organization has
+  GitHub Actions workflow permissions set to read-only. In that case Buildchain
+  records `release-pr-status=permission-denied`, uploads the release PR handoff
+  summary/body plus staging release passport artifacts, and writes an exact
+  manual `gh pr create` command to the step summary. Set
+  `fail-on-release-pr-error=true` only when PR creation failure should fail the
+  whole workflow.
 - Release pull requests that match the configured production gate get a
   Buildchain review comment with the staging URL and production target, so the
   operator can verify staging from the PR page and use merge as the approval
@@ -702,8 +710,27 @@ jobs:
       production-release-label: buildchain-release
       production-release-head-prefix: release/
       production-release-branch-channel: production
+      production-release-pr-mode: auto
       production-aws-role-arn: arn:aws:iam::123456789012:role/site-production-github-actions
       production-environment: production
+```
+
+`production-release-pr-mode` controls the post-staging handoff:
+
+| Mode | Behavior |
+| --- | --- |
+| `auto` | Generate release PR facts, create/update the empty release-intent branch and PR, and label it when token permissions allow. This is the default. |
+| `summary-only` | Generate and upload release PR facts, body, passport evidence, and manual command, but do not call the GitHub PR API. |
+| `disabled` | Record a disabled handoff and skip release PR API calls. |
+
+Automatic release PR creation normally uses the workflow `github.token`. If the
+consumer repository cannot enable "GitHub Actions can create and approve pull
+requests" globally, pass a narrower GitHub App token or PAT through
+`production-release-pr-token`:
+
+```yaml
+with:
+  production-release-pr-token: ${{ secrets.BUILDCHAIN_RELEASE_PR_TOKEN }}
 ```
 
 The merge button becomes the production approval only for a PR that carries the
@@ -722,7 +749,9 @@ Callers must grant `id-token: write` for OIDC role assumption. Preview comments
 need `pull-requests: write`. Automatic release PR creation also needs
 `contents: write`, `pull-requests: write`, and `issues: write` so Buildchain can
 create the release branch, write the empty release-intent commit, open or update
-the PR, and apply the release label. The AWS roles remain caller-owned and
+the PR, and apply the release label. If these permissions are unavailable,
+Buildchain degrades the release handoff instead of marking a successful staging
+deployment as failed, unless `fail-on-release-pr-error=true`. The AWS roles remain caller-owned and
 should be scoped by channel: preview can mutate only preview resources, staging
 can mutate only staging resources, and production can mutate only production
 resources.
