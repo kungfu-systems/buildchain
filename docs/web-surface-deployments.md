@@ -457,18 +457,20 @@ node scripts/web-surface.mjs \
   --output .buildchain/web-surface-production-health.json
 ```
 
-The health check fetches every surface root URL and the nested smoke URLs
-recorded in each surface binding. Nested smoke URLs are derived from the
+The health check fetches every surface root URL and any nested smoke URLs
+recorded in each surface binding. Nested smoke URLs are derived from nested HTML
 artifact files under the surface path prefix, with directory index resolution
 such as `dist/buildchain/docs/index.html` becoming `/docs/` on the buildchain
-preview host. This fails closed when a deploy reports success but a child page
-returns 403 or another unexpected status. Production additionally fails if a
+preview host. If a surface has no nested HTML route, Buildchain records only
+the root smoke URL; absence of nested HTML is not a deployment failure. When a
+nested route is present, the check fails closed if a deploy reports success but
+that child page returns 403 or another unexpected status. Production additionally fails if a
 response is unreachable, returns an unexpected status, or still sends
 `x-robots-tag: noindex`. The health check also verifies that each surface
 binding recorded a deployment manifest pointer. The production release passport
 embeds the deploy plan, apply result, production preflight, and health check so
 a reviewer or agent can audit why the production site changed and whether every
-declared host and nested route was actually covered.
+declared host and every existing nested route was actually covered.
 
 ## Cleanup Plans
 

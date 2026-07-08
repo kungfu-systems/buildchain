@@ -166,6 +166,25 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /BUILDCHAIN_ARTIFACT_RELAY_S3_BUCKET/);
   assert.match(workflow, /BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN/);
   assert.match(workflow, /BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN/);
+  assert.match(workflow, /checkout-cache-mode:/);
+  assert.match(workflow, /checkout-cache-mirror-url-template:/);
+  assert.match(workflow, /checkout-cache-reference-repository-template:/);
+  assert.match(workflow, /checkout-cache-fallback:/);
+  assert.match(workflow, /checkout-cache-timeout-seconds:/);
+  assert.match(workflow, /BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE/);
+  assert.match(workflow, /BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE/);
+  assert.equal(
+    (workflow.match(/node \.buildchain\/runtime\/scripts\/locked-source-checkout\.mjs/g) || []).length,
+    2,
+  );
+  assert.equal(
+    (workflow.match(/BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH: \.buildchain\/diagnostics\/source-checkout\.json/g) || []).length,
+    2,
+  );
+  assert.equal(
+    (workflow.match(/\.buildchain\/artifacts\/\$\{\{ matrix\.platform\.id \}\}\/source-checkout\.json/g) || []).length,
+    4,
+  );
   assert.match(workflow, /id-token: write/);
   assert.match(workflow, /artifact-transfer:/);
   assert.match(workflow, /artifact-relay-s3\.mjs upload/);
@@ -181,6 +200,7 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /summary\.json/);
   assert.match(workflow, /diagnostics\.json/);
   assert.match(workflow, /diagnostics-manifest\.json/);
+  assert.match(workflow, /source-checkout\.json/);
   assert.match(workflow, /events\.jsonl/);
   assert.match(workflow, /process-summary\.json/);
   assert.match(workflow, /process-samples\.jsonl/);
@@ -245,7 +265,7 @@ test("reusable build workflow exposes the required surface contract", () => {
   );
   assert.match(
     workflow,
-    /ref: \$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/,
+    /BUILDCHAIN_SOURCE_SHA: \$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/,
   );
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
 });
@@ -986,6 +1006,8 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
     workflow,
     /artifact-transfer-mode: \$\{\{ github\.event\.inputs\['artifact-transfer-mode'\] \|\| 'github-artifacts' \}\}/,
   );
+  assert.match(workflow, /checkout-cache-mode: auto/);
+  assert.match(workflow, /checkout-cache-fallback: github/);
   assert.doesNotMatch(workflow, /run: node scripts\/artifact-relay-s3\.mjs/);
 });
 
@@ -1920,6 +1942,14 @@ test("runLifecycle writes deterministic artifact manifest", () => {
         topCommands: [{ command: "clang++", count: 2 }],
       },
     })}\n`);
+    fs.writeFileSync(path.join(workspace, ".buildchain/diagnostics/source-checkout.json"), `${JSON.stringify({
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-locked-source-checkout-cache",
+      policy: { mode: "auto", fallback: "github" },
+      cache: { transport: "mirror-url", hit: true, fallbackUsed: false, fallbackReason: "" },
+      verification: { head: "2".repeat(40), tree: "3".repeat(40), headOk: true, treeOk: true },
+      durationMs: 123,
+    })}\n`);
     runLifecycle({
       cwd: fixture,
       stageName: "install",
@@ -2010,6 +2040,9 @@ test("runLifecycle writes deterministic artifact manifest", () => {
     assert.ok(diagnostics.compilerCaches.ccache);
     assert.equal(diagnostics.process.requestedParallelism, 8);
     assert.equal(diagnostics.process.observedConcurrency.max, 3);
+    assert.equal(diagnostics.sourceCheckout.contract, "kungfu-buildchain-locked-source-checkout-cache");
+    assert.equal(diagnostics.sourceCheckout.cache.hit, true);
+    assert.equal(diagnostics.sourceCheckout.verification.headOk, true);
     assert.equal(diagnostics.links.artifactName, "libnode-shaped-linux-x64-abc123");
     assert.equal(diagnostics.links.platformId, "linux-x64");
     assert.equal(diagnostics.links.processSummary, ".buildchain/diagnostics/process-summary.json");
@@ -2017,6 +2050,7 @@ test("runLifecycle writes deterministic artifact manifest", () => {
     assert.equal(diagnostics.links.diagnosticsEvents, ".buildchain/artifacts/linux-x64/events.jsonl");
     assert.equal(diagnostics.links.diagnosticsProcessSummary, ".buildchain/artifacts/linux-x64/process-summary.json");
     assert.equal(diagnostics.links.diagnosticsProcessSamples, ".buildchain/artifacts/linux-x64/process-samples.jsonl");
+    assert.equal(diagnostics.links.sourceCheckout, ".buildchain/artifacts/linux-x64/source-checkout.json");
     const diagnosticsManifest = JSON.parse(
       fs.readFileSync(
         path.join(workspace, ".buildchain/artifacts/linux-x64/diagnostics-manifest.json"),
@@ -2026,10 +2060,10 @@ test("runLifecycle writes deterministic artifact manifest", () => {
     assert.equal(diagnosticsManifest.contract, BUILDCHAIN_DIAGNOSTICS_MANIFEST_CONTRACT);
     assert.equal(diagnosticsManifest.artifactName, "libnode-shaped-linux-x64-abc123");
     assert.equal(diagnosticsManifest.platformId, "linux-x64");
-    assert.equal(diagnosticsManifest.fileCount, 4);
+    assert.equal(diagnosticsManifest.fileCount, 5);
     assert.deepEqual(
       diagnosticsManifest.files.map((file) => file.kind),
-      ["diagnostics", "events", "process-summary", "process-samples"],
+      ["diagnostics", "events", "process-summary", "process-samples", "source-checkout"],
     );
     assert.ok(diagnosticsManifest.files.every((file) => file.bytes > 0));
     assert.ok(diagnosticsManifest.files.every((file) => /^[a-f0-9]{64}$/.test(file.sha256)));
@@ -2041,6 +2075,7 @@ test("runLifecycle writes deterministic artifact manifest", () => {
     assert.ok(fs.existsSync(path.join(workspace, ".buildchain/artifacts/linux-x64/diagnostics-manifest.json")));
     assert.ok(fs.existsSync(path.join(workspace, ".buildchain/artifacts/linux-x64/process-summary.json")));
     assert.ok(fs.existsSync(path.join(workspace, ".buildchain/artifacts/linux-x64/process-samples.jsonl")));
+    assert.ok(fs.existsSync(path.join(workspace, ".buildchain/artifacts/linux-x64/source-checkout.json")));
   } finally {
     process.env = originalEnv;
     fs.rmSync(workspace, { recursive: true, force: true });

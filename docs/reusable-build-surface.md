@@ -214,6 +214,55 @@ The lock is intentionally small. It does not copy the full contract. The full
 contract remains in the Buildchain ref and package; the consumer records only
 what it accepted and the policy used to compare future floating-ref movement.
 
+## Locked Source Checkout Cache
+
+Self-hosted runners that build large repositories can opt into a locked source
+checkout cache. This changes only the Git object transport. Buildchain still
+resolves `publish-source-sha` before any build runner starts, checks out that
+exact commit, and verifies `HEAD` plus the resolved source tree SHA before
+lifecycle commands run.
+
+```yaml
+jobs:
+  build:
+    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2
+    with:
+      runner-preset: kungfu-v4-self-hosted
+      checkout-cache-mode: auto
+      checkout-cache-mirror-url-template: ${{ vars.BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE }}
+      checkout-cache-reference-repository-template: ${{ vars.BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE }}
+      checkout-cache-fallback: github
+      checkout-cache-timeout-seconds: 60
+```
+
+`checkout-cache-mode` accepts:
+
+| Mode | Behavior |
+| --- | --- |
+| `off` | Default. Buildchain fetches the locked commit from GitHub. |
+| `auto` | Try the trusted cache first; on miss, record the miss and fall back according to `checkout-cache-fallback`. |
+| `require` | Require the cache to provide the locked commit and fail before lifecycle work if unavailable. |
+
+The cache can be a local/LAN mirror URL template or a runner-local bare
+reference repository template. Templates support `{owner}`, `{repo}`,
+`{repository}`, `{repositorySlug}`, and `{sha}`. The workflow also reads
+repository or organization variables named
+`BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE` and
+`BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE`, so consumers can keep
+private LAN topology out of repository YAML.
+
+Do not read cache URLs or reference paths from PR-controlled files such as
+`buildchain.toml`. These values are trusted workflow inputs or repo/org
+variables. Buildchain does not pass GitHub credentials to cache mirrors or
+reference repositories. If it must fall back to GitHub, the workflow token is
+used only for the GitHub fetch path.
+
+Each platform diagnostics artifact includes `source-checkout.json` and embeds a
+compact `sourceCheckout` summary in `diagnostics.json`: mode, transport,
+hit/miss, fallback reason, duration, final HEAD verification, and tree
+verification. Remote URLs are sanitized and local reference paths are represented
+by a short display name plus fingerprint, not by secret-bearing credentials.
+
 When a Buildchain maintainer asks for downstream validation, the expected
 request is:
 

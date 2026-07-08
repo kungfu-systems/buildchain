@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import crypto from "node:crypto";
+import { createRequire } from "node:module";
 import { loadBuildchainConfig } from "./buildchain-config.js";
 import {
   readJsonFromLocation,
@@ -11,12 +12,21 @@ import {
 export const README_BADGE_FACTS_CONTRACT = "kungfu-buildchain-readme-badge-facts";
 export const README_BADGE_BLOCK_START = "<!-- buildchain:badges:start -->";
 export const README_BADGE_BLOCK_END = "<!-- buildchain:badges:end -->";
+export const README_BADGE_HOSTED_BASE_URL = "https://buildchain.libkungfu.dev/badges/v1";
 
 const KFD_KEYS = [
   { key: "kfd-1", id: "kfd1", label: "KFD-1", text: "contract world" },
   { key: "kfd-2", id: "kfd2", label: "KFD-2", text: "trust passport" },
   { key: "kfd-3", id: "kfd3", label: "KFD-3", text: "collaboration interface" },
 ];
+
+const KFD_BADGE_CONCEPTS = {
+  "kfd-1": "contractWorld",
+  "kfd-2": "releaseTrustPassport",
+  "kfd-3": "collaborationInterface",
+};
+
+const requireFromHere = createRequire(import.meta.url);
 
 const STATE_COLORS = {
   passed: "2ea44f",
@@ -30,11 +40,39 @@ const STATE_COLORS = {
   unknown: "6e7781",
 };
 
+const BUILDCHAIN_BADGE_IDS = [
+  "kfd-1",
+  "kfd-2",
+  "kfd-3",
+  "buildchain-release-passport",
+];
+
+const BUILDCHAIN_BADGE_LOGO_PLACEHOLDER = {
+  contract: "kungfu-buildchain-badge-logo-policy",
+  mode: "hosted-placeholder",
+  placeholder: "buildchain-monogram",
+  futureLogoUpdateRequiresConsumerAction: false,
+  owner: "Buildchain site badge endpoint",
+  note: "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text.",
+};
+
 function readJsonIfExists(filePath) {
   if (!filePath || !fs.existsSync(filePath)) {
     return undefined;
   }
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
+}
+
+function readPackageJsonForResolvedFile(filePath) {
+  let current = path.dirname(filePath);
+  while (current && current !== path.dirname(current)) {
+    const packagePath = path.join(current, "package.json");
+    if (fs.existsSync(packagePath)) {
+      return readJsonIfExists(packagePath) || {};
+    }
+    current = path.dirname(current);
+  }
+  return {};
 }
 
 function readTextIfExists(filePath) {
@@ -59,6 +97,61 @@ function badgeUrl({ label, message, color }) {
   return `https://img.shields.io/badge/${encodeBadge(label)}-${encodeBadge(message)}-${color || "6e7781"}.svg`;
 }
 
+function badgeEndpointBaseUrl(badgeConfig = {}) {
+  return String(
+    badgeConfig.badge_endpoint_base_url ||
+    badgeConfig.badgeEndpointBaseUrl ||
+    README_BADGE_HOSTED_BASE_URL,
+  ).replace(/\/+$/, "");
+}
+
+function hostedBadgeUrl({ badgeConfig = {}, id, state }) {
+  return `${badgeEndpointBaseUrl(badgeConfig)}/${encodeURIComponent(id)}/${encodeURIComponent(state || "unknown")}.svg`;
+}
+
+export function createReadmeBadgeEndpointRegistry({ kfdSpecs = KFD_KEYS } = {}) {
+  const states = Object.keys(STATE_COLORS).filter((state) => state !== "unknown");
+  const specs = [
+    ...kfdSpecs.map((entry) => ({
+      id: entry.key,
+      label: entry.label,
+      messageTemplate: `${entry.text} {state}`,
+      linkRole: "repository-release-passport",
+    })),
+    {
+      id: "buildchain-release-passport",
+      label: "buildchain",
+      messageTemplate: "release passport {state}",
+      linkRole: "repository-release-passport",
+    },
+  ];
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-readme-badge-endpoint-registry",
+    endpointBaseUrl: README_BADGE_HOSTED_BASE_URL,
+    imagePathTemplate: "/badges/v1/{badge}/{state}.svg",
+    jsonPathTemplate: "/badges/v1/{badge}/{state}.json",
+    consumerActionForLogoChange: "none",
+    logoPolicy: BUILDCHAIN_BADGE_LOGO_PLACEHOLDER,
+    shieldsEndpointCompatible: true,
+    badges: specs.map((spec) => ({
+      ...spec,
+      states: states.map((state) => ({
+        state,
+        path: `badges/v1/${spec.id}/${state}.json`,
+        svgPath: `badges/v1/${spec.id}/${state}.svg`,
+        payload: {
+          schemaVersion: 1,
+          label: spec.label,
+          message: spec.messageTemplate.replace("{state}", state),
+          color: STATE_COLORS[state] || STATE_COLORS.unknown,
+          logoPolicy: BUILDCHAIN_BADGE_LOGO_PLACEHOLDER,
+        },
+      })),
+    })),
+  };
+}
+
 function normalizeState(value, fallback = "planned") {
   const normalized = String(value || fallback).trim().toLowerCase();
   if (["passed", "aligned", "declared", "planned", "draft", "downgraded", "failed", "missing"].includes(normalized)) {
@@ -79,6 +172,128 @@ function normalizeStringArray(value) {
   return value
     .map((entry) => String(entry || "").trim())
     .filter(Boolean);
+}
+
+function resolveLocalFactPath({ cwd, location }) {
+  const value = String(location || "").trim();
+  if (!value || /^https?:\/\//.test(value)) {
+    return "";
+  }
+  return path.isAbsolute(value) ? value : path.resolve(cwd, value);
+}
+
+function kfdStandardsLocation({ cwd, badgeConfig = {} }) {
+  return String(
+    badgeConfig.kfd_standards ||
+    badgeConfig.kfdStandards ||
+    badgeConfig.kfd_standards_path ||
+    badgeConfig.kfdStandardsPath ||
+    process.env.BUILDCHAIN_KFD_STANDARDS_PATH ||
+    "",
+  ).trim();
+}
+
+async function loadKfdStandards({ cwd, badgeConfig = {} }) {
+  const configured = kfdStandardsLocation({ cwd, badgeConfig });
+  if (configured) {
+    const localPath = resolveLocalFactPath({ cwd, location: configured });
+    const value = /^https?:\/\//.test(configured)
+      ? await readJsonFromLocation(configured)
+      : readJsonIfExists(localPath);
+    if (!value || typeof value !== "object") {
+      throw new Error(`KFD standards metadata is not readable: ${configured}`);
+    }
+    return {
+      location: configured,
+      resolvedPath: localPath,
+      source: /^https?:\/\//.test(configured) ? "configured-url" : "configured-path",
+      sha256: localPath && fs.existsSync(localPath) ? sha256File(localPath) : hashText(JSON.stringify(value)),
+      package: {},
+      value,
+      error: "",
+    };
+  }
+  try {
+    const resolvedPath = requireFromHere.resolve("@kungfu-tech/kfd/standards.json", {
+      paths: [cwd],
+    });
+    const value = readJsonIfExists(resolvedPath);
+    const packageJson = readPackageJsonForResolvedFile(resolvedPath);
+    return {
+      location: "@kungfu-tech/kfd/standards.json",
+      resolvedPath,
+      source: "package-export",
+      sha256: sha256File(resolvedPath),
+      package: {
+        name: packageJson.name || "@kungfu-tech/kfd",
+        version: packageJson.version || "",
+      },
+      value,
+      error: "",
+    };
+  } catch (error) {
+    return {
+      location: "@kungfu-tech/kfd/standards.json",
+      resolvedPath: "",
+      source: "fallback",
+      sha256: "",
+      package: {},
+      value: undefined,
+      error: error.message,
+    };
+  }
+}
+
+function summarizeKfdStandards(loaded) {
+  const standards = loaded?.value?.standards && typeof loaded.value.standards === "object"
+    ? loaded.value.standards
+    : {};
+  const summary = {
+    contract: loaded?.value?.contract || "",
+    schemaVersion: loaded?.value?.schemaVersion || undefined,
+    metadataSchema: loaded?.value?.metadataSchema || undefined,
+    source: loaded?.source || "fallback",
+    location: loaded?.location || "",
+    sha256: loaded?.sha256 || "",
+    package: loaded?.package || {},
+    error: loaded?.error || "",
+    standards: {},
+  };
+  for (const fallback of KFD_KEYS) {
+    const standard = standards[fallback.key] || {};
+    const conceptKey = KFD_BADGE_CONCEPTS[fallback.key];
+    summary.standards[fallback.key] = {
+      key: standard.key || fallback.key,
+      id: standard.id || fallback.label,
+      label: standard.label || fallback.label,
+      title: standard.title || "",
+      status: standard.status || "",
+      revision: standard.revision || undefined,
+      documentUrl: standard.document?.url || "",
+      documentPath: standard.document?.path || "",
+      documentSha256: standard.document?.sha256 || "",
+      badgeText: standard.concepts?.[conceptKey] || fallback.text,
+      interfaceContract: conceptKey ? standard.interfaces?.[conceptKey]?.contract || "" : "",
+      schemaId: conceptKey ? standard.interfaces?.[conceptKey]?.schemaId || standard.schemaIds?.[conceptKey] || "" : "",
+    };
+  }
+  return summary;
+}
+
+function kfdBadgeSpecs(kfdStandards) {
+  return KFD_KEYS.map((fallback) => {
+    const standard = kfdStandards?.standards?.[fallback.key] || {};
+    return {
+      ...fallback,
+      label: standard.label || fallback.label,
+      text: standard.badgeText || fallback.text,
+      title: standard.title || "",
+      standardDocumentUrl: standard.documentUrl || "",
+      standardDocumentSha256: standard.documentSha256 || "",
+      interfaceContract: standard.interfaceContract || "",
+      schemaId: standard.schemaId || "",
+    };
+  });
 }
 
 function readRepositoryFromGit(cwd) {
@@ -273,28 +488,20 @@ function localFactFileSummary(cwd, candidates = []) {
   return undefined;
 }
 
-function buildBadgeEntries(facts) {
+function buildBadgeEntries(facts, { badgeConfig = {} } = {}) {
   const entries = [];
   for (const kfd of facts.kfd) {
     entries.push({
       id: kfd.key,
       alt: `${kfd.label}: ${kfd.state}`,
-      image: badgeUrl({
-        label: kfd.label,
-        message: `${kfd.text} ${kfd.state}`,
-        color: STATE_COLORS[kfd.state] || STATE_COLORS.unknown,
-      }),
+      image: hostedBadgeUrl({ badgeConfig, id: kfd.key, state: kfd.state }),
       link: kfd.url,
     });
   }
   entries.push({
-    id: "release-passport",
-    alt: `Release Passport: ${facts.releasePassport.state}`,
-    image: badgeUrl({
-      label: "release passport",
-      message: facts.releasePassport.state,
-      color: STATE_COLORS[facts.releasePassport.state] || STATE_COLORS.unknown,
-    }),
+    id: "buildchain-release-passport",
+    alt: `Buildchain Release Passport: ${facts.releasePassport.state}`,
+    image: hostedBadgeUrl({ badgeConfig, id: "buildchain-release-passport", state: facts.releasePassport.state }),
     link: facts.releasePassport.url,
   });
   if (facts.package.license) {
@@ -344,13 +551,19 @@ export async function collectReadmeBadgeFacts({ cwd = process.cwd() } = {}) {
       ? `${repository.url}/blob/HEAD/${posixPath(releasePassportLocation)}`
       : releasePassportLocation;
   const releaseState = releasePassportState({ report, error, badgeConfig });
-  const kfd = KFD_KEYS.map((entry) => {
+  const kfdStandards = summarizeKfdStandards(await loadKfdStandards({ cwd: resolvedCwd, badgeConfig }));
+  const kfd = kfdBadgeSpecs(kfdStandards).map((entry) => {
     const passed = kfdSectionPassed({ passport, report, key: entry.key });
     const state = passed ? "passed" : declaredKfdState({ badgeConfig, key: entry.key, id: entry.id });
     return {
       key: entry.key,
       label: entry.label,
       text: entry.text,
+      title: entry.title,
+      standardDocumentUrl: entry.standardDocumentUrl,
+      standardDocumentSha256: entry.standardDocumentSha256,
+      interfaceContract: entry.interfaceContract,
+      schemaId: entry.schemaId,
       state,
       source: passed ? "release-passport" : "declaration",
       url: releasePassportUrl,
@@ -382,6 +595,7 @@ export async function collectReadmeBadgeFacts({ cwd = process.cwd() } = {}) {
       "dist/site/kfd-claims.json",
       ".buildchain/kfd-claims.json",
     ]),
+    kfdStandards,
     productMechanism: localFactFileSummary(resolvedCwd, [
       "dist/site/product-mechanism.json",
       "product-mechanism.json",
@@ -390,9 +604,15 @@ export async function collectReadmeBadgeFacts({ cwd = process.cwd() } = {}) {
     kfd,
     platforms: collectPlatformFacts({ badgeConfig, passport }),
     workflows: discoverWorkflowFacts({ cwd: resolvedCwd, repository, badgeConfig }),
+    badgeRuntime: {
+      provider: "buildchain-hosted",
+      endpointBaseUrl: badgeEndpointBaseUrl(badgeConfig),
+      hostedBadgeIds: BUILDCHAIN_BADGE_IDS,
+      logoPolicy: BUILDCHAIN_BADGE_LOGO_PLACEHOLDER,
+    },
     badges: [],
   };
-  facts.badges = buildBadgeEntries(facts);
+  facts.badges = buildBadgeEntries(facts, { badgeConfig });
   return facts;
 }
 
