@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-impact",
+  "versionImpact": {
+    "final": "patch",
+    "source": "buildchain-release-governance",
+    "rationale": "Buildchain v2.10 patch release accepts strict publish-gate channel-lineage PRs and supports externally managed web-surface directory-index rewrites for shared CloudFront preview routers."
+  },
+  "surfaceImpacts": [
+    {
+      "id": "publish-gate-channel-lineage",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Accepts same-line publish-gate/alpha and publish-gate/release source-lock PR lineage during promote-buildchain-ref governance checks.",
+      "source": "buildchain-ref-promotion.yml"
+    },
+    {
+      "id": "web-surface-external-directory-index-rewrite",
+      "impact": "patch",
+      "class": "web-surface-deployment",
+      "rationale": "Allows web-surface deploy channels to declare directory_index_rewrite = external so Buildchain does not replace an existing viewer-request prefix router while health checks still validate root and nested surface URLs.",
+      "source": "buildchain-ref-promotion.yml"
+    }
+  ],
+  "classification": "patch",
+  "breaking": false,
+  "security": false,
+  "migrationRequired": false,
+  "summary": "Buildchain v2.10 patch release for publish-gate lineage and externally managed web-surface preview root routing.",
+  "release": {
+    "tag": "v2.10.2-alpha.1",
+    "line": "v2.10"
+  }
+}
