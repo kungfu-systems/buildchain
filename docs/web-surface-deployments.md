@@ -22,7 +22,7 @@ This keeps the evidence chain clear:
 
 ## Configuration
 
-`buildchain.toml` is the source of truth. Web-surface projects must declare
+`.buildchain/buildchain.toml` is the source of truth. Web-surface projects must declare
 preview, staging, and production channels plus a deploy adapter for each.
 
 ```toml
@@ -165,14 +165,14 @@ jobs:
   web:
     uses: kungfu-systems/buildchain/.github/workflows/.web-surface.yml@v2
     with:
-      buildchain-contract-lock-path: buildchain.contract-lock.json
+      buildchain-contract-lock-path: .buildchain/contract-lock.json
       buildchain-contract-compatibility-policy: major-compatible
       buildchain-contract-drift-issue-mode: compatible-and-breaking
       build-command: pnpm build
       artifact-path: dist
 ```
 
-The caller repository commits `buildchain.contract-lock.json` after reviewing an
+The caller repository commits `.buildchain/contract-lock.json` after reviewing an
 accepted Buildchain runtime SHA and contract digest. The reusable workflow then
 resolves the floating runtime to an immutable SHA, checks the lock before the
 caller build command, and applies these rules:

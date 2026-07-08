@@ -3,11 +3,11 @@
   "contract": "kungfu-buildchain-public-surface-reverse-audit",
   "status": "passed",
   "summary": {
-    "cliCommandCount": 58,
+    "cliCommandCount": 65,
     "workflowCount": 35,
     "actionCount": 4,
     "sitePageCount": 43,
-    "docCommandRefCount": 181,
+    "docCommandRefCount": 208,
     "failureCount": 0
   },
   "enumerated": {
@@ -133,14 +133,39 @@
         "usage": "buildchain kfd ..."
       },
       {
+        "id": "kfd-1-gate",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd 1 gate --witness-json <file-or-json>... [--cwd <dir>] [--artifact-root <dir>]"
+      },
+      {
         "id": "kfd-1-schema",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain kfd 1 schema [--schema <name>] [--json]"
       },
       {
+        "id": "kfd-1-verify",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd 1 verify --gate-json <file-or-json> [--json]"
+      },
+      {
+        "id": "kfd-1-witness",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd 1 witness [--cwd <dir>] [--source-sha <sha>] [--output <file>] [--json]"
+      },
+      {
+        "id": "kfd-2-claims",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd 2 claims [--cwd <dir>] [--output-dir <dir>] [--json]"
+      },
+      {
         "id": "kfd-2-schema",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain kfd 2 schema [--schema <name>] [--json]"
+      },
+      {
+        "id": "kfd-2-taxonomy",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd 2 taxonomy --entry-json <file-or-json>... [--kind residualRisk|downgradeReason] [--json]"
       },
       {
         "id": "kfd-3",
@@ -178,6 +203,11 @@
         "usage": "buildchain kfd 4 schema [--schema <name>] [--json]"
       },
       {
+        "id": "kfd-migrate-layout",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd migrate-layout [--cwd <dir>] [--write] [--force] [--json]"
+      },
+      {
         "id": "kfd-schema-list",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain kfd schema list [--standard kfd-1|kfd-2|kfd-3|kfd-4] [--json]"
@@ -186,6 +216,11 @@
         "id": "kfd-schema-show",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain kfd schema show <kfd-1|kfd-2|kfd-3|kfd-4> [--schema <name>] [--json]"
+      },
+      {
+        "id": "kfd-status",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd status [--cwd <dir>] [--json]"
       },
       {
         "id": "lifecycle",
@@ -1591,6 +1626,96 @@
         "command": "buildchain inspect release --passport"
       },
       {
+        "id": "kfd-1-gate",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd 1 gate"
+      },
+      {
+        "id": "kfd-1-gate",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 1 gate"
+      },
+      {
+        "id": "kfd-1-schema",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd 1 schema"
+      },
+      {
+        "id": "kfd-1-schema",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 1 schema"
+      },
+      {
+        "id": "kfd-1-verify",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd 1 verify"
+      },
+      {
+        "id": "kfd-1-verify",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 1 verify"
+      },
+      {
+        "id": "kfd-1-witness",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd 1 witness"
+      },
+      {
+        "id": "kfd-1-witness",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 1 witness"
+      },
+      {
+        "id": "kfd-1-witness",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 1 witness"
+      },
+      {
+        "id": "kfd-1-witness",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 1 witness"
+      },
+      {
+        "id": "kfd-2-claims",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd 2 claims"
+      },
+      {
+        "id": "kfd-2-claims",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 2 claims"
+      },
+      {
+        "id": "kfd-2-claims",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 2 claims"
+      },
+      {
+        "id": "kfd-2-claims",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 2 claims"
+      },
+      {
+        "id": "kfd-2-schema",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd 2 schema"
+      },
+      {
+        "id": "kfd-2-schema",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 2 schema"
+      },
+      {
+        "id": "kfd-2-taxonomy",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd 2 taxonomy"
+      },
+      {
+        "id": "kfd-2-taxonomy",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 2 taxonomy"
+      },
+      {
         "id": "kfd-3-audit",
         "path": "docs/cli.md",
         "command": "buildchain kfd 3 audit"
@@ -1618,6 +1743,11 @@
       {
         "id": "kfd-3-query",
         "path": "docs/cli.md",
+        "command": "buildchain kfd 3 query"
+      },
+      {
+        "id": "kfd-3-query",
+        "path": "docs/kfd-support.md",
         "command": "buildchain kfd 3 query"
       },
       {
@@ -1667,12 +1797,37 @@
       },
       {
         "id": "kfd-4-schema",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd 4 schema"
+      },
+      {
+        "id": "kfd-4-schema",
         "path": "docs/kfd-support.md",
         "command": "buildchain kfd 4 schema"
       },
       {
+        "id": "kfd-4-schema",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 4 schema"
+      },
+      {
+        "id": "kfd-migrate-layout",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd migrate-layout --write"
+      },
+      {
+        "id": "kfd-migrate-layout",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd migrate-layout --write"
+      },
+      {
         "id": "kfd-schema-list",
         "path": "docs/cli.md",
+        "command": "buildchain kfd schema list"
+      },
+      {
+        "id": "kfd-schema-list",
+        "path": "docs/kfd-support.md",
         "command": "buildchain kfd schema list"
       },
       {
@@ -1689,10 +1844,25 @@
         "id": "kfd-schema-show",
         "path": "docs/kfd-support.md",
         "command": "buildchain kfd schema show"
+      },
+      {
+        "id": "kfd-status",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd status --json"
+      },
+      {
+        "id": "kfd-status",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd status --json"
       },
       {
         "id": "kfd",
         "path": "docs/cli.md",
+        "command": "buildchain kfd"
+      },
+      {
+        "id": "kfd",
+        "path": "README.md",
         "command": "buildchain kfd"
       },
       {
@@ -2096,9 +2266,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "f139da75a7940a30f70579b8c831c8806c21b5b76facb574378cfa27430a7602",
+    "cliRegistryDigest": "8a692573ad139a250fd77014b7874141dfb4d492ceee2dae46cdf1a631c32909",
     "workflowRegistryDigest": "b24b2a68ae83941cbb6a719a62b4eafbd0f5e859e5810ae766ce9a5db69ddfae",
-    "pageRegistryDigest": "6f340cfbc4c803ff1cf9329f101b0a163169b26ca9e041dd7f713b5e72f00c8e"
+    "pageRegistryDigest": "58d12a0d2198503c9ad12418431ca90a95f65675f80d61f622393a62c14256ca"
   },
   "comparison": {
     "missingCliRegistry": [],

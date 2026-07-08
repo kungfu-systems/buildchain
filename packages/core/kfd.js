@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import { createRequire } from "node:module";
+import path from "node:path";
 
 import {
   createBuildchainKfd1Witness,
@@ -10,6 +11,14 @@ import {
   createBuildchainKfdSurfaceRegistry,
   createBuildchainPublicClaimDefinitions,
 } from "./buildchain-kfd-claims.js";
+import {
+  migrateBuildchainLayout,
+  planBuildchainLayoutMigration,
+  resolveBuildchainConfigPath,
+  resolveBuildchainContractLockPath,
+  resolveKfd3SurfaceRegistryPath,
+  resolveReleasePassportPath,
+} from "./buildchain-layout.js";
 import {
   createKfd1ReleaseGateEvidence,
   createKfd3CollaborationInterfaceReleaseGateEvidence,
@@ -37,6 +46,26 @@ const require = createRequire(import.meta.url);
 
 function readJsonPackageExport(exportPath) {
   return JSON.parse(fs.readFileSync(require.resolve(exportPath), "utf8"));
+}
+
+function readJsonFile(filePath) {
+  return JSON.parse(fs.readFileSync(filePath, "utf8"));
+}
+
+function readJsonInput(value, { cwd = process.cwd(), label = "json" } = {}) {
+  const input = String(value || "").trim();
+  if (!input) {
+    throw new Error(`${label} is required`);
+  }
+  const filePath = path.isAbsolute(input) ? input : path.join(cwd, input);
+  if (fs.existsSync(filePath)) {
+    return readJsonFile(filePath);
+  }
+  return JSON.parse(input);
+}
+
+function readJsonInputs(values = [], { cwd = process.cwd(), label = "json" } = {}) {
+  return values.map((value, index) => readJsonInput(value, { cwd, label: `${label}[${index}]` }));
 }
 
 export function normalizeKfdStandardId(value) {
@@ -136,6 +165,13 @@ export const kfd1 = Object.freeze({
   createReleaseGateEvidence: createKfd1ReleaseGateEvidence,
   validateReleaseGateEvidence: validateKfd1ReleaseGateEvidence,
   createBuildchainWitness: createBuildchainKfd1Witness,
+  createGate: ({ cwd = process.cwd(), witnessJsons = [], artifactRoot = "", artifacts = [] } = {}) => createKfd1ReleaseGateEvidence({
+    cwd,
+    artifactRoot,
+    artifacts,
+    witnesses: readJsonInputs(witnessJsons, { cwd, label: "kfd-1 witness" }),
+  }),
+  validateGate: (section) => validateKfd1ReleaseGateEvidence(section),
 });
 
 export const kfd2 = Object.freeze({
@@ -143,6 +179,10 @@ export const kfd2 = Object.freeze({
   validateTrustTaxonomyEntry: validateKfd2TrustTaxonomyEntry,
   createBuildchainClaims: createBuildchainKfd2Claims,
   createBuildchainPublicClaimDefinitions,
+  validateTaxonomyEntries: ({ entries = [], kind = "residualRisk" } = {}) => entries.map((entry, index) => validateKfd2TrustTaxonomyEntry(entry, {
+    kind,
+    label: `${kind}[${index}]`,
+  })),
 });
 
 export const kfd3 = Object.freeze({
@@ -168,10 +208,66 @@ export const kfd4 = Object.freeze({
     list: (options = {}) => listKfdSchemas({ ...options, standard: "kfd-4" }),
     read: (options = {}) => readKfdSchema({ ...options, standard: "kfd-4" }),
   },
+  status: "schema-only",
 });
 
 export const buildchainKfdClaims = Object.freeze({
   createClaimRegistry: createBuildchainKfdClaimRegistry,
   createSurfaceRegistry: createBuildchainKfdSurfaceRegistry,
   createPublicClaimDefinitions: createBuildchainPublicClaimDefinitions,
+});
+
+export function collectKfdStatus({ cwd = process.cwd() } = {}) {
+  const resolvedCwd = path.resolve(cwd);
+  const schemas = listKfdSchemas();
+  const layout = planBuildchainLayoutMigration({ cwd: resolvedCwd });
+  const paths = {
+    config: resolveBuildchainConfigPath(resolvedCwd),
+    contractLock: resolveBuildchainContractLockPath(resolvedCwd),
+    kfd3SurfaceRegistry: resolveKfd3SurfaceRegistryPath(resolvedCwd),
+    releasePassport: resolveReleasePassportPath(resolvedCwd),
+  };
+  const pathStatus = Object.fromEntries(Object.entries(paths).map(([key, relPath]) => [
+    key,
+    {
+      path: relPath,
+      exists: fs.existsSync(path.join(resolvedCwd, relPath)),
+    },
+  ]));
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-kfd-status",
+    cwd: resolvedCwd,
+    layout: {
+      status: layout.status,
+      canonicalRoot: layout.canonicalRoot,
+      migrationNeeded: layout.moves.length > 0,
+      moves: layout.moves,
+    },
+    standards: schemas.schemas.reduce((acc, entry) => {
+      acc[entry.standard] ||= [];
+      acc[entry.standard].push({
+        name: entry.name,
+        schemaId: entry.schemaId,
+        schemaPath: entry.schemaPath,
+      });
+      return acc;
+    }, {}),
+    support: {
+      "kfd-1": ["schema", "witness", "gate", "verify"],
+      "kfd-2": ["schema", "taxonomy", "claims"],
+      "kfd-3": ["schema", "detect", "register", "audit", "witness", "query"],
+      "kfd-4": ["schema"],
+    },
+    paths: pathStatus,
+  };
+}
+
+export const layout = Object.freeze({
+  plan: planBuildchainLayoutMigration,
+  migrate: migrateBuildchainLayout,
+  resolveConfigPath: resolveBuildchainConfigPath,
+  resolveContractLockPath: resolveBuildchainContractLockPath,
+  resolveKfd3SurfaceRegistryPath,
+  resolveReleasePassportPath,
 });

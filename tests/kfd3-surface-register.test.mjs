@@ -5,6 +5,10 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import {
+  collectKfdStatus,
+  kfd1,
+  kfd2,
+  kfd4,
   kfd3,
   listKfdSchemas,
   readKfdSchema,
@@ -126,10 +130,29 @@ test("KFD CLI exposes all KFD standards through the unified schema namespace", (
   assert.equal(cliSchema.standard, "kfd-1");
 });
 
-test("Buildchain dogfoods KFD-3 capability query from its site KFD claims", async () => {
+test("Buildchain dogfoods KFD-1, KFD-2, and KFD-3 first-class APIs", async () => {
+  const status = collectKfdStatus({ cwd: root });
+  assert.deepEqual(status.support["kfd-1"], ["schema", "witness", "gate", "verify"]);
+  assert.deepEqual(status.support["kfd-2"], ["schema", "taxonomy", "claims"]);
+  assert.deepEqual(status.support["kfd-3"], ["schema", "detect", "register", "audit", "witness", "query"]);
+  assert.deepEqual(status.support["kfd-4"], ["schema"]);
+
+  const witness = kfd1.createBuildchainWitness({ root, sourceSha: "a".repeat(40) });
+  assert.equal(witness.standard, "kfd-1");
+  assert.match(witness.contractWorld.digest, /^sha256:/);
+
+  const claims = kfd2.createBuildchainClaims({ root });
+  assert.ok(claims.length > 0);
+  assert.ok(claims.every((entry) => entry.public === true));
+  assert.ok(claims.every((entry) => Array.isArray(entry.machineEvidence)));
+
   const query = await kfd3.queryCapabilities({ cwd: root, product: "buildchain" });
 
   assert.equal(query.product, "Buildchain");
   assert.equal(query.source.type, "buildchain-site-kfd-claims");
   assert.ok(query.capabilities.some((entry) => entry.id === "export:./kfd" || entry.id === "export:./buildchain-kfd-claims"));
+
+  assert.equal(kfd4.status, "schema-only");
+  const kfd4Schema = readKfdSchema({ standard: "kfd-4" });
+  assert.equal(kfd4Schema.standard, "kfd-4");
 });

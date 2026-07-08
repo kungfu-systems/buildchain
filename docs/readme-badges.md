@@ -2,7 +2,7 @@
 
 Buildchain can generate a managed README badge block from repository-owned
 facts. The README keeps only a projection; the source facts remain in
-`buildchain.toml`, package metadata, workflow files, KFD standards metadata,
+`.buildchain/buildchain.toml`, package metadata, workflow files, KFD standards metadata,
 and the repository's own release passport.
 
 The managed block is delimited by:
@@ -107,7 +107,7 @@ so badge drift is detected like any other generated release-facing surface.
 
 ## Configuration
 
-The optional `[badges]` table in `buildchain.toml` declares local facts that
+The optional `[badges]` table in `.buildchain/buildchain.toml` declares local facts that
 cannot be inferred safely:
 
 ```toml

@@ -77,6 +77,38 @@ replacement = '\${version}'
   );
 });
 
+test(".buildchain/buildchain.toml is preferred over legacy root buildchain.toml", () => {
+  withTempRepo(
+    {
+      ".buildchain/buildchain.toml": `
+schema = 1
+
+[project]
+type = "package"
+name = "canonical"
+
+[lifecycle.verify]
+command = "node -e \\"process.exit(0)\\""
+`,
+      "buildchain.toml": `
+schema = 1
+
+[project]
+type = "package"
+name = "legacy"
+
+[lifecycle.verify]
+command = "node -e \\"process.exit(0)\\""
+`,
+    },
+    (dir) => {
+      const loaded = loadBuildchainConfig(dir);
+      assert.equal(loaded.path, ".buildchain/buildchain.toml");
+      assert.equal(loaded.config.project.name, "canonical");
+    },
+  );
+});
+
 test("lifecycle stage supports command arrays and scripts", () => {
   withTempRepo(
     {

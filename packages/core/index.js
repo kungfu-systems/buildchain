@@ -258,8 +258,29 @@ export {
 } from "./homebrew.js";
 
 export {
+  BUILDCHAIN_CONFIG_PATH,
+  BUILDCHAIN_CONTRACT_LOCK_PATH,
+  BUILDCHAIN_DIR,
+  BUILDCHAIN_GENERATED_DIRS,
+  BUILDCHAIN_KFD3_SURFACE_REGISTRY_PATH,
+  BUILDCHAIN_RELEASE_PASSPORT_PATH,
+  LEGACY_BUILDCHAIN_CONFIG_PATH,
+  LEGACY_BUILDCHAIN_CONTRACT_LOCK_PATH,
+  LEGACY_BUILDCHAIN_KFD3_SURFACE_REGISTRY_PATH,
+  LEGACY_BUILDCHAIN_RELEASE_PASSPORT_PATH,
+  discoverBuildchainRepoFiles,
+  migrateBuildchainLayout,
+  planBuildchainLayoutMigration,
+  resolveBuildchainConfigPath,
+  resolveBuildchainContractLockPath,
+  resolveKfd3SurfaceRegistryPath,
+  resolveReleasePassportPath,
+} from "./buildchain-layout.js";
+export {
   buildchainKfdClaims,
+  collectKfdStatus,
   discoverKfdStandards,
+  layout,
   kfd1,
   kfd2,
   kfd3,

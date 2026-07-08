@@ -1,9 +1,14 @@
 # Lifecycle Protocol
 
-Buildchain uses `buildchain.toml` as the v2 repository configuration format.
+Buildchain uses `.buildchain/buildchain.toml` as the v2 repository configuration format.
 The file is optional for simple JavaScript repositories, but it is the preferred
 way to describe release version state and lifecycle commands when a project is
 not a plain pnpm, npm, or yarn workspace.
+
+For compatibility, Buildchain still reads a legacy root `buildchain.toml` when
+`.buildchain/buildchain.toml` is absent. New repositories should use the
+`.buildchain/` layout so all Buildchain-owned local state lives under one
+directory.
 
 Only TOML is supported in v2. YAML, JSON, and JavaScript config files are not
 loaded.
@@ -278,7 +283,7 @@ it overrides `lifecycle.verify` for that invocation.
 
 Heavy repositories can validate their Buildchain declaration before they are
 ready to run the real build. `actions/validate-config` checks that
-`buildchain.toml` parses, configured version-state files exist, configured
+`.buildchain/buildchain.toml` parses, configured version-state files exist, configured
 version keys are strings, and required lifecycle stage names are declared.
 For web-surface repositories it also validates `project`, `channels`, `deploy`,
 `retention`, and `security` declarations.

@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:6c48d8209217f7e3399e9cdcb94e8e66994c9316454fccc1df6a8e0432505064",
+      "digest": "sha256:497124adb3868e679e67e7a283f7c5c79146e7ebe60ffe07afc4bf6a70ad2568",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:6c48d8209217f7e3399e9cdcb94e8e66994c9316454fccc1df6a8e0432505064",
+      "digest": "sha256:497124adb3868e679e67e7a283f7c5c79146e7ebe60ffe07afc4bf6a70ad2568",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -125,8 +125,21 @@
       "specifier": "@kungfu-tech/buildchain/kfd",
       "export": "./kfd",
       "target": "./packages/core/kfd.js",
-      "digest": "sha256:46eed679234c690c92ea0df5b847efb03bdaa0b6388512a4e7819cadd45dca0e",
-      "summary": "Unified KFD standards, schema discovery, KFD-1/KFD-2/KFD-3/KFD-4 grouped APIs, and Buildchain KFD claim helpers.",
+      "digest": "sha256:908a171399090cf3d2f43a1e01fa312a1a47861dfc9874d32f5e8a9d4ac53899",
+      "summary": "Unified KFD standards, schema discovery, KFD-1/KFD-2/KFD-3 grouped APIs, KFD-4 schema discovery, and Buildchain KFD claim helpers.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/buildchain-layout",
+      "export": "./buildchain-layout",
+      "target": "./packages/core/buildchain-layout.js",
+      "digest": "sha256:686d0afe1c88835d18917ad2ed79863848bdb5edddaebf975543ef8463435941",
+      "summary": "Canonical .buildchain repository layout constants, path resolution, and migration APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [
         "developer",
@@ -269,7 +282,7 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:0319318fb5573bd4d8dd596edeba2aff25b2ca18fc65cedfec43be5a6bdfb702"
+      "digest": "sha256:b6bc32831d202d5c542d72f6e63322f632014751e7db00862b28fb9ce5318fd3"
     },
     {
       "id": "build-facts",
@@ -279,12 +292,12 @@
     {
       "id": "kfd-support",
       "path": "docs/kfd-support.md",
-      "digest": "sha256:5edc5926da7f18c672eca1d4e272cb7d807fda6040484c5455d88b2907e42cd7"
+      "digest": "sha256:704efbf7be24d641d8b119737eb33b3e98fea8c55cf434f7f475160809f4e3a4"
     },
     {
       "id": "readme-badges",
       "path": "docs/readme-badges.md",
-      "digest": "sha256:ddaf49a7d6e6c11aea8d21d1ba736159897e16207cd74af0044014425faf8a2c"
+      "digest": "sha256:d032ddd27db62bdb21031cbd0673d9ae61af0250c12522fe6106e7aff835fb21"
     },
     {
       "id": "homebrew",

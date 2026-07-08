@@ -171,9 +171,24 @@ npx @kungfu-tech/buildchain validate --require-version-state
 npx @kungfu-tech/buildchain release --dry-run --target-ref alpha/v2/v2.2
 ```
 
-Buildchain supports package and non-package projects through `buildchain.toml`.
+Buildchain supports package and non-package projects through
+`.buildchain/buildchain.toml`. Legacy root `buildchain.toml` files remain
+readable, but new consumers should keep Buildchain-owned files under
+`.buildchain/`:
+
+```text
+.buildchain/buildchain.toml
+.buildchain/contract-lock.json
+.buildchain/kfd/kfd-3-surfaces.json
+.buildchain/release-passport/buildchain.release.json
+```
+
 Lifecycle commands can call pnpm, npm, yarn, pip, Conan, CMake, Make, custom
 scripts, or any other command that can run in the repository checkout.
+
+The KFD entrypoint is `buildchain kfd`. Buildchain currently provides concrete
+KFD-1 contract-world, KFD-2 trust-claim, and KFD-3 collaboration-surface
+workflows; KFD-4 is exposed as schema-only until a verification protocol exists.
 
 Buildchain's active GitHub Action surface is deliberately small:
 

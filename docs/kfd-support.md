@@ -9,7 +9,33 @@ facts, not as README prose. The machine-readable sources are:
   workflow, action, site, and documented command surfaces;
 - `buildchain.release.json` for release-specific KFD-1, KFD-2, and KFD-3
   passport results;
-- `buildchain.kfd3.json` for product-owned KFD-3 surface registration.
+- `.buildchain/buildchain.toml` for repository-owned Buildchain configuration;
+- `.buildchain/kfd/kfd-3-surfaces.json` for product-owned KFD-3 surface
+  registration;
+- `.buildchain/contract-lock.json` for accepted floating runtime contracts.
+
+Buildchain still reads the legacy root files `buildchain.toml`,
+`buildchain.contract-lock.json`, and `buildchain.kfd3.json` so existing
+consumers do not break, but new repositories should keep repo-owned Buildchain
+files under `.buildchain/`.
+
+## Unified Namespace
+
+KFD support is exposed through one first-class namespace:
+
+```bash
+buildchain kfd status --json
+buildchain kfd migrate-layout --write
+buildchain kfd schema list --json
+buildchain kfd 1 witness --json
+buildchain kfd 2 claims --json
+buildchain kfd 3 query buildchain --json
+buildchain kfd 4 schema --json
+```
+
+KFD-1, KFD-2, and KFD-3 have concrete Buildchain workflows. KFD-4 is currently
+schema-only in Buildchain: agents can discover and read the KFD-4 schema from
+`@kungfu-tech/kfd`, but Buildchain does not claim KFD-4 verification.
 
 ## KFD-1
 
@@ -21,6 +47,15 @@ For Buildchain itself, the source registry lives in
 `packages/core/buildchain-kfd-claims.js` and is projected to
 `dist/site/kfd-claims.json`. Release promotion binds that registry to exact
 source and artifact hashes in the release passport.
+
+Buildchain exposes KFD-1 through:
+
+```bash
+buildchain kfd 1 schema --json
+buildchain kfd 1 witness --json
+buildchain kfd 1 gate --witness-json kfd-1-witness.json --json
+buildchain kfd 1 verify --gate-json kfd-1-gate.json --json
+```
 
 ## KFD-2
 
@@ -37,6 +72,14 @@ Every public claim binds:
 - audit boundary;
 - responsibility state;
 - residual risk.
+
+Buildchain exposes KFD-2 through:
+
+```bash
+buildchain kfd 2 schema --json
+buildchain kfd 2 taxonomy --entry-json residual-risk.json --kind residualRisk --json
+buildchain kfd 2 claims --json
+```
 
 ## KFD-3
 
@@ -60,7 +103,7 @@ KFD-3 surface registration uses three states.
 | State | Meaning |
 | --- | --- |
 | `detected` | Buildchain found a candidate public surface from package metadata, wheel metadata, CLI bins, binary artifacts, docs, or site bundle facts. |
-| `declared` | The product owner accepted that candidate into `buildchain.kfd3.json`. |
+| `declared` | The product owner accepted that candidate into `.buildchain/kfd/kfd-3-surfaces.json`. |
 | `enforced` | The product has promoted a declared surface to a hard release boundary. Missing enforced surfaces fail release verification. |
 
 Detection does not silently become product intent. `register` is the boundary
@@ -109,7 +152,7 @@ Query capability facts for agents or downstream sites:
 
 ```bash
 buildchain kfd 3 query buildchain --json
-buildchain kfd 3 query --passport buildchain.release.json --json
+buildchain kfd 3 query --passport .buildchain/release-passport/buildchain.release.json --json
 ```
 
 ## Node API
@@ -118,14 +161,20 @@ The CLI is a thin wrapper over the public Node API:
 
 ```js
 import {
+  kfd1,
+  kfd2,
   kfd3,
+  kfd4,
+  collectKfdStatus,
   listKfdSchemas,
   readKfdSchema,
 } from "@kungfu-tech/buildchain/kfd";
 ```
 
-Agents should prefer `kfd3.queryCapabilities()` when deciding whether a product
-capability is usable. The query result connects each capability to:
+Agents should start with `collectKfdStatus()` to learn which standards are
+implemented and where the repository-owned Buildchain files live. For capability
+use decisions, prefer `kfd3.queryCapabilities()`. The query result connects each
+capability to:
 
 - KFD-3 surface identity and state;
 - KFD-1 basis facts such as source and artifact paths or digests;
@@ -152,8 +201,12 @@ the registry over time, but the first boundary is metadata-based.
 
 Buildchain dogfoods this model in two ways:
 
+- `buildchain kfd 1 witness --json` generates Buildchain's own KFD-1 contract
+  world witness;
+- `buildchain kfd 2 claims --json` generates Buildchain's own KFD-2 public
+  claim evidence;
 - `dist/site/kfd-claims.json` declares Buildchain's own KFD-3 collaboration
-  surface;
+  interface;
 - `buildchain kfd 3 query buildchain --json` resolves the packaged
   Buildchain capability map from that site fact source.
 

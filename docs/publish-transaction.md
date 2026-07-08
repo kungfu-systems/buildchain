@@ -70,7 +70,7 @@ of reusing or overwriting that failed transaction slot.
 
 ## Lifecycle
 
-Repositories declare publish work in `buildchain.toml`:
+Repositories declare publish work in `.buildchain/buildchain.toml`:
 
 ```toml
 [publish]

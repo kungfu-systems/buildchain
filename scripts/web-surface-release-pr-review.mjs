@@ -2,6 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { parse as parseToml } from "smol-toml";
+import { resolveBuildchainConfigPath } from "../packages/core/buildchain-layout.js";
 
 export const RELEASE_REVIEW_MARKER = "<!-- buildchain:web-surface-release-review -->";
 
@@ -51,7 +52,7 @@ export function resolveReleaseReviewState(payload, options = {}) {
 }
 
 export function loadWebSurfaceReleaseUrls(cwd = ".") {
-  const configPath = path.join(cwd, "buildchain.toml");
+  const configPath = path.join(cwd, resolveBuildchainConfigPath(cwd));
   const raw = fs.readFileSync(configPath, "utf8");
   const config = parseToml(raw);
   const stagingUrl = String(config.channels?.staging?.url || "").trim();

@@ -10,6 +10,10 @@ import {
   readBuildchainContractWorld,
   renderBuildchainContractDriftIssueBody,
 } from "../packages/core/buildchain-contract.js";
+import {
+  BUILDCHAIN_CONTRACT_LOCK_PATH,
+  resolveBuildchainContractLockPath,
+} from "../packages/core/buildchain-layout.js";
 import { writeGitHubOutputs } from "./build-contract-core.mjs";
 
 function env(name, fallback = "") {
@@ -58,7 +62,7 @@ function issueModeAllows(mode, evaluation) {
 }
 
 export function checkBuildchainContractLock({
-  lockPath = env("BUILDCHAIN_CONTRACT_LOCK_PATH", "buildchain.contract-lock.json"),
+  lockPath = env("BUILDCHAIN_CONTRACT_LOCK_PATH") || resolveBuildchainContractLockPath(process.cwd()),
   currentContractPath = env("BUILDCHAIN_CONTRACT_CURRENT_PATH", ".buildchain/runtime/dist/site/buildchain-contract.json"),
   runtimeRoot = env("BUILDCHAIN_RUNTIME_ROOT", ".buildchain/runtime"),
   runtimeRef = env("BUILDCHAIN_RUNTIME_REF"),
@@ -124,7 +128,7 @@ export function checkBuildchainContractLock({
 }
 
 export function writeBuildchainContractLock({
-  output = env("BUILDCHAIN_CONTRACT_LOCK_PATH", "buildchain.contract-lock.json"),
+  output = env("BUILDCHAIN_CONTRACT_LOCK_PATH", BUILDCHAIN_CONTRACT_LOCK_PATH),
   currentContractPath = env("BUILDCHAIN_CONTRACT_CURRENT_PATH", "dist/site/buildchain-contract.json"),
   runtimeRoot = env("BUILDCHAIN_RUNTIME_ROOT", process.cwd()),
   buildchainRef = env("BUILDCHAIN_RUNTIME_REF", "v2"),
