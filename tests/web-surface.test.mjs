@@ -109,7 +109,6 @@ test("web-surface deploy plan emits deterministic manifest without touching AWS"
     assert.deepEqual(
       plan.steps.map((step) => step.action),
       [
-        "ensure-cloudfront-default-root-object",
         "sync-static-artifact",
         "write-deployment-manifest",
         "invalidate-cdn",
@@ -150,9 +149,9 @@ test("web-surface deploy apply defaults to dry-run operations", () => {
     assert.equal(result.surfaceBindings.length, 4);
     assert.deepEqual(
       result.operations.map((operation) => operation.executed),
-      Array.from({ length: 21 }, () => false),
+      Array.from({ length: 20 }, () => false),
     );
-    assert.equal(result.operations.filter((operation) => operation.action === "ensure-cloudfront-default-root-object").length, 1);
+    assert.equal(result.operations.filter((operation) => operation.action === "ensure-cloudfront-default-root-object").length, 0);
   });
 });
 
@@ -176,11 +175,8 @@ test("web-surface deploy apply executes aws s3 and cloudfront commands through r
     assert.equal(result.applyMode, "apply");
     assert.equal(result.status, "applied");
     assert.equal(result.target, "libkungfu-dev-staging");
-    assert.equal(result.operations.length, 21);
-    const defaultRoot = calls.find((call) => call.action === "ensure-cloudfront-default-root-object");
-    assert.equal(defaultRoot.command, "bash");
-    assert.match(defaultRoot.args.join("\n"), /DefaultRootObject/);
-    assert.equal(defaultRoot.routing.defaultRootObject, "index.html");
+    assert.equal(result.operations.length, 20);
+    assert.equal(calls.some((call) => call.action === "ensure-cloudfront-default-root-object"), false);
     const hubSync = calls.find((call) => call.action === "sync-static-artifact" && call.surface === "hub");
     assert.deepEqual(hubSync.args.slice(0, 3), ["s3", "sync", path.join(fixture, "dist")]);
     assert.equal(hubSync.args[3], "s3://libkungfu-dev-staging/staging");
@@ -207,7 +203,7 @@ test("web-surface deploy apply executes aws s3 and cloudfront commands through r
     ]);
     assert.deepEqual(
       result.operations.map((operation) => operation.executed),
-      Array.from({ length: 21 }, () => true),
+      Array.from({ length: 20 }, () => true),
     );
   });
 });
@@ -1105,6 +1101,42 @@ test("web-surface CLI deploy-apply writes dry-run apply result by default", () =
       assert.equal(result.applyMode, "dry-run");
       assert.equal(result.status, "planned");
       assert.equal(JSON.parse(fs.readFileSync(output, "utf8")).contract, "kungfu-buildchain-web-surface-deploy-apply");
+    } finally {
+      process.argv = originalArgv;
+    }
+  });
+});
+
+test("web-surface CLI deploy-apply preserves failed operation diagnostics", () => {
+  withFixture((fixture) => {
+    fs.mkdirSync(path.join(fixture, "dist"), { recursive: true });
+    fs.writeFileSync(path.join(fixture, "dist", "index.html"), "hello\n");
+    const output = path.join(fixture, ".buildchain", "web-surface-apply.json");
+    const originalArgv = process.argv;
+    try {
+      process.argv = [
+        "node",
+        "web-surface.mjs",
+        "--mode",
+        "deploy-apply",
+        "--cwd",
+        fixture,
+        "--channel",
+        "staging",
+        "--source-sha",
+        "d".repeat(40),
+        "--dry-run",
+        "false",
+        "--output",
+        output,
+      ];
+      assert.throws(() => webSurfaceCli(), /see apply result/);
+      const result = JSON.parse(fs.readFileSync(output, "utf8"));
+      assert.equal(result.status, "failed");
+      assert.equal(result.operations[0].action, "sync-static-artifact");
+      assert.equal(result.operations[0].surface, "hub");
+      assert.deepEqual(result.operations[0].args.slice(0, 2), ["s3", "sync"]);
+      assert.match(result.operations[0].stderr, /aws|ENOENT|exit code/);
     } finally {
       process.argv = originalArgv;
     }
