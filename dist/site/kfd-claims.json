@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "6a28bc9e41eab809d41a7cccf8a8d27e0761d4a114470a374cf4e3ee69c8650f",
+    "sha256": "9a3e5bce8fd3bdf9a48d76db89b7d464358db7c31d4753ac78cbbda664463565",
     "summary": {
-      "cliCommandCount": 69,
+      "cliCommandCount": 71,
       "workflowCount": 35,
       "actionCount": 4,
       "sitePageCount": 43,
-      "docCommandRefCount": 221,
+      "docCommandRefCount": 224,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -207,13 +207,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "6a28bc9e41eab809d41a7cccf8a8d27e0761d4a114470a374cf4e3ee69c8650f",
+      "sha256": "9a3e5bce8fd3bdf9a48d76db89b7d464358db7c31d4753ac78cbbda664463565",
       "summary": {
-        "cliCommandCount": 69,
+        "cliCommandCount": 71,
         "workflowCount": 35,
         "actionCount": 4,
         "sitePageCount": 43,
-        "docCommandRefCount": 221,
+        "docCommandRefCount": 224,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -1865,8 +1865,32 @@
           "reverseAuditSource": "bin/buildchain.mjs"
         },
         {
-          "id": "cli:kfd-upstream",
+          "id": "cli:kfd-upstream-check",
+          "name": "buildchain kfd upstream check [--cwd <dir>] [--aggregate-json <file-or-json>] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:kfd-upstream-collect",
           "name": "buildchain kfd upstream collect [--cwd <dir>] [--output <file>] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:kfd-upstream-roles",
+          "name": "buildchain kfd upstream roles [--json]",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -3757,6 +3781,6 @@
         "public": true
       }
     ],
-    "publicSurfaceCount": 250
+    "publicSurfaceCount": 252
   }
 }

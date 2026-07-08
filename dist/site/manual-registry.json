@@ -245,7 +245,7 @@
       "title": "KFD support and KFD-3 surface registration",
       "path": "docs/kfd-support.md",
       "plane": "verify",
-      "digest": "sha256:ef792dbebe0909240829643ac28c02754e88e499bb5a27dafaed08fc18e5aab5",
+      "digest": "sha256:4bcf5d1ce63555072130eae90c739555b11658d1d796a3fcea770b90841c4afd",
       "capabilityGroup": "kfd-trust",
       "audience": [
         "agent",

@@ -48,6 +48,40 @@ const require = createRequire(import.meta.url);
 const KFD_UPSTREAM_AGGREGATE_CONTRACT = "kungfu-buildchain-kfd-upstream-aggregate";
 const KFD_AGGREGATE_CONTRACT = "kungfu-buildchain-kfd-aggregate";
 const KFD_UPSTREAM_CHECK_CONTRACT = "kungfu-buildchain-kfd-upstream-check";
+const KFD_UPSTREAM_ROLES = Object.freeze({
+  STANDARD_AND_SCHEMA_PROVIDER: "standard-and-schema-provider",
+  RELEASE_PASSPORT_AND_KFD_GATE_PROVIDER: "release-passport-and-kfd-gate-provider",
+  KFD_AWARE_PRODUCT_COMPONENT: "kfd-aware-product-component",
+  SITE_CONSUMPTION_PROVIDER: "site-consumption-provider",
+  UNKNOWN_KFD_UPSTREAM: "unknown-kfd-upstream",
+});
+const KFD_UPSTREAM_ROLE_SET = new Set(Object.values(KFD_UPSTREAM_ROLES));
+const KFD_UPSTREAM_KNOWN_PACKAGE_ROLES = Object.freeze({
+  "@kungfu-tech/kfd": KFD_UPSTREAM_ROLES.STANDARD_AND_SCHEMA_PROVIDER,
+  "@kungfu-tech/buildchain": KFD_UPSTREAM_ROLES.RELEASE_PASSPORT_AND_KFD_GATE_PROVIDER,
+});
+const KFD_UPSTREAM_ROLE_DEFINITIONS = Object.freeze([
+  {
+    role: KFD_UPSTREAM_ROLES.STANDARD_AND_SCHEMA_PROVIDER,
+    description: "Provides KFD standards, schemas, taxonomy, or standard-owned witness and claim facts.",
+  },
+  {
+    role: KFD_UPSTREAM_ROLES.RELEASE_PASSPORT_AND_KFD_GATE_PROVIDER,
+    description: "Provides release passport, KFD gate, release claim, or release governance machinery consumed by the product.",
+  },
+  {
+    role: KFD_UPSTREAM_ROLES.KFD_AWARE_PRODUCT_COMPONENT,
+    description: "A product component that exposes KFD witness, claim, collaboration-interface, or package evidence without being core KFD infrastructure.",
+  },
+  {
+    role: KFD_UPSTREAM_ROLES.SITE_CONSUMPTION_PROVIDER,
+    description: "Provides site-consumption facts such as site manifests, site bundles, or downstream page-content contracts.",
+  },
+  {
+    role: KFD_UPSTREAM_ROLES.UNKNOWN_KFD_UPSTREAM,
+    description: "Fallback for a declared upstream that has not matched a Buildchain-known package or role-specific evidence.",
+  },
+]);
 const KFD_UPSTREAM_DEFAULT_EVIDENCE = Object.freeze([
   { kind: "package", path: "buildchain.release.json", required: false },
   { kind: "package", path: "kfd.release.json", required: false },
@@ -232,9 +266,10 @@ function normalizeKfdSupport(component = {}) {
 
 function normalizeKfdUpstreamComponent(component = {}, index = 0) {
   const packageName = component.package || component.packageName || component.npm || component.name;
+  const explicitRole = component.role === undefined ? "" : String(component.role || "").trim();
   return {
     id: String(component.id || packageName || `upstream-${index + 1}`).replace(/^@/, "").replace(/[^a-zA-Z0-9_.-]+/g, "-"),
-    role: String(component.role || "kfd-aware-upstream"),
+    explicitRole,
     packageName: packageName ? String(packageName) : "",
     repository: String(component.repository || ""),
     evidence: Array.isArray(component.evidence) ? component.evidence : [],
@@ -266,6 +301,7 @@ function configuredKfdUpstreamComponents(cwd) {
 function dependencyMap(pkg) {
   return {
     ...(pkg.dependencies && typeof pkg.dependencies === "object" && !Array.isArray(pkg.dependencies) ? pkg.dependencies : {}),
+    ...(pkg.devDependencies && typeof pkg.devDependencies === "object" && !Array.isArray(pkg.devDependencies) ? pkg.devDependencies : {}),
     ...(pkg.optionalDependencies && typeof pkg.optionalDependencies === "object" && !Array.isArray(pkg.optionalDependencies) ? pkg.optionalDependencies : {}),
   };
 }
@@ -279,13 +315,93 @@ function autoDiscoveredKfdUpstreams(cwd) {
     .map((name, index) => normalizeKfdUpstreamComponent({
       id: name.split("/").pop(),
       package: name,
-      role: name === "@kungfu-tech/kfd"
-        ? "standard-and-schema-provider"
-        : name === "@kungfu-tech/buildchain"
-          ? "release-passport-and-kfd-gate-provider"
-          : "kfd-aware-upstream",
       evidence: KFD_UPSTREAM_DEFAULT_EVIDENCE,
     }, index));
+}
+
+function inferKfdUpstreamRole({ component = {}, resolvedPackage = {}, assets = [] } = {}) {
+  const explicitRole = String(component.explicitRole || "").trim();
+  if (explicitRole) {
+    return {
+      role: explicitRole,
+      roleSource: "explicit",
+      roleReason: KFD_UPSTREAM_ROLE_SET.has(explicitRole)
+        ? "Configured role is one of the Buildchain-managed KFD upstream roles."
+        : `Configured role is not a Buildchain-managed KFD upstream role: ${explicitRole}`,
+      roleValid: KFD_UPSTREAM_ROLE_SET.has(explicitRole),
+    };
+  }
+
+  const packageName = resolvedPackage.name || component.packageName || "";
+  const knownPackageRole = KFD_UPSTREAM_KNOWN_PACKAGE_ROLES[packageName];
+  if (knownPackageRole) {
+    return {
+      role: knownPackageRole,
+      roleSource: "known-package",
+      roleReason: `${packageName} is a Buildchain-known KFD upstream package.`,
+      roleValid: true,
+    };
+  }
+
+  const assetList = Array.isArray(assets) ? assets : [];
+  const contracts = new Set(assetList.map((asset) => String(asset.contract || "")).filter(Boolean));
+  const paths = assetList.map((asset) => String(asset.path || ""));
+
+  if (contracts.has("kfd-standards-metadata") || paths.includes("standards.json")) {
+    return {
+      role: KFD_UPSTREAM_ROLES.STANDARD_AND_SCHEMA_PROVIDER,
+      roleSource: "evidence",
+      roleReason: "Package evidence exposes KFD standards metadata.",
+      roleValid: true,
+    };
+  }
+
+  if (
+    contracts.has("kungfu-buildchain-release-passport") ||
+    contracts.has("kungfu-buildchain-kfd-claim-registry") ||
+    paths.some((assetPath) => assetPath === "buildchain.release.json" || assetPath === "dist/site/kfd-claims.json")
+  ) {
+    return {
+      role: KFD_UPSTREAM_ROLES.RELEASE_PASSPORT_AND_KFD_GATE_PROVIDER,
+      roleSource: "evidence",
+      roleReason: "Package evidence exposes Buildchain release passport or KFD gate facts.",
+      roleValid: true,
+    };
+  }
+
+  if (
+    contracts.has("kungfu-buildchain-site-bundle") ||
+    contracts.has("kungfu-buildchain-site-manifest") ||
+    paths.some((assetPath) => assetPath === "dist/site/site-manifest.json" || assetPath === "dist/site/buildchain-site.json")
+  ) {
+    return {
+      role: KFD_UPSTREAM_ROLES.SITE_CONSUMPTION_PROVIDER,
+      roleSource: "evidence",
+      roleReason: "Package evidence exposes site-consumption facts.",
+      roleValid: true,
+    };
+  }
+
+  if (
+    contracts.has("kfd-3-collaboration-interface") ||
+    contracts.has("kfd-2-trust-claims") ||
+    contracts.has("kfd-2-trust-assessment") ||
+    paths.some((assetPath) => assetPath.includes("/kfd-") || assetPath.startsWith(".buildchain/kfd-"))
+  ) {
+    return {
+      role: KFD_UPSTREAM_ROLES.KFD_AWARE_PRODUCT_COMPONENT,
+      roleSource: "evidence",
+      roleReason: "Package evidence exposes KFD witness, claim, or collaboration-interface facts.",
+      roleValid: true,
+    };
+  }
+
+  return {
+    role: KFD_UPSTREAM_ROLES.UNKNOWN_KFD_UPSTREAM,
+    roleSource: "default",
+    roleReason: "No Buildchain-known package or role-specific evidence matched; keeping the upstream visible without asking the consumer to invent a role.",
+    roleValid: true,
+  };
 }
 
 function releaseAnchorFromAssets(assets = []) {
@@ -564,9 +680,13 @@ export function collectKfdUpstreamFacts({ cwd = process.cwd(), components = unde
   }
   const upstreams = [...byId.values()].map((component, index) => {
     if (!component.packageName) {
+      const roleFacts = inferKfdUpstreamRole({ component });
       return {
         id: component.id || `upstream-${index + 1}`,
-        role: component.role || "kfd-aware-upstream",
+        role: roleFacts.role,
+        roleSource: roleFacts.roleSource,
+        roleReason: roleFacts.roleReason,
+        roleValid: roleFacts.roleValid,
         package: { name: "", version: "" },
         repository: component.repository || "",
         kfd: component.kfd || {},
@@ -588,9 +708,13 @@ export function collectKfdUpstreamFacts({ cwd = process.cwd(), components = unde
     const assetsWithParsed = evidence
       .map((spec) => assetFromSpec({ spec, resolvedPackage, cwd: resolvedCwd }))
       .filter(Boolean);
+    const roleFacts = inferKfdUpstreamRole({ component, resolvedPackage, assets });
     return {
       id: component.id || resolvedPackage.name,
-      role: component.role,
+      role: roleFacts.role,
+      roleSource: roleFacts.roleSource,
+      roleReason: roleFacts.roleReason,
+      roleValid: roleFacts.roleValid,
       package: {
         name: resolvedPackage.name,
         version: resolvedPackage.version,
@@ -625,6 +749,33 @@ export function collectKfdUpstreamFacts({ cwd = process.cwd(), components = unde
   };
 }
 
+export function listKfdUpstreamRoles() {
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-kfd-upstream-role-registry",
+    roles: KFD_UPSTREAM_ROLE_DEFINITIONS.map((entry) => ({ ...entry })),
+    policy: {
+      consumerConfiguration: "role is optional; Buildchain infers it from package identity and evidence whenever possible",
+      explicitRole: "explicit role values must be one of this registry",
+      unknownExplicitRole: "fail-closed",
+      fallbackRole: KFD_UPSTREAM_ROLES.UNKNOWN_KFD_UPSTREAM,
+    },
+    inference: {
+      knownPackages: Object.fromEntries(Object.entries(KFD_UPSTREAM_KNOWN_PACKAGE_ROLES)),
+      evidenceContracts: {
+        "kfd-standards-metadata": KFD_UPSTREAM_ROLES.STANDARD_AND_SCHEMA_PROVIDER,
+        "kungfu-buildchain-release-passport": KFD_UPSTREAM_ROLES.RELEASE_PASSPORT_AND_KFD_GATE_PROVIDER,
+        "kungfu-buildchain-kfd-claim-registry": KFD_UPSTREAM_ROLES.RELEASE_PASSPORT_AND_KFD_GATE_PROVIDER,
+        "kungfu-buildchain-site-bundle": KFD_UPSTREAM_ROLES.SITE_CONSUMPTION_PROVIDER,
+        "kungfu-buildchain-site-manifest": KFD_UPSTREAM_ROLES.SITE_CONSUMPTION_PROVIDER,
+        "kfd-3-collaboration-interface": KFD_UPSTREAM_ROLES.KFD_AWARE_PRODUCT_COMPONENT,
+        "kfd-2-trust-claims": KFD_UPSTREAM_ROLES.KFD_AWARE_PRODUCT_COMPONENT,
+        "kfd-2-trust-assessment": KFD_UPSTREAM_ROLES.KFD_AWARE_PRODUCT_COMPONENT,
+      },
+    },
+  };
+}
+
 export function checkKfdUpstreamFacts(aggregate = {}) {
   const issues = [];
   if (!aggregate || typeof aggregate !== "object" || Array.isArray(aggregate)) {
@@ -644,6 +795,12 @@ export function checkKfdUpstreamFacts(aggregate = {}) {
     }
     if (!upstream?.role) {
       issues.push(issue("error", `${label}.role`, "KFD upstream component must include role"));
+    } else if (!KFD_UPSTREAM_ROLE_SET.has(upstream.role)) {
+      issues.push(issue("error", `${label}.role`, `KFD upstream role must be one of: ${[...KFD_UPSTREAM_ROLE_SET].join(", ")}`, {
+        id: upstream?.id || "",
+        role: upstream.role,
+        roleSource: upstream.roleSource || "",
+      }));
     }
     if (!upstream?.package?.name || !upstream?.package?.version) {
       issues.push(issue("error", `${label}.package`, "KFD upstream component must include package name and version"));
@@ -714,6 +871,7 @@ export const upstream = Object.freeze({
   collect: collectKfdUpstreamFacts,
   check: checkKfdUpstreamFacts,
   aggregate: collectKfdAggregate,
+  roles: listKfdUpstreamRoles,
 });
 
 export const buildchainKfdClaims = Object.freeze({

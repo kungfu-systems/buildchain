@@ -64,6 +64,7 @@ function commandId(first = "", second = "", third = "") {
   if (head === "kfd") {
     if (!sub || sub === "...") return "kfd";
     if (sub === "schema") return normalizedLeaf ? `kfd-schema-${normalizedLeaf}` : "kfd-schema";
+    if (sub === "upstream") return normalizedLeaf ? `kfd-upstream-${normalizedLeaf}` : "kfd-upstream";
     if (/^[1-9][0-9]*$/.test(sub)) return normalizedLeaf ? `kfd-${sub}-${normalizedLeaf}` : `kfd-${sub}`;
     return `kfd-${sub}`;
   }

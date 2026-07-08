@@ -419,6 +419,7 @@ function cliCommandMeta(id) {
     "kfd-upstream": { group: "kfd-trust", purpose: "Inspect KFD upstream aggregate command families." },
     "kfd-upstream-check": { group: "kfd-trust", purpose: "Validate a KFD upstream aggregate document and fail closed on missing evidence." },
     "kfd-upstream-collect": { group: "kfd-trust", purpose: "Collect declared KFD-aware upstream package evidence and hashes from Buildchain config." },
+    "kfd-upstream-roles": { group: "kfd-trust", purpose: "List Buildchain-managed KFD upstream role values and inference policy." },
     lifecycle: { group: "reusable-build", purpose: "Run configured lifecycle commands and write deterministic artifact manifests." },
     log: { group: "observability-diagnostics", purpose: "Inspect Buildchain logging command families." },
     logging: { group: "observability-diagnostics", purpose: "Emit timestamped build events, summarize logs, and enforce required phases." },

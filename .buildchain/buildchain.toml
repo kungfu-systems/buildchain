@@ -77,7 +77,6 @@ auto_discover = false
 
 [[kfd.upstream.components]]
 id = "kfd"
-role = "standard-and-schema-provider"
 package = "@kungfu-tech/kfd"
 repository = "kungfu-systems/kfd"
 kfd_1 = "exported-witness"
