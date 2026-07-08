@@ -29,6 +29,8 @@ buildchain kfd migrate-layout --write
 buildchain kfd schema list --json
 buildchain kfd 1 witness --json
 buildchain kfd 2 claims --json
+buildchain kfd 2 trust-claims --json
+buildchain kfd 2 trust-assessment --json
 buildchain kfd 3 query buildchain --json
 buildchain kfd 4 schema --json
 ```
@@ -79,7 +81,17 @@ Buildchain exposes KFD-2 through:
 buildchain kfd 2 schema --json
 buildchain kfd 2 taxonomy --entry-json residual-risk.json --kind residualRisk --json
 buildchain kfd 2 claims --json
+buildchain kfd 2 trust-claims --json
+buildchain kfd 2 trust-assessment --json
 ```
+
+`claims` generates Buildchain's release-passport public claim inputs. The
+`trust-claims` and `trust-assessment` commands expose the latest KFD package's
+foundation KFD-2 facts from `@kungfu-tech/kfd` and validate their taxonomy
+values against the KFD-owned `trust-taxonomy` schema. Unknown `riskType`,
+`trustImpact`, `machineProvability`, or `agentAction` values fail validation;
+new values must be requested upstream in `kungfu-systems/kfd`, not invented in
+Buildchain.
 
 ## KFD-3
 
@@ -118,6 +130,11 @@ buildchain kfd schema list --json
 buildchain kfd schema show kfd-1 --json
 buildchain kfd 4 schema --json
 ```
+
+The KFD schema namespace is discovered from `@kungfu-tech/kfd/standards.json`.
+For KFD-2 this includes `trustClaims`, `trustAssessment`, `trustTaxonomy`,
+`releaseClaims`, and `releaseTrustPassport`. For KFD-4 Buildchain currently
+exposes the KFD-owned `observerPerspective` schema only.
 
 Detect public surface candidates:
 
@@ -205,6 +222,9 @@ Buildchain dogfoods this model in two ways:
   world witness;
 - `buildchain kfd 2 claims --json` generates Buildchain's own KFD-2 public
   claim evidence;
+- `buildchain kfd 2 trust-claims --json` and
+  `buildchain kfd 2 trust-assessment --json` expose and validate the KFD
+  package's foundation KFD-2 trust facts against the latest KFD taxonomy;
 - `dist/site/kfd-claims.json` declares Buildchain's own KFD-3 collaboration
   interface;
 - `buildchain kfd 3 query buildchain --json` resolves the packaged

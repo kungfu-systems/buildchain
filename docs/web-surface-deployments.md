@@ -723,15 +723,30 @@ jobs:
 | `summary-only` | Generate and upload release PR facts, body, passport evidence, and manual command, but do not call the GitHub PR API. |
 | `disabled` | Record a disabled handoff and skip release PR API calls. |
 
-Automatic release PR creation normally uses the workflow `github.token`. If the
-consumer repository cannot enable "GitHub Actions can create and approve pull
-requests" globally, pass a narrower GitHub App token or PAT through
-`production-release-pr-token`:
+Automatic release PR creation normally uses the workflow `github.token`.
+Consumers that cannot enable "GitHub Actions can create and approve pull
+requests" globally should prefer the first-class GitHub App path. Pass the App
+id as an input and the private key as a reusable workflow secret; Buildchain
+creates an installation token inside the release PR job and uses it only for the
+release-intent branch, PR, and label operations:
+
+```yaml
+with:
+  production-release-app-id: ${{ vars.KUNGFU_RELEASE_APP_ID }}
+secrets:
+  production-release-app-private-key: ${{ secrets.KUNGFU_RELEASE_APP_PRIVATE_KEY }}
+```
+
+If a repository already generates its own narrow token or PAT, it can still pass
+that through `production-release-pr-token`:
 
 ```yaml
 with:
   production-release-pr-token: ${{ secrets.BUILDCHAIN_RELEASE_PR_TOKEN }}
 ```
+
+Token priority is: generated GitHub App installation token,
+`production-release-pr-token`, then `github.token`.
 
 The merge button becomes the production approval only for a PR that carries the
 release label and comes from the configured source-branch prefix. Ordinary pull

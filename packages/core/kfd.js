@@ -68,6 +68,19 @@ function readJsonInputs(values = [], { cwd = process.cwd(), label = "json" } = {
   return values.map((value, index) => readJsonInput(value, { cwd, label: `${label}[${index}]` }));
 }
 
+function issue(level, code, message, detail = {}) {
+  return { level, code, message, ...detail };
+}
+
+function validateTaxonomyEntryToIssues(entry, { kind, label }) {
+  try {
+    validateKfd2TrustTaxonomyEntry(entry, { kind, label });
+    return [];
+  } catch (error) {
+    return [issue("error", `${label}.taxonomy`, error.message)];
+  }
+}
+
 export function normalizeKfdStandardId(value) {
   const raw = String(value || "").trim().toLowerCase();
   const match = raw.match(/^(?:kfd[-\s]?)?([1-9][0-9]*)$/);
@@ -179,10 +192,96 @@ export const kfd2 = Object.freeze({
   validateTrustTaxonomyEntry: validateKfd2TrustTaxonomyEntry,
   createBuildchainClaims: createBuildchainKfd2Claims,
   createBuildchainPublicClaimDefinitions,
+  readFoundationTrustClaims: () => readJsonPackageExport("@kungfu-tech/kfd/buildchain/kfd-2/kfd-foundation.trust-claims.json"),
+  readFoundationTrustAssessment: () => readJsonPackageExport("@kungfu-tech/kfd/buildchain/kfd-2/kfd-foundation.trust-assessment.json"),
   validateTaxonomyEntries: ({ entries = [], kind = "residualRisk" } = {}) => entries.map((entry, index) => validateKfd2TrustTaxonomyEntry(entry, {
     kind,
     label: `${kind}[${index}]`,
   })),
+  validateTrustClaims: (document = {}) => {
+    const issues = [];
+    if (!document || typeof document !== "object" || Array.isArray(document)) {
+      issues.push(issue("error", "kfd-2.trustClaims.object", "KFD-2 trust claims must be a JSON object"));
+    }
+    if (document.contract !== "kfd-2-trust-claims") {
+      issues.push(issue("error", "kfd-2.trustClaims.contract", "KFD-2 trust claims contract must be kfd-2-trust-claims"));
+    }
+    if (document.standard !== "kfd-2") {
+      issues.push(issue("error", "kfd-2.trustClaims.standard", "KFD-2 trust claims standard must be kfd-2"));
+    }
+    const claims = Array.isArray(document.claims) ? document.claims : [];
+    if (claims.length === 0) {
+      issues.push(issue("error", "kfd-2.trustClaims.claims", "KFD-2 trust claims must include at least one claim"));
+    }
+    for (const [index, claim] of claims.entries()) {
+      if (!claim?.id || !claim?.statement) {
+        issues.push(issue("error", `kfd-2.trustClaims.claims[${index}]`, "KFD-2 trust claim must include id and statement"));
+      }
+      if (!Array.isArray(claim?.facts) || claim.facts.length === 0) {
+        issues.push(issue("error", `kfd-2.trustClaims.claims[${index}].facts`, "KFD-2 trust claim must bind at least one fact"));
+      }
+      if (!Array.isArray(claim?.evidence) || claim.evidence.length === 0) {
+        issues.push(issue("error", `kfd-2.trustClaims.claims[${index}].evidence`, "KFD-2 trust claim must bind at least one evidence entry"));
+      }
+      for (const [riskIndex, risk] of (claim?.residualRisk || []).entries()) {
+        issues.push(...validateTaxonomyEntryToIssues(risk, {
+          kind: "residualRisk",
+          label: `kfd-2.trustClaims.claims[${index}].residualRisk[${riskIndex}]`,
+        }));
+      }
+    }
+    return {
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-kfd-2-trust-claims-validation",
+      ok: issues.filter((entry) => entry.level === "error").length === 0,
+      claimCount: claims.length,
+      issues,
+    };
+  },
+  validateTrustAssessment: (document = {}) => {
+    const issues = [];
+    if (!document || typeof document !== "object" || Array.isArray(document)) {
+      issues.push(issue("error", "kfd-2.trustAssessment.object", "KFD-2 trust assessment must be a JSON object"));
+    }
+    if (document.contract !== "kfd-2-trust-assessment") {
+      issues.push(issue("error", "kfd-2.trustAssessment.contract", "KFD-2 trust assessment contract must be kfd-2-trust-assessment"));
+    }
+    if (document.standard !== "kfd-2") {
+      issues.push(issue("error", "kfd-2.trustAssessment.standard", "KFD-2 trust assessment standard must be kfd-2"));
+    }
+    if (!["pass", "fail", "warning", "unverifiable"].includes(document.result)) {
+      issues.push(issue("error", "kfd-2.trustAssessment.result", "KFD-2 trust assessment result must be pass, fail, warning, or unverifiable"));
+    }
+    const assessments = Array.isArray(document.assessments) ? document.assessments : [];
+    if (assessments.length === 0) {
+      issues.push(issue("error", "kfd-2.trustAssessment.assessments", "KFD-2 trust assessment must include at least one assessment"));
+    }
+    for (const [index, assessment] of assessments.entries()) {
+      if (!assessment?.id || !assessment?.claimId) {
+        issues.push(issue("error", `kfd-2.trustAssessment.assessments[${index}]`, "KFD-2 trust assessment must include id and claimId"));
+      }
+      for (const [riskIndex, risk] of (assessment?.residualRisk || []).entries()) {
+        issues.push(...validateTaxonomyEntryToIssues(risk, {
+          kind: "residualRisk",
+          label: `kfd-2.trustAssessment.assessments[${index}].residualRisk[${riskIndex}]`,
+        }));
+      }
+    }
+    for (const [reasonIndex, reason] of (document.downgradeReasons || []).entries()) {
+      issues.push(...validateTaxonomyEntryToIssues(reason, {
+        kind: "downgradeReason",
+        label: `kfd-2.trustAssessment.downgradeReasons[${reasonIndex}]`,
+      }));
+    }
+    return {
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-kfd-2-trust-assessment-validation",
+      ok: issues.filter((entry) => entry.level === "error").length === 0,
+      result: document.result || "",
+      assessmentCount: assessments.length,
+      issues,
+    };
+  },
 });
 
 export const kfd3 = Object.freeze({
@@ -255,7 +354,7 @@ export function collectKfdStatus({ cwd = process.cwd() } = {}) {
     }, {}),
     support: {
       "kfd-1": ["schema", "witness", "gate", "verify"],
-      "kfd-2": ["schema", "taxonomy", "claims"],
+      "kfd-2": ["schema", "taxonomy", "claims", "trust-claims", "trust-assessment"],
       "kfd-3": ["schema", "detect", "register", "audit", "witness", "query"],
       "kfd-4": ["schema"],
     },

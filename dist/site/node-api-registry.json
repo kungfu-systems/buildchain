@@ -125,7 +125,7 @@
       "specifier": "@kungfu-tech/buildchain/kfd",
       "export": "./kfd",
       "target": "./packages/core/kfd.js",
-      "digest": "sha256:908a171399090cf3d2f43a1e01fa312a1a47861dfc9874d32f5e8a9d4ac53899",
+      "digest": "sha256:e9170c1e56d2729cf530f953df9ade21963faa9a756ba5fbd0cdd03d8b781cb3",
       "summary": "Unified KFD standards, schema discovery, KFD-1/KFD-2/KFD-3 grouped APIs, KFD-4 schema discovery, and Buildchain KFD claim helpers.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -292,7 +292,7 @@
     {
       "id": "kfd-support",
       "path": "docs/kfd-support.md",
-      "digest": "sha256:704efbf7be24d641d8b119737eb33b3e98fea8c55cf434f7f475160809f4e3a4"
+      "digest": "sha256:d1fdec0890884340e4e8108c17b62866c08dc95771075e3e285532b5a7b0ee5a"
     },
     {
       "id": "readme-badges",
