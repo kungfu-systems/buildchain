@@ -376,23 +376,25 @@ records this as `routing.contract =
 `viewerPathPrefix = "/"`, `artifactPathPrefix = "buildchain"`, and
 `directoryIndexResolution = true`.
 
-When a surface uses an S3 object prefix, Buildchain also writes directory-index
-alias objects during apply. The root `dist/buildchain/index.html` is copied to
-the prefix keys `pr-29/buildchain` and `pr-29/buildchain/`, while nested indexes
-such as `dist/buildchain/docs/index.html` are copied to `pr-29/buildchain/docs`
-and `pr-29/buildchain/docs/`. This makes surface-host requests for `/` and
-`/docs/` resolve to the surface's `index.html` files even when the CloudFront
-origin is an S3 REST origin rather than an S3 website endpoint.
+When a surface uses an S3 object prefix, Buildchain installs or updates one
+CloudFront viewer-request function per distribution before uploading payloads.
+The function rewrites any request path ending in `/` to the corresponding
+`index.html`, so `https://buildchain-pr-29.preview.libkungfu.dev/` resolves to
+`pr-29/buildchain/index.html` and
+`https://buildchain-pr-29.preview.libkungfu.dev/docs/` resolves to
+`pr-29/buildchain/docs/index.html`. This keeps multi-host preview roots
+compatible with S3 REST origins, where copying alias objects such as
+`pr-29/buildchain` or `pr-29/buildchain/` is not a reliable substitute for an
+edge rewrite.
 
-Buildchain does not mutate the shared CloudFront distribution as part of a
-consumer preview apply. In particular, it does not require preview roles to
-update `DefaultRootObject`. Shared distribution and origin-request routing are
-infrastructure prerequisites; the consumer workflow owns only its surface
-payload, prefix alias objects, deployment manifests, invalidations, and health
-checks. If root or nested surface routing still fails, the reusable workflow
-uploads `buildchain-web-surface-*-diagnostics` artifacts containing the apply
-and health JSON so the failing AWS operation or HTTP check is visible from the
-consumer run.
+Buildchain still writes directory-index alias objects during apply as
+compatibility evidence, but root correctness comes from the CloudFront function,
+not from extensionless S3 keys. If a distribution already has a different
+viewer-request function, apply fails closed and records that conflict in the
+apply result instead of silently serving 403s. The reusable workflow uploads
+`buildchain-web-surface-*-diagnostics` artifacts containing the apply and health
+JSON so the failing AWS operation or HTTP check is visible from the consumer
+run.
 
 It can also execute a previously saved deploy plan. In that mode Buildchain
 recomputes the local artifact hash before running AWS commands and fails closed
@@ -483,7 +485,7 @@ preview host. If a surface has no nested HTML route, Buildchain records only
 the root smoke URL; absence of nested HTML is not a deployment failure. When a
 nested route is present, the check fails closed if a deploy reports success but
 that child page returns 403 or another unexpected status. Surface root checks
-expect the apply result to have written directory-index alias objects, so a
+expect the apply result to have installed the directory-index rewrite, so a
 multi-host preview root such as `https://buildchain-pr-29.preview.libkungfu.dev/`
 must resolve to the surface `index.html`, not the bare prefix directory.
 Production additionally fails if a response is unreachable, returns an

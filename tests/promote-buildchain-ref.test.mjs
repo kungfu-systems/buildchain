@@ -5310,6 +5310,68 @@ test("strict alpha promotion accepts same-line version-state PR lineage", async 
   assert.equal(refs.get("tags/v1.0-alpha"), SHA);
 });
 
+test("strict alpha promotion accepts same-line publish-gate PR lineage", async () => {
+  const pullRequest = await assertChannelPromotionPr({
+    octokit: {
+      rest: {
+        repos: {
+          listPullRequestsAssociatedWithCommit: async ({ commit_sha }) => {
+            assert.equal(commit_sha, SHA);
+            return {
+              data: [
+                {
+                  merged_at: "2026-07-08T00:00:00Z",
+                  base: { ref: "alpha/v22/v22.22" },
+                  head: {
+                    ref: "publish-gate/alpha/v22/v22.22/22.22.3-kf.3-alpha.15",
+                    repo: { full_name: "kungfu-systems/libnode" },
+                  },
+                },
+              ],
+            };
+          },
+        },
+      },
+    },
+    owner: "kungfu-systems",
+    repo: "libnode",
+    sha: SHA,
+    targetRef: "alpha/v22/v22.22",
+  });
+
+  assert.equal(pullRequest.head.ref, "publish-gate/alpha/v22/v22.22/22.22.3-kf.3-alpha.15");
+});
+
+test("strict alpha promotion rejects publish-gate PR lineage for a different line", async () => {
+  await assert.rejects(
+    assertChannelPromotionPr({
+      octokit: {
+        rest: {
+          repos: {
+            listPullRequestsAssociatedWithCommit: async () => ({
+              data: [
+                {
+                  merged_at: "2026-07-08T00:00:00Z",
+                  base: { ref: "alpha/v22/v22.22" },
+                  head: {
+                    ref: "publish-gate/alpha/v22/v22.23/22.23.0-alpha.0",
+                    repo: { full_name: "kungfu-systems/libnode" },
+                  },
+                },
+              ],
+            }),
+          },
+        },
+      },
+      owner: "kungfu-systems",
+      repo: "libnode",
+      sha: SHA,
+      targetRef: "alpha/v22/v22.22",
+    }),
+    /publish-gate\/alpha\/\.\.\. -> alpha\/v22\/v22\.22/,
+  );
+});
+
 test("strict alpha promotion no-ops settled generated version-state commits", async () => {
   const refs = new Map([
     ["heads/alpha/v1/v1.0", SHA],

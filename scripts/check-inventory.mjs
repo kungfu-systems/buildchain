@@ -631,10 +631,9 @@ for (const requiredSnippet of [
   "release-passport-buildchain-self-kfd: true",
   "publish-required-artifacts-json: \"[]\"",
   "release-passport-impact-json: >-",
-  "Buildchain v2.9 adds Build Facts as a public contract",
-  "build-facts-contract",
-  "trust-badge-bundle",
-  "web-surface-directory-index-aliases",
+  "Buildchain v2.10 patch release accepts strict publish-gate channel-lineage PRs",
+  "publish-gate-channel-lineage",
+  "web-surface-cloudfront-directory-index-rewrite",
   "\"surfaceImpacts\":[",
 ]) {
   if (!buildchainRefPromotionWorkflow.includes(requiredSnippet)) {
