@@ -87,7 +87,7 @@ npx @kungfu-tech/buildchain validate --require-version-state
 npx @kungfu-tech/buildchain release --dry-run --target-ref alpha/v2/v2.2
 ```
 
-Use `buildchain.toml` to declare lifecycle commands. The commands may use Node
+Use `.buildchain/buildchain.toml` to declare lifecycle commands. The commands may use Node
 package managers or non-Node tools such as pip, Conan, CMake, Make, or project
 scripts.
 

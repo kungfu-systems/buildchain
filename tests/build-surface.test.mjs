@@ -34,9 +34,11 @@ import {
 } from "../scripts/web-surface-release-pr-review.mjs";
 import {
   compactProductionReleasePrSummary,
+  createProductionReleasePrHandoff,
   releaseBranchName,
   readStagingReleasePrSummary,
   renderProductionReleasePrBody,
+  webSurfaceProductionReleasePrCli,
 } from "../scripts/web-surface-production-release-pr.mjs";
 import { compactWebSurfaceApplyResult } from "../scripts/web-surface.mjs";
 import {
@@ -633,6 +635,9 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /production-release-label:/);
   assert.match(workflow, /production-release-head-prefix:/);
   assert.match(workflow, /production-release-branch-channel:/);
+  assert.match(workflow, /production-release-pr-mode:/);
+  assert.match(workflow, /production-release-pr-token:/);
+  assert.match(workflow, /fail-on-release-pr-error:/);
   assert.match(workflow, /Resolve production release PR intent/);
   assert.match(workflow, /listPullRequestsAssociatedWithCommit/);
   assert.match(workflow, /associated-release-pr-merged/);
@@ -669,6 +674,11 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /buildchain-web-surface-staging-release-pr-summary/);
   assert.match(workflow, /Open production release PR/);
   assert.match(workflow, /web-surface-production-release-pr\.mjs/);
+  assert.match(workflow, /PRODUCTION_RELEASE_PR_MODE: \$\{\{ inputs\.production-release-pr-mode \}\}/);
+  assert.match(workflow, /FAIL_ON_RELEASE_PR_ERROR: \$\{\{ inputs\.fail-on-release-pr-error \}\}/);
+  assert.match(workflow, /inputs\.production-release-pr-token != ''/);
+  assert.match(workflow, /buildchain-web-surface-production-release-pr-handoff/);
+  assert.match(workflow, /release-pr-status/);
   assert.match(workflow, /needs\.staging-apply\.result == 'success'/);
   assert.match(workflow, /needs\.release-intent\.outputs\.production-release-approved != 'true'/);
   assert.match(workflow, /Download staging release PR summary/);
@@ -796,6 +806,139 @@ test("web-surface production release PR body carries staging evidence", () => {
   assert.match(body, /buildchain-web-surface-staging-release-passport/);
   assert.match(body, /buildchain-release/);
   assert.match(body, /release\/production-abcdef123456/);
+});
+
+test("web-surface production release PR handoff renders manual command facts", () => {
+  const sourceSha = "abcdef1234567890abcdef1234567890abcdef12";
+  const handoff = createProductionReleasePrHandoff({
+    repository: "kungfu-systems/site-libkungfu-dev",
+    sourceSha,
+    stagingResult: {
+      urls: { core: "https://core.staging.libkungfu.dev" },
+      artifactHash: "sha256:artifact",
+    },
+    productionReleaseLabel: "buildchain-release",
+    productionReleaseHeadPrefix: "release/",
+    productionReleaseChannel: "production",
+    runId: "123",
+    serverUrl: "https://github.com",
+  });
+  assert.equal(handoff.contract, "kungfu-buildchain-web-surface-production-release-pr-handoff");
+  assert.equal(handoff.branchName, "release/production-abcdef123456");
+  assert.equal(handoff.title, "Release production from abcdef123456");
+  assert.match(handoff.manualCommand, /gh pr create --repo kungfu-systems\/site-libkungfu-dev/);
+  assert.match(handoff.manualCommand, /--body-file \.buildchain\/production-release-pr\/body\.md/);
+});
+
+test("web-surface production release PR permission-denied is a non-fatal handoff", async () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-release-pr-permission-"));
+  const previousCwd = process.cwd();
+  const previousFetch = globalThis.fetch;
+  const sourceSha = "abcdef1234567890abcdef1234567890abcdef12";
+  const summaryPath = path.join(workspace, "staging-summary.json");
+  const outputPath = path.join(workspace, "github-output.txt");
+  const stepSummaryPath = path.join(workspace, "step-summary.md");
+  fs.writeFileSync(
+    summaryPath,
+    `${JSON.stringify({
+      channel: "staging",
+      status: "applied",
+      sourceSha,
+      urls: { default: "https://staging.libkungfu.dev" },
+      artifactHash: "sha256:artifact",
+    })}\n`,
+  );
+  const calls = [];
+  globalThis.fetch = async (url, options = {}) => {
+    calls.push({ url: String(url), method: options.method || "GET" });
+    if (String(url).includes("/pulls?state=open")) return new Response("[]", { status: 200 });
+    if (String(url).endsWith(`/git/commits/${sourceSha}`)) {
+      return new Response(JSON.stringify({ tree: { sha: "tree-sha" } }), { status: 200 });
+    }
+    if (String(url).endsWith("/git/commits") && options.method === "POST") {
+      return new Response(JSON.stringify({ sha: "release-intent-sha" }), { status: 201 });
+    }
+    if (String(url).endsWith("/git/refs") && options.method === "POST") {
+      return new Response(JSON.stringify({ ref: "refs/heads/release/production-abcdef123456" }), { status: 201 });
+    }
+    if (String(url).endsWith("/pulls") && options.method === "POST") {
+      return new Response(
+        JSON.stringify({ message: "GitHub Actions is not permitted to create or approve pull requests." }),
+        { status: 403 },
+      );
+    }
+    throw new Error(`unexpected fetch: ${options.method || "GET"} ${url}`);
+  };
+  try {
+    process.chdir(workspace);
+    const result = await webSurfaceProductionReleasePrCli({
+      GITHUB_TOKEN: "token",
+      GITHUB_REPOSITORY: "kungfu-systems/site-libkungfu-dev",
+      GITHUB_SHA: sourceSha,
+      GITHUB_RUN_ID: "123",
+      GITHUB_SERVER_URL: "https://github.com",
+      GITHUB_API_URL: "https://api.github.com",
+      STAGING_RELEASE_PR_SUMMARY_PATH: summaryPath,
+      GITHUB_OUTPUT: outputPath,
+      GITHUB_STEP_SUMMARY: stepSummaryPath,
+      PRODUCTION_RELEASE_PR_MODE: "auto",
+      FAIL_ON_RELEASE_PR_ERROR: "false",
+      PRODUCTION_RELEASE_PR_SUMMARY_PATH: ".buildchain/production-release-pr/handoff.json",
+      PRODUCTION_RELEASE_PR_BODY_PATH: ".buildchain/production-release-pr/body.md",
+    });
+    assert.equal(result.status, "permission-denied");
+    assert.match(fs.readFileSync(outputPath, "utf8"), /release-pr-status=permission-denied/);
+    assert.match(fs.readFileSync(stepSummaryPath, "utf8"), /Manual PR creation command/);
+    const handoff = JSON.parse(fs.readFileSync(path.join(workspace, ".buildchain/production-release-pr/handoff.json"), "utf8"));
+    assert.equal(handoff.status, "permission-denied");
+    assert.equal(handoff.error.status, 403);
+    assert.ok(calls.some((call) => call.method === "POST" && call.url.endsWith("/pulls")));
+  } finally {
+    process.chdir(previousCwd);
+    globalThis.fetch = previousFetch;
+  }
+});
+
+test("web-surface production release PR summary-only mode does not call GitHub PR API", async () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-release-pr-summary-only-"));
+  const previousCwd = process.cwd();
+  const previousFetch = globalThis.fetch;
+  const sourceSha = "abcdef1234567890abcdef1234567890abcdef12";
+  const summaryPath = path.join(workspace, "staging-summary.json");
+  fs.writeFileSync(
+    summaryPath,
+    `${JSON.stringify({
+      channel: "staging",
+      status: "applied",
+      sourceSha,
+      urls: { default: "https://staging.libkungfu.dev" },
+      artifactHash: "sha256:artifact",
+    })}\n`,
+  );
+  let called = false;
+  globalThis.fetch = async () => {
+    called = true;
+    throw new Error("fetch should not be called");
+  };
+  try {
+    process.chdir(workspace);
+    const result = await webSurfaceProductionReleasePrCli({
+      GITHUB_TOKEN: "",
+      GITHUB_REPOSITORY: "kungfu-systems/site-libkungfu-dev",
+      GITHUB_SHA: sourceSha,
+      STAGING_RELEASE_PR_SUMMARY_PATH: summaryPath,
+      PRODUCTION_RELEASE_PR_MODE: "summary-only",
+      PRODUCTION_RELEASE_PR_SUMMARY_PATH: ".buildchain/production-release-pr/handoff.json",
+      PRODUCTION_RELEASE_PR_BODY_PATH: ".buildchain/production-release-pr/body.md",
+    });
+    assert.equal(result.status, "summary-only");
+    assert.equal(called, false);
+    assert.equal(fs.existsSync(path.join(workspace, ".buildchain/production-release-pr/handoff.json")), true);
+    assert.equal(fs.existsSync(path.join(workspace, ".buildchain/production-release-pr/body.md")), true);
+  } finally {
+    process.chdir(previousCwd);
+    globalThis.fetch = previousFetch;
+  }
 });
 
 test("web-surface release PR review comments only on matching release PRs", () => {

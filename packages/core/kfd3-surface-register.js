@@ -1,12 +1,13 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { resolveKfd3SurfaceRegistryPath } from "./buildchain-layout.js";
 
 export const KFD3_SURFACE_REGISTRY_CONTRACT = "kungfu-buildchain-kfd-3-surface-registry";
 export const KFD3_SURFACE_DETECTION_CONTRACT = "kungfu-buildchain-kfd-3-surface-detection";
 export const KFD3_SURFACE_AUDIT_CONTRACT = "kungfu-buildchain-kfd-3-surface-audit";
 export const KFD3_CAPABILITY_QUERY_CONTRACT = "kungfu-buildchain-kfd-3-capability-query";
-export const KFD3_DEFAULT_REGISTRY_PATH = "buildchain.kfd3.json";
+export const KFD3_DEFAULT_REGISTRY_PATH = ".buildchain/kfd/kfd-3-surfaces.json";
 
 const KIND_ALIASES = Object.freeze({
   "node-api": "node-api",
@@ -343,15 +344,20 @@ export function detectKfd3Surfaces({ cwd = process.cwd(), kinds = [], artifactPa
   };
 }
 
-export function readKfd3SurfaceRegistry({ cwd = process.cwd(), registryPath = KFD3_DEFAULT_REGISTRY_PATH } = {}) {
-  const filePath = path.resolve(cwd, registryPath);
+function resolveRegistryPath(cwd, registryPath) {
+  return registryPath || resolveKfd3SurfaceRegistryPath(cwd);
+}
+
+export function readKfd3SurfaceRegistry({ cwd = process.cwd(), registryPath = "" } = {}) {
+  const effectiveRegistryPath = resolveRegistryPath(cwd, registryPath);
+  const filePath = path.resolve(cwd, effectiveRegistryPath);
   const registry = readJsonFile(filePath, null);
   if (!registry) {
     return {
       schemaVersion: 1,
       contract: KFD3_SURFACE_REGISTRY_CONTRACT,
       product: {},
-      registryPath,
+      registryPath: effectiveRegistryPath,
       surfaces: [],
     };
   }
@@ -359,24 +365,25 @@ export function readKfd3SurfaceRegistry({ cwd = process.cwd(), registryPath = KF
     schemaVersion: registry.schemaVersion || 1,
     contract: registry.contract || KFD3_SURFACE_REGISTRY_CONTRACT,
     product: registry.product || {},
-    registryPath,
+    registryPath: registry.registryPath || effectiveRegistryPath,
     surfaces: Array.isArray(registry.surfaces) ? registry.surfaces : [],
     policy: registry.policy || {},
   };
 }
 
-export function writeKfd3SurfaceRegistry({ cwd = process.cwd(), registryPath = KFD3_DEFAULT_REGISTRY_PATH, registry }) {
+export function writeKfd3SurfaceRegistry({ cwd = process.cwd(), registryPath = "", registry }) {
+  const effectiveRegistryPath = resolveRegistryPath(cwd, registryPath);
   const next = {
     schemaVersion: 1,
     contract: KFD3_SURFACE_REGISTRY_CONTRACT,
     product: registry.product || {},
-    registryPath,
+    registryPath: effectiveRegistryPath,
     surfaces: uniqueSurfaces(registry.surfaces || []).map((entry) => ({
       ...entry,
       state: entry.state || "declared",
       declaration: entry.declaration || {
         owner: "product",
-        source: "buildchain kfd-3 register",
+        source: "buildchain kfd 3 register",
       },
     })),
     policy: registry.policy || {
@@ -384,13 +391,13 @@ export function writeKfd3SurfaceRegistry({ cwd = process.cwd(), registryPath = K
       declaredButMissing: "fail",
     },
   };
-  writeJsonFile(path.resolve(cwd, registryPath), next);
+  writeJsonFile(path.resolve(cwd, effectiveRegistryPath), next);
   return next;
 }
 
 export function registerKfd3Surfaces({
   cwd = process.cwd(),
-  registryPath = KFD3_DEFAULT_REGISTRY_PATH,
+  registryPath = "",
   kinds = [],
   artifactPath = "",
   product = {},
@@ -435,7 +442,7 @@ export function registerKfd3Surfaces({
 
 export function auditKfd3Surfaces({
   cwd = process.cwd(),
-  registryPath = KFD3_DEFAULT_REGISTRY_PATH,
+  registryPath = "",
   kinds = [],
   artifactPath = "",
 } = {}) {
@@ -490,7 +497,7 @@ export function auditKfd3Surfaces({
 
 export function createKfd3SurfaceWitness({
   cwd = process.cwd(),
-  registryPath = KFD3_DEFAULT_REGISTRY_PATH,
+  registryPath = "",
   kind = "prebuild",
   sourceSha = "",
   artifactPath = "",
@@ -613,7 +620,7 @@ function capabilitiesFromRegistry({ registry, audit, passport = null }) {
 export async function queryKfd3Capabilities({
   cwd = process.cwd(),
   product = "",
-  registryPath = KFD3_DEFAULT_REGISTRY_PATH,
+  registryPath = "",
   passportLocation = "",
   artifactPath = "",
 } = {}) {
@@ -649,15 +656,16 @@ export async function queryKfd3Capabilities({
     };
   }
 
-  const registry = readKfd3SurfaceRegistry({ cwd, registryPath });
-  const hasRegistry = fs.existsSync(path.resolve(cwd, registryPath));
-  const audit = hasRegistry ? auditKfd3Surfaces({ cwd, registryPath, artifactPath }) : null;
+  const effectiveRegistryPath = resolveRegistryPath(cwd, registryPath);
+  const registry = readKfd3SurfaceRegistry({ cwd, registryPath: effectiveRegistryPath });
+  const hasRegistry = fs.existsSync(path.resolve(cwd, effectiveRegistryPath));
+  const audit = hasRegistry ? auditKfd3Surfaces({ cwd, registryPath: effectiveRegistryPath, artifactPath }) : null;
   if (hasRegistry) {
     return {
       schemaVersion: 1,
       contract: KFD3_CAPABILITY_QUERY_CONTRACT,
       product: product || registry.product?.name || registry.product?.id || "local-product",
-      source: { type: "surface-registry", path: registryPath },
+      source: { type: "surface-registry", path: effectiveRegistryPath },
       status: audit.status,
       summary: audit.summary,
       capabilities: capabilitiesFromRegistry({ registry, audit }),

@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:22dd10ba022b722440e75636ea165317ee2aedb737531e20f14a9e6e7fe299c4",
+      "digest": "sha256:497124adb3868e679e67e7a283f7c5c79146e7ebe60ffe07afc4bf6a70ad2568",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:22dd10ba022b722440e75636ea165317ee2aedb737531e20f14a9e6e7fe299c4",
+      "digest": "sha256:497124adb3868e679e67e7a283f7c5c79146e7ebe60ffe07afc4bf6a70ad2568",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -122,11 +122,24 @@
       "maturity": "stable"
     },
     {
-      "specifier": "@kungfu-tech/buildchain/kfd-3-surfaces",
-      "export": "./kfd-3-surfaces",
-      "target": "./packages/core/kfd3-surface-register.js",
-      "digest": "sha256:dc0d041257e0080147fbaa0a2d61e7f0a7ec3031a94311c58ea6b3e0fb78c18b",
-      "summary": "KFD-3 detection, registration, audit, witness, and capability query APIs.",
+      "specifier": "@kungfu-tech/buildchain/kfd",
+      "export": "./kfd",
+      "target": "./packages/core/kfd.js",
+      "digest": "sha256:908a171399090cf3d2f43a1e01fa312a1a47861dfc9874d32f5e8a9d4ac53899",
+      "summary": "Unified KFD standards, schema discovery, KFD-1/KFD-2/KFD-3 grouped APIs, KFD-4 schema discovery, and Buildchain KFD claim helpers.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/buildchain-layout",
+      "export": "./buildchain-layout",
+      "target": "./packages/core/buildchain-layout.js",
+      "digest": "sha256:686d0afe1c88835d18917ad2ed79863848bdb5edddaebf975543ef8463435941",
+      "summary": "Canonical .buildchain repository layout constants, path resolution, and migration APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [
         "developer",
@@ -164,7 +177,7 @@
       "specifier": "@kungfu-tech/buildchain/public-surface-audit",
       "export": "./public-surface-audit",
       "target": "./packages/core/public-surface-audit.js",
-      "digest": "sha256:c9fbbfa5a4d78ff4bfb4b5570fedc5dcfc9e0a43f01ac5c3bbc2298d086a6346",
+      "digest": "sha256:22b8354a876962400f47070b5917141faace5589c2b40fe54ed004816d6735d4",
       "summary": "Reverse audit APIs for CLI, workflow, action, site page, and documentation command surfaces.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -269,7 +282,7 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:2f55874feb9acecce1c471b96e07bb9a198a8da93efd0f859d69f353bf9c36a8"
+      "digest": "sha256:b6bc32831d202d5c542d72f6e63322f632014751e7db00862b28fb9ce5318fd3"
     },
     {
       "id": "build-facts",
@@ -279,12 +292,12 @@
     {
       "id": "kfd-support",
       "path": "docs/kfd-support.md",
-      "digest": "sha256:4bb33e408a2129e1534e92bea78d3cc0e4d8f986b0fbb27fe73ae6eae46b9ca3"
+      "digest": "sha256:704efbf7be24d641d8b119737eb33b3e98fea8c55cf434f7f475160809f4e3a4"
     },
     {
       "id": "readme-badges",
       "path": "docs/readme-badges.md",
-      "digest": "sha256:ddaf49a7d6e6c11aea8d21d1ba736159897e16207cd74af0044014425faf8a2c"
+      "digest": "sha256:d032ddd27db62bdb21031cbd0673d9ae61af0250c12522fe6106e7aff835fb21"
     },
     {
       "id": "homebrew",

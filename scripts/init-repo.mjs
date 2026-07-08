@@ -2,6 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { BUILDCHAIN_CONFIG_PATH } from "../packages/core/buildchain-layout.js";
 import { detectPackageManager, assertPackageManager } from "../packages/core/package-manager.js";
 
 const BUILDCHAIN_WORKFLOW_REF = "kungfu-systems/buildchain/.github/workflows/.build.yml@v2";
@@ -356,7 +357,7 @@ export function initBuildchainRepo({
   })();
 
   const written = [
-    writeIfAllowed(path.join(resolvedCwd, "buildchain.toml"), toml, { force }),
+    writeIfAllowed(path.join(resolvedCwd, BUILDCHAIN_CONFIG_PATH), toml, { force }),
     writeIfAllowed(path.join(resolvedCwd, ".github", "workflows", "build.yml"), workflowYaml({
       type,
       runnerPreset,

@@ -90,7 +90,7 @@ floating-ref contract world for a runtime such as `@v2`.
 
 ## Commands
 
-`buildchain init` writes a starter `buildchain.toml` and a reusable workflow
+`buildchain init` writes a starter `.buildchain/buildchain.toml` and a reusable workflow
 caller at `.github/workflows/build.yml`.
 
 Supported presets:
@@ -111,7 +111,7 @@ The native preset includes an opt-in `[diagnostics.native]` profile with common
 tool/cache/artifact probes. Consumers can keep it enabled, adjust the tool and
 directory lists, or disable it if a repository does not need native diagnostics.
 
-`buildchain validate` parses `buildchain.toml`, checks configured version-state
+`buildchain validate` parses `.buildchain/buildchain.toml`, checks configured version-state
 files, and can require named lifecycle stages:
 
 ```bash
@@ -173,23 +173,57 @@ import {
 assertPublicSurfaceReverseAudit(collectPublicSurfaceReverseAudit({ root: process.cwd() }));
 ```
 
-`buildchain kfd-3` is the product-facing registration and query entrypoint for
-KFD-3 surfaces. It is separate from Buildchain's self reverse audit: products
-can detect standard public surfaces, register the accepted boundary, audit the
+`buildchain kfd` is the product-facing KFD namespace. Schema commands expose the
+machine-readable KFD standards shipped by `@kungfu-tech/kfd`, while versioned
+subcommands host concrete product workflows. KFD-1, KFD-2, and KFD-3 are
+first-class Buildchain surfaces. KFD-4 is schema-only until Buildchain has a
+real verification protocol for it.
+
+`status` reports implemented support and the active repo-owned file layout.
+`migrate-layout` moves legacy root files into `.buildchain/`:
+
+```bash
+buildchain kfd status --json
+buildchain kfd migrate-layout --write
+```
+
+KFD-1 commands generate and validate contract-world release evidence:
+
+```bash
+buildchain kfd 1 schema --json
+buildchain kfd 1 witness --json
+buildchain kfd 1 gate --witness-json kfd-1-witness.json --json
+buildchain kfd 1 verify --gate-json kfd-1-gate.json --json
+```
+
+KFD-2 commands validate trust taxonomy entries and generate Buildchain's public
+claim evidence:
+
+```bash
+buildchain kfd 2 schema --json
+buildchain kfd 2 taxonomy --entry-json residual-risk.json --kind residualRisk --json
+buildchain kfd 2 claims --json
+```
+
+KFD-3 commands are separate from Buildchain's self reverse audit: products can
+detect standard public surfaces, register the accepted boundary, audit the
 current source or artifact tree, generate a release-passport-compatible witness,
 and expose a capability map for agents:
 
 ```bash
-buildchain kfd-3 detect --kind node-api --kind cli --json
-buildchain kfd-3 register node-api --product Buildchain
-buildchain kfd-3 audit --json
-buildchain kfd-3 witness --kind prebuild --output .buildchain/kfd-3/collaboration-interface.prebuild.json
-buildchain kfd-3 query buildchain --json
+buildchain kfd schema list --json
+buildchain kfd schema show kfd-3 --json
+buildchain kfd 3 detect --kind node-api --kind cli --json
+buildchain kfd 3 register node-api --product Buildchain
+buildchain kfd 3 audit --json
+buildchain kfd 3 witness --kind prebuild --output .buildchain/kfd-3/collaboration-interface.prebuild.json
+buildchain kfd 3 query buildchain --json
+buildchain kfd 4 schema --json
 ```
 
-The public Node API is exported from
-`@kungfu-tech/buildchain/kfd-3-surfaces`. See [`kfd-support.md`](kfd-support.md)
-for the detected / declared / enforced model and the agent query flow.
+The public Node API is exported from `@kungfu-tech/buildchain/kfd`. See
+[`kfd-support.md`](kfd-support.md) for the detected / declared / enforced model
+and the agent query flow.
 
 Lifecycle runs also write a Buildchain observability JSONL log at
 `.buildchain/logs/events.jsonl` by default. Framework events use
@@ -320,7 +354,7 @@ spend long stretches in low-concurrency compile, archive, link, or cache steps.
 buildchain doctor --json
 ```
 
-It validates `buildchain.toml`, package-manager detection, Git repository state,
+It validates `.buildchain/buildchain.toml`, package-manager detection, Git repository state,
 and the reusable workflow caller. For `version.strategy = "anchored"` with
 `version.next = "manual"`, it also embeds the anchored package release contract
 check: anchor manifest readability, configured version files, trusted

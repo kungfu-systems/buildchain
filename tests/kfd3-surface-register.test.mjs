@@ -5,12 +5,14 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import {
-  auditKfd3Surfaces,
-  createKfd3SurfaceWitness,
-  detectKfd3Surfaces,
-  queryKfd3Capabilities,
-  registerKfd3Surfaces,
-} from "@kungfu-tech/buildchain/kfd-3-surfaces";
+  collectKfdStatus,
+  kfd1,
+  kfd2,
+  kfd4,
+  kfd3,
+  listKfdSchemas,
+  readKfdSchema,
+} from "@kungfu-tech/buildchain/kfd";
 
 const root = path.resolve(import.meta.dirname, "..");
 const bin = path.join(root, "bin", "buildchain.mjs");
@@ -69,7 +71,7 @@ function createFixtureRepo() {
 
 test("KFD-3 detection recognizes npm exports, CLI bins, wheel metadata, docs, site facts, and binaries", () => {
   const cwd = createFixtureRepo();
-  const detection = detectKfd3Surfaces({ cwd, artifactPath: "dist/wheel" });
+  const detection = kfd3.detectSurfaces({ cwd, artifactPath: "dist/wheel" });
 
   assert.equal(detection.contract, "kungfu-buildchain-kfd-3-surface-detection");
   assert.ok(detection.surfaces.some((entry) => entry.id.includes("node-api:example/fixture/sdk")));
@@ -83,19 +85,19 @@ test("KFD-3 detection recognizes npm exports, CLI bins, wheel metadata, docs, si
 
 test("KFD-3 register, audit, witness, and query share one registry contract", async () => {
   const cwd = createFixtureRepo();
-  registerKfd3Surfaces({ cwd, kinds: ["node-api"], product: { id: "fixture", name: "Fixture" } });
-  registerKfd3Surfaces({ cwd, kinds: ["cli"], artifactPath: "dist/wheel" });
-  const audit = auditKfd3Surfaces({ cwd, kinds: ["node-api", "cli"], artifactPath: "dist/wheel" });
+  kfd3.registerSurfaces({ cwd, kinds: ["node-api"], product: { id: "fixture", name: "Fixture" } });
+  kfd3.registerSurfaces({ cwd, kinds: ["cli"], artifactPath: "dist/wheel" });
+  const audit = kfd3.auditSurfaces({ cwd, kinds: ["node-api", "cli"], artifactPath: "dist/wheel" });
 
   assert.equal(audit.status, "passed");
   assert.equal(audit.summary.declared > 0, true);
 
-  const witness = createKfd3SurfaceWitness({ cwd, kind: "prebuild", sourceSha: "a".repeat(40), artifactPath: "dist/wheel" });
+  const witness = kfd3.createSurfaceWitness({ cwd, kind: "prebuild", sourceSha: "a".repeat(40), artifactPath: "dist/wheel" });
   assert.equal(witness.standard, "kfd-3");
   assert.equal(witness.collaborationInterface.contract, "kungfu-buildchain-kfd-3-surface-registry");
   assert.match(witness.collaborationInterfaceDigest, /^sha256:/);
 
-  const query = await queryKfd3Capabilities({ cwd, product: "fixture", artifactPath: "dist/wheel" });
+  const query = await kfd3.queryCapabilities({ cwd, product: "fixture", artifactPath: "dist/wheel" });
   assert.equal(query.contract, "kungfu-buildchain-kfd-3-capability-query");
   assert.equal(query.product, "fixture");
   assert.ok(query.capabilities.some((entry) => entry.kfd1Basis?.digest?.startsWith("sha256:")));
@@ -103,19 +105,54 @@ test("KFD-3 register, audit, witness, and query share one registry contract", as
 
 test("KFD-3 CLI is aligned with the Node API", () => {
   const cwd = createFixtureRepo();
-  const register = JSON.parse(runBuildchain(["kfd-3", "register", "node-api", "--cwd", cwd, "--product", "Fixture", "--json"]));
+  const register = JSON.parse(runBuildchain(["kfd", "3", "register", "node-api", "--cwd", cwd, "--product", "Fixture", "--json"]));
   assert.equal(register.contract, "kungfu-buildchain-kfd-3-surface-register");
-  const audit = JSON.parse(runBuildchain(["kfd-3", "audit", "--cwd", cwd, "--kind", "node-api", "--json"]));
+  const audit = JSON.parse(runBuildchain(["kfd", "3", "audit", "--cwd", cwd, "--kind", "node-api", "--json"]));
   assert.equal(audit.status, "passed");
-  const query = JSON.parse(runBuildchain(["kfd-3", "query", "fixture", "--cwd", cwd, "--json"]));
+  const query = JSON.parse(runBuildchain(["kfd", "3", "query", "fixture", "--cwd", cwd, "--json"]));
   assert.equal(query.contract, "kungfu-buildchain-kfd-3-capability-query");
   assert.equal(query.capabilities.length, register.registrySurfaceCount);
 });
 
-test("Buildchain dogfoods KFD-3 capability query from its site KFD claims", async () => {
-  const query = await queryKfd3Capabilities({ cwd: root, product: "buildchain" });
+test("KFD CLI exposes all KFD standards through the unified schema namespace", () => {
+  const schemas = listKfdSchemas();
+  assert.ok(schemas.schemas.some((entry) => entry.standard === "kfd-1"));
+  assert.ok(schemas.schemas.some((entry) => entry.standard === "kfd-2"));
+  assert.ok(schemas.schemas.some((entry) => entry.standard === "kfd-3"));
+
+  const cliList = JSON.parse(runBuildchain(["kfd", "schema", "list", "--json"]));
+  assert.equal(cliList.contract, "kungfu-buildchain-kfd-schema-list");
+  assert.ok(cliList.schemas.length >= schemas.schemas.length);
+
+  const kfd1Schema = readKfdSchema({ standard: "kfd-1" });
+  assert.equal(kfd1Schema.contract, "kungfu-buildchain-kfd-schema");
+  const cliSchema = JSON.parse(runBuildchain(["kfd", "1", "schema", "--json"]));
+  assert.equal(cliSchema.standard, "kfd-1");
+});
+
+test("Buildchain dogfoods KFD-1, KFD-2, and KFD-3 first-class APIs", async () => {
+  const status = collectKfdStatus({ cwd: root });
+  assert.deepEqual(status.support["kfd-1"], ["schema", "witness", "gate", "verify"]);
+  assert.deepEqual(status.support["kfd-2"], ["schema", "taxonomy", "claims"]);
+  assert.deepEqual(status.support["kfd-3"], ["schema", "detect", "register", "audit", "witness", "query"]);
+  assert.deepEqual(status.support["kfd-4"], ["schema"]);
+
+  const witness = kfd1.createBuildchainWitness({ root, sourceSha: "a".repeat(40) });
+  assert.equal(witness.standard, "kfd-1");
+  assert.match(witness.contractWorld.digest, /^sha256:/);
+
+  const claims = kfd2.createBuildchainClaims({ root });
+  assert.ok(claims.length > 0);
+  assert.ok(claims.every((entry) => entry.public === true));
+  assert.ok(claims.every((entry) => Array.isArray(entry.machineEvidence)));
+
+  const query = await kfd3.queryCapabilities({ cwd: root, product: "buildchain" });
 
   assert.equal(query.product, "Buildchain");
   assert.equal(query.source.type, "buildchain-site-kfd-claims");
-  assert.ok(query.capabilities.some((entry) => entry.id === "export:./kfd-3-surfaces" || entry.id === "export:./buildchain-kfd-claims"));
+  assert.ok(query.capabilities.some((entry) => entry.id === "export:./kfd" || entry.id === "export:./buildchain-kfd-claims"));
+
+  assert.equal(kfd4.status, "schema-only");
+  const kfd4Schema = readKfdSchema({ standard: "kfd-4" });
+  assert.equal(kfd4Schema.standard, "kfd-4");
 });

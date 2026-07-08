@@ -54,7 +54,8 @@ const requiredPaths = [
   "docs/lifecycle-protocol.md",
   "docs/ownership.md",
   "tests/buildchain-inventory.json",
-  "buildchain.toml",
+  ".buildchain/buildchain.toml",
+  ".buildchain/contract-lock.json",
   ".github/actionlint.yaml",
   ".github/workflows/self-hosted-runner-smoke.yml",
   ".github/workflows/buildchain-ref-promotion.yml",
@@ -126,8 +127,8 @@ if (rootPackage.exports?.["./buildchain-contract"] !== "./packages/core/buildcha
 if (rootPackage.exports?.["./issue-reporting"] !== "./packages/core/issue-reporting.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/issue-reporting");
 }
-if (rootPackage.exports?.["./kfd-3-surfaces"] !== "./packages/core/kfd3-surface-register.js") {
-  throw new Error("root package must export @kungfu-tech/buildchain/kfd-3-surfaces");
+if (rootPackage.exports?.["./kfd"] !== "./packages/core/kfd.js") {
+  throw new Error("root package must export @kungfu-tech/buildchain/kfd");
 }
 if (rootPackage.exports?.["./release-line-bootstrap"] !== "./packages/core/release-line-bootstrap.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/release-line-bootstrap");
@@ -498,7 +499,7 @@ for (const requiredSnippet of [
   "buildFacts[]",
   "--build-facts-json",
   "Floating Buildchain contract lock",
-  "buildchain.contract-lock.json",
+  ".buildchain/contract-lock.json",
   "--kfd-3-prebuild-witness-json",
   "--kfd-3-artifact-verify-cmd",
   "currently named `kfd-3`",

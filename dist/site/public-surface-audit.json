@@ -3,11 +3,11 @@
   "contract": "kungfu-buildchain-public-surface-reverse-audit",
   "status": "passed",
   "summary": {
-    "cliCommandCount": 52,
+    "cliCommandCount": 65,
     "workflowCount": 35,
     "actionCount": 4,
     "sitePageCount": 43,
-    "docCommandRefCount": 180,
+    "docCommandRefCount": 208,
     "failureCount": 0
   },
   "enumerated": {
@@ -128,34 +128,99 @@
         "usage": "buildchain inspect release --passport <file-or-url> [--json]"
       },
       {
+        "id": "kfd",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd ..."
+      },
+      {
+        "id": "kfd-1-gate",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd 1 gate --witness-json <file-or-json>... [--cwd <dir>] [--artifact-root <dir>]"
+      },
+      {
+        "id": "kfd-1-schema",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd 1 schema [--schema <name>] [--json]"
+      },
+      {
+        "id": "kfd-1-verify",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd 1 verify --gate-json <file-or-json> [--json]"
+      },
+      {
+        "id": "kfd-1-witness",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd 1 witness [--cwd <dir>] [--source-sha <sha>] [--output <file>] [--json]"
+      },
+      {
+        "id": "kfd-2-claims",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd 2 claims [--cwd <dir>] [--output-dir <dir>] [--json]"
+      },
+      {
+        "id": "kfd-2-schema",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd 2 schema [--schema <name>] [--json]"
+      },
+      {
+        "id": "kfd-2-taxonomy",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd 2 taxonomy --entry-json <file-or-json>... [--kind residualRisk|downgradeReason] [--json]"
+      },
+      {
         "id": "kfd-3",
         "source": "bin/buildchain.mjs",
-        "usage": "buildchain kfd-3"
+        "usage": "buildchain kfd 3 ..."
       },
       {
         "id": "kfd-3-audit",
         "source": "bin/buildchain.mjs",
-        "usage": "buildchain kfd-3 audit [--cwd <dir>] [--registry <path>] [--artifact <path>] [--json]"
+        "usage": "buildchain kfd 3 audit [--cwd <dir>] [--registry <path>] [--artifact <path>] [--json]"
       },
       {
         "id": "kfd-3-detect",
         "source": "bin/buildchain.mjs",
-        "usage": "buildchain kfd-3 detect [--cwd <dir>] [--kind <kind>]... [--artifact <path>] [--json]"
+        "usage": "buildchain kfd 3 detect [--cwd <dir>] [--kind <kind>]... [--artifact <path>] [--json]"
       },
       {
         "id": "kfd-3-query",
         "source": "bin/buildchain.mjs",
-        "usage": "buildchain kfd-3 query [<product>] [--cwd <dir>] [--registry <path>]"
+        "usage": "buildchain kfd 3 query [<product>] [--cwd <dir>] [--registry <path>]"
       },
       {
         "id": "kfd-3-register",
         "source": "bin/buildchain.mjs",
-        "usage": "buildchain kfd-3 register <node-api|python-api|cli|binary|documentation|site-bundle>"
+        "usage": "buildchain kfd 3 register <node-api|python-api|cli|binary|documentation|site-bundle>"
       },
       {
         "id": "kfd-3-witness",
         "source": "bin/buildchain.mjs",
-        "usage": "buildchain kfd-3 witness [--cwd <dir>] [--registry <path>] [--kind prebuild|artifact]"
+        "usage": "buildchain kfd 3 witness [--cwd <dir>] [--registry <path>] [--kind prebuild|artifact]"
+      },
+      {
+        "id": "kfd-4-schema",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd 4 schema [--schema <name>] [--json]"
+      },
+      {
+        "id": "kfd-migrate-layout",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd migrate-layout [--cwd <dir>] [--write] [--force] [--json]"
+      },
+      {
+        "id": "kfd-schema-list",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd schema list [--standard kfd-1|kfd-2|kfd-3|kfd-4] [--json]"
+      },
+      {
+        "id": "kfd-schema-show",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd schema show <kfd-1|kfd-2|kfd-3|kfd-4> [--schema <name>] [--json]"
+      },
+      {
+        "id": "kfd-status",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd status [--cwd <dir>] [--json]"
       },
       {
         "id": "lifecycle",
@@ -500,6 +565,7 @@
           "buildchain-contract-lock-path",
           "buildchain-ref",
           "buildchain-repository",
+          "fail-on-release-pr-error",
           "node-version",
           "preview-apply",
           "preview-aws-role-arn",
@@ -514,6 +580,8 @@
           "production-release-head-prefix",
           "production-release-label",
           "production-release-on-main",
+          "production-release-pr-mode",
+          "production-release-pr-token",
           "release-feedback-actor-privacy",
           "staging-apply",
           "staging-aws-role-arn",
@@ -521,7 +589,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 28
+        "inputCount": 31
       },
       {
         "id": ".wheel-release",
@@ -1158,7 +1226,22 @@
       {
         "id": "badges-bundle",
         "path": "docs/cli.md",
-        "command": "buildchain badges bundle"
+        "command": "buildchain badges bundle --json"
+      },
+      {
+        "id": "badges-bundle",
+        "path": "docs/cli.md",
+        "command": "buildchain badges bundle --check"
+      },
+      {
+        "id": "badges-bundle",
+        "path": "docs/cli.md",
+        "command": "buildchain badges bundle --write"
+      },
+      {
+        "id": "badges-bundle",
+        "path": "docs/cli.md",
+        "command": "buildchain badges bundle --claims"
       },
       {
         "id": "badges-bundle",
@@ -1167,108 +1250,93 @@
       },
       {
         "id": "badges-bundle",
-        "path": "docs/cli.md",
-        "command": "buildchain badges bundle"
-      },
-      {
-        "id": "badges-bundle",
-        "path": "docs/cli.md",
-        "command": "buildchain badges bundle"
-      },
-      {
-        "id": "badges-bundle",
-        "path": "docs/cli.md",
-        "command": "buildchain badges bundle"
+        "path": "docs/readme-badges.md",
+        "command": "buildchain badges bundle --json"
       },
       {
         "id": "badges-bundle",
         "path": "docs/readme-badges.md",
-        "command": "buildchain badges bundle"
+        "command": "buildchain badges bundle --check"
       },
       {
         "id": "badges-bundle",
         "path": "docs/readme-badges.md",
-        "command": "buildchain badges bundle"
+        "command": "buildchain badges bundle --write"
       },
       {
         "id": "badges-bundle",
         "path": "docs/readme-badges.md",
-        "command": "buildchain badges bundle"
+        "command": "buildchain badges bundle --claims"
       },
       {
         "id": "badges-bundle",
         "path": "docs/readme-badges.md",
-        "command": "buildchain badges bundle"
+        "command": "buildchain badges bundle --check"
       },
       {
         "id": "badges-bundle",
         "path": "docs/readme-badges.md",
-        "command": "buildchain badges bundle"
-      },
-      {
-        "id": "badges-bundle",
-        "path": "docs/readme-badges.md",
-        "command": "buildchain badges bundle"
+        "command": "buildchain badges bundle --check"
       },
       {
         "id": "badges-bundle",
         "path": "README.md",
-        "command": "buildchain badges bundle"
+        "command": "buildchain badges bundle --check"
       },
       {
         "id": "badges-bundle",
         "path": "README.md",
-        "command": "buildchain badges bundle"
+        "command": "buildchain badges bundle --write"
       },
       {
         "id": "badges-readme",
         "path": "docs/cli.md",
-        "command": "buildchain badges readme"
+        "command": "buildchain badges readme --json"
       },
       {
         "id": "badges-readme",
         "path": "docs/cli.md",
-        "command": "buildchain badges readme"
+        "command": "buildchain badges readme --check"
       },
       {
         "id": "badges-readme",
         "path": "docs/cli.md",
-        "command": "buildchain badges readme"
+        "command": "buildchain badges readme --write"
       },
       {
         "id": "badges-readme",
         "path": "docs/readme-badges.md",
-        "command": "buildchain badges readme"
+        "command": "buildchain badges readme --json"
       },
       {
         "id": "badges-readme",
         "path": "docs/readme-badges.md",
-        "command": "buildchain badges readme"
+        "command": "buildchain badges readme --check"
       },
       {
         "id": "badges-readme",
         "path": "docs/readme-badges.md",
-        "command": "buildchain badges readme"
+        "command": "buildchain badges readme --write"
       },
       {
         "id": "badges-readme",
         "path": "docs/readme-badges.md",
-        "command": "buildchain badges readme"
+        "command": "buildchain badges readme --check"
       },
       {
         "id": "badges-readme",
         "path": "docs/readme-badges.md",
-        "command": "buildchain badges readme"
+        "command": "buildchain badges readme --check"
       },
       {
         "id": "badges-readme",
         "path": "README.md",
-        "command": "buildchain badges readme"
+        "command": "buildchain badges readme --check"
       },
       {
         "id": "badges-readme",
         "path": "README.md",
-        "command": "buildchain badges readme"
+        "command": "buildchain badges readme --write"
       },
       {
         "id": "badges",
@@ -1303,7 +1371,7 @@
       {
         "id": "build-facts",
         "path": "docs/build-facts.md",
-        "command": "buildchain facts verify"
+        "command": "buildchain facts verify --fact"
       },
       {
         "id": "build-facts",
@@ -1318,7 +1386,7 @@
       {
         "id": "build-facts",
         "path": "docs/cli.md",
-        "command": "buildchain facts verify"
+        "command": "buildchain facts verify --fact"
       },
       {
         "id": "collect-github-release",
@@ -1391,16 +1459,6 @@
         "command": "buildchain doctor"
       },
       {
-        "id": "doctor",
-        "path": "docs/install.md",
-        "command": "buildchain doctor --json"
-      },
-      {
-        "id": "doctor",
-        "path": "README.md",
-        "command": "buildchain doctor --json"
-      },
-      {
         "id": "explain-artifact",
         "path": "docs/cli.md",
         "command": "buildchain explain artifact"
@@ -1408,17 +1466,17 @@
       {
         "id": "explain-release",
         "path": "docs/cli.md",
-        "command": "buildchain explain release"
+        "command": "buildchain explain release --passport"
       },
       {
         "id": "explain-release",
         "path": "docs/cli.md",
-        "command": "buildchain explain release"
+        "command": "buildchain explain release --for"
       },
       {
         "id": "explain-release",
         "path": "docs/install.md",
-        "command": "buildchain explain release"
+        "command": "buildchain explain release --passport"
       },
       {
         "id": "explain-release",
@@ -1438,12 +1496,12 @@
       {
         "id": "homebrew-check",
         "path": "docs/cli.md",
-        "command": "buildchain homebrew check"
+        "command": "buildchain homebrew check --json"
       },
       {
         "id": "homebrew-check",
         "path": "docs/homebrew.md",
-        "command": "buildchain homebrew check"
+        "command": "buildchain homebrew check --json"
       },
       {
         "id": "homebrew-check",
@@ -1468,7 +1526,7 @@
       {
         "id": "infra-contract",
         "path": "docs/cli.md",
-        "command": "buildchain infra-contract --mode"
+        "command": "buildchain infra-contract --mode ci"
       },
       {
         "id": "infra-contract",
@@ -1478,62 +1536,62 @@
       {
         "id": "infra-contract",
         "path": "docs/infra-contract.md",
-        "command": "buildchain infra-contract --mode"
+        "command": "buildchain infra-contract --mode validate"
       },
       {
         "id": "infra-contract",
         "path": "docs/infra-contract.md",
-        "command": "buildchain infra-contract --mode"
+        "command": "buildchain infra-contract --mode ci"
       },
       {
         "id": "infra-contract",
         "path": "docs/infra-contract.md",
-        "command": "buildchain infra-contract --mode"
+        "command": "buildchain infra-contract --mode plan"
       },
       {
         "id": "infra-contract",
         "path": "docs/infra-contract.md",
-        "command": "buildchain infra-contract --mode"
+        "command": "buildchain infra-contract --mode plan"
       },
       {
         "id": "infra-contract",
         "path": "docs/infra-contract.md",
-        "command": "buildchain infra-contract --mode"
+        "command": "buildchain infra-contract --mode contract"
       },
       {
         "id": "infra-contract",
         "path": "docs/infra-contract.md",
-        "command": "buildchain infra-contract --mode"
+        "command": "buildchain infra-contract --mode propagation-plan"
       },
       {
         "id": "infra-contract",
         "path": "docs/infra-contract.md",
-        "command": "buildchain infra-contract --mode"
+        "command": "buildchain infra-contract --mode propagation-apply"
       },
       {
         "id": "infra-contract",
         "path": "docs/infra-contract.md",
-        "command": "buildchain infra-contract --mode"
+        "command": "buildchain infra-contract --mode apply"
       },
       {
         "id": "infra-contract",
         "path": "docs/infra-contract.md",
-        "command": "buildchain infra-contract --mode"
+        "command": "buildchain infra-contract --mode apply"
       },
       {
         "id": "infra-contract",
         "path": "docs/infra-contract.md",
-        "command": "buildchain infra-contract --mode"
+        "command": "buildchain infra-contract --mode evidence-bundle"
       },
       {
         "id": "infra-contract",
         "path": "docs/infra-contract.md",
-        "command": "buildchain infra-contract --mode"
+        "command": "buildchain infra-contract --mode ci"
       },
       {
         "id": "infra-contract",
         "path": "docs/lifecycle-protocol.md",
-        "command": "buildchain infra-contract --mode"
+        "command": "buildchain infra-contract --mode ci"
       },
       {
         "id": "init",
@@ -1543,22 +1601,22 @@
       {
         "id": "init",
         "path": "docs/infra-contract.md",
-        "command": "buildchain init --type"
+        "command": "buildchain init --type infra-contract"
       },
       {
         "id": "init",
         "path": "docs/install.md",
-        "command": "buildchain init --type"
+        "command": "buildchain init --type package"
       },
       {
         "id": "init",
         "path": "docs/lifecycle-protocol.md",
-        "command": "buildchain init --type"
+        "command": "buildchain init --type infra-contract"
       },
       {
         "id": "init",
         "path": "README.md",
-        "command": "buildchain init --type"
+        "command": "buildchain init --type package"
       },
       {
         "id": "inspect-artifact",
@@ -1568,92 +1626,252 @@
       {
         "id": "inspect-release",
         "path": "docs/cli.md",
-        "command": "buildchain inspect release"
+        "command": "buildchain inspect release --passport"
+      },
+      {
+        "id": "kfd-1-gate",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd 1 gate"
+      },
+      {
+        "id": "kfd-1-gate",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 1 gate"
+      },
+      {
+        "id": "kfd-1-schema",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd 1 schema"
+      },
+      {
+        "id": "kfd-1-schema",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 1 schema"
+      },
+      {
+        "id": "kfd-1-verify",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd 1 verify"
+      },
+      {
+        "id": "kfd-1-verify",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 1 verify"
+      },
+      {
+        "id": "kfd-1-witness",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd 1 witness"
+      },
+      {
+        "id": "kfd-1-witness",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 1 witness"
+      },
+      {
+        "id": "kfd-1-witness",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 1 witness"
+      },
+      {
+        "id": "kfd-1-witness",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 1 witness"
+      },
+      {
+        "id": "kfd-2-claims",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd 2 claims"
+      },
+      {
+        "id": "kfd-2-claims",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 2 claims"
+      },
+      {
+        "id": "kfd-2-claims",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 2 claims"
+      },
+      {
+        "id": "kfd-2-claims",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 2 claims"
+      },
+      {
+        "id": "kfd-2-schema",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd 2 schema"
+      },
+      {
+        "id": "kfd-2-schema",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 2 schema"
+      },
+      {
+        "id": "kfd-2-taxonomy",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd 2 taxonomy"
+      },
+      {
+        "id": "kfd-2-taxonomy",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 2 taxonomy"
       },
       {
         "id": "kfd-3-audit",
         "path": "docs/cli.md",
-        "command": "buildchain kfd-3 audit"
+        "command": "buildchain kfd 3 audit"
       },
       {
         "id": "kfd-3-audit",
         "path": "docs/kfd-support.md",
-        "command": "buildchain kfd-3 audit"
+        "command": "buildchain kfd 3 audit"
       },
       {
         "id": "kfd-3-detect",
         "path": "docs/cli.md",
-        "command": "buildchain kfd-3 detect"
+        "command": "buildchain kfd 3 detect"
       },
       {
         "id": "kfd-3-detect",
         "path": "docs/kfd-support.md",
-        "command": "buildchain kfd-3 detect"
+        "command": "buildchain kfd 3 detect"
       },
       {
         "id": "kfd-3-detect",
         "path": "docs/kfd-support.md",
-        "command": "buildchain kfd-3 detect"
+        "command": "buildchain kfd 3 detect"
       },
       {
         "id": "kfd-3-query",
         "path": "docs/cli.md",
-        "command": "buildchain kfd-3 query"
+        "command": "buildchain kfd 3 query"
       },
       {
         "id": "kfd-3-query",
         "path": "docs/kfd-support.md",
-        "command": "buildchain kfd-3 query"
+        "command": "buildchain kfd 3 query"
       },
       {
         "id": "kfd-3-query",
         "path": "docs/kfd-support.md",
-        "command": "buildchain kfd-3 query"
+        "command": "buildchain kfd 3 query"
       },
       {
         "id": "kfd-3-query",
         "path": "docs/kfd-support.md",
-        "command": "buildchain kfd-3 query"
+        "command": "buildchain kfd 3 query"
+      },
+      {
+        "id": "kfd-3-query",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 3 query"
       },
       {
         "id": "kfd-3-register",
         "path": "docs/cli.md",
-        "command": "buildchain kfd-3 register"
+        "command": "buildchain kfd 3 register"
       },
       {
         "id": "kfd-3-register",
         "path": "docs/kfd-support.md",
-        "command": "buildchain kfd-3 register"
+        "command": "buildchain kfd 3 register"
       },
       {
         "id": "kfd-3-register",
         "path": "docs/kfd-support.md",
-        "command": "buildchain kfd-3 register"
+        "command": "buildchain kfd 3 register"
       },
       {
         "id": "kfd-3-register",
         "path": "docs/kfd-support.md",
-        "command": "buildchain kfd-3 register"
+        "command": "buildchain kfd 3 register"
       },
       {
         "id": "kfd-3-witness",
         "path": "docs/cli.md",
-        "command": "buildchain kfd-3 witness"
+        "command": "buildchain kfd 3 witness"
       },
       {
         "id": "kfd-3-witness",
         "path": "docs/kfd-support.md",
-        "command": "buildchain kfd-3 witness"
+        "command": "buildchain kfd 3 witness"
       },
       {
-        "id": "kfd-3",
+        "id": "kfd-4-schema",
         "path": "docs/cli.md",
-        "command": "buildchain kfd-3"
+        "command": "buildchain kfd 4 schema"
+      },
+      {
+        "id": "kfd-4-schema",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 4 schema"
+      },
+      {
+        "id": "kfd-4-schema",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 4 schema"
+      },
+      {
+        "id": "kfd-migrate-layout",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd migrate-layout --write"
+      },
+      {
+        "id": "kfd-migrate-layout",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd migrate-layout --write"
+      },
+      {
+        "id": "kfd-schema-list",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd schema list"
+      },
+      {
+        "id": "kfd-schema-list",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd schema list"
+      },
+      {
+        "id": "kfd-schema-list",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd schema list"
+      },
+      {
+        "id": "kfd-schema-show",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd schema show"
+      },
+      {
+        "id": "kfd-schema-show",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd schema show"
+      },
+      {
+        "id": "kfd-status",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd status --json"
+      },
+      {
+        "id": "kfd-status",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd status --json"
+      },
+      {
+        "id": "kfd",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd"
+      },
+      {
+        "id": "kfd",
+        "path": "README.md",
+        "command": "buildchain kfd"
       },
       {
         "id": "lifecycle",
         "path": "docs/cli.md",
-        "command": "buildchain lifecycle run"
+        "command": "buildchain lifecycle run build"
       },
       {
         "id": "lifecycle",
@@ -1688,12 +1906,12 @@
       {
         "id": "logging",
         "path": "docs/cli.md",
-        "command": "buildchain log warn"
+        "command": "buildchain log warn --event"
       },
       {
         "id": "logging",
         "path": "docs/cli.md",
-        "command": "buildchain log summary"
+        "command": "buildchain log summary --json"
       },
       {
         "id": "logging",
@@ -1703,17 +1921,17 @@
       {
         "id": "logging",
         "path": "docs/toolkit-observability.md",
-        "command": "buildchain log summary"
+        "command": "buildchain log summary --json"
       },
       {
         "id": "logging",
         "path": "README.md",
-        "command": "buildchain log summary"
+        "command": "buildchain log summary --json"
       },
       {
         "id": "mark",
         "path": "docs/cli.md",
-        "command": "buildchain mark --event"
+        "command": "buildchain mark --event configure"
       },
       {
         "id": "mark",
@@ -1743,12 +1961,12 @@
       {
         "id": "mark",
         "path": "README.md",
-        "command": "buildchain mark --event"
+        "command": "buildchain mark --event native"
       },
       {
         "id": "npm-dry-run",
         "path": "docs/cli.md",
-        "command": "buildchain npm dry-run"
+        "command": "buildchain npm dry-run --json"
       },
       {
         "id": "npm-dry-run",
@@ -1758,7 +1976,7 @@
       {
         "id": "publish-source",
         "path": "docs/cli.md",
-        "command": "buildchain publish-source validate-anchored-release"
+        "command": "buildchain publish-source validate-anchored-release --json"
       },
       {
         "id": "publish-source",
@@ -1768,7 +1986,7 @@
       {
         "id": "publish-source",
         "path": "docs/reusable-build-surface.md",
-        "command": "buildchain publish-source validate-anchored-release"
+        "command": "buildchain publish-source validate-anchored-release --json"
       },
       {
         "id": "release-dry-run",
@@ -1778,57 +1996,47 @@
       {
         "id": "release-dry-run",
         "path": "docs/cli.md",
-        "command": "buildchain release --dry-run"
+        "command": "buildchain release --dry-run --target-ref"
       },
       {
         "id": "release-dry-run",
         "path": "docs/cli.md",
-        "command": "buildchain release --dry-run"
+        "command": "buildchain release --dry-run --target-ref"
       },
       {
         "id": "release-dry-run",
         "path": "docs/cli.md",
-        "command": "buildchain release dry-run"
+        "command": "buildchain release dry-run --target-ref"
       },
       {
         "id": "release-dry-run",
         "path": "docs/cli.md",
-        "command": "buildchain release explain"
+        "command": "buildchain release explain --target-ref"
       },
       {
         "id": "release-dry-run",
         "path": "docs/cli.md",
-        "command": "buildchain release --dry-run"
-      },
-      {
-        "id": "release-dry-run",
-        "path": "docs/install.md",
-        "command": "buildchain release --dry-run"
-      },
-      {
-        "id": "release-dry-run",
-        "path": "README.md",
         "command": "buildchain release --dry-run"
       },
       {
         "id": "release-line-open",
         "path": "docs/cli.md",
-        "command": "buildchain release line"
+        "command": "buildchain release line open"
       },
       {
         "id": "release-line-open",
         "path": "docs/cli.md",
-        "command": "buildchain release line"
+        "command": "buildchain release line open"
       },
       {
         "id": "release-line-open",
         "path": "docs/cli.md",
-        "command": "buildchain release line"
+        "command": "buildchain release line open"
       },
       {
         "id": "release-line-open",
         "path": "docs/release-flow.md",
-        "command": "buildchain release line"
+        "command": "buildchain release line open"
       },
       {
         "id": "release-propagation",
@@ -1853,7 +2061,7 @@
       {
         "id": "sample-process-tree",
         "path": "docs/cli.md",
-        "command": "buildchain sample process-tree"
+        "command": "buildchain sample process-tree --label"
       },
       {
         "id": "sample-process-tree",
@@ -1883,7 +2091,7 @@
       {
         "id": "span",
         "path": "docs/cli.md",
-        "command": "buildchain span --event"
+        "command": "buildchain span --event native"
       },
       {
         "id": "span",
@@ -1913,12 +2121,12 @@
       {
         "id": "span",
         "path": "README.md",
-        "command": "buildchain span --event"
+        "command": "buildchain span --event native"
       },
       {
         "id": "transaction-inspect",
         "path": "docs/cli.md",
-        "command": "buildchain transaction inspect"
+        "command": "buildchain transaction inspect --version"
       },
       {
         "id": "transaction-inspect",
@@ -1943,12 +2151,12 @@
       {
         "id": "validate",
         "path": "docs/install.md",
-        "command": "buildchain validate --require-version-state"
+        "command": "buildchain validate --require-version-state npx"
       },
       {
         "id": "validate",
         "path": "README.md",
-        "command": "buildchain validate --require-version-state"
+        "command": "buildchain validate --require-version-state npx"
       },
       {
         "id": "verify-artifact",
@@ -2018,17 +2226,17 @@
       {
         "id": "verify-release-passport",
         "path": "docs/install.md",
-        "command": "buildchain verify release-passport"
+        "command": "buildchain verify release-passport buildchain"
       },
       {
         "id": "verify-release-passport",
         "path": "docs/install.md",
-        "command": "buildchain verify release-passport"
+        "command": "buildchain verify release-passport buildchain"
       },
       {
         "id": "verify-release-passport",
         "path": "docs/install.md",
-        "command": "buildchain verify release-passport"
+        "command": "buildchain verify release-passport buildchain"
       },
       {
         "id": "verify-release-passport",
@@ -2038,17 +2246,17 @@
       {
         "id": "verify-release-passport",
         "path": "README.md",
-        "command": "buildchain verify release-passport"
+        "command": "buildchain verify release-passport buildchain"
       },
       {
         "id": "version",
         "path": "docs/install.md",
-        "command": "buildchain version npx"
+        "command": "buildchain version npx buildchain"
       },
       {
         "id": "version",
         "path": "README.md",
-        "command": "buildchain version npx"
+        "command": "buildchain version npx buildchain"
       },
       {
         "id": "web-surface",
@@ -2061,9 +2269,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "281c186e9dbdf45e55e8afcd59cfee66518f42c146d1b79dfd8837048c00bec8",
-    "workflowRegistryDigest": "b24b2a68ae83941cbb6a719a62b4eafbd0f5e859e5810ae766ce9a5db69ddfae",
-    "pageRegistryDigest": "3f1337aa8d9a1ef1d9c607612db76705479d5a1b270360d001dfcbb1a68a69cb"
+    "cliRegistryDigest": "8a692573ad139a250fd77014b7874141dfb4d492ceee2dae46cdf1a631c32909",
+    "workflowRegistryDigest": "9aecc7abd02f397d0ab4ad210aef50b5df045262415ff25398dd0f5f57fc998e",
+    "pageRegistryDigest": "95734209e1b6f47e888a93c75306aa90a6bb9452231451eb44e3cf83336eca5d"
   },
   "comparison": {
     "missingCliRegistry": [],

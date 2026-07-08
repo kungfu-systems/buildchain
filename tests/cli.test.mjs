@@ -63,7 +63,7 @@ test("CLI prints help and version", () => {
   assert.equal(runBuildchain(["version"]).trim(), packageJson.version);
 });
 
-test("init package creates buildchain.toml and reusable workflow", () => {
+test("init package creates .buildchain/buildchain.toml and reusable workflow", () => {
   const cwd = tempDir("init-package");
   fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({ name: "fixture", version: "0.1.0" }, null, 2));
   const result = JSON.parse(runBuildchain([
@@ -80,8 +80,8 @@ test("init package creates buildchain.toml and reusable workflow", () => {
 
   assert.equal(result.type, "package");
   assert.equal(result.packageManager, "npm");
-  assert.deepEqual(result.written.sort(), [".github/workflows/build.yml", "buildchain.toml"]);
-  assert.match(fs.readFileSync(path.join(cwd, "buildchain.toml"), "utf8"), /npm ci/);
+  assert.deepEqual(result.written.sort(), [".buildchain/buildchain.toml", ".github/workflows/build.yml"]);
+  assert.match(fs.readFileSync(path.join(cwd, ".buildchain", "buildchain.toml"), "utf8"), /npm ci/);
   const workflow = fs.readFileSync(path.join(cwd, ".github/workflows/build.yml"), "utf8");
   assert.match(workflow, /workflow_dispatch:/);
   assert.match(workflow, /buildchain-ref:/);
@@ -105,13 +105,13 @@ test("init infra-contract creates a directly valid observed contract scaffold", 
 
   assert.equal(result.type, "infra-contract");
   assert.deepEqual(result.written.sort(), [
+    ".buildchain/buildchain.toml",
     ".github/workflows/build.yml",
-    "buildchain.toml",
     "infra/desired.json",
     "infra/outputs.json",
   ]);
-  assert.match(fs.readFileSync(path.join(cwd, "buildchain.toml"), "utf8"), /type = "infra-contract"/);
-  assert.match(fs.readFileSync(path.join(cwd, "buildchain.toml"), "utf8"), /--mode ci/);
+  assert.match(fs.readFileSync(path.join(cwd, ".buildchain", "buildchain.toml"), "utf8"), /type = "infra-contract"/);
+  assert.match(fs.readFileSync(path.join(cwd, ".buildchain", "buildchain.toml"), "utf8"), /--mode ci/);
   const workflow = fs.readFileSync(path.join(cwd, ".github", "workflows", "build.yml"), "utf8");
   assert.match(workflow, /\.buildchain\/infra-contract-plan\.json/);
   assert.match(workflow, /\.buildchain\/infra-contract-evidence-verification\.json/);
