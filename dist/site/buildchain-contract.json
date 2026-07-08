@@ -4,7 +4,7 @@
   "product": {
     "name": "Buildchain",
     "package": "@kungfu-tech/buildchain",
-    "version": "2.10.2-alpha.0",
+    "version": "2.10.2-alpha.1",
     "repository": "https://github.com/kungfu-systems/buildchain"
   },
   "majorLine": "v2",
@@ -460,5 +460,5 @@
     }
   ],
   "compatibilityDigest": "sha256:407d6d5ee6a96a34d2cc30db9ac64cf4b1819ab6d77bd7a57a07a124f22101ca",
-  "contractDigest": "sha256:b35d37c3d39c187889a70f66c6c9583297f46b087b3df1d6c999a3afcec3e84c"
+  "contractDigest": "sha256:20dd370ee59b64c5deacc220adf072e80b1889834d87aa44930bacaaa16c7495"
 }
