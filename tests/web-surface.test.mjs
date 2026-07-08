@@ -903,6 +903,47 @@ test("web-surface health check verifies managed-network staging from deployment 
   });
 });
 
+test("web-surface health check verifies managed-network live apply with S3 head checks", async () => {
+  await withFixtureAsync(async (fixture) => {
+    fs.mkdirSync(path.join(fixture, "dist", "buildchain", "docs"), { recursive: true });
+    fs.writeFileSync(path.join(fixture, "dist", "index.html"), "hub\n");
+    fs.writeFileSync(path.join(fixture, "dist", "buildchain", "index.html"), "buildchain\n");
+    fs.writeFileSync(path.join(fixture, "dist", "buildchain", "docs", "index.html"), "docs\n");
+    const result = applyWebSurfaceDeploy({
+      cwd: fixture,
+      channel: "staging",
+      sourceSha: "b".repeat(40),
+      dryRun: false,
+      commandRunner() {
+        return { exitCode: 0, stdout: "", stderr: "" };
+      },
+    });
+    const headOperations = [];
+    const health = await checkWebSurfaceHealth({
+      cwd: fixture,
+      result,
+      checkedAt: "2026-07-01T00:00:00.000Z",
+      commandRunner(operation) {
+        headOperations.push(operation);
+        return { exitCode: 0, stdout: "", stderr: "" };
+      },
+      fetchImpl() {
+        throw new Error("managed-network health must not require public fetch");
+      },
+    });
+
+    const buildchainRoot = health.checks.find((check) => check.surface === "buildchain" && check.kind === "root");
+    const buildchainNested = health.checks.find((check) => check.surface === "buildchain" && check.kind === "nested");
+    assert.equal(health.status, "passed");
+    assert.equal(buildchainRoot.healthStrategy, "s3-object");
+    assert.equal(buildchainRoot.objectKey, "staging/buildchain/index.html");
+    assert.equal(buildchainNested.objectKey, "staging/buildchain/docs/index.html");
+    assert.ok(headOperations.some((operation) => operation.args.includes(".buildchain/deployments/staging/buildchain.json")));
+    assert.ok(headOperations.some((operation) => operation.args.includes("staging/buildchain/index.html")));
+    assert.ok(headOperations.some((operation) => operation.args.includes("staging/buildchain/docs/index.html")));
+  });
+});
+
 test("web-surface health check can use an allowed runner for managed-network HTTP smoke", async () => {
   await withFixtureAsync(async (fixture) => {
     fs.mkdirSync(path.join(fixture, "dist"), { recursive: true });

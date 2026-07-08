@@ -241,6 +241,11 @@ export function webSurfaceCli() {
         "allowed-managed-network-runner",
         envAllowedManagedNetworkRunner,
       ),
+      managedNetworkS3ObjectVerification: readBooleanArg(
+        "managed-network-s3-object-verification",
+        process.env.BUILDCHAIN_WEB_SURFACE_HEALTH_S3_OBJECTS !== "false" &&
+          process.env.BUILDCHAIN_WEB_SURFACE_HEALTH_S3_OBJECTS !== "0",
+      ),
     });
     return Promise.resolve(health).then((resolved) => {
       writeJson(resolved, output);
