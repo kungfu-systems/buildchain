@@ -327,15 +327,20 @@ function assertAllowedLocalChanges(cwd, allowedPaths) {
     cwd,
     encoding: "utf8",
   }).trimEnd();
-  const isEphemeralReleaseCandidateEvidence = (status, filePath) =>
-    status === "??" && filePath.startsWith(".buildchain/release-candidate/");
+  const isEphemeralBuildchainEvidence = (status, filePath) =>
+    status === "??" &&
+    [
+      ".buildchain/kfd/",
+      ".buildchain/release-candidate/",
+      ".buildchain/release-passport/",
+    ].some((prefix) => filePath.startsWith(prefix));
   const unexpected = output
     .split(/\r?\n/)
     .filter(Boolean)
     .filter((line) => {
       const status = line.slice(0, 2);
       const filePath = line.slice(3).trim();
-      if (isEphemeralReleaseCandidateEvidence(status, filePath)) return false;
+      if (isEphemeralBuildchainEvidence(status, filePath)) return false;
       return !(
         allowed.has(filePath) &&
         status !== "??" &&
