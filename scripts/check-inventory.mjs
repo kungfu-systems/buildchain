@@ -586,12 +586,10 @@ for (const requiredSnippet of [
   "release-passport-buildchain-self-kfd: true",
   "publish-required-artifacts-json: \"[]\"",
   "release-passport-impact-json: >-",
-  "Buildchain v2.8 promotes KFD self-verification",
-  "kfd-1-contract-world-release-gate",
-  "kfd-2-release-trust-passport-audit",
-  "kfd-3-collaboration-interface-trust-proof",
-  "publish-source-lock-enforcement",
-  "required-check-protection",
+  "Buildchain v2.9 adds Build Facts as a public contract",
+  "build-facts-contract",
+  "trust-badge-bundle",
+  "web-surface-directory-index-aliases",
   "\"surfaceImpacts\":[",
 ]) {
   if (!buildchainRefPromotionWorkflow.includes(requiredSnippet)) {
