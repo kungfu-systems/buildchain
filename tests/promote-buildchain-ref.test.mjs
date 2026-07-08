@@ -4916,6 +4916,78 @@ test("release promotion rerun reuses prepared next alpha version commit", async 
   );
 });
 
+test("release promotion rerun resumes durable stable transaction after alpha advanced", async () => {
+  const sourceSha = "c".repeat(40);
+  const alphaSha = "d".repeat(40);
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "1.0.6-alpha.1",
+      packageManager: "pnpm@11.7.0",
+    },
+  });
+  const { octokit, refs } = createGitMock({
+    refs: new Map([
+      ["heads/release/v1/v1.0", sourceSha],
+      ["heads/alpha/v1/v1.0", alphaSha],
+      ["heads/dev/v1/v1.0", alphaSha],
+      ["tags/v1.0.6-alpha.1", alphaSha],
+      ["tags/v1.0-alpha", alphaSha],
+    ]),
+  });
+  await persistDurableReleaseTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    transaction: {
+      id: "tx-resume-stable",
+      schema: 1,
+      version: "1.0.6",
+      exact_tag: "v1.0.6",
+      channel: "release",
+      source_sha: sourceSha,
+      release_sha: "e".repeat(40),
+      release_material_sha: "e".repeat(40),
+      publish_tooling_sha: "e".repeat(40),
+      target_ref: "release/v1/v1.0",
+      state_ref: "buildchain/release-state/1-0-6",
+      state_path: ".buildchain/release-state/1.0.6.json",
+      evidence_path: "",
+      state: "published",
+      previous_state: "publishing",
+      actor: "codex",
+      run_id: "1",
+      superseded_by: "",
+      failure: "",
+      artifacts: [],
+      evidence: [],
+      created_at: "2026-07-01T00:00:00.000Z",
+      updated_at: "2026-07-01T00:00:00.000Z",
+    },
+    evidencePath: "",
+  });
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: sourceSha,
+    targetRef: "release/v1/v1.0",
+    cwd,
+  });
+
+  assert.equal(result.sha, refs.get("tags/v1.0.6"));
+  assert.equal(refs.get("heads/release/v1/v1.0"), result.sha);
+  assert.equal(refs.get("tags/v1"), result.sha);
+  assert.equal(refs.get("tags/v1.0"), result.sha);
+  assert.match(result.nextAlphaSha, /^commit-/);
+  assert.equal(refs.get("tags/v1.0.7-alpha.0"), result.nextAlphaSha);
+  assert.equal(refs.get("heads/alpha/v1/v1.0"), result.nextAlphaSha);
+  assert.equal(refs.get("heads/dev/v1/v1.0"), result.nextAlphaSha);
+  assert.equal(refs.get("tags/v1.0-alpha"), result.nextAlphaSha);
+});
+
 test("promoteBuildchainRefs rejects stale target SHA", async () => {
   const octokit = {
     rest: {
