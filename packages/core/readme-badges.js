@@ -18,19 +18,22 @@ export const BADGE_BUNDLE_DEFAULT_CLAIMS = [
   "kfd-1",
   "kfd-2",
   "kfd-3",
+  "kfd-4",
   "release-passport",
 ];
 
-const KFD_KEYS = [
+const KFD_FALLBACK_KEYS = [
   { key: "kfd-1", id: "kfd1", label: "KFD-1", text: "contract world" },
   { key: "kfd-2", id: "kfd2", label: "KFD-2", text: "trust passport" },
   { key: "kfd-3", id: "kfd3", label: "KFD-3", text: "collaboration interface" },
+  { key: "kfd-4", id: "kfd4", label: "KFD-4", text: "timeline observer" },
 ];
 
 const KFD_BADGE_CONCEPTS = {
   "kfd-1": "contractWorld",
   "kfd-2": "releaseTrustPassport",
   "kfd-3": "collaborationInterface",
+  "kfd-4": "observerPerspective",
 };
 
 const requireFromHere = createRequire(import.meta.url);
@@ -47,23 +50,7 @@ const STATE_COLORS = {
   unknown: "6e7781",
 };
 
-const BUILDCHAIN_BADGE_IDS = [
-  "kfd-1",
-  "kfd-2",
-  "kfd-3",
-  "buildchain-release-passport",
-];
-
-const BADGE_BUNDLE_CLAIM_ALIASES = {
-  kfd1: "kfd-1",
-  "kfd_1": "kfd-1",
-  "kfd-1": "kfd-1",
-  kfd2: "kfd-2",
-  "kfd_2": "kfd-2",
-  "kfd-2": "kfd-2",
-  kfd3: "kfd-3",
-  "kfd_3": "kfd-3",
-  "kfd-3": "kfd-3",
+const STATIC_BADGE_BUNDLE_CLAIM_ALIASES = {
   passport: "release-passport",
   "release_passport": "release-passport",
   "release-passport": "release-passport",
@@ -136,10 +123,20 @@ function hostedBadgeUrl({ badgeConfig = {}, id, state }) {
   return `${badgeEndpointBaseUrl(badgeConfig)}/${encodeURIComponent(id)}/${encodeURIComponent(state || "unknown")}.svg`;
 }
 
-export function createReadmeBadgeEndpointRegistry({ kfdSpecs = KFD_KEYS } = {}) {
+export function createKfdBadgeSpecsFromStandards(standardsMetadata) {
+  return kfdBadgeSpecs(summarizeKfdStandards({
+    value: standardsMetadata && typeof standardsMetadata === "object" ? standardsMetadata : undefined,
+    source: "provided",
+  }));
+}
+
+export function createReadmeBadgeEndpointRegistry({ kfdSpecs = undefined, kfdStandards = undefined } = {}) {
+  const effectiveKfdSpecs = Array.isArray(kfdSpecs) && kfdSpecs.length > 0
+    ? kfdSpecs
+    : createKfdBadgeSpecsFromStandards(kfdStandards);
   const states = Object.keys(STATE_COLORS).filter((state) => state !== "unknown");
   const specs = [
-    ...kfdSpecs.map((entry) => ({
+    ...effectiveKfdSpecs.map((entry) => ({
       id: entry.key,
       label: entry.label,
       messageTemplate: `${entry.text} {state}`,
@@ -211,15 +208,55 @@ function splitClaimList(value) {
   return [];
 }
 
-function normalizeBadgeBundleClaims(value, fallback = BADGE_BUNDLE_DEFAULT_CLAIMS) {
+function fallbackKfdEntryForKey(key) {
+  return KFD_FALLBACK_KEYS.find((entry) => entry.key === key) || {};
+}
+
+function normalizeKfdKey(value) {
+  const normalized = String(value || "").trim().toLowerCase().replace(/_/g, "-");
+  const match = normalized.match(/^kfd-?(\d+)$/);
+  return match ? `kfd-${match[1]}` : normalized;
+}
+
+function kfdSortValue(key) {
+  const match = String(key || "").match(/^kfd-(\d+)$/);
+  return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER;
+}
+
+function sortedKfdKeys(keys = []) {
+  return [...new Set(keys.map(normalizeKfdKey).filter((key) => /^kfd-\d+$/.test(key)))]
+    .sort((left, right) => {
+      const numeric = kfdSortValue(left) - kfdSortValue(right);
+      return numeric || left.localeCompare(right);
+    });
+}
+
+function defaultBadgeBundleClaimsForKfd(kfdSpecs = KFD_FALLBACK_KEYS) {
+  const claims = sortedKfdKeys(kfdSpecs.map((entry) => entry.key));
+  return [...claims, "release-passport"];
+}
+
+function badgeBundleClaimAliases(kfdSpecs = KFD_FALLBACK_KEYS) {
+  const aliases = { ...STATIC_BADGE_BUNDLE_CLAIM_ALIASES };
+  for (const key of sortedKfdKeys(kfdSpecs.map((entry) => entry.key))) {
+    const number = key.replace(/^kfd-/, "");
+    aliases[key] = key;
+    aliases[`kfd${number}`] = key;
+    aliases[`kfd_${number}`] = key;
+  }
+  return aliases;
+}
+
+function normalizeBadgeBundleClaims(value, fallback = BADGE_BUNDLE_DEFAULT_CLAIMS, kfdSpecs = KFD_FALLBACK_KEYS) {
   const selected = [];
   const unknown = [];
+  const aliases = badgeBundleClaimAliases(kfdSpecs);
   for (const claim of splitClaimList(value)) {
     const key = String(claim || "").trim().toLowerCase();
     if (!key) {
       continue;
     }
-    const normalized = BADGE_BUNDLE_CLAIM_ALIASES[key];
+    const normalized = aliases[key.replace(/_/g, "-")] || aliases[key];
     if (!normalized) {
       unknown.push(key);
       continue;
@@ -234,13 +271,18 @@ function normalizeBadgeBundleClaims(value, fallback = BADGE_BUNDLE_DEFAULT_CLAIM
   return selected.length > 0 ? selected : [...fallback];
 }
 
-function badgeBundleConfig(badgeConfig = {}) {
+function badgeBundleConfig(badgeConfig = {}, kfdSpecs = KFD_FALLBACK_KEYS) {
   const configured = badgeConfig.bundle && typeof badgeConfig.bundle === "object"
     ? badgeConfig.bundle
     : {};
+  const defaultClaims = defaultBadgeBundleClaimsForKfd(kfdSpecs);
   return {
     enabled: configured.enabled === undefined ? true : Boolean(configured.enabled),
-    claims: normalizeBadgeBundleClaims(configured.claims || badgeConfig.bundle_claims || badgeConfig.bundleClaims),
+    claims: normalizeBadgeBundleClaims(
+      configured.claims || badgeConfig.bundle_claims || badgeConfig.bundleClaims,
+      defaultClaims,
+      kfdSpecs,
+    ),
     mode: String(configured.mode || "readme"),
     hosted: configured.hosted === undefined ? true : Boolean(configured.hosted),
   };
@@ -320,6 +362,13 @@ function summarizeKfdStandards(loaded) {
   const standards = loaded?.value?.standards && typeof loaded.value.standards === "object"
     ? loaded.value.standards
     : {};
+  const discoveredKeys = sortedKfdKeys(Object.keys(standards).filter((key) => {
+    const standard = standards[key];
+    return standard && typeof standard === "object" && standard.status !== "retired";
+  }));
+  const keys = discoveredKeys.length > 0
+    ? discoveredKeys
+    : sortedKfdKeys(KFD_FALLBACK_KEYS.map((entry) => entry.key));
   const summary = {
     contract: loaded?.value?.contract || "",
     schemaVersion: loaded?.value?.schemaVersion || undefined,
@@ -331,20 +380,22 @@ function summarizeKfdStandards(loaded) {
     error: loaded?.error || "",
     standards: {},
   };
-  for (const fallback of KFD_KEYS) {
-    const standard = standards[fallback.key] || {};
-    const conceptKey = KFD_BADGE_CONCEPTS[fallback.key];
-    summary.standards[fallback.key] = {
-      key: standard.key || fallback.key,
-      id: standard.id || fallback.label,
-      label: standard.label || fallback.label,
+  for (const key of keys) {
+    const fallback = fallbackKfdEntryForKey(key);
+    const standard = standards[key] || {};
+    const conceptKey = KFD_BADGE_CONCEPTS[key] || Object.keys(standard.interfaces || {})[0] || Object.keys(standard.concepts || {})[0] || "";
+    const label = standard.label || fallback.label || String(key).toUpperCase();
+    summary.standards[key] = {
+      key: standard.key || key,
+      id: standard.id || fallback.id || label,
+      label,
       title: standard.title || "",
       status: standard.status || "",
       revision: standard.revision || undefined,
       documentUrl: standard.document?.url || "",
       documentPath: standard.document?.path || "",
       documentSha256: standard.document?.sha256 || "",
-      badgeText: standard.concepts?.[conceptKey] || fallback.text,
+      badgeText: standard.concepts?.[conceptKey] || fallback.text || label,
       interfaceContract: conceptKey ? standard.interfaces?.[conceptKey]?.contract || "" : "",
       schemaId: conceptKey ? standard.interfaces?.[conceptKey]?.schemaId || standard.schemaIds?.[conceptKey] || "" : "",
     };
@@ -353,12 +404,15 @@ function summarizeKfdStandards(loaded) {
 }
 
 function kfdBadgeSpecs(kfdStandards) {
-  return KFD_KEYS.map((fallback) => {
-    const standard = kfdStandards?.standards?.[fallback.key] || {};
+  const keys = sortedKfdKeys(Object.keys(kfdStandards?.standards || {}));
+  return keys.map((key) => {
+    const fallback = fallbackKfdEntryForKey(key);
+    const standard = kfdStandards?.standards?.[key] || {};
     return {
       ...fallback,
+      key,
       label: standard.label || fallback.label,
-      text: standard.badgeText || fallback.text,
+      text: standard.badgeText || fallback.text || standard.label || key.toUpperCase(),
       title: standard.title || "",
       standardDocumentUrl: standard.documentUrl || "",
       standardDocumentSha256: standard.documentSha256 || "",
@@ -664,7 +718,8 @@ export async function collectReadmeBadgeFacts({ cwd = process.cwd() } = {}) {
       : releasePassportLocation;
   const releaseState = releasePassportState({ report, error, badgeConfig });
   const kfdStandards = summarizeKfdStandards(await loadKfdStandards({ cwd: resolvedCwd, badgeConfig }));
-  const kfd = kfdBadgeSpecs(kfdStandards).map((entry) => {
+  const kfdSpecs = kfdBadgeSpecs(kfdStandards);
+  const kfd = kfdSpecs.map((entry) => {
     const passed = kfdSectionPassed({ passport, report, key: entry.key });
     const state = passed ? "passed" : declaredKfdState({ badgeConfig, key: entry.key, id: entry.id });
     return {
@@ -719,10 +774,13 @@ export async function collectReadmeBadgeFacts({ cwd = process.cwd() } = {}) {
     badgeRuntime: {
       provider: "buildchain-hosted",
       endpointBaseUrl: badgeEndpointBaseUrl(badgeConfig),
-      hostedBadgeIds: BUILDCHAIN_BADGE_IDS,
+      hostedBadgeIds: [
+        ...defaultBadgeBundleClaimsForKfd(kfdSpecs).filter((claim) => claim !== "release-passport"),
+        "buildchain-release-passport",
+      ],
       logoPolicy: BUILDCHAIN_BADGE_LOGO_PLACEHOLDER,
     },
-    badgeBundle: badgeBundleConfig(badgeConfig),
+    badgeBundle: badgeBundleConfig(badgeConfig, kfdSpecs),
     badges: [],
   };
   facts.badges = buildBadgeEntries(facts, { badgeConfig });
@@ -733,7 +791,7 @@ export async function collectBadgeBundleFacts({ cwd = process.cwd(), claims = un
   const readmeFacts = await collectReadmeBadgeFacts({ cwd });
   const config = {
     ...readmeFacts.badgeBundle,
-    claims: normalizeBadgeBundleClaims(claims, readmeFacts.badgeBundle.claims),
+    claims: normalizeBadgeBundleClaims(claims, readmeFacts.badgeBundle.claims, readmeFacts.kfd),
   };
   const badges = buildBadgeBundleEntries(readmeFacts, config);
   return {
@@ -746,6 +804,7 @@ export async function collectBadgeBundleFacts({ cwd = process.cwd(), claims = un
     sourceFactsSha256: hashText(JSON.stringify(readmeFacts)),
     policy: {
       defaultClaims: [...BADGE_BUNDLE_DEFAULT_CLAIMS],
+      discoveredDefaultClaims: defaultBadgeBundleClaimsForKfd(readmeFacts.kfd),
       claims: config.claims,
       hosted: config.hosted,
       mode: config.mode,

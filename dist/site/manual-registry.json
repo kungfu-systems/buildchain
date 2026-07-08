@@ -78,7 +78,7 @@
       "title": "README badge blocks",
       "path": "docs/readme-badges.md",
       "plane": "use",
-      "digest": "sha256:06eaef737dcc73a6526d856d79275ee87af9670f0e2be39a5596758bfc3527c9",
+      "digest": "sha256:ddaf49a7d6e6c11aea8d21d1ba736159897e16207cd74af0044014425faf8a2c",
       "capabilityGroup": "distribution-indexes",
       "audience": [
         "consumer",

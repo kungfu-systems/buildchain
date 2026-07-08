@@ -9,6 +9,7 @@ export {
   checkReadmeBadgeBlock,
   collectBadgeBundleFacts,
   collectReadmeBadgeFacts,
+  createKfdBadgeSpecsFromStandards,
   createReadmeBadgeEndpointRegistry,
   readReadme,
   renderBadgeBundleBlock,
