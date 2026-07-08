@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-impact",
+  "versionImpact": {
+    "final": "patch",
+    "source": "buildchain-release-governance",
+    "rationale": "Buildchain v2.10 patch release accepts strict publish-gate channel-lineage PRs and fixes multi-surface web preview roots through CloudFront directory-index rewrites."
+  },
+  "surfaceImpacts": [
+    {
+      "id": "publish-gate-channel-lineage",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Accepts same-line publish-gate/alpha and publish-gate/release source-lock PR lineage during promote-buildchain-ref governance checks.",
+      "source": "buildchain-ref-promotion.yml"
+    },
+    {
+      "id": "web-surface-cloudfront-directory-index-rewrite",
+      "impact": "patch",
+      "class": "web-surface-deployment",
+      "rationale": "Installs a CloudFront viewer-request directory-index rewrite so multi-surface preview roots resolve to each surface index.html without relying on extensionless S3 alias keys.",
+      "source": "buildchain-ref-promotion.yml"
+    }
+  ],
+  "classification": "patch",
+  "breaking": false,
+  "security": false,
+  "migrationRequired": false,
+  "summary": "Buildchain v2.10 patch release for publish-gate lineage and web-surface preview root routing.",
+  "release": {
+    "tag": "v2.10.1-alpha.1",
+    "line": "v2.10"
+  }
+}
