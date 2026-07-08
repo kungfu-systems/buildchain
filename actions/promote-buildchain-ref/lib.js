@@ -4253,6 +4253,16 @@ async function promoteBuildchainRefs({
       enabled: Boolean(releasePassport),
       releaseCandidateValidation,
     });
+    if (latestPublishTransaction?.transaction) {
+      const publicReleaseTag = latestPublishTransaction.publicReleaseTag ||
+        publicReleaseTagForTransaction(latestPublishTransaction.transaction);
+      if (
+        publicReleaseTag &&
+        publicReleaseTag !== latestPublishTransaction.transaction.exact_tag
+      ) {
+        await ensureTag(publicReleaseTag, latestPublishTransaction.transaction.release_sha);
+      }
+    }
     return latestPublishTransaction;
   };
 
