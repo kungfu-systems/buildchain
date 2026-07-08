@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "f9ae0512372a5967f58aafc3eb0e28b1a35a56631caa4b59df7e200b72f4b4f0",
+    "sha256": "6431d84ece43e64ec51f31f4a563501181253bd02fcc1789164102158e50c119",
     "summary": {
-      "cliCommandCount": 65,
+      "cliCommandCount": 67,
       "workflowCount": 35,
       "actionCount": 4,
       "sitePageCount": 43,
-      "docCommandRefCount": 208,
+      "docCommandRefCount": 214,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -207,13 +207,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "f9ae0512372a5967f58aafc3eb0e28b1a35a56631caa4b59df7e200b72f4b4f0",
+      "sha256": "6431d84ece43e64ec51f31f4a563501181253bd02fcc1789164102158e50c119",
       "summary": {
-        "cliCommandCount": 65,
+        "cliCommandCount": 67,
         "workflowCount": 35,
         "actionCount": 4,
         "sitePageCount": 43,
-        "docCommandRefCount": 208,
+        "docCommandRefCount": 214,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -1686,6 +1686,30 @@
           "reverseAuditSource": "bin/buildchain.mjs"
         },
         {
+          "id": "cli:kfd-2-trust-assessment",
+          "name": "buildchain kfd 2 trust-assessment [--assessment-json <file-or-json>] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:kfd-2-trust-claims",
+          "name": "buildchain kfd 2 trust-claims [--claims-json <file-or-json>] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
           "id": "cli:kfd-3",
           "name": "buildchain kfd 3 ...",
           "kind": "cli-command",
@@ -2397,7 +2421,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 31,
+          "inputCount": 32,
           "inputs": [
             "artifact-path",
             "aws-region",
@@ -2418,6 +2442,7 @@
             "production-approved",
             "production-aws-role-arn",
             "production-environment",
+            "production-release-app-id",
             "production-release-branch-channel",
             "production-release-head-prefix",
             "production-release-label",
@@ -3697,6 +3722,6 @@
         "public": true
       }
     ],
-    "publicSurfaceCount": 245
+    "publicSurfaceCount": 247
   }
 }

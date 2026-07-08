@@ -189,7 +189,7 @@
       "path": "docs/kfd-support.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:704efbf7be24d641d8b119737eb33b3e98fea8c55cf434f7f475160809f4e3a4"
+      "digest": "sha256:d1fdec0890884340e4e8108c17b62866c08dc95771075e3e285532b5a7b0ee5a"
     },
     {
       "id": "lifecycle-protocol",
@@ -253,7 +253,7 @@
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:8d60ee80b1d4af1faa092ff9d7170330b02361d1f479221f73c6dc021aac1e60"
+      "digest": "sha256:cae39c60ffa0da5eb963a49d8d4ad6294788b1b76a8ba2516de75b263b3b8504"
     }
   ],
   "facts": [
