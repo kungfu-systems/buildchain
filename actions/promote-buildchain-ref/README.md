@@ -297,9 +297,11 @@ governance semantics:
   protection for administrators, and must require approving PR review plus the
   strict `check` job from the `Verify` workflow;
 - alpha promotion must come from a merged same-repository PR
-  `dev/vN/vN.M -> alpha/vN/vN.M`;
+  `dev/vN/vN.M -> alpha/vN/vN.M`, or from a strict same-line
+  `publish-gate/alpha/vN/vN.M/<version> -> alpha/vN/vN.M` source-lock PR;
 - release promotion must come from a merged same-repository PR
-  `alpha/vN/vN.M -> release/vN/vN.M`;
+  `alpha/vN/vN.M -> release/vN/vN.M`, or from a strict same-line
+  `publish-gate/release/vN/vN.M/<version> -> release/vN/vN.M` source-lock PR;
 - major promotion must come from a merged same-repository PR
   `release/vN/vN.M -> publish-gate/major`;
 - release promotion must have an exact alpha tag for the same patch line, and

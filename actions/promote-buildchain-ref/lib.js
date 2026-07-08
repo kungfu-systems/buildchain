@@ -266,6 +266,28 @@ function expectedHeadRefForTarget(targetRef) {
     : `alpha/v${rule.major}/v${rule.major}.${rule.minor}`;
 }
 
+function parsePublishGateChannelRef(ref) {
+  const match = String(ref || "").match(/^publish-gate\/(alpha|release)\/v(\d+)\/v(\d+)\.(\d+)\/([^/]+)$/);
+  if (!match) {
+    return undefined;
+  }
+  const channel = match[1];
+  const major = Number(match[2]);
+  const minorMajor = Number(match[3]);
+  const minor = Number(match[4]);
+  if (major !== minorMajor) {
+    throw new Error(`Publish-gate ref major mismatch: ${ref}`);
+  }
+  return {
+    ref,
+    channel,
+    major,
+    minor,
+    targetRef: `${channel}/v${major}/v${major}.${minor}`,
+    consumerVersion: match[5],
+  };
+}
+
 function parseReleaseLineRef(ref) {
   const match = String(ref || "").match(/^release\/v(\d+)\/v(\d+)\.(\d+)$/);
   if (!match) {
@@ -2151,6 +2173,7 @@ async function assertChannelPromotionPr({
     const headRef = pullRequest.head?.ref;
     const headRepo = pullRequest.head?.repo?.full_name;
     const matchingVersionStateTarget = parseVersionStateBranchName(headRef);
+    const matchingPublishGateTarget = parsePublishGateChannelRef(headRef)?.targetRef;
     if (getPromotionRule(targetRef).channel === "major") {
       return (
         pullRequest.merged_at &&
@@ -2162,13 +2185,17 @@ async function assertChannelPromotionPr({
     return (
       pullRequest.merged_at &&
       baseRef === targetRef &&
-      (headRef === expectedHeadRef || matchingVersionStateTarget === targetRef) &&
+      (
+        headRef === expectedHeadRef ||
+        matchingVersionStateTarget === targetRef ||
+        matchingPublishGateTarget === targetRef
+      ) &&
       headRepo === `${owner}/${repo}`
     );
   });
   if (!matchingPullRequest) {
     throw new Error(
-      `Promotion source ${sha} must come from a merged same-repository PR ${expectedHeadRef} -> ${targetRef} or buildchain/version-state/* -> ${targetRef}`,
+      `Promotion source ${sha} must come from a merged same-repository PR ${expectedHeadRef} -> ${targetRef}, publish-gate/${getPromotionRule(targetRef).channel}/... -> ${targetRef}, or buildchain/version-state/* -> ${targetRef}`,
     );
   }
   return matchingPullRequest;
