@@ -4,6 +4,7 @@
 [![KFD-1: passed](https://buildchain.libkungfu.dev/badges/v1/kfd-1/passed.svg)](https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json)
 [![KFD-2: passed](https://buildchain.libkungfu.dev/badges/v1/kfd-2/passed.svg)](https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json)
 [![KFD-3: passed](https://buildchain.libkungfu.dev/badges/v1/kfd-3/passed.svg)](https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json)
+[![KFD-4: declared](https://buildchain.libkungfu.dev/badges/v1/kfd-4/declared.svg)](https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json)
 [![Buildchain Release Passport: passed](https://buildchain.libkungfu.dev/badges/v1/buildchain-release-passport/passed.svg)](https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-0969da.svg)](https://github.com/kungfu-systems/buildchain/blob/HEAD/LICENSE)
 [![Platform: macOS | Linux | Windows](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-6e7781.svg)](https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json)

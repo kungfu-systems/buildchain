@@ -479,10 +479,13 @@ consumer shell glue. Consumers normally use the `release-candidate-promote.yml`
 wrapper, where GitHub Release publication is enabled by default and can be
 disabled with `github-release: false`; the wrapper passes that declaration to
 the action. After the publish transaction reaches `complete`, Buildchain creates
-or updates the exact-tag GitHub Release and uploads the generated
+or updates the public GitHub Release and uploads the generated
 `buildchain.release.json`, release-passport assets, and publish evidence. Semver
 prerelease tags are marked `prerelease=true` and `make_latest=false`; stable
-semver tags are marked latest. This is the supported path for downstream
+semver tags are marked latest. For anchored/manual package releases, the public
+release tag defaults to `v<publishedVersion>` while the internal exact
+transaction tag remains in the release passport and release-state ref. This is
+the supported path for downstream
 `release.published` propagation across semver, major, and promote-only release
 candidate publication models.
 

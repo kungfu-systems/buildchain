@@ -68,5 +68,6 @@ release_passport = "https://github.com/kungfu-systems/buildchain/releases/latest
 kfd_1 = "declared"
 kfd_2 = "declared"
 kfd_3 = "declared"
+kfd_4 = "declared"
 platforms = ["macOS", "Linux", "Windows"]
 workflows = ["verify.yml", "buildchain-ref-promotion.yml", "binary-distribution.yml"]

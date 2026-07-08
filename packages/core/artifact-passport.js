@@ -297,14 +297,31 @@ function embeddedPointerCandidates(subject) {
     : [];
 }
 
-function githubReleasePassportLocation(subject, options) {
-  const repository = options.repository || subject.githubRelease?.repository || "";
-  const tag = options.tag || subject.githubRelease?.tag || "";
-  if (!repository || !tag) {
+function releaseTagForArtifactVersion(version = "") {
+  const value = optionalString(version).trim();
+  if (!value) {
     return "";
   }
+  return value.startsWith("v") ? value : `v${value}`;
+}
+
+function githubReleasePassportLocations(subject, options) {
+  const repository = options.repository || subject.githubRelease?.repository || "";
+  if (!repository) {
+    return [];
+  }
+  const tags = [
+    subject.githubRelease?.tag,
+    releaseTagForArtifactVersion(subject.version),
+    options.tag,
+  ].map(optionalString).filter(Boolean);
+  const uniqueTags = [...new Set(tags)];
   const baseUrl = (options.githubReleaseBaseUrl || "https://github.com").replace(/\/$/, "");
-  return `${baseUrl}/${repository}/releases/download/${encodeURIComponent(tag)}/buildchain.release.json`;
+  return uniqueTags.map((tag) => ({
+    tag,
+    repository,
+    location: `${baseUrl}/${repository}/releases/download/${encodeURIComponent(tag)}/buildchain.release.json`,
+  }));
 }
 
 export async function resolveArtifactSubject(subject, {
@@ -455,18 +472,27 @@ export async function discoverArtifactPassport({
       return found("local-config-index", matched.passportLocation, { locator: matched.locator });
     }
   }
-  const githubLocation = githubReleasePassportLocation(subject, { repository, tag, githubReleaseBaseUrl });
-  if (githubLocation) {
+  const githubLocations = githubReleasePassportLocations(subject, { repository, tag, githubReleaseBaseUrl });
+  for (const githubLocation of githubLocations) {
     try {
-      await readJsonFromLocation(githubLocation);
-      attempts.push({ method: "github-release-default", location: githubLocation, status: "found" });
-      return found("github-release-default", githubLocation, { repository: repository || subject.githubRelease?.repository || "", tag: tag || subject.githubRelease?.tag || "" });
+      await readJsonFromLocation(githubLocation.location);
+      attempts.push({
+        method: "github-release-default",
+        location: githubLocation.location,
+        status: "found",
+        details: { repository: githubLocation.repository, tag: githubLocation.tag },
+      });
+      return found("github-release-default", githubLocation.location, {
+        repository: githubLocation.repository,
+        tag: githubLocation.tag,
+      });
     } catch (error) {
       attempts.push({
         method: "github-release-default",
-        location: githubLocation,
+        location: githubLocation.location,
         status: "miss",
         error: error.message,
+        details: { repository: githubLocation.repository, tag: githubLocation.tag },
       });
     }
   }

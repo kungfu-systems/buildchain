@@ -11,6 +11,7 @@ import {
   checkReadmeBadgeBlock,
   collectBadgeBundleFacts,
   collectReadmeBadgeFacts,
+  createKfdBadgeSpecsFromStandards,
   createReadmeBadgeEndpointRegistry,
   renderBadgeBundleBlock,
   renderReadmeBadgeBlock,
@@ -111,6 +112,20 @@ function minimalKfdStandards() {
           collaborationInterface: {
             contract: "kfd-3-collaboration-interface",
             schemaId: "https://kfd.libkungfu.dev/schemas/kfd-3/collaboration-interface.schema.json",
+          },
+        },
+      },
+      "kfd-4": {
+        key: "kfd-4",
+        id: "KFD-4",
+        label: "KFD-4",
+        title: "Timelines must declare their observer",
+        document: { path: "decisions/kfd-4.md", url: "https://kfd.libkungfu.dev/4", sha256: "4".repeat(64) },
+        concepts: { observerPerspective: "timeline observer" },
+        interfaces: {
+          observerPerspective: {
+            contract: "kfd-4-observer-perspective",
+            schemaId: "https://kfd.libkungfu.dev/schemas/kfd-4/observer-perspective.schema.json",
           },
         },
       },
@@ -268,11 +283,12 @@ test("readme badge check detects missing and stale blocks", async () => {
 
 test("repositories without a verified passport cannot display KFD passed", async () => {
   const cwd = writeFixtureRepo({
-    badges: 'kfd_1 = "passed"\nkfd_2 = "passed"\nkfd_3 = "passed"\nrelease_passport_state = "passed"\n',
+    badges: 'kfd_1 = "passed"\nkfd_2 = "passed"\nkfd_3 = "passed"\nkfd_4 = "passed"\nrelease_passport_state = "passed"\n',
   });
+  writeKfdPackage(cwd);
   const facts = await collectReadmeBadgeFacts({ cwd });
 
-  assert.deepEqual(facts.kfd.map((entry) => entry.state), ["declared", "declared", "declared"]);
+  assert.deepEqual(facts.kfd.map((entry) => entry.state), ["declared", "declared", "declared", "declared"]);
   assert.equal(facts.kfd.some((entry) => entry.state === "passed"), false);
   assert.equal(facts.releasePassport.state, "declared");
   assert.match(renderReadmeBadgeBlock(facts), /KFD-1: declared/);
@@ -280,12 +296,13 @@ test("repositories without a verified passport cannot display KFD passed", async
 
 test("KFD badge text and provenance come from the KFD standards package", async () => {
   const cwd = writeFixtureRepo({
-    badges: 'kfd_1 = "declared"\nkfd_2 = "aligned"\nkfd_3 = "planned"\n',
+    badges: 'kfd_1 = "declared"\nkfd_2 = "aligned"\nkfd_3 = "planned"\nkfd_4 = "declared"\n',
   });
   writeKfdPackage(cwd);
 
   const facts = await collectReadmeBadgeFacts({ cwd });
   const kfd2 = facts.kfd.find((entry) => entry.key === "kfd-2");
+  const kfd4 = facts.kfd.find((entry) => entry.key === "kfd-4");
 
   assert.equal(facts.kfdStandards.contract, "kfd-standards-metadata");
   assert.equal(facts.kfdStandards.source, "package-export");
@@ -294,25 +311,36 @@ test("KFD badge text and provenance come from the KFD standards package", async 
   assert.equal(kfd2.text, "release trust passport");
   assert.equal(kfd2.standardDocumentUrl, "https://kfd.libkungfu.dev/2");
   assert.equal(kfd2.interfaceContract, "kfd-2-release-trust-passport");
+  assert.equal(kfd4.text, "timeline observer");
+  assert.equal(kfd4.standardDocumentUrl, "https://kfd.libkungfu.dev/4");
+  assert.equal(kfd4.interfaceContract, "kfd-4-observer-perspective");
   assert.match(renderReadmeBadgeBlock(facts), /https:\/\/buildchain\.libkungfu\.dev\/badges\/v1\/kfd-2\/aligned\.svg/);
+  assert.match(renderReadmeBadgeBlock(facts), /https:\/\/buildchain\.libkungfu\.dev\/badges\/v1\/kfd-4\/declared\.svg/);
 });
 
 test("Buildchain-owned badge endpoints are stable and logo-swappable without consumer reruns", () => {
-  const registry = createReadmeBadgeEndpointRegistry({
-    kfdSpecs: [
-      { key: "kfd-1", label: "KFD-1", text: "contract world" },
-      { key: "kfd-2", label: "KFD-2", text: "release trust passport" },
-      { key: "kfd-3", label: "KFD-3", text: "collaboration interface" },
-    ],
-  });
+  const registry = createReadmeBadgeEndpointRegistry({ kfdStandards: minimalKfdStandards() });
+  const kfd4 = registry.badges.find((entry) => entry.id === "kfd-4");
   const releasePassport = registry.badges.find((entry) => entry.id === "buildchain-release-passport");
   const passed = releasePassport.states.find((entry) => entry.state === "passed");
 
   assert.equal(registry.consumerActionForLogoChange, "none");
   assert.equal(registry.logoPolicy.futureLogoUpdateRequiresConsumerAction, false);
+  assert.equal(kfd4.states.find((entry) => entry.state === "passed").payload.message, "timeline observer passed");
   assert.equal(passed.svgPath, "badges/v1/buildchain-release-passport/passed.svg");
   assert.equal(passed.path, "badges/v1/buildchain-release-passport/passed.json");
   assert.equal(passed.payload.message, "release passport passed");
+});
+
+test("KFD badge specs are projected from standards metadata", () => {
+  const specs = createKfdBadgeSpecsFromStandards(minimalKfdStandards());
+
+  assert.deepEqual(specs.map((entry) => entry.key), ["kfd-1", "kfd-2", "kfd-3", "kfd-4"]);
+  assert.equal(specs.find((entry) => entry.key === "kfd-4").text, "timeline observer");
+  assert.equal(
+    specs.find((entry) => entry.key === "kfd-4").schemaId,
+    "https://kfd.libkungfu.dev/schemas/kfd-4/observer-perspective.schema.json",
+  );
 });
 
 test("verified repository passport backs KFD passed badges and repo-specific links", async () => {
@@ -320,11 +348,9 @@ test("verified repository passport backs KFD passed badges and repo-specific lin
   const facts = await collectReadmeBadgeFacts({ cwd });
 
   assert.equal(facts.releasePassport.verified, true);
-  assert.deepEqual(facts.kfd.map((entry) => entry.state), ["passed", "passed", "passed"]);
-  assert.equal(
-    facts.kfd.every((entry) => entry.url.endsWith("/.buildchain/release-passport/buildchain.release.json")),
-    true,
-  );
+  assert.deepEqual(facts.kfd.filter((entry) => ["kfd-1", "kfd-2", "kfd-3"].includes(entry.key)).map((entry) => entry.state), ["passed", "passed", "passed"]);
+  assert.equal(facts.kfd.find((entry) => entry.key === "kfd-4")?.state, "planned");
+  assert.equal(facts.kfd.every((entry) => entry.url.endsWith("/.buildchain/release-passport/buildchain.release.json")), true);
   assert.match(renderReadmeBadgeBlock(facts), /KFD-3: passed/);
 });
 
@@ -350,21 +376,24 @@ test("CLI readme badge commands use the Node API", async () => {
   assert.equal(JSON.parse(checked).ok, true);
 });
 
-test("badge bundle defaults to KFD 1/2/3 and release passport trust claims", async () => {
+test("badge bundle defaults to discovered KFD standards and release passport trust claims", async () => {
   const cwd = writeFixtureRepo({
-    badges: 'kfd_1 = "declared"\nkfd_2 = "aligned"\nkfd_3 = "planned"\n',
+    badges: 'kfd_1 = "declared"\nkfd_2 = "aligned"\nkfd_3 = "planned"\nkfd_4 = "declared"\n',
   });
+  writeKfdPackage(cwd);
 
   const facts = await collectBadgeBundleFacts({ cwd });
   const block = renderBadgeBundleBlock(facts);
 
-  assert.deepEqual(BADGE_BUNDLE_DEFAULT_CLAIMS, ["kfd-1", "kfd-2", "kfd-3", "release-passport"]);
+  assert.deepEqual(BADGE_BUNDLE_DEFAULT_CLAIMS, ["kfd-1", "kfd-2", "kfd-3", "kfd-4", "release-passport"]);
   assert.equal(facts.contract, "kungfu-buildchain-badge-bundle-facts");
+  assert.deepEqual(facts.policy.discoveredDefaultClaims, BADGE_BUNDLE_DEFAULT_CLAIMS);
   assert.deepEqual(facts.policy.claims, BADGE_BUNDLE_DEFAULT_CLAIMS);
   assert.deepEqual(facts.badges.map((badge) => badge.claim), BADGE_BUNDLE_DEFAULT_CLAIMS);
   assert.match(block, /KFD-1: declared/);
   assert.match(block, /KFD-2: aligned/);
   assert.match(block, /KFD-3: planned/);
+  assert.match(block, /KFD-4: declared/);
   assert.match(block, /Buildchain Release Passport: declared/);
 });
 
@@ -374,19 +403,21 @@ test("badge bundle can be narrowed by buildchain.toml or CLI claims", async () =
 kfd_1 = "declared"
 kfd_2 = "aligned"
 kfd_3 = "planned"
+kfd_4 = "declared"
 
 [badges.bundle]
-claims = ["kfd-1", "release-passport"]
+claims = ["kfd-4", "release-passport"]
 `,
   });
+  writeKfdPackage(cwd);
 
   const configured = await collectBadgeBundleFacts({ cwd });
-  const overridden = await collectBadgeBundleFacts({ cwd, claims: "kfd-2,kfd-3" });
+  const overridden = await collectBadgeBundleFacts({ cwd, claims: "kfd-2,kfd-4" });
 
-  assert.deepEqual(configured.policy.claims, ["kfd-1", "release-passport"]);
-  assert.deepEqual(configured.badges.map((badge) => badge.claim), ["kfd-1", "release-passport"]);
-  assert.deepEqual(overridden.policy.claims, ["kfd-2", "kfd-3"]);
-  assert.deepEqual(overridden.badges.map((badge) => badge.claim), ["kfd-2", "kfd-3"]);
+  assert.deepEqual(configured.policy.claims, ["kfd-4", "release-passport"]);
+  assert.deepEqual(configured.badges.map((badge) => badge.claim), ["kfd-4", "release-passport"]);
+  assert.deepEqual(overridden.policy.claims, ["kfd-2", "kfd-4"]);
+  assert.deepEqual(overridden.badges.map((badge) => badge.claim), ["kfd-2", "kfd-4"]);
 });
 
 test("badge bundle fails closed on unknown claims", async () => {

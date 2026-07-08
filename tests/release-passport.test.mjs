@@ -464,6 +464,77 @@ function createUnifiedPassportFixture({
   return path.join(collected.outputDir, "buildchain.release.json");
 }
 
+function createAnchoredPackagePassportBundle({
+  tag = "v22.22.3-kf.3-alpha.16",
+  internalTag = "v22.22.1-alpha.9",
+  version = "22.22.3-kf.3-alpha.16",
+} = {}) {
+  const cwd = tempDir("anchored-package-passport");
+  const publishEvidencePath = writeJson(path.join(cwd, "publish-evidence.json"), {
+    schema: 1,
+    version,
+    channel: "alpha",
+    source_sha: "a".repeat(40),
+    release_sha: "b".repeat(40),
+    release_material_sha: "b".repeat(40),
+    publish_tooling_sha: "b".repeat(40),
+    target_ref: "alpha/v22/v22.22",
+    artifacts: [
+      {
+        group: "libnode",
+        kind: "npm",
+        name: "@kungfu-tech/libnode",
+        ref: version,
+        digest: "sha256:package-digest",
+      },
+    ],
+  });
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    repository: "kungfu-systems/libnode",
+    productName: "Libnode",
+    tag,
+    packageName: "@kungfu-tech/libnode",
+    packageVersion: version,
+    sourceSha: "a".repeat(40),
+    outputDir: "release-passport",
+    publishEvidenceJson: publishEvidencePath,
+    transactionJson: JSON.stringify({
+      transaction: {
+        state: "complete",
+        version,
+        exact_tag: internalTag,
+        release_sha: "b".repeat(40),
+        release_material_sha: "b".repeat(40),
+        publish_tooling_sha: "b".repeat(40),
+        state_ref: "buildchain/release-state/22-22-3-kf-3-alpha-16",
+      },
+    }),
+    releaseJsonExtra: JSON.stringify({
+      channel: "alpha",
+      targetRef: "alpha/v22/v22.22",
+      publicTag: tag,
+      internalTag,
+      internalVersion: internalTag.replace(/^v/, ""),
+      publishedVersion: version,
+      versionLabel: version,
+      releaseSha: "b".repeat(40),
+      releaseMaterialSha: "b".repeat(40),
+      publishToolingSha: "b".repeat(40),
+      releaseStateRef: "refs/heads/buildchain/release-state/22-22-3-kf-3-alpha-16",
+    }),
+  });
+  return collected.outputDir;
+}
+
+function serveBundleAt(releasePath, outputDir) {
+  return Object.fromEntries(
+    fs.readdirSync(outputDir)
+      .filter((name) => fs.statSync(path.join(outputDir, name)).isFile())
+      .map((name) => [`${releasePath}/${name}`, fs.readFileSync(path.join(outputDir, name))]),
+  );
+}
+
 test("release passport core verifies unified three-platform npm passport", async () => {
   const passportPath = createUnifiedPassportFixture();
   const report = await verifyReleasePassport({ passportLocation: passportPath });
@@ -561,6 +632,47 @@ test("artifact passport default GitHub Release discovery can verify release asse
     });
     assert.equal(report.ok, true);
     assert.equal(report.discovery.method, "github-release-default");
+  });
+});
+
+test("artifact passport discovery prefers npm package public release tags", async () => {
+  const releasePath = "/kungfu-systems/libnode/releases/download/v22.22.3-kf.3-alpha.16";
+  const outputDir = createAnchoredPackagePassportBundle();
+
+  await withHttpFixture(serveBundleAt(releasePath, outputDir), async (baseUrl) => {
+    const discovery = await verifyArtifactPassport({
+      subject: "npm:@kungfu-tech/libnode@22.22.3-kf.3-alpha.16",
+      repository: "kungfu-systems/libnode",
+      githubReleaseBaseUrl: baseUrl,
+      subjectDigest: "sha256:package-digest",
+    });
+    assert.equal(discovery.ok, true);
+    assert.equal(discovery.discovery.method, "github-release-default");
+    assert.equal(discovery.discovery.details.tag, "v22.22.3-kf.3-alpha.16");
+  });
+});
+
+test("artifact passport discovery keeps explicit internal exact tag compatibility", async () => {
+  const releasePath = "/kungfu-systems/libnode/releases/download/v22.22.1-alpha.9";
+  const outputDir = createAnchoredPackagePassportBundle();
+
+  await withHttpFixture(serveBundleAt(releasePath, outputDir), async (baseUrl) => {
+    const report = await verifyArtifactPassport({
+      subject: "npm:@kungfu-tech/libnode@22.22.3-kf.3-alpha.16",
+      repository: "kungfu-systems/libnode",
+      tag: "v22.22.1-alpha.9",
+      githubReleaseBaseUrl: baseUrl,
+      subjectDigest: "sha256:package-digest",
+    });
+    assert.equal(report.ok, true);
+    assert.equal(report.discovery.details.tag, "v22.22.1-alpha.9");
+    assert.equal(
+      report.discovery.attempts.some((attempt) =>
+        attempt.method === "github-release-default" &&
+        attempt.status === "miss" &&
+        attempt.details?.tag === "v22.22.3-kf.3-alpha.16"),
+      true,
+    );
   });
 });
 
@@ -713,11 +825,12 @@ test("release passport core preserves supplied product name at root", async () =
 test("release passport core separates anchored manual internal tags from published versions", async () => {
   const passportPath = createUnifiedPassportFixture({
     productName: "Libnode",
-    tag: "v22.22.1-alpha.1",
+    tag: "v22.22.3-kf.3-alpha.7",
     packageVersion: "22.22.3-kf.3-alpha.7",
     releaseExtra: {
       channel: "alpha",
       targetRef: "alpha/v22/v22.22",
+      publicTag: "v22.22.3-kf.3-alpha.7",
       internalTag: "v22.22.1-alpha.1",
       internalVersion: "22.22.1-alpha.1",
       publishedVersion: "22.22.3-kf.3-alpha.7",
@@ -726,7 +839,8 @@ test("release passport core separates anchored manual internal tags from publish
   });
   const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
 
-  assert.equal(passport.release.tag, "v22.22.1-alpha.1");
+  assert.equal(passport.release.tag, "v22.22.3-kf.3-alpha.7");
+  assert.equal(passport.release.publicTag, "v22.22.3-kf.3-alpha.7");
   assert.equal(passport.release.internalTag, "v22.22.1-alpha.1");
   assert.equal(passport.release.internalVersion, "22.22.1-alpha.1");
   assert.equal(passport.release.publishedVersion, "22.22.3-kf.3-alpha.7");

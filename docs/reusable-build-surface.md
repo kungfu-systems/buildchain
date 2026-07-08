@@ -628,13 +628,16 @@ resolution and before publish. A compatible `v2` drift leaves an issue in the
 consumer repository but does not trigger a second heavy build; an incompatible
 drift fails before publish side effects.
 
-The wrapper publishes the promoted exact tag as a GitHub Release by default.
+The wrapper publishes the public release tag as a GitHub Release by default.
 After `promote-buildchain-ref` reports a complete release transaction, the
-wrapper creates or updates the exact-tag release, marks semver prerelease tags
+wrapper creates or updates the public release, marks semver prerelease tags
 such as `v1.2.3-alpha.0`, `v1.2.3-rc.1`, or `v22.22.3-kf.3-alpha.7` as
 `prerelease=true` and `make_latest=false`, marks stable semver tags as latest,
 and uploads the publish evidence file plus every file in the generated release
 passport directory, including `buildchain.release.json` and `check-report.json`.
+For anchored/manual package releases, the public release tag is derived from the
+published package version and the internal exact transaction tag remains
+available in the release passport.
 Consumers do not need to hand-write `gh release` logic to trigger
 `release.published` propagation. Set `github-release: false` only for
 repositories that intentionally do not maintain GitHub Releases.

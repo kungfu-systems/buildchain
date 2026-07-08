@@ -89,7 +89,7 @@
     "vitest": "^4.1.9"
   },
   "dependencies": {
-    "@kungfu-tech/kfd": "1.0.0-alpha.16",
+    "@kungfu-tech/kfd": "1.0.0-alpha.19",
     "smol-toml": "1.7.0"
   }
 }

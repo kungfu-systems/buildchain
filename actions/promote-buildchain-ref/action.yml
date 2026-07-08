@@ -135,10 +135,10 @@ inputs:
     description: "Generate Buildchain-owned KFD-1/2/3 self witnesses inside the final version-state workspace before release passport finalization"
     default: "false"
   github-release:
-    description: "Create/update the exact-tag GitHub Release and upload publish evidence plus release passport assets after a complete release transaction"
+    description: "Create/update the public GitHub Release and upload publish evidence plus release passport assets after a complete release transaction"
     default: "false"
   github-release-title:
-    description: "Optional GitHub Release title. Empty defaults to the exact tag."
+    description: "Optional GitHub Release title. Empty defaults to the public release tag."
     default: ""
   github-release-notes:
     description: "Optional GitHub Release notes. Empty uses a Buildchain release-passport asset note."
@@ -168,6 +168,8 @@ outputs:
     description: "Final release transaction state"
   transaction-exact-tag:
     description: "Exact release or prerelease tag governed by the transaction"
+  public-release-tag:
+    description: "Public GitHub Release tag; anchored package publishes use v<publishedVersion> while transaction-exact-tag remains internal"
   transaction-release-sha:
     description: "Release/version-state SHA governed by the transaction"
   transaction-state-ref:
@@ -187,7 +189,7 @@ outputs:
   finalization-needed:
     description: "true when publish completed but protected ref finalization still needs a later run"
   github-release-url:
-    description: "HTML URL of the created or updated exact-tag GitHub Release"
+    description: "HTML URL of the created or updated public GitHub Release"
   github-release-action:
     description: "created, updated, or empty when GitHub Release publication did not run"
 runs:

@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:91dac9241f8e9aa02df360a0720d3998cf8eca27910517d8afabcb4a97e019e1",
+      "digest": "sha256:22dd10ba022b722440e75636ea165317ee2aedb737531e20f14a9e6e7fe299c4",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -21,7 +21,7 @@
       "specifier": "@kungfu-tech/buildchain/badges",
       "export": "./badges",
       "target": "./packages/core/badges.js",
-      "digest": "sha256:207ebe604c6f109f61816932fbadaf95fcf96a075a60d79dce4a90629337e2c9",
+      "digest": "sha256:1527c396db5fcd7e9ccdd68e6d862e468b2424789d1c9dd2015996bae03eabd3",
       "summary": "Badge bundle facts, rendering, checking, and update APIs.",
       "capabilityGroup": "distribution-indexes",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:91dac9241f8e9aa02df360a0720d3998cf8eca27910517d8afabcb4a97e019e1",
+      "digest": "sha256:22dd10ba022b722440e75636ea165317ee2aedb737531e20f14a9e6e7fe299c4",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -60,7 +60,7 @@
       "specifier": "@kungfu-tech/buildchain/artifact-passport",
       "export": "./artifact-passport",
       "target": "./packages/core/artifact-passport.js",
-      "digest": "sha256:2f882bf245658fb7a204004d7aa3a22f7e34816e4ba101fb0969a002d05fc12c",
+      "digest": "sha256:beb4da1f056630bf7e19b709374a327c0004e87d541e03ac1eddfa8c65bb66c4",
       "summary": "Artifact passport digest and evidence helper APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -73,7 +73,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-contract",
       "export": "./buildchain-contract",
       "target": "./packages/core/buildchain-contract.js",
-      "digest": "sha256:b3c4164d08acc2d3d56783d695e47feceb3e134b7e87e80294ea05a87e7921d7",
+      "digest": "sha256:54eea325e5c33972670a702ce03d0553944614e0bbb6673f89ca13cff7d616ed",
       "summary": "Runtime contract world and compatibility digest APIs for floating-ref drift checks.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -151,7 +151,7 @@
       "specifier": "@kungfu-tech/buildchain/readme-badges",
       "export": "./readme-badges",
       "target": "./packages/core/readme-badges.js",
-      "digest": "sha256:3d4b61918f31a24de8fb11b15a9544df2c9696f6bd8c7efb1e373f0745cb3ce0",
+      "digest": "sha256:13914ebabbc92ed49dd842c2aa51cc99d72b0732423c0b53a030c6458a0cd9d8",
       "summary": "Managed README badge block facts, rendering, drift checks, and updates.",
       "capabilityGroup": "distribution-indexes",
       "audience": [
@@ -216,7 +216,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:ce36cc21cfd3e0508a2a816292863dc2e11f19146b2624ef066fc9aaa4f4190e",
+      "digest": "sha256:e4218271c4e24ea9b4a5bab04b4d0364c92774075a07d474e05a234eaceae2b1",
       "summary": "Release passport collection, verification, explanation, and evidence APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -255,7 +255,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-kfd-claims",
       "export": "./buildchain-kfd-claims",
       "target": "./packages/core/buildchain-kfd-claims.js",
-      "digest": "sha256:fa934cd170be8f729c05aec3e2df52ed5765445d2dffaeb391f1d367f6a09195",
+      "digest": "sha256:e800194bd945e6727d2e467d3dc155e0df95c656d58047590d12e5174ca84463",
       "summary": "Buildchain self KFD claim registry, witnesses, and public claim APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -284,7 +284,7 @@
     {
       "id": "readme-badges",
       "path": "docs/readme-badges.md",
-      "digest": "sha256:06eaef737dcc73a6526d856d79275ee87af9670f0e2be39a5596758bfc3527c9"
+      "digest": "sha256:ddaf49a7d6e6c11aea8d21d1ba736159897e16207cd74af0044014425faf8a2c"
     },
     {
       "id": "homebrew",

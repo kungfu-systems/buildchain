@@ -100,7 +100,7 @@
     {
       "id": "kfd-trust",
       "title": "KFD Trust and Surface Closure",
-      "summary": "Discover KFD-1, KFD-2, and KFD-3 support, public surface reverse audits, and product capability queries.",
+      "summary": "Discover KFD trust support, public surface reverse audits, and product capability queries.",
       "audience": [
         "agent",
         "maintainer"
