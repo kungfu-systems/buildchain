@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { pathToFileURL } from "node:url";
+import { createRequire } from "node:module";
 import { createBuildchainContractWorld } from "../packages/core/buildchain-contract.js";
 import {
   BUILDCHAIN_AGENT_MANUALS,
@@ -23,6 +24,7 @@ const SITE_BUNDLE_CONTRACT = "kungfu-buildchain-site-bundle";
 const README_PATH = "README.md";
 const root = path.resolve(import.meta.dirname, "..");
 const outputDir = path.join(root, "dist", "site");
+const requireFromHere = createRequire(import.meta.url);
 
 function readText(rel) {
   return fs.readFileSync(path.join(root, rel), "utf8");
@@ -30,6 +32,13 @@ function readText(rel) {
 
 function readJson(rel) {
   return JSON.parse(readText(rel));
+}
+
+function readPackageKfdStandards() {
+  const standardsPath = requireFromHere.resolve("@kungfu-tech/kfd/standards.json", {
+    paths: [root],
+  });
+  return JSON.parse(fs.readFileSync(standardsPath, "utf8"));
 }
 
 function writeJson(filePath, value) {
@@ -247,7 +256,7 @@ const CAPABILITY_GROUPS = Object.freeze([
   {
     id: "kfd-trust",
     title: "KFD Trust and Surface Closure",
-    summary: "Discover KFD-1, KFD-2, and KFD-3 support, public surface reverse audits, and product capability queries.",
+    summary: "Discover KFD trust support, public surface reverse audits, and product capability queries.",
     audience: ["agent", "maintainer"],
     maturity: "stable",
   },
@@ -921,11 +930,7 @@ function buildSiteBundle() {
     instruction: "Use this bundle as the package-owned fact source for Buildchain pages. Do not infer current release mechanics from prose alone.",
   };
   const badgeEndpointRegistry = createReadmeBadgeEndpointRegistry({
-    kfdSpecs: [
-      { key: "kfd-1", label: "KFD-1", text: "contract world" },
-      { key: "kfd-2", label: "KFD-2", text: "release trust passport" },
-      { key: "kfd-3", label: "KFD-3", text: "collaboration interface" },
-    ],
+    kfdStandards: readPackageKfdStandards(),
   });
 
   const homepageSections = [

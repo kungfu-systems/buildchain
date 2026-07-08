@@ -271,6 +271,7 @@ for (const requiredSnippet of [
   "renderReadmeBadgeBlock",
   "checkReadmeBadgeBlock",
   "updateReadmeBadgeBlock",
+  "createKfdBadgeSpecsFromStandards",
   "createReadmeBadgeEndpointRegistry",
 ]) {
   if (!coreIndexSource.includes(requiredSnippet)) {
