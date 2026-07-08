@@ -5,7 +5,10 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import {
+  checkKfdUpstreamFacts,
+  collectKfdAggregate,
   collectKfdStatus,
+  collectKfdUpstreamFacts,
   kfd1,
   kfd2,
   kfd4,
@@ -140,8 +143,8 @@ test("KFD CLI exposes all KFD standards through the unified schema namespace", (
 test("Buildchain dogfoods KFD-1, KFD-2, and KFD-3 first-class APIs", async () => {
   const status = collectKfdStatus({ cwd: root });
   assert.deepEqual(status.support["kfd-1"], ["schema", "witness", "gate", "verify"]);
-  assert.deepEqual(status.support["kfd-2"], ["schema", "taxonomy", "claims", "trust-claims", "trust-assessment"]);
-  assert.deepEqual(status.support["kfd-3"], ["schema", "detect", "register", "audit", "witness", "query"]);
+  assert.deepEqual(status.support["kfd-2"], ["schema", "taxonomy", "claims", "trust-claims", "trust-assessment", "upstream"]);
+  assert.deepEqual(status.support["kfd-3"], ["schema", "detect", "register", "audit", "witness", "query", "aggregate"]);
   assert.deepEqual(status.support["kfd-4"], ["schema"]);
 
   const witness = kfd1.createBuildchainWitness({ root, sourceSha: "a".repeat(40) });
@@ -181,4 +184,36 @@ test("Buildchain dogfoods KFD-1, KFD-2, and KFD-3 first-class APIs", async () =>
   const kfd4Schema = readKfdSchema({ standard: "kfd-4" });
   assert.equal(kfd4Schema.standard, "kfd-4");
   assert.equal(readKfdSchema({ standard: "kfd-4", schema: "observerPerspective" }).name, "observerPerspective");
+});
+
+test("Buildchain dogfoods KFD upstream aggregate facts for the KFD package", () => {
+  const upstream = collectKfdUpstreamFacts({ cwd: root });
+  assert.equal(upstream.contract, "kungfu-buildchain-kfd-upstream-aggregate");
+  assert.equal(upstream.summary.upstreamCount, 1);
+  assert.deepEqual(upstream.summary.kfdAwareUpstreams, ["kfd"]);
+  assert.equal(upstream.upstreams[0].package.name, "@kungfu-tech/kfd");
+  assert.equal(upstream.upstreams[0].kfd.kfd1, "exported-witness");
+  assert.equal(upstream.upstreams[0].kfd.kfd2, "exported-claim");
+  assert.equal(upstream.upstreams[0].kfd.kfd3, "exported-collaboration-interface");
+  assert.equal(upstream.upstreams[0].kfd.kfd4, "schema-metadata");
+  assert.ok(upstream.upstreams[0].assets.some((entry) => entry.path === "standards.json" && entry.sha256.startsWith("sha256:")));
+  assert.ok(upstream.upstreams[0].assets.some((entry) => entry.path === ".buildchain/kfd-3/collaboration-interface.json" && entry.sha256.startsWith("sha256:")));
+
+  const check = checkKfdUpstreamFacts(upstream);
+  assert.equal(check.ok, true);
+
+  const aggregate = collectKfdAggregate({ cwd: root });
+  assert.equal(aggregate.contract, "kungfu-buildchain-kfd-aggregate");
+  assert.equal(aggregate.upstreamCheck.status, "passed");
+
+  const cliCollect = JSON.parse(runBuildchain(["kfd", "upstream", "collect", "--json"]));
+  assert.equal(cliCollect.contract, upstream.contract);
+  assert.equal(cliCollect.summary.packageVersions.kfd, upstream.summary.packageVersions.kfd);
+
+  const cliCheck = JSON.parse(runBuildchain(["kfd", "upstream", "check", "--json"]));
+  assert.equal(cliCheck.ok, true);
+
+  const cliAggregate = JSON.parse(runBuildchain(["kfd", "aggregate", "--json"]));
+  assert.equal(cliAggregate.contract, aggregate.contract);
+  assert.equal(cliAggregate.upstreamCheck.status, "passed");
 });

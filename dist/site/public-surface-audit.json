@@ -3,11 +3,11 @@
   "contract": "kungfu-buildchain-public-surface-reverse-audit",
   "status": "passed",
   "summary": {
-    "cliCommandCount": 67,
+    "cliCommandCount": 69,
     "workflowCount": 35,
     "actionCount": 4,
     "sitePageCount": 43,
-    "docCommandRefCount": 214,
+    "docCommandRefCount": 221,
     "failureCount": 0
   },
   "enumerated": {
@@ -213,6 +213,11 @@
         "usage": "buildchain kfd 4 schema [--schema <name>] [--json]"
       },
       {
+        "id": "kfd-aggregate",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd aggregate [--cwd <dir>] [--json]"
+      },
+      {
         "id": "kfd-migrate-layout",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain kfd migrate-layout [--cwd <dir>] [--write] [--force] [--json]"
@@ -231,6 +236,11 @@
         "id": "kfd-status",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain kfd status [--cwd <dir>] [--json]"
+      },
+      {
+        "id": "kfd-upstream",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd upstream collect [--cwd <dir>] [--output <file>] [--json]"
       },
       {
         "id": "lifecycle",
@@ -1855,6 +1865,16 @@
         "command": "buildchain kfd 4 schema"
       },
       {
+        "id": "kfd-aggregate",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd aggregate --json"
+      },
+      {
+        "id": "kfd-aggregate",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd aggregate --json"
+      },
+      {
         "id": "kfd-migrate-layout",
         "path": "docs/cli.md",
         "command": "buildchain kfd migrate-layout --write"
@@ -1898,10 +1918,35 @@
         "id": "kfd-status",
         "path": "docs/kfd-support.md",
         "command": "buildchain kfd status --json"
+      },
+      {
+        "id": "kfd-upstream",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd upstream collect"
+      },
+      {
+        "id": "kfd-upstream",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd upstream check"
+      },
+      {
+        "id": "kfd-upstream",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd upstream collect"
+      },
+      {
+        "id": "kfd-upstream",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd upstream check"
       },
       {
         "id": "kfd",
         "path": "docs/cli.md",
+        "command": "buildchain kfd"
+      },
+      {
+        "id": "kfd",
+        "path": "docs/kfd-support.md",
         "command": "buildchain kfd"
       },
       {
@@ -2310,9 +2355,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "a3cec96bbde43078fa328afb51e0c0e9df87f4aab494ea4b9841a05a67261f00",
+    "cliRegistryDigest": "8fb553f01e8d36f1010aacf3b6a45ef0ba8992b3276c751187f3a7052325ed0a",
     "workflowRegistryDigest": "7ec4a7f4f2d81ec294a4b961f6f991c3e90bacb6f516a5138736399d461d9aee",
-    "pageRegistryDigest": "aa643d3ca72fb1bed26ad0f1f5c910ae49eeb6a2a57850ab0bfdc538b221308c"
+    "pageRegistryDigest": "96e7a2f7ed05dc9df511b7a97f89d016fa786b75f4fdf979b3d31cf2992949bd"
   },
   "comparison": {
     "missingCliRegistry": [],

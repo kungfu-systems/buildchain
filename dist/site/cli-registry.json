@@ -486,6 +486,18 @@
       "maturity": "stable"
     },
     {
+      "id": "kfd-aggregate",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd aggregate [--cwd <dir>] [--json]",
+      "purpose": "Return a product KFD view that combines own KFD status with upstream KFD aggregate facts.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
       "id": "kfd-migrate-layout",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain kfd migrate-layout [--cwd <dir>] [--write] [--force] [--json]",
@@ -526,6 +538,18 @@
       "source": "bin/buildchain.mjs",
       "usage": "buildchain kfd status [--cwd <dir>] [--json]",
       "purpose": "Report implemented KFD support and the active .buildchain repository layout.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-upstream",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd upstream collect [--cwd <dir>] [--output <file>] [--json]",
+      "purpose": "Inspect KFD upstream aggregate command families.",
       "capabilityGroup": "kfd-trust",
       "audience": [
         "agent",
