@@ -58,7 +58,7 @@
     "treeEquivalent": true,
     "publishToolingSha": "aa039c39e7d5a5a74d078025a21a47676fadca82",
     "releaseStateRef": "refs/heads/buildchain/release-state/2-8-17",
-    "releaseStateSha": "",
+    "releaseStateSha": "536a5c89e203f05173f34944af2471130536acf3",
     "package": {
       "name": "@kungfu-tech/buildchain",
       "version": "2.8.17"
