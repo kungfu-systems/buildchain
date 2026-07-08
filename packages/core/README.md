@@ -12,6 +12,8 @@ Current shared surfaces:
 - toolkit observability logging through `@kungfu-tech/buildchain/logging`;
 - toolkit diagnostics and native profile collection through
   `@kungfu-tech/buildchain/diagnostics`;
+- source/version/module/product build facts through
+  `@kungfu-tech/buildchain/build-facts`;
 - release passport creation and verification through
   `@kungfu-tech/buildchain/release-passport`.
 - managed KFD / Release Passport badge bundle facts and README marker blocks
@@ -50,6 +52,16 @@ CommonJS scripts can use dynamic imports for the same package surfaces:
 ```js
 const { createBuildchainLogger } = await import("@kungfu-tech/buildchain/logging");
 const { collectRunnerDiagnostics } = await import("@kungfu-tech/buildchain/diagnostics");
+```
+
+Build facts consumers can collect source-bound module/product facts before
+publishing and pass those facts into the release passport:
+
+```js
+import { collectModuleBuildFacts, writeBuildFacts } from "@kungfu-tech/buildchain/build-facts";
+
+const fact = collectModuleBuildFacts({ moduleId: "native-core" });
+writeBuildFacts({ fact, output: ".buildchain/facts/native-core.json" });
 ```
 
 Web-surface validation stays in core because both local scripts and GitHub

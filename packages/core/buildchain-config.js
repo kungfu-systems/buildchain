@@ -42,6 +42,8 @@ const SUPPORTED_INFRA_ADOPTION_MODES = new Set([
   "managed-apply",
 ]);
 const SUPPORTED_INFRA_APPLY_MODES = new Set(["disabled", "manual-approval", "environment-approval"]);
+const SUPPORTED_FACT_VERSION_SOURCE_TYPES = new Set(["static", "json", "toml", "regex", "command"]);
+const SUPPORTED_FACT_LEGACY_PROJECTIONS = new Set(["kungfu-buildinfo"]);
 
 function posixPath(value) {
   return String(value || "").split(path.sep).join("/");
@@ -154,9 +156,121 @@ export function normalizeBuildchainConfig(config) {
   if (normalized.diagnostics !== undefined) {
     normalized.diagnostics = normalizeDiagnosticsSection(normalized.diagnostics);
   }
+  if (normalized.facts !== undefined) {
+    normalized.facts = normalizeFactsSection(normalized.facts);
+  }
   validateWebSurfaceConfig(normalized);
   validateInfraContractConfig(normalized);
   return normalized;
+}
+
+function normalizeFactsSection(facts) {
+  assertPlainObject(facts, "facts");
+  return {
+    outputDir: facts.output_dir === undefined ? ".buildchain/facts" : posixPath(assertString(facts.output_dir, "facts.output_dir")),
+    versionSources: normalizeFactVersionSources(facts.version_sources),
+    modules: normalizeFactModules(facts.modules),
+    products: normalizeFactProducts(facts.products),
+    legacyProjections: normalizeFactLegacyProjections(facts.legacy_projections),
+  };
+}
+
+function normalizeFactVersionSources(sources = []) {
+  if (sources === undefined) {
+    return [];
+  }
+  if (!Array.isArray(sources)) {
+    throw new Error("facts.version_sources must be an array of tables");
+  }
+  return sources.map((source, index) => {
+    assertPlainObject(source, `facts.version_sources[${index}]`);
+    const id = assertString(source.id, `facts.version_sources[${index}].id`);
+    const type = source.type === undefined ? "static" : assertString(source.type, `facts.version_sources[${index}].type`);
+    if (!SUPPORTED_FACT_VERSION_SOURCE_TYPES.has(type)) {
+      throw new Error("facts.version_sources[].type must be one of static, json, toml, regex, or command");
+    }
+    if (["json", "toml", "regex"].includes(type) && source.path === undefined) {
+      throw new Error(`facts.version_sources[${index}].path is required for ${type}`);
+    }
+    if (["json", "toml"].includes(type) && source.key === undefined) {
+      throw new Error(`facts.version_sources[${index}].key is required for ${type}`);
+    }
+    if (type === "regex" && source.pattern === undefined) {
+      throw new Error(`facts.version_sources[${index}].pattern is required for regex`);
+    }
+    if (type === "command" && source.command === undefined) {
+      throw new Error(`facts.version_sources[${index}].command is required for command`);
+    }
+    return {
+      id,
+      type,
+      value: source.value === undefined ? undefined : String(source.value),
+      path: source.path === undefined ? "" : posixPath(assertString(source.path, `facts.version_sources[${index}].path`)),
+      key: source.key === undefined ? "" : assertString(source.key, `facts.version_sources[${index}].key`),
+      pattern: source.pattern === undefined ? "" : assertString(source.pattern, `facts.version_sources[${index}].pattern`),
+      command: source.command === undefined ? "" : assertString(source.command, `facts.version_sources[${index}].command`),
+      trust: source.trust === undefined ? "" : assertString(source.trust, `facts.version_sources[${index}].trust`),
+      reproducible: optionalBoolean(source.reproducible, type !== "command"),
+    };
+  });
+}
+
+function normalizeFactModules(modules = []) {
+  if (modules === undefined) {
+    return [];
+  }
+  if (!Array.isArray(modules)) {
+    throw new Error("facts.modules must be an array of tables");
+  }
+  return modules.map((module, index) => {
+    assertPlainObject(module, `facts.modules[${index}]`);
+    return {
+      id: assertString(module.id, `facts.modules[${index}].id`),
+      root: module.root === undefined ? "." : posixPath(assertString(module.root, `facts.modules[${index}].root`)),
+      scope: module.scope === undefined ? "" : assertString(module.scope, `facts.modules[${index}].scope`),
+      versionSource: module.version_source === undefined ? "" : assertString(module.version_source, `facts.modules[${index}].version_source`),
+      lifecycle: module.lifecycle === undefined ? "" : assertString(module.lifecycle, `facts.modules[${index}].lifecycle`),
+      outputs: normalizeStringArray(module.outputs, `facts.modules[${index}].outputs`).map(posixPath),
+    };
+  });
+}
+
+function normalizeFactProducts(products = []) {
+  if (products === undefined) {
+    return [];
+  }
+  if (!Array.isArray(products)) {
+    throw new Error("facts.products must be an array of tables");
+  }
+  return products.map((product, index) => {
+    assertPlainObject(product, `facts.products[${index}]`);
+    return {
+      id: assertString(product.id, `facts.products[${index}].id`),
+      moduleFacts: normalizeStringArray(product.module_facts, `facts.products[${index}].module_facts`).map(posixPath),
+      artifacts: normalizeStringArray(product.artifacts, `facts.products[${index}].artifacts`).map(posixPath),
+    };
+  });
+}
+
+function normalizeFactLegacyProjections(projections = []) {
+  if (projections === undefined) {
+    return [];
+  }
+  if (!Array.isArray(projections)) {
+    throw new Error("facts.legacy_projections must be an array of tables");
+  }
+  return projections.map((projection, index) => {
+    assertPlainObject(projection, `facts.legacy_projections[${index}]`);
+    const type = assertString(projection.type, `facts.legacy_projections[${index}].type`);
+    if (!SUPPORTED_FACT_LEGACY_PROJECTIONS.has(type)) {
+      throw new Error("facts.legacy_projections[].type must be kungfu-buildinfo");
+    }
+    return {
+      type,
+      module: projection.module === undefined ? "" : assertString(projection.module, `facts.legacy_projections[${index}].module`),
+      path: posixPath(assertString(projection.path, `facts.legacy_projections[${index}].path`)),
+    };
+  });
 }
 
 function normalizeDiagnosticsSection(diagnostics) {
@@ -1062,6 +1176,7 @@ export function validateBuildchainConfig(
     })),
     lifecycleStages,
     publish: loadedConfig.config.publish,
+    facts: loadedConfig.config.facts,
   };
 }
 

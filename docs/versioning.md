@@ -61,6 +61,7 @@ repository changes are patch".
 
 | Date | Action | Line | Faces | Class | Rationale | PR |
 | --- | --- | --- | --- | --- | --- | --- |
+| 2026-07-08 | open-minor | `v2.9` | build-facts-contract | additive | Build Facts add a public CLI command family, Node API export, config protocol, module/product fact contracts, release-passport evidence section, and Kungfu legacy buildinfo projection from the same source facts. | |
 | 2026-07-06 | open-minor | `v2.8` | kfd-1-contract-world-release-gate, kfd-2-release-trust-passport-audit, kfd-3-collaboration-interface-trust-proof, publish-source-lock-enforcement, required-check-protection | additive | KFD release gates add KFD-1 self contract verification, KFD-2 public release trust claim audit, KFD-3 collaboration-interface trust proofs, publish-side source-lock enforcement for promote-only wrappers, and protected channel required checks repaired to bind GitHub Actions check runs instead of legacy commit status contexts. | |
 | 2026-07-04 | open-minor | `v2.5` | scheduled-integration-governance | additive | Scheduled integration governance adds scheduled feature-branch discovery, conflict-free integration, reporting, and agent-visible governance automation for dev-line maintenance. | |
 | 2026-07-03 | open-minor | `v2.4` | infra-contract-lifecycle | additive | Infra contract lifecycle adds the provider-neutral `infra-contract` CLI command family, project type, adapter capability contract, lifecycle evidence bundle, propagation evidence, CI evidence mode, and consumer-facing contract artifacts. | |

@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:6ff2ec05a6d2b88b87aa40d09e1d2ae169eab01e220fab6ee833830b3b0c49ab"
+      "digest": "sha256:2d95d0dd56088efb1a9a16d026810cf2e74659963612451f903e37825c260122"
     },
     {
       "id": "install",
@@ -23,7 +23,7 @@
       "title": "Release Passport protocol",
       "path": "docs/release-passport.md",
       "plane": "verify",
-      "digest": "sha256:56c9000305e9dc23993e6c401568c4063dd496c3586382a44cd44db108a95094"
+      "digest": "sha256:495e1c46ce45268a9ed6502fe115af45a8cd1d8e644cb4332da9b551f919f578"
     },
     {
       "id": "release-propagation",
@@ -107,7 +107,14 @@
       "title": "CLI and npm package",
       "path": "docs/cli.md",
       "plane": "use",
-      "digest": "sha256:a8db321b281bea50e055e9357179cccffe12fd9c4b1d7eb9f7dc018108e676c6"
+      "digest": "sha256:60686b5b4d5fe7f3944cb53ab709231fd00bb02b6d51770f1fe8b018122afd8f"
+    },
+    {
+      "id": "build-facts",
+      "title": "Build Facts",
+      "path": "docs/build-facts.md",
+      "plane": "use",
+      "digest": "sha256:75dcf7a6628dac9e982a455de9966044ae771611d4efc04e7264a2d4adb0bd3e"
     },
     {
       "id": "lifecycle-protocol",
@@ -156,7 +163,7 @@
       "title": "Versioning",
       "path": "docs/versioning.md",
       "plane": "why",
-      "digest": "sha256:77b92fc979cc100beab3f8a13cd791dea992737b986ace505104edff4810a296"
+      "digest": "sha256:2c79f7d1a072a40c75d889beac38ae843b2170587fc570ce40722d3968b6506e"
     },
     {
       "id": "web-surface-deployments",
@@ -170,6 +177,7 @@
     "docs/MAP.md",
     "docs/install.md",
     "docs/cli.md",
+    "docs/build-facts.md",
     "docs/reusable-build-surface.md",
     "docs/release-candidate.md",
     "docs/release-governance.md",

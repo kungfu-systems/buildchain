@@ -37,6 +37,32 @@ command = "node scripts/generate-site-bundle.mjs"
 [lifecycle.publish]
 command = "node scripts/npm-publish-transaction.mjs"
 
+[[facts.version_sources]]
+id = "package"
+type = "json"
+path = "package.json"
+key = "version"
+
+[[facts.modules]]
+id = "buildchain-core"
+root = "packages/core"
+scope = "node-api"
+version_source = "package"
+lifecycle = "version-state"
+outputs = [
+  "dist/site/buildchain-site.json",
+  "dist/site/manual-registry.json",
+  "dist/site/node-api-registry.json",
+]
+
+[[facts.products]]
+id = "buildchain"
+module_facts = [".buildchain/facts/buildchain-core.json"]
+artifacts = [
+  "dist/site/buildchain-site.json",
+  "dist/site/site-manifest.json",
+]
+
 [badges]
 release_passport = "https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json"
 kfd_1 = "declared"
