@@ -1,6 +1,6 @@
 {
   "name": "@kungfu-tech/buildchain",
-  "version": "2.10.7",
+  "version": "2.10.8-alpha.1",
   "private": false,
   "description": "Buildchain Release Passport, release governance, CLI toolkit, and site facts.",
   "repository": "https://github.com/kungfu-systems/buildchain",
@@ -90,7 +90,7 @@
     "vitest": "^4.1.9"
   },
   "dependencies": {
-    "@kungfu-tech/kfd": "1.0.0-alpha.19",
+    "@kungfu-tech/kfd": "1.0.0-alpha.21",
     "smol-toml": "1.7.0"
   }
 }

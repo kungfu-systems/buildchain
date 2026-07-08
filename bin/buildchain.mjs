@@ -169,6 +169,8 @@ function usage() {
   buildchain kfd 2 schema [--schema <name>] [--json]
   buildchain kfd 2 taxonomy --entry-json <file-or-json>... [--kind residualRisk|downgradeReason] [--json]
   buildchain kfd 2 claims [--cwd <dir>] [--output-dir <dir>] [--json]
+  buildchain kfd 2 trust-claims [--claims-json <file-or-json>] [--json]
+  buildchain kfd 2 trust-assessment [--assessment-json <file-or-json>] [--json]
   buildchain kfd 3 ...
   buildchain kfd 3 detect [--cwd <dir>] [--kind <kind>]... [--artifact <path>] [--json]
   buildchain kfd 3 register <node-api|python-api|cli|binary|documentation|site-bundle>
@@ -223,6 +225,7 @@ Examples:
   buildchain kfd schema list --json
   buildchain kfd 1 witness --json
   buildchain kfd 2 claims --json
+  buildchain kfd 2 trust-assessment --json
   buildchain kfd 3 query buildchain --json
 `;
 }
@@ -757,7 +760,51 @@ function runKfd2Cli(args = []) {
     }
     return;
   }
-  throw new Error("usage: buildchain kfd 2 <schema|taxonomy|claims> ...");
+  if (action === "trust-claims") {
+    const document = readFlag(rest, "claims-json", "")
+      ? readJsonInput(readFlag(rest, "claims-json", ""), { cwd, label: "kfd-2 trust claims" })
+      : kfd2.readFoundationTrustClaims();
+    const validation = kfd2.validateTrustClaims(document);
+    const result = {
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-kfd-2-trust-claims",
+      source: readFlag(rest, "claims-json", "") ? "input" : "@kungfu-tech/kfd foundation trust claims",
+      document,
+      validation,
+    };
+    if (json) {
+      printJson(result);
+    } else {
+      process.stdout.write(`kfd 2 trust-claims: ${validation.ok ? "ok" : "failed"} (${validation.claimCount} claims)\n`);
+    }
+    if (!validation.ok) {
+      process.exitCode = 1;
+    }
+    return;
+  }
+  if (action === "trust-assessment") {
+    const document = readFlag(rest, "assessment-json", "")
+      ? readJsonInput(readFlag(rest, "assessment-json", ""), { cwd, label: "kfd-2 trust assessment" })
+      : kfd2.readFoundationTrustAssessment();
+    const validation = kfd2.validateTrustAssessment(document);
+    const result = {
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-kfd-2-trust-assessment",
+      source: readFlag(rest, "assessment-json", "") ? "input" : "@kungfu-tech/kfd foundation trust assessment",
+      document,
+      validation,
+    };
+    if (json) {
+      printJson(result);
+    } else {
+      process.stdout.write(`kfd 2 trust-assessment: ${validation.ok ? "ok" : "failed"} (${validation.result || "unknown"}, ${validation.assessmentCount} assessments)\n`);
+    }
+    if (!validation.ok) {
+      process.exitCode = 1;
+    }
+    return;
+  }
+  throw new Error("usage: buildchain kfd 2 <schema|taxonomy|claims|trust-claims|trust-assessment> ...");
 }
 
 async function runKfdCli(args = []) {

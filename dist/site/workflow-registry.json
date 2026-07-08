@@ -270,6 +270,7 @@
         "production-approved",
         "production-aws-role-arn",
         "production-environment",
+        "production-release-app-id",
         "production-release-branch-channel",
         "production-release-head-prefix",
         "production-release-label",
@@ -283,7 +284,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 31,
+      "inputCount": 32,
       "surface": "reusable-workflow",
       "capabilityGroup": "api-cli-reference",
       "status": "active"

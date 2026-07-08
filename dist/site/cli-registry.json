@@ -378,6 +378,30 @@
       "maturity": "stable"
     },
     {
+      "id": "kfd-2-trust-assessment",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 2 trust-assessment [--assessment-json <file-or-json>] [--json]",
+      "purpose": "Expose and validate the KFD package foundation KFD-2 trust assessment.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-2-trust-claims",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 2 trust-claims [--claims-json <file-or-json>] [--json]",
+      "purpose": "Expose and validate the KFD package foundation KFD-2 trust claims.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
       "id": "kfd-3",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain kfd 3 ...",
