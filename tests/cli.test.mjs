@@ -1783,6 +1783,71 @@ key = "version"
   assert.equal(JSON.parse(fs.readFileSync(path.join(cwd, "package.json"), "utf8")).version, "1.2.3-alpha.0");
 });
 
+test("release line open plans a protected new minor without mutating files", () => {
+  const cwd = tempDir("release-line-open-plan");
+  execFileSync("git", ["init"], { cwd, stdio: "ignore" });
+  fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({
+    name: "release-line-open-fixture",
+    version: "2.9.0",
+  }, null, 2));
+
+  const output = runBuildchain([
+    "release",
+    "line",
+    "open",
+    "--cwd",
+    cwd,
+    "--major",
+    "2",
+    "--minor",
+    "10",
+    "--source-ref",
+    "release/v2/v2.9",
+    "--json",
+  ], { cwd });
+  const plan = JSON.parse(output);
+
+  assert.equal(plan.dryRun, true);
+  assert.equal(plan.line, "v2.10");
+  assert.equal(plan.initialVersion, "2.10.0-alpha.0");
+  assert.equal(plan.refs.dev, "dev/v2/v2.10");
+  assert.equal(plan.refs.alpha, "alpha/v2/v2.10");
+  assert.equal(plan.refs.release, "release/v2/v2.10");
+  assert.equal(plan.protection.requiredApprovingReviewCount, 1);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(cwd, "package.json"), "utf8")).version, "2.9.0");
+});
+
+test("release line open write updates version-state files only", () => {
+  const cwd = tempDir("release-line-open-write");
+  execFileSync("git", ["init"], { cwd, stdio: "ignore" });
+  fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({
+    name: "release-line-open-write-fixture",
+    version: "2.9.0",
+  }, null, 2));
+
+  const output = runBuildchain([
+    "release",
+    "line",
+    "open",
+    "--cwd",
+    cwd,
+    "--major",
+    "2",
+    "--minor",
+    "10",
+    "--initial-version",
+    "2.10.0-alpha.0",
+    "--write",
+    "--skip-version-state-lifecycle",
+    "--json",
+  ], { cwd });
+  const plan = JSON.parse(output);
+
+  assert.equal(plan.dryRun, false);
+  assert.deepEqual(plan.changedFiles, ["package.json"]);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(cwd, "package.json"), "utf8")).version, "2.10.0-alpha.0");
+});
+
 test("release dry-run subcommand explains major gate with source ref", () => {
   const output = runBuildchain([
     "release",

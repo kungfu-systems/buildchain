@@ -4,7 +4,7 @@
   "product": {
     "name": "Buildchain",
     "package": "@kungfu-tech/buildchain",
-    "version": "2.9.0",
+    "version": "2.9.1-alpha.1",
     "repository": "https://github.com/kungfu-systems/buildchain"
   },
   "majorLine": "v2",
@@ -344,7 +344,7 @@
         "README badge block checks and writes are generated from machine-readable repository facts"
       ],
       "breakingDigest": "sha256:90a73892b2d6c214048448d5f45df75639bdf7b7e8fefd9c596e04b087407bcc",
-      "auditDigest": "sha256:114de9f5a2cd5602bec3ff7599aae1a09858ff53a96b562ebe542d501d37eb46"
+      "auditDigest": "sha256:8e4538461494045932ca878773403dd27d02d8f4f6e13faa90a19f6534cf9ffe"
     },
     {
       "contractVersion": 1,
@@ -434,7 +434,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:cd21906acf183b9f5b456f7013581dd55e493b904551f00475cf6ea2f0030098"
+      "auditDigest": "sha256:2cc5b516507336464f2e75e9f74d64e9bb4c01efedeff1787e0fe533c3935934"
     },
     {
       "contractVersion": 1,
@@ -456,9 +456,9 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:10855957c6eac44c41c59518e1d1310e6efd735ed3b5e1eddff4f98296352717"
+      "auditDigest": "sha256:1d42b05c7ebd9ad02ffd18c7d8a2641853d17552cb87706a1d859a98c7e65c98"
     }
   ],
   "compatibilityDigest": "sha256:407d6d5ee6a96a34d2cc30db9ac64cf4b1819ab6d77bd7a57a07a124f22101ca",
-  "contractDigest": "sha256:45c8a3198664e76e58ff881befcac450a7db6cfd6bffb5bcd3db747a895c551e"
+  "contractDigest": "sha256:b1f4faf6d1c3e80ade21bd119f012b75db803309c27f615d9e15f635455b6ca7"
 }

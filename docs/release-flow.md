@@ -73,6 +73,37 @@ The intended governance split is:
 - protected branches still require reviewed channel PRs before Buildchain can
   move any exact or floating release refs.
 
+## Opening a Minor Line
+
+New minor lines should be opened through Buildchain instead of hand-created
+branches. The reusable entrypoint is the `Release Line Bootstrap` workflow. It
+defaults to dry-run so maintainers can inspect the planned refs, protection
+contract, initial version, and first alpha PR before any mutation.
+
+The workflow is backed by the CLI command:
+
+```bash
+buildchain release line open \
+  --major 2 \
+  --minor 10 \
+  --source-ref release/v2/v2.9 \
+  --json
+```
+
+When the workflow is run with `apply=true`, Buildchain:
+
+- writes the initial version-state commit, such as `2.10.0-alpha.0`;
+- creates `dev/v2/v2.10` from that commit;
+- creates `alpha/v2/v2.10` and `release/v2/v2.10` from the selected source ref;
+- applies branch protection with one approving review and the configured
+  required status check;
+- switches the repository default branch to the new dev line when requested;
+- opens the first `dev/v2/v2.10 -> alpha/v2/v2.10` channel PR when requested.
+
+This makes minor-line creation a single audited operation. The channel PR still
+goes through the normal verify/review/promotion path before an alpha is
+published.
+
 ## Alpha Promotion
 
 ```mermaid

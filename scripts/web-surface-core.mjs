@@ -324,6 +324,70 @@ function directoryIndexAliasOperations({ surfaceArtifactRoot, bucket, binding })
     });
 }
 
+function cloudfrontDefaultRootObjectOperation({ distributionId, directoryIndex = "index.html" }) {
+  const normalizedDistribution = String(distributionId || "").trim();
+  const normalizedDirectoryIndex = normalizeS3Key(directoryIndex || "index.html");
+  if (!normalizedDistribution || !normalizedDirectoryIndex || normalizedDirectoryIndex.includes("/")) {
+    return null;
+  }
+  return {
+    action: "ensure-cloudfront-default-root-object",
+    surface: "__distribution__",
+    command: "bash",
+    args: [
+      "-euo",
+      "pipefail",
+      "-c",
+      [
+        'distribution_id="$1"',
+        'root_object="$2"',
+        'tmp_dir="$(mktemp -d)"',
+        'trap \'rm -rf "$tmp_dir"\' EXIT',
+        'aws cloudfront get-distribution-config --id "$distribution_id" > "$tmp_dir/distribution.json"',
+        'etag="$(jq -r \'.ETag\' "$tmp_dir/distribution.json")"',
+        'current="$(jq -r \'.DistributionConfig.DefaultRootObject // ""\' "$tmp_dir/distribution.json")"',
+        'if [ "$current" = "$root_object" ]; then',
+        '  echo "cloudfront default root object already $root_object for $distribution_id"',
+        '  exit 0',
+        'fi',
+        'jq --arg root "$root_object" \'.DistributionConfig | .DefaultRootObject = $root\' "$tmp_dir/distribution.json" > "$tmp_dir/distribution-config.json"',
+        'aws cloudfront update-distribution --id "$distribution_id" --if-match "$etag" --distribution-config "file://$tmp_dir/distribution-config.json" >/dev/null',
+        'aws cloudfront wait distribution-deployed --id "$distribution_id"',
+        'echo "cloudfront default root object set to $root_object for $distribution_id"',
+      ].join("\n"),
+      "buildchain-cloudfront-default-root-object",
+      normalizedDistribution,
+      normalizedDirectoryIndex,
+    ],
+    routing: {
+      contract: "kungfu-buildchain-web-surface-cloudfront-default-root-object",
+      distributionId: normalizedDistribution,
+      defaultRootObject: normalizedDirectoryIndex,
+      reason: "Surface host root requests must resolve to index.html before host/path prefix rewrite reaches the S3 origin.",
+    },
+  };
+}
+
+function cloudfrontDefaultRootObjectOperations({ bindings }) {
+  const seen = new Set();
+  return (bindings || []).flatMap((binding) => {
+    if (binding.directoryIndexResolution === false || !binding.distributionId) {
+      return [];
+    }
+    const directoryIndex = binding.directoryIndex || "index.html";
+    const key = `${binding.distributionId}:${directoryIndex}`;
+    if (seen.has(key)) {
+      return [];
+    }
+    seen.add(key);
+    const operation = cloudfrontDefaultRootObjectOperation({
+      distributionId: binding.distributionId,
+      directoryIndex,
+    });
+    return operation ? [operation] : [];
+  });
+}
+
 function defaultCommandRunner({ command, args, stdin = "" }) {
   const result = spawnSync(command, args, {
     encoding: "utf8",
@@ -941,12 +1005,15 @@ export function applyWebSurfaceDeploy({
       });
     }
   }
-  const operations = bindings.flatMap((binding) => deployBindingOperations({
-    artifactRoot,
-    deployConfig,
-    manifest: resolvedPlan.manifest,
-    binding,
-  }));
+  const operations = [
+    ...cloudfrontDefaultRootObjectOperations({ bindings }),
+    ...bindings.flatMap((binding) => deployBindingOperations({
+      artifactRoot,
+      deployConfig,
+      manifest: resolvedPlan.manifest,
+      binding,
+    })),
+  ];
   const primaryBinding = bindings[0] || {};
   const objectPrefix = primaryBinding.objectPrefix || objectPrefixFor(deployConfig, resolvedPlan.manifest.alias || resolvedPlan.manifest.channel);
   const manifestKey = primaryBinding.manifestKey || deployManifestKey(deployConfig, resolvedPlan.manifest);
@@ -1428,6 +1495,12 @@ function deployBindingOperations({ artifactRoot, deployConfig, manifest, binding
 function planAdapterSteps(adapter, deployConfig, manifest) {
   if (adapter === "aws-s3-cloudfront") {
     return [
+      ...cloudfrontDefaultRootObjectOperations({ bindings: manifest.surfaceBindings }).map((operation) => ({
+        action: operation.action,
+        surface: operation.surface,
+        distribution: operation.routing.distributionId,
+        defaultRootObject: operation.routing.defaultRootObject,
+      })),
       ...manifest.surfaceBindings.flatMap((binding) => [
         {
           action: "sync-static-artifact",

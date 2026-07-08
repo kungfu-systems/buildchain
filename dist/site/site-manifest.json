@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-site-manifest",
-  "generatedAt": "2026-07-08T02:47:46.506Z",
-  "publishedAt": "2026-07-08T02:47:46.506Z",
+  "generatedAt": "2026-07-08T03:48:55.879Z",
+  "publishedAt": "2026-07-08T03:48:55.879Z",
   "reproducible": true,
   "timestampPolicy": "ci-injected",
   "deterministicInputs": [
@@ -19,7 +19,7 @@
     "declared Buildchain surface manifest contract"
   ],
   "sourceDateEpoch": "0",
-  "sourceRevision": "2142b74c1ce1b6be6e2227ffe53ba87750afde07",
+  "sourceRevision": "c97c237961bd1eac6d75194c8b45e372cf6526d8",
   "timestampPolicyDetails": {
     "contract": "kungfu-buildchain-surface-timestamp-policy",
     "timestampFields": [
@@ -37,7 +37,7 @@
   },
   "package": {
     "name": "@kungfu-tech/buildchain",
-    "version": "2.9.0",
+    "version": "2.9.1-alpha.1",
     "versionSource": "package.json#version"
   },
   "entrypoint": "buildchain-site.json",
@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:2d95d0dd56088efb1a9a16d026810cf2e74659963612451f903e37825c260122"
+      "digest": "sha256:10292c42c2778e9d164c698a0967c8ae3c50d5e4814170bd5c1426b0d240000a"
     },
     {
       "id": "install",
@@ -69,7 +69,7 @@
       "path": "docs/release-passport.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:495e1c46ce45268a9ed6502fe115af45a8cd1d8e644cb4332da9b551f919f578"
+      "digest": "sha256:75d8bade4b0b96b26941b11835c2debcdada8f1723412935fb8ae6884f08f9f3"
     },
     {
       "id": "release-propagation",
@@ -133,7 +133,7 @@
       "path": "docs/site-bundle-contract.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:fa8bdf597ddf87d89629c133318d54f89c5f291d32427189fb3483bc81efc6b7"
+      "digest": "sha256:595ad74e82f179844da7bb3545b1fa7a0cd99c083160b7ed08861dfb5b2603ab"
     },
     {
       "id": "migration-inventory",
@@ -165,7 +165,7 @@
       "path": "docs/cli.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:60686b5b4d5fe7f3944cb53ab709231fd00bb02b6d51770f1fe8b018122afd8f"
+      "digest": "sha256:1922537563582f59e08b7c69c8a1549ea2b438229097b1111110b421a7ad84d8"
     },
     {
       "id": "build-facts",
@@ -213,7 +213,7 @@
       "path": "docs/release-flow.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:0a2f46501a64905067cc5872b45ac4824f9e632d59bfdfb2f6a794dfc5f959ea"
+      "digest": "sha256:feb1e056975a4ffb714d8fc0583a0f6fd8ed774c30ca168c27d5e6baf02f1cde"
     },
     {
       "id": "runtime-train-validation",
@@ -237,7 +237,7 @@
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:70995864ece77573756e1c197a936d86011f84b356d75683881b59b5aa537d8c"
+      "digest": "sha256:b56fedfdf6784855e5854a747e7e869d746e6b0a9f419047bcc799945052eb8d"
     }
   ],
   "facts": [
@@ -246,6 +246,7 @@
     "manual-registry.json",
     "node-api-registry.json",
     "workflow-registry.json",
+    "public-surface-audit.json",
     "release-model.json",
     "artifact-schemas.json",
     "badge-endpoint-registry.json",
