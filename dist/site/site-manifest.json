@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-site-manifest",
-  "generatedAt": "2026-07-08T08:27:16.923Z",
-  "publishedAt": "2026-07-08T08:27:16.923Z",
+  "generatedAt": "2026-07-08T10:25:58.694Z",
+  "publishedAt": "2026-07-08T10:25:58.694Z",
   "reproducible": true,
   "timestampPolicy": "ci-injected",
   "deterministicInputs": [
@@ -19,7 +19,7 @@
     "declared Buildchain surface manifest contract"
   ],
   "sourceDateEpoch": "0",
-  "sourceRevision": "04fc1e0ec35cfd1d47dbfa67eeabae6cf1f042bd",
+  "sourceRevision": "f10354608cd6f3c295a4df40922728111e234b34",
   "timestampPolicyDetails": {
     "contract": "kungfu-buildchain-surface-timestamp-policy",
     "timestampFields": [
@@ -37,7 +37,7 @@
   },
   "package": {
     "name": "@kungfu-tech/buildchain",
-    "version": "2.10.2",
+    "version": "2.10.3-alpha.1",
     "versionSource": "package.json#version"
   },
   "entrypoint": "buildchain-site.json",
@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:3712026dcfcf44c16bc4def2acf246caee1ec036543c0fea265fa17b19d4de31"
+      "digest": "sha256:67a0e6b63a943904eacbf7d26227e3c9ad650d17e8aa937c40b3fdad8f389fdd"
     },
     {
       "id": "install",
@@ -70,6 +70,14 @@
       "plane": "verify",
       "exists": true,
       "digest": "sha256:75d8bade4b0b96b26941b11835c2debcdada8f1723412935fb8ae6884f08f9f3"
+    },
+    {
+      "id": "release-candidate",
+      "title": "Release Candidate Passport",
+      "path": "docs/release-candidate.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:6b5107cded122925e8560a9b117ff1c96f5cf05d934caf83d7e4b2a4d777175e"
     },
     {
       "id": "release-propagation",
@@ -133,7 +141,7 @@
       "path": "docs/site-bundle-contract.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:595ad74e82f179844da7bb3545b1fa7a0cd99c083160b7ed08861dfb5b2603ab"
+      "digest": "sha256:6b5bc2ee0f785b16d762f140f14a9163c07caf0d424200c2ececc74f7bb2271c"
     },
     {
       "id": "migration-inventory",
@@ -165,7 +173,7 @@
       "path": "docs/cli.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:85e014b7e053b74b620e5b438d54453e20b22f758a33dfd5ae970403fa41d9d7"
+      "digest": "sha256:2f55874feb9acecce1c471b96e07bb9a198a8da93efd0f859d69f353bf9c36a8"
     },
     {
       "id": "build-facts",
@@ -245,11 +253,12 @@
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:3a11e4c38c058181ab6d36242a8898e13a3a452304838e806c2d1b86d1348a83"
+      "digest": "sha256:58673b84879a219572fe39aa8b4d01cfc34fabf664b3318753d61043821edaff"
     }
   ],
   "facts": [
     "page-registry.json",
+    "capability-registry.json",
     "cli-registry.json",
     "manual-registry.json",
     "node-api-registry.json",

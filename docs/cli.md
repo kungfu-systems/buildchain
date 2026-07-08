@@ -58,6 +58,10 @@ internal file paths. The npm package also ships
 `dist/site/node-api-registry.json` and exports it as
 `@kungfu-tech/buildchain/site/node-api-registry.json` so agents can enumerate
 the supported imports from the installed package.
+For navigation, start with `dist/site/capability-registry.json`: it groups
+manuals, CLI commands, workflow/action inputs, Node exports, site pages, and KFD
+claim facts by product capability before an agent chooses a concrete command or
+manual.
 
 Current public import families include:
 
@@ -74,6 +78,7 @@ import { createReleasePropagationPlan } from "@kungfu-tech/buildchain/release-pr
 import { planReleaseLineBootstrap } from "@kungfu-tech/buildchain/release-line-bootstrap";
 import { collectPublicSurfaceReverseAudit } from "@kungfu-tech/buildchain/public-surface-audit";
 import contractWorld from "@kungfu-tech/buildchain/site/buildchain-contract.json" with { type: "json" };
+import capabilityRegistry from "@kungfu-tech/buildchain/site/capability-registry.json" with { type: "json" };
 import manualRegistry from "@kungfu-tech/buildchain/site/manual-registry.json" with { type: "json" };
 import nodeApiRegistry from "@kungfu-tech/buildchain/site/node-api-registry.json" with { type: "json" };
 import publicSurfaceAudit from "@kungfu-tech/buildchain/site/public-surface-audit.json" with { type: "json" };

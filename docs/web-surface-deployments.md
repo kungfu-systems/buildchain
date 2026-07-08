@@ -513,6 +513,24 @@ preflight, and health check so a reviewer or agent can audit why the production
 site changed and whether every declared host and every existing nested route was
 actually covered.
 
+Channels declared with `access_control = "managed-network"` use a different
+health strategy by default. Buildchain does not require a GitHub-hosted runner
+to fetch a URL that is intentionally reachable only from an approved network.
+Instead, after a live apply the health check uses the deploy role to run S3
+`head-object` checks for each surface manifest and the smoke target object, such
+as the surface `index.html` or a nested `docs/index.html`. The check records
+`healthStrategy = "s3-object"` and skips the public HTTP fetch. Dry-run and
+plan-only checks fall back to deployment evidence: each surface must have a
+manifest key, bucket, object prefix, `sync-static-artifact`, and
+`write-deployment-manifest` evidence, recorded as
+`healthStrategy = "deployment-evidence"`. If the workflow is running on a runner
+that is allowed to reach the managed network, set
+`BUILDCHAIN_WEB_SURFACE_HEALTH_ALLOWED_RUNNER=true` or pass
+`--allowed-managed-network-runner true` to keep the normal HTTP smoke checks.
+Set `BUILDCHAIN_WEB_SURFACE_HEALTH_S3_OBJECTS=false` or pass
+`--managed-network-s3-object-verification false` only when an external channel
+policy owns managed-network object verification.
+
 ## Cleanup Plans
 
 Preview cleanup is an auditable cleanup contract. It can run as a dry-run plan,

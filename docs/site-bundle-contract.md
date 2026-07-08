@@ -13,6 +13,7 @@ release mechanics, command registry, workflow registry, or artifact schema.
 dist/site/
   buildchain-site.json
   site-manifest.json
+  capability-registry.json
   cli-registry.json
   manual-registry.json
   node-api-registry.json
@@ -36,6 +37,12 @@ of parsing `README.md` themselves.
 It also includes a `pages` collection that mirrors `page-registry.json`, so a
 site repository can build the full Buildchain public documentation surface from
 the npm package without scanning the source checkout.
+`capability-registry.json` is the navigation spine for that page surface. It
+groups manuals, pages, CLI commands, workflows, actions, Node API exports, and
+KFD claim facts into stable product capability groups. Site repositories should
+render navigation from this registry first, then use `page-registry.json`,
+`manual-registry.json`, `cli-registry.json`, `node-api-registry.json`, and
+`workflow-registry.json` for the concrete entries inside each group.
 `page-registry.json` is the complete page fact source: README homepage content,
 all packaged `docs/*.md` manuals, action README files, the Node API package
 overview, and fixture guides.
@@ -126,6 +133,8 @@ this gate, so release candidates cannot publish an out-of-date site bundle.
 The P0 bundle includes:
 
 - README-derived homepage fields and display plan;
+- capability-grouped navigation facts for docs, CLI, Node API, workflows,
+  actions, and KFD claims;
 - complete markdown page registry for public Buildchain docs, action manuals,
   Node API overview, and fixtures;
 - site manifest;
