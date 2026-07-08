@@ -261,6 +261,16 @@ by downstream sites and by Buildchain's own release passport. Exact release
 version/SHA binding is deliberately deferred to the promotion witness, so the
 source registry can remain stable across semver version-state bumps.
 
+Buildchain also performs a reverse audit before that witness is used. The
+generated `dist/site/public-surface-audit.json` enumerates real CLI commands
+from `bin/buildchain.mjs`, workflow inputs, action inputs, site pages, and docs
+command references, then compares them with the generated registries. Buildchain
+self KFD witnesses include that audit result and classify the collaboration
+interface as closed-world only when the reverse audit passes. If a public
+command, workflow input, action input, or site page is exposed without a
+registry entry, `pnpm run check` fails before release promotion can produce a
+passport.
+
 The product remains the fact source. Before build/publish, the product writes a
 pre-build witness:
 

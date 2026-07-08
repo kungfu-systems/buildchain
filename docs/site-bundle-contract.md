@@ -17,6 +17,7 @@ dist/site/
   manual-registry.json
   node-api-registry.json
   workflow-registry.json
+  public-surface-audit.json
   release-model.json
   artifact-schemas.json
   buildchain-contract.json
@@ -51,6 +52,12 @@ internal paths.
 from `packages/core/buildchain-kfd-claims.js` and enumerates the public release
 claims plus the KFD-3 collaboration surfaces that Buildchain self-verifies
 during release promotion.
+`public-surface-audit.json` is the reverse enumeration report for those
+surfaces. It enumerates real CLI commands from `bin/buildchain.mjs`, workflow
+inputs, action inputs, site pages, and documentation command references, then
+compares those sets with `cli-registry.json`, `workflow-registry.json`, and
+`page-registry.json`. Buildchain's self-check fails closed when an enumerable
+public surface is missing from the generated registries.
 
 ## Timestamp and Reproducibility Policy
 

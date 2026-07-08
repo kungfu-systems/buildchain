@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:b2473e46d2d6cef4986f2ce7b005dd0f92f0ead0f5acff17592e7eb290934ea9"
+      "digest": "sha256:587d05df468462b29ebde8d584b97afa1a569db6a4f269a15e552c7c164d1aaa"
     },
     {
       "specifier": "@kungfu-tech/buildchain/badges",
@@ -26,7 +26,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:b2473e46d2d6cef4986f2ce7b005dd0f92f0ead0f5acff17592e7eb290934ea9"
+      "digest": "sha256:587d05df468462b29ebde8d584b97afa1a569db6a4f269a15e552c7c164d1aaa"
     },
     {
       "specifier": "@kungfu-tech/buildchain/artifact-passport",
@@ -59,10 +59,22 @@
       "digest": "sha256:d6e0a450a52b7a4fba84bff855d5370e0cfa2ec3c4be737b3c9099a72f705e2d"
     },
     {
+      "specifier": "@kungfu-tech/buildchain/release-line-bootstrap",
+      "export": "./release-line-bootstrap",
+      "target": "./packages/core/release-line-bootstrap.js",
+      "digest": "sha256:7c42519975f8a653ca7bae4f0b33baf34d7e1dcb6dd4e87be9ed27de2d252e55"
+    },
+    {
       "specifier": "@kungfu-tech/buildchain/readme-badges",
       "export": "./readme-badges",
       "target": "./packages/core/readme-badges.js",
       "digest": "sha256:3d4b61918f31a24de8fb11b15a9544df2c9696f6bd8c7efb1e373f0745cb3ce0"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/public-surface-audit",
+      "export": "./public-surface-audit",
+      "target": "./packages/core/public-surface-audit.js",
+      "digest": "sha256:d428109652f5604240d37b8e9a17c179dd72215206a74cdfb6b3d0647b499827"
     },
     {
       "specifier": "@kungfu-tech/buildchain/logging",
@@ -104,14 +116,14 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-kfd-claims",
       "export": "./buildchain-kfd-claims",
       "target": "./packages/core/buildchain-kfd-claims.js",
-      "digest": "sha256:76f349063e301dcf3707b4dbf768f100c13130b921da181246b74afbe48213c9"
+      "digest": "sha256:eb7826e9b451799be4912d578207c04949cd533b560640fd4f4609f439acb6dd"
     }
   ],
   "docs": [
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:60686b5b4d5fe7f3944cb53ab709231fd00bb02b6d51770f1fe8b018122afd8f"
+      "digest": "sha256:1922537563582f59e08b7c69c8a1549ea2b438229097b1111110b421a7ad84d8"
     },
     {
       "id": "build-facts",
@@ -131,7 +143,7 @@
     {
       "id": "site-bundle-contract",
       "path": "docs/site-bundle-contract.md",
-      "digest": "sha256:fa8bdf597ddf87d89629c133318d54f89c5f291d32427189fb3483bc81efc6b7"
+      "digest": "sha256:595ad74e82f179844da7bb3545b1fa7a0cd99c083160b7ed08861dfb5b2603ab"
     }
   ],
   "guidance": "These are the public Node import surfaces shipped by the npm package. Agents should prefer these exports over internal file paths."

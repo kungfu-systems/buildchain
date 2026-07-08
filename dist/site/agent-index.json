@@ -10,6 +10,7 @@
     "manual-registry.json",
     "node-api-registry.json",
     "workflow-registry.json",
+    "public-surface-audit.json",
     "artifact-schemas.json",
     "buildchain-contract.json",
     "kfd-claims.json",

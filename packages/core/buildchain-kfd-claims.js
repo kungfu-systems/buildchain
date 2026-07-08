@@ -2,6 +2,10 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { createBuildchainContractWorld, sha256Json } from "./buildchain-contract.js";
+import {
+  BUILDCHAIN_PUBLIC_SURFACE_AUDIT_CONTRACT,
+  collectPublicSurfaceReverseAudit,
+} from "./public-surface-audit.js";
 
 export const BUILDCHAIN_KFD_CLAIM_REGISTRY_CONTRACT = "kungfu-buildchain-kfd-claim-registry";
 export const BUILDCHAIN_KFD_COLLABORATION_INTERFACE_CONTRACT = "kungfu-buildchain-kfd-collaboration-interface";
@@ -41,6 +45,7 @@ const SITE_CONTRACT_FILES = Object.freeze([
   "dist/site/manual-registry.json",
   "dist/site/node-api-registry.json",
   "dist/site/workflow-registry.json",
+  "dist/site/public-surface-audit.json",
   "dist/site/release-model.json",
   "dist/site/artifact-schemas.json",
   "dist/site/buildchain-contract.json",
@@ -55,6 +60,7 @@ const SCHEMA_AND_STANDARD_FILES = Object.freeze([
   "packages/core/release-passport.js",
   "packages/core/buildchain-contract.js",
   "packages/core/buildchain-kfd-claims.js",
+  "packages/core/public-surface-audit.js",
   "dist/site/artifact-schemas.json",
   "dist/site/buildchain-contract.json",
 ]);
@@ -78,6 +84,51 @@ const EXTRA_KFD1_FILES = Object.freeze([
   "scripts/generate-site-bundle.mjs",
   "scripts/ensure-github-release.mjs",
 ]);
+
+function publicSurfaceReverseAudit({ root }) {
+  if (!fileExists(root, "bin/buildchain.mjs")) {
+    return {
+      schemaVersion: 1,
+      contract: BUILDCHAIN_PUBLIC_SURFACE_AUDIT_CONTRACT,
+      status: "unavailable",
+      summary: { failureCount: 0 },
+      enumerated: {
+        cliCommands: [],
+        workflowInputs: [],
+        actionInputs: [],
+        sitePages: [],
+        docCommandRefs: [],
+      },
+      declared: {},
+      comparison: {
+        missingCliRegistry: [],
+        missingWorkflowRegistry: [],
+        missingActionRegistry: [],
+        missingPageRegistry: [],
+        unknownDocCommandRefs: [],
+      },
+      auditBoundary: {
+        mode: "not-enumerated",
+        scope: "Fixture or partial source tree without bin/buildchain.mjs",
+        residualRisk: ["Reverse audit is only enforceable in a complete Buildchain source tree."],
+      },
+    };
+  }
+  return collectPublicSurfaceReverseAudit({ root });
+}
+
+function publicSurfaceAuditEvidence(root) {
+  const relPath = "dist/site/public-surface-audit.json";
+  const audit = publicSurfaceReverseAudit({ root });
+  return {
+    contract: BUILDCHAIN_PUBLIC_SURFACE_AUDIT_CONTRACT,
+    path: relPath,
+    status: audit.status,
+    sha256: fileExists(root, relPath) ? sha256File(root, relPath) : "",
+    summary: audit.summary,
+    auditBoundary: audit.auditBoundary,
+  };
+}
 
 function immediateReadmes(root, dir) {
   const absoluteDir = path.join(root, dir);
@@ -215,6 +266,23 @@ export function createBuildchainPublicClaimDefinitions() {
       ],
     },
     {
+      id: "claim:buildchain-public-surface-reverse-audit",
+      claim: "Buildchain fails closed when enumerable public CLI, workflow, action, site page, or documentation command surfaces are exposed without a matching machine registry entry.",
+      sourcePaths: [
+        "packages/core/public-surface-audit.js",
+        "scripts/generate-site-bundle.mjs",
+        "scripts/check-inventory.mjs",
+        "bin/buildchain.mjs",
+      ],
+      artifactPaths: [
+        "dist/site/public-surface-audit.json",
+        "dist/site/cli-registry.json",
+        "dist/site/workflow-registry.json",
+        "dist/site/page-registry.json",
+        "dist/site/kfd-claims.json",
+      ],
+    },
+    {
       id: "claim:buildchain-readme-badge-facts",
       claim: "Buildchain README status badges are generated from repository-owned facts and verified release-passport evidence, not hand-maintained README prose.",
       sourcePaths: [
@@ -309,6 +377,7 @@ export function createBuildchainPublicClaimDefinitions() {
 
 export function createBuildchainKfdSurfaceRegistry({ root = process.cwd() } = {}) {
   const pkg = packageJson(root);
+  const reverseAudit = publicSurfaceReverseAudit({ root });
   const exports = Object.entries(pkg.exports || {})
     .filter(([specifier]) => !specifier.startsWith("./site/") && specifier !== "./package.json")
     .map(([specifier, target]) => surface(
@@ -337,18 +406,40 @@ export function createBuildchainKfdSurfaceRegistry({ root = process.cwd() } = {}
   ];
   const siteConsumptionContracts = SITE_CONTRACT_FILES.map((relPath) => surface(`site:${relPath}`, "site-consumption-contract", relPath));
   const controlSurfaces = WORKFLOW_AND_ACTION_FILES.map((relPath) => surface(`control:${relPath}`, relPath.includes("actions/") ? "action" : "workflow", relPath));
+  const reverseEnumeratedSurfaces = uniqueById([
+    ...reverseAudit.enumerated.cliCommands.map((entry) => surface(`cli:${entry.id}`, "cli-command", "bin/buildchain.mjs", {
+      name: entry.usage,
+      reverseAuditSource: entry.source,
+    })),
+    ...reverseAudit.enumerated.workflowInputs.map((entry) => surface(`workflow:${entry.id}`, "workflow", entry.path, {
+      inputCount: entry.inputCount,
+      inputs: entry.inputs,
+      reverseAuditSource: ".github/workflows",
+    })),
+    ...reverseAudit.enumerated.actionInputs.map((entry) => surface(`action:${entry.id}`, "action", entry.path, {
+      inputCount: entry.inputCount,
+      inputs: entry.inputs,
+      reverseAuditSource: "actions/*/action.yml",
+    })),
+    ...reverseAudit.enumerated.sitePages.map((entry) => surface(`site-page:${entry.id}`, "site-page", "dist/site/page-registry.json", {
+      pagePath: entry.path,
+      reverseAuditSource: "dist/site/page-registry.json",
+    })),
+  ]);
   return {
     schemaVersion: 1,
     contract: BUILDCHAIN_KFD_COLLABORATION_INTERFACE_CONTRACT,
+    reverseAudit: publicSurfaceAuditEvidence(root),
     groups: {
       docs,
       schemas,
       standardsMetadata,
       packageExports: exports,
       siteConsumptionContracts,
+      reverseEnumeratedSurfaces,
     },
     additionalSurfaces: controlSurfaces,
-    publicSurfaceCount: docs.length + schemas.length + standardsMetadata.length + exports.length + siteConsumptionContracts.length + controlSurfaces.length,
+    publicSurfaceCount: docs.length + schemas.length + standardsMetadata.length + exports.length + siteConsumptionContracts.length + reverseEnumeratedSurfaces.length + controlSurfaces.length,
   };
 }
 
@@ -366,6 +457,7 @@ export function createBuildchainKfdClaimRegistry({ root = process.cwd(), sourceS
       sourceModule: "packages/core/buildchain-kfd-claims.js",
     },
     runtimeContract: runtimeContractSummary({ root }),
+    publicSurfaceReverseAudit: publicSurfaceAuditEvidence(root),
     publicClaims: createBuildchainPublicClaimDefinitions(),
     collaborationSurfaces: createBuildchainKfdSurfaceRegistry({ root }),
   };
@@ -427,6 +519,7 @@ export function createBuildchainKfd1Witness({ root = process.cwd(), sourceSha = 
 export function createBuildchainKfd3PrebuildWitness({ root = process.cwd(), sourceSha = "" } = {}) {
   const registry = createBuildchainKfdClaimRegistry({ root, sourceSha });
   const surfaces = createBuildchainKfdSurfaceRegistry({ root });
+  const reverseAudit = publicSurfaceAuditEvidence(root);
   const digest = `sha256:${sha256Json(registry)}`;
   return {
     schemaVersion: 1,
@@ -458,21 +551,24 @@ export function createBuildchainKfd3PrebuildWitness({ root = process.cwd(), sour
       standardsMetadata: surfaces.groups.standardsMetadata,
       packageExports: surfaces.groups.packageExports,
       siteConsumptionContracts: surfaces.groups.siteConsumptionContracts,
+      reverseEnumeratedSurfaces: surfaces.groups.reverseEnumeratedSurfaces,
       surfaces: surfaces.additionalSurfaces,
+      reverseAudit,
       closure: {
-        classificationMode: "closed-world",
-        reachableSurfaceMode: "declared-boundary",
+        classificationMode: reverseAudit.status === "passed" ? "closed-world" : "partial",
+        reachableSurfaceMode: reverseAudit.status === "passed" ? "reverse-enumerated-boundary" : "declared-boundary",
         unclassifiedEntrypointsPolicy: "fail",
-        nonExhaustivelyEnumerableSurfaces: [],
+        nonExhaustivelyEnumerableSurfaces: reverseAudit.status === "passed" ? [] : [reverseAudit.auditBoundary?.scope || "public surface reverse audit unavailable"],
         explicitlyExemptedSurfaces: [],
       },
     },
     auditBoundary: {
-      mode: "closed-world",
+      mode: reverseAudit.status === "passed" ? "closed-world" : "partial",
       scope: "Buildchain public human/agent release, workflow, package, and site-consumption surfaces",
-      reachableSurfaceMode: "declared-boundary",
+      reachableSurfaceMode: reverseAudit.status === "passed" ? "reverse-enumerated-boundary" : "declared-boundary",
       unclassifiedPolicy: "fail",
-      nonExhaustivelyEnumerableSurfaces: [],
+      reverseAudit,
+      nonExhaustivelyEnumerableSurfaces: reverseAudit.status === "passed" ? [] : [reverseAudit.auditBoundary?.scope || "public surface reverse audit unavailable"],
       explicitlyExemptedSurfaces: [],
     },
     residualRisk: [],
@@ -487,6 +583,7 @@ export function createBuildchainKfd3PrebuildWitness({ root = process.cwd(), sour
 export function createBuildchainKfd3ArtifactWitness({ root = process.cwd(), sourceSha = "" } = {}) {
   const registry = createBuildchainKfdClaimRegistry({ root, sourceSha });
   const surfaces = createBuildchainKfdSurfaceRegistry({ root });
+  const reverseAudit = publicSurfaceAuditEvidence(root);
   return {
     schemaVersion: 1,
     id: "buildchain-collaboration-interface",
@@ -507,7 +604,15 @@ export function createBuildchainKfd3ArtifactWitness({ root = process.cwd(), sour
     standardsMetadata: surfaces.groups.standardsMetadata,
     packageExports: surfaces.groups.packageExports,
     siteConsumptionContracts: surfaces.groups.siteConsumptionContracts,
+    reverseEnumeratedSurfaces: surfaces.groups.reverseEnumeratedSurfaces,
     surfaces: surfaces.additionalSurfaces,
+    reverseAudit,
+    auditBoundary: {
+      mode: reverseAudit.status === "passed" ? "closed-world" : "partial",
+      reachableSurfaceMode: reverseAudit.status === "passed" ? "reverse-enumerated-boundary" : "declared-boundary",
+      reverseAudit,
+      nonExhaustivelyEnumerableSurfaces: reverseAudit.status === "passed" ? [] : [reverseAudit.auditBoundary?.scope || "public surface reverse audit unavailable"],
+    },
     verifier: {
       name: "Buildchain self KFD witness generator",
       source: "scripts/generate-buildchain-kfd-witnesses.mjs",
@@ -519,11 +624,17 @@ export function createBuildchainKfd2Claims({ root = process.cwd(), witnessFiles 
   const evidenceFiles = Object.entries(witnessFiles)
     .filter(([, relPath]) => relPath)
     .map(([id, relPath]) => fileEvidence(root, relPath, { id }));
+  const reverseAuditEvidence = publicSurfaceAuditEvidence(root);
   return createBuildchainPublicClaimDefinitions().map((definition) => {
     const sourceBindings = uniqueById(definition.sourcePaths.map((relPath) => fileEvidence(root, relPath)));
     const artifacts = uniqueById(definition.artifactPaths.map((relPath) => fileEvidence(root, relPath)));
     const machineEvidence = [
       ...evidenceFiles,
+      fileEvidence(root, "dist/site/public-surface-audit.json", {
+        id: "public-surface-reverse-audit",
+        contract: reverseAuditEvidence.contract,
+        status: reverseAuditEvidence.status,
+      }),
       { id: "buildchain-kfd-claim-definition", digest: `sha256:${sha256Json(definition)}` },
     ];
     return {

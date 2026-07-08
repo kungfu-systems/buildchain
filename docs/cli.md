@@ -71,9 +71,12 @@ import { collectBadgeBundleFacts } from "@kungfu-tech/buildchain/badges";
 import { collectReadmeBadgeFacts } from "@kungfu-tech/buildchain/readme-badges";
 import { verifyReleasePassport } from "@kungfu-tech/buildchain/release-passport";
 import { createReleasePropagationPlan } from "@kungfu-tech/buildchain/release-propagation";
+import { planReleaseLineBootstrap } from "@kungfu-tech/buildchain/release-line-bootstrap";
+import { collectPublicSurfaceReverseAudit } from "@kungfu-tech/buildchain/public-surface-audit";
 import contractWorld from "@kungfu-tech/buildchain/site/buildchain-contract.json" with { type: "json" };
 import manualRegistry from "@kungfu-tech/buildchain/site/manual-registry.json" with { type: "json" };
 import nodeApiRegistry from "@kungfu-tech/buildchain/site/node-api-registry.json" with { type: "json" };
+import publicSurfaceAudit from "@kungfu-tech/buildchain/site/public-surface-audit.json" with { type: "json" };
 ```
 
 Use `dist/site/manual-registry.json` to find the packaged operating manuals and
@@ -119,6 +122,50 @@ same deterministic artifact manifest contract used by the reusable workflow:
 buildchain lifecycle run build \
   --artifact-path dist \
   --artifact-name "{repo}-{version}-{platform}"
+```
+
+`buildchain release line open` plans or writes the first version-state commit
+for a new semver minor line. It does not publish anything. The dry-run mode is
+the default and returns the dev/alpha/release refs, protection contract, default
+branch action, and initial version before any GitHub mutation happens:
+
+```bash
+buildchain release line open \
+  --major 2 \
+  --minor 10 \
+  --source-ref release/v2/v2.9 \
+  --json
+```
+
+The write mode only updates local version-state files. The repository workflow
+`Release Line Bootstrap` wraps this command and, when `apply=true`, commits the
+initial version state, creates `dev/vX/vX.Y`, `alpha/vX/vX.Y`, and
+`release/vX/vX.Y`, applies one-review branch protection, switches the default
+branch, and opens the first dev-to-alpha channel PR:
+
+```bash
+buildchain release line open \
+  --major 2 \
+  --minor 10 \
+  --source-ref release/v2/v2.9 \
+  --write \
+  --json
+```
+
+`buildchain` also publishes a public surface reverse audit as
+`dist/site/public-surface-audit.json`. The audit enumerates CLI commands from
+`bin/buildchain.mjs`, workflow inputs, action inputs, site pages, and docs
+command references, then compares them with the generated registries. Buildchain
+self-checks fail closed when an enumerable public surface is missing from the
+registry:
+
+```js
+import {
+  collectPublicSurfaceReverseAudit,
+  assertPublicSurfaceReverseAudit,
+} from "@kungfu-tech/buildchain/public-surface-audit";
+
+assertPublicSurfaceReverseAudit(collectPublicSurfaceReverseAudit({ root: process.cwd() }));
 ```
 
 Lifecycle runs also write a Buildchain observability JSONL log at

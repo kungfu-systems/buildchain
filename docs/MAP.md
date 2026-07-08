@@ -21,6 +21,7 @@ manuals explain those facts and give operator examples.
 | Capability | Machine-readable entry | Manual entry |
 | --- | --- | --- |
 | KFD-1 / KFD-2 / KFD-3 release-passport gates | `dist/site/kfd-claims.json`, `dist/site/buildchain-contract.json`, `dist/site/artifact-schemas.json` | [`release-passport.md`](release-passport.md) |
+| KFD-3 public surface reverse audit | `dist/site/public-surface-audit.json`, `dist/site/cli-registry.json`, `dist/site/workflow-registry.json`, `dist/site/page-registry.json` | [`cli.md`](cli.md), [`site-bundle-contract.md`](site-bundle-contract.md) |
 | Floating `@v2` drift detection and compatibility issues | `dist/site/buildchain-contract.json` | [`reusable-build-surface.md`](reusable-build-surface.md#floating-ref-contract-lock) |
 | npm publish transactions, evidence, dist-tags, and recovery | `dist/site/release-model.json`, `dist/site/artifact-schemas.json` | [`publish-transaction.md`](publish-transaction.md) |
 | Git/source/version/module/product build facts | `dist/site/node-api-registry.json`, `dist/site/cli-registry.json`, `kungfu-buildchain-module-build-facts`, `kungfu-buildchain-product-build-facts` | [`build-facts.md`](build-facts.md) |

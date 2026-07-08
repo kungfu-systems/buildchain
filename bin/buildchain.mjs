@@ -22,6 +22,10 @@ import {
   formatReleaseLineDryRun,
 } from "../packages/core/release-line-dry-run.js";
 import {
+  planReleaseLineBootstrap,
+  writeReleaseLineBootstrapVersionState,
+} from "../packages/core/release-line-bootstrap.js";
+import {
   collectGitHubReleasePassport,
   explainReleasePassport,
   verifyReleasePassport,
@@ -84,6 +88,8 @@ function usage() {
                                      [--tags <comma-list>] [--json]
   buildchain release dry-run --target-ref <ref> [--sha <sha>] [--source-ref <ref>]
                                       [--tags <comma-list>] [--json]
+  buildchain release line open --major <n> --minor <n> [--source-ref <ref>]
+                               [--initial-version <version>] [--write] [--json]
   buildchain release <inspect|recover|finalize|abort> ...
   buildchain transaction inspect ...
   buildchain collect github-release --tag <tag> [--repository <owner/repo>]
@@ -158,6 +164,7 @@ Examples:
   buildchain lifecycle run build --artifact-path dist --artifact-name "{repo}-{version}-{platform}"
   buildchain npm dry-run --json
   buildchain release --dry-run --target-ref alpha/v2/v2.0
+  buildchain release line open --major 2 --minor 10 --source-ref release/v2/v2.9 --json
   buildchain span --event native.build -- cmake --build build
   buildchain collect github-release --tag v2.2.0 --assets-dir dist --output-dir .buildchain/release-passport
   buildchain verify release-passport .buildchain/release-passport/buildchain.release.json
@@ -919,6 +926,46 @@ async function main(argv = process.argv.slice(2)) {
   }
 
   if (command === "release") {
+    if (args[0] === "line" && args[1] === "open") {
+      const lineArgs = args.slice(2);
+      const options = {
+        cwd: readFlag(lineArgs, "cwd", process.cwd()),
+        major: readFlag(lineArgs, "major", ""),
+        minor: readFlag(lineArgs, "minor", ""),
+        sourceRef: readFlag(lineArgs, "source-ref", ""),
+        initialVersion: readFlag(lineArgs, "initial-version", ""),
+      };
+      const result = readBooleanFlag(lineArgs, "write")
+        ? writeReleaseLineBootstrapVersionState({
+            ...options,
+            runVersionStateLifecycle: !readBooleanFlag(lineArgs, "skip-version-state-lifecycle"),
+            generatedAt: readFlag(lineArgs, "generated-at", ""),
+          })
+        : planReleaseLineBootstrap({
+            ...options,
+            requiredStatusCheck: readFlag(lineArgs, "required-status-check", "check"),
+            setDefault: !readBooleanFlag(lineArgs, "no-set-default"),
+            createAlphaPr: !readBooleanFlag(lineArgs, "no-alpha-pr"),
+            approvalCount: Number(readFlag(lineArgs, "approval-count", "1")),
+            bootstrapBranch: readFlag(lineArgs, "bootstrap-branch", ""),
+          });
+      if (readBooleanFlag(lineArgs, "json")) {
+        printJson(result);
+      } else {
+        process.stdout.write(`Buildchain release line bootstrap ${result.line}\n`);
+        process.stdout.write(`- source: ${result.source.ref}${result.source.sha ? ` (${result.source.sha})` : ""}\n`);
+        process.stdout.write(`- initial version: ${result.initialVersion}\n`);
+        process.stdout.write(`- dev: ${result.refs.dev}\n`);
+        process.stdout.write(`- alpha: ${result.refs.alpha}\n`);
+        process.stdout.write(`- release: ${result.refs.release}\n`);
+        process.stdout.write(`- version files: ${result.versionState.files.join(", ") || "none"}\n`);
+        if (result.changedFiles) {
+          process.stdout.write(`- changed files: ${result.changedFiles.join(", ") || "none"}\n`);
+        }
+        process.stdout.write(result.dryRun ? "No refs, branches, PRs, or files were modified.\n" : "Version-state files were updated in the working tree.\n");
+      }
+      return;
+    }
     const explainMode = args[0] === "dry-run" || args[0] === "explain";
     const releaseArgs = explainMode ? args.slice(1) : args;
     if (explainMode || readBooleanFlag(args, "dry-run")) {
