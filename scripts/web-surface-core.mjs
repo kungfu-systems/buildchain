@@ -633,14 +633,7 @@ function smokeUrlsForBinding({ binding, artifactPath, files }) {
           url: urlWithPath(binding.url, nestedPath),
           required: true,
         }]
-      : [{
-          kind: "nested",
-          requestPath: "",
-          url: "",
-          required: true,
-          missing: true,
-          message: "no nested HTML route was found under this surface artifact prefix",
-        }]),
+      : []),
   ];
 }
 

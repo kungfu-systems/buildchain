@@ -69,6 +69,7 @@ replace them.
 | What package-owned facts should buildchain.libkungfu.dev render? | [`site-bundle-contract.md`](site-bundle-contract.md) | use | stable |
 | How do I call the reusable build workflow? | [`reusable-build-surface.md`](reusable-build-surface.md) | use | stable |
 | How do self-hosted runners relay large artifacts through S3 before GitHub artifacts? | [`reusable-build-surface.md`](reusable-build-surface.md#artifact-transfer-relay) | use | stable |
+| How do self-hosted runners reuse local Git checkout caches without weakening source locks? | [`reusable-build-surface.md`](reusable-build-surface.md#locked-source-checkout-cache) | use | stable |
 | How do I validate an unreleased Buildchain runtime train while keeping `@v2`? | [`runtime-train-validation.md`](runtime-train-validation.md) | use | stable |
 | How do I deploy a site/app preview, staging, or production surface? | [`web-surface-deployments.md`](web-surface-deployments.md) | use | stable |
 | How do I publish observed infrastructure contracts for downstream consumers? | [`infra-contract.md`](infra-contract.md) | use | preview |
@@ -102,6 +103,8 @@ replace them.
   [`../fixtures/libnode-shaped/README.md`](../fixtures/libnode-shaped/README.md).
 - **S3 artifact relay / self-hosted runner artifact transfer** ->
   [`reusable-build-surface.md`](reusable-build-surface.md#artifact-transfer-relay).
+- **local Git checkout cache / self-hosted source transport** ->
+  [`reusable-build-surface.md`](reusable-build-surface.md#locked-source-checkout-cache).
 - **runtime train validation / temporary `buildchain-ref` override** ->
   [`runtime-train-validation.md`](runtime-train-validation.md) and
   [`reusable-build-surface.md`](reusable-build-surface.md).

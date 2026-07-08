@@ -8,13 +8,13 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:d3a30e60a7374b1742604d3b97970c7f8f2d7b1fcfe58d9459fb0703197bc0d1"
+      "digest": "sha256:af5d9dc00da4361e8db61152cd2c26874c04c2470b7c684c77d9b237ccc3cb62"
     },
     {
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:d3a30e60a7374b1742604d3b97970c7f8f2d7b1fcfe58d9459fb0703197bc0d1"
+      "digest": "sha256:af5d9dc00da4361e8db61152cd2c26874c04c2470b7c684c77d9b237ccc3cb62"
     },
     {
       "specifier": "@kungfu-tech/buildchain/artifact-passport",
@@ -32,7 +32,7 @@
       "specifier": "@kungfu-tech/buildchain/diagnostics",
       "export": "./diagnostics",
       "target": "./packages/core/diagnostics.js",
-      "digest": "sha256:d447f864c719632872c9d90f0e30e2b6d45311bc5115d4f3c661d21164d75ebc"
+      "digest": "sha256:a0e54f60ec24d9c15529a8dbad33129c8ec537e9f34203119d876d1e2fb26fe7"
     },
     {
       "specifier": "@kungfu-tech/buildchain/homebrew",
@@ -50,7 +50,7 @@
       "specifier": "@kungfu-tech/buildchain/readme-badges",
       "export": "./readme-badges",
       "target": "./packages/core/readme-badges.js",
-      "digest": "sha256:a3400b0083430782d4fda283b21d308327eaed969053aa5b88a8b946bf83d4b3"
+      "digest": "sha256:35c42750bbdede7d85b71444d1d09cd6c7ce40ecd8868c86d869855764dad0c2"
     },
     {
       "specifier": "@kungfu-tech/buildchain/logging",
@@ -104,7 +104,7 @@
     {
       "id": "readme-badges",
       "path": "docs/readme-badges.md",
-      "digest": "sha256:3f4a44ea7f3b70cadc78a343fe53ade74b78fa369c19630cc9b926c1e460f66f"
+      "digest": "sha256:c886d5d469d143571ae68497643be754b1616b562fddc780a5708f49b4c46242"
     },
     {
       "id": "homebrew",

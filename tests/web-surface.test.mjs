@@ -239,6 +239,31 @@ test("web-surface deploy apply rewrites surface host roots to artifact path pref
   });
 });
 
+test("web-surface deploy apply only records nested smoke URLs when nested HTML exists", () => {
+  withFixture((fixture) => {
+    fs.mkdirSync(path.join(fixture, "dist", "buildchain"), { recursive: true });
+    fs.writeFileSync(path.join(fixture, "dist", "index.html"), "hub\n");
+    fs.writeFileSync(path.join(fixture, "dist", "buildchain", "index.html"), "buildchain\n");
+
+    const result = applyWebSurfaceDeploy({
+      cwd: fixture,
+      channel: "preview",
+      alias: "pr-29",
+      sourceSha: "b".repeat(40),
+      dryRun: true,
+    });
+    const buildchainBinding = result.surfaceBindings.find((binding) => binding.surface === "buildchain");
+
+    assert.deepEqual(
+      buildchainBinding.smokeUrls.map((entry) => [entry.kind, entry.requestPath, entry.url]),
+      [
+        ["root", "/", "https://buildchain-pr-29.preview.libkungfu.dev/"],
+      ],
+    );
+    assert.equal(buildchainBinding.smokeUrls.some((entry) => entry.missing), false);
+  });
+});
+
 test("web-surface deploy apply honors per-surface deploy overrides", () => {
   withFixture((fixture) => {
     const configPath = path.join(fixture, "buildchain.toml");

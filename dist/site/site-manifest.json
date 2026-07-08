@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:f4300eed89765cee0df38eb92de4d9d3adce4fbf954c735aead3bea74f05d975"
+      "digest": "sha256:03f52660d03223fff7daf500f995645d78a46fffd8cddec9d8c01bbee0863145"
     },
     {
       "id": "install",
@@ -85,7 +85,7 @@
       "path": "docs/readme-badges.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:3f4a44ea7f3b70cadc78a343fe53ade74b78fa369c19630cc9b926c1e460f66f"
+      "digest": "sha256:c886d5d469d143571ae68497643be754b1616b562fddc780a5708f49b4c46242"
     },
     {
       "id": "homebrew",
@@ -181,7 +181,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:165011e2a932461805925c714c2c1c07f1ee60c4b3a614b6dcdda4b81ec22d68"
+      "digest": "sha256:e76aefe23b83f1b99b8c13cee1ca99760fd9902a41fbec25e193426329826340"
     },
     {
       "id": "publish-transaction",
@@ -229,7 +229,7 @@
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:4c7334fe2284fec3c1249124b0ff85f1242eb7a76d4b2c537c8b2cb6e0e598c1"
+      "digest": "sha256:5063ebb76db3cd36797561782e6c741e30d60bfa0dac8f798dbbd34c4ab2b3c0"
     }
   ],
   "facts": [
@@ -240,6 +240,7 @@
     "workflow-registry.json",
     "release-model.json",
     "artifact-schemas.json",
+    "badge-endpoint-registry.json",
     "product-mechanism.json",
     "release-provenance.json",
     "kfd-claims.json",

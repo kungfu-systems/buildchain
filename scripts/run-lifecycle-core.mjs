@@ -405,10 +405,13 @@ export function runLifecycle({
   const resolvedDiagnosticsEventsPath = path.join(diagnosticsDir, "events.jsonl");
   const resolvedDiagnosticsProcessSummaryPath = path.join(diagnosticsDir, "process-summary.json");
   const resolvedDiagnosticsProcessSamplesPath = path.join(diagnosticsDir, "process-samples.jsonl");
+  const resolvedSourceCheckoutPath = path.resolve(resolvedWorkspace, ".buildchain/diagnostics/source-checkout.json");
+  const resolvedDiagnosticsSourceCheckoutPath = path.join(diagnosticsDir, "source-checkout.json");
   const resolvedDiagnosticsManifestPath = path.join(diagnosticsDir, "diagnostics-manifest.json");
   const relativeDiagnosticsEventsPath = toPosix(path.relative(resolvedWorkspace, resolvedDiagnosticsEventsPath));
   const relativeDiagnosticsProcessSummaryPath = toPosix(path.relative(resolvedWorkspace, resolvedDiagnosticsProcessSummaryPath));
   const relativeDiagnosticsProcessSamplesPath = toPosix(path.relative(resolvedWorkspace, resolvedDiagnosticsProcessSamplesPath));
+  const relativeDiagnosticsSourceCheckoutPath = toPosix(path.relative(resolvedWorkspace, resolvedDiagnosticsSourceCheckoutPath));
   const relativeDiagnosticsManifestPath = toPosix(path.relative(resolvedWorkspace, resolvedDiagnosticsManifestPath));
   const logRunId = crypto.randomUUID();
   const frameworkLog = createBuildchainLogger({
@@ -567,6 +570,9 @@ export function runLifecycle({
   const processSummaryArtifact = shouldReadProcessSummary
     ? readProcessSummaryArtifact(resolvedProcessSummaryPath)
     : undefined;
+  const sourceCheckoutArtifact = fs.existsSync(resolvedSourceCheckoutPath)
+    ? JSON.parse(fs.readFileSync(resolvedSourceCheckoutPath, "utf8"))
+    : undefined;
   fs.mkdirSync(path.dirname(resolvedManifestPath), { recursive: true });
   const scanStartedAt = Date.now();
   const files = collectArtifactFiles(resolvedWorkspace, artifactPaths);
@@ -687,6 +693,7 @@ export function runLifecycle({
       artifactPaths,
       lifecycleObservability,
       processSummary: processSummaryArtifact?.summary,
+      sourceCheckout: sourceCheckoutArtifact,
       links: {
         artifactName,
         platformId,
@@ -700,6 +707,7 @@ export function runLifecycle({
         ...(relativeProcessSummaryPath ? { processSummary: relativeProcessSummaryPath } : {}),
         ...(processSummaryArtifact ? { diagnosticsProcessSummary: relativeDiagnosticsProcessSummaryPath } : {}),
         ...(processSummaryArtifact?.samplesPath ? { diagnosticsProcessSamples: relativeDiagnosticsProcessSamplesPath } : {}),
+        ...(sourceCheckoutArtifact ? { sourceCheckout: relativeDiagnosticsSourceCheckoutPath } : {}),
       },
     }),
   );
@@ -718,6 +726,9 @@ export function runLifecycle({
     });
     copyIfExists(resolvedSamplesPath, resolvedDiagnosticsProcessSamplesPath);
   }
+  if (sourceCheckoutArtifact) {
+    copyIfExists(resolvedSourceCheckoutPath, resolvedDiagnosticsSourceCheckoutPath);
+  }
   writeDiagnosticsSidecarManifest(resolvedDiagnosticsManifestPath, {
     workspace: resolvedWorkspace,
     artifactName,
@@ -728,6 +739,7 @@ export function runLifecycle({
       { kind: "events", filePath: resolvedDiagnosticsEventsPath, required: true },
       { kind: "process-summary", filePath: resolvedDiagnosticsProcessSummaryPath },
       { kind: "process-samples", filePath: resolvedDiagnosticsProcessSamplesPath },
+      { kind: "source-checkout", filePath: resolvedDiagnosticsSourceCheckoutPath },
     ],
   });
   console.log(`buildchain_manifest=${path.relative(resolvedWorkspace, resolvedManifestPath)}`);
