@@ -1032,6 +1032,7 @@ export function createReleasePassport({
     },
     release: {
       tag: normalizedTag,
+      publicTag: optionalString(release.publicTag || release.public_tag || normalizedTag),
       internalTag: optionalString(release.internalTag || release.internal_tag || normalizedTag),
       internalVersion,
       publishedVersion,

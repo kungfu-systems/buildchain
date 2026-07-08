@@ -14,14 +14,14 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:407d6d5ee6a96a34d2cc30db9ac64cf4b1819ab6d77bd7a57a07a124f22101ca",
+    "compatibilityDigest": "sha256:967df7e854fdf582294ddfb6403eff25c00db9518a24051e7d47cbd75527c785",
     "majorLine": "v2"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "046b397df3042bdf9771e279cedb2d29cc0d691d379e2c244c3b9476c16c6ce3",
+    "sha256": "8643f99a115112c2fa97081d7ba9bb7c8d6a4be74df40a5d50410e417d4f2856",
     "summary": {
       "cliCommandCount": 52,
       "workflowCount": 35,
@@ -158,7 +158,7 @@
     },
     {
       "id": "claim:buildchain-semver-github-release",
-      "claim": "Semver promotion can create or update an exact-tag GitHub Release only after the publish transaction completes, and uploads Buildchain release passport/evidence assets.",
+      "claim": "Semver promotion can create or update the public GitHub Release only after the publish transaction completes, and uploads Buildchain release passport/evidence assets while preserving the internal transaction exact tag.",
       "sourcePaths": [
         "actions/promote-buildchain-ref/index.js",
         "actions/promote-buildchain-ref/action.yml",
@@ -207,7 +207,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "046b397df3042bdf9771e279cedb2d29cc0d691d379e2c244c3b9476c16c6ce3",
+      "sha256": "8643f99a115112c2fa97081d7ba9bb7c8d6a4be74df40a5d50410e417d4f2856",
       "summary": {
         "cliCommandCount": 52,
         "workflowCount": 35,

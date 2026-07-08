@@ -353,7 +353,7 @@ export function createBuildchainPublicClaimDefinitions() {
     },
     {
       id: "claim:buildchain-semver-github-release",
-      claim: "Semver promotion can create or update an exact-tag GitHub Release only after the publish transaction completes, and uploads Buildchain release passport/evidence assets.",
+      claim: "Semver promotion can create or update the public GitHub Release only after the publish transaction completes, and uploads Buildchain release passport/evidence assets while preserving the internal transaction exact tag.",
       sourcePaths: [
         "actions/promote-buildchain-ref/index.js",
         "actions/promote-buildchain-ref/action.yml",

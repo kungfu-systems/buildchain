@@ -271,6 +271,7 @@ for (const requiredSnippet of [
   "renderReadmeBadgeBlock",
   "checkReadmeBadgeBlock",
   "updateReadmeBadgeBlock",
+  "createKfdBadgeSpecsFromStandards",
   "createReadmeBadgeEndpointRegistry",
 ]) {
   if (!coreIndexSource.includes(requiredSnippet)) {
@@ -761,6 +762,7 @@ for (const requiredSnippet of [
   "github-release:",
   "github-release-title:",
   "github-release-notes:",
+  "public-release-tag:",
   "github-release-url:",
   "github-release-action:",
 ]) {

@@ -24,6 +24,7 @@ Use the public package export:
 import {
   collectBadgeBundleFacts,
   collectReadmeBadgeFacts,
+  createKfdBadgeSpecsFromStandards,
   renderBadgeBundleBlock,
   renderReadmeBadgeBlock,
   checkBadgeBundleBlock,
@@ -60,9 +61,11 @@ The Node API is the implementation source. The CLI delegates to it.
 `collectBadgeBundleFacts({ cwd, claims })` is the trust-badge bundle API. It
 uses the same repository facts, but returns contract
 `kungfu-buildchain-badge-bundle-facts` and only renders the Buildchain trust
-claims: `kfd-1`, `kfd-2`, `kfd-3`, and `release-passport`. Those four claims are
-enabled by default. Callers can pass `claims: "kfd-1,release-passport"` or an
-array to narrow the bundle without hand-writing badge Markdown.
+claims: every active `kfd-*` standard discovered from KFD standards metadata,
+plus `release-passport`. KFD-1, KFD-2, KFD-3, KFD-4, and release passport are
+enabled by default with current KFD metadata. Callers can pass
+`claims: "kfd-1,release-passport"` or an array to narrow the bundle without
+hand-writing badge Markdown.
 
 ## CLI
 
@@ -114,11 +117,12 @@ kfd_standards = "node_modules/@kungfu-tech/kfd/standards.json"
 kfd_1 = "declared"
 kfd_2 = "planned"
 kfd_3 = "aligned"
+kfd_4 = "declared"
 platforms = ["macOS", "Linux", "Windows"]
 workflows = ["verify.yml", "build.yml"]
 
 [badges.bundle]
-claims = ["kfd-1", "kfd-2", "kfd-3", "release-passport"]
+claims = ["kfd-1", "kfd-2", "kfd-3", "kfd-4", "release-passport"]
 ```
 
 `release_passport` may be a local path or URL. If omitted, Buildchain tries
@@ -161,12 +165,12 @@ may display a KFD state as `passed`.
 
 ## KFD Badge Rules
 
-KFD passed is evidence-backed. A repository may display `KFD-1 passed`,
-`KFD-2 passed`, or `KFD-3 passed` only when its own release passport verifies
-successfully and the corresponding passport section has `status: "passed"`.
-The KFD badge vocabulary comes from KFD standards metadata, not Buildchain
-private strings: for example KFD-2 uses the `releaseTrustPassport` concept from
-`@kungfu-tech/kfd/standards.json`.
+KFD passed is evidence-backed. A repository may display `KFD-N passed` only when
+its own release passport verifies successfully and the corresponding passport
+section has `status: "passed"`. The KFD badge vocabulary comes from KFD
+standards metadata, not Buildchain private strings: for example KFD-2 uses the
+`releaseTrustPassport` concept and KFD-4 uses the `observerPerspective` concept
+from `@kungfu-tech/kfd/standards.json`.
 
 When no release passport exists yet, or when the passport cannot be verified,
 Buildchain downgrades each KFD badge to the explicit local declaration such as

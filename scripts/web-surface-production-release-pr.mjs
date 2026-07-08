@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import fs from "node:fs";
+import path from "node:path";
 
 function requiredString(value, name) {
   const normalized = String(value || "").trim();
@@ -28,6 +30,27 @@ function parseJson(value, name) {
   }
 }
 
+function readArg(name, fallback = "") {
+  const index = process.argv.indexOf(`--${name}`);
+  if (index === -1) return fallback;
+  return process.argv[index + 1] || "";
+}
+
+function readJsonFile(filePath, name) {
+  const normalized = requiredString(filePath, name);
+  try {
+    return JSON.parse(fs.readFileSync(path.resolve(normalized), "utf8"));
+  } catch (error) {
+    throw new Error(`${name} must point to valid JSON: ${error.message}`);
+  }
+}
+
+function writeJsonFile(filePath, value) {
+  const resolved = path.resolve(requiredString(filePath, "output"));
+  fs.mkdirSync(path.dirname(resolved), { recursive: true });
+  fs.writeFileSync(resolved, `${JSON.stringify(value, null, 2)}\n`);
+}
+
 function runUrl({ serverUrl = "", repository = "", runId = "" } = {}) {
   if (!serverUrl || !repository || !runId) return "";
   return `${serverUrl.replace(/\/$/, "")}/${repository}/actions/runs/${runId}`;
@@ -37,6 +60,51 @@ function urlsFromResult(result = {}) {
   const urls = result.urls && typeof result.urls === "object" ? result.urls : {};
   if (Object.keys(urls).length > 0) return urls;
   return result.url ? { default: result.url } : {};
+}
+
+export function compactProductionReleasePrSummary(result = {}) {
+  const manifest = result.manifest && typeof result.manifest === "object" ? result.manifest : {};
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-web-surface-production-release-pr-summary",
+    sourceContract: result.contract || "",
+    channel: result.channel || manifest.channel || "",
+    alias: result.alias || manifest.alias || "",
+    status: result.status || "",
+    applyMode: result.applyMode || "",
+    actor: result.actor || "",
+    runId: result.runId || "",
+    appliedAt: result.appliedAt || "",
+    url: result.url || "",
+    urls: urlsFromResult(result),
+    sourceSha: result.sourceSha || manifest.sourceSha || "",
+    artifactHash: result.artifactHash || manifest.artifactHash || "",
+    target: result.target || "",
+    manifestKey: result.manifestKey || "",
+    surfaceBindings: Array.isArray(result.surfaceBindings)
+      ? result.surfaceBindings.map((binding) => ({
+          surface: binding.surface || "",
+          pathPrefix: binding.pathPrefix || "",
+          objectPrefix: binding.objectPrefix || "",
+          url: binding.url || "",
+          manifestKey: binding.manifestKey || "",
+          accessControl: binding.accessControl || "",
+          healthStrategy: binding.healthStrategy || "",
+        }))
+      : [],
+  };
+}
+
+export function readStagingReleasePrSummary(env = process.env) {
+  const summaryPath = optionalString(env.STAGING_RELEASE_PR_SUMMARY_PATH);
+  if (summaryPath) {
+    return compactProductionReleasePrSummary(readJsonFile(summaryPath, "STAGING_RELEASE_PR_SUMMARY_PATH"));
+  }
+  const resultPath = optionalString(env.STAGING_APPLY_RESULT_PATH);
+  if (resultPath) {
+    return compactProductionReleasePrSummary(readJsonFile(resultPath, "STAGING_APPLY_RESULT_PATH"));
+  }
+  return compactProductionReleasePrSummary(parseJson(env.STAGING_APPLY_RESULT_JSON, "STAGING_APPLY_RESULT_JSON"));
 }
 
 export function releaseBranchName({ prefix = "release/", channel = "production", sourceSha = "" } = {}) {
@@ -276,7 +344,7 @@ export async function openProductionReleasePr({
 }
 
 export async function webSurfaceProductionReleasePrCli(env = process.env) {
-  const stagingResult = parseJson(env.STAGING_APPLY_RESULT_JSON, "STAGING_APPLY_RESULT_JSON");
+  const stagingResult = readStagingReleasePrSummary(env);
   const sourceSha = optionalString(stagingResult.sourceSha) || requiredString(env.GITHUB_SHA, "GITHUB_SHA");
   const result = await openProductionReleasePr({
     apiUrl: env.GITHUB_API_URL || "https://api.github.com",
@@ -307,9 +375,26 @@ export async function webSurfaceProductionReleasePrCli(env = process.env) {
   return result;
 }
 
+export function writeProductionReleasePrSummaryCli(env = process.env) {
+  const input = readArg("input", env.STAGING_APPLY_RESULT_PATH || "");
+  const output = readArg("output", env.STAGING_RELEASE_PR_SUMMARY_PATH || "");
+  const result = input
+    ? readJsonFile(input, "input")
+    : parseJson(env.STAGING_APPLY_RESULT_JSON, "STAGING_APPLY_RESULT_JSON");
+  const summary = compactProductionReleasePrSummary(result);
+  writeJsonFile(output, summary);
+  return summary;
+}
+
 if (import.meta.url === `file://${process.argv[1]}`) {
-  webSurfaceProductionReleasePrCli().catch((error) => {
+  try {
+    if (process.argv[2] === "write-summary") {
+      writeProductionReleasePrSummaryCli();
+    } else {
+      await webSurfaceProductionReleasePrCli();
+    }
+  } catch (error) {
     console.error(error.stack || error.message);
     process.exitCode = 1;
-  });
+  }
 }
