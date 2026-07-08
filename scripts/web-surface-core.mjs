@@ -334,10 +334,21 @@ function cloudFrontDirectoryIndexFunctionName(distributionId = "") {
   return `buildchain-web-surface-index-${suffix || "distribution"}`;
 }
 
+function directoryIndexRewriteMode(binding) {
+  return binding.directoryIndexRewrite === "external" ? "external" : "buildchain";
+}
+
+function directoryIndexRoutingStrategy(binding) {
+  return directoryIndexRewriteMode(binding) === "external"
+    ? "external-viewer-request-function"
+    : "cloudfront-function";
+}
+
 function cloudFrontDirectoryIndexRewriteOperations(bindings) {
   const seen = new Set();
   const helper = path.join(moduleDir, "web-surface-cloudfront-rewrite.mjs");
   return bindings
+    .filter((binding) => directoryIndexRewriteMode(binding) === "buildchain")
     .map((binding) => binding.distributionId || "")
     .filter(Boolean)
     .filter((distributionId) => {
@@ -361,6 +372,7 @@ function cloudFrontDirectoryIndexRewriteOperations(bindings) {
       routing: {
         contract: "kungfu-buildchain-web-surface-directory-index-rewrite",
         strategy: "cloudfront-function",
+        managedBy: "buildchain",
         distributionId,
         functionName: cloudFrontDirectoryIndexFunctionName(distributionId),
         requestRewrite: "viewer request paths ending in / are rewritten to /index.html",
@@ -653,6 +665,7 @@ function resolveSurfaceBindings({ config, channelName, alias, deployConfig }) {
       viewerPathPrefix: "/",
       directoryIndex: "index.html",
       directoryIndexResolution: true,
+      directoryIndexRewrite: effectiveDeploy.directoryIndexRewrite || "buildchain",
       canonicalUrl: surface.productionUrl || (channelName === "production" ? url : ""),
       pathOnly: Boolean(surface.pathOnly),
       bucket,
@@ -729,23 +742,29 @@ function smokeUrlsForBinding({ binding, artifactPath, files }) {
 }
 
 function withSurfaceRoutingEvidence(bindings, { artifactPath, files }) {
-  return bindings.map((binding) => ({
-    ...binding,
-    artifactPathPrefix: normalizeS3Key(binding.artifactPathPrefix || surfaceArtifactPrefix(binding)),
-    viewerPathPrefix: binding.viewerPathPrefix || "/",
-    directoryIndex: binding.directoryIndex || "index.html",
-    directoryIndexResolution: binding.directoryIndexResolution !== false,
-    routing: {
-      contract: "kungfu-buildchain-web-surface-path-prefix-rewrite",
-      viewerPathPrefix: binding.viewerPathPrefix || "/",
+  return bindings.map((binding) => {
+    const directoryIndexRewrite = directoryIndexRewriteMode(binding);
+    return {
+      ...binding,
+      directoryIndexRewrite,
       artifactPathPrefix: normalizeS3Key(binding.artifactPathPrefix || surfaceArtifactPrefix(binding)),
-      objectPrefix: binding.objectPrefix,
+      viewerPathPrefix: binding.viewerPathPrefix || "/",
       directoryIndex: binding.directoryIndex || "index.html",
       directoryIndexResolution: binding.directoryIndexResolution !== false,
-      directoryIndexStrategy: "cloudfront-function",
-    },
-    smokeUrls: smokeUrlsForBinding({ binding, artifactPath, files }),
-  }));
+      routing: {
+        contract: "kungfu-buildchain-web-surface-path-prefix-rewrite",
+        viewerPathPrefix: binding.viewerPathPrefix || "/",
+        artifactPathPrefix: normalizeS3Key(binding.artifactPathPrefix || surfaceArtifactPrefix(binding)),
+        objectPrefix: binding.objectPrefix,
+        directoryIndex: binding.directoryIndex || "index.html",
+        directoryIndexResolution: binding.directoryIndexResolution !== false,
+        directoryIndexRewrite,
+        directoryIndexManagedBy: directoryIndexRewrite === "external" ? "external" : "buildchain",
+        directoryIndexStrategy: directoryIndexRoutingStrategy(binding),
+      },
+      smokeUrls: smokeUrlsForBinding({ binding, artifactPath, files }),
+    };
+  });
 }
 
 export function validateWebSurfaceProject(cwd = process.cwd()) {
