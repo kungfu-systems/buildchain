@@ -6848,6 +6848,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   assert.equal(refs.has("heads/buildchain/release-state/22-22-3-kf-3"), true);
   assert.equal(refs.has("heads/buildchain/release-state/22-22-0"), false);
   assert.equal(refs.get("tags/v22.22.0"), SHA);
+  assert.equal(refs.get("tags/v22.22.3-kf.3"), SHA);
 });
 
 test("strict release promotion rejects code changes after alpha", async () => {
