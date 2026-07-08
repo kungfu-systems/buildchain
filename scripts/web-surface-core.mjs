@@ -1309,6 +1309,69 @@ function htmlLikeResponse(response, url = "") {
   return String(contentType).toLowerCase().includes("text/html") || /\/$|\.html(?:$|[?#])/.test(String(url || ""));
 }
 
+const managedNetworkRequiredEvidence = [
+  "sync-static-artifact",
+  "write-deployment-manifest",
+];
+
+function operationEvidenceStatus(operation, { plannedEvidence = false } = {}) {
+  if (plannedEvidence && operation.status === undefined) {
+    return true;
+  }
+  return operation.status === "applied" || operation.status === "planned";
+}
+
+function managedNetworkHealthEvidence({ target, result, plan }) {
+  const operationSource = Array.isArray(result?.operations) && result.operations.length > 0
+    ? "apply-result"
+    : "deploy-plan";
+  const operations = operationSource === "apply-result"
+    ? result.operations
+    : (Array.isArray(plan?.steps) ? plan.steps : []);
+  const surfaceOperations = operations.filter((operation) => operation.surface === target.surface);
+  const presentActions = new Set(
+    surfaceOperations
+      .filter((operation) => operationEvidenceStatus(operation, { plannedEvidence: operationSource === "deploy-plan" }))
+      .map((operation) => operation.action),
+  );
+  const missingActions = managedNetworkRequiredEvidence.filter((action) => !presentActions.has(action));
+  const missingFields = [];
+  if (!target.manifestKey) missingFields.push("manifestKey");
+  if (!target.bucket) missingFields.push("bucket");
+  if (!target.objectPrefix) missingFields.push("objectPrefix");
+  return {
+    source: operationSource,
+    actions: [...presentActions].sort(),
+    requiredActions: managedNetworkRequiredEvidence,
+    missingActions,
+    missingFields,
+    status: missingActions.length === 0 && missingFields.length === 0 ? "pass" : "fail",
+  };
+}
+
+function managedNetworkHealthCheck({ target, result, plan }) {
+  const evidence = managedNetworkHealthEvidence({ target, result, plan });
+  return {
+    surface: target.surface,
+    kind: target.kind,
+    requestPath: target.requestPath,
+    url: target.url,
+    accessControl: "managed-network",
+    healthStrategy: "deployment-evidence",
+    status: evidence.status,
+    httpStatus: null,
+    finalUrl: "",
+    noindexHeader: false,
+    manifestKey: target.manifestKey || "",
+    bucket: target.bucket || "",
+    objectPrefix: target.objectPrefix || "",
+    evidence,
+    message: evidence.status === "pass"
+      ? "managed-network surface health verified from deployment manifest and S3 object sync evidence; direct public fetch skipped"
+      : `managed-network surface health requires manifest and S3 object evidence; missing actions=${evidence.missingActions.join(",") || "none"}, missing fields=${evidence.missingFields.join(",") || "none"}`,
+  };
+}
+
 export async function checkWebSurfaceHealth({
   result = null,
   plan = null,
@@ -1316,6 +1379,7 @@ export async function checkWebSurfaceHealth({
   fetchImpl = fetch,
   checkedAt = new Date().toISOString(),
   allowedStatuses = [200],
+  allowedManagedNetworkRunner = false,
 } = {}) {
   const loadedConfig = loadBuildchainConfig(cwd);
   const config = assertWebSurfaceConfig(loadedConfig);
@@ -1351,6 +1415,10 @@ export async function checkWebSurfaceHealth({
           required: smoke.required !== false,
           missing: Boolean(smoke.missing),
           message: smoke.message || "",
+          accessControl: binding.accessControl || config.channels?.[channel]?.accessControl || "",
+          manifestKey: binding.manifestKey || "",
+          bucket: binding.bucket || "",
+          objectPrefix: binding.objectPrefix || "",
         }));
       })
     : Object.entries(urls).map(([surface, url]) => ({
@@ -1359,6 +1427,7 @@ export async function checkWebSurfaceHealth({
         requestPath: "/",
         url,
         required: true,
+        accessControl: config.channels?.[channel]?.accessControl || "",
       }));
 
   for (const target of smokeTargets) {
@@ -1377,6 +1446,10 @@ export async function checkWebSurfaceHealth({
       });
       continue;
     }
+    if (target.accessControl === "managed-network" && !allowedManagedNetworkRunner) {
+      checks.push(managedNetworkHealthCheck({ target, result, plan }));
+      continue;
+    }
     try {
       const response = await fetchImpl(url, { redirect: "follow" });
       const expectedNoindex = Boolean(config.channels?.[channel]?.noindex);
@@ -1393,6 +1466,8 @@ export async function checkWebSurfaceHealth({
         kind: target.kind,
         requestPath: target.requestPath,
         url,
+        accessControl: target.accessControl || "",
+        healthStrategy: "http",
         status: statusOk && noindexOk ? "pass" : "fail",
         httpStatus: response.status,
         finalUrl: response.url || url,

@@ -871,6 +871,77 @@ test("web-surface health check smokes root and nested surface URLs", async () =>
   });
 });
 
+test("web-surface health check verifies managed-network staging from deployment evidence", async () => {
+  await withFixtureAsync(async (fixture) => {
+    fs.mkdirSync(path.join(fixture, "dist", "buildchain", "docs"), { recursive: true });
+    fs.writeFileSync(path.join(fixture, "dist", "index.html"), "hub\n");
+    fs.writeFileSync(path.join(fixture, "dist", "buildchain", "index.html"), "buildchain\n");
+    fs.writeFileSync(path.join(fixture, "dist", "buildchain", "docs", "index.html"), "docs\n");
+    const result = applyWebSurfaceDeploy({
+      cwd: fixture,
+      channel: "staging",
+      sourceSha: "b".repeat(40),
+      dryRun: true,
+    });
+    const health = await checkWebSurfaceHealth({
+      cwd: fixture,
+      result,
+      checkedAt: "2026-07-01T00:00:00.000Z",
+      fetchImpl() {
+        throw new Error("managed-network health must not require public fetch");
+      },
+    });
+
+    const buildchainRoot = health.checks.find((check) => check.surface === "buildchain" && check.kind === "root");
+    const buildchainNested = health.checks.find((check) => check.surface === "buildchain" && check.kind === "nested");
+    assert.equal(health.status, "passed");
+    assert.equal(buildchainRoot.healthStrategy, "deployment-evidence");
+    assert.equal(buildchainRoot.accessControl, "managed-network");
+    assert.deepEqual(buildchainRoot.evidence.requiredActions, ["sync-static-artifact", "write-deployment-manifest"]);
+    assert.equal(buildchainRoot.evidence.status, "pass");
+    assert.equal(buildchainNested.healthStrategy, "deployment-evidence");
+  });
+});
+
+test("web-surface health check can use an allowed runner for managed-network HTTP smoke", async () => {
+  await withFixtureAsync(async (fixture) => {
+    fs.mkdirSync(path.join(fixture, "dist"), { recursive: true });
+    fs.writeFileSync(path.join(fixture, "dist", "index.html"), "hello\n");
+    const result = applyWebSurfaceDeploy({
+      cwd: fixture,
+      channel: "staging",
+      sourceSha: "b".repeat(40),
+      dryRun: true,
+    });
+    const fetched = [];
+    const health = await checkWebSurfaceHealth({
+      cwd: fixture,
+      result,
+      allowedManagedNetworkRunner: true,
+      fetchImpl(url) {
+        fetched.push(url);
+        return {
+          status: 200,
+          url,
+          headers: {
+            get() {
+              return "";
+            },
+          },
+          text() {
+            return "<!doctype html>";
+          },
+        };
+      },
+    });
+
+    const hub = health.checks.find((check) => check.surface === "hub" && check.kind === "root");
+    assert.equal(health.status, "passed");
+    assert.equal(hub.healthStrategy, "http");
+    assert.ok(fetched.includes("https://staging.libkungfu.dev/"));
+  });
+});
+
 test("web-surface health check fails production on html robots noindex meta", async () => {
   await withFixtureAsync(async (fixture) => {
     fs.mkdirSync(path.join(fixture, "dist"), { recursive: true });

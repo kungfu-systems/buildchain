@@ -513,6 +513,18 @@ preflight, and health check so a reviewer or agent can audit why the production
 site changed and whether every declared host and every existing nested route was
 actually covered.
 
+Channels declared with `access_control = "managed-network"` use a different
+health strategy by default. Buildchain does not require a GitHub-hosted runner
+to fetch a URL that is intentionally reachable only from an approved network.
+Instead, the health check verifies the deployment evidence recorded by the apply
+result: each surface must have a manifest key, bucket, object prefix,
+`sync-static-artifact`, and `write-deployment-manifest` evidence. The check
+records `healthStrategy = "deployment-evidence"` for those surfaces and skips
+the public HTTP fetch. If the workflow is running on a runner that is allowed to
+reach the managed network, set
+`BUILDCHAIN_WEB_SURFACE_HEALTH_ALLOWED_RUNNER=true` or pass
+`--allowed-managed-network-runner true` to keep the normal HTTP smoke checks.
+
 ## Cleanup Plans
 
 Preview cleanup is an auditable cleanup contract. It can run as a dry-run plan,
