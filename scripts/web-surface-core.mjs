@@ -277,6 +277,53 @@ function syncStaticArtifactArgs({ artifactRoot, bucket, objectPrefix }) {
   return args;
 }
 
+function directoryIndexAliasKeys({ objectPrefix, relativeIndexPath }) {
+  const normalizedPrefix = normalizeS3Key(objectPrefix);
+  if (!normalizedPrefix) {
+    return [];
+  }
+  const normalizedIndexPath = normalizeS3Key(relativeIndexPath);
+  if (!normalizedIndexPath.endsWith("index.html")) {
+    return [];
+  }
+  const directory = normalizeS3Key(normalizedIndexPath.slice(0, -"index.html".length));
+  const aliasBase = joinS3Key(normalizedPrefix, directory);
+  return [...new Set([aliasBase, `${aliasBase}/`].filter(Boolean))];
+}
+
+function directoryIndexAliasOperations({ surfaceArtifactRoot, bucket, binding }) {
+  if (binding.directoryIndexResolution === false || !bucket || !binding.objectPrefix || !fs.existsSync(surfaceArtifactRoot)) {
+    return [];
+  }
+  return listFiles(surfaceArtifactRoot, ".")
+    .filter((filePath) => path.basename(filePath) === (binding.directoryIndex || "index.html"))
+    .flatMap((filePath) => {
+      const relativeIndexPath = toPosix(path.relative(surfaceArtifactRoot, filePath));
+      return directoryIndexAliasKeys({ objectPrefix: binding.objectPrefix, relativeIndexPath }).map((key) => ({
+        action: "write-directory-index-alias",
+        surface: binding.surface,
+        command: "aws",
+        args: [
+          "s3api",
+          "put-object",
+          "--bucket",
+          bucket,
+          "--key",
+          key,
+          "--body",
+          filePath,
+          "--content-type",
+          "text/html",
+        ],
+        routing: {
+          ...(binding.routing || {}),
+          directoryIndexAlias: key,
+          directoryIndexSource: relativeIndexPath,
+        },
+      }));
+    });
+}
+
 function defaultCommandRunner({ command, args, stdin = "" }) {
   const result = spawnSync(command, args, {
     encoding: "utf8",
@@ -1345,6 +1392,7 @@ function deployBindingOperations({ artifactRoot, deployConfig, manifest, binding
       args: syncStaticArtifactArgs({ artifactRoot: surfaceArtifactRoot, bucket, objectPrefix: binding.objectPrefix }),
       routing: binding.routing,
     },
+    ...directoryIndexAliasOperations({ surfaceArtifactRoot, bucket, binding }),
     {
       action: "write-deployment-manifest",
       surface: binding.surface,

@@ -9,6 +9,8 @@
     },
     "exports": {
       ".": "./packages/core/index.js",
+      "./badges": "./packages/core/badges.js",
+      "./build-facts": "./packages/core/build-facts.js",
       "./core": "./packages/core/index.js",
       "./artifact-passport": "./packages/core/artifact-passport.js",
       "./buildchain-contract": "./packages/core/buildchain-contract.js",

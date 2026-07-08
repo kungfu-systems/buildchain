@@ -6,12 +6,17 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import {
+  BADGE_BUNDLE_DEFAULT_CLAIMS,
+  checkBadgeBundleBlock,
   checkReadmeBadgeBlock,
+  collectBadgeBundleFacts,
   collectReadmeBadgeFacts,
   createReadmeBadgeEndpointRegistry,
+  renderBadgeBundleBlock,
   renderReadmeBadgeBlock,
+  updateBadgeBundleBlock,
   updateReadmeBadgeBlock,
-} from "@kungfu-tech/buildchain/readme-badges";
+} from "@kungfu-tech/buildchain/badges";
 import { collectGitHubReleasePassport } from "@kungfu-tech/buildchain/release-passport";
 
 const root = path.resolve(import.meta.dirname, "..");
@@ -339,6 +344,103 @@ test("CLI readme badge commands use the Node API", async () => {
   assert.equal(JSON.parse(written).contract, "kungfu-buildchain-readme-badge-write");
 
   const checked = execFileSync(process.execPath, [bin, "badges", "readme", "--cwd", cwd, "--check", "--json"], {
+    cwd: root,
+    encoding: "utf8",
+  });
+  assert.equal(JSON.parse(checked).ok, true);
+});
+
+test("badge bundle defaults to KFD 1/2/3 and release passport trust claims", async () => {
+  const cwd = writeFixtureRepo({
+    badges: 'kfd_1 = "declared"\nkfd_2 = "aligned"\nkfd_3 = "planned"\n',
+  });
+
+  const facts = await collectBadgeBundleFacts({ cwd });
+  const block = renderBadgeBundleBlock(facts);
+
+  assert.deepEqual(BADGE_BUNDLE_DEFAULT_CLAIMS, ["kfd-1", "kfd-2", "kfd-3", "release-passport"]);
+  assert.equal(facts.contract, "kungfu-buildchain-badge-bundle-facts");
+  assert.deepEqual(facts.policy.claims, BADGE_BUNDLE_DEFAULT_CLAIMS);
+  assert.deepEqual(facts.badges.map((badge) => badge.claim), BADGE_BUNDLE_DEFAULT_CLAIMS);
+  assert.match(block, /KFD-1: declared/);
+  assert.match(block, /KFD-2: aligned/);
+  assert.match(block, /KFD-3: planned/);
+  assert.match(block, /Buildchain Release Passport: declared/);
+});
+
+test("badge bundle can be narrowed by buildchain.toml or CLI claims", async () => {
+  const cwd = writeFixtureRepo({
+    badges: `
+kfd_1 = "declared"
+kfd_2 = "aligned"
+kfd_3 = "planned"
+
+[badges.bundle]
+claims = ["kfd-1", "release-passport"]
+`,
+  });
+
+  const configured = await collectBadgeBundleFacts({ cwd });
+  const overridden = await collectBadgeBundleFacts({ cwd, claims: "kfd-2,kfd-3" });
+
+  assert.deepEqual(configured.policy.claims, ["kfd-1", "release-passport"]);
+  assert.deepEqual(configured.badges.map((badge) => badge.claim), ["kfd-1", "release-passport"]);
+  assert.deepEqual(overridden.policy.claims, ["kfd-2", "kfd-3"]);
+  assert.deepEqual(overridden.badges.map((badge) => badge.claim), ["kfd-2", "kfd-3"]);
+});
+
+test("badge bundle fails closed on unknown claims", async () => {
+  const cwd = writeFixtureRepo({
+    badges: `
+[badges.bundle]
+claims = ["kfd-1", "surprise"]
+`,
+  });
+
+  await assert.rejects(
+    collectBadgeBundleFacts({ cwd }),
+    /unsupported badge bundle claim\(s\): surprise/,
+  );
+
+  const cli = spawnSync(process.execPath, [bin, "badges", "bundle", "--cwd", cwd, "--claims", "kfd-1,surprise", "--json"], {
+    cwd: root,
+    encoding: "utf8",
+  });
+  assert.notEqual(cli.status, 0);
+  assert.match(cli.stderr, /unsupported badge bundle claim\(s\): surprise/);
+});
+
+test("badge bundle check and update use the same managed README block", async () => {
+  const cwd = writeFixtureRepo({ badges: 'kfd_1 = "declared"\n' });
+  const facts = await collectBadgeBundleFacts({ cwd, claims: "kfd-1,release-passport" });
+  const readme = fs.readFileSync(path.join(cwd, "README.md"), "utf8");
+  const updated = updateBadgeBundleBlock({ readmeText: readme, facts });
+  const check = checkBadgeBundleBlock({ readmeText: updated, facts });
+
+  assert.equal(check.ok, true);
+  assert.match(updated, /<!-- buildchain:badges:start -->/);
+  assert.match(updated, /KFD-1: declared/);
+  assert.doesNotMatch(updated, /KFD-2/);
+  assert.match(updated, /Buildchain Release Passport: declared/);
+});
+
+test("CLI badge bundle commands use bundle facts and claim filtering", async () => {
+  const cwd = writeFixtureRepo({ badges: 'kfd_1 = "declared"\nkfd_2 = "aligned"\n' });
+  const factsJson = execFileSync(process.execPath, [bin, "badges", "bundle", "--cwd", cwd, "--claims", "kfd-2", "--json"], {
+    cwd: root,
+    encoding: "utf8",
+  });
+  const facts = JSON.parse(factsJson);
+  assert.equal(facts.contract, "kungfu-buildchain-badge-bundle-facts");
+  assert.deepEqual(facts.badges.map((badge) => badge.claim), ["kfd-2"]);
+
+  const written = execFileSync(process.execPath, [bin, "badges", "bundle", "--cwd", cwd, "--claims", "kfd-2", "--write", "--json"], {
+    cwd: root,
+    encoding: "utf8",
+  });
+  assert.equal(JSON.parse(written).contract, "kungfu-buildchain-badge-bundle-write");
+
+  const checked = execFileSync(process.execPath, [bin, "badges", "bundle", "--cwd", cwd, "--claims", "kfd-2", "--check", "--json"], {
     cwd: root,
     encoding: "utf8",
   });

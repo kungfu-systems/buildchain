@@ -64,8 +64,10 @@ Current public import families include:
 ```js
 import * as buildchain from "@kungfu-tech/buildchain";
 import { createBuildchainLogger } from "@kungfu-tech/buildchain/logging";
+import { collectModuleBuildFacts } from "@kungfu-tech/buildchain/build-facts";
 import { checkHomebrewTap } from "@kungfu-tech/buildchain/homebrew";
 import { verifyKfd1ReleaseGate } from "@kungfu-tech/buildchain/kfd-gate";
+import { collectBadgeBundleFacts } from "@kungfu-tech/buildchain/badges";
 import { collectReadmeBadgeFacts } from "@kungfu-tech/buildchain/readme-badges";
 import { verifyReleasePassport } from "@kungfu-tech/buildchain/release-passport";
 import { createReleasePropagationPlan } from "@kungfu-tech/buildchain/release-propagation";
@@ -199,6 +201,30 @@ install/build/verify/publish, artifact scan/upload, total, warning, and error
 columns for each platform, plus `jobs` and `active` columns for requested and
 observed process concurrency when sampler data is present.
 
+`buildchain facts` collects and verifies source/version/output facts for
+modules and products:
+
+```bash
+buildchain facts module \
+  --module native-core \
+  --output .buildchain/facts/native-core.json \
+  --legacy-kungfu-buildinfo framework/core/src/kungfu/yijinjing/kungfubuildinfo.json
+
+buildchain facts aggregate \
+  --product kungfu \
+  --module-fact .buildchain/facts/native-core.json \
+  --artifact dist/kungfu.zip \
+  --output .buildchain/facts/kungfu.json
+
+buildchain facts verify --fact .buildchain/facts/kungfu.json
+```
+
+The same implementation is available from
+`@kungfu-tech/buildchain/build-facts`. Release passports can include these
+facts with repeated `--build-facts-json` arguments to
+`buildchain collect github-release`. See
+[`build-facts.md`](build-facts.md) for the config schema and Node API.
+
 `buildchain sample process-tree` wraps a long-running command and periodically
 writes process-tree snapshots:
 
@@ -259,6 +285,10 @@ Generate, check, or update the managed README badge block:
 buildchain badges readme --json
 buildchain badges readme --check
 buildchain badges readme --write
+buildchain badges bundle --json
+buildchain badges bundle --check
+buildchain badges bundle --write
+buildchain badges bundle --claims kfd-1,release-passport --write
 ```
 
 The `--json` form emits the `kungfu-buildchain-readme-badge-facts` object.
@@ -266,8 +296,10 @@ The `--json` form emits the `kungfu-buildchain-readme-badge-facts` object.
 `--write` inserts or replaces only the marked block. KFD passed badges come
 from the repository's own verified release passport; unreleased repositories
 downgrade to explicit local declarations such as `declared`, `aligned`, or
-`planned`. See [`readme-badges.md`](readme-badges.md) for the marker contract
-and `[badges]` configuration.
+`planned`. `buildchain badges bundle` is the focused trust-badge entrypoint: it
+emits `kungfu-buildchain-badge-bundle-facts` and defaults to KFD-1, KFD-2,
+KFD-3, and Release Passport. See [`readme-badges.md`](readme-badges.md) for the
+marker contract and `[badges]` / `[badges.bundle]` configuration.
 
 Generate or check Homebrew tap projections from upstream release passports:
 

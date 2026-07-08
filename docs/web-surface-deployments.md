@@ -376,6 +376,14 @@ records this as `routing.contract =
 `viewerPathPrefix = "/"`, `artifactPathPrefix = "buildchain"`, and
 `directoryIndexResolution = true`.
 
+When a surface uses an S3 object prefix, Buildchain also writes directory-index
+alias objects during apply. The root `dist/buildchain/index.html` is copied to
+the prefix keys `pr-29/buildchain` and `pr-29/buildchain/`, while nested indexes
+such as `dist/buildchain/docs/index.html` are copied to `pr-29/buildchain/docs`
+and `pr-29/buildchain/docs/`. This makes surface-host requests for `/` and
+`/docs/` resolve to the surface's `index.html` files even when the CloudFront
+origin is an S3 REST origin rather than an S3 website endpoint.
+
 It can also execute a previously saved deploy plan. In that mode Buildchain
 recomputes the local artifact hash before running AWS commands and fails closed
 if the artifact no longer matches the saved plan:
@@ -464,13 +472,17 @@ such as `dist/buildchain/docs/index.html` becoming `/docs/` on the buildchain
 preview host. If a surface has no nested HTML route, Buildchain records only
 the root smoke URL; absence of nested HTML is not a deployment failure. When a
 nested route is present, the check fails closed if a deploy reports success but
-that child page returns 403 or another unexpected status. Production additionally fails if a
-response is unreachable, returns an unexpected status, or still sends
-`x-robots-tag: noindex`. The health check also verifies that each surface
-binding recorded a deployment manifest pointer. The production release passport
-embeds the deploy plan, apply result, production preflight, and health check so
-a reviewer or agent can audit why the production site changed and whether every
-declared host and every existing nested route was actually covered.
+that child page returns 403 or another unexpected status. Surface root checks
+expect the apply result to have written directory-index alias objects, so a
+multi-host preview root such as `https://buildchain-pr-29.preview.libkungfu.dev/`
+must resolve to the surface `index.html`, not the bare prefix directory.
+Production additionally fails if a response is unreachable, returns an
+unexpected status, or still sends `x-robots-tag: noindex`. The health check also
+verifies that each surface binding recorded a deployment manifest pointer. The
+production release passport embeds the deploy plan, apply result, production
+preflight, and health check so a reviewer or agent can audit why the production
+site changed and whether every declared host and every existing nested route was
+actually covered.
 
 ## Cleanup Plans
 

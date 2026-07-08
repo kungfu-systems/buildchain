@@ -31,9 +31,12 @@ import {
   verifyArtifactPassport,
 } from "../packages/core/artifact-passport.js";
 import {
+  checkBadgeBundleBlock,
   checkReadmeBadgeBlock,
+  collectBadgeBundleFacts,
   collectReadmeBadgeFacts,
   readReadme,
+  updateBadgeBundleBlock,
   updateReadmeBadgeBlock,
 } from "../packages/core/readme-badges.js";
 import {
@@ -50,6 +53,13 @@ import {
   summarizeProcessSamples,
   validateAnchoredPackageRelease,
 } from "../packages/core/diagnostics.js";
+import {
+  aggregateBuildFacts,
+  collectModuleBuildFacts,
+  verifyBuildFacts,
+  writeBuildFacts,
+  writeKungfuBuildInfoProjection,
+} from "../packages/core/build-facts.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const embeddedPackageVersion = process.env.BUILDCHAIN_EMBEDDED_PACKAGE_VERSION || "";
@@ -86,6 +96,7 @@ function usage() {
                                     [--anchor-manifest-json <json-or-path>]
                                     [--impact-json <json-or-path>]
                                     [--build-summary-json <json-or-path>]
+                                    [--build-facts-json <json-or-path>]...
                                     [--platform-manifest-json <json-or-path>]...
                                     [--dist-tag-evidence-json <json-or-path>]
                                     [--kfd-1-witness-json <json-or-path>]...
@@ -116,6 +127,13 @@ function usage() {
   buildchain log summary [--path <jsonl>] [--json]
   buildchain diagnostics summary <diagnostics.json>... [--artifact <file>]...
                                       [--output <file>] [--json]
+  buildchain facts module [--cwd <dir>] [--module <id>] [--module-root <path>]
+                          [--version-source <id>] [--output <file>]
+                          [--output-path <path>]... [--legacy-kungfu-buildinfo <file>] [--json]
+  buildchain facts aggregate [--cwd <dir>] [--product <id>]
+                             [--module-fact <file>]... [--artifact <path>]...
+                             [--output <file>] [--json]
+  buildchain facts verify [--cwd <dir>] --fact <file> [--json]
   buildchain sample process-tree [--interval-ms <n>] [--label <name>]
                                  [--output <jsonl>] [--summary-output <json>]
                                  [--requested-parallelism <n>] [--json]
@@ -128,6 +146,7 @@ function usage() {
   buildchain infra-contract ...
   buildchain release-propagation <plan|write-lock> ...
   buildchain badges readme [--cwd <dir>] [--readme <path>] [--check] [--write] [--json]
+  buildchain badges bundle [--cwd <dir>] [--readme <path>] [--claims <csv>] [--check] [--write] [--json]
   buildchain homebrew update-formula --package <name> --release-passport <file-or-url> [--write] [--json]
   buildchain homebrew check [--cwd <dir>] [--package <name>] [--release-passport <file-or-url>] [--json]
   buildchain publish-source <lock|manifest|verify-lock|verify-channel-ref|validate-anchored-release> ...
@@ -294,13 +313,20 @@ function writeJsonFile(filePath, value) {
 
 async function runReadmeBadgesCli(args = []) {
   const [subcommand = "", surface = "", ...badgeArgs] = args;
-  if (subcommand !== "readme" || (surface && surface.startsWith("--") === false)) {
-    throw new Error("usage: buildchain badges readme [--cwd <dir>] [--readme <path>] [--check] [--write] [--json]");
+  if (!["readme", "bundle"].includes(subcommand) || (surface && surface.startsWith("--") === false)) {
+    throw new Error("usage: buildchain badges <readme|bundle> [--cwd <dir>] [--readme <path>] [--claims <csv>] [--check] [--write] [--json]");
   }
   const effectiveArgs = surface ? [surface, ...badgeArgs] : badgeArgs;
   const cwd = path.resolve(readFlag(effectiveArgs, "cwd", process.cwd()));
   const readmePath = readFlag(effectiveArgs, "readme", "README.md");
-  const facts = await collectReadmeBadgeFacts({ cwd });
+  const claims = readFlag(effectiveArgs, "claims", "");
+  const isBundle = subcommand === "bundle";
+  const facts = isBundle
+    ? await collectBadgeBundleFacts({ cwd, claims })
+    : await collectReadmeBadgeFacts({ cwd });
+  const checkBlock = isBundle ? checkBadgeBundleBlock : checkReadmeBadgeBlock;
+  const updateBlock = isBundle ? updateBadgeBundleBlock : updateReadmeBadgeBlock;
+  const commandLabel = `buildchain badges ${subcommand}`;
   if (readBooleanFlag(effectiveArgs, "json") && !readBooleanFlag(effectiveArgs, "check") && !readBooleanFlag(effectiveArgs, "write")) {
     printJson(facts);
     return;
@@ -309,13 +335,13 @@ async function runReadmeBadgesCli(args = []) {
   if (!readmeText) {
     throw new Error(`README not found: ${path.join(cwd, readmePath)}`);
   }
-  const check = checkReadmeBadgeBlock({ readmeText, facts });
+  const check = checkBlock({ readmeText, facts });
   if (readBooleanFlag(effectiveArgs, "write")) {
-    const next = updateReadmeBadgeBlock({ readmeText, facts });
+    const next = updateBlock({ readmeText, facts });
     fs.writeFileSync(path.join(cwd, readmePath), next);
     const result = {
       schemaVersion: 1,
-      contract: "kungfu-buildchain-readme-badge-write",
+      contract: isBundle ? "kungfu-buildchain-badge-bundle-write" : "kungfu-buildchain-readme-badge-write",
       ok: true,
       changed: next !== readmeText,
       readmePath,
@@ -324,7 +350,7 @@ async function runReadmeBadgesCli(args = []) {
     if (readBooleanFlag(effectiveArgs, "json")) {
       printJson(result);
     } else {
-      process.stdout.write(`buildchain badges readme: ${result.changed ? "updated" : "current"}\n`);
+      process.stdout.write(`${commandLabel}: ${result.changed ? "updated" : "current"}\n`);
     }
     return;
   }
@@ -332,7 +358,7 @@ async function runReadmeBadgesCli(args = []) {
     if (readBooleanFlag(effectiveArgs, "json")) {
       printJson(check);
     } else {
-      process.stdout.write(`buildchain badges readme: ${check.ok ? "ok" : "failed"}\n`);
+      process.stdout.write(`${commandLabel}: ${check.ok ? "ok" : "failed"}\n`);
       if (!check.ok) {
         process.stdout.write(`${check.message}\n`);
       }
@@ -415,6 +441,85 @@ async function runHomebrewCli(args = []) {
     return;
   }
   throw new Error("usage: buildchain homebrew <update-formula|check> ...");
+}
+
+async function runBuildFactsCli(args = []) {
+  const [subcommand = "", ...factArgs] = args;
+  const cwd = path.resolve(readFlag(factArgs, "cwd", process.cwd()));
+  if (subcommand === "module") {
+    const fact = collectModuleBuildFacts({
+      cwd,
+      moduleId: readFlag(factArgs, "module", ""),
+      moduleRoot: readFlag(factArgs, "module-root", ""),
+      versionSourceId: readFlag(factArgs, "version-source", ""),
+      outputs: readRepeatedFlag(factArgs, "output-path"),
+      lifecycle: readFlag(factArgs, "lifecycle", ""),
+      platform: readFlag(factArgs, "platform", "") || undefined,
+    });
+    const output = readFlag(factArgs, "output", "");
+    const writeResult = output ? writeBuildFacts({ cwd, fact, output }) : undefined;
+    const legacyOutput = readFlag(factArgs, "legacy-kungfu-buildinfo", "");
+    const legacyProjection = legacyOutput
+      ? writeKungfuBuildInfoProjection({ cwd, moduleFact: fact, output: legacyOutput })
+      : undefined;
+    const result = {
+      ...fact,
+      ...(writeResult ? { written: writeResult } : {}),
+      ...(legacyProjection ? { legacyProjection: { path: legacyProjection.path, digest: legacyProjection.digest } } : {}),
+    };
+    if (readBooleanFlag(factArgs, "json") || !output) {
+      printJson(result);
+    } else {
+      process.stdout.write(`buildchain facts module: ${fact.verification.ok ? "ok" : "failed"} ${writeResult.path}\n`);
+    }
+    if (!fact.verification.ok) {
+      process.exitCode = 1;
+    }
+    return;
+  }
+  if (subcommand === "aggregate") {
+    const fact = aggregateBuildFacts({
+      cwd,
+      productId: readFlag(factArgs, "product", ""),
+      moduleFacts: readRepeatedFlag(factArgs, "module-fact"),
+      artifacts: readRepeatedFlag(factArgs, "artifact"),
+    });
+    const output = readFlag(factArgs, "output", "");
+    const writeResult = output ? writeBuildFacts({ cwd, fact, output }) : undefined;
+    const result = {
+      ...fact,
+      ...(writeResult ? { written: writeResult } : {}),
+    };
+    if (readBooleanFlag(factArgs, "json") || !output) {
+      printJson(result);
+    } else {
+      process.stdout.write(`buildchain facts aggregate: ${fact.verification.ok ? "ok" : "failed"} ${writeResult.path}\n`);
+    }
+    if (!fact.verification.ok) {
+      process.exitCode = 1;
+    }
+    return;
+  }
+  if (subcommand === "verify") {
+    const factPath = readFlag(factArgs, "fact", "");
+    if (!factPath) {
+      throw new Error("usage: buildchain facts verify --fact <file>");
+    }
+    const result = verifyBuildFacts({ cwd, factPath });
+    if (readBooleanFlag(factArgs, "json")) {
+      printJson(result);
+    } else {
+      process.stdout.write(`buildchain facts verify: ${result.ok ? "ok" : "failed"}\n`);
+      for (const issue of result.issues) {
+        process.stdout.write(`- ${issue.level}: ${issue.id}: ${issue.message}\n`);
+      }
+    }
+    if (!result.ok) {
+      process.exitCode = 1;
+    }
+    return;
+  }
+  throw new Error("usage: buildchain facts <module|aggregate|verify> ...");
 }
 
 function appendJsonLine(filePath, value) {
@@ -697,6 +802,11 @@ async function main(argv = process.argv.slice(2)) {
     return;
   }
 
+  if (command === "facts") {
+    await runBuildFactsCli(args);
+    return;
+  }
+
   if (command === "sample") {
     const [subcommand = "", ...sampleArgs] = args;
     if (subcommand !== "process-tree") {
@@ -878,6 +988,7 @@ async function main(argv = process.argv.slice(2)) {
       anchorManifestJson: readFlag(collectArgs, "anchor-manifest-json", ""),
       impactJson: readFlag(collectArgs, "impact-json", ""),
       buildSummaryJson: readFlag(collectArgs, "build-summary-json", ""),
+      buildFactsJsons: readRepeatedFlag(collectArgs, "build-facts-json"),
       platformManifestJsons: readRepeatedFlag(collectArgs, "platform-manifest-json"),
       distTagEvidenceJson: readFlag(collectArgs, "dist-tag-evidence-json", ""),
       kfd1WitnessJsons: readRepeatedFlag(collectArgs, "kfd-1-witness-json"),

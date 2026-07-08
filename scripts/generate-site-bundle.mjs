@@ -294,6 +294,7 @@ function buildSiteBundle() {
       { id: "verify-infra-contract-evidence-bundle", usage: "buildchain verify infra-contract-evidence-bundle <file>", purpose: "Fail closed unless an infra-contract lifecycle evidence bundle is complete, hash-bound, and validation-consistent." },
       { id: "logging", usage: "buildchain log|mark|span|verify observability-log", purpose: "Emit timestamped build events, summarize logs, and enforce required phases." },
       { id: "diagnostics-summary", usage: "buildchain diagnostics summary <diagnostics.json>...", purpose: "Summarize small diagnostics artifacts into JSON and a cross-platform lifecycle timing table." },
+      { id: "build-facts", usage: "buildchain facts module|aggregate|verify", purpose: "Collect and verify Git source, version, module output, product artifact, and legacy Kungfu buildinfo facts." },
       { id: "npm-dry-run", usage: "buildchain npm dry-run --json", purpose: "Verify npm publish shape before a release transaction." },
       { id: "infra-contract", usage: "buildchain infra-contract --mode validate|ci|plan|contract|propagation-plan|propagation-apply|apply|evidence-bundle", purpose: "Validate and publish provider-neutral infrastructure contract evidence with a mutation-free CI evidence chain, provider command plans, configured provider command execution, saved-plan apply gates, dry-run-first propagation, and lifecycle evidence bundles." },
       { id: "homebrew", usage: "buildchain homebrew update-formula|check", purpose: "Generate and verify Homebrew tap Formula metadata as a distribution-index projection of upstream release passport evidence." },
@@ -316,6 +317,7 @@ function buildSiteBundle() {
       "docs/MAP.md",
       "docs/install.md",
       "docs/cli.md",
+      "docs/build-facts.md",
       "docs/reusable-build-surface.md",
       "docs/release-candidate.md",
       "docs/release-governance.md",
@@ -361,6 +363,7 @@ function buildSiteBundle() {
       })),
     docs: [
       { id: "cli-and-node-package", path: "docs/cli.md", digest: sha256File("docs/cli.md") },
+      { id: "build-facts", path: "docs/build-facts.md", digest: sha256File("docs/build-facts.md") },
       { id: "readme-badges", path: "docs/readme-badges.md", digest: sha256File("docs/readme-badges.md") },
       { id: "homebrew", path: "docs/homebrew.md", digest: sha256File("docs/homebrew.md") },
       { id: "site-bundle-contract", path: "docs/site-bundle-contract.md", digest: sha256File("docs/site-bundle-contract.md") },

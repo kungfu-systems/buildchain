@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:03f52660d03223fff7daf500f995645d78a46fffd8cddec9d8c01bbee0863145"
+      "digest": "sha256:2d95d0dd56088efb1a9a16d026810cf2e74659963612451f903e37825c260122"
     },
     {
       "id": "install",
@@ -23,7 +23,7 @@
       "title": "Release Passport protocol",
       "path": "docs/release-passport.md",
       "plane": "verify",
-      "digest": "sha256:56c9000305e9dc23993e6c401568c4063dd496c3586382a44cd44db108a95094"
+      "digest": "sha256:495e1c46ce45268a9ed6502fe115af45a8cd1d8e644cb4332da9b551f919f578"
     },
     {
       "id": "release-propagation",
@@ -37,7 +37,7 @@
       "title": "README badge blocks",
       "path": "docs/readme-badges.md",
       "plane": "use",
-      "digest": "sha256:c886d5d469d143571ae68497643be754b1616b562fddc780a5708f49b4c46242"
+      "digest": "sha256:06eaef737dcc73a6526d856d79275ee87af9670f0e2be39a5596758bfc3527c9"
     },
     {
       "id": "homebrew",
@@ -107,7 +107,14 @@
       "title": "CLI and npm package",
       "path": "docs/cli.md",
       "plane": "use",
-      "digest": "sha256:cfb0bf32f2b8b44bf352e79c27e34b7980e0f66e5fa10e4f202975fbb4780ad1"
+      "digest": "sha256:60686b5b4d5fe7f3944cb53ab709231fd00bb02b6d51770f1fe8b018122afd8f"
+    },
+    {
+      "id": "build-facts",
+      "title": "Build Facts",
+      "path": "docs/build-facts.md",
+      "plane": "use",
+      "digest": "sha256:75dcf7a6628dac9e982a455de9966044ae771611d4efc04e7264a2d4adb0bd3e"
     },
     {
       "id": "lifecycle-protocol",
@@ -156,20 +163,21 @@
       "title": "Versioning",
       "path": "docs/versioning.md",
       "plane": "why",
-      "digest": "sha256:77b92fc979cc100beab3f8a13cd791dea992737b986ace505104edff4810a296"
+      "digest": "sha256:2c79f7d1a072a40c75d889beac38ae843b2170587fc570ce40722d3968b6506e"
     },
     {
       "id": "web-surface-deployments",
       "title": "Web surface deployments",
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
-      "digest": "sha256:5063ebb76db3cd36797561782e6c741e30d60bfa0dac8f798dbbd34c4ab2b3c0"
+      "digest": "sha256:70995864ece77573756e1c197a936d86011f84b356d75683881b59b5aa537d8c"
     }
   ],
   "requiredAgentManuals": [
     "docs/MAP.md",
     "docs/install.md",
     "docs/cli.md",
+    "docs/build-facts.md",
     "docs/reusable-build-surface.md",
     "docs/release-candidate.md",
     "docs/release-governance.md",

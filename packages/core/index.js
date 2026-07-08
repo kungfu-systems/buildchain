@@ -87,6 +87,24 @@ export {
 } from "./diagnostics.js";
 
 export {
+  BUILD_FACTS_GIT_CONTRACT,
+  BUILD_FACTS_LEGACY_KUNGFU_BUILDINFO_CONTRACT,
+  BUILD_FACTS_MODULE_CONTRACT,
+  BUILD_FACTS_PRODUCT_CONTRACT,
+  BUILD_FACTS_VERIFY_CONTRACT,
+  BUILD_FACTS_VERSION_CONTRACT,
+  aggregateBuildFacts,
+  buildFactsDigest,
+  collectGitSourceFacts,
+  collectModuleBuildFacts,
+  collectVersionSourceFact,
+  createKungfuBuildInfoProjection,
+  verifyBuildFacts,
+  writeBuildFacts,
+  writeKungfuBuildInfoProjection,
+} from "./build-facts.js";
+
+export {
   RELEASE_CANDIDATE_PASSPORT_CONTRACT,
   createReleaseCandidatePassport,
   sha256Json,
@@ -194,15 +212,21 @@ export {
 } from "./issue-reporting.js";
 
 export {
+  BADGE_BUNDLE_DEFAULT_CLAIMS,
+  BADGE_BUNDLE_FACTS_CONTRACT,
   README_BADGE_BLOCK_END,
   README_BADGE_BLOCK_START,
   README_BADGE_FACTS_CONTRACT,
   README_BADGE_HOSTED_BASE_URL,
+  checkBadgeBundleBlock,
   checkReadmeBadgeBlock,
+  collectBadgeBundleFacts,
   collectReadmeBadgeFacts,
   createReadmeBadgeEndpointRegistry,
   readReadme,
+  renderBadgeBundleBlock,
   renderReadmeBadgeBlock,
+  updateBadgeBundleBlock,
   updateReadmeBadgeBlock,
 } from "./readme-badges.js";
 

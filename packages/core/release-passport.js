@@ -930,6 +930,7 @@ export function createReleasePassport({
   trustedPublishing = undefined,
   transaction = undefined,
   buildSummary = undefined,
+  buildFacts = [],
   platformArtifactManifests = [],
   distTagPromotionEvidence = undefined,
   release = {},
@@ -947,6 +948,9 @@ export function createReleasePassport({
   const normalizedTrustedPublishing = normalizeTrustedPublishing(trustedPublishing, { workflow, publish });
   const normalizedTransaction = normalizeTransaction(transaction);
   const normalizedBuildSummary = buildSummary ? normalizeEvidenceDocument(buildSummary, "buildSummary") : undefined;
+  const normalizedBuildFacts = (buildFacts || [])
+    .map((fact, index) => normalizeEvidenceDocument(fact, `buildFacts[${index}]`))
+    .filter(Boolean);
   const normalizedPlatformArtifactManifests = (platformArtifactManifests || [])
     .map((manifest, index) => normalizePlatformArtifactManifest(manifest, index))
     .filter(Boolean);
@@ -1078,6 +1082,7 @@ export function createReleasePassport({
     ...(normalizedTrustedPublishing ? { trustedPublishing: normalizedTrustedPublishing } : {}),
     ...(normalizedTransaction ? { transaction: normalizedTransaction } : {}),
     ...(normalizedBuildSummary ? { buildSummary: normalizedBuildSummary } : {}),
+    ...(normalizedBuildFacts.length > 0 ? { buildFacts: normalizedBuildFacts } : {}),
     ...(normalizedPlatformArtifactManifests.length > 0 ? { platformArtifactManifests: normalizedPlatformArtifactManifests } : {}),
     ...(normalizedDistTagPromotionEvidence ? { distTagPromotion: normalizedDistTagPromotionEvidence } : {}),
     ...(normalizedKfd1 ? { [normalizedKfd1.key || kfd1Metadata.key]: normalizedKfd1.passportSection } : {}),
@@ -1111,6 +1116,13 @@ export function createReleasePassport({
       publishEvidence: publishEvidencePath,
       transactionState: transactionStatePath,
       buildSummary: normalizedBuildSummary?.path || "",
+      buildFacts: normalizedBuildFacts.map((fact) => ({
+        path: fact.path || "",
+        sha256: fact.sha256 || "",
+        contract: fact.fields?.contract || "",
+        id: fact.fields?.id || "",
+        digest: fact.fields?.digest || "",
+      })),
       platformArtifactManifests: normalizedPlatformArtifactManifests.map((manifest) => ({
         path: manifest.path,
         sha256: manifest.sha256,
@@ -1152,6 +1164,7 @@ export function collectGitHubReleasePassport({
   anchorManifestJson = "",
   impactJson = "",
   buildSummaryJson = "",
+  buildFactsJsons = [],
   platformManifestJsons = [],
   distTagEvidenceJson = "",
   kfd1WitnessJsons = [],
@@ -1175,6 +1188,10 @@ export function collectGitHubReleasePassport({
   const anchorManifest = normalizeAnchorManifest(parseJsonInputWithMeta(anchorManifestJson, undefined));
   const impactMeta = parseJsonInputWithMeta(impactJson, undefined);
   const buildSummaryMeta = parseJsonInputWithMeta(buildSummaryJson, undefined);
+  const buildFactMetas = (buildFactsJsons || [])
+    .filter(Boolean)
+    .map((buildFactsJson) => parseJsonInputWithMeta(buildFactsJson, undefined))
+    .filter((meta) => meta.value);
   const platformManifestMetas = (platformManifestJsons || [])
     .filter(Boolean)
     .map((manifestJson) => parseJsonInputWithMeta(manifestJson, undefined));
@@ -1255,6 +1272,10 @@ export function collectGitHubReleasePassport({
           path: buildSummaryMeta.path ? path.relative(resolvedOutputDir, buildSummaryMeta.path).split(path.sep).join("/") : "",
         }
       : undefined,
+    buildFacts: buildFactMetas.map((meta) => ({
+      ...meta,
+      path: meta.path ? path.relative(resolvedOutputDir, meta.path).split(path.sep).join("/") : "",
+    })),
     platformArtifactManifests: platformManifestMetas
       .filter((meta) => meta.value)
       .map((meta) => ({
