@@ -122,7 +122,12 @@ on:
         type: string
         required: false
       production-release-app-id:
-        description: "Optional GitHub App id used to create production release PRs. Requires production-release-app-private-key."
+        description: "Deprecated alias for production-release-app-client-id. Existing consumers may keep this input key, but the value should be the GitHub App client id."
+        default: ""
+        type: string
+        required: false
+      production-release-app-client-id:
+        description: "Optional GitHub App client id used to create production release PRs. Requires production-release-app-private-key."
         default: ""
         type: string
         required: false
@@ -146,7 +151,7 @@ on:
         required: false
     secrets:
       production-release-app-private-key:
-        description: "Private key for production-release-app-id. When set, Buildchain creates production release PRs with that GitHub App installation token."
+        description: "Private key for production-release-app-client-id. When set, Buildchain creates production release PRs with that GitHub App installation token."
         required: false
     outputs:
       web-surface-channel:
@@ -1227,10 +1232,10 @@ jobs:
 
       - name: Create production release app token
         id: production-release-app-token
-        if: ${{ inputs.production-release-app-id != '' }}
-        uses: actions/create-github-app-token@v3
+        if: ${{ inputs.production-release-app-client-id != '' || inputs.production-release-app-id != '' }}
+        uses: actions/create-github-app-token@v3.1.1
         with:
-          app-id: ${{ inputs.production-release-app-id }}
+          client-id: ${{ inputs.production-release-app-client-id || inputs.production-release-app-id }}
           private-key: ${{ secrets.production-release-app-private-key }}
           owner: ${{ github.repository_owner }}
           repositories: ${{ github.event.repository.name }}

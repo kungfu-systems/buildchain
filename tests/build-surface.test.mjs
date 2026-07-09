@@ -638,6 +638,7 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /production-release-pr-mode:/);
   assert.match(workflow, /production-release-pr-token:/);
   assert.match(workflow, /production-release-app-id:/);
+  assert.match(workflow, /production-release-app-client-id:/);
   assert.match(workflow, /production-release-app-private-key:/);
   assert.match(workflow, /fail-on-release-pr-error:/);
   assert.match(workflow, /Resolve production release PR intent/);
@@ -679,8 +680,8 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /PRODUCTION_RELEASE_PR_MODE: \$\{\{ inputs\.production-release-pr-mode \}\}/);
   assert.match(workflow, /FAIL_ON_RELEASE_PR_ERROR: \$\{\{ inputs\.fail-on-release-pr-error \}\}/);
   assert.match(workflow, /Create production release app token/);
-  assert.match(workflow, /actions\/create-github-app-token@v3/);
-  assert.match(workflow, /app-id: \$\{\{ inputs\.production-release-app-id \}\}/);
+  assert.match(workflow, /actions\/create-github-app-token@v3\.1\.1/);
+  assert.match(workflow, /client-id: \$\{\{ inputs\.production-release-app-client-id \|\| inputs\.production-release-app-id \}\}/);
   assert.match(workflow, /private-key: \$\{\{ secrets\.production-release-app-private-key \}\}/);
   assert.match(
     workflow,

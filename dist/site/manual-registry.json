@@ -355,7 +355,7 @@
       "title": "Web surface deployments",
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
-      "digest": "sha256:cae39c60ffa0da5eb963a49d8d4ad6294788b1b76a8ba2516de75b263b3b8504",
+      "digest": "sha256:e5792a28aac1b2502a91f0cafd06dd52a4eecbcfb1f8df349c5aed16229777ec",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "site",
