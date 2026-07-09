@@ -6,6 +6,8 @@ import { loadBuildchainConfig } from "./buildchain-config.js";
 
 export const PUBLICATION_ARTIFACT_MANIFEST_CONTRACT = "kungfu-buildchain-publication-artifact-manifest";
 export const PUBLICATION_ARTIFACT_PASSPORT_CONTRACT = "kungfu-buildchain-publication-artifact-passport";
+export const PUBLICATION_ARTIFACT_ARCHIVE_CONTRACT = "kungfu-buildchain-publication-artifact-archive";
+export const PUBLICATION_ARTIFACT_REGISTRY_CONTRACT = "kungfu-buildchain-publication-artifact-registry";
 const KFD2_RESIDUAL_RISK_SCHEMA = "https://kfd.libkungfu.dev/schemas/kfd-2/trust-taxonomy.schema.json#/$defs/residualRisk";
 
 function toPosix(value) {
@@ -18,6 +20,28 @@ function sha256Buffer(buffer) {
 
 function sha256FilePath(filePath) {
   return sha256Buffer(fs.readFileSync(filePath));
+}
+
+function sortJson(value) {
+  if (Array.isArray(value)) {
+    return value.map(sortJson);
+  }
+  if (!value || typeof value !== "object") {
+    return value;
+  }
+  return Object.fromEntries(
+    Object.entries(value)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, entry]) => [key, sortJson(entry)]),
+  );
+}
+
+function stableJson(value) {
+  return `${JSON.stringify(sortJson(value), null, 2)}\n`;
+}
+
+function sha256Json(value) {
+  return sha256Buffer(Buffer.from(stableJson(value)));
 }
 
 function repoRelative(cwd, filePath) {
@@ -73,6 +97,29 @@ function createdAt(now = new Date()) {
     return new Date(Number(sourceDateEpoch) * 1000).toISOString();
   }
   return now.toISOString();
+}
+
+function ensureTrailingSlash(value) {
+  const text = String(value || "").trim();
+  return text.endsWith("/") ? text : `${text}/`;
+}
+
+function joinUrl(prefix, ...segments) {
+  const base = ensureTrailingSlash(prefix);
+  const suffix = segments
+    .filter(Boolean)
+    .map((segment) => String(segment).replace(/^\/+/, "").replace(/\\/g, "/"))
+    .join("/");
+  return suffix ? `${base}${suffix}` : base;
+}
+
+function versionLabel(version) {
+  const text = String(version || "").trim();
+  return text.startsWith("v") ? text : `v${text}`;
+}
+
+function archiveFileUrl(prefix, relPath) {
+  return joinUrl(prefix, path.posix.basename(toPosix(relPath)));
 }
 
 function publicationToolchainFacts(publication) {
@@ -138,6 +185,67 @@ function publicationResidualRisk(toolchainFacts) {
   return risks;
 }
 
+function publicationArchiveFacts({ loaded, publication, manifestPath, passportPath, artifacts, bundle }) {
+  if (!publication.archive) {
+    return undefined;
+  }
+  const version = String(publication.version || "").trim();
+  if (!version) {
+    throw new Error("publication.archive requires publication.version");
+  }
+  const archive = publication.archive;
+  const id = archive.id || loaded.config.project?.name || "publication";
+  const immutableVersionPrefix = archive.immutableUrlPrefix
+    ? ensureTrailingSlash(archive.immutableUrlPrefix)
+    : ensureTrailingSlash(joinUrl(archive.immutableBaseUrl, id, versionLabel(version)));
+  const artifactUrlPrefix = archive.artifactUrlPrefix
+    ? ensureTrailingSlash(archive.artifactUrlPrefix)
+    : immutableVersionPrefix;
+  return {
+    contract: PUBLICATION_ARTIFACT_ARCHIVE_CONTRACT,
+    id,
+    version,
+    appendOnly: true,
+    sameVersionRepublish: "fail-on-digest-change",
+    immutablePathPolicy: "do-not-sync-delete-immutable-prefixes",
+    routes: {
+      canonicalUrl: archive.canonicalUrl,
+      latestUrl: archive.latestUrl || archive.canonicalUrl,
+      latestEvidenceUrl: archive.latestEvidenceUrl,
+      immutableVersionPrefix,
+      immutableVersionUrl: immutableVersionPrefix,
+      artifactUrlPrefix,
+    },
+    registry: {
+      contract: PUBLICATION_ARTIFACT_REGISTRY_CONTRACT,
+      path: archive.registryPath,
+    },
+    publicArtifacts: {
+      manifest: {
+        path: toPosix(manifestPath),
+        url: archiveFileUrl(artifactUrlPrefix, manifestPath),
+      },
+      passport: {
+        path: toPosix(passportPath),
+        url: archiveFileUrl(artifactUrlPrefix, passportPath),
+      },
+      sourceBundle: bundle
+        ? {
+            path: bundle.path,
+            url: archiveFileUrl(artifactUrlPrefix, bundle.path),
+            sha256: bundle.sha256,
+            bytes: bundle.bytes,
+          }
+        : undefined,
+      artifacts: artifacts.map((artifact) => ({
+        ...artifact,
+        role: artifact.path === publication.primaryArtifact ? "primary" : "attachment",
+        url: archiveFileUrl(artifactUrlPrefix, artifact.path),
+      })),
+    },
+  };
+}
+
 export function createPublicationSourceBundle({
   cwd = process.cwd(),
   sourcePaths = [],
@@ -166,6 +274,8 @@ export function collectPublicationArtifact({
   sourceBundle = true,
   sourceBundlePath = "",
   generatedAt = "",
+  manifestPath = "",
+  passportPath = "",
 } = {}) {
   const loaded = loadBuildchainConfig(cwd);
   if (!loaded?.config?.publication) {
@@ -195,6 +305,16 @@ export function collectPublicationArtifact({
   const sourceTreeSha = gitValue(cwd, ["rev-parse", `${resolvedSourceSha}^{tree}`]);
   const timestamp = generatedAt || createdAt();
   const toolchain = publicationToolchainFacts(publication);
+  const resolvedManifestPath = manifestPath || publication.manifestPath;
+  const resolvedPassportPath = passportPath || ".buildchain/publication/publication-artifact-passport.json";
+  const archive = publicationArchiveFacts({
+    loaded,
+    publication,
+    manifestPath: resolvedManifestPath,
+    passportPath: resolvedPassportPath,
+    artifacts,
+    bundle,
+  });
   const manifest = {
     schemaVersion: 1,
     contract: PUBLICATION_ARTIFACT_MANIFEST_CONTRACT,
@@ -210,6 +330,7 @@ export function collectPublicationArtifact({
       authors: publication.authors,
       primaryArtifact: publication.primaryArtifact,
       siteConsumers: publication.siteConsumers,
+      archive,
     },
     toolchain,
     source: {
@@ -241,16 +362,38 @@ export function collectPublicationArtifact({
       artifactDigestScope: "publication artifact digests cover files and source bundle, not manifest timestamps",
     },
   };
+  const manifestDigest = `sha256:${sha256Buffer(Buffer.from(JSON.stringify(manifest, null, 2)))}`;
   return {
     manifest,
     passport: {
       schemaVersion: 1,
       contract: PUBLICATION_ARTIFACT_PASSPORT_CONTRACT,
       status: "passed",
-      manifestDigest: `sha256:${sha256Buffer(Buffer.from(JSON.stringify(manifest, null, 2)))}`,
+      manifestDigest,
       source: manifest.source,
       toolchain,
       artifacts: manifest.artifacts,
+      publicationArchive: archive
+        ? {
+            contract: archive.contract,
+            id: archive.id,
+            version: archive.version,
+            routes: archive.routes,
+            registry: archive.registry,
+            publicArtifacts: {
+              manifest: {
+                ...archive.publicArtifacts.manifest,
+                sha256: manifestDigest.replace(/^sha256:/, ""),
+              },
+              passport: archive.publicArtifacts.passport,
+              sourceBundle: archive.publicArtifacts.sourceBundle,
+              artifacts: archive.publicArtifacts.artifacts,
+            },
+            appendOnly: archive.appendOnly,
+            sameVersionRepublish: archive.sameVersionRepublish,
+            immutablePathPolicy: archive.immutablePathPolicy,
+          }
+        : undefined,
       responsibility: {
         producer: "publication repository",
         renderer: "site repository",
@@ -277,31 +420,179 @@ export function collectPublicationArtifact({
   };
 }
 
+function publicationArchiveRecord({ collected, manifestPath, passportPath, registryPath, generatedAt }) {
+  const archive = collected.manifest.publication.archive;
+  if (!archive) {
+    return undefined;
+  }
+  const manifestDigest = sha256FilePath(manifestPath);
+  const passportDigest = sha256FilePath(passportPath);
+  const immutableEvidence = {
+    version: archive.version,
+    source: {
+      sha: collected.manifest.source.sha,
+      treeSha: collected.manifest.source.treeSha,
+      sourceBundle: archive.publicArtifacts.sourceBundle,
+    },
+    routes: archive.routes,
+    artifacts: archive.publicArtifacts.artifacts.map((artifact) => ({
+      path: artifact.path,
+      role: artifact.role,
+      url: artifact.url,
+      bytes: artifact.bytes,
+      sha256: artifact.sha256,
+    })),
+    metadata: collected.manifest.metadata,
+    toolchain: collected.manifest.toolchain,
+  };
+  const immutableDigest = sha256Json(immutableEvidence);
+  const record = {
+    version: archive.version,
+    status: "published",
+    publishedAt: generatedAt || collected.manifest.publishedAt,
+    immutableDigest: `sha256:${immutableDigest}`,
+    source: {
+      repository: collected.manifest.source.repository,
+      sha: collected.manifest.source.sha,
+      treeSha: collected.manifest.source.treeSha,
+      sourceBundle: archive.publicArtifacts.sourceBundle,
+    },
+    routes: archive.routes,
+    artifacts: archive.publicArtifacts.artifacts,
+    metadata: collected.manifest.metadata,
+    manifest: {
+      ...archive.publicArtifacts.manifest,
+      sha256: manifestDigest,
+    },
+    passport: {
+      ...archive.publicArtifacts.passport,
+      sha256: passportDigest,
+    },
+    immutableEvidenceSha256: immutableDigest,
+  };
+  record.recordSha256 = sha256Json({ ...record, recordSha256: undefined });
+  return {
+    registryPath: archive.registry.path || registryPath,
+    record,
+  };
+}
+
+function updatePublicationArchiveRegistry({ cwd, collected, manifestPath, passportPath, registryOutput, generatedAt }) {
+  const archive = collected.manifest.publication.archive;
+  if (!archive) {
+    return undefined;
+  }
+  const registryPath = path.resolve(cwd, registryOutput || archive.registry.path);
+  const { record } = publicationArchiveRecord({
+    collected,
+    manifestPath,
+    passportPath,
+    registryPath,
+    generatedAt,
+  });
+  let registry = {
+    schemaVersion: 1,
+    contract: PUBLICATION_ARTIFACT_REGISTRY_CONTRACT,
+    publication: {
+      id: archive.id,
+      kind: collected.manifest.publication.kind,
+      title: collected.manifest.publication.title,
+      canonicalUrl: archive.routes.canonicalUrl,
+      latestUrl: archive.routes.latestUrl,
+      latestEvidenceUrl: archive.routes.latestEvidenceUrl,
+      siteConsumers: collected.manifest.publication.siteConsumers,
+    },
+    appendOnly: true,
+    sameVersionRepublish: "fail-on-digest-change",
+    immutablePathPolicy: archive.immutablePathPolicy,
+    versions: [],
+  };
+  if (fs.existsSync(registryPath)) {
+    registry = JSON.parse(fs.readFileSync(registryPath, "utf8"));
+    if (registry.contract !== PUBLICATION_ARTIFACT_REGISTRY_CONTRACT) {
+      throw new Error(`publication archive registry has unsupported contract: ${registry.contract || "(missing)"}`);
+    }
+  }
+  const versions = Array.isArray(registry.versions) ? registry.versions : [];
+  const existingIndex = versions.findIndex((entry) => entry.version === record.version);
+  if (existingIndex !== -1) {
+    const existing = versions[existingIndex];
+    if (existing.immutableDigest !== record.immutableDigest) {
+      throw new Error(
+        `publication archive version ${record.version} is immutable: existing digest ${existing.immutableDigest}, new digest ${record.immutableDigest}`,
+      );
+    }
+    versions[existingIndex] = {
+      ...existing,
+      latestObservedAt: generatedAt || collected.manifest.publishedAt,
+    };
+  } else {
+    versions.push(record);
+  }
+  registry = {
+    ...registry,
+    publication: {
+      ...registry.publication,
+      id: archive.id,
+      kind: collected.manifest.publication.kind,
+      title: collected.manifest.publication.title,
+      canonicalUrl: archive.routes.canonicalUrl,
+      latestUrl: archive.routes.latestUrl,
+      latestEvidenceUrl: archive.routes.latestEvidenceUrl,
+      siteConsumers: collected.manifest.publication.siteConsumers,
+    },
+    versions: versions.sort((left, right) => left.version.localeCompare(right.version)),
+  };
+  registry.registrySha256 = sha256Json({ ...registry, registrySha256: undefined });
+  fs.mkdirSync(path.dirname(registryPath), { recursive: true });
+  fs.writeFileSync(registryPath, stableJson(registry));
+  return {
+    path: toPosix(path.relative(cwd, registryPath)),
+    sha256: sha256FilePath(registryPath),
+    record,
+    registry,
+  };
+}
+
 export function writePublicationArtifact({
   cwd = process.cwd(),
   output = "",
   passportOutput = "",
+  registryOutput = "",
   sourceSha = "",
   sourceBundle = true,
   sourceBundlePath = "",
   generatedAt = "",
 } = {}) {
+  const loaded = loadBuildchainConfig(cwd);
+  const manifestOutput = output || loaded.config.publication.manifestPath;
+  const passportPath = passportOutput || ".buildchain/publication/publication-artifact-passport.json";
   const collected = collectPublicationArtifact({
     cwd,
     sourceSha,
     sourceBundle,
     sourceBundlePath,
     generatedAt,
+    manifestPath: manifestOutput,
+    passportPath,
   });
-  const manifestOutput = output || loadBuildchainConfig(cwd).config.publication.manifestPath;
-  const passportPath = passportOutput || ".buildchain/publication/publication-artifact-passport.json";
   fs.mkdirSync(path.dirname(path.resolve(cwd, manifestOutput)), { recursive: true });
   fs.mkdirSync(path.dirname(path.resolve(cwd, passportPath)), { recursive: true });
   fs.writeFileSync(path.resolve(cwd, manifestOutput), `${JSON.stringify(collected.manifest, null, 2)}\n`);
   fs.writeFileSync(path.resolve(cwd, passportPath), `${JSON.stringify(collected.passport, null, 2)}\n`);
+  const registry = updatePublicationArchiveRegistry({
+    cwd,
+    collected,
+    manifestPath: path.resolve(cwd, manifestOutput),
+    passportPath: path.resolve(cwd, passportPath),
+    registryOutput,
+    generatedAt,
+  });
   return {
     ...collected,
     manifestPath: toPosix(manifestOutput),
     passportPath: toPosix(passportPath),
+    registryPath: registry?.path,
+    registry,
   };
 }

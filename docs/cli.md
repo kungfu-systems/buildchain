@@ -396,9 +396,11 @@ buildchain publication-artifact manifest \
 ```
 
 The command writes `.buildchain/publication/publication-artifact.json`,
-`.buildchain/publication/publication-artifact-passport.json`, and a source
-bundle by default. See [`publication-artifacts.md`](publication-artifacts.md)
-for the repository contract and reusable workflow.
+`.buildchain/publication/publication-artifact-passport.json`, a source bundle,
+and, when `[publication.archive]` is configured,
+`.buildchain/publication/publication-registry.json` by default. See
+[`publication-artifacts.md`](publication-artifacts.md) for the repository
+contract and reusable workflow.
 
 Generate, check, or update the managed README badge block:
 

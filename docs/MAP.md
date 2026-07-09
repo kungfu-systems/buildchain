@@ -31,7 +31,7 @@ workflow, action, and Node API export also carries a `capabilityGroup`,
 | Reusable Build and Lifecycle | `workflow-registry.json`, `release-model.json` | [`reusable-build-surface.md`](reusable-build-surface.md), [`lifecycle-protocol.md`](lifecycle-protocol.md) |
 | KFD Trust and Surface Closure | `kfd-claims.json`, `public-surface-audit.json`, `cli-registry.json`, `node-api-registry.json` | [`kfd-support.md`](kfd-support.md), [`release-passport.md`](release-passport.md) |
 | Site Bundle, Web Surfaces, and Propagation | `buildchain-site.json`, `site-manifest.json`, `page-registry.json`, `release-model.json` | [`site-bundle-contract.md`](site-bundle-contract.md), [`web-surface-deployments.md`](web-surface-deployments.md), [`release-propagation.md`](release-propagation.md) |
-| Publication Artifacts | `workflow-registry.json`, `node-api-registry.json`, `manual-registry.json` | [`publication-artifacts.md`](publication-artifacts.md), [`reusable-build-surface.md`](reusable-build-surface.md) |
+| Publication Artifacts | `workflow-registry.json`, `node-api-registry.json`, `manual-registry.json`, `kungfu-buildchain-publication-artifact-registry` | [`publication-artifacts.md`](publication-artifacts.md), [`reusable-build-surface.md`](reusable-build-surface.md) |
 | Distribution Indexes and Badges | `badge-endpoint-registry.json`, `node-api-registry.json`, `manual-registry.json` | [`readme-badges.md`](readme-badges.md), [`homebrew.md`](homebrew.md) |
 | Build Facts, Observability, and Diagnostics | `cli-registry.json`, `node-api-registry.json`, lifecycle artifacts | [`build-facts.md`](build-facts.md), [`toolkit-observability.md`](toolkit-observability.md), [`consumer-issue-reporting.md`](consumer-issue-reporting.md) |
 | Governance, Versioning, and Runtime Drift | `buildchain-contract.json`, `workflow-registry.json`, `release-model.json` | [`release-governance.md`](release-governance.md), [`release-flow.md`](release-flow.md), [`versioning.md`](versioning.md), [`runtime-train-validation.md`](runtime-train-validation.md) |
@@ -47,8 +47,8 @@ workflow, action, and Node API export also carries a `capabilityGroup`,
 | npm publish transactions, evidence, dist-tags, and recovery | `dist/site/release-model.json`, `dist/site/artifact-schemas.json` | [`publish-transaction.md`](publish-transaction.md) |
 | Git/source/version/module/product build facts | `dist/site/node-api-registry.json`, `dist/site/cli-registry.json`, `kungfu-buildchain-module-build-facts`, `kungfu-buildchain-product-build-facts` | [`build-facts.md`](build-facts.md) |
 | GitHub Release passport/evidence publication | `dist/site/release-model.json`, `dist/site/artifact-schemas.json` | [`release-governance.md`](release-governance.md), [`release-candidate.md`](release-candidate.md) |
-| release propagation for package/site chains | `dist/site/release-model.json` | [`release-propagation.md`](release-propagation.md) |
-| publication artifact manifests, source bundles, and paper repository workflows | `dist/site/workflow-registry.json`, `dist/site/node-api-registry.json`, `kungfu-buildchain-publication-artifact-manifest` | [`publication-artifacts.md`](publication-artifacts.md) |
+| release propagation for package/publication/site chains | `dist/site/release-model.json` | [`release-propagation.md`](release-propagation.md) |
+| publication artifact manifests, immutable archive registries, source bundles, and paper repository workflows | `dist/site/workflow-registry.json`, `dist/site/node-api-registry.json`, `kungfu-buildchain-publication-artifact-manifest`, `kungfu-buildchain-publication-artifact-registry` | [`publication-artifacts.md`](publication-artifacts.md) |
 | Generated badge bundles, README badge blocks, and badge facts | `dist/site/node-api-registry.json`, `dist/site/manual-registry.json`, `kungfu-buildchain-badge-bundle-facts`, `kungfu-buildchain-readme-badge-facts` | [`readme-badges.md`](readme-badges.md) |
 | Homebrew tap distribution indexes | `dist/site/node-api-registry.json`, `dist/site/buildchain-contract.json` | [`homebrew.md`](homebrew.md) |
 | Buildchain CLI manual | `dist/site/cli-registry.json`, `dist/site/manual-registry.json` | [`cli.md`](cli.md) |
@@ -149,9 +149,9 @@ replace them.
   [`cli.md`](cli.md) and [`publish-transaction.md`](publish-transaction.md).
 - **Git source digest / module build facts / product build facts / legacy
   Kungfu build info** -> [`build-facts.md`](build-facts.md) and [`cli.md`](cli.md).
-- **release chains / upstream package as source of truth / site synchronization** ->
+- **release chains / upstream package or publication artifact as source of truth / site synchronization** ->
   [`release-propagation.md`](release-propagation.md).
-- **paper repositories / PDFs / publication manifests / source bundles** ->
+- **paper repositories / PDFs / publication manifests / immutable archive registries / source bundles** ->
   [`publication-artifacts.md`](publication-artifacts.md).
 - **README status badges / KFD badge bundles / badge facts JSON** ->
   [`readme-badges.md`](readme-badges.md) and [`cli.md`](cli.md).

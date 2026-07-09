@@ -397,6 +397,41 @@ function normalizePublicationSection(publication) {
     sourceBundlePath: publication.source_bundle_path === undefined
       ? ".buildchain/publication/source.tar.gz"
       : posixPath(assertString(publication.source_bundle_path, "publication.source_bundle_path")),
+    archive: normalizePublicationArchive(publication.archive),
+  };
+}
+
+function normalizePublicationArchive(archive = undefined) {
+  if (archive === undefined) {
+    return undefined;
+  }
+  assertPlainObject(archive, "publication.archive");
+  const immutableUrlPrefix = archive.immutable_url_prefix === undefined
+    ? ""
+    : assertString(archive.immutable_url_prefix, "publication.archive.immutable_url_prefix");
+  const immutableBaseUrl = archive.immutable_base_url === undefined
+    ? ""
+    : assertString(archive.immutable_base_url, "publication.archive.immutable_base_url");
+  if (!immutableUrlPrefix && !immutableBaseUrl) {
+    throw new Error("publication.archive requires immutable_url_prefix or immutable_base_url");
+  }
+  return {
+    id: archive.id === undefined ? "" : assertString(archive.id, "publication.archive.id"),
+    canonicalUrl: assertString(archive.canonical_url, "publication.archive.canonical_url"),
+    latestUrl: archive.latest_url === undefined
+      ? ""
+      : assertString(archive.latest_url, "publication.archive.latest_url"),
+    latestEvidenceUrl: archive.latest_evidence_url === undefined
+      ? ""
+      : assertString(archive.latest_evidence_url, "publication.archive.latest_evidence_url"),
+    immutableBaseUrl,
+    immutableUrlPrefix,
+    artifactUrlPrefix: archive.artifact_url_prefix === undefined
+      ? ""
+      : assertString(archive.artifact_url_prefix, "publication.archive.artifact_url_prefix"),
+    registryPath: archive.registry_path === undefined
+      ? ".buildchain/publication/publication-registry.json"
+      : posixPath(assertString(archive.registry_path, "publication.archive.registry_path")),
   };
 }
 

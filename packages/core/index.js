@@ -186,8 +186,10 @@ export {
 } from "./public-surface-audit.js";
 
 export {
+  PUBLICATION_ARTIFACT_ARCHIVE_CONTRACT,
   PUBLICATION_ARTIFACT_MANIFEST_CONTRACT,
   PUBLICATION_ARTIFACT_PASSPORT_CONTRACT,
+  PUBLICATION_ARTIFACT_REGISTRY_CONTRACT,
   collectPublicationArtifact,
   createPublicationSourceBundle,
   writePublicationArtifact,

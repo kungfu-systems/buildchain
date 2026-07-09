@@ -85,6 +85,53 @@ The upstream release envelope is the post-finalization fact set:
 The package version and integrity must be exact. Downstream build logic should
 install that version directly, not resolve `alpha` or `latest` again.
 
+Publication repositories can propagate immutable publication archive evidence
+without npm package facts. The upstream envelope then includes
+`publicationArtifact`:
+
+```json
+{
+  "repository": "kungfu-systems/paper-observer-declared-timelines",
+  "channel": "alpha",
+  "tag": "v0.1.0-alpha.1",
+  "sourceSha": "4444444444444444444444444444444444444444",
+  "releasePassport": {
+    "url": "https://github.com/kungfu-systems/paper-observer-declared-timelines/releases/download/v0.1.0-alpha.1/buildchain.release.json",
+    "sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+  },
+  "publicationArtifact": {
+    "id": "observer-declared-timelines",
+    "kind": "paper",
+    "version": "0.1.0-alpha.1",
+    "canonicalUrl": "https://papers.libkungfu.dev/observer-declared-timelines/",
+    "latestUrl": "https://papers.libkungfu.dev/observer-declared-timelines/latest/",
+    "latestEvidenceUrl": "https://papers.libkungfu.dev/observer-declared-timelines/latest/buildchain.release.json",
+    "immutableVersionUrl": "https://papers.libkungfu.dev/archive/observer-declared-timelines/v0.1.0-alpha.1/",
+    "registry": {
+      "url": "https://github.com/kungfu-systems/paper-observer-declared-timelines/releases/download/v0.1.0-alpha.1/publication-registry.json",
+      "sha256": "6666666666666666666666666666666666666666666666666666666666666666"
+    },
+    "manifest": {
+      "url": "https://github.com/kungfu-systems/paper-observer-declared-timelines/releases/download/v0.1.0-alpha.1/publication-artifact.json",
+      "sha256": "7777777777777777777777777777777777777777777777777777777777777777"
+    },
+    "passport": {
+      "url": "https://github.com/kungfu-systems/paper-observer-declared-timelines/releases/download/v0.1.0-alpha.1/publication-artifact-passport.json",
+      "sha256": "8888888888888888888888888888888888888888888888888888888888888888"
+    },
+    "primaryArtifact": {
+      "path": "_build/main.pdf",
+      "url": "https://papers.libkungfu.dev/archive/observer-declared-timelines/v0.1.0-alpha.1/main.pdf",
+      "sha256": "9999999999999999999999999999999999999999999999999999999999999999"
+    }
+  }
+}
+```
+
+This lets a site repository render the latest reader page and historical
+version index from release facts while keeping old PDFs, source bundles,
+manifests, and passports immutable.
+
 ## CLI
 
 Generate a propagation plan:
@@ -111,7 +158,9 @@ The written lock has contract
 `kungfu-buildchain-release-propagation-lock` and records:
 
 - upstream repository, channel, exact tag, source SHA;
-- npm package name, exact version, and sha512 integrity;
+- optional npm package name, exact version, and sha512 integrity;
+- optional publication artifact canonical/latest/immutable URLs, registry,
+  manifest, passport, source bundle, and primary artifact digests;
 - release passport URL and SHA-256;
 - optional site bundle manifest SHA-256;
 - downstream repository, channel, base ref, lock path;
