@@ -63,6 +63,10 @@ secret_refs = ["AWS_ROLE_ARN"]
 # Use "external" when an existing viewer-request CloudFront Function already
 # owns preview alias, surface-prefix, and directory-index routing.
 directory_index_rewrite = "buildchain"
+# Optional. Defaults to HTTP for public channels and S3 object evidence for
+# managed-network channels. Use "s3-object" when CI should verify uploaded
+# objects and manifests instead of waiting for public edge convergence.
+health_strategy = "http"
 ```
 
 ### Multi-Surface Host Mapping
@@ -527,6 +531,14 @@ production release passport embeds the deploy plan, apply result, production
 preflight, and health check so a reviewer or agent can audit why the production
 site changed and whether every declared host and every existing nested route was
 actually covered.
+
+Public channels can opt into object-level health with
+`deploy.<channel>.health_strategy = "s3-object"` when the deployment contract is
+already covered by S3 manifest/object writes and public edge convergence is not
+the right CI gate. This is useful for preview distributions whose viewer-request
+routing is owned by an external CloudFront Function. The channel remains public;
+only the CI health evidence changes from HTTP fetches to S3 `head-object`
+checks.
 
 Channels declared with `access_control = "managed-network"` use a different
 health strategy by default. Buildchain does not require a GitHub-hosted runner
