@@ -112,6 +112,12 @@ export {
 } from "./release-candidate.js";
 
 export {
+  PUBLICATION_NPM_PACKAGE_CONTRACT,
+  collectPublicationPackageFacts,
+  preparePublicationNpmPackage,
+} from "./publication-package.js";
+
+export {
   ARTIFACT_PASSPORT_LOCATOR_CONTRACT,
   ARTIFACT_PASSPORT_POINTER_CONTRACT,
   ARTIFACT_VERIFICATION_CONTRACT,

@@ -3,11 +3,11 @@
   "contract": "kungfu-buildchain-public-surface-reverse-audit",
   "status": "passed",
   "summary": {
-    "cliCommandCount": 73,
-    "workflowCount": 36,
+    "cliCommandCount": 74,
+    "workflowCount": 37,
     "actionCount": 4,
     "sitePageCount": 45,
-    "docCommandRefCount": 229,
+    "docCommandRefCount": 231,
     "failureCount": 0
   },
   "enumerated": {
@@ -291,6 +291,11 @@
         "id": "publication-artifact-manifest",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain publication-artifact manifest [--cwd <dir>] [--source-sha <sha>]"
+      },
+      {
+        "id": "publication-artifact-npm-package",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain publication-artifact npm-package [--cwd <dir>] [--output-dir <dir>] [--package-name <name>] [--json]"
       },
       {
         "id": "publish-source",
@@ -782,6 +787,45 @@
           "run-check"
         ],
         "inputCount": 2
+      },
+      {
+        "id": "paper-release",
+        "path": ".github/workflows/paper-release.yml",
+        "inputs": [
+          "artifact-name",
+          "artifact-retention-days",
+          "branch-protection-bypass-apps",
+          "branch-protection-bypass-teams",
+          "branch-protection-bypass-users",
+          "build-command",
+          "buildchain-contract-compatibility-policy",
+          "buildchain-contract-drift-issue-mode",
+          "buildchain-contract-lock-path",
+          "buildchain-ref",
+          "buildchain-repository",
+          "dry-run",
+          "github-release",
+          "github-release-notes",
+          "github-release-title",
+          "node-version",
+          "package-name",
+          "publish-dist-tag",
+          "publish-package-set-order",
+          "release-passport-impact-json",
+          "release-passport-output-dir",
+          "release-passport-product-name",
+          "required-status-check",
+          "setup-node",
+          "target-ref",
+          "target-sha",
+          "toolchain-command",
+          "toolchain-digest",
+          "toolchain-image",
+          "toolchain-type",
+          "verify-command",
+          "working-directory"
+        ],
+        "inputCount": 32
       },
       {
         "id": "patrol-daily",
@@ -2143,6 +2187,16 @@
         "command": "buildchain publication-artifact manifest --source-sha"
       },
       {
+        "id": "publication-artifact-npm-package",
+        "path": "docs/cli.md",
+        "command": "buildchain publication-artifact npm-package --json"
+      },
+      {
+        "id": "publication-artifact-npm-package",
+        "path": "docs/publication-artifacts.md",
+        "command": "buildchain publication-artifact npm-package --json"
+      },
+      {
         "id": "publication-artifact",
         "path": "docs/cli.md",
         "command": "buildchain publication-artifact"
@@ -2448,9 +2502,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "53833f92021caa7cc5feaff5d21f38b0a77317ace11a43795be180d1dec3699f",
-    "workflowRegistryDigest": "67572429a83124370b9ffd46f56923aa2b252873c9624ded39a26675fb0ee815",
-    "pageRegistryDigest": "3a041b5802183d5a9559a415645b03f582a1e4808b4ba5713484e6941956d35e"
+    "cliRegistryDigest": "fb33fe38423f56ebf95919e2b58e13dc2f544aee10169bc87d7afe980bc1b142",
+    "workflowRegistryDigest": "4041321df08640a802a87ff0fbe8584d95dc416945b43778727adb820cab9097",
+    "pageRegistryDigest": "f9da4a3693844653a4b18db81be75676ecd70c5e15ebbc9371dcf007e5e4e858"
   },
   "comparison": {
     "missingCliRegistry": [],

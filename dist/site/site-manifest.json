@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:7e1b72dfc0ad91323156295617e320fee94a644efee54667b017e690fcebf64e"
+      "digest": "sha256:886d073bd37ac655e1ad9659baf161c72ef796b6032c5c3332218ac8198c2aeb"
     },
     {
       "id": "install",
@@ -173,7 +173,7 @@
       "path": "docs/cli.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:4b31f7ff5330cde8ab32b237f533c7af76463cce570d67dd14669c3a14c83c84"
+      "digest": "sha256:81624885888c9e357db128f644f93dcab2286910df426b532730b0141d7cb00d"
     },
     {
       "id": "build-facts",

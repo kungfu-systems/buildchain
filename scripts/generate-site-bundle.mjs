@@ -431,6 +431,7 @@ function cliCommandMeta(id) {
     "publish-source": { group: "release-passport-trust", purpose: "Create, inspect, or verify publish-gate source-lock refs." },
     "publication-artifact": { group: "reusable-build", purpose: "Generate publication artifact manifests, passports, and source bundles for paper/report repositories." },
     "publication-artifact-manifest": { group: "reusable-build", purpose: "Write a site-consumable publication artifact manifest, publication passport, and source bundle." },
+    "publication-artifact-npm-package": { group: "reusable-build", purpose: "Synthesize the declared npm paper package from a publication artifact manifest, passport, registry, source bundle, and primary artifact." },
     "release-dry-run": { group: "governance-versioning", purpose: "Explain what a channel merge would publish before the PR is merged." },
     "release-line-open": { group: "governance-versioning", purpose: "Plan or write the initial version-state commit for a new minor release line." },
     "release-propagation": { group: "site-and-propagation", purpose: "Plan channel-preserving downstream release PRs and write exact upstream release locks." },
@@ -466,6 +467,7 @@ function nodeApiMeta(exportName) {
     "./diagnostics": { group: "observability-diagnostics", summary: "Native diagnostics collection, summarization, cache, compiler, and process-sampler APIs." },
     "./logging": { group: "observability-diagnostics", summary: "Buildchain JSONL logging, span, summary, and verification APIs." },
     "./publication-artifact": { group: "reusable-build", summary: "Publication artifact manifest, source bundle, and publication passport APIs." },
+    "./publication-package": { group: "reusable-build", summary: "Publication npm package synthesis APIs for Buildchain-managed paper release presets." },
     "./artifact-passport": { group: "release-passport-trust", summary: "Artifact passport digest and evidence helper APIs." },
     "./release-passport": { group: "release-passport-trust", summary: "Release passport collection, verification, explanation, and evidence APIs." },
     "./release-candidate": { group: "reusable-build", summary: "PR-stage release-candidate artifact, passport, and promote-only resolver APIs." },
@@ -537,7 +539,7 @@ function buildCapabilityRegistry({ docs, pages, cliRegistry, manualRegistry, nod
 
 function workflowCapabilityGroup(entry) {
   if (["web-surface", "release-propagation"].includes(entry.id)) return capabilityGroup("site-and-propagation");
-  if (["build", "release-candidate-promote", "publication-artifact"].includes(entry.id)) return capabilityGroup("reusable-build");
+  if (["build", "release-candidate-promote", "publication-artifact", "paper-release"].includes(entry.id)) return capabilityGroup("reusable-build");
   if (["buildchain-ref-promotion", "release-line-bootstrap"].includes(entry.id)) return capabilityGroup("release-passport-trust");
   if (entry.id.includes("patrol") || entry.id.includes("dev-pr-auto-merge")) return capabilityGroup("governance-versioning");
   if (entry.status === "repository-internal" || entry.status === "compatibility-fixture") return capabilityGroup("api-cli-reference");
@@ -815,6 +817,7 @@ function buildSiteBundle() {
         ["buildchain-ref-promotion", "release-governance"],
         ["release-line-bootstrap", "release-governance"],
         ["release-candidate-promote", "release-governance"],
+        ["paper-release", "reusable-build"],
         ["release-propagation", "release-propagation"],
         ["dev-pr-auto-merge", "dev-governance"],
         ["binary-distribution", "release-passport"],
