@@ -23,6 +23,11 @@ type = "json"
 path = "dist/site/site-manifest.json"
 key = "package.version"
 
+[[version.files]]
+type = "json"
+path = "dist/site/kfd-upstream-aggregate.json"
+key = "product.version"
+
 [lifecycle.install]
 command = "corepack pnpm@11.7.0 install --frozen-lockfile"
 
