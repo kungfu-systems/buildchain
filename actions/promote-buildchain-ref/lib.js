@@ -332,7 +332,9 @@ function assertAllowedLocalChanges(cwd, allowedPaths) {
     [
       ".buildchain/kfd/",
       ".buildchain/release-candidate/",
+      ".buildchain/release-evidence/",
       ".buildchain/release-passport/",
+      ".buildchain/release-state/",
     ].some((prefix) => filePath.startsWith(prefix));
   const unexpected = output
     .split(/\r?\n/)
