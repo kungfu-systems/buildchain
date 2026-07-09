@@ -323,8 +323,10 @@ jobs:
         run: |
           case "${PACKAGE_MANAGER}" in
             pnpm)
-              corepack enable pnpm
-              pnpm install --frozen-lockfile
+              corepack prepare pnpm@11.7.0 --activate
+              corepack enable
+              pnpm --version
+              corepack pnpm@11.7.0 install --frozen-lockfile
               ;;
             yarn)
               corepack enable yarn
@@ -545,7 +547,13 @@ jobs:
       - name: Classify Buildchain promotion friction
         id: friction
         if: ${{ failure() && steps.rc.outcome != '' }}
-        run: node .buildchain/runtime/scripts/workflow-friction-report.mjs
+        shell: bash
+        run: |
+          reporter=".buildchain/runtime/scripts/workflow-friction-report.mjs"
+          if [ ! -f "${reporter}" ]; then
+            reporter="scripts/workflow-friction-report.mjs"
+          fi
+          node "${reporter}"
         env:
           GITHUB_TOKEN: ${{ github.token }}
           BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}

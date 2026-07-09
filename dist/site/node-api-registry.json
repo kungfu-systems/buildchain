@@ -203,7 +203,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-artifact",
       "export": "./publication-artifact",
       "target": "./packages/core/publication-artifact.js",
-      "digest": "sha256:4d00985aa43a98ca0feee872f889251d7b7b2c8f1a6703316ffc27ad4405e423",
+      "digest": "sha256:03cf19323cf8d4bd7726e07ab615ed74b4ff7ca0b58becd25963ff080993c6ea",
       "summary": "Publication artifact manifest, source bundle, and publication passport APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [

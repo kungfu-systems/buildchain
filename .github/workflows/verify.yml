@@ -33,7 +33,10 @@ jobs:
         with:
           go-version: "1.25.x"
       - name: Enable package manager shims
-        run: corepack enable pnpm
+        run: |
+          corepack prepare pnpm@11.7.0 --activate
+          corepack enable
+          pnpm --version
       - name: Install Buildchain runtime dependencies
         run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
       - name: Validate declared check lifecycle

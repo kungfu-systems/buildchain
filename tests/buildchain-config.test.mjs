@@ -316,6 +316,12 @@ metadata_paths = ["README.md"]
 source_paths = ["paper", "README.md", "LICENSE", "Makefile"]
 site_consumers = ["papers.example.com"]
 
+[publication.toolchain]
+type = "latex-docker"
+image = "ghcr.io/kungfu-systems/latex"
+digest = "sha256:${"a".repeat(64)}"
+command = "latexmk -pdf -outdir=_build paper/main.tex"
+
 [lifecycle.build]
 command = "make pdf"
 
@@ -334,6 +340,8 @@ command = "make check"
       assert.equal(summary.project.type, "publication-artifact");
       assert.equal(summary.publication.title, "Paper Fixture");
       assert.equal(summary.publication.primaryArtifact, "_build/main.pdf");
+      assert.equal(summary.publication.toolchain.type, "latex-docker");
+      assert.equal(summary.publication.toolchain.trustClassification, "pinned-docker-toolchain");
       assert.deepEqual(summary.publication.sourcePaths, ["paper", "README.md", "LICENSE", "Makefile"]);
     },
   );

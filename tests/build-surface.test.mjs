@@ -287,6 +287,12 @@ test("publication artifact workflow exposes paper artifact contract", () => {
   assert.match(workflow, /buildchain-ref override requires write, maintain, or admin permission/);
   assert.match(workflow, /BUILDCHAIN_RUNTIME_CLASS: \$\{\{ steps\.runtime\.outputs\.runtime-class \}\}/);
   assert.match(workflow, /build-command:/);
+  assert.match(workflow, /toolchain-type:/);
+  assert.match(workflow, /toolchain-image:/);
+  assert.match(workflow, /toolchain-digest:/);
+  assert.match(workflow, /Resolve publication toolchain/);
+  assert.match(workflow, /docker pull/);
+  assert.match(workflow, /BUILDCHAIN_PUBLICATION_TOOLCHAIN_TYPE/);
   assert.match(workflow, /verify-command:/);
   assert.match(workflow, /publication-artifact manifest/);
   assert.match(workflow, /publication-artifact-passport\.json/);
@@ -455,7 +461,8 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /INPUT_TARGET_SHA: \$\{\{ inputs\.target-sha \}\}/);
   assert.match(workflow, /Install promotion dependencies/);
   assert.match(workflow, /PACKAGE_MANAGER: \$\{\{ inputs\.package-manager \}\}/);
-  assert.match(workflow, /pnpm install --frozen-lockfile/);
+  assert.match(workflow, /corepack enable/);
+  assert.match(workflow, /corepack pnpm@11\.7\.0 install --frozen-lockfile/);
   assert.match(workflow, /promote-only-release-candidate: "true"/);
   assert.match(workflow, /release-candidate-passport-path:/);
   assert.match(workflow, /release-candidate-build-summary-path:/);
@@ -1298,6 +1305,8 @@ test("report issue action exposes workflow-friction feedback mode", () => {
   assert.match(workflow, /uses: actions\/create-github-app-token@v2/);
   assert.match(workflow, /BUILDCHAIN_BUILD_WORKFLOW_FILE: \$\{\{ inputs\.release-candidate-workflow-file \}\}/);
   assert.match(workflow, /BUILDCHAIN_BUILD_WORKFLOW_NAME: \$\{\{ inputs\.release-candidate-workflow-name \}\}/);
+  assert.match(workflow, /reporter="\.buildchain\/runtime\/scripts\/workflow-friction-report\.mjs"/);
+  assert.match(workflow, /reporter="scripts\/workflow-friction-report\.mjs"/);
   assert.match(workflow, /Report Buildchain promotion friction/);
   assert.match(
     workflow,
