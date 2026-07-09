@@ -1468,6 +1468,9 @@ function retryableHealthResponse(response) {
   return response.status === 403 || response.status === 404 || response.status >= 500;
 }
 
+const DEFAULT_HEALTH_HTTP_RETRY_ATTEMPTS = 12;
+const DEFAULT_HEALTH_HTTP_RETRY_INTERVAL_MS = 10000;
+
 export async function checkWebSurfaceHealth({
   result = null,
   plan = null,
@@ -1478,8 +1481,8 @@ export async function checkWebSurfaceHealth({
   allowedManagedNetworkRunner = false,
   managedNetworkS3ObjectVerification = true,
   commandRunner = defaultCommandRunner,
-  httpRetryAttempts = Number(process.env.BUILDCHAIN_WEB_SURFACE_HEALTH_HTTP_RETRY_ATTEMPTS || 3),
-  httpRetryIntervalMs = Number(process.env.BUILDCHAIN_WEB_SURFACE_HEALTH_HTTP_RETRY_INTERVAL_MS || 5000),
+  httpRetryAttempts = Number(process.env.BUILDCHAIN_WEB_SURFACE_HEALTH_HTTP_RETRY_ATTEMPTS || DEFAULT_HEALTH_HTTP_RETRY_ATTEMPTS),
+  httpRetryIntervalMs = Number(process.env.BUILDCHAIN_WEB_SURFACE_HEALTH_HTTP_RETRY_INTERVAL_MS || DEFAULT_HEALTH_HTTP_RETRY_INTERVAL_MS),
 } = {}) {
   const loadedConfig = loadBuildchainConfig(cwd);
   const config = assertWebSurfaceConfig(loadedConfig);
