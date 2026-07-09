@@ -24,6 +24,7 @@ import {
 import { createSurfaceTimestampPolicy } from "../packages/core/surface-manifest.js";
 
 const SITE_BUNDLE_CONTRACT = "kungfu-buildchain-site-bundle";
+const PUBLICATION_RELEASE_REGISTRY_CONTRACT = "kungfu-buildchain-publication-release-registry";
 const README_PATH = "README.md";
 const root = path.resolve(import.meta.dirname, "..");
 const outputDir = path.join(root, "dist", "site");
@@ -522,6 +523,7 @@ function buildCapabilityRegistry({ docs, pages, cliRegistry, manualRegistry, nod
         "cli-registry.json",
         "node-api-registry.json",
         "workflow-registry.json",
+        "publication-registry.json",
         "kfd-upstream-aggregate.json",
         "kfd-claims.json",
       ],
@@ -572,6 +574,90 @@ function buildSitePages() {
     ...apiPages,
     ...fixturePages,
   ].sort((a, b) => a.route.localeCompare(b.route));
+}
+
+function createPublicationReleaseRegistry({ packageJson, timestampPolicy }) {
+  return {
+    schemaVersion: 1,
+    contract: PUBLICATION_RELEASE_REGISTRY_CONTRACT,
+    ...timestampPolicy,
+    package: {
+      name: packageJson.name,
+      version: packageJson.version,
+      versionSource: "package.json#version",
+    },
+    sourceKind: "package-site-bundle",
+    sourceBoundary: {
+      truthOwner: "@kungfu-tech/buildchain",
+      siteRole: "rendering, routing, archive preservation checks, and agent discovery",
+      rule: "Downstream papers sites render this registry; Buildchain owns publication route, latest, immutable artifact, passport, and source bundle facts.",
+    },
+    archivePolicy: {
+      contract: "kungfu-buildchain-publication-archive-policy",
+      mutableRouteKinds: [
+        "canonical-reader",
+        "latest",
+        "registry-index",
+      ],
+      immutableRouteKinds: [
+        "version-artifact",
+        "version-passport",
+        "version-source",
+      ],
+      deploymentBoundary: "append-only immutable version prefixes",
+      rule: "A site build may update latest and canonical reader pages, but it must not delete or overwrite files under a declared immutable version prefix.",
+    },
+    publications: [
+      {
+        id: "publication-archive-fixture",
+        title: "Publication Archive Fixture",
+        summary: "A paper-shaped Buildchain package fact proving that site rendering preserves immutable versioned PDF, source, and passport routes while latest pages can move.",
+        canonicalReader: {
+          kind: "canonical-reader",
+          url: "https://kungfu.tech/whitepaper/",
+          owner: "site-kungfu-tech",
+        },
+        latest: {
+          kind: "latest",
+          version: "0.1.0",
+          path: "/publication-archive-fixture/latest/",
+        },
+        immutablePrefixTemplate: "/publication-archive-fixture/v{version}/",
+        versions: [
+          {
+            version: "0.1.0",
+            releasedAt: "2026-07-09T00:00:00.000Z",
+            immutable: true,
+            immutablePath: "/publication-archive-fixture/v0.1.0/",
+            source: {
+              repository: "https://github.com/kungfu-systems/publication-archive-fixture",
+              tag: "v0.1.0",
+              commit: "0000000000000000000000000000000000000000",
+              bundle: {
+                path: "source.tar.gz",
+                sha256: "sha256:e2ca891dbf441f867ed135b21b3556ee5cdcd3ec80038f267a3ecff496c5a38b",
+                fixtureBodyBase64: "c2l0ZS1saWJrdW5nZnUtZGV2IHB1YmxpY2F0aW9uIGFyY2hpdmUgZml4dHVyZSBzb3VyY2UgYnVuZGxlCnZlcnNpb246IDAuMS4wCg==",
+              },
+            },
+            passport: {
+              path: "publication-artifact-passport.json",
+              sha256: "sha256:ca214e2e17c8d3c01565e507e57d5b440943c762199aa8d9de21995940538cea",
+              fixtureBodyBase64: "ewogICJjb250cmFjdCI6ICJrdW5nZnUtYnVpbGRjaGFpbi1wdWJsaWNhdGlvbi1hcnRpZmFjdC1wYXNzcG9ydCIsCiAgInB1YmxpY2F0aW9uIjogInB1YmxpY2F0aW9uLWFyY2hpdmUtZml4dHVyZSIsCiAgInZlcnNpb24iOiAiMC4xLjAiLAogICJzdGF0dXMiOiAiZml4dHVyZSIKfQo=",
+            },
+            artifacts: [
+              {
+                role: "pdf",
+                path: "main.pdf",
+                mediaType: "application/pdf",
+                sha256: "sha256:c1c2020cbdcf0cc339323d2276480a48d9b8d7da9be1d19ab58a0b3c0b7a4fbb",
+                fixtureBodyBase64: "JVBERi0xLjQKJSBzaXRlLWxpYmt1bmdmdS1kZXYgcHVibGljYXRpb24gYXJjaGl2ZSBmaXh0dXJlCjEgMCBvYmogPDwgL1R5cGUgL0NhdGFsb2cgL1BhZ2VzIDIgMCBSID4+IGVuZG9iagoyIDAgb2JqIDw8IC9UeXBlIC9QYWdlcyAvS2lkcyBbMyAwIFJdIC9Db3VudCAxID4+IGVuZG9iagozIDAgb2JqIDw8IC9UeXBlIC9QYWdlIC9QYXJlbnQgMiAwIFIgL01lZGlhQm94IFswIDAgMzAwIDE0NF0gL0NvbnRlbnRzIDQgMCBSID4+IGVuZG9iago0IDAgb2JqIDw8IC9MZW5ndGggNzIgPj4gc3RyZWFtCkJUIC9GMSAxMiBUZiAzNiAxMDAgVGQgKFB1YmxpY2F0aW9uIGFyY2hpdmUgZml4dHVyZSB2MC4xLjApIFRqIEVUCmVuZHN0cmVhbSBlbmRvYmoKeHJlZgowIDUKMDAwMDAwMDAwMCA2NTUzNSBmIAp0cmFpbGVyIDw8IC9Sb290IDEgMCBSIC9TaXplIDUgPj4Kc3RhcnR4cmVmCjM2MAolJUVPRgo=",
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
 }
 
 function buildSiteBundle() {
@@ -843,6 +929,7 @@ function buildSiteBundle() {
       "buildchain-site.json",
       "site-manifest.json",
       "badge-endpoint-registry.json",
+      "publication-registry.json",
       "page-registry.json",
       "capability-registry.json",
       "cli-registry.json",
@@ -933,6 +1020,7 @@ function buildSiteBundle() {
       "release-model.json",
       "artifact-schemas.json",
       "badge-endpoint-registry.json",
+      "publication-registry.json",
       "product-mechanism.json",
       "release-provenance.json",
       "kfd-upstream-aggregate.json",
@@ -960,12 +1048,14 @@ function buildSiteBundle() {
       "kfd-upstream-aggregate.json",
       "kfd-claims.json",
       "badge-endpoint-registry.json",
+      "publication-registry.json",
     ],
     instruction: "Use this bundle as the package-owned fact source for Buildchain pages. Do not infer current release mechanics from prose alone.",
   };
   const badgeEndpointRegistry = createReadmeBadgeEndpointRegistry({
     kfdStandards: readPackageKfdStandards(),
   });
+  const publicationRegistry = createPublicationReleaseRegistry({ packageJson, timestampPolicy });
 
   const homepageSections = [
     homepageSection({
@@ -1094,6 +1184,7 @@ function buildSiteBundle() {
         "KFD claim registry",
         "KFD upstream aggregate registry",
         "release-passport evidence vocabulary",
+        "publication archive registry and immutable papers surface facts",
       ],
       ownedBySite: [
         "HTML structure",
@@ -1121,6 +1212,7 @@ function buildSiteBundle() {
     "release-model.json": releaseModel,
     "artifact-schemas.json": artifactSchemas,
     "badge-endpoint-registry.json": badgeEndpointRegistry,
+    "publication-registry.json": publicationRegistry,
     "buildchain-contract.json": createBuildchainContractWorld({ root }),
     "kfd-upstream-aggregate.json": collectKfdUpstreamFacts({ cwd: root, includeOwn: false }),
     "kfd-claims.json": createBuildchainKfdClaimRegistry({ root }),

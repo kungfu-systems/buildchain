@@ -32,6 +32,7 @@
       "./buildchain-kfd-claims": "./packages/core/buildchain-kfd-claims.js",
       "./site/buildchain-site.json": "./dist/site/buildchain-site.json",
       "./site/site-manifest.json": "./dist/site/site-manifest.json",
+      "./site/publication-registry.json": "./dist/site/publication-registry.json",
       "./site/page-registry.json": "./dist/site/page-registry.json",
       "./site/capability-registry.json": "./dist/site/capability-registry.json",
       "./site/cli-registry.json": "./dist/site/cli-registry.json",

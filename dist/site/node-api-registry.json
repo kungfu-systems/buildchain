@@ -281,7 +281,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-kfd-claims",
       "export": "./buildchain-kfd-claims",
       "target": "./packages/core/buildchain-kfd-claims.js",
-      "digest": "sha256:a61fd06fa065808eb6b1205b0748ae8801525dbb22cb902122b62fddde48c355",
+      "digest": "sha256:139a2318ff627819fe5553f0572fe754ce296d5fa974a7337c32c811feb02b14",
       "summary": "Buildchain self KFD claim registry, witnesses, and public claim APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -320,7 +320,7 @@
     {
       "id": "site-bundle-contract",
       "path": "docs/site-bundle-contract.md",
-      "digest": "sha256:6b5bc2ee0f785b16d762f140f14a9163c07caf0d424200c2ececc74f7bb2271c"
+      "digest": "sha256:d67a874b356fbfbee9a5d5ece7021fb52b2848347dc6a14f5562c98570096916"
     }
   ],
   "guidance": "These are the public Node import surfaces shipped by the npm package. Agents should prefer these exports over internal file paths."

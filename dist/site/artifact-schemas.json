@@ -16,6 +16,7 @@
     "buildchain-site.json",
     "site-manifest.json",
     "badge-endpoint-registry.json",
+    "publication-registry.json",
     "page-registry.json",
     "capability-registry.json",
     "cli-registry.json",
