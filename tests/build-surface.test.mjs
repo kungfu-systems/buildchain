@@ -461,7 +461,8 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /INPUT_TARGET_SHA: \$\{\{ inputs\.target-sha \}\}/);
   assert.match(workflow, /Install promotion dependencies/);
   assert.match(workflow, /PACKAGE_MANAGER: \$\{\{ inputs\.package-manager \}\}/);
-  assert.match(workflow, /pnpm install --frozen-lockfile/);
+  assert.match(workflow, /corepack enable/);
+  assert.match(workflow, /corepack pnpm@11\.7\.0 install --frozen-lockfile/);
   assert.match(workflow, /promote-only-release-candidate: "true"/);
   assert.match(workflow, /release-candidate-passport-path:/);
   assert.match(workflow, /release-candidate-build-summary-path:/);
@@ -1304,6 +1305,8 @@ test("report issue action exposes workflow-friction feedback mode", () => {
   assert.match(workflow, /uses: actions\/create-github-app-token@v2/);
   assert.match(workflow, /BUILDCHAIN_BUILD_WORKFLOW_FILE: \$\{\{ inputs\.release-candidate-workflow-file \}\}/);
   assert.match(workflow, /BUILDCHAIN_BUILD_WORKFLOW_NAME: \$\{\{ inputs\.release-candidate-workflow-name \}\}/);
+  assert.match(workflow, /reporter="\.buildchain\/runtime\/scripts\/workflow-friction-report\.mjs"/);
+  assert.match(workflow, /reporter="scripts\/workflow-friction-report\.mjs"/);
   assert.match(workflow, /Report Buildchain promotion friction/);
   assert.match(
     workflow,
