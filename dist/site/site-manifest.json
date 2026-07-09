@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-site-manifest",
-  "generatedAt": "2026-07-08T15:35:10.464Z",
-  "publishedAt": "2026-07-08T15:35:10.464Z",
+  "generatedAt": "2026-07-09T00:19:49.302Z",
+  "publishedAt": "2026-07-09T00:19:49.302Z",
   "reproducible": true,
   "timestampPolicy": "ci-injected",
   "deterministicInputs": [
@@ -19,7 +19,7 @@
     "declared Buildchain surface manifest contract"
   ],
   "sourceDateEpoch": "0",
-  "sourceRevision": "09ef484f589c8cb3e0c053c0ab3ec2542e2eb5f1",
+  "sourceRevision": "41d3fb928f08493dcad8450c8bc57883de15f924",
   "timestampPolicyDetails": {
     "contract": "kungfu-buildchain-surface-timestamp-policy",
     "timestampFields": [
@@ -37,7 +37,7 @@
   },
   "package": {
     "name": "@kungfu-tech/buildchain",
-    "version": "2.10.8",
+    "version": "2.10.9-alpha.1",
     "versionSource": "package.json#version"
   },
   "entrypoint": "buildchain-site.json",
@@ -189,7 +189,7 @@
       "path": "docs/kfd-support.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:d1fdec0890884340e4e8108c17b62866c08dc95771075e3e285532b5a7b0ee5a"
+      "digest": "sha256:4bcf5d1ce63555072130eae90c739555b11658d1d796a3fcea770b90841c4afd"
     },
     {
       "id": "lifecycle-protocol",
@@ -269,6 +269,7 @@
     "badge-endpoint-registry.json",
     "product-mechanism.json",
     "release-provenance.json",
+    "kfd-upstream-aggregate.json",
     "kfd-claims.json",
     "agent-index.json"
   ]

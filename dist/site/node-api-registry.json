@@ -125,8 +125,8 @@
       "specifier": "@kungfu-tech/buildchain/kfd",
       "export": "./kfd",
       "target": "./packages/core/kfd.js",
-      "digest": "sha256:e9170c1e56d2729cf530f953df9ade21963faa9a756ba5fbd0cdd03d8b781cb3",
-      "summary": "Unified KFD standards, schema discovery, KFD-1/KFD-2/KFD-3 grouped APIs, KFD-4 schema discovery, and Buildchain KFD claim helpers.",
+      "digest": "sha256:843c68350fe5cefdd94bfe49355ab60d4b52ce63c5e52d1874a3e8ec78244070",
+      "summary": "Unified KFD standards, schema discovery, KFD-1/KFD-2/KFD-3 grouped APIs, KFD-4 schema discovery, upstream KFD aggregate facts, and Buildchain KFD claim helpers.",
       "capabilityGroup": "kfd-trust",
       "audience": [
         "developer",
@@ -177,7 +177,7 @@
       "specifier": "@kungfu-tech/buildchain/public-surface-audit",
       "export": "./public-surface-audit",
       "target": "./packages/core/public-surface-audit.js",
-      "digest": "sha256:22b8354a876962400f47070b5917141faace5589c2b40fe54ed004816d6735d4",
+      "digest": "sha256:21e866a27cf96f6385f1fe2f3f0f73526fb9bba4c409334dbf9b34a886c80450",
       "summary": "Reverse audit APIs for CLI, workflow, action, site page, and documentation command surfaces.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -268,7 +268,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-kfd-claims",
       "export": "./buildchain-kfd-claims",
       "target": "./packages/core/buildchain-kfd-claims.js",
-      "digest": "sha256:e800194bd945e6727d2e467d3dc155e0df95c656d58047590d12e5174ca84463",
+      "digest": "sha256:a61fd06fa065808eb6b1205b0748ae8801525dbb22cb902122b62fddde48c355",
       "summary": "Buildchain self KFD claim registry, witnesses, and public claim APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -292,7 +292,7 @@
     {
       "id": "kfd-support",
       "path": "docs/kfd-support.md",
-      "digest": "sha256:d1fdec0890884340e4e8108c17b62866c08dc95771075e3e285532b5a7b0ee5a"
+      "digest": "sha256:4bcf5d1ce63555072130eae90c739555b11658d1d796a3fcea770b90841c4afd"
     },
     {
       "id": "readme-badges",

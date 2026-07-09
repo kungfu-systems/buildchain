@@ -56,6 +56,7 @@ const SITE_CONTRACT_FILES = Object.freeze([
   "dist/site/release-provenance.json",
   "dist/site/agent-index.json",
   "dist/site/kfd-claims.json",
+  "dist/site/kfd-upstream-aggregate.json",
 ]);
 
 const SCHEMA_AND_STANDARD_FILES = Object.freeze([

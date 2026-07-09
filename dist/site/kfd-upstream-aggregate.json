@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-kfd-upstream-aggregate",
+  "product": {
+    "id": "kungfu-tech-buildchain",
+    "name": "@kungfu-tech/buildchain",
+    "version": "2.10.9-alpha.1",
+    "repository": "https://github.com/kungfu-systems/buildchain"
+  },
+  "source": {
+    "generator": "@kungfu-tech/buildchain/kfd.collectKfdUpstreamFacts",
+    "configPath": ".buildchain/buildchain.toml",
+    "autoDiscover": false
+  },
+  "upstreams": [
+    {
+      "id": "kfd",
+      "role": "standard-and-schema-provider",
+      "roleSource": "known-package",
+      "roleReason": "@kungfu-tech/kfd is a Buildchain-known KFD upstream package.",
+      "roleValid": true,
+      "package": {
+        "name": "@kungfu-tech/kfd",
+        "version": "1.0.0-alpha.21"
+      },
+      "repository": "kungfu-systems/kfd",
+      "kfd": {
+        "kfd1": "exported-witness",
+        "kfd2": "exported-claim",
+        "kfd3": "exported-collaboration-interface",
+        "kfd4": "schema-metadata"
+      },
+      "releasePassport": "",
+      "releaseAnchor": {
+        "schemaVersion": 1,
+        "contract": "kfd-release-anchor",
+        "line": "v1.0",
+        "channel": "alpha",
+        "npmPackage": "@kungfu-tech/kfd",
+        "npmVersion": "1.0.0-alpha.21",
+        "source": {
+          "repository": "kungfu-systems/kfd",
+          "branch": "alpha/v1/v1.0"
+        },
+        "rationale": "KFD uses an anchored/manual Buildchain mode: the public package version is an explicit release fact, while the outer KFD line remains v1.0."
+      },
+      "kfd3SurfaceCount": 18,
+      "assets": [
+        {
+          "path": "kfd.release.json",
+          "kind": "package",
+          "sha256": "sha256:bfb302c839b6cb45204d541b5af5b1c211568efb16fb3eebbb04dc65f7de83d2",
+          "contract": "kfd-release-anchor",
+          "role": "",
+          "directory": false
+        },
+        {
+          "path": ".buildchain/kfd-1/contract-world.witness.json",
+          "kind": "package",
+          "sha256": "sha256:542fe5b730f2e4782655d096ec04a5dd82a88d4fc9e8701ee235eb111a06dab6",
+          "contract": "",
+          "role": "",
+          "directory": false
+        },
+        {
+          "path": ".buildchain/kfd-2/public-release-trust.claim.json",
+          "kind": "package",
+          "sha256": "sha256:3780b47472762b5ce9575250da73ee800af71dd194a9b0a3f61a063569311237",
+          "contract": "",
+          "role": "",
+          "directory": false
+        },
+        {
+          "path": ".buildchain/kfd-2/kfd-foundation.trust-claims.json",
+          "kind": "package",
+          "sha256": "sha256:87757bd26c8f64465472aaafda05fe56497939a3ce66274563c142594d9d769b",
+          "contract": "kfd-2-trust-claims",
+          "role": "",
+          "directory": false
+        },
+        {
+          "path": ".buildchain/kfd-2/kfd-foundation.trust-assessment.json",
+          "kind": "package",
+          "sha256": "sha256:c3749585bb4a295bb2f0f510a4b6030f0398d9a09dc50dab0ace31248bf95b0f",
+          "contract": "kfd-2-trust-assessment",
+          "role": "",
+          "directory": false
+        },
+        {
+          "path": ".buildchain/kfd-3/collaboration-interface.json",
+          "kind": "package",
+          "sha256": "sha256:fa41128be4ee57a4a40b76d4d7a063c01d7c2e5c53aec2b9c6db819c7a27b22b",
+          "contract": "kfd-3-collaboration-interface",
+          "role": "",
+          "directory": false
+        },
+        {
+          "path": "standards.json",
+          "kind": "package",
+          "sha256": "sha256:4ee9e5fc732eef1b43c75a146125496e0dbd859ef5a11d0c637c41e9091c677f",
+          "contract": "kfd-standards-metadata",
+          "role": "",
+          "directory": false
+        }
+      ],
+      "residualRisk": [],
+      "status": "collected"
+    }
+  ],
+  "summary": {
+    "upstreamCount": 1,
+    "kfdAwareUpstreams": [
+      "kfd"
+    ],
+    "packageVersions": {
+      "kfd": "1.0.0-alpha.21"
+    },
+    "status": "collected"
+  }
+}

@@ -23,6 +23,11 @@ type = "json"
 path = "dist/site/site-manifest.json"
 key = "package.version"
 
+[[version.files]]
+type = "json"
+path = "dist/site/kfd-upstream-aggregate.json"
+key = "product.version"
+
 [lifecycle.install]
 command = "corepack pnpm@11.7.0 install --frozen-lockfile"
 
@@ -71,3 +76,24 @@ kfd_3 = "declared"
 kfd_4 = "declared"
 platforms = ["macOS", "Linux", "Windows"]
 workflows = ["verify.yml", "buildchain-ref-promotion.yml", "binary-distribution.yml"]
+
+[kfd.upstream]
+auto_discover = false
+
+[[kfd.upstream.components]]
+id = "kfd"
+package = "@kungfu-tech/kfd"
+repository = "kungfu-systems/kfd"
+kfd_1 = "exported-witness"
+kfd_2 = "exported-claim"
+kfd_3 = "exported-collaboration-interface"
+kfd_4 = "schema-metadata"
+evidence = [
+  "package:kfd.release.json",
+  "package:.buildchain/kfd-1/contract-world.witness.json",
+  "package:.buildchain/kfd-2/public-release-trust.claim.json",
+  "package:.buildchain/kfd-2/kfd-foundation.trust-claims.json",
+  "package:.buildchain/kfd-2/kfd-foundation.trust-assessment.json",
+  "package:.buildchain/kfd-3/collaboration-interface.json",
+  "package:standards.json",
+]

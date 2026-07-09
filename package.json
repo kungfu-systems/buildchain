@@ -1,6 +1,6 @@
 {
   "name": "@kungfu-tech/buildchain",
-  "version": "2.10.8",
+  "version": "2.10.9-alpha.1",
   "private": false,
   "description": "Buildchain Release Passport, release governance, CLI toolkit, and site facts.",
   "repository": "https://github.com/kungfu-systems/buildchain",
@@ -42,6 +42,7 @@
     "./site/kfd-claims.json": "./dist/site/kfd-claims.json",
     "./site/workflow-registry.json": "./dist/site/workflow-registry.json",
     "./site/public-surface-audit.json": "./dist/site/public-surface-audit.json",
+    "./site/kfd-upstream-aggregate.json": "./dist/site/kfd-upstream-aggregate.json",
     "./site/release-model.json": "./dist/site/release-model.json",
     "./site/artifact-schemas.json": "./dist/site/artifact-schemas.json",
     "./site/buildchain-contract.json": "./dist/site/buildchain-contract.json",

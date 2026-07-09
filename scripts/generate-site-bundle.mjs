@@ -10,6 +10,9 @@ import {
   createBuildchainKfdClaimRegistry,
 } from "../packages/core/buildchain-kfd-claims.js";
 import {
+  collectKfdUpstreamFacts,
+} from "../packages/core/kfd.js";
+import {
   createReadmeBadgeEndpointRegistry,
 } from "../packages/core/readme-badges.js";
 import {
@@ -412,6 +415,11 @@ function cliCommandMeta(id) {
     "kfd-3-register": { group: "kfd-trust", purpose: "Declare detected KFD-3 public surfaces into a product-owned surface registry." },
     "kfd-3-witness": { group: "kfd-trust", purpose: "Generate release-passport-compatible KFD-3 surface witnesses from a product registry." },
     "kfd-4-schema": { group: "kfd-trust", purpose: "Print the default KFD-4 schema exposed by the KFD package standards metadata." },
+    "kfd-aggregate": { group: "kfd-trust", purpose: "Return a product KFD view that combines own KFD status with upstream KFD aggregate facts." },
+    "kfd-upstream": { group: "kfd-trust", purpose: "Inspect KFD upstream aggregate command families." },
+    "kfd-upstream-check": { group: "kfd-trust", purpose: "Validate a KFD upstream aggregate document and fail closed on missing evidence." },
+    "kfd-upstream-collect": { group: "kfd-trust", purpose: "Collect declared KFD-aware upstream package evidence and hashes from Buildchain config." },
+    "kfd-upstream-roles": { group: "kfd-trust", purpose: "List Buildchain-managed KFD upstream role values and inference policy." },
     lifecycle: { group: "reusable-build", purpose: "Run configured lifecycle commands and write deterministic artifact manifests." },
     log: { group: "observability-diagnostics", purpose: "Inspect Buildchain logging command families." },
     logging: { group: "observability-diagnostics", purpose: "Emit timestamped build events, summarize logs, and enforce required phases." },
@@ -462,7 +470,7 @@ function nodeApiMeta(exportName) {
     "./surface-manifest": { group: "site-and-propagation", summary: "Surface manifest timestamp and reproducibility policy APIs." },
     "./issue-reporting": { group: "observability-diagnostics", summary: "Buildchain-owned issue reporting API for workflow friction feedback." },
     "./buildchain-layout": { group: "kfd-trust", summary: "Canonical .buildchain repository layout constants, path resolution, and migration APIs." },
-    "./kfd": { group: "kfd-trust", summary: "Unified KFD standards, schema discovery, KFD-1/KFD-2/KFD-3 grouped APIs, KFD-4 schema discovery, and Buildchain KFD claim helpers." },
+    "./kfd": { group: "kfd-trust", summary: "Unified KFD standards, schema discovery, KFD-1/KFD-2/KFD-3 grouped APIs, KFD-4 schema discovery, upstream KFD aggregate facts, and Buildchain KFD claim helpers." },
     "./public-surface-audit": { group: "kfd-trust", summary: "Reverse audit APIs for CLI, workflow, action, site page, and documentation command surfaces." },
     "./kfd-gate": { group: "kfd-trust", summary: "KFD-1/KFD-2/KFD-3 release gate evidence and validation APIs." },
     "./buildchain-kfd-claims": { group: "kfd-trust", summary: "Buildchain self KFD claim registry, witnesses, and public claim APIs." },
@@ -510,6 +518,7 @@ function buildCapabilityRegistry({ docs, pages, cliRegistry, manualRegistry, nod
         "cli-registry.json",
         "node-api-registry.json",
         "workflow-registry.json",
+        "kfd-upstream-aggregate.json",
         "kfd-claims.json",
       ],
     })),
@@ -922,6 +931,7 @@ function buildSiteBundle() {
       "badge-endpoint-registry.json",
       "product-mechanism.json",
       "release-provenance.json",
+      "kfd-upstream-aggregate.json",
       "kfd-claims.json",
       "agent-index.json",
     ],
@@ -943,6 +953,7 @@ function buildSiteBundle() {
       "public-surface-audit.json",
       "artifact-schemas.json",
       "buildchain-contract.json",
+      "kfd-upstream-aggregate.json",
       "kfd-claims.json",
       "badge-endpoint-registry.json",
     ],
@@ -1077,6 +1088,7 @@ function buildSiteBundle() {
         "public surface reverse audit",
         "manual and Node API registries",
         "KFD claim registry",
+        "KFD upstream aggregate registry",
         "release-passport evidence vocabulary",
       ],
       ownedBySite: [
@@ -1106,6 +1118,7 @@ function buildSiteBundle() {
     "artifact-schemas.json": artifactSchemas,
     "badge-endpoint-registry.json": badgeEndpointRegistry,
     "buildchain-contract.json": createBuildchainContractWorld({ root }),
+    "kfd-upstream-aggregate.json": collectKfdUpstreamFacts({ cwd: root, includeOwn: false }),
     "kfd-claims.json": createBuildchainKfdClaimRegistry({ root }),
     "product-mechanism.json": productMechanism,
     "release-provenance.json": releaseProvenance,
