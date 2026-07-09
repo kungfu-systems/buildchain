@@ -468,6 +468,8 @@ function createAnchoredPackagePassportBundle({
   tag = "v22.22.3-kf.3-alpha.16",
   internalTag = "v22.22.1-alpha.9",
   version = "22.22.3-kf.3-alpha.16",
+  mainDigest = "sha256:package-digest",
+  darwinDigest = "sha512-darwin",
 } = {}) {
   const cwd = tempDir("anchored-package-passport");
   const publishEvidencePath = writeJson(path.join(cwd, "publish-evidence.json"), {
@@ -485,7 +487,61 @@ function createAnchoredPackagePassportBundle({
         kind: "npm",
         name: "@kungfu-tech/libnode",
         ref: version,
-        digest: "sha256:package-digest",
+        digest: mainDigest,
+      },
+      {
+        group: "libnode",
+        kind: "npm",
+        name: "@kungfu-tech/libnode-darwin-arm64",
+        ref: version,
+        digest: darwinDigest,
+      },
+      {
+        group: "libnode",
+        kind: "npm",
+        name: "@kungfu-tech/libnode-linux-x64",
+        ref: version,
+        digest: "sha512-linux",
+      },
+      {
+        group: "libnode",
+        kind: "npm",
+        name: "@kungfu-tech/libnode-win32-x64",
+        ref: version,
+        digest: "sha512-windows",
+      },
+    ],
+  });
+  const packageSetPath = writeJson(path.join(cwd, "package-set.json"), {
+    order: "platforms-first-main-last",
+    registry: "https://registry.npmjs.org/",
+    main: {
+      name: "@kungfu-tech/libnode",
+      version,
+      distTag: "alpha",
+      digest: mainDigest,
+    },
+    platforms: [
+      {
+        name: "@kungfu-tech/libnode-darwin-arm64",
+        version,
+        distTag: "alpha",
+        digest: darwinDigest,
+        platform: "darwin-arm64",
+      },
+      {
+        name: "@kungfu-tech/libnode-linux-x64",
+        version,
+        distTag: "alpha",
+        digest: "sha512-linux",
+        platform: "linux-x64",
+      },
+      {
+        name: "@kungfu-tech/libnode-win32-x64",
+        version,
+        distTag: "alpha",
+        digest: "sha512-windows",
+        platform: "win32-x64",
       },
     ],
   });
@@ -498,6 +554,7 @@ function createAnchoredPackagePassportBundle({
     packageVersion: version,
     sourceSha: "a".repeat(40),
     outputDir: "release-passport",
+    packageSetJson: packageSetPath,
     publishEvidenceJson: publishEvidencePath,
     transactionJson: JSON.stringify({
       transaction: {
@@ -649,6 +706,64 @@ test("artifact passport discovery prefers npm package public release tags", asyn
     assert.equal(discovery.ok, true);
     assert.equal(discovery.discovery.method, "github-release-default");
     assert.equal(discovery.discovery.details.tag, "v22.22.3-kf.3-alpha.16");
+  });
+});
+
+test("artifact passport verification resolves npm registry integrity for package-set subjects", async () => {
+  const releasePath = "/kungfu-systems/libnode/releases/download/v22.22.3-kf.3-alpha.18";
+  const version = "22.22.3-kf.3-alpha.18";
+  const mainIntegrity = "sha512-bGliLm5vZGUtbWFpbg==";
+  const darwinIntegrity = "sha512-bGliLm5vZGUtZGFyd2lu";
+  const outputDir = createAnchoredPackagePassportBundle({
+    tag: `v${version}`,
+    version,
+    mainDigest: mainIntegrity,
+    darwinDigest: darwinIntegrity,
+  });
+
+  await withHttpFixture({
+    ...serveBundleAt(releasePath, outputDir),
+    "/registry/@kungfu-tech/libnode": JSON.stringify({
+      versions: {
+        [version]: {
+          dist: {
+            integrity: mainIntegrity,
+            tarball: "https://registry.example.invalid/@kungfu-tech/libnode/-/libnode.tgz",
+          },
+        },
+      },
+    }),
+    "/registry/@kungfu-tech/libnode-darwin-arm64": JSON.stringify({
+      versions: {
+        [version]: {
+          dist: {
+            integrity: darwinIntegrity,
+            tarball: "https://registry.example.invalid/@kungfu-tech/libnode-darwin-arm64/-/libnode-darwin-arm64.tgz",
+          },
+        },
+      },
+    }),
+  }, async (baseUrl) => {
+    const mainReport = await verifyArtifactPassport({
+      subject: `npm:@kungfu-tech/libnode@${version}`,
+      repository: "kungfu-systems/libnode",
+      githubReleaseBaseUrl: baseUrl,
+      npmRegistryBaseUrl: `${baseUrl}/registry/`,
+    });
+    assert.equal(mainReport.ok, true);
+    assert.equal(mainReport.subject.digest, mainIntegrity);
+    assert.equal(mainReport.subject.npm.digestResolution, "resolved");
+    assert.ok(["passport.artifacts", "publish-evidence.artifacts", "packageSet"].includes(mainReport.match.source));
+
+    const platformReport = await verifyArtifactPassport({
+      subject: `npm:@kungfu-tech/libnode-darwin-arm64@${version}`,
+      repository: "kungfu-systems/libnode",
+      githubReleaseBaseUrl: baseUrl,
+      npmRegistryBaseUrl: `${baseUrl}/registry/`,
+    });
+    assert.equal(platformReport.ok, true);
+    assert.equal(platformReport.subject.digest, darwinIntegrity);
+    assert.ok(["passport.artifacts", "publish-evidence.artifacts", "packageSet"].includes(platformReport.match.source));
   });
 });
 
