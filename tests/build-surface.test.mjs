@@ -275,6 +275,32 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
 });
 
+test("publication artifact workflow exposes paper artifact contract", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/publication-artifact.yml"),
+    "utf8",
+  );
+  assert.match(workflow, /workflow_call:/);
+  assert.match(workflow, /buildchain-ref:/);
+  assert.match(workflow, /buildchain-contract-lock-path:/);
+  assert.match(workflow, /buildchain-ref override is only allowed for trusted workflow_dispatch runs/);
+  assert.match(workflow, /buildchain-ref override requires write, maintain, or admin permission/);
+  assert.match(workflow, /BUILDCHAIN_RUNTIME_CLASS: \$\{\{ steps\.runtime\.outputs\.runtime-class \}\}/);
+  assert.match(workflow, /build-command:/);
+  assert.match(workflow, /verify-command:/);
+  assert.match(workflow, /publication-artifact manifest/);
+  assert.match(workflow, /publication-artifact-passport\.json/);
+  assert.match(workflow, /source\.tar\.gz/);
+  assert.ok(
+    workflow.indexOf("Check Buildchain contract lock") <
+      workflow.indexOf("- name: Build publication"),
+  );
+  assert.ok(
+    workflow.indexOf("- name: Verify publication") <
+      workflow.indexOf("Collect publication artifact manifest"),
+  );
+});
+
 test("artifact relay uploads to S3 and downloads verified GitHub artifact payloads without aws cli", async () => {
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-artifact-relay-"));
   const fakeS3Root = path.join(workspace, "fake-s3");
@@ -638,6 +664,7 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /production-release-pr-mode:/);
   assert.match(workflow, /production-release-pr-token:/);
   assert.match(workflow, /production-release-app-id:/);
+  assert.match(workflow, /production-release-app-client-id:/);
   assert.match(workflow, /production-release-app-private-key:/);
   assert.match(workflow, /fail-on-release-pr-error:/);
   assert.match(workflow, /Resolve production release PR intent/);
@@ -679,8 +706,8 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /PRODUCTION_RELEASE_PR_MODE: \$\{\{ inputs\.production-release-pr-mode \}\}/);
   assert.match(workflow, /FAIL_ON_RELEASE_PR_ERROR: \$\{\{ inputs\.fail-on-release-pr-error \}\}/);
   assert.match(workflow, /Create production release app token/);
-  assert.match(workflow, /actions\/create-github-app-token@v3/);
-  assert.match(workflow, /app-id: \$\{\{ inputs\.production-release-app-id \}\}/);
+  assert.match(workflow, /actions\/create-github-app-token@v3\.1\.1/);
+  assert.match(workflow, /client-id: \$\{\{ inputs\.production-release-app-client-id \|\| inputs\.production-release-app-id \}\}/);
   assert.match(workflow, /private-key: \$\{\{ secrets\.production-release-app-private-key \}\}/);
   assert.match(
     workflow,

@@ -239,6 +239,33 @@ command = "buildchain infra-contract --mode ci"
 `;
 }
 
+function publicationArtifactToml(cwd) {
+  const name = repoName(cwd);
+  return `schema = 1
+
+[project]
+type = "publication-artifact"
+name = "${name}"
+
+[publication]
+kind = "paper"
+title = "${name}"
+primary_artifact = "_build/main.pdf"
+artifact_paths = ["_build/main.pdf"]
+metadata_paths = ["README.md", "docs/MAP.md"]
+source_paths = ["paper", "README.md", "LICENSE", "Makefile"]
+site_consumers = ["papers-site"]
+manifest_path = ".buildchain/publication/publication-artifact.json"
+source_bundle_path = ".buildchain/publication/source.tar.gz"
+
+[lifecycle.build]
+command = "make pdf"
+
+[lifecycle.verify]
+command = "make check"
+`;
+}
+
 function infraContractDesiredJson(cwd) {
   return `${JSON.stringify({
     service: repoName(cwd),
@@ -280,8 +307,46 @@ function workflowArtifactPaths(type) {
         .buildchain/infra-contract-evidence-bundle.json
         .buildchain/infra-contract-evidence-verification.json`;
   }
+  if (type === "publication-artifact") {
+    return `_build/main.pdf
+        .buildchain/publication/publication-artifact.json
+        .buildchain/publication/publication-artifact-passport.json
+        .buildchain/publication/source.tar.gz`;
+  }
   return `dist
         build/stage`;
+}
+
+function publicationWorkflowYaml() {
+  return `name: Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      buildchain-ref:
+        description: "Temporary Buildchain runtime ref for trusted manual validation"
+        required: false
+        default: ""
+  pull_request:
+  push:
+    branches:
+      - "dev/**"
+      - "alpha/**"
+      - "release/**"
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  publication:
+    uses: kungfu-systems/buildchain/.github/workflows/publication-artifact.yml@v2
+    with:
+      buildchain-ref: \${{ inputs.buildchain-ref || '' }}
+      build-command: make pdf
+      verify-command: make check
+      artifact-name: publication-artifact
+`;
 }
 
 function workflowYaml({ type, runnerPreset, artifactName }) {
@@ -350,19 +415,28 @@ export function initBuildchainRepo({
     if (type === "infra-contract") {
       return infraContractToml(resolvedCwd);
     }
+    if (type === "publication-artifact") {
+      return publicationArtifactToml(resolvedCwd);
+    }
     if (type === "anchored-package") {
       return anchoredPackageToml(resolvedCwd, manager);
     }
-    throw new Error("init --type must be one of package, native, web-surface, infra-contract, or anchored-package");
+    throw new Error("init --type must be one of package, native, web-surface, infra-contract, publication-artifact, or anchored-package");
   })();
 
   const written = [
     writeIfAllowed(path.join(resolvedCwd, BUILDCHAIN_CONFIG_PATH), toml, { force }),
-    writeIfAllowed(path.join(resolvedCwd, ".github", "workflows", "build.yml"), workflowYaml({
-      type,
-      runnerPreset,
-      artifactName,
-    }), { force }),
+    writeIfAllowed(
+      path.join(resolvedCwd, ".github", "workflows", "build.yml"),
+      type === "publication-artifact"
+        ? publicationWorkflowYaml()
+        : workflowYaml({
+            type,
+            runnerPreset,
+            artifactName,
+          }),
+      { force },
+    ),
   ];
 
   if (type === "anchored-package" && !fs.existsSync(path.join(resolvedCwd, "release.json"))) {

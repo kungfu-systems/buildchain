@@ -9,6 +9,7 @@ import { npmPublishDryRun } from "../scripts/npm-publish-dry-run.mjs";
 import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
 import { verifyInfraContractEvidenceBundle } from "../scripts/infra-contract-core.mjs";
 import { runReleasePropagationCli } from "../scripts/release-propagation.mjs";
+import { runPublicationArtifactCli } from "../scripts/publication-artifact.mjs";
 import { validateBuildchainConfig } from "../packages/core/buildchain-config.js";
 import { detectPackageManager } from "../packages/core/package-manager.js";
 import {
@@ -92,7 +93,7 @@ function usage() {
   return `Usage:
   buildchain --help
   buildchain version
-  buildchain init [--cwd <dir>] [--type package|native|web-surface|infra-contract|anchored-package] [--force]
+  buildchain init [--cwd <dir>] [--type package|native|web-surface|infra-contract|publication-artifact|anchored-package] [--force]
                   [--package-manager pnpm|npm|yarn] [--runner-preset <preset>]
                   [--artifact-name <template>]
   buildchain validate [--cwd <dir>] [--require-version-state]
@@ -200,6 +201,9 @@ function usage() {
                   [--path <jsonl>] -- <command> [args...]
   buildchain web-surface ...
   buildchain infra-contract ...
+  buildchain publication-artifact manifest [--cwd <dir>] [--source-sha <sha>]
+                                           [--output <file>] [--passport-output <file>]
+                                           [--source-bundle <file>] [--no-source-bundle] [--json]
   buildchain release-propagation <plan|write-lock> ...
   buildchain badges readme [--cwd <dir>] [--readme <path>] [--check] [--write] [--json]
   buildchain badges bundle [--cwd <dir>] [--readme <path>] [--claims <csv>] [--check] [--write] [--json]
@@ -228,6 +232,7 @@ Examples:
   buildchain infra-contract --mode apply --plan <plan.json> --source-sha <sha> --approval-id <id> --dry-run false --execute-adapter-commands true
   buildchain infra-contract --mode propagation-apply --propagation-plan <plan.json> --dry-run true
   buildchain infra-contract --mode evidence-bundle --artifact <artifact.json> --propagation-result <result.json>
+  buildchain publication-artifact manifest --source-sha <sha> --json
   buildchain release-propagation plan --graph graph.json --upstream-release release.json --json
   buildchain kfd status --json
   buildchain kfd schema list --json
@@ -1777,6 +1782,11 @@ async function main(argv = process.argv.slice(2)) {
 
   if (command === "infra-contract") {
     runScript("infra-contract.mjs", args);
+    return;
+  }
+
+  if (command === "publication-artifact" || command === "publication") {
+    runPublicationArtifactCli(args);
     return;
   }
 

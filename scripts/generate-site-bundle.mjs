@@ -325,6 +325,7 @@ const manualMetaById = new Map(Object.entries({
   "site-bundle-contract": { capabilityGroup: "site-and-propagation", audience: ["site", "agent"], maturity: "stable", order: 400 },
   "web-surface-deployments": { capabilityGroup: "site-and-propagation", audience: ["site", "release-operator"], maturity: "stable", order: 410 },
   "release-propagation": { capabilityGroup: "site-and-propagation", audience: ["release-operator", "agent"], maturity: "preview", order: 420 },
+  "publication-artifacts": { capabilityGroup: "reusable-build", audience: ["consumer", "site", "agent"], maturity: "stable", order: 430 },
   "readme-badges": { capabilityGroup: "distribution-indexes", audience: ["consumer", "site"], maturity: "stable", order: 500 },
   homebrew: { capabilityGroup: "distribution-indexes", audience: ["consumer", "release-operator"], maturity: "stable", order: 510 },
   "build-facts": { capabilityGroup: "observability-diagnostics", audience: ["maintainer", "agent"], maturity: "stable", order: 600 },
@@ -427,6 +428,8 @@ function cliCommandMeta(id) {
     npm: { group: "release-passport-trust", purpose: "Inspect npm publishing command families." },
     "npm-dry-run": { group: "release-passport-trust", purpose: "Verify npm publish shape before a release transaction." },
     "publish-source": { group: "release-passport-trust", purpose: "Create, inspect, or verify publish-gate source-lock refs." },
+    "publication-artifact": { group: "reusable-build", purpose: "Generate publication artifact manifests, passports, and source bundles for paper/report repositories." },
+    "publication-artifact-manifest": { group: "reusable-build", purpose: "Write a site-consumable publication artifact manifest, publication passport, and source bundle." },
     "release-dry-run": { group: "governance-versioning", purpose: "Explain what a channel merge would publish before the PR is merged." },
     "release-line-open": { group: "governance-versioning", purpose: "Plan or write the initial version-state commit for a new minor release line." },
     "release-propagation": { group: "site-and-propagation", purpose: "Plan channel-preserving downstream release PRs and write exact upstream release locks." },
@@ -461,6 +464,7 @@ function nodeApiMeta(exportName) {
     "./build-facts": { group: "observability-diagnostics", summary: "Git source, version, module output, product artifact, and legacy Kungfu build fact APIs." },
     "./diagnostics": { group: "observability-diagnostics", summary: "Native diagnostics collection, summarization, cache, compiler, and process-sampler APIs." },
     "./logging": { group: "observability-diagnostics", summary: "Buildchain JSONL logging, span, summary, and verification APIs." },
+    "./publication-artifact": { group: "reusable-build", summary: "Publication artifact manifest, source bundle, and publication passport APIs." },
     "./artifact-passport": { group: "release-passport-trust", summary: "Artifact passport digest and evidence helper APIs." },
     "./release-passport": { group: "release-passport-trust", summary: "Release passport collection, verification, explanation, and evidence APIs." },
     "./release-candidate": { group: "reusable-build", summary: "PR-stage release-candidate artifact, passport, and promote-only resolver APIs." },
@@ -531,7 +535,7 @@ function buildCapabilityRegistry({ docs, pages, cliRegistry, manualRegistry, nod
 
 function workflowCapabilityGroup(entry) {
   if (["web-surface", "release-propagation"].includes(entry.id)) return capabilityGroup("site-and-propagation");
-  if (["build", "release-candidate-promote"].includes(entry.id)) return capabilityGroup("reusable-build");
+  if (["build", "release-candidate-promote", "publication-artifact"].includes(entry.id)) return capabilityGroup("reusable-build");
   if (["buildchain-ref-promotion", "release-line-bootstrap"].includes(entry.id)) return capabilityGroup("release-passport-trust");
   if (entry.id.includes("patrol") || entry.id.includes("dev-pr-auto-merge")) return capabilityGroup("governance-versioning");
   if (entry.status === "repository-internal" || entry.status === "compatibility-fixture") return capabilityGroup("api-cli-reference");
