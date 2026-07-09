@@ -2156,6 +2156,7 @@ test("buildchain semver version state includes generated site contract version",
       "dist/site/buildchain-contract.json#product.version",
       "dist/site/buildchain-site.json#package.version",
       "dist/site/site-manifest.json#package.version",
+      "dist/site/publication-registry.json#package.version",
       "dist/site/kfd-upstream-aggregate.json#product.version",
     ],
   );
