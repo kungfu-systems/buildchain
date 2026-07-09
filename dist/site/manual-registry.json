@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:a57f131080254b3f7a0950b5bdd580b256ecb29047a0e1ee16e8385d61a44b81",
+      "digest": "sha256:795464d3d84af5698b19a26821dbd16040c258b708e070daaaba6d55e6ad81f7",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -36,7 +36,7 @@
       "title": "Release Passport protocol",
       "path": "docs/release-passport.md",
       "plane": "verify",
-      "digest": "sha256:332f058d9a016cc31c709a3447a56dc43ffd0c5e6cdbcd15f9a62f61bb16eb15",
+      "digest": "sha256:f613911bffb7e4e5a93d3652f9690f07e870a131780de1a7e8dd8bd3fc11f96a",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",
@@ -50,7 +50,7 @@
       "title": "Release Candidate Passport",
       "path": "docs/release-candidate.md",
       "plane": "verify",
-      "digest": "sha256:391f14569c7d2a43dd9986c6a29462d674a77338dac6a4ac89c79a4c3d6c4947",
+      "digest": "sha256:841d6f3281ba6dfe80527e4f149807bdbd05d41f9e94afe1c446fcd6d29e307c",
       "capabilityGroup": "reusable-build",
       "audience": [
         "release-operator",
@@ -217,7 +217,7 @@
       "title": "CLI and npm package",
       "path": "docs/cli.md",
       "plane": "use",
-      "digest": "sha256:c2d06c02224d8995dc4fec5449c016e04b8ef928139d2c88bee3f200092b7365",
+      "digest": "sha256:c5b65a092bb1189df8569f9bc4a8c1837a1e045038e3d01b3bd79e8e45682358",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -245,7 +245,7 @@
       "title": "KFD support and KFD-3 surface registration",
       "path": "docs/kfd-support.md",
       "plane": "verify",
-      "digest": "sha256:4bcf5d1ce63555072130eae90c739555b11658d1d796a3fcea770b90841c4afd",
+      "digest": "sha256:ce1bbf5c085a69649ee2e6ae76a52419eef94304e59efc0d0dcd4466c714709e",
       "capabilityGroup": "kfd-trust",
       "audience": [
         "agent",

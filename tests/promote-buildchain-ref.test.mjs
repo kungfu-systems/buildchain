@@ -855,13 +855,14 @@ test("version verification ignores generated buildchain evidence", () => {
     path.join(cwd, ".buildchain/release-candidate/passport/release-candidate-passport.json"),
     "{}\n",
   );
-  fs.mkdirSync(path.join(cwd, ".buildchain/kfd/kfd-2-claims"), { recursive: true });
+  fs.mkdirSync(path.join(cwd, ".buildchain/kfd/kfd-1"), { recursive: true });
+  fs.mkdirSync(path.join(cwd, ".buildchain/kfd/kfd-2/claims"), { recursive: true });
   fs.writeFileSync(
-    path.join(cwd, ".buildchain/kfd/buildchain-kfd-1-witness.json"),
+    path.join(cwd, ".buildchain/kfd/kfd-1/contract-world.witness.json"),
     "{}\n",
   );
   fs.writeFileSync(
-    path.join(cwd, ".buildchain/kfd/kfd-2-claims/buildchain-npm-publish-evidence.json"),
+    path.join(cwd, ".buildchain/kfd/kfd-2/claims/buildchain-npm-publish-evidence.json"),
     "{}\n",
   );
   fs.mkdirSync(path.join(cwd, ".buildchain/release-evidence/v1.0.1"), { recursive: true });
