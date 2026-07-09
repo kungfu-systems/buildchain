@@ -579,6 +579,10 @@ Verify a published artifact by subject:
 buildchain verify artifact ./Kungfu-2.8.0-windows-x64.exe
 buildchain inspect artifact ./Kungfu-2.8.0-windows-x64.exe --json
 buildchain explain artifact ./Kungfu-2.8.0-windows-x64.exe --for agent --json
+buildchain verify artifact npm:@kungfu-tech/libnode@22.22.3-kf.3-alpha.18 \
+  --repository kungfu-systems/libnode \
+  --tag v22.22.3-kf.3-alpha.18 \
+  --json
 ```
 
 `verify artifact` computes or obtains the subject digest, discovers the
@@ -586,6 +590,10 @@ detached release passport, verifies the passport, then requires that the
 subject digest appears in the passport's release assets, package set, publish
 evidence, or artifact evidence. Outcomes are explicit: `pass`, `fail`, or
 `unverifiable`. A filename is only a hint; trust comes from digest equality.
+For `npm:<name>@<version>` subjects, Buildchain resolves `dist.integrity` from
+the npm registry before matching passport evidence. Use `--npm-registry <url>`
+to verify packages from a custom registry; otherwise Buildchain uses
+`npm_config_registry` or `https://registry.npmjs.org/`.
 
 Discovery is fail-closed and ordered:
 

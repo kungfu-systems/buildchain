@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "2233add7313e182512cbb3bd375e62c3191e8a1063f3e93b6acda982eb5a91ac",
+    "sha256": "0b14121242329f7000dc29691d793d864c6e118b3692ee66708566de3f165725",
     "summary": {
       "cliCommandCount": 73,
       "workflowCount": 36,
       "actionCount": 4,
       "sitePageCount": 45,
-      "docCommandRefCount": 228,
+      "docCommandRefCount": 229,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -207,13 +207,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "2233add7313e182512cbb3bd375e62c3191e8a1063f3e93b6acda982eb5a91ac",
+      "sha256": "0b14121242329f7000dc29691d793d864c6e118b3692ee66708566de3f165725",
       "summary": {
         "cliCommandCount": 73,
         "workflowCount": 36,
         "actionCount": 4,
         "sitePageCount": 45,
-        "docCommandRefCount": 228,
+        "docCommandRefCount": 229,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -1482,7 +1482,7 @@
         },
         {
           "id": "cli:explain-artifact",
-          "name": "buildchain explain artifact <subject> [--passport <file-or-url>] [--for human|agent] [--json]",
+          "name": "buildchain explain artifact <subject> [--passport <file-or-url>] [--npm-registry <url>] [--for human|agent] [--json]",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -1602,7 +1602,7 @@
         },
         {
           "id": "cli:inspect-artifact",
-          "name": "buildchain inspect artifact <subject> [--passport <file-or-url>] [--json]",
+          "name": "buildchain inspect artifact <subject> [--passport <file-or-url>] [--npm-registry <url>] [--json]",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",

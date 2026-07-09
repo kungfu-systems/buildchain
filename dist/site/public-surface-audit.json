@@ -7,7 +7,7 @@
     "workflowCount": 36,
     "actionCount": 4,
     "sitePageCount": 45,
-    "docCommandRefCount": 228,
+    "docCommandRefCount": 229,
     "failureCount": 0
   },
   "enumerated": {
@@ -70,7 +70,7 @@
       {
         "id": "explain-artifact",
         "source": "bin/buildchain.mjs",
-        "usage": "buildchain explain artifact <subject> [--passport <file-or-url>] [--for human|agent] [--json]"
+        "usage": "buildchain explain artifact <subject> [--passport <file-or-url>] [--npm-registry <url>] [--for human|agent] [--json]"
       },
       {
         "id": "explain-release",
@@ -120,7 +120,7 @@
       {
         "id": "inspect-artifact",
         "source": "bin/buildchain.mjs",
-        "usage": "buildchain inspect artifact <subject> [--passport <file-or-url>] [--json]"
+        "usage": "buildchain inspect artifact <subject> [--passport <file-or-url>] [--npm-registry <url>] [--json]"
       },
       {
         "id": "inspect-release",
@@ -2339,6 +2339,11 @@
       },
       {
         "id": "verify-artifact",
+        "path": "docs/cli.md",
+        "command": "buildchain verify artifact npm"
+      },
+      {
+        "id": "verify-artifact",
         "path": "docs/release-passport.md",
         "command": "buildchain verify artifact"
       },
@@ -2443,9 +2448,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "1f7e1f7707a089f067175030fde6712b69ceece3df1b811eb542b0b4c8c1d4a9",
+    "cliRegistryDigest": "53833f92021caa7cc5feaff5d21f38b0a77317ace11a43795be180d1dec3699f",
     "workflowRegistryDigest": "67572429a83124370b9ffd46f56923aa2b252873c9624ded39a26675fb0ee815",
-    "pageRegistryDigest": "b4addcee8dc68e83efc814c24b6e7c614f158465152d7ed84f3fa03dcba4b7b8"
+    "pageRegistryDigest": "14b3d852445462c23c9c48d786844353a8c3e2764092323fabe60dcab9e39aae"
   },
   "comparison": {
     "missingCliRegistry": [],
