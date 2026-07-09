@@ -503,7 +503,11 @@ S3 sync and invalidation request.
 After the invalidation wait, HTTP smoke checks also retry transient 403, 404, and
 5xx responses before recording failure. This keeps the public health signal
 strict while absorbing short CloudFront edge propagation windows that can remain
-visible for a few seconds after the invalidation waiter returns.
+visible after the invalidation waiter returns. By default, Buildchain attempts
+each HTTP smoke URL 12 times with a 10 second interval. Consumers can override
+that window with `BUILDCHAIN_WEB_SURFACE_HEALTH_HTTP_RETRY_ATTEMPTS` and
+`BUILDCHAIN_WEB_SURFACE_HEALTH_HTTP_RETRY_INTERVAL_MS` when they need a
+site-specific health policy.
 
 The health check fetches every surface root URL and any nested smoke URLs
 recorded in each surface binding. Nested smoke URLs are derived from nested HTML
