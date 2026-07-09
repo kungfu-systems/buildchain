@@ -7,6 +7,7 @@ name = "paper-observer-declared-timelines"
 [publication]
 kind = "paper"
 title = "Observer-Declared Timelines for Real-World Agent Work"
+version = "0.1.0"
 primary_artifact = "_build/main.pdf"
 artifact_paths = ["_build/main.pdf"]
 metadata_paths = ["README.md", "docs/MAP.md"]
@@ -14,6 +15,14 @@ source_paths = ["paper", "README.md", "LICENSE", "Makefile"]
 site_consumers = ["papers.libkungfu.dev"]
 manifest_path = ".buildchain/publication/publication-artifact.json"
 source_bundle_path = ".buildchain/publication/source.tar.gz"
+
+[publication.archive]
+id = "observer-declared-timelines"
+canonical_url = "https://papers.libkungfu.dev/observer-declared-timelines/"
+latest_url = "https://papers.libkungfu.dev/observer-declared-timelines/latest/"
+latest_evidence_url = "https://papers.libkungfu.dev/observer-declared-timelines/latest/buildchain.release.json"
+immutable_base_url = "https://papers.libkungfu.dev/archive"
+registry_path = ".buildchain/publication/publication-registry.json"
 
 [lifecycle.build]
 command = "make pdf"
