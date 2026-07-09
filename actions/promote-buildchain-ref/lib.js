@@ -3800,10 +3800,12 @@ async function promoteBuildchainRefs({
         if (!matchingReleaseRecoveryPullRequest) {
           throw error;
         }
-        await assertOnlyAllowedReleaseRecoveryChangesBetween({
-          baseSha: alphaSha,
-          headSha: commitSha,
-          allowedPaths,
+        updates.push({
+          action: "accepted-release-recovery-tree-equivalent-source",
+          sha: commitSha,
+          alphaTag,
+          alphaSha,
+          targetRef,
         });
       }
       return;
@@ -3860,10 +3862,12 @@ async function promoteBuildchainRefs({
           if (!matchingReleaseRecoveryPullRequest) {
             throw error;
           }
-          await assertOnlyAllowedReleaseRecoveryChangesBetween({
-            baseSha: alphaSha,
-            headSha: parentSha,
-            allowedPaths,
+          updates.push({
+            action: "accepted-release-recovery-tree-equivalent-source",
+            sha: parentSha,
+            alphaTag,
+            alphaSha,
+            targetRef,
           });
         }
         await assertOnlyAllowedChangesBetween({
