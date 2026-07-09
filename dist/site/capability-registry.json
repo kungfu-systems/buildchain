@@ -32,6 +32,7 @@
         "cli-registry.json",
         "node-api-registry.json",
         "workflow-registry.json",
+        "kfd-upstream-aggregate.json",
         "kfd-claims.json"
       ]
     },
@@ -63,6 +64,7 @@
         "cli-registry.json",
         "node-api-registry.json",
         "workflow-registry.json",
+        "kfd-upstream-aggregate.json",
         "kfd-claims.json"
       ]
     },
@@ -94,6 +96,7 @@
         "cli-registry.json",
         "node-api-registry.json",
         "workflow-registry.json",
+        "kfd-upstream-aggregate.json",
         "kfd-claims.json"
       ]
     },
@@ -109,7 +112,7 @@
       "counts": {
         "manualCount": 1,
         "pageCount": 1,
-        "cliCommandCount": 21,
+        "cliCommandCount": 25,
         "nodeApiCount": 5,
         "workflowCount": 0,
         "actionCount": 0
@@ -123,6 +126,7 @@
         "cli-registry.json",
         "node-api-registry.json",
         "workflow-registry.json",
+        "kfd-upstream-aggregate.json",
         "kfd-claims.json"
       ]
     },
@@ -155,6 +159,7 @@
         "cli-registry.json",
         "node-api-registry.json",
         "workflow-registry.json",
+        "kfd-upstream-aggregate.json",
         "kfd-claims.json"
       ]
     },
@@ -186,6 +191,7 @@
         "cli-registry.json",
         "node-api-registry.json",
         "workflow-registry.json",
+        "kfd-upstream-aggregate.json",
         "kfd-claims.json"
       ]
     },
@@ -217,6 +223,7 @@
         "cli-registry.json",
         "node-api-registry.json",
         "workflow-registry.json",
+        "kfd-upstream-aggregate.json",
         "kfd-claims.json"
       ]
     },
@@ -252,6 +259,7 @@
         "cli-registry.json",
         "node-api-registry.json",
         "workflow-registry.json",
+        "kfd-upstream-aggregate.json",
         "kfd-claims.json"
       ]
     },
@@ -281,6 +289,7 @@
         "cli-registry.json",
         "node-api-registry.json",
         "workflow-registry.json",
+        "kfd-upstream-aggregate.json",
         "kfd-claims.json"
       ]
     }

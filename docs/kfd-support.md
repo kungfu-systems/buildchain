@@ -31,6 +31,10 @@ buildchain kfd 1 witness --json
 buildchain kfd 2 claims --json
 buildchain kfd 2 trust-claims --json
 buildchain kfd 2 trust-assessment --json
+buildchain kfd upstream roles --json
+buildchain kfd upstream collect --json
+buildchain kfd upstream check --json
+buildchain kfd aggregate --json
 buildchain kfd 3 query buildchain --json
 buildchain kfd 4 schema --json
 ```
@@ -92,6 +96,138 @@ values against the KFD-owned `trust-taxonomy` schema. Unknown `riskType`,
 `trustImpact`, `machineProvability`, or `agentAction` values fail validation;
 new values must be requested upstream in `kungfu-systems/kfd`, not invented in
 Buildchain.
+
+`@kungfu-tech/kfd` is a runtime dependency of Buildchain, not a development-only
+dependency. The public `buildchain kfd ...` CLI and `@kungfu-tech/buildchain/kfd`
+Node API read KFD-owned standards metadata, schemas, foundation trust claims,
+foundation trust assessments, and taxonomy values at runtime. Moving KFD to
+`devDependencies` would make installed Buildchain packages unable to answer KFD
+queries in consumer repositories.
+
+## Upstream KFD Aggregation
+
+Products often depend on multiple KFD-aware upstream components. A product's own
+KFD status is not the same thing as the status of those upstreams, but agents
+still need one machine-readable view of the upstream trust surface.
+
+Buildchain exposes that view through:
+
+```bash
+buildchain kfd upstream roles --json
+buildchain kfd upstream collect --json
+buildchain kfd upstream check --json
+buildchain kfd aggregate --json
+```
+
+`upstream collect` reads `.buildchain/buildchain.toml`, resolves declared
+packages from the caller repository, hashes declared evidence assets, and emits
+a `kungfu-buildchain-kfd-upstream-aggregate` document. `upstream check` validates
+that aggregate. `aggregate` combines the product's own Buildchain KFD status
+with the upstream aggregate.
+
+This works in development before the consuming repository has published an
+alpha or release. In that state Buildchain can collect and check upstream
+facts, versions, hashes, roles, and residual risk, but the consuming product
+must not claim its own KFD status as `passed` until a release passport verifies
+that product release.
+
+The repository-owned declaration is intentionally small. Consumers normally
+declare the upstream package identity, not Buildchain's inferred role or a
+duplicate semver:
+
+```toml
+[kfd.upstream]
+auto_discover = false
+
+[[kfd.upstream.components]]
+id = "kfd"
+package = "@kungfu-tech/kfd"
+repository = "kungfu-systems/kfd"
+evidence = [
+  "package:kfd.release.json",
+  "package:.buildchain/kfd-1/contract-world.witness.json",
+  "package:.buildchain/kfd-2/public-release-trust.claim.json",
+  "package:.buildchain/kfd-3/collaboration-interface.json",
+  "package:standards.json",
+]
+```
+
+The upstream package version is a single source of truth owned by the package
+manager. Put the dependency in `package.json` / the lockfile, then let
+Buildchain read the installed package's real `package.json`:
+
+```json
+{
+  "devDependencies": {
+    "@kungfu-tech/kfd": "1.0.0-alpha.21"
+  }
+}
+```
+
+Most consumers should keep `@kungfu-tech/kfd` in `devDependencies`: Buildchain
+uses it during CI, development checks, release evidence collection, and site
+generation. Move it to `dependencies` only if the product's own runtime imports
+KFD directly. Buildchain itself keeps KFD in `dependencies` because its public
+CLI and Node API resolve KFD standards, schemas, taxonomy, and foundation trust
+facts at runtime.
+
+Do not repeat upstream semver values in `.buildchain/buildchain.toml`. Repeating
+versions in both `package.json` and Buildchain config creates stale facts.
+`upstream collect` records the actual installed package version and evidence
+hashes in the aggregate output.
+
+`kfd_1`, `kfd_2`, `kfd_3`, and `kfd_4` are optional capability-state hints. When
+omitted, Buildchain treats the component as `declared`. Use explicit values only
+when the upstream package really exposes the corresponding machine evidence,
+for example:
+
+```toml
+kfd_1 = "exported-witness"
+kfd_2 = "exported-claim"
+kfd_3 = "exported-collaboration-interface"
+kfd_4 = "schema-metadata"
+```
+
+An upstream component may be `declared`, `aligned`, `exported-*`, or another
+explicit non-passed state when the evidence is package-local. A component may
+claim `passed` only when the aggregate also binds that component to a release
+passport. Upstream `passed` never upgrades the product's own KFD status; it only
+describes the upstream trust surface consumed by the product.
+
+### Upstream Roles
+
+Consumers should normally omit `role`. Buildchain owns the role vocabulary and
+infers the role from package identity and evidence. The aggregate records:
+
+- `role` - the normalized Buildchain-managed role;
+- `roleSource` - `known-package`, `evidence`, `default`, or `explicit`;
+- `roleReason` - the machine-readable explanation for the chosen role.
+
+The managed role registry is queryable:
+
+```bash
+buildchain kfd upstream roles --json
+```
+
+Current roles are:
+
+| Role | Meaning |
+| --- | --- |
+| `standard-and-schema-provider` | Provides KFD standards, schemas, taxonomy, or standard-owned witness and claim facts. |
+| `release-passport-and-kfd-gate-provider` | Provides release passport, KFD gate, release claim, or release governance machinery consumed by the product. |
+| `kfd-aware-product-component` | A product component that exposes KFD witness, claim, collaboration-interface, or package evidence without being core KFD infrastructure. |
+| `site-consumption-provider` | Provides site-consumption facts such as site manifests, site bundles, or downstream page-content contracts. |
+| `unknown-kfd-upstream` | Fallback for a declared upstream that has not matched a Buildchain-known package or role-specific evidence. |
+
+If a consumer explicitly writes `role`, it must be one of that registry. Unknown
+explicit values fail closed during `upstream check`; Buildchain will not let
+repositories invent local role spellings that later fragment aggregate reports.
+
+Buildchain dogfoods this model with `@kungfu-tech/kfd` as its upstream
+standard-and-schema provider. The generated site bundle includes
+`dist/site/kfd-upstream-aggregate.json` so downstream sites and agents can read
+Buildchain's upstream KFD facts from the npm package instead of scraping
+repository scripts.
 
 ## KFD-3
 
@@ -182,7 +318,12 @@ import {
   kfd2,
   kfd3,
   kfd4,
+  upstream,
+  collectKfdAggregate,
   collectKfdStatus,
+  collectKfdUpstreamFacts,
+  checkKfdUpstreamFacts,
+  listKfdUpstreamRoles,
   listKfdSchemas,
   readKfdSchema,
 } from "@kungfu-tech/buildchain/kfd";

@@ -5,11 +5,16 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import {
+  checkKfdUpstreamFacts,
+  collectKfdAggregate,
   collectKfdStatus,
+  collectKfdUpstreamFacts,
+  discoverKfdStandards,
   kfd1,
   kfd2,
   kfd4,
   kfd3,
+  listKfdUpstreamRoles,
   listKfdSchemas,
   readKfdSchema,
 } from "@kungfu-tech/buildchain/kfd";
@@ -140,8 +145,8 @@ test("KFD CLI exposes all KFD standards through the unified schema namespace", (
 test("Buildchain dogfoods KFD-1, KFD-2, and KFD-3 first-class APIs", async () => {
   const status = collectKfdStatus({ cwd: root });
   assert.deepEqual(status.support["kfd-1"], ["schema", "witness", "gate", "verify"]);
-  assert.deepEqual(status.support["kfd-2"], ["schema", "taxonomy", "claims", "trust-claims", "trust-assessment"]);
-  assert.deepEqual(status.support["kfd-3"], ["schema", "detect", "register", "audit", "witness", "query"]);
+  assert.deepEqual(status.support["kfd-2"], ["schema", "taxonomy", "claims", "trust-claims", "trust-assessment", "upstream"]);
+  assert.deepEqual(status.support["kfd-3"], ["schema", "detect", "register", "audit", "witness", "query", "aggregate"]);
   assert.deepEqual(status.support["kfd-4"], ["schema"]);
 
   const witness = kfd1.createBuildchainWitness({ root, sourceSha: "a".repeat(40) });
@@ -181,4 +186,97 @@ test("Buildchain dogfoods KFD-1, KFD-2, and KFD-3 first-class APIs", async () =>
   const kfd4Schema = readKfdSchema({ standard: "kfd-4" });
   assert.equal(kfd4Schema.standard, "kfd-4");
   assert.equal(readKfdSchema({ standard: "kfd-4", schema: "observerPerspective" }).name, "observerPerspective");
+});
+
+test("Buildchain dogfoods KFD upstream aggregate facts for the KFD package", () => {
+  const upstream = collectKfdUpstreamFacts({ cwd: root });
+  assert.equal(upstream.contract, "kungfu-buildchain-kfd-upstream-aggregate");
+  assert.equal(upstream.summary.upstreamCount, 1);
+  assert.deepEqual(upstream.summary.kfdAwareUpstreams, ["kfd"]);
+  assert.equal(upstream.upstreams[0].package.name, "@kungfu-tech/kfd");
+  assert.equal(upstream.upstreams[0].role, "standard-and-schema-provider");
+  assert.equal(upstream.upstreams[0].roleSource, "known-package");
+  assert.match(upstream.upstreams[0].roleReason, /Buildchain-known KFD upstream package/);
+  assert.equal(upstream.upstreams[0].kfd.kfd1, "exported-witness");
+  assert.equal(upstream.upstreams[0].kfd.kfd2, "exported-claim");
+  assert.equal(upstream.upstreams[0].kfd.kfd3, "exported-collaboration-interface");
+  assert.equal(upstream.upstreams[0].kfd.kfd4, "schema-metadata");
+  assert.ok(upstream.upstreams[0].assets.some((entry) => entry.path === "standards.json" && entry.sha256.startsWith("sha256:")));
+  assert.ok(upstream.upstreams[0].assets.some((entry) => entry.path === ".buildchain/kfd-3/collaboration-interface.json" && entry.sha256.startsWith("sha256:")));
+
+  const check = checkKfdUpstreamFacts(upstream);
+  assert.equal(check.ok, true);
+
+  const roles = listKfdUpstreamRoles();
+  assert.equal(roles.contract, "kungfu-buildchain-kfd-upstream-role-registry");
+  assert.ok(roles.roles.some((entry) => entry.role === "unknown-kfd-upstream"));
+  assert.equal(roles.policy.unknownExplicitRole, "fail-closed");
+
+  const invalidRole = collectKfdUpstreamFacts({
+    cwd: root,
+    components: [{ id: "kfd", package: "@kungfu-tech/kfd", role: "invented-role" }],
+  });
+  assert.equal(invalidRole.upstreams[0].role, "invented-role");
+  assert.equal(invalidRole.upstreams[0].roleSource, "explicit");
+  const invalidRoleCheck = checkKfdUpstreamFacts(invalidRole);
+  assert.equal(invalidRoleCheck.ok, false);
+  assert.ok(invalidRoleCheck.issues.some((entry) => entry.code === "kfd.upstream.upstreams[0].role"));
+
+  const aggregate = collectKfdAggregate({ cwd: root });
+  assert.equal(aggregate.contract, "kungfu-buildchain-kfd-aggregate");
+  assert.equal(aggregate.upstreamCheck.status, "passed");
+
+  const cliCollect = JSON.parse(runBuildchain(["kfd", "upstream", "collect", "--json"]));
+  assert.equal(cliCollect.contract, upstream.contract);
+  assert.equal(cliCollect.summary.packageVersions.kfd, upstream.summary.packageVersions.kfd);
+  assert.equal(cliCollect.upstreams[0].roleSource, "known-package");
+
+  const cliRoles = JSON.parse(runBuildchain(["kfd", "upstream", "roles", "--json"]));
+  assert.equal(cliRoles.contract, roles.contract);
+  assert.ok(cliRoles.roles.some((entry) => entry.role === "standard-and-schema-provider"));
+
+  const cliCheck = JSON.parse(runBuildchain(["kfd", "upstream", "check", "--json"]));
+  assert.equal(cliCheck.ok, true);
+
+  const cliAggregate = JSON.parse(runBuildchain(["kfd", "aggregate", "--json"]));
+  assert.equal(cliAggregate.contract, aggregate.contract);
+  assert.equal(cliAggregate.upstreamCheck.status, "passed");
+});
+
+test("KFD upstream auto-discovery reads devDependencies without consumer role or semver duplication", () => {
+  const cwd = tempDir("upstream-dev-dependency");
+  writeJson(path.join(cwd, "package.json"), {
+    name: "@example/kfd-consumer",
+    version: "0.0.0",
+    type: "module",
+    devDependencies: {
+      "@kungfu-tech/kfd": "1.0.0-alpha.21",
+    },
+  });
+  fs.mkdirSync(path.join(cwd, ".buildchain"), { recursive: true });
+  fs.writeFileSync(path.join(cwd, ".buildchain", "buildchain.toml"), [
+    "schema = 1",
+    "",
+    "[kfd.upstream]",
+    "auto_discover = true",
+    "",
+  ].join("\n"));
+  fs.symlinkSync(path.join(root, "node_modules"), path.join(cwd, "node_modules"), "dir");
+
+  const upstream = collectKfdUpstreamFacts({ cwd });
+  assert.equal(upstream.source.autoDiscover, true);
+  assert.equal(upstream.summary.upstreamCount, 1);
+  assert.equal(upstream.upstreams[0].package.name, "@kungfu-tech/kfd");
+  assert.equal(upstream.upstreams[0].package.version, discoverKfdStandards().package.version);
+  assert.equal(upstream.upstreams[0].role, "standard-and-schema-provider");
+  assert.equal(upstream.upstreams[0].roleSource, "known-package");
+  assert.deepEqual(upstream.upstreams[0].kfd, {
+    kfd1: "declared",
+    kfd2: "declared",
+    kfd3: "declared",
+    kfd4: "declared",
+  });
+
+  const check = checkKfdUpstreamFacts(upstream);
+  assert.equal(check.ok, true);
 });

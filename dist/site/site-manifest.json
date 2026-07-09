@@ -189,7 +189,7 @@
       "path": "docs/kfd-support.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:d1fdec0890884340e4e8108c17b62866c08dc95771075e3e285532b5a7b0ee5a"
+      "digest": "sha256:4bcf5d1ce63555072130eae90c739555b11658d1d796a3fcea770b90841c4afd"
     },
     {
       "id": "lifecycle-protocol",
@@ -269,6 +269,7 @@
     "badge-endpoint-registry.json",
     "product-mechanism.json",
     "release-provenance.json",
+    "kfd-upstream-aggregate.json",
     "kfd-claims.json",
     "agent-index.json"
   ]
