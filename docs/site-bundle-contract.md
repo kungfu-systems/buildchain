@@ -13,6 +13,7 @@ release mechanics, command registry, workflow registry, or artifact schema.
 dist/site/
   buildchain-site.json
   site-manifest.json
+  publication-registry.json
   capability-registry.json
   cli-registry.json
   manual-registry.json
@@ -65,6 +66,10 @@ inputs, action inputs, site pages, and documentation command references, then
 compares those sets with `cli-registry.json`, `workflow-registry.json`, and
 `page-registry.json`. Buildchain's self-check fails closed when an enumerable
 public surface is missing from the generated registries.
+`publication-registry.json` is the package-owned publication archive registry
+for downstream papers surfaces. Site repositories can render latest reader
+routes, immutable version artifact routes, source bundles, and publication
+passport links from this file instead of keeping their own fixture registry.
 
 ## Timestamp and Reproducibility Policy
 
@@ -138,6 +143,7 @@ The P0 bundle includes:
 - complete markdown page registry for public Buildchain docs, action manuals,
   Node API overview, and fixtures;
 - site manifest;
+- publication archive registry for downstream papers surfaces;
 - CLI command registry;
 - manual registry for packaged agent-facing documentation;
 - Node API registry for public package exports;
@@ -160,6 +166,11 @@ schema metadata without breaking existing consumers.
 release chain model. The site bundle exposes that document and the
 `release-propagation` CLI entry so downstream sites can render the current
 Buildchain-owned propagation contract instead of hand-writing it.
+`publication-registry.json` is the static site-consumption entrypoint for
+publication archive pages. It uses the
+`kungfu-buildchain-publication-release-registry` contract and declares the
+mutable latest/canonical routes separately from append-only immutable version
+prefixes.
 
 ## Rendering Boundary
 

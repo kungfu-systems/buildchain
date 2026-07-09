@@ -176,6 +176,24 @@ without rebuilding old PDFs from the latest npm package or paper source.
 A downstream papers site should treat the publication manifest as the single
 fact source for the artifact. The site owns rendering and navigation; it should
 not reinterpret the paper repository as a web deployment source.
+For registry-level routing, sites should first consume the package-owned
+Buildchain fact source:
+
+```text
+node_modules/@kungfu-tech/buildchain/dist/site/publication-registry.json
+```
+
+or the equivalent package export:
+
+```js
+import registry from "@kungfu-tech/buildchain/site/publication-registry.json" with { type: "json" };
+```
+
+That registry uses the `kungfu-buildchain-publication-release-registry`
+contract. It separates mutable canonical/latest reader routes from immutable
+version prefixes, publication artifacts, source bundles, and passport evidence
+so site repositories can render `/papers/**` without maintaining a parallel
+fixture truth source.
 
 For `paper-observer-declared-timelines`, the expected adoption path is:
 
