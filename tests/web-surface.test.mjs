@@ -14,7 +14,11 @@ import {
   preflightWebSurfaceProduction,
   validateWebSurfaceProject,
 } from "../scripts/web-surface-core.mjs";
-import { webSurfaceCli } from "../scripts/web-surface.mjs";
+import {
+  cloudFrontInvalidationWaitTargets,
+  waitForCloudFrontInvalidations,
+  webSurfaceCli,
+} from "../scripts/web-surface.mjs";
 import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
@@ -280,6 +284,65 @@ test("web-surface deploy apply executes aws s3 and cloudfront commands through r
       Array.from({ length: 21 }, () => true),
     );
   });
+});
+
+test("web-surface health waits for applied CloudFront invalidations", () => {
+  const result = {
+    operations: [
+      {
+        action: "invalidate-cdn",
+        surface: "hub",
+        status: "applied",
+        args: ["cloudfront", "create-invalidation", "--distribution-id", "E-HUB", "--paths", "/*"],
+        stdout: JSON.stringify({ Invalidation: { Id: "I-HUB" } }),
+      },
+      {
+        action: "invalidate-cdn",
+        surface: "hub",
+        status: "applied",
+        args: ["cloudfront", "create-invalidation", "--distribution-id", "E-HUB", "--paths", "/*"],
+        stdout: JSON.stringify({ Invalidation: { Id: "I-HUB" } }),
+      },
+      {
+        action: "invalidate-cdn",
+        surface: "core",
+        status: "planned",
+        args: ["cloudfront", "create-invalidation", "--distribution-id", "E-CORE", "--paths", "/*"],
+        stdout: JSON.stringify({ Invalidation: { Id: "I-CORE" } }),
+      },
+    ],
+  };
+  assert.deepEqual(cloudFrontInvalidationWaitTargets(result), [
+    {
+      distributionId: "E-HUB",
+      invalidationId: "I-HUB",
+      surface: "hub",
+    },
+  ]);
+
+  const calls = [];
+  assert.deepEqual(waitForCloudFrontInvalidations(result, {
+    commandRunner(args, target) {
+      calls.push({ args, target });
+      return { status: 0, stdout: "", stderr: "" };
+    },
+  }), [
+    {
+      distributionId: "E-HUB",
+      invalidationId: "I-HUB",
+      surface: "hub",
+      status: "completed",
+    },
+  ]);
+  assert.deepEqual(calls.map((call) => call.args), [[
+    "cloudfront",
+    "wait",
+    "invalidation-completed",
+    "--distribution-id",
+    "E-HUB",
+    "--id",
+    "I-HUB",
+  ]]);
 });
 
 test("web-surface deploy apply rewrites surface host roots to artifact path prefixes", () => {

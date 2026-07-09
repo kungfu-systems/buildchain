@@ -494,6 +494,12 @@ node scripts/web-surface.mjs \
   --output .buildchain/web-surface-production-health.json
 ```
 
+When the apply result includes CloudFront invalidations from the
+`aws-s3-cloudfront` adapter, health check waits for those invalidations to reach
+`Completed` before fetching public smoke URLs. This avoids reporting stale
+CloudFront 403 responses as deployment failures immediately after a successful
+S3 sync and invalidation request.
+
 The health check fetches every surface root URL and any nested smoke URLs
 recorded in each surface binding. Nested smoke URLs are derived from nested HTML
 artifact files under the surface path prefix, with directory index resolution
