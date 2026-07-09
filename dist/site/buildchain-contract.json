@@ -260,7 +260,7 @@
         "KFD self contract witnesses record source/artifact hashes, self-hosting boundary, and responsibility state"
       ],
       "breakingDigest": "sha256:f46c1f67b94957ad956cf70db59a73fd5690bd67c91edf9c2d0eb8f3d1e3cf8d",
-      "auditDigest": "sha256:534707144fa2c440fe6958073a8a161790f12b8fb4695e3b06e43f43a6c87ffb"
+      "auditDigest": "sha256:f31691f36f2a7930798805cb470aff7acd3503799cb72b954c7787b1d8b3eb31"
     },
     {
       "contractVersion": 1,
@@ -313,7 +313,7 @@
         "KFD-3 passports expose releaseStatus, witness hashes, declared capability verification, reverse audit boundary, residual risk, and responsibility state"
       ],
       "breakingDigest": "sha256:33654f3444c893754aacc42dde3051f0a371bd17c6ef7c657c579a07159cd7c1",
-      "auditDigest": "sha256:534707144fa2c440fe6958073a8a161790f12b8fb4695e3b06e43f43a6c87ffb"
+      "auditDigest": "sha256:f31691f36f2a7930798805cb470aff7acd3503799cb72b954c7787b1d8b3eb31"
     },
     {
       "contractVersion": 1,
@@ -456,9 +456,9 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:1841be1c125a404634849131b7fc98000c9a1b809db5bec260fa2c51df61cb2e"
+      "auditDigest": "sha256:5516090e12e99b46c686b9ec425e4237ef2da75907d6c4c3bda2754598d7ca42"
     }
   ],
   "compatibilityDigest": "sha256:967df7e854fdf582294ddfb6403eff25c00db9518a24051e7d47cbd75527c785",
-  "contractDigest": "sha256:42d7fdf919650cbe9cfb0f8552f683b998948ecf1f696fa0c4398599eee85903"
+  "contractDigest": "sha256:3fdfd033d72c09b1db0d187f219eb7712a6fa6cdfb4265738e14576e7a130599"
 }

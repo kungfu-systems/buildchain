@@ -216,7 +216,7 @@
       "specifier": "@kungfu-tech/buildchain/kfd-gate",
       "export": "./kfd-gate",
       "target": "./packages/core/kfd-gate.js",
-      "digest": "sha256:534707144fa2c440fe6958073a8a161790f12b8fb4695e3b06e43f43a6c87ffb",
+      "digest": "sha256:f31691f36f2a7930798805cb470aff7acd3503799cb72b954c7787b1d8b3eb31",
       "summary": "KFD-1/KFD-2/KFD-3 release gate evidence and validation APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [

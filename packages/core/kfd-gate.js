@@ -1,9 +1,10 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { createRequire } from "node:module";
 
-const require = createRequire(import.meta.url);
+import kfdPackageJson from "@kungfu-tech/kfd/package.json" with { type: "json" };
+import kfdStandards from "@kungfu-tech/kfd/standards.json" with { type: "json" };
+import kfdTrustTaxonomySchema from "@kungfu-tech/kfd/schemas/kfd-2/trust-taxonomy.schema.json" with { type: "json" };
 
 export const KFD1_RELEASE_GATE_CONTRACT = "kungfu-buildchain-kfd-1-release-gate";
 export const KFD1_WITNESS_SET_CONTRACT = "kungfu-buildchain-kfd-1-witness-set";
@@ -54,8 +55,21 @@ export function sha256File(filePath) {
   return crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");
 }
 
+const bundledKfdJsonExports = new Map([
+  ["@kungfu-tech/kfd/package.json", kfdPackageJson],
+  ["@kungfu-tech/kfd/standards.json", kfdStandards],
+  ["@kungfu-tech/kfd/schemas/kfd-2/trust-taxonomy.schema.json", kfdTrustTaxonomySchema],
+]);
+
+function cloneJson(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
 function readJsonPackageExport(exportPath) {
-  return JSON.parse(fs.readFileSync(require.resolve(exportPath), "utf8"));
+  if (!bundledKfdJsonExports.has(exportPath)) {
+    throw new Error(`KFD metadata package export is not bundled into Buildchain release gates: ${exportPath}`);
+  }
+  return cloneJson(bundledKfdJsonExports.get(exportPath));
 }
 
 function tryReadJsonPackageExport(exportPath) {
