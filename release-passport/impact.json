@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-impact",
+  "versionImpact": {
+    "final": "patch",
+    "source": "buildchain-release-governance",
+    "rationale": "Buildchain v2.10 patch release accepts strict publish-gate channel-lineage PRs and supports web-surface managed-network health verification without requiring public runner access."
+  },
+  "surfaceImpacts": [
+    {
+      "id": "publish-gate-channel-lineage",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Accepts same-line publish-gate/alpha and publish-gate/release source-lock PR lineage during promote-buildchain-ref governance checks.",
+      "source": "buildchain-ref-promotion.yml"
+    },
+    {
+      "id": "web-surface-external-directory-index-rewrite",
+      "impact": "patch",
+      "class": "web-surface-deployment",
+      "rationale": "Allows web-surface deploy channels to declare directory_index_rewrite = external so Buildchain does not replace an existing viewer-request prefix router while health checks still validate root and nested surface URLs.",
+      "source": "buildchain-ref-promotion.yml"
+    },
+    {
+      "id": "web-surface-managed-network-health",
+      "impact": "patch",
+      "class": "web-surface-deployment",
+      "rationale": "Channels declared access_control = managed-network now skip public HTTP fetches from GitHub-hosted runners, verify live applies with S3 head-object checks for manifests and smoke target objects, fall back to deployment evidence for dry-run/plan-only checks, and allow explicit private-network runner HTTP smoke checks.",
+      "source": "buildchain-ref-promotion.yml"
+    }
+  ],
+  "classification": "patch",
+  "breaking": false,
+  "security": false,
+  "migrationRequired": false,
+  "summary": "Buildchain v2.10 patch release for publish-gate lineage, web-surface routing, and managed-network health verification.",
+  "release": {
+    "tag": "v2.11.0",
+    "line": "v2.11"
+  }
+}
