@@ -10,14 +10,16 @@ facts, not as README prose. The machine-readable sources are:
 - `buildchain.release.json` for release-specific KFD-1, KFD-2, and KFD-3
   passport results;
 - `.buildchain/buildchain.toml` for repository-owned Buildchain configuration;
-- `.buildchain/kfd/kfd-3-surfaces.json` for product-owned KFD-3 surface
+- `.buildchain/kfd/kfd-3/surfaces.json` for product-owned KFD-3 surface
   registration;
 - `.buildchain/contract-lock.json` for accepted floating runtime contracts.
 
 Buildchain still reads the legacy root files `buildchain.toml`,
-`buildchain.contract-lock.json`, and `buildchain.kfd3.json` so existing
-consumers do not break, but new repositories should keep repo-owned Buildchain
-files under `.buildchain/`.
+`buildchain.contract-lock.json`, `buildchain.kfd3.json`, and the historical
+`.buildchain/kfd/kfd-3-surfaces.json` registry so existing consumers can run
+`buildchain kfd migrate-layout --write`. New repositories should keep
+repo-owned Buildchain files under `.buildchain/`, with all KFD evidence under
+`.buildchain/kfd/`.
 
 ## Unified Namespace
 
@@ -145,9 +147,9 @@ package = "@kungfu-tech/kfd"
 repository = "kungfu-systems/kfd"
 evidence = [
   "package:kfd.release.json",
-  "package:.buildchain/kfd-1/contract-world.witness.json",
-  "package:.buildchain/kfd-2/public-release-trust.claim.json",
-  "package:.buildchain/kfd-3/collaboration-interface.json",
+  "package:.buildchain/kfd/kfd-1/contract-world.witness.json",
+  "package:.buildchain/kfd/kfd-2/release-claims.json",
+  "package:.buildchain/kfd/kfd-3/collaboration-interface.json",
   "package:standards.json",
 ]
 ```
@@ -251,7 +253,7 @@ KFD-3 surface registration uses three states.
 | State | Meaning |
 | --- | --- |
 | `detected` | Buildchain found a candidate public surface from package metadata, wheel metadata, CLI bins, binary artifacts, docs, or site bundle facts. |
-| `declared` | The product owner accepted that candidate into `.buildchain/kfd/kfd-3-surfaces.json`. |
+| `declared` | The product owner accepted that candidate into `.buildchain/kfd/kfd-3/surfaces.json`. |
 | `enforced` | The product has promoted a declared surface to a hard release boundary. Missing enforced surfaces fail release verification. |
 
 Detection does not silently become product intent. `register` is the boundary
@@ -298,7 +300,7 @@ Generate a witness for release passport collection:
 ```bash
 buildchain kfd 3 witness \
   --kind prebuild \
-  --output .buildchain/kfd-3/collaboration-interface.prebuild.json
+  --output .buildchain/kfd/kfd-3/collaboration-interface.prebuild.json
 ```
 
 Query capability facts for agents or downstream sites:

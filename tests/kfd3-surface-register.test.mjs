@@ -18,6 +18,14 @@ import {
   listKfdSchemas,
   readKfdSchema,
 } from "@kungfu-tech/buildchain/kfd";
+import {
+  BUILDCHAIN_KFD1_CONTRACT_WORLD_WITNESS_PATH,
+  BUILDCHAIN_KFD2_CLAIMS_DIR,
+  BUILDCHAIN_KFD3_ARTIFACT_WITNESS_PATH,
+  BUILDCHAIN_KFD3_PREBUILD_WITNESS_PATH,
+  BUILDCHAIN_KFD3_SURFACE_REGISTRY_PATH,
+  migrateBuildchainLayout,
+} from "@kungfu-tech/buildchain";
 
 const root = path.resolve(import.meta.dirname, "..");
 const bin = path.join(root, "bin", "buildchain.mjs");
@@ -92,6 +100,7 @@ test("KFD-3 register, audit, witness, and query share one registry contract", as
   const cwd = createFixtureRepo();
   kfd3.registerSurfaces({ cwd, kinds: ["node-api"], product: { id: "fixture", name: "Fixture" } });
   kfd3.registerSurfaces({ cwd, kinds: ["cli"], artifactPath: "dist/wheel" });
+  assert.equal(fs.existsSync(path.join(cwd, BUILDCHAIN_KFD3_SURFACE_REGISTRY_PATH)), true);
   const audit = kfd3.auditSurfaces({ cwd, kinds: ["node-api", "cli"], artifactPath: "dist/wheel" });
 
   assert.equal(audit.status, "passed");
@@ -117,6 +126,34 @@ test("KFD-3 CLI is aligned with the Node API", () => {
   const query = JSON.parse(runBuildchain(["kfd", "3", "query", "fixture", "--cwd", cwd, "--json"]));
   assert.equal(query.contract, "kungfu-buildchain-kfd-3-capability-query");
   assert.equal(query.capabilities.length, register.registrySurfaceCount);
+});
+
+test("Buildchain layout migration unifies KFD outputs under .buildchain/kfd", () => {
+  const cwd = tempDir("layout-migration");
+  const legacyRegistryPath = ".buildchain/kfd/kfd-3-surfaces.json";
+  const legacyKfd1Path = ".buildchain/kfd/buildchain-kfd-1-witness.json";
+  const legacyKfd2ClaimsDir = ".buildchain/kfd/kfd-2-claims";
+  const legacyKfd3PrebuildPath = ".buildchain/kfd/buildchain-kfd-3-prebuild-witness.json";
+  const legacyKfd3ArtifactPath = ".buildchain/kfd/buildchain-kfd-3-artifact-witness.json";
+  writeJson(path.join(cwd, legacyRegistryPath), { contract: "legacy-registry" });
+  writeJson(path.join(cwd, legacyKfd1Path), { contract: "legacy-kfd1" });
+  writeJson(path.join(cwd, legacyKfd2ClaimsDir, "claim.json"), { id: "claim:legacy" });
+  writeJson(path.join(cwd, legacyKfd3PrebuildPath), { contract: "legacy-prebuild" });
+  writeJson(path.join(cwd, legacyKfd3ArtifactPath), { contract: "legacy-artifact" });
+
+  const plan = migrateBuildchainLayout({ cwd });
+  assert.equal(plan.status, "migration-needed");
+  assert.ok(plan.moves.some((move) => move.from === legacyRegistryPath && move.to === BUILDCHAIN_KFD3_SURFACE_REGISTRY_PATH));
+  assert.ok(plan.moves.some((move) => move.from === legacyKfd1Path && move.to === BUILDCHAIN_KFD1_CONTRACT_WORLD_WITNESS_PATH));
+  assert.ok(plan.moves.some((move) => move.from === legacyKfd2ClaimsDir && move.to === BUILDCHAIN_KFD2_CLAIMS_DIR));
+
+  const applied = migrateBuildchainLayout({ cwd, write: true });
+  assert.equal(applied.status, "applied");
+  assert.equal(fs.existsSync(path.join(cwd, BUILDCHAIN_KFD3_SURFACE_REGISTRY_PATH)), true);
+  assert.equal(fs.existsSync(path.join(cwd, BUILDCHAIN_KFD1_CONTRACT_WORLD_WITNESS_PATH)), true);
+  assert.equal(fs.existsSync(path.join(cwd, BUILDCHAIN_KFD2_CLAIMS_DIR, "claim.json")), true);
+  assert.equal(fs.existsSync(path.join(cwd, BUILDCHAIN_KFD3_PREBUILD_WITNESS_PATH)), true);
+  assert.equal(fs.existsSync(path.join(cwd, BUILDCHAIN_KFD3_ARTIFACT_WITNESS_PATH)), true);
 });
 
 test("KFD CLI exposes all KFD standards through the unified schema namespace", () => {
@@ -148,6 +185,7 @@ test("Buildchain dogfoods KFD-1, KFD-2, and KFD-3 first-class APIs", async () =>
   assert.deepEqual(status.support["kfd-2"], ["schema", "taxonomy", "claims", "trust-claims", "trust-assessment", "upstream"]);
   assert.deepEqual(status.support["kfd-3"], ["schema", "detect", "register", "audit", "witness", "query", "aggregate"]);
   assert.deepEqual(status.support["kfd-4"], ["schema"]);
+  assert.equal(status.paths.kfd3SurfaceRegistry.path, BUILDCHAIN_KFD3_SURFACE_REGISTRY_PATH);
 
   const witness = kfd1.createBuildchainWitness({ root, sourceSha: "a".repeat(40) });
   assert.equal(witness.standard, "kfd-1");
@@ -202,7 +240,10 @@ test("Buildchain dogfoods KFD upstream aggregate facts for the KFD package", () 
   assert.equal(upstream.upstreams[0].kfd.kfd3, "exported-collaboration-interface");
   assert.equal(upstream.upstreams[0].kfd.kfd4, "schema-metadata");
   assert.ok(upstream.upstreams[0].assets.some((entry) => entry.path === "standards.json" && entry.sha256.startsWith("sha256:")));
-  assert.ok(upstream.upstreams[0].assets.some((entry) => entry.path === ".buildchain/kfd-3/collaboration-interface.json" && entry.sha256.startsWith("sha256:")));
+  assert.ok(upstream.upstreams[0].assets.some((entry) => (
+    entry.path === ".buildchain/kfd/kfd-3/collaboration-interface.json" ||
+    entry.path === ".buildchain/kfd-3/collaboration-interface.json"
+  ) && entry.sha256.startsWith("sha256:")));
 
   const check = checkKfdUpstreamFacts(upstream);
   assert.equal(check.ok, true);

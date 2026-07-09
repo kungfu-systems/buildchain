@@ -1320,6 +1320,10 @@ test("Buildchain self KFD claims generate enforceable release passport evidence"
     sourceSha: "e".repeat(40),
     emitOutputs: false,
   });
+  assert.match(generated.outputs["kfd-1-witness-jsons"], /kfd-1\/contract-world\.witness\.json$/);
+  assert.match(generated.outputs["kfd-2-claim-jsons"], /kfd-2\/claims\//);
+  assert.match(generated.outputs["kfd-3-prebuild-witness-jsons"], /kfd-3\/collaboration-interface\.prebuild\.json$/);
+  assert.match(generated.outputs["kfd-3-artifact-witness-jsons"], /kfd-3\/collaboration-interface\.artifact\.json$/);
   const output = (name) => path.resolve(root, generated.outputs[name]);
   const outputList = (name) => String(generated.outputs[name] || "")
     .split(",")
