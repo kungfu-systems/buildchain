@@ -1094,6 +1094,54 @@ test("web-surface health check verifies managed-network live apply with S3 head 
   });
 });
 
+test("web-surface health check accepts managed-network bucket-root object prefix", async () => {
+  await withFixtureAsync(async (fixture) => {
+    const configPath = path.join(fixture, "buildchain.toml");
+    fs.writeFileSync(
+      configPath,
+      fs.readFileSync(configPath, "utf8").replace(
+        '[deploy.staging]\nadapter = "aws-s3-cloudfront"',
+        '[deploy.staging]\nprefix = ""\nadapter = "aws-s3-cloudfront"',
+      ),
+    );
+    fs.mkdirSync(path.join(fixture, "dist", "about"), { recursive: true });
+    fs.writeFileSync(path.join(fixture, "dist", "index.html"), "hub\n");
+    fs.writeFileSync(path.join(fixture, "dist", "about", "index.html"), "about\n");
+    const result = applyWebSurfaceDeploy({
+      cwd: fixture,
+      channel: "staging",
+      sourceSha: "b".repeat(40),
+      dryRun: false,
+      commandRunner() {
+        return { exitCode: 0, stdout: "", stderr: "" };
+      },
+    });
+    const headOperations = [];
+    const health = await checkWebSurfaceHealth({
+      cwd: fixture,
+      result,
+      checkedAt: "2026-07-01T00:00:00.000Z",
+      commandRunner(operation) {
+        headOperations.push(operation);
+        return { exitCode: 0, stdout: "", stderr: "" };
+      },
+      fetchImpl() {
+        throw new Error("managed-network bucket-root health must not require public fetch");
+      },
+    });
+
+    const hubRoot = health.checks.find((check) => check.surface === "hub" && check.kind === "root");
+    const hubNested = health.checks.find((check) => check.surface === "hub" && check.kind === "nested");
+    assert.equal(health.status, "passed");
+    assert.equal(hubRoot.objectPrefix, "");
+    assert.equal(hubRoot.objectKey, "index.html");
+    assert.equal(hubNested.objectKey, "about/index.html");
+    assert.ok(headOperations.some((operation) => operation.args.includes(".buildchain/deployments/staging/hub.json")));
+    assert.ok(headOperations.some((operation) => operation.args.includes("index.html")));
+    assert.ok(headOperations.some((operation) => operation.args.includes("about/index.html")));
+  });
+});
+
 test("web-surface health check supports explicit S3 object health for public preview", async () => {
   await withFixtureAsync(async (fixture) => {
     const configPath = path.join(fixture, "buildchain.toml");
