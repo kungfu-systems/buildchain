@@ -73,6 +73,10 @@ function commandId(first = "", second = "", third = "") {
   if (head === "homebrew" && sub) return `homebrew-${sub}`;
   if (head === "release-propagation") return "release-propagation";
   if (head === "publish-source") return "publish-source";
+  if (head === "publication-artifact" && sub) return `publication-artifact-${sub}`;
+  if (head === "publication-artifact") return "publication-artifact";
+  if (head === "publication" && sub) return `publication-artifact-${sub}`;
+  if (head === "publication") return "publication-artifact";
   if (head === "build-contract") return "build-contract";
   if (head === "infra-contract") return "infra-contract";
   if (head === "web-surface") return "web-surface";

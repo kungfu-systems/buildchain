@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:b12caa887a325820c591d462ae2c0a4521eda001cb71d3def72e9b55924f892f",
+      "digest": "sha256:2295adcb4860c46a6f7fb39a0790d7347d916a0ac999d862437698d194af31de",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -217,7 +217,7 @@
       "title": "CLI and npm package",
       "path": "docs/cli.md",
       "plane": "use",
-      "digest": "sha256:b6bc32831d202d5c542d72f6e63322f632014751e7db00862b28fb9ce5318fd3",
+      "digest": "sha256:35df4de8a3ade449bb577b50ac3000adb2eafe354fd2f885f408ffe6e86d5f19",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",

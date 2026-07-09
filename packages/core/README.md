@@ -18,6 +18,8 @@ Current shared surfaces:
   `@kungfu-tech/buildchain/release-passport`.
 - managed KFD / Release Passport badge bundle facts and README marker blocks
   through `@kungfu-tech/buildchain/badges`.
+- publication artifact manifests, source bundles, and publication artifact
+  passports through `@kungfu-tech/buildchain/publication-artifact`.
 
 ## Toolkit Imports
 
@@ -62,6 +64,15 @@ import { collectModuleBuildFacts, writeBuildFacts } from "@kungfu-tech/buildchai
 
 const fact = collectModuleBuildFacts({ moduleId: "native-core" });
 writeBuildFacts({ fact, output: ".buildchain/facts/native-core.json" });
+```
+
+Publication repositories can produce site-consumable paper/report facts without
+becoming web-surface repositories:
+
+```js
+import { writePublicationArtifact } from "@kungfu-tech/buildchain/publication-artifact";
+
+writePublicationArtifact({ sourceSha: process.env.GITHUB_SHA });
 ```
 
 Web-surface validation stays in core because both local scripts and GitHub

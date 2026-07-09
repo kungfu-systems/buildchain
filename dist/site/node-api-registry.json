@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:497124adb3868e679e67e7a283f7c5c79146e7ebe60ffe07afc4bf6a70ad2568",
+      "digest": "sha256:046d9a89ad57d78c93787baead48361179db9c5a408528a4f68a595b9acb9893",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:497124adb3868e679e67e7a283f7c5c79146e7ebe60ffe07afc4bf6a70ad2568",
+      "digest": "sha256:046d9a89ad57d78c93787baead48361179db9c5a408528a4f68a595b9acb9893",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -177,7 +177,7 @@
       "specifier": "@kungfu-tech/buildchain/public-surface-audit",
       "export": "./public-surface-audit",
       "target": "./packages/core/public-surface-audit.js",
-      "digest": "sha256:21e866a27cf96f6385f1fe2f3f0f73526fb9bba4c409334dbf9b34a886c80450",
+      "digest": "sha256:62c4b7e30d6f13b32df777c5c7e70d83bcac63b90d4bcbc4a647d8bfc8829850",
       "summary": "Reverse audit APIs for CLI, workflow, action, site page, and documentation command surfaces.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -193,6 +193,19 @@
       "digest": "sha256:8cc29b88dc7968de3b43d495b54c0b53f90984beb85883705d764c40d4da1b4e",
       "summary": "Buildchain JSONL logging, span, summary, and verification APIs.",
       "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/publication-artifact",
+      "export": "./publication-artifact",
+      "target": "./packages/core/publication-artifact.js",
+      "digest": "sha256:4d00985aa43a98ca0feee872f889251d7b7b2c8f1a6703316ffc27ad4405e423",
+      "summary": "Publication artifact manifest, source bundle, and publication passport APIs.",
+      "capabilityGroup": "reusable-build",
       "audience": [
         "developer",
         "agent"
@@ -282,7 +295,7 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:b6bc32831d202d5c542d72f6e63322f632014751e7db00862b28fb9ce5318fd3"
+      "digest": "sha256:35df4de8a3ade449bb577b50ac3000adb2eafe354fd2f885f408ffe6e86d5f19"
     },
     {
       "id": "build-facts",

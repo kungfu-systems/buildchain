@@ -297,6 +297,48 @@ command = "buildchain homebrew check"
   );
 });
 
+test("buildchain.toml accepts publication artifact project type", () => {
+  withTempRepo(
+    {
+      ".buildchain/buildchain.toml": `
+schema = 1
+
+[project]
+type = "publication-artifact"
+name = "paper-fixture"
+
+[publication]
+kind = "paper"
+title = "Paper Fixture"
+primary_artifact = "_build/main.pdf"
+artifact_paths = ["_build/main.pdf"]
+metadata_paths = ["README.md"]
+source_paths = ["paper", "README.md", "LICENSE", "Makefile"]
+site_consumers = ["papers.example.com"]
+
+[lifecycle.build]
+command = "make pdf"
+
+[lifecycle.verify]
+command = "make check"
+`,
+      "README.md": "# Paper Fixture\n",
+      "LICENSE": "fixture\n",
+      "Makefile": "check:\n\ttrue\npdf:\n\ttrue\n",
+      "paper/main.tex": "\\documentclass{article}\n",
+    },
+    (dir) => {
+      const summary = validateBuildchainConfig(dir, {
+        requireLifecycleStages: ["build", "verify"],
+      });
+      assert.equal(summary.project.type, "publication-artifact");
+      assert.equal(summary.publication.title, "Paper Fixture");
+      assert.equal(summary.publication.primaryArtifact, "_build/main.pdf");
+      assert.deepEqual(summary.publication.sourcePaths, ["paper", "README.md", "LICENSE", "Makefile"]);
+    },
+  );
+});
+
 test("buildchain.toml normalizes optional native diagnostics profile", () => {
   withTempRepo(
     {

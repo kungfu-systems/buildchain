@@ -31,6 +31,7 @@ workflow, action, and Node API export also carries a `capabilityGroup`,
 | Reusable Build and Lifecycle | `workflow-registry.json`, `release-model.json` | [`reusable-build-surface.md`](reusable-build-surface.md), [`lifecycle-protocol.md`](lifecycle-protocol.md) |
 | KFD Trust and Surface Closure | `kfd-claims.json`, `public-surface-audit.json`, `cli-registry.json`, `node-api-registry.json` | [`kfd-support.md`](kfd-support.md), [`release-passport.md`](release-passport.md) |
 | Site Bundle, Web Surfaces, and Propagation | `buildchain-site.json`, `site-manifest.json`, `page-registry.json`, `release-model.json` | [`site-bundle-contract.md`](site-bundle-contract.md), [`web-surface-deployments.md`](web-surface-deployments.md), [`release-propagation.md`](release-propagation.md) |
+| Publication Artifacts | `workflow-registry.json`, `node-api-registry.json`, `manual-registry.json` | [`publication-artifacts.md`](publication-artifacts.md), [`reusable-build-surface.md`](reusable-build-surface.md) |
 | Distribution Indexes and Badges | `badge-endpoint-registry.json`, `node-api-registry.json`, `manual-registry.json` | [`readme-badges.md`](readme-badges.md), [`homebrew.md`](homebrew.md) |
 | Build Facts, Observability, and Diagnostics | `cli-registry.json`, `node-api-registry.json`, lifecycle artifacts | [`build-facts.md`](build-facts.md), [`toolkit-observability.md`](toolkit-observability.md), [`consumer-issue-reporting.md`](consumer-issue-reporting.md) |
 | Governance, Versioning, and Runtime Drift | `buildchain-contract.json`, `workflow-registry.json`, `release-model.json` | [`release-governance.md`](release-governance.md), [`release-flow.md`](release-flow.md), [`versioning.md`](versioning.md), [`runtime-train-validation.md`](runtime-train-validation.md) |
@@ -47,6 +48,7 @@ workflow, action, and Node API export also carries a `capabilityGroup`,
 | Git/source/version/module/product build facts | `dist/site/node-api-registry.json`, `dist/site/cli-registry.json`, `kungfu-buildchain-module-build-facts`, `kungfu-buildchain-product-build-facts` | [`build-facts.md`](build-facts.md) |
 | GitHub Release passport/evidence publication | `dist/site/release-model.json`, `dist/site/artifact-schemas.json` | [`release-governance.md`](release-governance.md), [`release-candidate.md`](release-candidate.md) |
 | release propagation for package/site chains | `dist/site/release-model.json` | [`release-propagation.md`](release-propagation.md) |
+| publication artifact manifests, source bundles, and paper repository workflows | `dist/site/workflow-registry.json`, `dist/site/node-api-registry.json`, `kungfu-buildchain-publication-artifact-manifest` | [`publication-artifacts.md`](publication-artifacts.md) |
 | Generated badge bundles, README badge blocks, and badge facts | `dist/site/node-api-registry.json`, `dist/site/manual-registry.json`, `kungfu-buildchain-badge-bundle-facts`, `kungfu-buildchain-readme-badge-facts` | [`readme-badges.md`](readme-badges.md) |
 | Homebrew tap distribution indexes | `dist/site/node-api-registry.json`, `dist/site/buildchain-contract.json` | [`homebrew.md`](homebrew.md) |
 | Buildchain CLI manual | `dist/site/cli-registry.json`, `dist/site/manual-registry.json` | [`cli.md`](cli.md) |
@@ -85,6 +87,7 @@ replace them.
 | How do I detect, register, audit, witness, or query KFD-3 product surfaces? | [`kfd-support.md`](kfd-support.md) + [`cli.md`](cli.md) | verify/use | stable |
 | How do I keep `@v2` floating refs while detecting Buildchain contract drift? | [`reusable-build-surface.md`](reusable-build-surface.md#floating-ref-contract-lock) | verify/use | stable |
 | How do I propagate finalized upstream releases to downstream package/site PRs? | [`release-propagation.md`](release-propagation.md) | use | preview |
+| How do paper or report repositories publish PDFs, metadata, source bundles, and site-consumable manifests? | [`publication-artifacts.md`](publication-artifacts.md) | use | stable |
 | How do I generate KFD / Release Passport badge bundles without hand-maintaining Markdown? | [`readme-badges.md`](readme-badges.md) + [`cli.md`](cli.md) | use | stable |
 | How do I generate and verify a Homebrew tap from release passport evidence? | [`homebrew.md`](homebrew.md) + [`cli.md`](cli.md) | use/verify | stable |
 | How do I prove a PR-stage reusable build is the artifact source promoted later? | [`release-candidate.md`](release-candidate.md) + [`reusable-build-surface.md`](reusable-build-surface.md) | verify | stable |
@@ -99,7 +102,7 @@ replace them.
 | How do I publish observed infrastructure contracts for downstream consumers? | [`infra-contract.md`](infra-contract.md) | use | preview |
 | How do I use the active actions directly? | [`../actions/validate-config/README.md`](../actions/validate-config/README.md), [`../actions/run-lifecycle/README.md`](../actions/run-lifecycle/README.md), [`../actions/promote-buildchain-ref/README.md`](../actions/promote-buildchain-ref/README.md), [`../actions/report-buildchain-issue/README.md`](../actions/report-buildchain-issue/README.md) | use | stable |
 | How can a consumer workflow report a Buildchain-owned failure back to Buildchain? | [`consumer-issue-reporting.md`](consumer-issue-reporting.md) + [`../actions/report-buildchain-issue/README.md`](../actions/report-buildchain-issue/README.md) | use | stable |
-| What do the fixture repositories demonstrate? | [`../fixtures/libnode-shaped/README.md`](../fixtures/libnode-shaped/README.md), [`../fixtures/publish-transaction-shaped/README.md`](../fixtures/publish-transaction-shaped/README.md), [`../fixtures/web-surface-shaped/README.md`](../fixtures/web-surface-shaped/README.md) | verify | stable |
+| What do the fixture repositories demonstrate? | [`../fixtures/libnode-shaped/README.md`](../fixtures/libnode-shaped/README.md), [`../fixtures/publish-transaction-shaped/README.md`](../fixtures/publish-transaction-shaped/README.md), [`../fixtures/web-surface-shaped/README.md`](../fixtures/web-surface-shaped/README.md), [`../fixtures/publication-artifact-shaped/README.md`](../fixtures/publication-artifact-shaped/README.md) | verify | stable |
 | What license and contribution terms apply? | [`../LICENSE`](../LICENSE) + [`../LICENSE-POLICY.md`](../LICENSE-POLICY.md) | use | stable |
 | What trademark, official-service, and provider-compliance boundaries apply? | [`../TRADEMARK.md`](../TRADEMARK.md) + [`../ACCEPTABLE_USE.md`](../ACCEPTABLE_USE.md) + [`../PROVIDER_COMPLIANCE.md`](../PROVIDER_COMPLIANCE.md) | use | stable |
 | How do I report a vulnerability? | [`../SECURITY.md`](../SECURITY.md) | use | stable |
@@ -148,6 +151,8 @@ replace them.
   Kungfu build info** -> [`build-facts.md`](build-facts.md) and [`cli.md`](cli.md).
 - **release chains / upstream package as source of truth / site synchronization** ->
   [`release-propagation.md`](release-propagation.md).
+- **paper repositories / PDFs / publication manifests / source bundles** ->
+  [`publication-artifacts.md`](publication-artifacts.md).
 - **README status badges / KFD badge bundles / badge facts JSON** ->
   [`readme-badges.md`](readme-badges.md) and [`cli.md`](cli.md).
 - **Homebrew taps / distribution indexes / Formula drift checks** ->
