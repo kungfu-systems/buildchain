@@ -606,6 +606,7 @@
           "production-approved",
           "production-aws-role-arn",
           "production-environment",
+          "production-release-app-client-id",
           "production-release-app-id",
           "production-release-branch-channel",
           "production-release-head-prefix",
@@ -620,7 +621,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 32
+        "inputCount": 33
       },
       {
         "id": ".wheel-release",
@@ -2381,8 +2382,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "239414b93a2165625ea54f124377ad270355ca8c0764f4ff2a8ebc9ad78f2832",
-    "workflowRegistryDigest": "7ec4a7f4f2d81ec294a4b961f6f991c3e90bacb6f516a5138736399d461d9aee",
-    "pageRegistryDigest": "23c900280e3c30ca9886d74a5f744961f2b2c5a202743d264d423f0bb29c9eee"
+    "workflowRegistryDigest": "5e6de7c4896834e4225655aae8ea4e50aae20145bb0b23a3122dd06fd10c6a3d",
+    "pageRegistryDigest": "f6d605835e175568a302faf7f867171553271f524d453b41fd90ddf3e95f08c4"
   },
   "comparison": {
     "missingCliRegistry": [],

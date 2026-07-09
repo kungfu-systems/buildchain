@@ -726,16 +726,22 @@ jobs:
 Automatic release PR creation normally uses the workflow `github.token`.
 Consumers that cannot enable "GitHub Actions can create and approve pull
 requests" globally should prefer the first-class GitHub App path. Pass the App
-id as an input and the private key as a reusable workflow secret; Buildchain
+client id as an input and the private key as a reusable workflow secret; Buildchain
 creates an installation token inside the release PR job and uses it only for the
 release-intent branch, PR, and label operations:
 
 ```yaml
 with:
-  production-release-app-id: ${{ vars.KUNGFU_RELEASE_APP_ID }}
+  production-release-app-client-id: ${{ vars.KUNGFU_RELEASE_APP_CLIENT_ID }}
 secrets:
   production-release-app-private-key: ${{ secrets.KUNGFU_RELEASE_APP_PRIVATE_KEY }}
 ```
+
+`production-release-app-id` remains accepted as a deprecated alias for the input
+name, but the value should be the GitHub App client id. GitHub App numeric App
+IDs and client IDs are distinct, and Buildchain passes the value to
+`actions/create-github-app-token` through its non-deprecated `client-id` input so
+new runs do not emit the deprecated `app-id` warning.
 
 If a repository already generates its own narrow token or PAT, it can still pass
 that through `production-release-pr-token`:
