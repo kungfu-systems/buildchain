@@ -298,6 +298,10 @@ if (siteBundle.package?.version !== rootPackage.version) {
 if (siteManifest.package?.version !== rootPackage.version) {
   throw new Error("site-manifest.json package.version must match package.json version");
 }
+const publicationRegistry = JSON.parse(fs.readFileSync(path.join(root, "dist/site/publication-registry.json"), "utf8"));
+if (publicationRegistry.package?.version !== rootPackage.version) {
+  throw new Error("publication-registry.json package.version must match package.json version");
+}
 if (siteBundle.source?.homepageTextSource !== "README.md") {
   throw new Error("buildchain-site.json source.homepageTextSource must be README.md");
 }
