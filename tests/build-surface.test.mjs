@@ -289,7 +289,9 @@ test("publication artifact workflow exposes paper artifact contract", () => {
   assert.match(workflow, /build-command:/);
   assert.match(workflow, /toolchain-type:/);
   assert.match(workflow, /toolchain-image:/);
+  assert.match(workflow, /ghcr\.io\/kungfu-systems\/build-images\/latex-pdf-builder/);
   assert.match(workflow, /toolchain-digest:/);
+  assert.match(workflow, /sha256:c20f3809e96836c1c78e97c76939d12f1de3fed0ea9b7c40c43332ec2ea480f8/);
   assert.match(workflow, /Resolve publication toolchain/);
   assert.match(workflow, /docker pull/);
   assert.match(workflow, /BUILDCHAIN_PUBLICATION_TOOLCHAIN_TYPE/);

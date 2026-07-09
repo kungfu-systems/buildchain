@@ -46,8 +46,8 @@ registry_path = ".buildchain/publication/publication-registry.json"
 
 [publication.toolchain]
 type = "latex-docker"
-image = "ghcr.io/kungfu-systems/latex"
-digest = "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+image = "ghcr.io/kungfu-systems/build-images/latex-pdf-builder"
+digest = "sha256:c20f3809e96836c1c78e97c76939d12f1de3fed0ea9b7c40c43332ec2ea480f8"
 command = "latexmk -pdf -outdir=_build paper/main.tex"
 
 [lifecycle.build]
@@ -82,11 +82,14 @@ if PDF, source bundle, route, metadata, or toolchain evidence changes for an
 existing version, Buildchain fails before the registry is rewritten.
 
 `publication.toolchain` makes the source-to-PDF transformation part of the
-machine-readable contract. `latex-docker` is the preferred LaTeX profile: the
-workflow pulls the declared image by digest and runs the declared command in
-that pinned container. `custom-command` remains available for compatibility,
-but the passport records it as lower trust because Buildchain can record the
-command boundary without proving the compiler or LaTeX distribution digest.
+machine-readable contract. `latex-docker` is the preferred LaTeX profile. The
+Buildchain paper scaffold and reusable workflow default to
+`ghcr.io/kungfu-systems/build-images/latex-pdf-builder:v1.2.0`, pinned by the
+digest above. The workflow pulls the declared image by digest and runs the
+declared command in that pinned container. `custom-command` remains available
+for compatibility, but the passport records it as lower trust because
+Buildchain can record the command boundary without proving the compiler or
+LaTeX distribution digest.
 
 ## Reusable Workflow
 
@@ -109,8 +112,8 @@ The workflow:
   any paper build runs;
 - resolves the declared publication toolchain from `[publication.toolchain]` or
   workflow inputs;
-- for `latex-docker`, pulls the pinned image digest and runs the declared
-  command in the container;
+- for `latex-docker`, pulls the pinned build-images LaTeX builder digest and
+  runs the declared command in the container;
 - for `custom-command`, runs the declared command and records the lower-trust
   boundary in the passport;
 - runs the verify command;
