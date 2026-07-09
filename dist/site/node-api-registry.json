@@ -60,7 +60,7 @@
       "specifier": "@kungfu-tech/buildchain/artifact-passport",
       "export": "./artifact-passport",
       "target": "./packages/core/artifact-passport.js",
-      "digest": "sha256:beb4da1f056630bf7e19b709374a327c0004e87d541e03ac1eddfa8c65bb66c4",
+      "digest": "sha256:cb3f66539792f4df8e43379850de428f6d1431785e6265948f80bbdea46e8296",
       "summary": "Artifact passport digest and evidence helper APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -295,7 +295,7 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:c5b65a092bb1189df8569f9bc4a8c1837a1e045038e3d01b3bd79e8e45682358"
+      "digest": "sha256:4b31f7ff5330cde8ab32b237f533c7af76463cce570d67dd14669c3a14c83c84"
     },
     {
       "id": "build-facts",

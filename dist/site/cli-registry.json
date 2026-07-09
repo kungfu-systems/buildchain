@@ -140,7 +140,7 @@
     {
       "id": "explain-artifact",
       "source": "bin/buildchain.mjs",
-      "usage": "buildchain explain artifact <subject> [--passport <file-or-url>] [--for human|agent] [--json]",
+      "usage": "buildchain explain artifact <subject> [--passport <file-or-url>] [--npm-registry <url>] [--for human|agent] [--json]",
       "purpose": "Explain artifact evidence for humans or agents.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -260,7 +260,7 @@
     {
       "id": "inspect-artifact",
       "source": "bin/buildchain.mjs",
-      "usage": "buildchain inspect artifact <subject> [--passport <file-or-url>] [--json]",
+      "usage": "buildchain inspect artifact <subject> [--passport <file-or-url>] [--npm-registry <url>] [--json]",
       "purpose": "Inspect artifact evidence.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
