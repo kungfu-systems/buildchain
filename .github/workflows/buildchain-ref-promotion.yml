@@ -49,8 +49,13 @@ jobs:
         (
           github.event.workflow_run.conclusion == 'success' &&
           github.event.workflow_run.event == 'push' &&
-          !startsWith(github.event.workflow_run.display_title, 'Prepare v') &&
-          !startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v') &&
+          (
+            startsWith(github.event.workflow_run.head_branch, 'release/') ||
+            (
+              !startsWith(github.event.workflow_run.display_title, 'Prepare v') &&
+              !startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v')
+            )
+          ) &&
           !startsWith(github.event.workflow_run.display_title, 'chore(release): release v')
         )
       }}
