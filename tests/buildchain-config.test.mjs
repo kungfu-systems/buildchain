@@ -325,8 +325,8 @@ immutable_base_url = "https://papers.example.com/archive"
 
 [publication.toolchain]
 type = "latex-docker"
-image = "ghcr.io/kungfu-systems/latex"
-digest = "sha256:${"a".repeat(64)}"
+image = "ghcr.io/kungfu-systems/build-images/latex-pdf-builder"
+digest = "sha256:c20f3809e96836c1c78e97c76939d12f1de3fed0ea9b7c40c43332ec2ea480f8"
 command = "latexmk -pdf -outdir=_build paper/main.tex"
 
 [lifecycle.build]

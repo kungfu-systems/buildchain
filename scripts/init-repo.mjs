@@ -6,6 +6,9 @@ import { BUILDCHAIN_CONFIG_PATH } from "../packages/core/buildchain-layout.js";
 import { detectPackageManager, assertPackageManager } from "../packages/core/package-manager.js";
 
 const BUILDCHAIN_WORKFLOW_REF = "kungfu-systems/buildchain/.github/workflows/.build.yml@v2";
+const DEFAULT_PUBLICATION_LATEX_IMAGE = "ghcr.io/kungfu-systems/build-images/latex-pdf-builder";
+const DEFAULT_PUBLICATION_LATEX_DIGEST = "sha256:c20f3809e96836c1c78e97c76939d12f1de3fed0ea9b7c40c43332ec2ea480f8";
+const DEFAULT_PUBLICATION_LATEX_COMMAND = "latexmk -pdf -outdir=_build paper/main.tex";
 
 function posixPath(value) {
   return String(value || "").split(path.sep).join("/");
@@ -259,8 +262,10 @@ manifest_path = ".buildchain/publication/publication-artifact.json"
 source_bundle_path = ".buildchain/publication/source.tar.gz"
 
 [publication.toolchain]
-type = "custom-command"
-command = "make pdf"
+type = "latex-docker"
+image = "${DEFAULT_PUBLICATION_LATEX_IMAGE}"
+digest = "${DEFAULT_PUBLICATION_LATEX_DIGEST}"
+command = "${DEFAULT_PUBLICATION_LATEX_COMMAND}"
 
 [lifecycle.build]
 command = "make pdf"
