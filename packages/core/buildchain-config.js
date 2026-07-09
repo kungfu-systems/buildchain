@@ -13,7 +13,7 @@ const RESERVED_LIFECYCLE_KEYS = new Set(["env", "shell"]);
 const SUPPORTED_VERSION_FILE_TYPES = new Set(["json", "toml", "regex"]);
 const SUPPORTED_VERSION_STRATEGIES = new Set(["semver", "anchored"]);
 const SUPPORTED_VERSION_NEXT = new Set(["auto", "manual"]);
-const SUPPORTED_PROJECT_TYPES = new Set(["package", "web-surface", "infra-contract", "distribution-index"]);
+const SUPPORTED_PROJECT_TYPES = new Set(["package", "web-surface", "infra-contract", "distribution-index", "publication-artifact"]);
 const SUPPORTED_PUBLISH_MODES = new Set(["publish-final-version", "promote-existing-version"]);
 const SUPPORTED_PUBLISH_AUTH = new Set(["trusted-publishing", "npm-token"]);
 const SUPPORTED_PACKAGE_SET_ORDER = new Set(["as-provided", "platforms-first-main-last"]);
@@ -146,6 +146,9 @@ export function normalizeBuildchainConfig(config) {
   }
   if (normalized.infra !== undefined) {
     normalized.infra = normalizeInfraSection(normalized.infra);
+  }
+  if (normalized.publication !== undefined) {
+    normalized.publication = normalizePublicationSection(normalized.publication);
   }
   if (normalized.consumers !== undefined) {
     normalized.consumers = normalizeConsumersSection(normalized.consumers);
@@ -357,7 +360,7 @@ function normalizeProjectSection(project) {
   assertPlainObject(project, "project");
   const type = assertString(project.type, "project.type");
   if (!SUPPORTED_PROJECT_TYPES.has(type)) {
-    throw new Error("project.type must be one of package, web-surface, infra-contract, or distribution-index");
+    throw new Error("project.type must be one of package, web-surface, infra-contract, distribution-index, or publication-artifact");
   }
   const normalized = { type };
   for (const key of ["name", "site"]) {
@@ -366,6 +369,33 @@ function normalizeProjectSection(project) {
     }
   }
   return normalized;
+}
+
+function normalizePublicationSection(publication) {
+  assertPlainObject(publication, "publication");
+  const kind = publication.kind === undefined ? "paper" : assertString(publication.kind, "publication.kind");
+  if (!["paper", "report", "specification", "article", "dataset-note"].includes(kind)) {
+    throw new Error("publication.kind must be one of paper, report, specification, article, or dataset-note");
+  }
+  const primaryArtifact = posixPath(assertString(publication.primary_artifact, "publication.primary_artifact"));
+  return {
+    kind,
+    title: assertString(publication.title, "publication.title"),
+    primaryArtifact,
+    version: publication.version === undefined ? "" : assertString(publication.version, "publication.version"),
+    abstract: publication.abstract === undefined ? "" : assertString(publication.abstract, "publication.abstract"),
+    authors: normalizeStringArray(publication.authors, "publication.authors"),
+    artifactPaths: normalizeStringArray(publication.artifact_paths, "publication.artifact_paths").map(posixPath),
+    metadataPaths: normalizeStringArray(publication.metadata_paths, "publication.metadata_paths").map(posixPath),
+    sourcePaths: normalizeStringArray(publication.source_paths, "publication.source_paths").map(posixPath),
+    siteConsumers: normalizeStringArray(publication.site_consumers, "publication.site_consumers"),
+    manifestPath: publication.manifest_path === undefined
+      ? ".buildchain/publication/publication-artifact.json"
+      : posixPath(assertString(publication.manifest_path, "publication.manifest_path")),
+    sourceBundlePath: publication.source_bundle_path === undefined
+      ? ".buildchain/publication/source.tar.gz"
+      : posixPath(assertString(publication.source_bundle_path, "publication.source_bundle_path")),
+  };
 }
 
 function normalizeInfraSection(infra) {
@@ -1203,6 +1233,7 @@ export function validateBuildchainConfig(
     lifecycleStages,
     publish: loadedConfig.config.publish,
     facts: loadedConfig.config.facts,
+    publication: loadedConfig.config.publication,
   };
 }
 

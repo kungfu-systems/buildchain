@@ -1,0 +1,289 @@
+name: Buildchain Publication Artifact
+
+on:
+  workflow_call:
+    inputs:
+      buildchain-repository:
+        default: "kungfu-systems/buildchain"
+        type: string
+        required: false
+      buildchain-ref:
+        description: "Optional temporary Buildchain runtime ref for trusted manual validation. Empty uses the stable workflow runtime."
+        default: ""
+        type: string
+        required: false
+      buildchain-contract-lock-path:
+        description: "Consumer-owned Buildchain contract lock path"
+        default: ".buildchain/contract-lock.json"
+        type: string
+        required: false
+      buildchain-contract-compatibility-policy:
+        description: "Contract compatibility policy: major-compatible, allow-additive, or exact"
+        default: "major-compatible"
+        type: string
+        required: false
+      buildchain-contract-drift-issue-mode:
+        description: "Consumer issue behavior for Buildchain floating-ref contract drift: off, breaking-only, or compatible-and-breaking"
+        default: "compatible-and-breaking"
+        type: string
+        required: false
+      working-directory:
+        default: "."
+        type: string
+        required: false
+      setup-node:
+        default: true
+        type: boolean
+        required: false
+      node-version:
+        default: "24"
+        type: string
+        required: false
+      build-command:
+        default: "make pdf"
+        type: string
+        required: false
+      verify-command:
+        default: "make check"
+        type: string
+        required: false
+      artifact-name:
+        default: "publication-artifact"
+        type: string
+        required: false
+      artifact-paths:
+        default: |
+          _build/main.pdf
+          .buildchain/publication/publication-artifact.json
+          .buildchain/publication/publication-artifact-passport.json
+          .buildchain/publication/source.tar.gz
+        type: string
+        required: false
+      artifact-retention-days:
+        default: 30
+        type: number
+        required: false
+    outputs:
+      publication-artifact-name:
+        description: "Uploaded publication artifact name"
+        value: ${{ jobs.publication.outputs.publication-artifact-name }}
+      publication-manifest-path:
+        description: "Generated publication manifest path"
+        value: ${{ jobs.publication.outputs.publication-manifest-path }}
+      publication-passport-path:
+        description: "Generated publication passport path"
+        value: ${{ jobs.publication.outputs.publication-passport-path }}
+      publication-manifest-json:
+        description: "Compact publication manifest JSON"
+        value: ${{ jobs.publication.outputs.publication-manifest-json }}
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  publication:
+    name: Build publication artifact
+    runs-on: ubuntu-24.04
+    outputs:
+      publication-artifact-name: ${{ steps.names.outputs.artifact-name }}
+      publication-manifest-path: ${{ steps.manifest.outputs.manifest-path }}
+      publication-passport-path: ${{ steps.manifest.outputs.passport-path }}
+      publication-manifest-json: ${{ steps.manifest.outputs.manifest-json }}
+    steps:
+      - name: Resolve Buildchain runtime
+        id: runtime
+        uses: actions/github-script@v8
+        env:
+          BUILDCHAIN_REPOSITORY: ${{ inputs.buildchain-repository }}
+          BUILDCHAIN_REQUESTED_REF: ${{ inputs.buildchain-ref }}
+          BUILDCHAIN_DEFAULT_REF: v2
+        with:
+          script: |
+            const requested = (process.env.BUILDCHAIN_REQUESTED_REF || "").trim();
+            const repository = (process.env.BUILDCHAIN_REPOSITORY || "kungfu-systems/buildchain").trim();
+            const defaultRef = (process.env.BUILDCHAIN_DEFAULT_REF || "v2").trim();
+            const [runtimeOwner, runtimeRepo] = repository.split("/");
+            if (!runtimeOwner || !runtimeRepo) throw new Error(`invalid buildchain repository: ${repository}`);
+            const exactSha = /^[0-9a-f]{40}$/i;
+            const trainRef = /^train\/v\d+\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
+            const workflowRef = process.env.GITHUB_WORKFLOW_REF || "";
+            const shellRef = workflowRef.startsWith(`${repository}/.github/workflows/`)
+              ? (workflowRef.split("@").pop() || defaultRef).trim() || defaultRef
+              : defaultRef;
+            const normalizeClass = (ref) => {
+              const value = String(ref || "").replace(/^refs\/heads\//, "").replace(/^refs\/tags\//, "");
+              if (exactSha.test(value)) return "exact-sha";
+              if (trainRef.test(value)) return "train";
+              if (/^v\d+(?:\.\d+)?$/.test(value) || /^v\d+\.\d+\.\d+$/.test(value)) return "stable";
+              if (/^v\d+(?:\.\d+)?-alpha$/.test(value) || /^v\d+\.\d+\.\d+-alpha\.\d+$/.test(value)) return "alpha";
+              return "development";
+            };
+            let runtimeRef = requested || shellRef;
+            let runtimeFullRef = runtimeRef;
+            let runtimeClass = normalizeClass(runtimeRef);
+            let runtimeOverride = requested !== "";
+            let trustDecision = runtimeOverride ? "override-requested" : "stable-default";
+            if (runtimeOverride) {
+              if (context.eventName !== "workflow_dispatch") {
+                throw new Error("buildchain-ref override is only allowed for trusted workflow_dispatch runs");
+              }
+              const permission = await github.rest.repos.getCollaboratorPermissionLevel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                username: context.actor,
+              });
+              const actorPermission = permission.data.permission || "";
+              if (!["admin", "maintain", "write"].includes(actorPermission)) {
+                throw new Error(`buildchain-ref override requires write, maintain, or admin permission; actor has ${actorPermission || "none"}`);
+              }
+              if (exactSha.test(requested)) {
+                runtimeRef = requested;
+                runtimeFullRef = requested;
+                runtimeClass = "exact-sha";
+              } else {
+                runtimeRef = requested.replace(/^refs\/heads\//, "");
+                if (!trainRef.test(runtimeRef)) {
+                  throw new Error("buildchain-ref override must be train/vN/vN.M/<capability>, refs/heads/train/vN/vN.M/<capability>, or an exact 40-character SHA");
+                }
+                runtimeFullRef = `refs/heads/${runtimeRef}`;
+                runtimeClass = "train";
+              }
+              trustDecision = "override-accepted";
+            }
+            async function resolveRef(ref) {
+              if (exactSha.test(ref)) return ref;
+              const normalized = ref.replace(/^refs\/heads\//, "").replace(/^refs\/tags\//, "");
+              const candidates = ref.startsWith("refs/")
+                ? [ref.replace(/^refs\//, "")]
+                : [`tags/${normalized}`, `heads/${normalized}`];
+              for (const candidate of candidates) {
+                try {
+                  const response = await github.rest.git.getRef({ owner: runtimeOwner, repo: runtimeRepo, ref: candidate });
+                  return response.data.object.sha;
+                } catch (error) {
+                  if (error.status !== 404) throw error;
+                }
+              }
+              throw new Error(`unable to resolve Buildchain runtime ref: ${ref}`);
+            }
+            const runtimeSha = await resolveRef(runtimeFullRef);
+            core.setOutput("runtime-ref", runtimeRef);
+            core.setOutput("runtime-full-ref", runtimeFullRef);
+            core.setOutput("runtime-sha", runtimeSha);
+            core.setOutput("runtime-class", runtimeClass);
+            core.setOutput("runtime-override", String(runtimeOverride));
+            core.setOutput("runtime-trust-decision", trustDecision);
+            core.setOutput("workflow-shell-ref", shellRef);
+            core.setOutput("rollback-ref", shellRef);
+            await core.summary
+              .addHeading("Buildchain runtime")
+              .addRaw(`- workflow shell ref: \`${shellRef}\`\n`)
+              .addRaw(`- requested runtime ref: \`${requested || "(default)"}\`\n`)
+              .addRaw(`- resolved runtime ref: \`${runtimeRef}\`\n`)
+              .addRaw(`- resolved runtime sha: \`${runtimeSha}\`\n`)
+              .addRaw(`- runtime class: \`${runtimeClass}\`\n`)
+              .addRaw(`- trust decision: \`${trustDecision}\`\n`)
+              .write();
+
+      - name: Checkout source
+        uses: actions/checkout@v7.0.0
+        with:
+          clean: true
+          persist-credentials: false
+
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ steps.runtime.outputs.runtime-sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Check Buildchain contract lock
+        id: contract-lock
+        shell: bash
+        run: node .buildchain/runtime/scripts/buildchain-contract-lock.mjs check
+        env:
+          BUILDCHAIN_CONTRACT_LOCK_PATH: ${{ inputs.buildchain-contract-lock-path }}
+          BUILDCHAIN_CONTRACT_COMPATIBILITY_POLICY: ${{ inputs.buildchain-contract-compatibility-policy }}
+          BUILDCHAIN_CONTRACT_DRIFT_ISSUE_MODE: ${{ inputs.buildchain-contract-drift-issue-mode }}
+          BUILDCHAIN_RUNTIME_ROOT: .buildchain/runtime
+          BUILDCHAIN_RUNTIME_REF: ${{ steps.runtime.outputs.runtime-ref }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ steps.runtime.outputs.runtime-sha }}
+          BUILDCHAIN_RUNTIME_CLASS: ${{ steps.runtime.outputs.runtime-class }}
+          BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Report consumer Buildchain contract drift
+        if: ${{ always() && steps.contract-lock.outputs.contract-lock-issue-needed == 'true' }}
+        uses: ./.buildchain/runtime/actions/report-buildchain-issue
+        with:
+          token: ${{ github.token }}
+          target-repository: ${{ github.repository }}
+          title: "[Buildchain contract] ${{ github.repository }} publication artifact drift on ${{ steps.runtime.outputs.runtime-ref }}"
+          failure-code: buildchain-contract-${{ steps.contract-lock.outputs.contract-lock-status }}
+          buildchain-ref: ${{ steps.runtime.outputs.runtime-ref }}
+          buildchain-version: ${{ steps.contract-lock.outputs.contract-digest }}
+          consumer-repository: ${{ github.repository }}
+          consumer-ref: ${{ github.ref }}
+          consumer-sha: ${{ github.sha }}
+          workflow: ${{ github.workflow }}
+          run-id: ${{ github.run_id }}
+          run-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          summary: "Buildchain floating runtime contract drift: ${{ steps.contract-lock.outputs.contract-lock-status }}"
+          body-file: ${{ steps.contract-lock.outputs.contract-lock-issue-body-file }}
+          labels: "buildchain-contract-drift"
+          comment-cooldown-hours: "24"
+          fail-on-error: "false"
+
+      - name: Setup Buildchain Node.js
+        if: ${{ inputs.setup-node }}
+        uses: actions/setup-node@v6.0.0
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Install Buildchain runtime dependencies
+        shell: bash
+        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+
+      - name: Build publication
+        if: ${{ inputs.build-command != '' }}
+        shell: bash
+        working-directory: ${{ inputs.working-directory }}
+        run: ${{ inputs.build-command }}
+
+      - name: Verify publication
+        if: ${{ inputs.verify-command != '' }}
+        shell: bash
+        working-directory: ${{ inputs.working-directory }}
+        run: ${{ inputs.verify-command }}
+
+      - name: Collect publication artifact manifest
+        id: manifest
+        shell: bash
+        working-directory: ${{ inputs.working-directory }}
+        run: |
+          node "${GITHUB_WORKSPACE}/.buildchain/runtime/bin/buildchain.mjs" publication-artifact manifest \
+            --cwd . \
+            --source-sha "${GITHUB_SHA}" \
+            --json > "${GITHUB_WORKSPACE}/.buildchain/publication-result.json"
+          node <<'NODE'
+          const fs = require("node:fs");
+          const result = JSON.parse(fs.readFileSync(`${process.env.GITHUB_WORKSPACE}/.buildchain/publication-result.json`, "utf8"));
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `manifest-path=${result.manifestPath}\n`);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `passport-path=${result.passportPath}\n`);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `manifest-json=${JSON.stringify(result.manifest)}\n`);
+          NODE
+
+      - name: Resolve artifact name
+        id: names
+        shell: bash
+        run: echo "artifact-name=${{ inputs.artifact-name }}-${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload publication artifact
+        uses: actions/upload-artifact@v6.0.0
+        with:
+          name: ${{ steps.names.outputs.artifact-name }}
+          path: ${{ inputs.artifact-paths }}
+          retention-days: ${{ inputs.artifact-retention-days }}
+          if-no-files-found: error

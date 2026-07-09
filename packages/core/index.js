@@ -186,6 +186,14 @@ export {
 } from "./public-surface-audit.js";
 
 export {
+  PUBLICATION_ARTIFACT_MANIFEST_CONTRACT,
+  PUBLICATION_ARTIFACT_PASSPORT_CONTRACT,
+  collectPublicationArtifact,
+  createPublicationSourceBundle,
+  writePublicationArtifact,
+} from "./publication-artifact.js";
+
+export {
   AGENT_INDEX_CONTRACT,
   ARTIFACT_EVIDENCE_CONTRACT,
   IMPACT_LEDGER_CONTRACT,

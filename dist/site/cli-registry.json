@@ -236,7 +236,7 @@
     {
       "id": "init",
       "source": "bin/buildchain.mjs",
-      "usage": "buildchain init [--cwd <dir>] [--type package|native|web-surface|infra-contract|anchored-package] [--force]",
+      "usage": "buildchain init [--cwd <dir>] [--type package|native|web-surface|infra-contract|publication-artifact|anchored-package] [--force]",
       "purpose": "Bootstrap a repository with Buildchain configuration and caller workflow files.",
       "capabilityGroup": "getting-started",
       "audience": [
@@ -647,6 +647,30 @@
       "usage": "buildchain npm dry-run [--cwd <dir>] [--expected-tag <tag>] [--registry <url>]",
       "purpose": "Verify npm publish shape before a release transaction.",
       "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "publication-artifact",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain publication-artifact",
+      "purpose": "Generate publication artifact manifests, passports, and source bundles for paper/report repositories.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "publication-artifact-manifest",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain publication-artifact manifest [--cwd <dir>] [--source-sha <sha>]",
+      "purpose": "Write a site-consumable publication artifact manifest, publication passport, and source bundle.",
+      "capabilityGroup": "reusable-build",
       "audience": [
         "agent",
         "operator"

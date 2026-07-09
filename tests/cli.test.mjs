@@ -154,6 +154,30 @@ test("init infra-contract creates a directly valid observed contract scaffold", 
   assert.equal(verification.ok, true);
 });
 
+test("init publication-artifact creates a paper artifact scaffold", () => {
+  const cwd = tempDir("init-publication-artifact");
+  const result = JSON.parse(runBuildchain([
+    "init",
+    "--cwd",
+    cwd,
+    "--type",
+    "publication-artifact",
+  ]));
+
+  assert.equal(result.type, "publication-artifact");
+  assert.deepEqual(result.written.sort(), [
+    ".buildchain/buildchain.toml",
+    ".github/workflows/build.yml",
+  ]);
+  const toml = fs.readFileSync(path.join(cwd, ".buildchain", "buildchain.toml"), "utf8");
+  assert.match(toml, /type = "publication-artifact"/);
+  assert.match(toml, /primary_artifact = "_build\/main\.pdf"/);
+  const workflow = fs.readFileSync(path.join(cwd, ".github", "workflows", "build.yml"), "utf8");
+  assert.match(workflow, /publication-artifact\.yml@v2/);
+  assert.match(workflow, /build-command: make pdf/);
+  assert.match(workflow, /verify-command: make check/);
+});
+
 test("infra-contract CLI apply consumes a saved fresh plan", () => {
   const cwd = tempDir("infra-contract-cli-apply");
   fs.cpSync(path.join(root, "fixtures/infra-contract-terraform-shaped"), cwd, { recursive: true });
