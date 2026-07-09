@@ -44,6 +44,55 @@ test("version-state release PRs are valid verify-only release candidates", () =>
   });
 });
 
+test("publish-gate alpha PRs are valid verify-only prerelease candidates", () => {
+  withPackageVersion("1.0.5-alpha.1", (cwd) => {
+    assert.equal(
+      getBumpKeyword({
+        cwd,
+        headRef: "publish-gate/alpha/v1/v1.0/1.0.5-alpha.1",
+        baseRef: "alpha/v1/v1.0",
+      }),
+      "prerelease",
+    );
+  });
+});
+
+test("publish-gate release PRs are valid verify-only release candidates", () => {
+  withPackageVersion("1.0.5", (cwd) => {
+    assert.equal(
+      getBumpKeyword({
+        cwd,
+        headRef: "publish-gate/release/v1/v1.0/1.0.5",
+        baseRef: "release/v1/v1.0",
+      }),
+      "patch",
+    );
+  });
+});
+
+test("publish-gate PRs must target the same channel release line", () => {
+  withPackageVersion("1.0.5", (cwd) => {
+    assert.throws(
+      () =>
+        getBumpKeyword({
+          cwd,
+          headRef: "publish-gate/release/v1/v1.0/1.0.5",
+          baseRef: "release/v1/v1.1",
+        }),
+      /Versions not match/,
+    );
+    assert.throws(
+      () =>
+        getBumpKeyword({
+          cwd,
+          headRef: "publish-gate/release/v1/v1.0/1.0.5",
+          baseRef: "alpha/v1/v1.0",
+        }),
+      /Versions not match/,
+    );
+  });
+});
+
 test("version-state publish-gate/major PRs are valid verify-only major release candidates", () => {
   withPackageVersion("2.0.0", (cwd) => {
     assert.equal(
