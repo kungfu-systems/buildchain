@@ -137,16 +137,17 @@ function usage() {
   buildchain verify release-passport <file-or-url> [--json]
   buildchain verify artifact <file|dir|url|npm:...|oci:...|github-release:...>
                              [--passport <file-or-url>] [--locator-config <json>]
-                             [--repository <owner/repo>] [--tag <tag>] [--json]
+                             [--repository <owner/repo>] [--tag <tag>]
+                             [--npm-registry <url>] [--json]
   buildchain verify infra-contract-evidence-bundle <file> [--json]
   buildchain verify observability-log <jsonl> [--min-events <n>]
                                              [--require-phase <csv>]
                                              [--require-component <csv>]
                                              [--require-event <csv>] [--allow-errors] [--json]
   buildchain explain release --passport <file-or-url> [--for human|agent] [--json]
-  buildchain explain artifact <subject> [--passport <file-or-url>] [--for human|agent] [--json]
+  buildchain explain artifact <subject> [--passport <file-or-url>] [--npm-registry <url>] [--for human|agent] [--json]
   buildchain inspect release --passport <file-or-url> [--json]
-  buildchain inspect artifact <subject> [--passport <file-or-url>] [--json]
+  buildchain inspect artifact <subject> [--passport <file-or-url>] [--npm-registry <url>] [--json]
   buildchain doctor [--cwd <dir>] [--require-publish-source-lock] [--json]
   buildchain log <info|warn|error> --event <name> [--phase <phase>]
                  [--component <name>] [--source <name>] [--attribute key=value]...
@@ -1616,6 +1617,7 @@ async function main(argv = process.argv.slice(2)) {
         githubReleaseBaseUrl: readFlag(verifyArgs, "github-release-base-url", ""),
         subjectDigest: readFlag(verifyArgs, "subject-digest", ""),
         subjectKind: readFlag(verifyArgs, "subject-kind", ""),
+        npmRegistryBaseUrl: readFlag(verifyArgs, "npm-registry", ""),
       });
       if (readBooleanFlag(verifyArgs, "json")) {
         printJson(report);
@@ -1706,6 +1708,7 @@ async function main(argv = process.argv.slice(2)) {
         githubReleaseBaseUrl: readFlag(explainArgs, "github-release-base-url", ""),
         subjectDigest: readFlag(explainArgs, "subject-digest", ""),
         subjectKind: readFlag(explainArgs, "subject-kind", ""),
+        npmRegistryBaseUrl: readFlag(explainArgs, "npm-registry", ""),
         forAudience: readFlag(explainArgs, "for", "human"),
       });
       if (readBooleanFlag(explainArgs, "json")) {
@@ -1756,6 +1759,7 @@ async function main(argv = process.argv.slice(2)) {
         githubReleaseBaseUrl: readFlag(inspectArgs, "github-release-base-url", ""),
         subjectDigest: readFlag(inspectArgs, "subject-digest", ""),
         subjectKind: readFlag(inspectArgs, "subject-kind", ""),
+        npmRegistryBaseUrl: readFlag(inspectArgs, "npm-registry", ""),
       });
       printJson(report);
       process.exitCode = report.ok ? 0 : 1;

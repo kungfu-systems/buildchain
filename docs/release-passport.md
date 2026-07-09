@@ -376,6 +376,11 @@ appears in the passport's artifacts, package set, publish evidence, or artifact
 evidence. The command returns `pass`, `fail`, or `unverifiable`; missing
 passports and digest mismatches fail closed.
 
+For npm subjects, Buildchain treats the registry as the package digest source:
+`npm:<name>@<version>` resolves `dist.integrity` and matches it against
+`packageSet.main.digest`, `packageSet.platforms[].digest`, and publish evidence.
+Use `--npm-registry <url>` when the package comes from a non-default registry.
+
 Discovery is ordered and auditable:
 
 1. explicit `--passport`;

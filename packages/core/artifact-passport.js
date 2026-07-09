@@ -8,6 +8,7 @@ import { readJsonFromLocation, sha256File, verifyReleasePassport } from "./relea
 export const ARTIFACT_VERIFICATION_CONTRACT = "kungfu-buildchain-artifact-verification";
 export const ARTIFACT_PASSPORT_POINTER_CONTRACT = "kungfu-buildchain-artifact-passport-pointer";
 export const ARTIFACT_PASSPORT_LOCATOR_CONTRACT = "kungfu-buildchain-artifact-passport-locator";
+export const DEFAULT_NPM_REGISTRY_BASE_URL = "https://registry.npmjs.org/";
 
 function optionalString(value) {
   return value === undefined || value === null ? "" : String(value);
@@ -116,6 +117,45 @@ function parseNpmSubject(subject) {
     return { name: spec, version: "" };
   }
   return { name: spec.slice(0, atIndex), version: spec.slice(atIndex + 1) };
+}
+
+function normalizeNpmRegistryBaseUrl(value = "") {
+  const registry = optionalString(value || process.env.npm_config_registry || DEFAULT_NPM_REGISTRY_BASE_URL).trim();
+  return registry.endsWith("/") ? registry : `${registry}/`;
+}
+
+function npmRegistryPackageMetadataUrl(name, registryBaseUrl = "") {
+  return new URL(encodeURIComponent(name), normalizeNpmRegistryBaseUrl(registryBaseUrl)).toString();
+}
+
+async function resolveNpmSubjectDigest({ name, version, registryBaseUrl = "" } = {}) {
+  if (!name || !version) {
+    return { status: "skipped", reason: "missing-name-or-version" };
+  }
+  const metadataUrl = npmRegistryPackageMetadataUrl(name, registryBaseUrl);
+  const metadata = await readJsonFromLocation(metadataUrl);
+  const versionMetadata = metadata?.versions?.[version];
+  if (!versionMetadata) {
+    return {
+      status: "missing",
+      reason: "version-not-found",
+      registry: normalizeNpmRegistryBaseUrl(registryBaseUrl),
+      metadataUrl,
+    };
+  }
+  const integrity = optionalString(versionMetadata.dist?.integrity);
+  const shasum = optionalString(versionMetadata.dist?.shasum);
+  const digest = integrity || (shasum ? `sha1:${shasum}` : "");
+  return {
+    status: digest ? "resolved" : "missing",
+    reason: digest ? "" : "dist-integrity-missing",
+    registry: normalizeNpmRegistryBaseUrl(registryBaseUrl),
+    metadataUrl,
+    digest,
+    integrity,
+    shasum,
+    tarball: optionalString(versionMetadata.dist?.tarball),
+  };
 }
 
 function parseGitHubReleaseSubject(subject) {
@@ -328,6 +368,7 @@ export async function resolveArtifactSubject(subject, {
   cwd = process.cwd(),
   subjectDigest = "",
   subjectKind = "",
+  npmRegistryBaseUrl = "",
 } = {}) {
   const input = optionalString(subject).trim();
   if (!input) {
@@ -335,12 +376,38 @@ export async function resolveArtifactSubject(subject, {
   }
   if (/^npm:/i.test(input)) {
     const parsed = parseNpmSubject(input);
+    let npmDigest = {};
+    if (!subjectDigest) {
+      try {
+        npmDigest = await resolveNpmSubjectDigest({
+          name: parsed.name,
+          version: parsed.version,
+          registryBaseUrl: npmRegistryBaseUrl,
+        });
+      } catch (error) {
+        npmDigest = {
+          status: "error",
+          registry: normalizeNpmRegistryBaseUrl(npmRegistryBaseUrl),
+          error: error.message,
+        };
+      }
+    }
+    const digest = subjectDigest || npmDigest.digest || "";
     return {
       input,
       kind: subjectKind || "npm-package",
       name: parsed.name,
       version: parsed.version,
-      digest: subjectDigest,
+      digest,
+      integrity: npmDigest.integrity || (digest.startsWith("sha512-") ? digest : ""),
+      shasum: npmDigest.shasum || "",
+      registry: npmDigest.registry || normalizeNpmRegistryBaseUrl(npmRegistryBaseUrl),
+      npm: {
+        digestResolution: npmDigest.status || (subjectDigest ? "provided" : "skipped"),
+        metadataUrl: npmDigest.metadataUrl || "",
+        tarball: npmDigest.tarball || "",
+        error: npmDigest.error || "",
+      },
       localPath: "",
     };
   }
@@ -640,8 +707,9 @@ export async function verifyArtifactPassport({
   githubReleaseBaseUrl = "",
   subjectDigest = "",
   subjectKind = "",
+  npmRegistryBaseUrl = "",
 } = {}) {
-  const resolvedSubject = await resolveArtifactSubject(subject, { cwd, subjectDigest, subjectKind });
+  const resolvedSubject = await resolveArtifactSubject(subject, { cwd, subjectDigest, subjectKind, npmRegistryBaseUrl });
   const issues = [];
   if (resolvedSubject.missing) {
     issues.push(issue("error", "subject.missing", "artifact subject does not exist locally", { subject: resolvedSubject.input }));
