@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-site-manifest",
-  "generatedAt": "2026-07-09T03:43:15.764Z",
-  "publishedAt": "2026-07-09T03:43:15.764Z",
+  "generatedAt": "2026-07-09T04:16:37.696Z",
+  "publishedAt": "2026-07-09T04:16:37.696Z",
   "reproducible": true,
   "timestampPolicy": "ci-injected",
   "deterministicInputs": [
@@ -19,7 +19,7 @@
     "declared Buildchain surface manifest contract"
   ],
   "sourceDateEpoch": "0",
-  "sourceRevision": "7853c8fdf49294af4193a2f03b0e79a292d24574",
+  "sourceRevision": "5f4fc18a6236f3afd9f50e12e493d5c360db9d90",
   "timestampPolicyDetails": {
     "contract": "kungfu-buildchain-surface-timestamp-policy",
     "timestampFields": [
