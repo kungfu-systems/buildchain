@@ -310,11 +310,18 @@ name = "paper-fixture"
 [publication]
 kind = "paper"
 title = "Paper Fixture"
+version = "0.1.0"
 primary_artifact = "_build/main.pdf"
 artifact_paths = ["_build/main.pdf"]
 metadata_paths = ["README.md"]
 source_paths = ["paper", "README.md", "LICENSE", "Makefile"]
 site_consumers = ["papers.example.com"]
+
+[publication.archive]
+id = "paper-fixture"
+canonical_url = "https://papers.example.com/paper-fixture/"
+latest_url = "https://papers.example.com/paper-fixture/latest/"
+immutable_base_url = "https://papers.example.com/archive"
 
 [publication.toolchain]
 type = "latex-docker"
@@ -340,6 +347,10 @@ command = "make check"
       assert.equal(summary.project.type, "publication-artifact");
       assert.equal(summary.publication.title, "Paper Fixture");
       assert.equal(summary.publication.primaryArtifact, "_build/main.pdf");
+      assert.equal(summary.publication.archive.id, "paper-fixture");
+      assert.equal(summary.publication.archive.canonicalUrl, "https://papers.example.com/paper-fixture/");
+      assert.equal(summary.publication.archive.immutableBaseUrl, "https://papers.example.com/archive");
+      assert.equal(summary.publication.archive.registryPath, ".buildchain/publication/publication-registry.json");
       assert.equal(summary.publication.toolchain.type, "latex-docker");
       assert.equal(summary.publication.toolchain.trustClassification, "pinned-docker-toolchain");
       assert.deepEqual(summary.publication.sourcePaths, ["paper", "README.md", "LICENSE", "Makefile"]);

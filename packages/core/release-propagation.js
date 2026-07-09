@@ -212,14 +212,79 @@ function normalizePackageFact(pkg = {}) {
   };
 }
 
+function normalizeDigestUrlFact(value = {}, label) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`${label} must be an object`);
+  }
+  return {
+    url: assertString(value.url, `${label}.url`),
+    sha256: assertString(value.sha256 || value.digest, `${label}.sha256`),
+  };
+}
+
+function normalizeOptionalPathDigestUrlFact(value = undefined, label) {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+  const normalized = normalizeDigestUrlFact(value, label);
+  return {
+    path: optionalString(value.path),
+    bytes: value.bytes === undefined ? undefined : Number(value.bytes),
+    ...normalized,
+  };
+}
+
+function normalizePublicationArtifactFact(value = undefined) {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+  const artifact = assertPlainObject(value, "upstreamRelease.publicationArtifact");
+  return {
+    id: optionalString(artifact.id),
+    kind: optionalString(artifact.kind),
+    version: assertString(artifact.version, "upstreamRelease.publicationArtifact.version"),
+    canonicalUrl: assertString(
+      artifact.canonicalUrl || artifact.canonical_url,
+      "upstreamRelease.publicationArtifact.canonicalUrl",
+    ),
+    latestUrl: assertString(
+      artifact.latestUrl || artifact.latest_url,
+      "upstreamRelease.publicationArtifact.latestUrl",
+    ),
+    latestEvidenceUrl: optionalString(artifact.latestEvidenceUrl || artifact.latest_evidence_url),
+    immutableVersionUrl: assertString(
+      artifact.immutableVersionUrl || artifact.immutable_version_url || artifact.immutableVersionPrefix || artifact.immutable_version_prefix,
+      "upstreamRelease.publicationArtifact.immutableVersionUrl",
+    ),
+    immutableVersionPrefix: optionalString(artifact.immutableVersionPrefix || artifact.immutable_version_prefix),
+    registry: normalizeDigestUrlFact(artifact.registry, "upstreamRelease.publicationArtifact.registry"),
+    manifest: normalizeDigestUrlFact(artifact.manifest, "upstreamRelease.publicationArtifact.manifest"),
+    passport: normalizeDigestUrlFact(artifact.passport, "upstreamRelease.publicationArtifact.passport"),
+    primaryArtifact: normalizeOptionalPathDigestUrlFact(
+      artifact.primaryArtifact || artifact.primary_artifact,
+      "upstreamRelease.publicationArtifact.primaryArtifact",
+    ),
+    sourceBundle: normalizeOptionalPathDigestUrlFact(
+      artifact.sourceBundle || artifact.source_bundle,
+      "upstreamRelease.publicationArtifact.sourceBundle",
+    ),
+  };
+}
+
 function normalizeUpstreamRelease(input) {
   const release = assertPlainObject(input, "upstreamRelease");
+  const publicationArtifact = normalizePublicationArtifactFact(release.publicationArtifact || release.publication_artifact);
+  const packageFact = release.package === undefined ? undefined : normalizePackageFact(release.package);
+  if (!packageFact && !publicationArtifact) {
+    throw new Error("upstreamRelease requires package or publicationArtifact");
+  }
   return {
     repository: assertString(release.repository, "upstreamRelease.repository"),
     channel: normalizeChannel(release.channel, "upstreamRelease.channel"),
     tag: assertString(release.tag, "upstreamRelease.tag"),
     sourceSha: assertString(release.sourceSha || release.source_sha, "upstreamRelease.sourceSha"),
-    package: normalizePackageFact(release.package),
+    package: packageFact,
+    publicationArtifact,
     releasePassport: normalizeReleasePassport(release.releasePassport || release.release_passport),
     siteBundle: release.siteBundle || release.site_bundle
       ? {
@@ -250,6 +315,7 @@ export function createReleasePropagationLock({
       tag: upstreamRelease.tag,
       sourceSha: upstreamRelease.sourceSha,
       package: upstreamRelease.package,
+      publicationArtifact: upstreamRelease.publicationArtifact,
       releasePassport: upstreamRelease.releasePassport,
       siteBundle: upstreamRelease.siteBundle,
     },
@@ -278,7 +344,10 @@ export function planReleasePropagation({ graph: graphInput, upstreamRelease: rel
   const upstreamRelease = normalizeUpstreamRelease(releaseInput);
   const source = sourceNode
     ? graph.nodes.find((node) => node.id === sourceNode)
-    : graph.nodes.find((node) => node.repository === upstreamRelease.repository || node.package === upstreamRelease.package.name);
+    : graph.nodes.find((node) =>
+        node.repository === upstreamRelease.repository
+        || (upstreamRelease.package && node.package === upstreamRelease.package.name),
+      );
   if (!source) {
     throw new Error("could not resolve source node for upstream release");
   }
