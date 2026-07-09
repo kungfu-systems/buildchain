@@ -3781,6 +3781,97 @@ test("release finalization merges release ancestry into generated next-alpha", a
   assert.equal(result.nextAlphaSha, alphaMergeCommit.sha);
 });
 
+test("strict release promotion accepts a tree-equivalent release-line recovery trigger", async () => {
+  const alphaSha = "a".repeat(40);
+  const recoveryHeadSha = "b".repeat(40);
+  const releaseTriggerSha = "c".repeat(40);
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "1.0.0-alpha.0",
+      packageManager: "pnpm@11.7.0",
+    },
+  });
+  const { octokit, refs, commits, trees } = createGitMock({
+    refs: new Map([
+      ["heads/release/v1/v1.0", releaseTriggerSha],
+      ["heads/alpha/v1/v1.0", alphaSha],
+      ["heads/dev/v1/v1.0", alphaSha],
+      ["tags/v1.0.0-alpha.0", alphaSha],
+      ["tags/v1.0-alpha", alphaSha],
+    ]),
+  });
+  const packageBlob = "blob-package-alpha";
+  const actionBlob = "blob-action-current";
+  trees.set("alpha-tree", [
+    { path: "package.json", mode: "100644", type: "blob", sha: packageBlob },
+    {
+      path: "actions/promote-buildchain-ref/lib.js",
+      mode: "100644",
+      type: "blob",
+      sha: actionBlob,
+    },
+  ]);
+  commits.set(alphaSha, {
+    sha: alphaSha,
+    tree: { sha: "alpha-tree" },
+    parents: [],
+  });
+  commits.set(recoveryHeadSha, {
+    sha: recoveryHeadSha,
+    tree: { sha: "alpha-tree" },
+    parents: [{ sha: alphaSha }],
+  });
+  commits.set(releaseTriggerSha, {
+    sha: releaseTriggerSha,
+    tree: { sha: "alpha-tree" },
+    parents: [{ sha: alphaSha }, { sha: recoveryHeadSha }],
+  });
+  octokit.rest.repos = {
+    getBranchProtection: async () => ({ data: protectedChannel() }),
+    compareCommitsWithBasehead: async () => {
+      throw new Error("tree-equivalent recovery trigger must not use commit-range file checks");
+    },
+    listPullRequestsAssociatedWithCommit: async ({ commit_sha }) => ({
+      data:
+        commit_sha === releaseTriggerSha
+          ? [
+              {
+                merged_at: "2026-07-09T00:00:00Z",
+                base: { ref: "release/v1/v1.0" },
+                head: {
+                  ref: "fix/release-line-v1-v1.0-stable-trigger",
+                  repo: { full_name: "kungfu-systems/buildchain" },
+                },
+              },
+            ]
+          : [],
+    }),
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: releaseTriggerSha,
+    targetRef: "release/v1/v1.0",
+    cwd,
+    requireGovernance: true,
+    requireVersionState: true,
+    requiredStatusCheck: "check",
+  });
+
+  assert.equal(refs.get("tags/v1.0.0"), result.sha);
+  assert.ok(
+    result.updates.some(
+      (update) =>
+        update.action === "accepted-release-recovery-tree-equivalent-source" &&
+        update.sha === releaseTriggerSha &&
+        update.alphaTag === "v1.0.0-alpha.0",
+    ),
+  );
+});
+
 test("release promotion uses frozen PR alpha evidence when a later same-patch alpha exists", async () => {
   const oldReleaseSha = "4".repeat(40);
   const alphaZeroSha = "5".repeat(40);
