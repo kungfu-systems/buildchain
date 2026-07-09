@@ -87,7 +87,7 @@ replace them.
 | How do I detect, register, audit, witness, or query KFD-3 product surfaces? | [`kfd-support.md`](kfd-support.md) + [`cli.md`](cli.md) | verify/use | stable |
 | How do I keep `@v2` floating refs while detecting Buildchain contract drift? | [`reusable-build-surface.md`](reusable-build-surface.md#floating-ref-contract-lock) | verify/use | stable |
 | How do I propagate finalized upstream releases to downstream package/site PRs? | [`release-propagation.md`](release-propagation.md) | use | preview |
-| How do paper or report repositories publish PDFs, metadata, source bundles, and site-consumable manifests? | [`publication-artifacts.md`](publication-artifacts.md) | use | stable |
+| How do paper or report repositories publish PDFs, metadata, source bundles, site-consumable manifests, npm packages, and GitHub Releases? | [`publication-artifacts.md`](publication-artifacts.md) | use | stable |
 | How do I generate KFD / Release Passport badge bundles without hand-maintaining Markdown? | [`readme-badges.md`](readme-badges.md) + [`cli.md`](cli.md) | use | stable |
 | How do I generate and verify a Homebrew tap from release passport evidence? | [`homebrew.md`](homebrew.md) + [`cli.md`](cli.md) | use/verify | stable |
 | How do I prove a PR-stage reusable build is the artifact source promoted later? | [`release-candidate.md`](release-candidate.md) + [`reusable-build-surface.md`](reusable-build-surface.md) | verify | stable |

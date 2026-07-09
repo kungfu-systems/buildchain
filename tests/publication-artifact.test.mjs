@@ -11,9 +11,11 @@ import {
   collectPublicationArtifact,
   writePublicationArtifact,
 } from "../packages/core/publication-artifact.js";
+import { PUBLICATION_NPM_PACKAGE_CONTRACT } from "../packages/core/publication-package.js";
 
 const root = path.resolve(import.meta.dirname, "..");
 const fixture = path.join(root, "fixtures", "publication-artifact-shaped");
+const bin = path.join(root, "bin", "buildchain.mjs");
 
 function tempRepo() {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-publication-"));
@@ -101,6 +103,54 @@ test("publication artifact collection fails when primary artifact is missing", (
     () => collectPublicationArtifact({ cwd, sourceBundle: false }),
     /publication primary artifact is missing: _build\/main\.pdf/,
   );
+});
+
+test("publication artifact CLI synthesizes npm package from declared paper facts", () => {
+  const cwd = tempRepo();
+  const configPath = path.join(cwd, ".buildchain", "buildchain.toml");
+  fs.writeFileSync(
+    configPath,
+    `${fs.readFileSync(configPath, "utf8")}
+
+[publish]
+kind = "npm-paper-package"
+package = "@kungfu-tech/paper-observer-declared-timelines"
+auth = "trusted-publishing"
+`,
+  );
+  execFileSync("make", ["pdf"], { cwd });
+  writePublicationArtifact({
+    cwd,
+    sourceSha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    generatedAt: "2026-07-09T00:00:00.000Z",
+  });
+
+  const result = JSON.parse(execFileSync(process.execPath, [
+    bin,
+    "publication-artifact",
+    "npm-package",
+    "--cwd",
+    cwd,
+    "--json",
+  ], { cwd, encoding: "utf8" }));
+
+  assert.equal(result.contract, PUBLICATION_NPM_PACKAGE_CONTRACT);
+  assert.equal(result.package.name, "@kungfu-tech/paper-observer-declared-timelines");
+  assert.equal(result.package.version, "0.1.0");
+  assert.equal(result.package.auth, "trusted-publishing");
+  assert.equal(result.publication.primaryArtifact, "_build/main.pdf");
+  const packageDir = path.join(cwd, result.outputDir);
+  const packageJson = JSON.parse(fs.readFileSync(path.join(packageDir, "package.json"), "utf8"));
+  assert.equal(packageJson.name, "@kungfu-tech/paper-observer-declared-timelines");
+  assert.equal(packageJson.version, "0.1.0");
+  assert.equal(packageJson.private, false);
+  assert.equal(packageJson.exports["./publication-artifact.json"], "./.buildchain/publication/publication-artifact.json");
+  assert.equal(fs.existsSync(path.join(packageDir, "_build/main.pdf")), true);
+  assert.equal(fs.existsSync(path.join(packageDir, ".buildchain/publication/publication-artifact.json")), true);
+  assert.equal(fs.existsSync(path.join(packageDir, ".buildchain/publication/publication-artifact-passport.json")), true);
+  assert.equal(fs.existsSync(path.join(packageDir, ".buildchain/publication/publication-registry.json")), true);
+  assert.equal(fs.existsSync(path.join(packageDir, ".buildchain/publication/source.tar.gz")), true);
+  assert.equal(fs.existsSync(path.join(packageDir, "buildchain-publication-package.json")), true);
 });
 
 test("publication archive registry is idempotent for the same immutable record", () => {

@@ -398,6 +398,19 @@ buildchain publication-artifact manifest \
   --json
 ```
 
+Generate the Buildchain-owned npm paper package contents from declared
+publication facts:
+
+```bash
+buildchain publication-artifact npm-package --json
+```
+
+This command reads `project.type = "publication-artifact"`,
+`publication.version`, and `[publish] kind = "npm-paper-package"` plus
+`publish.package`; it writes `.buildchain/publication/npm-package` by default.
+The `paper-release.yml@v2` reusable workflow uses the same command before
+running the standard npm publish transaction.
+
 The command writes `.buildchain/publication/publication-artifact.json`,
 `.buildchain/publication/publication-artifact-passport.json`, a source bundle,
 and, when `[publication.archive]` is configured,

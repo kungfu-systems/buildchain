@@ -10,6 +10,7 @@ import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
 import { verifyInfraContractEvidenceBundle } from "../scripts/infra-contract-core.mjs";
 import { runReleasePropagationCli } from "../scripts/release-propagation.mjs";
 import { runPublicationArtifactCli } from "../scripts/publication-artifact.mjs";
+import { runPublicationPackageCli } from "../scripts/publication-package.mjs";
 import { validateBuildchainConfig } from "../packages/core/buildchain-config.js";
 import { detectPackageManager } from "../packages/core/package-manager.js";
 import {
@@ -206,6 +207,7 @@ function usage() {
                                            [--output <file>] [--passport-output <file>]
                                            [--registry-output <file>] [--source-bundle <file>]
                                            [--no-source-bundle] [--json]
+  buildchain publication-artifact npm-package [--cwd <dir>] [--output-dir <dir>] [--package-name <name>] [--json]
   buildchain release-propagation <plan|write-lock> ...
   buildchain badges readme [--cwd <dir>] [--readme <path>] [--check] [--write] [--json]
   buildchain badges bundle [--cwd <dir>] [--readme <path>] [--claims <csv>] [--check] [--write] [--json]
@@ -1791,6 +1793,10 @@ async function main(argv = process.argv.slice(2)) {
   }
 
   if (command === "publication-artifact" || command === "publication") {
+    if (args[0] === "npm-package" || args[0] === "package") {
+      runPublicationPackageCli(args.slice(1));
+      return;
+    }
     runPublicationArtifactCli(args);
     return;
   }

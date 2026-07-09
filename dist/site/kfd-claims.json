@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "4d431524f1c6d86cae2aea6fe7e7e7de9635cc5ffeabb1ae380416d5ba4be709",
+    "sha256": "fc213b9941398692eff626a4445a2f670b7c4e452e9383f223eb288518a1c4b1",
     "summary": {
-      "cliCommandCount": 73,
-      "workflowCount": 36,
+      "cliCommandCount": 74,
+      "workflowCount": 37,
       "actionCount": 4,
       "sitePageCount": 45,
-      "docCommandRefCount": 229,
+      "docCommandRefCount": 231,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -208,13 +208,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "4d431524f1c6d86cae2aea6fe7e7e7de9635cc5ffeabb1ae380416d5ba4be709",
+      "sha256": "fc213b9941398692eff626a4445a2f670b7c4e452e9383f223eb288518a1c4b1",
       "summary": {
-        "cliCommandCount": 73,
-        "workflowCount": 36,
+        "cliCommandCount": 74,
+        "workflowCount": 37,
         "actionCount": 4,
         "sitePageCount": 45,
-        "docCommandRefCount": 229,
+        "docCommandRefCount": 231,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -1085,6 +1085,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./publication-artifact"
+        },
+        {
+          "id": "export:./publication-package",
+          "name": "@kungfu-tech/buildchain/publication-package",
+          "kind": "package-export",
+          "sourcePath": "packages/core/publication-package.js",
+          "evidencePath": "packages/core/publication-package.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./publication-package"
         },
         {
           "id": "export:./kfd-gate",
@@ -2033,6 +2045,18 @@
           "reverseAuditSource": "bin/buildchain.mjs"
         },
         {
+          "id": "cli:publication-artifact-npm-package",
+          "name": "buildchain publication-artifact npm-package [--cwd <dir>] [--output-dir <dir>] [--package-name <name>] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
           "id": "cli:publish-source",
           "name": "buildchain publish-source <lock|manifest|verify-lock|verify-channel-ref|validate-anchored-release> ...",
           "kind": "cli-command",
@@ -2829,6 +2853,53 @@
           "inputs": [
             "ref",
             "run-check"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:paper-release",
+          "name": "workflow:paper-release",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/paper-release.yml",
+          "evidencePath": ".github/workflows/paper-release.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 32,
+          "inputs": [
+            "artifact-name",
+            "artifact-retention-days",
+            "branch-protection-bypass-apps",
+            "branch-protection-bypass-teams",
+            "branch-protection-bypass-users",
+            "build-command",
+            "buildchain-contract-compatibility-policy",
+            "buildchain-contract-drift-issue-mode",
+            "buildchain-contract-lock-path",
+            "buildchain-ref",
+            "buildchain-repository",
+            "dry-run",
+            "github-release",
+            "github-release-notes",
+            "github-release-title",
+            "node-version",
+            "package-name",
+            "publish-dist-tag",
+            "publish-package-set-order",
+            "release-passport-impact-json",
+            "release-passport-output-dir",
+            "release-passport-product-name",
+            "required-status-check",
+            "setup-node",
+            "target-ref",
+            "target-sha",
+            "toolchain-command",
+            "toolchain-digest",
+            "toolchain-image",
+            "toolchain-type",
+            "verify-command",
+            "working-directory"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -3898,6 +3969,6 @@
         "public": true
       }
     ],
-    "publicSurfaceCount": 260
+    "publicSurfaceCount": 263
   }
 }
