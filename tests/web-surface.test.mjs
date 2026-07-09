@@ -979,6 +979,48 @@ test("web-surface health check retries transient HTTP failures", async () => {
   });
 });
 
+test("web-surface health check default retry window absorbs extended transient HTTP failures", async () => {
+  await withFixtureAsync(async (fixture) => {
+    fs.mkdirSync(path.join(fixture, "dist"), { recursive: true });
+    fs.writeFileSync(path.join(fixture, "dist", "index.html"), "hello\n");
+    const result = applyWebSurfaceDeploy({
+      cwd: fixture,
+      channel: "preview",
+      alias: "pr-29",
+      sourceSha: "b".repeat(40),
+      dryRun: true,
+    });
+    let calls = 0;
+    const health = await checkWebSurfaceHealth({
+      cwd: fixture,
+      result,
+      checkedAt: "2026-07-01T00:00:00.000Z",
+      httpRetryIntervalMs: 0,
+      fetchImpl(url) {
+        calls += 1;
+        return {
+          status: calls < 5 ? 403 : 200,
+          url,
+          headers: {
+            get() {
+              return "";
+            },
+          },
+          text() {
+            return "<!doctype html>";
+          },
+        };
+      },
+    });
+
+    const root = health.checks.find((check) => check.surface === "hub" && check.kind === "root");
+    assert.equal(health.status, "passed");
+    assert.equal(root.httpStatus, 200);
+    assert.equal(root.attempts, 5);
+    assert.ok(calls >= 5);
+  });
+});
+
 test("web-surface health check verifies managed-network staging from deployment evidence", async () => {
   await withFixtureAsync(async (fixture) => {
     fs.mkdirSync(path.join(fixture, "dist", "buildchain", "docs"), { recursive: true });
