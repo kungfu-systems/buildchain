@@ -678,6 +678,18 @@
       "maturity": "stable"
     },
     {
+      "id": "publication-artifact-npm-package",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain publication-artifact npm-package [--cwd <dir>] [--output-dir <dir>] [--package-name <name>] [--json]",
+      "purpose": "Synthesize the declared npm paper package from a publication artifact manifest, passport, registry, source bundle, and primary artifact.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
       "id": "publish-source",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain publish-source <lock|manifest|verify-lock|verify-channel-ref|validate-anchored-release> ...",

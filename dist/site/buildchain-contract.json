@@ -344,7 +344,7 @@
         "README badge block checks and writes are generated from machine-readable repository facts"
       ],
       "breakingDigest": "sha256:90a73892b2d6c214048448d5f45df75639bdf7b7e8fefd9c596e04b087407bcc",
-      "auditDigest": "sha256:af9dac0e27f5daed03718f2e446425f1334f0773f3e028aaf0f59b375540ba05"
+      "auditDigest": "sha256:c41e3e069f70d038537fc7d399eabb01bc33873cc361e20798cac7a7c9ce3e31"
     },
     {
       "contractVersion": 1,
@@ -434,7 +434,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:d239e141275fdeb411de8b745b0658f3c71bce42cb60b77aaeab99e098e4233a"
+      "auditDigest": "sha256:30cf2ab67331fecaf3242ab60cb048b70c7e59fad526656d47f2897ebedc2f3b"
     },
     {
       "contractVersion": 1,
@@ -456,9 +456,9 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:5516090e12e99b46c686b9ec425e4237ef2da75907d6c4c3bda2754598d7ca42"
+      "auditDigest": "sha256:7b380d62fe8844c8fbf8d9a233559bfffa1457e9d664ed1bbf46da87cf225d46"
     }
   ],
   "compatibilityDigest": "sha256:967df7e854fdf582294ddfb6403eff25c00db9518a24051e7d47cbd75527c785",
-  "contractDigest": "sha256:4271947b04311f71f804bcfbde882f0ec7777f41ecfe17a382a339da29e7b762"
+  "contractDigest": "sha256:2216c364bc3c0bb504fd24213dcb9652c91f0fa84ecccaffce8c2371d8dfa0b8"
 }

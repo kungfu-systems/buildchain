@@ -27,6 +27,7 @@
     "./public-surface-audit": "./packages/core/public-surface-audit.js",
     "./logging": "./packages/core/logging.js",
     "./publication-artifact": "./packages/core/publication-artifact.js",
+    "./publication-package": "./packages/core/publication-package.js",
     "./kfd-gate": "./packages/core/kfd-gate.js",
     "./release-candidate": "./packages/core/release-candidate.js",
     "./release-passport": "./packages/core/release-passport.js",

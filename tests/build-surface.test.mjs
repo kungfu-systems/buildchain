@@ -312,6 +312,46 @@ test("publication artifact workflow exposes paper artifact contract", () => {
   );
 });
 
+test("paper release workflow publishes declared npm package with source lock and GitHub Release", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/paper-release.yml"),
+    "utf8",
+  );
+  assert.match(workflow, /workflow_call:/);
+  assert.match(workflow, /buildchain-ref:/);
+  assert.match(workflow, /buildchain-contract-lock-path:/);
+  assert.match(workflow, /BUILDCHAIN_RUNTIME_CLASS: \$\{\{ steps\.runtime\.outputs\.runtime-class \}\}/);
+  assert.match(workflow, /toolchain-type:/);
+  assert.match(workflow, /ghcr\.io\/kungfu-systems\/build-images\/latex-pdf-builder/);
+  assert.match(workflow, /publication-artifact manifest/);
+  assert.match(workflow, /publication-artifact npm-package/);
+  assert.match(workflow, /npm pack --dry-run/);
+  assert.match(workflow, /publish-required-artifacts-json: \$\{\{ steps\.package\.outputs\.publish-required-artifacts-json \}\}/);
+  assert.match(workflow, /publish-command: >-/);
+  assert.match(workflow, /scripts\/npm-publish-transaction\.mjs/);
+  assert.match(workflow, /publish-mode: "publish-final-version"/);
+  assert.match(workflow, /publish-auth: "trusted-publishing"/);
+  assert.match(workflow, /publish-dist-tag: \$\{\{ steps\.package\.outputs\.dist-tag \}\}/);
+  assert.match(workflow, /Ensure publish-gate ref locks promotion commit/);
+  assert.match(workflow, /publish-gate\/\$\{channel\}/);
+  assert.match(workflow, /require-publish-source-lock: "true"/);
+  assert.match(workflow, /publish-source-ref: \$\{\{ steps\.publish-gate\.outputs\.ref \}\}/);
+  assert.match(workflow, /publish-source-sha: \$\{\{ steps\.publish-gate\.outputs\.sha \}\}/);
+  assert.match(workflow, /publish-source-locked: \$\{\{ steps\.publish-gate\.outputs\.locked \}\}/);
+  assert.match(workflow, /release-passport-product-name: \$\{\{ inputs\.release-passport-product-name \|\| steps\.package\.outputs\.package-name \}\}/);
+  assert.match(workflow, /github-release:/);
+  assert.match(workflow, /github-release: \$\{\{ inputs\.github-release \}\}/);
+  assert.match(workflow, /default: true/);
+  assert.ok(
+    workflow.indexOf("Check Buildchain contract lock") <
+      workflow.indexOf("- name: Build publication"),
+  );
+  assert.ok(
+    workflow.indexOf("- name: Prepare npm paper package") <
+      workflow.indexOf("- name: Publish paper package"),
+  );
+});
+
 test("artifact relay uploads to S3 and downloads verified GitHub artifact payloads without aws cli", async () => {
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-artifact-relay-"));
   const fakeS3Root = path.join(workspace, "fake-s3");

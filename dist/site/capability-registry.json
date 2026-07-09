@@ -82,9 +82,9 @@
       "counts": {
         "manualCount": 3,
         "pageCount": 15,
-        "cliCommandCount": 3,
-        "nodeApiCount": 2,
-        "workflowCount": 2,
+        "cliCommandCount": 4,
+        "nodeApiCount": 3,
+        "workflowCount": 3,
         "actionCount": 2
       },
       "manuals": [
