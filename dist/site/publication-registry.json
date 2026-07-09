@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-publication-release-registry",
-  "generatedAt": "2026-07-09T20:49:08.239Z",
-  "publishedAt": "2026-07-09T20:49:08.239Z",
+  "generatedAt": "2026-07-09T20:54:32.797Z",
+  "publishedAt": "2026-07-09T20:54:32.797Z",
   "reproducible": true,
   "timestampPolicy": "ci-injected",
   "deterministicInputs": [
@@ -19,7 +19,7 @@
     "declared Buildchain surface manifest contract"
   ],
   "sourceDateEpoch": "0",
-  "sourceRevision": "8999e3d9787b2ef9ae70f68dc38eabf2ed59e4f3",
+  "sourceRevision": "eab24ddd562d22a9d03f09195e60274ba6dedd69",
   "timestampPolicyDetails": {
     "contract": "kungfu-buildchain-surface-timestamp-policy",
     "timestampFields": [
@@ -32,7 +32,7 @@
   },
   "package": {
     "name": "@kungfu-tech/buildchain",
-    "version": "2.11.3-alpha.1",
+    "version": "2.11.4-alpha.0",
     "versionSource": "package.json#version"
   },
   "sourceKind": "package-site-bundle",
