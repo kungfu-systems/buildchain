@@ -49,13 +49,13 @@ on:
         type: string
         required: false
       toolchain-image:
-        description: "Container image for latex-docker toolchain, without digest."
-        default: ""
+        description: "Container image for latex-docker toolchain, without digest. Defaults to the Buildchain paper LaTeX builder."
+        default: "ghcr.io/kungfu-systems/build-images/latex-pdf-builder"
         type: string
         required: false
       toolchain-digest:
         description: "sha256:<digest> for the latex-docker toolchain image."
-        default: ""
+        default: "sha256:c20f3809e96836c1c78e97c76939d12f1de3fed0ea9b7c40c43332ec2ea480f8"
         type: string
         required: false
       toolchain-command:
@@ -288,6 +288,7 @@ jobs:
           import { pathToFileURL } from "node:url";
           const runtimeConfigModule = pathToFileURL(path.join(process.env.GITHUB_WORKSPACE, ".buildchain/runtime/packages/core/buildchain-config.js")).href;
           const { loadBuildchainConfig } = await import(runtimeConfigModule);
+          const defaultLatexDockerCommand = "latexmk -pdf -outdir=_build paper/main.tex";
 
           const cwd = process.cwd();
           const inputType = (process.env.INPUT_TOOLCHAIN_TYPE || "config").trim();
@@ -308,6 +309,9 @@ jobs:
             throw new Error(`unsupported publication toolchain: ${resolved.type}`);
           }
           if (resolved.type === "latex-docker") {
+            if (!resolved.command) {
+              resolved.command = defaultLatexDockerCommand;
+            }
             if (!resolved.image) throw new Error("latex-docker publication toolchain requires toolchain-image or publication.toolchain.image");
             if (!/^sha256:[0-9a-f]{64}$/i.test(resolved.digest || "")) {
               throw new Error("latex-docker publication toolchain requires toolchain-digest or publication.toolchain.digest as sha256:<64 hex>");

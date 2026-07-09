@@ -69,7 +69,9 @@ writeBuildFacts({ fact, output: ".buildchain/facts/native-core.json" });
 Publication repositories can produce site-consumable paper/report facts without
 becoming web-surface repositories. When `[publication.archive]` is configured,
 the same API also maintains the append-only publication registry used by site
-repositories for latest and historical version pages:
+repositories for latest and historical version pages. The preferred
+`latex-docker` toolchain records the pinned build-images LaTeX builder digest in
+the publication artifact passport:
 
 ```js
 import { writePublicationArtifact } from "@kungfu-tech/buildchain/publication-artifact";

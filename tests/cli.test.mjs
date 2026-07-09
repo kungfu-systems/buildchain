@@ -172,6 +172,9 @@ test("init publication-artifact creates a paper artifact scaffold", () => {
   const toml = fs.readFileSync(path.join(cwd, ".buildchain", "buildchain.toml"), "utf8");
   assert.match(toml, /type = "publication-artifact"/);
   assert.match(toml, /primary_artifact = "_build\/main\.pdf"/);
+  assert.match(toml, /type = "latex-docker"/);
+  assert.match(toml, /image = "ghcr\.io\/kungfu-systems\/build-images\/latex-pdf-builder"/);
+  assert.match(toml, /digest = "sha256:c20f3809e96836c1c78e97c76939d12f1de3fed0ea9b7c40c43332ec2ea480f8"/);
   const workflow = fs.readFileSync(path.join(cwd, ".github", "workflows", "build.yml"), "utf8");
   assert.match(workflow, /publication-artifact\.yml@v2/);
   assert.match(workflow, /toolchain-type: config/);

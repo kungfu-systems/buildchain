@@ -74,8 +74,8 @@ test("publication artifact manifest records pinned latex docker toolchain", () =
 
 [publication.toolchain]
 type = "latex-docker"
-image = "ghcr.io/kungfu-systems/latex"
-digest = "sha256:${"a".repeat(64)}"
+image = "ghcr.io/kungfu-systems/build-images/latex-pdf-builder"
+digest = "sha256:c20f3809e96836c1c78e97c76939d12f1de3fed0ea9b7c40c43332ec2ea480f8"
 command = "latexmk -pdf -outdir=_build paper/main.tex"
 `,
   );
@@ -87,8 +87,8 @@ command = "latexmk -pdf -outdir=_build paper/main.tex"
   });
 
   assert.equal(result.manifest.toolchain.type, "latex-docker");
-  assert.equal(result.manifest.toolchain.image, "ghcr.io/kungfu-systems/latex");
-  assert.equal(result.manifest.toolchain.digest, `sha256:${"a".repeat(64)}`);
+  assert.equal(result.manifest.toolchain.image, "ghcr.io/kungfu-systems/build-images/latex-pdf-builder");
+  assert.equal(result.manifest.toolchain.digest, "sha256:c20f3809e96836c1c78e97c76939d12f1de3fed0ea9b7c40c43332ec2ea480f8");
   assert.equal(result.manifest.toolchain.command, "latexmk -pdf -outdir=_build paper/main.tex");
   assert.equal(result.manifest.toolchain.machineVerifiable, true);
   assert.equal(result.passport.toolchain.trustClassification, "pinned-docker-toolchain");
