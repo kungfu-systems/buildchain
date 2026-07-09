@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:2295adcb4860c46a6f7fb39a0790d7347d916a0ac999d862437698d194af31de"
+      "digest": "sha256:a57f131080254b3f7a0950b5bdd580b256ecb29047a0e1ee16e8385d61a44b81"
     },
     {
       "id": "install",
@@ -85,7 +85,7 @@
       "path": "docs/release-propagation.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:190e3537075f37cf8a7e52bf8254606e1d9450d87c5a81dc11df8b56a7d03065"
+      "digest": "sha256:c8085445fcd0ffd6a55197ac2db1e34fa4aaa94df9107e8e7b216b925fc3bddc"
     },
     {
       "id": "readme-badges",
@@ -173,7 +173,7 @@
       "path": "docs/cli.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:35df4de8a3ade449bb577b50ac3000adb2eafe354fd2f885f408ffe6e86d5f19"
+      "digest": "sha256:d77b7d5e4006e952235f6d68daff01bcc4cf87d81b874c57e447caabdaf0acaa"
     },
     {
       "id": "build-facts",

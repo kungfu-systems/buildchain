@@ -203,7 +203,8 @@ function usage() {
   buildchain infra-contract ...
   buildchain publication-artifact manifest [--cwd <dir>] [--source-sha <sha>]
                                            [--output <file>] [--passport-output <file>]
-                                           [--source-bundle <file>] [--no-source-bundle] [--json]
+                                           [--registry-output <file>] [--source-bundle <file>]
+                                           [--no-source-bundle] [--json]
   buildchain release-propagation <plan|write-lock> ...
   buildchain badges readme [--cwd <dir>] [--readme <path>] [--check] [--write] [--json]
   buildchain badges bundle [--cwd <dir>] [--readme <path>] [--claims <csv>] [--check] [--write] [--json]

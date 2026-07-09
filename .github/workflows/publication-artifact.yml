@@ -76,6 +76,7 @@ on:
           _build/main.pdf
           .buildchain/publication/publication-artifact.json
           .buildchain/publication/publication-artifact-passport.json
+          .buildchain/publication/publication-registry.json
           .buildchain/publication/source.tar.gz
         type: string
         required: false
@@ -93,6 +94,9 @@ on:
       publication-passport-path:
         description: "Generated publication passport path"
         value: ${{ jobs.publication.outputs.publication-passport-path }}
+      publication-registry-path:
+        description: "Generated publication archive registry path when archive config is present"
+        value: ${{ jobs.publication.outputs.publication-registry-path }}
       publication-manifest-json:
         description: "Compact publication manifest JSON"
         value: ${{ jobs.publication.outputs.publication-manifest-json }}
@@ -109,6 +113,7 @@ jobs:
       publication-artifact-name: ${{ steps.names.outputs.artifact-name }}
       publication-manifest-path: ${{ steps.manifest.outputs.manifest-path }}
       publication-passport-path: ${{ steps.manifest.outputs.passport-path }}
+      publication-registry-path: ${{ steps.manifest.outputs.registry-path }}
       publication-manifest-json: ${{ steps.manifest.outputs.manifest-json }}
     steps:
       - name: Resolve Buildchain runtime
@@ -391,6 +396,7 @@ jobs:
           const result = JSON.parse(fs.readFileSync(`${process.env.GITHUB_WORKSPACE}/.buildchain/publication-result.json`, "utf8"));
           fs.appendFileSync(process.env.GITHUB_OUTPUT, `manifest-path=${result.manifestPath}\n`);
           fs.appendFileSync(process.env.GITHUB_OUTPUT, `passport-path=${result.passportPath}\n`);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `registry-path=${result.registryPath || ""}\n`);
           fs.appendFileSync(process.env.GITHUB_OUTPUT, `manifest-json=${JSON.stringify(result.manifest)}\n`);
           NODE
 

@@ -27,6 +27,7 @@ name = "paper-observer-declared-timelines"
 [publication]
 kind = "paper"
 title = "Observer-Declared Timelines for Real-World Agent Work"
+version = "0.1.0"
 primary_artifact = "_build/main.pdf"
 artifact_paths = ["_build/main.pdf"]
 metadata_paths = ["README.md", "docs/MAP.md"]
@@ -34,6 +35,14 @@ source_paths = ["paper", "README.md", "LICENSE", "Makefile"]
 site_consumers = ["papers.libkungfu.dev"]
 manifest_path = ".buildchain/publication/publication-artifact.json"
 source_bundle_path = ".buildchain/publication/source.tar.gz"
+
+[publication.archive]
+id = "observer-declared-timelines"
+canonical_url = "https://papers.libkungfu.dev/observer-declared-timelines/"
+latest_url = "https://papers.libkungfu.dev/observer-declared-timelines/latest/"
+latest_evidence_url = "https://papers.libkungfu.dev/observer-declared-timelines/latest/buildchain.release.json"
+immutable_base_url = "https://papers.libkungfu.dev/archive"
+registry_path = ".buildchain/publication/publication-registry.json"
 
 [publication.toolchain]
 type = "latex-docker"
@@ -51,6 +60,26 @@ command = "make check"
 `primary_artifact` is the human-facing publication output, usually a PDF.
 `source_paths` are archived into a source bundle. `metadata_paths` are hashed
 and recorded so a site can consume the paper facts without scraping prose.
+
+`publication.archive` turns the publication into an append-only public archive
+contract:
+
+- `canonical_url` is the stable human reader page.
+- `latest_url` and `latest_evidence_url` are movable aliases for the latest
+  reader page and latest evidence.
+- `immutable_base_url` plus `id` and `publication.version` produce a versioned
+  prefix such as
+  `https://papers.libkungfu.dev/archive/observer-declared-timelines/v0.1.0/`.
+- `immutable_url_prefix` can be used instead when the repository already owns
+  the full version prefix.
+- `registry_path` records every published version and its manifest, passport,
+  source bundle, primary artifact, URLs, and SHA-256 digests.
+
+Immutable archive prefixes are append-only. Do not run site deployment commands
+with `sync --delete` or equivalent deletion semantics over those prefixes. A
+same-version republish is allowed only when the immutable digest is unchanged;
+if PDF, source bundle, route, metadata, or toolchain evidence changes for an
+existing version, Buildchain fails before the registry is rewritten.
 
 `publication.toolchain` makes the source-to-PDF transformation part of the
 machine-readable contract. `latex-docker` is the preferred LaTeX profile: the
@@ -88,8 +117,11 @@ The workflow:
 - creates a source bundle from `publication.source_paths`;
 - writes `.buildchain/publication/publication-artifact.json`;
 - writes `.buildchain/publication/publication-artifact-passport.json`;
-- uploads one GitHub artifact containing the PDF, manifest, passport, and
-  source bundle.
+- when `[publication.archive]` is configured, writes
+  `.buildchain/publication/publication-registry.json` and verifies same-version
+  immutability;
+- uploads one GitHub artifact containing the PDF, manifest, passport, optional
+  registry, and source bundle.
 
 The wrapper is build-only. It does not publish npm packages, deploy web pages,
 or create GitHub Releases. Release publication can be layered later by a
@@ -123,11 +155,18 @@ the reusable workflow. The generated manifest records:
 - publication toolchain type, image, digest, command, invocation mode, and trust
   classification;
 - timestamp and reproducibility policy;
-- downstream site-consumption hints.
+- downstream site-consumption hints;
+- optional archive routes for canonical, latest, latest evidence, immutable
+  version prefix, and public artifact URLs.
 
 The companion publication artifact passport records the same source and
 artifact evidence plus an explicit responsibility split. Buildchain proves
 declared files and hashes; it does not peer-review paper claims.
+
+When archive config is present, the registry uses the
+`kungfu-buildchain-publication-artifact-registry` contract. A site repository
+can render latest pages and historical version indexes from that registry
+without rebuilding old PDFs from the latest npm package or paper source.
 
 ## Site Consumption
 
@@ -139,7 +178,9 @@ For `paper-observer-declared-timelines`, the expected adoption path is:
 
 ```text
 paper repo builds PDF + manifest + source bundle
+paper repo updates publication-registry.json
 papers site consumes publication-artifact.json
+papers site consumes publication-registry.json for history
 site renders paper page and links the PDF/source bundle
 ```
 

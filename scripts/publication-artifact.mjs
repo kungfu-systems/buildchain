@@ -14,12 +14,13 @@ function readBooleanFlag(args, name) {
 export function runPublicationArtifactCli(args = process.argv.slice(2)) {
   const [mode = "manifest"] = args;
   if (!["manifest", "collect"].includes(mode)) {
-    throw new Error("usage: buildchain publication-artifact manifest [--cwd <dir>] [--source-sha <sha>] [--output <file>] [--passport-output <file>] [--source-bundle <file>] [--no-source-bundle] [--json]");
+    throw new Error("usage: buildchain publication-artifact manifest [--cwd <dir>] [--source-sha <sha>] [--output <file>] [--passport-output <file>] [--registry-output <file>] [--source-bundle <file>] [--no-source-bundle] [--json]");
   }
   const result = writePublicationArtifact({
     cwd: readFlag(args, "cwd", process.cwd()),
     output: readFlag(args, "output", ""),
     passportOutput: readFlag(args, "passport-output", ""),
+    registryOutput: readFlag(args, "registry-output", ""),
     sourceSha: readFlag(args, "source-sha", ""),
     sourceBundlePath: readFlag(args, "source-bundle", ""),
     sourceBundle: !readBooleanFlag(args, "no-source-bundle"),
@@ -30,6 +31,9 @@ export function runPublicationArtifactCli(args = process.argv.slice(2)) {
   } else {
     process.stdout.write(`publication-manifest=${result.manifestPath}\n`);
     process.stdout.write(`publication-passport=${result.passportPath}\n`);
+    if (result.registryPath) {
+      process.stdout.write(`publication-registry=${result.registryPath}\n`);
+    }
     process.stdout.write(`publication-primary-artifact=${result.manifest.publication.primaryArtifact}\n`);
   }
   return result;

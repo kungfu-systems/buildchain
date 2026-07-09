@@ -296,6 +296,9 @@ test("publication artifact workflow exposes paper artifact contract", () => {
   assert.match(workflow, /verify-command:/);
   assert.match(workflow, /publication-artifact manifest/);
   assert.match(workflow, /publication-artifact-passport\.json/);
+  assert.match(workflow, /publication-registry\.json/);
+  assert.match(workflow, /publication-registry-path:/);
+  assert.match(workflow, /registry-path=\$\{result\.registryPath \|\| ""\}/);
   assert.match(workflow, /source\.tar\.gz/);
   assert.ok(
     workflow.indexOf("Check Buildchain contract lock") <

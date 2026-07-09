@@ -60,6 +60,35 @@ test("release propagation graph preserves stable release channel", () => {
   assert.equal(plan.targets[0].lock.upstream.package.version, "1.4.0");
 });
 
+test("release propagation graph carries publication archive payload without package facts", () => {
+  const graph = readJson("graph.json");
+  graph.nodes.unshift({
+    id: "paper",
+    repository: "kungfu-systems/paper-observer-declared-timelines",
+  });
+  graph.edges.unshift({
+    id: "paper-to-site",
+    from: "paper",
+    to: "site-libkungfu-dev",
+    channelPolicy: "preserve",
+  });
+
+  const plan = planReleasePropagation({
+    graph,
+    upstreamRelease: readJson("upstream-publication.json"),
+  });
+
+  assert.equal(plan.source, "paper");
+  assert.equal(plan.targets[0].lock.upstream.package, undefined);
+  assert.equal(plan.targets[0].lock.upstream.publicationArtifact.version, "0.1.0-alpha.1");
+  assert.equal(
+    plan.targets[0].lock.upstream.publicationArtifact.immutableVersionUrl,
+    "https://papers.libkungfu.dev/archive/observer-declared-timelines/v0.1.0-alpha.1/",
+  );
+  assert.equal(plan.targets[0].lock.upstream.publicationArtifact.registry.sha256, "6666666666666666666666666666666666666666666666666666666666666666");
+  assert.equal(plan.targets[0].lock.upstream.publicationArtifact.primaryArtifact.path, "_build/main.pdf");
+});
+
 test("release propagation graph rejects cycles before planning downstream PRs", () => {
   const graph = readJson("graph.json");
   graph.edges.push({
