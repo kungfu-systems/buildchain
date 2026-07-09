@@ -104,7 +104,10 @@ Supported presets:
   plans by default, and only configured `[infra.commands]` hooks can execute.
 - `--type publication-artifact` for papers, reports, specifications, and other
   publication repositories that produce PDFs, metadata, source bundles, and
-  site-consumable manifests without becoming web-surface repositories.
+  site-consumable manifests without becoming web-surface repositories. The
+  scaffold uses Buildchain's pinned
+  `ghcr.io/kungfu-systems/build-images/latex-pdf-builder:v1.2.0` toolchain for
+  LaTeX PDF builds.
 - `--type distribution-index` for Homebrew taps and other index repositories
   whose files are projections of upstream release passport evidence.
 - `--type anchored-package` for packages whose version is anchored to an
@@ -400,7 +403,7 @@ The command writes `.buildchain/publication/publication-artifact.json`,
 and, when `[publication.archive]` is configured,
 `.buildchain/publication/publication-registry.json` by default. See
 [`publication-artifacts.md`](publication-artifacts.md) for the repository
-contract and reusable workflow.
+contract, pinned LaTeX builder, and reusable workflow.
 
 Generate, check, or update the managed README badge block:
 
