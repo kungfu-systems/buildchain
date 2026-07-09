@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:795464d3d84af5698b19a26821dbd16040c258b708e070daaaba6d55e6ad81f7",
+      "digest": "sha256:7e1b72dfc0ad91323156295617e320fee94a644efee54667b017e690fcebf64e",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -162,7 +162,7 @@
       "title": "Site bundle contract",
       "path": "docs/site-bundle-contract.md",
       "plane": "use",
-      "digest": "sha256:6b5bc2ee0f785b16d762f140f14a9163c07caf0d424200c2ececc74f7bb2271c",
+      "digest": "sha256:d67a874b356fbfbee9a5d5ece7021fb52b2848347dc6a14f5562c98570096916",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "site",

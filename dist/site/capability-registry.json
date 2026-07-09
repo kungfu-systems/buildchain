@@ -32,6 +32,7 @@
         "cli-registry.json",
         "node-api-registry.json",
         "workflow-registry.json",
+        "publication-registry.json",
         "kfd-upstream-aggregate.json",
         "kfd-claims.json"
       ]
@@ -64,6 +65,7 @@
         "cli-registry.json",
         "node-api-registry.json",
         "workflow-registry.json",
+        "publication-registry.json",
         "kfd-upstream-aggregate.json",
         "kfd-claims.json"
       ]
@@ -96,6 +98,7 @@
         "cli-registry.json",
         "node-api-registry.json",
         "workflow-registry.json",
+        "publication-registry.json",
         "kfd-upstream-aggregate.json",
         "kfd-claims.json"
       ]
@@ -126,6 +129,7 @@
         "cli-registry.json",
         "node-api-registry.json",
         "workflow-registry.json",
+        "publication-registry.json",
         "kfd-upstream-aggregate.json",
         "kfd-claims.json"
       ]
@@ -159,6 +163,7 @@
         "cli-registry.json",
         "node-api-registry.json",
         "workflow-registry.json",
+        "publication-registry.json",
         "kfd-upstream-aggregate.json",
         "kfd-claims.json"
       ]
@@ -191,6 +196,7 @@
         "cli-registry.json",
         "node-api-registry.json",
         "workflow-registry.json",
+        "publication-registry.json",
         "kfd-upstream-aggregate.json",
         "kfd-claims.json"
       ]
@@ -223,6 +229,7 @@
         "cli-registry.json",
         "node-api-registry.json",
         "workflow-registry.json",
+        "publication-registry.json",
         "kfd-upstream-aggregate.json",
         "kfd-claims.json"
       ]
@@ -259,6 +266,7 @@
         "cli-registry.json",
         "node-api-registry.json",
         "workflow-registry.json",
+        "publication-registry.json",
         "kfd-upstream-aggregate.json",
         "kfd-claims.json"
       ]
@@ -289,6 +297,7 @@
         "cli-registry.json",
         "node-api-registry.json",
         "workflow-registry.json",
+        "publication-registry.json",
         "kfd-upstream-aggregate.json",
         "kfd-claims.json"
       ]

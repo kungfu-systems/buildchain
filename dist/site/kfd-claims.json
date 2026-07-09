@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "0b14121242329f7000dc29691d793d864c6e118b3692ee66708566de3f165725",
+    "sha256": "4d431524f1c6d86cae2aea6fe7e7e7de9635cc5ffeabb1ae380416d5ba4be709",
     "summary": {
       "cliCommandCount": 73,
       "workflowCount": 36,
@@ -72,6 +72,7 @@
         "dist/site/node-api-registry.json",
         "dist/site/page-registry.json",
         "dist/site/capability-registry.json",
+        "dist/site/publication-registry.json",
         "dist/site/buildchain-site.json",
         "dist/site/site-manifest.json"
       ]
@@ -207,7 +208,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "0b14121242329f7000dc29691d793d864c6e118b3692ee66708566de3f165725",
+      "sha256": "4d431524f1c6d86cae2aea6fe7e7e7de9635cc5ffeabb1ae380416d5ba4be709",
       "summary": {
         "cliCommandCount": 73,
         "workflowCount": 36,
@@ -1176,6 +1177,17 @@
           "kind": "site-consumption-contract",
           "sourcePath": "dist/site/site-manifest.json",
           "evidencePath": "dist/site/site-manifest.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
+          "id": "site:dist/site/publication-registry.json",
+          "name": "site:dist/site/publication-registry.json",
+          "kind": "site-consumption-contract",
+          "sourcePath": "dist/site/publication-registry.json",
+          "evidencePath": "dist/site/publication-registry.json",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
@@ -3886,6 +3898,6 @@
         "public": true
       }
     ],
-    "publicSurfaceCount": 259
+    "publicSurfaceCount": 260
   }
 }

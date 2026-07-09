@@ -16,7 +16,8 @@
     "buildchain-contract.json",
     "kfd-upstream-aggregate.json",
     "kfd-claims.json",
-    "badge-endpoint-registry.json"
+    "badge-endpoint-registry.json",
+    "publication-registry.json"
   ],
   "instruction": "Use this bundle as the package-owned fact source for Buildchain pages. Do not infer current release mechanics from prose alone."
 }

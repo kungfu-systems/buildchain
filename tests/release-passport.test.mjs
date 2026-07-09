@@ -54,6 +54,19 @@ test("release passport records surface timestamp reproducibility policy", () => 
   );
 });
 
+test("KFD release gate metadata is statically bundled for action runtimes", () => {
+  const source = fs.readFileSync(path.resolve("packages/core/kfd-gate.js"), "utf8");
+  assert.match(source, /from "@kungfu-tech\/kfd\/package\.json" with \{ type: "json" \}/);
+  assert.match(source, /from "@kungfu-tech\/kfd\/standards\.json" with \{ type: "json" \}/);
+  assert.match(source, /from "@kungfu-tech\/kfd\/schemas\/kfd-2\/trust-taxonomy\.schema\.json" with \{ type: "json" \}/);
+  assert.doesNotMatch(source, /\bcreateRequire\b/);
+  assert.doesNotMatch(source, /\brequire\.resolve\b/);
+
+  const metadata = resolveKfd1Metadata();
+  assert.equal(metadata.package.name, "@kungfu-tech/kfd");
+  assert.ok(metadata.schemaPaths.witness);
+});
+
 function createKfdWitnessFixture({ id = "generic-contracts", artifactPath = "config.schema.json", content = "{\"ok\":true}\n", expectedSha256 = "" } = {}) {
   const cwd = tempDir("kfd-1-gate");
   const assetsDir = path.join(cwd, "dist");
