@@ -544,10 +544,14 @@
         "buildchain-repository",
         "node-version",
         "setup-node",
+        "toolchain-command",
+        "toolchain-digest",
+        "toolchain-image",
+        "toolchain-type",
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 13,
+      "inputCount": 17,
       "surface": "repository-workflow",
       "capabilityGroup": "reusable-build",
       "status": "active"

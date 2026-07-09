@@ -174,7 +174,7 @@ test("init publication-artifact creates a paper artifact scaffold", () => {
   assert.match(toml, /primary_artifact = "_build\/main\.pdf"/);
   const workflow = fs.readFileSync(path.join(cwd, ".github", "workflows", "build.yml"), "utf8");
   assert.match(workflow, /publication-artifact\.yml@v2/);
-  assert.match(workflow, /build-command: make pdf/);
+  assert.match(workflow, /toolchain-type: config/);
   assert.match(workflow, /verify-command: make check/);
 });
 

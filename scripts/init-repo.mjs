@@ -258,6 +258,10 @@ site_consumers = ["papers-site"]
 manifest_path = ".buildchain/publication/publication-artifact.json"
 source_bundle_path = ".buildchain/publication/source.tar.gz"
 
+[publication.toolchain]
+type = "custom-command"
+command = "make pdf"
+
 [lifecycle.build]
 command = "make pdf"
 
@@ -343,7 +347,7 @@ jobs:
     uses: kungfu-systems/buildchain/.github/workflows/publication-artifact.yml@v2
     with:
       buildchain-ref: \${{ inputs.buildchain-ref || '' }}
-      build-command: make pdf
+      toolchain-type: config
       verify-command: make check
       artifact-name: publication-artifact
 `;

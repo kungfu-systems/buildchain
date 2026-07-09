@@ -323,7 +323,7 @@ jobs:
         run: |
           case "${PACKAGE_MANAGER}" in
             pnpm)
-              corepack enable pnpm
+              corepack prepare pnpm@11.7.0 --activate
               pnpm install --frozen-lockfile
               ;;
             yarn)

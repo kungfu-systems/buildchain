@@ -287,6 +287,12 @@ test("publication artifact workflow exposes paper artifact contract", () => {
   assert.match(workflow, /buildchain-ref override requires write, maintain, or admin permission/);
   assert.match(workflow, /BUILDCHAIN_RUNTIME_CLASS: \$\{\{ steps\.runtime\.outputs\.runtime-class \}\}/);
   assert.match(workflow, /build-command:/);
+  assert.match(workflow, /toolchain-type:/);
+  assert.match(workflow, /toolchain-image:/);
+  assert.match(workflow, /toolchain-digest:/);
+  assert.match(workflow, /Resolve publication toolchain/);
+  assert.match(workflow, /docker pull/);
+  assert.match(workflow, /BUILDCHAIN_PUBLICATION_TOOLCHAIN_TYPE/);
   assert.match(workflow, /verify-command:/);
   assert.match(workflow, /publication-artifact manifest/);
   assert.match(workflow, /publication-artifact-passport\.json/);
