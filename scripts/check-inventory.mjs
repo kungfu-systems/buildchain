@@ -20,6 +20,7 @@ const requiredPaths = [
   "bin/buildchain.mjs",
   "packages/core/homebrew.js",
   "packages/core/build-facts.js",
+  "packages/core/publication-package.js",
   "packages/core/release-line-bootstrap.js",
   "packages/core/public-surface-audit.js",
   "docs/MAP.md",
@@ -46,6 +47,7 @@ const requiredPaths = [
   "scripts/artifact-relay-s3.mjs",
   "scripts/npm-publish-dry-run.mjs",
   "scripts/npm-publish-transaction.mjs",
+  "scripts/publication-package.mjs",
   "scripts/release-candidate-resolver.mjs",
   "scripts/buildchain-patrol.mjs",
   "scripts/workflow-friction-report.mjs",
@@ -71,6 +73,7 @@ const requiredPaths = [
   ".github/workflows/release-candidate-promote.yml",
   ".github/workflows/release-propagation.yml",
   ".github/workflows/npm-publish.yml",
+  ".github/workflows/paper-release.yml",
   ".github/workflows/binary-distribution.yml",
   ".github/workflows/verify.yml",
   ".github/workflows/.build.yml",
@@ -297,6 +300,10 @@ if (siteBundle.package?.version !== rootPackage.version) {
 }
 if (siteManifest.package?.version !== rootPackage.version) {
   throw new Error("site-manifest.json package.version must match package.json version");
+}
+const publicationRegistry = JSON.parse(fs.readFileSync(path.join(root, "dist/site/publication-registry.json"), "utf8"));
+if (publicationRegistry.package?.version !== rootPackage.version) {
+  throw new Error("publication-registry.json package.version must match package.json version");
 }
 if (siteBundle.source?.homepageTextSource !== "README.md") {
   throw new Error("buildchain-site.json source.homepageTextSource must be README.md");
@@ -909,7 +916,7 @@ if (!badgeEndpointRegistry.badges?.some((entry) => entry.id === "buildchain-rele
   throw new Error("badge endpoint registry must include Buildchain Release Passport badge");
 }
 
-for (const siteFile of ["buildchain-site.json", "site-manifest.json", "badge-endpoint-registry.json", "page-registry.json", "capability-registry.json", "cli-registry.json", "manual-registry.json", "node-api-registry.json", "workflow-registry.json", "public-surface-audit.json", "release-model.json", "buildchain-contract.json"]) {
+for (const siteFile of ["buildchain-site.json", "site-manifest.json", "badge-endpoint-registry.json", "publication-registry.json", "page-registry.json", "capability-registry.json", "cli-registry.json", "manual-registry.json", "node-api-registry.json", "workflow-registry.json", "public-surface-audit.json", "release-model.json", "buildchain-contract.json"]) {
   if (!fs.existsSync(path.join(root, "dist", "site", siteFile))) {
     throw new Error(`site bundle missing ${siteFile}`);
   }

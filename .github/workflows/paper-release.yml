@@ -1,0 +1,622 @@
+name: Buildchain Paper Release
+
+on:
+  workflow_call:
+    inputs:
+      buildchain-repository:
+        default: "kungfu-systems/buildchain"
+        type: string
+        required: false
+      buildchain-ref:
+        description: "Optional temporary Buildchain runtime ref for trusted manual validation. Empty uses the stable workflow runtime."
+        default: ""
+        type: string
+        required: false
+      buildchain-contract-lock-path:
+        description: "Consumer-owned Buildchain contract lock path"
+        default: ".buildchain/contract-lock.json"
+        type: string
+        required: false
+      buildchain-contract-compatibility-policy:
+        description: "Contract compatibility policy: major-compatible, allow-additive, or exact"
+        default: "major-compatible"
+        type: string
+        required: false
+      buildchain-contract-drift-issue-mode:
+        description: "Consumer issue behavior for Buildchain floating-ref contract drift: off, breaking-only, or compatible-and-breaking"
+        default: "compatible-and-breaking"
+        type: string
+        required: false
+      working-directory:
+        default: "."
+        type: string
+        required: false
+      setup-node:
+        default: true
+        type: boolean
+        required: false
+      node-version:
+        default: "24"
+        type: string
+        required: false
+      target-ref:
+        description: "Channel ref to publish. Defaults to the current ref name."
+        default: ""
+        type: string
+        required: false
+      target-sha:
+        description: "Channel commit SHA to publish. Defaults to the current workflow SHA."
+        default: ""
+        type: string
+        required: false
+      build-command:
+        default: "make pdf"
+        type: string
+        required: false
+      toolchain-type:
+        description: "Publication build toolchain: config, custom-command, or latex-docker. config reads [publication.toolchain]."
+        default: "config"
+        type: string
+        required: false
+      toolchain-image:
+        description: "Container image for latex-docker toolchain, without digest. Defaults to the Buildchain paper LaTeX builder."
+        default: "ghcr.io/kungfu-systems/build-images/latex-pdf-builder"
+        type: string
+        required: false
+      toolchain-digest:
+        description: "sha256:<digest> for the latex-docker toolchain image."
+        default: "sha256:c20f3809e96836c1c78e97c76939d12f1de3fed0ea9b7c40c43332ec2ea480f8"
+        type: string
+        required: false
+      toolchain-command:
+        description: "Command run by the declared publication toolchain. For custom-command this overrides build-command."
+        default: ""
+        type: string
+        required: false
+      verify-command:
+        default: "make check"
+        type: string
+        required: false
+      package-name:
+        description: "Optional npm package name override. Empty reads [publish].package from .buildchain/buildchain.toml."
+        default: ""
+        type: string
+        required: false
+      publish-dist-tag:
+        description: "Expected npm dist-tag. Empty derives alpha/latest from the target channel."
+        default: ""
+        type: string
+        required: false
+      publish-package-set-order:
+        description: "Package-set order passed to promote-buildchain-ref"
+        default: "as-provided"
+        type: string
+        required: false
+      required-status-check:
+        description: "Required protected-branch status check fragment"
+        default: "check"
+        type: string
+        required: false
+      branch-protection-bypass-apps:
+        description: "GitHub App slugs allowed to bypass pull-request review for Buildchain-managed generated channel ref updates"
+        default: "github-actions"
+        type: string
+        required: false
+      branch-protection-bypass-users:
+        description: "GitHub users allowed to bypass pull-request review for Buildchain-managed generated channel ref updates"
+        default: ""
+        type: string
+        required: false
+      branch-protection-bypass-teams:
+        description: "GitHub team slugs allowed to bypass pull-request review for Buildchain-managed generated channel ref updates"
+        default: ""
+        type: string
+        required: false
+      github-release:
+        description: "Create/update the public GitHub Release and upload Buildchain release passport/evidence assets after publishing"
+        default: true
+        type: boolean
+        required: false
+      github-release-title:
+        description: "Optional GitHub Release title. Empty defaults to the public release tag."
+        default: ""
+        type: string
+        required: false
+      github-release-notes:
+        description: "Optional GitHub Release notes. Empty uses a Buildchain release-passport asset note."
+        default: ""
+        type: string
+        required: false
+      release-passport-output-dir:
+        description: "Release passport output directory"
+        default: ".buildchain/release-passport"
+        type: string
+        required: false
+      release-passport-product-name:
+        description: "Product name recorded in buildchain.release.json. Empty defaults to the npm package name."
+        default: ""
+        type: string
+        required: false
+      release-passport-impact-json:
+        description: "Surface-aware release impact JSON or path passed to the release passport collector"
+        default: ""
+        type: string
+        required: false
+      dry-run:
+        description: "Plan only; do not publish or move refs"
+        default: false
+        type: boolean
+        required: false
+      artifact-name:
+        default: "paper-publication"
+        type: string
+        required: false
+      artifact-retention-days:
+        default: 30
+        type: number
+        required: false
+    secrets:
+      BUILDCHAIN_PROMOTION_TOKEN:
+        description: "Optional token used for protected generated refs and release finalization"
+        required: false
+    outputs:
+      package-name:
+        description: "Published npm package name"
+        value: ${{ jobs.paper-release.outputs.package-name }}
+      package-version:
+        description: "Published npm package version"
+        value: ${{ jobs.paper-release.outputs.package-version }}
+      public-release-tag:
+        description: "Public release tag created by promote-buildchain-ref"
+        value: ${{ jobs.paper-release.outputs.public-release-tag }}
+      release-passport-path:
+        description: "Generated buildchain.release.json path"
+        value: ${{ jobs.paper-release.outputs.release-passport-path }}
+      github-release-url:
+        description: "Created or updated GitHub Release URL"
+        value: ${{ jobs.paper-release.outputs.github-release-url }}
+
+permissions:
+  contents: write
+  id-token: write
+  issues: write
+
+jobs:
+  paper-release:
+    name: Build and publish paper package
+    runs-on: ubuntu-24.04
+    outputs:
+      package-name: ${{ steps.package.outputs.package-name }}
+      package-version: ${{ steps.package.outputs.package-version }}
+      public-release-tag: ${{ steps.promote.outputs.public-release-tag }}
+      release-passport-path: ${{ steps.promote.outputs.release-passport-path }}
+      github-release-url: ${{ steps.promote.outputs.github-release-url }}
+    steps:
+      - name: Resolve Buildchain runtime
+        id: runtime
+        uses: actions/github-script@v8
+        env:
+          BUILDCHAIN_REPOSITORY: ${{ inputs.buildchain-repository }}
+          BUILDCHAIN_REQUESTED_REF: ${{ inputs.buildchain-ref }}
+          BUILDCHAIN_DEFAULT_REF: v2
+        with:
+          script: |
+            const requested = (process.env.BUILDCHAIN_REQUESTED_REF || "").trim();
+            const repository = (process.env.BUILDCHAIN_REPOSITORY || "kungfu-systems/buildchain").trim();
+            const defaultRef = (process.env.BUILDCHAIN_DEFAULT_REF || "v2").trim();
+            const [runtimeOwner, runtimeRepo] = repository.split("/");
+            if (!runtimeOwner || !runtimeRepo) throw new Error(`invalid buildchain repository: ${repository}`);
+            const exactSha = /^[0-9a-f]{40}$/i;
+            const trainRef = /^train\/v\d+\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
+            const workflowRef = process.env.GITHUB_WORKFLOW_REF || "";
+            const shellRef = workflowRef.startsWith(`${repository}/.github/workflows/`)
+              ? (workflowRef.split("@").pop() || defaultRef).trim() || defaultRef
+              : defaultRef;
+            const normalizeClass = (ref) => {
+              const value = String(ref || "").replace(/^refs\/heads\//, "").replace(/^refs\/tags\//, "");
+              if (exactSha.test(value)) return "exact-sha";
+              if (trainRef.test(value)) return "train";
+              if (/^v\d+(?:\.\d+)?$/.test(value) || /^v\d+\.\d+\.\d+$/.test(value)) return "stable";
+              if (/^v\d+(?:\.\d+)?-alpha$/.test(value) || /^v\d+\.\d+\.\d+-alpha\.\d+$/.test(value)) return "alpha";
+              return "development";
+            };
+            let runtimeRef = requested || shellRef;
+            let runtimeFullRef = runtimeRef;
+            let runtimeClass = normalizeClass(runtimeRef);
+            let runtimeOverride = requested !== "";
+            let trustDecision = runtimeOverride ? "override-requested" : "stable-default";
+            if (runtimeOverride) {
+              if (context.eventName !== "workflow_dispatch") {
+                throw new Error("buildchain-ref override is only allowed for trusted workflow_dispatch runs");
+              }
+              const permission = await github.rest.repos.getCollaboratorPermissionLevel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                username: context.actor,
+              });
+              const actorPermission = permission.data.permission || "";
+              if (!["admin", "maintain", "write"].includes(actorPermission)) {
+                throw new Error(`buildchain-ref override requires write, maintain, or admin permission; actor has ${actorPermission || "none"}`);
+              }
+              if (exactSha.test(requested)) {
+                runtimeRef = requested;
+                runtimeFullRef = requested;
+                runtimeClass = "exact-sha";
+              } else {
+                runtimeRef = requested.replace(/^refs\/heads\//, "");
+                if (!trainRef.test(runtimeRef)) {
+                  throw new Error("buildchain-ref override must be train/vN/vN.M/<capability>, refs/heads/train/vN/vN.M/<capability>, or an exact 40-character SHA");
+                }
+                runtimeFullRef = `refs/heads/${runtimeRef}`;
+                runtimeClass = "train";
+              }
+              trustDecision = "override-accepted";
+            }
+            async function resolveRef(ref) {
+              if (exactSha.test(ref)) return ref;
+              const normalized = ref.replace(/^refs\/heads\//, "").replace(/^refs\/tags\//, "");
+              const candidates = ref.startsWith("refs/")
+                ? [ref.replace(/^refs\//, "")]
+                : [`tags/${normalized}`, `heads/${normalized}`];
+              for (const candidate of candidates) {
+                try {
+                  const response = await github.rest.git.getRef({ owner: runtimeOwner, repo: runtimeRepo, ref: candidate });
+                  return response.data.object.sha;
+                } catch (error) {
+                  if (error.status !== 404) throw error;
+                }
+              }
+              throw new Error(`unable to resolve Buildchain runtime ref: ${ref}`);
+            }
+            const runtimeSha = await resolveRef(runtimeFullRef);
+            core.setOutput("runtime-ref", runtimeRef);
+            core.setOutput("runtime-full-ref", runtimeFullRef);
+            core.setOutput("runtime-sha", runtimeSha);
+            core.setOutput("runtime-class", runtimeClass);
+            core.setOutput("runtime-override", String(runtimeOverride));
+            core.setOutput("runtime-trust-decision", trustDecision);
+            core.setOutput("workflow-shell-ref", shellRef);
+            core.setOutput("rollback-ref", shellRef);
+
+      - name: Checkout source
+        uses: actions/checkout@v7.0.0
+        with:
+          clean: true
+
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ steps.runtime.outputs.runtime-sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Check Buildchain contract lock
+        id: contract-lock
+        shell: bash
+        run: node .buildchain/runtime/scripts/buildchain-contract-lock.mjs check
+        env:
+          BUILDCHAIN_CONTRACT_LOCK_PATH: ${{ inputs.buildchain-contract-lock-path }}
+          BUILDCHAIN_CONTRACT_COMPATIBILITY_POLICY: ${{ inputs.buildchain-contract-compatibility-policy }}
+          BUILDCHAIN_CONTRACT_DRIFT_ISSUE_MODE: ${{ inputs.buildchain-contract-drift-issue-mode }}
+          BUILDCHAIN_RUNTIME_ROOT: .buildchain/runtime
+          BUILDCHAIN_RUNTIME_REF: ${{ steps.runtime.outputs.runtime-ref }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ steps.runtime.outputs.runtime-sha }}
+          BUILDCHAIN_RUNTIME_CLASS: ${{ steps.runtime.outputs.runtime-class }}
+          BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Setup Buildchain Node.js
+        if: ${{ inputs.setup-node }}
+        uses: actions/setup-node@v6.0.0
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Install Buildchain runtime dependencies
+        shell: bash
+        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+
+      - name: Resolve publication toolchain
+        id: toolchain
+        shell: bash
+        working-directory: ${{ inputs.working-directory }}
+        env:
+          INPUT_TOOLCHAIN_TYPE: ${{ inputs.toolchain-type }}
+          INPUT_TOOLCHAIN_IMAGE: ${{ inputs.toolchain-image }}
+          INPUT_TOOLCHAIN_DIGEST: ${{ inputs.toolchain-digest }}
+          INPUT_TOOLCHAIN_COMMAND: ${{ inputs.toolchain-command }}
+          INPUT_BUILD_COMMAND: ${{ inputs.build-command }}
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+          import path from "node:path";
+          import { pathToFileURL } from "node:url";
+          const runtimeConfigModule = pathToFileURL(path.join(process.env.GITHUB_WORKSPACE, ".buildchain/runtime/packages/core/buildchain-config.js")).href;
+          const { loadBuildchainConfig } = await import(runtimeConfigModule);
+          const defaultLatexDockerCommand = "latexmk -pdf -outdir=_build paper/main.tex";
+
+          const inputType = (process.env.INPUT_TOOLCHAIN_TYPE || "config").trim();
+          const inputToolchain = {
+            type: inputType,
+            image: process.env.INPUT_TOOLCHAIN_IMAGE || "",
+            digest: process.env.INPUT_TOOLCHAIN_DIGEST || "",
+            command: process.env.INPUT_TOOLCHAIN_COMMAND || "",
+          };
+          const configToolchain = loadBuildchainConfig(process.cwd())?.config?.publication?.toolchain || {};
+          const resolved = inputType && inputType !== "config"
+            ? inputToolchain
+            : { type: configToolchain.type || "custom-command", image: configToolchain.image || "", digest: configToolchain.digest || "", command: configToolchain.command || "" };
+          if (resolved.type === "custom-command" && !resolved.command) {
+            resolved.command = process.env.INPUT_BUILD_COMMAND || "";
+          }
+          if (!["custom-command", "latex-docker"].includes(resolved.type)) {
+            throw new Error(`unsupported publication toolchain: ${resolved.type}`);
+          }
+          if (resolved.type === "latex-docker") {
+            if (!resolved.command) resolved.command = defaultLatexDockerCommand;
+            if (!resolved.image) throw new Error("latex-docker publication toolchain requires toolchain-image or publication.toolchain.image");
+            if (!/^sha256:[0-9a-f]{64}$/i.test(resolved.digest || "")) {
+              throw new Error("latex-docker publication toolchain requires toolchain-digest or publication.toolchain.digest as sha256:<64 hex>");
+            }
+          }
+          const output = process.env.GITHUB_OUTPUT;
+          function writeOutput(name, value) {
+            const text = String(value || "");
+            if (text.includes("\n")) {
+              const marker = `EOF_${name}_${Date.now()}`;
+              fs.appendFileSync(output, `${name}<<${marker}\n${text}\n${marker}\n`);
+            } else {
+              fs.appendFileSync(output, `${name}=${text}\n`);
+            }
+          }
+          writeOutput("type", resolved.type);
+          writeOutput("image", resolved.image || "");
+          writeOutput("digest", resolved.digest || "");
+          writeOutput("command", resolved.command || "");
+          writeOutput("image-ref", resolved.image && resolved.digest ? `${resolved.image}@${resolved.digest}` : "");
+          NODE
+
+      - name: Build publication
+        if: ${{ steps.toolchain.outputs.command != '' }}
+        shell: bash
+        working-directory: ${{ inputs.working-directory }}
+        env:
+          BUILDCHAIN_PUBLICATION_TOOLCHAIN_TYPE: ${{ steps.toolchain.outputs.type }}
+          BUILDCHAIN_PUBLICATION_TOOLCHAIN_IMAGE_REF: ${{ steps.toolchain.outputs.image-ref }}
+          BUILDCHAIN_PUBLICATION_TOOLCHAIN_COMMAND: ${{ steps.toolchain.outputs.command }}
+        run: |
+          set -euo pipefail
+          if [ "$BUILDCHAIN_PUBLICATION_TOOLCHAIN_TYPE" = "latex-docker" ]; then
+            docker pull "$BUILDCHAIN_PUBLICATION_TOOLCHAIN_IMAGE_REF"
+            workspace_rel="${PWD#"$GITHUB_WORKSPACE"}"
+            workspace_rel="${workspace_rel#/}"
+            docker_workdir="/workspace"
+            if [ -n "$workspace_rel" ]; then
+              docker_workdir="/workspace/$workspace_rel"
+            fi
+            docker run --rm \
+              -v "$GITHUB_WORKSPACE:/workspace" \
+              -w "$docker_workdir" \
+              "$BUILDCHAIN_PUBLICATION_TOOLCHAIN_IMAGE_REF" \
+              bash -lc "$BUILDCHAIN_PUBLICATION_TOOLCHAIN_COMMAND"
+          elif [ "$BUILDCHAIN_PUBLICATION_TOOLCHAIN_TYPE" = "custom-command" ]; then
+            bash -lc "$BUILDCHAIN_PUBLICATION_TOOLCHAIN_COMMAND"
+          else
+            echo "::error::unsupported publication toolchain: $BUILDCHAIN_PUBLICATION_TOOLCHAIN_TYPE"
+            exit 1
+          fi
+
+      - name: Verify publication
+        if: ${{ inputs.verify-command != '' }}
+        shell: bash
+        working-directory: ${{ inputs.working-directory }}
+        run: ${{ inputs.verify-command }}
+
+      - name: Collect publication artifact manifest
+        id: manifest
+        shell: bash
+        working-directory: ${{ inputs.working-directory }}
+        env:
+          BUILDCHAIN_PUBLICATION_TOOLCHAIN_TYPE: ${{ steps.toolchain.outputs.type }}
+          BUILDCHAIN_PUBLICATION_TOOLCHAIN_IMAGE: ${{ steps.toolchain.outputs.image }}
+          BUILDCHAIN_PUBLICATION_TOOLCHAIN_DIGEST: ${{ steps.toolchain.outputs.digest }}
+          BUILDCHAIN_PUBLICATION_TOOLCHAIN_COMMAND: ${{ steps.toolchain.outputs.command }}
+        run: |
+          node "${GITHUB_WORKSPACE}/.buildchain/runtime/bin/buildchain.mjs" publication-artifact manifest \
+            --cwd . \
+            --source-sha "${GITHUB_SHA}" \
+            --json > "${GITHUB_WORKSPACE}/.buildchain/publication-result.json"
+
+      - name: Prepare npm paper package
+        id: package
+        shell: bash
+        working-directory: ${{ inputs.working-directory }}
+        env:
+          INPUT_PACKAGE_NAME: ${{ inputs.package-name }}
+          INPUT_PUBLISH_DIST_TAG: ${{ inputs.publish-dist-tag }}
+          INPUT_TARGET_REF: ${{ inputs.target-ref }}
+          INPUT_TARGET_SHA: ${{ inputs.target-sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$GITHUB_WORKSPACE/.buildchain/paper-release"
+          mkdir -p .buildchain/paper-release
+          package_args=()
+          if [ -n "$INPUT_PACKAGE_NAME" ]; then
+            package_args+=(--package-name "$INPUT_PACKAGE_NAME")
+          fi
+          node "${GITHUB_WORKSPACE}/.buildchain/runtime/bin/buildchain.mjs" publication-artifact npm-package \
+            --cwd . \
+            --output-dir .buildchain/publication/npm-package \
+            "${package_args[@]}" \
+            --json > "$GITHUB_WORKSPACE/.buildchain/paper-release/package-result.json"
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+          import path from "node:path";
+          import { spawnSync } from "node:child_process";
+
+          const resultPath = path.join(process.env.GITHUB_WORKSPACE, ".buildchain/paper-release/package-result.json");
+          const result = JSON.parse(fs.readFileSync(resultPath, "utf8"));
+          const packageDir = path.resolve(process.cwd(), result.packageDir);
+          const pack = spawnSync("npm", ["pack", "--dry-run", "--json", "--registry=https://registry.npmjs.org/"], {
+            cwd: packageDir,
+            encoding: "utf8",
+          });
+          if (pack.status !== 0) {
+            throw new Error(`npm pack --dry-run failed\n${pack.stdout || ""}${pack.stderr || ""}`.trim());
+          }
+          const packResult = JSON.parse(pack.stdout);
+          const first = Array.isArray(packResult) ? packResult[0] : packResult;
+          if (!first?.integrity) throw new Error("npm pack --dry-run did not report sha512 integrity");
+          const targetRef = process.env.INPUT_TARGET_REF || process.env.GITHUB_REF_NAME || "";
+          const channel = targetRef.startsWith("release/") ? "release" : "alpha";
+          const distTag = process.env.INPUT_PUBLISH_DIST_TAG || (channel === "release" ? "latest" : "alpha");
+          const requiredArtifacts = [{
+            group: "node",
+            kind: "npm",
+            name: result.package.name,
+            ref: result.package.version,
+            digest: first.integrity,
+            integrity: first.integrity,
+            role: "main",
+          }];
+          fs.writeFileSync(path.join(process.env.GITHUB_WORKSPACE, ".buildchain/paper-release/publish-required-artifacts.json"), `${JSON.stringify(requiredArtifacts, null, 2)}\n`);
+          fs.writeFileSync(path.join(process.cwd(), ".buildchain/paper-release/publish-required-artifacts.json"), `${JSON.stringify(requiredArtifacts, null, 2)}\n`);
+          fs.writeFileSync(path.join(process.cwd(), ".buildchain/paper-release/build-summary.json"), `${JSON.stringify({
+            schemaVersion: 1,
+            contract: "kungfu-buildchain-paper-release-build-summary",
+            repository: process.env.GITHUB_REPOSITORY || "",
+            sourceSha: process.env.GITHUB_SHA || "",
+            package: {
+              name: result.package.name,
+              version: result.package.version,
+            },
+            publication: {
+              manifestPath: ".buildchain/publication/publication-artifact.json",
+              passportPath: ".buildchain/publication/publication-artifact-passport.json",
+              registryPath: ".buildchain/publication/publication-registry.json",
+              primaryArtifact: result.publication?.primaryArtifact || "",
+            },
+            platforms: [{
+              id: "paper",
+              manifestPath: ".buildchain/publication/publication-artifact.json",
+            }],
+          }, null, 2)}\n`);
+          const output = process.env.GITHUB_OUTPUT;
+          const write = (name, value) => fs.appendFileSync(output, `${name}=${String(value || "").replace(/\r?\n/g, " ")}\n`);
+          const writeJson = (name, value) => {
+            const marker = `EOF_${name}_${Date.now()}`;
+            fs.appendFileSync(output, `${name}<<${marker}\n${JSON.stringify(value)}\n${marker}\n`);
+          };
+          write("package-dir", result.packageDir);
+          write("package-name", result.package.name);
+          write("package-version", result.package.version);
+          write("dist-tag", distTag);
+          write("exact-tag", `v${result.package.version}`);
+          writeJson("publish-required-artifacts-json", requiredArtifacts);
+          NODE
+
+      - name: Resolve target
+        id: target
+        shell: bash
+        env:
+          INPUT_TARGET_REF: ${{ inputs.target-ref }}
+          INPUT_TARGET_SHA: ${{ inputs.target-sha }}
+        run: |
+          set -euo pipefail
+          target_ref="${INPUT_TARGET_REF:-${GITHUB_REF_NAME}}"
+          target_sha="${INPUT_TARGET_SHA:-${GITHUB_SHA}}"
+          case "$target_ref" in
+            alpha/*) channel="alpha" ;;
+            release/*) channel="release" ;;
+            *)
+              echo "::error::paper-release.yml requires target-ref on alpha/* or release/*, got $target_ref"
+              exit 1
+              ;;
+          esac
+          {
+            echo "ref=$target_ref"
+            echo "sha=$target_sha"
+            echo "channel=$channel"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Ensure publish-gate ref locks promotion commit
+        id: publish-gate
+        uses: actions/github-script@v8
+        env:
+          CHANNEL: ${{ steps.target.outputs.channel }}
+          TARGET_REF: ${{ steps.target.outputs.ref }}
+          TARGET_SHA: ${{ steps.target.outputs.sha }}
+          VERSION: ${{ steps.package.outputs.package-version }}
+        with:
+          script: |
+            const channel = process.env.CHANNEL;
+            const targetRef = process.env.TARGET_REF;
+            const targetSha = process.env.TARGET_SHA;
+            const versionHint = process.env.VERSION || "publication";
+            const gateRef = `publish-gate/${channel}/${targetRef.replace(/^(alpha|release)\//, "")}/${versionHint}`;
+            const ref = `heads/${gateRef}`;
+            try {
+              const current = await github.rest.git.getRef({ owner: context.repo.owner, repo: context.repo.repo, ref });
+              if (current.data.object.sha !== targetSha) {
+                await github.rest.git.updateRef({ owner: context.repo.owner, repo: context.repo.repo, ref, sha: targetSha, force: true });
+              }
+            } catch (error) {
+              if (error.status !== 404) throw error;
+              await github.rest.git.createRef({ owner: context.repo.owner, repo: context.repo.repo, ref: `refs/${ref}`, sha: targetSha });
+            }
+            core.setOutput("ref", gateRef);
+            core.setOutput("sha", targetSha);
+            core.setOutput("locked", "true");
+
+      - name: Upload publication release evidence
+        uses: actions/upload-artifact@v6.0.0
+        with:
+          name: ${{ inputs.artifact-name }}-${{ steps.package.outputs.package-version }}-${{ github.sha }}
+          path: |
+            ${{ inputs.working-directory }}/.buildchain/publication/**
+            ${{ inputs.working-directory }}/.buildchain/paper-release/**
+            .buildchain/publication-result.json
+            .buildchain/paper-release/**
+          retention-days: ${{ inputs.artifact-retention-days }}
+          if-no-files-found: error
+
+      - name: Publish paper package
+        id: promote
+        uses: ./.buildchain/runtime/actions/promote-buildchain-ref
+        with:
+          token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+          sha: ${{ steps.target.outputs.sha }}
+          target-ref: ${{ steps.target.outputs.ref }}
+          tags: ${{ steps.package.outputs.exact-tag }}
+          dry-run: ${{ inputs.dry-run }}
+          require-governance: "true"
+          require-version-state: "false"
+          required-status-check: ${{ inputs.required-status-check }}
+          generated-status-check-token: ${{ github.token }}
+          generated-ref-update-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+          branch-protection-bypass-apps: ${{ inputs.branch-protection-bypass-apps }}
+          branch-protection-bypass-users: ${{ inputs.branch-protection-bypass-users }}
+          branch-protection-bypass-teams: ${{ inputs.branch-protection-bypass-teams }}
+          allow-repository: ${{ github.repository }}
+          publish-transaction: "true"
+          publish-command: >-
+            node "${{ github.workspace }}/.buildchain/runtime/scripts/npm-publish-transaction.mjs"
+            --cwd "${{ github.workspace }}/${{ inputs.working-directory }}/.buildchain/publication/npm-package"
+          publish-required-artifacts-json: ${{ steps.package.outputs.publish-required-artifacts-json }}
+          publish-mode: "publish-final-version"
+          publish-auth: "trusted-publishing"
+          publish-dist-tag: ${{ steps.package.outputs.dist-tag }}
+          publish-package-set-order: ${{ inputs.publish-package-set-order }}
+          publish-package-main: ${{ steps.package.outputs.package-name }}
+          require-publish-source-lock: "true"
+          publish-source-ref: ${{ steps.publish-gate.outputs.ref }}
+          publish-source-sha: ${{ steps.publish-gate.outputs.sha }}
+          publish-source-locked: ${{ steps.publish-gate.outputs.locked }}
+          release-passport: "true"
+          release-passport-output-dir: ${{ inputs.release-passport-output-dir }}
+          release-passport-product-name: ${{ inputs.release-passport-product-name || steps.package.outputs.package-name }}
+          release-passport-build-summary-path: ${{ inputs.working-directory }}/.buildchain/paper-release/build-summary.json
+          release-passport-platform-manifest-paths: ${{ inputs.working-directory }}/.buildchain/publication/publication-artifact.json
+          release-passport-impact-json: ${{ inputs.release-passport-impact-json }}
+          github-release: ${{ inputs.github-release }}
+          github-release-title: ${{ inputs.github-release-title }}
+          github-release-notes: ${{ inputs.github-release-notes }}

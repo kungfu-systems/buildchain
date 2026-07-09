@@ -323,6 +323,11 @@ canonical_url = "https://papers.example.com/paper-fixture/"
 latest_url = "https://papers.example.com/paper-fixture/latest/"
 immutable_base_url = "https://papers.example.com/archive"
 
+[publish]
+kind = "npm-paper-package"
+package = "@kungfu-tech/paper-fixture"
+auth = "trusted-publishing"
+
 [publication.toolchain]
 type = "latex-docker"
 image = "ghcr.io/kungfu-systems/build-images/latex-pdf-builder"
@@ -354,6 +359,9 @@ command = "make check"
       assert.equal(summary.publication.toolchain.type, "latex-docker");
       assert.equal(summary.publication.toolchain.trustClassification, "pinned-docker-toolchain");
       assert.deepEqual(summary.publication.sourcePaths, ["paper", "README.md", "LICENSE", "Makefile"]);
+      assert.equal(summary.publish.kind, "npm-paper-package");
+      assert.equal(summary.publish.package, "@kungfu-tech/paper-fixture");
+      assert.equal(summary.publish.auth, "trusted-publishing");
     },
   );
 });

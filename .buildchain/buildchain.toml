@@ -25,6 +25,11 @@ key = "package.version"
 
 [[version.files]]
 type = "json"
+path = "dist/site/publication-registry.json"
+key = "package.version"
+
+[[version.files]]
+type = "json"
 path = "dist/site/kfd-upstream-aggregate.json"
 key = "product.version"
 

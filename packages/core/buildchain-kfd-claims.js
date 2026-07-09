@@ -42,6 +42,7 @@ export const BUILDCHAIN_AGENT_MANUALS = Object.freeze([
 const SITE_CONTRACT_FILES = Object.freeze([
   "dist/site/buildchain-site.json",
   "dist/site/site-manifest.json",
+  "dist/site/publication-registry.json",
   "dist/site/page-registry.json",
   "dist/site/capability-registry.json",
   "dist/site/cli-registry.json",
@@ -268,6 +269,7 @@ export function createBuildchainPublicClaimDefinitions() {
         "dist/site/node-api-registry.json",
         "dist/site/page-registry.json",
         "dist/site/capability-registry.json",
+        "dist/site/publication-registry.json",
         "dist/site/buildchain-site.json",
         "dist/site/site-manifest.json",
       ],

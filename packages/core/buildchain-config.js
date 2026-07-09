@@ -16,6 +16,7 @@ const SUPPORTED_VERSION_NEXT = new Set(["auto", "manual"]);
 const SUPPORTED_PROJECT_TYPES = new Set(["package", "web-surface", "infra-contract", "distribution-index", "publication-artifact"]);
 const SUPPORTED_PUBLISH_MODES = new Set(["publish-final-version", "promote-existing-version"]);
 const SUPPORTED_PUBLISH_AUTH = new Set(["trusted-publishing", "npm-token"]);
+const SUPPORTED_PUBLISH_KINDS = new Set(["npm-package", "npm-paper-package"]);
 const SUPPORTED_PACKAGE_SET_ORDER = new Set(["as-provided", "platforms-first-main-last"]);
 const SUPPORTED_NATIVE_COMPILER_CACHE = new Set(["auto", "ccache", "sccache", "none"]);
 const WEB_SURFACE_CHANNELS = ["preview", "staging", "production"];
@@ -338,13 +339,19 @@ function normalizePublishSection(publish) {
   if (mode === "promote-existing-version" && auth !== "npm-token") {
     throw new Error('publish.mode = "promote-existing-version" requires publish.auth = "npm-token"');
   }
+  const kind = publish.kind === undefined
+    ? ""
+    : assertString(publish.kind, "publish.kind");
+  if (kind && !SUPPORTED_PUBLISH_KINDS.has(kind)) {
+    throw new Error("publish.kind must be one of npm-package or npm-paper-package");
+  }
   const packageSetOrder = publish.package_set_order === undefined
     ? "as-provided"
     : assertString(publish.package_set_order, "publish.package_set_order");
   if (!SUPPORTED_PACKAGE_SET_ORDER.has(packageSetOrder)) {
     throw new Error("publish.package_set_order must be one of as-provided or platforms-first-main-last");
   }
-  return {
+  const normalized = {
     mode,
     auth,
     distTag: publish.dist_tag === undefined
@@ -355,6 +362,13 @@ function normalizePublishSection(publish) {
       ? ""
       : assertString(publish.main_package, "publish.main_package"),
   };
+  if (publish.kind !== undefined) {
+    normalized.kind = kind;
+  }
+  if (publish.package !== undefined) {
+    normalized.package = assertString(publish.package, "publish.package");
+  }
+  return normalized;
 }
 
 function normalizeProjectSection(project) {

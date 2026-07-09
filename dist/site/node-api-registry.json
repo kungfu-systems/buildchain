@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:bfbcc5a729e7bf0b338d49ffd67b031741d138a125bea3669a6d78d0c31faa62",
+      "digest": "sha256:3586fe03ecf3769dbfff17603db966dae10ce770b704675e8d31e1b71810e6f9",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:bfbcc5a729e7bf0b338d49ffd67b031741d138a125bea3669a6d78d0c31faa62",
+      "digest": "sha256:3586fe03ecf3769dbfff17603db966dae10ce770b704675e8d31e1b71810e6f9",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -213,10 +213,23 @@
       "maturity": "stable"
     },
     {
+      "specifier": "@kungfu-tech/buildchain/publication-package",
+      "export": "./publication-package",
+      "target": "./packages/core/publication-package.js",
+      "digest": "sha256:3c96b1a7483eda44c1a89a7af1a1b262fb40cce8a4bcf81f5ad048b69664db67",
+      "summary": "Publication npm package synthesis APIs for Buildchain-managed paper release presets.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
       "specifier": "@kungfu-tech/buildchain/kfd-gate",
       "export": "./kfd-gate",
       "target": "./packages/core/kfd-gate.js",
-      "digest": "sha256:534707144fa2c440fe6958073a8a161790f12b8fb4695e3b06e43f43a6c87ffb",
+      "digest": "sha256:f31691f36f2a7930798805cb470aff7acd3503799cb72b954c7787b1d8b3eb31",
       "summary": "KFD-1/KFD-2/KFD-3 release gate evidence and validation APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -281,7 +294,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-kfd-claims",
       "export": "./buildchain-kfd-claims",
       "target": "./packages/core/buildchain-kfd-claims.js",
-      "digest": "sha256:a61fd06fa065808eb6b1205b0748ae8801525dbb22cb902122b62fddde48c355",
+      "digest": "sha256:139a2318ff627819fe5553f0572fe754ce296d5fa974a7337c32c811feb02b14",
       "summary": "Buildchain self KFD claim registry, witnesses, and public claim APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -295,7 +308,7 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:4b31f7ff5330cde8ab32b237f533c7af76463cce570d67dd14669c3a14c83c84"
+      "digest": "sha256:81624885888c9e357db128f644f93dcab2286910df426b532730b0141d7cb00d"
     },
     {
       "id": "build-facts",
@@ -320,7 +333,7 @@
     {
       "id": "site-bundle-contract",
       "path": "docs/site-bundle-contract.md",
-      "digest": "sha256:6b5bc2ee0f785b16d762f140f14a9163c07caf0d424200c2ececc74f7bb2271c"
+      "digest": "sha256:d67a874b356fbfbee9a5d5ece7021fb52b2848347dc6a14f5562c98570096916"
     }
   ],
   "guidance": "These are the public Node import surfaces shipped by the npm package. Agents should prefer these exports over internal file paths."

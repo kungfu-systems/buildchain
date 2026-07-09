@@ -24,6 +24,7 @@ import {
 import { createSurfaceTimestampPolicy } from "../packages/core/surface-manifest.js";
 
 const SITE_BUNDLE_CONTRACT = "kungfu-buildchain-site-bundle";
+const PUBLICATION_RELEASE_REGISTRY_CONTRACT = "kungfu-buildchain-publication-release-registry";
 const README_PATH = "README.md";
 const root = path.resolve(import.meta.dirname, "..");
 const outputDir = path.join(root, "dist", "site");
@@ -430,6 +431,7 @@ function cliCommandMeta(id) {
     "publish-source": { group: "release-passport-trust", purpose: "Create, inspect, or verify publish-gate source-lock refs." },
     "publication-artifact": { group: "reusable-build", purpose: "Generate publication artifact manifests, passports, and source bundles for paper/report repositories." },
     "publication-artifact-manifest": { group: "reusable-build", purpose: "Write a site-consumable publication artifact manifest, publication passport, and source bundle." },
+    "publication-artifact-npm-package": { group: "reusable-build", purpose: "Synthesize the declared npm paper package from a publication artifact manifest, passport, registry, source bundle, and primary artifact." },
     "release-dry-run": { group: "governance-versioning", purpose: "Explain what a channel merge would publish before the PR is merged." },
     "release-line-open": { group: "governance-versioning", purpose: "Plan or write the initial version-state commit for a new minor release line." },
     "release-propagation": { group: "site-and-propagation", purpose: "Plan channel-preserving downstream release PRs and write exact upstream release locks." },
@@ -465,6 +467,7 @@ function nodeApiMeta(exportName) {
     "./diagnostics": { group: "observability-diagnostics", summary: "Native diagnostics collection, summarization, cache, compiler, and process-sampler APIs." },
     "./logging": { group: "observability-diagnostics", summary: "Buildchain JSONL logging, span, summary, and verification APIs." },
     "./publication-artifact": { group: "reusable-build", summary: "Publication artifact manifest, source bundle, and publication passport APIs." },
+    "./publication-package": { group: "reusable-build", summary: "Publication npm package synthesis APIs for Buildchain-managed paper release presets." },
     "./artifact-passport": { group: "release-passport-trust", summary: "Artifact passport digest and evidence helper APIs." },
     "./release-passport": { group: "release-passport-trust", summary: "Release passport collection, verification, explanation, and evidence APIs." },
     "./release-candidate": { group: "reusable-build", summary: "PR-stage release-candidate artifact, passport, and promote-only resolver APIs." },
@@ -522,6 +525,7 @@ function buildCapabilityRegistry({ docs, pages, cliRegistry, manualRegistry, nod
         "cli-registry.json",
         "node-api-registry.json",
         "workflow-registry.json",
+        "publication-registry.json",
         "kfd-upstream-aggregate.json",
         "kfd-claims.json",
       ],
@@ -535,7 +539,7 @@ function buildCapabilityRegistry({ docs, pages, cliRegistry, manualRegistry, nod
 
 function workflowCapabilityGroup(entry) {
   if (["web-surface", "release-propagation"].includes(entry.id)) return capabilityGroup("site-and-propagation");
-  if (["build", "release-candidate-promote", "publication-artifact"].includes(entry.id)) return capabilityGroup("reusable-build");
+  if (["build", "release-candidate-promote", "publication-artifact", "paper-release"].includes(entry.id)) return capabilityGroup("reusable-build");
   if (["buildchain-ref-promotion", "release-line-bootstrap"].includes(entry.id)) return capabilityGroup("release-passport-trust");
   if (entry.id.includes("patrol") || entry.id.includes("dev-pr-auto-merge")) return capabilityGroup("governance-versioning");
   if (entry.status === "repository-internal" || entry.status === "compatibility-fixture") return capabilityGroup("api-cli-reference");
@@ -572,6 +576,90 @@ function buildSitePages() {
     ...apiPages,
     ...fixturePages,
   ].sort((a, b) => a.route.localeCompare(b.route));
+}
+
+function createPublicationReleaseRegistry({ packageJson, timestampPolicy }) {
+  return {
+    schemaVersion: 1,
+    contract: PUBLICATION_RELEASE_REGISTRY_CONTRACT,
+    ...timestampPolicy,
+    package: {
+      name: packageJson.name,
+      version: packageJson.version,
+      versionSource: "package.json#version",
+    },
+    sourceKind: "package-site-bundle",
+    sourceBoundary: {
+      truthOwner: "@kungfu-tech/buildchain",
+      siteRole: "rendering, routing, archive preservation checks, and agent discovery",
+      rule: "Downstream papers sites render this registry; Buildchain owns publication route, latest, immutable artifact, passport, and source bundle facts.",
+    },
+    archivePolicy: {
+      contract: "kungfu-buildchain-publication-archive-policy",
+      mutableRouteKinds: [
+        "canonical-reader",
+        "latest",
+        "registry-index",
+      ],
+      immutableRouteKinds: [
+        "version-artifact",
+        "version-passport",
+        "version-source",
+      ],
+      deploymentBoundary: "append-only immutable version prefixes",
+      rule: "A site build may update latest and canonical reader pages, but it must not delete or overwrite files under a declared immutable version prefix.",
+    },
+    publications: [
+      {
+        id: "publication-archive-fixture",
+        title: "Publication Archive Fixture",
+        summary: "A paper-shaped Buildchain package fact proving that site rendering preserves immutable versioned PDF, source, and passport routes while latest pages can move.",
+        canonicalReader: {
+          kind: "canonical-reader",
+          url: "https://kungfu.tech/whitepaper/",
+          owner: "site-kungfu-tech",
+        },
+        latest: {
+          kind: "latest",
+          version: "0.1.0",
+          path: "/publication-archive-fixture/latest/",
+        },
+        immutablePrefixTemplate: "/publication-archive-fixture/v{version}/",
+        versions: [
+          {
+            version: "0.1.0",
+            releasedAt: "2026-07-09T00:00:00.000Z",
+            immutable: true,
+            immutablePath: "/publication-archive-fixture/v0.1.0/",
+            source: {
+              repository: "https://github.com/kungfu-systems/publication-archive-fixture",
+              tag: "v0.1.0",
+              commit: "0000000000000000000000000000000000000000",
+              bundle: {
+                path: "source.tar.gz",
+                sha256: "sha256:e2ca891dbf441f867ed135b21b3556ee5cdcd3ec80038f267a3ecff496c5a38b",
+                fixtureBodyBase64: "c2l0ZS1saWJrdW5nZnUtZGV2IHB1YmxpY2F0aW9uIGFyY2hpdmUgZml4dHVyZSBzb3VyY2UgYnVuZGxlCnZlcnNpb246IDAuMS4wCg==",
+              },
+            },
+            passport: {
+              path: "publication-artifact-passport.json",
+              sha256: "sha256:ca214e2e17c8d3c01565e507e57d5b440943c762199aa8d9de21995940538cea",
+              fixtureBodyBase64: "ewogICJjb250cmFjdCI6ICJrdW5nZnUtYnVpbGRjaGFpbi1wdWJsaWNhdGlvbi1hcnRpZmFjdC1wYXNzcG9ydCIsCiAgInB1YmxpY2F0aW9uIjogInB1YmxpY2F0aW9uLWFyY2hpdmUtZml4dHVyZSIsCiAgInZlcnNpb24iOiAiMC4xLjAiLAogICJzdGF0dXMiOiAiZml4dHVyZSIKfQo=",
+            },
+            artifacts: [
+              {
+                role: "pdf",
+                path: "main.pdf",
+                mediaType: "application/pdf",
+                sha256: "sha256:c1c2020cbdcf0cc339323d2276480a48d9b8d7da9be1d19ab58a0b3c0b7a4fbb",
+                fixtureBodyBase64: "JVBERi0xLjQKJSBzaXRlLWxpYmt1bmdmdS1kZXYgcHVibGljYXRpb24gYXJjaGl2ZSBmaXh0dXJlCjEgMCBvYmogPDwgL1R5cGUgL0NhdGFsb2cgL1BhZ2VzIDIgMCBSID4+IGVuZG9iagoyIDAgb2JqIDw8IC9UeXBlIC9QYWdlcyAvS2lkcyBbMyAwIFJdIC9Db3VudCAxID4+IGVuZG9iagozIDAgb2JqIDw8IC9UeXBlIC9QYWdlIC9QYXJlbnQgMiAwIFIgL01lZGlhQm94IFswIDAgMzAwIDE0NF0gL0NvbnRlbnRzIDQgMCBSID4+IGVuZG9iago0IDAgb2JqIDw8IC9MZW5ndGggNzIgPj4gc3RyZWFtCkJUIC9GMSAxMiBUZiAzNiAxMDAgVGQgKFB1YmxpY2F0aW9uIGFyY2hpdmUgZml4dHVyZSB2MC4xLjApIFRqIEVUCmVuZHN0cmVhbSBlbmRvYmoKeHJlZgowIDUKMDAwMDAwMDAwMCA2NTUzNSBmIAp0cmFpbGVyIDw8IC9Sb290IDEgMCBSIC9TaXplIDUgPj4Kc3RhcnR4cmVmCjM2MAolJUVPRgo=",
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
 }
 
 function buildSiteBundle() {
@@ -729,6 +817,7 @@ function buildSiteBundle() {
         ["buildchain-ref-promotion", "release-governance"],
         ["release-line-bootstrap", "release-governance"],
         ["release-candidate-promote", "release-governance"],
+        ["paper-release", "reusable-build"],
         ["release-propagation", "release-propagation"],
         ["dev-pr-auto-merge", "dev-governance"],
         ["binary-distribution", "release-passport"],
@@ -843,6 +932,7 @@ function buildSiteBundle() {
       "buildchain-site.json",
       "site-manifest.json",
       "badge-endpoint-registry.json",
+      "publication-registry.json",
       "page-registry.json",
       "capability-registry.json",
       "cli-registry.json",
@@ -933,6 +1023,7 @@ function buildSiteBundle() {
       "release-model.json",
       "artifact-schemas.json",
       "badge-endpoint-registry.json",
+      "publication-registry.json",
       "product-mechanism.json",
       "release-provenance.json",
       "kfd-upstream-aggregate.json",
@@ -960,12 +1051,14 @@ function buildSiteBundle() {
       "kfd-upstream-aggregate.json",
       "kfd-claims.json",
       "badge-endpoint-registry.json",
+      "publication-registry.json",
     ],
     instruction: "Use this bundle as the package-owned fact source for Buildchain pages. Do not infer current release mechanics from prose alone.",
   };
   const badgeEndpointRegistry = createReadmeBadgeEndpointRegistry({
     kfdStandards: readPackageKfdStandards(),
   });
+  const publicationRegistry = createPublicationReleaseRegistry({ packageJson, timestampPolicy });
 
   const homepageSections = [
     homepageSection({
@@ -1094,6 +1187,7 @@ function buildSiteBundle() {
         "KFD claim registry",
         "KFD upstream aggregate registry",
         "release-passport evidence vocabulary",
+        "publication archive registry and immutable papers surface facts",
       ],
       ownedBySite: [
         "HTML structure",
@@ -1121,6 +1215,7 @@ function buildSiteBundle() {
     "release-model.json": releaseModel,
     "artifact-schemas.json": artifactSchemas,
     "badge-endpoint-registry.json": badgeEndpointRegistry,
+    "publication-registry.json": publicationRegistry,
     "buildchain-contract.json": createBuildchainContractWorld({ root }),
     "kfd-upstream-aggregate.json": collectKfdUpstreamFacts({ cwd: root, includeOwn: false }),
     "kfd-claims.json": createBuildchainKfdClaimRegistry({ root }),

@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-publication-release-registry",
+  "generatedAt": "2026-07-09T16:06:47.861Z",
+  "publishedAt": "2026-07-09T16:06:47.861Z",
+  "reproducible": true,
+  "timestampPolicy": "ci-injected",
+  "deterministicInputs": [
+    "README.md",
+    "docs/*.md",
+    "actions/*/README.md",
+    "fixtures/*/README.md",
+    "packages/core/README.md",
+    "package.json#exports",
+    "tests/buildchain-inventory.json",
+    "sourceRevision",
+    "sourceDateEpoch",
+    "package content",
+    "declared Buildchain surface manifest contract"
+  ],
+  "sourceDateEpoch": "0",
+  "sourceRevision": "b93fcd8237e6060596fc6bcb82198e9097356f5b",
+  "timestampPolicyDetails": {
+    "contract": "kungfu-buildchain-surface-timestamp-policy",
+    "timestampFields": [
+      "generatedAt",
+      "publishedAt"
+    ],
+    "timestampFieldsParticipateInArtifactDigest": true,
+    "artifactDigestScope": "npm package dist/site JSON files",
+    "note": "Human-readable timestamps are separate from reproducibility inputs; do not infer reproducibility from epoch timestamps."
+  },
+  "package": {
+    "name": "@kungfu-tech/buildchain",
+    "version": "2.11.2-alpha.2",
+    "versionSource": "package.json#version"
+  },
+  "sourceKind": "package-site-bundle",
+  "sourceBoundary": {
+    "truthOwner": "@kungfu-tech/buildchain",
+    "siteRole": "rendering, routing, archive preservation checks, and agent discovery",
+    "rule": "Downstream papers sites render this registry; Buildchain owns publication route, latest, immutable artifact, passport, and source bundle facts."
+  },
+  "archivePolicy": {
+    "contract": "kungfu-buildchain-publication-archive-policy",
+    "mutableRouteKinds": [
+      "canonical-reader",
+      "latest",
+      "registry-index"
+    ],
+    "immutableRouteKinds": [
+      "version-artifact",
+      "version-passport",
+      "version-source"
+    ],
+    "deploymentBoundary": "append-only immutable version prefixes",
+    "rule": "A site build may update latest and canonical reader pages, but it must not delete or overwrite files under a declared immutable version prefix."
+  },
+  "publications": [
+    {
+      "id": "publication-archive-fixture",
+      "title": "Publication Archive Fixture",
+      "summary": "A paper-shaped Buildchain package fact proving that site rendering preserves immutable versioned PDF, source, and passport routes while latest pages can move.",
+      "canonicalReader": {
+        "kind": "canonical-reader",
+        "url": "https://kungfu.tech/whitepaper/",
+        "owner": "site-kungfu-tech"
+      },
+      "latest": {
+        "kind": "latest",
+        "version": "0.1.0",
+        "path": "/publication-archive-fixture/latest/"
+      },
+      "immutablePrefixTemplate": "/publication-archive-fixture/v{version}/",
+      "versions": [
+        {
+          "version": "0.1.0",
+          "releasedAt": "2026-07-09T00:00:00.000Z",
+          "immutable": true,
+          "immutablePath": "/publication-archive-fixture/v0.1.0/",
+          "source": {
+            "repository": "https://github.com/kungfu-systems/publication-archive-fixture",
+            "tag": "v0.1.0",
+            "commit": "0000000000000000000000000000000000000000",
+            "bundle": {
+              "path": "source.tar.gz",
+              "sha256": "sha256:e2ca891dbf441f867ed135b21b3556ee5cdcd3ec80038f267a3ecff496c5a38b",
+              "fixtureBodyBase64": "c2l0ZS1saWJrdW5nZnUtZGV2IHB1YmxpY2F0aW9uIGFyY2hpdmUgZml4dHVyZSBzb3VyY2UgYnVuZGxlCnZlcnNpb246IDAuMS4wCg=="
+            }
+          },
+          "passport": {
+            "path": "publication-artifact-passport.json",
+            "sha256": "sha256:ca214e2e17c8d3c01565e507e57d5b440943c762199aa8d9de21995940538cea",
+            "fixtureBodyBase64": "ewogICJjb250cmFjdCI6ICJrdW5nZnUtYnVpbGRjaGFpbi1wdWJsaWNhdGlvbi1hcnRpZmFjdC1wYXNzcG9ydCIsCiAgInB1YmxpY2F0aW9uIjogInB1YmxpY2F0aW9uLWFyY2hpdmUtZml4dHVyZSIsCiAgInZlcnNpb24iOiAiMC4xLjAiLAogICJzdGF0dXMiOiAiZml4dHVyZSIKfQo="
+          },
+          "artifacts": [
+            {
+              "role": "pdf",
+              "path": "main.pdf",
+              "mediaType": "application/pdf",
+              "sha256": "sha256:c1c2020cbdcf0cc339323d2276480a48d9b8d7da9be1d19ab58a0b3c0b7a4fbb",
+              "fixtureBodyBase64": "JVBERi0xLjQKJSBzaXRlLWxpYmt1bmdmdS1kZXYgcHVibGljYXRpb24gYXJjaGl2ZSBmaXh0dXJlCjEgMCBvYmogPDwgL1R5cGUgL0NhdGFsb2cgL1BhZ2VzIDIgMCBSID4+IGVuZG9iagoyIDAgb2JqIDw8IC9UeXBlIC9QYWdlcyAvS2lkcyBbMyAwIFJdIC9Db3VudCAxID4+IGVuZG9iagozIDAgb2JqIDw8IC9UeXBlIC9QYWdlIC9QYXJlbnQgMiAwIFIgL01lZGlhQm94IFswIDAgMzAwIDE0NF0gL0NvbnRlbnRzIDQgMCBSID4+IGVuZG9iago0IDAgb2JqIDw8IC9MZW5ndGggNzIgPj4gc3RyZWFtCkJUIC9GMSAxMiBUZiAzNiAxMDAgVGQgKFB1YmxpY2F0aW9uIGFyY2hpdmUgZml4dHVyZSB2MC4xLjApIFRqIEVUCmVuZHN0cmVhbSBlbmRvYmoKeHJlZgowIDUKMDAwMDAwMDAwMCA2NTUzNSBmIAp0cmFpbGVyIDw8IC9Sb290IDEgMCBSIC9TaXplIDUgPj4Kc3RhcnR4cmVmCjM2MAolJUVPRgo="
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
