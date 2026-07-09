@@ -839,10 +839,14 @@
           "buildchain-repository",
           "node-version",
           "setup-node",
+          "toolchain-command",
+          "toolchain-digest",
+          "toolchain-image",
+          "toolchain-type",
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 13
+        "inputCount": 17
       },
       {
         "id": "release-candidate-promote",
@@ -2435,8 +2439,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "1f7e1f7707a089f067175030fde6712b69ceece3df1b811eb542b0b4c8c1d4a9",
-    "workflowRegistryDigest": "5a74fd4e5b7b071f014b59d590313535da05e7a96d46b82db0bc306182911395",
-    "pageRegistryDigest": "a32dc62d72d1499d3156711aa51c58c0a19be4cace798617815c98c733e43f8e"
+    "workflowRegistryDigest": "67572429a83124370b9ffd46f56923aa2b252873c9624ded39a26675fb0ee815",
+    "pageRegistryDigest": "c1ec998aced6612b9cf444b886d126a89b344954a1ecebf6908d11610dba3cf8"
   },
   "comparison": {
     "missingCliRegistry": [],

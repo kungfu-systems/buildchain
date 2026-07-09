@@ -49,6 +49,7 @@ const SUPPORTED_INFRA_ADOPTION_MODES = new Set([
 const SUPPORTED_INFRA_APPLY_MODES = new Set(["disabled", "manual-approval", "environment-approval"]);
 const SUPPORTED_FACT_VERSION_SOURCE_TYPES = new Set(["static", "json", "toml", "regex", "command"]);
 const SUPPORTED_FACT_LEGACY_PROJECTIONS = new Set(["kungfu-buildinfo"]);
+const SUPPORTED_PUBLICATION_TOOLCHAINS = new Set(["custom-command", "latex-docker"]);
 
 function posixPath(value) {
   return String(value || "").split(path.sep).join("/");
@@ -389,12 +390,56 @@ function normalizePublicationSection(publication) {
     metadataPaths: normalizeStringArray(publication.metadata_paths, "publication.metadata_paths").map(posixPath),
     sourcePaths: normalizeStringArray(publication.source_paths, "publication.source_paths").map(posixPath),
     siteConsumers: normalizeStringArray(publication.site_consumers, "publication.site_consumers"),
+    toolchain: normalizePublicationToolchain(publication.toolchain),
     manifestPath: publication.manifest_path === undefined
       ? ".buildchain/publication/publication-artifact.json"
       : posixPath(assertString(publication.manifest_path, "publication.manifest_path")),
     sourceBundlePath: publication.source_bundle_path === undefined
       ? ".buildchain/publication/source.tar.gz"
       : posixPath(assertString(publication.source_bundle_path, "publication.source_bundle_path")),
+  };
+}
+
+function normalizePublicationToolchain(toolchain = undefined) {
+  if (toolchain === undefined) {
+    return {
+      type: "custom-command",
+      image: "",
+      digest: "",
+      command: "",
+      trustClassification: "custom-command",
+    };
+  }
+  assertPlainObject(toolchain, "publication.toolchain");
+  const type = toolchain.type === undefined
+    ? "custom-command"
+    : assertString(toolchain.type, "publication.toolchain.type");
+  if (!SUPPORTED_PUBLICATION_TOOLCHAINS.has(type)) {
+    throw new Error("publication.toolchain.type must be one of custom-command or latex-docker");
+  }
+  const command = toolchain.command === undefined
+    ? ""
+    : assertString(toolchain.command, "publication.toolchain.command");
+  const image = toolchain.image === undefined
+    ? ""
+    : assertString(toolchain.image, "publication.toolchain.image");
+  const digest = toolchain.digest === undefined
+    ? ""
+    : assertString(toolchain.digest, "publication.toolchain.digest");
+  if (type === "latex-docker") {
+    if (!image) throw new Error("publication.toolchain.image is required for latex-docker");
+    if (!digest) throw new Error("publication.toolchain.digest is required for latex-docker");
+    if (!/^sha256:[0-9a-f]{64}$/i.test(digest)) {
+      throw new Error("publication.toolchain.digest must be a sha256:<64 hex> image digest");
+    }
+    if (!command) throw new Error("publication.toolchain.command is required for latex-docker");
+  }
+  return {
+    type,
+    image,
+    digest,
+    command,
+    trustClassification: type === "latex-docker" ? "pinned-docker-toolchain" : "custom-command",
   };
 }
 

@@ -35,6 +35,12 @@ site_consumers = ["papers.libkungfu.dev"]
 manifest_path = ".buildchain/publication/publication-artifact.json"
 source_bundle_path = ".buildchain/publication/source.tar.gz"
 
+[publication.toolchain]
+type = "latex-docker"
+image = "ghcr.io/kungfu-systems/latex"
+digest = "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+command = "latexmk -pdf -outdir=_build paper/main.tex"
+
 [lifecycle.build]
 command = "make pdf"
 
@@ -46,6 +52,13 @@ command = "make check"
 `source_paths` are archived into a source bundle. `metadata_paths` are hashed
 and recorded so a site can consume the paper facts without scraping prose.
 
+`publication.toolchain` makes the source-to-PDF transformation part of the
+machine-readable contract. `latex-docker` is the preferred LaTeX profile: the
+workflow pulls the declared image by digest and runs the declared command in
+that pinned container. `custom-command` remains available for compatibility,
+but the passport records it as lower trust because Buildchain can record the
+command boundary without proving the compiler or LaTeX distribution digest.
+
 ## Reusable Workflow
 
 Consumer repositories can call the Buildchain wrapper directly:
@@ -55,7 +68,7 @@ jobs:
   publication:
     uses: kungfu-systems/buildchain/.github/workflows/publication-artifact.yml@v2
     with:
-      build-command: make pdf
+      toolchain-type: config
       verify-command: make check
       artifact-name: observer-declared-timelines
       buildchain-contract-lock-path: .buildchain/contract-lock.json
@@ -65,7 +78,13 @@ The workflow:
 
 - resolves the Buildchain runtime and checks the floating contract lock before
   any paper build runs;
-- runs the declared build and verify commands;
+- resolves the declared publication toolchain from `[publication.toolchain]` or
+  workflow inputs;
+- for `latex-docker`, pulls the pinned image digest and runs the declared
+  command in the container;
+- for `custom-command`, runs the declared command and records the lower-trust
+  boundary in the passport;
+- runs the verify command;
 - creates a source bundle from `publication.source_paths`;
 - writes `.buildchain/publication/publication-artifact.json`;
 - writes `.buildchain/publication/publication-artifact-passport.json`;
@@ -101,6 +120,8 @@ the reusable workflow. The generated manifest records:
 - artifact paths, byte sizes, and SHA-256 digests;
 - metadata paths and SHA-256 digests;
 - source SHA, tree SHA, source files, and source bundle digest;
+- publication toolchain type, image, digest, command, invocation mode, and trust
+  classification;
 - timestamp and reproducibility policy;
 - downstream site-consumption hints.
 
