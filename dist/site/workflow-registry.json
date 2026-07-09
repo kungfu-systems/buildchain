@@ -530,6 +530,29 @@
       "status": "active"
     },
     {
+      "id": "publication-artifact",
+      "path": ".github/workflows/publication-artifact.yml",
+      "inputs": [
+        "artifact-name",
+        "artifact-paths",
+        "artifact-retention-days",
+        "build-command",
+        "buildchain-contract-compatibility-policy",
+        "buildchain-contract-drift-issue-mode",
+        "buildchain-contract-lock-path",
+        "buildchain-ref",
+        "buildchain-repository",
+        "node-version",
+        "setup-node",
+        "verify-command",
+        "working-directory"
+      ],
+      "inputCount": 13,
+      "surface": "repository-workflow",
+      "capabilityGroup": "reusable-build",
+      "status": "active"
+    },
+    {
       "id": "release-candidate-promote",
       "path": ".github/workflows/release-candidate-promote.yml",
       "inputs": [

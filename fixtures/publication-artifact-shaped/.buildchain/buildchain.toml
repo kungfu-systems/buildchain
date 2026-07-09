@@ -1,0 +1,22 @@
+schema = 1
+
+[project]
+type = "publication-artifact"
+name = "paper-observer-declared-timelines"
+
+[publication]
+kind = "paper"
+title = "Observer-Declared Timelines for Real-World Agent Work"
+primary_artifact = "_build/main.pdf"
+artifact_paths = ["_build/main.pdf"]
+metadata_paths = ["README.md", "docs/MAP.md"]
+source_paths = ["paper", "README.md", "LICENSE", "Makefile"]
+site_consumers = ["papers.libkungfu.dev"]
+manifest_path = ".buildchain/publication/publication-artifact.json"
+source_bundle_path = ".buildchain/publication/source.tar.gz"
+
+[lifecycle.build]
+command = "make pdf"
+
+[lifecycle.verify]
+command = "make check"

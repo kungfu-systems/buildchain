@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "dfd3c63c42e56399830ae4edfc6c1c0782113178d3e1a1cc1f475c345e74066f",
+    "sha256": "7d22fa037b5c1c14ac2ca1853dd414bb83b2c561221034a49a97401f28672471",
     "summary": {
-      "cliCommandCount": 71,
-      "workflowCount": 35,
+      "cliCommandCount": 73,
+      "workflowCount": 36,
       "actionCount": 4,
-      "sitePageCount": 43,
-      "docCommandRefCount": 224,
+      "sitePageCount": 45,
+      "docCommandRefCount": 227,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -207,13 +207,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "dfd3c63c42e56399830ae4edfc6c1c0782113178d3e1a1cc1f475c345e74066f",
+      "sha256": "7d22fa037b5c1c14ac2ca1853dd414bb83b2c561221034a49a97401f28672471",
       "summary": {
-        "cliCommandCount": 71,
-        "workflowCount": 35,
+        "cliCommandCount": 73,
+        "workflowCount": 36,
         "actionCount": 4,
-        "sitePageCount": 43,
-        "docCommandRefCount": 224,
+        "sitePageCount": 45,
+        "docCommandRefCount": 227,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -696,6 +696,18 @@
           "plane": "fixture"
         },
         {
+          "id": "doc:fixtures/publication-artifact-shaped/README.md",
+          "name": "fixtures/publication-artifact-shaped/README.md",
+          "kind": "documentation",
+          "sourcePath": "fixtures/publication-artifact-shaped/README.md",
+          "evidencePath": "fixtures/publication-artifact-shaped/README.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "fixture"
+        },
+        {
           "id": "doc:fixtures/publish-transaction-shaped/README.md",
           "name": "fixtures/publish-transaction-shaped/README.md",
           "kind": "documentation",
@@ -1060,6 +1072,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./logging"
+        },
+        {
+          "id": "export:./publication-artifact",
+          "name": "@kungfu-tech/buildchain/publication-artifact",
+          "kind": "package-export",
+          "sourcePath": "packages/core/publication-artifact.js",
+          "evidencePath": "packages/core/publication-artifact.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./publication-artifact"
         },
         {
           "id": "export:./kfd-gate",
@@ -1554,7 +1578,7 @@
         },
         {
           "id": "cli:init",
-          "name": "buildchain init [--cwd <dir>] [--type package|native|web-surface|infra-contract|anchored-package] [--force]",
+          "name": "buildchain init [--cwd <dir>] [--type package|native|web-surface|infra-contract|publication-artifact|anchored-package] [--force]",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -1963,6 +1987,30 @@
         {
           "id": "cli:npm-dry-run",
           "name": "buildchain npm dry-run [--cwd <dir>] [--expected-tag <tag>] [--registry <url>]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:publication-artifact",
+          "name": "buildchain publication-artifact",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:publication-artifact-manifest",
+          "name": "buildchain publication-artifact manifest [--cwd <dir>] [--source-sha <sha>]",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -2838,6 +2886,34 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:publication-artifact",
+          "name": "workflow:publication-artifact",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/publication-artifact.yml",
+          "evidencePath": ".github/workflows/publication-artifact.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 13,
+          "inputs": [
+            "artifact-name",
+            "artifact-paths",
+            "artifact-retention-days",
+            "build-command",
+            "buildchain-contract-compatibility-policy",
+            "buildchain-contract-drift-issue-mode",
+            "buildchain-contract-lock-path",
+            "buildchain-ref",
+            "buildchain-repository",
+            "node-version",
+            "setup-node",
+            "verify-command",
+            "working-directory"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:release-candidate-promote",
           "name": "workflow:release-candidate-promote",
           "kind": "workflow",
@@ -3353,6 +3429,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:fixture:publication-artifact-shaped",
+          "name": "site-page:fixture:publication-artifact-shaped",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:fixture:publish-transaction-shaped",
           "name": "site-page:fixture:publish-transaction-shaped",
           "kind": "site-page",
@@ -3535,6 +3623,18 @@
         {
           "id": "site-page:manual:product-mechanism",
           "name": "site-page:manual:product-mechanism",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
+          "id": "site-page:manual:publication-artifacts",
+          "name": "site-page:manual:publication-artifacts",
           "kind": "site-page",
           "sourcePath": "dist/site/page-registry.json",
           "evidencePath": "dist/site/page-registry.json",
@@ -3782,6 +3882,6 @@
         "public": true
       }
     ],
-    "publicSurfaceCount": 252
+    "publicSurfaceCount": 259
   }
 }
