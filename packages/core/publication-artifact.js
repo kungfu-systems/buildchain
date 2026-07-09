@@ -6,6 +6,7 @@ import { loadBuildchainConfig } from "./buildchain-config.js";
 
 export const PUBLICATION_ARTIFACT_MANIFEST_CONTRACT = "kungfu-buildchain-publication-artifact-manifest";
 export const PUBLICATION_ARTIFACT_PASSPORT_CONTRACT = "kungfu-buildchain-publication-artifact-passport";
+const KFD2_RESIDUAL_RISK_SCHEMA = "https://kfd.libkungfu.dev/schemas/kfd-2/trust-taxonomy.schema.json#/$defs/residualRisk";
 
 function toPosix(value) {
   return String(value || "").split(path.sep).join("/");
@@ -74,6 +75,69 @@ function createdAt(now = new Date()) {
   return now.toISOString();
 }
 
+function publicationToolchainFacts(publication) {
+  const envType = String(process.env.BUILDCHAIN_PUBLICATION_TOOLCHAIN_TYPE || "").trim();
+  const envToolchain = envType
+    ? {
+        type: envType,
+        image: process.env.BUILDCHAIN_PUBLICATION_TOOLCHAIN_IMAGE || "",
+        digest: process.env.BUILDCHAIN_PUBLICATION_TOOLCHAIN_DIGEST || "",
+        command: process.env.BUILDCHAIN_PUBLICATION_TOOLCHAIN_COMMAND || "",
+        trustClassification: envType === "latex-docker" ? "pinned-docker-toolchain" : "custom-command",
+      }
+    : undefined;
+  const toolchain = publication.toolchain || {
+    type: "custom-command",
+    image: "",
+    digest: "",
+    command: "",
+    trustClassification: "custom-command",
+  };
+  const resolved = envToolchain || toolchain;
+  const facts = {
+    type: resolved.type,
+    trustClassification: resolved.trustClassification || (resolved.type === "latex-docker" ? "pinned-docker-toolchain" : "custom-command"),
+    command: resolved.command || "",
+    image: resolved.image || "",
+    digest: resolved.digest || "",
+    machineVerifiable: resolved.type === "latex-docker" && Boolean(resolved.image && resolved.digest && resolved.command),
+  };
+  facts.invocation = facts.type === "latex-docker"
+    ? "docker-image-digest"
+    : "caller-provided-command";
+  return facts;
+}
+
+function publicationResidualRisk(toolchainFacts) {
+  const risks = [
+    {
+      id: "publication-semantic-review",
+      definedBy: KFD2_RESIDUAL_RISK_SCHEMA,
+      riskType: "natural-language-semantic-risk",
+      trustImpact: "downgrade-warning",
+      machineProvability: "not-machine-verifiable",
+      agentAction: "semantic-review-required",
+      owner: "publication maintainers",
+      reason: "Buildchain verifies declared files and hashes; it does not peer-review paper claims.",
+      note: "Buildchain verifies declared files and hashes; it does not peer-review paper claims.",
+    },
+  ];
+  if (toolchainFacts.type === "custom-command") {
+    risks.push({
+      id: "publication-custom-build-toolchain",
+      definedBy: KFD2_RESIDUAL_RISK_SCHEMA,
+      riskType: "natural-language-semantic-risk",
+      trustImpact: "downgrade-warning",
+      machineProvability: "not-machine-verifiable",
+      agentAction: "semantic-review-required",
+      owner: "publication maintainers",
+      reason: "The source-to-publication build is a caller-provided command, so Buildchain records the command boundary but cannot prove a pinned compiler or LaTeX image digest.",
+      note: "Use publication.toolchain.type = \"latex-docker\" with an image digest to make the PDF build toolchain machine-auditable.",
+    });
+  }
+  return risks;
+}
+
 export function createPublicationSourceBundle({
   cwd = process.cwd(),
   sourcePaths = [],
@@ -130,6 +194,7 @@ export function collectPublicationArtifact({
   const resolvedSourceSha = sourceSha || gitValue(cwd, ["rev-parse", "HEAD"]);
   const sourceTreeSha = gitValue(cwd, ["rev-parse", `${resolvedSourceSha}^{tree}`]);
   const timestamp = generatedAt || createdAt();
+  const toolchain = publicationToolchainFacts(publication);
   const manifest = {
     schemaVersion: 1,
     contract: PUBLICATION_ARTIFACT_MANIFEST_CONTRACT,
@@ -146,6 +211,7 @@ export function collectPublicationArtifact({
       primaryArtifact: publication.primaryArtifact,
       siteConsumers: publication.siteConsumers,
     },
+    toolchain,
     source: {
       repository: gitValue(cwd, ["config", "--get", "remote.origin.url"]),
       sha: resolvedSourceSha,
@@ -183,6 +249,7 @@ export function collectPublicationArtifact({
       status: "passed",
       manifestDigest: `sha256:${sha256Buffer(Buffer.from(JSON.stringify(manifest, null, 2)))}`,
       source: manifest.source,
+      toolchain,
       artifacts: manifest.artifacts,
       responsibility: {
         producer: "publication repository",
@@ -195,6 +262,9 @@ export function collectPublicationArtifact({
           "declared publication metadata files exist",
           "declared publication source files are hashed",
           "source bundle digest is recorded",
+          toolchain.machineVerifiable
+            ? "publication PDF build toolchain image digest is declared"
+            : "publication build command boundary is recorded",
         ],
         outsideBoundary: [
           "paper scientific claims",
@@ -202,15 +272,7 @@ export function collectPublicationArtifact({
           "human review of publication content",
         ],
       },
-      residualRisk: [
-        {
-          riskType: "natural-language-semantic-risk",
-          trustImpact: "downgrade-warning",
-          machineProvability: "not-machine-verifiable",
-          agentAction: "semantic-review-required",
-          note: "Buildchain verifies declared files and hashes; it does not peer-review paper claims.",
-        },
-      ],
+      residualRisk: publicationResidualRisk(toolchain),
     },
   };
 }

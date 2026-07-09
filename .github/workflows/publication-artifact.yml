@@ -43,6 +43,26 @@ on:
         default: "make pdf"
         type: string
         required: false
+      toolchain-type:
+        description: "Publication build toolchain: config, custom-command, or latex-docker. config reads [publication.toolchain]."
+        default: "config"
+        type: string
+        required: false
+      toolchain-image:
+        description: "Container image for latex-docker toolchain, without digest."
+        default: ""
+        type: string
+        required: false
+      toolchain-digest:
+        description: "sha256:<digest> for the latex-docker toolchain image."
+        default: ""
+        type: string
+        required: false
+      toolchain-command:
+        description: "Command run by the declared publication toolchain. For custom-command this overrides build-command."
+        default: ""
+        type: string
+        required: false
       verify-command:
         default: "make check"
         type: string
@@ -246,11 +266,105 @@ jobs:
         shell: bash
         run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
 
-      - name: Build publication
-        if: ${{ inputs.build-command != '' }}
+      - name: Resolve publication toolchain
+        id: toolchain
         shell: bash
         working-directory: ${{ inputs.working-directory }}
-        run: ${{ inputs.build-command }}
+        env:
+          INPUT_TOOLCHAIN_TYPE: ${{ inputs.toolchain-type }}
+          INPUT_TOOLCHAIN_IMAGE: ${{ inputs.toolchain-image }}
+          INPUT_TOOLCHAIN_DIGEST: ${{ inputs.toolchain-digest }}
+          INPUT_TOOLCHAIN_COMMAND: ${{ inputs.toolchain-command }}
+          INPUT_BUILD_COMMAND: ${{ inputs.build-command }}
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+          import path from "node:path";
+          import { pathToFileURL } from "node:url";
+          const runtimeConfigModule = pathToFileURL(path.join(process.env.GITHUB_WORKSPACE, ".buildchain/runtime/packages/core/buildchain-config.js")).href;
+          const { loadBuildchainConfig } = await import(runtimeConfigModule);
+
+          const cwd = process.cwd();
+          const inputType = (process.env.INPUT_TOOLCHAIN_TYPE || "config").trim();
+          const inputToolchain = {
+            type: inputType,
+            image: process.env.INPUT_TOOLCHAIN_IMAGE || "",
+            digest: process.env.INPUT_TOOLCHAIN_DIGEST || "",
+            command: process.env.INPUT_TOOLCHAIN_COMMAND || "",
+          };
+          const configToolchain = loadBuildchainConfig(cwd)?.config?.publication?.toolchain || {};
+          const resolved = inputType && inputType !== "config"
+            ? inputToolchain
+            : { type: configToolchain.type || "custom-command", image: configToolchain.image || "", digest: configToolchain.digest || "", command: configToolchain.command || "" };
+          if (resolved.type === "custom-command" && !resolved.command) {
+            resolved.command = process.env.INPUT_BUILD_COMMAND || "";
+          }
+          if (!["custom-command", "latex-docker"].includes(resolved.type)) {
+            throw new Error(`unsupported publication toolchain: ${resolved.type}`);
+          }
+          if (resolved.type === "latex-docker") {
+            if (!resolved.image) throw new Error("latex-docker publication toolchain requires toolchain-image or publication.toolchain.image");
+            if (!/^sha256:[0-9a-f]{64}$/i.test(resolved.digest || "")) {
+              throw new Error("latex-docker publication toolchain requires toolchain-digest or publication.toolchain.digest as sha256:<64 hex>");
+            }
+            if (!resolved.command) throw new Error("latex-docker publication toolchain requires toolchain-command or publication.toolchain.command");
+          }
+          const output = process.env.GITHUB_OUTPUT;
+          function writeOutput(name, value) {
+            const text = String(value || "");
+            if (text.includes("\n")) {
+              const marker = `EOF_${name}_${Date.now()}`;
+              fs.appendFileSync(output, `${name}<<${marker}\n${text}\n${marker}\n`);
+            } else {
+              fs.appendFileSync(output, `${name}=${text}\n`);
+            }
+          }
+          writeOutput("type", resolved.type);
+          writeOutput("image", resolved.image || "");
+          writeOutput("digest", resolved.digest || "");
+          writeOutput("command", resolved.command || "");
+          writeOutput("image-ref", resolved.image && resolved.digest ? `${resolved.image}@${resolved.digest}` : "");
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, [
+            "## Publication toolchain",
+            "",
+            `- type: \`${resolved.type}\``,
+            `- image: \`${resolved.image || "(none)"}\``,
+            `- digest: \`${resolved.digest || "(none)"}\``,
+            "",
+          ].join("\n"));
+          NODE
+
+      - name: Build publication
+        if: ${{ steps.toolchain.outputs.command != '' }}
+        shell: bash
+        working-directory: ${{ inputs.working-directory }}
+        env:
+          BUILDCHAIN_PUBLICATION_TOOLCHAIN_TYPE: ${{ steps.toolchain.outputs.type }}
+          BUILDCHAIN_PUBLICATION_TOOLCHAIN_IMAGE: ${{ steps.toolchain.outputs.image }}
+          BUILDCHAIN_PUBLICATION_TOOLCHAIN_DIGEST: ${{ steps.toolchain.outputs.digest }}
+          BUILDCHAIN_PUBLICATION_TOOLCHAIN_COMMAND: ${{ steps.toolchain.outputs.command }}
+          BUILDCHAIN_PUBLICATION_TOOLCHAIN_IMAGE_REF: ${{ steps.toolchain.outputs.image-ref }}
+        run: |
+          set -euo pipefail
+          if [ "$BUILDCHAIN_PUBLICATION_TOOLCHAIN_TYPE" = "latex-docker" ]; then
+            docker pull "$BUILDCHAIN_PUBLICATION_TOOLCHAIN_IMAGE_REF"
+            workspace_rel="${PWD#"$GITHUB_WORKSPACE"}"
+            workspace_rel="${workspace_rel#/}"
+            docker_workdir="/workspace"
+            if [ -n "$workspace_rel" ]; then
+              docker_workdir="/workspace/$workspace_rel"
+            fi
+            docker run --rm \
+              -v "$GITHUB_WORKSPACE:/workspace" \
+              -w "$docker_workdir" \
+              "$BUILDCHAIN_PUBLICATION_TOOLCHAIN_IMAGE_REF" \
+              bash -lc "$BUILDCHAIN_PUBLICATION_TOOLCHAIN_COMMAND"
+          elif [ "$BUILDCHAIN_PUBLICATION_TOOLCHAIN_TYPE" = "custom-command" ]; then
+            bash -lc "$BUILDCHAIN_PUBLICATION_TOOLCHAIN_COMMAND"
+          else
+            echo "::error::unsupported publication toolchain: $BUILDCHAIN_PUBLICATION_TOOLCHAIN_TYPE"
+            exit 1
+          fi
 
       - name: Verify publication
         if: ${{ inputs.verify-command != '' }}
@@ -262,6 +376,11 @@ jobs:
         id: manifest
         shell: bash
         working-directory: ${{ inputs.working-directory }}
+        env:
+          BUILDCHAIN_PUBLICATION_TOOLCHAIN_TYPE: ${{ steps.toolchain.outputs.type }}
+          BUILDCHAIN_PUBLICATION_TOOLCHAIN_IMAGE: ${{ steps.toolchain.outputs.image }}
+          BUILDCHAIN_PUBLICATION_TOOLCHAIN_DIGEST: ${{ steps.toolchain.outputs.digest }}
+          BUILDCHAIN_PUBLICATION_TOOLCHAIN_COMMAND: ${{ steps.toolchain.outputs.command }}
         run: |
           node "${GITHUB_WORKSPACE}/.buildchain/runtime/bin/buildchain.mjs" publication-artifact manifest \
             --cwd . \
