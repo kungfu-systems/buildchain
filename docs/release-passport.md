@@ -109,8 +109,8 @@ buildchain collect github-release \
   --platform-manifest-json .buildchain/artifacts/darwin-arm64/manifest.json \
   --platform-manifest-json .buildchain/artifacts/win32-x64/manifest.json \
   --dist-tag-evidence-json .buildchain/release-evidence/v2.2.0/dist-tag-evidence.json \
-  --kfd-1-witness-json .buildchain/kfd-1/contract-world.witness.json \
-  --kfd-2-claim-json .buildchain/kfd-2/release-claims.json \
+  --kfd-1-witness-json .buildchain/kfd/kfd-1/contract-world.witness.json \
+  --kfd-2-claim-json .buildchain/kfd/kfd-2/release-claims.json \
   --output-dir .buildchain/release-passport
 ```
 
@@ -279,7 +279,7 @@ pre-build witness:
 
 ```bash
 kungfu sdk collaboration-interface witness --json \
-  > .buildchain/kfd-3/collaboration-interface.prebuild.json
+  > .buildchain/kfd/kfd-3/collaboration-interface.prebuild.json
 ```
 
 That witness must contain, or point to, the product-owned KFD-3 collaboration
@@ -292,7 +292,7 @@ either as a JSON file or a command:
 
 ```bash
 buildchain collect github-release \
-  --kfd-3-prebuild-witness-json .buildchain/kfd-3/collaboration-interface.prebuild.json \
+  --kfd-3-prebuild-witness-json .buildchain/kfd/kfd-3/collaboration-interface.prebuild.json \
   --kfd-3-artifact-verify-cmd "kungfu agent verify --json"
 ```
 

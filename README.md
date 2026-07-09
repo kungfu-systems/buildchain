@@ -179,7 +179,7 @@ readable, but new consumers should keep Buildchain-owned files under
 ```text
 .buildchain/buildchain.toml
 .buildchain/contract-lock.json
-.buildchain/kfd/kfd-3-surfaces.json
+.buildchain/kfd/kfd-3/surfaces.json
 .buildchain/release-passport/buildchain.release.json
 ```
 
