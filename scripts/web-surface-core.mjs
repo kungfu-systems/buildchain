@@ -4,6 +4,7 @@ import dns from "node:dns/promises";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { setTimeout as sleep } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 import { loadBuildchainConfig, validateBuildchainConfig } from "../packages/core/buildchain-config.js";
 import { createSurfaceTimestampPolicy } from "../packages/core/surface-manifest.js";
@@ -1436,6 +1437,37 @@ function managedNetworkHealthCheck({ target, result, plan, commandRunner, verify
   };
 }
 
+async function fetchWithRetry(url, {
+  fetchImpl,
+  attempts = 3,
+  intervalMs = 5000,
+  shouldRetry = () => false,
+} = {}) {
+  const maxAttempts = Math.max(1, Number(attempts) || 1);
+  let lastError = null;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      const response = await fetchImpl(url, { redirect: "follow" });
+      if (attempt >= maxAttempts || !shouldRetry(response)) {
+        return { response, attempts: attempt };
+      }
+    } catch (error) {
+      lastError = error;
+      if (attempt >= maxAttempts) {
+        throw Object.assign(error, { attempts: attempt });
+      }
+    }
+    if (intervalMs > 0) {
+      await sleep(intervalMs);
+    }
+  }
+  throw Object.assign(lastError || new Error("web-surface fetch retry exhausted"), { attempts: maxAttempts });
+}
+
+function retryableHealthResponse(response) {
+  return response.status === 403 || response.status === 404 || response.status >= 500;
+}
+
 export async function checkWebSurfaceHealth({
   result = null,
   plan = null,
@@ -1446,6 +1478,8 @@ export async function checkWebSurfaceHealth({
   allowedManagedNetworkRunner = false,
   managedNetworkS3ObjectVerification = true,
   commandRunner = defaultCommandRunner,
+  httpRetryAttempts = Number(process.env.BUILDCHAIN_WEB_SURFACE_HEALTH_HTTP_RETRY_ATTEMPTS || 3),
+  httpRetryIntervalMs = Number(process.env.BUILDCHAIN_WEB_SURFACE_HEALTH_HTTP_RETRY_INTERVAL_MS || 5000),
 } = {}) {
   const loadedConfig = loadBuildchainConfig(cwd);
   const config = assertWebSurfaceConfig(loadedConfig);
@@ -1523,7 +1557,12 @@ export async function checkWebSurfaceHealth({
       continue;
     }
     try {
-      const response = await fetchImpl(url, { redirect: "follow" });
+      const { response, attempts } = await fetchWithRetry(url, {
+        fetchImpl,
+        attempts: httpRetryAttempts,
+        intervalMs: httpRetryIntervalMs,
+        shouldRetry: retryableHealthResponse,
+      });
       const expectedNoindex = Boolean(config.channels?.[channel]?.noindex);
       const headerNoindex = noindexHeader(response.headers);
       const body = htmlLikeResponse(response, url) && typeof response.text === "function"
@@ -1542,6 +1581,7 @@ export async function checkWebSurfaceHealth({
         healthStrategy: "http",
         status: statusOk && noindexOk ? "pass" : "fail",
         httpStatus: response.status,
+        attempts,
         finalUrl: response.url || url,
         noindexHeader: noindex,
         noindexHeaderValue: headerNoindex,
@@ -1558,6 +1598,7 @@ export async function checkWebSurfaceHealth({
         url,
         status: "fail",
         httpStatus: 0,
+        attempts: error.attempts || 1,
         finalUrl: "",
         noindexHeader: false,
         message: String(error.message || error),
