@@ -57,9 +57,24 @@ export function parseReleaseLineRecoveryRef(ref) {
   };
 }
 
+export function parsePublishGateChannelRef(ref) {
+  const normalizedRef = normalizeRef(ref);
+  const match = normalizedRef.match(/^publish-gate\/(alpha|release)\/(v(\d+)\/v(\d+\.\d+))\/[^/]+$/);
+  if (!match) return undefined;
+  return {
+    channel: match[1],
+    major: Number(match[3]),
+    loose: Number(match[4]),
+    normalizedRef: `${match[1]}/${match[2]}`,
+    lineSuffix: `/${match[2]}`,
+  };
+}
+
 export function getChannel(ref) {
   const versionStateTarget = parseVersionStateRef(ref);
   if (versionStateTarget) return versionStateTarget.channel;
+  const publishGateTarget = parsePublishGateChannelRef(ref);
+  if (publishGateTarget) return publishGateTarget.channel;
   const normalizedRef = normalizeRef(ref);
   if (isMajorGateRef(normalizedRef)) return MAJOR_GATE_CHANNEL;
   return normalizedRef.split("/")[0];
@@ -68,6 +83,8 @@ export function getChannel(ref) {
 export function getLineSuffix(ref, channel) {
   const versionStateTarget = parseVersionStateRef(ref);
   if (versionStateTarget) return versionStateTarget.lineSuffix;
+  const publishGateTarget = parsePublishGateChannelRef(ref);
+  if (publishGateTarget) return publishGateTarget.lineSuffix;
   if (isMajorGateRef(ref)) return "";
   return normalizeRef(ref).replace(channel, "");
 }
@@ -98,6 +115,7 @@ export function getBumpKeyword({ cwd = process.cwd(), headRef, baseRef, loose = 
   const lastLooseVersionNumber = Number((looseVersionNumber - 0.1).toFixed(1));
   const versionStateTarget = parseVersionStateRef(headRef);
   const releaseLineRecoveryTarget = parseReleaseLineRecoveryRef(headRef);
+  const publishGateTarget = parsePublishGateChannelRef(headRef);
   const headChannel = getChannel(headRef);
   const baseChannel = getChannel(baseRef);
   const key = `${headChannel}->${baseChannel}`;
@@ -121,6 +139,17 @@ export function getBumpKeyword({ cwd = process.cwd(), headRef, baseRef, loose = 
       throw new Error(mismatchMsg);
     }
     return "patch";
+  }
+
+  if (publishGateTarget) {
+    if (publishGateTarget.channel !== baseChannel || publishGateTarget.normalizedRef !== normalizeRef(baseRef)) {
+      throw new Error(`Versions not match for head/base refs: ${headRef} -> ${baseRef}`);
+    }
+    const mismatchMsg = `The version of head ref ${headRef} does not match current ${version.version}`;
+    if (publishGateTarget.major !== version.major || publishGateTarget.loose !== looseVersionNumber) {
+      throw new Error(mismatchMsg);
+    }
+    return baseChannel === "release" ? "patch" : "prerelease";
   }
 
   if (getLineSuffix(headRef, headChannel) !== getLineSuffix(baseRef, baseChannel) && !preminor && !majorGate) {
