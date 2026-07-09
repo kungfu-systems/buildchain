@@ -7,7 +7,7 @@
     "workflowCount": 36,
     "actionCount": 4,
     "sitePageCount": 45,
-    "docCommandRefCount": 227,
+    "docCommandRefCount": 228,
     "failureCount": 0
   },
   "enumerated": {
@@ -1938,6 +1938,11 @@
         "command": "buildchain kfd migrate-layout --write"
       },
       {
+        "id": "kfd-migrate-layout",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd migrate-layout --write"
+      },
+      {
         "id": "kfd-schema-list",
         "path": "docs/cli.md",
         "command": "buildchain kfd schema list"
@@ -2440,7 +2445,7 @@
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "1f7e1f7707a089f067175030fde6712b69ceece3df1b811eb542b0b4c8c1d4a9",
     "workflowRegistryDigest": "67572429a83124370b9ffd46f56923aa2b252873c9624ded39a26675fb0ee815",
-    "pageRegistryDigest": "f5af501c53824ee446f41a9e2c41c0a60f9ee5475b54cec85ddb5d2f6f93e125"
+    "pageRegistryDigest": "b4addcee8dc68e83efc814c24b6e7c614f158465152d7ed84f3fa03dcba4b7b8"
   },
   "comparison": {
     "missingCliRegistry": [],

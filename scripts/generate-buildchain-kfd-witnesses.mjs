@@ -9,6 +9,12 @@ import {
   createBuildchainKfd3ArtifactWitness,
   createBuildchainKfd3PrebuildWitness,
 } from "../packages/core/buildchain-kfd-claims.js";
+import {
+  BUILDCHAIN_KFD1_CONTRACT_WORLD_WITNESS_PATH,
+  BUILDCHAIN_KFD2_CLAIMS_DIR,
+  BUILDCHAIN_KFD3_ARTIFACT_WITNESS_PATH,
+  BUILDCHAIN_KFD3_PREBUILD_WITNESS_PATH,
+} from "../packages/core/buildchain-layout.js";
 import { writeGitHubOutputs } from "./build-contract-core.mjs";
 
 function parseArgs(argv = process.argv.slice(2)) {
@@ -60,11 +66,12 @@ export function generateBuildchainKfdWitnesses({
   const root = path.resolve(cwd);
   const outDir = path.resolve(root, outputDir);
   const resolvedSourceSha = sourceSha || gitSha(root);
+  const outputPath = (canonicalPath) => path.join(outDir, path.relative(".buildchain/kfd", canonicalPath));
   const paths = {
-    kfd1Witness: path.join(outDir, "buildchain-kfd-1-witness.json"),
-    kfd3PrebuildWitness: path.join(outDir, "buildchain-kfd-3-prebuild-witness.json"),
-    kfd3ArtifactWitness: path.join(outDir, "buildchain-kfd-3-artifact-witness.json"),
-    kfd2ClaimsDir: path.join(outDir, "kfd-2-claims"),
+    kfd1Witness: outputPath(BUILDCHAIN_KFD1_CONTRACT_WORLD_WITNESS_PATH),
+    kfd3PrebuildWitness: outputPath(BUILDCHAIN_KFD3_PREBUILD_WITNESS_PATH),
+    kfd3ArtifactWitness: outputPath(BUILDCHAIN_KFD3_ARTIFACT_WITNESS_PATH),
+    kfd2ClaimsDir: outputPath(BUILDCHAIN_KFD2_CLAIMS_DIR),
   };
   writeJson(paths.kfd1Witness, createBuildchainKfd1Witness({ root, sourceSha: resolvedSourceSha }));
   writeJson(paths.kfd3PrebuildWitness, createBuildchainKfd3PrebuildWitness({ root, sourceSha: resolvedSourceSha }));

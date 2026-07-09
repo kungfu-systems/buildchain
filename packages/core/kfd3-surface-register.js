@@ -7,7 +7,7 @@ export const KFD3_SURFACE_REGISTRY_CONTRACT = "kungfu-buildchain-kfd-3-surface-r
 export const KFD3_SURFACE_DETECTION_CONTRACT = "kungfu-buildchain-kfd-3-surface-detection";
 export const KFD3_SURFACE_AUDIT_CONTRACT = "kungfu-buildchain-kfd-3-surface-audit";
 export const KFD3_CAPABILITY_QUERY_CONTRACT = "kungfu-buildchain-kfd-3-capability-query";
-export const KFD3_DEFAULT_REGISTRY_PATH = ".buildchain/kfd/kfd-3-surfaces.json";
+export const KFD3_DEFAULT_REGISTRY_PATH = ".buildchain/kfd/kfd-3/surfaces.json";
 
 const KIND_ALIASES = Object.freeze({
   "node-api": "node-api",

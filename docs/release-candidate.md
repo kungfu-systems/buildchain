@@ -105,9 +105,9 @@ jobs:
     with:
       channel: alpha
       artifact-name: libnode
-      release-passport-kfd-1-witness-jsons: .buildchain/kfd-1/standard-contract.witness.json
-      release-passport-kfd-2-claim-jsons: .buildchain/kfd-2/release-claims.json
-      release-passport-kfd-3-prebuild-witness-jsons: .buildchain/kfd-3/collaboration-interface.prebuild.json
+      release-passport-kfd-1-witness-jsons: .buildchain/kfd/kfd-1/standard-contract.witness.json
+      release-passport-kfd-2-claim-jsons: .buildchain/kfd/kfd-2/release-claims.json
+      release-passport-kfd-3-prebuild-witness-jsons: .buildchain/kfd/kfd-3/collaboration-interface.prebuild.json
       release-passport-kfd-3-artifact-verify-command: kungfu agent verify --json
 ```
 

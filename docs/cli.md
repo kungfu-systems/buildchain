@@ -222,7 +222,7 @@ buildchain kfd schema show kfd-3 --json
 buildchain kfd 3 detect --kind node-api --kind cli --json
 buildchain kfd 3 register node-api --product Buildchain
 buildchain kfd 3 audit --json
-buildchain kfd 3 witness --kind prebuild --output .buildchain/kfd-3/collaboration-interface.prebuild.json
+buildchain kfd 3 witness --kind prebuild --output .buildchain/kfd/kfd-3/collaboration-interface.prebuild.json
 buildchain kfd 3 query buildchain --json
 buildchain kfd 4 schema --json
 ```
@@ -480,9 +480,9 @@ buildchain collect github-release \
   --platform-manifest-json .buildchain/artifacts/darwin-arm64/manifest.json \
   --platform-manifest-json .buildchain/artifacts/win32-x64/manifest.json \
   --dist-tag-evidence-json .buildchain/release-evidence/v2.3.2/dist-tag-evidence.json \
-  --kfd-1-witness-json .buildchain/kfd-1/contract-world.witness.json \
-  --kfd-2-claim-json .buildchain/kfd-2/release-claims.json \
-  --kfd-3-prebuild-witness-json .buildchain/kfd-3/collaboration-interface.prebuild.json \
+  --kfd-1-witness-json .buildchain/kfd/kfd-1/contract-world.witness.json \
+  --kfd-2-claim-json .buildchain/kfd/kfd-2/release-claims.json \
+  --kfd-3-prebuild-witness-json .buildchain/kfd/kfd-3/collaboration-interface.prebuild.json \
   --kfd-3-artifact-verify-cmd "kungfu agent verify --json" \
   --release-extra-json '{"channel":"release","targetRef":"release/v2/v2.3"}' \
   --output-dir .buildchain/release-passport

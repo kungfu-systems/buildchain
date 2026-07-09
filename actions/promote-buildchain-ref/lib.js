@@ -41,6 +41,12 @@ import {
   createBuildchainKfd3ArtifactWitness,
   createBuildchainKfd3PrebuildWitness,
 } from "../../packages/core/buildchain-kfd-claims.js";
+import {
+  BUILDCHAIN_KFD1_CONTRACT_WORLD_WITNESS_PATH,
+  BUILDCHAIN_KFD2_CLAIMS_DIR,
+  BUILDCHAIN_KFD3_ARTIFACT_WITNESS_PATH,
+  BUILDCHAIN_KFD3_PREBUILD_WITNESS_PATH,
+} from "../../packages/core/buildchain-layout.js";
 
 const COMMIT_IDENTITY = {
   name: "Keren Dong",
@@ -1928,11 +1934,12 @@ function generateBuildchainSelfKfdInputs({
   sourceSha = "",
 } = {}) {
   const resolvedOutputDir = path.resolve(cwd, outputDir);
+  const outputPath = (canonicalPath) => path.join(resolvedOutputDir, path.relative(".buildchain/kfd", canonicalPath));
   const paths = {
-    kfd1Witness: path.join(resolvedOutputDir, "buildchain-kfd-1-witness.json"),
-    kfd3PrebuildWitness: path.join(resolvedOutputDir, "buildchain-kfd-3-prebuild-witness.json"),
-    kfd3ArtifactWitness: path.join(resolvedOutputDir, "buildchain-kfd-3-artifact-witness.json"),
-    kfd2ClaimsDir: path.join(resolvedOutputDir, "kfd-2-claims"),
+    kfd1Witness: outputPath(BUILDCHAIN_KFD1_CONTRACT_WORLD_WITNESS_PATH),
+    kfd3PrebuildWitness: outputPath(BUILDCHAIN_KFD3_PREBUILD_WITNESS_PATH),
+    kfd3ArtifactWitness: outputPath(BUILDCHAIN_KFD3_ARTIFACT_WITNESS_PATH),
+    kfd2ClaimsDir: outputPath(BUILDCHAIN_KFD2_CLAIMS_DIR),
   };
   writeJsonFile(paths.kfd1Witness, createBuildchainKfd1Witness({ root: cwd, sourceSha }));
   writeJsonFile(paths.kfd3PrebuildWitness, createBuildchainKfd3PrebuildWitness({ root: cwd, sourceSha }));
