@@ -665,6 +665,7 @@ preview_url_pattern = "https://{alias}.preview.libkungfu.dev"
 [deploy.preview]
 adapter = "aws-s3-cloudfront"
 directory_index_rewrite = "external"
+health_strategy = "s3-object"
 
 [deploy.staging]
 adapter = "aws-s3-cloudfront"
@@ -676,6 +677,7 @@ adapter = "aws-s3-cloudfront"
     (dir) => {
       const summary = validateBuildchainConfig(dir);
       assert.equal(summary.deploy.preview.directoryIndexRewrite, "external");
+      assert.equal(summary.deploy.preview.healthStrategy, "s3-object");
       assert.equal(summary.deploy.staging.directoryIndexRewrite, "buildchain");
     },
   );

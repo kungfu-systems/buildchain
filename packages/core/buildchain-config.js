@@ -29,6 +29,7 @@ const SUPPORTED_DEPLOY_ADAPTERS = new Set([
   "aws-ecs-service",
 ]);
 const SUPPORTED_DIRECTORY_INDEX_REWRITE = new Set(["buildchain", "external"]);
+const SUPPORTED_HEALTH_STRATEGIES = new Set(["http", "s3-object"]);
 const SUPPORTED_INFRA_ADAPTERS = new Set([
   "manual-observed",
   "aws-cloudformation",
@@ -672,10 +673,17 @@ function normalizeDeployConfig(name, config) {
   if (!SUPPORTED_DIRECTORY_INDEX_REWRITE.has(directoryIndexRewrite)) {
     throw new Error(`deploy.${name}.directory_index_rewrite must be one of buildchain or external`);
   }
+  const healthStrategy = config.health_strategy === undefined
+    ? undefined
+    : assertString(config.health_strategy, `deploy.${name}.health_strategy`);
+  if (healthStrategy !== undefined && !SUPPORTED_HEALTH_STRATEGIES.has(healthStrategy)) {
+    throw new Error(`deploy.${name}.health_strategy must be one of http or s3-object`);
+  }
   const normalized = {
     ...config,
     adapter,
     directoryIndexRewrite,
+    healthStrategy,
     artifactPath: config.artifact_path === undefined
       ? undefined
       : posixPath(assertString(config.artifact_path, `deploy.${name}.artifact_path`)),
@@ -685,8 +693,12 @@ function normalizeDeployConfig(name, config) {
       : normalizeDeploySurfaceOverrides(name, config.surfaces),
   };
   delete normalized.directory_index_rewrite;
+  delete normalized.health_strategy;
   delete normalized.artifact_path;
   delete normalized.secret_refs;
+  if (normalized.healthStrategy === undefined) {
+    delete normalized.healthStrategy;
+  }
   if (normalized.surfaces === undefined) {
     delete normalized.surfaces;
   }
@@ -713,9 +725,16 @@ function normalizeDeploySurfaceOverride(channelName, surfaceName, override) {
   if (directoryIndexRewrite !== undefined && !SUPPORTED_DIRECTORY_INDEX_REWRITE.has(directoryIndexRewrite)) {
     throw new Error(`${label}.directory_index_rewrite must be one of buildchain or external`);
   }
+  const healthStrategy = override.health_strategy === undefined
+    ? undefined
+    : assertString(override.health_strategy, `${label}.health_strategy`);
+  if (healthStrategy !== undefined && !SUPPORTED_HEALTH_STRATEGIES.has(healthStrategy)) {
+    throw new Error(`${label}.health_strategy must be one of http or s3-object`);
+  }
   const normalized = {
     ...override,
     directoryIndexRewrite,
+    healthStrategy,
     artifactPath: override.artifact_path === undefined
       ? undefined
       : posixPath(assertString(override.artifact_path, `${label}.artifact_path`)),
@@ -725,6 +744,7 @@ function normalizeDeploySurfaceOverride(channelName, surfaceName, override) {
     secretRefs: normalizeStringArray(override.secret_refs, `${label}.secret_refs`),
   };
   delete normalized.directory_index_rewrite;
+  delete normalized.health_strategy;
   delete normalized.artifact_path;
   delete normalized.origin_path;
   delete normalized.secret_refs;
@@ -739,6 +759,9 @@ function normalizeDeploySurfaceOverride(channelName, surfaceName, override) {
   }
   if (normalized.directoryIndexRewrite === undefined) {
     delete normalized.directoryIndexRewrite;
+  }
+  if (normalized.healthStrategy === undefined) {
+    delete normalized.healthStrategy;
   }
   assertNoInlineSecretValues(override, label, new Set(["secret_refs"]));
   return normalized;
@@ -1273,6 +1296,7 @@ export function validateBuildchainConfig(
               adapter: deploy.adapter,
               artifactPath: deploy.artifactPath,
               directoryIndexRewrite: deploy.directoryIndexRewrite,
+              healthStrategy: deploy.healthStrategy,
               secretRefs: deploy.secretRefs,
             },
           ]),

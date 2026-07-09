@@ -667,6 +667,7 @@ function resolveSurfaceBindings({ config, channelName, alias, deployConfig }) {
       directoryIndex: "index.html",
       directoryIndexResolution: true,
       directoryIndexRewrite: effectiveDeploy.directoryIndexRewrite || "buildchain",
+      healthStrategy: effectiveDeploy.healthStrategy || "",
       canonicalUrl: surface.productionUrl || (channelName === "production" ? url : ""),
       pathOnly: Boolean(surface.pathOnly),
       bucket,
@@ -1386,7 +1387,7 @@ function managedNetworkS3HealthCheck({ target, evidence, commandRunner }) {
     kind: target.kind,
     requestPath: target.requestPath,
     url: target.url,
-    accessControl: "managed-network",
+    accessControl: target.accessControl || "",
     healthStrategy: "s3-object",
     status: evidence.status === "pass" && failed.length === 0 ? "pass" : "fail",
     httpStatus: null,
@@ -1406,8 +1407,8 @@ function managedNetworkS3HealthCheck({ target, evidence, commandRunner }) {
       stderr: operation.stderr || "",
     })),
     message: evidence.status === "pass" && failed.length === 0
-      ? "managed-network surface health verified from S3 manifest and object head checks; direct public fetch skipped"
-      : `managed-network S3 object health failed: ${failed.map((operation) => `${operation.action}:${operation.stderr || operation.exitCode}`).join("; ") || "missing deployment evidence"}`,
+      ? "surface health verified from S3 manifest and object head checks; direct public fetch skipped"
+      : `S3 object health failed: ${failed.map((operation) => `${operation.action}:${operation.stderr || operation.exitCode}`).join("; ") || "missing deployment evidence"}`,
   };
 }
 
@@ -1421,7 +1422,7 @@ function managedNetworkHealthCheck({ target, result, plan, commandRunner, verify
     kind: target.kind,
     requestPath: target.requestPath,
     url: target.url,
-    accessControl: "managed-network",
+    accessControl: target.accessControl || "",
     healthStrategy: "deployment-evidence",
     status: evidence.status,
     httpStatus: null,
@@ -1519,6 +1520,7 @@ export async function checkWebSurfaceHealth({
           missing: Boolean(smoke.missing),
           message: smoke.message || "",
           accessControl: binding.accessControl || config.channels?.[channel]?.accessControl || "",
+          healthStrategy: binding.healthStrategy || "",
           manifestKey: binding.manifestKey || "",
           bucket: binding.bucket || "",
           objectPrefix: binding.objectPrefix || "",
@@ -1531,6 +1533,7 @@ export async function checkWebSurfaceHealth({
         url,
         required: true,
         accessControl: config.channels?.[channel]?.accessControl || "",
+        healthStrategy: "",
       }));
 
   for (const target of smokeTargets) {
@@ -1547,6 +1550,16 @@ export async function checkWebSurfaceHealth({
         noindexHeader: false,
         message: target.message || "web-surface smoke URL is missing",
       });
+      continue;
+    }
+    if (target.healthStrategy === "s3-object") {
+      checks.push(managedNetworkHealthCheck({
+        target,
+        result,
+        plan,
+        commandRunner,
+        verifyS3Objects: managedNetworkS3ObjectVerification,
+      }));
       continue;
     }
     if (target.accessControl === "managed-network" && !allowedManagedNetworkRunner) {
