@@ -868,6 +868,7 @@ test("web-surface health check covers kfd and fails closed on production noindex
       cwd: fixture,
       result,
       checkedAt: "2026-07-01T00:00:00.000Z",
+      httpRetryAttempts: 1,
       fetchImpl(url) {
         return {
           status: 200,
@@ -908,6 +909,7 @@ test("web-surface health check smokes root and nested surface URLs", async () =>
       cwd: fixture,
       result,
       checkedAt: "2026-07-01T00:00:00.000Z",
+      httpRetryAttempts: 1,
       fetchImpl(url) {
         fetched.push(url);
         return {
@@ -931,6 +933,49 @@ test("web-surface health check smokes root and nested surface URLs", async () =>
     assert.equal(nested.httpStatus, 403);
     assert.ok(fetched.includes("https://buildchain-pr-29.preview.libkungfu.dev/"));
     assert.ok(fetched.includes("https://buildchain-pr-29.preview.libkungfu.dev/docs/"));
+  });
+});
+
+test("web-surface health check retries transient HTTP failures", async () => {
+  await withFixtureAsync(async (fixture) => {
+    fs.mkdirSync(path.join(fixture, "dist"), { recursive: true });
+    fs.writeFileSync(path.join(fixture, "dist", "index.html"), "hello\n");
+    const result = applyWebSurfaceDeploy({
+      cwd: fixture,
+      channel: "preview",
+      alias: "pr-29",
+      sourceSha: "b".repeat(40),
+      dryRun: true,
+    });
+    let calls = 0;
+    const health = await checkWebSurfaceHealth({
+      cwd: fixture,
+      result,
+      checkedAt: "2026-07-01T00:00:00.000Z",
+      httpRetryAttempts: 2,
+      httpRetryIntervalMs: 0,
+      fetchImpl(url) {
+        calls += 1;
+        return {
+          status: calls === 1 ? 403 : 200,
+          url,
+          headers: {
+            get() {
+              return "";
+            },
+          },
+          text() {
+            return "<!doctype html>";
+          },
+        };
+      },
+    });
+
+    const root = health.checks.find((check) => check.surface === "hub" && check.kind === "root");
+    assert.equal(health.status, "passed");
+    assert.equal(root.httpStatus, 200);
+    assert.equal(root.attempts, 2);
+    assert.ok(calls >= 2);
   });
 });
 

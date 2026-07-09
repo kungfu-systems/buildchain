@@ -500,6 +500,11 @@ When the apply result includes CloudFront invalidations from the
 CloudFront 403 responses as deployment failures immediately after a successful
 S3 sync and invalidation request.
 
+After the invalidation wait, HTTP smoke checks also retry transient 403, 404, and
+5xx responses before recording failure. This keeps the public health signal
+strict while absorbing short CloudFront edge propagation windows that can remain
+visible for a few seconds after the invalidation waiter returns.
+
 The health check fetches every surface root URL and any nested smoke URLs
 recorded in each surface binding. Nested smoke URLs are derived from nested HTML
 artifact files under the surface path prefix, with directory index resolution
