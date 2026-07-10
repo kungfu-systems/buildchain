@@ -262,13 +262,33 @@ and Binary Distribution run 29080058370 completed; npm `alpha` points to
 names `web-surface-immutable-publication-archive`. At this update, the repository
 has no open GitHub issues.
 
+### Stage 4: stable release throttle decision and canary gate
+
+The maintainer decision closes the cadence question with a minimum gate rather
+than a release schedule. Train and alpha remain fast. Stable promotion requires
+a product or contract diff, a 24-hour minimum interval from the preceding
+stable, the named `Build Surface Fixture` and no-apply `site-libkungfu-dev`
+canaries, and a one-hour soak after the final canary. The exact policy and
+attestor boundary live in `.buildchain/stable-release-policy.json`; passing and
+blocked decisions use the auditable `kungfu-buildchain-stable-release-gate`
+report.
+
+The `v2.11.13` promotion also exposed issue #1042 after its durable transaction,
+exact tag, floating refs, npm package, GitHub Release, and binary assets were
+already complete. Next-alpha bookkeeping compared the generated tree directly
+with a dev head that had gained this retrospective and rejected that legitimate
+concurrent file. Stage 4 changes generated next-alpha reconciliation to overlay
+only declared version-state paths on the current dev tree. It also makes any
+remaining post-complete bookkeeping failure deferred work instead of reversing
+the observed stable-release result.
+
 ### Remaining work
 
-This closure does not approve a stable-release cadence, ref retention policy,
-module decomposition, dependency cleanup, or a live repair of already missing
-consumer archive objects. Those remain separate, reviewable tasks. Any repair of
-published S3 state must start with an exact dry-run, digest comparison, impact,
-and rollback plan.
+This closure does not approve an automatic stable-release schedule, ref
+retention policy, module decomposition, dependency cleanup, or a live repair of
+already missing consumer archive objects. Those remain separate, reviewable
+tasks. Any repair of published S3 state must start with an exact dry-run, digest
+comparison, impact, and rollback plan.
 
 ## Handoff Procedure
 
@@ -292,7 +312,7 @@ consumer repositories.
 
 Open questions for the next maintainer decision:
 
-- What is the minimum canary set and soak time for a stable Buildchain release?
+- When should a second independent consumer join the minimum stable canary set?
 - Should promotion serialization be global first, or keyed by release line from
   the first implementation?
 - Which version-state and train refs remain required for rollback, and for how

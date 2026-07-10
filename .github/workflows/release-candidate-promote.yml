@@ -523,6 +523,20 @@ jobs:
           BUILDCHAIN_PUBLISH_PACKAGE_MAIN: ${{ inputs.publish-package-main }}
           BUILDCHAIN_RC_OUTPUT_DIR: .buildchain/release-candidate
 
+      - name: Enforce Buildchain stable release canary gate
+        if: ${{ needs.preflight.outputs.channel == 'release' && github.repository == 'kungfu-systems/buildchain' }}
+        shell: bash
+        run: node .buildchain/runtime/scripts/stable-release-gate.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BUILDCHAIN_PROMOTION_CHANNEL: ${{ needs.preflight.outputs.channel }}
+          BUILDCHAIN_RELEASE_CANDIDATE_VERSION: ${{ steps.rc.outputs.release-candidate-version }}
+          BUILDCHAIN_RELEASE_CANDIDATE_RUN_ID: ${{ steps.rc.outputs.release-candidate-run-id }}
+          BUILDCHAIN_RELEASE_CANDIDATE_RUN_URL: ${{ steps.rc.outputs.release-candidate-run-url }}
+          BUILDCHAIN_RELEASE_IMPACT: ${{ inputs.release-passport-impact-json }}
+          BUILDCHAIN_STABLE_RELEASE_POLICY: .buildchain/stable-release-policy.json
+          BUILDCHAIN_STABLE_RELEASE_GATE_OUTPUT: ${{ inputs.release-passport-output-dir }}/stable-release-gate.json
+
       - name: Ensure publish-gate ref locks promotion commit
         id: publish-gate
         uses: actions/github-script@v8

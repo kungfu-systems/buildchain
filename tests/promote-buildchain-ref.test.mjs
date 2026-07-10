@@ -1652,7 +1652,12 @@ test("release finalization merges protected alpha next-alpha ancestry", async ()
             })),
         }),
         getCommit: async ({ commit_sha }) => ({
-          data: { tree: { sha: `tree-${commit_sha}` } },
+          data: {
+            tree: { sha: `tree-${commit_sha}` },
+            parents: commit_sha.startsWith("commit-2")
+              ? [{ sha: commits[0]?.sha }]
+              : [],
+          },
         }),
         getTree: async () => ({
           data: { tree: [] },
@@ -3773,6 +3778,7 @@ test("release finalization merges generated next-alpha state into diverged dev",
   });
   const originalPackageBlob = "blob-package-alpha-0";
   const sharedActionBlob = "blob-action-current";
+  const devRetrospectiveBlob = "blob-dev-retrospective";
   trees.set("alpha-tree", [
     { path: "package.json", mode: "100644", type: "blob", sha: originalPackageBlob },
     {
@@ -3789,6 +3795,12 @@ test("release finalization merges generated next-alpha state into diverged dev",
       mode: "100644",
       type: "blob",
       sha: sharedActionBlob,
+    },
+    {
+      path: ".github/retrospectives/release.md",
+      mode: "100644",
+      type: "blob",
+      sha: devRetrospectiveBlob,
     },
   ]);
   commits.set(releaseHeadSha, {
@@ -3867,6 +3879,13 @@ test("release finalization merges generated next-alpha state into diverged dev",
   assert.ok(releaseVersionCommit);
   assert.ok(nextAlphaCommit);
   assert.ok(devMergeCommit);
+  assert.ok(
+    trees.get(devMergeCommit.tree).some(
+      (entry) =>
+        entry.path === ".github/retrospectives/release.md" &&
+        entry.sha === devRetrospectiveBlob,
+    ),
+  );
   assert.equal(result.sha, releaseVersionCommit.sha);
   assert.equal(result.nextAlphaSha, nextAlphaCommit.sha);
   assert.equal(refs.get("heads/alpha/v1/v1.0"), nextAlphaCommit.sha);
@@ -3891,6 +3910,86 @@ test("release finalization merges generated next-alpha state into diverged dev",
         update.currentSha === devHeadSha,
     ),
   );
+});
+
+test("completed stable release defers a failing next-alpha reconciliation", async () => {
+  const releaseHeadSha = SHA;
+  const alphaHeadSha = "c".repeat(40);
+  const devHeadSha = "d".repeat(40);
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "1.0.0-alpha.0",
+      packageManager: "pnpm@11.7.0",
+    },
+  });
+  const { octokit, refs, commits, trees } = createGitMock({
+    refs: new Map([
+      ["heads/release/v1/v1.0", releaseHeadSha],
+      ["heads/alpha/v1/v1.0", alphaHeadSha],
+      ["heads/dev/v1/v1.0", devHeadSha],
+      ["tags/v1.0.0-alpha.0", alphaHeadSha],
+      ["tags/v1.0-alpha", alphaHeadSha],
+    ]),
+  });
+  const packageBlob = "blob-package-alpha-0";
+  trees.set("alpha-tree", [
+    { path: "package.json", mode: "100644", type: "blob", sha: packageBlob },
+  ]);
+  trees.set("dev-tree", [
+    { path: "package.json", mode: "100644", type: "blob", sha: packageBlob },
+    { path: "docs/concurrent.md", mode: "100644", type: "blob", sha: "blob-concurrent" },
+  ]);
+  commits.set(releaseHeadSha, {
+    sha: releaseHeadSha,
+    tree: { sha: "alpha-tree" },
+    parents: [{ sha: alphaHeadSha }],
+  });
+  commits.set(alphaHeadSha, { sha: alphaHeadSha, tree: { sha: "alpha-tree" }, parents: [] });
+  commits.set(devHeadSha, { sha: devHeadSha, tree: { sha: "dev-tree" }, parents: [] });
+
+  const originalUpdateRef = octokit.rest.git.updateRef;
+  octokit.rest.git.updateRef = async (request) => {
+    if (request.ref === "heads/dev/v1/v1.0") {
+      const commit = commits.get(request.sha);
+      if (commit?.parents?.length === 1) {
+        throw Object.assign(new Error("Update is not a fast forward"), {
+          status: 422,
+          response: { data: { message: "Update is not a fast forward" } },
+        });
+      }
+    }
+    return originalUpdateRef(request);
+  };
+  const originalCreateTree = octokit.rest.git.createTree;
+  octokit.rest.git.createTree = async (request) => {
+    if (request.base_tree === "dev-tree") {
+      throw new Error("post-complete bookkeeping denied");
+    }
+    return originalCreateTree(request);
+  };
+  octokit.rest.checks = { create: async () => ({ data: { id: 1 } }) };
+  octokit.rest.repos = {
+    getBranchProtection: async () => ({ data: protectedChannel() }),
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: releaseHeadSha,
+    targetRef: "release/v1/v1.0",
+    cwd,
+  });
+
+  assert.equal(result.nextAlphaRequired, true);
+  assert.match(
+    result.updates.find((update) => update.action === "deferred-post-release-bookkeeping")?.reason || "",
+    /post-complete bookkeeping denied/,
+  );
+  assert.ok(refs.has("tags/v1.0.0"));
+  assert.equal(refs.get("tags/v1.0"), refs.get("tags/v1.0.0"));
+  assert.equal(refs.get("tags/v1"), refs.get("tags/v1.0.0"));
 });
 
 test("release finalization merges release ancestry into generated next-alpha", async () => {

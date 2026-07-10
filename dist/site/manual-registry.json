@@ -300,7 +300,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:9c8e3f096d314b2d0ea9a6badfdf263006e190aaa6e861489bdd05c93d3eaf04",
+      "digest": "sha256:f2eae65a8b678203da26e223bda9cffd7939852deea406f7328ce9e617da3c6f",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -314,7 +314,7 @@
       "title": "Release flow",
       "path": "docs/release-flow.md",
       "plane": "verify",
-      "digest": "sha256:feb1e056975a4ffb714d8fc0583a0f6fd8ed774c30ca168c27d5e6baf02f1cde",
+      "digest": "sha256:5b855ab3863e197b2ab257536b1f3ff85c79bca1fe962c45089b3f4c5ab81189",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "release-operator",

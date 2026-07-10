@@ -206,12 +206,54 @@ The production channel and the test channel therefore intentionally diverge
 after release: production stays on the release commit, while alpha/dev continue
 at the next prerelease commit.
 
+### Stable Release Throttle And Canary Gate
+
+Buildchain's own stable channel has an additional pre-publication gate. It is
+evaluated after the PR-stage release candidate has been resolved and before the
+publish-gate ref, package registry, exact stable tag, or floating stable refs
+are mutated. Train refs and alpha promotion do not execute this gate.
+
+The policy is versioned in `.buildchain/stable-release-policy.json`. A stable
+candidate is allowed only when all of these facts are true:
+
+- the candidate resolves to an immutable exact alpha tag and its GitHub
+  prerelease timestamp;
+- at least 24 hours have passed since the preceding stable patch on the same
+  minor line;
+- the preceding stable-to-alpha comparison contains a product or public
+  contract path, not only version, test, evidence, or retrospective changes;
+- the version-bound impact record has a non-empty summary and at least one
+  surface impact;
+- the `Build Surface Fixture` release-candidate run succeeded;
+- `site-libkungfu-dev` completed its no-apply `Buildchain Stable Canary` and an allowed
+  maintainer attested that successful run on the exact alpha SHA through the
+  `buildchain-canary/site-libkungfu-dev` commit-status context;
+- at least one hour has elapsed after the last required canary completed.
+
+The machine report is written to
+`.buildchain/release-passport/stable-release-gate.json`. A passing report is
+uploaded with the stable release passport. A blocked run writes the same report
+before failing, so the missing or stale condition is inspectable without
+opening a publication transaction.
+
+The cooldown is a minimum interval, not an instruction to release every day.
+Compatible work should still be batched until a stable release has a concrete
+consumer need. Changing the interval, canary set, attestors, product path
+boundary, or soak time is a reviewed policy change.
+
 If release finalization is resumed after generated version-state bookkeeping was
 partially applied, Buildchain applies the same recovery rule: the current
 release head may be the generated commit, or a historical merge commit that
 contains the recorded release material, existing exact tags and alpha/dev refs
 are accepted when they match the transaction, and missing floating `vX.Y` or
 `vX` tags are retried idempotently before completion.
+
+Once the durable release transaction is `complete` and the exact/floating
+stable refs have moved, next-alpha preparation is post-release bookkeeping. A
+failure there records `deferred-post-release-bookkeeping` and
+`next-anchor-required` instead of retroactively reporting the stable release as
+failed. Generated next-alpha merges use the current dev tree as their base and
+overlay only declared version-state paths, preserving concurrent dev changes.
 
 ## Major Gate Semantics
 
