@@ -354,9 +354,24 @@ test("paper release workflow publishes declared npm package with source lock and
   assert.match(workflow, /github-release: \$\{\{ inputs\.github-release \}\}/);
   assert.match(workflow, /permissions:\n  checks: write\n  contents: write/);
   assert.match(docs, /permissions:\n      checks: write\n      contents: write/);
+  assert.match(workflow, /Preflight protected publication authority/);
+  assert.match(
+    workflow,
+    /github-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token \}\}/,
+  );
+  assert.match(workflow, /cannot read branch protection before publication build/);
+  assert.match(
+    docs,
+    /BUILDCHAIN_PROMOTION_TOKEN: \$\{\{ secrets\.RELEASE_AUTHORITY_TOKEN \}\}/,
+  );
+  assert.match(docs, /caller-chosen release authority secret/);
   assert.match(workflow, /default: true/);
   assert.ok(
     workflow.indexOf("Check Buildchain contract lock") <
+      workflow.indexOf("- name: Build publication"),
+  );
+  assert.ok(
+    workflow.indexOf("Preflight protected publication authority") <
       workflow.indexOf("- name: Build publication"),
   );
   assert.ok(

@@ -169,6 +169,8 @@ jobs:
       contents: write
       id-token: write
       issues: write
+    secrets:
+      BUILDCHAIN_PROMOTION_TOKEN: ${{ secrets.RELEASE_AUTHORITY_TOKEN }}
     with:
       buildchain-ref: ${{ inputs.buildchain-ref || '' }}
       toolchain-type: config
@@ -176,10 +178,21 @@ jobs:
       buildchain-contract-lock-path: .buildchain/contract-lock.json
 ```
 
+`RELEASE_AUTHORITY_TOKEN` is a caller-chosen release authority secret name.
+Map whichever repository or organization secret owns protected release
+bookkeeping into the reusable workflow's `BUILDCHAIN_PROMOTION_TOKEN` contract;
+the reusable workflow does not require that provider-side secret to use a
+specific name. Before it builds the paper, the workflow uses that authority to
+read the target channel's branch protection and fails with a configuration
+diagnostic if the protection is not readable. `github.token` remains a fallback
+for repositories where its permissions are sufficient.
+
 The preset:
 
 - resolves the same floating Buildchain runtime and contract lock as the build
   workflow;
+- verifies that the declared promotion authority can read the protected target
+  channel before starting the publication build;
 - builds the PDF through the declared pinned LaTeX Docker toolchain or custom
   command;
 - verifies the paper repository;

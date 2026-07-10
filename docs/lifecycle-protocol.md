@@ -256,6 +256,14 @@ refs. After the command finishes, Buildchain checks that only declared
 version-state files changed. This prevents verification from quietly adding
 extra source changes to the release commit.
 
+Buildchain-owned untracked runtime evidence is excluded only through an exact
+internal allowlist. This includes contract-drift issue material under
+`.buildchain/contract-drift/` and the paper workflow's
+`.buildchain/publication-result.json`, alongside release-candidate, passport,
+release-state, KFD, and runtime evidence directories. Tracked changes, ordinary
+source files, and undeclared `.buildchain/*` paths still fail version
+verification.
+
 On protected alpha and release branches, the generated version-state commit is
 applied by the promotion automation after the reviewed channel PR has merged.
 Buildchain keeps review requirements, conversation resolution, strict status
