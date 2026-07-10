@@ -855,6 +855,7 @@ for (const requiredSnippet of [
   "scripts/create-release-bundle.mjs",
   "buildchain-release-bundle",
   "scripts/ensure-github-release.mjs",
+  "--impact-json .buildchain/release-evidence/authoritative-release-state-impact.json",
   "gh release upload",
 ]) {
   if (!binaryDistributionWorkflow.includes(requiredSnippet)) {
