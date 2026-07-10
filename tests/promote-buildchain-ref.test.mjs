@@ -211,6 +211,88 @@ function run(command, cwd) {
   });
 }
 
+test("durable release transaction treats retried createRef as idempotent", async () => {
+  const cwd = makeTempWorkspace({});
+  const { octokit, refs, commitLog } = createGitMock();
+  const originalCreateRef = octokit.rest.git.createRef;
+  const originalUpdateRef = octokit.rest.git.updateRef;
+  let createCalls = 0;
+  let updateCalls = 0;
+  octokit.rest.git.createRef = async (request) => {
+    createCalls += 1;
+    if (createCalls === 1) {
+      await originalCreateRef(request);
+      throw transientGitHubError();
+    }
+    return originalCreateRef(request);
+  };
+  octokit.rest.git.updateRef = async (request) => {
+    updateCalls += 1;
+    return originalUpdateRef(request);
+  };
+
+  const result = await persistDurableReleaseTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    transaction: {
+      schema: 1,
+      exact_tag: "v1.0.0-alpha.0",
+      state_ref: "buildchain/release-state/1-0-0-alpha-0",
+      state_path: path.join(cwd, ".buildchain/release-state/v1.0.0-alpha.0.json"),
+      state: "publishing",
+    },
+  });
+
+  assert.equal(createCalls, 2);
+  assert.equal(updateCalls, 0);
+  assert.equal(result.sha, refs.get("heads/buildchain/release-state/1-0-0-alpha-0"));
+  assert.equal(commitLog.length, 1);
+});
+
+test("durable release transaction treats retried updateRef non-fast-forward as idempotent", async () => {
+  const cwd = makeTempWorkspace({});
+  const { octokit, refs, commitLog } = createGitMock({
+    refs: new Map([["heads/buildchain/release-state/1-0-0-alpha-0", OTHER_SHA]]),
+  });
+  const originalUpdateRef = octokit.rest.git.updateRef;
+  let updateCalls = 0;
+  octokit.rest.git.updateRef = async (request) => {
+    updateCalls += 1;
+    if (updateCalls === 1) {
+      await originalUpdateRef(request);
+      throw transientGitHubError();
+    }
+    if (refs.get(request.ref) === request.sha) {
+      const error = new Error("Update is not a fast forward");
+      error.status = 422;
+      error.response = { data: { message: "Update is not a fast forward" } };
+      throw error;
+    }
+    return originalUpdateRef(request);
+  };
+
+  const result = await persistDurableReleaseTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    transaction: {
+      schema: 1,
+      exact_tag: "v1.0.0-alpha.0",
+      state_ref: "buildchain/release-state/1-0-0-alpha-0",
+      state_path: path.join(cwd, ".buildchain/release-state/v1.0.0-alpha.0.json"),
+      state: "published",
+    },
+  });
+
+  assert.equal(updateCalls, 2);
+  assert.equal(result.sha, refs.get("heads/buildchain/release-state/1-0-0-alpha-0"));
+  assert.equal(commitLog.length, 1);
+  assert.deepEqual(commitLog[0].parents, [OTHER_SHA]);
+});
+
 function protectedChannel(overrides = {}) {
   return {
     enforce_admins: { enabled: true },
@@ -879,6 +961,11 @@ test("version verification ignores generated buildchain evidence", () => {
   fs.writeFileSync(
     path.join(cwd, ".buildchain/release-state/v1.0.1.json"),
     "{}\n",
+  );
+  fs.mkdirSync(path.join(cwd, ".buildchain/runtime/actions/promote-buildchain-ref"), { recursive: true });
+  fs.writeFileSync(
+    path.join(cwd, ".buildchain/runtime/actions/promote-buildchain-ref/action.yml"),
+    "name: runtime\n",
   );
 
   assert.doesNotThrow(() => assertAllowedLocalChanges(cwd, ["package.json"]));
@@ -4186,7 +4273,7 @@ test("publish transaction durable ref updates when create races existing ref vis
     updated_at: "2026-07-01T00:00:00.000Z",
   };
   const orderFile = path.join(cwd, "order.log");
-  const { octokit, refs } = createGitMock({ orderFile });
+  const { octokit, refs, commits } = createGitMock({ orderFile });
   const originalUpdateRef = octokit.rest.git.updateRef;
   const updateForces = [];
   octokit.rest.git.updateRef = async (args) => {
@@ -4234,7 +4321,11 @@ test("publish transaction durable ref updates when create races existing ref vis
     "create:refs/heads/buildchain/release-state/1-0-0",
     "update:heads/buildchain/release-state/1-0-0",
   ]);
-  assert.deepEqual(updateForces, [true]);
+  assert.deepEqual(updateForces, [false]);
+  assert.deepEqual(
+    commits.get(second.sha).parents.map((parent) => parent.sha),
+    [first.sha],
+  );
 });
 
 test("publish transaction durable ref rebases when update sees a newer head", async () => {
@@ -5361,6 +5452,57 @@ test("strict alpha promotion rejects protection without admin enforcement", asyn
       requireGovernance: true,
     }),
     /must enforce branch protection for administrators/,
+  );
+});
+
+test("strict alpha promotion reports all missing protected channel settings", async () => {
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (ref === "heads/alpha/v1/v1.0") {
+            return { data: { object: { sha: SHA } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async () => ({ data: [] }),
+      },
+      repos: {
+        getBranchProtection: async () => ({
+          data: protectedChannel({
+            enforce_admins: { enabled: false },
+            allow_force_pushes: { enabled: true },
+            allow_deletions: { enabled: true },
+            required_conversation_resolution: { enabled: false },
+            required_pull_request_reviews: { required_approving_review_count: 0 },
+            required_status_checks: { strict: false, contexts: [] },
+          }),
+        }),
+      },
+    },
+  };
+
+  await assert.rejects(
+    promoteBuildchainRefs({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sha: SHA,
+      targetRef: "alpha/v1/v1.0",
+      versionState: false,
+      requireGovernance: true,
+    }),
+    (error) => {
+      assert.match(error.message, /missing required protection settings/);
+      assert.match(error.message, /must enforce branch protection for administrators/);
+      assert.match(error.message, /must disallow force pushes/);
+      assert.match(error.message, /must disallow branch deletion/);
+      assert.match(error.message, /must require conversation resolution/);
+      assert.match(error.message, /must require at least one approving review/);
+      assert.match(error.message, /must require strict status checks/);
+      assert.match(error.message, /must require a check status check/);
+      return true;
+    },
   );
 });
 

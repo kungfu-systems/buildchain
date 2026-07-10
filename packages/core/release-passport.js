@@ -134,6 +134,26 @@ function readJsonFile(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
 
+function resolveJsonInputPath(input, { cwd = process.cwd() } = {}) {
+  const normalized = String(input || "").trim();
+  if (!normalized) {
+    return "";
+  }
+  if (path.isAbsolute(normalized)) {
+    return fs.existsSync(normalized) ? normalized : "";
+  }
+  const cwdCandidate = cwd ? path.resolve(cwd, normalized) : "";
+  if (cwdCandidate && fs.existsSync(cwdCandidate)) {
+    return cwdCandidate;
+  }
+  return fs.existsSync(normalized) ? path.resolve(normalized) : "";
+}
+
+function jsonInputError({ input, label, cwd, cause }) {
+  const suffix = cwd ? ` or an existing JSON file path relative to ${cwd}` : " or an existing JSON file path";
+  return new Error(`${label} must be valid JSON${suffix}; received ${JSON.stringify(input)}`, { cause });
+}
+
 function writeJsonFile(filePath, value) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`);
@@ -252,30 +272,41 @@ function defaultLlmsText({ tag = "", passportPath = "buildchain.release.json" } 
   ].join("\n");
 }
 
-function parseJsonInput(value, fallback = undefined) {
+function parseJsonInput(value, fallback = undefined, { cwd = process.cwd(), label = "JSON input" } = {}) {
   const input = String(value || "").trim();
   if (!input) {
     return fallback;
   }
-  if (fs.existsSync(input)) {
-    return readJsonFile(input);
+  const filePath = resolveJsonInputPath(input, { cwd });
+  if (filePath) {
+    return readJsonFile(filePath);
   }
-  return JSON.parse(input);
+  try {
+    return JSON.parse(input);
+  } catch (error) {
+    throw jsonInputError({ input, label, cwd, cause: error });
+  }
 }
 
-function parseJsonInputWithMeta(value, fallback = undefined) {
+function parseJsonInputWithMeta(value, fallback = undefined, { cwd = process.cwd(), label = "JSON input" } = {}) {
   const input = String(value || "").trim();
   if (!input) {
     return { value: fallback, path: "", sha256: "" };
   }
-  if (fs.existsSync(input)) {
+  const filePath = resolveJsonInputPath(input, { cwd });
+  if (filePath) {
     return {
-      value: readJsonFile(input),
+      value: readJsonFile(filePath),
       path: input,
-      sha256: sha256File(input),
+      sha256: sha256File(filePath),
     };
   }
-  const parsed = JSON.parse(input);
+  let parsed;
+  try {
+    parsed = JSON.parse(input);
+  } catch (error) {
+    throw jsonInputError({ input, label, cwd, cause: error });
+  }
   return {
     value: parsed,
     path: "",
@@ -1179,41 +1210,41 @@ export function collectGitHubReleasePassport({
   publishJson = "",
   workflow = {},
 } = {}) {
-  const release = parseJsonInput(releaseJson, {});
-  const releaseExtra = parseJsonInput(releaseJsonExtra, {});
-  const assetsFromJson = parseJsonInput(assetsJson, []);
-  const packageSet = parseJsonInput(packageSetJson, undefined);
-  const publishEvidenceMeta = parseJsonInputWithMeta(publishEvidenceJson, undefined);
-  const trustedPublishing = parseJsonInput(trustedPublishingJson, undefined);
-  const transactionMeta = parseJsonInputWithMeta(transactionJson, undefined);
-  const anchorManifest = normalizeAnchorManifest(parseJsonInputWithMeta(anchorManifestJson, undefined));
-  const impactMeta = parseJsonInputWithMeta(impactJson, undefined);
-  const buildSummaryMeta = parseJsonInputWithMeta(buildSummaryJson, undefined);
+  const release = parseJsonInput(releaseJson, {}, { cwd, label: "releaseJson" });
+  const releaseExtra = parseJsonInput(releaseJsonExtra, {}, { cwd, label: "releaseJsonExtra" });
+  const assetsFromJson = parseJsonInput(assetsJson, [], { cwd, label: "assetsJson" });
+  const packageSet = parseJsonInput(packageSetJson, undefined, { cwd, label: "packageSetJson" });
+  const publishEvidenceMeta = parseJsonInputWithMeta(publishEvidenceJson, undefined, { cwd, label: "publishEvidenceJson" });
+  const trustedPublishing = parseJsonInput(trustedPublishingJson, undefined, { cwd, label: "trustedPublishingJson" });
+  const transactionMeta = parseJsonInputWithMeta(transactionJson, undefined, { cwd, label: "transactionJson" });
+  const anchorManifest = normalizeAnchorManifest(parseJsonInputWithMeta(anchorManifestJson, undefined, { cwd, label: "anchorManifestJson" }));
+  const impactMeta = parseJsonInputWithMeta(impactJson, undefined, { cwd, label: "impactJson" });
+  const buildSummaryMeta = parseJsonInputWithMeta(buildSummaryJson, undefined, { cwd, label: "buildSummaryJson" });
   const buildFactMetas = (buildFactsJsons || [])
     .filter(Boolean)
-    .map((buildFactsJson) => parseJsonInputWithMeta(buildFactsJson, undefined))
+    .map((buildFactsJson) => parseJsonInputWithMeta(buildFactsJson, undefined, { cwd, label: "buildFactsJsons entry" }))
     .filter((meta) => meta.value);
   const platformManifestMetas = (platformManifestJsons || [])
     .filter(Boolean)
-    .map((manifestJson) => parseJsonInputWithMeta(manifestJson, undefined));
-  const distTagEvidenceMeta = parseJsonInputWithMeta(distTagEvidenceJson, undefined);
+    .map((manifestJson) => parseJsonInputWithMeta(manifestJson, undefined, { cwd, label: "platformManifestJsons entry" }));
+  const distTagEvidenceMeta = parseJsonInputWithMeta(distTagEvidenceJson, undefined, { cwd, label: "distTagEvidenceJson" });
   const kfd1WitnessMetas = (kfd1WitnessJsons || [])
     .filter(Boolean)
-    .map((witnessJson) => parseJsonInputWithMeta(witnessJson, undefined))
+    .map((witnessJson) => parseJsonInputWithMeta(witnessJson, undefined, { cwd, label: "kfd1WitnessJsons entry" }))
     .filter((meta) => meta.value);
   const kfd2ClaimMetas = (kfd2ClaimJsons || [])
     .filter(Boolean)
-    .map((claimJson) => parseJsonInputWithMeta(claimJson, undefined))
+    .map((claimJson) => parseJsonInputWithMeta(claimJson, undefined, { cwd, label: "kfd2ClaimJsons entry" }))
     .filter((meta) => meta.value);
   const kfd3PrebuildWitnessMetas = (kfd3PrebuildWitnessJsons || [])
     .filter(Boolean)
-    .map((witnessJson) => parseJsonInputWithMeta(witnessJson, undefined))
+    .map((witnessJson) => parseJsonInputWithMeta(witnessJson, undefined, { cwd, label: "kfd3PrebuildWitnessJsons entry" }))
     .filter((meta) => meta.value);
   const kfd3ArtifactWitnessMetas = (kfd3ArtifactWitnessJsons || [])
     .filter(Boolean)
-    .map((witnessJson) => parseJsonInputWithMeta(witnessJson, undefined))
+    .map((witnessJson) => parseJsonInputWithMeta(witnessJson, undefined, { cwd, label: "kfd3ArtifactWitnessJsons entry" }))
     .filter((meta) => meta.value);
-  const basePassportMeta = parseJsonInputWithMeta(basePassportJson, undefined);
+  const basePassportMeta = parseJsonInputWithMeta(basePassportJson, undefined, { cwd, label: "basePassportJson" });
   const kfd3ArtifactCommandMeta = parseJsonCommandOutput({
     command: kfd3ArtifactVerifyCommand,
     cwd,
@@ -1223,7 +1254,7 @@ export function collectGitHubReleasePassport({
     ...kfd3ArtifactWitnessMetas.map((meta) => meta.value),
     ...(kfd3ArtifactCommandMeta.value ? [kfd3ArtifactCommandMeta.value] : []),
   ];
-  const publish = parseJsonInput(publishJson, {});
+  const publish = parseJsonInput(publishJson, {}, { cwd, label: "publishJson" });
   const assets = [
     ...(Array.isArray(release.assets) ? release.assets : []),
     ...(Array.isArray(assetsFromJson) ? assetsFromJson : []),
