@@ -57,7 +57,7 @@
       "id": "stable-canary-runtime-binding",
       "impact": "patch",
       "class": "release-governance",
-      "rationale": "Stable canary evidence accepts only the exact alpha tag or its resolved commit SHA and rejects successful statuses whose workflow, repository, or runtime input is mismatched.",
+      "rationale": "Stable canary evidence verifies authoritative workflow metadata, accepts only the exact alpha tag or its resolved commit SHA from workflow inputs or the workflow-owned run-name, and rejects otherwise successful mismatched statuses.",
       "source": "scripts/stable-release-gate.mjs"
     }
   ],
