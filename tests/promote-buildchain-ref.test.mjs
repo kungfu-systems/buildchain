@@ -211,6 +211,88 @@ function run(command, cwd) {
   });
 }
 
+test("durable release transaction treats retried createRef as idempotent", async () => {
+  const cwd = makeTempWorkspace({});
+  const { octokit, refs, commitLog } = createGitMock();
+  const originalCreateRef = octokit.rest.git.createRef;
+  const originalUpdateRef = octokit.rest.git.updateRef;
+  let createCalls = 0;
+  let updateCalls = 0;
+  octokit.rest.git.createRef = async (request) => {
+    createCalls += 1;
+    if (createCalls === 1) {
+      await originalCreateRef(request);
+      throw transientGitHubError();
+    }
+    return originalCreateRef(request);
+  };
+  octokit.rest.git.updateRef = async (request) => {
+    updateCalls += 1;
+    return originalUpdateRef(request);
+  };
+
+  const result = await persistDurableReleaseTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    transaction: {
+      schema: 1,
+      exact_tag: "v1.0.0-alpha.0",
+      state_ref: "buildchain/release-state/1-0-0-alpha-0",
+      state_path: path.join(cwd, ".buildchain/release-state/v1.0.0-alpha.0.json"),
+      state: "publishing",
+    },
+  });
+
+  assert.equal(createCalls, 2);
+  assert.equal(updateCalls, 0);
+  assert.equal(result.sha, refs.get("heads/buildchain/release-state/1-0-0-alpha-0"));
+  assert.equal(commitLog.length, 1);
+});
+
+test("durable release transaction treats retried updateRef non-fast-forward as idempotent", async () => {
+  const cwd = makeTempWorkspace({});
+  const { octokit, refs, commitLog } = createGitMock({
+    refs: new Map([["heads/buildchain/release-state/1-0-0-alpha-0", OTHER_SHA]]),
+  });
+  const originalUpdateRef = octokit.rest.git.updateRef;
+  let updateCalls = 0;
+  octokit.rest.git.updateRef = async (request) => {
+    updateCalls += 1;
+    if (updateCalls === 1) {
+      await originalUpdateRef(request);
+      throw transientGitHubError();
+    }
+    if (refs.get(request.ref) === request.sha) {
+      const error = new Error("Update is not a fast forward");
+      error.status = 422;
+      error.response = { data: { message: "Update is not a fast forward" } };
+      throw error;
+    }
+    return originalUpdateRef(request);
+  };
+
+  const result = await persistDurableReleaseTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    transaction: {
+      schema: 1,
+      exact_tag: "v1.0.0-alpha.0",
+      state_ref: "buildchain/release-state/1-0-0-alpha-0",
+      state_path: path.join(cwd, ".buildchain/release-state/v1.0.0-alpha.0.json"),
+      state: "published",
+    },
+  });
+
+  assert.equal(updateCalls, 2);
+  assert.equal(result.sha, refs.get("heads/buildchain/release-state/1-0-0-alpha-0"));
+  assert.equal(commitLog.length, 1);
+  assert.deepEqual(commitLog[0].parents, [OTHER_SHA]);
+});
+
 function protectedChannel(overrides = {}) {
   return {
     enforce_admins: { enabled: true },
@@ -4186,7 +4268,7 @@ test("publish transaction durable ref updates when create races existing ref vis
     updated_at: "2026-07-01T00:00:00.000Z",
   };
   const orderFile = path.join(cwd, "order.log");
-  const { octokit, refs } = createGitMock({ orderFile });
+  const { octokit, refs, commits } = createGitMock({ orderFile });
   const originalUpdateRef = octokit.rest.git.updateRef;
   const updateForces = [];
   octokit.rest.git.updateRef = async (args) => {
@@ -4234,7 +4316,11 @@ test("publish transaction durable ref updates when create races existing ref vis
     "create:refs/heads/buildchain/release-state/1-0-0",
     "update:heads/buildchain/release-state/1-0-0",
   ]);
-  assert.deepEqual(updateForces, [true]);
+  assert.deepEqual(updateForces, [false]);
+  assert.deepEqual(
+    commits.get(second.sha).parents.map((parent) => parent.sha),
+    [first.sha],
+  );
 });
 
 test("publish transaction durable ref rebases when update sees a newer head", async () => {
