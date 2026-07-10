@@ -147,20 +147,37 @@ async function resolveCanaryEvidence({
     const status = statuses.find((entry) => entry.context === canary.context);
     const targetRun = parseRunUrl(status?.target_url);
     let targetRunEvidence;
+    let targetWorkflowEvidence;
     if (targetRun && (!canary.repository || targetRun.repository === canary.repository)) {
       targetRunEvidence = await api(
         `/repos/${targetRun.owner}/${targetRun.repo}/actions/runs/${targetRun.runId}`,
       );
+      if (targetRunEvidence?.workflow_id) {
+        targetWorkflowEvidence = await api(
+          `/repos/${targetRun.owner}/${targetRun.repo}/actions/workflows/${encodeURIComponent(targetRunEvidence.workflow_id)}`,
+        );
+      }
     }
+    const workflowName = targetWorkflowEvidence?.name || targetRunEvidence?.name || "";
+    const workflowPath = targetWorkflowEvidence?.path || targetRunEvidence?.path || "";
     const workflowMatches = !canary.workflow ||
-      canary.workflow === targetRunEvidence?.name ||
-      canary.workflow === targetRunEvidence?.path?.split("/").pop();
+      canary.workflow === workflowName ||
+      canary.workflow === workflowPath.split("/").pop();
     const repositoryMatches = !canary.repository || targetRun?.repository === canary.repository;
-    const runtimeRef = String(
+    const inputRuntimeRef = String(
       targetRunEvidence?.inputs?.buildchain_ref ||
       targetRunEvidence?.inputs?.buildchainRef ||
       "",
     ).trim();
+    const runDisplayName = String(
+      targetRunEvidence?.display_title || targetRunEvidence?.name || "",
+    ).trim();
+    const runNamePrefix = `${workflowName || canary.workflow || ""} / `;
+    const runNameRuntimeRef = runNamePrefix.trim() && runDisplayName.startsWith(runNamePrefix)
+      ? runDisplayName.slice(runNamePrefix.length).trim()
+      : "";
+    const runtimeRef = inputRuntimeRef || runNameRuntimeRef;
+    const runtimeRefSource = inputRuntimeRef ? "workflow-input" : runNameRuntimeRef ? "run-name" : "missing";
     const runtimeRefMatches = runtimeRef === candidateTag || runtimeRef === candidateSha;
     const evidenceMatches =
       status?.state === "success" &&
@@ -179,9 +196,11 @@ async function resolveCanaryEvidence({
       completedAt: targetRunEvidence?.updated_at || status?.updated_at || "",
       evidenceUrl: status?.target_url || "",
       repository: targetRun?.repository || canary.repository,
-      workflow: targetRunEvidence?.name || targetRunEvidence?.path || "",
+      workflow: workflowName || workflowPath,
       attestor: status?.creator?.login || "",
       runtimeRef,
+      runtimeRefSource,
+      workflowId: targetRunEvidence?.workflow_id || "",
     });
   }
   return evidence;
