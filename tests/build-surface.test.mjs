@@ -330,6 +330,8 @@ test("paper release workflow publishes declared npm package with source lock and
   assert.match(workflow, /ghcr\.io\/kungfu-systems\/build-images\/latex-pdf-builder/);
   assert.match(workflow, /publication-artifact manifest/);
   assert.match(workflow, /publication-artifact npm-package/);
+  assert.match(workflow, /path\.resolve\(process\.cwd\(\), result\.outputDir\)/);
+  assert.match(workflow, /write\("package-dir", result\.outputDir\)/);
   assert.match(workflow, /npm pack --dry-run/);
   assert.match(workflow, /publish-required-artifacts-json: \$\{\{ steps\.package\.outputs\.publish-required-artifacts-json \}\}/);
   assert.match(workflow, /publish-command: >-/);
