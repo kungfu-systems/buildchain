@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "44e128d86f80239aee01c3823faaafcb484b897f3f8af2e8d3d659e377e5e7bb",
+    "sha256": "f758f5a5123875fc98d351e222424c301575f16eb623a3f736fdd2af8edd1e30",
     "summary": {
       "cliCommandCount": 75,
       "workflowCount": 37,
@@ -208,7 +208,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "44e128d86f80239aee01c3823faaafcb484b897f3f8af2e8d3d659e377e5e7bb",
+      "sha256": "f758f5a5123875fc98d351e222424c301575f16eb623a3f736fdd2af8edd1e30",
       "summary": {
         "cliCommandCount": 75,
         "workflowCount": 37,
@@ -2282,7 +2282,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 49,
+          "inputCount": 50,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -2304,6 +2304,7 @@
             "buildchain-repository",
             "checkout-cache-fallback",
             "checkout-cache-fetch-attempts",
+            "checkout-cache-github-timeout-seconds",
             "checkout-cache-mirror-url-template",
             "checkout-cache-mode",
             "checkout-cache-reference-repository-template",

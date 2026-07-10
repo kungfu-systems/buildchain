@@ -282,6 +282,26 @@ only declared version-state paths on the current dev tree. It also makes any
 remaining post-complete bookkeeping failure deferred work instead of reversing
 the observed stable-release result.
 
+### Post-closure correction: issue #1043 source checkout
+
+PR #1055 added bounded retries for the GitHub fallback path and automatically
+closed issue #1043. Later runner evidence showed that closure was incomplete:
+the failing source checkout first spent the cache timeout on a raw SHA fetch,
+then attempted an 83 MB advertised-ref snapshot under the same 60-second
+budget. On a constrained 5 Mbps uplink the two sequential fetches produced the
+observed roughly 120-second failure window; retrying the same transfer did not
+remove the structural threshold.
+
+The corrected contract fetches the advertised source ref before attempting a
+raw SHA. That lets a current mirror satisfy the checkout immediately and lets a
+stale mirror seed reusable objects before GitHub fallback. A retryable ref
+transport failure returns directly to the bounded retry loop instead of
+spending a second full timeout on an unadvertised SHA. Cache transport retains
+its 60-second default while GitHub fallback receives an independent, explicit
+300-second default budget. Exact commit and tree verification remain mandatory
+after either route. The `v2.11.14` release candidate must be regenerated after
+this correction; earlier `v2.11.14-alpha.4` canary evidence must not be reused.
+
 ### Remaining work
 
 This closure does not approve an automatic stable-release schedule, ref

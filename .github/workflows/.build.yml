@@ -227,8 +227,13 @@ on:
         type: string
         required: false
       checkout-cache-timeout-seconds:
-        description: "Timeout for each locked source checkout transport attempt"
+        description: "Timeout for each trusted cache transport attempt"
         default: 60
+        type: number
+        required: false
+      checkout-cache-github-timeout-seconds:
+        description: "Timeout for each GitHub fallback fetch attempt"
+        default: 300
         type: number
         required: false
       checkout-cache-fetch-attempts:
@@ -833,6 +838,7 @@ jobs:
           BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE: ${{ inputs.checkout-cache-reference-repository-template || vars.BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE }}
           BUILDCHAIN_CHECKOUT_CACHE_FALLBACK: ${{ inputs.checkout-cache-fallback }}
           BUILDCHAIN_CHECKOUT_CACHE_TIMEOUT_SECONDS: ${{ inputs.checkout-cache-timeout-seconds }}
+          BUILDCHAIN_CHECKOUT_CACHE_GITHUB_TIMEOUT_SECONDS: ${{ inputs.checkout-cache-github-timeout-seconds }}
           BUILDCHAIN_CHECKOUT_CACHE_FETCH_ATTEMPTS: ${{ inputs.checkout-cache-fetch-attempts }}
           BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH: .buildchain/diagnostics/source-checkout.json
           GITHUB_TOKEN: ${{ github.token }}
@@ -1050,6 +1056,7 @@ jobs:
           BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE: ${{ inputs.checkout-cache-reference-repository-template || vars.BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE }}
           BUILDCHAIN_CHECKOUT_CACHE_FALLBACK: ${{ inputs.checkout-cache-fallback }}
           BUILDCHAIN_CHECKOUT_CACHE_TIMEOUT_SECONDS: ${{ inputs.checkout-cache-timeout-seconds }}
+          BUILDCHAIN_CHECKOUT_CACHE_GITHUB_TIMEOUT_SECONDS: ${{ inputs.checkout-cache-github-timeout-seconds }}
           BUILDCHAIN_CHECKOUT_CACHE_FETCH_ATTEMPTS: ${{ inputs.checkout-cache-fetch-attempts }}
           BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH: .buildchain/diagnostics/source-checkout.json
           GITHUB_TOKEN: ${{ github.token }}
