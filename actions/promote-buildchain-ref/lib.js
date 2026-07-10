@@ -356,16 +356,23 @@ function assertAllowedLocalChanges(cwd, allowedPaths) {
     cwd,
     encoding: "utf8",
   }).trimEnd();
+  const ephemeralBuildchainEvidencePaths = [
+    ".buildchain/contract-drift/",
+    ".buildchain/kfd/",
+    ".buildchain/publication-result.json",
+    ".buildchain/release-candidate/",
+    ".buildchain/release-evidence/",
+    ".buildchain/release-passport/",
+    ".buildchain/release-state/",
+    ".buildchain/runtime/",
+  ];
   const isEphemeralBuildchainEvidence = (status, filePath) =>
     status === "??" &&
-    [
-      ".buildchain/kfd/",
-      ".buildchain/release-candidate/",
-      ".buildchain/release-evidence/",
-      ".buildchain/release-passport/",
-      ".buildchain/release-state/",
-      ".buildchain/runtime/",
-    ].some((prefix) => filePath.startsWith(prefix));
+    ephemeralBuildchainEvidencePaths.some((allowedPath) =>
+      allowedPath.endsWith("/")
+        ? filePath.startsWith(allowedPath)
+        : filePath === allowedPath,
+    );
   const unexpected = output
     .split(/\r?\n/)
     .filter(Boolean)
