@@ -207,6 +207,9 @@ export function compactWebSurfaceApplyResult(result = {}) {
     objectPrefix: result.objectPrefix || "",
     manifestKey: result.manifestKey || "",
     invalidationPaths: Array.isArray(result.invalidationPaths) ? result.invalidationPaths : [],
+    immutablePreservation: Array.isArray(result.immutablePreservation)
+      ? result.immutablePreservation
+      : [],
     surfaceBindings: Array.isArray(result.surfaceBindings)
       ? result.surfaceBindings.map((binding) => ({
           surface: binding.surface || "",
@@ -216,6 +219,7 @@ export function compactWebSurfaceApplyResult(result = {}) {
           manifestKey: binding.manifestKey || "",
           accessControl: binding.accessControl || "",
           healthStrategy: binding.healthStrategy || "",
+          mutableDeleteExcludes: binding.mutableDeleteExcludes || [],
         }))
       : [],
   };

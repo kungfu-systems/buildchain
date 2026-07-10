@@ -8,20 +8,20 @@
   "versionImpact": {
     "final": "patch",
     "source": "buildchain-version-state",
-    "rationale": "Paper publication now validates protected release authority before expensive build work and treats only enumerated Buildchain-owned ephemeral evidence as outside source version state."
+    "rationale": "Web-surface deploys now preserve declared immutable publication archives while retaining deletion for mutable site paths."
   },
   "surfaceImpacts": [
     {
-      "id": "publication-ephemeral-evidence-contract",
+      "id": "web-surface-immutable-publication-archive",
       "impact": "patch",
-      "class": "release-governance",
-      "rationale": "Exact Buildchain-owned contract-drift and publication-result paths no longer poison strict version verification, while undeclared paths remain rejected and unreadable promotion authority fails before the publication build.",
-      "source": "actions/promote-buildchain-ref/lib.js"
+      "class": "web-surface",
+      "rationale": "Publication archive roots are excluded from mutable deletion, existing immutable objects are digest-verified, missing objects use no-overwrite upload, and parent surface syncs carry the same preservation boundary.",
+      "source": "scripts/web-surface-core.mjs"
     }
   ],
   "classification": "patch",
   "breaking": false,
   "security": false,
   "migrationRequired": false,
-  "summary": "Buildchain v2.11 closes paper publication friction from workflow-generated ephemeral evidence and validates protected release authority before expensive build work."
+  "summary": "Buildchain v2.11 preserves immutable publication archives across preview, staging, and production web-surface deploys."
 }

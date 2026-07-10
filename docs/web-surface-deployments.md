@@ -371,6 +371,39 @@ node scripts/web-surface.mjs \
   --output .buildchain/web-surface-staging-apply.json
 ```
 
+### Immutable publication paths
+
+When a surface artifact contains `manifest.json` with
+`archivePolicy.contract = "kungfu-buildchain-publication-archive-policy"`,
+Buildchain treats every declared `publications[].versions[].immutablePath` as
+an append-only publication boundary. This applies identically to preview,
+staging, and production adapters.
+
+The adapter derives the protected archive root from those declared version
+paths and applies four ordered safeguards:
+
+1. every local immutable file is checked against an existing S3 object;
+2. missing files are uploaded with `aws s3 sync --no-overwrite` and a SHA-256
+   checksum;
+3. every immutable file is checked again after upload, closing the race between
+   the first check and the no-overwrite transfer;
+4. mutable site content keeps normal `sync --delete` behavior, but every parent
+   or owning surface sync excludes the protected archive root from deletion.
+
+An existing object with a different SHA-256 digest fails apply before mutable
+content is changed. Older objects without a stored S3 SHA-256 checksum are read
+and byte-hashed for compatibility. Directory-index alias writes are skipped
+under protected roots so they cannot overwrite immutable route objects; viewer
+request rewriting remains the directory-index authority.
+
+The deploy plan and manifest record `immutablePublication`,
+`mutableDeleteExcludes`, and the parent-surface coverage. Apply output records
+`immutablePreservation` plus every pre-check, no-overwrite sync, post-check, and
+mutable sync operation. Health output adds an `__immutable__` check proving that
+the owning and parent surface syncs carried their required delete exclusions.
+The runner must provide an AWS CLI version whose `s3 sync` supports
+`--no-overwrite`.
+
 For multi-surface sites, each surface host is treated as a root-relative view
 of that surface's artifact path prefix. For example, a `buildchain` surface with
 `path = "/buildchain/"` and preview URL
@@ -457,7 +490,8 @@ node scripts/web-surface.mjs \
 
 Apply output records the channel, alias, source SHA, artifact hash, target
 bucket, object prefix, manifest key, all surface URLs, all surface bindings, CDN
-invalidation paths, actor/run metadata, and every adapter operation with
+invalidation paths, actor/run metadata, immutable preservation evidence, and
+every adapter operation with
 `executed`, `exitCode`, `stdout`, and `stderr`. If an operation fails,
 Buildchain records the failed operation, stops subsequent adapter operations,
 and exits non-zero after writing the result JSON. Buildchain records secret
