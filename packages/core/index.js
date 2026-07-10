@@ -286,6 +286,7 @@ export {
   BUILDCHAIN_KFD2_CLAIMS_DIR,
   BUILDCHAIN_KFD2_CLAIM_ARGS_PATH,
   BUILDCHAIN_KFD2_DIR,
+  BUILDCHAIN_KFD2_REGISTRY_PATH,
   BUILDCHAIN_KFD2_RELEASE_CLAIMS_PATH,
   BUILDCHAIN_KFD3_ARTIFACT_WITNESS_PATH,
   BUILDCHAIN_KFD3_CAPABILITY_QUERY_PATH,
@@ -305,9 +306,20 @@ export {
   planBuildchainLayoutMigration,
   resolveBuildchainConfigPath,
   resolveBuildchainContractLockPath,
+  resolveKfd2ProductClaimsRegistryPath,
   resolveKfd3SurfaceRegistryPath,
   resolveReleasePassportPath,
 } from "./buildchain-layout.js";
+export {
+  KFD2_PRODUCT_CLAIMS_OUTPUT_CONTRACT,
+  KFD2_PRODUCT_CLAIMS_REGISTRY_CONTRACT,
+  KFD2_PRODUCT_CLAIMS_VALIDATION_CONTRACT,
+  checkKfd2ProductClaimOutputs,
+  readKfd2ProductClaimsRegistry,
+  renderKfd2ProductClaimOutputs,
+  validateKfd2ProductClaimsRegistry,
+  writeKfd2ProductClaimOutputs,
+} from "./kfd2-product-claims.js";
 export {
   buildchainKfdClaims,
   collectKfdStatus,
