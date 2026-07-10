@@ -177,6 +177,7 @@ on:
         value: ${{ jobs.paper-release.outputs.github-release-url }}
 
 permissions:
+  checks: write
   contents: write
   id-token: write
   issues: write

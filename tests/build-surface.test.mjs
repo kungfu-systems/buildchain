@@ -322,6 +322,10 @@ test("paper release workflow publishes declared npm package with source lock and
     path.join(root, ".github/workflows/paper-release.yml"),
     "utf8",
   );
+  const docs = fs.readFileSync(
+    path.join(root, "docs/publication-artifacts.md"),
+    "utf8",
+  );
   assert.match(workflow, /workflow_call:/);
   assert.match(workflow, /buildchain-ref:/);
   assert.match(workflow, /buildchain-contract-lock-path:/);
@@ -348,6 +352,8 @@ test("paper release workflow publishes declared npm package with source lock and
   assert.match(workflow, /release-passport-product-name: \$\{\{ inputs\.release-passport-product-name \|\| steps\.package\.outputs\.package-name \}\}/);
   assert.match(workflow, /github-release:/);
   assert.match(workflow, /github-release: \$\{\{ inputs\.github-release \}\}/);
+  assert.match(workflow, /permissions:\n  checks: write\n  contents: write/);
+  assert.match(docs, /permissions:\n      checks: write\n      contents: write/);
   assert.match(workflow, /default: true/);
   assert.ok(
     workflow.indexOf("Check Buildchain contract lock") <
