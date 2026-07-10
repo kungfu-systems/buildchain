@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-impact",
   "release": {
-    "version": "2.11.14-alpha.5",
+    "version": "2.11.14-alpha.6",
     "line": "v2.11"
   },
   "versionImpact": {
