@@ -86,6 +86,16 @@ same-version republish is allowed only when the immutable digest is unchanged;
 if PDF, source bundle, route, metadata, or toolchain evidence changes for an
 existing version, Buildchain fails before the registry is rewritten.
 
+The Buildchain web-surface adapter consumes this boundary from a surface-local
+`manifest.json` whose `archivePolicy.contract` is
+`kungfu-buildchain-publication-archive-policy`. It excludes the derived archive
+root from every owning or parent `sync --delete`, verifies existing object
+digests, uploads only missing immutable files with `--no-overwrite`, and verifies
+them again before mutable site content is synchronized. A current package set
+does not need to rebuild or enumerate every historical version: the protected
+archive root remains outside deletion even when older versions disappear from
+the current artifact.
+
 `publication.toolchain` makes the source-to-PDF transformation part of the
 machine-readable contract. `latex-docker` is the preferred LaTeX profile. The
 Buildchain paper scaffold and reusable workflow default to

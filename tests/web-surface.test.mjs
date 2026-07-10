@@ -16,6 +16,7 @@ import {
 } from "../scripts/web-surface-core.mjs";
 import {
   cloudFrontInvalidationWaitTargets,
+  compactWebSurfaceApplyResult,
   waitForCloudFrontInvalidations,
   webSurfaceCli,
 } from "../scripts/web-surface.mjs";
@@ -542,6 +543,133 @@ test("web-surface deploy apply honors explicit bucket-root prefix", () => {
     ]);
     const hubInvalidation = calls.find((call) => call.action === "invalidate-cdn" && call.surface === "hub");
     assert.deepEqual(hubInvalidation.args.slice(-2), ["/*", "/.buildchain/deployments/staging/hub.json"]);
+  });
+});
+
+test("web-surface deploy preserves publication archives while deleting mutable paths", async () => {
+  await withFixtureAsync(async (fixture) => {
+    const archiveRoot = path.join(fixture, "dist", "buildchain", "archive", "paper", "v1.0.0");
+    fs.mkdirSync(archiveRoot, { recursive: true });
+    fs.writeFileSync(path.join(archiveRoot, "index.html"), "immutable reader\n");
+    fs.writeFileSync(path.join(archiveRoot, "main.pdf"), "immutable pdf\n");
+    fs.writeFileSync(
+      path.join(fixture, "dist", "buildchain", "manifest.json"),
+      `${JSON.stringify({
+        schemaVersion: 1,
+        contract: "consumer-publication-archive-surface",
+        archivePolicy: {
+          contract: "kungfu-buildchain-publication-archive-policy",
+          deploymentBoundary: "append-only immutable version prefixes",
+        },
+        publications: [{
+          id: "paper",
+          versions: [{ version: "1.0.0", immutablePath: "/archive/paper/v1.0.0/" }],
+        }],
+      }, null, 2)}\n`,
+    );
+
+    const plan = planWebSurfaceDeploy({
+      cwd: fixture,
+      channel: "staging",
+      sourceSha: "b".repeat(40),
+      deployedAt: "2026-07-01T00:00:00.000Z",
+    });
+    const binding = plan.manifest.surfaceBindings.find((entry) => entry.surface === "buildchain");
+    assert.deepEqual(binding.immutablePublication?.preservedRoots, ["archive"]);
+    assert.deepEqual(binding.immutablePublication?.declaredPrefixes, ["archive/paper/v1.0.0"]);
+    assert.deepEqual(
+      binding.immutablePublication?.files.map((file) => file.path),
+      ["archive/paper/v1.0.0/index.html", "archive/paper/v1.0.0/main.pdf"],
+    );
+    const hubBinding = plan.manifest.surfaceBindings.find((entry) => entry.surface === "hub");
+    assert.deepEqual(hubBinding.mutableDeleteExcludes, ["buildchain/archive/*"]);
+    assert.deepEqual(binding.mutableDeleteExcludes, ["archive/*"]);
+
+    const calls = [];
+    const result = applyWebSurfaceDeploy({
+      cwd: fixture,
+      plan,
+      dryRun: false,
+      commandRunner(operation) {
+        calls.push(operation);
+        return { exitCode: 0, stdout: `${operation.action}\n`, stderr: "" };
+      },
+    });
+    const buildchainCalls = calls.filter((call) => call.surface === "buildchain");
+    assert.equal(calls[0].action, "verify-immutable-artifact-before-upload");
+    assert.deepEqual(buildchainCalls.slice(0, 6).map((call) => call.action), [
+      "verify-immutable-artifact-before-upload",
+      "verify-immutable-artifact-before-upload",
+      "sync-immutable-artifact",
+      "verify-immutable-artifact-after-upload",
+      "verify-immutable-artifact-after-upload",
+      "sync-static-artifact",
+    ]);
+    const immutableSync = buildchainCalls.find((call) => call.action === "sync-immutable-artifact");
+    assert.deepEqual(immutableSync.args.slice(-3), ["--no-overwrite", "--checksum-algorithm", "SHA256"]);
+    assert.equal(immutableSync.args[2], path.join(fixture, "dist", "buildchain", "archive"));
+    assert.equal(immutableSync.args[3], "s3://libkungfu-dev-staging/staging/buildchain/archive");
+    const mutableSync = buildchainCalls.find((call) => call.action === "sync-static-artifact");
+    assert.deepEqual(mutableSync.args.slice(-2), ["--exclude", "archive/*"]);
+    const hubMutableSync = calls.find((call) => call.action === "sync-static-artifact" && call.surface === "hub");
+    assert.deepEqual(hubMutableSync.args.slice(-2), ["--exclude", "buildchain/archive/*"]);
+    assert.ok(
+      calls.findLastIndex((call) => call.action === "verify-immutable-artifact-after-upload") <
+      calls.indexOf(hubMutableSync),
+    );
+    assert.equal(
+      buildchainCalls.some((call) =>
+        call.action === "write-directory-index-alias" &&
+        call.args[call.args.indexOf("--key") + 1]?.includes("/archive/")),
+      false,
+    );
+    assert.deepEqual(result.immutablePreservation, [{
+      surface: "buildchain",
+      manifestPath: "buildchain/manifest.json",
+      preservedRoots: ["archive"],
+      declaredPrefixes: ["archive/paper/v1.0.0"],
+      fileCount: 2,
+      mutableDeleteExcludes: ["archive/*"],
+      coveringBindings: [
+        { surface: "buildchain", mutableDeleteExcludes: ["archive/*"] },
+        { surface: "hub", mutableDeleteExcludes: ["buildchain/archive/*"] },
+      ],
+      status: "applied",
+    }]);
+    assert.deepEqual(
+      compactWebSurfaceApplyResult(result).immutablePreservation,
+      result.immutablePreservation,
+    );
+
+    const health = await checkWebSurfaceHealth({
+      result,
+      cwd: fixture,
+      managedNetworkS3ObjectVerification: false,
+      fetchImpl() {
+        throw new Error("managed-network health must not require public fetch");
+      },
+    });
+    const preservation = health.checks.find((check) => check.surface === "__immutable__");
+    assert.equal(preservation.status, "pass");
+    assert.equal(preservation.bindings[0].fileCount, 2);
+    assert.deepEqual(preservation.bindings[0].coveringBindings, [
+      { surface: "buildchain", mutableDeleteExcludes: ["archive/*"], status: "pass" },
+      { surface: "hub", mutableDeleteExcludes: ["buildchain/archive/*"], status: "pass" },
+    ]);
+
+    const failedCalls = [];
+    const failed = applyWebSurfaceDeploy({
+      cwd: fixture,
+      plan,
+      dryRun: false,
+      commandRunner(operation) {
+        failedCalls.push(operation);
+        return { exitCode: 1, stdout: "", stderr: "immutable object digest mismatch" };
+      },
+    });
+    assert.equal(failed.status, "failed");
+    assert.equal(failed.immutablePreservation[0].status, "failed");
+    assert.deepEqual(failedCalls.map((call) => call.action), ["verify-immutable-artifact-before-upload"]);
   });
 });
 
