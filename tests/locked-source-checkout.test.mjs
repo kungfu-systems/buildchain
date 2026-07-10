@@ -69,7 +69,7 @@ test("locked source checkout auto mode falls back to GitHub transport", () => {
     mode: "auto",
     mirrorUrlTemplate: "file:///does/not/exist/{repositorySlug}.git",
     fallback: "github",
-    githubTimeoutSeconds: 300,
+    githubTimeoutSeconds: 600,
     githubRemote: `file://${origin.bare}`,
     diagnosticsPath: ".buildchain/diagnostics/source-checkout.json",
   });
@@ -77,7 +77,7 @@ test("locked source checkout auto mode falls back to GitHub transport", () => {
   assert.equal(evidence.cache.fallbackUsed, true);
   assert.equal(evidence.cache.transport, "github");
   assert.equal(evidence.policy.fetchAttempts, 3);
-  assert.equal(evidence.policy.githubTimeoutSeconds, 300);
+  assert.equal(evidence.policy.githubTimeoutSeconds, 600);
   assert.equal(evidence.cache.githubFetchAttempts, 1);
   assert.match(evidence.cache.fallbackReason, /does not appear to be a git repository|not exist|failed/i);
   assert.equal(evidence.verification.headOk, true);
@@ -93,7 +93,7 @@ test("source fetch seeds from the advertised ref before trying a raw SHA", () =>
     remoteUrl: "https://github.com/kungfu-systems/example.git",
     sha: "a".repeat(40),
     fetchRef: "refs/heads/dev/v4/v4.0",
-    timeoutMs: 300000,
+    timeoutMs: 600000,
     runGit: (args) => {
       calls.push(args);
       if (args[0] === "fetch" && args.at(-1).endsWith(":refs/buildchain/source-ref")) {
@@ -117,7 +117,7 @@ test("source fetch does not spend a second raw-SHA timeout after a ref timeout",
       remoteUrl: "https://github.com/kungfu-systems/example.git",
       sha: "b".repeat(40),
       fetchRef: "refs/heads/dev/v4/v4.0",
-      timeoutMs: 300000,
+      timeoutMs: 600000,
       runGit: (args) => {
         if (args[0] === "fetch") {
           fetches.push(args);

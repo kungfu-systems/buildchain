@@ -205,7 +205,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:85e7781cc421458b689c3621581afac5146a273aac9f21a2a59f9deed2154f7a"
+      "digest": "sha256:b9335434f95e6173f31d50983f8ab492378b065fa203a3b68bee447487883cea"
     },
     {
       "id": "publish-transaction",

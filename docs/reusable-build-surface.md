@@ -233,7 +233,7 @@ jobs:
       checkout-cache-reference-repository-template: ${{ vars.BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE }}
       checkout-cache-fallback: github
       checkout-cache-timeout-seconds: 60
-      checkout-cache-github-timeout-seconds: 300
+      checkout-cache-github-timeout-seconds: 600
       checkout-cache-fetch-attempts: 3
 ```
 
@@ -259,7 +259,7 @@ variables. Buildchain does not pass GitHub credentials to cache mirrors or
 reference repositories. If it must fall back to GitHub, the workflow token is
 used only for the GitHub fetch path. Cache attempts use
 `checkout-cache-timeout-seconds`; the potentially larger GitHub fallback uses
-the independent `checkout-cache-github-timeout-seconds` budget (300 seconds by
+the independent `checkout-cache-github-timeout-seconds` budget (600 seconds by
 default). Buildchain fetches the advertised source ref before trying an exact
 SHA, so a cache hit or stale-cache seed can contribute objects and the fallback
 does not first waste a full timeout on an unadvertised SHA. Retryable timeout

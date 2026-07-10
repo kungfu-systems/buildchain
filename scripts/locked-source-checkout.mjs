@@ -300,7 +300,7 @@ export function lockedSourceCheckout({
   referenceRepositoryTemplate = readEnv("BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE"),
   fallback = readEnv("BUILDCHAIN_CHECKOUT_CACHE_FALLBACK", "github"),
   timeoutSeconds = Number(readEnv("BUILDCHAIN_CHECKOUT_CACHE_TIMEOUT_SECONDS", "60") || 60),
-  githubTimeoutSeconds = Number(readEnv("BUILDCHAIN_CHECKOUT_CACHE_GITHUB_TIMEOUT_SECONDS", "300") || 300),
+  githubTimeoutSeconds = Number(readEnv("BUILDCHAIN_CHECKOUT_CACHE_GITHUB_TIMEOUT_SECONDS", "600") || 600),
   fetchAttempts = Number(readEnv("BUILDCHAIN_CHECKOUT_CACHE_FETCH_ATTEMPTS", "3") || 3),
   diagnosticsPath = readEnv("BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH", ".buildchain/diagnostics/source-checkout.json"),
   githubToken = readEnv("GITHUB_TOKEN"),
@@ -315,7 +315,7 @@ export function lockedSourceCheckout({
   const treeSha = sourceTreeSha ? assertSha(sourceTreeSha, "sourceTreeSha") : "";
   const repoParts = splitRepository(repository);
   const timeoutMs = Math.max(1, Number(timeoutSeconds || 60)) * 1000;
-  const githubTimeoutMs = Math.max(1, Number(githubTimeoutSeconds || 300)) * 1000;
+  const githubTimeoutMs = Math.max(1, Number(githubTimeoutSeconds || 600)) * 1000;
   const normalizedFetchAttempts = Math.max(1, Math.floor(Number(fetchAttempts) || 3));
   const targetPath = ensureCheckoutTarget(checkoutPath, workspace);
   git(["init"], { cwd: targetPath, timeoutMs });
@@ -337,7 +337,7 @@ export function lockedSourceCheckout({
       mode: normalizedMode,
       fallback: normalizedFallback,
       timeoutSeconds: Math.max(1, Number(timeoutSeconds || 60)),
-      githubTimeoutSeconds: Math.max(1, Number(githubTimeoutSeconds || 300)),
+      githubTimeoutSeconds: Math.max(1, Number(githubTimeoutSeconds || 600)),
       fetchAttempts: normalizedFetchAttempts,
       mirror: sanitizeIdentity(renderedMirrorUrl),
       referenceRepository: sanitizeIdentity(renderedReferenceRepository),

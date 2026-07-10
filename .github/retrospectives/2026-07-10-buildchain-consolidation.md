@@ -298,7 +298,7 @@ stale mirror seed reusable objects before GitHub fallback. A retryable ref
 transport failure returns directly to the bounded retry loop instead of
 spending a second full timeout on an unadvertised SHA. Cache transport retains
 its 60-second default while GitHub fallback receives an independent, explicit
-300-second default budget. Exact commit and tree verification remain mandatory
+600-second default budget. Exact commit and tree verification remain mandatory
 after either route. The `v2.11.14` release candidate must be regenerated after
 this correction; earlier `v2.11.14-alpha.4` canary evidence must not be reused.
 

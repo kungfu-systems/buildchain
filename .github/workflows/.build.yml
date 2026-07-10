@@ -233,7 +233,7 @@ on:
         required: false
       checkout-cache-github-timeout-seconds:
         description: "Timeout for each GitHub fallback fetch attempt"
-        default: 300
+        default: 600
         type: number
         required: false
       checkout-cache-fetch-attempts:
