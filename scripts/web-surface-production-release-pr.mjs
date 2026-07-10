@@ -257,6 +257,8 @@ function renderStepSummary(result = {}) {
     `- release branch: \`${result.branchName || ""}\``,
   ];
   if (result.pullUrl) lines.push(`- pull request: ${result.pullUrl}`);
+  if (result.tokenSource) lines.push(`- token source: \`${result.tokenSource}\``);
+  if (result.appTokenStatus) lines.push(`- app token status: \`${result.appTokenStatus}\``);
   if (result.error?.message) lines.push(`- error: \`${result.error.message.replace(/`/g, "'")}\``);
   if (result.manualCommand) {
     lines.push("", "Manual PR creation command:", "", "```bash", result.manualCommand, "```");
@@ -480,6 +482,12 @@ export async function webSurfaceProductionReleasePrCli(env = process.env) {
   const bodyPath = optionalString(env.PRODUCTION_RELEASE_PR_BODY_PATH) || ".buildchain/production-release-pr/body.md";
   const summaryPath = optionalString(env.PRODUCTION_RELEASE_PR_SUMMARY_PATH) || ".buildchain/production-release-pr/handoff.json";
   writeTextFile(bodyPath, `${handoff.body}\n`);
+  const tokenSource = optionalString(env.PRODUCTION_RELEASE_TOKEN_SOURCE) || "github-token";
+  const appTokenStatus = optionalString(env.PRODUCTION_RELEASE_APP_TOKEN_STATUS) || "not-configured";
+  const appTokenUnavailable = parseBoolean(env.PRODUCTION_RELEASE_APP_TOKEN_UNAVAILABLE, false);
+  const appClientIdConfigured = parseBoolean(env.PRODUCTION_RELEASE_APP_CLIENT_ID_CONFIGURED, false);
+  const appPrivateKeyConfigured = parseBoolean(env.PRODUCTION_RELEASE_APP_PRIVATE_KEY_CONFIGURED, false);
+  const prTokenConfigured = parseBoolean(env.PRODUCTION_RELEASE_PR_TOKEN_CONFIGURED, false);
 
   let result = {
     ...handoff,
@@ -490,42 +498,72 @@ export async function webSurfaceProductionReleasePrCli(env = process.env) {
     pullUrl: "",
     bodyPath,
     summaryPath,
+    tokenSource,
+    appTokenStatus,
+    appConfig: {
+      clientIdConfigured: appClientIdConfigured,
+      privateKeyConfigured: appPrivateKeyConfigured,
+      prTokenConfigured,
+    },
   };
 
   if (mode === "auto") {
-    try {
+    if (appTokenUnavailable && !prTokenConfigured) {
       result = {
         ...result,
-        ...(await openProductionReleasePr({
-          apiUrl: env.GITHUB_API_URL || "https://api.github.com",
-          token: env.GITHUB_TOKEN,
-          repository: env.GITHUB_REPOSITORY,
-          sourceSha,
-          stagingResult,
-          productionReleaseLabel: env.PRODUCTION_RELEASE_LABEL || "buildchain-release",
-          productionReleaseHeadPrefix: env.PRODUCTION_RELEASE_HEAD_PREFIX || "release/",
-          productionReleaseChannel: env.PRODUCTION_RELEASE_CHANNEL || "production",
-          runId: env.GITHUB_RUN_ID,
-          serverUrl: env.GITHUB_SERVER_URL || "https://github.com",
-          releasePassportArtifact: env.RELEASE_PASSPORT_ARTIFACT || "buildchain-web-surface-staging-release-passport",
-        })),
-        mode,
-      };
-    } catch (error) {
-      const status = classifyReleasePrError(error);
-      result = {
-        ...result,
-        status,
-        action: status,
+        status: "app-token-unavailable",
+        action: "app-token-unavailable",
         error: {
-          status: error.status || "",
-          message: error.message || String(error),
+          status: "",
+          message:
+            `Production release GitHub App token is unavailable (${appTokenStatus}). ` +
+            "Configure production-release-app-client-id and production-release-app-private-key, " +
+            "or provide production-release-pr-token.",
         },
       };
-      if (status !== "permission-denied" || failOnReleasePrError) {
+      if (failOnReleasePrError) {
         writeJsonFile(summaryPath, result);
         if (env.GITHUB_STEP_SUMMARY) fs.appendFileSync(env.GITHUB_STEP_SUMMARY, renderStepSummary(result));
-        throw error;
+        throw new Error(result.error.message);
+      }
+    } else {
+      try {
+        result = {
+          ...result,
+          ...(await openProductionReleasePr({
+            apiUrl: env.GITHUB_API_URL || "https://api.github.com",
+            token: env.GITHUB_TOKEN,
+            repository: env.GITHUB_REPOSITORY,
+            sourceSha,
+            stagingResult,
+            productionReleaseLabel: env.PRODUCTION_RELEASE_LABEL || "buildchain-release",
+            productionReleaseHeadPrefix: env.PRODUCTION_RELEASE_HEAD_PREFIX || "release/",
+            productionReleaseChannel: env.PRODUCTION_RELEASE_CHANNEL || "production",
+            runId: env.GITHUB_RUN_ID,
+            serverUrl: env.GITHUB_SERVER_URL || "https://github.com",
+            releasePassportArtifact: env.RELEASE_PASSPORT_ARTIFACT || "buildchain-web-surface-staging-release-passport",
+          })),
+          mode,
+          tokenSource,
+          appTokenStatus,
+          appConfig: result.appConfig,
+        };
+      } catch (error) {
+        const status = classifyReleasePrError(error);
+        result = {
+          ...result,
+          status,
+          action: status,
+          error: {
+            status: error.status || "",
+            message: error.message || String(error),
+          },
+        };
+        if (status !== "permission-denied" || failOnReleasePrError) {
+          writeJsonFile(summaryPath, result);
+          if (env.GITHUB_STEP_SUMMARY) fs.appendFileSync(env.GITHUB_STEP_SUMMARY, renderStepSummary(result));
+          throw error;
+        }
       }
     }
   }
@@ -542,6 +580,8 @@ export async function webSurfaceProductionReleasePrCli(env = process.env) {
     "production-release-pr-url": result.pullUrl || "",
     "production-release-branch": result.branchName || "",
     "production-release-source-sha": result.sourceSha || "",
+    "production-release-token-source": result.tokenSource || "",
+    "production-release-app-token-status": result.appTokenStatus || "",
     "production-release-pr-summary-path": summaryPath,
     "production-release-pr-body-path": bodyPath,
   });

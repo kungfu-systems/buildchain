@@ -757,14 +757,19 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /web-surface-production-release-pr\.mjs/);
   assert.match(workflow, /PRODUCTION_RELEASE_PR_MODE: \$\{\{ inputs\.production-release-pr-mode \}\}/);
   assert.match(workflow, /FAIL_ON_RELEASE_PR_ERROR: \$\{\{ inputs\.fail-on-release-pr-error \}\}/);
+  assert.match(workflow, /Resolve production release token config/);
   assert.match(workflow, /Create production release app token/);
   assert.match(workflow, /actions\/create-github-app-token@v3\.1\.1/);
+  assert.match(workflow, /continue-on-error: true/);
   assert.match(workflow, /client-id: \$\{\{ inputs\.production-release-app-client-id \|\| inputs\.production-release-app-id \}\}/);
   assert.match(workflow, /private-key: \$\{\{ secrets\.production-release-app-private-key \}\}/);
+  assert.match(workflow, /Resolve production release token source/);
   assert.match(
     workflow,
     /GITHUB_TOKEN: \$\{\{ steps\.production-release-app-token\.outputs\.token \|\| inputs\.production-release-pr-token \|\| github\.token \}\}/,
   );
+  assert.match(workflow, /PRODUCTION_RELEASE_TOKEN_SOURCE: \$\{\{ steps\.production-release-token\.outputs\.token-source \}\}/);
+  assert.match(workflow, /PRODUCTION_RELEASE_APP_TOKEN_STATUS: \$\{\{ steps\.production-release-token\.outputs\.app-token-status \}\}/);
   assert.match(workflow, /buildchain-web-surface-production-release-pr-handoff/);
   assert.match(workflow, /release-pr-status/);
   assert.match(workflow, /needs\.staging-apply\.result == 'success'/);
@@ -976,11 +981,75 @@ test("web-surface production release PR permission-denied is a non-fatal handoff
     });
     assert.equal(result.status, "permission-denied");
     assert.match(fs.readFileSync(outputPath, "utf8"), /release-pr-status=permission-denied/);
+    assert.match(fs.readFileSync(outputPath, "utf8"), /production-release-token-source=github-token/);
     assert.match(fs.readFileSync(stepSummaryPath, "utf8"), /Manual PR creation command/);
     const handoff = JSON.parse(fs.readFileSync(path.join(workspace, ".buildchain/production-release-pr/handoff.json"), "utf8"));
     assert.equal(handoff.status, "permission-denied");
     assert.equal(handoff.error.status, 403);
+    assert.equal(handoff.tokenSource, "github-token");
     assert.ok(calls.some((call) => call.method === "POST" && call.url.endsWith("/pulls")));
+  } finally {
+    process.chdir(previousCwd);
+    globalThis.fetch = previousFetch;
+  }
+});
+
+test("web-surface production release PR reports unavailable app token before fallback github token", async () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-release-pr-app-token-unavailable-"));
+  const previousCwd = process.cwd();
+  const previousFetch = globalThis.fetch;
+  const sourceSha = "abcdef1234567890abcdef1234567890abcdef12";
+  const summaryPath = path.join(workspace, "staging-summary.json");
+  const outputPath = path.join(workspace, "github-output.txt");
+  const stepSummaryPath = path.join(workspace, "step-summary.md");
+  fs.writeFileSync(
+    summaryPath,
+    `${JSON.stringify({
+      channel: "staging",
+      status: "applied",
+      sourceSha,
+      urls: { default: "https://staging.libkungfu.dev" },
+      artifactHash: "sha256:artifact",
+    })}\n`,
+  );
+  let called = false;
+  globalThis.fetch = async () => {
+    called = true;
+    throw new Error("fetch should not be called when app token is unavailable");
+  };
+  try {
+    process.chdir(workspace);
+    const result = await webSurfaceProductionReleasePrCli({
+      GITHUB_TOKEN: "github-token",
+      GITHUB_REPOSITORY: "kungfu-systems/site-libkungfu-dev",
+      GITHUB_SHA: sourceSha,
+      GITHUB_RUN_ID: "123",
+      GITHUB_SERVER_URL: "https://github.com",
+      GITHUB_API_URL: "https://api.github.com",
+      STAGING_RELEASE_PR_SUMMARY_PATH: summaryPath,
+      GITHUB_OUTPUT: outputPath,
+      GITHUB_STEP_SUMMARY: stepSummaryPath,
+      PRODUCTION_RELEASE_PR_MODE: "auto",
+      FAIL_ON_RELEASE_PR_ERROR: "false",
+      PRODUCTION_RELEASE_TOKEN_SOURCE: "github-token",
+      PRODUCTION_RELEASE_APP_TOKEN_STATUS: "missing-private-key",
+      PRODUCTION_RELEASE_APP_TOKEN_UNAVAILABLE: "true",
+      PRODUCTION_RELEASE_APP_CLIENT_ID_CONFIGURED: "true",
+      PRODUCTION_RELEASE_APP_PRIVATE_KEY_CONFIGURED: "false",
+      PRODUCTION_RELEASE_PR_TOKEN_CONFIGURED: "false",
+      PRODUCTION_RELEASE_PR_SUMMARY_PATH: ".buildchain/production-release-pr/handoff.json",
+      PRODUCTION_RELEASE_PR_BODY_PATH: ".buildchain/production-release-pr/body.md",
+    });
+    assert.equal(result.status, "app-token-unavailable");
+    assert.equal(called, false);
+    assert.match(fs.readFileSync(outputPath, "utf8"), /release-pr-status=app-token-unavailable/);
+    assert.match(fs.readFileSync(outputPath, "utf8"), /production-release-app-token-status=missing-private-key/);
+    assert.match(fs.readFileSync(stepSummaryPath, "utf8"), /app token status: `missing-private-key`/);
+    const handoff = JSON.parse(fs.readFileSync(path.join(workspace, ".buildchain/production-release-pr/handoff.json"), "utf8"));
+    assert.equal(handoff.status, "app-token-unavailable");
+    assert.equal(handoff.appConfig.clientIdConfigured, true);
+    assert.equal(handoff.appConfig.privateKeyConfigured, false);
+    assert.match(handoff.manualCommand, /gh pr create/);
   } finally {
     process.chdir(previousCwd);
     globalThis.fetch = previousFetch;
