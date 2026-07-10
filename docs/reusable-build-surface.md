@@ -233,6 +233,7 @@ jobs:
       checkout-cache-reference-repository-template: ${{ vars.BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE }}
       checkout-cache-fallback: github
       checkout-cache-timeout-seconds: 60
+      checkout-cache-fetch-attempts: 3
 ```
 
 `checkout-cache-mode` accepts:
@@ -255,7 +256,10 @@ Do not read cache URLs or reference paths from PR-controlled files such as
 `.buildchain/buildchain.toml`. These values are trusted workflow inputs or repo/org
 variables. Buildchain does not pass GitHub credentials to cache mirrors or
 reference repositories. If it must fall back to GitHub, the workflow token is
-used only for the GitHub fetch path.
+used only for the GitHub fetch path. Retryable timeout and transient network
+failures use the bounded `checkout-cache-fetch-attempts` budget; permanent
+failures stop immediately. Diagnostics record the configured budget and actual
+GitHub fetch attempts before exact HEAD/tree verification.
 
 Each platform diagnostics artifact includes `source-checkout.json` and embeds a
 compact `sourceCheckout` summary in `diagnostics.json`: mode, transport,
@@ -592,7 +596,7 @@ jobs:
       runner-preset: github-hosted
       trusted-publishing: true
       github-release: true
-      required-status-check: check
+      required-status-check: check / check
       required-artifact-count: 3
       publish-dist-tag: alpha
       publish-package-set-order: platforms-first-main-last

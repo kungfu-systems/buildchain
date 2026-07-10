@@ -293,7 +293,10 @@ checked-out release material. Any code or undeclared file change still fails the
 release tree gate.
 
 The action input `verification-command` remains supported. When it is provided,
-it overrides `lifecycle.verify` for that invocation.
+it overrides `lifecycle.verify` for that invocation. The override inherits
+`[lifecycle.env]` and `lifecycle.verify.env`; when the configured stage declares
+`shell`, it also inherits that shell. If the stage has no explicit shell,
+Buildchain preserves the platform-default shell for compatibility.
 
 ## Migration Preflight
 

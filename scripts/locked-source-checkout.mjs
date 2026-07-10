@@ -213,6 +213,31 @@ function fetchSha({ targetPath, remoteName, remoteUrl, sha, fetchRef, timeoutMs,
   }
 }
 
+export function runBoundedFetch({ attempts = 1, fetch, onAttempt = () => {}, onRetry = () => {}, shouldRetry = () => true }) {
+  const limit = Math.max(1, Math.floor(Number(attempts) || 1));
+  let lastError;
+  for (let attempt = 1; attempt <= limit; attempt += 1) {
+    onAttempt({ attempt, limit });
+    try {
+      return { value: fetch({ attempt, limit }), attempts: attempt };
+    } catch (error) {
+      lastError = error;
+      if (attempt >= limit || !shouldRetry(error)) {
+        error.fetchAttempts = attempt;
+        throw error;
+      }
+      onRetry({ attempt, limit, error });
+    }
+  }
+  throw lastError;
+}
+
+function retryableGitFetchError(error) {
+  const code = String(error?.code || "").toUpperCase();
+  if (["ETIMEDOUT", "ECONNRESET", "ECONNREFUSED", "EAI_AGAIN", "ENETUNREACH", "EPIPE"].includes(code)) return true;
+  return /timed?\s*out|timeout|connection (?:reset|refused)|remote end hung up|early eof|rpc failed|http (?:429|5\d\d)|temporary failure|network is unreachable/i.test(String(error?.message || error || ""));
+}
+
 function githubRemoteUrl({ repository, serverUrl = "https://github.com" }) {
   const base = String(serverUrl || "https://github.com").replace(/\/+$/, "");
   return `${base}/${repository}.git`;
@@ -252,6 +277,7 @@ export function lockedSourceCheckout({
   referenceRepositoryTemplate = readEnv("BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE"),
   fallback = readEnv("BUILDCHAIN_CHECKOUT_CACHE_FALLBACK", "github"),
   timeoutSeconds = Number(readEnv("BUILDCHAIN_CHECKOUT_CACHE_TIMEOUT_SECONDS", "60") || 60),
+  fetchAttempts = Number(readEnv("BUILDCHAIN_CHECKOUT_CACHE_FETCH_ATTEMPTS", "3") || 3),
   diagnosticsPath = readEnv("BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH", ".buildchain/diagnostics/source-checkout.json"),
   githubToken = readEnv("GITHUB_TOKEN"),
   githubServerUrl = readEnv("GITHUB_SERVER_URL", "https://github.com"),
@@ -265,6 +291,7 @@ export function lockedSourceCheckout({
   const treeSha = sourceTreeSha ? assertSha(sourceTreeSha, "sourceTreeSha") : "";
   const repoParts = splitRepository(repository);
   const timeoutMs = Math.max(1, Number(timeoutSeconds || 60)) * 1000;
+  const normalizedFetchAttempts = Math.max(1, Math.floor(Number(fetchAttempts) || 3));
   const targetPath = ensureCheckoutTarget(checkoutPath, workspace);
   git(["init"], { cwd: targetPath, timeoutMs });
   const renderedMirrorUrl = renderTemplate(mirrorUrlTemplate, { ...repoParts, sha });
@@ -285,6 +312,7 @@ export function lockedSourceCheckout({
       mode: normalizedMode,
       fallback: normalizedFallback,
       timeoutSeconds: Math.max(1, Number(timeoutSeconds || 60)),
+      fetchAttempts: normalizedFetchAttempts,
       mirror: sanitizeIdentity(renderedMirrorUrl),
       referenceRepository: sanitizeIdentity(renderedReferenceRepository),
     },
@@ -294,6 +322,7 @@ export function lockedSourceCheckout({
       transport: "github",
       fallbackUsed: normalizedMode === "off",
       fallbackReason: normalizedMode === "off" ? "cache disabled" : "",
+      githubFetchAttempts: 0,
     },
     verification: {
       head: "",
@@ -352,15 +381,20 @@ export function lockedSourceCheckout({
     if (!evidence.cache.fallbackReason && checkoutError) {
       evidence.cache.fallbackReason = checkoutError.message;
     }
-    fetchSha({
-      targetPath,
-      remoteName: "origin",
-      remoteUrl,
-      sha,
-      fetchRef,
-      timeoutMs,
-      env: githubAuthEnv(githubToken),
-    });
+    try {
+      const fetchResult = runBoundedFetch({
+        attempts: normalizedFetchAttempts,
+        fetch: () => fetchSha({ targetPath, remoteName: "origin", remoteUrl, sha, fetchRef, timeoutMs, env: githubAuthEnv(githubToken) }),
+        onAttempt: ({ attempt }) => { evidence.cache.githubFetchAttempts = attempt; },
+        onRetry: ({ attempt, limit, error }) => console.log(`buildchain: GitHub source fetch failed, retry ${attempt + 1}/${limit}: ${error.message}`),
+        shouldRetry: retryableGitFetchError,
+      });
+      evidence.cache.githubFetchAttempts = fetchResult.attempts;
+    } catch (error) {
+      evidence.durationMs = Date.now() - startedAt;
+      writeEvidence(path.resolve(workspace, diagnosticsPath), evidence);
+      throw error;
+    }
     checkoutFetchedCommit(targetPath, sha, timeoutMs);
   }
   evidence.verification = verifyCheckout({ targetPath, sourceSha: sha, sourceTreeSha: treeSha });

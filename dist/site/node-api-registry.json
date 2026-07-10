@@ -73,7 +73,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-contract",
       "export": "./buildchain-contract",
       "target": "./packages/core/buildchain-contract.js",
-      "digest": "sha256:54eea325e5c33972670a702ce03d0553944614e0bbb6673f89ca13cff7d616ed",
+      "digest": "sha256:255a8ef61b6ede05e30789e750432d239d909514ab55591bd9ed19bf3ce2101d",
       "summary": "Runtime contract world and compatibility digest APIs for floating-ref drift checks.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -151,7 +151,7 @@
       "specifier": "@kungfu-tech/buildchain/release-line-bootstrap",
       "export": "./release-line-bootstrap",
       "target": "./packages/core/release-line-bootstrap.js",
-      "digest": "sha256:7c42519975f8a653ca7bae4f0b33baf34d7e1dcb6dd4e87be9ed27de2d252e55",
+      "digest": "sha256:303075eb3a205224a90ecf266741a5705a8373cfb566beb54429f1f5972a540b",
       "summary": "Semver release-line bootstrap planning and version-state APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -203,7 +203,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-artifact",
       "export": "./publication-artifact",
       "target": "./packages/core/publication-artifact.js",
-      "digest": "sha256:41aa92c7f16f441511c90f8710daf84a317969a8e7b33756d6a6d7a7367dbd1a",
+      "digest": "sha256:3c565ff115c1d6b161311227f99e3b2bbc0142f2be09cd95e07f35b1f168beef",
       "summary": "Publication artifact manifest, source bundle, and publication passport APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -216,7 +216,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-package",
       "export": "./publication-package",
       "target": "./packages/core/publication-package.js",
-      "digest": "sha256:72ad7e591fd9e3fc06cc75930742653feb4e067df9fde7430d7481822d930429",
+      "digest": "sha256:fa37e806991e37bc8bde854c59cba760d735eb809fbdc4705f5c808e24ec2a69",
       "summary": "Publication npm package synthesis APIs for Buildchain-managed paper release presets.",
       "capabilityGroup": "reusable-build",
       "audience": [

@@ -477,7 +477,54 @@ function publicationArchiveRecord({ collected, manifestPath, passportPath, regis
   };
 }
 
-function updatePublicationArchiveRegistry({ cwd, collected, manifestPath, passportPath, registryOutput, generatedAt }) {
+function immutablePublicationRecord(record = {}) {
+  const { publishedAt: _publishedAt, latestObservedAt: _latestObservedAt, recordSha256: _recordSha256, ...immutable } = record;
+  return immutable;
+}
+
+function readVerifiedPublicationRegistry(registryPath) {
+  const registry = JSON.parse(fs.readFileSync(registryPath, "utf8"));
+  if (registry.contract !== PUBLICATION_ARTIFACT_REGISTRY_CONTRACT) {
+    throw new Error(`publication archive registry has unsupported contract: ${registry.contract || "(missing)"}`);
+  }
+  const expectedDigest = sha256Json({ ...registry, registrySha256: undefined });
+  if (registry.registrySha256 !== expectedDigest) {
+    throw new Error(`publication archive registry digest mismatch for ${registryPath}: expected ${expectedDigest}, got ${registry.registrySha256 || "(missing)"}`);
+  }
+  if (!Array.isArray(registry.versions)) throw new Error(`publication archive registry versions must be an array: ${registryPath}`);
+  return registry;
+}
+
+function mergePublicationRegistryVersions({ registries = [], publicationId }) {
+  const versions = new Map();
+  for (const registry of registries) {
+    if (registry.publication?.id !== publicationId) {
+      throw new Error(`publication archive registry id mismatch: expected ${publicationId}, got ${registry.publication?.id || "(missing)"}`);
+    }
+    if (registry.historyPolicy === "cumulative-authenticated-hydration") {
+      const declaredVersions = new Set(registry.versions.map((record) => String(record?.version || "")));
+      const missingVersions = [...versions.keys()].filter((version) => !declaredVersions.has(version));
+      if (missingVersions.length > 0) throw new Error(`cumulative publication archive registry dropped accepted versions: ${missingVersions.join(", ")}`);
+    }
+    for (const record of registry.versions) {
+      const version = String(record?.version || "").trim();
+      if (!version) throw new Error("publication archive registry record is missing version");
+      const existing = versions.get(version);
+      if (!existing) {
+        versions.set(version, record);
+        continue;
+      }
+      if (existing.immutableDigest !== record.immutableDigest || stableJson(immutablePublicationRecord(existing)) !== stableJson(immutablePublicationRecord(record))) {
+        throw new Error(`publication archive version ${version} changed across accepted registries: ${existing.immutableDigest || "(missing)"} != ${record.immutableDigest || "(missing)"}`);
+      }
+      const latestObservedAt = [existing.latestObservedAt, record.latestObservedAt].filter(Boolean).sort().at(-1);
+      versions.set(version, latestObservedAt ? { ...existing, latestObservedAt } : existing);
+    }
+  }
+  return [...versions.values()];
+}
+
+function updatePublicationArchiveRegistry({ cwd, collected, manifestPath, passportPath, registryOutput, registryInputs = [], generatedAt }) {
   const archive = collected.manifest.publication.archive;
   if (!archive) {
     return undefined;
@@ -503,17 +550,16 @@ function updatePublicationArchiveRegistry({ cwd, collected, manifestPath, passpo
       siteConsumers: collected.manifest.publication.siteConsumers,
     },
     appendOnly: true,
+    historyPolicy: "cumulative-authenticated-hydration",
     sameVersionRepublish: "fail-on-digest-change",
     immutablePathPolicy: archive.immutablePathPolicy,
     versions: [],
   };
-  if (fs.existsSync(registryPath)) {
-    registry = JSON.parse(fs.readFileSync(registryPath, "utf8"));
-    if (registry.contract !== PUBLICATION_ARTIFACT_REGISTRY_CONTRACT) {
-      throw new Error(`publication archive registry has unsupported contract: ${registry.contract || "(missing)"}`);
-    }
-  }
-  const versions = Array.isArray(registry.versions) ? registry.versions : [];
+  const inputPaths = [...registryInputs.map((entry) => path.resolve(cwd, entry)), ...(fs.existsSync(registryPath) ? [registryPath] : [])];
+  const versions = mergePublicationRegistryVersions({
+    registries: inputPaths.map(readVerifiedPublicationRegistry),
+    publicationId: archive.id,
+  });
   const existingIndex = versions.findIndex((entry) => entry.version === record.version);
   if (existingIndex !== -1) {
     const existing = versions[existingIndex];
@@ -559,6 +605,7 @@ export function writePublicationArtifact({
   output = "",
   passportOutput = "",
   registryOutput = "",
+  registryInputs = [],
   sourceSha = "",
   sourceBundle = true,
   sourceBundlePath = "",
@@ -586,6 +633,7 @@ export function writePublicationArtifact({
     manifestPath: path.resolve(cwd, manifestOutput),
     passportPath: path.resolve(cwd, passportPath),
     registryOutput,
+    registryInputs,
     generatedAt,
   });
   return {

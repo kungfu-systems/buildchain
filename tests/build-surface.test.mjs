@@ -181,6 +181,8 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /checkout-cache-reference-repository-template:/);
   assert.match(workflow, /checkout-cache-fallback:/);
   assert.match(workflow, /checkout-cache-timeout-seconds:/);
+  assert.match(workflow, /checkout-cache-fetch-attempts:/);
+  assert.match(workflow, /BUILDCHAIN_CHECKOUT_CACHE_FETCH_ATTEMPTS:/);
   assert.match(workflow, /BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE/);
   assert.match(workflow, /BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE/);
   assert.equal(
@@ -611,7 +613,7 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.match(workflow, /workflow_call:/);
   assert.match(workflow, /target-branch:/);
   assert.match(workflow, /required-status-checks:/);
-  assert.match(workflow, /default: "check"/);
+  assert.match(workflow, /default: "check \/ check"/);
   assert.match(workflow, /ready-label:/);
   assert.match(workflow, /block-labels:/);
   assert.match(workflow, /allowed-head-prefixes:/);
@@ -834,6 +836,11 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /contents: write/);
   assert.match(workflow, /issues: write/);
   assert.match(workflow, /Plan gated production deploy/);
+  assert.match(workflow, /web-surface-channel: \$\{\{ steps\.gate\.outputs\.web-surface-channel \}\}/);
+  assert.match(workflow, /BUILDCHAIN_WEB_SURFACE_CHANNEL: \$\{\{ needs\.apply-input-gate\.outputs\.web-surface-channel \}\}/);
+  assert.match(workflow, /BUILDCHAIN_PREVIEW_ALIAS: \$\{\{ needs\.apply-input-gate\.outputs\.web-surface-alias \}\}/);
+  assert.match(workflow, /EVENT_NAME" = "workflow_dispatch".*web_surface_channel=staging/s);
+  assert.ok(workflow.indexOf("id: gate") < workflow.indexOf("Run caller build"));
   assert.match(workflow, /Apply production deploy/);
   assert.match(workflow, /inputs\.production-apply/);
   assert.match(workflow, /github\.event_name == 'workflow_dispatch' && inputs\.production-approved/);
@@ -2551,6 +2558,28 @@ test("runLifecycle writes deterministic artifact manifest", () => {
     assert.ok(fs.existsSync(path.join(workspace, ".buildchain/artifacts/linux-x64/source-checkout.json")));
   } finally {
     process.env = originalEnv;
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("runLifecycle command override inherits declared stage shell and lifecycle env", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-command-override-"));
+  const fixture = path.join(workspace, "fixture");
+  fs.cpSync(path.join(root, "fixtures/libnode-shaped"), fixture, { recursive: true });
+  const configPath = path.join(fixture, "buildchain.toml");
+  fs.writeFileSync(configPath, fs.readFileSync(configPath, "utf8")
+    .replace('[lifecycle.verify]\ncommand = "node scripts/verify.mjs"', '[lifecycle.verify]\ncommand = "node scripts/verify.mjs"\nshell = "/bin/bash"\n\n[lifecycle.verify.env]\nBUILDCHAIN_STAGE_ENV = "stage-value"')
+    .replace("[lifecycle.install]", '[lifecycle.env]\nBUILDCHAIN_SHARED_ENV = "shared-value"\n\n[lifecycle.install]'));
+  try {
+    runLifecycle({
+      cwd: fixture,
+      stageName: "verify",
+      command: 'printf "%s\\n%s\\n%s\\n" "$0" "$BUILDCHAIN_SHARED_ENV" "$BUILDCHAIN_STAGE_ENV" > command-override.txt',
+      required: true,
+      workspace,
+    });
+    assert.deepEqual(fs.readFileSync(path.join(fixture, "command-override.txt"), "utf8").trim().split("\n"), ["/bin/bash", "shared-value", "stage-value"]);
+  } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
   }
 });
