@@ -764,6 +764,13 @@ secrets:
   production-release-app-private-key: ${{ secrets.KUNGFU_RELEASE_APP_PRIVATE_KEY }}
 ```
 
+When either side of the App configuration is missing, Buildchain does not hide
+that behind the fallback `github.token`. The handoff JSON and job summary report
+`status: "app-token-unavailable"` with an `appTokenStatus` such as
+`missing-client-id`, `missing-private-key`, or `create-failed`, and still include
+the manual PR creation command. If the repository intentionally uses another
+narrow token, pass it through `production-release-pr-token`.
+
 `production-release-app-id` remains accepted as a deprecated alias for the input
 name, but the value should be the GitHub App client id. GitHub App numeric App
 IDs and client IDs are distinct, and Buildchain passes the value to
