@@ -59,6 +59,14 @@ path = "pyproject.toml"
 key = "project.version"
 ```
 
+Configured JSON and TOML version files are semantic no-ops when the declared
+key already equals the requested version. Buildchain preserves the repository's
+original TOML bytes in that case instead of serializing the whole document and
+creating formatter-only release state. When a TOML version really changes,
+Buildchain applies a parser-verified lossless edit to that key and fails closed
+if it cannot prove a unique edit; unrelated arrays, comments, and formatting
+remain repository-owned.
+
 Regex files must expose the current version through a named capture group called
 `version`:
 

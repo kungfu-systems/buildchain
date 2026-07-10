@@ -37,6 +37,12 @@ version commit itself is written through the GitHub Git Data API so the ref
 graph is the durable source of truth. Repositories without any supported version
 state degrade to ref-only promotion only when strict version state is disabled.
 
+JSON and TOML version entries whose declared key already matches the requested
+version are treated as semantic no-ops. TOML changes use a parser-verified
+lossless key edit, so repository formatting is preserved and formatter-only
+release-preparation commits are not created. If a unique lossless edit cannot
+be proven, promotion fails closed instead of rewriting the full TOML document.
+
 ## Dry Run
 
 Use `dry-run: "true"` or the CLI `buildchain release --dry-run` before merging a
