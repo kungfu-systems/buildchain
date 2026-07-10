@@ -962,6 +962,11 @@ test("version verification ignores generated buildchain evidence", () => {
     path.join(cwd, ".buildchain/release-state/v1.0.1.json"),
     "{}\n",
   );
+  fs.mkdirSync(path.join(cwd, ".buildchain/runtime/actions/promote-buildchain-ref"), { recursive: true });
+  fs.writeFileSync(
+    path.join(cwd, ".buildchain/runtime/actions/promote-buildchain-ref/action.yml"),
+    "name: runtime\n",
+  );
 
   assert.doesNotThrow(() => assertAllowedLocalChanges(cwd, ["package.json"]));
 
@@ -5447,6 +5452,57 @@ test("strict alpha promotion rejects protection without admin enforcement", asyn
       requireGovernance: true,
     }),
     /must enforce branch protection for administrators/,
+  );
+});
+
+test("strict alpha promotion reports all missing protected channel settings", async () => {
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (ref === "heads/alpha/v1/v1.0") {
+            return { data: { object: { sha: SHA } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async () => ({ data: [] }),
+      },
+      repos: {
+        getBranchProtection: async () => ({
+          data: protectedChannel({
+            enforce_admins: { enabled: false },
+            allow_force_pushes: { enabled: true },
+            allow_deletions: { enabled: true },
+            required_conversation_resolution: { enabled: false },
+            required_pull_request_reviews: { required_approving_review_count: 0 },
+            required_status_checks: { strict: false, contexts: [] },
+          }),
+        }),
+      },
+    },
+  };
+
+  await assert.rejects(
+    promoteBuildchainRefs({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sha: SHA,
+      targetRef: "alpha/v1/v1.0",
+      versionState: false,
+      requireGovernance: true,
+    }),
+    (error) => {
+      assert.match(error.message, /missing required protection settings/);
+      assert.match(error.message, /must enforce branch protection for administrators/);
+      assert.match(error.message, /must disallow force pushes/);
+      assert.match(error.message, /must disallow branch deletion/);
+      assert.match(error.message, /must require conversation resolution/);
+      assert.match(error.message, /must require at least one approving review/);
+      assert.match(error.message, /must require strict status checks/);
+      assert.match(error.message, /must require a check status check/);
+      return true;
+    },
   );
 });
 
