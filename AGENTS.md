@@ -53,6 +53,10 @@ pnpm run check
 `pnpm run check` validates inventory data, lints root workflows, runs unit tests,
 and rebuilds every action bundle.
 
+Before broad maintenance or consolidation work, read the current engineering
+handoff in
+[`2026-07-10-buildchain-consolidation.md`](.github/retrospectives/2026-07-10-buildchain-consolidation.md).
+
 ## Proposing changes
 
 - Open pull requests against the relevant `dev/*` channel branch.
