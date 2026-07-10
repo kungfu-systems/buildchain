@@ -3354,28 +3354,15 @@ async function promoteBuildchainRefs({
   };
 
   const majorAlphaRefCache = new Map();
-  const listAllMatchingRefs = async (ref) => {
-    const refs = [];
-    for (let page = 1; page <= 100; page += 1) {
-      const { data } = await octokit.rest.git.listMatchingRefs({
-        owner,
-        repo,
-        ref,
-        per_page: 100,
-        page,
-      });
-      refs.push(...data);
-      if (data.length < 100) {
-        return refs;
-      }
-    }
-    throw new Error(`Ref scan exceeded 100 pages for ${ref}`);
-  };
   const listMajorAlphaRefs = async (major = rule.major) => {
     if (!majorAlphaRefCache.has(major)) {
       majorAlphaRefCache.set(
         major,
-        listAllMatchingRefs(`tags/v${major}.`),
+        octokit.rest.git.listMatchingRefs({
+          owner,
+          repo,
+          ref: `tags/v${major}.`,
+        }).then(({ data }) => data),
       );
     }
     return majorAlphaRefCache.get(major);
