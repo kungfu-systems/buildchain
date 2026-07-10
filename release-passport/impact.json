@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-impact",
+  "release": {
+    "tag": "v2.11.13-alpha.1",
+    "line": "v2.11",
+    "version": "2.11.13-alpha.1"
+  },
+  "versionImpact": {
+    "final": "patch",
+    "source": "buildchain-version-state",
+    "rationale": "Buildchain self-promotion now serializes protected promotion intents and treats compatible superseded events as auditable no-ops."
+  },
+  "surfaceImpacts": [
+    {
+      "id": "promotion-transaction-serialization",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Queued promotion intents revalidate protected target ancestry before expensive work, and the mutation boundary performs the same compatible-ahead check before publication side effects.",
+      "source": ".github/workflows/release-candidate-promote.yml"
+    }
+  ],
+  "classification": "patch",
+  "breaking": false,
+  "security": false,
+  "migrationRequired": false,
+  "summary": "Buildchain v2.11 promotion transactions are serialized and compatible duplicate events produce no additional mutation."
+}
