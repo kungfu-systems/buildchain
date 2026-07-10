@@ -487,6 +487,8 @@ jobs:
             web_surface_channel=production
           elif [ "$EVENT_NAME" = "push" ] && [ "$REF_NAME" = "main" ]; then
             web_surface_channel=staging
+          elif [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            web_surface_channel=staging
           fi
           {
             echo "web-surface-channel=$web_surface_channel"

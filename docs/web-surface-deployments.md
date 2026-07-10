@@ -358,6 +358,8 @@ caller build or verify command. Both steps receive
 `BUILDCHAIN_SURFACE_CHANNEL` and `BUILDCHAIN_WEB_SURFACE_ALIAS` are also
 provided. Callers should consume these variables instead of reconstructing the
 release-intent state machine from raw GitHub events.
+An unapproved manual canary resolves to `staging`; a trusted manual dispatch
+with `production-approved=true` resolves to `production` through the same path.
 
 ## Explicit Apply
 

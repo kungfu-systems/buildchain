@@ -839,6 +839,7 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /web-surface-channel: \$\{\{ steps\.gate\.outputs\.web-surface-channel \}\}/);
   assert.match(workflow, /BUILDCHAIN_WEB_SURFACE_CHANNEL: \$\{\{ needs\.apply-input-gate\.outputs\.web-surface-channel \}\}/);
   assert.match(workflow, /BUILDCHAIN_PREVIEW_ALIAS: \$\{\{ needs\.apply-input-gate\.outputs\.web-surface-alias \}\}/);
+  assert.match(workflow, /EVENT_NAME" = "workflow_dispatch".*web_surface_channel=staging/s);
   assert.ok(workflow.indexOf("id: gate") < workflow.indexOf("Run caller build"));
   assert.match(workflow, /Apply production deploy/);
   assert.match(workflow, /inputs\.production-apply/);
