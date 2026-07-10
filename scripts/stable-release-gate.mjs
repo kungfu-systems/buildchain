@@ -161,16 +161,19 @@ async function resolveCanaryEvidence({
       targetRunEvidence?.inputs?.buildchainRef ||
       "",
     ).trim();
-    const runtimeRefMatches = runtimeRef === candidateTag;
+    const runtimeRefMatches = runtimeRef === candidateTag || runtimeRef === candidateSha;
+    const evidenceMatches =
+      status?.state === "success" &&
+      targetRunEvidence?.conclusion === "success" &&
+      workflowMatches &&
+      repositoryMatches &&
+      runtimeRefMatches;
     evidence.push({
       id: canary.id,
-      status:
-        status?.state === "success" &&
-        targetRunEvidence?.conclusion === "success" &&
-        workflowMatches &&
-        repositoryMatches &&
-        runtimeRefMatches
-          ? "success"
+      status: evidenceMatches
+        ? "success"
+        : status?.state === "success"
+          ? "mismatched"
           : status?.state || "missing",
       candidateSha,
       completedAt: targetRunEvidence?.updated_at || status?.updated_at || "",

@@ -8,7 +8,7 @@
   "versionImpact": {
     "final": "patch",
     "source": "buildchain-version-state",
-    "rationale": "Stable promotion now requires an exact alpha, named internal and consumer canaries, a soak interval, a stable cooldown, and a product or contract diff; alpha and train iteration remain unthrottled."
+    "rationale": "Buildchain v2.11.14 closes lifecycle, checkout, governance, publication-registry, web-surface, and stable-canary evidence gaps without changing the v2 compatibility line."
   },
   "surfaceImpacts": [
     {
@@ -17,11 +17,53 @@
       "class": "release-governance",
       "rationale": "Buildchain stable promotion fails closed until the exact alpha has fresh release-candidate and site-libkungfu-dev canary evidence, has soaked for one hour, is at least 24 hours after the prior stable, and contains a product or contract path change.",
       "source": "scripts/stable-release-gate.mjs"
+    },
+    {
+      "id": "lifecycle-command-override-inheritance",
+      "impact": "patch",
+      "class": "lifecycle-contract",
+      "rationale": "Explicit lifecycle command overrides inherit declared lifecycle and stage environment plus an explicit stage shell while preserving the platform-shell fallback.",
+      "source": "scripts/run-lifecycle-core.mjs"
+    },
+    {
+      "id": "locked-checkout-bounded-fallback",
+      "impact": "patch",
+      "class": "source-integrity",
+      "rationale": "Transient GitHub fallback fetches use a bounded retry budget and record configured and actual attempts before exact source verification.",
+      "source": "scripts/locked-source-checkout.mjs"
+    },
+    {
+      "id": "required-check-context-preservation",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Consumer reusable workflows retain the exact check / check context while Buildchain self workflows explicitly use their emitted check context.",
+      "source": ".github/workflows/buildchain-ref-promotion.yml"
+    },
+    {
+      "id": "authenticated-publication-registry-hydration",
+      "impact": "patch",
+      "class": "publication-evidence",
+      "rationale": "Publication releases hydrate authenticated npm registry history, verify immutable entries, and bind cumulative registry evidence into release artifacts.",
+      "source": "scripts/publication-registry-hydrate.mjs"
+    },
+    {
+      "id": "web-surface-channel-build-contract",
+      "impact": "patch",
+      "class": "web-surface",
+      "rationale": "Effective channel and preview alias reach caller build and verify commands, and host mismatches fail before deployment adapter side effects.",
+      "source": "scripts/web-surface-core.mjs"
+    },
+    {
+      "id": "stable-canary-runtime-binding",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Stable canary evidence accepts only the exact alpha tag or its resolved commit SHA and rejects successful statuses whose workflow, repository, or runtime input is mismatched.",
+      "source": "scripts/stable-release-gate.mjs"
     }
   ],
   "classification": "patch",
   "breaking": false,
   "security": false,
   "migrationRequired": false,
-  "summary": "Buildchain v2.11 adds an auditable stable-release throttle and exact-alpha canary gate without slowing alpha or train iteration."
+  "summary": "Buildchain v2.11.14 consolidates consumer-reported lifecycle, checkout, governance, publication, web-surface, and stable-canary evidence fixes into one audited patch release."
 }
