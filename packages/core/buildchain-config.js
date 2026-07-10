@@ -2,7 +2,8 @@ import { execSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { parse, stringify } from "smol-toml";
+import { isDeepStrictEqual } from "node:util";
+import { parse } from "smol-toml";
 import {
   BUILDCHAIN_CONFIG_PATH,
   resolveBuildchainConfigPath,
@@ -101,6 +102,44 @@ function setByDottedKey(target, key, value) {
     current = current[segment];
   }
   current[segments[segments.length - 1]] = value;
+}
+
+function updateTomlStringValuePreservingSource({ source, content, key, value, filePath }) {
+  const currentValue = getByDottedKey(content, key);
+  if (currentValue === value) {
+    return source;
+  }
+  if (typeof currentValue !== "string" || currentValue.length === 0) {
+    throw new Error(`Configured TOML version key is missing or empty: ${filePath}:${key}`);
+  }
+
+  const expected = structuredClone(content);
+  setByDottedKey(expected, key, value);
+  const candidates = [];
+  let offset = 0;
+  while (offset <= source.length - currentValue.length) {
+    const index = source.indexOf(currentValue, offset);
+    if (index === -1) {
+      break;
+    }
+    const candidate = `${source.slice(0, index)}${value}${source.slice(index + currentValue.length)}`;
+    try {
+      if (isDeepStrictEqual(parse(candidate), expected)) {
+        candidates.push(candidate);
+      }
+    } catch {
+      // Keep searching. Only a parser-confirmed single-field update is safe.
+    }
+    offset = index + currentValue.length;
+  }
+
+  if (candidates.length !== 1) {
+    throw new Error(
+      `Configured TOML version key cannot be updated losslessly: ${filePath}:${key} ` +
+        `(matching candidates: ${candidates.length})`,
+    );
+  }
+  return candidates[0];
 }
 
 export function loadBuildchainConfig(cwd = process.cwd()) {
@@ -1359,14 +1398,23 @@ export function updateConfiguredVersionStateContents(files, version) {
   return files
     .map((file) => {
       let content;
-      if (file.type === "json") {
+      if (
+        (file.type === "json" || file.type === "toml") &&
+        getByDottedKey(file.content, file.key) === version
+      ) {
+        content = file.source;
+      } else if (file.type === "json") {
         const next = structuredClone(file.content);
         setByDottedKey(next, file.key, version);
         content = `${JSON.stringify(next, null, 2)}\n`;
       } else if (file.type === "toml") {
-        const next = structuredClone(file.content);
-        setByDottedKey(next, file.key, version);
-        content = stringify(next);
+        content = updateTomlStringValuePreservingSource({
+          source: file.source,
+          content: file.content,
+          key: file.key,
+          value: version,
+          filePath: file.path,
+        });
       } else if (file.type === "regex") {
         content = file.source.replace(file.pattern, (...args) => {
           const groups = args.at(-1) || {};

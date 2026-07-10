@@ -1249,6 +1249,85 @@ test("alpha promotion creates exact prerelease tag and moves only the minor alph
   ]);
 });
 
+test("paper alpha promotion does not create a formatter-only version-state commit", async () => {
+  const cwd = makeTempWorkspace({
+    ".buildchain/buildchain.toml": `schema = 1
+
+[project]
+type = "publication-artifact"
+name = "paper-fixture"
+
+[publication]
+kind = "paper"
+title = "Paper fixture"
+version = "1.0.1-alpha.0"
+authors = ["Keren Dong"]
+primary_artifact = "_build/main.pdf"
+artifact_paths = ["_build/main.pdf"]
+metadata_paths = ["README.md"]
+source_paths = ["paper"]
+
+[version]
+required = true
+
+[[version.files]]
+type = "toml"
+path = ".buildchain/buildchain.toml"
+key = "publication.version"
+`,
+  });
+  const writes = [];
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (ref === "heads/alpha/v1/v1.0" || ref === "heads/dev/v1/v1.0") {
+            return { data: { object: { sha: SHA } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async ({ ref }) => ({
+          data: ref === "tags/v1.0."
+            ? [{ ref: "refs/tags/v1.0.0", object: { sha: OTHER_SHA } }]
+            : [],
+        }),
+        createBlob: async () => assert.fail("semantic version no-op must not create a blob"),
+        createTree: async () => assert.fail("semantic version no-op must not create a tree"),
+        createCommit: async () => assert.fail("semantic version no-op must not create a commit"),
+        createRef: async ({ ref, sha }) => {
+          writes.push(["createRef", ref, sha]);
+          return {};
+        },
+        updateRef: async ({ ref, sha, force }) => {
+          writes.push(["updateRef", ref, sha, force]);
+          return {};
+        },
+      },
+    },
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "paper-fixture",
+    allowRepository: "kungfu-systems/paper-fixture",
+    sha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    cwd,
+  });
+
+  assert.deepEqual(
+    result.updates
+      .filter((update) => update.version)
+      .map((update) => [update.version, update.action, update.sha]),
+    [["1.0.1-alpha.0", "existing-version-state", SHA]],
+  );
+  assert.deepEqual(writes, [
+    ["createRef", "refs/tags/v1.0.1-alpha.0", SHA],
+    ["updateRef", "tags/v1.0-alpha", SHA, true],
+  ]);
+});
+
 test("rerunning the same release SHA reuses exact tags", async () => {
   const octokit = {
     rest: {

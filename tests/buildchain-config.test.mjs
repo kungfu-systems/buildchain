@@ -77,6 +77,84 @@ replacement = '\${version}'
   );
 });
 
+test("configured TOML version updates preserve repository formatting and skip semantic no-ops", () => {
+  const source = `schema = 1
+
+[project]
+type = "publication-artifact"
+name = "paper-fixture"
+
+[publication]
+kind = "paper"
+title = "Paper fixture"
+version = "0.1.0-alpha.2"
+authors = ["Keren Dong"]
+primary_artifact = "_build/main.pdf"
+artifact_paths = ["_build/main.pdf"]
+metadata_paths = ["README.md"]
+source_paths = ["paper"]
+note = "release 0.1.0-alpha.2 remains immutable"
+
+[version]
+required = true
+
+[[version.files]]
+type = "toml"
+path = ".buildchain/buildchain.toml"
+key = "publication.version"
+`;
+
+  withTempRepo(
+    {
+      ".buildchain/buildchain.toml": source,
+    },
+    (dir) => {
+      const loaded = loadBuildchainConfig(dir);
+      const files = discoverConfiguredVersionStateFiles(dir, loaded);
+
+      assert.deepEqual(updateConfiguredVersionStateContents(files, "0.1.0-alpha.2"), []);
+
+      const changed = updateConfiguredVersionStateContents(files, "0.1.0-alpha.3");
+      assert.equal(changed.length, 1);
+      assert.equal(
+        changed[0].content,
+        source.replace('version = "0.1.0-alpha.2"', 'version = "0.1.0-alpha.3"'),
+      );
+    },
+  );
+});
+
+test("configured TOML version updates fail closed when a lossless edit cannot be proven", () => {
+  withTempRepo(
+    {
+      "buildchain.toml": `schema = 1
+
+[project]
+type = "package"
+name = "escaped-version-fixture"
+version = "\\u0031.\\u0030.\\u0030"
+
+[version]
+required = true
+
+[[version.files]]
+type = "toml"
+path = "buildchain.toml"
+key = "project.version"
+`,
+    },
+    (dir) => {
+      const loaded = loadBuildchainConfig(dir);
+      const files = discoverConfiguredVersionStateFiles(dir, loaded);
+
+      assert.throws(
+        () => updateConfiguredVersionStateContents(files, "1.0.1"),
+        /cannot be updated losslessly.*buildchain\.toml:project\.version.*matching candidates: 0/,
+      );
+    },
+  );
+});
+
 test(".buildchain/buildchain.toml is preferred over legacy root buildchain.toml", () => {
   withTempRepo(
     {
