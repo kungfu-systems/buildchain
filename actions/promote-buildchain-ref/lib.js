@@ -1392,6 +1392,19 @@ async function persistDurableReleaseTransaction({
     const latestRef = await getGitRefOrUndefined({ octokit, owner, repo, ref: refName });
     return latestRef?.object?.sha || "";
   };
+  const readCurrentRefShaAfterNonFastForward = async (previousParentSha) => {
+    let currentSha = "";
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      currentSha = await readCurrentRefSha();
+      if (currentSha && currentSha !== previousParentSha) {
+        return currentSha;
+      }
+      if (attempt < 3) {
+        await wait(githubRetryDelayMs() * (attempt + 1));
+      }
+    }
+    return currentSha;
+  };
   const updateExistingRef = async (parentSha) => {
     let latestParentSha = parentSha || "";
     let latestCommit = await createStateCommit(latestParentSha);
@@ -1416,8 +1429,20 @@ async function persistDurableReleaseTransaction({
         if (currentSha === latestCommit.data.sha) {
           return latestCommit;
         }
-        if (!currentSha || currentSha === latestParentSha || attempt === 2) {
+        if (!currentSha || attempt === 2) {
           throw error;
+        }
+        if (currentSha === latestParentSha) {
+          const refreshedSha = await readCurrentRefShaAfterNonFastForward(latestParentSha);
+          if (refreshedSha === latestCommit.data.sha) {
+            return latestCommit;
+          }
+          if (!refreshedSha || refreshedSha === latestParentSha) {
+            throw error;
+          }
+          latestParentSha = refreshedSha;
+          latestCommit = await createStateCommit(latestParentSha);
+          continue;
         }
         latestParentSha = currentSha;
         latestCommit = await createStateCommit(latestParentSha);
