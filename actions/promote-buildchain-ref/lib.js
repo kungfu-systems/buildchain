@@ -3205,6 +3205,37 @@ async function promoteBuildchainRefs({
   });
   const branchSha = branchRef.object.sha;
   if (branchSha !== sha) {
+    if (requireGovernance && !dryRun) {
+      const { data: comparison } = await octokit.rest.repos.compareCommitsWithBasehead({
+        owner,
+        repo,
+        basehead: `${sha}...${branchSha}`,
+      });
+      if (comparison.status !== "ahead") {
+        throw new Error(
+          `Ref ${targetRef} moved incompatibly from requested SHA ${sha} to ${branchSha} (${comparison.status})`,
+        );
+      }
+      return {
+        owner,
+        repo,
+        sourceSha: sha,
+        sha: branchSha,
+        targetRef,
+        superseded: true,
+        updates: [
+          {
+            action: "superseded-promotion",
+            ref: targetRef,
+            requestedSha: sha,
+            currentSha: branchSha,
+            comparisonStatus: comparison.status,
+            reason: "target-ref-advanced",
+            sha: branchSha,
+          },
+        ],
+      };
+    }
     throw new Error(
       `Ref ${targetRef} points at ${branchSha}, not requested SHA ${sha}`,
     );
