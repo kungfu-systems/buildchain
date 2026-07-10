@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-impact",
+  "release": {
+    "tag": "v2.11.14-alpha.0",
+    "line": "v2.11",
+    "version": "2.11.14-alpha.0"
+  },
+  "versionImpact": {
+    "final": "patch",
+    "source": "buildchain-version-state",
+    "rationale": "Web-surface deploys now preserve declared immutable publication archives while retaining deletion for mutable site paths."
+  },
+  "surfaceImpacts": [
+    {
+      "id": "web-surface-immutable-publication-archive",
+      "impact": "patch",
+      "class": "web-surface",
+      "rationale": "Publication archive roots are excluded from mutable deletion, existing immutable objects are digest-verified, missing objects use no-overwrite upload, and parent surface syncs carry the same preservation boundary.",
+      "source": "scripts/web-surface-core.mjs"
+    }
+  ],
+  "classification": "patch",
+  "breaking": false,
+  "security": false,
+  "migrationRequired": false,
+  "summary": "Buildchain v2.11 preserves immutable publication archives across preview, staging, and production web-surface deploys."
+}
