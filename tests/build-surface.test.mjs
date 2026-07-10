@@ -498,6 +498,10 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /allow-repository:/);
   assert.match(workflow, /default: ""/);
   assert.match(workflow, /required-status-check:/);
+  assert.match(
+    workflow,
+    /required-status-check:\n\s+description: "Exact required protected-branch status check context"\n\s+default: "check \/ check"/,
+  );
   assert.match(workflow, /target-sha:/);
   assert.match(workflow, /publish-mode:/);
   assert.match(workflow, /publish-dist-tag:/);
@@ -672,6 +676,7 @@ test("patrol workflow family exposes daily weekly monthly reusable entries and d
   assert.match(engine, /actions\/upload-artifact@v7\.0\.1/);
 
   assert.match(daily, /workflow_call:/);
+  assert.match(daily, /required-status-checks:\n\s+description: [^\n]+\n\s+default: "check \/ check"/);
   assert.match(daily, /cadence: daily/);
   assert.match(daily, /mode: cadence-default/);
   assert.match(daily, /max-actions:/);
@@ -688,6 +693,7 @@ test("patrol workflow family exposes daily weekly monthly reusable entries and d
 
   assert.match(dogfoodDaily, /schedule:/);
   assert.match(dogfoodDaily, /uses: \.\/\.github\/workflows\/patrol-daily\.yml/);
+  assert.match(dogfoodDaily, /required-status-checks: check/);
   assert.match(dogfoodDaily, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v2' \}\}/);
   assert.doesNotMatch(dogfoodDaily, /target-branch: dev\/v2\/v2\.\d+/);
   assert.match(dogfoodDaily, /dry-run: \$\{\{ inputs\.dry-run \|\| false \}\}/);
@@ -1557,6 +1563,10 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
     path.join(root, ".github/workflows/buildchain-ref-promotion.yml"),
     "utf8",
   );
+  const bootstrap = fs.readFileSync(
+    path.join(root, ".github/workflows/release-line-bootstrap.yml"),
+    "utf8",
+  );
 
   assert.match(workflow, /actions: read/);
   assert.match(workflow, /uses: \.\/\.github\/workflows\/release-candidate-promote\.yml/);
@@ -1571,6 +1581,12 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(workflow, /release-candidate-workflow-file: build-surface-fixture\.yml/);
   assert.match(workflow, /release-candidate-workflow-name: Build Surface Fixture/);
   assert.match(workflow, /github-release: true/);
+  assert.match(workflow, /required-status-check: check(?:\n|$)/);
+  assert.doesNotMatch(workflow, /required-status-check: check \/ check/);
+  assert.match(
+    bootstrap,
+    /required-status-check:\n\s+description: "Exact required branch-protection check context"\n\s+required: false\n\s+default: "check"/,
+  );
   assert.match(workflow, /publish-required-artifacts-json: "\[\]"/);
   assert.match(workflow, /release-passport-impact-json: \.buildchain\/release-impact\.json/);
   assert.doesNotMatch(workflow, /Buildchain v2\.10 patch release/);

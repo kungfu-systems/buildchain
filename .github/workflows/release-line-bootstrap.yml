@@ -28,7 +28,7 @@ on:
       required-status-check:
         description: "Exact required branch-protection check context"
         required: false
-        default: "check / check"
+        default: "check"
         type: string
       create-alpha-pr:
         description: "Open dev -> alpha channel PR"

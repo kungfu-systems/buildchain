@@ -318,12 +318,15 @@ After each merge, the next PR is re-evaluated before it can move the protected
 dev branch. This prevents one merge from silently making the next candidate
 stale or conflicting.
 
-The canonical required check context is `check / check`, matching the reusable
-workflow call plus its `check` job. Release governance preserves an already
-emitted exact consumer context and records branch-protection policy before/after
-facts; it does not collapse `check / check` back to the obsolete `check`
-fragment. Repositories can keep that context stable while changing the actual
-verification command declaratively in `buildchain.toml`:
+The canonical consumer required check context is `check / check`, matching the
+reusable workflow call plus its `check` job. Buildchain's own `Verify` workflow
+emits the repository-local context `check`, so Buildchain self-promotion,
+release-line bootstrap, and dogfood patrol wrappers pass `check` explicitly.
+Release governance preserves the exact context emitted by the repository and
+records branch-protection policy before/after facts; it does not rewrite one
+context shape into the other. Consumer repositories can keep their context
+stable while changing the actual verification command declaratively in
+`buildchain.toml`:
 
 ```toml
 [lifecycle.install]
