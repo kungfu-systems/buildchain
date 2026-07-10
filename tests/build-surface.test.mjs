@@ -67,7 +67,12 @@ import { resolvePublishSourceCli } from "../scripts/resolve-publish-source.mjs";
 import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
 import { verifyPublishChannelRefCli } from "../scripts/verify-publish-channel-ref.mjs";
 import { verifyPublishSourceLockCli } from "../scripts/verify-publish-source-lock.mjs";
-import { validateBuildchainConfig } from "../packages/core/buildchain-config.js";
+import {
+  discoverConfiguredVersionStateFiles,
+  loadBuildchainConfig,
+  updateConfiguredVersionStateContents,
+  validateBuildchainConfig,
+} from "../packages/core/buildchain-config.js";
 import {
   BUILDCHAIN_DIAGNOSTICS_CONTRACT,
   BUILDCHAIN_DIAGNOSTICS_MANIFEST_CONTRACT,
@@ -1488,10 +1493,8 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(workflow, /release-candidate-workflow-name: Build Surface Fixture/);
   assert.match(workflow, /github-release: true/);
   assert.match(workflow, /publish-required-artifacts-json: "\[\]"/);
-  assert.match(workflow, /release-passport-impact-json: >-/);
-  assert.match(workflow, /"surfaceImpacts":\[/);
-  assert.match(workflow, /"id":"publish-gate-channel-lineage"/);
-  assert.match(workflow, /"id":"web-surface-external-directory-index-rewrite"/);
+  assert.match(workflow, /release-passport-impact-json: \.buildchain\/release-impact\.json/);
+  assert.doesNotMatch(workflow, /Buildchain v2\.10 patch release/);
   assert.doesNotMatch(workflow, /run: node scripts\/release-candidate-resolver\.mjs/);
   assert.doesNotMatch(workflow, /uses: \.\/actions\/promote-buildchain-ref/);
 });
@@ -2262,6 +2265,7 @@ test("buildchain semver version state includes generated site contract version",
     summary.versionFiles.map((file) => `${file.path}#${file.key}`),
     [
       "package.json#version",
+      ".buildchain/release-impact.json#release.version",
       "dist/site/buildchain-contract.json#product.version",
       "dist/site/buildchain-site.json#package.version",
       "dist/site/site-manifest.json#package.version",
@@ -2272,6 +2276,13 @@ test("buildchain semver version state includes generated site contract version",
   assert.ok(
     summary.lifecycleStages.some((stage) => stage.name === "version-state"),
   );
+  const versionFiles = discoverConfiguredVersionStateFiles(root, loadBuildchainConfig(root));
+  const updated = updateConfiguredVersionStateContents(versionFiles, "2.11.11-alpha.0");
+  const releaseImpact = JSON.parse(
+    updated.find((file) => file.path === ".buildchain/release-impact.json").content,
+  );
+  assert.equal(releaseImpact.release.version, "2.11.11-alpha.0");
+  assert.equal(releaseImpact.release.line, "v2.11");
 });
 
 test("libnode-shaped fixture declares the build lifecycle contract", () => {
