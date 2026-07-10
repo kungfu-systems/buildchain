@@ -92,7 +92,7 @@
         "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes"
       ],
       "breakingDigest": "sha256:403d2fcdb0c5eabe749e89102defad69745f70a1556707bec7831fcc2e9fa8f8",
-      "auditDigest": "sha256:db6fe83e886a04221cc2457d3bdf091cd8607083d5c5e4dc87f40220c2436581"
+      "auditDigest": "sha256:1d12801725d7fb1849be6eb92bf4b08842c0260f3a2a09c87548870a3c50ae3e"
     },
     {
       "contractVersion": 1,
@@ -434,7 +434,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:9398a20c1d1ba4357fd17cb5cd47f7b276d41e6186bf2b495d65e84ffeedf1c4"
+      "auditDigest": "sha256:a74f1e2c4c9a2e4dd16be3d7febd36e450aa7905b7c7c449c3800e3f6a64df2a"
     },
     {
       "contractVersion": 1,
@@ -460,5 +460,5 @@
     }
   ],
   "compatibilityDigest": "sha256:967df7e854fdf582294ddfb6403eff25c00db9518a24051e7d47cbd75527c785",
-  "contractDigest": "sha256:df719ad9aeb97bb087fec627225aebf3dd7c9d351f6b46d7ea634914458e2fbb"
+  "contractDigest": "sha256:3ed57f441b2e407338d1dd91db4ca8a2bd92d9ed7d86d11f1c1d80d28f0b5421"
 }

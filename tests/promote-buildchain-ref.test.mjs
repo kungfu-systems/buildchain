@@ -5268,6 +5268,151 @@ test("promoteBuildchainRefs rejects stale target SHA", async () => {
   );
 });
 
+test("governed promotion treats a superseded target as an auditable no-op", async () => {
+  const mutationCalls = [];
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async () => ({ data: { object: { sha: OTHER_SHA } } }),
+        createRef: async (request) => mutationCalls.push(["createRef", request]),
+        updateRef: async (request) => mutationCalls.push(["updateRef", request]),
+      },
+      repos: {
+        compareCommitsWithBasehead: async () => ({ data: { status: "ahead" } }),
+        update: async (request) => mutationCalls.push(["repos.update", request]),
+      },
+    },
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    versionState: false,
+    requireGovernance: true,
+  });
+
+  assert.equal(result.superseded, true);
+  assert.equal(result.sourceSha, SHA);
+  assert.equal(result.sha, OTHER_SHA);
+  assert.deepEqual(result.updates, [
+    {
+      action: "superseded-promotion",
+      ref: "alpha/v1/v1.0",
+      requestedSha: SHA,
+      currentSha: OTHER_SHA,
+      comparisonStatus: "ahead",
+      reason: "target-ref-advanced",
+      sha: OTHER_SHA,
+    },
+  ]);
+  assert.deepEqual(mutationCalls, []);
+});
+
+test("a queued duplicate promotion adds no mutation after the protected target advances", async () => {
+  const refs = new Map([["heads/alpha/v1/v1.0", SHA]]);
+  const mutationCalls = [];
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (refs.has(ref)) {
+            return { data: { object: { sha: refs.get(ref) } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async ({ ref }) => ({
+          data: ref === "tags/v1.0."
+            ? [{ ref: "refs/tags/v1.0.0", object: { sha: OTHER_SHA } }]
+            : [],
+        }),
+        createRef: async ({ ref, sha }) => {
+          mutationCalls.push(["createRef", ref, sha]);
+          refs.set(ref.replace(/^refs\//, ""), sha);
+        },
+        updateRef: async ({ ref, sha, force }) => {
+          mutationCalls.push(["updateRef", ref, sha, force]);
+          refs.set(ref, sha);
+        },
+      },
+      repos: {
+        getBranchProtection: async () => ({ data: protectedChannel() }),
+        compareCommitsWithBasehead: async () => ({ data: { status: "ahead" } }),
+        listPullRequestsAssociatedWithCommit: async () => ({
+          data: [
+            {
+              merged_at: "2026-07-10T00:00:00Z",
+              base: { ref: "alpha/v1/v1.0" },
+              head: {
+                ref: "dev/v1/v1.0",
+                repo: { full_name: "kungfu-systems/buildchain" },
+              },
+            },
+          ],
+        }),
+      },
+    },
+  };
+
+  const first = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    cwd: makeTempWorkspace({}),
+    versionState: false,
+    requireGovernance: true,
+  });
+  assert.equal(first.superseded, undefined);
+  assert.equal(mutationCalls.length, 2);
+
+  refs.set("heads/alpha/v1/v1.0", OTHER_SHA);
+  const mutationsAfterFirstIntent = mutationCalls.length;
+  const duplicate = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    cwd: makeTempWorkspace({}),
+    versionState: false,
+    requireGovernance: true,
+  });
+
+  assert.equal(duplicate.superseded, true);
+  assert.equal(duplicate.updates[0].reason, "target-ref-advanced");
+  assert.equal(mutationCalls.length, mutationsAfterFirstIntent);
+});
+
+test("governed promotion fails closed when a mismatched target is not ahead", async () => {
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async () => ({ data: { object: { sha: OTHER_SHA } } }),
+      },
+      repos: {
+        compareCommitsWithBasehead: async () => ({ data: { status: "diverged" } }),
+      },
+    },
+  };
+
+  await assert.rejects(
+    promoteBuildchainRefs({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sha: SHA,
+      targetRef: "alpha/v1/v1.0",
+      versionState: false,
+      requireGovernance: true,
+    }),
+    /moved incompatibly.*diverged/,
+  );
+});
+
 test("promoteBuildchainRefs fails fast when promote-only RC passport source is stale", async () => {
   const cwd = makeTempWorkspace({
     ".buildchain/artifacts/release-candidate-passport.json": {

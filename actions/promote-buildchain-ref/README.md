@@ -146,6 +146,17 @@ contract:
 specific package publication. Direct `alpha/*` or `release/*` channel refs are
 not valid publish source locks when `require-publish-source-lock` is enabled,
 and a mismatched `publish-source-sha` fails before any promotion or publish side effects begin.
+The reusable promote workflow serializes non-dry-run promotion intents per
+repository and re-reads `target-ref` before checkout, dependency installation,
+release-candidate resolution, or publish-gate writes. If a queued intent asks
+for an older SHA after the protected channel has advanced, the workflow records
+the requested/current SHA pair, verifies that the current target is ahead of
+the requested commit, and exits successfully as a superseded no-op. Diverged,
+behind, or unreadable comparisons still fail closed.
+The action repeats that check at its mutation boundary for governed promotion
+calls, closing the race between workflow preflight and action start. Direct
+non-governed calls and dry-runs keep the strict target mismatch error so local
+diagnostics cannot silently reinterpret a stale request.
 The reusable build workflow performs the cheaper channel-ref preflight earlier:
 after source-lock resolution and before the build matrix, it requires the target
 channel ref such as `alpha/v22/v22.22` or `release/v22/v22.22` to already point

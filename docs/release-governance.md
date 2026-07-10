@@ -94,6 +94,19 @@ The implementation is intentionally stricter than a local release script:
   release source tree against that tested alpha tree;
 - generated version-state commits are verified before refs move.
 
+Promotion intents are serialized globally per caller repository with
+`cancel-in-progress: false`. A queued intent re-reads its protected target ref
+before checkout, dependency installation, release-candidate resolution, or any
+publish-gate/ref mutation. If the ref already points at a newer SHA, that older
+intent is no longer release authority: the workflow records the requested and
+current SHAs, proves that the current target is ahead of the requested commit,
+and completes as a `target-ref-advanced` superseded no-op. Diverged or behind
+comparisons are not superseded transactions and still fail closed.
+Missing refs, unreadable repository state, invalid channels, governance
+failures, and artifact mismatches still fail closed. The promote action repeats
+the target check at the mutation boundary, so a ref that advances after the
+workflow preflight cannot receive a second set of publication side effects.
+
 ## Version Lines
 
 Kungfu uses Python-like version lines where a minor line can represent a
