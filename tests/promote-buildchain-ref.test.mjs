@@ -1349,8 +1349,9 @@ test("older minor alpha promotion cannot move the major alpha channel backwards"
   });
 });
 
-test("major alpha ownership scans every tag page before moving the channel", async () => {
+test("major alpha ownership scans the full matching-ref response beyond 100 tags", async () => {
   const writes = [];
+  let majorScans = 0;
   const octokit = {
     rest: {
       git: {
@@ -1360,20 +1361,21 @@ test("major alpha ownership scans every tag page before moving the channel", asy
           }
           throw notFound();
         },
-        listMatchingRefs: async ({ ref, page = 1 }) => {
+        listMatchingRefs: async ({ ref }) => {
           if (ref === "tags/v1.0.") {
             return { data: [{ ref: "refs/tags/v1.0.0", object: { sha: OTHER_SHA } }] };
           }
-          if (ref === "tags/v1." && page === 1) {
+          if (ref === "tags/v1.") {
+            majorScans += 1;
             return {
-              data: Array.from({ length: 100 }, (_, index) => ({
-                ref: `refs/tags/v1.0.${index}`,
-                object: { sha: OTHER_SHA },
-              })),
+              data: [
+                ...Array.from({ length: 100 }, (_, index) => ({
+                  ref: `refs/tags/v1.0.${index}`,
+                  object: { sha: OTHER_SHA },
+                })),
+                { ref: "refs/tags/v1.1-alpha", object: { sha: "c".repeat(40) } },
+              ],
             };
-          }
-          if (ref === "tags/v1." && page === 2) {
-            return { data: [{ ref: "refs/tags/v1.1-alpha", object: { sha: "c".repeat(40) } }] };
           }
           return { data: [] };
         },
@@ -1398,6 +1400,7 @@ test("major alpha ownership scans every tag page before moving the channel", asy
   });
 
   assert.equal(writes.some((write) => write[1] === "tags/v1-alpha"), false);
+  assert.equal(majorScans, 1);
   assert.deepEqual(result.updates.at(-1), {
     tag: "v1-alpha",
     action: "skipped-newer-minor-alpha-exists",
