@@ -10,6 +10,11 @@ key = "version"
 
 [[version.files]]
 type = "json"
+path = ".buildchain/release-impact.json"
+key = "release.version"
+
+[[version.files]]
+type = "json"
 path = "dist/site/buildchain-contract.json"
 key = "product.version"
 
