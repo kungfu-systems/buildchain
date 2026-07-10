@@ -10,6 +10,8 @@ facts, not as README prose. The machine-readable sources are:
 - `buildchain.release.json` for release-specific KFD-1, KFD-2, and KFD-3
   passport results;
 - `.buildchain/buildchain.toml` for repository-owned Buildchain configuration;
+- `.buildchain/kfd/kfd-2/registry.json` for product-owned KFD-2 public claim
+  declarations;
 - `.buildchain/kfd/kfd-3/surfaces.json` for product-owned KFD-3 surface
   registration;
 - `.buildchain/contract-lock.json` for accepted floating runtime contracts.
@@ -87,9 +89,40 @@ Buildchain exposes KFD-2 through:
 buildchain kfd 2 schema --json
 buildchain kfd 2 taxonomy --entry-json residual-risk.json --kind residualRisk --json
 buildchain kfd 2 claims --json
+buildchain kfd 2 product-claims check --json
+buildchain kfd 2 product-claims write --json
+buildchain kfd 2 product-claims render --json
 buildchain kfd 2 trust-claims --json
 buildchain kfd 2 trust-assessment --json
 ```
+
+Products declare their own public trust intent once in the canonical tracked
+registry:
+
+```text
+.buildchain/kfd/kfd-2/registry.json
+```
+
+The registry uses
+`kungfu-buildchain-kfd-2-product-claims-registry/v1` and binds each claim to a
+source, machine-readable evidence, artifact coordinates, verification command,
+audit boundary, responsibility, residual risk, and canonical status. Buildchain
+does not invent product claims from prose. It validates the declaration, hashes
+the referenced files, and renders the release-facing outputs:
+
+```text
+.buildchain/kfd/kfd-2/release-claims.json
+.buildchain/kfd/kfd-2/claims/<claim-id>.json
+.buildchain/kfd/kfd-2/buildchain-claim-args.txt
+```
+
+`product-claims check` is read-only and fails on missing, stale, or unexpected
+claim projections. `write` updates only the declared KFD-2 output set and
+removes stale generated claim JSON files; unrelated files are preserved.
+`render` prints the expected document set without writing it. Version is read
+from the repository's configured Buildchain version state unless explicitly
+overridden. Release pipelines may override channel, tag, or source SHA while
+the registry remains the stable product-intent source.
 
 `claims` generates Buildchain's release-passport public claim inputs. The
 `trust-claims` and `trust-assessment` commands expose the latest KFD package's

@@ -406,6 +406,7 @@ function cliCommandMeta(id) {
     "kfd-1-witness": { group: "kfd-trust", purpose: "Generate Buildchain's KFD-1 self contract-world witness." },
     "kfd-2": { group: "kfd-trust", purpose: "Inspect KFD-2 trust taxonomy, public claims, and schema command families." },
     "kfd-2-claims": { group: "kfd-trust", purpose: "Generate Buildchain's KFD-2 public trust claim evidence." },
+    "kfd-2-product-claims": { group: "kfd-trust", purpose: "Validate and render product-owned KFD-2 claims in the canonical .buildchain/kfd layout." },
     "kfd-2-schema": { group: "kfd-trust", purpose: "Print the default KFD-2 schema exposed by the KFD package standards metadata." },
     "kfd-2-taxonomy": { group: "kfd-trust", purpose: "Validate KFD-2 trust taxonomy entries from the KFD package standards metadata." },
     "kfd-2-trust-assessment": { group: "kfd-trust", purpose: "Expose and validate the KFD package foundation KFD-2 trust assessment." },

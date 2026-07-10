@@ -17,9 +17,17 @@ import {
   planBuildchainLayoutMigration,
   resolveBuildchainConfigPath,
   resolveBuildchainContractLockPath,
+  resolveKfd2ProductClaimsRegistryPath,
   resolveKfd3SurfaceRegistryPath,
   resolveReleasePassportPath,
 } from "./buildchain-layout.js";
+import {
+  checkKfd2ProductClaimOutputs,
+  readKfd2ProductClaimsRegistry,
+  renderKfd2ProductClaimOutputs,
+  validateKfd2ProductClaimsRegistry,
+  writeKfd2ProductClaimOutputs,
+} from "./kfd2-product-claims.js";
 import {
   createKfd1ReleaseGateEvidence,
   createKfd3CollaborationInterfaceReleaseGateEvidence,
@@ -555,6 +563,11 @@ export const kfd2 = Object.freeze({
   validateTrustTaxonomyEntry: validateKfd2TrustTaxonomyEntry,
   createBuildchainClaims: createBuildchainKfd2Claims,
   createBuildchainPublicClaimDefinitions,
+  readProductClaimsRegistry: readKfd2ProductClaimsRegistry,
+  validateProductClaimsRegistry: validateKfd2ProductClaimsRegistry,
+  renderProductClaimOutputs: renderKfd2ProductClaimOutputs,
+  checkProductClaimOutputs: checkKfd2ProductClaimOutputs,
+  writeProductClaimOutputs: writeKfd2ProductClaimOutputs,
   readFoundationTrustClaims: () => readJsonPackageExport("@kungfu-tech/kfd/buildchain/kfd-2/kfd-foundation.trust-claims.json"),
   readFoundationTrustAssessment: () => readJsonPackageExport("@kungfu-tech/kfd/buildchain/kfd-2/kfd-foundation.trust-assessment.json"),
   validateTaxonomyEntries: ({ entries = [], kind = "residualRisk" } = {}) => entries.map((entry, index) => validateKfd2TrustTaxonomyEntry(entry, {
@@ -893,6 +906,7 @@ export function collectKfdStatus({ cwd = process.cwd() } = {}) {
   const paths = {
     config: resolveBuildchainConfigPath(resolvedCwd),
     contractLock: resolveBuildchainContractLockPath(resolvedCwd),
+    kfd2ProductClaimsRegistry: resolveKfd2ProductClaimsRegistryPath(resolvedCwd),
     kfd3SurfaceRegistry: resolveKfd3SurfaceRegistryPath(resolvedCwd),
     releasePassport: resolveReleasePassportPath(resolvedCwd),
   };
@@ -924,7 +938,7 @@ export function collectKfdStatus({ cwd = process.cwd() } = {}) {
     }, {}),
     support: {
       "kfd-1": ["schema", "witness", "gate", "verify"],
-      "kfd-2": ["schema", "taxonomy", "claims", "trust-claims", "trust-assessment", "upstream"],
+      "kfd-2": ["schema", "taxonomy", "claims", "product-claims", "trust-claims", "trust-assessment", "upstream"],
       "kfd-3": ["schema", "detect", "register", "audit", "witness", "query", "aggregate"],
       "kfd-4": ["schema"],
     },
@@ -937,6 +951,7 @@ export const layout = Object.freeze({
   migrate: migrateBuildchainLayout,
   resolveConfigPath: resolveBuildchainConfigPath,
   resolveContractLockPath: resolveBuildchainContractLockPath,
+  resolveKfd2ProductClaimsRegistryPath,
   resolveKfd3SurfaceRegistryPath,
   resolveReleasePassportPath,
 });
