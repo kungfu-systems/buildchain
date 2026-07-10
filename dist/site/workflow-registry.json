@@ -27,6 +27,7 @@
         "buildchain-repository",
         "checkout-cache-fallback",
         "checkout-cache-fetch-attempts",
+        "checkout-cache-github-timeout-seconds",
         "checkout-cache-mirror-url-template",
         "checkout-cache-mode",
         "checkout-cache-reference-repository-template",
@@ -57,7 +58,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 49,
+      "inputCount": 50,
       "surface": "reusable-workflow",
       "capabilityGroup": "api-cli-reference",
       "status": "active"

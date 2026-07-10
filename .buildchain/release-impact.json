@@ -29,7 +29,7 @@
       "id": "locked-checkout-bounded-fallback",
       "impact": "patch",
       "class": "source-integrity",
-      "rationale": "Transient GitHub fallback fetches use a bounded retry budget and record configured and actual attempts before exact source verification.",
+      "rationale": "Locked checkout fetches the advertised ref before a raw SHA so mirror objects seed recovery, and GitHub fallback has an independent 600-second default timeout plus bounded retry evidence before exact source verification.",
       "source": "scripts/locked-source-checkout.mjs"
     },
     {
