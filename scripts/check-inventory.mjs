@@ -108,7 +108,8 @@ if (!selfDogfoodMajor) {
 }
 for (const requiredSnippet of [
   `/.github/workflows/.build.yml@v${selfDogfoodMajor}-alpha`,
-  `/.github/workflows/.build.yml@v${selfDogfoodMajor}`,
+  `ref: v${selfDogfoodMajor}`,
+  `echo "ref=v${selfDogfoodMajor}"`,
   `const alphaRef = "v${selfDogfoodMajor}-alpha"`,
   `const stableRef = "v${selfDogfoodMajor}"`,
 ]) {

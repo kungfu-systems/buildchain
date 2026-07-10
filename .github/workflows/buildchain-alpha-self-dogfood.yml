@@ -43,24 +43,68 @@ jobs:
 
   stable-consumer:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
-    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2
-    permissions:
-      contents: read
-      issues: write
-      id-token: write
-    with:
-      working-directory: fixtures/libnode-shaped
-      buildchain-contract-lock-path: .buildchain/contract-lock.json
-      buildchain-contract-drift-issue-mode: "off"
-      runner-preset: custom
-      platforms-json: >-
-        [{"id":"linux-x64","name":"Linux x64","runner":"[\"ubuntu-24.04\"]"}]
-      artifact-name: buildchain-v2-stable-self-dogfood
-      artifact-name-template: "{artifact}-{platform}-{shortSha}"
-      artifact-paths: fixtures/libnode-shaped/dist
-      require-install: true
-      require-verify: true
-      artifact-retention-days: 7
+    runs-on: ubuntu-24.04
+    outputs:
+      buildchain-runtime-ref: ${{ steps.runtime.outputs.ref }}
+      buildchain-runtime-sha: ${{ steps.runtime.outputs.sha }}
+      buildchain-runtime-class: ${{ steps.runtime.outputs.class }}
+    steps:
+      - name: Checkout stable Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: kungfu-systems/buildchain
+          ref: v2
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Resolve stable runtime
+        id: runtime
+        shell: bash
+        run: |
+          {
+            echo "ref=v2"
+            echo "sha=$(git -C .buildchain/runtime rev-parse HEAD)"
+            echo "class=stable"
+          } >> "${GITHUB_OUTPUT}"
+
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "24"
+
+      - name: Install stable Buildchain runtime dependencies
+        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+
+      - name: Checkout self-consumer source
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ github.sha }}
+          path: source
+          persist-credentials: false
+
+      - name: Run stable lifecycle fixture
+        working-directory: source/fixtures/libnode-shaped
+        shell: bash
+        run: |
+          runtime="${GITHUB_WORKSPACE}/.buildchain/runtime/bin/buildchain.mjs"
+          node "${runtime}" validate --cwd . --require-version-state --require-lifecycle-stages install,build,verify
+          for stage in install build verify; do
+            node "${runtime}" lifecycle run "${stage}" \
+              --cwd . \
+              --required \
+              --artifact-name "buildchain-v2-stable-${stage}" \
+              --manifest-path ".buildchain/artifacts/${stage}-manifest.json" \
+              --summary-path ".buildchain/artifacts/${stage}-summary.json"
+          done
+
+      - name: Upload stable lifecycle evidence
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-v2-stable-self-dogfood
+          path: |
+            source/fixtures/libnode-shaped/.buildchain/artifacts/
+            source/fixtures/libnode-shaped/dist/
+          if-no-files-found: error
+          retention-days: 7
 
   verify-floating-refs:
     name: Verify floating refs
