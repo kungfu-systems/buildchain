@@ -2279,11 +2279,16 @@ test("buildchain semver version state includes generated site contract version",
     summary.lifecycleStages.some((stage) => stage.name === "version-state"),
   );
   const versionFiles = discoverConfiguredVersionStateFiles(root, loadBuildchainConfig(root));
-  const updated = updateConfiguredVersionStateContents(versionFiles, "2.11.11-alpha.0");
+  const currentImpact = JSON.parse(fs.readFileSync(path.join(root, ".buildchain/release-impact.json"), "utf8"));
+  const currentVersion = String(currentImpact.release.version);
+  const currentMatch = currentVersion.match(/^(\d+)\.(\d+)\.(\d+)/);
+  assert.ok(currentMatch);
+  const nextVersion = `${currentMatch[1]}.${currentMatch[2]}.${Number(currentMatch[3]) + 1}-alpha.0`;
+  const updated = updateConfiguredVersionStateContents(versionFiles, nextVersion);
   const releaseImpact = JSON.parse(
     updated.find((file) => file.path === ".buildchain/release-impact.json").content,
   );
-  assert.equal(releaseImpact.release.version, "2.11.11-alpha.0");
+  assert.equal(releaseImpact.release.version, nextVersion);
   assert.equal(releaseImpact.release.line, "v2.11");
 });
 
