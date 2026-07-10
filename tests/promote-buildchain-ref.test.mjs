@@ -14,6 +14,7 @@ const {
   discoverVersionStateFiles,
   expectedHeadRefForTarget,
   latestAlphaForPatch,
+  ownsMajorAlphaChannel,
   parseReleaseLineRef,
   parseTags,
   persistDurableReleaseTransaction,
@@ -362,17 +363,13 @@ function protectedChannel(overrides = {}) {
   };
 }
 
-test("parseTags accepts only ABV-style buildchain tags", () => {
+test("parseTags accepts exact, minor-floating, and major-floating buildchain tags", () => {
   assert.deepEqual(
-    parseTags("v1, v1.0, v1.0-alpha, v1.0.0, v1.0.1-alpha.0, v1"),
-    ["v1", "v1.0", "v1.0-alpha", "v1.0.0", "v1.0.1-alpha.0"],
+    parseTags("v1, v1-alpha, v1.0, v1.0-alpha, v1.0.0, v1.0.1-alpha.0, v1"),
+    ["v1", "v1-alpha", "v1.0", "v1.0-alpha", "v1.0.0", "v1.0.1-alpha.0"],
   );
   assert.throws(
     () => parseTags("1.0.0"),
-    /Unsupported buildchain promotion tag/,
-  );
-  assert.throws(
-    () => parseTags("v1-alpha"),
     /Unsupported buildchain promotion tag/,
   );
   assert.throws(
@@ -404,7 +401,7 @@ test("promotion is limited to buildchain alpha and release line refs", () => {
     () => assertPromotableTargetRef("release/v1/v2.0"),
     /major mismatch/,
   );
-  assert.deepEqual(resolveTagsForTarget("alpha/v1/v1.0"), ["v1.0-alpha"]);
+  assert.deepEqual(resolveTagsForTarget("alpha/v1/v1.0"), ["v1.0-alpha", "v1-alpha"]);
   assert.deepEqual(resolveTagsForTarget("release/v1/v1.0"), ["v1", "v1.0"]);
   assert.deepEqual(resolveTagsForTarget("release/v1/v1.1"), ["v1", "v1.1"]);
   assert.deepEqual(resolveTagsForTarget("publish-gate/major"), []);
@@ -417,6 +414,25 @@ test("promotion is limited to buildchain alpha and release line refs", () => {
     () => resolveTagsForTarget("release/v1/v1.0", ["v1.1.0"]),
     /not allowed for release promotion/,
   );
+  assert.deepEqual(
+    resolveTagsForTarget("alpha/v12/v12.34", ["v12.34-alpha", "v12-alpha"]),
+    ["v12.34-alpha", "v12-alpha"],
+  );
+});
+
+test("major alpha channel follows the highest published minor without crossing majors", () => {
+  const refs = [
+    { ref: "refs/tags/v2.9-alpha", object: { sha: SHA } },
+    { ref: "refs/tags/v2.10.3-alpha.4", object: { sha: OTHER_SHA } },
+    { ref: "refs/tags/v1.99-alpha", object: { sha: "c".repeat(40) } },
+    { ref: "refs/tags/v3.0.0-alpha.0", object: { sha: "d".repeat(40) } },
+    { ref: "refs/tags/v2.11.0", object: { sha: "e".repeat(40) } },
+  ];
+
+  assert.equal(ownsMajorAlphaChannel({ refs, major: 2, minor: 10 }), true);
+  assert.equal(ownsMajorAlphaChannel({ refs, major: 2, minor: 9 }), false);
+  assert.equal(ownsMajorAlphaChannel({ refs, major: 2, minor: 11 }), true);
+  assert.equal(ownsMajorAlphaChannel({ refs, major: 7, minor: 0 }), true);
 });
 
 test("channel promotion PR lineage retries transient GitHub API failures", async () => {
@@ -699,7 +715,7 @@ test("release line dry-run explains alpha promotion semantics", () => {
     "alpha/v2/v2.0",
     "dev/v2/v2.0",
   ]);
-  assert.deepEqual(plan.floatingRefs.map((update) => update.ref), ["v2.0-alpha"]);
+  assert.deepEqual(plan.floatingRefs.map((update) => update.ref), ["v2.0-alpha", "v2-alpha"]);
   assert.match(formatReleaseLineDryRun(plan), /No refs, tags, packages, or files were modified/);
 });
 
@@ -728,7 +744,7 @@ replacement = "VERSION={{version}}"
 
   assert.equal(plan.channel, "release");
   assert.deepEqual(plan.exactTags.map((tag) => tag.tag), ["v2.0.1", "v2.0.2-alpha.0"]);
-  assert.deepEqual(plan.floatingRefs.map((update) => update.ref), ["v2.0", "v2", "v2.0-alpha"]);
+  assert.deepEqual(plan.floatingRefs.map((update) => update.ref), ["v2.0", "v2", "v2.0-alpha", "v2-alpha"]);
   assert.equal(plan.publishTransaction.enabled, true);
   assert.equal(plan.versionState.manager, "buildchain.toml");
   assert.deepEqual(plan.versionState.files, ["VERSION"]);
@@ -1174,6 +1190,7 @@ test("release promotion creates v-prefixed release tag and prepares next alpha t
     { tag: "v1", action: "updated", sha: SHA },
     { tag: "v1.0.1-alpha.0", action: "created", sha: SHA },
     { tag: "v1.0-alpha", action: "updated", sha: SHA },
+    { tag: "v1-alpha", action: "updated", sha: SHA },
   ]);
   assert.deepEqual(calls, [
     ["getRef", "heads/release/v1/v1.0"],
@@ -1187,6 +1204,8 @@ test("release promotion creates v-prefixed release tag and prepares next alpha t
     ["getRef", "tags/v1.0.1-alpha.0"],
     ["createRef", "refs/tags/v1.0.1-alpha.0", SHA],
     ["updateRef", "tags/v1.0-alpha", SHA, true],
+    ["listMatchingRefs", "tags/v1."],
+    ["updateRef", "tags/v1-alpha", SHA, true],
   ]);
 });
 
@@ -1223,10 +1242,11 @@ test("release promotion does not move v1 when the next minor line exists", async
     { tag: "v1", action: "skipped-next-minor-exists", sha: SHA },
     { tag: "v1.0.1-alpha.0", action: "created", sha: SHA },
     { tag: "v1.0-alpha", action: "updated", sha: SHA },
+    { tag: "v1-alpha", action: "updated", sha: SHA },
   ]);
 });
 
-test("alpha promotion creates exact prerelease tag and moves only the minor alpha tag", async () => {
+test("alpha promotion creates exact prerelease tag and moves minor and major alpha tags", async () => {
   const calls = [];
   const octokit = {
     rest: {
@@ -1269,15 +1289,120 @@ test("alpha promotion creates exact prerelease tag and moves only the minor alph
   assert.deepEqual(result.updates, [
     { tag: "v1.0.1-alpha.0", action: "created", sha: SHA },
     { tag: "v1.0-alpha", action: "updated", sha: SHA },
+    { tag: "v1-alpha", action: "updated", sha: SHA },
   ]);
   assert.deepEqual(calls, [
     ["getRef", "heads/alpha/v1/v1.0"],
     ["listMatchingRefs", "tags/v1.0."],
     ["listMatchingRefs", "heads/buildchain/release-state/1-0-"],
+    ["listMatchingRefs", "tags/v1."],
     ["getRef", "tags/v1.0.1-alpha.0"],
     ["createRef", "refs/tags/v1.0.1-alpha.0", SHA],
     ["updateRef", "tags/v1.0-alpha", SHA, true],
+    ["updateRef", "tags/v1-alpha", SHA, true],
   ]);
+});
+
+test("older minor alpha promotion cannot move the major alpha channel backwards", async () => {
+  const writes = [];
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (ref === "heads/alpha/v1/v1.0") {
+            return { data: { object: { sha: SHA } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async ({ ref }) => ({
+          data: ref === "tags/v1.0."
+            ? [{ ref: "refs/tags/v1.0.0", object: { sha: OTHER_SHA } }]
+            : ref === "tags/v1."
+              ? [{ ref: "refs/tags/v1.1-alpha", object: { sha: "c".repeat(40) } }]
+              : [],
+        }),
+        updateRef: async ({ ref, sha, force }) => {
+          writes.push(["updateRef", ref, sha, force]);
+        },
+        createRef: async ({ ref, sha }) => {
+          writes.push(["createRef", ref, sha]);
+        },
+      },
+    },
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    cwd: makeTempWorkspace({}),
+    versionState: false,
+  });
+
+  assert.equal(writes.some((write) => write[1] === "tags/v1-alpha"), false);
+  assert.deepEqual(result.updates.at(-1), {
+    tag: "v1-alpha",
+    action: "skipped-newer-minor-alpha-exists",
+    sha: SHA,
+  });
+});
+
+test("major alpha ownership scans every tag page before moving the channel", async () => {
+  const writes = [];
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (ref === "heads/alpha/v1/v1.0") {
+            return { data: { object: { sha: SHA } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async ({ ref, page = 1 }) => {
+          if (ref === "tags/v1.0.") {
+            return { data: [{ ref: "refs/tags/v1.0.0", object: { sha: OTHER_SHA } }] };
+          }
+          if (ref === "tags/v1." && page === 1) {
+            return {
+              data: Array.from({ length: 100 }, (_, index) => ({
+                ref: `refs/tags/v1.0.${index}`,
+                object: { sha: OTHER_SHA },
+              })),
+            };
+          }
+          if (ref === "tags/v1." && page === 2) {
+            return { data: [{ ref: "refs/tags/v1.1-alpha", object: { sha: "c".repeat(40) } }] };
+          }
+          return { data: [] };
+        },
+        updateRef: async ({ ref, sha, force }) => {
+          writes.push(["updateRef", ref, sha, force]);
+        },
+        createRef: async ({ ref, sha }) => {
+          writes.push(["createRef", ref, sha]);
+        },
+      },
+    },
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    cwd: makeTempWorkspace({}),
+    versionState: false,
+  });
+
+  assert.equal(writes.some((write) => write[1] === "tags/v1-alpha"), false);
+  assert.deepEqual(result.updates.at(-1), {
+    tag: "v1-alpha",
+    action: "skipped-newer-minor-alpha-exists",
+    sha: SHA,
+  });
 });
 
 test("paper alpha promotion does not create a formatter-only version-state commit", async () => {
@@ -1356,6 +1481,7 @@ key = "publication.version"
   assert.deepEqual(writes, [
     ["createRef", "refs/tags/v1.0.1-alpha.0", SHA],
     ["updateRef", "tags/v1.0-alpha", SHA, true],
+    ["updateRef", "tags/v1-alpha", SHA, true],
   ]);
 });
 
@@ -1403,6 +1529,7 @@ test("rerunning the same release SHA reuses exact tags", async () => {
     { tag: "v1", action: "updated", sha: SHA },
     { tag: "v1.0.1-alpha.0", action: "existing", sha: SHA },
     { tag: "v1.0-alpha", action: "updated", sha: SHA },
+    { tag: "v1-alpha", action: "updated", sha: SHA },
   ]);
 });
 
@@ -1834,6 +1961,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   assert.equal(refs.has("heads/buildchain/release-state/1-0-0-alpha-0"), true);
   assert.equal(refs.get("tags/v1.0.0-alpha.0"), alphaSha);
   assert.equal(refs.get("tags/v1.0-alpha"), alphaSha);
+  assert.equal(refs.get("tags/v1-alpha"), alphaSha);
   const order = fs.readFileSync(path.join(cwd, "order.log"), "utf8").trim().split("\n");
   assert.equal(order[0], "create:refs/heads/buildchain/release-state/1-0-0-alpha-0");
   assert.equal(order.filter((entry) => entry.includes("buildchain/release-state")).length >= 4, true);
@@ -1843,6 +1971,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
     "create:refs/heads/dev/v1/v1.0",
     "create:refs/tags/v1.0.0-alpha.0",
     "update:tags/v1.0-alpha",
+    "update:tags/v1-alpha",
   ]);
 });
 
@@ -5576,7 +5705,7 @@ test("a queued duplicate promotion adds no mutation after the protected target a
     requireGovernance: true,
   });
   assert.equal(first.superseded, undefined);
-  assert.equal(mutationCalls.length, 2);
+  assert.equal(mutationCalls.length, 3);
 
   refs.set("heads/alpha/v1/v1.0", OTHER_SHA);
   const mutationsAfterFirstIntent = mutationCalls.length;
@@ -6158,6 +6287,7 @@ test("strict alpha promotion no-ops settled generated version-state commits", as
     ["heads/dev/v1/v1.0", SHA],
     ["tags/v1.0.4-alpha.0", SHA],
     ["tags/v1.0-alpha", SHA],
+    ["tags/v1-alpha", SHA],
   ]);
   const writes = [];
   const octokit = {
@@ -6213,6 +6343,7 @@ test("strict alpha promotion no-ops settled generated version-state commits", as
     { ref: "dev/v1/v1.0", action: "already-promoted", sha: SHA },
     { tag: "v1.0.4-alpha.0", action: "existing", sha: SHA },
     { tag: "v1.0-alpha", action: "existing", sha: SHA },
+    { tag: "v1-alpha", action: "existing", sha: SHA },
   ]);
 });
 

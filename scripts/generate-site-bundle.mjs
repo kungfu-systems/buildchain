@@ -872,7 +872,7 @@ function buildSiteBundle() {
     schemaVersion: 1,
     contract: "kungfu-buildchain-release-model",
     exactTags: "v-prefixed exact tags are immutable release records.",
-    floatingTags: "vX, vX.Y, and vX.Y-alpha are channel pointers updated by Buildchain transactions.",
+    floatingTags: "vX, vX-alpha, vX.Y, and vX.Y-alpha are channel pointers updated by Buildchain transactions; vX-alpha follows the highest minor in major X with a published alpha.",
     channelBranches: ["dev/vX/vX.Y", "alpha/vX/vX.Y", "release/vX/vX.Y", "publish-gate/major"],
     protectedDevelopmentBranches: ["dev/vX/vX.Y"],
     releasePassport: {

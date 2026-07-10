@@ -302,6 +302,17 @@ its 60-second default while GitHub fallback receives an independent, explicit
 after either route. The `v2.11.14` release candidate must be regenerated after
 this correction; earlier `v2.11.14-alpha.4` canary evidence must not be reused.
 
+### Consumer adoption correction: major alpha floating channel
+
+Per-minor alpha refs such as `v2.11-alpha` forced consumers to edit workflow
+pins whenever Buildchain opened a newer v2 minor. Buildchain now derives a
+generic `vN-alpha` for every major. It moves only when the promoted alpha or
+post-stable next-alpha belongs to the highest minor in that major with a
+published alpha. An older minor can continue maintenance releases, but records
+`skipped-newer-minor-alpha-exists` instead of rolling the major alpha channel
+backwards. Exact alpha tags and SHAs remain the immutable audit and rollback
+surface; `vN-alpha` is the low-friction continuous dogfood entrypoint.
+
 ### Remaining work
 
 This closure does not approve an automatic stable-release schedule, ref
