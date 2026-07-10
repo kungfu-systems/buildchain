@@ -21,6 +21,7 @@ const {
   restoreDurableReleaseTransaction,
   resolveTagsForTarget,
   runVersionVerification,
+  resolveReleaseImpactInput,
   selectAlphaTag,
   selectReleaseTag,
   updateVersionStateContents,
@@ -42,6 +43,50 @@ const {
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SHA = "a".repeat(40);
 const OTHER_SHA = "b".repeat(40);
+
+test("release impact path resolves through configured version state", () => {
+  const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[[version.files]]
+type = "json"
+path = ".buildchain/release-impact.json"
+key = "release.version"
+`,
+    "package.json": { name: "@kungfu-tech/buildchain", version: "2.11.10-alpha.0" },
+    ".buildchain/release-impact.json": {
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-impact",
+      release: { version: "2.11.10-alpha.0", line: "v2.11" },
+      versionImpact: { final: "patch", source: "buildchain-version-state", rationale: "Version-bound impact." },
+      surfaceImpacts: [
+        { id: "release-impact-version-binding", impact: "patch", rationale: "Keep the public release asset version-bound." },
+      ],
+      classification: "patch",
+      summary: "Version-bound Buildchain release impact.",
+    },
+  });
+
+  const resolved = JSON.parse(resolveReleaseImpactInput({
+    cwd,
+    impactJson: ".buildchain/release-impact.json",
+    version: "2.11.10-alpha.1",
+  }));
+
+  assert.equal(resolved.release.version, "2.11.10-alpha.1");
+  assert.equal(resolved.release.line, "v2.11");
+  assert.equal(resolved.classification, "patch");
+  assert.equal(resolved.summary, "Version-bound Buildchain release impact.");
+});
 
 function productionImpactJson({ tag = "v1.0.0", line = "v1.0", rationale = "Production promotion preserves existing registered surfaces." } = {}) {
   return JSON.stringify({
