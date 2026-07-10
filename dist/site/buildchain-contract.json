@@ -4,7 +4,7 @@
   "product": {
     "name": "Buildchain",
     "package": "@kungfu-tech/buildchain",
-    "version": "2.11.12",
+    "version": "2.11.13-alpha.3",
     "repository": "https://github.com/kungfu-systems/buildchain"
   },
   "majorLine": "v2",
@@ -92,7 +92,7 @@
         "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes"
       ],
       "breakingDigest": "sha256:403d2fcdb0c5eabe749e89102defad69745f70a1556707bec7831fcc2e9fa8f8",
-      "auditDigest": "sha256:db6fe83e886a04221cc2457d3bdf091cd8607083d5c5e4dc87f40220c2436581"
+      "auditDigest": "sha256:1d12801725d7fb1849be6eb92bf4b08842c0260f3a2a09c87548870a3c50ae3e"
     },
     {
       "contractVersion": 1,
@@ -434,7 +434,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:9398a20c1d1ba4357fd17cb5cd47f7b276d41e6186bf2b495d65e84ffeedf1c4"
+      "auditDigest": "sha256:8a609696e6fa8ff6be710ea9649054b9ce257f24014e0fcced0a7e7e41e7825b"
     },
     {
       "contractVersion": 1,
@@ -460,5 +460,5 @@
     }
   ],
   "compatibilityDigest": "sha256:967df7e854fdf582294ddfb6403eff25c00db9518a24051e7d47cbd75527c785",
-  "contractDigest": "sha256:394335bb5c7d0bf96712314a1051fcb8321fe07fd2d76287d3f5e414e97303fb"
+  "contractDigest": "sha256:10828b74f86ed9ebe8711003573a98edcad8ef8f61fb9f14d2ec5d13a0916896"
 }

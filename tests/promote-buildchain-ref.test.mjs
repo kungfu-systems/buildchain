@@ -1012,8 +1012,27 @@ test("version verification ignores generated buildchain evidence", () => {
     path.join(cwd, ".buildchain/runtime/actions/promote-buildchain-ref/action.yml"),
     "name: runtime\n",
   );
+  fs.mkdirSync(path.join(cwd, ".buildchain/contract-drift"), { recursive: true });
+  fs.writeFileSync(
+    path.join(cwd, ".buildchain/contract-drift/issue-body.md"),
+    "# compatible drift\n",
+  );
+  fs.writeFileSync(
+    path.join(cwd, ".buildchain/publication-result.json"),
+    "{}\n",
+  );
 
   assert.doesNotThrow(() => assertAllowedLocalChanges(cwd, ["package.json"]));
+
+  fs.writeFileSync(
+    path.join(cwd, ".buildchain/publication-result.json.backup"),
+    "{}\n",
+  );
+  assert.throws(
+    () => assertAllowedLocalChanges(cwd, ["package.json"]),
+    /\.buildchain\/publication-result\.json\.backup/,
+  );
+  fs.rmSync(path.join(cwd, ".buildchain/publication-result.json.backup"));
 
   fs.writeFileSync(path.join(cwd, ".buildchain/other.json"), "{}\n");
   assert.throws(
@@ -1244,6 +1263,85 @@ test("alpha promotion creates exact prerelease tag and moves only the minor alph
     ["listMatchingRefs", "tags/v1.0."],
     ["listMatchingRefs", "heads/buildchain/release-state/1-0-"],
     ["getRef", "tags/v1.0.1-alpha.0"],
+    ["createRef", "refs/tags/v1.0.1-alpha.0", SHA],
+    ["updateRef", "tags/v1.0-alpha", SHA, true],
+  ]);
+});
+
+test("paper alpha promotion does not create a formatter-only version-state commit", async () => {
+  const cwd = makeTempWorkspace({
+    ".buildchain/buildchain.toml": `schema = 1
+
+[project]
+type = "publication-artifact"
+name = "paper-fixture"
+
+[publication]
+kind = "paper"
+title = "Paper fixture"
+version = "1.0.1-alpha.0"
+authors = ["Keren Dong"]
+primary_artifact = "_build/main.pdf"
+artifact_paths = ["_build/main.pdf"]
+metadata_paths = ["README.md"]
+source_paths = ["paper"]
+
+[version]
+required = true
+
+[[version.files]]
+type = "toml"
+path = ".buildchain/buildchain.toml"
+key = "publication.version"
+`,
+  });
+  const writes = [];
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (ref === "heads/alpha/v1/v1.0" || ref === "heads/dev/v1/v1.0") {
+            return { data: { object: { sha: SHA } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async ({ ref }) => ({
+          data: ref === "tags/v1.0."
+            ? [{ ref: "refs/tags/v1.0.0", object: { sha: OTHER_SHA } }]
+            : [],
+        }),
+        createBlob: async () => assert.fail("semantic version no-op must not create a blob"),
+        createTree: async () => assert.fail("semantic version no-op must not create a tree"),
+        createCommit: async () => assert.fail("semantic version no-op must not create a commit"),
+        createRef: async ({ ref, sha }) => {
+          writes.push(["createRef", ref, sha]);
+          return {};
+        },
+        updateRef: async ({ ref, sha, force }) => {
+          writes.push(["updateRef", ref, sha, force]);
+          return {};
+        },
+      },
+    },
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "paper-fixture",
+    allowRepository: "kungfu-systems/paper-fixture",
+    sha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    cwd,
+  });
+
+  assert.deepEqual(
+    result.updates
+      .filter((update) => update.version)
+      .map((update) => [update.version, update.action, update.sha]),
+    [["1.0.1-alpha.0", "existing-version-state", SHA]],
+  );
+  assert.deepEqual(writes, [
     ["createRef", "refs/tags/v1.0.1-alpha.0", SHA],
     ["updateRef", "tags/v1.0-alpha", SHA, true],
   ]);
@@ -5265,6 +5363,151 @@ test("promoteBuildchainRefs rejects stale target SHA", async () => {
       versionState: false,
     }),
     /not requested SHA/,
+  );
+});
+
+test("governed promotion treats a superseded target as an auditable no-op", async () => {
+  const mutationCalls = [];
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async () => ({ data: { object: { sha: OTHER_SHA } } }),
+        createRef: async (request) => mutationCalls.push(["createRef", request]),
+        updateRef: async (request) => mutationCalls.push(["updateRef", request]),
+      },
+      repos: {
+        compareCommitsWithBasehead: async () => ({ data: { status: "ahead" } }),
+        update: async (request) => mutationCalls.push(["repos.update", request]),
+      },
+    },
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    versionState: false,
+    requireGovernance: true,
+  });
+
+  assert.equal(result.superseded, true);
+  assert.equal(result.sourceSha, SHA);
+  assert.equal(result.sha, OTHER_SHA);
+  assert.deepEqual(result.updates, [
+    {
+      action: "superseded-promotion",
+      ref: "alpha/v1/v1.0",
+      requestedSha: SHA,
+      currentSha: OTHER_SHA,
+      comparisonStatus: "ahead",
+      reason: "target-ref-advanced",
+      sha: OTHER_SHA,
+    },
+  ]);
+  assert.deepEqual(mutationCalls, []);
+});
+
+test("a queued duplicate promotion adds no mutation after the protected target advances", async () => {
+  const refs = new Map([["heads/alpha/v1/v1.0", SHA]]);
+  const mutationCalls = [];
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (refs.has(ref)) {
+            return { data: { object: { sha: refs.get(ref) } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async ({ ref }) => ({
+          data: ref === "tags/v1.0."
+            ? [{ ref: "refs/tags/v1.0.0", object: { sha: OTHER_SHA } }]
+            : [],
+        }),
+        createRef: async ({ ref, sha }) => {
+          mutationCalls.push(["createRef", ref, sha]);
+          refs.set(ref.replace(/^refs\//, ""), sha);
+        },
+        updateRef: async ({ ref, sha, force }) => {
+          mutationCalls.push(["updateRef", ref, sha, force]);
+          refs.set(ref, sha);
+        },
+      },
+      repos: {
+        getBranchProtection: async () => ({ data: protectedChannel() }),
+        compareCommitsWithBasehead: async () => ({ data: { status: "ahead" } }),
+        listPullRequestsAssociatedWithCommit: async () => ({
+          data: [
+            {
+              merged_at: "2026-07-10T00:00:00Z",
+              base: { ref: "alpha/v1/v1.0" },
+              head: {
+                ref: "dev/v1/v1.0",
+                repo: { full_name: "kungfu-systems/buildchain" },
+              },
+            },
+          ],
+        }),
+      },
+    },
+  };
+
+  const first = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    cwd: makeTempWorkspace({}),
+    versionState: false,
+    requireGovernance: true,
+  });
+  assert.equal(first.superseded, undefined);
+  assert.equal(mutationCalls.length, 2);
+
+  refs.set("heads/alpha/v1/v1.0", OTHER_SHA);
+  const mutationsAfterFirstIntent = mutationCalls.length;
+  const duplicate = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    cwd: makeTempWorkspace({}),
+    versionState: false,
+    requireGovernance: true,
+  });
+
+  assert.equal(duplicate.superseded, true);
+  assert.equal(duplicate.updates[0].reason, "target-ref-advanced");
+  assert.equal(mutationCalls.length, mutationsAfterFirstIntent);
+});
+
+test("governed promotion fails closed when a mismatched target is not ahead", async () => {
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async () => ({ data: { object: { sha: OTHER_SHA } } }),
+      },
+      repos: {
+        compareCommitsWithBasehead: async () => ({ data: { status: "diverged" } }),
+      },
+    },
+  };
+
+  await assert.rejects(
+    promoteBuildchainRefs({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sha: SHA,
+      targetRef: "alpha/v1/v1.0",
+      versionState: false,
+      requireGovernance: true,
+    }),
+    /moved incompatibly.*diverged/,
   );
 });
 

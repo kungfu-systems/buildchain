@@ -356,16 +356,23 @@ function assertAllowedLocalChanges(cwd, allowedPaths) {
     cwd,
     encoding: "utf8",
   }).trimEnd();
+  const ephemeralBuildchainEvidencePaths = [
+    ".buildchain/contract-drift/",
+    ".buildchain/kfd/",
+    ".buildchain/publication-result.json",
+    ".buildchain/release-candidate/",
+    ".buildchain/release-evidence/",
+    ".buildchain/release-passport/",
+    ".buildchain/release-state/",
+    ".buildchain/runtime/",
+  ];
   const isEphemeralBuildchainEvidence = (status, filePath) =>
     status === "??" &&
-    [
-      ".buildchain/kfd/",
-      ".buildchain/release-candidate/",
-      ".buildchain/release-evidence/",
-      ".buildchain/release-passport/",
-      ".buildchain/release-state/",
-      ".buildchain/runtime/",
-    ].some((prefix) => filePath.startsWith(prefix));
+    ephemeralBuildchainEvidencePaths.some((allowedPath) =>
+      allowedPath.endsWith("/")
+        ? filePath.startsWith(allowedPath)
+        : filePath === allowedPath,
+    );
   const unexpected = output
     .split(/\r?\n/)
     .filter(Boolean)
@@ -3205,6 +3212,37 @@ async function promoteBuildchainRefs({
   });
   const branchSha = branchRef.object.sha;
   if (branchSha !== sha) {
+    if (requireGovernance && !dryRun) {
+      const { data: comparison } = await octokit.rest.repos.compareCommitsWithBasehead({
+        owner,
+        repo,
+        basehead: `${sha}...${branchSha}`,
+      });
+      if (comparison.status !== "ahead") {
+        throw new Error(
+          `Ref ${targetRef} moved incompatibly from requested SHA ${sha} to ${branchSha} (${comparison.status})`,
+        );
+      }
+      return {
+        owner,
+        repo,
+        sourceSha: sha,
+        sha: branchSha,
+        targetRef,
+        superseded: true,
+        updates: [
+          {
+            action: "superseded-promotion",
+            ref: targetRef,
+            requestedSha: sha,
+            currentSha: branchSha,
+            comparisonStatus: comparison.status,
+            reason: "target-ref-advanced",
+            sha: branchSha,
+          },
+        ],
+      };
+    }
     throw new Error(
       `Ref ${targetRef} points at ${branchSha}, not requested SHA ${sha}`,
     );

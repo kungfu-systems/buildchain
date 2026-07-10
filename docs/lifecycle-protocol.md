@@ -59,6 +59,14 @@ path = "pyproject.toml"
 key = "project.version"
 ```
 
+Configured JSON and TOML version files are semantic no-ops when the declared
+key already equals the requested version. Buildchain preserves the repository's
+original TOML bytes in that case instead of serializing the whole document and
+creating formatter-only release state. When a TOML version really changes,
+Buildchain applies a parser-verified lossless edit to that key and fails closed
+if it cannot prove a unique edit; unrelated arrays, comments, and formatting
+remain repository-owned.
+
 Regex files must expose the current version through a named capture group called
 `version`:
 
@@ -247,6 +255,14 @@ changes to the local checkout, and before it creates release commits or moves
 refs. After the command finishes, Buildchain checks that only declared
 version-state files changed. This prevents verification from quietly adding
 extra source changes to the release commit.
+
+Buildchain-owned untracked runtime evidence is excluded only through an exact
+internal allowlist. This includes contract-drift issue material under
+`.buildchain/contract-drift/` and the paper workflow's
+`.buildchain/publication-result.json`, alongside release-candidate, passport,
+release-state, KFD, and runtime evidence directories. Tracked changes, ordinary
+source files, and undeclared `.buildchain/*` paths still fail version
+verification.
 
 On protected alpha and release branches, the generated version-state commit is
 applied by the promotion automation after the reviewed channel PR has merged.

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-site-manifest",
-  "generatedAt": "2026-07-10T04:40:14.828Z",
-  "publishedAt": "2026-07-10T04:40:14.828Z",
+  "generatedAt": "2026-07-10T08:30:26.417Z",
+  "publishedAt": "2026-07-10T08:30:26.417Z",
   "reproducible": true,
   "timestampPolicy": "ci-injected",
   "deterministicInputs": [
@@ -19,7 +19,7 @@
     "declared Buildchain surface manifest contract"
   ],
   "sourceDateEpoch": "0",
-  "sourceRevision": "dd0ccdcbfa432e8856ba01735c25b6427a1ff1c0",
+  "sourceRevision": "b94f51e5fa48c4ce51126162f4a5b2ccc0a2c90d",
   "timestampPolicyDetails": {
     "contract": "kungfu-buildchain-surface-timestamp-policy",
     "timestampFields": [
@@ -37,7 +37,7 @@
   },
   "package": {
     "name": "@kungfu-tech/buildchain",
-    "version": "2.11.12",
+    "version": "2.11.13-alpha.3",
     "versionSource": "package.json#version"
   },
   "entrypoint": "buildchain-site.json",
@@ -197,7 +197,7 @@
       "path": "docs/lifecycle-protocol.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:191d706801abe5cea7927042b9cd7989f19cf868e726f8ac5852dff9490aa14f"
+      "digest": "sha256:16c8e4994276142e6b57a61a18a88998727dce5911cb2da96d3900c049fb76dc"
     },
     {
       "id": "reusable-build-surface",
@@ -221,7 +221,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:69218a4749170e1f84b82f211d57187a7ff33f1a510aced587e240d1d901b9e7"
+      "digest": "sha256:9c8e3f096d314b2d0ea9a6badfdf263006e190aaa6e861489bdd05c93d3eaf04"
     },
     {
       "id": "release-flow",
@@ -253,7 +253,7 @@
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:23b727c27a571d1a9947e4edb1b1e58efc9de2c80a3b901d05293fc5cd3ce82c"
+      "digest": "sha256:4c88b27af8aeb3f72fc8b979529b68d5fbc910dce70fe4219192c09aeb404e5c"
     }
   ],
   "facts": [

@@ -354,9 +354,24 @@ test("paper release workflow publishes declared npm package with source lock and
   assert.match(workflow, /github-release: \$\{\{ inputs\.github-release \}\}/);
   assert.match(workflow, /permissions:\n  checks: write\n  contents: write/);
   assert.match(docs, /permissions:\n      checks: write\n      contents: write/);
+  assert.match(workflow, /Preflight protected publication authority/);
+  assert.match(
+    workflow,
+    /github-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token \}\}/,
+  );
+  assert.match(workflow, /cannot read branch protection before publication build/);
+  assert.match(
+    docs,
+    /BUILDCHAIN_PROMOTION_TOKEN: \$\{\{ secrets\.RELEASE_AUTHORITY_TOKEN \}\}/,
+  );
+  assert.match(docs, /caller-chosen release authority secret/);
   assert.match(workflow, /default: true/);
   assert.ok(
     workflow.indexOf("Check Buildchain contract lock") <
+      workflow.indexOf("- name: Build publication"),
+  );
+  assert.ok(
+    workflow.indexOf("Preflight protected publication authority") <
       workflow.indexOf("- name: Build publication"),
   );
   assert.ok(
@@ -515,7 +530,17 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /BUILDCHAIN_RC_WORKFLOW_NAME: \$\{\{ inputs\.release-candidate-workflow-name \}\}/);
   assert.match(workflow, /BUILDCHAIN_REQUIRED_ARTIFACT_COUNT: \$\{\{ inputs\.required-artifact-count \}\}/);
   assert.match(workflow, /BUILDCHAIN_PUBLISH_PACKAGE_MAIN: \$\{\{ inputs\.publish-package-main \}\}/);
-  assert.match(workflow, /derived_channel="alpha"/);
+  assert.match(workflow, /concurrency:\n\s+group: buildchain-release-promotion-\$\{\{ github\.repository \}\}\n\s+cancel-in-progress: false/);
+  assert.match(workflow, /name: Revalidate promotion intent/);
+  assert.match(workflow, /name: Revalidate queued promotion intent/);
+  assert.match(workflow, /compareCommitsWithBasehead/);
+  assert.match(workflow, /const superseded = !dryRun && comparisonStatus === "ahead"/);
+  assert.match(workflow, /moved incompatibly/);
+  assert.match(workflow, /const action = superseded \? "noop" : "promote"/);
+  assert.match(workflow, /const reason = superseded \? "target-ref-advanced" : "target-ref-current"/);
+  assert.match(workflow, /needs: preflight/);
+  assert.match(workflow, /if: \$\{\{ needs\.preflight\.outputs\.action == 'promote' \}\}/);
+  assert.match(workflow, /ref: \$\{\{ needs\.preflight\.outputs\.requested-sha \}\}/);
   assert.match(workflow, /INPUT_TARGET_SHA: \$\{\{ inputs\.target-sha \}\}/);
   assert.match(workflow, /Install promotion dependencies/);
   assert.match(workflow, /PACKAGE_MANAGER: \$\{\{ inputs\.package-manager \}\}/);
@@ -535,6 +560,18 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /github-release-notes: \$\{\{ inputs\.github-release-notes \}\}/);
   assert.match(workflow, /Ensure publish-gate ref locks promotion commit/);
   assert.match(workflow, /id: promote/);
+  assert.ok(
+    workflow.indexOf("Revalidate queued promotion intent") <
+      workflow.indexOf("Install promotion dependencies"),
+  );
+  assert.ok(
+    workflow.indexOf("Revalidate queued promotion intent") <
+      workflow.indexOf("Resolve PR-stage release candidate"),
+  );
+  assert.ok(
+    workflow.indexOf("Revalidate queued promotion intent") <
+      workflow.indexOf("Ensure publish-gate ref locks promotion commit"),
+  );
   assert.doesNotMatch(workflow, /Publish GitHub Release evidence/);
   assert.doesNotMatch(workflow, /gh release upload/);
   assert.doesNotMatch(workflow, /\.github\/workflows\/\.build\.yml/);

@@ -247,13 +247,17 @@ on:
     outputs:
       promoted-sha:
         description: "Promoted channel SHA"
-        value: ${{ jobs.promote.outputs.promoted-sha }}
+        value: ${{ jobs.promote.outputs.promoted-sha || jobs.preflight.outputs.current-sha }}
       built-source-sha:
         description: "PR-stage built source SHA"
         value: ${{ jobs.promote.outputs.built-source-sha }}
       release-candidate-artifact:
         description: "Resolved release-candidate artifact name"
         value: ${{ jobs.promote.outputs.release-candidate-artifact }}
+
+concurrency:
+  group: buildchain-release-promotion-${{ github.repository }}
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -263,53 +267,108 @@ permissions:
   id-token: write
 
 jobs:
-  promote:
-    name: Promote release candidate
+  preflight:
+    name: Revalidate promotion intent
     runs-on: ubuntu-24.04
     outputs:
-      promoted-sha: ${{ steps.target.outputs.sha }}
-      built-source-sha: ${{ steps.rc.outputs.release-candidate-source-sha }}
-      release-candidate-artifact: ${{ steps.rc.outputs.release-candidate-artifact }}
+      action: ${{ steps.intent.outputs.action }}
+      reason: ${{ steps.intent.outputs.reason }}
+      channel: ${{ steps.intent.outputs.channel }}
+      target-ref: ${{ steps.intent.outputs.target-ref }}
+      requested-sha: ${{ steps.intent.outputs.requested-sha }}
+      current-sha: ${{ steps.intent.outputs.current-sha }}
+      comparison-status: ${{ steps.intent.outputs.comparison-status }}
     steps:
-      - name: Resolve target ref
-        id: target-ref
-        shell: bash
-        run: |
-          target_ref="${INPUT_TARGET_REF:-${GITHUB_REF_NAME}}"
-          derived_channel=""
-          case "${target_ref}" in
-            alpha/v*/v*) derived_channel="alpha" ;;
-            release/v*/v*) derived_channel="release" ;;
-            publish-gate/major|major-gate) derived_channel="major" ;;
-            *)
-              echo "::error::unsupported promote target ref: ${target_ref}"
-              exit 1
-              ;;
-          esac
-          channel="${INPUT_CHANNEL:-${derived_channel}}"
-          if [ "${channel}" != "${derived_channel}" ]; then
-            echo "::error::promotion channel ${channel} does not match target ref ${target_ref} (${derived_channel})"
-            exit 1
-          fi
-          echo "value=${target_ref}" >> "${GITHUB_OUTPUT}"
-          echo "channel=${channel}" >> "${GITHUB_OUTPUT}"
+      - name: Revalidate queued promotion intent
+        id: intent
+        uses: actions/github-script@v8
         env:
           INPUT_CHANNEL: ${{ inputs.channel }}
           INPUT_TARGET_REF: ${{ inputs.target-ref }}
-
-      - name: Resolve target SHA
-        id: target
-        shell: bash
-        run: |
-          target_sha="${INPUT_TARGET_SHA:-${GITHUB_SHA}}"
-          echo "sha=${target_sha}" >> "${GITHUB_OUTPUT}"
-        env:
           INPUT_TARGET_SHA: ${{ inputs.target-sha }}
+          INPUT_DRY_RUN: ${{ inputs.dry-run }}
+        with:
+          script: |
+            const targetRef = (process.env.INPUT_TARGET_REF || context.ref.replace(/^refs\/heads\//, ""))
+              .replace(/^refs\/heads\//, "");
+            const requestedSha = process.env.INPUT_TARGET_SHA || context.sha;
+            if (!/^[0-9a-f]{40}$/i.test(requestedSha)) {
+              throw new Error(`promotion target SHA must be a 40-character Git SHA, got '${requestedSha}'`);
+            }
 
+            let derivedChannel = "";
+            if (/^alpha\/v\d+\/v\d+\.\d+$/.test(targetRef)) derivedChannel = "alpha";
+            if (/^release\/v\d+\/v\d+\.\d+$/.test(targetRef)) derivedChannel = "release";
+            if (targetRef === "publish-gate/major" || targetRef === "major-gate") derivedChannel = "major";
+            if (!derivedChannel) {
+              throw new Error(`unsupported promote target ref: ${targetRef}`);
+            }
+            const channel = process.env.INPUT_CHANNEL || derivedChannel;
+            if (channel !== derivedChannel) {
+              throw new Error(`promotion channel ${channel} does not match target ref ${targetRef} (${derivedChannel})`);
+            }
+
+            const current = await github.rest.git.getRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `heads/${targetRef}`,
+            });
+            const currentSha = current.data.object.sha;
+            const dryRun = process.env.INPUT_DRY_RUN === "true";
+            let comparisonStatus = "identical";
+            if (currentSha !== requestedSha) {
+              const comparison = await github.rest.repos.compareCommitsWithBasehead({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                basehead: `${requestedSha}...${currentSha}`,
+              });
+              comparisonStatus = comparison.data.status;
+            }
+            const superseded = !dryRun && comparisonStatus === "ahead";
+            if (!dryRun && currentSha !== requestedSha && !superseded) {
+              throw new Error(
+                `promotion target ${targetRef} moved incompatibly: requested ${requestedSha}, current ${currentSha}, comparison ${comparisonStatus}`,
+              );
+            }
+            const action = superseded ? "noop" : "promote";
+            const reason = superseded ? "target-ref-advanced" : "target-ref-current";
+
+            core.setOutput("action", action);
+            core.setOutput("reason", reason);
+            core.setOutput("channel", channel);
+            core.setOutput("target-ref", targetRef);
+            core.setOutput("requested-sha", requestedSha);
+            core.setOutput("current-sha", currentSha);
+            core.setOutput("comparison-status", comparisonStatus);
+
+            if (superseded) {
+              core.notice(`Promotion intent is superseded: ${targetRef} is ${currentSha}, requested ${requestedSha}.`);
+            }
+            await core.summary
+              .addHeading("Buildchain promotion intent")
+              .addRaw(`- Action: \`${action}\`\n`)
+              .addRaw(`- Reason: \`${reason}\`\n`)
+              .addRaw(`- Channel: \`${channel}\`\n`)
+              .addRaw(`- Target ref: \`${targetRef}\`\n`)
+              .addRaw(`- Requested SHA: \`${requestedSha}\`\n`)
+              .addRaw(`- Current SHA: \`${currentSha}\`\n`)
+              .addRaw(`- Comparison: \`${comparisonStatus}\`\n`)
+              .write();
+
+  promote:
+    name: Promote release candidate
+    needs: preflight
+    if: ${{ needs.preflight.outputs.action == 'promote' }}
+    runs-on: ubuntu-24.04
+    outputs:
+      promoted-sha: ${{ needs.preflight.outputs.requested-sha }}
+      built-source-sha: ${{ steps.rc.outputs.release-candidate-source-sha }}
+      release-candidate-artifact: ${{ steps.rc.outputs.release-candidate-artifact }}
+    steps:
       - name: Checkout promotion channel commit
         uses: actions/checkout@v7.0.0
         with:
-          ref: ${{ steps.target.outputs.sha }}
+          ref: ${{ needs.preflight.outputs.requested-sha }}
           clean: true
           persist-credentials: false
 
@@ -437,7 +496,7 @@ jobs:
           buildchain-version: ${{ steps.contract-lock.outputs.contract-digest }}
           consumer-repository: ${{ github.repository }}
           consumer-ref: ${{ github.ref }}
-          consumer-sha: ${{ steps.target.outputs.sha }}
+          consumer-sha: ${{ needs.preflight.outputs.requested-sha }}
           workflow: ${{ github.workflow }}
           run-id: ${{ github.run_id }}
           run-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -453,8 +512,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
-          BUILDCHAIN_TARGET_SHA: ${{ steps.target.outputs.sha }}
-          BUILDCHAIN_TARGET_REF: ${{ steps.target-ref.outputs.value }}
+          BUILDCHAIN_TARGET_SHA: ${{ needs.preflight.outputs.requested-sha }}
+          BUILDCHAIN_TARGET_REF: ${{ needs.preflight.outputs.target-ref }}
           BUILDCHAIN_ARTIFACT_NAME: ${{ inputs.artifact-name }}
           BUILDCHAIN_ARTIFACT_PATTERNS: ${{ inputs.artifact-patterns }}
           BUILDCHAIN_RC_WORKFLOW_FILE: ${{ inputs.release-candidate-workflow-file }}
@@ -468,9 +527,9 @@ jobs:
         id: publish-gate
         uses: actions/github-script@v8
         env:
-          CHANNEL: ${{ steps.target-ref.outputs.channel }}
-          TARGET_REF: ${{ steps.target-ref.outputs.value }}
-          TARGET_SHA: ${{ steps.target.outputs.sha }}
+          CHANNEL: ${{ needs.preflight.outputs.channel }}
+          TARGET_REF: ${{ needs.preflight.outputs.target-ref }}
+          TARGET_SHA: ${{ needs.preflight.outputs.requested-sha }}
           VERSION: ${{ steps.rc.outputs.release-candidate-version || 'promotion' }}
         with:
           script: |
@@ -500,8 +559,8 @@ jobs:
         uses: ./.buildchain/runtime/actions/promote-buildchain-ref
         with:
           token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
-          sha: ${{ steps.target.outputs.sha }}
-          target-ref: ${{ steps.target-ref.outputs.value }}
+          sha: ${{ needs.preflight.outputs.requested-sha }}
+          target-ref: ${{ needs.preflight.outputs.target-ref }}
           dry-run: ${{ inputs.dry-run }}
           require-governance: "true"
           require-version-state: "true"
@@ -557,8 +616,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
-          BUILDCHAIN_TARGET_REF: ${{ steps.target-ref.outputs.value }}
-          BUILDCHAIN_TARGET_SHA: ${{ steps.target.outputs.sha }}
+          BUILDCHAIN_TARGET_REF: ${{ needs.preflight.outputs.target-ref }}
+          BUILDCHAIN_TARGET_SHA: ${{ needs.preflight.outputs.requested-sha }}
           BUILDCHAIN_WORKFLOW_NAME: ${{ github.workflow }}
           BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           BUILDCHAIN_RC_RESOLVE_OUTCOME: ${{ steps.rc.outcome }}
@@ -606,9 +665,9 @@ jobs:
           run-id: ${{ github.run_id }}
           run-attempt: ${{ github.run_attempt }}
           run-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          channel: ${{ steps.target-ref.outputs.value }}
+          channel: ${{ needs.preflight.outputs.target-ref }}
           source-ref: ${{ github.ref_name }}
-          source-sha: ${{ steps.target.outputs.sha }}
+          source-sha: ${{ needs.preflight.outputs.requested-sha }}
           pull-request: ${{ steps.friction.outputs.pull-request }}
           friction-class: ${{ steps.friction.outputs.friction-class }}
           summary: ${{ steps.friction.outputs.summary }}
