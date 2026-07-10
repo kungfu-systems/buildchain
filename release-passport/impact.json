@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-impact",
+  "release": {
+    "tag": "v2.11.13-alpha.2",
+    "line": "v2.11",
+    "version": "2.11.13-alpha.2"
+  },
+  "versionImpact": {
+    "final": "patch",
+    "source": "buildchain-version-state",
+    "rationale": "Configured release version updates now preserve repository-owned TOML formatting and treat already-matching JSON or TOML version state as a semantic no-op."
+  },
+  "surfaceImpacts": [
+    {
+      "id": "version-state-lossless-toml-update",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Parser-verified lossless TOML edits prevent formatter-only release-preparation commits while real version changes and strict transaction source identity remain enforced.",
+      "source": "packages/core/buildchain-config.js"
+    }
+  ],
+  "classification": "patch",
+  "breaking": false,
+  "security": false,
+  "migrationRequired": false,
+  "summary": "Buildchain v2.11 avoids formatter-only generated promotion commits by preserving TOML source formatting and skipping semantic version-state no-ops."
+}
