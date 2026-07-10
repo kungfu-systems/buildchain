@@ -1840,6 +1840,7 @@ test("release line open plans a protected new minor without mutating files", () 
   assert.equal(plan.refs.dev, "dev/v2/v2.10");
   assert.equal(plan.refs.alpha, "alpha/v2/v2.10");
   assert.equal(plan.refs.release, "release/v2/v2.10");
+  assert.equal(plan.protection.requiredStatusCheck, "check");
   assert.equal(plan.protection.requiredApprovingReviewCount, 1);
   assert.equal(JSON.parse(fs.readFileSync(path.join(cwd, "package.json"), "utf8")).version, "2.9.0");
 });

@@ -120,7 +120,7 @@ export function planReleaseLineBootstrap({
   minor,
   sourceRef = "",
   initialVersion = "",
-  requiredStatusCheck = "check / check",
+  requiredStatusCheck = "check",
   setDefault = true,
   createAlphaPr = true,
   approvalCount = 1,
