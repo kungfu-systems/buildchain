@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-stable-release-policy",
+  "enabled": true,
+  "minimumStableIntervalSeconds": 86400,
+  "minimumCanarySoakSeconds": 3600,
+  "productPathPrefixes": [
+    ".buildchain/stable-release-policy.json",
+    ".github/workflows/",
+    "actions/",
+    "packages/",
+    "scripts/"
+  ],
+  "requiredCanaries": [
+    {
+      "id": "build-surface-fixture",
+      "source": "release-candidate",
+      "repository": "kungfu-systems/buildchain",
+      "workflow": "Build Surface Fixture",
+      "allowedAttestors": []
+    },
+    {
+      "id": "site-libkungfu-dev",
+      "source": "commit-status",
+      "repository": "kungfu-systems/site-libkungfu-dev",
+      "workflow": "Buildchain Stable Canary",
+      "context": "buildchain-canary/site-libkungfu-dev",
+      "allowedAttestors": [
+        "kungfu-origin"
+      ]
+    }
+  ]
+}

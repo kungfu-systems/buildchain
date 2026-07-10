@@ -12,6 +12,8 @@ flowchart TD
   Review["Protected branch review"]
   Merge["Merge PR into alpha or release"]
   Promotion["Buildchain Ref Promotion"]
+  StableDecision{"Release channel?"}
+  StableGate["Stable only: exact-alpha canaries + soak + cooldown"]
   Action["promote-buildchain-ref action"]
   VersionState["Version-state commit"]
   ExactTag["Exact tag"]
@@ -22,7 +24,10 @@ flowchart TD
   Verify --> Review
   Review --> Merge
   Merge --> Promotion
-  Promotion --> Action
+  Promotion --> StableDecision
+  StableDecision -->|yes| StableGate
+  StableDecision -->|no: alpha| Action
+  StableGate --> Action
   Action --> VersionState
   Action --> ExactTag
   Action --> FloatingRefs
@@ -32,6 +37,10 @@ flowchart TD
 
 Buildchain treats the PR merge as release intent and the promotion action as the
 only component allowed to turn that intent into release refs.
+
+`StableGate` applies only to Buildchain's release channel. Alpha and train
+iteration bypass it. See [Stable Release Throttle And Canary Gate](release-governance.md#stable-release-throttle-and-canary-gate)
+for the versioned policy and evidence contract.
 
 ## Ref State
 
