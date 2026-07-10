@@ -2208,6 +2208,62 @@ test("release passport keeps surface impacts optional for alpha passports", asyn
   assert.equal(explanation.impact.surfaceImpactRequirement.required, false);
 });
 
+test("release passport rejects version-bound impact from another minor line", async () => {
+  const passportPath = createUnifiedPassportFixture({
+    impact: {
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-impact",
+      release: { version: "2.3.2", line: "v2.2" },
+      versionImpact: {
+        final: "patch",
+        source: "buildchain-version-state",
+        rationale: "The impact is intentionally bound to the wrong minor line.",
+      },
+      surfaceImpacts: [
+        {
+          id: "release-impact-version-binding",
+          impact: "patch",
+          class: "release-evidence",
+          rationale: "The fixture proves stale minor-line evidence fails closed.",
+        },
+      ],
+      classification: "patch",
+      summary: "Version-bound impact fixture for cross-minor rejection.",
+    },
+  });
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+
+  assert.equal(report.ok, false);
+  assert.equal(report.issues.some((entry) => entry.code === "impact.release.line"), true);
+  assert.match(JSON.stringify(report.issues), /impact release line must match/);
+});
+
+test("release passport rejects incomplete or mismatched version-bound impact", async () => {
+  const passportPath = createUnifiedPassportFixture({
+    impact: {
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-impact",
+      release: { version: "2.3.1", line: "v2.3" },
+      versionImpact: {
+        final: "patch",
+        source: "buildchain-version-state",
+        rationale: "The fixture intentionally omits valid release impact facts.",
+      },
+      surfaceImpacts: [],
+      classification: "minor",
+      summary: "",
+    },
+  });
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+  const issueCodes = new Set(report.issues.map((entry) => entry.code));
+
+  assert.equal(report.ok, false);
+  assert.equal(issueCodes.has("impact.release.version"), true);
+  assert.equal(issueCodes.has("impact.classification"), true);
+  assert.equal(issueCodes.has("impact.summary"), true);
+  assert.equal(issueCodes.has("impact.surfaceImpacts.required"), true);
+});
+
 test("release passport fails closed when final impact is lower than a surface impact", async () => {
   const passportPath = createUnifiedPassportFixture({
     impact: {

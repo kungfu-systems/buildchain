@@ -58,6 +58,7 @@ const requiredPaths = [
   "tests/buildchain-inventory.json",
   ".buildchain/buildchain.toml",
   ".buildchain/contract-lock.json",
+  ".buildchain/release-impact.json",
   ".github/actionlint.yaml",
   ".github/workflows/self-hosted-runner-smoke.yml",
   ".github/workflows/buildchain-ref-promotion.yml",
@@ -651,6 +652,22 @@ const binaryDistributionWorkflow = fs.readFileSync(path.join(root, ".github/work
 const selfHostedRunnerSmokeWorkflow = fs.readFileSync(path.join(root, ".github/workflows/self-hosted-runner-smoke.yml"), "utf8");
 const npmDryRunScript = fs.readFileSync(path.join(root, "scripts/npm-publish-dry-run.mjs"), "utf8");
 const npmPublishTransactionScript = fs.readFileSync(path.join(root, "scripts/npm-publish-transaction.mjs"), "utf8");
+const rootPackageJson = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
+const selfReleaseImpact = JSON.parse(fs.readFileSync(path.join(root, ".buildchain/release-impact.json"), "utf8"));
+const selfReleaseLineMatch = String(rootPackageJson.version || "").match(/^(\d+)\.(\d+)\./);
+const expectedSelfReleaseLine = selfReleaseLineMatch ? `v${selfReleaseLineMatch[1]}.${selfReleaseLineMatch[2]}` : "";
+if (selfReleaseImpact.release?.version !== rootPackageJson.version) {
+  throw new Error("Buildchain self release impact version must match package.json version");
+}
+if (!expectedSelfReleaseLine || selfReleaseImpact.release?.line !== expectedSelfReleaseLine) {
+  throw new Error("Buildchain self release impact line must match package.json major/minor line");
+}
+if (!["patch", "minor", "major"].includes(selfReleaseImpact.classification)) {
+  throw new Error("Buildchain self release impact classification must be patch, minor, or major");
+}
+if (!String(selfReleaseImpact.summary || "").trim() || !Array.isArray(selfReleaseImpact.surfaceImpacts) || selfReleaseImpact.surfaceImpacts.length === 0) {
+  throw new Error("Buildchain self release impact requires a summary and surfaceImpacts[]");
+}
 for (const requiredSnippet of [
   "runs-on: ubuntu-24.04",
   "workflow_dispatch:",
@@ -680,12 +697,7 @@ for (const requiredSnippet of [
   "github-release: true",
   "release-passport-buildchain-self-kfd: true",
   "publish-required-artifacts-json: \"[]\"",
-  "release-passport-impact-json: >-",
-  "Buildchain v2.10 patch release accepts strict publish-gate channel-lineage PRs",
-  "directory_index_rewrite = external",
-  "publish-gate-channel-lineage",
-  "web-surface-external-directory-index-rewrite",
-  "\"surfaceImpacts\":[",
+  "release-passport-impact-json: .buildchain/release-impact.json",
 ]) {
   if (!buildchainRefPromotionWorkflow.includes(requiredSnippet)) {
     throw new Error(`buildchain ref promotion workflow missing npm transaction snippet: ${requiredSnippet}`);
