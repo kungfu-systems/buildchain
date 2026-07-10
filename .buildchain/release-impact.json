@@ -59,11 +59,18 @@
       "class": "release-governance",
       "rationale": "Stable canary evidence verifies authoritative workflow metadata, accepts only the exact alpha tag or its resolved commit SHA from workflow inputs or the workflow-owned run-name, and rejects otherwise successful mismatched statuses.",
       "source": "scripts/stable-release-gate.mjs"
+    },
+    {
+      "id": "major-alpha-floating-channel",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Every major line exposes vN-alpha as a cross-minor test channel owned by the highest minor with a published alpha, while older minor promotions fail closed to a skip instead of rolling consumers backwards.",
+      "source": "actions/promote-buildchain-ref/lib.js"
     }
   ],
   "classification": "patch",
   "breaking": false,
   "security": false,
   "migrationRequired": false,
-  "summary": "Buildchain v2.11.14 consolidates consumer-reported lifecycle, checkout, governance, publication, web-surface, and stable-canary evidence fixes into one audited patch release."
+  "summary": "Buildchain v2.11.14 consolidates consumer-reported lifecycle, checkout, governance, publication, web-surface, stable-canary, and cross-minor alpha adoption fixes into one audited patch release."
 }

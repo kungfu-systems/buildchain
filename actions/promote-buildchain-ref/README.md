@@ -6,18 +6,18 @@ compatibility refs from buildchain release channels:
 - `alpha/v2/v2.0` creates or reuses the next exact prerelease tag such as
   `v2.0.1-alpha.0`, writes that version into package version state, points the
   alpha and dev channel branches at the version commit, then promotes
-  `v2.0-alpha`;
+  `v2.0-alpha` and, when this is the highest published alpha minor, `v2-alpha`;
 - `release/v2/v2.0` creates or reuses the next exact release tag such as
   `v2.0.0`, writes that version into package version state, points the release
   channel branch and release tags at the release commit, then prepares a second
   source commit for the next exact prerelease tag such as `v2.0.1-alpha.0` and
   points the alpha/dev channel branches plus `v2.0-alpha` at that prerelease
-  commit;
+  commit, and moves `v2-alpha` only if no higher v2 minor has published an alpha;
 - `publish-gate/major` accepts a reviewed PR from a production release line such
   as `release/v2/v2.0`, writes the next major production version such as
   `v3.0.0`, points `publish-gate/major`, `release/v3/v3.0`, `v3.0`, and `v3`
   at that release commit, then prepares `v3.0.1-alpha.0` for
-  `alpha/v3/v3.0`, `dev/v3/v3.0`, and `v3.0-alpha`. The older `major-gate`
+  `alpha/v3/v3.0`, `dev/v3/v3.0`, `v3.0-alpha`, and `v3-alpha`. The older `major-gate`
   branch name is a compatibility alias only.
 
 The release branch name defines the minor line. For example,
@@ -359,11 +359,14 @@ declare the same release authority twice.
 The tag names intentionally follow the old ABV release semantics:
 exact release tags are `vX.Y.Z`, exact alpha tags are `vX.Y.Z-alpha.N`, floating
 release tags are minor/major tags such as `v2.0` and `v2`, and floating alpha
-tags are minor-line tags such as `v2.0-alpha`. Bare tags such as `1.0.0` are not
+tags are minor-line tags such as `v2.0-alpha` plus cross-minor major tags such
+as `v2-alpha`. A major alpha tag only moves for the highest minor in that major
+with a published alpha, so older-line maintenance cannot roll consumers back.
+Bare tags such as `1.0.0` are not
 maintained as buildchain release entrypoints.
 
 Repository rulesets should protect exact tags, not every `v*` tag. A ruleset
-such as `refs/tags/v*` also protects floating channel tags like `v2.0-alpha`,
+such as `refs/tags/v*` also protects floating channel tags like `v2.0-alpha` and `v2-alpha`,
 which Buildchain must update after exact tags and publish evidence are durable.
 Use an exact-tag rule such as `refs/tags/v*.*.*` for immutable evidence tags and
 leave floating channel tags mutable for the promotion token.

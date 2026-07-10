@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:7dc5b9adc5f23456ddc3a3f7c46f2cdf3ddd38d9546a45267291ba3fe567e0c9",
+      "digest": "sha256:53b605e57a5ac2b8d4ed911a4fbb4d1a39352db143db183aa551f9226f2d7a6a",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -300,7 +300,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:00b5e4c3ffd91d3f050a6e880f76dd36716660a731db029f636b372707ee3910",
+      "digest": "sha256:8a70f9f2699bcec6102164d6ae67f13549f3ef962d12441fbb80f9d49a1cc2e1",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -314,7 +314,7 @@
       "title": "Release flow",
       "path": "docs/release-flow.md",
       "plane": "verify",
-      "digest": "sha256:5b855ab3863e197b2ab257536b1f3ff85c79bca1fe962c45089b3f4c5ab81189",
+      "digest": "sha256:c05905de6a905d1ce0dd977986175b8bc1ad908c6c2eee946809693ea2cb91de",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "release-operator",

@@ -128,13 +128,14 @@ This is why Buildchain maintains both exact and floating refs:
 - `v2` is the selected stable major-line entrypoint;
 - `v2.0.3-alpha.0` is immutable alpha evidence;
 - `v2.0-alpha` is the latest test channel for the `2.0` line.
+- `v2-alpha` is the latest test channel on the highest published alpha minor in major `2`.
 
 A release does not mean "minor is complete." It means "this patch on this minor
 line is now production."
 
 GitHub repository rules must preserve that distinction. Exact tags such as
 `v2.0.2` and `v2.0.3-alpha.0` should be immutable. Floating channel tags such as
-`v2`, `v2.0`, and `v2.0-alpha` must remain movable by the Buildchain promotion
+`v2`, `v2.0`, `v2.0-alpha`, and `v2-alpha` must remain movable by the Buildchain promotion
 token after governance checks and publish evidence pass. A tag ruleset that
 protects every `refs/tags/v*` ref is too broad because it also locks the
 floating channel tags that Buildchain is required to update. Prefer exact-tag
@@ -159,9 +160,12 @@ Buildchain then:
 6. Moves `dev/vX/vX.Y` to the same generated alpha commit when this is a
    fast-forward update.
 7. Moves `vX.Y-alpha` to the same generated alpha commit.
+8. Moves `vX-alpha` only when `X.Y` is the highest minor in major `X` with a published alpha; older minor alpha work records a skip and cannot move the major channel backwards.
 
 This keeps the test channel self-describing. If a consumer checks out
-`v2.0-alpha`, the manifests and exact alpha tag agree.
+`v2.0-alpha` or `v2-alpha`, the manifests and exact alpha tag agree. The major
+alpha ref removes routine consumer edits when Buildchain opens a newer minor,
+while exact tags and SHAs remain the reproducible audit choice.
 
 If `dev/vX/vX.Y` has already advanced before generated alpha version-state
 bookkeeping can sync back, Buildchain records `skipped-non-fast-forward` for the
@@ -201,6 +205,7 @@ Buildchain then:
    `vX.Y.(Z+1)-alpha.0`.
 10. Moves `alpha/vX/vX.Y`, `dev/vX/vX.Y`, and `vX.Y-alpha` to that next alpha
     commit.
+11. Moves `vX-alpha` to that next alpha only when this remains the highest published alpha minor.
 
 The production channel and the test channel therefore intentionally diverge
 after release: production stays on the release commit, while alpha/dev continue
@@ -513,6 +518,7 @@ When the loop succeeds, maintainers and consumers can rely on these facts:
   not a hidden manual button;
 - every test channel has an exact alpha tag such as `v2.0.3-alpha.0`;
 - every alpha minor line has a floating tag such as `v2.0-alpha`;
+- every major with a published alpha has a cross-minor floating tag such as `v2-alpha`, owned by its highest published alpha minor;
 - version manifests match the tag visible from the same commit;
 - production releases are derived from the alpha tree that was tested;
 - manual non-dry-run promotion cannot bypass PR review and verification;

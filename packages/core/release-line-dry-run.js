@@ -23,7 +23,7 @@ function parseTags(input) {
     : String(input || "").split(",").map((tag) => tag.trim()).filter(Boolean);
   for (const tag of tags) {
     if (
-      !/^v\d+$|^v\d+\.\d+$|^v\d+\.\d+-alpha$|^v\d+\.\d+\.\d+$|^v\d+\.\d+\.\d+-alpha\.\d+$/.test(tag)
+      !/^v\d+$|^v\d+-alpha$|^v\d+\.\d+$|^v\d+\.\d+-alpha$|^v\d+\.\d+\.\d+$|^v\d+\.\d+\.\d+-alpha\.\d+$/.test(tag)
     ) {
       throw new Error(`Unsupported buildchain dry-run tag: ${tag}`);
     }
@@ -42,6 +42,7 @@ function getPromotionRule(targetRef, sourceRef = "") {
       sourceRef: sourceRef || "release/vN/vN.M",
       releasePrefix: nextMajor ? `v${nextMajor}.0` : "v(N+1).0",
       majorTag: nextMajor ? `v${nextMajor}` : "v(N+1)",
+      majorAlphaTag: nextMajor ? `v${nextMajor}-alpha` : "v(N+1)-alpha",
       minorTag: nextMajor ? `v${nextMajor}.0` : "v(N+1).0",
       alphaTag: nextMajor ? `v${nextMajor}.0-alpha` : "v(N+1).0-alpha",
       exactReleasePattern: nextMajor ? `v${nextMajor}.0.0` : "v(N+1).0.0",
@@ -69,6 +70,7 @@ function getPromotionRule(targetRef, sourceRef = "") {
     minor,
     releasePrefix,
     majorTag: `v${major}`,
+    majorAlphaTag: `v${major}-alpha`,
     minorTag: releasePrefix,
     alphaTag: `${releasePrefix}-alpha`,
     sourceRef: channel === "alpha" ? `dev/v${major}/v${major}.${minor}` : `alpha/v${major}/v${major}.${minor}`,
@@ -193,7 +195,10 @@ function explainReleaseLineDryRun({
       kind: "alpha",
       action: "would create or reuse immutable alpha evidence tag",
     });
-    plan.floatingRefs.push({ ref: rule.alphaTag, kind: "tag", action: "would move to alpha version-state commit" });
+    plan.floatingRefs.push(
+      { ref: rule.alphaTag, kind: "tag", action: "would move to alpha version-state commit" },
+      { ref: rule.majorAlphaTag, kind: "tag", action: "would move when this is the highest published alpha minor" },
+    );
     plan.branchUpdates.push(
       { ref: targetRef, action: "would move to alpha version-state commit" },
       { ref: `dev/v${rule.major}/v${rule.major}.${rule.minor}`, action: "would align dev with the published alpha state" },
@@ -211,6 +216,7 @@ function explainReleaseLineDryRun({
       { ref: rule.minorTag, kind: "tag", action: "would move to production release commit" },
       { ref: rule.majorTag, kind: "tag", action: "would move when no newer minor line owns the major tag" },
       { ref: rule.alphaTag, kind: "tag", action: "would move to next alpha version-state commit" },
+      { ref: rule.majorAlphaTag, kind: "tag", action: "would move when this is the highest published alpha minor" },
     );
     plan.branchUpdates.push(
       { ref: targetRef, action: "would move to production release commit" },
@@ -234,6 +240,7 @@ function explainReleaseLineDryRun({
       { ref: rule.minorTag, kind: "tag", action: "would move to next-major release commit" },
       { ref: rule.majorTag, kind: "tag", action: "would move to next-major release commit" },
       { ref: rule.alphaTag, kind: "tag", action: "would move to next-major alpha commit" },
+      { ref: rule.majorAlphaTag, kind: "tag", action: "would move to next-major alpha commit" },
     );
     plan.branchUpdates.push(
       { ref: targetRef, action: "would move to next-major release commit" },
