@@ -150,6 +150,15 @@ The build-only workflow:
 
 It does not publish npm packages, deploy web pages, or create GitHub Releases.
 
+The paper release preset additionally hydrates every prior published package
+registry from the npm registry before generating the current manifest. npm
+package integrity authenticates each downloaded source; Buildchain verifies the
+registry self-digest, merges immutable records, and fails if a cumulative
+registry drops an accepted version or changes immutable route/artifact facts.
+The synthesized package therefore carries complete history even on a clean
+runner. Its cumulative registry and file SHA-256 values are bound into the paper
+release build summary and release passport evidence.
+
 ## Paper Release Preset
 
 Paper repositories that publish a versioned npm package should use the

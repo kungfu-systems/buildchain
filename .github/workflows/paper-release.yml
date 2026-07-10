@@ -93,8 +93,8 @@ on:
         type: string
         required: false
       required-status-check:
-        description: "Required protected-branch status check fragment"
-        default: "check"
+        description: "Exact required protected-branch status check context"
+        default: "check / check"
         type: string
         required: false
       branch-protection-bypass-apps:
@@ -438,6 +438,13 @@ jobs:
         working-directory: ${{ inputs.working-directory }}
         run: ${{ inputs.verify-command }}
 
+      - name: Hydrate cumulative publication registry
+        shell: bash
+        working-directory: ${{ inputs.working-directory }}
+        run: >-
+          node "${GITHUB_WORKSPACE}/.buildchain/runtime/scripts/publication-registry-hydrate.mjs"
+          --cwd .
+
       - name: Collect publication artifact manifest
         id: manifest
         shell: bash
@@ -451,6 +458,7 @@ jobs:
           node "${GITHUB_WORKSPACE}/.buildchain/runtime/bin/buildchain.mjs" publication-artifact manifest \
             --cwd . \
             --source-sha "${GITHUB_SHA}" \
+            --registry-input-dir .buildchain/publication/registry-inputs \
             --json > "${GITHUB_WORKSPACE}/.buildchain/publication-result.json"
 
       - name: Prepare npm paper package
@@ -476,6 +484,7 @@ jobs:
             "${package_args[@]}" \
             --json > "$GITHUB_WORKSPACE/.buildchain/paper-release/package-result.json"
           node --input-type=module <<'NODE'
+          import crypto from "node:crypto";
           import fs from "node:fs";
           import path from "node:path";
           import { spawnSync } from "node:child_process";
@@ -505,6 +514,15 @@ jobs:
             integrity: first.integrity,
             role: "main",
           }];
+          const registryPath = path.join(process.cwd(), ".buildchain/publication/publication-registry.json");
+          const registryHydrationPath = path.join(process.cwd(), ".buildchain/publication/registry-hydration.json");
+          const publicationRegistry = fs.existsSync(registryPath) ? JSON.parse(fs.readFileSync(registryPath, "utf8")) : {};
+          const registryFileSha256 = fs.existsSync(registryPath)
+            ? crypto.createHash("sha256").update(fs.readFileSync(registryPath)).digest("hex")
+            : "";
+          const registryHydrationFileSha256 = fs.existsSync(registryHydrationPath)
+            ? crypto.createHash("sha256").update(fs.readFileSync(registryHydrationPath)).digest("hex")
+            : "";
           fs.writeFileSync(path.join(process.env.GITHUB_WORKSPACE, ".buildchain/paper-release/publish-required-artifacts.json"), `${JSON.stringify(requiredArtifacts, null, 2)}\n`);
           fs.writeFileSync(path.join(process.cwd(), ".buildchain/paper-release/publish-required-artifacts.json"), `${JSON.stringify(requiredArtifacts, null, 2)}\n`);
           fs.writeFileSync(path.join(process.cwd(), ".buildchain/paper-release/build-summary.json"), `${JSON.stringify({
@@ -519,7 +537,11 @@ jobs:
             publication: {
               manifestPath: ".buildchain/publication/publication-artifact.json",
               passportPath: ".buildchain/publication/publication-artifact-passport.json",
-              registryPath: ".buildchain/publication/publication-registry.json",
+              registryPath: result.publication?.registryPath || "",
+              registrySha256: publicationRegistry.registrySha256 || "",
+              registryFileSha256,
+              registryHydrationPath: fs.existsSync(registryHydrationPath) ? ".buildchain/publication/registry-hydration.json" : "",
+              registryHydrationFileSha256,
               primaryArtifact: result.publication?.primaryArtifact || "",
             },
             platforms: [{

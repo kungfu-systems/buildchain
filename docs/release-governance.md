@@ -318,9 +318,12 @@ After each merge, the next PR is re-evaluated before it can move the protected
 dev branch. This prevents one merge from silently making the next candidate
 stale or conflicting.
 
-The required check should be the `check` job. Repositories can keep that job
-name stable while changing the actual verification command declaratively in
-`buildchain.toml`:
+The canonical required check context is `check / check`, matching the reusable
+workflow call plus its `check` job. Release governance preserves an already
+emitted exact consumer context and records branch-protection policy before/after
+facts; it does not collapse `check / check` back to the obsolete `check`
+fragment. Repositories can keep that context stable while changing the actual
+verification command declaratively in `buildchain.toml`:
 
 ```toml
 [lifecycle.install]
@@ -359,7 +362,7 @@ jobs:
       statuses: read
     with:
       target-branch: dev/v2/v2.6
-      required-status-checks: check
+      required-status-checks: check / check
       ready-label: ready
       block-labels: blocked,do-not-merge
       max-merges: 1

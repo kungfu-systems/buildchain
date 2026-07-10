@@ -6,6 +6,7 @@ import path from "node:path";
 import test from "node:test";
 import {
   LOCKED_SOURCE_CHECKOUT_CONTRACT,
+  runBoundedFetch,
   lockedSourceCheckout,
 } from "../scripts/locked-source-checkout.mjs";
 
@@ -73,9 +74,38 @@ test("locked source checkout auto mode falls back to GitHub transport", () => {
   assert.equal(evidence.cache.hit, false);
   assert.equal(evidence.cache.fallbackUsed, true);
   assert.equal(evidence.cache.transport, "github");
+  assert.equal(evidence.policy.fetchAttempts, 3);
+  assert.equal(evidence.cache.githubFetchAttempts, 1);
   assert.match(evidence.cache.fallbackReason, /does not appear to be a git repository|not exist|failed/i);
   assert.equal(evidence.verification.headOk, true);
   assert.equal(evidence.verification.treeOk, true);
+});
+
+test("locked source checkout retries GitHub fallback fetch with a bounded attempt count", () => {
+  let calls = 0;
+  const failures = [];
+  const result = runBoundedFetch({
+    attempts: 3,
+    fetch: () => {
+      calls += 1;
+      if (calls < 3) {
+        const error = new Error(`transient fetch failure ${calls}`);
+        error.code = "ETIMEDOUT";
+        throw error;
+      }
+      return "fetched";
+    },
+    onRetry: ({ attempt, error }) => failures.push({ attempt, code: error.code }),
+  });
+  assert.equal(result.value, "fetched");
+  assert.equal(result.attempts, 3);
+  assert.deepEqual(failures, [{ attempt: 1, code: "ETIMEDOUT" }, { attempt: 2, code: "ETIMEDOUT" }]);
+});
+
+test("locked source checkout stops after the configured fallback fetch attempts", () => {
+  let calls = 0;
+  assert.throws(() => runBoundedFetch({ attempts: 2, fetch: () => { calls += 1; throw new Error("upstream unavailable"); } }), /upstream unavailable/);
+  assert.equal(calls, 2);
 });
 
 test("locked source checkout require mode fails before fallback when cache is unavailable", () => {

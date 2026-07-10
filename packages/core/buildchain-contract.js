@@ -96,6 +96,10 @@ export function createBuildchainContractWorld({ root = process.cwd(), packageJso
         "platforms-json",
         "release-candidate",
         "artifact-transfer-mode",
+        "checkout-cache-mode",
+        "checkout-cache-fallback",
+        "checkout-cache-timeout-seconds",
+        "checkout-cache-fetch-attempts",
         "buildchain-contract-lock-path",
         "buildchain-contract-drift-issue-mode",
       ],
@@ -104,6 +108,7 @@ export function createBuildchainContractWorld({ root = process.cwd(), packageJso
         "publish source locks are verified before heavy build jobs",
         "release-candidate builds do not publish registry artifacts",
         "contract drift is checked before heavy build jobs for stable floating refs",
+        "retryable GitHub fallback fetches use a bounded attempt budget before exact source SHA and tree verification",
       ],
     }),
     surface(root, {
@@ -115,7 +120,7 @@ export function createBuildchainContractWorld({ root = process.cwd(), packageJso
       requiredOutputs: ["promoted-sha", "built-source-sha", "release-candidate-artifact"],
       breakingDefaults: {
         promoteOnlyReleaseCandidate: true,
-        requiredStatusCheck: "check",
+        requiredStatusCheck: "check / check",
       },
       optionalInputs: [
         "buildchain-ref",
@@ -177,6 +182,8 @@ export function createBuildchainContractWorld({ root = process.cwd(), packageJso
         "contract drift is checked before caller build, web-surface render, deploy planning, and apply side effects",
         "compatible contract drift continues and produces a consumer issue or summary",
         "breaking contract drift fails closed before rendering, deployment, or release publication",
+        "effective channel and preview alias are injected before caller build and verify commands",
+        "channel-aware artifact host facts are checked against the deploy plan before adapter side effects",
       ],
     }),
     surface(root, {
@@ -189,6 +196,7 @@ export function createBuildchainContractWorld({ root = process.cwd(), packageJso
       breakingDefaults: {
         requireGovernance: false,
         releasePassport: true,
+        requiredStatusCheck: "check / check",
       },
       optionalInputs: [
         "publish-transaction",

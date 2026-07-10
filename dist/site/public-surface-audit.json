@@ -412,6 +412,7 @@
           "buildchain-ref",
           "buildchain-repository",
           "checkout-cache-fallback",
+          "checkout-cache-fetch-attempts",
           "checkout-cache-mirror-url-template",
           "checkout-cache-mode",
           "checkout-cache-reference-repository-template",
@@ -442,7 +443,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 48
+        "inputCount": 49
       },
       {
         "id": ".bump-minor-version",
@@ -2538,8 +2539,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "3c0729f5351eb82fe26625fa5aabf30903f45f68af2431e02860f85ada468ac9",
-    "workflowRegistryDigest": "4041321df08640a802a87ff0fbe8584d95dc416945b43778727adb820cab9097",
-    "pageRegistryDigest": "172c596669f7793af188430bde105d1e940c4927ba6446dc9f7ecf0456f1a4e1"
+    "workflowRegistryDigest": "7052aa984ab49647ce2c9f96669caa32f92da57d8b2e506ac172089bedd793cf",
+    "pageRegistryDigest": "fc12b6060aa931ae8addbebfa3d2e80cb893474bc0834300d40510d82614ca1b"
   },
   "comparison": {
     "missingCliRegistry": [],

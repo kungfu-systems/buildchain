@@ -351,6 +351,14 @@ The CLI emits GitHub outputs when `GITHUB_OUTPUT` is present:
 - `web-surface-artifact-hash`
 - `web-surface-manifest-json`
 
+The reusable workflow resolves that same effective channel before running the
+caller build or verify command. Both steps receive
+`BUILDCHAIN_WEB_SURFACE_CHANNEL` (`preview`, `staging`, or `production`) and
+`BUILDCHAIN_PREVIEW_ALIAS` for previews. Compatibility aliases
+`BUILDCHAIN_SURFACE_CHANNEL` and `BUILDCHAIN_WEB_SURFACE_ALIAS` are also
+provided. Callers should consume these variables instead of reconstructing the
+release-intent state machine from raw GitHub events.
+
 ## Explicit Apply
 
 `deploy-apply` and `cleanup-apply` are explicit execution modes for the
@@ -452,7 +460,11 @@ HTTP check is visible from the consumer run.
 
 It can also execute a previously saved deploy plan. In that mode Buildchain
 recomputes the local artifact hash before running AWS commands and fails closed
-if the artifact no longer matches the saved plan:
+if the artifact no longer matches the saved plan. Before any adapter operation,
+it also checks channel-aware JSON manifests in the artifact: top-level
+`canonicalHost` and declared `pages[].host` facts must belong to the plan's
+surface hosts. A production plan therefore rejects staging/preview host facts
+before AWS apply:
 
 ```bash
 node scripts/web-surface.mjs \

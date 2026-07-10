@@ -429,8 +429,12 @@ jobs:
     needs:
       - runtime
       - release-intent
+    outputs:
+      web-surface-channel: ${{ steps.gate.outputs.web-surface-channel }}
+      web-surface-alias: ${{ steps.gate.outputs.web-surface-alias }}
     steps:
       - name: Validate apply inputs before build
+        id: gate
         env:
           EVENT_NAME: ${{ github.event_name }}
           EVENT_ACTION: ${{ github.event.action }}
@@ -474,6 +478,20 @@ jobs:
             echo "::error::production-aws-role-arn is required before production-apply can build or deploy"
             exit 1
           fi
+          web_surface_channel=""
+          web_surface_alias=""
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            web_surface_channel=preview
+            web_surface_alias="pr-${{ github.event.pull_request.number }}"
+          elif [ "$production_event_approved" = "true" ]; then
+            web_surface_channel=production
+          elif [ "$EVENT_NAME" = "push" ] && [ "$REF_NAME" = "main" ]; then
+            web_surface_channel=staging
+          fi
+          {
+            echo "web-surface-channel=$web_surface_channel"
+            echo "web-surface-alias=$web_surface_alias"
+          } >> "$GITHUB_OUTPUT"
 
   plan:
     name: Plan web-surface channel
@@ -581,13 +599,23 @@ jobs:
           fail-on-error: "false"
 
       - name: Run caller build
-        if: ${{ inputs.build-command != '' }}
+        if: ${{ inputs.build-command != '' && needs.apply-input-gate.outputs.web-surface-channel != '' }}
         working-directory: ${{ inputs.working-directory }}
+        env:
+          BUILDCHAIN_WEB_SURFACE_CHANNEL: ${{ needs.apply-input-gate.outputs.web-surface-channel }}
+          BUILDCHAIN_SURFACE_CHANNEL: ${{ needs.apply-input-gate.outputs.web-surface-channel }}
+          BUILDCHAIN_PREVIEW_ALIAS: ${{ needs.apply-input-gate.outputs.web-surface-alias }}
+          BUILDCHAIN_WEB_SURFACE_ALIAS: ${{ needs.apply-input-gate.outputs.web-surface-alias }}
         run: ${{ inputs.build-command }}
 
       - name: Run caller verify
-        if: ${{ inputs.verify-command != '' }}
+        if: ${{ inputs.verify-command != '' && needs.apply-input-gate.outputs.web-surface-channel != '' }}
         working-directory: ${{ inputs.working-directory }}
+        env:
+          BUILDCHAIN_WEB_SURFACE_CHANNEL: ${{ needs.apply-input-gate.outputs.web-surface-channel }}
+          BUILDCHAIN_SURFACE_CHANNEL: ${{ needs.apply-input-gate.outputs.web-surface-channel }}
+          BUILDCHAIN_PREVIEW_ALIAS: ${{ needs.apply-input-gate.outputs.web-surface-alias }}
+          BUILDCHAIN_WEB_SURFACE_ALIAS: ${{ needs.apply-input-gate.outputs.web-surface-alias }}
         run: ${{ inputs.verify-command }}
 
       - name: Validate web-surface config
@@ -599,12 +627,13 @@ jobs:
 
       - name: Plan pull request preview
         id: preview
-        if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
+        if: ${{ needs.apply-input-gate.outputs.web-surface-channel == 'preview' && github.event.action != 'closed' }}
         run: >-
           node .buildchain/runtime/scripts/web-surface.mjs
           --mode deploy-plan
           --cwd "${{ inputs.working-directory }}"
           --channel preview
+          --alias "${{ needs.apply-input-gate.outputs.web-surface-alias }}"
           --source-sha "${{ github.event.pull_request.head.sha }}"
           --pull-number "${{ github.event.pull_request.number }}"
           --artifact-path "${{ inputs.artifact-path }}"
@@ -629,12 +658,7 @@ jobs:
 
       - name: Plan main staging deploy
         id: staging
-        if: >-
-          ${{
-            github.event_name == 'push' &&
-            github.ref_name == 'main' &&
-            !(inputs.production-release-on-main && needs.release-intent.outputs.production-release-approved == 'true')
-          }}
+        if: ${{ needs.apply-input-gate.outputs.web-surface-channel == 'staging' }}
         run: >-
           node .buildchain/runtime/scripts/web-surface.mjs
           --mode deploy-plan
@@ -649,11 +673,7 @@ jobs:
 
       - name: Plan gated production deploy
         id: production
-        if: >-
-          ${{
-            (github.event_name == 'workflow_dispatch' && inputs.production-approved) ||
-            (github.event_name == 'push' && github.ref_name == 'main' && inputs.production-release-on-main && needs.release-intent.outputs.production-release-approved == 'true')
-          }}
+        if: ${{ needs.apply-input-gate.outputs.web-surface-channel == 'production' }}
         run: >-
           node .buildchain/runtime/scripts/web-surface.mjs
           --mode deploy-plan
@@ -675,7 +695,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Upload web-surface artifact
-        if: ${{ github.event_name != 'pull_request' || github.event.action != 'closed' }}
+        if: ${{ needs.apply-input-gate.outputs.web-surface-channel != '' && (github.event_name != 'pull_request' || github.event.action != 'closed') }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: buildchain-web-surface-artifact

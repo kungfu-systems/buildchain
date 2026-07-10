@@ -35,6 +35,10 @@
         "platforms-json",
         "release-candidate",
         "artifact-transfer-mode",
+        "checkout-cache-mode",
+        "checkout-cache-fallback",
+        "checkout-cache-timeout-seconds",
+        "checkout-cache-fetch-attempts",
         "buildchain-contract-lock-path",
         "buildchain-contract-drift-issue-mode"
       ],
@@ -42,10 +46,11 @@
         "runtime floating refs are resolved to immutable SHAs before matrix jobs",
         "publish source locks are verified before heavy build jobs",
         "release-candidate builds do not publish registry artifacts",
-        "contract drift is checked before heavy build jobs for stable floating refs"
+        "contract drift is checked before heavy build jobs for stable floating refs",
+        "retryable GitHub fallback fetches use a bounded attempt budget before exact source SHA and tree verification"
       ],
-      "breakingDigest": "sha256:6303aa2c2cb8c2cef4301ceea95cc3c426c2aa81d98714aa9bdf2471d63faee1",
-      "auditDigest": "sha256:7c456219712222f67a4d7b4ee13183c2f9e42d7ac518100ff413419c189fc2d4"
+      "breakingDigest": "sha256:a6a35370d6b0d0f46e1b2712dcc01961fe53c2febde95409a27a485c10a36650",
+      "auditDigest": "sha256:470204345d064b20293e3f775c10f344e1d587f034169ee1d52766f2419e861f"
     },
     {
       "contractVersion": 1,
@@ -65,7 +70,7 @@
       ],
       "breakingDefaults": {
         "promoteOnlyReleaseCandidate": true,
-        "requiredStatusCheck": "check"
+        "requiredStatusCheck": "check / check"
       },
       "optionalInputs": [
         "buildchain-ref",
@@ -91,8 +96,8 @@
         "publish-gate source locks are created by the wrapper and enforced by promote-buildchain-ref before publish side effects",
         "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes"
       ],
-      "breakingDigest": "sha256:403d2fcdb0c5eabe749e89102defad69745f70a1556707bec7831fcc2e9fa8f8",
-      "auditDigest": "sha256:9e5def8447c148bdbb14029fe1ea77b055b9a61483dceee1e080ac03e08d7ec0"
+      "breakingDigest": "sha256:6dbae32ce3d7aab3be6957065105af574794581847b7637314dad45f5349c919",
+      "auditDigest": "sha256:c02484e4e6b073311cdf4b9ac9690b84344b4ec214adf799515f7dd4480fd7f8"
     },
     {
       "contractVersion": 1,
@@ -131,10 +136,12 @@
         "runtime floating refs are resolved to immutable SHAs before caller build and deploy work",
         "contract drift is checked before caller build, web-surface render, deploy planning, and apply side effects",
         "compatible contract drift continues and produces a consumer issue or summary",
-        "breaking contract drift fails closed before rendering, deployment, or release publication"
+        "breaking contract drift fails closed before rendering, deployment, or release publication",
+        "effective channel and preview alias are injected before caller build and verify commands",
+        "channel-aware artifact host facts are checked against the deploy plan before adapter side effects"
       ],
-      "breakingDigest": "sha256:82ee63cb336e40d832dfff4a1c5e6cbfa221a4fc8b2359990033bc931bffc43a",
-      "auditDigest": "sha256:d01b542ec2b15ac0418e40336ca257bd99a71f2344c730efdee188fa57bb2ace"
+      "breakingDigest": "sha256:da569f90374e878948e3d5160ed9929338ce0572473ca8ee54867b0fe1aaeace",
+      "auditDigest": "sha256:e020572429c4e955f0dc9b821e42d4108d4ed54d5f44b5ca04eef0b5d11e3559"
     },
     {
       "contractVersion": 1,
@@ -154,7 +161,8 @@
       ],
       "breakingDefaults": {
         "requireGovernance": false,
-        "releasePassport": true
+        "releasePassport": true,
+        "requiredStatusCheck": "check / check"
       },
       "optionalInputs": [
         "publish-transaction",
@@ -175,8 +183,8 @@
         "publish transactions can require a resolved publish-gate source lock to prevent floating-ref drift",
         "semver GitHub Releases are created or updated only after transaction completion, with prerelease/latest metadata derived from the public release tag"
       ],
-      "breakingDigest": "sha256:0c5896590c8c9a44dfecbe060bcef1b43d3a9556737309dbe7e5f2bf83bfee6c",
-      "auditDigest": "sha256:a2d78432dae8488b0b3a2359eb0daa8f605910689529ea4d0f1b46b7613f00db"
+      "breakingDigest": "sha256:a59f0910e6df842e7699139472e5dd69ac2fdd7f7213bf2cb346d1d622556874",
+      "auditDigest": "sha256:19a838fa786936a65585c00d65b15fe84c83ee19a0d41f3b6502226a966345a9"
     },
     {
       "contractVersion": 1,
@@ -434,7 +442,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:a79631837d756175e5f3c1071b72b6c1b11c2bdd6f32a082191a0d3a944c99b9"
+      "auditDigest": "sha256:db0082396de483189a1d2a4139b63a633625a914651366cab3dd9824d215c863"
     },
     {
       "contractVersion": 1,
@@ -456,9 +464,9 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:4754455d100bb473a24d084920a84b165e3203f9bbb34ee1c6cc5eca230d22b5"
+      "auditDigest": "sha256:00968d22a751092dcf77f27198e2103908df09f5ba702da54563108f01841c6e"
     }
   ],
-  "compatibilityDigest": "sha256:967df7e854fdf582294ddfb6403eff25c00db9518a24051e7d47cbd75527c785",
-  "contractDigest": "sha256:7ccbfa755ce856b1610da1ca509eb995e1d5a243a61302b1f9025fa291be6356"
+  "compatibilityDigest": "sha256:1396e42444aaf3f26a40121faf3d599eb9db13537f627fc8dbcef2475af8af44",
+  "contractDigest": "sha256:02efaad8a45b6dbd0a3189421f809f5304f4b280b8a7bf4a80305e24c253fce6"
 }

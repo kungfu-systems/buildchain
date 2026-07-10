@@ -1099,6 +1099,33 @@ export function planWebSurfaceDeploy({
   };
 }
 
+export function verifyWebSurfaceArtifactChannelFacts({ cwd = process.cwd(), plan } = {}) {
+  const resolvedPlan = assertDeployPlan(plan);
+  const artifactRoot = path.resolve(cwd, resolvedPlan.artifact.path);
+  const expectedHosts = new Set((resolvedPlan.manifest?.surfaceBindings || []).map((binding) => {
+    try { return new URL(binding.url).host; } catch { return ""; }
+  }).filter(Boolean));
+  const observed = [];
+  for (const filePath of listFiles(artifactRoot, artifactRoot).filter((entry) => entry.endsWith(".json"))) {
+    let value;
+    try { value = JSON.parse(fs.readFileSync(filePath, "utf8")); } catch { continue; }
+    if (!value || typeof value !== "object" || Array.isArray(value) || !String(value.contract || "").includes("manifest")) continue;
+    const facts = [];
+    if (typeof value.canonicalHost === "string" && value.canonicalHost.trim()) facts.push({ field: "canonicalHost", host: value.canonicalHost.trim() });
+    if (Array.isArray(value.pages)) {
+      for (const [index, page] of value.pages.entries()) {
+        if (typeof page?.host === "string" && page.host.trim()) facts.push({ field: `pages[${index}].host`, host: page.host.trim() });
+      }
+    }
+    for (const fact of facts) observed.push({ path: toPosix(path.relative(cwd, filePath)), ...fact });
+  }
+  const mismatches = observed.filter((fact) => !expectedHosts.has(fact.host));
+  if (mismatches.length > 0) {
+    throw new Error(`web-surface artifact channel facts mismatch for ${resolvedPlan.channel}: ${mismatches.map((fact) => `${fact.path}#${fact.field}=${fact.host}`).join(", ")}`);
+  }
+  return { channel: resolvedPlan.channel, expectedHosts: [...expectedHosts].sort(), observed };
+}
+
 export function applyWebSurfaceDeploy({
   cwd = process.cwd(),
   channel = "preview",
@@ -1125,6 +1152,7 @@ export function applyWebSurfaceDeploy({
         dryRun: true,
         deployedAt: appliedAt,
       });
+  verifyWebSurfaceArtifactChannelFacts({ cwd, plan: resolvedPlan });
   const loadedConfig = loadBuildchainConfig(cwd);
   const config = assertWebSurfaceConfig(loadedConfig);
   const deployConfig = config.deploy?.[resolvedPlan.channel];

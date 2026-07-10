@@ -71,7 +71,7 @@ jobs:
       release-candidate-workflow-file: build-surface-fixture.yml
       release-candidate-workflow-name: Build Surface Fixture
       github-release: true
-      required-status-check: check
+      required-status-check: check / check
       branch-protection-bypass-apps: ${{ vars.BUILDCHAIN_PROMOTION_BYPASS_APPS || 'github-actions' }}
       branch-protection-bypass-users: ${{ vars.BUILDCHAIN_PROMOTION_BYPASS_USERS }}
       branch-protection-bypass-teams: ${{ vars.BUILDCHAIN_PROMOTION_BYPASS_TEAMS }}

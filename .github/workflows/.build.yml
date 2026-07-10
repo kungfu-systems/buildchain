@@ -231,6 +231,11 @@ on:
         default: 60
         type: number
         required: false
+      checkout-cache-fetch-attempts:
+        description: "Maximum bounded attempts for retryable GitHub fallback fetch failures"
+        default: 3
+        type: number
+        required: false
     secrets:
       BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN:
         required: false
@@ -828,6 +833,7 @@ jobs:
           BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE: ${{ inputs.checkout-cache-reference-repository-template || vars.BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE }}
           BUILDCHAIN_CHECKOUT_CACHE_FALLBACK: ${{ inputs.checkout-cache-fallback }}
           BUILDCHAIN_CHECKOUT_CACHE_TIMEOUT_SECONDS: ${{ inputs.checkout-cache-timeout-seconds }}
+          BUILDCHAIN_CHECKOUT_CACHE_FETCH_ATTEMPTS: ${{ inputs.checkout-cache-fetch-attempts }}
           BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH: .buildchain/diagnostics/source-checkout.json
           GITHUB_TOKEN: ${{ github.token }}
 
@@ -1044,6 +1050,7 @@ jobs:
           BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE: ${{ inputs.checkout-cache-reference-repository-template || vars.BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE }}
           BUILDCHAIN_CHECKOUT_CACHE_FALLBACK: ${{ inputs.checkout-cache-fallback }}
           BUILDCHAIN_CHECKOUT_CACHE_TIMEOUT_SECONDS: ${{ inputs.checkout-cache-timeout-seconds }}
+          BUILDCHAIN_CHECKOUT_CACHE_FETCH_ATTEMPTS: ${{ inputs.checkout-cache-fetch-attempts }}
           BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH: .buildchain/diagnostics/source-checkout.json
           GITHUB_TOKEN: ${{ github.token }}
 
