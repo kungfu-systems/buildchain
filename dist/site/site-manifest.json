@@ -221,7 +221,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:59858b6e02e42377b8a1f3d6d33ba50c5ffba476f7e1443fd61e03919046eff2"
+      "digest": "sha256:776a9b5dffdf0e818831832eb7977aaadf40d685c6974eeeefa8880258e3acde"
     },
     {
       "id": "release-flow",

@@ -49,9 +49,10 @@ function response(body, status = 200) {
   };
 }
 
-test("stable gate collector binds the exact alpha to internal and consumer canaries", async () => {
+test("stable gate collector binds exact alpha tag or SHA runtime inputs to consumer canaries", async () => {
   const cwd = workspace();
   const requests = [];
+  let runtimeRef = "v2.11.14-alpha.0";
   const fetchImpl = async (url) => {
     const requestPath = new URL(url).pathname + new URL(url).search;
     requests.push(requestPath);
@@ -93,29 +94,46 @@ test("stable gate collector binds the exact alpha to internal and consumer canar
         conclusion: "success",
         name: "Buildchain Stable Canary",
         updated_at: "2026-07-10T02:20:00Z",
-        inputs: { buildchain_ref: "v2.11.14-alpha.0" },
+        inputs: { buildchain_ref: runtimeRef },
       });
     }
     throw new Error(`unexpected request: ${requestPath}`);
   };
 
-  const report = await collectStableReleaseGateReport({
-    cwd,
-    repository: "kungfu-systems/buildchain",
-    channel: "release",
-    candidateVersion: "2.11.14-alpha.0",
-    releaseCandidateRunId: "101",
-    now: "2026-07-10T02:21:00Z",
-    token: "test-token",
-    fetchImpl,
-  });
+  for (runtimeRef of ["v2.11.14-alpha.0", ALPHA_SHA]) {
+    const report = await collectStableReleaseGateReport({
+      cwd,
+      repository: "kungfu-systems/buildchain",
+      channel: "release",
+      candidateVersion: "2.11.14-alpha.0",
+      releaseCandidateRunId: "101",
+      now: "2026-07-10T02:21:00Z",
+      token: "test-token",
+      fetchImpl,
+    });
 
-  assert.equal(report.ok, true);
-  assert.equal(report.candidate.sha, ALPHA_SHA);
-  assert.deepEqual(report.policy.requiredCanaries, ["build-surface-fixture", "site-libkungfu-dev"]);
-  assert.equal(
-    report.checks.find((entry) => entry.id === "stable.canary.site-libkungfu-dev")?.details.runtimeRef,
-    "v2.11.14-alpha.0",
+    assert.equal(report.ok, true, runtimeRef);
+    assert.equal(report.candidate.sha, ALPHA_SHA);
+    assert.deepEqual(report.policy.requiredCanaries, ["build-surface-fixture", "site-libkungfu-dev"]);
+    assert.equal(
+      report.checks.find((entry) => entry.id === "stable.canary.site-libkungfu-dev")?.details.runtimeRef,
+      runtimeRef,
+    );
+  }
+
+  runtimeRef = STABLE_SHA;
+  await assert.rejects(
+    collectStableReleaseGateReport({
+      cwd,
+      repository: "kungfu-systems/buildchain",
+      channel: "release",
+      candidateVersion: "2.11.14-alpha.0",
+      releaseCandidateRunId: "101",
+      now: "2026-07-10T02:21:00Z",
+      token: "test-token",
+      fetchImpl,
+    }),
+    (error) => error.report?.summary.failedChecks.includes("stable.canary.site-libkungfu-dev"),
   );
   assert.ok(requests.some((entry) => entry.includes("site-libkungfu-dev/actions/runs/202")));
 });
