@@ -341,6 +341,7 @@ function assertAllowedLocalChanges(cwd, allowedPaths) {
       ".buildchain/release-evidence/",
       ".buildchain/release-passport/",
       ".buildchain/release-state/",
+      ".buildchain/runtime/",
     ].some((prefix) => filePath.startsWith(prefix));
   const unexpected = output
     .split(/\r?\n/)
@@ -1387,37 +1388,49 @@ async function persistDurableReleaseTransaction({
       }),
     );
   };
-  let commit = await createStateCommit(currentRef?.object?.sha);
-  if (currentRef) {
-    try {
-      await retryGitHubOperation(
-        `git.updateRef ${refName}`,
-        () => octokit.rest.git.updateRef({
-          owner,
-          repo,
-          ref: refName,
-          sha: commit.data.sha,
-          force: false,
-        }),
-      );
-    } catch (error) {
-      if (!nonFastForwardUpdateRejected(error)) {
-        throw error;
+  const readCurrentRefSha = async () => {
+    const latestRef = await getGitRefOrUndefined({ octokit, owner, repo, ref: refName });
+    return latestRef?.object?.sha || "";
+  };
+  const updateExistingRef = async (parentSha) => {
+    let latestParentSha = parentSha || "";
+    let latestCommit = await createStateCommit(latestParentSha);
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        await retryGitHubOperation(
+          `git.updateRef ${refName}`,
+          () => octokit.rest.git.updateRef({
+            owner,
+            repo,
+            ref: refName,
+            sha: latestCommit.data.sha,
+            force: false,
+          }),
+        );
+        return latestCommit;
+      } catch (error) {
+        if (!nonFastForwardUpdateRejected(error)) {
+          throw error;
+        }
+        const currentSha = await readCurrentRefSha();
+        if (currentSha === latestCommit.data.sha) {
+          return latestCommit;
+        }
+        if (!currentSha || currentSha === latestParentSha || attempt === 2) {
+          throw error;
+        }
+        latestParentSha = currentSha;
+        latestCommit = await createStateCommit(latestParentSha);
       }
-      const latestRef = await getGitRefOrUndefined({ octokit, owner, repo, ref: refName });
-      commit = await createStateCommit(latestRef?.object?.sha);
-      await retryGitHubOperation(
-        `git.updateRef ${refName}`,
-        () => octokit.rest.git.updateRef({
-          owner,
-          repo,
-          ref: refName,
-          sha: commit.data.sha,
-          force: false,
-        }),
-      );
     }
+    return latestCommit;
+  };
+
+  let commit;
+  if (currentRef) {
+    commit = await updateExistingRef(currentRef.object?.sha);
   } else {
+    commit = await createStateCommit();
     try {
       await retryGitHubOperation(
         `git.createRef ${refName}`,
@@ -1432,16 +1445,15 @@ async function persistDurableReleaseTransaction({
       if (!referenceAlreadyExists(error)) {
         throw error;
       }
-      await retryGitHubOperation(
-        `git.updateRef ${refName}`,
-        () => octokit.rest.git.updateRef({
-          owner,
-          repo,
-          ref: refName,
+      const currentSha = await readCurrentRefSha();
+      if (currentSha === commit.data.sha) {
+        return {
+          ref: transaction.state_ref,
           sha: commit.data.sha,
-          force: true,
-        }),
-      );
+          statePath: path.relative(cwd, transaction.state_path || "").split(path.sep).join("/"),
+        };
+      }
+      commit = await updateExistingRef(currentSha);
     }
   }
   return {
@@ -2287,39 +2299,37 @@ async function assertProtectedChannel({
     }
     throw error;
   }
+  const missing = [];
   if (protection.enforce_admins?.enabled !== true) {
-    throw new Error(
-      `Protected channel ${targetRef} must enforce branch protection for administrators`,
-    );
+    missing.push("must enforce branch protection for administrators");
   }
   if (protection.allow_force_pushes?.enabled !== false) {
-    throw new Error(`Protected channel ${targetRef} must disallow force pushes`);
+    missing.push("must disallow force pushes");
   }
   if (protection.allow_deletions?.enabled !== false) {
-    throw new Error(`Protected channel ${targetRef} must disallow branch deletion`);
+    missing.push("must disallow branch deletion");
   }
   if (protection.required_conversation_resolution?.enabled !== true) {
-    throw new Error(
-      `Protected channel ${targetRef} must require conversation resolution`,
-    );
+    missing.push("must require conversation resolution");
   }
   const reviews = protection.required_pull_request_reviews;
   if (!reviews || Number(reviews.required_approving_review_count || 0) < 1) {
-    throw new Error(
-      `Protected channel ${targetRef} must require at least one approving review`,
-    );
+    missing.push("must require at least one approving review");
   }
   const checks = protection.required_status_checks;
   if (!checks?.strict) {
-    throw new Error(`Protected channel ${targetRef} must require strict status checks`);
+    missing.push("must require strict status checks");
   }
   const checkNames = [
     ...(checks.contexts || []),
     ...((checks.checks || []).map((check) => check.context || check.app_id) || []),
   ].map(String);
   if (!checkNames.some((name) => name.includes(requiredStatusCheck))) {
+    missing.push(`must require a ${requiredStatusCheck} status check`);
+  }
+  if (missing.length > 0) {
     throw new Error(
-      `Protected channel ${targetRef} must require a ${requiredStatusCheck} status check`,
+      `Protected channel ${targetRef} is missing required protection settings: ${missing.join("; ")}`,
     );
   }
 }

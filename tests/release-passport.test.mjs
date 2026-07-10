@@ -1047,6 +1047,34 @@ test("release passport records generic KFD-1 contract-world gate evidence from K
   assert.equal(passport.evidence.kfd1, metadata.key);
 });
 
+test("release passport accepts cwd-relative KFD witness path inputs", async () => {
+  const { cwd, assetsDir, witnessPath, metadata } = createKfdWitnessFixture();
+  const relativeWitnessPath = ".buildchain/kfd/kfd-1/contract-world.witness.json";
+  const resolvedWitnessPath = path.join(cwd, relativeWitnessPath);
+  fs.mkdirSync(path.dirname(resolvedWitnessPath), { recursive: true });
+  fs.copyFileSync(witnessPath, resolvedWitnessPath);
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v1.2.3-alpha.0",
+    repository: "example/project",
+    sourceSha: "a".repeat(40),
+    assetsDir: path.relative(cwd, assetsDir),
+    outputDir: "release-passport",
+    releaseJsonExtra: JSON.stringify({
+      channel: "alpha",
+      targetRef: "alpha/v1/v1.2",
+    }),
+    kfd1WitnessJsons: [relativeWitnessPath],
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+
+  assert.equal(report.ok, true);
+  assert.equal(passport[metadata.key].status, "passed");
+  assert.equal(passport.evidence.kfd1, metadata.key);
+});
+
 test("release passport records Kungfu-shaped KFD-1 gate without invoking Kungfu SDK commands", async () => {
   const { cwd, assetsDir, witnessPath, metadata } = createKfdWitnessFixture({
     id: "kungfu-config",
