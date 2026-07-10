@@ -322,6 +322,10 @@ test("paper release workflow publishes declared npm package with source lock and
     path.join(root, ".github/workflows/paper-release.yml"),
     "utf8",
   );
+  const docs = fs.readFileSync(
+    path.join(root, "docs/publication-artifacts.md"),
+    "utf8",
+  );
   assert.match(workflow, /workflow_call:/);
   assert.match(workflow, /buildchain-ref:/);
   assert.match(workflow, /buildchain-contract-lock-path:/);
@@ -348,6 +352,8 @@ test("paper release workflow publishes declared npm package with source lock and
   assert.match(workflow, /release-passport-product-name: \$\{\{ inputs\.release-passport-product-name \|\| steps\.package\.outputs\.package-name \}\}/);
   assert.match(workflow, /github-release:/);
   assert.match(workflow, /github-release: \$\{\{ inputs\.github-release \}\}/);
+  assert.match(workflow, /permissions:\n  checks: write\n  contents: write/);
+  assert.match(docs, /permissions:\n      checks: write\n      contents: write/);
   assert.match(workflow, /default: true/);
   assert.ok(
     workflow.indexOf("Check Buildchain contract lock") <
@@ -1229,7 +1235,9 @@ test("binary distribution manages GitHub Release metadata explicitly", () => {
   assert.match(workflow, /Fetch durable release-state passport/);
   assert.match(workflow, /refs\/heads\/\$\{ref\}:refs\/remotes\/origin\/\$\{ref\}/);
   assert.match(workflow, /authoritative-release-state-passport\.json/);
+  assert.match(workflow, /authoritative-release-state-impact\.json/);
   assert.match(workflow, /durable release-state passport KFD base: ok/);
+  assert.match(workflow, /durable release-state impact: ok/);
   assert.match(workflow, /kfd-1/);
   assert.match(workflow, /kfd-2/);
   assert.match(workflow, /kfd-3/);
@@ -1241,6 +1249,7 @@ test("binary distribution manages GitHub Release metadata explicitly", () => {
     /verify release-passport/,
   );
   assert.match(workflow, /--base-passport-json \.buildchain\/release-passport\/authoritative-release-state-passport\.json/);
+  assert.match(workflow, /--impact-json \.buildchain\/release-evidence\/authoritative-release-state-impact\.json/);
   assert.match(workflow, /--require-base-kfd/);
   assert.match(workflow, /scripts\/ensure-github-release\.mjs/);
   assert.match(workflow, /--repository "\$\{\{ github\.repository \}\}"/);
