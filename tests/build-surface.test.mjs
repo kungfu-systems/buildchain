@@ -1229,7 +1229,9 @@ test("binary distribution manages GitHub Release metadata explicitly", () => {
   assert.match(workflow, /Fetch durable release-state passport/);
   assert.match(workflow, /refs\/heads\/\$\{ref\}:refs\/remotes\/origin\/\$\{ref\}/);
   assert.match(workflow, /authoritative-release-state-passport\.json/);
+  assert.match(workflow, /authoritative-release-state-impact\.json/);
   assert.match(workflow, /durable release-state passport KFD base: ok/);
+  assert.match(workflow, /durable release-state impact: ok/);
   assert.match(workflow, /kfd-1/);
   assert.match(workflow, /kfd-2/);
   assert.match(workflow, /kfd-3/);
@@ -1241,6 +1243,7 @@ test("binary distribution manages GitHub Release metadata explicitly", () => {
     /verify release-passport/,
   );
   assert.match(workflow, /--base-passport-json \.buildchain\/release-passport\/authoritative-release-state-passport\.json/);
+  assert.match(workflow, /--impact-json \.buildchain\/release-evidence\/authoritative-release-state-impact\.json/);
   assert.match(workflow, /--require-base-kfd/);
   assert.match(workflow, /scripts\/ensure-github-release\.mjs/);
   assert.match(workflow, /--repository "\$\{\{ github\.repository \}\}"/);
