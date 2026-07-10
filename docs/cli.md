@@ -203,13 +203,24 @@ buildchain kfd 1 verify --gate-json kfd-1-gate.json --json
 ```
 
 KFD-2 commands validate trust taxonomy entries and generate Buildchain's public
-claim evidence:
+claim evidence. Product repositories use the `product-claims` subcommand to
+validate and render their own declared KFD-2 release claims under the canonical
+Buildchain KFD layout:
 
 ```bash
 buildchain kfd 2 schema --json
 buildchain kfd 2 taxonomy --entry-json residual-risk.json --kind residualRisk --json
 buildchain kfd 2 claims --json
+buildchain kfd 2 product-claims check --json
+buildchain kfd 2 product-claims write --json
+buildchain kfd 2 product-claims render --json
 ```
+
+The default source is `.buildchain/kfd/kfd-2/registry.json`; outputs are
+`.buildchain/kfd/kfd-2/release-claims.json`, per-claim release-passport inputs
+under `claims/`, and `buildchain-claim-args.txt`. Use `--registry` or
+`--output-dir` only for an explicit product packaging projection. `check` never
+writes and exits non-zero when outputs drift.
 
 KFD-3 commands are separate from Buildchain's self reverse audit: products can
 detect standard public surfaces, register the accepted boundary, audit the

@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "8b049e7b378b5238fe32d8c842277585f0ac8fa41458243e6b4399657d91ace7",
+    "sha256": "695fc1de1599dec3bd7bc090e03b3ac3e2bd99df483aa5e64add43b1f4bdda4e",
     "summary": {
-      "cliCommandCount": 74,
+      "cliCommandCount": 75,
       "workflowCount": 37,
       "actionCount": 4,
       "sitePageCount": 45,
-      "docCommandRefCount": 231,
+      "docCommandRefCount": 237,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -208,13 +208,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "8b049e7b378b5238fe32d8c842277585f0ac8fa41458243e6b4399657d91ace7",
+      "sha256": "695fc1de1599dec3bd7bc090e03b3ac3e2bd99df483aa5e64add43b1f4bdda4e",
       "summary": {
-        "cliCommandCount": 74,
+        "cliCommandCount": 75,
         "workflowCount": 37,
         "actionCount": 4,
         "sitePageCount": 45,
-        "docCommandRefCount": 231,
+        "docCommandRefCount": 237,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -1711,6 +1711,18 @@
         {
           "id": "cli:kfd-2-claims",
           "name": "buildchain kfd 2 claims [--cwd <dir>] [--output-dir <dir>] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:kfd-2-product-claims",
+          "name": "buildchain kfd 2 product-claims <check|write|render> [--cwd <dir>] [--registry <path>]",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -3969,6 +3981,6 @@
         "public": true
       }
     ],
-    "publicSurfaceCount": 263
+    "publicSurfaceCount": 264
   }
 }

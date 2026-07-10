@@ -354,6 +354,18 @@
       "maturity": "stable"
     },
     {
+      "id": "kfd-2-product-claims",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 2 product-claims <check|write|render> [--cwd <dir>] [--registry <path>]",
+      "purpose": "Validate and render product-owned KFD-2 claims in the canonical .buildchain/kfd layout.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
       "id": "kfd-2-schema",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain kfd 2 schema [--schema <name>] [--json]",

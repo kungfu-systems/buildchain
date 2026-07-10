@@ -180,6 +180,9 @@ function usage() {
   buildchain kfd 2 schema [--schema <name>] [--json]
   buildchain kfd 2 taxonomy --entry-json <file-or-json>... [--kind residualRisk|downgradeReason] [--json]
   buildchain kfd 2 claims [--cwd <dir>] [--output-dir <dir>] [--json]
+  buildchain kfd 2 product-claims <check|write|render> [--cwd <dir>] [--registry <path>]
+                                      [--output-dir <dir>] [--version <version>]
+                                      [--channel <channel>] [--tag <tag>] [--source-sha <sha>] [--json]
   buildchain kfd 2 trust-claims [--claims-json <file-or-json>] [--json]
   buildchain kfd 2 trust-assessment [--assessment-json <file-or-json>] [--json]
   buildchain kfd 3 ...
@@ -779,6 +782,34 @@ function runKfd2Cli(args = []) {
     }
     return;
   }
+  if (action === "product-claims") {
+    const mode = !rest[0] || rest[0].startsWith("--") ? "check" : rest[0];
+    const productArgs = mode === rest[0] ? rest.slice(1) : rest;
+    const options = {
+      cwd,
+      ...(readFlag(productArgs, "registry", "") ? { registryPath: readFlag(productArgs, "registry", "") } : {}),
+      ...(readFlag(productArgs, "output-dir", "") ? { outputDir: readFlag(productArgs, "output-dir", "") } : {}),
+      version: readFlag(productArgs, "version", ""),
+      channel: readFlag(productArgs, "channel", ""),
+      tag: readFlag(productArgs, "tag", ""),
+      sourceSha: readFlag(productArgs, "source-sha", ""),
+    };
+    let result;
+    if (mode === "check") result = kfd2.checkProductClaimOutputs(options);
+    else if (mode === "write") result = kfd2.writeProductClaimOutputs(options);
+    else if (mode === "render") result = kfd2.renderProductClaimOutputs(options);
+    else throw new Error("usage: buildchain kfd 2 product-claims <check|write|render> ...");
+    if (json || mode === "render") {
+      printJson(result);
+    } else {
+      process.stdout.write(`kfd 2 product-claims ${mode}: ${result.ok ? "ok" : "failed"} (${result.summary.claimCount} claims, ${result.status || "rendered"})\n`);
+      for (const entry of result.issues || []) {
+        process.stdout.write(`- ${entry.level || "error"}: ${entry.code}: ${entry.message}\n`);
+      }
+    }
+    if (!result.ok) process.exitCode = 1;
+    return;
+  }
   if (action === "trust-claims") {
     const document = readFlag(rest, "claims-json", "")
       ? readJsonInput(readFlag(rest, "claims-json", ""), { cwd, label: "kfd-2 trust claims" })
@@ -823,7 +854,7 @@ function runKfd2Cli(args = []) {
     }
     return;
   }
-  throw new Error("usage: buildchain kfd 2 <schema|taxonomy|claims|trust-claims|trust-assessment> ...");
+  throw new Error("usage: buildchain kfd 2 <schema|taxonomy|claims|product-claims|trust-claims|trust-assessment> ...");
 }
 
 async function runKfdCli(args = []) {

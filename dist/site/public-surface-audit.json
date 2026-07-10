@@ -3,11 +3,11 @@
   "contract": "kungfu-buildchain-public-surface-reverse-audit",
   "status": "passed",
   "summary": {
-    "cliCommandCount": 74,
+    "cliCommandCount": 75,
     "workflowCount": 37,
     "actionCount": 4,
     "sitePageCount": 45,
-    "docCommandRefCount": 231,
+    "docCommandRefCount": 237,
     "failureCount": 0
   },
   "enumerated": {
@@ -156,6 +156,11 @@
         "id": "kfd-2-claims",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain kfd 2 claims [--cwd <dir>] [--output-dir <dir>] [--json]"
+      },
+      {
+        "id": "kfd-2-product-claims",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd 2 product-claims <check|write|render> [--cwd <dir>] [--registry <path>]"
       },
       {
         "id": "kfd-2-schema",
@@ -1817,6 +1822,36 @@
         "command": "buildchain kfd 2 claims"
       },
       {
+        "id": "kfd-2-product-claims",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd 2 product-claims"
+      },
+      {
+        "id": "kfd-2-product-claims",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd 2 product-claims"
+      },
+      {
+        "id": "kfd-2-product-claims",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd 2 product-claims"
+      },
+      {
+        "id": "kfd-2-product-claims",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 2 product-claims"
+      },
+      {
+        "id": "kfd-2-product-claims",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 2 product-claims"
+      },
+      {
+        "id": "kfd-2-product-claims",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 2 product-claims"
+      },
+      {
         "id": "kfd-2-schema",
         "path": "docs/cli.md",
         "command": "buildchain kfd 2 schema"
@@ -2502,9 +2537,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "fb33fe38423f56ebf95919e2b58e13dc2f544aee10169bc87d7afe980bc1b142",
+    "cliRegistryDigest": "3c0729f5351eb82fe26625fa5aabf30903f45f68af2431e02860f85ada468ac9",
     "workflowRegistryDigest": "4041321df08640a802a87ff0fbe8584d95dc416945b43778727adb820cab9097",
-    "pageRegistryDigest": "0da18f8e3164359afadc261bbac828b4edc84fffc076bef97c5ebfb9ed5e3d03"
+    "pageRegistryDigest": "083d9e0c63de3ede001c5fd4571050a111567a976176be3cb996e9299ccbeeac"
   },
   "comparison": {
     "missingCliRegistry": [],

@@ -182,9 +182,10 @@ test("KFD CLI exposes all KFD standards through the unified schema namespace", (
 test("Buildchain dogfoods KFD-1, KFD-2, and KFD-3 first-class APIs", async () => {
   const status = collectKfdStatus({ cwd: root });
   assert.deepEqual(status.support["kfd-1"], ["schema", "witness", "gate", "verify"]);
-  assert.deepEqual(status.support["kfd-2"], ["schema", "taxonomy", "claims", "trust-claims", "trust-assessment", "upstream"]);
+  assert.deepEqual(status.support["kfd-2"], ["schema", "taxonomy", "claims", "product-claims", "trust-claims", "trust-assessment", "upstream"]);
   assert.deepEqual(status.support["kfd-3"], ["schema", "detect", "register", "audit", "witness", "query", "aggregate"]);
   assert.deepEqual(status.support["kfd-4"], ["schema"]);
+  assert.equal(status.paths.kfd2ProductClaimsRegistry.path, ".buildchain/kfd/kfd-2/registry.json");
   assert.equal(status.paths.kfd3SurfaceRegistry.path, BUILDCHAIN_KFD3_SURFACE_REGISTRY_PATH);
 
   const witness = kfd1.createBuildchainWitness({ root, sourceSha: "a".repeat(40) });
