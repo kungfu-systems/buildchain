@@ -1235,20 +1235,87 @@ jobs:
           name: buildchain-web-surface-staging-release-passport
           path: .buildchain/staging-release-passport
 
+      - name: Resolve production release token config
+        id: production-release-token-config
+        env:
+          PRODUCTION_RELEASE_APP_CLIENT_ID: ${{ inputs.production-release-app-client-id || inputs.production-release-app-id }}
+          PRODUCTION_RELEASE_APP_PRIVATE_KEY_PRESENT: ${{ secrets.production-release-app-private-key != '' }}
+          PRODUCTION_RELEASE_PR_TOKEN_PRESENT: ${{ inputs.production-release-pr-token != '' }}
+        run: |
+          set -euo pipefail
+          app_token_status="not-configured"
+          app_token_requested="false"
+          if [ -n "$PRODUCTION_RELEASE_APP_CLIENT_ID" ]; then
+            if [ "$PRODUCTION_RELEASE_APP_PRIVATE_KEY_PRESENT" = "true" ]; then
+              app_token_status="requested"
+              app_token_requested="true"
+            else
+              app_token_status="missing-private-key"
+            fi
+          elif [ "$PRODUCTION_RELEASE_APP_PRIVATE_KEY_PRESENT" = "true" ]; then
+            app_token_status="missing-client-id"
+          fi
+          {
+            echo "app-token-status=$app_token_status"
+            echo "app-token-requested=$app_token_requested"
+            echo "app-client-id-configured=$([ -n "$PRODUCTION_RELEASE_APP_CLIENT_ID" ] && echo true || echo false)"
+            echo "app-private-key-configured=$PRODUCTION_RELEASE_APP_PRIVATE_KEY_PRESENT"
+            echo "pr-token-configured=$PRODUCTION_RELEASE_PR_TOKEN_PRESENT"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Create production release app token
         id: production-release-app-token
-        if: ${{ inputs.production-release-app-client-id != '' || inputs.production-release-app-id != '' }}
+        if: ${{ steps.production-release-token-config.outputs.app-token-requested == 'true' }}
         uses: actions/create-github-app-token@v3.1.1
+        continue-on-error: true
         with:
           client-id: ${{ inputs.production-release-app-client-id || inputs.production-release-app-id }}
           private-key: ${{ secrets.production-release-app-private-key }}
           owner: ${{ github.repository_owner }}
           repositories: ${{ github.event.repository.name }}
 
+      - name: Resolve production release token source
+        id: production-release-token
+        env:
+          APP_TOKEN_STATUS: ${{ steps.production-release-token-config.outputs.app-token-status }}
+          APP_TOKEN_OUTCOME: ${{ steps.production-release-app-token.outcome }}
+          APP_TOKEN_PRESENT: ${{ steps.production-release-app-token.outputs.token != '' }}
+          PR_TOKEN_CONFIGURED: ${{ steps.production-release-token-config.outputs.pr-token-configured }}
+        run: |
+          set -euo pipefail
+          token_source="github-token"
+          app_token_status="$APP_TOKEN_STATUS"
+          app_token_unavailable="false"
+          if [ "$APP_TOKEN_STATUS" = "requested" ]; then
+            if [ "$APP_TOKEN_OUTCOME" = "success" ] && [ "$APP_TOKEN_PRESENT" = "true" ]; then
+              token_source="github-app"
+              app_token_status="available"
+            else
+              app_token_status="create-failed"
+              app_token_unavailable="true"
+            fi
+          elif [ "$APP_TOKEN_STATUS" != "not-configured" ]; then
+            app_token_unavailable="true"
+          fi
+          if [ "$token_source" = "github-token" ] && [ "$PR_TOKEN_CONFIGURED" = "true" ]; then
+            token_source="production-release-pr-token"
+          fi
+          {
+            echo "token-source=$token_source"
+            echo "app-token-status=$app_token_status"
+            echo "app-token-unavailable=$app_token_unavailable"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Open production release PR
         id: open
         env:
           GITHUB_TOKEN: ${{ steps.production-release-app-token.outputs.token || inputs.production-release-pr-token || github.token }}
+          PRODUCTION_RELEASE_TOKEN_SOURCE: ${{ steps.production-release-token.outputs.token-source }}
+          PRODUCTION_RELEASE_APP_TOKEN_STATUS: ${{ steps.production-release-token.outputs.app-token-status }}
+          PRODUCTION_RELEASE_APP_TOKEN_UNAVAILABLE: ${{ steps.production-release-token.outputs.app-token-unavailable }}
+          PRODUCTION_RELEASE_APP_CLIENT_ID_CONFIGURED: ${{ steps.production-release-token-config.outputs.app-client-id-configured }}
+          PRODUCTION_RELEASE_APP_PRIVATE_KEY_CONFIGURED: ${{ steps.production-release-token-config.outputs.app-private-key-configured }}
+          PRODUCTION_RELEASE_PR_TOKEN_CONFIGURED: ${{ steps.production-release-token-config.outputs.pr-token-configured }}
           STAGING_RELEASE_PR_SUMMARY_PATH: .buildchain/staging-release-pr-summary/web-surface-staging-release-pr-summary.json
           PRODUCTION_RELEASE_PR_SUMMARY_PATH: .buildchain/production-release-pr/handoff.json
           PRODUCTION_RELEASE_PR_BODY_PATH: .buildchain/production-release-pr/body.md
