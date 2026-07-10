@@ -1387,37 +1387,49 @@ async function persistDurableReleaseTransaction({
       }),
     );
   };
-  let commit = await createStateCommit(currentRef?.object?.sha);
-  if (currentRef) {
-    try {
-      await retryGitHubOperation(
-        `git.updateRef ${refName}`,
-        () => octokit.rest.git.updateRef({
-          owner,
-          repo,
-          ref: refName,
-          sha: commit.data.sha,
-          force: false,
-        }),
-      );
-    } catch (error) {
-      if (!nonFastForwardUpdateRejected(error)) {
-        throw error;
+  const readCurrentRefSha = async () => {
+    const latestRef = await getGitRefOrUndefined({ octokit, owner, repo, ref: refName });
+    return latestRef?.object?.sha || "";
+  };
+  const updateExistingRef = async (parentSha) => {
+    let latestParentSha = parentSha || "";
+    let latestCommit = await createStateCommit(latestParentSha);
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        await retryGitHubOperation(
+          `git.updateRef ${refName}`,
+          () => octokit.rest.git.updateRef({
+            owner,
+            repo,
+            ref: refName,
+            sha: latestCommit.data.sha,
+            force: false,
+          }),
+        );
+        return latestCommit;
+      } catch (error) {
+        if (!nonFastForwardUpdateRejected(error)) {
+          throw error;
+        }
+        const currentSha = await readCurrentRefSha();
+        if (currentSha === latestCommit.data.sha) {
+          return latestCommit;
+        }
+        if (!currentSha || currentSha === latestParentSha || attempt === 2) {
+          throw error;
+        }
+        latestParentSha = currentSha;
+        latestCommit = await createStateCommit(latestParentSha);
       }
-      const latestRef = await getGitRefOrUndefined({ octokit, owner, repo, ref: refName });
-      commit = await createStateCommit(latestRef?.object?.sha);
-      await retryGitHubOperation(
-        `git.updateRef ${refName}`,
-        () => octokit.rest.git.updateRef({
-          owner,
-          repo,
-          ref: refName,
-          sha: commit.data.sha,
-          force: false,
-        }),
-      );
     }
+    return latestCommit;
+  };
+
+  let commit;
+  if (currentRef) {
+    commit = await updateExistingRef(currentRef.object?.sha);
   } else {
+    commit = await createStateCommit();
     try {
       await retryGitHubOperation(
         `git.createRef ${refName}`,
@@ -1432,16 +1444,15 @@ async function persistDurableReleaseTransaction({
       if (!referenceAlreadyExists(error)) {
         throw error;
       }
-      await retryGitHubOperation(
-        `git.updateRef ${refName}`,
-        () => octokit.rest.git.updateRef({
-          owner,
-          repo,
-          ref: refName,
+      const currentSha = await readCurrentRefSha();
+      if (currentSha === commit.data.sha) {
+        return {
+          ref: transaction.state_ref,
           sha: commit.data.sha,
-          force: true,
-        }),
-      );
+          statePath: path.relative(cwd, transaction.state_path || "").split(path.sep).join("/"),
+        };
+      }
+      commit = await updateExistingRef(currentSha);
     }
   }
   return {
