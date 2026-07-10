@@ -1404,6 +1404,30 @@ test("promote wrapper exposes controlled branch-protection review bypass", () =>
   assert.match(selfPromotion, /BUILDCHAIN_PROMOTION_BYPASS_TEAMS/);
 });
 
+test("Buildchain stable promotion gates publication after RC resolution", () => {
+  const wrapper = fs.readFileSync(
+    path.join(root, ".github/workflows/release-candidate-promote.yml"),
+    "utf8",
+  );
+  const policy = JSON.parse(fs.readFileSync(
+    path.join(root, ".buildchain/stable-release-policy.json"),
+    "utf8",
+  ));
+  const rcIndex = wrapper.indexOf("- name: Resolve PR-stage release candidate");
+  const stableGateIndex = wrapper.indexOf("- name: Enforce Buildchain stable release canary gate");
+  const publishGateIndex = wrapper.indexOf("- name: Ensure publish-gate ref locks promotion commit");
+
+  assert.ok(rcIndex >= 0 && stableGateIndex > rcIndex && publishGateIndex > stableGateIndex);
+  assert.match(wrapper, /needs\.preflight\.outputs\.channel == 'release'/);
+  assert.match(wrapper, /node \.buildchain\/runtime\/scripts\/stable-release-gate\.mjs/);
+  assert.equal(policy.minimumStableIntervalSeconds, 86400);
+  assert.equal(policy.minimumCanarySoakSeconds, 3600);
+  assert.deepEqual(
+    policy.requiredCanaries.map((canary) => canary.id),
+    ["build-surface-fixture", "site-libkungfu-dev"],
+  );
+});
+
 test("reusable build exposes release-candidate passport outputs", () => {
   const workflow = fs.readFileSync(
     path.join(root, ".github/workflows/.build.yml"),

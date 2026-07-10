@@ -3485,17 +3485,66 @@ async function promoteBuildchainRefs({
       if (!allowedPaths.length) {
         return undefined;
       }
-      await assertOnlyAllowedChangesBetween({
-        baseSha: currentSha,
-        headSha: branchSha,
-        allowedPaths,
-      });
       const { data: generatedCommit } = await getGitCommitWithRetry({
         octokit,
         owner,
         repo,
         commitSha: branchSha,
       });
+      const generatedParentSha = generatedCommit.parents?.[0]?.sha;
+      if (!generatedParentSha) {
+        throw new Error(
+          `Generated version-state commit ${branchSha} must have a parent before merging into ${branch}`,
+        );
+      }
+      await assertOnlyAllowedChangesBetween({
+        baseSha: generatedParentSha,
+        headSha: branchSha,
+        allowedPaths,
+      });
+      const { data: currentCommit } = await getGitCommitWithRetry({
+        octokit,
+        owner,
+        repo,
+        commitSha: currentSha,
+      });
+      const { data: generatedTree } = await retryGitHubOperation(
+        `git.getTree ${branchSha} recursive`,
+        () => octokit.rest.git.getTree({
+          owner,
+          repo,
+          tree_sha: generatedCommit.tree.sha,
+          recursive: "1",
+        }),
+      );
+      const generatedEntries = new Map(
+        (generatedTree.tree || []).map((entry) => [entry.path, entry]),
+      );
+      const overlayEntries = allowedPaths.map((allowedPath) => {
+        const entry = generatedEntries.get(allowedPath);
+        return entry
+          ? {
+              path: entry.path,
+              mode: entry.mode,
+              type: entry.type,
+              sha: entry.sha,
+            }
+          : {
+              path: allowedPath,
+              mode: "100644",
+              type: "blob",
+              sha: null,
+            };
+      });
+      const { data: mergedTree } = await retryGitHubOperation(
+        `git.createTree ${branch} generated version-state overlay`,
+        () => octokit.rest.git.createTree({
+          owner,
+          repo,
+          base_tree: currentCommit.tree.sha,
+          tree: overlayEntries,
+        }),
+      );
       const { data: mergeCommit } = await retryGitHubOperation(
         `git.createCommit ${branch} generated version-state merge`,
         () => octokit.rest.git.createCommit({
@@ -3506,7 +3555,7 @@ async function promoteBuildchainRefs({
             `${protectedUpdate?.title || "Apply generated version-state"}\n\n` +
               `Buildchain generated this merge commit to fast-forward ${branch} after ` +
               "the channel had diverged only by generated version-state files.",
-          tree: generatedCommit.tree.sha,
+          tree: mergedTree.sha,
           parents: [currentSha, branchSha],
           author: COMMIT_IDENTITY,
           committer: COMMIT_IDENTITY,
@@ -5077,15 +5126,115 @@ async function promoteBuildchainRefs({
   }
   await markComplete();
 
-  if (releaseCommit.versionStrategy?.next === "manual") {
-    if (ownsMajorFloatingTag) {
-      await updateDefaultBranch(`dev/v${rule.major}/v${rule.major}.${rule.minor}`);
+  try {
+    if (releaseCommit.versionStrategy?.next === "manual") {
+      if (ownsMajorFloatingTag) {
+        await updateDefaultBranch(`dev/v${rule.major}/v${rule.major}.${rule.minor}`);
+      }
+      updates.push({
+        ref: `dev/v${rule.major}/v${rule.major}.${rule.minor}`,
+        action: "next-anchor-required",
+        versionStrategy: releaseCommit.versionStrategy.strategy,
+        manifest: releaseCommit.anchorManifest?.path,
+        sha: releaseSha,
+      });
+      return withPublishTransaction({
+        owner,
+        repo,
+        sourceSha: sha,
+        sha: releaseSha,
+        nextAlphaRequired: true,
+        targetRef,
+        updates,
+      });
     }
+
+    const explicitAlphaTags = requestedTags
+      ? requestedTags.filter((tag) => tag.includes("-alpha."))
+      : [];
+    if (explicitAlphaTags.length > 1) {
+      throw new Error(
+        "Release promotion accepts at most one explicit next-alpha tag",
+      );
+    }
+    const selectedNextAlpha = explicitAlphaTags[0]
+      ? { tag: explicitAlphaTags[0] }
+      : selectAlphaTag({
+          refs: lineRefs,
+          releasePrefix: rule.releasePrefix,
+          sha: releaseSha,
+          patchAfterRelease: selectedReleaseCandidate.patch + 1,
+        });
+    const nextAlphaVersion = stripTagPrefix(selectedNextAlpha.tag);
+    let nextAlphaSha = versionState ? selectedNextAlpha.sha : sha;
+    let nextAlphaVersionStateFiles = [];
+    if (versionState && selectedNextAlpha.exists && nextAlphaSha) {
+      updates.push({
+        version: nextAlphaVersion,
+        action: "existing-version-state",
+        sha: nextAlphaSha,
+      });
+    } else if (versionState) {
+      const nextAlphaCommit = await createVersionStateCommit({
+        baseSha: releaseSha,
+        version: nextAlphaVersion,
+        message: `chore(release): prepare ${selectedNextAlpha.tag}`,
+      });
+      nextAlphaSha = nextAlphaCommit.sha;
+      nextAlphaVersionStateFiles = nextAlphaCommit.files || [];
+    }
+    if (versionState) {
+      const nextDevRef = `dev/v${rule.major}/v${rule.major}.${rule.minor}`;
+      if (ownsMajorFloatingTag) {
+        await updateDefaultBranch(nextDevRef);
+      }
+      const nextAlphaRef = `alpha/v${rule.major}/v${rule.major}.${rule.minor}`;
+      const nextAlphaUpdate = await updateBranch(nextAlphaRef, nextAlphaSha, "updated", {
+        title: `Prepare ${selectedNextAlpha.tag}`,
+        body: `Create the generated version-state commit for ${selectedNextAlpha.tag}.`,
+        allowPendingPullRequest: true,
+        allowMergeCommitOnNonFastForward: true,
+        allowMergeCommitOnNonFastForwardPaths: nextAlphaVersionStateFiles,
+      });
+      if (nextAlphaUpdate.pending) {
+        return withPublishTransaction({
+          owner,
+          repo,
+          sourceSha: sha,
+          sha: releaseSha,
+          nextAlphaSha,
+          targetRef,
+          pendingPullRequest:
+            nextAlphaUpdate.pullRequest.html_url || nextAlphaUpdate.pullRequest.url,
+          updates,
+        });
+      }
+      if (nextAlphaUpdate.mergeSha) {
+        nextAlphaSha = nextAlphaUpdate.mergeSha;
+      }
+      await updateBranch(nextDevRef, nextAlphaSha, "updated", {
+        title: `Prepare ${selectedNextAlpha.tag}`,
+        body: `Create the generated version-state commit for ${selectedNextAlpha.tag}.`,
+        allowMergeCommitOnNonFastForward: true,
+        allowMergeCommitOnNonFastForwardPaths: nextAlphaVersionStateFiles,
+      });
+    }
+    await ensureTag(selectedNextAlpha.tag, nextAlphaSha);
+    await updateTag(rule.alphaTag, nextAlphaSha);
+    return withPublishTransaction({
+      owner,
+      repo,
+      sourceSha: sha,
+      sha: releaseSha,
+      nextAlphaSha,
+      targetRef,
+      updates,
+    });
+  } catch (error) {
     updates.push({
       ref: `dev/v${rule.major}/v${rule.major}.${rule.minor}`,
-      action: "next-anchor-required",
-      versionStrategy: releaseCommit.versionStrategy.strategy,
-      manifest: releaseCommit.anchorManifest?.path,
+      action: "deferred-post-release-bookkeeping",
+      reason: error?.message || String(error),
       sha: releaseSha,
     });
     return withPublishTransaction({
@@ -5098,88 +5247,6 @@ async function promoteBuildchainRefs({
       updates,
     });
   }
-
-  const explicitAlphaTags = requestedTags
-    ? requestedTags.filter((tag) => tag.includes("-alpha."))
-    : [];
-  if (explicitAlphaTags.length > 1) {
-    throw new Error(
-      "Release promotion accepts at most one explicit next-alpha tag",
-    );
-  }
-  const selectedNextAlpha = explicitAlphaTags[0]
-    ? { tag: explicitAlphaTags[0] }
-    : selectAlphaTag({
-        refs: lineRefs,
-        releasePrefix: rule.releasePrefix,
-        sha: releaseSha,
-        patchAfterRelease: selectedReleaseCandidate.patch + 1,
-      });
-  const nextAlphaVersion = stripTagPrefix(selectedNextAlpha.tag);
-  let nextAlphaSha = versionState ? selectedNextAlpha.sha : sha;
-  let nextAlphaVersionStateFiles = [];
-  if (versionState && selectedNextAlpha.exists && nextAlphaSha) {
-    updates.push({
-      version: nextAlphaVersion,
-      action: "existing-version-state",
-      sha: nextAlphaSha,
-    });
-  } else if (versionState) {
-    const nextAlphaCommit = await createVersionStateCommit({
-      baseSha: releaseSha,
-      version: nextAlphaVersion,
-      message: `chore(release): prepare ${selectedNextAlpha.tag}`,
-    });
-    nextAlphaSha = nextAlphaCommit.sha;
-    nextAlphaVersionStateFiles = nextAlphaCommit.files || [];
-  }
-  if (versionState) {
-    const nextDevRef = `dev/v${rule.major}/v${rule.major}.${rule.minor}`;
-    if (ownsMajorFloatingTag) {
-      await updateDefaultBranch(nextDevRef);
-    }
-    const nextAlphaRef = `alpha/v${rule.major}/v${rule.major}.${rule.minor}`;
-    const nextAlphaUpdate = await updateBranch(nextAlphaRef, nextAlphaSha, "updated", {
-      title: `Prepare ${selectedNextAlpha.tag}`,
-      body: `Create the generated version-state commit for ${selectedNextAlpha.tag}.`,
-      allowPendingPullRequest: true,
-      allowMergeCommitOnNonFastForward: true,
-      allowMergeCommitOnNonFastForwardPaths: nextAlphaVersionStateFiles,
-    });
-    if (nextAlphaUpdate.pending) {
-      return withPublishTransaction({
-        owner,
-        repo,
-        sourceSha: sha,
-        sha: releaseSha,
-        nextAlphaSha,
-        targetRef,
-        pendingPullRequest:
-          nextAlphaUpdate.pullRequest.html_url || nextAlphaUpdate.pullRequest.url,
-        updates,
-      });
-    }
-    if (nextAlphaUpdate.mergeSha) {
-      nextAlphaSha = nextAlphaUpdate.mergeSha;
-    }
-    await updateBranch(nextDevRef, nextAlphaSha, "updated", {
-      title: `Prepare ${selectedNextAlpha.tag}`,
-      body: `Create the generated version-state commit for ${selectedNextAlpha.tag}.`,
-      allowMergeCommitOnNonFastForward: true,
-      allowMergeCommitOnNonFastForwardPaths: nextAlphaVersionStateFiles,
-    });
-  }
-  await ensureTag(selectedNextAlpha.tag, nextAlphaSha);
-  await updateTag(rule.alphaTag, nextAlphaSha);
-  return withPublishTransaction({
-    owner,
-    repo,
-    sourceSha: sha,
-    sha: releaseSha,
-    nextAlphaSha,
-    targetRef,
-    updates,
-  });
 }
 
 export {
