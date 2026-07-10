@@ -8,7 +8,7 @@ on:
         type: string
         required: false
       buildchain-ref:
-        description: "Optional temporary Buildchain runtime ref for trusted manual validation. Empty uses the stable workflow runtime."
+        description: "Official floating Buildchain channel, or a temporary train/SHA for trusted manual validation."
         default: ""
         type: string
         required: false
@@ -209,6 +209,7 @@ jobs:
             if (!runtimeOwner || !runtimeRepo) throw new Error(`invalid buildchain repository: ${repository}`);
             const exactSha = /^[0-9a-f]{40}$/i;
             const trainRef = /^train\/v\d+\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
+            const officialChannelRef = /^v\d+(?:\.\d+)?(?:-alpha)?$/;
             const workflowRef = process.env.GITHUB_WORKFLOW_REF || "";
             const shellRef = workflowRef.startsWith(`${repository}/.github/workflows/`)
               ? (workflowRef.split("@").pop() || defaultRef).trim() || defaultRef
@@ -224,8 +225,13 @@ jobs:
             let runtimeRef = requested || shellRef;
             let runtimeFullRef = runtimeRef;
             let runtimeClass = normalizeClass(runtimeRef);
-            let runtimeOverride = requested !== "";
-            let trustDecision = runtimeOverride ? "override-requested" : "stable-default";
+            const officialChannel = officialChannelRef.test(requested);
+            let runtimeOverride = requested !== "" && !officialChannel;
+            let trustDecision = officialChannel
+              ? "official-channel"
+              : runtimeOverride
+                ? "override-requested"
+                : "stable-default";
             if (runtimeOverride) {
               if (context.eventName !== "workflow_dispatch") {
                 throw new Error("buildchain-ref override is only allowed for trusted workflow_dispatch runs");

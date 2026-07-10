@@ -24,6 +24,15 @@ uses: kungfu-systems/buildchain/actions/promote-buildchain-ref@v2
 uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2
 ```
 
+Consumers intentionally following the alpha channel should pair the workflow
+shell with the matching official runtime channel:
+
+```yaml
+uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2-alpha
+with:
+  buildchain-ref: v2-alpha
+```
+
 For new repositories, prefer the CLI:
 
 ```sh

@@ -5,6 +5,13 @@ committed workflow YAML. Runtime trains provide a temporary validation pointer
 for Buildchain changes that are ready for downstream testing but not yet
 promoted through the normal `dev -> alpha -> release` chain.
 
+Official floating channels are not runtime overrides. A consumer that
+deliberately follows `@v2-alpha` should also pass `buildchain-ref: v2-alpha` so
+the reusable workflow resolves the matching runtime on pull requests and
+pushes. GitHub does not expose the called reusable-workflow ref as the caller's
+`github.workflow_ref`, so the explicit channel input is the auditable binding
+between workflow shell and runtime.
+
 ## Train refs
 
 A train ref is a branch in the Buildchain repository:
@@ -111,10 +118,12 @@ summary. The evidence should include:
 
 ## Trust and limitation
 
-Runtime overrides fail closed unless the event is `workflow_dispatch` and the
-actor has write, maintain, or admin permission on the caller repository.
-Pull requests, including fork-originated pull requests, cannot use a non-empty
-`buildchain-ref`.
+Official floating channel refs such as `v2` and `v2-alpha` may be selected on
+pull requests and pushes. Train refs and arbitrary exact-SHA overrides still
+fail closed unless the event is `workflow_dispatch` and the actor has write,
+maintain, or admin permission on the caller repository. Pull requests,
+including fork-originated pull requests, cannot use train or exact-SHA
+overrides.
 
 Runtime train validation covers Buildchain runtime scripts, CLI code, local
 actions, configuration parsing, and lifecycle behavior. It cannot validate

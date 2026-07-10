@@ -1,5 +1,6 @@
 const EXACT_SHA_RE = /^[0-9a-f]{40}$/i;
 const TRAIN_REF_RE = /^train\/v\d+\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
+const OFFICIAL_CHANNEL_REF_RE = /^v\d+(?:\.\d+)?(?:-alpha)?$/;
 
 export function parseWorkflowShellRef(workflowRef = "", fallback = "v2", buildchainRepository = "kungfu-systems/buildchain") {
   const value = String(workflowRef || "");
@@ -28,13 +29,34 @@ export function classifyBuildchainRuntimeRef(ref = "") {
   return "development";
 }
 
+export function isOfficialBuildchainChannelRef(ref = "") {
+  const value = String(ref || "").trim().replace(/^refs\/tags\//, "");
+  return OFFICIAL_CHANNEL_REF_RE.test(value);
+}
+
 export function normalizeRequestedRuntimeRef(requestedRef = "") {
   const requested = String(requestedRef || "").trim();
   if (!requested) {
-    return { ref: "", fullRef: "", class: "", exactSha: false };
+    return { ref: "", fullRef: "", class: "", exactSha: false, officialChannel: false };
+  }
+  if (isOfficialBuildchainChannelRef(requested)) {
+    const channelRef = requested.replace(/^refs\/tags\//, "");
+    return {
+      ref: channelRef,
+      fullRef: channelRef,
+      class: classifyBuildchainRuntimeRef(channelRef),
+      exactSha: false,
+      officialChannel: true,
+    };
   }
   if (EXACT_SHA_RE.test(requested)) {
-    return { ref: requested, fullRef: requested, class: "exact-sha", exactSha: true };
+    return {
+      ref: requested,
+      fullRef: requested,
+      class: "exact-sha",
+      exactSha: true,
+      officialChannel: false,
+    };
   }
   const trainRef = requested.replace(/^refs\/heads\//, "");
   if (!TRAIN_REF_RE.test(trainRef)) {
@@ -47,6 +69,7 @@ export function normalizeRequestedRuntimeRef(requestedRef = "") {
     fullRef: `refs/heads/${trainRef}`,
     class: "train",
     exactSha: false,
+    officialChannel: false,
   };
 }
 
@@ -71,15 +94,16 @@ export function resolveRuntimeSelection({
     };
   }
   const normalized = normalizeRequestedRuntimeRef(requested);
+  const runtimeOverride = !normalized.officialChannel;
   return {
     requestedRef: requested,
     runtimeRef: normalized.ref,
     runtimeFullRef: normalized.fullRef,
     runtimeClass: normalized.class,
-    runtimeOverride: true,
+    runtimeOverride,
     workflowShellRef: workflowShellRef || defaultStableRef,
     rollbackRef: workflowShellRef || defaultStableRef,
-    trustDecision: "override-requested",
+    trustDecision: normalized.officialChannel ? "official-channel" : "override-requested",
   };
 }
 
@@ -90,6 +114,9 @@ export function validateRuntimeOverrideTrust({
 } = {}) {
   if (!String(requestedRef || "").trim()) {
     return { ok: true, decision: "stable-default" };
+  }
+  if (isOfficialBuildchainChannelRef(requestedRef)) {
+    return { ok: true, decision: "official-channel" };
   }
   if (eventName !== "workflow_dispatch") {
     return {

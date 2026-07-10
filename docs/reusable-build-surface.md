@@ -214,6 +214,20 @@ The lock is intentionally small. It does not copy the full contract. The full
 contract remains in the Buildchain ref and package; the consumer records only
 what it accepted and the policy used to compare future floating-ref movement.
 
+Alpha-channel consumers must bind both layers explicitly:
+
+```yaml
+jobs:
+  build:
+    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2-alpha
+    with:
+      buildchain-ref: v2-alpha
+      buildchain-contract-lock-path: .buildchain/contract-lock.json
+```
+
+Official floating refs are ordinary channel selections and are allowed on pull
+requests and pushes. Train refs and exact SHAs remain trusted manual overrides.
+
 ## Locked Source Checkout Cache
 
 Self-hosted runners that build large repositories can opt into a locked source
@@ -309,7 +323,7 @@ The reusable workflow exposes the resolved contract:
 | `buildchain-runtime-ref`          | Runtime ref selected after applying the empty-default or override policy        |
 | `buildchain-runtime-sha`          | Immutable Buildchain runtime commit used by all runtime checkouts               |
 | `buildchain-runtime-class`        | `stable`, `alpha`, `train`, `exact-sha`, or `development`                       |
-| `buildchain-runtime-override`     | `true` when a non-empty `buildchain-ref` override was accepted                  |
+| `buildchain-runtime-override`     | `true` when a train or exact-SHA `buildchain-ref` override was accepted          |
 | `buildchain-runtime-trust-decision` | Runtime override trust decision                                               |
 | `buildchain-contract-lock-status` | `unchanged`, `compatible-drift`, `breaking-drift`, `missing-lock`, `non-floating-runtime`, or first-release `runtime-contract-unavailable` |
 | `buildchain-contract-lock-drift`  | `true` when the floating runtime SHA or contract digest changed                 |
