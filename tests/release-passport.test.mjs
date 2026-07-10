@@ -1598,6 +1598,61 @@ test("binary release passport can merge authoritative Buildchain KFD release-sta
   assert.ok(passport.artifacts.some((artifact) => artifact.name === "buildchain-x86_64-unknown-linux-gnu.tar.gz"));
 });
 
+test("version-bound impact remains authoritative in the public release asset", () => {
+  const cwd = tempDir("version-bound-public-impact");
+  const surfaceImpacts = [
+    {
+      id: "release-impact-version-binding",
+      impact: "patch",
+      class: "release-evidence",
+      rationale: "The public impact asset stays bound to the published version.",
+      source: "release-impact.json",
+    },
+  ];
+  const basePassportPath = writeJson(path.join(cwd, "release-candidate-passport.json"), {
+    release: { publishedVersion: "2.11.10-alpha.1", targetRef: "alpha/v2/v2.11" },
+    versionImpact: { final: "patch", source: "buildchain-version-state", rationale: "Version-bound impact." },
+    surfaceImpacts,
+    classification: "unknown",
+    summary: "No release impact summary was supplied.",
+  });
+  const impactPath = writeJson(path.join(cwd, "release-impact.json"), {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-impact",
+    release: { version: "2.11.10-alpha.1", line: "v2.11" },
+    versionImpact: { final: "patch", source: "buildchain-version-state", rationale: "Version-bound impact." },
+    surfaceImpacts,
+    classification: "patch",
+    breaking: false,
+    security: false,
+    migrationRequired: false,
+    summary: "Buildchain public impact evidence is version-bound.",
+  });
+  const assetsDir = path.join(cwd, "dist");
+  fs.mkdirSync(assetsDir, { recursive: true });
+  fs.writeFileSync(path.join(assetsDir, "buildchain.tgz"), "release-bytes\n");
+
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v2.11.10-alpha.1",
+    line: "v2.11",
+    repository: "kungfu-systems/buildchain",
+    sourceSha: "a".repeat(40),
+    packageVersion: "2.11.10-alpha.1",
+    assetsDir,
+    outputDir: "release-passport",
+    basePassportJson: basePassportPath,
+    impactJson: impactPath,
+  });
+  const impact = JSON.parse(fs.readFileSync(path.join(collected.outputDir, "impact.json"), "utf8"));
+
+  assert.equal(impact.release.version, "2.11.10-alpha.1");
+  assert.equal(impact.release.line, "v2.11");
+  assert.equal(impact.classification, "patch");
+  assert.equal(impact.summary, "Buildchain public impact evidence is version-bound.");
+  assert.equal(collected.checkReport.ok, true, JSON.stringify(collected.checkReport.issues));
+});
+
 test("release passport collection bundles publish evidence as a sibling audit asset", async () => {
   const cwd = tempDir("release-passport-flat-publish-evidence");
   const assetsDir = path.join(cwd, "dist");
