@@ -239,6 +239,13 @@ uploaded with the stable release passport. A blocked run writes the same report
 before failing, so the missing or stale condition is inspectable without
 opening a publication transaction.
 
+GitHub's Actions run REST object does not expose `workflow_dispatch` inputs.
+Buildchain therefore verifies the run's `workflow_id` against the authoritative
+workflow metadata, then reads the exact runtime from the workflow-owned
+`<workflow name> / <runtime ref>` run-name when no input field is available.
+An explicit API input, when present, remains authoritative and cannot be
+overridden by the display name.
+
 The cooldown is a minimum interval, not an instruction to release every day.
 Compatible work should still be batched until a stable release has a concrete
 consumer need. Changing the interval, canary set, attestors, product path

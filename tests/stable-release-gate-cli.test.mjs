@@ -92,9 +92,18 @@ test("stable gate collector binds exact alpha tag or SHA runtime inputs to consu
     if (requestPath.endsWith("/repos/kungfu-systems/site-libkungfu-dev/actions/runs/202")) {
       return response({
         conclusion: "success",
-        name: "Buildchain Stable Canary",
+        name: `Buildchain Stable Canary / ${runtimeRef}`,
+        display_title: `Buildchain Stable Canary / ${runtimeRef}`,
+        path: ".github/workflows/buildchain-stable-canary.yml",
+        workflow_id: 303,
         updated_at: "2026-07-10T02:20:00Z",
-        inputs: { buildchain_ref: runtimeRef },
+      });
+    }
+    if (requestPath.endsWith("/repos/kungfu-systems/site-libkungfu-dev/actions/workflows/303")) {
+      return response({
+        id: 303,
+        name: "Buildchain Stable Canary",
+        path: ".github/workflows/buildchain-stable-canary.yml",
       });
     }
     throw new Error(`unexpected request: ${requestPath}`);
@@ -115,10 +124,10 @@ test("stable gate collector binds exact alpha tag or SHA runtime inputs to consu
     assert.equal(report.ok, true, runtimeRef);
     assert.equal(report.candidate.sha, ALPHA_SHA);
     assert.deepEqual(report.policy.requiredCanaries, ["build-surface-fixture", "site-libkungfu-dev"]);
-    assert.equal(
-      report.checks.find((entry) => entry.id === "stable.canary.site-libkungfu-dev")?.details.runtimeRef,
-      runtimeRef,
-    );
+    const canaryCheck = report.checks.find((entry) => entry.id === "stable.canary.site-libkungfu-dev");
+    assert.equal(canaryCheck?.details.runtimeRef, runtimeRef);
+    assert.equal(canaryCheck?.details.runtimeRefSource, "run-name");
+    assert.equal(canaryCheck?.details.workflowId, "303");
   }
 
   runtimeRef = STABLE_SHA;
@@ -136,6 +145,7 @@ test("stable gate collector binds exact alpha tag or SHA runtime inputs to consu
     (error) => error.report?.summary.failedChecks.includes("stable.canary.site-libkungfu-dev"),
   );
   assert.ok(requests.some((entry) => entry.includes("site-libkungfu-dev/actions/runs/202")));
+  assert.ok(requests.some((entry) => entry.includes("site-libkungfu-dev/actions/workflows/303")));
 });
 
 test("stable gate collector leaves alpha promotion fast and offline", async () => {
