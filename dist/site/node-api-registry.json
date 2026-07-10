@@ -151,7 +151,7 @@
       "specifier": "@kungfu-tech/buildchain/release-line-bootstrap",
       "export": "./release-line-bootstrap",
       "target": "./packages/core/release-line-bootstrap.js",
-      "digest": "sha256:303075eb3a205224a90ecf266741a5705a8373cfb566beb54429f1f5972a540b",
+      "digest": "sha256:7c42519975f8a653ca7bae4f0b33baf34d7e1dcb6dd4e87be9ed27de2d252e55",
       "summary": "Semver release-line bootstrap planning and version-state APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [

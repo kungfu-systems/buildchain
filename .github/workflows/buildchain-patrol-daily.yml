@@ -26,6 +26,7 @@ jobs:
     uses: ./.github/workflows/patrol-daily.yml
     with:
       buildchain-ref: ${{ inputs.buildchain-ref || 'v2' }}
+      required-status-checks: check
       dry-run: ${{ inputs.dry-run || false }}
       max-actions: 1
     secrets:
