@@ -8,7 +8,7 @@ export function parseWorkflowShellRef(workflowRef = "", fallback = "v2", buildch
     return fallback;
   }
   const ref = value.split("@").pop()?.trim();
-  return ref || fallback;
+  return (ref || fallback).replace(/^refs\/(?:heads|tags)\//, "");
 }
 
 export function classifyBuildchainRuntimeRef(ref = "") {

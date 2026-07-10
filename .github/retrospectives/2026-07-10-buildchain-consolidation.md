@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-07-10
+last_reviewed: 2026-07-11
 ---
 
 # Buildchain Consolidation Retrospective — 2026-07-10
@@ -312,6 +312,27 @@ published alpha. An older minor can continue maintenance releases, but records
 `skipped-newer-minor-alpha-exists` instead of rolling the major alpha channel
 backwards. Exact alpha tags and SHAs remain the immutable audit and rollback
 surface; `vN-alpha` is the low-friction continuous dogfood entrypoint.
+
+### Stage 5: vN-alpha self-dogfood canary
+
+The floating alpha channel now has a Buildchain-owned consumer loop rather
+than relying only on downstream adoption. A scheduled, post-promotion, and
+manually dispatchable workflow calls the released `@v2-alpha` outer reusable
+workflow and a stable `@v2` compatibility lane with the same bounded Linux
+fixture. It compares each reusable workflow's resolved runtime SHA with the
+corresponding GitHub tag and uploads a small evidence record.
+
+Implementation exposed a prior identity blind spot: GitHub associates
+`github.workflow_ref` with the caller during reusable workflow execution, while
+`job.workflow_ref` identifies the workflow that defines the called job. The
+reusable build trust gate now prefers `job.workflow_ref`, so a call through
+`@vN-alpha` defaults to the selected alpha runtime instead of the caller's
+branch. Full `refs/tags/*` and `refs/heads/*` workflow identities are normalized
+before runtime selection. The canary shares promotion serialization so its ref
+comparison cannot race a later floating-tag move. Inventory and unit checks
+preserve those distinctions. Promotion remains bound to the verified exact SHA;
+patrol, repair, and dev-merge defaults do not depend on the floating alpha they
+may need to repair.
 
 ### Remaining work
 

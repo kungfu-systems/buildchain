@@ -344,6 +344,15 @@
       "status": "repository-internal"
     },
     {
+      "id": "buildchain-alpha-self-dogfood",
+      "path": ".github/workflows/buildchain-alpha-self-dogfood.yml",
+      "inputs": [],
+      "inputCount": 0,
+      "surface": "repository-workflow",
+      "capabilityGroup": "api-cli-reference",
+      "status": "active"
+    },
+    {
       "id": "buildchain-patrol-daily",
       "path": ".github/workflows/buildchain-patrol-daily.yml",
       "inputs": [
