@@ -167,7 +167,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p .buildchain/release-passport
+          mkdir -p .buildchain/release-passport .buildchain/release-evidence
           version="${RELEASE_TAG#v}"
           state="${version//./-}"
           ref="buildchain/release-state/${state}"
@@ -184,11 +184,15 @@ jobs:
           git fetch --depth=1 origin "refs/heads/${ref}:refs/remotes/origin/${ref}"
           git show "refs/remotes/origin/${ref}:release-passport/buildchain.release.json" \
             > .buildchain/release-passport/authoritative-release-state-passport.json
+          git show "refs/remotes/origin/${ref}:release-passport/impact.json" \
+            > .buildchain/release-evidence/authoritative-release-state-impact.json
           node --input-type=module <<'NODE'
           import fs from "node:fs";
 
           const passportPath = ".buildchain/release-passport/authoritative-release-state-passport.json";
+          const impactPath = ".buildchain/release-evidence/authoritative-release-state-impact.json";
           const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+          const impact = JSON.parse(fs.readFileSync(impactPath, "utf8"));
           const requiredSections = ["kfd-1", "kfd-2", "kfd-3"];
           for (const sectionName of requiredSections) {
             const section = passport[sectionName];
@@ -197,7 +201,13 @@ jobs:
               process.exit(1);
             }
           }
+          const publishedVersion = passport.release?.publishedVersion || passport.release?.package?.version || "";
+          if (!publishedVersion || impact.release?.version !== publishedVersion) {
+            console.error("durable release-state impact must match the passport published version");
+            process.exit(1);
+          }
           console.log("durable release-state passport KFD base: ok");
+          console.log("durable release-state impact: ok");
           NODE
 
       - name: Collect release passport
@@ -217,6 +227,7 @@ jobs:
           if [ -f .buildchain/release-passport/authoritative-release-state-passport.json ]; then
             args+=(
               --base-passport-json .buildchain/release-passport/authoritative-release-state-passport.json
+              --impact-json .buildchain/release-evidence/authoritative-release-state-impact.json
               --require-base-kfd
             )
           fi
