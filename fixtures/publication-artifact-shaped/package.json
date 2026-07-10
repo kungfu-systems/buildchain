@@ -1,0 +1,9 @@
+{
+  "name": "@kungfu-tech/paper-observer-declared-timelines",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kungfu-systems/paper-observer-declared-timelines.git"
+  },
+  "license": "Apache-2.0"
+}
