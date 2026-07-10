@@ -8,20 +8,20 @@
   "versionImpact": {
     "final": "patch",
     "source": "buildchain-version-state",
-    "rationale": "Configured release version updates now preserve repository-owned TOML formatting and treat already-matching JSON or TOML version state as a semantic no-op."
+    "rationale": "Paper publication now validates protected release authority before expensive build work and treats only enumerated Buildchain-owned ephemeral evidence as outside source version state."
   },
   "surfaceImpacts": [
     {
-      "id": "version-state-lossless-toml-update",
+      "id": "publication-ephemeral-evidence-contract",
       "impact": "patch",
       "class": "release-governance",
-      "rationale": "Parser-verified lossless TOML edits prevent formatter-only release-preparation commits while real version changes and strict transaction source identity remain enforced.",
-      "source": "packages/core/buildchain-config.js"
+      "rationale": "Exact Buildchain-owned contract-drift and publication-result paths no longer poison strict version verification, while undeclared paths remain rejected and unreadable promotion authority fails before the publication build.",
+      "source": "actions/promote-buildchain-ref/lib.js"
     }
   ],
   "classification": "patch",
   "breaking": false,
   "security": false,
   "migrationRequired": false,
-  "summary": "Buildchain v2.11 avoids formatter-only generated promotion commits by preserving TOML source formatting and skipping semantic version-state no-ops."
+  "summary": "Buildchain v2.11 closes paper publication friction from workflow-generated ephemeral evidence and validates protected release authority before expensive build work."
 }

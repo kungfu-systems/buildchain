@@ -306,6 +306,32 @@ jobs:
           BUILDCHAIN_RUNTIME_CLASS: ${{ steps.runtime.outputs.runtime-class }}
           BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
+      - name: Preflight protected publication authority
+        uses: actions/github-script@v8
+        env:
+          TARGET_REF: ${{ inputs.target-ref || github.ref_name }}
+        with:
+          github-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+          script: |
+            const targetRef = (process.env.TARGET_REF || "").trim();
+            if (!/^(alpha|release)\/v\d+\/v\d+\.\d+$/.test(targetRef)) {
+              throw new Error(`paper-release.yml requires target-ref on a protected alpha/* or release/* channel, got ${targetRef}`);
+            }
+            try {
+              await github.rest.repos.getBranchProtection({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                branch: targetRef,
+              });
+            } catch (error) {
+              if (error.status === 403 || error.status === 404) {
+                throw new Error(
+                  `Buildchain promotion authority cannot read branch protection before publication build for ${targetRef}; map a caller-chosen release authority secret to BUILDCHAIN_PROMOTION_TOKEN`,
+                );
+              }
+              throw error;
+            }
+
       - name: Setup Buildchain Node.js
         if: ${{ inputs.setup-node }}
         uses: actions/setup-node@v6.0.0

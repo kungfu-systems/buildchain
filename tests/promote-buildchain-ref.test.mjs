@@ -1012,8 +1012,27 @@ test("version verification ignores generated buildchain evidence", () => {
     path.join(cwd, ".buildchain/runtime/actions/promote-buildchain-ref/action.yml"),
     "name: runtime\n",
   );
+  fs.mkdirSync(path.join(cwd, ".buildchain/contract-drift"), { recursive: true });
+  fs.writeFileSync(
+    path.join(cwd, ".buildchain/contract-drift/issue-body.md"),
+    "# compatible drift\n",
+  );
+  fs.writeFileSync(
+    path.join(cwd, ".buildchain/publication-result.json"),
+    "{}\n",
+  );
 
   assert.doesNotThrow(() => assertAllowedLocalChanges(cwd, ["package.json"]));
+
+  fs.writeFileSync(
+    path.join(cwd, ".buildchain/publication-result.json.backup"),
+    "{}\n",
+  );
+  assert.throws(
+    () => assertAllowedLocalChanges(cwd, ["package.json"]),
+    /\.buildchain\/publication-result\.json\.backup/,
+  );
+  fs.rmSync(path.join(cwd, ".buildchain/publication-result.json.backup"));
 
   fs.writeFileSync(path.join(cwd, ".buildchain/other.json"), "{}\n");
   assert.throws(
