@@ -262,6 +262,29 @@ function updateVersionStateContents(files, version) {
     .filter((file) => file.changed);
 }
 
+function resolveReleaseImpactInput({ cwd = process.cwd(), impactJson = "", version = "" } = {}) {
+  const input = String(impactJson || "").trim();
+  if (!input) {
+    return "";
+  }
+  const inputPath = path.isAbsolute(input) ? input : path.resolve(cwd, input);
+  if (!fs.existsSync(inputPath) || !fs.statSync(inputPath).isFile()) {
+    return input;
+  }
+
+  const relativePath = path.relative(cwd, inputPath).split(path.sep).join("/");
+  const discovered = discoverVersionStateFiles(cwd);
+  const configuredFile = discovered.files.find((file) => file.path === relativePath);
+  if (configuredFile && version) {
+    const updated = updateVersionStateContents([configuredFile], version)
+      .find((file) => file.path === relativePath);
+    if (updated) {
+      return updated.content;
+    }
+  }
+  return fs.readFileSync(inputPath, "utf8");
+}
+
 function expectedHeadRefForTarget(targetRef) {
   const rule = getPromotionRule(targetRef);
   if (rule.channel === "major") {
@@ -2053,6 +2076,11 @@ async function collectAndPersistReleasePassport({
   const internalVersion = stripTagPrefix(result.transaction.exact_tag || "");
   const publishedVersion = result.transaction.version || internalVersion;
   const publicReleaseTag = publicReleaseTagForTransaction(result.transaction);
+  const resolvedImpactJson = resolveReleaseImpactInput({
+    cwd,
+    impactJson,
+    version: publishedVersion,
+  });
   const selfKfd = buildchainSelfKfd
     ? generateBuildchainSelfKfdInputs({
         cwd,
@@ -2093,7 +2121,7 @@ async function collectAndPersistReleasePassport({
       : "",
     transactionJson: JSON.stringify(transactionJson),
     anchorManifestJson: anchorManifestPath && fs.existsSync(anchorManifestPath) ? anchorManifestPath : "",
-    impactJson,
+    impactJson: resolvedImpactJson,
     kfd1WitnessJsons: resolvedKfd1WitnessJsons,
     kfd2ClaimJsons: resolvedKfd2ClaimJsons,
     kfd3PrebuildWitnessJsons: resolvedKfd3PrebuildWitnessJsons,
@@ -5143,5 +5171,6 @@ export {
   selectReleaseTag,
   stripTagPrefix,
   updateVersionStateContents,
+  resolveReleaseImpactInput,
   validatePromotionReleaseCandidate,
 };

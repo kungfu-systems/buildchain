@@ -364,6 +364,9 @@ function mergeAuthoritativeImpactBase(impact, basePassport = undefined) {
     return impact;
   }
   const merged = { ...impact };
+  if (optionalString(impact?.release?.version)) {
+    return merged;
+  }
   if (basePassport.versionImpact && typeof basePassport.versionImpact === "object" && !Array.isArray(basePassport.versionImpact)) {
     merged.versionImpact = {
       ...(impact.versionImpact && typeof impact.versionImpact === "object" && !Array.isArray(impact.versionImpact) ? impact.versionImpact : {}),

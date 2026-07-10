@@ -17,6 +17,23 @@ function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
 
+function sourceRepositoryMetadata(sourcePackage) {
+  const repository = sourcePackage.repository;
+  if (typeof repository === "string") {
+    return repository.trim() || undefined;
+  }
+  if (
+    repository &&
+    typeof repository === "object" &&
+    !Array.isArray(repository) &&
+    typeof repository.url === "string" &&
+    repository.url.trim()
+  ) {
+    return { ...repository, url: repository.url.trim() };
+  }
+  return undefined;
+}
+
 function copyFilePreservingPath({ cwd, outputDir, relPath, copied }) {
   const source = path.resolve(cwd, relPath);
   if (!fs.existsSync(source) || !fs.statSync(source).isFile()) {
@@ -142,12 +159,19 @@ export function preparePublicationNpmPackage({
   const sourcePackage = fs.existsSync(path.join(resolvedCwd, "package.json"))
     ? readJson(path.join(resolvedCwd, "package.json"))
     : {};
+  const repository = sourceRepositoryMetadata(sourcePackage);
+  if (facts.package.auth === "trusted-publishing" && !repository) {
+    throw new Error(
+      "publication npm package with trusted-publishing requires source package.json repository metadata",
+    );
+  }
   const packageJson = {
     name: facts.package.name,
     version: facts.package.version,
     private: false,
     description: `${facts.publication.title} publication artifact package.`,
     license: sourcePackage.license || "UNLICENSED",
+    repository,
     type: "module",
     files: [
       ".buildchain/publication/",

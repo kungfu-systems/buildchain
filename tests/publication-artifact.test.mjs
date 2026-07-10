@@ -11,7 +11,10 @@ import {
   collectPublicationArtifact,
   writePublicationArtifact,
 } from "../packages/core/publication-artifact.js";
-import { PUBLICATION_NPM_PACKAGE_CONTRACT } from "../packages/core/publication-package.js";
+import {
+  PUBLICATION_NPM_PACKAGE_CONTRACT,
+  preparePublicationNpmPackage,
+} from "../packages/core/publication-package.js";
 
 const root = path.resolve(import.meta.dirname, "..");
 const fixture = path.join(root, "fixtures", "publication-artifact-shaped");
@@ -144,6 +147,10 @@ auth = "trusted-publishing"
   assert.equal(packageJson.name, "@kungfu-tech/paper-observer-declared-timelines");
   assert.equal(packageJson.version, "0.1.0");
   assert.equal(packageJson.private, false);
+  assert.deepEqual(packageJson.repository, {
+    type: "git",
+    url: "git+https://github.com/kungfu-systems/paper-observer-declared-timelines.git",
+  });
   assert.equal(packageJson.exports["./publication-artifact.json"], "./.buildchain/publication/publication-artifact.json");
   assert.equal(fs.existsSync(path.join(packageDir, "_build/main.pdf")), true);
   assert.equal(fs.existsSync(path.join(packageDir, ".buildchain/publication/publication-artifact.json")), true);
@@ -151,6 +158,33 @@ auth = "trusted-publishing"
   assert.equal(fs.existsSync(path.join(packageDir, ".buildchain/publication/publication-registry.json")), true);
   assert.equal(fs.existsSync(path.join(packageDir, ".buildchain/publication/source.tar.gz")), true);
   assert.equal(fs.existsSync(path.join(packageDir, "buildchain-publication-package.json")), true);
+});
+
+test("trusted publication package requires repository metadata for provenance", () => {
+  const cwd = tempRepo();
+  const configPath = path.join(cwd, ".buildchain", "buildchain.toml");
+  fs.writeFileSync(
+    configPath,
+    `${fs.readFileSync(configPath, "utf8")}
+
+[publish]
+kind = "npm-paper-package"
+package = "@kungfu-tech/paper-observer-declared-timelines"
+auth = "trusted-publishing"
+`,
+  );
+  fs.rmSync(path.join(cwd, "package.json"));
+  execFileSync("make", ["pdf"], { cwd });
+  writePublicationArtifact({
+    cwd,
+    sourceSha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    generatedAt: "2026-07-09T00:00:00.000Z",
+  });
+
+  assert.throws(
+    () => preparePublicationNpmPackage({ cwd }),
+    /trusted-publishing requires source package\.json repository metadata/,
+  );
 });
 
 test("publication archive registry is idempotent for the same immutable record", () => {
