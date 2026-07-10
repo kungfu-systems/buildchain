@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-impact",
+  "release": {
+    "tag": "v2.11.14-alpha.1",
+    "line": "v2.11",
+    "version": "2.11.14-alpha.1"
+  },
+  "versionImpact": {
+    "final": "patch",
+    "source": "buildchain-version-state",
+    "rationale": "Stable promotion now requires an exact alpha, named internal and consumer canaries, a soak interval, a stable cooldown, and a product or contract diff; alpha and train iteration remain unthrottled."
+  },
+  "surfaceImpacts": [
+    {
+      "id": "stable-release-canary-gate",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Buildchain stable promotion fails closed until the exact alpha has fresh release-candidate and site-libkungfu-dev canary evidence, has soaked for one hour, is at least 24 hours after the prior stable, and contains a product or contract path change.",
+      "source": "scripts/stable-release-gate.mjs"
+    }
+  ],
+  "classification": "patch",
+  "breaking": false,
+  "security": false,
+  "migrationRequired": false,
+  "summary": "Buildchain v2.11 adds an auditable stable-release throttle and exact-alpha canary gate without slowing alpha or train iteration."
+}
