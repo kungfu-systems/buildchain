@@ -110,6 +110,7 @@ async function resolveCanaryEvidence({
   api,
   repository,
   policy,
+  candidateTag,
   candidateSha,
   releaseCandidateRunId,
   releaseCandidateRunUrl,
@@ -155,13 +156,20 @@ async function resolveCanaryEvidence({
       canary.workflow === targetRunEvidence?.name ||
       canary.workflow === targetRunEvidence?.path?.split("/").pop();
     const repositoryMatches = !canary.repository || targetRun?.repository === canary.repository;
+    const runtimeRef = String(
+      targetRunEvidence?.inputs?.buildchain_ref ||
+      targetRunEvidence?.inputs?.buildchainRef ||
+      "",
+    ).trim();
+    const runtimeRefMatches = runtimeRef === candidateTag;
     evidence.push({
       id: canary.id,
       status:
         status?.state === "success" &&
         targetRunEvidence?.conclusion === "success" &&
         workflowMatches &&
-        repositoryMatches
+        repositoryMatches &&
+        runtimeRefMatches
           ? "success"
           : status?.state || "missing",
       candidateSha,
@@ -170,6 +178,7 @@ async function resolveCanaryEvidence({
       repository: targetRun?.repository || canary.repository,
       workflow: targetRunEvidence?.name || targetRunEvidence?.path || "",
       attestor: status?.creator?.login || "",
+      runtimeRef,
     });
   }
   return evidence;
@@ -214,6 +223,7 @@ export async function collectStableReleaseGateReport({
     api,
     repository,
     policy,
+    candidateTag: candidate.tag,
     candidateSha,
     releaseCandidateRunId,
     releaseCandidateRunUrl,

@@ -214,6 +214,7 @@ export function evaluateStableReleaseGate({
         context: required.context,
         repository: string(evidence?.repository || required.repository),
         workflow: string(evidence?.workflow || required.workflow),
+        runtimeRef: string(evidence?.runtimeRef),
         candidateSha: string(evidence?.candidateSha),
         completedAt: completedAt?.iso || "",
         evidenceUrl: string(evidence?.evidenceUrl),

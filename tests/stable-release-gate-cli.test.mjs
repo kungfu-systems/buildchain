@@ -93,6 +93,7 @@ test("stable gate collector binds the exact alpha to internal and consumer canar
         conclusion: "success",
         name: "Buildchain Stable Canary",
         updated_at: "2026-07-10T02:20:00Z",
+        inputs: { buildchain_ref: "v2.11.14-alpha.0" },
       });
     }
     throw new Error(`unexpected request: ${requestPath}`);
@@ -112,6 +113,10 @@ test("stable gate collector binds the exact alpha to internal and consumer canar
   assert.equal(report.ok, true);
   assert.equal(report.candidate.sha, ALPHA_SHA);
   assert.deepEqual(report.policy.requiredCanaries, ["build-surface-fixture", "site-libkungfu-dev"]);
+  assert.equal(
+    report.checks.find((entry) => entry.id === "stable.canary.site-libkungfu-dev")?.details.runtimeRef,
+    "v2.11.14-alpha.0",
+  );
   assert.ok(requests.some((entry) => entry.includes("site-libkungfu-dev/actions/runs/202")));
 });
 
