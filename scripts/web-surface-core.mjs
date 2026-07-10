@@ -1340,7 +1340,7 @@ function managedNetworkHealthEvidence({ target, result, plan }) {
   const missingFields = [];
   if (!target.manifestKey) missingFields.push("manifestKey");
   if (!target.bucket) missingFields.push("bucket");
-  if (!target.objectPrefix) missingFields.push("objectPrefix");
+  if (target.objectPrefix === undefined || target.objectPrefix === null) missingFields.push("objectPrefix");
   return {
     source: operationSource,
     actions: [...presentActions].sort(),
