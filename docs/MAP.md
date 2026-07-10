@@ -82,7 +82,7 @@ replace them.
 | How do I collect and verify module/product build facts from Git source, version files, and outputs? | [`build-facts.md`](build-facts.md) + [`cli.md`](cli.md) | use/verify | stable |
 | How do I publish or verify release passport artifacts? | [`release-passport.md`](release-passport.md) | use | stable |
 | How do I gate release artifacts with KFD-1 contract-world witnesses? | [`release-passport.md`](release-passport.md#kfd-1-contract-world-release-gate) | verify/use | stable |
-| How do I audit public KFD-2 release trust claims? | [`release-passport.md`](release-passport.md#kfd-2-release-trust-passport-audit) + [`cli.md`](cli.md) | verify/use | stable |
+| How do I declare, render, and audit product KFD-2 release trust claims? | [`kfd-support.md`](kfd-support.md#kfd-2) + [`release-passport.md`](release-passport.md#kfd-2-release-trust-passport-audit) + [`cli.md`](cli.md) | verify/use | stable |
 | How do I gate KFD-3 collaboration-interface releases? | [`release-passport.md`](release-passport.md#kfd-3-collaboration-interface-release-gate) + [`cli.md`](cli.md) | verify/use | stable |
 | How do I detect, register, audit, witness, or query KFD-3 product surfaces? | [`kfd-support.md`](kfd-support.md) + [`cli.md`](cli.md) | verify/use | stable |
 | How do I keep `@v2` floating refs while detecting Buildchain contract drift? | [`reusable-build-surface.md`](reusable-build-surface.md#floating-ref-contract-lock) | verify/use | stable |

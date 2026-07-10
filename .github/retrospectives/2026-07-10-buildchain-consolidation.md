@@ -201,6 +201,75 @@ The first follow-up should stay deliberately narrow:
 Do not combine this slice with module reorganization, dependency cleanup, or
 remote branch deletion. Those are separate reviewable changes.
 
+## Execution Update — Stages 1–3 And Issue Closure
+
+The recommended P0 implementation slice was completed on 2026-07-10. This
+section records the resulting public evidence so a later maintainer does not
+repeat the same work.
+
+### Stage 1: version-bound release evidence
+
+Release impact now comes from `.buildchain/release-impact.json`, participates in
+version state, and is verified against the target version and minor line before
+publication. Ref Promotion and Binary Distribution consume the same durable
+record instead of overwriting each other with workflow defaults. The delivery
+spanned PRs #1001, #1007, #1013, #1017, #1020, and #1022. Public alpha
+`v2.11.11-alpha.2` and its promotion/Binary Distribution runs proved the final
+asset agreement.
+
+### Stage 2: promotion serialization and deduplication
+
+PR #1030 added the global non-canceling queue, early target ancestry
+revalidation, and a governed superseded no-op at the mutation boundary. Public
+alpha `v2.11.13-alpha.1` was the effective mutation. Run 29072416507 attempt 2
+replayed the old intent and stopped after preflight without moving refs or
+opening a new friction issue. Historical issue #1024 was closed with this
+evidence; its original late failure was not treated as justification to widen
+the version-state recovery allowlist.
+
+### Stage 3: generated trigger canonicalization
+
+PR #1033 made unchanged JSON/TOML versions semantic no-ops and replaced TOML
+reserialization with a parser-verified lossless edit. This removed formatter-only
+paper preparation commits while keeping substantive version changes and strict
+source identity checks. PR #1034 published `v2.11.13-alpha.2`; the generated-head
+follow-up promotion was skipped, and issue #1029 was closed.
+
+### Open issue audit and newly discovered archive defect
+
+PR #1035 completed the paper publication evidence contract: only
+`.buildchain/contract-drift/` and `.buildchain/publication-result.json` are
+accepted as Buildchain-owned untracked ephemeral evidence, and protected release
+authority is checked before expensive paper build work. Issues #1009, #1011,
+#1012, #1015, #1024, and duplicate feedback #1032 were then closed with links to
+their fixing PRs and successful runs.
+
+The audit also surfaced issue #1036: the web-surface adapter applied
+`sync --delete` across the site root and could remove historical publication
+versions absent from the current package set. PR #1037 now consumes the existing
+publication archive policy from each surface manifest, propagates immutable
+delete exclusions to owning and parent surface syncs, verifies existing S3
+object digests, uploads missing objects with `--no-overwrite`, verifies again,
+and records apply/health evidence. A deploy-plan-only build of the current
+`site-libkungfu-dev` artifact identified 3 declared version prefixes and 15
+immutable files, with `papers/archive/*` excluded from the parent hub sync and
+`archive/*` excluded from the papers sync. No AWS apply was used for that
+validation.
+
+PR #1038 published `v2.11.13-alpha.3@fee1c64e`. Ref Promotion run 29079959309
+and Binary Distribution run 29080058370 completed; npm `alpha` points to
+`2.11.13-alpha.3`, npm `latest` remains `2.11.12`, and the public impact asset
+names `web-surface-immutable-publication-archive`. At this update, the repository
+has no open GitHub issues.
+
+### Remaining work
+
+This closure does not approve a stable-release cadence, ref retention policy,
+module decomposition, dependency cleanup, or a live repair of already missing
+consumer archive objects. Those remain separate, reviewable tasks. Any repair of
+published S3 state must start with an exact dry-run, digest comparison, impact,
+and rollback plan.
+
 ## Handoff Procedure
 
 1. Fetch `origin` and confirm the current default `dev/*` line.

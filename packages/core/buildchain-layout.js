@@ -14,6 +14,7 @@ export const BUILDCHAIN_KFD4_DIR = ".buildchain/kfd/kfd-4";
 export const BUILDCHAIN_KFD1_CONTRACT_WORLD_WITNESS_PATH = ".buildchain/kfd/kfd-1/contract-world.witness.json";
 export const BUILDCHAIN_KFD1_RELEASE_GATE_PATH = ".buildchain/kfd/kfd-1/release-gate.json";
 export const BUILDCHAIN_KFD1_VERIFY_RESULT_PATH = ".buildchain/kfd/kfd-1/verify-result.json";
+export const BUILDCHAIN_KFD2_REGISTRY_PATH = ".buildchain/kfd/kfd-2/registry.json";
 export const BUILDCHAIN_KFD2_RELEASE_CLAIMS_PATH = ".buildchain/kfd/kfd-2/release-claims.json";
 export const BUILDCHAIN_KFD2_CLAIM_ARGS_PATH = ".buildchain/kfd/kfd-2/buildchain-claim-args.txt";
 export const BUILDCHAIN_KFD2_CLAIMS_DIR = ".buildchain/kfd/kfd-2/claims";
@@ -75,6 +76,10 @@ export function resolveBuildchainContractLockPath(cwd = process.cwd()) {
   ]);
 }
 
+export function resolveKfd2ProductClaimsRegistryPath(cwd = process.cwd()) {
+  return firstExistingRepoPath(cwd, [BUILDCHAIN_KFD2_REGISTRY_PATH]);
+}
+
 export function resolveKfd3SurfaceRegistryPath(cwd = process.cwd()) {
   return firstExistingRepoPath(cwd, [
     BUILDCHAIN_KFD3_SURFACE_REGISTRY_PATH,
@@ -129,6 +134,12 @@ export function discoverBuildchainRepoFiles(cwd = process.cwd()) {
       canonical: BUILDCHAIN_KFD1_VERIFY_RESULT_PATH,
       legacy: [".buildchain/kfd-1/verify-result.json"],
       tracked: false,
+    },
+    {
+      kind: "kfd-2-product-claims-registry",
+      canonical: BUILDCHAIN_KFD2_REGISTRY_PATH,
+      legacy: [],
+      tracked: true,
     },
     {
       kind: "kfd-2-release-claims",
