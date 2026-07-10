@@ -455,7 +455,7 @@ jobs:
 
           const resultPath = path.join(process.env.GITHUB_WORKSPACE, ".buildchain/paper-release/package-result.json");
           const result = JSON.parse(fs.readFileSync(resultPath, "utf8"));
-          const packageDir = path.resolve(process.cwd(), result.packageDir);
+          const packageDir = path.resolve(process.cwd(), result.outputDir);
           const pack = spawnSync("npm", ["pack", "--dry-run", "--json", "--registry=https://registry.npmjs.org/"], {
             cwd: packageDir,
             encoding: "utf8",
@@ -506,7 +506,7 @@ jobs:
             const marker = `EOF_${name}_${Date.now()}`;
             fs.appendFileSync(output, `${name}<<${marker}\n${JSON.stringify(value)}\n${marker}\n`);
           };
-          write("package-dir", result.packageDir);
+          write("package-dir", result.outputDir);
           write("package-name", result.package.name);
           write("package-version", result.package.version);
           write("dist-tag", distTag);

@@ -1,0 +1,232 @@
+---
+status: draft
+period: 2026-07-10
+theme: buildchain-consolidation
+doc_type: engineering-retrospective
+source_level: live-system-check
+confidence: high
+sensitivity: public
+evidence_grade: A
+review_state: unreviewed
+last_reviewed: 2026-07-10
+---
+
+# Buildchain Consolidation Retrospective — 2026-07-10
+
+This record captures a time-bounded engineering review of Buildchain after a
+period of rapid v2 capability growth. It is a handoff document, not a release
+policy by itself. Future changes must still follow the current contribution,
+release-governance, and compatibility rules.
+
+## Baseline
+
+The review used the following baseline:
+
+- repository: `kungfu-systems/buildchain`;
+- default branch: `dev/v2/v2.11`;
+- reviewed commit: `7e95cb12827ef38d802a6adb2e25ae2ae9f2bf1b`;
+- latest stable release at review time: `v2.11.9`;
+- local branch and `origin/dev/v2/v2.11` were equal at the reviewed commit;
+- the latest sampled `Verify`, Binary Distribution, Build Surface Fixture, and
+  Release Verify runs were successful.
+
+The repository is functionally active and well tested in CI. The main risk is
+now consolidation debt: release evidence precision, release-transaction
+amplification, maintainability of large implementation surfaces, and lifecycle
+governance for an expanding public contract.
+
+## Evidence Snapshot
+
+These are observed facts, not estimates:
+
+- From 2026-07-03 through the review snapshot, GitHub exposed 189 Buildchain
+  releases: 113 stable releases and 76 prereleases.
+- The merged pull request query reached its 500-result limit for the same
+  period. In that sample, 443 titles matched promotion, release, version-state,
+  preparation, or state-synchronization work.
+- The generated public registries exposed 74 CLI command entries, 23 Node API
+  exports, 37 workflow entries, and 4 active actions.
+- The largest hand-maintained implementation and test surfaces included:
+  - `tests/promote-buildchain-ref.test.mjs`: 7,390 lines;
+  - `actions/promote-buildchain-ref/lib.js`: 5,147 lines;
+  - `scripts/web-surface-core.mjs`: 2,011 lines;
+  - `packages/core/release-passport.js`: 1,974 lines;
+  - `bin/buildchain.mjs`: 1,865 lines;
+  - `.github/workflows/.web-surface.yml`: 1,516 lines;
+  - `.github/workflows/.build.yml`: 1,480 lines.
+- Remote refs included 256 durable `buildchain/release-state/*` refs and 123
+  `buildchain/version-state/*` refs. Durable release-state refs are audit
+  records and are not cleanup candidates merely because they are numerous.
+
+## P0 Findings
+
+### 1. Release impact evidence is not derived from the release
+
+At the reviewed commit,
+`.github/workflows/buildchain-ref-promotion.yml` passed a static
+`release-passport-impact-json` payload that still described a Buildchain v2.10
+patch release. The public `v2.11.9/impact.json` consequently described v2.10
+changes, reported an `unknown` classification, and supplied no release impact
+summary.
+
+This is a correctness failure in Buildchain's primary trust product. Release
+impact must be an input or output of the release candidate/version-state
+transaction, not a long-lived literal in workflow YAML.
+
+Acceptance criteria:
+
+1. The impact record is generated from a version-bound source carried by the
+   release candidate or version-state commit.
+2. Stable promotion fails before publication when the impact version does not
+   match the target version, the classification is unknown, or the summary is
+   missing.
+3. Tests prove that a prior minor line's impact cannot be reused by the current
+   release line.
+4. The next stable release publishes an impact record whose version, summary,
+   and surface changes match that release.
+
+### 2. Promotion transactions are not serialized
+
+The promotion workflow had no top-level concurrency group. Recent failed runs
+included non-fast-forward ref updates while multiple promotion transactions
+were moving release state. A separate failure reached version verification
+before discovering that `dist/site/publication-registry.json` changed outside
+the accepted version-state set.
+
+Relevant failed runs at review time:
+
+- <https://github.com/kungfu-systems/buildchain/actions/runs/29060772647>
+- <https://github.com/kungfu-systems/buildchain/actions/runs/29059315116>
+- <https://github.com/kungfu-systems/buildchain/actions/runs/29029391212>
+
+Acceptance criteria:
+
+1. Promotion transactions are queued with `cancel-in-progress: false`, initially
+   globally or by a proven release-line key.
+2. A queued transaction revalidates its source and target heads immediately
+   before writing refs.
+3. A transaction superseded by a newer compatible promotion exits as an
+   auditable no-op instead of failing late.
+4. All version-derived generated outputs are checked before the expensive
+   release-candidate and publish stages.
+5. Concurrency tests reproduce two same-line promotions and prove that no
+   non-fast-forward update reaches the publication boundary.
+
+### 3. Stable release throughput amplifies small changes
+
+Buildchain already has train and alpha mechanisms for fast validation. The
+observed stable release and promotion-PR volume indicates that stable publication
+is also being used as a high-frequency debugging loop. That makes exact release
+review harder and creates repeated state, tag, evidence, and branch work for
+small changes.
+
+Proposed direction, pending a maintainer policy decision:
+
+- keep train and alpha fast;
+- require named consumer canaries and a soak interval before stable promotion;
+- batch compatible fixes into one stable patch window;
+- prevent a stable release when no new product or contract diff exists;
+- report product PRs, generated promotion PRs, retries, and stable releases as
+  separate operational metrics.
+
+## P1 Consolidation
+
+### Internal module boundaries
+
+Split large files without changing the public package, CLI, workflow, or action
+contracts first:
+
+- promotion policy and parsing;
+- GitHub ref/check/PR adapters;
+- version-state planning and verification;
+- durable publish transactions;
+- release passport and impact evidence;
+- CLI handlers grouped by release, KFD, facts, diagnostics, and web surfaces.
+
+Long reusable workflow files should retain their public inputs and outputs while
+moving procedural logic into versioned JavaScript modules with unit tests.
+
+### Public surface lifecycle
+
+The registries already enumerate public capabilities. Extend that fact source
+with ownership and lifecycle metadata:
+
+- owner;
+- maturity;
+- introduced version;
+- compatibility promise;
+- deprecated version and replacement;
+- sunset condition.
+
+New public commands, workflows, actions, or package exports should identify an
+existing capability group and justify why the existing surface cannot carry the
+new behavior.
+
+### Documentation and dependency hygiene
+
+The review found version-specific examples that still name older v2.2/v2.3
+lines and an action inventory that omitted `report-buildchain-issue`. Replace
+current-line literals with placeholders or generated facts when the number is
+not semantically part of the example. Derive public action/workflow inventories
+from the existing machine-readable registry and test the corresponding docs.
+
+The root package also declared `vitest`, `prettier`, and `@types/node` without
+tracked configuration or source usage. Either make formatting/static checking
+part of the done-check for hand-maintained sources or remove unused dependencies.
+
+## P2 Repository Hygiene
+
+Repository cleanup must classify refs before deletion:
+
+- retain immutable exact tags and durable `buildchain/release-state/*` audit
+  refs;
+- retain protected dev/alpha/release channels;
+- retain train refs only for their documented validation and rollback window;
+- identify merged or closed `buildchain/version-state/*` and ordinary working
+  branches, then delete them only after ancestry and open-PR checks;
+- publish the retention rule through Buildchain patrol rather than relying on
+  manual cleanup.
+
+## Recommended First Implementation Slice
+
+The first follow-up should stay deliberately narrow:
+
+1. replace the static impact payload with a version-bound impact source;
+2. add promotion serialization and stale-transaction no-op behavior;
+3. move generated-output drift checks ahead of expensive promotion work;
+4. add regression tests for all three behaviors;
+5. publish one corrected alpha and one corrected stable release, then verify the
+   public evidence assets.
+
+Do not combine this slice with module reorganization, dependency cleanup, or
+remote branch deletion. Those are separate reviewable changes.
+
+## Handoff Procedure
+
+1. Fetch `origin` and confirm the current default `dev/*` line.
+2. Create a feature or fix branch targeting that protected dev line.
+3. Read this record together with `CONTRIBUTING.md`, `docs/MAP.md`,
+   `docs/release-governance.md`, `docs/release-flow.md`, and
+   `docs/release-passport.md`.
+4. Install the pinned workspace dependencies and run `pnpm run check` before
+   and after the implementation.
+5. Use train/alpha validation before moving the stable `v2` trust surface.
+6. Preserve durable evidence refs and exact tags; cleanup work requires a
+   separate retention proof.
+
+## Source Boundary And Open Questions
+
+This review used repository files, Git history and refs, public GitHub releases,
+pull requests, issues, and Actions run metadata available on 2026-07-10. It did
+not inspect provider credentials, private logs, billing data, or unpublished
+consumer repositories.
+
+Open questions for the next maintainer decision:
+
+- What is the minimum canary set and soak time for a stable Buildchain release?
+- Should promotion serialization be global first, or keyed by release line from
+  the first implementation?
+- Which version-state and train refs remain required for rollback, and for how
+  long?
+- What size or change-frequency threshold should trigger mandatory internal
+  module extraction?

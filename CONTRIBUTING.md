@@ -30,8 +30,11 @@ repository itself is a Node/pnpm workspace.
 
 - `.github/workflows` - repository checks, reusable workflows, and Buildchain
   self-promotion.
+- `.github/retrospectives` - time-bounded engineering reviews and maintenance
+  handoff records. Start with the latest record before broad consolidation work.
 - `actions` - the active GitHub Actions surface:
-  `validate-config`, `run-lifecycle`, and `promote-buildchain-ref`.
+  `validate-config`, `run-lifecycle`, `promote-buildchain-ref`, and
+  `report-buildchain-issue`.
 - `bin` - the published `buildchain` command-line entrypoint.
 - `docs` - release governance, lifecycle, reusable workflow, web-surface, and
   CLI documentation.
@@ -42,6 +45,9 @@ repository itself is a Node/pnpm workspace.
 
 Standalone historical `action-*` repositories are not mirrored here as active
 actions. See [`docs/migration-inventory.md`](docs/migration-inventory.md).
+
+The current consolidation handoff is
+[`2026-07-10-buildchain-consolidation.md`](.github/retrospectives/2026-07-10-buildchain-consolidation.md).
 
 ## Build and verification
 

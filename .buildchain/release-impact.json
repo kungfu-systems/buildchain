@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-impact",
+  "release": {
+    "version": "2.11.10-alpha.2",
+    "line": "v2.11"
+  },
+  "versionImpact": {
+    "final": "patch",
+    "source": "buildchain-version-state",
+    "rationale": "Buildchain self-promotion now binds release impact evidence to the active version state and release line."
+  },
+  "surfaceImpacts": [
+    {
+      "id": "release-impact-version-binding",
+      "impact": "patch",
+      "class": "release-evidence",
+      "rationale": "Self-release impact evidence is loaded from a version-state-managed file and fails verification when its version or release line is stale.",
+      "source": ".buildchain/release-impact.json"
+    }
+  ],
+  "classification": "patch",
+  "breaking": false,
+  "security": false,
+  "migrationRequired": false,
+  "summary": "Buildchain v2.11 self-release impact evidence is version-bound and fails closed on cross-line drift."
+}
