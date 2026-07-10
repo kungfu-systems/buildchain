@@ -2337,6 +2337,19 @@ async function getMajorGateSource({
   };
 }
 
+function protectedStatusCheckNames(protection = {}) {
+  const checks = protection.required_status_checks;
+  return [...new Set([...(checks?.contexts || []), ...((checks?.checks || []).map((check) => check.context || check.app_id) || [])].map(String))];
+}
+
+export function resolveProtectedStatusCheckContext({ protection = {}, requiredStatusCheck = "check" } = {}) {
+  const declared = String(requiredStatusCheck || "").trim();
+  const checkNames = protectedStatusCheckNames(protection);
+  if (checkNames.includes(declared)) return declared;
+  const emittedCandidates = [...new Set(checkNames.filter((name) => name === `${declared} / ${declared}` || name.startsWith(`${declared} / `)))];
+  return emittedCandidates.length === 1 ? emittedCandidates[0] : declared;
+}
+
 async function assertProtectedChannel({
   octokit,
   owner,
@@ -2380,18 +2393,17 @@ async function assertProtectedChannel({
   if (!checks?.strict) {
     missing.push("must require strict status checks");
   }
-  const checkNames = [
-    ...(checks.contexts || []),
-    ...((checks.checks || []).map((check) => check.context || check.app_id) || []),
-  ].map(String);
-  if (!checkNames.some((name) => name.includes(requiredStatusCheck))) {
-    missing.push(`must require a ${requiredStatusCheck} status check`);
+  const checkNames = protectedStatusCheckNames(protection);
+  const resolvedStatusCheck = resolveProtectedStatusCheckContext({ protection, requiredStatusCheck });
+  if (!checkNames.includes(resolvedStatusCheck)) {
+    missing.push(`must require a ${requiredStatusCheck} status check using the exact context`);
   }
   if (missing.length > 0) {
     throw new Error(
       `Protected channel ${targetRef} is missing required protection settings: ${missing.join("; ")}`,
     );
   }
+  return resolvedStatusCheck;
 }
 
 function isManagedChannelBranch(ref) {
@@ -2494,7 +2506,29 @@ async function ensureManagedChannelBranchProtection({
     return;
   }
   if (typeof octokit.rest.repos?.updateBranchProtection !== "function") {
-    return;
+    return undefined;
+  }
+  let currentProtection;
+  if (typeof octokit.rest.repos?.getBranchProtection === "function") {
+    try {
+      ({ data: currentProtection } = await octokit.rest.repos.getBranchProtection({ owner, repo, branch }));
+    } catch (error) {
+      if (!notFound(error)) throw error;
+    }
+  }
+  const resolvedStatusCheck = currentProtection
+    ? resolveProtectedStatusCheckContext({ protection: currentProtection, requiredStatusCheck })
+    : requiredStatusCheck;
+  const preservedChecks = (currentProtection?.required_status_checks?.checks || [])
+    .filter((check) => check?.context)
+    .map((check) => ({ context: check.context, app_id: check.app_id ?? GITHUB_ACTIONS_APP_ID }));
+  for (const context of currentProtection?.required_status_checks?.contexts || []) {
+    if (!preservedChecks.some((check) => check.context === context)) {
+      preservedChecks.push({ context, app_id: GITHUB_ACTIONS_APP_ID });
+    }
+  }
+  if (!preservedChecks.some((check) => check.context === resolvedStatusCheck)) {
+    preservedChecks.push({ context: resolvedStatusCheck, app_id: GITHUB_ACTIONS_APP_ID });
   }
   const configuredBypassAllowances = branchProtectionBypassAllowances({
     apps: branchProtectionBypassApps,
@@ -2513,7 +2547,7 @@ async function ensureManagedChannelBranchProtection({
       branch,
       required_status_checks: {
         strict: true,
-        checks: [{ context: requiredStatusCheck, app_id: GITHUB_ACTIONS_APP_ID }],
+        checks: preservedChecks,
       },
       enforce_admins: true,
       required_pull_request_reviews: {
@@ -2535,6 +2569,18 @@ async function ensureManagedChannelBranchProtection({
       allow_fork_syncing: false,
     }),
   );
+  return {
+    action: "branch-protection-policy",
+    ref: branch,
+    policySource: "release-governance-required-status-check",
+    before: currentProtection ? {
+      requiredStatusChecks: protectedStatusCheckNames(currentProtection),
+      strict: currentProtection.required_status_checks?.strict === true,
+      enforceAdmins: currentProtection.enforce_admins?.enabled === true,
+      requiredApprovals: Number(currentProtection.required_pull_request_reviews?.required_approving_review_count || 0),
+    } : null,
+    after: { requiredStatusChecks: preservedChecks.map((check) => check.context), strict: true, enforceAdmins: true, requiredApprovals: 1 },
+  };
 }
 
 function latestAlphaForPatch(refs, releasePrefix, patch) {
@@ -3387,16 +3433,11 @@ async function promoteBuildchainRefs({
       updates.push({ ref: branch, action: "dry-run", sha: branchSha });
       return { updated: true };
     }
-    const ensureChannelProtection = () => ensureManagedChannelBranchProtection({
-      octokit,
-      owner,
-      repo,
-      branch,
-      requiredStatusCheck,
-      branchProtectionBypassApps,
-      branchProtectionBypassUsers,
-      branchProtectionBypassTeams,
-    });
+    const ensureChannelProtection = async () => {
+      const policyEvidence = await ensureManagedChannelBranchProtection({ octokit, owner, repo, branch, requiredStatusCheck, branchProtectionBypassApps, branchProtectionBypassUsers, branchProtectionBypassTeams });
+      if (policyEvidence) updates.push(policyEvidence);
+      return policyEvidence;
+    };
     const currentSha = await readRefSha(`heads/${branch}`);
     if (currentSha) {
       await ensureChannelProtection();
@@ -4460,7 +4501,7 @@ async function promoteBuildchainRefs({
   };
 
   if (requireGovernance && !dryRun) {
-    await assertProtectedChannel({
+    requiredStatusCheck = await assertProtectedChannel({
       octokit,
       owner,
       repo,

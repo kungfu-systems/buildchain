@@ -15,10 +15,47 @@ import {
   PUBLICATION_NPM_PACKAGE_CONTRACT,
   preparePublicationNpmPackage,
 } from "../packages/core/publication-package.js";
+import {
+  compareSemver,
+  hydratePublishedPublicationRegistry,
+} from "../scripts/publication-registry-hydrate.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const fixture = path.join(root, "fixtures", "publication-artifact-shaped");
 const bin = path.join(root, "bin", "buildchain.mjs");
+
+test("publication registry hydration orders prior semver versions", () => {
+  const versions = ["0.2.0-alpha.1", "0.1.0", "0.1.0-alpha.10", "0.1.0-alpha.2"];
+  assert.deepEqual(versions.sort(compareSemver), ["0.1.0-alpha.2", "0.1.0-alpha.10", "0.1.0", "0.2.0-alpha.1"]);
+});
+
+test("publication registry hydration records npm integrity and extracts only registry entries", () => {
+  const cwd = tempRepo();
+  const configPath = path.join(cwd, ".buildchain", "buildchain.toml");
+  fs.writeFileSync(
+    configPath,
+    `${fs.readFileSync(configPath, "utf8").replace('version = "0.1.0"', 'version = "0.1.0-alpha.3"')}\n[publish]\npackage = "@kungfu-tech/paper-observer-declared-timelines"\n`,
+  );
+  const calls = [];
+  const result = hydratePublishedPublicationRegistry({
+    cwd,
+    commandRunner(command, args) {
+      calls.push([command, ...args]);
+      if (command === "npm" && args[0] === "view") return '["0.1.0-alpha.1","0.1.0-alpha.2","0.1.0-alpha.3"]';
+      if (command === "npm" && args[0] === "pack") {
+        const version = args[1].split("@").at(-1);
+        return JSON.stringify([{ filename: `${version}.tgz`, integrity: `sha512-${version}` }]);
+      }
+      if (command === "tar" && args[0] === "-tzf") return "package/.buildchain/publication/publication-registry.json";
+      if (command === "tar" && args[0] === "-xOzf") return '{"contract":"fixture"}';
+      throw new Error(`unexpected command: ${command} ${args.join(" ")}`);
+    },
+  });
+  assert.equal(result.status, "hydrated");
+  assert.deepEqual(result.sources.map((source) => source.integrity), ["sha512-0.1.0-alpha.1", "sha512-0.1.0-alpha.2"]);
+  assert.equal(calls.some((call) => call[0] === "tar" && call[1] === "-xzf"), false);
+  assert.equal(fs.existsSync(path.join(cwd, result.inputDir, "0.1.0-alpha.1.json")), true);
+});
 
 function tempRepo() {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-publication-"));
@@ -127,6 +164,10 @@ auth = "trusted-publishing"
     sourceSha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     generatedAt: "2026-07-09T00:00:00.000Z",
   });
+  fs.writeFileSync(
+    path.join(cwd, ".buildchain", "publication", "registry-hydration.json"),
+    `${JSON.stringify({ contract: "kungfu-buildchain-publication-registry-hydration", status: "hydrated" }, null, 2)}\n`,
+  );
 
   const result = JSON.parse(execFileSync(process.execPath, [
     bin,
@@ -156,6 +197,7 @@ auth = "trusted-publishing"
   assert.equal(fs.existsSync(path.join(packageDir, ".buildchain/publication/publication-artifact.json")), true);
   assert.equal(fs.existsSync(path.join(packageDir, ".buildchain/publication/publication-artifact-passport.json")), true);
   assert.equal(fs.existsSync(path.join(packageDir, ".buildchain/publication/publication-registry.json")), true);
+  assert.equal(fs.existsSync(path.join(packageDir, ".buildchain/publication/registry-hydration.json")), true);
   assert.equal(fs.existsSync(path.join(packageDir, ".buildchain/publication/source.tar.gz")), true);
   assert.equal(fs.existsSync(path.join(packageDir, "buildchain-publication-package.json")), true);
 });
@@ -225,4 +267,33 @@ test("publication archive registry rejects changed artifact digest for an existi
     }),
     /publication archive version 0\.1\.0 is immutable/,
   );
+});
+
+test("clean publication release hydrates cumulative registry history", () => {
+  const firstCwd = tempRepo();
+  const firstConfig = path.join(firstCwd, ".buildchain", "buildchain.toml");
+  fs.writeFileSync(firstConfig, fs.readFileSync(firstConfig, "utf8").replace('version = "0.1.0"', 'version = "0.1.0-alpha.1"'));
+  execFileSync("make", ["pdf"], { cwd: firstCwd });
+  const first = writePublicationArtifact({ cwd: firstCwd, sourceSha: "a".repeat(40), generatedAt: "2026-07-01T00:00:00.000Z" });
+
+  const secondCwd = tempRepo();
+  const secondConfig = path.join(secondCwd, ".buildchain", "buildchain.toml");
+  fs.writeFileSync(secondConfig, fs.readFileSync(secondConfig, "utf8").replace('version = "0.1.0"', 'version = "0.1.0-alpha.2"'));
+  execFileSync("make", ["pdf"], { cwd: secondCwd });
+  const second = writePublicationArtifact({ cwd: secondCwd, sourceSha: "b".repeat(40), generatedAt: "2026-07-02T00:00:00.000Z", registryInputs: [path.join(firstCwd, first.registryPath)] });
+  assert.deepEqual(second.registry.registry.versions.map((entry) => entry.version), ["0.1.0-alpha.1", "0.1.0-alpha.2"]);
+  assert.equal(second.registry.registry.versions[0].immutableDigest, first.registry.registry.versions[0].immutableDigest);
+});
+
+test("publication registry hydration rejects unverifiable registry digest", () => {
+  const firstCwd = tempRepo();
+  execFileSync("make", ["pdf"], { cwd: firstCwd });
+  const first = writePublicationArtifact({ cwd: firstCwd, sourceSha: "a".repeat(40) });
+  const registryPath = path.join(firstCwd, first.registryPath);
+  const tampered = JSON.parse(fs.readFileSync(registryPath, "utf8"));
+  tampered.versions[0].routes.canonicalUrl = "https://attacker.invalid/paper/";
+  fs.writeFileSync(registryPath, `${JSON.stringify(tampered, null, 2)}\n`);
+  const secondCwd = tempRepo();
+  execFileSync("make", ["pdf"], { cwd: secondCwd });
+  assert.throws(() => writePublicationArtifact({ cwd: secondCwd, sourceSha: "b".repeat(40), registryInputs: [registryPath] }), /registry digest mismatch/);
 });

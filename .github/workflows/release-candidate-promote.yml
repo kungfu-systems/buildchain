@@ -73,8 +73,8 @@ on:
         type: string
         required: false
       required-status-check:
-        description: "Required protected-branch status check fragment"
-        default: "check"
+        description: "Exact required protected-branch status check context"
+        default: "check / check"
         type: string
         required: false
       branch-protection-bypass-apps:

@@ -22,6 +22,7 @@ const {
   resolveTagsForTarget,
   runVersionVerification,
   resolveReleaseImpactInput,
+  resolveProtectedStatusCheckContext,
   selectAlphaTag,
   selectReleaseTag,
   updateVersionStateContents,
@@ -43,6 +44,17 @@ const {
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SHA = "a".repeat(40);
 const OTHER_SHA = "b".repeat(40);
+
+test("release governance preserves the emitted reusable workflow check context", () => {
+  assert.equal(resolveProtectedStatusCheckContext({
+    requiredStatusCheck: "check",
+    protection: { required_status_checks: { strict: true, contexts: ["check / check"], checks: [{ context: "check / check", app_id: 15368 }] } },
+  }), "check / check");
+  assert.equal(resolveProtectedStatusCheckContext({
+    requiredStatusCheck: "consumer verify",
+    protection: { required_status_checks: { strict: true, contexts: ["consumer verify"] } },
+  }), "consumer verify");
+});
 
 test("release impact path resolves through configured version state", () => {
   const cwd = makeTempWorkspace({
@@ -6496,7 +6508,7 @@ test("strict alpha promotion protects created dev branches with one required app
       repos: {
         getBranchProtection: async () => ({
           data: protectedChannel({
-            required_status_checks: { strict: true, contexts: ["Build"] },
+            required_status_checks: { strict: true, contexts: ["Build", "security"] },
           }),
         }),
         updateBranchProtection: async (request) => {
@@ -6519,7 +6531,7 @@ test("strict alpha promotion protects created dev branches with one required app
     },
   };
 
-  await promoteBuildchainRefs({
+  const result = await promoteBuildchainRefs({
     octokit,
     owner: "kungfu-systems",
     repo: "buildchain",
@@ -6540,7 +6552,7 @@ test("strict alpha promotion protects created dev branches with one required app
   assert.ok(devProtection);
   assert.deepEqual(devProtection.required_status_checks, {
     strict: true,
-    checks: [{ context: "Build", app_id: 15368 }],
+    checks: [{ context: "Build", app_id: 15368 }, { context: "security", app_id: 15368 }],
   });
   assert.deepEqual(devProtection.required_pull_request_reviews, {
     dismiss_stale_reviews: false,
@@ -6557,6 +6569,10 @@ test("strict alpha promotion protects created dev branches with one required app
   assert.equal(devProtection.allow_force_pushes, false);
   assert.equal(devProtection.allow_deletions, false);
   assert.equal(devProtection.required_conversation_resolution, true);
+  const policyEvidence = result.updates.find((update) => update.action === "branch-protection-policy" && update.ref === "dev/v1/v1.0");
+  assert.deepEqual(policyEvidence.before.requiredStatusChecks, ["Build", "security"]);
+  assert.deepEqual(policyEvidence.after.requiredStatusChecks, ["Build", "security"]);
+  assert.equal(policyEvidence.policySource, "release-governance-required-status-check");
   assert.equal(checkRuns.length, 1);
   assert.deepEqual(
     checkRuns.map((check) => ({

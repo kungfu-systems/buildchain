@@ -446,6 +446,9 @@ export function runLifecycle({
 
   if (command.trim()) {
     commandSource = "workflow-input";
+    const lifecycle = loadedConfig?.config?.lifecycle || {};
+    const configuredStage = stageName ? lifecycle[stageName] : undefined;
+    const commandShell = configuredStage?.shell || true;
     const startedAt = Date.now();
     userLog.info("lifecycle.command.start", {
       attributes: {
@@ -457,6 +460,8 @@ export function runLifecycle({
     try {
       const commandEnv = {
         ...process.env,
+        ...(lifecycle.env || {}),
+        ...(configuredStage?.env || {}),
         ...(resolvedLogPath
           ? {
               BUILDCHAIN_LOG_PATH: resolvedLogPath,
@@ -469,7 +474,7 @@ export function runLifecycle({
           command,
           cwd: resolvedCwd,
           env: commandEnv,
-          shell: true,
+          shell: commandShell,
           label: `lifecycle-${stageName || "command"}`,
           processSummaryPath: resolvedProcessSummaryPath,
           processSamplesPath: resolvedProcessSamplesPath,
@@ -480,7 +485,7 @@ export function runLifecycle({
         execSync(command, {
           cwd: resolvedCwd,
           env: commandEnv,
-          shell: true,
+          shell: commandShell,
           stdio: "inherit",
         });
       }

@@ -106,6 +106,7 @@ export function collectPublicationPackageFacts({
       manifestPath: publication.manifestPath,
       passportPath: ".buildchain/publication/publication-artifact-passport.json",
       registryPath: publication.archive?.registryPath || "",
+      registryHydrationPath: publication.archive ? ".buildchain/publication/registry-hydration.json" : "",
       sourceBundlePath: publication.sourceBundlePath,
       artifactPaths: [publication.primaryArtifact, ...publication.artifactPaths].filter(Boolean),
       metadataPaths: publication.metadataPaths,
@@ -131,6 +132,7 @@ export function preparePublicationNpmPackage({
     facts.publication.manifestPath,
     facts.publication.passportPath,
     facts.publication.registryPath,
+    facts.publication.registryHydrationPath,
     facts.publication.sourceBundlePath,
     ...facts.publication.artifactPaths,
     ...facts.publication.metadataPaths,
@@ -197,6 +199,9 @@ export function preparePublicationNpmPackage({
       publicationManifest: facts.publication.manifestPath,
       publicationPassport: facts.publication.passportPath,
       publicationRegistry: facts.publication.registryPath || undefined,
+      publicationRegistryHydration: files.some((file) => file.path === facts.publication.registryHydrationPath)
+        ? facts.publication.registryHydrationPath
+        : undefined,
       primaryArtifact: facts.publication.primaryArtifact,
       sourceBundle: facts.publication.sourceBundlePath,
       siteConsumers: facts.publication.siteConsumers,

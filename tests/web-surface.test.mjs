@@ -691,6 +691,20 @@ test("web-surface deploy apply fails closed when saved plan artifact drifted", (
   });
 });
 
+test("web-surface deploy apply rejects artifact canonical hosts from another channel", () => {
+  withFixture((fixture) => {
+    fs.mkdirSync(path.join(fixture, "dist"), { recursive: true });
+    fs.writeFileSync(path.join(fixture, "dist", "index.html"), "production page\n");
+    fs.writeFileSync(path.join(fixture, "dist", "manifest.json"), `${JSON.stringify({
+      contract: "consumer-generated-site-manifest",
+      canonicalHost: "staging.libkungfu.dev",
+      pages: [{ host: "core.staging.libkungfu.dev", path: "/core/" }],
+    }, null, 2)}\n`);
+    const plan = planWebSurfaceDeploy({ cwd: fixture, channel: "production", sourceSha: "b".repeat(40) });
+    assert.throws(() => applyWebSurfaceDeploy({ cwd: fixture, plan, dryRun: true }), /artifact channel facts mismatch.*staging\.libkungfu\.dev/i);
+  });
+});
+
 test("web-surface deploy apply fails closed on placeholder AWS targets", () => {
   withFixture((fixture) => {
     const configPath = path.join(fixture, "buildchain.toml");
