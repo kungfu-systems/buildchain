@@ -228,6 +228,9 @@ candidate is allowed only when all of these facts are true:
 - `site-libkungfu-dev` completed its no-apply `Buildchain Stable Canary` and an allowed
   maintainer attested that successful run on the exact alpha SHA through the
   `buildchain-canary/site-libkungfu-dev` commit-status context;
+- the canary runtime input is exactly the candidate alpha tag or the 40-character
+  commit SHA resolved from that tag; a successful status pointing at another
+  workflow, repository, tag, floating ref, or SHA is rejected as mismatched;
 - at least one hour has elapsed after the last required canary completed.
 
 The machine report is written to
