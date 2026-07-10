@@ -6,6 +6,7 @@ import path from "node:path";
 import test from "node:test";
 import {
   LOCKED_SOURCE_CHECKOUT_CONTRACT,
+  fetchSourceCommit,
   runBoundedFetch,
   lockedSourceCheckout,
 } from "../scripts/locked-source-checkout.mjs";
@@ -68,6 +69,7 @@ test("locked source checkout auto mode falls back to GitHub transport", () => {
     mode: "auto",
     mirrorUrlTemplate: "file:///does/not/exist/{repositorySlug}.git",
     fallback: "github",
+    githubTimeoutSeconds: 600,
     githubRemote: `file://${origin.bare}`,
     diagnosticsPath: ".buildchain/diagnostics/source-checkout.json",
   });
@@ -75,10 +77,61 @@ test("locked source checkout auto mode falls back to GitHub transport", () => {
   assert.equal(evidence.cache.fallbackUsed, true);
   assert.equal(evidence.cache.transport, "github");
   assert.equal(evidence.policy.fetchAttempts, 3);
+  assert.equal(evidence.policy.githubTimeoutSeconds, 600);
   assert.equal(evidence.cache.githubFetchAttempts, 1);
   assert.match(evidence.cache.fallbackReason, /does not appear to be a git repository|not exist|failed/i);
   assert.equal(evidence.verification.headOk, true);
   assert.equal(evidence.verification.treeOk, true);
+});
+
+test("source fetch seeds from the advertised ref before trying a raw SHA", () => {
+  const calls = [];
+  let containsCommit = false;
+  const result = fetchSourceCommit({
+    targetPath: "/tmp/buildchain-source-fetch-fixture",
+    remoteName: "origin",
+    remoteUrl: "https://github.com/kungfu-systems/example.git",
+    sha: "a".repeat(40),
+    fetchRef: "refs/heads/dev/v4/v4.0",
+    timeoutMs: 600000,
+    runGit: (args) => {
+      calls.push(args);
+      if (args[0] === "fetch" && args.at(-1).endsWith(":refs/buildchain/source-ref")) {
+        containsCommit = true;
+      }
+    },
+    containsCommit: () => containsCommit,
+  });
+  const fetches = calls.filter((args) => args[0] === "fetch");
+  assert.equal(result.selector, "ref");
+  assert.equal(fetches.length, 1);
+  assert.equal(fetches[0].at(-1), "+refs/heads/dev/v4/v4.0:refs/buildchain/source-ref");
+});
+
+test("source fetch does not spend a second raw-SHA timeout after a ref timeout", () => {
+  const fetches = [];
+  assert.throws(
+    () => fetchSourceCommit({
+      targetPath: "/tmp/buildchain-source-fetch-timeout-fixture",
+      remoteName: "origin",
+      remoteUrl: "https://github.com/kungfu-systems/example.git",
+      sha: "b".repeat(40),
+      fetchRef: "refs/heads/dev/v4/v4.0",
+      timeoutMs: 600000,
+      runGit: (args) => {
+        if (args[0] === "fetch") {
+          fetches.push(args);
+          const error = new Error("spawnSync git ETIMEDOUT");
+          error.code = "ETIMEDOUT";
+          throw error;
+        }
+      },
+      containsCommit: () => false,
+    }),
+    /ETIMEDOUT/,
+  );
+  assert.equal(fetches.length, 1);
+  assert.equal(fetches[0].at(-1), "+refs/heads/dev/v4/v4.0:refs/buildchain/source-ref");
 });
 
 test("locked source checkout retries GitHub fallback fetch with a bounded attempt count", () => {

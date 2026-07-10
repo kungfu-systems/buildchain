@@ -182,35 +182,64 @@ function checkoutFetchedCommit(targetPath, sha, timeoutMs) {
   git(["checkout", "--force", "--detach", sha], { cwd: targetPath, timeoutMs });
 }
 
-function fetchSha({ targetPath, remoteName, remoteUrl, sha, fetchRef, timeoutMs, env = {} }) {
+function retryableGitFetchError(error) {
+  const code = String(error?.code || "").toUpperCase();
+  if (["ETIMEDOUT", "ECONNRESET", "ECONNREFUSED", "EAI_AGAIN", "ENETUNREACH", "EPIPE"].includes(code)) return true;
+  return /timed?\s*out|timeout|connection (?:reset|refused)|remote end hung up|early eof|rpc failed|http (?:429|5\d\d)|temporary failure|network is unreachable/i.test(String(error?.message || error || ""));
+}
+
+export function fetchSourceCommit({
+  targetPath,
+  remoteName,
+  remoteUrl,
+  sha,
+  fetchRef,
+  timeoutMs,
+  env = {},
+  runGit = git,
+  containsCommit = hasCommit,
+}) {
   try {
-    git(["remote", "remove", remoteName], { cwd: targetPath, timeoutMs, stdio: "ignore" });
+    runGit(["remote", "remove", remoteName], { cwd: targetPath, timeoutMs, stdio: "ignore" });
   } catch {
     // The remote is optional; a fresh checkout target will not have it yet.
   }
   try {
-    git(["remote", "add", remoteName, remoteUrl], { cwd: targetPath, timeoutMs });
+    runGit(["remote", "add", remoteName, remoteUrl], { cwd: targetPath, timeoutMs });
   } catch {
-    git(["remote", "set-url", remoteName, remoteUrl], { cwd: targetPath, timeoutMs });
+    runGit(["remote", "set-url", remoteName, remoteUrl], { cwd: targetPath, timeoutMs });
   }
-  const fetchArgs = ["fetch", "--no-tags", "--depth=1", remoteName, `+${sha}:refs/buildchain/source`];
-  try {
-    git(fetchArgs, { cwd: targetPath, timeoutMs, env, stdio: "ignore" });
-    return;
-  } catch (error) {
-    if (!fetchRef) {
-      throw error;
+
+  if (fetchRef) {
+    try {
+      runGit(["fetch", "--no-tags", "--depth=1", remoteName, `+${fetchRef}:refs/buildchain/source-ref`], {
+        cwd: targetPath,
+        timeoutMs,
+        env,
+        stdio: "ignore",
+      });
+      if (containsCommit(targetPath, sha, timeoutMs)) {
+        return { selector: "ref" };
+      }
+    } catch (error) {
+      // A retryable transport failure belongs to the bounded outer retry. Do
+      // not immediately spend the same timeout again on an unadvertised SHA.
+      if (retryableGitFetchError(error)) {
+        throw error;
+      }
     }
   }
-  git(["fetch", "--no-tags", "--depth=1", remoteName, `+${fetchRef}:refs/buildchain/source-ref`], {
+
+  runGit(["fetch", "--no-tags", "--depth=1", remoteName, `+${sha}:refs/buildchain/source`], {
     cwd: targetPath,
     timeoutMs,
     env,
     stdio: "ignore",
   });
-  if (!hasCommit(targetPath, sha, timeoutMs)) {
-    throw new Error(`fetched ${fetchRef}, but ${sha} is not available`);
+  if (!containsCommit(targetPath, sha, timeoutMs)) {
+    throw new Error(`fetched ${fetchRef || sha}, but ${sha} is not available`);
   }
+  return { selector: "sha" };
 }
 
 export function runBoundedFetch({ attempts = 1, fetch, onAttempt = () => {}, onRetry = () => {}, shouldRetry = () => true }) {
@@ -230,12 +259,6 @@ export function runBoundedFetch({ attempts = 1, fetch, onAttempt = () => {}, onR
     }
   }
   throw lastError;
-}
-
-function retryableGitFetchError(error) {
-  const code = String(error?.code || "").toUpperCase();
-  if (["ETIMEDOUT", "ECONNRESET", "ECONNREFUSED", "EAI_AGAIN", "ENETUNREACH", "EPIPE"].includes(code)) return true;
-  return /timed?\s*out|timeout|connection (?:reset|refused)|remote end hung up|early eof|rpc failed|http (?:429|5\d\d)|temporary failure|network is unreachable/i.test(String(error?.message || error || ""));
 }
 
 function githubRemoteUrl({ repository, serverUrl = "https://github.com" }) {
@@ -277,6 +300,7 @@ export function lockedSourceCheckout({
   referenceRepositoryTemplate = readEnv("BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE"),
   fallback = readEnv("BUILDCHAIN_CHECKOUT_CACHE_FALLBACK", "github"),
   timeoutSeconds = Number(readEnv("BUILDCHAIN_CHECKOUT_CACHE_TIMEOUT_SECONDS", "60") || 60),
+  githubTimeoutSeconds = Number(readEnv("BUILDCHAIN_CHECKOUT_CACHE_GITHUB_TIMEOUT_SECONDS", "600") || 600),
   fetchAttempts = Number(readEnv("BUILDCHAIN_CHECKOUT_CACHE_FETCH_ATTEMPTS", "3") || 3),
   diagnosticsPath = readEnv("BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH", ".buildchain/diagnostics/source-checkout.json"),
   githubToken = readEnv("GITHUB_TOKEN"),
@@ -291,6 +315,7 @@ export function lockedSourceCheckout({
   const treeSha = sourceTreeSha ? assertSha(sourceTreeSha, "sourceTreeSha") : "";
   const repoParts = splitRepository(repository);
   const timeoutMs = Math.max(1, Number(timeoutSeconds || 60)) * 1000;
+  const githubTimeoutMs = Math.max(1, Number(githubTimeoutSeconds || 600)) * 1000;
   const normalizedFetchAttempts = Math.max(1, Math.floor(Number(fetchAttempts) || 3));
   const targetPath = ensureCheckoutTarget(checkoutPath, workspace);
   git(["init"], { cwd: targetPath, timeoutMs });
@@ -312,6 +337,7 @@ export function lockedSourceCheckout({
       mode: normalizedMode,
       fallback: normalizedFallback,
       timeoutSeconds: Math.max(1, Number(timeoutSeconds || 60)),
+      githubTimeoutSeconds: Math.max(1, Number(githubTimeoutSeconds || 600)),
       fetchAttempts: normalizedFetchAttempts,
       mirror: sanitizeIdentity(renderedMirrorUrl),
       referenceRepository: sanitizeIdentity(renderedReferenceRepository),
@@ -348,7 +374,7 @@ export function lockedSourceCheckout({
         checkoutFetchedCommit(targetPath, sha, timeoutMs);
       } else if (renderedMirrorUrl) {
         evidence.cache.transport = "mirror-url";
-        fetchSha({
+        fetchSourceCommit({
           targetPath,
           remoteName: "buildchain-cache",
           remoteUrl: renderedMirrorUrl,
@@ -384,7 +410,15 @@ export function lockedSourceCheckout({
     try {
       const fetchResult = runBoundedFetch({
         attempts: normalizedFetchAttempts,
-        fetch: () => fetchSha({ targetPath, remoteName: "origin", remoteUrl, sha, fetchRef, timeoutMs, env: githubAuthEnv(githubToken) }),
+        fetch: () => fetchSourceCommit({
+          targetPath,
+          remoteName: "origin",
+          remoteUrl,
+          sha,
+          fetchRef,
+          timeoutMs: githubTimeoutMs,
+          env: githubAuthEnv(githubToken),
+        }),
         onAttempt: ({ attempt }) => { evidence.cache.githubFetchAttempts = attempt; },
         onRetry: ({ attempt, limit, error }) => console.log(`buildchain: GitHub source fetch failed, retry ${attempt + 1}/${limit}: ${error.message}`),
         shouldRetry: retryableGitFetchError,
