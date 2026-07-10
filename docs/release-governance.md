@@ -173,9 +173,12 @@ Buildchain continuously consumes its own current major alpha through
 `.github/workflows/buildchain-alpha-self-dogfood.yml`. The workflow calls the
 released outer reusable workflow at `@v2-alpha` without a runtime override, so
 both the workflow shell and its default runtime must resolve through the same
-floating alpha channel. A parallel `@v2` job preserves the stable-major
-compatibility signal. Both lanes use a single GitHub-hosted Linux fixture to
-keep the recurring check bounded.
+floating alpha channel. A parallel stable lane checks out `v2` and runs the
+same declared install, build, and verify lifecycle directly. The direct stable
+lane is intentional: it preserves stable-runtime compatibility without
+requiring the previous stable outer workflow to understand a self-call identity
+fix that has not reached stable yet. Both lanes use a single GitHub-hosted Linux
+fixture to keep the recurring check bounded.
 
 The reusable build trust gate reads `job.workflow_ref`, which identifies the
 called workflow and its selected ref. It does not infer the runtime from
