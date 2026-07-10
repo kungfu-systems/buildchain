@@ -72,7 +72,7 @@ function parseTags(input) {
   }
   for (const tag of tags) {
     if (
-      !/^v\d+$|^v\d+\.\d+$|^v\d+\.\d+-alpha$|^v\d+\.\d+\.\d+$|^v\d+\.\d+\.\d+-alpha\.\d+$/.test(
+      !/^v\d+$|^v\d+-alpha$|^v\d+\.\d+$|^v\d+\.\d+-alpha$|^v\d+\.\d+\.\d+$|^v\d+\.\d+\.\d+-alpha\.\d+$/.test(
         tag,
       )
     ) {
@@ -129,6 +129,7 @@ function getPromotionRule(targetRef) {
   }
   const releasePrefix = `v${major}.${minor}`;
   const majorTag = `v${major}`;
+  const majorAlphaTag = `${majorTag}-alpha`;
   const minorTag = releasePrefix;
   const alphaTag = `${releasePrefix}-alpha`;
   if (channel === "alpha") {
@@ -138,9 +139,10 @@ function getPromotionRule(targetRef) {
       minor,
       releasePrefix,
       majorTag,
+      majorAlphaTag,
       minorTag,
       alphaTag,
-      tags: [alphaTag],
+      tags: [alphaTag, majorAlphaTag],
     };
   }
   return {
@@ -149,6 +151,7 @@ function getPromotionRule(targetRef) {
     minor,
     releasePrefix,
     majorTag,
+    majorAlphaTag,
     minorTag,
     alphaTag,
     tags: [majorTag, minorTag],
@@ -2600,6 +2603,22 @@ function alphaTagsForPatch(refs, releasePrefix, patch) {
     .sort((a, b) => b.prerelease - a.prerelease);
 }
 
+function ownsMajorAlphaChannel({ refs = [], major, minor }) {
+  const floatingPattern = new RegExp(`^refs/tags/v${major}\\.(\\d+)-alpha$`);
+  const exactPattern = new RegExp(
+    `^refs/tags/v${major}\\.(\\d+)\\.\\d+-alpha\\.\\d+$`,
+  );
+  let highestPublishedMinor = -1;
+  for (const ref of refs) {
+    const refName = String(ref?.ref || "");
+    const match = refName.match(floatingPattern) || refName.match(exactPattern);
+    if (match) {
+      highestPublishedMinor = Math.max(highestPublishedMinor, Number(match[1]));
+    }
+  }
+  return Number(minor) >= highestPublishedMinor;
+}
+
 function resolveTagsForTarget(targetRef, inputTags) {
   const rule = getPromotionRule(targetRef);
   if (rule.channel === "major" && (!inputTags || inputTags.length === 0)) {
@@ -2607,7 +2626,7 @@ function resolveTagsForTarget(targetRef, inputTags) {
   }
   if (rule.channel === "major") {
     for (const tag of inputTags) {
-      if (!/^v\d+$|^v\d+\.0$|^v\d+\.0-alpha$|^v\d+\.0\.\d+$|^v\d+\.0\.\d+-alpha\.\d+$/.test(tag)) {
+      if (!/^v\d+$|^v\d+-alpha$|^v\d+\.0$|^v\d+\.0-alpha$|^v\d+\.0\.\d+$|^v\d+\.0\.\d+-alpha\.\d+$/.test(tag)) {
         throw new Error(`Tag ${tag} is not allowed for publish-gate/major promotion`);
       }
     }
@@ -2623,11 +2642,12 @@ function resolveTagsForTarget(targetRef, inputTags) {
     const allowed =
       rule.channel === "release"
         ? tag === rule.majorTag ||
+          tag === rule.majorAlphaTag ||
           tag === rule.minorTag ||
           tag === rule.alphaTag ||
           isLineReleaseTag ||
           isLineAlphaTag
-        : tag === rule.alphaTag || isLineAlphaTag;
+        : tag === rule.majorAlphaTag || tag === rule.alphaTag || isLineAlphaTag;
     if (!allowed) {
       throw new Error(
         `Tag ${tag} is not allowed for ${rule.channel} promotion`,
@@ -3333,6 +3353,43 @@ async function promoteBuildchainRefs({
     return [...tagRefs, ...stateRefs];
   };
 
+  const majorAlphaRefCache = new Map();
+  const listAllMatchingRefs = async (ref) => {
+    const refs = [];
+    for (let page = 1; page <= 100; page += 1) {
+      const { data } = await octokit.rest.git.listMatchingRefs({
+        owner,
+        repo,
+        ref,
+        per_page: 100,
+        page,
+      });
+      refs.push(...data);
+      if (data.length < 100) {
+        return refs;
+      }
+    }
+    throw new Error(`Ref scan exceeded 100 pages for ${ref}`);
+  };
+  const listMajorAlphaRefs = async (major = rule.major) => {
+    if (!majorAlphaRefCache.has(major)) {
+      majorAlphaRefCache.set(
+        major,
+        listAllMatchingRefs(`tags/v${major}.`),
+      );
+    }
+    return majorAlphaRefCache.get(major);
+  };
+
+  const ownsMajorAlphaFloatingTag = async ({
+    major = rule.major,
+    minor = rule.minor,
+  } = {}) => ownsMajorAlphaChannel({
+    refs: await listMajorAlphaRefs(major),
+    major,
+    minor,
+  });
+
   const ensureTag = async (tag, tagSha = sha, options = {}) => {
     const acceptedExistingShas = uniqueShas([
       tagSha,
@@ -3410,6 +3467,24 @@ async function promoteBuildchainRefs({
       });
       updates.push({ tag, action: "created", sha: tagSha });
     }
+  };
+
+  const updateMajorAlphaFloatingTag = async ({
+    major = rule.major,
+    minor = rule.minor,
+    sha: tagSha = sha,
+  } = {}) => {
+    const tag = `v${major}-alpha`;
+    if (await ownsMajorAlphaFloatingTag({ major, minor })) {
+      await updateTag(tag, tagSha);
+      return true;
+    }
+    updates.push({
+      tag,
+      action: "skipped-newer-minor-alpha-exists",
+      sha: tagSha,
+    });
+    return false;
   };
 
   const readRefSha = async (ref) => {
@@ -4104,15 +4179,18 @@ async function promoteBuildchainRefs({
       return false;
     }
     const devRef = `heads/dev/v${rule.major}/v${rule.major}.${rule.minor}`;
-    const [devSha, exactAlphaTagSha, floatingAlphaTagSha] = await Promise.all([
+    const ownsMajorAlphaTag = await ownsMajorAlphaFloatingTag();
+    const [devSha, exactAlphaTagSha, floatingAlphaTagSha, majorFloatingAlphaTagSha] = await Promise.all([
       readRefSha(devRef),
       readRefSha(`tags/${selectedAlpha.tag}`),
       readRefSha(`tags/${rule.alphaTag}`),
+      ownsMajorAlphaTag ? readRefSha(`tags/${rule.majorAlphaTag}`) : undefined,
     ]);
     return (
       devSha === sha &&
       exactAlphaTagSha === sha &&
-      floatingAlphaTagSha === sha
+      floatingAlphaTagSha === sha &&
+      (!ownsMajorAlphaTag || majorFloatingAlphaTagSha === sha)
     );
   };
 
@@ -4542,6 +4620,7 @@ async function promoteBuildchainRefs({
     const majorRule = {
       ...rule,
       ...majorGate,
+      majorAlphaTag: `v${majorGate.major}-alpha`,
       tags: [majorGate.majorTag, majorGate.minorTag],
     };
     const refs = await listLineRefs(majorRule.releasePrefix);
@@ -4717,6 +4796,7 @@ async function promoteBuildchainRefs({
     }
     await ensureTag(selectedNextAlpha.tag, nextAlphaSha);
     await updateTag(majorRule.alphaTag, nextAlphaSha);
+    await updateTag(majorRule.majorAlphaTag, nextAlphaSha);
     return withPublishTransaction({
       owner,
       repo,
@@ -4731,6 +4811,7 @@ async function promoteBuildchainRefs({
   const lineRefs = await listLineRefs();
 
   if (rule.channel === "alpha") {
+    const ownsMajorAlphaTag = await ownsMajorAlphaFloatingTag();
     const explicitAlphaTags = requestedTags
       ? requestedTags.filter((tag) => tag.includes("-alpha."))
       : [];
@@ -4777,6 +4858,9 @@ async function promoteBuildchainRefs({
     const currentAlphaFloatingSha = currentAlpha
       ? await readRefSha(`tags/${rule.alphaTag}`)
       : undefined;
+    const currentAlphaMajorFloatingSha = currentAlpha && ownsMajorAlphaTag
+      ? await readRefSha(`tags/${rule.majorAlphaTag}`)
+      : undefined;
     const currentAlphaDevSha = currentAlpha
       ? await readRefSha(`heads/dev/v${rule.major}/v${rule.major}.${rule.minor}`)
       : undefined;
@@ -4788,6 +4872,7 @@ async function promoteBuildchainRefs({
       currentAlpha &&
       currentAlphaDevSha === sha &&
       currentAlphaFloatingSha === sha &&
+      (!ownsMajorAlphaTag || currentAlphaMajorFloatingSha === sha) &&
       currentAlphaTagSha &&
       currentAlphaAcceptedExactShas.includes(currentAlphaTagSha);
     const currentAlphaHasFinalizationRefs =
@@ -4850,6 +4935,9 @@ async function promoteBuildchainRefs({
       });
       updates.push({ tag: selectedAlpha.tag, action: "existing", sha });
       updates.push({ tag: rule.alphaTag, action: "existing", sha });
+      updates.push(ownsMajorAlphaTag
+        ? { tag: rule.majorAlphaTag, action: "existing", sha }
+        : { tag: rule.majorAlphaTag, action: "skipped-newer-minor-alpha-exists", sha });
       return { owner, repo, sourceSha: sha, sha, targetRef, updates };
     }
     const prepareAlphaCommit = async (candidate) => {
@@ -4956,6 +5044,7 @@ async function promoteBuildchainRefs({
       ),
     });
     await updateTag(rule.alphaTag, alpha.sha);
+    await updateMajorAlphaFloatingTag({ sha: alpha.sha });
     await markComplete();
     return withPublishTransaction({ owner, repo, sourceSha: sha, sha: alpha.sha, targetRef, updates });
   }
@@ -5262,6 +5351,7 @@ async function promoteBuildchainRefs({
     }
     await ensureTag(selectedNextAlpha.tag, nextAlphaSha);
     await updateTag(rule.alphaTag, nextAlphaSha);
+    await updateMajorAlphaFloatingTag({ sha: nextAlphaSha });
     return withPublishTransaction({
       owner,
       repo,
@@ -5302,6 +5392,7 @@ export {
   expectedHeadRefForTarget,
   getPromotionRule,
   latestAlphaForPatch,
+  ownsMajorAlphaChannel,
   parseReleaseLineRef,
   parseAlphaPrereleaseTag,
   parseRepository,

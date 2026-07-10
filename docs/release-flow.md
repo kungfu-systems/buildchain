@@ -53,6 +53,7 @@ for the versioned policy and evidence contract.
 | Exact alpha tag | `v2.0.3-alpha.0` | immutable | audit ref for one tested prerelease |
 | Exact release tag | `v2.0.2` | immutable | audit ref for one production release |
 | Floating alpha tag | `v2.0-alpha` | moves | latest test channel for a minor line |
+| Floating major alpha tag | `v2-alpha` | moves | latest test channel on the highest published alpha minor for a major line |
 | Floating minor tag | `v2.0` | moves | latest production patch on a minor line |
 | Floating major tag | `v2` | moves | selected stable major entrypoint |
 
@@ -68,8 +69,8 @@ refs/tags/v*.*.*
 ```
 
 Do not apply immutable-tag rulesets to every `refs/tags/v*` ref. Buildchain
-must be able to update floating channel tags such as `v2`, `v2.0`, and
-`v2.0-alpha` after the exact tag and publish evidence are valid. A ruleset that
+must be able to update floating channel tags such as `v2`, `v2.0`, `v2.0-alpha`,
+and `v2-alpha` after the exact tag and publish evidence are valid. A ruleset that
 matches all `v*` tags also matches floating tags, so release finalization can
 fail with GitHub protected-ref errors even though the exact release tag and
 published artifacts are already durable.
@@ -77,7 +78,7 @@ published artifacts are already durable.
 The intended governance split is:
 
 - exact tags such as `v2.0.14` and `v2.0.15-alpha.0` are immutable audit refs;
-- floating tags such as `v2`, `v2.0`, and `v2.0-alpha` are mutable channel refs
+- floating tags such as `v2`, `v2.0`, `v2.0-alpha`, and `v2-alpha` are mutable channel refs
   owned by the Buildchain promotion token;
 - protected branches still require reviewed channel PRs before Buildchain can
   move any exact or floating release refs.
@@ -134,6 +135,7 @@ sequenceDiagram
   Promote->>Promote: write and verify version state
   Promote->>Tags: create or reuse vX.Y.Z-alpha.N
   Promote->>Tags: move vX.Y-alpha
+  Promote->>Tags: move vX-alpha when X.Y is the highest published alpha minor
   Promote->>Alpha: move alpha/vX/vX.Y
   Promote->>Dev: move dev/vX/vX.Y
 ```
@@ -143,6 +145,7 @@ Result:
 ```text
 vX.Y.Z-alpha.N
 vX.Y-alpha
+vX-alpha when X.Y is the highest published alpha minor
 alpha/vX/vX.Y
 dev/vX/vX.Y
 ```
@@ -177,6 +180,7 @@ sequenceDiagram
   Promote->>Promote: prepare vX.Y.(Z+1)-alpha.0
   Promote->>Tags: create or reuse vX.Y.(Z+1)-alpha.0
   Promote->>Tags: move vX.Y-alpha
+  Promote->>Tags: move vX-alpha when X.Y is the highest published alpha minor
   Promote->>Alpha: move alpha/vX/vX.Y
   Promote->>Dev: move dev/vX/vX.Y
 ```
@@ -195,6 +199,7 @@ point at the production version-state commit, while:
 ```text
 vX.Y.(Z+1)-alpha.0
 vX.Y-alpha
+vX-alpha when X.Y is the highest published alpha minor
 alpha/vX/vX.Y
 dev/vX/vX.Y
 ```
@@ -235,6 +240,7 @@ It should also prepare:
 ```text
 v2.0.3-alpha.0          exact next alpha tag
 v2.0-alpha              floating alpha tag
+v2-alpha                floating major alpha tag when v2.0 is the highest published alpha minor
 alpha/v2/v2.0           alpha channel branch
 dev/v2/v2.0             development channel branch
 ```

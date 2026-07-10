@@ -2390,6 +2390,14 @@ test("buildchain semver version state includes generated site contract version",
   assert.equal(releaseImpact.release.line, "v2.11");
 });
 
+test("generated release model publishes the generic major alpha channel contract", () => {
+  const releaseModel = JSON.parse(
+    fs.readFileSync(path.join(root, "dist/site/release-model.json"), "utf8"),
+  );
+  assert.match(releaseModel.floatingTags, /vX-alpha/);
+  assert.match(releaseModel.floatingTags, /highest minor in major X with a published alpha/);
+});
+
 test("libnode-shaped fixture declares the build lifecycle contract", () => {
   const fixture = path.join(root, "fixtures/libnode-shaped");
   const summary = validateBuildchainConfig(fixture, {

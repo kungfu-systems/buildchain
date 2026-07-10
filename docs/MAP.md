@@ -111,7 +111,7 @@ replace them.
 
 - **ABV / old workflows / old action repositories** -> [`release-governance.md`](release-governance.md)
   and [`migration-inventory.md`](migration-inventory.md).
-- **v2 / v2.0 / v2.0-alpha / exact tags / floating tags** ->
+- **v2 / v2-alpha / v2.0 / v2.0-alpha / exact tags / floating tags** ->
   [`release-governance.md`](release-governance.md) and
   [`release-flow.md`](release-flow.md).
 - **v2.1 vs v2.2 / when to open a new minor line** ->
