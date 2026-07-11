@@ -766,6 +766,39 @@ test("patrol workflow family exposes daily weekly monthly reusable entries and d
   assert.match(dogfoodMonthly, /pull-requests: write/);
 });
 
+test("stable candidate patrol persists exact candidates and uses source-lock PR promotion", () => {
+  const reusable = fs.readFileSync(
+    path.join(root, ".github/workflows/stable-candidate-patrol.yml"),
+    "utf8",
+  );
+  const dogfood = fs.readFileSync(
+    path.join(root, ".github/workflows/buildchain-stable-candidate-patrol.yml"),
+    "utf8",
+  );
+  const implementation = fs.readFileSync(
+    path.join(root, "scripts/stable-candidate-patrol.mjs"),
+    "utf8",
+  );
+  const ledger = fs.readFileSync(
+    path.join(root, "packages/core/stable-candidate-ledger.js"),
+    "utf8",
+  );
+
+  assert.match(reusable, /workflow_call:/);
+  assert.match(reusable, /release-now:/);
+  assert.match(reusable, /auto-promote:/);
+  assert.match(reusable, /auto-merge:/);
+  assert.match(reusable, /BUILDCHAIN_STABLE_REVOKED_ALPHA_VERSIONS/);
+  assert.match(reusable, /stable-candidate-policy\.mjs/);
+  assert.match(reusable, /stable-candidate-patrol\.mjs/);
+  assert.match(reusable, /cancel-in-progress: false/);
+  assert.match(ledger, /publish-gate\/release/);
+  assert.match(implementation, /BUILDCHAIN_STABLE_RELEASE_NOW/);
+  assert.match(dogfood, /cron: "0 19 \* \* \*"/);
+  assert.match(dogfood, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v2-alpha' \}\}/);
+  assert.match(dogfood, /promotion-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/);
+});
+
 test("check workflow runs declarative Buildchain lifecycle verify", () => {
   const reusable = fs.readFileSync(
     path.join(root, ".github/workflows/check.yml"),

@@ -19,6 +19,7 @@ const SUPPORTED_PUBLISH_MODES = new Set(["publish-final-version", "promote-exist
 const SUPPORTED_PUBLISH_AUTH = new Set(["trusted-publishing", "npm-token"]);
 const SUPPORTED_PUBLISH_KINDS = new Set(["npm-package", "npm-paper-package"]);
 const SUPPORTED_PACKAGE_SET_ORDER = new Set(["as-provided", "platforms-first-main-last"]);
+const SUPPORTED_STABLE_RELEASE_STRATEGIES = new Set(["manual", "latest-qualified-alpha"]);
 const SUPPORTED_NATIVE_COMPILER_CACHE = new Set(["auto", "ccache", "sccache", "none"]);
 const WEB_SURFACE_CHANNELS = ["preview", "staging", "production"];
 const SUPPORTED_CHANNEL_VISIBILITY = new Set(["ephemeral", "protected", "public", "internal"]);
@@ -180,6 +181,9 @@ export function normalizeBuildchainConfig(config) {
   if (normalized.publish !== undefined) {
     normalized.publish = normalizePublishSection(normalized.publish);
   }
+  if (normalized.release !== undefined) {
+    normalized.release = normalizeReleaseSection(normalized.release);
+  }
   if (normalized.channels !== undefined) {
     normalized.channels = normalizeChannelsSection(normalized.channels, normalized.project);
   }
@@ -213,6 +217,59 @@ export function normalizeBuildchainConfig(config) {
   validateWebSurfaceConfig(normalized);
   validateInfraContractConfig(normalized);
   return normalized;
+}
+
+function normalizeReleaseSection(release) {
+  assertPlainObject(release, "release");
+  const normalized = { ...release };
+  if (release.stable !== undefined) {
+    assertPlainObject(release.stable, "release.stable");
+    const strategy = release.stable.strategy === undefined
+      ? "manual"
+      : assertString(release.stable.strategy, "release.stable.strategy");
+    if (!SUPPORTED_STABLE_RELEASE_STRATEGIES.has(strategy)) {
+      throw new Error("release.stable.strategy must be one of manual or latest-qualified-alpha");
+    }
+    const minimumSoakSeconds = release.stable.minimum_soak_seconds === undefined
+      ? 3600
+      : Number(release.stable.minimum_soak_seconds);
+    if (!Number.isInteger(minimumSoakSeconds) || minimumSoakSeconds < 0) {
+      throw new Error("release.stable.minimum_soak_seconds must be a non-negative integer");
+    }
+    normalized.stable = {
+      strategy,
+      timezone: release.stable.timezone === undefined
+        ? "UTC"
+        : assertString(release.stable.timezone, "release.stable.timezone"),
+      publishAt: release.stable.publish_at === undefined
+        ? "03:00"
+        : assertString(release.stable.publish_at, "release.stable.publish_at"),
+      minimumSoakSeconds,
+      requiredChecks: normalizeStringArray(release.stable.required_checks, "release.stable.required_checks"),
+      ledgerRef: release.stable.ledger_ref === undefined
+        ? ""
+        : assertString(release.stable.ledger_ref, "release.stable.ledger_ref"),
+      autoPromote: optionalBoolean(release.stable.auto_promote, strategy === "latest-qualified-alpha"),
+      autoMerge: optionalBoolean(release.stable.auto_merge, false),
+    };
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(normalized.stable.publishAt)) {
+      throw new Error("release.stable.publish_at must be HH:MM in 24-hour time");
+    }
+  }
+  return normalized;
+}
+
+export function getStableReleasePolicy(loadedConfig) {
+  return loadedConfig?.config?.release?.stable || {
+    strategy: "manual",
+    timezone: "UTC",
+    publishAt: "03:00",
+    minimumSoakSeconds: 3600,
+    requiredChecks: [],
+    ledgerRef: "",
+    autoPromote: false,
+    autoMerge: false,
+  };
 }
 
 function normalizeFactsSection(facts) {
@@ -1389,6 +1446,7 @@ export function validateBuildchainConfig(
     })),
     lifecycleStages,
     publish: loadedConfig.config.publish,
+    release: loadedConfig.config.release,
     facts: loadedConfig.config.facts,
     publication: loadedConfig.config.publication,
   };

@@ -490,6 +490,19 @@
       "status": "active"
     },
     {
+      "id": "buildchain-stable-candidate-patrol",
+      "path": ".github/workflows/buildchain-stable-candidate-patrol.yml",
+      "inputs": [
+        "buildchain-ref",
+        "dry-run",
+        "release-now"
+      ],
+      "inputCount": 3,
+      "surface": "repository-patrol",
+      "capabilityGroup": "governance-versioning",
+      "status": "active"
+    },
+    {
       "id": "candidate-lab",
       "path": ".github/workflows/candidate-lab.yml",
       "inputs": [
@@ -804,6 +817,31 @@
       "surface": "repository-workflow",
       "capabilityGroup": "api-cli-reference",
       "status": "compatibility-fixture"
+    },
+    {
+      "id": "stable-candidate-patrol",
+      "path": ".github/workflows/stable-candidate-patrol.yml",
+      "inputs": [
+        "auto-approve",
+        "auto-merge",
+        "auto-promote",
+        "buildchain-ref",
+        "buildchain-repository",
+        "dry-run",
+        "hold",
+        "hold-reason",
+        "ledger-ref",
+        "minimum-soak-seconds",
+        "release-now",
+        "required-checks",
+        "revoke-reason",
+        "revoked-versions",
+        "target-branch"
+      ],
+      "inputCount": 15,
+      "surface": "repository-patrol",
+      "capabilityGroup": "governance-versioning",
+      "status": "active"
     },
     {
       "id": "verify",

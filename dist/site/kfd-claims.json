@@ -21,12 +21,12 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "abb62f9017ec8d3bdad15be860bda98aaf4438e0fd623fe1d9200619a497ccab",
+    "sha256": "6ec95f4025ff96a5fdd7a6b8a9c91bd70726d8f3e5f0eb6eda13b7a13d654eb7",
     "summary": {
       "cliCommandCount": 75,
-      "workflowCount": 39,
+      "workflowCount": 41,
       "actionCount": 4,
-      "sitePageCount": 45,
+      "sitePageCount": 46,
       "docCommandRefCount": 237,
       "failureCount": 0
     },
@@ -208,12 +208,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "abb62f9017ec8d3bdad15be860bda98aaf4438e0fd623fe1d9200619a497ccab",
+      "sha256": "6ec95f4025ff96a5fdd7a6b8a9c91bd70726d8f3e5f0eb6eda13b7a13d654eb7",
       "summary": {
         "cliCommandCount": 75,
-        "workflowCount": 39,
+        "workflowCount": 41,
         "actionCount": 4,
-        "sitePageCount": 45,
+        "sitePageCount": 46,
         "docCommandRefCount": 237,
         "failureCount": 0
       },
@@ -1121,6 +1121,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./release-candidate"
+        },
+        {
+          "id": "export:./stable-candidate-ledger",
+          "name": "@kungfu-tech/buildchain/stable-candidate-ledger",
+          "kind": "package-export",
+          "sourcePath": "packages/core/stable-candidate-ledger.js",
+          "evidencePath": "packages/core/stable-candidate-ledger.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./stable-candidate-ledger"
         },
         {
           "id": "export:./release-passport",
@@ -2869,6 +2881,24 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:buildchain-stable-candidate-patrol",
+          "name": "workflow:buildchain-stable-candidate-patrol",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/buildchain-stable-candidate-patrol.yml",
+          "evidencePath": ".github/workflows/buildchain-stable-candidate-patrol.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 3,
+          "inputs": [
+            "buildchain-ref",
+            "dry-run",
+            "release-now"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:candidate-lab",
           "name": "workflow:candidate-lab",
           "kind": "workflow",
@@ -3262,6 +3292,36 @@
           "public": true,
           "inputCount": 0,
           "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:stable-candidate-patrol",
+          "name": "workflow:stable-candidate-patrol",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/stable-candidate-patrol.yml",
+          "evidencePath": ".github/workflows/stable-candidate-patrol.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 15,
+          "inputs": [
+            "auto-approve",
+            "auto-merge",
+            "auto-promote",
+            "buildchain-ref",
+            "buildchain-repository",
+            "dry-run",
+            "hold",
+            "hold-reason",
+            "ledger-ref",
+            "minimum-soak-seconds",
+            "release-now",
+            "required-checks",
+            "revoke-reason",
+            "revoked-versions",
+            "target-branch"
+          ],
           "reverseAuditSource": ".github/workflows"
         },
         {
@@ -3948,6 +4008,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:stable-candidate-patrol",
+          "name": "site-page:manual:stable-candidate-patrol",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:toolkit-observability",
           "name": "site-page:manual:toolkit-observability",
           "kind": "site-page",
@@ -4065,6 +4137,6 @@
         "public": true
       }
     ],
-    "publicSurfaceCount": 266
+    "publicSurfaceCount": 270
   }
 }
