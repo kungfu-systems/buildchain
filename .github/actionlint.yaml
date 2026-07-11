@@ -25,3 +25,15 @@ paths:
     # this exact false-positive scoped until actionlint's context schema ships it.
     ignore:
       - 'property "workflow_ref" is not defined in object type'
+  .github/workflows/.release-verify.yml:
+    ignore:
+      - 'property "workflow_ref" is not defined in object type'
+  .github/workflows/.web-surface.yml:
+    ignore:
+      - 'property "workflow_ref" is not defined in object type'
+  .github/workflows/paper-release.yml:
+    ignore:
+      - 'property "workflow_ref" is not defined in object type'
+  .github/workflows/publication-artifact.yml:
+    ignore:
+      - 'property "workflow_ref" is not defined in object type'

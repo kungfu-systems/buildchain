@@ -24,6 +24,17 @@ uses: kungfu-systems/buildchain/actions/promote-buildchain-ref@v2
 uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2
 ```
 
+Consumers intentionally following the alpha channel should pair the workflow
+shell with the matching floating ref:
+
+```yaml
+uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2-alpha
+```
+
+The reusable workflow derives its runtime from that called-workflow ref.
+Passing `buildchain-ref: v2-alpha` explicitly is also accepted as an official
+channel selection; it is not treated as a train or exact-SHA override.
+
 For new repositories, prefer the CLI:
 
 ```sh
