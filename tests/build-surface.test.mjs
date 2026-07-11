@@ -193,8 +193,13 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE/);
   assert.equal(
     (workflow.match(/node \.buildchain\/runtime\/scripts\/locked-source-checkout\.mjs/g) || []).length,
-    2,
+    0,
   );
+  assert.match(workflow, /buildchain-workflow-shell-sha:/);
+  assert.match(workflow, /"workflow-shell-sha": workflowShellSha/);
+  assert.match(workflow, /Checkout Buildchain workflow shell/);
+  assert.match(workflow, /ref: \$\{\{ steps\.runtime\.outputs\.workflow-shell-sha \}\}/);
+  assert.match(workflow, /path: \.buildchain\/workflow-shell\/scripts\/locked-source-checkout\.mjs/);
   assert.match(workflow, /Upload Buildchain runtime checkout bootstrap/);
   assert.equal(
     (workflow.match(/Download Buildchain runtime checkout bootstrap/g) || []).length,
@@ -202,7 +207,7 @@ test("reusable build workflow exposes the required surface contract", () => {
   );
   assert.equal(
     (workflow.match(/node \.buildchain\/runtime-bootstrap\/locked-source-checkout\.mjs/g) || []).length,
-    2,
+    4,
   );
   assert.equal(
     (workflow.match(/BUILDCHAIN_SOURCE_CHECKOUT_PATH: \.buildchain\/runtime/g) || []).length,

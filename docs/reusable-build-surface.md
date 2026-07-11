@@ -329,13 +329,17 @@ repository or organization variables named
 `BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE`, so consumers can keep
 private LAN topology out of repository YAML.
 
-The GitHub-hosted trust gate uploads the exact runtime version's small checkout
-bootstrap script. Native and Linux-container build jobs download that bootstrap,
-then use the same cache policy to obtain the Buildchain runtime at the already
-resolved immutable SHA. This prevents a large direct `actions/checkout` runtime
-clone from becoming a separate timeout path on constrained self-hosted uplinks.
-The bootstrap artifact does not contain the runtime repository and cannot move
-the selected ref.
+The GitHub-hosted trust gate resolves the reusable workflow shell to an exact
+commit and uploads that shell's small checkout bootstrap script. Native and
+Linux-container build jobs download the bootstrap, then use the same cache
+policy to obtain both the selected Buildchain runtime and consumer source at
+their already resolved immutable SHAs. Keeping the bootstrap owned by the
+workflow shell is important when `@vN-alpha` routes a stable release to an older
+`vN` runtime: the stable runtime does not need to already contain the newest
+checkout transport implementation. This also prevents a large direct
+`actions/checkout` runtime clone from becoming a separate timeout path on
+constrained self-hosted uplinks. The bootstrap artifact does not contain the
+runtime repository and cannot move either selected ref.
 
 Do not read cache URLs or reference paths from PR-controlled files such as
 `.buildchain/buildchain.toml`. These values are trusted workflow inputs or repo/org
