@@ -109,6 +109,31 @@ on:
         default: "24"
         type: string
         required: false
+      setup-rust:
+        description: "Install a Rust toolchain for native lifecycle jobs"
+        default: false
+        type: boolean
+        required: false
+      rust-toolchain:
+        description: "Rust toolchain installed when setup-rust is enabled"
+        default: "stable"
+        type: string
+        required: false
+      rustup-dist-server:
+        description: "Optional rustup distribution mirror; empty uses the official Rust server"
+        default: ""
+        type: string
+        required: false
+      rustup-update-root:
+        description: "Optional rustup self-update mirror; empty uses the official Rust server"
+        default: ""
+        type: string
+        required: false
+      cargo-registry-index:
+        description: "Optional crates.io-compatible Cargo registry index; empty uses the Cargo default"
+        default: ""
+        type: string
+        required: false
       install-command:
         default: ""
         type: string
@@ -486,6 +511,11 @@ jobs:
       publish-registry: ${{ inputs.publish-registry }}
       setup-node: ${{ inputs.setup-node }}
       node-version: ${{ inputs.node-version }}
+      setup-rust: ${{ inputs.setup-rust }}
+      rust-toolchain: ${{ inputs.rust-toolchain }}
+      rustup-dist-server: ${{ inputs.rustup-dist-server }}
+      rustup-update-root: ${{ inputs.rustup-update-root }}
+      cargo-registry-index: ${{ inputs.cargo-registry-index }}
       install-command: ${{ inputs.install-command }}
       build-command: ${{ inputs.build-command }}
       verify-command: ${{ inputs.verify-command }}
