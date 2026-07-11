@@ -14,26 +14,26 @@ restating them.
 
 ## Using this repo as a Buildchain consumer
 
-Stable consumers should pin actions and reusable workflows through the released
-Buildchain refs:
+Consumers that want Buildchain to select alpha for development/prerelease work
+and stable for production releases use the channel router. The router defaults
+to `auto`; repositories only add channel configuration when they intentionally
+override that policy:
 
 ```yaml
-uses: kungfu-systems/buildchain/actions/validate-config@v2
-uses: kungfu-systems/buildchain/actions/run-lifecycle@v2
-uses: kungfu-systems/buildchain/actions/promote-buildchain-ref@v2
-uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2
+uses: kungfu-systems/buildchain/.github/workflows/build.yml@v2
 ```
 
-Consumers intentionally following the alpha channel should pair the workflow
-shell with the matching floating ref:
+During the v2.12 alpha evaluation window, canaries call the same router through
+the matching prerelease ref:
 
 ```yaml
-uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2-alpha
+uses: kungfu-systems/buildchain/.github/workflows/build.yml@v2-alpha
 ```
 
-The reusable workflow derives its runtime from that called-workflow ref.
-Passing `buildchain-ref: v2-alpha` explicitly is also accepted as an official
-channel selection; it is not treated as a train or exact-SHA override.
+The default policy selects `vN-alpha` for pull requests, development, nightly,
+and prerelease intent; it selects stable `vN` for stable release intent. The
+advanced `.build.yml` surface and explicit `buildchain-ref` train/SHA validation
+remain available when a repository needs precise control.
 
 For new repositories, prefer the CLI:
 
