@@ -519,7 +519,19 @@ export function readBuildchainContractWorld(filePath) {
   if (!value || value.contract !== BUILDCHAIN_RUNTIME_CONTRACT_WORLD) {
     throw new Error(`Buildchain contract world is missing or invalid: ${filePath}`);
   }
-  return finalizeBuildchainContractWorld(value);
+  const computed = finalizeBuildchainContractWorld(value);
+  for (const digestName of ["compatibilityDigest", "contractDigest"]) {
+    const published = String(value[digestName] || "").trim();
+    if (published && published !== computed[digestName]) {
+      throw new Error(
+        `published ${digestName} mismatch in ${filePath}: expected ${published}, recomputed ${computed[digestName]}`,
+      );
+    }
+    if (published) {
+      computed[digestName] = published;
+    }
+  }
+  return computed;
 }
 
 export function readBuildchainContractLock(filePath) {

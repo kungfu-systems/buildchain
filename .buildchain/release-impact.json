@@ -36,8 +36,15 @@
       "id": "locked-checkout-bounded-fallback",
       "impact": "patch",
       "class": "source-integrity",
-      "rationale": "Locked checkout fetches the advertised ref before a raw SHA so mirror objects seed recovery, and GitHub fallback has an independent 600-second default timeout plus bounded retry evidence before exact source verification.",
+      "rationale": "Locked checkout fetches the advertised ref before a raw SHA so mirror objects seed recovery; self-hosted source and Buildchain runtime checkouts share this transport, and GitHub fallback has an independent 600-second default timeout plus bounded retry evidence before exact commit verification.",
       "source": "scripts/locked-source-checkout.mjs"
+    },
+    {
+      "id": "published-contract-digest-round-trip",
+      "impact": "patch",
+      "class": "source-integrity",
+      "rationale": "Consumer write-lock preserves the authoritative digests carried by a released contract artifact after recomputation and fails closed instead of silently replacing mismatched evidence.",
+      "source": "packages/core/buildchain-contract.js"
     },
     {
       "id": "required-check-context-preservation",
@@ -86,5 +93,5 @@
   "breaking": false,
   "security": false,
   "migrationRequired": false,
-  "summary": "Buildchain v2.12 introduces a single-config alpha/stable channel router while retaining exact-SHA promotion, recovery, and the existing reusable build contract."
+  "summary": "Buildchain v2.12 introduces a single-config alpha/stable channel router, preserves authoritative consumer contract locks, and makes constrained self-hosted runtime checkout use the trusted cache and bounded exact-SHA fallback path."
 }

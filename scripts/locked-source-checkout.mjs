@@ -290,8 +290,8 @@ function writeEvidence(filePath, evidence) {
 
 export function lockedSourceCheckout({
   workspace = process.cwd(),
-  checkoutPath = ".",
-  repository = readEnv("GITHUB_REPOSITORY"),
+  checkoutPath = readEnv("BUILDCHAIN_SOURCE_CHECKOUT_PATH", "."),
+  repository = readEnv("BUILDCHAIN_SOURCE_REPOSITORY", readEnv("GITHUB_REPOSITORY")),
   sourceSha = readEnv("BUILDCHAIN_SOURCE_SHA"),
   sourceTreeSha = readEnv("BUILDCHAIN_SOURCE_TREE_SHA"),
   fetchRef = readEnv("BUILDCHAIN_SOURCE_REF", readEnv("GITHUB_REF")),

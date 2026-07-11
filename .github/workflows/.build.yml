@@ -500,6 +500,14 @@ jobs:
           path: .buildchain/runtime
           persist-credentials: false
 
+      - name: Upload Buildchain runtime checkout bootstrap
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-runtime-checkout-bootstrap-${{ steps.runtime.outputs.runtime-sha }}
+          path: .buildchain/runtime/scripts/locked-source-checkout.mjs
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
       - name: Checkout consumer contract lock
         uses: actions/checkout@v7.0.0
         with:
@@ -820,19 +828,43 @@ jobs:
         platform: ${{ fromJSON(needs.resolve-contract.outputs.native-platforms-json) }}
     runs-on: ${{ fromJSON(matrix.platform.runner) }}
     steps:
-      - name: Checkout Buildchain runtime
-        uses: actions/checkout@v7.0.0
-        with:
-          repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          path: .buildchain/runtime
-          persist-credentials: false
-
       - name: Setup Node.js
         if: ${{ inputs.setup-node }}
         uses: actions/setup-node@v6.4.0
         with:
           node-version: ${{ inputs.node-version }}
+
+      - name: Download Buildchain runtime checkout bootstrap
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ inputs.artifact-name }}-runtime-checkout-bootstrap-${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          path: .buildchain/runtime-bootstrap
+
+      - name: Checkout Buildchain runtime
+        run: node .buildchain/runtime-bootstrap/locked-source-checkout.mjs
+        env:
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ inputs.buildchain-repository }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_SOURCE_REF: ${{ needs.trust-gate.outputs.buildchain-runtime-full-ref }}
+          BUILDCHAIN_SOURCE_CHECKOUT_PATH: .buildchain/runtime
+          BUILDCHAIN_CHECKOUT_CACHE_MODE: ${{ inputs.checkout-cache-mode }}
+          BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE: ${{ inputs.checkout-cache-mirror-url-template || vars.BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE }}
+          BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE: ${{ inputs.checkout-cache-reference-repository-template || vars.BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE }}
+          BUILDCHAIN_CHECKOUT_CACHE_FALLBACK: ${{ inputs.checkout-cache-fallback }}
+          BUILDCHAIN_CHECKOUT_CACHE_TIMEOUT_SECONDS: ${{ inputs.checkout-cache-timeout-seconds }}
+          BUILDCHAIN_CHECKOUT_CACHE_GITHUB_TIMEOUT_SECONDS: ${{ inputs.checkout-cache-github-timeout-seconds }}
+          BUILDCHAIN_CHECKOUT_CACHE_FETCH_ATTEMPTS: ${{ inputs.checkout-cache-fetch-attempts }}
+          BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH: .buildchain/diagnostics/runtime-checkout.json
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Upload Buildchain runtime checkout diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-runtime-checkout-${{ matrix.platform.id }}-${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          path: .buildchain/diagnostics/runtime-checkout.json
+          if-no-files-found: warn
+          retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Checkout locked source
         run: node .buildchain/runtime/scripts/locked-source-checkout.mjs
@@ -1032,14 +1064,6 @@ jobs:
       image: ${{ needs.resolve-contract.outputs.linux-container-image }}
       options: --user root
     steps:
-      - name: Checkout Buildchain runtime
-        uses: actions/checkout@v7.0.0
-        with:
-          repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          path: .buildchain/runtime
-          persist-credentials: false
-
       - name: Setup Buildchain Node.js with fnm
         shell: bash
         run: |
@@ -1051,6 +1075,38 @@ jobs:
           corepack enable
         env:
           BUILDCHAIN_NODE_VERSION: ${{ inputs.node-version }}
+
+      - name: Download Buildchain runtime checkout bootstrap
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ inputs.artifact-name }}-runtime-checkout-bootstrap-${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          path: .buildchain/runtime-bootstrap
+
+      - name: Checkout Buildchain runtime
+        run: node .buildchain/runtime-bootstrap/locked-source-checkout.mjs
+        env:
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ inputs.buildchain-repository }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_SOURCE_REF: ${{ needs.trust-gate.outputs.buildchain-runtime-full-ref }}
+          BUILDCHAIN_SOURCE_CHECKOUT_PATH: .buildchain/runtime
+          BUILDCHAIN_CHECKOUT_CACHE_MODE: ${{ inputs.checkout-cache-mode }}
+          BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE: ${{ inputs.checkout-cache-mirror-url-template || vars.BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE }}
+          BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE: ${{ inputs.checkout-cache-reference-repository-template || vars.BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE }}
+          BUILDCHAIN_CHECKOUT_CACHE_FALLBACK: ${{ inputs.checkout-cache-fallback }}
+          BUILDCHAIN_CHECKOUT_CACHE_TIMEOUT_SECONDS: ${{ inputs.checkout-cache-timeout-seconds }}
+          BUILDCHAIN_CHECKOUT_CACHE_GITHUB_TIMEOUT_SECONDS: ${{ inputs.checkout-cache-github-timeout-seconds }}
+          BUILDCHAIN_CHECKOUT_CACHE_FETCH_ATTEMPTS: ${{ inputs.checkout-cache-fetch-attempts }}
+          BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH: .buildchain/diagnostics/runtime-checkout.json
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Upload Buildchain runtime checkout diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-runtime-checkout-${{ matrix.platform.id }}-${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          path: .buildchain/diagnostics/runtime-checkout.json
+          if-no-files-found: warn
+          retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Checkout locked source
         run: node .buildchain/runtime/scripts/locked-source-checkout.mjs
