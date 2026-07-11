@@ -38,6 +38,25 @@ Each archive is accompanied by:
 - `buildchain-release-bundle.tar.gz`;
 - `buildchain-release-bundle.json`.
 
+## KFD-3 Distribution Declaration
+
+Buildchain self-describes this release lane in `dist/site/kfd-claims.json` as
+the KFD-3 surface `distribution:buildchain-standalone`. Its declaration assigns
+registration to Shifu, names `binary:build` as the reproducible task, and lists
+the artifact kind, platform, and path glob for all three archives. Shifu should
+discover the registry through `buildchain layout --json`, not by copying the
+registry path.
+
+The repository-owned task is:
+
+```bash
+pnpm binary:build
+```
+
+The release workflow still builds each target on its declared runner. The local
+task is the stable task identity used by the KFD declaration and local smoke
+checks; it does not replace the three-platform release matrix.
+
 ## Runner Policy
 
 Production binary builds use GitHub-hosted runners:
@@ -69,7 +88,7 @@ offline review, mirroring, or site ingestion.
 ## Local Smoke
 
 ```bash
-node scripts/build-standalone-binary.mjs --version v0.0.0-local --output-dir dist/binary
+pnpm binary:build -- --version v0.0.0-local
 node bin/buildchain.mjs collect github-release \
   --tag v0.0.0-local \
   --assets-dir dist/binary \

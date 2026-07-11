@@ -109,7 +109,7 @@
       "path": "docs/binary-distribution.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:36899140a9b2e9ce1565ed41f3d64f73a8829fad3d59a04b9498d9479c85c4be"
+      "digest": "sha256:08be4e97e1940a45a2c0aa2506012255888c23c1cbf8f5362b27c2b21089eb58"
     },
     {
       "id": "consumer-issue-reporting",
@@ -173,7 +173,7 @@
       "path": "docs/cli.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:133a7921163fecda050d772827bd498f35f11b1a3514e303dbfe89bb7a220f5d"
+      "digest": "sha256:3b3ac97c353f7549229f1102cca38236e734ec8d08c219d4a6e5ef2a48fc0e16"
     },
     {
       "id": "build-facts",
@@ -189,7 +189,7 @@
       "path": "docs/kfd-support.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:456eef9dbb71df3842613083054942436e763c6aa5ca3ff8a51c5a4e8cc186e7"
+      "digest": "sha256:ab15de33a1a9e292b6da74c00b8b96b7c46330d0553a454d1de4c24c672fc025"
     },
     {
       "id": "lifecycle-protocol",

@@ -84,6 +84,7 @@
     "check:site": "node scripts/generate-site-bundle.mjs --check",
     "test:unit": "node --test tests/*.test.mjs",
     "build": "pnpm -r --filter \"./actions/**\" build",
+    "binary:build": "node scripts/build-standalone-binary.mjs",
     "package": "npm pack --dry-run --json --registry=https://registry.npmjs.org/",
     "pack:check": "npm pack --dry-run --json --registry=https://registry.npmjs.org/"
   },

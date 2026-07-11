@@ -3,11 +3,11 @@
   "contract": "kungfu-buildchain-public-surface-reverse-audit",
   "status": "passed",
   "summary": {
-    "cliCommandCount": 75,
+    "cliCommandCount": 76,
     "workflowCount": 41,
     "actionCount": 4,
     "sitePageCount": 46,
-    "docCommandRefCount": 237,
+    "docCommandRefCount": 241,
     "failureCount": 0
   },
   "enumerated": {
@@ -256,6 +256,11 @@
         "id": "kfd-upstream-roles",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain kfd upstream roles [--json]"
+      },
+      {
+        "id": "layout",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain layout [--cwd <dir>] [--json]"
       },
       {
         "id": "lifecycle",
@@ -2211,6 +2216,26 @@
         "command": "buildchain kfd"
       },
       {
+        "id": "layout",
+        "path": "docs/binary-distribution.md",
+        "command": "buildchain layout --json"
+      },
+      {
+        "id": "layout",
+        "path": "docs/cli.md",
+        "command": "buildchain layout --cwd"
+      },
+      {
+        "id": "layout",
+        "path": "docs/cli.md",
+        "command": "buildchain layout"
+      },
+      {
+        "id": "layout",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain layout --cwd"
+      },
+      {
         "id": "lifecycle",
         "path": "docs/cli.md",
         "command": "buildchain lifecycle run build"
@@ -2641,9 +2666,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "3c0729f5351eb82fe26625fa5aabf30903f45f68af2431e02860f85ada468ac9",
+    "cliRegistryDigest": "ab57fec294efb9dde1612787bfd0d532b5bb95298b5da14a2b51a5e71b9c7dcc",
     "workflowRegistryDigest": "60957af5c033c999d29ca0187eff28841311567580a5279a7b6843c2a270cc08",
-    "pageRegistryDigest": "b15ee7c795d14273836cb82d3a3c902e594647faa6336b17ef8d6f5ee337921d"
+    "pageRegistryDigest": "ed070a5bd6c9c8ca7622800d79eb9fba72a8672e8b8ac5dc0f2b8822291fc245"
   },
   "comparison": {
     "missingCliRegistry": [],

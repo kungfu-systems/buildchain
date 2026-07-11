@@ -86,6 +86,7 @@ import {
   queryKfd3Capabilities,
   registerKfd3Surfaces,
 } from "../packages/core/kfd3-surface-register.js";
+import { createBuildchainLayoutDiscovery } from "../packages/core/buildchain-layout.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const embeddedPackageVersion = process.env.BUILDCHAIN_EMBEDDED_PACKAGE_VERSION || "";
@@ -94,6 +95,7 @@ function usage() {
   return `Usage:
   buildchain --help
   buildchain version
+  buildchain layout [--cwd <dir>] [--json]
   buildchain init [--cwd <dir>] [--type package|native|web-surface|infra-contract|publication-artifact|anchored-package] [--force]
                   [--package-manager pnpm|npm|yarn] [--runner-preset <preset>]
                   [--artifact-name <template>]
@@ -1273,6 +1275,22 @@ async function main(argv = process.argv.slice(2)) {
 
   if (command === "version" || command === "--version" || command === "-v") {
     process.stdout.write(`${packageVersion()}\n`);
+    return;
+  }
+
+  if (command === "layout") {
+    const result = createBuildchainLayoutDiscovery({
+      cwd: readFlag(args, "cwd", process.cwd()),
+      buildchainVersion: packageVersion(),
+    });
+    if (readBooleanFlag(args, "json")) {
+      printJson(result);
+    } else {
+      process.stdout.write(`Buildchain layout (${result.buildchain.version || "unknown"})\n`);
+      process.stdout.write(`- config: ${result.repository.configPath}\n`);
+      process.stdout.write(`- KFD-3 registry: ${result.kfd.registries["kfd-3"].path}\n`);
+      process.stdout.write(`- Shifu jurisdiction: ${result.shifu.jurisdiction.field}=${result.shifu.jurisdiction.value}\n`);
+    }
     return;
   }
 
