@@ -256,6 +256,15 @@ evaluated after the PR-stage release candidate has been resolved and before the
 publish-gate ref, package registry, exact stable tag, or floating stable refs
 are mutated. Train refs and alpha promotion do not execute this gate.
 
+All alpha and release promotions first run a metadata-only release-candidate
+preflight after queued-intent revalidation. The preflight uses the same resolver
+and exact target SHA as the publication job, but does not download payloads or
+install the candidate repository dependencies. Missing channel PRs, stale
+workflow runs, expired passport pairs, and insufficient payload artifact sets
+therefore fail before the full promotion job starts. The publication job still
+downloads and validates the exact evidence again at the trust boundary; the
+preflight moves failure earlier without weakening the final check.
+
 The policy is versioned in `.buildchain/stable-release-policy.json`. A stable
 candidate is allowed only when all of these facts are true:
 

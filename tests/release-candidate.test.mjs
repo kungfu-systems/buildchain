@@ -15,6 +15,7 @@ import {
   generatePublishRequiredArtifacts,
   readNpmPackageArtifact,
   resolveReleaseCandidateArtifacts,
+  releaseCandidateDownloadEnabled,
   selectMergedChannelPullRequest,
   selectPayloadArtifacts,
   selectReleaseCandidateArtifacts,
@@ -28,6 +29,13 @@ import {
 } from "../scripts/workflow-friction-report.mjs";
 
 const SOURCE_SHA = "1111111111111111111111111111111111111111";
+
+test("release candidate resolver makes metadata-only preflight explicit", () => {
+  assert.equal(releaseCandidateDownloadEnabled("false"), false);
+  assert.equal(releaseCandidateDownloadEnabled("FALSE"), false);
+  assert.equal(releaseCandidateDownloadEnabled("true"), true);
+  assert.equal(releaseCandidateDownloadEnabled(""), true);
+});
 
 function createNpmTarball(root, packageJson, filename) {
   const source = path.join(root, `${filename}-src`);
