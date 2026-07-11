@@ -1537,11 +1537,22 @@ test("Buildchain stable promotion gates publication after RC resolution", () => 
     "utf8",
   ));
   const rcIndex = wrapper.indexOf("- name: Resolve PR-stage release candidate");
+  const stableCandidateIndex = wrapper.indexOf("- name: Resolve Buildchain stable candidate alpha");
   const stableGateIndex = wrapper.indexOf("- name: Enforce Buildchain stable release canary gate");
   const publishGateIndex = wrapper.indexOf("- name: Ensure publish-gate ref locks promotion commit");
 
-  assert.ok(rcIndex >= 0 && stableGateIndex > rcIndex && publishGateIndex > stableGateIndex);
+  assert.ok(
+    rcIndex >= 0 &&
+      stableCandidateIndex > rcIndex &&
+      stableGateIndex > stableCandidateIndex &&
+      publishGateIndex > stableGateIndex,
+  );
   assert.match(wrapper, /needs\.preflight\.outputs\.channel == 'release'/);
+  assert.match(wrapper, /Buildchain stable candidate must declare an exact alpha version/);
+  assert.match(
+    wrapper,
+    /BUILDCHAIN_RELEASE_CANDIDATE_VERSION: \$\{\{ steps\.buildchain-stable-candidate\.outputs\.version \}\}/,
+  );
   assert.match(wrapper, /node \.buildchain\/runtime\/scripts\/stable-release-gate\.mjs/);
   assert.equal(policy.minimumStableIntervalSeconds, 86400);
   assert.equal(policy.minimumCanarySoakSeconds, 3600);
