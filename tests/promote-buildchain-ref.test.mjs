@@ -4803,6 +4803,79 @@ test("publish transaction durable ref waits out stale ref reads after non-fast-f
   }
 });
 
+test("publish transaction retries a non-fast-forward while the durable ref still reports its parent", async () => {
+  const originalRetryDelay = process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS;
+  process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS = "0";
+  const cwd = makeTempWorkspace({});
+  const statePath = path.join(cwd, ".buildchain/release-state/1.0.0.json");
+  const transaction = {
+    schema: 1,
+    id: "tx-parent-visible",
+    repository: "kungfu-systems/buildchain",
+    target_ref: "release/v1/v1.0",
+    source_sha: SHA,
+    release_sha: OTHER_SHA,
+    release_material_sha: OTHER_SHA,
+    publish_tooling_sha: OTHER_SHA,
+    version: "1.0.0",
+    exact_tag: "v1.0.0",
+    channel: "release",
+    line: "v1.0",
+    version_strategy: "",
+    lifecycle_identity: "lifecycle.publish",
+    state_ref: "buildchain/release-state/1-0-0",
+    state_path: statePath,
+    evidence_path: "",
+    state: "publishing",
+    previous_state: "prepared",
+    actor: "codex",
+    run_id: "1",
+    superseded_by: "",
+    failure: "",
+    artifacts: [],
+    evidence: [],
+    created_at: "2026-07-01T00:00:00.000Z",
+    updated_at: "2026-07-01T00:00:01.000Z",
+  };
+  const { octokit, refs } = createGitMock({
+    refs: new Map([["heads/buildchain/release-state/1-0-0", SHA]]),
+  });
+  const originalUpdateRef = octokit.rest.git.updateRef;
+  let rejectOnce = true;
+  let updateAttempts = 0;
+  octokit.rest.git.updateRef = async (args) => {
+    updateAttempts += 1;
+    if (rejectOnce) {
+      rejectOnce = false;
+      throw Object.assign(new Error("Update is not a fast forward"), {
+        status: 422,
+        response: { data: { message: "Update is not a fast forward" } },
+      });
+    }
+    return originalUpdateRef(args);
+  };
+
+  try {
+    const result = await persistDurableReleaseTransaction({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      cwd,
+      transaction,
+      evidencePath: "",
+    });
+
+    assert.equal(updateAttempts, 2);
+    assert.equal(refs.get("heads/buildchain/release-state/1-0-0"), result.sha);
+  } finally {
+    if (originalRetryDelay === undefined) {
+      delete process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS;
+    } else {
+      process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS = originalRetryDelay;
+    }
+  }
+});
+
 test("publish transaction retries transient durable release-state writes", async () => {
   const originalRetryDelay = process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS;
   process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS = "0";
