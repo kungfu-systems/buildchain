@@ -438,13 +438,15 @@
           "require-trusted-event",
           "require-verify",
           "runner-preset",
+          "rust-toolchain",
           "sample-process-tree",
           "setup-node",
+          "setup-rust",
           "untrusted-policy",
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 50
+        "inputCount": 52
       },
       {
         "id": ".bump-minor-version",
@@ -736,13 +738,15 @@
           "require-trusted-event",
           "require-verify",
           "runner-preset",
+          "rust-toolchain",
           "sample-process-tree",
           "setup-node",
+          "setup-rust",
           "untrusted-policy",
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 53
+        "inputCount": 55
       },
       {
         "id": "buildchain-alpha-self-dogfood",
@@ -2642,8 +2646,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "3c0729f5351eb82fe26625fa5aabf30903f45f68af2431e02860f85ada468ac9",
-    "workflowRegistryDigest": "60957af5c033c999d29ca0187eff28841311567580a5279a7b6843c2a270cc08",
-    "pageRegistryDigest": "b15ee7c795d14273836cb82d3a3c902e594647faa6336b17ef8d6f5ee337921d"
+    "workflowRegistryDigest": "f77ffedc282ca5e5b718ec2f62adc6571dbf780c07ccf8f6e17ac52b58d5140a",
+    "pageRegistryDigest": "b0099bc8b62a36f90c8a90e87d18105ac46cb02248f617c5d3bd66da21d26196"
   },
   "comparison": {
     "missingCliRegistry": [],

@@ -109,6 +109,16 @@ on:
         default: "24"
         type: string
         required: false
+      setup-rust:
+        description: "Install a Rust toolchain for native lifecycle jobs"
+        default: false
+        type: boolean
+        required: false
+      rust-toolchain:
+        description: "Rust toolchain installed when setup-rust is enabled"
+        default: "stable"
+        type: string
+        required: false
       install-command:
         default: ""
         type: string
@@ -486,6 +496,8 @@ jobs:
       publish-registry: ${{ inputs.publish-registry }}
       setup-node: ${{ inputs.setup-node }}
       node-version: ${{ inputs.node-version }}
+      setup-rust: ${{ inputs.setup-rust }}
+      rust-toolchain: ${{ inputs.rust-toolchain }}
       install-command: ${{ inputs.install-command }}
       build-command: ${{ inputs.build-command }}
       verify-command: ${{ inputs.verify-command }}

@@ -162,6 +162,23 @@ Artifact names, manifest paths, expected artifact checks, publish-source locks,
 and aggregate summaries are the same in both jobs. The split is an execution
 detail, not a different artifact contract.
 
+## Native Rust Toolchains
+
+Native lifecycle jobs can request an isolated Rust installation instead of
+depending on a self-hosted runner user's PATH:
+
+```yaml
+with:
+  setup-rust: true
+  rust-toolchain: "1.96.0"
+```
+
+`setup-rust` defaults to `false`, so existing consumers are unchanged. When it
+is enabled, Buildchain installs `rust-toolchain` before the install, build, and
+verify lifecycle stages on every native matrix platform. Pin an exact toolchain
+for release builds. Linux container jobs continue to obtain Rust from their
+digest-pinned image contract; Buildchain does not mutate that container surface.
+
 The container image provides `fnm` but does not preinstall Node. Buildchain uses
 `fnm` inside the container to install the requested `node-version` before it
 runs Buildchain runtime scripts or lifecycle actions.

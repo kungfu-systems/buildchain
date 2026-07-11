@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "6ec95f4025ff96a5fdd7a6b8a9c91bd70726d8f3e5f0eb6eda13b7a13d654eb7",
+    "sha256": "29be27cff2aaad6acbdfdca44ccecc64402a5ebf79dc8a5652700a0934e02f06",
     "summary": {
       "cliCommandCount": 75,
       "workflowCount": 41,
@@ -208,7 +208,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "6ec95f4025ff96a5fdd7a6b8a9c91bd70726d8f3e5f0eb6eda13b7a13d654eb7",
+      "sha256": "29be27cff2aaad6acbdfdca44ccecc64402a5ebf79dc8a5652700a0934e02f06",
       "summary": {
         "cliCommandCount": 75,
         "workflowCount": 41,
@@ -2294,7 +2294,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 50,
+          "inputCount": 52,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -2341,8 +2341,10 @@
             "require-trusted-event",
             "require-verify",
             "runner-preset",
+            "rust-toolchain",
             "sample-process-tree",
             "setup-node",
+            "setup-rust",
             "untrusted-policy",
             "verify-command",
             "working-directory"
@@ -2709,7 +2711,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 53,
+          "inputCount": 55,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -2759,8 +2761,10 @@
             "require-trusted-event",
             "require-verify",
             "runner-preset",
+            "rust-toolchain",
             "sample-process-tree",
             "setup-node",
+            "setup-rust",
             "untrusted-policy",
             "verify-command",
             "working-directory"

@@ -93,6 +93,16 @@ on:
         default: "24"
         type: string
         required: false
+      setup-rust:
+        description: "Install a Rust toolchain for native lifecycle jobs"
+        default: false
+        type: boolean
+        required: false
+      rust-toolchain:
+        description: "Rust toolchain installed when setup-rust is enabled"
+        default: "stable"
+        type: string
+        required: false
       install-command:
         default: ""
         type: string
@@ -845,6 +855,12 @@ jobs:
         uses: actions/setup-node@v6.4.0
         with:
           node-version: ${{ inputs.node-version }}
+
+      - name: Setup Rust toolchain
+        if: ${{ inputs.setup-rust }}
+        uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
+        with:
+          toolchain: ${{ inputs.rust-toolchain }}
 
       - name: Download Buildchain runtime checkout bootstrap
         uses: actions/download-artifact@v7.0.0

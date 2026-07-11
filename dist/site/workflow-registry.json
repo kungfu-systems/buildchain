@@ -52,13 +52,15 @@
         "require-trusted-event",
         "require-verify",
         "runner-preset",
+        "rust-toolchain",
         "sample-process-tree",
         "setup-node",
+        "setup-rust",
         "untrusted-policy",
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 50,
+      "inputCount": 52,
       "surface": "reusable-build",
       "capabilityGroup": "api-cli-reference",
       "status": "active"
@@ -395,13 +397,15 @@
         "require-trusted-event",
         "require-verify",
         "runner-preset",
+        "rust-toolchain",
         "sample-process-tree",
         "setup-node",
+        "setup-rust",
         "untrusted-policy",
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 53,
+      "inputCount": 55,
       "surface": "channel-build-router",
       "capabilityGroup": "reusable-build",
       "status": "active"

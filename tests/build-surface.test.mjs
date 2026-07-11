@@ -107,6 +107,12 @@ test("reusable build workflow exposes the required surface contract", () => {
     /fromJSON\(needs\.resolve-contract\.outputs\.container-platforms-json\)/,
   );
   assert.match(workflow, /Setup Buildchain Node\.js with fnm/);
+  assert.match(workflow, /setup-rust:/);
+  assert.match(workflow, /rust-toolchain:/);
+  assert.match(workflow, /Setup Rust toolchain/);
+  assert.match(workflow, /if: \$\{\{ inputs\.setup-rust \}\}/);
+  assert.match(workflow, /dtolnay\/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30/);
+  assert.match(workflow, /toolchain: \$\{\{ inputs\.rust-toolchain \}\}/);
   assert.match(workflow, /container:/);
   assert.match(workflow, /require-trusted-event:/);
   assert.match(workflow, /buildchain-ref:/);
