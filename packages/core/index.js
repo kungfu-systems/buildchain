@@ -3,6 +3,7 @@ export {
   getLifecycleStage,
   getNativeDiagnosticsProfile,
   getPublishContract,
+  getStableReleasePolicy,
   getVersionStrategy,
   loadBuildchainConfig,
   loadConfiguredAnchorManifest,
@@ -12,6 +13,20 @@ export {
   updateConfiguredVersionStateContents,
   validateBuildchainConfig,
 } from "./buildchain-config.js";
+
+export {
+  STABLE_CANDIDATE_LEDGER_CONTRACT,
+  STABLE_CANDIDATE_STATES,
+  createStableCandidateLedger,
+  markStableCandidatePromoted,
+  normalizeStableCandidateLedger,
+  qualifyStableCandidate,
+  registerStableCandidate,
+  revokeStableCandidate,
+  selectStableCandidate,
+  setStableCandidateHold,
+  stableCandidatePromotionRefs,
+} from "./stable-candidate-ledger.js";
 
 export {
   assertPackageManager,

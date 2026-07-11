@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:bad18d05d3d03b77bf64d8697fc351d58b1372a355a4f25c6719bf08984a79a2"
+      "digest": "sha256:0735009b21cea9227f2c9b9bcbec1219898f4d211776b60aa030ace65821ec80"
     },
     {
       "id": "install",
@@ -221,7 +221,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:11f0e3ff3162c7b3f886a38ab0e4b591886e2046937a9d006eda74b72a8cc9ab"
+      "digest": "sha256:a868fd50875aa64ae26d8e37a5bfbc4be137ce89be3b0726e97a7a8028a667f4"
     },
     {
       "id": "release-flow",

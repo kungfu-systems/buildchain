@@ -30,6 +30,7 @@
     "./publication-package": "./packages/core/publication-package.js",
     "./kfd-gate": "./packages/core/kfd-gate.js",
     "./release-candidate": "./packages/core/release-candidate.js",
+    "./stable-candidate-ledger": "./packages/core/stable-candidate-ledger.js",
     "./release-passport": "./packages/core/release-passport.js",
     "./release-propagation": "./packages/core/release-propagation.js",
     "./surface-manifest": "./packages/core/surface-manifest.js",

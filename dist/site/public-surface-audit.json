@@ -4,9 +4,9 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 75,
-    "workflowCount": 39,
+    "workflowCount": 41,
     "actionCount": 4,
-    "sitePageCount": 45,
+    "sitePageCount": 46,
     "docCommandRefCount": 237,
     "failureCount": 0
   },
@@ -810,6 +810,16 @@
         "inputCount": 3
       },
       {
+        "id": "buildchain-stable-candidate-patrol",
+        "path": ".github/workflows/buildchain-stable-candidate-patrol.yml",
+        "inputs": [
+          "buildchain-ref",
+          "dry-run",
+          "release-now"
+        ],
+        "inputCount": 3
+      },
+      {
         "id": "candidate-lab",
         "path": ".github/workflows/candidate-lab.yml",
         "inputs": [
@@ -1076,6 +1086,28 @@
         "path": ".github/workflows/self-hosted-runner-smoke.yml",
         "inputs": [],
         "inputCount": 0
+      },
+      {
+        "id": "stable-candidate-patrol",
+        "path": ".github/workflows/stable-candidate-patrol.yml",
+        "inputs": [
+          "auto-approve",
+          "auto-merge",
+          "auto-promote",
+          "buildchain-ref",
+          "buildchain-repository",
+          "dry-run",
+          "hold",
+          "hold-reason",
+          "ledger-ref",
+          "minimum-soak-seconds",
+          "release-now",
+          "required-checks",
+          "revoke-reason",
+          "revoked-versions",
+          "target-branch"
+        ],
+        "inputCount": 15
       },
       {
         "id": "verify",
@@ -1394,6 +1426,10 @@
       },
       {
         "id": "manual:site-bundle-contract",
+        "category": "manual"
+      },
+      {
+        "id": "manual:stable-candidate-patrol",
         "category": "manual"
       },
       {
@@ -2606,8 +2642,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "3c0729f5351eb82fe26625fa5aabf30903f45f68af2431e02860f85ada468ac9",
-    "workflowRegistryDigest": "2bd177fe6e3cbcd382ba30d90c96f35865ef17fc29e451715696cb076d7da933",
-    "pageRegistryDigest": "b5dd01ba00663f68c579a0a2661707094cb4db99b0ee30dd608e224a517b490e"
+    "workflowRegistryDigest": "60957af5c033c999d29ca0187eff28841311567580a5279a7b6843c2a270cc08",
+    "pageRegistryDigest": "b15ee7c795d14273836cb82d3a3c902e594647faa6336b17ef8d6f5ee337921d"
   },
   "comparison": {
     "missingCliRegistry": [],
