@@ -22,7 +22,7 @@ concurrency:
 jobs:
   alpha-consumer:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
-    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v2-alpha
+    uses: kungfu-systems/buildchain/.github/workflows/build.yml@train/v2/v2.3/channel-router
     permissions:
       contents: read
       issues: write
@@ -43,7 +43,7 @@ jobs:
 
   stable-consumer:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
-    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v2-alpha
+    uses: kungfu-systems/buildchain/.github/workflows/build.yml@train/v2/v2.3/channel-router
     permissions:
       contents: read
       issues: write
