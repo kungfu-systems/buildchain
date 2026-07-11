@@ -10,6 +10,7 @@ import {
   createBuildchainContractWorld,
   evaluateBuildchainContractLock,
   finalizeBuildchainContractWorld,
+  readBuildchainContractWorld,
   renderBuildchainContractDriftIssueBody,
 } from "../packages/core/buildchain-contract.js";
 import {
@@ -214,6 +215,39 @@ test("write-lock records resolved SHA and contract digest", () => {
   assert.equal(lock.buildchain.resolvedSha, "c".repeat(40));
   assert.equal(lock.buildchain.contractDigest, contract.contractDigest);
   assert.equal(JSON.parse(fs.readFileSync(lockPath, "utf8")).contract, BUILDCHAIN_CONTRACT_LOCK);
+});
+
+test("released contract worlds preserve their authoritative digests", () => {
+  const workspace = tempDir("released-world-round-trip");
+  const contract = createBuildchainContractWorld({
+    root: path.resolve(import.meta.dirname, ".."),
+    packageJson: { name: "@kungfu-tech/buildchain", version: "2.12.0-alpha.1" },
+  });
+  const contractPath = path.join(workspace, "buildchain-contract.json");
+  fs.writeFileSync(contractPath, `${JSON.stringify(contract, null, 2)}\n`);
+
+  const released = readBuildchainContractWorld(contractPath);
+
+  assert.equal(released.contractDigest, contract.contractDigest);
+  assert.equal(released.compatibilityDigest, contract.compatibilityDigest);
+});
+
+test("released contract worlds reject digest replacement instead of silently recomputing", () => {
+  const workspace = tempDir("released-world-digest-mismatch");
+  const contract = createBuildchainContractWorld({
+    root: path.resolve(import.meta.dirname, ".."),
+    packageJson: { name: "@kungfu-tech/buildchain", version: "2.12.0-alpha.1" },
+  });
+  const contractPath = path.join(workspace, "buildchain-contract.json");
+  fs.writeFileSync(contractPath, `${JSON.stringify({
+    ...contract,
+    contractDigest: "sha256:published-authoritative-digest",
+  }, null, 2)}\n`);
+
+  assert.throws(
+    () => readBuildchainContractWorld(contractPath),
+    /published contractDigest mismatch/,
+  );
 });
 
 test("contract drift issue body explains compatible and breaking next actions", () => {

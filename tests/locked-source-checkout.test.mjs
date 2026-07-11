@@ -58,6 +58,40 @@ test("locked source checkout uses a mirror cache and verifies head and tree", ()
   assert.equal(persisted.cache.hit, true);
 });
 
+test("locked checkout CLI can bootstrap a nested Buildchain runtime from the mirror", () => {
+  const origin = createRepository();
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-runtime-checkout-work-"));
+  const scriptPath = path.resolve(import.meta.dirname, "..", "scripts", "locked-source-checkout.mjs");
+
+  execFileSync(process.execPath, [scriptPath], {
+    cwd: workspace,
+    env: {
+      ...process.env,
+      BUILDCHAIN_SOURCE_REPOSITORY: "kungfu-systems/buildchain",
+      BUILDCHAIN_SOURCE_SHA: origin.sha,
+      BUILDCHAIN_SOURCE_REF: "refs/heads/train/v2/v2.3/runtime-checkout-cache",
+      BUILDCHAIN_SOURCE_TREE_SHA: origin.tree,
+      BUILDCHAIN_SOURCE_CHECKOUT_PATH: ".buildchain/runtime",
+      BUILDCHAIN_CHECKOUT_CACHE_MODE: "require",
+      BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE: `file://${origin.bare}`,
+      BUILDCHAIN_CHECKOUT_CACHE_FALLBACK: "fail",
+      BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH: ".buildchain/diagnostics/runtime-checkout.json",
+    },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+
+  assert.equal(git(["rev-parse", "HEAD"], path.join(workspace, ".buildchain", "runtime")), origin.sha);
+  const evidence = JSON.parse(fs.readFileSync(
+    path.join(workspace, ".buildchain", "diagnostics", "runtime-checkout.json"),
+    "utf8",
+  ));
+  assert.equal(evidence.repository, "kungfu-systems/buildchain");
+  assert.equal(evidence.checkoutPath, ".buildchain/runtime");
+  assert.equal(evidence.cache.transport, "mirror-url");
+  assert.equal(evidence.verification.headOk, true);
+  assert.equal(evidence.verification.treeOk, true);
+});
+
 test("locked source checkout auto mode falls back to GitHub transport", () => {
   const origin = createRepository();
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-checkout-fallback-"));
