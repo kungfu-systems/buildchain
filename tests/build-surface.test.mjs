@@ -2481,6 +2481,18 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
   assert.doesNotMatch(workflow, /buildchain-ref:/);
   assert.doesNotMatch(workflow, /\.build\.yml@v2\n/);
+  assert.match(workflow, /buildchain-contract-lock-path: \.buildchain\/alpha-contract-lock\.json/);
+
+  const alphaLock = JSON.parse(
+    fs.readFileSync(path.join(root, ".buildchain/alpha-contract-lock.json"), "utf8"),
+  );
+  const currentContract = JSON.parse(
+    fs.readFileSync(path.join(root, "dist/site/buildchain-contract.json"), "utf8"),
+  );
+  assert.equal(alphaLock.buildchain.ref, "v2-alpha");
+  assert.equal(alphaLock.buildchain.resolvedSha, "d7b9453665a60392e9082444dcc8e023cafc000c");
+  assert.equal(alphaLock.buildchain.compatibilityPolicy, "major-compatible");
+  assert.equal(alphaLock.buildchain.compatibilityDigest, currentContract.compatibilityDigest);
 
   const reusableBuild = fs.readFileSync(
     path.join(root, ".github/workflows/.build.yml"),

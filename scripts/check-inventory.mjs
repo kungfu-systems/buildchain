@@ -58,6 +58,7 @@ const requiredPaths = [
   "tests/buildchain-inventory.json",
   ".buildchain/buildchain.toml",
   ".buildchain/contract-lock.json",
+  ".buildchain/alpha-contract-lock.json",
   ".buildchain/release-impact.json",
   ".github/actionlint.yaml",
   ".github/workflows/self-hosted-runner-smoke.yml",
@@ -102,9 +103,27 @@ const selfDogfoodWorkflow = fs.readFileSync(
   path.join(root, ".github/workflows/buildchain-alpha-self-dogfood.yml"),
   "utf8",
 );
+const selfDogfoodAlphaLock = JSON.parse(
+  fs.readFileSync(path.join(root, ".buildchain/alpha-contract-lock.json"), "utf8"),
+);
+const currentBuildchainContract = JSON.parse(
+  fs.readFileSync(path.join(root, "dist/site/buildchain-contract.json"), "utf8"),
+);
 const selfDogfoodMajor = String(rootPackage.version || "").match(/^(\d+)\./)?.[1];
 if (!selfDogfoodMajor) {
   throw new Error("root package version must expose a numeric major for self-dogfood");
+}
+if (selfDogfoodAlphaLock.buildchain?.ref !== `v${selfDogfoodMajor}-alpha`) {
+  throw new Error("Buildchain self-dogfood alpha lock must target the current major alpha ref");
+}
+if (!/^[0-9a-f]{40}$/.test(selfDogfoodAlphaLock.buildchain?.resolvedSha || "")) {
+  throw new Error("Buildchain self-dogfood alpha lock must record an exact accepted SHA");
+}
+if (selfDogfoodAlphaLock.buildchain?.compatibilityPolicy !== "major-compatible") {
+  throw new Error("Buildchain self-dogfood alpha lock must enforce major-compatible policy");
+}
+if (selfDogfoodAlphaLock.buildchain?.compatibilityDigest !== currentBuildchainContract.compatibilityDigest) {
+  throw new Error("Buildchain self-dogfood alpha lock requires review after a breaking contract change");
 }
 for (const requiredSnippet of [
   `/.github/workflows/.build.yml@v${selfDogfoodMajor}-alpha`,
@@ -112,6 +131,7 @@ for (const requiredSnippet of [
   `echo "ref=v${selfDogfoodMajor}"`,
   `const alphaRef = "v${selfDogfoodMajor}-alpha"`,
   `const stableRef = "v${selfDogfoodMajor}"`,
+  "buildchain-contract-lock-path: .buildchain/alpha-contract-lock.json",
 ]) {
   if (!selfDogfoodWorkflow.includes(requiredSnippet)) {
     throw new Error(`Buildchain self-dogfood workflow missing current-major snippet: ${requiredSnippet}`);
