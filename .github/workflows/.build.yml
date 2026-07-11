@@ -856,8 +856,28 @@ jobs:
         with:
           node-version: ${{ inputs.node-version }}
 
+      - name: Setup Rust toolchain on Windows
+        if: ${{ inputs.setup-rust && runner.os == 'Windows' }}
+        shell: powershell
+        env:
+          BUILDCHAIN_RUST_TOOLCHAIN: ${{ inputs.rust-toolchain }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+          $cargoHome = Join-Path $env:RUNNER_TEMP "buildchain-cargo"
+          $rustupHome = Join-Path $env:RUNNER_TEMP "buildchain-rustup"
+          $rustupInit = Join-Path $env:RUNNER_TEMP "buildchain-rustup-init.exe"
+          Invoke-WebRequest -UseBasicParsing -Uri "https://win.rustup.rs/x86_64" -OutFile $rustupInit
+          $env:CARGO_HOME = $cargoHome
+          $env:RUSTUP_HOME = $rustupHome
+          & $rustupInit --default-toolchain $env:BUILDCHAIN_RUST_TOOLCHAIN --profile minimal -y --no-modify-path
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Join-Path $cargoHome "bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          "CARGO_HOME=$cargoHome" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "RUSTUP_HOME=$rustupHome" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
       - name: Setup Rust toolchain
-        if: ${{ inputs.setup-rust }}
+        if: ${{ inputs.setup-rust && runner.os != 'Windows' }}
         uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
         with:
           toolchain: ${{ inputs.rust-toolchain }}

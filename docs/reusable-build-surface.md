@@ -175,9 +175,12 @@ with:
 
 `setup-rust` defaults to `false`, so existing consumers are unchanged. When it
 is enabled, Buildchain installs `rust-toolchain` before the install, build, and
-verify lifecycle stages on every native matrix platform. Pin an exact toolchain
-for release builds. Linux container jobs continue to obtain Rust from their
-digest-pinned image contract; Buildchain does not mutate that container surface.
+verify lifecycle stages on every native matrix platform. Windows uses the
+official rustup bootstrap in runner-temporary Cargo and rustup homes, so the
+service account does not depend on another user's PATH or mutate host toolchain
+state. Pin an exact toolchain for release builds. Linux container jobs continue
+to obtain Rust from their digest-pinned image contract; Buildchain does not
+mutate that container surface.
 
 The container image provides `fnm` but does not preinstall Node. Buildchain uses
 `fnm` inside the container to install the requested `node-version` before it
