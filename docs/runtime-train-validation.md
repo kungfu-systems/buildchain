@@ -6,11 +6,12 @@ for Buildchain changes that are ready for downstream testing but not yet
 promoted through the normal `dev -> alpha -> release` chain.
 
 Official floating channels are not runtime overrides. A consumer that
-deliberately follows `@v2-alpha` should also pass `buildchain-ref: v2-alpha` so
-the reusable workflow resolves the matching runtime on pull requests and
-pushes. GitHub does not expose the called reusable-workflow ref as the caller's
-`github.workflow_ref`, so the explicit channel input is the auditable binding
-between workflow shell and runtime.
+deliberately follows `@v2-alpha` gets the matching runtime on pull requests and
+pushes because the reusable workflow reads the called workflow identity from
+`job.workflow_ref`. Passing `buildchain-ref: v2-alpha` explicitly is also
+accepted when the caller wants the channel binding visible in its input set.
+The caller's `github.workflow_ref` is not used for this inference because it
+identifies the caller workflow during reusable calls.
 
 ## Train refs
 

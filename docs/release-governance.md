@@ -167,6 +167,38 @@ This keeps the test channel self-describing. If a consumer checks out
 alpha ref removes routine consumer edits when Buildchain opens a newer minor,
 while exact tags and SHAs remain the reproducible audit choice.
 
+### Buildchain Alpha Self-Dogfood
+
+Buildchain continuously consumes its own current major alpha through
+`.github/workflows/buildchain-alpha-self-dogfood.yml`. The workflow calls the
+released outer reusable workflow at `@v2-alpha` without a runtime override, so
+both the workflow shell and its default runtime must resolve through the same
+floating alpha channel. A parallel `@v2` job preserves the stable-major
+compatibility signal. Both lanes use a single GitHub-hosted Linux fixture to
+keep the recurring check bounded.
+
+The reusable build trust gate reads `job.workflow_ref`, which identifies the
+called workflow and its selected ref. It does not infer the runtime from
+`github.workflow_ref`, because GitHub defines that context as the caller
+workflow identity during a reusable call.
+
+The evidence job resolves `v2-alpha` and `v2` through the GitHub refs API,
+compares those immutable SHAs with the reusable workflow outputs, verifies the
+`alpha` and `stable` classifications, and uploads a JSON evidence artifact.
+The canary runs after successful Buildchain ref promotion, on a daily fallback
+schedule, and on manual dispatch. It shares the release-promotion concurrency
+group, so another promotion cannot move the floating refs between runtime
+resolution and evidence comparison.
+
+This is a post-publication consumer canary, not a release bootstrap. Source
+verification still runs the current commit, and
+`buildchain-ref-promotion.yml` still passes the verified exact SHA into the
+promotion workflow. Patrol, dev-merge, repair, and promotion defaults remain on
+stable or exact refs so a broken alpha cannot prevent Buildchain from publishing
+its fix. When Buildchain opens a new major, inventory validation requires this
+workflow's fixed GitHub `uses` refs to move from `vN`/`vN-alpha` to the new
+major; GitHub does not allow expressions in a reusable-workflow `uses` ref.
+
 If `dev/vX/vX.Y` has already advanced before generated alpha version-state
 bookkeeping can sync back, Buildchain records `skipped-non-fast-forward` for the
 dev sync and still completes the exact and floating alpha tags for the reviewed

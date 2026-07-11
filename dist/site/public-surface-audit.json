@@ -4,7 +4,7 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 75,
-    "workflowCount": 37,
+    "workflowCount": 38,
     "actionCount": 4,
     "sitePageCount": 45,
     "docCommandRefCount": 237,
@@ -683,6 +683,12 @@
           "artifact-transfer-mode"
         ],
         "inputCount": 1
+      },
+      {
+        "id": "buildchain-alpha-self-dogfood",
+        "path": ".github/workflows/buildchain-alpha-self-dogfood.yml",
+        "inputs": [],
+        "inputCount": 0
       },
       {
         "id": "buildchain-patrol-daily",
@@ -2540,8 +2546,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "3c0729f5351eb82fe26625fa5aabf30903f45f68af2431e02860f85ada468ac9",
-    "workflowRegistryDigest": "0fc20324b4154e352176378665daecb3cb7a74179796e3777eb2f6fc93a50092",
-    "pageRegistryDigest": "a6e2df970f202ef4fc86a618398441a0a22ca666b716a4a5a60b4d1b91bb4522"
+    "workflowRegistryDigest": "5875dd6440e9585dc8ce86fc61af8546a60ae1140ed25789199adead2846d4fe",
+    "pageRegistryDigest": "df97f4366c5e4b03fab56051354960770b16eddaaff27404df36c32f9c6d6569"
   },
   "comparison": {
     "missingCliRegistry": [],

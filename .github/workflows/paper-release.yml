@@ -200,6 +200,7 @@ jobs:
           BUILDCHAIN_REPOSITORY: ${{ inputs.buildchain-repository }}
           BUILDCHAIN_REQUESTED_REF: ${{ inputs.buildchain-ref }}
           BUILDCHAIN_DEFAULT_REF: v2
+          BUILDCHAIN_WORKFLOW_REF: ${{ job.workflow_ref }}
         with:
           script: |
             const requested = (process.env.BUILDCHAIN_REQUESTED_REF || "").trim();
@@ -210,10 +211,10 @@ jobs:
             const exactSha = /^[0-9a-f]{40}$/i;
             const trainRef = /^train\/v\d+\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
             const officialChannelRef = /^v\d+(?:\.\d+)?(?:-alpha)?$/;
-            const workflowRef = process.env.GITHUB_WORKFLOW_REF || "";
-            const shellRef = workflowRef.startsWith(`${repository}/.github/workflows/`)
+            const workflowRef = process.env.BUILDCHAIN_WORKFLOW_REF || process.env.GITHUB_WORKFLOW_REF || "";
+            const shellRef = (workflowRef.startsWith(`${repository}/.github/workflows/`)
               ? (workflowRef.split("@").pop() || defaultRef).trim() || defaultRef
-              : defaultRef;
+              : defaultRef).replace(/^refs\/(?:heads|tags)\//, "");
             const normalizeClass = (ref) => {
               const value = String(ref || "").replace(/^refs\/heads\//, "").replace(/^refs\/tags\//, "");
               if (exactSha.test(value)) return "exact-sha";

@@ -114,6 +114,8 @@ replace them.
 - **v2 / v2-alpha / v2.0 / v2.0-alpha / exact tags / floating tags** ->
   [`release-governance.md`](release-governance.md) and
   [`release-flow.md`](release-flow.md).
+- **Buildchain self-dogfood / released alpha canary / stable compatibility lane** ->
+  [`release-governance.md`](release-governance.md#buildchain-alpha-self-dogfood).
 - **v2.1 vs v2.2 / when to open a new minor line** ->
   [`versioning.md`](versioning.md).
 - **dry-run / what would happen if this channel PR merges** -> [`cli.md`](cli.md)

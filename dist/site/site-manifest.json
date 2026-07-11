@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:53b605e57a5ac2b8d4ed911a4fbb4d1a39352db143db183aa551f9226f2d7a6a"
+      "digest": "sha256:02987c6bf99441eddc630fa4050fd109c15923047a4591e26d54a714c124539a"
     },
     {
       "id": "install",
@@ -205,7 +205,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:3c9c651a315273a766b4d5e232341e6d78583fc9d2ddf5e2cfafbd41f50b4a3a"
+      "digest": "sha256:4611e4ae47091687f50b489ccc6caba911f13bb1f73b27a5d44581d8a6450d06"
     },
     {
       "id": "publish-transaction",
@@ -221,7 +221,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:8a70f9f2699bcec6102164d6ae67f13549f3ef962d12441fbb80f9d49a1cc2e1"
+      "digest": "sha256:2853bbc3a0682d4ec0db0c15b53dcb3d9f219978b005c91aac599b304576a3fb"
     },
     {
       "id": "release-flow",
@@ -237,7 +237,7 @@
       "path": "docs/runtime-train-validation.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:3d9d67f15958ae9156ac621fb31a4b0224bda050cc2a6f98358ee62e5af160c7"
+      "digest": "sha256:1872e511b31c04ba75fc3a005c7a4f857c8b06ecadfedb75bc35b2ce70e7764a"
     },
     {
       "id": "versioning",

@@ -214,19 +214,20 @@ The lock is intentionally small. It does not copy the full contract. The full
 contract remains in the Buildchain ref and package; the consumer records only
 what it accepted and the policy used to compare future floating-ref movement.
 
-Alpha-channel consumers must bind both layers explicitly:
+Alpha-channel consumers select the matching workflow shell:
 
 ```yaml
 jobs:
   build:
     uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2-alpha
     with:
-      buildchain-ref: v2-alpha
       buildchain-contract-lock-path: .buildchain/contract-lock.json
 ```
 
-Official floating refs are ordinary channel selections and are allowed on pull
-requests and pushes. Train refs and exact SHAs remain trusted manual overrides.
+The runtime follows the called workflow through `job.workflow_ref`. Callers may
+also pass `buildchain-ref: v2-alpha` explicitly; official floating refs are
+ordinary channel selections and are allowed on pull requests and pushes. Train
+refs and exact SHAs remain trusted manual overrides.
 
 ## Locked Source Checkout Cache
 
