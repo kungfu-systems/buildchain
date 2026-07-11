@@ -26,6 +26,13 @@
       "source": "scripts/stable-release-gate.mjs"
     },
     {
+      "id": "release-state-ref-propagation-retry",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Durable release-state persistence retries a transient non-fast-forward response when GitHub still reports the expected parent, avoiding a false promotion failure during ref propagation.",
+      "source": "actions/promote-buildchain-ref/lib.js"
+    },
+    {
       "id": "lifecycle-command-override-inheritance",
       "impact": "patch",
       "class": "lifecycle-contract",

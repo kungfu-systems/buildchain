@@ -1470,8 +1470,11 @@ async function persistDurableReleaseTransaction({
           if (refreshedSha === latestCommit.data.sha) {
             return latestCommit;
           }
-          if (!refreshedSha || refreshedSha === latestParentSha) {
+          if (!refreshedSha) {
             throw error;
+          }
+          if (refreshedSha === latestParentSha) {
+            continue;
           }
           latestParentSha = refreshedSha;
           latestCommit = await createStateCommit(latestParentSha);
