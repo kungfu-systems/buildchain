@@ -587,6 +587,7 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /name: Revalidate queued promotion intent/);
   assert.match(workflow, /name: Preflight PR-stage release candidate evidence/);
   assert.match(workflow, /BUILDCHAIN_RC_DOWNLOAD: "false"/);
+  assert.match(workflow, /failure\(\) && !inputs\.dry-run && steps\.rc\.outcome != ''/);
   assert.match(workflow, /compareCommitsWithBasehead/);
   assert.match(workflow, /const superseded = !dryRun && comparisonStatus === "ahead"/);
   assert.match(workflow, /moved incompatibly/);

@@ -653,7 +653,7 @@ jobs:
 
       - name: Classify Buildchain promotion friction
         id: friction
-        if: ${{ failure() && steps.rc.outcome != '' }}
+        if: ${{ failure() && !inputs.dry-run && steps.rc.outcome != '' }}
         shell: bash
         run: |
           reporter=".buildchain/runtime/scripts/workflow-friction-report.mjs"

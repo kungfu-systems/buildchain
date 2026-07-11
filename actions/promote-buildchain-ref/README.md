@@ -169,6 +169,9 @@ The action repeats that check at its mutation boundary for governed promotion
 calls, closing the race between workflow preflight and action start. Direct
 non-governed calls and dry-runs keep the strict target mismatch error so local
 diagnostics cannot silently reinterpret a stale request.
+Expected manual dry-run failures remain visible in the workflow result and do
+not create automated workflow-friction issues; issue reporting is reserved for
+non-dry-run promotion failures.
 The reusable build workflow performs the cheaper channel-ref preflight earlier:
 after source-lock resolution and before the build matrix, it requires the target
 channel ref such as `alpha/v22/v22.22` or `release/v22/v22.22` to already point

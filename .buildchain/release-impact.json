@@ -29,7 +29,7 @@
       "id": "release-candidate-evidence-preflight",
       "impact": "patch",
       "class": "release-governance",
-      "rationale": "Alpha and stable promotion validate exact PR-stage release-candidate metadata before candidate dependency installation or the full publication job starts, while retaining the complete evidence download and validation at the publication trust boundary.",
+      "rationale": "Alpha and stable promotion validate exact PR-stage release-candidate metadata before candidate dependency installation or the full publication job starts, retain complete validation at the publication trust boundary, and keep expected manual dry-run failures out of automated friction issues.",
       "source": ".github/workflows/release-candidate-promote.yml"
     },
     {
