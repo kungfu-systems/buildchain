@@ -279,6 +279,49 @@ detect standard public surfaces, write a small product-owned registry, audit the
 registry against the current artifact/source tree, generate a release-passport
 compatible witness, and query the resulting capability map.
 
+## Shifu Discovery and Distribution Declarations
+
+Buildchain owns the repository-layout question; product tools must not copy its
+internal paths. Shifu and other consumers use this sequence:
+
+1. read the welded `.buildchain-version` pin to select Buildchain;
+2. run `buildchain layout --cwd <repository> --json`;
+3. read the returned `kfd.registries["kfd-3"].path`;
+4. treat a surface as Shifu-managed only when its declaration contains
+   `distribution.registrar="shifu"`.
+
+The layout response uses the
+`kungfu-buildchain-layout-discovery` contract with an explicit schema version.
+Changing or removing its fields is a public contract change. Consumers must not
+fall back to a hard-coded registry location when the command is unavailable or
+returns an unsupported contract.
+
+A Shifu distribution declaration must contain at least one task and one
+artifact. Every artifact declares `kind`, `platform`, and `pathGlob`; an
+optional `sha256` is a lowercase 64-character hexadecimal digest. This makes
+artifact form and platform machine-readable without asking Shifu to infer them
+from filenames:
+
+```json
+{
+  "distribution": {
+    "registrar": "shifu",
+    "tasks": ["binary:build"],
+    "artifacts": [
+      {
+        "kind": "binary",
+        "platform": "linux",
+        "pathGlob": "dist/binary/example-x86_64-unknown-linux-gnu.tar.gz"
+      }
+    ]
+  }
+}
+```
+
+Buildchain validates this shape whenever a KFD-3 registry is read or written.
+Repositories that do not declare the registrar remain outside Shifu's
+distribution jurisdiction.
+
 ## Detected, Declared, Enforced
 
 KFD-3 surface registration uses three states.
@@ -402,7 +445,7 @@ Buildchain dogfoods this model in two ways:
   `buildchain kfd 2 trust-assessment --json` expose and validate the KFD
   package's foundation KFD-2 trust facts against the latest KFD taxonomy;
 - `dist/site/kfd-claims.json` declares Buildchain's own KFD-3 collaboration
-  interface;
+  interface, including a Shifu-owned standalone binary distribution surface;
 - `buildchain kfd 3 query buildchain --json` resolves the packaged
   Buildchain capability map from that site fact source.
 

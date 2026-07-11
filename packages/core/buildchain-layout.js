@@ -2,6 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 
 export const BUILDCHAIN_DIR = ".buildchain";
+export const BUILDCHAIN_VERSION_PIN_PATH = ".buildchain-version";
+export const BUILDCHAIN_LAYOUT_DISCOVERY_CONTRACT = "kungfu-buildchain-layout-discovery";
 export const BUILDCHAIN_CONFIG_PATH = ".buildchain/buildchain.toml";
 export const LEGACY_BUILDCHAIN_CONFIG_PATH = "buildchain.toml";
 export const BUILDCHAIN_CONTRACT_LOCK_PATH = ".buildchain/contract-lock.json";
@@ -92,6 +94,50 @@ export function resolveReleasePassportPath(cwd = process.cwd()) {
     BUILDCHAIN_RELEASE_PASSPORT_PATH,
     LEGACY_BUILDCHAIN_RELEASE_PASSPORT_PATH,
   ]);
+}
+
+export function createBuildchainLayoutDiscovery({
+  cwd = process.cwd(),
+  buildchainVersion = "",
+} = {}) {
+  const resolvedCwd = path.resolve(cwd);
+  const configPath = resolveBuildchainConfigPath(resolvedCwd);
+  const kfd3RegistryPath = resolveKfd3SurfaceRegistryPath(resolvedCwd);
+  return {
+    schemaVersion: 1,
+    contract: BUILDCHAIN_LAYOUT_DISCOVERY_CONTRACT,
+    buildchain: {
+      version: String(buildchainVersion || ""),
+      versionPinPath: BUILDCHAIN_VERSION_PIN_PATH,
+    },
+    repository: {
+      root: resolvedCwd,
+      managed: fs.existsSync(repoPath(resolvedCwd, configPath))
+        || fs.existsSync(repoPath(resolvedCwd, BUILDCHAIN_VERSION_PIN_PATH))
+        || fs.existsSync(repoPath(resolvedCwd, kfd3RegistryPath)),
+      configPath,
+    },
+    kfd: {
+      root: BUILDCHAIN_KFD_ROOT,
+      registries: {
+        "kfd-3": {
+          standard: "kfd-3",
+          schemaVersion: 1,
+          path: kfd3RegistryPath,
+          canonicalPath: BUILDCHAIN_KFD3_SURFACE_REGISTRY_PATH,
+          exists: fs.existsSync(repoPath(resolvedCwd, kfd3RegistryPath)),
+        },
+      },
+    },
+    shifu: {
+      jurisdiction: {
+        source: "kfd-3-distribution-declaration",
+        registryStandard: "kfd-3",
+        field: "surfaces[].distribution.registrar",
+        value: "shifu",
+      },
+    },
+  };
 }
 
 export function discoverBuildchainRepoFiles(cwd = process.cwd()) {
