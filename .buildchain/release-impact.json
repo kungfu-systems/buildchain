@@ -40,6 +40,13 @@
       "source": "scripts/locked-source-checkout.mjs"
     },
     {
+      "id": "workflow-shell-checkout-bootstrap",
+      "impact": "patch",
+      "class": "source-integrity",
+      "rationale": "The reusable workflow carries its exact checkout bootstrap into build runners, so alpha/stable routing remains compatible with stable runtimes that predate the newest locked checkout transport.",
+      "source": ".github/workflows/.build.yml"
+    },
+    {
       "id": "published-contract-digest-round-trip",
       "impact": "patch",
       "class": "source-integrity",
