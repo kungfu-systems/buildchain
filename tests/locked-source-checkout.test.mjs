@@ -54,6 +54,8 @@ test("locked source checkout uses a mirror cache and verifies head and tree", ()
   assert.equal(evidence.verification.head, origin.sha);
   assert.equal(evidence.verification.tree, origin.tree);
   assert.equal(git(["rev-parse", "HEAD"], workspace), origin.sha);
+  assert.equal(git(["config", "--get", "core.autocrlf"], workspace), "false");
+  assert.equal(git(["config", "--get", "core.eol"], workspace), "lf");
   const persisted = JSON.parse(fs.readFileSync(path.join(workspace, ".buildchain/diagnostics/source-checkout.json"), "utf8"));
   assert.equal(persisted.cache.hit, true);
 });

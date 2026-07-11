@@ -319,6 +319,11 @@ export function lockedSourceCheckout({
   const normalizedFetchAttempts = Math.max(1, Math.floor(Number(fetchAttempts) || 3));
   const targetPath = ensureCheckoutTarget(checkoutPath, workspace);
   git(["init"], { cwd: targetPath, timeoutMs });
+  // The locked Git tree is also the byte-level source of release evidence.
+  // Ignore runner-global autocrlf settings so tracked text has the same bytes
+  // on Windows, macOS, and Linux checkouts.
+  git(["config", "core.autocrlf", "false"], { cwd: targetPath, timeoutMs });
+  git(["config", "core.eol", "lf"], { cwd: targetPath, timeoutMs });
   const renderedMirrorUrl = renderTemplate(mirrorUrlTemplate, { ...repoParts, sha });
   const renderedReferenceRepository = renderTemplate(referenceRepositoryTemplate, { ...repoParts, sha });
   markSafeDirectory(targetPath, timeoutMs);
