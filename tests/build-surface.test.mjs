@@ -585,12 +585,15 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /concurrency:\n\s+group: buildchain-release-promotion-\$\{\{ github\.repository \}\}\n\s+cancel-in-progress: false/);
   assert.match(workflow, /name: Revalidate promotion intent/);
   assert.match(workflow, /name: Revalidate queued promotion intent/);
+  assert.match(workflow, /name: Preflight PR-stage release candidate evidence/);
+  assert.match(workflow, /BUILDCHAIN_RC_DOWNLOAD: "false"/);
+  assert.match(workflow, /failure\(\) && !inputs\.dry-run && steps\.rc\.outcome != ''/);
   assert.match(workflow, /compareCommitsWithBasehead/);
   assert.match(workflow, /const superseded = !dryRun && comparisonStatus === "ahead"/);
   assert.match(workflow, /moved incompatibly/);
   assert.match(workflow, /const action = superseded \? "noop" : "promote"/);
   assert.match(workflow, /const reason = superseded \? "target-ref-advanced" : "target-ref-current"/);
-  assert.match(workflow, /needs: preflight/);
+  assert.match(workflow, /needs: \[preflight, release-candidate-preflight\]/);
   assert.match(workflow, /if: \$\{\{ needs\.preflight\.outputs\.action == 'promote' \}\}/);
   assert.match(workflow, /ref: \$\{\{ needs\.preflight\.outputs\.requested-sha \}\}/);
   assert.match(workflow, /INPUT_TARGET_SHA: \$\{\{ inputs\.target-sha \}\}/);
@@ -614,6 +617,10 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /id: promote/);
   assert.ok(
     workflow.indexOf("Revalidate queued promotion intent") <
+      workflow.indexOf("Install promotion dependencies"),
+  );
+  assert.ok(
+    workflow.indexOf("Preflight PR-stage release candidate evidence") <
       workflow.indexOf("Install promotion dependencies"),
   );
   assert.ok(

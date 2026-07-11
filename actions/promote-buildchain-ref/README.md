@@ -159,10 +159,19 @@ for an older SHA after the protected channel has advanced, the workflow records
 the requested/current SHA pair, verifies that the current target is ahead of
 the requested commit, and exits successfully as a superseded no-op. Diverged,
 behind, or unreadable comparisons still fail closed.
+After queued-intent revalidation, the reusable workflow runs the canonical
+release-candidate resolver in metadata-only mode before installing candidate
+dependencies or starting the full promotion job. The full job resolves and
+downloads the evidence again before any publish-gate or publication mutation.
+This preserves the final exact-evidence trust check while making missing or
+stale PR-stage evidence fail early.
 The action repeats that check at its mutation boundary for governed promotion
 calls, closing the race between workflow preflight and action start. Direct
 non-governed calls and dry-runs keep the strict target mismatch error so local
 diagnostics cannot silently reinterpret a stale request.
+Expected manual dry-run failures remain visible in the workflow result and do
+not create automated workflow-friction issues; issue reporting is reserved for
+non-dry-run promotion failures.
 The reusable build workflow performs the cheaper channel-ref preflight earlier:
 after source-lock resolution and before the build matrix, it requires the target
 channel ref such as `alpha/v22/v22.22` or `release/v22/v22.22` to already point
