@@ -28,7 +28,7 @@ export function runPublicationPackageCli(args = process.argv.slice(2)) {
   return result;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (!process.env.BUILDCHAIN_EMBEDDED_ENTRYPOINT && process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
     runPublicationPackageCli();
   } catch (error) {
