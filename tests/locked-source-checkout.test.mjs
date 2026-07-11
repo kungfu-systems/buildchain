@@ -37,25 +37,38 @@ function createRepository() {
 test("locked source checkout uses a mirror cache and verifies head and tree", () => {
   const origin = createRepository();
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-checkout-work-"));
-  const evidence = lockedSourceCheckout({
-    workspace,
-    repository: "kungfu-systems/example",
-    sourceSha: origin.sha,
-    sourceTreeSha: origin.tree,
-    mode: "require",
-    mirrorUrlTemplate: `file://${origin.bare}`,
-    fallback: "fail",
-    diagnosticsPath: ".buildchain/diagnostics/source-checkout.json",
-    now: () => "2026-07-07T00:00:00.000Z",
-  });
+  const configEnv = ["GIT_CONFIG_COUNT", "GIT_CONFIG_KEY_0", "GIT_CONFIG_VALUE_0"];
+  const previous = new Map(configEnv.map((key) => [key, process.env[key]]));
+  process.env.GIT_CONFIG_COUNT = "1";
+  process.env.GIT_CONFIG_KEY_0 = "core.autocrlf";
+  process.env.GIT_CONFIG_VALUE_0 = "true";
+  let evidence;
+  try {
+    evidence = lockedSourceCheckout({
+      workspace,
+      repository: "kungfu-systems/example",
+      sourceSha: origin.sha,
+      sourceTreeSha: origin.tree,
+      mode: "require",
+      mirrorUrlTemplate: `file://${origin.bare}`,
+      fallback: "fail",
+      diagnosticsPath: ".buildchain/diagnostics/source-checkout.json",
+      now: () => "2026-07-07T00:00:00.000Z",
+    });
+  } finally {
+    for (const key of configEnv) {
+      const value = previous.get(key);
+      if (value == null) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
   assert.equal(evidence.contract, LOCKED_SOURCE_CHECKOUT_CONTRACT);
   assert.equal(evidence.cache.hit, true);
   assert.equal(evidence.cache.transport, "mirror-url");
   assert.equal(evidence.verification.head, origin.sha);
   assert.equal(evidence.verification.tree, origin.tree);
   assert.equal(git(["rev-parse", "HEAD"], workspace), origin.sha);
-  assert.equal(git(["config", "--get", "core.autocrlf"], workspace), "false");
-  assert.equal(git(["config", "--get", "core.eol"], workspace), "lf");
+  assert.equal(fs.readFileSync(path.join(workspace, "README.md"), "utf8"), "hello\n");
   const persisted = JSON.parse(fs.readFileSync(path.join(workspace, ".buildchain/diagnostics/source-checkout.json"), "utf8"));
   assert.equal(persisted.cache.hit, true);
 });
