@@ -19,13 +19,18 @@ import {
   readKfdSchema,
 } from "@kungfu-tech/buildchain/kfd";
 import {
+  BUILDCHAIN_LAYOUT_DISCOVERY_CONTRACT,
   BUILDCHAIN_KFD1_CONTRACT_WORLD_WITNESS_PATH,
   BUILDCHAIN_KFD2_CLAIMS_DIR,
   BUILDCHAIN_KFD3_ARTIFACT_WITNESS_PATH,
   BUILDCHAIN_KFD3_PREBUILD_WITNESS_PATH,
   BUILDCHAIN_KFD3_SURFACE_REGISTRY_PATH,
+  BUILDCHAIN_VERSION_PIN_PATH,
+  createBuildchainLayoutDiscovery,
   migrateBuildchainLayout,
 } from "@kungfu-tech/buildchain";
+import { createBuildchainKfdSurfaceRegistry } from "../packages/core/buildchain-kfd-claims.js";
+import { normalizeKfd3DistributionDeclaration } from "../packages/core/kfd3-surface-register.js";
 
 const root = path.resolve(import.meta.dirname, "..");
 const bin = path.join(root, "bin", "buildchain.mjs");
@@ -154,6 +159,75 @@ test("Buildchain layout migration unifies KFD outputs under .buildchain/kfd", ()
   assert.equal(fs.existsSync(path.join(cwd, BUILDCHAIN_KFD2_CLAIMS_DIR, "claim.json")), true);
   assert.equal(fs.existsSync(path.join(cwd, BUILDCHAIN_KFD3_PREBUILD_WITNESS_PATH)), true);
   assert.equal(fs.existsSync(path.join(cwd, BUILDCHAIN_KFD3_ARTIFACT_WITNESS_PATH)), true);
+});
+
+test("Buildchain layout discovery is the stable Shifu KFD question contract", () => {
+  const cwd = createFixtureRepo();
+  fs.mkdirSync(path.join(cwd, ".buildchain"), { recursive: true });
+  fs.writeFileSync(path.join(cwd, ".buildchain-version"), "2.12.1-alpha.3\n");
+  fs.writeFileSync(path.join(cwd, ".buildchain", "buildchain.toml"), "schema = 1\n");
+  const result = createBuildchainLayoutDiscovery({ cwd, buildchainVersion: "2.12.1-alpha.3" });
+
+  assert.equal(result.contract, BUILDCHAIN_LAYOUT_DISCOVERY_CONTRACT);
+  assert.equal(result.buildchain.version, "2.12.1-alpha.3");
+  assert.equal(result.buildchain.versionPinPath, BUILDCHAIN_VERSION_PIN_PATH);
+  assert.equal(result.repository.managed, true);
+  assert.equal(result.kfd.registries["kfd-3"].path, BUILDCHAIN_KFD3_SURFACE_REGISTRY_PATH);
+  assert.equal(result.kfd.registries["kfd-3"].schemaVersion, 1);
+  assert.equal(result.shifu.jurisdiction.field, "surfaces[].distribution.registrar");
+  assert.equal(result.shifu.jurisdiction.value, "shifu");
+
+  const cli = JSON.parse(runBuildchain(["layout", "--cwd", cwd, "--json"]));
+  assert.equal(cli.contract, BUILDCHAIN_LAYOUT_DISCOVERY_CONTRACT);
+  assert.equal(cli.kfd.registries["kfd-3"].path, BUILDCHAIN_KFD3_SURFACE_REGISTRY_PATH);
+});
+
+test("KFD-3 distribution declarations require artifact kind, platform, and pathGlob", () => {
+  const declaration = normalizeKfd3DistributionDeclaration({
+    registrar: "shifu",
+    tasks: ["binary:build"],
+    artifacts: [{
+      kind: "binary",
+      platform: "linux",
+      pathGlob: "dist/binary/buildchain-x86_64-unknown-linux-gnu.tar.gz",
+    }],
+  }, { surfaceId: "distribution:buildchain-standalone" });
+  assert.equal(declaration.artifacts[0].kind, "binary");
+  assert.equal(declaration.artifacts[0].platform, "linux");
+  assert.throws(
+    () => normalizeKfd3DistributionDeclaration({
+      registrar: "shifu",
+      tasks: ["binary:build"],
+      artifacts: [{ kind: "binary", pathGlob: "dist/binary/buildchain" }],
+    }, { surfaceId: "invalid" }),
+    /platform/,
+  );
+
+  const cwd = tempDir("invalid-distribution-registry");
+  writeJson(path.join(cwd, BUILDCHAIN_KFD3_SURFACE_REGISTRY_PATH), {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-kfd-3-surface-registry",
+    surfaces: [{
+      id: "distribution:invalid",
+      distribution: {
+        registrar: "shifu",
+        tasks: ["binary:build"],
+        artifacts: [{ kind: "binary", platform: "linux", pathGlob: "dist/binary/example", sha256: "" }],
+      },
+    }],
+  });
+  assert.throws(() => kfd3.readSurfaceRegistry({ cwd }), /sha256/);
+});
+
+test("Buildchain self KFD registry declares standalone binaries for Shifu", () => {
+  const registry = createBuildchainKfdSurfaceRegistry({ root });
+  const surface = registry.additionalSurfaces.find((entry) => entry.id === "distribution:buildchain-standalone");
+  assert.equal(surface.distribution.registrar, "shifu");
+  assert.deepEqual(surface.distribution.tasks, ["binary:build"]);
+  assert.deepEqual(
+    surface.distribution.artifacts.map((artifact) => [artifact.kind, artifact.platform]),
+    [["binary", "linux"], ["binary", "macos"], ["binary", "windows"]],
+  );
 });
 
 test("KFD CLI exposes all KFD standards through the unified schema namespace", () => {

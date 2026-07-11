@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "6ec95f4025ff96a5fdd7a6b8a9c91bd70726d8f3e5f0eb6eda13b7a13d654eb7",
+    "sha256": "723565fc18406706b870f319ef4a77ecadbeff2088068ed44252ecfc043be461",
     "summary": {
-      "cliCommandCount": 75,
+      "cliCommandCount": 76,
       "workflowCount": 41,
       "actionCount": 4,
       "sitePageCount": 46,
-      "docCommandRefCount": 237,
+      "docCommandRefCount": 241,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -108,6 +108,23 @@
         "dist/site/node-api-registry.json",
         "dist/site/kfd-claims.json",
         "dist/site/public-surface-audit.json"
+      ]
+    },
+    {
+      "id": "claim:buildchain-shifu-kfd-discovery",
+      "claim": "Buildchain exposes a versioned repository-layout discovery contract and KFD-3 distribution declarations so Shifu can locate the registry and determine jurisdiction without copying Buildchain layout paths.",
+      "sourcePaths": [
+        "packages/core/buildchain-layout.js",
+        "packages/core/buildchain-kfd-claims.js",
+        "packages/core/kfd3-surface-register.js",
+        "bin/buildchain.mjs",
+        "scripts/build-standalone-binary.mjs",
+        "docs/kfd-support.md"
+      ],
+      "artifactPaths": [
+        "dist/site/kfd-claims.json",
+        "dist/site/cli-registry.json",
+        "dist/site/node-api-registry.json"
       ]
     },
     {
@@ -208,13 +225,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "6ec95f4025ff96a5fdd7a6b8a9c91bd70726d8f3e5f0eb6eda13b7a13d654eb7",
+      "sha256": "723565fc18406706b870f319ef4a77ecadbeff2088068ed44252ecfc043be461",
       "summary": {
-        "cliCommandCount": 75,
+        "cliCommandCount": 76,
         "workflowCount": 41,
         "actionCount": 4,
         "sitePageCount": 46,
-        "docCommandRefCount": 237,
+        "docCommandRefCount": 241,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -1963,6 +1980,18 @@
         {
           "id": "cli:kfd-upstream-roles",
           "name": "buildchain kfd upstream roles [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:layout",
+          "name": "buildchain layout [--cwd <dir>] [--json]",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -4135,8 +4164,43 @@
         "visibility": "public",
         "participantFacing": true,
         "public": true
+      },
+      {
+        "id": "distribution:buildchain-standalone",
+        "name": "Buildchain standalone binary distribution",
+        "kind": "binary-distribution",
+        "sourcePath": "scripts/build-standalone-binary.mjs",
+        "evidencePath": ".github/workflows/binary-distribution.yml",
+        "availability": "shipped",
+        "visibility": "public",
+        "participantFacing": true,
+        "public": true,
+        "artifactPath": "dist/binary",
+        "distribution": {
+          "registrar": "shifu",
+          "tasks": [
+            "binary:build"
+          ],
+          "artifacts": [
+            {
+              "kind": "binary",
+              "platform": "linux",
+              "pathGlob": "dist/binary/buildchain-x86_64-unknown-linux-gnu.tar.gz"
+            },
+            {
+              "kind": "binary",
+              "platform": "macos",
+              "pathGlob": "dist/binary/buildchain-aarch64-apple-darwin.tar.gz"
+            },
+            {
+              "kind": "binary",
+              "platform": "windows",
+              "pathGlob": "dist/binary/buildchain-x86_64-pc-windows-msvc.zip"
+            }
+          ]
+        }
       }
     ],
-    "publicSurfaceCount": 270
+    "publicSurfaceCount": 272
   }
 }

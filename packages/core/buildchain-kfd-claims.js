@@ -6,6 +6,7 @@ import {
   BUILDCHAIN_PUBLIC_SURFACE_AUDIT_CONTRACT,
   collectPublicSurfaceReverseAudit,
 } from "./public-surface-audit.js";
+import { normalizeKfd3DistributionDeclaration } from "./kfd3-surface-register.js";
 
 export const BUILDCHAIN_KFD_CLAIM_REGISTRY_CONTRACT = "kungfu-buildchain-kfd-claim-registry";
 export const BUILDCHAIN_KFD_COLLABORATION_INTERFACE_CONTRACT = "kungfu-buildchain-kfd-collaboration-interface";
@@ -308,6 +309,23 @@ export function createBuildchainPublicClaimDefinitions() {
       ],
     },
     {
+      id: "claim:buildchain-shifu-kfd-discovery",
+      claim: "Buildchain exposes a versioned repository-layout discovery contract and KFD-3 distribution declarations so Shifu can locate the registry and determine jurisdiction without copying Buildchain layout paths.",
+      sourcePaths: [
+        "packages/core/buildchain-layout.js",
+        "packages/core/buildchain-kfd-claims.js",
+        "packages/core/kfd3-surface-register.js",
+        "bin/buildchain.mjs",
+        "scripts/build-standalone-binary.mjs",
+        "docs/kfd-support.md",
+      ],
+      artifactPaths: [
+        "dist/site/kfd-claims.json",
+        "dist/site/cli-registry.json",
+        "dist/site/node-api-registry.json",
+      ],
+    },
+    {
       id: "claim:buildchain-readme-badge-facts",
       claim: "Buildchain README status badges are generated from repository-owned facts and verified release-passport evidence, not hand-maintained README prose.",
       sourcePaths: [
@@ -431,6 +449,37 @@ export function createBuildchainKfdSurfaceRegistry({ root = process.cwd() } = {}
   ];
   const siteConsumptionContracts = SITE_CONTRACT_FILES.map((relPath) => surface(`site:${relPath}`, "site-consumption-contract", relPath));
   const controlSurfaces = WORKFLOW_AND_ACTION_FILES.map((relPath) => surface(`control:${relPath}`, relPath.includes("actions/") ? "action" : "workflow", relPath));
+  const standaloneDistribution = surface(
+    "distribution:buildchain-standalone",
+    "binary-distribution",
+    "scripts/build-standalone-binary.mjs",
+    {
+      name: "Buildchain standalone binary distribution",
+      artifactPath: "dist/binary",
+      evidencePath: ".github/workflows/binary-distribution.yml",
+      distribution: normalizeKfd3DistributionDeclaration({
+        registrar: "shifu",
+        tasks: ["binary:build"],
+        artifacts: [
+          {
+            kind: "binary",
+            platform: "linux",
+            pathGlob: "dist/binary/buildchain-x86_64-unknown-linux-gnu.tar.gz",
+          },
+          {
+            kind: "binary",
+            platform: "macos",
+            pathGlob: "dist/binary/buildchain-aarch64-apple-darwin.tar.gz",
+          },
+          {
+            kind: "binary",
+            platform: "windows",
+            pathGlob: "dist/binary/buildchain-x86_64-pc-windows-msvc.zip",
+          },
+        ],
+      }, { surfaceId: "distribution:buildchain-standalone" }),
+    },
+  );
   const reverseEnumeratedSurfaces = uniqueById([
     ...reverseAudit.enumerated.cliCommands.map((entry) => surface(`cli:${entry.id}`, "cli-command", "bin/buildchain.mjs", {
       name: entry.usage,
@@ -463,8 +512,8 @@ export function createBuildchainKfdSurfaceRegistry({ root = process.cwd() } = {}
       siteConsumptionContracts,
       reverseEnumeratedSurfaces,
     },
-    additionalSurfaces: controlSurfaces,
-    publicSurfaceCount: docs.length + schemas.length + standardsMetadata.length + exports.length + siteConsumptionContracts.length + reverseEnumeratedSurfaces.length + controlSurfaces.length,
+    additionalSurfaces: [...controlSurfaces, standaloneDistribution],
+    publicSurfaceCount: docs.length + schemas.length + standardsMetadata.length + exports.length + siteConsumptionContracts.length + reverseEnumeratedSurfaces.length + controlSurfaces.length + 1,
   };
 }
 

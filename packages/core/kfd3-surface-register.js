@@ -67,6 +67,63 @@ function normalizeKinds(kinds = []) {
   return [...new Set(selected.map(normalizeKind))].sort();
 }
 
+export function normalizeKfd3DistributionDeclaration(distribution, { surfaceId = "surface" } = {}) {
+  if (!distribution || typeof distribution !== "object" || Array.isArray(distribution)) {
+    throw new Error(`KFD-3 surface ${surfaceId} distribution must be an object`);
+  }
+  const registrar = String(distribution.registrar || "").trim();
+  if (!registrar) {
+    throw new Error(`KFD-3 surface ${surfaceId} distribution.registrar is required`);
+  }
+  const tasks = Array.isArray(distribution.tasks)
+    ? [...new Set(distribution.tasks.map((entry) => String(entry || "").trim()).filter(Boolean))]
+    : [];
+  if (tasks.length === 0) {
+    throw new Error(`KFD-3 surface ${surfaceId} distribution.tasks must contain at least one task`);
+  }
+  const sourceArtifacts = Array.isArray(distribution.artifacts) ? distribution.artifacts : [];
+  if (sourceArtifacts.length === 0) {
+    throw new Error(`KFD-3 surface ${surfaceId} distribution.artifacts must contain at least one artifact`);
+  }
+  const artifacts = sourceArtifacts.map((artifact, index) => {
+    if (!artifact || typeof artifact !== "object" || Array.isArray(artifact)) {
+      throw new Error(`KFD-3 surface ${surfaceId} distribution.artifacts[${index}] must be an object`);
+    }
+    const normalized = {
+      ...artifact,
+      kind: String(artifact.kind || "").trim(),
+      platform: String(artifact.platform || "").trim(),
+      pathGlob: String(artifact.pathGlob || "").trim(),
+    };
+    for (const field of ["kind", "platform", "pathGlob"]) {
+      if (!normalized[field]) {
+        throw new Error(`KFD-3 surface ${surfaceId} distribution.artifacts[${index}].${field} is required`);
+      }
+    }
+    if (artifact.sha256 !== undefined) {
+      normalized.sha256 = String(artifact.sha256 || "").trim().toLowerCase();
+      if (!/^[a-f0-9]{64}$/.test(normalized.sha256)) {
+        throw new Error(`KFD-3 surface ${surfaceId} distribution.artifacts[${index}].sha256 must be 64 lowercase hex characters`);
+      }
+    }
+    return normalized;
+  });
+  return {
+    ...distribution,
+    registrar,
+    tasks,
+    artifacts,
+  };
+}
+
+function normalizeRegistrySurface(entry) {
+  if (!entry?.distribution) return entry;
+  return {
+    ...entry,
+    distribution: normalizeKfd3DistributionDeclaration(entry.distribution, { surfaceId: entry.id || "surface" }),
+  };
+}
+
 function stableId(value) {
   return String(value || "")
     .toLowerCase()
@@ -366,7 +423,7 @@ export function readKfd3SurfaceRegistry({ cwd = process.cwd(), registryPath = ""
     contract: registry.contract || KFD3_SURFACE_REGISTRY_CONTRACT,
     product: registry.product || {},
     registryPath: registry.registryPath || effectiveRegistryPath,
-    surfaces: Array.isArray(registry.surfaces) ? registry.surfaces : [],
+    surfaces: Array.isArray(registry.surfaces) ? registry.surfaces.map(normalizeRegistrySurface) : [],
     policy: registry.policy || {},
   };
 }
@@ -379,7 +436,7 @@ export function writeKfd3SurfaceRegistry({ cwd = process.cwd(), registryPath = "
     product: registry.product || {},
     registryPath: effectiveRegistryPath,
     surfaces: uniqueSurfaces(registry.surfaces || []).map((entry) => ({
-      ...entry,
+      ...normalizeRegistrySurface(entry),
       state: entry.state || "declared",
       declaration: entry.declaration || {
         owner: "product",

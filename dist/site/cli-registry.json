@@ -594,6 +594,18 @@
       "maturity": "stable"
     },
     {
+      "id": "layout",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain layout [--cwd <dir>] [--json]",
+      "purpose": "Return the versioned repository-layout and KFD registry discovery contract for tools such as Shifu.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
       "id": "lifecycle",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain lifecycle run <stage> [--cwd <dir>] [--required]",
