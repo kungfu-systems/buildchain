@@ -331,6 +331,14 @@ therefore remains the true outer-workflow canary; the stable lane tests the
 released runtime directly until a later stable release naturally contains the
 called-workflow identity correction.
 
+After `v2.11.14-alpha.7` moved `v2-alpha` to `d7b94536`, run `29132027756`
+proved that called-workflow ref selection was fixed, then stopped at the next
+independent contract boundary: Buildchain's stable consumer lock predated four
+reviewed alpha breaking digests. The self-dogfood lane now owns a separate
+alpha contract lock accepted at the exact alpha.7 SHA. Stable consumers retain
+their stable lock, and future alpha breaking-digest changes still fail closed
+until reviewed.
+
 Implementation exposed a prior identity blind spot: GitHub associates
 `github.workflow_ref` with the caller during reusable workflow execution, while
 `job.workflow_ref` identifies the workflow that defines the called job. The

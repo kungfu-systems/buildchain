@@ -185,6 +185,12 @@ called workflow and its selected ref. It does not infer the runtime from
 `github.workflow_ref`, because GitHub defines that context as the caller
 workflow identity during a reusable call.
 
+The alpha lane uses a separate `.buildchain/alpha-contract-lock.json`. That
+lock records the exact reviewed alpha SHA and compatibility digest; it does not
+replace the stable consumer lock. A later alpha with only compatible audit
+drift continues, while a changed breaking digest fails until the new alpha
+contract is explicitly reviewed and the alpha lock is refreshed.
+
 The evidence job resolves `v2-alpha` and `v2` through the GitHub refs API,
 compares those immutable SHAs with the reusable workflow outputs, verifies the
 `alpha` and `stable` classifications, and uploads a JSON evidence artifact.
