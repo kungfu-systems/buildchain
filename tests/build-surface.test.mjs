@@ -2471,13 +2471,16 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   assert.match(workflow, /group: buildchain-release-promotion-\$\{\{ github\.repository \}\}/);
   assert.match(workflow, /cancel-in-progress: false/);
   assert.match(workflow, /\.build\.yml@v2-alpha/);
-  assert.match(workflow, /\.build\.yml@v2\n/);
+  assert.match(workflow, /Checkout stable Buildchain runtime/);
+  assert.match(workflow, /ref: v2/);
+  assert.match(workflow, /lifecycle run "\$\{stage\}"/);
   assert.match(workflow, /ALPHA_RUNTIME_SHA: \$\{\{ needs\.alpha-consumer\.outputs\.buildchain-runtime-sha \}\}/);
   assert.match(workflow, /STABLE_RUNTIME_SHA: \$\{\{ needs\.stable-consumer\.outputs\.buildchain-runtime-sha \}\}/);
   assert.match(workflow, /ref: `tags\/\$\{tag\}`/);
   assert.match(workflow, /kungfu-buildchain-alpha-self-dogfood/);
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
   assert.doesNotMatch(workflow, /buildchain-ref:/);
+  assert.doesNotMatch(workflow, /\.build\.yml@v2\n/);
 
   const reusableBuild = fs.readFileSync(
     path.join(root, ".github/workflows/.build.yml"),

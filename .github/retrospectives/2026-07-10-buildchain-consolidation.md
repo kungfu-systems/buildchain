@@ -318,9 +318,18 @@ surface; `vN-alpha` is the low-friction continuous dogfood entrypoint.
 The floating alpha channel now has a Buildchain-owned consumer loop rather
 than relying only on downstream adoption. A scheduled, post-promotion, and
 manually dispatchable workflow calls the released `@v2-alpha` outer reusable
-workflow and a stable `@v2` compatibility lane with the same bounded Linux
-fixture. It compares each reusable workflow's resolved runtime SHA with the
-corresponding GitHub tag and uploads a small evidence record.
+workflow and runs a direct stable `v2` runtime compatibility lane with the same
+bounded Linux fixture. The stable lane does not require the preceding stable
+outer workflow to contain the new self-call identity fix. The canary compares
+each resolved runtime SHA with the corresponding GitHub tag and uploads a small
+evidence record.
+
+The first live run, `29131395486`, proved the evidence gate by rejecting both
+released outer calls after they resolved the self-caller's
+`refs/heads/dev/v2/v2.11` instead of the requested floating refs. The alpha lane
+therefore remains the true outer-workflow canary; the stable lane tests the
+released runtime directly until a later stable release naturally contains the
+called-workflow identity correction.
 
 Implementation exposed a prior identity blind spot: GitHub associates
 `github.workflow_ref` with the caller during reusable workflow execution, while
