@@ -113,6 +113,11 @@ on:
         default: ""
         type: string
         required: false
+      cargo-registry-index:
+        description: "Optional crates.io-compatible Cargo registry index; empty uses the Cargo default"
+        default: ""
+        type: string
+        required: false
       install-command:
         default: ""
         type: string
@@ -859,6 +864,8 @@ jobs:
       matrix:
         platform: ${{ fromJSON(needs.resolve-contract.outputs.native-platforms-json) }}
     runs-on: ${{ fromJSON(matrix.platform.runner) }}
+    env:
+      CARGO_REGISTRIES_CRATES_IO_INDEX: ${{ inputs.cargo-registry-index }}
     steps:
       - name: Setup Node.js
         if: ${{ inputs.setup-node }}

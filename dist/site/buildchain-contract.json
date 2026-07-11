@@ -50,7 +50,7 @@
         "retryable GitHub fallback fetches use a bounded attempt budget before exact source SHA and tree verification"
       ],
       "breakingDigest": "sha256:a6a35370d6b0d0f46e1b2712dcc01961fe53c2febde95409a27a485c10a36650",
-      "auditDigest": "sha256:43d36595ee8bd20070bcd9ff610de49705c33282b0c53e3f694f475e71c86155"
+      "auditDigest": "sha256:54fc86a74ac016dfb2b424a578aef1916eb9f14e5be0868e9e854e27eb1cb9bb"
     },
     {
       "contractVersion": 1,
@@ -89,7 +89,7 @@
         "alpha and stable channel selections use separate consumer contract locks by default"
       ],
       "breakingDigest": "sha256:c4597dfa89e1a58f1023905092b849644f5c080abf150aeba9c7e1cd5ed43962",
-      "auditDigest": "sha256:766a4b09e1e22da26acad91be37aed4b8f5516ba17590e9a8f12915bb9462cdb"
+      "auditDigest": "sha256:f777bc424ed3c78c3142d28f68ae8155ffe2f858e44b23f44ddb6a95df6eeb39"
     },
     {
       "contractVersion": 1,
@@ -481,7 +481,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:fe9c251aa4c22b11a84a5c5ae52e10ac833aaab2994f217a8ce89feb7f837647"
+      "auditDigest": "sha256:7e7d122df7d9c878ee37bb3defbd9cb5f15bfb987041ee898a269089deb87491"
     },
     {
       "contractVersion": 1,
@@ -507,5 +507,5 @@
     }
   ],
   "compatibilityDigest": "sha256:2090784977bc7d54fc647215ef73532b9db26147a0b40ec3f56c31d611d806cc",
-  "contractDigest": "sha256:9de908a499833b5232f3dd5bcca42f42f9fdf72d18d208d0b543a994e9de726d"
+  "contractDigest": "sha256:b2436a0c02eadd7902cd7c3804d7e7b09d74f896caee852deb21787038f45d00"
 }

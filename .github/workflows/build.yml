@@ -129,6 +129,11 @@ on:
         default: ""
         type: string
         required: false
+      cargo-registry-index:
+        description: "Optional crates.io-compatible Cargo registry index; empty uses the Cargo default"
+        default: ""
+        type: string
+        required: false
       install-command:
         default: ""
         type: string
@@ -510,6 +515,7 @@ jobs:
       rust-toolchain: ${{ inputs.rust-toolchain }}
       rustup-dist-server: ${{ inputs.rustup-dist-server }}
       rustup-update-root: ${{ inputs.rustup-update-root }}
+      cargo-registry-index: ${{ inputs.cargo-registry-index }}
       install-command: ${{ inputs.install-command }}
       build-command: ${{ inputs.build-command }}
       verify-command: ${{ inputs.verify-command }}

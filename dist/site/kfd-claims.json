@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "02c0afc41e684fcf70b6c95623bb7cfc85864fb7c49532fbd582b8240097335a",
+    "sha256": "8fe360d34b4f39818c336baabff0d04e3141b09e135d6b2abf88efec585d8cfa",
     "summary": {
       "cliCommandCount": 75,
       "workflowCount": 41,
@@ -208,7 +208,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "02c0afc41e684fcf70b6c95623bb7cfc85864fb7c49532fbd582b8240097335a",
+      "sha256": "8fe360d34b4f39818c336baabff0d04e3141b09e135d6b2abf88efec585d8cfa",
       "summary": {
         "cliCommandCount": 75,
         "workflowCount": 41,
@@ -2294,7 +2294,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 54,
+          "inputCount": 55,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -2314,6 +2314,7 @@
             "buildchain-contract-lock-path",
             "buildchain-ref",
             "buildchain-repository",
+            "cargo-registry-index",
             "checkout-cache-fallback",
             "checkout-cache-fetch-attempts",
             "checkout-cache-github-timeout-seconds",
@@ -2713,7 +2714,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 57,
+          "inputCount": 58,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -2736,6 +2737,7 @@
             "buildchain-ref",
             "buildchain-repository",
             "buildchain-stable-contract-lock-path",
+            "cargo-registry-index",
             "checkout-cache-fallback",
             "checkout-cache-fetch-attempts",
             "checkout-cache-github-timeout-seconds",

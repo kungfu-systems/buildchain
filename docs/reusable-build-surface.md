@@ -173,6 +173,7 @@ with:
   rust-toolchain: "1.96.0"
   rustup-dist-server: "https://rsproxy.cn"
   rustup-update-root: "https://rsproxy.cn/rustup"
+  cargo-registry-index: ${{ vars.BUILDCHAIN_CARGO_REGISTRY_INDEX }}
 ```
 
 `setup-rust` defaults to `false`, so existing consumers are unchanged. When it
@@ -189,6 +190,14 @@ The rustup server inputs are optional and default to Rust's official servers.
 Consumers behind a slow cross-border link may select a trusted transport mirror;
 rustup still verifies the selected toolchain's distribution metadata and
 component checksums.
+
+`cargo-registry-index` is also optional. When set, Buildchain exposes it to
+Cargo as `CARGO_REGISTRIES_CRATES_IO_INDEX` for every native lifecycle stage,
+so a self-hosted runner can use a repository or organization variable without
+committing private LAN topology to public workflow YAML. The endpoint must be a
+crates.io-compatible index whose `config.json` download contract serves the
+matching checksum-verified crate archives. An empty value preserves Cargo's
+normal crates.io behavior.
 
 The container image provides `fnm` but does not preinstall Node. Buildchain uses
 `fnm` inside the container to install the requested `node-version` before it

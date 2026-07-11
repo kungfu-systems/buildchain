@@ -111,6 +111,7 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /rust-toolchain:/);
   assert.match(workflow, /rustup-dist-server:/);
   assert.match(workflow, /rustup-update-root:/);
+  assert.match(workflow, /cargo-registry-index:/);
   assert.equal((workflow.match(/RUSTUP_DIST_SERVER:/g) || []).length, 2);
   assert.equal((workflow.match(/RUSTUP_UPDATE_ROOT:/g) || []).length, 2);
   assert.match(workflow, /https:\/\/static\.rust-lang\.org\/rustup/);
@@ -126,6 +127,10 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /if: \$\{\{ inputs\.setup-rust && runner\.os != 'Windows' \}\}/);
   assert.match(workflow, /dtolnay\/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30/);
   assert.match(workflow, /toolchain: \$\{\{ inputs\.rust-toolchain \}\}/);
+  assert.match(
+    workflow,
+    /CARGO_REGISTRIES_CRATES_IO_INDEX: \$\{\{ inputs\.cargo-registry-index \}\}/,
+  );
   assert.match(workflow, /container:/);
   assert.match(workflow, /require-trusted-event:/);
   assert.match(workflow, /buildchain-ref:/);

@@ -411,6 +411,7 @@
           "buildchain-contract-lock-path",
           "buildchain-ref",
           "buildchain-repository",
+          "cargo-registry-index",
           "checkout-cache-fallback",
           "checkout-cache-fetch-attempts",
           "checkout-cache-github-timeout-seconds",
@@ -448,7 +449,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 54
+        "inputCount": 55
       },
       {
         "id": ".bump-minor-version",
@@ -713,6 +714,7 @@
           "buildchain-ref",
           "buildchain-repository",
           "buildchain-stable-contract-lock-path",
+          "cargo-registry-index",
           "checkout-cache-fallback",
           "checkout-cache-fetch-attempts",
           "checkout-cache-github-timeout-seconds",
@@ -750,7 +752,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 57
+        "inputCount": 58
       },
       {
         "id": "buildchain-alpha-self-dogfood",
@@ -2650,8 +2652,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "3c0729f5351eb82fe26625fa5aabf30903f45f68af2431e02860f85ada468ac9",
-    "workflowRegistryDigest": "3484670686bcca9e3eefe2760b92f84525cd83d60380f0215d7f240db2da383a",
-    "pageRegistryDigest": "7c79050f86b49cbe39cc45269c8ba6a2834808997746e9320d54c87f409ea9ff"
+    "workflowRegistryDigest": "4c93fb096eaed497556adedd96f0920ad0d83da73b9855ce02880ca64ce0a06e",
+    "pageRegistryDigest": "54fc1576347ed0fb24c645ffa20f60f5f146c768c90a9aab4c921bfc00722c1e"
   },
   "comparison": {
     "missingCliRegistry": [],
