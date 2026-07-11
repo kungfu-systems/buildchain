@@ -77,6 +77,7 @@ import { verifyReleasePassport } from "@kungfu-tech/buildchain/release-passport"
 import { createReleasePropagationPlan } from "@kungfu-tech/buildchain/release-propagation";
 import { planReleaseLineBootstrap } from "@kungfu-tech/buildchain/release-line-bootstrap";
 import { collectPublicSurfaceReverseAudit } from "@kungfu-tech/buildchain/public-surface-audit";
+import { createBuildchainLayoutDiscovery } from "@kungfu-tech/buildchain/buildchain-layout";
 import contractWorld from "@kungfu-tech/buildchain/site/buildchain-contract.json" with { type: "json" };
 import capabilityRegistry from "@kungfu-tech/buildchain/site/capability-registry.json" with { type: "json" };
 import manualRegistry from "@kungfu-tech/buildchain/site/manual-registry.json" with { type: "json" };
@@ -89,6 +90,22 @@ their SHA-256 digests. Use `dist/site/buildchain-contract.json` to verify the
 floating-ref contract world for a runtime such as `@v2`.
 
 ## Commands
+
+`buildchain layout` is the stable machine question for repository layout. Tools
+such as Shifu should call it instead of copying `.buildchain/` path constants:
+
+```bash
+buildchain layout --cwd /path/to/repository --json
+```
+
+The result identifies the Buildchain version pin, repository root and config,
+the canonical and currently resolved KFD-3 registry paths, and the KFD field
+used to declare Shifu jurisdiction. A repository is in Shifu's distribution
+jurisdiction only when a KFD-3 surface explicitly declares
+`distribution.registrar="shifu"`; the presence of Buildchain configuration is
+not sufficient. The same contract is available through
+`createBuildchainLayoutDiscovery()` from
+`@kungfu-tech/buildchain/buildchain-layout`.
 
 `buildchain init` writes a starter `.buildchain/buildchain.toml` and a reusable workflow
 caller at `.github/workflows/build.yml`.
