@@ -103,6 +103,16 @@ on:
         default: "stable"
         type: string
         required: false
+      rustup-dist-server:
+        description: "Optional rustup distribution mirror; empty uses the official Rust server"
+        default: ""
+        type: string
+        required: false
+      rustup-update-root:
+        description: "Optional rustup self-update mirror; empty uses the official Rust server"
+        default: ""
+        type: string
+        required: false
       install-command:
         default: ""
         type: string
@@ -858,27 +868,30 @@ jobs:
 
       - name: Setup Rust toolchain on Windows
         if: ${{ inputs.setup-rust && runner.os == 'Windows' }}
-        shell: powershell
+        shell: cmd
         env:
           BUILDCHAIN_RUST_TOOLCHAIN: ${{ inputs.rust-toolchain }}
+          RUSTUP_DIST_SERVER: ${{ inputs.rustup-dist-server || 'https://static.rust-lang.org' }}
+          RUSTUP_UPDATE_ROOT: ${{ inputs.rustup-update-root || 'https://static.rust-lang.org/rustup' }}
         run: |
-          $ErrorActionPreference = "Stop"
-          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-          $cargoHome = Join-Path $env:RUNNER_TEMP "buildchain-cargo"
-          $rustupHome = Join-Path $env:RUNNER_TEMP "buildchain-rustup"
-          $rustupInit = Join-Path $env:RUNNER_TEMP "buildchain-rustup-init.exe"
-          Invoke-WebRequest -UseBasicParsing -Uri "https://win.rustup.rs/x86_64" -OutFile $rustupInit
-          $env:CARGO_HOME = $cargoHome
-          $env:RUSTUP_HOME = $rustupHome
-          & $rustupInit --default-toolchain $env:BUILDCHAIN_RUST_TOOLCHAIN --profile minimal -y --no-modify-path
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          Join-Path $cargoHome "bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          "CARGO_HOME=$cargoHome" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          "RUSTUP_HOME=$rustupHome" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          @echo off
+          set "CARGO_HOME=%RUNNER_TEMP%\buildchain-cargo"
+          set "RUSTUP_HOME=%RUNNER_TEMP%\buildchain-rustup"
+          set "RUSTUP_INIT=%RUNNER_TEMP%\buildchain-rustup-init.exe"
+          curl.exe --proto "=https" --tlsv1.2 --retry 10 --retry-connrefused --fail --silent --show-error --location "https://win.rustup.rs/x86_64" --output "%RUSTUP_INIT%"
+          if errorlevel 1 exit /b %errorlevel%
+          "%RUSTUP_INIT%" --default-toolchain "%BUILDCHAIN_RUST_TOOLCHAIN%" --profile minimal -y --no-modify-path
+          if errorlevel 1 exit /b %errorlevel%
+          echo %CARGO_HOME%\bin>>"%GITHUB_PATH%"
+          echo CARGO_HOME=%CARGO_HOME%>>"%GITHUB_ENV%"
+          echo RUSTUP_HOME=%RUSTUP_HOME%>>"%GITHUB_ENV%"
 
       - name: Setup Rust toolchain
         if: ${{ inputs.setup-rust && runner.os != 'Windows' }}
         uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
+        env:
+          RUSTUP_DIST_SERVER: ${{ inputs.rustup-dist-server || 'https://static.rust-lang.org' }}
+          RUSTUP_UPDATE_ROOT: ${{ inputs.rustup-update-root || 'https://static.rust-lang.org/rustup' }}
         with:
           toolchain: ${{ inputs.rust-toolchain }}
 

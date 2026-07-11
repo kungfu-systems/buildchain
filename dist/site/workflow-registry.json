@@ -53,6 +53,8 @@
         "require-verify",
         "runner-preset",
         "rust-toolchain",
+        "rustup-dist-server",
+        "rustup-update-root",
         "sample-process-tree",
         "setup-node",
         "setup-rust",
@@ -60,7 +62,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 52,
+      "inputCount": 54,
       "surface": "reusable-build",
       "capabilityGroup": "api-cli-reference",
       "status": "active"
@@ -398,6 +400,8 @@
         "require-verify",
         "runner-preset",
         "rust-toolchain",
+        "rustup-dist-server",
+        "rustup-update-root",
         "sample-process-tree",
         "setup-node",
         "setup-rust",
@@ -405,7 +409,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 55,
+      "inputCount": 57,
       "surface": "channel-build-router",
       "capabilityGroup": "reusable-build",
       "status": "active"

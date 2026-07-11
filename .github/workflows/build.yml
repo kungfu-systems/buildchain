@@ -119,6 +119,16 @@ on:
         default: "stable"
         type: string
         required: false
+      rustup-dist-server:
+        description: "Optional rustup distribution mirror; empty uses the official Rust server"
+        default: ""
+        type: string
+        required: false
+      rustup-update-root:
+        description: "Optional rustup self-update mirror; empty uses the official Rust server"
+        default: ""
+        type: string
+        required: false
       install-command:
         default: ""
         type: string
@@ -498,6 +508,8 @@ jobs:
       node-version: ${{ inputs.node-version }}
       setup-rust: ${{ inputs.setup-rust }}
       rust-toolchain: ${{ inputs.rust-toolchain }}
+      rustup-dist-server: ${{ inputs.rustup-dist-server }}
+      rustup-update-root: ${{ inputs.rustup-update-root }}
       install-command: ${{ inputs.install-command }}
       build-command: ${{ inputs.build-command }}
       verify-command: ${{ inputs.verify-command }}

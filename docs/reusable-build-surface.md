@@ -171,16 +171,24 @@ depending on a self-hosted runner user's PATH:
 with:
   setup-rust: true
   rust-toolchain: "1.96.0"
+  rustup-dist-server: "https://rsproxy.cn"
+  rustup-update-root: "https://rsproxy.cn/rustup"
 ```
 
 `setup-rust` defaults to `false`, so existing consumers are unchanged. When it
 is enabled, Buildchain installs `rust-toolchain` before the install, build, and
 verify lifecycle stages on every native matrix platform. Windows uses the
-official rustup bootstrap in runner-temporary Cargo and rustup homes, so the
-service account does not depend on another user's PATH or mutate host toolchain
-state. Pin an exact toolchain for release builds. Linux container jobs continue
+official rustup bootstrap through `cmd.exe` and `curl.exe` into runner-temporary
+Cargo and rustup homes, so it works under a restrictive PowerShell execution
+policy and the service account does not depend on another user's PATH or mutate
+host toolchain state. Pin an exact toolchain for release builds. Linux container jobs continue
 to obtain Rust from their digest-pinned image contract; Buildchain does not
 mutate that container surface.
+
+The rustup server inputs are optional and default to Rust's official servers.
+Consumers behind a slow cross-border link may select a trusted transport mirror;
+rustup still verifies the selected toolchain's distribution metadata and
+component checksums.
 
 The container image provides `fnm` but does not preinstall Node. Buildchain uses
 `fnm` inside the container to install the requested `node-version` before it

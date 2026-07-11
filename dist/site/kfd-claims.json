@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "bb5ac3789d1b91014a4f3fe91be157ec12d9ff20b0c17dc10120b58c48370671",
+    "sha256": "02c0afc41e684fcf70b6c95623bb7cfc85864fb7c49532fbd582b8240097335a",
     "summary": {
       "cliCommandCount": 75,
       "workflowCount": 41,
@@ -208,7 +208,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "bb5ac3789d1b91014a4f3fe91be157ec12d9ff20b0c17dc10120b58c48370671",
+      "sha256": "02c0afc41e684fcf70b6c95623bb7cfc85864fb7c49532fbd582b8240097335a",
       "summary": {
         "cliCommandCount": 75,
         "workflowCount": 41,
@@ -2294,7 +2294,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 52,
+          "inputCount": 54,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -2342,6 +2342,8 @@
             "require-verify",
             "runner-preset",
             "rust-toolchain",
+            "rustup-dist-server",
+            "rustup-update-root",
             "sample-process-tree",
             "setup-node",
             "setup-rust",
@@ -2711,7 +2713,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 55,
+          "inputCount": 57,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -2762,6 +2764,8 @@
             "require-verify",
             "runner-preset",
             "rust-toolchain",
+            "rustup-dist-server",
+            "rustup-update-root",
             "sample-process-tree",
             "setup-node",
             "setup-rust",

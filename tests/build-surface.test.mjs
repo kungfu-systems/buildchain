@@ -109,8 +109,15 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /Setup Buildchain Node\.js with fnm/);
   assert.match(workflow, /setup-rust:/);
   assert.match(workflow, /rust-toolchain:/);
+  assert.match(workflow, /rustup-dist-server:/);
+  assert.match(workflow, /rustup-update-root:/);
+  assert.equal((workflow.match(/RUSTUP_DIST_SERVER:/g) || []).length, 2);
+  assert.equal((workflow.match(/RUSTUP_UPDATE_ROOT:/g) || []).length, 2);
+  assert.match(workflow, /https:\/\/static\.rust-lang\.org\/rustup/);
   assert.match(workflow, /Setup Rust toolchain on Windows/);
   assert.match(workflow, /if: \$\{\{ inputs\.setup-rust && runner\.os == 'Windows' \}\}/);
+  assert.match(workflow, /shell: cmd/);
+  assert.match(workflow, /curl\.exe --proto "=https"/);
   assert.match(workflow, /https:\/\/win\.rustup\.rs\/x86_64/);
   assert.match(workflow, /--no-modify-path/);
   assert.match(workflow, /buildchain-cargo/);
