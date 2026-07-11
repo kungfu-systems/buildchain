@@ -4,6 +4,8 @@ import {
   assertPublicSurfaceReverseAudit,
   collectPublicSurfaceReverseAudit,
 } from "../packages/core/public-surface-audit.js";
+import { evaluateBuildchainContractLock } from "../packages/core/buildchain-contract.js";
+import { generateChannelBuildWorkflow } from "./generate-channel-build-workflow.mjs";
 
 const root = process.cwd();
 const sharedActionTsupConfig = fs.readFileSync(path.join(root, "scripts/tsup-action.config.mjs"), "utf8");
@@ -38,6 +40,8 @@ const requiredPaths = [
   "docs/toolkit-observability.md",
   "docs/versioning.md",
   "scripts/release-line-dry-run.mjs",
+  "scripts/buildchain-channel-router.mjs",
+  "scripts/generate-channel-build-workflow.mjs",
   "scripts/build-standalone-binary.mjs",
   "scripts/create-release-bundle.mjs",
   "scripts/ensure-github-release.mjs",
@@ -80,6 +84,7 @@ const requiredPaths = [
   ".github/workflows/binary-distribution.yml",
   ".github/workflows/verify.yml",
   ".github/workflows/.build.yml",
+  ".github/workflows/build.yml",
   ".github/workflows/build-surface-fixture.yml",
   ".github/workflows/candidate-lab.yml",
   "fixtures/libnode-shaped/buildchain.toml",
@@ -122,16 +127,22 @@ if (!/^[0-9a-f]{40}$/.test(selfDogfoodAlphaLock.buildchain?.resolvedSha || "")) 
 if (selfDogfoodAlphaLock.buildchain?.compatibilityPolicy !== "major-compatible") {
   throw new Error("Buildchain self-dogfood alpha lock must enforce major-compatible policy");
 }
-if (selfDogfoodAlphaLock.buildchain?.compatibilityDigest !== currentBuildchainContract.compatibilityDigest) {
+const selfDogfoodAlphaEvaluation = evaluateBuildchainContractLock({
+  lock: selfDogfoodAlphaLock,
+  current: currentBuildchainContract,
+  runtimeRef: `v${selfDogfoodMajor}-alpha`,
+  runtimeSha: "current-development-contract",
+  runtimeClass: "alpha",
+});
+if (!selfDogfoodAlphaEvaluation.compatible) {
   throw new Error("Buildchain self-dogfood alpha lock requires review after a breaking contract change");
 }
 for (const requiredSnippet of [
-  `/.github/workflows/.build.yml@v${selfDogfoodMajor}-alpha`,
-  `ref: v${selfDogfoodMajor}`,
-  `echo "ref=v${selfDogfoodMajor}"`,
+  `/.github/workflows/build.yml@v${selfDogfoodMajor}-alpha`,
+  "buildchain-channel: auto",
+  "buildchain-channel: stable",
   `const alphaRef = "v${selfDogfoodMajor}-alpha"`,
   `const stableRef = "v${selfDogfoodMajor}"`,
-  "buildchain-contract-lock-path: .buildchain/alpha-contract-lock.json",
 ]) {
   if (!selfDogfoodWorkflow.includes(requiredSnippet)) {
     throw new Error(`Buildchain self-dogfood workflow missing current-major snippet: ${requiredSnippet}`);
@@ -150,6 +161,23 @@ for (const requiredSnippet of [
     throw new Error(`reusable build workflow missing called-workflow identity: ${requiredSnippet}`);
   }
 }
+const channelBuildWorkflow = fs.readFileSync(
+  path.join(root, ".github/workflows/build.yml"),
+  "utf8",
+);
+if (channelBuildWorkflow !== generateChannelBuildWorkflow(reusableBuildWorkflow)) {
+  throw new Error("generated channel build workflow is stale");
+}
+for (const requiredSnippet of [
+  "buildchain-channel:",
+  "uses: ./.github/workflows/.build.yml",
+  "needs.resolve-channel.outputs.buildchain-ref",
+  "needs.resolve-channel.outputs.contract-lock-path",
+]) {
+  if (!channelBuildWorkflow.includes(requiredSnippet)) {
+    throw new Error(`channel build workflow missing routing contract: ${requiredSnippet}`);
+  }
+}
 for (const requiredSnippet of [
   "group: buildchain-release-promotion-${{ github.repository }}",
   "cancel-in-progress: false",
@@ -163,6 +191,7 @@ const actionlintConfig = fs.readFileSync(
   "utf8",
 );
 for (const requiredSnippet of [
+  ".github/workflows/build.yml:",
   ".github/workflows/.build.yml:",
   'property "workflow_ref" is not defined in object type',
 ]) {

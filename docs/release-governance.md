@@ -170,26 +170,23 @@ while exact tags and SHAs remain the reproducible audit choice.
 ### Buildchain Alpha Self-Dogfood
 
 Buildchain continuously consumes its own current major alpha through
-`.github/workflows/buildchain-alpha-self-dogfood.yml`. The workflow calls the
-released outer reusable workflow at `@v2-alpha` without a runtime override, so
-both the workflow shell and its default runtime must resolve through the same
-floating alpha channel. A parallel stable lane checks out `v2` and runs the
-same declared install, build, and verify lifecycle directly. The direct stable
-lane is intentional: it preserves stable-runtime compatibility without
-requiring the previous stable outer workflow to understand a self-call identity
-fix that has not reached stable yet. Both lanes use a single GitHub-hosted Linux
-fixture to keep the recurring check bounded.
+`.github/workflows/buildchain-alpha-self-dogfood.yml`. Both lanes call the
+released channel router at `build.yml@v2-alpha`. The auto lane must resolve
+`v2-alpha`; the explicit stable lane must resolve `v2`. Both execute the same
+declared install, build, and verify fixture, proving that a single consumer
+surface routes to distinct released runtimes without duplicating lifecycle
+configuration in the consumer.
 
 The reusable build trust gate reads `job.workflow_ref`, which identifies the
 called workflow and its selected ref. It does not infer the runtime from
 `github.workflow_ref`, because GitHub defines that context as the caller
 workflow identity during a reusable call.
 
-The alpha lane uses a separate `.buildchain/alpha-contract-lock.json`. That
-lock records the exact reviewed alpha SHA and compatibility digest; it does not
-replace the stable consumer lock. A later alpha with only compatible audit
-drift continues, while a changed breaking digest fails until the new alpha
-contract is explicitly reviewed and the alpha lock is refreshed.
+The router selects `.buildchain/alpha-contract-lock.json` for alpha and
+`.buildchain/contract-lock.json` for stable. The alpha lock records the exact
+reviewed alpha SHA and compatibility digest; it does not replace the stable
+consumer lock. A later alpha with only compatible additive drift continues,
+while a changed breaking digest fails until the new alpha contract is reviewed.
 
 The evidence job resolves `v2-alpha` and `v2` through the GitHub refs API,
 compares those immutable SHAs with the reusable workflow outputs, verifies the

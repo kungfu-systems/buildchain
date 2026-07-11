@@ -813,7 +813,8 @@ function buildSiteBundle() {
     workflowSource: ".github/workflows reverse input enumeration",
     workflows: enumerateWorkflowInputs({ root }).map((entry) => {
       const surfaceById = new Map([
-        ["build", "reusable-build"],
+        ["build", "channel-build-router"],
+        [".build", "reusable-build"],
         ["web-surface", "site-app-deployment"],
         ["buildchain-ref-promotion", "release-governance"],
         ["release-line-bootstrap", "release-governance"],

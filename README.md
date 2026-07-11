@@ -201,6 +201,8 @@ The active reusable workflow surfaces are:
 
 - `.github/workflows/.build.yml` for deterministic multi-platform build and
   artifact contracts;
+- `.github/workflows/build.yml` for the single-config channel router that uses
+  `vN-alpha` during development/prerelease work and `vN` for stable releases;
 - `.github/workflows/release-candidate-promote.yml` for post-merge
   promote-only publication from a PR-stage release candidate, without a second
   heavy build;
@@ -219,7 +221,7 @@ uses: kungfu-systems/buildchain/actions/validate-config@v2
 ```
 
 ```yaml
-uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2
+uses: kungfu-systems/buildchain/.github/workflows/build.yml@v2
 ```
 
 ```yaml
