@@ -877,7 +877,7 @@ jobs:
           @echo off
           set "CARGO_HOME=%RUNNER_TEMP%\buildchain-cargo"
           set "RUSTUP_HOME=%RUNNER_TEMP%\buildchain-rustup"
-          set "RUSTUP_INIT=%RUNNER_TEMP%\buildchain-rustup-init.exe"
+          set "RUSTUP_INIT=%RUNNER_TEMP%\rustup-init.exe"
           curl.exe --proto "=https" --tlsv1.2 --retry 10 --retry-connrefused --fail --silent --show-error --location "https://win.rustup.rs/x86_64" --output "%RUSTUP_INIT%"
           if errorlevel 1 exit /b %errorlevel%
           "%RUSTUP_INIT%" --default-toolchain "%BUILDCHAIN_RUST_TOOLCHAIN%" --profile minimal -y --no-modify-path

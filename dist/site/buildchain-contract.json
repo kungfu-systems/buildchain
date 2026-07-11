@@ -50,7 +50,7 @@
         "retryable GitHub fallback fetches use a bounded attempt budget before exact source SHA and tree verification"
       ],
       "breakingDigest": "sha256:a6a35370d6b0d0f46e1b2712dcc01961fe53c2febde95409a27a485c10a36650",
-      "auditDigest": "sha256:b1a1eff42d0c7108c21ce504c501059410aa6aac82e43d998dd50b5ab81e041c"
+      "auditDigest": "sha256:1ae4fea029cfbdca58b2f8da4d4dc68c8b397b216aa6b5b9c129cb8a815b8bca"
     },
     {
       "contractVersion": 1,
@@ -507,5 +507,5 @@
     }
   ],
   "compatibilityDigest": "sha256:2090784977bc7d54fc647215ef73532b9db26147a0b40ec3f56c31d611d806cc",
-  "contractDigest": "sha256:6c5e8f59f7efbc2d419577d91433ee3219146b091045348cde7213ec0809c18b"
+  "contractDigest": "sha256:1f11e508a0e60cfc1ca3979de087776bfbf13a102a8f67e60d935d7f9afd2b86"
 }
