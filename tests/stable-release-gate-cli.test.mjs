@@ -74,11 +74,23 @@ test("stable gate collector binds exact alpha tag or SHA runtime inputs to consu
     if (requestPath.endsWith("/actions/runs/101")) {
       return response({
         conclusion: "success",
+        head_sha: STABLE_SHA,
         name: "Build Surface Fixture",
-        updated_at: "2026-07-10T02:10:00Z",
+        updated_at: "2026-07-10T02:59:00Z",
         html_url: "https://github.com/kungfu-systems/buildchain/actions/runs/101",
         actor: { login: "github-actions[bot]" },
       });
+    }
+    if (requestPath.endsWith(`/actions/runs?head_sha=${ALPHA_SHA}&status=success&per_page=100`)) {
+      return response({ workflow_runs: [{
+        conclusion: "success",
+        head_sha: ALPHA_SHA,
+        name: "Build Surface Fixture",
+        path: ".github/workflows/build-surface-fixture.yml",
+        updated_at: "2026-07-10T02:10:00Z",
+        html_url: "https://github.com/kungfu-systems/buildchain/actions/runs/99",
+        actor: { login: "github-actions[bot]" },
+      }] });
     }
     if (requestPath.endsWith(`/commits/${ALPHA_SHA}/statuses?per_page=100`)) {
       return response([{
@@ -128,6 +140,13 @@ test("stable gate collector binds exact alpha tag or SHA runtime inputs to consu
     assert.equal(canaryCheck?.details.runtimeRef, runtimeRef);
     assert.equal(canaryCheck?.details.runtimeRefSource, "run-name");
     assert.equal(canaryCheck?.details.workflowId, "303");
+    const releaseCandidateCheck = report.checks.find(
+      (entry) => entry.id === "stable.canary.build-surface-fixture",
+    );
+    assert.equal(
+      releaseCandidateCheck?.details.evidenceUrl,
+      "https://github.com/kungfu-systems/buildchain/actions/runs/99",
+    );
   }
 
   runtimeRef = STABLE_SHA;
@@ -147,6 +166,7 @@ test("stable gate collector binds exact alpha tag or SHA runtime inputs to consu
   assert.ok(requests.some((entry) => entry.includes("site-libkungfu-dev/actions/runs/202")));
   assert.ok(requests.some((entry) => entry.includes("site-libkungfu-dev/actions/workflows/303")));
   assert.ok(requests.some((entry) => entry.includes("compare/v2.11.13...v2.12.0-alpha.0")));
+  assert.ok(requests.some((entry) => entry.includes(`actions/runs?head_sha=${ALPHA_SHA}`)));
 });
 
 test("stable gate collector leaves alpha promotion fast and offline", async () => {

@@ -144,20 +144,32 @@ async function resolveCanaryEvidence({
         evidence.push({ id: canary.id, status: "missing", candidateSha });
         continue;
       }
-      const run = await api(
+      let run = await api(
         `/repos/${repository.owner}/${repository.repo}/actions/runs/${encodeURIComponent(releaseCandidateRunId)}`,
       );
+      if (run.head_sha !== candidateSha) {
+        const exactRuns = await api(
+          `/repos/${repository.owner}/${repository.repo}/actions/runs?head_sha=${encodeURIComponent(candidateSha)}&status=success&per_page=100`,
+        );
+        run = (exactRuns.workflow_runs || []).find((entry) => {
+          const workflowMatches = !canary.workflow ||
+            canary.workflow === entry.name || canary.workflow === entry.path?.split("/").pop();
+          return entry.head_sha === candidateSha && entry.conclusion === "success" && workflowMatches;
+        });
+      }
       const workflowMatches = !canary.workflow ||
-        canary.workflow === run.name || canary.workflow === run.path?.split("/").pop();
+        canary.workflow === run?.name || canary.workflow === run?.path?.split("/").pop();
       evidence.push({
         id: canary.id,
-        status: run.conclusion === "success" && workflowMatches ? "success" : run.conclusion || "failure",
+        status: run?.head_sha === candidateSha && run.conclusion === "success" && workflowMatches
+          ? "success"
+          : run?.conclusion || "missing",
         candidateSha,
-        completedAt: run.updated_at || run.run_started_at || "",
-        evidenceUrl: run.html_url || releaseCandidateRunUrl,
+        completedAt: run?.updated_at || run?.run_started_at || "",
+        evidenceUrl: run?.html_url || "",
         repository: repository.fullName,
-        workflow: run.name || run.path || "",
-        attestor: run.actor?.login || run.triggering_actor?.login || "",
+        workflow: run?.name || run?.path || "",
+        attestor: run?.actor?.login || run?.triggering_actor?.login || "",
       });
       continue;
     }
