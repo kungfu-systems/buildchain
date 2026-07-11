@@ -766,6 +766,39 @@ test("patrol workflow family exposes daily weekly monthly reusable entries and d
   assert.match(dogfoodMonthly, /pull-requests: write/);
 });
 
+test("stable candidate patrol persists exact candidates and uses source-lock PR promotion", () => {
+  const reusable = fs.readFileSync(
+    path.join(root, ".github/workflows/stable-candidate-patrol.yml"),
+    "utf8",
+  );
+  const dogfood = fs.readFileSync(
+    path.join(root, ".github/workflows/buildchain-stable-candidate-patrol.yml"),
+    "utf8",
+  );
+  const implementation = fs.readFileSync(
+    path.join(root, "scripts/stable-candidate-patrol.mjs"),
+    "utf8",
+  );
+  const ledger = fs.readFileSync(
+    path.join(root, "packages/core/stable-candidate-ledger.js"),
+    "utf8",
+  );
+
+  assert.match(reusable, /workflow_call:/);
+  assert.match(reusable, /release-now:/);
+  assert.match(reusable, /auto-promote:/);
+  assert.match(reusable, /auto-merge:/);
+  assert.match(reusable, /BUILDCHAIN_STABLE_REVOKED_ALPHA_VERSIONS/);
+  assert.match(reusable, /stable-candidate-policy\.mjs/);
+  assert.match(reusable, /stable-candidate-patrol\.mjs/);
+  assert.match(reusable, /cancel-in-progress: false/);
+  assert.match(ledger, /publish-gate\/release/);
+  assert.match(implementation, /BUILDCHAIN_STABLE_RELEASE_NOW/);
+  assert.match(dogfood, /cron: "0 19 \* \* \*"/);
+  assert.match(dogfood, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v2-alpha' \}\}/);
+  assert.match(dogfood, /promotion-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/);
+});
+
 test("check workflow runs declarative Buildchain lifecycle verify", () => {
   const reusable = fs.readFileSync(
     path.join(root, ".github/workflows/check.yml"),
@@ -1539,13 +1572,15 @@ test("Buildchain stable promotion gates publication after RC resolution", () => 
   const rcIndex = wrapper.indexOf("- name: Resolve PR-stage release candidate");
   const stableCandidateIndex = wrapper.indexOf("- name: Resolve Buildchain stable candidate alpha");
   const stableGateIndex = wrapper.indexOf("- name: Enforce Buildchain stable release canary gate");
+  const immediateAuthorityIndex = wrapper.indexOf("- name: Record Buildchain immediate stable authority");
   const publishGateIndex = wrapper.indexOf("- name: Ensure publish-gate ref locks promotion commit");
 
   assert.ok(
     rcIndex >= 0 &&
       stableCandidateIndex > rcIndex &&
       stableGateIndex > stableCandidateIndex &&
-      publishGateIndex > stableGateIndex,
+      immediateAuthorityIndex > stableGateIndex &&
+      publishGateIndex > immediateAuthorityIndex,
   );
   assert.match(wrapper, /needs\.preflight\.outputs\.channel == 'release'/);
   assert.match(wrapper, /Buildchain stable candidate must declare an exact alpha version/);
@@ -1554,6 +1589,15 @@ test("Buildchain stable promotion gates publication after RC resolution", () => 
     /BUILDCHAIN_RELEASE_CANDIDATE_VERSION: \$\{\{ steps\.buildchain-stable-candidate\.outputs\.version \}\}/,
   );
   assert.match(wrapper, /node \.buildchain\/runtime\/scripts\/stable-release-gate\.mjs/);
+  assert.match(
+    wrapper,
+    /vars\.BUILDCHAIN_STABLE_RELEASE_NOW != steps\.buildchain-stable-candidate\.outputs\.version/,
+  );
+  assert.match(
+    wrapper,
+    /vars\.BUILDCHAIN_STABLE_RELEASE_NOW == steps\.buildchain-stable-candidate\.outputs\.version/,
+  );
+  assert.match(wrapper, /Immediate stable release authorized/);
   assert.equal(policy.minimumStableIntervalSeconds, 86400);
   assert.equal(policy.minimumCanarySoakSeconds, 3600);
   assert.deepEqual(

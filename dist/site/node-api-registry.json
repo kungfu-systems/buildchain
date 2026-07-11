@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:13bd32ce8c34c353233c54b8989844a19621fedfd4e189af1d66dc8c97c31a55",
+      "digest": "sha256:426ec8d852633bcc3f954d94d38aa0f091bfd0fba8f3cc5091d70bfdebe71b34",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:13bd32ce8c34c353233c54b8989844a19621fedfd4e189af1d66dc8c97c31a55",
+      "digest": "sha256:426ec8d852633bcc3f954d94d38aa0f091bfd0fba8f3cc5091d70bfdebe71b34",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -245,6 +245,19 @@
       "digest": "sha256:0aa35ae7482fdb9543214275118da7111c6592b715d2622c525f83f253e5d6dc",
       "summary": "PR-stage release-candidate artifact, passport, and promote-only resolver APIs.",
       "capabilityGroup": "reusable-build",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/stable-candidate-ledger",
+      "export": "./stable-candidate-ledger",
+      "target": "./packages/core/stable-candidate-ledger.js",
+      "digest": "sha256:cefb5d1747e6e0e11490350e6b49877fe69982117a027b7c5b28e08d7afee374",
+      "summary": "Immutable alpha candidate ledger, qualification, revocation, selection, and exact stable source-lock APIs.",
+      "capabilityGroup": "governance-versioning",
       "audience": [
         "developer",
         "agent"
