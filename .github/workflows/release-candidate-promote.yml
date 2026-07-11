@@ -570,7 +570,12 @@ jobs:
           echo "version=${version}" >> "${GITHUB_OUTPUT}"
 
       - name: Enforce Buildchain stable release canary gate
-        if: ${{ needs.preflight.outputs.channel == 'release' && github.repository == 'kungfu-systems/buildchain' }}
+        if: >-
+          ${{
+            needs.preflight.outputs.channel == 'release' &&
+            github.repository == 'kungfu-systems/buildchain' &&
+            vars.BUILDCHAIN_STABLE_RELEASE_NOW != steps.buildchain-stable-candidate.outputs.version
+          }}
         shell: bash
         run: node .buildchain/runtime/scripts/stable-release-gate.mjs
         env:
@@ -582,6 +587,23 @@ jobs:
           BUILDCHAIN_RELEASE_IMPACT: ${{ inputs.release-passport-impact-json }}
           BUILDCHAIN_STABLE_RELEASE_POLICY: .buildchain/stable-release-policy.json
           BUILDCHAIN_STABLE_RELEASE_GATE_OUTPUT: ${{ inputs.release-passport-output-dir }}/stable-release-gate.json
+
+      - name: Record Buildchain immediate stable authority
+        if: >-
+          ${{
+            needs.preflight.outputs.channel == 'release' &&
+            github.repository == 'kungfu-systems/buildchain' &&
+            vars.BUILDCHAIN_STABLE_RELEASE_NOW == steps.buildchain-stable-candidate.outputs.version
+          }}
+        shell: bash
+        env:
+          BUILDCHAIN_STABLE_RELEASE_NOW: ${{ vars.BUILDCHAIN_STABLE_RELEASE_NOW }}
+          BUILDCHAIN_STABLE_RELEASE_REASON: ${{ vars.BUILDCHAIN_STABLE_RELEASE_REASON }}
+        run: |
+          echo "::notice::Immediate stable release authorized for ${BUILDCHAIN_STABLE_RELEASE_NOW}"
+          if [ -n "${BUILDCHAIN_STABLE_RELEASE_REASON}" ]; then
+            echo "::notice::Authority reason: ${BUILDCHAIN_STABLE_RELEASE_REASON}"
+          fi
 
       - name: Ensure publish-gate ref locks promotion commit
         id: publish-gate
