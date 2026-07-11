@@ -5,9 +5,69 @@ Buildchain's release semantics but cannot be described as a simple Node package.
 The first target shape is `libnode`: expensive native builds, multiple operating
 systems, self-hosted runner labels, and release artifacts that must be auditable.
 
-## Workflow
+## Automatic Channel Router
 
-Stable consumers call:
+The preferred consumer surface is one reusable workflow call. After v2.12
+reaches the stable major ref, consumers keep this configuration for both alpha
+development and stable release work:
+
+```yaml
+jobs:
+  build:
+    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v2
+    permissions:
+      contents: read
+      issues: write
+      id-token: write
+    with:
+      working-directory: .
+      artifact-name: libnode
+      runner-preset: kungfu-v4-self-hosted
+      publish-channel: none
+    secrets: inherit
+```
+
+`buildchain-channel` defaults to `auto`. Selection uses this precedence:
+
+1. an explicit `buildchain-ref` train, SHA, or official channel;
+2. an explicit `buildchain-channel: alpha|stable`;
+3. `publish-channel: alpha|release|major`;
+4. GitHub release prerelease metadata;
+5. a canonical semver tag;
+6. non-release PR, push, dispatch, schedule, and workflow-run events default to
+   alpha.
+
+The resolved runtime is `vN-alpha` for development and prerelease intent and
+`vN` for stable release intent. Unknown custom publish channels, malformed
+release events, and non-semver release-like tags fail before the build matrix;
+they never guess alpha for a stable release.
+
+The router automatically selects `.buildchain/alpha-contract-lock.json` for
+alpha and `.buildchain/contract-lock.json` for stable. A repository can override
+the common path with `buildchain-contract-lock-path`, or override one channel
+with `buildchain-alpha-contract-lock-path` /
+`buildchain-stable-contract-lock-path`.
+
+Only repositories changing the default policy need extra routing input:
+
+```yaml
+with:
+  buildchain-channel: stable
+```
+
+During the v2.12 prerelease evaluation window, canaries use
+`build.yml@v2-alpha`. The same router then selects `v2-alpha` or stable `v2` as
+the runtime. Production consumers should adopt `build.yml@v2` after the router
+has reached stable; this keeps the routing shell itself on a stable ref.
+
+The router is generated from `.build.yml`'s input/output surface. Run
+`node scripts/generate-channel-build-workflow.mjs` after changing the advanced
+build workflow; inventory and unit tests reject a stale generated router.
+
+## Advanced Workflow
+
+Consumers that need direct workflow-shell or runtime control call the advanced
+surface:
 
 ```yaml
 jobs:
@@ -214,7 +274,7 @@ The lock is intentionally small. It does not copy the full contract. The full
 contract remains in the Buildchain ref and package; the consumer records only
 what it accepted and the policy used to compare future floating-ref movement.
 
-Alpha-channel consumers select the matching workflow shell:
+Advanced alpha-channel consumers select the matching workflow shell:
 
 ```yaml
 jobs:
@@ -231,10 +291,11 @@ refs and exact SHAs remain trusted manual overrides.
 
 ## Locked Source Checkout Cache
 
-Self-hosted runners that build large repositories can opt into a locked source
-checkout cache. This changes only the Git object transport. Buildchain still
-resolves `publish-source-sha` before any build runner starts, checks out that
-exact commit, and verifies `HEAD` plus the resolved source tree SHA before
+Self-hosted runners that build large repositories can opt into a locked checkout
+cache for both the consumer source and the Buildchain runtime. This changes only
+the Git object transport. Buildchain still resolves `publish-source-sha` and the
+runtime SHA before any build runner starts, checks out those exact commits, and
+verifies each final `HEAD` plus the resolved consumer source tree SHA before
 lifecycle commands run.
 
 ```yaml
@@ -268,6 +329,18 @@ repository or organization variables named
 `BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE`, so consumers can keep
 private LAN topology out of repository YAML.
 
+The GitHub-hosted trust gate resolves the reusable workflow shell to an exact
+commit and uploads that shell's small checkout bootstrap script. Native and
+Linux-container build jobs download the bootstrap, then use the same cache
+policy to obtain both the selected Buildchain runtime and consumer source at
+their already resolved immutable SHAs. Keeping the bootstrap owned by the
+workflow shell is important when `@vN-alpha` routes a stable release to an older
+`vN` runtime: the stable runtime does not need to already contain the newest
+checkout transport implementation. This also prevents a large direct
+`actions/checkout` runtime clone from becoming a separate timeout path on
+constrained self-hosted uplinks. The bootstrap artifact does not contain the
+runtime repository and cannot move either selected ref.
+
 Do not read cache URLs or reference paths from PR-controlled files such as
 `.buildchain/buildchain.toml`. These values are trusted workflow inputs or repo/org
 variables. Buildchain does not pass GitHub credentials to cache mirrors or
@@ -288,6 +361,9 @@ compact `sourceCheckout` summary in `diagnostics.json`: mode, transport,
 hit/miss, fallback reason, duration, final HEAD verification, and tree
 verification. Remote URLs are sanitized and local reference paths are represented
 by a short display name plus fingerprint, not by secret-bearing credentials.
+Runtime checkout evidence is uploaded separately as `runtime-checkout.json`,
+including cache transport, fallback attempts, and exact runtime `HEAD`
+verification, even when a later lifecycle step fails.
 
 When a Buildchain maintainer asks for downstream validation, the expected
 request is:

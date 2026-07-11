@@ -112,6 +112,36 @@ export function createBuildchainContractWorld({ root = process.cwd(), packageJso
       ],
     }),
     surface(root, {
+      id: "channel-build-router",
+      kind: "workflow",
+      path: ".github/workflows/build.yml",
+      publicRef: `${pkg.repository ? "kungfu-systems/buildchain" : "buildchain"}/.github/workflows/build.yml@${majorLine}`,
+      requiredInputs: [],
+      requiredOutputs: ["buildchain-channel", "buildchain-runtime-sha", "build-summary-artifact"],
+      breakingDefaults: {
+        channelDefault: "auto",
+        developmentDefault: "alpha",
+        prereleaseDefault: "alpha",
+        stableReleaseDefault: "stable",
+        ambiguousReleasePolicy: "fail-closed",
+      },
+      optionalInputs: [
+        "buildchain-channel",
+        "buildchain-ref",
+        "buildchain-alpha-contract-lock-path",
+        "buildchain-stable-contract-lock-path",
+        "buildchain-contract-lock-path",
+      ],
+      guarantees: [
+        "consumers declare one build job while Buildchain selects the matching generic major channel",
+        "development and prerelease intent select vN-alpha",
+        "stable release intent selects vN",
+        "ambiguous release-like intent fails before build jobs",
+        "explicit train and exact-SHA overrides retain the reusable build trust gate",
+        "alpha and stable channel selections use separate consumer contract locks by default",
+      ],
+    }),
+    surface(root, {
       id: "release-candidate-promote",
       kind: "workflow",
       path: ".github/workflows/release-candidate-promote.yml",
@@ -489,7 +519,19 @@ export function readBuildchainContractWorld(filePath) {
   if (!value || value.contract !== BUILDCHAIN_RUNTIME_CONTRACT_WORLD) {
     throw new Error(`Buildchain contract world is missing or invalid: ${filePath}`);
   }
-  return finalizeBuildchainContractWorld(value);
+  const computed = finalizeBuildchainContractWorld(value);
+  for (const digestName of ["compatibilityDigest", "contractDigest"]) {
+    const published = String(value[digestName] || "").trim();
+    if (published && published !== computed[digestName]) {
+      throw new Error(
+        `published ${digestName} mismatch in ${filePath}: expected ${published}, recomputed ${computed[digestName]}`,
+      );
+    }
+    if (published) {
+      computed[digestName] = published;
+    }
+  }
+  return computed;
 }
 
 export function readBuildchainContractLock(filePath) {

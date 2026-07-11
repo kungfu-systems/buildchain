@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-site-manifest",
-  "generatedAt": "2026-07-11T00:08:19.877Z",
-  "publishedAt": "2026-07-11T00:08:19.877Z",
+  "generatedAt": "2026-07-11T05:45:16.756Z",
+  "publishedAt": "2026-07-11T05:45:16.756Z",
   "reproducible": true,
   "timestampPolicy": "ci-injected",
   "deterministicInputs": [
@@ -19,7 +19,7 @@
     "declared Buildchain surface manifest contract"
   ],
   "sourceDateEpoch": "0",
-  "sourceRevision": "7d3f049ffc8b567c3afad9fa9f8e974b50fd3b90",
+  "sourceRevision": "6ac5e0fbb3e3659c4948685993b9856ad8cf34e5",
   "timestampPolicyDetails": {
     "contract": "kungfu-buildchain-surface-timestamp-policy",
     "timestampFields": [
@@ -37,7 +37,7 @@
   },
   "package": {
     "name": "@kungfu-tech/buildchain",
-    "version": "2.11.14-alpha.7",
+    "version": "2.12.0-alpha.4",
     "versionSource": "package.json#version"
   },
   "entrypoint": "buildchain-site.json",
@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:02987c6bf99441eddc630fa4050fd109c15923047a4591e26d54a714c124539a"
+      "digest": "sha256:bad18d05d3d03b77bf64d8697fc351d58b1372a355a4f25c6719bf08984a79a2"
     },
     {
       "id": "install",
@@ -205,7 +205,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:4611e4ae47091687f50b489ccc6caba911f13bb1f73b27a5d44581d8a6450d06"
+      "digest": "sha256:dfa37928517a391c2ab214a095954dcb50e84f514cea0a8424619903843d9b8d"
     },
     {
       "id": "publish-transaction",
@@ -221,7 +221,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:cc37142ea6148268e45ebc529e668711fbb80cb0debf0987e8804dd9db90908c"
+      "digest": "sha256:11f0e3ff3162c7b3f886a38ab0e4b591886e2046937a9d006eda74b72a8cc9ab"
     },
     {
       "id": "release-flow",
@@ -245,7 +245,7 @@
       "path": "docs/versioning.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:2c79f7d1a072a40c75d889beac38ae843b2170587fc570ce40722d3968b6506e"
+      "digest": "sha256:400027d5e34d5c22752f7664bb9ca9ce99c04e7be298183d0303f3fb04fa7747"
     },
     {
       "id": "web-surface-deployments",

@@ -2,21 +2,42 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-impact",
   "release": {
-    "version": "2.11.14-alpha.7",
-    "line": "v2.11"
+    "version": "2.12.0-alpha.4",
+    "line": "v2.12"
   },
   "versionImpact": {
-    "final": "patch",
+    "final": "minor",
     "source": "buildchain-version-state",
-    "rationale": "Buildchain v2.11.14 closes lifecycle, checkout, governance, publication-registry, web-surface, and stable-canary evidence gaps without changing the v2 compatibility line."
+    "rationale": "Buildchain v2.12 adds a compatible public channel-router workflow that selects generic major alpha or stable runtimes from release intent while preserving the existing reusable build surface."
   },
   "surfaceImpacts": [
+    {
+      "id": "channel-build-router",
+      "impact": "minor",
+      "class": "workflow-contract",
+      "rationale": "A new public reusable workflow lets consumers declare one build job, defaults development and prerelease work to vN-alpha, defaults stable releases to vN, keeps separate channel locks, and fails closed for ambiguous release intent.",
+      "source": ".github/workflows/build.yml"
+    },
     {
       "id": "stable-release-canary-gate",
       "impact": "patch",
       "class": "release-governance",
       "rationale": "Buildchain stable promotion fails closed until the exact alpha has fresh release-candidate and site-libkungfu-dev canary evidence, has soaked for one hour, is at least 24 hours after the prior stable, and contains a product or contract path change.",
       "source": "scripts/stable-release-gate.mjs"
+    },
+    {
+      "id": "release-candidate-evidence-preflight",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Alpha and stable promotion validate exact PR-stage release-candidate metadata before candidate dependency installation or the full publication job starts, retain complete validation at the publication trust boundary, and keep expected manual dry-run failures out of automated friction issues.",
+      "source": ".github/workflows/release-candidate-promote.yml"
+    },
+    {
+      "id": "release-state-ref-propagation-retry",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Durable release-state persistence retries a transient non-fast-forward response when GitHub still reports the expected parent, avoiding a false promotion failure during ref propagation.",
+      "source": "actions/promote-buildchain-ref/lib.js"
     },
     {
       "id": "lifecycle-command-override-inheritance",
@@ -29,8 +50,22 @@
       "id": "locked-checkout-bounded-fallback",
       "impact": "patch",
       "class": "source-integrity",
-      "rationale": "Locked checkout fetches the advertised ref before a raw SHA so mirror objects seed recovery, and GitHub fallback has an independent 600-second default timeout plus bounded retry evidence before exact source verification.",
+      "rationale": "Locked checkout fetches the advertised ref before a raw SHA so mirror objects seed recovery; self-hosted source and Buildchain runtime checkouts share this transport, and GitHub fallback has an independent 600-second default timeout plus bounded retry evidence before exact commit verification.",
       "source": "scripts/locked-source-checkout.mjs"
+    },
+    {
+      "id": "workflow-shell-checkout-bootstrap",
+      "impact": "patch",
+      "class": "source-integrity",
+      "rationale": "The reusable workflow carries its exact checkout bootstrap into build runners, so alpha/stable routing remains compatible with stable runtimes that predate the newest locked checkout transport.",
+      "source": ".github/workflows/.build.yml"
+    },
+    {
+      "id": "published-contract-digest-round-trip",
+      "impact": "patch",
+      "class": "source-integrity",
+      "rationale": "Consumer write-lock preserves the authoritative digests carried by a released contract artifact after recomputation and fails closed instead of silently replacing mismatched evidence.",
+      "source": "packages/core/buildchain-contract.js"
     },
     {
       "id": "required-check-context-preservation",
@@ -75,9 +110,9 @@
       "source": ".github/workflows/buildchain-alpha-self-dogfood.yml"
     }
   ],
-  "classification": "patch",
+  "classification": "minor",
   "breaking": false,
   "security": false,
   "migrationRequired": false,
-  "summary": "Buildchain v2.11.14 consolidates consumer-reported lifecycle, checkout, governance, publication, web-surface, stable-canary, and cross-minor alpha adoption fixes into one audited patch release."
+  "summary": "Buildchain v2.12 introduces a single-config alpha/stable channel router, preserves authoritative consumer contract locks, and makes constrained self-hosted runtime checkout use the trusted cache and bounded exact-SHA fallback path."
 }

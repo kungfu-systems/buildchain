@@ -64,6 +64,7 @@ import {
   validateRuntimeOverrideTrust,
 } from "../scripts/runtime-ref-core.mjs";
 import { resolvePublishSourceCli } from "../scripts/resolve-publish-source.mjs";
+import { evaluateBuildchainContractLock } from "../packages/core/buildchain-contract.js";
 import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
 import { verifyPublishChannelRefCli } from "../scripts/verify-publish-channel-ref.mjs";
 import { verifyPublishSourceLockCli } from "../scripts/verify-publish-source-lock.mjs";
@@ -185,15 +186,55 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /checkout-cache-fetch-attempts:/);
   assert.equal(
     (workflow.match(/BUILDCHAIN_CHECKOUT_CACHE_GITHUB_TIMEOUT_SECONDS:/g) || []).length,
-    2,
+    4,
   );
   assert.match(workflow, /BUILDCHAIN_CHECKOUT_CACHE_FETCH_ATTEMPTS:/);
   assert.match(workflow, /BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE/);
   assert.match(workflow, /BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE/);
   assert.equal(
     (workflow.match(/node \.buildchain\/runtime\/scripts\/locked-source-checkout\.mjs/g) || []).length,
+    0,
+  );
+  assert.match(workflow, /buildchain-workflow-shell-sha:/);
+  assert.match(workflow, /"workflow-shell-sha": workflowShellSha/);
+  assert.match(workflow, /Checkout Buildchain workflow shell/);
+  assert.match(workflow, /ref: \$\{\{ steps\.runtime\.outputs\.workflow-shell-sha \}\}/);
+  assert.match(workflow, /path: \.buildchain\/workflow-shell\/scripts\/locked-source-checkout\.mjs/);
+  assert.match(workflow, /Upload Buildchain runtime checkout bootstrap/);
+  assert.equal(
+    (workflow.match(/Download Buildchain runtime checkout bootstrap/g) || []).length,
     2,
   );
+  assert.equal(
+    (workflow.match(/node \.buildchain\/runtime-bootstrap\/locked-source-checkout\.mjs/g) || []).length,
+    4,
+  );
+  assert.equal(
+    (workflow.match(/BUILDCHAIN_SOURCE_CHECKOUT_PATH: \.buildchain\/runtime/g) || []).length,
+    2,
+  );
+  assert.equal(
+    (workflow.match(/BUILDCHAIN_SOURCE_REPOSITORY: \$\{\{ inputs\.buildchain-repository \}\}/g) || []).length,
+    2,
+  );
+  assert.equal(
+    (workflow.match(/BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH: \.buildchain\/diagnostics\/runtime-checkout\.json/g) || []).length,
+    2,
+  );
+  const nativeJob = workflow.slice(
+    workflow.indexOf("\n  build-native:"),
+    workflow.indexOf("\n  build-linux-container:"),
+  );
+  const containerJob = workflow.slice(
+    workflow.indexOf("\n  build-linux-container:"),
+    workflow.indexOf("\n  relay-artifacts:"),
+  );
+  assert.ok(nativeJob.indexOf("Setup Node.js") < nativeJob.indexOf("Download Buildchain runtime checkout bootstrap"));
+  assert.ok(containerJob.indexOf("Setup Buildchain Node.js") < containerJob.indexOf("Download Buildchain runtime checkout bootstrap"));
+  for (const job of [nativeJob, containerJob]) {
+    assert.ok(job.indexOf("Download Buildchain runtime checkout bootstrap") < job.indexOf("Checkout Buildchain runtime"));
+    assert.doesNotMatch(job, /Checkout Buildchain runtime\n\s+uses: actions\/checkout/);
+  }
   assert.equal(
     (workflow.match(/BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH: \.buildchain\/diagnostics\/source-checkout\.json/g) || []).length,
     2,
@@ -544,12 +585,15 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /concurrency:\n\s+group: buildchain-release-promotion-\$\{\{ github\.repository \}\}\n\s+cancel-in-progress: false/);
   assert.match(workflow, /name: Revalidate promotion intent/);
   assert.match(workflow, /name: Revalidate queued promotion intent/);
+  assert.match(workflow, /name: Preflight PR-stage release candidate evidence/);
+  assert.match(workflow, /BUILDCHAIN_RC_DOWNLOAD: "false"/);
+  assert.match(workflow, /failure\(\) && !inputs\.dry-run && steps\.rc\.outcome != ''/);
   assert.match(workflow, /compareCommitsWithBasehead/);
   assert.match(workflow, /const superseded = !dryRun && comparisonStatus === "ahead"/);
   assert.match(workflow, /moved incompatibly/);
   assert.match(workflow, /const action = superseded \? "noop" : "promote"/);
   assert.match(workflow, /const reason = superseded \? "target-ref-advanced" : "target-ref-current"/);
-  assert.match(workflow, /needs: preflight/);
+  assert.match(workflow, /needs: \[preflight, release-candidate-preflight\]/);
   assert.match(workflow, /if: \$\{\{ needs\.preflight\.outputs\.action == 'promote' \}\}/);
   assert.match(workflow, /ref: \$\{\{ needs\.preflight\.outputs\.requested-sha \}\}/);
   assert.match(workflow, /INPUT_TARGET_SHA: \$\{\{ inputs\.target-sha \}\}/);
@@ -573,6 +617,10 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /id: promote/);
   assert.ok(
     workflow.indexOf("Revalidate queued promotion intent") <
+      workflow.indexOf("Install promotion dependencies"),
+  );
+  assert.ok(
+    workflow.indexOf("Preflight PR-stage release candidate evidence") <
       workflow.indexOf("Install promotion dependencies"),
   );
   assert.ok(
@@ -2444,7 +2492,7 @@ test("buildchain semver version state includes generated site contract version",
     updated.find((file) => file.path === ".buildchain/release-impact.json").content,
   );
   assert.equal(releaseImpact.release.version, nextVersion);
-  assert.equal(releaseImpact.release.line, "v2.11");
+  assert.equal(releaseImpact.release.line, `v${currentMatch[1]}.${currentMatch[2]}`);
 });
 
 test("generated release model publishes the generic major alpha channel contract", () => {
@@ -2470,10 +2518,9 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   assert.match(workflow, /schedule:/);
   assert.match(workflow, /group: buildchain-release-promotion-\$\{\{ github\.repository \}\}/);
   assert.match(workflow, /cancel-in-progress: false/);
-  assert.match(workflow, /\.build\.yml@v2-alpha/);
-  assert.match(workflow, /Checkout stable Buildchain runtime/);
-  assert.match(workflow, /ref: v2/);
-  assert.match(workflow, /lifecycle run "\$\{stage\}"/);
+  assert.match(workflow, /build\.yml@v2-alpha/);
+  assert.match(workflow, /buildchain-channel: auto/);
+  assert.match(workflow, /buildchain-channel: stable/);
   assert.match(workflow, /ALPHA_RUNTIME_SHA: \$\{\{ needs\.alpha-consumer\.outputs\.buildchain-runtime-sha \}\}/);
   assert.match(workflow, /STABLE_RUNTIME_SHA: \$\{\{ needs\.stable-consumer\.outputs\.buildchain-runtime-sha \}\}/);
   assert.match(workflow, /ref: `tags\/\$\{tag\}`/);
@@ -2481,7 +2528,7 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
   assert.doesNotMatch(workflow, /buildchain-ref:/);
   assert.doesNotMatch(workflow, /\.build\.yml@v2\n/);
-  assert.match(workflow, /buildchain-contract-lock-path: \.buildchain\/alpha-contract-lock\.json/);
+  assert.doesNotMatch(workflow, /buildchain-contract-lock-path:/);
 
   const alphaLock = JSON.parse(
     fs.readFileSync(path.join(root, ".buildchain/alpha-contract-lock.json"), "utf8"),
@@ -2492,7 +2539,14 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   assert.equal(alphaLock.buildchain.ref, "v2-alpha");
   assert.equal(alphaLock.buildchain.resolvedSha, "d7b9453665a60392e9082444dcc8e023cafc000c");
   assert.equal(alphaLock.buildchain.compatibilityPolicy, "major-compatible");
-  assert.equal(alphaLock.buildchain.compatibilityDigest, currentContract.compatibilityDigest);
+  const alphaEvaluation = evaluateBuildchainContractLock({
+    lock: alphaLock,
+    current: currentContract,
+    runtimeRef: "v2-alpha",
+    runtimeSha: "current-development-contract",
+    runtimeClass: "alpha",
+  });
+  assert.equal(alphaEvaluation.compatible, true);
 
   const reusableBuild = fs.readFileSync(
     path.join(root, ".github/workflows/.build.yml"),
@@ -2507,6 +2561,7 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
     "utf8",
   );
   assert.match(actionlintConfig, /\.github\/workflows\/\.build\.yml:/);
+  assert.match(actionlintConfig, /\.github\/workflows\/build\.yml:/);
   assert.match(actionlintConfig, /property "workflow_ref" is not defined in object type/);
 
   assert.match(promotion, /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.sha \|\| github\.sha \}\}/);

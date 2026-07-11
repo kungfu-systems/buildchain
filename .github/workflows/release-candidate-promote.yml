@@ -355,9 +355,43 @@ jobs:
               .addRaw(`- Comparison: \`${comparisonStatus}\`\n`)
               .write();
 
+  release-candidate-preflight:
+    name: Preflight PR-stage release candidate evidence
+    needs: preflight
+    if: ${{ needs.preflight.outputs.action == 'promote' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Buildchain release-candidate resolver
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.buildchain-ref || 'v2' }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "24"
+
+      - name: Preflight PR-stage release candidate evidence
+        run: node .buildchain/runtime/scripts/release-candidate-resolver.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_TARGET_SHA: ${{ needs.preflight.outputs.requested-sha }}
+          BUILDCHAIN_TARGET_REF: ${{ needs.preflight.outputs.target-ref }}
+          BUILDCHAIN_ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          BUILDCHAIN_ARTIFACT_PATTERNS: ${{ inputs.artifact-patterns }}
+          BUILDCHAIN_RC_WORKFLOW_FILE: ${{ inputs.release-candidate-workflow-file }}
+          BUILDCHAIN_RC_WORKFLOW_NAME: ${{ inputs.release-candidate-workflow-name }}
+          BUILDCHAIN_REQUIRED_ARTIFACT_COUNT: ${{ inputs.required-artifact-count }}
+          BUILDCHAIN_PUBLISH_ARTIFACT_KIND: ${{ inputs.publish-artifact-kind }}
+          BUILDCHAIN_PUBLISH_PACKAGE_MAIN: ${{ inputs.publish-package-main }}
+          BUILDCHAIN_RC_DOWNLOAD: "false"
+
   promote:
     name: Promote release candidate
-    needs: preflight
+    needs: [preflight, release-candidate-preflight]
     if: ${{ needs.preflight.outputs.action == 'promote' }}
     runs-on: ubuntu-24.04
     outputs:
@@ -619,7 +653,7 @@ jobs:
 
       - name: Classify Buildchain promotion friction
         id: friction
-        if: ${{ failure() && steps.rc.outcome != '' }}
+        if: ${{ failure() && !inputs.dry-run && steps.rc.outcome != '' }}
         shell: bash
         run: |
           reporter=".buildchain/runtime/scripts/workflow-friction-report.mjs"

@@ -13,6 +13,10 @@ function env(name, fallback = "") {
   return process.env[name] || fallback;
 }
 
+export function releaseCandidateDownloadEnabled(value = "true") {
+  return String(value || "true").trim().toLowerCase() !== "false";
+}
+
 function splitRepository(repository) {
   const match = String(repository || "").trim().match(/^([^/\s]+)\/([^/\s]+)$/);
   if (!match) {
@@ -546,6 +550,7 @@ export async function resolveReleaseCandidateArtifactsCli() {
     publishArtifactKind: env("BUILDCHAIN_PUBLISH_ARTIFACT_KIND", "npm"),
     publishPackageMain: env("BUILDCHAIN_PUBLISH_PACKAGE_MAIN"),
     outputDir: env("BUILDCHAIN_RC_OUTPUT_DIR", ".buildchain/release-candidate"),
+    download: releaseCandidateDownloadEnabled(env("BUILDCHAIN_RC_DOWNLOAD", "true")),
   });
   writeGitHubOutputs({
     "promote-only-release-candidate": String(result.enabled === true),

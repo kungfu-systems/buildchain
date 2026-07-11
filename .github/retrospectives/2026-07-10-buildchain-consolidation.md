@@ -351,6 +351,31 @@ preserve those distinctions. Promotion remains bound to the verified exact SHA;
 patrol, repair, and dev-merge defaults do not depend on the floating alpha they
 may need to repair.
 
+### Stage 6: automatic consumer channel router
+
+Consumers previously needed two nearly identical reusable-workflow calls to
+select `vN-alpha` during development and `vN` for a stable release. Buildchain
+now provides an additive `build.yml` router. Its default `auto` policy derives
+the major line and selects the generic alpha floating ref for development,
+pull-request, and prerelease intent, then selects the stable major floating ref
+for a stable release. Explicit channel and exact trusted runtime overrides
+remain available; ambiguous release-like evidence fails closed. The existing
+`.build.yml` advanced surface keeps its prior semantics.
+
+Because the router is a new public reusable-workflow surface and input
+protocol, KFD-1 classifies it as a minor change. The implementation therefore
+opens `v2.12` and targets `2.12.0-alpha.0` instead of extending the `v2.11`
+patch line.
+
+Train canary `29134325376` exercised the new outer router in both modes with a
+single bounded Linux fixture. The alpha lane resolved `v2-alpha`; the stable
+lane resolved `v2`; both contract locks, build lifecycles, summaries, and the
+final floating-ref comparison passed. The preceding run `29134106772` had
+correctly failed the stable lane because Buildchain's own stable consumer lock
+still accepted an older `v2`. That lock was refreshed to the exact reviewed
+stable SHA `618512fd874cc0125cc8a3daa07ef4d1b195777e`; no compatibility gate was
+bypassed or weakened.
+
 ### Remaining work
 
 This closure does not approve an automatic stable-release schedule, ref
