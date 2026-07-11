@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-impact",
+  "release": {
+    "tag": "v2.12.1-alpha.3",
+    "line": "v2.12",
+    "version": "2.12.1-alpha.3"
+  },
+  "versionImpact": {
+    "final": "minor",
+    "source": "buildchain-version-state",
+    "rationale": "Buildchain v2.12 adds a compatible public channel-router workflow that selects generic major alpha or stable runtimes from release intent while preserving the existing reusable build surface."
+  },
+  "surfaceImpacts": [
+    {
+      "id": "channel-build-router",
+      "impact": "minor",
+      "class": "workflow-contract",
+      "rationale": "A new public reusable workflow lets consumers declare one build job, defaults development and prerelease work to vN-alpha, defaults stable releases to vN, keeps separate channel locks, and fails closed for ambiguous release intent.",
+      "source": ".github/workflows/build.yml"
+    },
+    {
+      "id": "stable-release-canary-gate",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Buildchain stable promotion fails closed until the exact alpha has fresh release-candidate and site-libkungfu-dev canary evidence, has soaked for one hour, is at least 24 hours after the prior stable, and contains a product or contract path change.",
+      "source": "scripts/stable-release-gate.mjs"
+    },
+    {
+      "id": "release-candidate-evidence-preflight",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Alpha and stable promotion validate exact PR-stage release-candidate metadata before candidate dependency installation or the full publication job starts, retain complete validation at the publication trust boundary, and keep expected manual dry-run failures out of automated friction issues.",
+      "source": ".github/workflows/release-candidate-promote.yml"
+    },
+    {
+      "id": "release-state-ref-propagation-retry",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Durable release-state persistence retries a transient non-fast-forward response when GitHub still reports the expected parent, avoiding a false promotion failure during ref propagation.",
+      "source": "actions/promote-buildchain-ref/lib.js"
+    },
+    {
+      "id": "lifecycle-command-override-inheritance",
+      "impact": "patch",
+      "class": "lifecycle-contract",
+      "rationale": "Explicit lifecycle command overrides inherit declared lifecycle and stage environment plus an explicit stage shell while preserving the platform-shell fallback.",
+      "source": "scripts/run-lifecycle-core.mjs"
+    },
+    {
+      "id": "locked-checkout-bounded-fallback",
+      "impact": "patch",
+      "class": "source-integrity",
+      "rationale": "Locked checkout fetches the advertised ref before a raw SHA so mirror objects seed recovery; self-hosted source and Buildchain runtime checkouts share this transport, and GitHub fallback has an independent 600-second default timeout plus bounded retry evidence before exact commit verification.",
+      "source": "scripts/locked-source-checkout.mjs"
+    },
+    {
+      "id": "workflow-shell-checkout-bootstrap",
+      "impact": "patch",
+      "class": "source-integrity",
+      "rationale": "The reusable workflow carries its exact checkout bootstrap into build runners, so alpha/stable routing remains compatible with stable runtimes that predate the newest locked checkout transport.",
+      "source": ".github/workflows/.build.yml"
+    },
+    {
+      "id": "published-contract-digest-round-trip",
+      "impact": "patch",
+      "class": "source-integrity",
+      "rationale": "Consumer write-lock preserves the authoritative digests carried by a released contract artifact after recomputation and fails closed instead of silently replacing mismatched evidence.",
+      "source": "packages/core/buildchain-contract.js"
+    },
+    {
+      "id": "required-check-context-preservation",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Consumer reusable workflows retain the exact check / check context while Buildchain self workflows explicitly use their emitted check context.",
+      "source": ".github/workflows/buildchain-ref-promotion.yml"
+    },
+    {
+      "id": "authenticated-publication-registry-hydration",
+      "impact": "patch",
+      "class": "publication-evidence",
+      "rationale": "Publication releases hydrate authenticated npm registry history, verify immutable entries, and bind cumulative registry evidence into release artifacts.",
+      "source": "scripts/publication-registry-hydrate.mjs"
+    },
+    {
+      "id": "web-surface-channel-build-contract",
+      "impact": "patch",
+      "class": "web-surface",
+      "rationale": "Effective channel and preview alias reach caller build and verify commands, and host mismatches fail before deployment adapter side effects.",
+      "source": "scripts/web-surface-core.mjs"
+    },
+    {
+      "id": "stable-canary-runtime-binding",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Stable canary evidence verifies authoritative workflow metadata, accepts only the exact alpha tag or its resolved commit SHA from workflow inputs or the workflow-owned run-name, and rejects otherwise successful mismatched statuses.",
+      "source": "scripts/stable-release-gate.mjs"
+    },
+    {
+      "id": "major-alpha-floating-channel",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Every major line exposes vN-alpha as a cross-minor test channel owned by the highest minor with a published alpha, while older minor promotions fail closed to a skip instead of rolling consumers backwards.",
+      "source": "actions/promote-buildchain-ref/lib.js"
+    },
+    {
+      "id": "major-alpha-self-dogfood-canary",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Buildchain continuously consumes its released vN-alpha reusable workflow and stable vN runtime, verifies their resolved immutable SHAs, and keeps exact-SHA promotion independent from the floating alpha repair target.",
+      "source": ".github/workflows/buildchain-alpha-self-dogfood.yml"
+    }
+  ],
+  "classification": "minor",
+  "breaking": false,
+  "security": false,
+  "migrationRequired": false,
+  "summary": "Buildchain v2.12 introduces a single-config alpha/stable channel router, preserves authoritative consumer contract locks, and makes constrained self-hosted runtime checkout use the trusted cache and bounded exact-SHA fallback path."
+}
