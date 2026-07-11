@@ -291,10 +291,11 @@ refs and exact SHAs remain trusted manual overrides.
 
 ## Locked Source Checkout Cache
 
-Self-hosted runners that build large repositories can opt into a locked source
-checkout cache. This changes only the Git object transport. Buildchain still
-resolves `publish-source-sha` before any build runner starts, checks out that
-exact commit, and verifies `HEAD` plus the resolved source tree SHA before
+Self-hosted runners that build large repositories can opt into a locked checkout
+cache for both the consumer source and the Buildchain runtime. This changes only
+the Git object transport. Buildchain still resolves `publish-source-sha` and the
+runtime SHA before any build runner starts, checks out those exact commits, and
+verifies each final `HEAD` plus the resolved consumer source tree SHA before
 lifecycle commands run.
 
 ```yaml
@@ -328,6 +329,14 @@ repository or organization variables named
 `BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE`, so consumers can keep
 private LAN topology out of repository YAML.
 
+The GitHub-hosted trust gate uploads the exact runtime version's small checkout
+bootstrap script. Native and Linux-container build jobs download that bootstrap,
+then use the same cache policy to obtain the Buildchain runtime at the already
+resolved immutable SHA. This prevents a large direct `actions/checkout` runtime
+clone from becoming a separate timeout path on constrained self-hosted uplinks.
+The bootstrap artifact does not contain the runtime repository and cannot move
+the selected ref.
+
 Do not read cache URLs or reference paths from PR-controlled files such as
 `.buildchain/buildchain.toml`. These values are trusted workflow inputs or repo/org
 variables. Buildchain does not pass GitHub credentials to cache mirrors or
@@ -348,6 +357,9 @@ compact `sourceCheckout` summary in `diagnostics.json`: mode, transport,
 hit/miss, fallback reason, duration, final HEAD verification, and tree
 verification. Remote URLs are sanitized and local reference paths are represented
 by a short display name plus fingerprint, not by secret-bearing credentials.
+Runtime checkout evidence is uploaded separately as `runtime-checkout.json`,
+including cache transport, fallback attempts, and exact runtime `HEAD`
+verification, even when a later lifecycle step fails.
 
 When a Buildchain maintainer asks for downstream validation, the expected
 request is:

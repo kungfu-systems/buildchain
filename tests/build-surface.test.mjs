@@ -186,7 +186,7 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /checkout-cache-fetch-attempts:/);
   assert.equal(
     (workflow.match(/BUILDCHAIN_CHECKOUT_CACHE_GITHUB_TIMEOUT_SECONDS:/g) || []).length,
-    2,
+    4,
   );
   assert.match(workflow, /BUILDCHAIN_CHECKOUT_CACHE_FETCH_ATTEMPTS:/);
   assert.match(workflow, /BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE/);
@@ -195,6 +195,41 @@ test("reusable build workflow exposes the required surface contract", () => {
     (workflow.match(/node \.buildchain\/runtime\/scripts\/locked-source-checkout\.mjs/g) || []).length,
     2,
   );
+  assert.match(workflow, /Upload Buildchain runtime checkout bootstrap/);
+  assert.equal(
+    (workflow.match(/Download Buildchain runtime checkout bootstrap/g) || []).length,
+    2,
+  );
+  assert.equal(
+    (workflow.match(/node \.buildchain\/runtime-bootstrap\/locked-source-checkout\.mjs/g) || []).length,
+    2,
+  );
+  assert.equal(
+    (workflow.match(/BUILDCHAIN_SOURCE_CHECKOUT_PATH: \.buildchain\/runtime/g) || []).length,
+    2,
+  );
+  assert.equal(
+    (workflow.match(/BUILDCHAIN_SOURCE_REPOSITORY: \$\{\{ inputs\.buildchain-repository \}\}/g) || []).length,
+    2,
+  );
+  assert.equal(
+    (workflow.match(/BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH: \.buildchain\/diagnostics\/runtime-checkout\.json/g) || []).length,
+    2,
+  );
+  const nativeJob = workflow.slice(
+    workflow.indexOf("\n  build-native:"),
+    workflow.indexOf("\n  build-linux-container:"),
+  );
+  const containerJob = workflow.slice(
+    workflow.indexOf("\n  build-linux-container:"),
+    workflow.indexOf("\n  relay-artifacts:"),
+  );
+  assert.ok(nativeJob.indexOf("Setup Node.js") < nativeJob.indexOf("Download Buildchain runtime checkout bootstrap"));
+  assert.ok(containerJob.indexOf("Setup Buildchain Node.js") < containerJob.indexOf("Download Buildchain runtime checkout bootstrap"));
+  for (const job of [nativeJob, containerJob]) {
+    assert.ok(job.indexOf("Download Buildchain runtime checkout bootstrap") < job.indexOf("Checkout Buildchain runtime"));
+    assert.doesNotMatch(job, /Checkout Buildchain runtime\n\s+uses: actions\/checkout/);
+  }
   assert.equal(
     (workflow.match(/BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH: \.buildchain\/diagnostics\/source-checkout\.json/g) || []).length,
     2,
