@@ -557,6 +557,18 @@ jobs:
           BUILDCHAIN_PUBLISH_PACKAGE_MAIN: ${{ inputs.publish-package-main }}
           BUILDCHAIN_RC_OUTPUT_DIR: .buildchain/release-candidate
 
+      - name: Resolve Buildchain stable candidate alpha
+        id: buildchain-stable-candidate
+        if: ${{ needs.preflight.outputs.channel == 'release' && github.repository == 'kungfu-systems/buildchain' }}
+        shell: bash
+        run: |
+          version="$(node -e 'const fs = require("node:fs"); const manifest = JSON.parse(fs.readFileSync("package.json", "utf8")); process.stdout.write(String(manifest.version || ""));')"
+          if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-alpha\.[0-9]+$ ]]; then
+            echo "::error::Buildchain stable candidate must declare an exact alpha version, got ${version:-<empty>}"
+            exit 1
+          fi
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+
       - name: Enforce Buildchain stable release canary gate
         if: ${{ needs.preflight.outputs.channel == 'release' && github.repository == 'kungfu-systems/buildchain' }}
         shell: bash
@@ -564,7 +576,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           BUILDCHAIN_PROMOTION_CHANNEL: ${{ needs.preflight.outputs.channel }}
-          BUILDCHAIN_RELEASE_CANDIDATE_VERSION: ${{ steps.rc.outputs.release-candidate-version }}
+          BUILDCHAIN_RELEASE_CANDIDATE_VERSION: ${{ steps.buildchain-stable-candidate.outputs.version }}
           BUILDCHAIN_RELEASE_CANDIDATE_RUN_ID: ${{ steps.rc.outputs.release-candidate-run-id }}
           BUILDCHAIN_RELEASE_CANDIDATE_RUN_URL: ${{ steps.rc.outputs.release-candidate-run-url }}
           BUILDCHAIN_RELEASE_IMPACT: ${{ inputs.release-passport-impact-json }}
