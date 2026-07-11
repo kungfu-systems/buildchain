@@ -155,7 +155,7 @@ function usage() {
 `;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (!process.env.BUILDCHAIN_EMBEDDED_ENTRYPOINT && process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
     const argv = process.argv.slice(2);
     if (hasFlag(argv, "help") || hasFlag(argv, "h")) {

@@ -1652,6 +1652,30 @@ test("standalone binary builder resolves Windows package manager shims", () => {
   assert.equal(usesShellForSpawnCommand("pnpm", "linux"), false);
 });
 
+test("standalone binary runs public CLI without imported script entrypoint side effects", { timeout: 180_000 }, () => {
+  const outputDir = tempDir("standalone-entrypoint");
+  const version = "2.12.1-alpha.entry-guard";
+  execFileSync(process.execPath, [
+    path.join(root, "scripts", "build-standalone-binary.mjs"),
+    "--version",
+    version,
+    "--output-dir",
+    outputDir,
+  ], {
+    cwd: root,
+    stdio: "ignore",
+  });
+  const executable = path.join(outputDir, process.platform === "win32" ? "buildchain.exe" : "buildchain");
+
+  assert.equal(execFileSync(executable, ["version"], { encoding: "utf8" }).trim(), version);
+  const layout = JSON.parse(execFileSync(executable, ["layout", "--cwd", root, "--json"], {
+    encoding: "utf8",
+  }));
+  assert.equal(layout.contract, "kungfu-buildchain-layout-discovery");
+  assert.equal(layout.buildchain.version, version);
+  assert.equal(layout.kfd.registries["kfd-3"].path, ".buildchain/kfd/kfd-3/surfaces.json");
+});
+
 test("CLI span wraps commands and preserves failure exit codes", () => {
   const cwd = tempDir("span");
   const logPath = path.join(cwd, "events.jsonl");
