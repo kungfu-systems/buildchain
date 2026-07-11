@@ -875,9 +875,12 @@ jobs:
           RUSTUP_UPDATE_ROOT: ${{ inputs.rustup-update-root || 'https://static.rust-lang.org/rustup' }}
         run: |
           @echo off
-          set "CARGO_HOME=%RUNNER_TEMP%\buildchain-cargo"
-          set "RUSTUP_HOME=%RUNNER_TEMP%\buildchain-rustup"
-          set "RUSTUP_INIT=%RUNNER_TEMP%\rustup-init.exe"
+          set "CARGO_HOME=%RUNNER_TEMP%\buildchain-cargo-%GITHUB_RUN_ID%-%GITHUB_RUN_ATTEMPT%"
+          set "RUSTUP_HOME=%RUNNER_TEMP%\buildchain-rustup-%GITHUB_RUN_ID%-%GITHUB_RUN_ATTEMPT%"
+          set "RUSTUP_INIT_ROOT=%RUNNER_TEMP%\buildchain-rustup-init-%GITHUB_RUN_ID%-%GITHUB_RUN_ATTEMPT%"
+          set "RUSTUP_INIT=%RUSTUP_INIT_ROOT%\rustup-init.exe"
+          if not exist "%RUSTUP_INIT_ROOT%" mkdir "%RUSTUP_INIT_ROOT%"
+          if errorlevel 1 exit /b %errorlevel%
           curl.exe --proto "=https" --tlsv1.2 --retry 10 --retry-connrefused --fail --silent --show-error --location "https://win.rustup.rs/x86_64" --output "%RUSTUP_INIT%"
           if errorlevel 1 exit /b %errorlevel%
           "%RUSTUP_INIT%" --default-toolchain "%BUILDCHAIN_RUST_TOOLCHAIN%" --profile minimal -y --no-modify-path
