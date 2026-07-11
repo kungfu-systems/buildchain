@@ -1,0 +1,193 @@
+name: Buildchain Alpha Self-Dogfood
+
+run-name: Buildchain v2-alpha self-dogfood
+
+on:
+  workflow_run:
+    workflows: ["Buildchain Ref Promotion"]
+    types: [completed]
+  schedule:
+    - cron: "47 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  id-token: write
+
+concurrency:
+  group: buildchain-release-promotion-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  alpha-consumer:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v2-alpha
+    permissions:
+      contents: read
+      issues: write
+      id-token: write
+    with:
+      working-directory: fixtures/libnode-shaped
+      buildchain-contract-lock-path: .buildchain/contract-lock.json
+      buildchain-contract-drift-issue-mode: "off"
+      runner-preset: custom
+      platforms-json: >-
+        [{"id":"linux-x64","name":"Linux x64","runner":"[\"ubuntu-24.04\"]"}]
+      artifact-name: buildchain-v2-alpha-self-dogfood
+      artifact-name-template: "{artifact}-{platform}-{shortSha}"
+      artifact-paths: fixtures/libnode-shaped/dist
+      require-install: true
+      require-verify: true
+      artifact-retention-days: 7
+
+  stable-consumer:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-24.04
+    outputs:
+      buildchain-runtime-ref: ${{ steps.runtime.outputs.ref }}
+      buildchain-runtime-sha: ${{ steps.runtime.outputs.sha }}
+      buildchain-runtime-class: ${{ steps.runtime.outputs.class }}
+    steps:
+      - name: Checkout stable Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: kungfu-systems/buildchain
+          ref: v2
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Resolve stable runtime
+        id: runtime
+        shell: bash
+        run: |
+          {
+            echo "ref=v2"
+            echo "sha=$(git -C .buildchain/runtime rev-parse HEAD)"
+            echo "class=stable"
+          } >> "${GITHUB_OUTPUT}"
+
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "24"
+
+      - name: Install stable Buildchain runtime dependencies
+        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+
+      - name: Checkout self-consumer source
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ github.sha }}
+          path: source
+          persist-credentials: false
+
+      - name: Run stable lifecycle fixture
+        working-directory: source/fixtures/libnode-shaped
+        shell: bash
+        run: |
+          runtime="${GITHUB_WORKSPACE}/.buildchain/runtime/bin/buildchain.mjs"
+          node "${runtime}" validate --cwd . --require-version-state --require-lifecycle-stages install,build,verify
+          for stage in install build verify; do
+            node "${runtime}" lifecycle run "${stage}" \
+              --cwd . \
+              --required \
+              --artifact-name "buildchain-v2-stable-${stage}" \
+              --manifest-path ".buildchain/artifacts/${stage}-manifest.json" \
+              --summary-path ".buildchain/artifacts/${stage}-summary.json"
+          done
+
+      - name: Upload stable lifecycle evidence
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-v2-stable-self-dogfood
+          path: |
+            source/fixtures/libnode-shaped/.buildchain/artifacts/
+            source/fixtures/libnode-shaped/dist/
+          if-no-files-found: error
+          retention-days: 7
+
+  verify-floating-refs:
+    name: Verify floating refs
+    needs:
+      - alpha-consumer
+      - stable-consumer
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Verify resolved runtime SHAs
+        uses: actions/github-script@v8
+        env:
+          ALPHA_RUNTIME_REF: ${{ needs.alpha-consumer.outputs.buildchain-runtime-ref }}
+          ALPHA_RUNTIME_SHA: ${{ needs.alpha-consumer.outputs.buildchain-runtime-sha }}
+          ALPHA_RUNTIME_CLASS: ${{ needs.alpha-consumer.outputs.buildchain-runtime-class }}
+          STABLE_RUNTIME_REF: ${{ needs.stable-consumer.outputs.buildchain-runtime-ref }}
+          STABLE_RUNTIME_SHA: ${{ needs.stable-consumer.outputs.buildchain-runtime-sha }}
+          STABLE_RUNTIME_CLASS: ${{ needs.stable-consumer.outputs.buildchain-runtime-class }}
+        with:
+          script: |
+            const fs = require("node:fs");
+            const alphaRef = "v2-alpha";
+            const stableRef = "v2";
+            const resolveTag = async (tag) => {
+              const response = await github.rest.git.getRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `tags/${tag}`,
+              });
+              return response.data.object.sha;
+            };
+            const expectedAlphaSha = await resolveTag(alphaRef);
+            const expectedStableSha = await resolveTag(stableRef);
+            const observed = {
+              alpha: {
+                ref: process.env.ALPHA_RUNTIME_REF,
+                sha: process.env.ALPHA_RUNTIME_SHA,
+                class: process.env.ALPHA_RUNTIME_CLASS,
+                expectedSha: expectedAlphaSha,
+              },
+              stable: {
+                ref: process.env.STABLE_RUNTIME_REF,
+                sha: process.env.STABLE_RUNTIME_SHA,
+                class: process.env.STABLE_RUNTIME_CLASS,
+                expectedSha: expectedStableSha,
+              },
+            };
+            const failures = [];
+            if (observed.alpha.ref !== alphaRef) failures.push(`alpha runtime ref: ${observed.alpha.ref}`);
+            if (observed.alpha.class !== "alpha") failures.push(`alpha runtime class: ${observed.alpha.class}`);
+            if (observed.alpha.sha !== expectedAlphaSha) failures.push(`alpha runtime sha: ${observed.alpha.sha}`);
+            if (observed.stable.ref !== stableRef) failures.push(`stable runtime ref: ${observed.stable.ref}`);
+            if (observed.stable.class !== "stable") failures.push(`stable runtime class: ${observed.stable.class}`);
+            if (observed.stable.sha !== expectedStableSha) failures.push(`stable runtime sha: ${observed.stable.sha}`);
+            const evidence = {
+              schemaVersion: 1,
+              contract: "kungfu-buildchain-alpha-self-dogfood",
+              repository: context.repo.owner + "/" + context.repo.repo,
+              callerSha: context.sha,
+              checkedAt: new Date().toISOString(),
+              status: failures.length === 0 ? "passed" : "failed",
+              observed,
+              failures,
+            };
+            fs.mkdirSync(".buildchain/self-dogfood", { recursive: true });
+            fs.writeFileSync(
+              ".buildchain/self-dogfood/evidence.json",
+              JSON.stringify(evidence, null, 2) + "\n",
+            );
+            await core.summary
+              .addHeading("Buildchain floating ref self-dogfood")
+              .addRaw(`- v2-alpha: \`${observed.alpha.sha}\` (${observed.alpha.class})\n`)
+              .addRaw(`- v2: \`${observed.stable.sha}\` (${observed.stable.class})\n`)
+              .addRaw(`- status: \`${evidence.status}\`\n`)
+              .write();
+            if (failures.length > 0) {
+              core.setFailed(`floating ref self-dogfood failed: ${failures.join(", ")}`);
+            }
+
+      - name: Upload self-dogfood evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-v2-alpha-self-dogfood-evidence
+          path: .buildchain/self-dogfood/evidence.json
+          if-no-files-found: error
+          retention-days: 14

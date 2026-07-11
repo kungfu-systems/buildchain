@@ -1313,7 +1313,7 @@ test("binary distribution manages GitHub Release metadata explicitly", () => {
   assert.doesNotMatch(workflow, /gh release create/);
 });
 
-test("runtime train override accepts only trusted manual train or exact SHA refs", () => {
+test("runtime selection accepts official channels and gates train or SHA overrides", () => {
   assert.deepEqual(
     resolveRuntimeSelection({ requestedRef: "", workflowRef: "kungfu-systems/buildchain/.github/workflows/.build.yml@v2" }),
     {
@@ -1327,9 +1327,46 @@ test("runtime train override accepts only trusted manual train or exact SHA refs
       trustDecision: "stable-default",
     },
   );
+  assert.deepEqual(
+    resolveRuntimeSelection({ requestedRef: "", workflowRef: "kungfu-systems/buildchain/.github/workflows/.build.yml@refs/tags/v2-alpha" }),
+    {
+      requestedRef: "",
+      runtimeRef: "v2-alpha",
+      runtimeFullRef: "v2-alpha",
+      runtimeClass: "alpha",
+      runtimeOverride: false,
+      workflowShellRef: "v2-alpha",
+      rollbackRef: "v2-alpha",
+      trustDecision: "stable-default",
+    },
+  );
   assert.equal(
     resolveRuntimeSelection({ requestedRef: "", workflowRef: "kungfu-systems/libnode/.github/workflows/build.yml@main" }).runtimeRef,
     "v2",
+  );
+  assert.deepEqual(
+    resolveRuntimeSelection({
+      requestedRef: "v2-alpha",
+      workflowRef: "kungfu-systems/libnode/.github/workflows/build.yml@main",
+    }),
+    {
+      requestedRef: "v2-alpha",
+      runtimeRef: "v2-alpha",
+      runtimeFullRef: "v2-alpha",
+      runtimeClass: "alpha",
+      runtimeOverride: false,
+      workflowShellRef: "v2",
+      rollbackRef: "v2",
+      trustDecision: "official-channel",
+    },
+  );
+  assert.deepEqual(
+    validateRuntimeOverrideTrust({
+      requestedRef: "v2-alpha",
+      eventName: "pull_request",
+      actorPermission: "none",
+    }),
+    { ok: true, decision: "official-channel" },
   );
   assert.equal(
     normalizeRequestedRuntimeRef("refs/heads/train/v2/v2.3/runtime-loader").ref,
@@ -1361,6 +1398,26 @@ test("runtime train override accepts only trusted manual train or exact SHA refs
     }).decision,
     "override-accepted",
   );
+});
+
+test("runtime-aware workflows distinguish official channels from overrides", () => {
+  const workflowFiles = [
+    ".github/workflows/.build.yml",
+    ".github/workflows/.release-verify.yml",
+    ".github/workflows/.web-surface.yml",
+    ".github/workflows/paper-release.yml",
+    ".github/workflows/publication-artifact.yml",
+  ];
+  for (const workflowFile of workflowFiles) {
+    const workflow = fs.readFileSync(path.join(root, workflowFile), "utf8");
+    assert.match(workflow, /BUILDCHAIN_WORKFLOW_REF: \$\{\{ job\.workflow_ref \}\}/);
+    assert.match(workflow, /process\.env\.BUILDCHAIN_WORKFLOW_REF \|\| process\.env\.GITHUB_WORKFLOW_REF/);
+    assert.match(workflow, /const officialChannelRef = \/\^v\\d\+/);
+    assert.match(workflow, /const officialChannel = officialChannelRef\.test\(requested\)/);
+    assert.match(workflow, /requested !== "" && !officialChannel/);
+    assert.match(workflow, /\? "official-channel"/);
+    assert.match(workflow, /buildchain-ref override is only allowed for trusted workflow_dispatch runs/);
+  }
 });
 
 test("promote action exposes generic publish source-lock gate", () => {
@@ -2396,6 +2453,52 @@ test("generated release model publishes the generic major alpha channel contract
   );
   assert.match(releaseModel.floatingTags, /vX-alpha/);
   assert.match(releaseModel.floatingTags, /highest minor in major X with a published alpha/);
+});
+
+test("Buildchain self-dogfoods the current major alpha without replacing exact-SHA promotion", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/buildchain-alpha-self-dogfood.yml"),
+    "utf8",
+  );
+  const promotion = fs.readFileSync(
+    path.join(root, ".github/workflows/buildchain-ref-promotion.yml"),
+    "utf8",
+  );
+
+  assert.match(workflow, /workflow_run:/);
+  assert.match(workflow, /workflows: \["Buildchain Ref Promotion"\]/);
+  assert.match(workflow, /schedule:/);
+  assert.match(workflow, /group: buildchain-release-promotion-\$\{\{ github\.repository \}\}/);
+  assert.match(workflow, /cancel-in-progress: false/);
+  assert.match(workflow, /\.build\.yml@v2-alpha/);
+  assert.match(workflow, /Checkout stable Buildchain runtime/);
+  assert.match(workflow, /ref: v2/);
+  assert.match(workflow, /lifecycle run "\$\{stage\}"/);
+  assert.match(workflow, /ALPHA_RUNTIME_SHA: \$\{\{ needs\.alpha-consumer\.outputs\.buildchain-runtime-sha \}\}/);
+  assert.match(workflow, /STABLE_RUNTIME_SHA: \$\{\{ needs\.stable-consumer\.outputs\.buildchain-runtime-sha \}\}/);
+  assert.match(workflow, /ref: `tags\/\$\{tag\}`/);
+  assert.match(workflow, /kungfu-buildchain-alpha-self-dogfood/);
+  assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
+  assert.doesNotMatch(workflow, /buildchain-ref:/);
+  assert.doesNotMatch(workflow, /\.build\.yml@v2\n/);
+
+  const reusableBuild = fs.readFileSync(
+    path.join(root, ".github/workflows/.build.yml"),
+    "utf8",
+  );
+  assert.match(reusableBuild, /BUILDCHAIN_WORKFLOW_REF: \$\{\{ job\.workflow_ref \}\}/);
+  assert.match(reusableBuild, /process\.env\.BUILDCHAIN_WORKFLOW_REF \|\| process\.env\.GITHUB_WORKFLOW_REF/);
+  assert.match(reusableBuild, /replace\(\/\^refs\\\/\(\?:heads\|tags\)\\\/\//);
+
+  const actionlintConfig = fs.readFileSync(
+    path.join(root, ".github/actionlint.yaml"),
+    "utf8",
+  );
+  assert.match(actionlintConfig, /\.github\/workflows\/\.build\.yml:/);
+  assert.match(actionlintConfig, /property "workflow_ref" is not defined in object type/);
+
+  assert.match(promotion, /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.sha \|\| github\.sha \}\}/);
+  assert.doesNotMatch(promotion, /buildchain-ref: (?:v\d+-alpha|\$\{\{[^\n]*v\d+-alpha)/);
 });
 
 test("libnode-shaped fixture declares the build lifecycle contract", () => {

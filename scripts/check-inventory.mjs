@@ -71,6 +71,7 @@ const requiredPaths = [
   ".github/workflows/buildchain-patrol-daily.yml",
   ".github/workflows/buildchain-patrol-weekly.yml",
   ".github/workflows/buildchain-patrol-monthly.yml",
+  ".github/workflows/buildchain-alpha-self-dogfood.yml",
   ".github/workflows/release-candidate-promote.yml",
   ".github/workflows/release-propagation.yml",
   ".github/workflows/npm-publish.yml",
@@ -96,6 +97,58 @@ if (rootPackage.name !== "@kungfu-tech/buildchain") {
 }
 if (rootPackage.private !== false) {
   throw new Error("root package must be publishable with private=false");
+}
+const selfDogfoodWorkflow = fs.readFileSync(
+  path.join(root, ".github/workflows/buildchain-alpha-self-dogfood.yml"),
+  "utf8",
+);
+const selfDogfoodMajor = String(rootPackage.version || "").match(/^(\d+)\./)?.[1];
+if (!selfDogfoodMajor) {
+  throw new Error("root package version must expose a numeric major for self-dogfood");
+}
+for (const requiredSnippet of [
+  `/.github/workflows/.build.yml@v${selfDogfoodMajor}-alpha`,
+  `ref: v${selfDogfoodMajor}`,
+  `echo "ref=v${selfDogfoodMajor}"`,
+  `const alphaRef = "v${selfDogfoodMajor}-alpha"`,
+  `const stableRef = "v${selfDogfoodMajor}"`,
+]) {
+  if (!selfDogfoodWorkflow.includes(requiredSnippet)) {
+    throw new Error(`Buildchain self-dogfood workflow missing current-major snippet: ${requiredSnippet}`);
+  }
+}
+const reusableBuildWorkflow = fs.readFileSync(
+  path.join(root, ".github/workflows/.build.yml"),
+  "utf8",
+);
+for (const requiredSnippet of [
+  "BUILDCHAIN_WORKFLOW_REF: ${{ job.workflow_ref }}",
+  "process.env.BUILDCHAIN_WORKFLOW_REF || process.env.GITHUB_WORKFLOW_REF",
+  'replace(/^refs\\/(?:heads|tags)\\//, "")',
+]) {
+  if (!reusableBuildWorkflow.includes(requiredSnippet)) {
+    throw new Error(`reusable build workflow missing called-workflow identity: ${requiredSnippet}`);
+  }
+}
+for (const requiredSnippet of [
+  "group: buildchain-release-promotion-${{ github.repository }}",
+  "cancel-in-progress: false",
+]) {
+  if (!selfDogfoodWorkflow.includes(requiredSnippet)) {
+    throw new Error(`Buildchain self-dogfood workflow missing promotion serialization: ${requiredSnippet}`);
+  }
+}
+const actionlintConfig = fs.readFileSync(
+  path.join(root, ".github/actionlint.yaml"),
+  "utf8",
+);
+for (const requiredSnippet of [
+  ".github/workflows/.build.yml:",
+  'property "workflow_ref" is not defined in object type',
+]) {
+  if (!actionlintConfig.includes(requiredSnippet)) {
+    throw new Error(`actionlint config missing scoped job.workflow_ref compatibility rule: ${requiredSnippet}`);
+  }
 }
 const packageDependencySections = ["dependencies", "optionalDependencies", "peerDependencies"];
 const exoticDependencyPattern =

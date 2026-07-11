@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:53b605e57a5ac2b8d4ed911a4fbb4d1a39352db143db183aa551f9226f2d7a6a",
+      "digest": "sha256:02987c6bf99441eddc630fa4050fd109c15923047a4591e26d54a714c124539a",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -273,7 +273,7 @@
       "title": "Reusable build surface",
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
-      "digest": "sha256:b9335434f95e6173f31d50983f8ab492378b065fa203a3b68bee447487883cea",
+      "digest": "sha256:4611e4ae47091687f50b489ccc6caba911f13bb1f73b27a5d44581d8a6450d06",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -300,7 +300,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:8a70f9f2699bcec6102164d6ae67f13549f3ef962d12441fbb80f9d49a1cc2e1",
+      "digest": "sha256:69c4146640626bc03b93ac178e250745e45939ba9443f3ba27207a35522036c4",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -328,7 +328,7 @@
       "title": "Runtime train validation",
       "path": "docs/runtime-train-validation.md",
       "plane": "verify",
-      "digest": "sha256:bb053594407bd0f78aa43352a249a2ffa19825374147cc712cd56ca6ad50dfa3",
+      "digest": "sha256:1872e511b31c04ba75fc3a005c7a4f857c8b06ecadfedb75bc35b2ce70e7764a",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
