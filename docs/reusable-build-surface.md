@@ -5,9 +5,69 @@ Buildchain's release semantics but cannot be described as a simple Node package.
 The first target shape is `libnode`: expensive native builds, multiple operating
 systems, self-hosted runner labels, and release artifacts that must be auditable.
 
-## Workflow
+## Automatic Channel Router
 
-Stable consumers call:
+The preferred consumer surface is one reusable workflow call. After v2.12
+reaches the stable major ref, consumers keep this configuration for both alpha
+development and stable release work:
+
+```yaml
+jobs:
+  build:
+    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v2
+    permissions:
+      contents: read
+      issues: write
+      id-token: write
+    with:
+      working-directory: .
+      artifact-name: libnode
+      runner-preset: kungfu-v4-self-hosted
+      publish-channel: none
+    secrets: inherit
+```
+
+`buildchain-channel` defaults to `auto`. Selection uses this precedence:
+
+1. an explicit `buildchain-ref` train, SHA, or official channel;
+2. an explicit `buildchain-channel: alpha|stable`;
+3. `publish-channel: alpha|release|major`;
+4. GitHub release prerelease metadata;
+5. a canonical semver tag;
+6. non-release PR, push, dispatch, schedule, and workflow-run events default to
+   alpha.
+
+The resolved runtime is `vN-alpha` for development and prerelease intent and
+`vN` for stable release intent. Unknown custom publish channels, malformed
+release events, and non-semver release-like tags fail before the build matrix;
+they never guess alpha for a stable release.
+
+The router automatically selects `.buildchain/alpha-contract-lock.json` for
+alpha and `.buildchain/contract-lock.json` for stable. A repository can override
+the common path with `buildchain-contract-lock-path`, or override one channel
+with `buildchain-alpha-contract-lock-path` /
+`buildchain-stable-contract-lock-path`.
+
+Only repositories changing the default policy need extra routing input:
+
+```yaml
+with:
+  buildchain-channel: stable
+```
+
+During the v2.12 prerelease evaluation window, canaries use
+`build.yml@v2-alpha`. The same router then selects `v2-alpha` or stable `v2` as
+the runtime. Production consumers should adopt `build.yml@v2` after the router
+has reached stable; this keeps the routing shell itself on a stable ref.
+
+The router is generated from `.build.yml`'s input/output surface. Run
+`node scripts/generate-channel-build-workflow.mjs` after changing the advanced
+build workflow; inventory and unit tests reject a stale generated router.
+
+## Advanced Workflow
+
+Consumers that need direct workflow-shell or runtime control call the advanced
+surface:
 
 ```yaml
 jobs:
@@ -214,7 +274,7 @@ The lock is intentionally small. It does not copy the full contract. The full
 contract remains in the Buildchain ref and package; the consumer records only
 what it accepted and the policy used to compare future floating-ref movement.
 
-Alpha-channel consumers select the matching workflow shell:
+Advanced alpha-channel consumers select the matching workflow shell:
 
 ```yaml
 jobs:

@@ -64,6 +64,7 @@ import {
   validateRuntimeOverrideTrust,
 } from "../scripts/runtime-ref-core.mjs";
 import { resolvePublishSourceCli } from "../scripts/resolve-publish-source.mjs";
+import { evaluateBuildchainContractLock } from "../packages/core/buildchain-contract.js";
 import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
 import { verifyPublishChannelRefCli } from "../scripts/verify-publish-channel-ref.mjs";
 import { verifyPublishSourceLockCli } from "../scripts/verify-publish-source-lock.mjs";
@@ -2444,7 +2445,7 @@ test("buildchain semver version state includes generated site contract version",
     updated.find((file) => file.path === ".buildchain/release-impact.json").content,
   );
   assert.equal(releaseImpact.release.version, nextVersion);
-  assert.equal(releaseImpact.release.line, "v2.11");
+  assert.equal(releaseImpact.release.line, `v${currentMatch[1]}.${currentMatch[2]}`);
 });
 
 test("generated release model publishes the generic major alpha channel contract", () => {
@@ -2470,10 +2471,9 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   assert.match(workflow, /schedule:/);
   assert.match(workflow, /group: buildchain-release-promotion-\$\{\{ github\.repository \}\}/);
   assert.match(workflow, /cancel-in-progress: false/);
-  assert.match(workflow, /\.build\.yml@v2-alpha/);
-  assert.match(workflow, /Checkout stable Buildchain runtime/);
-  assert.match(workflow, /ref: v2/);
-  assert.match(workflow, /lifecycle run "\$\{stage\}"/);
+  assert.match(workflow, /build\.yml@v2-alpha/);
+  assert.match(workflow, /buildchain-channel: auto/);
+  assert.match(workflow, /buildchain-channel: stable/);
   assert.match(workflow, /ALPHA_RUNTIME_SHA: \$\{\{ needs\.alpha-consumer\.outputs\.buildchain-runtime-sha \}\}/);
   assert.match(workflow, /STABLE_RUNTIME_SHA: \$\{\{ needs\.stable-consumer\.outputs\.buildchain-runtime-sha \}\}/);
   assert.match(workflow, /ref: `tags\/\$\{tag\}`/);
@@ -2481,7 +2481,7 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
   assert.doesNotMatch(workflow, /buildchain-ref:/);
   assert.doesNotMatch(workflow, /\.build\.yml@v2\n/);
-  assert.match(workflow, /buildchain-contract-lock-path: \.buildchain\/alpha-contract-lock\.json/);
+  assert.doesNotMatch(workflow, /buildchain-contract-lock-path:/);
 
   const alphaLock = JSON.parse(
     fs.readFileSync(path.join(root, ".buildchain/alpha-contract-lock.json"), "utf8"),
@@ -2492,7 +2492,14 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   assert.equal(alphaLock.buildchain.ref, "v2-alpha");
   assert.equal(alphaLock.buildchain.resolvedSha, "d7b9453665a60392e9082444dcc8e023cafc000c");
   assert.equal(alphaLock.buildchain.compatibilityPolicy, "major-compatible");
-  assert.equal(alphaLock.buildchain.compatibilityDigest, currentContract.compatibilityDigest);
+  const alphaEvaluation = evaluateBuildchainContractLock({
+    lock: alphaLock,
+    current: currentContract,
+    runtimeRef: "v2-alpha",
+    runtimeSha: "current-development-contract",
+    runtimeClass: "alpha",
+  });
+  assert.equal(alphaEvaluation.compatible, true);
 
   const reusableBuild = fs.readFileSync(
     path.join(root, ".github/workflows/.build.yml"),
@@ -2507,6 +2514,7 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
     "utf8",
   );
   assert.match(actionlintConfig, /\.github\/workflows\/\.build\.yml:/);
+  assert.match(actionlintConfig, /\.github\/workflows\/build\.yml:/);
   assert.match(actionlintConfig, /property "workflow_ref" is not defined in object type/);
 
   assert.match(promotion, /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.sha \|\| github\.sha \}\}/);
