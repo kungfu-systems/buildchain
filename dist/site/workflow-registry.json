@@ -59,11 +59,13 @@
         "sample-process-tree",
         "setup-node",
         "setup-rust",
+        "shifu-cache-profile-digest",
+        "shifu-cache-profile-ref",
         "untrusted-policy",
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 55,
+      "inputCount": 57,
       "surface": "reusable-build",
       "capabilityGroup": "api-cli-reference",
       "status": "active"
@@ -407,11 +409,13 @@
         "sample-process-tree",
         "setup-node",
         "setup-rust",
+        "shifu-cache-profile-digest",
+        "shifu-cache-profile-ref",
         "untrusted-policy",
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 58,
+      "inputCount": 60,
       "surface": "channel-build-router",
       "capabilityGroup": "reusable-build",
       "status": "active"

@@ -683,6 +683,8 @@ for (const requiredSnippet of [
   "checkout-cache-mode",
   "BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE",
   "sourceCheckout",
+  "Shifu Cache Profile Passthrough",
+  "opaque reference and digest",
 ]) {
   if (!reusableBuildSurfaceDoc.includes(requiredSnippet)) {
     throw new Error(`reusable build surface doc missing contract lock snippet: ${requiredSnippet}`);

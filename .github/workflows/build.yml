@@ -282,6 +282,16 @@ on:
         default: 3
         type: number
         required: false
+      shifu-cache-profile-ref:
+        description: "Opaque trusted Shifu cache profile reference passed to lifecycle commands without interpretation"
+        default: ""
+        type: string
+        required: false
+      shifu-cache-profile-digest:
+        description: "Opaque expected Shifu cache profile digest passed to lifecycle commands without interpretation"
+        default: ""
+        type: string
+        required: false
     secrets:
       BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN:
         required: false
@@ -547,4 +557,6 @@ jobs:
       checkout-cache-timeout-seconds: ${{ inputs.checkout-cache-timeout-seconds }}
       checkout-cache-github-timeout-seconds: ${{ inputs.checkout-cache-github-timeout-seconds }}
       checkout-cache-fetch-attempts: ${{ inputs.checkout-cache-fetch-attempts }}
+      shifu-cache-profile-ref: ${{ inputs.shifu-cache-profile-ref }}
+      shifu-cache-profile-digest: ${{ inputs.shifu-cache-profile-digest }}
     secrets: inherit
