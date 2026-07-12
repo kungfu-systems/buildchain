@@ -175,7 +175,10 @@ export function createGitHubQualificationClient({
   async function matchingRun(query) {
     const payload = await api(`/repos/${query.repository}/actions/workflows/${encodeURIComponent(query.workflowFile)}/runs?per_page=100`);
     return (payload.workflow_runs || [])
-      .filter((run) => (!query.headSha || run.head_sha === query.headSha) && (!query.runName || run.display_title === query.runName || run.name === query.runName))
+      .filter((run) => (
+        (!query.runName && (!query.headSha || run.head_sha === query.headSha))
+        || (query.runName && (run.display_title === query.runName || run.name === query.runName))
+      ))
       .sort((left, right) => String(right.created_at).localeCompare(String(left.created_at)))[0];
   }
   return {

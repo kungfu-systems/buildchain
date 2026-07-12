@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { normalizeStableCandidateQualificationOptions, runStableCandidateQualification } from "../scripts/stable-candidate-qualification.mjs";
+import {
+  createGitHubQualificationClient,
+  normalizeStableCandidateQualificationOptions,
+  runStableCandidateQualification,
+} from "../scripts/stable-candidate-qualification.mjs";
 
 const SHA = "a".repeat(40);
 
@@ -81,4 +85,32 @@ test("non-alpha workflow deliveries are auditable no-ops", async () => {
   const result = await runStableCandidateQualification({ repository: "kungfu-systems/buildchain", candidateSha: SHA }, client);
   assert.equal(result.status, "skipped");
   assert.equal(result.reason, "exact-alpha-release-not-found");
+});
+
+test("cross-repository canary matching binds the candidate through the exact run name", async () => {
+  const response = {
+    ok: true,
+    status: 200,
+    async text() {
+      return JSON.stringify({
+        workflow_runs: [{
+          id: 42,
+          head_sha: "b".repeat(40),
+          display_title: `Buildchain Stable Canary / ${SHA}`,
+          status: "completed",
+          conclusion: "success",
+          created_at: "2026-07-12T07:03:31Z",
+        }],
+      });
+    },
+  };
+  const client = createGitHubQualificationClient({ token: "dispatch", fetchImpl: async () => response });
+  const run = await client.findWorkflowRun({
+    repository: "kungfu-systems/site-libkungfu-dev",
+    workflowFile: "buildchain-stable-canary.yml",
+    workflowName: "Buildchain Stable Canary",
+    headSha: SHA,
+    runName: `Buildchain Stable Canary / ${SHA}`,
+  });
+  assert.equal(run.id, 42);
 });
