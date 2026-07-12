@@ -26,7 +26,8 @@
       "workflow": "Buildchain Stable Canary",
       "context": "buildchain-canary/site-libkungfu-dev",
       "allowedAttestors": [
-        "kungfu-origin"
+        "kungfu-origin",
+        "github-actions[bot]"
       ]
     }
   ]

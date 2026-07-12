@@ -833,6 +833,7 @@ function buildSiteBundle() {
         ["buildchain-patrol-monthly", "repository-patrol"],
         ["stable-candidate-patrol", "repository-patrol"],
         ["buildchain-stable-candidate-patrol", "repository-patrol"],
+        ["buildchain-stable-candidate-qualification", "repository-patrol"],
         ["patrol-daily", "repository-patrol"],
         ["patrol-weekly", "repository-patrol"],
         ["patrol-monthly", "repository-patrol"],
@@ -841,6 +842,7 @@ function buildSiteBundle() {
         ["release-propagation", "preview"],
         ["candidate-lab", "repository-internal"],
         ["build-surface-fixture", "repository-internal"],
+        ["buildchain-stable-candidate-qualification", "repository-internal"],
         ["self-hosted-runner-smoke", "compatibility-fixture"],
       ]);
       return {
