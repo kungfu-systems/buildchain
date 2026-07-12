@@ -266,6 +266,16 @@ on:
         default: 3
         type: number
         required: false
+      shifu-cache-profile-ref:
+        description: "Opaque trusted Shifu cache profile reference passed to lifecycle commands without interpretation"
+        default: ""
+        type: string
+        required: false
+      shifu-cache-profile-digest:
+        description: "Opaque expected Shifu cache profile digest passed to lifecycle commands without interpretation"
+        default: ""
+        type: string
+        required: false
     secrets:
       BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN:
         required: false
@@ -971,6 +981,8 @@ jobs:
         env:
           BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
           BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          SHIFU_CACHE_PROFILE_REF: ${{ inputs.shifu-cache-profile-ref }}
+          SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
         with:
           cwd: ${{ inputs.working-directory }}
           stage: install
@@ -988,6 +1000,8 @@ jobs:
         env:
           BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
           BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          SHIFU_CACHE_PROFILE_REF: ${{ inputs.shifu-cache-profile-ref }}
+          SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
         with:
           cwd: ${{ inputs.working-directory }}
           stage: build
@@ -1012,6 +1026,8 @@ jobs:
         env:
           BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
           BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          SHIFU_CACHE_PROFILE_REF: ${{ inputs.shifu-cache-profile-ref }}
+          SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
         with:
           cwd: ${{ inputs.working-directory }}
           stage: verify
@@ -1213,6 +1229,8 @@ jobs:
         env:
           BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
           BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          SHIFU_CACHE_PROFILE_REF: ${{ inputs.shifu-cache-profile-ref }}
+          SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
         with:
           cwd: ${{ inputs.working-directory }}
           stage: install
@@ -1230,6 +1248,8 @@ jobs:
         env:
           BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
           BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          SHIFU_CACHE_PROFILE_REF: ${{ inputs.shifu-cache-profile-ref }}
+          SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
         with:
           cwd: ${{ inputs.working-directory }}
           stage: build
@@ -1254,6 +1274,8 @@ jobs:
         env:
           BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
           BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          SHIFU_CACHE_PROFILE_REF: ${{ inputs.shifu-cache-profile-ref }}
+          SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
         with:
           cwd: ${{ inputs.working-directory }}
           stage: verify

@@ -208,6 +208,16 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /checkout-cache-timeout-seconds:/);
   assert.match(workflow, /checkout-cache-github-timeout-seconds:/);
   assert.match(workflow, /checkout-cache-fetch-attempts:/);
+  assert.match(workflow, /shifu-cache-profile-ref:/);
+  assert.match(workflow, /shifu-cache-profile-digest:/);
+  assert.equal(
+    (workflow.match(/SHIFU_CACHE_PROFILE_REF:/g) || []).length,
+    6,
+  );
+  assert.equal(
+    (workflow.match(/SHIFU_CACHE_PROFILE_DIGEST:/g) || []).length,
+    6,
+  );
   assert.equal(
     (workflow.match(/BUILDCHAIN_CHECKOUT_CACHE_GITHUB_TIMEOUT_SECONDS:/g) || []).length,
     4,

@@ -326,6 +326,38 @@ also pass `buildchain-ref: v2-alpha` explicitly; official floating refs are
 ordinary channel selections and are allowed on pull requests and pushes. Train
 refs and exact SHAs remain trusted manual overrides.
 
+## Shifu Cache Profile Passthrough
+
+Buildchain can carry one trusted Shifu cache-profile reference and its exact
+digest into lifecycle execution. Its contract is an opaque reference and digest
+only. This surface is deliberately opaque:
+Buildchain does not fetch the profile, parse JSON, select cache services,
+rewrite bindings, decide fallback, or emit Shifu resolution evidence. Those
+semantics remain owned by the consumer's pinned Shifu implementation.
+
+```yaml
+jobs:
+  build:
+    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v2
+    with:
+      shifu-cache-profile-ref: ${{ vars.SHIFU_CACHE_PROFILE_REF }}
+      shifu-cache-profile-digest: ${{ vars.SHIFU_CACHE_PROFILE_DIGEST }}
+```
+
+The reusable workflow passes the pair as `SHIFU_CACHE_PROFILE_REF` and
+`SHIFU_CACHE_PROFILE_DIGEST` to install, build, and verify lifecycle commands.
+The consumer must invoke its Shifu cache-aware execution surface. An empty pair
+preserves existing behavior; a consumer Shifu should fail closed when exactly
+one value is present or the resolved bytes do not match the expected digest.
+
+Use trusted repository or organization variables rather than PR-controlled
+files for private/LAN references. The variables must remain secret-free; any
+credentials use a separate provider-approved secret surface and must not be
+embedded in the profile reference. This passthrough is separate from
+Buildchain's locked source checkout cache below: Buildchain owns checkout
+transport and source identity, while Shifu owns post-checkout execution cache
+bindings and receipts.
+
 ## Locked Source Checkout Cache
 
 Self-hosted runners that build large repositories can opt into a locked checkout
