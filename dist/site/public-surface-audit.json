@@ -450,11 +450,13 @@
           "sample-process-tree",
           "setup-node",
           "setup-rust",
+          "shifu-cache-profile-digest",
+          "shifu-cache-profile-ref",
           "untrusted-policy",
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 55
+        "inputCount": 57
       },
       {
         "id": ".bump-minor-version",
@@ -753,11 +755,13 @@
           "sample-process-tree",
           "setup-node",
           "setup-rust",
+          "shifu-cache-profile-digest",
+          "shifu-cache-profile-ref",
           "untrusted-policy",
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 58
+        "inputCount": 60
       },
       {
         "id": "buildchain-alpha-self-dogfood",
@@ -2686,8 +2690,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "ab57fec294efb9dde1612787bfd0d532b5bb95298b5da14a2b51a5e71b9c7dcc",
-    "workflowRegistryDigest": "a99a49daacd041f7f44eacb9dce95db1dd1ae3a7139ed574fad5edc1e46bcf90",
-    "pageRegistryDigest": "cd839c1f24250dc50f15065adb8152cb394e051807f1d5ecf20a10642962b4f3"
+    "workflowRegistryDigest": "c821196e68a63cefb5686b9005a01aeb7d6cf5248a6146d1e276b87ee765e9f6",
+    "pageRegistryDigest": "c4c73230264352bc86f2f4170335ff0c1bb399b4040323627b6f9e10a32d9ea0"
   },
   "comparison": {
     "missingCliRegistry": [],

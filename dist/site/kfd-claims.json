@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "d244439cf3c73fff08f030650035c1dcbcb6c4f44cad59a8dbe32edc93c4b5f0",
+    "sha256": "f9c9b25aa70d39b4d6db08bb35854c1f1511a637a600508aeda309c99d05c329",
     "summary": {
       "cliCommandCount": 76,
       "workflowCount": 42,
@@ -225,7 +225,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "d244439cf3c73fff08f030650035c1dcbcb6c4f44cad59a8dbe32edc93c4b5f0",
+      "sha256": "f9c9b25aa70d39b4d6db08bb35854c1f1511a637a600508aeda309c99d05c329",
       "summary": {
         "cliCommandCount": 76,
         "workflowCount": 42,
@@ -2323,7 +2323,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 55,
+          "inputCount": 57,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -2377,6 +2377,8 @@
             "sample-process-tree",
             "setup-node",
             "setup-rust",
+            "shifu-cache-profile-digest",
+            "shifu-cache-profile-ref",
             "untrusted-policy",
             "verify-command",
             "working-directory"
@@ -2743,7 +2745,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 58,
+          "inputCount": 60,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -2800,6 +2802,8 @@
             "sample-process-tree",
             "setup-node",
             "setup-rust",
+            "shifu-cache-profile-digest",
+            "shifu-cache-profile-ref",
             "untrusted-policy",
             "verify-command",
             "working-directory"
