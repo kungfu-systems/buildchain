@@ -21,10 +21,10 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "104b9c035410391871d75b4adbce4c39ff753e708a21883096d0112d99499794",
+    "sha256": "d244439cf3c73fff08f030650035c1dcbcb6c4f44cad59a8dbe32edc93c4b5f0",
     "summary": {
       "cliCommandCount": 76,
-      "workflowCount": 41,
+      "workflowCount": 42,
       "actionCount": 4,
       "sitePageCount": 46,
       "docCommandRefCount": 241,
@@ -225,10 +225,10 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "104b9c035410391871d75b4adbce4c39ff753e708a21883096d0112d99499794",
+      "sha256": "d244439cf3c73fff08f030650035c1dcbcb6c4f44cad59a8dbe32edc93c4b5f0",
       "summary": {
         "cliCommandCount": 76,
-        "workflowCount": 41,
+        "workflowCount": 42,
         "actionCount": 4,
         "sitePageCount": 46,
         "docCommandRefCount": 241,
@@ -2938,6 +2938,23 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:buildchain-stable-candidate-qualification",
+          "name": "workflow:buildchain-stable-candidate-qualification",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/buildchain-stable-candidate-qualification.yml",
+          "evidencePath": ".github/workflows/buildchain-stable-candidate-qualification.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 2,
+          "inputs": [
+            "candidate-sha",
+            "dry-run"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:candidate-lab",
           "name": "workflow:candidate-lab",
           "kind": "workflow",
@@ -4211,6 +4228,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 272
+    "publicSurfaceCount": 273
   }
 }

@@ -513,6 +513,18 @@
       "status": "active"
     },
     {
+      "id": "buildchain-stable-candidate-qualification",
+      "path": ".github/workflows/buildchain-stable-candidate-qualification.yml",
+      "inputs": [
+        "candidate-sha",
+        "dry-run"
+      ],
+      "inputCount": 2,
+      "surface": "repository-patrol",
+      "capabilityGroup": "api-cli-reference",
+      "status": "repository-internal"
+    },
+    {
       "id": "candidate-lab",
       "path": ".github/workflows/candidate-lab.yml",
       "inputs": [

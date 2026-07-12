@@ -4,7 +4,7 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 76,
-    "workflowCount": 41,
+    "workflowCount": 42,
     "actionCount": 4,
     "sitePageCount": 46,
     "docCommandRefCount": 241,
@@ -833,6 +833,15 @@
           "release-now"
         ],
         "inputCount": 3
+      },
+      {
+        "id": "buildchain-stable-candidate-qualification",
+        "path": ".github/workflows/buildchain-stable-candidate-qualification.yml",
+        "inputs": [
+          "candidate-sha",
+          "dry-run"
+        ],
+        "inputCount": 2
       },
       {
         "id": "candidate-lab",
@@ -2677,8 +2686,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "ab57fec294efb9dde1612787bfd0d532b5bb95298b5da14a2b51a5e71b9c7dcc",
-    "workflowRegistryDigest": "4c93fb096eaed497556adedd96f0920ad0d83da73b9855ce02880ca64ce0a06e",
-    "pageRegistryDigest": "867b109d1848a50d0097fd7ec9f525eb88e4b3087aa25b3918b67bb3f269be3c"
+    "workflowRegistryDigest": "a99a49daacd041f7f44eacb9dce95db1dd1ae3a7139ed574fad5edc1e46bcf90",
+    "pageRegistryDigest": "cd839c1f24250dc50f15065adb8152cb394e051807f1d5ecf20a10642962b4f3"
   },
   "comparison": {
     "missingCliRegistry": [],

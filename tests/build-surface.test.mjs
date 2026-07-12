@@ -799,6 +799,10 @@ test("stable candidate patrol persists exact candidates and uses source-lock PR 
     path.join(root, ".github/workflows/buildchain-stable-candidate-patrol.yml"),
     "utf8",
   );
+  const qualification = fs.readFileSync(
+    path.join(root, ".github/workflows/buildchain-stable-candidate-qualification.yml"),
+    "utf8",
+  );
   const implementation = fs.readFileSync(
     path.join(root, "scripts/stable-candidate-patrol.mjs"),
     "utf8",
@@ -821,6 +825,11 @@ test("stable candidate patrol persists exact candidates and uses source-lock PR 
   assert.match(dogfood, /cron: "0 19 \* \* \*"/);
   assert.match(dogfood, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v2-alpha' \}\}/);
   assert.match(dogfood, /promotion-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/);
+  assert.match(qualification, /workflows: \["Buildchain Alpha Self-Dogfood"\]/);
+  assert.match(qualification, /statuses: write/);
+  assert.match(qualification, /GITHUB_TOKEN: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/);
+  assert.match(qualification, /BUILDCHAIN_QUALIFICATION_ATTESTATION_TOKEN: \$\{\{ github\.token \}\}/);
+  assert.match(qualification, /stable-candidate-qualification\.mjs/);
 });
 
 test("check workflow runs declarative Buildchain lifecycle verify", () => {
