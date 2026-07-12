@@ -223,7 +223,6 @@ export function fetchSourceCommit({
         cwd: targetPath,
         timeoutMs,
         env,
-        stdio: "ignore",
       });
       if (containsCommit(targetPath, sha, timeoutMs)) {
         return { selector: "ref", checkoutSha: sha };
@@ -254,7 +253,6 @@ export function fetchSourceCommit({
     cwd: targetPath,
     timeoutMs,
     env,
-    stdio: "ignore",
   });
   if (!containsCommit(targetPath, sha, timeoutMs)) {
     throw new Error(`fetched ${fetchRef || sha}, but ${sha} is not available`);

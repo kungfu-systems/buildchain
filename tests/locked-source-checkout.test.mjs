@@ -186,6 +186,27 @@ test("pull merge fetch accepts a regenerated commit only when the locked tree ma
   assert.equal(fetches[0].at(-1), "+refs/pull/629/merge:refs/buildchain/source-ref");
 });
 
+test("source fetch preserves stderr for retry classification and diagnostics", () => {
+  const calls = [];
+  fetchSourceCommit({
+    targetPath: "/tmp/buildchain-source-fetch-diagnostics-fixture",
+    remoteName: "origin",
+    remoteUrl: "https://github.com/kungfu-systems/example.git",
+    sha: "a".repeat(40),
+    fetchRef: "refs/heads/dev/v4/v4.0",
+    timeoutMs: 600000,
+    runGit: (args, options) => {
+      calls.push({ args, options });
+      return "";
+    },
+    containsCommit: () => true,
+  });
+
+  const fetch = calls.find(({ args }) => args[0] === "fetch");
+  assert.ok(fetch);
+  assert.equal(fetch.options.stdio, undefined);
+});
+
 test("locked checkout accepts a regenerated pull merge commit with the exact locked tree", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-pull-merge-origin-"));
   git(["init"], root);
