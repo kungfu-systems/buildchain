@@ -4,7 +4,7 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 76,
-    "workflowCount": 41,
+    "workflowCount": 42,
     "actionCount": 4,
     "sitePageCount": 46,
     "docCommandRefCount": 241,
@@ -416,6 +416,7 @@
           "buildchain-contract-lock-path",
           "buildchain-ref",
           "buildchain-repository",
+          "cargo-registry-index",
           "checkout-cache-fallback",
           "checkout-cache-fetch-attempts",
           "checkout-cache-github-timeout-seconds",
@@ -443,13 +444,17 @@
           "require-trusted-event",
           "require-verify",
           "runner-preset",
+          "rust-toolchain",
+          "rustup-dist-server",
+          "rustup-update-root",
           "sample-process-tree",
           "setup-node",
+          "setup-rust",
           "untrusted-policy",
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 50
+        "inputCount": 55
       },
       {
         "id": ".bump-minor-version",
@@ -714,6 +719,7 @@
           "buildchain-ref",
           "buildchain-repository",
           "buildchain-stable-contract-lock-path",
+          "cargo-registry-index",
           "checkout-cache-fallback",
           "checkout-cache-fetch-attempts",
           "checkout-cache-github-timeout-seconds",
@@ -741,13 +747,17 @@
           "require-trusted-event",
           "require-verify",
           "runner-preset",
+          "rust-toolchain",
+          "rustup-dist-server",
+          "rustup-update-root",
           "sample-process-tree",
           "setup-node",
+          "setup-rust",
           "untrusted-policy",
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 53
+        "inputCount": 58
       },
       {
         "id": "buildchain-alpha-self-dogfood",
@@ -823,6 +833,15 @@
           "release-now"
         ],
         "inputCount": 3
+      },
+      {
+        "id": "buildchain-stable-candidate-qualification",
+        "path": ".github/workflows/buildchain-stable-candidate-qualification.yml",
+        "inputs": [
+          "candidate-sha",
+          "dry-run"
+        ],
+        "inputCount": 2
       },
       {
         "id": "candidate-lab",
@@ -2667,8 +2686,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "ab57fec294efb9dde1612787bfd0d532b5bb95298b5da14a2b51a5e71b9c7dcc",
-    "workflowRegistryDigest": "60957af5c033c999d29ca0187eff28841311567580a5279a7b6843c2a270cc08",
-    "pageRegistryDigest": "ed070a5bd6c9c8ca7622800d79eb9fba72a8672e8b8ac5dc0f2b8822291fc245"
+    "workflowRegistryDigest": "a99a49daacd041f7f44eacb9dce95db1dd1ae3a7139ed574fad5edc1e46bcf90",
+    "pageRegistryDigest": "cd839c1f24250dc50f15065adb8152cb394e051807f1d5ecf20a10642962b4f3"
   },
   "comparison": {
     "missingCliRegistry": [],

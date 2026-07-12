@@ -21,10 +21,10 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "723565fc18406706b870f319ef4a77ecadbeff2088068ed44252ecfc043be461",
+    "sha256": "d244439cf3c73fff08f030650035c1dcbcb6c4f44cad59a8dbe32edc93c4b5f0",
     "summary": {
       "cliCommandCount": 76,
-      "workflowCount": 41,
+      "workflowCount": 42,
       "actionCount": 4,
       "sitePageCount": 46,
       "docCommandRefCount": 241,
@@ -225,10 +225,10 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "723565fc18406706b870f319ef4a77ecadbeff2088068ed44252ecfc043be461",
+      "sha256": "d244439cf3c73fff08f030650035c1dcbcb6c4f44cad59a8dbe32edc93c4b5f0",
       "summary": {
         "cliCommandCount": 76,
-        "workflowCount": 41,
+        "workflowCount": 42,
         "actionCount": 4,
         "sitePageCount": 46,
         "docCommandRefCount": 241,
@@ -2323,7 +2323,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 50,
+          "inputCount": 55,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -2343,6 +2343,7 @@
             "buildchain-contract-lock-path",
             "buildchain-ref",
             "buildchain-repository",
+            "cargo-registry-index",
             "checkout-cache-fallback",
             "checkout-cache-fetch-attempts",
             "checkout-cache-github-timeout-seconds",
@@ -2370,8 +2371,12 @@
             "require-trusted-event",
             "require-verify",
             "runner-preset",
+            "rust-toolchain",
+            "rustup-dist-server",
+            "rustup-update-root",
             "sample-process-tree",
             "setup-node",
+            "setup-rust",
             "untrusted-policy",
             "verify-command",
             "working-directory"
@@ -2738,7 +2743,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 53,
+          "inputCount": 58,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -2761,6 +2766,7 @@
             "buildchain-ref",
             "buildchain-repository",
             "buildchain-stable-contract-lock-path",
+            "cargo-registry-index",
             "checkout-cache-fallback",
             "checkout-cache-fetch-attempts",
             "checkout-cache-github-timeout-seconds",
@@ -2788,8 +2794,12 @@
             "require-trusted-event",
             "require-verify",
             "runner-preset",
+            "rust-toolchain",
+            "rustup-dist-server",
+            "rustup-update-root",
             "sample-process-tree",
             "setup-node",
+            "setup-rust",
             "untrusted-policy",
             "verify-command",
             "working-directory"
@@ -2924,6 +2934,23 @@
             "buildchain-ref",
             "dry-run",
             "release-now"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:buildchain-stable-candidate-qualification",
+          "name": "workflow:buildchain-stable-candidate-qualification",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/buildchain-stable-candidate-qualification.yml",
+          "evidencePath": ".github/workflows/buildchain-stable-candidate-qualification.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 2,
+          "inputs": [
+            "candidate-sha",
+            "dry-run"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -4201,6 +4228,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 272
+    "publicSurfaceCount": 273
   }
 }

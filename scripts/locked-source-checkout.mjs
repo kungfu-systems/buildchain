@@ -179,7 +179,13 @@ function hasCommit(targetPath, sha, timeoutMs) {
 }
 
 function checkoutFetchedCommit(targetPath, sha, timeoutMs) {
-  git(["checkout", "--force", "--detach", sha], { cwd: targetPath, timeoutMs });
+  // The locked Git tree is also the byte-level source of release evidence.
+  // Override runner-global autocrlf only at checkout time so this also works
+  // when a container workspace uses an external Git metadata pointer.
+  git(["-c", "core.autocrlf=false", "-c", "core.eol=lf", "checkout", "--force", "--detach", sha], {
+    cwd: targetPath,
+    timeoutMs,
+  });
 }
 
 function retryableGitFetchError(error) {

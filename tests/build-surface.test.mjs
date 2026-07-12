@@ -107,6 +107,30 @@ test("reusable build workflow exposes the required surface contract", () => {
     /fromJSON\(needs\.resolve-contract\.outputs\.container-platforms-json\)/,
   );
   assert.match(workflow, /Setup Buildchain Node\.js with fnm/);
+  assert.match(workflow, /setup-rust:/);
+  assert.match(workflow, /rust-toolchain:/);
+  assert.match(workflow, /rustup-dist-server:/);
+  assert.match(workflow, /rustup-update-root:/);
+  assert.match(workflow, /cargo-registry-index:/);
+  assert.equal((workflow.match(/RUSTUP_DIST_SERVER:/g) || []).length, 2);
+  assert.equal((workflow.match(/RUSTUP_UPDATE_ROOT:/g) || []).length, 2);
+  assert.match(workflow, /https:\/\/static\.rust-lang\.org\/rustup/);
+  assert.match(workflow, /Setup Rust toolchain on Windows/);
+  assert.match(workflow, /if: \$\{\{ inputs\.setup-rust && runner\.os == 'Windows' \}\}/);
+  assert.match(workflow, /shell: cmd/);
+  assert.match(workflow, /curl\.exe --proto "=https"/);
+  assert.match(workflow, /https:\/\/win\.rustup\.rs\/x86_64/);
+  assert.match(workflow, /--no-modify-path/);
+  assert.match(workflow, /buildchain-cargo/);
+  assert.match(workflow, /buildchain-rustup/);
+  assert.match(workflow, /Setup Rust toolchain/);
+  assert.match(workflow, /if: \$\{\{ inputs\.setup-rust && runner\.os != 'Windows' \}\}/);
+  assert.match(workflow, /dtolnay\/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30/);
+  assert.match(workflow, /toolchain: \$\{\{ inputs\.rust-toolchain \}\}/);
+  assert.match(
+    workflow,
+    /CARGO_REGISTRIES_CRATES_IO_INDEX: \$\{\{ inputs\.cargo-registry-index \}\}/,
+  );
   assert.match(workflow, /container:/);
   assert.match(workflow, /require-trusted-event:/);
   assert.match(workflow, /buildchain-ref:/);
@@ -775,6 +799,10 @@ test("stable candidate patrol persists exact candidates and uses source-lock PR 
     path.join(root, ".github/workflows/buildchain-stable-candidate-patrol.yml"),
     "utf8",
   );
+  const qualification = fs.readFileSync(
+    path.join(root, ".github/workflows/buildchain-stable-candidate-qualification.yml"),
+    "utf8",
+  );
   const implementation = fs.readFileSync(
     path.join(root, "scripts/stable-candidate-patrol.mjs"),
     "utf8",
@@ -797,6 +825,11 @@ test("stable candidate patrol persists exact candidates and uses source-lock PR 
   assert.match(dogfood, /cron: "0 19 \* \* \*"/);
   assert.match(dogfood, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v2-alpha' \}\}/);
   assert.match(dogfood, /promotion-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/);
+  assert.match(qualification, /workflows: \["Buildchain Alpha Self-Dogfood"\]/);
+  assert.match(qualification, /statuses: write/);
+  assert.match(qualification, /GITHUB_TOKEN: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/);
+  assert.match(qualification, /BUILDCHAIN_QUALIFICATION_ATTESTATION_TOKEN: \$\{\{ github\.token \}\}/);
+  assert.match(qualification, /stable-candidate-qualification\.mjs/);
 });
 
 test("check workflow runs declarative Buildchain lifecycle verify", () => {

@@ -43,6 +43,22 @@ alphas for that exact stable version are closed because that immutable stable
 version has been consumed; their later product changes continue through the
 next patch alpha prepared by the normal release transaction.
 
+For Buildchain's own release line, successful Alpha Self-Dogfood starts an
+idempotent qualification producer for the exact alpha SHA. It dispatches the
+existing `Build Surface Fixture` at the immutable exact tag, runs the existing
+`site-libkungfu-dev` no-apply canary with the exact SHA, and writes the declared
+commit-status attestation only after that authoritative canary succeeds. The
+producer creates evidence only: Patrol still owns qualification and selection,
+and the normal source-lock PR, stable gate, transaction, and branch protections
+remain mandatory.
+
+Cross-repository dispatch and repository-local attestation use separate tokens.
+The promotion token can start the no-apply consumer workflow, while the
+repository-scoped Actions token writes the status as `github-actions[bot]` only
+after the producer has observed the successful authoritative workflow run. The
+stable gate still verifies the workflow identity, exact runtime SHA, target URL,
+and allowed attestor before accepting that status.
+
 ## Repository policy
 
 Declare the default once in `.buildchain/buildchain.toml`:
