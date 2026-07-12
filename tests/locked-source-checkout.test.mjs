@@ -153,8 +153,75 @@ test("source fetch seeds from the advertised ref before trying a raw SHA", () =>
   });
   const fetches = calls.filter((args) => args[0] === "fetch");
   assert.equal(result.selector, "ref");
+  assert.equal(result.checkoutSha, "a".repeat(40));
   assert.equal(fetches.length, 1);
   assert.equal(fetches[0].at(-1), "+refs/heads/dev/v4/v4.0:refs/buildchain/source-ref");
+});
+
+test("pull merge fetch accepts a regenerated commit only when the locked tree matches", () => {
+  const calls = [];
+  const expectedSha = "a".repeat(40);
+  const regeneratedSha = "b".repeat(40);
+  const sourceTreeSha = "c".repeat(40);
+  const result = fetchSourceCommit({
+    targetPath: "/tmp/buildchain-pull-merge-fetch-fixture",
+    remoteName: "origin",
+    remoteUrl: "https://github.com/kungfu-systems/example.git",
+    sha: expectedSha,
+    fetchRef: "refs/pull/629/merge",
+    sourceTreeSha,
+    timeoutMs: 600000,
+    runGit: (args) => {
+      calls.push(args);
+      if (args[0] === "rev-parse" && args[1].endsWith("^{commit}")) return regeneratedSha;
+      if (args[0] === "rev-parse" && args[1].endsWith("^{tree}")) return sourceTreeSha;
+      return "";
+    },
+    containsCommit: () => false,
+  });
+  const fetches = calls.filter((args) => args[0] === "fetch");
+  assert.equal(result.selector, "ref-tree");
+  assert.equal(result.checkoutSha, regeneratedSha);
+  assert.equal(fetches.length, 1);
+  assert.equal(fetches[0].at(-1), "+refs/pull/629/merge:refs/buildchain/source-ref");
+});
+
+test("locked checkout accepts a regenerated pull merge commit with the exact locked tree", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-pull-merge-origin-"));
+  git(["init"], root);
+  git(["config", "user.name", "Buildchain Test"], root);
+  git(["config", "user.email", "buildchain@example.test"], root);
+  fs.writeFileSync(path.join(root, "README.md"), "same tree\n");
+  git(["add", "README.md"], root);
+  git(["commit", "-m", "original merge"], root);
+  const originalSha = git(["rev-parse", "HEAD"], root);
+  const tree = git(["rev-parse", "HEAD^{tree}"], root);
+  git(["commit", "--amend", "-m", "regenerated merge"], root);
+  const regeneratedSha = git(["rev-parse", "HEAD"], root);
+  assert.notEqual(regeneratedSha, originalSha);
+  assert.equal(git(["rev-parse", "HEAD^{tree}"], root), tree);
+
+  const bare = `${root}.git`;
+  git(["clone", "--bare", root, bare], path.dirname(root));
+  git(["update-ref", "refs/pull/629/merge", regeneratedSha], bare);
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-pull-merge-work-"));
+  const evidence = lockedSourceCheckout({
+    workspace,
+    repository: "kungfu-systems/example",
+    sourceSha: originalSha,
+    sourceTreeSha: tree,
+    fetchRef: "refs/pull/629/merge",
+    mode: "off",
+    githubRemote: `file://${bare}`,
+    diagnosticsPath: ".buildchain/diagnostics/source-checkout.json",
+  });
+
+  assert.equal(evidence.verification.head, regeneratedSha);
+  assert.equal(evidence.verification.expectedHead, originalSha);
+  assert.equal(evidence.verification.headOk, false);
+  assert.equal(evidence.verification.treeOk, true);
+  assert.equal(evidence.verification.identityOk, true);
+  assert.equal(evidence.verification.identityMode, "tree-equivalent-pull-merge");
 });
 
 test("source fetch does not spend a second raw-SHA timeout after a ref timeout", () => {
