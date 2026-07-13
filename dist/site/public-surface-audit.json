@@ -1203,6 +1203,7 @@
           "publish-tooling-sha",
           "publish-transaction",
           "publish-transaction-override",
+          "reconciliation-workspace",
           "release-candidate-build-summary-path",
           "release-candidate-passport-path",
           "release-candidate-version",
@@ -1230,7 +1231,7 @@
           "transaction-state-path",
           "verification-command"
         ],
-        "inputCount": 51
+        "inputCount": 52
       },
       {
         "id": "report-buildchain-issue",
@@ -2723,8 +2724,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "ab57fec294efb9dde1612787bfd0d532b5bb95298b5da14a2b51a5e71b9c7dcc",
-    "workflowRegistryDigest": "ccc8ab882a30d8c180c109aa484c619d34a5e889c571757f11e555f113c4d338",
-    "pageRegistryDigest": "394ef34331be95e72b6c2c875ce138ea0b3344e539793291dc8126d168a2c1f9"
+    "workflowRegistryDigest": "967e63f8539a9d0c35473efba0538990304d00c14d0bbeba58783072855ec540",
+    "pageRegistryDigest": "029f8cfec4b72fdce9d138f70ade80e2c5862b41b7837f1443a8cc5999ac1c35"
   },
   "comparison": {
     "missingCliRegistry": [],

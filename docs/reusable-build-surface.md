@@ -784,7 +784,10 @@ workflow's `github.token`; the last fallback can only report issues when it has
 write access to the target Buildchain repository.
 
 `publish-required-artifacts-json` can still be passed explicitly for custom
-publish targets. For the default `publish-artifact-kind: npm` path, consumers do
+publish targets. Custom OCI requirements may omit pre-publish refs and digests;
+the action resolves the exact version ref and validates final digests and any
+built/reused provenance after `lifecycle.publish`. For the default
+`publish-artifact-kind: npm` path, consumers do
 not download artifacts or run repository scripts to build publish evidence. The
 wrapper downloads the PR-stage payload artifacts, finds the downloaded `.tgz`
 packages, reads each tarball's `package/package.json` for the real scoped

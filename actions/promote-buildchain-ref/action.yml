@@ -26,6 +26,9 @@ inputs:
   verification-command:
     description: "Command to run against each generated version-state tree before refs move"
     default: ""
+  reconciliation-workspace:
+    description: "Optional checkout of the current development branch used to regenerate version state before reconciling a divergent post-release dev ref"
+    default: ""
   required-status-check:
     description: "Exact status check context required by protected channel branches"
     default: "check / check"
@@ -60,7 +63,7 @@ inputs:
     description: "Path to release transaction state JSON. Defaults to .buildchain/release-state/<tag>.json"
     default: ""
   publish-required-artifacts-json:
-    description: "JSON array of required artifacts whose evidence must exist before refs move"
+    description: "JSON array of required artifacts whose post-publish evidence must exist before refs move; digest and ref may be omitted before lifecycle.publish"
     default: ""
   publish-mode:
     description: "Publish mode: publish-final-version or promote-existing-version"

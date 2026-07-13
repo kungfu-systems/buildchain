@@ -635,6 +635,11 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /PACKAGE_MANAGER: \$\{\{ inputs\.package-manager \}\}/);
   assert.match(workflow, /corepack enable/);
   assert.match(workflow, /corepack pnpm@11\.7\.0 install --frozen-lockfile/);
+  assert.match(workflow, /Resolve post-release reconciliation checkout/);
+  assert.match(workflow, /Checkout current development channel for reconciliation/);
+  assert.match(workflow, /Install reconciliation dependencies/);
+  assert.match(workflow, /workspace=\.buildchain\/reconciliation\/dev/);
+  assert.match(workflow, /reconciliation-workspace: \$\{\{ steps\.reconciliation\.outputs\.workspace \}\}/);
   assert.match(workflow, /promote-only-release-candidate: "true"/);
   assert.match(workflow, /release-candidate-passport-path:/);
   assert.match(workflow, /release-candidate-build-summary-path:/);
@@ -1827,6 +1832,7 @@ test("promote action exposes promote-only release candidate inputs", () => {
   );
 
   assert.match(action, /promote-only-release-candidate:/);
+  assert.match(action, /reconciliation-workspace:/);
   assert.match(action, /release-candidate-passport-path:/);
   assert.match(action, /release-candidate-build-summary-path:/);
   assert.match(action, /release-passport-kfd-1-witness-jsons:/);
@@ -1836,6 +1842,7 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(action, /release-passport-kfd-3-artifact-verify-command:/);
   assert.match(action, /release-passport-buildchain-self-kfd:/);
   assert.match(implementation, /promoteOnlyReleaseCandidate/);
+  assert.match(implementation, /reconciliationWorkspace/);
   assert.match(implementation, /releasePassportKfd1WitnessJsons/);
   assert.match(implementation, /releasePassportKfd2ClaimJsons/);
   assert.match(implementation, /releasePassportKfd3PrebuildWitnessJsons/);

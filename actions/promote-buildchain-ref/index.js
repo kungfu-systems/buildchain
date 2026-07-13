@@ -206,6 +206,7 @@ async function main() {
   const requireGovernance = core.getBooleanInput("require-governance");
   const requireVersionState = core.getBooleanInput("require-version-state");
   const verificationCommand = core.getInput("verification-command");
+  const reconciliationWorkspace = core.getInput("reconciliation-workspace");
   const requiredStatusCheck = core.getInput("required-status-check") || "check / check";
   const generatedStatusCheckToken = core.getInput("generated-status-check-token") || token;
   const generatedRefUpdateToken = core.getInput("generated-ref-update-token") || token;
@@ -286,6 +287,7 @@ async function main() {
     requireGovernance,
     requireVersionState,
     verificationCommand,
+    reconciliationWorkspace,
     requiredStatusCheck,
     statusCheckOctokit,
     refUpdateOctokit,

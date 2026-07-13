@@ -15,6 +15,7 @@ import {
   validateKfd3CollaborationInterfaceReleaseGateEvidence,
 } from "./kfd-gate.js";
 import { createSurfaceTimestampPolicy } from "./surface-manifest.js";
+import { validatePublishEvidence as validateTransactionPublishEvidence } from "./publish-transaction.js";
 
 export const RELEASE_PASSPORT_CONTRACT = "kungfu-buildchain-release-passport";
 export const ARTIFACT_EVIDENCE_CONTRACT = "kungfu-buildchain-artifact-evidence";
@@ -521,7 +522,7 @@ function normalizePlatformArtifactManifest(meta, index = 0) {
 
 function normalizePublishArtifact(artifact = {}, index = 0) {
   const name = nonEmptyString(artifact.name, `publishEvidence.artifacts[${index}].name`);
-  return {
+  const normalized = {
     group: optionalString(artifact.group),
     kind: optionalString(artifact.kind),
     name,
@@ -529,6 +530,20 @@ function normalizePublishArtifact(artifact = {}, index = 0) {
     digest: optionalString(artifact.digest || artifact.sha256 || artifact.integrity || artifact.shasum),
     evidence: optionalString(artifact.evidence),
   };
+  for (const key of [
+    "action",
+    "platform",
+    "contract_major",
+    "parent_digest",
+    "content",
+    "release",
+    "verification",
+  ]) {
+    if (Object.prototype.hasOwnProperty.call(artifact, key)) {
+      normalized[key] = structuredClone(artifact[key]);
+    }
+  }
+  return normalized;
 }
 
 function normalizePublishEvidence(value = undefined) {
@@ -1138,11 +1153,7 @@ export function createReleasePassport({
         url: asset.url,
       })),
       ...publishArtifacts.map((artifact) => ({
-        group: artifact.group,
-        kind: artifact.kind,
-        name: artifact.name,
-        ref: artifact.ref,
-        digest: artifact.digest,
+        ...artifact,
         evidence: publishEvidencePath || artifact.evidence || artifactEvidencePath,
       })),
     ],
@@ -1652,6 +1663,29 @@ export function createReleaseCheckReport({
     if (!Array.isArray(normalizedPublishEvidence?.artifacts) || normalizedPublishEvidence.artifacts.length === 0) {
       issues.push(issue("error", "publishEvidence.artifacts", "publishEvidence.artifacts must include published artifacts"));
     }
+    if ((normalizedPublishEvidence?.artifacts || []).some((artifact) => artifact.action)) {
+      try {
+        const validation = validateTransactionPublishEvidence({
+          evidence: publishEvidence,
+          version: normalizedPublishEvidence.version,
+          channel: normalizedPublishEvidence.channel,
+          sourceSha: normalizedPublishEvidence.sourceSha,
+          releaseSha: normalizedPublishEvidence.releaseSha,
+          targetRef: normalizedPublishEvidence.targetRef,
+          releaseMaterialSha: normalizedPublishEvidence.releaseMaterialSha,
+          publishToolingSha: normalizedPublishEvidence.publishToolingSha,
+        });
+        for (const error of validation.errors) {
+          issues.push(issue("error", "publishEvidence.artifactProvenance", error));
+        }
+      } catch (error) {
+        issues.push(issue(
+          "error",
+          "publishEvidence.artifactProvenance",
+          `publish artifact provenance is invalid: ${error.message}`,
+        ));
+      }
+    }
     if (passport?.release?.sourceSha && normalizedPublishEvidence?.sourceSha && passport.release.sourceSha !== normalizedPublishEvidence.sourceSha) {
       issues.push(issue("error", "publishEvidence.sourceSha.mismatch", "publishEvidence.sourceSha must match passport.release.sourceSha"));
     }
@@ -1685,6 +1719,26 @@ export function createReleaseCheckReport({
     }
     if (artifact.digest && evidenceDigest && artifact.digest !== evidenceDigest && artifact.digest !== `sha256:${evidenceDigest}`) {
       issues.push(issue("error", "artifact.digest.mismatch", `artifact ${artifact.name} digest differs between passport and evidence`));
+    }
+    for (const field of [
+      "action",
+      "platform",
+      "contract_major",
+      "parent_digest",
+      "content",
+      "release",
+      "verification",
+    ]) {
+      if (
+        Object.prototype.hasOwnProperty.call(evidence, field) &&
+        stableJson(artifact[field]) !== stableJson(evidence[field])
+      ) {
+        issues.push(issue(
+          "error",
+          `artifact.${field}.mismatch`,
+          `artifact ${artifact.name} ${field} differs between passport and publish evidence`,
+        ));
+      }
     }
   }
   if (passport?.packageSet) {
