@@ -131,6 +131,19 @@ GitHub Actions policy explicitly allows the caller token to approve the PR;
 otherwise a repository-owned App or review bot supplies the approval. The
 generated PR may use auto-merge, but it never bypasses the target branch checks.
 
+Before enabling `auto-approve` and `auto-merge`, the caller repository must
+enable both corresponding GitHub capabilities:
+
+- **Actions > General > Workflow permissions > Allow GitHub Actions to create
+  and approve pull requests**, so the caller `github.token` can provide the
+  approval independently from the promotion token that opened the PR;
+- **General > Pull Requests > Allow auto-merge**, so Patrol can arm the
+  protected merge while required reviews and checks are still pending.
+
+Patrol treats a GraphQL refusal to enable auto-merge as a hard failure. A run
+must not report publication authority when GitHub accepted the HTTP request but
+returned a GraphQL error in the response body.
+
 ## Exact-source stable promotion
 
 For a selected `2.12.0-alpha.4`, Patrol creates the immutable source branch:
