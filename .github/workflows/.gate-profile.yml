@@ -35,6 +35,21 @@ on:
         default: ""
         type: string
         required: false
+      gate-environment-json:
+        description: "Optional non-sensitive project environment passed to Shifu as a JSON object"
+        default: "{}"
+        type: string
+        required: false
+      shifu-cache-profile-ref:
+        description: "Opaque trusted Shifu cache profile reference passed without interpretation"
+        default: ""
+        type: string
+        required: false
+      shifu-cache-profile-digest:
+        description: "Opaque expected Shifu cache profile digest passed without interpretation"
+        default: ""
+        type: string
+        required: false
       include-advisory:
         default: false
         type: boolean
@@ -216,6 +231,9 @@ jobs:
           BUILDCHAIN_GATE_INCLUDE_ADVISORY: ${{ inputs.include-advisory }}
           BUILDCHAIN_GATE_COMMAND_JSON: ${{ inputs.gate-command-json }}
           BUILDCHAIN_GATE_REGISTRY: ${{ inputs.gate-registry }}
+          BUILDCHAIN_GATE_ENVIRONMENT_JSON: ${{ inputs.gate-environment-json }}
+          BUILDCHAIN_SHIFU_CACHE_PROFILE_REF: ${{ inputs.shifu-cache-profile-ref }}
+          BUILDCHAIN_SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
           BUILDCHAIN_GATE_SOURCE_CWD: source/${{ inputs.working-directory }}
           BUILDCHAIN_GATE_OUTPUT_ROOT: .buildchain/gates/plan
           BUILDCHAIN_RUNNER_PRESET: ${{ inputs.runner-preset }}
@@ -285,6 +303,9 @@ jobs:
           BUILDCHAIN_GATE_MATRIX_ENTRY_JSON: ${{ toJSON(matrix.gate) }}
           BUILDCHAIN_GATE_COMMAND_JSON: ${{ inputs.gate-command-json }}
           BUILDCHAIN_GATE_REGISTRY: ${{ inputs.gate-registry }}
+          BUILDCHAIN_GATE_ENVIRONMENT_JSON: ${{ inputs.gate-environment-json }}
+          BUILDCHAIN_SHIFU_CACHE_PROFILE_REF: ${{ inputs.shifu-cache-profile-ref }}
+          BUILDCHAIN_SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
           BUILDCHAIN_GATE_SOURCE_CWD: source/${{ inputs.working-directory }}
           BUILDCHAIN_GATE_OUTPUT_ROOT: .buildchain/gates/executions/${{ matrix.gate.id }}
 

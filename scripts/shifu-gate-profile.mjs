@@ -54,12 +54,52 @@ function commandForPlatform(commandJson, platform) {
   return argv;
 }
 
+function gateEnvironment() {
+  const parsed = parseJson(
+    process.env.BUILDCHAIN_GATE_ENVIRONMENT_JSON || "{}",
+    "gate-environment-json",
+  );
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error("gate-environment-json must be a JSON object");
+  }
+  const entries = Object.entries(parsed).map(([name, value]) => {
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name))
+      throw new Error(`invalid Gate environment name: ${name}`);
+    if (!["string", "number", "boolean"].includes(typeof value)) {
+      throw new Error(
+        `Gate environment ${name} must be a string, number, or boolean`,
+      );
+    }
+    return [name, String(value)];
+  });
+  return {
+    ...process.env,
+    ...Object.fromEntries(entries),
+    ...(process.env.BUILDCHAIN_SHIFU_CACHE_PROFILE_REF
+      ? {
+          SHIFU_CACHE_PROFILE_REF:
+            process.env.BUILDCHAIN_SHIFU_CACHE_PROFILE_REF,
+        }
+      : {}),
+    ...(process.env.BUILDCHAIN_SHIFU_CACHE_PROFILE_DIGEST
+      ? {
+          SHIFU_CACHE_PROFILE_DIGEST:
+            process.env.BUILDCHAIN_SHIFU_CACHE_PROFILE_DIGEST,
+        }
+      : {}),
+  };
+}
+
 function cmdQuote(value) {
   if (/^[A-Za-z0-9_./:\\-]+$/u.test(value)) return value;
   return `"${value.replace(/(\\*)"/g, '$1$1\\"').replace(/(\\+)$/g, "$1$1")}"`;
 }
 
-function runArgv(argv, args, { cwd, allowFailure = false } = {}) {
+function runArgv(
+  argv,
+  args,
+  { cwd, env = process.env, allowFailure = false } = {},
+) {
   const command = argv[0];
   const commandArgs = [...argv.slice(1), ...args];
   const windowsBatch =
@@ -70,12 +110,14 @@ function runArgv(argv, args, { cwd, allowFailure = false } = {}) {
         ["/d", "/s", "/c", [command, ...commandArgs].map(cmdQuote).join(" ")],
         {
           cwd,
+          env,
           encoding: "utf8",
           maxBuffer: 16 * 1024 * 1024,
         },
       )
     : spawnSync(command, commandArgs, {
         cwd,
+        env,
         encoding: "utf8",
         maxBuffer: 16 * 1024 * 1024,
       });
@@ -104,6 +146,7 @@ function planMode() {
   const outputRoot = path.resolve(
     process.env.BUILDCHAIN_GATE_OUTPUT_ROOT || ".buildchain/gates/plan",
   );
+  const env = gateEnvironment();
   const resolvedRunners = resolveRunnerMatrix({
     runnerPreset: process.env.BUILDCHAIN_RUNNER_PRESET || "github-hosted",
     platformsJson: process.env.BUILDCHAIN_PLATFORMS_JSON || "",
@@ -127,7 +170,7 @@ function planMode() {
       ],
       registry,
     );
-    const result = runArgv(argv, args, { cwd });
+    const result = runArgv(argv, args, { cwd, env });
     const plan = parseJson(result.stdout, `Shifu gate plan for ${platform.id}`);
     plans[platform.id] = plan;
     writeJson(path.join(outputRoot, "plans", `${platform.id}.json`), plan);
@@ -168,6 +211,7 @@ function runMode() {
   const receiptPath = path.join(outputRoot, "receipt.json");
   const validationPath = path.join(outputRoot, "validation.json");
   const executionPath = path.join(outputRoot, "execution.json");
+  const env = gateEnvironment();
   fs.mkdirSync(outputRoot, { recursive: true });
   const argv = commandForPlatform(commandJson, entry.platform);
   const runArgs = gateArgs(
@@ -187,7 +231,7 @@ function runMode() {
     ],
     registry,
   );
-  const runResult = runArgv(argv, runArgs, { cwd, allowFailure: true });
+  const runResult = runArgv(argv, runArgs, { cwd, env, allowFailure: true });
   let receipt = fs.existsSync(receiptPath)
     ? readJson(receiptPath, "Shifu gate receipt")
     : null;
@@ -200,7 +244,7 @@ function runMode() {
         ["gate", "receipt", "validate", receiptPath, "--json"],
         registry,
       ),
-      { cwd, allowFailure: true },
+      { cwd, env, allowFailure: true },
     );
     validationStatus = validationResult.status;
     if (validationResult.stdout.trim()) {

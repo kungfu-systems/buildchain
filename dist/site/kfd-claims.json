@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "05464b925d6f6f5a6f31fb2f4f9c2227241cfd8d2915462d0361083c2ed26236",
+    "sha256": "fa3cf84f063a1ed69d4e9bd59e54e6450f89e244d2be4df856e6e3f40ad4d779",
     "summary": {
       "cliCommandCount": 76,
       "workflowCount": 43,
@@ -225,7 +225,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "05464b925d6f6f5a6f31fb2f4f9c2227241cfd8d2915462d0361083c2ed26236",
+      "sha256": "fa3cf84f063a1ed69d4e9bd59e54e6450f89e244d2be4df856e6e3f40ad4d779",
       "summary": {
         "cliCommandCount": 76,
         "workflowCount": 43,
@@ -2410,13 +2410,14 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 15,
+          "inputCount": 18,
           "inputs": [
             "artifact-name",
             "artifact-retention-days",
             "buildchain-ref",
             "buildchain-repository",
             "gate-command-json",
+            "gate-environment-json",
             "gate-profile",
             "gate-registry",
             "include-advisory",
@@ -2424,6 +2425,8 @@
             "platforms-json",
             "require-trusted-event",
             "runner-preset",
+            "shifu-cache-profile-digest",
+            "shifu-cache-profile-ref",
             "source-ref",
             "untrusted-policy",
             "working-directory"

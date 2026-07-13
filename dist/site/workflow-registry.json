@@ -89,6 +89,7 @@
         "buildchain-ref",
         "buildchain-repository",
         "gate-command-json",
+        "gate-environment-json",
         "gate-profile",
         "gate-registry",
         "include-advisory",
@@ -96,11 +97,13 @@
         "platforms-json",
         "require-trusted-event",
         "runner-preset",
+        "shifu-cache-profile-digest",
+        "shifu-cache-profile-ref",
         "source-ref",
         "untrusted-policy",
         "working-directory"
       ],
-      "inputCount": 15,
+      "inputCount": 18,
       "surface": "reusable-workflow",
       "capabilityGroup": "api-cli-reference",
       "status": "active"

@@ -114,6 +114,13 @@ gate-command-json: >-
   {"linux":["./tools/shifu"],"macos":["./tools/shifu"],"windows":["./tools/shifu.cmd"]}
 ```
 
+Projects may also pass non-sensitive scalar environment through
+`gate-environment-json`; Buildchain validates the JSON shape and forwards it
+without interpreting names or values. Cache profile references use the same
+opaque `shifu-cache-profile-ref` and `shifu-cache-profile-digest` inputs as the
+reusable build. Do not place tokens, credentials, or other secrets in workflow
+inputs or Gate receipts.
+
 When a qualifying aggregate is passed to the build workflow, the
 release-candidate passport binds its profile, source SHA, registry digest,
 matrix digest, aggregate digest, receipt count, and result count. A failed,
