@@ -197,7 +197,7 @@
       "path": "docs/lifecycle-protocol.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:bef6f703a76667c731dccea6a0385b2196b5a23438ce4bc39894561530975f21"
+      "digest": "sha256:953e01289d6f547a5824b99414a94e55568c1a69dccdd71aab3177c379b97bd1"
     },
     {
       "id": "reusable-build-surface",

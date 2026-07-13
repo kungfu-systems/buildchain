@@ -176,6 +176,10 @@ or release lifecycle. Consumers can run it on GitHub-hosted Linux through
 `.github/workflows/check.yml@v2` with `mode: source`; the reusable workflow runs
 only `lifecycle.install` and `lifecycle.check`. The default `mode: verify`
 continues to run `lifecycle.install` and `lifecycle.verify` for existing callers.
+Both executed stages receive `BUILDCHAIN_CHECK_MODE=source` or
+`BUILDCHAIN_CHECK_MODE=verify`, so a repository whose normal install path can
+compile native tooling can select a provisioning-only install path for source
+acceptance without weakening promotion installs.
 The reusable job name remains `check`, and `upload-artifacts: false` disables
 evidence upload without changing the job conclusion used by branch protection.
 
