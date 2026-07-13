@@ -1609,6 +1609,25 @@ test("runtime-aware workflows distinguish official channels from overrides", () 
   }
 });
 
+test("runtime-aware workflows pin same-repository pull request merge refs", () => {
+  const workflowFiles = [
+    ".github/workflows/.build.yml",
+    ".github/workflows/.gate-profile.yml",
+    ".github/workflows/.release-verify.yml",
+    ".github/workflows/.web-surface.yml",
+    ".github/workflows/paper-release.yml",
+    ".github/workflows/publication-artifact.yml",
+  ];
+  for (const workflowFile of workflowFiles) {
+    const workflow = fs.readFileSync(path.join(root, workflowFile), "utf8");
+    assert.match(workflow, /const sameRepositoryWorkflow = workflowRef\.startsWith/);
+    assert.match(workflow, /const pullRequestMergeRef = \/\^refs\\\/pull\\\/\\d\+\\\/merge\$\//);
+    assert.match(workflow, /sameRepositoryWorkflow && pullRequestMergeRef\.test\(ref\)/);
+    assert.match(workflow, /const workflowSha = String\(context\.sha \|\| ""\)/);
+    assert.match(workflow, /current workflow SHA is invalid for Buildchain pull request merge ref/);
+  }
+});
+
 test("promote action exposes generic publish source-lock gate", () => {
   const action = fs.readFileSync(
     path.join(root, "actions/promote-buildchain-ref/action.yml"),

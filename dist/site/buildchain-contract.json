@@ -50,7 +50,7 @@
         "retryable GitHub fallback fetches use a bounded attempt budget before exact source SHA and tree verification"
       ],
       "breakingDigest": "sha256:a6a35370d6b0d0f46e1b2712dcc01961fe53c2febde95409a27a485c10a36650",
-      "auditDigest": "sha256:fe8c66aca800df5bac04bdf980ecf3dde1ab5b9047d20097b06258eabc38015a"
+      "auditDigest": "sha256:62745b34c90d223578b7e6d4121cd0c7d16f4d43f44318ee71e111a52d2139a0"
     },
     {
       "contractVersion": 1,
@@ -203,7 +203,7 @@
         "channel-aware artifact host facts are checked against the deploy plan before adapter side effects"
       ],
       "breakingDigest": "sha256:da569f90374e878948e3d5160ed9929338ce0572473ca8ee54867b0fe1aaeace",
-      "auditDigest": "sha256:9834ea899b16cb5603551df460b9e62fa4229c320d13f91a2353b696563fe07c"
+      "auditDigest": "sha256:0bf34cb451ac3274e5cab5dc239643e3311e686b4cdc6ad628fcb7e8e89b4773"
     },
     {
       "contractVersion": 1,
@@ -553,5 +553,5 @@
     }
   ],
   "compatibilityDigest": "sha256:2090784977bc7d54fc647215ef73532b9db26147a0b40ec3f56c31d611d806cc",
-  "contractDigest": "sha256:97e39d3211a9f6423c4074993eba9f7c1a688204825fa5e27b5ff0db62bfb0c7"
+  "contractDigest": "sha256:d22c5cbf2c10da63ebfc52d0c8e62a666f28da948d6b18873eb2a7cf1d32cc42"
 }
