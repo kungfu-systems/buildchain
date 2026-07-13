@@ -412,6 +412,13 @@ Consumers that want Buildchain to own the check wrapper can call
 `lifecycle.install` and `lifecycle.verify` stages and fails the `check` job when
 either declaration is missing or the command exits non-zero.
 
+Development pull requests that need source acceptance without product build or
+artifact verification can opt into `mode: source`. That mode runs only
+`lifecycle.install` and `lifecycle.check` on GitHub-hosted `ubuntu-24.04` while
+preserving the stable `check / check` required-check context. Existing callers
+remain on `mode: verify` by default, and callers may set
+`upload-artifacts: false` without weakening the job conclusion.
+
 Typical consumer wrapper:
 
 ```yaml
