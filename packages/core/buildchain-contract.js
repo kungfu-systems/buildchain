@@ -171,6 +171,7 @@ export function createBuildchainContractWorld({ root = process.cwd(), packageJso
       publishArtifactSchema: {
         requirementDigest: "optional-before-publish-required-after-publish",
         exactRefResolution: "missing requirement refs resolve to the promoted exact version",
+        exactRefTemplate: "optional ref_template expands one {version} after exact version selection",
         provenanceActions: ["built", "reused"],
         provenanceCoordinates: ["content", "release"],
         verificationFields: [
@@ -260,6 +261,7 @@ export function createBuildchainContractWorld({ root = process.cwd(), packageJso
       publishArtifactSchema: {
         requirementDigest: "optional-before-publish-required-after-publish",
         exactRefResolution: "missing requirement refs resolve to the promoted exact version",
+        exactRefTemplate: "optional ref_template expands one {version} after exact version selection",
         provenanceActions: ["built", "reused"],
         provenanceCoordinates: ["content", "release"],
         verificationFields: [

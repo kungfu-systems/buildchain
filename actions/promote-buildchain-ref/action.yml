@@ -63,7 +63,7 @@ inputs:
     description: "Path to release transaction state JSON. Defaults to .buildchain/release-state/<tag>.json"
     default: ""
   publish-required-artifacts-json:
-    description: "JSON array of required artifacts whose post-publish evidence must exist before refs move; digest and ref may be omitted before lifecycle.publish"
+    description: "JSON array of required artifacts whose post-publish evidence must exist before refs move; digest and ref may be omitted, or ref_template may contain one {version} placeholder"
     default: ""
   publish-mode:
     description: "Publish mode: publish-final-version or promote-existing-version"

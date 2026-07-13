@@ -132,7 +132,13 @@ run may change tooling, but material drift fails closed.
 `publish-required-artifacts-json` is a pre-publish family declaration, not a
 request to guess registry digests. A descriptor must include `kind + name`; it
 may omit `ref` and `digest`. The action resolves a missing `ref` to the exact
-`BUILDCHAIN_VERSION`, exports the normalized array as
+`BUILDCHAIN_VERSION`. Registries whose exact refs add a stable prefix or suffix
+may instead declare a `ref_template` containing exactly one `{version}`, such
+as `v{version}`. The template is expanded only after exact version selection,
+so a resumed alpha transaction receives the newly selected prerelease rather
+than the checked-out version. Declaring both `ref` and `ref_template`, using
+another placeholder, or leaving unmatched braces fails before
+`lifecycle.publish`. The action exports the normalized exact refs as
 `BUILDCHAIN_REQUIRED_ARTIFACTS`, runs `lifecycle.publish`, and then requires the
 final evidence to contain every exact member with a non-empty digest. Existing
 callers may continue supplying exact refs and digests.

@@ -205,6 +205,7 @@ test("contract world exposes additive post-publish artifact provenance schema", 
       surface.publishArtifactSchema.requirementDigest,
       "optional-before-publish-required-after-publish",
     );
+    assert.match(surface.publishArtifactSchema.exactRefTemplate, /\{version\}/);
     assert.deepEqual(surface.publishArtifactSchema.provenanceActions, ["built", "reused"]);
     assert.match(surface.publishArtifactSchema.provenanceCoordinates.join("\n"), /content/);
     assert.match(surface.publishArtifactSchema.provenanceCoordinates.join("\n"), /release/);

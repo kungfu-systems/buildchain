@@ -128,7 +128,7 @@ on:
         type: string
         required: false
       publish-required-artifacts-json:
-        description: "Required publish artifacts JSON passed to the promotion action"
+        description: "Required publish artifacts JSON passed to the promotion action; ref_template may contain one {version} placeholder"
         default: ""
         type: string
         required: false
