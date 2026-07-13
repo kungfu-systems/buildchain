@@ -255,7 +255,7 @@
       "specifier": "@kungfu-tech/buildchain/stable-candidate-ledger",
       "export": "./stable-candidate-ledger",
       "target": "./packages/core/stable-candidate-ledger.js",
-      "digest": "sha256:cefb5d1747e6e0e11490350e6b49877fe69982117a027b7c5b28e08d7afee374",
+      "digest": "sha256:c816025953dda54e43fc13c01139a19ea96b4377844108af537eb190255a8dbd",
       "summary": "Immutable alpha candidate ledger, qualification, revocation, selection, and exact stable source-lock APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
