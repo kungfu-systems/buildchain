@@ -110,6 +110,10 @@ export function windowsBatchInvocation(command, args, { cwd, comSpec } = {}) {
   };
 }
 
+export function prepareGateExecutionFiles(files) {
+  for (const file of files) fs.rmSync(file, { force: true });
+}
+
 function runArgv(
   argv,
   args,
@@ -234,6 +238,7 @@ function runMode() {
   const executionPath = path.join(outputRoot, "execution.json");
   const env = gateEnvironment();
   fs.mkdirSync(outputRoot, { recursive: true });
+  prepareGateExecutionFiles([receiptPath, validationPath, executionPath]);
   const argv = commandForPlatform(commandJson, entry.platform);
   const runArgs = gateArgs(
     [
