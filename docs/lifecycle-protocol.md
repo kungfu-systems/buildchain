@@ -158,6 +158,9 @@ commands = [
   "pnpm run package",
 ]
 
+[lifecycle.check]
+command = "pnpm run check:source"
+
 [lifecycle.verify]
 shell = "bash"
 script = """
@@ -166,6 +169,15 @@ pnpm run check
 git diff --check
 """
 ```
+
+`lifecycle.check` is the repository-owned source-acceptance gate. It should
+validate the checked-out source revision without entering the build, artifact,
+or release lifecycle. Consumers can run it on GitHub-hosted Linux through
+`.github/workflows/check.yml@v2` with `mode: source`; the reusable workflow runs
+only `lifecycle.install` and `lifecycle.check`. The default `mode: verify`
+continues to run `lifecycle.install` and `lifecycle.verify` for existing callers.
+The reusable job name remains `check`, and `upload-artifacts: false` disables
+evidence upload without changing the job conclusion used by branch protection.
 
 Shared environment variables can be declared once:
 
