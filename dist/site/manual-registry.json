@@ -287,7 +287,7 @@
       "title": "Publish transaction",
       "path": "docs/publish-transaction.md",
       "plane": "verify",
-      "digest": "sha256:1ce6af9b2bffc8eb210291e775459d4265de159bc7eee635cea0376c9ef62e5d",
+      "digest": "sha256:8d5d7075cf8b4280a4c5097726f5c51ae40db83e2652eafefe4fa5e487794f57",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator"

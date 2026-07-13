@@ -251,9 +251,12 @@ BUILDCHAIN_REQUIRED_ARTIFACTS
 ```
 
 `BUILDCHAIN_REQUIRED_ARTIFACTS` is the normalized requirement array after the
-action resolves a missing artifact `ref` to `BUILDCHAIN_VERSION` and binds any
-declared provenance to the current release coordinate. Requirement descriptors
-may omit `digest`; final publish evidence may not.
+action resolves a missing artifact `ref` to `BUILDCHAIN_VERSION`, or expands an
+optional `ref_template` containing exactly one `{version}`, and binds any
+declared provenance to the current release coordinate. Template expansion
+happens after exact version selection; ambiguous or unsupported templates fail
+before `lifecycle.publish`. Requirement descriptors may omit `digest`; final
+publish evidence may not.
 
 The action outputs `transaction-id`, `transaction-state`,
 `transaction-exact-tag`, `public-release-tag`, `transaction-release-sha`,
