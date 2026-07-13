@@ -35,6 +35,7 @@ const requiredPaths = [
   "docs/product-mechanism.md",
   "docs/readme-badges.md",
   "docs/release-passport.md",
+  "docs/shifu-gate-profiles.md",
   "docs/release-propagation.md",
   "docs/site-bundle-contract.md",
   "docs/toolkit-observability.md",
@@ -48,6 +49,7 @@ const requiredPaths = [
   "scripts/generate-site-bundle.mjs",
   "scripts/generate-buildchain-kfd-witnesses.mjs",
   "scripts/generate-release-candidate-passport.mjs",
+  "scripts/shifu-gate-profile.mjs",
   "scripts/artifact-relay-s3.mjs",
   "scripts/npm-publish-dry-run.mjs",
   "scripts/npm-publish-transaction.mjs",
@@ -84,6 +86,7 @@ const requiredPaths = [
   ".github/workflows/binary-distribution.yml",
   ".github/workflows/verify.yml",
   ".github/workflows/.build.yml",
+  ".github/workflows/.gate-profile.yml",
   ".github/workflows/build.yml",
   ".github/workflows/build-surface-fixture.yml",
   ".github/workflows/candidate-lab.yml",
@@ -193,6 +196,7 @@ const actionlintConfig = fs.readFileSync(
 for (const requiredSnippet of [
   ".github/workflows/build.yml:",
   ".github/workflows/.build.yml:",
+  ".github/workflows/.gate-profile.yml:",
   'property "workflow_ref" is not defined in object type',
 ]) {
   if (!actionlintConfig.includes(requiredSnippet)) {

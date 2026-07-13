@@ -850,6 +850,7 @@ function validatePromotionReleaseCandidate({
     buildSummaryPath: buildSummary ? resolvedSummaryPath : "",
     candidateHash: passport.candidateHash || "",
     platformCount: Array.isArray(passport.platformMatrix) ? passport.platformMatrix.length : 0,
+    gateProfileEvidence: passport.gateProfileEvidence,
     builtSourceSha: passport.source?.mergeRefSha || passport.source?.headSha || "",
     builtSourceTreeSha: passport.source?.treeHash || "",
     promotionChannelSha: sourceHeadSha || "",
@@ -2160,6 +2161,9 @@ async function collectAndPersistReleasePassport({
             promotionChannelSha: releaseCandidateValidation.promotionChannelSha,
             promotionChannelTreeSha: releaseCandidateValidation.promotionChannelTreeSha,
             treeEquivalent: releaseCandidateValidation.treeEquivalent,
+            ...(releaseCandidateValidation.gateProfileEvidence
+              ? { gateProfileEvidence: releaseCandidateValidation.gateProfileEvidence }
+              : {}),
           }
         : {}),
       publishToolingSha: result.transaction.publish_tooling_sha,

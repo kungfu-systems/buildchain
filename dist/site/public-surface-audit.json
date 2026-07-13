@@ -4,9 +4,9 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 76,
-    "workflowCount": 42,
+    "workflowCount": 43,
     "actionCount": 4,
-    "sitePageCount": 46,
+    "sitePageCount": 47,
     "docCommandRefCount": 241,
     "failureCount": 0
   },
@@ -425,6 +425,7 @@
           "checkout-cache-reference-repository-template",
           "checkout-cache-timeout-seconds",
           "expected-artifacts-json",
+          "gate-profile-aggregate-json",
           "install-command",
           "linux-container-image",
           "linux-container-preset",
@@ -456,13 +457,35 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 57
+        "inputCount": 58
       },
       {
         "id": ".bump-minor-version",
         "path": ".github/workflows/.bump-minor-version.yml",
         "inputs": [],
         "inputCount": 0
+      },
+      {
+        "id": ".gate-profile",
+        "path": ".github/workflows/.gate-profile.yml",
+        "inputs": [
+          "artifact-name",
+          "artifact-retention-days",
+          "buildchain-ref",
+          "buildchain-repository",
+          "gate-command-json",
+          "gate-profile",
+          "gate-registry",
+          "include-advisory",
+          "node-version",
+          "platforms-json",
+          "require-trusted-event",
+          "runner-preset",
+          "source-ref",
+          "untrusted-policy",
+          "working-directory"
+        ],
+        "inputCount": 15
       },
       {
         "id": ".release-docker",
@@ -730,6 +753,7 @@
           "checkout-cache-reference-repository-template",
           "checkout-cache-timeout-seconds",
           "expected-artifacts-json",
+          "gate-profile-aggregate-json",
           "install-command",
           "linux-container-image",
           "linux-container-preset",
@@ -761,7 +785,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 60
+        "inputCount": 61
       },
       {
         "id": "buildchain-alpha-self-dogfood",
@@ -1451,6 +1475,10 @@
       },
       {
         "id": "manual:runtime-train-validation",
+        "category": "manual"
+      },
+      {
+        "id": "manual:shifu-gate-profiles",
         "category": "manual"
       },
       {
@@ -2691,8 +2719,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "ab57fec294efb9dde1612787bfd0d532b5bb95298b5da14a2b51a5e71b9c7dcc",
-    "workflowRegistryDigest": "e7e3db196607ac6dbf4058552a84692c86c4e5cbcee7080c6cde9d1b71873daf",
-    "pageRegistryDigest": "830d6e5a21590a9445540beedaacd3c36683fbe400f0f0e63ed140e80cfcc977"
+    "workflowRegistryDigest": "f45470b7d599474d4ee32f0fb9bf3f214d7a975f477426b43f791bd890e48748",
+    "pageRegistryDigest": "68a9e7b18e18aad5d1761a4001c69c510883b236f9adc1f8317c062e651624e7"
   },
   "comparison": {
     "missingCliRegistry": [],

@@ -1722,7 +1722,25 @@ test("reusable build exposes release-candidate passport outputs", () => {
   assert.match(workflow, /BUILDCHAIN_RC_SOURCE_TREE_HASH/);
   assert.match(workflow, /release-candidate-passport-artifact/);
   assert.match(workflow, /release-candidate-passport-json/);
+  assert.match(workflow, /gate-profile-aggregate-json:/);
+  assert.match(workflow, /BUILDCHAIN_GATE_PROFILE_AGGREGATE_JSON/);
   assert.match(workflow, /<artifact-name>-release-candidate-|release-candidate-/);
+});
+
+test("reusable Shifu Gate workflow keeps project policy outside Buildchain", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/.gate-profile.yml"),
+    "utf8",
+  );
+  assert.match(workflow, /gate-profile:/);
+  assert.match(workflow, /gate-command-json:/);
+  assert.match(workflow, /platforms-json:/);
+  assert.match(workflow, /shifu-gate-profile\.mjs --mode plan/);
+  assert.match(workflow, /shifu-gate-profile\.mjs --mode run/);
+  assert.match(workflow, /shifu-gate-profile\.mjs --mode aggregate/);
+  assert.match(workflow, /name: Gate profile \/ aggregate/);
+  assert.match(workflow, /gate-aggregate-json:/);
+  assert.doesNotMatch(workflow, /product\.verify|gate\.catalog|dev-patrol|alpha-pr|release-pr/);
 });
 
 test("build surface fixture can dogfood artifact transfer modes declaratively", () => {

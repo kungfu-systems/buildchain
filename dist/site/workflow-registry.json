@@ -34,6 +34,7 @@
         "checkout-cache-reference-repository-template",
         "checkout-cache-timeout-seconds",
         "expected-artifacts-json",
+        "gate-profile-aggregate-json",
         "install-command",
         "linux-container-image",
         "linux-container-preset",
@@ -65,7 +66,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 57,
+      "inputCount": 58,
       "surface": "reusable-build",
       "capabilityGroup": "api-cli-reference",
       "status": "active"
@@ -75,6 +76,31 @@
       "path": ".github/workflows/.bump-minor-version.yml",
       "inputs": [],
       "inputCount": 0,
+      "surface": "reusable-workflow",
+      "capabilityGroup": "api-cli-reference",
+      "status": "active"
+    },
+    {
+      "id": ".gate-profile",
+      "path": ".github/workflows/.gate-profile.yml",
+      "inputs": [
+        "artifact-name",
+        "artifact-retention-days",
+        "buildchain-ref",
+        "buildchain-repository",
+        "gate-command-json",
+        "gate-profile",
+        "gate-registry",
+        "include-advisory",
+        "node-version",
+        "platforms-json",
+        "require-trusted-event",
+        "runner-preset",
+        "source-ref",
+        "untrusted-policy",
+        "working-directory"
+      ],
+      "inputCount": 15,
       "surface": "reusable-workflow",
       "capabilityGroup": "api-cli-reference",
       "status": "active"
@@ -384,6 +410,7 @@
         "checkout-cache-reference-repository-template",
         "checkout-cache-timeout-seconds",
         "expected-artifacts-json",
+        "gate-profile-aggregate-json",
         "install-command",
         "linux-container-image",
         "linux-container-preset",
@@ -415,7 +442,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 60,
+      "inputCount": 61,
       "surface": "channel-build-router",
       "capabilityGroup": "reusable-build",
       "status": "active"

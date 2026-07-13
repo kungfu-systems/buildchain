@@ -100,6 +100,36 @@ function inferVersionFromReleaseManifest(buildSummary = {}) {
   }
 }
 
+function normalizeGateProfileEvidence(gateAggregate = undefined) {
+  if (gateAggregate === undefined || gateAggregate === null || gateAggregate === "") return undefined;
+  if (!gateAggregate || typeof gateAggregate !== "object" || Array.isArray(gateAggregate)) {
+    throw new Error("gateAggregate must be an object");
+  }
+  if (gateAggregate.contract !== "buildchain.shifu-gate-aggregate/v1") {
+    throw new Error("gateAggregate must use buildchain.shifu-gate-aggregate/v1");
+  }
+  const { digest, ...digestInput } = gateAggregate;
+  const expectedDigest = `sha256:${sha256Json(digestInput)}`;
+  if (digest !== expectedDigest) {
+    throw new Error("gateAggregate digest does not match its content");
+  }
+  return {
+    contract: gateAggregate.contract,
+    digest,
+    profile: nonEmptyString(gateAggregate.profile, "gateAggregate.profile"),
+    sourceSha: nonEmptyString(gateAggregate.sourceSha, "gateAggregate.sourceSha"),
+    registry: {
+      projectId: nonEmptyString(gateAggregate.registry?.projectId, "gateAggregate.registry.projectId"),
+      digest: nonEmptyString(gateAggregate.registry?.digest, "gateAggregate.registry.digest"),
+    },
+    matrixDigest: nonEmptyString(gateAggregate.matrixDigest, "gateAggregate.matrixDigest"),
+    status: nonEmptyString(gateAggregate.status, "gateAggregate.status"),
+    qualifying: gateAggregate.qualifying === true,
+    receiptCount: Array.isArray(gateAggregate.receipts) ? gateAggregate.receipts.length : 0,
+    gateResultCount: Array.isArray(gateAggregate.gates) ? gateAggregate.gates.length : 0,
+  };
+}
+
 export function createReleaseCandidatePassport({
   repository = "",
   pullRequest = {},
@@ -111,6 +141,7 @@ export function createReleaseCandidatePassport({
   sourceTreeHash = "",
   buildSummary = {},
   buildchain = {},
+  gateAggregate = undefined,
   workflow = {},
   createdAt = nowIso(),
 } = {}) {
@@ -122,6 +153,7 @@ export function createReleaseCandidatePassport({
     || normalizeTargetChannel(normalizedSummary.publishGate?.channel)
     || normalizeTargetChannel(pullRequest.baseRef);
   const resolvedVersion = version || normalizedSummary.publishSource?.consumerVersion || inferVersionFromReleaseManifest(normalizedSummary);
+  const gateProfileEvidence = normalizeGateProfileEvidence(gateAggregate);
   const candidate = {
     schemaVersion: 1,
     contract: RELEASE_CANDIDATE_PASSPORT_CONTRACT,
@@ -164,6 +196,7 @@ export function createReleaseCandidatePassport({
       buildSummaryContract: optionalString(normalizedSummary.contract),
       buildSummaryHash: sha256Json(normalizedSummary),
     },
+    ...(gateProfileEvidence ? { gateProfileEvidence } : {}),
   };
   candidate.candidateHash = sha256Json({
     repository: candidate.repository,
@@ -171,6 +204,7 @@ export function createReleaseCandidatePassport({
     source: candidate.source,
     platformMatrix: candidate.platformMatrix,
     buildchain: candidate.buildchain,
+    ...(candidate.gateProfileEvidence ? { gateProfileEvidence: candidate.gateProfileEvidence } : {}),
   });
   return candidate;
 }
@@ -224,6 +258,14 @@ export function validateReleaseCandidatePassport({
   if (buildSummary) {
     const expectedHash = sha256Json(buildSummary);
     check(passport.diagnostics?.buildSummaryHash === expectedHash, "build summary hash mismatch");
+  }
+  if (passport.gateProfileEvidence) {
+    check(passport.gateProfileEvidence.contract === "buildchain.shifu-gate-aggregate/v1", "gate profile evidence contract mismatch");
+    check(passport.gateProfileEvidence.sourceSha === passport.source?.headSha, "gate profile evidence source SHA mismatch");
+    check(passport.gateProfileEvidence.status === "pass", "gate profile evidence status must be pass");
+    check(passport.gateProfileEvidence.qualifying === true, "gate profile evidence must be qualifying");
+    check(Boolean(passport.gateProfileEvidence.digest), "gate profile evidence digest is required");
+    check(Boolean(passport.gateProfileEvidence.matrixDigest), "gate profile matrix digest is required");
   }
   return { ok: errors.length === 0, errors };
 }

@@ -292,6 +292,11 @@ on:
         default: ""
         type: string
         required: false
+      gate-profile-aggregate-json:
+        description: "Optional qualifying buildchain.shifu-gate-aggregate/v1 JSON from the reusable Gate workflow"
+        default: ""
+        type: string
+        required: false
     secrets:
       BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN:
         required: false
@@ -559,4 +564,5 @@ jobs:
       checkout-cache-fetch-attempts: ${{ inputs.checkout-cache-fetch-attempts }}
       shifu-cache-profile-ref: ${{ inputs.shifu-cache-profile-ref }}
       shifu-cache-profile-digest: ${{ inputs.shifu-cache-profile-digest }}
+      gate-profile-aggregate-json: ${{ inputs.gate-profile-aggregate-json }}
     secrets: inherit

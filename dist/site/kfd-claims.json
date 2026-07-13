@@ -21,12 +21,12 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "1c9f99a679cc5ddf07bdc0bbd628f6b2d11443da92418e44395cb9e5b519229e",
+    "sha256": "05464b925d6f6f5a6f31fb2f4f9c2227241cfd8d2915462d0361083c2ed26236",
     "summary": {
       "cliCommandCount": 76,
-      "workflowCount": 42,
+      "workflowCount": 43,
       "actionCount": 4,
-      "sitePageCount": 46,
+      "sitePageCount": 47,
       "docCommandRefCount": 241,
       "failureCount": 0
     },
@@ -225,12 +225,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "1c9f99a679cc5ddf07bdc0bbd628f6b2d11443da92418e44395cb9e5b519229e",
+      "sha256": "05464b925d6f6f5a6f31fb2f4f9c2227241cfd8d2915462d0361083c2ed26236",
       "summary": {
         "cliCommandCount": 76,
-        "workflowCount": 42,
+        "workflowCount": 43,
         "actionCount": 4,
-        "sitePageCount": 46,
+        "sitePageCount": 47,
         "docCommandRefCount": 241,
         "failureCount": 0
       },
@@ -2323,7 +2323,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 57,
+          "inputCount": 58,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -2352,6 +2352,7 @@
             "checkout-cache-reference-repository-template",
             "checkout-cache-timeout-seconds",
             "expected-artifacts-json",
+            "gate-profile-aggregate-json",
             "install-command",
             "linux-container-image",
             "linux-container-preset",
@@ -2397,6 +2398,36 @@
           "public": true,
           "inputCount": 0,
           "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:.gate-profile",
+          "name": "workflow:.gate-profile",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/.gate-profile.yml",
+          "evidencePath": ".github/workflows/.gate-profile.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 15,
+          "inputs": [
+            "artifact-name",
+            "artifact-retention-days",
+            "buildchain-ref",
+            "buildchain-repository",
+            "gate-command-json",
+            "gate-profile",
+            "gate-registry",
+            "include-advisory",
+            "node-version",
+            "platforms-json",
+            "require-trusted-event",
+            "runner-preset",
+            "source-ref",
+            "untrusted-policy",
+            "working-directory"
+          ],
           "reverseAuditSource": ".github/workflows"
         },
         {
@@ -2745,7 +2776,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 60,
+          "inputCount": 61,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -2777,6 +2808,7 @@
             "checkout-cache-reference-repository-template",
             "checkout-cache-timeout-seconds",
             "expected-artifacts-json",
+            "gate-profile-aggregate-json",
             "install-command",
             "linux-container-image",
             "linux-container-preset",
@@ -4057,6 +4089,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:shifu-gate-profiles",
+          "name": "site-page:manual:shifu-gate-profiles",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:site-bundle-contract",
           "name": "site-page:manual:site-bundle-contract",
           "kind": "site-page",
@@ -4233,6 +4277,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 273
+    "publicSurfaceCount": 275
   }
 }
