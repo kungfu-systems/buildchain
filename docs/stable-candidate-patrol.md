@@ -122,23 +122,30 @@ jobs:
       dry-run: false
     secrets:
       promotion-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+      approval-token: ${{ secrets.BUILDCHAIN_APPROVAL_TOKEN }}
 ```
 
 The promotion token must be repository-owned and capable of creating the
 machine ledger branch, exact source-lock branch, and pull request. Repositories
-that require an approving review can set `auto-approve: true` only when their
-GitHub Actions policy explicitly allows the caller token to approve the PR;
-otherwise a repository-owned App or review bot supplies the approval. The
+that require an approving review can pass an independent repository-owned App,
+bot, or human service-account token as `approval-token`. The approval identity
+must differ from the promotion token identity that opens the PR. When no
+`approval-token` is passed, `auto-approve: true` falls back to the caller
+`github.token` and therefore requires GitHub Actions approval permission. The
 generated PR may use auto-merge, but it never bypasses the target branch checks.
 
 Before enabling `auto-approve` and `auto-merge`, the caller repository must
-enable both corresponding GitHub capabilities:
+provide one approval path and enable auto-merge:
 
-- **Actions > General > Workflow permissions > Allow GitHub Actions to create
-  and approve pull requests**, so the caller `github.token` can provide the
-  approval independently from the promotion token that opened the PR;
+- pass an independent `approval-token`; or enable **Actions > General >
+  Workflow permissions > Allow GitHub Actions to create and approve pull
+  requests**, so the caller `github.token` can approve independently from the
+  promotion token that opened the PR;
 - **General > Pull Requests > Allow auto-merge**, so Patrol can arm the
   protected merge while required reviews and checks are still pending.
+
+GitHub rejects approval from the same identity that opened the pull request;
+Patrol propagates that review failure instead of reporting success.
 
 Patrol treats a GraphQL refusal to enable auto-merge as a hard failure. A run
 must not report publication authority when GitHub accepted the HTTP request but

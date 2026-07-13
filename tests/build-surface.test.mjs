@@ -826,6 +826,8 @@ test("stable candidate patrol persists exact candidates and uses source-lock PR 
   assert.match(reusable, /release-now:/);
   assert.match(reusable, /auto-promote:/);
   assert.match(reusable, /auto-merge:/);
+  assert.match(reusable, /approval-token:/);
+  assert.match(reusable, /GH_TOKEN: \$\{\{ secrets\.approval-token \|\| github\.token \}\}/);
   assert.match(reusable, /BUILDCHAIN_STABLE_REVOKED_ALPHA_VERSIONS/);
   assert.match(reusable, /stable-candidate-policy\.mjs/);
   assert.match(reusable, /stable-candidate-patrol\.mjs/);
@@ -835,6 +837,7 @@ test("stable candidate patrol persists exact candidates and uses source-lock PR 
   assert.match(dogfood, /cron: "0 19 \* \* \*"/);
   assert.match(dogfood, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v2-alpha' \}\}/);
   assert.match(dogfood, /promotion-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/);
+  assert.match(dogfood, /approval-token: \$\{\{ secrets\.BUILDCHAIN_APPROVAL_TOKEN \}\}/);
   assert.match(qualification, /workflows: \["Buildchain Alpha Self-Dogfood"\]/);
   assert.match(qualification, /statuses: write/);
   assert.match(qualification, /GITHUB_TOKEN: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/);
