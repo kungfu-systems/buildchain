@@ -481,7 +481,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:66a045e6f34c7d8996ea5f903238e28d8836a8accf9ff18c4ff8963b14aca541"
+      "auditDigest": "sha256:1822319271fb2e06d3ff41655cd04eb10d4106821000764cc8d4f0da51f0fd77"
     },
     {
       "contractVersion": 1,
@@ -507,5 +507,5 @@
     }
   ],
   "compatibilityDigest": "sha256:2090784977bc7d54fc647215ef73532b9db26147a0b40ec3f56c31d611d806cc",
-  "contractDigest": "sha256:290418c5d6d83605b7a031abf0aafff4b2b437ac36857824741f2aef64850554"
+  "contractDigest": "sha256:fec21e31b033f40100bcd79a0c382c9053cfa961f2f02df10ccecb44333710c7"
 }
