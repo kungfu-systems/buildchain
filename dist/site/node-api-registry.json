@@ -242,7 +242,7 @@
       "specifier": "@kungfu-tech/buildchain/release-candidate",
       "export": "./release-candidate",
       "target": "./packages/core/release-candidate.js",
-      "digest": "sha256:0aa35ae7482fdb9543214275118da7111c6592b715d2622c525f83f253e5d6dc",
+      "digest": "sha256:1495e08e7601c2c01922ddcaffcc8dde1ac3e8cdabc83685ffdc18028246cdc6",
       "summary": "PR-stage release-candidate artifact, passport, and promote-only resolver APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [

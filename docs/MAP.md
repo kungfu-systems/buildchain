@@ -28,7 +28,7 @@ workflow, action, and Node API export also carries a `capabilityGroup`,
 | --- | --- | --- |
 | Getting Started | `capability-registry.json`, `product-mechanism.json` | [`install.md`](install.md), [`product-mechanism.md`](product-mechanism.md), [`cli.md`](cli.md) |
 | Release Passport and Trust | `release-model.json`, `artifact-schemas.json`, `kfd-claims.json` | [`release-passport.md`](release-passport.md), [`release-candidate.md`](release-candidate.md), [`publish-transaction.md`](publish-transaction.md), [`binary-distribution.md`](binary-distribution.md) |
-| Reusable Build and Lifecycle | `workflow-registry.json`, `release-model.json` | [`reusable-build-surface.md`](reusable-build-surface.md), [`lifecycle-protocol.md`](lifecycle-protocol.md) |
+| Reusable Build and Lifecycle | `workflow-registry.json`, `release-model.json` | [`reusable-build-surface.md`](reusable-build-surface.md), [`shifu-gate-profiles.md`](shifu-gate-profiles.md), [`lifecycle-protocol.md`](lifecycle-protocol.md) |
 | KFD Trust and Surface Closure | `kfd-claims.json`, `public-surface-audit.json`, `cli-registry.json`, `node-api-registry.json` | [`kfd-support.md`](kfd-support.md), [`release-passport.md`](release-passport.md) |
 | Site Bundle, Web Surfaces, and Propagation | `buildchain-site.json`, `site-manifest.json`, `page-registry.json`, `release-model.json` | [`site-bundle-contract.md`](site-bundle-contract.md), [`web-surface-deployments.md`](web-surface-deployments.md), [`release-propagation.md`](release-propagation.md) |
 | Publication Artifacts | `publication-registry.json`, `workflow-registry.json`, `node-api-registry.json`, `manual-registry.json`, `kungfu-buildchain-publication-artifact-registry` | [`publication-artifacts.md`](publication-artifacts.md), [`reusable-build-surface.md`](reusable-build-surface.md) |
@@ -95,6 +95,7 @@ replace them.
 | How do I add timestamped logs inside build scripts? | [`toolkit-observability.md`](toolkit-observability.md) | use | stable |
 | What package-owned facts should buildchain.libkungfu.dev render? | [`site-bundle-contract.md`](site-bundle-contract.md) | use | stable |
 | How do I call the reusable build workflow? | [`reusable-build-surface.md`](reusable-build-surface.md) | use | stable |
+| How does Buildchain schedule and aggregate a project-owned Shifu Gate profile? | [`shifu-gate-profiles.md`](shifu-gate-profiles.md) | use/verify | draft |
 | How do I use one build job that follows alpha during development and stable for releases? | [`reusable-build-surface.md`](reusable-build-surface.md#automatic-channel-router) | use | preview |
 | How do self-hosted runners relay large artifacts through S3 before GitHub artifacts? | [`reusable-build-surface.md`](reusable-build-surface.md#artifact-transfer-relay) | use | stable |
 | How do self-hosted runners reuse local Git checkout caches without weakening source locks? | [`reusable-build-surface.md`](reusable-build-surface.md#locked-source-checkout-cache) | use | stable |

@@ -276,6 +276,11 @@ on:
         default: ""
         type: string
         required: false
+      gate-profile-aggregate-json:
+        description: "Optional qualifying buildchain.shifu-gate-aggregate/v1 JSON from the reusable Gate workflow"
+        default: ""
+        type: string
+        required: false
     secrets:
       BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN:
         required: false
@@ -1619,6 +1624,7 @@ jobs:
           BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           BUILDCHAIN_WORKFLOW_SHELL_REF: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-ref }}
           BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          BUILDCHAIN_GATE_PROFILE_AGGREGATE_JSON: ${{ inputs.gate-profile-aggregate-json }}
           BUILDCHAIN_PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
           BUILDCHAIN_PULL_REQUEST_URL: ${{ github.event.pull_request.html_url }}
           BUILDCHAIN_PULL_REQUEST_HEAD_REF: ${{ github.event.pull_request.head.ref }}

@@ -5888,6 +5888,18 @@ test("promote-only RC passport accepts channel merge commit with matching source
       target: { channel: "alpha", ref: "alpha/v1/v1.0", version: "1.0.0-alpha.0" },
       source: { headSha: OTHER_SHA, mergeRefSha: OTHER_SHA, treeHash: `tree-${SHA}` },
       platformMatrix: [{ platformId: "linux-x64", artifactName: "buildchain-linux-x64" }],
+      gateProfileEvidence: {
+        contract: "buildchain.shifu-gate-aggregate/v1",
+        digest: `sha256:${"a".repeat(64)}`,
+        profile: "alpha-pr",
+        sourceSha: OTHER_SHA,
+        registry: { projectId: "fixture", digest: `sha256:${"b".repeat(64)}` },
+        matrixDigest: `sha256:${"c".repeat(64)}`,
+        status: "pass",
+        qualifying: true,
+        receiptCount: 1,
+        gateResultCount: 2,
+      },
       diagnostics: {},
     },
   });
@@ -5900,6 +5912,7 @@ test("promote-only RC passport accepts channel merge commit with matching source
       sourceTreeSha: `tree-${SHA}`,
     });
     assert.equal(result.platformCount, 1);
+    assert.equal(result.gateProfileEvidence.profile, "alpha-pr");
   } finally {
     fs.rmSync(cwd, { recursive: true, force: true });
   }
