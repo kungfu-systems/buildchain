@@ -548,12 +548,13 @@
       "inputs": [
         "buildchain-ref",
         "buildchain-repository",
+        "mode",
         "node-version",
         "require-version-state",
         "upload-artifacts",
         "working-directory"
       ],
-      "inputCount": 6,
+      "inputCount": 7,
       "surface": "repository-workflow",
       "capabilityGroup": "api-cli-reference",
       "status": "active"
