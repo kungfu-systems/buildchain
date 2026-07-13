@@ -99,6 +99,7 @@ replace them.
 | How do self-hosted runners relay large artifacts through S3 before GitHub artifacts? | [`reusable-build-surface.md`](reusable-build-surface.md#artifact-transfer-relay) | use | stable |
 | How do self-hosted runners reuse local Git checkout caches without weakening source locks? | [`reusable-build-surface.md`](reusable-build-surface.md#locked-source-checkout-cache) | use | stable |
 | How do I validate an unreleased Buildchain runtime train while keeping `@v2`? | [`runtime-train-validation.md`](runtime-train-validation.md) | use | stable |
+| How do I automatically qualify alpha candidates and publish the newest non-revoked qualified candidate at a fixed window? | [`stable-candidate-patrol.md`](stable-candidate-patrol.md) | use | preview |
 | How do I deploy a site/app preview, staging, or production surface? | [`web-surface-deployments.md`](web-surface-deployments.md) | use | stable |
 | How do I publish observed infrastructure contracts for downstream consumers? | [`infra-contract.md`](infra-contract.md) | use | preview |
 | How do I use the active actions directly? | [`../actions/validate-config/README.md`](../actions/validate-config/README.md), [`../actions/run-lifecycle/README.md`](../actions/run-lifecycle/README.md), [`../actions/promote-buildchain-ref/README.md`](../actions/promote-buildchain-ref/README.md), [`../actions/report-buildchain-issue/README.md`](../actions/report-buildchain-issue/README.md) | use | stable |
@@ -117,6 +118,8 @@ replace them.
   [`release-flow.md`](release-flow.md).
 - **Buildchain self-dogfood / released alpha canary / stable compatibility lane** ->
   [`release-governance.md`](release-governance.md#buildchain-alpha-self-dogfood).
+- **qualified alpha ledger / scheduled stable selection / hold and revoke** ->
+  [`stable-candidate-patrol.md`](stable-candidate-patrol.md).
 - **v2.1 vs v2.2 / when to open a new minor line** ->
   [`versioning.md`](versioning.md).
 - **dry-run / what would happen if this channel PR merges** -> [`cli.md`](cli.md)

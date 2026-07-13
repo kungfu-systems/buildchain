@@ -37,23 +37,38 @@ function createRepository() {
 test("locked source checkout uses a mirror cache and verifies head and tree", () => {
   const origin = createRepository();
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-checkout-work-"));
-  const evidence = lockedSourceCheckout({
-    workspace,
-    repository: "kungfu-systems/example",
-    sourceSha: origin.sha,
-    sourceTreeSha: origin.tree,
-    mode: "require",
-    mirrorUrlTemplate: `file://${origin.bare}`,
-    fallback: "fail",
-    diagnosticsPath: ".buildchain/diagnostics/source-checkout.json",
-    now: () => "2026-07-07T00:00:00.000Z",
-  });
+  const configEnv = ["GIT_CONFIG_COUNT", "GIT_CONFIG_KEY_0", "GIT_CONFIG_VALUE_0"];
+  const previous = new Map(configEnv.map((key) => [key, process.env[key]]));
+  process.env.GIT_CONFIG_COUNT = "1";
+  process.env.GIT_CONFIG_KEY_0 = "core.autocrlf";
+  process.env.GIT_CONFIG_VALUE_0 = "true";
+  let evidence;
+  try {
+    evidence = lockedSourceCheckout({
+      workspace,
+      repository: "kungfu-systems/example",
+      sourceSha: origin.sha,
+      sourceTreeSha: origin.tree,
+      mode: "require",
+      mirrorUrlTemplate: `file://${origin.bare}`,
+      fallback: "fail",
+      diagnosticsPath: ".buildchain/diagnostics/source-checkout.json",
+      now: () => "2026-07-07T00:00:00.000Z",
+    });
+  } finally {
+    for (const key of configEnv) {
+      const value = previous.get(key);
+      if (value == null) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
   assert.equal(evidence.contract, LOCKED_SOURCE_CHECKOUT_CONTRACT);
   assert.equal(evidence.cache.hit, true);
   assert.equal(evidence.cache.transport, "mirror-url");
   assert.equal(evidence.verification.head, origin.sha);
   assert.equal(evidence.verification.tree, origin.tree);
   assert.equal(git(["rev-parse", "HEAD"], workspace), origin.sha);
+  assert.equal(fs.readFileSync(path.join(workspace, "README.md"), "utf8"), "hello\n");
   const persisted = JSON.parse(fs.readFileSync(path.join(workspace, ".buildchain/diagnostics/source-checkout.json"), "utf8"));
   assert.equal(persisted.cache.hit, true);
 });
@@ -138,8 +153,96 @@ test("source fetch seeds from the advertised ref before trying a raw SHA", () =>
   });
   const fetches = calls.filter((args) => args[0] === "fetch");
   assert.equal(result.selector, "ref");
+  assert.equal(result.checkoutSha, "a".repeat(40));
   assert.equal(fetches.length, 1);
   assert.equal(fetches[0].at(-1), "+refs/heads/dev/v4/v4.0:refs/buildchain/source-ref");
+});
+
+test("pull merge fetch accepts a regenerated commit only when the locked tree matches", () => {
+  const calls = [];
+  const expectedSha = "a".repeat(40);
+  const regeneratedSha = "b".repeat(40);
+  const sourceTreeSha = "c".repeat(40);
+  const result = fetchSourceCommit({
+    targetPath: "/tmp/buildchain-pull-merge-fetch-fixture",
+    remoteName: "origin",
+    remoteUrl: "https://github.com/kungfu-systems/example.git",
+    sha: expectedSha,
+    fetchRef: "refs/pull/629/merge",
+    sourceTreeSha,
+    timeoutMs: 600000,
+    runGit: (args) => {
+      calls.push(args);
+      if (args[0] === "rev-parse" && args[1].endsWith("^{commit}")) return regeneratedSha;
+      if (args[0] === "rev-parse" && args[1].endsWith("^{tree}")) return sourceTreeSha;
+      return "";
+    },
+    containsCommit: () => false,
+  });
+  const fetches = calls.filter((args) => args[0] === "fetch");
+  assert.equal(result.selector, "ref-tree");
+  assert.equal(result.checkoutSha, regeneratedSha);
+  assert.equal(fetches.length, 1);
+  assert.equal(fetches[0].at(-1), "+refs/pull/629/merge:refs/buildchain/source-ref");
+});
+
+test("source fetch preserves stderr for retry classification and diagnostics", () => {
+  const calls = [];
+  fetchSourceCommit({
+    targetPath: "/tmp/buildchain-source-fetch-diagnostics-fixture",
+    remoteName: "origin",
+    remoteUrl: "https://github.com/kungfu-systems/example.git",
+    sha: "a".repeat(40),
+    fetchRef: "refs/heads/dev/v4/v4.0",
+    timeoutMs: 600000,
+    runGit: (args, options) => {
+      calls.push({ args, options });
+      return "";
+    },
+    containsCommit: () => true,
+  });
+
+  const fetch = calls.find(({ args }) => args[0] === "fetch");
+  assert.ok(fetch);
+  assert.equal(fetch.options.stdio, undefined);
+});
+
+test("locked checkout accepts a regenerated pull merge commit with the exact locked tree", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-pull-merge-origin-"));
+  git(["init"], root);
+  git(["config", "user.name", "Buildchain Test"], root);
+  git(["config", "user.email", "buildchain@example.test"], root);
+  fs.writeFileSync(path.join(root, "README.md"), "same tree\n");
+  git(["add", "README.md"], root);
+  git(["commit", "-m", "original merge"], root);
+  const originalSha = git(["rev-parse", "HEAD"], root);
+  const tree = git(["rev-parse", "HEAD^{tree}"], root);
+  git(["commit", "--amend", "-m", "regenerated merge"], root);
+  const regeneratedSha = git(["rev-parse", "HEAD"], root);
+  assert.notEqual(regeneratedSha, originalSha);
+  assert.equal(git(["rev-parse", "HEAD^{tree}"], root), tree);
+
+  const bare = `${root}.git`;
+  git(["clone", "--bare", root, bare], path.dirname(root));
+  git(["update-ref", "refs/pull/629/merge", regeneratedSha], bare);
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-pull-merge-work-"));
+  const evidence = lockedSourceCheckout({
+    workspace,
+    repository: "kungfu-systems/example",
+    sourceSha: originalSha,
+    sourceTreeSha: tree,
+    fetchRef: "refs/pull/629/merge",
+    mode: "off",
+    githubRemote: `file://${bare}`,
+    diagnosticsPath: ".buildchain/diagnostics/source-checkout.json",
+  });
+
+  assert.equal(evidence.verification.head, regeneratedSha);
+  assert.equal(evidence.verification.expectedHead, originalSha);
+  assert.equal(evidence.verification.headOk, false);
+  assert.equal(evidence.verification.treeOk, true);
+  assert.equal(evidence.verification.identityOk, true);
+  assert.equal(evidence.verification.identityMode, "tree-equivalent-pull-merge");
 });
 
 test("source fetch does not spend a second raw-SHA timeout after a ref timeout", () => {

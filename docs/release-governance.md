@@ -303,6 +303,15 @@ Compatible work should still be batched until a stable release has a concrete
 consumer need. Changing the interval, canary set, attestors, product path
 boundary, or soak time is a reviewed policy change.
 
+Repositories that want a predictable scheduled stable window can use
+[`Stable Candidate Patrol`](stable-candidate-patrol.md). It persists each exact
+alpha independently, qualifies it after repository-declared checks and soak,
+and selects the newest qualified non-revoked candidate. A newer soaking alpha
+does not invalidate an older qualified candidate. The selected tree enters the
+existing strict `publish-gate/release/<line>/<version> -> release/<line>` PR
+path, so scheduled selection changes release intent timing without weakening
+source locks, review, verification, publish transactions, or passports.
+
 If release finalization is resumed after generated version-state bookkeeping was
 partially applied, Buildchain applies the same recovery rule: the current
 release head may be the generated commit, or a historical merge commit that
@@ -445,6 +454,7 @@ patrol workflow family:
 | `.github/workflows/patrol-daily.yml` | daily | lightweight inspection plus ready dev PR maintenance |
 | `.github/workflows/patrol-weekly.yml` | weekly | release-state, passport, gate, and stale-state health checks as they are added |
 | `.github/workflows/patrol-monthly.yml` | monthly | governance, permission, branch-protection, and workflow drift checks as they are added |
+| `.github/workflows/stable-candidate-patrol.yml` | repository-selected release window | qualify immutable alpha candidates and open the exact source-lock stable PR |
 
 The cadence names describe patrol intensity, not release cadence:
 
@@ -452,6 +462,12 @@ The cadence names describe patrol intensity, not release cadence:
 - weekly patrol is for medium-cost maintenance and audit checks;
 - monthly patrol is for structural drift checks that should not block ordinary
   development velocity.
+
+Stable Candidate Patrol is separate from those maintenance cadences because its
+caller-owned cron is a release-intent window. Its candidate ledger and selection
+remain generic; registry-specific side effects still run through the normal
+repository `lifecycle.publish` transaction. See
+[`stable-candidate-patrol.md`](stable-candidate-patrol.md).
 
 Consumers should schedule thin callers and keep their YAML declarative. For
 example:

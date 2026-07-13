@@ -52,6 +52,19 @@ command = "node scripts/generate-site-bundle.mjs"
 [lifecycle.publish]
 command = "node scripts/npm-publish-transaction.mjs"
 
+[release.stable]
+strategy = "latest-qualified-alpha"
+timezone = "Asia/Shanghai"
+publish_at = "03:00"
+minimum_soak_seconds = 3600
+required_checks = [
+  "alpha-release",
+  "workflow:Build Surface Fixture",
+  "status:buildchain-canary/site-libkungfu-dev",
+]
+auto_promote = true
+auto_merge = true
+
 [[facts.version_sources]]
 id = "package"
 type = "json"

@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "abb62f9017ec8d3bdad15be860bda98aaf4438e0fd623fe1d9200619a497ccab",
+    "sha256": "f9c9b25aa70d39b4d6db08bb35854c1f1511a637a600508aeda309c99d05c329",
     "summary": {
-      "cliCommandCount": 75,
-      "workflowCount": 39,
+      "cliCommandCount": 76,
+      "workflowCount": 42,
       "actionCount": 4,
-      "sitePageCount": 45,
-      "docCommandRefCount": 237,
+      "sitePageCount": 46,
+      "docCommandRefCount": 241,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -108,6 +108,23 @@
         "dist/site/node-api-registry.json",
         "dist/site/kfd-claims.json",
         "dist/site/public-surface-audit.json"
+      ]
+    },
+    {
+      "id": "claim:buildchain-shifu-kfd-discovery",
+      "claim": "Buildchain exposes a versioned repository-layout discovery contract and KFD-3 distribution declarations so Shifu can locate the registry and determine jurisdiction without copying Buildchain layout paths.",
+      "sourcePaths": [
+        "packages/core/buildchain-layout.js",
+        "packages/core/buildchain-kfd-claims.js",
+        "packages/core/kfd3-surface-register.js",
+        "bin/buildchain.mjs",
+        "scripts/build-standalone-binary.mjs",
+        "docs/kfd-support.md"
+      ],
+      "artifactPaths": [
+        "dist/site/kfd-claims.json",
+        "dist/site/cli-registry.json",
+        "dist/site/node-api-registry.json"
       ]
     },
     {
@@ -208,13 +225,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "abb62f9017ec8d3bdad15be860bda98aaf4438e0fd623fe1d9200619a497ccab",
+      "sha256": "f9c9b25aa70d39b4d6db08bb35854c1f1511a637a600508aeda309c99d05c329",
       "summary": {
-        "cliCommandCount": 75,
-        "workflowCount": 39,
+        "cliCommandCount": 76,
+        "workflowCount": 42,
         "actionCount": 4,
-        "sitePageCount": 45,
-        "docCommandRefCount": 237,
+        "sitePageCount": 46,
+        "docCommandRefCount": 241,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -1123,6 +1140,18 @@
           "packageExport": "./release-candidate"
         },
         {
+          "id": "export:./stable-candidate-ledger",
+          "name": "@kungfu-tech/buildchain/stable-candidate-ledger",
+          "kind": "package-export",
+          "sourcePath": "packages/core/stable-candidate-ledger.js",
+          "evidencePath": "packages/core/stable-candidate-ledger.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./stable-candidate-ledger"
+        },
+        {
           "id": "export:./release-passport",
           "name": "@kungfu-tech/buildchain/release-passport",
           "kind": "package-export",
@@ -1961,6 +1990,18 @@
           "reverseAuditSource": "bin/buildchain.mjs"
         },
         {
+          "id": "cli:layout",
+          "name": "buildchain layout [--cwd <dir>] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
           "id": "cli:lifecycle",
           "name": "buildchain lifecycle run <stage> [--cwd <dir>] [--required]",
           "kind": "cli-command",
@@ -2282,7 +2323,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 50,
+          "inputCount": 57,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -2302,6 +2343,7 @@
             "buildchain-contract-lock-path",
             "buildchain-ref",
             "buildchain-repository",
+            "cargo-registry-index",
             "checkout-cache-fallback",
             "checkout-cache-fetch-attempts",
             "checkout-cache-github-timeout-seconds",
@@ -2329,8 +2371,14 @@
             "require-trusted-event",
             "require-verify",
             "runner-preset",
+            "rust-toolchain",
+            "rustup-dist-server",
+            "rustup-update-root",
             "sample-process-tree",
             "setup-node",
+            "setup-rust",
+            "shifu-cache-profile-digest",
+            "shifu-cache-profile-ref",
             "untrusted-policy",
             "verify-command",
             "working-directory"
@@ -2697,7 +2745,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 53,
+          "inputCount": 60,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -2720,6 +2768,7 @@
             "buildchain-ref",
             "buildchain-repository",
             "buildchain-stable-contract-lock-path",
+            "cargo-registry-index",
             "checkout-cache-fallback",
             "checkout-cache-fetch-attempts",
             "checkout-cache-github-timeout-seconds",
@@ -2747,8 +2796,14 @@
             "require-trusted-event",
             "require-verify",
             "runner-preset",
+            "rust-toolchain",
+            "rustup-dist-server",
+            "rustup-update-root",
             "sample-process-tree",
             "setup-node",
+            "setup-rust",
+            "shifu-cache-profile-digest",
+            "shifu-cache-profile-ref",
             "untrusted-policy",
             "verify-command",
             "working-directory"
@@ -2865,6 +2920,41 @@
             "dry-run",
             "sha",
             "target-ref"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:buildchain-stable-candidate-patrol",
+          "name": "workflow:buildchain-stable-candidate-patrol",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/buildchain-stable-candidate-patrol.yml",
+          "evidencePath": ".github/workflows/buildchain-stable-candidate-patrol.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 3,
+          "inputs": [
+            "buildchain-ref",
+            "dry-run",
+            "release-now"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:buildchain-stable-candidate-qualification",
+          "name": "workflow:buildchain-stable-candidate-qualification",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/buildchain-stable-candidate-qualification.yml",
+          "evidencePath": ".github/workflows/buildchain-stable-candidate-qualification.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 2,
+          "inputs": [
+            "candidate-sha",
+            "dry-run"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -3262,6 +3352,36 @@
           "public": true,
           "inputCount": 0,
           "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:stable-candidate-patrol",
+          "name": "workflow:stable-candidate-patrol",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/stable-candidate-patrol.yml",
+          "evidencePath": ".github/workflows/stable-candidate-patrol.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 15,
+          "inputs": [
+            "auto-approve",
+            "auto-merge",
+            "auto-promote",
+            "buildchain-ref",
+            "buildchain-repository",
+            "dry-run",
+            "hold",
+            "hold-reason",
+            "ledger-ref",
+            "minimum-soak-seconds",
+            "release-now",
+            "required-checks",
+            "revoke-reason",
+            "revoked-versions",
+            "target-branch"
+          ],
           "reverseAuditSource": ".github/workflows"
         },
         {
@@ -3948,6 +4068,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:stable-candidate-patrol",
+          "name": "site-page:manual:stable-candidate-patrol",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:toolkit-observability",
           "name": "site-page:manual:toolkit-observability",
           "kind": "site-page",
@@ -4063,8 +4195,43 @@
         "visibility": "public",
         "participantFacing": true,
         "public": true
+      },
+      {
+        "id": "distribution:buildchain-standalone",
+        "name": "Buildchain standalone binary distribution",
+        "kind": "binary-distribution",
+        "sourcePath": "scripts/build-standalone-binary.mjs",
+        "evidencePath": ".github/workflows/binary-distribution.yml",
+        "availability": "shipped",
+        "visibility": "public",
+        "participantFacing": true,
+        "public": true,
+        "artifactPath": "dist/binary",
+        "distribution": {
+          "registrar": "shifu",
+          "tasks": [
+            "binary:build"
+          ],
+          "artifacts": [
+            {
+              "kind": "binary",
+              "platform": "linux",
+              "pathGlob": "dist/binary/buildchain-x86_64-unknown-linux-gnu.tar.gz"
+            },
+            {
+              "kind": "binary",
+              "platform": "macos",
+              "pathGlob": "dist/binary/buildchain-aarch64-apple-darwin.tar.gz"
+            },
+            {
+              "kind": "binary",
+              "platform": "windows",
+              "pathGlob": "dist/binary/buildchain-x86_64-pc-windows-msvc.zip"
+            }
+          ]
+        }
       }
     ],
-    "publicSurfaceCount": 266
+    "publicSurfaceCount": 273
   }
 }

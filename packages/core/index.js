@@ -3,6 +3,7 @@ export {
   getLifecycleStage,
   getNativeDiagnosticsProfile,
   getPublishContract,
+  getStableReleasePolicy,
   getVersionStrategy,
   loadBuildchainConfig,
   loadConfiguredAnchorManifest,
@@ -12,6 +13,20 @@ export {
   updateConfiguredVersionStateContents,
   validateBuildchainConfig,
 } from "./buildchain-config.js";
+
+export {
+  STABLE_CANDIDATE_LEDGER_CONTRACT,
+  STABLE_CANDIDATE_STATES,
+  createStableCandidateLedger,
+  markStableCandidatePromoted,
+  normalizeStableCandidateLedger,
+  qualifyStableCandidate,
+  registerStableCandidate,
+  revokeStableCandidate,
+  selectStableCandidate,
+  setStableCandidateHold,
+  stableCandidatePromotionRefs,
+} from "./stable-candidate-ledger.js";
 
 export {
   assertPackageManager,
@@ -277,6 +292,8 @@ export {
   BUILDCHAIN_CONFIG_PATH,
   BUILDCHAIN_CONTRACT_LOCK_PATH,
   BUILDCHAIN_DIR,
+  BUILDCHAIN_LAYOUT_DISCOVERY_CONTRACT,
+  BUILDCHAIN_VERSION_PIN_PATH,
   BUILDCHAIN_GENERATED_DIRS,
   BUILDCHAIN_KFD_ROOT,
   BUILDCHAIN_KFD1_CONTRACT_WORLD_WITNESS_PATH,
@@ -302,6 +319,7 @@ export {
   LEGACY_BUILDCHAIN_KFD3_SURFACE_REGISTRY_PATHS,
   LEGACY_BUILDCHAIN_RELEASE_PASSPORT_PATH,
   discoverBuildchainRepoFiles,
+  createBuildchainLayoutDiscovery,
   migrateBuildchainLayout,
   planBuildchainLayoutMigration,
   resolveBuildchainConfigPath,
@@ -344,6 +362,7 @@ export {
   auditKfd3Surfaces,
   createKfd3SurfaceWitness,
   detectKfd3Surfaces,
+  normalizeKfd3DistributionDeclaration,
   queryKfd3Capabilities,
   readKfd3SurfaceRegistry,
   registerKfd3Surfaces,

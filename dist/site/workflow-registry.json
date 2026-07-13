@@ -25,6 +25,7 @@
         "buildchain-contract-lock-path",
         "buildchain-ref",
         "buildchain-repository",
+        "cargo-registry-index",
         "checkout-cache-fallback",
         "checkout-cache-fetch-attempts",
         "checkout-cache-github-timeout-seconds",
@@ -52,13 +53,19 @@
         "require-trusted-event",
         "require-verify",
         "runner-preset",
+        "rust-toolchain",
+        "rustup-dist-server",
+        "rustup-update-root",
         "sample-process-tree",
         "setup-node",
+        "setup-rust",
+        "shifu-cache-profile-digest",
+        "shifu-cache-profile-ref",
         "untrusted-policy",
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 50,
+      "inputCount": 57,
       "surface": "reusable-build",
       "capabilityGroup": "api-cli-reference",
       "status": "active"
@@ -368,6 +375,7 @@
         "buildchain-ref",
         "buildchain-repository",
         "buildchain-stable-contract-lock-path",
+        "cargo-registry-index",
         "checkout-cache-fallback",
         "checkout-cache-fetch-attempts",
         "checkout-cache-github-timeout-seconds",
@@ -395,13 +403,19 @@
         "require-trusted-event",
         "require-verify",
         "runner-preset",
+        "rust-toolchain",
+        "rustup-dist-server",
+        "rustup-update-root",
         "sample-process-tree",
         "setup-node",
+        "setup-rust",
+        "shifu-cache-profile-digest",
+        "shifu-cache-profile-ref",
         "untrusted-policy",
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 53,
+      "inputCount": 60,
       "surface": "channel-build-router",
       "capabilityGroup": "reusable-build",
       "status": "active"
@@ -488,6 +502,31 @@
       "surface": "release-governance",
       "capabilityGroup": "release-passport-trust",
       "status": "active"
+    },
+    {
+      "id": "buildchain-stable-candidate-patrol",
+      "path": ".github/workflows/buildchain-stable-candidate-patrol.yml",
+      "inputs": [
+        "buildchain-ref",
+        "dry-run",
+        "release-now"
+      ],
+      "inputCount": 3,
+      "surface": "repository-patrol",
+      "capabilityGroup": "governance-versioning",
+      "status": "active"
+    },
+    {
+      "id": "buildchain-stable-candidate-qualification",
+      "path": ".github/workflows/buildchain-stable-candidate-qualification.yml",
+      "inputs": [
+        "candidate-sha",
+        "dry-run"
+      ],
+      "inputCount": 2,
+      "surface": "repository-patrol",
+      "capabilityGroup": "api-cli-reference",
+      "status": "repository-internal"
     },
     {
       "id": "candidate-lab",
@@ -804,6 +843,31 @@
       "surface": "repository-workflow",
       "capabilityGroup": "api-cli-reference",
       "status": "compatibility-fixture"
+    },
+    {
+      "id": "stable-candidate-patrol",
+      "path": ".github/workflows/stable-candidate-patrol.yml",
+      "inputs": [
+        "auto-approve",
+        "auto-merge",
+        "auto-promote",
+        "buildchain-ref",
+        "buildchain-repository",
+        "dry-run",
+        "hold",
+        "hold-reason",
+        "ledger-ref",
+        "minimum-soak-seconds",
+        "release-now",
+        "required-checks",
+        "revoke-reason",
+        "revoked-versions",
+        "target-branch"
+      ],
+      "inputCount": 15,
+      "surface": "repository-patrol",
+      "capabilityGroup": "governance-versioning",
+      "status": "active"
     },
     {
       "id": "verify",

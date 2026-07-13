@@ -162,6 +162,43 @@ Artifact names, manifest paths, expected artifact checks, publish-source locks,
 and aggregate summaries are the same in both jobs. The split is an execution
 detail, not a different artifact contract.
 
+## Native Rust Toolchains
+
+Native lifecycle jobs can request an isolated Rust installation instead of
+depending on a self-hosted runner user's PATH:
+
+```yaml
+with:
+  setup-rust: true
+  rust-toolchain: "1.96.0"
+  rustup-dist-server: "https://rsproxy.cn"
+  rustup-update-root: "https://rsproxy.cn/rustup"
+  cargo-registry-index: ${{ vars.BUILDCHAIN_CARGO_REGISTRY_INDEX }}
+```
+
+`setup-rust` defaults to `false`, so existing consumers are unchanged. When it
+is enabled, Buildchain installs `rust-toolchain` before the install, build, and
+verify lifecycle stages on every native matrix platform. Windows uses the
+official rustup bootstrap through `cmd.exe` and `curl.exe` into runner-temporary
+Cargo and rustup homes, so it works under a restrictive PowerShell execution
+policy and the service account does not depend on another user's PATH or mutate
+host toolchain state. Pin an exact toolchain for release builds. Linux container jobs continue
+to obtain Rust from their digest-pinned image contract; Buildchain does not
+mutate that container surface.
+
+The rustup server inputs are optional and default to Rust's official servers.
+Consumers behind a slow cross-border link may select a trusted transport mirror;
+rustup still verifies the selected toolchain's distribution metadata and
+component checksums.
+
+`cargo-registry-index` is also optional. When set, Buildchain exposes it to
+Cargo as `CARGO_REGISTRIES_CRATES_IO_INDEX` for every native lifecycle stage,
+so a self-hosted runner can use a repository or organization variable without
+committing private LAN topology to public workflow YAML. The endpoint must be a
+crates.io-compatible index whose `config.json` download contract serves the
+matching checksum-verified crate archives. An empty value preserves Cargo's
+normal crates.io behavior.
+
 The container image provides `fnm` but does not preinstall Node. Buildchain uses
 `fnm` inside the container to install the requested `node-version` before it
 runs Buildchain runtime scripts or lifecycle actions.
@@ -288,6 +325,38 @@ The runtime follows the called workflow through `job.workflow_ref`. Callers may
 also pass `buildchain-ref: v2-alpha` explicitly; official floating refs are
 ordinary channel selections and are allowed on pull requests and pushes. Train
 refs and exact SHAs remain trusted manual overrides.
+
+## Shifu Cache Profile Passthrough
+
+Buildchain can carry one trusted Shifu cache-profile reference and its exact
+digest into lifecycle execution. Its contract is an opaque reference and digest
+only. This surface is deliberately opaque:
+Buildchain does not fetch the profile, parse JSON, select cache services,
+rewrite bindings, decide fallback, or emit Shifu resolution evidence. Those
+semantics remain owned by the consumer's pinned Shifu implementation.
+
+```yaml
+jobs:
+  build:
+    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v2
+    with:
+      shifu-cache-profile-ref: ${{ vars.SHIFU_CACHE_PROFILE_REF }}
+      shifu-cache-profile-digest: ${{ vars.SHIFU_CACHE_PROFILE_DIGEST }}
+```
+
+The reusable workflow passes the pair as `SHIFU_CACHE_PROFILE_REF` and
+`SHIFU_CACHE_PROFILE_DIGEST` to install, build, and verify lifecycle commands.
+The consumer must invoke its Shifu cache-aware execution surface. An empty pair
+preserves existing behavior; a consumer Shifu should fail closed when exactly
+one value is present or the resolved bytes do not match the expected digest.
+
+Use trusted repository or organization variables rather than PR-controlled
+files for private/LAN references. The variables must remain secret-free; any
+credentials use a separate provider-approved secret surface and must not be
+embedded in the profile reference. This passthrough is separate from
+Buildchain's locked source checkout cache below: Buildchain owns checkout
+transport and source identity, while Shifu owns post-checkout execution cache
+bindings and receipts.
 
 ## Locked Source Checkout Cache
 

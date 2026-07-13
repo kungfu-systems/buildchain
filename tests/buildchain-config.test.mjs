@@ -509,6 +509,35 @@ test("buildchain.toml rejects dist-tag promotion without npm token auth", () => 
   );
 });
 
+test("buildchain.toml normalizes qualified-alpha stable patrol policy", () => {
+  const config = normalizeBuildchainConfig({
+    schema: 1,
+    release: {
+      stable: {
+        strategy: "latest-qualified-alpha",
+        timezone: "Asia/Shanghai",
+        publish_at: "03:00",
+        minimum_soak_seconds: 3600,
+        required_checks: ["alpha-release", "status:consumer-canary"],
+      },
+    },
+  });
+  assert.deepEqual(config.release.stable, {
+    strategy: "latest-qualified-alpha",
+    timezone: "Asia/Shanghai",
+    publishAt: "03:00",
+    minimumSoakSeconds: 3600,
+    requiredChecks: ["alpha-release", "status:consumer-canary"],
+    ledgerRef: "",
+    autoPromote: true,
+    autoMerge: false,
+  });
+  assert.throws(
+    () => normalizeBuildchainConfig({ schema: 1, release: { stable: { strategy: "latest-alpha" } } }),
+    /release\.stable\.strategy/,
+  );
+});
+
 test("manual next version is only valid for anchored strategy", () => {
   assert.throws(
     () =>

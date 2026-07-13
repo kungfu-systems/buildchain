@@ -1,6 +1,6 @@
 {
   "name": "@kungfu-tech/buildchain",
-  "version": "2.12.0",
+  "version": "2.12.1-alpha.9",
   "private": false,
   "description": "Buildchain Release Passport, release governance, CLI toolkit, and site facts.",
   "repository": "https://github.com/kungfu-systems/buildchain",
@@ -30,6 +30,7 @@
     "./publication-package": "./packages/core/publication-package.js",
     "./kfd-gate": "./packages/core/kfd-gate.js",
     "./release-candidate": "./packages/core/release-candidate.js",
+    "./stable-candidate-ledger": "./packages/core/stable-candidate-ledger.js",
     "./release-passport": "./packages/core/release-passport.js",
     "./release-propagation": "./packages/core/release-propagation.js",
     "./surface-manifest": "./packages/core/surface-manifest.js",
@@ -83,6 +84,7 @@
     "check:site": "node scripts/generate-site-bundle.mjs --check",
     "test:unit": "node --test tests/*.test.mjs",
     "build": "pnpm -r --filter \"./actions/**\" build",
+    "binary:build": "node scripts/build-standalone-binary.mjs",
     "package": "npm pack --dry-run --json --registry=https://registry.npmjs.org/",
     "pack:check": "npm pack --dry-run --json --registry=https://registry.npmjs.org/"
   },

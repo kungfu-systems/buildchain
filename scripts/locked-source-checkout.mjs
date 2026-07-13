@@ -179,7 +179,13 @@ function hasCommit(targetPath, sha, timeoutMs) {
 }
 
 function checkoutFetchedCommit(targetPath, sha, timeoutMs) {
-  git(["checkout", "--force", "--detach", sha], { cwd: targetPath, timeoutMs });
+  // The locked Git tree is also the byte-level source of release evidence.
+  // Override runner-global autocrlf only at checkout time so this also works
+  // when a container workspace uses an external Git metadata pointer.
+  git(["-c", "core.autocrlf=false", "-c", "core.eol=lf", "checkout", "--force", "--detach", sha], {
+    cwd: targetPath,
+    timeoutMs,
+  });
 }
 
 function retryableGitFetchError(error) {
@@ -194,6 +200,7 @@ export function fetchSourceCommit({
   remoteUrl,
   sha,
   fetchRef,
+  sourceTreeSha = "",
   timeoutMs,
   env = {},
   runGit = git,
@@ -216,10 +223,22 @@ export function fetchSourceCommit({
         cwd: targetPath,
         timeoutMs,
         env,
-        stdio: "ignore",
       });
       if (containsCommit(targetPath, sha, timeoutMs)) {
-        return { selector: "ref" };
+        return { selector: "ref", checkoutSha: sha };
+      }
+      if (/^refs\/pull\/\d+\/merge$/.test(fetchRef) && sourceTreeSha) {
+        const fetchedSha = runGit(["rev-parse", "refs/buildchain/source-ref^{commit}"], {
+          cwd: targetPath,
+          timeoutMs,
+        });
+        const fetchedTree = runGit(["rev-parse", "refs/buildchain/source-ref^{tree}"], {
+          cwd: targetPath,
+          timeoutMs,
+        });
+        if (fetchedTree === sourceTreeSha) {
+          return { selector: "ref-tree", checkoutSha: fetchedSha };
+        }
       }
     } catch (error) {
       // A retryable transport failure belongs to the bounded outer retry. Do
@@ -234,12 +253,11 @@ export function fetchSourceCommit({
     cwd: targetPath,
     timeoutMs,
     env,
-    stdio: "ignore",
   });
   if (!containsCommit(targetPath, sha, timeoutMs)) {
     throw new Error(`fetched ${fetchRef || sha}, but ${sha} is not available`);
   }
-  return { selector: "sha" };
+  return { selector: "sha", checkoutSha: sha };
 }
 
 export function runBoundedFetch({ attempts = 1, fetch, onAttempt = () => {}, onRetry = () => {}, shouldRetry = () => true }) {
@@ -266,18 +284,30 @@ function githubRemoteUrl({ repository, serverUrl = "https://github.com" }) {
   return `${base}/${repository}.git`;
 }
 
-function verifyCheckout({ targetPath, sourceSha, sourceTreeSha = "" }) {
+function verifyCheckout({ targetPath, sourceSha, sourceTreeSha = "", fetchRef = "" }) {
   const head = git(["rev-parse", "HEAD"], { cwd: targetPath });
   const tree = git(["rev-parse", "HEAD^{tree}"], { cwd: targetPath });
   const headOk = head === sourceSha;
   const treeOk = !sourceTreeSha || tree === sourceTreeSha;
-  if (!headOk) {
+  const pullMergeTreeEquivalent = !headOk
+    && /^refs\/pull\/\d+\/merge$/.test(fetchRef)
+    && Boolean(sourceTreeSha)
+    && treeOk;
+  if (!headOk && !pullMergeTreeEquivalent) {
     throw new Error(`locked source checkout head mismatch: expected ${sourceSha}, got ${head}`);
   }
   if (!treeOk) {
     throw new Error(`locked source checkout tree mismatch: expected ${sourceTreeSha}, got ${tree}`);
   }
-  return { head, tree, headOk, treeOk };
+  return {
+    head,
+    expectedHead: sourceSha,
+    tree,
+    headOk,
+    treeOk,
+    identityOk: headOk || pullMergeTreeEquivalent,
+    identityMode: pullMergeTreeEquivalent ? "tree-equivalent-pull-merge" : "commit",
+  };
 }
 
 function writeEvidence(filePath, evidence) {
@@ -359,6 +389,7 @@ export function lockedSourceCheckout({
     durationMs: 0,
   };
   let checkoutError;
+  let checkoutSha = sha;
   if (normalizedMode !== "off") {
     try {
       if (renderedReferenceRepository) {
@@ -374,15 +405,17 @@ export function lockedSourceCheckout({
         checkoutFetchedCommit(targetPath, sha, timeoutMs);
       } else if (renderedMirrorUrl) {
         evidence.cache.transport = "mirror-url";
-        fetchSourceCommit({
+        const fetchResult = fetchSourceCommit({
           targetPath,
           remoteName: "buildchain-cache",
           remoteUrl: renderedMirrorUrl,
           sha,
           fetchRef,
+          sourceTreeSha: treeSha,
           timeoutMs,
         });
-        checkoutFetchedCommit(targetPath, sha, timeoutMs);
+        checkoutSha = fetchResult.checkoutSha || sha;
+        checkoutFetchedCommit(targetPath, checkoutSha, timeoutMs);
       } else {
         throw new Error("checkout cache is enabled but no mirror URL or reference repository template was provided");
       }
@@ -416,6 +449,7 @@ export function lockedSourceCheckout({
           remoteUrl,
           sha,
           fetchRef,
+          sourceTreeSha: treeSha,
           timeoutMs: githubTimeoutMs,
           env: githubAuthEnv(githubToken),
         }),
@@ -424,14 +458,20 @@ export function lockedSourceCheckout({
         shouldRetry: retryableGitFetchError,
       });
       evidence.cache.githubFetchAttempts = fetchResult.attempts;
+      checkoutSha = fetchResult.value.checkoutSha || sha;
     } catch (error) {
       evidence.durationMs = Date.now() - startedAt;
       writeEvidence(path.resolve(workspace, diagnosticsPath), evidence);
       throw error;
     }
-    checkoutFetchedCommit(targetPath, sha, timeoutMs);
+    checkoutFetchedCommit(targetPath, checkoutSha, timeoutMs);
   }
-  evidence.verification = verifyCheckout({ targetPath, sourceSha: sha, sourceTreeSha: treeSha });
+  evidence.verification = verifyCheckout({
+    targetPath,
+    sourceSha: sha,
+    sourceTreeSha: treeSha,
+    fetchRef,
+  });
   evidence.durationMs = Date.now() - startedAt;
   writeEvidence(path.resolve(workspace, diagnosticsPath), evidence);
   return evidence;

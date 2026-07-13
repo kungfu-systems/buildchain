@@ -477,7 +477,7 @@ function readArg(name, fallback = "") {
   return process.argv[index + 1] || "";
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (!process.env.BUILDCHAIN_EMBEDDED_ENTRYPOINT && process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
     const result = initBuildchainRepo({
       cwd: readArg("cwd", process.cwd()),

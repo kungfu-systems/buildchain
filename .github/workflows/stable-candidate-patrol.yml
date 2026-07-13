@@ -1,0 +1,205 @@
+name: Buildchain Stable Candidate Patrol
+
+on:
+  workflow_call:
+    inputs:
+      buildchain-repository:
+        description: "Buildchain runtime repository"
+        default: "kungfu-systems/buildchain"
+        type: string
+        required: false
+      buildchain-ref:
+        description: "Buildchain runtime ref"
+        default: "v2"
+        type: string
+        required: false
+      target-branch:
+        description: "Stable release branch. Empty maps the caller dev/vN/vN.M branch to release/vN/vN.M."
+        default: ""
+        type: string
+        required: false
+      ledger-ref:
+        description: "Durable machine branch for the candidate ledger. Empty derives it from the release line."
+        default: ""
+        type: string
+        required: false
+      minimum-soak-seconds:
+        description: "Minimum interval after the final required check"
+        default: 0
+        type: number
+        required: false
+      required-checks:
+        description: "Comma/newline separated commit status contexts or check-run names; alpha-release is the prerelease publication fact"
+        default: ""
+        type: string
+        required: false
+      revoked-versions:
+        description: "Exact alpha versions explicitly revoked by repository policy"
+        default: ""
+        type: string
+        required: false
+      revoke-reason:
+        description: "Auditable reason applied to revoked versions"
+        default: "repository-policy-revocation"
+        type: string
+        required: false
+      hold:
+        description: "Hold scheduled stable selection for the whole repository"
+        default: false
+        type: boolean
+        required: false
+      hold-reason:
+        description: "Auditable repository hold reason"
+        default: ""
+        type: string
+        required: false
+      release-now:
+        description: "Exact alpha version selected by explicit human authority; bypasses schedule/soak but not revocation or source identity"
+        default: ""
+        type: string
+        required: false
+      auto-promote:
+        description: "Create the exact source-lock stable PR for the selected candidate"
+        default: false
+        type: boolean
+        required: false
+      auto-merge:
+        description: "Enable GitHub auto-merge on the generated stable PR"
+        default: false
+        type: boolean
+        required: false
+      auto-approve:
+        description: "Approve the generated PR with the caller github.token after the promotion token creates it"
+        default: false
+        type: boolean
+        required: false
+      dry-run:
+        description: "Evaluate only; do not persist the ledger or create refs/PRs"
+        default: true
+        type: boolean
+        required: false
+    secrets:
+      promotion-token:
+        description: "Repository-owned token used for durable ledger, source-lock branch and PR writes"
+        required: false
+    outputs:
+      result-path:
+        value: ${{ jobs.patrol.outputs.result-path }}
+      selected:
+        value: ${{ jobs.patrol.outputs.selected }}
+      selected-version:
+        value: ${{ jobs.patrol.outputs.selected-version }}
+      selected-sha:
+        value: ${{ jobs.patrol.outputs.selected-sha }}
+      stable-version:
+        value: ${{ jobs.patrol.outputs.stable-version }}
+      promotion-pr:
+        value: ${{ jobs.patrol.outputs.promotion-pr }}
+
+permissions:
+  actions: write
+  contents: write
+  pull-requests: write
+  checks: read
+  statuses: read
+
+concurrency:
+  group: buildchain-stable-candidate-patrol-${{ github.repository }}-${{ inputs.target-branch || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  patrol:
+    runs-on: ubuntu-24.04
+    outputs:
+      result-path: ${{ steps.patrol.outputs.result-path }}
+      selected: ${{ steps.patrol.outputs.selected }}
+      selected-version: ${{ steps.patrol.outputs.selected-version }}
+      selected-sha: ${{ steps.patrol.outputs.selected-sha }}
+      stable-version: ${{ steps.patrol.outputs.stable-version }}
+      promotion-pr: ${{ steps.patrol.outputs.promotion-pr }}
+    steps:
+      - name: Resolve stable release line
+        id: line
+        shell: bash
+        env:
+          INPUT_TARGET_BRANCH: ${{ inputs.target-branch }}
+        run: |
+          target_branch="${INPUT_TARGET_BRANCH}"
+          if [ -z "${target_branch}" ]; then
+            case "${GITHUB_REF_NAME}" in
+              dev/v*/v*) target_branch="release/${GITHUB_REF_NAME#dev/}" ;;
+              *)
+                echo "::error::target-branch is required when the caller ref is not dev/vN/vN.M"
+                exit 1
+                ;;
+            esac
+          fi
+          case "${target_branch}" in
+            release/v*/v*) ;;
+            *) echo "::error::target-branch must be release/vN/vN.M, got ${target_branch}"; exit 1 ;;
+          esac
+          echo "target-branch=${target_branch}" >> "${GITHUB_OUTPUT}"
+          echo "artifact-line=${target_branch//\//-}" >> "${GITHUB_OUTPUT}"
+
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.buildchain-ref || 'v2' }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Checkout caller policy source
+        uses: actions/checkout@v7.0.0
+        with:
+          path: .buildchain/source
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "24"
+
+      - name: Install Buildchain policy parser
+        run: |
+          corepack prepare pnpm@11.7.0 --activate
+          corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile
+
+      - name: Resolve repository stable policy
+        id: policy
+        run: node .buildchain/runtime/scripts/stable-candidate-policy.mjs
+        env:
+          BUILDCHAIN_STABLE_POLICY_CWD: .buildchain/source
+
+      - name: Reconcile and select stable candidate
+        id: patrol
+        run: node .buildchain/runtime/scripts/stable-candidate-patrol.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.promotion-token || github.token }}
+          BUILDCHAIN_STABLE_PATROL_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_STABLE_PATROL_TARGET_BRANCH: ${{ steps.line.outputs.target-branch }}
+          BUILDCHAIN_STABLE_PATROL_LEDGER_REF: ${{ inputs.ledger-ref || steps.policy.outputs.ledger-ref }}
+          BUILDCHAIN_STABLE_PATROL_MINIMUM_SOAK_SECONDS: ${{ inputs.minimum-soak-seconds || steps.policy.outputs.minimum-soak-seconds }}
+          BUILDCHAIN_STABLE_PATROL_REQUIRED_CHECKS: ${{ inputs.required-checks || steps.policy.outputs.required-checks || 'alpha-release' }}
+          BUILDCHAIN_STABLE_PATROL_REVOKED_VERSIONS: ${{ inputs.revoked-versions || vars.BUILDCHAIN_STABLE_REVOKED_ALPHA_VERSIONS }}
+          BUILDCHAIN_STABLE_PATROL_REVOKE_REASON: ${{ inputs.revoke-reason || vars.BUILDCHAIN_STABLE_REVOKE_REASON }}
+          BUILDCHAIN_STABLE_PATROL_HOLD: ${{ inputs.hold || vars.BUILDCHAIN_STABLE_HOLD == 'true' }}
+          BUILDCHAIN_STABLE_PATROL_HOLD_REASON: ${{ inputs.hold-reason || vars.BUILDCHAIN_STABLE_HOLD_REASON }}
+          BUILDCHAIN_STABLE_PATROL_RELEASE_NOW: ${{ inputs.release-now }}
+          BUILDCHAIN_STABLE_PATROL_AUTO_PROMOTE: ${{ inputs.auto-promote || steps.policy.outputs.auto-promote == 'true' }}
+          BUILDCHAIN_STABLE_PATROL_AUTO_MERGE: ${{ inputs.auto-merge || steps.policy.outputs.auto-merge == 'true' }}
+          BUILDCHAIN_STABLE_PATROL_DRY_RUN: ${{ inputs.dry-run }}
+          BUILDCHAIN_STABLE_PATROL_OUTPUT_PATH: .buildchain/patrol/stable-candidate.json
+
+      - name: Approve generated stable PR
+        if: ${{ inputs.auto-approve && !inputs.dry-run && steps.patrol.outputs.promotion-pr != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PROMOTION_PR: ${{ steps.patrol.outputs.promotion-pr }}
+        run: gh pr review "${PROMOTION_PR}" --approve --body "Approved by the repository-owned Buildchain Stable Candidate Patrol policy."
+
+      - name: Upload stable candidate patrol result
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-stable-candidate-patrol-${{ steps.line.outputs.artifact-line }}
+          path: ${{ steps.patrol.outputs.result-path }}
+          if-no-files-found: error

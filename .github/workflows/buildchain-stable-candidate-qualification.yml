@@ -1,0 +1,48 @@
+name: Buildchain Stable Candidate Qualification
+
+on:
+  workflow_run:
+    workflows: ["Buildchain Alpha Self-Dogfood"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      candidate-sha:
+        description: "Exact alpha commit SHA to qualify"
+        required: true
+        type: string
+      dry-run:
+        description: "Plan missing evidence without dispatch or attestation"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  actions: read
+  contents: read
+  statuses: write
+
+concurrency:
+  group: buildchain-stable-candidate-qualification-${{ github.event.workflow_run.head_sha || inputs.candidate-sha }}
+  cancel-in-progress: false
+
+jobs:
+  qualify:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || inputs.candidate-sha }}
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "24"
+
+      - name: Produce exact-alpha qualification evidence
+        run: node scripts/stable-candidate-qualification.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+          BUILDCHAIN_QUALIFICATION_ATTESTATION_TOKEN: ${{ github.token }}
+          BUILDCHAIN_QUALIFICATION_CANDIDATE_SHA: ${{ github.event.workflow_run.head_sha || inputs.candidate-sha }}
+          BUILDCHAIN_QUALIFICATION_DRY_RUN: ${{ inputs.dry-run || false }}

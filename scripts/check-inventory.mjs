@@ -683,6 +683,8 @@ for (const requiredSnippet of [
   "checkout-cache-mode",
   "BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE",
   "sourceCheckout",
+  "Shifu Cache Profile Passthrough",
+  "opaque reference and digest",
 ]) {
   if (!reusableBuildSurfaceDoc.includes(requiredSnippet)) {
     throw new Error(`reusable build surface doc missing contract lock snippet: ${requiredSnippet}`);
@@ -732,7 +734,8 @@ for (const requiredSnippet of [
   "../packages/core/logging.js",
   "standalone.cli-bundle.create",
   "BUILDCHAIN_EMBEDDED_PACKAGE_VERSION",
-  "noExternal: [\"smol-toml\"]",
+  "BUILDCHAIN_EMBEDDED_ENTRYPOINT",
+  "noExternal: [\"smol-toml\",",
   "--macho-segment-name",
   "mainFormat: \"commonjs\"",
   "standalone.sea-blob.create",
