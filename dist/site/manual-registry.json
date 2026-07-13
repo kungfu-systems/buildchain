@@ -259,7 +259,7 @@
       "title": "Lifecycle protocol",
       "path": "docs/lifecycle-protocol.md",
       "plane": "use",
-      "digest": "sha256:953e01289d6f547a5824b99414a94e55568c1a69dccdd71aab3177c379b97bd1",
+      "digest": "sha256:3a03359ec58db04f334303256b02020f6039616e8802c19dfc00e76bbb05bf18",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
