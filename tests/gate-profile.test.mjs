@@ -5,6 +5,7 @@ import {
   createGateExecutionMatrix,
   sha256,
 } from "../scripts/gate-profile-core.mjs";
+import { windowsBatchInvocation } from "../scripts/shifu-gate-profile.mjs";
 
 const SOURCE_SHA = "1".repeat(40);
 const DIGESTS = Object.freeze({
@@ -13,6 +14,25 @@ const DIGESTS = Object.freeze({
   catalogDefinition: `sha256:${"4".repeat(64)}`,
   verifyAction: `sha256:${"5".repeat(64)}`,
   verifyDefinition: `sha256:${"6".repeat(64)}`,
+});
+
+test("Windows Gate batch commands resolve explicit relative paths before cmd.exe", () => {
+  const explicit = windowsBatchInvocation(
+    "./shifu.cmd",
+    ["gate", "run", "--profile", "dev-patrol"],
+    { cwd: "C:\\actions runner\\source", comSpec: "cmd.exe" },
+  );
+  assert.equal(explicit.command, "cmd.exe");
+  assert.deepEqual(explicit.args.slice(0, 3), ["/d", "/s", "/c"]);
+  assert.match(
+    explicit.args[3],
+    /^"C:\\actions runner\\source\\shifu\.cmd" gate run --profile dev-patrol$/,
+  );
+
+  const fromPath = windowsBatchInvocation("shifu.cmd", ["gate", "list"], {
+    cwd: "C:\\ignored",
+  });
+  assert.equal(fromPath.args[3], "shifu.cmd gate list");
 });
 
 function plan(platform, { qualifying = true, unsupported = [] } = {}) {
