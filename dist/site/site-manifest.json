@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:0735009b21cea9227f2c9b9bcbec1219898f4d211776b60aa030ace65821ec80"
+      "digest": "sha256:5df6d6110d7c33da4625a2e1ebb6b778eef9c4420379cff342229bc0b02962e1"
     },
     {
       "id": "install",
@@ -197,7 +197,7 @@
       "path": "docs/lifecycle-protocol.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:60c39693878258d275e9d47983b306faed35d6416297c14570429de73284604c"
+      "digest": "sha256:3a03359ec58db04f334303256b02020f6039616e8802c19dfc00e76bbb05bf18"
     },
     {
       "id": "reusable-build-surface",
@@ -221,7 +221,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:a868fd50875aa64ae26d8e37a5bfbc4be137ce89be3b0726e97a7a8028a667f4"
+      "digest": "sha256:3ae2bbc2df394726f350e58be1a71dd0379b99b19cd6ccf15fbe3b843f3890b6"
     },
     {
       "id": "release-flow",

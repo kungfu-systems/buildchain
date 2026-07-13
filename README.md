@@ -1,6 +1,7 @@
 # Buildchain
 
 <!-- buildchain:badges:start -->
+
 [![KFD-1: passed](https://buildchain.libkungfu.dev/badges/v1/kfd-1/passed.svg)](https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json)
 [![KFD-2: passed](https://buildchain.libkungfu.dev/badges/v1/kfd-2/passed.svg)](https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json)
 [![KFD-3: passed](https://buildchain.libkungfu.dev/badges/v1/kfd-3/passed.svg)](https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json)
@@ -199,6 +200,9 @@ Buildchain's active GitHub Action surface is deliberately small:
 
 The active reusable workflow surfaces are:
 
+- `.github/workflows/.gate-profile.yml` for project-neutral Shifu Gate profile
+  planning, capability-aware runner dispatch, receipt validation, and one
+  stable aggregate check;
 - `.github/workflows/.build.yml` for deterministic multi-platform build and
   artifact contracts;
 - `.github/workflows/build.yml` for the single-config channel router that uses
@@ -232,11 +236,11 @@ uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@
 
 Buildchain treats a reviewed branch merge as release intent:
 
-| Merge path | Meaning | Exact tag | Floating refs |
-| --- | --- | --- | --- |
-| `dev/vX/vX.Y -> alpha/vX/vX.Y` | publish the next testable alpha for a minor line | `vX.Y.Z-alpha.N` | `vX.Y-alpha`, `alpha/vX/vX.Y`, `dev/vX/vX.Y` |
-| `alpha/vX/vX.Y -> release/vX/vX.Y` | publish production for that minor line | `vX.Y.Z` | `vX.Y`, usually `vX`, `release/vX/vX.Y` |
-| `release/vX/vX.Y -> publish-gate/major` | publish the next major from a reviewed production line | `v(X+1).0.0` | `v(X+1)`, `v(X+1).0`, new dev/alpha/release branches |
+| Merge path                              | Meaning                                                | Exact tag        | Floating refs                                        |
+| --------------------------------------- | ------------------------------------------------------ | ---------------- | ---------------------------------------------------- |
+| `dev/vX/vX.Y -> alpha/vX/vX.Y`          | publish the next testable alpha for a minor line       | `vX.Y.Z-alpha.N` | `vX.Y-alpha`, `alpha/vX/vX.Y`, `dev/vX/vX.Y`         |
+| `alpha/vX/vX.Y -> release/vX/vX.Y`      | publish production for that minor line                 | `vX.Y.Z`         | `vX.Y`, usually `vX`, `release/vX/vX.Y`              |
+| `release/vX/vX.Y -> publish-gate/major` | publish the next major from a reviewed production line | `v(X+1).0.0`     | `v(X+1)`, `v(X+1).0`, new dev/alpha/release branches |
 
 Exact tags are immutable. Floating channel tags and branches are machine-updated
 by Buildchain and must remain writable by the release authority.
@@ -342,6 +346,7 @@ npm pack --dry-run --json --registry=https://registry.npmjs.org/
 - [Site bundle contract](docs/site-bundle-contract.md)
 - [Lifecycle protocol](docs/lifecycle-protocol.md)
 - [Reusable build surface](docs/reusable-build-surface.md)
+- [Shifu Gate profile orchestration](docs/shifu-gate-profiles.md)
 - [Release candidate passport](docs/release-candidate.md)
 - [Consumer issue reporting](docs/consumer-issue-reporting.md)
 - [Publish transaction](docs/publish-transaction.md)

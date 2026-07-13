@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:0735009b21cea9227f2c9b9bcbec1219898f4d211776b60aa030ace65821ec80",
+      "digest": "sha256:5df6d6110d7c33da4625a2e1ebb6b778eef9c4420379cff342229bc0b02962e1",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
