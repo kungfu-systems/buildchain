@@ -302,6 +302,10 @@ export function createGitHubStableCandidateClient({ repository: repositoryInput,
     const payload = raw ? JSON.parse(raw) : undefined;
     if (allow404 && response.status === 404) return undefined;
     if (!response.ok) throw new Error(`GitHub API ${method} ${requestPath} failed with ${response.status}: ${payload?.message || raw}`);
+    if (requestPath === "/graphql" && Array.isArray(payload?.errors) && payload.errors.length > 0) {
+      const messages = payload.errors.map((error) => text(error?.message)).filter(Boolean);
+      throw new Error(`GitHub GraphQL ${method} ${requestPath} failed: ${messages.join("; ") || "unknown GraphQL error"}`);
+    }
     return payload;
   }
   return {

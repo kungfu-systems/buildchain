@@ -28,6 +28,11 @@ on:
         default: false
         type: boolean
         required: false
+      mode:
+        description: "Check mode: verify runs install + verify; source runs install + check"
+        default: "verify"
+        type: string
+        required: false
       upload-artifacts:
         description: "Upload check lifecycle manifests and summaries"
         default: true
@@ -44,6 +49,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7.0.0
+        with:
+          fetch-depth: ${{ inputs.mode == 'source' && '0' || '1' }}
+          persist-credentials: false
 
       - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
@@ -66,14 +74,32 @@ jobs:
       - name: Install Buildchain runtime dependencies
         run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
 
+      - name: Resolve check lifecycle mode
+        id: lifecycle
+        shell: bash
+        env:
+          BUILDCHAIN_CHECK_MODE: ${{ inputs.mode }}
+        run: |
+          case "$BUILDCHAIN_CHECK_MODE" in
+            verify) stage="verify" ;;
+            source) stage="check" ;;
+            *)
+              echo "unsupported check mode: $BUILDCHAIN_CHECK_MODE" >&2
+              exit 1
+              ;;
+          esac
+          echo "stage=$stage" >> "$GITHUB_OUTPUT"
+
       - name: Validate declared check lifecycle
         run: >-
           node .buildchain/runtime/bin/buildchain.mjs validate
           --cwd "${{ inputs.working-directory }}"
           ${{ inputs.require-version-state && '--require-version-state' || '' }}
-          --require-lifecycle-stages install,verify
+          --require-lifecycle-stages install,${{ steps.lifecycle.outputs.stage }}
 
       - name: Run declared install lifecycle
+        env:
+          BUILDCHAIN_CHECK_MODE: ${{ inputs.mode }}
         run: >-
           node .buildchain/runtime/bin/buildchain.mjs lifecycle run install
           --cwd "${{ inputs.working-directory }}"
@@ -82,9 +108,11 @@ jobs:
           --manifest-path .buildchain/artifacts/check-install-manifest.json
           --summary-path .buildchain/artifacts/check-install-summary.json
 
-      - name: Run declared verify lifecycle
+      - name: Run selected check lifecycle
+        env:
+          BUILDCHAIN_CHECK_MODE: ${{ inputs.mode }}
         run: >-
-          node .buildchain/runtime/bin/buildchain.mjs lifecycle run verify
+          node .buildchain/runtime/bin/buildchain.mjs lifecycle run ${{ steps.lifecycle.outputs.stage }}
           --cwd "${{ inputs.working-directory }}"
           --required
           --artifact-name buildchain-check

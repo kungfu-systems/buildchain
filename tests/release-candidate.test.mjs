@@ -8,6 +8,7 @@ import test from "node:test";
 import {
   RELEASE_CANDIDATE_PASSPORT_CONTRACT,
   createReleaseCandidatePassport,
+  sha256Json,
   validateReleaseCandidatePassport,
 } from "../packages/core/release-candidate.js";
 import { generateReleaseCandidatePassportCli } from "../scripts/generate-release-candidate-passport.mjs";
@@ -110,6 +111,41 @@ test("release candidate passport records source lock, platform matrix, and build
   assert.equal(passport.source.treeHash, "tree-source");
   assert.equal(passport.platformMatrix.length, 1);
   assert.equal(validateReleaseCandidatePassport({ passport, buildSummary }).ok, true);
+});
+
+test("release candidate passport binds a qualifying Shifu Gate aggregate", () => {
+  const buildSummary = sampleBuildSummary();
+  const gateAggregate = {
+    contract: "buildchain.shifu-gate-aggregate/v1",
+    profile: "candidate",
+    sourceSha: SOURCE_SHA,
+    registry: { projectId: "fixture", digest: `sha256:${"b".repeat(64)}` },
+    matrixDigest: `sha256:${"c".repeat(64)}`,
+    status: "pass",
+    qualifying: true,
+    receipts: [{ platformId: "linux" }],
+    gates: [{ gateId: "source.contract" }],
+  };
+  gateAggregate.digest = `sha256:${sha256Json(gateAggregate)}`;
+  const passport = createReleaseCandidatePassport({
+    repository: "kungfu-systems/libnode",
+    targetChannel: "alpha",
+    version: "22.22.3-kf.3-alpha.7",
+    sourceHeadSha: SOURCE_SHA,
+    buildSummary,
+    gateAggregate,
+  });
+  assert.equal(passport.gateProfileEvidence.digest, gateAggregate.digest);
+  assert.equal(passport.gateProfileEvidence.receiptCount, 1);
+  assert.equal(validateReleaseCandidatePassport({ passport, buildSummary }).ok, true);
+
+  const stale = {
+    ...passport,
+    gateProfileEvidence: { ...passport.gateProfileEvidence, sourceSha: "9".repeat(40) },
+  };
+  const validation = validateReleaseCandidatePassport({ passport: stale, buildSummary });
+  assert.equal(validation.ok, false);
+  assert.match(validation.errors.join("; "), /gate profile evidence source SHA mismatch/);
 });
 
 test("release candidate passport derives channel from PR base when publish channel is none", () => {

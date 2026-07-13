@@ -69,7 +69,7 @@ on:
         type: boolean
         required: false
       auto-approve:
-        description: "Approve the generated PR with the caller github.token after the promotion token creates it"
+        description: "Approve the generated PR with an independent approval token, or the caller github.token when repository policy permits"
         default: false
         type: boolean
         required: false
@@ -81,6 +81,9 @@ on:
     secrets:
       promotion-token:
         description: "Repository-owned token used for durable ledger, source-lock branch and PR writes"
+        required: false
+      approval-token:
+        description: "Independent repository-owned token used only to approve the generated PR"
         required: false
     outputs:
       result-path:
@@ -193,7 +196,7 @@ jobs:
       - name: Approve generated stable PR
         if: ${{ inputs.auto-approve && !inputs.dry-run && steps.patrol.outputs.promotion-pr != '' }}
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.approval-token || github.token }}
           PROMOTION_PR: ${{ steps.patrol.outputs.promotion-pr }}
         run: gh pr review "${PROMOTION_PR}" --approve --body "Approved by the repository-owned Buildchain Stable Candidate Patrol policy."
 

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  createGitHubStableCandidateClient,
   normalizeStableCandidatePatrolOptions,
   runStableCandidatePatrol,
 } from "../scripts/stable-candidate-patrol.mjs";
@@ -163,4 +164,26 @@ test("tag-only candidates qualify with repository checks when alpha-release is n
     dryRun: true,
   }, fake);
   assert.equal(guarded.selection.reason, "no-qualified-candidate");
+});
+
+test("GitHub client fails closed when auto-merge GraphQL returns errors", async () => {
+  const github = createGitHubStableCandidateClient({
+    repository: "kungfu-systems/example",
+    token: "test-token",
+    fetchImpl: async () => ({
+      ok: true,
+      status: 200,
+      async text() {
+        return JSON.stringify({
+          data: { enablePullRequestAutoMerge: null },
+          errors: [{ message: "Pull request Auto merge is not allowed for this repository" }],
+        });
+      },
+    }),
+  });
+
+  await assert.rejects(
+    github.enableAutoMerge({ node_id: "PR_node" }),
+    /GitHub GraphQL POST \/graphql failed: Pull request Auto merge is not allowed/,
+  );
 });
