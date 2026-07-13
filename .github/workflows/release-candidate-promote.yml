@@ -128,7 +128,7 @@ on:
         type: string
         required: false
       publish-required-artifacts-json:
-        description: "Required publish artifacts JSON passed to the promotion action"
+        description: "Required publish artifacts JSON passed to the promotion action; ref_template may contain one {version} placeholder"
         default: ""
         type: string
         required: false
@@ -443,6 +443,60 @@ jobs:
         env:
           PACKAGE_MANAGER: ${{ inputs.package-manager }}
 
+      - name: Resolve post-release reconciliation checkout
+        id: reconciliation
+        if: ${{ needs.preflight.outputs.channel == 'release' }}
+        shell: bash
+        env:
+          BUILDCHAIN_TARGET_REF: ${{ needs.preflight.outputs.target-ref }}
+        run: |
+          if [[ ! "${BUILDCHAIN_TARGET_REF}" =~ ^release/v[0-9]+/v[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Release reconciliation requires a release/vN/vN.M target, got ${BUILDCHAIN_TARGET_REF}"
+            exit 1
+          fi
+          echo "ref=${BUILDCHAIN_TARGET_REF/release\//dev/}" >> "${GITHUB_OUTPUT}"
+          echo "workspace=.buildchain/reconciliation/dev" >> "${GITHUB_OUTPUT}"
+
+      - name: Checkout current development channel for reconciliation
+        if: ${{ steps.reconciliation.outputs.ref != '' }}
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ steps.reconciliation.outputs.ref }}
+          path: .buildchain/reconciliation/dev
+          clean: true
+          persist-credentials: false
+
+      - name: Install reconciliation dependencies
+        if: ${{ steps.reconciliation.outputs.workspace != '' }}
+        shell: bash
+        env:
+          PACKAGE_MANAGER: ${{ inputs.package-manager }}
+          RECONCILIATION_WORKSPACE: ${{ steps.reconciliation.outputs.workspace }}
+        run: |
+          case "${PACKAGE_MANAGER}" in
+            pnpm)
+              corepack pnpm@11.7.0 install --dir "${RECONCILIATION_WORKSPACE}" --frozen-lockfile
+              ;;
+            yarn)
+              yarn --cwd "${RECONCILIATION_WORKSPACE}" install --immutable || yarn --cwd "${RECONCILIATION_WORKSPACE}" install --frozen-lockfile
+              ;;
+            npm)
+              if [ -f "${RECONCILIATION_WORKSPACE}/package-lock.json" ] || [ -f "${RECONCILIATION_WORKSPACE}/npm-shrinkwrap.json" ]; then
+                npm ci --prefix "${RECONCILIATION_WORKSPACE}"
+              else
+                npm install --prefix "${RECONCILIATION_WORKSPACE}"
+              fi
+              ;;
+            custom)
+              echo "::notice::Skipping reconciliation dependency install for custom package manager."
+              ;;
+            *)
+              echo "::error::Unsupported package-manager: ${PACKAGE_MANAGER}"
+              exit 1
+              ;;
+          esac
+
       - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
         with:
@@ -646,6 +700,7 @@ jobs:
           dry-run: ${{ inputs.dry-run }}
           require-governance: "true"
           require-version-state: "true"
+          reconciliation-workspace: ${{ steps.reconciliation.outputs.workspace }}
           required-status-check: ${{ inputs.required-status-check }}
           generated-status-check-token: ${{ github.token }}
           generated-ref-update-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}

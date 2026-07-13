@@ -94,6 +94,15 @@ configuration diagnostic instead of opening a post-publish human PR. Reusable
 wrapper callers should allow `checks: write` so the generated check is owned by
 GitHub Actions and matches the managed branch protection rule.
 
+Stable promotion also protects concurrent development work. The reusable
+wrapper checks out the exact current `dev/vN/vN.M` head as a reconciliation
+workspace. If next-alpha bookkeeping cannot fast-forward that branch, the
+action reruns the declared version-state generation and verification from that
+dev tree, creates a two-parent reconciliation commit from the regenerated
+files, and fails closed if the checkout moved before the mutation boundary.
+This prevents generated projections from an older release tree from replacing
+capabilities that reached dev while the release was in progress.
+
 For Buildchain-owned automation, callers may pass
 `branch-protection-bypass-apps`, `branch-protection-bypass-users`, or
 `branch-protection-bypass-teams`. The action still configures managed
@@ -238,7 +247,16 @@ BUILDCHAIN_RELEASE_SHA
 BUILDCHAIN_RELEASE_MATERIAL_SHA
 BUILDCHAIN_PUBLISH_TOOLING_SHA
 BUILDCHAIN_PUBLISH_EVIDENCE
+BUILDCHAIN_REQUIRED_ARTIFACTS
 ```
+
+`BUILDCHAIN_REQUIRED_ARTIFACTS` is the normalized requirement array after the
+action resolves a missing artifact `ref` to `BUILDCHAIN_VERSION`, or expands an
+optional `ref_template` containing exactly one `{version}`, and binds any
+declared provenance to the current release coordinate. Template expansion
+happens after exact version selection; ambiguous or unsupported templates fail
+before `lifecycle.publish`. Requirement descriptors may omit `digest`; final
+publish evidence may not.
 
 The action outputs `transaction-id`, `transaction-state`,
 `transaction-exact-tag`, `public-release-tag`, `transaction-release-sha`,
@@ -315,7 +333,8 @@ missing floating tags or dev/alpha refs before marking the transaction
 
 Normal reruns accept already-published artifacts only when evidence matches.
 Missing required artifacts can be published on the next run. Conflicting
-artifacts put the transaction into `repair_required`; `abandoned` and
+refs, digests, or declared provenance put the transaction into
+`repair_required`; `abandoned` and
 `failed_permanently` also fail closed unless `publish-transaction-override` is
 set for a controlled repair.
 

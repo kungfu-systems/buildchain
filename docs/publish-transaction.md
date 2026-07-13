@@ -103,6 +103,7 @@ BUILDCHAIN_RELEASE_SHA
 BUILDCHAIN_RELEASE_MATERIAL_SHA
 BUILDCHAIN_PUBLISH_TOOLING_SHA
 BUILDCHAIN_PUBLISH_EVIDENCE
+BUILDCHAIN_REQUIRED_ARTIFACTS
 BUILDCHAIN_PUBLISH_MODE
 BUILDCHAIN_PUBLISH_AUTH
 BUILDCHAIN_NPM_DIST_TAG
@@ -125,6 +126,83 @@ public refs.
 `BUILDCHAIN_RELEASE_MATERIAL_SHA` is the source material whose artifacts must
 match. `BUILDCHAIN_PUBLISH_TOOLING_SHA` identifies the publishing code. A repair
 run may change tooling, but material drift fails closed.
+
+## Post-Publish Requirements And Artifact Provenance
+
+`publish-required-artifacts-json` is a pre-publish family declaration, not a
+request to guess registry digests. A descriptor must include `kind + name`; it
+may omit `ref` and `digest`. The action resolves a missing `ref` to the exact
+`BUILDCHAIN_VERSION`. Registries whose exact refs add a stable prefix or suffix
+may instead declare a `ref_template` containing exactly one `{version}`, such
+as `v{version}`. The template is expanded only after exact version selection,
+so a resumed alpha transaction receives the newly selected prerelease rather
+than the checked-out version. Declaring both `ref` and `ref_template`, using
+another placeholder, or leaving unmatched braces fails before
+`lifecycle.publish`. The action exports the normalized exact refs as
+`BUILDCHAIN_REQUIRED_ARTIFACTS`, runs `lifecycle.publish`, and then requires the
+final evidence to contain every exact member with a non-empty digest. Existing
+callers may continue supplying exact refs and digests.
+
+OCI publishers can opt into strict per-artifact provenance by adding
+`action: built` or `action: reused`. Those artifacts carry two separate
+coordinates:
+
+- `content`: the version, ref, source SHA, and material SHA that produced the
+  immutable content;
+- `release`: the exact current version/ref, target ref, source SHA, and release
+  material SHA that bind that content into this release.
+
+This distinction permits truthful cross-version reuse without claiming that an
+old OCI config was rebuilt from current material. For an OCI artifact with an
+action, final evidence also requires `platform`, positive `contract_major`, and
+`verification` containing a public manifest result, exact ref and digest,
+platform, contract major, optional parent digest, evidence location, and a
+passed named smoke policy. Buildchain cross-checks those values against the
+artifact and current transaction. Missing family members and ref, digest,
+content, release, or verification conflicts enter `repair_required` before
+public refs move.
+
+Example reused OCI evidence entry (the pre-publish requirement may omit
+`ref`, `digest`, `release`, and the observed verification values):
+
+```json
+{
+  "group": "image",
+  "kind": "oci",
+  "name": "ghcr.io/kungfu-systems/base-linux",
+  "ref": "1.2.0-alpha.3",
+  "digest": "sha256:...",
+  "action": "reused",
+  "platform": "linux/amd64",
+  "contract_major": 1,
+  "content": {
+    "version": "1.1.9",
+    "ref": "1.1.9",
+    "source_sha": "<source-sha>",
+    "material_sha": "<material-sha>"
+  },
+  "release": {
+    "version": "1.2.0-alpha.3",
+    "ref": "1.2.0-alpha.3",
+    "target_ref": "alpha/v1/v1.2",
+    "source_sha": "<current-source-sha>",
+    "material_sha": "<current-material-sha>"
+  },
+  "verification": {
+    "public_manifest": true,
+    "ref": "1.2.0-alpha.3",
+    "digest": "sha256:...",
+    "platform": "linux/amd64",
+    "contract_major": 1,
+    "evidence": "registry-inspect.json",
+    "smoke": {
+      "policy": "manifest-contract",
+      "passed": true,
+      "evidence": "smoke.json"
+    }
+  }
+}
+```
 
 ## Release Modes And Auth
 
@@ -357,7 +435,10 @@ When no state file exists, creation commands also require:
 workflow rule. The expected integration shape is:
 
 - image build writes OCI digests into publish evidence;
-- required image families are passed through `publish-required-artifacts-json`;
+- required image families are passed through `publish-required-artifacts-json`
+  before their final digests are known;
+- mixed built/reused evidence preserves content provenance separately from the
+  current release binding;
 - reruns check GHCR or the target registry and accept existing images only when
   tag and digest match;
 - preview or alpha image tags remain non-stable until the transaction evidence

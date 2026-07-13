@@ -4,7 +4,7 @@
   "product": {
     "name": "Buildchain",
     "package": "@kungfu-tech/buildchain",
-    "version": "2.12.2",
+    "version": "2.12.3-alpha.4",
     "repository": "https://github.com/kungfu-systems/buildchain"
   },
   "majorLine": "v2",
@@ -50,7 +50,7 @@
         "retryable GitHub fallback fetches use a bounded attempt budget before exact source SHA and tree verification"
       ],
       "breakingDigest": "sha256:a6a35370d6b0d0f46e1b2712dcc01961fe53c2febde95409a27a485c10a36650",
-      "auditDigest": "sha256:fe8c66aca800df5bac04bdf980ecf3dde1ab5b9047d20097b06258eabc38015a"
+      "auditDigest": "sha256:62745b34c90d223578b7e6d4121cd0c7d16f4d43f44318ee71e111a52d2139a0"
     },
     {
       "contractVersion": 1,
@@ -127,6 +127,29 @@
         "github-release-title",
         "github-release-notes"
       ],
+      "publishArtifactSchema": {
+        "requirementDigest": "optional-before-publish-required-after-publish",
+        "exactRefResolution": "missing requirement refs resolve to the promoted exact version",
+        "exactRefTemplate": "optional ref_template expands one {version} after exact version selection",
+        "provenanceActions": [
+          "built",
+          "reused"
+        ],
+        "provenanceCoordinates": [
+          "content",
+          "release"
+        ],
+        "verificationFields": [
+          "public_manifest",
+          "ref",
+          "digest",
+          "platform",
+          "contract_major",
+          "parent_digest",
+          "smoke",
+          "evidence"
+        ]
+      },
       "guarantees": [
         "promotion reuses PR-stage release-candidate artifacts",
         "promotion does not run the heavy native build matrix",
@@ -136,7 +159,7 @@
         "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes"
       ],
       "breakingDigest": "sha256:6dbae32ce3d7aab3be6957065105af574794581847b7637314dad45f5349c919",
-      "auditDigest": "sha256:960c4d986f3bfd1c31681c3a3b9fa0bc00d24b5b1c0ac1fa3b44caebb24d3452"
+      "auditDigest": "sha256:4de3e10012429d18f066e453a49a470ae889612143bca56327649d6cacd546cf"
     },
     {
       "contractVersion": 1,
@@ -180,7 +203,7 @@
         "channel-aware artifact host facts are checked against the deploy plan before adapter side effects"
       ],
       "breakingDigest": "sha256:da569f90374e878948e3d5160ed9929338ce0572473ca8ee54867b0fe1aaeace",
-      "auditDigest": "sha256:9834ea899b16cb5603551df460b9e62fa4229c320d13f91a2353b696563fe07c"
+      "auditDigest": "sha256:0bf34cb451ac3274e5cab5dc239643e3311e686b4cdc6ad628fcb7e8e89b4773"
     },
     {
       "contractVersion": 1,
@@ -216,6 +239,29 @@
         "github-release-title",
         "github-release-notes"
       ],
+      "publishArtifactSchema": {
+        "requirementDigest": "optional-before-publish-required-after-publish",
+        "exactRefResolution": "missing requirement refs resolve to the promoted exact version",
+        "exactRefTemplate": "optional ref_template expands one {version} after exact version selection",
+        "provenanceActions": [
+          "built",
+          "reused"
+        ],
+        "provenanceCoordinates": [
+          "content",
+          "release"
+        ],
+        "verificationFields": [
+          "public_manifest",
+          "ref",
+          "digest",
+          "platform",
+          "contract_major",
+          "parent_digest",
+          "smoke",
+          "evidence"
+        ]
+      },
       "guarantees": [
         "protected release refs and durable release-state are finalized by Buildchain",
         "release passport finalization is idempotent after publish side effects",
@@ -223,7 +269,7 @@
         "semver GitHub Releases are created or updated only after transaction completion, with prerelease/latest metadata derived from the public release tag"
       ],
       "breakingDigest": "sha256:a59f0910e6df842e7699139472e5dd69ac2fdd7f7213bf2cb346d1d622556874",
-      "auditDigest": "sha256:19a838fa786936a65585c00d65b15fe84c83ee19a0d41f3b6502226a966345a9"
+      "auditDigest": "sha256:61edd187a303c33eeef28ccca138e46d7494645b16e6df72719b6d632b0d8e80"
     },
     {
       "contractVersion": 1,
@@ -282,7 +328,7 @@
         "release-state SHA is recorded as a durable audit entrance"
       ],
       "breakingDigest": "sha256:b627e1b2ece9b6049517a942c5139e342e6077cdd3d8962d61cef8481b1f70ad",
-      "auditDigest": "sha256:8d5a050df580d9bb7bbf3300b8fa4d22df8478bc1028de08b5af7a902d38448d"
+      "auditDigest": "sha256:54c23c984ab1e63f8fa5310f0106927ea63c6b069219970b9145c31558c47db0"
     },
     {
       "contractVersion": 1,
@@ -331,7 +377,7 @@
         "prose-only public claims downgrade the release trust passport audit"
       ],
       "breakingDigest": "sha256:f0b636eb925ddbf45ff1a8872454ab7b4dd98857cac12bb75217830130e62a16",
-      "auditDigest": "sha256:8d5a050df580d9bb7bbf3300b8fa4d22df8478bc1028de08b5af7a902d38448d"
+      "auditDigest": "sha256:54c23c984ab1e63f8fa5310f0106927ea63c6b069219970b9145c31558c47db0"
     },
     {
       "contractVersion": 1,
@@ -481,7 +527,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:def4f995282224c7072e4534aa8c8fa7d77b3497e5cd6f00098469da70b5ff6d"
+      "auditDigest": "sha256:a4d5ae2cf51f16cc1c1ab9d344ea044e881e3a7653ca4ae4aff1f3e95d556cf9"
     },
     {
       "contractVersion": 1,
@@ -503,9 +549,9 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:6c4078f847d70ba9d2cca1149e976828c5b0244f2e66cc5232cb79936388c5d5"
+      "auditDigest": "sha256:4458f86ab03e26015a1247fcf6fd89837256b39ecd7e82dfde2140e8967d2eb0"
     }
   ],
   "compatibilityDigest": "sha256:2090784977bc7d54fc647215ef73532b9db26147a0b40ec3f56c31d611d806cc",
-  "contractDigest": "sha256:db57a57a03db285dc2d3970c3ef2dc00e72bd95a3fd2791df8990c49d847aa3f"
+  "contractDigest": "sha256:0bbe1ae0f47f8aefd8c57b395a315655f479cfec16c31f7690824c6e2923c41d"
 }

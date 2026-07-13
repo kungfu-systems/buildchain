@@ -441,8 +441,10 @@ jobs:
             const exactSha = /^[0-9a-f]{40}$/i;
             const trainRef = /^train\/v\d+\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
             const officialChannelRef = /^v\d+(?:\.\d+)?(?:-alpha)?$/;
+            const pullRequestMergeRef = /^refs\/pull\/\d+\/merge$/;
             const workflowRef = process.env.BUILDCHAIN_WORKFLOW_REF || process.env.GITHUB_WORKFLOW_REF || "";
-            const shellRef = (workflowRef.startsWith(`${repository}/.github/workflows/`)
+            const sameRepositoryWorkflow = workflowRef.startsWith(`${repository}/.github/workflows/`);
+            const shellRef = (sameRepositoryWorkflow
               ? (workflowRef.split("@").pop() || defaultRef).trim() || defaultRef
               : defaultRef).replace(/^refs\/(?:heads|tags)\//, "");
             const normalizeClass = (ref) => {
@@ -492,6 +494,13 @@ jobs:
             }
             async function resolveRef(ref) {
               if (exactSha.test(ref)) return ref;
+              if (sameRepositoryWorkflow && pullRequestMergeRef.test(ref)) {
+                const workflowSha = String(context.sha || "");
+                if (!exactSha.test(workflowSha)) {
+                  throw new Error(`current workflow SHA is invalid for Buildchain pull request merge ref: ${ref}`);
+                }
+                return workflowSha;
+              }
               const normalized = ref.replace(/^refs\/heads\//, "").replace(/^refs\/tags\//, "");
               const candidates = ref.startsWith("refs/")
                 ? [ref.replace(/^refs\//, "")]

@@ -21,6 +21,7 @@ import {
   createReleaseTransaction,
   defaultPublishEvidencePath,
   defaultReleaseStatePath,
+  planArtifactPublish,
   releaseTransactionStateRef,
   parsePublishArtifactsJson,
   planTransactionRecovery,
@@ -28,6 +29,7 @@ import {
   readReleaseTransaction,
   transitionReleaseTransaction,
   validatePublishEvidence,
+  resolvePublishArtifactRequirements,
   writeReleaseTransaction,
 } from "../../packages/core/publish-transaction.js";
 import {
@@ -363,6 +365,7 @@ function assertAllowedLocalChanges(cwd, allowedPaths) {
     ".buildchain/contract-drift/",
     ".buildchain/kfd/",
     ".buildchain/publication-result.json",
+    ".buildchain/reconciliation/",
     ".buildchain/release-candidate/",
     ".buildchain/release-evidence/",
     ".buildchain/release-passport/",
@@ -1008,7 +1011,7 @@ function promoteExistingNpmArtifacts({ cwd, artifacts, distTag }) {
 }
 
 function materialErrorRequiresRepair(error) {
-  return /release_material_sha mismatch|source_sha mismatch|release_sha mismatch|version mismatch|target_ref mismatch|artifact digest mismatch|required artifact missing/.test(
+  return /release_material_sha mismatch|source_sha mismatch|release_sha mismatch|version mismatch|target_ref mismatch|artifact digest mismatch|artifact coordinate or provenance mismatch|artifact provenance mismatch|artifact.*verification|verification\.|required artifact missing|duplicate publish artifact/.test(
     error.message || "",
   );
 }
@@ -1020,15 +1023,6 @@ function transactionHasPublishedMaterial(transaction) {
   );
 }
 
-function publishArtifactKey(artifact) {
-  return [
-    artifact?.kind || "",
-    artifact?.name || "",
-    artifact?.ref || "",
-    artifact?.digest || "",
-  ].join("\0");
-}
-
 function transactionCoversRequiredArtifacts(transaction, requiredArtifacts) {
   if (!Array.isArray(requiredArtifacts) || requiredArtifacts.length === 0) {
     return true;
@@ -1036,10 +1030,10 @@ function transactionCoversRequiredArtifacts(transaction, requiredArtifacts) {
   if (!transactionHasPublishedMaterial(transaction)) {
     return true;
   }
-  const existing = new Set(
-    (transaction.artifacts || []).map((artifact) => publishArtifactKey(artifact)),
-  );
-  return requiredArtifacts.every((artifact) => existing.has(publishArtifactKey(artifact)));
+  return planArtifactPublish({
+    requiredArtifacts,
+    existingArtifacts: transaction.artifacts || [],
+  }).complete;
 }
 
 function ensureTransactionCanResume({
@@ -1639,6 +1633,12 @@ async function runPublishTransaction({
     publishPackageSetOrder,
     publishPackageMain,
   });
+  requiredArtifacts = resolvePublishArtifactRequirements(requiredArtifacts, {
+    version,
+    targetRef,
+    sourceSha,
+    releaseMaterialSha: releaseMaterialSha || releaseSha,
+  });
   validatePublishContractForArtifacts({
     channel,
     contract: publishContract,
@@ -1801,7 +1801,7 @@ async function runPublishTransaction({
         fallbackName: "dist-tag-evidence.json",
       }),
       packageSet: packageSetFromArtifacts({
-        artifacts: requiredArtifacts,
+        artifacts: transaction.artifacts || requiredArtifacts,
         contract: publishContract,
       }),
       publishContract,
@@ -1896,6 +1896,7 @@ async function runPublishTransaction({
             BUILDCHAIN_SURFACE_PUBLISHED_AT: promotionGeneratedAt,
             BUILDCHAIN_SURFACE_TIMESTAMP_POLICY: "ci-injected",
             BUILDCHAIN_PUBLISH_EVIDENCE: resolvedEvidencePath,
+            BUILDCHAIN_REQUIRED_ARTIFACTS: JSON.stringify(requiredArtifacts),
             BUILDCHAIN_PUBLISH_MODE: publishContract.mode,
             BUILDCHAIN_PUBLISH_AUTH: publishContract.auth,
             BUILDCHAIN_NPM_DIST_TAG: publishContract.distTag,
@@ -1925,7 +1926,7 @@ async function runPublishTransaction({
       auth: publishContract.auth,
       distTag: publishContract.distTag,
       source: publishSource || "validated-evidence",
-      artifacts: requiredArtifacts,
+      artifacts: validation.evidence.artifacts,
     });
     if (transaction.state === "publishing" || transaction.state === "publish_failed") {
       transaction = transitionReleaseTransaction(transaction, "published", {
@@ -1950,7 +1951,7 @@ async function runPublishTransaction({
       evidencePath: resolvedEvidencePath,
       distTagEvidencePath,
       packageSet: packageSetFromArtifacts({
-        artifacts: requiredArtifacts,
+        artifacts: validation.evidence.artifacts,
         contract: publishContract,
       }),
       publishContract,
@@ -3238,6 +3239,7 @@ async function promoteBuildchainRefs({
   branchProtectionBypassApps = "",
   branchProtectionBypassUsers = "",
   branchProtectionBypassTeams = "",
+  reconciliationWorkspace = "",
   publishTransaction = false,
   publishCommand = "",
   publishEvidencePath = "",
@@ -3612,6 +3614,42 @@ async function promoteBuildchainRefs({
         headSha: branchSha,
         allowedPaths,
       });
+      if (protectedUpdate?.reconciliationVersion && reconciliationWorkspace) {
+        const workspaceCwd = path.resolve(cwd, reconciliationWorkspace);
+        if (!fs.existsSync(workspaceCwd)) {
+          throw new Error(`Version-state reconciliation workspace does not exist: ${workspaceCwd}`);
+        }
+        const workspaceSha = execFileSync("git", ["rev-parse", "HEAD"], {
+          cwd: workspaceCwd,
+          encoding: "utf8",
+        }).trim();
+        if (workspaceSha !== currentSha) {
+          throw new Error(
+            `Version-state reconciliation workspace ${workspaceSha} does not match current ${branch} ${currentSha}`,
+          );
+        }
+        const reconciled = await createVersionStateCommit({
+          baseSha: currentSha,
+          version: protectedUpdate.reconciliationVersion,
+          message:
+            protectedUpdate?.mergeMessage ||
+            `${protectedUpdate?.title || "Apply generated version-state"}\n\n` +
+              `Buildchain regenerated version state from current ${branch} before reconciling ` +
+              `${currentSha} with ${branchSha}.`,
+          workspaceCwd,
+          parents: [currentSha, branchSha],
+        });
+        updates.push({
+          ref: branch,
+          action: "created-version-state-merge",
+          sha: reconciled.sha,
+          sourceSha: branchSha,
+          currentSha,
+          files: reconciled.files,
+          regenerated: true,
+        });
+        return reconciled.sha;
+      }
       const { data: currentCommit } = await getGitCommitWithRetry({
         octokit,
         owner,
@@ -4188,7 +4226,13 @@ async function promoteBuildchainRefs({
     );
   };
 
-  const createVersionStateCommit = async ({ baseSha, version, message }) => {
+  const createVersionStateCommit = async ({
+    baseSha,
+    version,
+    message,
+    workspaceCwd = cwd,
+    parents = [baseSha],
+  }) => {
     if (!versionState) {
       return {
         sha: baseSha,
@@ -4198,7 +4242,7 @@ async function promoteBuildchainRefs({
       };
     }
 
-    const discovered = discoverVersionStateFiles(cwd);
+    const discovered = discoverVersionStateFiles(workspaceCwd);
     if (discovered.files.length === 0) {
       if (requireVersionState) {
         throw new Error("Strict promotion requires package version state");
@@ -4220,7 +4264,7 @@ async function promoteBuildchainRefs({
 
     const discoveredPaths = discovered.files.map((file) => file.path);
     const versionStrategy = getVersionStrategy(discovered.config);
-    const anchorManifest = loadConfiguredAnchorManifest(cwd, discovered.config);
+    const anchorManifest = loadConfiguredAnchorManifest(workspaceCwd, discovered.config);
     const strategyEnv = versionVerificationEnv(versionStrategy, anchorManifest, {
       generatedAt: promotionGeneratedAt,
       sourceSha: sha,
@@ -4287,7 +4331,7 @@ async function promoteBuildchainRefs({
         repo,
         message,
         tree: nextTree.sha,
-        parents: [baseSha],
+        parents,
         author: COMMIT_IDENTITY,
         committer: COMMIT_IDENTITY,
       });
@@ -4313,7 +4357,7 @@ async function promoteBuildchainRefs({
     };
     if (manualNext) {
       runVersionVerification({
-        cwd,
+        cwd: workspaceCwd,
         command: verificationCommand,
         loadedConfig: discovered.config,
         version,
@@ -4345,7 +4389,7 @@ async function promoteBuildchainRefs({
     }
     if (changedFiles.length === 0) {
       const verifiedChangedFiles = runVersionVerification({
-        cwd,
+        cwd: workspaceCwd,
         command: verificationCommand,
         loadedConfig: discovered.config,
         version,
@@ -4404,7 +4448,7 @@ async function promoteBuildchainRefs({
     }
 
     const verifiedChangedFiles = runVersionVerification({
-      cwd,
+      cwd: workspaceCwd,
       command: verificationCommand,
       loadedConfig: discovered.config,
       version,
@@ -5341,6 +5385,7 @@ async function promoteBuildchainRefs({
         body: `Create the generated version-state commit for ${selectedNextAlpha.tag}.`,
         allowMergeCommitOnNonFastForward: true,
         allowMergeCommitOnNonFastForwardPaths: nextAlphaVersionStateFiles,
+        reconciliationVersion: nextAlphaVersion,
       });
     }
     await ensureTag(selectedNextAlpha.tag, nextAlphaSha);

@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "d5340540f6695d48c1e7f034d12acd8f8ff7398b2b6178b42c87f654aded5fdc",
+    "sha256": "618ffc1470959b5f0e5d5061eadb4ed54d1746ef9479c9822d31d41f5e187b15",
     "summary": {
       "cliCommandCount": 76,
       "workflowCount": 43,
@@ -225,7 +225,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "d5340540f6695d48c1e7f034d12acd8f8ff7398b2b6178b42c87f654aded5fdc",
+      "sha256": "618ffc1470959b5f0e5d5061eadb4ed54d1746ef9479c9822d31d41f5e187b15",
       "summary": {
         "cliCommandCount": 76,
         "workflowCount": 43,
@@ -3445,7 +3445,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 51,
+          "inputCount": 52,
           "inputs": [
             "allow-repository",
             "branch-protection-bypass-apps",
@@ -3472,6 +3472,7 @@
             "publish-tooling-sha",
             "publish-transaction",
             "publish-transaction-override",
+            "reconciliation-workspace",
             "release-candidate-build-summary-path",
             "release-candidate-passport-path",
             "release-candidate-version",

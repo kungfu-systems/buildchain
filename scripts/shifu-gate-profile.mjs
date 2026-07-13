@@ -95,6 +95,21 @@ function cmdQuote(value) {
   return `"${value.replace(/(\\*)"/g, '$1$1\\"').replace(/(\\+)$/g, "$1$1")}"`;
 }
 
+export function windowsBatchInvocation(command, args, { cwd, comSpec } = {}) {
+  const resolvedCommand = /[\\/]/u.test(command)
+    ? path.win32.resolve(cwd || process.cwd(), command)
+    : command;
+  return {
+    command: comSpec || process.env.ComSpec || "cmd.exe",
+    args: [
+      "/d",
+      "/s",
+      "/c",
+      [resolvedCommand, ...args].map(cmdQuote).join(" "),
+    ],
+  };
+}
+
 function runArgv(
   argv,
   args,
@@ -104,10 +119,13 @@ function runArgv(
   const commandArgs = [...argv.slice(1), ...args];
   const windowsBatch =
     process.platform === "win32" && /\.(?:cmd|bat)$/i.test(command);
+  const batchInvocation = windowsBatch
+    ? windowsBatchInvocation(command, commandArgs, { cwd })
+    : null;
   const result = windowsBatch
     ? spawnSync(
-        process.env.ComSpec || "cmd.exe",
-        ["/d", "/s", "/c", [command, ...commandArgs].map(cmdQuote).join(" ")],
+        batchInvocation.command,
+        batchInvocation.args,
         {
           cwd,
           env,
