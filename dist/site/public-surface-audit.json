@@ -864,12 +864,13 @@
         "inputs": [
           "buildchain-ref",
           "buildchain-repository",
+          "mode",
           "node-version",
           "require-version-state",
           "upload-artifacts",
           "working-directory"
         ],
-        "inputCount": 6
+        "inputCount": 7
       },
       {
         "id": "dev-pr-auto-merge",
@@ -2690,8 +2691,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "ab57fec294efb9dde1612787bfd0d532b5bb95298b5da14a2b51a5e71b9c7dcc",
-    "workflowRegistryDigest": "c821196e68a63cefb5686b9005a01aeb7d6cf5248a6146d1e276b87ee765e9f6",
-    "pageRegistryDigest": "c4c73230264352bc86f2f4170335ff0c1bb399b4040323627b6f9e10a32d9ea0"
+    "workflowRegistryDigest": "e7e3db196607ac6dbf4058552a84692c86c4e5cbcee7080c6cde9d1b71873daf",
+    "pageRegistryDigest": "8e2240c074e8e7b08761eba80c2650e6e9b94c8a6192266bb1b5b07a8aa08d38"
   },
   "comparison": {
     "missingCliRegistry": [],
