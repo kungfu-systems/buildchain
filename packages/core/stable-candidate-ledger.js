@@ -235,7 +235,9 @@ export function markStableCandidatePromoted(
   const version = exactAlpha(versionInput).version;
   const candidate = ledger.candidates.find((entry) => entry.version === version);
   if (!candidate) throw new Error(`candidate ${version} is not registered`);
-  if (!candidate.qualification?.ok && candidate.decision?.reason !== "human-release-now") {
+  const humanAuthority = candidate.decision?.reason === "human-release-now"
+    || candidate.promotionRequest?.authority === "human";
+  if (!candidate.qualification?.ok && !humanAuthority) {
     throw new Error(`candidate ${version} is not qualified for promotion`);
   }
   candidate.state = "promoted";
