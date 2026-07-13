@@ -1703,6 +1703,109 @@ test("release passport collection bundles publish evidence as a sibling audit as
   assert.equal(report.ok, true);
 });
 
+test("release passport preserves a five-image mixed built and reused provenance family", async () => {
+  const cwd = tempDir("release-passport-oci-provenance");
+  const assetsDir = path.join(cwd, "dist");
+  fs.mkdirSync(assetsDir, { recursive: true });
+  fs.writeFileSync(path.join(assetsDir, "family.json"), "{}\n");
+  const version = "1.2.0-alpha.3";
+  const sourceSha = "a".repeat(40);
+  const releaseSha = "b".repeat(40);
+  const names = ["base-linux", "node24-pnpm", "latex-pdf-builder", "native-linux-x64", "kungfu-verify"];
+  const artifacts = names.map((name, index) => {
+    const action = index === 2 ? "built" : "reused";
+    const digest = `sha256:image-${index}`;
+    const contentIsCurrent = action === "built";
+    const artifact = {
+      group: "image",
+      kind: "oci",
+      name: `ghcr.io/kungfu-systems/${name}`,
+      ref: version,
+      digest,
+      action,
+      platform: "linux/amd64",
+      contract_major: 1,
+      content: {
+        version: contentIsCurrent ? version : "1.1.9",
+        ref: contentIsCurrent ? version : "1.1.9",
+        source_sha: contentIsCurrent ? sourceSha : "c".repeat(40),
+        material_sha: contentIsCurrent ? releaseSha : "d".repeat(40),
+      },
+      release: {
+        version,
+        ref: version,
+        target_ref: "alpha/v1/v1.2",
+        source_sha: sourceSha,
+        material_sha: releaseSha,
+      },
+      verification: {
+        public_manifest: true,
+        ref: version,
+        digest,
+        platform: "linux/amd64",
+        contract_major: 1,
+        evidence: `registry-inspect-${index}.json`,
+        smoke: {
+          policy: "manifest-contract",
+          passed: true,
+          evidence: `smoke-${index}.json`,
+        },
+      },
+    };
+    if (index > 0) {
+      artifact.parent_digest = `sha256:image-${index - 1}`;
+      artifact.verification.parent_digest = artifact.parent_digest;
+    }
+    return artifact;
+  });
+  const publishEvidencePath = writeJson(path.join(cwd, "publish-evidence.json"), {
+    schema: 1,
+    version,
+    channel: "alpha",
+    source_sha: sourceSha,
+    release_sha: releaseSha,
+    target_ref: "alpha/v1/v1.2",
+    release_material_sha: releaseSha,
+    publish_tooling_sha: releaseSha,
+    artifacts,
+  });
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: `v${version}`,
+    repository: "kungfu-systems/build-images",
+    productName: "Build Images",
+    sourceSha,
+    assetsDir,
+    outputDir: "release-passport",
+    publishEvidenceJson: publishEvidencePath,
+    releaseJsonExtra: JSON.stringify({
+      channel: "alpha",
+      targetRef: "alpha/v1/v1.2",
+      releaseSha,
+      releaseMaterialSha: releaseSha,
+      publishToolingSha: releaseSha,
+    }),
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const publishedFamily = passport.artifacts.filter((artifact) => artifact.kind === "oci");
+
+  assert.equal(collected.checkReport.ok, true, JSON.stringify(collected.checkReport.issues));
+  assert.deepEqual(publishedFamily.map((artifact) => artifact.action), [
+    "reused", "reused", "built", "reused", "reused",
+  ]);
+  assert.equal(publishedFamily[0].content.material_sha, "d".repeat(40));
+  assert.equal(publishedFamily[2].release.material_sha, releaseSha);
+  assert.equal(publishedFamily[4].verification.smoke.passed, true);
+
+  const drifted = JSON.parse(fs.readFileSync(path.join(collected.outputDir, "evidence.json"), "utf8"));
+  drifted.artifacts[0].release.material_sha = "e".repeat(40);
+  writeJson(path.join(collected.outputDir, "evidence.json"), drifted);
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+  assert.equal(report.ok, false);
+  assert.match(JSON.stringify(report.issues), /artifact provenance mismatch|release\.material_sha/);
+});
+
 test("Buildchain source KFD claim registry is stable across semver version-state bumps", () => {
   const cwd = tempDir("buildchain-self-kfd-stable-claims");
   writeJson(path.join(cwd, "package.json"), {

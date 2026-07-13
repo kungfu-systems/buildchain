@@ -50,6 +50,97 @@ function optionalString(value) {
   return value === undefined || value === null ? "" : String(value);
 }
 
+function hasOwn(value, key) {
+  return Object.prototype.hasOwnProperty.call(value, key);
+}
+
+function optionalPositiveInteger(value, label) {
+  if (value === undefined || value === null || value === "") {
+    return undefined;
+  }
+  const normalized = Number(value);
+  if (!Number.isInteger(normalized) || normalized < 1) {
+    throw new Error(`${label} must be a positive integer`);
+  }
+  return normalized;
+}
+
+function normalizeArtifactCoordinate(value, label, { partial = false } = {}) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`${label} must be an object`);
+  }
+  const field = (key) => {
+    if (partial && !hasOwn(value, key)) {
+      return undefined;
+    }
+    return assertNonEmptyString(value[key], `${label}.${key}`);
+  };
+  const normalized = {};
+  for (const key of ["version", "ref", "source_sha", "material_sha"]) {
+    const item = field(key);
+    if (item !== undefined) {
+      normalized[key] = item;
+    }
+  }
+  if (hasOwn(value, "target_ref")) {
+    normalized.target_ref = assertNonEmptyString(value.target_ref, `${label}.target_ref`);
+  }
+  return normalized;
+}
+
+function normalizeArtifactVerification(value, label, { partial = false } = {}) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`${label} must be an object`);
+  }
+  const normalized = {};
+  const stringField = (key) => {
+    if (hasOwn(value, key)) {
+      normalized[key] = assertNonEmptyString(value[key], `${label}.${key}`);
+    }
+  };
+  for (const key of ["ref", "digest", "platform", "parent_digest", "evidence"]) {
+    stringField(key);
+  }
+  if (hasOwn(value, "public_manifest")) {
+    normalized.public_manifest = value.public_manifest === true;
+  }
+  const contractMajor = optionalPositiveInteger(value.contract_major, `${label}.contract_major`);
+  if (contractMajor !== undefined) {
+    normalized.contract_major = contractMajor;
+  }
+  if (hasOwn(value, "smoke")) {
+    if (!value.smoke || typeof value.smoke !== "object" || Array.isArray(value.smoke)) {
+      throw new Error(`${label}.smoke must be an object`);
+    }
+    normalized.smoke = {};
+    for (const key of ["policy", "evidence"]) {
+      if (hasOwn(value.smoke, key)) {
+        normalized.smoke[key] = assertNonEmptyString(value.smoke[key], `${label}.smoke.${key}`);
+      }
+    }
+    if (hasOwn(value.smoke, "passed")) {
+      normalized.smoke.passed = value.smoke.passed === true;
+    }
+  }
+  if (!partial) {
+    for (const key of ["ref", "digest", "platform", "evidence"]) {
+      assertNonEmptyString(normalized[key], `${label}.${key}`);
+    }
+    if (normalized.public_manifest !== true) {
+      throw new Error(`${label}.public_manifest must be true`);
+    }
+    if (normalized.contract_major === undefined) {
+      throw new Error(`${label}.contract_major must be a positive integer`);
+    }
+    if (!normalized.smoke || normalized.smoke.passed !== true) {
+      throw new Error(`${label}.smoke.passed must be true`);
+    }
+    assertNonEmptyString(normalized.smoke.policy, `${label}.smoke.policy`);
+    assertNonEmptyString(normalized.smoke.evidence, `${label}.smoke.evidence`);
+  }
+  return normalized;
+}
+
 function posixPath(value) {
   return String(value || "").split(path.sep).join("/");
 }
@@ -215,7 +306,11 @@ function artifactMatchesRequirement(actual, required) {
   );
 }
 
-export function normalizePublishArtifact(artifact, label = "artifact") {
+export function normalizePublishArtifact(
+  artifact,
+  label = "artifact",
+  { requireDigest = true, partialProvenance = !requireDigest } = {},
+) {
   if (!artifact || typeof artifact !== "object" || Array.isArray(artifact)) {
     throw new Error(`${label} must be an object`);
   }
@@ -223,15 +318,84 @@ export function normalizePublishArtifact(artifact, label = "artifact") {
   if (role && !["main", "platform"].includes(role)) {
     throw new Error(`${label}.role must be one of main or platform`);
   }
-  return {
+  const action = optionalString(artifact.action);
+  if (action && !["built", "reused"].includes(action)) {
+    throw new Error(`${label}.action must be one of built or reused`);
+  }
+  const digest = requireDigest
+    ? assertNonEmptyString(artifact.digest, `${label}.digest`)
+    : optionalString(artifact.digest);
+  const contractMajor = optionalPositiveInteger(artifact.contract_major, `${label}.contract_major`);
+  const normalized = {
     group: optionalString(artifact.group),
     kind: assertNonEmptyString(artifact.kind, `${label}.kind`),
     name: assertNonEmptyString(artifact.name, `${label}.name`),
     ref: optionalString(artifact.ref),
-    digest: assertNonEmptyString(artifact.digest, `${label}.digest`),
+    digest,
     role,
     required: artifact.required === undefined ? true : Boolean(artifact.required),
   };
+  if (action) {
+    normalized.action = action;
+  }
+  for (const key of ["platform", "parent_digest"]) {
+    if (hasOwn(artifact, key)) {
+      normalized[key] = assertNonEmptyString(artifact[key], `${label}.${key}`);
+    }
+  }
+  if (contractMajor !== undefined) {
+    normalized.contract_major = contractMajor;
+  }
+  for (const key of ["content", "release"]) {
+    if (hasOwn(artifact, key)) {
+      normalized[key] = normalizeArtifactCoordinate(
+        artifact[key],
+        `${label}.${key}`,
+        { partial: partialProvenance },
+      );
+    }
+  }
+  if (hasOwn(artifact, "verification")) {
+    normalized.verification = normalizeArtifactVerification(
+      artifact.verification,
+      `${label}.verification`,
+      { partial: partialProvenance },
+    );
+  }
+  if (requireDigest && action) {
+    for (const key of ["content", "release"]) {
+      if (!normalized[key]) {
+        throw new Error(`${label}.${key} is required when action is ${action}`);
+      }
+    }
+    if (normalized.kind === "oci") {
+      if (!normalized.platform) {
+        throw new Error(`${label}.platform is required for OCI provenance`);
+      }
+      if (!normalized.contract_major) {
+        throw new Error(`${label}.contract_major is required for OCI provenance`);
+      }
+      if (!normalized.verification) {
+        throw new Error(`${label}.verification is required for OCI provenance`);
+      }
+      const verification = normalized.verification;
+      const comparisons = [
+        [verification.ref, normalized.ref, "ref"],
+        [verification.digest, normalized.digest, "digest"],
+        [verification.platform, normalized.platform, "platform"],
+        [verification.contract_major, normalized.contract_major, "contract_major"],
+        [verification.parent_digest || "", normalized.parent_digest || "", "parent_digest"],
+      ];
+      for (const [actual, expected, field] of comparisons) {
+        if (actual !== expected) {
+          throw new Error(
+            `${label}.verification.${field} mismatch: expected ${expected || "<empty>"}, got ${actual || "<empty>"}`,
+          );
+        }
+      }
+    }
+  }
+  return normalized;
 }
 
 export function parsePublishArtifactsJson(value, label = "publish artifacts") {
@@ -244,7 +408,7 @@ export function parsePublishArtifactsJson(value, label = "publish artifacts") {
     throw new Error(`${label} must be a JSON array`);
   }
   return parsed.map((artifact, index) =>
-    normalizePublishArtifact(artifact, `${label}[${index}]`),
+    normalizePublishArtifact(artifact, `${label}[${index}]`, { requireDigest: false }),
   );
 }
 
@@ -260,6 +424,14 @@ export function normalizePublishEvidence(evidence) {
         normalizePublishArtifact(artifact, `artifacts[${index}]`),
       )
     : [];
+  const identities = new Set();
+  for (const artifact of artifacts) {
+    const identity = artifactIdentity(artifact);
+    if (identities.has(identity)) {
+      throw new Error(`duplicate publish artifact: ${artifact.kind}:${artifact.name}:${artifact.ref}`);
+    }
+    identities.add(identity);
+  }
   return {
     schema: 1,
     version: assertNonEmptyString(evidence.version, "evidence.version"),
@@ -282,25 +454,49 @@ export function readPublishEvidence(filePath) {
 
 export function planArtifactPublish({ requiredArtifacts = [], existingArtifacts = [] } = {}) {
   const required = requiredArtifacts.map((artifact, index) =>
-    normalizePublishArtifact(artifact, `requiredArtifacts[${index}]`),
+    normalizePublishArtifact(artifact, `requiredArtifacts[${index}]`, { requireDigest: false }),
   );
   const existing = existingArtifacts.map((artifact, index) =>
     normalizePublishArtifact(artifact, `existingArtifacts[${index}]`),
   );
-  const existingByIdentity = new Map(existing.map((artifact) => [artifactIdentity(artifact), artifact]));
   const publish = [];
   const accepted = [];
   const conflicts = [];
   for (const artifact of required) {
-    const current =
-      existingByIdentity.get(artifactIdentity(artifact)) ||
-      existing.find((candidate) => artifactMatchesRequirement(candidate, artifact));
+    const candidates = existing.filter((candidate) => (
+      candidate.kind === artifact.kind &&
+      candidate.name === artifact.name &&
+      (!artifact.group || candidate.group === artifact.group)
+    ));
+    const current = candidates.find((candidate) => artifactMatchesRequirement(candidate, artifact));
     if (!current) {
+      if (candidates.length > 0) {
+        conflicts.push({ expected: artifact, actual: candidates[0], fields: ["ref"] });
+        continue;
+      }
       publish.push(artifact);
       continue;
     }
-    if (current.digest !== artifact.digest) {
-      conflicts.push({ expected: artifact, actual: current });
+    const fields = [];
+    if (artifact.digest && current.digest !== artifact.digest) {
+      fields.push("digest");
+    }
+    const compareSubset = (actual, expected, prefix = "") => {
+      for (const [key, value] of Object.entries(expected || {})) {
+        if (["group", "kind", "name", "ref", "digest", "role", "required"].includes(key) && !prefix) {
+          continue;
+        }
+        const field = prefix ? `${prefix}.${key}` : key;
+        if (value && typeof value === "object" && !Array.isArray(value)) {
+          compareSubset(actual?.[key], value, field);
+        } else if (actual?.[key] !== value) {
+          fields.push(field);
+        }
+      }
+    };
+    compareSubset(current, artifact);
+    if (fields.length > 0) {
+      conflicts.push({ expected: artifact, actual: current, fields });
       continue;
     }
     accepted.push(current);
@@ -312,6 +508,40 @@ export function planArtifactPublish({ requiredArtifacts = [], existingArtifacts 
     complete: publish.length === 0 && conflicts.length === 0,
     repairRequired: conflicts.length > 0,
   };
+}
+
+export function resolvePublishArtifactRequirements(
+  requiredArtifacts,
+  { version, targetRef, sourceSha, releaseMaterialSha } = {},
+) {
+  return requiredArtifacts.map((artifact, index) => {
+    const normalized = normalizePublishArtifact(
+      artifact,
+      `requiredArtifacts[${index}]`,
+      { requireDigest: false },
+    );
+    normalized.ref ||= assertNonEmptyString(version, "version");
+    if (!normalized.action) {
+      return normalized;
+    }
+    const current = {
+      version: assertNonEmptyString(version, "version"),
+      ref: normalized.ref,
+      source_sha: assertNonEmptyString(sourceSha, "sourceSha"),
+      material_sha: assertNonEmptyString(releaseMaterialSha, "releaseMaterialSha"),
+    };
+    if (normalized.action === "built") {
+      normalized.content = { ...current, ...(normalized.content || {}) };
+    } else if (!normalized.content) {
+      throw new Error(`requiredArtifacts[${index}].content is required when action is reused`);
+    }
+    normalized.release = {
+      ...current,
+      target_ref: assertNonEmptyString(targetRef, "targetRef"),
+      ...(normalized.release || {}),
+    };
+    return normalized;
+  });
 }
 
 export function validatePublishEvidence({
@@ -354,9 +584,30 @@ export function validatePublishEvidence({
     );
   }
   for (const conflict of artifactPlan.conflicts) {
-    errors.push(
-      `artifact digest mismatch: ${conflict.expected.kind}:${conflict.expected.name}`,
-    );
+    const fields = conflict.fields || ["digest"];
+    const category = fields.length === 1 && fields[0] === "digest"
+      ? "artifact digest mismatch"
+      : "artifact coordinate or provenance mismatch";
+    errors.push(`${category}: ${conflict.expected.kind}:${conflict.expected.name}:${fields.join(",")}`);
+  }
+  for (const [index, artifact] of normalized.artifacts.entries()) {
+    if (!artifact.action) {
+      continue;
+    }
+    const checks = [
+      [artifact.release?.version, version, "release.version"],
+      [artifact.release?.ref, artifact.ref, "release.ref"],
+      [artifact.release?.target_ref, targetRef, "release.target_ref"],
+      [artifact.release?.source_sha, sourceSha, "release.source_sha"],
+      [artifact.release?.material_sha, releaseMaterialSha, "release.material_sha"],
+    ];
+    for (const [actual, expected, field] of checks) {
+      if (actual !== expected) {
+        errors.push(
+          `artifact provenance mismatch: artifacts[${index}].${field}: expected ${expected || "<empty>"}, got ${actual || "<empty>"}`,
+        );
+      }
+    }
   }
 
   return {

@@ -1915,6 +1915,7 @@ import path from "node:path";
 
 fs.mkdirSync(process.env.BUILDCHAIN_EVIDENCE_DIR, { recursive: true });
 fs.appendFileSync("order.log", "publish\\n");
+fs.writeFileSync("required-artifacts.json", process.env.BUILDCHAIN_REQUIRED_ARTIFACTS + "\\n");
 fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   schema: 1,
   version: process.env.BUILDCHAIN_VERSION,
@@ -1950,8 +1951,6 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
       {
         kind: "npm",
         name: "@kungfu-tech/buildchain",
-        ref: "1.0.0-alpha.0",
-        digest: "sha256:alpha",
       },
     ]),
   });
@@ -1961,6 +1960,18 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   assert.equal(result.publishTransaction.state, "complete");
   assert.equal(result.publishTransaction.failure, "");
   assert.equal(result.publishTransaction.stateRef, "buildchain/release-state/1-0-0-alpha-0");
+  assert.deepEqual(
+    JSON.parse(fs.readFileSync(path.join(cwd, "required-artifacts.json"), "utf8")),
+    [{
+      group: "",
+      kind: "npm",
+      name: "@kungfu-tech/buildchain",
+      ref: "1.0.0-alpha.0",
+      digest: "",
+      role: "",
+      required: true,
+    }],
+  );
   assert.equal(refs.has("heads/buildchain/release-state/1-0-0-alpha-0"), true);
   assert.equal(refs.get("tags/v1.0.0-alpha.0"), alphaSha);
   assert.equal(refs.get("tags/v1.0-alpha"), alphaSha);
@@ -1976,6 +1987,98 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
     "update:tags/v1.0-alpha",
     "update:tags/v1-alpha",
   ]);
+});
+
+test("OCI provenance conflicts enter repair_required before alpha refs move", async () => {
+  const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[lifecycle.publish]
+command = "node scripts/publish.mjs"
+`,
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "0.0.0-alpha.0",
+      packageManager: "pnpm@11.7.0",
+    },
+    "scripts/publish.mjs": `
+import fs from "node:fs";
+
+const [required] = JSON.parse(process.env.BUILDCHAIN_REQUIRED_ARTIFACTS);
+const digest = "sha256:reused";
+fs.mkdirSync(process.env.BUILDCHAIN_EVIDENCE_DIR, { recursive: true });
+fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
+  schema: 1,
+  version: process.env.BUILDCHAIN_VERSION,
+  channel: process.env.BUILDCHAIN_CHANNEL,
+  source_sha: process.env.BUILDCHAIN_SOURCE_SHA,
+  release_sha: process.env.BUILDCHAIN_RELEASE_SHA,
+  target_ref: process.env.BUILDCHAIN_TARGET_REF,
+  release_material_sha: process.env.BUILDCHAIN_RELEASE_MATERIAL_SHA,
+  publish_tooling_sha: process.env.BUILDCHAIN_PUBLISH_TOOLING_SHA,
+  artifacts: [{
+    ...required,
+    digest,
+    verification: {
+      public_manifest: true,
+      ref: required.ref,
+      digest: "sha256:registry-conflict",
+      platform: required.platform,
+      contract_major: required.contract_major,
+      evidence: "registry-inspect.json",
+      smoke: { policy: "manifest-contract", passed: true, evidence: "smoke.json" }
+    }
+  }]
+}, null, 2) + "\\n");
+`,
+  });
+  const { octokit, refs } = createGitMock({
+    refs: new Map([["heads/alpha/v1/v1.0", SHA]]),
+  });
+
+  await assert.rejects(
+    () => promoteBuildchainRefs({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sha: SHA,
+      targetRef: "alpha/v1/v1.0",
+      cwd,
+      publishTransaction: true,
+      publishRequiredArtifactsJson: JSON.stringify([{
+        group: "image",
+        kind: "oci",
+        name: "ghcr.io/kungfu-systems/base-linux",
+        action: "reused",
+        platform: "linux/amd64",
+        contract_major: 1,
+        content: {
+          version: "0.9.9",
+          ref: "0.9.9",
+          source_sha: "c".repeat(40),
+          material_sha: "d".repeat(40),
+        },
+      }]),
+    }),
+    /verification\.digest mismatch/,
+  );
+
+  const state = JSON.parse(fs.readFileSync(
+    path.join(cwd, ".buildchain/release-state/v1.0.0-alpha.0.json"),
+    "utf8",
+  ));
+  assert.equal(state.state, "repair_required");
+  assert.equal(refs.has("tags/v1.0.0-alpha.0"), false);
+  assert.equal(refs.get("heads/alpha/v1/v1.0"), SHA);
 });
 
 test("release final-version trusted publishing runs without npm token auth", async () => {
@@ -2295,6 +2398,7 @@ exit 64
         digest: "sha512-existing",
         role: "platform",
         required: true,
+        platform: "linux-x64",
       },
       {
         group: "",
@@ -2304,6 +2408,7 @@ exit 64
         digest: "sha512-existing",
         role: "platform",
         required: true,
+        platform: "darwin-arm64",
       },
       {
         group: "",
@@ -2313,6 +2418,7 @@ exit 64
         digest: "sha512-existing",
         role: "platform",
         required: true,
+        platform: "win32-x64",
       },
       {
         group: "",

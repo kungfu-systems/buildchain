@@ -238,7 +238,13 @@ BUILDCHAIN_RELEASE_SHA
 BUILDCHAIN_RELEASE_MATERIAL_SHA
 BUILDCHAIN_PUBLISH_TOOLING_SHA
 BUILDCHAIN_PUBLISH_EVIDENCE
+BUILDCHAIN_REQUIRED_ARTIFACTS
 ```
+
+`BUILDCHAIN_REQUIRED_ARTIFACTS` is the normalized requirement array after the
+action resolves a missing artifact `ref` to `BUILDCHAIN_VERSION` and binds any
+declared provenance to the current release coordinate. Requirement descriptors
+may omit `digest`; final publish evidence may not.
 
 The action outputs `transaction-id`, `transaction-state`,
 `transaction-exact-tag`, `public-release-tag`, `transaction-release-sha`,
@@ -315,7 +321,8 @@ missing floating tags or dev/alpha refs before marking the transaction
 
 Normal reruns accept already-published artifacts only when evidence matches.
 Missing required artifacts can be published on the next run. Conflicting
-artifacts put the transaction into `repair_required`; `abandoned` and
+refs, digests, or declared provenance put the transaction into
+`repair_required`; `abandoned` and
 `failed_permanently` also fail closed unless `publish-transaction-override` is
 set for a controlled repair.
 
