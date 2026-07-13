@@ -26,8 +26,13 @@ on:
         type: string
         required: true
       gate-command-json:
-        description: "Project-owned Shifu argv by platform; Buildchain never evaluates a shell string"
+        description: "Project-owned Shifu execution argv by platform; Buildchain never evaluates a shell string"
         default: '{"linux":["./shifu"],"macos":["./shifu"],"windows":["./shifu.cmd"]}'
+        type: string
+        required: false
+      gate-plan-command-json:
+        description: "Optional lightweight Shifu planning argv by platform; defaults to gate-command-json"
+        default: ""
         type: string
         required: false
       gate-registry:
@@ -230,6 +235,7 @@ jobs:
           BUILDCHAIN_GATE_PROFILE: ${{ inputs.gate-profile }}
           BUILDCHAIN_GATE_INCLUDE_ADVISORY: ${{ inputs.include-advisory }}
           BUILDCHAIN_GATE_COMMAND_JSON: ${{ inputs.gate-command-json }}
+          BUILDCHAIN_GATE_PLAN_COMMAND_JSON: ${{ inputs.gate-plan-command-json }}
           BUILDCHAIN_GATE_REGISTRY: ${{ inputs.gate-registry }}
           BUILDCHAIN_GATE_ENVIRONMENT_JSON: ${{ inputs.gate-environment-json }}
           BUILDCHAIN_SHIFU_CACHE_PROFILE_REF: ${{ inputs.shifu-cache-profile-ref }}

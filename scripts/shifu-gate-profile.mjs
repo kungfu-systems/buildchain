@@ -138,7 +138,10 @@ function planMode() {
   const profile = process.env.BUILDCHAIN_GATE_PROFILE || "";
   const includeAdvisory =
     process.env.BUILDCHAIN_GATE_INCLUDE_ADVISORY === "true";
-  const commandJson = process.env.BUILDCHAIN_GATE_COMMAND_JSON || '["./shifu"]';
+  const commandJson =
+    process.env.BUILDCHAIN_GATE_PLAN_COMMAND_JSON ||
+    process.env.BUILDCHAIN_GATE_COMMAND_JSON ||
+    '["./shifu"]';
   const registry = process.env.BUILDCHAIN_GATE_REGISTRY || "";
   const cwd = path.resolve(
     process.env.BUILDCHAIN_GATE_SOURCE_CWD || process.cwd(),

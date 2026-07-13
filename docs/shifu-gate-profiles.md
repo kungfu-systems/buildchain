@@ -114,6 +114,13 @@ gate-command-json: >-
   {"linux":["./tools/shifu"],"macos":["./tools/shifu"],"windows":["./tools/shifu.cmd"]}
 ```
 
+`gate-command-json` is the execution command. If execution needs a cache,
+container, or other project-owned wrapper that should not make the read-only
+plan depend on that service, pass a separate lightweight argv map through
+`gate-plan-command-json`. It defaults to the execution command for backward
+compatibility; Buildchain still treats both inputs as argv and never evaluates
+a shell string.
+
 Projects may also pass non-sensitive scalar environment through
 `gate-environment-json`; Buildchain validates the JSON shape and forwards it
 without interpreting names or values. Cache profile references use the same
