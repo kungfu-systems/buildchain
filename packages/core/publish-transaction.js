@@ -326,15 +326,31 @@ export function normalizePublishArtifact(
     ? assertNonEmptyString(artifact.digest, `${label}.digest`)
     : optionalString(artifact.digest);
   const contractMajor = optionalPositiveInteger(artifact.contract_major, `${label}.contract_major`);
+  const ref = optionalString(artifact.ref);
+  const refTemplate = optionalString(artifact.ref_template);
+  if (/[{}]/.test(ref)) {
+    throw new Error(`${label}.ref must be exact and cannot contain template braces; use ref_template`);
+  }
+  if (ref && refTemplate) {
+    throw new Error(`${label} cannot declare both ref and ref_template`);
+  }
+  if (refTemplate && !/^[^{}]*\{version\}[^{}]*$/.test(refTemplate)) {
+    throw new Error(
+      `${label}.ref_template must contain exactly one {version} placeholder and no other braces`,
+    );
+  }
   const normalized = {
     group: optionalString(artifact.group),
     kind: assertNonEmptyString(artifact.kind, `${label}.kind`),
     name: assertNonEmptyString(artifact.name, `${label}.name`),
-    ref: optionalString(artifact.ref),
+    ref,
     digest,
     role,
     required: artifact.required === undefined ? true : Boolean(artifact.required),
   };
+  if (refTemplate) {
+    normalized.ref_template = refTemplate;
+  }
   if (action) {
     normalized.action = action;
   }
@@ -520,12 +536,17 @@ export function resolvePublishArtifactRequirements(
       `requiredArtifacts[${index}]`,
       { requireDigest: false },
     );
-    normalized.ref ||= assertNonEmptyString(version, "version");
+    const exactVersion = assertNonEmptyString(version, "version");
+    if (normalized.ref_template) {
+      normalized.ref = normalized.ref_template.replace("{version}", exactVersion);
+      delete normalized.ref_template;
+    }
+    normalized.ref ||= exactVersion;
     if (!normalized.action) {
       return normalized;
     }
     const current = {
-      version: assertNonEmptyString(version, "version"),
+      version: exactVersion,
       ref: normalized.ref,
       source_sha: assertNonEmptyString(sourceSha, "sourceSha"),
       material_sha: assertNonEmptyString(releaseMaterialSha, "releaseMaterialSha"),

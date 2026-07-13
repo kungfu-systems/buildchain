@@ -12,6 +12,7 @@ import {
   defaultReleaseStatePath,
   planArtifactPublish,
   planTransactionRecovery,
+  parsePublishArtifactsJson,
   readReleaseTransaction,
   resolvePublishArtifactRequirements,
   transitionReleaseTransaction,
@@ -146,6 +147,50 @@ test("post-publish requirements resolve the exact release ref without inventing 
   });
 
   assert.equal(validation.valid, true, validation.errors.join("\n"));
+});
+
+test("post-publish requirements expand exact ref templates after version selection", () => {
+  const [artifact] = resolvePublishArtifactRequirements(parsePublishArtifactsJson(JSON.stringify([{
+    group: "image",
+    kind: "oci",
+    name: "ghcr.io/kungfu-systems/base-linux",
+    ref_template: "v{version}",
+  }])), {
+    version: "1.2.0-alpha.4",
+    targetRef: "alpha/v1/v1.2",
+    sourceSha: SHA,
+    releaseMaterialSha: RELEASE_SHA,
+  });
+
+  assert.deepEqual(artifact, {
+    group: "image",
+    kind: "oci",
+    name: "ghcr.io/kungfu-systems/base-linux",
+    ref: "v1.2.0-alpha.4",
+    digest: "",
+    role: "",
+    required: true,
+  });
+});
+
+test("post-publish ref templates reject ambiguity and unsupported placeholders", () => {
+  for (const descriptor of [
+    { ref: "v{version}" },
+    { ref: "v1.2.3", ref_template: "v{version}" },
+    { ref_template: "v{tag}" },
+    { ref_template: "v{version" },
+    { ref_template: "v{version}{version}" },
+    { ref_template: "v1.2.3" },
+  ]) {
+    assert.throws(
+      () => parsePublishArtifactsJson(JSON.stringify([{
+        kind: "oci",
+        name: "ghcr.io/kungfu-systems/base-linux",
+        ...descriptor,
+      }])),
+      /ref_template|both ref and ref_template|template braces/,
+    );
+  }
 });
 
 test("mixed OCI family provenance is preserved and validated fail closed", () => {

@@ -130,6 +130,7 @@
       "publishArtifactSchema": {
         "requirementDigest": "optional-before-publish-required-after-publish",
         "exactRefResolution": "missing requirement refs resolve to the promoted exact version",
+        "exactRefTemplate": "optional ref_template expands one {version} after exact version selection",
         "provenanceActions": [
           "built",
           "reused"
@@ -158,7 +159,7 @@
         "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes"
       ],
       "breakingDigest": "sha256:6dbae32ce3d7aab3be6957065105af574794581847b7637314dad45f5349c919",
-      "auditDigest": "sha256:bf2a50bbcf74dcae9e7cf71de8c075bfd03bffea81a6322efcb2521520f5051b"
+      "auditDigest": "sha256:4de3e10012429d18f066e453a49a470ae889612143bca56327649d6cacd546cf"
     },
     {
       "contractVersion": 1,
@@ -241,6 +242,7 @@
       "publishArtifactSchema": {
         "requirementDigest": "optional-before-publish-required-after-publish",
         "exactRefResolution": "missing requirement refs resolve to the promoted exact version",
+        "exactRefTemplate": "optional ref_template expands one {version} after exact version selection",
         "provenanceActions": [
           "built",
           "reused"
@@ -267,7 +269,7 @@
         "semver GitHub Releases are created or updated only after transaction completion, with prerelease/latest metadata derived from the public release tag"
       ],
       "breakingDigest": "sha256:a59f0910e6df842e7699139472e5dd69ac2fdd7f7213bf2cb346d1d622556874",
-      "auditDigest": "sha256:cf039e6b9b1c89d462ffe480b3fc399e91e0981d86814bd33dc84e2fbb7e6cdc"
+      "auditDigest": "sha256:61edd187a303c33eeef28ccca138e46d7494645b16e6df72719b6d632b0d8e80"
     },
     {
       "contractVersion": 1,
@@ -525,7 +527,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:52e3af74c41d722c0359cc9bf4e22e2cc50ec80d7b7402505ad28579c385371a"
+      "auditDigest": "sha256:a4d5ae2cf51f16cc1c1ab9d344ea044e881e3a7653ca4ae4aff1f3e95d556cf9"
     },
     {
       "contractVersion": 1,
@@ -547,9 +549,9 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:f6ee8028c7575067af9c5c35be3642a302d28ddfa14fa6721af03ba0372cad6e"
+      "auditDigest": "sha256:4458f86ab03e26015a1247fcf6fd89837256b39ecd7e82dfde2140e8967d2eb0"
     }
   ],
   "compatibilityDigest": "sha256:2090784977bc7d54fc647215ef73532b9db26147a0b40ec3f56c31d611d806cc",
-  "contractDigest": "sha256:5ee7c348a981c062fe8feb5defed0899a2bc4614dd2cc2a14f000a824b53be11"
+  "contractDigest": "sha256:1c122583e99c5153e81d4c792489b7c03a1726d09d801a238fb62ea5ec14be9d"
 }

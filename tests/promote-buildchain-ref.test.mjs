@@ -2110,12 +2110,14 @@ command = "node scripts/publish.mjs"
     "scripts/publish.mjs": `
 import fs from "node:fs";
 
+const requiredArtifacts = JSON.parse(process.env.BUILDCHAIN_REQUIRED_ARTIFACTS);
 fs.mkdirSync(process.env.BUILDCHAIN_EVIDENCE_DIR, { recursive: true });
 fs.writeFileSync("publish-env.json", JSON.stringify({
   mode: process.env.BUILDCHAIN_PUBLISH_MODE,
   auth: process.env.BUILDCHAIN_PUBLISH_AUTH,
   distTag: process.env.BUILDCHAIN_NPM_DIST_TAG,
-  tokenConfigured: Boolean(process.env.NODE_AUTH_TOKEN || process.env.NPM_TOKEN || process.env.npm_config__authToken)
+  tokenConfigured: Boolean(process.env.NODE_AUTH_TOKEN || process.env.NPM_TOKEN || process.env.npm_config__authToken),
+  requiredArtifacts
 }, null, 2) + "\\n");
 fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   schema: 1,
@@ -2126,12 +2128,10 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   target_ref: process.env.BUILDCHAIN_TARGET_REF,
   release_material_sha: process.env.BUILDCHAIN_RELEASE_MATERIAL_SHA,
   publish_tooling_sha: process.env.BUILDCHAIN_PUBLISH_TOOLING_SHA,
-  artifacts: [{
-    kind: "npm",
-    name: "@kungfu-tech/buildchain",
-    ref: process.env.BUILDCHAIN_VERSION,
-    digest: "sha256:release"
-  }]
+  artifacts: requiredArtifacts.map((artifact) => ({
+    ...artifact,
+    digest: "sha256:release-image"
+  }))
 }, null, 2) + "\\n");
 `,
   });
@@ -2161,10 +2161,9 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
       releasePassportImpactJson: productionImpactJson(),
       publishRequiredArtifactsJson: JSON.stringify([
         {
-          kind: "npm",
-          name: "@kungfu-tech/buildchain",
-          ref: "1.0.0",
-          digest: "sha256:release",
+          kind: "oci",
+          name: "ghcr.io/kungfu-systems/build-images/base-linux",
+          ref_template: "v{version}",
         },
       ]),
     });
@@ -2178,6 +2177,15 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
         auth: "trusted-publishing",
         distTag: "latest",
         tokenConfigured: false,
+        requiredArtifacts: [{
+          group: "",
+          kind: "oci",
+          name: "ghcr.io/kungfu-systems/build-images/base-linux",
+          ref: "v1.0.0",
+          digest: "",
+          role: "",
+          required: true,
+        }],
       },
     );
   } finally {
@@ -2191,7 +2199,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   }
 });
 
-test("publish transaction skips alpha versions occupied by durable state refs", async () => {
+test("publish transaction expands ref templates after skipping occupied alpha versions", async () => {
   const cwd = makeTempWorkspace({
     "buildchain.toml": `
 schema = 1
@@ -2215,7 +2223,9 @@ command = "node scripts/publish.mjs"
     "scripts/publish.mjs": `
 import fs from "node:fs";
 
+const [required] = JSON.parse(process.env.BUILDCHAIN_REQUIRED_ARTIFACTS);
 fs.mkdirSync(process.env.BUILDCHAIN_EVIDENCE_DIR, { recursive: true });
+fs.writeFileSync("required-artifacts.json", process.env.BUILDCHAIN_REQUIRED_ARTIFACTS + "\\n");
 fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   schema: 1,
   version: process.env.BUILDCHAIN_VERSION,
@@ -2226,9 +2236,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   release_material_sha: process.env.BUILDCHAIN_RELEASE_MATERIAL_SHA,
   publish_tooling_sha: process.env.BUILDCHAIN_PUBLISH_TOOLING_SHA,
   artifacts: [{
-    kind: "npm",
-    name: "@kungfu-tech/buildchain",
-    ref: process.env.BUILDCHAIN_VERSION,
+    ...required,
     digest: "sha256:alpha1"
   }]
 }, null, 2) + "\\n");
@@ -2237,6 +2245,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   const { octokit, refs, commits } = createGitMock({
     refs: new Map([
       ["heads/alpha/v1/v1.0", SHA],
+      ["tags/v1.0.0-alpha.0", OTHER_SHA],
       ["heads/buildchain/release-state/1-0-0-alpha-0", OTHER_SHA],
     ]),
   });
@@ -2251,10 +2260,9 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
     publishTransaction: true,
     publishRequiredArtifactsJson: JSON.stringify([
       {
-        kind: "npm",
-        name: "@kungfu-tech/buildchain",
-        ref: "1.0.0-alpha.1",
-        digest: "sha256:alpha1",
+        kind: "oci",
+        name: "ghcr.io/kungfu-systems/build-images/base-linux",
+        ref_template: "v{version}",
       },
     ]),
   });
@@ -2262,9 +2270,86 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   assert.equal(result.publishTransaction.state, "complete");
   assert.equal(result.publishTransaction.exactTag, "v1.0.0-alpha.1");
   assert.equal(result.publishTransaction.stateRef, "buildchain/release-state/1-0-0-alpha-1");
-  assert.equal(refs.has("tags/v1.0.0-alpha.0"), false);
+  assert.equal(refs.get("tags/v1.0.0-alpha.0"), OTHER_SHA);
   assert.equal(refs.has("tags/v1.0.0-alpha.1"), true);
   assert.equal(refs.has("heads/buildchain/release-state/1-0-0-alpha-1"), true);
+  assert.deepEqual(
+    JSON.parse(fs.readFileSync(path.join(cwd, "required-artifacts.json"), "utf8")),
+    [{
+      group: "",
+      kind: "oci",
+      name: "ghcr.io/kungfu-systems/build-images/base-linux",
+      ref: "v1.0.0-alpha.1",
+      digest: "",
+      role: "",
+      required: true,
+    }],
+  );
+  const transaction = JSON.parse(fs.readFileSync(
+    path.join(cwd, result.publishTransaction.statePath),
+    "utf8",
+  ));
+  assert.equal(transaction.artifacts[0].ref, "v1.0.0-alpha.1");
+  const passport = JSON.parse(fs.readFileSync(
+    path.join(cwd, result.publishTransaction.releasePassportPath),
+    "utf8",
+  ));
+  assert.equal(
+    passport.artifacts.find((artifact) => artifact.kind === "oci")?.ref,
+    "v1.0.0-alpha.1",
+  );
+});
+
+test("invalid ref templates fail before lifecycle publish", async () => {
+  for (const refTemplate of ["v{tag}", "v{version", "v{version}{version}"]) {
+    const cwd = makeTempWorkspace({
+      "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[lifecycle.publish]
+command = "node scripts/publish.mjs"
+`,
+      "package.json": {
+        name: "@kungfu-tech/buildchain",
+        version: "0.0.0-alpha.0",
+        packageManager: "pnpm@11.7.0",
+      },
+      "scripts/publish.mjs": `
+import fs from "node:fs";
+fs.writeFileSync("publish-ran", "unexpected\\n");
+`,
+    });
+    const { octokit } = createGitMock({
+      refs: new Map([["heads/alpha/v1/v1.0", SHA]]),
+    });
+
+    await assert.rejects(
+      () => promoteBuildchainRefs({
+        octokit,
+        owner: "kungfu-systems",
+        repo: "buildchain",
+        sha: SHA,
+        targetRef: "alpha/v1/v1.0",
+        cwd,
+        publishTransaction: true,
+        publishRequiredArtifactsJson: JSON.stringify([{
+          kind: "oci",
+          name: "ghcr.io/kungfu-systems/build-images/base-linux",
+          ref_template: refTemplate,
+        }]),
+      }),
+      /ref_template/,
+    );
+    assert.equal(fs.existsSync(path.join(cwd, "publish-ran")), false);
+  }
 });
 
 test("release publish transaction can promote existing npm artifacts by dist tag", async () => {
