@@ -49,6 +49,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7.0.0
+        with:
+          fetch-depth: ${{ inputs.mode == 'source' && 0 || 1 }}
+          persist-credentials: false
 
       - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
@@ -95,6 +98,8 @@ jobs:
           --require-lifecycle-stages install,${{ steps.lifecycle.outputs.stage }}
 
       - name: Run declared install lifecycle
+        env:
+          BUILDCHAIN_CHECK_MODE: ${{ inputs.mode }}
         run: >-
           node .buildchain/runtime/bin/buildchain.mjs lifecycle run install
           --cwd "${{ inputs.working-directory }}"
@@ -104,6 +109,8 @@ jobs:
           --summary-path .buildchain/artifacts/check-install-summary.json
 
       - name: Run selected check lifecycle
+        env:
+          BUILDCHAIN_CHECK_MODE: ${{ inputs.mode }}
         run: >-
           node .buildchain/runtime/bin/buildchain.mjs lifecycle run ${{ steps.lifecycle.outputs.stage }}
           --cwd "${{ inputs.working-directory }}"
