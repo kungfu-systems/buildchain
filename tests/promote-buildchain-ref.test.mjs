@@ -4009,7 +4009,6 @@ test("release finalization uses the transaction alpha source after next-alpha ad
 test("release finalization merges generated next-alpha state into diverged dev", async () => {
   const releaseHeadSha = SHA;
   const alphaHeadSha = "a".repeat(40);
-  const devHeadSha = "b".repeat(40);
   const cwd = makeTempWorkspace({
     "package.json": {
       name: "@kungfu-tech/buildchain",
@@ -4017,7 +4016,75 @@ test("release finalization merges generated next-alpha state into diverged dev",
       packageManager: "pnpm@11.7.0",
     },
   });
-  const { octokit, refs, commits, trees, commitLog } = createGitMock({
+  const reconciliationWorkspace = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[[version.files]]
+type = "json"
+path = "dist/site/buildchain-contract.json"
+key = "product.version"
+
+[lifecycle.version-state]
+command = "node scripts/generate-site-contract.mjs"
+
+[lifecycle.verify]
+command = "node scripts/check-site-contract.mjs"
+`,
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "1.0.0-alpha.0",
+      packageManager: "pnpm@11.7.0",
+    },
+    "feature.json": { capability: "oci-family-provenance" },
+    "dist/site/buildchain-contract.json": {
+      product: { version: "1.0.0-alpha.0" },
+      capabilities: [],
+    },
+    "scripts/generate-site-contract.mjs": `
+import fs from "node:fs";
+const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+const feature = JSON.parse(fs.readFileSync("feature.json", "utf8"));
+fs.writeFileSync("dist/site/buildchain-contract.json", JSON.stringify({
+  product: { version: pkg.version },
+  capabilities: [feature.capability]
+}, null, 2) + "\\n");
+`,
+    "scripts/check-site-contract.mjs": `
+import assert from "node:assert/strict";
+import fs from "node:fs";
+const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+const feature = JSON.parse(fs.readFileSync("feature.json", "utf8"));
+const contract = JSON.parse(fs.readFileSync("dist/site/buildchain-contract.json", "utf8"));
+assert.equal(contract.product.version, pkg.version);
+assert.deepEqual(contract.capabilities, [feature.capability]);
+`,
+  });
+  run(["git", "init"], reconciliationWorkspace);
+  run(["git", "add", "."], reconciliationWorkspace);
+  run([
+    "git",
+    "-c",
+    "user.name=Test",
+    "-c",
+    "user.email=test@example.com",
+    "commit",
+    "-m",
+    "init",
+  ], reconciliationWorkspace);
+  const devHeadSha = execFileSync("git", ["rev-parse", "HEAD"], {
+    cwd: reconciliationWorkspace,
+    encoding: "utf8",
+  }).trim();
+  const { octokit, refs, blobs, commits, trees, commitLog } = createGitMock({
     refs: new Map([
       ["heads/release/v1/v1.0", releaseHeadSha],
       ["heads/alpha/v1/v1.0", alphaHeadSha],
@@ -4029,6 +4096,7 @@ test("release finalization merges generated next-alpha state into diverged dev",
   const originalPackageBlob = "blob-package-alpha-0";
   const sharedActionBlob = "blob-action-current";
   const devRetrospectiveBlob = "blob-dev-retrospective";
+  const devContractBlob = "blob-dev-contract";
   trees.set("alpha-tree", [
     { path: "package.json", mode: "100644", type: "blob", sha: originalPackageBlob },
     {
@@ -4051,6 +4119,12 @@ test("release finalization merges generated next-alpha state into diverged dev",
       mode: "100644",
       type: "blob",
       sha: devRetrospectiveBlob,
+    },
+    {
+      path: "dist/site/buildchain-contract.json",
+      mode: "100644",
+      type: "blob",
+      sha: devContractBlob,
     },
   ]);
   commits.set(releaseHeadSha, {
@@ -4112,6 +4186,7 @@ test("release finalization merges generated next-alpha state into diverged dev",
     sha: releaseHeadSha,
     targetRef: "release/v1/v1.0",
     cwd,
+    reconciliationWorkspace,
     requiredStatusCheck: "check",
   });
 
@@ -4129,6 +4204,16 @@ test("release finalization merges generated next-alpha state into diverged dev",
   assert.ok(releaseVersionCommit);
   assert.ok(nextAlphaCommit);
   assert.ok(devMergeCommit);
+  const reconciledContractEntry = trees.get(devMergeCommit.tree).find(
+    (entry) => entry.path === "dist/site/buildchain-contract.json",
+  );
+  const reconciledContract = JSON.parse(
+    Buffer.from(blobs.get(reconciledContractEntry.sha).content, "base64").toString("utf8"),
+  );
+  assert.deepEqual(reconciledContract, {
+    product: { version: "1.0.1-alpha.0" },
+    capabilities: ["oci-family-provenance"],
+  });
   assert.ok(
     trees.get(devMergeCommit.tree).some(
       (entry) =>
@@ -4157,12 +4242,13 @@ test("release finalization merges generated next-alpha state into diverged dev",
         update.action === "created-version-state-merge" &&
         update.sha === devMergeCommit.sha &&
         update.sourceSha === nextAlphaCommit.sha &&
-        update.currentSha === devHeadSha,
+        update.currentSha === devHeadSha &&
+        update.regenerated === true,
     ),
   );
 });
 
-test("completed stable release defers a failing next-alpha reconciliation", async () => {
+test("completed stable release fails closed when the dev reconciliation checkout moved", async () => {
   const releaseHeadSha = SHA;
   const alphaHeadSha = "c".repeat(40);
   const devHeadSha = "d".repeat(40);
@@ -4173,6 +4259,25 @@ test("completed stable release defers a failing next-alpha reconciliation", asyn
       packageManager: "pnpm@11.7.0",
     },
   });
+  const reconciliationWorkspace = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "1.0.0-alpha.0",
+      packageManager: "pnpm@11.7.0",
+    },
+  });
+  run(["git", "init"], reconciliationWorkspace);
+  run(["git", "add", "."], reconciliationWorkspace);
+  run([
+    "git",
+    "-c",
+    "user.name=Test",
+    "-c",
+    "user.email=test@example.com",
+    "commit",
+    "-m",
+    "stale checkout",
+  ], reconciliationWorkspace);
   const { octokit, refs, commits, trees } = createGitMock({
     refs: new Map([
       ["heads/release/v1/v1.0", releaseHeadSha],
@@ -4211,13 +4316,6 @@ test("completed stable release defers a failing next-alpha reconciliation", asyn
     }
     return originalUpdateRef(request);
   };
-  const originalCreateTree = octokit.rest.git.createTree;
-  octokit.rest.git.createTree = async (request) => {
-    if (request.base_tree === "dev-tree") {
-      throw new Error("post-complete bookkeeping denied");
-    }
-    return originalCreateTree(request);
-  };
   octokit.rest.checks = { create: async () => ({ data: { id: 1 } }) };
   octokit.rest.repos = {
     getBranchProtection: async () => ({ data: protectedChannel() }),
@@ -4230,12 +4328,13 @@ test("completed stable release defers a failing next-alpha reconciliation", asyn
     sha: releaseHeadSha,
     targetRef: "release/v1/v1.0",
     cwd,
+    reconciliationWorkspace,
   });
 
   assert.equal(result.nextAlphaRequired, true);
   assert.match(
     result.updates.find((update) => update.action === "deferred-post-release-bookkeeping")?.reason || "",
-    /post-complete bookkeeping denied/,
+    /reconciliation workspace .* does not match current dev\/v1\/v1\.0/,
   );
   assert.ok(refs.has("tags/v1.0.0"));
   assert.equal(refs.get("tags/v1.0"), refs.get("tags/v1.0.0"));

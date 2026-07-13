@@ -365,6 +365,7 @@ function assertAllowedLocalChanges(cwd, allowedPaths) {
     ".buildchain/contract-drift/",
     ".buildchain/kfd/",
     ".buildchain/publication-result.json",
+    ".buildchain/reconciliation/",
     ".buildchain/release-candidate/",
     ".buildchain/release-evidence/",
     ".buildchain/release-passport/",
@@ -3238,6 +3239,7 @@ async function promoteBuildchainRefs({
   branchProtectionBypassApps = "",
   branchProtectionBypassUsers = "",
   branchProtectionBypassTeams = "",
+  reconciliationWorkspace = "",
   publishTransaction = false,
   publishCommand = "",
   publishEvidencePath = "",
@@ -3612,6 +3614,42 @@ async function promoteBuildchainRefs({
         headSha: branchSha,
         allowedPaths,
       });
+      if (protectedUpdate?.reconciliationVersion && reconciliationWorkspace) {
+        const workspaceCwd = path.resolve(cwd, reconciliationWorkspace);
+        if (!fs.existsSync(workspaceCwd)) {
+          throw new Error(`Version-state reconciliation workspace does not exist: ${workspaceCwd}`);
+        }
+        const workspaceSha = execFileSync("git", ["rev-parse", "HEAD"], {
+          cwd: workspaceCwd,
+          encoding: "utf8",
+        }).trim();
+        if (workspaceSha !== currentSha) {
+          throw new Error(
+            `Version-state reconciliation workspace ${workspaceSha} does not match current ${branch} ${currentSha}`,
+          );
+        }
+        const reconciled = await createVersionStateCommit({
+          baseSha: currentSha,
+          version: protectedUpdate.reconciliationVersion,
+          message:
+            protectedUpdate?.mergeMessage ||
+            `${protectedUpdate?.title || "Apply generated version-state"}\n\n` +
+              `Buildchain regenerated version state from current ${branch} before reconciling ` +
+              `${currentSha} with ${branchSha}.`,
+          workspaceCwd,
+          parents: [currentSha, branchSha],
+        });
+        updates.push({
+          ref: branch,
+          action: "created-version-state-merge",
+          sha: reconciled.sha,
+          sourceSha: branchSha,
+          currentSha,
+          files: reconciled.files,
+          regenerated: true,
+        });
+        return reconciled.sha;
+      }
       const { data: currentCommit } = await getGitCommitWithRetry({
         octokit,
         owner,
@@ -4188,7 +4226,13 @@ async function promoteBuildchainRefs({
     );
   };
 
-  const createVersionStateCommit = async ({ baseSha, version, message }) => {
+  const createVersionStateCommit = async ({
+    baseSha,
+    version,
+    message,
+    workspaceCwd = cwd,
+    parents = [baseSha],
+  }) => {
     if (!versionState) {
       return {
         sha: baseSha,
@@ -4198,7 +4242,7 @@ async function promoteBuildchainRefs({
       };
     }
 
-    const discovered = discoverVersionStateFiles(cwd);
+    const discovered = discoverVersionStateFiles(workspaceCwd);
     if (discovered.files.length === 0) {
       if (requireVersionState) {
         throw new Error("Strict promotion requires package version state");
@@ -4220,7 +4264,7 @@ async function promoteBuildchainRefs({
 
     const discoveredPaths = discovered.files.map((file) => file.path);
     const versionStrategy = getVersionStrategy(discovered.config);
-    const anchorManifest = loadConfiguredAnchorManifest(cwd, discovered.config);
+    const anchorManifest = loadConfiguredAnchorManifest(workspaceCwd, discovered.config);
     const strategyEnv = versionVerificationEnv(versionStrategy, anchorManifest, {
       generatedAt: promotionGeneratedAt,
       sourceSha: sha,
@@ -4287,7 +4331,7 @@ async function promoteBuildchainRefs({
         repo,
         message,
         tree: nextTree.sha,
-        parents: [baseSha],
+        parents,
         author: COMMIT_IDENTITY,
         committer: COMMIT_IDENTITY,
       });
@@ -4313,7 +4357,7 @@ async function promoteBuildchainRefs({
     };
     if (manualNext) {
       runVersionVerification({
-        cwd,
+        cwd: workspaceCwd,
         command: verificationCommand,
         loadedConfig: discovered.config,
         version,
@@ -4345,7 +4389,7 @@ async function promoteBuildchainRefs({
     }
     if (changedFiles.length === 0) {
       const verifiedChangedFiles = runVersionVerification({
-        cwd,
+        cwd: workspaceCwd,
         command: verificationCommand,
         loadedConfig: discovered.config,
         version,
@@ -4404,7 +4448,7 @@ async function promoteBuildchainRefs({
     }
 
     const verifiedChangedFiles = runVersionVerification({
-      cwd,
+      cwd: workspaceCwd,
       command: verificationCommand,
       loadedConfig: discovered.config,
       version,
@@ -5341,6 +5385,7 @@ async function promoteBuildchainRefs({
         body: `Create the generated version-state commit for ${selectedNextAlpha.tag}.`,
         allowMergeCommitOnNonFastForward: true,
         allowMergeCommitOnNonFastForwardPaths: nextAlphaVersionStateFiles,
+        reconciliationVersion: nextAlphaVersion,
       });
     }
     await ensureTag(selectedNextAlpha.tag, nextAlphaSha);
