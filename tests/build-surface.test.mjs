@@ -856,13 +856,25 @@ test("check workflow preserves verify mode and exposes source-check mode", () =>
   assert.match(reusable, /mode:/);
   assert.match(reusable, /default: "verify"/);
   assert.match(reusable, /runs-on: ubuntu-24\.04/);
+  assert.match(reusable, /fetch-depth: \$\{\{ inputs\.mode == 'source' && 0 \|\| 1 \}\}/);
+  assert.match(reusable, /persist-credentials: false/);
   assert.match(reusable, /Run declared install lifecycle/);
   assert.match(reusable, /lifecycle run install/);
   assert.match(reusable, /verify\) stage="verify"/);
   assert.match(reusable, /source\) stage="check"/);
   assert.match(reusable, /--require-lifecycle-stages install,\$\{\{ steps\.lifecycle\.outputs\.stage \}\}/);
   assert.match(reusable, /lifecycle run \$\{\{ steps\.lifecycle\.outputs\.stage \}\}/);
+  assert.equal(
+    (reusable.match(/BUILDCHAIN_CHECK_MODE: \$\{\{ inputs\.mode \}\}/g) || []).length,
+    3,
+  );
   assert.match(reusable, /if: \$\{\{ inputs\.upload-artifacts \}\}/);
+  const lifecycleDocs = fs.readFileSync(
+    path.join(root, "docs/lifecycle-protocol.md"),
+    "utf8",
+  );
+  assert.match(lifecycleDocs, /BUILDCHAIN_CHECK_MODE=source/);
+  assert.match(lifecycleDocs, /BUILDCHAIN_CHECK_MODE=verify/);
   assert.match(verify, /Checkout Buildchain runtime/);
   assert.match(verify, /Validate declared check lifecycle/);
   assert.match(verify, /lifecycle run install/);
@@ -873,30 +885,37 @@ test("source-check fixture executes only install and check", () => {
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-source-check-"));
   fs.cpSync(path.join(root, "fixtures/source-check-shaped"), workspace, { recursive: true });
 
-  runLifecycle({
-    cwd: workspace,
-    workspace,
-    stageName: "install",
-    required: true,
-    manifestPath: ".buildchain/artifacts/install-manifest.json",
-    summaryPath: ".buildchain/artifacts/install-summary.json",
-  });
-  runLifecycle({
-    cwd: workspace,
-    workspace,
-    stageName: "check",
-    required: true,
-    manifestPath: ".buildchain/artifacts/check-manifest.json",
-    summaryPath: ".buildchain/artifacts/check-summary.json",
-  });
+  const previousMode = process.env.BUILDCHAIN_CHECK_MODE;
+  process.env.BUILDCHAIN_CHECK_MODE = "source";
+  try {
+    runLifecycle({
+      cwd: workspace,
+      workspace,
+      stageName: "install",
+      required: true,
+      manifestPath: ".buildchain/artifacts/install-manifest.json",
+      summaryPath: ".buildchain/artifacts/install-summary.json",
+    });
+    runLifecycle({
+      cwd: workspace,
+      workspace,
+      stageName: "check",
+      required: true,
+      manifestPath: ".buildchain/artifacts/check-manifest.json",
+      summaryPath: ".buildchain/artifacts/check-summary.json",
+    });
 
-  const events = fs.readFileSync(
-    path.join(workspace, ".buildchain/source-check-events.txt"),
-    "utf8",
-  ).trim().split("\n");
-  assert.deepEqual(events, ["install", "check"]);
-  assert.ok(!events.includes("build"));
-  assert.ok(!events.includes("verify"));
+    const events = fs.readFileSync(
+      path.join(workspace, ".buildchain/source-check-events.txt"),
+      "utf8",
+    ).trim().split("\n");
+    assert.deepEqual(events, ["install:source", "check:source"]);
+    assert.ok(!events.some((event) => event.startsWith("build:")));
+    assert.ok(!events.some((event) => event.startsWith("verify:")));
+  } finally {
+    if (previousMode === undefined) delete process.env.BUILDCHAIN_CHECK_MODE;
+    else process.env.BUILDCHAIN_CHECK_MODE = previousMode;
+  }
 });
 
 test("reusable web-surface workflow exposes preview, cleanup, staging, and production gates", () => {
