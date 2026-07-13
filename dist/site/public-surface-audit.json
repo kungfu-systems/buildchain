@@ -474,6 +474,7 @@
           "buildchain-ref",
           "buildchain-repository",
           "gate-command-json",
+          "gate-environment-json",
           "gate-profile",
           "gate-registry",
           "include-advisory",
@@ -481,11 +482,13 @@
           "platforms-json",
           "require-trusted-event",
           "runner-preset",
+          "shifu-cache-profile-digest",
+          "shifu-cache-profile-ref",
           "source-ref",
           "untrusted-policy",
           "working-directory"
         ],
-        "inputCount": 15
+        "inputCount": 18
       },
       {
         "id": ".release-docker",
@@ -2719,8 +2722,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "ab57fec294efb9dde1612787bfd0d532b5bb95298b5da14a2b51a5e71b9c7dcc",
-    "workflowRegistryDigest": "f45470b7d599474d4ee32f0fb9bf3f214d7a975f477426b43f791bd890e48748",
-    "pageRegistryDigest": "68a9e7b18e18aad5d1761a4001c69c510883b236f9adc1f8317c062e651624e7"
+    "workflowRegistryDigest": "86574bbace5d723bbf7777a35ce2f1e64b310420c1b852a197f42127ebda0d7c",
+    "pageRegistryDigest": "986a40860e1125496a8e1808e0bda4a2209f3b3d497991345de966eb4565c636"
   },
   "comparison": {
     "missingCliRegistry": [],

@@ -1734,6 +1734,8 @@ test("reusable Shifu Gate workflow keeps project policy outside Buildchain", () 
   );
   assert.match(workflow, /gate-profile:/);
   assert.match(workflow, /gate-command-json:/);
+  assert.match(workflow, /gate-environment-json:/);
+  assert.match(workflow, /shifu-cache-profile-ref:/);
   assert.match(workflow, /platforms-json:/);
   assert.match(workflow, /shifu-gate-profile\.mjs --mode plan/);
   assert.match(workflow, /shifu-gate-profile\.mjs --mode run/);
