@@ -1,11 +1,17 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import test from "node:test";
 import {
   createGateAggregate,
   createGateExecutionMatrix,
   sha256,
 } from "../scripts/gate-profile-core.mjs";
-import { windowsBatchInvocation } from "../scripts/shifu-gate-profile.mjs";
+import {
+  prepareGateExecutionFiles,
+  windowsBatchInvocation,
+} from "../scripts/shifu-gate-profile.mjs";
 
 const SOURCE_SHA = "1".repeat(40);
 const DIGESTS = Object.freeze({
@@ -33,6 +39,22 @@ test("Windows Gate batch commands resolve explicit relative paths before cmd.exe
     cwd: "C:\\ignored",
   });
   assert.equal(fromPath.args[3], "shifu.cmd gate list");
+});
+
+test("Gate execution removes only managed receipt files before a new run", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-gate-run-"));
+  const managed = ["receipt.json", "validation.json", "execution.json"].map(
+    (name) => path.join(root, name),
+  );
+  const preserved = path.join(root, "diagnostics.log");
+  try {
+    for (const file of [...managed, preserved]) fs.writeFileSync(file, "stale\n");
+    prepareGateExecutionFiles(managed);
+    assert.deepEqual(managed.map((file) => fs.existsSync(file)), [false, false, false]);
+    assert.equal(fs.readFileSync(preserved, "utf8"), "stale\n");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 });
 
 function plan(platform, { qualifying = true, unsupported = [] } = {}) {

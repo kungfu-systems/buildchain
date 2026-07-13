@@ -4,7 +4,7 @@
   "product": {
     "name": "Buildchain",
     "package": "@kungfu-tech/buildchain",
-    "version": "2.12.3",
+    "version": "2.12.4-alpha.2",
     "repository": "https://github.com/kungfu-systems/buildchain"
   },
   "majorLine": "v2",
@@ -549,9 +549,9 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:4458f86ab03e26015a1247fcf6fd89837256b39ecd7e82dfde2140e8967d2eb0"
+      "auditDigest": "sha256:0b025f14bab42fd92705ce4e63e3b1881a70f43ee903eaa4e0d853b23e46ade3"
     }
   ],
   "compatibilityDigest": "sha256:2090784977bc7d54fc647215ef73532b9db26147a0b40ec3f56c31d611d806cc",
-  "contractDigest": "sha256:9debce5534f2dc23ef3075fbea83843314c660c63e1024b98003b96376fcb9fc"
+  "contractDigest": "sha256:2269c84729a244558c839a7fd4f3da3d4d3078900c5fea50574c0d3ee536e904"
 }
