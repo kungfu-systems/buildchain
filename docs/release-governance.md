@@ -570,6 +570,14 @@ reuses a same-repository `buildchain/version-state/*` PR based on the current
 target channel head and records `finalization-needed=true` in the durable
 transaction output. Strict alpha bookkeeping still fails with a
 token/protection diagnostic instead of creating a post-publish PR.
+
+For a stable release, the wrapper also checks out the exact current development
+channel into `.buildchain/reconciliation/dev`. When the prepared next-alpha
+commit cannot fast-forward dev because reviewed work landed concurrently, the
+promotion action applies the next version to that checkout, regenerates every
+declared derived version-state file, reruns the verification lifecycle, and
+only then creates the two-parent reconciliation commit. A checkout/current-ref
+SHA mismatch blocks reconciliation instead of committing stale projections.
 Buildchain's own promotion workflow reads `BUILDCHAIN_PROMOTION_BYPASS_APPS`,
 `BUILDCHAIN_PROMOTION_BYPASS_USERS`, and
 `BUILDCHAIN_PROMOTION_BYPASS_TEAMS` repository variables so the declared bypass

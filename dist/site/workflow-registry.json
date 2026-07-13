@@ -942,6 +942,7 @@
         "publish-tooling-sha",
         "publish-transaction",
         "publish-transaction-override",
+        "reconciliation-workspace",
         "release-candidate-build-summary-path",
         "release-candidate-passport-path",
         "release-candidate-version",
@@ -969,7 +970,7 @@
         "transaction-state-path",
         "verification-command"
       ],
-      "inputCount": 51,
+      "inputCount": 52,
       "capabilityGroup": "release-passport-trust",
       "status": "active"
     },

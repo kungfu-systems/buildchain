@@ -94,6 +94,15 @@ configuration diagnostic instead of opening a post-publish human PR. Reusable
 wrapper callers should allow `checks: write` so the generated check is owned by
 GitHub Actions and matches the managed branch protection rule.
 
+Stable promotion also protects concurrent development work. The reusable
+wrapper checks out the exact current `dev/vN/vN.M` head as a reconciliation
+workspace. If next-alpha bookkeeping cannot fast-forward that branch, the
+action reruns the declared version-state generation and verification from that
+dev tree, creates a two-parent reconciliation commit from the regenerated
+files, and fails closed if the checkout moved before the mutation boundary.
+This prevents generated projections from an older release tree from replacing
+capabilities that reached dev while the release was in progress.
+
 For Buildchain-owned automation, callers may pass
 `branch-protection-bypass-apps`, `branch-protection-bypass-users`, or
 `branch-protection-bypass-teams`. The action still configures managed
