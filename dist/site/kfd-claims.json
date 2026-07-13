@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "fa3cf84f063a1ed69d4e9bd59e54e6450f89e244d2be4df856e6e3f40ad4d779",
+    "sha256": "d5340540f6695d48c1e7f034d12acd8f8ff7398b2b6178b42c87f654aded5fdc",
     "summary": {
       "cliCommandCount": 76,
       "workflowCount": 43,
@@ -225,7 +225,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "fa3cf84f063a1ed69d4e9bd59e54e6450f89e244d2be4df856e6e3f40ad4d779",
+      "sha256": "d5340540f6695d48c1e7f034d12acd8f8ff7398b2b6178b42c87f654aded5fdc",
       "summary": {
         "cliCommandCount": 76,
         "workflowCount": 43,
@@ -2410,7 +2410,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 18,
+          "inputCount": 19,
           "inputs": [
             "artifact-name",
             "artifact-retention-days",
@@ -2418,6 +2418,7 @@
             "buildchain-repository",
             "gate-command-json",
             "gate-environment-json",
+            "gate-plan-command-json",
             "gate-profile",
             "gate-registry",
             "include-advisory",

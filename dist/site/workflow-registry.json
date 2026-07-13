@@ -90,6 +90,7 @@
         "buildchain-repository",
         "gate-command-json",
         "gate-environment-json",
+        "gate-plan-command-json",
         "gate-profile",
         "gate-registry",
         "include-advisory",
@@ -103,7 +104,7 @@
         "untrusted-policy",
         "working-directory"
       ],
-      "inputCount": 18,
+      "inputCount": 19,
       "surface": "reusable-workflow",
       "capabilityGroup": "api-cli-reference",
       "status": "active"
