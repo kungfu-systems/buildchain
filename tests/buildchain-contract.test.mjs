@@ -194,6 +194,25 @@ test("contract world exposes web-surface floating contract lock gate", () => {
   assert.match(surface.guarantees.join("\n"), /breaking contract drift fails closed/);
 });
 
+test("contract world exposes additive post-publish artifact provenance schema", () => {
+  const contract = createBuildchainContractWorld({
+    root: path.resolve(import.meta.dirname, ".."),
+    packageJson: { name: "@kungfu-tech/buildchain", version: "2.12.2-alpha.0" },
+  });
+  for (const id of ["release-candidate-promote", "promote-buildchain-ref-action"]) {
+    const surface = contract.surfaces.find((entry) => entry.id === id);
+    assert.equal(
+      surface.publishArtifactSchema.requirementDigest,
+      "optional-before-publish-required-after-publish",
+    );
+    assert.deepEqual(surface.publishArtifactSchema.provenanceActions, ["built", "reused"]);
+    assert.match(surface.publishArtifactSchema.provenanceCoordinates.join("\n"), /content/);
+    assert.match(surface.publishArtifactSchema.provenanceCoordinates.join("\n"), /release/);
+    assert.match(surface.publishArtifactSchema.verificationFields.join("\n"), /parent_digest/);
+    assert.match(surface.publishArtifactSchema.verificationFields.join("\n"), /smoke/);
+  }
+});
+
 test("write-lock records resolved SHA and contract digest", () => {
   const workspace = tempDir("write-lock");
   const contract = createBuildchainContractWorld({

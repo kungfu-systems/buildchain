@@ -21,6 +21,7 @@ import {
   createReleaseTransaction,
   defaultPublishEvidencePath,
   defaultReleaseStatePath,
+  planArtifactPublish,
   releaseTransactionStateRef,
   parsePublishArtifactsJson,
   planTransactionRecovery,
@@ -28,6 +29,7 @@ import {
   readReleaseTransaction,
   transitionReleaseTransaction,
   validatePublishEvidence,
+  resolvePublishArtifactRequirements,
   writeReleaseTransaction,
 } from "../../packages/core/publish-transaction.js";
 import {
@@ -1008,7 +1010,7 @@ function promoteExistingNpmArtifacts({ cwd, artifacts, distTag }) {
 }
 
 function materialErrorRequiresRepair(error) {
-  return /release_material_sha mismatch|source_sha mismatch|release_sha mismatch|version mismatch|target_ref mismatch|artifact digest mismatch|required artifact missing/.test(
+  return /release_material_sha mismatch|source_sha mismatch|release_sha mismatch|version mismatch|target_ref mismatch|artifact digest mismatch|artifact coordinate or provenance mismatch|artifact provenance mismatch|artifact.*verification|verification\.|required artifact missing|duplicate publish artifact/.test(
     error.message || "",
   );
 }
@@ -1020,15 +1022,6 @@ function transactionHasPublishedMaterial(transaction) {
   );
 }
 
-function publishArtifactKey(artifact) {
-  return [
-    artifact?.kind || "",
-    artifact?.name || "",
-    artifact?.ref || "",
-    artifact?.digest || "",
-  ].join("\0");
-}
-
 function transactionCoversRequiredArtifacts(transaction, requiredArtifacts) {
   if (!Array.isArray(requiredArtifacts) || requiredArtifacts.length === 0) {
     return true;
@@ -1036,10 +1029,10 @@ function transactionCoversRequiredArtifacts(transaction, requiredArtifacts) {
   if (!transactionHasPublishedMaterial(transaction)) {
     return true;
   }
-  const existing = new Set(
-    (transaction.artifacts || []).map((artifact) => publishArtifactKey(artifact)),
-  );
-  return requiredArtifacts.every((artifact) => existing.has(publishArtifactKey(artifact)));
+  return planArtifactPublish({
+    requiredArtifacts,
+    existingArtifacts: transaction.artifacts || [],
+  }).complete;
 }
 
 function ensureTransactionCanResume({
@@ -1639,6 +1632,12 @@ async function runPublishTransaction({
     publishPackageSetOrder,
     publishPackageMain,
   });
+  requiredArtifacts = resolvePublishArtifactRequirements(requiredArtifacts, {
+    version,
+    targetRef,
+    sourceSha,
+    releaseMaterialSha: releaseMaterialSha || releaseSha,
+  });
   validatePublishContractForArtifacts({
     channel,
     contract: publishContract,
@@ -1801,7 +1800,7 @@ async function runPublishTransaction({
         fallbackName: "dist-tag-evidence.json",
       }),
       packageSet: packageSetFromArtifacts({
-        artifacts: requiredArtifacts,
+        artifacts: transaction.artifacts || requiredArtifacts,
         contract: publishContract,
       }),
       publishContract,
@@ -1896,6 +1895,7 @@ async function runPublishTransaction({
             BUILDCHAIN_SURFACE_PUBLISHED_AT: promotionGeneratedAt,
             BUILDCHAIN_SURFACE_TIMESTAMP_POLICY: "ci-injected",
             BUILDCHAIN_PUBLISH_EVIDENCE: resolvedEvidencePath,
+            BUILDCHAIN_REQUIRED_ARTIFACTS: JSON.stringify(requiredArtifacts),
             BUILDCHAIN_PUBLISH_MODE: publishContract.mode,
             BUILDCHAIN_PUBLISH_AUTH: publishContract.auth,
             BUILDCHAIN_NPM_DIST_TAG: publishContract.distTag,
@@ -1925,7 +1925,7 @@ async function runPublishTransaction({
       auth: publishContract.auth,
       distTag: publishContract.distTag,
       source: publishSource || "validated-evidence",
-      artifacts: requiredArtifacts,
+      artifacts: validation.evidence.artifacts,
     });
     if (transaction.state === "publishing" || transaction.state === "publish_failed") {
       transaction = transitionReleaseTransaction(transaction, "published", {
@@ -1950,7 +1950,7 @@ async function runPublishTransaction({
       evidencePath: resolvedEvidencePath,
       distTagEvidencePath,
       packageSet: packageSetFromArtifacts({
-        artifacts: requiredArtifacts,
+        artifacts: validation.evidence.artifacts,
         contract: publishContract,
       }),
       publishContract,

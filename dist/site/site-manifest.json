@@ -69,7 +69,7 @@
       "path": "docs/release-passport.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:f278f148e36f508f7217ad0e41501fa1cf5fe4d0a54d81dfbab867b3d35465c7"
+      "digest": "sha256:b339c4de0a19a58507bb0aa3efb57c63e4bb4e8002891b9fcc1d73223a8e2c7f"
     },
     {
       "id": "release-candidate",
@@ -205,7 +205,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:fbc74dee3a6f2283ea69a2a9a31945ac82ccaf1d270995539f5d80235ab74614"
+      "digest": "sha256:6916d88ae0f25fa129308354b04d339552b72796d4d7d7938015e0e2f4dcaa6a"
     },
     {
       "id": "publish-transaction",
@@ -213,7 +213,7 @@
       "path": "docs/publish-transaction.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:2523dd9a81e837918afae30c203349a7b29f00fdf953962a6db360fd95e0c6cb"
+      "digest": "sha256:1ce6af9b2bffc8eb210291e775459d4265de159bc7eee635cea0376c9ef62e5d"
     },
     {
       "id": "release-governance",
