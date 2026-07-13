@@ -36,4 +36,4 @@ jobs:
       dry-run: ${{ inputs.dry-run || false }}
     secrets:
       promotion-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
-      approval-token: ${{ secrets.BUILDCHAIN_APPROVAL_TOKEN }}
+      approval-token: ${{ secrets.BUILDCHAIN_APPROVAL_TOKEN || secrets.KUNGFU_GITHUB_TOKEN }}
