@@ -840,6 +840,8 @@ for (const requiredSnippet of [
   "publish-source-ref: ${{ steps.publish-gate.outputs.ref }}",
   "publish-source-sha: ${{ steps.publish-gate.outputs.sha }}",
   "publish-source-locked: ${{ steps.publish-gate.outputs.locked }}",
+  "DRY_RUN: ${{ inputs.dry-run }}",
+  "if (dryRun) {",
   "Enforce Buildchain stable release canary gate",
   "BUILDCHAIN_STABLE_RELEASE_POLICY: .buildchain/stable-release-policy.json",
 ]) {
