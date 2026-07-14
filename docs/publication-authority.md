@@ -34,7 +34,8 @@ descriptor not marked `product-publication` are denied product publication.
 
 A qualifying admission binds exact source and runtime SHAs; contract, consumer
 policy, qualifying controller receipt, Shifu/Gate aggregate, artifact, runner,
-and control-plane digests; repository, workflow, protected Environment,
+and control-plane digests; repository, authority workflow, provider publisher
+workflow, Environment policy,
 product, target, version, and channel; plus a unique nonce and a lifetime of no
 more than 15 minutes. Every expected binding is mandatory at verification time;
 an omitted expected field is not a wildcard.
@@ -64,7 +65,8 @@ capability.
 
 The external audit records digests and pass/fail status for repository Actions
 defaults, classic branch protection or an active matching repository ruleset,
-protected Environment policy, job-scoped credentials,
+declared protected Environment policy or an explicit no-Environment binding,
+job-scoped credentials,
 absence of long-lived workflow publication credentials, provider authority,
 and authorized runner class. Provider modes are `npm-trusted-publisher`,
 `github-token`, and `oidc-role`. The OIDC-role mode consumes only a sanitized
@@ -72,6 +74,47 @@ provider audit containing a role digest and qualifying decision; raw IAM policy,
 tokens, or credentials are rejected. Package-owner, cloud-root, GitHub
 administrator, and registry-root credentials remain outside Buildchain's trust
 boundary. Missing or unreadable facts fail closed.
+
+An unauthenticated local npm CLI is not evidence that Trusted Publishing is
+missing. `npm whoami` reports only the local CLI session and does not report the
+OIDC identity that npm creates during `npm publish`. The default read-only audit
+therefore binds the exact provider, repository, caller workflow, optional
+Environment, job-scoped OIDC permission, and absence of long-lived credentials,
+then records `provider-at-transaction`: npm makes the final authorization
+decision when `npm publish` exchanges the job's OIDC token. A missing or drifted
+trusted-publisher configuration consequently denies the transaction safely; it
+is not preflighted through an unrelated long-lived npm login.
+
+An authenticated external auditor can add stronger point-in-time evidence by
+supplying sanitized `npm trust list --json` output with `--npm-trust-json`. This
+changes the publisher fact to `audited-control-plane`; the workflow never runs
+`npm trust list` itself and never receives that auditor's npm credential.
+
+The credential-free collector proves effective Actions and runner scope from
+the publication workflow fetched at `--workflow-ref`: explicit read-only
+workflow defaults, job-scoped write/OIDC permissions, and an exact GitHub-hosted
+runner label. It does not call repository Actions-default or self-hosted-runner
+administration endpoints. Branch/ruleset and OIDC subject facts remain live
+read-only provider queries. This avoids turning a repository-admin token into a
+publication prerequisite.
+
+For non-dry-run workflows, missing admission, runner, control-plane, Gate, or
+expected-binding evidence is rejected before Buildchain downloads candidate
+artifacts. The denial explicitly records that npm Trusted Publishing and OIDC
+were not evaluated, so downstream diagnostics cannot misclassify an admission
+assembly failure as an npm authentication failure.
+
+Buildchain's own `workflow_run` promotion lane may assemble those inputs only
+for `kungfu-systems/buildchain`. It downloads the exact prior RC passport,
+summary, referenced controller receipt, manifests, and product payloads; proves
+the admitted channel commit has the same Git tree as the RC; performs the live
+read-only control-plane audit; records the GitHub-hosted job as ephemeral runner
+provenance; and creates an explicit Buildchain-owned no-Gate decision. The
+independent verifier then recomputes every receipt and payload digest exactly as
+it does for externally supplied admission. The self-assembly mode rejects other
+repositories, unknown refs, non-exact source SHAs, and any caller other than
+`.github/workflows/buildchain-ref-promotion.yml`. Manual apply and external
+consumer workflows still require their own explicit admission inputs.
 
 Evidence publication is a separate authority class and never grants product
 publication.
@@ -97,6 +140,25 @@ providers select an explicit adapter:
 ```bash
 buildchain audit publication-control-plane \
   --repository kungfu-systems/buildchain \
+  --branch dev/v2/v2.12 \
+  --workflow .github/workflows/release-candidate-promote.yml \
+  --workflow-ref <exact-buildchain-sha> \
+  --publisher-workflow .github/workflows/buildchain-ref-promotion.yml \
+  --job promote \
+  --environment none
+
+# Optional stronger external evidence; generate the JSON outside the workflow.
+buildchain audit publication-control-plane \
+  --repository kungfu-systems/buildchain \
+  --branch dev/v2/v2.12 \
+  --workflow .github/workflows/release-candidate-promote.yml \
+  --publisher-workflow .github/workflows/buildchain-ref-promotion.yml \
+  --job promote \
+  --environment none \
+  --npm-trust-json sanitized-npm-trust.json
+
+buildchain audit publication-control-plane \
+  --repository kungfu-systems/buildchain \
   --branch release/v2/v2.12 \
   --workflow .github/workflows/.binary-release-assets.yml \
   --job publish \
@@ -114,8 +176,13 @@ buildchain audit publication-control-plane \
   --provider-audit-json sanitized-oidc-role-audit.json
 ```
 
-Provider credential issuance must bind to the same protected workflow and
-environment. The Buildchain receipt alone is never sufficient authorization.
+The authority workflow identifies the reusable implementation that performs the
+publication job. The publisher workflow identifies the caller filename bound by
+the provider's trusted-publisher policy; these identities are deliberately
+separate. `--environment none` is an explicit assertion that the job declares no
+GitHub Environment and the provider policy has no Environment restriction. A
+named Environment must exist, be protected, and be declared by the job. The
+Buildchain receipt alone is never sufficient authorization.
 
 ## Publication lanes
 

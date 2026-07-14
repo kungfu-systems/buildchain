@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "8bca8735e513174299f6d0c69fea339acf575da6e8121d1ef692fa9c0ce65ee7",
+    "sha256": "c36a4c19193beb2ca5e98787761d622722f1f02d6d0102d95ca55c618fc97416",
     "summary": {
       "cliCommandCount": 79,
       "workflowCount": 46,
       "actionCount": 4,
       "sitePageCount": 49,
-      "docCommandRefCount": 244,
+      "docCommandRefCount": 246,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -225,13 +225,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "8bca8735e513174299f6d0c69fea339acf575da6e8121d1ef692fa9c0ce65ee7",
+      "sha256": "c36a4c19193beb2ca5e98787761d622722f1f02d6d0102d95ca55c618fc97416",
       "summary": {
         "cliCommandCount": 79,
         "workflowCount": 46,
         "actionCount": 4,
         "sitePageCount": 49,
-        "docCommandRefCount": 244,
+        "docCommandRefCount": 246,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -2642,9 +2642,10 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 15,
+          "inputCount": 22,
           "inputs": [
             "admission-json",
+            "auto-admission",
             "buildchain-ref",
             "buildchain-repository",
             "control-plane-audit-json",
@@ -2657,7 +2658,13 @@
             "evidence-summary-artifact",
             "expected-json",
             "gate-aggregate-json",
+            "package-name",
+            "product",
+            "publication-target",
+            "publisher-workflow-path",
             "runner-provenance-json",
+            "source-sha",
+            "target-ref",
             "used-nonces-json"
           ],
           "reverseAuditSource": ".github/workflows"
@@ -3452,7 +3459,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 50,
+          "inputCount": 55,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -3472,10 +3479,15 @@
             "github-release-title",
             "package-manager",
             "publication-admission-json",
+            "publication-auto-admission",
             "publication-control-plane-audit-json",
             "publication-expected-json",
             "publication-gate-aggregate-json",
+            "publication-package-name",
+            "publication-product",
+            "publication-publisher-workflow-path",
             "publication-runner-provenance-json",
+            "publication-target",
             "publication-used-nonces-json",
             "publish-artifact-kind",
             "publish-command",

@@ -65,7 +65,7 @@
       "title": "Sealed publication authority",
       "path": "docs/publication-authority.md",
       "plane": "verify",
-      "digest": "sha256:68c91eec1c672f0ad85430672eb905f66a1f4779a3decbebaf66d4ef18f07c98",
+      "digest": "sha256:8c432c336b6257a17f83cc6d115326eaa333d2771755b7b3171476c87269a043",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",

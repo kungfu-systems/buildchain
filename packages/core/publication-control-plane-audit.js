@@ -11,6 +11,7 @@ function fact(id, pass, observed) {
 export function evaluatePublicationControlPlaneSnapshot({
   repository,
   workflowPath,
+  publisherWorkflowPath = workflowPath,
   environment,
   branch,
   packageName,
@@ -19,31 +20,37 @@ export function evaluatePublicationControlPlaneSnapshot({
   observedAt,
   expiresAt,
 } = {}) {
-  const workflowFilename = String(workflowPath || "").split("/").pop();
+  const workflowFilename = String(publisherWorkflowPath || "").split("/").pop();
+  const providerEnvironment = environment === "none" ? "" : environment;
   const actions = snapshot?.actions || {};
   const branchPolicy = snapshot?.branch || {};
   const environmentPolicy = snapshot?.environment || {};
   const oidc = snapshot?.oidc || {};
   const publisher = snapshot?.publisher || {};
   const runner = snapshot?.runner || {};
+  const npmIdentityPass = publisher.packageName === packageName &&
+    publisher.provider === "github" &&
+    publisher.repository === repository &&
+    publisher.workflowFilename === workflowFilename &&
+    publisher.environment === providerEnvironment &&
+    publisher.longLivedWorkflowCredentialPresent === false;
   const publisherPass = publisherMode === "npm-trusted-publisher"
-    ? publisher.packageName === packageName &&
-      publisher.provider === "github" &&
-      publisher.repository === repository &&
-      publisher.workflowFilename === workflowFilename &&
-      publisher.environment === environment &&
-      publisher.allowPublish === true &&
-      publisher.longLivedWorkflowCredentialPresent === false
+    ? npmIdentityPass && (
+      (publisher.enforcement === "audited-control-plane" && publisher.allowPublish === true) ||
+      (publisher.enforcement === "provider-at-transaction" &&
+        publisher.authorizationDeferred === true &&
+        publisher.configurationRead === false)
+    )
     : publisherMode === "github-token"
       ? publisher.provider === "github-token" &&
         publisher.repository === repository &&
-        publisher.workflowPath === workflowPath &&
+        publisher.workflowPath === publisherWorkflowPath &&
         publisher.permissionScoped === true &&
         publisher.longLivedWorkflowCredentialPresent === false
       : publisherMode === "oidc-role"
         ? publisher.provider !== "" &&
           publisher.repository === repository &&
-          publisher.workflowPath === workflowPath &&
+          publisher.workflowPath === publisherWorkflowPath &&
           publisher.environment === environment &&
           publisher.trustQualifying === true &&
           /^[0-9a-f]{64}$/i.test(String(publisher.roleDigest || "").replace(/^sha256:/, "")) &&
@@ -51,8 +58,8 @@ export function evaluatePublicationControlPlaneSnapshot({
         : false;
   const credentialIsolationPass = publisherMode === "github-token"
     ? oidc.githubTokenJobScoped === true && oidc.longLivedCredentialPresent === false
-    : oidc.workflowPath === workflowPath &&
-      oidc.environment === environment &&
+    : oidc.workflowPath === publisherWorkflowPath &&
+      oidc.environment === providerEnvironment &&
       oidc.idTokenJobScoped === true &&
       oidc.longLivedCredentialPresent === false;
   const facts = [
@@ -72,10 +79,13 @@ export function evaluatePublicationControlPlaneSnapshot({
     ),
     fact(
       "environment-policy",
-        environmentPolicy.name === environment &&
-        environmentPolicy.exists === true &&
-        environmentPolicy.protected === true &&
-        (environmentPolicy.reviewRequired !== true || environmentPolicy.preventSelfReview === true),
+      environment === "none"
+        ? environmentPolicy.declared === false && environmentPolicy.exists === false
+        : environmentPolicy.name === environment &&
+          environmentPolicy.declared === true &&
+          environmentPolicy.exists === true &&
+          environmentPolicy.protected === true &&
+          (environmentPolicy.reviewRequired !== true || environmentPolicy.preventSelfReview === true),
       environmentPolicy,
     ),
     fact(
@@ -100,6 +110,7 @@ export function evaluatePublicationControlPlaneSnapshot({
   return createPublicationControlPlaneAudit({
     repository,
     workflowPath,
+    publisherWorkflowPath,
     environment,
     facts,
     observedAt,

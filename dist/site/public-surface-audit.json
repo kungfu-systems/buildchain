@@ -7,7 +7,7 @@
     "workflowCount": 46,
     "actionCount": 4,
     "sitePageCount": 49,
-    "docCommandRefCount": 244,
+    "docCommandRefCount": 246,
     "failureCount": 0
   },
   "enumerated": {
@@ -609,6 +609,7 @@
         "reusable": true,
         "inputs": [
           "admission-json",
+          "auto-admission",
           "buildchain-ref",
           "buildchain-repository",
           "control-plane-audit-json",
@@ -621,10 +622,16 @@
           "evidence-summary-artifact",
           "expected-json",
           "gate-aggregate-json",
+          "package-name",
+          "product",
+          "publication-target",
+          "publisher-workflow-path",
           "runner-provenance-json",
+          "source-sha",
+          "target-ref",
           "used-nonces-json"
         ],
-        "inputCount": 15,
+        "inputCount": 22,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -1534,10 +1541,15 @@
           "github-release-title",
           "package-manager",
           "publication-admission-json",
+          "publication-auto-admission",
           "publication-control-plane-audit-json",
           "publication-expected-json",
           "publication-gate-aggregate-json",
+          "publication-package-name",
+          "publication-product",
+          "publication-publisher-workflow-path",
           "publication-runner-provenance-json",
+          "publication-target",
           "publication-used-nonces-json",
           "publish-artifact-kind",
           "publish-command",
@@ -1567,7 +1579,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 50,
+        "inputCount": 55,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2078,6 +2090,16 @@
       }
     ],
     "docCommandRefs": [
+      {
+        "id": "audit",
+        "path": "docs/publication-authority.md",
+        "command": "buildchain audit publication-control-plane"
+      },
+      {
+        "id": "audit",
+        "path": "docs/publication-authority.md",
+        "command": "buildchain audit publication-control-plane"
+      },
       {
         "id": "audit",
         "path": "docs/publication-authority.md",
@@ -3305,8 +3327,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "a6daf4822365bf576425777230246046ebca67b3f8dcfea61fc7a61773776185",
-    "workflowRegistryDigest": "eacd2721b69b6c4e898d2ca919152c1b85e4fc7364c7a3e7644e3a644a0f8b16",
-    "pageRegistryDigest": "fd7a22160cc77e3543bf6cdf34beeba317353267f79f3b1d688078ee3d6374f8"
+    "workflowRegistryDigest": "c71378eba66d2e03b5c90ed3e5b20a3e68f279b503062ffbf9fdfabe341adcae",
+    "pageRegistryDigest": "81cf3ddcaa01966bd3c7e59d7a5992c55fb1723af984e68f14b4897ed81fb689"
   },
   "comparison": {
     "missingCliRegistry": [],
