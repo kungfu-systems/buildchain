@@ -281,16 +281,14 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write
-  actions: read
-  checks: write
-  issues: write
-  id-token: write
+  contents: read
 
 jobs:
   preflight:
     name: Revalidate promotion intent
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     outputs:
       action: ${{ steps.intent.outputs.action }}
       reason: ${{ steps.intent.outputs.reason }}
@@ -381,6 +379,8 @@ jobs:
     needs: preflight
     if: ${{ always() && needs.preflight.result == 'success' }}
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     outputs:
       controller-plan-artifact: buildchain-release-promotion-controller-plan-${{ needs.preflight.outputs.requested-sha }}
       controller-plan-json: ${{ steps.controller-plan.outputs.controller-plan-json }}
@@ -431,6 +431,9 @@ jobs:
     needs: [preflight, controller-plan]
     if: ${{ needs.preflight.outputs.action == 'promote' }}
     runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
     steps:
       - name: Checkout Buildchain release-candidate resolver
         uses: actions/checkout@v7.0.0
@@ -465,6 +468,12 @@ jobs:
     needs: [preflight, controller-plan, release-candidate-preflight]
     if: ${{ needs.preflight.outputs.action == 'promote' }}
     runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      checks: write
+      contents: write
+      id-token: write
+      issues: write
     outputs:
       promoted-sha: ${{ needs.preflight.outputs.requested-sha }}
       built-source-sha: ${{ steps.rc.outputs.release-candidate-source-sha }}
@@ -933,6 +942,9 @@ jobs:
     needs: [preflight, controller-plan, release-candidate-preflight, promote]
     if: ${{ always() && needs.controller-plan.result == 'success' }}
     runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
     outputs:
       controller-receipt-artifact: buildchain-release-promotion-controller-receipt-${{ needs.preflight.outputs.requested-sha }}
       controller-receipt-json: ${{ steps.controller-receipt.outputs.controller-receipt-json }}

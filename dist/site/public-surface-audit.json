@@ -3,11 +3,11 @@
   "contract": "kungfu-buildchain-public-surface-reverse-audit",
   "status": "passed",
   "summary": {
-    "cliCommandCount": 76,
+    "cliCommandCount": 77,
     "workflowCount": 43,
     "actionCount": 4,
-    "sitePageCount": 48,
-    "docCommandRefCount": 241,
+    "sitePageCount": 49,
+    "docCommandRefCount": 242,
     "failureCount": 0
   },
   "enumerated": {
@@ -376,6 +376,11 @@
         "id": "verify-observability-log",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain verify observability-log <jsonl> [--min-events <n>]"
+      },
+      {
+        "id": "verify-publication-admission",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain verify publication-admission <file-or-json>"
       },
       {
         "id": "verify-release-passport",
@@ -1917,6 +1922,10 @@
         "category": "manual"
       },
       {
+        "id": "manual:publication-authority",
+        "category": "manual"
+      },
+      {
         "id": "manual:publish-transaction",
         "category": "manual"
       },
@@ -3143,6 +3152,11 @@
         "command": "buildchain verify observability-log"
       },
       {
+        "id": "verify-publication-admission",
+        "path": "docs/publication-authority.md",
+        "command": "buildchain verify publication-admission admission"
+      },
+      {
         "id": "verify-release-passport",
         "path": "docs/cli.md",
         "command": "buildchain verify release-passport"
@@ -3193,9 +3207,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "ab57fec294efb9dde1612787bfd0d532b5bb95298b5da14a2b51a5e71b9c7dcc",
+    "cliRegistryDigest": "346a6bfc660fd409d499252116290d2c2b1a194f3b17b93cac03a7f35828b41a",
     "workflowRegistryDigest": "1da5cf730fa6a4816bc3d15a457b34dba28d9dfdcdc3146e9b35cb7e0e6c7abf",
-    "pageRegistryDigest": "0319f1af7e6241d1cf41d063b4b2870d2b405f475133cbfef05cfd8f435d0584"
+    "pageRegistryDigest": "b95c40a840449c3a1d2253c1cc1745e167787e59c141b02272da4be37b37285f"
   },
   "comparison": {
     "missingCliRegistry": [],

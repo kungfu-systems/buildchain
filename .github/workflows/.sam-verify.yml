@@ -23,7 +23,8 @@ on:
       NODE_AUTH_TOKEN:
         required: false
 
-permissions: write-all
+permissions:
+  contents: read
 
 jobs:
   prepare:

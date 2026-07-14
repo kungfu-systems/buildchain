@@ -882,6 +882,18 @@
       "maturity": "stable"
     },
     {
+      "id": "verify-publication-admission",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain verify publication-admission <file-or-json>",
+      "purpose": "Independently verify sealed publication admission, runner provenance, control-plane audit, nonce freshness, and exact artifact bindings.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
       "id": "verify-release-passport",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain verify release-passport <file-or-url> [--json]",
