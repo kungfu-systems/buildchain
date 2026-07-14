@@ -452,6 +452,7 @@ export function createControllerReceiptReference(receipt) {
 
 export function validateControllerReceiptReference(reference, {
   expectedSourceSha = "",
+  acceptedSourceShas = [],
   expectedRuntimeSha = "",
   requirePassed = false,
 } = {}) {
@@ -468,7 +469,10 @@ export function validateControllerReceiptReference(reference, {
     issues.push("controller receipt reference status is invalid");
   }
   if (requirePassed && reference.status !== "passed") issues.push("controller receipt reference status must be passed");
-  if (expectedSourceSha && reference.sourceSha !== expectedSourceSha) issues.push("controller receipt reference source SHA mismatch");
+  const allowedSourceShas = new Set([expectedSourceSha, ...(acceptedSourceShas || [])].filter(Boolean));
+  if (allowedSourceShas.size > 0 && !allowedSourceShas.has(reference.sourceSha)) {
+    issues.push("controller receipt reference source SHA mismatch");
+  }
   if (expectedRuntimeSha && reference.runtimeSha !== expectedRuntimeSha) issues.push("controller receipt reference runtime SHA mismatch");
   return { ok: issues.length === 0, issues };
 }
@@ -477,6 +481,7 @@ export function normalizeControllerReceiptReferences({
   receipts = [],
   references = [],
   expectedSourceSha = "",
+  acceptedSourceShas = [],
   expectedRuntimeSha = "",
   requirePassed = false,
 } = {}) {
@@ -486,7 +491,12 @@ export function normalizeControllerReceiptReferences({
   ];
   const seen = new Set();
   for (const reference of normalized) {
-    const validation = validateControllerReceiptReference(reference, { expectedSourceSha, expectedRuntimeSha, requirePassed });
+    const validation = validateControllerReceiptReference(reference, {
+      expectedSourceSha,
+      acceptedSourceShas,
+      expectedRuntimeSha,
+      requirePassed,
+    });
     if (!validation.ok) throw new Error(`controller receipt reference is invalid: ${validation.issues.join("; ")}`);
     if (seen.has(reference.controllerId)) throw new Error(`duplicate controller receipt reference: ${reference.controllerId}`);
     seen.add(reference.controllerId);

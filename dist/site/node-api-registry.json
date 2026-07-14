@@ -86,7 +86,7 @@
       "specifier": "@kungfu-tech/buildchain/controller-evidence",
       "export": "./controller-evidence",
       "target": "./packages/core/controller-evidence.js",
-      "digest": "sha256:e5db8c1534f634c525c00dd81e380157a8d7415e95471474574edd4cf92f0fb7",
+      "digest": "sha256:6aba1af5216feaec16581a1ea36fdf318cf4af4e03b22fe5399a8bf597b8c003",
       "summary": "Project-independent controller descriptors, source/runtime-bound plans, receipts, aggregates, and validation APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -281,7 +281,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:f452026600687ecc266651457a8c1151303210d312f0d16ad16e4c3f414ed170",
+      "digest": "sha256:32fd54ceb8e1a0219918e7744797e3a1bf3f614bb8498028209275b98304ac5b",
       "summary": "Release passport collection, verification, explanation, and evidence APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
