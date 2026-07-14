@@ -47,15 +47,16 @@
       ],
       "maturity": "stable",
       "counts": {
-        "manualCount": 3,
-        "pageCount": 3,
-        "cliCommandCount": 16,
-        "nodeApiCount": 2,
+        "manualCount": 4,
+        "pageCount": 4,
+        "cliCommandCount": 19,
+        "nodeApiCount": 5,
         "workflowCount": 2,
         "actionCount": 1
       },
       "manuals": [
         "docs/release-passport.md",
+        "docs/publication-authority.md",
         "docs/binary-distribution.md",
         "docs/publish-transaction.md"
       ],
@@ -286,7 +287,7 @@
         "pageCount": 6,
         "cliCommandCount": 0,
         "nodeApiCount": 2,
-        "workflowCount": 26,
+        "workflowCount": 29,
         "actionCount": 0
       },
       "manuals": [

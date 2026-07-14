@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:223c7e2d20680d4a10c84f6a7c7875602538607217e9dfe291a356bbd21ac4f1"
+      "digest": "sha256:91dc800bafc31bc149680c86272827936c94e0f025d547bbabc10d58fe5f128e"
     },
     {
       "id": "install",
@@ -78,6 +78,14 @@
       "plane": "verify",
       "exists": true,
       "digest": "sha256:442e1b72e3977af56a8ae5e081ffd89c2f3ebcd9cfd50f07af730344bdf9fb0e"
+    },
+    {
+      "id": "publication-authority",
+      "title": "Sealed publication authority",
+      "path": "docs/publication-authority.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:b6dbd569be5f84329ffe9f037ffffbdffaa689061e6a32501d02de114549a1bd"
     },
     {
       "id": "release-candidate",
@@ -272,6 +280,7 @@
     "node-api-registry.json",
     "workflow-registry.json",
     "controller-registry.json",
+    "publication-authority-registry.json",
     "public-surface-audit.json",
     "release-model.json",
     "artifact-schemas.json",

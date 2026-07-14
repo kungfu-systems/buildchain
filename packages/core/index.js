@@ -133,6 +133,30 @@ export {
 } from "./publication-package.js";
 
 export {
+  PUBLICATION_ADMISSION_CONTRACT,
+  PUBLICATION_AUTHORITY_CLASSES,
+  PUBLICATION_AUTHORITY_REGISTRY_CONTRACT,
+  PUBLICATION_CAPABILITY_CONTRACT,
+  PUBLICATION_CONTROL_PLANE_AUDIT_CONTRACT,
+  RUNNER_PROVENANCE_CLASSES,
+  RUNNER_PROVENANCE_CONTRACT,
+  createPublicationAuthorityRegistry,
+  createPublicationAdmission,
+  createPublicationControlPlaneAudit,
+  createRunnerProvenance,
+  detectPublicationAuthoritySignals,
+  publicationAuthorityDigest,
+  verifyPublicationAdmission,
+} from "./publication-authority.js";
+
+export {
+  buildchainPublicationAuthorityDescriptors,
+  createBuildchainPublicationAuthorityRegistry,
+} from "./buildchain-publication-authority.js";
+
+export { evaluatePublicationControlPlaneSnapshot } from "./publication-control-plane-audit.js";
+
+export {
   ARTIFACT_PASSPORT_LOCATOR_CONTRACT,
   ARTIFACT_PASSPORT_POINTER_CONTRACT,
   ARTIFACT_VERIFICATION_CONTRACT,

@@ -21,7 +21,8 @@ on:
       AWS_ACCOUNT_ID:
         required: true
 
-permissions: write-all
+permissions:
+  contents: read
 
 jobs:
   retired:

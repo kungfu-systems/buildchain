@@ -897,6 +897,26 @@
           "classification": "redacted",
           "source": "workflow-call-input"
         },
+        "publication-admission-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-control-plane-audit-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-expected-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-runner-provenance-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-used-nonces-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "release-feedback-actor-privacy": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -941,6 +961,10 @@
             "required": false
           },
           {
+            "id": "publication-authority",
+            "required": false
+          },
+          {
             "id": "apply",
             "required": false
           },
@@ -953,14 +977,15 @@
           "web-build",
           "web-verify",
           "deployment-plan",
-          "deployment-apply"
+          "deployment-apply",
+          "publication-authority"
         ],
         "evidence": [
           "web-surface-plan",
           "controller-receipt"
         ]
       },
-      "digest": "sha256:09b4d98c400fb12a87b701eedaaefbf4af2fd0c1fb19b8b44c6219c596430e80"
+      "digest": "sha256:f08c4970f33c059f8e0b43110f0063172fb1015ac914bdb0c8e9646692fb9f06"
     },
     {
       "schemaVersion": 1,
@@ -1087,10 +1112,6 @@
         "path": ".github/workflows/paper-release.yml"
       },
       "inputs": {
-        "BUILDCHAIN_PROMOTION_TOKEN": {
-          "classification": "redacted",
-          "source": "workflow-call-secret"
-        },
         "artifact-name": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -1157,6 +1178,26 @@
         },
         "package-name": {
           "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "publication-admission-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-control-plane-audit-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-expected-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-runner-provenance-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-used-nonces-json": {
+          "classification": "digest-only",
           "source": "workflow-call-input"
         },
         "publish-dist-tag": {
@@ -1239,6 +1280,10 @@
             "required": true
           },
           {
+            "id": "publication-authority",
+            "required": true
+          },
+          {
             "id": "publish",
             "required": true
           },
@@ -1254,6 +1299,7 @@
         "capabilities": [
           "publication-build",
           "artifact-admission",
+          "publication-authority",
           "release-publish",
           "release-passport"
         ],
@@ -1263,7 +1309,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:726e94ed5353240289700df7f436e9aa4041783738757dfbdef1a6825acb6bfb"
+      "digest": "sha256:0613ea545fe2d630f34e665c8e6fe99df3f5333d75051a7176e9cf991e494f59"
     },
     {
       "schemaVersion": 1,
@@ -1284,10 +1330,6 @@
           "source": "workflow-call-secret"
         },
         "BUILDCHAIN_ISSUE_TOKEN": {
-          "classification": "redacted",
-          "source": "workflow-call-secret"
-        },
-        "BUILDCHAIN_PROMOTION_TOKEN": {
           "classification": "redacted",
           "source": "workflow-call-secret"
         },
@@ -1369,6 +1411,26 @@
         },
         "package-manager": {
           "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "publication-admission-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-control-plane-audit-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-expected-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-runner-provenance-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-used-nonces-json": {
+          "classification": "digest-only",
           "source": "workflow-call-input"
         },
         "publish-artifact-kind": {
@@ -1491,6 +1553,10 @@
             "required": true
           },
           {
+            "id": "publication-authority",
+            "required": true
+          },
+          {
             "id": "publish",
             "required": true
           },
@@ -1506,6 +1572,7 @@
         "capabilities": [
           "promotion-preflight",
           "artifact-admission",
+          "publication-authority",
           "publish-transaction",
           "release-passport"
         ],
@@ -1516,7 +1583,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:f5a295b2d3e8f20ba46c611acaed71ee7ab5cd1ecaa6e7504b4344493271a803"
+      "digest": "sha256:ec3acda6407d7860925ece4448c508a50f30b9c516734405108fbab6d409bf74"
     },
     {
       "schemaVersion": 1,
@@ -1622,5 +1689,5 @@
       "digest": "sha256:9b9f9a2320c4349903d72ee46e329211b5538ed5ebebaa93559df4eafb835997"
     }
   ],
-  "digest": "sha256:0bd2214618cfa1fb7cdc052b3dcb64fa1ab8b815416bc00bbd27c0c666923363"
+  "digest": "sha256:03be033ae3a53ac9ab973daa68aa116b3d9aaaca68f2c8354565915873cda2c4"
 }

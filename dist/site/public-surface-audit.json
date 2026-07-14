@@ -3,15 +3,20 @@
   "contract": "kungfu-buildchain-public-surface-reverse-audit",
   "status": "passed",
   "summary": {
-    "cliCommandCount": 76,
-    "workflowCount": 43,
+    "cliCommandCount": 79,
+    "workflowCount": 46,
     "actionCount": 4,
-    "sitePageCount": 48,
-    "docCommandRefCount": 241,
+    "sitePageCount": 49,
+    "docCommandRefCount": 244,
     "failureCount": 0
   },
   "enumerated": {
     "cliCommands": [
+      {
+        "id": "audit",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain audit publication-control-plane --repository <owner/repo> --branch <protected-branch>"
+      },
       {
         "id": "badges",
         "source": "bin/buildchain.mjs",
@@ -46,6 +51,11 @@
         "id": "collect-github-release",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain collect github-release --tag <tag> [--repository <owner/repo>]"
+      },
+      {
+        "id": "create",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain create publication-admission --input-json <file-or-json> [--output <file>] [--json]"
       },
       {
         "id": "diagnostics",
@@ -378,6 +388,11 @@
         "usage": "buildchain verify observability-log <jsonl> [--min-events <n>]"
       },
       {
+        "id": "verify-publication-admission",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain verify publication-admission <file-or-json>"
+      },
+      {
         "id": "verify-release-passport",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain verify release-passport <file-or-url> [--json]"
@@ -394,6 +409,27 @@
       }
     ],
     "workflowInputs": [
+      {
+        "id": ".binary-release-assets",
+        "path": ".github/workflows/.binary-release-assets.yml",
+        "reusable": true,
+        "inputs": [
+          "buildchain-ref",
+          "buildchain-repository",
+          "evidence-run-id",
+          "publication-admission-json",
+          "publication-control-plane-audit-json",
+          "publication-expected-json",
+          "publication-runner-provenance-json",
+          "publication-used-nonces-json",
+          "release-tag"
+        ],
+        "inputCount": 9,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
       {
         "id": ".build",
         "path": ".github/workflows/.build.yml",
@@ -566,6 +602,30 @@
           "source-sha"
         ],
         "outputCount": 14
+      },
+      {
+        "id": ".publication-authority",
+        "path": ".github/workflows/.publication-authority.yml",
+        "reusable": true,
+        "inputs": [
+          "admission-json",
+          "buildchain-ref",
+          "buildchain-repository",
+          "control-plane-audit-json",
+          "dry-run",
+          "expected-json",
+          "runner-provenance-json",
+          "used-nonces-json"
+        ],
+        "inputCount": 8,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [
+          "capability-artifact",
+          "capability-digest",
+          "capability-json"
+        ],
+        "outputCount": 3
       },
       {
         "id": ".release-docker",
@@ -832,6 +892,11 @@
           "production-release-on-main",
           "production-release-pr-mode",
           "production-release-pr-token",
+          "publication-admission-json",
+          "publication-control-plane-audit-json",
+          "publication-expected-json",
+          "publication-runner-provenance-json",
+          "publication-used-nonces-json",
           "release-feedback-actor-privacy",
           "staging-apply",
           "staging-aws-role-arn",
@@ -839,7 +904,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 33,
+        "inputCount": 38,
         "secrets": [
           "production-release-app-private-key"
         ],
@@ -913,6 +978,17 @@
       {
         "id": "binary-distribution",
         "path": ".github/workflows/binary-distribution.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "binary-release-assets",
+        "path": ".github/workflows/binary-release-assets.yml",
         "reusable": false,
         "inputs": [],
         "inputCount": 0,
@@ -1266,6 +1342,11 @@
           "github-release-title",
           "node-version",
           "package-name",
+          "publication-admission-json",
+          "publication-control-plane-audit-json",
+          "publication-expected-json",
+          "publication-runner-provenance-json",
+          "publication-used-nonces-json",
           "publish-dist-tag",
           "publish-package-set-order",
           "release-passport-impact-json",
@@ -1282,11 +1363,9 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 32,
-        "secrets": [
-          "BUILDCHAIN_PROMOTION_TOKEN"
-        ],
-        "secretCount": 1,
+        "inputCount": 37,
+        "secrets": [],
+        "secretCount": 0,
         "outputs": [
           "controller-plan-artifact",
           "controller-plan-digest",
@@ -1447,6 +1526,11 @@
           "github-release-notes",
           "github-release-title",
           "package-manager",
+          "publication-admission-json",
+          "publication-control-plane-audit-json",
+          "publication-expected-json",
+          "publication-runner-provenance-json",
+          "publication-used-nonces-json",
           "publish-artifact-kind",
           "publish-command",
           "publish-dist-tag",
@@ -1475,17 +1559,16 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 44,
+        "inputCount": 49,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
           "BUILDCHAIN_ISSUE_TOKEN",
-          "BUILDCHAIN_PROMOTION_TOKEN",
           "buildchain-issue-app-id",
           "buildchain-issue-app-private-key",
           "buildchain-issue-token"
         ],
-        "secretCount": 7,
+        "secretCount": 6,
         "outputs": [
           "built-source-sha",
           "controller-plan-artifact",
@@ -1496,9 +1579,10 @@
           "controller-receipt-json",
           "controller-receipt-status",
           "promoted-sha",
+          "publication-capability-digest",
           "release-candidate-artifact"
         ],
-        "outputCount": 10
+        "outputCount": 11
       },
       {
         "id": "release-line-bootstrap",
@@ -1917,6 +2001,10 @@
         "category": "manual"
       },
       {
+        "id": "manual:publication-authority",
+        "category": "manual"
+      },
+      {
         "id": "manual:publish-transaction",
         "category": "manual"
       },
@@ -1982,6 +2070,16 @@
       }
     ],
     "docCommandRefs": [
+      {
+        "id": "audit",
+        "path": "docs/publication-authority.md",
+        "command": "buildchain audit publication-control-plane"
+      },
+      {
+        "id": "audit",
+        "path": "docs/publication-authority.md",
+        "command": "buildchain audit publication-control-plane"
+      },
       {
         "id": "badges-bundle",
         "path": "docs/cli.md",
@@ -3143,6 +3241,11 @@
         "command": "buildchain verify observability-log"
       },
       {
+        "id": "verify-publication-admission",
+        "path": "docs/publication-authority.md",
+        "command": "buildchain verify publication-admission admission"
+      },
+      {
         "id": "verify-release-passport",
         "path": "docs/cli.md",
         "command": "buildchain verify release-passport"
@@ -3193,9 +3296,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "ab57fec294efb9dde1612787bfd0d532b5bb95298b5da14a2b51a5e71b9c7dcc",
-    "workflowRegistryDigest": "1da5cf730fa6a4816bc3d15a457b34dba28d9dfdcdc3146e9b35cb7e0e6c7abf",
-    "pageRegistryDigest": "0319f1af7e6241d1cf41d063b4b2870d2b405f475133cbfef05cfd8f435d0584"
+    "cliRegistryDigest": "a6daf4822365bf576425777230246046ebca67b3f8dcfea61fc7a61773776185",
+    "workflowRegistryDigest": "efa3d81e747dc1a9d60e962a1d2c530ea3a32311d46b8b97c06c809de52215d4",
+    "pageRegistryDigest": "cd5a212ed56b9b33899a2c744f1a4c76bf39ea082b5b923e26ab8d0a05772891"
   },
   "comparison": {
     "missingCliRegistry": [],

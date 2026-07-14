@@ -24,6 +24,7 @@
     "node-api-registry.json",
     "workflow-registry.json",
     "controller-registry.json",
+    "publication-authority-registry.json",
     "public-surface-audit.json",
     "release-model.json",
     "artifact-schemas.json",
