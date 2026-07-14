@@ -225,6 +225,7 @@ jobs:
   publication-authority:
     name: Seal paper publication capability
     permissions:
+      actions: read
       contents: read
     uses: ./.github/workflows/.publication-authority.yml
     with:
