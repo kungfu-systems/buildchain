@@ -4,7 +4,7 @@
   "product": {
     "id": "kungfu-tech-buildchain",
     "name": "@kungfu-tech/buildchain",
-    "version": "2.12.6-alpha.2",
+    "version": "2.12.6-alpha.3",
     "repository": "https://github.com/kungfu-systems/buildchain"
   },
   "source": {
