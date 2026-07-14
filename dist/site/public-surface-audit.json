@@ -1584,11 +1584,12 @@
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
           "BUILDCHAIN_ISSUE_TOKEN",
+          "BUILDCHAIN_PROMOTION_TOKEN",
           "buildchain-issue-app-id",
           "buildchain-issue-app-private-key",
           "buildchain-issue-token"
         ],
-        "secretCount": 6,
+        "secretCount": 7,
         "outputs": [
           "built-source-sha",
           "controller-plan-artifact",
@@ -3327,7 +3328,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "a6daf4822365bf576425777230246046ebca67b3f8dcfea61fc7a61773776185",
-    "workflowRegistryDigest": "c71378eba66d2e03b5c90ed3e5b20a3e68f279b503062ffbf9fdfabe341adcae",
+    "workflowRegistryDigest": "0a42ae651ae4e0121393641c792aa99d357cb582752278728bdffb92269314bd",
     "pageRegistryDigest": "69cad87fc8b656d7876aa6e9861b5d0d4d02ba681e21bccb266c66290f1e17e3"
   },
   "comparison": {

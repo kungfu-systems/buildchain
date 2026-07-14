@@ -698,7 +698,11 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /needs\.publication-authority\.result == 'success'/);
   assert.doesNotMatch(workflow, /^ {4}environment\s*:/m);
   assert.match(workflow, /token: \$\{\{ github\.token \}\}/);
-  assert.doesNotMatch(workflow, /BUILDCHAIN_PROMOTION_TOKEN/);
+  assert.match(
+    workflow,
+    /generated-ref-update-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token \}\}/,
+  );
+  assert.doesNotMatch(workflow, /NODE_AUTH_TOKEN|NPM_TOKEN/);
   assert.match(workflow, /if: \$\{\{ needs\.preflight\.outputs\.action == 'promote' \}\}/);
   assert.match(workflow, /ref: \$\{\{ needs\.preflight\.outputs\.requested-sha \}\}/);
   assert.match(workflow, /INPUT_TARGET_SHA: \$\{\{ inputs\.target-sha \}\}/);
@@ -1836,8 +1840,11 @@ test("promote wrapper exposes controlled branch-protection review bypass", () =>
   assert.match(wrapper, /branch-protection-bypass-apps: \$\{\{ inputs\.branch-protection-bypass-apps \}\}/);
   assert.match(wrapper, /checks: write/);
   assert.match(wrapper, /generated-status-check-token: \$\{\{ github\.token \}\}/);
-  assert.match(wrapper, /generated-ref-update-token: \$\{\{ github\.token \}\}/);
-  assert.doesNotMatch(wrapper, /BUILDCHAIN_PROMOTION_TOKEN/);
+  assert.match(wrapper, /BUILDCHAIN_PROMOTION_TOKEN:\n\s+description:/);
+  assert.match(
+    wrapper,
+    /generated-ref-update-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token \}\}/,
+  );
 
   const selfPromotion = fs.readFileSync(
     path.join(root, ".github/workflows/buildchain-ref-promotion.yml"),
