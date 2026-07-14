@@ -487,19 +487,19 @@ test("paper release workflow publishes declared npm package with source lock and
   assert.match(workflow, /release-passport-product-name: \$\{\{ inputs\.release-passport-product-name \|\| steps\.package\.outputs\.package-name \}\}/);
   assert.match(workflow, /github-release:/);
   assert.match(workflow, /github-release: \$\{\{ inputs\.github-release \}\}/);
-  assert.match(workflow, /permissions:\n  checks: write\n  contents: write/);
-  assert.match(docs, /permissions:\n      checks: write\n      contents: write/);
+  assert.match(workflow, /permissions:\n  contents: read/);
+  assert.match(workflow, /name: Seal paper publication capability/);
+  assert.match(workflow, /permissions:\n      checks: write\n      contents: write\n      id-token: write/);
+  assert.match(workflow, /environment: buildchain-publication/);
   assert.match(workflow, /Preflight protected publication authority/);
   assert.match(
     workflow,
-    /github-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token \}\}/,
+    /github-token: \$\{\{ github\.token \}\}/,
   );
   assert.match(workflow, /cannot read branch protection before publication build/);
-  assert.match(
-    docs,
-    /BUILDCHAIN_PROMOTION_TOKEN: \$\{\{ secrets\.RELEASE_AUTHORITY_TOKEN \}\}/,
-  );
-  assert.match(docs, /caller-chosen release authority secret/);
+  assert.doesNotMatch(workflow, /BUILDCHAIN_PROMOTION_TOKEN|NODE_AUTH_TOKEN|NPM_TOKEN/);
+  assert.match(docs, /publication-admission-json/);
+  assert.match(docs, /does not accept a long-lived promotion token/);
   assert.match(workflow, /default: true/);
   assert.ok(
     workflow.indexOf("Check Buildchain contract lock") <
@@ -680,7 +680,15 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /moved incompatibly/);
   assert.match(workflow, /const action = superseded \? "noop" : "promote"/);
   assert.match(workflow, /const reason = superseded \? "target-ref-advanced" : "target-ref-current"/);
-  assert.match(workflow, /needs: \[preflight, controller-plan, release-candidate-preflight\]/);
+  assert.match(workflow, /publication-admission-json:/);
+  assert.match(workflow, /publication-control-plane-audit-json:/);
+  assert.match(workflow, /name: Seal product publication capability/);
+  assert.match(workflow, /uses: \.\/\.github\/workflows\/\.publication-authority\.yml/);
+  assert.match(workflow, /needs: \[preflight, controller-plan, release-candidate-preflight, publication-authority\]/);
+  assert.match(workflow, /needs\.publication-authority\.result == 'success'/);
+  assert.match(workflow, /environment: buildchain-publication/);
+  assert.match(workflow, /token: \$\{\{ github\.token \}\}/);
+  assert.doesNotMatch(workflow, /BUILDCHAIN_PROMOTION_TOKEN/);
   assert.match(workflow, /if: \$\{\{ needs\.preflight\.outputs\.action == 'promote' \}\}/);
   assert.match(workflow, /ref: \$\{\{ needs\.preflight\.outputs\.requested-sha \}\}/);
   assert.match(workflow, /INPUT_TARGET_SHA: \$\{\{ inputs\.target-sha \}\}/);
@@ -716,6 +724,10 @@ test("release-candidate promote workflow is promote-only and never schedules a h
       workflow.indexOf("Install promotion dependencies"),
   );
   assert.ok(
+    workflow.indexOf("Seal product publication capability") <
+      workflow.indexOf("Install promotion dependencies"),
+  );
+  assert.ok(
     workflow.indexOf("Revalidate queued promotion intent") <
       workflow.indexOf("Resolve PR-stage release candidate"),
   );
@@ -729,6 +741,20 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.doesNotMatch(workflow, /build-native:/);
   assert.doesNotMatch(workflow, /build-linux-container:/);
   assert.doesNotMatch(workflow, /fromJSON\(needs\.resolve-contract\.outputs/);
+});
+
+test("sealed publication authority verifier is independent and credential-free", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/.publication-authority.yml"),
+    "utf8",
+  );
+  assert.match(workflow, /name: Independently verify publication admission/);
+  assert.match(workflow, /verifyPublicationAdmission/);
+  assert.match(workflow, /contents: read/);
+  assert.doesNotMatch(workflow, /id-token:\s*write/);
+  assert.doesNotMatch(workflow, /contents:\s*write/);
+  assert.doesNotMatch(workflow, /NODE_AUTH_TOKEN|NPM_TOKEN|BUILDCHAIN_PROMOTION_TOKEN/);
+  assert.match(workflow, /BUILDCHAIN_USED_NONCES_JSON/);
 });
 
 test("legacy release workflows fail closed instead of bypassing publish-gate source locks", () => {
@@ -1095,6 +1121,11 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /EVENT_NAME" = "workflow_dispatch".*web_surface_channel=staging/s);
   assert.ok(workflow.indexOf("id: gate") < workflow.indexOf("Run caller build"));
   assert.match(workflow, /Apply production deploy/);
+  assert.match(workflow, /Seal web production publication capability/);
+  assert.match(workflow, /uses: \.\/\.github\/workflows\/\.publication-authority\.yml/);
+  assert.match(workflow, /publication-admission-json:/);
+  assert.match(workflow, /publication-control-plane-audit-json:/);
+  assert.match(workflow, /- publication-authority/);
   assert.match(workflow, /inputs\.production-apply/);
   assert.match(workflow, /github\.event_name == 'workflow_dispatch' && inputs\.production-approved/);
   assert.match(workflow, /github\.event_name == 'push' && github\.ref_name == 'main' && inputs\.production-release-on-main/);
@@ -1519,14 +1550,18 @@ test("binary distribution blocks invalid release uploads before the build matrix
     workflow.indexOf("Binary distribution preflight") <
       workflow.indexOf("Build standalone binary archive"),
   );
-  assert.match(workflow, /upload-release=true is only allowed on true tag-triggered release runs/);
+  assert.match(workflow, /upload-release is retired from the evidence-only Binary Distribution workflow/);
   assert.match(workflow, /needs: preflight/);
   assert.match(workflow, /needs: \[preflight, binary\]/);
 });
 
-test("binary distribution manages GitHub Release metadata explicitly", () => {
+test("binary evidence and product publication are isolated by the sealed asset workflow", () => {
   const workflow = fs.readFileSync(
     path.join(root, ".github/workflows/binary-distribution.yml"),
+    "utf8",
+  );
+  const publication = fs.readFileSync(
+    path.join(root, ".github/workflows/.binary-release-assets.yml"),
     "utf8",
   );
   assert.match(workflow, /Fetch durable release-state passport/);
@@ -1548,10 +1583,16 @@ test("binary distribution manages GitHub Release metadata explicitly", () => {
   assert.match(workflow, /--base-passport-json \.buildchain\/release-passport\/authoritative-release-state-passport\.json/);
   assert.match(workflow, /--impact-json \.buildchain\/release-evidence\/authoritative-release-state-impact\.json/);
   assert.match(workflow, /--require-base-kfd/);
-  assert.match(workflow, /scripts\/ensure-github-release\.mjs/);
-  assert.match(workflow, /--repository "\$\{\{ github\.repository \}\}"/);
-  assert.match(workflow, /--tag "\$RELEASE_TAG"/);
-  assert.match(workflow, /gh release upload "\$RELEASE_TAG"/);
+  assert.doesNotMatch(workflow, /scripts\/ensure-github-release\.mjs/);
+  assert.doesNotMatch(workflow, /gh release upload/);
+  assert.match(publication, /uses: \.\/\.github\/workflows\/\.publication-authority\.yml/);
+  assert.match(publication, /needs: publication-authority/);
+  assert.match(publication, /environment: buildchain-release-assets/);
+  assert.match(publication, /scripts\/ensure-github-release\.mjs/);
+  assert.match(publication, /--repository "\$\{\{ github\.repository \}\}"/);
+  assert.match(publication, /--tag "\$RELEASE_TAG"/);
+  assert.match(publication, /gh release upload "\$RELEASE_TAG"/);
+  assert.match(publication, /capability\.artifactDigest !== actualArtifact/);
   assert.doesNotMatch(workflow, /gh release create/);
 });
 
@@ -1728,7 +1769,8 @@ test("promote wrapper exposes controlled branch-protection review bypass", () =>
   assert.match(wrapper, /branch-protection-bypass-apps: \$\{\{ inputs\.branch-protection-bypass-apps \}\}/);
   assert.match(wrapper, /checks: write/);
   assert.match(wrapper, /generated-status-check-token: \$\{\{ github\.token \}\}/);
-  assert.match(wrapper, /generated-ref-update-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token \}\}/);
+  assert.match(wrapper, /generated-ref-update-token: \$\{\{ github\.token \}\}/);
+  assert.doesNotMatch(wrapper, /BUILDCHAIN_PROMOTION_TOKEN/);
 
   const selfPromotion = fs.readFileSync(
     path.join(root, ".github/workflows/buildchain-ref-promotion.yml"),
@@ -1881,7 +1923,7 @@ test("report issue action exposes workflow-friction feedback mode", () => {
   assert.match(workflow, /Report Buildchain promotion friction/);
   assert.match(
     workflow,
-    /token: \$\{\{ steps\.buildchain-issue-app-token\.outputs\.token \|\| secrets\['buildchain-issue-token'\] \|\| secrets\.BUILDCHAIN_ISSUE_TOKEN \|\| secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token \}\}/,
+    /token: \$\{\{ steps\.buildchain-issue-app-token\.outputs\.token \|\| secrets\['buildchain-issue-token'\] \|\| secrets\.BUILDCHAIN_ISSUE_TOKEN \|\| github\.token \}\}/,
   );
   assert.doesNotMatch(workflow, /Report Buildchain promotion friction[\s\S]*token: \$\{\{ github\.token \}\}/);
   assert.match(workflow, /body-file: \$\{\{ steps\.friction\.outputs\.body-file \}\}/);

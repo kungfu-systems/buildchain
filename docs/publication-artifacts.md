@@ -188,23 +188,24 @@ jobs:
       contents: write
       id-token: write
       issues: write
-    secrets:
-      BUILDCHAIN_PROMOTION_TOKEN: ${{ secrets.RELEASE_AUTHORITY_TOKEN }}
     with:
       buildchain-ref: ${{ inputs.buildchain-ref || '' }}
+      publication-admission-json: ${{ needs.authority.outputs.admission-json }}
+      publication-runner-provenance-json: ${{ needs.authority.outputs.runner-provenance-json }}
+      publication-control-plane-audit-json: ${{ needs.authority.outputs.control-plane-audit-json }}
+      publication-expected-json: ${{ needs.authority.outputs.expected-json }}
       toolchain-type: config
       verify-command: make check
       buildchain-contract-lock-path: .buildchain/contract-lock.json
 ```
 
-`RELEASE_AUTHORITY_TOKEN` is a caller-chosen release authority secret name.
-Map whichever repository or organization secret owns protected release
-bookkeeping into the reusable workflow's `BUILDCHAIN_PROMOTION_TOKEN` contract;
-the reusable workflow does not require that provider-side secret to use a
-specific name. Before it builds the paper, the workflow uses that authority to
-read the target channel's branch protection and fails with a configuration
-diagnostic if the protection is not readable. `github.token` remains a fallback
-for repositories where its permissions are sufficient.
+The publication job does not accept a long-lived promotion token. The caller
+must first produce a fresh sealed admission, runner provenance, external
+control-plane audit, and exact expected bindings. The credential-free verifier
+job checks those receipts; only then can the protected
+`buildchain-publication` job use its short-lived `github.token` and OIDC trusted
+publisher identity. The workflow fails before the publication build when the
+target branch protection cannot be read.
 
 The preset:
 

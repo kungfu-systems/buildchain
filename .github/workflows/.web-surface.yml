@@ -144,6 +144,31 @@ on:
         default: "production"
         type: string
         required: false
+      publication-admission-json:
+        description: "Fresh sealed admission for production deploy; ignored by preview and staging lanes."
+        default: ""
+        type: string
+        required: false
+      publication-runner-provenance-json:
+        description: "Qualified runner provenance bound by the production admission."
+        default: ""
+        type: string
+        required: false
+      publication-control-plane-audit-json:
+        description: "Fresh consumer control-plane audit bound to production-environment."
+        default: ""
+        type: string
+        required: false
+      publication-expected-json:
+        description: "Consumer-owned exact production source, runtime, Gate, artifact, target, and channel bindings."
+        default: ""
+        type: string
+        required: false
+      publication-used-nonces-json:
+        description: "Consumer-owned JSON array of already consumed admission nonces."
+        default: "[]"
+        type: string
+        required: false
       release-feedback-actor-privacy:
         description: "Actor identity mode for web-surface release feedback passports: public, redacted, or private-ref."
         default: "public"
@@ -226,9 +251,6 @@ on:
 
 permissions:
   contents: read
-  id-token: write
-  issues: write
-  pull-requests: write
 
 jobs:
   runtime:
@@ -1449,6 +1471,32 @@ jobs:
           include-hidden-files: true
           if-no-files-found: warn
 
+  publication-authority:
+    name: Seal web production publication capability
+    needs:
+      - plan
+      - runtime
+      - release-intent
+    if: >-
+      ${{
+        inputs.production-apply &&
+        (
+          (github.event_name == 'workflow_dispatch' && inputs.production-approved) ||
+          (github.event_name == 'push' && github.ref_name == 'main' && inputs.production-release-on-main && needs.release-intent.outputs.production-release-approved == 'true')
+        )
+      }}
+    permissions:
+      contents: read
+    uses: ./.github/workflows/.publication-authority.yml
+    with:
+      buildchain-repository: ${{ inputs.buildchain-repository }}
+      buildchain-ref: ${{ needs.runtime.outputs.runtime-sha }}
+      admission-json: ${{ inputs.publication-admission-json }}
+      runner-provenance-json: ${{ inputs.publication-runner-provenance-json }}
+      control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
+      expected-json: ${{ inputs.publication-expected-json }}
+      used-nonces-json: ${{ inputs.publication-used-nonces-json }}
+
   production-apply:
     name: Apply production deploy
     if: >-
@@ -1464,6 +1512,7 @@ jobs:
       - plan
       - runtime
       - release-intent
+      - publication-authority
     environment: ${{ inputs.production-environment }}
     outputs:
       production-apply-result-json: ${{ steps.apply.outputs.web-surface-apply-result-json }}
@@ -1633,6 +1682,7 @@ jobs:
       - preview-apply
       - preview-cleanup
       - staging-apply
+      - publication-authority
       - production-apply
     if: ${{ always() && needs.controller-plan.result == 'success' }}
     runs-on: ubuntu-24.04
@@ -1683,7 +1733,7 @@ jobs:
         env:
           BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
           BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
-            [{"id":"resolve-runtime","status":"${{ needs.runtime.result }}"},{"id":"plan","status":"${{ needs.plan.result }}"},{"id":"build","status":"${{ needs.plan.outputs.build-outcome || needs.plan.result }}"},{"id":"verify","status":"${{ needs.plan.outputs.verify-outcome || needs.plan.result }}"},{"id":"apply","status":"${{ (needs.preview-apply.result == 'failure' || needs.preview-cleanup.result == 'failure' || needs.staging-apply.result == 'failure' || needs.production-apply.result == 'failure') && 'failure' || (needs.preview-apply.result == 'cancelled' || needs.preview-cleanup.result == 'cancelled' || needs.staging-apply.result == 'cancelled' || needs.production-apply.result == 'cancelled') && 'cancelled' || (needs.preview-apply.result == 'success' || needs.preview-cleanup.result == 'success' || needs.staging-apply.result == 'success' || needs.production-apply.result == 'success') && 'success' || 'skipped' }}"},{"id":"aggregate","status":"${{ (needs.plan.result == 'failure' || needs.preview-apply.result == 'failure' || needs.preview-cleanup.result == 'failure' || needs.staging-apply.result == 'failure' || needs.production-apply.result == 'failure') && 'failure' || (needs.plan.result == 'cancelled' || needs.preview-apply.result == 'cancelled' || needs.preview-cleanup.result == 'cancelled' || needs.staging-apply.result == 'cancelled' || needs.production-apply.result == 'cancelled') && 'cancelled' || needs.plan.result == 'success' && 'success' || 'skipped' }}"}]
+            [{"id":"resolve-runtime","status":"${{ needs.runtime.result }}"},{"id":"plan","status":"${{ needs.plan.result }}"},{"id":"build","status":"${{ needs.plan.outputs.build-outcome || needs.plan.result }}"},{"id":"verify","status":"${{ needs.plan.outputs.verify-outcome || needs.plan.result }}"},{"id":"publication-authority","status":"${{ needs.publication-authority.result }}"},{"id":"apply","status":"${{ (needs.preview-apply.result == 'failure' || needs.preview-cleanup.result == 'failure' || needs.staging-apply.result == 'failure' || needs.production-apply.result == 'failure') && 'failure' || (needs.preview-apply.result == 'cancelled' || needs.preview-cleanup.result == 'cancelled' || needs.staging-apply.result == 'cancelled' || needs.production-apply.result == 'cancelled') && 'cancelled' || (needs.preview-apply.result == 'success' || needs.preview-cleanup.result == 'success' || needs.staging-apply.result == 'success' || needs.production-apply.result == 'success') && 'success' || 'skipped' }}"},{"id":"aggregate","status":"${{ (needs.plan.result == 'failure' || needs.preview-apply.result == 'failure' || needs.preview-cleanup.result == 'failure' || needs.staging-apply.result == 'failure' || needs.production-apply.result == 'failure') && 'failure' || (needs.plan.result == 'cancelled' || needs.preview-apply.result == 'cancelled' || needs.preview-cleanup.result == 'cancelled' || needs.staging-apply.result == 'cancelled' || needs.production-apply.result == 'cancelled') && 'cancelled' || needs.plan.result == 'success' && 'success' || 'skipped' }}"}]
           BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ steps.select-plan.outcome == 'success' && '[{"kind":"web-surface-plan","path":".buildchain/controller/web-surface-plan.json"}]' || '[]' }}
           BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ needs.plan.result != 'success' && 'web-surface-incomplete' || steps.select-plan.outcome != 'success' && 'no-applicable-web-surface-channel' || '' }}
           BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Web-surface controller did not complete an applicable channel successfully

@@ -375,6 +375,8 @@ function pageCapabilityMeta(relPath, category) {
 
 function cliCommandMeta(id) {
   const map = new Map(Object.entries({
+    audit: { group: "release-passport-trust", purpose: "Inspect read-only publication authority audit commands." },
+    "audit-publication-control-plane": { group: "release-passport-trust", purpose: "Read GitHub and npm publication control-plane state and emit a sanitized expiring receipt." },
     badges: { group: "distribution-indexes", purpose: "Inspect README badge command families." },
     "badges-bundle": { group: "distribution-indexes", purpose: "Generate or verify the combined KFD and Release Passport badge bundle." },
     "badges-readme": { group: "distribution-indexes", purpose: "Generate or verify managed README badge blocks." },
@@ -382,6 +384,9 @@ function cliCommandMeta(id) {
     "build-facts": { group: "observability-diagnostics", purpose: "Collect and verify Git source, version, module output, product artifact, and legacy Kungfu buildinfo facts." },
     collect: { group: "release-passport-trust", purpose: "Inspect release evidence collection command families." },
     "collect-github-release": { group: "release-passport-trust", purpose: "Collect GitHub Release assets into a release passport." },
+    create: { group: "release-passport-trust", purpose: "Create canonical sealed publication evidence documents." },
+    "create-publication-admission": { group: "release-passport-trust", purpose: "Create a canonical short-lived publication admission envelope from exact consumer bindings." },
+    "create-runner-provenance": { group: "release-passport-trust", purpose: "Create runner provenance evidence with an explicit qualification floor." },
     diagnostics: { group: "observability-diagnostics", purpose: "Inspect diagnostics command families." },
     "diagnostics-summary": { group: "observability-diagnostics", purpose: "Summarize diagnostics artifacts into JSON and cross-platform lifecycle timing tables." },
     doctor: { group: "getting-started", purpose: "Report local integration readiness." },

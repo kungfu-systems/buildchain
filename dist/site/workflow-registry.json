@@ -4,6 +4,30 @@
   "workflowSource": ".github/workflows reverse input enumeration",
   "workflows": [
     {
+      "id": ".binary-release-assets",
+      "path": ".github/workflows/.binary-release-assets.yml",
+      "reusable": true,
+      "inputs": [
+        "buildchain-ref",
+        "buildchain-repository",
+        "evidence-run-id",
+        "publication-admission-json",
+        "publication-control-plane-audit-json",
+        "publication-expected-json",
+        "publication-runner-provenance-json",
+        "publication-used-nonces-json",
+        "release-tag"
+      ],
+      "inputCount": 9,
+      "secrets": [],
+      "secretCount": 0,
+      "outputs": [],
+      "outputCount": 0,
+      "surface": "reusable-workflow",
+      "capabilityGroup": "api-cli-reference",
+      "status": "active"
+    },
+    {
       "id": ".build",
       "path": ".github/workflows/.build.yml",
       "reusable": true,
@@ -181,6 +205,33 @@
         "source-sha"
       ],
       "outputCount": 14,
+      "surface": "reusable-workflow",
+      "capabilityGroup": "api-cli-reference",
+      "status": "active"
+    },
+    {
+      "id": ".publication-authority",
+      "path": ".github/workflows/.publication-authority.yml",
+      "reusable": true,
+      "inputs": [
+        "admission-json",
+        "buildchain-ref",
+        "buildchain-repository",
+        "control-plane-audit-json",
+        "dry-run",
+        "expected-json",
+        "runner-provenance-json",
+        "used-nonces-json"
+      ],
+      "inputCount": 8,
+      "secrets": [],
+      "secretCount": 0,
+      "outputs": [
+        "capability-artifact",
+        "capability-digest",
+        "capability-json"
+      ],
+      "outputCount": 3,
       "surface": "reusable-workflow",
       "capabilityGroup": "api-cli-reference",
       "status": "active"
@@ -474,6 +525,11 @@
         "production-release-on-main",
         "production-release-pr-mode",
         "production-release-pr-token",
+        "publication-admission-json",
+        "publication-control-plane-audit-json",
+        "publication-expected-json",
+        "publication-runner-provenance-json",
+        "publication-used-nonces-json",
         "release-feedback-actor-privacy",
         "staging-apply",
         "staging-aws-role-arn",
@@ -481,7 +537,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 33,
+      "inputCount": 38,
       "secrets": [
         "production-release-app-private-key"
       ],
@@ -572,6 +628,20 @@
       "outputs": [],
       "outputCount": 0,
       "surface": "release-passport",
+      "capabilityGroup": "api-cli-reference",
+      "status": "active"
+    },
+    {
+      "id": "binary-release-assets",
+      "path": ".github/workflows/binary-release-assets.yml",
+      "reusable": false,
+      "inputs": [],
+      "inputCount": 0,
+      "secrets": [],
+      "secretCount": 0,
+      "outputs": [],
+      "outputCount": 0,
+      "surface": "repository-workflow",
       "capabilityGroup": "api-cli-reference",
       "status": "active"
     },
@@ -962,6 +1032,11 @@
         "github-release-title",
         "node-version",
         "package-name",
+        "publication-admission-json",
+        "publication-control-plane-audit-json",
+        "publication-expected-json",
+        "publication-runner-provenance-json",
+        "publication-used-nonces-json",
         "publish-dist-tag",
         "publish-package-set-order",
         "release-passport-impact-json",
@@ -978,11 +1053,9 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 32,
-      "secrets": [
-        "BUILDCHAIN_PROMOTION_TOKEN"
-      ],
-      "secretCount": 1,
+      "inputCount": 37,
+      "secrets": [],
+      "secretCount": 0,
       "outputs": [
         "controller-plan-artifact",
         "controller-plan-digest",
@@ -1158,6 +1231,11 @@
         "github-release-notes",
         "github-release-title",
         "package-manager",
+        "publication-admission-json",
+        "publication-control-plane-audit-json",
+        "publication-expected-json",
+        "publication-runner-provenance-json",
+        "publication-used-nonces-json",
         "publish-artifact-kind",
         "publish-command",
         "publish-dist-tag",
@@ -1186,17 +1264,16 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 44,
+      "inputCount": 49,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
         "BUILDCHAIN_ISSUE_TOKEN",
-        "BUILDCHAIN_PROMOTION_TOKEN",
         "buildchain-issue-app-id",
         "buildchain-issue-app-private-key",
         "buildchain-issue-token"
       ],
-      "secretCount": 7,
+      "secretCount": 6,
       "outputs": [
         "built-source-sha",
         "controller-plan-artifact",
@@ -1207,9 +1284,10 @@
         "controller-receipt-json",
         "controller-receipt-status",
         "promoted-sha",
+        "publication-capability-digest",
         "release-candidate-artifact"
       ],
-      "outputCount": 10,
+      "outputCount": 11,
       "surface": "release-governance",
       "capabilityGroup": "reusable-build",
       "status": "active"

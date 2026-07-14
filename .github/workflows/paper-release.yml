@@ -142,6 +142,31 @@ on:
         default: ""
         type: string
         required: false
+      publication-admission-json:
+        description: "Fresh sealed publication admission JSON; required for non-dry-run publication"
+        default: ""
+        type: string
+        required: false
+      publication-runner-provenance-json:
+        description: "Runner provenance receipt JSON bound by the admission"
+        default: ""
+        type: string
+        required: false
+      publication-control-plane-audit-json:
+        description: "Fresh external control-plane audit receipt JSON"
+        default: ""
+        type: string
+        required: false
+      publication-expected-json:
+        description: "Independent exact publication bindings JSON"
+        default: ""
+        type: string
+        required: false
+      publication-used-nonces-json:
+        description: "JSON array of consumed admission nonces"
+        default: "[]"
+        type: string
+        required: false
       dry-run:
         description: "Plan only; do not publish or move refs"
         default: false
@@ -154,10 +179,6 @@ on:
       artifact-retention-days:
         default: 30
         type: number
-        required: false
-    secrets:
-      BUILDCHAIN_PROMOTION_TOKEN:
-        description: "Optional token used for protected generated refs and release finalization"
         required: false
     outputs:
       package-name:
@@ -198,15 +219,35 @@ on:
         value: ${{ jobs.paper-release.outputs.controller-receipt-status }}
 
 permissions:
-  checks: write
-  contents: write
-  id-token: write
-  issues: write
+  contents: read
 
 jobs:
+  publication-authority:
+    name: Seal paper publication capability
+    permissions:
+      contents: read
+    uses: ./.github/workflows/.publication-authority.yml
+    with:
+      buildchain-repository: ${{ inputs.buildchain-repository }}
+      buildchain-ref: ${{ inputs.buildchain-ref || 'v2' }}
+      admission-json: ${{ inputs.publication-admission-json }}
+      runner-provenance-json: ${{ inputs.publication-runner-provenance-json }}
+      control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
+      expected-json: ${{ inputs.publication-expected-json }}
+      used-nonces-json: ${{ inputs.publication-used-nonces-json }}
+      dry-run: ${{ inputs.dry-run }}
+
   paper-release:
     name: Build and publish paper package
+    needs: publication-authority
+    if: ${{ needs.publication-authority.result == 'success' }}
     runs-on: ubuntu-24.04
+    environment: buildchain-publication
+    permissions:
+      checks: write
+      contents: write
+      id-token: write
+      issues: write
     outputs:
       package-name: ${{ steps.package.outputs.package-name }}
       package-version: ${{ steps.package.outputs.package-version }}
@@ -391,7 +432,7 @@ jobs:
         env:
           TARGET_REF: ${{ inputs.target-ref || github.ref_name }}
         with:
-          github-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+          github-token: ${{ github.token }}
           script: |
             const targetRef = (process.env.TARGET_REF || "").trim();
             if (!/^(alpha|release)\/v\d+\/v\d+\.\d+$/.test(targetRef)) {
@@ -406,7 +447,7 @@ jobs:
             } catch (error) {
               if (error.status === 403 || error.status === 404) {
                 throw new Error(
-                  `Buildchain promotion authority cannot read branch protection before publication build for ${targetRef}; map a caller-chosen release authority secret to BUILDCHAIN_PROMOTION_TOKEN`,
+                  `Buildchain promotion authority cannot read branch protection before publication build for ${targetRef}`,
                 );
               }
               throw error;
@@ -716,7 +757,7 @@ jobs:
         id: promote
         uses: ./.buildchain/runtime/actions/promote-buildchain-ref
         with:
-          token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+          token: ${{ github.token }}
           sha: ${{ steps.target.outputs.sha }}
           target-ref: ${{ steps.target.outputs.ref }}
           tags: ${{ steps.package.outputs.exact-tag }}
@@ -725,7 +766,7 @@ jobs:
           require-version-state: "false"
           required-status-check: ${{ inputs.required-status-check }}
           generated-status-check-token: ${{ github.token }}
-          generated-ref-update-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+          generated-ref-update-token: ${{ github.token }}
           branch-protection-bypass-apps: ${{ inputs.branch-protection-bypass-apps }}
           branch-protection-bypass-users: ${{ inputs.branch-protection-bypass-users }}
           branch-protection-bypass-teams: ${{ inputs.branch-protection-bypass-teams }}
@@ -761,7 +802,7 @@ jobs:
         env:
           BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
           BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
-            [{"id":"resolve-runtime","status":"${{ steps.runtime.outcome == 'success' && steps.runtime-checkout.outcome == 'success' && steps.controller-identities.outcome == 'success' && 'success' || 'failure' }}"},{"id":"build","status":"${{ steps.build.outcome }}"},{"id":"verify","status":"${{ steps.verify.outcome }}"},{"id":"collect","status":"${{ (steps.hydrate.outcome == 'failure' || steps.manifest.outcome == 'failure' || steps.package.outcome == 'failure' || steps.evidence-upload.outcome == 'failure') && 'failure' || (steps.manifest.outcome == 'success' && steps.package.outcome == 'success' && steps.evidence-upload.outcome == 'success') && 'success' || 'skipped' }}"},{"id":"publish","status":"${{ inputs.dry-run && 'skipped' || steps.promote.outcome }}"},{"id":"passport","status":"${{ inputs.dry-run && 'skipped' || steps.promote.outcome }}"},{"id":"aggregate","status":"${{ steps.promote.outcome }}"}]
+            [{"id":"resolve-runtime","status":"${{ steps.runtime.outcome == 'success' && steps.runtime-checkout.outcome == 'success' && steps.controller-identities.outcome == 'success' && 'success' || 'failure' }}"},{"id":"build","status":"${{ steps.build.outcome }}"},{"id":"verify","status":"${{ steps.verify.outcome }}"},{"id":"collect","status":"${{ (steps.hydrate.outcome == 'failure' || steps.manifest.outcome == 'failure' || steps.package.outcome == 'failure' || steps.evidence-upload.outcome == 'failure') && 'failure' || (steps.manifest.outcome == 'success' && steps.package.outcome == 'success' && steps.evidence-upload.outcome == 'success') && 'success' || 'skipped' }}"},{"id":"publication-authority","status":"${{ inputs.dry-run && 'skipped' || needs.publication-authority.result }}"},{"id":"publish","status":"${{ inputs.dry-run && 'skipped' || steps.promote.outcome }}"},{"id":"passport","status":"${{ inputs.dry-run && 'skipped' || steps.promote.outcome }}"},{"id":"aggregate","status":"${{ steps.promote.outcome }}"}]
           BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ steps.promote.outcome == 'success' && !inputs.dry-run && format('[{{"kind":"publication-manifest","path":"{0}/.buildchain/publication/publication-artifact.json"}},{{"kind":"release-passport","path":"{1}"}}]', inputs.working-directory, steps.promote.outputs.release-passport-path) || steps.manifest.outcome == 'success' && format('[{{"kind":"publication-manifest","path":"{0}/.buildchain/publication/publication-artifact.json"}}]', inputs.working-directory) || '[]' }}
           BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ inputs.dry-run && 'paper-release-dry-run' || steps.promote.outcome == 'success' && '' || 'paper-release-incomplete' }}
           BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Paper release did not complete successfully

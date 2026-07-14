@@ -5,14 +5,17 @@ import { createPublicationAuthorityRegistry } from "./publication-authority.js";
 
 const DESCRIPTORS = Object.freeze([
   [".github/workflows/.build.yml", "non-publication-oidc"],
+  [".github/workflows/.publication-authority.yml", "evidence-publication"],
   [".github/workflows/.release-verify.yml", "governance-write"],
   [".github/workflows/.sam-release.yml", "retired-deny"],
   [".github/workflows/.sam-verify.yml", "retired-deny"],
   [".github/workflows/.sync-remote-git.yml", "governance-write"],
-  [".github/workflows/.web-surface.yml", "product-publication", true, ["web-production"], "oidc", "buildchain-publication"],
+  [".github/workflows/.web-surface.yml", "product-publication", true, ["web-production"], "oidc", "consumer-defined", "caller-bound"],
   [".github/workflows/.wheel-release.yml", "retired-deny"],
   [".github/workflows/.wheel-verify.yml", "retired-deny"],
-  [".github/workflows/binary-distribution.yml", "product-publication", true, ["github-release"], "oidc", "buildchain-publication"],
+  [".github/workflows/.binary-release-assets.yml", "product-publication", true, ["github-release"], "github-token", "buildchain-release-assets"],
+  [".github/workflows/binary-distribution.yml", "evidence-publication"],
+  [".github/workflows/binary-release-assets.yml", "governance-write"],
   [".github/workflows/build-surface-fixture.yml", "non-publication-oidc"],
   [".github/workflows/build.yml", "non-publication-oidc"],
   [".github/workflows/buildchain-alpha-self-dogfood.yml", "non-publication-oidc"],
@@ -44,6 +47,7 @@ export function buildchainPublicationAuthorityDescriptors() {
     capabilityIds = [],
     credentialMode = "none",
     environment = "",
+    environmentMode = "fixed",
   ]) => ({
     workflowPath,
     authorityClass,
@@ -51,6 +55,7 @@ export function buildchainPublicationAuthorityDescriptors() {
     capabilityIds,
     credentialMode,
     environment,
+    environmentMode,
     runnerPolicy: publicationCapable ? "qualified-measured" : "unqualified",
   }));
 }

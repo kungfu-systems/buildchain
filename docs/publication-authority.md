@@ -32,10 +32,12 @@ descriptor not marked `product-publication` are denied product publication.
 
 ## Evidence chain
 
-A qualifying admission binds exact source and runtime SHAs; contract, policy,
-controller, artifact, runner, and control-plane digests; repository, workflow,
+A qualifying admission binds exact source and runtime SHAs; contract, consumer
+policy, qualifying controller receipt, Shifu/Gate aggregate, artifact, runner,
+and control-plane digests; repository, workflow, protected Environment,
 product, target, version, and channel; plus a unique nonce and a lifetime of no
-more than 15 minutes.
+more than 15 minutes. Every expected binding is mandatory at verification time;
+an omitted expected field is not a wildcard.
 
 The independent verifier recomputes every digest and ignores a producer's own
 allow/deny conclusion. It rejects an unknown workflow, stale or replayed nonce,
@@ -46,12 +48,23 @@ credential.
 ## Runner and control-plane evidence
 
 Runner evidence uses exactly four classes: `ephemeral`, `reimaged`,
-`persistent-measured`, and `unqualified`. The first three require image and
-measurement digests; `unqualified` always fails. Provider restrictions still
-apply. The external audit records digests and pass/fail status for repository
-Actions defaults, protected branch and Environment policy, job-scoped OIDC,
-absence of long-lived publication credentials, exact trusted-publisher binding,
-token-disable policy, and authorized runner class. Missing facts fail closed.
+`persistent-measured`, and `unqualified`. Ephemeral runners also record their
+job-isolation boundary. Reimaged and persistent runners qualify only when a
+clean baseline is proven and baseline, toolchain, cache-contract, and task-
+isolation digests are all present. Otherwise they still emit diagnostic
+evidence with `qualificationStatus = unqualified`, but cannot receive a product
+capability.
+
+The external audit records digests and pass/fail status for repository Actions
+defaults, classic branch protection or an active matching repository ruleset,
+protected Environment policy, job-scoped credentials,
+absence of long-lived workflow publication credentials, provider authority,
+and authorized runner class. Provider modes are `npm-trusted-publisher`,
+`github-token`, and `oidc-role`. The OIDC-role mode consumes only a sanitized
+provider audit containing a role digest and qualifying decision; raw IAM policy,
+tokens, or credentials are rejected. Package-owner, cloud-root, GitHub
+administrator, and registry-root credentials remain outside Buildchain's trust
+boundary. Missing or unreadable facts fail closed.
 
 Evidence publication is a separate authority class and never grants product
 publication.
@@ -70,5 +83,41 @@ buildchain verify publication-admission admission.json \
   --json
 ```
 
+The read-only live collector defaults to npm trusted publishing. Other product
+providers select an explicit adapter:
+
+```bash
+buildchain audit publication-control-plane \
+  --repository kungfu-systems/buildchain \
+  --branch release/v2/v2.12 \
+  --workflow .github/workflows/.binary-release-assets.yml \
+  --job publish \
+  --environment buildchain-release-assets \
+  --publisher-mode github-token
+
+buildchain audit publication-control-plane \
+  --repository OWNER/CONSUMER \
+  --workflow-repository kungfu-systems/buildchain \
+  --branch main \
+  --workflow .github/workflows/.web-surface.yml \
+  --job production-apply \
+  --environment production \
+  --publisher-mode oidc-role \
+  --provider-audit-json sanitized-oidc-role-audit.json
+```
+
 Provider credential issuance must bind to the same protected workflow and
 environment. The Buildchain receipt alone is never sufficient authorization.
+
+## Publication lanes
+
+`Binary Distribution` is evidence-only. It builds platform archives and a
+release evidence bundle with read-only repository permissions. GitHub Release
+asset writes live in `Binary Release Assets`, which downloads an exact prior
+evidence run, verifies its bundle digest against the sealed capability, and is
+the only binary job with `contents: write` in the protected
+`buildchain-release-assets` Environment.
+
+The npm/promotion, paper, binary-release, and web-production lanes all depend on
+the independent verifier. Preview, staging, build, source-check, controller,
+and failure-evidence lanes do not inherit product publication capability.

@@ -141,6 +141,7 @@ export {
   RUNNER_PROVENANCE_CLASSES,
   RUNNER_PROVENANCE_CONTRACT,
   createPublicationAuthorityRegistry,
+  createPublicationAdmission,
   createPublicationControlPlaneAudit,
   createRunnerProvenance,
   detectPublicationAuthoritySignals,

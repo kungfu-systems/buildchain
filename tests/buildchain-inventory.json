@@ -134,6 +134,9 @@
       ],
       "binaryDistribution": {
         "workflow": "binary-distribution.yml",
+        "publicationWorkflow": "binary-release-assets.yml",
+        "publicationEnvironment": "buildchain-release-assets",
+        "authority": "sealed-publication-capability",
         "productionRunnerDefault": "github-hosted",
         "selfHostedRole": "compatibility-fixture",
         "heavyPackageManagersDeferred": true

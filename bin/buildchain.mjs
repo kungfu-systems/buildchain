@@ -32,7 +32,11 @@ import {
   explainReleasePassport,
   verifyReleasePassport,
 } from "../packages/core/release-passport.js";
-import { verifyPublicationAdmission } from "../packages/core/publication-authority.js";
+import {
+  createPublicationAdmission,
+  createRunnerProvenance,
+  verifyPublicationAdmission,
+} from "../packages/core/publication-authority.js";
 import {
   explainArtifactPassport,
   verifyArtifactPassport,
@@ -139,12 +143,19 @@ function usage() {
                                     [--base-passport-json <json-or-path>] [--require-base-kfd]
                                     [--release-extra-json <json-or-path>]
                                     [--publish-json <json-or-path>] [--output-dir <dir>] [--json]
+  buildchain create publication-admission --input-json <file-or-json> [--output <file>] [--json]
+  buildchain create runner-provenance --input-json <file-or-json> [--output <file>] [--json]
   buildchain verify release-passport <file-or-url> [--json]
   buildchain verify publication-admission <file-or-json>
                           --registry-json <file-or-json>
                           --runner-json <file-or-json>
                           --control-plane-audit-json <file-or-json>
                           [--expected-json <file-or-json>] [--used-nonce <nonce>]... [--json]
+  buildchain audit publication-control-plane --repository <owner/repo> --branch <protected-branch>
+                          [--workflow-repository <owner/repo>] [--workflow <path>]
+                          [--job <id>] [--environment <name>] [--package <name>]
+                          [--publisher-mode npm-trusted-publisher|github-token|oidc-role]
+                          [--provider-audit-json <file>] [--output <file>] [--allow-nonqualifying]
   buildchain verify artifact <file|dir|url|npm:...|oci:...|github-release:...>
                              [--passport <file-or-url>] [--locator-config <json>]
                              [--repository <owner/repo>] [--tag <tag>]
@@ -237,8 +248,11 @@ Examples:
   buildchain release line open --major 2 --minor 10 --source-ref release/v2/v2.9 --json
   buildchain span --event native.build -- cmake --build build
   buildchain collect github-release --tag v2.2.0 --assets-dir dist --output-dir .buildchain/release-passport
+  buildchain create publication-admission --input-json admission-input.json --output admission.json
+  buildchain create runner-provenance --input-json runner-input.json --output runner.json
   buildchain verify release-passport .buildchain/release-passport/buildchain.release.json
   buildchain verify publication-admission admission.json --registry-json publication-authority-registry.json --runner-json runner.json --control-plane-audit-json control-plane.json --expected-json expected.json --json
+  buildchain audit publication-control-plane --repository kungfu-systems/buildchain --branch release/v2/v2.12
   buildchain verify artifact ./dist/buildchain-x86_64-unknown-linux-gnu.tar.gz --passport .buildchain/release-passport/buildchain.release.json
   buildchain verify infra-contract-evidence-bundle .buildchain/infra-contract-evidence-bundle.json
   buildchain verify observability-log .buildchain/logs/events.jsonl --min-events 4 --require-phase build
@@ -1602,6 +1616,23 @@ async function main(argv = process.argv.slice(2)) {
     return;
   }
 
+  if (command === "create") {
+    const [subcommand = "", ...createArgs] = args;
+    const inputValue = readFlag(createArgs, "input-json", "");
+    if (!inputValue || !["publication-admission", "runner-provenance"].includes(subcommand)) {
+      throw new Error("usage: buildchain create <publication-admission|runner-provenance> --input-json <file-or-json> [--output <file>]");
+    }
+    const input = readJsonInput(inputValue, { label: "input-json" });
+    const value = subcommand === "publication-admission"
+      ? createPublicationAdmission(input)
+      : createRunnerProvenance(input);
+    const output = readFlag(createArgs, "output", "");
+    if (output) writeJsonFile(path.resolve(output), value);
+    if (!output || readBooleanFlag(createArgs, "json")) printJson(value);
+    else process.stdout.write(`${subcommand}: ${output}\n`);
+    return;
+  }
+
   if (command === "collect") {
     const [subcommand = "", ...collectArgs] = args;
     if (subcommand !== "github-release") {
@@ -1776,6 +1807,15 @@ async function main(argv = process.argv.slice(2)) {
       }
     }
     process.exitCode = report.ok ? 0 : 1;
+    return;
+  }
+
+  if (command === "audit") {
+    const [subcommand = "", ...auditArgs] = args;
+    if (subcommand !== "publication-control-plane") {
+      throw new Error("usage: buildchain audit publication-control-plane --repository <owner/repo> --branch <protected-branch>");
+    }
+    runScript("audit-publication-control-plane.mjs", auditArgs);
     return;
   }
 

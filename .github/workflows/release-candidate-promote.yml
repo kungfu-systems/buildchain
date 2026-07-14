@@ -217,6 +217,31 @@ on:
         default: 3
         type: number
         required: false
+      publication-admission-json:
+        description: "Fresh sealed publication admission JSON; required for non-dry-run publication"
+        default: ""
+        type: string
+        required: false
+      publication-runner-provenance-json:
+        description: "Runner provenance receipt bound by the admission"
+        default: ""
+        type: string
+        required: false
+      publication-control-plane-audit-json:
+        description: "Fresh external control-plane audit receipt bound by the admission"
+        default: ""
+        type: string
+        required: false
+      publication-expected-json:
+        description: "Independent exact source/runtime/product/channel/artifact bindings"
+        default: ""
+        type: string
+        required: false
+      publication-used-nonces-json:
+        description: "JSON array of already consumed admission nonces"
+        default: "[]"
+        type: string
+        required: false
       dry-run:
         description: "Plan only; do not publish or move refs"
         default: false
@@ -241,9 +266,6 @@ on:
       BUILDCHAIN_ISSUE_APP_PRIVATE_KEY:
         description: "Optional GitHub App private key used to mint a Buildchain issue-report token"
         required: false
-      BUILDCHAIN_PROMOTION_TOKEN:
-        description: "Optional promotion token; also used as a fallback Buildchain issue-report token"
-        required: false
     outputs:
       promoted-sha:
         description: "Promoted channel SHA"
@@ -263,6 +285,9 @@ on:
       controller-plan-digest:
         description: "Controller plan digest"
         value: ${{ jobs.controller-plan.outputs.controller-plan-digest }}
+      publication-capability-digest:
+        description: "Sealed publication capability receipt digest"
+        value: ${{ jobs.publication-authority.outputs.capability-digest }}
       controller-receipt-artifact:
         description: "Controller receipt artifact name"
         value: ${{ jobs.controller-receipt.outputs.controller-receipt-artifact }}
@@ -463,11 +488,29 @@ jobs:
           BUILDCHAIN_PUBLISH_PACKAGE_MAIN: ${{ inputs.publish-package-main }}
           BUILDCHAIN_RC_DOWNLOAD: "false"
 
-  promote:
-    name: Promote release candidate
+  publication-authority:
+    name: Seal product publication capability
     needs: [preflight, controller-plan, release-candidate-preflight]
     if: ${{ needs.preflight.outputs.action == 'promote' }}
+    permissions:
+      contents: read
+    uses: ./.github/workflows/.publication-authority.yml
+    with:
+      buildchain-repository: ${{ inputs.buildchain-repository }}
+      buildchain-ref: ${{ inputs.buildchain-ref || 'v2' }}
+      admission-json: ${{ inputs.publication-admission-json }}
+      runner-provenance-json: ${{ inputs.publication-runner-provenance-json }}
+      control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
+      expected-json: ${{ inputs.publication-expected-json }}
+      used-nonces-json: ${{ inputs.publication-used-nonces-json }}
+      dry-run: ${{ inputs.dry-run }}
+
+  promote:
+    name: Promote release candidate
+    needs: [preflight, controller-plan, release-candidate-preflight, publication-authority]
+    if: ${{ needs.preflight.outputs.action == 'promote' && needs.publication-authority.result == 'success' }}
     runs-on: ubuntu-24.04
+    environment: buildchain-publication
     permissions:
       actions: read
       checks: write
@@ -782,7 +825,7 @@ jobs:
         id: promote
         uses: ./.buildchain/runtime/actions/promote-buildchain-ref
         with:
-          token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+          token: ${{ github.token }}
           sha: ${{ needs.preflight.outputs.requested-sha }}
           target-ref: ${{ needs.preflight.outputs.target-ref }}
           dry-run: ${{ inputs.dry-run }}
@@ -791,7 +834,7 @@ jobs:
           reconciliation-workspace: ${{ steps.reconciliation.outputs.workspace }}
           required-status-check: ${{ inputs.required-status-check }}
           generated-status-check-token: ${{ github.token }}
-          generated-ref-update-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+          generated-ref-update-token: ${{ github.token }}
           branch-protection-bypass-apps: ${{ inputs.branch-protection-bypass-apps }}
           branch-protection-bypass-users: ${{ inputs.branch-protection-bypass-users }}
           branch-protection-bypass-teams: ${{ inputs.branch-protection-bypass-teams }}
@@ -914,7 +957,7 @@ jobs:
         if: ${{ failure() && steps.friction.outcome == 'success' }}
         uses: ./.buildchain/runtime/actions/report-buildchain-issue
         with:
-          token: ${{ steps.buildchain-issue-app-token.outputs.token || secrets['buildchain-issue-token'] || secrets.BUILDCHAIN_ISSUE_TOKEN || secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+          token: ${{ steps.buildchain-issue-app-token.outputs.token || secrets['buildchain-issue-token'] || secrets.BUILDCHAIN_ISSUE_TOKEN || github.token }}
           report-kind: workflow-friction
           target-repository: ${{ inputs.buildchain-repository }}
           repository: ${{ github.repository }}
@@ -939,7 +982,7 @@ jobs:
 
   controller-receipt:
     name: Record release-candidate promotion controller receipt
-    needs: [preflight, controller-plan, release-candidate-preflight, promote]
+    needs: [preflight, controller-plan, release-candidate-preflight, publication-authority, promote]
     if: ${{ always() && needs.controller-plan.result == 'success' }}
     runs-on: ubuntu-24.04
     permissions:
@@ -978,7 +1021,7 @@ jobs:
         env:
           BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
           BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
-            [{"id":"preflight","status":"${{ needs.preflight.result }}"},{"id":"admit-release-candidate","status":"${{ needs.release-candidate-preflight.result == 'success' && needs.promote.outputs.release-candidate-outcome || needs.release-candidate-preflight.result }}"},{"id":"publish","status":"${{ inputs.dry-run && 'skipped' || needs.promote.outputs.promotion-outcome || needs.promote.result }}"},{"id":"passport","status":"${{ inputs.dry-run && 'skipped' || needs.promote.outputs.promotion-outcome || needs.promote.result }}"},{"id":"aggregate","status":"${{ needs.promote.result }}"}]
+            [{"id":"preflight","status":"${{ needs.preflight.result }}"},{"id":"admit-release-candidate","status":"${{ needs.release-candidate-preflight.result == 'success' && needs.promote.outputs.release-candidate-outcome || needs.release-candidate-preflight.result }}"},{"id":"publication-authority","status":"${{ needs.publication-authority.result }}"},{"id":"publish","status":"${{ inputs.dry-run && 'skipped' || needs.promote.outputs.promotion-outcome || needs.promote.result }}"},{"id":"passport","status":"${{ inputs.dry-run && 'skipped' || needs.promote.outputs.promotion-outcome || needs.promote.result }}"},{"id":"aggregate","status":"${{ needs.promote.result }}"}]
           BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ !inputs.dry-run && needs.promote.result == 'success' && '[{"kind":"release-candidate-passport","path":".buildchain/controller/promotion-evidence/release-candidate-passport.json"},{"kind":"publish-evidence","path":".buildchain/controller/promotion-evidence/publish-evidence.json"},{"kind":"release-passport","path":".buildchain/controller/promotion-evidence/release-passport.json"}]' || '[]' }}
           BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ inputs.dry-run && 'promotion-dry-run' || needs.promote.result == 'success' && '' || needs.preflight.outputs.action == 'noop' && 'promotion-superseded' || 'promotion-incomplete' }}
           BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Release-candidate promotion did not complete successfully
