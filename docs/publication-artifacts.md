@@ -202,10 +202,11 @@ jobs:
 The publication job does not accept a long-lived promotion token. The caller
 must first produce a fresh sealed admission, runner provenance, external
 control-plane audit, and exact expected bindings. The credential-free verifier
-job checks those receipts; only then can the protected
-`buildchain-publication` job use its short-lived `github.token` and OIDC trusted
-publisher identity. The workflow fails before the publication build when the
-target branch protection cannot be read.
+job checks those receipts; only then can the publication job use its short-lived
+`github.token` and caller-bound OIDC trusted publisher identity. npm binds that
+identity to the consumer workflow filename; an npm Environment restriction is
+optional and must be represented explicitly when configured. The workflow fails
+before the publication build when the target branch protection cannot be read.
 
 The preset:
 

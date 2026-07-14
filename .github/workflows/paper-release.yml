@@ -242,7 +242,6 @@ jobs:
     needs: publication-authority
     if: ${{ needs.publication-authority.result == 'success' }}
     runs-on: ubuntu-24.04
-    environment: buildchain-publication
     permissions:
       checks: write
       contents: write

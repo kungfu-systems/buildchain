@@ -242,7 +242,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-authority",
       "export": "./publication-authority",
       "target": "./packages/core/publication-authority.js",
-      "digest": "sha256:52cc918c64b912ee7814f6ace8da618eb4785531413ffa76b696b9688f047b86",
+      "digest": "sha256:7fbca828c55cdf40f6bb41dc0f15cb192ee106df3fe1c6e4e2ea2ae1332e88b9",
       "summary": "Sealed publication authority registry, runner provenance, control-plane audit, admission, and independent verification APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -255,7 +255,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-control-plane-audit",
       "export": "./publication-control-plane-audit",
       "target": "./packages/core/publication-control-plane-audit.js",
-      "digest": "sha256:fdd51fb7b2ec7acfb957a09e1aa4f63f512f5fa6d86225b6fa697b8e753ea781",
+      "digest": "sha256:cd608e96c7910a85256cb575e38ff08b7903745420be68fbe2d3223a9e8b473e",
       "summary": "Read-only publication control-plane snapshot evaluation APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -268,7 +268,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-publication-authority",
       "export": "./buildchain-publication-authority",
       "target": "./packages/core/buildchain-publication-authority.js",
-      "digest": "sha256:d80134bdab538970e77f0f5454dcd4692871b17e399d693c3761652a572f8e14",
+      "digest": "sha256:731f21387a62cddfc8f4e4637557d4275af8ad3c79f4353750fd36be8e8dc2b1",
       "summary": "Buildchain-owned closed-world publication authority descriptor registry.",
       "capabilityGroup": "release-passport-trust",
       "audience": [

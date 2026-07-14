@@ -113,6 +113,29 @@ jobs:
             exit 1
           fi
 
+      - name: Require complete sealed publication evidence
+        if: ${{ !inputs.dry-run }}
+        env:
+          BUILDCHAIN_PUBLICATION_ADMISSION_JSON: ${{ inputs.admission-json }}
+          BUILDCHAIN_RUNNER_PROVENANCE_JSON: ${{ inputs.runner-provenance-json }}
+          BUILDCHAIN_CONTROL_PLANE_AUDIT_JSON: ${{ inputs.control-plane-audit-json }}
+          BUILDCHAIN_GATE_AGGREGATE_JSON: ${{ inputs.gate-aggregate-json }}
+          BUILDCHAIN_PUBLICATION_EXPECTED_JSON: ${{ inputs.expected-json }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=()
+          for name in BUILDCHAIN_PUBLICATION_ADMISSION_JSON BUILDCHAIN_RUNNER_PROVENANCE_JSON BUILDCHAIN_CONTROL_PLANE_AUDIT_JSON BUILDCHAIN_GATE_AGGREGATE_JSON BUILDCHAIN_PUBLICATION_EXPECTED_JSON; do
+            if [[ -z "${!name}" ]]; then
+              missing+=("${name}")
+            fi
+          done
+          if (( ${#missing[@]} > 0 )); then
+            joined="$(IFS=,; echo "${missing[*]}")"
+            echo "::error title=Sealed publication evidence unavailable::Missing ${joined}. Product publication was denied before artifact download. npm Trusted Publishing and OIDC were not evaluated; this denial does not mean either is absent or unable to publish."
+            exit 1
+          fi
+
       - name: Checkout exact Buildchain authority runtime
         uses: actions/checkout@v7.0.0
         with:
@@ -215,12 +238,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for name in BUILDCHAIN_PUBLICATION_ADMISSION_JSON BUILDCHAIN_RUNNER_PROVENANCE_JSON BUILDCHAIN_CONTROL_PLANE_AUDIT_JSON BUILDCHAIN_GATE_AGGREGATE_JSON BUILDCHAIN_PUBLICATION_EXPECTED_JSON; do
-            if [[ -z "${!name}" ]]; then
-              echo "::error::${name} is required for non-dry-run product publication"
-              exit 1
-            fi
-          done
           node --input-type=module <<'NODE'
           import fs from "node:fs";
           import crypto from "node:crypto";

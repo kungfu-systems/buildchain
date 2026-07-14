@@ -34,7 +34,8 @@ descriptor not marked `product-publication` are denied product publication.
 
 A qualifying admission binds exact source and runtime SHAs; contract, consumer
 policy, qualifying controller receipt, Shifu/Gate aggregate, artifact, runner,
-and control-plane digests; repository, workflow, protected Environment,
+and control-plane digests; repository, authority workflow, provider publisher
+workflow, Environment policy,
 product, target, version, and channel; plus a unique nonce and a lifetime of no
 more than 15 minutes. Every expected binding is mandatory at verification time;
 an omitted expected field is not a wildcard.
@@ -64,7 +65,8 @@ capability.
 
 The external audit records digests and pass/fail status for repository Actions
 defaults, classic branch protection or an active matching repository ruleset,
-protected Environment policy, job-scoped credentials,
+declared protected Environment policy or an explicit no-Environment binding,
+job-scoped credentials,
 absence of long-lived workflow publication credentials, provider authority,
 and authorized runner class. Provider modes are `npm-trusted-publisher`,
 `github-token`, and `oidc-role`. The OIDC-role mode consumes only a sanitized
@@ -72,6 +74,20 @@ provider audit containing a role digest and qualifying decision; raw IAM policy,
 tokens, or credentials are rejected. Package-owner, cloud-root, GitHub
 administrator, and registry-root credentials remain outside Buildchain's trust
 boundary. Missing or unreadable facts fail closed.
+
+An unauthenticated local npm CLI is not evidence that Trusted Publishing is
+missing. `npm whoami` reports only the local CLI session and does not report the
+OIDC identity that npm creates during `npm publish`. Likewise, an `E401` from
+`npm trust list` means the external publisher policy could not be audited from
+that session; it does not prove that the configured GitHub workflow cannot
+publish. Buildchain reports this state as `audit unreadable` and fails the
+sealed admission without rewriting it as `trusted publisher missing`.
+
+For non-dry-run workflows, missing admission, runner, control-plane, Gate, or
+expected-binding evidence is rejected before Buildchain downloads candidate
+artifacts. The denial explicitly records that npm Trusted Publishing and OIDC
+were not evaluated, so downstream diagnostics cannot misclassify an admission
+assembly failure as an npm authentication failure.
 
 Evidence publication is a separate authority class and never grants product
 publication.
@@ -97,6 +113,14 @@ providers select an explicit adapter:
 ```bash
 buildchain audit publication-control-plane \
   --repository kungfu-systems/buildchain \
+  --branch dev/v2/v2.12 \
+  --workflow .github/workflows/release-candidate-promote.yml \
+  --publisher-workflow .github/workflows/buildchain-ref-promotion.yml \
+  --job promote \
+  --environment none
+
+buildchain audit publication-control-plane \
+  --repository kungfu-systems/buildchain \
   --branch release/v2/v2.12 \
   --workflow .github/workflows/.binary-release-assets.yml \
   --job publish \
@@ -114,8 +138,13 @@ buildchain audit publication-control-plane \
   --provider-audit-json sanitized-oidc-role-audit.json
 ```
 
-Provider credential issuance must bind to the same protected workflow and
-environment. The Buildchain receipt alone is never sufficient authorization.
+The authority workflow identifies the reusable implementation that performs the
+publication job. The publisher workflow identifies the caller filename bound by
+the provider's trusted-publisher policy; these identities are deliberately
+separate. `--environment none` is an explicit assertion that the job declares no
+GitHub Environment and the provider policy has no Environment restriction. A
+named Environment must exist, be protected, and be declared by the job. The
+Buildchain receipt alone is never sufficient authorization.
 
 ## Publication lanes
 

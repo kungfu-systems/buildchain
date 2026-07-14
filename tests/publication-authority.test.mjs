@@ -43,6 +43,7 @@ function fixture({ runnerClass = "ephemeral", factStatus = "pass" } = {}) {
         publicationCapable: true,
         capabilityIds: ["npm-publish"],
         credentialMode: "trusted-publishing",
+        publisherWorkflowMode: "caller-bound",
         environment: "npm-production",
         runnerPolicy: "ephemeral",
       },
@@ -80,6 +81,7 @@ function fixture({ runnerClass = "ephemeral", factStatus = "pass" } = {}) {
   const controlPlaneAudit = createPublicationControlPlaneAudit({
     repository: "kungfu-systems/buildchain",
     workflowPath: ".github/workflows/sealed-publish.yml",
+    publisherWorkflowPath: ".github/workflows/release.yml",
     environment: "npm-production",
     facts,
     observedAt: "2026-07-14T00:00:00.000Z",
@@ -196,6 +198,7 @@ function fixture({ runnerClass = "ephemeral", factStatus = "pass" } = {}) {
     contract: PUBLICATION_ADMISSION_CONTRACT,
     registryDigest: registry.registryDigest,
     workflowPath: ".github/workflows/sealed-publish.yml",
+    publisherWorkflowPath: ".github/workflows/release.yml",
     repository: "kungfu-systems/buildchain",
     sourceSha: DIGESTS.sourceSha,
     runtimeSha: DIGESTS.runtimeSha,
@@ -221,6 +224,7 @@ function fixture({ runnerClass = "ephemeral", factStatus = "pass" } = {}) {
   };
   const expectedBindings = Object.fromEntries([
     "repository",
+    "publisherWorkflowPath",
     "sourceSha",
     "runtimeSha",
     "contractDigest",
@@ -392,6 +396,7 @@ test("control-plane snapshot audit covers all external publication authorities",
   const receipt = evaluatePublicationControlPlaneSnapshot({
     repository: "kungfu-systems/buildchain",
     workflowPath: ".github/workflows/sealed-publish.yml",
+    publisherWorkflowPath: ".github/workflows/release.yml",
     environment: "npm-production",
     branch: "release/v2/v2.12",
     packageName: "@kungfu-tech/buildchain",
@@ -400,9 +405,9 @@ test("control-plane snapshot audit covers all external publication authorities",
     snapshot: {
       actions: { defaultWorkflowPermissions: "read", canApprovePullRequestReviews: false },
       branch: { ref: "release/v2/v2.12", strict: true, requiredApprovals: 1, requireConversationResolution: true, enforceAdmins: true },
-      environment: { name: "npm-production", exists: true, protected: true, preventSelfReview: true },
-      oidc: { workflowPath: ".github/workflows/sealed-publish.yml", environment: "npm-production", idTokenJobScoped: true, longLivedCredentialPresent: false },
-      publisher: { packageName: "@kungfu-tech/buildchain", provider: "github", repository: "kungfu-systems/buildchain", workflowFilename: "sealed-publish.yml", environment: "npm-production", allowPublish: true, longLivedWorkflowCredentialPresent: false },
+      environment: { name: "npm-production", declared: true, exists: true, protected: true, preventSelfReview: true },
+      oidc: { workflowPath: ".github/workflows/release.yml", environment: "npm-production", idTokenJobScoped: true, longLivedCredentialPresent: false },
+      publisher: { packageName: "@kungfu-tech/buildchain", provider: "github", repository: "kungfu-systems/buildchain", workflowFilename: "release.yml", environment: "npm-production", allowPublish: true, longLivedWorkflowCredentialPresent: false },
       runner: { class: "ephemeral", label: "ubuntu-24.04", githubHosted: true, selfHostedAuthorized: false },
     },
   });
@@ -419,11 +424,33 @@ test("control-plane snapshot audit covers all external publication authorities",
   assert.throws(() => verify(values), /control-plane audit fact did not pass: publisher-policy/);
 });
 
+test("control-plane snapshot explicitly qualifies caller-bound npm publishing without an Environment", () => {
+  const receipt = evaluatePublicationControlPlaneSnapshot({
+    repository: "kungfu-systems/buildchain",
+    workflowPath: ".github/workflows/release-candidate-promote.yml",
+    publisherWorkflowPath: ".github/workflows/buildchain-ref-promotion.yml",
+    environment: "none",
+    branch: "dev/v2/v2.12",
+    packageName: "@kungfu-tech/buildchain",
+    observedAt: "2026-07-14T00:00:00.000Z",
+    expiresAt: "2026-07-14T00:10:00.000Z",
+    snapshot: {
+      actions: { defaultWorkflowPermissions: "read", canApprovePullRequestReviews: false },
+      branch: { ref: "dev/v2/v2.12", strict: true, requiredApprovals: 1, requireConversationResolution: true, enforceAdmins: true },
+      environment: { name: "none", declared: false, exists: false, protected: false },
+      oidc: { workflowPath: ".github/workflows/buildchain-ref-promotion.yml", environment: "", idTokenJobScoped: true, longLivedCredentialPresent: false },
+      publisher: { packageName: "@kungfu-tech/buildchain", provider: "github", repository: "kungfu-systems/buildchain", workflowFilename: "buildchain-ref-promotion.yml", environment: "", allowPublish: true, longLivedWorkflowCredentialPresent: false },
+      runner: { class: "ephemeral", label: "ubuntu-24.04", githubHosted: true, selfHostedAuthorized: false },
+    },
+  });
+  assert.equal(receipt.facts.every((entry) => entry.status === "pass"), true);
+});
+
 test("control-plane snapshot audit supports scoped GitHub tokens and sanitized OIDC roles", () => {
   const base = {
     actions: { defaultWorkflowPermissions: "read", canApprovePullRequestReviews: false },
     branch: { ref: "release/v2/v2.12", strict: true, requiredApprovals: 1, requireConversationResolution: true, enforceAdmins: true },
-    environment: { name: "release-assets", exists: true, protected: true, preventSelfReview: true },
+    environment: { name: "release-assets", declared: true, exists: true, protected: true, preventSelfReview: true },
     runner: { class: "ephemeral", label: "ubuntu-24.04", githubHosted: true, selfHostedAuthorized: false },
   };
   const common = {
@@ -453,11 +480,12 @@ test("control-plane snapshot audit supports scoped GitHub tokens and sanitized O
 
   const oidcRole = evaluatePublicationControlPlaneSnapshot({
     ...common,
+    publisherWorkflowPath: ".github/workflows/deploy.yml",
     publisherMode: "oidc-role",
     snapshot: {
       ...base,
       oidc: {
-        workflowPath: common.workflowPath,
+        workflowPath: ".github/workflows/deploy.yml",
         environment: common.environment,
         idTokenJobScoped: true,
         longLivedCredentialPresent: false,
@@ -465,7 +493,7 @@ test("control-plane snapshot audit supports scoped GitHub tokens and sanitized O
       publisher: {
         provider: "aws",
         repository: common.repository,
-        workflowPath: common.workflowPath,
+        workflowPath: ".github/workflows/deploy.yml",
         environment: common.environment,
         trustQualifying: true,
         roleDigest: "a".repeat(64),
