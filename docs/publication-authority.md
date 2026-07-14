@@ -43,8 +43,10 @@ The independent verifier recomputes every digest and ignores a producer's own
 allow/deny conclusion. It fetches the exact evidence run, validates the actual
 release-candidate passport and referenced qualifying controller receipt,
 recomputes the Shifu Gate aggregate or explicit consumer-owned no-Gate policy,
-recomputes the downloaded artifact manifests, and hashes every candidate payload
-file against those manifests. It also compares the PR evidence tree to the
+recomputes the downloaded artifact manifests, and hashes every declared product
+payload file against those manifests. The `.buildchain/` diagnostics envelope is
+bound by the manifest digest but excluded from the product-byte set because it can
+be finalized after the lifecycle scan. The verifier also compares the PR evidence tree to the
 admitted post-merge source commit tree. It rejects an unknown
 workflow, stale or replayed nonce, runner downgrade, control-plane drift,
 source/runtime mismatch, and artifact substitution. A successful result is a

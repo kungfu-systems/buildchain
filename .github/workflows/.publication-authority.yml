@@ -252,7 +252,7 @@ jobs:
             if (!fs.existsSync(root)) throw new Error(`candidate payload artifact is missing: ${manifest.artifactName}`);
             return {
               artifactName: manifest.artifactName,
-              files: (manifest.files || []).map((entry) => {
+              files: (manifest.files || []).filter((entry) => !entry.path.startsWith(".buildchain/")).map((entry) => {
                 if (path.isAbsolute(entry.path) || entry.path.includes("\\") || entry.path.split("/").includes("..")) {
                   throw new Error(`candidate payload manifest contains an unsafe path: ${entry.path}`);
                 }
