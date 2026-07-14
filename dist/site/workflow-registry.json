@@ -1492,6 +1492,7 @@
         "generated-ref-update-token",
         "generated-status-check-token",
         "github-release",
+        "github-release-artifact-paths",
         "github-release-notes",
         "github-release-title",
         "promote-only-release-candidate",
@@ -1537,7 +1538,7 @@
         "transaction-state-path",
         "verification-command"
       ],
-      "inputCount": 53,
+      "inputCount": 54,
       "capabilityGroup": "release-passport-trust",
       "status": "active"
     },

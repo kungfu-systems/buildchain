@@ -103,6 +103,7 @@ export function collectGitHubReleaseEvidenceAssets({
   publishEvidencePath = "",
   releasePassportPath = "",
   releasePassportOutputDir = "",
+  additionalAssetPaths = [],
 } = {}) {
   assertFile(publishEvidencePath, "a publish evidence file");
   assertFile(releasePassportPath, "buildchain.release.json");
@@ -118,6 +119,16 @@ export function collectGitHubReleaseEvidenceAssets({
   }
   if (assets.length < 2) {
     throw new Error(`github-release=true found no release passport assets under ${releasePassportOutputDir}`);
+  }
+  const occupiedBasenames = new Set(assets.map((assetPath) => path.basename(assetPath)));
+  for (const assetPath of additionalAssetPaths) {
+    assertFile(assetPath, "a declared GitHub Release artifact");
+    const basename = path.basename(assetPath);
+    if (occupiedBasenames.has(basename)) {
+      throw new Error(`github-release=true found duplicate asset basename '${basename}'`);
+    }
+    occupiedBasenames.add(basename);
+    assets.push(assetPath);
   }
   return assets;
 }
@@ -161,6 +172,7 @@ export async function publishGitHubReleaseEvidence({
   publishEvidencePath = "",
   releasePassportPath = "",
   releasePassportOutputDir = "",
+  additionalAssetPaths = [],
 } = {}) {
   if (!tag) {
     throw new Error("github-release=true requires promote-buildchain-ref to resolve a public release tag");
@@ -169,6 +181,7 @@ export async function publishGitHubReleaseEvidence({
     publishEvidencePath,
     releasePassportPath,
     releasePassportOutputDir,
+    additionalAssetPaths,
   });
   const release = await ensureGitHubRelease({
     apiUrl,
@@ -245,6 +258,9 @@ async function main() {
   const releasePassportKfd3ArtifactVerifyCommand = core.getInput("release-passport-kfd-3-artifact-verify-command");
   const releasePassportBuildchainSelfKfd = core.getBooleanInput("release-passport-buildchain-self-kfd");
   const githubRelease = core.getBooleanInput("github-release");
+  const githubReleaseArtifactPaths = core.getMultilineInput("github-release-artifact-paths")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
   const githubReleaseTitle = core.getInput("github-release-title");
   const githubReleaseNotes = core.getInput("github-release-notes");
   const promoteOnlyReleaseCandidate = core.getBooleanInput("promote-only-release-candidate");
@@ -376,6 +392,7 @@ async function main() {
         publishEvidencePath: result.publishTransaction?.evidencePath || "",
         releasePassportPath: result.publishTransaction?.releasePassportPath || "",
         releasePassportOutputDir: result.publishTransaction?.releasePassportOutputDir || "",
+        additionalAssetPaths: githubReleaseArtifactPaths,
       });
       core.info(`github release ${githubReleaseResult.action}: ${githubReleaseResult.tag} (${githubReleaseResult.assetCount} assets)`);
     } else {

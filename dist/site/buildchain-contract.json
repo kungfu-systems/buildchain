@@ -269,7 +269,7 @@
         "semver GitHub Releases are created or updated only after transaction completion, with prerelease/latest metadata derived from the public release tag"
       ],
       "breakingDigest": "sha256:a59f0910e6df842e7699139472e5dd69ac2fdd7f7213bf2cb346d1d622556874",
-      "auditDigest": "sha256:eac5c97897a71a6ab8e07cf978bd631d953798b447974f2bae825b66f6e10924"
+      "auditDigest": "sha256:0a6b261a43f59477497d99f840e83b11a2cfa6545a3d89c9952f47d7ebed33dc"
     },
     {
       "contractVersion": 1,
@@ -2155,7 +2155,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:0eb318df455ef9cb737a7c2515a2411b685d34ed0bde7b5f5b173a7a42513114",
-      "auditDigest": "sha256:4dfb8623c947f6b8ab339a11e31de132401997c6bb5ea0cfe70e45e3b4aa9429"
+      "auditDigest": "sha256:f5f11c5c5d27884e0b93ce99b7dc5d2e58d956a004a0001707a21f0939f3226e"
     },
     {
       "contractVersion": 1,
@@ -2654,5 +2654,5 @@
     }
   ],
   "compatibilityDigest": "sha256:af162b86ab4506e9b5f1d3c59b41f3fd57fbad79ff4d749a7f12ff16460517f8",
-  "contractDigest": "sha256:efb308df5c40080901be04042987df67b3a798251464eca5c86ad9226b109941"
+  "contractDigest": "sha256:d6564da3b1248813664ddaefde50e85c65ae97924ba3d0c607c4b2448d37cce9"
 }

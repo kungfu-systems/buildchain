@@ -228,11 +228,18 @@ The preset:
   before any publish side effect;
 - publishes the package through npm Trusted Publishing;
 - writes Buildchain release/passport evidence; and
-- creates or updates the exact-version GitHub Release by default.
+- creates or updates the exact-version GitHub Release by default, uploading
+  every file declared by `publication.primary_artifact` and
+  `publication.artifact_paths` alongside the release evidence.
 
 Consumers can opt out of the GitHub Release with `github-release: false`, but
 the default is on so downstream release propagation can observe
 `release.published` without hand-written `gh release` steps.
+
+Declared publication artifacts are resolved from the generated publication
+manifest rather than repeated in consumer workflow YAML. Publication fails
+before upload if a declared artifact is missing or if its basename would
+collide with another GitHub Release asset.
 
 For npm Trusted Publishing, register the consumer workflow file that calls this
 preset, for example `.github/workflows/paper-release.yml`, against the declared
