@@ -407,7 +407,7 @@ test("control-plane snapshot audit covers all external publication authorities",
       branch: { ref: "release/v2/v2.12", strict: true, requiredApprovals: 1, requireConversationResolution: true, enforceAdmins: true },
       environment: { name: "npm-production", declared: true, exists: true, protected: true, preventSelfReview: true },
       oidc: { workflowPath: ".github/workflows/release.yml", environment: "npm-production", idTokenJobScoped: true, longLivedCredentialPresent: false },
-      publisher: { packageName: "@kungfu-tech/buildchain", provider: "github", repository: "kungfu-systems/buildchain", workflowFilename: "release.yml", environment: "npm-production", allowPublish: true, longLivedWorkflowCredentialPresent: false },
+      publisher: { packageName: "@kungfu-tech/buildchain", provider: "github", repository: "kungfu-systems/buildchain", workflowFilename: "release.yml", environment: "npm-production", allowPublish: true, enforcement: "audited-control-plane", longLivedWorkflowCredentialPresent: false },
       runner: { class: "ephemeral", label: "ubuntu-24.04", githubHosted: true, selfHostedAuthorized: false },
     },
   });
@@ -439,7 +439,7 @@ test("control-plane snapshot explicitly qualifies caller-bound npm publishing wi
       branch: { ref: "dev/v2/v2.12", strict: true, requiredApprovals: 1, requireConversationResolution: true, enforceAdmins: true },
       environment: { name: "none", declared: false, exists: false, protected: false },
       oidc: { workflowPath: ".github/workflows/buildchain-ref-promotion.yml", environment: "", idTokenJobScoped: true, longLivedCredentialPresent: false },
-      publisher: { packageName: "@kungfu-tech/buildchain", provider: "github", repository: "kungfu-systems/buildchain", workflowFilename: "buildchain-ref-promotion.yml", environment: "", allowPublish: true, longLivedWorkflowCredentialPresent: false },
+      publisher: { packageName: "@kungfu-tech/buildchain", provider: "github", repository: "kungfu-systems/buildchain", workflowFilename: "buildchain-ref-promotion.yml", environment: "", allowPublish: false, enforcement: "provider-at-transaction", authorizationDeferred: true, configurationRead: false, longLivedWorkflowCredentialPresent: false },
       runner: { class: "ephemeral", label: "ubuntu-24.04", githubHosted: true, selfHostedAuthorized: false },
     },
   });

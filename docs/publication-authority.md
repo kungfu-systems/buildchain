@@ -77,11 +77,18 @@ boundary. Missing or unreadable facts fail closed.
 
 An unauthenticated local npm CLI is not evidence that Trusted Publishing is
 missing. `npm whoami` reports only the local CLI session and does not report the
-OIDC identity that npm creates during `npm publish`. Likewise, an `E401` from
-`npm trust list` means the external publisher policy could not be audited from
-that session; it does not prove that the configured GitHub workflow cannot
-publish. Buildchain reports this state as `audit unreadable` and fails the
-sealed admission without rewriting it as `trusted publisher missing`.
+OIDC identity that npm creates during `npm publish`. The default read-only audit
+therefore binds the exact provider, repository, caller workflow, optional
+Environment, job-scoped OIDC permission, and absence of long-lived credentials,
+then records `provider-at-transaction`: npm makes the final authorization
+decision when `npm publish` exchanges the job's OIDC token. A missing or drifted
+trusted-publisher configuration consequently denies the transaction safely; it
+is not preflighted through an unrelated long-lived npm login.
+
+An authenticated external auditor can add stronger point-in-time evidence by
+supplying sanitized `npm trust list --json` output with `--npm-trust-json`. This
+changes the publisher fact to `audited-control-plane`; the workflow never runs
+`npm trust list` itself and never receives that auditor's npm credential.
 
 For non-dry-run workflows, missing admission, runner, control-plane, Gate, or
 expected-binding evidence is rejected before Buildchain downloads candidate
@@ -118,6 +125,16 @@ buildchain audit publication-control-plane \
   --publisher-workflow .github/workflows/buildchain-ref-promotion.yml \
   --job promote \
   --environment none
+
+# Optional stronger external evidence; generate the JSON outside the workflow.
+buildchain audit publication-control-plane \
+  --repository kungfu-systems/buildchain \
+  --branch dev/v2/v2.12 \
+  --workflow .github/workflows/release-candidate-promote.yml \
+  --publisher-workflow .github/workflows/buildchain-ref-promotion.yml \
+  --job promote \
+  --environment none \
+  --npm-trust-json sanitized-npm-trust.json
 
 buildchain audit publication-control-plane \
   --repository kungfu-systems/buildchain \

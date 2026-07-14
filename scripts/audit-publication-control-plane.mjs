@@ -14,13 +14,6 @@ function commandJson(command, args, label) {
   const result = spawnSync(command, args, { encoding: "utf8", timeout: 60_000 });
   if (result.status !== 0) {
     const category = /401|E401|unauthorized/i.test(result.stderr) ? "unauthorized" : "unavailable";
-    if (label === "npm trusted-publisher policy" && category === "unauthorized") {
-      throw new Error(
-        "npm trusted-publisher policy is unreadable because this local npm CLI session is not authenticated; " +
-        "this does not mean Trusted Publishing is absent and does not predict whether GitHub Actions OIDC can publish; " +
-        "publication control-plane audit fails closed",
-      );
-    }
     throw new Error(`${label} is ${category}; publication control-plane audit fails closed`);
   }
   try {
@@ -131,6 +124,15 @@ function readSanitizedProviderAudit(filePath) {
   return value;
 }
 
+function readJsonValue(value, label) {
+  if (!value) return null;
+  try {
+    return JSON.parse(fs.existsSync(value) ? fs.readFileSync(path.resolve(value), "utf8") : value);
+  } catch {
+    throw new Error(`${label} must be valid JSON or a path to a JSON file`);
+  }
+}
+
 function normalizeNpmPublisher(value, { packageName, repository, workflowFilename, environment }) {
   const entries = npmTrustEntries(value);
   const normalized = entries.map((entry) => {
@@ -143,6 +145,9 @@ function normalizeNpmPublisher(value, { packageName, repository, workflowFilenam
       workflowFilename: String(first(entry, ["workflowFilename", "workflow_file", "file", "configuration.workflowFilename", "claims.workflow"]) || "").split("/").pop(),
       environment: String(first(entry, ["environment", "env", "configuration.environment", "claims.environment"]) || ""),
       allowPublish: actionList.some((action) => /^(?:npm[ _-]?)?publish$/i.test(action)) || first(entry, ["allowPublish", "allow_publish"]) === true,
+      enforcement: "audited-control-plane",
+      authorizationDeferred: false,
+      configurationRead: true,
     };
   });
   return normalized.find((entry) =>
@@ -158,6 +163,9 @@ function normalizeNpmPublisher(value, { packageName, repository, workflowFilenam
     workflowFilename: "",
     environment: "",
     allowPublish: false,
+    enforcement: "audited-control-plane",
+    authorizationDeferred: false,
+    configurationRead: true,
   };
 }
 
@@ -201,20 +209,31 @@ function main() {
   if (!["npm-trusted-publisher", "github-token", "oidc-role"].includes(publisherMode)) {
     throw new Error(`unsupported --publisher-mode: ${publisherMode}`);
   }
-  const longLivedWorkflowCredentialPresent = /NODE_AUTH_TOKEN|NPM_TOKEN|npm-token|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY/i.test(block);
+  const longLivedWorkflowCredentialPresent = (
+    /^\s*(?:NODE_AUTH_TOKEN|NPM_TOKEN|npm-token|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY)\s*:/im.test(block) ||
+    /\$\{\{\s*secrets\.(?:NODE_AUTH_TOKEN|NPM_TOKEN|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY)\b/im.test(block)
+  );
   let publisher;
   if (publisherMode === "npm-trusted-publisher") {
-    const trust = commandJson(
-      "npm",
-      ["trust", "list", packageName, "--json", "--registry=https://registry.npmjs.org/"],
-      "npm trusted-publisher policy",
-    );
-    publisher = normalizeNpmPublisher(trust, {
-      packageName,
-      repository,
-      workflowFilename: path.basename(publisherWorkflowPath),
-      environment: providerEnvironment,
-    });
+    const trust = readJsonValue(flag("npm-trust-json"), "--npm-trust-json");
+    publisher = trust
+      ? normalizeNpmPublisher(trust, {
+        packageName,
+        repository,
+        workflowFilename: path.basename(publisherWorkflowPath),
+        environment: providerEnvironment,
+      })
+      : {
+        packageName,
+        provider: "github",
+        repository,
+        workflowFilename: path.basename(publisherWorkflowPath),
+        environment: providerEnvironment,
+        allowPublish: false,
+        enforcement: "provider-at-transaction",
+        authorizationDeferred: true,
+        configurationRead: false,
+      };
   } else if (publisherMode === "github-token") {
     publisher = {
       provider: "github-token",

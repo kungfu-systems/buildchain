@@ -156,6 +156,7 @@ function usage() {
                           [--workflow-repository <owner/repo>] [--workflow <path>]
                           [--job <id>] [--environment <name>] [--package <name>]
                           [--publisher-mode npm-trusted-publisher|github-token|oidc-role]
+                          [--npm-trust-json <file-or-json>]
                           [--provider-audit-json <file>] [--output <file>] [--allow-nonqualifying]
   buildchain verify artifact <file|dir|url|npm:...|oci:...|github-release:...>
                              [--passport <file-or-url>] [--locator-config <json>]

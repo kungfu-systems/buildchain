@@ -775,14 +775,17 @@ test("sealed publication authority verifier is independent and credential-free",
   assert.match(workflow, /artifactPayloads:/);
 });
 
-test("publication control-plane audit does not misreport local npm auth as missing OIDC trust", () => {
+test("publication control-plane audit defers npm OIDC authorization to the publish transaction", () => {
   const script = fs.readFileSync(
     path.join(root, "scripts/audit-publication-control-plane.mjs"),
     "utf8",
   );
-  assert.match(script, /local npm CLI session is not authenticated/);
-  assert.match(script, /does not mean Trusted Publishing is absent/);
-  assert.match(script, /does not predict whether GitHub Actions OIDC can publish/);
+  assert.match(script, /provider-at-transaction/);
+  assert.match(script, /authorizationDeferred: true/);
+  assert.match(script, /configurationRead: false/);
+  assert.doesNotMatch(script, /\["trust", "list"/);
+  assert.match(script, /\^\\s\*\(\?:NODE_AUTH_TOKEN\|NPM_TOKEN\|npm-token/);
+  assert.doesNotMatch(script, /= \/NODE_AUTH_TOKEN\|NPM_TOKEN\|npm-token\|/);
 });
 
 test("legacy release workflows fail closed instead of bypassing publish-gate source locks", () => {

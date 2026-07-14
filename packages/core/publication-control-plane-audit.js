@@ -28,14 +28,19 @@ export function evaluatePublicationControlPlaneSnapshot({
   const oidc = snapshot?.oidc || {};
   const publisher = snapshot?.publisher || {};
   const runner = snapshot?.runner || {};
+  const npmIdentityPass = publisher.packageName === packageName &&
+    publisher.provider === "github" &&
+    publisher.repository === repository &&
+    publisher.workflowFilename === workflowFilename &&
+    publisher.environment === providerEnvironment &&
+    publisher.longLivedWorkflowCredentialPresent === false;
   const publisherPass = publisherMode === "npm-trusted-publisher"
-    ? publisher.packageName === packageName &&
-      publisher.provider === "github" &&
-      publisher.repository === repository &&
-      publisher.workflowFilename === workflowFilename &&
-      publisher.environment === providerEnvironment &&
-      publisher.allowPublish === true &&
-      publisher.longLivedWorkflowCredentialPresent === false
+    ? npmIdentityPass && (
+      (publisher.enforcement === "audited-control-plane" && publisher.allowPublish === true) ||
+      (publisher.enforcement === "provider-at-transaction" &&
+        publisher.authorizationDeferred === true &&
+        publisher.configurationRead === false)
+    )
     : publisherMode === "github-token"
       ? publisher.provider === "github-token" &&
         publisher.repository === repository &&
