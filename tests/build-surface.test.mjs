@@ -87,6 +87,42 @@ const root = path.resolve(
   "..",
 );
 
+test("public reusable controllers expose source-bound plan and always-aggregated receipt outputs", () => {
+  const workflows = [
+    ".github/workflows/check.yml",
+    ".github/workflows/.build.yml",
+    ".github/workflows/build.yml",
+    ".github/workflows/.gate-profile.yml",
+    ".github/workflows/.web-surface.yml",
+    ".github/workflows/publication-artifact.yml",
+    ".github/workflows/paper-release.yml",
+    ".github/workflows/release-candidate-promote.yml",
+    ".github/workflows/release-propagation.yml",
+  ];
+  for (const workflow of workflows) {
+    const source = fs.readFileSync(path.join(root, workflow), "utf8");
+    assert.match(source, /controller-plan-artifact:/, `${workflow} must expose its plan artifact`);
+    assert.match(source, /controller-plan-digest:/, `${workflow} must expose its plan digest`);
+    assert.match(source, /controller-receipt-artifact:/, `${workflow} must expose its receipt artifact`);
+    assert.match(source, /controller-receipt-digest:/, `${workflow} must expose its receipt digest`);
+    assert.match(source, /controller-receipt-status:/, `${workflow} must expose its receipt status`);
+    assert.match(source, /BUILDCHAIN_CONTROLLER_SOURCE_SHA:/, `${workflow} must bind the consumer source SHA`);
+    assert.match(source, /BUILDCHAIN_CONTROLLER_RUNTIME_SHA:/, `${workflow} must bind the Buildchain runtime SHA`);
+    assert.match(source, /BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST:/, `${workflow} must bind the runtime contract digest`);
+    assert.match(source, /if: \$\{\{ always\(\)/, `${workflow} must aggregate controller outcomes with always()`);
+    assert.match(source, /controller-receipt-qualifying != 'true'/, `${workflow} must fail closed on a nonqualifying receipt`);
+  }
+
+  const gateEnvelope = fs.readFileSync(path.join(root, ".github/workflows/.gate-profile.yml"), "utf8");
+  assert.match(gateEnvelope, /shifu-gate-aggregate/);
+  assert.doesNotMatch(gateEnvelope, /BUILDCHAIN_CONTROLLER_(?:GATE_IDS|GATE_RESULTS)/);
+
+  const paperRelease = fs.readFileSync(path.join(root, ".github/workflows/paper-release.yml"), "utf8");
+  const promotion = fs.readFileSync(path.join(root, ".github/workflows/release-candidate-promote.yml"), "utf8");
+  assert.match(paperRelease, /!inputs\.dry-run.*controller-receipt-qualifying/);
+  assert.match(promotion, /!inputs\.dry-run.*controller-receipt-qualifying/);
+});
+
 test("reusable build workflow exposes the required surface contract", () => {
   const workflow = fs.readFileSync(
     path.join(root, ".github/workflows/.build.yml"),
@@ -627,7 +663,7 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /moved incompatibly/);
   assert.match(workflow, /const action = superseded \? "noop" : "promote"/);
   assert.match(workflow, /const reason = superseded \? "target-ref-advanced" : "target-ref-current"/);
-  assert.match(workflow, /needs: \[preflight, release-candidate-preflight\]/);
+  assert.match(workflow, /needs: \[preflight, controller-plan, release-candidate-preflight\]/);
   assert.match(workflow, /if: \$\{\{ needs\.preflight\.outputs\.action == 'promote' \}\}/);
   assert.match(workflow, /ref: \$\{\{ needs\.preflight\.outputs\.requested-sha \}\}/);
   assert.match(workflow, /INPUT_TARGET_SHA: \$\{\{ inputs\.target-sha \}\}/);

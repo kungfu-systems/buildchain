@@ -11,6 +11,7 @@
     "manual-registry.json",
     "node-api-registry.json",
     "workflow-registry.json",
+    "controller-registry.json",
     "public-surface-audit.json",
     "artifact-schemas.json",
     "buildchain-contract.json",

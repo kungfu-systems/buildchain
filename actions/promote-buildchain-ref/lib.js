@@ -854,6 +854,7 @@ function validatePromotionReleaseCandidate({
     candidateHash: passport.candidateHash || "",
     platformCount: Array.isArray(passport.platformMatrix) ? passport.platformMatrix.length : 0,
     gateProfileEvidence: passport.gateProfileEvidence,
+    controllerReceipts: passport.controllerReceipts || [],
     builtSourceSha: passport.source?.mergeRefSha || passport.source?.headSha || "",
     builtSourceTreeSha: passport.source?.treeHash || "",
     promotionChannelSha: sourceHeadSha || "",
@@ -2145,6 +2146,7 @@ async function collectAndPersistReleasePassport({
     buildSummaryJson,
     platformManifestJsons: platformManifests,
     distTagEvidenceJson: existingJsonObjectFile(result.distTagEvidencePath),
+    controllerReceiptReferences: releaseCandidateValidation?.controllerReceipts || [],
     releaseJsonExtra: JSON.stringify({
       channel,
       targetRef,

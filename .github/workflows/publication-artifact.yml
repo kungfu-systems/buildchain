@@ -100,6 +100,27 @@ on:
       publication-manifest-json:
         description: "Compact publication manifest JSON"
         value: ${{ jobs.publication.outputs.publication-manifest-json }}
+      controller-plan-artifact:
+        description: "Controller plan artifact name"
+        value: ${{ jobs.publication.outputs.controller-plan-artifact }}
+      controller-plan-json:
+        description: "Compact controller plan JSON"
+        value: ${{ jobs.publication.outputs.controller-plan-json }}
+      controller-plan-digest:
+        description: "Controller plan digest"
+        value: ${{ jobs.publication.outputs.controller-plan-digest }}
+      controller-receipt-artifact:
+        description: "Controller receipt artifact name"
+        value: ${{ jobs.publication.outputs.controller-receipt-artifact }}
+      controller-receipt-json:
+        description: "Compact controller receipt JSON"
+        value: ${{ jobs.publication.outputs.controller-receipt-json }}
+      controller-receipt-digest:
+        description: "Controller receipt digest"
+        value: ${{ jobs.publication.outputs.controller-receipt-digest }}
+      controller-receipt-status:
+        description: "Controller receipt status"
+        value: ${{ jobs.publication.outputs.controller-receipt-status }}
 
 permissions:
   contents: read
@@ -115,6 +136,13 @@ jobs:
       publication-passport-path: ${{ steps.manifest.outputs.passport-path }}
       publication-registry-path: ${{ steps.manifest.outputs.registry-path }}
       publication-manifest-json: ${{ steps.manifest.outputs.manifest-json }}
+      controller-plan-artifact: buildchain-publication-controller-plan-${{ steps.controller-identities.outputs.source-sha }}
+      controller-plan-json: ${{ steps.controller-plan.outputs.controller-plan-json }}
+      controller-plan-digest: ${{ steps.controller-plan.outputs.controller-plan-digest }}
+      controller-receipt-artifact: buildchain-publication-controller-receipt-${{ steps.controller-identities.outputs.source-sha }}
+      controller-receipt-json: ${{ steps.controller-receipt.outputs.controller-receipt-json }}
+      controller-receipt-digest: ${{ steps.controller-receipt.outputs.controller-receipt-digest }}
+      controller-receipt-status: ${{ steps.controller-receipt.outputs.controller-receipt-status }}
     steps:
       - name: Resolve Buildchain runtime
         id: runtime
@@ -228,18 +256,53 @@ jobs:
               .write();
 
       - name: Checkout source
+        id: source
         uses: actions/checkout@v7.0.0
         with:
           clean: true
           persist-credentials: false
 
       - name: Checkout Buildchain runtime
+        id: runtime-checkout
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
           ref: ${{ steps.runtime.outputs.runtime-sha }}
           path: .buildchain/runtime
           persist-credentials: false
+
+      - name: Resolve controller identities
+        id: controller-identities
+        shell: bash
+        run: |
+          source_sha="$(git rev-parse HEAD)"
+          runtime_sha="$(git -C .buildchain/runtime rev-parse HEAD)"
+          contract_digest="$(node -e 'const fs=require("fs"); const value=JSON.parse(fs.readFileSync(".buildchain/runtime/dist/site/buildchain-contract.json","utf8")); process.stdout.write(value.contractDigest)')"
+          {
+            echo "source-sha=${source_sha}"
+            echo "runtime-sha=${runtime_sha}"
+            echo "contract-digest=${contract_digest}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create publication-artifact controller plan
+        id: controller-plan
+        run: node .buildchain/runtime/scripts/controller-evidence.mjs --mode plan
+        env:
+          BUILDCHAIN_CONTROLLER_ID: publication-artifact
+          BUILDCHAIN_CONTROLLER_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_CONTROLLER_SOURCE_SHA: ${{ steps.controller-identities.outputs.source-sha }}
+          BUILDCHAIN_CONTROLLER_RUNTIME_REF: ${{ steps.runtime.outputs.runtime-ref }}
+          BUILDCHAIN_CONTROLLER_RUNTIME_SHA: ${{ steps.controller-identities.outputs.runtime-sha }}
+          BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST: ${{ steps.controller-identities.outputs.contract-digest }}
+          BUILDCHAIN_CONTROLLER_INPUTS_JSON: ${{ toJSON(inputs) }}
+          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+
+      - name: Upload publication-artifact controller plan
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-publication-controller-plan-${{ steps.controller-identities.outputs.source-sha }}
+          path: .buildchain/controller/plan.json
+          if-no-files-found: error
 
       - name: Check Buildchain contract lock
         id: contract-lock
@@ -360,6 +423,7 @@ jobs:
           NODE
 
       - name: Build publication
+        id: build
         if: ${{ steps.toolchain.outputs.command != '' }}
         shell: bash
         working-directory: ${{ inputs.working-directory }}
@@ -392,6 +456,7 @@ jobs:
           fi
 
       - name: Verify publication
+        id: verify
         if: ${{ inputs.verify-command != '' }}
         shell: bash
         working-directory: ${{ inputs.working-directory }}
@@ -426,9 +491,38 @@ jobs:
         run: echo "artifact-name=${{ inputs.artifact-name }}-${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
 
       - name: Upload publication artifact
+        id: artifact-upload
         uses: actions/upload-artifact@v6.0.0
         with:
           name: ${{ steps.names.outputs.artifact-name }}
           path: ${{ inputs.artifact-paths }}
           retention-days: ${{ inputs.artifact-retention-days }}
           if-no-files-found: error
+
+      - name: Create publication-artifact controller receipt
+        id: controller-receipt
+        if: ${{ always() && steps.controller-plan.outcome == 'success' }}
+        run: node .buildchain/runtime/scripts/controller-evidence.mjs --mode receipt
+        env:
+          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+          BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
+            [{"id":"resolve-runtime","status":"${{ steps.runtime.outcome == 'success' && steps.runtime-checkout.outcome == 'success' && steps.controller-identities.outcome == 'success' && 'success' || 'failure' }}"},{"id":"build","status":"${{ steps.build.outcome }}"},{"id":"verify","status":"${{ steps.verify.outcome }}"},{"id":"collect","status":"${{ steps.manifest.outcome }}"},{"id":"aggregate","status":"${{ steps.artifact-upload.outcome }}"}]
+          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ steps.manifest.outcome == 'success' && format('[{{"kind":"publication-manifest","path":"{0}/{1}"}},{{"kind":"publication-passport","path":"{0}/{2}"}}]', inputs.working-directory, steps.manifest.outputs.manifest-path, steps.manifest.outputs.passport-path) || '[]' }}
+          BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ steps.artifact-upload.outcome == 'success' && '' || 'publication-incomplete' }}
+          BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Publication artifact did not complete successfully
+          BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: buildchain-publication-controller-receipt-${{ steps.controller-identities.outputs.source-sha }}
+          BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/receipt.json
+
+      - name: Upload publication-artifact controller receipt
+        if: ${{ always() && steps.controller-receipt.outcome == 'success' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-publication-controller-receipt-${{ steps.controller-identities.outputs.source-sha }}
+          path: .buildchain/controller/receipt.json
+          if-no-files-found: error
+
+      - name: Enforce qualifying publication-artifact controller receipt
+        if: ${{ always() && steps.controller-plan.outcome == 'success' && steps.controller-receipt.outputs.controller-receipt-qualifying != 'true' }}
+        run: |
+          echo "::error::publication-artifact controller receipt is not qualifying: ${{ steps.controller-receipt.outputs.controller-receipt-status }}"
+          exit 1
