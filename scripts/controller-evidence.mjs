@@ -57,6 +57,19 @@ function descriptorFromRegistry(registry, controllerId) {
   return descriptor;
 }
 
+export function selectWorkflowCallInputs(descriptor, inputs) {
+  if (!inputs || typeof inputs !== "object" || Array.isArray(inputs)) {
+    throw new Error("controller inputs JSON must be an object");
+  }
+  const declaredInputs = descriptor?.inputs;
+  if (!declaredInputs || typeof declaredInputs !== "object" || Array.isArray(declaredInputs)) {
+    throw new Error("controller descriptor inputs must be an object");
+  }
+  return Object.fromEntries(
+    Object.entries(inputs).filter(([name]) => Object.hasOwn(declaredInputs, name)),
+  );
+}
+
 function normalizeStageStatus(value) {
   const normalized = String(value || "").trim().toLowerCase();
   return {
@@ -90,6 +103,11 @@ function planMode() {
   const registryPath = path.resolve(env("BUILDCHAIN_CONTROLLER_REGISTRY", ".buildchain/runtime/dist/site/controller-registry.json"));
   const registry = readJson(registryPath, "controller registry");
   const descriptor = descriptorFromRegistry(registry, env("BUILDCHAIN_CONTROLLER_ID"));
+  const rawInputs = parseJson(env("BUILDCHAIN_CONTROLLER_INPUTS_JSON", "{}"), "controller inputs JSON", {});
+  const inputBoundary = env("BUILDCHAIN_CONTROLLER_INPUT_BOUNDARY", "strict");
+  if (!["strict", "workflow-call"].includes(inputBoundary)) {
+    throw new Error(`unsupported controller input boundary: ${inputBoundary}`);
+  }
   const plan = createControllerPlan({
     descriptor,
     source: {
@@ -101,7 +119,9 @@ function planMode() {
       sha: env("BUILDCHAIN_CONTROLLER_RUNTIME_SHA"),
       contractDigest: env("BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST"),
     },
-    inputs: parseJson(env("BUILDCHAIN_CONTROLLER_INPUTS_JSON", "{}"), "controller inputs JSON", {}),
+    inputs: inputBoundary === "workflow-call"
+      ? selectWorkflowCallInputs(descriptor, rawInputs)
+      : rawInputs,
   });
   const outputPath = path.resolve(env("BUILDCHAIN_CONTROLLER_PLAN_PATH", ".buildchain/controller/plan.json"));
   writeJson(outputPath, plan);
