@@ -41,6 +41,38 @@ on:
         type: string
         required: false
         default: "[]"
+      auto-admission:
+        description: "Assemble Buildchain self-publication evidence from the exact RC run; unavailable to external consumers"
+        type: boolean
+        required: false
+        default: false
+      source-sha:
+        description: "Exact channel commit admitted by Buildchain self-publication assembly"
+        type: string
+        required: false
+        default: ""
+      target-ref:
+        description: "Protected Buildchain channel ref audited by self-publication assembly"
+        type: string
+        required: false
+        default: ""
+      publisher-workflow-path:
+        description: "Caller workflow filename bound by the npm trusted publisher"
+        type: string
+        required: false
+        default: ""
+      product:
+        type: string
+        required: false
+        default: "Buildchain"
+      publication-target:
+        type: string
+        required: false
+        default: "npm:@kungfu-tech/buildchain"
+      package-name:
+        type: string
+        required: false
+        default: "@kungfu-tech/buildchain"
       evidence-repository:
         description: "Consumer repository whose exact Actions run owns the independent evidence"
         type: string
@@ -114,7 +146,7 @@ jobs:
           fi
 
       - name: Require complete sealed publication evidence
-        if: ${{ !inputs.dry-run }}
+        if: ${{ !inputs.dry-run && !inputs.auto-admission }}
         env:
           BUILDCHAIN_PUBLICATION_ADMISSION_JSON: ${{ inputs.admission-json }}
           BUILDCHAIN_RUNNER_PROVENANCE_JSON: ${{ inputs.runner-provenance-json }}
@@ -133,6 +165,33 @@ jobs:
           if (( ${#missing[@]} > 0 )); then
             joined="$(IFS=,; echo "${missing[*]}")"
             echo "::error title=Sealed publication evidence unavailable::Missing ${joined}. Product publication was denied before artifact download. npm Trusted Publishing and OIDC were not evaluated; this denial does not mean either is absent or unable to publish."
+            exit 1
+          fi
+
+      - name: Restrict automatic admission to Buildchain self-publication
+        if: ${{ !inputs.dry-run && inputs.auto-admission }}
+        env:
+          BUILDCHAIN_REPOSITORY: ${{ inputs.buildchain-repository }}
+          BUILDCHAIN_SOURCE_SHA: ${{ inputs.source-sha }}
+          BUILDCHAIN_TARGET_REF: ${{ inputs.target-ref }}
+          BUILDCHAIN_PUBLISHER_WORKFLOW_PATH: ${{ inputs.publisher-workflow-path }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REPOSITORY" != "$BUILDCHAIN_REPOSITORY" || "$BUILDCHAIN_REPOSITORY" != "kungfu-systems/buildchain" ]]; then
+            echo "::error::automatic publication admission is restricted to Buildchain self-publication"
+            exit 1
+          fi
+          if [[ ! "$BUILDCHAIN_SOURCE_SHA" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "::error::automatic publication admission requires an exact 40-character source SHA"
+            exit 1
+          fi
+          if [[ ! "$BUILDCHAIN_TARGET_REF" =~ ^(alpha|release)/v[0-9]+/v[0-9]+\.[0-9]+$ && "$BUILDCHAIN_TARGET_REF" != "publish-gate/major" && "$BUILDCHAIN_TARGET_REF" != "major-gate" ]]; then
+            echo "::error::automatic publication admission target is not an allowed Buildchain channel: $BUILDCHAIN_TARGET_REF"
+            exit 1
+          fi
+          if [[ "$BUILDCHAIN_PUBLISHER_WORKFLOW_PATH" != ".github/workflows/buildchain-ref-promotion.yml" ]]; then
+            echo "::error::automatic publication admission requires the Buildchain ref-promotion caller identity"
             exit 1
           fi
 
@@ -225,14 +284,50 @@ jobs:
           pattern: ${{ inputs.evidence-payload-pattern }}
           path: .buildchain/publication-evidence/payloads
 
+      - name: Audit Buildchain self-publication control plane
+        if: ${{ !inputs.dry-run && inputs.auto-admission }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .buildchain/publication-authority/auto
+          node .buildchain/authority-runtime/scripts/audit-publication-control-plane.mjs \
+            --repository "${{ inputs.buildchain-repository }}" \
+            --branch "${{ inputs.target-ref }}" \
+            --workflow .github/workflows/release-candidate-promote.yml \
+            --workflow-ref "${{ inputs.buildchain-ref }}" \
+            --publisher-workflow "${{ inputs.publisher-workflow-path }}" \
+            --job promote \
+            --environment none \
+            --package "${{ inputs.package-name }}" \
+            --output .buildchain/publication-authority/auto/control-plane.json
+
+      - name: Assemble Buildchain self-publication admission
+        if: ${{ !inputs.dry-run && inputs.auto-admission }}
+        id: auto-evidence
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BUILDCHAIN_REPOSITORY: ${{ inputs.buildchain-repository }}
+          BUILDCHAIN_SOURCE_SHA: ${{ inputs.source-sha }}
+          BUILDCHAIN_AUTHORITY_WORKFLOW_PATH: .github/workflows/release-candidate-promote.yml
+          BUILDCHAIN_PUBLISHER_WORKFLOW_PATH: ${{ inputs.publisher-workflow-path }}
+          BUILDCHAIN_CONTROL_PLANE_AUDIT_PATH: .buildchain/publication-authority/auto/control-plane.json
+          BUILDCHAIN_PUBLICATION_ENVIRONMENT: none
+          BUILDCHAIN_PUBLICATION_PRODUCT: ${{ inputs.product }}
+          BUILDCHAIN_PUBLICATION_TARGET: ${{ inputs.publication-target }}
+          BUILDCHAIN_PUBLICATION_CHANNEL: ${{ startsWith(inputs.target-ref, 'release/') && 'release' || startsWith(inputs.target-ref, 'alpha/') && 'alpha' || 'major' }}
+        shell: bash
+        run: node .buildchain/authority-runtime/scripts/assemble-self-publication-admission.mjs
+
       - name: Verify sealed publication admission
         if: ${{ !inputs.dry-run }}
         env:
-          BUILDCHAIN_PUBLICATION_ADMISSION_JSON: ${{ inputs.admission-json }}
-          BUILDCHAIN_RUNNER_PROVENANCE_JSON: ${{ inputs.runner-provenance-json }}
-          BUILDCHAIN_CONTROL_PLANE_AUDIT_JSON: ${{ inputs.control-plane-audit-json }}
-          BUILDCHAIN_GATE_AGGREGATE_JSON: ${{ inputs.gate-aggregate-json }}
-          BUILDCHAIN_PUBLICATION_EXPECTED_JSON: ${{ inputs.expected-json }}
+          BUILDCHAIN_PUBLICATION_ADMISSION_JSON: ${{ inputs.admission-json || steps.auto-evidence.outputs.admission-json }}
+          BUILDCHAIN_RUNNER_PROVENANCE_JSON: ${{ inputs.runner-provenance-json || steps.auto-evidence.outputs.runner-provenance-json }}
+          BUILDCHAIN_CONTROL_PLANE_AUDIT_JSON: ${{ inputs.control-plane-audit-json || steps.auto-evidence.outputs.control-plane-audit-json }}
+          BUILDCHAIN_GATE_AGGREGATE_JSON: ${{ inputs.gate-aggregate-json || steps.auto-evidence.outputs.gate-aggregate-json }}
+          BUILDCHAIN_PUBLICATION_EXPECTED_JSON: ${{ inputs.expected-json || steps.auto-evidence.outputs.expected-json }}
           BUILDCHAIN_USED_NONCES_JSON: ${{ inputs.used-nonces-json }}
           GITHUB_TOKEN: ${{ github.token }}
         shell: bash
@@ -345,4 +440,12 @@ jobs:
         with:
           name: buildchain-publication-capability-${{ github.run_id }}-${{ github.run_attempt }}
           path: .buildchain/publication-authority/capability.json
+          if-no-files-found: error
+
+      - name: Upload assembled self-publication evidence
+        if: ${{ !inputs.dry-run && inputs.auto-admission }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-self-publication-admission-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .buildchain/publication-authority/auto/*.json
           if-no-files-found: error

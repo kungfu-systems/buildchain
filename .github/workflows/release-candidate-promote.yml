@@ -247,6 +247,28 @@ on:
         default: "[]"
         type: string
         required: false
+      publication-auto-admission:
+        description: "Assemble sealed evidence for Buildchain self-publication only"
+        default: false
+        type: boolean
+        required: false
+      publication-publisher-workflow-path:
+        description: "Caller workflow path bound by the provider trusted-publisher policy"
+        default: ""
+        type: string
+        required: false
+      publication-product:
+        default: "Buildchain"
+        type: string
+        required: false
+      publication-target:
+        default: "npm:@kungfu-tech/buildchain"
+        type: string
+        required: false
+      publication-package-name:
+        default: "@kungfu-tech/buildchain"
+        type: string
+        required: false
       dry-run:
         description: "Plan only; do not publish or move refs"
         default: false
@@ -517,6 +539,13 @@ jobs:
       gate-aggregate-json: ${{ inputs.publication-gate-aggregate-json }}
       expected-json: ${{ inputs.publication-expected-json }}
       used-nonces-json: ${{ inputs.publication-used-nonces-json }}
+      auto-admission: ${{ inputs.publication-auto-admission }}
+      source-sha: ${{ needs.preflight.outputs.requested-sha }}
+      target-ref: ${{ needs.preflight.outputs.target-ref }}
+      publisher-workflow-path: ${{ inputs.publication-publisher-workflow-path }}
+      product: ${{ inputs.publication-product }}
+      publication-target: ${{ inputs.publication-target }}
+      package-name: ${{ inputs.publication-package-name }}
       evidence-repository: ${{ github.repository }}
       evidence-run-id: ${{ needs.release-candidate-preflight.outputs.evidence-run-id }}
       evidence-passport-artifact: ${{ needs.release-candidate-preflight.outputs.passport-artifact }}

@@ -683,6 +683,10 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /publication-admission-json:/);
   assert.match(workflow, /publication-control-plane-audit-json:/);
   assert.match(workflow, /publication-gate-aggregate-json:/);
+  assert.match(workflow, /publication-auto-admission:/);
+  assert.match(workflow, /auto-admission: \$\{\{ inputs\.publication-auto-admission \}\}/);
+  assert.match(workflow, /source-sha: \$\{\{ needs\.preflight\.outputs\.requested-sha \}\}/);
+  assert.match(workflow, /publisher-workflow-path: \$\{\{ inputs\.publication-publisher-workflow-path \}\}/);
   assert.match(workflow, /evidence-run-id:/);
   assert.match(workflow, /evidence-manifest-pattern:/);
   assert.match(workflow, /name: Seal product publication capability/);
@@ -773,6 +777,27 @@ test("sealed publication authority verifier is independent and credential-free",
   assert.match(workflow, /controllerReceipt:/);
   assert.match(workflow, /artifactManifests(?:,|:)/);
   assert.match(workflow, /artifactPayloads:/);
+  assert.match(workflow, /name: Restrict automatic admission to Buildchain self-publication/);
+  assert.match(workflow, /automatic publication admission is restricted to Buildchain self-publication/);
+  assert.match(workflow, /name: Audit Buildchain self-publication control plane/);
+  assert.match(workflow, /--workflow-ref "\$\{\{ inputs\.buildchain-ref \}\}"/);
+  assert.match(workflow, /name: Assemble Buildchain self-publication admission/);
+  assert.match(workflow, /steps\.auto-evidence\.outputs\.admission-json/);
+  assert.doesNotMatch(workflow, /id-token:\s*write/);
+});
+
+test("self-publication admission assembly binds downloaded evidence without publication credentials", () => {
+  const script = fs.readFileSync(
+    path.join(root, "scripts/assemble-self-publication-admission.mjs"),
+    "utf8",
+  );
+  assert.match(script, /createPublicationArtifactManifestSet/);
+  assert.match(script, /createPublicationGateDecision/);
+  assert.match(script, /createRunnerProvenance/);
+  assert.match(script, /createPublicationAdmission/);
+  assert.match(script, /admitted source tree does not match release candidate/);
+  assert.match(script, /github-hosted-single-job/);
+  assert.doesNotMatch(script, /NODE_AUTH_TOKEN|NPM_TOKEN|BUILDCHAIN_PROMOTION_TOKEN/);
 });
 
 test("publication control-plane audit defers npm OIDC authorization to the publish transaction", () => {
@@ -783,6 +808,11 @@ test("publication control-plane audit defers npm OIDC authorization to the publi
   assert.match(script, /provider-at-transaction/);
   assert.match(script, /authorizationDeferred: true/);
   assert.match(script, /configurationRead: false/);
+  assert.match(script, /workflowRef \? `\?ref=\$\{encodeURIComponent\(workflowRef\)\}`/);
+  assert.match(script, /evidenceSource: "exact-workflow-source"/);
+  assert.match(script, /evidenceSource: "exact-workflow-job"/);
+  assert.doesNotMatch(script, /actions\/permissions\/workflow/);
+  assert.doesNotMatch(script, /actions\/runners\?per_page/);
   assert.doesNotMatch(script, /\["trust", "list"/);
   assert.match(script, /\^\\s\*\(\?:NODE_AUTH_TOKEN\|NPM_TOKEN\|npm-token/);
   assert.doesNotMatch(script, /= \/NODE_AUTH_TOKEN\|NPM_TOKEN\|npm-token\|/);
@@ -2013,6 +2043,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(workflow, /actions: read/);
   assert.match(workflow, /uses: \.\/\.github\/workflows\/release-candidate-promote\.yml/);
   assert.match(workflow, /github\.event\.workflow_run\.event == 'push'/);
+  assert.match(workflow, /startsWith\(github\.event\.workflow_run\.head_branch, 'alpha\/'\)/);
   assert.match(workflow, /startsWith\(github\.event\.workflow_run\.head_branch, 'release\/'\)/);
   assert.match(workflow, /!startsWith\(github\.event\.workflow_run\.display_title, 'chore\(release\): prepare v'\)/);
   assert.match(workflow, /!startsWith\(github\.event\.workflow_run\.display_title, 'chore\(release\): release v'\)/);
@@ -2031,6 +2062,8 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   );
   assert.match(workflow, /publish-required-artifacts-json: "\[\]"/);
   assert.match(workflow, /release-passport-impact-json: \.buildchain\/release-impact\.json/);
+  assert.match(workflow, /publication-auto-admission: \$\{\{ github\.event_name == 'workflow_run' \}\}/);
+  assert.match(workflow, /publication-publisher-workflow-path: \.github\/workflows\/buildchain-ref-promotion\.yml/);
   assert.doesNotMatch(workflow, /Buildchain v2\.10 patch release/);
   assert.doesNotMatch(workflow, /run: node scripts\/release-candidate-resolver\.mjs/);
   assert.doesNotMatch(workflow, /uses: \.\/actions\/promote-buildchain-ref/);

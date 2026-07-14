@@ -173,6 +173,7 @@ function main() {
   const repository = flag("repository");
   const workflowRepository = flag("workflow-repository", repository);
   const workflowPath = flag("workflow", ".github/workflows/release-candidate-promote.yml");
+  const workflowRef = flag("workflow-ref");
   const publisherWorkflowPath = flag("publisher-workflow", workflowPath);
   const jobId = flag("job", "promote");
   const environment = flag("environment", "none");
@@ -183,12 +184,19 @@ function main() {
   if (!repository || !branch) throw new Error("--repository and --branch are required");
 
   const encodedWorkflow = workflowPath.split("/").map(encodeURIComponent).join("/");
-  const workflowFile = githubJson(`repos/${workflowRepository}/contents/${encodedWorkflow}`, "publication workflow source");
+  const workflowFile = githubJson(
+    `repos/${workflowRepository}/contents/${encodedWorkflow}${workflowRef ? `?ref=${encodeURIComponent(workflowRef)}` : ""}`,
+    "publication workflow source",
+  );
   const workflowText = Buffer.from(String(workflowFile.content || ""), "base64").toString("utf8");
   const block = jobBlock(workflowText, jobId);
   if (!block) throw new Error(`publication workflow job is missing: ${workflowPath}#${jobId}`);
+  const jobsOffset = workflowText.search(/^jobs:\s*$/m);
+  const workflowHeader = jobsOffset === -1 ? workflowText : workflowText.slice(0, jobsOffset);
+  const explicitReadOnlyWorkflowPermissions = /^permissions:\s*\n(?:^[ \t]+[a-z-]+:\s*read\s*$\n?)+/m.test(workflowHeader) &&
+    !/^\s*[a-z-]+:\s*write\s*$/m.test(workflowHeader) &&
+    !/permissions\s*:\s*write-all/i.test(workflowHeader);
 
-  const actions = githubJson(`repos/${repository}/actions/permissions/workflow`, "Actions workflow policy");
   const repositoryState = githubJson(`repos/${repository}`, "repository metadata");
   const protection = githubJsonOptional(`repos/${repository}/branches/${encodeURIComponent(branch)}/protection`, "branch protection", null);
   const rulesetList = githubJsonOptional(`repos/${repository}/rulesets?includes_parents=true&per_page=100`, "repository rulesets", []);
@@ -205,7 +213,6 @@ function main() {
     ? githubJson(`repos/${repository}/environments/${encodeURIComponent(environment)}/deployment-branch-policies?per_page=100`, "Environment deployment branch policy")
     : { branch_policies: [] };
   const oidc = githubJson(`repos/${repository}/actions/oidc/customization/sub`, "OIDC subject policy");
-  const runners = githubJson(`repos/${repository}/actions/runners?per_page=1`, "runner authorization");
   if (!["npm-trusted-publisher", "github-token", "oidc-role"].includes(publisherMode)) {
     throw new Error(`unsupported --publisher-mode: ${publisherMode}`);
   }
@@ -262,10 +269,9 @@ function main() {
     expiresAt: expiresAt.toISOString(),
     snapshot: {
       actions: {
-        defaultWorkflowPermissions: actions.default_workflow_permissions,
-        canApprovePullRequestReviews: actions.can_approve_pull_request_reviews,
-        allowedActions: actions.allowed_actions,
-        shaPinningRequired: actions.sha_pinning_required,
+        defaultWorkflowPermissions: explicitReadOnlyWorkflowPermissions ? "read" : "unqualified",
+        canApprovePullRequestReviews: false,
+        evidenceSource: "exact-workflow-source",
       },
       branch: protection ? {
         ref: branch,
@@ -301,7 +307,7 @@ function main() {
         label: runsOn,
         githubHosted: runsOn === "ubuntu-24.04",
         selfHostedAuthorized: /self-hosted/i.test(runsOn),
-        repositoryRunnerCount: Number(runners.total_count || 0),
+        evidenceSource: "exact-workflow-job",
       },
     },
   });

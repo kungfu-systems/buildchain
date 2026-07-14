@@ -85,7 +85,7 @@
       "path": "docs/publication-authority.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:85742405eb3617252241684942fa4453afb3a42603800190ed9ca03e733a7999"
+      "digest": "sha256:8c432c336b6257a17f83cc6d115326eaa333d2771755b7b3171476c87269a043"
     },
     {
       "id": "release-candidate",
