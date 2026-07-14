@@ -4,7 +4,7 @@
   "product": {
     "name": "Buildchain",
     "package": "@kungfu-tech/buildchain",
-    "version": "2.12.5",
+    "version": "2.12.6-alpha.3",
     "repository": "https://github.com/kungfu-systems/buildchain"
   },
   "majorLine": "v2",
@@ -50,7 +50,7 @@
         "retryable GitHub fallback fetches use a bounded attempt budget before exact source SHA and tree verification"
       ],
       "breakingDigest": "sha256:a6a35370d6b0d0f46e1b2712dcc01961fe53c2febde95409a27a485c10a36650",
-      "auditDigest": "sha256:92302100660c89ac100c632d6b848e2290f193d882582060032eb94ee25e91ef"
+      "auditDigest": "sha256:18b1cdc05272152120fdb52eb98be1d146702664ca8eba29ae92591ae55d5d2a"
     },
     {
       "contractVersion": 1,
@@ -89,7 +89,7 @@
         "alpha and stable channel selections use separate consumer contract locks by default"
       ],
       "breakingDigest": "sha256:c4597dfa89e1a58f1023905092b849644f5c080abf150aeba9c7e1cd5ed43962",
-      "auditDigest": "sha256:a265606dc3acc927c9be7b2c792bfd6f609eeabb8177fe5cf089adf191fdad78"
+      "auditDigest": "sha256:ced442c3c5617448c52668e0e42dec98476e6f09728c37e08a13cffcd207dbf2"
     },
     {
       "contractVersion": 1,
@@ -159,7 +159,7 @@
         "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes"
       ],
       "breakingDigest": "sha256:6dbae32ce3d7aab3be6957065105af574794581847b7637314dad45f5349c919",
-      "auditDigest": "sha256:692807dec7da9232686143bc2ea01c10ddc3770d3c70b56c0f34042882e141a5"
+      "auditDigest": "sha256:7f513e87fe6c12b34c740261cc6412b9d9c56632537b7538a74ccabe03fe171e"
     },
     {
       "contractVersion": 1,
@@ -203,7 +203,7 @@
         "channel-aware artifact host facts are checked against the deploy plan before adapter side effects"
       ],
       "breakingDigest": "sha256:da569f90374e878948e3d5160ed9929338ce0572473ca8ee54867b0fe1aaeace",
-      "auditDigest": "sha256:4ead2855fba29e007ae3add5a773a511fb2ddf5cb9b895243b351e2ecef02869"
+      "auditDigest": "sha256:465182c56f3fef7463bab7cf2b93931797bad6c5e51c1f3029b71c09d5e42e1d"
     },
     {
       "contractVersion": 1,
@@ -328,7 +328,7 @@
         "release-state SHA is recorded as a durable audit entrance"
       ],
       "breakingDigest": "sha256:b627e1b2ece9b6049517a942c5139e342e6077cdd3d8962d61cef8481b1f70ad",
-      "auditDigest": "sha256:32fd54ceb8e1a0219918e7744797e3a1bf3f614bb8498028209275b98304ac5b"
+      "auditDigest": "sha256:af307129d9df51a1a0d5f7cfff742b0db7d9f8f04dd810cf97a62c79e2d3a726"
     },
     {
       "contractVersion": 1,
@@ -377,7 +377,7 @@
         "prose-only public claims downgrade the release trust passport audit"
       ],
       "breakingDigest": "sha256:f0b636eb925ddbf45ff1a8872454ab7b4dd98857cac12bb75217830130e62a16",
-      "auditDigest": "sha256:32fd54ceb8e1a0219918e7744797e3a1bf3f614bb8498028209275b98304ac5b"
+      "auditDigest": "sha256:af307129d9df51a1a0d5f7cfff742b0db7d9f8f04dd810cf97a62c79e2d3a726"
     },
     {
       "contractVersion": 1,
@@ -549,7 +549,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:3bcfa43a81ab6b7cab1a82deee789d412978df48496f8cc73b6edef71a38569a"
+      "auditDigest": "sha256:63874351201e9323e51c011e81cf1d4d1ff0e3f6d733d5a0cef2537eba95228a"
     },
     {
       "contractVersion": 1,
@@ -639,7 +639,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:d4bd0f2a1921bfed71a4d9104d45934555bde74a5c189f93ad79f37074c02b87",
-      "auditDigest": "sha256:f6d0e94a57d637247b271a9f3c084d679234f442806a8ec6de86065f1fc6f9d2"
+      "auditDigest": "sha256:aa1727de29ad42d50ccc6e6cb8923a7b532da0f6ce6e53372d63801a120de65e"
     },
     {
       "contractVersion": 1,
@@ -1001,7 +1001,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:e264a79f9f399038c2fcfd21e4168c68c2e1485ee5c651c02242a02b622ac2be",
-      "auditDigest": "sha256:92302100660c89ac100c632d6b848e2290f193d882582060032eb94ee25e91ef"
+      "auditDigest": "sha256:18b1cdc05272152120fdb52eb98be1d146702664ca8eba29ae92591ae55d5d2a"
     },
     {
       "contractVersion": 1,
@@ -1374,7 +1374,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:d40dd05d7e07473d4b2dc1b62fbb0ed6f06449b4d3a7c44a2e8014313e3c0273",
-      "auditDigest": "sha256:a265606dc3acc927c9be7b2c792bfd6f609eeabb8177fe5cf089adf191fdad78"
+      "auditDigest": "sha256:ced442c3c5617448c52668e0e42dec98476e6f09728c37e08a13cffcd207dbf2"
     },
     {
       "contractVersion": 1,
@@ -1520,7 +1520,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:5f1868478b7ccd9fb79aea76bc771289d2ca6bd2dccd1abf57575426f1eae5fb",
-      "auditDigest": "sha256:1ea73c7bb01bfdc8387fd0706c32e5cbfae6d4130bfcd8a8d2cd82d578deeafa"
+      "auditDigest": "sha256:2b8db410486b9f572536be9fc68b8819c373ba31bdf8a7379c2770ce5168eb6c"
     },
     {
       "contractVersion": 1,
@@ -1744,7 +1744,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:b48566da2325d9a6a603fbd444a8cc7deb8abed3e6c70a984259208fb0ed513c",
-      "auditDigest": "sha256:4ead2855fba29e007ae3add5a773a511fb2ddf5cb9b895243b351e2ecef02869"
+      "auditDigest": "sha256:465182c56f3fef7463bab7cf2b93931797bad6c5e51c1f3029b71c09d5e42e1d"
     },
     {
       "contractVersion": 1,
@@ -1884,7 +1884,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:3f76502666069c2727d23efcfdb08fb80f89ced1955a69e29f11525ae88aca1d",
-      "auditDigest": "sha256:68d65091eb9f9ff7331eb372499412c9f065d0c683bdc97a4510896c8d1e5296"
+      "auditDigest": "sha256:4756627241ae819e4796b6ddb3b37096223c62652dbc79ac95c2fce8f1bc74a8"
     },
     {
       "contractVersion": 1,
@@ -2107,7 +2107,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:18ed432e8f3dd55a80c7e94dadacc09ab0508f6226a882029ce582d590ac214b",
-      "auditDigest": "sha256:cd143ece816a159bcefe1a01312d5bdb25243048ef733fb4f7d228b4bcf8bec4"
+      "auditDigest": "sha256:cadb8bc59d3cc58cdc2b6bf7f80c235390a685e947d7c78d24ffcde6b321557a"
     },
     {
       "contractVersion": 1,
@@ -2420,7 +2420,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:63e4340f090bce35f5ab64f38fe16767725a39819498ed4d24c5c16de4083c23",
-      "auditDigest": "sha256:692807dec7da9232686143bc2ea01c10ddc3770d3c70b56c0f34042882e141a5"
+      "auditDigest": "sha256:7f513e87fe6c12b34c740261cc6412b9d9c56632537b7538a74ccabe03fe171e"
     },
     {
       "contractVersion": 1,
@@ -2545,9 +2545,9 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:d7a1f15990ce8bd13149474888232c7d4451dd2a49bebf4d4ce1336695da430e",
-      "auditDigest": "sha256:c8cb3170c94e9a0249aa7bae044070bfd012dfc99dd094bd51cd4db163c61518"
+      "auditDigest": "sha256:e7d0cc13b9d6f19e7cd77b650693f0d615b919796d075041d74876e6ca58716f"
     }
   ],
   "compatibilityDigest": "sha256:2520207c5d6d6a737dd32251a42be9c5299644d9aebf690a8402ead1724ed495",
-  "contractDigest": "sha256:e441710d65f4eb03c727ca9617b391eae29aeee155b3b06d927529fa02f7ba13"
+  "contractDigest": "sha256:0d84f30000d4d97f27aa84e9a3cca95d1f455a6e024c28684349f6081aaec7bf"
 }
