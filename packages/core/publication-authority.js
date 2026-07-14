@@ -70,6 +70,14 @@ function normalizeDigest(value, label) {
   return normalized.toLowerCase();
 }
 
+function normalizeGitSha(value, label) {
+  const normalized = requiredString(value, label).toLowerCase();
+  if (!/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/.test(normalized)) {
+    throw new Error(`${label} must be a 40- or 64-character Git commit SHA`);
+  }
+  return normalized;
+}
+
 function parseTime(value, label) {
   const time = Date.parse(requiredString(value, label));
   if (!Number.isFinite(time)) throw new Error(`${label} must be an ISO timestamp`);
@@ -109,6 +117,7 @@ export function createPublicationAuthorityRegistry({ descriptors = [], workflows
       capabilityIds: [...new Set((descriptor.capabilityIds || []).map(String))].sort(),
       credentialMode: String(descriptor.credentialMode || "none"),
       environment: String(descriptor.environment || ""),
+      environmentMode: String(descriptor.environmentMode || "fixed"),
       runnerPolicy: String(descriptor.runnerPolicy || "unqualified"),
       notes: String(descriptor.notes || ""),
     });
@@ -141,12 +150,23 @@ export function createRunnerProvenance({
   architecture,
   imageDigest,
   measurementDigest,
+  baselineDigest = "",
+  toolchainDigest = "",
+  cacheContractDigest = "",
+  taskIsolationDigest = "",
+  cleanBaselineProven = false,
   isolation = "",
 } = {}) {
   const normalizedClass = requiredString(runnerClass, "runnerClass");
   if (!RUNNER_PROVENANCE_CLASSES.includes(normalizedClass)) {
     throw new Error(`unknown runner provenance class: ${normalizedClass}`);
   }
+  const measuredFloor = [baselineDigest, toolchainDigest, cacheContractDigest, taskIsolationDigest].every(Boolean);
+  const qualificationStatus = normalizedClass === "ephemeral"
+    ? (String(isolation).trim() ? "qualifying" : "unqualified")
+    : ["reimaged", "persistent-measured"].includes(normalizedClass)
+      ? (cleanBaselineProven === true && measuredFloor ? "qualifying" : "unqualified")
+      : "unqualified";
   const receipt = {
     schemaVersion: 1,
     contract: RUNNER_PROVENANCE_CONTRACT,
@@ -155,6 +175,12 @@ export function createRunnerProvenance({
     architecture: requiredString(architecture, "architecture"),
     imageDigest: normalizeDigest(imageDigest, "imageDigest"),
     measurementDigest: normalizeDigest(measurementDigest, "measurementDigest"),
+    baselineDigest: baselineDigest ? normalizeDigest(baselineDigest, "baselineDigest") : "",
+    toolchainDigest: toolchainDigest ? normalizeDigest(toolchainDigest, "toolchainDigest") : "",
+    cacheContractDigest: cacheContractDigest ? normalizeDigest(cacheContractDigest, "cacheContractDigest") : "",
+    taskIsolationDigest: taskIsolationDigest ? normalizeDigest(taskIsolationDigest, "taskIsolationDigest") : "",
+    cleanBaselineProven: cleanBaselineProven === true,
+    qualificationStatus,
     isolation: String(isolation),
   };
   return { ...receipt, receiptDigest: publicationAuthorityDigest(receipt) };
@@ -186,10 +212,41 @@ export function createPublicationControlPlaneAudit({
   return { ...receipt, receiptDigest: publicationAuthorityDigest(receipt) };
 }
 
+export function createPublicationAdmission(input = {}) {
+  const payload = {
+    schemaVersion: 1,
+    contract: PUBLICATION_ADMISSION_CONTRACT,
+    registryDigest: normalizeDigest(input.registryDigest, "registryDigest"),
+    workflowPath: requiredString(input.workflowPath, "workflowPath"),
+    repository: requiredString(input.repository, "repository"),
+    sourceSha: normalizeGitSha(input.sourceSha, "sourceSha"),
+    runtimeSha: normalizeGitSha(input.runtimeSha, "runtimeSha"),
+    contractDigest: normalizeDigest(input.contractDigest, "contractDigest"),
+    policyDigest: normalizeDigest(input.policyDigest, "policyDigest"),
+    controllerReceiptDigest: normalizeDigest(input.controllerReceiptDigest, "controllerReceiptDigest"),
+    runnerProvenanceDigest: normalizeDigest(input.runnerProvenanceDigest, "runnerProvenanceDigest"),
+    controlPlaneAuditDigest: normalizeDigest(input.controlPlaneAuditDigest, "controlPlaneAuditDigest"),
+    gateAggregateDigest: normalizeDigest(input.gateAggregateDigest, "gateAggregateDigest"),
+    environment: requiredString(input.environment, "environment"),
+    product: requiredString(input.product, "product"),
+    target: requiredString(input.target, "target"),
+    version: requiredString(input.version, "version"),
+    channel: requiredString(input.channel, "channel"),
+    artifactDigest: normalizeDigest(input.artifactDigest, "artifactDigest"),
+    nonce: requiredString(input.nonce, "nonce"),
+    issuedAt: new Date(parseTime(input.issuedAt, "issuedAt")).toISOString(),
+    expiresAt: new Date(parseTime(input.expiresAt, "expiresAt")).toISOString(),
+  };
+  return { ...payload, admissionDigest: publicationAuthorityDigest(payload) };
+}
+
 function validateRunnerProvenance(receipt, expectedDigest) {
   if (receipt?.contract !== RUNNER_PROVENANCE_CONTRACT) throw new Error("runner provenance contract mismatch");
   if (!QUALIFIED_RUNNER_CLASSES.has(receipt.runnerClass)) {
     throw new Error(`runner provenance is not qualified: ${receipt.runnerClass || "unknown"}`);
+  }
+  if (receipt.qualificationStatus !== "qualifying") {
+    throw new Error(`runner provenance qualification floor was not met: ${receipt.runnerClass}`);
   }
   const { receiptDigest: supplied, ...payload } = receipt;
   const actual = publicationAuthorityDigest(payload);
@@ -202,11 +259,12 @@ function validateRunnerProvenance(receipt, expectedDigest) {
   return actual;
 }
 
-function validateControlPlaneAudit(receipt, { workflowPath, environment, now, expectedDigest }) {
+function validateControlPlaneAudit(receipt, { repository, workflowPath, environment, now, expectedDigest }) {
   if (receipt?.contract !== PUBLICATION_CONTROL_PLANE_AUDIT_CONTRACT) {
     throw new Error("publication control-plane audit contract mismatch");
   }
   if (receipt.workflowPath !== workflowPath) throw new Error("control-plane workflow binding mismatch");
+  if (receipt.repository !== repository) throw new Error("control-plane repository binding mismatch");
   if (receipt.environment !== environment) throw new Error("control-plane environment binding mismatch");
   if (parseTime(receipt.observedAt, "controlPlaneAudit.observedAt") > now) {
     throw new Error("control-plane audit is from the future");
@@ -262,7 +320,17 @@ export function verifyPublicationAdmission({
   if (!descriptor.publicationCapable || descriptor.authorityClass !== "product-publication") {
     throw new Error(`workflow is not product-publication capable: ${workflowPath}`);
   }
-  if (!descriptor.environment) throw new Error("publication authority descriptor has no protected environment");
+  const environmentMode = descriptor.environmentMode || "fixed";
+  if (!["fixed", "caller-bound"].includes(environmentMode)) {
+    throw new Error(`unsupported publication environment mode: ${environmentMode}`);
+  }
+  const environment = environmentMode === "caller-bound"
+    ? requiredString(admission.environment, "admission.environment")
+    : descriptor.environment;
+  if (!environment) throw new Error("publication authority descriptor has no protected environment");
+  if (environmentMode === "fixed" && admission.environment !== environment) {
+    throw new Error("publication admission environment binding mismatch");
+  }
 
   const nowMs = now instanceof Date ? now.getTime() : parseTime(now, "now");
   const issuedAt = parseTime(admission.issuedAt, "admission.issuedAt");
@@ -280,6 +348,8 @@ export function verifyPublicationAdmission({
     "contractDigest",
     "policyDigest",
     "controllerReceiptDigest",
+    "gateAggregateDigest",
+    "environment",
     "product",
     "target",
     "version",
@@ -288,18 +358,25 @@ export function verifyPublicationAdmission({
   ];
   for (const key of bindings) {
     const actual = requiredString(admission[key], `admission.${key}`);
-    if (expected[key] !== undefined && String(expected[key]) !== actual) {
+    if (expected[key] === undefined) {
+      throw new Error(`publication admission expected ${key} binding is required`);
+    }
+    if (String(expected[key]) !== actual) {
       throw new Error(`publication admission ${key} binding mismatch`);
     }
   }
-  for (const key of ["sourceSha", "runtimeSha", "contractDigest", "policyDigest", "controllerReceiptDigest", "artifactDigest"]) {
+  for (const key of ["sourceSha", "runtimeSha"]) {
+    normalizeGitSha(admission[key], `admission.${key}`);
+  }
+  for (const key of ["contractDigest", "policyDigest", "controllerReceiptDigest", "gateAggregateDigest", "artifactDigest"]) {
     normalizeDigest(admission[key], `admission.${key}`);
   }
 
   const runnerDigest = validateRunnerProvenance(runnerProvenance, admission.runnerProvenanceDigest);
   const controlPlaneDigest = validateControlPlaneAudit(controlPlaneAudit, {
+    repository: admission.repository,
     workflowPath,
-    environment: descriptor.environment,
+    environment,
     now: nowMs,
     expectedDigest: admission.controlPlaneAuditDigest,
   });
@@ -316,6 +393,11 @@ export function verifyPublicationAdmission({
     workflowPath,
     capabilityIds: descriptor.capabilityIds,
     repository: admission.repository,
+    sourceSha: normalizeGitSha(admission.sourceSha, "admission.sourceSha"),
+    runtimeSha: normalizeGitSha(admission.runtimeSha, "admission.runtimeSha"),
+    contractDigest: normalizeDigest(admission.contractDigest, "admission.contractDigest"),
+    policyDigest: normalizeDigest(admission.policyDigest, "admission.policyDigest"),
+    controllerReceiptDigest: normalizeDigest(admission.controllerReceiptDigest, "admission.controllerReceiptDigest"),
     product: admission.product,
     target: admission.target,
     version: admission.version,
@@ -324,6 +406,8 @@ export function verifyPublicationAdmission({
     admissionDigest: actualAdmissionDigest,
     runnerProvenanceDigest: runnerDigest,
     controlPlaneAuditDigest: controlPlaneDigest,
+    gateAggregateDigest: normalizeDigest(admission.gateAggregateDigest, "admission.gateAggregateDigest"),
+    environment,
     nonce,
     expiresAt: admission.expiresAt,
   };

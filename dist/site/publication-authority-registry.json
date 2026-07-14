@@ -4,12 +4,37 @@
   "defaultDecision": "deny",
   "entries": [
     {
+      "workflowPath": ".github/workflows/.binary-release-assets.yml",
+      "authorityClass": "product-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "github-release"
+      ],
+      "credentialMode": "github-token",
+      "environment": "buildchain-release-assets",
+      "environmentMode": "fixed",
+      "runnerPolicy": "qualified-measured",
+      "notes": ""
+    },
+    {
       "workflowPath": ".github/workflows/.build.yml",
       "authorityClass": "non-publication-oidc",
       "publicationCapable": false,
       "capabilityIds": [],
       "credentialMode": "none",
       "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/.publication-authority.yml",
+      "authorityClass": "evidence-publication",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "environment": "",
+      "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
       "notes": ""
     },
@@ -20,6 +45,7 @@
       "capabilityIds": [],
       "credentialMode": "none",
       "environment": "",
+      "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
       "notes": ""
     },
@@ -30,6 +56,7 @@
       "capabilityIds": [],
       "credentialMode": "none",
       "environment": "",
+      "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
       "notes": ""
     },
@@ -40,6 +67,7 @@
       "capabilityIds": [],
       "credentialMode": "none",
       "environment": "",
+      "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
       "notes": ""
     },
@@ -50,6 +78,7 @@
       "capabilityIds": [],
       "credentialMode": "none",
       "environment": "",
+      "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
       "notes": ""
     },
@@ -61,7 +90,8 @@
         "web-production"
       ],
       "credentialMode": "oidc",
-      "environment": "buildchain-publication",
+      "environment": "consumer-defined",
+      "environmentMode": "caller-bound",
       "runnerPolicy": "qualified-measured",
       "notes": ""
     },
@@ -72,6 +102,7 @@
       "capabilityIds": [],
       "credentialMode": "none",
       "environment": "",
+      "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
       "notes": ""
     },
@@ -82,19 +113,30 @@
       "capabilityIds": [],
       "credentialMode": "none",
       "environment": "",
+      "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
       "notes": ""
     },
     {
       "workflowPath": ".github/workflows/binary-distribution.yml",
-      "authorityClass": "product-publication",
-      "publicationCapable": true,
-      "capabilityIds": [
-        "github-release"
-      ],
-      "credentialMode": "oidc",
-      "environment": "buildchain-publication",
-      "runnerPolicy": "qualified-measured",
+      "authorityClass": "evidence-publication",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/binary-release-assets.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
       "notes": ""
     },
     {
@@ -104,6 +146,7 @@
       "capabilityIds": [],
       "credentialMode": "none",
       "environment": "",
+      "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
       "notes": ""
     },
@@ -114,6 +157,7 @@
       "capabilityIds": [],
       "credentialMode": "none",
       "environment": "",
+      "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
       "notes": ""
     },
@@ -124,6 +168,7 @@
       "capabilityIds": [],
       "credentialMode": "none",
       "environment": "",
+      "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
       "notes": ""
     },
@@ -134,6 +179,7 @@
       "capabilityIds": [],
       "credentialMode": "none",
       "environment": "",
+      "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
       "notes": ""
     },
@@ -144,6 +190,7 @@
       "capabilityIds": [],
       "credentialMode": "none",
       "environment": "",
+      "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
       "notes": ""
     },
@@ -154,6 +201,7 @@
       "capabilityIds": [],
       "credentialMode": "none",
       "environment": "",
+      "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
       "notes": ""
     },
@@ -164,6 +212,7 @@
       "capabilityIds": [],
       "credentialMode": "none",
       "environment": "",
+      "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
       "notes": ""
     },
@@ -174,6 +223,7 @@
       "capabilityIds": [],
       "credentialMode": "none",
       "environment": "",
+      "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
       "notes": ""
     },
@@ -184,6 +234,7 @@
       "capabilityIds": [],
       "credentialMode": "none",
       "environment": "",
+      "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
       "notes": ""
     },
@@ -194,6 +245,7 @@
       "capabilityIds": [],
       "credentialMode": "none",
       "environment": "",
+      "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
       "notes": ""
     },
@@ -204,6 +256,7 @@
       "capabilityIds": [],
       "credentialMode": "none",
       "environment": "",
+      "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
       "notes": ""
     },
@@ -217,6 +270,7 @@
       ],
       "credentialMode": "trusted-publishing",
       "environment": "buildchain-publication",
+      "environmentMode": "fixed",
       "runnerPolicy": "qualified-measured",
       "notes": ""
     },
@@ -227,6 +281,7 @@
       "capabilityIds": [],
       "credentialMode": "none",
       "environment": "",
+      "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
       "notes": ""
     },
@@ -237,6 +292,7 @@
       "capabilityIds": [],
       "credentialMode": "none",
       "environment": "",
+      "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
       "notes": ""
     },
@@ -247,6 +303,7 @@
       "capabilityIds": [],
       "credentialMode": "none",
       "environment": "",
+      "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
       "notes": ""
     },
@@ -257,6 +314,7 @@
       "capabilityIds": [],
       "credentialMode": "none",
       "environment": "",
+      "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
       "notes": ""
     },
@@ -271,6 +329,7 @@
       ],
       "credentialMode": "trusted-publishing",
       "environment": "buildchain-publication",
+      "environmentMode": "fixed",
       "runnerPolicy": "qualified-measured",
       "notes": ""
     },
@@ -281,6 +340,7 @@
       "capabilityIds": [],
       "credentialMode": "none",
       "environment": "",
+      "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
       "notes": ""
     },
@@ -291,6 +351,7 @@
       "capabilityIds": [],
       "credentialMode": "none",
       "environment": "",
+      "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
       "notes": ""
     },
@@ -301,6 +362,7 @@
       "capabilityIds": [],
       "credentialMode": "none",
       "environment": "",
+      "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
       "notes": ""
     },
@@ -311,11 +373,21 @@
       "capabilityIds": [],
       "credentialMode": "none",
       "environment": "",
+      "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
       "notes": ""
     }
   ],
   "workflowFacts": [
+    {
+      "path": ".github/workflows/.binary-release-assets.yml",
+      "signals": [
+        "write-permission",
+        "environment",
+        "github-release"
+      ],
+      "classified": true
+    },
     {
       "path": ".github/workflows/.build.yml",
       "signals": [
@@ -334,6 +406,11 @@
       "path": ".github/workflows/.gate-profile.yml",
       "signals": [],
       "classified": false
+    },
+    {
+      "path": ".github/workflows/.publication-authority.yml",
+      "signals": [],
+      "classified": true
     },
     {
       "path": ".github/workflows/.release-docker.yml",
@@ -406,10 +483,13 @@
     },
     {
       "path": ".github/workflows/binary-distribution.yml",
+      "signals": [],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/binary-release-assets.yml",
       "signals": [
-        "write-permission",
-        "oidc",
-        "github-release"
+        "write-permission"
       ],
       "classified": true
     },
@@ -513,7 +593,8 @@
       "path": ".github/workflows/paper-release.yml",
       "signals": [
         "write-permission",
-        "oidc"
+        "oidc",
+        "environment"
       ],
       "classified": true
     },
@@ -549,7 +630,8 @@
       "path": ".github/workflows/release-candidate-promote.yml",
       "signals": [
         "write-permission",
-        "oidc"
+        "oidc",
+        "environment"
       ],
       "classified": true
     },
@@ -604,5 +686,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "ca8e4ad9c26a687f699470bd8a9be21123a92fc58d96407cdb870a1e8d3fcb4a"
+  "registryDigest": "291709070346038095f82966d1e185399b582221ae84667f7489bd3dee53f459"
 }

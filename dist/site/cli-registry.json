@@ -6,6 +6,18 @@
   "commandSource": "bin/buildchain.mjs reverse enumeration",
   "commands": [
     {
+      "id": "audit",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain audit publication-control-plane --repository <owner/repo> --branch <protected-branch>",
+      "purpose": "Inspect read-only publication authority audit commands.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
       "id": "badges",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain badges",
@@ -82,6 +94,18 @@
       "source": "bin/buildchain.mjs",
       "usage": "buildchain collect github-release --tag <tag> [--repository <owner/repo>]",
       "purpose": "Collect GitHub Release assets into a release passport.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "create",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain create publication-admission --input-json <file-or-json> [--output <file>] [--json]",
+      "purpose": "Create canonical sealed publication evidence documents.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "agent",

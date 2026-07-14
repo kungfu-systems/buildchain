@@ -1,0 +1,50 @@
+name: Binary Release Assets
+
+on:
+  workflow_dispatch:
+    inputs:
+      buildchain-ref:
+        description: "Exact Buildchain SHA containing the sealed verifier."
+        required: true
+      evidence-run-id:
+        description: "Successful Binary Distribution run id."
+        required: true
+      release-tag:
+        description: "Existing v* release tag."
+        required: true
+      publication-admission-json:
+        description: "Fresh sealed publication admission JSON."
+        required: true
+      publication-runner-provenance-json:
+        description: "Qualified runner provenance receipt JSON."
+        required: true
+      publication-control-plane-audit-json:
+        description: "Fresh external control-plane audit receipt JSON."
+        required: true
+      publication-expected-json:
+        description: "Exact source, runtime, Gate, artifact, target, version, and channel bindings JSON."
+        required: true
+      publication-used-nonces-json:
+        description: "JSON array of already consumed admission nonces."
+        required: true
+        default: "[]"
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    uses: ./.github/workflows/.binary-release-assets.yml
+    permissions:
+      actions: read
+      contents: write
+    with:
+      buildchain-repository: kungfu-systems/buildchain
+      buildchain-ref: ${{ inputs.buildchain-ref }}
+      evidence-run-id: ${{ inputs.evidence-run-id }}
+      release-tag: ${{ inputs.release-tag }}
+      publication-admission-json: ${{ inputs.publication-admission-json }}
+      publication-runner-provenance-json: ${{ inputs.publication-runner-provenance-json }}
+      publication-control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
+      publication-expected-json: ${{ inputs.publication-expected-json }}
+      publication-used-nonces-json: ${{ inputs.publication-used-nonces-json }}

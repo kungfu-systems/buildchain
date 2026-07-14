@@ -14,6 +14,7 @@ export function evaluatePublicationControlPlaneSnapshot({
   environment,
   branch,
   packageName,
+  publisherMode = "npm-trusted-publisher",
   snapshot,
   observedAt,
   expiresAt,
@@ -25,6 +26,35 @@ export function evaluatePublicationControlPlaneSnapshot({
   const oidc = snapshot?.oidc || {};
   const publisher = snapshot?.publisher || {};
   const runner = snapshot?.runner || {};
+  const publisherPass = publisherMode === "npm-trusted-publisher"
+    ? publisher.packageName === packageName &&
+      publisher.provider === "github" &&
+      publisher.repository === repository &&
+      publisher.workflowFilename === workflowFilename &&
+      publisher.environment === environment &&
+      publisher.allowPublish === true &&
+      publisher.longLivedWorkflowCredentialPresent === false
+    : publisherMode === "github-token"
+      ? publisher.provider === "github-token" &&
+        publisher.repository === repository &&
+        publisher.workflowPath === workflowPath &&
+        publisher.permissionScoped === true &&
+        publisher.longLivedWorkflowCredentialPresent === false
+      : publisherMode === "oidc-role"
+        ? publisher.provider !== "" &&
+          publisher.repository === repository &&
+          publisher.workflowPath === workflowPath &&
+          publisher.environment === environment &&
+          publisher.trustQualifying === true &&
+          /^[0-9a-f]{64}$/i.test(String(publisher.roleDigest || "").replace(/^sha256:/, "")) &&
+          publisher.longLivedWorkflowCredentialPresent === false
+        : false;
+  const credentialIsolationPass = publisherMode === "github-token"
+    ? oidc.githubTokenJobScoped === true && oidc.longLivedCredentialPresent === false
+    : oidc.workflowPath === workflowPath &&
+      oidc.environment === environment &&
+      oidc.idTokenJobScoped === true &&
+      oidc.longLivedCredentialPresent === false;
   const facts = [
     fact(
       "actions-policy",
@@ -42,29 +72,20 @@ export function evaluatePublicationControlPlaneSnapshot({
     ),
     fact(
       "environment-policy",
-      environmentPolicy.name === environment &&
+        environmentPolicy.name === environment &&
         environmentPolicy.exists === true &&
         environmentPolicy.protected === true &&
-        environmentPolicy.preventSelfReview === true,
+        (environmentPolicy.reviewRequired !== true || environmentPolicy.preventSelfReview === true),
       environmentPolicy,
     ),
     fact(
       "oidc-policy",
-      oidc.workflowPath === workflowPath &&
-        oidc.environment === environment &&
-        oidc.idTokenJobScoped === true &&
-        oidc.longLivedCredentialPresent === false,
+      credentialIsolationPass,
       oidc,
     ),
     fact(
       "publisher-policy",
-      publisher.packageName === packageName &&
-        publisher.provider === "github" &&
-        publisher.repository === repository &&
-        publisher.workflowFilename === workflowFilename &&
-        publisher.environment === environment &&
-        publisher.allowPublish === true &&
-        publisher.tokensDisallowed === true,
+      publisherPass,
       publisher,
     ),
     fact(
