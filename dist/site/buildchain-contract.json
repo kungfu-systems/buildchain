@@ -50,7 +50,7 @@
         "retryable GitHub fallback fetches use a bounded attempt budget before exact source SHA and tree verification"
       ],
       "breakingDigest": "sha256:a6a35370d6b0d0f46e1b2712dcc01961fe53c2febde95409a27a485c10a36650",
-      "auditDigest": "sha256:18b1cdc05272152120fdb52eb98be1d146702664ca8eba29ae92591ae55d5d2a"
+      "auditDigest": "sha256:4dc810c734e3b597297932839d3919219b93c69a985fc1b8ecc91a08299b940e"
     },
     {
       "contractVersion": 1,
@@ -159,7 +159,7 @@
         "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes"
       ],
       "breakingDigest": "sha256:6dbae32ce3d7aab3be6957065105af574794581847b7637314dad45f5349c919",
-      "auditDigest": "sha256:197c71556a66a7435fc08d4e90d24c494dea43d00a57f3f6afb91ab7c13e62ff"
+      "auditDigest": "sha256:10c3132362feab7e8e3f612eedc2e62b9b90ff0ed2fcf8445ce75caef55c26d5"
     },
     {
       "contractVersion": 1,
@@ -269,7 +269,7 @@
         "semver GitHub Releases are created or updated only after transaction completion, with prerelease/latest metadata derived from the public release tag"
       ],
       "breakingDigest": "sha256:a59f0910e6df842e7699139472e5dd69ac2fdd7f7213bf2cb346d1d622556874",
-      "auditDigest": "sha256:61edd187a303c33eeef28ccca138e46d7494645b16e6df72719b6d632b0d8e80"
+      "auditDigest": "sha256:eac5c97897a71a6ab8e07cf978bd631d953798b447974f2bae825b66f6e10924"
     },
     {
       "contractVersion": 1,
@@ -527,7 +527,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:1b444a6dd4d4ea1b7f55ab74e6e53b4e042c9a872d6dee247acf63f7bbab9f23"
+      "auditDigest": "sha256:653df5708fa73f074129b3bf1e047f7f204f42e4521e2b0d7521618f01f9f345"
     },
     {
       "contractVersion": 1,
@@ -1001,7 +1001,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:e264a79f9f399038c2fcfd21e4168c68c2e1485ee5c651c02242a02b622ac2be",
-      "auditDigest": "sha256:18b1cdc05272152120fdb52eb98be1d146702664ca8eba29ae92591ae55d5d2a"
+      "auditDigest": "sha256:4dc810c734e3b597297932839d3919219b93c69a985fc1b8ecc91a08299b940e"
     },
     {
       "contractVersion": 1,
@@ -1520,7 +1520,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:5f1868478b7ccd9fb79aea76bc771289d2ca6bd2dccd1abf57575426f1eae5fb",
-      "auditDigest": "sha256:2b8db410486b9f572536be9fc68b8819c373ba31bdf8a7379c2770ce5168eb6c"
+      "auditDigest": "sha256:f478f291726cd47d998c37d454d9fc3e97f1d4a45dc60fe756d8c239fa1245bd"
     },
     {
       "contractVersion": 1,
@@ -2525,7 +2525,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:46238f8fc3c20924decc57ecad142a462fc4739c6bc21409d5cd2457fc1c3cdd",
-      "auditDigest": "sha256:197c71556a66a7435fc08d4e90d24c494dea43d00a57f3f6afb91ab7c13e62ff"
+      "auditDigest": "sha256:10c3132362feab7e8e3f612eedc2e62b9b90ff0ed2fcf8445ce75caef55c26d5"
     },
     {
       "contractVersion": 1,
@@ -2654,5 +2654,5 @@
     }
   ],
   "compatibilityDigest": "sha256:af162b86ab4506e9b5f1d3c59b41f3fd57fbad79ff4d749a7f12ff16460517f8",
-  "contractDigest": "sha256:3abf1d4b7f940f16739b375c8286aa4e293fa81708d774d6554fb6b4f1309e59"
+  "contractDigest": "sha256:54faa7bccadf58420c5daf405b816c126769ece9db217a5abc2e742121c8a840"
 }

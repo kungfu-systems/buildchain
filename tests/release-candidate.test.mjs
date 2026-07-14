@@ -732,7 +732,26 @@ test("workflow friction classifier falls back when configured workflow file is m
     assert.match(result.diagnosis, /workflow file build-surface-fixture\.yml was not found/);
     assert.match(result.diagnosis, /fell back to repository pull_request workflow runs/);
     assert.doesNotMatch(result.summary, /auto-classification did not complete/);
-    assert.equal(seen.length, 3);
+
+    const promotionResult = await classifyWorkflowFriction({
+      repository: "kungfu-systems/libnode",
+      targetSha,
+      targetRef: "alpha/v22/v22.22",
+      buildWorkflowFile: "build-surface-fixture.yml",
+      buildWorkflowName: "Build",
+      releaseCandidateOutcome: "success",
+      releaseCandidateDiagnosis: "Resolved the exact PR-stage release candidate.",
+      promotionOutcome: "failure",
+      promotionDiagnosis: "Generated protected ref update was rejected by branch protection.",
+      outputDir: workspace,
+      fetchImpl,
+    });
+
+    assert.equal(promotionResult.frictionClass, "buildchain-ref-promotion-failed");
+    assert.match(promotionResult.diagnosis, /Generated protected ref update was rejected/);
+    assert.doesNotMatch(promotionResult.diagnosis, /Resolved the exact PR-stage release candidate/);
+    assert.doesNotMatch(promotionResult.nextAction, /Deduplicate/);
+    assert.equal(seen.length, 6);
   } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
   }

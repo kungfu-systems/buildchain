@@ -3222,6 +3222,17 @@ function selectAlphaTag({ refs, releasePrefix, sha, patchAfterRelease }) {
   };
 }
 
+function assertExpectedPublicationVersion(expectedVersion, actualVersion) {
+  const expected = String(expectedVersion || "").trim();
+  const actual = String(actualVersion || "").trim();
+  if (expected && expected !== actual) {
+    throw new Error(
+      `publication version changed after authority planning: expected ${expected}, got ${actual || "<empty>"}`,
+    );
+  }
+  return actual;
+}
+
 function notFound(error) {
   const status = error?.status || error?.response?.status;
   const message = error?.response?.data?.message || error?.message || "";
@@ -3361,6 +3372,7 @@ async function promoteBuildchainRefs({
   publishDistTag = "",
   publishPackageSetOrder = "",
   publishPackageMain = "",
+  expectedPublicationVersion = "",
   releasePassport = true,
   releasePassportOutputDir = ".buildchain/release-passport",
   releasePassportProductName = "Buildchain",
@@ -4595,6 +4607,7 @@ async function promoteBuildchainRefs({
     allowVersionStateFinalization = false,
   }) => {
     const transactionVersion = version;
+    assertExpectedPublicationVersion(expectedPublicationVersion, transactionVersion);
     if (dryRun && (publishTransaction || publishCommand || getLifecycleStage(loadBuildchainConfig(cwd), "publish"))) {
       updates.push({
         action: "dry-run-publish-transaction",
@@ -5557,6 +5570,7 @@ export {
   runVersionVerification,
   selectAlphaTag,
   selectReleaseTag,
+  assertExpectedPublicationVersion,
   stripTagPrefix,
   updateVersionStateContents,
   resolveReleaseImpactInput,
