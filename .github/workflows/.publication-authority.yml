@@ -69,6 +69,11 @@ on:
         type: string
         required: false
         default: "npm:@kungfu-tech/buildchain"
+      publication-version:
+        description: "Exact version selected by the read-only publication plan"
+        type: string
+        required: false
+        default: ""
       package-name:
         type: string
         required: false
@@ -175,6 +180,7 @@ jobs:
           BUILDCHAIN_SOURCE_SHA: ${{ inputs.source-sha }}
           BUILDCHAIN_TARGET_REF: ${{ inputs.target-ref }}
           BUILDCHAIN_PUBLISHER_WORKFLOW_PATH: ${{ inputs.publisher-workflow-path }}
+          BUILDCHAIN_PUBLICATION_VERSION: ${{ inputs.publication-version }}
         shell: bash
         run: |
           set -euo pipefail
@@ -192,6 +198,10 @@ jobs:
           fi
           if [[ "$BUILDCHAIN_PUBLISHER_WORKFLOW_PATH" != ".github/workflows/buildchain-ref-promotion.yml" ]]; then
             echo "::error::automatic publication admission requires the Buildchain ref-promotion caller identity"
+            exit 1
+          fi
+          if [[ -z "$BUILDCHAIN_PUBLICATION_VERSION" ]]; then
+            echo "::error::automatic publication admission requires an exact planned publication version"
             exit 1
           fi
 
@@ -317,6 +327,7 @@ jobs:
           BUILDCHAIN_PUBLICATION_ENVIRONMENT: none
           BUILDCHAIN_PUBLICATION_PRODUCT: ${{ inputs.product }}
           BUILDCHAIN_PUBLICATION_TARGET: ${{ inputs.publication-target }}
+          BUILDCHAIN_PUBLICATION_VERSION: ${{ inputs.publication-version }}
           BUILDCHAIN_PUBLICATION_CHANNEL: ${{ startsWith(inputs.target-ref, 'release/') && 'release' || startsWith(inputs.target-ref, 'alpha/') && 'alpha' || 'major' }}
         shell: bash
         run: node .buildchain/authority-runtime/scripts/assemble-self-publication-admission.mjs
@@ -330,6 +341,7 @@ jobs:
           BUILDCHAIN_GATE_AGGREGATE_JSON: ${{ inputs.gate-aggregate-json || steps.auto-evidence.outputs.gate-aggregate-json }}
           BUILDCHAIN_PUBLICATION_EXPECTED_JSON: ${{ inputs.expected-json || steps.auto-evidence.outputs.expected-json }}
           BUILDCHAIN_USED_NONCES_JSON: ${{ inputs.used-nonces-json }}
+          BUILDCHAIN_PLANNED_PUBLICATION_VERSION: ${{ inputs.publication-version }}
           GITHUB_TOKEN: ${{ github.token }}
         shell: bash
         run: |
@@ -412,6 +424,9 @@ jobs:
           const actualRuntimeSha = execFileSync("git", ["-C", ".buildchain/authority-runtime", "rev-parse", "HEAD"], { encoding: "utf8" }).trim().toLowerCase();
           if (capability.runtimeSha !== actualRuntimeSha) {
             throw new Error(`authority runtime checkout mismatch: expected ${capability.runtimeSha}, got ${actualRuntimeSha}`);
+          }
+          if (capability.version !== process.env.BUILDCHAIN_PLANNED_PUBLICATION_VERSION) {
+            throw new Error(`authority publication version mismatch: planned ${process.env.BUILDCHAIN_PLANNED_PUBLICATION_VERSION || "<empty>"}, capability ${capability.version || "<empty>"}`);
           }
           fs.mkdirSync(".buildchain/publication-authority", { recursive: true });
           fs.writeFileSync(".buildchain/publication-authority/capability.json", `${JSON.stringify(capability, null, 2)}\n`);

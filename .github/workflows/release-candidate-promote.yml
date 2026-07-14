@@ -525,9 +525,65 @@ jobs:
           BUILDCHAIN_PUBLISH_PACKAGE_MAIN: ${{ inputs.publish-package-main }}
           BUILDCHAIN_RC_DOWNLOAD: "false"
 
+  publication-plan:
+    name: Plan exact publication version
+    needs: [preflight, controller-plan]
+    if: ${{ needs.preflight.outputs.action == 'promote' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.plan.outputs.planned-publication-version }}
+      exact-tag: ${{ steps.plan.outputs.planned-publication-exact-tag }}
+    steps:
+      - name: Checkout promotion channel commit
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ needs.preflight.outputs.requested-sha }}
+          clean: true
+          persist-credentials: false
+
+      - name: Checkout exact Buildchain planner runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.buildchain-ref || 'v2' }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Resolve exact publication transaction version
+        id: plan
+        uses: ./.buildchain/runtime/actions/promote-buildchain-ref
+        with:
+          token: ${{ github.token }}
+          sha: ${{ needs.preflight.outputs.requested-sha }}
+          target-ref: ${{ needs.preflight.outputs.target-ref }}
+          dry-run: "true"
+          require-governance: "false"
+          require-version-state: "true"
+          allow-repository: ${{ inputs.allow-repository || github.repository }}
+          publish-transaction: "true"
+          release-passport: "false"
+
+      - name: Require an exact publication transaction version
+        shell: bash
+        env:
+          BUILDCHAIN_PUBLICATION_VERSION: ${{ steps.plan.outputs.planned-publication-version }}
+          BUILDCHAIN_PUBLICATION_EXACT_TAG: ${{ steps.plan.outputs.planned-publication-exact-tag }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$BUILDCHAIN_PUBLICATION_VERSION" || -z "$BUILDCHAIN_PUBLICATION_EXACT_TAG" ]]; then
+            echo "::error::publication planning did not produce an exact version and tag"
+            exit 1
+          fi
+          if [[ "v${BUILDCHAIN_PUBLICATION_VERSION}" != "$BUILDCHAIN_PUBLICATION_EXACT_TAG" ]]; then
+            echo "::error::publication plan version/tag mismatch: ${BUILDCHAIN_PUBLICATION_VERSION} != ${BUILDCHAIN_PUBLICATION_EXACT_TAG}"
+            exit 1
+          fi
+
   publication-authority:
     name: Seal product publication capability
-    needs: [preflight, controller-plan, release-candidate-preflight]
+    needs: [preflight, controller-plan, release-candidate-preflight, publication-plan]
     if: ${{ needs.preflight.outputs.action == 'promote' }}
     permissions:
       actions: read
@@ -548,6 +604,7 @@ jobs:
       publisher-workflow-path: ${{ inputs.publication-publisher-workflow-path }}
       product: ${{ inputs.publication-product }}
       publication-target: ${{ inputs.publication-target }}
+      publication-version: ${{ needs.publication-plan.outputs.version }}
       package-name: ${{ inputs.publication-package-name }}
       evidence-repository: ${{ github.repository }}
       evidence-run-id: ${{ needs.release-candidate-preflight.outputs.evidence-run-id }}
@@ -559,7 +616,7 @@ jobs:
 
   promote:
     name: Promote release candidate
-    needs: [preflight, controller-plan, release-candidate-preflight, publication-authority]
+    needs: [preflight, controller-plan, release-candidate-preflight, publication-plan, publication-authority]
     if: ${{ needs.preflight.outputs.action == 'promote' && needs.publication-authority.result == 'success' }}
     runs-on: ubuntu-24.04
     permissions:
@@ -848,14 +905,15 @@ jobs:
           CHANNEL: ${{ needs.preflight.outputs.channel }}
           TARGET_REF: ${{ needs.preflight.outputs.target-ref }}
           TARGET_SHA: ${{ needs.preflight.outputs.requested-sha }}
-          VERSION: ${{ steps.rc.outputs.release-candidate-version || 'promotion' }}
+          PUBLICATION_VERSION: ${{ needs.publication-plan.outputs.version }}
           DRY_RUN: ${{ inputs.dry-run }}
         with:
           script: |
             const channel = process.env.CHANNEL;
             const targetRef = process.env.TARGET_REF;
             const targetSha = process.env.TARGET_SHA;
-            const versionHint = process.env.VERSION || "promotion";
+            const versionHint = process.env.PUBLICATION_VERSION;
+            if (!versionHint) throw new Error("publish-gate lock requires the planned publication version");
             const dryRun = process.env.DRY_RUN === "true";
             const gateRef = channel === "major"
               ? "publish-gate/major"
@@ -904,6 +962,7 @@ jobs:
           publish-dist-tag: ${{ inputs.publish-dist-tag }}
           publish-package-set-order: ${{ inputs.publish-package-set-order }}
           publish-package-main: ${{ inputs.publish-package-main }}
+          expected-publication-version: ${{ needs.publication-plan.outputs.version }}
           require-publish-source-lock: "true"
           publish-source-ref: ${{ steps.publish-gate.outputs.ref }}
           publish-source-sha: ${{ steps.publish-gate.outputs.sha }}
