@@ -6,7 +6,7 @@
   "hold": {
     "enabled": false,
     "reason": "",
-    "updatedAt": "2026-07-14T03:05:51.834Z"
+    "updatedAt": "2026-07-14T04:22:59.150Z"
   },
   "candidates": [
     {
@@ -1147,10 +1147,10 @@
       "sha": "2645a4e9db8ef3ce02657a1359a9df7b3d31d7a0",
       "tag": "v2.12.5-alpha.0",
       "publishedAt": "2026-07-13T14:59:09.000Z",
-      "state": "soaking",
+      "state": "revoked",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-07-14T03:05:51.834Z",
+        "observedAt": "2026-07-14T04:22:59.150Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1176,9 +1176,9 @@
         ]
       },
       "decision": {
-        "reason": "checks-incomplete",
-        "updatedAt": "2026-07-14T03:05:51.834Z",
-        "actor": "buildchain-patrol"
+        "reason": "stable-version-promoted-by:2.12.5-alpha.5",
+        "actor": "buildchain",
+        "updatedAt": "2026-07-14T03:12:11.000Z"
       }
     },
     {
@@ -1187,10 +1187,10 @@
       "sha": "7de99bd125c8a1d407038643b2fa0c0a11159e90",
       "tag": "v2.12.5-alpha.1",
       "publishedAt": "2026-07-14T01:50:37.000Z",
-      "state": "soaking",
+      "state": "revoked",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-07-14T03:05:51.834Z",
+        "observedAt": "2026-07-14T04:22:59.150Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1216,9 +1216,9 @@
         ]
       },
       "decision": {
-        "reason": "checks-incomplete",
-        "updatedAt": "2026-07-14T03:05:51.834Z",
-        "actor": "buildchain-patrol"
+        "reason": "stable-version-promoted-by:2.12.5-alpha.5",
+        "actor": "buildchain",
+        "updatedAt": "2026-07-14T03:12:11.000Z"
       }
     },
     {
@@ -1227,10 +1227,10 @@
       "sha": "29e786b80277d5b25de16e1b2fcae9bbca648522",
       "tag": "v2.12.5-alpha.2",
       "publishedAt": "2026-07-14T02:10:01.000Z",
-      "state": "soaking",
+      "state": "revoked",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-07-14T03:05:51.834Z",
+        "observedAt": "2026-07-14T04:22:59.150Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1256,9 +1256,9 @@
         ]
       },
       "decision": {
-        "reason": "checks-incomplete",
-        "updatedAt": "2026-07-14T03:05:51.834Z",
-        "actor": "buildchain-patrol"
+        "reason": "stable-version-promoted-by:2.12.5-alpha.5",
+        "actor": "buildchain",
+        "updatedAt": "2026-07-14T03:12:11.000Z"
       }
     },
     {
@@ -1267,10 +1267,10 @@
       "sha": "83c2587404f4cd799d316216af8f0598f3849e5b",
       "tag": "v2.12.5-alpha.3",
       "publishedAt": "2026-07-14T02:27:52.000Z",
-      "state": "soaking",
+      "state": "revoked",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-07-14T03:05:51.834Z",
+        "observedAt": "2026-07-14T04:22:59.150Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1296,9 +1296,9 @@
         ]
       },
       "decision": {
-        "reason": "checks-incomplete",
-        "updatedAt": "2026-07-14T03:05:51.834Z",
-        "actor": "buildchain-patrol"
+        "reason": "stable-version-promoted-by:2.12.5-alpha.5",
+        "actor": "buildchain",
+        "updatedAt": "2026-07-14T03:12:11.000Z"
       }
     },
     {
@@ -1307,10 +1307,10 @@
       "sha": "c80d521a22b3e46472fac8a9dd773e1ac178dfef",
       "tag": "v2.12.5-alpha.4",
       "publishedAt": "2026-07-14T02:42:47.000Z",
-      "state": "soaking",
+      "state": "revoked",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-07-14T03:05:51.834Z",
+        "observedAt": "2026-07-14T04:22:59.150Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1336,9 +1336,9 @@
         ]
       },
       "decision": {
-        "reason": "checks-incomplete",
-        "updatedAt": "2026-07-14T03:05:51.834Z",
-        "actor": "buildchain-patrol"
+        "reason": "stable-version-promoted-by:2.12.5-alpha.5",
+        "actor": "buildchain",
+        "updatedAt": "2026-07-14T03:12:11.000Z"
       }
     },
     {
@@ -1347,12 +1347,12 @@
       "sha": "38ef5648fd3e127055422c657652084ab4640a54",
       "tag": "v2.12.5-alpha.5",
       "publishedAt": "2026-07-14T02:59:05.000Z",
-      "state": "soaking",
+      "state": "promoted",
       "qualification": {
-        "ok": false,
-        "observedAt": "2026-07-14T03:05:51.834Z",
-        "soakStartedAt": "2026-07-14T03:05:08.000Z",
-        "soakElapsedSeconds": 43,
+        "ok": true,
+        "observedAt": "2026-07-14T04:22:59.150Z",
+        "soakStartedAt": "2026-07-14T03:08:02.000Z",
+        "soakElapsedSeconds": 4497,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1364,8 +1364,8 @@
           {
             "id": "workflow:Build Surface Fixture",
             "status": "pass",
-            "completedAt": "2026-07-14T03:04:12.000Z",
-            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/actions/runs/29302529737"
+            "completedAt": "2026-07-14T03:08:02.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/actions/runs/29302703616"
           },
           {
             "id": "status:buildchain-canary/site-libkungfu-dev",
@@ -1376,9 +1376,9 @@
         ]
       },
       "decision": {
-        "reason": "human-release-now",
-        "actor": "human",
-        "updatedAt": "2026-07-14T03:05:51.834Z"
+        "reason": "promoted",
+        "actor": "",
+        "updatedAt": "2026-07-14T03:12:11.000Z"
       },
       "promotionRequest": {
         "stableTag": "v2.12.5",
@@ -1387,11 +1387,190 @@
         "pullRequestUrl": "https://github.com/kungfu-systems/buildchain/pull/1185",
         "requestedAt": "2026-07-14T03:05:51.834Z",
         "authority": "human"
+      },
+      "promotion": {
+        "stableTag": "v2.12.5",
+        "stableSha": "40f99dc7fca0740b9ee47a69c83db86528b74466",
+        "promotedAt": "2026-07-14T03:12:11.000Z"
+      }
+    },
+    {
+      "version": "2.12.6-alpha.0",
+      "stableVersion": "2.12.6",
+      "sha": "46558edd35bb44170f7fe16d8979bd56ec288e12",
+      "tag": "v2.12.6-alpha.0",
+      "publishedAt": "2026-07-14T03:12:04.000Z",
+      "state": "soaking",
+      "qualification": {
+        "ok": false,
+        "observedAt": "2026-07-14T04:22:59.150Z",
+        "soakStartedAt": "",
+        "soakElapsedSeconds": 0,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": "https://api.github.com/repos/kungfu-systems/buildchain/git/refs/tags/v2.12.6-alpha.0"
+          },
+          {
+            "id": "workflow:Build Surface Fixture",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": ""
+          },
+          {
+            "id": "status:buildchain-canary/site-libkungfu-dev",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": ""
+          }
+        ]
+      },
+      "decision": {
+        "reason": "checks-incomplete",
+        "updatedAt": "2026-07-14T04:22:59.150Z",
+        "actor": "buildchain-patrol"
+      }
+    },
+    {
+      "version": "2.12.6-alpha.1",
+      "stableVersion": "2.12.6",
+      "sha": "93e8232763ff5701a8b813fdbcdbbd1e49ff9a2e",
+      "tag": "v2.12.6-alpha.1",
+      "publishedAt": "2026-07-14T03:32:26.000Z",
+      "state": "soaking",
+      "qualification": {
+        "ok": false,
+        "observedAt": "2026-07-14T04:22:59.150Z",
+        "soakStartedAt": "",
+        "soakElapsedSeconds": 0,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-07-14T03:32:26.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v2.12.6-alpha.1"
+          },
+          {
+            "id": "workflow:Build Surface Fixture",
+            "status": "pass",
+            "completedAt": "2026-07-14T03:37:15.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/actions/runs/29303881274"
+          },
+          {
+            "id": "status:buildchain-canary/site-libkungfu-dev",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": ""
+          }
+        ]
+      },
+      "decision": {
+        "reason": "checks-incomplete",
+        "updatedAt": "2026-07-14T04:22:59.150Z",
+        "actor": "buildchain-patrol"
+      }
+    },
+    {
+      "version": "2.12.6-alpha.2",
+      "stableVersion": "2.12.6",
+      "sha": "e5c4c222583c10496897b63d70cc3c9a71b52e9f",
+      "tag": "v2.12.6-alpha.2",
+      "publishedAt": "2026-07-14T03:54:44.000Z",
+      "state": "soaking",
+      "qualification": {
+        "ok": false,
+        "observedAt": "2026-07-14T04:22:59.150Z",
+        "soakStartedAt": "",
+        "soakElapsedSeconds": 0,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-07-14T03:54:44.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v2.12.6-alpha.2"
+          },
+          {
+            "id": "workflow:Build Surface Fixture",
+            "status": "pass",
+            "completedAt": "2026-07-14T03:58:48.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/actions/runs/29304740455"
+          },
+          {
+            "id": "status:buildchain-canary/site-libkungfu-dev",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": ""
+          }
+        ]
+      },
+      "decision": {
+        "reason": "checks-incomplete",
+        "updatedAt": "2026-07-14T04:22:59.150Z",
+        "actor": "buildchain-patrol"
+      }
+    },
+    {
+      "version": "2.12.6-alpha.3",
+      "stableVersion": "2.12.6",
+      "sha": "94ea357ff52b7218c4e1439fe7bae2ecb337226c",
+      "tag": "v2.12.6-alpha.3",
+      "publishedAt": "2026-07-14T04:16:37.000Z",
+      "state": "soaking",
+      "qualification": {
+        "ok": false,
+        "observedAt": "2026-07-14T04:22:59.150Z",
+        "soakStartedAt": "2026-07-14T04:22:06.000Z",
+        "soakElapsedSeconds": 53,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-07-14T04:16:37.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v2.12.6-alpha.3"
+          },
+          {
+            "id": "workflow:Build Surface Fixture",
+            "status": "pass",
+            "completedAt": "2026-07-14T04:20:55.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/actions/runs/29305691663"
+          },
+          {
+            "id": "status:buildchain-canary/site-libkungfu-dev",
+            "status": "pass",
+            "completedAt": "2026-07-14T04:22:06.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/site-libkungfu-dev/actions/runs/29305757597"
+          }
+        ]
+      },
+      "decision": {
+        "reason": "human-release-now",
+        "actor": "human",
+        "updatedAt": "2026-07-14T04:22:59.150Z"
+      },
+      "promotionRequest": {
+        "stableTag": "v2.12.6",
+        "sourceRef": "publish-gate/release/v2/v2.12/2.12.6-alpha.3",
+        "targetRef": "release/v2/v2.12",
+        "pullRequestUrl": "https://github.com/kungfu-systems/buildchain/pull/1193",
+        "requestedAt": "2026-07-14T04:22:59.150Z",
+        "authority": "human"
       }
     }
   ],
-  "updatedAt": "2026-07-14T03:05:51.834Z",
+  "updatedAt": "2026-07-14T03:12:11.000Z",
   "stableReleases": [
+    {
+      "version": "2.12.5",
+      "tag": "v2.12.5",
+      "publishedAt": "2026-07-14T03:12:11Z",
+      "url": "https://github.com/kungfu-systems/buildchain/releases/tag/v2.12.5"
+    },
     {
       "version": "2.12.4",
       "tag": "v2.12.4",
@@ -1553,18 +1732,6 @@
       "tag": "v2.10.2",
       "publishedAt": "2026-07-08T08:29:02Z",
       "url": "https://github.com/kungfu-systems/buildchain/releases/tag/v2.10.2"
-    },
-    {
-      "version": "2.10.1",
-      "tag": "v2.10.1",
-      "publishedAt": "2026-07-08T07:07:30Z",
-      "url": "https://github.com/kungfu-systems/buildchain/releases/tag/v2.10.1"
-    },
-    {
-      "version": "2.10.0",
-      "tag": "v2.10.0",
-      "publishedAt": "2026-07-08T04:43:08Z",
-      "url": "https://github.com/kungfu-systems/buildchain/releases/tag/v2.10.0"
     }
   ]
 }
