@@ -125,6 +125,12 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   assert.match(channelRouter, /BUILDCHAIN_CONTROLLER_REGISTRY: \.buildchain\/controller-runtime\/dist\/site\/controller-registry\.json/);
   assert.doesNotMatch(channelRouter, /\.buildchain\/runtime\/scripts\/controller-evidence\.mjs/);
 
+  const reusableBuild = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
+  assert.match(reusableBuild, /Checkout build controller workflow shell/);
+  assert.match(reusableBuild, /BUILDCHAIN_CONTROLLER_RUNTIME_REF: \$\{\{ needs\.trust-gate\.outputs\.buildchain-workflow-shell-ref \}\}/);
+  assert.match(reusableBuild, /BUILDCHAIN_CONTROLLER_RUNTIME_SHA: \$\{\{ needs\.trust-gate\.outputs\.buildchain-workflow-shell-sha \}\}/);
+  assert.match(reusableBuild, /BUILDCHAIN_CONTROLLER_REGISTRY: \.buildchain\/controller-runtime\/dist\/site\/controller-registry\.json/);
+
   const paperRelease = fs.readFileSync(path.join(root, ".github/workflows/paper-release.yml"), "utf8");
   const promotion = fs.readFileSync(path.join(root, ".github/workflows/release-candidate-promote.yml"), "utf8");
   assert.match(paperRelease, /!inputs\.dry-run.*controller-receipt-qualifying/);
