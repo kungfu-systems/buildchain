@@ -1333,6 +1333,10 @@
           "classification": "redacted",
           "source": "workflow-call-secret"
         },
+        "BUILDCHAIN_PROMOTION_TOKEN": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
         "allow-repository": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -1607,7 +1611,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:380a550c76a7a0c884d0519b5e6e605ad3e04e86f637ba846c20b546faec4a0f"
+      "digest": "sha256:c2f1fd6e984606b077b27bb243b66077162c2c4be03f99c0d8f917bf7bf4d0d1"
     },
     {
       "schemaVersion": 1,
@@ -1713,5 +1717,5 @@
       "digest": "sha256:9b9f9a2320c4349903d72ee46e329211b5538ed5ebebaa93559df4eafb835997"
     }
   ],
-  "digest": "sha256:f4ea94c3590360ef21ade53056129f0183356de3d1997e43c49a0494d0acd34a"
+  "digest": "sha256:7b7a03b9814e00f968e7c1ff0cdd2b447d49c78a1a9eba4ec5d2645d8f724521"
 }
