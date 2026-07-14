@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:5df6d6110d7c33da4625a2e1ebb6b778eef9c4420379cff342229bc0b02962e1"
+      "digest": "sha256:223c7e2d20680d4a10c84f6a7c7875602538607217e9dfe291a356bbd21ac4f1"
     },
     {
       "id": "install",
@@ -69,7 +69,15 @@
       "path": "docs/release-passport.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:b339c4de0a19a58507bb0aa3efb57c63e4bb4e8002891b9fcc1d73223a8e2c7f"
+      "digest": "sha256:2421e3e9f2dd892971bea5deb605492dfec38f3a83e539229442b55380bebe25"
+    },
+    {
+      "id": "controller-evidence",
+      "title": "Controller evidence contract",
+      "path": "docs/controller-evidence.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:442e1b72e3977af56a8ae5e081ffd89c2f3ebcd9cfd50f07af730344bdf9fb0e"
     },
     {
       "id": "release-candidate",
@@ -263,6 +271,7 @@
     "manual-registry.json",
     "node-api-registry.json",
     "workflow-registry.json",
+    "controller-registry.json",
     "public-surface-audit.json",
     "release-model.json",
     "artifact-schemas.json",

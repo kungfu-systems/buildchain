@@ -254,6 +254,27 @@ on:
       release-candidate-artifact:
         description: "Resolved release-candidate artifact name"
         value: ${{ jobs.promote.outputs.release-candidate-artifact }}
+      controller-plan-artifact:
+        description: "Controller plan artifact name"
+        value: ${{ jobs.controller-plan.outputs.controller-plan-artifact }}
+      controller-plan-json:
+        description: "Compact controller plan JSON"
+        value: ${{ jobs.controller-plan.outputs.controller-plan-json }}
+      controller-plan-digest:
+        description: "Controller plan digest"
+        value: ${{ jobs.controller-plan.outputs.controller-plan-digest }}
+      controller-receipt-artifact:
+        description: "Controller receipt artifact name"
+        value: ${{ jobs.controller-receipt.outputs.controller-receipt-artifact }}
+      controller-receipt-json:
+        description: "Compact controller receipt JSON"
+        value: ${{ jobs.controller-receipt.outputs.controller-receipt-json }}
+      controller-receipt-digest:
+        description: "Controller receipt digest"
+        value: ${{ jobs.controller-receipt.outputs.controller-receipt-digest }}
+      controller-receipt-status:
+        description: "Controller receipt status"
+        value: ${{ jobs.controller-receipt.outputs.controller-receipt-status }}
 
 concurrency:
   group: buildchain-release-promotion-${{ github.repository }}
@@ -355,9 +376,58 @@ jobs:
               .addRaw(`- Comparison: \`${comparisonStatus}\`\n`)
               .write();
 
+  controller-plan:
+    name: Plan release-candidate promotion controller
+    needs: preflight
+    if: ${{ always() && needs.preflight.result == 'success' }}
+    runs-on: ubuntu-24.04
+    outputs:
+      controller-plan-artifact: buildchain-release-promotion-controller-plan-${{ needs.preflight.outputs.requested-sha }}
+      controller-plan-json: ${{ steps.controller-plan.outputs.controller-plan-json }}
+      controller-plan-digest: ${{ steps.controller-plan.outputs.controller-plan-digest }}
+    steps:
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.buildchain-ref || 'v2' }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Resolve controller runtime identity
+        id: controller-runtime
+        shell: bash
+        run: |
+          runtime_sha="$(git -C .buildchain/runtime rev-parse HEAD)"
+          contract_digest="$(node -e 'const fs=require("fs"); const value=JSON.parse(fs.readFileSync(".buildchain/runtime/dist/site/buildchain-contract.json","utf8")); process.stdout.write(value.contractDigest)')"
+          {
+            echo "sha=${runtime_sha}"
+            echo "contract-digest=${contract_digest}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create release-candidate-promotion controller plan
+        id: controller-plan
+        run: node .buildchain/runtime/scripts/controller-evidence.mjs --mode plan
+        env:
+          BUILDCHAIN_CONTROLLER_ID: release-candidate-promotion
+          BUILDCHAIN_CONTROLLER_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_CONTROLLER_SOURCE_SHA: ${{ needs.preflight.outputs.requested-sha }}
+          BUILDCHAIN_CONTROLLER_RUNTIME_REF: ${{ inputs.buildchain-ref || 'v2' }}
+          BUILDCHAIN_CONTROLLER_RUNTIME_SHA: ${{ steps.controller-runtime.outputs.sha }}
+          BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST: ${{ steps.controller-runtime.outputs.contract-digest }}
+          BUILDCHAIN_CONTROLLER_INPUTS_JSON: ${{ toJSON(inputs) }}
+          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+
+      - name: Upload release-candidate-promotion controller plan
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-release-promotion-controller-plan-${{ needs.preflight.outputs.requested-sha }}
+          path: .buildchain/controller/plan.json
+          if-no-files-found: error
+
   release-candidate-preflight:
     name: Preflight PR-stage release candidate evidence
-    needs: preflight
+    needs: [preflight, controller-plan]
     if: ${{ needs.preflight.outputs.action == 'promote' }}
     runs-on: ubuntu-24.04
     steps:
@@ -391,14 +461,22 @@ jobs:
 
   promote:
     name: Promote release candidate
-    needs: [preflight, release-candidate-preflight]
+    needs: [preflight, controller-plan, release-candidate-preflight]
     if: ${{ needs.preflight.outputs.action == 'promote' }}
     runs-on: ubuntu-24.04
     outputs:
       promoted-sha: ${{ needs.preflight.outputs.requested-sha }}
       built-source-sha: ${{ steps.rc.outputs.release-candidate-source-sha }}
       release-candidate-artifact: ${{ steps.rc.outputs.release-candidate-artifact }}
+      release-candidate-outcome: ${{ steps.rc.outcome }}
+      promotion-outcome: ${{ steps.promote.outcome }}
     steps:
+      - name: Download release-candidate-promotion controller plan
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ needs.controller-plan.outputs.controller-plan-artifact }}
+          path: .buildchain/controller
+
       - name: Checkout promotion channel commit
         uses: actions/checkout@v7.0.0
         with:
@@ -740,6 +818,38 @@ jobs:
           release-candidate-build-summary-path: ${{ steps.rc.outputs.release-candidate-build-summary-path }}
           release-candidate-version: ${{ steps.rc.outputs.release-candidate-version }}
 
+      - name: Bundle release-candidate-promotion controller evidence
+        id: controller-evidence
+        if: ${{ always() && !inputs.dry-run && steps.promote.outcome == 'success' }}
+        shell: bash
+        env:
+          RELEASE_CANDIDATE_PASSPORT: ${{ steps.rc.outputs.release-candidate-passport-path }}
+          PUBLISH_EVIDENCE: ${{ steps.promote.outputs.publish-evidence-path }}
+          RELEASE_PASSPORT: ${{ steps.promote.outputs.release-passport-path }}
+        run: |
+          node <<'NODE'
+          const fs = require("node:fs");
+          const path = require("node:path");
+          const files = [
+            [process.env.RELEASE_CANDIDATE_PASSPORT, "release-candidate-passport.json"],
+            [process.env.PUBLISH_EVIDENCE, "publish-evidence.json"],
+            [process.env.RELEASE_PASSPORT, "release-passport.json"],
+          ];
+          fs.mkdirSync(".buildchain/controller/promotion-evidence", { recursive: true });
+          for (const [source, name] of files) {
+            if (!source || !fs.existsSync(source)) throw new Error(`promotion controller evidence is missing: ${source || name}`);
+            fs.copyFileSync(source, path.join(".buildchain/controller/promotion-evidence", name));
+          }
+          NODE
+
+      - name: Upload release-candidate-promotion controller evidence
+        if: ${{ always() && steps.controller-evidence.outcome == 'success' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-release-promotion-controller-evidence-${{ needs.preflight.outputs.requested-sha }}
+          path: .buildchain/controller/promotion-evidence/
+          if-no-files-found: error
+
       - name: Classify Buildchain promotion friction
         id: friction
         if: ${{ failure() && !inputs.dry-run && steps.rc.outcome != '' }}
@@ -816,3 +926,62 @@ jobs:
           labels: "buildchain-feedback,workflow-friction"
           comment-cooldown-hours: "24"
           fail-on-error: "false"
+
+  controller-receipt:
+    name: Record release-candidate promotion controller receipt
+    needs: [preflight, controller-plan, release-candidate-preflight, promote]
+    if: ${{ always() && needs.controller-plan.result == 'success' }}
+    runs-on: ubuntu-24.04
+    outputs:
+      controller-receipt-artifact: buildchain-release-promotion-controller-receipt-${{ needs.preflight.outputs.requested-sha }}
+      controller-receipt-json: ${{ steps.controller-receipt.outputs.controller-receipt-json }}
+      controller-receipt-digest: ${{ steps.controller-receipt.outputs.controller-receipt-digest }}
+      controller-receipt-status: ${{ steps.controller-receipt.outputs.controller-receipt-status }}
+    steps:
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.buildchain-ref || 'v2' }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Download release-candidate-promotion controller plan
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ needs.controller-plan.outputs.controller-plan-artifact }}
+          path: .buildchain/controller
+
+      - name: Download release-candidate-promotion controller evidence
+        if: ${{ !inputs.dry-run && needs.promote.result == 'success' }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: buildchain-release-promotion-controller-evidence-${{ needs.preflight.outputs.requested-sha }}
+          path: .buildchain/controller/promotion-evidence
+
+      - name: Create release-candidate-promotion controller receipt
+        id: controller-receipt
+        run: node .buildchain/runtime/scripts/controller-evidence.mjs --mode receipt
+        env:
+          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+          BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
+            [{"id":"preflight","status":"${{ needs.preflight.result }}"},{"id":"admit-release-candidate","status":"${{ needs.release-candidate-preflight.result == 'success' && needs.promote.outputs.release-candidate-outcome || needs.release-candidate-preflight.result }}"},{"id":"publish","status":"${{ inputs.dry-run && 'skipped' || needs.promote.outputs.promotion-outcome || needs.promote.result }}"},{"id":"passport","status":"${{ inputs.dry-run && 'skipped' || needs.promote.outputs.promotion-outcome || needs.promote.result }}"},{"id":"aggregate","status":"${{ needs.promote.result }}"}]
+          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ !inputs.dry-run && needs.promote.result == 'success' && '[{"kind":"release-candidate-passport","path":".buildchain/controller/promotion-evidence/release-candidate-passport.json"},{"kind":"publish-evidence","path":".buildchain/controller/promotion-evidence/publish-evidence.json"},{"kind":"release-passport","path":".buildchain/controller/promotion-evidence/release-passport.json"}]' || '[]' }}
+          BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ inputs.dry-run && 'promotion-dry-run' || needs.promote.result == 'success' && '' || needs.preflight.outputs.action == 'noop' && 'promotion-superseded' || 'promotion-incomplete' }}
+          BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Release-candidate promotion did not complete successfully
+          BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: buildchain-release-promotion-controller-receipt-${{ needs.preflight.outputs.requested-sha }}
+          BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/receipt.json
+
+      - name: Upload release-candidate-promotion controller receipt
+        if: ${{ always() && steps.controller-receipt.outcome == 'success' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-release-promotion-controller-receipt-${{ needs.preflight.outputs.requested-sha }}
+          path: .buildchain/controller/receipt.json
+          if-no-files-found: error
+
+      - name: Enforce qualifying release-candidate-promotion controller receipt
+        if: ${{ always() && !inputs.dry-run && needs.preflight.outputs.action == 'promote' && steps.controller-receipt.outputs.controller-receipt-qualifying != 'true' }}
+        run: |
+          echo "::error::release-candidate-promotion controller receipt is not qualifying: ${{ steps.controller-receipt.outputs.controller-receipt-status }}"
+          exit 1

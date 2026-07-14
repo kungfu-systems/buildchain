@@ -28,7 +28,7 @@ workflow, action, and Node API export also carries a `capabilityGroup`,
 | --- | --- | --- |
 | Getting Started | `capability-registry.json`, `product-mechanism.json` | [`install.md`](install.md), [`product-mechanism.md`](product-mechanism.md), [`cli.md`](cli.md) |
 | Release Passport and Trust | `release-model.json`, `artifact-schemas.json`, `kfd-claims.json` | [`release-passport.md`](release-passport.md), [`release-candidate.md`](release-candidate.md), [`publish-transaction.md`](publish-transaction.md), [`binary-distribution.md`](binary-distribution.md) |
-| Reusable Build and Lifecycle | `workflow-registry.json`, `release-model.json` | [`reusable-build-surface.md`](reusable-build-surface.md), [`shifu-gate-profiles.md`](shifu-gate-profiles.md), [`lifecycle-protocol.md`](lifecycle-protocol.md) |
+| Reusable Build and Lifecycle | `workflow-registry.json`, `controller-registry.json`, `release-model.json` | [`reusable-build-surface.md`](reusable-build-surface.md), [`controller-evidence.md`](controller-evidence.md), [`shifu-gate-profiles.md`](shifu-gate-profiles.md), [`lifecycle-protocol.md`](lifecycle-protocol.md) |
 | KFD Trust and Surface Closure | `kfd-claims.json`, `public-surface-audit.json`, `cli-registry.json`, `node-api-registry.json` | [`kfd-support.md`](kfd-support.md), [`release-passport.md`](release-passport.md) |
 | Site Bundle, Web Surfaces, and Propagation | `buildchain-site.json`, `site-manifest.json`, `page-registry.json`, `release-model.json` | [`site-bundle-contract.md`](site-bundle-contract.md), [`web-surface-deployments.md`](web-surface-deployments.md), [`release-propagation.md`](release-propagation.md) |
 | Publication Artifacts | `publication-registry.json`, `workflow-registry.json`, `node-api-registry.json`, `manual-registry.json`, `kungfu-buildchain-publication-artifact-registry` | [`publication-artifacts.md`](publication-artifacts.md), [`reusable-build-surface.md`](reusable-build-surface.md) |
@@ -86,6 +86,7 @@ replace them.
 | How do I gate KFD-3 collaboration-interface releases? | [`release-passport.md`](release-passport.md#kfd-3-collaboration-interface-release-gate) + [`cli.md`](cli.md) | verify/use | stable |
 | How do I detect, register, audit, witness, or query KFD-3 product surfaces? | [`kfd-support.md`](kfd-support.md) + [`cli.md`](cli.md) | verify/use | stable |
 | How do I keep `@v2` floating refs while detecting Buildchain contract drift? | [`reusable-build-surface.md`](reusable-build-surface.md#floating-ref-contract-lock) | verify/use | stable |
+| How do reusable workflows bind controller intent, source/runtime identity, outcomes, and receipt evidence? | [`controller-evidence.md`](controller-evidence.md) | verify/use | draft |
 | How do I propagate finalized upstream releases to downstream package/site PRs? | [`release-propagation.md`](release-propagation.md) | use | preview |
 | How do paper or report repositories publish PDFs, metadata, source bundles, site-consumable manifests, npm packages, and GitHub Releases? | [`publication-artifacts.md`](publication-artifacts.md) | use | stable |
 | How do I generate KFD / Release Passport badge bundles without hand-maintaining Markdown? | [`readme-badges.md`](readme-badges.md) + [`cli.md`](cli.md) | use | stable |

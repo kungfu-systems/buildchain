@@ -5,6 +5,7 @@ import crypto from "node:crypto";
 import { pathToFileURL } from "node:url";
 import { createRequire } from "node:module";
 import { createBuildchainContractWorld } from "../packages/core/buildchain-contract.js";
+import { createControllerRegistry } from "../packages/core/controller-evidence.js";
 import {
   BUILDCHAIN_AGENT_MANUALS,
   createBuildchainKfdClaimRegistry,
@@ -316,6 +317,7 @@ const manualMetaById = new Map(Object.entries({
   "product-mechanism": { capabilityGroup: "getting-started", audience: ["agent", "maintainer"], maturity: "stable", order: 30 },
   cli: { capabilityGroup: "api-cli-reference", audience: ["agent", "developer"], maturity: "stable", order: 40 },
   "release-passport": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "stable", order: 100 },
+  "controller-evidence": { capabilityGroup: "reusable-build", audience: ["consumer", "release-operator", "agent"], maturity: "draft", order: 205 },
   "binary-distribution": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "stable", order: 110 },
   "publish-transaction": { capabilityGroup: "release-passport-trust", audience: ["release-operator"], maturity: "stable", order: 120 },
   "release-candidate": { capabilityGroup: "reusable-build", audience: ["release-operator", "consumer"], maturity: "stable", order: 130 },
@@ -478,6 +480,7 @@ function nodeApiMeta(exportName) {
     "./release-propagation": { group: "site-and-propagation", summary: "Release propagation graph, plan, and exact upstream lock APIs." },
     "./release-line-bootstrap": { group: "governance-versioning", summary: "Semver release-line bootstrap planning and version-state APIs." },
     "./buildchain-contract": { group: "governance-versioning", summary: "Runtime contract world and compatibility digest APIs for floating-ref drift checks." },
+    "./controller-evidence": { group: "reusable-build", summary: "Project-independent controller descriptors, source/runtime-bound plans, receipts, aggregates, and validation APIs." },
     "./surface-manifest": { group: "site-and-propagation", summary: "Surface manifest timestamp and reproducibility policy APIs." },
     "./issue-reporting": { group: "observability-diagnostics", summary: "Buildchain-owned issue reporting API for workflow friction feedback." },
     "./buildchain-layout": { group: "kfd-trust", summary: "Versioned Buildchain repository-layout discovery contract plus canonical .buildchain path resolution and migration APIs." },
@@ -753,6 +756,7 @@ function buildSiteBundle() {
       "docs/stable-candidate-patrol.md",
       "docs/release-governance.md",
       "docs/release-passport.md",
+      "docs/controller-evidence.md",
       "docs/publish-transaction.md",
       "docs/homebrew.md",
       "docs/site-bundle-contract.md",
@@ -862,6 +866,7 @@ function buildSiteBundle() {
       status: "active",
     })),
   };
+  const controllerRegistry = createControllerRegistry({ workflows: workflowRegistry.workflows });
   const publicSurfaceAudit = collectPublicSurfaceReverseAudit({
     root,
     cliRegistry,
@@ -949,6 +954,7 @@ function buildSiteBundle() {
       "manual-registry.json",
       "node-api-registry.json",
       "workflow-registry.json",
+      "controller-registry.json",
       "public-surface-audit.json",
       "release-model.json",
       "artifact-schemas.json",
@@ -1029,6 +1035,7 @@ function buildSiteBundle() {
       "manual-registry.json",
       "node-api-registry.json",
       "workflow-registry.json",
+      "controller-registry.json",
       "public-surface-audit.json",
       "release-model.json",
       "artifact-schemas.json",
@@ -1055,6 +1062,7 @@ function buildSiteBundle() {
       "manual-registry.json",
       "node-api-registry.json",
       "workflow-registry.json",
+      "controller-registry.json",
       "public-surface-audit.json",
       "artifact-schemas.json",
       "buildchain-contract.json",
@@ -1191,6 +1199,7 @@ function buildSiteBundle() {
         "capability-grouped navigation registry for docs, CLI, Node API, workflows, actions, and KFD claims",
         "release model facts",
         "workflow and action registries",
+        "controller evidence descriptors and input classification",
         "CLI command registry",
         "public surface reverse audit",
         "manual and Node API registries",
@@ -1221,12 +1230,13 @@ function buildSiteBundle() {
     "manual-registry.json": manualRegistry,
     "node-api-registry.json": nodeApiRegistry,
     "workflow-registry.json": workflowRegistry,
+    "controller-registry.json": controllerRegistry,
     "public-surface-audit.json": publicSurfaceAudit,
     "release-model.json": releaseModel,
     "artifact-schemas.json": artifactSchemas,
     "badge-endpoint-registry.json": badgeEndpointRegistry,
     "publication-registry.json": publicationRegistry,
-    "buildchain-contract.json": createBuildchainContractWorld({ root }),
+    "buildchain-contract.json": createBuildchainContractWorld({ root, controllerRegistry }),
     "kfd-upstream-aggregate.json": collectKfdUpstreamFacts({ cwd: root, includeOwn: false }),
     "kfd-claims.json": createBuildchainKfdClaimRegistry({ root }),
     "product-mechanism.json": productMechanism,

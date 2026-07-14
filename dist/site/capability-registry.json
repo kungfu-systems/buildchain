@@ -80,14 +80,15 @@
       ],
       "maturity": "stable",
       "counts": {
-        "manualCount": 3,
-        "pageCount": 15,
+        "manualCount": 4,
+        "pageCount": 16,
         "cliCommandCount": 4,
-        "nodeApiCount": 3,
+        "nodeApiCount": 4,
         "workflowCount": 4,
         "actionCount": 2
       },
       "manuals": [
+        "docs/controller-evidence.md",
         "docs/release-candidate.md",
         "docs/lifecycle-protocol.md",
         "docs/reusable-build-surface.md"
