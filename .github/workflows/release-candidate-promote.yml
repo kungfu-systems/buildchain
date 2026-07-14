@@ -232,6 +232,11 @@ on:
         default: ""
         type: string
         required: false
+      publication-gate-aggregate-json:
+        description: "Qualifying Shifu Gate aggregate or explicit consumer-owned no-Gate decision"
+        default: ""
+        type: string
+        required: false
       publication-expected-json:
         description: "Independent exact source/runtime/product/channel/artifact bindings"
         default: ""
@@ -459,6 +464,12 @@ jobs:
     permissions:
       actions: read
       contents: read
+    outputs:
+      evidence-run-id: ${{ steps.release-candidate.outputs.release-candidate-run-id }}
+      passport-artifact: ${{ steps.release-candidate.outputs.release-candidate-artifact }}
+      summary-artifact: ${{ steps.release-candidate.outputs.release-candidate-build-summary-artifact }}
+      manifest-pattern: ${{ inputs.artifact-name }}-manifest-*-${{ steps.release-candidate.outputs.release-candidate-source-sha }}
+      payload-pattern: ${{ inputs.artifact-name }}-*
     steps:
       - name: Checkout Buildchain release-candidate resolver
         uses: actions/checkout@v7.0.0
@@ -473,6 +484,7 @@ jobs:
           node-version: "24"
 
       - name: Preflight PR-stage release candidate evidence
+        id: release-candidate
         run: node .buildchain/runtime/scripts/release-candidate-resolver.mjs
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -493,6 +505,7 @@ jobs:
     needs: [preflight, controller-plan, release-candidate-preflight]
     if: ${{ needs.preflight.outputs.action == 'promote' }}
     permissions:
+      actions: read
       contents: read
     uses: ./.github/workflows/.publication-authority.yml
     with:
@@ -501,8 +514,15 @@ jobs:
       admission-json: ${{ inputs.publication-admission-json }}
       runner-provenance-json: ${{ inputs.publication-runner-provenance-json }}
       control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
+      gate-aggregate-json: ${{ inputs.publication-gate-aggregate-json }}
       expected-json: ${{ inputs.publication-expected-json }}
       used-nonces-json: ${{ inputs.publication-used-nonces-json }}
+      evidence-repository: ${{ github.repository }}
+      evidence-run-id: ${{ needs.release-candidate-preflight.outputs.evidence-run-id }}
+      evidence-passport-artifact: ${{ needs.release-candidate-preflight.outputs.passport-artifact }}
+      evidence-summary-artifact: ${{ needs.release-candidate-preflight.outputs.summary-artifact }}
+      evidence-manifest-pattern: ${{ needs.release-candidate-preflight.outputs.manifest-pattern }}
+      evidence-payload-pattern: ${{ needs.release-candidate-preflight.outputs.payload-pattern }}
       dry-run: ${{ inputs.dry-run }}
 
   promote:

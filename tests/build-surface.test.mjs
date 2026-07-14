@@ -682,6 +682,9 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /const reason = superseded \? "target-ref-advanced" : "target-ref-current"/);
   assert.match(workflow, /publication-admission-json:/);
   assert.match(workflow, /publication-control-plane-audit-json:/);
+  assert.match(workflow, /publication-gate-aggregate-json:/);
+  assert.match(workflow, /evidence-run-id:/);
+  assert.match(workflow, /evidence-manifest-pattern:/);
   assert.match(workflow, /name: Seal product publication capability/);
   assert.match(workflow, /uses: \.\/\.github\/workflows\/\.publication-authority\.yml/);
   assert.match(workflow, /needs: \[preflight, controller-plan, release-candidate-preflight, publication-authority\]/);
@@ -755,6 +758,14 @@ test("sealed publication authority verifier is independent and credential-free",
   assert.doesNotMatch(workflow, /contents:\s*write/);
   assert.doesNotMatch(workflow, /NODE_AUTH_TOKEN|NPM_TOKEN|BUILDCHAIN_PROMOTION_TOKEN/);
   assert.match(workflow, /BUILDCHAIN_USED_NONCES_JSON/);
+  assert.match(workflow, /Download exact release-candidate passport evidence/);
+  assert.match(workflow, /Download referenced controller receipt evidence/);
+  assert.match(workflow, /Download exact artifact manifest evidence/);
+  assert.match(workflow, /git\/commits\/\$\{admission\.sourceSha\}/);
+  assert.match(workflow, /releaseCandidatePassport:/);
+  assert.match(workflow, /controllerReceipt:/);
+  assert.match(workflow, /artifactManifests(?:,|:)/);
+  assert.match(workflow, /artifactPayloads:/);
 });
 
 test("legacy release workflows fail closed instead of bypassing publish-gate source locks", () => {

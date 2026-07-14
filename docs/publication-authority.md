@@ -40,10 +40,15 @@ more than 15 minutes. Every expected binding is mandatory at verification time;
 an omitted expected field is not a wildcard.
 
 The independent verifier recomputes every digest and ignores a producer's own
-allow/deny conclusion. It rejects an unknown workflow, stale or replayed nonce,
-runner downgrade, control-plane drift, source/runtime mismatch, and artifact
-substitution. A successful result is a scoped capability receipt, not a bearer
-credential.
+allow/deny conclusion. It fetches the exact evidence run, validates the actual
+release-candidate passport and referenced qualifying controller receipt,
+recomputes the Shifu Gate aggregate or explicit consumer-owned no-Gate policy,
+recomputes the downloaded artifact manifests, and hashes every candidate payload
+file against those manifests. It also compares the PR evidence tree to the
+admitted post-merge source commit tree. It rejects an unknown
+workflow, stale or replayed nonce, runner downgrade, control-plane drift,
+source/runtime mismatch, and artifact substitution. A successful result is a
+scoped capability receipt, not a bearer credential.
 
 ## Runner and control-plane evidence
 
@@ -78,6 +83,7 @@ buildchain verify publication-admission admission.json \
   --registry-json publication-authority-registry.json \
   --runner-json runner.json \
   --control-plane-audit-json control-plane.json \
+  --publication-evidence-json publication-evidence.json \
   --expected-json expected.json \
   --used-nonce previous-run-nonce \
   --json

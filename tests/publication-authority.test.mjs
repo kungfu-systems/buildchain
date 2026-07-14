@@ -1,17 +1,25 @@
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
 import test from "node:test";
 
 import {
+  BUILDCHAIN_CONTROLLER_EVIDENCE_CONTRACT,
+  controllerEvidenceDigest,
+} from "../packages/core/controller-evidence.js";
+import {
   PUBLICATION_ADMISSION_CONTRACT,
+  createPublicationArtifactManifestSet,
   createPublicationAuthorityRegistry,
   createPublicationAdmission,
   createPublicationControlPlaneAudit,
+  createPublicationGateDecision,
   createRunnerProvenance,
   detectPublicationAuthoritySignals,
   publicationAuthorityDigest,
   verifyPublicationAdmission,
 } from "../packages/core/publication-authority.js";
 import { evaluatePublicationControlPlaneSnapshot } from "../packages/core/publication-control-plane-audit.js";
+import { sha256Json } from "../packages/core/release-candidate.js";
 
 const DIGESTS = Object.freeze({
   sourceSha: "1".repeat(40),
@@ -23,6 +31,7 @@ const DIGESTS = Object.freeze({
   artifactDigest: "6".repeat(64),
   imageDigest: "7".repeat(64),
   measurementDigest: "8".repeat(64),
+  sourceTreeSha: "a".repeat(40),
 });
 
 function fixture({ runnerClass = "ephemeral", factStatus = "pass" } = {}) {
@@ -76,6 +85,107 @@ function fixture({ runnerClass = "ephemeral", factStatus = "pass" } = {}) {
     observedAt: "2026-07-14T00:00:00.000Z",
     expiresAt: "2026-07-14T00:12:00.000Z",
   });
+  const controllerPayload = {
+    schemaVersion: 1,
+    contract: BUILDCHAIN_CONTROLLER_EVIDENCE_CONTRACT,
+    kind: "receipt",
+    controller: { id: "build-lifecycle" },
+    source: { repository: "kungfu-systems/buildchain", sha: DIGESTS.sourceSha },
+    runtime: {
+      ref: DIGESTS.runtimeSha,
+      sha: DIGESTS.runtimeSha,
+      contractDigest: `sha256:${DIGESTS.contractDigest}`,
+    },
+    planDigest: `sha256:${"b".repeat(64)}`,
+    status: "passed",
+    qualifying: true,
+    stages: [],
+    evidence: [],
+    issues: [],
+  };
+  const controllerReceipt = {
+    ...controllerPayload,
+    digest: controllerEvidenceDigest(controllerPayload),
+  };
+  const gateAggregate = createPublicationGateDecision({
+    sourceSha: DIGESTS.sourceSha,
+    profile: "publication-fixture",
+    rationale: "This fixture declares no project-specific Shifu Gates.",
+    policy: { requiredGateCount: 0 },
+  });
+  const buildSummary = {};
+  const artifactManifests = [{
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-artifact",
+    artifactName: "fixture-linux-x64",
+    platform: { id: "linux-x64" },
+    git: { repository: "kungfu-systems/buildchain", sha: DIGESTS.sourceSha },
+    summary: {
+      contract: "kungfu-buildchain-artifact-summary",
+      artifactName: "fixture-linux-x64",
+      platform: { id: "linux-x64" },
+      fileCount: 1,
+      totalBytes: 3,
+      digest: sha256Json("placeholder"),
+    },
+    expectedArtifacts: { ok: true },
+    files: [{ path: "dist/addon.node", size: 3, sha256: DIGESTS.artifactDigest }],
+  }];
+  artifactManifests[0].summary.digest = (() => {
+    const hash = crypto.createHash("sha256");
+    hash.update(["dist/addon.node", "3", DIGESTS.artifactDigest].join("\0") + "\n");
+    return hash.digest("hex");
+  })();
+  const artifactPayloads = [{
+    artifactName: "fixture-linux-x64",
+    files: [{ path: "dist/addon.node", size: 3, sha256: DIGESTS.artifactDigest }],
+  }];
+  const artifactManifestSet = createPublicationArtifactManifestSet({
+    repository: "kungfu-systems/buildchain",
+    sourceSha: DIGESTS.sourceSha,
+    sourceTreeSha: DIGESTS.sourceTreeSha,
+    manifests: artifactManifests,
+    payloads: artifactPayloads,
+  });
+  const releaseCandidatePassport = {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-release-candidate-passport",
+    repository: "kungfu-systems/buildchain",
+    target: { channel: "alpha" },
+    source: {
+      headSha: DIGESTS.sourceSha,
+      mergeRefSha: DIGESTS.sourceSha,
+      treeHash: DIGESTS.sourceTreeSha,
+    },
+    buildchain: { sha: DIGESTS.runtimeSha },
+    platformMatrix: [{ platformId: "linux-x64", artifactName: "fixture-linux-x64" }],
+    diagnostics: { buildSummaryHash: sha256Json(buildSummary) },
+    controllerReceipts: [{
+      controllerId: "build-lifecycle",
+      planDigest: controllerReceipt.planDigest,
+      receiptDigest: controllerReceipt.digest,
+      sourceSha: DIGESTS.sourceSha,
+      runtimeSha: DIGESTS.runtimeSha,
+      status: "passed",
+    }],
+  };
+  releaseCandidatePassport.candidateHash = sha256Json({
+    repository: releaseCandidatePassport.repository,
+    target: releaseCandidatePassport.target,
+    source: releaseCandidatePassport.source,
+    platformMatrix: releaseCandidatePassport.platformMatrix,
+    buildchain: releaseCandidatePassport.buildchain,
+    controllerReceipts: releaseCandidatePassport.controllerReceipts,
+  });
+  const publicationEvidence = {
+    sourceTreeSha: DIGESTS.sourceTreeSha,
+    releaseCandidatePassport,
+    buildSummary,
+    controllerReceipt,
+    gateAggregate,
+    artifactManifests,
+    artifactPayloads,
+  };
   const admissionPayload = {
     schemaVersion: 1,
     contract: PUBLICATION_ADMISSION_CONTRACT,
@@ -85,17 +195,17 @@ function fixture({ runnerClass = "ephemeral", factStatus = "pass" } = {}) {
     sourceSha: DIGESTS.sourceSha,
     runtimeSha: DIGESTS.runtimeSha,
     contractDigest: DIGESTS.contractDigest,
-    policyDigest: DIGESTS.policyDigest,
-    controllerReceiptDigest: DIGESTS.controllerReceiptDigest,
+    policyDigest: gateAggregate.policyDigest,
+    controllerReceiptDigest: controllerReceipt.digest.replace(/^sha256:/, ""),
     runnerProvenanceDigest: runnerProvenance.receiptDigest,
     controlPlaneAuditDigest: controlPlaneAudit.receiptDigest,
-    gateAggregateDigest: DIGESTS.gateAggregateDigest,
+    gateAggregateDigest: gateAggregate.digest,
     environment: "npm-production",
     product: "@kungfu-tech/buildchain",
     target: "registry.npmjs.org",
     version: "2.12.7-alpha.0",
     channel: "alpha",
-    artifactDigest: DIGESTS.artifactDigest,
+    artifactDigest: artifactManifestSet.manifestSetDigest,
     nonce: "run-123:attempt-1:publish",
     issuedAt: "2026-07-14T00:01:00.000Z",
     expiresAt: "2026-07-14T00:10:00.000Z",
@@ -104,26 +214,29 @@ function fixture({ runnerClass = "ephemeral", factStatus = "pass" } = {}) {
     ...admissionPayload,
     admissionDigest: publicationAuthorityDigest(admissionPayload),
   };
-  return { registry, runnerProvenance, controlPlaneAudit, admission };
+  const expectedBindings = Object.fromEntries([
+    "repository",
+    "sourceSha",
+    "runtimeSha",
+    "contractDigest",
+    "policyDigest",
+    "controllerReceiptDigest",
+    "gateAggregateDigest",
+    "environment",
+    "product",
+    "target",
+    "version",
+    "channel",
+    "artifactDigest",
+  ].map((key) => [key, admission[key]]));
+  return { registry, runnerProvenance, controlPlaneAudit, publicationEvidence, admission, expectedBindings };
 }
 
 function verify(values, overrides = {}) {
   return verifyPublicationAdmission({
     ...values,
     expected: {
-      repository: "kungfu-systems/buildchain",
-      sourceSha: DIGESTS.sourceSha,
-      runtimeSha: DIGESTS.runtimeSha,
-      contractDigest: DIGESTS.contractDigest,
-      policyDigest: DIGESTS.policyDigest,
-      controllerReceiptDigest: DIGESTS.controllerReceiptDigest,
-      gateAggregateDigest: DIGESTS.gateAggregateDigest,
-      environment: "npm-production",
-      product: "@kungfu-tech/buildchain",
-      target: "registry.npmjs.org",
-      version: "2.12.7-alpha.0",
-      channel: "alpha",
-      artifactDigest: DIGESTS.artifactDigest,
+      ...values.expectedBindings,
       ...(overrides.expected || {}),
     },
     usedNonces: overrides.usedNonces || [],
@@ -149,7 +262,7 @@ test("independent verifier issues an exact short-lived publication capability", 
   const values = fixture();
   const capability = verify(values);
   assert.equal(capability.decision, "allow");
-  assert.equal(capability.artifactDigest, DIGESTS.artifactDigest);
+  assert.equal(capability.artifactDigest, values.admission.artifactDigest);
   assert.equal(capability.nonce, values.admission.nonce);
   assert.deepEqual(capability.capabilityIds, ["npm-publish"]);
 });
@@ -178,6 +291,49 @@ test("verifier rejects source, runtime, channel, and artifact substitution", () 
     values.admission.admissionDigest = publicationAuthorityDigest(payload);
     assert.throws(() => verify(values), new RegExp(`${key} binding mismatch`));
   }
+});
+
+test("independent verifier rejects substituted controller, Gate, and artifact evidence", () => {
+  const controller = fixture();
+  controller.publicationEvidence.controllerReceipt.status = "failed";
+  assert.throws(() => verify(controller), /controller receipt did not qualify|receipt digest mismatch/);
+
+  const gate = fixture();
+  gate.publicationEvidence.gateAggregate.qualifying = true;
+  gate.publicationEvidence.gateAggregate.required = true;
+  assert.throws(() => verify(gate), /Gate decision digest mismatch|required Gate policy must supply/);
+
+  const artifact = fixture();
+  artifact.publicationEvidence.artifactManifests[0].summary.digest = "f".repeat(64);
+  assert.throws(() => verify(artifact), /summary digest mismatch|artifact manifest evidence binding mismatch/);
+
+  const payload = fixture();
+  payload.publicationEvidence.artifactPayloads[0].files[0].sha256 = "e".repeat(64);
+  assert.throws(() => verify(payload), /payload bytes do not match/);
+});
+
+test("independent verifier rejects a producer-supplied source tree that is not the admitted commit tree", () => {
+  const values = fixture();
+  values.publicationEvidence.sourceTreeSha = "d".repeat(40);
+  assert.throws(() => verify(values), /source tree does not match/);
+});
+
+test("independent verifier recomputes the candidate hash and preserves the platform set", () => {
+  const candidate = fixture();
+  candidate.publicationEvidence.releaseCandidatePassport.candidateHash = "d".repeat(64);
+  assert.throws(() => verify(candidate), /candidate hash mismatch/);
+
+  const platform = fixture();
+  platform.publicationEvidence.releaseCandidatePassport.platformMatrix[0].platformId = "darwin-arm64";
+  platform.publicationEvidence.releaseCandidatePassport.candidateHash = sha256Json({
+    repository: platform.publicationEvidence.releaseCandidatePassport.repository,
+    target: platform.publicationEvidence.releaseCandidatePassport.target,
+    source: platform.publicationEvidence.releaseCandidatePassport.source,
+    platformMatrix: platform.publicationEvidence.releaseCandidatePassport.platformMatrix,
+    buildchain: platform.publicationEvidence.releaseCandidatePassport.buildchain,
+    controllerReceipts: platform.publicationEvidence.releaseCandidatePassport.controllerReceipts,
+  });
+  assert.throws(() => verify(platform), /does not match the release-candidate platform matrix/);
 });
 
 test("verifier rejects stale, overlong, and replayed admission", () => {

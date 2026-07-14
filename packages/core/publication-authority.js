@@ -1,5 +1,8 @@
 import crypto from "node:crypto";
 
+import { validateControllerReceipt } from "./controller-evidence.js";
+import { sha256Json, validateReleaseCandidatePassport } from "./release-candidate.js";
+
 export const PUBLICATION_AUTHORITY_REGISTRY_CONTRACT =
   "kungfu-buildchain-publication-authority-registry";
 export const PUBLICATION_ADMISSION_CONTRACT =
@@ -10,6 +13,10 @@ export const RUNNER_PROVENANCE_CONTRACT =
   "kungfu-buildchain-runner-provenance";
 export const PUBLICATION_CONTROL_PLANE_AUDIT_CONTRACT =
   "kungfu-buildchain-publication-control-plane-audit";
+export const PUBLICATION_GATE_DECISION_CONTRACT =
+  "kungfu-buildchain-publication-gate-decision";
+export const PUBLICATION_ARTIFACT_MANIFEST_SET_CONTRACT =
+  "kungfu-buildchain-publication-artifact-manifest-set";
 
 export const PUBLICATION_AUTHORITY_CLASSES = Object.freeze([
   "product-publication",
@@ -240,6 +247,272 @@ export function createPublicationAdmission(input = {}) {
   return { ...payload, admissionDigest: publicationAuthorityDigest(payload) };
 }
 
+export function createPublicationGateDecision({
+  sourceSha,
+  profile,
+  required = false,
+  rationale,
+  policy = {},
+} = {}) {
+  const normalizedPolicy = {
+    profile: requiredString(profile, "profile"),
+    required: required === true,
+    rationale: requiredString(rationale, "rationale"),
+    policy,
+  };
+  const payload = {
+    schemaVersion: 1,
+    contract: PUBLICATION_GATE_DECISION_CONTRACT,
+    sourceSha: normalizeGitSha(sourceSha, "sourceSha"),
+    policyDigest: publicationAuthorityDigest(normalizedPolicy),
+    ...normalizedPolicy,
+  };
+  return { ...payload, digest: publicationAuthorityDigest(payload) };
+}
+
+export function createPublicationArtifactManifestSet({
+  repository,
+  sourceSha,
+  sourceTreeSha,
+  manifests = [],
+  payloads = [],
+} = {}) {
+  const normalizedRepository = requiredString(repository, "repository");
+  const normalizedSourceSha = normalizeGitSha(sourceSha, "sourceSha");
+  const normalizedSourceTreeSha = normalizeGitSha(sourceTreeSha, "sourceTreeSha");
+  if (!Array.isArray(manifests) || manifests.length === 0) {
+    throw new Error("publication artifact manifest set requires at least one manifest");
+  }
+  if (!Array.isArray(payloads) || payloads.length !== manifests.length) {
+    throw new Error("publication artifact payload set must exactly match the manifest set");
+  }
+  const payloadMap = new Map();
+  for (const [index, payload] of payloads.entries()) {
+    const artifactName = requiredString(payload?.artifactName, `artifactPayloads[${index}].artifactName`);
+    if (payloadMap.has(artifactName)) throw new Error(`duplicate publication artifact payload: ${artifactName}`);
+    if (!Array.isArray(payload.files)) throw new Error(`artifactPayloads[${index}].files must be an array`);
+    payloadMap.set(artifactName, payload.files);
+  }
+  const artifacts = manifests.map((manifest, index) => {
+    if (manifest?.contract !== "kungfu-buildchain-artifact") {
+      throw new Error(`artifactManifests[${index}] contract mismatch`);
+    }
+    if (manifest.git?.repository !== normalizedRepository) {
+      throw new Error(`artifactManifests[${index}] repository mismatch`);
+    }
+    if (manifest.git?.sha !== normalizedSourceSha) {
+      throw new Error(`artifactManifests[${index}] source SHA mismatch`);
+    }
+    if (manifest.expectedArtifacts?.ok !== true) {
+      throw new Error(`artifactManifests[${index}] expected artifacts did not qualify`);
+    }
+    const artifactName = requiredString(manifest.artifactName, `artifactManifests[${index}].artifactName`);
+    if (manifest.summary?.contract !== "kungfu-buildchain-artifact-summary") {
+      throw new Error(`artifactManifests[${index}] summary contract mismatch`);
+    }
+    if (manifest.summary?.artifactName !== artifactName || manifest.summary?.platform?.id !== manifest.platform?.id) {
+      throw new Error(`artifactManifests[${index}] summary identity mismatch`);
+    }
+    if (!Array.isArray(manifest.files)) throw new Error(`artifactManifests[${index}].files must be an array`);
+    const declaredFiles = manifest.files.map((file, fileIndex) => {
+      const filePath = requiredString(file?.path, `artifactManifests[${index}].files[${fileIndex}].path`);
+      if (filePath.startsWith("/") || filePath.includes("\\") || filePath.split("/").includes("..")) {
+        throw new Error(`artifactManifests[${index}] contains an unsafe file path`);
+      }
+      return {
+        path: filePath,
+        size: Number(file?.size),
+        sha256: normalizeDigest(file?.sha256, `artifactManifests[${index}].files[${fileIndex}].sha256`),
+      };
+    });
+    if (new Set(declaredFiles.map((file) => file.path)).size !== declaredFiles.length) {
+      throw new Error(`artifactManifests[${index}] contains duplicate file paths`);
+    }
+    if (declaredFiles.some((file) => !Number.isSafeInteger(file.size) || file.size < 0)) {
+      throw new Error(`artifactManifests[${index}] contains an invalid file size`);
+    }
+    const totalBytes = declaredFiles.reduce((sum, file) => sum + file.size, 0);
+    const contentHash = crypto.createHash("sha256");
+    for (const file of declaredFiles) contentHash.update(`${file.path}\0${file.size}\0${file.sha256}\n`);
+    const contentDigest = contentHash.digest("hex");
+    if (manifest.summary.fileCount !== declaredFiles.length || manifest.summary.totalBytes !== totalBytes) {
+      throw new Error(`artifactManifests[${index}] summary counts mismatch`);
+    }
+    if (normalizeDigest(manifest.summary.digest, `artifactManifests[${index}].summary.digest`) !== contentDigest) {
+      throw new Error(`artifactManifests[${index}] summary digest mismatch`);
+    }
+    const actualFiles = payloadMap.get(artifactName);
+    if (!actualFiles) throw new Error(`publication artifact payload is missing: ${artifactName}`);
+    const normalizedActualFiles = actualFiles.map((file, fileIndex) => ({
+      path: requiredString(file?.path, `artifactPayloads[${index}].files[${fileIndex}].path`),
+      size: Number(file?.size),
+      sha256: normalizeDigest(file?.sha256, `artifactPayloads[${index}].files[${fileIndex}].sha256`),
+    }));
+    const byPath = (left, right) => left.path.localeCompare(right.path);
+    if (JSON.stringify([...declaredFiles].sort(byPath)) !== JSON.stringify([...normalizedActualFiles].sort(byPath))) {
+      throw new Error(`publication artifact payload bytes do not match manifest: ${artifactName}`);
+    }
+    return {
+      artifactName,
+      platformId: requiredString(manifest.platform?.id, `artifactManifests[${index}].platform.id`),
+      manifestDigest: publicationAuthorityDigest(manifest),
+      contentDigest,
+    };
+  }).sort((left, right) => left.artifactName.localeCompare(right.artifactName));
+  const payload = {
+    schemaVersion: 1,
+    contract: PUBLICATION_ARTIFACT_MANIFEST_SET_CONTRACT,
+    repository: normalizedRepository,
+    sourceSha: normalizedSourceSha,
+    sourceTreeSha: normalizedSourceTreeSha,
+    artifacts,
+  };
+  return { ...payload, manifestSetDigest: publicationAuthorityDigest(payload) };
+}
+
+function validateGateAggregate(gateAggregate, { admission, passport }) {
+  if (gateAggregate?.contract === "buildchain.shifu-gate-aggregate/v1") {
+    const { digest, ...payload } = gateAggregate;
+    const actualDigest = sha256Json(payload);
+    if (normalizeDigest(digest, "gateAggregate.digest") !== actualDigest) {
+      throw new Error("gate aggregate digest mismatch");
+    }
+    if (gateAggregate.status !== "pass" || gateAggregate.qualifying !== true) {
+      throw new Error("gate aggregate is not qualifying");
+    }
+    if (![admission.sourceSha, passport.source?.headSha].includes(gateAggregate.sourceSha)) {
+      throw new Error("gate aggregate source SHA mismatch");
+    }
+    normalizeDigest(gateAggregate.registry?.digest, "gateAggregate.registry.digest");
+    const policyDigest = normalizeDigest(gateAggregate.matrixDigest, "gateAggregate.matrixDigest");
+    return { gateAggregateDigest: actualDigest, policyDigest };
+  }
+  if (gateAggregate?.contract !== PUBLICATION_GATE_DECISION_CONTRACT) {
+    throw new Error("gate evidence must be a Shifu Gate aggregate or explicit publication Gate decision");
+  }
+  const { digest, ...payload } = gateAggregate;
+  const actualDigest = publicationAuthorityDigest(payload);
+  if (normalizeDigest(digest, "gateDecision.digest") !== actualDigest) {
+    throw new Error("publication Gate decision digest mismatch");
+  }
+  if (gateAggregate.required !== false) {
+    throw new Error("a required Gate policy must supply a qualifying Shifu Gate aggregate");
+  }
+  if (![admission.sourceSha, passport.source?.headSha].includes(gateAggregate.sourceSha)) {
+    throw new Error("publication Gate decision source SHA mismatch");
+  }
+  const normalizedPolicy = {
+    profile: requiredString(gateAggregate.profile, "gateDecision.profile"),
+    required: false,
+    rationale: requiredString(gateAggregate.rationale, "gateDecision.rationale"),
+    policy: gateAggregate.policy || {},
+  };
+  const policyDigest = publicationAuthorityDigest(normalizedPolicy);
+  if (normalizeDigest(gateAggregate.policyDigest, "gateDecision.policyDigest") !== policyDigest) {
+    throw new Error("publication Gate policy digest mismatch");
+  }
+  return { gateAggregateDigest: actualDigest, policyDigest };
+}
+
+function validatePublicationEvidence(publicationEvidence, admission) {
+  if (!publicationEvidence || typeof publicationEvidence !== "object" || Array.isArray(publicationEvidence)) {
+    throw new Error("independent publication evidence is required");
+  }
+  const passport = publicationEvidence.releaseCandidatePassport;
+  const buildSummary = publicationEvidence.buildSummary;
+  const passportValidation = validateReleaseCandidatePassport({
+    passport,
+    buildSummary,
+    repository: admission.repository,
+    targetChannel: admission.channel,
+  });
+  if (!passportValidation.ok) {
+    throw new Error(`release-candidate passport did not qualify: ${passportValidation.errors.join("; ")}`);
+  }
+  const candidateHash = sha256Json({
+    repository: passport.repository,
+    target: passport.target,
+    source: passport.source,
+    platformMatrix: passport.platformMatrix,
+    buildchain: passport.buildchain,
+    ...(passport.gateProfileEvidence ? { gateProfileEvidence: passport.gateProfileEvidence } : {}),
+    ...(passport.controllerReceipts ? { controllerReceipts: passport.controllerReceipts } : {}),
+  });
+  if (normalizeDigest(passport.candidateHash, "releaseCandidatePassport.candidateHash") !== candidateHash) {
+    throw new Error("release-candidate passport candidate hash mismatch");
+  }
+  const sourceTreeSha = normalizeGitSha(publicationEvidence.sourceTreeSha, "publicationEvidence.sourceTreeSha");
+  if (passport.source?.treeHash !== sourceTreeSha) {
+    throw new Error("release-candidate source tree does not match the admitted source commit");
+  }
+  const controllerReceipt = publicationEvidence.controllerReceipt;
+  const controllerValidation = validateControllerReceipt(controllerReceipt, {
+    expectedSourceSha: passport.source?.headSha || "",
+    expectedRuntimeSha: passport.buildchain?.sha || "",
+  });
+  if (!controllerValidation.ok || !controllerValidation.qualifying) {
+    throw new Error(`controller receipt did not qualify: ${controllerValidation.issues.join("; ")}`);
+  }
+  const reference = (passport.controllerReceipts || []).find(
+    (entry) => entry.controllerId === controllerReceipt.controller?.id,
+  );
+  if (!reference || reference.receiptDigest !== controllerReceipt.digest) {
+    throw new Error("release-candidate controller receipt reference mismatch");
+  }
+  const controllerReceiptDigest = normalizeDigest(controllerReceipt.digest, "controllerReceipt.digest");
+  if (controllerReceiptDigest !== normalizeDigest(admission.controllerReceiptDigest, "admission.controllerReceiptDigest")) {
+    throw new Error("controller receipt evidence binding mismatch");
+  }
+  const contractDigest = normalizeDigest(controllerReceipt.runtime?.contractDigest, "controllerReceipt.runtime.contractDigest");
+  if (contractDigest !== normalizeDigest(admission.contractDigest, "admission.contractDigest")) {
+    throw new Error("runtime contract evidence binding mismatch");
+  }
+  const gate = validateGateAggregate(publicationEvidence.gateAggregate, { admission, passport });
+  if (passport.gateProfileEvidence?.digest && passport.gateProfileEvidence.digest !== `sha256:${gate.gateAggregateDigest}`) {
+    throw new Error("release-candidate passport Gate evidence binding mismatch");
+  }
+  if (gate.gateAggregateDigest !== normalizeDigest(admission.gateAggregateDigest, "admission.gateAggregateDigest")) {
+    throw new Error("Gate aggregate evidence binding mismatch");
+  }
+  if (gate.policyDigest !== normalizeDigest(admission.policyDigest, "admission.policyDigest")) {
+    throw new Error("Gate policy evidence binding mismatch");
+  }
+  const manifestSet = createPublicationArtifactManifestSet({
+    repository: admission.repository,
+    sourceSha: passport.source?.headSha,
+    sourceTreeSha,
+    manifests: publicationEvidence.artifactManifests,
+    payloads: publicationEvidence.artifactPayloads,
+  });
+  const passportPlatforms = (passport.platformMatrix || [])
+    .map((entry) => `${entry.platformId}\0${entry.artifactName}`)
+    .sort();
+  const manifestPlatforms = manifestSet.artifacts
+    .map((entry) => `${entry.platformId}\0${entry.artifactName}`)
+    .sort();
+  if (JSON.stringify(passportPlatforms) !== JSON.stringify(manifestPlatforms)) {
+    throw new Error("artifact manifest set does not match the release-candidate platform matrix");
+  }
+  if (manifestSet.manifestSetDigest !== normalizeDigest(admission.artifactDigest, "admission.artifactDigest")) {
+    throw new Error("artifact manifest evidence binding mismatch");
+  }
+  return {
+    sourceTreeSha,
+    controllerReceiptDigest,
+    contractDigest,
+    gateAggregateDigest: gate.gateAggregateDigest,
+    policyDigest: gate.policyDigest,
+    artifactDigest: manifestSet.manifestSetDigest,
+    evidenceDigest: publicationAuthorityDigest({
+      passportCandidateHash: passport.candidateHash,
+      sourceTreeSha,
+      controllerReceiptDigest,
+      gateAggregateDigest: gate.gateAggregateDigest,
+      artifactDigest: manifestSet.manifestSetDigest,
+    }),
+  };
+}
+
 function validateRunnerProvenance(receipt, expectedDigest) {
   if (receipt?.contract !== RUNNER_PROVENANCE_CONTRACT) throw new Error("runner provenance contract mismatch");
   if (!QUALIFIED_RUNNER_CLASSES.has(receipt.runnerClass)) {
@@ -295,6 +568,7 @@ export function verifyPublicationAdmission({
   registry,
   runnerProvenance,
   controlPlaneAudit,
+  publicationEvidence,
   expected = {},
   usedNonces = [],
   now = new Date(),
@@ -380,6 +654,7 @@ export function verifyPublicationAdmission({
     now: nowMs,
     expectedDigest: admission.controlPlaneAuditDigest,
   });
+  const evidence = validatePublicationEvidence(publicationEvidence, admission);
   const { admissionDigest: suppliedAdmissionDigest, producerDecision: _ignored, ...admissionPayload } = admission;
   const actualAdmissionDigest = publicationAuthorityDigest(admissionPayload);
   if (normalizeDigest(suppliedAdmissionDigest, "admission.admissionDigest") !== actualAdmissionDigest) {
@@ -403,6 +678,8 @@ export function verifyPublicationAdmission({
     version: admission.version,
     channel: admission.channel,
     artifactDigest: normalizeDigest(admission.artifactDigest, "admission.artifactDigest"),
+    sourceTreeSha: evidence.sourceTreeSha,
+    publicationEvidenceDigest: evidence.evidenceDigest,
     admissionDigest: actualAdmissionDigest,
     runnerProvenanceDigest: runnerDigest,
     controlPlaneAuditDigest: controlPlaneDigest,
