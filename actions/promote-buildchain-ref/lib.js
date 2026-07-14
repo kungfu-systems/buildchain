@@ -2363,11 +2363,81 @@ export function resolveProtectedStatusCheckContext({ protection = {}, requiredSt
   return emittedCandidates.length === 1 ? emittedCandidates[0] : declared;
 }
 
+async function assertProviderEnforcedChannelTransaction({
+  octokit,
+  owner,
+  repo,
+  targetRef,
+  sourceSha,
+  requiredStatusCheck,
+}) {
+  const { data: branch } = await octokit.rest.repos.getBranch({
+    owner,
+    repo,
+    branch: targetRef,
+  });
+  const protection = branch.protection || {};
+  const resolvedStatusCheck = resolveProtectedStatusCheckContext({ protection, requiredStatusCheck });
+  const requiredCheck = (protection.required_status_checks?.checks || []).find((entry) =>
+    entry.context === resolvedStatusCheck
+  );
+  const pullRequest = await assertChannelPromotionPr({
+    octokit,
+    owner,
+    repo,
+    sha: sourceSha,
+    targetRef,
+  });
+  const { data: reviews } = await octokit.rest.pulls.listReviews({
+    owner,
+    repo,
+    pull_number: pullRequest.number,
+    per_page: 100,
+  });
+  const latestReviews = new Map();
+  for (const review of reviews || []) {
+    const login = String(review?.user?.login || "");
+    if (login) latestReviews.set(login, review);
+  }
+  const independentApproval = [...latestReviews.values()].some((review) =>
+    review.state === "APPROVED" && review.user?.login !== pullRequest.user?.login
+  );
+  const { data: checkRuns } = await octokit.rest.checks.listForRef({
+    owner,
+    repo,
+    ref: sourceSha,
+    per_page: 100,
+  });
+  const requiredCheckPassed = (checkRuns.check_runs || []).some((entry) =>
+    entry.name === resolvedStatusCheck &&
+    entry.conclusion === "success" &&
+    (!requiredCheck?.app_id || entry.app?.id === requiredCheck.app_id)
+  );
+  const missing = [];
+  if (branch.protected !== true) missing.push("must be provider-protected");
+  if (branch.commit?.sha !== sourceSha) missing.push("must still point at the admitted source SHA");
+  if (protection.required_status_checks?.enforcement_level !== "everyone") {
+    missing.push("must enforce required status checks for everyone");
+  }
+  if (!protectedStatusCheckNames(protection).includes(resolvedStatusCheck)) {
+    missing.push(`must require a ${requiredStatusCheck} status check using the exact context`);
+  }
+  if (!requiredCheckPassed) missing.push(`required status check ${resolvedStatusCheck} must pass from its configured app`);
+  if (!independentApproval) missing.push("must have an independent approving review on the merged source PR");
+  if (missing.length > 0) {
+    throw new Error(
+      `Protected channel ${targetRef} provider transaction is not qualifying: ${missing.join("; ")}`,
+    );
+  }
+  return resolvedStatusCheck;
+}
+
 async function assertProtectedChannel({
   octokit,
   owner,
   repo,
   targetRef,
+  sourceSha,
   requiredStatusCheck = "check",
 }) {
   let protection;
@@ -2379,9 +2449,14 @@ async function assertProtectedChannel({
     }));
   } catch (error) {
     if (error.status === 403) {
-      throw new Error(
-        `Protected channel ${targetRef} protection details must be readable to verify admin enforcement`,
-      );
+      return assertProviderEnforcedChannelTransaction({
+        octokit,
+        owner,
+        repo,
+        targetRef,
+        sourceSha,
+        requiredStatusCheck,
+      });
     }
     throw error;
   }
@@ -4624,6 +4699,7 @@ async function promoteBuildchainRefs({
       owner,
       repo,
       targetRef,
+      sourceSha: sha,
       requiredStatusCheck,
     });
   }
@@ -5425,6 +5501,7 @@ export {
   DEFAULT_REPOSITORY,
   assertChannelPromotionPr,
   assertAllowedLocalChanges,
+  assertProviderEnforcedChannelTransaction,
   assertProtectedChannel,
   assertPromotableRepository,
   assertPromotableTargetRef,
