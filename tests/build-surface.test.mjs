@@ -492,6 +492,10 @@ test("paper release workflow publishes declared npm package with source lock and
   assert.match(workflow, /github-release-artifact-paths: \$\{\{ steps\.package\.outputs\.github-release-artifact-paths \}\}/);
   assert.match(workflow, /permissions:\n  contents: read/);
   assert.match(workflow, /name: Seal paper publication capability/);
+  assert.match(
+    workflow,
+    /name: Seal paper publication capability\n    permissions:\n      actions: read\n      contents: read/,
+  );
   assert.match(workflow, /permissions:\n      checks: write\n      contents: write\n      id-token: write/);
   assert.doesNotMatch(workflow, /^ {4}environment\s*:/m);
   assert.match(workflow, /Preflight protected publication authority/);
