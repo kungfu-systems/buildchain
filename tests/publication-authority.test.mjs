@@ -124,16 +124,21 @@ function fixture({ runnerClass = "ephemeral", factStatus = "pass" } = {}) {
       contract: "kungfu-buildchain-artifact-summary",
       artifactName: "fixture-linux-x64",
       platform: { id: "linux-x64" },
-      fileCount: 1,
-      totalBytes: 3,
+      fileCount: 2,
+      totalBytes: 7,
       digest: sha256Json("placeholder"),
     },
     expectedArtifacts: { ok: true },
-    files: [{ path: "dist/addon.node", size: 3, sha256: DIGESTS.artifactDigest }],
+    files: [
+      { path: ".buildchain/artifacts/linux-x64/diagnostics.json", size: 4, sha256: "b".repeat(64) },
+      { path: "dist/addon.node", size: 3, sha256: DIGESTS.artifactDigest },
+    ],
   }];
   artifactManifests[0].summary.digest = (() => {
     const hash = crypto.createHash("sha256");
-    hash.update(["dist/addon.node", "3", DIGESTS.artifactDigest].join("\0") + "\n");
+    for (const file of artifactManifests[0].files) {
+      hash.update([file.path, String(file.size), file.sha256].join("\0") + "\n");
+    }
     return hash.digest("hex");
   })();
   const artifactPayloads = [{

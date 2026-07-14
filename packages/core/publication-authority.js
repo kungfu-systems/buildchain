@@ -341,6 +341,10 @@ export function createPublicationArtifactManifestSet({
     if (normalizeDigest(manifest.summary.digest, `artifactManifests[${index}].summary.digest`) !== contentDigest) {
       throw new Error(`artifactManifests[${index}] summary digest mismatch`);
     }
+    const declaredPayloadFiles = declaredFiles.filter((file) => !file.path.startsWith(".buildchain/"));
+    if (declaredPayloadFiles.length === 0) {
+      throw new Error(`artifactManifests[${index}] declares no independently verifiable product payload files`);
+    }
     const actualFiles = payloadMap.get(artifactName);
     if (!actualFiles) throw new Error(`publication artifact payload is missing: ${artifactName}`);
     const normalizedActualFiles = actualFiles.map((file, fileIndex) => ({
@@ -349,7 +353,7 @@ export function createPublicationArtifactManifestSet({
       sha256: normalizeDigest(file?.sha256, `artifactPayloads[${index}].files[${fileIndex}].sha256`),
     }));
     const byPath = (left, right) => left.path.localeCompare(right.path);
-    if (JSON.stringify([...declaredFiles].sort(byPath)) !== JSON.stringify([...normalizedActualFiles].sort(byPath))) {
+    if (JSON.stringify([...declaredPayloadFiles].sort(byPath)) !== JSON.stringify([...normalizedActualFiles].sort(byPath))) {
       throw new Error(`publication artifact payload bytes do not match manifest: ${artifactName}`);
     }
     return {
@@ -357,6 +361,7 @@ export function createPublicationArtifactManifestSet({
       platformId: requiredString(manifest.platform?.id, `artifactManifests[${index}].platform.id`),
       manifestDigest: publicationAuthorityDigest(manifest),
       contentDigest,
+      productPayloadDigest: publicationAuthorityDigest([...normalizedActualFiles].sort(byPath)),
     };
   }).sort((left, right) => left.artifactName.localeCompare(right.artifactName));
   const payload = {

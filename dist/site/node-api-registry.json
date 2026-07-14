@@ -242,7 +242,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-authority",
       "export": "./publication-authority",
       "target": "./packages/core/publication-authority.js",
-      "digest": "sha256:90c1a19b59e1859ad86008dd7f0258b6fa13c0452f756e66785c4710815acb69",
+      "digest": "sha256:52cc918c64b912ee7814f6ace8da618eb4785531413ffa76b696b9688f047b86",
       "summary": "Sealed publication authority registry, runner provenance, control-plane audit, admission, and independent verification APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
