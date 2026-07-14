@@ -26,6 +26,11 @@ on:
         type: string
         required: false
         default: ""
+      gate-aggregate-json:
+        description: "Qualifying Shifu Gate aggregate or explicit consumer-owned no-Gate decision"
+        type: string
+        required: false
+        default: ""
       expected-json:
         description: "Independent exact publication bindings JSON"
         type: string
@@ -36,6 +41,36 @@ on:
         type: string
         required: false
         default: "[]"
+      evidence-repository:
+        description: "Consumer repository whose exact Actions run owns the independent evidence"
+        type: string
+        required: false
+        default: ""
+      evidence-run-id:
+        description: "Exact successful Actions run containing the RC passport and controller/artifact evidence"
+        type: string
+        required: false
+        default: ""
+      evidence-passport-artifact:
+        description: "Exact release-candidate passport artifact name"
+        type: string
+        required: false
+        default: ""
+      evidence-summary-artifact:
+        description: "Exact build-summary artifact name"
+        type: string
+        required: false
+        default: ""
+      evidence-manifest-pattern:
+        description: "Artifact-name pattern selecting the exact run's platform manifests"
+        type: string
+        required: false
+        default: ""
+      evidence-payload-pattern:
+        description: "Artifact-name pattern selecting the exact run's candidate payloads"
+        type: string
+        required: false
+        default: ""
       dry-run:
         type: boolean
         required: false
@@ -59,6 +94,7 @@ jobs:
     name: Independently verify publication admission
     runs-on: ubuntu-24.04
     permissions:
+      actions: read
       contents: read
     outputs:
       capability-json: ${{ steps.result.outputs.capability-json }}
@@ -85,18 +121,101 @@ jobs:
           path: .buildchain/authority-runtime
           persist-credentials: false
 
+      - name: Download exact release-candidate passport evidence
+        if: ${{ !inputs.dry-run }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          repository: ${{ inputs.evidence-repository }}
+          run-id: ${{ inputs.evidence-run-id }}
+          github-token: ${{ github.token }}
+          name: ${{ inputs.evidence-passport-artifact }}
+          path: .buildchain/publication-evidence/passport
+
+      - name: Download exact build-summary evidence
+        if: ${{ !inputs.dry-run }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          repository: ${{ inputs.evidence-repository }}
+          run-id: ${{ inputs.evidence-run-id }}
+          github-token: ${{ github.token }}
+          name: ${{ inputs.evidence-summary-artifact }}
+          path: .buildchain/publication-evidence/summary
+
+      - name: Resolve referenced controller evidence
+        if: ${{ !inputs.dry-run }}
+        id: controller-evidence
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+          import path from "node:path";
+          const find = (root, name) => {
+            const stack = [root];
+            while (stack.length) {
+              const current = stack.pop();
+              for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+                const full = path.join(current, entry.name);
+                if (entry.isDirectory()) stack.push(full);
+                else if (entry.name === name) return full;
+              }
+            }
+            return "";
+          };
+          const passportPath = find(".buildchain/publication-evidence/passport", "release-candidate-passport.json");
+          if (!passportPath) throw new Error("release-candidate-passport.json is missing from exact evidence artifact");
+          const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+          if (!Array.isArray(passport.controllerReceipts) || passport.controllerReceipts.length !== 1) {
+            throw new Error("publication evidence requires exactly one qualifying controller receipt reference");
+          }
+          const artifact = String(passport.controllerReceipts[0].artifact || "");
+          if (!artifact) throw new Error("release-candidate passport controller receipt artifact is missing");
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `controller-artifact=${artifact}\n`);
+          NODE
+
+      - name: Download referenced controller receipt evidence
+        if: ${{ !inputs.dry-run }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          repository: ${{ inputs.evidence-repository }}
+          run-id: ${{ inputs.evidence-run-id }}
+          github-token: ${{ github.token }}
+          name: ${{ steps.controller-evidence.outputs.controller-artifact }}
+          path: .buildchain/publication-evidence/controller
+
+      - name: Download exact artifact manifest evidence
+        if: ${{ !inputs.dry-run }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          repository: ${{ inputs.evidence-repository }}
+          run-id: ${{ inputs.evidence-run-id }}
+          github-token: ${{ github.token }}
+          pattern: ${{ inputs.evidence-manifest-pattern }}
+          path: .buildchain/publication-evidence/manifests
+
+      - name: Download exact candidate payload evidence
+        if: ${{ !inputs.dry-run }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          repository: ${{ inputs.evidence-repository }}
+          run-id: ${{ inputs.evidence-run-id }}
+          github-token: ${{ github.token }}
+          pattern: ${{ inputs.evidence-payload-pattern }}
+          path: .buildchain/publication-evidence/payloads
+
       - name: Verify sealed publication admission
         if: ${{ !inputs.dry-run }}
         env:
           BUILDCHAIN_PUBLICATION_ADMISSION_JSON: ${{ inputs.admission-json }}
           BUILDCHAIN_RUNNER_PROVENANCE_JSON: ${{ inputs.runner-provenance-json }}
           BUILDCHAIN_CONTROL_PLANE_AUDIT_JSON: ${{ inputs.control-plane-audit-json }}
+          BUILDCHAIN_GATE_AGGREGATE_JSON: ${{ inputs.gate-aggregate-json }}
           BUILDCHAIN_PUBLICATION_EXPECTED_JSON: ${{ inputs.expected-json }}
           BUILDCHAIN_USED_NONCES_JSON: ${{ inputs.used-nonces-json }}
+          GITHUB_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
-          for name in BUILDCHAIN_PUBLICATION_ADMISSION_JSON BUILDCHAIN_RUNNER_PROVENANCE_JSON BUILDCHAIN_CONTROL_PLANE_AUDIT_JSON BUILDCHAIN_PUBLICATION_EXPECTED_JSON; do
+          for name in BUILDCHAIN_PUBLICATION_ADMISSION_JSON BUILDCHAIN_RUNNER_PROVENANCE_JSON BUILDCHAIN_CONTROL_PLANE_AUDIT_JSON BUILDCHAIN_GATE_AGGREGATE_JSON BUILDCHAIN_PUBLICATION_EXPECTED_JSON; do
             if [[ -z "${!name}" ]]; then
               echo "::error::${name} is required for non-dry-run product publication"
               exit 1
@@ -104,14 +223,76 @@ jobs:
           done
           node --input-type=module <<'NODE'
           import fs from "node:fs";
+          import crypto from "node:crypto";
           import { execFileSync } from "node:child_process";
+          import path from "node:path";
           import { verifyPublicationAdmission } from "./.buildchain/authority-runtime/packages/core/publication-authority.js";
           const parse = (name) => JSON.parse(process.env[name]);
+          const filesNamed = (root, name) => {
+            const matches = [];
+            const stack = [root];
+            while (stack.length) {
+              const current = stack.pop();
+              for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+                const full = path.join(current, entry.name);
+                if (entry.isDirectory()) stack.push(full);
+                else if (entry.name === name) matches.push(full);
+              }
+            }
+            return matches.sort();
+          };
+          const one = (root, name) => {
+            const matches = filesNamed(root, name);
+            if (matches.length !== 1) throw new Error(`expected exactly one ${name} under ${root}, found ${matches.length}`);
+            return JSON.parse(fs.readFileSync(matches[0], "utf8"));
+          };
+          const sha256File = (file) => crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex");
+          const payloadFor = (manifest) => {
+            const root = path.join(".buildchain/publication-evidence/payloads", manifest.artifactName);
+            if (!fs.existsSync(root)) throw new Error(`candidate payload artifact is missing: ${manifest.artifactName}`);
+            return {
+              artifactName: manifest.artifactName,
+              files: (manifest.files || []).map((entry) => {
+                if (path.isAbsolute(entry.path) || entry.path.includes("\\") || entry.path.split("/").includes("..")) {
+                  throw new Error(`candidate payload manifest contains an unsafe path: ${entry.path}`);
+                }
+                const file = path.join(root, entry.path);
+                if (!fs.existsSync(file) || !fs.statSync(file).isFile()) {
+                  throw new Error(`candidate payload file is missing: ${manifest.artifactName}/${entry.path}`);
+                }
+                return { path: entry.path, size: fs.statSync(file).size, sha256: sha256File(file) };
+              }),
+            };
+          };
+          const admission = parse("BUILDCHAIN_PUBLICATION_ADMISSION_JSON");
+          const response = await fetch(
+            `${process.env.GITHUB_API_URL}/repos/${admission.repository}/git/commits/${admission.sourceSha}`,
+            {
+              headers: {
+                accept: "application/vnd.github+json",
+                authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+                "x-github-api-version": "2022-11-28",
+              },
+            },
+          );
+          if (!response.ok) throw new Error(`could not resolve admitted source tree: GitHub API ${response.status}`);
+          const commit = await response.json();
+          const artifactManifests = filesNamed(".buildchain/publication-evidence/manifests", "manifest.json")
+            .map((file) => JSON.parse(fs.readFileSync(file, "utf8")));
           const capability = verifyPublicationAdmission({
-            admission: parse("BUILDCHAIN_PUBLICATION_ADMISSION_JSON"),
+            admission,
             registry: JSON.parse(fs.readFileSync(".buildchain/authority-runtime/dist/site/publication-authority-registry.json", "utf8")),
             runnerProvenance: parse("BUILDCHAIN_RUNNER_PROVENANCE_JSON"),
             controlPlaneAudit: parse("BUILDCHAIN_CONTROL_PLANE_AUDIT_JSON"),
+            publicationEvidence: {
+              sourceTreeSha: commit.tree?.sha,
+              releaseCandidatePassport: one(".buildchain/publication-evidence/passport", "release-candidate-passport.json"),
+              buildSummary: one(".buildchain/publication-evidence/summary", "build-summary.json"),
+              controllerReceipt: one(".buildchain/publication-evidence/controller", "release-candidate-receipt.json"),
+              gateAggregate: parse("BUILDCHAIN_GATE_AGGREGATE_JSON"),
+              artifactManifests,
+              artifactPayloads: artifactManifests.map(payloadFor),
+            },
             expected: parse("BUILDCHAIN_PUBLICATION_EXPECTED_JSON"),
             usedNonces: parse("BUILDCHAIN_USED_NONCES_JSON"),
           });

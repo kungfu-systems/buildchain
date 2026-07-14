@@ -613,11 +613,18 @@
           "buildchain-repository",
           "control-plane-audit-json",
           "dry-run",
+          "evidence-manifest-pattern",
+          "evidence-passport-artifact",
+          "evidence-payload-pattern",
+          "evidence-repository",
+          "evidence-run-id",
+          "evidence-summary-artifact",
           "expected-json",
+          "gate-aggregate-json",
           "runner-provenance-json",
           "used-nonces-json"
         ],
-        "inputCount": 8,
+        "inputCount": 15,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -1529,6 +1536,7 @@
           "publication-admission-json",
           "publication-control-plane-audit-json",
           "publication-expected-json",
+          "publication-gate-aggregate-json",
           "publication-runner-provenance-json",
           "publication-used-nonces-json",
           "publish-artifact-kind",
@@ -1559,7 +1567,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 49,
+        "inputCount": 50,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -3297,8 +3305,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "a6daf4822365bf576425777230246046ebca67b3f8dcfea61fc7a61773776185",
-    "workflowRegistryDigest": "efa3d81e747dc1a9d60e962a1d2c530ea3a32311d46b8b97c06c809de52215d4",
-    "pageRegistryDigest": "cd5a212ed56b9b33899a2c744f1a4c76bf39ea082b5b923e26ab8d0a05772891"
+    "workflowRegistryDigest": "eacd2721b69b6c4e898d2ca919152c1b85e4fc7364c7a3e7644e3a644a0f8b16",
+    "pageRegistryDigest": "584ddf79e6574caf16d053782f556f4977588fc5df0083c5d338e75ff7b1d924"
   },
   "comparison": {
     "missingCliRegistry": [],
