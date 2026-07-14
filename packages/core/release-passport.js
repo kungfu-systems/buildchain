@@ -16,6 +16,7 @@ import {
 } from "./kfd-gate.js";
 import { createSurfaceTimestampPolicy } from "./surface-manifest.js";
 import { validatePublishEvidence as validateTransactionPublishEvidence } from "./publish-transaction.js";
+import { normalizeControllerReceiptReferences } from "./controller-evidence.js";
 
 export const RELEASE_PASSPORT_CONTRACT = "kungfu-buildchain-release-passport";
 export const ARTIFACT_EVIDENCE_CONTRACT = "kungfu-buildchain-artifact-evidence";
@@ -989,6 +990,8 @@ export function createReleasePassport({
   kfd1 = undefined,
   kfd2Claims = [],
   kfd3 = undefined,
+  controllerReceipts = [],
+  controllerReceiptReferences = [],
 } = {}) {
   const normalizedTag = nonEmptyString(tag, "tag");
   const artifactEvidence = createArtifactEvidence({ assets, repository, tag: normalizedTag, sourceSha, workflow });
@@ -1015,6 +1018,18 @@ export function createReleasePassport({
     explicitClaims: kfd2Claims,
     kfd1Section: normalizedKfd1?.passportSection,
     kfd3Section: normalizedKfd3?.passportSection,
+  });
+  const builtSourceSha = optionalString(release.builtSourceSha || release.built_source_sha);
+  const promotionChannelSha = optionalString(release.promotionChannelSha || release.promotion_channel_sha);
+  const treeEquivalent = release.treeEquivalent === true;
+  const normalizedControllerReceipts = normalizeControllerReceiptReferences({
+    receipts: controllerReceipts,
+    references: controllerReceiptReferences,
+    expectedSourceSha: sourceSha,
+    acceptedSourceShas: treeEquivalent && promotionChannelSha === sourceSha && builtSourceSha
+      ? [builtSourceSha]
+      : [],
+    requirePassed: true,
   });
   const publishArtifacts = normalizedPublishEvidence?.artifacts || [];
   const normalizedPublishSummary = normalizePublishSummary({
@@ -1069,6 +1084,7 @@ export function createReleasePassport({
         "artifact-evidence.json",
         "publish evidence",
         "release-state transaction",
+        "controller receipt references",
       ],
       timestampFields: ["generatedAt", "publishedAt", "surfaceTimestampPolicy.generatedAt", "surfaceTimestampPolicy.publishedAt"],
       timestampFieldsParticipateInArtifactDigest: true,
@@ -1138,6 +1154,7 @@ export function createReleasePassport({
     ...(normalizedKfd1 ? { [normalizedKfd1.key || kfd1Metadata.key]: normalizedKfd1.passportSection } : {}),
     ...(normalizedKfd2 ? { "kfd-2": normalizedKfd2 } : {}),
     ...(normalizedKfd3 ? { [normalizedKfd3.key || "kfd-3"]: normalizedKfd3.passportSection } : {}),
+    ...(normalizedControllerReceipts.length > 0 ? { controllerReceipts: normalizedControllerReceipts } : {}),
     versionImpact: normalizedImpact.versionImpact,
     surfaceImpacts: normalizedImpact.surfaceImpacts,
     artifacts: [
@@ -1218,6 +1235,7 @@ export function collectGitHubReleasePassport({
   kfd3PrebuildWitnessJsons = [],
   kfd3ArtifactWitnessJsons = [],
   kfd3ArtifactVerifyCommand = "",
+  controllerReceiptReferences = [],
   basePassportJson = "",
   requireBaseKfd = false,
   releaseJsonExtra = "",
@@ -1340,6 +1358,7 @@ export function collectGitHubReleasePassport({
     kfd1,
     kfd2Claims: kfd2ClaimMetas.map((meta) => meta.value),
     kfd3,
+    controllerReceiptReferences,
     publishEvidencePath: publishEvidenceMeta.path ? path.relative(resolvedOutputDir, publishEvidenceMeta.path).split(path.sep).join("/") : "",
     transactionStatePath: transactionMeta.path ? path.relative(resolvedOutputDir, transactionMeta.path).split(path.sep).join("/") : "",
     workflow,

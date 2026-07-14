@@ -113,6 +113,35 @@ test("release candidate passport records source lock, platform matrix, and build
   assert.equal(validateReleaseCandidatePassport({ passport, buildSummary }).ok, true);
 });
 
+test("release candidate passport binds controller receipts to source and runtime", () => {
+  const buildSummary = sampleBuildSummary();
+  const reference = {
+    controllerId: "build-lifecycle",
+    planDigest: `sha256:${"3".repeat(64)}`,
+    receiptDigest: `sha256:${"4".repeat(64)}`,
+    sourceSha: SOURCE_SHA,
+    runtimeSha: buildSummary.runtime.sha,
+    status: "passed",
+    artifact: "buildchain-controller-receipt",
+  };
+  const passport = createReleaseCandidatePassport({
+    repository: "kungfu-systems/libnode",
+    targetChannel: "alpha",
+    version: "22.22.3-kf.3-alpha.7",
+    sourceHeadSha: SOURCE_SHA,
+    buildSummary,
+    controllerReceiptReferences: [reference],
+  });
+
+  assert.deepEqual(passport.controllerReceipts, [reference]);
+  assert.equal(validateReleaseCandidatePassport({ passport, buildSummary }).ok, true);
+  passport.controllerReceipts[0].runtimeSha = "5".repeat(40);
+  assert.match(
+    validateReleaseCandidatePassport({ passport, buildSummary }).errors.join("; "),
+    /runtime SHA mismatch/,
+  );
+});
+
 test("release candidate passport binds a qualifying Shifu Gate aggregate", () => {
   const buildSummary = sampleBuildSummary();
   const gateAggregate = {

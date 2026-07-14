@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { normalizeControllerReceiptReferences, validateControllerReceiptReference } from "./controller-evidence.js";
 
 export const RELEASE_CANDIDATE_PASSPORT_CONTRACT = "kungfu-buildchain-release-candidate-passport";
 
@@ -142,6 +143,8 @@ export function createReleaseCandidatePassport({
   buildSummary = {},
   buildchain = {},
   gateAggregate = undefined,
+  controllerReceipts = [],
+  controllerReceiptReferences = [],
   workflow = {},
   createdAt = nowIso(),
 } = {}) {
@@ -154,6 +157,13 @@ export function createReleaseCandidatePassport({
     || normalizeTargetChannel(pullRequest.baseRef);
   const resolvedVersion = version || normalizedSummary.publishSource?.consumerVersion || inferVersionFromReleaseManifest(normalizedSummary);
   const gateProfileEvidence = normalizeGateProfileEvidence(gateAggregate);
+  const controllerReceiptEvidence = normalizeControllerReceiptReferences({
+    receipts: controllerReceipts,
+    references: controllerReceiptReferences,
+    expectedSourceSha: sourceSha,
+    expectedRuntimeSha: optionalString(buildchain.sha || normalizedSummary.runtime?.sha),
+    requirePassed: true,
+  });
   const candidate = {
     schemaVersion: 1,
     contract: RELEASE_CANDIDATE_PASSPORT_CONTRACT,
@@ -197,6 +207,7 @@ export function createReleaseCandidatePassport({
       buildSummaryHash: sha256Json(normalizedSummary),
     },
     ...(gateProfileEvidence ? { gateProfileEvidence } : {}),
+    ...(controllerReceiptEvidence.length > 0 ? { controllerReceipts: controllerReceiptEvidence } : {}),
   };
   candidate.candidateHash = sha256Json({
     repository: candidate.repository,
@@ -205,6 +216,7 @@ export function createReleaseCandidatePassport({
     platformMatrix: candidate.platformMatrix,
     buildchain: candidate.buildchain,
     ...(candidate.gateProfileEvidence ? { gateProfileEvidence: candidate.gateProfileEvidence } : {}),
+    ...(candidate.controllerReceipts ? { controllerReceipts: candidate.controllerReceipts } : {}),
   });
   return candidate;
 }
@@ -266,6 +278,20 @@ export function validateReleaseCandidatePassport({
     check(passport.gateProfileEvidence.qualifying === true, "gate profile evidence must be qualifying");
     check(Boolean(passport.gateProfileEvidence.digest), "gate profile evidence digest is required");
     check(Boolean(passport.gateProfileEvidence.matrixDigest), "gate profile matrix digest is required");
+  }
+  if (passport.controllerReceipts !== undefined) {
+    check(Array.isArray(passport.controllerReceipts), "controllerReceipts must be an array");
+    const controllerIds = new Set();
+    for (const [index, reference] of (passport.controllerReceipts || []).entries()) {
+      const validation = validateControllerReceiptReference(reference, {
+        expectedSourceSha: passport.source?.headSha || "",
+        expectedRuntimeSha: passport.buildchain?.sha || "",
+        requirePassed: true,
+      });
+      for (const issue of validation.issues) check(false, `controllerReceipts[${index}]: ${issue}`);
+      check(!controllerIds.has(reference.controllerId), `controllerReceipts[${index}]: duplicate controller id ${reference.controllerId}`);
+      controllerIds.add(reference.controllerId);
+    }
   }
   return { ok: errors.length === 0, errors };
 }

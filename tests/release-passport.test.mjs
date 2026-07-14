@@ -54,6 +54,67 @@ test("release passport records surface timestamp reproducibility policy", () => 
   );
 });
 
+test("release passport carries source-bound controller receipt references", () => {
+  const sourceSha = "a".repeat(40);
+  const reference = {
+    controllerId: "build-lifecycle",
+    planDigest: `sha256:${"b".repeat(64)}`,
+    receiptDigest: `sha256:${"c".repeat(64)}`,
+    sourceSha,
+    runtimeSha: "d".repeat(40),
+    status: "passed",
+    artifact: "buildchain-controller-receipt",
+  };
+  const passport = createReleasePassport({
+    repository: "kungfu-systems/buildchain",
+    tag: "v2.12.5-alpha.1",
+    sourceSha,
+    controllerReceiptReferences: [reference],
+  });
+
+  assert.deepEqual(passport.controllerReceipts, [reference]);
+  assert.throws(
+    () => createReleasePassport({ tag: "v2.12.5-alpha.1", sourceSha: "e".repeat(40), controllerReceiptReferences: [reference] }),
+    /source SHA mismatch/,
+  );
+});
+
+test("release passport preserves a tree-equivalent RC controller source", () => {
+  const builtSourceSha = "a".repeat(40);
+  const promotionChannelSha = "e".repeat(40);
+  const reference = {
+    controllerId: "build-lifecycle",
+    planDigest: `sha256:${"b".repeat(64)}`,
+    receiptDigest: `sha256:${"c".repeat(64)}`,
+    sourceSha: builtSourceSha,
+    runtimeSha: "d".repeat(40),
+    status: "passed",
+    artifact: "buildchain-controller-receipt",
+  };
+  const passport = createReleasePassport({
+    repository: "kungfu-systems/buildchain",
+    tag: "v2.12.5-alpha.1",
+    sourceSha: promotionChannelSha,
+    release: {
+      builtSourceSha,
+      promotionChannelSha,
+      treeEquivalent: true,
+    },
+    controllerReceiptReferences: [reference],
+  });
+
+  assert.deepEqual(passport.controllerReceipts, [reference]);
+  assert.throws(
+    () => createReleasePassport({
+      tag: "v2.12.5-alpha.1",
+      sourceSha: promotionChannelSha,
+      release: { builtSourceSha, promotionChannelSha, treeEquivalent: false },
+      controllerReceiptReferences: [reference],
+    }),
+    /source SHA mismatch/,
+  );
+});
+
 test("KFD release gate metadata is statically bundled for action runtimes", () => {
   const source = fs.readFileSync(path.resolve("packages/core/kfd-gate.js"), "utf8");
   assert.match(source, /from "@kungfu-tech\/kfd\/package\.json" with \{ type: "json" \}/);

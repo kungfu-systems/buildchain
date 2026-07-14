@@ -159,6 +159,23 @@ export {
 } from "./buildchain-contract.js";
 
 export {
+  BUILDCHAIN_CONTROLLER_AGGREGATE_CONTRACT,
+  BUILDCHAIN_CONTROLLER_DESCRIPTOR_CONTRACT,
+  BUILDCHAIN_CONTROLLER_EVIDENCE_CONTRACT,
+  BUILDCHAIN_CONTROLLER_REGISTRY_CONTRACT,
+  aggregateControllerReceipts,
+  controllerEvidenceDigest,
+  createControllerPlan,
+  createControllerReceipt,
+  createControllerReceiptReference,
+  createControllerRegistry,
+  normalizeControllerReceiptReferences,
+  validateControllerPlan,
+  validateControllerReceipt,
+  validateControllerReceiptReference,
+} from "./controller-evidence.js";
+
+export {
   planReleaseLineBootstrap,
   writeReleaseLineBootstrapVersionState,
 } from "./release-line-bootstrap.js";

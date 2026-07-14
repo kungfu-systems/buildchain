@@ -214,6 +214,33 @@ test("contract world exposes additive post-publish artifact provenance schema", 
   }
 });
 
+test("contract world exposes versioned controller evidence surfaces", () => {
+  const contract = createBuildchainContractWorld({
+    root: path.resolve(import.meta.dirname, ".."),
+    packageJson: { name: "@kungfu-tech/buildchain", version: "2.12.5-alpha.0" },
+  });
+  const controllers = contract.surfaces.filter((entry) => entry.kind === "controller");
+
+  assert.deepEqual(controllers.map((entry) => entry.id), [
+    "controller:source-check",
+    "controller:build-lifecycle",
+    "controller:build-channel-router",
+    "controller:shifu-gate-profile-envelope",
+    "controller:web-surface",
+    "controller:publication-artifact",
+    "controller:paper-release",
+    "controller:release-candidate-promotion",
+    "controller:release-propagation",
+  ]);
+  assert.ok(controllers.every((entry) => entry.requiredOutputs.includes("controller-receipt-digest")));
+  assert.ok(controllers.every((entry) => entry.breakingDefaults.evidenceContract === "buildchain.controller-evidence/v1"));
+  assert.match(
+    controllers.find((entry) => entry.id === "controller:build-lifecycle")
+      .controllerDescriptor.inputClassifications["build-command"].classification,
+    /digest-only/,
+  );
+});
+
 test("write-lock records resolved SHA and contract digest", () => {
   const workspace = tempDir("write-lock");
   const contract = createBuildchainContractWorld({

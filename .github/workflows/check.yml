@@ -38,6 +38,28 @@ on:
         default: true
         type: boolean
         required: false
+    outputs:
+      controller-plan-artifact:
+        description: "Uploaded source-check controller plan artifact name"
+        value: ${{ jobs.check.outputs.controller-plan-artifact }}
+      controller-plan-json:
+        description: "Compact source/runtime-bound source-check controller plan"
+        value: ${{ jobs.check.outputs.controller-plan-json }}
+      controller-plan-digest:
+        description: "Digest of the source-check controller plan"
+        value: ${{ jobs.check.outputs.controller-plan-digest }}
+      controller-receipt-artifact:
+        description: "Uploaded source-check controller receipt artifact name"
+        value: ${{ jobs.check.outputs.controller-receipt-artifact }}
+      controller-receipt-json:
+        description: "Compact source-check controller receipt"
+        value: ${{ jobs.check.outputs.controller-receipt-json }}
+      controller-receipt-digest:
+        description: "Digest of the source-check controller receipt"
+        value: ${{ jobs.check.outputs.controller-receipt-digest }}
+      controller-receipt-status:
+        description: "Final source-check controller status"
+        value: ${{ jobs.check.outputs.controller-receipt-status }}
 
 permissions:
   contents: read
@@ -46,20 +68,63 @@ jobs:
   check:
     name: check
     runs-on: ubuntu-24.04
+    outputs:
+      controller-plan-artifact: buildchain-check-controller-plan-${{ steps.identities.outputs.source-sha }}
+      controller-plan-json: ${{ steps.plan.outputs.controller-plan-json }}
+      controller-plan-digest: ${{ steps.plan.outputs.controller-plan-digest }}
+      controller-receipt-artifact: buildchain-check-controller-receipt-${{ steps.identities.outputs.source-sha }}
+      controller-receipt-json: ${{ steps.receipt.outputs.controller-receipt-json }}
+      controller-receipt-digest: ${{ steps.receipt.outputs.controller-receipt-digest }}
+      controller-receipt-status: ${{ steps.receipt.outputs.controller-receipt-status }}
     steps:
       - name: Checkout repository
+        id: source
         uses: actions/checkout@v7.0.0
         with:
           fetch-depth: ${{ inputs.mode == 'source' && '0' || '1' }}
           persist-credentials: false
 
       - name: Checkout Buildchain runtime
+        id: runtime
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
           ref: ${{ inputs.buildchain-ref || 'v2' }}
           path: .buildchain/runtime
           persist-credentials: false
+
+      - name: Resolve source and runtime identities
+        id: identities
+        shell: bash
+        run: |
+          source_sha="$(git rev-parse HEAD)"
+          runtime_sha="$(git -C .buildchain/runtime rev-parse HEAD)"
+          contract_digest="$(node -e 'const fs=require("fs"); const value=JSON.parse(fs.readFileSync(".buildchain/runtime/dist/site/buildchain-contract.json","utf8")); process.stdout.write(value.contractDigest)')"
+          {
+            echo "source-sha=${source_sha}"
+            echo "runtime-sha=${runtime_sha}"
+            echo "contract-digest=${contract_digest}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create source-check controller plan
+        id: plan
+        run: node .buildchain/runtime/scripts/controller-evidence.mjs --mode plan
+        env:
+          BUILDCHAIN_CONTROLLER_ID: source-check
+          BUILDCHAIN_CONTROLLER_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_CONTROLLER_SOURCE_SHA: ${{ steps.identities.outputs.source-sha }}
+          BUILDCHAIN_CONTROLLER_RUNTIME_REF: ${{ inputs.buildchain-ref || 'v2' }}
+          BUILDCHAIN_CONTROLLER_RUNTIME_SHA: ${{ steps.identities.outputs.runtime-sha }}
+          BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST: ${{ steps.identities.outputs.contract-digest }}
+          BUILDCHAIN_CONTROLLER_INPUTS_JSON: ${{ toJSON(inputs) }}
+          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+
+      - name: Upload source-check controller plan
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-check-controller-plan-${{ steps.identities.outputs.source-sha }}
+          path: .buildchain/controller/plan.json
+          if-no-files-found: error
 
       - uses: actions/setup-node@v6.4.0
         with:
@@ -91,6 +156,7 @@ jobs:
           echo "stage=$stage" >> "$GITHUB_OUTPUT"
 
       - name: Validate declared check lifecycle
+        id: validate
         run: >-
           node .buildchain/runtime/bin/buildchain.mjs validate
           --cwd "${{ inputs.working-directory }}"
@@ -98,6 +164,7 @@ jobs:
           --require-lifecycle-stages install,${{ steps.lifecycle.outputs.stage }}
 
       - name: Run declared install lifecycle
+        id: install
         env:
           BUILDCHAIN_CHECK_MODE: ${{ inputs.mode }}
         run: >-
@@ -109,6 +176,7 @@ jobs:
           --summary-path .buildchain/artifacts/check-install-summary.json
 
       - name: Run selected check lifecycle
+        id: selected-check
         env:
           BUILDCHAIN_CHECK_MODE: ${{ inputs.mode }}
         run: >-
@@ -120,9 +188,38 @@ jobs:
           --summary-path .buildchain/artifacts/check-summary.json
 
       - name: Upload check evidence
+        id: evidence-upload
         if: ${{ inputs.upload-artifacts }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: buildchain-check
           path: .buildchain/artifacts/
           if-no-files-found: error
+
+      - name: Create source-check controller receipt
+        id: receipt
+        if: ${{ always() && steps.plan.outcome == 'success' }}
+        run: node .buildchain/runtime/scripts/controller-evidence.mjs --mode receipt
+        env:
+          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+          BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
+            [{"id":"resolve-runtime","status":"${{ steps.runtime.outcome }}"},{"id":"checkout-source","status":"${{ steps.source.outcome }}"},{"id":"install","status":"${{ steps.install.outcome }}"},{"id":"check","status":"${{ (steps.validate.outcome == 'failure' || steps.selected-check.outcome == 'failure') && 'failure' || (steps.validate.outcome == 'cancelled' || steps.selected-check.outcome == 'cancelled') && 'cancelled' || (steps.validate.outcome == 'success' && steps.selected-check.outcome == 'success') && 'success' || 'skipped' }}"},{"id":"aggregate","status":"${{ (steps.selected-check.outcome == 'failure' || steps.evidence-upload.outcome == 'failure') && 'failure' || (steps.selected-check.outcome == 'cancelled' || steps.evidence-upload.outcome == 'cancelled') && 'cancelled' || (steps.selected-check.outcome == 'success' && (!inputs.upload-artifacts || steps.evidence-upload.outcome == 'success')) && 'success' || 'skipped' }}"}]
+          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ steps.selected-check.outcome == 'success' && '[{"kind":"lifecycle-manifest","path":".buildchain/artifacts/check-manifest.json"},{"kind":"lifecycle-summary","path":".buildchain/artifacts/check-summary.json"}]' || '[]' }}
+          BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ steps.selected-check.outcome == 'success' && '' || 'check-incomplete' }}
+          BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Source check did not complete successfully
+          BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: buildchain-check-controller-receipt-${{ steps.identities.outputs.source-sha }}
+          BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/receipt.json
+
+      - name: Upload source-check controller receipt
+        if: ${{ always() && steps.receipt.outcome == 'success' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-check-controller-receipt-${{ steps.identities.outputs.source-sha }}
+          path: .buildchain/controller/receipt.json
+          if-no-files-found: error
+
+      - name: Enforce qualifying source-check controller receipt
+        if: ${{ always() && steps.plan.outcome == 'success' && steps.receipt.outputs.controller-receipt-qualifying != 'true' }}
+        run: |
+          echo "::error::source-check controller receipt is not qualifying: ${{ steps.receipt.outputs.controller-receipt-status }}"
+          exit 1

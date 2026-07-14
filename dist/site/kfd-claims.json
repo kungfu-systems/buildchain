@@ -14,19 +14,19 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:2090784977bc7d54fc647215ef73532b9db26147a0b40ec3f56c31d611d806cc",
+    "compatibilityDigest": "sha256:2520207c5d6d6a737dd32251a42be9c5299644d9aebf690a8402ead1724ed495",
     "majorLine": "v2"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "618ffc1470959b5f0e5d5061eadb4ed54d1746ef9479c9822d31d41f5e187b15",
+    "sha256": "da49ee5526b44e5e9baa9aa846c35776aa5fcb64fd76e4b6611a4cd517555034",
     "summary": {
       "cliCommandCount": 76,
       "workflowCount": 43,
       "actionCount": 4,
-      "sitePageCount": 47,
+      "sitePageCount": 48,
       "docCommandRefCount": 241,
       "failureCount": 0
     },
@@ -225,12 +225,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "618ffc1470959b5f0e5d5061eadb4ed54d1746ef9479c9822d31d41f5e187b15",
+      "sha256": "da49ee5526b44e5e9baa9aa846c35776aa5fcb64fd76e4b6611a4cd517555034",
       "summary": {
         "cliCommandCount": 76,
         "workflowCount": 43,
         "actionCount": 4,
-        "sitePageCount": 47,
+        "sitePageCount": 48,
         "docCommandRefCount": 241,
         "failureCount": 0
       },
@@ -364,6 +364,18 @@
           "participantFacing": true,
           "public": true,
           "plane": "use"
+        },
+        {
+          "id": "doc:docs/controller-evidence.md",
+          "name": "Controller evidence contract",
+          "kind": "documentation",
+          "sourcePath": "docs/controller-evidence.md",
+          "evidencePath": "docs/controller-evidence.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "verify"
         },
         {
           "id": "doc:docs/homebrew.md",
@@ -809,6 +821,17 @@
           "public": true
         },
         {
+          "id": "schema:packages/core/controller-evidence.js",
+          "name": "schema:packages/core/controller-evidence.js",
+          "kind": "schema",
+          "sourcePath": "packages/core/controller-evidence.js",
+          "evidencePath": "packages/core/controller-evidence.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
           "id": "schema:packages/core/buildchain-kfd-claims.js",
           "name": "schema:packages/core/buildchain-kfd-claims.js",
           "kind": "schema",
@@ -982,6 +1005,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./buildchain-contract"
+        },
+        {
+          "id": "export:./controller-evidence",
+          "name": "@kungfu-tech/buildchain/controller-evidence",
+          "kind": "package-export",
+          "sourcePath": "packages/core/controller-evidence.js",
+          "evidencePath": "packages/core/controller-evidence.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./controller-evidence"
         },
         {
           "id": "export:./diagnostics",
@@ -1295,6 +1330,17 @@
           "kind": "site-consumption-contract",
           "sourcePath": "dist/site/workflow-registry.json",
           "evidencePath": "dist/site/workflow-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
+          "id": "site:dist/site/controller-registry.json",
+          "name": "site:dist/site/controller-registry.json",
+          "kind": "site-consumption-contract",
+          "sourcePath": "dist/site/controller-registry.json",
+          "evidencePath": "dist/site/controller-registry.json",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
@@ -2747,11 +2793,8 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 2,
-          "inputs": [
-            "tag",
-            "upload-release"
-          ],
+          "inputCount": 0,
+          "inputs": [],
           "reverseAuditSource": ".github/workflows"
         },
         {
@@ -2764,10 +2807,8 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 1,
-          "inputs": [
-            "artifact-transfer-mode"
-          ],
+          "inputCount": 0,
+          "inputs": [],
           "reverseAuditSource": ".github/workflows"
         },
         {
@@ -2870,11 +2911,8 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 2,
-          "inputs": [
-            "buildchain-ref",
-            "dry-run"
-          ],
+          "inputCount": 0,
+          "inputs": [],
           "reverseAuditSource": ".github/workflows"
         },
         {
@@ -2887,11 +2925,8 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 2,
-          "inputs": [
-            "buildchain-ref",
-            "dry-run"
-          ],
+          "inputCount": 0,
+          "inputs": [],
           "reverseAuditSource": ".github/workflows"
         },
         {
@@ -2904,11 +2939,8 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 2,
-          "inputs": [
-            "buildchain-ref",
-            "dry-run"
-          ],
+          "inputCount": 0,
+          "inputs": [],
           "reverseAuditSource": ".github/workflows"
         },
         {
@@ -2951,12 +2983,8 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 3,
-          "inputs": [
-            "dry-run",
-            "sha",
-            "target-ref"
-          ],
+          "inputCount": 0,
+          "inputs": [],
           "reverseAuditSource": ".github/workflows"
         },
         {
@@ -2969,12 +2997,8 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 3,
-          "inputs": [
-            "buildchain-ref",
-            "dry-run",
-            "release-now"
-          ],
+          "inputCount": 0,
+          "inputs": [],
           "reverseAuditSource": ".github/workflows"
         },
         {
@@ -2987,11 +3011,8 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 2,
-          "inputs": [
-            "candidate-sha",
-            "dry-run"
-          ],
+          "inputCount": 0,
+          "inputs": [],
           "reverseAuditSource": ".github/workflows"
         },
         {
@@ -3004,13 +3025,8 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 4,
-          "inputs": [
-            "buildchain_ref",
-            "legacy_workflows_ref",
-            "publish",
-            "target_fixture"
-          ],
+          "inputCount": 0,
+          "inputs": [],
           "reverseAuditSource": ".github/workflows"
         },
         {
@@ -3072,11 +3088,8 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 2,
-          "inputs": [
-            "ref",
-            "run-check"
-          ],
+          "inputCount": 0,
+          "inputs": [],
           "reverseAuditSource": ".github/workflows"
         },
         {
@@ -3292,17 +3305,8 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 8,
-          "inputs": [
-            "apply",
-            "create-alpha-pr",
-            "initial-version",
-            "major",
-            "minor",
-            "required-status-check",
-            "set-default-branch",
-            "source-ref"
-          ],
+          "inputCount": 0,
+          "inputs": [],
           "reverseAuditSource": ".github/workflows"
         },
         {
@@ -3371,10 +3375,8 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 1,
-          "inputs": [
-            "enable-legacy-purge"
-          ],
+          "inputCount": 0,
+          "inputs": [],
           "reverseAuditSource": ".github/workflows"
         },
         {
@@ -3866,6 +3868,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:controller-evidence",
+          "name": "site-page:manual:controller-evidence",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:homebrew",
           "name": "site-page:manual:homebrew",
           "kind": "site-page",
@@ -4282,6 +4296,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 275
+    "publicSurfaceCount": 280
   }
 }
