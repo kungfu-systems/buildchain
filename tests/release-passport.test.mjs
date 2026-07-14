@@ -1592,10 +1592,20 @@ test("Buildchain self KFD claims generate enforceable release passport evidence"
 test("binary release passport can merge authoritative Buildchain KFD release-state passport", async () => {
   const root = process.cwd();
   const outputDir = tempDir("buildchain-kfd-base-passport");
+  const sourceSha = "f".repeat(40);
+  const controllerReceiptReference = {
+    controllerId: "build-lifecycle",
+    planDigest: `sha256:${"a".repeat(64)}`,
+    receiptDigest: `sha256:${"b".repeat(64)}`,
+    sourceSha,
+    runtimeSha: sourceSha,
+    status: "passed",
+    artifact: "buildchain-controller-receipt",
+  };
   const generated = generateBuildchainKfdWitnesses({
     cwd: root,
     outputDir,
-    sourceSha: "f".repeat(40),
+    sourceSha,
     emitOutputs: false,
   });
   const output = (name) => path.resolve(root, generated.outputs[name]);
@@ -1608,7 +1618,7 @@ test("binary release passport can merge authoritative Buildchain KFD release-sta
     tag: "v2.8.2",
     repository: "kungfu-systems/buildchain",
     productName: "Buildchain",
-    sourceSha: "f".repeat(40),
+    sourceSha,
     assetsDir: "dist/site",
     outputDir: path.join(outputDir, "release-state-passport"),
     releaseJsonExtra: JSON.stringify({
@@ -1629,6 +1639,7 @@ test("binary release passport can merge authoritative Buildchain KFD release-sta
     kfd2ClaimJsons: outputList("kfd-2-claim-jsons"),
     kfd3PrebuildWitnessJsons: [output("kfd-3-prebuild-witness-jsons")],
     kfd3ArtifactWitnessJsons: [output("kfd-3-artifact-witness-jsons")],
+    controllerReceiptReferences: [controllerReceiptReference],
   });
   const binaryDir = path.join(outputDir, "dist", "binary");
   fs.mkdirSync(binaryDir, { recursive: true });
@@ -1656,6 +1667,7 @@ test("binary release passport can merge authoritative Buildchain KFD release-sta
   assert.equal(passport["kfd-2"].status, "passed");
   assert.equal(passport["kfd-3"].status, "passed");
   assert.equal(passport.release.releaseStateSha, "1".repeat(40));
+  assert.deepEqual(passport.controllerReceipts, [controllerReceiptReference]);
   assert.ok(passport.artifacts.some((artifact) => artifact.name === "buildchain-x86_64-unknown-linux-gnu.tar.gz"));
 });
 
