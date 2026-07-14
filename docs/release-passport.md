@@ -8,6 +8,12 @@ promotion PRs, exact tags, GitHub Releases, npm Trusted Publishing, and
 machine-readable evidence. A project can keep its existing build system and use
 Buildchain to make the release record auditable.
 
+Release-candidate and final passports may also include compact
+`controllerReceipts[]` references. These bind a real reusable-workflow receipt
+to its plan digest, consumer source SHA, and exact Buildchain runtime SHA; they
+do not infer execution evidence from a green job. See
+[`controller-evidence.md`](controller-evidence.md).
+
 ## Contract
 
 The release passport surface is a welded contract. Additive fields are allowed;

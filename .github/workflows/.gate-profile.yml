@@ -112,6 +112,27 @@ on:
       gate-aggregate-status:
         description: "pass or fail"
         value: ${{ jobs.aggregate.outputs.gate-aggregate-status }}
+      controller-plan-artifact:
+        description: "Uploaded Shifu profile envelope controller plan artifact name"
+        value: ${{ jobs.plan.outputs.controller-plan-artifact }}
+      controller-plan-json:
+        description: "Compact source/runtime-bound Shifu profile envelope plan"
+        value: ${{ jobs.plan.outputs.controller-plan-json }}
+      controller-plan-digest:
+        description: "Digest of the Shifu profile envelope controller plan"
+        value: ${{ jobs.plan.outputs.controller-plan-digest }}
+      controller-receipt-artifact:
+        description: "Uploaded Shifu profile envelope controller receipt artifact name"
+        value: ${{ jobs.aggregate.outputs.controller-receipt-artifact }}
+      controller-receipt-json:
+        description: "Compact Shifu profile envelope controller receipt"
+        value: ${{ jobs.aggregate.outputs.controller-receipt-json }}
+      controller-receipt-digest:
+        description: "Digest of the Shifu profile envelope controller receipt"
+        value: ${{ jobs.aggregate.outputs.controller-receipt-digest }}
+      controller-receipt-status:
+        description: "Final Shifu profile envelope controller status"
+        value: ${{ jobs.aggregate.outputs.controller-receipt-status }}
 
 permissions:
   contents: read
@@ -127,6 +148,9 @@ jobs:
       gate-matrix-json: ${{ steps.plan.outputs.gate-matrix-json }}
       gate-matrix-digest: ${{ steps.plan.outputs.gate-matrix-digest }}
       gate-matrix-artifact: ${{ steps.names.outputs.gate-matrix-artifact }}
+      controller-plan-artifact: ${{ steps.controller-names.outputs.controller-plan-artifact }}
+      controller-plan-json: ${{ steps.controller-plan.outputs.controller-plan-json }}
+      controller-plan-digest: ${{ steps.controller-plan.outputs.controller-plan-digest }}
     steps:
       - name: Evaluate event trust
         id: trust
@@ -237,6 +261,42 @@ jobs:
         uses: actions/setup-node@v6.4.0
         with:
           node-version: ${{ inputs.node-version }}
+
+      - name: Resolve controller runtime contract digest
+        if: ${{ steps.trust.outputs.trusted == 'true' }}
+        id: controller-identities
+        run: node -e 'const fs=require("fs"); const value=JSON.parse(fs.readFileSync(".buildchain/runtime/dist/site/buildchain-contract.json","utf8")); fs.appendFileSync(process.env.GITHUB_OUTPUT, "contract-digest="+value.contractDigest+"\n")'
+
+      - name: Create Shifu profile envelope controller plan
+        if: ${{ steps.trust.outputs.trusted == 'true' }}
+        id: controller-plan
+        run: node .buildchain/runtime/scripts/controller-evidence.mjs --mode plan
+        env:
+          BUILDCHAIN_CONTROLLER_ID: shifu-gate-profile-envelope
+          BUILDCHAIN_CONTROLLER_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_CONTROLLER_SOURCE_SHA: ${{ steps.source.outputs.source-sha }}
+          BUILDCHAIN_CONTROLLER_RUNTIME_REF: ${{ steps.runtime.outputs.runtime-ref }}
+          BUILDCHAIN_CONTROLLER_RUNTIME_SHA: ${{ steps.runtime.outputs.runtime-sha }}
+          BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST: ${{ steps.controller-identities.outputs.contract-digest }}
+          BUILDCHAIN_CONTROLLER_INPUTS_JSON: ${{ toJSON(inputs) }}
+          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+
+      - name: Resolve Shifu profile envelope controller plan artifact
+        if: ${{ steps.trust.outputs.trusted == 'true' }}
+        id: controller-names
+        run: echo "controller-plan-artifact=${ARTIFACT_NAME}-controller-plan-${SOURCE_SHA}" >> "$GITHUB_OUTPUT"
+        env:
+          ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          SOURCE_SHA: ${{ steps.source.outputs.source-sha }}
+
+      - name: Upload Shifu profile envelope controller plan
+        if: ${{ steps.trust.outputs.trusted == 'true' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.controller-names.outputs.controller-plan-artifact }}
+          path: .buildchain/controller/plan.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Resolve Shifu Gate plans and runner matrix
         if: ${{ steps.trust.outputs.trusted == 'true' }}
@@ -351,6 +411,10 @@ jobs:
       gate-aggregate-json: ${{ steps.aggregate.outputs.gate-aggregate-json }}
       gate-aggregate-digest: ${{ steps.aggregate.outputs.gate-aggregate-digest }}
       gate-aggregate-status: ${{ steps.aggregate.outputs.gate-aggregate-status }}
+      controller-receipt-artifact: ${{ steps.controller-names.outputs.controller-receipt-artifact }}
+      controller-receipt-json: ${{ steps.controller-receipt.outputs.controller-receipt-json }}
+      controller-receipt-digest: ${{ steps.controller-receipt.outputs.controller-receipt-digest }}
+      controller-receipt-status: ${{ steps.controller-receipt.outputs.controller-receipt-status }}
     steps:
       - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
@@ -370,6 +434,12 @@ jobs:
         with:
           name: ${{ needs.plan.outputs.gate-matrix-artifact }}
           path: .buildchain/gates/plan
+
+      - name: Download Shifu profile envelope controller plan
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ needs.plan.outputs.controller-plan-artifact }}
+          path: .buildchain/controller
 
       - name: Download Shifu Gate receipts
         continue-on-error: true
@@ -406,6 +476,37 @@ jobs:
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
+      - name: Create Shifu profile envelope controller receipt
+        id: controller-receipt
+        if: ${{ always() }}
+        run: node .buildchain/runtime/scripts/controller-evidence.mjs --mode receipt
+        env:
+          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+          BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
+            [{"id":"plan","status":"${{ needs.plan.result }}"},{"id":"execute","status":"${{ needs.run-gates.result }}"},{"id":"aggregate","status":"${{ steps.aggregate.outcome }}"}]
+          BUILDCHAIN_CONTROLLER_EVIDENCE_JSON: ${{ steps.aggregate.outputs.gate-aggregate-digest != '' && format('[{{"kind":"shifu-gate-aggregate","digest":"{0}"}}]', steps.aggregate.outputs.gate-aggregate-digest) || '[]' }}
+          BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ steps.aggregate.outcome == 'success' && '' || 'gate-aggregate-incomplete' }}
+          BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Shifu Gate aggregate did not qualify
+          BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: ${{ inputs.artifact-name }}-controller-receipt-${{ needs.plan.outputs.source-sha }}
+          BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/receipt.json
+
+      - name: Resolve Shifu profile envelope controller receipt artifact
+        id: controller-names
+        if: ${{ always() && steps.controller-receipt.outcome == 'success' }}
+        run: echo "controller-receipt-artifact=${ARTIFACT_NAME}-controller-receipt-${SOURCE_SHA}" >> "$GITHUB_OUTPUT"
+        env:
+          ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          SOURCE_SHA: ${{ needs.plan.outputs.source-sha }}
+
+      - name: Upload Shifu profile envelope controller receipt
+        if: ${{ always() && steps.controller-receipt.outcome == 'success' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.controller-names.outputs.controller-receipt-artifact }}
+          path: .buildchain/controller/receipt.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
       - name: Enforce aggregate qualification
-        if: ${{ steps.aggregate.outcome != 'success' }}
+        if: ${{ steps.aggregate.outcome != 'success' || steps.controller-receipt.outputs.controller-receipt-qualifying != 'true' }}
         run: exit 1

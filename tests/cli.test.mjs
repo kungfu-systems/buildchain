@@ -658,6 +658,35 @@ command = "node -e \\"require('node:fs').mkdirSync('out',{recursive:true});requi
   assert.equal(diagnostics.links.diagnosticsProcessSamples, ".buildchain/artifacts/process-samples.jsonl");
 });
 
+test("lifecycle run honors explicit manifest and summary paths", () => {
+  const cwd = tempDir("lifecycle-output-paths");
+  fs.writeFileSync(path.join(cwd, "buildchain.toml"), `schema = 1
+
+[lifecycle.check]
+command = "node -e \\"process.stdout.write('ok')\\""
+`);
+
+  runBuildchain([
+    "lifecycle",
+    "run",
+    "check",
+    "--cwd",
+    cwd,
+    "--required",
+    "--manifest-path",
+    ".buildchain/artifacts/check-manifest.json",
+    "--summary-path",
+    ".buildchain/artifacts/check-summary.json",
+  ], { cwd });
+
+  const manifestPath = path.join(cwd, ".buildchain", "artifacts", "check-manifest.json");
+  const summaryPath = path.join(cwd, ".buildchain", "artifacts", "check-summary.json");
+  assert.ok(fs.existsSync(manifestPath));
+  assert.ok(fs.existsSync(summaryPath));
+  assert.equal(JSON.parse(fs.readFileSync(manifestPath, "utf8")).lifecycle.stage, "check");
+  assert.equal(JSON.parse(fs.readFileSync(summaryPath, "utf8")).contract, "kungfu-buildchain-artifact-summary");
+});
+
 test("CLI logging writes redacted JSONL events and summaries", () => {
   const cwd = tempDir("logging");
   const logPath = path.join(cwd, ".buildchain", "logs", "events.jsonl");

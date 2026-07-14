@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:b07f54900a72f05a8545d1325951ba5a373e43cc0bdddb628c75cf39d7c7223c",
+      "digest": "sha256:cb4a5547027b38acbffd0359c2c08192b8696f0fff841e24c05ebd887ae05fc5",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:b07f54900a72f05a8545d1325951ba5a373e43cc0bdddb628c75cf39d7c7223c",
+      "digest": "sha256:cb4a5547027b38acbffd0359c2c08192b8696f0fff841e24c05ebd887ae05fc5",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -73,9 +73,22 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-contract",
       "export": "./buildchain-contract",
       "target": "./packages/core/buildchain-contract.js",
-      "digest": "sha256:6eafa1bf4a3970a6831b093cd13dd94a43a566de1082d7309a72b1eed985559d",
+      "digest": "sha256:a7af059ca8fd80a3e12485d3f756276326a1593edc40e3e1518ff709c47399fe",
       "summary": "Runtime contract world and compatibility digest APIs for floating-ref drift checks.",
       "capabilityGroup": "governance-versioning",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/controller-evidence",
+      "export": "./controller-evidence",
+      "target": "./packages/core/controller-evidence.js",
+      "digest": "sha256:e5db8c1534f634c525c00dd81e380157a8d7415e95471474574edd4cf92f0fb7",
+      "summary": "Project-independent controller descriptors, source/runtime-bound plans, receipts, aggregates, and validation APIs.",
+      "capabilityGroup": "reusable-build",
       "audience": [
         "developer",
         "agent"
@@ -177,7 +190,7 @@
       "specifier": "@kungfu-tech/buildchain/public-surface-audit",
       "export": "./public-surface-audit",
       "target": "./packages/core/public-surface-audit.js",
-      "digest": "sha256:62c4b7e30d6f13b32df777c5c7e70d83bcac63b90d4bcbc4a647d8bfc8829850",
+      "digest": "sha256:1a7ab71556fa0c42a9d2c3b4a8613903ee830035a385d487aaa751c4c81b2809",
       "summary": "Reverse audit APIs for CLI, workflow, action, site page, and documentation command surfaces.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -242,7 +255,7 @@
       "specifier": "@kungfu-tech/buildchain/release-candidate",
       "export": "./release-candidate",
       "target": "./packages/core/release-candidate.js",
-      "digest": "sha256:1495e08e7601c2c01922ddcaffcc8dde1ac3e8cdabc83685ffdc18028246cdc6",
+      "digest": "sha256:8d47b3dc103be8056fd2c4adec637efc663896dfd55d27a4642d0ee49ad0ded2",
       "summary": "PR-stage release-candidate artifact, passport, and promote-only resolver APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -268,7 +281,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:54c23c984ab1e63f8fa5310f0106927ea63c6b069219970b9145c31558c47db0",
+      "digest": "sha256:f452026600687ecc266651457a8c1151303210d312f0d16ad16e4c3f414ed170",
       "summary": "Release passport collection, verification, explanation, and evidence APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -307,7 +320,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-kfd-claims",
       "export": "./buildchain-kfd-claims",
       "target": "./packages/core/buildchain-kfd-claims.js",
-      "digest": "sha256:3a13ebd81e23433a3546d553eb55149bbe53ea2158e73b37adb6787661ac1045",
+      "digest": "sha256:41d5d3257bb7052b44d034fb64fdd6f57c637fbdc7b20c93d9f0abd79844252a",
       "summary": "Buildchain self KFD claim registry, witnesses, and public claim APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [
