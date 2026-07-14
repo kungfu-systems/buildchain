@@ -846,24 +846,30 @@ jobs:
           TARGET_REF: ${{ needs.preflight.outputs.target-ref }}
           TARGET_SHA: ${{ needs.preflight.outputs.requested-sha }}
           VERSION: ${{ steps.rc.outputs.release-candidate-version || 'promotion' }}
+          DRY_RUN: ${{ inputs.dry-run }}
         with:
           script: |
             const channel = process.env.CHANNEL;
             const targetRef = process.env.TARGET_REF;
             const targetSha = process.env.TARGET_SHA;
             const versionHint = process.env.VERSION || "promotion";
+            const dryRun = process.env.DRY_RUN === "true";
             const gateRef = channel === "major"
               ? "publish-gate/major"
               : `publish-gate/${channel}/${targetRef.replace(/^(alpha|release)\//, "")}/${versionHint}`;
             const ref = `heads/${gateRef}`;
-            try {
-              const current = await github.rest.git.getRef({ owner: context.repo.owner, repo: context.repo.repo, ref });
-              if (current.data.object.sha !== targetSha) {
-                await github.rest.git.updateRef({ owner: context.repo.owner, repo: context.repo.repo, ref, sha: targetSha, force: true });
+            if (dryRun) {
+              core.notice(`Dry-run would lock ${gateRef} to ${targetSha}`);
+            } else {
+              try {
+                const current = await github.rest.git.getRef({ owner: context.repo.owner, repo: context.repo.repo, ref });
+                if (current.data.object.sha !== targetSha) {
+                  await github.rest.git.updateRef({ owner: context.repo.owner, repo: context.repo.repo, ref, sha: targetSha, force: true });
+                }
+              } catch (error) {
+                if (error.status !== 404) throw error;
+                await github.rest.git.createRef({ owner: context.repo.owner, repo: context.repo.repo, ref: `refs/${ref}`, sha: targetSha });
               }
-            } catch (error) {
-              if (error.status !== 404) throw error;
-              await github.rest.git.createRef({ owner: context.repo.owner, repo: context.repo.repo, ref: `refs/${ref}`, sha: targetSha });
             }
             core.setOutput("ref", gateRef);
             core.setOutput("sha", targetSha);

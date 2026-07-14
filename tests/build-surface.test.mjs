@@ -658,6 +658,9 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-passport-kfd-3-artifact-verify-command:/);
   assert.match(workflow, /release-passport-buildchain-self-kfd:/);
   assert.match(workflow, /release-passport-buildchain-self-kfd: \$\{\{ inputs\.release-passport-buildchain-self-kfd \}\}/);
+  assert.match(workflow, /DRY_RUN: \$\{\{ inputs\.dry-run \}\}/);
+  assert.match(workflow, /const dryRun = process\.env\.DRY_RUN === "true"/);
+  assert.match(workflow, /if \(dryRun\) \{\s+core\.notice\(`Dry-run would lock/);
   assert.match(workflow, /core\.setOutput\("locked", "true"\)/);
   assert.match(workflow, /require-publish-source-lock: "true"/);
   assert.match(workflow, /publish-source-ref: \$\{\{ steps\.publish-gate\.outputs\.ref \}\}/);
