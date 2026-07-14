@@ -44,6 +44,22 @@ function githubJsonOptional(apiPath, label, fallback) {
   }
 }
 
+function githubJsonReadLimited(apiPath, label, fallback) {
+  const result = spawnSync("gh", ["api", apiPath, "-H", "Accept: application/vnd.github+json"], {
+    encoding: "utf8",
+    timeout: 60_000,
+  });
+  if (result.status !== 0) {
+    if (/401|403|404|unauthorized|forbidden|not found/i.test(`${result.stdout}\n${result.stderr}`)) return fallback;
+    throw new Error(`${label} is unavailable; publication control-plane audit fails closed`);
+  }
+  try {
+    return JSON.parse(result.stdout);
+  } catch {
+    throw new Error(`${label} did not return JSON; publication control-plane audit fails closed`);
+  }
+}
+
 function rulesetIncludesBranch(ruleset, branch, defaultBranch) {
   const includes = ruleset.conditions?.ref_name?.include || [];
   const excludes = ruleset.conditions?.ref_name?.exclude || [];
@@ -179,6 +195,7 @@ function main() {
   const environment = flag("environment", "none");
   const providerEnvironment = environment === "none" ? "" : environment;
   const branch = flag("branch");
+  const sourceSha = flag("source-sha").toLowerCase();
   const packageName = flag("package", "@kungfu-tech/buildchain");
   const publisherMode = flag("publisher-mode", "npm-trusted-publisher");
   if (!repository || !branch) throw new Error("--repository and --branch are required");
@@ -198,7 +215,11 @@ function main() {
     !/permissions\s*:\s*write-all/i.test(workflowHeader);
 
   const repositoryState = githubJson(`repos/${repository}`, "repository metadata");
-  const protection = githubJsonOptional(`repos/${repository}/branches/${encodeURIComponent(branch)}/protection`, "branch protection", null);
+  const branchState = githubJson(`repos/${repository}/branches/${encodeURIComponent(branch)}`, "branch summary");
+  const exactTransactionSource = /^[0-9a-f]{40}$/.test(sourceSha);
+  const protection = exactTransactionSource
+    ? null
+    : githubJsonReadLimited(`repos/${repository}/branches/${encodeURIComponent(branch)}/protection`, "branch protection", null);
   const rulesetList = githubJsonOptional(`repos/${repository}/rulesets?includes_parents=true&per_page=100`, "repository rulesets", []);
   const rulesets = [];
   for (const entry of Array.isArray(rulesetList) ? rulesetList : []) {
@@ -220,6 +241,70 @@ function main() {
     /^\s*(?:NODE_AUTH_TOKEN|NPM_TOKEN|npm-token|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY)\s*:/im.test(block) ||
     /\$\{\{\s*secrets\.(?:NODE_AUTH_TOKEN|NPM_TOKEN|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY)\b/im.test(block)
   );
+  const rulesetBranchPolicy = normalizeRulesetBranchPolicy(rulesets, branch, repositoryState.default_branch);
+  let branchPolicy;
+  if (protection) {
+    branchPolicy = {
+      ref: branch,
+      policyMode: "branch-protection",
+      strict: protection.required_status_checks?.strict === true,
+      requiredApprovals: protection.required_pull_request_reviews?.required_approving_review_count || 0,
+      requireConversationResolution: protection.required_conversation_resolution?.enabled === true,
+      enforceAdmins: protection.enforce_admins?.enabled === true,
+      observedRulesetCount: rulesets.length,
+    };
+  } else if (rulesetBranchPolicy.rulesetCount > 0) {
+    branchPolicy = rulesetBranchPolicy;
+  } else {
+    if (!/^[0-9a-f]{40}$/.test(sourceSha)) {
+      throw new Error("--source-sha is required when detailed branch policy is not readable");
+    }
+    const pullRequests = githubJson(`repos/${repository}/commits/${sourceSha}/pulls`, "source pull-request lineage");
+    const mergedPullRequest = (Array.isArray(pullRequests) ? pullRequests : []).find((entry) =>
+      entry?.merged_at &&
+      entry.merge_commit_sha === sourceSha &&
+      entry.base?.ref === branch &&
+      entry.head?.repo?.full_name === repository
+    );
+    const reviews = mergedPullRequest
+      ? githubJson(`repos/${repository}/pulls/${mergedPullRequest.number}/reviews?per_page=100`, "source pull-request reviews")
+      : [];
+    const latestReviews = new Map();
+    for (const review of Array.isArray(reviews) ? reviews : []) {
+      const login = String(review?.user?.login || "");
+      if (login) latestReviews.set(login, review);
+    }
+    const independentApprovals = [...latestReviews.values()].filter((review) =>
+      review.state === "APPROVED" && review.user?.login !== mergedPullRequest?.user?.login
+    );
+    const checkRuns = githubJson(`repos/${repository}/commits/${sourceSha}/check-runs?per_page=100`, "source check runs");
+    const requiredStatusCheckPolicy = branchState.protection?.required_status_checks || {};
+    const requiredStatusChecks = requiredStatusCheckPolicy.contexts || [];
+    const requiredCheckSource = (requiredStatusCheckPolicy.checks || []).find((entry) => entry.context === "check");
+    branchPolicy = {
+      ref: branch,
+      policyMode: "provider-enforced-transaction",
+      protected: branchState.protected === true,
+      enforcementLevel: branchState.protection?.required_status_checks?.enforcement_level || "",
+      requiredStatusChecks,
+      requiredCheckPassed: (checkRuns.check_runs || []).some((entry) =>
+        entry.name === "check" &&
+        entry.conclusion === "success" &&
+        (!requiredCheckSource?.app_id || entry.app?.id === requiredCheckSource.app_id)
+      ),
+      requiredCheckAppId: requiredCheckSource?.app_id || 0,
+      sourceSha,
+      headSha: String(branchState.commit?.sha || "").toLowerCase(),
+      mergedPullRequest: Boolean(mergedPullRequest),
+      pullRequestNumber: mergedPullRequest?.number || 0,
+      baseRef: mergedPullRequest?.base?.ref || "",
+      headRepository: mergedPullRequest?.head?.repo?.full_name || "",
+      approvalCount: independentApprovals.length,
+      independentApproval: independentApprovals.length > 0,
+      configurationRead: false,
+      evidenceSource: "public-provider-transaction",
+    };
+  }
   let publisher;
   if (publisherMode === "npm-trusted-publisher") {
     const trust = readJsonValue(flag("npm-trust-json"), "--npm-trust-json");
@@ -273,15 +358,7 @@ function main() {
         canApprovePullRequestReviews: false,
         evidenceSource: "exact-workflow-source",
       },
-      branch: protection ? {
-        ref: branch,
-        policyMode: "branch-protection",
-        strict: protection.required_status_checks?.strict === true,
-        requiredApprovals: protection.required_pull_request_reviews?.required_approving_review_count || 0,
-        requireConversationResolution: protection.required_conversation_resolution?.enabled === true,
-        enforceAdmins: protection.enforce_admins?.enabled === true,
-        observedRulesetCount: rulesets.length,
-      } : normalizeRulesetBranchPolicy(rulesets, branch, repositoryState.default_branch),
+      branch: branchPolicy,
       environment: {
         name: environment === "none" ? "none" : environmentState.name || environment,
         declared: environmentDeclared,

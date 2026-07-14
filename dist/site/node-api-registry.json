@@ -255,7 +255,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-control-plane-audit",
       "export": "./publication-control-plane-audit",
       "target": "./packages/core/publication-control-plane-audit.js",
-      "digest": "sha256:abef8253ea00458db7f40abb43752c135dc6cbda63da438653020b55577047f5",
+      "digest": "sha256:9e34235fe4a07631b617f3325bb7a983053699c47a1263e3917175d8f1c51758",
       "summary": "Read-only publication control-plane snapshot evaluation APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [

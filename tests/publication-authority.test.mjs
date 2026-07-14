@@ -437,13 +437,61 @@ test("control-plane snapshot explicitly qualifies caller-bound npm publishing wi
     snapshot: {
       actions: { defaultWorkflowPermissions: "read", canApprovePullRequestReviews: false },
       branch: { ref: "dev/v2/v2.12", strict: true, requiredApprovals: 1, requireConversationResolution: true, enforceAdmins: true },
+    environment: { name: "none", declared: false, exists: false, protected: false },
+    oidc: { workflowPath: ".github/workflows/buildchain-ref-promotion.yml", environment: "", idTokenJobScoped: true, longLivedCredentialPresent: false },
+    publisher: { packageName: "@kungfu-tech/buildchain", provider: "github", repository: "kungfu-systems/buildchain", workflowFilename: "buildchain-ref-promotion.yml", environment: "", allowPublish: false, enforcement: "provider-at-transaction", authorizationDeferred: true, configurationRead: false, longLivedWorkflowCredentialPresent: false },
+    runner: { class: "ephemeral", label: "ubuntu-24.04", githubHosted: true, selfHostedAuthorized: false },
+    },
+  });
+  assert.equal(receipt.facts.every((entry) => entry.status === "pass"), true);
+});
+
+test("control-plane snapshot qualifies an exact provider-enforced protected-branch transaction", () => {
+  const sourceSha = "a".repeat(40);
+  const common = {
+    repository: "kungfu-systems/buildchain",
+    workflowPath: ".github/workflows/release-candidate-promote.yml",
+    publisherWorkflowPath: ".github/workflows/buildchain-ref-promotion.yml",
+    environment: "none",
+    branch: "alpha/v2/v2.12",
+    packageName: "@kungfu-tech/buildchain",
+    observedAt: "2026-07-14T00:00:00.000Z",
+    expiresAt: "2026-07-14T00:10:00.000Z",
+  };
+  const snapshot = {
+    actions: { defaultWorkflowPermissions: "read", canApprovePullRequestReviews: false },
+    branch: {
+      ref: "alpha/v2/v2.12",
+      policyMode: "provider-enforced-transaction",
+      protected: true,
+      enforcementLevel: "everyone",
+      requiredStatusChecks: ["check"],
+      requiredCheckPassed: true,
+      sourceSha,
+      headSha: sourceSha,
+      mergedPullRequest: true,
+      baseRef: "alpha/v2/v2.12",
+      headRepository: "kungfu-systems/buildchain",
+      approvalCount: 1,
+      independentApproval: true,
+      configurationRead: false,
+    },
       environment: { name: "none", declared: false, exists: false, protected: false },
       oidc: { workflowPath: ".github/workflows/buildchain-ref-promotion.yml", environment: "", idTokenJobScoped: true, longLivedCredentialPresent: false },
       publisher: { packageName: "@kungfu-tech/buildchain", provider: "github", repository: "kungfu-systems/buildchain", workflowFilename: "buildchain-ref-promotion.yml", environment: "", allowPublish: false, enforcement: "provider-at-transaction", authorizationDeferred: true, configurationRead: false, longLivedWorkflowCredentialPresent: false },
       runner: { class: "ephemeral", label: "ubuntu-24.04", githubHosted: true, selfHostedAuthorized: false },
+  };
+  const receipt = evaluatePublicationControlPlaneSnapshot({ ...common, snapshot });
+  assert.equal(receipt.facts.every((entry) => entry.status === "pass"), true);
+
+  const drifted = evaluatePublicationControlPlaneSnapshot({
+    ...common,
+    snapshot: {
+      ...snapshot,
+      branch: { ...snapshot.branch, approvalCount: 0, independentApproval: false },
     },
   });
-  assert.equal(receipt.facts.every((entry) => entry.status === "pass"), true);
+  assert.equal(drifted.facts.find((entry) => entry.id === "branch-policy").status, "fail");
 });
 
 test("control-plane snapshot audit supports scoped GitHub tokens and sanitized OIDC roles", () => {
