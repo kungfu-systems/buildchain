@@ -143,6 +143,9 @@ inputs:
   github-release:
     description: "Create/update the public GitHub Release and upload publish evidence plus release passport assets after a complete release transaction"
     default: "false"
+  github-release-artifact-paths:
+    description: "Newline-separated declared product artifact paths to upload alongside GitHub Release evidence"
+    default: ""
   github-release-title:
     description: "Optional GitHub Release title. Empty defaults to the public release tag."
     default: ""

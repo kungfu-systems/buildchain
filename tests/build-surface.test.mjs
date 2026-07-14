@@ -487,6 +487,9 @@ test("paper release workflow publishes declared npm package with source lock and
   assert.match(workflow, /release-passport-product-name: \$\{\{ inputs\.release-passport-product-name \|\| steps\.package\.outputs\.package-name \}\}/);
   assert.match(workflow, /github-release:/);
   assert.match(workflow, /github-release: \$\{\{ inputs\.github-release \}\}/);
+  assert.match(workflow, /publicationManifest\.artifacts/);
+  assert.match(workflow, /writeMultiline\("github-release-artifact-paths", releaseArtifactPaths\)/);
+  assert.match(workflow, /github-release-artifact-paths: \$\{\{ steps\.package\.outputs\.github-release-artifact-paths \}\}/);
   assert.match(workflow, /permissions:\n  contents: read/);
   assert.match(workflow, /name: Seal paper publication capability/);
   assert.match(workflow, /permissions:\n      checks: write\n      contents: write\n      id-token: write/);
@@ -2145,6 +2148,7 @@ test("promote-buildchain-ref owns semver GitHub Release publication", () => {
   );
 
   assert.match(action, /github-release:/);
+  assert.match(action, /github-release-artifact-paths:/);
   assert.match(action, /github-release-title:/);
   assert.match(action, /github-release-notes:/);
   assert.match(action, /public-release-tag:/);
@@ -2153,6 +2157,7 @@ test("promote-buildchain-ref owns semver GitHub Release publication", () => {
   assert.match(source, /ensureGitHubRelease/);
   assert.match(source, /publishGitHubReleaseEvidence/);
   assert.match(source, /collectGitHubReleaseEvidenceAssets/);
+  assert.match(source, /duplicate asset basename/);
   assert.match(source, /uploadReleaseAsset/);
   assert.match(source, /transaction-state.*complete/s);
   assert.match(source, /finalizationNeeded !== true/);

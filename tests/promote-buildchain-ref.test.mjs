@@ -589,6 +589,7 @@ test("promote action collects GitHub Release evidence assets fail-closed", () =>
     ".buildchain/release-evidence/v1.0.0/evidence.json": { ok: true },
     ".buildchain/release-passport/buildchain.release.json": { release: { tag: "v1.0.0" } },
     ".buildchain/release-passport/evidence.json": { passport: true },
+    "dist/paper.pdf": "paper bytes",
   });
 
   assert.deepEqual(
@@ -596,11 +597,13 @@ test("promote action collects GitHub Release evidence assets fail-closed", () =>
       publishEvidencePath: path.join(cwd, ".buildchain/release-evidence/v1.0.0/evidence.json"),
       releasePassportPath: path.join(cwd, ".buildchain/release-passport/buildchain.release.json"),
       releasePassportOutputDir: path.join(cwd, ".buildchain/release-passport"),
+      additionalAssetPaths: [path.join(cwd, "dist/paper.pdf")],
     }).map((entry) => path.relative(cwd, entry).split(path.sep).join("/")),
     [
       ".buildchain/release-evidence/v1.0.0/evidence.json",
       ".buildchain/release-passport/buildchain.release.json",
       ".buildchain/release-passport/evidence.json",
+      "dist/paper.pdf",
     ],
   );
 
@@ -612,6 +615,26 @@ test("promote action collects GitHub Release evidence assets fail-closed", () =>
     }),
     /requires a publish evidence file/,
   );
+
+  assert.throws(
+    () => collectGitHubReleaseEvidenceAssets({
+      publishEvidencePath: path.join(cwd, ".buildchain/release-evidence/v1.0.0/evidence.json"),
+      releasePassportPath: path.join(cwd, ".buildchain/release-passport/buildchain.release.json"),
+      releasePassportOutputDir: path.join(cwd, ".buildchain/release-passport"),
+      additionalAssetPaths: [path.join(cwd, "dist/missing.pdf")],
+    }),
+    /requires a declared GitHub Release artifact/,
+  );
+
+  assert.throws(
+    () => collectGitHubReleaseEvidenceAssets({
+      publishEvidencePath: path.join(cwd, ".buildchain/release-evidence/v1.0.0/evidence.json"),
+      releasePassportPath: path.join(cwd, ".buildchain/release-passport/buildchain.release.json"),
+      releasePassportOutputDir: path.join(cwd, ".buildchain/release-passport"),
+      additionalAssetPaths: [path.join(cwd, ".buildchain/release-passport/buildchain.release.json")],
+    }),
+    /duplicate asset basename 'buildchain\.release\.json'/,
+  );
 });
 
 test("promote action publishes semver GitHub Release evidence assets", async (t) => {
@@ -619,6 +642,7 @@ test("promote action publishes semver GitHub Release evidence assets", async (t)
     ".buildchain/release-evidence/v1.0.1-alpha.0/evidence.json": { ok: true },
     ".buildchain/release-passport/buildchain.release.json": { release: { tag: "v1.0.1-alpha.0" } },
     ".buildchain/release-passport/kfd-2.json": { ok: true },
+    "dist/paper.pdf": "paper bytes",
   });
   const uploaded = [];
   const deleted = [];
@@ -671,15 +695,17 @@ test("promote action publishes semver GitHub Release evidence assets", async (t)
     publishEvidencePath: path.join(cwd, ".buildchain/release-evidence/v1.0.1-alpha.0/evidence.json"),
     releasePassportPath: path.join(cwd, ".buildchain/release-passport/buildchain.release.json"),
     releasePassportOutputDir: path.join(cwd, ".buildchain/release-passport"),
+    additionalAssetPaths: [path.join(cwd, "dist/paper.pdf")],
   });
 
   assert.equal(result.action, "created");
-  assert.equal(result.assetCount, 3);
+  assert.equal(result.assetCount, 4);
   assert.deepEqual(deleted, [7]);
   assert.deepEqual(uploaded.map((asset) => asset.name), [
     "evidence.json",
     "buildchain.release.json",
     "kfd-2.json",
+    "paper.pdf",
   ]);
 });
 

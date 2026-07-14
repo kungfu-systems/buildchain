@@ -678,12 +678,25 @@ jobs:
             const marker = `EOF_${name}_${Date.now()}`;
             fs.appendFileSync(output, `${name}<<${marker}\n${JSON.stringify(value)}\n${marker}\n`);
           };
+          const writeMultiline = (name, values) => {
+            const marker = `EOF_${name}_${Date.now()}`;
+            fs.appendFileSync(output, `${name}<<${marker}\n${values.join("\n")}\n${marker}\n`);
+          };
+          const publicationManifest = JSON.parse(fs.readFileSync(
+            path.join(process.cwd(), ".buildchain/publication/publication-artifact.json"),
+            "utf8",
+          ));
+          const releaseArtifactPaths = [...new Set((publicationManifest.artifacts || [])
+            .map((artifact) => artifact.path)
+            .filter(Boolean))]
+            .map((artifactPath) => path.resolve(process.cwd(), artifactPath));
           write("package-dir", result.outputDir);
           write("package-name", result.package.name);
           write("package-version", result.package.version);
           write("dist-tag", distTag);
           write("exact-tag", `v${result.package.version}`);
           writeJson("publish-required-artifacts-json", requiredArtifacts);
+          writeMultiline("github-release-artifact-paths", releaseArtifactPaths);
           NODE
 
       - name: Resolve target
@@ -791,6 +804,7 @@ jobs:
           release-passport-platform-manifest-paths: ${{ inputs.working-directory }}/.buildchain/publication/publication-artifact.json
           release-passport-impact-json: ${{ inputs.release-passport-impact-json }}
           github-release: ${{ inputs.github-release }}
+          github-release-artifact-paths: ${{ steps.package.outputs.github-release-artifact-paths }}
           github-release-title: ${{ inputs.github-release-title }}
           github-release-notes: ${{ inputs.github-release-notes }}
 
