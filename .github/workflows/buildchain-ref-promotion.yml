@@ -72,12 +72,13 @@ jobs:
           github.event.workflow_run.conclusion == 'success' &&
           github.event.workflow_run.event == 'push' &&
           (
+            startsWith(github.event.workflow_run.head_branch, 'alpha/') ||
             startsWith(github.event.workflow_run.head_branch, 'release/') ||
-            (
-              !startsWith(github.event.workflow_run.display_title, 'Prepare v') &&
-              !startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v')
-            )
+            github.event.workflow_run.head_branch == 'publish-gate/major' ||
+            github.event.workflow_run.head_branch == 'major-gate'
           ) &&
+          !startsWith(github.event.workflow_run.display_title, 'Prepare v') &&
+          !startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v') &&
           !startsWith(github.event.workflow_run.display_title, 'chore(release): release v')
         )
       }}
@@ -116,4 +117,9 @@ jobs:
       publication-gate-aggregate-json: ${{ inputs['publication-gate-aggregate-json'] || '' }}
       publication-expected-json: ${{ inputs['publication-expected-json'] || '' }}
       publication-used-nonces-json: ${{ inputs['publication-used-nonces-json'] || '[]' }}
+      publication-auto-admission: ${{ github.event_name == 'workflow_run' }}
+      publication-publisher-workflow-path: .github/workflows/buildchain-ref-promotion.yml
+      publication-product: Buildchain
+      publication-target: npm:@kungfu-tech/buildchain
+      publication-package-name: "@kungfu-tech/buildchain"
       dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs['dry-run'] == 'true' }}

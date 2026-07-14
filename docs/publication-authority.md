@@ -90,11 +90,31 @@ supplying sanitized `npm trust list --json` output with `--npm-trust-json`. This
 changes the publisher fact to `audited-control-plane`; the workflow never runs
 `npm trust list` itself and never receives that auditor's npm credential.
 
+The credential-free collector proves effective Actions and runner scope from
+the publication workflow fetched at `--workflow-ref`: explicit read-only
+workflow defaults, job-scoped write/OIDC permissions, and an exact GitHub-hosted
+runner label. It does not call repository Actions-default or self-hosted-runner
+administration endpoints. Branch/ruleset and OIDC subject facts remain live
+read-only provider queries. This avoids turning a repository-admin token into a
+publication prerequisite.
+
 For non-dry-run workflows, missing admission, runner, control-plane, Gate, or
 expected-binding evidence is rejected before Buildchain downloads candidate
 artifacts. The denial explicitly records that npm Trusted Publishing and OIDC
 were not evaluated, so downstream diagnostics cannot misclassify an admission
 assembly failure as an npm authentication failure.
+
+Buildchain's own `workflow_run` promotion lane may assemble those inputs only
+for `kungfu-systems/buildchain`. It downloads the exact prior RC passport,
+summary, referenced controller receipt, manifests, and product payloads; proves
+the admitted channel commit has the same Git tree as the RC; performs the live
+read-only control-plane audit; records the GitHub-hosted job as ephemeral runner
+provenance; and creates an explicit Buildchain-owned no-Gate decision. The
+independent verifier then recomputes every receipt and payload digest exactly as
+it does for externally supplied admission. The self-assembly mode rejects other
+repositories, unknown refs, non-exact source SHAs, and any caller other than
+`.github/workflows/buildchain-ref-promotion.yml`. Manual apply and external
+consumer workflows still require their own explicit admission inputs.
 
 Evidence publication is a separate authority class and never grants product
 publication.
@@ -122,6 +142,7 @@ buildchain audit publication-control-plane \
   --repository kungfu-systems/buildchain \
   --branch dev/v2/v2.12 \
   --workflow .github/workflows/release-candidate-promote.yml \
+  --workflow-ref <exact-buildchain-sha> \
   --publisher-workflow .github/workflows/buildchain-ref-promotion.yml \
   --job promote \
   --environment none
