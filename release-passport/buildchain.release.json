@@ -60,7 +60,7 @@
     "treeEquivalent": true,
     "publishToolingSha": "023c8e83f89e34e603c8f82ceec7bb9e89fc9e78",
     "releaseStateRef": "refs/heads/buildchain/release-state/2-12-7-alpha-4",
-    "releaseStateSha": "",
+    "releaseStateSha": "760539e8eb8ac828597419137b5435d3a23f01b5",
     "package": {
       "name": "@kungfu-tech/buildchain",
       "version": "2.12.7-alpha.4"
