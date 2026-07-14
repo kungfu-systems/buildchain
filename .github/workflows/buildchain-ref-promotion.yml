@@ -35,6 +35,10 @@ on:
         description: "Fresh external control-plane audit receipt JSON"
         required: false
         default: ""
+      publication-gate-aggregate-json:
+        description: "Qualifying Shifu Gate aggregate or explicit consumer-owned no-Gate decision"
+        required: false
+        default: ""
       publication-expected-json:
         description: "Independent exact publication bindings JSON"
         required: false
@@ -109,6 +113,7 @@ jobs:
       publication-admission-json: ${{ inputs['publication-admission-json'] || '' }}
       publication-runner-provenance-json: ${{ inputs['publication-runner-provenance-json'] || '' }}
       publication-control-plane-audit-json: ${{ inputs['publication-control-plane-audit-json'] || '' }}
+      publication-gate-aggregate-json: ${{ inputs['publication-gate-aggregate-json'] || '' }}
       publication-expected-json: ${{ inputs['publication-expected-json'] || '' }}
       publication-used-nonces-json: ${{ inputs['publication-used-nonces-json'] || '[]' }}
       dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs['dry-run'] == 'true' }}

@@ -219,11 +219,18 @@
         "buildchain-repository",
         "control-plane-audit-json",
         "dry-run",
+        "evidence-manifest-pattern",
+        "evidence-passport-artifact",
+        "evidence-payload-pattern",
+        "evidence-repository",
+        "evidence-run-id",
+        "evidence-summary-artifact",
         "expected-json",
+        "gate-aggregate-json",
         "runner-provenance-json",
         "used-nonces-json"
       ],
-      "inputCount": 8,
+      "inputCount": 15,
       "secrets": [],
       "secretCount": 0,
       "outputs": [
@@ -1234,6 +1241,7 @@
         "publication-admission-json",
         "publication-control-plane-audit-json",
         "publication-expected-json",
+        "publication-gate-aggregate-json",
         "publication-runner-provenance-json",
         "publication-used-nonces-json",
         "publish-artifact-kind",
@@ -1264,7 +1272,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 49,
+      "inputCount": 50,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",

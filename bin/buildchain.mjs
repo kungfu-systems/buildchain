@@ -150,6 +150,7 @@ function usage() {
                           --registry-json <file-or-json>
                           --runner-json <file-or-json>
                           --control-plane-audit-json <file-or-json>
+                          --publication-evidence-json <file-or-json>
                           [--expected-json <file-or-json>] [--used-nonce <nonce>]... [--json]
   buildchain audit publication-control-plane --repository <owner/repo> --branch <protected-branch>
                           [--workflow-repository <owner/repo>] [--workflow <path>]
@@ -1697,7 +1698,7 @@ async function main(argv = process.argv.slice(2)) {
     const [subcommand = "", location = "", ...verifyArgs] = args;
     if (subcommand === "publication-admission") {
       if (!location) {
-        throw new Error("usage: buildchain verify publication-admission <file-or-json> --registry-json <file-or-json> --runner-json <file-or-json> --control-plane-audit-json <file-or-json>");
+        throw new Error("usage: buildchain verify publication-admission <file-or-json> --registry-json <file-or-json> --runner-json <file-or-json> --control-plane-audit-json <file-or-json> --publication-evidence-json <file-or-json>");
       }
       const requiredInput = (name) => {
         const value = readFlag(verifyArgs, name, "");
@@ -1710,6 +1711,7 @@ async function main(argv = process.argv.slice(2)) {
         registry: requiredInput("registry-json"),
         runnerProvenance: requiredInput("runner-json"),
         controlPlaneAudit: requiredInput("control-plane-audit-json"),
+        publicationEvidence: requiredInput("publication-evidence-json"),
         expected: expectedInput ? readJsonInput(expectedInput, { label: "expected-json" }) : {},
         usedNonces: readRepeatedFlag(verifyArgs, "used-nonce"),
       });
