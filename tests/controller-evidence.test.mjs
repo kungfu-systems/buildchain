@@ -13,7 +13,10 @@ import {
   validateControllerReceipt,
   validateControllerReceiptReference,
 } from "../packages/core/controller-evidence.js";
-import { selectWorkflowCallInputs } from "../scripts/controller-evidence.mjs";
+import {
+  resolveControllerInputBoundary,
+  selectWorkflowCallInputs,
+} from "../scripts/controller-evidence.mjs";
 
 const SOURCE_SHA = "a".repeat(40);
 const RUNTIME_SHA = "b".repeat(40);
@@ -112,12 +115,27 @@ test("controller plans fail closed for undeclared inputs", () => {
 });
 
 test("workflow-call controller adapters exclude caller ambient inputs", () => {
-  const inputs = selectWorkflowCallInputs(descriptor("web-surface"), {
+  const workflowDescriptor = descriptor("web-surface");
+  const inputs = selectWorkflowCallInputs(workflowDescriptor, {
     "build-command": "pnpm run build",
     buildchain_ref: RUNTIME_SHA,
   });
 
+  assert.equal(resolveControllerInputBoundary(workflowDescriptor), "workflow-call");
+  assert.equal(resolveControllerInputBoundary(workflowDescriptor, "strict"), "strict");
   assert.deepEqual(inputs, { "build-command": "pnpm run build" });
+});
+
+test("controller input boundaries remain strict without workflow-call provenance", () => {
+  assert.equal(resolveControllerInputBoundary({
+    inputs: {
+      mode: { classification: "included", source: "environment" },
+    },
+  }), "strict");
+  assert.throws(
+    () => resolveControllerInputBoundary(descriptor("web-surface"), "ambient"),
+    /unsupported controller input boundary/,
+  );
 });
 
 test("controller receipts preserve pass, fail, skip, and partial outcomes", () => {
