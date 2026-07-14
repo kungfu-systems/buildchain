@@ -109,6 +109,9 @@ test("public reusable controllers expose source-bound plan and always-aggregated
     assert.match(source, /BUILDCHAIN_CONTROLLER_SOURCE_SHA:/, `${workflow} must bind the consumer source SHA`);
     assert.match(source, /BUILDCHAIN_CONTROLLER_RUNTIME_SHA:/, `${workflow} must bind the Buildchain runtime SHA`);
     assert.match(source, /BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST:/, `${workflow} must bind the runtime contract digest`);
+    if (source.includes("BUILDCHAIN_CONTROLLER_INPUTS_JSON: ${{ toJSON(inputs) }}")) {
+      assert.match(source, /BUILDCHAIN_CONTROLLER_INPUT_BOUNDARY: workflow-call/, `${workflow} must isolate caller ambient inputs`);
+    }
     assert.match(source, /if: \$\{\{ always\(\)/, `${workflow} must aggregate controller outcomes with always()`);
     assert.match(source, /controller-receipt-qualifying != 'true'/, `${workflow} must fail closed on a nonqualifying receipt`);
   }

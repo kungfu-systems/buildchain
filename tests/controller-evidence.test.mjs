@@ -13,6 +13,7 @@ import {
   validateControllerReceipt,
   validateControllerReceiptReference,
 } from "../packages/core/controller-evidence.js";
+import { selectWorkflowCallInputs } from "../scripts/controller-evidence.mjs";
 
 const SOURCE_SHA = "a".repeat(40);
 const RUNTIME_SHA = "b".repeat(40);
@@ -108,6 +109,15 @@ test("controller plans fail closed for undeclared inputs", () => {
     () => plan({ inputs: { "undeclared-input": true } }),
     /undeclared controller input/,
   );
+});
+
+test("workflow-call controller adapters exclude caller ambient inputs", () => {
+  const inputs = selectWorkflowCallInputs(descriptor("web-surface"), {
+    "build-command": "pnpm run build",
+    buildchain_ref: RUNTIME_SHA,
+  });
+
+  assert.deepEqual(inputs, { "build-command": "pnpm run build" });
 });
 
 test("controller receipts preserve pass, fail, skip, and partial outcomes", () => {
