@@ -975,6 +975,16 @@ jobs:
         with:
           node-version: ${{ inputs.node-version }}
 
+      - name: Expose Windows runner user toolchain
+        if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
+        run: Add-Content -LiteralPath $env:GITHUB_PATH -Value (Join-Path $HOME ".local\bin")
+
+      - name: Expose POSIX runner user toolchain
+        if: ${{ runner.os != 'Windows' }}
+        shell: bash
+        run: echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
+
       - name: Setup Rust toolchain on Windows
         if: ${{ inputs.setup-rust && runner.os == 'Windows' }}
         shell: cmd

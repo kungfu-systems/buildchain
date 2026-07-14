@@ -1920,6 +1920,23 @@ test("reusable build exposes release-candidate passport outputs", () => {
   assert.match(workflow, /<artifact-name>-release-candidate-|release-candidate-/);
 });
 
+test("reusable build exposes runner-local tools before lifecycle execution", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/.build.yml"),
+    "utf8",
+  );
+
+  assert.match(workflow, /name: Expose Windows runner user toolchain/);
+  assert.match(workflow, /Join-Path \$HOME "\.local\\bin"/);
+  assert.match(workflow, /name: Expose POSIX runner user toolchain/);
+  assert.match(workflow, /\$\{HOME\}\/\.local\/bin/);
+  const nativeBuild = workflow.slice(workflow.indexOf("  build-native:"));
+  assert.ok(
+    nativeBuild.indexOf("name: Expose Windows runner user toolchain") <
+      nativeBuild.indexOf("name: Install Buildchain runtime dependencies"),
+  );
+});
+
 test("reusable Shifu Gate workflow keeps project policy outside Buildchain", () => {
   const workflow = fs.readFileSync(
     path.join(root, ".github/workflows/.gate-profile.yml"),
