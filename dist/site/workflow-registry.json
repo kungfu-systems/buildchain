@@ -1289,11 +1289,12 @@
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
         "BUILDCHAIN_ISSUE_TOKEN",
+        "BUILDCHAIN_PROMOTION_TOKEN",
         "buildchain-issue-app-id",
         "buildchain-issue-app-private-key",
         "buildchain-issue-token"
       ],
-      "secretCount": 6,
+      "secretCount": 7,
       "outputs": [
         "built-source-sha",
         "controller-plan-artifact",
