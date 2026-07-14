@@ -122,6 +122,7 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   assert.match(channelRouter, /router-ref: \$\{\{ steps\.router\.outputs\.ref \}\}/);
   assert.match(channelRouter, /Checkout Buildchain controller workflow shell/);
   assert.match(channelRouter, /\.buildchain\/controller-runtime\/scripts\/controller-evidence\.mjs/);
+  assert.match(channelRouter, /BUILDCHAIN_CONTROLLER_REGISTRY: \.buildchain\/controller-runtime\/dist\/site\/controller-registry\.json/);
   assert.doesNotMatch(channelRouter, /\.buildchain\/runtime\/scripts\/controller-evidence\.mjs/);
 
   const paperRelease = fs.readFileSync(path.join(root, ".github/workflows/paper-release.yml"), "utf8");
