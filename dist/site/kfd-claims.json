@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "da49ee5526b44e5e9baa9aa846c35776aa5fcb64fd76e4b6611a4cd517555034",
+    "sha256": "7b03833d88b0db43441730db879f9acf2f0b91981050f7adb98f62676ec57bd2",
     "summary": {
-      "cliCommandCount": 76,
+      "cliCommandCount": 77,
       "workflowCount": 43,
       "actionCount": 4,
-      "sitePageCount": 48,
-      "docCommandRefCount": 241,
+      "sitePageCount": 49,
+      "docCommandRefCount": 242,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -225,13 +225,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "da49ee5526b44e5e9baa9aa846c35776aa5fcb64fd76e4b6611a4cd517555034",
+      "sha256": "7b03833d88b0db43441730db879f9acf2f0b91981050f7adb98f62676ec57bd2",
       "summary": {
-        "cliCommandCount": 76,
+        "cliCommandCount": 77,
         "workflowCount": 43,
         "actionCount": 4,
-        "sitePageCount": 48,
-        "docCommandRefCount": 241,
+        "sitePageCount": 49,
+        "docCommandRefCount": 242,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -472,6 +472,18 @@
           "participantFacing": true,
           "public": true,
           "plane": "why"
+        },
+        {
+          "id": "doc:docs/publication-authority.md",
+          "name": "Sealed publication authority",
+          "kind": "documentation",
+          "sourcePath": "docs/publication-authority.md",
+          "evidencePath": "docs/publication-authority.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "verify"
         },
         {
           "id": "doc:docs/publish-transaction.md",
@@ -832,6 +844,39 @@
           "public": true
         },
         {
+          "id": "schema:packages/core/publication-authority.js",
+          "name": "schema:packages/core/publication-authority.js",
+          "kind": "schema",
+          "sourcePath": "packages/core/publication-authority.js",
+          "evidencePath": "packages/core/publication-authority.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
+          "id": "schema:packages/core/publication-control-plane-audit.js",
+          "name": "schema:packages/core/publication-control-plane-audit.js",
+          "kind": "schema",
+          "sourcePath": "packages/core/publication-control-plane-audit.js",
+          "evidencePath": "packages/core/publication-control-plane-audit.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
+          "id": "schema:packages/core/buildchain-publication-authority.js",
+          "name": "schema:packages/core/buildchain-publication-authority.js",
+          "kind": "schema",
+          "sourcePath": "packages/core/buildchain-publication-authority.js",
+          "evidencePath": "packages/core/buildchain-publication-authority.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
           "id": "schema:packages/core/buildchain-kfd-claims.js",
           "name": "schema:packages/core/buildchain-kfd-claims.js",
           "kind": "schema",
@@ -1151,6 +1196,42 @@
           "packageExport": "./publication-package"
         },
         {
+          "id": "export:./publication-authority",
+          "name": "@kungfu-tech/buildchain/publication-authority",
+          "kind": "package-export",
+          "sourcePath": "packages/core/publication-authority.js",
+          "evidencePath": "packages/core/publication-authority.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./publication-authority"
+        },
+        {
+          "id": "export:./publication-control-plane-audit",
+          "name": "@kungfu-tech/buildchain/publication-control-plane-audit",
+          "kind": "package-export",
+          "sourcePath": "packages/core/publication-control-plane-audit.js",
+          "evidencePath": "packages/core/publication-control-plane-audit.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./publication-control-plane-audit"
+        },
+        {
+          "id": "export:./buildchain-publication-authority",
+          "name": "@kungfu-tech/buildchain/buildchain-publication-authority",
+          "kind": "package-export",
+          "sourcePath": "packages/core/buildchain-publication-authority.js",
+          "evidencePath": "packages/core/buildchain-publication-authority.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./buildchain-publication-authority"
+        },
+        {
           "id": "export:./kfd-gate",
           "name": "@kungfu-tech/buildchain/kfd-gate",
           "kind": "package-export",
@@ -1341,6 +1422,17 @@
           "kind": "site-consumption-contract",
           "sourcePath": "dist/site/controller-registry.json",
           "evidencePath": "dist/site/controller-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
+          "id": "site:dist/site/publication-authority-registry.json",
+          "name": "site:dist/site/publication-authority-registry.json",
+          "kind": "site-consumption-contract",
+          "sourcePath": "dist/site/publication-authority-registry.json",
+          "evidencePath": "dist/site/publication-authority-registry.json",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
@@ -2314,6 +2406,18 @@
         {
           "id": "cli:verify-observability-log",
           "name": "buildchain verify observability-log <jsonl> [--min-events <n>]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:verify-publication-admission",
+          "name": "buildchain verify publication-admission <file-or-json>",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -4000,6 +4104,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:publication-authority",
+          "name": "site-page:manual:publication-authority",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:publish-transaction",
           "name": "site-page:manual:publish-transaction",
           "kind": "site-page",
@@ -4296,6 +4412,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 280
+    "publicSurfaceCount": 290
   }
 }

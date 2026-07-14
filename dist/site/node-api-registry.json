@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:cb4a5547027b38acbffd0359c2c08192b8696f0fff841e24c05ebd887ae05fc5",
+      "digest": "sha256:dcc21f7602a9a0a7936253fa8de84397f0b4aad28bf2ce8aca6342423aa5ec63",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:cb4a5547027b38acbffd0359c2c08192b8696f0fff841e24c05ebd887ae05fc5",
+      "digest": "sha256:dcc21f7602a9a0a7936253fa8de84397f0b4aad28bf2ce8aca6342423aa5ec63",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -239,6 +239,45 @@
       "maturity": "stable"
     },
     {
+      "specifier": "@kungfu-tech/buildchain/publication-authority",
+      "export": "./publication-authority",
+      "target": "./packages/core/publication-authority.js",
+      "digest": "sha256:51ae57abbf578b990801cdbaa491eded09ee4463f42a96c9f051b11fd21634f5",
+      "summary": "Sealed publication authority registry, runner provenance, control-plane audit, admission, and independent verification APIs.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/publication-control-plane-audit",
+      "export": "./publication-control-plane-audit",
+      "target": "./packages/core/publication-control-plane-audit.js",
+      "digest": "sha256:ca7f2d9c9a960dc1933d9ebcb850008b057a005aa69e00cbd499926625659b04",
+      "summary": "Read-only publication control-plane snapshot evaluation APIs.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/buildchain-publication-authority",
+      "export": "./buildchain-publication-authority",
+      "target": "./packages/core/buildchain-publication-authority.js",
+      "digest": "sha256:33605af4c4c99fb40316e5b51a3072c046305b5bcf27a32dd26c75a73c6e4fb0",
+      "summary": "Buildchain-owned closed-world publication authority descriptor registry.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
       "specifier": "@kungfu-tech/buildchain/kfd-gate",
       "export": "./kfd-gate",
       "target": "./packages/core/kfd-gate.js",
@@ -320,7 +359,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-kfd-claims",
       "export": "./buildchain-kfd-claims",
       "target": "./packages/core/buildchain-kfd-claims.js",
-      "digest": "sha256:41d5d3257bb7052b44d034fb64fdd6f57c637fbdc7b20c93d9f0abd79844252a",
+      "digest": "sha256:e9178d4fa1d5aba1063aacf3f0b4fa0d9523c2379824386ac65a21c8262ac0b4",
       "summary": "Buildchain self KFD claim registry, witnesses, and public claim APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [

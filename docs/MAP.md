@@ -27,7 +27,7 @@ workflow, action, and Node API export also carries a `capabilityGroup`,
 | Capability group | Primary facts | Primary manuals |
 | --- | --- | --- |
 | Getting Started | `capability-registry.json`, `product-mechanism.json` | [`install.md`](install.md), [`product-mechanism.md`](product-mechanism.md), [`cli.md`](cli.md) |
-| Release Passport and Trust | `release-model.json`, `artifact-schemas.json`, `kfd-claims.json` | [`release-passport.md`](release-passport.md), [`release-candidate.md`](release-candidate.md), [`publish-transaction.md`](publish-transaction.md), [`binary-distribution.md`](binary-distribution.md) |
+| Release Passport and Trust | `release-model.json`, `artifact-schemas.json`, `publication-authority-registry.json`, `kfd-claims.json` | [`release-passport.md`](release-passport.md), [`publication-authority.md`](publication-authority.md), [`release-candidate.md`](release-candidate.md), [`publish-transaction.md`](publish-transaction.md), [`binary-distribution.md`](binary-distribution.md) |
 | Reusable Build and Lifecycle | `workflow-registry.json`, `controller-registry.json`, `release-model.json` | [`reusable-build-surface.md`](reusable-build-surface.md), [`controller-evidence.md`](controller-evidence.md), [`shifu-gate-profiles.md`](shifu-gate-profiles.md), [`lifecycle-protocol.md`](lifecycle-protocol.md) |
 | KFD Trust and Surface Closure | `kfd-claims.json`, `public-surface-audit.json`, `cli-registry.json`, `node-api-registry.json` | [`kfd-support.md`](kfd-support.md), [`release-passport.md`](release-passport.md) |
 | Site Bundle, Web Surfaces, and Propagation | `buildchain-site.json`, `site-manifest.json`, `page-registry.json`, `release-model.json` | [`site-bundle-contract.md`](site-bundle-contract.md), [`web-surface-deployments.md`](web-surface-deployments.md), [`release-propagation.md`](release-propagation.md) |
@@ -81,6 +81,7 @@ replace them.
 | How does publish evidence, recovery, and finalization work? | [`publish-transaction.md`](publish-transaction.md) | verify | stable |
 | How do I collect and verify module/product build facts from Git source, version files, and outputs? | [`build-facts.md`](build-facts.md) + [`cli.md`](cli.md) | use/verify | stable |
 | How do I publish or verify release passport artifacts? | [`release-passport.md`](release-passport.md) | use | stable |
+| How is product publication authority sealed to an exact workflow, runner, control plane, nonce, and artifact? | [`publication-authority.md`](publication-authority.md) | verify | preview |
 | How do I gate release artifacts with KFD-1 contract-world witnesses? | [`release-passport.md`](release-passport.md#kfd-1-contract-world-release-gate) | verify/use | stable |
 | How do I declare, render, and audit product KFD-2 release trust claims? | [`kfd-support.md`](kfd-support.md#kfd-2) + [`release-passport.md`](release-passport.md#kfd-2-release-trust-passport-audit) + [`cli.md`](cli.md) | verify/use | stable |
 | How do I gate KFD-3 collaboration-interface releases? | [`release-passport.md`](release-passport.md#kfd-3-collaboration-interface-release-gate) + [`cli.md`](cli.md) | verify/use | stable |

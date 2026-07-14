@@ -1,0 +1,608 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-publication-authority-registry",
+  "defaultDecision": "deny",
+  "entries": [
+    {
+      "workflowPath": ".github/workflows/.build.yml",
+      "authorityClass": "non-publication-oidc",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "environment": "",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/.release-verify.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "environment": "",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/.sam-release.yml",
+      "authorityClass": "retired-deny",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "environment": "",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/.sam-verify.yml",
+      "authorityClass": "retired-deny",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "environment": "",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/.sync-remote-git.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "environment": "",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/.web-surface.yml",
+      "authorityClass": "product-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "web-production"
+      ],
+      "credentialMode": "oidc",
+      "environment": "buildchain-publication",
+      "runnerPolicy": "qualified-measured",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/.wheel-release.yml",
+      "authorityClass": "retired-deny",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "environment": "",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/.wheel-verify.yml",
+      "authorityClass": "retired-deny",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "environment": "",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/binary-distribution.yml",
+      "authorityClass": "product-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "github-release"
+      ],
+      "credentialMode": "oidc",
+      "environment": "buildchain-publication",
+      "runnerPolicy": "qualified-measured",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/build-surface-fixture.yml",
+      "authorityClass": "non-publication-oidc",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "environment": "",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/build.yml",
+      "authorityClass": "non-publication-oidc",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "environment": "",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/buildchain-alpha-self-dogfood.yml",
+      "authorityClass": "non-publication-oidc",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "environment": "",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/buildchain-patrol-daily.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "environment": "",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/buildchain-patrol-monthly.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "environment": "",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/buildchain-patrol-weekly.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "environment": "",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/buildchain-patrol.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "environment": "",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/buildchain-ref-promotion.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "environment": "",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/buildchain-stable-candidate-patrol.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "environment": "",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/dev-pr-auto-merge.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "environment": "",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/npm-publish.yml",
+      "authorityClass": "dry-run-only",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "environment": "",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/paper-release.yml",
+      "authorityClass": "product-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "github-release",
+        "npm-publish"
+      ],
+      "credentialMode": "trusted-publishing",
+      "environment": "buildchain-publication",
+      "runnerPolicy": "qualified-measured",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/patrol-daily.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "environment": "",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/patrol-monthly.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "environment": "",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/patrol-weekly.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "environment": "",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/publication-artifact.yml",
+      "authorityClass": "evidence-publication",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "environment": "",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/release-candidate-promote.yml",
+      "authorityClass": "product-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "channel-ref",
+        "github-release",
+        "npm-publish"
+      ],
+      "credentialMode": "trusted-publishing",
+      "environment": "buildchain-publication",
+      "runnerPolicy": "qualified-measured",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/release-line-bootstrap.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "environment": "",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/release-propagation.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "environment": "",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/release-verify.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "environment": "",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/stable-candidate-patrol.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "environment": "",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    }
+  ],
+  "workflowFacts": [
+    {
+      "path": ".github/workflows/.build.yml",
+      "signals": [
+        "write-permission",
+        "oidc",
+        "cloud-credential"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/.bump-minor-version.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
+      "path": ".github/workflows/.gate-profile.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
+      "path": ".github/workflows/.release-docker.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
+      "path": ".github/workflows/.release-elastic-beanstalk.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
+      "path": ".github/workflows/.release-new-version.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
+      "path": ".github/workflows/.release-verify.yml",
+      "signals": [
+        "write-permission",
+        "cloud-credential"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/.sam-release.yml",
+      "signals": [],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/.sam-verify.yml",
+      "signals": [
+        "cloud-credential"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/.sync-release-page.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
+      "path": ".github/workflows/.sync-remote-git.yml",
+      "signals": [
+        "git-push"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/.web-surface.yml",
+      "signals": [
+        "write-permission",
+        "oidc",
+        "environment",
+        "cloud-credential"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/.wheel-release.yml",
+      "signals": [],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/.wheel-verify.yml",
+      "signals": [
+        "cloud-credential"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/binary-distribution.yml",
+      "signals": [
+        "write-permission",
+        "oidc",
+        "github-release"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/build-surface-fixture.yml",
+      "signals": [
+        "write-permission",
+        "oidc"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/build.yml",
+      "signals": [
+        "write-permission",
+        "oidc"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/buildchain-alpha-self-dogfood.yml",
+      "signals": [
+        "write-permission",
+        "oidc"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/buildchain-patrol-daily.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/buildchain-patrol-monthly.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/buildchain-patrol-weekly.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/buildchain-patrol.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/buildchain-ref-promotion.yml",
+      "signals": [
+        "write-permission",
+        "oidc"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/buildchain-stable-candidate-patrol.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/buildchain-stable-candidate-qualification.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
+      "path": ".github/workflows/candidate-lab.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
+      "path": ".github/workflows/check.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
+      "path": ".github/workflows/dev-pr-auto-merge.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/npm-publish.yml",
+      "signals": [
+        "npm-publish"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/paper-release.yml",
+      "signals": [
+        "write-permission",
+        "oidc"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/patrol-daily.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/patrol-monthly.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/patrol-weekly.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/publication-artifact.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/release-candidate-promote.yml",
+      "signals": [
+        "write-permission",
+        "oidc"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/release-line-bootstrap.yml",
+      "signals": [
+        "write-permission",
+        "git-push"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/release-new-version.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
+      "path": ".github/workflows/release-propagation.yml",
+      "signals": [
+        "write-permission",
+        "git-push"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/release-verify.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/schedule-purge-artifacts.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
+      "path": ".github/workflows/self-hosted-runner-smoke.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
+      "path": ".github/workflows/stable-candidate-patrol.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/verify.yml",
+      "signals": [],
+      "classified": false
+    }
+  ],
+  "registryDigest": "ca8e4ad9c26a687f699470bd8a9be21123a92fc58d96407cdb870a1e8d3fcb4a"
+}

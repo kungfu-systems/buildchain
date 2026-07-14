@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:223c7e2d20680d4a10c84f6a7c7875602538607217e9dfe291a356bbd21ac4f1",
+      "digest": "sha256:91dc800bafc31bc149680c86272827936c94e0f025d547bbabc10d58fe5f128e",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -59,6 +59,20 @@
       ],
       "maturity": "draft",
       "order": 205
+    },
+    {
+      "id": "publication-authority",
+      "title": "Sealed publication authority",
+      "path": "docs/publication-authority.md",
+      "plane": "verify",
+      "digest": "sha256:57f249672d806a80d80dc131369bc9f122cb059e31a53a9d0219e6039a7160ff",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "release-operator",
+        "agent"
+      ],
+      "maturity": "preview",
+      "order": 105
     },
     {
       "id": "release-candidate",

@@ -32,6 +32,7 @@ import {
   explainReleasePassport,
   verifyReleasePassport,
 } from "../packages/core/release-passport.js";
+import { verifyPublicationAdmission } from "../packages/core/publication-authority.js";
 import {
   explainArtifactPassport,
   verifyArtifactPassport,
@@ -139,6 +140,11 @@ function usage() {
                                     [--release-extra-json <json-or-path>]
                                     [--publish-json <json-or-path>] [--output-dir <dir>] [--json]
   buildchain verify release-passport <file-or-url> [--json]
+  buildchain verify publication-admission <file-or-json>
+                          --registry-json <file-or-json>
+                          --runner-json <file-or-json>
+                          --control-plane-audit-json <file-or-json>
+                          [--expected-json <file-or-json>] [--used-nonce <nonce>]... [--json]
   buildchain verify artifact <file|dir|url|npm:...|oci:...|github-release:...>
                              [--passport <file-or-url>] [--locator-config <json>]
                              [--repository <owner/repo>] [--tag <tag>]
@@ -232,6 +238,7 @@ Examples:
   buildchain span --event native.build -- cmake --build build
   buildchain collect github-release --tag v2.2.0 --assets-dir dist --output-dir .buildchain/release-passport
   buildchain verify release-passport .buildchain/release-passport/buildchain.release.json
+  buildchain verify publication-admission admission.json --registry-json publication-authority-registry.json --runner-json runner.json --control-plane-audit-json control-plane.json --expected-json expected.json --json
   buildchain verify artifact ./dist/buildchain-x86_64-unknown-linux-gnu.tar.gz --passport .buildchain/release-passport/buildchain.release.json
   buildchain verify infra-contract-evidence-bundle .buildchain/infra-contract-evidence-bundle.json
   buildchain verify observability-log .buildchain/logs/events.jsonl --min-events 4 --require-phase build
@@ -1657,6 +1664,33 @@ async function main(argv = process.argv.slice(2)) {
 
   if (command === "verify") {
     const [subcommand = "", location = "", ...verifyArgs] = args;
+    if (subcommand === "publication-admission") {
+      if (!location) {
+        throw new Error("usage: buildchain verify publication-admission <file-or-json> --registry-json <file-or-json> --runner-json <file-or-json> --control-plane-audit-json <file-or-json>");
+      }
+      const requiredInput = (name) => {
+        const value = readFlag(verifyArgs, name, "");
+        if (!value) throw new Error(`buildchain verify publication-admission requires --${name} <file-or-json>`);
+        return readJsonInput(value, { label: name });
+      };
+      const expectedInput = readFlag(verifyArgs, "expected-json", "");
+      const capability = verifyPublicationAdmission({
+        admission: readJsonInput(location, { label: "publication admission" }),
+        registry: requiredInput("registry-json"),
+        runnerProvenance: requiredInput("runner-json"),
+        controlPlaneAudit: requiredInput("control-plane-audit-json"),
+        expected: expectedInput ? readJsonInput(expectedInput, { label: "expected-json" }) : {},
+        usedNonces: readRepeatedFlag(verifyArgs, "used-nonce"),
+      });
+      if (readBooleanFlag(verifyArgs, "json")) {
+        printJson(capability);
+      } else {
+        process.stdout.write(`publication admission: ${capability.decision}\n`);
+        process.stdout.write(`capability digest: ${capability.capabilityDigest}\n`);
+        process.stdout.write(`expires at: ${capability.expiresAt}\n`);
+      }
+      return;
+    }
     if (subcommand === "artifact") {
       if (!location) {
         throw new Error("usage: buildchain verify artifact <subject>");
