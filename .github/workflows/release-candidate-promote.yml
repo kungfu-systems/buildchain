@@ -530,7 +530,6 @@ jobs:
     needs: [preflight, controller-plan, release-candidate-preflight, publication-authority]
     if: ${{ needs.preflight.outputs.action == 'promote' && needs.publication-authority.result == 'success' }}
     runs-on: ubuntu-24.04
-    environment: buildchain-publication
     permissions:
       actions: read
       checks: write

@@ -490,7 +490,7 @@ test("paper release workflow publishes declared npm package with source lock and
   assert.match(workflow, /permissions:\n  contents: read/);
   assert.match(workflow, /name: Seal paper publication capability/);
   assert.match(workflow, /permissions:\n      checks: write\n      contents: write\n      id-token: write/);
-  assert.match(workflow, /environment: buildchain-publication/);
+  assert.doesNotMatch(workflow, /^ {4}environment\s*:/m);
   assert.match(workflow, /Preflight protected publication authority/);
   assert.match(
     workflow,
@@ -689,7 +689,7 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /uses: \.\/\.github\/workflows\/\.publication-authority\.yml/);
   assert.match(workflow, /needs: \[preflight, controller-plan, release-candidate-preflight, publication-authority\]/);
   assert.match(workflow, /needs\.publication-authority\.result == 'success'/);
-  assert.match(workflow, /environment: buildchain-publication/);
+  assert.doesNotMatch(workflow, /^ {4}environment\s*:/m);
   assert.match(workflow, /token: \$\{\{ github\.token \}\}/);
   assert.doesNotMatch(workflow, /BUILDCHAIN_PROMOTION_TOKEN/);
   assert.match(workflow, /if: \$\{\{ needs\.preflight\.outputs\.action == 'promote' \}\}/);
@@ -758,6 +758,13 @@ test("sealed publication authority verifier is independent and credential-free",
   assert.doesNotMatch(workflow, /contents:\s*write/);
   assert.doesNotMatch(workflow, /NODE_AUTH_TOKEN|NPM_TOKEN|BUILDCHAIN_PROMOTION_TOKEN/);
   assert.match(workflow, /BUILDCHAIN_USED_NONCES_JSON/);
+  assert.match(workflow, /name: Require complete sealed publication evidence/);
+  assert.match(workflow, /Sealed publication evidence unavailable/);
+  assert.match(workflow, /npm Trusted Publishing and OIDC were not evaluated/);
+  assert.ok(
+    workflow.indexOf("Require complete sealed publication evidence") <
+      workflow.indexOf("Download exact release-candidate passport evidence"),
+  );
   assert.match(workflow, /Download exact release-candidate passport evidence/);
   assert.match(workflow, /Download referenced controller receipt evidence/);
   assert.match(workflow, /Download exact artifact manifest evidence/);
@@ -766,6 +773,16 @@ test("sealed publication authority verifier is independent and credential-free",
   assert.match(workflow, /controllerReceipt:/);
   assert.match(workflow, /artifactManifests(?:,|:)/);
   assert.match(workflow, /artifactPayloads:/);
+});
+
+test("publication control-plane audit does not misreport local npm auth as missing OIDC trust", () => {
+  const script = fs.readFileSync(
+    path.join(root, "scripts/audit-publication-control-plane.mjs"),
+    "utf8",
+  );
+  assert.match(script, /local npm CLI session is not authenticated/);
+  assert.match(script, /does not mean Trusted Publishing is absent/);
+  assert.match(script, /does not predict whether GitHub Actions OIDC can publish/);
 });
 
 test("legacy release workflows fail closed instead of bypassing publish-gate source locks", () => {

@@ -14,6 +14,13 @@ function commandJson(command, args, label) {
   const result = spawnSync(command, args, { encoding: "utf8", timeout: 60_000 });
   if (result.status !== 0) {
     const category = /401|E401|unauthorized/i.test(result.stderr) ? "unauthorized" : "unavailable";
+    if (label === "npm trusted-publisher policy" && category === "unauthorized") {
+      throw new Error(
+        "npm trusted-publisher policy is unreadable because this local npm CLI session is not authenticated; " +
+        "this does not mean Trusted Publishing is absent and does not predict whether GitHub Actions OIDC can publish; " +
+        "publication control-plane audit fails closed",
+      );
+    }
     throw new Error(`${label} is ${category}; publication control-plane audit fails closed`);
   }
   try {
@@ -158,8 +165,10 @@ function main() {
   const repository = flag("repository");
   const workflowRepository = flag("workflow-repository", repository);
   const workflowPath = flag("workflow", ".github/workflows/release-candidate-promote.yml");
+  const publisherWorkflowPath = flag("publisher-workflow", workflowPath);
   const jobId = flag("job", "promote");
-  const environment = flag("environment", "buildchain-publication");
+  const environment = flag("environment", "none");
+  const providerEnvironment = environment === "none" ? "" : environment;
   const branch = flag("branch");
   const packageName = flag("package", "@kungfu-tech/buildchain");
   const publisherMode = flag("publisher-mode", "npm-trusted-publisher");
@@ -180,8 +189,11 @@ function main() {
     if (!entry?.id) continue;
     rulesets.push(githubJson(`repos/${repository}/rulesets/${entry.id}`, `repository ruleset ${entry.id}`));
   }
-  const environmentState = githubJson(`repos/${repository}/environments/${encodeURIComponent(environment)}`, "publication Environment");
-  const deploymentBranches = environmentState.deployment_branch_policy?.custom_branch_policies === true
+  const environmentDeclared = /^ {4}environment\s*:/m.test(block);
+  const environmentState = environment === "none"
+    ? {}
+    : githubJson(`repos/${repository}/environments/${encodeURIComponent(environment)}`, "publication Environment");
+  const deploymentBranches = environment !== "none" && environmentState.deployment_branch_policy?.custom_branch_policies === true
     ? githubJson(`repos/${repository}/environments/${encodeURIComponent(environment)}/deployment-branch-policies?per_page=100`, "Environment deployment branch policy")
     : { branch_policies: [] };
   const oidc = githubJson(`repos/${repository}/actions/oidc/customization/sub`, "OIDC subject policy");
@@ -200,8 +212,8 @@ function main() {
     publisher = normalizeNpmPublisher(trust, {
       packageName,
       repository,
-      workflowFilename: path.basename(workflowPath),
-      environment,
+      workflowFilename: path.basename(publisherWorkflowPath),
+      environment: providerEnvironment,
     });
   } else if (publisherMode === "github-token") {
     publisher = {
@@ -222,6 +234,7 @@ function main() {
   const receipt = evaluatePublicationControlPlaneSnapshot({
     repository,
     workflowPath,
+    publisherWorkflowPath,
     environment,
     branch,
     packageName,
@@ -245,7 +258,8 @@ function main() {
         observedRulesetCount: rulesets.length,
       } : normalizeRulesetBranchPolicy(rulesets, branch, repositoryState.default_branch),
       environment: {
-        name: environmentState.name || environment,
+        name: environment === "none" ? "none" : environmentState.name || environment,
+        declared: environmentDeclared,
         exists: Boolean(environmentState.id || environmentState.node_id),
         protected: (environmentState.protection_rules || []).length > 0 ||
           environmentState.deployment_branch_policy?.protected_branches === true ||
@@ -254,8 +268,8 @@ function main() {
         preventSelfReview: reviewRules.some((rule) => rule.prevent_self_review === true),
       },
       oidc: {
-        workflowPath,
-        environment,
+        workflowPath: publisherWorkflowPath,
+        environment: providerEnvironment,
         idTokenJobScoped: /^\s{6}id-token:\s*write\s*$/m.test(block) && !/^\s{2}id-token:\s*write\s*$/m.test(workflowText),
         githubTokenJobScoped: /^\s{6}contents:\s*write\s*$/m.test(block) && !/^\s{2}contents:\s*write\s*$/m.test(workflowText),
         longLivedCredentialPresent: publisher.longLivedWorkflowCredentialPresent,

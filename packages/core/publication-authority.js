@@ -123,6 +123,8 @@ export function createPublicationAuthorityRegistry({ descriptors = [], workflows
       publicationCapable: descriptor.publicationCapable === true,
       capabilityIds: [...new Set((descriptor.capabilityIds || []).map(String))].sort(),
       credentialMode: String(descriptor.credentialMode || "none"),
+      publisherWorkflowMode: String(descriptor.publisherWorkflowMode || "fixed"),
+      publisherWorkflowPath: String(descriptor.publisherWorkflowPath || workflowPath),
       environment: String(descriptor.environment || ""),
       environmentMode: String(descriptor.environmentMode || "fixed"),
       runnerPolicy: String(descriptor.runnerPolicy || "unqualified"),
@@ -196,6 +198,7 @@ export function createRunnerProvenance({
 export function createPublicationControlPlaneAudit({
   repository,
   workflowPath,
+  publisherWorkflowPath,
   environment,
   facts = [],
   observedAt,
@@ -211,6 +214,7 @@ export function createPublicationControlPlaneAudit({
     contract: PUBLICATION_CONTROL_PLANE_AUDIT_CONTRACT,
     repository: requiredString(repository, "repository"),
     workflowPath: requiredString(workflowPath, "workflowPath"),
+    publisherWorkflowPath: requiredString(publisherWorkflowPath || workflowPath, "publisherWorkflowPath"),
     environment: requiredString(environment, "environment"),
     observedAt: new Date(parseTime(observedAt, "observedAt")).toISOString(),
     expiresAt: new Date(parseTime(expiresAt, "expiresAt")).toISOString(),
@@ -225,6 +229,7 @@ export function createPublicationAdmission(input = {}) {
     contract: PUBLICATION_ADMISSION_CONTRACT,
     registryDigest: normalizeDigest(input.registryDigest, "registryDigest"),
     workflowPath: requiredString(input.workflowPath, "workflowPath"),
+    publisherWorkflowPath: requiredString(input.publisherWorkflowPath || input.workflowPath, "publisherWorkflowPath"),
     repository: requiredString(input.repository, "repository"),
     sourceSha: normalizeGitSha(input.sourceSha, "sourceSha"),
     runtimeSha: normalizeGitSha(input.runtimeSha, "runtimeSha"),
@@ -537,11 +542,21 @@ function validateRunnerProvenance(receipt, expectedDigest) {
   return actual;
 }
 
-function validateControlPlaneAudit(receipt, { repository, workflowPath, environment, now, expectedDigest }) {
+function validateControlPlaneAudit(receipt, {
+  repository,
+  workflowPath,
+  publisherWorkflowPath,
+  environment,
+  now,
+  expectedDigest,
+}) {
   if (receipt?.contract !== PUBLICATION_CONTROL_PLANE_AUDIT_CONTRACT) {
     throw new Error("publication control-plane audit contract mismatch");
   }
   if (receipt.workflowPath !== workflowPath) throw new Error("control-plane workflow binding mismatch");
+  if (receipt.publisherWorkflowPath !== publisherWorkflowPath) {
+    throw new Error("control-plane publisher workflow binding mismatch");
+  }
   if (receipt.repository !== repository) throw new Error("control-plane repository binding mismatch");
   if (receipt.environment !== environment) throw new Error("control-plane environment binding mismatch");
   if (parseTime(receipt.observedAt, "controlPlaneAudit.observedAt") > now) {
@@ -599,6 +614,16 @@ export function verifyPublicationAdmission({
   if (!descriptor.publicationCapable || descriptor.authorityClass !== "product-publication") {
     throw new Error(`workflow is not product-publication capable: ${workflowPath}`);
   }
+  const publisherWorkflowMode = descriptor.publisherWorkflowMode || "fixed";
+  if (!["fixed", "caller-bound"].includes(publisherWorkflowMode)) {
+    throw new Error(`unsupported publisher workflow mode: ${publisherWorkflowMode}`);
+  }
+  const publisherWorkflowPath = publisherWorkflowMode === "caller-bound"
+    ? requiredString(admission.publisherWorkflowPath, "admission.publisherWorkflowPath")
+    : requiredString(descriptor.publisherWorkflowPath || workflowPath, "descriptor.publisherWorkflowPath");
+  if (publisherWorkflowMode === "fixed" && admission.publisherWorkflowPath !== publisherWorkflowPath) {
+    throw new Error("publication admission publisher workflow binding mismatch");
+  }
   const environmentMode = descriptor.environmentMode || "fixed";
   if (!["fixed", "caller-bound"].includes(environmentMode)) {
     throw new Error(`unsupported publication environment mode: ${environmentMode}`);
@@ -622,6 +647,7 @@ export function verifyPublicationAdmission({
 
   const bindings = [
     "repository",
+    "publisherWorkflowPath",
     "sourceSha",
     "runtimeSha",
     "contractDigest",
@@ -655,6 +681,7 @@ export function verifyPublicationAdmission({
   const controlPlaneDigest = validateControlPlaneAudit(controlPlaneAudit, {
     repository: admission.repository,
     workflowPath,
+    publisherWorkflowPath,
     environment,
     now: nowMs,
     expectedDigest: admission.controlPlaneAuditDigest,
@@ -671,6 +698,7 @@ export function verifyPublicationAdmission({
     contract: PUBLICATION_CAPABILITY_CONTRACT,
     decision: "allow",
     workflowPath,
+    publisherWorkflowPath,
     capabilityIds: descriptor.capabilityIds,
     repository: admission.repository,
     sourceSha: normalizeGitSha(admission.sourceSha, "admission.sourceSha"),
