@@ -123,6 +123,7 @@ function routerControllerPlanJob() {
           BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST: \${{ steps.identities.outputs.contract-digest }}
           BUILDCHAIN_CONTROLLER_REGISTRY: .buildchain/controller-runtime/dist/site/controller-registry.json
           BUILDCHAIN_CONTROLLER_INPUTS_JSON: \${{ toJSON(inputs) }}
+          BUILDCHAIN_CONTROLLER_INPUT_BOUNDARY: workflow-call
           BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
 
       - name: Resolve channel router controller plan artifact
