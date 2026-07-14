@@ -390,7 +390,11 @@ async function main() {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   main().catch((error) => {
+    const failureMessage = String(error?.message || error || "promotion failed")
+      .replace(/\r?\n/g, " ")
+      .slice(0, 2000);
+    core.setOutput("failure-message", failureMessage);
     console.error(error);
-    core.setFailed(error.message);
+    core.setFailed(failureMessage);
   });
 }

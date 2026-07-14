@@ -159,6 +159,8 @@ inputs:
     description: "Optional expected product version recorded in the release-candidate passport"
     default: ""
 outputs:
+  failure-message:
+    description: "Single-line promotion failure passed to workflow-friction reporting"
   sha:
     description: "Final promoted release or alpha commit SHA"
   tags:

@@ -1992,6 +1992,8 @@ test("report issue action exposes workflow-friction feedback mode", () => {
   assert.match(workflow, /uses: actions\/create-github-app-token@v2/);
   assert.match(workflow, /BUILDCHAIN_BUILD_WORKFLOW_FILE: \$\{\{ inputs\.release-candidate-workflow-file \}\}/);
   assert.match(workflow, /BUILDCHAIN_BUILD_WORKFLOW_NAME: \$\{\{ inputs\.release-candidate-workflow-name \}\}/);
+  assert.match(workflow, /BUILDCHAIN_PROMOTION_OUTCOME: \$\{\{ steps\.promote\.outcome \}\}/);
+  assert.match(workflow, /BUILDCHAIN_PROMOTION_DIAGNOSIS: \$\{\{ steps\.promote\.outputs\.failure-message \}\}/);
   assert.match(workflow, /reporter="\.buildchain\/runtime\/scripts\/workflow-friction-report\.mjs"/);
   assert.match(workflow, /reporter="scripts\/workflow-friction-report\.mjs"/);
   assert.match(workflow, /Report Buildchain promotion friction/);
@@ -2003,6 +2005,17 @@ test("report issue action exposes workflow-friction feedback mode", () => {
   assert.match(workflow, /body-file: \$\{\{ steps\.friction\.outputs\.body-file \}\}/);
   assert.match(implementation, /Copyable issue body/);
   assert.match(implementation, /buildWorkflowFrictionIssueReport/);
+
+  const promoteAction = fs.readFileSync(
+    path.join(root, "actions/promote-buildchain-ref/action.yml"),
+    "utf8",
+  );
+  const promoteImplementation = fs.readFileSync(
+    path.join(root, "actions/promote-buildchain-ref/index.js"),
+    "utf8",
+  );
+  assert.match(promoteAction, /failure-message:/);
+  assert.match(promoteImplementation, /core\.setOutput\("failure-message", failureMessage\)/);
 });
 
 test("promote action exposes promote-only release candidate inputs", () => {
