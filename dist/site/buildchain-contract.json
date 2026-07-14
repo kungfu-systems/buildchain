@@ -328,7 +328,7 @@
         "release-state SHA is recorded as a durable audit entrance"
       ],
       "breakingDigest": "sha256:b627e1b2ece9b6049517a942c5139e342e6077cdd3d8962d61cef8481b1f70ad",
-      "auditDigest": "sha256:32fd54ceb8e1a0219918e7744797e3a1bf3f614bb8498028209275b98304ac5b"
+      "auditDigest": "sha256:af307129d9df51a1a0d5f7cfff742b0db7d9f8f04dd810cf97a62c79e2d3a726"
     },
     {
       "contractVersion": 1,
@@ -377,7 +377,7 @@
         "prose-only public claims downgrade the release trust passport audit"
       ],
       "breakingDigest": "sha256:f0b636eb925ddbf45ff1a8872454ab7b4dd98857cac12bb75217830130e62a16",
-      "auditDigest": "sha256:32fd54ceb8e1a0219918e7744797e3a1bf3f614bb8498028209275b98304ac5b"
+      "auditDigest": "sha256:af307129d9df51a1a0d5f7cfff742b0db7d9f8f04dd810cf97a62c79e2d3a726"
     },
     {
       "contractVersion": 1,
@@ -549,7 +549,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:3bcfa43a81ab6b7cab1a82deee789d412978df48496f8cc73b6edef71a38569a"
+      "auditDigest": "sha256:63874351201e9323e51c011e81cf1d4d1ff0e3f6d733d5a0cef2537eba95228a"
     },
     {
       "contractVersion": 1,
@@ -2549,5 +2549,5 @@
     }
   ],
   "compatibilityDigest": "sha256:2520207c5d6d6a737dd32251a42be9c5299644d9aebf690a8402ead1724ed495",
-  "contractDigest": "sha256:9f91f50072c5429ff9718efef81554b94366183a8729f488b0dc39bd06846b2f"
+  "contractDigest": "sha256:e972e0bceb51178f76c602db7de48efd86bb3aa2249d54219ea78bdbb70c4583"
 }

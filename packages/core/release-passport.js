@@ -353,6 +353,9 @@ function mergeAuthoritativePassportBase(passport, basePassport = undefined, { re
       merged[key] = basePassport[key];
     }
   }
+  if (basePassport.controllerReceipts !== undefined) {
+    merged.controllerReceipts = basePassport.controllerReceipts;
+  }
   for (const key of kfdKeys) {
     if (basePassport[key] && typeof basePassport[key] === "object" && !Array.isArray(basePassport[key])) {
       merged[key] = basePassport[key];
