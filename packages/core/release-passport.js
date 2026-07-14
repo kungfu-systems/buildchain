@@ -1019,10 +1019,16 @@ export function createReleasePassport({
     kfd1Section: normalizedKfd1?.passportSection,
     kfd3Section: normalizedKfd3?.passportSection,
   });
+  const builtSourceSha = optionalString(release.builtSourceSha || release.built_source_sha);
+  const promotionChannelSha = optionalString(release.promotionChannelSha || release.promotion_channel_sha);
+  const treeEquivalent = release.treeEquivalent === true;
   const normalizedControllerReceipts = normalizeControllerReceiptReferences({
     receipts: controllerReceipts,
     references: controllerReceiptReferences,
     expectedSourceSha: sourceSha,
+    acceptedSourceShas: treeEquivalent && promotionChannelSha === sourceSha && builtSourceSha
+      ? [builtSourceSha]
+      : [],
     requirePassed: true,
   });
   const publishArtifacts = normalizedPublishEvidence?.artifacts || [];
