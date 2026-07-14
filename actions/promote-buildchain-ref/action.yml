@@ -80,6 +80,9 @@ inputs:
   publish-package-main:
     description: "Main npm package name for package-set visibility gating"
     default: ""
+  expected-publication-version:
+    description: "Exact publication version sealed by the pre-publication authority plan; promotion fails if transaction selection drifts"
+    default: ""
   require-publish-source-lock:
     description: "Require publish side effects to come from a resolved publish-gate source lock"
     default: "false"
@@ -173,6 +176,10 @@ outputs:
     description: "Final release transaction state"
   transaction-exact-tag:
     description: "Exact release or prerelease tag governed by the transaction"
+  planned-publication-version:
+    description: "Exact version selected during a dry-run publication plan"
+  planned-publication-exact-tag:
+    description: "Exact tag selected during a dry-run publication plan"
   public-release-tag:
     description: "Public GitHub Release tag; anchored package publishes use v<publishedVersion> while transaction-exact-tag remains internal"
   transaction-release-sha:

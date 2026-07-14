@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const {
   assertAllowedLocalChanges,
+  assertExpectedPublicationVersion,
   assertChannelPromotionPr,
   assertProviderEnforcedChannelTransaction,
   assertPromotableRepository,
@@ -31,6 +32,14 @@ const {
   updateVersionStateContents,
   validatePromotionReleaseCandidate,
 } = await import("../actions/promote-buildchain-ref/lib.js");
+
+test("publication authority version binding fails closed on transaction drift", () => {
+  assert.equal(assertExpectedPublicationVersion("2.12.7-alpha.3", "2.12.7-alpha.3"), "2.12.7-alpha.3");
+  assert.throws(
+    () => assertExpectedPublicationVersion("2.12.7-alpha.3", "2.12.7-alpha.4"),
+    /publication version changed after authority planning: expected 2\.12\.7-alpha\.3, got 2\.12\.7-alpha\.4/,
+  );
+});
 const {
   explainReleaseLineDryRun,
   formatReleaseLineDryRun,

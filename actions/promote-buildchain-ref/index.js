@@ -224,6 +224,7 @@ async function main() {
   const publishDistTag = core.getInput("publish-dist-tag");
   const publishPackageSetOrder = core.getInput("publish-package-set-order");
   const publishPackageMain = core.getInput("publish-package-main");
+  const expectedPublicationVersion = core.getInput("expected-publication-version");
   const requirePublishSourceLock = core.getBooleanInput("require-publish-source-lock");
   const publishSourceRef = core.getInput("publish-source-ref");
   const publishSourceSha = core.getInput("publish-source-sha");
@@ -304,6 +305,7 @@ async function main() {
     publishDistTag,
     publishPackageSetOrder,
     publishPackageMain,
+    expectedPublicationVersion,
     releaseMaterialSha,
     publishToolingSha,
     releasePassport,
@@ -340,6 +342,11 @@ async function main() {
   core.setOutput("transaction-id", result.publishTransaction?.id || "");
   core.setOutput("transaction-state", result.publishTransaction?.state || "");
   core.setOutput("transaction-exact-tag", result.publishTransaction?.exactTag || "");
+  const plannedPublication = result.updates.find(
+    (update) => update.action === "dry-run-publish-transaction",
+  );
+  core.setOutput("planned-publication-version", plannedPublication?.version || "");
+  core.setOutput("planned-publication-exact-tag", plannedPublication?.tag || "");
   core.setOutput("public-release-tag", result.publishTransaction?.publicReleaseTag || result.publishTransaction?.exactTag || "");
   core.setOutput("transaction-release-sha", result.publishTransaction?.releaseSha || "");
   core.setOutput("transaction-state-ref", result.publishTransaction?.stateRef || "");

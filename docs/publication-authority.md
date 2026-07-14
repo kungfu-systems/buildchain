@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-07-14
+last_reviewed: 2026-07-15
 ai_provenance:
   model_family: GPT-5
   product: Codex
-  generated_at: 2026-07-14
+  generated_at: 2026-07-15
   limits: Live provider configuration must be re-audited; no credential values are represented.
 ---
 
@@ -120,6 +120,15 @@ it does for externally supplied admission. The self-assembly mode rejects other
 repositories, unknown refs, non-exact source SHAs, and any caller other than
 `.github/workflows/buildchain-ref-promotion.yml`. Manual apply and external
 consumer workflows still require their own explicit admission inputs.
+
+Before authority verification, the reusable promotion controller runs the same
+release transaction selector in read-only mode. That plan supplies one exact
+publication version and tag to the admission verifier, the publish-gate source
+lock, and the real promotion action. The verifier rejects a capability for a
+different version, and the promotion action rechecks the planned version before
+any publish transaction side effect. Release-candidate fixture versions are
+artifact evidence only; they never name Buildchain's own source-lock or
+publication capability.
 
 Evidence publication is a separate authority class and never grants product
 publication.

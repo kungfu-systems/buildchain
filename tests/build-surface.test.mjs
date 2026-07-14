@@ -676,6 +676,11 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /name: Revalidate promotion intent/);
   assert.match(workflow, /name: Revalidate queued promotion intent/);
   assert.match(workflow, /name: Preflight PR-stage release candidate evidence/);
+  assert.match(workflow, /name: Plan exact publication version/);
+  assert.match(workflow, /planned-publication-version/);
+  assert.match(workflow, /publication-version: \$\{\{ needs\.publication-plan\.outputs\.version \}\}/);
+  assert.match(workflow, /PUBLICATION_VERSION: \$\{\{ needs\.publication-plan\.outputs\.version \}\}/);
+  assert.match(workflow, /expected-publication-version: \$\{\{ needs\.publication-plan\.outputs\.version \}\}/);
   assert.match(workflow, /BUILDCHAIN_RC_DOWNLOAD: "false"/);
   assert.match(workflow, /failure\(\) && !inputs\.dry-run && steps\.rc\.outcome != ''/);
   assert.match(workflow, /compareCommitsWithBasehead/);
@@ -694,7 +699,7 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /evidence-manifest-pattern:/);
   assert.match(workflow, /name: Seal product publication capability/);
   assert.match(workflow, /uses: \.\/\.github\/workflows\/\.publication-authority\.yml/);
-  assert.match(workflow, /needs: \[preflight, controller-plan, release-candidate-preflight, publication-authority\]/);
+  assert.match(workflow, /needs: \[preflight, controller-plan, release-candidate-preflight, publication-plan, publication-authority\]/);
   assert.match(workflow, /needs\.publication-authority\.result == 'success'/);
   assert.doesNotMatch(workflow, /^ {4}environment\s*:/m);
   assert.match(workflow, /token: \$\{\{ github\.token \}\}/);
@@ -790,6 +795,8 @@ test("sealed publication authority verifier is independent and credential-free",
   assert.match(workflow, /--source-sha "\$\{\{ inputs\.source-sha \}\}"/);
   assert.match(workflow, /--workflow-ref "\$\{\{ inputs\.buildchain-ref \}\}"/);
   assert.match(workflow, /name: Assemble Buildchain self-publication admission/);
+  assert.match(workflow, /BUILDCHAIN_PLANNED_PUBLICATION_VERSION/);
+  assert.match(workflow, /authority publication version mismatch/);
   assert.match(workflow, /steps\.auto-evidence\.outputs\.admission-json/);
   assert.doesNotMatch(workflow, /id-token:\s*write/);
 });
@@ -803,6 +810,7 @@ test("self-publication admission assembly binds downloaded evidence without publ
   assert.match(script, /createPublicationGateDecision/);
   assert.match(script, /createRunnerProvenance/);
   assert.match(script, /createPublicationAdmission/);
+  assert.match(script, /required\("BUILDCHAIN_PUBLICATION_VERSION"\)/);
   assert.match(script, /admitted source tree does not match release candidate/);
   assert.match(script, /github-hosted-single-job/);
   assert.doesNotMatch(script, /NODE_AUTH_TOKEN|NPM_TOKEN|BUILDCHAIN_PROMOTION_TOKEN/);
@@ -1807,6 +1815,10 @@ test("promote action exposes generic publish source-lock gate", () => {
   assert.match(action, /publish-source-ref:/);
   assert.match(action, /publish-source-sha:/);
   assert.match(action, /publish-source-locked:/);
+  assert.match(action, /expected-publication-version:/);
+  assert.match(action, /planned-publication-version:/);
+  assert.match(implementation, /expectedPublicationVersion/);
+  assert.match(implementation, /planned-publication-version/);
   assert.match(implementation, /kungfu-buildchain-publish-source-lock-validation/);
   assert.match(implementation, /publish-gate\/\{alpha,release,major\}/);
   assert.match(implementation, /does not match promotion sha/);

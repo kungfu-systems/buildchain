@@ -159,7 +159,7 @@
         "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes"
       ],
       "breakingDigest": "sha256:6dbae32ce3d7aab3be6957065105af574794581847b7637314dad45f5349c919",
-      "auditDigest": "sha256:2b1309b143763465efb01094b2237951907850f785a9914aa6baa128ac6a3ce4"
+      "auditDigest": "sha256:10c3132362feab7e8e3f612eedc2e62b9b90ff0ed2fcf8445ce75caef55c26d5"
     },
     {
       "contractVersion": 1,
@@ -269,7 +269,7 @@
         "semver GitHub Releases are created or updated only after transaction completion, with prerelease/latest metadata derived from the public release tag"
       ],
       "breakingDigest": "sha256:a59f0910e6df842e7699139472e5dd69ac2fdd7f7213bf2cb346d1d622556874",
-      "auditDigest": "sha256:76846a188081db0fe179c5d3e9d4f67fb3cee03354de45cb4b2ed3bb70f1579e"
+      "auditDigest": "sha256:eac5c97897a71a6ab8e07cf978bd631d953798b447974f2bae825b66f6e10924"
     },
     {
       "contractVersion": 1,
@@ -527,7 +527,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:1b444a6dd4d4ea1b7f55ab74e6e53b4e042c9a872d6dee247acf63f7bbab9f23"
+      "auditDigest": "sha256:653df5708fa73f074129b3bf1e047f7f204f42e4521e2b0d7521618f01f9f345"
     },
     {
       "contractVersion": 1,
@@ -2525,7 +2525,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:46238f8fc3c20924decc57ecad142a462fc4739c6bc21409d5cd2457fc1c3cdd",
-      "auditDigest": "sha256:2b1309b143763465efb01094b2237951907850f785a9914aa6baa128ac6a3ce4"
+      "auditDigest": "sha256:10c3132362feab7e8e3f612eedc2e62b9b90ff0ed2fcf8445ce75caef55c26d5"
     },
     {
       "contractVersion": 1,
@@ -2654,5 +2654,5 @@
     }
   ],
   "compatibilityDigest": "sha256:af162b86ab4506e9b5f1d3c59b41f3fd57fbad79ff4d749a7f12ff16460517f8",
-  "contractDigest": "sha256:7f9d1c7fb69c39a5b08690139675761129d267b0b99005ec0dfeec742f07c9c7"
+  "contractDigest": "sha256:efb308df5c40080901be04042987df67b3a798251464eca5c86ad9226b109941"
 }
