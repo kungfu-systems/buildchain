@@ -780,6 +780,7 @@ test("sealed publication authority verifier is independent and credential-free",
   assert.match(workflow, /name: Restrict automatic admission to Buildchain self-publication/);
   assert.match(workflow, /automatic publication admission is restricted to Buildchain self-publication/);
   assert.match(workflow, /name: Audit Buildchain self-publication control plane/);
+  assert.match(workflow, /--source-sha "\$\{\{ inputs\.source-sha \}\}"/);
   assert.match(workflow, /--workflow-ref "\$\{\{ inputs\.buildchain-ref \}\}"/);
   assert.match(workflow, /name: Assemble Buildchain self-publication admission/);
   assert.match(workflow, /steps\.auto-evidence\.outputs\.admission-json/);
@@ -811,6 +812,8 @@ test("publication control-plane audit defers npm OIDC authorization to the publi
   assert.match(script, /workflowRef \? `\?ref=\$\{encodeURIComponent\(workflowRef\)\}`/);
   assert.match(script, /evidenceSource: "exact-workflow-source"/);
   assert.match(script, /evidenceSource: "exact-workflow-job"/);
+  assert.match(script, /policyMode: "provider-enforced-transaction"/);
+  assert.match(script, /source pull-request lineage/);
   assert.doesNotMatch(script, /actions\/permissions\/workflow/);
   assert.doesNotMatch(script, /actions\/runners\?per_page/);
   assert.doesNotMatch(script, /\["trust", "list"/);

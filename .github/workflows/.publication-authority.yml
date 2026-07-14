@@ -295,6 +295,7 @@ jobs:
           node .buildchain/authority-runtime/scripts/audit-publication-control-plane.mjs \
             --repository "${{ inputs.buildchain-repository }}" \
             --branch "${{ inputs.target-ref }}" \
+            --source-sha "${{ inputs.source-sha }}" \
             --workflow .github/workflows/release-candidate-promote.yml \
             --workflow-ref "${{ inputs.buildchain-ref }}" \
             --publisher-workflow "${{ inputs.publisher-workflow-path }}" \

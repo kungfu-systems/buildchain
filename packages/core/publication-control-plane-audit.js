@@ -62,6 +62,24 @@ export function evaluatePublicationControlPlaneSnapshot({
       oidc.environment === providerEnvironment &&
       oidc.idTokenJobScoped === true &&
       oidc.longLivedCredentialPresent === false;
+  const configuredBranchPolicyPass = branchPolicy.ref === branch &&
+    branchPolicy.strict === true &&
+    Number(branchPolicy.requiredApprovals || 0) >= 1 &&
+    branchPolicy.requireConversationResolution === true &&
+    branchPolicy.enforceAdmins === true;
+  const providerTransactionBranchPass = branchPolicy.ref === branch &&
+    branchPolicy.policyMode === "provider-enforced-transaction" &&
+    branchPolicy.protected === true &&
+    branchPolicy.enforcementLevel === "everyone" &&
+    Array.isArray(branchPolicy.requiredStatusChecks) &&
+    branchPolicy.requiredStatusChecks.includes("check") &&
+    branchPolicy.requiredCheckPassed === true &&
+    branchPolicy.sourceSha === branchPolicy.headSha &&
+    branchPolicy.mergedPullRequest === true &&
+    branchPolicy.baseRef === branch &&
+    branchPolicy.headRepository === repository &&
+    Number(branchPolicy.approvalCount || 0) >= 1 &&
+    branchPolicy.independentApproval === true;
   const facts = [
     fact(
       "actions-policy",
@@ -70,11 +88,7 @@ export function evaluatePublicationControlPlaneSnapshot({
     ),
     fact(
       "branch-policy",
-      branchPolicy.ref === branch &&
-        branchPolicy.strict === true &&
-        Number(branchPolicy.requiredApprovals || 0) >= 1 &&
-        branchPolicy.requireConversationResolution === true &&
-        branchPolicy.enforceAdmins === true,
+      configuredBranchPolicyPass || providerTransactionBranchPass,
       branchPolicy,
     ),
     fact(
