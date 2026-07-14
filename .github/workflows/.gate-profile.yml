@@ -346,6 +346,22 @@ jobs:
     runs-on: ${{ fromJSON(matrix.gate.runner) }}
     timeout-minutes: ${{ matrix.gate.timeoutMinutes }}
     steps:
+      - name: Reset prior Windows Gate source workspace
+        if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          $workspace = [System.IO.Path]::GetFullPath($env:GITHUB_WORKSPACE)
+          $source = [System.IO.Path]::GetFullPath((Join-Path $workspace "source"))
+          if ([System.IO.Path]::GetDirectoryName($source) -ne $workspace) {
+            throw "refusing to clean Gate source outside GITHUB_WORKSPACE"
+          }
+          if (Test-Path -LiteralPath $source) {
+            & cmd.exe /d /c "rd /s /q `"$source`""
+            if ($LASTEXITCODE -ne 0 -or (Test-Path -LiteralPath $source)) {
+              throw "failed to reset prior Windows Gate source workspace: $source"
+            }
+          }
+
       - name: Checkout locked consumer source
         uses: actions/checkout@v7.0.0
         with:

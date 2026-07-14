@@ -1937,6 +1937,10 @@ test("reusable Shifu Gate workflow keeps project policy outside Buildchain", () 
   assert.match(workflow, /shifu-gate-profile\.mjs --mode aggregate/);
   assert.match(workflow, /name: Gate profile \/ aggregate/);
   assert.match(workflow, /gate-aggregate-json:/);
+  assert.match(workflow, /Reset prior Windows Gate source workspace/);
+  assert.match(workflow, /runner\.os == 'Windows'/);
+  assert.match(workflow, /rd \/s \/q/);
+  assert.match(workflow, /refusing to clean Gate source outside GITHUB_WORKSPACE/);
   assert.doesNotMatch(workflow, /product\.verify|gate\.catalog|dev-patrol|alpha-pr|release-pr/);
 });
 
