@@ -445,6 +445,8 @@ jobs:
       channel: ${{ steps.channel.outputs.channel }}
       buildchain-ref: ${{ steps.channel.outputs.buildchain-ref }}
       contract-lock-path: ${{ steps.lock.outputs.path }}
+      router-repository: ${{ steps.router.outputs.repository }}
+      router-ref: ${{ steps.router.outputs.ref }}
       selection-source: ${{ steps.channel.outputs.selection-source }}
       reason: ${{ steps.channel.outputs.reason }}
     steps:
@@ -529,20 +531,20 @@ jobs:
       controller-plan-digest: ${{ steps.plan.outputs.controller-plan-digest }}
       runtime-sha: ${{ steps.identities.outputs.runtime-sha }}
     steps:
-      - name: Checkout selected Buildchain runtime
+      - name: Checkout Buildchain controller workflow shell
         uses: actions/checkout@v7.0.0
         with:
-          repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ needs.resolve-channel.outputs.buildchain-ref }}
-          path: .buildchain/runtime
+          repository: ${{ needs.resolve-channel.outputs.router-repository }}
+          ref: ${{ needs.resolve-channel.outputs.router-ref }}
+          path: .buildchain/controller-runtime
           persist-credentials: false
 
-      - name: Resolve selected runtime identity
+      - name: Resolve controller workflow shell identity
         id: identities
         shell: bash
         run: |
-          runtime_sha="$(git -C .buildchain/runtime rev-parse HEAD)"
-          contract_digest="$(node -e 'const fs=require("fs"); const value=JSON.parse(fs.readFileSync(".buildchain/runtime/dist/site/buildchain-contract.json","utf8")); process.stdout.write(value.contractDigest)')"
+          runtime_sha="$(git -C .buildchain/controller-runtime rev-parse HEAD)"
+          contract_digest="$(node -e 'const fs=require("fs"); const value=JSON.parse(fs.readFileSync(".buildchain/controller-runtime/dist/site/buildchain-contract.json","utf8")); process.stdout.write(value.contractDigest)')"
           {
             echo "runtime-sha=${runtime_sha}"
             echo "contract-digest=${contract_digest}"
@@ -550,12 +552,12 @@ jobs:
 
       - name: Create channel router controller plan
         id: plan
-        run: node .buildchain/runtime/scripts/controller-evidence.mjs --mode plan
+        run: node .buildchain/controller-runtime/scripts/controller-evidence.mjs --mode plan
         env:
           BUILDCHAIN_CONTROLLER_ID: build-channel-router
           BUILDCHAIN_CONTROLLER_SOURCE_REPOSITORY: ${{ github.repository }}
           BUILDCHAIN_CONTROLLER_SOURCE_SHA: ${{ github.sha }}
-          BUILDCHAIN_CONTROLLER_RUNTIME_REF: ${{ needs.resolve-channel.outputs.buildchain-ref }}
+          BUILDCHAIN_CONTROLLER_RUNTIME_REF: ${{ needs.resolve-channel.outputs.router-ref }}
           BUILDCHAIN_CONTROLLER_RUNTIME_SHA: ${{ steps.identities.outputs.runtime-sha }}
           BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST: ${{ steps.identities.outputs.contract-digest }}
           BUILDCHAIN_CONTROLLER_INPUTS_JSON: ${{ toJSON(inputs) }}
@@ -659,12 +661,12 @@ jobs:
       controller-receipt-digest: ${{ steps.receipt.outputs.controller-receipt-digest }}
       controller-receipt-status: ${{ steps.receipt.outputs.controller-receipt-status }}
     steps:
-      - name: Checkout selected Buildchain runtime
+      - name: Checkout Buildchain controller workflow shell
         uses: actions/checkout@v7.0.0
         with:
-          repository: ${{ inputs.buildchain-repository }}
+          repository: ${{ needs.resolve-channel.outputs.router-repository }}
           ref: ${{ needs.controller-plan.outputs.runtime-sha }}
-          path: .buildchain/runtime
+          path: .buildchain/controller-runtime
           persist-credentials: false
 
       - name: Download channel router controller plan
@@ -675,7 +677,7 @@ jobs:
 
       - name: Create channel router controller receipt
         id: receipt
-        run: node .buildchain/runtime/scripts/controller-evidence.mjs --mode receipt
+        run: node .buildchain/controller-runtime/scripts/controller-evidence.mjs --mode receipt
         env:
           BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
           BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
