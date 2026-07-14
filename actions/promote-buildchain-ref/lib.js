@@ -2601,6 +2601,38 @@ async function ensureManagedChannelBranchProtection({
     try {
       ({ data: currentProtection } = await octokit.rest.repos.getBranchProtection({ owner, repo, branch }));
     } catch (error) {
+      if (error.status === 403 && typeof octokit.rest.repos?.getBranch === "function") {
+        const { data: branchSummary } = await octokit.rest.repos.getBranch({ owner, repo, branch });
+        const providerProtection = branchSummary.protection || {};
+        const resolvedStatusCheck = resolveProtectedStatusCheckContext({
+          protection: providerProtection,
+          requiredStatusCheck,
+        });
+        const missing = [];
+        if (branchSummary.protected !== true) missing.push("must be provider-protected");
+        if (providerProtection.required_status_checks?.enforcement_level !== "everyone") {
+          missing.push("must enforce required status checks for everyone");
+        }
+        if (!protectedStatusCheckNames(providerProtection).includes(resolvedStatusCheck)) {
+          missing.push(`must require a ${requiredStatusCheck} status check using the exact context`);
+        }
+        if (missing.length > 0) {
+          throw new Error(
+            `Managed channel ${branch} provider policy is not qualifying: ${missing.join("; ")}`,
+          );
+        }
+        const observedPolicy = {
+          requiredStatusChecks: protectedStatusCheckNames(providerProtection),
+          enforcementLevel: providerProtection.required_status_checks.enforcement_level,
+        };
+        return {
+          action: "branch-protection-policy-observed",
+          ref: branch,
+          policySource: "provider-enforced-existing-policy",
+          before: observedPolicy,
+          after: observedPolicy,
+        };
+      }
       if (!notFound(error)) throw error;
     }
   }
@@ -5505,6 +5537,7 @@ export {
   assertProtectedChannel,
   assertPromotableRepository,
   assertPromotableTargetRef,
+  ensureManagedChannelBranchProtection,
   assertSha,
   discoverVersionStateFiles,
   expectedHeadRefForTarget,
