@@ -103,6 +103,7 @@ function usage() {
                       [--require-lifecycle-stages <comma-list>]
   buildchain lifecycle run <stage> [--cwd <dir>] [--required]
                              [--artifact-name <name>] [--artifact-path <path>]...
+                             [--manifest-path <path>] [--summary-path <path>]
                              [--process-summary <json>]
   buildchain npm dry-run [--cwd <dir>] [--expected-tag <tag>] [--registry <url>]
                          [--dist-tag <tag>] [--skip-npm-publish-dry-run] [--json]
@@ -1489,6 +1490,8 @@ async function main(argv = process.argv.slice(2)) {
       required: readBooleanFlag(lifecycleArgs, "required"),
       artifactName: readFlag(lifecycleArgs, "artifact-name", "buildchain-artifact"),
       artifactPaths,
+      manifestPath: readFlag(lifecycleArgs, "manifest-path", ".buildchain/artifacts/manifest.json"),
+      summaryPath: readFlag(lifecycleArgs, "summary-path", ".buildchain/artifacts/summary.json"),
       expectedArtifactsJson: readFlag(lifecycleArgs, "expected-artifacts-json", ""),
       logPath: readFlag(lifecycleArgs, "log-path", process.env.BUILDCHAIN_LOG_PATH || ".buildchain/logs/events.jsonl"),
       processSummaryPath: readFlag(lifecycleArgs, "process-summary", ""),
