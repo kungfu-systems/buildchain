@@ -78,6 +78,12 @@ Every matrix job checks out the exact source SHA planned by Buildchain, invokes
 then invokes `shifu gate receipt validate`. Buildchain uploads the original
 receipt and validation result even when the run fails.
 
+Before invoking the project-owned command, the workflow adds the runner
+account's `~/.local/bin` directory to `PATH` on Windows, Linux, and macOS. This
+keeps user-scoped tools such as `uv` available to strict Shifu cache profiles
+without assuming an administrator-managed system installation. The consumer or
+runner owner remains responsible for provisioning the declared tools.
+
 The fixed `Gate profile / aggregate` job fails closed for missing receipts,
 invalid or stale Shifu validation, dirty or mismatched source SHA, registry or
 plan drift, missing required results, required failures/skips, or gate action

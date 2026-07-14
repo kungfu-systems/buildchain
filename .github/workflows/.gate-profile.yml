@@ -399,6 +399,16 @@ jobs:
         with:
           node-version: ${{ inputs.node-version }}
 
+      - name: Expose Windows runner user toolchain
+        if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
+        run: Add-Content -LiteralPath $env:GITHUB_PATH -Value (Join-Path $HOME ".local\bin")
+
+      - name: Expose POSIX runner user toolchain
+        if: ${{ runner.os != 'Windows' }}
+        shell: bash
+        run: echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
+
       - name: Download locked Gate plan
         uses: actions/download-artifact@v7.0.0
         with:
