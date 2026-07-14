@@ -376,7 +376,7 @@ function pageCapabilityMeta(relPath, category) {
 function cliCommandMeta(id) {
   const map = new Map(Object.entries({
     audit: { group: "release-passport-trust", purpose: "Inspect read-only publication authority audit commands." },
-    "audit-publication-control-plane": { group: "release-passport-trust", purpose: "Read GitHub and npm publication control-plane state and emit a sanitized expiring receipt." },
+    "audit-publication-control-plane": { group: "release-passport-trust", purpose: "Read GitHub publication controls, bind provider-enforced npm identity, and emit a sanitized expiring receipt." },
     badges: { group: "distribution-indexes", purpose: "Inspect README badge command families." },
     "badges-bundle": { group: "distribution-indexes", purpose: "Generate or verify the combined KFD and Release Passport badge bundle." },
     "badges-readme": { group: "distribution-indexes", purpose: "Generate or verify managed README badge blocks." },

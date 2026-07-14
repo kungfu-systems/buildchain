@@ -7,7 +7,7 @@
     "workflowCount": 46,
     "actionCount": 4,
     "sitePageCount": 49,
-    "docCommandRefCount": 245,
+    "docCommandRefCount": 246,
     "failureCount": 0
   },
   "enumerated": {
@@ -2094,6 +2094,11 @@
         "command": "buildchain audit publication-control-plane"
       },
       {
+        "id": "audit",
+        "path": "docs/publication-authority.md",
+        "command": "buildchain audit publication-control-plane"
+      },
+      {
         "id": "badges-bundle",
         "path": "docs/cli.md",
         "command": "buildchain badges bundle --json"
@@ -3311,7 +3316,7 @@
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "a6daf4822365bf576425777230246046ebca67b3f8dcfea61fc7a61773776185",
     "workflowRegistryDigest": "eacd2721b69b6c4e898d2ca919152c1b85e4fc7364c7a3e7644e3a644a0f8b16",
-    "pageRegistryDigest": "74018eacefbea016a9b3be61d27c90f5d10b8967781752a2339ff18b72330463"
+    "pageRegistryDigest": "6a5cb7bee803c27cc9dab630c87dffc31dba50fb8a5050d4086b56c4b7a13dde"
   },
   "comparison": {
     "missingCliRegistry": [],
