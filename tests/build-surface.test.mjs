@@ -117,6 +117,13 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   assert.match(gateEnvelope, /shifu-gate-aggregate/);
   assert.doesNotMatch(gateEnvelope, /BUILDCHAIN_CONTROLLER_(?:GATE_IDS|GATE_RESULTS)/);
 
+  const channelRouter = fs.readFileSync(path.join(root, ".github/workflows/build.yml"), "utf8");
+  assert.match(channelRouter, /router-repository: \$\{\{ steps\.router\.outputs\.repository \}\}/);
+  assert.match(channelRouter, /router-ref: \$\{\{ steps\.router\.outputs\.ref \}\}/);
+  assert.match(channelRouter, /Checkout Buildchain controller workflow shell/);
+  assert.match(channelRouter, /\.buildchain\/controller-runtime\/scripts\/controller-evidence\.mjs/);
+  assert.doesNotMatch(channelRouter, /\.buildchain\/runtime\/scripts\/controller-evidence\.mjs/);
+
   const paperRelease = fs.readFileSync(path.join(root, ".github/workflows/paper-release.yml"), "utf8");
   const promotion = fs.readFileSync(path.join(root, ".github/workflows/release-candidate-promote.yml"), "utf8");
   assert.match(paperRelease, /!inputs\.dry-run.*controller-receipt-qualifying/);
