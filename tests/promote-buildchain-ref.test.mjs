@@ -13,6 +13,7 @@ const {
   assertPromotableRepository,
   assertPromotableTargetRef,
   discoverVersionStateFiles,
+  ensureManagedChannelBranchProtection,
   expectedHeadRefForTarget,
   latestAlphaForPatch,
   ownsMajorAlphaChannel,
@@ -6371,6 +6372,59 @@ test("strict alpha promotion uses provider transaction evidence when protection 
       requiredStatusCheck: "check",
     }),
     /must have an independent approving review/,
+  );
+});
+
+test("managed channels reuse provider-enforced policy when protection details are unreadable", async () => {
+  let requiredContexts = ["check"];
+  const octokit = {
+    rest: {
+      repos: {
+        getBranchProtection: async () => {
+          const error = new Error("Resource not accessible by integration");
+          error.status = 403;
+          throw error;
+        },
+        getBranch: async () => ({
+          data: {
+            protected: true,
+            protection: {
+              required_status_checks: {
+                enforcement_level: "everyone",
+                contexts: requiredContexts,
+                checks: requiredContexts.map((context) => ({ context, app_id: 15368 })),
+              },
+            },
+          },
+        }),
+        updateBranchProtection: async () => {
+          assert.fail("provider-enforced existing policy must not be rewritten");
+        },
+      },
+    },
+  };
+
+  const evidence = await ensureManagedChannelBranchProtection({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    branch: "alpha/v1/v1.0",
+    requiredStatusCheck: "check",
+  });
+  assert.equal(evidence.action, "branch-protection-policy-observed");
+  assert.equal(evidence.policySource, "provider-enforced-existing-policy");
+  assert.deepEqual(evidence.after.requiredStatusChecks, ["check"]);
+
+  requiredContexts = ["security"];
+  await assert.rejects(
+    ensureManagedChannelBranchProtection({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      branch: "alpha/v1/v1.0",
+      requiredStatusCheck: "check",
+    }),
+    /must require a check status check using the exact context/,
   );
 });
 

@@ -348,6 +348,10 @@ governance semantics:
   instead prove a protected current head, same-repository merged PR,
   independent approval, and the required successful `check` from its configured
   GitHub App;
+- post-publish channel reconciliation reuses an already qualifying
+  provider-enforced policy when the workflow token cannot read or rewrite the
+  administrative protection document, and fails closed if the public branch
+  summary no longer carries the required check for everyone;
 - alpha promotion must come from a merged same-repository PR
   `dev/vN/vN.M -> alpha/vN/vN.M`, or from a strict same-line
   `publish-gate/alpha/vN/vN.M/<version> -> alpha/vN/vN.M` source-lock PR;
