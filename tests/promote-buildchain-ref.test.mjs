@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 const {
   assertAllowedLocalChanges,
   assertChannelPromotionPr,
+  assertProviderEnforcedChannelTransaction,
   assertPromotableRepository,
   assertPromotableTargetRef,
   discoverVersionStateFiles,
@@ -6294,32 +6295,17 @@ test("strict alpha promotion requires a protected dev-to-alpha PR", async () => 
   ]);
 });
 
-test("strict alpha promotion rejects unreadable protection details", async () => {
-  const calls = [];
+test("strict alpha promotion uses provider transaction evidence when protection details are unreadable", async () => {
+  let reviewState = "APPROVED";
   const octokit = {
     rest: {
-      git: {
-        getRef: async ({ ref }) => {
-          if (ref === "heads/alpha/v1/v1.0") {
-            return { data: { object: { sha: SHA } } };
-          }
-          throw notFound();
-        },
-        listMatchingRefs: async () => ({ data: [] }),
-        createRef: async () => ({}),
-        updateRef: async () => ({}),
-      },
       repos: {
-        getBranchProtection: async ({ branch }) => {
-          calls.push(["getBranchProtection", branch]);
-          const error = new Error("Resource not accessible by integration");
-          error.status = 403;
-          throw error;
-        },
         listPullRequestsAssociatedWithCommit: async () => ({
           data: [
             {
+              number: 42,
               merged_at: "2026-06-29T00:00:00Z",
+              user: { login: "author" },
               base: { ref: "alpha/v1/v1.0" },
               head: {
                 ref: "dev/v1/v1.0",
@@ -6328,24 +6314,64 @@ test("strict alpha promotion rejects unreadable protection details", async () =>
             },
           ],
         }),
+        getBranch: async ({ branch }) => {
+          assert.equal(branch, "alpha/v1/v1.0");
+          return {
+            data: {
+              protected: true,
+              commit: { sha: SHA },
+              protection: {
+                required_status_checks: {
+                  enforcement_level: "everyone",
+                  contexts: ["check"],
+                  checks: [{ context: "check", app_id: 15368 }],
+                },
+              },
+            },
+          };
+        },
+      },
+      pulls: {
+        listReviews: async ({ pull_number }) => {
+          assert.equal(pull_number, 42);
+          return { data: [{ state: reviewState, user: { login: "reviewer" } }] };
+        },
+      },
+      checks: {
+        listForRef: async ({ ref }) => {
+          assert.equal(ref, SHA);
+          return {
+            data: {
+              check_runs: [{ name: "check", conclusion: "success", app: { id: 15368 } }],
+            },
+          };
+        },
       },
     },
   };
 
+  const resolvedStatusCheck = await assertProviderEnforcedChannelTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sourceSha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    requiredStatusCheck: "check",
+  });
+  assert.equal(resolvedStatusCheck, "check");
+
+  reviewState = "CHANGES_REQUESTED";
   await assert.rejects(
-    promoteBuildchainRefs({
+    assertProviderEnforcedChannelTransaction({
       octokit,
       owner: "kungfu-systems",
       repo: "buildchain",
-      sha: SHA,
+      sourceSha: SHA,
       targetRef: "alpha/v1/v1.0",
-      versionState: false,
-      requireGovernance: true,
+      requiredStatusCheck: "check",
     }),
-    /protection details must be readable/,
+    /must have an independent approving review/,
   );
-
-  assert.deepEqual(calls, [["getBranchProtection", "alpha/v1/v1.0"]]);
 });
 
 test("strict alpha promotion rejects protection without admin enforcement", async () => {

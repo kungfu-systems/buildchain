@@ -341,9 +341,13 @@ set for a controlled repair.
 In strict buildchain promotion, ref movement is also gated by the old ABV
 governance semantics:
 
-- the target channel branch protection details must be readable, must enforce
-  protection for administrators, and must require approving PR review plus the
-  strict `check` job from the `Verify` workflow;
+- when detailed target branch protection is readable, it must enforce
+  protection for administrators and require approving PR review plus the strict
+  `check` job from the `Verify` workflow; when GitHub withholds that
+  administration endpoint from the workflow token, the exact transaction must
+  instead prove a protected current head, same-repository merged PR,
+  independent approval, and the required successful `check` from its configured
+  GitHub App;
 - alpha promotion must come from a merged same-repository PR
   `dev/vN/vN.M -> alpha/vN/vN.M`, or from a strict same-line
   `publish-gate/alpha/vN/vN.M/<version> -> alpha/vN/vN.M` source-lock PR;
