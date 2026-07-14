@@ -137,6 +137,7 @@ async function main() {
     isolation: "github-hosted-single-job",
   });
   const packageJson = JSON.parse(fs.readFileSync(path.join(runtimeRoot, "package.json"), "utf8"));
+  const publicationVersion = required("BUILDCHAIN_PUBLICATION_VERSION");
   const issuedAt = new Date();
   const admission = createPublicationAdmission({
     registryDigest: registry.registryDigest,
@@ -154,7 +155,7 @@ async function main() {
     environment: process.env.BUILDCHAIN_PUBLICATION_ENVIRONMENT || "none",
     product: process.env.BUILDCHAIN_PUBLICATION_PRODUCT || "Buildchain",
     target: process.env.BUILDCHAIN_PUBLICATION_TARGET || `npm:${packageJson.name}`,
-    version: process.env.BUILDCHAIN_PUBLICATION_VERSION || packageJson.version,
+    version: publicationVersion,
     channel: required("BUILDCHAIN_PUBLICATION_CHANNEL"),
     artifactDigest: artifactSet.manifestSetDigest,
     nonce: `${required("GITHUB_RUN_ID")}:${required("GITHUB_RUN_ATTEMPT")}:${sourceSha}`,

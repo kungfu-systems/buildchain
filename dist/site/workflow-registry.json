@@ -231,13 +231,14 @@
         "package-name",
         "product",
         "publication-target",
+        "publication-version",
         "publisher-workflow-path",
         "runner-provenance-json",
         "source-sha",
         "target-ref",
         "used-nonces-json"
       ],
-      "inputCount": 22,
+      "inputCount": 23,
       "secrets": [],
       "secretCount": 0,
       "outputs": [
@@ -1487,9 +1488,11 @@
         "branch-protection-bypass-teams",
         "branch-protection-bypass-users",
         "dry-run",
+        "expected-publication-version",
         "generated-ref-update-token",
         "generated-status-check-token",
         "github-release",
+        "github-release-artifact-paths",
         "github-release-notes",
         "github-release-title",
         "promote-only-release-candidate",
@@ -1535,7 +1538,7 @@
         "transaction-state-path",
         "verification-command"
       ],
-      "inputCount": 52,
+      "inputCount": 54,
       "capabilityGroup": "release-passport-trust",
       "status": "active"
     },

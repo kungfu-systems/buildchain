@@ -80,6 +80,9 @@ inputs:
   publish-package-main:
     description: "Main npm package name for package-set visibility gating"
     default: ""
+  expected-publication-version:
+    description: "Exact publication version sealed by the pre-publication authority plan; promotion fails if transaction selection drifts"
+    default: ""
   require-publish-source-lock:
     description: "Require publish side effects to come from a resolved publish-gate source lock"
     default: "false"
@@ -140,6 +143,9 @@ inputs:
   github-release:
     description: "Create/update the public GitHub Release and upload publish evidence plus release passport assets after a complete release transaction"
     default: "false"
+  github-release-artifact-paths:
+    description: "Newline-separated declared product artifact paths to upload alongside GitHub Release evidence"
+    default: ""
   github-release-title:
     description: "Optional GitHub Release title. Empty defaults to the public release tag."
     default: ""
@@ -159,6 +165,8 @@ inputs:
     description: "Optional expected product version recorded in the release-candidate passport"
     default: ""
 outputs:
+  failure-message:
+    description: "Single-line promotion failure passed to workflow-friction reporting"
   sha:
     description: "Final promoted release or alpha commit SHA"
   tags:
@@ -171,6 +179,10 @@ outputs:
     description: "Final release transaction state"
   transaction-exact-tag:
     description: "Exact release or prerelease tag governed by the transaction"
+  planned-publication-version:
+    description: "Exact version selected during a dry-run publication plan"
+  planned-publication-exact-tag:
+    description: "Exact tag selected during a dry-run publication plan"
   public-release-tag:
     description: "Public GitHub Release tag; anchored package publishes use v<publishedVersion> while transaction-exact-tag remains internal"
   transaction-release-sha:

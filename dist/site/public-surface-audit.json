@@ -625,13 +625,14 @@
           "package-name",
           "product",
           "publication-target",
+          "publication-version",
           "publisher-workflow-path",
           "runner-provenance-json",
           "source-sha",
           "target-ref",
           "used-nonces-json"
         ],
-        "inputCount": 22,
+        "inputCount": 23,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -1754,9 +1755,11 @@
           "branch-protection-bypass-teams",
           "branch-protection-bypass-users",
           "dry-run",
+          "expected-publication-version",
           "generated-ref-update-token",
           "generated-status-check-token",
           "github-release",
+          "github-release-artifact-paths",
           "github-release-notes",
           "github-release-title",
           "promote-only-release-candidate",
@@ -1802,7 +1805,7 @@
           "transaction-state-path",
           "verification-command"
         ],
-        "inputCount": 52
+        "inputCount": 54
       },
       {
         "id": "report-buildchain-issue",
@@ -3328,8 +3331,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "a6daf4822365bf576425777230246046ebca67b3f8dcfea61fc7a61773776185",
-    "workflowRegistryDigest": "0a42ae651ae4e0121393641c792aa99d357cb582752278728bdffb92269314bd",
-    "pageRegistryDigest": "69cad87fc8b656d7876aa6e9861b5d0d4d02ba681e21bccb266c66290f1e17e3"
+    "workflowRegistryDigest": "2b36c3c532082a835a2054ce565b4b5ca39ef1c09b8188a080d5dc4a5909218b",
+    "pageRegistryDigest": "dc526c6f9aefa92aa566a9664374eb4f177f4b3ae5b9480eb94abbbf3a257a30"
   },
   "comparison": {
     "missingCliRegistry": [],

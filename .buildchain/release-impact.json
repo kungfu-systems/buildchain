@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-impact",
   "release": {
-    "version": "2.12.7-alpha.3",
+    "version": "2.12.7-alpha.0",
     "line": "v2.12"
   },
   "versionImpact": {
@@ -80,6 +80,13 @@
       "class": "publication-evidence",
       "rationale": "Publication releases hydrate authenticated npm registry history, verify immutable entries, and bind cumulative registry evidence into release artifacts.",
       "source": "scripts/publication-registry-hydrate.mjs"
+    },
+    {
+      "id": "paper-release-declared-github-assets",
+      "impact": "patch",
+      "class": "publication-distribution",
+      "rationale": "The existing paper release contract now uploads publication artifacts already declared in the publication manifest to the exact GitHub Release, closing the documented PDF distribution path without adding consumer workflow declarations.",
+      "source": ".github/workflows/paper-release.yml"
     },
     {
       "id": "web-surface-channel-build-contract",
