@@ -95,8 +95,13 @@ the publication workflow fetched at `--workflow-ref`: explicit read-only
 workflow defaults, job-scoped write/OIDC permissions, and an exact GitHub-hosted
 runner label. It does not call repository Actions-default or self-hosted-runner
 administration endpoints. Branch/ruleset and OIDC subject facts remain live
-read-only provider queries. This avoids turning a repository-admin token into a
-publication prerequisite.
+read-only provider queries. When the detailed branch-protection endpoint is not
+readable with the workflow token, `--source-sha` binds the provider's public
+protected-branch summary to the exact merged PR, independent approval, required
+successful check, same-repository lineage, and current branch head. This records
+provider-enforced transaction evidence without treating an unavailable
+administration endpoint as an unprotected branch. It avoids turning a
+repository-admin token into a publication prerequisite.
 
 For non-dry-run workflows, missing admission, runner, control-plane, Gate, or
 expected-binding evidence is rejected before Buildchain downloads candidate
@@ -141,6 +146,7 @@ providers select an explicit adapter:
 buildchain audit publication-control-plane \
   --repository kungfu-systems/buildchain \
   --branch dev/v2/v2.12 \
+  --source-sha <exact-merged-branch-sha> \
   --workflow .github/workflows/release-candidate-promote.yml \
   --workflow-ref <exact-buildchain-sha> \
   --publisher-workflow .github/workflows/buildchain-ref-promotion.yml \

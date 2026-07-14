@@ -153,7 +153,8 @@ function usage() {
                           --publication-evidence-json <file-or-json>
                           [--expected-json <file-or-json>] [--used-nonce <nonce>]... [--json]
   buildchain audit publication-control-plane --repository <owner/repo> --branch <protected-branch>
-                          [--workflow-repository <owner/repo>] [--workflow <path>] [--workflow-ref <sha-or-ref>]
+                          [--source-sha <merged-branch-sha>] [--workflow-repository <owner/repo>]
+                          [--workflow <path>] [--workflow-ref <sha-or-ref>]
                           [--job <id>] [--environment <name>] [--package <name>]
                           [--publisher-mode npm-trusted-publisher|github-token|oidc-role]
                           [--npm-trust-json <file-or-json>]
