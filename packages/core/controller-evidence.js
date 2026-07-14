@@ -303,7 +303,7 @@ function normalizeEvidence(entries = []) {
 function receiptStatus(plan, stages) {
   if (stages.some((stage) => stage.status === "failed")) return "failed";
   if (stages.length > 0 && stages.every((stage) => stage.status === "skipped")) return "skipped";
-  if (stages.some((stage) => stage.status === "cancelled" || stage.status === "missing")) return "partial";
+  if (stages.some((stage) => stage.status === "cancelled" || (stage.required && stage.status === "missing"))) return "partial";
   const required = new Set(plan.expected.stages.filter((stage) => stage.required).map((stage) => stage.id));
   if (stages.filter((stage) => required.has(stage.id)).every((stage) => stage.status === "passed")) return "passed";
   return "partial";
