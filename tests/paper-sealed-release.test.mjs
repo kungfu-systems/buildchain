@@ -24,6 +24,7 @@ test("sealed paper release separates read-only build, authority, and admitted pu
   assert.match(workflow, /resolvePublicationCandidateFile\(bundle\.evidence\.files, candidatePath\)/);
   assert.doesNotMatch(workflow, /entry\.path\.endsWith/);
   assert.match(workflow, /github-release-artifact-paths: \$\{\{ steps\.candidate\.outputs\.github-release-artifact-paths \}\}/);
+  assert.match(workflow, /publish-transaction-override: "true"/);
   const publish = workflow.slice(workflow.indexOf("  publish:"));
   assert.doesNotMatch(publish, /Build publication|verify-command|latexmk|docker run/);
 });
