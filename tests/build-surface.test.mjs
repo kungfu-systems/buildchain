@@ -505,7 +505,7 @@ test("paper release workflow publishes declared npm package with source lock and
   );
   assert.match(workflow, /cannot read branch protection before publication build/);
   assert.doesNotMatch(workflow, /BUILDCHAIN_PROMOTION_TOKEN|NODE_AUTH_TOKEN|NPM_TOKEN/);
-  assert.match(docs, /publication-admission-json/);
+  assert.match(docs, /paper-release-sealed\.yml@v2/);
   assert.match(docs, /does not accept a long-lived promotion token/);
   assert.match(workflow, /default: true/);
   assert.ok(
@@ -796,8 +796,8 @@ test("sealed publication authority verifier is independent and credential-free",
   assert.match(workflow, /controllerReceipt:/);
   assert.match(workflow, /artifactManifests(?:,|:)/);
   assert.match(workflow, /artifactPayloads:/);
-  assert.match(workflow, /name: Restrict automatic admission to Buildchain self-publication/);
-  assert.match(workflow, /automatic publication admission is restricted to Buildchain self-publication/);
+  assert.match(workflow, /name: Restrict automatic admission to declared managed publication surfaces/);
+  assert.match(workflow, /release-candidate automatic admission requires Buildchain self-publication identity/);
   assert.match(workflow, /name: Audit Buildchain self-publication control plane/);
   assert.match(workflow, /--source-sha "\$\{\{ inputs\.source-sha \}\}"/);
   assert.match(workflow, /--workflow-ref "\$\{\{ inputs\.buildchain-ref \}\}"/);
