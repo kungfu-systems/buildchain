@@ -154,6 +154,12 @@ export {
 } from "./publication-authority.js";
 
 export {
+  PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT,
+  createPublicationArtifactCandidate,
+  publicationArtifactCandidateDigest,
+} from "./publication-artifact-candidate.js";
+
+export {
   buildchainPublicationAuthorityDescriptors,
   createBuildchainPublicationAuthorityRegistry,
 } from "./buildchain-publication-authority.js";

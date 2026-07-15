@@ -4,7 +4,7 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 79,
-    "workflowCount": 46,
+    "workflowCount": 47,
     "actionCount": 4,
     "sitePageCount": 49,
     "docCommandRefCount": 246,
@@ -609,14 +609,18 @@
         "reusable": true,
         "inputs": [
           "admission-json",
+          "authority-workflow-path",
           "auto-admission",
+          "auto-admission-kind",
           "buildchain-ref",
           "buildchain-repository",
           "control-plane-audit-json",
           "dry-run",
+          "evidence-controller-artifact",
           "evidence-manifest-pattern",
           "evidence-passport-artifact",
           "evidence-payload-pattern",
+          "evidence-publication-artifact",
           "evidence-repository",
           "evidence-run-id",
           "evidence-summary-artifact",
@@ -632,7 +636,7 @@
           "target-ref",
           "used-nonces-json"
         ],
-        "inputCount": 23,
+        "inputCount": 27,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -1336,6 +1340,49 @@
         "outputCount": 0
       },
       {
+        "id": "paper-release-sealed",
+        "path": ".github/workflows/paper-release-sealed.yml",
+        "reusable": true,
+        "inputs": [
+          "artifact-name",
+          "artifact-paths",
+          "artifact-retention-days",
+          "branch-protection-bypass-apps",
+          "branch-protection-bypass-teams",
+          "branch-protection-bypass-users",
+          "buildchain-contract-lock-path",
+          "buildchain-ref",
+          "buildchain-repository",
+          "dry-run",
+          "github-release",
+          "github-release-notes",
+          "github-release-title",
+          "package-name",
+          "publish-dist-tag",
+          "publisher-workflow-path",
+          "release-passport-impact-json",
+          "release-passport-output-dir",
+          "release-passport-product-name",
+          "required-status-check",
+          "target-ref",
+          "target-sha",
+          "toolchain-type",
+          "verify-command",
+          "working-directory"
+        ],
+        "inputCount": 25,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [
+          "github-release-url",
+          "package-name",
+          "package-version",
+          "public-release-tag",
+          "release-passport-path"
+        ],
+        "outputCount": 5
+      },
+      {
         "id": "paper-release",
         "path": ".github/workflows/paper-release.yml",
         "reusable": true,
@@ -1492,7 +1539,11 @@
           "buildchain-ref",
           "buildchain-repository",
           "node-version",
+          "package-name",
+          "prepare-paper-package",
+          "publish-dist-tag",
           "setup-node",
+          "target-ref",
           "toolchain-command",
           "toolchain-digest",
           "toolchain-image",
@@ -1500,7 +1551,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 17,
+        "inputCount": 21,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -1511,13 +1562,17 @@
           "controller-receipt-digest",
           "controller-receipt-json",
           "controller-receipt-status",
+          "package-name",
+          "package-version",
           "publication-artifact-name",
           "publication-manifest-json",
           "publication-manifest-path",
           "publication-passport-path",
-          "publication-registry-path"
+          "publication-registry-path",
+          "publish-dist-tag",
+          "runtime-sha"
         ],
-        "outputCount": 12
+        "outputCount": 16
       },
       {
         "id": "release-candidate-promote",
@@ -3331,8 +3386,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "a6daf4822365bf576425777230246046ebca67b3f8dcfea61fc7a61773776185",
-    "workflowRegistryDigest": "2b36c3c532082a835a2054ce565b4b5ca39ef1c09b8188a080d5dc4a5909218b",
-    "pageRegistryDigest": "dc526c6f9aefa92aa566a9664374eb4f177f4b3ae5b9480eb94abbbf3a257a30"
+    "workflowRegistryDigest": "89b7907718c8b4a7b22c3d36a971510a918f113b245bb7fe1d8982dbaf707c66",
+    "pageRegistryDigest": "3a4779e3d85d0a175e33c7d2a8bee30ede3931cc721a7d8c422ab321f0dec723"
   },
   "comparison": {
     "missingCliRegistry": [],

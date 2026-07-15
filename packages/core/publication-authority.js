@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 
 import { validateControllerReceipt } from "./controller-evidence.js";
+import { createPublicationArtifactCandidate } from "./publication-artifact-candidate.js";
 import { sha256Json, validateReleaseCandidatePassport } from "./release-candidate.js";
 
 export const PUBLICATION_AUTHORITY_REGISTRY_CONTRACT =
@@ -381,6 +382,7 @@ export function createPublicationArtifactManifestSet({
 }
 
 function validateGateAggregate(gateAggregate, { admission, passport }) {
+  const passportSourceSha = passport.source?.headSha || passport.source?.sha;
   if (gateAggregate?.contract === "buildchain.shifu-gate-aggregate/v1") {
     const { digest, ...payload } = gateAggregate;
     const actualDigest = sha256Json(payload);
@@ -390,7 +392,7 @@ function validateGateAggregate(gateAggregate, { admission, passport }) {
     if (gateAggregate.status !== "pass" || gateAggregate.qualifying !== true) {
       throw new Error("gate aggregate is not qualifying");
     }
-    if (![admission.sourceSha, passport.source?.headSha].includes(gateAggregate.sourceSha)) {
+    if (![admission.sourceSha, passportSourceSha].includes(gateAggregate.sourceSha)) {
       throw new Error("gate aggregate source SHA mismatch");
     }
     normalizeDigest(gateAggregate.registry?.digest, "gateAggregate.registry.digest");
@@ -408,7 +410,7 @@ function validateGateAggregate(gateAggregate, { admission, passport }) {
   if (gateAggregate.required !== false) {
     throw new Error("a required Gate policy must supply a qualifying Shifu Gate aggregate");
   }
-  if (![admission.sourceSha, passport.source?.headSha].includes(gateAggregate.sourceSha)) {
+  if (![admission.sourceSha, passportSourceSha].includes(gateAggregate.sourceSha)) {
     throw new Error("publication Gate decision source SHA mismatch");
   }
   const normalizedPolicy = {
@@ -427,6 +429,43 @@ function validateGateAggregate(gateAggregate, { admission, passport }) {
 function validatePublicationEvidence(publicationEvidence, admission) {
   if (!publicationEvidence || typeof publicationEvidence !== "object" || Array.isArray(publicationEvidence)) {
     throw new Error("independent publication evidence is required");
+  }
+  if (publicationEvidence.publicationArtifactCandidate) {
+    const candidate = createPublicationArtifactCandidate(publicationEvidence.publicationArtifactCandidate);
+    const passport = publicationEvidence.publicationArtifactCandidate.passport;
+    const controllerReceipt = publicationEvidence.publicationArtifactCandidate.controllerReceipt;
+    const controllerReceiptDigest = normalizeDigest(controllerReceipt.digest, "controllerReceipt.digest");
+    if (controllerReceiptDigest !== normalizeDigest(admission.controllerReceiptDigest, "admission.controllerReceiptDigest")) {
+      throw new Error("controller receipt evidence binding mismatch");
+    }
+    const contractDigest = normalizeDigest(controllerReceipt.runtime?.contractDigest, "controllerReceipt.runtime.contractDigest");
+    if (contractDigest !== normalizeDigest(admission.contractDigest, "admission.contractDigest")) {
+      throw new Error("runtime contract evidence binding mismatch");
+    }
+    const gate = validateGateAggregate(publicationEvidence.gateAggregate, { admission, passport });
+    if (gate.gateAggregateDigest !== normalizeDigest(admission.gateAggregateDigest, "admission.gateAggregateDigest")) {
+      throw new Error("Gate aggregate evidence binding mismatch");
+    }
+    if (gate.policyDigest !== normalizeDigest(admission.policyDigest, "admission.policyDigest")) {
+      throw new Error("Gate policy evidence binding mismatch");
+    }
+    if (candidate.candidateDigest !== normalizeDigest(admission.artifactDigest, "admission.artifactDigest")) {
+      throw new Error("publication artifact candidate evidence binding mismatch");
+    }
+    return {
+      sourceTreeSha: candidate.sourceTreeSha,
+      controllerReceiptDigest,
+      contractDigest,
+      gateAggregateDigest: gate.gateAggregateDigest,
+      policyDigest: gate.policyDigest,
+      artifactDigest: candidate.candidateDigest,
+      evidenceDigest: publicationAuthorityDigest({
+        sourceTreeSha: candidate.sourceTreeSha,
+        controllerReceiptDigest,
+        gateAggregateDigest: gate.gateAggregateDigest,
+        artifactDigest: candidate.candidateDigest,
+      }),
+    };
   }
   const passport = publicationEvidence.releaseCandidatePassport;
   const buildSummary = publicationEvidence.buildSummary;
