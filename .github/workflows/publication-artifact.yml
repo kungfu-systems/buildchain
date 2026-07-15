@@ -615,6 +615,7 @@ jobs:
             ${{ inputs.working-directory }}/.buildchain/paper-release/**
           retention-days: ${{ inputs.artifact-retention-days }}
           if-no-files-found: error
+          include-hidden-files: true
 
       - name: Create publication-artifact controller receipt
         id: controller-receipt
