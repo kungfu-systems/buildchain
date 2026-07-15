@@ -608,6 +608,7 @@ jobs:
       auto-no-gate: ${{ inputs.publication-auto-no-gate }}
       source-sha: ${{ needs.preflight.outputs.requested-sha }}
       target-ref: ${{ needs.preflight.outputs.target-ref }}
+      required-status-check: ${{ inputs.required-status-check }}
       publisher-workflow-path: ${{ inputs.publication-publisher-workflow-path }}
       product: ${{ inputs.publication-product }}
       publication-target: ${{ inputs.publication-target }}
