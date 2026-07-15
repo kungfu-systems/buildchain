@@ -22,6 +22,11 @@ test("sealed paper release separates read-only build, authority, and admitted pu
   assert.match(workflow, /Setup trusted-publishing Node\.js/);
   assert.match(workflow, /uses: actions\/setup-node@v6\.4\.0/);
   assert.match(workflow, /node-version: "24"/);
+  assert.match(workflow, /BUILDCHAIN_PROMOTION_TOKEN:\n\s+description:/);
+  assert.match(
+    workflow,
+    /generated-ref-update-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token \}\}/,
+  );
   assert.match(workflow, /Verify candidate bytes against sealed capability/);
   assert.match(workflow, /capability\.artifactDigest !== bundle\.candidate\.candidateDigest/);
   assert.match(workflow, /resolvePublicationCandidateFile\(bundle\.evidence\.files, candidatePath\)/);
