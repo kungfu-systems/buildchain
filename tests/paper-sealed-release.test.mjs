@@ -19,6 +19,9 @@ test("sealed paper release separates read-only build, authority, and admitted pu
   assert.match(authority, /--required-status-check "\$\{\{ inputs\.required-status-check \}\}"/);
   assert.match(workflow, /publish:\n    name: Publish admitted paper candidate/);
   assert.match(workflow, /id-token: write/);
+  assert.match(workflow, /Setup trusted-publishing Node\.js/);
+  assert.match(workflow, /uses: actions\/setup-node@v6\.4\.0/);
+  assert.match(workflow, /node-version: "24"/);
   assert.match(workflow, /Verify candidate bytes against sealed capability/);
   assert.match(workflow, /capability\.artifactDigest !== bundle\.candidate\.candidateDigest/);
   assert.match(workflow, /resolvePublicationCandidateFile\(bundle\.evidence\.files, candidatePath\)/);
