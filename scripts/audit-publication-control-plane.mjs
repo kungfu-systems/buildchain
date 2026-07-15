@@ -191,6 +191,7 @@ function main() {
   const workflowPath = flag("workflow", ".github/workflows/release-candidate-promote.yml");
   const workflowRef = flag("workflow-ref");
   const publisherWorkflowPath = flag("publisher-workflow", workflowPath);
+  const requiredStatusCheck = flag("required-status-check", "check");
   const jobId = flag("job", "promote");
   const environment = flag("environment", "none");
   const providerEnvironment = environment === "none" ? "" : environment;
@@ -280,15 +281,16 @@ function main() {
     const checkRuns = githubJson(`repos/${repository}/commits/${sourceSha}/check-runs?per_page=100`, "source check runs");
     const requiredStatusCheckPolicy = branchState.protection?.required_status_checks || {};
     const requiredStatusChecks = requiredStatusCheckPolicy.contexts || [];
-    const requiredCheckSource = (requiredStatusCheckPolicy.checks || []).find((entry) => entry.context === "check");
+    const requiredCheckSource = (requiredStatusCheckPolicy.checks || []).find((entry) => entry.context === requiredStatusCheck);
     branchPolicy = {
       ref: branch,
       policyMode: "provider-enforced-transaction",
       protected: branchState.protected === true,
       enforcementLevel: branchState.protection?.required_status_checks?.enforcement_level || "",
       requiredStatusChecks,
+      requiredStatusCheck,
       requiredCheckPassed: (checkRuns.check_runs || []).some((entry) =>
-        entry.name === "check" &&
+        entry.name === requiredStatusCheck &&
         entry.conclusion === "success" &&
         (!requiredCheckSource?.app_id || entry.app?.id === requiredCheckSource.app_id)
       ),
@@ -350,6 +352,7 @@ function main() {
     branch,
     packageName,
     publisherMode,
+    requiredStatusCheck,
     observedAt: observedAt.toISOString(),
     expiresAt: expiresAt.toISOString(),
     snapshot: {

@@ -159,6 +159,7 @@ jobs:
       source-sha: ${{ inputs.target-sha || github.sha }}
       target-ref: ${{ inputs.target-ref || github.ref_name }}
       publisher-workflow-path: ${{ inputs.publisher-workflow-path }}
+      required-status-check: ${{ inputs.required-status-check }}
       product: ${{ inputs.release-passport-product-name || needs.publication-candidate.outputs.package-name }}
       publication-target: npm:${{ needs.publication-candidate.outputs.package-name }}
       publication-version: ${{ needs.publication-candidate.outputs.package-version }}
