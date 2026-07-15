@@ -16,6 +16,8 @@ Current shared surfaces:
   `@kungfu-tech/buildchain/build-facts`;
 - release passport creation and verification through
   `@kungfu-tech/buildchain/release-passport`.
+- sealed exact-root and KFD assessment inputs for KFX admission through
+  `@kungfu-tech/buildchain/artifact-verification-envelope`.
 - managed KFD / Release Passport badge bundle facts and README marker blocks
   through `@kungfu-tech/buildchain/badges`.
 - publication artifact manifests, source bundles, and publication artifact
@@ -64,6 +66,17 @@ import { collectModuleBuildFacts, writeBuildFacts } from "@kungfu-tech/buildchai
 
 const fact = collectModuleBuildFacts({ moduleId: "native-core" });
 writeBuildFacts({ fact, output: ".buildchain/facts/native-core.json" });
+```
+
+KFX producers can seal one passing artifact verification with exact roots,
+identity, lifecycle, revocation, and an existing ADR-0052 assessment. Consumers
+verify or project the same envelope instead of reconstructing bindings:
+
+```js
+import {
+  projectArtifactVerificationEnvelopeToKfx,
+  verifyArtifactVerificationEnvelope,
+} from "@kungfu-tech/buildchain/artifact-verification-envelope";
 ```
 
 Publication repositories can produce site-consumable paper/report facts without

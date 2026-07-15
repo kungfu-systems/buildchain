@@ -81,6 +81,7 @@ replace them.
 | How does publish evidence, recovery, and finalization work? | [`publish-transaction.md`](publish-transaction.md) | verify | stable |
 | How do I collect and verify module/product build facts from Git source, version files, and outputs? | [`build-facts.md`](build-facts.md) + [`cli.md`](cli.md) | use/verify | stable |
 | How do I publish or verify release passport artifacts? | [`release-passport.md`](release-passport.md) | use | stable |
+| How do I seal exact artifact, identity, lifecycle, and KFD assessment roots for KFX admission? | [`artifact-verification-envelope.md`](artifact-verification-envelope.md) | verify/use | preview |
 | How is product publication authority sealed to an exact workflow, runner, control plane, nonce, and artifact? | [`publication-authority.md`](publication-authority.md) | verify | preview |
 | How do I gate release artifacts with KFD-1 contract-world witnesses? | [`release-passport.md`](release-passport.md#kfd-1-contract-world-release-gate) | verify/use | stable |
 | How do I declare, render, and audit product KFD-2 release trust claims? | [`kfd-support.md`](kfd-support.md#kfd-2) + [`release-passport.md`](release-passport.md#kfd-2-release-trust-passport-audit) + [`cli.md`](cli.md) | verify/use | stable |

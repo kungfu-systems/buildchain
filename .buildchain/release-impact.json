@@ -2,15 +2,29 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-impact",
   "release": {
-    "version": "2.12.7",
-    "line": "v2.12"
+    "version": "2.13.0-alpha.0",
+    "line": "v2.13"
   },
   "versionImpact": {
     "final": "minor",
     "source": "buildchain-version-state",
-    "rationale": "Buildchain v2.12 adds a compatible public channel-router workflow that selects generic major alpha or stable runtimes from release intent while preserving the existing reusable build surface."
+    "rationale": "Buildchain v2.13 adds a compatible sealed artifact-verification envelope, public Node and CLI projections, and exact KFD assessment bindings for KFX admission."
   },
   "surfaceImpacts": [
+    {
+      "id": "artifact-verification-envelope",
+      "impact": "minor",
+      "class": "evidence-contract",
+      "rationale": "A new public envelope verifies exact artifact, provenance, identity, lifecycle, revocation, and existing KFD assessment roots, then projects the same sealed root directly to KFX admission inputs.",
+      "source": "packages/core/artifact-verification-envelope.js"
+    },
+    {
+      "id": "release-line-impact-state",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Release-line bootstrap now updates the release-impact version and line before generated version-state validation, so a newly opened minor dev branch is internally consistent.",
+      "source": "packages/core/release-line-bootstrap.js"
+    },
     {
       "id": "channel-build-router",
       "impact": "minor",
@@ -121,5 +135,5 @@
   "breaking": false,
   "security": false,
   "migrationRequired": false,
-  "summary": "Buildchain v2.12 introduces a single-config alpha/stable channel router, preserves authoritative consumer contract locks, and makes constrained self-hosted runtime checkout use the trusted cache and bounded exact-SHA fallback path."
+  "summary": "Buildchain v2.13 introduces one sealed exact-root KFX admission envelope with matching Node and CLI projections, while release-line bootstrap keeps the new minor version-impact state internally consistent."
 }
