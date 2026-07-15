@@ -1068,6 +1068,7 @@ function canReplaceStaleVersionStateTransaction({
   targetRef,
   channel,
   allowVersionStateFinalization,
+  explicitOverride,
   localOnly,
 }) {
   if (!materialErrorRequiresRepair(error)) {
@@ -1076,7 +1077,7 @@ function canReplaceStaleVersionStateTransaction({
   if (localOnly) {
     return true;
   }
-  if (!allowVersionStateFinalization) {
+  if (!allowVersionStateFinalization && !explicitOverride) {
     return false;
   }
   if (transactionHasPublishedMaterial(existing)) {
@@ -1744,6 +1745,7 @@ async function runPublishTransaction({
         targetRef,
         channel,
         allowVersionStateFinalization,
+        explicitOverride,
         localOnly: Boolean(localExisting && !durableExisting),
       });
     if (!canFinalizeVersionState && !canReplaceStaleVersionState) {

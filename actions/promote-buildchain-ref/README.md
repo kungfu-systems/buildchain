@@ -336,7 +336,11 @@ Missing required artifacts can be published on the next run. Conflicting
 refs, digests, or declared provenance put the transaction into
 `repair_required`; `abandoned` and
 `failed_permanently` also fail closed unless `publish-transaction-override` is
-set for a controlled repair.
+set for a controlled repair. The same override may replace a stale transaction
+only when its version, exact tag, target ref, and channel are unchanged, the
+transaction is not complete, and it contains no published artifacts or
+evidence. This lets a newly admitted source retry a previously failed paper
+publication without weakening already-published facts.
 
 In strict buildchain promotion, ref movement is also gated by the old ABV
 governance semantics:
