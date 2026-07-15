@@ -56,6 +56,9 @@ jobs:
       BUILDCHAIN_SOURCE_REF: ${{ inputs.source-ref }}
       BUILDCHAIN_INITIAL_VERSION: ${{ inputs.initial-version }}
       BUILDCHAIN_REQUIRED_STATUS_CHECK: ${{ inputs.required-status-check }}
+      BUILDCHAIN_PROMOTION_BYPASS_APPS: ${{ vars.BUILDCHAIN_PROMOTION_BYPASS_APPS }}
+      BUILDCHAIN_PROMOTION_BYPASS_USERS: ${{ vars.BUILDCHAIN_PROMOTION_BYPASS_USERS }}
+      BUILDCHAIN_PROMOTION_BYPASS_TEAMS: ${{ vars.BUILDCHAIN_PROMOTION_BYPASS_TEAMS }}
       BUILDCHAIN_CREATE_ALPHA_PR: ${{ inputs.create-alpha-pr }}
       BUILDCHAIN_SET_DEFAULT_BRANCH: ${{ inputs.set-default-branch }}
       BUILDCHAIN_APPLY: ${{ inputs.apply }}
@@ -173,9 +176,28 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          csv_json() {
+            jq -Rn --arg value "$1" \
+              '$value | split(",") | map(gsub("^\\s+|\\s+$"; "")) | map(select(length > 0))'
+          }
+          bypass_apps="$(csv_json "$BUILDCHAIN_PROMOTION_BYPASS_APPS")"
+          bypass_users="$(csv_json "$BUILDCHAIN_PROMOTION_BYPASS_USERS")"
+          bypass_teams="$(csv_json "$BUILDCHAIN_PROMOTION_BYPASS_TEAMS")"
+          if jq -e -n \
+            --argjson apps "$bypass_apps" \
+            --argjson users "$bypass_users" \
+            --argjson teams "$bypass_teams" \
+            '($apps + $users + $teams) | length == 0' >/dev/null; then
+            echo "::error::Release line bootstrap requires a declared promotion bypass app, user, or team." >&2
+            echo "::error::Configure BUILDCHAIN_PROMOTION_BYPASS_APPS, BUILDCHAIN_PROMOTION_BYPASS_USERS, or BUILDCHAIN_PROMOTION_BYPASS_TEAMS before apply=true." >&2
+            exit 1
+          fi
           for branch in "${{ steps.plan.outputs.dev_ref }}" "${{ steps.plan.outputs.alpha_ref }}" "${{ steps.plan.outputs.release_ref }}"; do
             jq -n \
               --arg context "$BUILDCHAIN_REQUIRED_STATUS_CHECK" \
+              --argjson bypass_apps "$bypass_apps" \
+              --argjson bypass_users "$bypass_users" \
+              --argjson bypass_teams "$bypass_teams" \
               '{
                 required_status_checks: { strict: true, contexts: [$context] },
                 enforce_admins: true,
@@ -183,7 +205,11 @@ jobs:
                   required_approving_review_count: 1,
                   require_code_owner_reviews: false,
                   require_last_push_approval: false,
-                  bypass_pull_request_allowances: {}
+                  bypass_pull_request_allowances: {
+                    apps: $bypass_apps,
+                    users: $bypass_users,
+                    teams: $bypass_teams
+                  }
                 },
                 restrictions: null,
                 required_conversation_resolution: true

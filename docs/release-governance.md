@@ -590,7 +590,11 @@ Buildchain's own promotion workflow reads `BUILDCHAIN_PROMOTION_BYPASS_APPS`,
 `BUILDCHAIN_PROMOTION_BYPASS_TEAMS` repository variables so the declared bypass
 identity can match the actual `BUILDCHAIN_PROMOTION_TOKEN` actor, but consumers
 do not need to duplicate that actor manually when the token identity is
-discoverable.
+discoverable. Buildchain's release-line bootstrap applies the same declared
+allowances when it creates new `dev`, `alpha`, and `release` branch protection,
+and fails closed before changing protection when no promotion authority is
+declared. This keeps a new minor line publishable without weakening its normal
+human review gate.
 
 ## What This Guarantees
 
