@@ -178,6 +178,30 @@ test("controller receipts preserve pass, fail, skip, and partial outcomes", () =
   assert.equal(validateControllerReceipt(passed, { plan: expectedPlan }).ok, true);
 });
 
+test("controller receipts allow optional stages to remain uninstantiated", () => {
+  const expectedPlan = createControllerPlan({
+    descriptor: descriptor("web-surface"),
+    source: { repository: "kungfu-systems/example", sha: SOURCE_SHA },
+    runtime: { ref: "v2", sha: RUNTIME_SHA, contractDigest: CONTRACT_DIGEST },
+    inputs: {},
+  });
+  const receipt = createControllerReceipt({
+    plan: expectedPlan,
+    stages: expectedPlan.expected.stages
+      .filter((stage) => stage.required)
+      .map((stage) => ({ id: stage.id, status: "passed" })),
+    evidence: [{ kind: "web-surface-plan", digest: `sha256:${"d".repeat(64)}` }],
+  });
+
+  assert.equal(receipt.status, "passed");
+  assert.equal(receipt.qualifying, true);
+  assert.equal(
+    receipt.stages.find((stage) => stage.id === "publication-authority").status,
+    "missing",
+  );
+  assert.equal(validateControllerReceipt(receipt, { plan: expectedPlan }).qualifying, true);
+});
+
 test("source, runtime, and plan mismatches invalidate receipts", () => {
   const expectedPlan = plan();
   const receipt = createControllerReceipt({

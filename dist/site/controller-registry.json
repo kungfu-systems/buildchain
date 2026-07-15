@@ -897,6 +897,26 @@
           "classification": "redacted",
           "source": "workflow-call-input"
         },
+        "publication-admission-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-control-plane-audit-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-expected-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-runner-provenance-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-used-nonces-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "release-feedback-actor-privacy": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -941,6 +961,10 @@
             "required": false
           },
           {
+            "id": "publication-authority",
+            "required": false
+          },
+          {
             "id": "apply",
             "required": false
           },
@@ -953,14 +977,15 @@
           "web-build",
           "web-verify",
           "deployment-plan",
-          "deployment-apply"
+          "deployment-apply",
+          "publication-authority"
         ],
         "evidence": [
           "web-surface-plan",
           "controller-receipt"
         ]
       },
-      "digest": "sha256:09b4d98c400fb12a87b701eedaaefbf4af2fd0c1fb19b8b44c6219c596430e80"
+      "digest": "sha256:f08c4970f33c059f8e0b43110f0063172fb1015ac914bdb0c8e9646692fb9f06"
     },
     {
       "schemaVersion": 1,
@@ -1012,7 +1037,23 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "package-name": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "prepare-paper-package": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "publish-dist-tag": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "setup-node": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "target-ref": {
           "classification": "included",
           "source": "workflow-call-input"
         },
@@ -1075,7 +1116,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:d09d8f4081e7b5b9296487337206111591eeca6f8d7667e90012ac911c1b71cf"
+      "digest": "sha256:6b132790b9798e8a5dfbe095701d8e024c160a08bc7c4bd477ee79feef7a9cfd"
     },
     {
       "schemaVersion": 1,
@@ -1087,10 +1128,6 @@
         "path": ".github/workflows/paper-release.yml"
       },
       "inputs": {
-        "BUILDCHAIN_PROMOTION_TOKEN": {
-          "classification": "redacted",
-          "source": "workflow-call-secret"
-        },
         "artifact-name": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -1157,6 +1194,26 @@
         },
         "package-name": {
           "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "publication-admission-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-control-plane-audit-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-expected-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-runner-provenance-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-used-nonces-json": {
+          "classification": "digest-only",
           "source": "workflow-call-input"
         },
         "publish-dist-tag": {
@@ -1239,6 +1296,10 @@
             "required": true
           },
           {
+            "id": "publication-authority",
+            "required": true
+          },
+          {
             "id": "publish",
             "required": true
           },
@@ -1254,6 +1315,7 @@
         "capabilities": [
           "publication-build",
           "artifact-admission",
+          "publication-authority",
           "release-publish",
           "release-passport"
         ],
@@ -1263,7 +1325,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:726e94ed5353240289700df7f436e9aa4041783738757dfbdef1a6825acb6bfb"
+      "digest": "sha256:0613ea545fe2d630f34e665c8e6fe99df3f5333d75051a7176e9cf991e494f59"
     },
     {
       "schemaVersion": 1,
@@ -1369,6 +1431,54 @@
         },
         "package-manager": {
           "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "publication-admission-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-auto-admission": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "publication-auto-no-gate": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "publication-control-plane-audit-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-expected-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-gate-aggregate-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-package-name": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "publication-product": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "publication-publisher-workflow-path": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-runner-provenance-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-target": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "publication-used-nonces-json": {
+          "classification": "digest-only",
           "source": "workflow-call-input"
         },
         "publish-artifact-kind": {
@@ -1491,6 +1601,10 @@
             "required": true
           },
           {
+            "id": "publication-authority",
+            "required": true
+          },
+          {
             "id": "publish",
             "required": true
           },
@@ -1506,6 +1620,7 @@
         "capabilities": [
           "promotion-preflight",
           "artifact-admission",
+          "publication-authority",
           "publish-transaction",
           "release-passport"
         ],
@@ -1516,7 +1631,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:f5a295b2d3e8f20ba46c611acaed71ee7ab5cd1ecaa6e7504b4344493271a803"
+      "digest": "sha256:c5dfeb63bbe3507e3c58f74e2a5792e6558002e3aafab6453cc8b8837db2a729"
     },
     {
       "schemaVersion": 1,
@@ -1622,5 +1737,5 @@
       "digest": "sha256:9b9f9a2320c4349903d72ee46e329211b5538ed5ebebaa93559df4eafb835997"
     }
   ],
-  "digest": "sha256:0bd2214618cfa1fb7cdc052b3dcb64fa1ab8b815416bc00bbd27c0c666923363"
+  "digest": "sha256:22be9d05109396f2b5c44a74fb0f67e4a554c462662c5a41e44e466c4d90ed04"
 }

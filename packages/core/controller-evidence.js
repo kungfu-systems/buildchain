@@ -47,9 +47,9 @@ const CONTROLLER_SPECS = [
     id: "web-surface",
     workflowId: ".web-surface",
     version: 1,
-    capabilities: ["web-build", "web-verify", "deployment-plan", "deployment-apply"],
-    stages: ["resolve-runtime", "plan", "build", "verify", "apply", "aggregate"],
-    optionalStages: ["build", "verify", "apply"],
+    capabilities: ["web-build", "web-verify", "deployment-plan", "deployment-apply", "publication-authority"],
+    stages: ["resolve-runtime", "plan", "build", "verify", "publication-authority", "apply", "aggregate"],
+    optionalStages: ["build", "verify", "publication-authority", "apply"],
     evidence: ["web-surface-plan", "controller-receipt"],
   },
   {
@@ -65,8 +65,8 @@ const CONTROLLER_SPECS = [
     id: "paper-release",
     workflowId: "paper-release",
     version: 1,
-    capabilities: ["publication-build", "artifact-admission", "release-publish", "release-passport"],
-    stages: ["resolve-runtime", "build", "verify", "collect", "publish", "passport", "aggregate"],
+    capabilities: ["publication-build", "artifact-admission", "publication-authority", "release-publish", "release-passport"],
+    stages: ["resolve-runtime", "build", "verify", "collect", "publication-authority", "publish", "passport", "aggregate"],
     optionalStages: ["verify"],
     evidence: ["publication-manifest", "release-passport", "controller-receipt"],
   },
@@ -74,8 +74,8 @@ const CONTROLLER_SPECS = [
     id: "release-candidate-promotion",
     workflowId: "release-candidate-promote",
     version: 1,
-    capabilities: ["promotion-preflight", "artifact-admission", "publish-transaction", "release-passport"],
-    stages: ["preflight", "admit-release-candidate", "publish", "passport", "aggregate"],
+    capabilities: ["promotion-preflight", "artifact-admission", "publication-authority", "publish-transaction", "release-passport"],
+    stages: ["preflight", "admit-release-candidate", "publication-authority", "publish", "passport", "aggregate"],
     evidence: ["release-candidate-passport", "publish-evidence", "release-passport", "controller-receipt"],
   },
   {
@@ -303,7 +303,7 @@ function normalizeEvidence(entries = []) {
 function receiptStatus(plan, stages) {
   if (stages.some((stage) => stage.status === "failed")) return "failed";
   if (stages.length > 0 && stages.every((stage) => stage.status === "skipped")) return "skipped";
-  if (stages.some((stage) => stage.status === "cancelled" || stage.status === "missing")) return "partial";
+  if (stages.some((stage) => stage.status === "cancelled" || (stage.required && stage.status === "missing"))) return "partial";
   const required = new Set(plan.expected.stages.filter((stage) => stage.required).map((stage) => stage.id));
   if (stages.filter((stage) => required.has(stage.id)).every((stage) => stage.status === "passed")) return "passed";
   return "partial";

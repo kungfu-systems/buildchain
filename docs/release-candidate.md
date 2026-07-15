@@ -116,3 +116,22 @@ KFD-1 source/artifact contract surfaces, audits KFD-2 public release claims, and
 compares KFD-3 declared shipped public surfaces with artifact-exposed public
 surfaces. The release passport records the results under `kfd-1`, `kfd-2`, and
 the KFD-provided `kfd-3` section.
+
+Managed consumers may also ask the promotion wrapper to assemble sealed
+publication evidence from the exact release candidate instead of producing
+short-lived admission JSON in repository-specific workflow code:
+
+```yaml
+      publication-auto-admission: true
+      publication-auto-no-gate: true
+      publication-publisher-workflow-path: .github/workflows/buildchain-ref-promotion.yml
+      publication-product: Example Product
+      publication-target: npm:@example/product
+      publication-package-name: "@example/product"
+```
+
+`publication-auto-no-gate` is an explicit consumer decision, not a default. A
+consumer with a Shifu Gate registry supplies `publication-gate-aggregate-json`
+instead. Buildchain still requires caller-owned RC evidence, an exact authority
+runtime and source SHA, a repository-local publisher workflow, matching npm
+target/package identity, and a qualifying control-plane audit.

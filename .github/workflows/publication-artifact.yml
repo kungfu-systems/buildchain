@@ -84,6 +84,26 @@ on:
         default: 30
         type: number
         required: false
+      prepare-paper-package:
+        description: "Prepare the deterministic npm paper package inside the read-only publication candidate"
+        default: false
+        type: boolean
+        required: false
+      package-name:
+        description: "Optional npm package name override"
+        default: ""
+        type: string
+        required: false
+      publish-dist-tag:
+        description: "Expected npm distribution tag; empty derives alpha/latest from target-ref"
+        default: ""
+        type: string
+        required: false
+      target-ref:
+        description: "Protected publication channel ref"
+        default: ""
+        type: string
+        required: false
     outputs:
       publication-artifact-name:
         description: "Uploaded publication artifact name"
@@ -121,6 +141,18 @@ on:
       controller-receipt-status:
         description: "Controller receipt status"
         value: ${{ jobs.publication.outputs.controller-receipt-status }}
+      runtime-sha:
+        description: "Exact resolved Buildchain runtime SHA"
+        value: ${{ jobs.publication.outputs.runtime-sha }}
+      package-name:
+        description: "Prepared npm package name"
+        value: ${{ jobs.publication.outputs.package-name }}
+      package-version:
+        description: "Prepared npm package version"
+        value: ${{ jobs.publication.outputs.package-version }}
+      publish-dist-tag:
+        description: "Prepared npm distribution tag"
+        value: ${{ jobs.publication.outputs.publish-dist-tag }}
 
 permissions:
   contents: read
@@ -143,6 +175,10 @@ jobs:
       controller-receipt-json: ${{ steps.controller-receipt.outputs.controller-receipt-json }}
       controller-receipt-digest: ${{ steps.controller-receipt.outputs.controller-receipt-digest }}
       controller-receipt-status: ${{ steps.controller-receipt.outputs.controller-receipt-status }}
+      runtime-sha: ${{ steps.controller-identities.outputs.runtime-sha }}
+      package-name: ${{ steps.package.outputs.package-name }}
+      package-version: ${{ steps.package.outputs.package-version }}
+      publish-dist-tag: ${{ steps.package.outputs.dist-tag }}
     steps:
       - name: Resolve Buildchain runtime
         id: runtime
@@ -463,6 +499,14 @@ jobs:
         working-directory: ${{ inputs.working-directory }}
         run: ${{ inputs.verify-command }}
 
+      - name: Hydrate cumulative publication registry
+        if: ${{ inputs.prepare-paper-package }}
+        shell: bash
+        working-directory: ${{ inputs.working-directory }}
+        run: >-
+          node "${GITHUB_WORKSPACE}/.buildchain/runtime/scripts/publication-registry-hydrate.mjs"
+          --cwd .
+
       - name: Collect publication artifact manifest
         id: manifest
         shell: bash
@@ -486,6 +530,75 @@ jobs:
           fs.appendFileSync(process.env.GITHUB_OUTPUT, `manifest-json=${JSON.stringify(result.manifest)}\n`);
           NODE
 
+      - name: Prepare deterministic npm paper package
+        id: package
+        if: ${{ inputs.prepare-paper-package }}
+        shell: bash
+        working-directory: ${{ inputs.working-directory }}
+        env:
+          INPUT_PACKAGE_NAME: ${{ inputs.package-name }}
+          INPUT_PUBLISH_DIST_TAG: ${{ inputs.publish-dist-tag }}
+          INPUT_TARGET_REF: ${{ inputs.target-ref || github.ref_name }}
+        run: |
+          set -euo pipefail
+          mkdir -p .buildchain/paper-release
+          package_args=()
+          if [ -n "$INPUT_PACKAGE_NAME" ]; then
+            package_args+=(--package-name "$INPUT_PACKAGE_NAME")
+          fi
+          node "${GITHUB_WORKSPACE}/.buildchain/runtime/bin/buildchain.mjs" publication-artifact npm-package \
+            --cwd . \
+            --output-dir .buildchain/publication/npm-package \
+            "${package_args[@]}" \
+            --json > .buildchain/paper-release/package-result.json
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+          import path from "node:path";
+          import { spawnSync } from "node:child_process";
+
+          const result = JSON.parse(fs.readFileSync(".buildchain/paper-release/package-result.json", "utf8"));
+          const packageDir = path.resolve(result.outputDir);
+          const pack = spawnSync("npm", ["pack", "--dry-run", "--json", "--registry=https://registry.npmjs.org/"], {
+            cwd: packageDir,
+            encoding: "utf8",
+          });
+          if (pack.status !== 0) throw new Error(`npm pack --dry-run failed\n${pack.stdout || ""}${pack.stderr || ""}`.trim());
+          const packResult = JSON.parse(pack.stdout);
+          const first = Array.isArray(packResult) ? packResult[0] : packResult;
+          if (!first?.integrity) throw new Error("npm pack --dry-run did not report sha512 integrity");
+          const targetRef = process.env.INPUT_TARGET_REF || "";
+          const channel = targetRef.startsWith("release/") ? "release" : "alpha";
+          const distTag = process.env.INPUT_PUBLISH_DIST_TAG || (channel === "release" ? "latest" : "alpha");
+          const requiredArtifacts = [{
+            group: "node",
+            kind: "npm",
+            name: result.package.name,
+            ref: result.package.version,
+            digest: first.integrity,
+            integrity: first.integrity,
+            role: "main",
+          }];
+          fs.writeFileSync(".buildchain/paper-release/publish-required-artifacts.json", `${JSON.stringify(requiredArtifacts, null, 2)}\n`);
+          fs.writeFileSync(".buildchain/paper-release/build-summary.json", `${JSON.stringify({
+            schemaVersion: 1,
+            contract: "kungfu-buildchain-paper-release-build-summary",
+            repository: process.env.GITHUB_REPOSITORY || "",
+            sourceSha: process.env.GITHUB_SHA || "",
+            package: { name: result.package.name, version: result.package.version },
+            publication: {
+              manifestPath: ".buildchain/publication/publication-artifact.json",
+              passportPath: ".buildchain/publication/publication-artifact-passport.json",
+              registryPath: result.publication?.registryPath || "",
+              primaryArtifact: result.publication?.primaryArtifact || "",
+            },
+            platforms: [{ id: "paper", manifestPath: ".buildchain/publication/publication-artifact.json" }],
+          }, null, 2)}\n`);
+          const output = process.env.GITHUB_OUTPUT;
+          fs.appendFileSync(output, `package-name=${result.package.name}\n`);
+          fs.appendFileSync(output, `package-version=${result.package.version}\n`);
+          fs.appendFileSync(output, `dist-tag=${distTag}\n`);
+          NODE
+
       - name: Resolve artifact name
         id: names
         shell: bash
@@ -496,9 +609,13 @@ jobs:
         uses: actions/upload-artifact@v6.0.0
         with:
           name: ${{ steps.names.outputs.artifact-name }}
-          path: ${{ inputs.artifact-paths }}
+          path: |
+            ${{ inputs.artifact-paths }}
+            ${{ inputs.working-directory }}/.buildchain/publication/**
+            ${{ inputs.working-directory }}/.buildchain/paper-release/**
           retention-days: ${{ inputs.artifact-retention-days }}
           if-no-files-found: error
+          include-hidden-files: true
 
       - name: Create publication-artifact controller receipt
         id: controller-receipt
@@ -507,7 +624,7 @@ jobs:
         env:
           BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
           BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
-            [{"id":"resolve-runtime","status":"${{ steps.runtime.outcome == 'success' && steps.runtime-checkout.outcome == 'success' && steps.controller-identities.outcome == 'success' && 'success' || 'failure' }}"},{"id":"build","status":"${{ steps.build.outcome }}"},{"id":"verify","status":"${{ steps.verify.outcome }}"},{"id":"collect","status":"${{ steps.manifest.outcome }}"},{"id":"aggregate","status":"${{ steps.artifact-upload.outcome }}"}]
+            [{"id":"resolve-runtime","status":"${{ steps.runtime.outcome == 'success' && steps.runtime-checkout.outcome == 'success' && steps.controller-identities.outcome == 'success' && 'success' || 'failure' }}"},{"id":"build","status":"${{ steps.build.outcome }}"},{"id":"verify","status":"${{ steps.verify.outcome }}"},{"id":"collect","status":"${{ (steps.manifest.outcome == 'success' && (!inputs.prepare-paper-package || steps.package.outcome == 'success')) && 'success' || 'failure' }}"},{"id":"aggregate","status":"${{ steps.artifact-upload.outcome }}"}]
           BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ steps.manifest.outcome == 'success' && format('[{{"kind":"publication-manifest","path":"{0}/{1}"}},{{"kind":"publication-passport","path":"{0}/{2}"}}]', inputs.working-directory, steps.manifest.outputs.manifest-path, steps.manifest.outputs.passport-path) || '[]' }}
           BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ steps.artifact-upload.outcome == 'success' && '' || 'publication-incomplete' }}
           BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Publication artifact did not complete successfully

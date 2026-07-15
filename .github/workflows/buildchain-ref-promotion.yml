@@ -23,43 +23,72 @@ on:
         description: "Only print planned tag updates"
         required: true
         default: "true"
+      publication-admission-json:
+        description: "Fresh sealed admission JSON required for manual apply"
+        required: false
+        default: ""
+      publication-runner-provenance-json:
+        description: "Runner provenance receipt JSON bound by the admission"
+        required: false
+        default: ""
+      publication-control-plane-audit-json:
+        description: "Fresh external control-plane audit receipt JSON"
+        required: false
+        default: ""
+      publication-gate-aggregate-json:
+        description: "Qualifying Shifu Gate aggregate or explicit consumer-owned no-Gate decision"
+        required: false
+        default: ""
+      publication-expected-json:
+        description: "Independent exact publication bindings JSON"
+        required: false
+        default: ""
+      publication-used-nonces-json:
+        description: "JSON array of consumed admission nonces"
+        required: false
+        default: "[]"
 
 permissions:
-  contents: write
-  actions: read
-  checks: write
-  issues: write
-  id-token: write
+  contents: read
 
 jobs:
   reject-manual-apply:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs['dry-run'] != 'true' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs['dry-run'] != 'true' && inputs['publication-admission-json'] == '' }}
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     steps:
       - name: Reject manual apply
         run: |
-          echo "::error::Manual buildchain ref promotion is limited to dry-run."
-          echo "::error::Merge through alpha/release and let a successful Verify workflow_run promote refs."
+          echo "::error::Manual apply requires a fresh sealed publication admission."
+          echo "::error::Provide admission, runner, control-plane audit, expected bindings, and used nonces JSON."
           exit 1
 
   promote:
     if: >-
       ${{
-        (github.event_name == 'workflow_dispatch' && inputs['dry-run'] == 'true') ||
+        (github.event_name == 'workflow_dispatch' && (inputs['dry-run'] == 'true' || inputs['publication-admission-json'] != '')) ||
         (
           github.event.workflow_run.conclusion == 'success' &&
           github.event.workflow_run.event == 'push' &&
           (
+            startsWith(github.event.workflow_run.head_branch, 'alpha/') ||
             startsWith(github.event.workflow_run.head_branch, 'release/') ||
-            (
-              !startsWith(github.event.workflow_run.display_title, 'Prepare v') &&
-              !startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v')
-            )
+            github.event.workflow_run.head_branch == 'publish-gate/major' ||
+            github.event.workflow_run.head_branch == 'major-gate'
           ) &&
+          !startsWith(github.event.workflow_run.display_title, 'Prepare v') &&
+          !startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v') &&
           !startsWith(github.event.workflow_run.display_title, 'chore(release): release v')
         )
       }}
     uses: ./.github/workflows/release-candidate-promote.yml
+    permissions:
+      actions: read
+      checks: write
+      contents: write
+      id-token: write
+      issues: write
     secrets: inherit
     with:
       buildchain-repository: kungfu-systems/buildchain
@@ -82,4 +111,16 @@ jobs:
       release-passport-product-name: Buildchain
       release-passport-buildchain-self-kfd: true
       release-passport-impact-json: .buildchain/release-impact.json
+      publication-admission-json: ${{ inputs['publication-admission-json'] || '' }}
+      publication-runner-provenance-json: ${{ inputs['publication-runner-provenance-json'] || '' }}
+      publication-control-plane-audit-json: ${{ inputs['publication-control-plane-audit-json'] || '' }}
+      publication-gate-aggregate-json: ${{ inputs['publication-gate-aggregate-json'] || '' }}
+      publication-expected-json: ${{ inputs['publication-expected-json'] || '' }}
+      publication-used-nonces-json: ${{ inputs['publication-used-nonces-json'] || '[]' }}
+      publication-auto-admission: ${{ github.event_name == 'workflow_run' }}
+      publication-auto-no-gate: ${{ github.event_name == 'workflow_run' }}
+      publication-publisher-workflow-path: .github/workflows/buildchain-ref-promotion.yml
+      publication-product: Buildchain
+      publication-target: npm:@kungfu-tech/buildchain
+      publication-package-name: "@kungfu-tech/buildchain"
       dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs['dry-run'] == 'true' }}

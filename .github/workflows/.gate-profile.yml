@@ -346,6 +346,38 @@ jobs:
     runs-on: ${{ fromJSON(matrix.gate.runner) }}
     timeout-minutes: ${{ matrix.gate.timeoutMinutes }}
     steps:
+      - name: Reset prior Windows Gate source workspace
+        if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          $workspace = [System.IO.Path]::GetFullPath($env:GITHUB_WORKSPACE)
+          $source = [System.IO.Path]::GetFullPath((Join-Path $workspace "source"))
+          $gitCache = [System.IO.Path]::GetFullPath((Join-Path $workspace ".buildchain/windows-gate-source-git"))
+          if ([System.IO.Path]::GetDirectoryName($source) -ne $workspace) {
+            throw "refusing to clean Gate source outside GITHUB_WORKSPACE"
+          }
+          $sourceGit = Join-Path $source ".git"
+          if (Test-Path -LiteralPath $sourceGit -PathType Container) {
+            if (Test-Path -LiteralPath $gitCache) {
+              & cmd.exe /d /c "rd /s /q `"$gitCache`""
+              if ($LASTEXITCODE -ne 0 -or (Test-Path -LiteralPath $gitCache)) {
+                throw "failed to reset prior Windows Gate Git cache: $gitCache"
+              }
+            }
+            New-Item -ItemType Directory -Force -Path ([System.IO.Path]::GetDirectoryName($gitCache)) | Out-Null
+            Move-Item -LiteralPath $sourceGit -Destination $gitCache
+          }
+          if (Test-Path -LiteralPath $source) {
+            & cmd.exe /d /c "rd /s /q `"$source`""
+            if ($LASTEXITCODE -ne 0 -or (Test-Path -LiteralPath $source)) {
+              throw "failed to reset prior Windows Gate source workspace: $source"
+            }
+          }
+          if (Test-Path -LiteralPath $gitCache -PathType Container) {
+            New-Item -ItemType Directory -Force -Path $source | Out-Null
+            Move-Item -LiteralPath $gitCache -Destination (Join-Path $source ".git")
+          }
+
       - name: Checkout locked consumer source
         uses: actions/checkout@v7.0.0
         with:
@@ -366,6 +398,16 @@ jobs:
         uses: actions/setup-node@v6.4.0
         with:
           node-version: ${{ inputs.node-version }}
+
+      - name: Expose Windows runner user toolchain
+        if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
+        run: Add-Content -LiteralPath $env:GITHUB_PATH -Value (Join-Path $HOME ".local\bin")
+
+      - name: Expose POSIX runner user toolchain
+        if: ${{ runner.os != 'Windows' }}
+        shell: bash
+        run: echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
 
       - name: Download locked Gate plan
         uses: actions/download-artifact@v7.0.0

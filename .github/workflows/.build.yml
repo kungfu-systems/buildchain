@@ -828,12 +828,6 @@ jobs:
           path: .buildchain/controller-runtime
           persist-credentials: false
 
-      - name: Resolve build controller workflow shell identity
-        id: identities
-        run: |
-          contract_digest="$(node -e 'const fs=require("fs"); const value=JSON.parse(fs.readFileSync(".buildchain/controller-runtime/dist/site/buildchain-contract.json","utf8")); process.stdout.write(value.contractDigest)')"
-          echo "contract-digest=${contract_digest}" >> "$GITHUB_OUTPUT"
-
       - name: Create build controller plan
         id: plan
         run: node .buildchain/controller-runtime/scripts/controller-evidence.mjs --mode plan
@@ -841,9 +835,9 @@ jobs:
           BUILDCHAIN_CONTROLLER_ID: build-lifecycle
           BUILDCHAIN_CONTROLLER_SOURCE_REPOSITORY: ${{ github.repository }}
           BUILDCHAIN_CONTROLLER_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_CONTROLLER_RUNTIME_REF: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-ref }}
-          BUILDCHAIN_CONTROLLER_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-sha }}
-          BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST: ${{ steps.identities.outputs.contract-digest }}
+          BUILDCHAIN_CONTROLLER_RUNTIME_REF: ${{ needs.trust-gate.outputs.buildchain-runtime-ref }}
+          BUILDCHAIN_CONTROLLER_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST: ${{ needs.trust-gate.outputs.buildchain-contract-digest }}
           BUILDCHAIN_CONTROLLER_REGISTRY: .buildchain/controller-runtime/dist/site/controller-registry.json
           BUILDCHAIN_CONTROLLER_INPUTS_JSON: ${{ toJSON(inputs) }}
           BUILDCHAIN_CONTROLLER_INPUT_BOUNDARY: workflow-call
@@ -974,6 +968,16 @@ jobs:
         uses: actions/setup-node@v6.4.0
         with:
           node-version: ${{ inputs.node-version }}
+
+      - name: Expose Windows runner user toolchain
+        if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
+        run: Add-Content -LiteralPath $env:GITHUB_PATH -Value (Join-Path $HOME ".local\bin")
+
+      - name: Expose POSIX runner user toolchain
+        if: ${{ runner.os != 'Windows' }}
+        shell: bash
+        run: echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
 
       - name: Setup Rust toolchain on Windows
         if: ${{ inputs.setup-rust && runner.os == 'Windows' }}

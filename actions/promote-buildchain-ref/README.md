@@ -336,14 +336,26 @@ Missing required artifacts can be published on the next run. Conflicting
 refs, digests, or declared provenance put the transaction into
 `repair_required`; `abandoned` and
 `failed_permanently` also fail closed unless `publish-transaction-override` is
-set for a controlled repair.
+set for a controlled repair. The same override may replace a stale transaction
+only when its version, exact tag, target ref, and channel are unchanged, the
+transaction is not complete, and it contains no published artifacts or
+evidence. This lets a newly admitted source retry a previously failed paper
+publication without weakening already-published facts.
 
 In strict buildchain promotion, ref movement is also gated by the old ABV
 governance semantics:
 
-- the target channel branch protection details must be readable, must enforce
-  protection for administrators, and must require approving PR review plus the
-  strict `check` job from the `Verify` workflow;
+- when detailed target branch protection is readable, it must enforce
+  protection for administrators and require approving PR review plus the strict
+  `check` job from the `Verify` workflow; when GitHub withholds that
+  administration endpoint from the workflow token, the exact transaction must
+  instead prove a protected current head, same-repository merged PR,
+  independent approval, and the required successful `check` from its configured
+  GitHub App;
+- post-publish channel reconciliation reuses an already qualifying
+  provider-enforced policy when the workflow token cannot read or rewrite the
+  administrative protection document, and fails closed if the public branch
+  summary no longer carries the required check for everyone;
 - alpha promotion must come from a merged same-repository PR
   `dev/vN/vN.M -> alpha/vN/vN.M`, or from a strict same-line
   `publish-gate/alpha/vN/vN.M/<version> -> alpha/vN/vN.M` source-lock PR;

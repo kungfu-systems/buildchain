@@ -14,20 +14,20 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:2520207c5d6d6a737dd32251a42be9c5299644d9aebf690a8402ead1724ed495",
+    "compatibilityDigest": "sha256:af162b86ab4506e9b5f1d3c59b41f3fd57fbad79ff4d749a7f12ff16460517f8",
     "majorLine": "v2"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "da49ee5526b44e5e9baa9aa846c35776aa5fcb64fd76e4b6611a4cd517555034",
+    "sha256": "8815fc5abfe516e247a7024a367be5e3144fbe49196b7ec251dba4598bfc59ea",
     "summary": {
-      "cliCommandCount": 76,
-      "workflowCount": 43,
+      "cliCommandCount": 79,
+      "workflowCount": 47,
       "actionCount": 4,
-      "sitePageCount": 48,
-      "docCommandRefCount": 241,
+      "sitePageCount": 49,
+      "docCommandRefCount": 246,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -225,13 +225,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "da49ee5526b44e5e9baa9aa846c35776aa5fcb64fd76e4b6611a4cd517555034",
+      "sha256": "8815fc5abfe516e247a7024a367be5e3144fbe49196b7ec251dba4598bfc59ea",
       "summary": {
-        "cliCommandCount": 76,
-        "workflowCount": 43,
+        "cliCommandCount": 79,
+        "workflowCount": 47,
         "actionCount": 4,
-        "sitePageCount": 48,
-        "docCommandRefCount": 241,
+        "sitePageCount": 49,
+        "docCommandRefCount": 246,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -472,6 +472,18 @@
           "participantFacing": true,
           "public": true,
           "plane": "why"
+        },
+        {
+          "id": "doc:docs/publication-authority.md",
+          "name": "Sealed publication authority",
+          "kind": "documentation",
+          "sourcePath": "docs/publication-authority.md",
+          "evidencePath": "docs/publication-authority.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "verify"
         },
         {
           "id": "doc:docs/publish-transaction.md",
@@ -832,6 +844,39 @@
           "public": true
         },
         {
+          "id": "schema:packages/core/publication-authority.js",
+          "name": "schema:packages/core/publication-authority.js",
+          "kind": "schema",
+          "sourcePath": "packages/core/publication-authority.js",
+          "evidencePath": "packages/core/publication-authority.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
+          "id": "schema:packages/core/publication-control-plane-audit.js",
+          "name": "schema:packages/core/publication-control-plane-audit.js",
+          "kind": "schema",
+          "sourcePath": "packages/core/publication-control-plane-audit.js",
+          "evidencePath": "packages/core/publication-control-plane-audit.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
+          "id": "schema:packages/core/buildchain-publication-authority.js",
+          "name": "schema:packages/core/buildchain-publication-authority.js",
+          "kind": "schema",
+          "sourcePath": "packages/core/buildchain-publication-authority.js",
+          "evidencePath": "packages/core/buildchain-publication-authority.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
           "id": "schema:packages/core/buildchain-kfd-claims.js",
           "name": "schema:packages/core/buildchain-kfd-claims.js",
           "kind": "schema",
@@ -1151,6 +1196,42 @@
           "packageExport": "./publication-package"
         },
         {
+          "id": "export:./publication-authority",
+          "name": "@kungfu-tech/buildchain/publication-authority",
+          "kind": "package-export",
+          "sourcePath": "packages/core/publication-authority.js",
+          "evidencePath": "packages/core/publication-authority.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./publication-authority"
+        },
+        {
+          "id": "export:./publication-control-plane-audit",
+          "name": "@kungfu-tech/buildchain/publication-control-plane-audit",
+          "kind": "package-export",
+          "sourcePath": "packages/core/publication-control-plane-audit.js",
+          "evidencePath": "packages/core/publication-control-plane-audit.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./publication-control-plane-audit"
+        },
+        {
+          "id": "export:./buildchain-publication-authority",
+          "name": "@kungfu-tech/buildchain/buildchain-publication-authority",
+          "kind": "package-export",
+          "sourcePath": "packages/core/buildchain-publication-authority.js",
+          "evidencePath": "packages/core/buildchain-publication-authority.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./buildchain-publication-authority"
+        },
+        {
           "id": "export:./kfd-gate",
           "name": "@kungfu-tech/buildchain/kfd-gate",
           "kind": "package-export",
@@ -1347,6 +1428,17 @@
           "public": true
         },
         {
+          "id": "site:dist/site/publication-authority-registry.json",
+          "name": "site:dist/site/publication-authority-registry.json",
+          "kind": "site-consumption-contract",
+          "sourcePath": "dist/site/publication-authority-registry.json",
+          "evidencePath": "dist/site/publication-authority-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
           "id": "site:dist/site/public-surface-audit.json",
           "name": "site:dist/site/public-surface-audit.json",
           "kind": "site-consumption-contract",
@@ -1448,6 +1540,18 @@
       ],
       "reverseEnumeratedSurfaces": [
         {
+          "id": "cli:audit",
+          "name": "buildchain audit publication-control-plane --repository <owner/repo> --branch <protected-branch>",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
           "id": "cli:badges",
           "name": "buildchain badges",
           "kind": "cli-command",
@@ -1522,6 +1626,18 @@
         {
           "id": "cli:collect-github-release",
           "name": "buildchain collect github-release --tag <tag> [--repository <owner/repo>]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:create",
+          "name": "buildchain create publication-admission --input-json <file-or-json> [--output <file>] [--json]",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -2324,6 +2440,18 @@
           "reverseAuditSource": "bin/buildchain.mjs"
         },
         {
+          "id": "cli:verify-publication-admission",
+          "name": "buildchain verify publication-admission <file-or-json>",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
           "id": "cli:verify-release-passport",
           "name": "buildchain verify release-passport <file-or-url> [--json]",
           "kind": "cli-command",
@@ -2358,6 +2486,30 @@
           "participantFacing": true,
           "public": true,
           "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "workflow:.binary-release-assets",
+          "name": "workflow:.binary-release-assets",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/.binary-release-assets.yml",
+          "evidencePath": ".github/workflows/.binary-release-assets.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 9,
+          "inputs": [
+            "buildchain-ref",
+            "buildchain-repository",
+            "evidence-run-id",
+            "publication-admission-json",
+            "publication-control-plane-audit-json",
+            "publication-expected-json",
+            "publication-runner-provenance-json",
+            "publication-used-nonces-json",
+            "release-tag"
+          ],
+          "reverseAuditSource": ".github/workflows"
         },
         {
           "id": "workflow:.build",
@@ -2477,6 +2629,50 @@
             "source-ref",
             "untrusted-policy",
             "working-directory"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:.publication-authority",
+          "name": "workflow:.publication-authority",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/.publication-authority.yml",
+          "evidencePath": ".github/workflows/.publication-authority.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 29,
+          "inputs": [
+            "admission-json",
+            "authority-workflow-path",
+            "auto-admission",
+            "auto-admission-kind",
+            "auto-no-gate",
+            "buildchain-ref",
+            "buildchain-repository",
+            "control-plane-audit-json",
+            "dry-run",
+            "evidence-controller-artifact",
+            "evidence-manifest-pattern",
+            "evidence-passport-artifact",
+            "evidence-payload-pattern",
+            "evidence-publication-artifact",
+            "evidence-repository",
+            "evidence-run-id",
+            "evidence-summary-artifact",
+            "expected-json",
+            "gate-aggregate-json",
+            "package-name",
+            "product",
+            "publication-target",
+            "publication-version",
+            "publisher-workflow-path",
+            "required-status-check",
+            "runner-provenance-json",
+            "source-sha",
+            "target-ref",
+            "used-nonces-json"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -2707,7 +2903,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 33,
+          "inputCount": 38,
           "inputs": [
             "artifact-path",
             "aws-region",
@@ -2736,6 +2932,11 @@
             "production-release-on-main",
             "production-release-pr-mode",
             "production-release-pr-token",
+            "publication-admission-json",
+            "publication-control-plane-audit-json",
+            "publication-expected-json",
+            "publication-runner-provenance-json",
+            "publication-used-nonces-json",
             "release-feedback-actor-privacy",
             "staging-apply",
             "staging-aws-role-arn",
@@ -2789,6 +2990,20 @@
           "kind": "workflow",
           "sourcePath": ".github/workflows/binary-distribution.yml",
           "evidencePath": ".github/workflows/binary-distribution.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:binary-release-assets",
+          "name": "workflow:binary-release-assets",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/binary-release-assets.yml",
+          "evidencePath": ".github/workflows/binary-release-assets.yml",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
@@ -3093,6 +3308,46 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:paper-release-sealed",
+          "name": "workflow:paper-release-sealed",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/paper-release-sealed.yml",
+          "evidencePath": ".github/workflows/paper-release-sealed.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 25,
+          "inputs": [
+            "artifact-name",
+            "artifact-paths",
+            "artifact-retention-days",
+            "branch-protection-bypass-apps",
+            "branch-protection-bypass-teams",
+            "branch-protection-bypass-users",
+            "buildchain-contract-lock-path",
+            "buildchain-ref",
+            "buildchain-repository",
+            "dry-run",
+            "github-release",
+            "github-release-notes",
+            "github-release-title",
+            "package-name",
+            "publish-dist-tag",
+            "publisher-workflow-path",
+            "release-passport-impact-json",
+            "release-passport-output-dir",
+            "release-passport-product-name",
+            "required-status-check",
+            "target-ref",
+            "target-sha",
+            "toolchain-type",
+            "verify-command",
+            "working-directory"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:paper-release",
           "name": "workflow:paper-release",
           "kind": "workflow",
@@ -3102,7 +3357,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 32,
+          "inputCount": 37,
           "inputs": [
             "artifact-name",
             "artifact-retention-days",
@@ -3121,6 +3376,11 @@
             "github-release-title",
             "node-version",
             "package-name",
+            "publication-admission-json",
+            "publication-control-plane-audit-json",
+            "publication-expected-json",
+            "publication-runner-provenance-json",
+            "publication-used-nonces-json",
             "publish-dist-tag",
             "publish-package-set-order",
             "release-passport-impact-json",
@@ -3214,7 +3474,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 17,
+          "inputCount": 21,
           "inputs": [
             "artifact-name",
             "artifact-paths",
@@ -3226,7 +3486,11 @@
             "buildchain-ref",
             "buildchain-repository",
             "node-version",
+            "package-name",
+            "prepare-paper-package",
+            "publish-dist-tag",
             "setup-node",
+            "target-ref",
             "toolchain-command",
             "toolchain-digest",
             "toolchain-image",
@@ -3246,7 +3510,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 44,
+          "inputCount": 56,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -3265,6 +3529,18 @@
             "github-release-notes",
             "github-release-title",
             "package-manager",
+            "publication-admission-json",
+            "publication-auto-admission",
+            "publication-auto-no-gate",
+            "publication-control-plane-audit-json",
+            "publication-expected-json",
+            "publication-gate-aggregate-json",
+            "publication-package-name",
+            "publication-product",
+            "publication-publisher-workflow-path",
+            "publication-runner-provenance-json",
+            "publication-target",
+            "publication-used-nonces-json",
             "publish-artifact-kind",
             "publish-command",
             "publish-dist-tag",
@@ -3447,16 +3723,18 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 52,
+          "inputCount": 54,
           "inputs": [
             "allow-repository",
             "branch-protection-bypass-apps",
             "branch-protection-bypass-teams",
             "branch-protection-bypass-users",
             "dry-run",
+            "expected-publication-version",
             "generated-ref-update-token",
             "generated-status-check-token",
             "github-release",
+            "github-release-artifact-paths",
             "github-release-notes",
             "github-release-title",
             "promote-only-release-candidate",
@@ -4000,6 +4278,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:publication-authority",
+          "name": "site-page:manual:publication-authority",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:publish-transaction",
           "name": "site-page:manual:publish-transaction",
           "kind": "site-page",
@@ -4296,6 +4586,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 280
+    "publicSurfaceCount": 296
   }
 }

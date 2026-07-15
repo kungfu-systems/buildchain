@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-site-manifest",
-  "generatedAt": "2026-07-14T04:26:37.000Z",
-  "publishedAt": "2026-07-14T04:26:37.000Z",
+  "generatedAt": "2026-07-15T13:10:00.779Z",
+  "publishedAt": "2026-07-15T13:10:00.779Z",
   "reproducible": true,
   "timestampPolicy": "ci-injected",
   "deterministicInputs": [
@@ -19,7 +19,7 @@
     "declared Buildchain surface manifest contract"
   ],
   "sourceDateEpoch": "0",
-  "sourceRevision": "cbc30aab42b6ef7a32f8ab87b9e5674ce676f5c3",
+  "sourceRevision": "57c59542464de6d6fa053d83117cf74d018707e9",
   "timestampPolicyDetails": {
     "contract": "kungfu-buildchain-surface-timestamp-policy",
     "timestampFields": [
@@ -37,7 +37,7 @@
   },
   "package": {
     "name": "@kungfu-tech/buildchain",
-    "version": "2.12.6",
+    "version": "2.12.7-alpha.22",
     "versionSource": "package.json#version"
   },
   "entrypoint": "buildchain-site.json",
@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:223c7e2d20680d4a10c84f6a7c7875602538607217e9dfe291a356bbd21ac4f1"
+      "digest": "sha256:91dc800bafc31bc149680c86272827936c94e0f025d547bbabc10d58fe5f128e"
     },
     {
       "id": "install",
@@ -80,12 +80,20 @@
       "digest": "sha256:442e1b72e3977af56a8ae5e081ffd89c2f3ebcd9cfd50f07af730344bdf9fb0e"
     },
     {
+      "id": "publication-authority",
+      "title": "Sealed publication authority",
+      "path": "docs/publication-authority.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:05bc22c7e5885e591bc121fc43f588e5d49ccf0a8de6a642811c1d0d03dcee1e"
+    },
+    {
       "id": "release-candidate",
       "title": "Release Candidate Passport",
       "path": "docs/release-candidate.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:841d6f3281ba6dfe80527e4f149807bdbd05d41f9e94afe1c446fcd6d29e307c"
+      "digest": "sha256:6a20c6e3e483327d5ccbe70271f7fb4752731bd0523eeddb96f27b2b6ebf1cf8"
     },
     {
       "id": "release-propagation",
@@ -229,7 +237,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:beba38634bfdde032bb2ff85dc98dd8d755f942dabe227bf9b7aba8127ab7ce9"
+      "digest": "sha256:cce9f80add3c746fe28d8ebf5afb809348694741cb75d19154ed3057a9374c0d"
     },
     {
       "id": "release-flow",
@@ -272,6 +280,7 @@
     "node-api-registry.json",
     "workflow-registry.json",
     "controller-registry.json",
+    "publication-authority-registry.json",
     "public-surface-audit.json",
     "release-model.json",
     "artifact-schemas.json",

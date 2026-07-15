@@ -627,7 +627,9 @@ passes `require-publish-source-lock`, `publish-source-ref`,
 `promote-buildchain-ref`. Direct action callers must pass the same four inputs
 from the reusable build outputs. Workflows that only collect passports or run
 dry-run package checks do not move publish refs and are not publish-gate
-publication models.
+publication models. A dry-run of `release-candidate-promote.yml` computes and
+reports the exact `publish-gate/*` source lock that a real promotion would use,
+but does not read, create, or move that ref.
 
 Semver GitHub Release publication is owned by `promote-buildchain-ref`, not by
 consumer shell glue. Consumers normally use the `release-candidate-promote.yml`
