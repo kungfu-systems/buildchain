@@ -218,6 +218,7 @@
         "authority-workflow-path",
         "auto-admission",
         "auto-admission-kind",
+        "auto-no-gate",
         "buildchain-ref",
         "buildchain-repository",
         "control-plane-audit-json",
@@ -243,7 +244,7 @@
         "target-ref",
         "used-nonces-json"
       ],
-      "inputCount": 28,
+      "inputCount": 29,
       "secrets": [],
       "secretCount": 0,
       "outputs": [
@@ -1309,6 +1310,7 @@
         "package-manager",
         "publication-admission-json",
         "publication-auto-admission",
+        "publication-auto-no-gate",
         "publication-control-plane-audit-json",
         "publication-expected-json",
         "publication-gate-aggregate-json",
@@ -1346,7 +1348,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 55,
+      "inputCount": 56,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",

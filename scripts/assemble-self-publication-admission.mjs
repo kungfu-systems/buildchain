@@ -115,13 +115,22 @@ async function main() {
     manifests,
     payloads: manifests.map((manifest) => payloadFor(manifest, path.join(evidenceRoot, "payloads"))),
   });
-  const gateAggregate = createPublicationGateDecision({
-    sourceSha,
-    profile: process.env.BUILDCHAIN_GATE_PROFILE || "buildchain-self-publication",
-    required: false,
-    rationale: process.env.BUILDCHAIN_GATE_RATIONALE || "Buildchain self-publication has no consumer-owned Shifu Gate registry.",
-    policy: { scope: "buildchain-self-publication", repository },
-  });
+  const suppliedGateAggregate = String(process.env.BUILDCHAIN_GATE_AGGREGATE_JSON || "").trim();
+  let gateAggregate;
+  if (suppliedGateAggregate) {
+    gateAggregate = JSON.parse(suppliedGateAggregate);
+  } else {
+    if (process.env.BUILDCHAIN_ALLOW_NO_GATE !== "true") {
+      throw new Error("managed release-candidate admission requires a Gate aggregate or explicit no-Gate decision");
+    }
+    gateAggregate = createPublicationGateDecision({
+      sourceSha,
+      profile: process.env.BUILDCHAIN_GATE_PROFILE || "managed-release-candidate-no-gate",
+      required: false,
+      rationale: process.env.BUILDCHAIN_GATE_RATIONALE || "The consumer explicitly declared no Shifu Gate registry for this publication transaction.",
+      policy: { scope: "managed-release-candidate", repository },
+    });
+  }
   const runnerProvenance = createRunnerProvenance({
     runnerClass: "ephemeral",
     os: required("RUNNER_OS"),
@@ -178,6 +187,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(`assemble self publication admission: ${error.message}`);
+  console.error(`assemble release-candidate admission: ${error.message}`);
   process.exitCode = 1;
 });

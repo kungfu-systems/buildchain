@@ -109,17 +109,20 @@ artifacts. The denial explicitly records that npm Trusted Publishing and OIDC
 were not evaluated, so downstream diagnostics cannot misclassify an admission
 assembly failure as an npm authentication failure.
 
-Buildchain's own `workflow_run` promotion lane may assemble those inputs only
-for `kungfu-systems/buildchain`. It downloads the exact prior RC passport,
+An explicitly opted-in managed `workflow_run` promotion lane may assemble those
+inputs from evidence owned by its caller repository. It downloads the exact prior RC passport,
 summary, referenced controller receipt, manifests, and product payloads; proves
 the admitted channel commit has the same Git tree as the RC; performs the live
 read-only control-plane audit; records the GitHub-hosted job as ephemeral runner
-provenance; and creates an explicit Buildchain-owned no-Gate decision. The
+provenance; and consumes either a caller-supplied Gate aggregate or an explicit
+caller no-Gate decision. The
 independent verifier then recomputes every receipt and payload digest exactly as
-it does for externally supplied admission. The self-assembly mode rejects other
-repositories, unknown refs, non-exact source SHAs, and any caller other than
-`.github/workflows/buildchain-ref-promotion.yml`. Manual apply and external
-consumer workflows still require their own explicit admission inputs.
+it does for externally supplied admission. Automatic assembly keeps Buildchain
+as the canonical authority repository, requires evidence to belong to the
+caller, binds a repository-local publisher workflow, and rejects unknown refs,
+non-exact source SHAs, package/target mismatches, or an undeclared Gate policy.
+Manual apply and consumers that do not opt in still require their own explicit
+admission inputs.
 
 Before authority verification, the reusable promotion controller runs the same
 release transaction selector in read-only mode. That plan supplies one exact

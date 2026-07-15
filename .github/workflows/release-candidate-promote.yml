@@ -248,7 +248,12 @@ on:
         type: string
         required: false
       publication-auto-admission:
-        description: "Assemble sealed evidence for Buildchain self-publication only"
+        description: "Assemble sealed evidence from the caller repository's exact managed release candidate"
+        default: false
+        type: boolean
+        required: false
+      publication-auto-no-gate:
+        description: "Explicitly declare that this managed publication has no consumer-owned Shifu Gate registry"
         default: false
         type: boolean
         required: false
@@ -600,6 +605,7 @@ jobs:
       expected-json: ${{ inputs.publication-expected-json }}
       used-nonces-json: ${{ inputs.publication-used-nonces-json }}
       auto-admission: ${{ inputs.publication-auto-admission }}
+      auto-no-gate: ${{ inputs.publication-auto-no-gate }}
       source-sha: ${{ needs.preflight.outputs.requested-sha }}
       target-ref: ${{ needs.preflight.outputs.target-ref }}
       publisher-workflow-path: ${{ inputs.publication-publisher-workflow-path }}
