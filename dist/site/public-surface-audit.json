@@ -1372,8 +1372,10 @@
           "working-directory"
         ],
         "inputCount": 25,
-        "secrets": [],
-        "secretCount": 0,
+        "secrets": [
+          "BUILDCHAIN_PROMOTION_TOKEN"
+        ],
+        "secretCount": 1,
         "outputs": [
           "github-release-url",
           "package-name",
@@ -3387,8 +3389,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "a6daf4822365bf576425777230246046ebca67b3f8dcfea61fc7a61773776185",
-    "workflowRegistryDigest": "a61b85b07185e02e340c27d50f77a6710968db87dd42d1b1f4dd81260779a0ed",
-    "pageRegistryDigest": "95f9f687ab307ba0c3b51f5c79af4a20ff31be7f70c48caa1202b8d2454f03bb"
+    "workflowRegistryDigest": "542ea4bc1546429a131ee0d814bee7bfabaa7bb30cf836c660879dc10792e532",
+    "pageRegistryDigest": "7ae453a9d09e6a0147c25d1855cd6ed4d8460cb00e683836e6f0028deb53304a"
   },
   "comparison": {
     "missingCliRegistry": [],

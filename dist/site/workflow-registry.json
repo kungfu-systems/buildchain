@@ -1062,8 +1062,10 @@
         "working-directory"
       ],
       "inputCount": 25,
-      "secrets": [],
-      "secretCount": 0,
+      "secrets": [
+        "BUILDCHAIN_PROMOTION_TOKEN"
+      ],
+      "secretCount": 1,
       "outputs": [
         "github-release-url",
         "package-name",
