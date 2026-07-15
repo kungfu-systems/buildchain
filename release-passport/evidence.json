@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "version": "2.12.7-alpha.11",
+  "channel": "alpha",
+  "source_sha": "73ac4e0b790c451e6881f808b5022a5fcd50b07d",
+  "release_sha": "789c3649fb804c1af1d16ceeeff671ef020238ec",
+  "target_ref": "alpha/v2/v2.12",
+  "release_material_sha": "789c3649fb804c1af1d16ceeeff671ef020238ec",
+  "publish_tooling_sha": "789c3649fb804c1af1d16ceeeff671ef020238ec",
+  "artifacts": [
+    {
+      "group": "node",
+      "kind": "npm",
+      "name": "@kungfu-tech/buildchain",
+      "ref": "2.12.7-alpha.11",
+      "digest": "sha512-t76u72UwVwzd95tyEHYQImSRo+FNL8mmildyG592i7diMOwy5emlXC2NH8Mz1U2nPtG0F+m/8O/v3FUb2CUMcA=="
+    }
+  ]
+}
