@@ -344,6 +344,7 @@ export function createControllerReceipt({ plan, stages = [], evidence = [], reas
   const issues = status === "passed"
     ? missingEvidence.map((kind) => `required controller evidence is missing: ${kind}`)
     : [];
+  const qualifying = status === "passed" && plan.qualifying === true && issues.length === 0;
   const receipt = {
     schemaVersion: 1,
     contract: BUILDCHAIN_CONTROLLER_EVIDENCE_CONTRACT,
@@ -353,11 +354,11 @@ export function createControllerReceipt({ plan, stages = [], evidence = [], reas
     runtime: { ...plan.runtime },
     planDigest: plan.digest,
     status,
-    qualifying: status === "passed" && plan.qualifying === true && issues.length === 0,
+    qualifying,
     stages: normalizedStages,
     evidence: normalizedEvidence,
     issues,
-    ...(reason ? {
+    ...(reason && !qualifying ? {
       reason: {
         code: nonEmptyString(reason.code, "reason.code"),
         summary: nonEmptyString(reason.summary, "reason.summary"),
