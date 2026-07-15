@@ -237,12 +237,13 @@
         "publication-target",
         "publication-version",
         "publisher-workflow-path",
+        "required-status-check",
         "runner-provenance-json",
         "source-sha",
         "target-ref",
         "used-nonces-json"
       ],
-      "inputCount": 27,
+      "inputCount": 28,
       "secrets": [],
       "secretCount": 0,
       "outputs": [
