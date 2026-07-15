@@ -18,6 +18,11 @@ When `command` is provided, it overrides `buildchain.toml` for that invocation.
 When `command` is empty, the action loads `buildchain.toml` and runs the named
 stage.
 
+`timeout-minutes` defaults to 120 and bounds either command source. A
+stage-specific `timeout_minutes` in `buildchain.toml` takes precedence. Timeout
+errors identify the lifecycle stage and platform so a hung self-hosted build can
+be diagnosed after the runner is released.
+
 The action writes both a full manifest and a compact summary. It also exposes
 the summary as outputs for reusable workflow callers:
 

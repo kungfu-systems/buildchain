@@ -1096,6 +1096,11 @@ test("version verification ignores generated buildchain evidence", () => {
     path.join(cwd, ".buildchain/admitted/controller/receipt.json"),
     "{}\n",
   );
+  fs.mkdirSync(path.join(cwd, ".buildchain/controller"), { recursive: true });
+  fs.writeFileSync(
+    path.join(cwd, ".buildchain/controller/plan.json"),
+    "{}\n",
+  );
 
   assert.doesNotThrow(() => assertAllowedLocalChanges(cwd, ["package.json"]));
 
