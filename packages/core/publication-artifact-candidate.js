@@ -20,6 +20,18 @@ export function publicationArtifactCandidateDigest(value) {
   return crypto.createHash("sha256").update(stableJson(value)).digest("hex");
 }
 
+export function resolvePublicationCandidateFile(files = [], candidatePath) {
+  const normalizedPath = requiredString(candidatePath, "candidatePath").replaceAll("\\", "/");
+  if (normalizedPath.startsWith("/") || normalizedPath.split("/").includes("..")) {
+    throw new Error(`publication artifact candidate contains an unsafe path: ${normalizedPath}`);
+  }
+  const matches = files.filter((entry) => entry.path === normalizedPath);
+  if (matches.length !== 1) {
+    throw new Error(`expected exactly one publication candidate file at ${normalizedPath}, found ${matches.length}`);
+  }
+  return matches[0].path;
+}
+
 function requiredString(value, label) {
   const normalized = String(value || "").trim();
   if (!normalized) throw new Error(`${label} must be a non-empty string`);
