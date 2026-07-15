@@ -12,6 +12,13 @@
   },
   "surfaceImpacts": [
     {
+      "id": "release-line-promotion-authority",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Release-line bootstrap carries the declared promotion bypass authority into new dev, alpha, and release branch protection and fails closed before apply when no authority is declared.",
+      "source": ".github/workflows/release-line-bootstrap.yml"
+    },
+    {
       "id": "publication-plan-read-only-derived-state",
       "impact": "patch",
       "class": "release-governance",
