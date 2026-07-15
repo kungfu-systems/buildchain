@@ -4,7 +4,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-import { createPublicationArtifactCandidate } from "../packages/core/publication-artifact-candidate.js";
+import {
+  createPublicationArtifactCandidate,
+  resolvePublicationCandidateFile,
+} from "../packages/core/publication-artifact-candidate.js";
+
+export { resolvePublicationCandidateFile };
 
 function flag(name, fallback = "") {
   const index = process.argv.indexOf(`--${name}`);

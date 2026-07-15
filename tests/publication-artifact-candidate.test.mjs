@@ -6,7 +6,10 @@ import {
   BUILDCHAIN_CONTROLLER_EVIDENCE_CONTRACT,
   controllerEvidenceDigest,
 } from "../packages/core/controller-evidence.js";
-import { createPublicationArtifactCandidate } from "../packages/core/publication-artifact-candidate.js";
+import {
+  createPublicationArtifactCandidate,
+  resolvePublicationCandidateFile,
+} from "../packages/core/publication-artifact-candidate.js";
 import {
   createPublicationAdmission,
   createPublicationAuthorityRegistry,
@@ -76,6 +79,18 @@ test("publication candidate binds declared PDFs and prepared npm package bytes",
   const substituted = structuredClone(evidence);
   substituted.files[1].sha256 = "e".repeat(64);
   assert.throws(() => createPublicationArtifactCandidate(substituted), /bytes do not match manifest/);
+});
+
+test("publisher resolves manifest paths exactly when the npm package repeats an artifact suffix", () => {
+  const files = [
+    { path: "_build/paper.pdf" },
+    { path: ".buildchain/publication/npm-package/_build/paper.pdf" },
+  ];
+  assert.equal(resolvePublicationCandidateFile(files, "_build/paper.pdf"), "_build/paper.pdf");
+  assert.throws(
+    () => resolvePublicationCandidateFile(files, "paper.pdf"),
+    /expected exactly one publication candidate file at paper\.pdf, found 0/,
+  );
 });
 
 test("sealed authority accepts exact publication-artifact evidence and rejects byte drift", () => {

@@ -230,7 +230,10 @@ jobs:
           import fs from "node:fs";
           import path from "node:path";
           import { execFileSync } from "node:child_process";
-          import { buildPublicationArtifactCandidate } from "./.buildchain/runtime/scripts/publication-artifact-candidate.mjs";
+          import {
+            buildPublicationArtifactCandidate,
+            resolvePublicationCandidateFile,
+          } from "./.buildchain/runtime/scripts/publication-artifact-candidate.mjs";
 
           const root = ".buildchain/admitted/artifact";
           const sourceSha = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim().toLowerCase();
@@ -247,25 +250,23 @@ jobs:
           if (capability.decision !== "allow" || capability.artifactDigest !== bundle.candidate.candidateDigest) {
             throw new Error("downloaded publication candidate does not match the sealed publication capability");
           }
-          const filesNamed = (name) => bundle.evidence.files.filter((entry) => entry.path.endsWith(name));
-          const onePath = (suffix) => {
-            const matches = filesNamed(suffix);
-            if (matches.length !== 1) throw new Error(`expected one candidate file ending ${suffix}, found ${matches.length}`);
-            return path.resolve(root, matches[0].path);
-          };
-          const packageResultPath = onePath(".buildchain/paper-release/package-result.json");
+          const exactPath = (candidatePath) => path.resolve(
+            root,
+            resolvePublicationCandidateFile(bundle.evidence.files, candidatePath),
+          );
+          const packageResultPath = exactPath(".buildchain/paper-release/package-result.json");
           const packageResult = JSON.parse(fs.readFileSync(packageResultPath, "utf8"));
-          const packageJsonPath = onePath(".buildchain/publication/npm-package/package.json");
+          const packageJsonPath = exactPath(".buildchain/publication/npm-package/package.json");
           const packageDir = path.dirname(packageJsonPath);
           const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
           if (packageJson.name !== process.env.BUILDCHAIN_PACKAGE_NAME || packageJson.version !== process.env.BUILDCHAIN_PACKAGE_VERSION) {
             throw new Error("prepared npm package identity differs from the admitted publication plan");
           }
-          const manifestPath = onePath(".buildchain/publication/publication-artifact.json");
+          const manifestPath = exactPath(".buildchain/publication/publication-artifact.json");
           const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
-          const releaseAssets = (manifest.artifacts || []).map((entry) => onePath(entry.path));
-          const requiredArtifactsPath = onePath(".buildchain/paper-release/publish-required-artifacts.json");
-          const buildSummaryPath = onePath(".buildchain/paper-release/build-summary.json");
+          const releaseAssets = (manifest.artifacts || []).map((entry) => exactPath(entry.path));
+          const requiredArtifactsPath = exactPath(".buildchain/paper-release/publish-required-artifacts.json");
+          const buildSummaryPath = exactPath(".buildchain/paper-release/build-summary.json");
           const output = fs.createWriteStream(process.env.GITHUB_OUTPUT, { flags: "a" });
           output.write(`package-dir=${packageDir}\n`);
           output.write(`package-name=${packageJson.name}\n`);
