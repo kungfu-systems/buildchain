@@ -455,6 +455,7 @@ test("control-plane snapshot qualifies an exact provider-enforced protected-bran
     environment: "none",
     branch: "alpha/v2/v2.12",
     packageName: "@kungfu-tech/buildchain",
+    requiredStatusCheck: "check / check",
     observedAt: "2026-07-14T00:00:00.000Z",
     expiresAt: "2026-07-14T00:10:00.000Z",
   };
@@ -465,7 +466,8 @@ test("control-plane snapshot qualifies an exact provider-enforced protected-bran
       policyMode: "provider-enforced-transaction",
       protected: true,
       enforcementLevel: "everyone",
-      requiredStatusChecks: ["check"],
+      requiredStatusChecks: ["check / check"],
+      requiredStatusCheck: "check / check",
       requiredCheckPassed: true,
       sourceSha,
       headSha: sourceSha,
@@ -492,6 +494,15 @@ test("control-plane snapshot qualifies an exact provider-enforced protected-bran
     },
   });
   assert.equal(drifted.facts.find((entry) => entry.id === "branch-policy").status, "fail");
+
+  const mismatchedCheck = evaluatePublicationControlPlaneSnapshot({
+    ...common,
+    snapshot: {
+      ...snapshot,
+      branch: { ...snapshot.branch, requiredStatusCheck: "check", requiredStatusChecks: ["check"] },
+    },
+  });
+  assert.equal(mismatchedCheck.facts.find((entry) => entry.id === "branch-policy").status, "fail");
 });
 
 test("control-plane snapshot audit supports scoped GitHub tokens and sanitized OIDC roles", () => {

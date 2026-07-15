@@ -549,7 +549,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:c90df3cf1ba9451509659d755c8f85808bf8878ccf9acce63c1408ce30538479"
+      "auditDigest": "sha256:4af45bd66f45b92607ed69840834c57ff157f57c66fe65d1645a5e83eaca8108"
     },
     {
       "contractVersion": 1,
@@ -2674,5 +2674,5 @@
     }
   ],
   "compatibilityDigest": "sha256:af162b86ab4506e9b5f1d3c59b41f3fd57fbad79ff4d749a7f12ff16460517f8",
-  "contractDigest": "sha256:2a46d02c760b2475ac6690971b0ad02cd87d889624a143eba3f8af8acbb76b4d"
+  "contractDigest": "sha256:e6691431a36a9bfdbdea90525537d95bd91c42e4f59bf471da60f665507a6c59"
 }

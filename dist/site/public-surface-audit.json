@@ -631,12 +631,13 @@
           "publication-target",
           "publication-version",
           "publisher-workflow-path",
+          "required-status-check",
           "runner-provenance-json",
           "source-sha",
           "target-ref",
           "used-nonces-json"
         ],
-        "inputCount": 27,
+        "inputCount": 28,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -3386,7 +3387,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "a6daf4822365bf576425777230246046ebca67b3f8dcfea61fc7a61773776185",
-    "workflowRegistryDigest": "89b7907718c8b4a7b22c3d36a971510a918f113b245bb7fe1d8982dbaf707c66",
+    "workflowRegistryDigest": "a61b85b07185e02e340c27d50f77a6710968db87dd42d1b1f4dd81260779a0ed",
     "pageRegistryDigest": "3a4779e3d85d0a175e33c7d2a8bee30ede3931cc721a7d8c422ab321f0dec723"
   },
   "comparison": {

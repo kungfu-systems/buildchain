@@ -61,6 +61,11 @@ on:
         type: string
         required: false
         default: ""
+      required-status-check:
+        description: "Exact protected-branch status check context admitted by the authority"
+        type: string
+        required: false
+        default: "check"
       publisher-workflow-path:
         description: "Caller workflow filename bound by the npm trusted publisher"
         type: string
@@ -369,6 +374,7 @@ jobs:
             --workflow .github/workflows/release-candidate-promote.yml \
             --workflow-ref "${{ inputs.buildchain-ref }}" \
             --publisher-workflow "${{ inputs.publisher-workflow-path }}" \
+            --required-status-check "${{ inputs.required-status-check }}" \
             --job promote \
             --environment none \
             --package "${{ inputs.package-name }}" \
@@ -408,6 +414,7 @@ jobs:
             --workflow "${{ inputs.authority-workflow-path || '.github/workflows/paper-release-sealed.yml' }}" \
             --workflow-ref "${{ inputs.buildchain-ref }}" \
             --publisher-workflow "${{ inputs.publisher-workflow-path }}" \
+            --required-status-check "${{ inputs.required-status-check }}" \
             --job publish \
             --environment none \
             --package "${{ inputs.package-name }}" \

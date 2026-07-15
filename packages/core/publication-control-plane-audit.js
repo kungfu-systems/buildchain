@@ -16,6 +16,7 @@ export function evaluatePublicationControlPlaneSnapshot({
   branch,
   packageName,
   publisherMode = "npm-trusted-publisher",
+  requiredStatusCheck = "check",
   snapshot,
   observedAt,
   expiresAt,
@@ -72,7 +73,8 @@ export function evaluatePublicationControlPlaneSnapshot({
     branchPolicy.protected === true &&
     branchPolicy.enforcementLevel === "everyone" &&
     Array.isArray(branchPolicy.requiredStatusChecks) &&
-    branchPolicy.requiredStatusChecks.includes("check") &&
+    branchPolicy.requiredStatusCheck === requiredStatusCheck &&
+    branchPolicy.requiredStatusChecks.includes(requiredStatusCheck) &&
     branchPolicy.requiredCheckPassed === true &&
     branchPolicy.sourceSha === branchPolicy.headSha &&
     branchPolicy.mergedPullRequest === true &&
