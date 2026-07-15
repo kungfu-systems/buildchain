@@ -222,10 +222,32 @@ export function fetchSourceCommit({
   sourceTreeSha = "",
   timeoutMs,
   env = {},
+  allowFullFetchRetry = false,
   runGit = git,
   containsCommit = hasCommit,
 }) {
   const fetchEnv = isolatedGitFetchEnv(env, targetPath);
+  const fetch = (refspec) => {
+    const options = { cwd: targetPath, timeoutMs, env: fetchEnv };
+    try {
+      runGit(["fetch", "--no-tags", "--depth=1", remoteName, refspec], options);
+      return "shallow";
+    } catch (error) {
+      if (
+        !allowFullFetchRetry
+        || !/dumb http transport does not support shallow capabilities/i.test(
+          String(error?.message || error || ""),
+        )
+      ) {
+        throw error;
+      }
+      // Dumb HTTP mirrors are intentionally simple static cache endpoints.
+      // Retry only that explicit capability mismatch without --depth; all
+      // network fallbacks remain shallow and bounded by their own policy.
+      runGit(["fetch", "--no-tags", remoteName, refspec], options);
+      return "full";
+    }
+  };
   try {
     runGit(["remote", "remove", remoteName], { cwd: targetPath, timeoutMs, stdio: "ignore" });
   } catch {
@@ -239,13 +261,9 @@ export function fetchSourceCommit({
 
   if (fetchRef) {
     try {
-      runGit(["fetch", "--no-tags", "--depth=1", remoteName, `+${fetchRef}:refs/buildchain/source-ref`], {
-        cwd: targetPath,
-        timeoutMs,
-        env: fetchEnv,
-      });
+      const fetchMode = fetch(`+${fetchRef}:refs/buildchain/source-ref`);
       if (containsCommit(targetPath, sha, timeoutMs)) {
-        return { selector: "ref", checkoutSha: sha };
+        return { selector: "ref", checkoutSha: sha, fetchMode };
       }
       if (/^refs\/pull\/\d+\/merge$/.test(fetchRef) && sourceTreeSha) {
         const fetchedSha = runGit(["rev-parse", "refs/buildchain/source-ref^{commit}"], {
@@ -257,7 +275,7 @@ export function fetchSourceCommit({
           timeoutMs,
         });
         if (fetchedTree === sourceTreeSha) {
-          return { selector: "ref-tree", checkoutSha: fetchedSha };
+          return { selector: "ref-tree", checkoutSha: fetchedSha, fetchMode };
         }
       }
     } catch (error) {
@@ -269,15 +287,11 @@ export function fetchSourceCommit({
     }
   }
 
-  runGit(["fetch", "--no-tags", "--depth=1", remoteName, `+${sha}:refs/buildchain/source`], {
-    cwd: targetPath,
-    timeoutMs,
-    env: fetchEnv,
-  });
+  const fetchMode = fetch(`+${sha}:refs/buildchain/source`);
   if (!containsCommit(targetPath, sha, timeoutMs)) {
     throw new Error(`fetched ${fetchRef || sha}, but ${sha} is not available`);
   }
-  return { selector: "sha", checkoutSha: sha };
+  return { selector: "sha", checkoutSha: sha, fetchMode };
 }
 
 export function runBoundedFetch({ attempts = 1, fetch, onAttempt = () => {}, onRetry = () => {}, shouldRetry = () => true }) {
@@ -433,7 +447,9 @@ export function lockedSourceCheckout({
           fetchRef,
           sourceTreeSha: treeSha,
           timeoutMs,
+          allowFullFetchRetry: true,
         });
+        evidence.cache.fetchMode = fetchResult.fetchMode;
         checkoutSha = fetchResult.checkoutSha || sha;
         checkoutFetchedCommit(targetPath, checkoutSha, timeoutMs);
       } else {
@@ -478,6 +494,7 @@ export function lockedSourceCheckout({
         shouldRetry: retryableGitFetchError,
       });
       evidence.cache.githubFetchAttempts = fetchResult.attempts;
+      evidence.cache.fetchMode = fetchResult.value.fetchMode;
       checkoutSha = fetchResult.value.checkoutSha || sha;
     } catch (error) {
       evidence.durationMs = Date.now() - startedAt;
