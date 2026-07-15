@@ -146,6 +146,11 @@ on:
         default: ""
         type: string
         required: false
+      lifecycle-timeout-minutes:
+        description: "Maximum minutes for the build matrix job and fallback timeout for each lifecycle stage"
+        default: 120
+        type: number
+        required: false
       require-install:
         default: false
         type: boolean
@@ -616,6 +621,7 @@ jobs:
       install-command: ${{ inputs.install-command }}
       build-command: ${{ inputs.build-command }}
       verify-command: ${{ inputs.verify-command }}
+      lifecycle-timeout-minutes: ${{ inputs.lifecycle-timeout-minutes }}
       require-install: ${{ inputs.require-install }}
       require-build: ${{ inputs.require-build }}
       require-verify: ${{ inputs.require-verify }}

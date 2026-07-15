@@ -33,6 +33,7 @@ async function main() {
     stageName: getInput("stage") || "build",
     command: getInput("command") || "",
     required: getInput("required") === "true",
+    timeoutMinutes: Number(getInput("timeout-minutes") || 120),
     manifestPath,
     summaryPath,
     diagnosticsPath,

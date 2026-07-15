@@ -61,6 +61,7 @@
         "expected-artifacts-json",
         "gate-profile-aggregate-json",
         "install-command",
+        "lifecycle-timeout-minutes",
         "linux-container-image",
         "linux-container-preset",
         "node-version",
@@ -91,7 +92,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 58,
+      "inputCount": 59,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -717,6 +718,7 @@
         "expected-artifacts-json",
         "gate-profile-aggregate-json",
         "install-command",
+        "lifecycle-timeout-minutes",
         "linux-container-image",
         "linux-container-preset",
         "node-version",
@@ -747,7 +749,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 61,
+      "inputCount": 62,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1680,9 +1682,10 @@
         "required",
         "sample-process-tree",
         "stage",
-        "summary-path"
+        "summary-path",
+        "timeout-minutes"
       ],
-      "inputCount": 20,
+      "inputCount": 21,
       "capabilityGroup": "reusable-build",
       "status": "active"
     },

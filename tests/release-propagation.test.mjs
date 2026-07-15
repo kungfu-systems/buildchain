@@ -190,4 +190,8 @@ test("release propagation reusable workflow invokes the checked out Buildchain r
     (workflow.match(/node \.buildchain\/runtime\/bin\/buildchain\.mjs release-propagation/g) || []).length,
     2,
   );
+  assert.match(workflow, /LOCK_PATH: \$\{\{ steps\.plan\.outputs\.lock_path \}\}/);
+  assert.match(workflow, /git add -- "\$LOCK_PATH"\n\s+if git diff --cached --quiet -- "\$LOCK_PATH"/);
+  assert.doesNotMatch(workflow, /if git diff --quiet/);
+  assert.doesNotMatch(workflow, /git add \./);
 });

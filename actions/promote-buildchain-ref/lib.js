@@ -363,6 +363,7 @@ function assertAllowedLocalChanges(cwd, allowedPaths) {
   }).trimEnd();
   const ephemeralBuildchainEvidencePaths = [
     ".buildchain/admitted/",
+    ".buildchain/controller/",
     ".buildchain/contract-drift/",
     ".buildchain/kfd/",
     ".buildchain/publication-result.json",

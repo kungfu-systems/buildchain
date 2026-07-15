@@ -1141,6 +1141,7 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
     "utf8",
   );
   assert.match(workflow, /workflow_call:/);
+  assert.match(workflow, /permissions:\n  actions: read\n  contents: read/);
   assert.match(workflow, /buildchain-ref:/);
   assert.match(workflow, /buildchain-contract-lock-path:/);
   assert.match(workflow, /buildchain-contract-compatibility-policy:/);
@@ -1249,6 +1250,10 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.ok(workflow.indexOf("id: gate") < workflow.indexOf("Run caller build"));
   assert.match(workflow, /Apply production deploy/);
   assert.match(workflow, /Seal web production publication capability/);
+  assert.match(
+    workflow,
+    /name: Seal web production publication capability[\s\S]*?permissions:\n      actions: read\n      contents: read[\s\S]*?uses: \.\/\.github\/workflows\/\.publication-authority\.yml/,
+  );
   assert.match(workflow, /uses: \.\/\.github\/workflows\/\.publication-authority\.yml/);
   assert.match(workflow, /publication-admission-json:/);
   assert.match(workflow, /publication-control-plane-audit-json:/);
@@ -3262,6 +3267,55 @@ test("runLifecycle command override inherits declared stage shell and lifecycle 
   } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
   }
+});
+
+test("runLifecycle applies a clear fallback timeout to commands and configured stages", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-lifecycle-timeout-"));
+  const fixture = path.join(workspace, "fixture");
+  fs.mkdirSync(fixture, { recursive: true });
+  fs.writeFileSync(
+    path.join(fixture, "buildchain.toml"),
+    'schema = 1\n\n[lifecycle.verify]\ncommand = "node -e \\\"setTimeout(() => {}, 1000)\\\""\n',
+  );
+  try {
+    assert.throws(
+      () => runLifecycle({
+        cwd: fixture,
+        stageName: "verify",
+        command: 'node -e "setTimeout(() => {}, 1000)"',
+        timeoutMinutes: 0.001,
+        platformId: "linux-x64",
+        platformName: "Linux x64",
+        workspace,
+      }),
+      /lifecycle verify timed out after 0\.001 minute\(s\) on Linux x64 \(linux-x64\)/,
+    );
+    assert.throws(
+      () => runLifecycle({
+        cwd: fixture,
+        stageName: "verify",
+        timeoutMinutes: 0.001,
+        platformId: "linux-x64",
+        platformName: "Linux x64",
+        workspace,
+      }),
+      /lifecycle verify timed out after 0\.001 minute\(s\) on Linux x64 \(linux-x64\)/,
+    );
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("reusable build bounds matrix jobs and lifecycle actions with one timeout input", () => {
+  const workflow = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
+  const action = fs.readFileSync(path.join(root, "actions/run-lifecycle/action.yml"), "utf8");
+
+  assert.match(workflow, /lifecycle-timeout-minutes:[\s\S]*?default: 120[\s\S]*?type: number/);
+  assert.equal(
+    (workflow.match(/timeout-minutes: \$\{\{ inputs\.lifecycle-timeout-minutes \}\}/g) || []).length,
+    8,
+  );
+  assert.match(action, /timeout-minutes:[\s\S]*?default: "120"/);
 });
 
 test("runLifecycle samples a configured lifecycle stage", () => {
