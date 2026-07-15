@@ -6,7 +6,7 @@
   "hold": {
     "enabled": false,
     "reason": "",
-    "updatedAt": "2026-07-15T13:43:52.808Z"
+    "updatedAt": "2026-07-15T23:53:03.072Z"
   },
   "candidates": [
     {
@@ -1573,10 +1573,10 @@
       "sha": "3e266af8570f330952a325e53182b5782ee118b7",
       "tag": "v2.12.7-alpha.0",
       "publishedAt": "2026-07-14T04:28:36.000Z",
-      "state": "soaking",
+      "state": "revoked",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-07-15T13:43:52.808Z",
+        "observedAt": "2026-07-15T23:53:03.072Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1602,9 +1602,9 @@
         ]
       },
       "decision": {
-        "reason": "checks-incomplete",
-        "updatedAt": "2026-07-15T13:43:52.808Z",
-        "actor": "buildchain-patrol"
+        "reason": "stable-version-promoted-by:2.12.7-alpha.22",
+        "actor": "buildchain",
+        "updatedAt": "2026-07-15T13:53:31.000Z"
       }
     },
     {
@@ -1613,10 +1613,10 @@
       "sha": "af7ab8210dcb5113df37011bfbffdc745e7acc04",
       "tag": "v2.12.7-alpha.3",
       "publishedAt": "2026-07-14T17:01:09.000Z",
-      "state": "soaking",
+      "state": "revoked",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-07-15T13:43:52.808Z",
+        "observedAt": "2026-07-15T23:53:03.072Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1642,9 +1642,9 @@
         ]
       },
       "decision": {
-        "reason": "checks-incomplete",
-        "updatedAt": "2026-07-15T13:43:52.808Z",
-        "actor": "buildchain-patrol"
+        "reason": "stable-version-promoted-by:2.12.7-alpha.22",
+        "actor": "buildchain",
+        "updatedAt": "2026-07-15T13:53:31.000Z"
       }
     },
     {
@@ -1653,10 +1653,10 @@
       "sha": "023c8e83f89e34e603c8f82ceec7bb9e89fc9e78",
       "tag": "v2.12.7-alpha.4",
       "publishedAt": "2026-07-14T23:12:02.000Z",
-      "state": "soaking",
+      "state": "revoked",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-07-15T13:43:52.808Z",
+        "observedAt": "2026-07-15T23:53:03.072Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -1682,9 +1682,9 @@
         ]
       },
       "decision": {
-        "reason": "checks-incomplete",
-        "updatedAt": "2026-07-15T13:43:52.808Z",
-        "actor": "buildchain-patrol"
+        "reason": "stable-version-promoted-by:2.12.7-alpha.22",
+        "actor": "buildchain",
+        "updatedAt": "2026-07-15T13:53:31.000Z"
       }
     },
     {
@@ -1693,12 +1693,12 @@
       "sha": "23c360b7878e813b7308bd047f1310a64a6b4aae",
       "tag": "v2.12.7-alpha.5",
       "publishedAt": "2026-07-14T23:37:07.000Z",
-      "state": "qualified",
+      "state": "revoked",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-07-15T13:43:52.808Z",
+        "observedAt": "2026-07-15T23:53:03.072Z",
         "soakStartedAt": "2026-07-14T23:43:29.000Z",
-        "soakElapsedSeconds": 50423,
+        "soakElapsedSeconds": 86974,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1722,9 +1722,9 @@
         ]
       },
       "decision": {
-        "reason": "qualification-satisfied",
-        "updatedAt": "2026-07-15T13:43:52.808Z",
-        "actor": "buildchain-patrol"
+        "reason": "stable-version-promoted-by:2.12.7-alpha.22",
+        "actor": "buildchain",
+        "updatedAt": "2026-07-15T13:53:31.000Z"
       }
     },
     {
@@ -1733,12 +1733,12 @@
       "sha": "63190f90f71fee292212d41d87149e511f5408f2",
       "tag": "v2.12.7-alpha.6",
       "publishedAt": "2026-07-14T23:52:08.000Z",
-      "state": "qualified",
+      "state": "revoked",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-07-15T13:43:52.808Z",
+        "observedAt": "2026-07-15T23:53:03.072Z",
         "soakStartedAt": "2026-07-14T23:57:39.000Z",
-        "soakElapsedSeconds": 49573,
+        "soakElapsedSeconds": 86124,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1762,9 +1762,9 @@
         ]
       },
       "decision": {
-        "reason": "qualification-satisfied",
-        "updatedAt": "2026-07-15T13:43:52.808Z",
-        "actor": "buildchain-patrol"
+        "reason": "stable-version-promoted-by:2.12.7-alpha.22",
+        "actor": "buildchain",
+        "updatedAt": "2026-07-15T13:53:31.000Z"
       }
     },
     {
@@ -1773,12 +1773,12 @@
       "sha": "6ae029cd7d78a56aaaeb97bc9195e0fdcda82be6",
       "tag": "v2.12.7-alpha.7",
       "publishedAt": "2026-07-15T01:04:13.000Z",
-      "state": "qualified",
+      "state": "revoked",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-07-15T13:43:52.808Z",
+        "observedAt": "2026-07-15T23:53:03.072Z",
         "soakStartedAt": "2026-07-15T01:10:49.000Z",
-        "soakElapsedSeconds": 45183,
+        "soakElapsedSeconds": 81734,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1802,9 +1802,9 @@
         ]
       },
       "decision": {
-        "reason": "qualification-satisfied",
-        "updatedAt": "2026-07-15T13:43:52.808Z",
-        "actor": "buildchain-patrol"
+        "reason": "stable-version-promoted-by:2.12.7-alpha.22",
+        "actor": "buildchain",
+        "updatedAt": "2026-07-15T13:53:31.000Z"
       }
     },
     {
@@ -1813,12 +1813,12 @@
       "sha": "e6c3b27db0552bb0ca075ced4fe1dea621ef06cf",
       "tag": "v2.12.7-alpha.8",
       "publishedAt": "2026-07-15T01:34:01.000Z",
-      "state": "qualified",
+      "state": "revoked",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-07-15T13:43:52.808Z",
+        "observedAt": "2026-07-15T23:53:03.072Z",
         "soakStartedAt": "2026-07-15T01:40:03.000Z",
-        "soakElapsedSeconds": 43429,
+        "soakElapsedSeconds": 79980,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1842,9 +1842,9 @@
         ]
       },
       "decision": {
-        "reason": "qualification-satisfied",
-        "updatedAt": "2026-07-15T13:43:52.808Z",
-        "actor": "buildchain-patrol"
+        "reason": "stable-version-promoted-by:2.12.7-alpha.22",
+        "actor": "buildchain",
+        "updatedAt": "2026-07-15T13:53:31.000Z"
       }
     },
     {
@@ -1853,12 +1853,12 @@
       "sha": "14d7952cbf6508b6446971fd6903fba954aad4d6",
       "tag": "v2.12.7-alpha.9",
       "publishedAt": "2026-07-15T01:59:59.000Z",
-      "state": "qualified",
+      "state": "revoked",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-07-15T13:43:52.808Z",
+        "observedAt": "2026-07-15T23:53:03.072Z",
         "soakStartedAt": "2026-07-15T02:06:10.000Z",
-        "soakElapsedSeconds": 41862,
+        "soakElapsedSeconds": 78413,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1882,9 +1882,9 @@
         ]
       },
       "decision": {
-        "reason": "qualification-satisfied",
-        "updatedAt": "2026-07-15T13:43:52.808Z",
-        "actor": "buildchain-patrol"
+        "reason": "stable-version-promoted-by:2.12.7-alpha.22",
+        "actor": "buildchain",
+        "updatedAt": "2026-07-15T13:53:31.000Z"
       }
     },
     {
@@ -1893,12 +1893,12 @@
       "sha": "6630a522de1bc9833b95cfdc6f2605532d7bde2a",
       "tag": "v2.12.7-alpha.10",
       "publishedAt": "2026-07-15T02:26:05.000Z",
-      "state": "qualified",
+      "state": "revoked",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-07-15T13:43:52.808Z",
+        "observedAt": "2026-07-15T23:53:03.072Z",
         "soakStartedAt": "2026-07-15T02:32:24.000Z",
-        "soakElapsedSeconds": 40288,
+        "soakElapsedSeconds": 76839,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1922,9 +1922,9 @@
         ]
       },
       "decision": {
-        "reason": "qualification-satisfied",
-        "updatedAt": "2026-07-15T13:43:52.808Z",
-        "actor": "buildchain-patrol"
+        "reason": "stable-version-promoted-by:2.12.7-alpha.22",
+        "actor": "buildchain",
+        "updatedAt": "2026-07-15T13:53:31.000Z"
       }
     },
     {
@@ -1933,12 +1933,12 @@
       "sha": "789c3649fb804c1af1d16ceeeff671ef020238ec",
       "tag": "v2.12.7-alpha.11",
       "publishedAt": "2026-07-15T02:57:24.000Z",
-      "state": "qualified",
+      "state": "revoked",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-07-15T13:43:52.808Z",
+        "observedAt": "2026-07-15T23:53:03.072Z",
         "soakStartedAt": "2026-07-15T03:02:47.000Z",
-        "soakElapsedSeconds": 38465,
+        "soakElapsedSeconds": 75016,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -1962,9 +1962,9 @@
         ]
       },
       "decision": {
-        "reason": "qualification-satisfied",
-        "updatedAt": "2026-07-15T13:43:52.808Z",
-        "actor": "buildchain-patrol"
+        "reason": "stable-version-promoted-by:2.12.7-alpha.22",
+        "actor": "buildchain",
+        "updatedAt": "2026-07-15T13:53:31.000Z"
       }
     },
     {
@@ -1973,12 +1973,12 @@
       "sha": "90d3ccd8e8e2847c51981576426bb087e618ea17",
       "tag": "v2.12.7-alpha.12",
       "publishedAt": "2026-07-15T03:43:49.000Z",
-      "state": "qualified",
+      "state": "revoked",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-07-15T13:43:52.808Z",
+        "observedAt": "2026-07-15T23:53:03.072Z",
         "soakStartedAt": "2026-07-15T03:49:24.000Z",
-        "soakElapsedSeconds": 35668,
+        "soakElapsedSeconds": 72219,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -2002,9 +2002,9 @@
         ]
       },
       "decision": {
-        "reason": "qualification-satisfied",
-        "updatedAt": "2026-07-15T13:43:52.808Z",
-        "actor": "buildchain-patrol"
+        "reason": "stable-version-promoted-by:2.12.7-alpha.22",
+        "actor": "buildchain",
+        "updatedAt": "2026-07-15T13:53:31.000Z"
       }
     },
     {
@@ -2013,12 +2013,12 @@
       "sha": "d62005055d80deaa17c7f81f248ee62e6b25e56f",
       "tag": "v2.12.7-alpha.13",
       "publishedAt": "2026-07-15T04:14:11.000Z",
-      "state": "qualified",
+      "state": "revoked",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-07-15T13:43:52.808Z",
+        "observedAt": "2026-07-15T23:53:03.072Z",
         "soakStartedAt": "2026-07-15T04:19:47.000Z",
-        "soakElapsedSeconds": 33845,
+        "soakElapsedSeconds": 70396,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -2042,9 +2042,9 @@
         ]
       },
       "decision": {
-        "reason": "qualification-satisfied",
-        "updatedAt": "2026-07-15T13:43:52.808Z",
-        "actor": "buildchain-patrol"
+        "reason": "stable-version-promoted-by:2.12.7-alpha.22",
+        "actor": "buildchain",
+        "updatedAt": "2026-07-15T13:53:31.000Z"
       }
     },
     {
@@ -2053,12 +2053,12 @@
       "sha": "3fe00edb4d49a54df81a5bb3fb0196728d7efd88",
       "tag": "v2.12.7-alpha.14",
       "publishedAt": "2026-07-15T04:41:58.000Z",
-      "state": "qualified",
+      "state": "revoked",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-07-15T13:43:52.808Z",
+        "observedAt": "2026-07-15T23:53:03.072Z",
         "soakStartedAt": "2026-07-15T04:47:18.000Z",
-        "soakElapsedSeconds": 32194,
+        "soakElapsedSeconds": 68745,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -2082,9 +2082,9 @@
         ]
       },
       "decision": {
-        "reason": "qualification-satisfied",
-        "updatedAt": "2026-07-15T13:43:52.808Z",
-        "actor": "buildchain-patrol"
+        "reason": "stable-version-promoted-by:2.12.7-alpha.22",
+        "actor": "buildchain",
+        "updatedAt": "2026-07-15T13:53:31.000Z"
       }
     },
     {
@@ -2093,12 +2093,12 @@
       "sha": "2f0a26822b7171bfc4a9dbcd9a992d02d5f1a612",
       "tag": "v2.12.7-alpha.15",
       "publishedAt": "2026-07-15T05:14:30.000Z",
-      "state": "qualified",
+      "state": "revoked",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-07-15T13:43:52.808Z",
+        "observedAt": "2026-07-15T23:53:03.072Z",
         "soakStartedAt": "2026-07-15T05:20:36.000Z",
-        "soakElapsedSeconds": 30196,
+        "soakElapsedSeconds": 66747,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -2122,9 +2122,9 @@
         ]
       },
       "decision": {
-        "reason": "qualification-satisfied",
-        "updatedAt": "2026-07-15T13:43:52.808Z",
-        "actor": "buildchain-patrol"
+        "reason": "stable-version-promoted-by:2.12.7-alpha.22",
+        "actor": "buildchain",
+        "updatedAt": "2026-07-15T13:53:31.000Z"
       }
     },
     {
@@ -2133,12 +2133,12 @@
       "sha": "865abff6c65fba8de616096676fb4a3d0de899ad",
       "tag": "v2.12.7-alpha.16",
       "publishedAt": "2026-07-15T09:00:20.000Z",
-      "state": "qualified",
+      "state": "revoked",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-07-15T13:43:52.808Z",
+        "observedAt": "2026-07-15T23:53:03.072Z",
         "soakStartedAt": "2026-07-15T09:06:43.000Z",
-        "soakElapsedSeconds": 16629,
+        "soakElapsedSeconds": 53180,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -2162,9 +2162,9 @@
         ]
       },
       "decision": {
-        "reason": "qualification-satisfied",
-        "updatedAt": "2026-07-15T13:43:52.808Z",
-        "actor": "buildchain-patrol"
+        "reason": "stable-version-promoted-by:2.12.7-alpha.22",
+        "actor": "buildchain",
+        "updatedAt": "2026-07-15T13:53:31.000Z"
       }
     },
     {
@@ -2173,12 +2173,12 @@
       "sha": "1a1ccc2180986161f14a080f5856991ac375813c",
       "tag": "v2.12.7-alpha.17",
       "publishedAt": "2026-07-15T09:32:23.000Z",
-      "state": "qualified",
+      "state": "revoked",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-07-15T13:43:52.808Z",
+        "observedAt": "2026-07-15T23:53:03.072Z",
         "soakStartedAt": "2026-07-15T09:38:37.000Z",
-        "soakElapsedSeconds": 14715,
+        "soakElapsedSeconds": 51266,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -2202,9 +2202,9 @@
         ]
       },
       "decision": {
-        "reason": "qualification-satisfied",
-        "updatedAt": "2026-07-15T13:43:52.808Z",
-        "actor": "buildchain-patrol"
+        "reason": "stable-version-promoted-by:2.12.7-alpha.22",
+        "actor": "buildchain",
+        "updatedAt": "2026-07-15T13:53:31.000Z"
       }
     },
     {
@@ -2213,12 +2213,12 @@
       "sha": "6f1b17fac1e0182d1afa6ea9cfe3578e7a5e532c",
       "tag": "v2.12.7-alpha.18",
       "publishedAt": "2026-07-15T10:06:45.000Z",
-      "state": "qualified",
+      "state": "revoked",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-07-15T13:43:52.808Z",
+        "observedAt": "2026-07-15T23:53:03.072Z",
         "soakStartedAt": "2026-07-15T10:12:47.000Z",
-        "soakElapsedSeconds": 12665,
+        "soakElapsedSeconds": 49216,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -2242,9 +2242,9 @@
         ]
       },
       "decision": {
-        "reason": "qualification-satisfied",
-        "updatedAt": "2026-07-15T13:43:52.808Z",
-        "actor": "buildchain-patrol"
+        "reason": "stable-version-promoted-by:2.12.7-alpha.22",
+        "actor": "buildchain",
+        "updatedAt": "2026-07-15T13:53:31.000Z"
       }
     },
     {
@@ -2253,12 +2253,12 @@
       "sha": "51b3d5490160916a7a25937cb23c45dd2de9a335",
       "tag": "v2.12.7-alpha.19",
       "publishedAt": "2026-07-15T10:41:36.000Z",
-      "state": "qualified",
+      "state": "revoked",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-07-15T13:43:52.808Z",
+        "observedAt": "2026-07-15T23:53:03.072Z",
         "soakStartedAt": "2026-07-15T10:47:54.000Z",
-        "soakElapsedSeconds": 10558,
+        "soakElapsedSeconds": 47109,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -2282,9 +2282,9 @@
         ]
       },
       "decision": {
-        "reason": "qualification-satisfied",
-        "updatedAt": "2026-07-15T13:43:52.808Z",
-        "actor": "buildchain-patrol"
+        "reason": "stable-version-promoted-by:2.12.7-alpha.22",
+        "actor": "buildchain",
+        "updatedAt": "2026-07-15T13:53:31.000Z"
       }
     },
     {
@@ -2293,10 +2293,10 @@
       "sha": "e73b5c98e5c3f2f5a514ce28faf9aa9261e9fbb6",
       "tag": "v2.12.7-alpha.20",
       "publishedAt": "2026-07-15T11:17:17.000Z",
-      "state": "soaking",
+      "state": "revoked",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-07-15T13:43:52.808Z",
+        "observedAt": "2026-07-15T23:53:03.072Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -2322,9 +2322,9 @@
         ]
       },
       "decision": {
-        "reason": "checks-incomplete",
-        "updatedAt": "2026-07-15T13:43:52.808Z",
-        "actor": "buildchain-patrol"
+        "reason": "stable-version-promoted-by:2.12.7-alpha.22",
+        "actor": "buildchain",
+        "updatedAt": "2026-07-15T13:53:31.000Z"
       }
     },
     {
@@ -2333,12 +2333,12 @@
       "sha": "b3beb7b4be718693d0b79ba9a947c4f69a5bf1ce",
       "tag": "v2.12.7-alpha.21",
       "publishedAt": "2026-07-15T12:29:46.000Z",
-      "state": "qualified",
+      "state": "revoked",
       "qualification": {
         "ok": true,
-        "observedAt": "2026-07-15T13:43:52.808Z",
+        "observedAt": "2026-07-15T23:53:03.072Z",
         "soakStartedAt": "2026-07-15T12:39:44.000Z",
-        "soakElapsedSeconds": 3848,
+        "soakElapsedSeconds": 40399,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -2362,9 +2362,9 @@
         ]
       },
       "decision": {
-        "reason": "qualification-satisfied",
-        "updatedAt": "2026-07-15T13:43:52.808Z",
-        "actor": "buildchain-patrol"
+        "reason": "stable-version-promoted-by:2.12.7-alpha.22",
+        "actor": "buildchain",
+        "updatedAt": "2026-07-15T13:53:31.000Z"
       }
     },
     {
@@ -2373,12 +2373,12 @@
       "sha": "40f808101be476b2f60611395b13c6e4520cb386",
       "tag": "v2.12.7-alpha.22",
       "publishedAt": "2026-07-15T13:12:20.000Z",
-      "state": "soaking",
+      "state": "promoted",
       "qualification": {
-        "ok": false,
-        "observedAt": "2026-07-15T13:43:52.808Z",
-        "soakStartedAt": "2026-07-15T13:18:23.000Z",
-        "soakElapsedSeconds": 1529,
+        "ok": true,
+        "observedAt": "2026-07-15T23:53:03.072Z",
+        "soakStartedAt": "2026-07-15T13:48:14.000Z",
+        "soakElapsedSeconds": 36289,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -2390,8 +2390,8 @@
           {
             "id": "workflow:Build Surface Fixture",
             "status": "pass",
-            "completedAt": "2026-07-15T13:17:06.000Z",
-            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/actions/runs/29418419801"
+            "completedAt": "2026-07-15T13:48:14.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/actions/runs/29420542785"
           },
           {
             "id": "status:buildchain-canary/site-libkungfu-dev",
@@ -2402,9 +2402,9 @@
         ]
       },
       "decision": {
-        "reason": "human-release-now",
-        "actor": "human",
-        "updatedAt": "2026-07-15T13:43:52.808Z"
+        "reason": "promoted",
+        "actor": "",
+        "updatedAt": "2026-07-15T13:53:31.000Z"
       },
       "promotionRequest": {
         "stableTag": "v2.12.7",
@@ -2413,11 +2413,110 @@
         "pullRequestUrl": "https://github.com/kungfu-systems/buildchain/pull/1290",
         "requestedAt": "2026-07-15T13:43:52.808Z",
         "authority": "human"
+      },
+      "promotion": {
+        "stableTag": "v2.12.7",
+        "stableSha": "52dba6d30051b53d6f6b723fa6e27b090ce4311f",
+        "promotedAt": "2026-07-15T13:53:31.000Z"
+      }
+    },
+    {
+      "version": "2.12.8-alpha.0",
+      "stableVersion": "2.12.8",
+      "sha": "635db902260b89328f1546d2418caf32b1a476be",
+      "tag": "v2.12.8-alpha.0",
+      "publishedAt": "2026-07-15T14:11:31.000Z",
+      "state": "soaking",
+      "qualification": {
+        "ok": false,
+        "observedAt": "2026-07-15T23:53:03.072Z",
+        "soakStartedAt": "",
+        "soakElapsedSeconds": 0,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-07-15T14:11:31.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v2.12.8-alpha.0"
+          },
+          {
+            "id": "workflow:Build Surface Fixture",
+            "status": "pass",
+            "completedAt": "2026-07-15T14:16:25.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/actions/runs/29422670088"
+          },
+          {
+            "id": "status:buildchain-canary/site-libkungfu-dev",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": ""
+          }
+        ]
+      },
+      "decision": {
+        "reason": "checks-incomplete",
+        "updatedAt": "2026-07-15T23:53:03.072Z",
+        "actor": "buildchain-patrol"
+      }
+    },
+    {
+      "version": "2.12.8-alpha.1",
+      "stableVersion": "2.12.8",
+      "sha": "2e59c9ef371c6b40199c7ccfbb3a79f306944096",
+      "tag": "v2.12.8-alpha.1",
+      "publishedAt": "2026-07-15T23:44:51.000Z",
+      "state": "soaking",
+      "qualification": {
+        "ok": false,
+        "observedAt": "2026-07-15T23:53:03.072Z",
+        "soakStartedAt": "",
+        "soakElapsedSeconds": 0,
+        "requiredSeconds": 3600,
+        "checks": [
+          {
+            "id": "alpha-release",
+            "status": "pass",
+            "completedAt": "2026-07-15T23:44:51.000Z",
+            "evidenceUrl": "https://github.com/kungfu-systems/buildchain/releases/tag/v2.12.8-alpha.1"
+          },
+          {
+            "id": "workflow:Build Surface Fixture",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": ""
+          },
+          {
+            "id": "status:buildchain-canary/site-libkungfu-dev",
+            "status": "fail",
+            "completedAt": "",
+            "evidenceUrl": ""
+          }
+        ]
+      },
+      "decision": {
+        "reason": "human-release-now",
+        "actor": "human",
+        "updatedAt": "2026-07-15T23:53:03.072Z"
+      },
+      "promotionRequest": {
+        "stableTag": "v2.12.8",
+        "sourceRef": "publish-gate/release/v2/v2.12/2.12.8-alpha.1",
+        "targetRef": "release/v2/v2.12",
+        "pullRequestUrl": "https://github.com/kungfu-systems/buildchain/pull/1311",
+        "requestedAt": "2026-07-15T23:53:03.072Z",
+        "authority": "human"
       }
     }
   ],
-  "updatedAt": "2026-07-15T13:43:52.808Z",
+  "updatedAt": "2026-07-15T13:53:31.000Z",
   "stableReleases": [
+    {
+      "version": "2.12.7",
+      "tag": "v2.12.7",
+      "publishedAt": "2026-07-15T13:53:31Z",
+      "url": "https://github.com/kungfu-systems/buildchain/releases/tag/v2.12.7"
+    },
     {
       "version": "2.12.6",
       "tag": "v2.12.6",
@@ -2531,12 +2630,6 @@
       "tag": "v2.11.1",
       "publishedAt": "2026-07-09T11:55:32Z",
       "url": "https://github.com/kungfu-systems/buildchain/releases/tag/v2.11.1"
-    },
-    {
-      "version": "2.11.0",
-      "tag": "v2.11.0",
-      "publishedAt": "2026-07-09T04:24:58Z",
-      "url": "https://github.com/kungfu-systems/buildchain/releases/tag/v2.11.0"
     }
   ]
 }
