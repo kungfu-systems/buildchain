@@ -94,6 +94,11 @@ The implementation is intentionally stricter than a local release script:
   release source tree against that tested alpha tree;
 - generated version-state commits are verified before refs move.
 
+Exact publication planning installs the checked-out promotion source's declared
+dependencies before version-state verification. This keeps the pre-authority
+version plan on the same package-manager boundary as the later promotion job,
+including repositories whose verification commands import production packages.
+
 Promotion intents are serialized globally per caller repository with
 `cancel-in-progress: false`. A queued intent re-reads its protected target ref
 before checkout, dependency installation, release-candidate resolution, or any

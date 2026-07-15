@@ -159,7 +159,7 @@
         "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes"
       ],
       "breakingDigest": "sha256:6dbae32ce3d7aab3be6957065105af574794581847b7637314dad45f5349c919",
-      "auditDigest": "sha256:3de1fbbaad4c5b09cf958bed1aeba4fd9a3e101baa96076088c9c4a91c2d9784"
+      "auditDigest": "sha256:3d3eec3ea3ed1b2621056f551a20543fb2b01eab985ac70c15a304e7a4bac7cc"
     },
     {
       "contractVersion": 1,
@@ -527,7 +527,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:9cbb9a4f729dc67f56714eee35360acf4e50225d9849cf9d852962c9ade7ffaf"
+      "auditDigest": "sha256:59d528ff8951d17cfd91058bab6707008c8c5dbe33889df4ef5e86e90beecc76"
     },
     {
       "contractVersion": 1,
@@ -2560,7 +2560,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:46238f8fc3c20924decc57ecad142a462fc4739c6bc21409d5cd2457fc1c3cdd",
-      "auditDigest": "sha256:3de1fbbaad4c5b09cf958bed1aeba4fd9a3e101baa96076088c9c4a91c2d9784"
+      "auditDigest": "sha256:3d3eec3ea3ed1b2621056f551a20543fb2b01eab985ac70c15a304e7a4bac7cc"
     },
     {
       "contractVersion": 1,
@@ -2689,5 +2689,5 @@
     }
   ],
   "compatibilityDigest": "sha256:af162b86ab4506e9b5f1d3c59b41f3fd57fbad79ff4d749a7f12ff16460517f8",
-  "contractDigest": "sha256:edad815ca15fd7b8919050112c947dde1b9b4a1b4f690083ba0da26808f56911"
+  "contractDigest": "sha256:cb228995c839d67238a5b3c7444a0e2512e43633653105d8bb1afddef812b82d"
 }
