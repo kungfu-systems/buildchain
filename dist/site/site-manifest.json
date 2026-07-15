@@ -85,7 +85,7 @@
       "path": "docs/publication-authority.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:06ba05f9d8a2685a0896334b6013a97c45b7d71163cf6898e5a6274baf7f0296"
+      "digest": "sha256:05bc22c7e5885e591bc121fc43f588e5d49ccf0a8de6a642811c1d0d03dcee1e"
     },
     {
       "id": "release-candidate",
@@ -93,7 +93,7 @@
       "path": "docs/release-candidate.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:841d6f3281ba6dfe80527e4f149807bdbd05d41f9e94afe1c446fcd6d29e307c"
+      "digest": "sha256:6a20c6e3e483327d5ccbe70271f7fb4752731bd0523eeddb96f27b2b6ebf1cf8"
     },
     {
       "id": "release-propagation",

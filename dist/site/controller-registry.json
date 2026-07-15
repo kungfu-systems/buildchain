@@ -1441,6 +1441,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "publication-auto-no-gate": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "publication-control-plane-audit-json": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -1627,7 +1631,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:c2f1fd6e984606b077b27bb243b66077162c2c4be03f99c0d8f917bf7bf4d0d1"
+      "digest": "sha256:c5dfeb63bbe3507e3c58f74e2a5792e6558002e3aafab6453cc8b8837db2a729"
     },
     {
       "schemaVersion": 1,
@@ -1733,5 +1737,5 @@
       "digest": "sha256:9b9f9a2320c4349903d72ee46e329211b5538ed5ebebaa93559df4eafb835997"
     }
   ],
-  "digest": "sha256:aeb2d6b05cdd8e8118d6cc2c82cf4b7bf00f934b809479017a12b69c299d0e05"
+  "digest": "sha256:22be9d05109396f2b5c44a74fb0f67e4a554c462662c5a41e44e466c4d90ed04"
 }

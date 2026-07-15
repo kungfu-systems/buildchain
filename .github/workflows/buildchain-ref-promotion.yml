@@ -118,6 +118,7 @@ jobs:
       publication-expected-json: ${{ inputs['publication-expected-json'] || '' }}
       publication-used-nonces-json: ${{ inputs['publication-used-nonces-json'] || '[]' }}
       publication-auto-admission: ${{ github.event_name == 'workflow_run' }}
+      publication-auto-no-gate: ${{ github.event_name == 'workflow_run' }}
       publication-publisher-workflow-path: .github/workflows/buildchain-ref-promotion.yml
       publication-product: Buildchain
       publication-target: npm:@kungfu-tech/buildchain

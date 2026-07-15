@@ -612,6 +612,7 @@
           "authority-workflow-path",
           "auto-admission",
           "auto-admission-kind",
+          "auto-no-gate",
           "buildchain-ref",
           "buildchain-repository",
           "control-plane-audit-json",
@@ -637,7 +638,7 @@
           "target-ref",
           "used-nonces-json"
         ],
-        "inputCount": 28,
+        "inputCount": 29,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -1601,6 +1602,7 @@
           "package-manager",
           "publication-admission-json",
           "publication-auto-admission",
+          "publication-auto-no-gate",
           "publication-control-plane-audit-json",
           "publication-expected-json",
           "publication-gate-aggregate-json",
@@ -1638,7 +1640,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 55,
+        "inputCount": 56,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -3389,8 +3391,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "a6daf4822365bf576425777230246046ebca67b3f8dcfea61fc7a61773776185",
-    "workflowRegistryDigest": "542ea4bc1546429a131ee0d814bee7bfabaa7bb30cf836c660879dc10792e532",
-    "pageRegistryDigest": "7ae453a9d09e6a0147c25d1855cd6ed4d8460cb00e683836e6f0028deb53304a"
+    "workflowRegistryDigest": "f7906cff65097a4dc0a7e3eb8a13a52415fadae6b6d019646a52867d94903998",
+    "pageRegistryDigest": "18046faf40798c07c6056d61beae2c1eda19d51e1545aa245f3c18692d18b9a0"
   },
   "comparison": {
     "missingCliRegistry": [],

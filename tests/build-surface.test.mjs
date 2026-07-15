@@ -728,6 +728,8 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /publication-gate-aggregate-json:/);
   assert.match(workflow, /publication-auto-admission:/);
   assert.match(workflow, /auto-admission: \$\{\{ inputs\.publication-auto-admission \}\}/);
+  assert.match(workflow, /publication-auto-no-gate:/);
+  assert.match(workflow, /auto-no-gate: \$\{\{ inputs\.publication-auto-no-gate \}\}/);
   assert.match(workflow, /source-sha: \$\{\{ needs\.preflight\.outputs\.requested-sha \}\}/);
   assert.match(workflow, /publisher-workflow-path: \$\{\{ inputs\.publication-publisher-workflow-path \}\}/);
   assert.match(workflow, /evidence-run-id:/);
@@ -825,11 +827,15 @@ test("sealed publication authority verifier is independent and credential-free",
   assert.match(workflow, /artifactManifests(?:,|:)/);
   assert.match(workflow, /artifactPayloads:/);
   assert.match(workflow, /name: Restrict automatic admission to declared managed publication surfaces/);
-  assert.match(workflow, /release-candidate automatic admission requires Buildchain self-publication identity/);
-  assert.match(workflow, /name: Audit Buildchain self-publication control plane/);
+  assert.match(workflow, /release-candidate admission evidence must belong to the caller repository/);
+  assert.match(workflow, /release-candidate admission requires a repository-local publisher workflow path/);
+  assert.match(workflow, /release-candidate admission requires a Gate aggregate or explicit publication-auto-no-gate decision/);
+  assert.match(workflow, /name: Audit managed release-candidate publication control plane/);
+  assert.match(workflow, /--repository "\$\{\{ inputs\.evidence-repository \}\}"/);
+  assert.match(workflow, /--workflow-repository "\$\{\{ inputs\.buildchain-repository \}\}"/);
   assert.match(workflow, /--source-sha "\$\{\{ inputs\.source-sha \}\}"/);
   assert.match(workflow, /--workflow-ref "\$\{\{ inputs\.buildchain-ref \}\}"/);
-  assert.match(workflow, /name: Assemble Buildchain self-publication admission/);
+  assert.match(workflow, /name: Assemble managed release-candidate admission/);
   assert.match(workflow, /BUILDCHAIN_PLANNED_PUBLICATION_VERSION/);
   assert.match(workflow, /authority publication version mismatch/);
   assert.match(workflow, /steps\.auto-evidence\.outputs\.admission-json/);
@@ -847,6 +853,8 @@ test("self-publication admission assembly binds downloaded evidence without publ
   assert.match(script, /createPublicationAdmission/);
   assert.match(script, /required\("BUILDCHAIN_PUBLICATION_VERSION"\)/);
   assert.match(script, /admitted source tree does not match release candidate/);
+  assert.match(script, /BUILDCHAIN_ALLOW_NO_GATE/);
+  assert.match(script, /managed-release-candidate-no-gate/);
   assert.match(script, /github-hosted-single-job/);
   assert.doesNotMatch(script, /NODE_AUTH_TOKEN|NPM_TOKEN|BUILDCHAIN_PROMOTION_TOKEN/);
 });
@@ -2163,6 +2171,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(workflow, /publish-required-artifacts-json: "\[\]"/);
   assert.match(workflow, /release-passport-impact-json: \.buildchain\/release-impact\.json/);
   assert.match(workflow, /publication-auto-admission: \$\{\{ github\.event_name == 'workflow_run' \}\}/);
+  assert.match(workflow, /publication-auto-no-gate: \$\{\{ github\.event_name == 'workflow_run' \}\}/);
   assert.match(workflow, /publication-publisher-workflow-path: \.github\/workflows\/buildchain-ref-promotion\.yml/);
   assert.doesNotMatch(workflow, /Buildchain v2\.10 patch release/);
   assert.doesNotMatch(workflow, /run: node scripts\/release-candidate-resolver\.mjs/);

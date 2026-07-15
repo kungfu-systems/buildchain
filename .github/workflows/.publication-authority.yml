@@ -51,8 +51,13 @@ on:
         type: string
         required: false
         default: "release-candidate"
+      auto-no-gate:
+        description: "Explicit caller decision that a managed release-candidate publication has no Shifu Gate registry"
+        type: boolean
+        required: false
+        default: false
       source-sha:
-        description: "Exact channel commit admitted by Buildchain self-publication assembly"
+        description: "Exact caller channel commit admitted by managed publication assembly"
         type: string
         required: false
         default: ""
@@ -207,7 +212,11 @@ jobs:
           BUILDCHAIN_PUBLISHER_WORKFLOW_PATH: ${{ inputs.publisher-workflow-path }}
           BUILDCHAIN_PUBLICATION_VERSION: ${{ inputs.publication-version }}
           BUILDCHAIN_AUTO_ADMISSION_KIND: ${{ inputs.auto-admission-kind }}
+          BUILDCHAIN_AUTO_NO_GATE: ${{ inputs.auto-no-gate }}
           BUILDCHAIN_EVIDENCE_REPOSITORY: ${{ inputs.evidence-repository }}
+          BUILDCHAIN_GATE_AGGREGATE_JSON: ${{ inputs.gate-aggregate-json }}
+          BUILDCHAIN_PUBLICATION_TARGET: ${{ inputs.publication-target }}
+          BUILDCHAIN_PACKAGE_NAME: ${{ inputs.package-name }}
         shell: bash
         run: |
           set -euo pipefail
@@ -220,7 +229,7 @@ jobs:
             exit 1
           fi
           if [[ ! "$BUILDCHAIN_TARGET_REF" =~ ^(alpha|release)/v[0-9]+/v[0-9]+\.[0-9]+$ && "$BUILDCHAIN_TARGET_REF" != "publish-gate/major" && "$BUILDCHAIN_TARGET_REF" != "major-gate" ]]; then
-            echo "::error::automatic publication admission target is not an allowed Buildchain channel: $BUILDCHAIN_TARGET_REF"
+            echo "::error::automatic publication admission target is not an allowed managed channel: $BUILDCHAIN_TARGET_REF"
             exit 1
           fi
           if [[ -z "$BUILDCHAIN_PUBLICATION_VERSION" ]]; then
@@ -229,8 +238,20 @@ jobs:
           fi
           case "$BUILDCHAIN_AUTO_ADMISSION_KIND" in
             release-candidate)
-              if [[ "$GITHUB_REPOSITORY" != "$BUILDCHAIN_REPOSITORY" || "$BUILDCHAIN_PUBLISHER_WORKFLOW_PATH" != ".github/workflows/buildchain-ref-promotion.yml" ]]; then
-                echo "::error::release-candidate automatic admission requires Buildchain self-publication identity"
+              if [[ "$BUILDCHAIN_EVIDENCE_REPOSITORY" != "$GITHUB_REPOSITORY" ]]; then
+                echo "::error::release-candidate admission evidence must belong to the caller repository"
+                exit 1
+              fi
+              if [[ ! "$BUILDCHAIN_PUBLISHER_WORKFLOW_PATH" =~ ^\.github/workflows/[A-Za-z0-9._-]+\.ya?ml$ ]]; then
+                echo "::error::release-candidate admission requires a repository-local publisher workflow path"
+                exit 1
+              fi
+              if [[ -z "$BUILDCHAIN_PACKAGE_NAME" || "$BUILDCHAIN_PUBLICATION_TARGET" != "npm:${BUILDCHAIN_PACKAGE_NAME}" ]]; then
+                echo "::error::release-candidate admission requires an exact npm target matching publication-package-name"
+                exit 1
+              fi
+              if [[ -z "$BUILDCHAIN_GATE_AGGREGATE_JSON" && "$BUILDCHAIN_AUTO_NO_GATE" != "true" ]]; then
+                echo "::error::release-candidate admission requires a Gate aggregate or explicit publication-auto-no-gate decision"
                 exit 1
               fi
               ;;
@@ -359,7 +380,7 @@ jobs:
           name: ${{ inputs.evidence-controller-artifact }}
           path: .buildchain/publication-evidence/controller
 
-      - name: Audit Buildchain self-publication control plane
+      - name: Audit managed release-candidate publication control plane
         if: ${{ !inputs.dry-run && inputs.auto-admission && inputs.auto-admission-kind == 'release-candidate' }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -368,7 +389,8 @@ jobs:
           set -euo pipefail
           mkdir -p .buildchain/publication-authority/auto
           node .buildchain/authority-runtime/scripts/audit-publication-control-plane.mjs \
-            --repository "${{ inputs.buildchain-repository }}" \
+            --repository "${{ inputs.evidence-repository }}" \
+            --workflow-repository "${{ inputs.buildchain-repository }}" \
             --branch "${{ inputs.target-ref }}" \
             --source-sha "${{ inputs.source-sha }}" \
             --workflow .github/workflows/release-candidate-promote.yml \
@@ -380,12 +402,12 @@ jobs:
             --package "${{ inputs.package-name }}" \
             --output .buildchain/publication-authority/auto/control-plane.json
 
-      - name: Assemble Buildchain self-publication admission
+      - name: Assemble managed release-candidate admission
         if: ${{ !inputs.dry-run && inputs.auto-admission && inputs.auto-admission-kind == 'release-candidate' }}
         id: auto-evidence
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          BUILDCHAIN_REPOSITORY: ${{ inputs.buildchain-repository }}
+          BUILDCHAIN_REPOSITORY: ${{ inputs.evidence-repository }}
           BUILDCHAIN_SOURCE_SHA: ${{ inputs.source-sha }}
           BUILDCHAIN_AUTHORITY_WORKFLOW_PATH: .github/workflows/release-candidate-promote.yml
           BUILDCHAIN_PUBLISHER_WORKFLOW_PATH: ${{ inputs.publisher-workflow-path }}
@@ -395,6 +417,8 @@ jobs:
           BUILDCHAIN_PUBLICATION_TARGET: ${{ inputs.publication-target }}
           BUILDCHAIN_PUBLICATION_VERSION: ${{ inputs.publication-version }}
           BUILDCHAIN_PUBLICATION_CHANNEL: ${{ startsWith(inputs.target-ref, 'release/') && 'release' || startsWith(inputs.target-ref, 'alpha/') && 'alpha' || 'major' }}
+          BUILDCHAIN_GATE_AGGREGATE_JSON: ${{ inputs.gate-aggregate-json }}
+          BUILDCHAIN_ALLOW_NO_GATE: ${{ inputs.auto-no-gate }}
         shell: bash
         run: node .buildchain/authority-runtime/scripts/assemble-self-publication-admission.mjs
 
