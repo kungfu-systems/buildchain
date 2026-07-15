@@ -1952,6 +1952,15 @@ test("release line open write updates version-state files only", () => {
     name: "release-line-open-write-fixture",
     version: "2.9.0",
   }, null, 2));
+  fs.mkdirSync(path.join(cwd, ".buildchain"), { recursive: true });
+  fs.writeFileSync(path.join(cwd, ".buildchain", "release-impact.json"), JSON.stringify({
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-impact",
+    release: { version: "2.9.0", line: "v2.9" },
+    classification: "minor",
+    summary: "Fixture impact.",
+    surfaceImpacts: [{ id: "fixture", impact: "minor" }],
+  }, null, 2));
 
   const output = runBuildchain([
     "release",
@@ -1972,8 +1981,12 @@ test("release line open write updates version-state files only", () => {
   const plan = JSON.parse(output);
 
   assert.equal(plan.dryRun, false);
-  assert.deepEqual(plan.changedFiles, ["package.json"]);
+  assert.deepEqual(plan.changedFiles, [".buildchain/release-impact.json", "package.json"]);
   assert.equal(JSON.parse(fs.readFileSync(path.join(cwd, "package.json"), "utf8")).version, "2.10.0-alpha.0");
+  assert.deepEqual(
+    JSON.parse(fs.readFileSync(path.join(cwd, ".buildchain", "release-impact.json"), "utf8")).release,
+    { version: "2.10.0-alpha.0", line: "v2.10" },
+  );
 });
 
 test("release dry-run subcommand explains major gate with source ref", () => {

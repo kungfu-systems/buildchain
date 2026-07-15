@@ -674,6 +674,28 @@ files, directories, and URLs are digestable directly; remote package, OCI,
 object storage, and deployment subjects should provide a digest or resolve to a
 locator that records one.
 
+Seal an exact artifact verification with the Node API, then verify or project
+the resulting KFX admission envelope without reconstructing its roots:
+
+```bash
+buildchain verify artifact-envelope envelope.json \
+  --assessment-time 150 \
+  --expected-root sha256:... \
+  --expected-issuer buildchain.libkungfu.dev \
+  --expected-publisher kungfu-systems \
+  --expected-contract buildchain.release/v1 \
+  --json
+
+buildchain project kfx-admission envelope.json \
+  --assessment-time 150 \
+  --json
+```
+
+Both commands call the public artifact-verification-envelope verifier. The
+projected `attestation`, `trustInputs`, and `kfdAssessment` are direct copies of
+the sealed envelope, and `envelopeRoot` stays identical across Node and CLI.
+See [`artifact-verification-envelope.md`](artifact-verification-envelope.md).
+
 Verify infra-contract lifecycle evidence bundles:
 
 ```bash

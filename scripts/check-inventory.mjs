@@ -21,6 +21,7 @@ const requiredPaths = [
   ".github/pull_request_template.md",
   "bin/buildchain.mjs",
   "packages/core/homebrew.js",
+  "packages/core/artifact-verification-envelope.js",
   "packages/core/build-facts.js",
   "packages/core/publication-package.js",
   "packages/core/release-line-bootstrap.js",
@@ -238,6 +239,9 @@ if (rootPackage.exports?.["./buildchain-contract"] !== "./packages/core/buildcha
 }
 if (rootPackage.exports?.["./controller-evidence"] !== "./packages/core/controller-evidence.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/controller-evidence");
+}
+if (rootPackage.exports?.["./artifact-verification-envelope"] !== "./packages/core/artifact-verification-envelope.js") {
+  throw new Error("root package must export @kungfu-tech/buildchain/artifact-verification-envelope");
 }
 if (rootPackage.exports?.["./issue-reporting"] !== "./packages/core/issue-reporting.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/issue-reporting");

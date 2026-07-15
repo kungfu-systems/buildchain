@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:91dc800bafc31bc149680c86272827936c94e0f025d547bbabc10d58fe5f128e",
+      "digest": "sha256:ce439062d4ed9d8213499e607825afdcf8a65f825343a657d0438f3e229a0af0",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -246,7 +246,7 @@
       "title": "CLI and npm package",
       "path": "docs/cli.md",
       "plane": "use",
-      "digest": "sha256:3b3ac97c353f7549229f1102cca38236e734ec8d08c219d4a6e5ef2a48fc0e16",
+      "digest": "sha256:ef5be4484da8628b9e027f00fe0fdb5b295665ed23eeceefac48e63581f12c0c",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -371,7 +371,7 @@
       "title": "Versioning",
       "path": "docs/versioning.md",
       "plane": "why",
-      "digest": "sha256:400027d5e34d5c22752f7664bb9ca9ce99c04e7be298183d0303f3fb04fa7747",
+      "digest": "sha256:280d30e15552ab6a362cb121a7a1cafc3b907913cdc7d4d8a9e8e1930d856f7e",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer"
