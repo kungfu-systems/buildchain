@@ -157,6 +157,7 @@ export {
   PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT,
   createPublicationArtifactCandidate,
   publicationArtifactCandidateDigest,
+  resolvePublicationCandidateFile,
 } from "./publication-artifact-candidate.js";
 
 export {
