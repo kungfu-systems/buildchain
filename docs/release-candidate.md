@@ -82,6 +82,11 @@ other package as `role: platform`. Consumer workflows therefore stay
 declarative and do not need their own artifact download or publish-evidence
 generation scripts.
 
+Because a channel merge can trigger promotion before its PR-stage matrix has
+finished uploading evidence, the resolver waits up to ten minutes for the exact
+merged PR's successful workflow run and paired artifacts. Polling remains bound
+to the PR/head identity; timeout or a sibling run still fails closed.
+
 By default, the wrapper forwards GitHub Release publication to the underlying
 `promote-buildchain-ref` semver model. Once the release transaction is complete,
 the action creates or updates the public GitHub Release, applies
