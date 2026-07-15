@@ -138,12 +138,31 @@ test("public reusable controllers expose source-bound plan and always-aggregated
 
   const paperRelease = fs.readFileSync(path.join(root, ".github/workflows/paper-release.yml"), "utf8");
   const promotion = fs.readFileSync(path.join(root, ".github/workflows/release-candidate-promote.yml"), "utf8");
+  const promotionAuthority = promotion.slice(
+    promotion.indexOf("  publication-authority:"),
+    promotion.indexOf("\n  promote:", promotion.indexOf("  publication-authority:")),
+  );
   assert.match(paperRelease, /!inputs\.dry-run.*controller-receipt-qualifying/);
   assert.match(promotion, /!inputs\.dry-run.*controller-receipt-qualifying/);
   assert.match(
     promotion,
     /"id":"publication-authority","status":"\$\{\{ needs\.promote\.result == 'success' && 'success' \|\| needs\.publication-authority\.result \}\}"/,
     "a successful promotion must preserve its already-enforced publication authority result",
+  );
+  assert.match(
+    promotion,
+    /runtime-sha: \$\{\{ steps\.controller-runtime\.outputs\.sha \}\}/,
+    "promotion controller planning must expose the resolved immutable runtime SHA",
+  );
+  assert.match(
+    promotionAuthority,
+    /buildchain-ref: \$\{\{ needs\.controller-plan\.outputs\.runtime-sha \}\}/,
+    "publication authority must consume the resolved immutable runtime SHA",
+  );
+  assert.doesNotMatch(
+    promotionAuthority,
+    /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v2' \}\}/,
+    "publication authority must not receive a floating caller ref",
   );
 });
 
