@@ -50,6 +50,7 @@
     "buildchain-site.json",
     "capability-registry.json",
     "cli-registry.json",
+    "controller-registry.json",
     "kfd-claims.json",
     "kfd-upstream-aggregate.json",
     "manual-registry.json",
@@ -57,6 +58,7 @@
     "page-registry.json",
     "product-mechanism.json",
     "public-surface-audit.json",
+    "publication-authority-registry.json",
     "publication-registry.json",
     "release-model.json",
     "release-provenance.json",
@@ -70,19 +72,19 @@
   "contract": "kungfu-buildchain-release-line-bootstrap",
   "dryRun": false,
   "cwd": "/home/runner/work/buildchain/buildchain",
-  "line": "v2.12",
+  "line": "v2.13",
   "major": 2,
-  "minor": 12,
-  "initialVersion": "2.12.0-alpha.0",
+  "minor": 13,
+  "initialVersion": "2.13.0-alpha.0",
   "source": {
-    "ref": "dev/v2/v2.11",
-    "sha": "60a29b0e3da6145203dc376254ac124ff23d5ce9"
+    "ref": "release/v2/v2.12",
+    "sha": "52dba6d30051b53d6f6b723fa6e27b090ce4311f"
   },
   "refs": {
-    "dev": "dev/v2/v2.12",
-    "alpha": "alpha/v2/v2.12",
-    "release": "release/v2/v2.12",
-    "bootstrap": "buildchain/release-line/v2.12"
+    "dev": "dev/v2/v2.13",
+    "alpha": "alpha/v2/v2.13",
+    "release": "release/v2/v2.13",
+    "bootstrap": "buildchain/release-line/v2.13"
   },
   "versionState": {
     "files": [
@@ -103,56 +105,56 @@
     "requiredConversationResolution": true,
     "enforceAdmins": true,
     "protectedRefs": [
-      "dev/v2/v2.12",
-      "alpha/v2/v2.12",
-      "release/v2/v2.12"
+      "dev/v2/v2.13",
+      "alpha/v2/v2.13",
+      "release/v2/v2.13"
     ]
   },
   "repositoryActions": [
     {
       "action": "create-or-verify-source-ref",
-      "ref": "dev/v2/v2.11"
-    },
-    {
-      "action": "commit-initial-version-state",
-      "ref": "buildchain/release-line/v2.12",
-      "version": "2.12.0-alpha.0"
-    },
-    {
-      "action": "create-dev-branch",
-      "ref": "dev/v2/v2.12",
-      "from": "buildchain/release-line/v2.12"
-    },
-    {
-      "action": "create-alpha-branch",
-      "ref": "alpha/v2/v2.12",
-      "from": "dev/v2/v2.11"
-    },
-    {
-      "action": "create-release-branch",
-      "ref": "release/v2/v2.12",
-      "from": "dev/v2/v2.11"
-    },
-    {
-      "action": "set-default-branch",
-      "ref": "dev/v2/v2.12"
-    },
-    {
-      "action": "protect-branch",
-      "ref": "dev/v2/v2.12"
-    },
-    {
-      "action": "protect-branch",
-      "ref": "alpha/v2/v2.12"
-    },
-    {
-      "action": "protect-branch",
       "ref": "release/v2/v2.12"
     },
     {
+      "action": "commit-initial-version-state",
+      "ref": "buildchain/release-line/v2.13",
+      "version": "2.13.0-alpha.0"
+    },
+    {
+      "action": "create-dev-branch",
+      "ref": "dev/v2/v2.13",
+      "from": "buildchain/release-line/v2.13"
+    },
+    {
+      "action": "create-alpha-branch",
+      "ref": "alpha/v2/v2.13",
+      "from": "release/v2/v2.12"
+    },
+    {
+      "action": "create-release-branch",
+      "ref": "release/v2/v2.13",
+      "from": "release/v2/v2.12"
+    },
+    {
+      "action": "set-default-branch",
+      "ref": "dev/v2/v2.13"
+    },
+    {
+      "action": "protect-branch",
+      "ref": "dev/v2/v2.13"
+    },
+    {
+      "action": "protect-branch",
+      "ref": "alpha/v2/v2.13"
+    },
+    {
+      "action": "protect-branch",
+      "ref": "release/v2/v2.13"
+    },
+    {
       "action": "open-alpha-pr",
-      "head": "dev/v2/v2.12",
-      "base": "alpha/v2/v2.12"
+      "head": "dev/v2/v2.13",
+      "base": "alpha/v2/v2.13"
     }
   ],
   "notes": [
