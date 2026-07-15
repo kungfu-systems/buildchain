@@ -22,27 +22,16 @@ function requiredFlag(name) {
   return value;
 }
 
-function filesNamed(root, name) {
-  const matches = [];
-  const pending = [path.resolve(root)];
-  while (pending.length > 0) {
-    const current = pending.pop();
-    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
-      const full = path.join(current, entry.name);
-      if (entry.isDirectory()) pending.push(full);
-      else if (entry.isFile() && entry.name === name) matches.push(full);
-    }
+function exactJson(root, relativePath) {
+  const absoluteRoot = path.resolve(root);
+  const absolutePath = path.resolve(absoluteRoot, relativePath);
+  if (!absolutePath.startsWith(`${absoluteRoot}${path.sep}`)) {
+    throw new Error(`publication evidence path escapes artifact root: ${relativePath}`);
   }
-  return matches.sort();
-}
-
-function oneJson(root, name) {
-  const matches = filesNamed(root, name);
-  if (matches.length !== 1)
-    throw new Error(
-      `expected exactly one ${name} under ${root}, found ${matches.length}`,
-    );
-  return JSON.parse(fs.readFileSync(matches[0], "utf8"));
+  if (!fs.existsSync(absolutePath) || !fs.statSync(absolutePath).isFile()) {
+    throw new Error(`expected publication evidence at ${relativePath}`);
+  }
+  return JSON.parse(fs.readFileSync(absolutePath, "utf8"));
 }
 
 function collectFiles(root) {
@@ -84,12 +73,15 @@ export function buildPublicationArtifactCandidate({
     sourceSha,
     sourceTreeSha,
     runtimeSha,
-    manifest: oneJson(resolvedArtifactRoot, "publication-artifact.json"),
-    passport: oneJson(
+    manifest: exactJson(
       resolvedArtifactRoot,
-      "publication-artifact-passport.json",
+      ".buildchain/publication/publication-artifact.json",
     ),
-    controllerReceipt: oneJson(resolvedControllerRoot, "receipt.json"),
+    passport: exactJson(
+      resolvedArtifactRoot,
+      ".buildchain/publication/publication-artifact-passport.json",
+    ),
+    controllerReceipt: exactJson(resolvedControllerRoot, "receipt.json"),
     files: collectFiles(resolvedArtifactRoot),
   };
   const candidate = createPublicationArtifactCandidate(evidence);

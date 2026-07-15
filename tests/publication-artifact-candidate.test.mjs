@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import test from "node:test";
 
 import {
@@ -10,6 +13,7 @@ import {
   createPublicationArtifactCandidate,
   resolvePublicationCandidateFile,
 } from "../packages/core/publication-artifact-candidate.js";
+import { buildPublicationArtifactCandidate } from "../scripts/publication-artifact-candidate.mjs";
 import {
   createPublicationAdmission,
   createPublicationAuthorityRegistry,
@@ -91,6 +95,49 @@ test("publisher resolves manifest paths exactly when the npm package repeats an 
     () => resolvePublicationCandidateFile(files, "paper.pdf"),
     /expected exactly one publication candidate file at paper\.pdf, found 0/,
   );
+});
+
+test("authority reads canonical evidence when the npm package contains self-describing copies", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-publication-artifact-"));
+  const artifactRoot = path.join(root, "artifact");
+  const controllerRoot = path.join(root, "controller");
+  const { evidence } = fixture();
+  const pdf = Buffer.from("pdf");
+  const manifest = structuredClone(evidence.manifest);
+  manifest.artifacts[0].bytes = pdf.length;
+  manifest.artifacts[0].sha256 = crypto.createHash("sha256").update(pdf).digest("hex");
+  const passport = structuredClone(evidence.passport);
+  passport.manifestDigest = `sha256:${crypto.createHash("sha256").update(JSON.stringify(manifest, null, 2)).digest("hex")}`;
+  const publicationRoot = path.join(artifactRoot, ".buildchain/publication");
+  const packagePublicationRoot = path.join(publicationRoot, "npm-package/.buildchain/publication");
+  fs.mkdirSync(packagePublicationRoot, { recursive: true });
+  fs.mkdirSync(path.join(artifactRoot, "_build"), { recursive: true });
+  fs.mkdirSync(controllerRoot, { recursive: true });
+  fs.writeFileSync(path.join(publicationRoot, "publication-artifact.json"), `${JSON.stringify(manifest, null, 2)}\n`);
+  fs.writeFileSync(path.join(publicationRoot, "publication-artifact-passport.json"), `${JSON.stringify(passport, null, 2)}\n`);
+  fs.writeFileSync(path.join(packagePublicationRoot, "publication-artifact.json"), "{}\n");
+  fs.writeFileSync(path.join(packagePublicationRoot, "publication-artifact-passport.json"), "{}\n");
+  fs.writeFileSync(path.join(artifactRoot, "_build/paper.pdf"), pdf);
+  fs.writeFileSync(path.join(controllerRoot, "receipt.json"), `${JSON.stringify(evidence.controllerReceipt, null, 2)}\n`);
+
+  try {
+    const result = buildPublicationArtifactCandidate({
+      artifactRoot,
+      controllerRoot,
+      repository: evidence.repository,
+      sourceSha,
+      sourceTreeSha,
+      runtimeSha,
+    });
+    assert.equal(result.evidence.manifest.contract, manifest.contract);
+    assert.equal(result.evidence.passport.contract, passport.contract);
+    assert.equal(
+      result.candidate.files.some((entry) => entry.path.endsWith("npm-package/.buildchain/publication/publication-artifact.json")),
+      true,
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 });
 
 test("sealed authority accepts exact publication-artifact evidence and rejects byte drift", () => {
