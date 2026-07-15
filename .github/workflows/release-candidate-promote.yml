@@ -247,6 +247,21 @@ on:
         default: "[]"
         type: string
         required: false
+      publication-consumer-qualification-command:
+        description: "Opt-in consumer-owned predicate command; writes its decision to BUILDCHAIN_PUBLICATION_QUALIFICATION_RESULT_PATH"
+        default: ""
+        type: string
+        required: false
+      publication-consumer-predicate-id:
+        description: "Stable identifier for the opt-in consumer-owned publication predicate"
+        default: ""
+        type: string
+        required: false
+      publication-used-qualification-nonces-json:
+        description: "JSON array of already consumed qualification nonces"
+        default: "[]"
+        type: string
+        required: false
       publication-auto-admission:
         description: "Assemble sealed evidence from the caller repository's exact managed release candidate"
         default: false
@@ -625,7 +640,7 @@ jobs:
 
   publication-authority:
     name: Seal product publication capability
-    needs: [preflight, controller-plan, release-candidate-preflight, publication-plan]
+    needs: [preflight, controller-plan, release-candidate-preflight, publication-plan, qualification-plan]
     if: ${{ needs.preflight.outputs.action == 'promote' }}
     permissions:
       actions: read
@@ -640,6 +655,9 @@ jobs:
       gate-aggregate-json: ${{ inputs.publication-gate-aggregate-json }}
       expected-json: ${{ inputs.publication-expected-json }}
       used-nonces-json: ${{ inputs.publication-used-nonces-json }}
+      consumer-qualification-required: ${{ needs.qualification-plan.outputs.required == 'true' }}
+      consumer-predicate-id: ${{ needs.qualification-plan.outputs.predicate-id }}
+      consumer-predicate-digest: ${{ needs.qualification-plan.outputs.predicate-digest }}
       auto-admission: ${{ inputs.publication-auto-admission }}
       auto-no-gate: ${{ inputs.publication-auto-no-gate }}
       source-sha: ${{ needs.preflight.outputs.requested-sha }}
@@ -658,10 +676,139 @@ jobs:
       evidence-payload-pattern: ${{ needs.release-candidate-preflight.outputs.payload-pattern }}
       dry-run: ${{ inputs.dry-run }}
 
+  qualification-plan:
+    name: Bind consumer publication predicate
+    needs: [preflight]
+    if: ${{ needs.preflight.outputs.action == 'promote' }}
+    runs-on: ubuntu-24.04
+    permissions: {}
+    outputs:
+      required: ${{ steps.plan.outputs.required }}
+      predicate-id: ${{ steps.plan.outputs.predicate-id }}
+      predicate-digest: ${{ steps.plan.outputs.predicate-digest }}
+    steps:
+      - name: Seal exact predicate identity
+        id: plan
+        shell: bash
+        env:
+          BUILDCHAIN_CONSUMER_PREDICATE_COMMAND: ${{ inputs.publication-consumer-qualification-command }}
+          BUILDCHAIN_CONSUMER_PREDICATE_ID: ${{ inputs.publication-consumer-predicate-id }}
+        run: |
+          node <<'NODE'
+          const crypto = require("node:crypto");
+          const fs = require("node:fs");
+          const command = String(process.env.BUILDCHAIN_CONSUMER_PREDICATE_COMMAND || "");
+          const predicateId = String(process.env.BUILDCHAIN_CONSUMER_PREDICATE_ID || "").trim();
+          if (command && !predicateId) throw new Error("consumer qualification command requires publication-consumer-predicate-id");
+          if (!command && predicateId) throw new Error("consumer predicate id requires publication-consumer-qualification-command");
+          const output = fs.createWriteStream(process.env.GITHUB_OUTPUT, { flags: "a" });
+          output.write(`required=${command ? "true" : "false"}\n`);
+          output.write(`predicate-id=${predicateId}\n`);
+          output.write(`predicate-digest=${command ? crypto.createHash("sha256").update(command).digest("hex") : ""}\n`);
+          output.end();
+          NODE
+
+  publication-qualification:
+    name: Run consumer publication predicate
+    needs: [preflight, controller-plan, qualification-plan, publication-authority]
+    if: ${{ needs.preflight.outputs.action == 'promote' && needs.publication-authority.result == 'success' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      required: ${{ needs.qualification-plan.outputs.required }}
+      receipt-json: ${{ steps.result.outputs.receipt-json }}
+      receipt-digest: ${{ steps.result.outputs.receipt-digest }}
+    steps:
+      - name: Checkout exact consumer source
+        if: ${{ needs.qualification-plan.outputs.required == 'true' }}
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ needs.preflight.outputs.requested-sha }}
+          persist-credentials: false
+
+      - name: Checkout exact Buildchain qualification runtime
+        if: ${{ needs.qualification-plan.outputs.required == 'true' }}
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.controller-plan.outputs.runtime-sha }}
+          path: .buildchain/qualification-runtime
+          persist-credentials: false
+
+      - name: Materialize complete qualification handoff
+        if: ${{ needs.qualification-plan.outputs.required == 'true' }}
+        shell: bash
+        env:
+          BUILDCHAIN_PUBLICATION_CAPABILITY_JSON: ${{ needs.publication-authority.outputs.capability-json }}
+          BUILDCHAIN_PUBLICATION_GATE_AGGREGATE_JSON: ${{ needs.publication-authority.outputs.gate-aggregate-json }}
+        run: |
+          set -euo pipefail
+          mkdir -p .buildchain/publication-qualification
+          printf '%s\n' "$BUILDCHAIN_PUBLICATION_CAPABILITY_JSON" > .buildchain/publication-qualification/capability.json
+          printf '%s\n' "$BUILDCHAIN_PUBLICATION_GATE_AGGREGATE_JSON" > .buildchain/publication-qualification/gate-aggregate.json
+
+      - name: Run consumer-owned qualification predicate
+        if: ${{ needs.qualification-plan.outputs.required == 'true' }}
+        shell: bash
+        env:
+          BUILDCHAIN_PUBLICATION_CAPABILITY_PATH: .buildchain/publication-qualification/capability.json
+          BUILDCHAIN_PUBLICATION_GATE_AGGREGATE_PATH: .buildchain/publication-qualification/gate-aggregate.json
+          BUILDCHAIN_PUBLICATION_QUALIFICATION_RESULT_PATH: .buildchain/publication-qualification/consumer-decision.json
+          BUILDCHAIN_PUBLICATION_PREDICATE_ID: ${{ needs.qualification-plan.outputs.predicate-id }}
+          BUILDCHAIN_PUBLICATION_PREDICATE_DIGEST: ${{ needs.qualification-plan.outputs.predicate-digest }}
+        run: ${{ inputs.publication-consumer-qualification-command }}
+
+      - name: Restore sealed handoff before receipt sealing
+        if: ${{ needs.qualification-plan.outputs.required == 'true' }}
+        shell: bash
+        env:
+          BUILDCHAIN_PUBLICATION_CAPABILITY_JSON: ${{ needs.publication-authority.outputs.capability-json }}
+          BUILDCHAIN_PUBLICATION_GATE_AGGREGATE_JSON: ${{ needs.publication-authority.outputs.gate-aggregate-json }}
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$BUILDCHAIN_PUBLICATION_CAPABILITY_JSON" > .buildchain/publication-qualification/capability.json
+          printf '%s\n' "$BUILDCHAIN_PUBLICATION_GATE_AGGREGATE_JSON" > .buildchain/publication-qualification/gate-aggregate.json
+
+      - name: Seal deterministic qualification receipt
+        if: ${{ needs.qualification-plan.outputs.required == 'true' }}
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+          import { createPublicationQualificationReceipt } from "./.buildchain/qualification-runtime/packages/core/publication-authority.js";
+          const read = (file) => JSON.parse(fs.readFileSync(file, "utf8"));
+          const receipt = createPublicationQualificationReceipt({
+            capability: read(".buildchain/publication-qualification/capability.json"),
+            gateAggregate: read(".buildchain/publication-qualification/gate-aggregate.json"),
+            consumerDecision: read(".buildchain/publication-qualification/consumer-decision.json"),
+          });
+          fs.writeFileSync(".buildchain/publication-qualification/receipt.json", `${JSON.stringify(receipt, null, 2)}\n`);
+          NODE
+
+      - name: Export qualification result
+        id: result
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require("node:fs");
+          const path = ".buildchain/publication-qualification/receipt.json";
+          const receipt = fs.existsSync(path) ? JSON.parse(fs.readFileSync(path, "utf8")) : null;
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `receipt-json=${receipt ? JSON.stringify(receipt) : ""}\nreceipt-digest=${receipt?.receiptDigest || ""}\n`);
+          NODE
+
+      - name: Upload consumer qualification evidence
+        if: ${{ needs.qualification-plan.outputs.required == 'true' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-publication-qualification-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .buildchain/publication-qualification/
+          if-no-files-found: error
+
   promote:
     name: Promote release candidate
-    needs: [preflight, controller-plan, release-candidate-preflight, publication-plan, publication-authority]
-    if: ${{ needs.preflight.outputs.action == 'promote' && needs.publication-authority.result == 'success' }}
+    needs: [preflight, controller-plan, release-candidate-preflight, publication-plan, publication-authority, publication-qualification]
+    if: ${{ needs.preflight.outputs.action == 'promote' && needs.publication-authority.result == 'success' && needs.publication-qualification.result == 'success' }}
     runs-on: ubuntu-24.04
     permissions:
       actions: read
@@ -1007,6 +1154,11 @@ jobs:
           publish-package-set-order: ${{ inputs.publish-package-set-order }}
           publish-package-main: ${{ inputs.publish-package-main }}
           expected-publication-version: ${{ needs.publication-plan.outputs.version }}
+          require-publication-qualification: ${{ needs.publication-qualification.outputs.required }}
+          publication-capability-json: ${{ needs.publication-authority.outputs.capability-json }}
+          publication-gate-aggregate-json: ${{ needs.publication-authority.outputs.gate-aggregate-json }}
+          publication-qualification-receipt-json: ${{ needs.publication-qualification.outputs.receipt-json }}
+          publication-used-qualification-nonces-json: ${{ inputs.publication-used-qualification-nonces-json }}
           require-publish-source-lock: "true"
           publish-source-ref: ${{ steps.publish-gate.outputs.ref }}
           publish-source-sha: ${{ steps.publish-gate.outputs.sha }}

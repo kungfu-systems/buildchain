@@ -85,7 +85,7 @@
       "path": "docs/publication-authority.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:05bc22c7e5885e591bc121fc43f588e5d49ccf0a8de6a642811c1d0d03dcee1e"
+      "digest": "sha256:920d4f14902ded1999f46d39f6d02db8cb5be6f22e376f6f2d456b3a1cc0c674"
     },
     {
       "id": "release-candidate",
@@ -93,7 +93,7 @@
       "path": "docs/release-candidate.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:554613c963f57cc391acbd072bf73e1a2543d9bd1371087d4411577cccbf817c"
+      "digest": "sha256:1fc581cf1b4e4a202464c8d6671b3bff12d0b349760246a951e88ef524f99e6b"
     },
     {
       "id": "release-propagation",

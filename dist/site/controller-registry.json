@@ -1453,6 +1453,14 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "publication-consumer-predicate-id": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "publication-consumer-qualification-command": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "publication-control-plane-audit-json": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -1486,6 +1494,10 @@
           "source": "workflow-call-input"
         },
         "publication-used-nonces-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-used-qualification-nonces-json": {
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
@@ -1639,7 +1651,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:c5dfeb63bbe3507e3c58f74e2a5792e6558002e3aafab6453cc8b8837db2a729"
+      "digest": "sha256:2507d132710f66d3ae6ffdb18f5e66172707b8e0f9ad9e888f7422fdacc99133"
     },
     {
       "schemaVersion": 1,
@@ -1745,5 +1757,5 @@
       "digest": "sha256:9b9f9a2320c4349903d72ee46e329211b5538ed5ebebaa93559df4eafb835997"
     }
   ],
-  "digest": "sha256:710205201c2f18c442bdda7247d70e34da81c9bdb151658af93be73b29f1d90f"
+  "digest": "sha256:1a8a2ace3d97dce074ccea44cfbd88d27e466e4bb8f87fb8ce129397256c2b51"
 }

@@ -6235,6 +6235,36 @@ test("promoteBuildchainRefs rejects stale target SHA", async () => {
   );
 });
 
+test("every direct provider path fails before mutation when opted-in qualification is omitted", async () => {
+  const providerCalls = [];
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async (request) => {
+          providerCalls.push(["getRef", request]);
+          return { data: { object: { sha: SHA } } };
+        },
+        createRef: async (request) => providerCalls.push(["createRef", request]),
+        updateRef: async (request) => providerCalls.push(["updateRef", request]),
+      },
+    },
+  };
+
+  await assert.rejects(
+    promoteBuildchainRefs({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sha: SHA,
+      targetRef: "alpha/v1/v1.0",
+      versionState: false,
+      requirePublicationQualification: true,
+    }),
+    /publication-qualification-receipt-json is required before provider mutation/,
+  );
+  assert.deepEqual(providerCalls, []);
+});
+
 test("governed promotion treats a superseded target as an auditable no-op", async () => {
   const mutationCalls = [];
   const octokit = {
