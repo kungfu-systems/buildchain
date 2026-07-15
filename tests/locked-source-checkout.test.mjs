@@ -308,6 +308,35 @@ test("source fetch preserves command-scoped auth while isolating global config",
   assert.equal(fetch.options.env.GIT_CONFIG_GLOBAL, ISOLATED_GIT_GLOBAL_CONFIG);
 });
 
+test("mirror source fetch retries without depth when dumb HTTP rejects shallow fetch", () => {
+  const calls = [];
+  const result = fetchSourceCommit({
+    targetPath: "/tmp/buildchain-source-fetch-dumb-http-fixture",
+    remoteName: "buildchain-cache",
+    remoteUrl: "http://cache.example.test/buildchain.git",
+    sha: "a".repeat(40),
+    fetchRef: "a".repeat(40),
+    timeoutMs: 60000,
+    allowFullFetchRetry: true,
+    runGit: (args, options) => {
+      calls.push({ args, options });
+      if (args[0] === "fetch" && args.includes("--depth=1")) {
+        throw new Error("fatal: dumb http transport does not support shallow capabilities");
+      }
+      return "";
+    },
+    containsCommit: () => true,
+  });
+
+  const fetches = calls.filter(({ args }) => args[0] === "fetch");
+  assert.equal(fetches.length, 2);
+  assert.ok(fetches[0].args.includes("--depth=1"));
+  assert.ok(!fetches[1].args.some((arg) => arg.startsWith("--depth")));
+  assert.equal(fetches[1].args.at(-1), `+${"a".repeat(40)}:refs/buildchain/source-ref`);
+  assert.equal(result.selector, "ref");
+  assert.equal(result.fetchMode, "full");
+});
+
 test("locked checkout accepts a regenerated pull merge commit with the exact locked tree", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-pull-merge-origin-"));
   git(["init"], root);
