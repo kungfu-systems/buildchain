@@ -440,6 +440,7 @@ jobs:
       controller-plan-artifact: buildchain-release-promotion-controller-plan-${{ needs.preflight.outputs.requested-sha }}
       controller-plan-json: ${{ steps.controller-plan.outputs.controller-plan-json }}
       controller-plan-digest: ${{ steps.controller-plan.outputs.controller-plan-digest }}
+      runtime-sha: ${{ steps.controller-runtime.outputs.sha }}
     steps:
       - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
@@ -591,7 +592,7 @@ jobs:
     uses: ./.github/workflows/.publication-authority.yml
     with:
       buildchain-repository: ${{ inputs.buildchain-repository }}
-      buildchain-ref: ${{ inputs.buildchain-ref || 'v2' }}
+      buildchain-ref: ${{ needs.controller-plan.outputs.runtime-sha }}
       admission-json: ${{ inputs.publication-admission-json }}
       runner-provenance-json: ${{ inputs.publication-runner-provenance-json }}
       control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
