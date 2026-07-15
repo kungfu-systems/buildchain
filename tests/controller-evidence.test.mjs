@@ -153,6 +153,7 @@ test("controller receipts preserve pass, fail, skip, and partial outcomes", () =
       { kind: "platform-manifests", digest: `sha256:${"2".repeat(64)}` },
       { kind: "build-summary", digest: `sha256:${"3".repeat(64)}` },
     ],
+    reason: { code: "stale-failure", summary: "must not survive a qualifying receipt" },
   });
   const failed = createControllerReceipt({
     plan: expectedPlan,
@@ -172,6 +173,7 @@ test("controller receipts preserve pass, fail, skip, and partial outcomes", () =
 
   assert.equal(passed.status, "passed");
   assert.equal(passed.qualifying, true);
+  assert.equal("reason" in passed, false);
   assert.equal(failed.status, "failed");
   assert.equal(skipped.status, "skipped");
   assert.equal(partial.status, "partial");
