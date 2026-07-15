@@ -717,6 +717,19 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /name: Revalidate queued promotion intent/);
   assert.match(workflow, /name: Preflight PR-stage release candidate evidence/);
   assert.match(workflow, /name: Plan exact publication version/);
+  assert.match(workflow, /name: Install exact publication planning dependencies/);
+  const publicationPlanStart = workflow.indexOf("  publication-plan:");
+  const publicationAuthorityStart = workflow.indexOf("  publication-authority:");
+  const publicationPlan = workflow.slice(publicationPlanStart, publicationAuthorityStart);
+  assert.ok(
+    publicationPlan.indexOf("name: Install exact publication planning dependencies") <
+      publicationPlan.indexOf("name: Resolve exact publication transaction version"),
+    "exact publication planning must install source dependencies before version-state verification",
+  );
+  assert.match(publicationPlan, /corepack pnpm@11\.7\.0 install --frozen-lockfile/);
+  assert.match(publicationPlan, /yarn install --immutable \|\| yarn install --frozen-lockfile/);
+  assert.match(publicationPlan, /npm ci/);
+  assert.match(publicationPlan, /Skipping dependency install for custom package manager/);
   assert.match(workflow, /planned-publication-version/);
   assert.match(workflow, /publication-version: \$\{\{ needs\.publication-plan\.outputs\.version \}\}/);
   assert.match(workflow, /PUBLICATION_VERSION: \$\{\{ needs\.publication-plan\.outputs\.version \}\}/);
