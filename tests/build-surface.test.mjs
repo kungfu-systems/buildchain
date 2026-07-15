@@ -140,6 +140,11 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   const promotion = fs.readFileSync(path.join(root, ".github/workflows/release-candidate-promote.yml"), "utf8");
   assert.match(paperRelease, /!inputs\.dry-run.*controller-receipt-qualifying/);
   assert.match(promotion, /!inputs\.dry-run.*controller-receipt-qualifying/);
+  assert.match(
+    promotion,
+    /"id":"publication-authority","status":"\$\{\{ needs\.promote\.result == 'success' && 'success' \|\| needs\.publication-authority\.result \}\}"/,
+    "a successful promotion must preserve its already-enforced publication authority result",
+  );
 });
 
 test("reusable build workflow exposes the required surface contract", () => {
