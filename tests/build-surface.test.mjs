@@ -159,6 +159,11 @@ test("public reusable controllers expose source-bound plan and always-aggregated
     /buildchain-ref: \$\{\{ needs\.controller-plan\.outputs\.runtime-sha \}\}/,
     "publication authority must consume the resolved immutable runtime SHA",
   );
+  assert.match(
+    promotionAuthority,
+    /required-status-check: \$\{\{ inputs\.required-status-check \}\}/,
+    "publication authority must audit the exact protected-branch status check",
+  );
   assert.doesNotMatch(
     promotionAuthority,
     /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v2' \}\}/,
