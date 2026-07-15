@@ -6,6 +6,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 export const LOCKED_SOURCE_CHECKOUT_CONTRACT = "kungfu-buildchain-locked-source-checkout-cache";
+export const ISOLATED_GIT_GLOBAL_CONFIG = process.platform === "win32" ? "NUL" : "/dev/null";
 
 const GIT_SHA_PATTERN = /^[0-9a-f]{40}$/i;
 
@@ -133,6 +134,24 @@ function githubAuthEnv(token = "") {
   };
 }
 
+function isolatedGitFetchEnv(env = {}, targetPath) {
+  const configuredCount = Number.parseInt(env.GIT_CONFIG_COUNT || "0", 10);
+  const safeDirectoryIndex = Number.isInteger(configuredCount) && configuredCount >= 0
+    ? configuredCount
+    : 0;
+  return {
+    ...env,
+    // Runner-global URL rewrites are shared mutable state. A concurrent job
+    // may point the same repository URL at a different single-SHA bundle, so
+    // network fetches must not consult the account-level Git config.
+    GIT_CONFIG_GLOBAL: ISOLATED_GIT_GLOBAL_CONFIG,
+    GIT_CONFIG_NOSYSTEM: "1",
+    GIT_CONFIG_COUNT: String(safeDirectoryIndex + 1),
+    [`GIT_CONFIG_KEY_${safeDirectoryIndex}`]: "safe.directory",
+    [`GIT_CONFIG_VALUE_${safeDirectoryIndex}`]: path.resolve(targetPath),
+  };
+}
+
 function markSafeDirectory(targetPath, timeoutMs) {
   try {
     git(["config", "--global", "--add", "safe.directory", path.resolve(targetPath)], {
@@ -206,6 +225,7 @@ export function fetchSourceCommit({
   runGit = git,
   containsCommit = hasCommit,
 }) {
+  const fetchEnv = isolatedGitFetchEnv(env, targetPath);
   try {
     runGit(["remote", "remove", remoteName], { cwd: targetPath, timeoutMs, stdio: "ignore" });
   } catch {
@@ -222,7 +242,7 @@ export function fetchSourceCommit({
       runGit(["fetch", "--no-tags", "--depth=1", remoteName, `+${fetchRef}:refs/buildchain/source-ref`], {
         cwd: targetPath,
         timeoutMs,
-        env,
+        env: fetchEnv,
       });
       if (containsCommit(targetPath, sha, timeoutMs)) {
         return { selector: "ref", checkoutSha: sha };
@@ -252,7 +272,7 @@ export function fetchSourceCommit({
   runGit(["fetch", "--no-tags", "--depth=1", remoteName, `+${sha}:refs/buildchain/source`], {
     cwd: targetPath,
     timeoutMs,
-    env,
+    env: fetchEnv,
   });
   if (!containsCommit(targetPath, sha, timeoutMs)) {
     throw new Error(`fetched ${fetchRef || sha}, but ${sha} is not available`);
