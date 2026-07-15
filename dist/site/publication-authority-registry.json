@@ -307,6 +307,22 @@
       "notes": ""
     },
     {
+      "workflowPath": ".github/workflows/paper-release-sealed.yml",
+      "authorityClass": "product-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "github-release",
+        "npm-publish"
+      ],
+      "credentialMode": "trusted-publishing",
+      "publisherWorkflowMode": "caller-bound",
+      "publisherWorkflowPath": ".github/workflows/paper-release-sealed.yml",
+      "environment": "none",
+      "environmentMode": "fixed",
+      "runnerPolicy": "qualified-measured",
+      "notes": ""
+    },
+    {
       "workflowPath": ".github/workflows/paper-release.yml",
       "authorityClass": "product-publication",
       "publicationCapable": true,
@@ -656,6 +672,14 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/paper-release-sealed.yml",
+      "signals": [
+        "write-permission",
+        "oidc"
+      ],
+      "classified": true
+    },
+    {
       "path": ".github/workflows/paper-release.yml",
       "signals": [
         "write-permission",
@@ -750,5 +774,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "a606a7da7188a8eee970d63b15f859b99024c246fb698d74e04fd548d2552c55"
+  "registryDigest": "760215fb39e6c85890c925e924c538a766d78abd6319794c8799fb47c23dec3d"
 }

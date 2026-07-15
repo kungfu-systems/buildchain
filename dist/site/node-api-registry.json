@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:180f7e5d0f83bcb17d1268265fa264554f8715869818f440b411b6ecd6934536",
+      "digest": "sha256:1957a1a155a03d136bab9eedc7cf5f74ffcf23899684885217064a605d17bed3",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:180f7e5d0f83bcb17d1268265fa264554f8715869818f440b411b6ecd6934536",
+      "digest": "sha256:1957a1a155a03d136bab9eedc7cf5f74ffcf23899684885217064a605d17bed3",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -242,7 +242,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-authority",
       "export": "./publication-authority",
       "target": "./packages/core/publication-authority.js",
-      "digest": "sha256:7fbca828c55cdf40f6bb41dc0f15cb192ee106df3fe1c6e4e2ea2ae1332e88b9",
+      "digest": "sha256:3c95bd9d7abc5048fb7b456e411c08f2875fe1cf65940fa3e50689acb6781a0c",
       "summary": "Sealed publication authority registry, runner provenance, control-plane audit, admission, and independent verification APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -268,7 +268,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-publication-authority",
       "export": "./buildchain-publication-authority",
       "target": "./packages/core/buildchain-publication-authority.js",
-      "digest": "sha256:731f21387a62cddfc8f4e4637557d4275af8ad3c79f4353750fd36be8e8dc2b1",
+      "digest": "sha256:48c5f4cb70cacb75e85b579db686a09f56d1372b8bdfeba112a3ade01524d3f5",
       "summary": "Buildchain-owned closed-world publication authority descriptor registry.",
       "capabilityGroup": "release-passport-trust",
       "audience": [

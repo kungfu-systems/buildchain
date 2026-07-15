@@ -42,10 +42,15 @@ on:
         required: false
         default: "[]"
       auto-admission:
-        description: "Assemble Buildchain self-publication evidence from the exact RC run; unavailable to external consumers"
+        description: "Assemble sealed evidence from an exact managed publication candidate"
         type: boolean
         required: false
         default: false
+      auto-admission-kind:
+        description: "Managed evidence kind: release-candidate or publication-artifact"
+        type: string
+        required: false
+        default: "release-candidate"
       source-sha:
         description: "Exact channel commit admitted by Buildchain self-publication assembly"
         type: string
@@ -58,6 +63,11 @@ on:
         default: ""
       publisher-workflow-path:
         description: "Caller workflow filename bound by the npm trusted publisher"
+        type: string
+        required: false
+        default: ""
+      authority-workflow-path:
+        description: "Buildchain product-publication workflow path bound by the admission"
         type: string
         required: false
         default: ""
@@ -105,6 +115,16 @@ on:
         default: ""
       evidence-payload-pattern:
         description: "Artifact-name pattern selecting the exact run's candidate payloads"
+        type: string
+        required: false
+        default: ""
+      evidence-publication-artifact:
+        description: "Exact publication candidate artifact name"
+        type: string
+        required: false
+        default: ""
+      evidence-controller-artifact:
+        description: "Exact publication-artifact controller receipt artifact name"
         type: string
         required: false
         default: ""
@@ -173,7 +193,7 @@ jobs:
             exit 1
           fi
 
-      - name: Restrict automatic admission to Buildchain self-publication
+      - name: Restrict automatic admission to declared managed publication surfaces
         if: ${{ !inputs.dry-run && inputs.auto-admission }}
         env:
           BUILDCHAIN_REPOSITORY: ${{ inputs.buildchain-repository }}
@@ -181,11 +201,13 @@ jobs:
           BUILDCHAIN_TARGET_REF: ${{ inputs.target-ref }}
           BUILDCHAIN_PUBLISHER_WORKFLOW_PATH: ${{ inputs.publisher-workflow-path }}
           BUILDCHAIN_PUBLICATION_VERSION: ${{ inputs.publication-version }}
+          BUILDCHAIN_AUTO_ADMISSION_KIND: ${{ inputs.auto-admission-kind }}
+          BUILDCHAIN_EVIDENCE_REPOSITORY: ${{ inputs.evidence-repository }}
         shell: bash
         run: |
           set -euo pipefail
-          if [[ "$GITHUB_REPOSITORY" != "$BUILDCHAIN_REPOSITORY" || "$BUILDCHAIN_REPOSITORY" != "kungfu-systems/buildchain" ]]; then
-            echo "::error::automatic publication admission is restricted to Buildchain self-publication"
+          if [[ "$BUILDCHAIN_REPOSITORY" != "kungfu-systems/buildchain" ]]; then
+            echo "::error::automatic publication admission requires the canonical Buildchain authority repository"
             exit 1
           fi
           if [[ ! "$BUILDCHAIN_SOURCE_SHA" =~ ^[0-9a-fA-F]{40}$ ]]; then
@@ -196,14 +218,32 @@ jobs:
             echo "::error::automatic publication admission target is not an allowed Buildchain channel: $BUILDCHAIN_TARGET_REF"
             exit 1
           fi
-          if [[ "$BUILDCHAIN_PUBLISHER_WORKFLOW_PATH" != ".github/workflows/buildchain-ref-promotion.yml" ]]; then
-            echo "::error::automatic publication admission requires the Buildchain ref-promotion caller identity"
-            exit 1
-          fi
           if [[ -z "$BUILDCHAIN_PUBLICATION_VERSION" ]]; then
             echo "::error::automatic publication admission requires an exact planned publication version"
             exit 1
           fi
+          case "$BUILDCHAIN_AUTO_ADMISSION_KIND" in
+            release-candidate)
+              if [[ "$GITHUB_REPOSITORY" != "$BUILDCHAIN_REPOSITORY" || "$BUILDCHAIN_PUBLISHER_WORKFLOW_PATH" != ".github/workflows/buildchain-ref-promotion.yml" ]]; then
+                echo "::error::release-candidate automatic admission requires Buildchain self-publication identity"
+                exit 1
+              fi
+              ;;
+            publication-artifact)
+              if [[ "$BUILDCHAIN_EVIDENCE_REPOSITORY" != "$GITHUB_REPOSITORY" ]]; then
+                echo "::error::publication-artifact admission evidence must belong to the caller repository"
+                exit 1
+              fi
+              if [[ ! "$BUILDCHAIN_PUBLISHER_WORKFLOW_PATH" =~ ^\.github/workflows/[A-Za-z0-9._-]+\.ya?ml$ ]]; then
+                echo "::error::publication-artifact admission requires a repository-local publisher workflow path"
+                exit 1
+              fi
+              ;;
+            *)
+              echo "::error::unsupported automatic admission kind: $BUILDCHAIN_AUTO_ADMISSION_KIND"
+              exit 1
+              ;;
+          esac
 
       - name: Checkout exact Buildchain authority runtime
         uses: actions/checkout@v7.0.0
@@ -214,7 +254,7 @@ jobs:
           persist-credentials: false
 
       - name: Download exact release-candidate passport evidence
-        if: ${{ !inputs.dry-run }}
+        if: ${{ !inputs.dry-run && inputs.auto-admission-kind == 'release-candidate' }}
         uses: actions/download-artifact@v7.0.0
         with:
           repository: ${{ inputs.evidence-repository }}
@@ -224,7 +264,7 @@ jobs:
           path: .buildchain/publication-evidence/passport
 
       - name: Download exact build-summary evidence
-        if: ${{ !inputs.dry-run }}
+        if: ${{ !inputs.dry-run && inputs.auto-admission-kind == 'release-candidate' }}
         uses: actions/download-artifact@v7.0.0
         with:
           repository: ${{ inputs.evidence-repository }}
@@ -234,7 +274,7 @@ jobs:
           path: .buildchain/publication-evidence/summary
 
       - name: Resolve referenced controller evidence
-        if: ${{ !inputs.dry-run }}
+        if: ${{ !inputs.dry-run && inputs.auto-admission-kind == 'release-candidate' }}
         id: controller-evidence
         shell: bash
         run: |
@@ -265,7 +305,7 @@ jobs:
           NODE
 
       - name: Download referenced controller receipt evidence
-        if: ${{ !inputs.dry-run }}
+        if: ${{ !inputs.dry-run && inputs.auto-admission-kind == 'release-candidate' }}
         uses: actions/download-artifact@v7.0.0
         with:
           repository: ${{ inputs.evidence-repository }}
@@ -275,7 +315,7 @@ jobs:
           path: .buildchain/publication-evidence/controller
 
       - name: Download exact artifact manifest evidence
-        if: ${{ !inputs.dry-run }}
+        if: ${{ !inputs.dry-run && inputs.auto-admission-kind == 'release-candidate' }}
         uses: actions/download-artifact@v7.0.0
         with:
           repository: ${{ inputs.evidence-repository }}
@@ -285,7 +325,7 @@ jobs:
           path: .buildchain/publication-evidence/manifests
 
       - name: Download exact candidate payload evidence
-        if: ${{ !inputs.dry-run }}
+        if: ${{ !inputs.dry-run && inputs.auto-admission-kind == 'release-candidate' }}
         uses: actions/download-artifact@v7.0.0
         with:
           repository: ${{ inputs.evidence-repository }}
@@ -294,8 +334,28 @@ jobs:
           pattern: ${{ inputs.evidence-payload-pattern }}
           path: .buildchain/publication-evidence/payloads
 
+      - name: Download exact publication artifact candidate
+        if: ${{ !inputs.dry-run && inputs.auto-admission-kind == 'publication-artifact' }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          repository: ${{ inputs.evidence-repository }}
+          run-id: ${{ inputs.evidence-run-id }}
+          github-token: ${{ github.token }}
+          name: ${{ inputs.evidence-publication-artifact }}
+          path: .buildchain/publication-evidence/artifact
+
+      - name: Download exact publication controller receipt
+        if: ${{ !inputs.dry-run && inputs.auto-admission-kind == 'publication-artifact' }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          repository: ${{ inputs.evidence-repository }}
+          run-id: ${{ inputs.evidence-run-id }}
+          github-token: ${{ github.token }}
+          name: ${{ inputs.evidence-controller-artifact }}
+          path: .buildchain/publication-evidence/controller
+
       - name: Audit Buildchain self-publication control plane
-        if: ${{ !inputs.dry-run && inputs.auto-admission }}
+        if: ${{ !inputs.dry-run && inputs.auto-admission && inputs.auto-admission-kind == 'release-candidate' }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
         shell: bash
@@ -315,7 +375,7 @@ jobs:
             --output .buildchain/publication-authority/auto/control-plane.json
 
       - name: Assemble Buildchain self-publication admission
-        if: ${{ !inputs.dry-run && inputs.auto-admission }}
+        if: ${{ !inputs.dry-run && inputs.auto-admission && inputs.auto-admission-kind == 'release-candidate' }}
         id: auto-evidence
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -332,16 +392,55 @@ jobs:
         shell: bash
         run: node .buildchain/authority-runtime/scripts/assemble-self-publication-admission.mjs
 
+      - name: Audit managed paper publication control plane
+        if: ${{ !inputs.dry-run && inputs.auto-admission && inputs.auto-admission-kind == 'publication-artifact' }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .buildchain/publication-authority/auto
+          node .buildchain/authority-runtime/scripts/audit-publication-control-plane.mjs \
+            --repository "${{ inputs.evidence-repository }}" \
+            --workflow-repository "${{ inputs.buildchain-repository }}" \
+            --branch "${{ inputs.target-ref }}" \
+            --source-sha "${{ inputs.source-sha }}" \
+            --workflow "${{ inputs.authority-workflow-path || '.github/workflows/paper-release-sealed.yml' }}" \
+            --workflow-ref "${{ inputs.buildchain-ref }}" \
+            --publisher-workflow "${{ inputs.publisher-workflow-path }}" \
+            --job publish \
+            --environment none \
+            --package "${{ inputs.package-name }}" \
+            --output .buildchain/publication-authority/auto/control-plane.json
+
+      - name: Assemble managed publication artifact admission
+        if: ${{ !inputs.dry-run && inputs.auto-admission && inputs.auto-admission-kind == 'publication-artifact' }}
+        id: paper-auto-evidence
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BUILDCHAIN_REPOSITORY: ${{ inputs.evidence-repository }}
+          BUILDCHAIN_SOURCE_SHA: ${{ inputs.source-sha }}
+          BUILDCHAIN_PUBLISHER_WORKFLOW_PATH: ${{ inputs.publisher-workflow-path }}
+          BUILDCHAIN_AUTHORITY_WORKFLOW_PATH: ${{ inputs.authority-workflow-path || '.github/workflows/paper-release-sealed.yml' }}
+          BUILDCHAIN_CONTROL_PLANE_AUDIT_PATH: .buildchain/publication-authority/auto/control-plane.json
+          BUILDCHAIN_PUBLICATION_PRODUCT: ${{ inputs.product }}
+          BUILDCHAIN_PUBLICATION_TARGET: ${{ inputs.publication-target }}
+          BUILDCHAIN_PUBLICATION_VERSION: ${{ inputs.publication-version }}
+          BUILDCHAIN_PUBLICATION_CHANNEL: ${{ startsWith(inputs.target-ref, 'release/') && 'release' || 'alpha' }}
+        shell: bash
+        run: node .buildchain/authority-runtime/scripts/assemble-publication-artifact-admission.mjs
+
       - name: Verify sealed publication admission
         if: ${{ !inputs.dry-run }}
         env:
-          BUILDCHAIN_PUBLICATION_ADMISSION_JSON: ${{ inputs.admission-json || steps.auto-evidence.outputs.admission-json }}
-          BUILDCHAIN_RUNNER_PROVENANCE_JSON: ${{ inputs.runner-provenance-json || steps.auto-evidence.outputs.runner-provenance-json }}
-          BUILDCHAIN_CONTROL_PLANE_AUDIT_JSON: ${{ inputs.control-plane-audit-json || steps.auto-evidence.outputs.control-plane-audit-json }}
-          BUILDCHAIN_GATE_AGGREGATE_JSON: ${{ inputs.gate-aggregate-json || steps.auto-evidence.outputs.gate-aggregate-json }}
-          BUILDCHAIN_PUBLICATION_EXPECTED_JSON: ${{ inputs.expected-json || steps.auto-evidence.outputs.expected-json }}
+          BUILDCHAIN_PUBLICATION_ADMISSION_JSON: ${{ inputs.admission-json || steps.auto-evidence.outputs.admission-json || steps.paper-auto-evidence.outputs.admission-json }}
+          BUILDCHAIN_RUNNER_PROVENANCE_JSON: ${{ inputs.runner-provenance-json || steps.auto-evidence.outputs.runner-provenance-json || steps.paper-auto-evidence.outputs.runner-provenance-json }}
+          BUILDCHAIN_CONTROL_PLANE_AUDIT_JSON: ${{ inputs.control-plane-audit-json || steps.auto-evidence.outputs.control-plane-audit-json || steps.paper-auto-evidence.outputs.control-plane-audit-json }}
+          BUILDCHAIN_GATE_AGGREGATE_JSON: ${{ inputs.gate-aggregate-json || steps.auto-evidence.outputs.gate-aggregate-json || steps.paper-auto-evidence.outputs.gate-aggregate-json }}
+          BUILDCHAIN_PUBLICATION_EXPECTED_JSON: ${{ inputs.expected-json || steps.auto-evidence.outputs.expected-json || steps.paper-auto-evidence.outputs.expected-json }}
           BUILDCHAIN_USED_NONCES_JSON: ${{ inputs.used-nonces-json }}
           BUILDCHAIN_PLANNED_PUBLICATION_VERSION: ${{ inputs.publication-version }}
+          BUILDCHAIN_AUTO_ADMISSION_KIND: ${{ inputs.auto-admission-kind }}
           GITHUB_TOKEN: ${{ github.token }}
         shell: bash
         run: |
@@ -352,6 +451,7 @@ jobs:
           import { execFileSync } from "node:child_process";
           import path from "node:path";
           import { verifyPublicationAdmission } from "./.buildchain/authority-runtime/packages/core/publication-authority.js";
+          import { buildPublicationArtifactCandidate } from "./.buildchain/authority-runtime/scripts/publication-artifact-candidate.mjs";
           const parse = (name) => JSON.parse(process.env[name]);
           const filesNamed = (root, name) => {
             const matches = [];
@@ -402,14 +502,25 @@ jobs:
           );
           if (!response.ok) throw new Error(`could not resolve admitted source tree: GitHub API ${response.status}`);
           const commit = await response.json();
-          const artifactManifests = filesNamed(".buildchain/publication-evidence/manifests", "manifest.json")
-            .map((file) => JSON.parse(fs.readFileSync(file, "utf8")));
-          const capability = verifyPublicationAdmission({
-            admission,
-            registry: JSON.parse(fs.readFileSync(".buildchain/authority-runtime/dist/site/publication-authority-registry.json", "utf8")),
-            runnerProvenance: parse("BUILDCHAIN_RUNNER_PROVENANCE_JSON"),
-            controlPlaneAudit: parse("BUILDCHAIN_CONTROL_PLANE_AUDIT_JSON"),
-            publicationEvidence: {
+          const actualRuntimeSha = execFileSync("git", ["-C", ".buildchain/authority-runtime", "rev-parse", "HEAD"], { encoding: "utf8" }).trim().toLowerCase();
+          let publicationEvidence;
+          if (process.env.BUILDCHAIN_AUTO_ADMISSION_KIND === "publication-artifact") {
+            const candidateBundle = buildPublicationArtifactCandidate({
+              artifactRoot: ".buildchain/publication-evidence/artifact",
+              controllerRoot: ".buildchain/publication-evidence/controller",
+              repository: admission.repository,
+              sourceSha: admission.sourceSha,
+              sourceTreeSha: commit.tree?.sha,
+              runtimeSha: actualRuntimeSha,
+            });
+            publicationEvidence = {
+              publicationArtifactCandidate: candidateBundle.evidence,
+              gateAggregate: parse("BUILDCHAIN_GATE_AGGREGATE_JSON"),
+            };
+          } else {
+            const artifactManifests = filesNamed(".buildchain/publication-evidence/manifests", "manifest.json")
+              .map((file) => JSON.parse(fs.readFileSync(file, "utf8")));
+            publicationEvidence = {
               sourceTreeSha: commit.tree?.sha,
               releaseCandidatePassport: one(".buildchain/publication-evidence/passport", "release-candidate-passport.json"),
               buildSummary: one(".buildchain/publication-evidence/summary", "build-summary.json"),
@@ -417,11 +528,17 @@ jobs:
               gateAggregate: parse("BUILDCHAIN_GATE_AGGREGATE_JSON"),
               artifactManifests,
               artifactPayloads: artifactManifests.map(payloadFor),
-            },
+            };
+          }
+          const capability = verifyPublicationAdmission({
+            admission,
+            registry: JSON.parse(fs.readFileSync(".buildchain/authority-runtime/dist/site/publication-authority-registry.json", "utf8")),
+            runnerProvenance: parse("BUILDCHAIN_RUNNER_PROVENANCE_JSON"),
+            controlPlaneAudit: parse("BUILDCHAIN_CONTROL_PLANE_AUDIT_JSON"),
+            publicationEvidence,
             expected: parse("BUILDCHAIN_PUBLICATION_EXPECTED_JSON"),
             usedNonces: parse("BUILDCHAIN_USED_NONCES_JSON"),
           });
-          const actualRuntimeSha = execFileSync("git", ["-C", ".buildchain/authority-runtime", "rev-parse", "HEAD"], { encoding: "utf8" }).trim().toLowerCase();
           if (capability.runtimeSha !== actualRuntimeSha) {
             throw new Error(`authority runtime checkout mismatch: expected ${capability.runtimeSha}, got ${actualRuntimeSha}`);
           }

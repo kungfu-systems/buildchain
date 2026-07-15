@@ -1037,7 +1037,23 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "package-name": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "prepare-paper-package": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "publish-dist-tag": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "setup-node": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "target-ref": {
           "classification": "included",
           "source": "workflow-call-input"
         },
@@ -1100,7 +1116,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:d09d8f4081e7b5b9296487337206111591eeca6f8d7667e90012ac911c1b71cf"
+      "digest": "sha256:6b132790b9798e8a5dfbe095701d8e024c160a08bc7c4bd477ee79feef7a9cfd"
     },
     {
       "schemaVersion": 1,
@@ -1717,5 +1733,5 @@
       "digest": "sha256:9b9f9a2320c4349903d72ee46e329211b5538ed5ebebaa93559df4eafb835997"
     }
   ],
-  "digest": "sha256:7b7a03b9814e00f968e7c1ff0cdd2b447d49c78a1a9eba4ec5d2645d8f724521"
+  "digest": "sha256:aeb2d6b05cdd8e8118d6cc2c82cf4b7bf00f934b809479017a12b69c299d0e05"
 }

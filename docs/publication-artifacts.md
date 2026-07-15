@@ -182,40 +182,37 @@ on:
 
 jobs:
   paper-release:
-    uses: kungfu-systems/buildchain/.github/workflows/paper-release.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/paper-release-sealed.yml@v2
     permissions:
+      actions: read
       checks: write
       contents: write
       id-token: write
       issues: write
     with:
       buildchain-ref: ${{ inputs.buildchain-ref || '' }}
-      publication-admission-json: ${{ needs.authority.outputs.admission-json }}
-      publication-runner-provenance-json: ${{ needs.authority.outputs.runner-provenance-json }}
-      publication-control-plane-audit-json: ${{ needs.authority.outputs.control-plane-audit-json }}
-      publication-expected-json: ${{ needs.authority.outputs.expected-json }}
+      publisher-workflow-path: .github/workflows/paper-release.yml
       toolchain-type: config
       verify-command: make check
+      artifact-paths: _build/paper-name.pdf
       buildchain-contract-lock-path: .buildchain/contract-lock.json
 ```
 
-The publication job does not accept a long-lived promotion token. The caller
-must first produce a fresh sealed admission, runner provenance, external
-control-plane audit, and exact expected bindings. The credential-free verifier
-job checks those receipts; only then can the publication job use its short-lived
-`github.token` and caller-bound OIDC trusted publisher identity. npm binds that
-identity to the consumer workflow filename; an npm Environment restriction is
-optional and must be represented explicitly when configured. The workflow fails
-before the publication build when the target branch protection cannot be read.
+The sealed preset does not accept a long-lived promotion token. It builds and
+packages the paper in a read-only job, then a credential-free authority job
+downloads that exact candidate, audits the external control plane, and seals a
+capability over the source tree, Buildchain runtime, controller receipt, PDF,
+and npm package bytes. Only the final job receives write and OIDC permissions;
+it downloads the admitted candidate, recomputes the capability binding, and
+publishes without executing consumer build commands. npm binds the OIDC identity
+to the consumer workflow named by `publisher-workflow-path`.
 
 The preset:
 
-- resolves the same floating Buildchain runtime and contract lock as the build
-  workflow;
-- verifies that the declared promotion authority can read the protected target
-  channel before starting the publication build;
+- resolves the floating Buildchain runtime once and binds the exact SHA into the
+  publication candidate and authority capability;
 - builds the PDF through the declared pinned LaTeX Docker toolchain or custom
-  command;
+  command in a read-only job;
 - verifies the paper repository;
 - writes the publication manifest, publication passport, optional archive
   registry, and source bundle;
@@ -226,7 +223,8 @@ The preset:
 - creates a `publish-gate/<alpha|release>/.../<version>` source lock for the
   channel commit and requires `promote-buildchain-ref` to verify that lock
   before any publish side effect;
-- publishes the package through npm Trusted Publishing;
+- verifies the complete candidate again after authority and publishes the
+  package through npm Trusted Publishing without rebuilding it;
 - writes Buildchain release/passport evidence; and
 - creates or updates the exact-version GitHub Release by default, uploading
   every file declared by `publication.primary_artifact` and

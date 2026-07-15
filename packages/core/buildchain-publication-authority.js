@@ -27,6 +27,7 @@ const DESCRIPTORS = Object.freeze([
   [".github/workflows/buildchain-stable-candidate-patrol.yml", "governance-write"],
   [".github/workflows/dev-pr-auto-merge.yml", "governance-write"],
   [".github/workflows/npm-publish.yml", "dry-run-only"],
+  [".github/workflows/paper-release-sealed.yml", "product-publication", true, ["npm-publish", "github-release"], "trusted-publishing", "none", "fixed", "caller-bound"],
   [".github/workflows/paper-release.yml", "product-publication", true, ["npm-publish", "github-release"], "trusted-publishing", "none", "fixed", "caller-bound"],
   [".github/workflows/patrol-daily.yml", "governance-write"],
   [".github/workflows/patrol-monthly.yml", "governance-write"],
