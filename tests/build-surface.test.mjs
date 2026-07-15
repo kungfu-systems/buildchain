@@ -272,6 +272,19 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /build-command:/);
   assert.match(workflow, /verify-command:/);
   assert.match(workflow, /artifact-name:/);
+  assert.equal(
+    (workflow.match(/name: Upload failed lifecycle evidence/g) || []).length,
+    2,
+  );
+  assert.equal(
+    (workflow.match(/if: \$\{\{ failure\(\) \}\}/g) || []).length,
+    2,
+  );
+  assert.match(
+    workflow,
+    /failure-evidence-\$\{\{ matrix\.platform\.id \}\}-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/,
+  );
+  assert.match(workflow, /if-no-files-found: warn/);
   assert.match(workflow, /artifact-name-template:/);
   assert.match(workflow, /expected-artifacts-json:/);
   assert.match(workflow, /process-summary-path:/);
