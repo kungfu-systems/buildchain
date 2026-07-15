@@ -245,15 +245,16 @@ jobs:
           TITLE: ${{ inputs.pr-title }}
           BODY: ${{ inputs.pr-body }}
           PLAN_PATH: ../.buildchain/release-propagation/plan.json
+          LOCK_PATH: ${{ steps.plan.outputs.lock_path }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -B "$BRANCH"
-          if git diff --quiet; then
+          git add -- "$LOCK_PATH"
+          if git diff --cached --quiet -- "$LOCK_PATH"; then
             echo "No downstream lock changes."
             exit 0
           fi
-          git add .
           git commit -m "$TITLE"
           git push origin "HEAD:$BRANCH"
           {

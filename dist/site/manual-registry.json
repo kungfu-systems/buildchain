@@ -93,7 +93,7 @@
       "title": "Release propagation",
       "path": "docs/release-propagation.md",
       "plane": "use",
-      "digest": "sha256:c8085445fcd0ffd6a55197ac2db1e34fa4aaa94df9107e8e7b216b925fc3bddc",
+      "digest": "sha256:55895694a32b76dfaf5ed0eb9e32f1e10bd859fb590d6f4504d36692ebe61ea9",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "release-operator",
@@ -302,7 +302,7 @@
       "title": "Reusable build surface",
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
-      "digest": "sha256:6916d88ae0f25fa129308354b04d339552b72796d4d7d7938015e0e2f4dcaa6a",
+      "digest": "sha256:a2092c8064332cec9a4be852b24d94f90625cb45f885c4c3208f7068a643a3f0",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",

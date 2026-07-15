@@ -130,6 +130,11 @@ on:
         default: ""
         type: string
         required: false
+      lifecycle-timeout-minutes:
+        description: "Maximum minutes for the build matrix job and fallback timeout for each lifecycle stage"
+        default: 120
+        type: number
+        required: false
       require-install:
         default: false
         type: boolean
@@ -960,6 +965,7 @@ jobs:
       matrix:
         platform: ${{ fromJSON(needs.resolve-contract.outputs.native-platforms-json) }}
     runs-on: ${{ fromJSON(matrix.platform.runner) }}
+    timeout-minutes: ${{ inputs.lifecycle-timeout-minutes }}
     env:
       CARGO_REGISTRIES_CRATES_IO_INDEX: ${{ inputs.cargo-registry-index }}
     steps:
@@ -1084,6 +1090,7 @@ jobs:
           stage: install
           command: ${{ inputs.install-command }}
           required: ${{ inputs.require-install }}
+          timeout-minutes: ${{ inputs.lifecycle-timeout-minutes }}
           artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
           platform-id: ${{ matrix.platform.id }}
           platform-name: ${{ matrix.platform.name }}
@@ -1103,6 +1110,7 @@ jobs:
           stage: build
           command: ${{ inputs.build-command }}
           required: ${{ inputs.require-build }}
+          timeout-minutes: ${{ inputs.lifecycle-timeout-minutes }}
           artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
           platform-id: ${{ matrix.platform.id }}
           platform-name: ${{ matrix.platform.name }}
@@ -1129,6 +1137,7 @@ jobs:
           stage: verify
           command: ${{ inputs.verify-command }}
           required: ${{ inputs.require-verify }}
+          timeout-minutes: ${{ inputs.lifecycle-timeout-minutes }}
           artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
           manifest-artifact-name: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           diagnostics-artifact-name: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
@@ -1244,6 +1253,7 @@ jobs:
       matrix:
         platform: ${{ fromJSON(needs.resolve-contract.outputs.container-platforms-json) }}
     runs-on: ${{ fromJSON(matrix.platform.runner) }}
+    timeout-minutes: ${{ inputs.lifecycle-timeout-minutes }}
     container:
       image: ${{ needs.resolve-contract.outputs.linux-container-image }}
       options: --user root
@@ -1333,6 +1343,7 @@ jobs:
           stage: install
           command: ${{ inputs.install-command }}
           required: ${{ inputs.require-install }}
+          timeout-minutes: ${{ inputs.lifecycle-timeout-minutes }}
           artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
           platform-id: ${{ matrix.platform.id }}
           platform-name: ${{ matrix.platform.name }}
@@ -1352,6 +1363,7 @@ jobs:
           stage: build
           command: ${{ inputs.build-command }}
           required: ${{ inputs.require-build }}
+          timeout-minutes: ${{ inputs.lifecycle-timeout-minutes }}
           artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
           platform-id: ${{ matrix.platform.id }}
           platform-name: ${{ matrix.platform.name }}
@@ -1378,6 +1390,7 @@ jobs:
           stage: verify
           command: ${{ inputs.verify-command }}
           required: ${{ inputs.require-verify }}
+          timeout-minutes: ${{ inputs.lifecycle-timeout-minutes }}
           artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
           manifest-artifact-name: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           diagnostics-artifact-name: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}

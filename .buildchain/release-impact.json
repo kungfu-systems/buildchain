@@ -19,6 +19,34 @@
       "source": "packages/core/artifact-verification-envelope.js"
     },
     {
+      "id": "bounded-lifecycle-jobs",
+      "impact": "patch",
+      "class": "lifecycle-contract",
+      "rationale": "Reusable native and container build jobs now share one configurable 120-minute default bound with lifecycle actions, while stage-specific timeout_minutes remains authoritative and timeout diagnostics identify the lifecycle and platform.",
+      "source": ".github/workflows/.build.yml"
+    },
+    {
+      "id": "web-surface-publication-authority-permissions",
+      "impact": "patch",
+      "class": "publication-authority",
+      "rationale": "The web-surface workflow grants actions:read through the nested reusable-workflow permission chain so sealed production authority can start without requiring a consumer workaround.",
+      "source": ".github/workflows/.web-surface.yml"
+    },
+    {
+      "id": "release-propagation-new-lock-detection",
+      "impact": "patch",
+      "class": "release-propagation",
+      "rationale": "Release propagation stages and checks the declared downstream lock path, creating a PR for a first untracked lock while preserving byte-identical reruns as explicit no-ops.",
+      "source": ".github/workflows/release-propagation.yml"
+    },
+    {
+      "id": "controller-evidence-version-state-isolation",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Version-state verification recognizes untracked controller plan and receipt files as Buildchain-owned ephemeral evidence without broadening the allowance to unrelated generated files.",
+      "source": "actions/promote-buildchain-ref/lib.js"
+    },
+    {
       "id": "release-line-impact-state",
       "impact": "patch",
       "class": "release-governance",
@@ -135,5 +163,5 @@
   "breaking": false,
   "security": false,
   "migrationRequired": false,
-  "summary": "Buildchain v2.13 introduces one sealed exact-root KFX admission envelope with matching Node and CLI projections, while release-line bootstrap keeps the new minor version-impact state internally consistent."
+  "summary": "Buildchain v2.13 introduces one sealed exact-root KFX admission envelope with matching Node and CLI projections, while bounded lifecycle execution and targeted workflow repairs close current publication and propagation failures."
 }

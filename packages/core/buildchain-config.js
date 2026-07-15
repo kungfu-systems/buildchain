@@ -1181,7 +1181,7 @@ export function getPublishContract(loadedConfig) {
   return loadedConfig?.config?.publish;
 }
 
-export function runLifecycleStage({ cwd = process.cwd(), loadedConfig, name, stage, env: extraEnv }) {
+export function runLifecycleStage({ cwd = process.cwd(), loadedConfig, name, stage, env: extraEnv, timeoutMinutes }) {
   const lifecycle = loadedConfig?.config?.lifecycle || {};
   const selected = stage || getLifecycleStage(loadedConfig, name);
   if (!selected) {
@@ -1193,7 +1193,11 @@ export function runLifecycleStage({ cwd = process.cwd(), loadedConfig, name, sta
     ...(selected.env || {}),
     ...(extraEnv || {}),
   };
-  const timeout = selected.timeoutMinutes ? selected.timeoutMinutes * 60_000 : undefined;
+  const effectiveTimeoutMinutes = selected.timeoutMinutes ?? timeoutMinutes;
+  if (effectiveTimeoutMinutes !== undefined && (!Number.isFinite(effectiveTimeoutMinutes) || effectiveTimeoutMinutes <= 0)) {
+    throw new Error("lifecycle timeoutMinutes must be a positive number");
+  }
+  const timeout = effectiveTimeoutMinutes ? effectiveTimeoutMinutes * 60_000 : undefined;
   const execOptions = {
     cwd,
     env,
