@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:07013ab68f7947772ec5bee502f97bae4b2c2f87235188f2f28f6fbb2dc5cb23",
+      "digest": "sha256:68a42e62f5204170bea16640febf52d5f3cefac3b95aa8c36eb0410725a39e34",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:07013ab68f7947772ec5bee502f97bae4b2c2f87235188f2f28f6fbb2dc5cb23",
+      "digest": "sha256:68a42e62f5204170bea16640febf52d5f3cefac3b95aa8c36eb0410725a39e34",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -60,8 +60,21 @@
       "specifier": "@kungfu-tech/buildchain/artifact-passport",
       "export": "./artifact-passport",
       "target": "./packages/core/artifact-passport.js",
-      "digest": "sha256:cb3f66539792f4df8e43379850de428f6d1431785e6265948f80bbdea46e8296",
+      "digest": "sha256:15a43745e337b94431734c2da28b4263cabe3584f1caf9d31802721e561f03c4",
       "summary": "Artifact passport digest and evidence helper APIs.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/artifact-verification-envelope",
+      "export": "./artifact-verification-envelope",
+      "target": "./packages/core/artifact-verification-envelope.js",
+      "digest": "sha256:c8cc0b031fc1e78fe25b3034854b038f75eb2ea046734d32323707a4085dbbe4",
+      "summary": "Sealed exact-root, lifecycle, identity, and existing KFD assessment inputs for KFX admission.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "developer",
@@ -373,7 +386,7 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:3b3ac97c353f7549229f1102cca38236e734ec8d08c219d4a6e5ef2a48fc0e16"
+      "digest": "sha256:ef5be4484da8628b9e027f00fe0fdb5b295665ed23eeceefac48e63581f12c0c"
     },
     {
       "id": "build-facts",

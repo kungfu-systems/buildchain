@@ -3,6 +3,7 @@ import fs from "node:fs";
 import http from "node:http";
 import https from "node:https";
 import path from "node:path";
+import { sealArtifactVerificationReport } from "./artifact-verification-envelope.js";
 import { readJsonFromLocation, sha256File, verifyReleasePassport } from "./release-passport.js";
 
 export const ARTIFACT_VERIFICATION_CONTRACT = "kungfu-buildchain-artifact-verification";
@@ -708,6 +709,7 @@ export async function verifyArtifactPassport({
   subjectDigest = "",
   subjectKind = "",
   npmRegistryBaseUrl = "",
+  verificationEnvelope = undefined,
 } = {}) {
   const resolvedSubject = await resolveArtifactSubject(subject, { cwd, subjectDigest, subjectKind, npmRegistryBaseUrl });
   const issues = [];
@@ -789,7 +791,7 @@ export async function verifyArtifactPassport({
   }
   const ok = passportReport.ok && Boolean(match);
   const outcome = ok ? "pass" : "fail";
-  return {
+  const report = {
     schemaVersion: 1,
     contract: ARTIFACT_VERIFICATION_CONTRACT,
     outcome,
@@ -817,6 +819,9 @@ export async function verifyArtifactPassport({
       : undefined,
     issues,
   };
+  return verificationEnvelope
+    ? sealArtifactVerificationReport({ report, ...verificationEnvelope })
+    : report;
 }
 
 export async function explainArtifactPassport(options = {}) {

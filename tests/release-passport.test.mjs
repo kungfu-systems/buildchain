@@ -9,6 +9,7 @@ import {
   resolveArtifactSubject,
   verifyArtifactPassport,
 } from "../packages/core/artifact-passport.js";
+import { artifactVerificationEnvelopeDigest } from "../packages/core/artifact-verification-envelope.js";
 import {
   collectGitHubReleasePassport,
   createReleasePassport,
@@ -697,6 +698,59 @@ test("artifact passport verification passes for a local installer with explicit 
   assert.equal(report.subject.kind, "native-installer");
   assert.equal(report.discovery.method, "explicit-passport");
   assert.equal(report.match.source, "passport.artifacts");
+
+  const assessmentKey = artifactVerificationEnvelopeDigest({
+    claim: "artifact-admission",
+    purpose: "workspace-install",
+  });
+  const kfdReport = {
+    assessment_key: assessmentKey,
+    purpose: "workspace-install",
+    state: "fresh",
+    query_proof_root: `sha256:${"b".repeat(64)}`,
+    contract_world: { root: `sha256:${"c".repeat(64)}` },
+    policy: { root: `sha256:${"d".repeat(64)}` },
+    fact_surfaces: [{ root: `sha256:${"e".repeat(64)}` }],
+  };
+  kfdReport.report_hash = artifactVerificationEnvelopeDigest(kfdReport);
+  const sealed = await verifyArtifactPassport({
+    subject: fixture.artifactPath,
+    passportLocation: fixture.passportPath,
+    verificationEnvelope: {
+      issuedAt: 100,
+      expiresAt: 200,
+      revocation: {
+        status: "active",
+        revoked: false,
+        checkedAt: 150,
+        source: "buildchain.release/revocations/v1",
+        root: artifactVerificationEnvelopeDigest({ status: "active", checkedAt: 150 }),
+      },
+      bindings: {
+        schema: "kungfu.kfx-trust-inputs/v1",
+        packageRoot: `sha256:${"0".repeat(64)}`,
+        sourceRoot: `sha256:${"1".repeat(64)}`,
+        dependencyRoot: `sha256:${"2".repeat(64)}`,
+        buildPlanRoot: `sha256:${"3".repeat(64)}`,
+        toolchainRoot: `sha256:${"4".repeat(64)}`,
+        artifactRoot: report.subject.digest,
+        qualificationRoot: kfdReport.report_hash,
+        verifierRoot: `sha256:${"7".repeat(64)}`,
+        issuer: "buildchain.libkungfu.dev",
+        publisher: "kungfu-systems",
+        contractVersion: "buildchain.release/v1",
+      },
+      kfdAssessment: {
+        schema: "kungfu.trust.assessment/v1",
+        state: "fresh",
+        assessment_key: assessmentKey,
+        report: kfdReport,
+      },
+    },
+  });
+  assert.equal(sealed.ok, true);
+  assert.equal(sealed.envelope.contract, "kungfu-buildchain-artifact-verification-envelope");
+  assert.equal(sealed.bindings.artifactRoot, report.subject.digest);
 });
 
 test("artifact passport discovery follows a sidecar pointer", async () => {

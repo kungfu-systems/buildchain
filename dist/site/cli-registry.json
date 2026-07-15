@@ -702,6 +702,18 @@
       "maturity": "stable"
     },
     {
+      "id": "project",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain project kfx-admission <file-or-json> [--assessment-time <epoch>]",
+      "purpose": "Inspect read-only consumer projection command families.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
       "id": "publication-artifact",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain publication-artifact",
@@ -874,6 +886,18 @@
       "source": "bin/buildchain.mjs",
       "usage": "buildchain verify artifact <file|dir|url|npm:...|oci:...|github-release:...>",
       "purpose": "Verify artifact subjects against release passport evidence.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "verify-artifact-envelope",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain verify artifact-envelope <file-or-json> [--assessment-time <epoch>]",
+      "purpose": "Verify exact roots, identity, lifecycle, revocation, and an existing KFD assessment in a sealed artifact envelope.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "agent",

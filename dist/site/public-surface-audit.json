@@ -3,11 +3,11 @@
   "contract": "kungfu-buildchain-public-surface-reverse-audit",
   "status": "passed",
   "summary": {
-    "cliCommandCount": 79,
+    "cliCommandCount": 81,
     "workflowCount": 47,
     "actionCount": 4,
-    "sitePageCount": 49,
-    "docCommandRefCount": 246,
+    "sitePageCount": 50,
+    "docCommandRefCount": 250,
     "failureCount": 0
   },
   "enumerated": {
@@ -303,6 +303,11 @@
         "usage": "buildchain npm dry-run [--cwd <dir>] [--expected-tag <tag>] [--registry <url>]"
       },
       {
+        "id": "project",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain project kfx-admission <file-or-json> [--assessment-time <epoch>]"
+      },
+      {
         "id": "publication-artifact",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain publication-artifact"
@@ -376,6 +381,11 @@
         "id": "verify-artifact",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain verify artifact <file|dir|url|npm:...|oci:...|github-release:...>"
+      },
+      {
+        "id": "verify-artifact-envelope",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain verify artifact-envelope <file-or-json> [--assessment-time <epoch>]"
       },
       {
         "id": "verify-infra-contract-evidence-bundle",
@@ -2025,6 +2035,10 @@
         "category": "fixture"
       },
       {
+        "id": "manual:artifact-verification-envelope",
+        "category": "manual"
+      },
+      {
         "id": "manual:binary-distribution",
         "category": "manual"
       },
@@ -3060,6 +3074,16 @@
         "command": "buildchain npm dry-run"
       },
       {
+        "id": "project",
+        "path": "docs/artifact-verification-envelope.md",
+        "command": "buildchain project kfx-admission envelope"
+      },
+      {
+        "id": "project",
+        "path": "docs/cli.md",
+        "command": "buildchain project kfx-admission envelope"
+      },
+      {
         "id": "publication-artifact-manifest",
         "path": "docs/cli.md",
         "command": "buildchain publication-artifact manifest"
@@ -3270,6 +3294,16 @@
         "command": "buildchain validate --require-version-state npx"
       },
       {
+        "id": "verify-artifact-envelope",
+        "path": "docs/artifact-verification-envelope.md",
+        "command": "buildchain verify artifact-envelope envelope"
+      },
+      {
+        "id": "verify-artifact-envelope",
+        "path": "docs/cli.md",
+        "command": "buildchain verify artifact-envelope envelope"
+      },
+      {
         "id": "verify-artifact",
         "path": "docs/cli.md",
         "command": "buildchain verify artifact"
@@ -3390,9 +3424,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "a6daf4822365bf576425777230246046ebca67b3f8dcfea61fc7a61773776185",
+    "cliRegistryDigest": "ff1772371ec74271c21b6723dad0745a080347be8feef36a37e3948ebd19993d",
     "workflowRegistryDigest": "f7906cff65097a4dc0a7e3eb8a13a52415fadae6b6d019646a52867d94903998",
-    "pageRegistryDigest": "18046faf40798c07c6056d61beae2c1eda19d51e1545aa245f3c18692d18b9a0"
+    "pageRegistryDigest": "add4e34910997965aca78dab64f16737ecb049b049e0458d5bdb89d3ec9f6e1d"
   },
   "comparison": {
     "missingCliRegistry": [],

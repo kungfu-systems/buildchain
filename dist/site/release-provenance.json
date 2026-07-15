@@ -13,6 +13,7 @@
       "./build-facts": "./packages/core/build-facts.js",
       "./core": "./packages/core/index.js",
       "./artifact-passport": "./packages/core/artifact-passport.js",
+      "./artifact-verification-envelope": "./packages/core/artifact-verification-envelope.js",
       "./buildchain-contract": "./packages/core/buildchain-contract.js",
       "./controller-evidence": "./packages/core/controller-evidence.js",
       "./diagnostics": "./packages/core/diagnostics.js",

@@ -180,6 +180,16 @@ export {
 } from "./artifact-passport.js";
 
 export {
+  ARTIFACT_VERIFICATION_ENVELOPE_CHECK_CONTRACT,
+  ARTIFACT_VERIFICATION_ENVELOPE_CONTRACT,
+  KFX_ADMISSION_INPUTS_CONTRACT,
+  artifactVerificationEnvelopeDigest,
+  projectArtifactVerificationEnvelopeToKfx,
+  sealArtifactVerificationReport,
+  verifyArtifactVerificationEnvelope,
+} from "./artifact-verification-envelope.js";
+
+export {
   BUILDCHAIN_CONTRACT_LOCK,
   BUILDCHAIN_RUNTIME_CONTRACT_WORLD,
   contractSummary,
