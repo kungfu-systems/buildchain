@@ -847,6 +847,7 @@ for (const requiredSnippet of [
   "expected-publication-version: ${{ needs.publication-plan.outputs.version }}",
   "publication-version: ${{ needs.publication-plan.outputs.version }}",
   "name: Plan exact publication version",
+  "name: Install exact publication planning dependencies",
   "DRY_RUN: ${{ inputs.dry-run }}",
   "if (dryRun) {",
   "Enforce Buildchain stable release canary gate",

@@ -12,6 +12,13 @@
   },
   "surfaceImpacts": [
     {
+      "id": "publication-plan-source-dependencies",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Exact publication planning installs the promotion source dependencies before version-state verification, preventing declared production imports from failing before publication authority is sealed.",
+      "source": ".github/workflows/release-candidate-promote.yml"
+    },
+    {
       "id": "artifact-verification-envelope",
       "impact": "minor",
       "class": "evidence-contract",
