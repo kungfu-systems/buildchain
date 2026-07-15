@@ -357,6 +357,7 @@ jobs:
           publish-source-ref: ${{ steps.publish-gate.outputs.ref }}
           publish-source-sha: ${{ steps.publish-gate.outputs.sha }}
           publish-source-locked: ${{ steps.publish-gate.outputs.locked }}
+          publish-transaction-override: "true"
           release-passport: "true"
           release-passport-output-dir: ${{ inputs.release-passport-output-dir }}
           release-passport-product-name: ${{ inputs.release-passport-product-name || steps.candidate.outputs.package-name }}

@@ -102,7 +102,7 @@ inputs:
     description: "Publish tooling SHA used for controlled repair. Defaults to the generated release SHA."
     default: ""
   publish-transaction-override:
-    description: "Explicitly allow recovery from repair_required, abandoned, or failed_permanently transaction states"
+    description: "Explicitly allow controlled recovery from terminal transaction states or replacement of an unpublished stale transaction with the same version, tag, target, and channel"
     default: "false"
   release-passport:
     description: "Generate and persist the unified buildchain-release-passport after publish transaction completion"
