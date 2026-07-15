@@ -196,16 +196,21 @@ jobs:
       verify-command: make check
       artifact-paths: _build/paper-name.pdf
       buildchain-contract-lock-path: .buildchain/contract-lock.json
+    secrets:
+      BUILDCHAIN_PROMOTION_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
 ```
 
-The sealed preset does not accept a long-lived promotion token. It builds and
-packages the paper in a read-only job, then a credential-free authority job
-downloads that exact candidate, audits the external control plane, and seals a
-capability over the source tree, Buildchain runtime, controller receipt, PDF,
-and npm package bytes. Only the final job receives write and OIDC permissions;
-it downloads the admitted candidate, recomputes the capability binding, and
-publishes without executing consumer build commands. npm binds the OIDC identity
-to the consumer workflow named by `publisher-workflow-path`.
+The sealed preset does not use a long-lived token for npm publication. It may
+accept an optional `BUILDCHAIN_PROMOTION_TOKEN` only for machine-generated
+version-state updates on protected channel branches; npm publication remains
+bound to GitHub OIDC trusted publishing. The preset builds and packages the
+paper in a read-only job, then a credential-free authority job downloads that
+exact candidate, audits the external control plane, and seals a capability over
+the source tree, Buildchain runtime, controller receipt, PDF, and npm package
+bytes. Only the final job receives write and OIDC permissions; it downloads the
+admitted candidate, recomputes the capability binding, and publishes without
+executing consumer build commands. npm binds the OIDC identity to the consumer
+workflow named by `publisher-workflow-path`.
 
 The preset:
 

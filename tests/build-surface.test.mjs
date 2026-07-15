@@ -505,9 +505,10 @@ test("paper release workflow publishes declared npm package with source lock and
     /github-token: \$\{\{ github\.token \}\}/,
   );
   assert.match(workflow, /cannot read branch protection before publication build/);
-  assert.doesNotMatch(workflow, /BUILDCHAIN_PROMOTION_TOKEN|NODE_AUTH_TOKEN|NPM_TOKEN/);
+  assert.doesNotMatch(workflow, /NODE_AUTH_TOKEN|NPM_TOKEN/);
   assert.match(docs, /paper-release-sealed\.yml@v2/);
-  assert.match(docs, /does not accept a long-lived promotion token/);
+  assert.match(docs, /does not use a long-lived token for npm publication/);
+  assert.match(docs, /only for machine-generated[\s\S]*version-state updates/);
   assert.match(workflow, /default: true/);
   assert.ok(
     workflow.indexOf("Check Buildchain contract lock") <
