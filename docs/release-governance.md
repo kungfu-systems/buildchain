@@ -98,6 +98,8 @@ Exact publication planning installs the checked-out promotion source's declared
 dependencies before version-state verification. This keeps the pre-authority
 version plan on the same package-manager boundary as the later promotion job,
 including repositories whose verification commands import production packages.
+The planning pass may materialize and verify declared derived files locally,
+but dry-run never creates Git blobs, trees, commits, refs, or tags.
 
 Promotion intents are serialized globally per caller repository with
 `cancel-in-progress: false`. A queued intent re-reads its protected target ref

@@ -4526,6 +4526,27 @@ async function promoteBuildchainRefs({
         console.log(
           `> version state lifecycle changes for ${version}: ${verifiedChangedFiles.map((file) => file.path).join(", ")}`,
         );
+        if (dryRun) {
+          updates.push({
+            version,
+            action: "dry-run-version-state",
+            packageManager: discovered.packageManager.name,
+            files: verifiedChangedFiles.map((file) => file.path),
+            sha: baseSha,
+          });
+          return {
+            sha: baseSha,
+            version,
+            action: "dry-run",
+            publishVersion,
+            files: verifiedChangedFiles.map((file) => file.path),
+            releaseTreeAllowedPaths: verifiedChangedFiles.map((file) => file.path),
+            hasVersionVerification,
+            packageManager: discovered.packageManager,
+            versionStrategy,
+            anchorManifest,
+          };
+        }
         return createVerifiedVersionStateCommit(verifiedChangedFiles);
       }
       updates.push({

@@ -12,6 +12,20 @@
   },
   "surfaceImpacts": [
     {
+      "id": "publication-plan-read-only-derived-state",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Dry-run exact publication planning records lifecycle-generated version-state files without creating Git objects, preserving a read-only pre-authority boundary.",
+      "source": "actions/promote-buildchain-ref/lib.js"
+    },
+    {
+      "id": "release-candidate-preflight-bounded-wait",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Release-candidate preflight waits for a bounded period for the exact merged channel PR run and artifacts, eliminating the merge-to-matrix-completion race without accepting sibling evidence.",
+      "source": "scripts/release-candidate-resolver.mjs"
+    },
+    {
       "id": "publication-plan-source-dependencies",
       "impact": "patch",
       "class": "release-governance",
