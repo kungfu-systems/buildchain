@@ -442,6 +442,7 @@ test("publication artifact workflow exposes paper artifact contract", () => {
   assert.match(workflow, /publication-registry-path:/);
   assert.match(workflow, /registry-path=\$\{result\.registryPath \|\| ""\}/);
   assert.match(workflow, /source\.tar\.gz/);
+  assert.match(workflow, /Upload publication artifact[\s\S]*include-hidden-files: true/);
   assert.ok(
     workflow.indexOf("Check Buildchain contract lock") <
       workflow.indexOf("- name: Build publication"),
