@@ -1198,6 +1198,96 @@ assert.equal(contract.generated, true);
   });
 });
 
+test("dry-run version planning records derived files without writing Git objects", async () => {
+  const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[[version.files]]
+type = "json"
+path = "dist/site/buildchain-contract.json"
+key = "product.version"
+
+[lifecycle.version-state]
+command = "node scripts/generate-site-contract.mjs"
+`,
+    "package.json": {
+      name: "@kungfu-systems/example",
+      version: "1.0.0-alpha.0",
+      packageManager: "pnpm@11.7.0",
+    },
+    "dist/site/buildchain-contract.json": {
+      product: { version: "1.0.0-alpha.0" },
+      generated: false,
+    },
+    "scripts/generate-site-contract.mjs": `
+import fs from "node:fs";
+const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+fs.writeFileSync("dist/site/buildchain-contract.json", JSON.stringify({
+  product: { version: pkg.version },
+  generated: true
+}, null, 2) + "\\n");
+`,
+  });
+  run(["git", "init"], cwd);
+  run(["git", "add", "."], cwd);
+  run(["git", "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-m", "init"], cwd);
+
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (ref === "heads/alpha/v1/v1.0") {
+            return { data: { object: { sha: SHA } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async () => ({ data: [] }),
+        createBlob: async () => assert.fail("dry-run must not create a blob"),
+        createTree: async () => assert.fail("dry-run must not create a tree"),
+        createCommit: async () => assert.fail("dry-run must not create a commit"),
+        createRef: async () => assert.fail("dry-run must not create a ref"),
+        updateRef: async () => assert.fail("dry-run must not update a ref"),
+      },
+    },
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    cwd,
+    dryRun: true,
+    requireVersionState: true,
+    publishTransaction: true,
+    releasePassport: false,
+  });
+
+  assert.deepEqual(
+    result.updates.find((update) => update.action === "dry-run-version-state").files,
+    ["dist/site/buildchain-contract.json"],
+  );
+  assert.deepEqual(
+    result.updates.find((update) => update.action === "dry-run-publish-transaction"),
+    {
+      action: "dry-run-publish-transaction",
+      version: "1.0.0-alpha.0",
+      tag: "v1.0.0-alpha.0",
+      sha: SHA,
+    },
+  );
+});
+
 test("release promotion creates v-prefixed release tag and prepares next alpha tag", async () => {
   const calls = [];
   const octokit = {
