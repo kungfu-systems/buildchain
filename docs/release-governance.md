@@ -162,6 +162,11 @@ Buildchain then:
 7. Moves `vX.Y-alpha` to the same generated alpha commit.
 8. Moves `vX-alpha` only when `X.Y` is the highest minor in major `X` with a published alpha; older minor alpha work records a skip and cannot move the major channel backwards.
 
+The npm channel follows the same ownership rule. The highest alpha minor publishes
+with dist-tag `alpha`; maintenance alphas on an older minor publish with the
+line-specific dist-tag `vX.Y-alpha` so they cannot roll the global `alpha`
+channel backward. Exact prerelease versions remain installable directly.
+
 This keeps the test channel self-describing. If a consumer checks out
 `v2.0-alpha` or `v2-alpha`, the manifests and exact alpha tag agree. The major
 alpha ref removes routine consumer edits when Buildchain opens a newer minor,
