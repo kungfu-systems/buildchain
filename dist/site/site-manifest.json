@@ -61,7 +61,7 @@
       "path": "docs/install.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:2600738a92b5853bc26d4e01211f0c07b8b36a21d4d72ca809bc6032dff5dc5f"
+      "digest": "sha256:1879849c01f82b8820f2d9aeb09faed0931954cb7fe6939176a5eb69110cee59"
     },
     {
       "id": "release-passport",
@@ -229,7 +229,7 @@
       "path": "docs/publish-transaction.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:8d5d7075cf8b4280a4c5097726f5c51ae40db83e2652eafefe4fa5e487794f57"
+      "digest": "sha256:9e77030dbd69e27c2402d855980f7560a465270cac1f3225c0470523ab4a8ddf"
     },
     {
       "id": "release-governance",
@@ -237,7 +237,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:cce9f80add3c746fe28d8ebf5afb809348694741cb75d19154ed3057a9374c0d"
+      "digest": "sha256:d85ac78b7c73b85b0a59a4a39131230522ae65225fa1b52f9dfe6939f1bb839c"
     },
     {
       "id": "release-flow",
