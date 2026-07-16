@@ -563,9 +563,24 @@ function defaultDistTagForChannel(channel) {
   return channel === "alpha" ? "alpha" : "latest";
 }
 
+function alphaDistTagForPromotion({
+  ownsMajorAlphaTag,
+  line,
+  publishDistTag = "",
+} = {}) {
+  if (ownsMajorAlphaTag) {
+    return publishDistTag;
+  }
+  if (!/^v\d+\.\d+$/.test(String(line || ""))) {
+    throw new Error(`older-minor alpha publication requires a vN.N release line; got ${line || "<empty>"}`);
+  }
+  return `${line}-alpha`;
+}
+
 function resolvePublishContract({
   loadedConfig,
   channel,
+  line = "",
   publishMode = "",
   publishAuth = "",
   publishDistTag = "",
@@ -593,8 +608,9 @@ function resolvePublishContract({
   if (channel === "release" && mode === "publish-final-version" && distTag !== "latest") {
     throw new Error("release publish-final-version must use dist-tag latest");
   }
-  if (channel === "alpha" && mode === "publish-final-version" && distTag !== "alpha") {
-    throw new Error("alpha publish-final-version must use dist-tag alpha");
+  const alphaDistTags = new Set(["alpha", ...(line ? [`${line}-alpha`] : [])]);
+  if (channel === "alpha" && mode === "publish-final-version" && !alphaDistTags.has(distTag)) {
+    throw new Error(`alpha publish-final-version must use dist-tag alpha or ${line ? `${line}-alpha` : "the line-specific alpha tag"}`);
   }
   return {
     mode,
@@ -1632,6 +1648,7 @@ async function runPublishTransaction({
   const publishContract = resolvePublishContract({
     loadedConfig,
     channel,
+    line,
     publishMode,
     publishAuth,
     publishDistTag,
@@ -4678,6 +4695,7 @@ async function promoteBuildchainRefs({
     channel,
     line,
     releaseSha,
+    publishDistTagOverride = publishDistTag,
     allowVersionStateFinalization = false,
   }) => {
     const transactionVersion = version;
@@ -4714,7 +4732,7 @@ async function promoteBuildchainRefs({
       publishToolingSha,
       publishMode,
       publishAuth,
-      publishDistTag,
+      publishDistTag: publishDistTagOverride,
       publishPackageSetOrder,
       publishPackageMain,
       actor,
@@ -5048,6 +5066,11 @@ async function promoteBuildchainRefs({
 
   if (rule.channel === "alpha") {
     const ownsMajorAlphaTag = await ownsMajorAlphaFloatingTag();
+    const alphaPublishDistTag = alphaDistTagForPromotion({
+      ownsMajorAlphaTag,
+      line: rule.releasePrefix,
+      publishDistTag,
+    });
     const explicitAlphaTags = requestedTags
       ? requestedTags.filter((tag) => tag.includes("-alpha."))
       : [];
@@ -5208,6 +5231,7 @@ async function promoteBuildchainRefs({
         channel: rule.channel,
         line: rule.releasePrefix,
         releaseSha: alpha.sha,
+        publishDistTagOverride: alphaPublishDistTag,
         allowVersionStateFinalization:
           currentAlpha &&
           selectedAlpha.tag === currentAlpha.tag &&
@@ -5238,6 +5262,7 @@ async function promoteBuildchainRefs({
         channel: rule.channel,
         line: rule.releasePrefix,
         releaseSha: alpha.sha,
+        publishDistTagOverride: alphaPublishDistTag,
       });
     }
     if (versionState) {
@@ -5646,6 +5671,7 @@ export {
   selectAlphaTag,
   selectReleaseTag,
   assertExpectedPublicationVersion,
+  alphaDistTagForPromotion,
   stripTagPrefix,
   updateVersionStateContents,
   resolveReleaseImpactInput,
