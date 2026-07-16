@@ -84,6 +84,9 @@ The implementation is intentionally stricter than a local release script:
 - non-dry-run promotion must be driven by a completed `Verify` workflow;
 - target branch protection details must be readable, and branch protection must
   apply to administrators as well as regular contributors;
+- `alpha/vX/vX.Y` and `release/vX/vX.Y` branch protection must require both the
+  general `check` context and the Release Verify aggregate `verify` context, so
+  an invalid channel pair cannot merge even when repository checks pass;
 - alpha promotion must come from a merged same-repository PR from
   `dev/vX/vX.Y` to `alpha/vX/vX.Y`;
 - release promotion must come from a merged same-repository PR from
