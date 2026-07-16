@@ -19,6 +19,19 @@ function requiredString(value, label) {
   return normalized;
 }
 
+export function selectMergeQueueMethod(repositorySettings = {}) {
+  const candidates = [
+    ["MERGE", repositorySettings.allow_merge_commit],
+    ["SQUASH", repositorySettings.allow_squash_merge],
+    ["REBASE", repositorySettings.allow_rebase_merge],
+  ];
+  const selected = candidates.find(([, allowed]) => allowed === true)?.[0];
+  if (!selected) {
+    throw new Error("repository must allow at least one merge method before merge queue enablement");
+  }
+  return selected;
+}
+
 export function validateMergeGroupWorkflows(workflows = []) {
   if (workflows.length === 0) {
     throw new Error("at least one required workflow must be declared with --workflow");
@@ -49,6 +62,7 @@ export function createDevMergeQueuePlan({
   branch,
   workflows,
   protection,
+  repositorySettings,
   rulesets = [],
   checkResponseTimeoutMinutes = 120,
   maxEntriesToBuild = 1,
@@ -59,6 +73,7 @@ export function createDevMergeQueuePlan({
     throw new Error(`branch must be a Buildchain dev channel, got '${normalizedBranch}'`);
   }
   const workflowChecks = validateMergeGroupWorkflows(workflows);
+  const mergeMethod = selectMergeQueueMethod(repositorySettings);
   const requiredChecks = protection?.required_status_checks?.checks || [];
   if (requiredChecks.length === 0) {
     throw new Error(`protected branch ${normalizedBranch} must declare required status checks before merge queue enablement`);
@@ -82,7 +97,7 @@ export function createDevMergeQueuePlan({
         grouping_strategy: "ALLGREEN",
         max_entries_to_build: positiveInteger(maxEntriesToBuild, "max entries to build", 1),
         max_entries_to_merge: 1,
-        merge_method: "MERGE",
+        merge_method: mergeMethod,
         min_entries_to_merge: 1,
         min_entries_to_merge_wait_minutes: 0,
       },
@@ -103,6 +118,7 @@ export function createDevMergeQueuePlan({
     desired: {
       strict: false,
       requiredStatusChecks: requiredChecks.map((check) => check.context),
+      mergeMethod,
       ruleset,
     },
     operations: [
@@ -132,6 +148,7 @@ export async function reconcileDevMergeQueue({
   maxEntriesToBuild = 1,
 } = {}) {
   const encodedBranch = encodeURIComponent(requiredString(branch, "branch"));
+  const repositorySettings = await api.request("GET", `repos/${repository}`);
   const protection = await api.request("GET", `repos/${repository}/branches/${encodedBranch}/protection`);
   const rulesets = await api.request("GET", `repos/${repository}/rulesets?includes_parents=false&per_page=100`);
   const plan = createDevMergeQueuePlan({
@@ -139,6 +156,7 @@ export async function reconcileDevMergeQueue({
     branch,
     workflows,
     protection,
+    repositorySettings,
     rulesets,
     checkResponseTimeoutMinutes,
     maxEntriesToBuild,
