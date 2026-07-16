@@ -65,7 +65,7 @@
       "title": "Sealed publication authority",
       "path": "docs/publication-authority.md",
       "plane": "verify",
-      "digest": "sha256:05bc22c7e5885e591bc121fc43f588e5d49ccf0a8de6a642811c1d0d03dcee1e",
+      "digest": "sha256:920d4f14902ded1999f46d39f6d02db8cb5be6f22e376f6f2d456b3a1cc0c674",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",
@@ -79,7 +79,7 @@
       "title": "Release Candidate Passport",
       "path": "docs/release-candidate.md",
       "plane": "verify",
-      "digest": "sha256:554613c963f57cc391acbd072bf73e1a2543d9bd1371087d4411577cccbf817c",
+      "digest": "sha256:1fc581cf1b4e4a202464c8d6671b3bff12d0b349760246a951e88ef524f99e6b",
       "capabilityGroup": "reusable-build",
       "audience": [
         "release-operator",
@@ -329,7 +329,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:03108f05a608cb0849e7a668fe23671b62863907ce02a70bc6522eb8074f3e63",
+      "digest": "sha256:82160f0fd9e45f08dbfbaf8037e0895cbeecf251feca8bdaff607dcc030b3e28",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",

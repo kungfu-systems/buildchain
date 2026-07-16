@@ -161,6 +161,19 @@ contract:
 specific package publication. Direct `alpha/*` or `release/*` channel refs are
 not valid publish source locks when `require-publish-source-lock` is enabled,
 and a mismatched `publish-source-sha` fails before any promotion or publish side effects begin.
+
+Consumers that opt in to a product-owned final predicate set
+`require-publication-qualification: "true"` and pass the exact sealed
+`publication-capability-json`, complete `publication-gate-aggregate-json`, and
+`publication-qualification-receipt-json`. The action validates their canonical
+digests, predicate identity, freshness, nonce, source, version, channel, target,
+and evidence bindings both before provider access and immediately before the
+publish transaction. Missing or drifted receipts fail before mutation. The
+reusable `release-candidate-promote.yml` workflow creates these values in a
+separate credentialless consumer job; direct callers must preserve the same
+contract and may pass previously consumed nonces through
+`publication-used-qualification-nonces-json`.
+
 The reusable promote workflow serializes non-dry-run promotion intents per
 repository and re-reads `target-ref` before checkout, dependency installation,
 release-candidate resolution, or publish-gate writes. If a queued intent asks

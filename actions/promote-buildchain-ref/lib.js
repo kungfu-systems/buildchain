@@ -37,6 +37,7 @@ import {
   verifyReleasePassport,
 } from "../../packages/core/release-passport.js";
 import { validateReleaseCandidatePassport } from "../../packages/core/release-candidate.js";
+import { verifyPublicationQualificationReceipt } from "../../packages/core/publication-authority.js";
 import {
   createBuildchainKfd1Witness,
   createBuildchainKfd2Claims,
@@ -3377,6 +3378,12 @@ async function promoteBuildchainRefs({
   publishPackageSetOrder = "",
   publishPackageMain = "",
   expectedPublicationVersion = "",
+  requirePublicationQualification = false,
+  publicationCapabilityJson = "",
+  publicationGateAggregateJson = "",
+  publicationQualificationReceiptJson = "",
+  publicationUsedQualificationNoncesJson = "[]",
+  publicationQualificationNow,
   releasePassport = true,
   releasePassportOutputDir = ".buildchain/release-passport",
   releasePassportProductName = "Buildchain",
@@ -3401,6 +3408,48 @@ async function promoteBuildchainRefs({
   assertPromotableTargetRef(targetRef);
   assertSha(sha);
   const rule = getPromotionRule(targetRef);
+  const assertPublicationQualification = ({
+    version = expectedPublicationVersion,
+    channel = rule.channel,
+  } = {}) => {
+    if (!requirePublicationQualification || dryRun) return;
+    const parseQualificationJson = (value, label) => {
+      if (!String(value || "").trim()) {
+        throw new Error(`${label} is required before provider mutation`);
+      }
+      try {
+        return JSON.parse(value);
+      } catch (error) {
+        throw new Error(`${label} must be valid JSON: ${error.message}`);
+      }
+    };
+    verifyPublicationQualificationReceipt({
+      receipt: parseQualificationJson(
+        publicationQualificationReceiptJson,
+        "publication-qualification-receipt-json",
+      ),
+      capability: parseQualificationJson(
+        publicationCapabilityJson,
+        "publication-capability-json",
+      ),
+      gateAggregate: parseQualificationJson(
+        publicationGateAggregateJson,
+        "publication-gate-aggregate-json",
+      ),
+      usedNonces: parseQualificationJson(
+        publicationUsedQualificationNoncesJson || "[]",
+        "publication-used-qualification-nonces-json",
+      ),
+      expected: {
+        sourceSha: sha,
+        channel,
+        ...(version ? { version } : {}),
+        ...(publishPackageMain ? { target: `npm:${publishPackageMain}` } : {}),
+      },
+      now: publicationQualificationNow || new Date(),
+    });
+  };
+  assertPublicationQualification();
   const requestedTags = tags
     ? resolveTagsForTarget(targetRef, tags)
     : undefined;
@@ -4642,6 +4691,7 @@ async function promoteBuildchainRefs({
       });
       return undefined;
     }
+    assertPublicationQualification({ version: transactionVersion, channel });
     latestPublishTransaction = await runPublishTransaction({
       octokit,
       owner,

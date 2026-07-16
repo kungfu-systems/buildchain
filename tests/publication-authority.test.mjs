@@ -8,15 +8,19 @@ import {
 } from "../packages/core/controller-evidence.js";
 import {
   PUBLICATION_ADMISSION_CONTRACT,
+  CONSUMER_PUBLICATION_DECISION_CONTRACT,
   createPublicationArtifactManifestSet,
   createPublicationAuthorityRegistry,
   createPublicationAdmission,
+  createConsumerPublicationDecision,
   createPublicationControlPlaneAudit,
   createPublicationGateDecision,
+  createPublicationQualificationReceipt,
   createRunnerProvenance,
   detectPublicationAuthoritySignals,
   publicationAuthorityDigest,
   verifyPublicationAdmission,
+  verifyPublicationQualificationReceipt,
 } from "../packages/core/publication-authority.js";
 import { evaluatePublicationControlPlaneSnapshot } from "../packages/core/publication-control-plane-audit.js";
 import { sha256Json } from "../packages/core/release-candidate.js";
@@ -34,7 +38,7 @@ const DIGESTS = Object.freeze({
   sourceTreeSha: "a".repeat(40),
 });
 
-function fixture({ runnerClass = "ephemeral", factStatus = "pass" } = {}) {
+function fixture({ runnerClass = "ephemeral", factStatus = "pass", qualificationRequired = false } = {}) {
   const registry = createPublicationAuthorityRegistry({
     descriptors: [
       {
@@ -204,6 +208,7 @@ function fixture({ runnerClass = "ephemeral", factStatus = "pass" } = {}) {
     runtimeSha: DIGESTS.runtimeSha,
     contractDigest: DIGESTS.contractDigest,
     policyDigest: gateAggregate.policyDigest,
+    gateRegistryDigest: gateAggregate.policyDigest,
     controllerReceiptDigest: controllerReceipt.digest.replace(/^sha256:/, ""),
     runnerProvenanceDigest: runnerProvenance.receiptDigest,
     controlPlaneAuditDigest: controlPlaneAudit.receiptDigest,
@@ -217,6 +222,13 @@ function fixture({ runnerClass = "ephemeral", factStatus = "pass" } = {}) {
     nonce: "run-123:attempt-1:publish",
     issuedAt: "2026-07-14T00:01:00.000Z",
     expiresAt: "2026-07-14T00:10:00.000Z",
+    qualification: qualificationRequired
+      ? {
+          required: true,
+          predicateId: "kungfu.release-admission/v1",
+          predicateDigest: "c".repeat(64),
+        }
+      : { required: false, predicateId: "", predicateDigest: "" },
   };
   const admission = {
     ...admissionPayload,
@@ -229,6 +241,7 @@ function fixture({ runnerClass = "ephemeral", factStatus = "pass" } = {}) {
     "runtimeSha",
     "contractDigest",
     "policyDigest",
+    "gateRegistryDigest",
     "controllerReceiptDigest",
     "gateAggregateDigest",
     "environment",
@@ -280,6 +293,146 @@ test("publication admission constructor canonicalizes every sealed binding", () 
   const values = fixture();
   const { admissionDigest: _digest, schemaVersion: _schemaVersion, contract: _contract, ...input } = values.admission;
   assert.deepEqual(createPublicationAdmission(input), values.admission);
+});
+
+function qualificationFixture() {
+  const values = fixture({ qualificationRequired: true });
+  const now = new Date("2026-07-14T00:05:00.000Z");
+  const capability = verify(values, { now });
+  const consumerDecision = createConsumerPublicationDecision({
+    capability,
+    gateAggregate: values.publicationEvidence.gateAggregate,
+    decision: "allow",
+    predicateId: capability.qualification.predicateId,
+    predicateDigest: capability.qualification.predicateDigest,
+    evidence: { requiredGateCount: 0, owner: "kungfu-systems/kungfu" },
+    now,
+  });
+  const receipt = createPublicationQualificationReceipt({
+    capability,
+    gateAggregate: values.publicationEvidence.gateAggregate,
+    consumerDecision,
+    now,
+  });
+  return { values, capability, consumerDecision, receipt, now };
+}
+
+test("consumer qualification emits a deterministic receipt over the full Gate handoff", () => {
+  const first = qualificationFixture();
+  const second = createPublicationQualificationReceipt({
+    capability: first.capability,
+    gateAggregate: first.values.publicationEvidence.gateAggregate,
+    consumerDecision: first.consumerDecision,
+    now: first.now,
+  });
+  assert.deepEqual(second, first.receipt);
+  assert.equal(first.consumerDecision.contract, CONSUMER_PUBLICATION_DECISION_CONTRACT);
+  assert.deepEqual(
+    verifyPublicationQualificationReceipt({
+      receipt: first.receipt,
+      capability: first.capability,
+      gateAggregate: first.values.publicationEvidence.gateAggregate,
+      expected: {
+        sourceSha: DIGESTS.sourceSha,
+        version: "2.12.7-alpha.0",
+        channel: "alpha",
+      },
+      now: first.now,
+    }),
+    {
+      ok: true,
+      receiptDigest: first.receipt.receiptDigest,
+      nonce: first.receipt.nonce,
+    },
+  );
+});
+
+test("consumer qualification rejects aggregate and capability substitution", () => {
+  const aggregate = qualificationFixture();
+  const substitutedAggregate = structuredClone(aggregate.values.publicationEvidence.gateAggregate);
+  substitutedAggregate.policy.rationale = "substituted";
+  assert.throws(
+    () => verifyPublicationQualificationReceipt({
+      receipt: aggregate.receipt,
+      capability: aggregate.capability,
+      gateAggregate: substitutedAggregate,
+      now: aggregate.now,
+    }),
+    /Gate decision digest mismatch|Gate aggregate binding mismatch/,
+  );
+
+  const capability = qualificationFixture();
+  const substitutedCapability = { ...capability.capability, artifactDigest: "d".repeat(64) };
+  assert.throws(
+    () => verifyPublicationQualificationReceipt({
+      receipt: capability.receipt,
+      capability: substitutedCapability,
+      gateAggregate: capability.values.publicationEvidence.gateAggregate,
+      now: capability.now,
+    }),
+    /capability digest mismatch/,
+  );
+});
+
+test("consumer qualification rejects omitted, stale, replayed, and post-predicate drift receipts", () => {
+  const missingPredicate = qualificationFixture();
+  assert.throws(
+    () => createConsumerPublicationDecision({
+      capability: missingPredicate.capability,
+      gateAggregate: missingPredicate.values.publicationEvidence.gateAggregate,
+      decision: "allow",
+      predicateId: "",
+      predicateDigest: missingPredicate.capability.qualification.predicateDigest,
+      now: missingPredicate.now,
+    }),
+    /predicateId must be a non-empty string/,
+  );
+
+  const omitted = qualificationFixture();
+  assert.throws(
+    () => verifyPublicationQualificationReceipt({
+      receipt: undefined,
+      capability: omitted.capability,
+      gateAggregate: omitted.values.publicationEvidence.gateAggregate,
+      now: omitted.now,
+    }),
+    /receipt contract mismatch/,
+  );
+
+  const stale = qualificationFixture();
+  assert.throws(
+    () => verifyPublicationQualificationReceipt({
+      receipt: stale.receipt,
+      capability: stale.capability,
+      gateAggregate: stale.values.publicationEvidence.gateAggregate,
+      now: new Date("2026-07-14T00:11:00.000Z"),
+    }),
+    /capability is stale/,
+  );
+
+  const replayed = qualificationFixture();
+  assert.throws(
+    () => verifyPublicationQualificationReceipt({
+      receipt: replayed.receipt,
+      capability: replayed.capability,
+      gateAggregate: replayed.values.publicationEvidence.gateAggregate,
+      usedNonces: [replayed.receipt.nonce],
+      now: replayed.now,
+    }),
+    /nonce was replayed/,
+  );
+
+  const drifted = qualificationFixture();
+  assert.throws(
+    () => verifyPublicationQualificationReceipt({
+      receipt: drifted.receipt,
+      capability: drifted.capability,
+      gateAggregate: drifted.values.publicationEvidence.gateAggregate,
+      expected: { version: "2.12.7-alpha.1" },
+      now: drifted.now,
+    }),
+    /version binding mismatch/,
+  );
 });
 
 test("unknown and evidence-only workflows cannot obtain product publication capability", () => {

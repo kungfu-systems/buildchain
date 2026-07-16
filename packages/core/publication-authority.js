@@ -16,6 +16,10 @@ export const PUBLICATION_CONTROL_PLANE_AUDIT_CONTRACT =
   "kungfu-buildchain-publication-control-plane-audit";
 export const PUBLICATION_GATE_DECISION_CONTRACT =
   "kungfu-buildchain-publication-gate-decision";
+export const CONSUMER_PUBLICATION_DECISION_CONTRACT =
+  "kungfu-buildchain-consumer-publication-decision";
+export const PUBLICATION_QUALIFICATION_RECEIPT_CONTRACT =
+  "kungfu-buildchain-publication-qualification-receipt";
 export const PUBLICATION_ARTIFACT_MANIFEST_SET_CONTRACT =
   "kungfu-buildchain-publication-artifact-manifest-set";
 
@@ -225,6 +229,16 @@ export function createPublicationControlPlaneAudit({
 }
 
 export function createPublicationAdmission(input = {}) {
+  const qualificationRequired = input.qualification?.required === true;
+  const qualification = {
+    required: qualificationRequired,
+    predicateId: qualificationRequired
+      ? requiredString(input.qualification?.predicateId, "qualification.predicateId")
+      : "",
+    predicateDigest: qualificationRequired
+      ? normalizeDigest(input.qualification?.predicateDigest, "qualification.predicateDigest")
+      : "",
+  };
   const payload = {
     schemaVersion: 1,
     contract: PUBLICATION_ADMISSION_CONTRACT,
@@ -236,6 +250,10 @@ export function createPublicationAdmission(input = {}) {
     runtimeSha: normalizeGitSha(input.runtimeSha, "runtimeSha"),
     contractDigest: normalizeDigest(input.contractDigest, "contractDigest"),
     policyDigest: normalizeDigest(input.policyDigest, "policyDigest"),
+    gateRegistryDigest: normalizeDigest(
+      input.gateRegistryDigest || input.policyDigest,
+      "gateRegistryDigest",
+    ),
     controllerReceiptDigest: normalizeDigest(input.controllerReceiptDigest, "controllerReceiptDigest"),
     runnerProvenanceDigest: normalizeDigest(input.runnerProvenanceDigest, "runnerProvenanceDigest"),
     controlPlaneAuditDigest: normalizeDigest(input.controlPlaneAuditDigest, "controlPlaneAuditDigest"),
@@ -249,6 +267,7 @@ export function createPublicationAdmission(input = {}) {
     nonce: requiredString(input.nonce, "nonce"),
     issuedAt: new Date(parseTime(input.issuedAt, "issuedAt")).toISOString(),
     expiresAt: new Date(parseTime(input.expiresAt, "expiresAt")).toISOString(),
+    qualification,
   };
   return { ...payload, admissionDigest: publicationAuthorityDigest(payload) };
 }
@@ -381,8 +400,7 @@ export function createPublicationArtifactManifestSet({
   return { ...payload, manifestSetDigest: publicationAuthorityDigest(payload) };
 }
 
-function validateGateAggregate(gateAggregate, { admission, passport }) {
-  const passportSourceSha = passport.source?.headSha || passport.source?.sha;
+export function publicationGateAggregateBindings(gateAggregate) {
   if (gateAggregate?.contract === "buildchain.shifu-gate-aggregate/v1") {
     const { digest, ...payload } = gateAggregate;
     const actualDigest = sha256Json(payload);
@@ -392,12 +410,17 @@ function validateGateAggregate(gateAggregate, { admission, passport }) {
     if (gateAggregate.status !== "pass" || gateAggregate.qualifying !== true) {
       throw new Error("gate aggregate is not qualifying");
     }
-    if (![admission.sourceSha, passportSourceSha].includes(gateAggregate.sourceSha)) {
-      throw new Error("gate aggregate source SHA mismatch");
-    }
-    normalizeDigest(gateAggregate.registry?.digest, "gateAggregate.registry.digest");
+    const registryDigest = normalizeDigest(
+      gateAggregate.registry?.digest,
+      "gateAggregate.registry.digest",
+    );
     const policyDigest = normalizeDigest(gateAggregate.matrixDigest, "gateAggregate.matrixDigest");
-    return { gateAggregateDigest: actualDigest, policyDigest };
+    return {
+      gateAggregateDigest: actualDigest,
+      policyDigest,
+      registryDigest,
+      sourceSha: normalizeGitSha(gateAggregate.sourceSha, "gateAggregate.sourceSha"),
+    };
   }
   if (gateAggregate?.contract !== PUBLICATION_GATE_DECISION_CONTRACT) {
     throw new Error("gate evidence must be a Shifu Gate aggregate or explicit publication Gate decision");
@@ -410,9 +433,6 @@ function validateGateAggregate(gateAggregate, { admission, passport }) {
   if (gateAggregate.required !== false) {
     throw new Error("a required Gate policy must supply a qualifying Shifu Gate aggregate");
   }
-  if (![admission.sourceSha, passportSourceSha].includes(gateAggregate.sourceSha)) {
-    throw new Error("publication Gate decision source SHA mismatch");
-  }
   const normalizedPolicy = {
     profile: requiredString(gateAggregate.profile, "gateDecision.profile"),
     required: false,
@@ -423,7 +443,21 @@ function validateGateAggregate(gateAggregate, { admission, passport }) {
   if (normalizeDigest(gateAggregate.policyDigest, "gateDecision.policyDigest") !== policyDigest) {
     throw new Error("publication Gate policy digest mismatch");
   }
-  return { gateAggregateDigest: actualDigest, policyDigest };
+  return {
+    gateAggregateDigest: actualDigest,
+    policyDigest,
+    registryDigest: policyDigest,
+    sourceSha: normalizeGitSha(gateAggregate.sourceSha, "gateDecision.sourceSha"),
+  };
+}
+
+function validateGateAggregate(gateAggregate, { admission, passport }) {
+  const bindings = publicationGateAggregateBindings(gateAggregate);
+  const passportSourceSha = passport.source?.headSha || passport.source?.sha;
+  if (![admission.sourceSha, passportSourceSha].includes(bindings.sourceSha)) {
+    throw new Error("gate aggregate source SHA mismatch");
+  }
+  return bindings;
 }
 
 function validatePublicationEvidence(publicationEvidence, admission) {
@@ -458,6 +492,7 @@ function validatePublicationEvidence(publicationEvidence, admission) {
       contractDigest,
       gateAggregateDigest: gate.gateAggregateDigest,
       policyDigest: gate.policyDigest,
+      gateRegistryDigest: gate.registryDigest,
       artifactDigest: candidate.candidateDigest,
       evidenceDigest: publicationAuthorityDigest({
         sourceTreeSha: candidate.sourceTreeSha,
@@ -551,6 +586,7 @@ function validatePublicationEvidence(publicationEvidence, admission) {
     contractDigest,
     gateAggregateDigest: gate.gateAggregateDigest,
     policyDigest: gate.policyDigest,
+    gateRegistryDigest: gate.registryDigest,
     artifactDigest: manifestSet.manifestSetDigest,
     evidenceDigest: publicationAuthorityDigest({
       passportCandidateHash: passport.candidateHash,
@@ -712,7 +748,7 @@ export function verifyPublicationAdmission({
   for (const key of ["sourceSha", "runtimeSha"]) {
     normalizeGitSha(admission[key], `admission.${key}`);
   }
-  for (const key of ["contractDigest", "policyDigest", "controllerReceiptDigest", "gateAggregateDigest", "artifactDigest"]) {
+  for (const key of ["contractDigest", "policyDigest", "controllerReceiptDigest", "gateAggregateDigest", "artifactDigest", ...(admission.gateRegistryDigest ? ["gateRegistryDigest"] : [])]) {
     normalizeDigest(admission[key], `admission.${key}`);
   }
 
@@ -726,6 +762,13 @@ export function verifyPublicationAdmission({
     expectedDigest: admission.controlPlaneAuditDigest,
   });
   const evidence = validatePublicationEvidence(publicationEvidence, admission);
+  if (
+    admission.gateRegistryDigest &&
+    normalizeDigest(admission.gateRegistryDigest, "admission.gateRegistryDigest") !==
+      evidence.gateRegistryDigest
+  ) {
+    throw new Error("Gate registry evidence binding mismatch");
+  }
   const { admissionDigest: suppliedAdmissionDigest, producerDecision: _ignored, ...admissionPayload } = admission;
   const actualAdmissionDigest = publicationAuthorityDigest(admissionPayload);
   if (normalizeDigest(suppliedAdmissionDigest, "admission.admissionDigest") !== actualAdmissionDigest) {
@@ -744,6 +787,8 @@ export function verifyPublicationAdmission({
     runtimeSha: normalizeGitSha(admission.runtimeSha, "admission.runtimeSha"),
     contractDigest: normalizeDigest(admission.contractDigest, "admission.contractDigest"),
     policyDigest: normalizeDigest(admission.policyDigest, "admission.policyDigest"),
+    authorityRegistryDigest: actualRegistryDigest,
+    gateRegistryDigest: evidence.gateRegistryDigest,
     controllerReceiptDigest: normalizeDigest(admission.controllerReceiptDigest, "admission.controllerReceiptDigest"),
     product: admission.product,
     target: admission.target,
@@ -758,7 +803,231 @@ export function verifyPublicationAdmission({
     gateAggregateDigest: normalizeDigest(admission.gateAggregateDigest, "admission.gateAggregateDigest"),
     environment,
     nonce,
+    issuedAt: admission.issuedAt,
     expiresAt: admission.expiresAt,
+    qualification: admission.qualification?.required === true
+      ? {
+          required: true,
+          predicateId: requiredString(
+            admission.qualification.predicateId,
+            "admission.qualification.predicateId",
+          ),
+          predicateDigest: normalizeDigest(
+            admission.qualification.predicateDigest,
+            "admission.qualification.predicateDigest",
+          ),
+        }
+      : { required: false, predicateId: "", predicateDigest: "" },
   };
   return { ...capability, capabilityDigest: publicationAuthorityDigest(capability) };
+}
+
+function validatePublicationCapability(capability, now = new Date()) {
+  if (capability?.contract !== PUBLICATION_CAPABILITY_CONTRACT) {
+    throw new Error("publication capability contract mismatch");
+  }
+  const { capabilityDigest: supplied, ...payload } = capability;
+  const actual = publicationAuthorityDigest(payload);
+  if (normalizeDigest(supplied, "capability.capabilityDigest") !== actual) {
+    throw new Error("publication capability digest mismatch");
+  }
+  if (capability.decision !== "allow") {
+    throw new Error("publication capability did not allow provider mutation");
+  }
+  const nowMs = now instanceof Date ? now.getTime() : parseTime(now, "now");
+  if (parseTime(capability.expiresAt, "capability.expiresAt") <= nowMs) {
+    throw new Error("publication capability is stale");
+  }
+  return actual;
+}
+
+function validateCapabilityGateAggregate(capability, gateAggregate) {
+  const gate = publicationGateAggregateBindings(gateAggregate);
+  if (gate.gateAggregateDigest !== normalizeDigest(capability.gateAggregateDigest, "capability.gateAggregateDigest")) {
+    throw new Error("publication qualification Gate aggregate binding mismatch");
+  }
+  if (gate.policyDigest !== normalizeDigest(capability.policyDigest, "capability.policyDigest")) {
+    throw new Error("publication qualification Gate policy binding mismatch");
+  }
+  if (gate.registryDigest !== normalizeDigest(capability.gateRegistryDigest, "capability.gateRegistryDigest")) {
+    throw new Error("publication qualification Gate registry binding mismatch");
+  }
+  if (gate.sourceSha !== normalizeGitSha(capability.sourceSha, "capability.sourceSha")) {
+    throw new Error("publication qualification Gate source binding mismatch");
+  }
+  return gate;
+}
+
+export function createConsumerPublicationDecision({
+  capability,
+  gateAggregate,
+  decision,
+  predicateId,
+  predicateDigest,
+  evidence = {},
+  now = new Date(),
+} = {}) {
+  const capabilityDigest = validatePublicationCapability(capability, now);
+  const gate = validateCapabilityGateAggregate(capability, gateAggregate);
+  if (capability.qualification?.required !== true) {
+    throw new Error("publication capability did not require consumer qualification");
+  }
+  const normalizedPredicateId = requiredString(predicateId, "predicateId");
+  const normalizedPredicateDigest = normalizeDigest(predicateDigest, "predicateDigest");
+  if (normalizedPredicateId !== capability.qualification.predicateId) {
+    throw new Error("consumer publication predicate id mismatch");
+  }
+  if (normalizedPredicateDigest !== capability.qualification.predicateDigest) {
+    throw new Error("consumer publication predicate digest mismatch");
+  }
+  const normalizedDecision = requiredString(decision, "decision");
+  if (!["allow", "deny"].includes(normalizedDecision)) {
+    throw new Error("consumer publication decision must be allow or deny");
+  }
+  const payload = {
+    schemaVersion: 1,
+    contract: CONSUMER_PUBLICATION_DECISION_CONTRACT,
+    decision: normalizedDecision,
+    predicateId: normalizedPredicateId,
+    predicateDigest: normalizedPredicateDigest,
+    capabilityDigest,
+    gateAggregateDigest: gate.gateAggregateDigest,
+    sourceSha: capability.sourceSha,
+    artifactDigest: capability.artifactDigest,
+    version: capability.version,
+    channel: capability.channel,
+    nonce: capability.nonce,
+    evidence,
+  };
+  return { ...payload, decisionDigest: publicationAuthorityDigest(payload) };
+}
+
+export function createPublicationQualificationReceipt({
+  capability,
+  gateAggregate,
+  consumerDecision,
+  now = new Date(),
+} = {}) {
+  const capabilityDigest = validatePublicationCapability(capability, now);
+  const gate = validateCapabilityGateAggregate(capability, gateAggregate);
+  if (capability.qualification?.required !== true) {
+    throw new Error("publication capability did not require consumer qualification");
+  }
+  if (consumerDecision?.contract !== CONSUMER_PUBLICATION_DECISION_CONTRACT) {
+    throw new Error("consumer publication decision contract mismatch");
+  }
+  const { decisionDigest: suppliedDecisionDigest, ...decisionPayload } = consumerDecision;
+  const decisionDigest = publicationAuthorityDigest(decisionPayload);
+  if (normalizeDigest(suppliedDecisionDigest, "consumerDecision.decisionDigest") !== decisionDigest) {
+    throw new Error("consumer publication decision digest mismatch");
+  }
+  if (consumerDecision.decision !== "allow") {
+    throw new Error("consumer publication predicate did not qualify");
+  }
+  const exactBindings = {
+    predicateId: capability.qualification.predicateId,
+    predicateDigest: capability.qualification.predicateDigest,
+    capabilityDigest,
+    gateAggregateDigest: gate.gateAggregateDigest,
+    sourceSha: capability.sourceSha,
+    artifactDigest: capability.artifactDigest,
+    version: capability.version,
+    channel: capability.channel,
+    nonce: capability.nonce,
+  };
+  for (const [key, expected] of Object.entries(exactBindings)) {
+    if (String(consumerDecision[key] || "") !== String(expected)) {
+      throw new Error(`consumer publication decision ${key} binding mismatch`);
+    }
+  }
+  const payload = {
+    schemaVersion: 1,
+    contract: PUBLICATION_QUALIFICATION_RECEIPT_CONTRACT,
+    decision: "allow",
+    ...exactBindings,
+    authorityRegistryDigest: capability.authorityRegistryDigest,
+    gateRegistryDigest: gate.registryDigest,
+    policyDigest: gate.policyDigest,
+    runtimeSha: capability.runtimeSha,
+    contractDigest: capability.contractDigest,
+    controllerReceiptDigest: capability.controllerReceiptDigest,
+    runnerProvenanceDigest: capability.runnerProvenanceDigest,
+    controlPlaneAuditDigest: capability.controlPlaneAuditDigest,
+    publicationEvidenceDigest: capability.publicationEvidenceDigest,
+    product: capability.product,
+    target: capability.target,
+    issuedAt: capability.issuedAt,
+    expiresAt: capability.expiresAt,
+    consumerDecisionDigest: decisionDigest,
+  };
+  return { ...payload, receiptDigest: publicationAuthorityDigest(payload) };
+}
+
+export function verifyPublicationQualificationReceipt({
+  receipt,
+  capability,
+  gateAggregate,
+  expected = {},
+  usedNonces = [],
+  now = new Date(),
+} = {}) {
+  const capabilityDigest = validatePublicationCapability(capability, now);
+  const gate = validateCapabilityGateAggregate(capability, gateAggregate);
+  if (capability.qualification?.required !== true) {
+    throw new Error("publication capability did not require consumer qualification");
+  }
+  if (receipt?.contract !== PUBLICATION_QUALIFICATION_RECEIPT_CONTRACT) {
+    throw new Error("publication qualification receipt contract mismatch");
+  }
+  if (receipt.decision !== "allow") {
+    throw new Error("publication qualification receipt did not allow provider mutation");
+  }
+  const exactBindings = {
+    predicateId: capability.qualification.predicateId,
+    predicateDigest: capability.qualification.predicateDigest,
+    capabilityDigest,
+    gateAggregateDigest: gate.gateAggregateDigest,
+    authorityRegistryDigest: capability.authorityRegistryDigest,
+    gateRegistryDigest: gate.registryDigest,
+    policyDigest: gate.policyDigest,
+    sourceSha: capability.sourceSha,
+    runtimeSha: capability.runtimeSha,
+    contractDigest: capability.contractDigest,
+    controllerReceiptDigest: capability.controllerReceiptDigest,
+    runnerProvenanceDigest: capability.runnerProvenanceDigest,
+    controlPlaneAuditDigest: capability.controlPlaneAuditDigest,
+    publicationEvidenceDigest: capability.publicationEvidenceDigest,
+    artifactDigest: capability.artifactDigest,
+    product: capability.product,
+    target: capability.target,
+    version: capability.version,
+    channel: capability.channel,
+    nonce: capability.nonce,
+    issuedAt: capability.issuedAt,
+    expiresAt: capability.expiresAt,
+  };
+  for (const [key, value] of Object.entries(exactBindings)) {
+    if (String(receipt[key] || "") !== String(value)) {
+      throw new Error(`publication qualification receipt ${key} binding mismatch`);
+    }
+  }
+  normalizeDigest(
+    receipt.consumerDecisionDigest,
+    "receipt.consumerDecisionDigest",
+  );
+  const { receiptDigest: suppliedReceiptDigest, ...receiptPayload } = receipt;
+  const receiptDigest = publicationAuthorityDigest(receiptPayload);
+  if (normalizeDigest(suppliedReceiptDigest, "receipt.receiptDigest") !== receiptDigest) {
+    throw new Error("publication qualification receipt digest mismatch");
+  }
+  const nonce = requiredString(receipt.nonce, "receipt.nonce");
+  if (new Set(usedNonces.map(String)).has(nonce)) {
+    throw new Error("publication qualification receipt nonce was replayed");
+  }
+  for (const [key, value] of Object.entries(expected)) {
+    if (value !== undefined && String(receipt[key] || "") !== String(value)) {
+      throw new Error(`publication qualification receipt ${key} binding mismatch`);
+    }
+  }
+  return { ok: true, receiptDigest, nonce };
 }

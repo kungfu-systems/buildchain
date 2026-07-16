@@ -83,6 +83,21 @@ inputs:
   expected-publication-version:
     description: "Exact publication version sealed by the pre-publication authority plan; promotion fails if transaction selection drifts"
     default: ""
+  require-publication-qualification:
+    description: "Require an exact consumer qualification receipt before any provider mutation"
+    default: "false"
+  publication-capability-json:
+    description: "Sealed publication capability JSON bound to the consumer qualification"
+    default: ""
+  publication-gate-aggregate-json:
+    description: "Complete Gate aggregate evaluated by the consumer predicate"
+    default: ""
+  publication-qualification-receipt-json:
+    description: "Deterministic consumer qualification receipt JSON"
+    default: ""
+  publication-used-qualification-nonces-json:
+    description: "JSON array of already consumed consumer qualification nonces"
+    default: "[]"
   require-publish-source-lock:
     description: "Require publish side effects to come from a resolved publish-gate source lock"
     default: "false"
