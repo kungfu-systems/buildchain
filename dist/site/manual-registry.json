@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:ce439062d4ed9d8213499e607825afdcf8a65f825343a657d0438f3e229a0af0",
+      "digest": "sha256:a9a9594c0bd9584b145a8f41847db83e297c1c4d1b8b2d7c4bf8d10264ab1cef",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -246,7 +246,7 @@
       "title": "CLI and npm package",
       "path": "docs/cli.md",
       "plane": "use",
-      "digest": "sha256:ef5be4484da8628b9e027f00fe0fdb5b295665ed23eeceefac48e63581f12c0c",
+      "digest": "sha256:a7a31bbec048acbc9759324c5421c7ea0734f394f8d6705b63d70654867fdfa6",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -329,7 +329,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:cb6aafc3410c0e72da3d9c3ba330421005af27c3c67665a2f3356603f02da84a",
+      "digest": "sha256:3c1e5dc7ce2d781e50adb73f37aa1978f03c9c97f7331269633a218a034cf99e",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -371,7 +371,7 @@
       "title": "Versioning",
       "path": "docs/versioning.md",
       "plane": "why",
-      "digest": "sha256:280d30e15552ab6a362cb121a7a1cafc3b907913cdc7d4d8a9e8e1930d856f7e",
+      "digest": "sha256:c3dce313b846fb36c69e4a725d086226ff2e875c376cc10e8554a0aff2f67c93",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer"

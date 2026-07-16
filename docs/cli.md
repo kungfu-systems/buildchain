@@ -152,6 +152,25 @@ buildchain lifecycle run build \
   --artifact-name "{repo}-{version}-{platform}"
 ```
 
+`buildchain dev merge-queue` plans a GitHub merge-queue policy for a protected
+Buildchain dev channel. Declare every workflow that emits a required check; the
+command fails closed unless each file handles both `pull_request` and
+`merge_group` without reading `github.event.pull_request` directly:
+
+```bash
+buildchain dev merge-queue \
+  --repository kungfu-systems/example \
+  --branch dev/v4/v4.0 \
+  --workflow .github/workflows/source-acceptance.yml \
+  --workflow .github/workflows/affected-native-pr.yml
+```
+
+The default output is a read-only plan. Add `--apply` only after reviewing it.
+Apply creates the exact-branch merge-queue ruleset before changing classic
+required status checks from strict to loose, preserves the required check
+identities, and is safe to repeat. `gh` must be authenticated with repository
+Administration write permission for apply mode.
+
 `buildchain release line open` plans or writes the first version-state commit
 for a new semver minor line. It does not publish anything. The dry-run mode is
 the default and returns the dev/alpha/release refs, protection contract, default

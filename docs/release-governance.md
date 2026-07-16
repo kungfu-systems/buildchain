@@ -385,6 +385,35 @@ This keeps the earliest development channel audit-friendly:
 - later `dev -> alpha -> release` promotion inherits a reviewable source
   lineage instead of trying to reconstruct how the dev branch changed.
 
+When required checks take longer than the normal dev-channel commit interval,
+classic strict up-to-date protection can become a non-converging retry loop:
+each base update invalidates a completed check set and rebasing restarts the
+same slow checks. Buildchain supports GitHub merge queues for that channel
+shape. The queue validates the projected merged result and serializes the final
+ref update, so concurrent channel movement no longer invalidates the candidate.
+
+Every required workflow must handle both `pull_request` and `merge_group`
+before the queue is enabled. Queue runs do not provide
+`github.event.pull_request`; required workflows must use the checked-out
+`github.sha` or event-neutral source facts. The governance command is dry-run by
+default and refuses to enable a queue when a declared required workflow lacks
+either trigger or still reads the pull-request-only payload directly:
+
+```bash
+buildchain dev merge-queue \
+  --repository owner/repository \
+  --branch dev/v4/v4.0 \
+  --workflow .github/workflows/source-acceptance.yml \
+  --workflow .github/workflows/affected-native-pr.yml
+```
+
+After reviewing the plan, repeat with `--apply`. Buildchain creates or updates
+an exact-branch `merge_queue` ruleset first, then changes only the classic
+required-status-check policy from strict to loose. Reviews, administrator
+enforcement, conversation resolution, required check identities, force-push
+protection, and deletion protection remain owned by the existing branch
+protection. Re-running the command is idempotent.
+
 Buildchain provides the reusable
 `.github/workflows/dev-pr-auto-merge.yml` workflow for repositories that want a
 scheduled or manual "merge ready dev PRs" pass. The consumer repository owns
@@ -661,6 +690,12 @@ transaction tag remains in the release passport and release-state ref. This is
 the supported path for downstream
 `release.published` propagation across semver, major, and promote-only release
 candidate publication models.
+
+Published GitHub Release assets are immutable evidence. A repeated promotion
+preserves an existing asset when its SHA-256 digest matches the regenerated
+bytes, uploads only missing assets, and fails with an immutable-release
+collision when a same-name asset has different bytes. It never deletes and
+replaces an existing asset during retry or duplicate workflow delivery.
 
 Buildchain also does not maintain bare exact tags such as `1.0.0`. The supported
 exact release and alpha refs are v-prefixed:

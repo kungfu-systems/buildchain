@@ -435,6 +435,8 @@ function cliCommandMeta(id) {
     "kfd-upstream-collect": { group: "kfd-trust", purpose: "Collect declared KFD-aware upstream package evidence and hashes from Buildchain config." },
     "kfd-upstream-roles": { group: "kfd-trust", purpose: "List Buildchain-managed KFD upstream role values and inference policy." },
     lifecycle: { group: "reusable-build", purpose: "Run configured lifecycle commands and write deterministic artifact manifests." },
+    dev: { group: "governance-versioning", purpose: "Inspect protected development-channel governance command families." },
+    "dev-merge-queue": { group: "governance-versioning", purpose: "Plan or apply an exact-branch GitHub merge queue after required workflow event compatibility is verified." },
     log: { group: "observability-diagnostics", purpose: "Inspect Buildchain logging command families." },
     logging: { group: "observability-diagnostics", purpose: "Emit timestamped build events, summarize logs, and enforce required phases." },
     mark: { group: "observability-diagnostics", purpose: "Emit a single Buildchain log event." },
