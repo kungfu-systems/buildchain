@@ -247,16 +247,47 @@ jobs:
           PLAN_PATH: ../.buildchain/release-propagation/plan.json
           LOCK_PATH: ${{ steps.plan.outputs.lock_path }}
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -B "$BRANCH"
           git add -- "$LOCK_PATH"
+          remote_sha="$(git ls-remote --heads origin "refs/heads/$BRANCH" | cut -f1)"
+          reconciliation_path="../.buildchain/release-propagation/branch-reconciliation.json"
           if git diff --cached --quiet -- "$LOCK_PATH"; then
             echo "No downstream lock changes."
+            jq -n \
+              --arg repository "${{ inputs.downstream-repository }}" \
+              --arg branch "$BRANCH" \
+              --arg base "$BASE" \
+              --arg remote_sha "$remote_sha" \
+              '{
+                schemaVersion: 1,
+                contract: "kungfu-buildchain-release-propagation-branch-reconciliation",
+                repository: $repository,
+                branch: $branch,
+                base: $base,
+                action: "no-lock-change",
+                observedRemoteSha: $remote_sha,
+                pushedSha: "",
+                leaseMode: "none",
+                pullRequest: null
+              }' > "$reconciliation_path"
             exit 0
           fi
           git commit -m "$TITLE"
-          git push origin "HEAD:$BRANCH"
+          if [[ -n "$remote_sha" ]]; then
+            git push \
+              --force-with-lease="refs/heads/$BRANCH:$remote_sha" \
+              origin "HEAD:refs/heads/$BRANCH"
+            reconciliation_action="leased-replace"
+            lease_mode="exact-remote-sha"
+          else
+            git push origin "HEAD:refs/heads/$BRANCH"
+            reconciliation_action="created-branch"
+            lease_mode="new-ref"
+          fi
+          pushed_sha="$(git rev-parse HEAD)"
           {
             echo "$BODY"
             echo
@@ -266,16 +297,56 @@ jobs:
             cat "$PLAN_PATH"
             echo '```'
           } > ../.buildchain/release-propagation/pr-body.md
-          gh pr create \
+          pr_json="$(gh pr list \
             --repo "${{ inputs.downstream-repository }}" \
+            --state open \
             --base "$BASE" \
             --head "$BRANCH" \
-            --title "$TITLE" \
-            --body-file ../.buildchain/release-propagation/pr-body.md || \
-          gh pr edit "$BRANCH" \
-            --repo "${{ inputs.downstream-repository }}" \
-            --title "$TITLE" \
-            --body-file ../.buildchain/release-propagation/pr-body.md
+            --limit 1 \
+            --json number,url,headRefOid \
+            --jq '.[0] // empty')"
+          if [[ -n "$pr_json" ]]; then
+            pr_number="$(jq -r '.number' <<<"$pr_json")"
+            gh pr edit "$pr_number" \
+              --repo "${{ inputs.downstream-repository }}" \
+              --title "$TITLE" \
+              --body-file ../.buildchain/release-propagation/pr-body.md
+            pr_action="updated-open-pr"
+          else
+            pr_url="$(gh pr create \
+              --repo "${{ inputs.downstream-repository }}" \
+              --base "$BASE" \
+              --head "$BRANCH" \
+              --title "$TITLE" \
+              --body-file ../.buildchain/release-propagation/pr-body.md)"
+            pr_json="$(gh pr view "$pr_url" \
+              --repo "${{ inputs.downstream-repository }}" \
+              --json number,url,headRefOid)"
+            pr_action="created-pr"
+          fi
+          jq -n \
+            --arg repository "${{ inputs.downstream-repository }}" \
+            --arg branch "$BRANCH" \
+            --arg base "$BASE" \
+            --arg action "$reconciliation_action" \
+            --arg remote_sha "$remote_sha" \
+            --arg pushed_sha "$pushed_sha" \
+            --arg lease_mode "$lease_mode" \
+            --arg pr_action "$pr_action" \
+            --argjson pull_request "$pr_json" \
+            '{
+              schemaVersion: 1,
+              contract: "kungfu-buildchain-release-propagation-branch-reconciliation",
+              repository: $repository,
+              branch: $branch,
+              base: $base,
+              action: $action,
+              observedRemoteSha: $remote_sha,
+              pushedSha: $pushed_sha,
+              leaseMode: $lease_mode,
+              pullRequestAction: $pr_action,
+              pullRequest: $pull_request
+            }' > "$reconciliation_path"
 
       - name: Upload propagation plan
         id: propagation-upload
@@ -292,7 +363,7 @@ jobs:
           BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
           BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
             [{"id":"resolve-runtime","status":"${{ steps.runtime.outcome == 'success' && steps.controller-identities.outcome == 'success' && 'success' || steps.runtime.outcome == 'failure' && 'failure' || steps.controller-identities.outcome }}"},{"id":"plan","status":"${{ steps.plan.outcome }}"},{"id":"write-lock","status":"${{ steps.lock.outcome }}"},{"id":"open-pr","status":"${{ steps.open-pr.outcome }}"},{"id":"aggregate","status":"${{ (steps.summarize.outcome == 'failure' || steps.propagation-upload.outcome == 'failure') && 'failure' || (steps.summarize.outcome == 'success' && steps.propagation-upload.outcome == 'success') && 'success' || 'skipped' }}"}]
-          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ steps.plan.outcome == 'success' && steps.lock.outcome == 'success' && '[{"kind":"propagation-plan","path":".buildchain/release-propagation/plan.json"},{"kind":"propagation-lock","path":".buildchain/release-propagation/write-lock.json"}]' || '[]' }}
+          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ steps.plan.outcome == 'success' && steps.lock.outcome == 'success' && steps.open-pr.outcome == 'success' && '[{"kind":"propagation-plan","path":".buildchain/release-propagation/plan.json"},{"kind":"propagation-lock","path":".buildchain/release-propagation/write-lock.json"},{"kind":"propagation-branch-reconciliation","path":".buildchain/release-propagation/branch-reconciliation.json"}]' || steps.plan.outcome == 'success' && steps.lock.outcome == 'success' && '[{"kind":"propagation-plan","path":".buildchain/release-propagation/plan.json"},{"kind":"propagation-lock","path":".buildchain/release-propagation/write-lock.json"}]' || '[]' }}
           BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ steps.plan.outcome == 'success' && steps.lock.outcome == 'success' && '' || 'propagation-incomplete' }}
           BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Release propagation did not complete successfully
           BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: buildchain-release-propagation-controller-receipt-${{ github.sha }}
