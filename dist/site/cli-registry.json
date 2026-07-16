@@ -114,6 +114,18 @@
       "maturity": "stable"
     },
     {
+      "id": "dev",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain dev merge-queue --repository <owner/repo> --branch <dev/vN/vN.M>",
+      "purpose": "Inspect protected development-channel governance command families.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
       "id": "diagnostics",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain diagnostics",

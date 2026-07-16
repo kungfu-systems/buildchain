@@ -386,7 +386,7 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:ef5be4484da8628b9e027f00fe0fdb5b295665ed23eeceefac48e63581f12c0c"
+      "digest": "sha256:a7a31bbec048acbc9759324c5421c7ea0734f394f8d6705b63d70654867fdfa6"
     },
     {
       "id": "build-facts",

@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "e6103b9ce8a24475e86b4347c0828052d5b112355ce9ff77c4d5dc2141ff64a4",
+    "sha256": "d0f3ed176a732c876d0c810f0a41afd42491530ac1920d521eb601e64e3dae0b",
     "summary": {
-      "cliCommandCount": 81,
+      "cliCommandCount": 82,
       "workflowCount": 47,
       "actionCount": 4,
       "sitePageCount": 50,
-      "docCommandRefCount": 250,
+      "docCommandRefCount": 253,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -225,13 +225,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "e6103b9ce8a24475e86b4347c0828052d5b112355ce9ff77c4d5dc2141ff64a4",
+      "sha256": "d0f3ed176a732c876d0c810f0a41afd42491530ac1920d521eb601e64e3dae0b",
       "summary": {
-        "cliCommandCount": 81,
+        "cliCommandCount": 82,
         "workflowCount": 47,
         "actionCount": 4,
         "sitePageCount": 50,
-        "docCommandRefCount": 250,
+        "docCommandRefCount": 253,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -1650,6 +1650,18 @@
         {
           "id": "cli:create",
           "name": "buildchain create publication-admission --input-json <file-or-json> [--output <file>] [--json]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:dev",
+          "name": "buildchain dev merge-queue --repository <owner/repo> --branch <dev/vN/vN.M>",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -4648,6 +4660,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 300
+    "publicSurfaceCount": 301
   }
 }

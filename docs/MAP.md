@@ -34,7 +34,7 @@ workflow, action, and Node API export also carries a `capabilityGroup`,
 | Publication Artifacts | `publication-registry.json`, `workflow-registry.json`, `node-api-registry.json`, `manual-registry.json`, `kungfu-buildchain-publication-artifact-registry` | [`publication-artifacts.md`](publication-artifacts.md), [`reusable-build-surface.md`](reusable-build-surface.md) |
 | Distribution Indexes and Badges | `badge-endpoint-registry.json`, `node-api-registry.json`, `manual-registry.json` | [`readme-badges.md`](readme-badges.md), [`homebrew.md`](homebrew.md) |
 | Build Facts, Observability, and Diagnostics | `cli-registry.json`, `node-api-registry.json`, lifecycle artifacts | [`build-facts.md`](build-facts.md), [`toolkit-observability.md`](toolkit-observability.md), [`consumer-issue-reporting.md`](consumer-issue-reporting.md) |
-| Governance, Versioning, and Runtime Drift | `buildchain-contract.json`, `workflow-registry.json`, `release-model.json` | [`release-governance.md`](release-governance.md), [`release-flow.md`](release-flow.md), [`versioning.md`](versioning.md), [`runtime-train-validation.md`](runtime-train-validation.md) |
+| Governance, Versioning, and Runtime Drift | `buildchain-contract.json`, `workflow-registry.json`, `release-model.json` | [`release-governance.md`](release-governance.md), [`release-flow.md`](release-flow.md), [`versioning.md`](versioning.md), [`runtime-train-validation.md`](runtime-train-validation.md), [`cli.md`](cli.md) |
 | CLI and Node API Reference | `cli-registry.json`, `node-api-registry.json`, `workflow-registry.json`, `manual-registry.json` | [`cli.md`](cli.md), [`../packages/core/README.md`](../packages/core/README.md) |
 
 | Capability | Machine-readable entry | Manual entry |
@@ -72,6 +72,7 @@ replace them.
 | How do I initialize a new repository? | [`cli.md`](cli.md) + [`lifecycle-protocol.md`](lifecycle-protocol.md) | use | stable |
 | Why does Buildchain use branch-driven release governance? | [`release-governance.md`](release-governance.md) | why | stable |
 | How do protected dev branches and scheduled ready-PR merging work? | [`release-governance.md`](release-governance.md#protected-dev-branches) | use | stable |
+| How do slow required checks land reliably on a busy dev channel? | [`release-governance.md`](release-governance.md#protected-dev-branches) + [`cli.md`](cli.md#commands) | use | preview |
 | How do I run daily, weekly, or monthly repository patrols? | [`release-governance.md`](release-governance.md#buildchain-patrol) | use | stable |
 | How does Buildchain decide patch, minor, and major release lines? | [`versioning.md`](versioning.md) | why | stable |
 | What exact branch/tag state machine runs on alpha, release, and major gate? | [`release-flow.md`](release-flow.md) | verify | stable |
