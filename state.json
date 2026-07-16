@@ -16,14 +16,27 @@
   "state_ref": "buildchain/release-state/2-13-0",
   "state_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-state/v2.13.0.json",
   "evidence_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-evidence/v2.13.0/evidence.json",
-  "state": "publishing",
-  "previous_state": "prepared",
+  "state": "published",
+  "previous_state": "publishing",
   "actor": "kungfu-origin",
   "run_id": "29480887738",
   "superseded_by": "",
   "failure": "",
-  "artifacts": [],
-  "evidence": [],
+  "artifacts": [
+    {
+      "group": "node",
+      "kind": "npm",
+      "name": "@kungfu-tech/buildchain",
+      "ref": "2.13.0",
+      "digest": "sha512-NS672/mnkKMtyq1x/Ok14IAu6rdgLjxlYMEuE887Ia9AthsncBBiOxGnCWZODlPZX/+bvWGFPqYINy0FWMRMWQ==",
+      "role": "",
+      "required": true
+    }
+  ],
+  "evidence": [
+    ".buildchain/release-evidence/v2.13.0/evidence.json",
+    ".buildchain/release-evidence/v2.13.0/dist-tag-evidence.json"
+  ],
   "created_at": "2026-07-16T07:46:09.283Z",
-  "updated_at": "2026-07-16T07:46:11.278Z"
+  "updated_at": "2026-07-16T07:46:21.277Z"
 }
