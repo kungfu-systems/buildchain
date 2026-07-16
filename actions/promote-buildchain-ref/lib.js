@@ -3294,7 +3294,7 @@ function protectedBranchDirectUpdateError({ branch, branchSha, error }) {
   );
 }
 
-async function createGeneratedVersionStateCheck({
+async function createGeneratedVersionStateChecks({
   octokit,
   owner,
   repo,
@@ -3302,38 +3302,46 @@ async function createGeneratedVersionStateCheck({
   branchSha,
   currentSha,
   requiredStatusCheck,
+  requiredStatusChecks = [],
 }) {
   if (!isManagedChannelBranch(branch)) {
-    return false;
+    return [];
   }
-  if (!requiredStatusCheck) {
-    return false;
+  const statusChecks = [...new Set(
+    [...requiredStatusChecks, requiredStatusCheck]
+      .map((check) => String(check || "").trim())
+      .filter(Boolean),
+  )];
+  if (statusChecks.length === 0) {
+    return [];
   }
   if (typeof octokit?.rest?.checks?.create !== "function") {
     console.log(
-      `buildchain: unable to create generated version-state check '${requiredStatusCheck}' for ${branchSha}; checks.create is unavailable`,
+      `buildchain: unable to create generated version-state checks '${statusChecks.join(", ")}' for ${branchSha}; checks.create is unavailable`,
     );
-    return false;
+    return [];
   }
-  await retryGitHubOperation(
-    `checks.create ${requiredStatusCheck} ${branchSha}`,
-    () => octokit.rest.checks.create({
-      owner,
-      repo,
-      name: requiredStatusCheck,
-      head_sha: branchSha,
-      status: "completed",
-      conclusion: "success",
-      output: {
-        title: "Buildchain generated version-state verification",
-        summary:
-          `Buildchain verified generated version-state commit ${branchSha} for ${branch} before direct protected ref update.\n\n` +
-          `Previous branch head: ${currentSha || "new branch"}\n\n` +
-          "This check is emitted only after promote-buildchain-ref has generated the commit through the declared version-state files and verification gate.",
-      },
-    }),
-  );
-  return true;
+  for (const statusCheck of statusChecks) {
+    await retryGitHubOperation(
+      `checks.create ${statusCheck} ${branchSha}`,
+      () => octokit.rest.checks.create({
+        owner,
+        repo,
+        name: statusCheck,
+        head_sha: branchSha,
+        status: "completed",
+        conclusion: "success",
+        output: {
+          title: "Buildchain generated version-state verification",
+          summary:
+            `Buildchain verified generated version-state commit ${branchSha} for ${branch} before direct protected ref update.\n\n` +
+            `Previous branch head: ${currentSha || "new branch"}\n\n` +
+            "This check is emitted only after promote-buildchain-ref has generated the commit through the declared version-state files and verification gate.",
+        },
+      }),
+    );
+  }
+  return statusChecks;
 }
 
 function nonFastForwardUpdateRejected(error) {
@@ -3708,9 +3716,10 @@ async function promoteBuildchainRefs({
       return policyEvidence;
     };
     const currentSha = await readRefSha(`heads/${branch}`);
-    if (currentSha) {
-      await ensureChannelProtection();
-    }
+    const protectionPolicy = currentSha
+      ? await ensureChannelProtection()
+      : undefined;
+    const generatedStatusChecks = protectionPolicy?.after?.requiredStatusChecks || [requiredStatusCheck];
     if (currentSha === branchSha) {
       updates.push({ ref: branch, action: "existing", sha: branchSha });
       return { updated: true, existing: true };
@@ -3918,7 +3927,7 @@ async function promoteBuildchainRefs({
       return mergeCommit.sha;
     };
     if (protectedUpdate && currentSha) {
-      const createdCheck = await createGeneratedVersionStateCheck({
+      const createdChecks = await createGeneratedVersionStateChecks({
         octokit: statusCheckOctokit,
         owner,
         repo,
@@ -3926,12 +3935,13 @@ async function promoteBuildchainRefs({
         branchSha,
         currentSha,
         requiredStatusCheck,
+        requiredStatusChecks: generatedStatusChecks,
       });
-      if (createdCheck) {
+      for (const check of createdChecks) {
         updates.push({
           ref: branch,
           action: "generated-status-check",
-          check: requiredStatusCheck,
+          check,
           sha: branchSha,
         });
       }
@@ -3967,7 +3977,7 @@ async function promoteBuildchainRefs({
       ) {
         const mergeSha = await createVersionStateMergeCommit();
         if (mergeSha) {
-          const createdMergeCheck = await createGeneratedVersionStateCheck({
+          const createdMergeChecks = await createGeneratedVersionStateChecks({
             octokit: statusCheckOctokit,
             owner,
             repo,
@@ -3975,12 +3985,13 @@ async function promoteBuildchainRefs({
             branchSha: mergeSha,
             currentSha,
             requiredStatusCheck,
+            requiredStatusChecks: generatedStatusChecks,
           });
-          if (createdMergeCheck) {
+          for (const check of createdMergeChecks) {
             updates.push({
               ref: branch,
               action: "generated-status-check",
-              check: requiredStatusCheck,
+              check,
               sha: mergeSha,
             });
           }

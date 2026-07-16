@@ -7540,20 +7540,24 @@ test("strict alpha promotion protects created dev branches with one required app
         createCommit: async () => ({ data: { sha: versionSha } }),
         updateRef: async ({ ref, sha }) => {
           if (ref === "heads/alpha/v1/v1.0") {
-            assert.ok(
-              checkRuns.find((check) => check.head_sha === sha && check.name === "Build"),
-              "generated alpha version-state check should be created before ref PATCH",
-            );
+            for (const name of ["Build", "security"]) {
+              assert.ok(
+                checkRuns.find((check) => check.head_sha === sha && check.name === name),
+                `generated alpha version-state check ${name} should be created before ref PATCH`,
+              );
+            }
           }
           if (ref === "heads/dev/v1/v1.0") {
             assert.ok(
               protections.find((protection) => protection.branch === "dev/v1/v1.0"),
               "managed dev branch protection should be updated before ref PATCH",
             );
-            assert.ok(
-              checkRuns.find((check) => check.head_sha === sha && check.name === "Build"),
-              "generated dev version-state check should be created before ref PATCH",
-            );
+            for (const name of ["Build", "security"]) {
+              assert.ok(
+                checkRuns.find((check) => check.head_sha === sha && check.name === name),
+                `generated dev version-state check ${name} should be created before ref PATCH`,
+              );
+            }
           }
           refs.set(ref, sha);
           return {};
@@ -7643,7 +7647,7 @@ test("strict alpha promotion protects created dev branches with one required app
   assert.deepEqual(policyEvidence.before.requiredStatusChecks, ["Build", "security"]);
   assert.deepEqual(policyEvidence.after.requiredStatusChecks, ["Build", "security"]);
   assert.equal(policyEvidence.policySource, "release-governance-required-status-check");
-  assert.equal(checkRuns.length, 1);
+  assert.equal(checkRuns.length, 2);
   assert.deepEqual(
     checkRuns.map((check) => ({
       name: check.name,
@@ -7653,6 +7657,11 @@ test("strict alpha promotion protects created dev branches with one required app
     [
       {
         name: "Build",
+        status: "completed",
+        conclusion: "success",
+      },
+      {
+        name: "security",
         status: "completed",
         conclusion: "success",
       },
