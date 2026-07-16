@@ -353,6 +353,9 @@ export async function resolveReleaseCandidateArtifacts({
   outputDir = ".buildchain/release-candidate",
   fetchImpl = globalThis.fetch,
   download = true,
+  waitSeconds = 600,
+  pollIntervalMs = 15000,
+  sleepImpl = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
 } = {}) {
   const repoInfo = splitRepository(repository);
   const sha = assertSha(targetSha, "targetSha");
@@ -377,45 +380,63 @@ export async function resolveReleaseCandidateArtifacts({
   if (!pullRequest) {
     throw new Error(`no same-repository merged channel PR found for ${sha} into ${normalizedTarget}`);
   }
-  const runs = await githubJson({
-    apiUrl,
-    token,
-    fetchImpl,
-    path: `/repos/${repoInfo.owner}/${repoInfo.repo}/actions/workflows/${encodeURIComponent(workflowFile)}/runs?event=pull_request&status=success&per_page=100`,
-  });
-  const candidateRuns = selectReleaseCandidateRuns({
-    runs: Array.isArray(runs.workflow_runs) ? runs.workflow_runs : [],
-    pullRequest,
-    workflowName,
-  });
-  if (!candidateRuns.length) {
-    throw new Error(`no successful ${workflowName} pull_request run found for channel PR #${pullRequest.number}`);
+  const timeoutMs = Number(waitSeconds) * 1000;
+  const intervalMs = Number(pollIntervalMs);
+  if (!Number.isFinite(timeoutMs) || timeoutMs < 0) {
+    throw new Error(`release-candidate waitSeconds must be a non-negative number, got ${waitSeconds}`);
   }
+  if (!Number.isFinite(intervalMs) || intervalMs < 0) {
+    throw new Error(`release-candidate pollIntervalMs must be a non-negative number, got ${pollIntervalMs}`);
+  }
+  const deadline = Date.now() + timeoutMs;
   let run;
   let artifactResponse;
   let selected;
-  const selectionErrors = [];
-  for (const candidateRun of candidateRuns) {
-    const candidateArtifactResponse = await githubJson({
+  let selectionErrors = [];
+  let candidateRuns = [];
+  while (!selected) {
+    const runs = await githubJson({
       apiUrl,
       token,
       fetchImpl,
-      path: `/repos/${repoInfo.owner}/${repoInfo.repo}/actions/runs/${candidateRun.id}/artifacts?per_page=100`,
+      path: `/repos/${repoInfo.owner}/${repoInfo.repo}/actions/workflows/${encodeURIComponent(workflowFile)}/runs?event=pull_request&status=success&per_page=100`,
     });
-    try {
-      selected = selectReleaseCandidateArtifacts({
-        artifacts: Array.isArray(candidateArtifactResponse.artifacts) ? candidateArtifactResponse.artifacts : [],
-        artifactName,
+    candidateRuns = selectReleaseCandidateRuns({
+      runs: Array.isArray(runs.workflow_runs) ? runs.workflow_runs : [],
+      pullRequest,
+      workflowName,
+    });
+    selectionErrors = [];
+    for (const candidateRun of candidateRuns) {
+      const candidateArtifactResponse = await githubJson({
+        apiUrl,
+        token,
+        fetchImpl,
+        path: `/repos/${repoInfo.owner}/${repoInfo.repo}/actions/runs/${candidateRun.id}/artifacts?per_page=100`,
       });
-      run = candidateRun;
-      artifactResponse = candidateArtifactResponse;
-      break;
-    } catch (error) {
-      selectionErrors.push(`run ${candidateRun.id}: ${error.message}`);
+      try {
+        selected = selectReleaseCandidateArtifacts({
+          artifacts: Array.isArray(candidateArtifactResponse.artifacts) ? candidateArtifactResponse.artifacts : [],
+          artifactName,
+        });
+        run = candidateRun;
+        artifactResponse = candidateArtifactResponse;
+        break;
+      } catch (error) {
+        selectionErrors.push(`run ${candidateRun.id}: ${error.message}`);
+      }
     }
-  }
-  if (!run || !artifactResponse || !selected) {
-    throw new Error(`no successful ${workflowName} pull_request run for channel PR #${pullRequest.number} contained release-candidate artifacts: ${selectionErrors.join("; ")}`);
+    if (selected) break;
+    if (Date.now() >= deadline) {
+      if (!candidateRuns.length) {
+        throw new Error(`no successful ${workflowName} pull_request run found for channel PR #${pullRequest.number} within ${waitSeconds}s`);
+      }
+      throw new Error(`no successful ${workflowName} pull_request run for channel PR #${pullRequest.number} contained release-candidate artifacts within ${waitSeconds}s: ${selectionErrors.join("; ")}`);
+    }
+    console.log(
+      `> waiting for successful ${workflowName} release-candidate evidence for channel PR #${pullRequest.number}`,
+    );
+    await sleepImpl(intervalMs);
   }
   const payloadArtifacts = selectPayloadArtifacts({
     artifacts: Array.isArray(artifactResponse.artifacts) ? artifactResponse.artifacts : [],
@@ -551,6 +572,8 @@ export async function resolveReleaseCandidateArtifactsCli() {
     publishPackageMain: env("BUILDCHAIN_PUBLISH_PACKAGE_MAIN"),
     outputDir: env("BUILDCHAIN_RC_OUTPUT_DIR", ".buildchain/release-candidate"),
     download: releaseCandidateDownloadEnabled(env("BUILDCHAIN_RC_DOWNLOAD", "true")),
+    waitSeconds: env("BUILDCHAIN_RC_WAIT_SECONDS", "600"),
+    pollIntervalMs: env("BUILDCHAIN_RC_POLL_INTERVAL_MS", "15000"),
   });
   writeGitHubOutputs({
     "promote-only-release-candidate": String(result.enabled === true),

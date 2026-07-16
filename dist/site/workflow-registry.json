@@ -61,6 +61,7 @@
         "expected-artifacts-json",
         "gate-profile-aggregate-json",
         "install-command",
+        "lifecycle-timeout-minutes",
         "linux-container-image",
         "linux-container-preset",
         "node-version",
@@ -91,7 +92,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 58,
+      "inputCount": 59,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -221,6 +222,9 @@
         "auto-no-gate",
         "buildchain-ref",
         "buildchain-repository",
+        "consumer-predicate-digest",
+        "consumer-predicate-id",
+        "consumer-qualification-required",
         "control-plane-audit-json",
         "dry-run",
         "evidence-controller-artifact",
@@ -244,15 +248,17 @@
         "target-ref",
         "used-nonces-json"
       ],
-      "inputCount": 29,
+      "inputCount": 32,
       "secrets": [],
       "secretCount": 0,
       "outputs": [
         "capability-artifact",
         "capability-digest",
-        "capability-json"
+        "capability-json",
+        "gate-aggregate-digest",
+        "gate-aggregate-json"
       ],
-      "outputCount": 3,
+      "outputCount": 5,
       "surface": "reusable-workflow",
       "capabilityGroup": "api-cli-reference",
       "status": "active"
@@ -717,6 +723,7 @@
         "expected-artifacts-json",
         "gate-profile-aggregate-json",
         "install-command",
+        "lifecycle-timeout-minutes",
         "linux-container-image",
         "linux-container-preset",
         "node-version",
@@ -747,7 +754,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 61,
+      "inputCount": 62,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1311,6 +1318,8 @@
         "publication-admission-json",
         "publication-auto-admission",
         "publication-auto-no-gate",
+        "publication-consumer-predicate-id",
+        "publication-consumer-qualification-command",
         "publication-control-plane-audit-json",
         "publication-expected-json",
         "publication-gate-aggregate-json",
@@ -1320,6 +1329,7 @@
         "publication-runner-provenance-json",
         "publication-target",
         "publication-used-nonces-json",
+        "publication-used-qualification-nonces-json",
         "publish-artifact-kind",
         "publish-command",
         "publish-dist-tag",
@@ -1348,7 +1358,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 56,
+      "inputCount": 59,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1559,6 +1569,10 @@
         "github-release-notes",
         "github-release-title",
         "promote-only-release-candidate",
+        "publication-capability-json",
+        "publication-gate-aggregate-json",
+        "publication-qualification-receipt-json",
+        "publication-used-qualification-nonces-json",
         "publish-auth",
         "publish-command",
         "publish-dist-tag",
@@ -1591,6 +1605,7 @@
         "release-passport-platform-manifest-paths",
         "release-passport-product-name",
         "require-governance",
+        "require-publication-qualification",
         "require-publish-source-lock",
         "require-version-state",
         "required-status-check",
@@ -1601,7 +1616,7 @@
         "transaction-state-path",
         "verification-command"
       ],
-      "inputCount": 54,
+      "inputCount": 59,
       "capabilityGroup": "release-passport-trust",
       "status": "active"
     },
@@ -1680,9 +1695,10 @@
         "required",
         "sample-process-tree",
         "stage",
-        "summary-path"
+        "summary-path",
+        "timeout-minutes"
       ],
-      "inputCount": 20,
+      "inputCount": 21,
       "capabilityGroup": "reusable-build",
       "status": "active"
     },

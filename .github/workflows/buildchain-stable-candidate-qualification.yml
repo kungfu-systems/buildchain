@@ -10,6 +10,16 @@ on:
         description: "Exact alpha commit SHA to qualify"
         required: true
         type: string
+      canary-ref:
+        description: "Optional consumer branch or tag for outer-workflow bootstrap qualification"
+        required: false
+        default: ""
+        type: string
+      canary-sha:
+        description: "Exact commit SHA that canary-ref must resolve to"
+        required: false
+        default: ""
+        type: string
       dry-run:
         description: "Plan missing evidence without dispatch or attestation"
         required: false
@@ -45,4 +55,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
           BUILDCHAIN_QUALIFICATION_ATTESTATION_TOKEN: ${{ github.token }}
           BUILDCHAIN_QUALIFICATION_CANDIDATE_SHA: ${{ github.event.workflow_run.head_sha || inputs.candidate-sha }}
+          BUILDCHAIN_QUALIFICATION_CANARY_REF: ${{ inputs.canary-ref || '' }}
+          BUILDCHAIN_QUALIFICATION_CANARY_SHA: ${{ inputs.canary-sha || '' }}
           BUILDCHAIN_QUALIFICATION_DRY_RUN: ${{ inputs.dry-run || false }}

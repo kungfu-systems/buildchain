@@ -136,6 +136,32 @@ publication capability.
 Evidence publication is a separate authority class and never grants product
 publication.
 
+## Consumer qualification handoff
+
+Consumers may explicitly opt in to a final, consumer-owned qualification
+predicate. Buildchain then transports the complete Gate aggregate alongside the
+sealed capability instead of reducing it to a summary. The capability binds the
+authority registry, consumer Gate registry and policy, exact source and runtime,
+controller, runner, control-plane, artifact, provider target, channel, version,
+freshness window, nonce, and exact predicate command digest.
+
+The predicate runs in a separate job with read-only source access, no inherited
+secrets, no OIDC permission, and no provider write permission. It receives only
+paths to `capability.json` and `gate-aggregate.json` plus the exact predicate id
+and digest. The consumer writes a
+`kungfu-buildchain-consumer-publication-decision`; Buildchain seals that result
+as a deterministic
+`kungfu-buildchain-publication-qualification-receipt`. Buildchain does not parse
+product-specific Gate meanings.
+
+The provider action revalidates the capability, full aggregate, receipt,
+predicate identity, freshness, nonce, source, version, channel, target, and all
+sealed digests immediately before the publish transaction. Missing, denied,
+stale, replayed, substituted, or drifted receipts fail before provider mutation.
+Direct calls to the provider action cannot bypass the receipt when
+`require-publication-qualification` is enabled. Consumers that do not opt in
+retain the existing publication contract.
+
 ## API and CLI
 
 Use `@kungfu-tech/buildchain/publication-authority` or run:

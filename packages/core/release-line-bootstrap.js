@@ -65,6 +65,29 @@ function writeJson(value) {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
 
+function updateReleaseImpactVersionState(cwd, plan) {
+  const filePath = path.join(cwd, ".buildchain", "release-impact.json");
+  if (!fs.existsSync(filePath)) {
+    return;
+  }
+  const current = readJsonIfExists(filePath);
+  if (!current || typeof current !== "object" || Array.isArray(current)) {
+    throw new Error(".buildchain/release-impact.json must be a JSON object");
+  }
+  const next = {
+    ...current,
+    release: {
+      ...(current.release && typeof current.release === "object" ? current.release : {}),
+      version: plan.initialVersion,
+      line: plan.line,
+    },
+  };
+  const content = writeJson(next);
+  if (content !== writeJson(current)) {
+    fs.writeFileSync(filePath, content);
+  }
+}
+
 function discoverVersionStateFiles(cwd, loadedConfig) {
   if (loadedConfig?.config?.version?.files?.length) {
     return discoverConfiguredVersionStateFiles(cwd, loadedConfig);
@@ -212,6 +235,7 @@ export function writeReleaseLineBootstrapVersionState({
   for (const file of changed) {
     fs.writeFileSync(path.join(cwd, file.path), file.content);
   }
+  updateReleaseImpactVersionState(cwd, plan);
   const lifecycleVersionState =
     getLifecycleStage(loadedConfig, "version-state") ||
     getLifecycleStage(loadedConfig, "version_state");

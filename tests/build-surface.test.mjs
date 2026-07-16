@@ -717,6 +717,19 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /name: Revalidate queued promotion intent/);
   assert.match(workflow, /name: Preflight PR-stage release candidate evidence/);
   assert.match(workflow, /name: Plan exact publication version/);
+  assert.match(workflow, /name: Install exact publication planning dependencies/);
+  const publicationPlanStart = workflow.indexOf("  publication-plan:");
+  const publicationAuthorityStart = workflow.indexOf("  publication-authority:");
+  const publicationPlan = workflow.slice(publicationPlanStart, publicationAuthorityStart);
+  assert.ok(
+    publicationPlan.indexOf("name: Install exact publication planning dependencies") <
+      publicationPlan.indexOf("name: Resolve exact publication transaction version"),
+    "exact publication planning must install source dependencies before version-state verification",
+  );
+  assert.match(publicationPlan, /corepack pnpm@11\.7\.0 install --frozen-lockfile/);
+  assert.match(publicationPlan, /yarn install --immutable \|\| yarn install --frozen-lockfile/);
+  assert.match(publicationPlan, /npm ci/);
+  assert.match(publicationPlan, /Skipping dependency install for custom package manager/);
   assert.match(workflow, /planned-publication-version/);
   assert.match(workflow, /publication-version: \$\{\{ needs\.publication-plan\.outputs\.version \}\}/);
   assert.match(workflow, /PUBLICATION_VERSION: \$\{\{ needs\.publication-plan\.outputs\.version \}\}/);
@@ -741,8 +754,23 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /evidence-manifest-pattern:/);
   assert.match(workflow, /name: Seal product publication capability/);
   assert.match(workflow, /uses: \.\/\.github\/workflows\/\.publication-authority\.yml/);
-  assert.match(workflow, /needs: \[preflight, controller-plan, release-candidate-preflight, publication-plan, publication-authority\]/);
+  assert.match(workflow, /needs: \[preflight, controller-plan, release-candidate-preflight, publication-plan, publication-authority, publication-qualification\]/);
   assert.match(workflow, /needs\.publication-authority\.result == 'success'/);
+  assert.match(workflow, /name: Bind consumer publication predicate/);
+  assert.match(workflow, /name: Run consumer publication predicate/);
+  assert.match(workflow, /permissions: \{\}/);
+  assert.match(workflow, /BUILDCHAIN_PUBLICATION_GATE_AGGREGATE_PATH/);
+  assert.match(workflow, /BUILDCHAIN_PUBLICATION_QUALIFICATION_RESULT_PATH/);
+  assert.match(workflow, /createPublicationQualificationReceipt/);
+  assert.ok(
+    workflow.indexOf("Run consumer-owned qualification predicate") <
+      workflow.indexOf("Restore sealed handoff before receipt sealing") &&
+      workflow.indexOf("Restore sealed handoff before receipt sealing") <
+        workflow.indexOf("Seal deterministic qualification receipt"),
+    "consumer code must not be able to replace the authority handoff used for receipt sealing",
+  );
+  assert.match(workflow, /require-publication-qualification: \$\{\{ needs\.publication-qualification\.outputs\.required \}\}/);
+  assert.match(workflow, /publication-qualification-receipt-json: \$\{\{ needs\.publication-qualification\.outputs\.receipt-json \}\}/);
   assert.doesNotMatch(workflow, /^ {4}environment\s*:/m);
   assert.match(workflow, /token: \$\{\{ github\.token \}\}/);
   assert.match(
@@ -789,6 +817,10 @@ test("release-candidate promote workflow is promote-only and never schedules a h
       workflow.indexOf("Install promotion dependencies"),
   );
   assert.ok(
+    workflow.indexOf("Run consumer-owned qualification predicate") <
+      workflow.indexOf("Ensure publish-gate ref locks promotion commit"),
+  );
+  assert.ok(
     workflow.indexOf("Revalidate queued promotion intent") <
       workflow.indexOf("Resolve PR-stage release candidate"),
   );
@@ -816,6 +848,8 @@ test("sealed publication authority verifier is independent and credential-free",
   assert.doesNotMatch(workflow, /contents:\s*write/);
   assert.doesNotMatch(workflow, /NODE_AUTH_TOKEN|NPM_TOKEN|BUILDCHAIN_PROMOTION_TOKEN/);
   assert.match(workflow, /BUILDCHAIN_USED_NONCES_JSON/);
+  assert.match(workflow, /gate-aggregate-json=/);
+  assert.match(workflow, /consumer-qualification-required:/);
   assert.match(workflow, /name: Require complete sealed publication evidence/);
   assert.match(workflow, /Sealed publication evidence unavailable/);
   assert.match(workflow, /npm Trusted Publishing and OIDC were not evaluated/);
@@ -843,6 +877,14 @@ test("sealed publication authority verifier is independent and credential-free",
   assert.match(workflow, /name: Assemble managed release-candidate admission/);
   assert.match(workflow, /BUILDCHAIN_PLANNED_PUBLICATION_VERSION/);
   assert.match(workflow, /authority publication version mismatch/);
+  assert.match(
+    workflow,
+    /const capabilityQualificationRequired = capability\.qualification\?\.required === true;/,
+  );
+  assert.match(
+    workflow,
+    /capabilityQualificationRequired !== qualificationRequired/,
+  );
   assert.match(workflow, /steps\.auto-evidence\.outputs\.admission-json/);
   assert.doesNotMatch(workflow, /id-token:\s*write/);
 });
@@ -1141,6 +1183,7 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
     "utf8",
   );
   assert.match(workflow, /workflow_call:/);
+  assert.match(workflow, /permissions:\n  actions: read\n  contents: read/);
   assert.match(workflow, /buildchain-ref:/);
   assert.match(workflow, /buildchain-contract-lock-path:/);
   assert.match(workflow, /buildchain-contract-compatibility-policy:/);
@@ -1249,6 +1292,10 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.ok(workflow.indexOf("id: gate") < workflow.indexOf("Run caller build"));
   assert.match(workflow, /Apply production deploy/);
   assert.match(workflow, /Seal web production publication capability/);
+  assert.match(
+    workflow,
+    /name: Seal web production publication capability[\s\S]*?permissions:\n      actions: read\n      contents: read[\s\S]*?uses: \.\/\.github\/workflows\/\.publication-authority\.yml/,
+  );
   assert.match(workflow, /uses: \.\/\.github\/workflows\/\.publication-authority\.yml/);
   assert.match(workflow, /publication-admission-json:/);
   assert.match(workflow, /publication-control-plane-audit-json:/);
@@ -2173,6 +2220,11 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
     bootstrap,
     /required-status-check:\n\s+description: "Exact required branch-protection check context"\n\s+required: false\n\s+default: "check"/,
   );
+  assert.match(bootstrap, /BUILDCHAIN_PROMOTION_BYPASS_APPS: \$\{\{ vars\.BUILDCHAIN_PROMOTION_BYPASS_APPS \}\}/);
+  assert.match(bootstrap, /BUILDCHAIN_PROMOTION_BYPASS_USERS: \$\{\{ vars\.BUILDCHAIN_PROMOTION_BYPASS_USERS \}\}/);
+  assert.match(bootstrap, /BUILDCHAIN_PROMOTION_BYPASS_TEAMS: \$\{\{ vars\.BUILDCHAIN_PROMOTION_BYPASS_TEAMS \}\}/);
+  assert.match(bootstrap, /Release line bootstrap requires a declared promotion bypass app, user, or team/);
+  assert.match(bootstrap, /bypass_pull_request_allowances:\s*\{\s*apps: \$bypass_apps,\s*users: \$bypass_users,\s*teams: \$bypass_teams\s*\}/);
   assert.match(workflow, /publish-required-artifacts-json: "\[\]"/);
   assert.match(workflow, /release-passport-impact-json: \.buildchain\/release-impact\.json/);
   assert.match(workflow, /publication-auto-admission: \$\{\{ github\.event_name == 'workflow_run' \}\}/);
@@ -3262,6 +3314,55 @@ test("runLifecycle command override inherits declared stage shell and lifecycle 
   } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
   }
+});
+
+test("runLifecycle applies a clear fallback timeout to commands and configured stages", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-lifecycle-timeout-"));
+  const fixture = path.join(workspace, "fixture");
+  fs.mkdirSync(fixture, { recursive: true });
+  fs.writeFileSync(
+    path.join(fixture, "buildchain.toml"),
+    'schema = 1\n\n[lifecycle.verify]\ncommand = "node -e \\\"setTimeout(() => {}, 1000)\\\""\n',
+  );
+  try {
+    assert.throws(
+      () => runLifecycle({
+        cwd: fixture,
+        stageName: "verify",
+        command: 'node -e "setTimeout(() => {}, 1000)"',
+        timeoutMinutes: 0.001,
+        platformId: "linux-x64",
+        platformName: "Linux x64",
+        workspace,
+      }),
+      /lifecycle verify timed out after 0\.001 minute\(s\) on Linux x64 \(linux-x64\)/,
+    );
+    assert.throws(
+      () => runLifecycle({
+        cwd: fixture,
+        stageName: "verify",
+        timeoutMinutes: 0.001,
+        platformId: "linux-x64",
+        platformName: "Linux x64",
+        workspace,
+      }),
+      /lifecycle verify timed out after 0\.001 minute\(s\) on Linux x64 \(linux-x64\)/,
+    );
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("reusable build bounds matrix jobs and lifecycle actions with one timeout input", () => {
+  const workflow = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
+  const action = fs.readFileSync(path.join(root, "actions/run-lifecycle/action.yml"), "utf8");
+
+  assert.match(workflow, /lifecycle-timeout-minutes:[\s\S]*?default: 120[\s\S]*?type: number/);
+  assert.equal(
+    (workflow.match(/timeout-minutes: \$\{\{ inputs\.lifecycle-timeout-minutes \}\}/g) || []).length,
+    8,
+  );
+  assert.match(action, /timeout-minutes:[\s\S]*?default: "120"/);
 });
 
 test("runLifecycle samples a configured lifecycle stage", () => {

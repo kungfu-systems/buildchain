@@ -94,6 +94,13 @@ The implementation is intentionally stricter than a local release script:
   release source tree against that tested alpha tree;
 - generated version-state commits are verified before refs move.
 
+Exact publication planning installs the checked-out promotion source's declared
+dependencies before version-state verification. This keeps the pre-authority
+version plan on the same package-manager boundary as the later promotion job,
+including repositories whose verification commands import production packages.
+The planning pass may materialize and verify declared derived files locally,
+but dry-run never creates Git blobs, trees, commits, refs, or tags.
+
 Promotion intents are serialized globally per caller repository with
 `cancel-in-progress: false`. A queued intent re-reads its protected target ref
 before checkout, dependency installation, release-candidate resolution, or any
@@ -161,6 +168,11 @@ Buildchain then:
    fast-forward update.
 7. Moves `vX.Y-alpha` to the same generated alpha commit.
 8. Moves `vX-alpha` only when `X.Y` is the highest minor in major `X` with a published alpha; older minor alpha work records a skip and cannot move the major channel backwards.
+
+The npm channel follows the same ownership rule. The highest alpha minor publishes
+with dist-tag `alpha`; maintenance alphas on an older minor publish with the
+line-specific dist-tag `vX.Y-alpha` so they cannot roll the global `alpha`
+channel backward. Exact prerelease versions remain installable directly.
 
 This keeps the test channel self-describing. If a consumer checks out
 `v2.0-alpha` or `v2-alpha`, the manifests and exact alpha tag agree. The major
@@ -583,7 +595,11 @@ Buildchain's own promotion workflow reads `BUILDCHAIN_PROMOTION_BYPASS_APPS`,
 `BUILDCHAIN_PROMOTION_BYPASS_TEAMS` repository variables so the declared bypass
 identity can match the actual `BUILDCHAIN_PROMOTION_TOKEN` actor, but consumers
 do not need to duplicate that actor manually when the token identity is
-discoverable.
+discoverable. Buildchain's release-line bootstrap applies the same declared
+allowances when it creates new `dev`, `alpha`, and `release` branch protection,
+and fails closed before changing protection when no promotion authority is
+declared. This keeps a new minor line publishable without weakening its normal
+human review gate.
 
 ## What This Guarantees
 

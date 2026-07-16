@@ -138,19 +138,25 @@ export {
   PUBLICATION_AUTHORITY_CLASSES,
   PUBLICATION_AUTHORITY_REGISTRY_CONTRACT,
   PUBLICATION_CAPABILITY_CONTRACT,
+  CONSUMER_PUBLICATION_DECISION_CONTRACT,
   PUBLICATION_CONTROL_PLANE_AUDIT_CONTRACT,
   PUBLICATION_GATE_DECISION_CONTRACT,
+  PUBLICATION_QUALIFICATION_RECEIPT_CONTRACT,
   RUNNER_PROVENANCE_CLASSES,
   RUNNER_PROVENANCE_CONTRACT,
   createPublicationAuthorityRegistry,
   createPublicationAdmission,
   createPublicationArtifactManifestSet,
+  createConsumerPublicationDecision,
   createPublicationControlPlaneAudit,
   createPublicationGateDecision,
+  createPublicationQualificationReceipt,
   createRunnerProvenance,
   detectPublicationAuthoritySignals,
   publicationAuthorityDigest,
+  publicationGateAggregateBindings,
   verifyPublicationAdmission,
+  verifyPublicationQualificationReceipt,
 } from "./publication-authority.js";
 
 export {
@@ -178,6 +184,16 @@ export {
   sha512IntegrityFile,
   verifyArtifactPassport,
 } from "./artifact-passport.js";
+
+export {
+  ARTIFACT_VERIFICATION_ENVELOPE_CHECK_CONTRACT,
+  ARTIFACT_VERIFICATION_ENVELOPE_CONTRACT,
+  KFX_ADMISSION_INPUTS_CONTRACT,
+  artifactVerificationEnvelopeDigest,
+  projectArtifactVerificationEnvelopeToKfx,
+  sealArtifactVerificationReport,
+  verifyArtifactVerificationEnvelope,
+} from "./artifact-verification-envelope.js";
 
 export {
   BUILDCHAIN_CONTRACT_LOCK,

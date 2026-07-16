@@ -42,6 +42,10 @@ import {
   verifyArtifactPassport,
 } from "../packages/core/artifact-passport.js";
 import {
+  projectArtifactVerificationEnvelopeToKfx,
+  verifyArtifactVerificationEnvelope,
+} from "../packages/core/artifact-verification-envelope.js";
+import {
   checkBadgeBundleBlock,
   checkReadmeBadgeBlock,
   collectBadgeBundleFacts,
@@ -163,6 +167,14 @@ function usage() {
                              [--passport <file-or-url>] [--locator-config <json>]
                              [--repository <owner/repo>] [--tag <tag>]
                              [--npm-registry <url>] [--json]
+  buildchain verify artifact-envelope <file-or-json> [--assessment-time <epoch>]
+                             [--expected-root <sha256:...>] [--expected-issuer <issuer>]
+                             [--expected-publisher <publisher>]
+                             [--expected-contract <version>] [--json]
+  buildchain project kfx-admission <file-or-json> [--assessment-time <epoch>]
+                             [--expected-root <sha256:...>] [--expected-issuer <issuer>]
+                             [--expected-publisher <publisher>]
+                             [--expected-contract <version>] [--json]
   buildchain verify infra-contract-evidence-bundle <file> [--json]
   buildchain verify observability-log <jsonl> [--min-events <n>]
                                              [--require-phase <csv>]
@@ -257,6 +269,8 @@ Examples:
   buildchain verify publication-admission admission.json --registry-json publication-authority-registry.json --runner-json runner.json --control-plane-audit-json control-plane.json --expected-json expected.json --json
   buildchain audit publication-control-plane --repository kungfu-systems/buildchain --branch release/v2/v2.12
   buildchain verify artifact ./dist/buildchain-x86_64-unknown-linux-gnu.tar.gz --passport .buildchain/release-passport/buildchain.release.json
+  buildchain verify artifact-envelope .buildchain/kfx/artifact-verification-envelope.json --json
+  buildchain project kfx-admission .buildchain/kfx/artifact-verification-envelope.json --json
   buildchain verify infra-contract-evidence-bundle .buildchain/infra-contract-evidence-bundle.json
   buildchain verify observability-log .buildchain/logs/events.jsonl --min-events 4 --require-phase build
   buildchain infra-contract --mode plan --source-sha <sha>
@@ -300,6 +314,17 @@ function readRepeatedFlag(args, name) {
     }
   }
   return values;
+}
+
+function artifactEnvelopeOptions(args) {
+  const assessmentTime = readFlag(args, "assessment-time", "");
+  return {
+    ...(assessmentTime ? { assessmentTime: Number(assessmentTime) } : {}),
+    expectedEnvelopeRoot: readFlag(args, "expected-root", ""),
+    expectedIssuer: readFlag(args, "expected-issuer", ""),
+    expectedPublisher: readFlag(args, "expected-publisher", ""),
+    expectedContractVersion: readFlag(args, "expected-contract", ""),
+  };
 }
 
 function readAttributes(args) {
@@ -1696,6 +1721,23 @@ async function main(argv = process.argv.slice(2)) {
     return;
   }
 
+  if (command === "project") {
+    const [subcommand = "", location = "", ...projectArgs] = args;
+    if (subcommand !== "kfx-admission" || !location) {
+      throw new Error("usage: buildchain project kfx-admission <file-or-json>");
+    }
+    const projection = projectArtifactVerificationEnvelopeToKfx({
+      envelope: readJsonInput(location, { label: "artifact verification envelope" }),
+      ...artifactEnvelopeOptions(projectArgs),
+    });
+    if (readBooleanFlag(projectArgs, "json")) {
+      printJson(projection);
+    } else {
+      process.stdout.write(`KFX admission envelope: ${projection.envelopeRoot}\n`);
+    }
+    return;
+  }
+
   if (command === "verify") {
     const [subcommand = "", location = "", ...verifyArgs] = args;
     if (subcommand === "publication-admission") {
@@ -1748,6 +1790,26 @@ async function main(argv = process.argv.slice(2)) {
         process.stdout.write(`artifact: ${report.outcome}\n`);
         process.stdout.write(`subject: ${report.subject?.name || location}\n`);
         process.stdout.write(`passport: ${report.passport?.location || report.discovery?.passportLocation || "unresolved"}\n`);
+        for (const entry of report.issues) {
+          process.stdout.write(`- ${entry.level}: ${entry.code}: ${entry.message}\n`);
+        }
+      }
+      process.exitCode = report.ok ? 0 : 1;
+      return;
+    }
+    if (subcommand === "artifact-envelope") {
+      if (!location) {
+        throw new Error("usage: buildchain verify artifact-envelope <file-or-json>");
+      }
+      const report = verifyArtifactVerificationEnvelope({
+        envelope: readJsonInput(location, { label: "artifact verification envelope" }),
+        ...artifactEnvelopeOptions(verifyArgs),
+      });
+      if (readBooleanFlag(verifyArgs, "json")) {
+        printJson(report);
+      } else {
+        process.stdout.write(`artifact verification envelope: ${report.outcome}\n`);
+        process.stdout.write(`root: ${report.envelopeRoot || "unresolved"}\n`);
         for (const entry of report.issues) {
           process.stdout.write(`- ${entry.level}: ${entry.code}: ${entry.message}\n`);
         }

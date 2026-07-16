@@ -7,6 +7,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 const {
+  alphaDistTagForPromotion,
   assertAllowedLocalChanges,
   assertExpectedPublicationVersion,
   assertChannelPromotionPr,
@@ -32,6 +33,26 @@ const {
   updateVersionStateContents,
   validatePromotionReleaseCandidate,
 } = await import("../actions/promote-buildchain-ref/lib.js");
+
+test("older minor alpha publication preserves the global npm alpha channel", () => {
+  assert.equal(alphaDistTagForPromotion({
+    ownsMajorAlphaTag: true,
+    line: "v2.13",
+  }), "");
+  assert.equal(alphaDistTagForPromotion({
+    ownsMajorAlphaTag: true,
+    line: "v2.13",
+    publishDistTag: "alpha",
+  }), "alpha");
+  assert.equal(alphaDistTagForPromotion({
+    ownsMajorAlphaTag: false,
+    line: "v2.12",
+  }), "v2.12-alpha");
+  assert.throws(
+    () => alphaDistTagForPromotion({ ownsMajorAlphaTag: false, line: "" }),
+    /older-minor alpha publication requires a vN\.N release line/,
+  );
+});
 
 test("publication authority version binding fails closed on transaction drift", () => {
   assert.equal(assertExpectedPublicationVersion("2.12.7-alpha.3", "2.12.7-alpha.3"), "2.12.7-alpha.3");
@@ -1096,6 +1117,11 @@ test("version verification ignores generated buildchain evidence", () => {
     path.join(cwd, ".buildchain/admitted/controller/receipt.json"),
     "{}\n",
   );
+  fs.mkdirSync(path.join(cwd, ".buildchain/controller"), { recursive: true });
+  fs.writeFileSync(
+    path.join(cwd, ".buildchain/controller/plan.json"),
+    "{}\n",
+  );
 
   assert.doesNotThrow(() => assertAllowedLocalChanges(cwd, ["package.json"]));
 
@@ -1191,6 +1217,96 @@ assert.equal(contract.generated, true);
     product: { version: "1.0.1-alpha.0" },
     generated: true,
   });
+});
+
+test("dry-run version planning records derived files without writing Git objects", async () => {
+  const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[[version.files]]
+type = "json"
+path = "dist/site/buildchain-contract.json"
+key = "product.version"
+
+[lifecycle.version-state]
+command = "node scripts/generate-site-contract.mjs"
+`,
+    "package.json": {
+      name: "@kungfu-systems/example",
+      version: "1.0.0-alpha.0",
+      packageManager: "pnpm@11.7.0",
+    },
+    "dist/site/buildchain-contract.json": {
+      product: { version: "1.0.0-alpha.0" },
+      generated: false,
+    },
+    "scripts/generate-site-contract.mjs": `
+import fs from "node:fs";
+const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+fs.writeFileSync("dist/site/buildchain-contract.json", JSON.stringify({
+  product: { version: pkg.version },
+  generated: true
+}, null, 2) + "\\n");
+`,
+  });
+  run(["git", "init"], cwd);
+  run(["git", "add", "."], cwd);
+  run(["git", "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-m", "init"], cwd);
+
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (ref === "heads/alpha/v1/v1.0") {
+            return { data: { object: { sha: SHA } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async () => ({ data: [] }),
+        createBlob: async () => assert.fail("dry-run must not create a blob"),
+        createTree: async () => assert.fail("dry-run must not create a tree"),
+        createCommit: async () => assert.fail("dry-run must not create a commit"),
+        createRef: async () => assert.fail("dry-run must not create a ref"),
+        updateRef: async () => assert.fail("dry-run must not update a ref"),
+      },
+    },
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    cwd,
+    dryRun: true,
+    requireVersionState: true,
+    publishTransaction: true,
+    releasePassport: false,
+  });
+
+  assert.deepEqual(
+    result.updates.find((update) => update.action === "dry-run-version-state").files,
+    ["dist/site/buildchain-contract.json"],
+  );
+  assert.deepEqual(
+    result.updates.find((update) => update.action === "dry-run-publish-transaction"),
+    {
+      action: "dry-run-publish-transaction",
+      version: "1.0.0-alpha.0",
+      tag: "v1.0.0-alpha.0",
+      sha: SHA,
+    },
+  );
 });
 
 test("release promotion creates v-prefixed release tag and prepares next alpha tag", async () => {
@@ -6138,6 +6254,36 @@ test("promoteBuildchainRefs rejects stale target SHA", async () => {
     }),
     /not requested SHA/,
   );
+});
+
+test("every direct provider path fails before mutation when opted-in qualification is omitted", async () => {
+  const providerCalls = [];
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async (request) => {
+          providerCalls.push(["getRef", request]);
+          return { data: { object: { sha: SHA } } };
+        },
+        createRef: async (request) => providerCalls.push(["createRef", request]),
+        updateRef: async (request) => providerCalls.push(["updateRef", request]),
+      },
+    },
+  };
+
+  await assert.rejects(
+    promoteBuildchainRefs({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sha: SHA,
+      targetRef: "alpha/v1/v1.0",
+      versionState: false,
+      requirePublicationQualification: true,
+    }),
+    /publication-qualification-receipt-json is required before provider mutation/,
+  );
+  assert.deepEqual(providerCalls, []);
 });
 
 test("governed promotion treats a superseded target as an auditable no-op", async () => {

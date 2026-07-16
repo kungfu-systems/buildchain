@@ -37,6 +37,7 @@ import {
   verifyReleasePassport,
 } from "../../packages/core/release-passport.js";
 import { validateReleaseCandidatePassport } from "../../packages/core/release-candidate.js";
+import { verifyPublicationQualificationReceipt } from "../../packages/core/publication-authority.js";
 import {
   createBuildchainKfd1Witness,
   createBuildchainKfd2Claims,
@@ -363,6 +364,7 @@ function assertAllowedLocalChanges(cwd, allowedPaths) {
   }).trimEnd();
   const ephemeralBuildchainEvidencePaths = [
     ".buildchain/admitted/",
+    ".buildchain/controller/",
     ".buildchain/contract-drift/",
     ".buildchain/kfd/",
     ".buildchain/publication-result.json",
@@ -561,9 +563,24 @@ function defaultDistTagForChannel(channel) {
   return channel === "alpha" ? "alpha" : "latest";
 }
 
+function alphaDistTagForPromotion({
+  ownsMajorAlphaTag,
+  line,
+  publishDistTag = "",
+} = {}) {
+  if (ownsMajorAlphaTag) {
+    return publishDistTag;
+  }
+  if (!/^v\d+\.\d+$/.test(String(line || ""))) {
+    throw new Error(`older-minor alpha publication requires a vN.N release line; got ${line || "<empty>"}`);
+  }
+  return `${line}-alpha`;
+}
+
 function resolvePublishContract({
   loadedConfig,
   channel,
+  line = "",
   publishMode = "",
   publishAuth = "",
   publishDistTag = "",
@@ -591,8 +608,9 @@ function resolvePublishContract({
   if (channel === "release" && mode === "publish-final-version" && distTag !== "latest") {
     throw new Error("release publish-final-version must use dist-tag latest");
   }
-  if (channel === "alpha" && mode === "publish-final-version" && distTag !== "alpha") {
-    throw new Error("alpha publish-final-version must use dist-tag alpha");
+  const alphaDistTags = new Set(["alpha", ...(line ? [`${line}-alpha`] : [])]);
+  if (channel === "alpha" && mode === "publish-final-version" && !alphaDistTags.has(distTag)) {
+    throw new Error(`alpha publish-final-version must use dist-tag alpha or ${line ? `${line}-alpha` : "the line-specific alpha tag"}`);
   }
   return {
     mode,
@@ -1630,6 +1648,7 @@ async function runPublishTransaction({
   const publishContract = resolvePublishContract({
     loadedConfig,
     channel,
+    line,
     publishMode,
     publishAuth,
     publishDistTag,
@@ -3376,6 +3395,12 @@ async function promoteBuildchainRefs({
   publishPackageSetOrder = "",
   publishPackageMain = "",
   expectedPublicationVersion = "",
+  requirePublicationQualification = false,
+  publicationCapabilityJson = "",
+  publicationGateAggregateJson = "",
+  publicationQualificationReceiptJson = "",
+  publicationUsedQualificationNoncesJson = "[]",
+  publicationQualificationNow,
   releasePassport = true,
   releasePassportOutputDir = ".buildchain/release-passport",
   releasePassportProductName = "Buildchain",
@@ -3400,6 +3425,48 @@ async function promoteBuildchainRefs({
   assertPromotableTargetRef(targetRef);
   assertSha(sha);
   const rule = getPromotionRule(targetRef);
+  const assertPublicationQualification = ({
+    version = expectedPublicationVersion,
+    channel = rule.channel,
+  } = {}) => {
+    if (!requirePublicationQualification || dryRun) return;
+    const parseQualificationJson = (value, label) => {
+      if (!String(value || "").trim()) {
+        throw new Error(`${label} is required before provider mutation`);
+      }
+      try {
+        return JSON.parse(value);
+      } catch (error) {
+        throw new Error(`${label} must be valid JSON: ${error.message}`);
+      }
+    };
+    verifyPublicationQualificationReceipt({
+      receipt: parseQualificationJson(
+        publicationQualificationReceiptJson,
+        "publication-qualification-receipt-json",
+      ),
+      capability: parseQualificationJson(
+        publicationCapabilityJson,
+        "publication-capability-json",
+      ),
+      gateAggregate: parseQualificationJson(
+        publicationGateAggregateJson,
+        "publication-gate-aggregate-json",
+      ),
+      usedNonces: parseQualificationJson(
+        publicationUsedQualificationNoncesJson || "[]",
+        "publication-used-qualification-nonces-json",
+      ),
+      expected: {
+        sourceSha: sha,
+        channel,
+        ...(version ? { version } : {}),
+        ...(publishPackageMain ? { target: `npm:${publishPackageMain}` } : {}),
+      },
+      now: publicationQualificationNow || new Date(),
+    });
+  };
+  assertPublicationQualification();
   const requestedTags = tags
     ? resolveTagsForTarget(targetRef, tags)
     : undefined;
@@ -4525,6 +4592,27 @@ async function promoteBuildchainRefs({
         console.log(
           `> version state lifecycle changes for ${version}: ${verifiedChangedFiles.map((file) => file.path).join(", ")}`,
         );
+        if (dryRun) {
+          updates.push({
+            version,
+            action: "dry-run-version-state",
+            packageManager: discovered.packageManager.name,
+            files: verifiedChangedFiles.map((file) => file.path),
+            sha: baseSha,
+          });
+          return {
+            sha: baseSha,
+            version,
+            action: "dry-run",
+            publishVersion,
+            files: verifiedChangedFiles.map((file) => file.path),
+            releaseTreeAllowedPaths: verifiedChangedFiles.map((file) => file.path),
+            hasVersionVerification,
+            packageManager: discovered.packageManager,
+            versionStrategy,
+            anchorManifest,
+          };
+        }
         return createVerifiedVersionStateCommit(verifiedChangedFiles);
       }
       updates.push({
@@ -4607,6 +4695,7 @@ async function promoteBuildchainRefs({
     channel,
     line,
     releaseSha,
+    publishDistTagOverride = publishDistTag,
     allowVersionStateFinalization = false,
   }) => {
     const transactionVersion = version;
@@ -4620,6 +4709,7 @@ async function promoteBuildchainRefs({
       });
       return undefined;
     }
+    assertPublicationQualification({ version: transactionVersion, channel });
     latestPublishTransaction = await runPublishTransaction({
       octokit,
       owner,
@@ -4642,7 +4732,7 @@ async function promoteBuildchainRefs({
       publishToolingSha,
       publishMode,
       publishAuth,
-      publishDistTag,
+      publishDistTag: publishDistTagOverride,
       publishPackageSetOrder,
       publishPackageMain,
       actor,
@@ -4976,6 +5066,11 @@ async function promoteBuildchainRefs({
 
   if (rule.channel === "alpha") {
     const ownsMajorAlphaTag = await ownsMajorAlphaFloatingTag();
+    const alphaPublishDistTag = alphaDistTagForPromotion({
+      ownsMajorAlphaTag,
+      line: rule.releasePrefix,
+      publishDistTag,
+    });
     const explicitAlphaTags = requestedTags
       ? requestedTags.filter((tag) => tag.includes("-alpha."))
       : [];
@@ -5136,6 +5231,7 @@ async function promoteBuildchainRefs({
         channel: rule.channel,
         line: rule.releasePrefix,
         releaseSha: alpha.sha,
+        publishDistTagOverride: alphaPublishDistTag,
         allowVersionStateFinalization:
           currentAlpha &&
           selectedAlpha.tag === currentAlpha.tag &&
@@ -5166,6 +5262,7 @@ async function promoteBuildchainRefs({
         channel: rule.channel,
         line: rule.releasePrefix,
         releaseSha: alpha.sha,
+        publishDistTagOverride: alphaPublishDistTag,
       });
     }
     if (versionState) {
@@ -5574,6 +5671,7 @@ export {
   selectAlphaTag,
   selectReleaseTag,
   assertExpectedPublicationVersion,
+  alphaDistTagForPromotion,
   stripTagPrefix,
   updateVersionStateContents,
   resolveReleaseImpactInput,

@@ -41,6 +41,21 @@ on:
         type: string
         required: false
         default: "[]"
+      consumer-qualification-required:
+        description: "Require a consumer-owned predicate receipt before provider mutation"
+        type: boolean
+        required: false
+        default: false
+      consumer-predicate-id:
+        description: "Stable consumer-owned predicate identifier"
+        type: string
+        required: false
+        default: ""
+      consumer-predicate-digest:
+        description: "SHA-256 digest of the exact consumer predicate command"
+        type: string
+        required: false
+        default: ""
       auto-admission:
         description: "Assemble sealed evidence from an exact managed publication candidate"
         type: boolean
@@ -152,6 +167,12 @@ on:
       capability-artifact:
         description: "Publication capability receipt artifact"
         value: ${{ jobs.verify.outputs.capability-artifact }}
+      gate-aggregate-json:
+        description: "Complete Gate aggregate transported without summary reduction"
+        value: ${{ jobs.verify.outputs.gate-aggregate-json }}
+      gate-aggregate-digest:
+        description: "Canonical digest of the transported Gate aggregate"
+        value: ${{ jobs.verify.outputs.gate-aggregate-digest }}
 
 permissions:
   contents: read
@@ -167,6 +188,8 @@ jobs:
       capability-json: ${{ steps.result.outputs.capability-json }}
       capability-digest: ${{ steps.result.outputs.capability-digest }}
       capability-artifact: buildchain-publication-capability-${{ github.run_id }}-${{ github.run_attempt }}
+      gate-aggregate-json: ${{ steps.result.outputs.gate-aggregate-json }}
+      gate-aggregate-digest: ${{ steps.result.outputs.gate-aggregate-digest }}
     steps:
       - name: Require an immutable authority runtime
         if: ${{ !inputs.dry-run }}
@@ -217,6 +240,9 @@ jobs:
           BUILDCHAIN_GATE_AGGREGATE_JSON: ${{ inputs.gate-aggregate-json }}
           BUILDCHAIN_PUBLICATION_TARGET: ${{ inputs.publication-target }}
           BUILDCHAIN_PACKAGE_NAME: ${{ inputs.package-name }}
+          BUILDCHAIN_CONSUMER_QUALIFICATION_REQUIRED: ${{ inputs.consumer-qualification-required }}
+          BUILDCHAIN_CONSUMER_PREDICATE_ID: ${{ inputs.consumer-predicate-id }}
+          BUILDCHAIN_CONSUMER_PREDICATE_DIGEST: ${{ inputs.consumer-predicate-digest }}
         shell: bash
         run: |
           set -euo pipefail
@@ -235,6 +261,12 @@ jobs:
           if [[ -z "$BUILDCHAIN_PUBLICATION_VERSION" ]]; then
             echo "::error::automatic publication admission requires an exact planned publication version"
             exit 1
+          fi
+          if [[ "$BUILDCHAIN_CONSUMER_QUALIFICATION_REQUIRED" == "true" ]]; then
+            if [[ -z "$BUILDCHAIN_CONSUMER_PREDICATE_ID" || ! "$BUILDCHAIN_CONSUMER_PREDICATE_DIGEST" =~ ^[0-9a-fA-F]{64}$ ]]; then
+              echo "::error::consumer qualification requires an exact predicate id and SHA-256 command digest"
+              exit 1
+            fi
           fi
           case "$BUILDCHAIN_AUTO_ADMISSION_KIND" in
             release-candidate)
@@ -419,6 +451,9 @@ jobs:
           BUILDCHAIN_PUBLICATION_CHANNEL: ${{ startsWith(inputs.target-ref, 'release/') && 'release' || startsWith(inputs.target-ref, 'alpha/') && 'alpha' || 'major' }}
           BUILDCHAIN_GATE_AGGREGATE_JSON: ${{ inputs.gate-aggregate-json }}
           BUILDCHAIN_ALLOW_NO_GATE: ${{ inputs.auto-no-gate }}
+          BUILDCHAIN_CONSUMER_QUALIFICATION_REQUIRED: ${{ inputs.consumer-qualification-required }}
+          BUILDCHAIN_CONSUMER_PREDICATE_ID: ${{ inputs.consumer-predicate-id }}
+          BUILDCHAIN_CONSUMER_PREDICATE_DIGEST: ${{ inputs.consumer-predicate-digest }}
         shell: bash
         run: node .buildchain/authority-runtime/scripts/assemble-self-publication-admission.mjs
 
@@ -458,6 +493,9 @@ jobs:
           BUILDCHAIN_PUBLICATION_TARGET: ${{ inputs.publication-target }}
           BUILDCHAIN_PUBLICATION_VERSION: ${{ inputs.publication-version }}
           BUILDCHAIN_PUBLICATION_CHANNEL: ${{ startsWith(inputs.target-ref, 'release/') && 'release' || 'alpha' }}
+          BUILDCHAIN_CONSUMER_QUALIFICATION_REQUIRED: ${{ inputs.consumer-qualification-required }}
+          BUILDCHAIN_CONSUMER_PREDICATE_ID: ${{ inputs.consumer-predicate-id }}
+          BUILDCHAIN_CONSUMER_PREDICATE_DIGEST: ${{ inputs.consumer-predicate-digest }}
         shell: bash
         run: node .buildchain/authority-runtime/scripts/assemble-publication-artifact-admission.mjs
 
@@ -472,6 +510,9 @@ jobs:
           BUILDCHAIN_USED_NONCES_JSON: ${{ inputs.used-nonces-json }}
           BUILDCHAIN_PLANNED_PUBLICATION_VERSION: ${{ inputs.publication-version }}
           BUILDCHAIN_AUTO_ADMISSION_KIND: ${{ inputs.auto-admission-kind }}
+          BUILDCHAIN_CONSUMER_QUALIFICATION_REQUIRED: ${{ inputs.consumer-qualification-required }}
+          BUILDCHAIN_CONSUMER_PREDICATE_ID: ${{ inputs.consumer-predicate-id }}
+          BUILDCHAIN_CONSUMER_PREDICATE_DIGEST: ${{ inputs.consumer-predicate-digest }}
           GITHUB_TOKEN: ${{ github.token }}
         shell: bash
         run: |
@@ -576,8 +617,24 @@ jobs:
           if (capability.version !== process.env.BUILDCHAIN_PLANNED_PUBLICATION_VERSION) {
             throw new Error(`authority publication version mismatch: planned ${process.env.BUILDCHAIN_PLANNED_PUBLICATION_VERSION || "<empty>"}, capability ${capability.version || "<empty>"}`);
           }
+          const qualificationRequired = process.env.BUILDCHAIN_CONSUMER_QUALIFICATION_REQUIRED === "true";
+          // Runtimes published before the consumer-qualification capability
+          // omit this optional field. Preserve fail-closed behavior when a
+          // predicate is required, while treating the legacy omission as the
+          // equivalent of the explicit non-required shape.
+          const capabilityQualificationRequired = capability.qualification?.required === true;
+          if (capabilityQualificationRequired !== qualificationRequired) {
+            throw new Error("authority consumer qualification requirement mismatch");
+          }
+          if (qualificationRequired && (
+            capability.qualification.predicateId !== process.env.BUILDCHAIN_CONSUMER_PREDICATE_ID ||
+            capability.qualification.predicateDigest !== process.env.BUILDCHAIN_CONSUMER_PREDICATE_DIGEST
+          )) {
+            throw new Error("authority consumer predicate binding mismatch");
+          }
           fs.mkdirSync(".buildchain/publication-authority", { recursive: true });
           fs.writeFileSync(".buildchain/publication-authority/capability.json", `${JSON.stringify(capability, null, 2)}\n`);
+          fs.writeFileSync(".buildchain/publication-authority/gate-aggregate.json", `${JSON.stringify(publicationEvidence.gateAggregate, null, 2)}\n`);
           NODE
 
       - name: Record non-authorizing dry-run result
@@ -593,9 +650,13 @@ jobs:
           node --input-type=module <<'NODE'
           import fs from "node:fs";
           const value = JSON.parse(fs.readFileSync(".buildchain/publication-authority/capability.json", "utf8"));
+          const gatePath = ".buildchain/publication-authority/gate-aggregate.json";
+          const gate = fs.existsSync(gatePath) ? JSON.parse(fs.readFileSync(gatePath, "utf8")) : null;
           const output = fs.createWriteStream(process.env.GITHUB_OUTPUT, { flags: "a" });
           output.write(`capability-json=${JSON.stringify(value)}\n`);
           output.write(`capability-digest=${value.capabilityDigest || ""}\n`);
+          output.write(`gate-aggregate-json=${gate ? JSON.stringify(gate) : ""}\n`);
+          output.write(`gate-aggregate-digest=${gate?.digest || ""}\n`);
           output.end();
           NODE
 

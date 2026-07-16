@@ -59,6 +59,15 @@ after the producer has observed the successful authoritative workflow run. The
 stable gate still verifies the workflow identity, exact runtime SHA, target URL,
 and allowed attestor before accepting that status.
 
+When a candidate changes the outer reusable-workflow YAML itself, the stable
+shell cannot exercise that change through a runtime override. A maintainer may
+manually qualify it with `canary-ref` set to a dispatchable consumer branch or
+tag and `canary-sha` set to the exact 40-character commit that ref must resolve
+to. That consumer workflow pins the candidate's exact Buildchain SHA. The
+qualification producer verifies the ref binding before dispatch, accepts only a
+run whose source SHA matches, and writes the normal candidate-bound status only
+after success. The automatic path continues to use the consumer default branch.
+
 ## Repository policy
 
 Declare the default once in `.buildchain/buildchain.toml`:

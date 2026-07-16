@@ -238,6 +238,11 @@ async function main() {
   const publishPackageSetOrder = core.getInput("publish-package-set-order");
   const publishPackageMain = core.getInput("publish-package-main");
   const expectedPublicationVersion = core.getInput("expected-publication-version");
+  const requirePublicationQualification = core.getBooleanInput("require-publication-qualification");
+  const publicationCapabilityJson = core.getInput("publication-capability-json");
+  const publicationGateAggregateJson = core.getInput("publication-gate-aggregate-json");
+  const publicationQualificationReceiptJson = core.getInput("publication-qualification-receipt-json");
+  const publicationUsedQualificationNoncesJson = core.getInput("publication-used-qualification-nonces-json") || "[]";
   const requirePublishSourceLock = core.getBooleanInput("require-publish-source-lock");
   const publishSourceRef = core.getInput("publish-source-ref");
   const publishSourceSha = core.getInput("publish-source-sha");
@@ -322,6 +327,11 @@ async function main() {
     publishPackageSetOrder,
     publishPackageMain,
     expectedPublicationVersion,
+    requirePublicationQualification,
+    publicationCapabilityJson,
+    publicationGateAggregateJson,
+    publicationQualificationReceiptJson,
+    publicationUsedQualificationNoncesJson,
     releaseMaterialSha,
     publishToolingSha,
     releasePassport,

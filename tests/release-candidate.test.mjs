@@ -506,6 +506,94 @@ test("release candidate resolver skips newer successful run without passport art
   assert.equal(result.artifacts.passport, `libnode-shaped-release-candidate-${olderSourceSha}`);
 });
 
+test("release candidate resolver waits for the exact channel PR run", async () => {
+  const targetSha = "5".repeat(40);
+  const builtSourceSha = "6".repeat(40);
+  let workflowQueries = 0;
+  let waits = 0;
+  const jsonResponse = (value) => ({
+    ok: true,
+    status: 200,
+    text: async () => JSON.stringify(value),
+  });
+  const fetchImpl = async (url) => {
+    if (url.endsWith(`/commits/${targetSha}/pulls`)) {
+      return jsonResponse([
+        {
+          number: 530,
+          state: "closed",
+          merged_at: "2026-07-15T16:04:52Z",
+          base: { ref: "alpha/v2/v2.13" },
+          head: {
+            ref: "dev/v2/v2.13",
+            sha: builtSourceSha,
+            repo: { full_name: "kungfu-systems/buildchain" },
+          },
+        },
+      ]);
+    }
+    if (url.includes("actions/workflows/build-surface-fixture.yml/runs")) {
+      workflowQueries += 1;
+      if (workflowQueries === 1) {
+        return jsonResponse({
+          workflow_runs: [
+            {
+              id: 700,
+              name: "Build Surface Fixture",
+              event: "pull_request",
+              status: "completed",
+              conclusion: "success",
+              pull_requests: [{ number: 529 }],
+            },
+          ],
+        });
+      }
+      return jsonResponse({
+        workflow_runs: [
+          {
+            id: 701,
+            name: "Build Surface Fixture",
+            event: "pull_request",
+            status: "completed",
+            conclusion: "success",
+            head_sha: builtSourceSha,
+            pull_requests: [{ number: 530 }],
+          },
+        ],
+      });
+    }
+    if (url.includes("actions/runs/701/artifacts")) {
+      return jsonResponse({
+        artifacts: [
+          { id: 1, name: `libnode-shaped-release-candidate-${builtSourceSha}`, expired: false },
+          { id: 2, name: `libnode-shaped-summary-${builtSourceSha}`, expired: false },
+        ],
+      });
+    }
+    throw new Error(`unexpected url ${url}`);
+  };
+
+  const result = await resolveReleaseCandidateArtifacts({
+    repository: "kungfu-systems/buildchain",
+    targetRef: "alpha/v2/v2.13",
+    targetSha,
+    workflowFile: "build-surface-fixture.yml",
+    workflowName: "Build Surface Fixture",
+    artifactName: "libnode-shaped",
+    fetchImpl,
+    download: false,
+    waitSeconds: 1,
+    pollIntervalMs: 0,
+    sleepImpl: async () => {
+      waits += 1;
+    },
+  });
+
+  assert.equal(workflowQueries, 2);
+  assert.equal(waits, 1);
+  assert.equal(result.run.id, "701");
+});
+
 test("release candidate resolver selects payload artifacts and generates publish requirements", () => {
   const payloads = selectPayloadArtifacts({
     artifactName: "libnode",

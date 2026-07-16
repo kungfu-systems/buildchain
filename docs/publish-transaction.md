@@ -210,7 +210,7 @@ Buildchain distinguishes two npm release modes:
 
 | Mode | Use | Auth | npm operation |
 | --- | --- | --- | --- |
-| `publish-final-version` | normal alpha or stable publication | `trusted-publishing` | `npm publish --tag <alpha|latest>` |
+| `publish-final-version` | normal alpha or stable publication | `trusted-publishing` | `npm publish --tag <alpha|vX.Y-alpha|latest>` |
 | `promote-existing-version` | same-version alpha-to-latest recovery | `npm-token` | `npm dist-tag add <pkg>@<version> latest` |
 
 The normal libnode path is `publish-final-version`: publish an alpha package set

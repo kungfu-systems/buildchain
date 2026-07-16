@@ -8,6 +8,7 @@ import {
   createPublicationAdmission,
   createPublicationGateDecision,
   createRunnerProvenance,
+  publicationGateAggregateBindings,
 } from "../packages/core/publication-authority.js";
 import { buildPublicationArtifactCandidate } from "./publication-artifact-candidate.mjs";
 
@@ -126,6 +127,8 @@ async function main() {
     isolation: "github-hosted-single-job",
   });
   const issuedAt = new Date();
+  const gateBindings = publicationGateAggregateBindings(gateAggregate);
+  const qualificationRequired = process.env.BUILDCHAIN_CONSUMER_QUALIFICATION_REQUIRED === "true";
   const admission = createPublicationAdmission({
     registryDigest: registry.registryDigest,
     workflowPath:
@@ -137,6 +140,7 @@ async function main() {
     runtimeSha,
     contractDigest: controllerReceipt.runtime?.contractDigest,
     policyDigest: gateAggregate.policyDigest,
+    gateRegistryDigest: gateBindings.registryDigest,
     controllerReceiptDigest: controllerReceipt.digest,
     runnerProvenanceDigest: runnerProvenance.receiptDigest,
     controlPlaneAuditDigest: controlPlaneAudit.receiptDigest,
@@ -150,6 +154,11 @@ async function main() {
     nonce: `${required("GITHUB_RUN_ID")}:${required("GITHUB_RUN_ATTEMPT")}:${sourceSha}:paper`,
     issuedAt: issuedAt.toISOString(),
     expiresAt: new Date(issuedAt.getTime() + 10 * 60 * 1000).toISOString(),
+    qualification: {
+      required: qualificationRequired,
+      predicateId: process.env.BUILDCHAIN_CONSUMER_PREDICATE_ID || "",
+      predicateDigest: process.env.BUILDCHAIN_CONSUMER_PREDICATE_DIGEST || "",
+    },
   });
   const bindingNames = [
     "repository",
@@ -158,6 +167,7 @@ async function main() {
     "runtimeSha",
     "contractDigest",
     "policyDigest",
+    "gateRegistryDigest",
     "controllerReceiptDigest",
     "gateAggregateDigest",
     "environment",

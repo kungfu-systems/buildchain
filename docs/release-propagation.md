@@ -194,6 +194,9 @@ downstream repository, writes the exact lock, and opens or updates a PR. It does
 not publish the downstream release directly. The downstream repository keeps its
 normal Buildchain governance: the PR updates source-of-truth facts, then
 downstream alpha or release publication runs through its own protected channel.
+The workflow stages the declared lock path before checking the index, so the
+first propagation creates a PR even when the lock did not previously exist; a
+byte-identical rerun is an explicit successful no-op.
 For unreleased runtime validation, keep the caller's reusable workflow reference
 on `@v2` and pass a temporary train ref through `buildchain-ref`.
 
