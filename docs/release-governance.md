@@ -412,7 +412,9 @@ an exact-branch `merge_queue` ruleset first, then changes only the classic
 required-status-check policy from strict to loose. Reviews, administrator
 enforcement, conversation resolution, required check identities, force-push
 protection, and deletion protection remain owned by the existing branch
-protection. Re-running the command is idempotent.
+protection. The ruleset uses the first merge method that the repository itself
+allows, and fails closed when the repository has no enabled merge method.
+Re-running the command is idempotent.
 
 Buildchain provides the reusable
 `.github/workflows/dev-pr-auto-merge.yml` workflow for repositories that want a

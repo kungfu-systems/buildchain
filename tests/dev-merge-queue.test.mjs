@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   createDevMergeQueuePlan,
   reconcileDevMergeQueue,
+  selectMergeQueueMethod,
   validateMergeGroupWorkflows,
 } from "../scripts/dev-merge-queue.mjs";
 
@@ -18,6 +19,20 @@ const protection = {
     checks: [{ context: "Source acceptance / check", app_id: 15368 }],
   },
 };
+const repositorySettings = {
+  allow_merge_commit: false,
+  allow_squash_merge: false,
+  allow_rebase_merge: true,
+};
+
+test("merge queue selects only a repository-enabled merge method", () => {
+  assert.equal(selectMergeQueueMethod(repositorySettings), "REBASE");
+  assert.equal(selectMergeQueueMethod({ allow_squash_merge: true }), "SQUASH");
+  assert.throws(
+    () => selectMergeQueueMethod({}),
+    /repository must allow at least one merge method/,
+  );
+});
 
 test("merge queue rejects required workflows without merge_group", () => {
   assert.throws(
@@ -39,10 +54,12 @@ test("merge queue plan creates an exact dev ruleset before loosening classic str
     branch: "dev/v4/v4.0",
     workflows,
     protection,
+    repositorySettings,
   });
   assert.equal(plan.operations[0].method, "POST");
   assert.equal(plan.operations[0].body.rules[0].type, "merge_queue");
   assert.deepEqual(plan.operations[0].body.conditions.ref_name.include, ["refs/heads/dev/v4/v4.0"]);
+  assert.equal(plan.operations[0].body.rules[0].parameters.merge_method, "REBASE");
   assert.equal(plan.operations[1].body.strict, false);
   assert.deepEqual(plan.operations[1].body.checks, protection.required_status_checks.checks);
 });
@@ -52,6 +69,7 @@ test("merge queue apply is idempotent and preserves operation order", async () =
   const api = {
     async request(method, endpoint, body) {
       calls.push({ method, endpoint, body });
+      if (method === "GET" && endpoint === "repos/kungfu-systems/kungfu") return repositorySettings;
       if (endpoint.endsWith("/protection")) return protection;
       if (method === "GET" && endpoint.includes("/rulesets?")) {
         return [{ id: 42, name: "Buildchain dev merge queue: dev/v4/v4.0" }];
