@@ -21,6 +21,7 @@ function fakeClient(overrides = {}) {
     async dispatchWorkflow(input) { calls.push(["dispatch", input]); },
     async waitForWorkflowRun() { throw new Error("unexpected wait"); },
     async defaultBranch() { return "dev/v2/v2.7"; },
+    async resolveCommitSha() { return "b".repeat(40); },
     async findCommitStatus() { return undefined; },
     async createCommitStatus(input) { calls.push(["status", input]); return { state: "success", target_url: input.targetUrl }; },
     ...overrides,
@@ -33,12 +34,17 @@ test("normalizes exact-SHA qualification options", () => {
   assert.equal(options.canaryRepository, "kungfu-systems/site-libkungfu-dev");
   assert.equal(options.canaryStatusContext, "buildchain-canary/site-libkungfu-dev");
   assert.equal(options.canaryRef, "");
+  assert.equal(options.canarySha, "");
 });
 
-test("requires an immutable canary source override", () => {
+test("requires a safe canary ref bound to an immutable source SHA", () => {
   assert.throws(
-    () => normalizeStableCandidateQualificationOptions({ repository: "kungfu-systems/buildchain", candidateSha: SHA, canaryRef: "main" }),
-    /canary ref must be an exact 40-character commit SHA/,
+    () => normalizeStableCandidateQualificationOptions({ repository: "kungfu-systems/buildchain", candidateSha: SHA, canaryRef: "evidence/canary" }),
+    /canary ref and canary SHA must be provided together/,
+  );
+  assert.throws(
+    () => normalizeStableCandidateQualificationOptions({ repository: "kungfu-systems/buildchain", candidateSha: SHA, canaryRef: "../main", canarySha: "b".repeat(40) }),
+    /canary ref must be a safe branch or tag ref/,
   );
 });
 
@@ -77,7 +83,8 @@ test("dispatches missing workflows at immutable refs and waits before attesting"
 });
 
 test("dispatches a bootstrap canary from an exact consumer commit", async () => {
-  const canaryRef = "b".repeat(40);
+  const canaryRef = "evidence/stable-canary";
+  const canarySha = "b".repeat(40);
   let lookup = 0;
   const client = fakeClient({
     async findWorkflowRun() { lookup += 1; return lookup <= 2 ? undefined : { status: "completed", conclusion: "success", html_url: "https://example.test/run" }; },
@@ -88,10 +95,26 @@ test("dispatches a bootstrap canary from an exact consumer commit", async () => 
     repository: "kungfu-systems/buildchain",
     candidateSha: SHA,
     canaryRef,
+    canarySha,
   }, client);
   assert.equal(client.calls[1][1].ref, canaryRef);
   assert.deepEqual(client.calls[1][1].inputs, { buildchain_ref: SHA });
   assert.equal(result.canary.ref, canaryRef);
+  assert.equal(result.canary.sha, canarySha);
+});
+
+test("fails closed when the dispatchable canary ref moved", async () => {
+  const client = fakeClient({ async resolveCommitSha() { return "c".repeat(40); } });
+  await assert.rejects(
+    runStableCandidateQualification({
+      repository: "kungfu-systems/buildchain",
+      candidateSha: SHA,
+      canaryRef: "evidence/stable-canary",
+      canarySha: "b".repeat(40),
+    }, client),
+    /canary ref evidence\/stable-canary resolved to c{40}, expected b{40}/,
+  );
+  assert.equal(client.calls.some(([kind]) => kind === "status"), false);
 });
 
 test("fails closed when a required workflow does not succeed", async () => {
@@ -137,6 +160,7 @@ test("cross-repository canary matching binds the candidate through the exact run
     workflowName: "Buildchain Stable Canary",
     headSha: SHA,
     runName: `Buildchain Stable Canary / ${SHA}`,
+    sourceSha: "b".repeat(40),
   });
   assert.equal(run.id, 42);
 });
