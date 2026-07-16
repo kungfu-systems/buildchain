@@ -1,0 +1,186 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-stable-release-gate",
+  "applies": true,
+  "ok": true,
+  "channel": "release",
+  "evaluatedAt": "2026-07-16T23:48:18.894Z",
+  "candidate": {
+    "tag": "v2.14.0-alpha.1",
+    "sha": "f839c66f54975dc1d0954e421bebe447b6ddfd0d",
+    "publishedAt": "2026-07-16T17:27:54.000Z"
+  },
+  "policy": {
+    "minimumStableIntervalSeconds": 86400,
+    "minimumCanarySoakSeconds": 3600,
+    "requiredCanaries": [
+      "build-surface-fixture",
+      "site-libkungfu-dev"
+    ]
+  },
+  "checks": [
+    {
+      "id": "candidate.sha",
+      "status": "pass",
+      "message": "candidate alpha SHA is exact",
+      "details": {
+        "sha": "f839c66f54975dc1d0954e421bebe447b6ddfd0d"
+      }
+    },
+    {
+      "id": "candidate.tag",
+      "status": "pass",
+      "message": "candidate is an exact alpha tag",
+      "details": {
+        "tag": "v2.14.0-alpha.1"
+      }
+    },
+    {
+      "id": "stable.minimum_interval",
+      "status": "pass",
+      "message": "no previous stable release exists",
+      "details": {
+        "firstStable": true
+      }
+    },
+    {
+      "id": "stable.product_diff",
+      "status": "pass",
+      "message": "candidate contains a product or contract difference from the current stable release",
+      "details": {
+        "changedPaths": [
+          ".github/workflows/.web-surface.yml",
+          ".github/workflows/release-line-bootstrap.yml",
+          ".github/workflows/release-propagation.yml",
+          "actions/promote-buildchain-ref/README.md",
+          "actions/promote-buildchain-ref/action.yml",
+          "actions/promote-buildchain-ref/dist/index.js",
+          "actions/promote-buildchain-ref/index.js",
+          "actions/promote-buildchain-ref/lib.js",
+          "packages/core/index.js",
+          "packages/core/publication-authority.js",
+          "packages/core/release-line-bootstrap.js",
+          "packages/core/web-surface-publication-candidate.js",
+          "scripts/assemble-web-surface-publication-admission.mjs",
+          "scripts/check-action-bundles.mjs",
+          "scripts/dev-merge-queue.mjs",
+          "scripts/generate-site-bundle.mjs",
+          "scripts/verify-web-surface-publication-capability.mjs",
+          "scripts/web-surface-production-decision.mjs"
+        ],
+        "comparedPathCount": 52
+      }
+    },
+    {
+      "id": "stable.impact",
+      "status": "pass",
+      "message": "version-bound impact declares a summary and at least one surface",
+      "details": {
+        "summary": "Buildchain v2.14 extends sealed evidence and release-governance contracts, including convergent protected channel promotion and bounded lifecycle execution.",
+        "surfaceIds": [
+          "release-channel-protection-convergence",
+          "consumer-publication-qualification-handoff",
+          "release-line-promotion-authority",
+          "publication-plan-read-only-derived-state",
+          "release-candidate-preflight-bounded-wait",
+          "publication-plan-source-dependencies",
+          "artifact-verification-envelope",
+          "bounded-lifecycle-jobs",
+          "web-surface-publication-authority-permissions",
+          "release-propagation-new-lock-detection",
+          "generated-version-state-required-check-set",
+          "release-propagation-managed-branch-reconciliation",
+          "controller-evidence-version-state-isolation",
+          "release-line-impact-state",
+          "channel-build-router",
+          "stable-release-canary-gate",
+          "release-candidate-evidence-preflight",
+          "release-state-ref-propagation-retry",
+          "lifecycle-command-override-inheritance",
+          "locked-checkout-bounded-fallback",
+          "workflow-shell-checkout-bootstrap",
+          "published-contract-digest-round-trip",
+          "required-check-context-preservation",
+          "authenticated-publication-registry-hydration",
+          "paper-release-declared-github-assets",
+          "web-surface-channel-build-contract",
+          "stable-canary-runtime-binding",
+          "major-alpha-floating-channel",
+          "major-alpha-self-dogfood-canary"
+        ]
+      }
+    },
+    {
+      "id": "stable.canary.build-surface-fixture",
+      "status": "pass",
+      "message": "required canary build-surface-fixture passed for the exact alpha candidate",
+      "details": {
+        "source": "release-candidate",
+        "context": "",
+        "repository": "kungfu-systems/buildchain",
+        "workflow": "Build Surface Fixture",
+        "runtimeRef": "",
+        "runtimeRefSource": "",
+        "workflowId": "",
+        "candidateSha": "f839c66f54975dc1d0954e421bebe447b6ddfd0d",
+        "completedAt": "2026-07-16T20:12:55.000Z",
+        "evidenceUrl": "https://github.com/kungfu-systems/buildchain/actions/runs/29530328931",
+        "attestor": "dongkeren",
+        "attestorAllowed": true
+      }
+    },
+    {
+      "id": "stable.canary.site-libkungfu-dev",
+      "status": "pass",
+      "message": "required canary site-libkungfu-dev passed for the exact alpha candidate",
+      "details": {
+        "source": "commit-status",
+        "context": "buildchain-canary/site-libkungfu-dev",
+        "repository": "kungfu-systems/site-libkungfu-dev",
+        "workflow": "Buildchain Stable Canary",
+        "runtimeRef": "f839c66f54975dc1d0954e421bebe447b6ddfd0d",
+        "runtimeRefSource": "run-name",
+        "workflowId": "310602469",
+        "candidateSha": "f839c66f54975dc1d0954e421bebe447b6ddfd0d",
+        "completedAt": "2026-07-16T17:52:02.000Z",
+        "evidenceUrl": "https://github.com/kungfu-systems/site-libkungfu-dev/actions/runs/29521453497",
+        "attestor": "github-actions[bot]",
+        "attestorAllowed": true
+      }
+    },
+    {
+      "id": "stable.canary_soak",
+      "status": "pass",
+      "message": "minimum soak interval after the final required canary is satisfied",
+      "details": {
+        "soakStartedAt": "2026-07-16T20:12:55.000Z",
+        "elapsedSeconds": 12923,
+        "requiredSeconds": 3600
+      }
+    }
+  ],
+  "summary": {
+    "decision": "allow",
+    "failedChecks": [],
+    "productChangedPaths": [
+      ".github/workflows/.web-surface.yml",
+      ".github/workflows/release-line-bootstrap.yml",
+      ".github/workflows/release-propagation.yml",
+      "actions/promote-buildchain-ref/README.md",
+      "actions/promote-buildchain-ref/action.yml",
+      "actions/promote-buildchain-ref/dist/index.js",
+      "actions/promote-buildchain-ref/index.js",
+      "actions/promote-buildchain-ref/lib.js",
+      "packages/core/index.js",
+      "packages/core/publication-authority.js",
+      "packages/core/release-line-bootstrap.js",
+      "packages/core/web-surface-publication-candidate.js",
+      "scripts/assemble-web-surface-publication-admission.mjs",
+      "scripts/check-action-bundles.mjs",
+      "scripts/dev-merge-queue.mjs",
+      "scripts/generate-site-bundle.mjs",
+      "scripts/verify-web-surface-publication-capability.mjs",
+      "scripts/web-surface-production-decision.mjs"
+    ]
+  }
+}
