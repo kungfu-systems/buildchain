@@ -33,6 +33,14 @@ function repository(value) {
   return normalized;
 }
 
+function optionalSha(value, label) {
+  const normalized = text(value);
+  if (normalized && !/^[0-9a-f]{40}$/i.test(normalized)) {
+    throw new Error(`${label} must be an exact 40-character commit SHA, got ${normalized}`);
+  }
+  return normalized;
+}
+
 export function normalizeStableCandidateQualificationOptions(options = {}) {
   const candidateSha = text(options.candidateSha ?? process.env.BUILDCHAIN_QUALIFICATION_CANDIDATE_SHA);
   if (!/^[0-9a-f]{40}$/i.test(candidateSha)) {
@@ -47,6 +55,7 @@ export function normalizeStableCandidateQualificationOptions(options = {}) {
     canaryWorkflowFile: text(options.canaryWorkflowFile ?? process.env.BUILDCHAIN_QUALIFICATION_CANARY_WORKFLOW_FILE) || DEFAULTS.canaryWorkflowFile,
     canaryWorkflowName: text(options.canaryWorkflowName ?? process.env.BUILDCHAIN_QUALIFICATION_CANARY_WORKFLOW_NAME) || DEFAULTS.canaryWorkflowName,
     canaryStatusContext: text(options.canaryStatusContext ?? process.env.BUILDCHAIN_QUALIFICATION_CANARY_STATUS_CONTEXT) || DEFAULTS.canaryStatusContext,
+    canaryRef: optionalSha(options.canaryRef ?? process.env.BUILDCHAIN_QUALIFICATION_CANARY_REF, "canary ref"),
     pollAttempts: integer(options.pollAttempts ?? process.env.BUILDCHAIN_QUALIFICATION_POLL_ATTEMPTS, DEFAULTS.pollAttempts),
     pollIntervalMs: integer(options.pollIntervalMs ?? process.env.BUILDCHAIN_QUALIFICATION_POLL_INTERVAL_MS, DEFAULTS.pollIntervalMs),
     dryRun: bool(options.dryRun ?? process.env.BUILDCHAIN_QUALIFICATION_DRY_RUN, false),
@@ -108,13 +117,13 @@ export async function runStableCandidateQualification(optionsInput = {}, clientI
   let status = await client.findCommitStatus(options.repository, options.candidateSha, options.canaryStatusContext);
   let canary = { state: status?.state === "success" ? "existing" : "pending", run: undefined };
   if (status?.state !== "success") {
-    const canaryDefaultBranch = await client.defaultBranch(options.canaryRepository);
+    const canaryRef = options.canaryRef || await client.defaultBranch(options.canaryRepository);
     canary = await ensureWorkflowEvidence({
       client,
       repository: options.canaryRepository,
       workflowFile: options.canaryWorkflowFile,
       workflowName: options.canaryWorkflowName,
-      ref: canaryDefaultBranch,
+      ref: canaryRef,
       headSha: options.candidateSha,
       runName: `${options.canaryWorkflowName} / ${options.candidateSha}`,
       options,
@@ -137,7 +146,7 @@ export async function runStableCandidateQualification(optionsInput = {}, clientI
     dryRun: options.dryRun,
     candidate,
     build: { state: build.state, url: build.run?.html_url || "" },
-    canary: { state: canary.state, url: canary.run?.html_url || status?.target_url || "" },
+    canary: { state: canary.state, ref: options.canaryRef || "default-branch", url: canary.run?.html_url || status?.target_url || "" },
     attestation: { context: options.canaryStatusContext, state: options.dryRun ? "planned" : status?.state || "" },
   };
 }

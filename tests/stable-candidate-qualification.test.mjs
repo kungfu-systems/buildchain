@@ -32,6 +32,14 @@ test("normalizes exact-SHA qualification options", () => {
   const options = normalizeStableCandidateQualificationOptions({ repository: "kungfu-systems/buildchain", candidateSha: SHA });
   assert.equal(options.canaryRepository, "kungfu-systems/site-libkungfu-dev");
   assert.equal(options.canaryStatusContext, "buildchain-canary/site-libkungfu-dev");
+  assert.equal(options.canaryRef, "");
+});
+
+test("requires an immutable canary source override", () => {
+  assert.throws(
+    () => normalizeStableCandidateQualificationOptions({ repository: "kungfu-systems/buildchain", candidateSha: SHA, canaryRef: "main" }),
+    /canary ref must be an exact 40-character commit SHA/,
+  );
 });
 
 test("attests only after both exact candidate workflows succeed", async () => {
@@ -66,6 +74,24 @@ test("dispatches missing workflows at immutable refs and waits before attesting"
   assert.equal(client.calls[1][1].ref, "dev/v2/v2.7");
   assert.deepEqual(client.calls[1][1].inputs, { buildchain_ref: SHA });
   assert.equal(client.calls[2][0], "status");
+});
+
+test("dispatches a bootstrap canary from an exact consumer commit", async () => {
+  const canaryRef = "b".repeat(40);
+  let lookup = 0;
+  const client = fakeClient({
+    async findWorkflowRun() { lookup += 1; return lookup <= 2 ? undefined : { status: "completed", conclusion: "success", html_url: "https://example.test/run" }; },
+    async waitForWorkflowRun() { return { status: "completed", conclusion: "success", html_url: "https://example.test/run" }; },
+    async defaultBranch() { throw new Error("exact canary ref must not resolve the default branch"); },
+  });
+  const result = await runStableCandidateQualification({
+    repository: "kungfu-systems/buildchain",
+    candidateSha: SHA,
+    canaryRef,
+  }, client);
+  assert.equal(client.calls[1][1].ref, canaryRef);
+  assert.deepEqual(client.calls[1][1].inputs, { buildchain_ref: SHA });
+  assert.equal(result.canary.ref, canaryRef);
 });
 
 test("fails closed when a required workflow does not succeed", async () => {
