@@ -85,7 +85,7 @@
   },
   "packageManager": "pnpm@11.7.0",
   "scripts": {
-    "check": "node scripts/check-inventory.mjs && pnpm run check:site && pnpm run check:workflows && pnpm run test:unit && pnpm -r --filter \"./actions/**\" build",
+    "check": "node scripts/check-inventory.mjs && pnpm run check:site && pnpm run check:workflows && pnpm run test:unit && node scripts/check-action-bundles.mjs",
     "check:workflows": "bash scripts/check-workflows.sh",
     "generate:site": "node scripts/generate-site-bundle.mjs",
     "check:site": "node scripts/generate-site-bundle.mjs --check",
