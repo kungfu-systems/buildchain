@@ -1154,6 +1154,7 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
     "utf8",
   );
   assert.match(workflow, /workflow_call:/);
+  assert.match(workflow, /permissions:\n  actions: read\n  contents: read/);
   assert.match(workflow, /buildchain-ref:/);
   assert.match(workflow, /buildchain-contract-lock-path:/);
   assert.match(workflow, /buildchain-contract-compatibility-policy:/);
@@ -1262,6 +1263,10 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.ok(workflow.indexOf("id: gate") < workflow.indexOf("Run caller build"));
   assert.match(workflow, /Apply production deploy/);
   assert.match(workflow, /Seal web production publication capability/);
+  assert.match(
+    workflow,
+    /name: Seal web production publication capability[\s\S]*?permissions:\n      actions: read\n      contents: read[\s\S]*?uses: \.\/\.github\/workflows\/\.publication-authority\.yml/,
+  );
   assert.match(workflow, /uses: \.\/\.github\/workflows\/\.publication-authority\.yml/);
   assert.match(workflow, /publication-admission-json:/);
   assert.match(workflow, /publication-control-plane-audit-json:/);
