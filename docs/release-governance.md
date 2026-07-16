@@ -84,6 +84,13 @@ The implementation is intentionally stricter than a local release script:
 - non-dry-run promotion must be driven by a completed `Verify` workflow;
 - target branch protection details must be readable, and branch protection must
   apply to administrators as well as regular contributors;
+- `alpha/vX/vX.Y` and `release/vX/vX.Y` branch protection must require both the
+  general `check` context and the Release Verify aggregate `verify` context, so
+  an invalid channel pair cannot merge even when repository checks pass;
+- release targets keep those checks non-strict with respect to source-branch
+  ancestry: generated channel bookkeeping intentionally makes the source and
+  target histories diverge, while the pair-specific `verify` context validates
+  the legal channel transition;
 - alpha promotion must come from a merged same-repository PR from
   `dev/vX/vX.Y` to `alpha/vX/vX.Y`;
 - release promotion must come from a merged same-repository PR from
@@ -592,8 +599,11 @@ to the action, that explicit command overrides `lifecycle.verify`.
 
 Protected release-line branches keep their normal human review gate. Managed
 `dev/vN/vN.M`, `alpha/vN/vN.M`, and `release/vN/vN.M` branches are configured
-with one required approving review, strict GitHub Actions checks, administrator
-enforcement, conversation resolution, no force pushes, and no deletions. The
+with one required approving review, required GitHub Actions checks, administrator
+enforcement, conversation resolution, no force pushes, and no deletions. Dev
+keeps its repository-selected strict or merge-queue policy. Alpha and release
+require both `check` and the pair-specific `verify` aggregate without requiring
+the source branch to contain the target's generated bookkeeping history. The
 reusable `release-candidate-promote.yml` wrapper defaults
 `branch-protection-bypass-apps` to `github-actions`, which lets the workflow's
 automation identity apply generated version-state or post-publish channel

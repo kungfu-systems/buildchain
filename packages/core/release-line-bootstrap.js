@@ -191,6 +191,11 @@ export function planReleaseLineBootstrap({
     protection: {
       requiredStatusCheck,
       strictStatusChecks: true,
+      strictStatusChecksByChannel: {
+        dev: true,
+        alpha: false,
+        release: false,
+      },
       requiredApprovingReviewCount: approvalCount,
       requiredConversationResolution: true,
       enforceAdmins: true,

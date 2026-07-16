@@ -2258,6 +2258,8 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(bootstrap, /BUILDCHAIN_PROMOTION_BYPASS_TEAMS: \$\{\{ vars\.BUILDCHAIN_PROMOTION_BYPASS_TEAMS \}\}/);
   assert.match(bootstrap, /Release line bootstrap requires a declared promotion bypass app, user, or team/);
   assert.match(bootstrap, /bypass_pull_request_allowances:\s*\{\s*apps: \$bypass_apps,\s*users: \$bypass_users,\s*teams: \$bypass_teams\s*\}/);
+  assert.match(bootstrap, /strict: \$dev_channel/);
+  assert.match(bootstrap, /\[\$context, "verify"\] \| unique/);
   assert.match(workflow, /publish-required-artifacts-json: "\[\]"/);
   assert.match(workflow, /release-passport-impact-json: \.buildchain\/release-impact\.json/);
   assert.match(workflow, /publication-auto-admission: \$\{\{ github\.event_name == 'workflow_run' \}\}/);
