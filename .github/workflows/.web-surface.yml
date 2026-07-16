@@ -250,6 +250,7 @@ on:
         value: ${{ jobs.controller-receipt.outputs.controller-receipt-status }}
 
 permissions:
+  actions: read
   contents: read
 
 jobs:
@@ -1486,6 +1487,7 @@ jobs:
         )
       }}
     permissions:
+      actions: read
       contents: read
     uses: ./.github/workflows/.publication-authority.yml
     with:
