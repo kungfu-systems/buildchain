@@ -2500,9 +2500,7 @@ async function assertProtectedChannel({
     missing.push("must require at least one approving review");
   }
   const checks = protection.required_status_checks;
-  if (!checks?.strict) {
-    missing.push("must require strict status checks");
-  }
+  if (!checks) missing.push("must require status checks");
   const checkNames = protectedStatusCheckNames(protection);
   const resolvedStatusCheck = resolveProtectedStatusCheckContext({ protection, requiredStatusCheck });
   if (!checkNames.includes(resolvedStatusCheck)) {
@@ -2518,6 +2516,14 @@ async function assertProtectedChannel({
 
 function isManagedChannelBranch(ref) {
   return /^(dev|alpha|release)\/v\d+\/v\d+\.\d+$/.test(String(ref || ""));
+}
+
+function managedChannelStrictStatusChecks(branch, currentProtection) {
+  if (/^(alpha|release)\//.test(String(branch || ""))) return false;
+  if (currentProtection?.required_status_checks) {
+    return currentProtection.required_status_checks.strict === true;
+  }
+  return true;
 }
 
 function parseBranchProtectionBypassList(value = "") {
@@ -2681,6 +2687,7 @@ async function ensureManagedChannelBranchProtection({
     octokit,
     allowances: configuredBypassAllowances,
   });
+  const strictStatusChecks = managedChannelStrictStatusChecks(branch, currentProtection);
   await retryGitHubOperation(
     `repos.updateBranchProtection ${branch}`,
     () => octokit.rest.repos.updateBranchProtection({
@@ -2688,7 +2695,7 @@ async function ensureManagedChannelBranchProtection({
       repo,
       branch,
       required_status_checks: {
-        strict: true,
+        strict: strictStatusChecks,
         checks: preservedChecks,
       },
       enforce_admins: true,
@@ -2721,7 +2728,7 @@ async function ensureManagedChannelBranchProtection({
       enforceAdmins: currentProtection.enforce_admins?.enabled === true,
       requiredApprovals: Number(currentProtection.required_pull_request_reviews?.required_approving_review_count || 0),
     } : null,
-    after: { requiredStatusChecks: preservedChecks.map((check) => check.context), strict: true, enforceAdmins: true, requiredApprovals: 1 },
+    after: { requiredStatusChecks: preservedChecks.map((check) => check.context), strict: strictStatusChecks, enforceAdmins: true, requiredApprovals: 1 },
   };
 }
 
