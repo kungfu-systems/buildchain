@@ -7,6 +7,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 const {
+  alphaDistTagForPromotion,
   assertAllowedLocalChanges,
   assertExpectedPublicationVersion,
   assertChannelPromotionPr,
@@ -32,6 +33,26 @@ const {
   updateVersionStateContents,
   validatePromotionReleaseCandidate,
 } = await import("../actions/promote-buildchain-ref/lib.js");
+
+test("older minor alpha publication preserves the global npm alpha channel", () => {
+  assert.equal(alphaDistTagForPromotion({
+    ownsMajorAlphaTag: true,
+    line: "v2.13",
+  }), "");
+  assert.equal(alphaDistTagForPromotion({
+    ownsMajorAlphaTag: true,
+    line: "v2.13",
+    publishDistTag: "alpha",
+  }), "alpha");
+  assert.equal(alphaDistTagForPromotion({
+    ownsMajorAlphaTag: false,
+    line: "v2.12",
+  }), "v2.12-alpha");
+  assert.throws(
+    () => alphaDistTagForPromotion({ ownsMajorAlphaTag: false, line: "" }),
+    /older-minor alpha publication requires a vN\.N release line/,
+  );
+});
 
 test("publication authority version binding fails closed on transaction drift", () => {
   assert.equal(assertExpectedPublicationVersion("2.12.7-alpha.3", "2.12.7-alpha.3"), "2.12.7-alpha.3");

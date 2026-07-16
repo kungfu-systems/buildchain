@@ -51,7 +51,9 @@ npx buildchain version
 npx buildchain doctor --json
 ```
 
-Alpha releases publish to the `alpha` npm dist-tag. Stable releases publish to
+The highest alpha minor publishes to the `alpha` npm dist-tag; older maintenance
+minor alphas use `vX.Y-alpha` so they cannot roll the global alpha channel back.
+Stable releases publish to
 `latest`. Both are created by the protected Buildchain promotion transaction.
 
 Stable consumers should pin the exact Buildchain version they have validated,
