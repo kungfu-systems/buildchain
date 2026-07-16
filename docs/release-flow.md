@@ -106,7 +106,8 @@ When the workflow is run with `apply=true`, Buildchain:
 - creates `dev/v2/v2.10` from that commit;
 - creates `alpha/v2/v2.10` and `release/v2/v2.10` from the selected source ref;
 - applies branch protection with one approving review and the configured
-  required status check;
+  required status check; dev starts strict, while alpha and release also require
+  the pair-specific `verify` aggregate without a source-up-to-date ancestry loop;
 - switches the repository default branch to the new dev line when requested;
 - opens the first `dev/v2/v2.10 -> alpha/v2/v2.10` channel PR when requested.
 

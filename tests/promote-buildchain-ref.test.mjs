@@ -6941,11 +6941,56 @@ test("strict alpha promotion reports all missing protected channel settings", as
       assert.match(error.message, /must disallow branch deletion/);
       assert.match(error.message, /must require conversation resolution/);
       assert.match(error.message, /must require at least one approving review/);
-      assert.match(error.message, /must require strict status checks/);
       assert.match(error.message, /must require a check status check/);
       return true;
     },
   );
+});
+
+test("managed release channels keep required checks without an impossible source-up-to-date loop", async () => {
+  const updates = [];
+  const protection = protectedChannel({
+    required_status_checks: {
+      strict: true,
+      checks: [
+        { context: "check", app_id: 15368 },
+        { context: "verify", app_id: 15368 },
+      ],
+    },
+  });
+  const octokit = {
+    rest: {
+      repos: {
+        getBranchProtection: async () => ({ data: protection }),
+        updateBranchProtection: async (request) => {
+          updates.push(request);
+          return { data: {} };
+        },
+      },
+    },
+  };
+
+  const alphaEvidence = await ensureManagedChannelBranchProtection({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    branch: "alpha/v2/v2.14",
+    requiredStatusCheck: "check",
+  });
+  assert.equal(updates[0].required_status_checks.strict, false);
+  assert.deepEqual(updates[0].required_status_checks.checks, protection.required_status_checks.checks);
+  assert.equal(alphaEvidence.after.strict, false);
+
+  protection.required_status_checks.strict = false;
+  const devEvidence = await ensureManagedChannelBranchProtection({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    branch: "dev/v2/v2.14",
+    requiredStatusCheck: "check",
+  });
+  assert.equal(updates[1].required_status_checks.strict, false);
+  assert.equal(devEvidence.after.strict, false);
 });
 
 test("strict alpha promotion rejects protection bypass surfaces", async () => {

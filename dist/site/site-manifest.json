@@ -237,7 +237,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:7ac2e6acdb0543eb4459076c2c4e1cc5998afbbef474c2a7edcc6b251a11e040"
+      "digest": "sha256:e97fd55d09facff9a6a5087fca5881d9756f33e791c9c3b9f9a8164ed2030c1d"
     },
     {
       "id": "release-flow",
@@ -245,7 +245,7 @@
       "path": "docs/release-flow.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:c05905de6a905d1ce0dd977986175b8bc1ad908c6c2eee946809693ea2cb91de"
+      "digest": "sha256:a2f68d42f34acc35940e135285df5ba510d91b15b9d9ede8cabbe8bfa6ab0305"
     },
     {
       "id": "runtime-train-validation",
