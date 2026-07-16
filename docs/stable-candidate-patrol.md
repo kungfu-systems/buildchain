@@ -61,12 +61,12 @@ and allowed attestor before accepting that status.
 
 When a candidate changes the outer reusable-workflow YAML itself, the stable
 shell cannot exercise that change through a runtime override. A maintainer may
-manually qualify it with `canary-ref` set to an exact 40-character commit in the
-consumer repository whose canary workflow pins the candidate's exact Buildchain
-SHA. The qualification producer still dispatches and observes the authoritative
-consumer workflow before writing the normal candidate-bound status. Floating
-consumer branches are rejected, and the automatic path continues to use the
-consumer default branch.
+manually qualify it with `canary-ref` set to a dispatchable consumer branch or
+tag and `canary-sha` set to the exact 40-character commit that ref must resolve
+to. That consumer workflow pins the candidate's exact Buildchain SHA. The
+qualification producer verifies the ref binding before dispatch, accepts only a
+run whose source SHA matches, and writes the normal candidate-bound status only
+after success. The automatic path continues to use the consumer default branch.
 
 ## Repository policy
 
