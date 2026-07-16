@@ -93,7 +93,7 @@
       "title": "Release propagation",
       "path": "docs/release-propagation.md",
       "plane": "use",
-      "digest": "sha256:55895694a32b76dfaf5ed0eb9e32f1e10bd859fb590d6f4504d36692ebe61ea9",
+      "digest": "sha256:d5877075eb41a3d41e531549da113756d29d6f34c91e3b68b8ce650753d5ca1d",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "release-operator",
@@ -316,7 +316,7 @@
       "title": "Publish transaction",
       "path": "docs/publish-transaction.md",
       "plane": "verify",
-      "digest": "sha256:9e77030dbd69e27c2402d855980f7560a465270cac1f3225c0470523ab4a8ddf",
+      "digest": "sha256:cc2f4c9d2b9988962a237bbc7e8da83385d45585e2b2dd105ff4c4334a74c05d",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator"
@@ -329,7 +329,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:dea036030d2cdd65422e7ce20118d01186c1d44b0f2c691447ac6b40eaf6eb62",
+      "digest": "sha256:5cf4bf4332119531f6aaa1c123d7f64e6af4a61611c4e4a33d40bd9fb46448cf",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -343,7 +343,7 @@
       "title": "Release flow",
       "path": "docs/release-flow.md",
       "plane": "verify",
-      "digest": "sha256:c05905de6a905d1ce0dd977986175b8bc1ad908c6c2eee946809693ea2cb91de",
+      "digest": "sha256:a2f68d42f34acc35940e135285df5ba510d91b15b9d9ede8cabbe8bfa6ab0305",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "release-operator",

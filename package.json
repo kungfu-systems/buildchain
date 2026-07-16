@@ -1,6 +1,6 @@
 {
   "name": "@kungfu-tech/buildchain",
-  "version": "2.13.0-alpha.3",
+  "version": "2.14.0-alpha.1",
   "private": false,
   "description": "Buildchain Release Passport, release governance, CLI toolkit, and site facts.",
   "repository": "https://github.com/kungfu-systems/buildchain",
@@ -85,7 +85,7 @@
   },
   "packageManager": "pnpm@11.7.0",
   "scripts": {
-    "check": "node scripts/check-inventory.mjs && pnpm run check:site && pnpm run check:workflows && pnpm run test:unit && pnpm -r --filter \"./actions/**\" build",
+    "check": "node scripts/check-inventory.mjs && pnpm run check:site && pnpm run check:workflows && pnpm run test:unit && node scripts/check-action-bundles.mjs",
     "check:workflows": "bash scripts/check-workflows.sh",
     "generate:site": "node scripts/generate-site-bundle.mjs",
     "check:site": "node scripts/generate-site-bundle.mjs --check",

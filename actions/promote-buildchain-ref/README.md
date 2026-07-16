@@ -83,15 +83,15 @@ explicitly, then run the normal channel promotion flow for that line.
 When branch protection requires pull requests, generated version-state commits
 still run through promotion automation first. The action updates
 Buildchain-managed channel protection before generated bookkeeping, adds the
-authenticated promotion token user or app to the bypass allowlist, creates the
-configured required check on the exact generated version-state commit, then
+authenticated promotion token user or app to the bypass allowlist, creates
+every configured required check on the exact generated version-state commit, then
 tries to apply that commit directly. If GitHub still rejects release
 finalization bookkeeping, Buildchain creates or reuses a same-repository
 `buildchain/version-state/*` PR based on the current target channel head and
 returns `finalization-needed=true`; a later idempotent promotion run can resume
 from the durable transaction state. Strict alpha promotion still fails with a
 configuration diagnostic instead of opening a post-publish human PR. Reusable
-wrapper callers should allow `checks: write` so the generated check is owned by
+wrapper callers should allow `checks: write` so the generated checks are owned by
 GitHub Actions and matches the managed branch protection rule.
 
 Stable promotion also protects concurrent development work. The reusable

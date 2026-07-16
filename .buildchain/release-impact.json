@@ -2,15 +2,22 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-impact",
   "release": {
-    "version": "2.13.0-alpha.3",
-    "line": "v2.13"
+    "version": "2.14.0-alpha.1",
+    "line": "v2.14"
   },
   "versionImpact": {
     "final": "minor",
     "source": "buildchain-version-state",
-    "rationale": "Buildchain v2.13 adds a compatible sealed artifact-verification envelope, public Node and CLI projections, and exact KFD assessment bindings for KFX admission."
+    "rationale": "Buildchain v2.14 adds compatible release-governance, artifact-verification, and controller evidence contracts without changing existing consumer inputs."
   },
   "surfaceImpacts": [
+    {
+      "id": "release-channel-protection-convergence",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Alpha and release targets require repository and pair-specific verification without requiring source branches to contain generated target-channel bookkeeping ancestry, while dev preserves its selected strict or merge-queue policy.",
+      "source": ".github/workflows/release-line-bootstrap.yml"
+    },
     {
       "id": "consumer-publication-qualification-handoff",
       "impact": "minor",
@@ -72,6 +79,20 @@
       "impact": "patch",
       "class": "release-propagation",
       "rationale": "Release propagation stages and checks the declared downstream lock path, creating a PR for a first untracked lock while preserving byte-identical reruns as explicit no-ops.",
+      "source": ".github/workflows/release-propagation.yml"
+    },
+    {
+      "id": "generated-version-state-required-check-set",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Generated version-state commits receive every status check preserved by the managed channel policy before a direct protected ref update, so adding a second required verification context cannot strand a publication after npm succeeds.",
+      "source": "actions/promote-buildchain-ref/lib.js"
+    },
+    {
+      "id": "release-propagation-managed-branch-reconciliation",
+      "impact": "patch",
+      "class": "release-propagation",
+      "rationale": "Repeated propagation reconciles a surviving managed downstream branch with an exact remote-SHA lease, records the branch and PR decision as controller evidence, and rejects concurrent stale writers.",
       "source": ".github/workflows/release-propagation.yml"
     },
     {
@@ -198,5 +219,5 @@
   "breaking": false,
   "security": false,
   "migrationRequired": false,
-  "summary": "Buildchain v2.13 introduces one sealed exact-root KFX admission envelope with matching Node and CLI projections, while bounded lifecycle execution and targeted workflow repairs close current publication and propagation failures."
+  "summary": "Buildchain v2.14 extends sealed evidence and release-governance contracts, including convergent protected channel promotion and bounded lifecycle execution."
 }

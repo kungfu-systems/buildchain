@@ -4,7 +4,7 @@
   "product": {
     "name": "Buildchain",
     "package": "@kungfu-tech/buildchain",
-    "version": "2.13.0-alpha.3",
+    "version": "2.14.0-alpha.1",
     "repository": "https://github.com/kungfu-systems/buildchain"
   },
   "majorLine": "v2",
@@ -269,7 +269,7 @@
         "semver GitHub Releases are created or updated only after transaction completion, with prerelease/latest metadata derived from the public release tag"
       ],
       "breakingDigest": "sha256:a59f0910e6df842e7699139472e5dd69ac2fdd7f7213bf2cb346d1d622556874",
-      "auditDigest": "sha256:d4fd25131a275abafdbb22b91b82fa8e04ff86850fdbb80a619e6615bb4eb716"
+      "auditDigest": "sha256:1dadbe655476a33323749a80a30daa624d8ffa60b7b452d45d920fd94a1a317c"
     },
     {
       "contractVersion": 1,
@@ -527,7 +527,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:047279f9909200aadd348fa592d8535d530d54a7acc268f784f1de47c5ac66a8"
+      "auditDigest": "sha256:32e2353d96a70c0334f6b56508b8689de0e5c5a89eb5789aebcc456e1613ed1e"
     },
     {
       "contractVersion": 1,
@@ -549,7 +549,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:4464b3a967f80e805234ad422853b8300004c039fc1af91f4af24469dbd1371a"
+      "auditDigest": "sha256:749a7207d0b71b3d9f5f4a2d4b23c3f92c9ebdb2c3ce41b38869327f9b43fd5b"
     },
     {
       "contractVersion": 1,
@@ -2705,9 +2705,9 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:d7a1f15990ce8bd13149474888232c7d4451dd2a49bebf4d4ce1336695da430e",
-      "auditDigest": "sha256:d94cab26784b13d57920b7cd6acc1db3b5569d0db0a8771f0932884b9b02493d"
+      "auditDigest": "sha256:2750630ae675352b601dd6cb6a987df14bf11029fcf02aa54638b4fcdcb7590e"
     }
   ],
   "compatibilityDigest": "sha256:af162b86ab4506e9b5f1d3c59b41f3fd57fbad79ff4d749a7f12ff16460517f8",
-  "contractDigest": "sha256:3ae47407242422312deb076c868c401950837bf87a469e59cb21841386eaec2b"
+  "contractDigest": "sha256:e155fe8cce9a0ea11f7f586665243bd07c59fdba7c170665d746d794fdf97fc2"
 }
