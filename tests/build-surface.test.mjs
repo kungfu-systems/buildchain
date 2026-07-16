@@ -877,6 +877,14 @@ test("sealed publication authority verifier is independent and credential-free",
   assert.match(workflow, /name: Assemble managed release-candidate admission/);
   assert.match(workflow, /BUILDCHAIN_PLANNED_PUBLICATION_VERSION/);
   assert.match(workflow, /authority publication version mismatch/);
+  assert.match(
+    workflow,
+    /const capabilityQualificationRequired = capability\.qualification\?\.required === true;/,
+  );
+  assert.match(
+    workflow,
+    /capabilityQualificationRequired !== qualificationRequired/,
+  );
   assert.match(workflow, /steps\.auto-evidence\.outputs\.admission-json/);
   assert.doesNotMatch(workflow, /id-token:\s*write/);
 });

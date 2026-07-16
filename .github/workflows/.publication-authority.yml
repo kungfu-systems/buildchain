@@ -618,7 +618,12 @@ jobs:
             throw new Error(`authority publication version mismatch: planned ${process.env.BUILDCHAIN_PLANNED_PUBLICATION_VERSION || "<empty>"}, capability ${capability.version || "<empty>"}`);
           }
           const qualificationRequired = process.env.BUILDCHAIN_CONSUMER_QUALIFICATION_REQUIRED === "true";
-          if (capability.qualification?.required !== qualificationRequired) {
+          // Runtimes published before the consumer-qualification capability
+          // omit this optional field. Preserve fail-closed behavior when a
+          // predicate is required, while treating the legacy omission as the
+          // equivalent of the explicit non-required shape.
+          const capabilityQualificationRequired = capability.qualification?.required === true;
+          if (capabilityQualificationRequired !== qualificationRequired) {
             throw new Error("authority consumer qualification requirement mismatch");
           }
           if (qualificationRequired && (
