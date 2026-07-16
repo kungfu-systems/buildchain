@@ -175,6 +175,23 @@ test("release propagation CLI fails fast when target is ambiguous", () => {
   assert.match(failure.stderr, /expected exactly one propagation target/);
 });
 
+test("release propagation staged change detection includes a new lock and preserves true no-op", () => {
+  const cwd = tempDir("release-propagation-git-change");
+  const lockPath = "buildchain.upstreams/kfd.release.json";
+  const absoluteLockPath = path.join(cwd, lockPath);
+  execFileSync("git", ["init"], { cwd, stdio: "ignore" });
+  execFileSync("git", ["config", "user.name", "Buildchain Test"], { cwd });
+  execFileSync("git", ["config", "user.email", "buildchain@example.test"], { cwd });
+  fs.mkdirSync(path.dirname(absoluteLockPath), { recursive: true });
+  fs.writeFileSync(absoluteLockPath, "{\"version\":1}\n");
+  execFileSync("git", ["add", "--", lockPath], { cwd });
+  assert.notEqual(spawnSync("git", ["diff", "--cached", "--quiet", "--", lockPath], { cwd }).status, 0);
+  execFileSync("git", ["commit", "-m", "test: add release lock"], { cwd, stdio: "ignore" });
+  fs.writeFileSync(absoluteLockPath, "{\"version\":1}\n");
+  execFileSync("git", ["add", "--", lockPath], { cwd });
+  assert.equal(spawnSync("git", ["diff", "--cached", "--quiet", "--", lockPath], { cwd }).status, 0);
+});
+
 test("release propagation reusable workflow invokes the checked out Buildchain runtime", () => {
   const workflow = fs.readFileSync(workflowPath, "utf8");
 
