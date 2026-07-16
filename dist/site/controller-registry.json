@@ -917,6 +917,10 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "publication-gate-aggregate-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "publication-runner-provenance-json": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -993,7 +997,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:f08c4970f33c059f8e0b43110f0063172fb1015ac914bdb0c8e9646692fb9f06"
+      "digest": "sha256:7e6283c8fbeab7a680bae57c9ab9c8eb94aab7400d3ee01c5b9dfdd03f149edb"
     },
     {
       "schemaVersion": 1,
@@ -1757,5 +1761,5 @@
       "digest": "sha256:9b9f9a2320c4349903d72ee46e329211b5538ed5ebebaa93559df4eafb835997"
     }
   ],
-  "digest": "sha256:1a8a2ace3d97dce074ccea44cfbd88d27e466e4bb8f87fb8ce129397256c2b51"
+  "digest": "sha256:266928038838e26ba1350c70d78290723ddb2fd209b66ab1afab776d948a379b"
 }

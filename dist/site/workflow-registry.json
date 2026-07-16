@@ -555,6 +555,7 @@
         "publication-admission-json",
         "publication-control-plane-audit-json",
         "publication-expected-json",
+        "publication-gate-aggregate-json",
         "publication-runner-provenance-json",
         "publication-used-nonces-json",
         "release-feedback-actor-privacy",
@@ -564,7 +565,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 38,
+      "inputCount": 39,
       "secrets": [
         "production-release-app-private-key"
       ],

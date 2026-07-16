@@ -85,7 +85,7 @@
       "path": "docs/publication-authority.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:920d4f14902ded1999f46d39f6d02db8cb5be6f22e376f6f2d456b3a1cc0c674"
+      "digest": "sha256:e191d248a52fc6488aef48050949ed0fd31064ab2a64cca2a5b529eeb68f0ff6"
     },
     {
       "id": "release-candidate",
@@ -269,7 +269,7 @@
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:f1e92ba87417dc9aac4f8cf080565f7f2c114b5007bb68b90f33692c73fdad88"
+      "digest": "sha256:797d8f0e81974a49125b17256bb8b4a85fc60673e06d6bbecbbf399651163437"
     }
   ],
   "facts": [

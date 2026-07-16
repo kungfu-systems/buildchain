@@ -1244,7 +1244,7 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /preview-cleanup-apply/);
   assert.match(workflow, /Plan main staging deploy/);
   assert.match(workflow, /github\.ref_name == 'main'/);
-  assert.match(workflow, /needs\.release-intent\.outputs\.production-release-approved == 'true'/);
+  assert.match(workflow, /needs\.publication-decision\.outputs\.approved == 'true'/);
   assert.match(workflow, /Apply staging deploy/);
   assert.match(workflow, /needs\.plan\.outputs\.web-surface-channel == 'staging'/);
   assert.match(workflow, /staging-aws-role-arn is required when staging-apply is true/);
@@ -1291,18 +1291,19 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /EVENT_NAME" = "workflow_dispatch".*web_surface_channel=staging/s);
   assert.ok(workflow.indexOf("id: gate") < workflow.indexOf("Run caller build"));
   assert.match(workflow, /Apply production deploy/);
-  assert.match(workflow, /Seal web production publication capability/);
+  assert.match(workflow, /Seal managed web production publication capability/);
   assert.match(
     workflow,
-    /name: Seal web production publication capability[\s\S]*?permissions:\n      actions: read\n      contents: read[\s\S]*?uses: \.\/\.github\/workflows\/\.publication-authority\.yml/,
+    /name: Verify external web production publication capability[\s\S]*?permissions:\n      actions: read\n      contents: read[\s\S]*?uses: \.\/\.github\/workflows\/\.publication-authority\.yml/,
   );
   assert.match(workflow, /uses: \.\/\.github\/workflows\/\.publication-authority\.yml/);
   assert.match(workflow, /publication-admission-json:/);
   assert.match(workflow, /publication-control-plane-audit-json:/);
+  assert.match(workflow, /publication-gate-aggregate-json:/);
   assert.match(workflow, /- publication-authority/);
   assert.match(workflow, /inputs\.production-apply/);
-  assert.match(workflow, /github\.event_name == 'workflow_dispatch' && inputs\.production-approved/);
-  assert.match(workflow, /github\.event_name == 'push' && github\.ref_name == 'main' && inputs\.production-release-on-main/);
+  assert.match(workflow, /BUILDCHAIN_PRODUCTION_APPROVED: \$\{\{ inputs\.production-approved \}\}/);
+  assert.match(workflow, /BUILDCHAIN_PRODUCTION_RELEASE_ON_MAIN: \$\{\{ inputs\.production-release-on-main \}\}/);
   assert.match(workflow, /production-aws-role-arn is required when production-apply is true/);
   assert.match(workflow, /Upload production apply diagnostics/);
   assert.match(workflow, /buildchain-web-surface-production-diagnostics/);
@@ -1321,6 +1322,38 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /Comment production deploy feedback and write passport/);
   assert.match(workflow, /buildchain-web-surface-production-release-passport/);
   assert.match(workflow, /web-surface-release-feedback\.mjs/);
+});
+
+test("web-surface side-effect jobs and sealed production paths have explicit authority", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/.web-surface.yml"),
+    "utf8",
+  );
+  const job = (id) => {
+    const match = workflow.match(new RegExp(`^  ${id}:\\n([\\s\\S]*?)(?=^  [a-z0-9-]+:\\n|\\Z)`, "m"));
+    assert.ok(match, `missing job ${id}`);
+    return match[0];
+  };
+  const plan = job("plan");
+  assert.match(plan, /pull-requests: write/);
+  assert.match(plan, /issues: write/);
+  assert.match(plan, /web-surface-release-pr-review\.mjs/);
+  assert.match(plan, /uses: \.\/\.buildchain\/runtime\/actions\/report-buildchain-issue/);
+
+  const decision = job("publication-decision");
+  assert.match(decision, /web-surface-production-decision\.mjs/);
+  assert.match(decision, /BUILDCHAIN_PRODUCTION_RELEASE_APPROVED/);
+  const authority = job("publication-authority");
+  assert.match(authority, /Create qualifying pre-publication controller receipt/);
+  assert.match(authority, /assemble-web-surface-publication-admission\.mjs/);
+  assert.match(authority, /needs\.publication-decision\.outputs\.approved == 'true'/);
+  const production = job("production-apply");
+  assert.match(production, /needs\.publication-authority\.result == 'success'/);
+  assert.match(production, /needs\.external-publication-authority\.result == 'success'/);
+  assert.ok(
+    production.indexOf("Verify sealed production capability before artifact download") <
+      production.indexOf("Download web-surface artifact"),
+  );
 });
 
 test("web-surface apply GitHub output summary omits operation logs", () => {
