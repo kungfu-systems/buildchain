@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:68a42e62f5204170bea16640febf52d5f3cefac3b95aa8c36eb0410725a39e34",
+      "digest": "sha256:a5c904aad95b55a3a83f9753c291418ee7cfa16a0455598d4a0c5c7e57fc19eb",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:68a42e62f5204170bea16640febf52d5f3cefac3b95aa8c36eb0410725a39e34",
+      "digest": "sha256:a5c904aad95b55a3a83f9753c291418ee7cfa16a0455598d4a0c5c7e57fc19eb",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -255,7 +255,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-authority",
       "export": "./publication-authority",
       "target": "./packages/core/publication-authority.js",
-      "digest": "sha256:3c95bd9d7abc5048fb7b456e411c08f2875fe1cf65940fa3e50689acb6781a0c",
+      "digest": "sha256:2563676499d75f637a47a56b7c98756c7886a327e8d539a4638446e6c4396d1a",
       "summary": "Sealed publication authority registry, runner provenance, control-plane audit, admission, and independent verification APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [

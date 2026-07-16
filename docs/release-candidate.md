@@ -140,3 +140,22 @@ consumer with a Shifu Gate registry supplies `publication-gate-aggregate-json`
 instead. Buildchain still requires caller-owned RC evidence, an exact authority
 runtime and source SHA, a repository-local publisher workflow, matching npm
 target/package identity, and a qualifying control-plane audit.
+
+A consumer that owns additional product qualification semantics can opt in to
+the sealed handoff without teaching Buildchain those semantics:
+
+```yaml
+      publication-consumer-predicate-id: kungfu.release-admission/v1
+      publication-consumer-qualification-command: node scripts/qualify-release.mjs
+```
+
+The command reads `BUILDCHAIN_PUBLICATION_CAPABILITY_PATH` and
+`BUILDCHAIN_PUBLICATION_GATE_AGGREGATE_PATH`, evaluates the complete aggregate,
+and writes a decision JSON document to
+`BUILDCHAIN_PUBLICATION_QUALIFICATION_RESULT_PATH`. It also receives
+`BUILDCHAIN_PUBLICATION_PREDICATE_ID` and
+`BUILDCHAIN_PUBLICATION_PREDICATE_DIGEST`. The separate qualification job has
+no write or OIDC permission and does not inherit publication secrets. A
+successful deterministic receipt is rechecked by the provider action
+immediately before mutation. Omitting both inputs preserves the existing
+consumer contract; supplying only one fails closed.

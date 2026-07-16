@@ -9,6 +9,7 @@ import {
   createPublicationArtifactManifestSet,
   createPublicationGateDecision,
   createRunnerProvenance,
+  publicationGateAggregateBindings,
 } from "../packages/core/publication-authority.js";
 
 function required(name) {
@@ -148,6 +149,8 @@ async function main() {
   const packageJson = JSON.parse(fs.readFileSync(path.join(runtimeRoot, "package.json"), "utf8"));
   const publicationVersion = required("BUILDCHAIN_PUBLICATION_VERSION");
   const issuedAt = new Date();
+  const gateBindings = publicationGateAggregateBindings(gateAggregate);
+  const qualificationRequired = process.env.BUILDCHAIN_CONSUMER_QUALIFICATION_REQUIRED === "true";
   const admission = createPublicationAdmission({
     registryDigest: registry.registryDigest,
     workflowPath: required("BUILDCHAIN_AUTHORITY_WORKFLOW_PATH"),
@@ -157,6 +160,7 @@ async function main() {
     runtimeSha,
     contractDigest: controllerReceipt.runtime?.contractDigest,
     policyDigest: gateAggregate.policyDigest,
+    gateRegistryDigest: gateBindings.registryDigest,
     controllerReceiptDigest: controllerReceipt.digest,
     runnerProvenanceDigest: runnerProvenance.receiptDigest,
     controlPlaneAuditDigest: controlPlaneAudit.receiptDigest,
@@ -170,9 +174,14 @@ async function main() {
     nonce: `${required("GITHUB_RUN_ID")}:${required("GITHUB_RUN_ATTEMPT")}:${sourceSha}`,
     issuedAt: issuedAt.toISOString(),
     expiresAt: new Date(issuedAt.getTime() + 10 * 60 * 1000).toISOString(),
+    qualification: {
+      required: qualificationRequired,
+      predicateId: process.env.BUILDCHAIN_CONSUMER_PREDICATE_ID || "",
+      predicateDigest: process.env.BUILDCHAIN_CONSUMER_PREDICATE_DIGEST || "",
+    },
   });
   const bindingNames = [
-    "repository", "publisherWorkflowPath", "sourceSha", "runtimeSha", "contractDigest", "policyDigest",
+    "repository", "publisherWorkflowPath", "sourceSha", "runtimeSha", "contractDigest", "policyDigest", "gateRegistryDigest",
     "controllerReceiptDigest", "gateAggregateDigest", "environment", "product", "target", "version", "channel",
     "artifactDigest",
   ];

@@ -12,6 +12,13 @@
   },
   "surfaceImpacts": [
     {
+      "id": "consumer-publication-qualification-handoff",
+      "impact": "minor",
+      "class": "publication-authority",
+      "rationale": "An opt-in credentialless consumer predicate receives the complete Gate aggregate and sealed capability, emits a deterministic receipt, and is reverified immediately before provider mutation without changing existing consumers.",
+      "source": ".github/workflows/release-candidate-promote.yml"
+    },
+    {
       "id": "release-line-promotion-authority",
       "impact": "patch",
       "class": "release-governance",
