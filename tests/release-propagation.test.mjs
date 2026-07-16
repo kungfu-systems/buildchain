@@ -208,7 +208,91 @@ test("release propagation reusable workflow invokes the checked out Buildchain r
     2,
   );
   assert.match(workflow, /LOCK_PATH: \$\{\{ steps\.plan\.outputs\.lock_path \}\}/);
-  assert.match(workflow, /git add -- "\$LOCK_PATH"\n\s+if git diff --cached --quiet -- "\$LOCK_PATH"/);
+  assert.match(
+    workflow,
+    /git add -- "\$LOCK_PATH"[\s\S]*?if git diff --cached --quiet -- "\$LOCK_PATH"/,
+  );
   assert.doesNotMatch(workflow, /if git diff --quiet/);
   assert.doesNotMatch(workflow, /git add \./);
+  assert.match(workflow, /git ls-remote --heads origin "refs\/heads\/\$BRANCH"/);
+  assert.match(workflow, /--force-with-lease="refs\/heads\/\$BRANCH:\$remote_sha"/);
+  assert.doesNotMatch(workflow, /git push --force(?:\s|$)/);
+  assert.match(workflow, /kungfu-buildchain-release-propagation-branch-reconciliation/);
+  assert.match(workflow, /"kind":"propagation-branch-reconciliation"/);
+  assert.match(workflow, /gh pr list[\s\S]*--state open[\s\S]*--head "\$BRANCH"/);
+});
+
+test("release propagation replaces a surviving managed branch with an exact lease and rejects stale writers", () => {
+  const cwd = tempDir("release-propagation-lease");
+  const remote = path.join(cwd, "remote.git");
+  const seed = path.join(cwd, "seed");
+  const writer = path.join(cwd, "writer");
+  const stale = path.join(cwd, "stale");
+  const concurrent = path.join(cwd, "concurrent");
+  const branch = "buildchain/release-propagation/kfd";
+  const ref = `refs/heads/${branch}`;
+  const run = (args, options = {}) => execFileSync("git", args, {
+    cwd: options.cwd || cwd,
+    encoding: "utf8",
+    stdio: options.stdio || "pipe",
+  }).trim();
+  const configure = (repo) => {
+    run(["config", "user.name", "Buildchain Test"], { cwd: repo });
+    run(["config", "user.email", "buildchain@example.test"], { cwd: repo });
+  };
+  const commitFile = (repo, file, content, message) => {
+    fs.writeFileSync(path.join(repo, file), content);
+    run(["add", "--", file], { cwd: repo });
+    run(["commit", "-m", message], { cwd: repo });
+  };
+
+  run(["init", "--bare", remote]);
+  run(["clone", remote, seed]);
+  configure(seed);
+  run(["checkout", "-b", "main"], { cwd: seed });
+  commitFile(seed, "base.txt", "base\n", "test: base");
+  run(["push", "-u", "origin", "main"], { cwd: seed });
+  run(["checkout", "-b", branch], { cwd: seed });
+  commitFile(seed, "kfd.release.json", "{\"version\":1}\n", "test: first lock");
+  run(["push", "-u", "origin", branch], { cwd: seed });
+  run(["checkout", "main"], { cwd: seed });
+  run(["merge", "--no-ff", branch, "-m", "test: merge first propagation"], { cwd: seed });
+  run(["push", "origin", "main"], { cwd: seed });
+
+  run(["clone", "--branch", "main", remote, writer]);
+  configure(writer);
+  run(["checkout", "-b", branch], { cwd: writer });
+  commitFile(writer, "kfd.release.json", "{\"version\":2}\n", "test: next lock");
+  const observed = run(["ls-remote", "--heads", "origin", ref], { cwd: writer }).split("\t")[0];
+  run([
+    "push",
+    `--force-with-lease=${ref}:${observed}`,
+    "origin",
+    `HEAD:${ref}`,
+  ], { cwd: writer });
+  assert.equal(
+    run(["ls-remote", "--heads", "origin", ref], { cwd: writer }).split("\t")[0],
+    run(["rev-parse", "HEAD"], { cwd: writer }),
+  );
+
+  run(["clone", remote, stale]);
+  configure(stale);
+  run(["checkout", "-b", branch, `origin/${branch}`], { cwd: stale });
+  const staleLease = run(["rev-parse", "HEAD"], { cwd: stale });
+  commitFile(stale, "kfd.release.json", "{\"version\":3}\n", "test: stale lock");
+
+  run(["clone", remote, concurrent]);
+  configure(concurrent);
+  run(["checkout", "-b", branch, `origin/${branch}`], { cwd: concurrent });
+  commitFile(concurrent, "concurrent.txt", "advanced\n", "test: concurrent advance");
+  run(["push", "origin", `HEAD:${ref}`], { cwd: concurrent });
+
+  const rejected = spawnSync("git", [
+    "push",
+    `--force-with-lease=${ref}:${staleLease}`,
+    "origin",
+    `HEAD:${ref}`,
+  ], { cwd: stale, encoding: "utf8" });
+  assert.notEqual(rejected.status, 0);
+  assert.match(`${rejected.stdout}\n${rejected.stderr}`, /stale info|rejected/);
 });

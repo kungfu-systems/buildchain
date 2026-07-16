@@ -82,6 +82,13 @@
       "source": ".github/workflows/release-propagation.yml"
     },
     {
+      "id": "release-propagation-managed-branch-reconciliation",
+      "impact": "patch",
+      "class": "release-propagation",
+      "rationale": "Repeated propagation reconciles a surviving managed downstream branch with an exact remote-SHA lease, records the branch and PR decision as controller evidence, and rejects concurrent stale writers.",
+      "source": ".github/workflows/release-propagation.yml"
+    },
+    {
       "id": "controller-evidence-version-state-isolation",
       "impact": "patch",
       "class": "release-governance",

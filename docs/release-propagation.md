@@ -187,6 +187,15 @@ jobs:
       propagation-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
 ```
 
+The downstream branch name may be reused across upstream releases. Before
+replacing an existing managed branch, the workflow reads its exact remote SHA
+and pushes with an explicit `--force-with-lease=<ref>:<sha>`. A surviving branch
+from a merged PR is therefore reconciled without manual deletion, while a
+concurrent writer makes the lease fail closed. The controller receipt includes a
+`propagation-branch-reconciliation` evidence file recording the branch, observed
+remote SHA, pushed SHA, lease mode, and the deterministically created or updated
+open PR.
+
 The workflow checks out the Buildchain runtime selected by
 `buildchain-repository` and `buildchain-ref` into `.buildchain/runtime`, invokes
 that runtime for the propagation plan and lock write, then checks out the
