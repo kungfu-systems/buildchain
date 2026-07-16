@@ -369,8 +369,8 @@ valid, the transaction can stop in `finalizing` and output
 and completes ref movement without republishing matching artifacts. New
 Buildchain-managed promotions first try to finish generated version-state
 bookkeeping with the promotion token directly. Before patching a protected
-generated bookkeeping ref, Buildchain emits the configured required check on
-the exact generated version-state commit so strict branch protection can
+generated bookkeeping ref, Buildchain emits every configured required check on
+the exact generated version-state commit so branch protection can
 validate the automation path without a second build, then uses the generated
 ref update token for the protected ref PATCH. If release finalization
 bookkeeping is still rejected, Buildchain creates or reuses a same-repository

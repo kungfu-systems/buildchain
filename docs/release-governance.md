@@ -613,7 +613,7 @@ bookkeeping after the reviewed channel PR has merged. Direct
 `branch-protection-bypass-teams`; the action also adds the current promotion
 token's authenticated user or app to the managed bypass allowlist. Before
 patching a protected generated bookkeeping ref, the action creates the
-configured required check on the exact generated version-state commit, so strict
+full configured required-check set on the exact generated version-state commit, so strict
 status checks are satisfied by machine-verifiable Buildchain evidence rather
 than a human PR. The protected ref PATCH itself uses the generated ref update
 token; the reusable wrapper defaults it to

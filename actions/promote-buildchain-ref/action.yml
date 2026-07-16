@@ -33,7 +33,7 @@ inputs:
     description: "Exact status check context required by protected channel branches"
     default: "check / check"
   generated-status-check-token:
-    description: "GitHub token used to create the generated version-state required check before direct protected branch updates. Defaults to token."
+    description: "GitHub token used to create every generated version-state check required by the managed branch before direct protected branch updates. Defaults to token."
     default: ""
   generated-ref-update-token:
     description: "GitHub token used to update Buildchain-generated protected version-state refs. Defaults to token."
