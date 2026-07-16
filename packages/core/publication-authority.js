@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import { validateControllerReceipt } from "./controller-evidence.js";
 import { createPublicationArtifactCandidate } from "./publication-artifact-candidate.js";
 import { sha256Json, validateReleaseCandidatePassport } from "./release-candidate.js";
+import { createWebSurfacePublicationCandidate } from "./web-surface-publication-candidate.js";
 
 export const PUBLICATION_AUTHORITY_REGISTRY_CONTRACT =
   "kungfu-buildchain-publication-authority-registry";
@@ -451,9 +452,9 @@ export function publicationGateAggregateBindings(gateAggregate) {
   };
 }
 
-function validateGateAggregate(gateAggregate, { admission, passport }) {
+function validateGateAggregate(gateAggregate, { admission, passport, sourceSha = "" }) {
   const bindings = publicationGateAggregateBindings(gateAggregate);
-  const passportSourceSha = passport.source?.headSha || passport.source?.sha;
+  const passportSourceSha = sourceSha || passport?.source?.headSha || passport?.source?.sha;
   if (![admission.sourceSha, passportSourceSha].includes(bindings.sourceSha)) {
     throw new Error("gate aggregate source SHA mismatch");
   }
@@ -463,6 +464,55 @@ function validateGateAggregate(gateAggregate, { admission, passport }) {
 function validatePublicationEvidence(publicationEvidence, admission) {
   if (!publicationEvidence || typeof publicationEvidence !== "object" || Array.isArray(publicationEvidence)) {
     throw new Error("independent publication evidence is required");
+  }
+  if (publicationEvidence.webSurfaceCandidate) {
+    const evidence = publicationEvidence.webSurfaceCandidate;
+    const candidate = createWebSurfacePublicationCandidate(evidence);
+    const controllerReceiptDigest = normalizeDigest(
+      evidence.controllerReceipt.digest,
+      "controllerReceipt.digest",
+    );
+    if (
+      controllerReceiptDigest !==
+      normalizeDigest(admission.controllerReceiptDigest, "admission.controllerReceiptDigest")
+    ) {
+      throw new Error("controller receipt evidence binding mismatch");
+    }
+    const contractDigest = normalizeDigest(
+      evidence.controllerReceipt.runtime?.contractDigest,
+      "controllerReceipt.runtime.contractDigest",
+    );
+    if (contractDigest !== normalizeDigest(admission.contractDigest, "admission.contractDigest")) {
+      throw new Error("runtime contract evidence binding mismatch");
+    }
+    const gate = validateGateAggregate(publicationEvidence.gateAggregate, {
+      admission,
+      sourceSha: candidate.sourceSha,
+    });
+    if (gate.gateAggregateDigest !== normalizeDigest(admission.gateAggregateDigest, "admission.gateAggregateDigest")) {
+      throw new Error("Gate aggregate evidence binding mismatch");
+    }
+    if (gate.policyDigest !== normalizeDigest(admission.policyDigest, "admission.policyDigest")) {
+      throw new Error("Gate policy evidence binding mismatch");
+    }
+    if (candidate.candidateDigest !== normalizeDigest(admission.artifactDigest, "admission.artifactDigest")) {
+      throw new Error("web-surface publication candidate evidence binding mismatch");
+    }
+    return {
+      sourceTreeSha: candidate.sourceTreeSha,
+      controllerReceiptDigest,
+      contractDigest,
+      gateAggregateDigest: gate.gateAggregateDigest,
+      policyDigest: gate.policyDigest,
+      gateRegistryDigest: gate.registryDigest,
+      artifactDigest: candidate.candidateDigest,
+      evidenceDigest: publicationAuthorityDigest({
+        sourceTreeSha: candidate.sourceTreeSha,
+        controllerReceiptDigest,
+        gateAggregateDigest: gate.gateAggregateDigest,
+        artifactDigest: candidate.candidateDigest,
+      }),
+    };
   }
   if (publicationEvidence.publicationArtifactCandidate) {
     const candidate = createPublicationArtifactCandidate(publicationEvidence.publicationArtifactCandidate);

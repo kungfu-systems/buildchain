@@ -159,6 +159,11 @@ on:
         default: ""
         type: string
         required: false
+      publication-gate-aggregate-json:
+        description: "Optional complete Gate aggregate for the external sealed-evidence compatibility path."
+        default: ""
+        type: string
+        required: false
       publication-expected-json:
         description: "Consumer-owned exact production source, runtime, Gate, artifact, target, and channel bindings."
         default: ""
@@ -528,12 +533,45 @@ jobs:
               .addRaw(`- required head prefix: \`${requiredHeadPrefix || "(none)"}\`\n`)
               .write();
 
+  publication-decision:
+    name: Resolve trusted production decision
+    runs-on: ubuntu-24.04
+    needs:
+      - runtime
+      - release-intent
+    permissions:
+      contents: read
+    outputs:
+      approved: ${{ steps.decision.outputs.approved }}
+      decision-json: ${{ steps.decision.outputs.decision-json }}
+    steps:
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.runtime.outputs.runtime-sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Resolve trusted production decision
+        id: decision
+        run: node .buildchain/runtime/scripts/web-surface-production-decision.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BUILDCHAIN_PRODUCTION_APPLY: ${{ inputs.production-apply }}
+          BUILDCHAIN_PRODUCTION_APPROVED: ${{ inputs.production-approved }}
+          BUILDCHAIN_PRODUCTION_RELEASE_ON_MAIN: ${{ inputs.production-release-on-main }}
+          BUILDCHAIN_PRODUCTION_RELEASE_APPROVED: ${{ needs.release-intent.outputs.production-release-approved }}
+          BUILDCHAIN_PRODUCTION_RELEASE_PR: ${{ needs.release-intent.outputs.production-release-pr }}
+          BUILDCHAIN_PRODUCTION_RELEASE_SOURCE: ${{ needs.release-intent.outputs.production-release-source }}
+
   apply-input-gate:
     name: Validate web-surface apply inputs
     runs-on: ubuntu-24.04
     needs:
       - runtime
       - release-intent
+      - publication-decision
     outputs:
       web-surface-channel: ${{ steps.gate.outputs.web-surface-channel }}
       web-surface-alias: ${{ steps.gate.outputs.web-surface-alias }}
@@ -553,6 +591,7 @@ jobs:
           PRODUCTION_APPROVED: ${{ inputs.production-approved }}
           PRODUCTION_RELEASE_ON_MAIN: ${{ inputs.production-release-on-main }}
           PRODUCTION_RELEASE_APPROVED: ${{ needs.release-intent.outputs.production-release-approved }}
+          PRODUCTION_DECISION_APPROVED: ${{ needs.publication-decision.outputs.approved }}
           PRODUCTION_ROLE_ARN: ${{ inputs.production-aws-role-arn }}
         run: |
           set -euo pipefail
@@ -568,15 +607,13 @@ jobs:
             echo "::error::staging-aws-role-arn is required before staging-apply can build or deploy"
             exit 1
           fi
-          production_event_approved=false
-          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$PRODUCTION_APPROVED" = "true" ]; then
-            production_event_approved=true
-          fi
-          if [ "$EVENT_NAME" = "push" ] && [ "$REF_NAME" = "main" ] && [ "$PRODUCTION_RELEASE_ON_MAIN" = "true" ] && [ "$PRODUCTION_RELEASE_APPROVED" = "true" ]; then
-            production_event_approved=true
-          fi
+          production_event_approved="$PRODUCTION_DECISION_APPROVED"
           if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$PRODUCTION_APPLY" = "true" ] && [ "$PRODUCTION_APPROVED" != "true" ]; then
             echo "::error::production-apply requires production-approved=true before production build or deploy"
+            exit 1
+          fi
+          if [ "$PRODUCTION_APPLY" = "true" ] && [ "$production_event_approved" != "true" ]; then
+            echo "::error::production-apply requires a trusted manual actor or reviewed matching release PR"
             exit 1
           fi
           if [ "$PRODUCTION_APPLY" = "true" ] && [ "$production_event_approved" = "true" ] && [ -z "$PRODUCTION_ROLE_ARN" ]; then
@@ -608,6 +645,11 @@ jobs:
       - release-intent
       - apply-input-gate
       - controller-plan
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: write
+      issues: write
     outputs:
       web-surface-channel: ${{ steps.web.outputs.web-surface-channel }}
       web-surface-alias: ${{ steps.web.outputs.web-surface-alias }}
@@ -1472,19 +1514,17 @@ jobs:
           include-hidden-files: true
           if-no-files-found: warn
 
-  publication-authority:
-    name: Seal web production publication capability
+  external-publication-authority:
+    name: Verify external web production publication capability
     needs:
       - plan
       - runtime
-      - release-intent
+      - publication-decision
     if: >-
       ${{
         inputs.production-apply &&
-        (
-          (github.event_name == 'workflow_dispatch' && inputs.production-approved) ||
-          (github.event_name == 'push' && github.ref_name == 'main' && inputs.production-release-on-main && needs.release-intent.outputs.production-release-approved == 'true')
-        )
+        needs.publication-decision.outputs.approved == 'true' &&
+        (inputs.publication-admission-json != '' || inputs.publication-runner-provenance-json != '' || inputs.publication-control-plane-audit-json != '' || inputs.publication-gate-aggregate-json != '' || inputs.publication-expected-json != '')
       }}
     permissions:
       actions: read
@@ -1496,25 +1536,111 @@ jobs:
       admission-json: ${{ inputs.publication-admission-json }}
       runner-provenance-json: ${{ inputs.publication-runner-provenance-json }}
       control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
+      gate-aggregate-json: ${{ inputs.publication-gate-aggregate-json }}
       expected-json: ${{ inputs.publication-expected-json }}
       used-nonces-json: ${{ inputs.publication-used-nonces-json }}
+
+  publication-authority:
+    name: Seal managed web production publication capability
+    runs-on: ubuntu-24.04
+    needs:
+      - plan
+      - runtime
+      - controller-plan
+      - publication-decision
+    if: >-
+      ${{
+        inputs.production-apply &&
+        needs.publication-decision.outputs.approved == 'true' &&
+        inputs.publication-admission-json == '' && inputs.publication-runner-provenance-json == '' && inputs.publication-control-plane-audit-json == '' && inputs.publication-gate-aggregate-json == '' && inputs.publication-expected-json == ''
+      }}
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      capability-json: ${{ steps.authority.outputs.capability-json }}
+      capability-digest: ${{ steps.authority.outputs.capability-digest }}
+      candidate-json: ${{ steps.authority.outputs.candidate-json }}
+    steps:
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.runtime.outputs.runtime-sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Download web-surface controller plan
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ needs.controller-plan.outputs.controller-plan-artifact }}
+          path: .buildchain/controller
+
+      - name: Download web-surface production plan
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: buildchain-web-surface-plans
+          path: .buildchain/controller/web-plans
+
+      - name: Select production plan evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          plan_file="$(find .buildchain/controller/web-plans -name web-surface-production-plan.json -print -quit)"
+          if [ -z "$plan_file" ]; then
+            echo "::error::managed production authority requires exactly one production plan"
+            exit 1
+          fi
+          cp "$plan_file" .buildchain/controller/web-surface-plan.json
+
+      - name: Create qualifying pre-publication controller receipt
+        run: node .buildchain/runtime/scripts/controller-evidence.mjs --mode receipt
+        env:
+          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+          BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
+            [{"id":"resolve-runtime","status":"${{ needs.runtime.result }}"},{"id":"plan","status":"${{ needs.plan.result }}"},{"id":"build","status":"${{ needs.plan.outputs.build-outcome || needs.plan.result }}"},{"id":"verify","status":"${{ needs.plan.outputs.verify-outcome || needs.plan.result }}"},{"id":"publication-authority","status":"skipped"},{"id":"apply","status":"skipped"},{"id":"aggregate","status":"success"}]
+          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: '[{"kind":"web-surface-plan","path":".buildchain/controller/web-surface-plan.json"}]'
+          BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: buildchain-web-surface-prepublication-receipt-${{ github.sha }}
+          BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/receipt.json
+
+      - name: Assemble and verify managed web publication admission
+        id: authority
+        run: node .buildchain/runtime/scripts/assemble-web-surface-publication-admission.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BUILDCHAIN_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_SOURCE_SHA: ${{ github.sha }}
+          BUILDCHAIN_RUNTIME_ROOT: .buildchain/runtime
+          BUILDCHAIN_WEB_SURFACE_PLAN_PATH: .buildchain/controller/web-surface-plan.json
+          BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/receipt.json
+          BUILDCHAIN_PRODUCTION_DECISION_JSON: ${{ needs.publication-decision.outputs.decision-json }}
+          BUILDCHAIN_PUBLICATION_ENVIRONMENT: ${{ inputs.production-environment }}
+          BUILDCHAIN_PRODUCTION_ROLE_ARN: ${{ inputs.production-aws-role-arn }}
+          BUILDCHAIN_OUTPUT_DIR: .buildchain/web-publication-authority
+
+      - name: Upload managed web publication authority evidence
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-web-publication-authority-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .buildchain/web-publication-authority/*.json
+          if-no-files-found: error
 
   production-apply:
     name: Apply production deploy
     if: >-
-      ${{
+      ${{ always() &&
         inputs.production-apply &&
-        (
-          (github.event_name == 'workflow_dispatch' && inputs.production-approved) ||
-          (github.event_name == 'push' && github.ref_name == 'main' && inputs.production-release-on-main && needs.release-intent.outputs.production-release-approved == 'true')
-        )
+        needs.publication-decision.outputs.approved == 'true' &&
+        (needs.publication-authority.result == 'success' || needs.external-publication-authority.result == 'success')
       }}
     runs-on: ubuntu-24.04
     needs:
       - plan
       - runtime
       - release-intent
+      - publication-decision
       - publication-authority
+      - external-publication-authority
     environment: ${{ inputs.production-environment }}
     outputs:
       production-apply-result-json: ${{ steps.apply.outputs.web-surface-apply-result-json }}
@@ -1556,6 +1682,18 @@ jobs:
         with:
           name: buildchain-web-surface-plans
           path: .buildchain/downloaded-plans
+
+      - name: Verify sealed production capability before artifact download
+        env:
+          BUILDCHAIN_PUBLICATION_CAPABILITY_JSON: ${{ needs.publication-authority.outputs.capability-json || needs.external-publication-authority.outputs.capability-json }}
+          BUILDCHAIN_WEB_SURFACE_CANDIDATE_JSON: ${{ needs.publication-authority.outputs.candidate-json }}
+          BUILDCHAIN_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_SOURCE_SHA: ${{ github.sha }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.runtime.outputs.runtime-sha }}
+          BUILDCHAIN_PUBLICATION_ENVIRONMENT: ${{ inputs.production-environment }}
+          BUILDCHAIN_PRODUCTION_ROLE_ARN: ${{ inputs.production-aws-role-arn }}
+          BUILDCHAIN_WEB_SURFACE_PLAN_PATH: .buildchain/downloaded-plans/web-surface-production-plan.json
+        run: node .buildchain/runtime/scripts/verify-web-surface-publication-capability.mjs
 
       - name: Download web-surface artifact
         uses: actions/download-artifact@v7.0.0
@@ -1685,6 +1823,7 @@ jobs:
       - preview-cleanup
       - staging-apply
       - publication-authority
+      - external-publication-authority
       - production-apply
     if: ${{ always() && needs.controller-plan.result == 'success' }}
     runs-on: ubuntu-24.04
@@ -1735,7 +1874,7 @@ jobs:
         env:
           BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
           BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
-            [{"id":"resolve-runtime","status":"${{ needs.runtime.result }}"},{"id":"plan","status":"${{ needs.plan.result }}"},{"id":"build","status":"${{ needs.plan.outputs.build-outcome || needs.plan.result }}"},{"id":"verify","status":"${{ needs.plan.outputs.verify-outcome || needs.plan.result }}"},{"id":"publication-authority","status":"${{ needs.publication-authority.result }}"},{"id":"apply","status":"${{ (needs.preview-apply.result == 'failure' || needs.preview-cleanup.result == 'failure' || needs.staging-apply.result == 'failure' || needs.production-apply.result == 'failure') && 'failure' || (needs.preview-apply.result == 'cancelled' || needs.preview-cleanup.result == 'cancelled' || needs.staging-apply.result == 'cancelled' || needs.production-apply.result == 'cancelled') && 'cancelled' || (needs.preview-apply.result == 'success' || needs.preview-cleanup.result == 'success' || needs.staging-apply.result == 'success' || needs.production-apply.result == 'success') && 'success' || 'skipped' }}"},{"id":"aggregate","status":"${{ (needs.plan.result == 'failure' || needs.preview-apply.result == 'failure' || needs.preview-cleanup.result == 'failure' || needs.staging-apply.result == 'failure' || needs.production-apply.result == 'failure') && 'failure' || (needs.plan.result == 'cancelled' || needs.preview-apply.result == 'cancelled' || needs.preview-cleanup.result == 'cancelled' || needs.staging-apply.result == 'cancelled' || needs.production-apply.result == 'cancelled') && 'cancelled' || needs.plan.result == 'success' && 'success' || 'skipped' }}"}]
+            [{"id":"resolve-runtime","status":"${{ needs.runtime.result }}"},{"id":"plan","status":"${{ needs.plan.result }}"},{"id":"build","status":"${{ needs.plan.outputs.build-outcome || needs.plan.result }}"},{"id":"verify","status":"${{ needs.plan.outputs.verify-outcome || needs.plan.result }}"},{"id":"publication-authority","status":"${{ (needs.publication-authority.result == 'success' || needs.external-publication-authority.result == 'success') && 'success' || (needs.publication-authority.result == 'failure' || needs.external-publication-authority.result == 'failure') && 'failure' || 'skipped' }}"},{"id":"apply","status":"${{ (needs.preview-apply.result == 'failure' || needs.preview-cleanup.result == 'failure' || needs.staging-apply.result == 'failure' || needs.production-apply.result == 'failure') && 'failure' || (needs.preview-apply.result == 'cancelled' || needs.preview-cleanup.result == 'cancelled' || needs.staging-apply.result == 'cancelled' || needs.production-apply.result == 'cancelled') && 'cancelled' || (needs.preview-apply.result == 'success' || needs.preview-cleanup.result == 'success' || needs.staging-apply.result == 'success' || needs.production-apply.result == 'success') && 'success' || 'skipped' }}"},{"id":"aggregate","status":"${{ (needs.plan.result == 'failure' || needs.preview-apply.result == 'failure' || needs.preview-cleanup.result == 'failure' || needs.staging-apply.result == 'failure' || needs.production-apply.result == 'failure') && 'failure' || (needs.plan.result == 'cancelled' || needs.preview-apply.result == 'cancelled' || needs.preview-cleanup.result == 'cancelled' || needs.staging-apply.result == 'cancelled' || needs.production-apply.result == 'cancelled') && 'cancelled' || needs.plan.result == 'success' && 'success' || 'skipped' }}"}]
           BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ steps.select-plan.outcome == 'success' && '[{"kind":"web-surface-plan","path":".buildchain/controller/web-surface-plan.json"}]' || '[]' }}
           BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ needs.plan.result != 'success' && 'web-surface-incomplete' || steps.select-plan.outcome != 'success' && 'no-applicable-web-surface-channel' || '' }}
           BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Web-surface controller did not complete an applicable channel successfully

@@ -746,11 +746,25 @@ When enabled, Buildchain owns the full release apply state machine:
   action. Consumers do not need to hand-write `gh pr create` or production
   release-intent glue.
 - Production runs when `production-apply` is true and either:
-  - a trusted `workflow_dispatch` passes `production-approved=true`; or
+  - a `workflow_dispatch` passes `production-approved=true` and the triggering
+    actor currently has `write`, `maintain`, or `admin` permission; or
   - `production-release-on-main=true` and the `main` push commit is associated
     with exactly one same-repository, merged release pull request matching
     `production-release-label` and `production-release-head-prefix`.
   The production job is then gated by the configured GitHub Environment.
+- Before production artifact download, Buildchain assembles a managed sealed
+  publication capability from the exact source/runtime SHAs, production plan
+  and artifact hash, a qualifying pre-publication controller receipt, the
+  trusted manual or reviewed-release-PR decision, production Environment and
+  AWS role target, an ephemeral-runner receipt, and a fresh nonce. Production
+  revalidates that capability against the downloaded plan before it downloads
+  product bytes. The later AWS OIDC exchange remains the provider's final
+  transaction-time authorization decision and fails closed before deploy apply.
+- The `publication-*-json` inputs are an advanced external-evidence
+  compatibility path, not a prerequisite for the standard release-PR or trusted
+  manual mechanisms. External evidence must now include
+  `publication-gate-aggregate-json`; supplying only a partial set still fails
+  closed.
 - Production apply writes a production release feedback passport artifact and
   comments the release PR with the production URL, source SHA, artifact
   identity, run URL, rollback pointer, and failure context when apply did not
@@ -844,9 +858,9 @@ another release PR.
 
 Apply-only inputs are validated before the caller build or verification command
 runs. If the current event would run preview, staging, or production apply,
-missing role inputs or a production apply without `production-approved=true`
-on manual dispatch fail immediately instead of spending the build and plan jobs
-first.
+missing role inputs, a production apply without `production-approved=true` on
+manual dispatch, or a manual actor without repository write authority fail
+immediately instead of spending the build and plan jobs first.
 
 Callers must grant `id-token: write` for OIDC role assumption. Preview comments
 need `pull-requests: write`. Automatic release PR creation also needs

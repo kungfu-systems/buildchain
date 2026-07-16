@@ -167,6 +167,14 @@ export {
 } from "./publication-artifact-candidate.js";
 
 export {
+  WEB_SURFACE_PRODUCTION_DECISION_CONTRACT,
+  WEB_SURFACE_PUBLICATION_CANDIDATE_CONTRACT,
+  createWebSurfaceProductionDecision,
+  createWebSurfacePublicationCandidate,
+  webSurfacePublicationDigest,
+} from "./web-surface-publication-candidate.js";
+
+export {
   buildchainPublicationAuthorityDescriptors,
   createBuildchainPublicationAuthorityRegistry,
 } from "./buildchain-publication-authority.js";

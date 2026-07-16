@@ -136,6 +136,30 @@ publication capability.
 Evidence publication is a separate authority class and never grants product
 publication.
 
+## Managed web-surface production
+
+The reusable web-surface controller owns a complete standard producer path for
+its documented production mechanisms. A reviewed matching release-PR merge or a
+manual dispatch by an actor with current repository write authority creates a
+signed decision bound to the exact source SHA. After build, verify, and
+production planning, the workflow creates a qualifying pre-publication
+controller receipt and assembles a ten-minute admission over the source tree,
+immutable Buildchain runtime, deployment plan, artifact hash, production
+Environment, AWS role/deploy target, runner provenance, decision digest, and
+nonce. The independent verifier emits the scoped `web-production` capability.
+
+The production job rechecks the capability and candidate against the same plan
+before downloading product artifacts. AWS authorization is deliberately
+recorded as `provider-at-transaction`: the capability binds the exact role and
+Environment, while `configure-aws-credentials` performs the live OIDC exchange
+and remains the final provider authorization gate before mutation. Buildchain
+does not claim that an IAM trust relationship passed before that transaction.
+
+Externally assembled admissions remain an optional compatibility path and must
+provide the full admission, runner, control-plane, Gate aggregate, expected
+bindings, and nonce set. They are not required for the managed web-surface
+release-PR or trusted-manual paths.
+
 ## Consumer qualification handoff
 
 Consumers may explicitly opt in to a final, consumer-owned qualification

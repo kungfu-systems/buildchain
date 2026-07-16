@@ -937,6 +937,7 @@
           "publication-admission-json",
           "publication-control-plane-audit-json",
           "publication-expected-json",
+          "publication-gate-aggregate-json",
           "publication-runner-provenance-json",
           "publication-used-nonces-json",
           "release-feedback-actor-privacy",
@@ -946,7 +947,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 38,
+        "inputCount": 39,
         "secrets": [
           "production-release-app-private-key"
         ],
@@ -3461,8 +3462,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "b07ed2241d34696ad0500c3431b2106b1499a0d4372a77385a8c0e0698421d76",
-    "workflowRegistryDigest": "f4dc70cba95a30b79eadbffc3a4ba5f8d382aae220a7bc13965365c2bbd5e674",
-    "pageRegistryDigest": "8c365bddf10dad5f2de430f5d0834ea19923ac559715cba0abb6dc77da16f2d4"
+    "workflowRegistryDigest": "62b7ca87803c461e1e1436a477c3b6b70103eed84dbf14d855d383e810d7d71e",
+    "pageRegistryDigest": "00a18074fdf904210bc0afae1a06121d45643b60b00348100f51731479bd9dcd"
   },
   "comparison": {
     "missingCliRegistry": [],
