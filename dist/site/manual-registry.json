@@ -316,7 +316,7 @@
       "title": "Publish transaction",
       "path": "docs/publish-transaction.md",
       "plane": "verify",
-      "digest": "sha256:9e77030dbd69e27c2402d855980f7560a465270cac1f3225c0470523ab4a8ddf",
+      "digest": "sha256:cc2f4c9d2b9988962a237bbc7e8da83385d45585e2b2dd105ff4c4334a74c05d",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator"
@@ -329,7 +329,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:e97fd55d09facff9a6a5087fca5881d9756f33e791c9c3b9f9a8164ed2030c1d",
+      "digest": "sha256:5cf4bf4332119531f6aaa1c123d7f64e6af4a61611c4e4a33d40bd9fb46448cf",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",

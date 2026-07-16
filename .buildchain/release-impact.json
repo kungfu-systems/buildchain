@@ -82,6 +82,13 @@
       "source": ".github/workflows/release-propagation.yml"
     },
     {
+      "id": "generated-version-state-required-check-set",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Generated version-state commits receive every status check preserved by the managed channel policy before a direct protected ref update, so adding a second required verification context cannot strand a publication after npm succeeds.",
+      "source": "actions/promote-buildchain-ref/lib.js"
+    },
+    {
       "id": "release-propagation-managed-branch-reconciliation",
       "impact": "patch",
       "class": "release-propagation",
