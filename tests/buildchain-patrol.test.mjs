@@ -48,6 +48,9 @@ function client({ pullRequests = [] } = {}) {
     async getBranchSha() {
       return "base-after";
     },
+    async getMergeQueueState() {
+      return { enabled: false, id: "", entries: [] };
+    },
   };
 }
 

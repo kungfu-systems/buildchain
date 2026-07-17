@@ -435,9 +435,21 @@ The workflow defaults are conservative. A PR is skipped unless it targets the
 configured dev line, is not a draft, has the ready label, has no block label,
 comes from the same repository, uses an allowed work-branch prefix, has a
 current approval, is mergeable, and has the configured required checks passing.
-After each merge, the next PR is re-evaluated before it can move the protected
-dev branch. This prevents one merge from silently making the next candidate
-stale or conflicting.
+`landing-mode: auto` reads the target branch's native merge-queue state. When a
+queue exists, Buildchain never calls the direct merge endpoint: it admits at
+most one PR against the observed target-branch SHA and immutable PR head, then
+calls GraphQL `enqueuePullRequest` with `expectedHeadOid`. GitHub's
+`merge_group` checks remain the final authority for the projected merge.
+
+The admission receipt records the expected and observed base/head SHAs, policy
+checks, decision, reason, and active predecessor. Buildchain re-reads the base,
+head, mergeability, and native queue immediately before enqueueing. Base or
+head drift fails closed, an active queue entry blocks admission, and a rejected
+ready predecessor leaves its PR open while later PRs receive
+`blocked-by-predecessor`. Workflow concurrency serializes Buildchain-owned
+admission runs; GitHub still owns the atomic queue and protected-ref update.
+Repositories may explicitly select `landing-mode: direct` only when the target
+branch has no native queue. Queue presence always disables the direct path.
 
 The canonical consumer required check context is `check / check`, matching the
 reusable workflow call plus its `check` job. Buildchain's own `Verify` workflow
@@ -497,6 +509,7 @@ jobs:
       ready-label: ready
       block-labels: blocked,do-not-merge
       max-merges: 1
+      landing-mode: auto
       dry-run: ${{ inputs.dry-run || false }}
 ```
 
