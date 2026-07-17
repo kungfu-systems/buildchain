@@ -1,0 +1,78 @@
+name: Dev Merge Queue Governance
+
+on:
+  push:
+    branches:
+      - dev/v*/v*
+    paths:
+      - .buildchain/buildchain.toml
+      - .github/workflows/**
+      - bin/buildchain.mjs
+      - packages/core/buildchain-config.js
+      - scripts/dev-merge-queue.mjs
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Protected Buildchain dev branch"
+        required: true
+        type: string
+      apply:
+        description: "Apply the reconciled policy after emitting the plan"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  reconcile:
+    name: Reconcile declared dev merge queue
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+      BUILDCHAIN_TARGET_BRANCH: ${{ inputs.branch || github.ref_name }}
+      BUILDCHAIN_APPLY: ${{ github.event_name == 'push' || inputs.apply }}
+    steps:
+      - name: Checkout governed branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.BUILDCHAIN_TARGET_BRANCH }}
+          persist-credentials: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Reconcile declared policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(
+            dev merge-queue
+            --cwd .
+            --repository "$GITHUB_REPOSITORY"
+            --branch "$BUILDCHAIN_TARGET_BRANCH"
+            --from-config
+          )
+          if [[ "$BUILDCHAIN_APPLY" == "true" ]]; then
+            args+=(--apply)
+          fi
+          node bin/buildchain.mjs "${args[@]}" | tee .buildchain-dev-merge-queue.json
+          {
+            echo "## Dev merge queue governance"
+            echo
+            echo "- branch: $BUILDCHAIN_TARGET_BRANCH"
+            echo "- mode: $(jq -r '.policyResolution.mode' .buildchain-dev-merge-queue.json)"
+            echo "- action: $(jq -r '.action' .buildchain-dev-merge-queue.json)"
+            echo "- applied: $(jq -r '.applied' .buildchain-dev-merge-queue.json)"
+            echo "- source branch: $(jq -r '.policyResolution.sourceBranch // "none"' .buildchain-dev-merge-queue.json)"
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -158,6 +158,8 @@ export function planReleaseLineBootstrap({
   const alphaRef = `alpha/v${parsedMajor}/${line}`;
   const releaseRef = `release/v${parsedMajor}/${line}`;
   const loadedConfig = loadBuildchainConfig(cwd);
+  const declaredMergeQueue = loadedConfig?.config?.governance?.dev?.mergeQueue;
+  const mergeQueueMode = declaredMergeQueue?.mode || "inherit";
   const versionFiles = discoverVersionStateFiles(cwd, loadedConfig);
   const lifecycleVersionState =
     getLifecycleStage(loadedConfig, "version-state") ||
@@ -201,22 +203,33 @@ export function planReleaseLineBootstrap({
       enforceAdmins: true,
       protectedRefs: [devRef, alphaRef, releaseRef],
     },
+    governance: {
+      mergeQueue: {
+        declared: Boolean(declaredMergeQueue),
+        mode: mergeQueueMode,
+        source: mergeQueueMode === "inherit" ? "repository-default-branch" : "buildchain-config",
+        requiredWorkflows: declaredMergeQueue?.requiredWorkflows || [],
+        reconcileBeforeDefaultBranchSwitch: true,
+      },
+    },
     repositoryActions: [
       { action: "create-or-verify-source-ref", ref: source },
       { action: "commit-initial-version-state", ref: branch, version: resolvedInitialVersion },
       { action: "create-dev-branch", ref: devRef, from: branch },
       { action: "create-alpha-branch", ref: alphaRef, from: source },
       { action: "create-release-branch", ref: releaseRef, from: source },
-      ...(setDefault ? [{ action: "set-default-branch", ref: devRef }] : []),
       { action: "protect-branch", ref: devRef },
       { action: "protect-branch", ref: alphaRef },
       { action: "protect-branch", ref: releaseRef },
+      { action: "reconcile-dev-merge-queue", ref: devRef, mode: mergeQueueMode },
+      ...(setDefault ? [{ action: "set-default-branch", ref: devRef }] : []),
       ...(createAlphaPr ? [{ action: "open-alpha-pr", head: devRef, base: alphaRef }] : []),
     ],
     notes: [
       "This bootstrap creates the new minor line before the first alpha promotion.",
       "The source ref stays as the baseline for alpha/release until reviewed channel PRs move them.",
       "The dev branch receives only the initial version-state commit and becomes the active line when setDefault is true.",
+      "Merge queue governance is reconciled after branch protection and before the repository default branch moves.",
     ],
   };
 }
