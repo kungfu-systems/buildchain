@@ -84,6 +84,7 @@ on:
         type: string
         required: false
       production-apply:
+        description: "Enable production deployment capability; each production apply still requires a trusted event decision."
         default: false
         type: boolean
         required: false
@@ -608,14 +609,6 @@ jobs:
             exit 1
           fi
           production_event_approved="$PRODUCTION_DECISION_APPROVED"
-          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$PRODUCTION_APPLY" = "true" ] && [ "$PRODUCTION_APPROVED" != "true" ]; then
-            echo "::error::production-apply requires production-approved=true before production build or deploy"
-            exit 1
-          fi
-          if [ "$PRODUCTION_APPLY" = "true" ] && [ "$production_event_approved" != "true" ]; then
-            echo "::error::production-apply requires a trusted manual actor or reviewed matching release PR"
-            exit 1
-          fi
           if [ "$PRODUCTION_APPLY" = "true" ] && [ "$production_event_approved" = "true" ] && [ -z "$PRODUCTION_ROLE_ARN" ]; then
             echo "::error::production-aws-role-arn is required before production-apply can build or deploy"
             exit 1

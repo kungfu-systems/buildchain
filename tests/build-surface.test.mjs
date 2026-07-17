@@ -1221,7 +1221,12 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   );
   assert.match(workflow, /preview-aws-role-arn is required before preview-apply can build or deploy/);
   assert.match(workflow, /staging-aws-role-arn is required before staging-apply can build or deploy/);
-  assert.match(workflow, /production-apply requires production-approved=true before production build or deploy/);
+  assert.doesNotMatch(workflow, /production-apply requires production-approved=true before production build or deploy/);
+  assert.doesNotMatch(workflow, /production-apply requires a trusted manual actor or reviewed matching release PR/);
+  assert.match(
+    workflow,
+    /\[ "\$PRODUCTION_APPLY" = "true" \] && \[ "\$production_event_approved" = "true" \] && \[ -z "\$PRODUCTION_ROLE_ARN" \]/,
+  );
   assert.match(workflow, /production-aws-role-arn is required before production-apply can build or deploy/);
   assert.match(workflow, /production-release-on-main:/);
   assert.match(workflow, /production-release-label:/);
@@ -1356,6 +1361,9 @@ test("web-surface side-effect jobs and sealed production paths have explicit aut
   const decision = job("publication-decision");
   assert.match(decision, /web-surface-production-decision\.mjs/);
   assert.match(decision, /BUILDCHAIN_PRODUCTION_RELEASE_APPROVED/);
+  const inputGate = job("apply-input-gate");
+  assert.doesNotMatch(inputGate, /production-apply requires a trusted manual actor/);
+  assert.match(inputGate, /elif \[ "\$production_event_approved" = "true" \]; then\n\s+web_surface_channel=production/);
   const authority = job("publication-authority");
   assert.match(authority, /Create qualifying pre-publication controller receipt/);
   assert.match(authority, /assemble-web-surface-publication-admission\.mjs/);

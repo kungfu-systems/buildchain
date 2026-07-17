@@ -745,7 +745,10 @@ When enabled, Buildchain owns the full release apply state machine:
   operator can verify staging from the PR page and use merge as the approval
   action. Consumers do not need to hand-write `gh pr create` or production
   release-intent glue.
-- Production runs when `production-apply` is true and either:
+- `production-apply=true` enables the production capability; it does not request
+  production for every event. Ordinary `main` pushes remain staging-only and
+  can create or update a release PR. Production runs only when the capability
+  is enabled and either:
   - a `workflow_dispatch` passes `production-approved=true` and the triggering
     actor currently has `write`, `maintain`, or `admin` permission; or
   - `production-release-on-main=true` and the `main` push commit is associated
@@ -794,7 +797,7 @@ jobs:
       build-command: npm run build
       verify-command: npm run check
       artifact-path: dist
-      production-apply: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+      production-apply: true
       production-release-on-main: true
       production-release-label: buildchain-release
       production-release-head-prefix: release/
@@ -803,6 +806,13 @@ jobs:
       production-aws-role-arn: arn:aws:iam::123456789012:role/site-production-github-actions
       production-environment: production
 ```
+
+Keep `production-apply` enabled in the caller when the repository supports
+production. Buildchain derives whether the current event may use that
+capability: an ordinary `main` push plans and applies staging, a matching
+reviewed release PR merge authorizes production, and an approved trusted manual
+dispatch authorizes production. Inputs from an untrusted event cannot turn that
+decision on.
 
 `production-release-pr-mode` controls the post-staging handoff:
 
