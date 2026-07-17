@@ -48,7 +48,7 @@ function choiceOption(value, valid, fallback, field) {
 }
 
 function normalizeRepo(value) {
-  const text = String(value || "").trim();
+  const text = String(value?.fullName || value || "").trim();
   const match = text.match(/^([^/\s]+)\/([^/\s]+)$/);
   if (!match) throw new Error(`repository must be owner/repo, got: ${text || "<empty>"}`);
   return { owner: match[1], repo: match[2], fullName: `${match[1]}/${match[2]}` };
