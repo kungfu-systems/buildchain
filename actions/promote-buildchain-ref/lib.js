@@ -3492,6 +3492,7 @@ async function promoteBuildchainRefs({
     ref: `heads/${targetRef}`,
   });
   const branchSha = branchRef.object.sha;
+  let advancedPublicationTransaction;
   if (branchSha !== sha) {
     if (requireGovernance && !dryRun) {
       const { data: comparison } = await octokit.rest.repos.compareCommitsWithBasehead({
@@ -3504,32 +3505,66 @@ async function promoteBuildchainRefs({
           `Ref ${targetRef} moved incompatibly from requested SHA ${sha} to ${branchSha} (${comparison.status})`,
         );
       }
-      return {
-        owner,
-        repo,
-        sourceSha: sha,
-        sha: branchSha,
-        targetRef,
-        superseded: true,
-        updates: [
-          {
-            action: "superseded-promotion",
-            ref: targetRef,
-            requestedSha: sha,
-            currentSha: branchSha,
-            comparisonStatus: comparison.status,
-            reason: "target-ref-advanced",
-            sha: branchSha,
-          },
-        ],
-      };
+      const publicationEnabled = Boolean(
+        publishTransaction ||
+        publishCommand ||
+        getLifecycleStage(loadBuildchainConfig(cwd), "publish"),
+      );
+      advancedPublicationTransaction = publicationEnabled && expectedPublicationVersion
+        ? await readDurableTransactionForVersion({
+            octokit,
+            owner,
+            repo,
+            version: expectedPublicationVersion,
+          })
+        : undefined;
+      const targetAdvancedByExactPublication =
+        advancedPublicationTransaction?.source_sha === sha &&
+        advancedPublicationTransaction?.target_ref === targetRef &&
+        advancedPublicationTransaction?.release_sha === branchSha &&
+        advancedPublicationTransaction?.version === expectedPublicationVersion &&
+        !["abandoned", "failed_permanently"].includes(advancedPublicationTransaction?.state || "");
+      if (!targetAdvancedByExactPublication) {
+        return {
+          owner,
+          repo,
+          sourceSha: sha,
+          sha: branchSha,
+          targetRef,
+          superseded: true,
+          updates: [
+            {
+              action: "superseded-promotion",
+              ref: targetRef,
+              requestedSha: sha,
+              currentSha: branchSha,
+              comparisonStatus: comparison.status,
+              reason: "target-ref-advanced",
+              sha: branchSha,
+            },
+          ],
+        };
+      }
     }
-    throw new Error(
-      `Ref ${targetRef} points at ${branchSha}, not requested SHA ${sha}`,
-    );
+    if (!advancedPublicationTransaction) {
+      throw new Error(
+        `Ref ${targetRef} points at ${branchSha}, not requested SHA ${sha}`,
+      );
+    }
   }
 
   const updates = [];
+  if (advancedPublicationTransaction) {
+    updates.push({
+      action: "resumed-advanced-publication",
+      ref: targetRef,
+      requestedSha: sha,
+      currentSha: branchSha,
+      transactionId: advancedPublicationTransaction.id,
+      transactionState: advancedPublicationTransaction.state,
+      sha: branchSha,
+    });
+  }
   const promotionGeneratedAt = new Date().toISOString();
   let releaseCandidateValidation;
   if (promoteOnlyReleaseCandidate) {

@@ -395,6 +395,13 @@ last transient error seen before a rerun.
 An exact tag at an unrelated SHA is still a material conflict and blocks
 recovery.
 
+Governed retries distinguish unrelated channel advancement from advancement
+made by their own durable transaction. An unrelated descendant remains an
+auditable `superseded-promotion` no-op. When the target ref is exactly the
+recorded `release_sha` for the requested source, target, and expected version,
+Buildchain resumes finalization, restores publish evidence, and emits the
+release-passport paths needed by downstream controller receipts.
+
 If finalization fails after an exact Git tag is created, the next run reads the
 durable `finalizing` state, verifies the exact tag points at the recorded
 release SHA, and retries the remaining floating refs. An exact tag at a
