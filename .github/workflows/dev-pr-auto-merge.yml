@@ -58,6 +58,11 @@ on:
         default: "merge"
         type: string
         required: false
+      landing-mode:
+        description: "Landing mode: auto selects native queue when enabled; queue fails closed without one"
+        default: "auto"
+        type: string
+        required: false
       dry-run:
         description: "Plan only; do not merge PRs"
         default: true
@@ -72,8 +77,14 @@ on:
         description: "Number of PRs evaluated"
         value: ${{ jobs.merge-dev-prs.outputs.evaluated-count }}
       merged-count:
-        description: "Number of PRs merged, or eligible in dry-run mode"
+        description: "Number of PRs directly merged, or directly eligible in dry-run mode"
         value: ${{ jobs.merge-dev-prs.outputs.merged-count }}
+      enqueued-count:
+        description: "Number of PRs admitted into the native merge queue"
+        value: ${{ jobs.merge-dev-prs.outputs.enqueued-count }}
+      action-count:
+        description: "Number of direct merges, queue admissions, or planned actions"
+        value: ${{ jobs.merge-dev-prs.outputs.action-count }}
       skipped-count:
         description: "Number of PRs skipped"
         value: ${{ jobs.merge-dev-prs.outputs.skipped-count }}
@@ -87,6 +98,10 @@ permissions:
   checks: read
   statuses: read
 
+concurrency:
+  group: buildchain-dev-pr-admission-${{ github.repository }}-${{ inputs.target-branch || github.ref_name }}
+  cancel-in-progress: false
+
 jobs:
   merge-dev-prs:
     name: Merge ready dev PRs
@@ -94,6 +109,8 @@ jobs:
     outputs:
       evaluated-count: ${{ steps.merge.outputs.evaluated-count }}
       merged-count: ${{ steps.merge.outputs.merged-count }}
+      enqueued-count: ${{ steps.merge.outputs.enqueued-count }}
+      action-count: ${{ steps.merge.outputs.action-count }}
       skipped-count: ${{ steps.merge.outputs.skipped-count }}
       final-base-sha: ${{ steps.merge.outputs.final-base-sha }}
     steps:
@@ -141,6 +158,7 @@ jobs:
           BUILDCHAIN_DEV_PR_SAME_REPOSITORY_ONLY: ${{ inputs.same-repository-only }}
           BUILDCHAIN_DEV_PR_MAX_MERGES: ${{ inputs.max-merges }}
           BUILDCHAIN_DEV_PR_MERGE_METHOD: ${{ inputs.merge-method }}
+          BUILDCHAIN_DEV_PR_LANDING_MODE: ${{ inputs.landing-mode }}
           BUILDCHAIN_DEV_PR_DRY_RUN: ${{ inputs.dry-run }}
           BUILDCHAIN_DEV_PR_OUTPUT_PATH: .buildchain/dev-pr-auto-merge/result.json
 

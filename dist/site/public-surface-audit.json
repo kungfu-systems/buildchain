@@ -1228,6 +1228,7 @@
           "cadence",
           "capabilities",
           "dry-run",
+          "landing-mode",
           "max-actions",
           "merge-method",
           "mode",
@@ -1237,7 +1238,7 @@
           "same-repository-only",
           "target-branch"
         ],
-        "inputCount": 15,
+        "inputCount": 16,
         "secrets": [
           "github-token"
         ],
@@ -1332,6 +1333,7 @@
           "buildchain-ref",
           "buildchain-repository",
           "dry-run",
+          "landing-mode",
           "max-merges",
           "merge-method",
           "ready-label",
@@ -1340,18 +1342,20 @@
           "same-repository-only",
           "target-branch"
         ],
-        "inputCount": 12,
+        "inputCount": 13,
         "secrets": [
           "github-token"
         ],
         "secretCount": 1,
         "outputs": [
+          "action-count",
+          "enqueued-count",
           "evaluated-count",
           "final-base-sha",
           "merged-count",
           "skipped-count"
         ],
-        "outputCount": 4
+        "outputCount": 6
       },
       {
         "id": "npm-publish",
@@ -1481,6 +1485,7 @@
           "buildchain-ref",
           "buildchain-repository",
           "dry-run",
+          "landing-mode",
           "max-actions",
           "merge-method",
           "ready-label",
@@ -1489,7 +1494,7 @@
           "same-repository-only",
           "target-branch"
         ],
-        "inputCount": 12,
+        "inputCount": 13,
         "secrets": [
           "github-token"
         ],
@@ -3462,8 +3467,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "b07ed2241d34696ad0500c3431b2106b1499a0d4372a77385a8c0e0698421d76",
-    "workflowRegistryDigest": "62b7ca87803c461e1e1436a477c3b6b70103eed84dbf14d855d383e810d7d71e",
-    "pageRegistryDigest": "1bec2a9ecc289aed2e3dd4e646989b1335d090b8445e04170c25955e638011ee"
+    "workflowRegistryDigest": "283dac6adfcebb463db63545d2c00686daa317f1603f5ac13c9d5c5c3c91592f",
+    "pageRegistryDigest": "02356f52cdf57cb029c795655e26adfdd8ddcee93f5857a4a02ae8c5919c07fc"
   },
   "comparison": {
     "missingCliRegistry": [],

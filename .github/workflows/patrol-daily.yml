@@ -58,6 +58,11 @@ on:
         default: "merge"
         type: string
         required: false
+      landing-mode:
+        description: "Landing mode for ready dev PRs: auto, direct, or queue"
+        default: "auto"
+        type: string
+        required: false
       dry-run:
         description: "Plan only; do not mutate repository state"
         default: true
@@ -107,6 +112,7 @@ jobs:
       same-repository-only: ${{ inputs.same-repository-only }}
       max-actions: ${{ inputs.max-actions }}
       merge-method: ${{ inputs.merge-method }}
+      landing-mode: ${{ inputs.landing-mode }}
       dry-run: ${{ inputs.dry-run }}
     secrets:
       github-token: ${{ secrets.github-token }}

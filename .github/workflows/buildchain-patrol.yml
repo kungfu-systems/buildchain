@@ -73,6 +73,11 @@ on:
         default: "merge"
         type: string
         required: false
+      landing-mode:
+        description: "Landing mode for ready dev PRs: auto, direct, or queue"
+        default: "auto"
+        type: string
+        required: false
       dry-run:
         description: "Plan only; do not mutate repository state"
         default: true
@@ -104,6 +109,10 @@ permissions:
   pull-requests: write
   checks: read
   statuses: read
+
+concurrency:
+  group: buildchain-patrol-${{ github.repository }}-${{ inputs.target-branch || github.ref_name }}
+  cancel-in-progress: false
 
 jobs:
   patrol:
@@ -163,6 +172,7 @@ jobs:
           BUILDCHAIN_PATROL_SAME_REPOSITORY_ONLY: ${{ inputs.same-repository-only }}
           BUILDCHAIN_PATROL_MAX_ACTIONS: ${{ inputs.max-actions }}
           BUILDCHAIN_PATROL_MERGE_METHOD: ${{ inputs.merge-method }}
+          BUILDCHAIN_PATROL_LANDING_MODE: ${{ inputs.landing-mode }}
           BUILDCHAIN_PATROL_DRY_RUN: ${{ inputs.dry-run }}
           BUILDCHAIN_PATROL_OUTPUT_PATH: .buildchain/patrol/result.json
 
