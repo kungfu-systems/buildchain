@@ -1989,6 +1989,17 @@ test("release line open plans a protected new minor without mutating files", () 
     release: false,
   });
   assert.equal(plan.protection.requiredApprovingReviewCount, 1);
+  assert.deepEqual(plan.governance.mergeQueue, {
+    declared: false,
+    mode: "inherit",
+    source: "repository-default-branch",
+    requiredWorkflows: [],
+    reconcileBeforeDefaultBranchSwitch: true,
+  });
+  assert.ok(
+    plan.repositoryActions.findIndex((action) => action.action === "reconcile-dev-merge-queue") <
+      plan.repositoryActions.findIndex((action) => action.action === "set-default-branch"),
+  );
   assert.equal(JSON.parse(fs.readFileSync(path.join(cwd, "package.json"), "utf8")).version, "2.9.0");
 });
 

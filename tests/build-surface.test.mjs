@@ -988,6 +988,18 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.doesNotMatch(verify, /github\.event\.pull_request/);
 });
 
+test("declared merge queue governance reconciles automatically on dev changes", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/dev-merge-queue-governance.yml"),
+    "utf8",
+  );
+  assert.match(workflow, /push:\n\s+branches:\n\s+- dev\/v\*\/v\*/);
+  assert.match(workflow, /\.buildchain\/buildchain\.toml/);
+  assert.match(workflow, /BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token/);
+  assert.match(workflow, /--from-config/);
+  assert.match(workflow, /github\.event_name == 'push' \|\| inputs\.apply/);
+});
+
 test("patrol workflow family exposes daily weekly monthly reusable entries and dogfood schedules", () => {
   const engine = fs.readFileSync(
     path.join(root, ".github/workflows/buildchain-patrol.yml"),
@@ -2281,6 +2293,12 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(bootstrap, /bypass_pull_request_allowances:\s*\{\s*apps: \$bypass_apps,\s*users: \$bypass_users,\s*teams: \$bypass_teams\s*\}/);
   assert.match(bootstrap, /strict: \$dev_channel/);
   assert.match(bootstrap, /\[\$context, "verify"\] \| unique/);
+  assert.match(bootstrap, /name: Reconcile dev merge queue governance/);
+  assert.match(bootstrap, /--from-config/);
+  assert.ok(
+    bootstrap.indexOf("name: Reconcile dev merge queue governance") <
+      bootstrap.indexOf("name: Set default branch"),
+  );
   assert.match(workflow, /publish-required-artifacts-json: "\[\]"/);
   assert.match(workflow, /release-passport-impact-json: \.buildchain\/release-impact\.json/);
   assert.match(workflow, /publication-auto-admission: \$\{\{ github\.event_name == 'workflow_run' \}\}/);

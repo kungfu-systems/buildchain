@@ -61,6 +61,7 @@ repository changes are patch".
 
 | Date | Action | Line | Faces | Class | Rationale | PR |
 | --- | --- | --- | --- | --- | --- | --- |
+| 2026-07-17 | extend-minor | `v2.14` | merge-queue-config, release-line-governance-inheritance | additive | Buildchain config can explicitly enable, inherit, or disable exact dev-channel merge queues, and release-line bootstrap reconciles the declared or inherited policy before moving the repository default branch. | |
 | 2026-07-16 | open-minor | `v2.14` | dev-merge-queue-governance | additive | The public CLI adds a dry-run-first, idempotent merge-queue governance command that verifies required workflow event compatibility before applying an exact dev-channel ruleset and removing the strict up-to-date race. | |
 | 2026-07-15 | open-minor | `v2.13` | artifact-verification-envelope, package-subpaths | additive | The public envelope seals exact artifact, provenance, identity, lifecycle, revocation, and existing KFD assessment roots into one consumer-ready KFX admission input, with a dedicated Node API export and fail-closed verifier. | |
 | 2026-07-11 | open-minor | `v2.12` | channel-build-router, channel-selection-protocol | additive | The public `build.yml` reusable workflow lets consumers declare one build job while Buildchain selects generic major alpha for development/prerelease intent and stable major for production release intent, with explicit overrides, separate locks, and fail-closed ambiguity handling. | |

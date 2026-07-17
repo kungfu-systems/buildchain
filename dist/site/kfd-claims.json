@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "4f270e82db617359d99ba56da7a6faeee4dfc23363e58465229e161edc277530",
+    "sha256": "3d9e43510266b900fe450253fbb8aac72953c7128a797154150eb301ef71ed6a",
     "summary": {
       "cliCommandCount": 83,
-      "workflowCount": 47,
+      "workflowCount": 48,
       "actionCount": 4,
       "sitePageCount": 50,
-      "docCommandRefCount": 256,
+      "docCommandRefCount": 257,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -225,13 +225,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "4f270e82db617359d99ba56da7a6faeee4dfc23363e58465229e161edc277530",
+      "sha256": "3d9e43510266b900fe450253fbb8aac72953c7128a797154150eb301ef71ed6a",
       "summary": {
         "cliCommandCount": 83,
-        "workflowCount": 47,
+        "workflowCount": 48,
         "actionCount": 4,
         "sitePageCount": 50,
-        "docCommandRefCount": 256,
+        "docCommandRefCount": 257,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -3346,6 +3346,20 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:dev-merge-queue-governance",
+          "name": "workflow:dev-merge-queue-governance",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/dev-merge-queue-governance.yml",
+          "evidencePath": ".github/workflows/dev-merge-queue-governance.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:dev-pr-auto-merge",
           "name": "workflow:dev-pr-auto-merge",
           "kind": "workflow",
@@ -4688,6 +4702,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 303
+    "publicSurfaceCount": 304
   }
 }

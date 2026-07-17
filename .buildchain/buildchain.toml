@@ -52,6 +52,13 @@ command = "node scripts/generate-site-bundle.mjs"
 [lifecycle.publish]
 command = "node scripts/npm-publish-transaction.mjs"
 
+[governance.dev.merge_queue]
+mode = "enabled"
+required_workflows = [".github/workflows/verify.yml"]
+check_response_timeout_minutes = 120
+max_entries_to_build = 1
+bypass_users = ["dongkeren"]
+
 [release.stable]
 strategy = "latest-qualified-alpha"
 timezone = "Asia/Shanghai"

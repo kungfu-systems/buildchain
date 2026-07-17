@@ -993,6 +993,20 @@
       "status": "active"
     },
     {
+      "id": "dev-merge-queue-governance",
+      "path": ".github/workflows/dev-merge-queue-governance.yml",
+      "reusable": false,
+      "inputs": [],
+      "inputCount": 0,
+      "secrets": [],
+      "secretCount": 0,
+      "outputs": [],
+      "outputCount": 0,
+      "surface": "repository-workflow",
+      "capabilityGroup": "api-cli-reference",
+      "status": "active"
+    },
+    {
       "id": "dev-pr-auto-merge",
       "path": ".github/workflows/dev-pr-auto-merge.yml",
       "reusable": true,
