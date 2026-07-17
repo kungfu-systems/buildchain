@@ -424,6 +424,22 @@ protection. The ruleset uses the first merge method that the repository itself
 allows, and fails closed when the repository has no enabled merge method.
 Re-running the command is idempotent.
 
+The repository policy can be declared once instead of repeated as CLI flags:
+
+```toml
+[governance.dev.merge_queue]
+mode = "inherit"
+required_workflows = [".github/workflows/verify.yml"]
+```
+
+`enabled` explicitly requires Buildchain to create or update an exact-branch
+queue; `inherit` copies queue parameters and bypass actors from the repository's
+current default dev branch; `disabled` prevents automatic queue creation. An
+absent declaration behaves as `inherit` during release-line bootstrap so a new
+major or minor line does not silently lose governance already active on the
+previous line. Required status-check identities still come from the new
+branch's own classic protection rather than being copied from the old branch.
+
 Merge-queue rules also reject generated post-publish version-state ref updates.
 When the sealed promotion workflow uses a dedicated GitHub App, user, or team
 already declared by release governance, repeat `--bypass-app`, `--bypass-user`,

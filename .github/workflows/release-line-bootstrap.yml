@@ -128,6 +128,7 @@ jobs:
             echo "- alpha: ${{ steps.plan.outputs.alpha_ref }}"
             echo "- release: ${{ steps.plan.outputs.release_ref }}"
             echo "- initial version: ${{ steps.plan.outputs.initial_version }}"
+            echo "- merge queue mode: $(jq -r '.governance.mergeQueue.mode' .buildchain-release-line-plan.json)"
             echo
             echo "Re-run with \`apply=true\` to create refs, protection, default branch, and alpha PR."
           } >> "$GITHUB_STEP_SUMMARY"
@@ -221,6 +222,18 @@ jobs:
               }' |
               gh api --method PUT "repos/${GITHUB_REPOSITORY}/branches/${branch}/protection" --input -
           done
+
+      - name: Reconcile dev merge queue governance
+        if: ${{ inputs.apply == true }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node bin/buildchain.mjs dev merge-queue \
+            --cwd . \
+            --repository "$GITHUB_REPOSITORY" \
+            --branch "${{ steps.plan.outputs.dev_ref }}" \
+            --from-config \
+            --apply | tee .buildchain-dev-merge-queue.json
 
       - name: Set default branch
         if: ${{ inputs.apply == true && inputs.set-default-branch == true }}

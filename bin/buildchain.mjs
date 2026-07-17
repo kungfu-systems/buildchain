@@ -195,7 +195,7 @@ function usage() {
   buildchain inspect artifact <subject> [--passport <file-or-url>] [--npm-registry <url>] [--json]
   buildchain doctor [--cwd <dir>] [--require-publish-source-lock] [--json]
   buildchain dev merge-queue --repository <owner/repo> --branch <dev/vN/vN.M>
-                             --workflow <required-workflow.yml>... [--cwd <dir>]
+                             [--from-config | --workflow <required-workflow.yml>...] [--cwd <dir>]
                              [--check-response-timeout-minutes <n>]
                              [--max-entries-to-build <n>] [--apply]
   buildchain log <info|warn|error> --event <name> [--phase <phase>]
@@ -1446,7 +1446,7 @@ async function main(argv = process.argv.slice(2)) {
   if (command === "dev") {
     const [subcommand = "", ...devArgs] = args;
     if (subcommand !== "merge-queue") {
-      throw new Error("usage: buildchain dev merge-queue --repository <owner/repo> --branch <dev/vN/vN.M> --workflow <path>...");
+      throw new Error("usage: buildchain dev merge-queue --repository <owner/repo> --branch <dev/vN/vN.M> [--from-config | --workflow <path>...]");
     }
     runScript("dev-merge-queue.mjs", devArgs);
     return;

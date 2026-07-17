@@ -177,7 +177,7 @@
       "specifier": "@kungfu-tech/buildchain/release-line-bootstrap",
       "export": "./release-line-bootstrap",
       "target": "./packages/core/release-line-bootstrap.js",
-      "digest": "sha256:314f9ae57330e38bcc751efdf0f77525bdd0c4ef94168431dd2ee071802b9b74",
+      "digest": "sha256:6e6ae3d5cd545cc0f435f5a52ddefd1da8fa7394b64936e0ef840ee78a1d9da3",
       "summary": "Semver release-line bootstrap planning and version-state APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -294,7 +294,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-publication-authority",
       "export": "./buildchain-publication-authority",
       "target": "./packages/core/buildchain-publication-authority.js",
-      "digest": "sha256:48c5f4cb70cacb75e85b579db686a09f56d1372b8bdfeba112a3ade01524d3f5",
+      "digest": "sha256:5c1c4ec0ef4cbda07ae4dead6423f800ecad6d45f02f19745aef23513fae45d4",
       "summary": "Buildchain-owned closed-world publication authority descriptor registry.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -399,7 +399,7 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:9ecf8c220b5ff02ee5719cb877d4b2b159c3d683af288630eae0013d9d906373"
+      "digest": "sha256:1733f9377938a16e6de77511546be7de67c5ab8816220d693fd46f55450a5148"
     },
     {
       "id": "build-facts",

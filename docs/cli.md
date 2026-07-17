@@ -208,6 +208,31 @@ required status checks from strict to loose, preserves the required check
 identities, and is safe to repeat. `gh` must be authenticated with repository
 Administration write permission for apply mode.
 
+Repositories can make that policy declarative in `buildchain.toml`:
+
+```toml
+[governance.dev.merge_queue]
+mode = "enabled" # enabled, inherit, or disabled
+required_workflows = [".github/workflows/verify.yml"]
+check_response_timeout_minutes = 120
+max_entries_to_build = 1
+bypass_users = ["release-owner"]
+```
+
+Use `buildchain dev merge-queue --from-config` to resolve and reconcile the
+declaration. `enabled` requires an exact queue on the target dev branch;
+`disabled` suppresses automatic queue creation; `inherit` copies the active
+default dev branch's queue parameters and bypass actors. When the table is
+absent, release-line bootstrap uses the backward-compatible `inherit` mode.
+Every inherited or explicitly enabled queue still validates each declared
+required workflow before any mutation. For a legacy repository with no table,
+an already-active exact queue on the current default dev branch is accepted as
+the inheritance evidence; new declarations should list the workflows so future
+changes are revalidated from source.
+The `Dev Merge Queue Governance` workflow runs this reconciliation after
+governance-relevant changes land on a dev branch; its manual dispatch remains
+dry-run by default.
+
 `buildchain release line open` plans or writes the first version-state commit
 for a new semver minor line. It does not publish anything. The dry-run mode is
 the default and returns the dev/alpha/release refs, protection contract, default
@@ -224,8 +249,9 @@ buildchain release line open \
 The write mode only updates local version-state files. The repository workflow
 `Release Line Bootstrap` wraps this command and, when `apply=true`, commits the
 initial version state, creates `dev/vX/vX.Y`, `alpha/vX/vX.Y`, and
-`release/vX/vX.Y`, applies one-review branch protection, switches the default
-branch, and opens the first dev-to-alpha channel PR:
+`release/vX/vX.Y`, applies one-review branch protection, reconciles declared or
+inherited merge-queue governance, switches the default branch only after that
+reconciliation succeeds, and opens the first dev-to-alpha channel PR:
 
 ```bash
 buildchain release line open \

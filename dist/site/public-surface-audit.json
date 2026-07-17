@@ -4,10 +4,10 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 83,
-    "workflowCount": 47,
+    "workflowCount": 48,
     "actionCount": 4,
     "sitePageCount": 50,
-    "docCommandRefCount": 256,
+    "docCommandRefCount": 257,
     "failureCount": 0
   },
   "enumerated": {
@@ -1329,6 +1329,17 @@
         "outputCount": 7
       },
       {
+        "id": "dev-merge-queue-governance",
+        "path": ".github/workflows/dev-merge-queue-governance.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
         "id": "dev-pr-auto-merge",
         "path": ".github/workflows/dev-pr-auto-merge.yml",
         "reusable": true,
@@ -2437,6 +2448,11 @@
       },
       {
         "id": "dev",
+        "path": "docs/cli.md",
+        "command": "buildchain dev merge-queue --from-config"
+      },
+      {
+        "id": "dev",
         "path": "docs/release-governance.md",
         "command": "buildchain dev merge-queue"
       },
@@ -3487,8 +3503,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "b469949f77ed7777f23fe68c54daf6d2c20d3afc97f3bbd5a178a91202a068d0",
-    "workflowRegistryDigest": "283dac6adfcebb463db63545d2c00686daa317f1603f5ac13c9d5c5c3c91592f",
-    "pageRegistryDigest": "03e700849e53b11a9593f1c750689bded8a34577a682fb0de2c44b23987047c6"
+    "workflowRegistryDigest": "2ad4284a9e275cec6fbc6593a470f9d443e26f7aa880bedf9fa0671448369f2f",
+    "pageRegistryDigest": "53c5c0918268a1ea769a3841ad3b5ad553e81b0fcd602c8289dc049e3559ff89"
   },
   "comparison": {
     "missingCliRegistry": [],
