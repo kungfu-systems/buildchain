@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 
 const RULESET_PREFIX = "Buildchain dev merge queue";
+const RULESET_BYPASS_TYPES = new Set(["Integration", "Team", "User"]);
 
 function positiveInteger(value, label, fallback) {
   const parsed = Number(value || fallback);
@@ -17,6 +18,53 @@ function requiredString(value, label) {
   const normalized = String(value || "").trim();
   if (!normalized) throw new Error(`${label} is required`);
   return normalized;
+}
+
+function normalizeRulesetBypassActors(actors = []) {
+  const normalized = [];
+  const seen = new Set();
+  for (const actor of actors) {
+    const actorType = requiredString(actor?.actor_type, "ruleset bypass actor type");
+    const actorId = Number(actor?.actor_id);
+    if (!RULESET_BYPASS_TYPES.has(actorType)) {
+      throw new Error(`ruleset bypass actor type must be Integration, Team, or User, got '${actorType}'`);
+    }
+    if (!Number.isInteger(actorId) || actorId < 1) {
+      throw new Error("ruleset bypass actor id must be a positive integer");
+    }
+    const key = `${actorType}:${actorId}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    normalized.push({ actor_id: actorId, actor_type: actorType, bypass_mode: "always" });
+  }
+  return normalized;
+}
+
+export async function resolveRulesetBypassActors({
+  api,
+  repository,
+  apps = [],
+  users = [],
+  teams = [],
+} = {}) {
+  const [owner] = requiredString(repository, "repository").split("/");
+  const actors = [];
+  for (const slug of apps) {
+    const app = await api.request("GET", `apps/${encodeURIComponent(requiredString(slug, "bypass app"))}`);
+    actors.push({ actor_id: app.id, actor_type: "Integration" });
+  }
+  for (const login of users) {
+    const user = await api.request("GET", `users/${encodeURIComponent(requiredString(login, "bypass user"))}`);
+    actors.push({ actor_id: user.id, actor_type: "User" });
+  }
+  for (const slug of teams) {
+    const team = await api.request(
+      "GET",
+      `orgs/${encodeURIComponent(owner)}/teams/${encodeURIComponent(requiredString(slug, "bypass team"))}`,
+    );
+    actors.push({ actor_id: team.id, actor_type: "Team" });
+  }
+  return normalizeRulesetBypassActors(actors);
 }
 
 export function selectMergeQueueMethod(repositorySettings = {}) {
@@ -64,6 +112,7 @@ export function createDevMergeQueuePlan({
   protection,
   repositorySettings,
   rulesets = [],
+  bypassActors = [],
   checkResponseTimeoutMinutes = 120,
   maxEntriesToBuild = 1,
 } = {}) {
@@ -84,6 +133,7 @@ export function createDevMergeQueuePlan({
     name: rulesetName,
     target: "branch",
     enforcement: "active",
+    bypass_actors: normalizeRulesetBypassActors(bypassActors),
     conditions: {
       ref_name: {
         include: [`refs/heads/${normalizedBranch}`],
@@ -144,6 +194,9 @@ export async function reconcileDevMergeQueue({
   branch,
   workflows,
   apply = false,
+  bypassApps = [],
+  bypassUsers = [],
+  bypassTeams = [],
   checkResponseTimeoutMinutes = 120,
   maxEntriesToBuild = 1,
 } = {}) {
@@ -151,6 +204,13 @@ export async function reconcileDevMergeQueue({
   const repositorySettings = await api.request("GET", `repos/${repository}`);
   const protection = await api.request("GET", `repos/${repository}/branches/${encodedBranch}/protection`);
   const rulesets = await api.request("GET", `repos/${repository}/rulesets?includes_parents=false&per_page=100`);
+  const bypassActors = await resolveRulesetBypassActors({
+    api,
+    repository,
+    apps: bypassApps,
+    users: bypassUsers,
+    teams: bypassTeams,
+  });
   const plan = createDevMergeQueuePlan({
     repository,
     branch,
@@ -158,6 +218,7 @@ export async function reconcileDevMergeQueue({
     protection,
     repositorySettings,
     rulesets,
+    bypassActors,
     checkResponseTimeoutMinutes,
     maxEntriesToBuild,
   });
@@ -245,6 +306,9 @@ async function main(args = process.argv.slice(2)) {
     apply: args.includes("--apply"),
     checkResponseTimeoutMinutes: readFlag(args, "check-response-timeout-minutes", "120"),
     maxEntriesToBuild: readFlag(args, "max-entries-to-build", "1"),
+    bypassApps: readRepeatedFlag(args, "bypass-app"),
+    bypassUsers: readRepeatedFlag(args, "bypass-user"),
+    bypassTeams: readRepeatedFlag(args, "bypass-team"),
   });
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
 }

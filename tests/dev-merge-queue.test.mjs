@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   createDevMergeQueuePlan,
   reconcileDevMergeQueue,
+  resolveRulesetBypassActors,
   selectMergeQueueMethod,
   validateMergeGroupWorkflows,
 } from "../scripts/dev-merge-queue.mjs";
@@ -60,8 +61,55 @@ test("merge queue plan creates an exact dev ruleset before loosening classic str
   assert.equal(plan.operations[0].body.rules[0].type, "merge_queue");
   assert.deepEqual(plan.operations[0].body.conditions.ref_name.include, ["refs/heads/dev/v4/v4.0"]);
   assert.equal(plan.operations[0].body.rules[0].parameters.merge_method, "REBASE");
+  assert.deepEqual(plan.operations[0].body.bypass_actors, []);
   assert.equal(plan.operations[1].body.strict, false);
   assert.deepEqual(plan.operations[1].body.checks, protection.required_status_checks.checks);
+});
+
+test("merge queue resolves only explicit app, user, and team bypass actors", async () => {
+  const calls = [];
+  const api = {
+    async request(method, endpoint) {
+      calls.push([method, endpoint]);
+      if (endpoint === "apps/release-bot") return { id: 101 };
+      if (endpoint === "users/release-owner") return { id: 202 };
+      if (endpoint === "orgs/kungfu-systems/teams/release-engineering") return { id: 303 };
+      throw new Error(`unexpected endpoint: ${endpoint}`);
+    },
+  };
+  const actors = await resolveRulesetBypassActors({
+    api,
+    repository: "kungfu-systems/buildchain",
+    apps: ["release-bot"],
+    users: ["release-owner"],
+    teams: ["release-engineering"],
+  });
+  assert.deepEqual(actors, [
+    { actor_id: 101, actor_type: "Integration", bypass_mode: "always" },
+    { actor_id: 202, actor_type: "User", bypass_mode: "always" },
+    { actor_id: 303, actor_type: "Team", bypass_mode: "always" },
+  ]);
+  assert.deepEqual(calls, [
+    ["GET", "apps/release-bot"],
+    ["GET", "users/release-owner"],
+    ["GET", "orgs/kungfu-systems/teams/release-engineering"],
+  ]);
+});
+
+test("merge queue writes an exact promotion bypass without weakening PR admission", () => {
+  const plan = createDevMergeQueuePlan({
+    repository: "kungfu-systems/buildchain",
+    branch: "dev/v2/v2.14",
+    workflows,
+    protection,
+    repositorySettings,
+    bypassActors: [{ actor_id: 202, actor_type: "User" }],
+  });
+  assert.deepEqual(plan.operations[0].body.bypass_actors, [
+    { actor_id: 202, actor_type: "User", bypass_mode: "always" },
+  ]);
+  assert.equal(plan.operations[0].body.rules[0].type, "merge_queue");
+  assert.equal(plan.operations[1].body.strict, false);
 });
 
 test("merge queue apply is idempotent and preserves operation order", async () => {
