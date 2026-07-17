@@ -879,6 +879,7 @@
         "cadence",
         "capabilities",
         "dry-run",
+        "landing-mode",
         "max-actions",
         "merge-method",
         "mode",
@@ -888,7 +889,7 @@
         "same-repository-only",
         "target-branch"
       ],
-      "inputCount": 15,
+      "inputCount": 16,
       "secrets": [
         "github-token"
       ],
@@ -1001,6 +1002,7 @@
         "buildchain-ref",
         "buildchain-repository",
         "dry-run",
+        "landing-mode",
         "max-merges",
         "merge-method",
         "ready-label",
@@ -1009,18 +1011,20 @@
         "same-repository-only",
         "target-branch"
       ],
-      "inputCount": 12,
+      "inputCount": 13,
       "secrets": [
         "github-token"
       ],
       "secretCount": 1,
       "outputs": [
+        "action-count",
+        "enqueued-count",
         "evaluated-count",
         "final-base-sha",
         "merged-count",
         "skipped-count"
       ],
-      "outputCount": 4,
+      "outputCount": 6,
       "surface": "dev-governance",
       "capabilityGroup": "governance-versioning",
       "status": "active"
@@ -1162,6 +1166,7 @@
         "buildchain-ref",
         "buildchain-repository",
         "dry-run",
+        "landing-mode",
         "max-actions",
         "merge-method",
         "ready-label",
@@ -1170,7 +1175,7 @@
         "same-repository-only",
         "target-branch"
       ],
-      "inputCount": 12,
+      "inputCount": 13,
       "secrets": [
         "github-token"
       ],

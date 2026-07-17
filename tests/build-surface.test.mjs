@@ -964,6 +964,10 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.match(workflow, /require-approval:/);
   assert.match(workflow, /same-repository-only:/);
   assert.match(workflow, /max-merges:/);
+  assert.match(workflow, /landing-mode:/);
+  assert.match(workflow, /default: "auto"/);
+  assert.match(workflow, /enqueued-count:/);
+  assert.match(workflow, /action-count:/);
   assert.match(workflow, /dry-run:/);
   assert.match(workflow, /default: true/);
   assert.match(workflow, /dev\/v\*\/v\*/);
@@ -973,7 +977,15 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.match(workflow, /pull-requests: write/);
   assert.match(workflow, /checks: read/);
   assert.match(workflow, /statuses: read/);
+  assert.match(workflow, /buildchain-dev-pr-admission-/);
+  assert.match(workflow, /BUILDCHAIN_DEV_PR_LANDING_MODE: \$\{\{ inputs\.landing-mode \}\}/);
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
+
+  const verify = fs.readFileSync(path.join(root, ".github/workflows/verify.yml"), "utf8");
+  assert.match(verify, /pull_request:/);
+  assert.match(verify, /merge_group:/);
+  assert.match(verify, /types: \[checks_requested\]/);
+  assert.doesNotMatch(verify, /github\.event\.pull_request/);
 });
 
 test("patrol workflow family exposes daily weekly monthly reusable entries and dogfood schedules", () => {
@@ -1034,7 +1046,8 @@ test("patrol workflow family exposes daily weekly monthly reusable entries and d
   assert.match(dogfoodDaily, /schedule:/);
   assert.match(dogfoodDaily, /uses: \.\/\.github\/workflows\/patrol-daily\.yml/);
   assert.match(dogfoodDaily, /required-status-checks: check/);
-  assert.match(dogfoodDaily, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v2' \}\}/);
+  assert.match(dogfoodDaily, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v2-alpha' \}\}/);
+  assert.match(dogfoodDaily, /landing-mode: queue/);
   assert.doesNotMatch(dogfoodDaily, /target-branch: dev\/v2\/v2\.\d+/);
   assert.match(dogfoodDaily, /dry-run: \$\{\{ inputs\.dry-run \|\| false \}\}/);
   assert.match(dogfoodDaily, /contents: write/);

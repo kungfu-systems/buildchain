@@ -91,6 +91,7 @@ export function normalizePatrolOptions(options = {}) {
     sameRepositoryOnly: options.sameRepositoryOnly ?? process.env.BUILDCHAIN_PATROL_SAME_REPOSITORY_ONLY,
     maxActions: intOption(options.maxActions ?? process.env.BUILDCHAIN_PATROL_MAX_ACTIONS, 1),
     mergeMethod: String(options.mergeMethod || process.env.BUILDCHAIN_PATROL_MERGE_METHOD || "merge").trim(),
+    landingMode: String(options.landingMode || process.env.BUILDCHAIN_PATROL_LANDING_MODE || "auto").trim(),
     dryRun: boolOption(options.dryRun ?? process.env.BUILDCHAIN_PATROL_DRY_RUN, true),
     outputPath: String(options.outputPath || process.env.BUILDCHAIN_PATROL_OUTPUT_PATH || DEFAULT_OUTPUT_PATH),
   };
@@ -167,6 +168,7 @@ export async function runBuildchainPatrol(optionsInput = {}, clientInput) {
         sameRepositoryOnly: options.sameRepositoryOnly,
         maxMerges: options.maxActions,
         mergeMethod: options.mergeMethod,
+        landingMode: options.landingMode,
         dryRun: options.dryRun,
         outputPath: path.join(path.dirname(options.outputPath), "dev-pr-auto-merge.json"),
       },
@@ -178,7 +180,7 @@ export async function runBuildchainPatrol(optionsInput = {}, clientInput) {
       result: mergeResult,
     });
     result.summary.evaluatedCount += mergeResult.evaluated.length;
-    result.summary.actionCount += mergeResult.merged.length;
+    result.summary.actionCount += mergeResult.actions.length;
     result.summary.skippedCount += mergeResult.skipped.length;
   }
 

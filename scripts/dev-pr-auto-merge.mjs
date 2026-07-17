@@ -7,6 +7,15 @@ const DEFAULT_ALLOWED_HEAD_PREFIXES = ["feature/", "fix/", "chore/", "docs/", "c
 const DEFAULT_REQUIRED_CHECKS = ["check"];
 const SUCCESS_STATES = new Set(["success"]);
 const SUCCESS_CONCLUSIONS = new Set(["success", "neutral", "skipped"]);
+const VALID_LANDING_MODES = new Set(["auto", "direct", "queue"]);
+const STATIC_SKIP_REASONS = new Set([
+  "draft",
+  "fork-or-cross-repository-head",
+  "head-prefix-not-allowed",
+  "missing-ready-label",
+  "blocked-label",
+]);
+const ADMISSION_CONTRACT = "kungfu-buildchain-dev-merge-queue-admission";
 
 function splitList(value, fallback = []) {
   if (Array.isArray(value)) return value.map((entry) => String(entry).trim()).filter(Boolean);
@@ -30,6 +39,14 @@ function intOption(value, fallback) {
   return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : fallback;
 }
 
+function choiceOption(value, valid, fallback, field) {
+  const normalized = String(value || fallback).trim().toLowerCase();
+  if (!valid.has(normalized)) {
+    throw new Error(`${field} must be one of ${[...valid].join(", ")}, got: ${value || "<empty>"}`);
+  }
+  return normalized;
+}
+
 function normalizeRepo(value) {
   const text = String(value || "").trim();
   const match = text.match(/^([^/\s]+)\/([^/\s]+)$/);
@@ -49,6 +66,7 @@ function normalizeOptions(options = {}) {
     sameRepositoryOnly: boolOption(options.sameRepositoryOnly, true),
     maxMerges: intOption(options.maxMerges, 1),
     mergeMethod: String(options.mergeMethod || "merge").trim(),
+    landingMode: choiceOption(options.landingMode, VALID_LANDING_MODES, "auto", "landing mode"),
     dryRun: boolOption(options.dryRun, true),
     pollMergeableAttempts: intOption(options.pollMergeableAttempts, 3),
     pollMergeableDelayMs: intOption(options.pollMergeableDelayMs, 1000),
@@ -165,6 +183,12 @@ export async function evaluatePullRequest(pr, options, client) {
     attempts: options.pollMergeableAttempts,
     delayMs: options.pollMergeableDelayMs,
   });
+  if (detailed.base?.ref && detailed.base.ref !== options.targetBranch) {
+    return skip("base-branch-drift", {
+      expectedBaseRef: options.targetBranch,
+      observedBaseRef: detailed.base.ref,
+    });
+  }
   if (!mergeableAccepted(detailed)) {
     return skip("not-mergeable", {
       mergeable: detailed.mergeable,
@@ -172,19 +196,25 @@ export async function evaluatePullRequest(pr, options, client) {
     });
   }
 
+  const approval = { required: options.requireApproval, passed: true };
   if (options.requireApproval) {
     const reviews = await client.listReviews(pr.number);
-    if (!hasRequiredApproval(reviews)) return skip("missing-approval");
+    approval.passed = hasRequiredApproval(reviews);
+    if (!approval.passed) return skip("missing-approval", { approval });
   }
 
-  const checks = await client.listCommitChecks(pr.head?.sha);
+  const observedHeadSha = detailed.head?.sha || pr.head?.sha || "";
+  const checks = await client.listCommitChecks(observedHeadSha);
   const checkSummary = summarizeChecks(checks, options.requiredChecks);
-  if (!checkSummary.passed) return skip("required-checks-not-passing", { checks: checkSummary });
+  if (!checkSummary.passed) return skip("required-checks-not-passing", { checks: checkSummary, approval });
 
   return {
     action: options.dryRun ? "would-merge" : "merge",
     reason: options.dryRun ? "dry-run" : "eligible",
     checks: checkSummary,
+    approval,
+    pullRequestId: detailed.node_id || pr.node_id || "",
+    observedHeadSha,
   };
 }
 
@@ -302,6 +332,178 @@ export class GitHubClient {
     const { data } = await this.request("GET", `/repos/${this.repository.owner}/${this.repository.repo}/git/ref/${ref}`);
     return data.object?.sha || "";
   }
+
+  async graphql(query, variables = {}) {
+    const { data } = await this.request("POST", "/graphql", {
+      body: { query, variables },
+    });
+    if (Array.isArray(data?.errors) && data.errors.length > 0) {
+      const error = new Error(data.errors.map((entry) => entry.message).filter(Boolean).join("; ") || "GitHub GraphQL request failed");
+      error.data = data;
+      throw error;
+    }
+    return data?.data || {};
+  }
+
+  async getMergeQueueState(branch) {
+    const data = await this.graphql(
+      `query BuildchainMergeQueueState($owner: String!, $repo: String!, $branch: String!) {
+        repository(owner: $owner, name: $repo) {
+          mergeQueue(branch: $branch) {
+            id
+            entries(first: 100) {
+              nodes {
+                id
+                position
+                state
+                baseCommit { oid }
+                headCommit { oid }
+                pullRequest { number headRefOid }
+              }
+            }
+          }
+        }
+      }`,
+      {
+        owner: this.repository.owner,
+        repo: this.repository.repo,
+        branch,
+      },
+    );
+    const queue = data.repository?.mergeQueue || null;
+    return {
+      enabled: Boolean(queue),
+      id: queue?.id || "",
+      entries: (queue?.entries?.nodes || []).map((entry) => ({
+        id: entry.id || "",
+        position: entry.position,
+        state: entry.state || "",
+        pullRequestNumber: entry.pullRequest?.number || null,
+        pullRequestHeadSha: entry.pullRequest?.headRefOid || "",
+        baseSha: entry.baseCommit?.oid || "",
+        headSha: entry.headCommit?.oid || "",
+      })),
+    };
+  }
+
+  async enqueuePullRequest({ pullRequestId, expectedHeadOid }) {
+    const data = await this.graphql(
+      `mutation BuildchainEnqueuePullRequest($input: EnqueuePullRequestInput!) {
+        enqueuePullRequest(input: $input) {
+          mergeQueueEntry {
+            id
+            position
+            state
+            baseCommit { oid }
+            headCommit { oid }
+            pullRequest { number headRefOid }
+          }
+        }
+      }`,
+      {
+        input: {
+          pullRequestId,
+          expectedHeadOid,
+        },
+      },
+    );
+    const entry = data.enqueuePullRequest?.mergeQueueEntry;
+    if (!entry?.id) throw new Error("GitHub did not return a merge queue entry");
+    return {
+      id: entry.id,
+      position: entry.position,
+      state: entry.state || "",
+      pullRequestNumber: entry.pullRequest?.number || null,
+      pullRequestHeadSha: entry.pullRequest?.headRefOid || "",
+      baseSha: entry.baseCommit?.oid || "",
+      headSha: entry.headCommit?.oid || "",
+    };
+  }
+}
+
+function queuePredecessor(queueState, fallback = {}) {
+  const entry = queueState?.entries?.[0];
+  if (entry) {
+    return {
+      queueEntryId: entry.id,
+      pullRequestNumber: entry.pullRequestNumber,
+      headSha: entry.pullRequestHeadSha || entry.headSha || "",
+      state: entry.state || "",
+    };
+  }
+  return {
+    queueEntryId: fallback.queueEntryId || "",
+    pullRequestNumber: fallback.pullRequestNumber || null,
+    headSha: fallback.headSha || "",
+    state: fallback.state || "",
+  };
+}
+
+function admissionReceipt({
+  options,
+  pr,
+  expectedBaseSha,
+  observedBaseSha,
+  expectedHeadSha,
+  observedHeadSha,
+  decision,
+  reason,
+  checks,
+  approval,
+  predecessor,
+} = {}) {
+  return {
+    schemaVersion: 1,
+    contract: ADMISSION_CONTRACT,
+    repository: options.repository.fullName,
+    targetBranch: options.targetBranch,
+    pullRequestNumber: pr.number,
+    expectedBaseSha: expectedBaseSha || "",
+    observedBaseSha: observedBaseSha || "",
+    expectedHeadSha: expectedHeadSha || "",
+    observedHeadSha: observedHeadSha || "",
+    approvalRequired: options.requireApproval,
+    approval: approval || { required: options.requireApproval, passed: false },
+    checks: checks || { required: options.requiredChecks, entries: [], passed: false },
+    decision,
+    reason,
+    predecessor: predecessor || null,
+    finalSafetyBoundary: "github-merge-group",
+  };
+}
+
+function evaluatedEntry(pr, decision) {
+  return {
+    number: pr.number,
+    title: pr.title || "",
+    headRef: pr.head?.ref || "",
+    headSha: pr.head?.sha || "",
+    action: decision.action,
+    reason: decision.reason,
+    checks: decision.checks,
+  };
+}
+
+function blockRemainingPullRequests(result, pullRequests, startIndex, options, expectedBaseSha, predecessor) {
+  for (const pr of pullRequests.slice(startIndex)) {
+    const entry = evaluatedEntry(pr, {
+      action: "skip",
+      reason: "blocked-by-predecessor",
+    });
+    entry.admissionReceipt = admissionReceipt({
+      options,
+      pr,
+      expectedBaseSha,
+      observedBaseSha: expectedBaseSha,
+      expectedHeadSha: pr.head?.sha || "",
+      observedHeadSha: pr.head?.sha || "",
+      decision: "blocked",
+      reason: "blocked-by-predecessor",
+      predecessor,
+    });
+    result.evaluated.push(entry);
+    result.skipped.push(entry);
+  }
 }
 
 export async function runDevPrAutoMerge(optionsInput = {}, clientInput) {
@@ -313,21 +515,51 @@ export async function runDevPrAutoMerge(optionsInput = {}, clientInput) {
     apiUrl: optionsInput.apiUrl || process.env.GITHUB_API_URL || "https://api.github.com",
   });
 
-  const pullRequests = await client.listPullRequests(options.targetBranch);
+  const [pullRequests, initialBaseSha, initialQueueState] = await Promise.all([
+    client.listPullRequests(options.targetBranch),
+    client.getBranchSha(options.targetBranch).catch(() => ""),
+    client.getMergeQueueState(options.targetBranch),
+  ]);
+  const landingMode = initialQueueState.enabled ? "queue" : options.landingMode === "queue" ? "queue" : "direct";
+  const orderedPullRequests = landingMode === "queue"
+    ? [...pullRequests].sort((left, right) => Number(left.number) - Number(right.number))
+    : pullRequests;
   const result = {
     schemaVersion: 1,
     contract: "kungfu-buildchain-dev-pr-auto-merge",
     repository: options.repository.fullName,
     targetBranch: options.targetBranch,
+    requestedLandingMode: options.landingMode,
+    landingMode,
     dryRun: options.dryRun,
     maxMerges: options.maxMerges,
     evaluated: [],
+    actions: [],
     merged: [],
+    enqueued: [],
     skipped: [],
-    finalBaseSha: "",
+    initialBaseSha,
+    finalBaseSha: initialBaseSha,
+    mergeQueue: initialQueueState,
   };
 
-  for (const pr of pullRequests) {
+  if (landingMode === "queue" && !initialQueueState.enabled) {
+    blockRemainingPullRequests(result, orderedPullRequests, 0, options, initialBaseSha, null);
+    for (const entry of result.evaluated) {
+      entry.reason = "merge-queue-not-enabled";
+      entry.admissionReceipt.reason = "merge-queue-not-enabled";
+      entry.admissionReceipt.decision = "rejected";
+    }
+    return result;
+  }
+
+  if (landingMode === "queue" && initialQueueState.entries.length > 0) {
+    blockRemainingPullRequests(result, orderedPullRequests, 0, options, initialBaseSha, queuePredecessor(initialQueueState));
+    return result;
+  }
+
+  for (let index = 0; index < orderedPullRequests.length; index += 1) {
+    const pr = orderedPullRequests[index];
     if (result.merged.length >= options.maxMerges) {
       const entry = { number: pr.number, title: pr.title || "", action: "skip", reason: "max-merges-reached" };
       result.evaluated.push(entry);
@@ -336,29 +568,134 @@ export async function runDevPrAutoMerge(optionsInput = {}, clientInput) {
     }
 
     const decision = await evaluatePullRequest(pr, options, client);
-    const entry = {
-      number: pr.number,
-      title: pr.title || "",
-      headRef: pr.head?.ref || "",
-      headSha: pr.head?.sha || "",
-      action: decision.action,
-      reason: decision.reason,
-      checks: decision.checks,
-    };
+    const entry = evaluatedEntry(pr, decision);
     result.evaluated.push(entry);
 
-    if (decision.action === "merge") {
+    if (landingMode === "direct" && decision.action === "merge") {
       const mergeResult = await client.mergePullRequest(pr.number, {
         method: options.mergeMethod,
         sha: pr.head?.sha,
       });
       const mergedEntry = { ...entry, mergeSha: mergeResult.sha || "" };
       result.merged.push(mergedEntry);
+      result.actions.push(mergedEntry);
       result.evaluated[result.evaluated.length - 1] = mergedEntry;
-    } else if (decision.action === "would-merge") {
+    } else if (landingMode === "direct" && decision.action === "would-merge") {
       result.merged.push(entry);
-    } else {
+      result.actions.push(entry);
+    } else if (landingMode === "direct" || STATIC_SKIP_REASONS.has(decision.reason)) {
       result.skipped.push(entry);
+    } else if (decision.action === "skip") {
+      entry.admissionReceipt = admissionReceipt({
+        options,
+        pr,
+        expectedBaseSha: initialBaseSha,
+        observedBaseSha: initialBaseSha,
+        expectedHeadSha: decision.observedHeadSha || pr.head?.sha || "",
+        observedHeadSha: decision.observedHeadSha || pr.head?.sha || "",
+        decision: "rejected",
+        reason: decision.reason,
+        checks: decision.checks,
+        approval: decision.approval,
+      });
+      result.skipped.push(entry);
+      blockRemainingPullRequests(result, orderedPullRequests, index + 1, options, initialBaseSha, queuePredecessor(null, {
+        pullRequestNumber: pr.number,
+        headSha: decision.observedHeadSha || pr.head?.sha || "",
+        state: "ADMISSION_REJECTED",
+      }));
+      break;
+    } else {
+      const expectedHeadSha = decision.observedHeadSha || pr.head?.sha || "";
+      const [observedPullRequest, observedBaseSha, observedQueueState] = await Promise.all([
+        client.getPullRequest(pr.number, {
+          attempts: options.pollMergeableAttempts,
+          delayMs: options.pollMergeableDelayMs,
+        }),
+        client.getBranchSha(options.targetBranch),
+        client.getMergeQueueState(options.targetBranch),
+      ]);
+      const observedHeadSha = observedPullRequest.head?.sha || "";
+      let admissionDecision = options.dryRun ? "planned" : "accepted";
+      let admissionReason = options.dryRun ? "dry-run" : "eligible";
+      let predecessor = null;
+      if (observedQueueState.entries.length > 0) {
+        admissionDecision = "blocked";
+        admissionReason = "blocked-by-predecessor";
+        predecessor = queuePredecessor(observedQueueState);
+      } else if (observedBaseSha !== initialBaseSha) {
+        admissionDecision = "rejected";
+        admissionReason = "base-sha-drift";
+      } else if (observedHeadSha !== expectedHeadSha) {
+        admissionDecision = "rejected";
+        admissionReason = "head-sha-drift";
+      } else if (!mergeableAccepted(observedPullRequest)) {
+        admissionDecision = "rejected";
+        admissionReason = "not-mergeable-on-admission-recheck";
+      }
+
+      entry.action = admissionDecision === "planned" ? "would-enqueue" : admissionDecision === "accepted" ? "enqueue" : "skip";
+      entry.reason = admissionReason;
+      entry.headSha = expectedHeadSha;
+      entry.admissionReceipt = admissionReceipt({
+        options,
+        pr,
+        expectedBaseSha: initialBaseSha,
+        observedBaseSha,
+        expectedHeadSha,
+        observedHeadSha,
+        decision: admissionDecision,
+        reason: admissionReason,
+        checks: decision.checks,
+        approval: decision.approval,
+        predecessor,
+      });
+
+      if (admissionDecision === "planned") {
+        result.actions.push(entry);
+      } else if (admissionDecision === "accepted") {
+        if (!decision.pullRequestId) {
+          entry.action = "skip";
+          entry.reason = "missing-pull-request-node-id";
+          entry.admissionReceipt.decision = "rejected";
+          entry.admissionReceipt.reason = entry.reason;
+          result.skipped.push(entry);
+        } else {
+          try {
+            const queueEntry = await client.enqueuePullRequest({
+              pullRequestId: decision.pullRequestId,
+              expectedHeadOid: expectedHeadSha,
+            });
+            entry.action = "enqueued";
+            entry.reason = "enqueued-with-expected-head";
+            entry.queueEntry = queueEntry;
+            entry.admissionReceipt.reason = entry.reason;
+            result.actions.push(entry);
+            result.enqueued.push(entry);
+          } catch (error) {
+            entry.action = "skip";
+            entry.reason = "enqueue-rejected";
+            entry.enqueueError = {
+              status: error.status || null,
+              message: error.message || "GitHub rejected merge queue admission",
+            };
+            entry.admissionReceipt.decision = "rejected";
+            entry.admissionReceipt.reason = entry.reason;
+            result.skipped.push(entry);
+          }
+        }
+      } else {
+        result.skipped.push(entry);
+      }
+
+      const activePredecessor = queuePredecessor(null, {
+        queueEntryId: entry.queueEntry?.id || predecessor?.queueEntryId || "",
+        pullRequestNumber: pr.number,
+        headSha: expectedHeadSha,
+        state: entry.queueEntry?.state || (admissionDecision === "planned" ? "ADMISSION_PLANNED" : "ADMISSION_REJECTED"),
+      });
+      blockRemainingPullRequests(result, orderedPullRequests, index + 1, options, observedBaseSha || initialBaseSha, activePredecessor);
+      break;
     }
   }
 
@@ -372,9 +709,10 @@ export function renderMarkdownSummary(result) {
     "",
     `Repository: \`${result.repository}\``,
     `Target branch: \`${result.targetBranch}\``,
-    `Mode: \`${result.dryRun ? "dry-run" : "merge"}\``,
+    `Landing mode: \`${result.landingMode}\``,
+    `Execution: \`${result.dryRun ? "dry-run" : "apply"}\``,
     `Evaluated PRs: ${result.evaluated.length}`,
-    `Eligible ${result.dryRun ? "dry-run" : "merged"} PRs: ${result.merged.length}`,
+    `Actions ${result.dryRun ? "planned" : "taken"}: ${result.actions.length}`,
     "",
     "| PR | Action | Reason | Head |",
     "| --- | --- | --- | --- |",
@@ -410,6 +748,7 @@ async function main() {
     sameRepositoryOnly: process.env.BUILDCHAIN_DEV_PR_SAME_REPOSITORY_ONLY,
     maxMerges: process.env.BUILDCHAIN_DEV_PR_MAX_MERGES,
     mergeMethod: process.env.BUILDCHAIN_DEV_PR_MERGE_METHOD,
+    landingMode: process.env.BUILDCHAIN_DEV_PR_LANDING_MODE,
     dryRun: process.env.BUILDCHAIN_DEV_PR_DRY_RUN,
     outputPath: process.env.BUILDCHAIN_DEV_PR_OUTPUT_PATH,
   });
@@ -422,6 +761,8 @@ async function main() {
   writeGitHubOutputs({
     "evaluated-count": result.evaluated.length,
     "merged-count": result.merged.length,
+    "enqueued-count": result.enqueued.length,
+    "action-count": result.actions.length,
     "skipped-count": result.skipped.length,
     "final-base-sha": result.finalBaseSha,
     "result-path": options.outputPath,
