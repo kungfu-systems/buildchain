@@ -28,6 +28,7 @@
     "./readme-badges": "./packages/core/readme-badges.js",
     "./public-surface-audit": "./packages/core/public-surface-audit.js",
     "./logging": "./packages/core/logging.js",
+    "./portable-dev-cache": "./packages/core/portable-dev-cache.js",
     "./publication-artifact": "./packages/core/publication-artifact.js",
     "./publication-package": "./packages/core/publication-package.js",
     "./publication-authority": "./packages/core/publication-authority.js",
