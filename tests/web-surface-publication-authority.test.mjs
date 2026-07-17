@@ -111,6 +111,21 @@ test("trusted manual and reviewed release PR paths both authorize production", (
   assert.equal(release.kind, "release-pr");
 });
 
+test("ordinary main push keeps production capability dormant", () => {
+  const decision = resolveWebSurfaceProductionDecision({
+    eventName: "push",
+    refName: "main",
+    repository: "kungfu-systems/site",
+    sourceSha: SOURCE_SHA,
+    actor: "maintainer",
+    productionApply: true,
+    productionReleaseOnMain: true,
+  });
+  assert.equal(decision.approved, false);
+  assert.equal(decision.kind, "none");
+  assert.equal(decision.reason, "no-authorizing-production-event");
+});
+
 test("manual production rejects an actor without write permission", () => {
   const decision = resolveWebSurfaceProductionDecision({
     eventName: "workflow_dispatch",
