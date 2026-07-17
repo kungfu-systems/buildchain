@@ -52,6 +52,12 @@ export {
 } from "./publish-transaction.js";
 
 export {
+  createPortableDevCachePlan,
+  createPortableDevCacheReceipt,
+  verifyPortableDevCachePlan,
+} from "./portable-dev-cache.js";
+
+export {
   explainReleaseLineDryRun,
   formatReleaseLineDryRun,
 } from "./release-line-dry-run.js";

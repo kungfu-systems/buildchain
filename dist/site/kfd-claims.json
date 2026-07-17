@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "07fb928288f8c08aee449f544ed411b8ecd17fbab75da330aa87d4a0ab9362ac",
+    "sha256": "593872be448358cf6c7e428cf61c6ff1139e86e50241fcd85f478d3812ac7d7a",
     "summary": {
-      "cliCommandCount": 82,
+      "cliCommandCount": 83,
       "workflowCount": 47,
       "actionCount": 4,
       "sitePageCount": 50,
-      "docCommandRefCount": 253,
+      "docCommandRefCount": 256,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -225,13 +225,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "07fb928288f8c08aee449f544ed411b8ecd17fbab75da330aa87d4a0ab9362ac",
+      "sha256": "593872be448358cf6c7e428cf61c6ff1139e86e50241fcd85f478d3812ac7d7a",
       "summary": {
-        "cliCommandCount": 82,
+        "cliCommandCount": 83,
         "workflowCount": 47,
         "actionCount": 4,
         "sitePageCount": 50,
-        "docCommandRefCount": 253,
+        "docCommandRefCount": 256,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -1182,6 +1182,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./logging"
+        },
+        {
+          "id": "export:./portable-dev-cache",
+          "name": "@kungfu-tech/buildchain/portable-dev-cache",
+          "kind": "package-export",
+          "sourcePath": "packages/core/portable-dev-cache.js",
+          "evidencePath": "packages/core/portable-dev-cache.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./portable-dev-cache"
         },
         {
           "id": "export:./publication-artifact",
@@ -2250,6 +2262,18 @@
         {
           "id": "cli:npm-dry-run",
           "name": "buildchain npm dry-run [--cwd <dir>] [--expected-tag <tag>] [--registry <url>]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:portable-cache",
+          "name": "buildchain portable-cache plan --manifest <file-or-json> [--output <file>]",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -4661,6 +4685,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 301
+    "publicSurfaceCount": 303
   }
 }

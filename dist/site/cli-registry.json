@@ -714,6 +714,18 @@
       "maturity": "stable"
     },
     {
+      "id": "portable-cache",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain portable-cache plan --manifest <file-or-json> [--output <file>]",
+      "purpose": "Plan exact portable dependency/compiler cache inputs and seal provider outcomes.",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
       "id": "project",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain project kfx-admission <file-or-json> [--assessment-time <epoch>]",

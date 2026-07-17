@@ -103,6 +103,7 @@ replace them.
 | How do I use one build job that follows alpha during development and stable for releases? | [`reusable-build-surface.md`](reusable-build-surface.md#automatic-channel-router) | use | preview |
 | How do self-hosted runners relay large artifacts through S3 before GitHub artifacts? | [`reusable-build-surface.md`](reusable-build-surface.md#artifact-transfer-relay) | use | stable |
 | How do self-hosted runners reuse local Git checkout caches without weakening source locks? | [`reusable-build-surface.md`](reusable-build-surface.md#locked-source-checkout-cache) | use | stable |
+| How do ephemeral GitHub-hosted runners share exact dependency or compiler caches without fixed-runner affinity? | [`cli.md`](cli.md#commands) | use/verify | preview |
 | How do I validate an unreleased Buildchain runtime train while keeping `@v2`? | [`runtime-train-validation.md`](runtime-train-validation.md) | use | stable |
 | How do I automatically qualify alpha candidates and publish the newest non-revoked qualified candidate at a fixed window? | [`stable-candidate-patrol.md`](stable-candidate-patrol.md) | use | preview |
 | How do I deploy a site/app preview, staging, or production surface? | [`web-surface-deployments.md`](web-surface-deployments.md) | use | stable |
