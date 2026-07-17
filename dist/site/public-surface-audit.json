@@ -3,11 +3,11 @@
   "contract": "kungfu-buildchain-public-surface-reverse-audit",
   "status": "passed",
   "summary": {
-    "cliCommandCount": 82,
+    "cliCommandCount": 83,
     "workflowCount": 47,
     "actionCount": 4,
     "sitePageCount": 50,
-    "docCommandRefCount": 253,
+    "docCommandRefCount": 256,
     "failureCount": 0
   },
   "enumerated": {
@@ -306,6 +306,11 @@
         "id": "npm-dry-run",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain npm dry-run [--cwd <dir>] [--expected-tag <tag>] [--registry <url>]"
+      },
+      {
+        "id": "portable-cache",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain portable-cache plan --manifest <file-or-json> [--output <file>]"
       },
       {
         "id": "project",
@@ -3116,6 +3121,21 @@
         "command": "buildchain npm dry-run"
       },
       {
+        "id": "portable-cache",
+        "path": "docs/cli.md",
+        "command": "buildchain portable-cache plan"
+      },
+      {
+        "id": "portable-cache",
+        "path": "docs/cli.md",
+        "command": "buildchain portable-cache receipt"
+      },
+      {
+        "id": "portable-cache",
+        "path": "docs/cli.md",
+        "command": "buildchain portable-cache plan"
+      },
+      {
         "id": "project",
         "path": "docs/artifact-verification-envelope.md",
         "command": "buildchain project kfx-admission envelope"
@@ -3466,9 +3486,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "b07ed2241d34696ad0500c3431b2106b1499a0d4372a77385a8c0e0698421d76",
+    "cliRegistryDigest": "b469949f77ed7777f23fe68c54daf6d2c20d3afc97f3bbd5a178a91202a068d0",
     "workflowRegistryDigest": "283dac6adfcebb463db63545d2c00686daa317f1603f5ac13c9d5c5c3c91592f",
-    "pageRegistryDigest": "02356f52cdf57cb029c795655e26adfdd8ddcee93f5857a4a02ae8c5919c07fc"
+    "pageRegistryDigest": "77061e79d575aa965482dad26280a0262d09aadc92c87038065a3591c7072045"
   },
   "comparison": {
     "missingCliRegistry": [],
