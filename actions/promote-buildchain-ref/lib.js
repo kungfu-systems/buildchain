@@ -5277,6 +5277,25 @@ async function promoteBuildchainRefs({
       return { version, publishVersion: commit.publishVersion || version, commit, sha: commit.sha };
     };
     let alpha = await prepareAlphaCommit(selectedAlpha);
+    const currentAlphaRequiresNewPublication =
+      currentAlpha &&
+      selectedAlpha.tag === currentAlpha.tag &&
+      currentAlphaTransactionOpen &&
+      transactionHasPublishedMaterial(currentAlphaTransaction) &&
+      !["existing", "existing-publish-transaction"].includes(alpha.commit.action);
+    if (currentAlphaRequiresNewPublication) {
+      updates.push({
+        tag: selectedAlpha.tag,
+        action: "advanced-published-transaction",
+        sha: alpha.sha,
+      });
+      selectedAlpha = selectAlphaTag({
+        refs: lineRefs,
+        releasePrefix: rule.releasePrefix,
+        sha,
+      });
+      alpha = await prepareAlphaCommit(selectedAlpha);
+    }
     try {
       await executePublishTransaction({
         version: alpha.publishVersion || alpha.version,

@@ -316,7 +316,7 @@
       "title": "Publish transaction",
       "path": "docs/publish-transaction.md",
       "plane": "verify",
-      "digest": "sha256:163c21a652d982736b8e50fd05711851d0b323d70dc9c17dcb8d4da7a5d39e26",
+      "digest": "sha256:950ca4fb2f7ab0a7d40775593e3864f8bb1229f8543b266b00154af82c619e95",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator"
@@ -384,7 +384,7 @@
       "title": "Web surface deployments",
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
-      "digest": "sha256:797d8f0e81974a49125b17256bb8b4a85fc60673e06d6bbecbbf399651163437",
+      "digest": "sha256:856a7602cf1c2d3a0a540cdf0d64566914f79dde24417c92089f0466bee25df1",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "site",

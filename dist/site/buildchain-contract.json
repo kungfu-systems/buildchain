@@ -203,7 +203,7 @@
         "channel-aware artifact host facts are checked against the deploy plan before adapter side effects"
       ],
       "breakingDigest": "sha256:da569f90374e878948e3d5160ed9929338ce0572473ca8ee54867b0fe1aaeace",
-      "auditDigest": "sha256:d9aa7c4c2b30e741d0e24274307ecafc840f3db64dc46103bd30c09e54c4c47e"
+      "auditDigest": "sha256:25ba0770379881698dc9e685e282adf50e55f2c00c2682787290fae6c31f190c"
     },
     {
       "contractVersion": 1,
@@ -527,7 +527,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:f7370bf4c68cf81c572909b1e45c4bead01a19c2ca89e4e3ef0d0e4d6d8bdc68"
+      "auditDigest": "sha256:34526c1e75431fb4122fd690786c8cc41010ef0168a01625421bbd946055b3d6"
     },
     {
       "contractVersion": 1,
@@ -1785,7 +1785,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:f14825324a16b51c2e9ed708ebe64e1932e05b6d5e0866f83aea8439decb4a27",
-      "auditDigest": "sha256:d9aa7c4c2b30e741d0e24274307ecafc840f3db64dc46103bd30c09e54c4c47e"
+      "auditDigest": "sha256:25ba0770379881698dc9e685e282adf50e55f2c00c2682787290fae6c31f190c"
     },
     {
       "contractVersion": 1,
@@ -2709,5 +2709,5 @@
     }
   ],
   "compatibilityDigest": "sha256:af162b86ab4506e9b5f1d3c59b41f3fd57fbad79ff4d749a7f12ff16460517f8",
-  "contractDigest": "sha256:07c4fd01cae3e574189c993b93690b8a25146ca401b432730f33e98ce5abec4b"
+  "contractDigest": "sha256:cf05ae21077cbff911dfe70d28ad2ea2c6ea953cd4f3a66757fea020af45ca6b"
 }
