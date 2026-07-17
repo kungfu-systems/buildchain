@@ -110,6 +110,23 @@ test("ready dev PR is selected in dry-run mode without merging", async () => {
   assert.match(renderMarkdownSummary(result), /#7/);
 });
 
+test("normalized CLI options remain valid when the runner normalizes them again", async () => {
+  const fake = client({ pullRequests: [pr({ number: 8 })] });
+  const result = await runDevPrAutoMerge(
+    {
+      ...baseOptions,
+      repository: {
+        owner: "kungfu-systems",
+        repo: "buildchain",
+        fullName: "kungfu-systems/buildchain",
+      },
+    },
+    fake,
+  );
+  assert.equal(result.evaluated[0].number, 8);
+  assert.equal(result.evaluated[0].action, "would-merge");
+});
+
 test("policy gates reject unsafe or incomplete dev PRs", async () => {
   const options = {
     repository: "kungfu-systems/buildchain",

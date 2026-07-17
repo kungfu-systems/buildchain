@@ -411,7 +411,8 @@ buildchain dev merge-queue \
   --repository owner/repository \
   --branch dev/v4/v4.0 \
   --workflow .github/workflows/source-acceptance.yml \
-  --workflow .github/workflows/affected-native-pr.yml
+  --workflow .github/workflows/affected-native-pr.yml \
+  --bypass-app dedicated-release-app
 ```
 
 After reviewing the plan, repeat with `--apply`. Buildchain creates or updates
@@ -422,6 +423,15 @@ protection, and deletion protection remain owned by the existing branch
 protection. The ruleset uses the first merge method that the repository itself
 allows, and fails closed when the repository has no enabled merge method.
 Re-running the command is idempotent.
+
+Merge-queue rules also reject generated post-publish version-state ref updates.
+When the sealed promotion workflow uses a dedicated GitHub App, user, or team
+already declared by release governance, repeat `--bypass-app`, `--bypass-user`,
+or `--bypass-team` to project that exact actor into the ruleset. Bypass actors
+are never inferred and broad repository or organization roles are not accepted.
+This keeps ordinary feature PRs on the predecessor-aligned queue path while the
+sealed publication authority can finish its machine-verified bookkeeping. The
+dry-run receipt exposes the exact actor IDs before `--apply` changes GitHub.
 
 Buildchain provides the reusable
 `.github/workflows/dev-pr-auto-merge.yml` workflow for repositories that want a

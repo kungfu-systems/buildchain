@@ -6452,6 +6452,111 @@ test("governed promotion treats a superseded target as an auditable no-op", asyn
   assert.deepEqual(mutationCalls, []);
 });
 
+test("governed promotion resumes its exact durable transaction after the target ref advanced", async () => {
+  const releaseSha = "c".repeat(40);
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "1.0.0-alpha.0",
+      packageManager: "pnpm@11.7.0",
+    },
+  });
+  const { octokit, refs, commits } = createGitMock({
+    refs: new Map([["heads/alpha/v1/v1.0", releaseSha]]),
+  });
+  commits.set(releaseSha, {
+    sha: releaseSha,
+    tree: { sha: `tree-${releaseSha}` },
+    parents: [{ sha: SHA }],
+  });
+  octokit.rest.repos = {
+    compareCommitsWithBasehead: async () => ({ data: { status: "ahead" } }),
+    getBranchProtection: async () => ({ data: protectedChannel() }),
+    listPullRequestsAssociatedWithCommit: async () => ({
+      data: [{
+        merged_at: "2026-07-17T00:00:00Z",
+        base: { ref: "alpha/v1/v1.0" },
+        head: {
+          ref: "dev/v1/v1.0",
+          repo: { full_name: "kungfu-systems/buildchain" },
+        },
+      }],
+    }),
+  };
+  const evidencePath = path.join(cwd, "durable-evidence.json");
+  fs.writeFileSync(evidencePath, JSON.stringify({
+    schema: 1,
+    version: "1.0.0-alpha.0",
+    channel: "alpha",
+    source_sha: SHA,
+    release_sha: releaseSha,
+    target_ref: "alpha/v1/v1.0",
+    release_material_sha: releaseSha,
+    publish_tooling_sha: releaseSha,
+    artifacts: [],
+  }, null, 2) + "\n");
+  await persistDurableReleaseTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    transaction: {
+      schema: 1,
+      id: "tx-advanced-alpha",
+      repository: "kungfu-systems/buildchain",
+      target_ref: "alpha/v1/v1.0",
+      source_sha: SHA,
+      release_sha: releaseSha,
+      release_material_sha: releaseSha,
+      publish_tooling_sha: releaseSha,
+      version: "1.0.0-alpha.0",
+      exact_tag: "v1.0.0-alpha.0",
+      channel: "alpha",
+      line: "v1.0",
+      version_strategy: "",
+      lifecycle_identity: "lifecycle.publish",
+      state_ref: "buildchain/release-state/1-0-0-alpha-0",
+      state_path: "",
+      evidence_path: "",
+      state: "finalizing",
+      previous_state: "published",
+      actor: "codex",
+      run_id: "1",
+      superseded_by: "",
+      failure: "",
+      artifacts: [],
+      evidence: ["durable-evidence.json"],
+      created_at: "2026-07-17T00:00:00.000Z",
+      updated_at: "2026-07-17T00:00:00.000Z",
+    },
+    evidencePath,
+  });
+  fs.unlinkSync(evidencePath);
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    cwd,
+    versionState: false,
+    requireGovernance: true,
+    publishTransaction: true,
+    expectedPublicationVersion: "1.0.0-alpha.0",
+    releasePassport: false,
+  });
+
+  assert.equal(result.superseded, undefined);
+  assert.equal(result.publishTransaction.state, "complete");
+  assert.equal(result.publishTransaction.exactTag, "v1.0.0-alpha.0");
+  assert.equal(refs.get("heads/alpha/v1/v1.0"), releaseSha);
+  assert.equal(refs.get("tags/v1.0.0-alpha.0"), releaseSha);
+  assert.equal(refs.get("tags/v1.0-alpha"), releaseSha);
+  assert.equal(fs.existsSync(path.join(cwd, result.publishTransaction.evidencePath)), true);
+  assert.equal(result.updates[0].action, "resumed-advanced-publication");
+});
+
 test("a queued duplicate promotion adds no mutation after the protected target advances", async () => {
   const refs = new Map([["heads/alpha/v1/v1.0", SHA]]);
   const mutationCalls = [];
