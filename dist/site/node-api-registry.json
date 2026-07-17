@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:fe824bdbc78379ae5981b936cbcab36f3b59d4dea3c6899e63c7c24975214d9f",
+      "digest": "sha256:454830df8be696e9c25136421dd9f4efaf5900b043422f5c4238648b493bc15c",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:fe824bdbc78379ae5981b936cbcab36f3b59d4dea3c6899e63c7c24975214d9f",
+      "digest": "sha256:454830df8be696e9c25136421dd9f4efaf5900b043422f5c4238648b493bc15c",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -226,6 +226,19 @@
       "maturity": "stable"
     },
     {
+      "specifier": "@kungfu-tech/buildchain/portable-dev-cache",
+      "export": "./portable-dev-cache",
+      "target": "./packages/core/portable-dev-cache.js",
+      "digest": "sha256:310c038a9545cea78afb2cdbbf8a762657ef6fab4f4f4de8c0e2346271d95b1a",
+      "summary": "Portable dependency/compiler cache plan, exact-root verification, and provider receipt APIs.",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
       "specifier": "@kungfu-tech/buildchain/publication-artifact",
       "export": "./publication-artifact",
       "target": "./packages/core/publication-artifact.js",
@@ -386,7 +399,7 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:a7a31bbec048acbc9759324c5421c7ea0734f394f8d6705b63d70654867fdfa6"
+      "digest": "sha256:9ecf8c220b5ff02ee5719cb877d4b2b159c3d683af288630eae0013d9d906373"
     },
     {
       "id": "build-facts",

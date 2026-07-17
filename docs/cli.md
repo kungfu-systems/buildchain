@@ -78,6 +78,7 @@ import { createReleasePropagationPlan } from "@kungfu-tech/buildchain/release-pr
 import { planReleaseLineBootstrap } from "@kungfu-tech/buildchain/release-line-bootstrap";
 import { collectPublicSurfaceReverseAudit } from "@kungfu-tech/buildchain/public-surface-audit";
 import { createBuildchainLayoutDiscovery } from "@kungfu-tech/buildchain/buildchain-layout";
+import { createPortableDevCachePlan } from "@kungfu-tech/buildchain/portable-dev-cache";
 import contractWorld from "@kungfu-tech/buildchain/site/buildchain-contract.json" with { type: "json" };
 import capabilityRegistry from "@kungfu-tech/buildchain/site/capability-registry.json" with { type: "json" };
 import manualRegistry from "@kungfu-tech/buildchain/site/manual-registry.json" with { type: "json" };
@@ -109,6 +110,42 @@ not sufficient. The same contract is available through
 
 `buildchain init` writes a starter `.buildchain/buildchain.toml` and a reusable workflow
 caller at `.github/workflows/build.yml`.
+
+`buildchain portable-cache plan` turns a consumer-owned, secret-free manifest
+into GitHub Actions cache inputs without letting each consumer invent key or
+restore-prefix semantics. The exact key binds source SHA and the consumer plan
+digest; the compatible restore prefix still requires the same provider schema,
+layer, roots, runner image, platform/architecture, toolchain, dependency lock,
+and build profile.
+
+```bash
+buildchain portable-cache plan \
+  --manifest .buildchain/portable-cache.json \
+  --output .buildchain/portable-cache-plan.json \
+  --github-output "$GITHUB_OUTPUT"
+```
+
+The emitted `cache-key`, `restore-keys`, and `cache-paths` values are intended
+for pinned `actions/cache/restore` and `actions/cache/save` actions. After
+restore and a consumer validation probe, seal the provider result:
+
+```bash
+buildchain portable-cache receipt \
+  --plan .buildchain/portable-cache-plan.json \
+  --matched-key "$CACHE_MATCHED_KEY" \
+  --cache-hit "$CACHE_HIT" \
+  --validation-status pass \
+  --cold-fallback-status passed \
+  --output .buildchain/portable-cache-receipt.json
+```
+
+The receipt distinguishes `exact`, `compatible`, `miss`, and `corrupt`.
+Unknown or contradictory provider evidence fails closed. A miss or corruption
+requires the consumer's audited cold path; a cache never substitutes for the
+consumer's current build or tests. Roots must be workspace-relative or under
+`~/`, and manifests cannot carry credentials, absolute host paths, or escape
+segments. `cold-fallback-status=passed` qualifies a miss only after the current
+source has completed its normal build and test path.
 
 Supported presets:
 
