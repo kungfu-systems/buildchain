@@ -63,6 +63,48 @@ test("CLI prints help and version", () => {
   assert.equal(runBuildchain(["version"]).trim(), packageJson.version);
 });
 
+test("CLI plans portable cache outputs and seals provider evidence", () => {
+  const cwd = tempDir("portable-cache");
+  const manifestPath = path.join(cwd, "manifest.json");
+  const planPath = path.join(cwd, "plan.json");
+  const receiptPath = path.join(cwd, "receipt.json");
+  const outputPath = path.join(cwd, "github-output.txt");
+  const sha = (character) => `sha256:${character.repeat(64)}`;
+  fs.writeFileSync(manifestPath, JSON.stringify({
+    schema: "buildchain.portable-dev-cache-manifest/v1",
+    layer: "compiler",
+    roots: [{ id: "compiler", path: "~/.cache/ccache" }],
+    identity: {
+      platform: "linux",
+      arch: "x64",
+      runnerImage: "ubuntu-24.04",
+      toolchainDigest: sha("1"),
+      dependencyLockDigest: sha("2"),
+      profileDigest: sha("3"),
+      sourceSha: "4".repeat(40),
+      planDigest: sha("5"),
+    },
+  }));
+  runBuildchain([
+    "portable-cache", "plan",
+    "--manifest", manifestPath,
+    "--output", planPath,
+    "--github-output", outputPath,
+  ]);
+  const plan = JSON.parse(fs.readFileSync(planPath, "utf8"));
+  assert.match(fs.readFileSync(outputPath, "utf8"), /cache-key<</);
+  runBuildchain([
+    "portable-cache", "receipt",
+    "--plan", planPath,
+    "--matched-key", plan.key,
+    "--cache-hit", "true",
+    "--output", receiptPath,
+  ]);
+  const receipt = JSON.parse(fs.readFileSync(receiptPath, "utf8"));
+  assert.equal(receipt.outcome, "exact");
+  assert.equal(receipt.usable, true);
+});
+
 test("CLI creates canonical publication admission and runner provenance receipts", () => {
   const admission = JSON.parse(runBuildchain([
     "create",
