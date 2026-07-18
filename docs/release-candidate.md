@@ -108,6 +108,9 @@ jobs:
   promote:
     uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v2
     with:
+      buildchain-channel: auto
+      buildchain-alpha-contract-lock-path: .buildchain/alpha-contract-lock.json
+      buildchain-stable-contract-lock-path: .buildchain/contract-lock.json
       channel: alpha
       artifact-name: libnode
       release-passport-kfd-1-witness-jsons: .buildchain/kfd/kfd-1/standard-contract.witness.json

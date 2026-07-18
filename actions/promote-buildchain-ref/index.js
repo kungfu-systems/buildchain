@@ -295,6 +295,7 @@ async function main() {
   const releasePassportBuildSummaryPath = core.getInput("release-passport-build-summary-path");
   const releasePassportPlatformManifestPaths = core.getInput("release-passport-platform-manifest-paths");
   const releasePassportImpactJson = core.getInput("release-passport-impact-json");
+  const releasePassportPromotionRoutingJson = core.getInput("release-passport-promotion-routing-json");
   const releasePassportKfd1WitnessJsons = core.getInput("release-passport-kfd-1-witness-jsons");
   const releasePassportKfd2ClaimJsons = core.getInput("release-passport-kfd-2-claim-jsons");
   const releasePassportKfd3PrebuildWitnessJsons = core.getInput("release-passport-kfd-3-prebuild-witness-jsons");
@@ -379,6 +380,7 @@ async function main() {
     releasePassportBuildSummaryPath,
     releasePassportPlatformManifestPaths,
     releasePassportImpactJson,
+    releasePassportPromotionRoutingJson,
     releasePassportKfd1WitnessJsons,
     releasePassportKfd2ClaimJsons,
     releasePassportKfd3PrebuildWitnessJsons,

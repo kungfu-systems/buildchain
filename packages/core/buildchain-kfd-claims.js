@@ -82,6 +82,7 @@ const SCHEMA_AND_STANDARD_FILES = Object.freeze([
 
 const WORKFLOW_AND_ACTION_FILES = Object.freeze([
   ".github/workflows/.build.yml",
+  ".github/workflows/.release-candidate-promote.yml",
   ".github/workflows/release-candidate-promote.yml",
   ".github/workflows/buildchain-ref-promotion.yml",
   ".github/workflows/release-propagation.yml",
@@ -372,6 +373,7 @@ export function createBuildchainPublicClaimDefinitions() {
         "packages/core/buildchain-contract.js",
         "scripts/buildchain-contract-lock.mjs",
         ".github/workflows/.build.yml",
+        ".github/workflows/.release-candidate-promote.yml",
         ".github/workflows/release-candidate-promote.yml",
         "docs/reusable-build-surface.md",
       ],
@@ -387,6 +389,7 @@ export function createBuildchainPublicClaimDefinitions() {
         "actions/promote-buildchain-ref/index.js",
         "actions/promote-buildchain-ref/action.yml",
         "scripts/ensure-github-release.mjs",
+        ".github/workflows/.release-candidate-promote.yml",
         ".github/workflows/release-candidate-promote.yml",
         "docs/release-governance.md",
       ],
@@ -415,6 +418,7 @@ export function createBuildchainPublicClaimDefinitions() {
       sourcePaths: [
         "scripts/npm-publish-transaction.mjs",
         "actions/promote-buildchain-ref/index.js",
+        ".github/workflows/.release-candidate-promote.yml",
         ".github/workflows/release-candidate-promote.yml",
         "docs/publish-transaction.md",
       ],

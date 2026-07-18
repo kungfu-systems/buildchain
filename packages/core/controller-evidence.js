@@ -72,7 +72,7 @@ const CONTROLLER_SPECS = [
   },
   {
     id: "release-candidate-promotion",
-    workflowId: "release-candidate-promote",
+    workflowId: ".release-candidate-promote",
     version: 1,
     capabilities: ["promotion-preflight", "artifact-admission", "publication-authority", "publish-transaction", "release-passport"],
     stages: ["preflight", "admit-release-candidate", "publication-authority", "publish", "passport", "aggregate"],

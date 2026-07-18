@@ -1345,8 +1345,8 @@
       "id": "release-candidate-promotion",
       "version": 1,
       "workflow": {
-        "id": "release-candidate-promote",
-        "path": ".github/workflows/release-candidate-promote.yml"
+        "id": ".release-candidate-promote",
+        "path": ".github/workflows/.release-candidate-promote.yml"
       },
       "inputs": {
         "BUILDCHAIN_ISSUE_APP_ID": {
@@ -1442,6 +1442,50 @@
           "source": "workflow-call-input"
         },
         "package-manager": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "promotion-contract-lock-digest": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "promotion-contract-lock-path": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "promotion-override-used": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "promotion-publication-channel": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "promotion-router-ref": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "promotion-router-sha": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "promotion-runtime-ref": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "promotion-runtime-sha": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "promotion-shell-ref": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "promotion-shell-sha": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "promotion-target-ref": {
           "classification": "included",
           "source": "workflow-call-input"
         },
@@ -1655,7 +1699,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:2507d132710f66d3ae6ffdb18f5e66172707b8e0f9ad9e888f7422fdacc99133"
+      "digest": "sha256:6a531c572b59eb3b8aa5d47df3658f8f438a0d026468dd13b1a6642a3ea8c425"
     },
     {
       "schemaVersion": 1,
@@ -1773,5 +1817,5 @@
       "digest": "sha256:ede9eba43b87cf19330d5f8203a1585bf066aa9affc9cac0f43230ac76b8580d"
     }
   ],
-  "digest": "sha256:2c6a3a4dce27e0d76baae1c9aeb4d3428866fe8b4c4022a8c582b054dace02fd"
+  "digest": "sha256:5f771d5b2f481a28afc48f516685f50985c1d51391857cdf04e3238c271fecc8"
 }
