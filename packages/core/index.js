@@ -321,6 +321,14 @@ export {
 } from "./release-passport.js";
 
 export {
+  RELEASE_PASSPORT_CHECK_MANIFEST_CONTRACT,
+  RELEASE_PASSPORT_SCHEMA,
+  RELEASE_PASSPORT_SCHEMA_ID,
+  createReleasePassportCheckManifest,
+  validateReleasePassportSchema,
+} from "./release-passport-contract.js";
+
+export {
   BUILDCHAIN_CONSUMER_ISSUE_CONTRACT,
   BUILDCHAIN_WORKFLOW_FRICTION_ISSUE_CONTRACT,
   DEFAULT_BUILDCHAIN_ISSUE_REPOSITORY,

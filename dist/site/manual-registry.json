@@ -36,7 +36,7 @@
       "title": "Release Passport protocol",
       "path": "docs/release-passport.md",
       "plane": "verify",
-      "digest": "sha256:2421e3e9f2dd892971bea5deb605492dfec38f3a83e539229442b55380bebe25",
+      "digest": "sha256:0029014ffab7d7228a12d8b92326b78cf6757a41f481b661c5997e2cef06d3cc",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",
@@ -93,7 +93,7 @@
       "title": "Release propagation",
       "path": "docs/release-propagation.md",
       "plane": "use",
-      "digest": "sha256:d5877075eb41a3d41e531549da113756d29d6f34c91e3b68b8ce650753d5ca1d",
+      "digest": "sha256:fc2b743e3d76c4f90cdd8c6560cf9d619ad25d74c15c074be96db7bcb6cc2a29",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "release-operator",

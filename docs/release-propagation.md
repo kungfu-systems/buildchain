@@ -182,6 +182,8 @@ jobs:
       downstream-target: site-libkungfu-dev
       downstream-repository: kungfu-systems/site-libkungfu-dev
       downstream-base-ref: dev/v2/v2.7
+      downstream-prepare-command: pnpm install --frozen-lockfile --ignore-scripts
+      downstream-verify-command: pnpm run check
       dry-run: false
     secrets:
       propagation-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
@@ -199,13 +201,23 @@ open PR.
 The workflow checks out the Buildchain runtime selected by
 `buildchain-repository` and `buildchain-ref` into `.buildchain/runtime`, invokes
 that runtime for the propagation plan and lock write, then checks out the
-downstream repository, writes the exact lock, and opens or updates a PR. It does
-not publish the downstream release directly. The downstream repository keeps its
-normal Buildchain governance: the PR updates source-of-truth facts, then
-downstream alpha or release publication runs through its own protected channel.
-The workflow stages the declared lock path before checking the index, so the
-first propagation creates a PR even when the lock did not previously exist; a
-byte-identical rerun is an explicit successful no-op.
+downstream repository and writes the exact lock. A consumer that must pin the
+exact upstream package or regenerate deterministic files declares
+`downstream-prepare-command`. The command receives
+`BUILDCHAIN_UPSTREAM_PACKAGE_NAME`, `BUILDCHAIN_UPSTREAM_PACKAGE_VERSION`, and
+`BUILDCHAIN_UPSTREAM_RELEASE_LOCK`. After preparation, Buildchain refreshes an
+existing `<!-- buildchain:badges:start -->` README block by default. Consumers
+can disable that step with `refresh-managed-readme-badges: false`.
+
+`downstream-verify-command` runs against the final tree before any commit or
+push, so consumers can use the same check as their PR workflow. Preparation,
+badge refresh, and verification failures all fail closed. The workflow stages
+the complete deterministic result, signs the propagation commit with DCO, and
+then opens or updates the PR. It does not publish the downstream release
+directly. The downstream repository keeps its normal Buildchain governance: the
+PR updates source-of-truth facts, then downstream alpha or release publication
+runs through its own protected channel. A byte-identical rerun is an explicit
+successful no-op.
 For unreleased runtime validation, keep the caller's reusable workflow reference
 on `@v2` and pass a temporary train ref through `buildchain-ref`.
 

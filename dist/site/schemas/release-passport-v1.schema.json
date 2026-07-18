@@ -1,0 +1,198 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.libkungfu.dev/schemas/release-passport-v1.schema.json",
+  "title": "Buildchain Release Passport v1",
+  "description": "Standalone structural schema for the Buildchain-owned release-passport envelope. KFD subsection semantics remain owned by their canonical KFD schemas.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "contract",
+    "product",
+    "release",
+    "artifacts",
+    "evidence",
+    "recovery"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "contract": {
+      "const": "kungfu-buildchain-release-passport"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "product": {
+      "type": "object",
+      "required": [
+        "name",
+        "repository",
+        "mechanism"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repository": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mechanism": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": true
+    },
+    "release": {
+      "type": "object",
+      "required": [
+        "tag"
+      ],
+      "properties": {
+        "tag": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceSha": {
+          "type": "string"
+        },
+        "releaseSha": {
+          "type": "string"
+        },
+        "releaseMaterialSha": {
+          "type": "string"
+        },
+        "targetRef": {
+          "type": "string"
+        },
+        "channel": {
+          "type": "string"
+        },
+        "line": {
+          "type": "string"
+        },
+        "package": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": true
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "required": [
+        "artifactEvidence",
+        "impact",
+        "agentIndex"
+      ],
+      "properties": {
+        "artifactEvidence": {
+          "type": "string",
+          "minLength": 1
+        },
+        "impact": {
+          "type": "string",
+          "minLength": 1
+        },
+        "agentIndex": {
+          "type": "string",
+          "minLength": 1
+        },
+        "publishEvidence": {
+          "type": "string"
+        },
+        "transactionState": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "recovery": {
+      "type": "object"
+    },
+    "workflow": {
+      "type": "object"
+    },
+    "runnerPolicy": {
+      "type": "object"
+    },
+    "versionImpact": {
+      "type": "object"
+    },
+    "surfaceImpacts": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "packageSet": {
+      "type": "object"
+    },
+    "anchorManifest": {
+      "type": "object"
+    },
+    "trustedPublishing": {
+      "type": "object"
+    },
+    "transaction": {
+      "type": "object"
+    },
+    "surfaceTimestampPolicy": {
+      "type": "object"
+    },
+    "buildFacts": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "buildSummary": {
+      "type": "object"
+    },
+    "platformArtifactManifests": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "distTagPromotion": {
+      "type": "object"
+    },
+    "controllerReceipts": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "kfd-1": {
+      "type": "object"
+    },
+    "kfd-2": {
+      "type": "object"
+    },
+    "kfd-3": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": true
+}

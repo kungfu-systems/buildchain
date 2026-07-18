@@ -7,7 +7,7 @@
     "workflowCount": 48,
     "actionCount": 4,
     "sitePageCount": 50,
-    "docCommandRefCount": 257,
+    "docCommandRefCount": 258,
     "failureCount": 0
   },
   "enumerated": {
@@ -1744,17 +1744,20 @@
           "buildchain-repository",
           "downstream-base-ref",
           "downstream-branch",
+          "downstream-prepare-command",
           "downstream-repository",
           "downstream-target",
+          "downstream-verify-command",
           "dry-run",
           "graph-json",
           "lock-path",
           "pr-body",
           "pr-title",
+          "refresh-managed-readme-badges",
           "source-node",
           "upstream-release-json"
         ],
-        "inputCount": 13,
+        "inputCount": 16,
         "secrets": [
           "propagation-token"
         ],
@@ -3478,6 +3481,11 @@
       },
       {
         "id": "verify-release-passport",
+        "path": "docs/release-passport.md",
+        "command": "buildchain verify release-passport"
+      },
+      {
+        "id": "verify-release-passport",
         "path": "README.md",
         "command": "buildchain verify release-passport buildchain"
       },
@@ -3503,8 +3511,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "b469949f77ed7777f23fe68c54daf6d2c20d3afc97f3bbd5a178a91202a068d0",
-    "workflowRegistryDigest": "2ad4284a9e275cec6fbc6593a470f9d443e26f7aa880bedf9fa0671448369f2f",
-    "pageRegistryDigest": "53c5c0918268a1ea769a3841ad3b5ad553e81b0fcd602c8289dc049e3559ff89"
+    "workflowRegistryDigest": "822624c70c801b19f537335a451b240f4e82cc4435ad89f0298621d3a817a710",
+    "pageRegistryDigest": "4598f3d80d638f6aa5ed8541b9ddd47b2052408c1245fcc4b776e36a297ef99f"
   },
   "comparison": {
     "missingCliRegistry": [],

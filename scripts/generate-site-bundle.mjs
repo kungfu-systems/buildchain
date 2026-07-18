@@ -18,6 +18,10 @@ import {
   createReadmeBadgeEndpointRegistry,
 } from "../packages/core/readme-badges.js";
 import {
+  RELEASE_PASSPORT_SCHEMA,
+  createReleasePassportCheckManifest,
+} from "../packages/core/release-passport-contract.js";
+import {
   collectPublicSurfaceReverseAudit,
   enumerateActionInputs,
   enumerateCliCommandsFromBin,
@@ -496,6 +500,7 @@ function nodeApiMeta(exportName) {
     "./artifact-passport": { group: "release-passport-trust", summary: "Artifact passport digest and evidence helper APIs." },
     "./artifact-verification-envelope": { group: "release-passport-trust", summary: "Sealed exact-root, lifecycle, identity, and existing KFD assessment inputs for KFX admission." },
     "./release-passport": { group: "release-passport-trust", summary: "Release passport collection, verification, explanation, and evidence APIs." },
+    "./release-passport-contract": { group: "release-passport-trust", summary: "Standalone release passport JSON Schema, ownership/check manifest, and structural validation APIs." },
     "./release-candidate": { group: "reusable-build", summary: "PR-stage release-candidate artifact, passport, and promote-only resolver APIs." },
     "./stable-candidate-ledger": { group: "governance-versioning", summary: "Immutable alpha candidate ledger, qualification, revocation, selection, and exact stable source-lock APIs." },
     "./release-propagation": { group: "site-and-propagation", summary: "Release propagation graph, plan, and exact upstream lock APIs." },
@@ -915,6 +920,8 @@ function buildSiteBundle() {
       entrypoint: "buildchain.release.json",
       bundle: "buildchain-release-bundle.tar.gz",
       contract: "kungfu-buildchain-release-passport",
+      schema: "schemas/release-passport-v1.schema.json",
+      checkManifest: "release-passport-check-manifest.json",
     },
     releasePropagation: {
       graphContract: "kungfu-buildchain-release-propagation-graph",
@@ -956,6 +963,8 @@ function buildSiteBundle() {
     contract: "kungfu-buildchain-artifact-schema-index",
     releasePassport: [
       "buildchain.release.json",
+      "release-passport-check-manifest.json",
+      "schemas/release-passport-v1.schema.json",
       "artifact-evidence.json",
       "product-mechanism.json",
       "impact.json",
@@ -981,6 +990,8 @@ function buildSiteBundle() {
       "public-surface-audit.json",
       "release-model.json",
       "artifact-schemas.json",
+      "release-passport-check-manifest.json",
+      "schemas/release-passport-v1.schema.json",
       "buildchain-contract.json",
       "kfd-claims.json",
       "product-mechanism.json",
@@ -1090,6 +1101,8 @@ function buildSiteBundle() {
       "publication-authority-registry.json",
       "public-surface-audit.json",
       "artifact-schemas.json",
+      "release-passport-check-manifest.json",
+      "schemas/release-passport-v1.schema.json",
       "buildchain-contract.json",
       "kfd-upstream-aggregate.json",
       "kfd-claims.json",
@@ -1260,6 +1273,8 @@ function buildSiteBundle() {
     "public-surface-audit.json": publicSurfaceAudit,
     "release-model.json": releaseModel,
     "artifact-schemas.json": artifactSchemas,
+    "release-passport-check-manifest.json": createReleasePassportCheckManifest(),
+    "schemas/release-passport-v1.schema.json": RELEASE_PASSPORT_SCHEMA,
     "badge-endpoint-registry.json": badgeEndpointRegistry,
     "publication-registry.json": publicationRegistry,
     "buildchain-contract.json": createBuildchainContractWorld({ root, controllerRegistry }),
