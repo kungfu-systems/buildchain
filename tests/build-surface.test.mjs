@@ -764,6 +764,7 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /auto-no-gate: \$\{\{ inputs\.publication-auto-no-gate \}\}/);
   assert.match(workflow, /source-sha: \$\{\{ needs\.preflight\.outputs\.requested-sha \}\}/);
   assert.match(workflow, /publisher-workflow-path: \$\{\{ inputs\.publication-publisher-workflow-path \}\}/);
+  assert.match(workflow, /authority-workflow-path: \.github\/workflows\/\.release-candidate-promote\.yml/);
   assert.match(workflow, /evidence-run-id:/);
   assert.match(workflow, /evidence-manifest-pattern:/);
   assert.match(workflow, /name: Seal product publication capability/);
@@ -888,7 +889,9 @@ test("sealed publication authority verifier is independent and credential-free",
   assert.match(workflow, /--repository "\$\{\{ inputs\.evidence-repository \}\}"/);
   assert.match(workflow, /--workflow-repository "\$\{\{ inputs\.buildchain-repository \}\}"/);
   assert.match(workflow, /--source-sha "\$\{\{ inputs\.source-sha \}\}"/);
+  assert.match(workflow, /--workflow "\$\{\{ inputs\.authority-workflow-path \|\| '\.github\/workflows\/release-candidate-promote\.yml' \}\}"/);
   assert.match(workflow, /--workflow-ref "\$\{\{ inputs\.buildchain-ref \}\}"/);
+  assert.match(workflow, /BUILDCHAIN_AUTHORITY_WORKFLOW_PATH: \$\{\{ inputs\.authority-workflow-path \|\| '\.github\/workflows\/release-candidate-promote\.yml' \}\}/);
   assert.match(workflow, /name: Assemble managed release-candidate admission/);
   assert.match(workflow, /BUILDCHAIN_PLANNED_PUBLICATION_VERSION/);
   assert.match(workflow, /authority publication version mismatch/);
