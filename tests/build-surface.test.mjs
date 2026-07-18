@@ -179,6 +179,11 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /workflow_call:/);
   assert.match(workflow, /name: Validate consumer package manager contract/);
   assert.match(workflow, /scripts\/validate-package-manager-contract\.mjs/);
+  assert.match(
+    workflow,
+    /BUILDCHAIN_PACKAGE_MANAGER_CWD: \.buildchain\/consumer\n/,
+    "consumer package-manager detection must use the repository root even when builds use a nested working directory",
+  );
   assert.ok(
     workflow.indexOf("name: Validate consumer package manager contract") <
       workflow.indexOf("  build-native:"),
