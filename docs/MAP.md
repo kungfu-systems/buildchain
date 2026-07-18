@@ -86,6 +86,7 @@ replace them.
 | How do I declare, render, and audit product KFD-2 release trust claims? | [`kfd-support.md`](kfd-support.md#kfd-2) + [`release-passport.md`](release-passport.md#kfd-2-release-trust-passport-audit) + [`cli.md`](cli.md) | verify/use | stable |
 | How do I gate KFD-3 collaboration-interface releases? | [`release-passport.md`](release-passport.md#kfd-3-collaboration-interface-release-gate) + [`cli.md`](cli.md) | verify/use | stable |
 | How do I gate KFD-7 engineering-contract Profile releases? | [`release-passport.md`](release-passport.md#kfd-7-engineering-contract-release-gate) + [`kfd-support.md`](kfd-support.md#kfd-7) + [`cli.md`](cli.md) | verify/use | stable |
+| How does Buildchain dogfood KFD-7 outside the Kungfu runtime? | [`kfd-support.md`](kfd-support.md#kfd-7) + `@kungfu-tech/buildchain/kfd7-buildchain-profile` | verify/use | qualifying |
 | How do I detect, register, audit, witness, or query KFD-3 product surfaces? | [`kfd-support.md`](kfd-support.md) + [`cli.md`](cli.md) | verify/use | stable |
 | How do I keep `@v2` floating refs while detecting Buildchain contract drift? | [`reusable-build-surface.md`](reusable-build-surface.md#floating-ref-contract-lock) | verify/use | stable |
 | How do reusable workflows bind controller intent, source/runtime identity, outcomes, and receipt evidence? | [`controller-evidence.md`](controller-evidence.md) | verify/use | draft |

@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:715e0ef057523600aaecbe38e5a67b0d6e591a246eab2117a6fd182131b966b1"
+      "digest": "sha256:1de248c867e06b531478a4075c7aa2ec895cce51aabde776e97c3d727283b6b1"
     },
     {
       "id": "install",
@@ -69,7 +69,7 @@
       "path": "docs/release-passport.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:429e5500d877200eee3cd47f734ad94cdbb15d8df6dfcd2a5b750977c770d0b4"
+      "digest": "sha256:75d165b3b5098dd381f04c6f3c1457c1bdd6726e8fa3f9ce7f3e9e9fb96497c2"
     },
     {
       "id": "controller-evidence",
@@ -205,7 +205,7 @@
       "path": "docs/kfd-support.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:e271ca1ca8c6aa52037b50f57f6b022a7b2f25354e5830815b01a43135a1aa53"
+      "digest": "sha256:dac3359c0bd8143107715b295af499bf43344b7c70d8d3eec910fde966225626"
     },
     {
       "id": "lifecycle-protocol",

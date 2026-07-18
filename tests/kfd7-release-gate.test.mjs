@@ -71,8 +71,14 @@ function createFixture(name) {
   const positive = writeJson(cwd, "evidence/positive.json", evidenceReport({ sourceSha, kind: "positive" }));
   const negative = writeJson(cwd, "evidence/negative.json", evidenceReport({ sourceSha, kind: "negative", outcome: "fail" }));
   const experiments = [
+    "role-deletion-or-fusion",
     "export-import-rebuild",
     "backend-migration",
+    "concurrency-retry-compensation",
+    "warrant-decay-revocation",
+    "atlas-staleness-loss",
+    "pursuit-continuity-settlement",
+    "episode-replay-contraction",
     "cold-start-continuation",
   ].map((category) => ({
     id: category,
@@ -198,7 +204,15 @@ test("KFD-7 release gate fails closed on stale migration evidence", () => {
   migration.sha256 = sha256File(reportPath);
   const gate = createKfd7ReleaseGateEvidence({ cwd, declarations: [declaration] });
   assert.equal(gate.passportSection.status, "failed");
-  assert.ok(gate.passportSection.profiles[0].issues.some((entry) => entry.code === "experiment[1].sourceSha"));
+  assert.ok(gate.passportSection.profiles[0].issues.some((entry) => entry.code === "experiment[2].sourceSha"));
+});
+
+test("KFD-7 release gate fails closed when role counterfactual evidence is absent", () => {
+  const { cwd, declaration } = createFixture("role-counterfactual-missing");
+  declaration.experiments = declaration.experiments.filter((entry) => entry.category !== "role-deletion-or-fusion");
+  const gate = createKfd7ReleaseGateEvidence({ cwd, declarations: [declaration] });
+  assert.equal(gate.passportSection.status, "failed");
+  assert.ok(gate.passportSection.profiles[0].issues.some((entry) => entry.code === "kfd-7.experiment.role-deletion-or-fusion.missing"));
 });
 
 test("KFD-7 release gate fails closed on KFD verifier mismatch", () => {

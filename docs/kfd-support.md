@@ -290,7 +290,10 @@ copying their workflow implementation into Buildchain. A declaration passed via
 - the exact product source SHA and KFD-verified action contract;
 - matching source and released artifact surfaces;
 - retained positive and negative transition reports;
-- export/import/rebuild, backend-migration, and cold-start continuation reports;
+- role deletion or fusion, export/import/rebuild, backend migration,
+  concurrency/retry/compensation, Warrant decay or revocation, Atlas staleness
+  or loss, Pursuit continuity and settlement, Episode replay and contraction,
+  and cold-start continuation reports;
 - KFD-2 residual-risk vocabulary, responsibility owners, and explicit
   non-claims.
 
@@ -298,6 +301,14 @@ The gate records `pass`, `warning`, or `fail`. Provisional and non-activated
 Profiles remain warnings even when their retained evidence is internally
 complete. Buildchain verifies engineering-contract evidence closure; it does
 not claim to measure real-world task quality.
+
+Buildchain also dogfoods KFD-7 through the public
+`@kungfu-tech/buildchain/kfd7-buildchain-profile` projection. It reads the
+existing release candidate passport, release transaction, and publication
+admission authorities as one release-transaction Profile with stable Fact,
+Episode, Pursuit, Atlas, and Warrant roles. The projection owns no second state
+machine, store, credential, or publication authority; Buildchain's release
+lifecycle vocabulary remains product-owned.
 
 ## Shifu Discovery and Distribution Declarations
 

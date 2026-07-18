@@ -1,4 +1,13 @@
 export {
+  BUILDCHAIN_KFD7_ACTION_CONTRACT,
+  BUILDCHAIN_KFD7_PROFILE_ID,
+  BUILDCHAIN_KFD7_PROFILE_SCHEMA,
+  BUILDCHAIN_KFD7_ROLES,
+  createBuildchainKfd7ProfileSnapshot,
+  validateBuildchainKfd7ProfileSnapshot,
+} from "./kfd7-buildchain-profile.js";
+
+export {
   discoverConfiguredVersionStateFiles,
   getLifecycleStage,
   getNativeDiagnosticsProfile,

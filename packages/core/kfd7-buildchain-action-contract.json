@@ -1,0 +1,300 @@
+{
+  "$schema": "https://kfd.libkungfu.dev/schemas/kfd-7/action-contract.schema.json",
+  "schemaVersion": 1,
+  "contract": "kfd-7-action-contract",
+  "standard": "kfd-7",
+  "profile": {
+    "id": "buildchain-release-transaction-profile",
+    "version": "0.1.0",
+    "product": "buildchain",
+    "implementation": "source:packages/core/kfd7-buildchain-profile.js",
+    "qualificationStatus": "qualifying"
+  },
+  "roles": [
+    {
+      "role": "fact",
+      "profileTerm": "release-candidate",
+      "identity": "exact source, tree, artifact, and candidate passport roots",
+      "sourceAuthority": "Buildchain release candidate passport",
+      "responsibility": "bind the admitted release material independently of release intent or publication occurrence",
+      "lifecycleVocabulary": ["declared", "superseded", "degraded"],
+      "requiredEvidence": [
+        "source head, tree hash, candidate hash, and artifact digests"
+      ],
+      "nonClaims": ["does not prove publication or grant publication authority"]
+    },
+    {
+      "role": "episode",
+      "profileTerm": "release-transaction",
+      "identity": "release transaction id, ordered lifecycle state, and retained evidence roots",
+      "sourceAuthority": "Buildchain release transaction state machine",
+      "responsibility": "preserve publish, retry, repair, finalization, and terminal occurrence order",
+      "lifecycleVocabulary": [
+        "prepared",
+        "publishing",
+        "published",
+        "finalizing",
+        "complete",
+        "repair-required",
+        "abandoned"
+      ],
+      "requiredEvidence": [
+        "transaction identity, prior/current state, and publication evidence roots"
+      ],
+      "nonClaims": ["does not infer release success from intent or authority"]
+    },
+    {
+      "role": "pursuit",
+      "profileTerm": "release-intent",
+      "identity": "repository, version, target ref, channel, and exact tag",
+      "sourceAuthority": "protected Buildchain release intent and target coordinates",
+      "responsibility": "retain which release outcome is being pursued and its terminal conditions",
+      "lifecycleVocabulary": ["active", "completed", "abandoned"],
+      "requiredEvidence": [
+        "repository, version, target ref, exact tag, and terminal transaction state"
+      ],
+      "nonClaims": [
+        "does not authorize publication or prove material correctness"
+      ]
+    },
+    {
+      "role": "atlas",
+      "profileTerm": "release-passport-view",
+      "identity": "release candidate passport and qualifying gate aggregate roots",
+      "sourceAuthority": "Buildchain Release Passport and controller evidence",
+      "responsibility": "bind the source, platform, gate, controller, and provenance view used for publication",
+      "lifecycleVocabulary": ["current", "stale", "conflicted"],
+      "requiredEvidence": [
+        "candidate hash, build summary hash, gate aggregate, and controller receipts"
+      ],
+      "nonClaims": [
+        "does not claim complete repository reality or grant publication authority"
+      ]
+    },
+    {
+      "role": "warrant",
+      "profileTerm": "publication-admission",
+      "identity": "publication admission digest, protected environment, nonce, source, and validity interval",
+      "sourceAuthority": "Buildchain publication authority admission and provider protection boundary",
+      "responsibility": "bind who may publish which exact source and artifact within a short non-replayable interval",
+      "lifecycleVocabulary": ["issued", "expired", "consumed", "denied"],
+      "requiredEvidence": [
+        "admission digest, environment, nonce, source, issued-at, and expires-at"
+      ],
+      "nonClaims": [
+        "does not prove publication, success, or residual side-effect cancellation"
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "id": "prepare-release",
+      "subjectRole": "fact",
+      "operation": "create",
+      "from": "absent",
+      "to": "declared",
+      "preconditions": [
+        "candidate passport binds exact source and release material"
+      ],
+      "effect": "declare one release candidate without starting publication",
+      "receipt": "buildchain release candidate passport",
+      "evidence": ["candidate hash and exact source/tree coordinates"],
+      "denialReasons": ["candidate-mismatch", "digest-mismatch"],
+      "residualRisks": ["platform qualification remains passport-owned"]
+    },
+    {
+      "id": "publish-release",
+      "subjectRole": "episode",
+      "operation": "advance",
+      "from": "prepared",
+      "to": "publishing",
+      "preconditions": [
+        "current Atlas and unexpired publication Warrant bind the same source"
+      ],
+      "effect": "enter the existing release transaction lifecycle",
+      "receipt": "Buildchain release transaction record",
+      "evidence": ["prior/current state and exact transaction identity"],
+      "denialReasons": ["atlas-stale", "warrant-expired", "identity-mismatch"],
+      "residualRisks": [
+        "external registry availability remains outside the Profile"
+      ]
+    },
+    {
+      "id": "seal-publication",
+      "subjectRole": "episode",
+      "operation": "seal",
+      "from": "published",
+      "to": "complete",
+      "preconditions": ["publication evidence validates and final refs match"],
+      "effect": "seal a completed release transaction without rewriting prior failures or retries",
+      "receipt": "Buildchain release transaction plus publication evidence",
+      "evidence": [
+        "registry readback, artifact digest, tag/ref evidence, and terminal transaction state"
+      ],
+      "denialReasons": ["evidence-missing", "readback-mismatch"],
+      "residualRisks": ["downstream propagation is a separate lifecycle"]
+    },
+    {
+      "id": "repair-publication",
+      "subjectRole": "episode",
+      "operation": "reconcile",
+      "from": "published",
+      "to": "repair-required",
+      "preconditions": [
+        "published material exists but retained evidence is invalid or incomplete"
+      ],
+      "effect": "retain an explicit repair boundary rather than claiming completion",
+      "receipt": "Buildchain recovery plan",
+      "evidence": ["failed validation and exact transaction state"],
+      "denialReasons": ["invalid-transition", "identity-mismatch"],
+      "residualRisks": ["repair may require provider-side human action"]
+    },
+    {
+      "id": "complete-release-intent",
+      "subjectRole": "pursuit",
+      "operation": "complete",
+      "from": "active",
+      "to": "completed",
+      "preconditions": ["the exact release transaction is complete"],
+      "effect": "settle release intent separately from publication occurrence",
+      "receipt": "terminal release transaction projection",
+      "evidence": ["target coordinates and terminal transaction state"],
+      "denialReasons": ["transaction-incomplete", "target-mismatch"],
+      "residualRisks": ["product adoption remains outside release completion"]
+    },
+    {
+      "id": "invalidate-release-atlas",
+      "subjectRole": "atlas",
+      "operation": "revise",
+      "from": "current",
+      "to": "stale",
+      "preconditions": [
+        "source, passport, gate, or controller binding no longer matches"
+      ],
+      "effect": "deny publication until a successor passport view is qualified",
+      "receipt": "Buildchain validation issue set",
+      "evidence": ["mismatched coordinate and prior candidate hash"],
+      "denialReasons": ["source-mismatch", "gate-stale"],
+      "residualRisks": ["provider state may change after observation"]
+    },
+    {
+      "id": "expire-publication-warrant",
+      "subjectRole": "warrant",
+      "operation": "expire",
+      "from": "issued",
+      "to": "expired",
+      "preconditions": ["the short admission interval has ended"],
+      "effect": "deny later publication without erasing the admission history",
+      "receipt": "publication admission expiry check",
+      "evidence": ["issued-at, expires-at, and observation time"],
+      "denialReasons": ["warrant-expired", "nonce-replayed"],
+      "residualRisks": ["expiry does not undo an already admitted publication"]
+    }
+  ],
+  "prohibitedInferences": [
+    "authority-from-pursuit",
+    "complete-reality-from-atlas",
+    "occurrence-from-warrant",
+    "authorization-from-episode",
+    "completion-from-episode",
+    "occurrence-from-fact",
+    "child-authority-from-parent",
+    "causal-equivalence-from-equal-endpoints"
+  ],
+  "evidenceObligations": [
+    {
+      "category": "role-deletion-or-fusion",
+      "status": "passed",
+      "artifactRefs": ["tests/kfd7-buildchain-profile.test.mjs"],
+      "residualRisk": "cross-domain universality is decided by KFD rather than this Profile"
+    },
+    {
+      "category": "invalid-transition",
+      "status": "passed",
+      "artifactRefs": [
+        "tests/publish-transaction.test.mjs",
+        "tests/kfd7-buildchain-profile.test.mjs"
+      ],
+      "residualRisk": "provider behavior remains separately verified"
+    },
+    {
+      "category": "export-import-rebuild",
+      "status": "not-applicable",
+      "artifactRefs": [],
+      "reason": "The Profile projects existing portable passport, transaction, and admission records and owns no separate authority store.",
+      "residualRisk": "source authorities retain their own portability obligations"
+    },
+    {
+      "category": "backend-migration",
+      "status": "not-applicable",
+      "artifactRefs": [],
+      "reason": "The Profile owns no persistence backend and cannot migrate authority.",
+      "residualRisk": "underlying transaction storage remains Buildchain-owned"
+    },
+    {
+      "category": "concurrency-retry-compensation",
+      "status": "passed",
+      "artifactRefs": ["tests/publish-transaction.test.mjs"],
+      "residualRisk": "provider concurrency remains outside the local transaction witness"
+    },
+    {
+      "category": "warrant-decay-revocation",
+      "status": "passed",
+      "artifactRefs": [
+        "tests/publication-authority.test.mjs",
+        "tests/kfd7-buildchain-profile.test.mjs"
+      ],
+      "residualRisk": "provider environment enforcement remains independently qualified"
+    },
+    {
+      "category": "atlas-staleness-loss",
+      "status": "passed",
+      "artifactRefs": [
+        "tests/release-candidate.test.mjs",
+        "tests/kfd7-buildchain-profile.test.mjs"
+      ],
+      "residualRisk": "a new provider observation requires a successor passport"
+    },
+    {
+      "category": "pursuit-continuity-settlement",
+      "status": "passed",
+      "artifactRefs": [
+        "tests/publish-transaction.test.mjs",
+        "tests/kfd7-buildchain-profile.test.mjs"
+      ],
+      "residualRisk": "release completion does not imply adoption"
+    },
+    {
+      "category": "episode-replay-contraction",
+      "status": "passed",
+      "artifactRefs": ["tests/publish-transaction.test.mjs"],
+      "residualRisk": "external registry causality is bounded by retained evidence"
+    },
+    {
+      "category": "cold-start-continuation",
+      "status": "passed",
+      "artifactRefs": [
+        "tests/publish-transaction.test.mjs",
+        "tests/kfd7-buildchain-profile.test.mjs"
+      ],
+      "residualRisk": "missing external evidence still produces repair-required rather than fake continuation"
+    }
+  ],
+  "nonClaims": [
+    "This Profile does not replace Buildchain release transaction, passport, or publication authority ownership.",
+    "A conforming Buildchain release Profile does not activate KFD-7 or prove universal minimality.",
+    "Product lifecycle terms are Profile-owned extensions rather than universal KFD enums."
+  ],
+  "extensions": [],
+  "activation": {
+    "decision": "pending",
+    "evidenceCut": "pending-independent-review",
+    "independentReview": "required",
+    "productWitnesses": [
+      "packages/core/kfd7-buildchain-profile.js",
+      "packages/core/kfd7-buildchain-action-contract.json",
+      "tests/kfd7-buildchain-profile.test.mjs"
+    ],
+    "residualRisk": "KFD schema activation and independent cross-repository review remain pending."
+  }
+}

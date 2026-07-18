@@ -14,8 +14,14 @@ export const KFD7_RELEASE_GATE_CONTRACT = "kungfu-buildchain-kfd-7-release-gate"
 
 const REQUIRED_TEST_KINDS = Object.freeze(["positive", "negative"]);
 const REQUIRED_EXPERIMENT_CATEGORIES = Object.freeze([
+  "role-deletion-or-fusion",
   "export-import-rebuild",
   "backend-migration",
+  "concurrency-retry-compensation",
+  "warrant-decay-revocation",
+  "atlas-staleness-loss",
+  "pursuit-continuity-settlement",
+  "episode-replay-contraction",
   "cold-start-continuation",
 ]);
 
