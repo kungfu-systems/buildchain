@@ -798,6 +798,7 @@ jobs:
       target-ref: ${{ needs.preflight.outputs.target-ref }}
       required-status-check: ${{ inputs.required-status-check }}
       publisher-workflow-path: ${{ inputs.publication-publisher-workflow-path }}
+      authority-workflow-path: .github/workflows/.release-candidate-promote.yml
       product: ${{ inputs.publication-product }}
       publication-target: ${{ inputs.publication-target }}
       publication-version: ${{ needs.publication-plan.outputs.version }}
