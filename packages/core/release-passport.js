@@ -926,6 +926,43 @@ function normalizeTransaction(value = undefined) {
   };
 }
 
+function normalizePromotionRouting(value = undefined) {
+  if (value === undefined) return undefined;
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("release.promotionRouting must be a JSON object");
+  }
+  if (value.contract !== "buildchain.promotion-routing/v1") {
+    throw new Error("release.promotionRouting contract must be buildchain.promotion-routing/v1");
+  }
+  for (const [label, field] of [
+    ["router.ref", value.router?.ref],
+    ["router.sha", value.router?.sha],
+    ["shell.ref", value.shell?.ref],
+    ["shell.sha", value.shell?.sha],
+    ["runtime.requestedRef", value.runtime?.requestedRef],
+    ["runtime.resolvedSha", value.runtime?.resolvedSha],
+    ["contractLock.path", value.contractLock?.path],
+    ["contractLock.digest", value.contractLock?.digest],
+    ["publication.channel", value.publication?.channel],
+    ["publication.targetRef", value.publication?.targetRef],
+  ]) {
+    if (!String(field || "").trim()) throw new Error(`release.promotionRouting.${label} is required`);
+  }
+  for (const [label, sha] of [
+    ["router.sha", value.router.sha],
+    ["shell.sha", value.shell.sha],
+    ["runtime.resolvedSha", value.runtime.resolvedSha],
+  ]) {
+    if (!/^[0-9a-f]{40}$/i.test(String(sha))) {
+      throw new Error(`release.promotionRouting.${label} must be a 40-character Git SHA`);
+    }
+  }
+  if (!/^sha256:[0-9a-f]{64}$/i.test(String(value.contractLock.digest))) {
+    throw new Error("release.promotionRouting.contractLock.digest must be a sha256 digest");
+  }
+  return JSON.parse(JSON.stringify(value));
+}
+
 export function createArtifactEvidence({ assets = [], repository = "", tag = "", sourceSha = "", workflow = {} } = {}) {
   const normalizedAssets = assets.map((asset, index) => normalizeAsset(asset, index));
   return {
@@ -1002,6 +1039,7 @@ export function createReleasePassport({
   const normalizedPackageSet = normalizePackageSet(packageSet, { packageName, packageVersion, publish });
   const normalizedTrustedPublishing = normalizeTrustedPublishing(trustedPublishing, { workflow, publish });
   const normalizedTransaction = normalizeTransaction(transaction);
+  const normalizedPromotionRouting = normalizePromotionRouting(release.promotionRouting);
   const normalizedBuildSummary = buildSummary ? normalizeEvidenceDocument(buildSummary, "buildSummary") : undefined;
   const normalizedBuildFacts = (buildFacts || [])
     .map((fact, index) => normalizeEvidenceDocument(fact, `buildFacts[${index}]`))
@@ -1150,6 +1188,7 @@ export function createReleasePassport({
     ...(anchorManifest ? { anchorManifest } : {}),
     ...(normalizedTrustedPublishing ? { trustedPublishing: normalizedTrustedPublishing } : {}),
     ...(normalizedTransaction ? { transaction: normalizedTransaction } : {}),
+    ...(normalizedPromotionRouting ? { promotionRouting: normalizedPromotionRouting } : {}),
     ...(normalizedBuildSummary ? { buildSummary: normalizedBuildSummary } : {}),
     ...(normalizedBuildFacts.length > 0 ? { buildFacts: normalizedBuildFacts } : {}),
     ...(normalizedPlatformArtifactManifests.length > 0 ? { platformArtifactManifests: normalizedPlatformArtifactManifests } : {}),

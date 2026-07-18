@@ -6,6 +6,7 @@ import {
 } from "../packages/core/public-surface-audit.js";
 import { evaluateBuildchainContractLock } from "../packages/core/buildchain-contract.js";
 import { generateChannelBuildWorkflow } from "./generate-channel-build-workflow.mjs";
+import { generateChannelPromotionWorkflow } from "./generate-channel-promotion-workflow.mjs";
 
 const root = process.cwd();
 const sharedActionTsupConfig = fs.readFileSync(path.join(root, "scripts/tsup-action.config.mjs"), "utf8");
@@ -44,6 +45,8 @@ const requiredPaths = [
   "scripts/release-line-dry-run.mjs",
   "scripts/buildchain-channel-router.mjs",
   "scripts/generate-channel-build-workflow.mjs",
+  "scripts/promotion-channel-router.mjs",
+  "scripts/generate-channel-promotion-workflow.mjs",
   "scripts/build-standalone-binary.mjs",
   "scripts/create-release-bundle.mjs",
   "scripts/ensure-github-release.mjs",
@@ -81,6 +84,7 @@ const requiredPaths = [
   ".github/workflows/buildchain-patrol-monthly.yml",
   ".github/workflows/buildchain-alpha-self-dogfood.yml",
   ".github/workflows/release-candidate-promote.yml",
+  ".github/workflows/.release-candidate-promote.yml",
   ".github/workflows/release-propagation.yml",
   ".github/workflows/npm-publish.yml",
   ".github/workflows/paper-release.yml",
@@ -173,6 +177,30 @@ const channelBuildWorkflow = fs.readFileSync(
 );
 if (channelBuildWorkflow !== generateChannelBuildWorkflow(reusableBuildWorkflow)) {
   throw new Error("generated channel build workflow is stale");
+}
+const advancedPromotionWorkflow = fs.readFileSync(
+  path.join(root, ".github/workflows/.release-candidate-promote.yml"),
+  "utf8",
+);
+const channelPromotionWorkflow = fs.readFileSync(
+  path.join(root, ".github/workflows/release-candidate-promote.yml"),
+  "utf8",
+);
+if (channelPromotionWorkflow !== generateChannelPromotionWorkflow(advancedPromotionWorkflow, {
+  major: Number(selfDogfoodMajor),
+})) {
+  throw new Error("generated channel promotion workflow is stale");
+}
+for (const requiredSnippet of [
+  "buildchain-channel:",
+  `/.github/workflows/.release-candidate-promote.yml@v${selfDogfoodMajor}-alpha`,
+  `/.github/workflows/.release-candidate-promote.yml@v${selfDogfoodMajor}`,
+  "promotion-contract-lock-digest:",
+  "promotion runtime override is only allowed for trusted workflow_dispatch runs",
+]) {
+  if (!channelPromotionWorkflow.includes(requiredSnippet)) {
+    throw new Error(`channel promotion workflow missing routing contract: ${requiredSnippet}`);
+  }
 }
 for (const requiredSnippet of [
   "buildchain-channel:",
@@ -814,7 +842,7 @@ for (const forbiddenSnippet of [
 for (const requiredSnippet of [
   "id-token: write",
   "actions: read",
-  "uses: ./.github/workflows/release-candidate-promote.yml",
+  "uses: ./.github/workflows/.release-candidate-promote.yml",
   "github.event.workflow_run.event == 'push'",
   "!startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v')",
   "!startsWith(github.event.workflow_run.display_title, 'chore(release): release v')",
@@ -828,7 +856,7 @@ for (const requiredSnippet of [
     throw new Error(`buildchain ref promotion workflow missing npm transaction snippet: ${requiredSnippet}`);
   }
 }
-const releaseCandidatePromoteWorkflow = fs.readFileSync(path.join(root, ".github/workflows/release-candidate-promote.yml"), "utf8");
+const releaseCandidatePromoteWorkflow = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
 for (const requiredSnippet of [
   "release-passport-kfd-1-witness-jsons:",
   "release-passport-kfd-1-witness-jsons: ${{ inputs.release-passport-kfd-1-witness-jsons }}",

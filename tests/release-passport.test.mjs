@@ -80,6 +80,35 @@ test("release passport carries source-bound controller receipt references", () =
   );
 });
 
+test("release passport records immutable promotion router, shell, runtime, and lock identities", () => {
+  const promotionRouting = {
+    schemaVersion: 1,
+    contract: "buildchain.promotion-routing/v1",
+    router: { ref: "v2-alpha", sha: "a".repeat(40) },
+    shell: { channel: "alpha", ref: "v2-alpha", sha: "b".repeat(40) },
+    runtime: { requestedRef: "v2-alpha", resolvedSha: "c".repeat(40) },
+    contractLock: { path: ".buildchain/alpha-contract-lock.json", digest: `sha256:${"d".repeat(64)}` },
+    publication: { channel: "alpha", targetRef: "alpha/v2/v2.14" },
+    trustedOverrideUsed: false,
+  };
+  const passport = createReleasePassport({
+    repository: "kungfu-systems/buildchain",
+    tag: "v2.14.3-alpha.1",
+    sourceSha: "e".repeat(40),
+    release: { promotionRouting },
+  });
+
+  assert.deepEqual(passport.promotionRouting, promotionRouting);
+  assert.throws(
+    () => createReleasePassport({
+      tag: "v2.14.3-alpha.1",
+      sourceSha: "e".repeat(40),
+      release: { promotionRouting: { ...promotionRouting, contractLock: { path: "lock.json", digest: "bad" } } },
+    }),
+    /sha256 digest/,
+  );
+});
+
 test("release passport preserves a tree-equivalent RC controller source", () => {
   const builtSourceSha = "a".repeat(40);
   const promotionChannelSha = "e".repeat(40);

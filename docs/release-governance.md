@@ -729,7 +729,7 @@ but does not read, create, or move that ref.
 
 Semver GitHub Release publication is owned by `promote-buildchain-ref`, not by
 consumer shell glue. Consumers normally use the `release-candidate-promote.yml`
-wrapper, where GitHub Release publication is enabled by default and can be
+generated channel router, where GitHub Release publication is enabled by default and can be
 disabled with `github-release: false`; the wrapper passes that declaration to
 the action. After the publish transaction reaches `complete`, Buildchain creates
 or updates the public GitHub Release and uploads the generated
@@ -764,9 +764,10 @@ When debugging or extending release behavior, read in this order:
 2. `.github/workflows/release-verify.yml`
 3. `.github/workflows/buildchain-ref-promotion.yml`
 4. `.github/workflows/release-candidate-promote.yml`
-5. `actions/promote-buildchain-ref/README.md`
-6. `actions/promote-buildchain-ref/src/`
-7. `docs/migration-inventory.md`
+5. `.github/workflows/.release-candidate-promote.yml`
+6. `actions/promote-buildchain-ref/README.md`
+7. `actions/promote-buildchain-ref/src/`
+8. `docs/migration-inventory.md`
 
 That path gives the policy first, the workflow trigger second, and the action
 implementation last.

@@ -5,6 +5,7 @@ import { createPublicationAuthorityRegistry } from "./publication-authority.js";
 
 const DESCRIPTORS = Object.freeze([
   [".github/workflows/.build.yml", "non-publication-oidc"],
+  [".github/workflows/.release-candidate-promote.yml", "product-publication", true, ["npm-publish", "github-release", "channel-ref"], "trusted-publishing", "none", "fixed", "caller-bound"],
   [".github/workflows/.publication-authority.yml", "evidence-publication"],
   [".github/workflows/.release-verify.yml", "governance-write"],
   [".github/workflows/.sam-release.yml", "retired-deny"],

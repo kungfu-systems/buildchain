@@ -2077,6 +2077,7 @@ async function collectAndPersistReleasePassport({
   buildSummaryPath,
   platformManifestPaths = [],
   impactJson = "",
+  promotionRoutingJson = "",
   kfd1WitnessJsons = [],
   kfd2ClaimJsons = [],
   kfd3PrebuildWitnessJsons = [],
@@ -2119,6 +2120,14 @@ async function collectAndPersistReleasePassport({
     impactJson,
     version: publishedVersion,
   });
+  const promotionRouting = String(promotionRoutingJson || "").trim()
+    ? (() => {
+        const candidate = resolveMaybeRelative(cwd, promotionRoutingJson);
+        return fs.existsSync(candidate)
+          ? JSON.parse(fs.readFileSync(candidate, "utf8"))
+          : JSON.parse(promotionRoutingJson);
+      })()
+    : undefined;
   const selfKfd = buildchainSelfKfd
     ? generateBuildchainSelfKfdInputs({
         cwd,
@@ -2193,6 +2202,7 @@ async function collectAndPersistReleasePassport({
         : {}),
       publishToolingSha: result.transaction.publish_tooling_sha,
       releaseStateRef: `refs/heads/${result.transaction.state_ref}`,
+      ...(promotionRouting ? { promotionRouting } : {}),
     }),
     publishJson: JSON.stringify({
       auth: result.publishContract?.auth || "",
@@ -3422,6 +3432,7 @@ async function promoteBuildchainRefs({
   releasePassportBuildSummaryPath = ".buildchain/artifacts/build-summary.json",
   releasePassportPlatformManifestPaths = "",
   releasePassportImpactJson = "",
+  releasePassportPromotionRoutingJson = "",
   releasePassportKfd1WitnessJsons = "",
   releasePassportKfd2ClaimJsons = "",
   releasePassportKfd3PrebuildWitnessJsons = "",
@@ -4832,6 +4843,7 @@ async function promoteBuildchainRefs({
       buildSummaryPath: releasePassportBuildSummaryPath,
       platformManifestPaths: splitPathList(releasePassportPlatformManifestPaths),
       impactJson: releasePassportImpactJson,
+      promotionRoutingJson: releasePassportPromotionRoutingJson,
       kfd1WitnessJsons: splitPathList(releasePassportKfd1WitnessJsons),
       kfd2ClaimJsons: splitPathList(releasePassportKfd2ClaimJsons),
       kfd3PrebuildWitnessJsons: splitPathList(releasePassportKfd3PrebuildWitnessJsons),

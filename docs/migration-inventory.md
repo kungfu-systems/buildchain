@@ -37,6 +37,14 @@ migrate to `release-candidate-promote.yml@v2` or a project-owned
 `lifecycle.publish` command behind a publish-gate source lock, so floating
 `@v2` consumers cannot bypass source-lock drift protection.
 
+The public promotion workflow is now a generated dual-channel router. Existing
+callers remain source-compatible, while callers that want alpha workflow-shell
+fixes before stable promotion should add `buildchain-channel: auto` plus
+`buildchain-alpha-contract-lock-path` and
+`buildchain-stable-contract-lock-path`. Keep one common promotion declaration;
+do not duplicate alpha and stable jobs or call
+`.release-candidate-promote.yml` directly.
+
 ## Migrated Actions
 
 No standalone `action-*` repository is shipped as a Buildchain action anymore.
