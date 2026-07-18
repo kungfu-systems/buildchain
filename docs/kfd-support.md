@@ -293,7 +293,8 @@ copying their workflow implementation into Buildchain. A declaration passed via
 - role deletion or fusion, export/import/rebuild, backend migration,
   concurrency/retry/compensation, Warrant decay or revocation, Atlas staleness
   or loss, Pursuit continuity and settlement, Episode replay and contraction,
-  and cold-start continuation reports;
+  cold-start continuation, session round-trip refinement, session complexity
+  breakpoint, and context-insufficiency counterexample reports;
 - KFD-2 residual-risk vocabulary, responsibility owners, and explicit
   non-claims.
 

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-kfd-7-evidence-report",
+  "profileId": "buildchain-release-transaction-profile",
+  "profileVersion": "0.1.0",
+  "stateMachineVersion": "0.1.0",
+  "sourceSha": "1c830d6612782208896b709c7d5b982c85a873c7",
+  "category": "session-complexity-breakpoint",
+  "outcome": "pass",
+  "matchedExpectation": true,
+  "checks": [
+    { "id": "release-alternatives-break-compression", "status": "pass" },
+    { "id": "passport-staleness-breaks-compression", "status": "pass" },
+    { "id": "publication-admission-loss-breaks-compression", "status": "pass" },
+    { "id": "multiple-transactions-break-compression", "status": "pass" },
+    { "id": "candidate-branches-break-compression", "status": "pass" },
+    { "id": "lossy-projection-rejected", "status": "pass" }
+  ],
+  "observations": {
+    "suite": "tests/kfd7-buildchain-profile.test.mjs",
+    "revealedRoles": ["fact", "episode", "pursuit", "atlas", "warrant"],
+    "failureCode": "session-complexity-breakpoint",
+    "newAuthorityWrites": 0
+  }
+}

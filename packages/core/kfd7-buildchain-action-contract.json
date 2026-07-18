@@ -1,13 +1,13 @@
 {
   "$schema": "https://kfd.libkungfu.dev/schemas/kfd-7/action-contract.schema.json",
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "contract": "kfd-7-action-contract",
   "standard": "kfd-7",
   "profile": {
     "id": "buildchain-release-transaction-profile",
     "version": "0.1.0",
     "product": "buildchain",
-    "implementation": "source:packages/core/kfd7-buildchain-profile.js",
+    "implementation": "git+https://github.com/kungfu-systems/buildchain.git@1c830d6612782208896b709c7d5b982c85a873c7#packages/core/kfd7-buildchain-profile.js",
     "qualificationStatus": "qualifying"
   },
   "roles": [
@@ -201,6 +201,37 @@
     "child-authority-from-parent",
     "causal-equivalence-from-equal-endpoints"
   ],
+  "qualificationBasis": {
+    "sessionRoundTrip": {
+      "theoremId": "kfd-7-session-round-trip-preservation",
+      "theoremVersion": 1,
+      "source": "docs/KFD-7-formal.md#session-round-trip-preservation-theorem",
+      "applicability": "session-compressible-only",
+      "semanticDimensions": [
+        "direction",
+        "perspective-boundary",
+        "effective-authority",
+        "causal-process",
+        "admitted-result"
+      ],
+      "implementationRefs": {
+        "expand": "source:packages/core/kfd7-buildchain-profile.js#expandBuildchainKfd7ReleaseSession@1c830d6612782208896b709c7d5b982c85a873c7",
+        "project": "source:packages/core/kfd7-buildchain-profile.js#projectBuildchainKfd7ReleaseSession@1c830d6612782208896b709c7d5b982c85a873c7",
+        "compressibilityPredicate": "source:packages/core/kfd7-buildchain-profile.js#buildchainKfd7SessionCompressibility@1c830d6612782208896b709c7d5b982c85a873c7"
+      }
+    },
+    "contextInsufficiency": {
+      "corollaryId": "kfd-7-context-insufficiency",
+      "corollaryVersion": 1,
+      "source": "docs/KFD-7-formal.md#context-insufficiency-corollary",
+      "conclusion": "context-alone-is-not-sufficient"
+    },
+    "evidenceCategories": {
+      "roundTripRefinement": "session-round-trip-refinement",
+      "complexityBreakpoint": "session-complexity-breakpoint",
+      "contextCounterexample": "context-insufficiency-counterexample"
+    }
+  },
   "evidenceObligations": [
     {
       "category": "role-deletion-or-fusion",
@@ -278,6 +309,33 @@
         "tests/kfd7-buildchain-profile.test.mjs"
       ],
       "residualRisk": "missing external evidence still produces repair-required rather than fake continuation"
+    },
+    {
+      "category": "session-round-trip-refinement",
+      "status": "passed",
+      "artifactRefs": [
+        "tests/kfd7-buildchain-profile.test.mjs",
+        "packages/core/kfd7-evidence/session-round-trip-refinement.json"
+      ],
+      "residualRisk": "the theorem applies only while the session-compressibility predicate holds"
+    },
+    {
+      "category": "session-complexity-breakpoint",
+      "status": "passed",
+      "artifactRefs": [
+        "tests/kfd7-buildchain-profile.test.mjs",
+        "packages/core/kfd7-evidence/session-complexity-breakpoint.json"
+      ],
+      "residualRisk": "new release topology dimensions require new explicit breakpoint witnesses"
+    },
+    {
+      "category": "context-insufficiency-counterexample",
+      "status": "passed",
+      "artifactRefs": [
+        "tests/kfd7-buildchain-profile.test.mjs",
+        "packages/core/kfd7-evidence/context-insufficiency-counterexample.json"
+      ],
+      "residualRisk": "the retained vectors cover intent, authority, and freshness rather than every provider policy input"
     }
   ],
   "nonClaims": [
@@ -288,13 +346,13 @@
   "extensions": [],
   "activation": {
     "decision": "pending",
-    "evidenceCut": "pending-independent-review",
-    "independentReview": "required",
+    "evidenceCut": "git:1c830d6612782208896b709c7d5b982c85a873c7+npm:@kungfu-tech/kfd@1.0.0-alpha.35",
+    "independentReview": "required-after-cross-repository-validation",
     "productWitnesses": [
       "packages/core/kfd7-buildchain-profile.js",
       "packages/core/kfd7-buildchain-action-contract.json",
       "tests/kfd7-buildchain-profile.test.mjs"
     ],
-    "residualRisk": "KFD schema activation and independent cross-repository review remain pending."
+    "residualRisk": "Independent cross-repository review and merged product witnesses remain before activation."
   }
 }

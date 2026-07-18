@@ -23,6 +23,9 @@ const REQUIRED_EXPERIMENT_CATEGORIES = Object.freeze([
   "pursuit-continuity-settlement",
   "episode-replay-contraction",
   "cold-start-continuation",
+  "session-round-trip-refinement",
+  "session-complexity-breakpoint",
+  "context-insufficiency-counterexample",
 ]);
 
 function optionalString(value) {

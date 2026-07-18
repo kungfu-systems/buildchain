@@ -80,6 +80,9 @@ function createFixture(name) {
     "pursuit-continuity-settlement",
     "episode-replay-contraction",
     "cold-start-continuation",
+    "session-round-trip-refinement",
+    "session-complexity-breakpoint",
+    "context-insufficiency-counterexample",
   ].map((category) => ({
     id: category,
     category,
@@ -213,6 +216,20 @@ test("KFD-7 release gate fails closed when role counterfactual evidence is absen
   const gate = createKfd7ReleaseGateEvidence({ cwd, declarations: [declaration] });
   assert.equal(gate.passportSection.status, "failed");
   assert.ok(gate.passportSection.profiles[0].issues.some((entry) => entry.code === "kfd-7.experiment.role-deletion-or-fusion.missing"));
+});
+
+test("KFD-7 release gate fails closed when session refinement evidence is absent", () => {
+  const { cwd, declaration } = createFixture("session-refinement-missing");
+  declaration.experiments = declaration.experiments.filter(
+    (entry) => entry.category !== "session-round-trip-refinement",
+  );
+  const gate = createKfd7ReleaseGateEvidence({ cwd, declarations: [declaration] });
+  assert.equal(gate.passportSection.status, "failed");
+  assert.ok(
+    gate.passportSection.profiles[0].issues.some(
+      (entry) => entry.code === "kfd-7.experiment.session-round-trip-refinement.missing",
+    ),
+  );
 });
 
 test("KFD-7 release gate fails closed on KFD verifier mismatch", () => {

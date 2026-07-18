@@ -354,7 +354,9 @@ verifier report, source-to-artifact surfaces, positive and negative transition
 reports, and retained experiments for role deletion or fusion,
 export/import/rebuild, backend migration, concurrency/retry/compensation,
 Warrant decay or revocation, Atlas staleness or loss, Pursuit continuity and
-settlement, Episode replay and contraction, and cold-start continuation. It
+settlement, Episode replay and contraction, cold-start continuation, session
+round-trip refinement, session complexity breakpoints, and context-insufficiency
+counterexamples. It
 also records KFD-2 residual-risk vocabulary, explicit responsibility owners,
 and non-claims.
 

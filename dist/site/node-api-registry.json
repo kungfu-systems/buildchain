@@ -294,7 +294,7 @@
       "specifier": "@kungfu-tech/buildchain/kfd7-release-gate",
       "export": "./kfd7-release-gate",
       "target": "./packages/core/kfd7-release-gate.js",
-      "digest": "sha256:98889f659a3b777ffc6c5d341bfa7e6ceaa862cbb6369bdd3b3de6cffa8d18da",
+      "digest": "sha256:fbd320d0ae384d578d9908f3480ca855eacee46f36132cc3441ba6739d94d213",
       "summary": "KFD-7 engineering-contract declaration, evidence closure, and release gate validation APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -409,7 +409,7 @@
     {
       "id": "kfd-support",
       "path": "docs/kfd-support.md",
-      "digest": "sha256:dac3359c0bd8143107715b295af499bf43344b7c70d8d3eec910fde966225626"
+      "digest": "sha256:5a9319f30fd6eb473ada43c938c5ae09519ffa8c27903438aebfb99b2c754d11"
     },
     {
       "id": "readme-badges",
