@@ -964,6 +964,10 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.match(workflow, /require-approval:/);
   assert.match(workflow, /same-repository-only:/);
   assert.match(workflow, /max-merges:/);
+  assert.match(workflow, /landing-mode:/);
+  assert.match(workflow, /default: "auto"/);
+  assert.match(workflow, /enqueued-count:/);
+  assert.match(workflow, /action-count:/);
   assert.match(workflow, /dry-run:/);
   assert.match(workflow, /default: true/);
   assert.match(workflow, /dev\/v\*\/v\*/);
@@ -973,7 +977,27 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.match(workflow, /pull-requests: write/);
   assert.match(workflow, /checks: read/);
   assert.match(workflow, /statuses: read/);
+  assert.match(workflow, /buildchain-dev-pr-admission-/);
+  assert.match(workflow, /BUILDCHAIN_DEV_PR_LANDING_MODE: \$\{\{ inputs\.landing-mode \}\}/);
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
+
+  const verify = fs.readFileSync(path.join(root, ".github/workflows/verify.yml"), "utf8");
+  assert.match(verify, /pull_request:/);
+  assert.match(verify, /merge_group:/);
+  assert.match(verify, /types: \[checks_requested\]/);
+  assert.doesNotMatch(verify, /github\.event\.pull_request/);
+});
+
+test("declared merge queue governance reconciles automatically on dev changes", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/dev-merge-queue-governance.yml"),
+    "utf8",
+  );
+  assert.match(workflow, /push:\n\s+branches:\n\s+- dev\/v\*\/v\*/);
+  assert.match(workflow, /\.buildchain\/buildchain\.toml/);
+  assert.match(workflow, /BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token/);
+  assert.match(workflow, /--from-config/);
+  assert.match(workflow, /github\.event_name == 'push' \|\| inputs\.apply/);
 });
 
 test("patrol workflow family exposes daily weekly monthly reusable entries and dogfood schedules", () => {
@@ -1034,7 +1058,8 @@ test("patrol workflow family exposes daily weekly monthly reusable entries and d
   assert.match(dogfoodDaily, /schedule:/);
   assert.match(dogfoodDaily, /uses: \.\/\.github\/workflows\/patrol-daily\.yml/);
   assert.match(dogfoodDaily, /required-status-checks: check/);
-  assert.match(dogfoodDaily, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v2' \}\}/);
+  assert.match(dogfoodDaily, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v2-alpha' \}\}/);
+  assert.match(dogfoodDaily, /landing-mode: queue/);
   assert.doesNotMatch(dogfoodDaily, /target-branch: dev\/v2\/v2\.\d+/);
   assert.match(dogfoodDaily, /dry-run: \$\{\{ inputs\.dry-run \|\| false \}\}/);
   assert.match(dogfoodDaily, /contents: write/);
@@ -1208,7 +1233,12 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   );
   assert.match(workflow, /preview-aws-role-arn is required before preview-apply can build or deploy/);
   assert.match(workflow, /staging-aws-role-arn is required before staging-apply can build or deploy/);
-  assert.match(workflow, /production-apply requires production-approved=true before production build or deploy/);
+  assert.doesNotMatch(workflow, /production-apply requires production-approved=true before production build or deploy/);
+  assert.doesNotMatch(workflow, /production-apply requires a trusted manual actor or reviewed matching release PR/);
+  assert.match(
+    workflow,
+    /\[ "\$PRODUCTION_APPLY" = "true" \] && \[ "\$production_event_approved" = "true" \] && \[ -z "\$PRODUCTION_ROLE_ARN" \]/,
+  );
   assert.match(workflow, /production-aws-role-arn is required before production-apply can build or deploy/);
   assert.match(workflow, /production-release-on-main:/);
   assert.match(workflow, /production-release-label:/);
@@ -1343,6 +1373,9 @@ test("web-surface side-effect jobs and sealed production paths have explicit aut
   const decision = job("publication-decision");
   assert.match(decision, /web-surface-production-decision\.mjs/);
   assert.match(decision, /BUILDCHAIN_PRODUCTION_RELEASE_APPROVED/);
+  const inputGate = job("apply-input-gate");
+  assert.doesNotMatch(inputGate, /production-apply requires a trusted manual actor/);
+  assert.match(inputGate, /elif \[ "\$production_event_approved" = "true" \]; then\n\s+web_surface_channel=production/);
   const authority = job("publication-authority");
   assert.match(authority, /Create qualifying pre-publication controller receipt/);
   assert.match(authority, /assemble-web-surface-publication-admission\.mjs/);
@@ -2260,6 +2293,12 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(bootstrap, /bypass_pull_request_allowances:\s*\{\s*apps: \$bypass_apps,\s*users: \$bypass_users,\s*teams: \$bypass_teams\s*\}/);
   assert.match(bootstrap, /strict: \$dev_channel/);
   assert.match(bootstrap, /\[\$context, "verify"\] \| unique/);
+  assert.match(bootstrap, /name: Reconcile dev merge queue governance/);
+  assert.match(bootstrap, /--from-config/);
+  assert.ok(
+    bootstrap.indexOf("name: Reconcile dev merge queue governance") <
+      bootstrap.indexOf("name: Set default branch"),
+  );
   assert.match(workflow, /publish-required-artifacts-json: "\[\]"/);
   assert.match(workflow, /release-passport-impact-json: \.buildchain\/release-impact\.json/);
   assert.match(workflow, /publication-auto-admission: \$\{\{ github\.event_name == 'workflow_run' \}\}/);

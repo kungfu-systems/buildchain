@@ -246,7 +246,7 @@
       "title": "CLI and npm package",
       "path": "docs/cli.md",
       "plane": "use",
-      "digest": "sha256:9ecf8c220b5ff02ee5719cb877d4b2b159c3d683af288630eae0013d9d906373",
+      "digest": "sha256:1733f9377938a16e6de77511546be7de67c5ab8816220d693fd46f55450a5148",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -316,7 +316,7 @@
       "title": "Publish transaction",
       "path": "docs/publish-transaction.md",
       "plane": "verify",
-      "digest": "sha256:cc2f4c9d2b9988962a237bbc7e8da83385d45585e2b2dd105ff4c4334a74c05d",
+      "digest": "sha256:950ca4fb2f7ab0a7d40775593e3864f8bb1229f8543b266b00154af82c619e95",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator"
@@ -329,7 +329,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:5cf4bf4332119531f6aaa1c123d7f64e6af4a61611c4e4a33d40bd9fb46448cf",
+      "digest": "sha256:e64ffd6183eaa7b73f8c0c133a645ced22212bca70c9609ad5f667cf3830aaae",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -343,7 +343,7 @@
       "title": "Release flow",
       "path": "docs/release-flow.md",
       "plane": "verify",
-      "digest": "sha256:a2f68d42f34acc35940e135285df5ba510d91b15b9d9ede8cabbe8bfa6ab0305",
+      "digest": "sha256:fc6495a7b5124c17c880777e16fc98e60ed7766ec9a958abfca3030bdc2c321e",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "release-operator",
@@ -371,7 +371,7 @@
       "title": "Versioning",
       "path": "docs/versioning.md",
       "plane": "why",
-      "digest": "sha256:c3dce313b846fb36c69e4a725d086226ff2e875c376cc10e8554a0aff2f67c93",
+      "digest": "sha256:e856ec8aee11ff4bd2760425a8950538a91245cd5624c22c8768af50d6b1a8ce",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer"
@@ -384,7 +384,7 @@
       "title": "Web surface deployments",
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
-      "digest": "sha256:797d8f0e81974a49125b17256bb8b4a85fc60673e06d6bbecbbf399651163437",
+      "digest": "sha256:856a7602cf1c2d3a0a540cdf0d64566914f79dde24417c92089f0466bee25df1",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "site",

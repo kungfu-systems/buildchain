@@ -879,6 +879,7 @@
         "cadence",
         "capabilities",
         "dry-run",
+        "landing-mode",
         "max-actions",
         "merge-method",
         "mode",
@@ -888,7 +889,7 @@
         "same-repository-only",
         "target-branch"
       ],
-      "inputCount": 15,
+      "inputCount": 16,
       "secrets": [
         "github-token"
       ],
@@ -992,6 +993,20 @@
       "status": "active"
     },
     {
+      "id": "dev-merge-queue-governance",
+      "path": ".github/workflows/dev-merge-queue-governance.yml",
+      "reusable": false,
+      "inputs": [],
+      "inputCount": 0,
+      "secrets": [],
+      "secretCount": 0,
+      "outputs": [],
+      "outputCount": 0,
+      "surface": "repository-workflow",
+      "capabilityGroup": "api-cli-reference",
+      "status": "active"
+    },
+    {
       "id": "dev-pr-auto-merge",
       "path": ".github/workflows/dev-pr-auto-merge.yml",
       "reusable": true,
@@ -1001,6 +1016,7 @@
         "buildchain-ref",
         "buildchain-repository",
         "dry-run",
+        "landing-mode",
         "max-merges",
         "merge-method",
         "ready-label",
@@ -1009,18 +1025,20 @@
         "same-repository-only",
         "target-branch"
       ],
-      "inputCount": 12,
+      "inputCount": 13,
       "secrets": [
         "github-token"
       ],
       "secretCount": 1,
       "outputs": [
+        "action-count",
+        "enqueued-count",
         "evaluated-count",
         "final-base-sha",
         "merged-count",
         "skipped-count"
       ],
-      "outputCount": 4,
+      "outputCount": 6,
       "surface": "dev-governance",
       "capabilityGroup": "governance-versioning",
       "status": "active"
@@ -1162,6 +1180,7 @@
         "buildchain-ref",
         "buildchain-repository",
         "dry-run",
+        "landing-mode",
         "max-actions",
         "merge-method",
         "ready-label",
@@ -1170,7 +1189,7 @@
         "same-repository-only",
         "target-branch"
       ],
-      "inputCount": 12,
+      "inputCount": 13,
       "secrets": [
         "github-token"
       ],

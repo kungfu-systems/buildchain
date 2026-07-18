@@ -4,10 +4,10 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 83,
-    "workflowCount": 47,
+    "workflowCount": 48,
     "actionCount": 4,
     "sitePageCount": 50,
-    "docCommandRefCount": 256,
+    "docCommandRefCount": 257,
     "failureCount": 0
   },
   "enumerated": {
@@ -1233,6 +1233,7 @@
           "cadence",
           "capabilities",
           "dry-run",
+          "landing-mode",
           "max-actions",
           "merge-method",
           "mode",
@@ -1242,7 +1243,7 @@
           "same-repository-only",
           "target-branch"
         ],
-        "inputCount": 15,
+        "inputCount": 16,
         "secrets": [
           "github-token"
         ],
@@ -1328,6 +1329,17 @@
         "outputCount": 7
       },
       {
+        "id": "dev-merge-queue-governance",
+        "path": ".github/workflows/dev-merge-queue-governance.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
         "id": "dev-pr-auto-merge",
         "path": ".github/workflows/dev-pr-auto-merge.yml",
         "reusable": true,
@@ -1337,6 +1349,7 @@
           "buildchain-ref",
           "buildchain-repository",
           "dry-run",
+          "landing-mode",
           "max-merges",
           "merge-method",
           "ready-label",
@@ -1345,18 +1358,20 @@
           "same-repository-only",
           "target-branch"
         ],
-        "inputCount": 12,
+        "inputCount": 13,
         "secrets": [
           "github-token"
         ],
         "secretCount": 1,
         "outputs": [
+          "action-count",
+          "enqueued-count",
           "evaluated-count",
           "final-base-sha",
           "merged-count",
           "skipped-count"
         ],
-        "outputCount": 4
+        "outputCount": 6
       },
       {
         "id": "npm-publish",
@@ -1486,6 +1501,7 @@
           "buildchain-ref",
           "buildchain-repository",
           "dry-run",
+          "landing-mode",
           "max-actions",
           "merge-method",
           "ready-label",
@@ -1494,7 +1510,7 @@
           "same-repository-only",
           "target-branch"
         ],
-        "inputCount": 12,
+        "inputCount": 13,
         "secrets": [
           "github-token"
         ],
@@ -2429,6 +2445,11 @@
         "id": "dev",
         "path": "docs/cli.md",
         "command": "buildchain dev merge-queue"
+      },
+      {
+        "id": "dev",
+        "path": "docs/cli.md",
+        "command": "buildchain dev merge-queue --from-config"
       },
       {
         "id": "dev",
@@ -3482,8 +3503,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "b469949f77ed7777f23fe68c54daf6d2c20d3afc97f3bbd5a178a91202a068d0",
-    "workflowRegistryDigest": "62b7ca87803c461e1e1436a477c3b6b70103eed84dbf14d855d383e810d7d71e",
-    "pageRegistryDigest": "c76ebcc729f2c9922605e02ba369c8e839064d6090735362ec3fc4983a20accb"
+    "workflowRegistryDigest": "2ad4284a9e275cec6fbc6593a470f9d443e26f7aa880bedf9fa0671448369f2f",
+    "pageRegistryDigest": "53c5c0918268a1ea769a3841ad3b5ad553e81b0fcd602c8289dc049e3559ff89"
   },
   "comparison": {
     "missingCliRegistry": [],

@@ -4,7 +4,7 @@
   "product": {
     "name": "Buildchain",
     "package": "@kungfu-tech/buildchain",
-    "version": "2.14.1",
+    "version": "2.14.2-alpha.1",
     "repository": "https://github.com/kungfu-systems/buildchain"
   },
   "majorLine": "v2",
@@ -203,7 +203,7 @@
         "channel-aware artifact host facts are checked against the deploy plan before adapter side effects"
       ],
       "breakingDigest": "sha256:da569f90374e878948e3d5160ed9929338ce0572473ca8ee54867b0fe1aaeace",
-      "auditDigest": "sha256:d9aa7c4c2b30e741d0e24274307ecafc840f3db64dc46103bd30c09e54c4c47e"
+      "auditDigest": "sha256:25ba0770379881698dc9e685e282adf50e55f2c00c2682787290fae6c31f190c"
     },
     {
       "contractVersion": 1,
@@ -437,7 +437,7 @@
         "README badge block checks and writes are generated from machine-readable repository facts"
       ],
       "breakingDigest": "sha256:90a73892b2d6c214048448d5f45df75639bdf7b7e8fefd9c596e04b087407bcc",
-      "auditDigest": "sha256:3f232f89616d18e9b6fdd9470a33961cd25e3401d204905707cbe18fdecf5d2c"
+      "auditDigest": "sha256:20d60eacea93a6b318ff712e30e5db9aa109d92cb13923268bbfa2f4f3cdf51a"
     },
     {
       "contractVersion": 1,
@@ -527,7 +527,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:1b0bbd84aa67702007385c2779d75d6444f328fc44b51a7f85f8313cc650711f"
+      "auditDigest": "sha256:e0fd0a6e19835663980faec6d4d132424d9ee65c27fcd3437bf30634740032bb"
     },
     {
       "contractVersion": 1,
@@ -549,7 +549,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:9f0cf71c3fd2cdafee57c242afc3b02f3146f61d0d4c4e6db402a0fdbe02f5cd"
+      "auditDigest": "sha256:dca785dc9f657536f84a9b40c3fb00d5a191bbd6cbce2fb1cb59cd0369150817"
     },
     {
       "contractVersion": 1,
@@ -1785,7 +1785,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:f14825324a16b51c2e9ed708ebe64e1932e05b6d5e0866f83aea8439decb4a27",
-      "auditDigest": "sha256:d9aa7c4c2b30e741d0e24274307ecafc840f3db64dc46103bd30c09e54c4c47e"
+      "auditDigest": "sha256:25ba0770379881698dc9e685e282adf50e55f2c00c2682787290fae6c31f190c"
     },
     {
       "contractVersion": 1,
@@ -2709,5 +2709,5 @@
     }
   ],
   "compatibilityDigest": "sha256:af162b86ab4506e9b5f1d3c59b41f3fd57fbad79ff4d749a7f12ff16460517f8",
-  "contractDigest": "sha256:2cf9ff617ff20598497d214e6e55dc16daab5e353fe39e0d6e41e7c6364c82a4"
+  "contractDigest": "sha256:cfaa1ec4810696a489861d6d04d8037ec15470b42acbbc0e9f78c8ef8e48bd98"
 }

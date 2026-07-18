@@ -27,6 +27,44 @@ function withTempRepo(files, fn) {
   }
 }
 
+test("buildchain.toml normalizes explicit dev merge queue governance", () => {
+  withTempRepo(
+    {
+      ".buildchain/buildchain.toml": `schema = 1
+
+[governance.dev.merge_queue]
+mode = "enabled"
+required_workflows = [".github/workflows/verify.yml"]
+check_response_timeout_minutes = 90
+max_entries_to_build = 1
+bypass_users = ["release-owner"]
+`,
+    },
+    (dir) => {
+      const summary = validateBuildchainConfig(dir);
+      assert.deepEqual(summary.governance.dev.mergeQueue, {
+        mode: "enabled",
+        requiredWorkflows: [".github/workflows/verify.yml"],
+        checkResponseTimeoutMinutes: 90,
+        maxEntriesToBuild: 1,
+        bypassApps: [],
+        bypassUsers: ["release-owner"],
+        bypassTeams: [],
+      });
+    },
+  );
+});
+
+test("buildchain.toml rejects unsupported dev merge queue governance", () => {
+  assert.throws(
+    () => normalizeBuildchainConfig({
+      schema: 1,
+      governance: { dev: { merge_queue: { mode: "sometimes" } } },
+    }),
+    /mode must be one of inherit, enabled, or disabled/,
+  );
+});
+
 test("buildchain.toml discovers and updates configured version files", () => {
   withTempRepo(
     {

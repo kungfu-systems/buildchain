@@ -20,6 +20,7 @@ const SUPPORTED_PUBLISH_AUTH = new Set(["trusted-publishing", "npm-token"]);
 const SUPPORTED_PUBLISH_KINDS = new Set(["npm-package", "npm-paper-package"]);
 const SUPPORTED_PACKAGE_SET_ORDER = new Set(["as-provided", "platforms-first-main-last"]);
 const SUPPORTED_STABLE_RELEASE_STRATEGIES = new Set(["manual", "latest-qualified-alpha"]);
+const SUPPORTED_MERGE_QUEUE_MODES = new Set(["inherit", "enabled", "disabled"]);
 const SUPPORTED_NATIVE_COMPILER_CACHE = new Set(["auto", "ccache", "sccache", "none"]);
 const WEB_SURFACE_CHANNELS = ["preview", "staging", "production"];
 const SUPPORTED_CHANNEL_VISIBILITY = new Set(["ephemeral", "protected", "public", "internal"]);
@@ -184,6 +185,9 @@ export function normalizeBuildchainConfig(config) {
   if (normalized.release !== undefined) {
     normalized.release = normalizeReleaseSection(normalized.release);
   }
+  if (normalized.governance !== undefined) {
+    normalized.governance = normalizeGovernanceSection(normalized.governance);
+  }
   if (normalized.channels !== undefined) {
     normalized.channels = normalizeChannelsSection(normalized.channels, normalized.project);
   }
@@ -216,6 +220,53 @@ export function normalizeBuildchainConfig(config) {
   }
   validateWebSurfaceConfig(normalized);
   validateInfraContractConfig(normalized);
+  return normalized;
+}
+
+function normalizeGovernanceSection(governance) {
+  assertPlainObject(governance, "governance");
+  const normalized = { ...governance };
+  if (governance.dev !== undefined) {
+    assertPlainObject(governance.dev, "governance.dev");
+    normalized.dev = { ...governance.dev };
+    if (governance.dev.merge_queue !== undefined) {
+      const mergeQueue = assertPlainObject(governance.dev.merge_queue, "governance.dev.merge_queue");
+      const mode = mergeQueue.mode === undefined
+        ? "inherit"
+        : assertString(mergeQueue.mode, "governance.dev.merge_queue.mode");
+      if (!SUPPORTED_MERGE_QUEUE_MODES.has(mode)) {
+        throw new Error("governance.dev.merge_queue.mode must be one of inherit, enabled, or disabled");
+      }
+      const checkResponseTimeoutMinutes = mergeQueue.check_response_timeout_minutes === undefined
+        ? 120
+        : Number(mergeQueue.check_response_timeout_minutes);
+      const maxEntriesToBuild = mergeQueue.max_entries_to_build === undefined
+        ? 1
+        : Number(mergeQueue.max_entries_to_build);
+      if (!Number.isInteger(checkResponseTimeoutMinutes) || checkResponseTimeoutMinutes < 1) {
+        throw new Error("governance.dev.merge_queue.check_response_timeout_minutes must be a positive integer");
+      }
+      if (!Number.isInteger(maxEntriesToBuild) || maxEntriesToBuild < 1) {
+        throw new Error("governance.dev.merge_queue.max_entries_to_build must be a positive integer");
+      }
+      normalized.dev = {
+        ...governance.dev,
+        mergeQueue: {
+          mode,
+          requiredWorkflows: normalizeStringArray(
+            mergeQueue.required_workflows,
+            "governance.dev.merge_queue.required_workflows",
+          ),
+          checkResponseTimeoutMinutes,
+          maxEntriesToBuild,
+          bypassApps: normalizeStringArray(mergeQueue.bypass_apps, "governance.dev.merge_queue.bypass_apps"),
+          bypassUsers: normalizeStringArray(mergeQueue.bypass_users, "governance.dev.merge_queue.bypass_users"),
+          bypassTeams: normalizeStringArray(mergeQueue.bypass_teams, "governance.dev.merge_queue.bypass_teams"),
+        },
+      };
+      delete normalized.dev.merge_queue;
+    }
+  }
   return normalized;
 }
 
@@ -1451,6 +1502,7 @@ export function validateBuildchainConfig(
     lifecycleStages,
     publish: loadedConfig.config.publish,
     release: loadedConfig.config.release,
+    governance: loadedConfig.config.governance,
     facts: loadedConfig.config.facts,
     publication: loadedConfig.config.publication,
   };

@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "593872be448358cf6c7e428cf61c6ff1139e86e50241fcd85f478d3812ac7d7a",
+    "sha256": "3d9e43510266b900fe450253fbb8aac72953c7128a797154150eb301ef71ed6a",
     "summary": {
       "cliCommandCount": 83,
-      "workflowCount": 47,
+      "workflowCount": 48,
       "actionCount": 4,
       "sitePageCount": 50,
-      "docCommandRefCount": 256,
+      "docCommandRefCount": 257,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -225,13 +225,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "593872be448358cf6c7e428cf61c6ff1139e86e50241fcd85f478d3812ac7d7a",
+      "sha256": "3d9e43510266b900fe450253fbb8aac72953c7128a797154150eb301ef71ed6a",
       "summary": {
         "cliCommandCount": 83,
-        "workflowCount": 47,
+        "workflowCount": 48,
         "actionCount": 4,
         "sitePageCount": 50,
-        "docCommandRefCount": 256,
+        "docCommandRefCount": 257,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -3246,7 +3246,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 15,
+          "inputCount": 16,
           "inputs": [
             "allowed-head-prefixes",
             "block-labels",
@@ -3255,6 +3255,7 @@
             "cadence",
             "capabilities",
             "dry-run",
+            "landing-mode",
             "max-actions",
             "merge-method",
             "mode",
@@ -3345,6 +3346,20 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:dev-merge-queue-governance",
+          "name": "workflow:dev-merge-queue-governance",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/dev-merge-queue-governance.yml",
+          "evidencePath": ".github/workflows/dev-merge-queue-governance.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:dev-pr-auto-merge",
           "name": "workflow:dev-pr-auto-merge",
           "kind": "workflow",
@@ -3354,13 +3369,14 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 12,
+          "inputCount": 13,
           "inputs": [
             "allowed-head-prefixes",
             "block-labels",
             "buildchain-ref",
             "buildchain-repository",
             "dry-run",
+            "landing-mode",
             "max-merges",
             "merge-method",
             "ready-label",
@@ -3487,13 +3503,14 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 12,
+          "inputCount": 13,
           "inputs": [
             "allowed-head-prefixes",
             "block-labels",
             "buildchain-ref",
             "buildchain-repository",
             "dry-run",
+            "landing-mode",
             "max-actions",
             "merge-method",
             "ready-label",
@@ -4685,6 +4702,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 303
+    "publicSurfaceCount": 304
   }
 }

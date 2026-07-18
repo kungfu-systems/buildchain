@@ -108,12 +108,17 @@ When the workflow is run with `apply=true`, Buildchain:
 - applies branch protection with one approving review and the configured
   required status check; dev starts strict, while alpha and release also require
   the pair-specific `verify` aggregate without a source-up-to-date ancestry loop;
+- reconciles the new dev branch's explicitly declared merge queue, or inherits
+  the exact queue parameters and bypass actors from the current default dev
+  branch when the policy is `inherit` or absent;
 - switches the repository default branch to the new dev line when requested;
 - opens the first `dev/v2/v2.10 -> alpha/v2/v2.10` channel PR when requested.
 
 This makes minor-line creation a single audited operation. The channel PR still
 goes through the normal verify/review/promotion path before an alpha is
-published.
+published. Queue reconciliation runs after branch protection and before the
+default-branch switch, so a failed governance apply leaves the old active line
+in place and the idempotently created new refs can be retried.
 
 ## Alpha Promotion
 
