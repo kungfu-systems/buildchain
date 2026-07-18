@@ -159,7 +159,7 @@
         "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes"
       ],
       "breakingDigest": "sha256:6dbae32ce3d7aab3be6957065105af574794581847b7637314dad45f5349c919",
-      "auditDigest": "sha256:0a5691beb2469a71e22b0b7ecd3d32af539fa14dd6af6e14bf47d692a1788070"
+      "auditDigest": "sha256:73811e8b4b55f09aa1d20258cffb923c2eea7863b576a0f84249d04a6042ad90"
     },
     {
       "contractVersion": 1,
@@ -2580,7 +2580,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:46238f8fc3c20924decc57ecad142a462fc4739c6bc21409d5cd2457fc1c3cdd",
-      "auditDigest": "sha256:0a5691beb2469a71e22b0b7ecd3d32af539fa14dd6af6e14bf47d692a1788070"
+      "auditDigest": "sha256:73811e8b4b55f09aa1d20258cffb923c2eea7863b576a0f84249d04a6042ad90"
     },
     {
       "contractVersion": 1,
@@ -2709,5 +2709,5 @@
     }
   ],
   "compatibilityDigest": "sha256:af162b86ab4506e9b5f1d3c59b41f3fd57fbad79ff4d749a7f12ff16460517f8",
-  "contractDigest": "sha256:cfaa1ec4810696a489861d6d04d8037ec15470b42acbbc0e9f78c8ef8e48bd98"
+  "contractDigest": "sha256:a0d63349c28283cd57d09668924111f4ceef7badf5430962a30a2fad78ec755f"
 }
