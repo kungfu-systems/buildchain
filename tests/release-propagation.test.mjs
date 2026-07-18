@@ -208,9 +208,14 @@ test("release propagation reusable workflow invokes the checked out Buildchain r
     2,
   );
   assert.match(workflow, /LOCK_PATH: \$\{\{ steps\.plan\.outputs\.lock_path \}\}/);
+  assert.match(workflow, /downstream-prepare-command:/);
+  assert.match(workflow, /BUILDCHAIN_UPSTREAM_PACKAGE_VERSION:/);
+  assert.match(workflow, /Refresh managed README badges/);
+  assert.match(workflow, /badges readme --cwd \. --write/);
+  assert.match(workflow, /downstream-verify-command:/);
   assert.match(
     workflow,
-    /git add -- "\$LOCK_PATH"[\s\S]*?if git diff --cached --quiet -- "\$LOCK_PATH"/,
+    /git add --all[\s\S]*?if git diff --cached --quiet/,
   );
   assert.doesNotMatch(workflow, /if git diff --quiet/);
   assert.doesNotMatch(workflow, /git add \./);
@@ -220,6 +225,10 @@ test("release propagation reusable workflow invokes the checked out Buildchain r
   assert.match(workflow, /kungfu-buildchain-release-propagation-branch-reconciliation/);
   assert.match(workflow, /"kind":"propagation-branch-reconciliation"/);
   assert.match(workflow, /gh pr list[\s\S]*--state open[\s\S]*--head "\$BRANCH"/);
+  assert.match(workflow, /git commit --signoff -m "\$TITLE"/);
+  assert.ok(
+    workflow.indexOf("Verify downstream release update") < workflow.indexOf("Create or update downstream PR"),
+  );
 });
 
 test("release propagation replaces a surviving managed branch with an exact lease and rejects stale writers", () => {

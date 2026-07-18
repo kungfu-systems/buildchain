@@ -58,6 +58,21 @@ on:
         default: ""
         required: false
         type: string
+      downstream-prepare-command:
+        description: "Optional consumer-owned command that pins the propagated release and updates deterministic generated files"
+        default: ""
+        required: false
+        type: string
+      refresh-managed-readme-badges:
+        description: "Refresh a Buildchain-managed README badge block after consumer preparation"
+        default: true
+        required: false
+        type: boolean
+      downstream-verify-command:
+        description: "Optional consumer-owned check command run against the final propagation tree before commit"
+        default: ""
+        required: false
+        type: string
       dry-run:
         description: "Plan and write lock without pushing a PR"
         default: true
@@ -190,7 +205,8 @@ jobs:
             const plan = JSON.parse(fs.readFileSync(".buildchain/release-propagation/plan.json", "utf8"));
             const target = plan.targets.find((entry) => entry.target === process.env.TARGET || entry.repository === process.env.TARGET);
             if (!target) throw new Error(`no propagation target matched ${process.env.TARGET}`);
-            fs.appendFileSync(process.env.GITHUB_OUTPUT, `target=${target.target}\nrepository=${target.repository}\nchannel=${target.channel}\nlock_path=${target.lockPath}\nlock_sha=${target.lock.lockSha256}\n`);
+            const upstreamPackage = target.lock.upstream.package || {};
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `target=${target.target}\nrepository=${target.repository}\nchannel=${target.channel}\nlock_path=${target.lockPath}\nlock_sha=${target.lock.lockSha256}\npackage_name=${upstreamPackage.name || ""}\npackage_version=${upstreamPackage.version || ""}\n`);
           NODE
         env:
           TARGET: ${{ inputs.downstream-target }}
@@ -218,6 +234,42 @@ jobs:
             const result = JSON.parse(fs.readFileSync(".buildchain/release-propagation/write-lock.json", "utf8"));
             fs.appendFileSync(process.env.GITHUB_OUTPUT, `path=${result.path}\nlock_sha=${result.lockSha256}\n`);
           NODE
+
+      - name: Prepare downstream release update
+        id: prepare
+        if: ${{ inputs.downstream-prepare-command != '' }}
+        shell: bash
+        working-directory: downstream
+        env:
+          BUILDCHAIN_UPSTREAM_PACKAGE_NAME: ${{ steps.plan.outputs.package_name }}
+          BUILDCHAIN_UPSTREAM_PACKAGE_VERSION: ${{ steps.plan.outputs.package_version }}
+          BUILDCHAIN_UPSTREAM_RELEASE_LOCK: ${{ steps.plan.outputs.lock_path }}
+          BUILDCHAIN_DOWNSTREAM_PREPARE_COMMAND: ${{ inputs.downstream-prepare-command }}
+        run: bash -euo pipefail -c "$BUILDCHAIN_DOWNSTREAM_PREPARE_COMMAND"
+
+      - name: Refresh managed README badges
+        id: badges
+        if: ${{ inputs.refresh-managed-readme-badges }}
+        shell: bash
+        working-directory: downstream
+        run: |
+          if [[ ! -f README.md ]] || ! grep -Fq '<!-- buildchain:badges:start -->' README.md; then
+            echo "No Buildchain-managed README badge block; nothing to refresh."
+            exit 0
+          fi
+          node ../.buildchain/runtime/bin/buildchain.mjs badges readme --cwd . --write
+
+      - name: Verify downstream release update
+        id: verify
+        if: ${{ inputs.downstream-verify-command != '' }}
+        shell: bash
+        working-directory: downstream
+        env:
+          BUILDCHAIN_UPSTREAM_PACKAGE_NAME: ${{ steps.plan.outputs.package_name }}
+          BUILDCHAIN_UPSTREAM_PACKAGE_VERSION: ${{ steps.plan.outputs.package_version }}
+          BUILDCHAIN_UPSTREAM_RELEASE_LOCK: ${{ steps.plan.outputs.lock_path }}
+          BUILDCHAIN_DOWNSTREAM_VERIFY_COMMAND: ${{ inputs.downstream-verify-command }}
+        run: bash -euo pipefail -c "$BUILDCHAIN_DOWNSTREAM_VERIFY_COMMAND"
 
       - name: Summarize release propagation
         id: summarize
@@ -251,11 +303,11 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -B "$BRANCH"
-          git add -- "$LOCK_PATH"
+          git add --all
           remote_sha="$(git ls-remote --heads origin "refs/heads/$BRANCH" | cut -f1)"
           reconciliation_path="../.buildchain/release-propagation/branch-reconciliation.json"
-          if git diff --cached --quiet -- "$LOCK_PATH"; then
-            echo "No downstream lock changes."
+          if git diff --cached --quiet; then
+            echo "No downstream propagation changes."
             jq -n \
               --arg repository "${{ inputs.downstream-repository }}" \
               --arg branch "$BRANCH" \
@@ -275,7 +327,7 @@ jobs:
               }' > "$reconciliation_path"
             exit 0
           fi
-          git commit -m "$TITLE"
+          git commit --signoff -m "$TITLE"
           if [[ -n "$remote_sha" ]]; then
             git push \
               --force-with-lease="refs/heads/$BRANCH:$remote_sha" \
@@ -362,7 +414,7 @@ jobs:
         env:
           BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
           BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
-            [{"id":"resolve-runtime","status":"${{ steps.runtime.outcome == 'success' && steps.controller-identities.outcome == 'success' && 'success' || steps.runtime.outcome == 'failure' && 'failure' || steps.controller-identities.outcome }}"},{"id":"plan","status":"${{ steps.plan.outcome }}"},{"id":"write-lock","status":"${{ steps.lock.outcome }}"},{"id":"open-pr","status":"${{ steps.open-pr.outcome }}"},{"id":"aggregate","status":"${{ (steps.summarize.outcome == 'failure' || steps.propagation-upload.outcome == 'failure') && 'failure' || (steps.summarize.outcome == 'success' && steps.propagation-upload.outcome == 'success') && 'success' || 'skipped' }}"}]
+            [{"id":"resolve-runtime","status":"${{ steps.runtime.outcome == 'success' && steps.controller-identities.outcome == 'success' && 'success' || steps.runtime.outcome == 'failure' && 'failure' || steps.controller-identities.outcome }}"},{"id":"plan","status":"${{ steps.plan.outcome }}"},{"id":"write-lock","status":"${{ steps.lock.outcome }}"},{"id":"prepare-consumer","status":"${{ steps.prepare.outcome }}"},{"id":"refresh-badges","status":"${{ steps.badges.outcome }}"},{"id":"verify-consumer","status":"${{ steps.verify.outcome }}"},{"id":"open-pr","status":"${{ steps.open-pr.outcome }}"},{"id":"aggregate","status":"${{ (steps.summarize.outcome == 'failure' || steps.propagation-upload.outcome == 'failure') && 'failure' || (steps.summarize.outcome == 'success' && steps.propagation-upload.outcome == 'success') && 'success' || 'skipped' }}"}]
           BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ steps.plan.outcome == 'success' && steps.lock.outcome == 'success' && steps.open-pr.outcome == 'success' && '[{"kind":"propagation-plan","path":".buildchain/release-propagation/plan.json"},{"kind":"propagation-lock","path":".buildchain/release-propagation/write-lock.json"},{"kind":"propagation-branch-reconciliation","path":".buildchain/release-propagation/branch-reconciliation.json"}]' || steps.plan.outcome == 'success' && steps.lock.outcome == 'success' && '[{"kind":"propagation-plan","path":".buildchain/release-propagation/plan.json"},{"kind":"propagation-lock","path":".buildchain/release-propagation/write-lock.json"}]' || '[]' }}
           BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ steps.plan.outcome == 'success' && steps.lock.outcome == 'success' && '' || 'propagation-incomplete' }}
           BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Release propagation did not complete successfully

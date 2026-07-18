@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-release-passport-check-manifest",
+  "passport": {
+    "contract": "kungfu-buildchain-release-passport",
+    "schemaVersion": 1,
+    "schema": {
+      "id": "https://buildchain.libkungfu.dev/schemas/release-passport-v1.schema.json",
+      "path": "schemas/release-passport-v1.schema.json",
+      "npmExport": "@kungfu-tech/buildchain/site/schemas/release-passport-v1.schema.json"
+    },
+    "checker": {
+      "contract": "kungfu-buildchain-release-check-report",
+      "command": "buildchain verify release-passport <buildchain.release.json>",
+      "nodeApi": "@kungfu-tech/buildchain/release-passport#verifyReleasePassport",
+      "result": "check-report.json"
+    }
+  },
+  "ownership": {
+    "envelopeOwner": "Buildchain",
+    "aggregationFields": [
+      "product",
+      "release",
+      "workflow",
+      "runnerPolicy",
+      "versionImpact",
+      "surfaceImpacts",
+      "packageSet",
+      "anchorManifest",
+      "trustedPublishing",
+      "transaction",
+      "surfaceTimestampPolicy",
+      "buildFacts",
+      "buildSummary",
+      "platformArtifactManifests",
+      "distTagPromotion",
+      "controllerReceipts",
+      "artifacts",
+      "evidence",
+      "recovery"
+    ],
+    "kfdSections": [
+      {
+        "section": "kfd-1",
+        "owner": "KFD",
+        "package": "@kungfu-tech/kfd",
+        "metadataSchema": {
+          "id": "https://kfd.libkungfu.dev/schemas/kfd-standards.schema.json",
+          "path": "schemas/kfd-standards.schema.json",
+          "version": "2"
+        },
+        "schemaIds": {
+          "metadata": "https://kfd.libkungfu.dev/schemas/kfd-standards.schema.json",
+          "contractWorld": "https://kfd.libkungfu.dev/schemas/kfd-1/contract-world.schema.json",
+          "witness": "https://kfd.libkungfu.dev/schemas/kfd-1/witness.schema.json",
+          "publicationUrlSemantics": "https://kfd.libkungfu.dev/schemas/kfd-1/publication-url-semantics.schema.json",
+          "candidateRegistry": "https://kfd.libkungfu.dev/schemas/kfd-candidate-registry.schema.json",
+          "verificationBundle": "https://kfd.libkungfu.dev/schemas/kfd-verification-bundle.schema.json",
+          "verificationReport": "https://kfd.libkungfu.dev/schemas/kfd-verification-report.schema.json"
+        },
+        "schemaPaths": {
+          "metadata": "schemas/kfd-standards.schema.json",
+          "contractWorld": "schemas/kfd-1/contract-world.schema.json",
+          "witness": "schemas/kfd-1/witness.schema.json",
+          "publicationUrlSemantics": "schemas/kfd-1/publication-url-semantics.schema.json",
+          "candidateRegistry": "schemas/kfd-candidate-registry.schema.json",
+          "verificationBundle": "schemas/kfd-verification-bundle.schema.json",
+          "verificationReport": "schemas/kfd-verification-report.schema.json"
+        },
+        "compatibility": {
+          "packageLine": "v1.0",
+          "registrySchemaVersion": 1,
+          "metadataSchemaVersion": "2",
+          "rule": "Before the first stable release, fully evidenced Foundation Revision may correct the latest numbered structure while preserving published coordinates and lineage; Foundation Freeze then requires later substantive change to mint a new KFD."
+        },
+        "rule": "Buildchain aggregates and checks kfd-1 evidence but does not redefine its schema semantics."
+      },
+      {
+        "section": "kfd-2",
+        "owner": "KFD",
+        "package": "@kungfu-tech/kfd",
+        "metadataSchema": {
+          "id": "https://kfd.libkungfu.dev/schemas/kfd-standards.schema.json",
+          "path": "schemas/kfd-standards.schema.json",
+          "version": "2"
+        },
+        "schemaIds": {
+          "metadata": "https://kfd.libkungfu.dev/schemas/kfd-standards.schema.json",
+          "trustTaxonomy": "https://kfd.libkungfu.dev/schemas/kfd-2/trust-taxonomy.schema.json",
+          "releaseClaims": "https://kfd.libkungfu.dev/schemas/kfd-2/release-claims.schema.json",
+          "releaseTrustPassport": "https://kfd.libkungfu.dev/schemas/kfd-2/release-trust-passport.schema.json",
+          "trustClaims": "https://kfd.libkungfu.dev/schemas/kfd-2/trust-claims.schema.json",
+          "trustAssessment": "https://kfd.libkungfu.dev/schemas/kfd-2/trust-assessment.schema.json"
+        },
+        "schemaPaths": {
+          "metadata": "schemas/kfd-standards.schema.json",
+          "trustTaxonomy": "schemas/kfd-2/trust-taxonomy.schema.json",
+          "releaseClaims": "schemas/kfd-2/release-claims.schema.json",
+          "releaseTrustPassport": "schemas/kfd-2/release-trust-passport.schema.json",
+          "trustClaims": "schemas/kfd-2/trust-claims.schema.json",
+          "trustAssessment": "schemas/kfd-2/trust-assessment.schema.json"
+        },
+        "compatibility": {
+          "packageLine": "v1.0",
+          "registrySchemaVersion": 1,
+          "metadataSchemaVersion": "2",
+          "rule": "Before the first stable release, maintainer-authorized semantic refinement must declare breaking decision-surface impact; after stable, substantive change mints a new KFD."
+        },
+        "rule": "Buildchain aggregates and checks kfd-2 evidence but does not redefine its schema semantics."
+      },
+      {
+        "section": "kfd-3",
+        "owner": "KFD",
+        "package": "@kungfu-tech/kfd",
+        "metadataSchema": {
+          "id": "https://kfd.libkungfu.dev/schemas/kfd-standards.schema.json",
+          "path": "schemas/kfd-standards.schema.json",
+          "version": "2"
+        },
+        "schemaIds": {
+          "metadata": "https://kfd.libkungfu.dev/schemas/kfd-standards.schema.json",
+          "collaborationInterface": "https://kfd.libkungfu.dev/schemas/kfd-3/collaboration-interface.schema.json",
+          "witness": "https://kfd.libkungfu.dev/schemas/kfd-3/witness.schema.json"
+        },
+        "schemaPaths": {
+          "metadata": "schemas/kfd-standards.schema.json",
+          "collaborationInterface": "schemas/kfd-3/collaboration-interface.schema.json",
+          "witness": "schemas/kfd-3/witness.schema.json"
+        },
+        "compatibility": {
+          "packageLine": "v1.0",
+          "registrySchemaVersion": 1,
+          "metadataSchemaVersion": "2",
+          "rule": "Before the first stable release, maintainer-authorized semantic refinement must declare breaking decision-surface impact; after stable, substantive change mints a new KFD."
+        },
+        "rule": "Buildchain aggregates and checks kfd-3 evidence but does not redefine its schema semantics."
+      }
+    ]
+  },
+  "localClosure": {
+    "entrypoint": "buildchain.release.json",
+    "resolutionBase": "directory containing the passport",
+    "requiredSiblings": [
+      "product.mechanism",
+      "evidence.artifactEvidence",
+      "evidence.impact",
+      "evidence.agentIndex"
+    ],
+    "conditionalSiblings": [
+      {
+        "when": "evidence.publishEvidence is present or packageSet is present",
+        "pointer": "evidence.publishEvidence"
+      },
+      {
+        "when": "evidence.transactionState is present",
+        "pointer": "evidence.transactionState"
+      }
+    ],
+    "rule": "The normative checker resolves every declared sibling relative to the passport and fails closed on missing required evidence, digest drift, or semantic mismatch."
+  },
+  "compatibility": {
+    "envelope": "Compatible optional fields may be added while schemaVersion remains 1; removing or changing required-field semantics requires a new schema id or contract version.",
+    "siblings": "New optional siblings may be added in v1; making a sibling required requires a new schema id or contract version.",
+    "kfdSections": "Each KFD subsection follows the compatibility metadata published by @kungfu-tech/kfd; Buildchain must not silently reinterpret a KFD schema version.",
+    "unknownFields": "Independent readers must preserve or ignore unknown additive fields."
+  }
+}

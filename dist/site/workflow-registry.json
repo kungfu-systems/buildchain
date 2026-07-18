@@ -1444,17 +1444,20 @@
         "buildchain-repository",
         "downstream-base-ref",
         "downstream-branch",
+        "downstream-prepare-command",
         "downstream-repository",
         "downstream-target",
+        "downstream-verify-command",
         "dry-run",
         "graph-json",
         "lock-path",
         "pr-body",
         "pr-title",
+        "refresh-managed-readme-badges",
         "source-node",
         "upstream-release-json"
       ],
-      "inputCount": 13,
+      "inputCount": 16,
       "secrets": [
         "propagation-token"
       ],
