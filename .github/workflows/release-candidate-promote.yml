@@ -576,15 +576,19 @@ jobs:
         with:
           node-version: "24"
 
+      - name: Validate consumer package manager contract
+        run: node .buildchain/runtime/scripts/validate-package-manager-contract.mjs
+        env:
+          BUILDCHAIN_EXPECTED_PACKAGE_MANAGER: ${{ inputs.package-manager }}
+
       - name: Install exact publication planning dependencies
         shell: bash
         run: |
           case "${PACKAGE_MANAGER}" in
             pnpm)
-              corepack prepare pnpm@11.7.0 --activate
               corepack enable
-              pnpm --version
-              corepack pnpm@11.7.0 install --frozen-lockfile
+              corepack pnpm --version
+              corepack pnpm install --frozen-lockfile
               ;;
             yarn)
               corepack enable yarn
@@ -846,10 +850,9 @@ jobs:
         run: |
           case "${PACKAGE_MANAGER}" in
             pnpm)
-              corepack prepare pnpm@11.7.0 --activate
               corepack enable
-              pnpm --version
-              corepack pnpm@11.7.0 install --frozen-lockfile
+              corepack pnpm --version
+              corepack pnpm install --frozen-lockfile
               ;;
             yarn)
               corepack enable yarn
@@ -906,7 +909,11 @@ jobs:
         run: |
           case "${PACKAGE_MANAGER}" in
             pnpm)
-              corepack pnpm@11.7.0 install --dir "${RECONCILIATION_WORKSPACE}" --frozen-lockfile
+              (
+                cd "${RECONCILIATION_WORKSPACE}"
+                corepack pnpm --version
+                corepack pnpm install --frozen-lockfile
+              )
               ;;
             yarn)
               yarn --cwd "${RECONCILIATION_WORKSPACE}" install --immutable || yarn --cwd "${RECONCILIATION_WORKSPACE}" install --frozen-lockfile

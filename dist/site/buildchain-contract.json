@@ -50,7 +50,7 @@
         "retryable GitHub fallback fetches use a bounded attempt budget before exact source SHA and tree verification"
       ],
       "breakingDigest": "sha256:a6a35370d6b0d0f46e1b2712dcc01961fe53c2febde95409a27a485c10a36650",
-      "auditDigest": "sha256:07f01d270d7f5712be067697f652b5843a07748696c0d2b8b2020639108c669d"
+      "auditDigest": "sha256:65be8700e28dfc83c542452d41e80844382766dabf3698226ee3f83fc679da9b"
     },
     {
       "contractVersion": 1,
@@ -159,7 +159,7 @@
         "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes"
       ],
       "breakingDigest": "sha256:6dbae32ce3d7aab3be6957065105af574794581847b7637314dad45f5349c919",
-      "auditDigest": "sha256:73811e8b4b55f09aa1d20258cffb923c2eea7863b576a0f84249d04a6042ad90"
+      "auditDigest": "sha256:1f65ef71c7cbafdcd7628a7d41929d153fa3bf9fcbc167d514a358dd49518e98"
     },
     {
       "contractVersion": 1,
@@ -549,7 +549,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:d4aa0741e314fd04907300c945c761631dc52b877c15e2ec8b1adc4c0eecef9e"
+      "auditDigest": "sha256:03d6f62196eb47edcfc8b4b68abefc0a10912b276d407e75e83be443a112ba16"
     },
     {
       "contractVersion": 1,
@@ -1006,7 +1006,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:e264a79f9f399038c2fcfd21e4168c68c2e1485ee5c651c02242a02b622ac2be",
-      "auditDigest": "sha256:07f01d270d7f5712be067697f652b5843a07748696c0d2b8b2020639108c669d"
+      "auditDigest": "sha256:65be8700e28dfc83c542452d41e80844382766dabf3698226ee3f83fc679da9b"
     },
     {
       "contractVersion": 1,
@@ -2580,7 +2580,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:46238f8fc3c20924decc57ecad142a462fc4739c6bc21409d5cd2457fc1c3cdd",
-      "auditDigest": "sha256:73811e8b4b55f09aa1d20258cffb923c2eea7863b576a0f84249d04a6042ad90"
+      "auditDigest": "sha256:1f65ef71c7cbafdcd7628a7d41929d153fa3bf9fcbc167d514a358dd49518e98"
     },
     {
       "contractVersion": 1,
@@ -2724,5 +2724,5 @@
     }
   ],
   "compatibilityDigest": "sha256:af162b86ab4506e9b5f1d3c59b41f3fd57fbad79ff4d749a7f12ff16460517f8",
-  "contractDigest": "sha256:8857f1be543a703d0528a7d173b162ca20879076bbee988533656ef25a52aa20"
+  "contractDigest": "sha256:1b6e55de720751b379e79f5bfb3b1fd5c304293bf3a6aec9c6f309a4546f4f4a"
 }

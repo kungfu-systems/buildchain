@@ -603,6 +603,13 @@ jobs:
           persist-credentials: false
           path: .buildchain/consumer
 
+      - name: Validate consumer package manager contract
+        id: package-manager
+        shell: bash
+        run: node .buildchain/runtime/scripts/validate-package-manager-contract.mjs
+        env:
+          BUILDCHAIN_PACKAGE_MANAGER_CWD: .buildchain/consumer/${{ inputs.working-directory }}
+
       - name: Check Buildchain contract lock
         id: contract-lock
         shell: bash
