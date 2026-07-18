@@ -113,7 +113,12 @@ test("Buildchain declares a schema-valid non-Kungfu KFD-7 Profile", () => {
   assert.equal(BUILDCHAIN_KFD7_ACTION_CONTRACT.profile.product, "buildchain");
   assert.equal(
     BUILDCHAIN_KFD7_ACTION_CONTRACT.profile.qualificationStatus,
-    "qualifying",
+    "qualified",
+  );
+  assert.equal(BUILDCHAIN_KFD7_ACTION_CONTRACT.activation.decision, "activate");
+  assert.equal(
+    BUILDCHAIN_KFD7_ACTION_CONTRACT.activation.independentReview,
+    "https://github.com/kungfu-systems/buildchain/pull/1383#pullrequestreview-4728683864",
   );
   const serialized = JSON.stringify(BUILDCHAIN_KFD7_ACTION_CONTRACT);
   for (const productTerm of [

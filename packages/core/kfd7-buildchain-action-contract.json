@@ -8,7 +8,7 @@
     "version": "0.1.0",
     "product": "buildchain",
     "implementation": "git+https://github.com/kungfu-systems/buildchain.git@1c830d6612782208896b709c7d5b982c85a873c7#packages/core/kfd7-buildchain-profile.js",
-    "qualificationStatus": "qualifying"
+    "qualificationStatus": "qualified"
   },
   "roles": [
     {
@@ -340,19 +340,19 @@
   ],
   "nonClaims": [
     "This Profile does not replace Buildchain release transaction, passport, or publication authority ownership.",
-    "A conforming Buildchain release Profile does not activate KFD-7 or prove universal minimality.",
+    "Activating this Buildchain Profile does not activate any other product Profile or prove universal minimality.",
     "Product lifecycle terms are Profile-owned extensions rather than universal KFD enums."
   ],
   "extensions": [],
   "activation": {
-    "decision": "pending",
-    "evidenceCut": "git:1c830d6612782208896b709c7d5b982c85a873c7+npm:@kungfu-tech/kfd@1.0.0-alpha.35",
-    "independentReview": "required-after-cross-repository-validation",
+    "decision": "activate",
+    "evidenceCut": "implementation:git:1c830d6612782208896b709c7d5b982c85a873c7+qualification:git:bd1d62e0a0c6a07e2271b1fd1a7ec7bc09ec6712+review:pullrequestreview-4728683864+npm:@kungfu-tech/kfd@1.0.0-alpha.35",
+    "independentReview": "https://github.com/kungfu-systems/buildchain/pull/1383#pullrequestreview-4728683864",
     "productWitnesses": [
       "packages/core/kfd7-buildchain-profile.js",
       "packages/core/kfd7-buildchain-action-contract.json",
       "tests/kfd7-buildchain-profile.test.mjs"
     ],
-    "residualRisk": "Independent cross-repository review and merged product witnesses remain before activation."
+    "residualRisk": "Activation is limited to the Buildchain release-transaction Profile; PR merge remains the product availability boundary and universal minimality remains unclaimed."
   }
 }
