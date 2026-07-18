@@ -30,6 +30,7 @@
       "./publication-control-plane-audit": "./packages/core/publication-control-plane-audit.js",
       "./buildchain-publication-authority": "./packages/core/buildchain-publication-authority.js",
       "./kfd-gate": "./packages/core/kfd-gate.js",
+      "./kfd7-release-gate": "./packages/core/kfd7-release-gate.js",
       "./release-candidate": "./packages/core/release-candidate.js",
       "./stable-candidate-ledger": "./packages/core/stable-candidate-ledger.js",
       "./release-passport": "./packages/core/release-passport.js",

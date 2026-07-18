@@ -1338,6 +1338,7 @@
         "release-passport-kfd-3-artifact-verify-command",
         "release-passport-kfd-3-artifact-witness-jsons",
         "release-passport-kfd-3-prebuild-witness-jsons",
+        "release-passport-kfd-7-declaration-jsons",
         "release-passport-output-dir",
         "release-passport-platform-manifest-paths",
         "release-passport-product-name",
@@ -1348,7 +1349,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 56,
+      "inputCount": 57,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1587,6 +1588,7 @@
         "release-passport-kfd-3-artifact-verify-command",
         "release-passport-kfd-3-artifact-witness-jsons",
         "release-passport-kfd-3-prebuild-witness-jsons",
+        "release-passport-kfd-7-declaration-jsons",
         "release-passport-output-dir",
         "release-passport-platform-manifest-paths",
         "release-passport-product-name",
@@ -1601,7 +1603,7 @@
         "transaction-state-path",
         "verification-command"
       ],
-      "inputCount": 54,
+      "inputCount": 55,
       "capabilityGroup": "release-passport-trust",
       "status": "active"
     },

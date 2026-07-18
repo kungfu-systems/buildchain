@@ -71,6 +71,7 @@ import { createBuildchainLogger } from "@kungfu-tech/buildchain/logging";
 import { collectModuleBuildFacts } from "@kungfu-tech/buildchain/build-facts";
 import { checkHomebrewTap } from "@kungfu-tech/buildchain/homebrew";
 import { verifyKfd1ReleaseGate } from "@kungfu-tech/buildchain/kfd-gate";
+import { createKfd7ReleaseGateEvidence } from "@kungfu-tech/buildchain/kfd7-release-gate";
 import { collectBadgeBundleFacts } from "@kungfu-tech/buildchain/badges";
 import { collectReadmeBadgeFacts } from "@kungfu-tech/buildchain/readme-badges";
 import { verifyReleasePassport } from "@kungfu-tech/buildchain/release-passport";
@@ -525,6 +526,7 @@ buildchain collect github-release \
   --kfd-2-claim-json .buildchain/kfd/kfd-2/release-claims.json \
   --kfd-3-prebuild-witness-json .buildchain/kfd/kfd-3/collaboration-interface.prebuild.json \
   --kfd-3-artifact-verify-cmd "kungfu agent verify --json" \
+  --kfd-7-declaration-json .buildchain/kfd/kfd-7/profile.release-gate.json \
   --release-extra-json '{"channel":"release","targetRef":"release/v2/v2.3"}' \
   --output-dir .buildchain/release-passport
 ```
@@ -585,6 +587,16 @@ For the KFD repository itself, the witness can declare docs, schemas, standards
 metadata, package exports, and site-consumption contracts as grouped public
 surfaces; the artifact witness must expose the same enumerable package/site
 surfaces or verification fails closed.
+
+`--kfd-7-declaration-json` attaches a KFD-7 engineering-contract release gate.
+The declaration binds an exact source SHA to a KFD-verified action contract,
+source and artifact surfaces, positive and negative transition reports, the
+required recovery/migration/continuation experiments, KFD-2 residual-risk
+entries, responsibility, and non-claims. The flag may be repeated. Missing or
+stale evidence fails closed; a schema-valid Profile that is still provisional
+or not activated produces a warning instead of a false pass. The resulting
+`kfd-7` passport section embeds canonical-digest-bound evidence for agent-side
+revalidation.
 
 `--impact-json` supplies the surface-aware impact ledger. Production release
 passports (`release/*`) and major publish-gate passports require

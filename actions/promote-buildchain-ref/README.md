@@ -306,6 +306,12 @@ product-owned `release-passport-kfd-3-artifact-verify-command` such as
 `kungfu agent verify --json`. Buildchain compares declared shipped public
 surfaces with artifact-exposed public surfaces and writes the result under the
 KFD-provided `kfd-3` passport section.
+Set `release-passport-kfd-7-declaration-jsons` to newline-separated KFD-7
+engineering-contract declaration paths. Buildchain checks the frozen Profile,
+KFD verifier report, source/artifact surfaces, positive and negative transition
+evidence, required recovery/migration/continuation experiments, responsibility,
+residual risk, and non-claims. A valid provisional Profile remains a warning;
+missing or stale evidence fails closed.
 Buildchain's own release workflow sets `release-passport-buildchain-self-kfd:
 "true"`. In that mode the action generates Buildchain-owned KFD-1/2/3 witnesses
 inside the final version-state workspace, after the release transaction has

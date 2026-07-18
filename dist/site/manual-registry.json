@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:91dc800bafc31bc149680c86272827936c94e0f025d547bbabc10d58fe5f128e",
+      "digest": "sha256:715e0ef057523600aaecbe38e5a67b0d6e591a246eab2117a6fd182131b966b1",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -36,7 +36,7 @@
       "title": "Release Passport protocol",
       "path": "docs/release-passport.md",
       "plane": "verify",
-      "digest": "sha256:2421e3e9f2dd892971bea5deb605492dfec38f3a83e539229442b55380bebe25",
+      "digest": "sha256:429e5500d877200eee3cd47f734ad94cdbb15d8df6dfcd2a5b750977c770d0b4",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",
@@ -246,7 +246,7 @@
       "title": "CLI and npm package",
       "path": "docs/cli.md",
       "plane": "use",
-      "digest": "sha256:3b3ac97c353f7549229f1102cca38236e734ec8d08c219d4a6e5ef2a48fc0e16",
+      "digest": "sha256:24195d82a92f2dafce04c0699abbc78af02b1b6c37c1fcdfaae78787d764fa97",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -274,7 +274,7 @@
       "title": "KFD support and KFD-3 surface registration",
       "path": "docs/kfd-support.md",
       "plane": "verify",
-      "digest": "sha256:ab15de33a1a9e292b6da74c00b8b96b7c46330d0553a454d1de4c24c672fc025",
+      "digest": "sha256:e271ca1ca8c6aa52037b50f57f6b022a7b2f25354e5830815b01a43135a1aa53",
       "capabilityGroup": "kfd-trust",
       "audience": [
         "agent",

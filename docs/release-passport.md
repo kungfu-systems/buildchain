@@ -119,6 +119,7 @@ buildchain collect github-release \
   --dist-tag-evidence-json .buildchain/release-evidence/v2.2.0/dist-tag-evidence.json \
   --kfd-1-witness-json .buildchain/kfd/kfd-1/contract-world.witness.json \
   --kfd-2-claim-json .buildchain/kfd/kfd-2/release-claims.json \
+  --kfd-7-declaration-json .buildchain/kfd/kfd-7/profile.release-gate.json \
   --output-dir .buildchain/release-passport
 ```
 
@@ -339,6 +340,28 @@ This makes KFD-3 support usable by readers and agents immediately: they can
 inspect `buildchain.release.json` and know whether the released package
 actually exposes no more and no less than the declared collaboration interface,
 instead of trusting docs or release notes.
+
+### KFD-7 engineering-contract release gate
+
+KFD-7 freezes a product-owned work Profile as an engineering contract and
+checks whether the retained release evidence closes over that contract.
+Products pass one or more declarative files with
+`--kfd-7-declaration-json`; Buildchain does not copy product workflows or judge
+whether the resulting work was good in the real world.
+
+Each declaration binds the exact source SHA, KFD-7 action-contract and KFD
+verifier report, source-to-artifact surfaces, positive and negative transition
+reports, and the required export/import/rebuild, backend-migration, and
+cold-start continuation experiments. It also records KFD-2 residual-risk
+vocabulary, explicit responsibility owners, and non-claims.
+
+The gate fails closed on an unknown state-machine version, missing negative
+evidence, missing or drifted artifact surfaces, stale experiment evidence, or
+a verifier report that does not match the frozen action contract. A valid but
+provisional or non-activated Profile is retained as `warning`; it is never
+promoted to a false qualification. The generated passport embeds the evidence
+under `kfd-7` with canonical digests so agents can revalidate it without the
+consumer repository.
 
 ### Floating Buildchain contract lock
 

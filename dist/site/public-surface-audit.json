@@ -7,7 +7,7 @@
     "workflowCount": 47,
     "actionCount": 4,
     "sitePageCount": 49,
-    "docCommandRefCount": 246,
+    "docCommandRefCount": 247,
     "failureCount": 0
   },
   "enumerated": {
@@ -1630,6 +1630,7 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-7-declaration-jsons",
           "release-passport-output-dir",
           "release-passport-platform-manifest-paths",
           "release-passport-product-name",
@@ -1640,7 +1641,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 56,
+        "inputCount": 57,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1851,6 +1852,7 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-7-declaration-jsons",
           "release-passport-output-dir",
           "release-passport-platform-manifest-paths",
           "release-passport-product-name",
@@ -1865,7 +1867,7 @@
           "transaction-state-path",
           "verification-command"
         ],
-        "inputCount": 54
+        "inputCount": 55
       },
       {
         "id": "report-buildchain-issue",
@@ -2368,6 +2370,11 @@
         "id": "collect-github-release",
         "path": "docs/cli.md",
         "command": "buildchain collect github-release"
+      },
+      {
+        "id": "collect-github-release",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain collect github-release --kfd-7-declaration-json"
       },
       {
         "id": "collect-github-release",
@@ -3391,8 +3398,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "a6daf4822365bf576425777230246046ebca67b3f8dcfea61fc7a61773776185",
-    "workflowRegistryDigest": "f7906cff65097a4dc0a7e3eb8a13a52415fadae6b6d019646a52867d94903998",
-    "pageRegistryDigest": "9bc28515f1e756237c167e9343eed56f6c21823611bd91ebf411630ff4b7c9f3"
+    "workflowRegistryDigest": "eff933ab5b304497873a9941e60a271ed3c40e82aab5db26f25554bd6fc3d04a",
+    "pageRegistryDigest": "11711d013f639e062acfd9fb59232b424e8b695fc62953dbb84d2a41641ccef2"
   },
   "comparison": {
     "missingCliRegistry": [],

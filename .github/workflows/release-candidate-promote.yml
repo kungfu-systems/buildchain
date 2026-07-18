@@ -202,6 +202,11 @@ on:
         default: ""
         type: string
         required: false
+      release-passport-kfd-7-declaration-jsons:
+        description: "Newline- or comma-separated KFD-7 engineering-contract declaration JSON paths passed to the release passport collector"
+        default: ""
+        type: string
+        required: false
       release-passport-buildchain-self-kfd:
         description: "Generate Buildchain-owned KFD-1/2/3 self witnesses and claims from the checked-out package source before release passport finalization"
         default: false
@@ -986,6 +991,7 @@ jobs:
           release-passport-kfd-3-prebuild-witness-jsons: ${{ inputs.release-passport-kfd-3-prebuild-witness-jsons }}
           release-passport-kfd-3-artifact-witness-jsons: ${{ inputs.release-passport-kfd-3-artifact-witness-jsons }}
           release-passport-kfd-3-artifact-verify-command: ${{ inputs.release-passport-kfd-3-artifact-verify-command }}
+          release-passport-kfd-7-declaration-jsons: ${{ inputs.release-passport-kfd-7-declaration-jsons }}
           release-passport-buildchain-self-kfd: ${{ inputs.release-passport-buildchain-self-kfd }}
           github-release: ${{ inputs.github-release }}
           github-release-title: ${{ inputs.github-release-title }}

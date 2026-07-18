@@ -256,6 +256,7 @@ async function main() {
   const releasePassportKfd3PrebuildWitnessJsons = core.getInput("release-passport-kfd-3-prebuild-witness-jsons");
   const releasePassportKfd3ArtifactWitnessJsons = core.getInput("release-passport-kfd-3-artifact-witness-jsons");
   const releasePassportKfd3ArtifactVerifyCommand = core.getInput("release-passport-kfd-3-artifact-verify-command");
+  const releasePassportKfd7DeclarationJsons = core.getInput("release-passport-kfd-7-declaration-jsons");
   const releasePassportBuildchainSelfKfd = core.getBooleanInput("release-passport-buildchain-self-kfd");
   const githubRelease = core.getBooleanInput("github-release");
   const githubReleaseArtifactPaths = core.getMultilineInput("github-release-artifact-paths")
@@ -335,6 +336,7 @@ async function main() {
     releasePassportKfd3PrebuildWitnessJsons,
     releasePassportKfd3ArtifactWitnessJsons,
     releasePassportKfd3ArtifactVerifyCommand,
+    releasePassportKfd7DeclarationJsons,
     releasePassportBuildchainSelfKfd,
     promoteOnlyReleaseCandidate,
     releaseCandidatePassportPath,

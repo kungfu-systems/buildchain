@@ -7,7 +7,7 @@ facts, not as README prose. The machine-readable sources are:
   collaboration surfaces;
 - `dist/site/public-surface-audit.json` for reverse enumeration of exposed CLI,
   workflow, action, site, and documented command surfaces;
-- `buildchain.release.json` for release-specific KFD-1, KFD-2, and KFD-3
+- `buildchain.release.json` for release-specific KFD-1, KFD-2, KFD-3, and KFD-7
   passport results;
 - `.buildchain/buildchain.toml` for repository-owned Buildchain configuration;
 - `.buildchain/kfd/kfd-2/registry.json` for product-owned KFD-2 public claim
@@ -43,7 +43,9 @@ buildchain kfd 3 query buildchain --json
 buildchain kfd 4 schema --json
 ```
 
-KFD-1, KFD-2, and KFD-3 have concrete Buildchain workflows. KFD-4 is currently
+KFD-1, KFD-2, and KFD-3 have concrete Buildchain namespace workflows. KFD-7
+has a concrete release-passport gate exposed by `collect github-release` and
+the public `@kungfu-tech/buildchain/kfd7-release-gate` API. KFD-4 is currently
 schema-only in Buildchain: agents can discover and read the KFD-4 schema from
 `@kungfu-tech/kfd`, but Buildchain does not claim KFD-4 verification.
 
@@ -278,6 +280,24 @@ The second layer is product surface registration. Products can ask Buildchain to
 detect standard public surfaces, write a small product-owned registry, audit the
 registry against the current artifact/source tree, generate a release-passport
 compatible witness, and query the resulting capability map.
+
+## KFD-7
+
+KFD-7 release gates validate product-owned work Profile declarations without
+copying their workflow implementation into Buildchain. A declaration passed via
+`buildchain collect github-release --kfd-7-declaration-json <path>` must bind:
+
+- the exact product source SHA and KFD-verified action contract;
+- matching source and released artifact surfaces;
+- retained positive and negative transition reports;
+- export/import/rebuild, backend-migration, and cold-start continuation reports;
+- KFD-2 residual-risk vocabulary, responsibility owners, and explicit
+  non-claims.
+
+The gate records `pass`, `warning`, or `fail`. Provisional and non-activated
+Profiles remain warnings even when their retained evidence is internally
+complete. Buildchain verifies engineering-contract evidence closure; it does
+not claim to measure real-world task quality.
 
 ## Shifu Discovery and Distribution Declarations
 
