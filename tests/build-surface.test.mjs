@@ -2194,6 +2194,10 @@ test("report issue action exposes workflow-friction feedback mode", () => {
   assert.match(workflow, /BUILDCHAIN_BUILD_WORKFLOW_NAME: \$\{\{ inputs\.release-candidate-workflow-name \}\}/);
   assert.match(workflow, /BUILDCHAIN_PROMOTION_OUTCOME: \$\{\{ steps\.promote\.outcome \}\}/);
   assert.match(workflow, /BUILDCHAIN_PROMOTION_DIAGNOSIS: \$\{\{ steps\.promote\.outputs\.failure-message \}\}/);
+  assert.match(workflow, /stable\.minimum_interval/);
+  assert.match(workflow, /stable\.canary_soak/);
+  assert.match(workflow, /echo "report=false" >> "\$\{GITHUB_OUTPUT\}"/);
+  assert.match(workflow, /steps\.friction\.outputs\.report != 'false'/);
   assert.match(workflow, /reporter="\.buildchain\/runtime\/scripts\/workflow-friction-report\.mjs"/);
   assert.match(workflow, /reporter="scripts\/workflow-friction-report\.mjs"/);
   assert.match(workflow, /Report Buildchain promotion friction/);

@@ -1220,6 +1220,29 @@ jobs:
         if: ${{ failure() && !inputs.dry-run && steps.rc.outcome != '' }}
         shell: bash
         run: |
+          stable_gate_report="${{ inputs.release-passport-output-dir }}/stable-release-gate.json"
+          if [ -f "${stable_gate_report}" ]; then
+            deferred="$(node - "${stable_gate_report}" <<'NODE'
+          const fs = require("node:fs");
+          const report = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+          const deferrable = new Set(["stable.minimum_interval", "stable.canary_soak"]);
+          const failedChecks = Array.isArray(report?.summary?.failedChecks)
+            ? report.summary.failedChecks
+            : [];
+          process.stdout.write(
+            failedChecks.length > 0 && failedChecks.every((id) => deferrable.has(id))
+              ? "true"
+              : "false",
+          );
+          NODE
+            )"
+            if [ "${deferred}" = "true" ]; then
+              echo "report=false" >> "${GITHUB_OUTPUT}"
+              echo "::notice::Stable promotion is intentionally deferred by its time gate; skipping workflow-friction reporting."
+              exit 0
+            fi
+          fi
+          echo "report=true" >> "${GITHUB_OUTPUT}"
           reporter=".buildchain/runtime/scripts/workflow-friction-report.mjs"
           if [ ! -f "${reporter}" ]; then
             reporter="scripts/workflow-friction-report.mjs"
@@ -1241,7 +1264,7 @@ jobs:
 
       - name: Resolve Buildchain issue token mode
         id: issue-token-mode
-        if: ${{ failure() && steps.friction.outcome == 'success' }}
+        if: ${{ failure() && steps.friction.outcome == 'success' && steps.friction.outputs.report != 'false' }}
         shell: bash
         run: |
           if [ -n "${DIRECT_TOKEN}" ]; then
@@ -1268,7 +1291,7 @@ jobs:
           repositories: buildchain
 
       - name: Report Buildchain promotion friction
-        if: ${{ failure() && steps.friction.outcome == 'success' }}
+        if: ${{ failure() && steps.friction.outcome == 'success' && steps.friction.outputs.report != 'false' }}
         uses: ./.buildchain/runtime/actions/report-buildchain-issue
         with:
           token: ${{ steps.buildchain-issue-app-token.outputs.token || secrets['buildchain-issue-token'] || secrets.BUILDCHAIN_ISSUE_TOKEN || github.token }}
