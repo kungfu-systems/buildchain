@@ -63,6 +63,53 @@ test("CLI prints help and version", () => {
   assert.equal(runBuildchain(["version"]).trim(), packageJson.version);
 });
 
+test("CLI creates canonical publication admission and runner provenance receipts", () => {
+  const admission = JSON.parse(runBuildchain([
+    "create",
+    "publication-admission",
+    "--input-json",
+    JSON.stringify({
+      registryDigest: "1".repeat(64),
+      workflowPath: ".github/workflows/sealed.yml",
+      repository: "owner/repo",
+      sourceSha: "2".repeat(40),
+      runtimeSha: "3".repeat(40),
+      contractDigest: "4".repeat(64),
+      policyDigest: "5".repeat(64),
+      controllerReceiptDigest: "6".repeat(64),
+      runnerProvenanceDigest: "7".repeat(64),
+      controlPlaneAuditDigest: "8".repeat(64),
+      gateAggregateDigest: "9".repeat(64),
+      environment: "production",
+      product: "fixture",
+      target: "registry.example",
+      version: "1.0.0",
+      channel: "stable",
+      artifactDigest: "a".repeat(64),
+      nonce: "fixture-1",
+      issuedAt: "2026-07-14T00:00:00.000Z",
+      expiresAt: "2026-07-14T00:10:00.000Z",
+    }),
+  ]));
+  assert.match(admission.admissionDigest, /^[0-9a-f]{64}$/);
+
+  const runner = JSON.parse(runBuildchain([
+    "create",
+    "runner-provenance",
+    "--input-json",
+    JSON.stringify({
+      runnerClass: "ephemeral",
+      os: "linux",
+      architecture: "x64",
+      imageDigest: "b".repeat(64),
+      measurementDigest: "c".repeat(64),
+      isolation: "fresh-vm-per-job",
+    }),
+  ]));
+  assert.equal(runner.qualificationStatus, "qualifying");
+  assert.match(runner.receiptDigest, /^[0-9a-f]{64}$/);
+});
+
 test("init package creates .buildchain/buildchain.toml and reusable workflow", () => {
   const cwd = tempDir("init-package");
   fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({ name: "fixture", version: "0.1.0" }, null, 2));
@@ -656,6 +703,35 @@ command = "node -e \\"require('node:fs').mkdirSync('out',{recursive:true});requi
   assert.equal(diagnostics.links.diagnosticsEvents, ".buildchain/artifacts/events.jsonl");
   assert.equal(diagnostics.links.diagnosticsProcessSummary, ".buildchain/artifacts/process-summary.json");
   assert.equal(diagnostics.links.diagnosticsProcessSamples, ".buildchain/artifacts/process-samples.jsonl");
+});
+
+test("lifecycle run honors explicit manifest and summary paths", () => {
+  const cwd = tempDir("lifecycle-output-paths");
+  fs.writeFileSync(path.join(cwd, "buildchain.toml"), `schema = 1
+
+[lifecycle.check]
+command = "node -e \\"process.stdout.write('ok')\\""
+`);
+
+  runBuildchain([
+    "lifecycle",
+    "run",
+    "check",
+    "--cwd",
+    cwd,
+    "--required",
+    "--manifest-path",
+    ".buildchain/artifacts/check-manifest.json",
+    "--summary-path",
+    ".buildchain/artifacts/check-summary.json",
+  ], { cwd });
+
+  const manifestPath = path.join(cwd, ".buildchain", "artifacts", "check-manifest.json");
+  const summaryPath = path.join(cwd, ".buildchain", "artifacts", "check-summary.json");
+  assert.ok(fs.existsSync(manifestPath));
+  assert.ok(fs.existsSync(summaryPath));
+  assert.equal(JSON.parse(fs.readFileSync(manifestPath, "utf8")).lifecycle.stage, "check");
+  assert.equal(JSON.parse(fs.readFileSync(summaryPath, "utf8")).contract, "kungfu-buildchain-artifact-summary");
 });
 
 test("CLI logging writes redacted JSONL events and summaries", () => {

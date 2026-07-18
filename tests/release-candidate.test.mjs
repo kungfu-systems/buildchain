@@ -8,6 +8,7 @@ import test from "node:test";
 import {
   RELEASE_CANDIDATE_PASSPORT_CONTRACT,
   createReleaseCandidatePassport,
+  sha256Json,
   validateReleaseCandidatePassport,
 } from "../packages/core/release-candidate.js";
 import { generateReleaseCandidatePassportCli } from "../scripts/generate-release-candidate-passport.mjs";
@@ -110,6 +111,70 @@ test("release candidate passport records source lock, platform matrix, and build
   assert.equal(passport.source.treeHash, "tree-source");
   assert.equal(passport.platformMatrix.length, 1);
   assert.equal(validateReleaseCandidatePassport({ passport, buildSummary }).ok, true);
+});
+
+test("release candidate passport binds controller receipts to source and runtime", () => {
+  const buildSummary = sampleBuildSummary();
+  const reference = {
+    controllerId: "build-lifecycle",
+    planDigest: `sha256:${"3".repeat(64)}`,
+    receiptDigest: `sha256:${"4".repeat(64)}`,
+    sourceSha: SOURCE_SHA,
+    runtimeSha: buildSummary.runtime.sha,
+    status: "passed",
+    artifact: "buildchain-controller-receipt",
+  };
+  const passport = createReleaseCandidatePassport({
+    repository: "kungfu-systems/libnode",
+    targetChannel: "alpha",
+    version: "22.22.3-kf.3-alpha.7",
+    sourceHeadSha: SOURCE_SHA,
+    buildSummary,
+    controllerReceiptReferences: [reference],
+  });
+
+  assert.deepEqual(passport.controllerReceipts, [reference]);
+  assert.equal(validateReleaseCandidatePassport({ passport, buildSummary }).ok, true);
+  passport.controllerReceipts[0].runtimeSha = "5".repeat(40);
+  assert.match(
+    validateReleaseCandidatePassport({ passport, buildSummary }).errors.join("; "),
+    /runtime SHA mismatch/,
+  );
+});
+
+test("release candidate passport binds a qualifying Shifu Gate aggregate", () => {
+  const buildSummary = sampleBuildSummary();
+  const gateAggregate = {
+    contract: "buildchain.shifu-gate-aggregate/v1",
+    profile: "candidate",
+    sourceSha: SOURCE_SHA,
+    registry: { projectId: "fixture", digest: `sha256:${"b".repeat(64)}` },
+    matrixDigest: `sha256:${"c".repeat(64)}`,
+    status: "pass",
+    qualifying: true,
+    receipts: [{ platformId: "linux" }],
+    gates: [{ gateId: "source.contract" }],
+  };
+  gateAggregate.digest = `sha256:${sha256Json(gateAggregate)}`;
+  const passport = createReleaseCandidatePassport({
+    repository: "kungfu-systems/libnode",
+    targetChannel: "alpha",
+    version: "22.22.3-kf.3-alpha.7",
+    sourceHeadSha: SOURCE_SHA,
+    buildSummary,
+    gateAggregate,
+  });
+  assert.equal(passport.gateProfileEvidence.digest, gateAggregate.digest);
+  assert.equal(passport.gateProfileEvidence.receiptCount, 1);
+  assert.equal(validateReleaseCandidatePassport({ passport, buildSummary }).ok, true);
+
+  const stale = {
+    ...passport,
+    gateProfileEvidence: { ...passport.gateProfileEvidence, sourceSha: "9".repeat(40) },
+  };
+  const validation = validateReleaseCandidatePassport({ passport: stale, buildSummary });
+  assert.equal(validation.ok, false);
+  assert.match(validation.errors.join("; "), /gate profile evidence source SHA mismatch/);
 });
 
 test("release candidate passport derives channel from PR base when publish channel is none", () => {
@@ -667,7 +732,26 @@ test("workflow friction classifier falls back when configured workflow file is m
     assert.match(result.diagnosis, /workflow file build-surface-fixture\.yml was not found/);
     assert.match(result.diagnosis, /fell back to repository pull_request workflow runs/);
     assert.doesNotMatch(result.summary, /auto-classification did not complete/);
-    assert.equal(seen.length, 3);
+
+    const promotionResult = await classifyWorkflowFriction({
+      repository: "kungfu-systems/libnode",
+      targetSha,
+      targetRef: "alpha/v22/v22.22",
+      buildWorkflowFile: "build-surface-fixture.yml",
+      buildWorkflowName: "Build",
+      releaseCandidateOutcome: "success",
+      releaseCandidateDiagnosis: "Resolved the exact PR-stage release candidate.",
+      promotionOutcome: "failure",
+      promotionDiagnosis: "Generated protected ref update was rejected by branch protection.",
+      outputDir: workspace,
+      fetchImpl,
+    });
+
+    assert.equal(promotionResult.frictionClass, "buildchain-ref-promotion-failed");
+    assert.match(promotionResult.diagnosis, /Generated protected ref update was rejected/);
+    assert.doesNotMatch(promotionResult.diagnosis, /Resolved the exact PR-stage release candidate/);
+    assert.doesNotMatch(promotionResult.nextAction, /Deduplicate/);
+    assert.equal(seen.length, 6);
   } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
   }

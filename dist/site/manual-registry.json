@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:72bbbe3ef03d627e0691a39eb3c06598cf550e841611f7a7fb427d5850175600",
+      "digest": "sha256:715e0ef057523600aaecbe38e5a67b0d6e591a246eab2117a6fd182131b966b1",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -23,7 +23,7 @@
       "title": "Install and verify Buildchain",
       "path": "docs/install.md",
       "plane": "use",
-      "digest": "sha256:2600738a92b5853bc26d4e01211f0c07b8b36a21d4d72ca809bc6032dff5dc5f",
+      "digest": "sha256:1879849c01f82b8820f2d9aeb09faed0931954cb7fe6939176a5eb69110cee59",
       "capabilityGroup": "getting-started",
       "audience": [
         "consumer"
@@ -36,7 +36,7 @@
       "title": "Release Passport protocol",
       "path": "docs/release-passport.md",
       "plane": "verify",
-      "digest": "sha256:0d5fb6cad04c157f4edc3966fdad3e7ab86726f6bdef9cfe9d16209a88ff4667",
+      "digest": "sha256:429e5500d877200eee3cd47f734ad94cdbb15d8df6dfcd2a5b750977c770d0b4",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",
@@ -46,11 +46,40 @@
       "order": 100
     },
     {
+      "id": "controller-evidence",
+      "title": "Controller evidence contract",
+      "path": "docs/controller-evidence.md",
+      "plane": "verify",
+      "digest": "sha256:442e1b72e3977af56a8ae5e081ffd89c2f3ebcd9cfd50f07af730344bdf9fb0e",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "consumer",
+        "release-operator",
+        "agent"
+      ],
+      "maturity": "draft",
+      "order": 205
+    },
+    {
+      "id": "publication-authority",
+      "title": "Sealed publication authority",
+      "path": "docs/publication-authority.md",
+      "plane": "verify",
+      "digest": "sha256:05bc22c7e5885e591bc121fc43f588e5d49ccf0a8de6a642811c1d0d03dcee1e",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "release-operator",
+        "agent"
+      ],
+      "maturity": "preview",
+      "order": 105
+    },
+    {
       "id": "release-candidate",
       "title": "Release Candidate Passport",
       "path": "docs/release-candidate.md",
       "plane": "verify",
-      "digest": "sha256:841d6f3281ba6dfe80527e4f149807bdbd05d41f9e94afe1c446fcd6d29e307c",
+      "digest": "sha256:6a20c6e3e483327d5ccbe70271f7fb4752731bd0523eeddb96f27b2b6ebf1cf8",
       "capabilityGroup": "reusable-build",
       "audience": [
         "release-operator",
@@ -273,7 +302,7 @@
       "title": "Reusable build surface",
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
-      "digest": "sha256:fbc74dee3a6f2283ea69a2a9a31945ac82ccaf1d270995539f5d80235ab74614",
+      "digest": "sha256:6916d88ae0f25fa129308354b04d339552b72796d4d7d7938015e0e2f4dcaa6a",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -287,7 +316,7 @@
       "title": "Publish transaction",
       "path": "docs/publish-transaction.md",
       "plane": "verify",
-      "digest": "sha256:2523dd9a81e837918afae30c203349a7b29f00fdf953962a6db360fd95e0c6cb",
+      "digest": "sha256:9e77030dbd69e27c2402d855980f7560a465270cac1f3225c0470523ab4a8ddf",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator"
@@ -300,7 +329,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:3ae2bbc2df394726f350e58be1a71dd0379b99b19cd6ccf15fbe3b843f3890b6",
+      "digest": "sha256:d85ac78b7c73b85b0a59a4a39131230522ae65225fa1b52f9dfe6939f1bb839c",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -376,6 +405,7 @@
     "docs/stable-candidate-patrol.md",
     "docs/release-governance.md",
     "docs/release-passport.md",
+    "docs/controller-evidence.md",
     "docs/publish-transaction.md",
     "docs/homebrew.md",
     "docs/site-bundle-contract.md",

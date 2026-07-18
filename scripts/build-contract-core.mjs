@@ -4,25 +4,31 @@ import path from "node:path";
 
 export const RUNNER_PRESETS = Object.freeze({
   "github-hosted": [
-    { id: "linux-x64", name: "Linux x64", runner: '["ubuntu-24.04"]' },
-    { id: "macos", name: "macOS", runner: '["macos-latest"]' },
-    { id: "windows-x64", name: "Windows x64", runner: '["windows-2022"]' },
+    { id: "linux-x64", name: "Linux x64", platform: "linux", runner: '["ubuntu-24.04"]', capabilities: ["node"] },
+    { id: "macos", name: "macOS", platform: "macos", runner: '["macos-latest"]', capabilities: ["node"] },
+    { id: "windows-x64", name: "Windows x64", platform: "windows", runner: '["windows-2022"]', capabilities: ["node"] },
   ],
   "kungfu-v4-self-hosted": [
     {
       id: "linux-x64",
       name: "Linux x64",
+      platform: "linux",
       runner: '["self-hosted","Linux","X64","kungfu-build-v4-linux-x64"]',
+      capabilities: ["node", "native-toolchain", "product-artifacts", "rust"],
     },
     {
       id: "macos-arm64",
       name: "macOS ARM64",
+      platform: "macos",
       runner: '["self-hosted","macOS","ARM64","kungfu-build-v4-macos-arm64"]',
+      capabilities: ["node", "native-toolchain", "product-artifacts", "rust"],
     },
     {
       id: "windows-x64",
       name: "Windows x64",
+      platform: "windows",
       runner: '["self-hosted","Windows","X64","kungfu-build-v4-windows-x64"]',
+      capabilities: ["node", "native-toolchain", "product-artifacts", "rust"],
     },
   ],
 });
@@ -713,7 +719,18 @@ function normalizePlatform(platform, index) {
     throw new Error(`platforms-json[${index}].runner is required`);
   }
   parseJsonArray(runner, `platforms-json[${index}].runner`);
-  return { id, name, runner };
+  const capabilities = platform?.capabilities === undefined
+    ? ["node"]
+    : parseJsonArray(JSON.stringify(platform.capabilities), `platforms-json[${index}].capabilities`)
+        .map((capability) => String(capability || "").trim());
+  if (capabilities.some((capability) => !capability) || new Set(capabilities).size !== capabilities.length) {
+    throw new Error(`platforms-json[${index}].capabilities must contain unique non-empty strings`);
+  }
+  const normalized = { id, name, runner };
+  if (platform?.platform !== undefined) normalized.platform = String(platform.platform || "").trim();
+  normalized.capabilities = capabilities.sort();
+  if (platform?.required === false) normalized.required = false;
+  return normalized;
 }
 
 export function resolveRunnerMatrix({

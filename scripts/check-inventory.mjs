@@ -35,6 +35,7 @@ const requiredPaths = [
   "docs/product-mechanism.md",
   "docs/readme-badges.md",
   "docs/release-passport.md",
+  "docs/shifu-gate-profiles.md",
   "docs/release-propagation.md",
   "docs/site-bundle-contract.md",
   "docs/toolkit-observability.md",
@@ -48,6 +49,7 @@ const requiredPaths = [
   "scripts/generate-site-bundle.mjs",
   "scripts/generate-buildchain-kfd-witnesses.mjs",
   "scripts/generate-release-candidate-passport.mjs",
+  "scripts/shifu-gate-profile.mjs",
   "scripts/artifact-relay-s3.mjs",
   "scripts/npm-publish-dry-run.mjs",
   "scripts/npm-publish-transaction.mjs",
@@ -82,8 +84,11 @@ const requiredPaths = [
   ".github/workflows/npm-publish.yml",
   ".github/workflows/paper-release.yml",
   ".github/workflows/binary-distribution.yml",
+  ".github/workflows/.binary-release-assets.yml",
+  ".github/workflows/binary-release-assets.yml",
   ".github/workflows/verify.yml",
   ".github/workflows/.build.yml",
+  ".github/workflows/.gate-profile.yml",
   ".github/workflows/build.yml",
   ".github/workflows/build-surface-fixture.yml",
   ".github/workflows/candidate-lab.yml",
@@ -193,6 +198,7 @@ const actionlintConfig = fs.readFileSync(
 for (const requiredSnippet of [
   ".github/workflows/build.yml:",
   ".github/workflows/.build.yml:",
+  ".github/workflows/.gate-profile.yml:",
   'property "workflow_ref" is not defined in object type',
 ]) {
   if (!actionlintConfig.includes(requiredSnippet)) {
@@ -229,6 +235,9 @@ if (rootPackage.exports?.["./homebrew"] !== "./packages/core/homebrew.js") {
 }
 if (rootPackage.exports?.["./buildchain-contract"] !== "./packages/core/buildchain-contract.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/buildchain-contract");
+}
+if (rootPackage.exports?.["./controller-evidence"] !== "./packages/core/controller-evidence.js") {
+  throw new Error("root package must export @kungfu-tech/buildchain/controller-evidence");
 }
 if (rootPackage.exports?.["./issue-reporting"] !== "./packages/core/issue-reporting.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/issue-reporting");
@@ -755,6 +764,7 @@ if (commonJsSourcePattern.test(standaloneBinaryScript)) {
 const npmPublishWorkflow = fs.readFileSync(path.join(root, ".github/workflows/npm-publish.yml"), "utf8");
 const buildchainRefPromotionWorkflow = fs.readFileSync(path.join(root, ".github/workflows/buildchain-ref-promotion.yml"), "utf8");
 const binaryDistributionWorkflow = fs.readFileSync(path.join(root, ".github/workflows/binary-distribution.yml"), "utf8");
+const binaryReleaseAssetsWorkflow = fs.readFileSync(path.join(root, ".github/workflows/.binary-release-assets.yml"), "utf8");
 const selfHostedRunnerSmokeWorkflow = fs.readFileSync(path.join(root, ".github/workflows/self-hosted-runner-smoke.yml"), "utf8");
 const npmDryRunScript = fs.readFileSync(path.join(root, "scripts/npm-publish-dry-run.mjs"), "utf8");
 const npmPublishTransactionScript = fs.readFileSync(path.join(root, "scripts/npm-publish-transaction.mjs"), "utf8");
@@ -831,6 +841,11 @@ for (const requiredSnippet of [
   "publish-source-ref: ${{ steps.publish-gate.outputs.ref }}",
   "publish-source-sha: ${{ steps.publish-gate.outputs.sha }}",
   "publish-source-locked: ${{ steps.publish-gate.outputs.locked }}",
+  "expected-publication-version: ${{ needs.publication-plan.outputs.version }}",
+  "publication-version: ${{ needs.publication-plan.outputs.version }}",
+  "name: Plan exact publication version",
+  "DRY_RUN: ${{ inputs.dry-run }}",
+  "if (dryRun) {",
   "Enforce Buildchain stable release canary gate",
   "BUILDCHAIN_STABLE_RELEASE_POLICY: .buildchain/stable-release-policy.json",
 ]) {
@@ -962,12 +977,27 @@ for (const requiredSnippet of [
   "verify artifact",
   "scripts/create-release-bundle.mjs",
   "buildchain-release-bundle",
-  "scripts/ensure-github-release.mjs",
   "--impact-json .buildchain/release-evidence/authoritative-release-state-impact.json",
-  "gh release upload",
 ]) {
   if (!binaryDistributionWorkflow.includes(requiredSnippet)) {
     throw new Error(`binary distribution workflow missing required snippet: ${requiredSnippet}`);
+  }
+}
+for (const requiredSnippet of [
+  "uses: ./.github/workflows/.publication-authority.yml",
+  "environment: buildchain-release-assets",
+  "needs: publication-authority",
+  "scripts/ensure-github-release.mjs",
+  "gh release upload",
+  "capability.artifactDigest !== actualArtifact",
+]) {
+  if (!binaryReleaseAssetsWorkflow.includes(requiredSnippet)) {
+    throw new Error(`binary release assets workflow missing required snippet: ${requiredSnippet}`);
+  }
+}
+for (const forbiddenSnippet of ["contents: write", "id-token: write", "gh release upload"]) {
+  if (binaryDistributionWorkflow.includes(forbiddenSnippet)) {
+    throw new Error(`binary distribution evidence workflow must not carry product authority: ${forbiddenSnippet}`);
   }
 }
 for (const forbiddenSnippet of [
@@ -1037,7 +1067,7 @@ if (!badgeEndpointRegistry.badges?.some((entry) => entry.id === "buildchain-rele
   throw new Error("badge endpoint registry must include Buildchain Release Passport badge");
 }
 
-for (const siteFile of ["buildchain-site.json", "site-manifest.json", "badge-endpoint-registry.json", "publication-registry.json", "page-registry.json", "capability-registry.json", "cli-registry.json", "manual-registry.json", "node-api-registry.json", "workflow-registry.json", "public-surface-audit.json", "release-model.json", "buildchain-contract.json"]) {
+for (const siteFile of ["buildchain-site.json", "site-manifest.json", "badge-endpoint-registry.json", "publication-registry.json", "page-registry.json", "capability-registry.json", "cli-registry.json", "manual-registry.json", "node-api-registry.json", "workflow-registry.json", "controller-registry.json", "public-surface-audit.json", "release-model.json", "buildchain-contract.json"]) {
   if (!fs.existsSync(path.join(root, "dist", "site", siteFile))) {
     throw new Error(`site bundle missing ${siteFile}`);
   }

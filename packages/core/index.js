@@ -133,6 +133,41 @@ export {
 } from "./publication-package.js";
 
 export {
+  PUBLICATION_ADMISSION_CONTRACT,
+  PUBLICATION_ARTIFACT_MANIFEST_SET_CONTRACT,
+  PUBLICATION_AUTHORITY_CLASSES,
+  PUBLICATION_AUTHORITY_REGISTRY_CONTRACT,
+  PUBLICATION_CAPABILITY_CONTRACT,
+  PUBLICATION_CONTROL_PLANE_AUDIT_CONTRACT,
+  PUBLICATION_GATE_DECISION_CONTRACT,
+  RUNNER_PROVENANCE_CLASSES,
+  RUNNER_PROVENANCE_CONTRACT,
+  createPublicationAuthorityRegistry,
+  createPublicationAdmission,
+  createPublicationArtifactManifestSet,
+  createPublicationControlPlaneAudit,
+  createPublicationGateDecision,
+  createRunnerProvenance,
+  detectPublicationAuthoritySignals,
+  publicationAuthorityDigest,
+  verifyPublicationAdmission,
+} from "./publication-authority.js";
+
+export {
+  PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT,
+  createPublicationArtifactCandidate,
+  publicationArtifactCandidateDigest,
+  resolvePublicationCandidateFile,
+} from "./publication-artifact-candidate.js";
+
+export {
+  buildchainPublicationAuthorityDescriptors,
+  createBuildchainPublicationAuthorityRegistry,
+} from "./buildchain-publication-authority.js";
+
+export { evaluatePublicationControlPlaneSnapshot } from "./publication-control-plane-audit.js";
+
+export {
   ARTIFACT_PASSPORT_LOCATOR_CONTRACT,
   ARTIFACT_PASSPORT_POINTER_CONTRACT,
   ARTIFACT_VERIFICATION_CONTRACT,
@@ -157,6 +192,23 @@ export {
   renderBuildchainContractDriftIssueBody,
   sha256Json as sha256BuildchainContractJson,
 } from "./buildchain-contract.js";
+
+export {
+  BUILDCHAIN_CONTROLLER_AGGREGATE_CONTRACT,
+  BUILDCHAIN_CONTROLLER_DESCRIPTOR_CONTRACT,
+  BUILDCHAIN_CONTROLLER_EVIDENCE_CONTRACT,
+  BUILDCHAIN_CONTROLLER_REGISTRY_CONTRACT,
+  aggregateControllerReceipts,
+  controllerEvidenceDigest,
+  createControllerPlan,
+  createControllerReceipt,
+  createControllerReceiptReference,
+  createControllerRegistry,
+  normalizeControllerReceiptReferences,
+  validateControllerPlan,
+  validateControllerReceipt,
+  validateControllerReceiptReference,
+} from "./controller-evidence.js";
 
 export {
   planReleaseLineBootstrap,

@@ -6,6 +6,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 export const LOCKED_SOURCE_CHECKOUT_CONTRACT = "kungfu-buildchain-locked-source-checkout-cache";
+export const ISOLATED_GIT_GLOBAL_CONFIG = process.platform === "win32" ? "NUL" : "/dev/null";
 
 const GIT_SHA_PATTERN = /^[0-9a-f]{40}$/i;
 
@@ -133,6 +134,24 @@ function githubAuthEnv(token = "") {
   };
 }
 
+function isolatedGitFetchEnv(env = {}, targetPath) {
+  const configuredCount = Number.parseInt(env.GIT_CONFIG_COUNT || "0", 10);
+  const safeDirectoryIndex = Number.isInteger(configuredCount) && configuredCount >= 0
+    ? configuredCount
+    : 0;
+  return {
+    ...env,
+    // Runner-global URL rewrites are shared mutable state. A concurrent job
+    // may point the same repository URL at a different single-SHA bundle, so
+    // network fetches must not consult the account-level Git config.
+    GIT_CONFIG_GLOBAL: ISOLATED_GIT_GLOBAL_CONFIG,
+    GIT_CONFIG_NOSYSTEM: "1",
+    GIT_CONFIG_COUNT: String(safeDirectoryIndex + 1),
+    [`GIT_CONFIG_KEY_${safeDirectoryIndex}`]: "safe.directory",
+    [`GIT_CONFIG_VALUE_${safeDirectoryIndex}`]: path.resolve(targetPath),
+  };
+}
+
 function markSafeDirectory(targetPath, timeoutMs) {
   try {
     git(["config", "--global", "--add", "safe.directory", path.resolve(targetPath)], {
@@ -203,9 +222,32 @@ export function fetchSourceCommit({
   sourceTreeSha = "",
   timeoutMs,
   env = {},
+  allowFullFetchRetry = false,
   runGit = git,
   containsCommit = hasCommit,
 }) {
+  const fetchEnv = isolatedGitFetchEnv(env, targetPath);
+  const fetch = (refspec) => {
+    const options = { cwd: targetPath, timeoutMs, env: fetchEnv };
+    try {
+      runGit(["fetch", "--no-tags", "--depth=1", remoteName, refspec], options);
+      return "shallow";
+    } catch (error) {
+      if (
+        !allowFullFetchRetry
+        || !/dumb http transport does not support shallow capabilities/i.test(
+          String(error?.message || error || ""),
+        )
+      ) {
+        throw error;
+      }
+      // Dumb HTTP mirrors are intentionally simple static cache endpoints.
+      // Retry only that explicit capability mismatch without --depth; all
+      // network fallbacks remain shallow and bounded by their own policy.
+      runGit(["fetch", "--no-tags", remoteName, refspec], options);
+      return "full";
+    }
+  };
   try {
     runGit(["remote", "remove", remoteName], { cwd: targetPath, timeoutMs, stdio: "ignore" });
   } catch {
@@ -219,13 +261,9 @@ export function fetchSourceCommit({
 
   if (fetchRef) {
     try {
-      runGit(["fetch", "--no-tags", "--depth=1", remoteName, `+${fetchRef}:refs/buildchain/source-ref`], {
-        cwd: targetPath,
-        timeoutMs,
-        env,
-      });
+      const fetchMode = fetch(`+${fetchRef}:refs/buildchain/source-ref`);
       if (containsCommit(targetPath, sha, timeoutMs)) {
-        return { selector: "ref", checkoutSha: sha };
+        return { selector: "ref", checkoutSha: sha, fetchMode };
       }
       if (/^refs\/pull\/\d+\/merge$/.test(fetchRef) && sourceTreeSha) {
         const fetchedSha = runGit(["rev-parse", "refs/buildchain/source-ref^{commit}"], {
@@ -237,7 +275,7 @@ export function fetchSourceCommit({
           timeoutMs,
         });
         if (fetchedTree === sourceTreeSha) {
-          return { selector: "ref-tree", checkoutSha: fetchedSha };
+          return { selector: "ref-tree", checkoutSha: fetchedSha, fetchMode };
         }
       }
     } catch (error) {
@@ -249,15 +287,11 @@ export function fetchSourceCommit({
     }
   }
 
-  runGit(["fetch", "--no-tags", "--depth=1", remoteName, `+${sha}:refs/buildchain/source`], {
-    cwd: targetPath,
-    timeoutMs,
-    env,
-  });
+  const fetchMode = fetch(`+${sha}:refs/buildchain/source`);
   if (!containsCommit(targetPath, sha, timeoutMs)) {
     throw new Error(`fetched ${fetchRef || sha}, but ${sha} is not available`);
   }
-  return { selector: "sha", checkoutSha: sha };
+  return { selector: "sha", checkoutSha: sha, fetchMode };
 }
 
 export function runBoundedFetch({ attempts = 1, fetch, onAttempt = () => {}, onRetry = () => {}, shouldRetry = () => true }) {
@@ -413,7 +447,9 @@ export function lockedSourceCheckout({
           fetchRef,
           sourceTreeSha: treeSha,
           timeoutMs,
+          allowFullFetchRetry: true,
         });
+        evidence.cache.fetchMode = fetchResult.fetchMode;
         checkoutSha = fetchResult.checkoutSha || sha;
         checkoutFetchedCommit(targetPath, checkoutSha, timeoutMs);
       } else {
@@ -458,6 +494,7 @@ export function lockedSourceCheckout({
         shouldRetry: retryableGitFetchError,
       });
       evidence.cache.githubFetchAttempts = fetchResult.attempts;
+      evidence.cache.fetchMode = fetchResult.value.fetchMode;
       checkoutSha = fetchResult.value.checkoutSha || sha;
     } catch (error) {
       evidence.durationMs = Date.now() - startedAt;

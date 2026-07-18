@@ -21,6 +21,7 @@ import {
   createReleaseTransaction,
   defaultPublishEvidencePath,
   defaultReleaseStatePath,
+  planArtifactPublish,
   releaseTransactionStateRef,
   parsePublishArtifactsJson,
   planTransactionRecovery,
@@ -28,6 +29,7 @@ import {
   readReleaseTransaction,
   transitionReleaseTransaction,
   validatePublishEvidence,
+  resolvePublishArtifactRequirements,
   writeReleaseTransaction,
 } from "../../packages/core/publish-transaction.js";
 import {
@@ -360,9 +362,11 @@ function assertAllowedLocalChanges(cwd, allowedPaths) {
     encoding: "utf8",
   }).trimEnd();
   const ephemeralBuildchainEvidencePaths = [
+    ".buildchain/admitted/",
     ".buildchain/contract-drift/",
     ".buildchain/kfd/",
     ".buildchain/publication-result.json",
+    ".buildchain/reconciliation/",
     ".buildchain/release-candidate/",
     ".buildchain/release-evidence/",
     ".buildchain/release-passport/",
@@ -557,9 +561,24 @@ function defaultDistTagForChannel(channel) {
   return channel === "alpha" ? "alpha" : "latest";
 }
 
+function alphaDistTagForPromotion({
+  ownsMajorAlphaTag,
+  line,
+  publishDistTag = "",
+} = {}) {
+  if (ownsMajorAlphaTag) {
+    return publishDistTag;
+  }
+  if (!/^v\d+\.\d+$/.test(String(line || ""))) {
+    throw new Error(`older-minor alpha publication requires a vN.N release line; got ${line || "<empty>"}`);
+  }
+  return `${line}-alpha`;
+}
+
 function resolvePublishContract({
   loadedConfig,
   channel,
+  line = "",
   publishMode = "",
   publishAuth = "",
   publishDistTag = "",
@@ -587,8 +606,9 @@ function resolvePublishContract({
   if (channel === "release" && mode === "publish-final-version" && distTag !== "latest") {
     throw new Error("release publish-final-version must use dist-tag latest");
   }
-  if (channel === "alpha" && mode === "publish-final-version" && distTag !== "alpha") {
-    throw new Error("alpha publish-final-version must use dist-tag alpha");
+  const alphaDistTags = new Set(["alpha", ...(line ? [`${line}-alpha`] : [])]);
+  if (channel === "alpha" && mode === "publish-final-version" && !alphaDistTags.has(distTag)) {
+    throw new Error(`alpha publish-final-version must use dist-tag alpha or ${line ? `${line}-alpha` : "the line-specific alpha tag"}`);
   }
   return {
     mode,
@@ -850,6 +870,8 @@ function validatePromotionReleaseCandidate({
     buildSummaryPath: buildSummary ? resolvedSummaryPath : "",
     candidateHash: passport.candidateHash || "",
     platformCount: Array.isArray(passport.platformMatrix) ? passport.platformMatrix.length : 0,
+    gateProfileEvidence: passport.gateProfileEvidence,
+    controllerReceipts: passport.controllerReceipts || [],
     builtSourceSha: passport.source?.mergeRefSha || passport.source?.headSha || "",
     builtSourceTreeSha: passport.source?.treeHash || "",
     promotionChannelSha: sourceHeadSha || "",
@@ -1007,7 +1029,7 @@ function promoteExistingNpmArtifacts({ cwd, artifacts, distTag }) {
 }
 
 function materialErrorRequiresRepair(error) {
-  return /release_material_sha mismatch|source_sha mismatch|release_sha mismatch|version mismatch|target_ref mismatch|artifact digest mismatch|required artifact missing/.test(
+  return /release_material_sha mismatch|source_sha mismatch|release_sha mismatch|version mismatch|target_ref mismatch|artifact digest mismatch|artifact coordinate or provenance mismatch|artifact provenance mismatch|artifact.*verification|verification\.|required artifact missing|duplicate publish artifact/.test(
     error.message || "",
   );
 }
@@ -1019,15 +1041,6 @@ function transactionHasPublishedMaterial(transaction) {
   );
 }
 
-function publishArtifactKey(artifact) {
-  return [
-    artifact?.kind || "",
-    artifact?.name || "",
-    artifact?.ref || "",
-    artifact?.digest || "",
-  ].join("\0");
-}
-
 function transactionCoversRequiredArtifacts(transaction, requiredArtifacts) {
   if (!Array.isArray(requiredArtifacts) || requiredArtifacts.length === 0) {
     return true;
@@ -1035,10 +1048,10 @@ function transactionCoversRequiredArtifacts(transaction, requiredArtifacts) {
   if (!transactionHasPublishedMaterial(transaction)) {
     return true;
   }
-  const existing = new Set(
-    (transaction.artifacts || []).map((artifact) => publishArtifactKey(artifact)),
-  );
-  return requiredArtifacts.every((artifact) => existing.has(publishArtifactKey(artifact)));
+  return planArtifactPublish({
+    requiredArtifacts,
+    existingArtifacts: transaction.artifacts || [],
+  }).complete;
 }
 
 function ensureTransactionCanResume({
@@ -1071,6 +1084,7 @@ function canReplaceStaleVersionStateTransaction({
   targetRef,
   channel,
   allowVersionStateFinalization,
+  explicitOverride,
   localOnly,
 }) {
   if (!materialErrorRequiresRepair(error)) {
@@ -1079,7 +1093,7 @@ function canReplaceStaleVersionStateTransaction({
   if (localOnly) {
     return true;
   }
-  if (!allowVersionStateFinalization) {
+  if (!allowVersionStateFinalization && !explicitOverride) {
     return false;
   }
   if (transactionHasPublishedMaterial(existing)) {
@@ -1632,11 +1646,18 @@ async function runPublishTransaction({
   const publishContract = resolvePublishContract({
     loadedConfig,
     channel,
+    line,
     publishMode,
     publishAuth,
     publishDistTag,
     publishPackageSetOrder,
     publishPackageMain,
+  });
+  requiredArtifacts = resolvePublishArtifactRequirements(requiredArtifacts, {
+    version,
+    targetRef,
+    sourceSha,
+    releaseMaterialSha: releaseMaterialSha || releaseSha,
   });
   validatePublishContractForArtifacts({
     channel,
@@ -1741,6 +1762,7 @@ async function runPublishTransaction({
         targetRef,
         channel,
         allowVersionStateFinalization,
+        explicitOverride,
         localOnly: Boolean(localExisting && !durableExisting),
       });
     if (!canFinalizeVersionState && !canReplaceStaleVersionState) {
@@ -1800,7 +1822,7 @@ async function runPublishTransaction({
         fallbackName: "dist-tag-evidence.json",
       }),
       packageSet: packageSetFromArtifacts({
-        artifacts: requiredArtifacts,
+        artifacts: transaction.artifacts || requiredArtifacts,
         contract: publishContract,
       }),
       publishContract,
@@ -1895,6 +1917,7 @@ async function runPublishTransaction({
             BUILDCHAIN_SURFACE_PUBLISHED_AT: promotionGeneratedAt,
             BUILDCHAIN_SURFACE_TIMESTAMP_POLICY: "ci-injected",
             BUILDCHAIN_PUBLISH_EVIDENCE: resolvedEvidencePath,
+            BUILDCHAIN_REQUIRED_ARTIFACTS: JSON.stringify(requiredArtifacts),
             BUILDCHAIN_PUBLISH_MODE: publishContract.mode,
             BUILDCHAIN_PUBLISH_AUTH: publishContract.auth,
             BUILDCHAIN_NPM_DIST_TAG: publishContract.distTag,
@@ -1924,7 +1947,7 @@ async function runPublishTransaction({
       auth: publishContract.auth,
       distTag: publishContract.distTag,
       source: publishSource || "validated-evidence",
-      artifacts: requiredArtifacts,
+      artifacts: validation.evidence.artifacts,
     });
     if (transaction.state === "publishing" || transaction.state === "publish_failed") {
       transaction = transitionReleaseTransaction(transaction, "published", {
@@ -1949,7 +1972,7 @@ async function runPublishTransaction({
       evidencePath: resolvedEvidencePath,
       distTagEvidencePath,
       packageSet: packageSetFromArtifacts({
-        artifacts: requiredArtifacts,
+        artifacts: validation.evidence.artifacts,
         contract: publishContract,
       }),
       publishContract,
@@ -2145,6 +2168,7 @@ async function collectAndPersistReleasePassport({
     buildSummaryJson,
     platformManifestJsons: platformManifests,
     distTagEvidenceJson: existingJsonObjectFile(result.distTagEvidencePath),
+    controllerReceiptReferences: releaseCandidateValidation?.controllerReceipts || [],
     releaseJsonExtra: JSON.stringify({
       channel,
       targetRef,
@@ -2162,6 +2186,9 @@ async function collectAndPersistReleasePassport({
             promotionChannelSha: releaseCandidateValidation.promotionChannelSha,
             promotionChannelTreeSha: releaseCandidateValidation.promotionChannelTreeSha,
             treeEquivalent: releaseCandidateValidation.treeEquivalent,
+            ...(releaseCandidateValidation.gateProfileEvidence
+              ? { gateProfileEvidence: releaseCandidateValidation.gateProfileEvidence }
+              : {}),
           }
         : {}),
       publishToolingSha: result.transaction.publish_tooling_sha,
@@ -2358,11 +2385,81 @@ export function resolveProtectedStatusCheckContext({ protection = {}, requiredSt
   return emittedCandidates.length === 1 ? emittedCandidates[0] : declared;
 }
 
+async function assertProviderEnforcedChannelTransaction({
+  octokit,
+  owner,
+  repo,
+  targetRef,
+  sourceSha,
+  requiredStatusCheck,
+}) {
+  const { data: branch } = await octokit.rest.repos.getBranch({
+    owner,
+    repo,
+    branch: targetRef,
+  });
+  const protection = branch.protection || {};
+  const resolvedStatusCheck = resolveProtectedStatusCheckContext({ protection, requiredStatusCheck });
+  const requiredCheck = (protection.required_status_checks?.checks || []).find((entry) =>
+    entry.context === resolvedStatusCheck
+  );
+  const pullRequest = await assertChannelPromotionPr({
+    octokit,
+    owner,
+    repo,
+    sha: sourceSha,
+    targetRef,
+  });
+  const { data: reviews } = await octokit.rest.pulls.listReviews({
+    owner,
+    repo,
+    pull_number: pullRequest.number,
+    per_page: 100,
+  });
+  const latestReviews = new Map();
+  for (const review of reviews || []) {
+    const login = String(review?.user?.login || "");
+    if (login) latestReviews.set(login, review);
+  }
+  const independentApproval = [...latestReviews.values()].some((review) =>
+    review.state === "APPROVED" && review.user?.login !== pullRequest.user?.login
+  );
+  const { data: checkRuns } = await octokit.rest.checks.listForRef({
+    owner,
+    repo,
+    ref: sourceSha,
+    per_page: 100,
+  });
+  const requiredCheckPassed = (checkRuns.check_runs || []).some((entry) =>
+    entry.name === resolvedStatusCheck &&
+    entry.conclusion === "success" &&
+    (!requiredCheck?.app_id || entry.app?.id === requiredCheck.app_id)
+  );
+  const missing = [];
+  if (branch.protected !== true) missing.push("must be provider-protected");
+  if (branch.commit?.sha !== sourceSha) missing.push("must still point at the admitted source SHA");
+  if (protection.required_status_checks?.enforcement_level !== "everyone") {
+    missing.push("must enforce required status checks for everyone");
+  }
+  if (!protectedStatusCheckNames(protection).includes(resolvedStatusCheck)) {
+    missing.push(`must require a ${requiredStatusCheck} status check using the exact context`);
+  }
+  if (!requiredCheckPassed) missing.push(`required status check ${resolvedStatusCheck} must pass from its configured app`);
+  if (!independentApproval) missing.push("must have an independent approving review on the merged source PR");
+  if (missing.length > 0) {
+    throw new Error(
+      `Protected channel ${targetRef} provider transaction is not qualifying: ${missing.join("; ")}`,
+    );
+  }
+  return resolvedStatusCheck;
+}
+
 async function assertProtectedChannel({
   octokit,
   owner,
   repo,
   targetRef,
+  sourceSha,
   requiredStatusCheck = "check",
 }) {
   let protection;
@@ -2374,9 +2471,14 @@ async function assertProtectedChannel({
     }));
   } catch (error) {
     if (error.status === 403) {
-      throw new Error(
-        `Protected channel ${targetRef} protection details must be readable to verify admin enforcement`,
-      );
+      return assertProviderEnforcedChannelTransaction({
+        octokit,
+        owner,
+        repo,
+        targetRef,
+        sourceSha,
+        requiredStatusCheck,
+      });
     }
     throw error;
   }
@@ -2521,6 +2623,38 @@ async function ensureManagedChannelBranchProtection({
     try {
       ({ data: currentProtection } = await octokit.rest.repos.getBranchProtection({ owner, repo, branch }));
     } catch (error) {
+      if (error.status === 403 && typeof octokit.rest.repos?.getBranch === "function") {
+        const { data: branchSummary } = await octokit.rest.repos.getBranch({ owner, repo, branch });
+        const providerProtection = branchSummary.protection || {};
+        const resolvedStatusCheck = resolveProtectedStatusCheckContext({
+          protection: providerProtection,
+          requiredStatusCheck,
+        });
+        const missing = [];
+        if (branchSummary.protected !== true) missing.push("must be provider-protected");
+        if (providerProtection.required_status_checks?.enforcement_level !== "everyone") {
+          missing.push("must enforce required status checks for everyone");
+        }
+        if (!protectedStatusCheckNames(providerProtection).includes(resolvedStatusCheck)) {
+          missing.push(`must require a ${requiredStatusCheck} status check using the exact context`);
+        }
+        if (missing.length > 0) {
+          throw new Error(
+            `Managed channel ${branch} provider policy is not qualifying: ${missing.join("; ")}`,
+          );
+        }
+        const observedPolicy = {
+          requiredStatusChecks: protectedStatusCheckNames(providerProtection),
+          enforcementLevel: providerProtection.required_status_checks.enforcement_level,
+        };
+        return {
+          action: "branch-protection-policy-observed",
+          ref: branch,
+          policySource: "provider-enforced-existing-policy",
+          before: observedPolicy,
+          after: observedPolicy,
+        };
+      }
       if (!notFound(error)) throw error;
     }
   }
@@ -3110,6 +3244,17 @@ function selectAlphaTag({ refs, releasePrefix, sha, patchAfterRelease }) {
   };
 }
 
+function assertExpectedPublicationVersion(expectedVersion, actualVersion) {
+  const expected = String(expectedVersion || "").trim();
+  const actual = String(actualVersion || "").trim();
+  if (expected && expected !== actual) {
+    throw new Error(
+      `publication version changed after authority planning: expected ${expected}, got ${actual || "<empty>"}`,
+    );
+  }
+  return actual;
+}
+
 function notFound(error) {
   const status = error?.status || error?.response?.status;
   const message = error?.response?.data?.message || error?.message || "";
@@ -3236,6 +3381,7 @@ async function promoteBuildchainRefs({
   branchProtectionBypassApps = "",
   branchProtectionBypassUsers = "",
   branchProtectionBypassTeams = "",
+  reconciliationWorkspace = "",
   publishTransaction = false,
   publishCommand = "",
   publishEvidencePath = "",
@@ -3248,6 +3394,7 @@ async function promoteBuildchainRefs({
   publishDistTag = "",
   publishPackageSetOrder = "",
   publishPackageMain = "",
+  expectedPublicationVersion = "",
   releasePassport = true,
   releasePassportOutputDir = ".buildchain/release-passport",
   releasePassportProductName = "Buildchain",
@@ -3611,6 +3758,42 @@ async function promoteBuildchainRefs({
         headSha: branchSha,
         allowedPaths,
       });
+      if (protectedUpdate?.reconciliationVersion && reconciliationWorkspace) {
+        const workspaceCwd = path.resolve(cwd, reconciliationWorkspace);
+        if (!fs.existsSync(workspaceCwd)) {
+          throw new Error(`Version-state reconciliation workspace does not exist: ${workspaceCwd}`);
+        }
+        const workspaceSha = execFileSync("git", ["rev-parse", "HEAD"], {
+          cwd: workspaceCwd,
+          encoding: "utf8",
+        }).trim();
+        if (workspaceSha !== currentSha) {
+          throw new Error(
+            `Version-state reconciliation workspace ${workspaceSha} does not match current ${branch} ${currentSha}`,
+          );
+        }
+        const reconciled = await createVersionStateCommit({
+          baseSha: currentSha,
+          version: protectedUpdate.reconciliationVersion,
+          message:
+            protectedUpdate?.mergeMessage ||
+            `${protectedUpdate?.title || "Apply generated version-state"}\n\n` +
+              `Buildchain regenerated version state from current ${branch} before reconciling ` +
+              `${currentSha} with ${branchSha}.`,
+          workspaceCwd,
+          parents: [currentSha, branchSha],
+        });
+        updates.push({
+          ref: branch,
+          action: "created-version-state-merge",
+          sha: reconciled.sha,
+          sourceSha: branchSha,
+          currentSha,
+          files: reconciled.files,
+          regenerated: true,
+        });
+        return reconciled.sha;
+      }
       const { data: currentCommit } = await getGitCommitWithRetry({
         octokit,
         owner,
@@ -4187,7 +4370,13 @@ async function promoteBuildchainRefs({
     );
   };
 
-  const createVersionStateCommit = async ({ baseSha, version, message }) => {
+  const createVersionStateCommit = async ({
+    baseSha,
+    version,
+    message,
+    workspaceCwd = cwd,
+    parents = [baseSha],
+  }) => {
     if (!versionState) {
       return {
         sha: baseSha,
@@ -4197,7 +4386,7 @@ async function promoteBuildchainRefs({
       };
     }
 
-    const discovered = discoverVersionStateFiles(cwd);
+    const discovered = discoverVersionStateFiles(workspaceCwd);
     if (discovered.files.length === 0) {
       if (requireVersionState) {
         throw new Error("Strict promotion requires package version state");
@@ -4219,7 +4408,7 @@ async function promoteBuildchainRefs({
 
     const discoveredPaths = discovered.files.map((file) => file.path);
     const versionStrategy = getVersionStrategy(discovered.config);
-    const anchorManifest = loadConfiguredAnchorManifest(cwd, discovered.config);
+    const anchorManifest = loadConfiguredAnchorManifest(workspaceCwd, discovered.config);
     const strategyEnv = versionVerificationEnv(versionStrategy, anchorManifest, {
       generatedAt: promotionGeneratedAt,
       sourceSha: sha,
@@ -4286,7 +4475,7 @@ async function promoteBuildchainRefs({
         repo,
         message,
         tree: nextTree.sha,
-        parents: [baseSha],
+        parents,
         author: COMMIT_IDENTITY,
         committer: COMMIT_IDENTITY,
       });
@@ -4312,7 +4501,7 @@ async function promoteBuildchainRefs({
     };
     if (manualNext) {
       runVersionVerification({
-        cwd,
+        cwd: workspaceCwd,
         command: verificationCommand,
         loadedConfig: discovered.config,
         version,
@@ -4344,7 +4533,7 @@ async function promoteBuildchainRefs({
     }
     if (changedFiles.length === 0) {
       const verifiedChangedFiles = runVersionVerification({
-        cwd,
+        cwd: workspaceCwd,
         command: verificationCommand,
         loadedConfig: discovered.config,
         version,
@@ -4403,7 +4592,7 @@ async function promoteBuildchainRefs({
     }
 
     const verifiedChangedFiles = runVersionVerification({
-      cwd,
+      cwd: workspaceCwd,
       command: verificationCommand,
       loadedConfig: discovered.config,
       version,
@@ -4438,9 +4627,11 @@ async function promoteBuildchainRefs({
     channel,
     line,
     releaseSha,
+    publishDistTagOverride = publishDistTag,
     allowVersionStateFinalization = false,
   }) => {
     const transactionVersion = version;
+    assertExpectedPublicationVersion(expectedPublicationVersion, transactionVersion);
     if (dryRun && (publishTransaction || publishCommand || getLifecycleStage(loadBuildchainConfig(cwd), "publish"))) {
       updates.push({
         action: "dry-run-publish-transaction",
@@ -4472,7 +4663,7 @@ async function promoteBuildchainRefs({
       publishToolingSha,
       publishMode,
       publishAuth,
-      publishDistTag,
+      publishDistTag: publishDistTagOverride,
       publishPackageSetOrder,
       publishPackageMain,
       actor,
@@ -4578,6 +4769,7 @@ async function promoteBuildchainRefs({
       owner,
       repo,
       targetRef,
+      sourceSha: sha,
       requiredStatusCheck,
     });
   }
@@ -4806,6 +4998,11 @@ async function promoteBuildchainRefs({
 
   if (rule.channel === "alpha") {
     const ownsMajorAlphaTag = await ownsMajorAlphaFloatingTag();
+    const alphaPublishDistTag = alphaDistTagForPromotion({
+      ownsMajorAlphaTag,
+      line: rule.releasePrefix,
+      publishDistTag,
+    });
     const explicitAlphaTags = requestedTags
       ? requestedTags.filter((tag) => tag.includes("-alpha."))
       : [];
@@ -4966,6 +5163,7 @@ async function promoteBuildchainRefs({
         channel: rule.channel,
         line: rule.releasePrefix,
         releaseSha: alpha.sha,
+        publishDistTagOverride: alphaPublishDistTag,
         allowVersionStateFinalization:
           currentAlpha &&
           selectedAlpha.tag === currentAlpha.tag &&
@@ -4996,6 +5194,7 @@ async function promoteBuildchainRefs({
         channel: rule.channel,
         line: rule.releasePrefix,
         releaseSha: alpha.sha,
+        publishDistTagOverride: alphaPublishDistTag,
       });
     }
     if (versionState) {
@@ -5341,6 +5540,7 @@ async function promoteBuildchainRefs({
         body: `Create the generated version-state commit for ${selectedNextAlpha.tag}.`,
         allowMergeCommitOnNonFastForward: true,
         allowMergeCommitOnNonFastForwardPaths: nextAlphaVersionStateFiles,
+        reconciliationVersion: nextAlphaVersion,
       });
     }
     await ensureTag(selectedNextAlpha.tag, nextAlphaSha);
@@ -5378,9 +5578,11 @@ export {
   DEFAULT_REPOSITORY,
   assertChannelPromotionPr,
   assertAllowedLocalChanges,
+  assertProviderEnforcedChannelTransaction,
   assertProtectedChannel,
   assertPromotableRepository,
   assertPromotableTargetRef,
+  ensureManagedChannelBranchProtection,
   assertSha,
   discoverVersionStateFiles,
   expectedHeadRefForTarget,
@@ -5400,6 +5602,8 @@ export {
   runVersionVerification,
   selectAlphaTag,
   selectReleaseTag,
+  assertExpectedPublicationVersion,
+  alphaDistTagForPromotion,
   stripTagPrefix,
   updateVersionStateContents,
   resolveReleaseImpactInput,

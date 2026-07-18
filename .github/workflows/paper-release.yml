@@ -142,6 +142,31 @@ on:
         default: ""
         type: string
         required: false
+      publication-admission-json:
+        description: "Fresh sealed publication admission JSON; required for non-dry-run publication"
+        default: ""
+        type: string
+        required: false
+      publication-runner-provenance-json:
+        description: "Runner provenance receipt JSON bound by the admission"
+        default: ""
+        type: string
+        required: false
+      publication-control-plane-audit-json:
+        description: "Fresh external control-plane audit receipt JSON"
+        default: ""
+        type: string
+        required: false
+      publication-expected-json:
+        description: "Independent exact publication bindings JSON"
+        default: ""
+        type: string
+        required: false
+      publication-used-nonces-json:
+        description: "JSON array of consumed admission nonces"
+        default: "[]"
+        type: string
+        required: false
       dry-run:
         description: "Plan only; do not publish or move refs"
         default: false
@@ -154,10 +179,6 @@ on:
       artifact-retention-days:
         default: 30
         type: number
-        required: false
-    secrets:
-      BUILDCHAIN_PROMOTION_TOKEN:
-        description: "Optional token used for protected generated refs and release finalization"
         required: false
     outputs:
       package-name:
@@ -175,23 +196,71 @@ on:
       github-release-url:
         description: "Created or updated GitHub Release URL"
         value: ${{ jobs.paper-release.outputs.github-release-url }}
+      controller-plan-artifact:
+        description: "Controller plan artifact name"
+        value: ${{ jobs.paper-release.outputs.controller-plan-artifact }}
+      controller-plan-json:
+        description: "Compact controller plan JSON"
+        value: ${{ jobs.paper-release.outputs.controller-plan-json }}
+      controller-plan-digest:
+        description: "Controller plan digest"
+        value: ${{ jobs.paper-release.outputs.controller-plan-digest }}
+      controller-receipt-artifact:
+        description: "Controller receipt artifact name"
+        value: ${{ jobs.paper-release.outputs.controller-receipt-artifact }}
+      controller-receipt-json:
+        description: "Compact controller receipt JSON"
+        value: ${{ jobs.paper-release.outputs.controller-receipt-json }}
+      controller-receipt-digest:
+        description: "Controller receipt digest"
+        value: ${{ jobs.paper-release.outputs.controller-receipt-digest }}
+      controller-receipt-status:
+        description: "Controller receipt status"
+        value: ${{ jobs.paper-release.outputs.controller-receipt-status }}
 
 permissions:
-  checks: write
-  contents: write
-  id-token: write
-  issues: write
+  contents: read
 
 jobs:
+  publication-authority:
+    name: Seal paper publication capability
+    permissions:
+      actions: read
+      contents: read
+    uses: ./.github/workflows/.publication-authority.yml
+    with:
+      buildchain-repository: ${{ inputs.buildchain-repository }}
+      buildchain-ref: ${{ inputs.buildchain-ref || 'v2' }}
+      admission-json: ${{ inputs.publication-admission-json }}
+      runner-provenance-json: ${{ inputs.publication-runner-provenance-json }}
+      control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
+      expected-json: ${{ inputs.publication-expected-json }}
+      used-nonces-json: ${{ inputs.publication-used-nonces-json }}
+      dry-run: ${{ inputs.dry-run }}
+
   paper-release:
     name: Build and publish paper package
+    needs: publication-authority
+    if: ${{ needs.publication-authority.result == 'success' }}
     runs-on: ubuntu-24.04
+    permissions:
+      checks: write
+      contents: write
+      id-token: write
+      issues: write
     outputs:
       package-name: ${{ steps.package.outputs.package-name }}
       package-version: ${{ steps.package.outputs.package-version }}
       public-release-tag: ${{ steps.promote.outputs.public-release-tag }}
       release-passport-path: ${{ steps.promote.outputs.release-passport-path }}
       github-release-url: ${{ steps.promote.outputs.github-release-url }}
+      controller-plan-artifact: buildchain-paper-release-controller-plan-${{ steps.controller-identities.outputs.source-sha }}
+      controller-plan-json: ${{ steps.controller-plan.outputs.controller-plan-json }}
+      controller-plan-digest: ${{ steps.controller-plan.outputs.controller-plan-digest }}
+      controller-receipt-artifact: buildchain-paper-release-controller-receipt-${{ steps.controller-identities.outputs.source-sha }}
+      controller-receipt-json: ${{ steps.controller-receipt.outputs.controller-receipt-json }}
+      controller-receipt-digest: ${{ steps.controller-receipt.outputs.controller-receipt-digest }}
+      controller-receipt-status: ${{ steps.controller-receipt.outputs.controller-receipt-status }}
     steps:
       - name: Resolve Buildchain runtime
         id: runtime
@@ -211,8 +280,10 @@ jobs:
             const exactSha = /^[0-9a-f]{40}$/i;
             const trainRef = /^train\/v\d+\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
             const officialChannelRef = /^v\d+(?:\.\d+)?(?:-alpha)?$/;
+            const pullRequestMergeRef = /^refs\/pull\/\d+\/merge$/;
             const workflowRef = process.env.BUILDCHAIN_WORKFLOW_REF || process.env.GITHUB_WORKFLOW_REF || "";
-            const shellRef = (workflowRef.startsWith(`${repository}/.github/workflows/`)
+            const sameRepositoryWorkflow = workflowRef.startsWith(`${repository}/.github/workflows/`);
+            const shellRef = (sameRepositoryWorkflow
               ? (workflowRef.split("@").pop() || defaultRef).trim() || defaultRef
               : defaultRef).replace(/^refs\/(?:heads|tags)\//, "");
             const normalizeClass = (ref) => {
@@ -262,6 +333,13 @@ jobs:
             }
             async function resolveRef(ref) {
               if (exactSha.test(ref)) return ref;
+              if (sameRepositoryWorkflow && pullRequestMergeRef.test(ref)) {
+                const workflowSha = String(context.sha || "");
+                if (!exactSha.test(workflowSha)) {
+                  throw new Error(`current workflow SHA is invalid for Buildchain pull request merge ref: ${ref}`);
+                }
+                return workflowSha;
+              }
               const normalized = ref.replace(/^refs\/heads\//, "").replace(/^refs\/tags\//, "");
               const candidates = ref.startsWith("refs/")
                 ? [ref.replace(/^refs\//, "")]
@@ -287,17 +365,53 @@ jobs:
             core.setOutput("rollback-ref", shellRef);
 
       - name: Checkout source
+        id: source
         uses: actions/checkout@v7.0.0
         with:
           clean: true
 
       - name: Checkout Buildchain runtime
+        id: runtime-checkout
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
           ref: ${{ steps.runtime.outputs.runtime-sha }}
           path: .buildchain/runtime
           persist-credentials: false
+
+      - name: Resolve controller identities
+        id: controller-identities
+        shell: bash
+        run: |
+          source_sha="$(git rev-parse HEAD)"
+          runtime_sha="$(git -C .buildchain/runtime rev-parse HEAD)"
+          contract_digest="$(node -e 'const fs=require("fs"); const value=JSON.parse(fs.readFileSync(".buildchain/runtime/dist/site/buildchain-contract.json","utf8")); process.stdout.write(value.contractDigest)')"
+          {
+            echo "source-sha=${source_sha}"
+            echo "runtime-sha=${runtime_sha}"
+            echo "contract-digest=${contract_digest}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create paper-release controller plan
+        id: controller-plan
+        run: node .buildchain/runtime/scripts/controller-evidence.mjs --mode plan
+        env:
+          BUILDCHAIN_CONTROLLER_ID: paper-release
+          BUILDCHAIN_CONTROLLER_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_CONTROLLER_SOURCE_SHA: ${{ steps.controller-identities.outputs.source-sha }}
+          BUILDCHAIN_CONTROLLER_RUNTIME_REF: ${{ steps.runtime.outputs.runtime-ref }}
+          BUILDCHAIN_CONTROLLER_RUNTIME_SHA: ${{ steps.controller-identities.outputs.runtime-sha }}
+          BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST: ${{ steps.controller-identities.outputs.contract-digest }}
+          BUILDCHAIN_CONTROLLER_INPUTS_JSON: ${{ toJSON(inputs) }}
+          BUILDCHAIN_CONTROLLER_INPUT_BOUNDARY: workflow-call
+          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+
+      - name: Upload paper-release controller plan
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-paper-release-controller-plan-${{ steps.controller-identities.outputs.source-sha }}
+          path: .buildchain/controller/plan.json
+          if-no-files-found: error
 
       - name: Check Buildchain contract lock
         id: contract-lock
@@ -318,7 +432,7 @@ jobs:
         env:
           TARGET_REF: ${{ inputs.target-ref || github.ref_name }}
         with:
-          github-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+          github-token: ${{ github.token }}
           script: |
             const targetRef = (process.env.TARGET_REF || "").trim();
             if (!/^(alpha|release)\/v\d+\/v\d+\.\d+$/.test(targetRef)) {
@@ -333,7 +447,7 @@ jobs:
             } catch (error) {
               if (error.status === 403 || error.status === 404) {
                 throw new Error(
-                  `Buildchain promotion authority cannot read branch protection before publication build for ${targetRef}; map a caller-chosen release authority secret to BUILDCHAIN_PROMOTION_TOKEN`,
+                  `Buildchain promotion authority cannot read branch protection before publication build for ${targetRef}`,
                 );
               }
               throw error;
@@ -410,6 +524,7 @@ jobs:
           NODE
 
       - name: Build publication
+        id: build
         if: ${{ steps.toolchain.outputs.command != '' }}
         shell: bash
         working-directory: ${{ inputs.working-directory }}
@@ -440,12 +555,14 @@ jobs:
           fi
 
       - name: Verify publication
+        id: verify
         if: ${{ inputs.verify-command != '' }}
         shell: bash
         working-directory: ${{ inputs.working-directory }}
         run: ${{ inputs.verify-command }}
 
       - name: Hydrate cumulative publication registry
+        id: hydrate
         shell: bash
         working-directory: ${{ inputs.working-directory }}
         run: >-
@@ -562,12 +679,25 @@ jobs:
             const marker = `EOF_${name}_${Date.now()}`;
             fs.appendFileSync(output, `${name}<<${marker}\n${JSON.stringify(value)}\n${marker}\n`);
           };
+          const writeMultiline = (name, values) => {
+            const marker = `EOF_${name}_${Date.now()}`;
+            fs.appendFileSync(output, `${name}<<${marker}\n${values.join("\n")}\n${marker}\n`);
+          };
+          const publicationManifest = JSON.parse(fs.readFileSync(
+            path.join(process.cwd(), ".buildchain/publication/publication-artifact.json"),
+            "utf8",
+          ));
+          const releaseArtifactPaths = [...new Set((publicationManifest.artifacts || [])
+            .map((artifact) => artifact.path)
+            .filter(Boolean))]
+            .map((artifactPath) => path.resolve(process.cwd(), artifactPath));
           write("package-dir", result.outputDir);
           write("package-name", result.package.name);
           write("package-version", result.package.version);
           write("dist-tag", distTag);
           write("exact-tag", `v${result.package.version}`);
           writeJson("publish-required-artifacts-json", requiredArtifacts);
+          writeMultiline("github-release-artifact-paths", releaseArtifactPaths);
           NODE
 
       - name: Resolve target
@@ -624,6 +754,7 @@ jobs:
             core.setOutput("locked", "true");
 
       - name: Upload publication release evidence
+        id: evidence-upload
         uses: actions/upload-artifact@v6.0.0
         with:
           name: ${{ inputs.artifact-name }}-${{ steps.package.outputs.package-version }}-${{ github.sha }}
@@ -639,7 +770,7 @@ jobs:
         id: promote
         uses: ./.buildchain/runtime/actions/promote-buildchain-ref
         with:
-          token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+          token: ${{ github.token }}
           sha: ${{ steps.target.outputs.sha }}
           target-ref: ${{ steps.target.outputs.ref }}
           tags: ${{ steps.package.outputs.exact-tag }}
@@ -648,7 +779,7 @@ jobs:
           require-version-state: "false"
           required-status-check: ${{ inputs.required-status-check }}
           generated-status-check-token: ${{ github.token }}
-          generated-ref-update-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+          generated-ref-update-token: ${{ github.token }}
           branch-protection-bypass-apps: ${{ inputs.branch-protection-bypass-apps }}
           branch-protection-bypass-users: ${{ inputs.branch-protection-bypass-users }}
           branch-protection-bypass-teams: ${{ inputs.branch-protection-bypass-teams }}
@@ -674,5 +805,34 @@ jobs:
           release-passport-platform-manifest-paths: ${{ inputs.working-directory }}/.buildchain/publication/publication-artifact.json
           release-passport-impact-json: ${{ inputs.release-passport-impact-json }}
           github-release: ${{ inputs.github-release }}
+          github-release-artifact-paths: ${{ steps.package.outputs.github-release-artifact-paths }}
           github-release-title: ${{ inputs.github-release-title }}
           github-release-notes: ${{ inputs.github-release-notes }}
+
+      - name: Create paper-release controller receipt
+        id: controller-receipt
+        if: ${{ always() && steps.controller-plan.outcome == 'success' }}
+        run: node .buildchain/runtime/scripts/controller-evidence.mjs --mode receipt
+        env:
+          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+          BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
+            [{"id":"resolve-runtime","status":"${{ steps.runtime.outcome == 'success' && steps.runtime-checkout.outcome == 'success' && steps.controller-identities.outcome == 'success' && 'success' || 'failure' }}"},{"id":"build","status":"${{ steps.build.outcome }}"},{"id":"verify","status":"${{ steps.verify.outcome }}"},{"id":"collect","status":"${{ (steps.hydrate.outcome == 'failure' || steps.manifest.outcome == 'failure' || steps.package.outcome == 'failure' || steps.evidence-upload.outcome == 'failure') && 'failure' || (steps.manifest.outcome == 'success' && steps.package.outcome == 'success' && steps.evidence-upload.outcome == 'success') && 'success' || 'skipped' }}"},{"id":"publication-authority","status":"${{ inputs.dry-run && 'skipped' || needs.publication-authority.result }}"},{"id":"publish","status":"${{ inputs.dry-run && 'skipped' || steps.promote.outcome }}"},{"id":"passport","status":"${{ inputs.dry-run && 'skipped' || steps.promote.outcome }}"},{"id":"aggregate","status":"${{ steps.promote.outcome }}"}]
+          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ steps.promote.outcome == 'success' && !inputs.dry-run && format('[{{"kind":"publication-manifest","path":"{0}/.buildchain/publication/publication-artifact.json"}},{{"kind":"release-passport","path":"{1}"}}]', inputs.working-directory, steps.promote.outputs.release-passport-path) || steps.manifest.outcome == 'success' && format('[{{"kind":"publication-manifest","path":"{0}/.buildchain/publication/publication-artifact.json"}}]', inputs.working-directory) || '[]' }}
+          BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ inputs.dry-run && 'paper-release-dry-run' || steps.promote.outcome == 'success' && '' || 'paper-release-incomplete' }}
+          BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Paper release did not complete successfully
+          BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: buildchain-paper-release-controller-receipt-${{ steps.controller-identities.outputs.source-sha }}
+          BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/receipt.json
+
+      - name: Upload paper-release controller receipt
+        if: ${{ always() && steps.controller-receipt.outcome == 'success' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-paper-release-controller-receipt-${{ steps.controller-identities.outputs.source-sha }}
+          path: .buildchain/controller/receipt.json
+          if-no-files-found: error
+
+      - name: Enforce qualifying paper-release controller receipt
+        if: ${{ always() && !inputs.dry-run && steps.controller-plan.outcome == 'success' && steps.controller-receipt.outputs.controller-receipt-qualifying != 'true' }}
+        run: |
+          echo "::error::paper-release controller receipt is not qualifying: ${{ steps.controller-receipt.outputs.controller-receipt-status }}"
+          exit 1

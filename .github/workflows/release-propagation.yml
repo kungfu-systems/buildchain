@@ -67,6 +67,28 @@ on:
       propagation-token:
         description: "Token with contents:write and pull-requests:write on the downstream repository"
         required: false
+    outputs:
+      controller-plan-artifact:
+        description: "Controller plan artifact name"
+        value: ${{ jobs.propagate.outputs.controller-plan-artifact }}
+      controller-plan-json:
+        description: "Compact controller plan JSON"
+        value: ${{ jobs.propagate.outputs.controller-plan-json }}
+      controller-plan-digest:
+        description: "Controller plan digest"
+        value: ${{ jobs.propagate.outputs.controller-plan-digest }}
+      controller-receipt-artifact:
+        description: "Controller receipt artifact name"
+        value: ${{ jobs.propagate.outputs.controller-receipt-artifact }}
+      controller-receipt-json:
+        description: "Compact controller receipt JSON"
+        value: ${{ jobs.propagate.outputs.controller-receipt-json }}
+      controller-receipt-digest:
+        description: "Controller receipt digest"
+        value: ${{ jobs.propagate.outputs.controller-receipt-digest }}
+      controller-receipt-status:
+        description: "Controller receipt status"
+        value: ${{ jobs.propagate.outputs.controller-receipt-status }}
 
 permissions:
   contents: write
@@ -76,14 +98,55 @@ jobs:
   propagate:
     name: Create downstream release propagation PR
     runs-on: ubuntu-24.04
+    outputs:
+      controller-plan-artifact: buildchain-release-propagation-controller-plan-${{ github.sha }}
+      controller-plan-json: ${{ steps.controller-plan.outputs.controller-plan-json }}
+      controller-plan-digest: ${{ steps.controller-plan.outputs.controller-plan-digest }}
+      controller-receipt-artifact: buildchain-release-propagation-controller-receipt-${{ github.sha }}
+      controller-receipt-json: ${{ steps.controller-receipt.outputs.controller-receipt-json }}
+      controller-receipt-digest: ${{ steps.controller-receipt.outputs.controller-receipt-digest }}
+      controller-receipt-status: ${{ steps.controller-receipt.outputs.controller-receipt-status }}
     steps:
       - name: Checkout Buildchain runtime
+        id: runtime
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
           ref: ${{ inputs.buildchain-ref || 'v2' }}
           path: .buildchain/runtime
           persist-credentials: false
+
+      - name: Resolve controller identities
+        id: controller-identities
+        shell: bash
+        run: |
+          runtime_sha="$(git -C .buildchain/runtime rev-parse HEAD)"
+          contract_digest="$(node -e 'const fs=require("fs"); const value=JSON.parse(fs.readFileSync(".buildchain/runtime/dist/site/buildchain-contract.json","utf8")); process.stdout.write(value.contractDigest)')"
+          {
+            echo "runtime-sha=${runtime_sha}"
+            echo "contract-digest=${contract_digest}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create release-propagation controller plan
+        id: controller-plan
+        run: node .buildchain/runtime/scripts/controller-evidence.mjs --mode plan
+        env:
+          BUILDCHAIN_CONTROLLER_ID: release-propagation
+          BUILDCHAIN_CONTROLLER_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_CONTROLLER_SOURCE_SHA: ${{ github.sha }}
+          BUILDCHAIN_CONTROLLER_RUNTIME_REF: ${{ inputs.buildchain-ref || 'v2' }}
+          BUILDCHAIN_CONTROLLER_RUNTIME_SHA: ${{ steps.controller-identities.outputs.runtime-sha }}
+          BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST: ${{ steps.controller-identities.outputs.contract-digest }}
+          BUILDCHAIN_CONTROLLER_INPUTS_JSON: ${{ toJSON(inputs) }}
+          BUILDCHAIN_CONTROLLER_INPUT_BOUNDARY: workflow-call
+          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+
+      - name: Upload release-propagation controller plan
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-release-propagation-controller-plan-${{ github.sha }}
+          path: .buildchain/controller/plan.json
+          if-no-files-found: error
 
       - name: Setup Node
         uses: actions/setup-node@v6.4.0
@@ -157,6 +220,7 @@ jobs:
           NODE
 
       - name: Summarize release propagation
+        id: summarize
         shell: bash
         run: |
           {
@@ -170,6 +234,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Create or update downstream PR
+        id: open-pr
         if: ${{ !inputs.dry-run }}
         shell: bash
         working-directory: downstream
@@ -212,7 +277,36 @@ jobs:
             --body-file ../.buildchain/release-propagation/pr-body.md
 
       - name: Upload propagation plan
+        id: propagation-upload
         uses: actions/upload-artifact@v4
         with:
           name: buildchain-release-propagation-plan
           path: .buildchain/release-propagation/*
+
+      - name: Create release-propagation controller receipt
+        id: controller-receipt
+        if: ${{ always() && steps.controller-plan.outcome == 'success' }}
+        run: node .buildchain/runtime/scripts/controller-evidence.mjs --mode receipt
+        env:
+          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+          BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
+            [{"id":"resolve-runtime","status":"${{ steps.runtime.outcome == 'success' && steps.controller-identities.outcome == 'success' && 'success' || steps.runtime.outcome == 'failure' && 'failure' || steps.controller-identities.outcome }}"},{"id":"plan","status":"${{ steps.plan.outcome }}"},{"id":"write-lock","status":"${{ steps.lock.outcome }}"},{"id":"open-pr","status":"${{ steps.open-pr.outcome }}"},{"id":"aggregate","status":"${{ (steps.summarize.outcome == 'failure' || steps.propagation-upload.outcome == 'failure') && 'failure' || (steps.summarize.outcome == 'success' && steps.propagation-upload.outcome == 'success') && 'success' || 'skipped' }}"}]
+          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ steps.plan.outcome == 'success' && steps.lock.outcome == 'success' && '[{"kind":"propagation-plan","path":".buildchain/release-propagation/plan.json"},{"kind":"propagation-lock","path":".buildchain/release-propagation/write-lock.json"}]' || '[]' }}
+          BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ steps.plan.outcome == 'success' && steps.lock.outcome == 'success' && '' || 'propagation-incomplete' }}
+          BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Release propagation did not complete successfully
+          BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: buildchain-release-propagation-controller-receipt-${{ github.sha }}
+          BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/receipt.json
+
+      - name: Upload release-propagation controller receipt
+        if: ${{ always() && steps.controller-receipt.outcome == 'success' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-release-propagation-controller-receipt-${{ github.sha }}
+          path: .buildchain/controller/receipt.json
+          if-no-files-found: error
+
+      - name: Enforce qualifying release-propagation controller receipt
+        if: ${{ always() && steps.controller-plan.outcome == 'success' && steps.controller-receipt.outputs.controller-receipt-qualifying != 'true' }}
+        run: |
+          echo "::error::release-propagation controller receipt is not qualifying: ${{ steps.controller-receipt.outputs.controller-receipt-status }}"
+          exit 1

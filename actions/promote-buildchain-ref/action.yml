@@ -26,6 +26,9 @@ inputs:
   verification-command:
     description: "Command to run against each generated version-state tree before refs move"
     default: ""
+  reconciliation-workspace:
+    description: "Optional checkout of the current development branch used to regenerate version state before reconciling a divergent post-release dev ref"
+    default: ""
   required-status-check:
     description: "Exact status check context required by protected channel branches"
     default: "check / check"
@@ -60,7 +63,7 @@ inputs:
     description: "Path to release transaction state JSON. Defaults to .buildchain/release-state/<tag>.json"
     default: ""
   publish-required-artifacts-json:
-    description: "JSON array of required artifacts whose evidence must exist before refs move"
+    description: "JSON array of required artifacts whose post-publish evidence must exist before refs move; digest and ref may be omitted, or ref_template may contain one {version} placeholder"
     default: ""
   publish-mode:
     description: "Publish mode: publish-final-version or promote-existing-version"
@@ -76,6 +79,9 @@ inputs:
     default: ""
   publish-package-main:
     description: "Main npm package name for package-set visibility gating"
+    default: ""
+  expected-publication-version:
+    description: "Exact publication version sealed by the pre-publication authority plan; promotion fails if transaction selection drifts"
     default: ""
   require-publish-source-lock:
     description: "Require publish side effects to come from a resolved publish-gate source lock"
@@ -96,7 +102,7 @@ inputs:
     description: "Publish tooling SHA used for controlled repair. Defaults to the generated release SHA."
     default: ""
   publish-transaction-override:
-    description: "Explicitly allow recovery from repair_required, abandoned, or failed_permanently transaction states"
+    description: "Explicitly allow controlled recovery from terminal transaction states or replacement of an unpublished stale transaction with the same version, tag, target, and channel"
     default: "false"
   release-passport:
     description: "Generate and persist the unified buildchain-release-passport after publish transaction completion"
@@ -140,6 +146,9 @@ inputs:
   github-release:
     description: "Create/update the public GitHub Release and upload publish evidence plus release passport assets after a complete release transaction"
     default: "false"
+  github-release-artifact-paths:
+    description: "Newline-separated declared product artifact paths to upload alongside GitHub Release evidence"
+    default: ""
   github-release-title:
     description: "Optional GitHub Release title. Empty defaults to the public release tag."
     default: ""
@@ -159,6 +168,8 @@ inputs:
     description: "Optional expected product version recorded in the release-candidate passport"
     default: ""
 outputs:
+  failure-message:
+    description: "Single-line promotion failure passed to workflow-friction reporting"
   sha:
     description: "Final promoted release or alpha commit SHA"
   tags:
@@ -171,6 +182,10 @@ outputs:
     description: "Final release transaction state"
   transaction-exact-tag:
     description: "Exact release or prerelease tag governed by the transaction"
+  planned-publication-version:
+    description: "Exact version selected during a dry-run publication plan"
+  planned-publication-exact-tag:
+    description: "Exact tag selected during a dry-run publication plan"
   public-release-tag:
     description: "Public GitHub Release tag; anchored package publishes use v<publishedVersion> while transaction-exact-tag remains internal"
   transaction-release-sha:

@@ -15,7 +15,7 @@
       "maturity": "stable",
       "counts": {
         "manualCount": 3,
-        "pageCount": 6,
+        "pageCount": 7,
         "cliCommandCount": 5,
         "nodeApiCount": 0,
         "workflowCount": 0,
@@ -47,15 +47,16 @@
       ],
       "maturity": "stable",
       "counts": {
-        "manualCount": 3,
-        "pageCount": 3,
-        "cliCommandCount": 16,
-        "nodeApiCount": 2,
+        "manualCount": 4,
+        "pageCount": 4,
+        "cliCommandCount": 19,
+        "nodeApiCount": 5,
         "workflowCount": 2,
         "actionCount": 1
       },
       "manuals": [
         "docs/release-passport.md",
+        "docs/publication-authority.md",
         "docs/binary-distribution.md",
         "docs/publish-transaction.md"
       ],
@@ -80,14 +81,15 @@
       ],
       "maturity": "stable",
       "counts": {
-        "manualCount": 3,
-        "pageCount": 15,
+        "manualCount": 4,
+        "pageCount": 16,
         "cliCommandCount": 4,
-        "nodeApiCount": 3,
+        "nodeApiCount": 4,
         "workflowCount": 4,
         "actionCount": 2
       },
       "manuals": [
+        "docs/controller-evidence.md",
         "docs/release-candidate.md",
         "docs/lifecycle-protocol.md",
         "docs/reusable-build-surface.md"
@@ -285,7 +287,7 @@
         "pageCount": 6,
         "cliCommandCount": 0,
         "nodeApiCount": 2,
-        "workflowCount": 25,
+        "workflowCount": 30,
         "actionCount": 0
       },
       "manuals": [

@@ -162,6 +162,11 @@ Buildchain then:
 7. Moves `vX.Y-alpha` to the same generated alpha commit.
 8. Moves `vX-alpha` only when `X.Y` is the highest minor in major `X` with a published alpha; older minor alpha work records a skip and cannot move the major channel backwards.
 
+The npm channel follows the same ownership rule. The highest alpha minor publishes
+with dist-tag `alpha`; maintenance alphas on an older minor publish with the
+line-specific dist-tag `vX.Y-alpha` so they cannot roll the global `alpha`
+channel backward. Exact prerelease versions remain installable directly.
+
 This keeps the test channel self-describing. If a consumer checks out
 `v2.0-alpha` or `v2-alpha`, the manifests and exact alpha tag agree. The major
 alpha ref removes routine consumer edits when Buildchain opens a newer minor,
@@ -570,6 +575,14 @@ reuses a same-repository `buildchain/version-state/*` PR based on the current
 target channel head and records `finalization-needed=true` in the durable
 transaction output. Strict alpha bookkeeping still fails with a
 token/protection diagnostic instead of creating a post-publish PR.
+
+For a stable release, the wrapper also checks out the exact current development
+channel into `.buildchain/reconciliation/dev`. When the prepared next-alpha
+commit cannot fast-forward dev because reviewed work landed concurrently, the
+promotion action applies the next version to that checkout, regenerates every
+declared derived version-state file, reruns the verification lifecycle, and
+only then creates the two-parent reconciliation commit. A checkout/current-ref
+SHA mismatch blocks reconciliation instead of committing stale projections.
 Buildchain's own promotion workflow reads `BUILDCHAIN_PROMOTION_BYPASS_APPS`,
 `BUILDCHAIN_PROMOTION_BYPASS_USERS`, and
 `BUILDCHAIN_PROMOTION_BYPASS_TEAMS` repository variables so the declared bypass
@@ -619,7 +632,9 @@ passes `require-publish-source-lock`, `publish-source-ref`,
 `promote-buildchain-ref`. Direct action callers must pass the same four inputs
 from the reusable build outputs. Workflows that only collect passports or run
 dry-run package checks do not move publish refs and are not publish-gate
-publication models.
+publication models. A dry-run of `release-candidate-promote.yml` computes and
+reports the exact `publish-gate/*` source lock that a real promotion would use,
+but does not read, create, or move that ref.
 
 Semver GitHub Release publication is owned by `promote-buildchain-ref`, not by
 consumer shell glue. Consumers normally use the `release-candidate-promote.yml`

@@ -27,8 +27,8 @@ workflow, action, and Node API export also carries a `capabilityGroup`,
 | Capability group | Primary facts | Primary manuals |
 | --- | --- | --- |
 | Getting Started | `capability-registry.json`, `product-mechanism.json` | [`install.md`](install.md), [`product-mechanism.md`](product-mechanism.md), [`cli.md`](cli.md) |
-| Release Passport and Trust | `release-model.json`, `artifact-schemas.json`, `kfd-claims.json` | [`release-passport.md`](release-passport.md), [`release-candidate.md`](release-candidate.md), [`publish-transaction.md`](publish-transaction.md), [`binary-distribution.md`](binary-distribution.md) |
-| Reusable Build and Lifecycle | `workflow-registry.json`, `release-model.json` | [`reusable-build-surface.md`](reusable-build-surface.md), [`lifecycle-protocol.md`](lifecycle-protocol.md) |
+| Release Passport and Trust | `release-model.json`, `artifact-schemas.json`, `publication-authority-registry.json`, `kfd-claims.json` | [`release-passport.md`](release-passport.md), [`publication-authority.md`](publication-authority.md), [`release-candidate.md`](release-candidate.md), [`publish-transaction.md`](publish-transaction.md), [`binary-distribution.md`](binary-distribution.md) |
+| Reusable Build and Lifecycle | `workflow-registry.json`, `controller-registry.json`, `release-model.json` | [`reusable-build-surface.md`](reusable-build-surface.md), [`controller-evidence.md`](controller-evidence.md), [`shifu-gate-profiles.md`](shifu-gate-profiles.md), [`lifecycle-protocol.md`](lifecycle-protocol.md) |
 | KFD Trust and Surface Closure | `kfd-claims.json`, `public-surface-audit.json`, `cli-registry.json`, `node-api-registry.json` | [`kfd-support.md`](kfd-support.md), [`release-passport.md`](release-passport.md) |
 | Site Bundle, Web Surfaces, and Propagation | `buildchain-site.json`, `site-manifest.json`, `page-registry.json`, `release-model.json` | [`site-bundle-contract.md`](site-bundle-contract.md), [`web-surface-deployments.md`](web-surface-deployments.md), [`release-propagation.md`](release-propagation.md) |
 | Publication Artifacts | `publication-registry.json`, `workflow-registry.json`, `node-api-registry.json`, `manual-registry.json`, `kungfu-buildchain-publication-artifact-registry` | [`publication-artifacts.md`](publication-artifacts.md), [`reusable-build-surface.md`](reusable-build-surface.md) |
@@ -81,12 +81,14 @@ replace them.
 | How does publish evidence, recovery, and finalization work? | [`publish-transaction.md`](publish-transaction.md) | verify | stable |
 | How do I collect and verify module/product build facts from Git source, version files, and outputs? | [`build-facts.md`](build-facts.md) + [`cli.md`](cli.md) | use/verify | stable |
 | How do I publish or verify release passport artifacts? | [`release-passport.md`](release-passport.md) | use | stable |
+| How is product publication authority sealed to an exact workflow, runner, control plane, nonce, and artifact? | [`publication-authority.md`](publication-authority.md) | verify | preview |
 | How do I gate release artifacts with KFD-1 contract-world witnesses? | [`release-passport.md`](release-passport.md#kfd-1-contract-world-release-gate) | verify/use | stable |
 | How do I declare, render, and audit product KFD-2 release trust claims? | [`kfd-support.md`](kfd-support.md#kfd-2) + [`release-passport.md`](release-passport.md#kfd-2-release-trust-passport-audit) + [`cli.md`](cli.md) | verify/use | stable |
 | How do I gate KFD-3 collaboration-interface releases? | [`release-passport.md`](release-passport.md#kfd-3-collaboration-interface-release-gate) + [`cli.md`](cli.md) | verify/use | stable |
 | How do I gate KFD-7 engineering-contract Profile releases? | [`release-passport.md`](release-passport.md#kfd-7-engineering-contract-release-gate) + [`kfd-support.md`](kfd-support.md#kfd-7) + [`cli.md`](cli.md) | verify/use | stable |
 | How do I detect, register, audit, witness, or query KFD-3 product surfaces? | [`kfd-support.md`](kfd-support.md) + [`cli.md`](cli.md) | verify/use | stable |
 | How do I keep `@v2` floating refs while detecting Buildchain contract drift? | [`reusable-build-surface.md`](reusable-build-surface.md#floating-ref-contract-lock) | verify/use | stable |
+| How do reusable workflows bind controller intent, source/runtime identity, outcomes, and receipt evidence? | [`controller-evidence.md`](controller-evidence.md) | verify/use | draft |
 | How do I propagate finalized upstream releases to downstream package/site PRs? | [`release-propagation.md`](release-propagation.md) | use | preview |
 | How do paper or report repositories publish PDFs, metadata, source bundles, site-consumable manifests, npm packages, and GitHub Releases? | [`publication-artifacts.md`](publication-artifacts.md) | use | stable |
 | How do I generate KFD / Release Passport badge bundles without hand-maintaining Markdown? | [`readme-badges.md`](readme-badges.md) + [`cli.md`](cli.md) | use | stable |
@@ -96,6 +98,7 @@ replace them.
 | How do I add timestamped logs inside build scripts? | [`toolkit-observability.md`](toolkit-observability.md) | use | stable |
 | What package-owned facts should buildchain.libkungfu.dev render? | [`site-bundle-contract.md`](site-bundle-contract.md) | use | stable |
 | How do I call the reusable build workflow? | [`reusable-build-surface.md`](reusable-build-surface.md) | use | stable |
+| How does Buildchain schedule and aggregate a project-owned Shifu Gate profile? | [`shifu-gate-profiles.md`](shifu-gate-profiles.md) | use/verify | draft |
 | How do I use one build job that follows alpha during development and stable for releases? | [`reusable-build-surface.md`](reusable-build-surface.md#automatic-channel-router) | use | preview |
 | How do self-hosted runners relay large artifacts through S3 before GitHub artifacts? | [`reusable-build-surface.md`](reusable-build-surface.md#artifact-transfer-relay) | use | stable |
 | How do self-hosted runners reuse local Git checkout caches without weakening source locks? | [`reusable-build-surface.md`](reusable-build-surface.md#locked-source-checkout-cache) | use | stable |
