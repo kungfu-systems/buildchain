@@ -3,7 +3,15 @@ export {
   BUILDCHAIN_KFD7_PROFILE_ID,
   BUILDCHAIN_KFD7_PROFILE_SCHEMA,
   BUILDCHAIN_KFD7_ROLES,
+  BUILDCHAIN_KFD7_SESSION_COMPRESSIBILITY_SCHEMA,
+  BUILDCHAIN_KFD7_SESSION_EXPANSION_SCHEMA,
+  BUILDCHAIN_KFD7_SESSION_SCHEMA,
+  buildchainKfd7SessionCompressibility,
+  buildchainKfd7SessionValidActions,
   createBuildchainKfd7ProfileSnapshot,
+  createBuildchainKfd7ReleaseSession,
+  expandBuildchainKfd7ReleaseSession,
+  projectBuildchainKfd7ReleaseSession,
   validateBuildchainKfd7ProfileSnapshot,
 } from "./kfd7-buildchain-profile.js";
 

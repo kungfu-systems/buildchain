@@ -16,6 +16,12 @@ export const BUILDCHAIN_KFD7_PROFILE_SCHEMA =
   "buildchain.kfd7.release-profile/v1";
 export const BUILDCHAIN_KFD7_PROFILE_ID =
   "buildchain-release-transaction-profile";
+export const BUILDCHAIN_KFD7_SESSION_SCHEMA =
+  "buildchain.kfd7.release-session/v1";
+export const BUILDCHAIN_KFD7_SESSION_EXPANSION_SCHEMA =
+  "buildchain.kfd7.release-session-expansion/v1";
+export const BUILDCHAIN_KFD7_SESSION_COMPRESSIBILITY_SCHEMA =
+  "buildchain.kfd7.release-session-compressibility/v1";
 export const BUILDCHAIN_KFD7_ROLES = Object.freeze([
   "fact",
   "episode",
@@ -278,4 +284,210 @@ export function createBuildchainKfd7ProfileSnapshot({
     snapshotRoot: digest(snapshot),
     candidateDigest: `sha256:${sha256Json(candidatePassport)}`,
   };
+}
+
+function validateSessionComponent(session, field, identityField) {
+  const component = session?.[field];
+  if (!component || typeof component !== "object" || Array.isArray(component))
+    throw new Error(`${field}-missing`);
+  if (!String(component[identityField] || "").trim())
+    throw new Error(`${field}-${identityField}-missing`);
+  return component;
+}
+
+function validateReleaseSession(session) {
+  if (session?.schema !== BUILDCHAIN_KFD7_SESSION_SCHEMA)
+    throw new Error("release-session-schema-mismatch");
+  if (!String(session.sessionId || "").trim())
+    throw new Error("release-session-id-missing");
+  const components = {
+    pursuit: validateSessionComponent(session, "goal", "pursuitId"),
+    atlas: validateSessionComponent(session, "context", "atlasId"),
+    warrant: validateSessionComponent(session, "permissions", "warrantId"),
+    episode: validateSessionComponent(session, "run", "episodeId"),
+    fact: validateSessionComponent(session, "facts", "factId"),
+  };
+  const identities = [
+    components.fact.factId,
+    components.episode.episodeId,
+    components.pursuit.pursuitId,
+    components.atlas.atlasId,
+    components.warrant.warrantId,
+  ];
+  if (new Set(identities).size !== identities.length)
+    throw new Error("release-session-role-identity-fusion");
+  for (const [field, value] of [
+    ["goal.operations", components.pursuit.operations],
+    ["permissions.allowedOperations", components.warrant.allowedOperations],
+  ]) {
+    if (
+      !Array.isArray(value) ||
+      value.length === 0 ||
+      value.some((item) => !String(item || "").trim())
+    )
+      throw new Error(`${field}-invalid`);
+  }
+  return components;
+}
+
+export function createBuildchainKfd7ReleaseSession(input = {}) {
+  const snapshot = createBuildchainKfd7ProfileSnapshot(input);
+  if (snapshot.status === "denied") return snapshot;
+  const { transaction, candidatePassport, publicationAdmission, observedAt } =
+    input;
+  const session = {
+    schema: BUILDCHAIN_KFD7_SESSION_SCHEMA,
+    sessionId: `release-session:${transaction.id}`,
+    goal: {
+      pursuitId: snapshot.roles.pursuit.identity,
+      ...snapshot.roles.pursuit.authority,
+      state: snapshot.roles.pursuit.state,
+      operations: ["publish-release"],
+      alternatives: [],
+    },
+    context: {
+      atlasId: snapshot.roles.atlas.identity,
+      ...snapshot.roles.atlas.authority,
+      state: snapshot.roles.atlas.state,
+      observedAt,
+      views: [candidatePassport.candidateHash],
+    },
+    permissions: {
+      warrantId: snapshot.roles.warrant.identity,
+      ...snapshot.roles.warrant.authority,
+      state: snapshot.roles.warrant.state,
+      allowedOperations: ["publish-release"],
+      admissions: [publicationAdmission.admissionDigest],
+      delegated: false,
+    },
+    run: {
+      episodeId: snapshot.roles.episode.identity,
+      ...snapshot.roles.episode.authority,
+      state: snapshot.roles.episode.state,
+      transactionIds: [transaction.id],
+    },
+    facts: {
+      factId: snapshot.roles.fact.identity,
+      ...snapshot.roles.fact.authority,
+      state: snapshot.roles.fact.state,
+      candidateHashes: [candidatePassport.candidateHash],
+      branchRoots: [],
+    },
+  };
+  validateReleaseSession(session);
+  return session;
+}
+
+export function buildchainKfd7SessionCompressibility(session) {
+  const components = validateReleaseSession(session);
+  const breakpoints = [];
+  if (
+    components.pursuit.state !== "active" ||
+    components.pursuit.alternatives?.length
+  )
+    breakpoints.push({
+      role: "pursuit",
+      code: "multiple-or-terminal-release-intent",
+    });
+  if (
+    components.atlas.state !== "current" ||
+    components.atlas.views?.length !== 1
+  )
+    breakpoints.push({ role: "atlas", code: "candidate-view-boundary" });
+  if (
+    components.warrant.state !== "issued" ||
+    components.warrant.admissions?.length !== 1 ||
+    components.warrant.delegated === true
+  )
+    breakpoints.push({ role: "warrant", code: "publication-authority-boundary" });
+  if (components.episode.transactionIds?.length !== 1)
+    breakpoints.push({ role: "episode", code: "release-transaction-branch" });
+  if (
+    components.fact.candidateHashes?.length !== 1 ||
+    components.fact.branchRoots?.length
+  )
+    breakpoints.push({ role: "fact", code: "release-candidate-branch" });
+  return {
+    schema: BUILDCHAIN_KFD7_SESSION_COMPRESSIBILITY_SCHEMA,
+    sessionId: session.sessionId,
+    compressible: breakpoints.length === 0,
+    breakpoints,
+    revealedRoles: [...new Set(breakpoints.map((entry) => entry.role))].sort(),
+  };
+}
+
+export function buildchainKfd7SessionValidActions(session) {
+  const components = validateReleaseSession(session);
+  if (
+    components.pursuit.state !== "active" ||
+    components.atlas.state !== "current" ||
+    components.warrant.state !== "issued"
+  )
+    return [];
+  return [...new Set(components.pursuit.operations)].filter((operation) =>
+    components.warrant.allowedOperations.includes(operation),
+  ).sort();
+}
+
+export function expandBuildchainKfd7ReleaseSession(session) {
+  const components = validateReleaseSession(session);
+  const roles = Object.fromEntries(
+    BUILDCHAIN_KFD7_ROLES.map((role) => [
+      role,
+      {
+        role,
+        state: components[role].state,
+        identity:
+          components[role][
+            {
+              fact: "factId",
+              episode: "episodeId",
+              pursuit: "pursuitId",
+              atlas: "atlasId",
+              warrant: "warrantId",
+            }[role]
+          ],
+        details: structuredClone(components[role]),
+      },
+    ]),
+  );
+  return {
+    schema: BUILDCHAIN_KFD7_SESSION_EXPANSION_SCHEMA,
+    sessionId: session.sessionId,
+    compressibility: buildchainKfd7SessionCompressibility(session),
+    roles,
+    observations: {
+      direction: roles.pursuit.details,
+      "perspective-boundary": roles.atlas.details,
+      "effective-authority": roles.warrant.details,
+      "causal-process": roles.episode.details,
+      "admitted-result": roles.fact.details,
+    },
+    validActions: buildchainKfd7SessionValidActions(session),
+  };
+}
+
+export function projectBuildchainKfd7ReleaseSession(expansion) {
+  if (expansion?.schema !== BUILDCHAIN_KFD7_SESSION_EXPANSION_SCHEMA)
+    throw new Error("release-session-expansion-schema-mismatch");
+  if (expansion.compressibility?.compressible !== true)
+    throw new Error("session-complexity-breakpoint");
+  const roles = expansion.roles;
+  if (
+    !roles ||
+    Object.keys(roles).sort().join(",") !==
+      [...BUILDCHAIN_KFD7_ROLES].sort().join(",")
+  )
+    throw new Error("release-session-role-closure-mismatch");
+  const session = {
+    schema: BUILDCHAIN_KFD7_SESSION_SCHEMA,
+    sessionId: expansion.sessionId,
+    goal: structuredClone(roles.pursuit.details),
+    context: structuredClone(roles.atlas.details),
+    permissions: structuredClone(roles.warrant.details),
+    run: structuredClone(roles.episode.details),
+    facts: structuredClone(roles.fact.details),
+  };
+  validateReleaseSession(session);
+  return session;
 }

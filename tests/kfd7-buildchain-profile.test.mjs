@@ -7,7 +7,11 @@ import kfd7ActionContractSchema from "@kungfu-tech/kfd/schemas/kfd-7/action-cont
 import {
   BUILDCHAIN_KFD7_ACTION_CONTRACT,
   BUILDCHAIN_KFD7_ROLES,
+  buildchainKfd7SessionValidActions,
   createBuildchainKfd7ProfileSnapshot,
+  createBuildchainKfd7ReleaseSession,
+  expandBuildchainKfd7ReleaseSession,
+  projectBuildchainKfd7ReleaseSession,
   validateBuildchainKfd7ProfileSnapshot,
 } from "../packages/core/kfd7-buildchain-profile.js";
 import { createPublicationAdmission } from "../packages/core/publication-authority.js";
@@ -245,4 +249,75 @@ test("tampered admission digest is denied before any profile state is produced",
   assert.equal(denied.failureCode, "publication-admission-digest-mismatch");
   assert.equal(denied.writeOccurred, false);
   assert.deepEqual(denied.roles, {});
+});
+
+test("simple release session round-trips all five decision observations", () => {
+  const session = createBuildchainKfd7ReleaseSession({
+    ...fixture(),
+    observedAt: OBSERVED_AT,
+  });
+  const expanded = expandBuildchainKfd7ReleaseSession(session);
+
+  assert.equal(expanded.compressibility.compressible, true);
+  assert.deepEqual(expanded.compressibility.breakpoints, []);
+  assert.deepEqual(
+    Object.keys(expanded.observations).sort(),
+    [
+      "admitted-result",
+      "causal-process",
+      "direction",
+      "effective-authority",
+      "perspective-boundary",
+    ],
+  );
+  assert.deepEqual(projectBuildchainKfd7ReleaseSession(expanded), session);
+});
+
+test("release session complexity breakpoints reveal each independent role", () => {
+  const baseline = createBuildchainKfd7ReleaseSession({
+    ...fixture(),
+    observedAt: OBSERVED_AT,
+  });
+  const mutations = {
+    pursuit: (session) => session.goal.alternatives.push("release-intent:other"),
+    atlas: (session) => session.context.views.push("candidate:other"),
+    warrant: (session) => session.permissions.admissions.push("admission:other"),
+    episode: (session) => session.run.transactionIds.push("transaction:retry"),
+    fact: (session) => session.facts.branchRoots.push(`sha256:${"e".repeat(64)}`),
+  };
+  for (const [role, mutate] of Object.entries(mutations)) {
+    const session = structuredClone(baseline);
+    mutate(session);
+    const expanded = expandBuildchainKfd7ReleaseSession(session);
+    assert.equal(expanded.compressibility.compressible, false, role);
+    assert.ok(expanded.compressibility.revealedRoles.includes(role), role);
+    assert.throws(
+      () => projectBuildchainKfd7ReleaseSession(expanded),
+      /session-complexity-breakpoint/,
+    );
+  }
+});
+
+test("same candidate payload has different actions without intent authority or current context", () => {
+  const baseline = createBuildchainKfd7ReleaseSession({
+    ...fixture(),
+    observedAt: OBSERVED_AT,
+  });
+  const candidatePayload = structuredClone(baseline.facts);
+  assert.deepEqual(buildchainKfd7SessionValidActions(baseline), [
+    "publish-release",
+  ]);
+
+  const noIntent = structuredClone(baseline);
+  noIntent.goal.operations = ["inspect-release"];
+  const noAuthority = structuredClone(baseline);
+  noAuthority.permissions.allowedOperations = ["inspect-release"];
+  const staleContext = structuredClone(baseline);
+  staleContext.context.state = "stale";
+
+  for (const session of [noIntent, noAuthority, staleContext])
+    assert.deepEqual(session.facts, candidatePayload);
+  assert.deepEqual(buildchainKfd7SessionValidActions(noIntent), []);
+  assert.deepEqual(buildchainKfd7SessionValidActions(noAuthority), []);
+  assert.deepEqual(buildchainKfd7SessionValidActions(staleContext), []);
 });
