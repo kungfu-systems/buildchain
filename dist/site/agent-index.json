@@ -15,6 +15,8 @@
     "publication-authority-registry.json",
     "public-surface-audit.json",
     "artifact-schemas.json",
+    "release-passport-check-manifest.json",
+    "schemas/release-passport-v1.schema.json",
     "buildchain-contract.json",
     "kfd-upstream-aggregate.json",
     "kfd-claims.json",

@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "3d9e43510266b900fe450253fbb8aac72953c7128a797154150eb301ef71ed6a",
+    "sha256": "056a3d5e87f0813bbddb47cf4f3c8db43458b23bcf9fbe4b3d0ca8b80c38bbdc",
     "summary": {
       "cliCommandCount": 83,
       "workflowCount": 48,
       "actionCount": 4,
       "sitePageCount": 50,
-      "docCommandRefCount": 257,
+      "docCommandRefCount": 258,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -225,13 +225,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "3d9e43510266b900fe450253fbb8aac72953c7128a797154150eb301ef71ed6a",
+      "sha256": "056a3d5e87f0813bbddb47cf4f3c8db43458b23bcf9fbe4b3d0ca8b80c38bbdc",
       "summary": {
         "cliCommandCount": 83,
         "workflowCount": 48,
         "actionCount": 4,
         "sitePageCount": 50,
-        "docCommandRefCount": 257,
+        "docCommandRefCount": 258,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -1302,6 +1302,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./release-passport"
+        },
+        {
+          "id": "export:./release-passport-contract",
+          "name": "@kungfu-tech/buildchain/release-passport-contract",
+          "kind": "package-export",
+          "sourcePath": "packages/core/release-passport-contract.js",
+          "evidencePath": "packages/core/release-passport-contract.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./release-passport-contract"
         },
         {
           "id": "export:./release-propagation",
@@ -3707,19 +3719,22 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 13,
+          "inputCount": 16,
           "inputs": [
             "buildchain-ref",
             "buildchain-repository",
             "downstream-base-ref",
             "downstream-branch",
+            "downstream-prepare-command",
             "downstream-repository",
             "downstream-target",
+            "downstream-verify-command",
             "dry-run",
             "graph-json",
             "lock-path",
             "pr-body",
             "pr-title",
+            "refresh-managed-readme-badges",
             "source-node",
             "upstream-release-json"
           ],
@@ -4702,6 +4717,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 304
+    "publicSurfaceCount": 305
   }
 }

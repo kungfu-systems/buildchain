@@ -1683,12 +1683,20 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "downstream-prepare-command": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "downstream-repository": {
           "classification": "included",
           "source": "workflow-call-input"
         },
         "downstream-target": {
           "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "downstream-verify-command": {
+          "classification": "digest-only",
           "source": "workflow-call-input"
         },
         "dry-run": {
@@ -1714,6 +1722,10 @@
         "propagation-token": {
           "classification": "redacted",
           "source": "workflow-call-secret"
+        },
+        "refresh-managed-readme-badges": {
+          "classification": "included",
+          "source": "workflow-call-input"
         },
         "source-node": {
           "classification": "included",
@@ -1758,8 +1770,8 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:9b9f9a2320c4349903d72ee46e329211b5538ed5ebebaa93559df4eafb835997"
+      "digest": "sha256:ede9eba43b87cf19330d5f8203a1585bf066aa9affc9cac0f43230ac76b8580d"
     }
   ],
-  "digest": "sha256:266928038838e26ba1350c70d78290723ddb2fd209b66ab1afab776d948a379b"
+  "digest": "sha256:2c6a3a4dce27e0d76baae1c9aeb4d3428866fe8b4c4022a8c582b054dace02fd"
 }

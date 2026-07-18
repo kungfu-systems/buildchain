@@ -3,6 +3,8 @@
   "contract": "kungfu-buildchain-artifact-schema-index",
   "releasePassport": [
     "buildchain.release.json",
+    "release-passport-check-manifest.json",
+    "schemas/release-passport-v1.schema.json",
     "artifact-evidence.json",
     "product-mechanism.json",
     "impact.json",
@@ -28,6 +30,8 @@
     "public-surface-audit.json",
     "release-model.json",
     "artifact-schemas.json",
+    "release-passport-check-manifest.json",
+    "schemas/release-passport-v1.schema.json",
     "buildchain-contract.json",
     "kfd-claims.json",
     "product-mechanism.json",

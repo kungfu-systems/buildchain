@@ -15,7 +15,9 @@
   "releasePassport": {
     "entrypoint": "buildchain.release.json",
     "bundle": "buildchain-release-bundle.tar.gz",
-    "contract": "kungfu-buildchain-release-passport"
+    "contract": "kungfu-buildchain-release-passport",
+    "schema": "schemas/release-passport-v1.schema.json",
+    "checkManifest": "release-passport-check-manifest.json"
   },
   "releasePropagation": {
     "graphContract": "kungfu-buildchain-release-propagation-graph",
