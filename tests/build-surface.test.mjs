@@ -177,6 +177,18 @@ test("reusable build workflow exposes the required surface contract", () => {
     "utf8",
   );
   assert.match(workflow, /workflow_call:/);
+  assert.match(workflow, /name: Validate consumer package manager contract/);
+  assert.match(workflow, /scripts\/validate-package-manager-contract\.mjs/);
+  assert.match(
+    workflow,
+    /BUILDCHAIN_PACKAGE_MANAGER_CWD: \.buildchain\/consumer\n/,
+    "consumer package-manager detection must use the repository root even when builds use a nested working directory",
+  );
+  assert.ok(
+    workflow.indexOf("name: Validate consumer package manager contract") <
+      workflow.indexOf("  build-native:"),
+    "consumer package-manager incompatibility must fail before native release-candidate jobs",
+  );
   assert.match(workflow, /runner-preset:/);
   assert.match(workflow, /platforms-json:/);
   assert.match(workflow, /linux-container-preset:/);
@@ -726,7 +738,9 @@ test("release-candidate promote workflow is promote-only and never schedules a h
       publicationPlan.indexOf("name: Resolve exact publication transaction version"),
     "exact publication planning must install source dependencies before version-state verification",
   );
-  assert.match(publicationPlan, /corepack pnpm@11\.7\.0 install --frozen-lockfile/);
+  assert.match(publicationPlan, /name: Validate consumer package manager contract/);
+  assert.match(publicationPlan, /corepack pnpm install --frozen-lockfile/);
+  assert.doesNotMatch(publicationPlan, /corepack pnpm@11\.7\.0/);
   assert.match(publicationPlan, /yarn install --immutable \|\| yarn install --frozen-lockfile/);
   assert.match(publicationPlan, /npm ci/);
   assert.match(publicationPlan, /Skipping dependency install for custom package manager/);
@@ -784,7 +798,8 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /Install promotion dependencies/);
   assert.match(workflow, /PACKAGE_MANAGER: \$\{\{ inputs\.package-manager \}\}/);
   assert.match(workflow, /corepack enable/);
-  assert.match(workflow, /corepack pnpm@11\.7\.0 install --frozen-lockfile/);
+  assert.match(workflow, /corepack pnpm install --frozen-lockfile/);
+  assert.match(workflow, /cd "\$\{RECONCILIATION_WORKSPACE\}"[\s\S]*corepack pnpm install --frozen-lockfile/);
   assert.match(workflow, /Resolve post-release reconciliation checkout/);
   assert.match(workflow, /Checkout current development channel for reconciliation/);
   assert.match(workflow, /Install reconciliation dependencies/);

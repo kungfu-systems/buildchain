@@ -37,6 +37,7 @@ export {
   detectPackageManager,
   getWorkspaceInfo,
   shellJoin,
+  validatePackageManagerContract,
 } from "./package-manager.js";
 
 export {

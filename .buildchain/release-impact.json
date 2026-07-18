@@ -54,6 +54,13 @@
       "source": ".github/workflows/release-candidate-promote.yml"
     },
     {
+      "id": "consumer-package-manager-version",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "PR-stage preflight and promote-only dependency installation preserve the consumer packageManager version instead of substituting Buildchain's internal bootstrap version.",
+      "source": ".github/workflows/release-candidate-promote.yml"
+    },
+    {
       "id": "artifact-verification-envelope",
       "impact": "minor",
       "class": "evidence-contract",

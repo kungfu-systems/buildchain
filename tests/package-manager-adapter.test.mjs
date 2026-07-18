@@ -13,6 +13,7 @@ import {
   getPnpmLockInfo,
   getWorkspaceInfo,
   getYarnLockInfo,
+  validatePackageManagerContract,
 } from "../packages/core/package-manager.js";
 
 function withTempRepo(files, fn) {
@@ -52,6 +53,55 @@ test("detectPackageManager fails closed without an explicit manager signal", () 
       /Add packageManager to package\.json or commit a supported lockfile/,
     );
   });
+});
+
+test("consumer package manager contract preserves a version newer than Buildchain's own pnpm", () => {
+  withTempRepo(
+    {
+      "package.json": JSON.stringify({ packageManager: "pnpm@11.9.0" }),
+      "pnpm-lock.yaml": "lockfileVersion: '9.0'\n",
+    },
+    (dir) => {
+      assert.deepEqual(validatePackageManagerContract({ cwd: dir, expectedManager: "pnpm" }), {
+        name: "pnpm",
+        reason: "packageManager",
+        declaredSpec: "pnpm@11.9.0",
+        declaredVersion: "11.9.0",
+      });
+    },
+  );
+});
+
+test("consumer package manager contract fails before build on invalid or conflicting declarations", () => {
+  withTempRepo(
+    { "package.json": JSON.stringify({ packageManager: "pnpm@11.9.0" }) },
+    (dir) => {
+      assert.throws(
+        () => validatePackageManagerContract({ cwd: dir, expectedManager: "npm" }),
+        /workflow requested npm, but the consumer declares pnpm/,
+      );
+    },
+  );
+  withTempRepo(
+    { "package.json": JSON.stringify({ packageManager: "pnpm" }), "pnpm-lock.yaml": "" },
+    (dir) => {
+      assert.throws(
+        () => validatePackageManagerContract({ cwd: dir }),
+        /Invalid packageManager declaration/,
+      );
+    },
+  );
+  withTempRepo(
+    { "package.json": JSON.stringify({ packageManager: "bun@1.2.0" }) },
+    (dir) => {
+      assert.deepEqual(validatePackageManagerContract({ cwd: dir, expectedManager: "custom" }), {
+        name: "custom",
+        reason: "packageManager",
+        declaredSpec: "bun@1.2.0",
+        declaredVersion: "1.2.0",
+      });
+    },
+  );
 });
 
 test("commands are generated for pnpm, yarn, and npm", () => {
