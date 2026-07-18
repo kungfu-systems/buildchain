@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "1c9f99a679cc5ddf07bdc0bbd628f6b2d11443da92418e44395cb9e5b519229e",
+    "sha256": "40c7601e7f91f42ebf69508523ce971f8a29d71617f4458457e16b854e4cbb99",
     "summary": {
       "cliCommandCount": 76,
       "workflowCount": 42,
       "actionCount": 4,
       "sitePageCount": 46,
-      "docCommandRefCount": 241,
+      "docCommandRefCount": 242,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -42,10 +42,11 @@
   "publicClaims": [
     {
       "id": "claim:buildchain-kfd-release-passport-support",
-      "claim": "Buildchain release passports support KFD-1 self contract verification, KFD-2 public release claim audits, and KFD-3 collaboration-interface trust proofs.",
+      "claim": "Buildchain release passports support KFD-1 self contract verification, KFD-2 public release claim audits, KFD-3 collaboration-interface trust proofs, and KFD-7 engineering-contract evidence gates.",
       "sourcePaths": [
         "packages/core/release-passport.js",
         "packages/core/kfd-gate.js",
+        "packages/core/kfd7-release-gate.js",
         "packages/core/buildchain-kfd-claims.js",
         "docs/release-passport.md"
       ],
@@ -225,13 +226,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "1c9f99a679cc5ddf07bdc0bbd628f6b2d11443da92418e44395cb9e5b519229e",
+      "sha256": "40c7601e7f91f42ebf69508523ce971f8a29d71617f4458457e16b854e4cbb99",
       "summary": {
         "cliCommandCount": 76,
         "workflowCount": 42,
         "actionCount": 4,
         "sitePageCount": 46,
-        "docCommandRefCount": 241,
+        "docCommandRefCount": 242,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -787,6 +788,17 @@
           "public": true
         },
         {
+          "id": "schema:packages/core/kfd7-release-gate.js",
+          "name": "schema:packages/core/kfd7-release-gate.js",
+          "kind": "schema",
+          "sourcePath": "packages/core/kfd7-release-gate.js",
+          "evidencePath": "packages/core/kfd7-release-gate.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
           "id": "schema:packages/core/release-passport.js",
           "name": "schema:packages/core/release-passport.js",
           "kind": "schema",
@@ -1126,6 +1138,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./kfd-gate"
+        },
+        {
+          "id": "export:./kfd7-release-gate",
+          "name": "@kungfu-tech/buildchain/kfd7-release-gate",
+          "kind": "package-export",
+          "sourcePath": "packages/core/kfd7-release-gate.js",
+          "evidencePath": "packages/core/kfd7-release-gate.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./kfd7-release-gate"
         },
         {
           "id": "export:./release-candidate",
@@ -3197,7 +3221,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 44,
+          "inputCount": 45,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -3234,6 +3258,7 @@
             "release-passport-kfd-3-artifact-verify-command",
             "release-passport-kfd-3-artifact-witness-jsons",
             "release-passport-kfd-3-prebuild-witness-jsons",
+            "release-passport-kfd-7-declaration-jsons",
             "release-passport-output-dir",
             "release-passport-platform-manifest-paths",
             "release-passport-product-name",
@@ -3409,7 +3434,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 51,
+          "inputCount": 52,
           "inputs": [
             "allow-repository",
             "branch-protection-bypass-apps",
@@ -3449,6 +3474,7 @@
             "release-passport-kfd-3-artifact-verify-command",
             "release-passport-kfd-3-artifact-witness-jsons",
             "release-passport-kfd-3-prebuild-witness-jsons",
+            "release-passport-kfd-7-declaration-jsons",
             "release-passport-output-dir",
             "release-passport-platform-manifest-paths",
             "release-passport-product-name",
@@ -4233,6 +4259,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 273
+    "publicSurfaceCount": 275
   }
 }

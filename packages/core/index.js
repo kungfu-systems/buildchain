@@ -183,6 +183,14 @@ export {
 } from "./kfd-gate.js";
 
 export {
+  KFD7_EVIDENCE_REPORT_CONTRACT,
+  KFD7_RELEASE_GATE_CONTRACT,
+  KFD7_RELEASE_GATE_INPUT_CONTRACT,
+  createKfd7ReleaseGateEvidence,
+  validateKfd7ReleaseGateEvidence,
+} from "./kfd7-release-gate.js";
+
+export {
   BUILDCHAIN_AGENT_MANUALS,
   BUILDCHAIN_KFD_CLAIM_REGISTRY_CONTRACT,
   BUILDCHAIN_KFD_COLLABORATION_INTERFACE_CONTRACT,

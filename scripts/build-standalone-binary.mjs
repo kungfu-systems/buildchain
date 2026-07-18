@@ -176,7 +176,7 @@ function bundleCli({ cwd, tempDir, version, logger }) {
   sourcemap: false,
   dts: false,
   shims: true,
-  noExternal: ["smol-toml", /^@kungfu-tech\\/kfd(?:\\/|$)/],
+  noExternal: ["ajv", /^ajv\\//, "smol-toml", /^@kungfu-tech\\/kfd(?:\\/|$)/],
   define: {
     "process.env.BUILDCHAIN_EMBEDDED_PACKAGE_VERSION": ${JSON.stringify(JSON.stringify(version || packageVersion(cwd)))},
     "process.env.BUILDCHAIN_EMBEDDED_ENTRYPOINT": ${JSON.stringify(JSON.stringify("1"))},
