@@ -351,9 +351,14 @@ whether the resulting work was good in the real world.
 
 Each declaration binds the exact source SHA, KFD-7 action-contract and KFD
 verifier report, source-to-artifact surfaces, positive and negative transition
-reports, and the required export/import/rebuild, backend-migration, and
-cold-start continuation experiments. It also records KFD-2 residual-risk
-vocabulary, explicit responsibility owners, and non-claims.
+reports, and retained experiments for role deletion or fusion,
+export/import/rebuild, backend migration, concurrency/retry/compensation,
+Warrant decay or revocation, Atlas staleness or loss, Pursuit continuity and
+settlement, Episode replay and contraction, cold-start continuation, session
+round-trip refinement, session complexity breakpoints, and context-insufficiency
+counterexamples. It
+also records KFD-2 residual-risk vocabulary, explicit responsibility owners,
+and non-claims.
 
 The gate fails closed on an unknown state-machine version, missing negative
 evidence, missing or drifted artifact surfaces, stale experiment evidence, or

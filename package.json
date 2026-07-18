@@ -34,6 +34,7 @@
     "./buildchain-publication-authority": "./packages/core/buildchain-publication-authority.js",
     "./kfd-gate": "./packages/core/kfd-gate.js",
     "./kfd7-release-gate": "./packages/core/kfd7-release-gate.js",
+    "./kfd7-buildchain-profile": "./packages/core/kfd7-buildchain-profile.js",
     "./release-candidate": "./packages/core/release-candidate.js",
     "./stable-candidate-ledger": "./packages/core/stable-candidate-ledger.js",
     "./release-passport": "./packages/core/release-passport.js",
@@ -103,7 +104,7 @@
     "vitest": "^4.1.9"
   },
   "dependencies": {
-    "@kungfu-tech/kfd": "1.0.0-alpha.34",
+    "@kungfu-tech/kfd": "1.0.0-alpha.35",
     "ajv": "8.20.0",
     "smol-toml": "1.7.0"
   }

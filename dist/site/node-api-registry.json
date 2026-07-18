@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:8109b034034267073dd17ec55bf906567845e6531933005ae0036c780832b64c",
+      "digest": "sha256:58febcd44994bc32f775325d49014bb8e3c22623e2b69bee909ca65c5bd840c8",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:8109b034034267073dd17ec55bf906567845e6531933005ae0036c780832b64c",
+      "digest": "sha256:58febcd44994bc32f775325d49014bb8e3c22623e2b69bee909ca65c5bd840c8",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -294,8 +294,21 @@
       "specifier": "@kungfu-tech/buildchain/kfd7-release-gate",
       "export": "./kfd7-release-gate",
       "target": "./packages/core/kfd7-release-gate.js",
-      "digest": "sha256:85f251b25c74954bf2c8422ffc03980c2da965f56cf21afd60ebcabeac798edc",
+      "digest": "sha256:fbd320d0ae384d578d9908f3480ca855eacee46f36132cc3441ba6739d94d213",
       "summary": "KFD-7 engineering-contract declaration, evidence closure, and release gate validation APIs.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/kfd7-buildchain-profile",
+      "export": "./kfd7-buildchain-profile",
+      "target": "./packages/core/kfd7-buildchain-profile.js",
+      "digest": "sha256:60b9f844fe2f4887d5c34fe7bf8f4c9f6cb68e4a55f18d9848e3d5aefb5932e2",
+      "summary": "Buildchain's read-only KFD-7 release-transaction Profile projection and validation APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [
         "developer",
@@ -396,7 +409,7 @@
     {
       "id": "kfd-support",
       "path": "docs/kfd-support.md",
-      "digest": "sha256:e271ca1ca8c6aa52037b50f57f6b022a7b2f25354e5830815b01a43135a1aa53"
+      "digest": "sha256:5a9319f30fd6eb473ada43c938c5ae09519ffa8c27903438aebfb99b2c754d11"
     },
     {
       "id": "readme-badges",

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-kfd-7-evidence-report",
+  "profileId": "buildchain-release-transaction-profile",
+  "profileVersion": "0.1.0",
+  "stateMachineVersion": "0.1.0",
+  "sourceSha": "1c830d6612782208896b709c7d5b982c85a873c7",
+  "category": "session-round-trip-refinement",
+  "outcome": "pass",
+  "matchedExpectation": true,
+  "checks": [
+    { "id": "compressible-release-session-expands", "status": "pass" },
+    { "id": "all-five-decision-observations-retained", "status": "pass" },
+    { "id": "project-expand-round-trip-equals-session", "status": "pass" }
+  ],
+  "observations": {
+    "suite": "tests/kfd7-buildchain-profile.test.mjs",
+    "implementation": "packages/core/kfd7-buildchain-profile.js",
+    "dimensions": [
+      "direction",
+      "perspective-boundary",
+      "effective-authority",
+      "causal-process",
+      "admitted-result"
+    ],
+    "installedKfd": "1.0.0-alpha.35"
+  }
+}

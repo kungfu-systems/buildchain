@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:715e0ef057523600aaecbe38e5a67b0d6e591a246eab2117a6fd182131b966b1",
+      "digest": "sha256:1de248c867e06b531478a4075c7aa2ec895cce51aabde776e97c3d727283b6b1",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -36,7 +36,7 @@
       "title": "Release Passport protocol",
       "path": "docs/release-passport.md",
       "plane": "verify",
-      "digest": "sha256:429e5500d877200eee3cd47f734ad94cdbb15d8df6dfcd2a5b750977c770d0b4",
+      "digest": "sha256:4d7a5ce8b7c43aa45967f72873cd9cb1912ffc79a8e07eccb1a21804ddea4981",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",
@@ -274,7 +274,7 @@
       "title": "KFD support and KFD-3 surface registration",
       "path": "docs/kfd-support.md",
       "plane": "verify",
-      "digest": "sha256:e271ca1ca8c6aa52037b50f57f6b022a7b2f25354e5830815b01a43135a1aa53",
+      "digest": "sha256:5a9319f30fd6eb473ada43c938c5ae09519ffa8c27903438aebfb99b2c754d11",
       "capabilityGroup": "kfd-trust",
       "audience": [
         "agent",

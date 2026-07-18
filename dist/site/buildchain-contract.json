@@ -527,7 +527,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:17c456f4ab7ceab1b0cd43cd5df4c4befdbed7953a41129c253d496859fde947"
+      "auditDigest": "sha256:fd368b7a7125bfaa8b58cff84a6d9077c673e3874ca233f4f3fe682ff7903852"
     },
     {
       "contractVersion": 1,
@@ -549,7 +549,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:4cfdc65ae88d0d54f56b3783ea213d2ef8e41dac51ab9cbdeeb793cdc776e702"
+      "auditDigest": "sha256:0f1ac4ba4e4f4d8d5eca99c617e39f4ec24da80b946543524fbce3a80fcf00b6"
     },
     {
       "contractVersion": 1,
@@ -2684,5 +2684,5 @@
     }
   ],
   "compatibilityDigest": "sha256:af162b86ab4506e9b5f1d3c59b41f3fd57fbad79ff4d749a7f12ff16460517f8",
-  "contractDigest": "sha256:ef077cc74a36635d92b611df9b14803daaa20b3293b58bd393890759a8b4300f"
+  "contractDigest": "sha256:ab8a57809839b29ce1df9d31cd9c66a178a835d1ec129ae6428f37f887c18818"
 }
