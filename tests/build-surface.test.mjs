@@ -96,7 +96,7 @@ test("public reusable controllers expose source-bound plan and always-aggregated
     ".github/workflows/.web-surface.yml",
     ".github/workflows/publication-artifact.yml",
     ".github/workflows/paper-release.yml",
-    ".github/workflows/release-candidate-promote.yml",
+    ".github/workflows/.release-candidate-promote.yml",
     ".github/workflows/release-propagation.yml",
   ];
   for (const workflow of workflows) {
@@ -137,7 +137,7 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   assert.match(reusableBuild, /BUILDCHAIN_CONTROLLER_REGISTRY: \.buildchain\/controller-runtime\/dist\/site\/controller-registry\.json/);
 
   const paperRelease = fs.readFileSync(path.join(root, ".github/workflows/paper-release.yml"), "utf8");
-  const promotion = fs.readFileSync(path.join(root, ".github/workflows/release-candidate-promote.yml"), "utf8");
+  const promotion = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
   const promotionAuthority = promotion.slice(
     promotion.indexOf("  publication-authority:"),
     promotion.indexOf("\n  promote:", promotion.indexOf("  publication-authority:")),
@@ -666,7 +666,7 @@ test("artifact relay uploads to S3 and downloads verified GitHub artifact payloa
 
 test("release-candidate promote workflow is promote-only and never schedules a heavy build", () => {
   const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/release-candidate-promote.yml"),
+    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
     "utf8",
   );
   assert.match(workflow, /workflow_call:/);
@@ -2010,7 +2010,7 @@ test("promote wrapper exposes controlled branch-protection review bypass", () =>
     "utf8",
   );
   const wrapper = fs.readFileSync(
-    path.join(root, ".github/workflows/release-candidate-promote.yml"),
+    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
     "utf8",
   );
 
@@ -2046,7 +2046,7 @@ test("promote wrapper exposes controlled branch-protection review bypass", () =>
 
 test("Buildchain stable promotion gates publication after RC resolution", () => {
   const wrapper = fs.readFileSync(
-    path.join(root, ".github/workflows/release-candidate-promote.yml"),
+    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
     "utf8",
   );
   const policy = JSON.parse(fs.readFileSync(
@@ -2188,7 +2188,7 @@ test("report issue action exposes workflow-friction feedback mode", () => {
     "utf8",
   );
   const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/release-candidate-promote.yml"),
+    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
     "utf8",
   );
 
@@ -2286,7 +2286,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   );
 
   assert.match(workflow, /actions: read/);
-  assert.match(workflow, /uses: \.\/\.github\/workflows\/release-candidate-promote\.yml/);
+  assert.match(workflow, /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml/);
   assert.match(workflow, /github\.event\.workflow_run\.event == 'push'/);
   assert.match(workflow, /startsWith\(github\.event\.workflow_run\.head_branch, 'alpha\/'\)/);
   assert.match(workflow, /startsWith\(github\.event\.workflow_run\.head_branch, 'release\/'\)/);
@@ -3163,7 +3163,7 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
     fs.readFileSync(path.join(root, "dist/site/buildchain-contract.json"), "utf8"),
   );
   assert.equal(alphaLock.buildchain.ref, "v2-alpha");
-  assert.equal(alphaLock.buildchain.resolvedSha, "d7b9453665a60392e9082444dcc8e023cafc000c");
+  assert.equal(alphaLock.buildchain.resolvedSha, "11163bfb2cd39382684b543e580cce3411254f47");
   assert.equal(alphaLock.buildchain.compatibilityPolicy, "major-compatible");
   const alphaEvaluation = evaluateBuildchainContractLock({
     lock: alphaLock,

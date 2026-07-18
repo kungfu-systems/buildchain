@@ -12,6 +12,13 @@
   },
   "surfaceImpacts": [
     {
+      "id": "dual-channel-promotion-workflow-shell-router",
+      "impact": "minor",
+      "class": "workflow-contract",
+      "rationale": "A generated public promotion router lets consumers declare one job while alpha and stable lanes select matching advanced workflow shells, runtimes, and contract locks; immutable routing identities are verified before candidate download and recorded in controller and release passport evidence.",
+      "source": ".github/workflows/release-candidate-promote.yml"
+    },
+    {
       "id": "release-channel-protection-convergence",
       "impact": "patch",
       "class": "release-governance",
@@ -226,5 +233,5 @@
   "breaking": false,
   "security": false,
   "migrationRequired": false,
-  "summary": "Buildchain v2.14 extends sealed evidence and release-governance contracts, including convergent protected channel promotion and bounded lifecycle execution."
+  "summary": "Buildchain v2.14 extends sealed evidence and release governance with first-class dual-channel promotion workflow-shell routing."
 }

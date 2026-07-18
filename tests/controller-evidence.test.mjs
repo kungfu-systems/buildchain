@@ -38,6 +38,7 @@ function registry() {
       { id: "publication-artifact", path: ".github/workflows/publication-artifact.yml", inputs: ["build-command"] },
       { id: "paper-release", path: ".github/workflows/paper-release.yml", inputs: ["build-command"] },
       { id: "release-candidate-promote", path: ".github/workflows/release-candidate-promote.yml", inputs: ["channel"] },
+      { id: ".release-candidate-promote", path: ".github/workflows/.release-candidate-promote.yml", inputs: ["channel"] },
       { id: "release-propagation", path: ".github/workflows/release-propagation.yml", inputs: ["graph-json"] },
     ],
   });

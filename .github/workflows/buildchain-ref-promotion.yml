@@ -82,7 +82,10 @@ jobs:
           !startsWith(github.event.workflow_run.display_title, 'chore(release): release v')
         )
       }}
-    uses: ./.github/workflows/release-candidate-promote.yml
+    # Bootstrap self-publication from the exact repository commit. The public
+    # router delegates to floating channel shells and therefore cannot publish
+    # the first alpha that introduces a new advanced shell path.
+    uses: ./.github/workflows/.release-candidate-promote.yml
     permissions:
       actions: read
       checks: write
