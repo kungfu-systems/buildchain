@@ -1,0 +1,194 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-stable-release-gate",
+  "applies": true,
+  "ok": true,
+  "channel": "release",
+  "evaluatedAt": "2026-07-18T00:59:55.855Z",
+  "candidate": {
+    "tag": "v2.14.2-alpha.1",
+    "sha": "467d56d218a93540a3a200866d69fa7cd1a6df3f",
+    "publishedAt": "2026-07-17T06:49:06.000Z"
+  },
+  "previousStable": {
+    "tag": "v2.14.1",
+    "sha": "bb9ce34b368c6b5a27b00fbdcb0515076abd9744",
+    "publishedAt": "2026-07-17T00:57:24.000Z"
+  },
+  "policy": {
+    "minimumStableIntervalSeconds": 86400,
+    "minimumCanarySoakSeconds": 3600,
+    "requiredCanaries": [
+      "build-surface-fixture",
+      "site-libkungfu-dev"
+    ]
+  },
+  "checks": [
+    {
+      "id": "candidate.sha",
+      "status": "pass",
+      "message": "candidate alpha SHA is exact",
+      "details": {
+        "sha": "467d56d218a93540a3a200866d69fa7cd1a6df3f"
+      }
+    },
+    {
+      "id": "candidate.tag",
+      "status": "pass",
+      "message": "candidate is an exact alpha tag",
+      "details": {
+        "tag": "v2.14.2-alpha.1"
+      }
+    },
+    {
+      "id": "stable.minimum_interval",
+      "status": "pass",
+      "message": "minimum interval since the previous stable release is satisfied",
+      "details": {
+        "previousTag": "v2.14.1",
+        "previousPublishedAt": "2026-07-17T00:57:24.000Z",
+        "elapsedSeconds": 86551,
+        "requiredSeconds": 86400
+      }
+    },
+    {
+      "id": "stable.product_diff",
+      "status": "pass",
+      "message": "candidate contains a product or contract difference from the current stable release",
+      "details": {
+        "changedPaths": [
+          ".github/workflows/.web-surface.yml",
+          ".github/workflows/buildchain-patrol-daily.yml",
+          ".github/workflows/buildchain-patrol.yml",
+          ".github/workflows/dev-merge-queue-governance.yml",
+          ".github/workflows/dev-pr-auto-merge.yml",
+          ".github/workflows/patrol-daily.yml",
+          ".github/workflows/release-line-bootstrap.yml",
+          ".github/workflows/verify.yml",
+          "actions/promote-buildchain-ref/dist/index.js",
+          "actions/promote-buildchain-ref/lib.js",
+          "actions/run-lifecycle/dist/index.js",
+          "actions/validate-config/dist/index.js",
+          "packages/core/buildchain-config.js",
+          "packages/core/buildchain-publication-authority.js",
+          "packages/core/release-line-bootstrap.js",
+          "scripts/buildchain-patrol.mjs",
+          "scripts/dev-merge-queue.mjs",
+          "scripts/dev-pr-auto-merge.mjs"
+        ],
+        "comparedPathCount": 49
+      }
+    },
+    {
+      "id": "stable.impact",
+      "status": "pass",
+      "message": "version-bound impact declares a summary and at least one surface",
+      "details": {
+        "summary": "Buildchain v2.14 extends sealed evidence and release-governance contracts, including convergent protected channel promotion and bounded lifecycle execution.",
+        "surfaceIds": [
+          "release-channel-protection-convergence",
+          "consumer-publication-qualification-handoff",
+          "release-line-promotion-authority",
+          "publication-plan-read-only-derived-state",
+          "release-candidate-preflight-bounded-wait",
+          "publication-plan-source-dependencies",
+          "artifact-verification-envelope",
+          "bounded-lifecycle-jobs",
+          "web-surface-publication-authority-permissions",
+          "release-propagation-new-lock-detection",
+          "generated-version-state-required-check-set",
+          "release-propagation-managed-branch-reconciliation",
+          "controller-evidence-version-state-isolation",
+          "release-line-impact-state",
+          "channel-build-router",
+          "stable-release-canary-gate",
+          "release-candidate-evidence-preflight",
+          "release-state-ref-propagation-retry",
+          "lifecycle-command-override-inheritance",
+          "locked-checkout-bounded-fallback",
+          "workflow-shell-checkout-bootstrap",
+          "published-contract-digest-round-trip",
+          "required-check-context-preservation",
+          "authenticated-publication-registry-hydration",
+          "paper-release-declared-github-assets",
+          "web-surface-channel-build-contract",
+          "stable-canary-runtime-binding",
+          "major-alpha-floating-channel",
+          "major-alpha-self-dogfood-canary"
+        ]
+      }
+    },
+    {
+      "id": "stable.canary.build-surface-fixture",
+      "status": "pass",
+      "message": "required canary build-surface-fixture passed for the exact alpha candidate",
+      "details": {
+        "source": "release-candidate",
+        "context": "",
+        "repository": "kungfu-systems/buildchain",
+        "workflow": "Build Surface Fixture",
+        "runtimeRef": "",
+        "runtimeRefSource": "",
+        "workflowId": "",
+        "candidateSha": "467d56d218a93540a3a200866d69fa7cd1a6df3f",
+        "completedAt": "2026-07-17T06:53:49.000Z",
+        "evidenceUrl": "https://github.com/kungfu-systems/buildchain/actions/runs/29561271536",
+        "attestor": "dongkeren",
+        "attestorAllowed": true
+      }
+    },
+    {
+      "id": "stable.canary.site-libkungfu-dev",
+      "status": "pass",
+      "message": "required canary site-libkungfu-dev passed for the exact alpha candidate",
+      "details": {
+        "source": "commit-status",
+        "context": "buildchain-canary/site-libkungfu-dev",
+        "repository": "kungfu-systems/site-libkungfu-dev",
+        "workflow": "Buildchain Stable Canary",
+        "runtimeRef": "467d56d218a93540a3a200866d69fa7cd1a6df3f",
+        "runtimeRefSource": "run-name",
+        "workflowId": "310602469",
+        "candidateSha": "467d56d218a93540a3a200866d69fa7cd1a6df3f",
+        "completedAt": "2026-07-17T06:54:51.000Z",
+        "evidenceUrl": "https://github.com/kungfu-systems/site-libkungfu-dev/actions/runs/29561385796",
+        "attestor": "github-actions[bot]",
+        "attestorAllowed": true
+      }
+    },
+    {
+      "id": "stable.canary_soak",
+      "status": "pass",
+      "message": "minimum soak interval after the final required canary is satisfied",
+      "details": {
+        "soakStartedAt": "2026-07-17T06:54:51.000Z",
+        "elapsedSeconds": 65104,
+        "requiredSeconds": 3600
+      }
+    }
+  ],
+  "summary": {
+    "decision": "allow",
+    "failedChecks": [],
+    "productChangedPaths": [
+      ".github/workflows/.web-surface.yml",
+      ".github/workflows/buildchain-patrol-daily.yml",
+      ".github/workflows/buildchain-patrol.yml",
+      ".github/workflows/dev-merge-queue-governance.yml",
+      ".github/workflows/dev-pr-auto-merge.yml",
+      ".github/workflows/patrol-daily.yml",
+      ".github/workflows/release-line-bootstrap.yml",
+      ".github/workflows/verify.yml",
+      "actions/promote-buildchain-ref/dist/index.js",
+      "actions/promote-buildchain-ref/lib.js",
+      "actions/run-lifecycle/dist/index.js",
+      "actions/validate-config/dist/index.js",
+      "packages/core/buildchain-config.js",
+      "packages/core/buildchain-publication-authority.js",
+      "packages/core/release-line-bootstrap.js",
+      "scripts/buildchain-patrol.mjs",
+      "scripts/dev-merge-queue.mjs",
+      "scripts/dev-pr-auto-merge.mjs"
+    ]
+  }
+}
