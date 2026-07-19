@@ -162,6 +162,21 @@ test("stable bootstrap only forwards inputs supported by the pinned legacy wrapp
   assert.match(stableBlock, /^      target-ref:/m);
 });
 
+test("alpha router coerces string job output before forwarding a boolean input", () => {
+  const advanced = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
+  const generated = generateChannelPromotionWorkflow(advanced, { major: 2, shellRouting });
+  const alphaBlock = generated.slice(generated.indexOf("  alpha:\n"), generated.indexOf("  stable:\n"));
+
+  assert.match(
+    alphaBlock,
+    /^      promotion-override-used: \$\{\{ needs\.resolve-promotion\.outputs\.override-used == 'true' \}\}$/m,
+  );
+  assert.doesNotMatch(
+    alphaBlock,
+    /^      promotion-override-used: \$\{\{ needs\.resolve-promotion\.outputs\.override-used \}\}$/m,
+  );
+});
+
 test("promotion router contains no native build job and delegates candidate reuse to the advanced shell", () => {
   const router = fs.readFileSync(path.join(root, ".github/workflows/release-candidate-promote.yml"), "utf8");
   const advanced = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");

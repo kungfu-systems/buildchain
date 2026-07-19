@@ -111,6 +111,9 @@ function forwardedInputs(inputNames, { includeInternal = true } = {}) {
         "promotion-target-ref": "target-ref",
         "promotion-override-used": "override-used",
       }[name];
+      if (name === "promotion-override-used") {
+        return `      ${name}: \${{ needs.resolve-promotion.outputs.override-used == 'true' }}`;
+      }
       return routed
         ? `      ${name}: \${{ needs.resolve-promotion.outputs.${routed} }}`
         : `      ${name}: \${{ inputs.${name} }}`;
