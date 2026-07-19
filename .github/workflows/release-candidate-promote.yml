@@ -671,17 +671,6 @@ jobs:
     with:
       buildchain-repository: ${{ inputs.buildchain-repository }}
       buildchain-ref: ${{ needs.resolve-promotion.outputs.runtime-ref }}
-      promotion-router-ref: ${{ needs.resolve-promotion.outputs.router-ref }}
-      promotion-router-sha: ${{ needs.resolve-promotion.outputs.router-sha }}
-      promotion-shell-ref: ${{ needs.resolve-promotion.outputs.shell-ref }}
-      promotion-shell-sha: ${{ needs.resolve-promotion.outputs.shell-sha }}
-      promotion-runtime-ref: ${{ needs.resolve-promotion.outputs.runtime-ref }}
-      promotion-runtime-sha: ${{ needs.resolve-promotion.outputs.runtime-sha }}
-      promotion-contract-lock-path: ${{ needs.resolve-promotion.outputs.contract-lock-path }}
-      promotion-contract-lock-digest: ${{ needs.resolve-promotion.outputs.contract-lock-digest }}
-      promotion-publication-channel: ${{ needs.resolve-promotion.outputs.publication-channel }}
-      promotion-target-ref: ${{ needs.resolve-promotion.outputs.target-ref }}
-      promotion-override-used: ${{ needs.resolve-promotion.outputs.override-used }}
       buildchain-contract-lock-path: ${{ needs.resolve-promotion.outputs.contract-lock-path }}
       buildchain-contract-compatibility-policy: ${{ inputs.buildchain-contract-compatibility-policy }}
       buildchain-contract-drift-issue-mode: ${{ inputs.buildchain-contract-drift-issue-mode }}
