@@ -1,0 +1,245 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-impact",
+  "release": {
+    "tag": "v2.14.3-alpha.4",
+    "line": "v2.14",
+    "version": "2.14.3-alpha.4"
+  },
+  "versionImpact": {
+    "final": "minor",
+    "source": "buildchain-version-state",
+    "rationale": "Buildchain v2.14 adds compatible release-governance, artifact-verification, and controller evidence contracts without changing existing consumer inputs."
+  },
+  "surfaceImpacts": [
+    {
+      "id": "dual-channel-promotion-workflow-shell-router",
+      "impact": "minor",
+      "class": "workflow-contract",
+      "rationale": "A generated public promotion router lets consumers declare one job while alpha and stable lanes select matching advanced workflow shells, runtimes, and contract locks; immutable routing identities are verified before candidate download and recorded in controller and release passport evidence.",
+      "source": ".github/workflows/release-candidate-promote.yml"
+    },
+    {
+      "id": "promotion-shell-layout-bootstrap",
+      "impact": "patch",
+      "class": "workflow-contract",
+      "rationale": "The generated router reads a provider-owned shell-layout declaration and pins a legacy stable public workflow to its immutable v2 SHA until the stable tag contains the hidden advanced workflow, preventing cross-repository workflow parsing failures without changing consumer declarations.",
+      "source": ".buildchain/promotion-shell-routing.json"
+    },
+    {
+      "id": "release-channel-protection-convergence",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Alpha and release targets require repository and pair-specific verification without requiring source branches to contain generated target-channel bookkeeping ancestry, while dev preserves its selected strict or merge-queue policy.",
+      "source": ".github/workflows/release-line-bootstrap.yml"
+    },
+    {
+      "id": "consumer-publication-qualification-handoff",
+      "impact": "minor",
+      "class": "publication-authority",
+      "rationale": "An opt-in credentialless consumer predicate receives the complete Gate aggregate and sealed capability, emits a deterministic receipt, and is reverified immediately before provider mutation without changing existing consumers.",
+      "source": ".github/workflows/release-candidate-promote.yml"
+    },
+    {
+      "id": "release-line-promotion-authority",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Release-line bootstrap carries the declared promotion bypass authority into new dev, alpha, and release branch protection and fails closed before apply when no authority is declared.",
+      "source": ".github/workflows/release-line-bootstrap.yml"
+    },
+    {
+      "id": "publication-plan-read-only-derived-state",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Dry-run exact publication planning records lifecycle-generated version-state files without creating Git objects, preserving a read-only pre-authority boundary.",
+      "source": "actions/promote-buildchain-ref/lib.js"
+    },
+    {
+      "id": "release-candidate-preflight-bounded-wait",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Release-candidate preflight waits for a bounded period for the exact merged channel PR run and artifacts, eliminating the merge-to-matrix-completion race without accepting sibling evidence.",
+      "source": "scripts/release-candidate-resolver.mjs"
+    },
+    {
+      "id": "publication-plan-source-dependencies",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Exact publication planning installs the promotion source dependencies before version-state verification, preventing declared production imports from failing before publication authority is sealed.",
+      "source": ".github/workflows/release-candidate-promote.yml"
+    },
+    {
+      "id": "consumer-package-manager-version",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "PR-stage preflight and promote-only dependency installation preserve the consumer packageManager version instead of substituting Buildchain's internal bootstrap version.",
+      "source": ".github/workflows/release-candidate-promote.yml"
+    },
+    {
+      "id": "artifact-verification-envelope",
+      "impact": "minor",
+      "class": "evidence-contract",
+      "rationale": "A new public envelope verifies exact artifact, provenance, identity, lifecycle, revocation, and existing KFD assessment roots, then projects the same sealed root directly to KFX admission inputs.",
+      "source": "packages/core/artifact-verification-envelope.js"
+    },
+    {
+      "id": "bounded-lifecycle-jobs",
+      "impact": "patch",
+      "class": "lifecycle-contract",
+      "rationale": "Reusable native and container build jobs now share one configurable 120-minute default bound with lifecycle actions, while stage-specific timeout_minutes remains authoritative and timeout diagnostics identify the lifecycle and platform.",
+      "source": ".github/workflows/.build.yml"
+    },
+    {
+      "id": "web-surface-publication-authority-permissions",
+      "impact": "patch",
+      "class": "publication-authority",
+      "rationale": "The web-surface workflow grants actions:read through the nested reusable-workflow permission chain so sealed production authority can start without requiring a consumer workaround.",
+      "source": ".github/workflows/.web-surface.yml"
+    },
+    {
+      "id": "release-propagation-new-lock-detection",
+      "impact": "patch",
+      "class": "release-propagation",
+      "rationale": "Release propagation stages and checks the declared downstream lock path, creating a PR for a first untracked lock while preserving byte-identical reruns as explicit no-ops.",
+      "source": ".github/workflows/release-propagation.yml"
+    },
+    {
+      "id": "generated-version-state-required-check-set",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Generated version-state commits receive every status check preserved by the managed channel policy before a direct protected ref update, so adding a second required verification context cannot strand a publication after npm succeeds.",
+      "source": "actions/promote-buildchain-ref/lib.js"
+    },
+    {
+      "id": "release-propagation-managed-branch-reconciliation",
+      "impact": "patch",
+      "class": "release-propagation",
+      "rationale": "Repeated propagation reconciles a surviving managed downstream branch with an exact remote-SHA lease, records the branch and PR decision as controller evidence, and rejects concurrent stale writers.",
+      "source": ".github/workflows/release-propagation.yml"
+    },
+    {
+      "id": "controller-evidence-version-state-isolation",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Version-state verification recognizes untracked controller plan and receipt files as Buildchain-owned ephemeral evidence without broadening the allowance to unrelated generated files.",
+      "source": "actions/promote-buildchain-ref/lib.js"
+    },
+    {
+      "id": "release-line-impact-state",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Release-line bootstrap now updates the release-impact version and line before generated version-state validation, so a newly opened minor dev branch is internally consistent.",
+      "source": "packages/core/release-line-bootstrap.js"
+    },
+    {
+      "id": "channel-build-router",
+      "impact": "minor",
+      "class": "workflow-contract",
+      "rationale": "A new public reusable workflow lets consumers declare one build job, defaults development and prerelease work to vN-alpha, defaults stable releases to vN, keeps separate channel locks, and fails closed for ambiguous release intent.",
+      "source": ".github/workflows/build.yml"
+    },
+    {
+      "id": "stable-release-canary-gate",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Buildchain stable promotion fails closed until the exact alpha has fresh release-candidate and site-libkungfu-dev canary evidence, has soaked for one hour, is at least 24 hours after the prior stable, and contains a product or contract path change.",
+      "source": "scripts/stable-release-gate.mjs"
+    },
+    {
+      "id": "release-candidate-evidence-preflight",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Alpha and stable promotion validate exact PR-stage release-candidate metadata before candidate dependency installation or the full publication job starts, retain complete validation at the publication trust boundary, and keep expected manual dry-run failures out of automated friction issues.",
+      "source": ".github/workflows/release-candidate-promote.yml"
+    },
+    {
+      "id": "release-state-ref-propagation-retry",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Durable release-state persistence retries a transient non-fast-forward response when GitHub still reports the expected parent, avoiding a false promotion failure during ref propagation.",
+      "source": "actions/promote-buildchain-ref/lib.js"
+    },
+    {
+      "id": "lifecycle-command-override-inheritance",
+      "impact": "patch",
+      "class": "lifecycle-contract",
+      "rationale": "Explicit lifecycle command overrides inherit declared lifecycle and stage environment plus an explicit stage shell while preserving the platform-shell fallback.",
+      "source": "scripts/run-lifecycle-core.mjs"
+    },
+    {
+      "id": "locked-checkout-bounded-fallback",
+      "impact": "patch",
+      "class": "source-integrity",
+      "rationale": "Locked checkout fetches the advertised ref before a raw SHA so mirror objects seed recovery; self-hosted source and Buildchain runtime checkouts share this transport, and GitHub fallback has an independent 600-second default timeout plus bounded retry evidence before exact commit verification.",
+      "source": "scripts/locked-source-checkout.mjs"
+    },
+    {
+      "id": "workflow-shell-checkout-bootstrap",
+      "impact": "patch",
+      "class": "source-integrity",
+      "rationale": "The reusable workflow carries its exact checkout bootstrap into build runners, so alpha/stable routing remains compatible with stable runtimes that predate the newest locked checkout transport.",
+      "source": ".github/workflows/.build.yml"
+    },
+    {
+      "id": "published-contract-digest-round-trip",
+      "impact": "patch",
+      "class": "source-integrity",
+      "rationale": "Consumer write-lock preserves the authoritative digests carried by a released contract artifact after recomputation and fails closed instead of silently replacing mismatched evidence.",
+      "source": "packages/core/buildchain-contract.js"
+    },
+    {
+      "id": "required-check-context-preservation",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Consumer reusable workflows retain the exact check / check context while Buildchain self workflows explicitly use their emitted check context.",
+      "source": ".github/workflows/buildchain-ref-promotion.yml"
+    },
+    {
+      "id": "authenticated-publication-registry-hydration",
+      "impact": "patch",
+      "class": "publication-evidence",
+      "rationale": "Publication releases hydrate authenticated npm registry history, verify immutable entries, and bind cumulative registry evidence into release artifacts.",
+      "source": "scripts/publication-registry-hydrate.mjs"
+    },
+    {
+      "id": "paper-release-declared-github-assets",
+      "impact": "patch",
+      "class": "publication-distribution",
+      "rationale": "The existing paper release contract now uploads publication artifacts already declared in the publication manifest to the exact GitHub Release, closing the documented PDF distribution path without adding consumer workflow declarations.",
+      "source": ".github/workflows/paper-release.yml"
+    },
+    {
+      "id": "web-surface-channel-build-contract",
+      "impact": "patch",
+      "class": "web-surface",
+      "rationale": "Effective channel and preview alias reach caller build and verify commands, and host mismatches fail before deployment adapter side effects.",
+      "source": "scripts/web-surface-core.mjs"
+    },
+    {
+      "id": "stable-canary-runtime-binding",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Stable canary evidence verifies authoritative workflow metadata, accepts only the exact alpha tag or its resolved commit SHA from workflow inputs or the workflow-owned run-name, and rejects otherwise successful mismatched statuses.",
+      "source": "scripts/stable-release-gate.mjs"
+    },
+    {
+      "id": "major-alpha-floating-channel",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Every major line exposes vN-alpha as a cross-minor test channel owned by the highest minor with a published alpha, while older minor promotions fail closed to a skip instead of rolling consumers backwards.",
+      "source": "actions/promote-buildchain-ref/lib.js"
+    },
+    {
+      "id": "major-alpha-self-dogfood-canary",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Buildchain continuously consumes its released vN-alpha reusable workflow and stable vN runtime, verifies their resolved immutable SHAs, and keeps exact-SHA promotion independent from the floating alpha repair target.",
+      "source": ".github/workflows/buildchain-alpha-self-dogfood.yml"
+    }
+  ],
+  "classification": "minor",
+  "breaking": false,
+  "security": false,
+  "migrationRequired": false,
+  "summary": "Buildchain v2.14 extends sealed evidence and release governance with first-class dual-channel promotion workflow-shell routing."
+}
