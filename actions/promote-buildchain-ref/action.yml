@@ -155,6 +155,12 @@ inputs:
   release-passport-kfd-3-artifact-verify-command:
     description: "Product-owned command that emits a KFD-3 artifact-side collaboration-interface witness JSON document"
     default: ""
+  release-passport-invariant-passport-jsons:
+    description: "Newline- or comma-separated invariant Passport JSON paths required by the release gate"
+    default: ""
+  release-passport-invariant-passport-command:
+    description: "Product-owned command that emits a canonical invariant Passport JSON document"
+    default: ""
   release-passport-buildchain-self-kfd:
     description: "Generate Buildchain-owned KFD-1/2/3 self witnesses inside the final version-state workspace before release passport finalization"
     default: "false"
