@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-impact",
   "release": {
-    "version": "2.14.3-alpha.7",
+    "version": "2.14.3-alpha.8",
     "line": "v2.14"
   },
   "versionImpact": {
@@ -73,6 +73,13 @@
       "class": "release-governance",
       "rationale": "PR-stage preflight and promote-only dependency installation preserve the consumer packageManager version instead of substituting Buildchain's internal bootstrap version.",
       "source": ".github/workflows/release-candidate-promote.yml"
+    },
+    {
+      "id": "provider-transaction-pr-head-check",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Provider-policy fallback verifies the configured required check on the merged pull request head SHA while retaining target-branch, same-repository PR, independent approval, exact context, and configured app constraints.",
+      "source": "actions/promote-buildchain-ref/lib.js"
     },
     {
       "id": "artifact-verification-envelope",
