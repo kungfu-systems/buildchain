@@ -753,6 +753,16 @@ promotion starts:
 - release and major targets use `.release-candidate-promote.yml@vN`, runtime
   `vN`, and `buildchain-stable-contract-lock-path`.
 
+The generated router also owns the stable-shell layout transition through
+`.buildchain/promotion-shell-routing.json`. While the current stable `vN` still
+ships the advanced implementation at the public workflow path, the stable lane
+calls that public workflow at the exact immutable SHA behind `vN`; this prevents
+GitHub from rejecting the router merely because the future hidden workflow path
+does not exist in the current stable tag. The logical shell identity remains
+`vN`, and the router verifies that its checkout SHA equals the pinned call SHA.
+After a stable release contains the hidden advanced workflow, the routing file
+can move the stable call to that path without any consumer declaration change.
+
 The router resolves immutable SHAs and the selected lock digest before candidate
 download. The advanced shell verifies the same router, shell, runtime, lock,
 channel, and target binding again. Train and exact-SHA runtime overrides remain

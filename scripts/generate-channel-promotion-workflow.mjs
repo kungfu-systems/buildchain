@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sourcePath = path.join(root, ".github/workflows/.release-candidate-promote.yml");
 const targetPath = path.join(root, ".github/workflows/release-candidate-promote.yml");
+const routingPath = path.join(root, ".buildchain/promotion-shell-routing.json");
 const internalInputs = new Set([
   "promotion-router-ref",
   "promotion-router-sha",
@@ -114,7 +115,45 @@ function forwardedInputs(inputNames) {
   }).join("\n");
 }
 
-export function generateChannelPromotionWorkflow(source, { major = 2 } = {}) {
+function validateWorkflowRoute(name, route, expectedLogicalRef) {
+  if (!route || typeof route !== "object") throw new Error(`promotion shell routing missing ${name} route`);
+  if (route.logicalRef !== expectedLogicalRef) {
+    throw new Error(`promotion shell ${name} logicalRef must be ${expectedLogicalRef}`);
+  }
+  if (!/^\.github\/workflows\/[.a-z0-9-]+\.ya?ml$/.test(route.workflowPath || "")) {
+    throw new Error(`promotion shell ${name} workflowPath must name a reusable workflow`);
+  }
+  if (!/^(?:v[0-9]+(?:-alpha)?|[0-9a-f]{40})$/.test(route.callRef || "")) {
+    throw new Error(`promotion shell ${name} callRef must be an official channel ref or exact SHA`);
+  }
+  return { ...route };
+}
+
+export function parsePromotionShellRouting(source, { major = 2 } = {}) {
+  const parsed = JSON.parse(source);
+  if (parsed.schemaVersion !== 1) throw new Error("promotion shell routing schemaVersion must be 1");
+  if (parsed.major !== major) throw new Error(`promotion shell routing major must be ${major}`);
+  return {
+    alpha: validateWorkflowRoute("alpha", parsed.alpha, `v${major}-alpha`),
+    stable: validateWorkflowRoute("stable", parsed.stable, `v${major}`),
+  };
+}
+
+export function generateChannelPromotionWorkflow(source, { major = 2, shellRouting } = {}) {
+  const routes = shellRouting || {
+    alpha: {
+      logicalRef: `v${major}-alpha`,
+      callRef: `v${major}-alpha`,
+      workflowPath: ".github/workflows/.release-candidate-promote.yml",
+    },
+    stable: {
+      logicalRef: `v${major}`,
+      callRef: `v${major}`,
+      workflowPath: ".github/workflows/.release-candidate-promote.yml",
+    },
+  };
+  const alphaRoute = validateWorkflowRoute("alpha", routes.alpha, `v${major}-alpha`);
+  const stableRoute = validateWorkflowRoute("stable", routes.stable, `v${major}`);
   const inputs = blockBetween(source, "    inputs:\n", "    secrets:\n");
   const secrets = blockBetween(source, "    secrets:\n", "    outputs:\n");
   const outputs = blockBetween(source, "    outputs:\n", "\nconcurrency:\n");
@@ -269,12 +308,39 @@ jobs:
       - name: Resolve immutable promotion identities
         id: identities
         shell: bash
+        env:
+          CHANNEL: \${{ steps.route.outputs.channel }}
+          SELECTED_SHELL_REF: \${{ steps.route.outputs.shell-ref }}
+          ALPHA_SHELL_REF: ${alphaRoute.logicalRef}
+          ALPHA_SHELL_CALL_REF: ${alphaRoute.callRef}
+          ALPHA_SHELL_WORKFLOW_PATH: ${alphaRoute.workflowPath}
+          STABLE_SHELL_REF: ${stableRoute.logicalRef}
+          STABLE_SHELL_CALL_REF: ${stableRoute.callRef}
+          STABLE_SHELL_WORKFLOW_PATH: ${stableRoute.workflowPath}
         run: |
           set -euo pipefail
-          test -f .buildchain/shell/.github/workflows/.release-candidate-promote.yml
+          if [[ "\${CHANNEL}" = "alpha" ]]; then
+            expected_ref="\${ALPHA_SHELL_REF}"
+            call_ref="\${ALPHA_SHELL_CALL_REF}"
+            workflow_path="\${ALPHA_SHELL_WORKFLOW_PATH}"
+          else
+            expected_ref="\${STABLE_SHELL_REF}"
+            call_ref="\${STABLE_SHELL_CALL_REF}"
+            workflow_path="\${STABLE_SHELL_WORKFLOW_PATH}"
+          fi
+          if [[ "\${SELECTED_SHELL_REF}" != "\${expected_ref}" ]]; then
+            echo "::error::Selected promotion shell ref \${SELECTED_SHELL_REF} does not match configured \${expected_ref}"
+            exit 1
+          fi
+          test -f ".buildchain/shell/\${workflow_path}"
+          shell_sha="$(git -C .buildchain/shell rev-parse HEAD)"
+          if [[ "\${call_ref}" =~ ^[0-9a-f]{40}$ && "\${shell_sha}" != "\${call_ref}" ]]; then
+            echo "::error::Pinned promotion shell \${call_ref} does not match selected \${shell_sha}"
+            exit 1
+          fi
           {
             echo "router-sha=$(git -C .buildchain/router rev-parse HEAD)"
-            echo "shell-sha=$(git -C .buildchain/shell rev-parse HEAD)"
+            echo "shell-sha=\${shell_sha}"
             echo "runtime-sha=$(git -C .buildchain/runtime rev-parse HEAD)"
           } >> "\${GITHUB_OUTPUT}"
 
@@ -282,7 +348,7 @@ jobs:
     name: Promote with alpha workflow shell
     needs: resolve-promotion
     if: \${{ needs.resolve-promotion.outputs.channel == 'alpha' }}
-    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v${major}-alpha
+    uses: kungfu-systems/buildchain/${alphaRoute.workflowPath}@${alphaRoute.callRef}
     permissions:
       actions: read
       checks: write
@@ -297,7 +363,7 @@ ${forwarded}
     name: Promote with stable workflow shell
     needs: resolve-promotion
     if: \${{ needs.resolve-promotion.outputs.channel == 'stable' }}
-    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v${major}
+    uses: kungfu-systems/buildchain/${stableRoute.workflowPath}@${stableRoute.callRef}
     permissions:
       actions: read
       checks: write
@@ -315,7 +381,8 @@ function main() {
   const version = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8")).version;
   const major = Number(String(version).match(/^(\d+)\./)?.[1]);
   if (!Number.isInteger(major)) throw new Error("package version must expose a numeric major");
-  const generated = generateChannelPromotionWorkflow(source, { major });
+  const shellRouting = parsePromotionShellRouting(fs.readFileSync(routingPath, "utf8"), { major });
+  const generated = generateChannelPromotionWorkflow(source, { major, shellRouting });
   if (process.argv.includes("--check")) {
     const current = fs.existsSync(targetPath) ? fs.readFileSync(targetPath, "utf8") : "";
     if (current !== generated) {

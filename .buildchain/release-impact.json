@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-impact",
   "release": {
-    "version": "2.14.3-alpha.1",
+    "version": "2.14.3-alpha.2",
     "line": "v2.14"
   },
   "versionImpact": {
@@ -17,6 +17,13 @@
       "class": "workflow-contract",
       "rationale": "A generated public promotion router lets consumers declare one job while alpha and stable lanes select matching advanced workflow shells, runtimes, and contract locks; immutable routing identities are verified before candidate download and recorded in controller and release passport evidence.",
       "source": ".github/workflows/release-candidate-promote.yml"
+    },
+    {
+      "id": "promotion-shell-layout-bootstrap",
+      "impact": "patch",
+      "class": "workflow-contract",
+      "rationale": "The generated router reads a provider-owned shell-layout declaration and pins a legacy stable public workflow to its immutable v2 SHA until the stable tag contains the hidden advanced workflow, preventing cross-repository workflow parsing failures without changing consumer declarations.",
+      "source": ".buildchain/promotion-shell-routing.json"
     },
     {
       "id": "release-channel-protection-convergence",

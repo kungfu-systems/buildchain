@@ -6,7 +6,10 @@ import {
 } from "../packages/core/public-surface-audit.js";
 import { evaluateBuildchainContractLock } from "../packages/core/buildchain-contract.js";
 import { generateChannelBuildWorkflow } from "./generate-channel-build-workflow.mjs";
-import { generateChannelPromotionWorkflow } from "./generate-channel-promotion-workflow.mjs";
+import {
+  generateChannelPromotionWorkflow,
+  parsePromotionShellRouting,
+} from "./generate-channel-promotion-workflow.mjs";
 
 const root = process.cwd();
 const sharedActionTsupConfig = fs.readFileSync(path.join(root, "scripts/tsup-action.config.mjs"), "utf8");
@@ -186,15 +189,21 @@ const channelPromotionWorkflow = fs.readFileSync(
   path.join(root, ".github/workflows/release-candidate-promote.yml"),
   "utf8",
 );
+const promotionShellRouting = parsePromotionShellRouting(
+  fs.readFileSync(path.join(root, ".buildchain/promotion-shell-routing.json"), "utf8"),
+  { major: Number(selfDogfoodMajor) },
+);
 if (channelPromotionWorkflow !== generateChannelPromotionWorkflow(advancedPromotionWorkflow, {
   major: Number(selfDogfoodMajor),
+  shellRouting: promotionShellRouting,
 })) {
   throw new Error("generated channel promotion workflow is stale");
 }
 for (const requiredSnippet of [
   "buildchain-channel:",
   `/.github/workflows/.release-candidate-promote.yml@v${selfDogfoodMajor}-alpha`,
-  `/.github/workflows/.release-candidate-promote.yml@v${selfDogfoodMajor}`,
+  `/release-candidate-promote.yml@${promotionShellRouting.stable.callRef}`,
+  `STABLE_SHELL_REF: v${selfDogfoodMajor}`,
   "promotion-contract-lock-digest:",
   "promotion runtime override is only allowed for trusted workflow_dispatch runs",
 ]) {
