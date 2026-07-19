@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-impact",
   "release": {
-    "version": "2.14.3-alpha.9",
+    "version": "2.14.3-alpha.10",
     "line": "v2.14"
   },
   "versionImpact": {
@@ -87,6 +87,13 @@
       "class": "workflow-contract",
       "rationale": "The workflow shell prefers the selected runtime package-manager validator and falls back to its own bundled validator when a legacy stable runtime predates that contract, preserving runtime-first routing and fail-closed validation.",
       "source": ".github/workflows/.build.yml"
+    },
+    {
+      "id": "stable-candidate-source-lock-ancestry-reconciliation",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Stable candidate patrol preserves the exact qualified candidate tree while adding missing stable target ancestry through a non-forced, idempotent source-lock commit, and fails closed on candidate tree or lineage drift.",
+      "source": "scripts/stable-candidate-patrol.mjs"
     },
     {
       "id": "artifact-verification-envelope",
