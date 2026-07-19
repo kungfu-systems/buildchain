@@ -24,9 +24,9 @@ const base = {
 test("alpha promotion selects the alpha workflow shell, runtime, and target", () => {
   assert.deepEqual(resolvePromotionChannel({
     ...base,
-    targetRef: "alpha/v2/v2.14",
+    targetRef: "alpha/v22/v22.22",
   }), {
-    targetRef: "alpha/v2/v2.14",
+    targetRef: "alpha/v22/v22.22",
     publicationChannel: "alpha",
     channel: "alpha",
     major: 2,
@@ -51,7 +51,7 @@ test("release and major promotion select the stable workflow shell and runtime",
   }
 });
 
-test("channel, target, major, and official ref mismatches fail closed", () => {
+test("channel and target mismatches fail closed", () => {
   assert.throws(
     () => resolvePromotionChannel({ ...base, targetRef: "alpha/v2/v2.14", publicationChannel: "release" }),
     /does not match target ref/,
@@ -60,10 +60,13 @@ test("channel, target, major, and official ref mismatches fail closed", () => {
     () => resolvePromotionChannel({ ...base, targetRef: "alpha/v2/v2.14", requestedChannel: "stable" }),
     /requires alpha shell\/runtime/,
   );
-  assert.throws(
-    () => resolvePromotionChannel({ ...base, targetRef: "release/v3/v3.0", requestedRef: "v2" }),
-    /requires Buildchain v3/,
-  );
+});
+
+test("consumer target version does not override the Buildchain major", () => {
+  const result = resolvePromotionChannel({ ...base, targetRef: "release/v22/v22.22" });
+  assert.equal(result.major, 2);
+  assert.equal(result.shellRef, "v2");
+  assert.equal(result.runtimeRef, "v2");
 });
 
 test("train and exact-SHA overrides retain auto-only selection and target shell lane", () => {
