@@ -45,6 +45,23 @@
       "notes": ""
     },
     {
+      "workflowPath": ".github/workflows/.release-candidate-promote.yml",
+      "authorityClass": "product-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "channel-ref",
+        "github-release",
+        "npm-publish"
+      ],
+      "credentialMode": "trusted-publishing",
+      "publisherWorkflowMode": "caller-bound",
+      "publisherWorkflowPath": ".github/workflows/.release-candidate-promote.yml",
+      "environment": "none",
+      "environmentMode": "fixed",
+      "runnerPolicy": "qualified-measured",
+      "notes": ""
+    },
+    {
       "workflowPath": ".github/workflows/.release-verify.yml",
       "authorityClass": "governance-write",
       "publicationCapable": false,
@@ -508,6 +525,14 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/.release-candidate-promote.yml",
+      "signals": [
+        "write-permission",
+        "oidc"
+      ],
+      "classified": true
+    },
+    {
       "path": ".github/workflows/.release-docker.yml",
       "signals": [],
       "classified": false
@@ -792,5 +817,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "24c7f5210da277b79ce13356c439c14ea49f6c54ba9e083f42ce47fdfdacc55c"
+  "registryDigest": "ac085131119085cfc02e37913ec5eabc9f38b04100c58d797ede3b8e2b7e3046"
 }

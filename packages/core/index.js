@@ -37,6 +37,7 @@ export {
   detectPackageManager,
   getWorkspaceInfo,
   shellJoin,
+  validatePackageManagerContract,
 } from "./package-manager.js";
 
 export {
@@ -319,6 +320,14 @@ export {
   validateKnownReleasePassportContracts,
   verifyReleasePassport,
 } from "./release-passport.js";
+
+export {
+  RELEASE_PASSPORT_CHECK_MANIFEST_CONTRACT,
+  RELEASE_PASSPORT_SCHEMA,
+  RELEASE_PASSPORT_SCHEMA_ID,
+  createReleasePassportCheckManifest,
+  validateReleasePassportSchema,
+} from "./release-passport-contract.js";
 
 export {
   BUILDCHAIN_CONSUMER_ISSUE_CONTRACT,

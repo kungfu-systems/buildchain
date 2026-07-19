@@ -1,6 +1,6 @@
 {
   "name": "@kungfu-tech/buildchain",
-  "version": "2.14.2",
+  "version": "2.14.3-alpha.9",
   "private": false,
   "description": "Buildchain Release Passport, release governance, CLI toolkit, and site facts.",
   "repository": "https://github.com/kungfu-systems/buildchain",
@@ -38,6 +38,7 @@
     "./release-candidate": "./packages/core/release-candidate.js",
     "./stable-candidate-ledger": "./packages/core/stable-candidate-ledger.js",
     "./release-passport": "./packages/core/release-passport.js",
+    "./release-passport-contract": "./packages/core/release-passport-contract.js",
     "./release-propagation": "./packages/core/release-propagation.js",
     "./surface-manifest": "./packages/core/surface-manifest.js",
     "./buildchain-kfd-claims": "./packages/core/buildchain-kfd-claims.js",
@@ -57,6 +58,8 @@
     "./site/kfd-upstream-aggregate.json": "./dist/site/kfd-upstream-aggregate.json",
     "./site/release-model.json": "./dist/site/release-model.json",
     "./site/artifact-schemas.json": "./dist/site/artifact-schemas.json",
+    "./site/release-passport-check-manifest.json": "./dist/site/release-passport-check-manifest.json",
+    "./site/schemas/release-passport-v1.schema.json": "./dist/site/schemas/release-passport-v1.schema.json",
     "./site/buildchain-contract.json": "./dist/site/buildchain-contract.json",
     "./site/product-mechanism.json": "./dist/site/product-mechanism.json",
     "./site/release-provenance.json": "./dist/site/release-provenance.json",
@@ -104,7 +107,7 @@
     "vitest": "^4.1.9"
   },
   "dependencies": {
-    "@kungfu-tech/kfd": "1.0.0-alpha.21",
+    "@kungfu-tech/kfd": "1.0.0-alpha.29",
     "smol-toml": "1.7.0"
   }
 }

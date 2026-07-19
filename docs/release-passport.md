@@ -19,6 +19,25 @@ do not infer execution evidence from a green job. See
 The release passport surface is a welded contract. Additive fields are allowed;
 breaking semantic changes require a new major line.
 
+Independent verifiers can pin two package-owned, standalone files without
+scraping this implementation:
+
+- `dist/site/schemas/release-passport-v1.schema.json` is the self-contained
+  JSON Schema for the Buildchain-owned envelope;
+- `dist/site/release-passport-check-manifest.json` names the normative checker,
+  required and conditional sibling evidence, local-resolution rules,
+  Buildchain aggregation fields, canonical KFD subsection schema authorities,
+  and forward-compatibility policy.
+
+The same files are exported as
+`@kungfu-tech/buildchain/site/schemas/release-passport-v1.schema.json` and
+`@kungfu-tech/buildchain/site/release-passport-check-manifest.json`. The schema
+checks the envelope shape. `buildchain verify release-passport` remains the
+normative semantic checker: it resolves sibling evidence relative to the
+passport and fails closed on missing evidence, digest drift, or inconsistent
+release facts. Buildchain owns envelope aggregation; KFD retains schema and
+compatibility authority for the `kfd-1`, `kfd-2`, and `kfd-3` subsections.
+
 P0 protocol artifacts:
 
 - `product-mechanism.json`

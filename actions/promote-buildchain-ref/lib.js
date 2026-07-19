@@ -2077,6 +2077,7 @@ async function collectAndPersistReleasePassport({
   buildSummaryPath,
   platformManifestPaths = [],
   impactJson = "",
+  promotionRoutingJson = "",
   kfd1WitnessJsons = [],
   kfd2ClaimJsons = [],
   kfd3PrebuildWitnessJsons = [],
@@ -2119,6 +2120,14 @@ async function collectAndPersistReleasePassport({
     impactJson,
     version: publishedVersion,
   });
+  const promotionRouting = String(promotionRoutingJson || "").trim()
+    ? (() => {
+        const candidate = resolveMaybeRelative(cwd, promotionRoutingJson);
+        return fs.existsSync(candidate)
+          ? JSON.parse(fs.readFileSync(candidate, "utf8"))
+          : JSON.parse(promotionRoutingJson);
+      })()
+    : undefined;
   const selfKfd = buildchainSelfKfd
     ? generateBuildchainSelfKfdInputs({
         cwd,
@@ -2193,6 +2202,7 @@ async function collectAndPersistReleasePassport({
         : {}),
       publishToolingSha: result.transaction.publish_tooling_sha,
       releaseStateRef: `refs/heads/${result.transaction.state_ref}`,
+      ...(promotionRouting ? { promotionRouting } : {}),
     }),
     publishJson: JSON.stringify({
       auth: result.publishContract?.auth || "",
@@ -2424,12 +2434,16 @@ async function assertProviderEnforcedChannelTransaction({
   const independentApproval = [...latestReviews.values()].some((review) =>
     review.state === "APPROVED" && review.user?.login !== pullRequest.user?.login
   );
-  const { data: checkRuns } = await octokit.rest.checks.listForRef({
-    owner,
-    repo,
-    ref: sourceSha,
-    per_page: 100,
-  });
+  const pullRequestHeadSha = String(pullRequest.head?.sha || "").trim();
+  const validPullRequestHeadSha = /^[0-9a-f]{40}$/i.test(pullRequestHeadSha);
+  const { data: checkRuns } = validPullRequestHeadSha
+    ? await octokit.rest.checks.listForRef({
+        owner,
+        repo,
+        ref: pullRequestHeadSha,
+        per_page: 100,
+      })
+    : { data: { check_runs: [] } };
   const requiredCheckPassed = (checkRuns.check_runs || []).some((entry) =>
     entry.name === resolvedStatusCheck &&
     entry.conclusion === "success" &&
@@ -2443,6 +2457,9 @@ async function assertProviderEnforcedChannelTransaction({
   }
   if (!protectedStatusCheckNames(protection).includes(resolvedStatusCheck)) {
     missing.push(`must require a ${requiredStatusCheck} status check using the exact context`);
+  }
+  if (!validPullRequestHeadSha) {
+    missing.push("merged source PR must expose an immutable head SHA");
   }
   if (!requiredCheckPassed) missing.push(`required status check ${resolvedStatusCheck} must pass from its configured app`);
   if (!independentApproval) missing.push("must have an independent approving review on the merged source PR");
@@ -3422,6 +3439,7 @@ async function promoteBuildchainRefs({
   releasePassportBuildSummaryPath = ".buildchain/artifacts/build-summary.json",
   releasePassportPlatformManifestPaths = "",
   releasePassportImpactJson = "",
+  releasePassportPromotionRoutingJson = "",
   releasePassportKfd1WitnessJsons = "",
   releasePassportKfd2ClaimJsons = "",
   releasePassportKfd3PrebuildWitnessJsons = "",
@@ -4758,6 +4776,7 @@ async function promoteBuildchainRefs({
         action: "dry-run-publish-transaction",
         version: transactionVersion,
         tag: exactTag,
+        publicTag: releaseTagForPublishedVersion(transactionVersion),
         sha: releaseSha,
       });
       return undefined;
@@ -4832,6 +4851,7 @@ async function promoteBuildchainRefs({
       buildSummaryPath: releasePassportBuildSummaryPath,
       platformManifestPaths: splitPathList(releasePassportPlatformManifestPaths),
       impactJson: releasePassportImpactJson,
+      promotionRoutingJson: releasePassportPromotionRoutingJson,
       kfd1WitnessJsons: splitPathList(releasePassportKfd1WitnessJsons),
       kfd2ClaimJsons: splitPathList(releasePassportKfd2ClaimJsons),
       kfd3PrebuildWitnessJsons: splitPathList(releasePassportKfd3PrebuildWitnessJsons),

@@ -4,7 +4,7 @@
   "product": {
     "name": "Buildchain",
     "package": "@kungfu-tech/buildchain",
-    "version": "2.14.2",
+    "version": "2.14.3-alpha.9",
     "repository": "https://github.com/kungfu-systems/buildchain"
   },
   "majorLine": "v2",
@@ -50,7 +50,7 @@
         "retryable GitHub fallback fetches use a bounded attempt budget before exact source SHA and tree verification"
       ],
       "breakingDigest": "sha256:a6a35370d6b0d0f46e1b2712dcc01961fe53c2febde95409a27a485c10a36650",
-      "auditDigest": "sha256:07f01d270d7f5712be067697f652b5843a07748696c0d2b8b2020639108c669d"
+      "auditDigest": "sha256:18d0ab6f916258871d45e92fa28597f590efbac0a0610f9bf7585472a5126307"
     },
     {
       "contractVersion": 1,
@@ -108,11 +108,17 @@
         "release-candidate-artifact"
       ],
       "breakingDefaults": {
+        "channelDefault": "auto",
+        "alphaShellDefault": "v2-alpha",
+        "stableShellDefault": "v2",
         "promoteOnlyReleaseCandidate": true,
         "requiredStatusCheck": "check / check"
       },
       "optionalInputs": [
+        "buildchain-channel",
         "buildchain-ref",
+        "buildchain-alpha-contract-lock-path",
+        "buildchain-stable-contract-lock-path",
         "release-candidate-workflow-file",
         "release-candidate-workflow-name",
         "publish-required-artifacts-json",
@@ -151,6 +157,9 @@
         ]
       },
       "guarantees": [
+        "one declarative promotion job selects matching alpha or stable workflow shell, runtime, and contract lock",
+        "router, shell, runtime, lock, publication channel, target ref, and override identities are bound before candidate download",
+        "train and exact-SHA runtime overrides remain limited to trusted workflow_dispatch actors",
         "promotion reuses PR-stage release-candidate artifacts",
         "promotion does not run the heavy native build matrix",
         "built source and promotion channel SHA are recorded separately",
@@ -158,8 +167,50 @@
         "publish-gate source locks are created by the wrapper and enforced by promote-buildchain-ref before publish side effects",
         "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes"
       ],
-      "breakingDigest": "sha256:6dbae32ce3d7aab3be6957065105af574794581847b7637314dad45f5349c919",
-      "auditDigest": "sha256:0a5691beb2469a71e22b0b7ecd3d32af539fa14dd6af6e14bf47d692a1788070"
+      "breakingDigest": "sha256:1f476fb9a4854b362c4b24cef89a3c7675d7d63baf3bc828d7b8ae7d2787cead",
+      "auditDigest": "sha256:4a0f29c9c33ef97609ca0e2244f79a36307de2c3bbb42f1515b358d2f4a2caa2"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "advanced-release-candidate-promote",
+      "kind": "workflow",
+      "path": ".github/workflows/.release-candidate-promote.yml",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v2",
+      "requiredInputs": [
+        "channel"
+      ],
+      "requiredOutputs": [
+        "promoted-sha",
+        "built-source-sha",
+        "release-candidate-artifact"
+      ],
+      "breakingDefaults": {
+        "promoteOnlyReleaseCandidate": true,
+        "requiredStatusCheck": "check / check"
+      },
+      "optionalInputs": [
+        "buildchain-ref",
+        "buildchain-contract-lock-path",
+        "promotion-router-ref",
+        "promotion-router-sha",
+        "promotion-shell-ref",
+        "promotion-shell-sha",
+        "promotion-runtime-ref",
+        "promotion-runtime-sha",
+        "promotion-contract-lock-path",
+        "promotion-contract-lock-digest",
+        "promotion-publication-channel",
+        "promotion-target-ref",
+        "promotion-override-used"
+      ],
+      "guarantees": [
+        "advanced promotion verifies routed shell, runtime, lock, publication channel, and target bindings before candidate resolution",
+        "promotion reuses PR-stage release-candidate artifacts and does not run the heavy native build matrix"
+      ],
+      "breakingDigest": "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0",
+      "auditDigest": "sha256:3c2594dccab4bf7836a28e1aca5189554618eb51bd73e63df5bc28f232b214db"
     },
     {
       "contractVersion": 1,
@@ -269,7 +320,7 @@
         "semver GitHub Releases are created or updated only after transaction completion, with prerelease/latest metadata derived from the public release tag"
       ],
       "breakingDigest": "sha256:a59f0910e6df842e7699139472e5dd69ac2fdd7f7213bf2cb346d1d622556874",
-      "auditDigest": "sha256:1dadbe655476a33323749a80a30daa624d8ffa60b7b452d45d920fd94a1a317c"
+      "auditDigest": "sha256:5b365ef8afa4c5d88e73d22415929f4123da0ea3b33374f465a1c8f22aaf2785"
     },
     {
       "contractVersion": 1,
@@ -328,7 +379,7 @@
         "release-state SHA is recorded as a durable audit entrance"
       ],
       "breakingDigest": "sha256:b627e1b2ece9b6049517a942c5139e342e6077cdd3d8962d61cef8481b1f70ad",
-      "auditDigest": "sha256:af307129d9df51a1a0d5f7cfff742b0db7d9f8f04dd810cf97a62c79e2d3a726"
+      "auditDigest": "sha256:05abae7c71444b0c48c097a4363218ed3ae7d652677588f1cf2c457a358cc4c1"
     },
     {
       "contractVersion": 1,
@@ -377,7 +428,7 @@
         "prose-only public claims downgrade the release trust passport audit"
       ],
       "breakingDigest": "sha256:f0b636eb925ddbf45ff1a8872454ab7b4dd98857cac12bb75217830130e62a16",
-      "auditDigest": "sha256:af307129d9df51a1a0d5f7cfff742b0db7d9f8f04dd810cf97a62c79e2d3a726"
+      "auditDigest": "sha256:05abae7c71444b0c48c097a4363218ed3ae7d652677588f1cf2c457a358cc4c1"
     },
     {
       "contractVersion": 1,
@@ -527,7 +578,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:e0fd0a6e19835663980faec6d4d132424d9ee65c27fcd3437bf30634740032bb"
+      "auditDigest": "sha256:e0770d43da650319a70d83cdb52f79e70ed0a9d31e103a28a1f8423a52aa1539"
     },
     {
       "contractVersion": 1,
@@ -549,7 +600,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:dca785dc9f657536f84a9b40c3fb00d5a191bbd6cbce2fb1cb59cd0369150817"
+      "auditDigest": "sha256:7d74190fd37b62acc862e5a50fa01f2888605b60404f600548a3bb32c0d8b93f"
     },
     {
       "contractVersion": 1,
@@ -600,7 +651,7 @@
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
         "digest": "sha256:373723a73d188194d389dee04c394d3b79cb0c016a370f2f5d0f60979a02ed48",
-        "registryDigest": "sha256:266928038838e26ba1350c70d78290723ddb2fd209b66ab1afab776d948a379b",
+        "registryDigest": "sha256:5f771d5b2f481a28afc48f516685f50985c1d51391857cdf04e3238c271fecc8",
         "inputClassifications": {
           "buildchain-ref": {
             "classification": "included",
@@ -747,7 +798,7 @@
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
         "digest": "sha256:367be236280f2597ffefc49680feb106b4cf9e8f5fb9420713351f075a168c4a",
-        "registryDigest": "sha256:266928038838e26ba1350c70d78290723ddb2fd209b66ab1afab776d948a379b",
+        "registryDigest": "sha256:5f771d5b2f481a28afc48f516685f50985c1d51391857cdf04e3238c271fecc8",
         "inputClassifications": {
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN": {
             "classification": "redacted",
@@ -1006,7 +1057,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:e264a79f9f399038c2fcfd21e4168c68c2e1485ee5c651c02242a02b622ac2be",
-      "auditDigest": "sha256:07f01d270d7f5712be067697f652b5843a07748696c0d2b8b2020639108c669d"
+      "auditDigest": "sha256:18d0ab6f916258871d45e92fa28597f590efbac0a0610f9bf7585472a5126307"
     },
     {
       "contractVersion": 1,
@@ -1113,7 +1164,7 @@
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
         "digest": "sha256:2e113607af3cb0a17b4da64b8758652a4bee4a162656ce7256a8e06de3d4cf2f",
-        "registryDigest": "sha256:266928038838e26ba1350c70d78290723ddb2fd209b66ab1afab776d948a379b",
+        "registryDigest": "sha256:5f771d5b2f481a28afc48f516685f50985c1d51391857cdf04e3238c271fecc8",
         "inputClassifications": {
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN": {
             "classification": "redacted",
@@ -1443,7 +1494,7 @@
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
         "digest": "sha256:29569f4b754595792a16742d1c4c63838b54601674a2cb6c96261a72c962dece",
-        "registryDigest": "sha256:266928038838e26ba1350c70d78290723ddb2fd209b66ab1afab776d948a379b",
+        "registryDigest": "sha256:5f771d5b2f481a28afc48f516685f50985c1d51391857cdf04e3238c271fecc8",
         "inputClassifications": {
           "artifact-name": {
             "classification": "included",
@@ -1614,7 +1665,7 @@
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
         "digest": "sha256:7e6283c8fbeab7a680bae57c9ab9c8eb94aab7400d3ee01c5b9dfdd03f149edb",
-        "registryDigest": "sha256:266928038838e26ba1350c70d78290723ddb2fd209b66ab1afab776d948a379b",
+        "registryDigest": "sha256:5f771d5b2f481a28afc48f516685f50985c1d51391857cdf04e3238c271fecc8",
         "inputClassifications": {
           "artifact-path": {
             "classification": "digest-only",
@@ -1850,7 +1901,7 @@
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
         "digest": "sha256:6b132790b9798e8a5dfbe095701d8e024c160a08bc7c4bd477ee79feef7a9cfd",
-        "registryDigest": "sha256:266928038838e26ba1350c70d78290723ddb2fd209b66ab1afab776d948a379b",
+        "registryDigest": "sha256:5f771d5b2f481a28afc48f516685f50985c1d51391857cdf04e3238c271fecc8",
         "inputClassifications": {
           "artifact-name": {
             "classification": "included",
@@ -2031,7 +2082,7 @@
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
         "digest": "sha256:0613ea545fe2d630f34e665c8e6fe99df3f5333d75051a7176e9cf991e494f59",
-        "registryDigest": "sha256:266928038838e26ba1350c70d78290723ddb2fd209b66ab1afab776d948a379b",
+        "registryDigest": "sha256:5f771d5b2f481a28afc48f516685f50985c1d51391857cdf04e3238c271fecc8",
         "inputClassifications": {
           "artifact-name": {
             "classification": "included",
@@ -2198,7 +2249,7 @@
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "controller:release-candidate-promotion",
       "kind": "controller",
-      "path": ".github/workflows/release-candidate-promote.yml",
+      "path": ".github/workflows/.release-candidate-promote.yml",
       "requiredInputs": [],
       "requiredOutputs": [
         "controller-plan-json",
@@ -2210,7 +2261,7 @@
       "breakingDefaults": {
         "evidenceContract": "buildchain.controller-evidence/v1",
         "descriptorVersion": 1,
-        "workflowPath": ".github/workflows/release-candidate-promote.yml",
+        "workflowPath": ".github/workflows/.release-candidate-promote.yml",
         "requiredStages": [
           "preflight",
           "admit-release-candidate",
@@ -2259,6 +2310,17 @@
         "github-release-notes",
         "github-release-title",
         "package-manager",
+        "promotion-contract-lock-digest",
+        "promotion-contract-lock-path",
+        "promotion-override-used",
+        "promotion-publication-channel",
+        "promotion-router-ref",
+        "promotion-router-sha",
+        "promotion-runtime-ref",
+        "promotion-runtime-sha",
+        "promotion-shell-ref",
+        "promotion-shell-sha",
+        "promotion-target-ref",
         "publication-admission-json",
         "publication-auto-admission",
         "publication-auto-no-gate",
@@ -2304,8 +2366,8 @@
       ],
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
-        "digest": "sha256:2507d132710f66d3ae6ffdb18f5e66172707b8e0f9ad9e888f7422fdacc99133",
-        "registryDigest": "sha256:266928038838e26ba1350c70d78290723ddb2fd209b66ab1afab776d948a379b",
+        "digest": "sha256:6a531c572b59eb3b8aa5d47df3658f8f438a0d026468dd13b1a6642a3ea8c425",
+        "registryDigest": "sha256:5f771d5b2f481a28afc48f516685f50985c1d51391857cdf04e3238c271fecc8",
         "inputClassifications": {
           "BUILDCHAIN_ISSUE_APP_ID": {
             "classification": "redacted",
@@ -2400,6 +2462,50 @@
             "source": "workflow-call-input"
           },
           "package-manager": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "promotion-contract-lock-digest": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "promotion-contract-lock-path": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "promotion-override-used": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "promotion-publication-channel": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "promotion-router-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "promotion-router-sha": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "promotion-runtime-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "promotion-runtime-sha": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "promotion-shell-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "promotion-shell-sha": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "promotion-target-ref": {
             "classification": "included",
             "source": "workflow-call-input"
           },
@@ -2579,8 +2685,8 @@
         "redacted input values are never serialized and digest-only input values are never emitted in plaintext",
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
-      "breakingDigest": "sha256:46238f8fc3c20924decc57ecad142a462fc4739c6bc21409d5cd2457fc1c3cdd",
-      "auditDigest": "sha256:0a5691beb2469a71e22b0b7ecd3d32af539fa14dd6af6e14bf47d692a1788070"
+      "breakingDigest": "sha256:015d8de793adbd4c539416be7d7512e18cc92097e629b0203fa06d2c183e98bd",
+      "auditDigest": "sha256:3c2594dccab4bf7836a28e1aca5189554618eb51bd73e63df5bc28f232b214db"
     },
     {
       "contractVersion": 1,
@@ -2624,21 +2730,24 @@
         "buildchain-repository",
         "downstream-base-ref",
         "downstream-branch",
+        "downstream-prepare-command",
         "downstream-repository",
         "downstream-target",
+        "downstream-verify-command",
         "dry-run",
         "graph-json",
         "lock-path",
         "pr-body",
         "pr-title",
         "propagation-token",
+        "refresh-managed-readme-badges",
         "source-node",
         "upstream-release-json"
       ],
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
-        "digest": "sha256:9b9f9a2320c4349903d72ee46e329211b5538ed5ebebaa93559df4eafb835997",
-        "registryDigest": "sha256:266928038838e26ba1350c70d78290723ddb2fd209b66ab1afab776d948a379b",
+        "digest": "sha256:ede9eba43b87cf19330d5f8203a1585bf066aa9affc9cac0f43230ac76b8580d",
+        "registryDigest": "sha256:5f771d5b2f481a28afc48f516685f50985c1d51391857cdf04e3238c271fecc8",
         "inputClassifications": {
           "buildchain-ref": {
             "classification": "included",
@@ -2656,12 +2765,20 @@
             "classification": "included",
             "source": "workflow-call-input"
           },
+          "downstream-prepare-command": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
           "downstream-repository": {
             "classification": "included",
             "source": "workflow-call-input"
           },
           "downstream-target": {
             "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "downstream-verify-command": {
+            "classification": "digest-only",
             "source": "workflow-call-input"
           },
           "dry-run": {
@@ -2688,6 +2805,10 @@
             "classification": "redacted",
             "source": "workflow-call-secret"
           },
+          "refresh-managed-readme-badges": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
           "source-node": {
             "classification": "included",
             "source": "workflow-call-input"
@@ -2705,9 +2826,9 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:d7a1f15990ce8bd13149474888232c7d4451dd2a49bebf4d4ce1336695da430e",
-      "auditDigest": "sha256:2750630ae675352b601dd6cb6a987df14bf11029fcf02aa54638b4fcdcb7590e"
+      "auditDigest": "sha256:43fd4da155c701d4c5078373c1f47b50bebc6a46556b8db5e3c4d502c113fa95"
     }
   ],
-  "compatibilityDigest": "sha256:af162b86ab4506e9b5f1d3c59b41f3fd57fbad79ff4d749a7f12ff16460517f8",
-  "contractDigest": "sha256:90466f4b69982ad1aba65d22596baa4cd0112454f44b1f7c33ab3de017029a06"
+  "compatibilityDigest": "sha256:edc3653e5cb34efd97065a6941db16140bbf375a565bbcf329d9d795bb07676f",
+  "contractDigest": "sha256:01282a8e51767f52f821295b2258b0f8ef67525ba30c2973f9309645088bc70e"
 }

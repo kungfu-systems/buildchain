@@ -15,6 +15,37 @@ function parsePackageManager(value) {
   return match ? match[1] : null;
 }
 
+export function validatePackageManagerContract({ cwd = process.cwd(), expectedManager = "" } = {}) {
+  const resolvedCwd = path.resolve(cwd);
+  const pkg = readJsonIfExists(path.join(resolvedCwd, "package.json"));
+  const declaredSpec = String(pkg?.packageManager || "").trim();
+  const declaredMatch = declaredSpec.match(/^([A-Za-z0-9._-]+)@([^\s]+)$/);
+
+  if (declaredSpec && !declaredMatch) {
+    throw new Error(
+      `Invalid packageManager declaration: ${declaredSpec}. Expected <manager>@<version>.`,
+    );
+  }
+
+  const declaredName = declaredMatch?.[1] || "";
+  const detected = declaredName && !KNOWN_MANAGERS.has(declaredName)
+    ? { name: "custom", reason: "packageManager" }
+    : detectPackageManager(resolvedCwd);
+  const expected = String(expectedManager || "").trim();
+  if (expected && expected !== "custom" && detected.name !== expected) {
+    throw new Error(
+      `Package manager mismatch: workflow requested ${expected}, but the consumer declares ${detected.name}.`,
+    );
+  }
+
+  return {
+    name: detected.name,
+    reason: detected.reason,
+    declaredSpec,
+    declaredVersion: declaredMatch?.[2] || "",
+  };
+}
+
 export function assertPackageManager(manager) {
   if (!KNOWN_MANAGERS.has(manager)) {
     throw new Error(`Unsupported package manager: ${manager}`);
@@ -288,4 +319,5 @@ export default {
   getWorkspaceInfo,
   getYarnLockInfo,
   shellJoin,
+  validatePackageManagerContract,
 };

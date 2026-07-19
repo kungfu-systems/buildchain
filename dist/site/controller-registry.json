@@ -1345,8 +1345,8 @@
       "id": "release-candidate-promotion",
       "version": 1,
       "workflow": {
-        "id": "release-candidate-promote",
-        "path": ".github/workflows/release-candidate-promote.yml"
+        "id": ".release-candidate-promote",
+        "path": ".github/workflows/.release-candidate-promote.yml"
       },
       "inputs": {
         "BUILDCHAIN_ISSUE_APP_ID": {
@@ -1442,6 +1442,50 @@
           "source": "workflow-call-input"
         },
         "package-manager": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "promotion-contract-lock-digest": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "promotion-contract-lock-path": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "promotion-override-used": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "promotion-publication-channel": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "promotion-router-ref": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "promotion-router-sha": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "promotion-runtime-ref": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "promotion-runtime-sha": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "promotion-shell-ref": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "promotion-shell-sha": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "promotion-target-ref": {
           "classification": "included",
           "source": "workflow-call-input"
         },
@@ -1655,7 +1699,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:2507d132710f66d3ae6ffdb18f5e66172707b8e0f9ad9e888f7422fdacc99133"
+      "digest": "sha256:6a531c572b59eb3b8aa5d47df3658f8f438a0d026468dd13b1a6642a3ea8c425"
     },
     {
       "schemaVersion": 1,
@@ -1683,12 +1727,20 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "downstream-prepare-command": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "downstream-repository": {
           "classification": "included",
           "source": "workflow-call-input"
         },
         "downstream-target": {
           "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "downstream-verify-command": {
+          "classification": "digest-only",
           "source": "workflow-call-input"
         },
         "dry-run": {
@@ -1714,6 +1766,10 @@
         "propagation-token": {
           "classification": "redacted",
           "source": "workflow-call-secret"
+        },
+        "refresh-managed-readme-badges": {
+          "classification": "included",
+          "source": "workflow-call-input"
         },
         "source-node": {
           "classification": "included",
@@ -1758,8 +1814,8 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:9b9f9a2320c4349903d72ee46e329211b5538ed5ebebaa93559df4eafb835997"
+      "digest": "sha256:ede9eba43b87cf19330d5f8203a1585bf066aa9affc9cac0f43230ac76b8580d"
     }
   ],
-  "digest": "sha256:266928038838e26ba1350c70d78290723ddb2fd209b66ab1afab776d948a379b"
+  "digest": "sha256:5f771d5b2f481a28afc48f516685f50985c1d51391857cdf04e3238c271fecc8"
 }

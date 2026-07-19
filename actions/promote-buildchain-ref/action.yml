@@ -137,6 +137,9 @@ inputs:
   release-passport-impact-json:
     description: "Surface-aware impact ledger JSON or path; required when the generated release passport target requires surfaceImpacts[]"
     default: ""
+  release-passport-promotion-routing-json:
+    description: "Promotion router/shell/runtime/lock evidence JSON or path to bind into the final release passport"
+    default: ""
   release-passport-kfd-1-witness-jsons:
     description: "Newline- or comma-separated KFD-1 contract-world witness JSON paths to include in the release passport"
     default: ""
@@ -197,7 +200,7 @@ outputs:
   planned-publication-version:
     description: "Exact version selected during a dry-run publication plan"
   planned-publication-exact-tag:
-    description: "Exact tag selected during a dry-run publication plan"
+    description: "Exact public tag corresponding to the planned publication version"
   public-release-tag:
     description: "Public GitHub Release tag; anchored package publishes use v<publishedVersion> while transaction-exact-tag remains internal"
   transaction-release-sha:

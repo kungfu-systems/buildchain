@@ -76,6 +76,8 @@ export function evaluatePublicationControlPlaneSnapshot({
     branchPolicy.requiredStatusCheck === requiredStatusCheck &&
     branchPolicy.requiredStatusChecks.includes(requiredStatusCheck) &&
     branchPolicy.requiredCheckPassed === true &&
+    /^[0-9a-f]{40}$/i.test(String(branchPolicy.requiredCheckSha || "")) &&
+    branchPolicy.requiredCheckSha === branchPolicy.pullRequestHeadSha &&
     branchPolicy.sourceSha === branchPolicy.headSha &&
     branchPolicy.mergedPullRequest === true &&
     branchPolicy.baseRef === branch &&

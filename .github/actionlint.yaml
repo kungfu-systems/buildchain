@@ -35,6 +35,15 @@ paths:
     # this exact false-positive scoped until actionlint's context schema ships it.
     ignore:
       - 'property "workflow_ref" is not defined in object type'
+  .github/workflows/release-candidate-promote.yml:
+    # GitHub.com exposes job.workflow_ref for called-workflow identity. Keep
+    # this exact false-positive scoped until actionlint's context schema ships it.
+    ignore:
+      - 'property "workflow_ref" is not defined in object type'
+  .github/workflows/.release-candidate-promote.yml:
+    # The advanced shell binds its called-workflow identity before candidate use.
+    ignore:
+      - 'property "workflow_ref" is not defined in object type'
   .github/workflows/.release-verify.yml:
     ignore:
       - 'property "workflow_ref" is not defined in object type'

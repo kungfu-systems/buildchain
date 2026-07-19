@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-impact",
   "release": {
-    "version": "2.14.2",
+    "version": "2.14.3-alpha.9",
     "line": "v2.14"
   },
   "versionImpact": {
@@ -11,6 +11,20 @@
     "rationale": "Buildchain v2.14 adds compatible release-governance, artifact-verification, and controller evidence contracts without changing existing consumer inputs."
   },
   "surfaceImpacts": [
+    {
+      "id": "dual-channel-promotion-workflow-shell-router",
+      "impact": "minor",
+      "class": "workflow-contract",
+      "rationale": "A generated public promotion router lets consumers declare one job while alpha and stable lanes select matching advanced workflow shells, runtimes, and contract locks; immutable routing identities are verified before candidate download and recorded in controller and release passport evidence.",
+      "source": ".github/workflows/release-candidate-promote.yml"
+    },
+    {
+      "id": "promotion-shell-layout-bootstrap",
+      "impact": "patch",
+      "class": "workflow-contract",
+      "rationale": "The generated router reads a provider-owned shell-layout declaration and pins a legacy stable public workflow to its immutable v2 SHA until the stable tag contains the hidden advanced workflow, preventing cross-repository workflow parsing failures without changing consumer declarations.",
+      "source": ".buildchain/promotion-shell-routing.json"
+    },
     {
       "id": "release-channel-protection-convergence",
       "impact": "patch",
@@ -52,6 +66,27 @@
       "class": "release-governance",
       "rationale": "Exact publication planning installs the promotion source dependencies before version-state verification, preventing declared production imports from failing before publication authority is sealed.",
       "source": ".github/workflows/release-candidate-promote.yml"
+    },
+    {
+      "id": "consumer-package-manager-version",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "PR-stage preflight and promote-only dependency installation preserve the consumer packageManager version instead of substituting Buildchain's internal bootstrap version.",
+      "source": ".github/workflows/release-candidate-promote.yml"
+    },
+    {
+      "id": "provider-transaction-pr-head-check",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Provider-policy fallback verifies the configured required check on the merged pull request head SHA while retaining target-branch, same-repository PR, independent approval, exact context, and configured app constraints.",
+      "source": "actions/promote-buildchain-ref/lib.js"
+    },
+    {
+      "id": "stable-runtime-package-manager-validator-fallback",
+      "impact": "patch",
+      "class": "workflow-contract",
+      "rationale": "The workflow shell prefers the selected runtime package-manager validator and falls back to its own bundled validator when a legacy stable runtime predates that contract, preserving runtime-first routing and fail-closed validation.",
+      "source": ".github/workflows/.build.yml"
     },
     {
       "id": "artifact-verification-envelope",
@@ -219,5 +254,5 @@
   "breaking": false,
   "security": false,
   "migrationRequired": false,
-  "summary": "Buildchain v2.14 extends sealed evidence and release-governance contracts, including convergent protected channel promotion and bounded lifecycle execution."
+  "summary": "Buildchain v2.14 extends sealed evidence and release governance with first-class dual-channel promotion workflow-shell routing."
 }

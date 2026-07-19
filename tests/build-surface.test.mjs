@@ -96,7 +96,7 @@ test("public reusable controllers expose source-bound plan and always-aggregated
     ".github/workflows/.web-surface.yml",
     ".github/workflows/publication-artifact.yml",
     ".github/workflows/paper-release.yml",
-    ".github/workflows/release-candidate-promote.yml",
+    ".github/workflows/.release-candidate-promote.yml",
     ".github/workflows/release-propagation.yml",
   ];
   for (const workflow of workflows) {
@@ -137,7 +137,7 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   assert.match(reusableBuild, /BUILDCHAIN_CONTROLLER_REGISTRY: \.buildchain\/controller-runtime\/dist\/site\/controller-registry\.json/);
 
   const paperRelease = fs.readFileSync(path.join(root, ".github/workflows/paper-release.yml"), "utf8");
-  const promotion = fs.readFileSync(path.join(root, ".github/workflows/release-candidate-promote.yml"), "utf8");
+  const promotion = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
   const promotionAuthority = promotion.slice(
     promotion.indexOf("  publication-authority:"),
     promotion.indexOf("\n  promote:", promotion.indexOf("  publication-authority:")),
@@ -177,6 +177,27 @@ test("reusable build workflow exposes the required surface contract", () => {
     "utf8",
   );
   assert.match(workflow, /workflow_call:/);
+  assert.match(workflow, /name: Validate consumer package manager contract/);
+  assert.match(
+    workflow,
+    /validator=\.buildchain\/runtime\/scripts\/validate-package-manager-contract\.mjs/,
+  );
+  assert.match(
+    workflow,
+    /validator=\.buildchain\/workflow-shell\/scripts\/validate-package-manager-contract\.mjs/,
+    "new workflow shells must retain package-manager validation when the selected stable runtime predates the validator",
+  );
+  assert.match(workflow, /node "\$\{validator\}"/);
+  assert.match(
+    workflow,
+    /BUILDCHAIN_PACKAGE_MANAGER_CWD: \.buildchain\/consumer\n/,
+    "consumer package-manager detection must use the repository root even when builds use a nested working directory",
+  );
+  assert.ok(
+    workflow.indexOf("name: Validate consumer package manager contract") <
+      workflow.indexOf("  build-native:"),
+    "consumer package-manager incompatibility must fail before native release-candidate jobs",
+  );
   assert.match(workflow, /runner-preset:/);
   assert.match(workflow, /platforms-json:/);
   assert.match(workflow, /linux-container-preset:/);
@@ -654,7 +675,7 @@ test("artifact relay uploads to S3 and downloads verified GitHub artifact payloa
 
 test("release-candidate promote workflow is promote-only and never schedules a heavy build", () => {
   const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/release-candidate-promote.yml"),
+    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
     "utf8",
   );
   assert.match(workflow, /workflow_call:/);
@@ -726,7 +747,9 @@ test("release-candidate promote workflow is promote-only and never schedules a h
       publicationPlan.indexOf("name: Resolve exact publication transaction version"),
     "exact publication planning must install source dependencies before version-state verification",
   );
-  assert.match(publicationPlan, /corepack pnpm@11\.7\.0 install --frozen-lockfile/);
+  assert.match(publicationPlan, /name: Validate consumer package manager contract/);
+  assert.match(publicationPlan, /corepack pnpm install --frozen-lockfile/);
+  assert.doesNotMatch(publicationPlan, /corepack pnpm@11\.7\.0/);
   assert.match(publicationPlan, /yarn install --immutable \|\| yarn install --frozen-lockfile/);
   assert.match(publicationPlan, /npm ci/);
   assert.match(publicationPlan, /Skipping dependency install for custom package manager/);
@@ -750,6 +773,7 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /auto-no-gate: \$\{\{ inputs\.publication-auto-no-gate \}\}/);
   assert.match(workflow, /source-sha: \$\{\{ needs\.preflight\.outputs\.requested-sha \}\}/);
   assert.match(workflow, /publisher-workflow-path: \$\{\{ inputs\.publication-publisher-workflow-path \}\}/);
+  assert.match(workflow, /authority-workflow-path: \.github\/workflows\/\.release-candidate-promote\.yml/);
   assert.match(workflow, /evidence-run-id:/);
   assert.match(workflow, /evidence-manifest-pattern:/);
   assert.match(workflow, /name: Seal product publication capability/);
@@ -784,7 +808,8 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /Install promotion dependencies/);
   assert.match(workflow, /PACKAGE_MANAGER: \$\{\{ inputs\.package-manager \}\}/);
   assert.match(workflow, /corepack enable/);
-  assert.match(workflow, /corepack pnpm@11\.7\.0 install --frozen-lockfile/);
+  assert.match(workflow, /corepack pnpm install --frozen-lockfile/);
+  assert.match(workflow, /cd "\$\{RECONCILIATION_WORKSPACE\}"[\s\S]*corepack pnpm install --frozen-lockfile/);
   assert.match(workflow, /Resolve post-release reconciliation checkout/);
   assert.match(workflow, /Checkout current development channel for reconciliation/);
   assert.match(workflow, /Install reconciliation dependencies/);
@@ -873,7 +898,9 @@ test("sealed publication authority verifier is independent and credential-free",
   assert.match(workflow, /--repository "\$\{\{ inputs\.evidence-repository \}\}"/);
   assert.match(workflow, /--workflow-repository "\$\{\{ inputs\.buildchain-repository \}\}"/);
   assert.match(workflow, /--source-sha "\$\{\{ inputs\.source-sha \}\}"/);
+  assert.match(workflow, /--workflow "\$\{\{ inputs\.authority-workflow-path \|\| '\.github\/workflows\/release-candidate-promote\.yml' \}\}"/);
   assert.match(workflow, /--workflow-ref "\$\{\{ inputs\.buildchain-ref \}\}"/);
+  assert.match(workflow, /BUILDCHAIN_AUTHORITY_WORKFLOW_PATH: \$\{\{ inputs\.authority-workflow-path \|\| '\.github\/workflows\/release-candidate-promote\.yml' \}\}/);
   assert.match(workflow, /name: Assemble managed release-candidate admission/);
   assert.match(workflow, /BUILDCHAIN_PLANNED_PUBLICATION_VERSION/);
   assert.match(workflow, /authority publication version mismatch/);
@@ -919,6 +946,8 @@ test("publication control-plane audit defers npm OIDC authorization to the publi
   assert.match(script, /evidenceSource: "exact-workflow-job"/);
   assert.match(script, /policyMode: "provider-enforced-transaction"/);
   assert.match(script, /source pull-request lineage/);
+  assert.match(script, /commits\/\$\{pullRequestHeadSha\}\/check-runs/);
+  assert.doesNotMatch(script, /commits\/\$\{sourceSha\}\/check-runs/);
   assert.doesNotMatch(script, /actions\/permissions\/workflow/);
   assert.doesNotMatch(script, /actions\/runners\?per_page/);
   assert.doesNotMatch(script, /\["trust", "list"/);
@@ -1995,7 +2024,7 @@ test("promote wrapper exposes controlled branch-protection review bypass", () =>
     "utf8",
   );
   const wrapper = fs.readFileSync(
-    path.join(root, ".github/workflows/release-candidate-promote.yml"),
+    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
     "utf8",
   );
 
@@ -2031,7 +2060,7 @@ test("promote wrapper exposes controlled branch-protection review bypass", () =>
 
 test("Buildchain stable promotion gates publication after RC resolution", () => {
   const wrapper = fs.readFileSync(
-    path.join(root, ".github/workflows/release-candidate-promote.yml"),
+    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
     "utf8",
   );
   const policy = JSON.parse(fs.readFileSync(
@@ -2173,7 +2202,7 @@ test("report issue action exposes workflow-friction feedback mode", () => {
     "utf8",
   );
   const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/release-candidate-promote.yml"),
+    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
     "utf8",
   );
 
@@ -2194,6 +2223,10 @@ test("report issue action exposes workflow-friction feedback mode", () => {
   assert.match(workflow, /BUILDCHAIN_BUILD_WORKFLOW_NAME: \$\{\{ inputs\.release-candidate-workflow-name \}\}/);
   assert.match(workflow, /BUILDCHAIN_PROMOTION_OUTCOME: \$\{\{ steps\.promote\.outcome \}\}/);
   assert.match(workflow, /BUILDCHAIN_PROMOTION_DIAGNOSIS: \$\{\{ steps\.promote\.outputs\.failure-message \}\}/);
+  assert.match(workflow, /stable\.minimum_interval/);
+  assert.match(workflow, /stable\.canary_soak/);
+  assert.match(workflow, /echo "report=false" >> "\$\{GITHUB_OUTPUT\}"/);
+  assert.match(workflow, /steps\.friction\.outputs\.report != 'false'/);
   assert.match(workflow, /reporter="\.buildchain\/runtime\/scripts\/workflow-friction-report\.mjs"/);
   assert.match(workflow, /reporter="scripts\/workflow-friction-report\.mjs"/);
   assert.match(workflow, /Report Buildchain promotion friction/);
@@ -2267,7 +2300,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   );
 
   assert.match(workflow, /actions: read/);
-  assert.match(workflow, /uses: \.\/\.github\/workflows\/release-candidate-promote\.yml/);
+  assert.match(workflow, /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml/);
   assert.match(workflow, /github\.event\.workflow_run\.event == 'push'/);
   assert.match(workflow, /startsWith\(github\.event\.workflow_run\.head_branch, 'alpha\/'\)/);
   assert.match(workflow, /startsWith\(github\.event\.workflow_run\.head_branch, 'release\/'\)/);
@@ -3144,7 +3177,7 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
     fs.readFileSync(path.join(root, "dist/site/buildchain-contract.json"), "utf8"),
   );
   assert.equal(alphaLock.buildchain.ref, "v2-alpha");
-  assert.equal(alphaLock.buildchain.resolvedSha, "d7b9453665a60392e9082444dcc8e023cafc000c");
+  assert.equal(alphaLock.buildchain.resolvedSha, "11163bfb2cd39382684b543e580cce3411254f47");
   assert.equal(alphaLock.buildchain.compatibilityPolicy, "major-compatible");
   const alphaEvaluation = evaluateBuildchainContractLock({
     lock: alphaLock,

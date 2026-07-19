@@ -71,6 +71,7 @@ const {
 } = await import("../packages/core/publish-transaction.js");
 const {
   validateRequiredPublishSourceLock,
+  plannedPublicationExactTag,
   collectGitHubReleaseEvidenceAssets,
   publishGitHubReleaseEvidence,
 } = await import("../actions/promote-buildchain-ref/index.js");
@@ -1427,9 +1428,23 @@ fs.writeFileSync("dist/site/buildchain-contract.json", JSON.stringify({
       action: "dry-run-publish-transaction",
       version: "1.0.0-alpha.0",
       tag: "v1.0.0-alpha.0",
+      publicTag: "v1.0.0-alpha.0",
       sha: SHA,
     },
   );
+});
+
+test("publication plan exposes an anchored package version as the exact public tag", () => {
+  const plannedPublication = {
+    action: "dry-run-publish-transaction",
+    version: "22.22.3-kf.3-alpha.19",
+    tag: "v22.22.1-alpha.12",
+    publicTag: "v22.22.3-kf.3-alpha.19",
+    sha: SHA,
+  };
+
+  assert.equal(plannedPublicationExactTag(plannedPublication), "v22.22.3-kf.3-alpha.19");
+  assert.equal(plannedPublication.tag, "v22.22.1-alpha.12");
 });
 
 test("release promotion creates v-prefixed release tag and prepares next alpha tag", async () => {
@@ -6958,6 +6973,8 @@ test("strict alpha promotion requires a protected dev-to-alpha PR", async () => 
 
 test("strict alpha promotion uses provider transaction evidence when protection details are unreadable", async () => {
   let reviewState = "APPROVED";
+  const pullRequestHeadSha = "b".repeat(40);
+  const checkedRefs = [];
   const octokit = {
     rest: {
       repos: {
@@ -6970,6 +6987,7 @@ test("strict alpha promotion uses provider transaction evidence when protection 
               base: { ref: "alpha/v1/v1.0" },
               head: {
                 ref: "dev/v1/v1.0",
+                sha: pullRequestHeadSha,
                 repo: { full_name: "kungfu-systems/buildchain" },
               },
             },
@@ -7000,7 +7018,8 @@ test("strict alpha promotion uses provider transaction evidence when protection 
       },
       checks: {
         listForRef: async ({ ref }) => {
-          assert.equal(ref, SHA);
+          checkedRefs.push(ref);
+          assert.equal(ref, pullRequestHeadSha);
           return {
             data: {
               check_runs: [{ name: "check", conclusion: "success", app: { id: 15368 } }],
@@ -7020,6 +7039,7 @@ test("strict alpha promotion uses provider transaction evidence when protection 
     requiredStatusCheck: "check",
   });
   assert.equal(resolvedStatusCheck, "check");
+  assert.deepEqual(checkedRefs, [pullRequestHeadSha]);
 
   reviewState = "CHANGES_REQUESTED";
   await assert.rejects(

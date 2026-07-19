@@ -743,6 +743,33 @@ It does not call `.build.yml`, does not create a matrix, and must fail before
 publish if the RC evidence, payload set, or source-lock ref is missing or
 ambiguous.
 
+The public `release-candidate-promote.yml` is a generated channel router. It
+derives the publication lane from `target-ref`, then selects the matching
+advanced workflow shell, runtime, and consumer lock before the advanced
+promotion starts:
+
+- alpha targets use `.release-candidate-promote.yml@vN-alpha`, runtime
+  `vN-alpha`, and `buildchain-alpha-contract-lock-path`;
+- release and major targets use `.release-candidate-promote.yml@vN`, runtime
+  `vN`, and `buildchain-stable-contract-lock-path`.
+
+The generated router also owns the stable-shell layout transition through
+`.buildchain/promotion-shell-routing.json`. While the current stable `vN` still
+ships the advanced implementation at the public workflow path, the stable lane
+calls that public workflow at the exact immutable SHA behind `vN`; this prevents
+GitHub from rejecting the router merely because the future hidden workflow path
+does not exist in the current stable tag. The logical shell identity remains
+`vN`, and the router verifies that its checkout SHA equals the pinned call SHA.
+After a stable release contains the hidden advanced workflow, the routing file
+can move the stable call to that path without any consumer declaration change.
+
+The router resolves immutable SHAs and the selected lock digest before candidate
+download. The advanced shell verifies the same router, shell, runtime, lock,
+channel, and target binding again. Train and exact-SHA runtime overrides remain
+restricted to trusted `workflow_dispatch` actors with write, maintain, or admin
+permission. Promotion controller evidence, the promotion copy of the release
+candidate passport, and the final release passport record these identities.
+
 ```yaml
 jobs:
   promote:
@@ -751,6 +778,9 @@ jobs:
       buildchain-issue-app-id: ${{ secrets.BUILDCHAIN_ISSUE_APP_ID }}
       buildchain-issue-app-private-key: ${{ secrets.BUILDCHAIN_ISSUE_APP_PRIVATE_KEY }}
     with:
+      buildchain-channel: auto
+      buildchain-alpha-contract-lock-path: .buildchain/alpha-contract-lock.json
+      buildchain-stable-contract-lock-path: .buildchain/contract-lock.json
       channel: alpha
       target-ref: alpha/v22/v22.22
       artifact-name: libnode
@@ -769,9 +799,14 @@ jobs:
       publish-package-set-order: platforms-first-main-last
       publish-package-main: "@kungfu-tech/libnode"
       release-passport-product-name: Libnode
-      buildchain-contract-lock-path: .buildchain/contract-lock.json
       buildchain-contract-drift-issue-mode: compatible-and-breaking
 ```
+
+Existing callers may keep `buildchain-contract-lock-path`; a non-empty explicit
+path overrides channel-specific selection for compatibility. Migration only
+requires adding the two channel lock inputs and may retain the remaining common
+promotion declaration unchanged. Consumers must not call the dot-prefixed
+advanced workflow directly.
 
 `buildchain-issue-app-id` and `buildchain-issue-app-private-key` are optional
 but recommended for cross-repository consumers. They should identify a GitHub

@@ -6,6 +6,10 @@ import {
 } from "../packages/core/public-surface-audit.js";
 import { evaluateBuildchainContractLock } from "../packages/core/buildchain-contract.js";
 import { generateChannelBuildWorkflow } from "./generate-channel-build-workflow.mjs";
+import {
+  generateChannelPromotionWorkflow,
+  parsePromotionShellRouting,
+} from "./generate-channel-promotion-workflow.mjs";
 
 const root = process.cwd();
 const sharedActionTsupConfig = fs.readFileSync(path.join(root, "scripts/tsup-action.config.mjs"), "utf8");
@@ -44,6 +48,8 @@ const requiredPaths = [
   "scripts/release-line-dry-run.mjs",
   "scripts/buildchain-channel-router.mjs",
   "scripts/generate-channel-build-workflow.mjs",
+  "scripts/promotion-channel-router.mjs",
+  "scripts/generate-channel-promotion-workflow.mjs",
   "scripts/build-standalone-binary.mjs",
   "scripts/create-release-bundle.mjs",
   "scripts/ensure-github-release.mjs",
@@ -81,6 +87,7 @@ const requiredPaths = [
   ".github/workflows/buildchain-patrol-monthly.yml",
   ".github/workflows/buildchain-alpha-self-dogfood.yml",
   ".github/workflows/release-candidate-promote.yml",
+  ".github/workflows/.release-candidate-promote.yml",
   ".github/workflows/release-propagation.yml",
   ".github/workflows/npm-publish.yml",
   ".github/workflows/paper-release.yml",
@@ -173,6 +180,36 @@ const channelBuildWorkflow = fs.readFileSync(
 );
 if (channelBuildWorkflow !== generateChannelBuildWorkflow(reusableBuildWorkflow)) {
   throw new Error("generated channel build workflow is stale");
+}
+const advancedPromotionWorkflow = fs.readFileSync(
+  path.join(root, ".github/workflows/.release-candidate-promote.yml"),
+  "utf8",
+);
+const channelPromotionWorkflow = fs.readFileSync(
+  path.join(root, ".github/workflows/release-candidate-promote.yml"),
+  "utf8",
+);
+const promotionShellRouting = parsePromotionShellRouting(
+  fs.readFileSync(path.join(root, ".buildchain/promotion-shell-routing.json"), "utf8"),
+  { major: Number(selfDogfoodMajor) },
+);
+if (channelPromotionWorkflow !== generateChannelPromotionWorkflow(advancedPromotionWorkflow, {
+  major: Number(selfDogfoodMajor),
+  shellRouting: promotionShellRouting,
+})) {
+  throw new Error("generated channel promotion workflow is stale");
+}
+for (const requiredSnippet of [
+  "buildchain-channel:",
+  `/.github/workflows/.release-candidate-promote.yml@v${selfDogfoodMajor}-alpha`,
+  `/release-candidate-promote.yml@${promotionShellRouting.stable.callRef}`,
+  `STABLE_SHELL_REF: v${selfDogfoodMajor}`,
+  "promotion-contract-lock-digest:",
+  "promotion runtime override is only allowed for trusted workflow_dispatch runs",
+]) {
+  if (!channelPromotionWorkflow.includes(requiredSnippet)) {
+    throw new Error(`channel promotion workflow missing routing contract: ${requiredSnippet}`);
+  }
 }
 for (const requiredSnippet of [
   "buildchain-channel:",
@@ -269,6 +306,9 @@ if (rootPackage.exports?.["./kfd-gate"] !== "./packages/core/kfd-gate.js") {
 }
 if (rootPackage.exports?.["./release-passport"] !== "./packages/core/release-passport.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/release-passport");
+}
+if (rootPackage.exports?.["./release-passport-contract"] !== "./packages/core/release-passport-contract.js") {
+  throw new Error("root package must export @kungfu-tech/buildchain/release-passport-contract");
 }
 if (rootPackage.exports?.["./release-propagation"] !== "./packages/core/release-propagation.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/release-propagation");
@@ -627,6 +667,9 @@ for (const requiredSnippet of [
   "--kfd-3-artifact-verify-cmd",
   "currently named `kfd-3`",
   "KFD-3 collaboration-interface release gate",
+  "release-passport-v1.schema.json",
+  "release-passport-check-manifest.json",
+  "Buildchain owns envelope aggregation",
 ]) {
   if (!releasePassportDoc.includes(requiredSnippet)) {
     throw new Error(`release passport doc missing KFD-1 gate snippet: ${requiredSnippet}`);
@@ -808,7 +851,7 @@ for (const forbiddenSnippet of [
 for (const requiredSnippet of [
   "id-token: write",
   "actions: read",
-  "uses: ./.github/workflows/release-candidate-promote.yml",
+  "uses: ./.github/workflows/.release-candidate-promote.yml",
   "github.event.workflow_run.event == 'push'",
   "!startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v')",
   "!startsWith(github.event.workflow_run.display_title, 'chore(release): release v')",
@@ -822,7 +865,7 @@ for (const requiredSnippet of [
     throw new Error(`buildchain ref promotion workflow missing npm transaction snippet: ${requiredSnippet}`);
   }
 }
-const releaseCandidatePromoteWorkflow = fs.readFileSync(path.join(root, ".github/workflows/release-candidate-promote.yml"), "utf8");
+const releaseCandidatePromoteWorkflow = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
 for (const requiredSnippet of [
   "release-passport-kfd-1-witness-jsons:",
   "release-passport-kfd-1-witness-jsons: ${{ inputs.release-passport-kfd-1-witness-jsons }}",
@@ -1071,7 +1114,7 @@ if (!badgeEndpointRegistry.badges?.some((entry) => entry.id === "buildchain-rele
   throw new Error("badge endpoint registry must include Buildchain Release Passport badge");
 }
 
-for (const siteFile of ["buildchain-site.json", "site-manifest.json", "badge-endpoint-registry.json", "publication-registry.json", "page-registry.json", "capability-registry.json", "cli-registry.json", "manual-registry.json", "node-api-registry.json", "workflow-registry.json", "controller-registry.json", "public-surface-audit.json", "release-model.json", "buildchain-contract.json"]) {
+for (const siteFile of ["buildchain-site.json", "site-manifest.json", "badge-endpoint-registry.json", "publication-registry.json", "page-registry.json", "capability-registry.json", "cli-registry.json", "manual-registry.json", "node-api-registry.json", "workflow-registry.json", "controller-registry.json", "public-surface-audit.json", "release-model.json", "release-passport-check-manifest.json", "schemas/release-passport-v1.schema.json", "buildchain-contract.json"]) {
   if (!fs.existsSync(path.join(root, "dist", "site", siteFile))) {
     throw new Error(`site bundle missing ${siteFile}`);
   }

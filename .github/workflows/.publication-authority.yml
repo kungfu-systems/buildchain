@@ -425,7 +425,7 @@ jobs:
             --workflow-repository "${{ inputs.buildchain-repository }}" \
             --branch "${{ inputs.target-ref }}" \
             --source-sha "${{ inputs.source-sha }}" \
-            --workflow .github/workflows/release-candidate-promote.yml \
+            --workflow "${{ inputs.authority-workflow-path || '.github/workflows/release-candidate-promote.yml' }}" \
             --workflow-ref "${{ inputs.buildchain-ref }}" \
             --publisher-workflow "${{ inputs.publisher-workflow-path }}" \
             --required-status-check "${{ inputs.required-status-check }}" \
@@ -441,7 +441,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           BUILDCHAIN_REPOSITORY: ${{ inputs.evidence-repository }}
           BUILDCHAIN_SOURCE_SHA: ${{ inputs.source-sha }}
-          BUILDCHAIN_AUTHORITY_WORKFLOW_PATH: .github/workflows/release-candidate-promote.yml
+          BUILDCHAIN_AUTHORITY_WORKFLOW_PATH: ${{ inputs.authority-workflow-path || '.github/workflows/release-candidate-promote.yml' }}
           BUILDCHAIN_PUBLISHER_WORKFLOW_PATH: ${{ inputs.publisher-workflow-path }}
           BUILDCHAIN_CONTROL_PLANE_AUDIT_PATH: .buildchain/publication-authority/auto/control-plane.json
           BUILDCHAIN_PUBLICATION_ENVIRONMENT: none
