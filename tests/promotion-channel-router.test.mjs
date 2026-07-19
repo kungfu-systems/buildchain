@@ -138,10 +138,25 @@ test("stable bootstrap calls the existing public workflow at the immutable v2 SH
     logicalRef: "v2",
     callRef: "c95f9fc36b0ac8fb4ff6400189850c4ae683f3ea",
     workflowPath: ".github/workflows/release-candidate-promote.yml",
+    forwardInternalInputs: false,
   });
   assert.match(generated, /STABLE_SHELL_REF: v2/);
   assert.match(generated, /STABLE_SHELL_CALL_REF: c95f9fc36b0ac8fb4ff6400189850c4ae683f3ea/);
   assert.match(generated, /STABLE_SHELL_WORKFLOW_PATH: \.github\/workflows\/release-candidate-promote\.yml/);
+});
+
+test("stable bootstrap only forwards inputs supported by the pinned legacy wrapper", () => {
+  const advanced = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
+  const generated = generateChannelPromotionWorkflow(advanced, { major: 2, shellRouting });
+  const stableBlock = generated.slice(generated.indexOf("  stable:\n"));
+
+  for (const name of workflowFields(advanced, "inputs").filter((input) => input.startsWith("promotion-"))) {
+    assert.doesNotMatch(stableBlock, new RegExp(`^      ${name}:`, "m"));
+  }
+  assert.match(stableBlock, /^      buildchain-ref:/m);
+  assert.match(stableBlock, /^      buildchain-contract-lock-path:/m);
+  assert.match(stableBlock, /^      channel:/m);
+  assert.match(stableBlock, /^      target-ref:/m);
 });
 
 test("promotion router contains no native build job and delegates candidate reuse to the advanced shell", () => {
