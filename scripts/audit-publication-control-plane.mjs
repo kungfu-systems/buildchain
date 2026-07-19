@@ -278,7 +278,10 @@ function main() {
     const independentApprovals = [...latestReviews.values()].filter((review) =>
       review.state === "APPROVED" && review.user?.login !== mergedPullRequest?.user?.login
     );
-    const checkRuns = githubJson(`repos/${repository}/commits/${sourceSha}/check-runs?per_page=100`, "source check runs");
+    const pullRequestHeadSha = String(mergedPullRequest?.head?.sha || "").toLowerCase();
+    const checkRuns = /^[0-9a-f]{40}$/.test(pullRequestHeadSha)
+      ? githubJson(`repos/${repository}/commits/${pullRequestHeadSha}/check-runs?per_page=100`, "merged pull-request head check runs")
+      : { check_runs: [] };
     const requiredStatusCheckPolicy = branchState.protection?.required_status_checks || {};
     const requiredStatusChecks = requiredStatusCheckPolicy.contexts || [];
     const requiredCheckSource = (requiredStatusCheckPolicy.checks || []).find((entry) => entry.context === requiredStatusCheck);
@@ -295,10 +298,12 @@ function main() {
         (!requiredCheckSource?.app_id || entry.app?.id === requiredCheckSource.app_id)
       ),
       requiredCheckAppId: requiredCheckSource?.app_id || 0,
+      requiredCheckSha: pullRequestHeadSha,
       sourceSha,
       headSha: String(branchState.commit?.sha || "").toLowerCase(),
       mergedPullRequest: Boolean(mergedPullRequest),
       pullRequestNumber: mergedPullRequest?.number || 0,
+      pullRequestHeadSha,
       baseRef: mergedPullRequest?.base?.ref || "",
       headRepository: mergedPullRequest?.head?.repo?.full_name || "",
       approvalCount: independentApprovals.length,
