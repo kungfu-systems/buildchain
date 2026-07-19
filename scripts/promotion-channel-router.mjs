@@ -23,12 +23,10 @@ function targetIntent(targetRef, requestedPublicationChannel = "") {
   if (requested && requested !== target.publicationChannel) {
     throw new Error(`promotion channel ${requested} does not match target ref ${ref} (${target.publicationChannel})`);
   }
-  const match = ref.match(target.pattern);
   return {
     targetRef: ref,
     publicationChannel: target.publicationChannel,
     shellChannel: target.shellChannel,
-    targetMajor: match?.[1] ? Number(match[1]) : undefined,
   };
 }
 
@@ -53,11 +51,6 @@ export function resolvePromotionChannel({
   if (!overrideUsed && selected.channel !== intent.shellChannel) {
     throw new Error(
       `promotion target ${intent.targetRef} requires ${intent.shellChannel} shell/runtime, got ${selected.channel}`,
-    );
-  }
-  if (Number.isInteger(intent.targetMajor) && selected.major !== intent.targetMajor) {
-    throw new Error(
-      `promotion target ${intent.targetRef} requires Buildchain v${intent.targetMajor}, got v${selected.major}`,
     );
   }
   const shellRef = intent.shellChannel === "alpha" ? `v${selected.major}-alpha` : `v${selected.major}`;
