@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-impact",
   "release": {
-    "version": "2.14.3-alpha.10",
+    "version": "2.14.3-alpha.11",
     "line": "v2.14"
   },
   "versionImpact": {
@@ -255,6 +255,13 @@
       "class": "release-governance",
       "rationale": "Buildchain continuously consumes its released vN-alpha reusable workflow and stable vN runtime, verifies their resolved immutable SHAs, and keeps exact-SHA promotion independent from the floating alpha repair target.",
       "source": ".github/workflows/buildchain-alpha-self-dogfood.yml"
+    },
+    {
+      "id": "self-dogfood-channel-contract-lock-refresh",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Buildchain self-dogfood accepts the reviewed stable v2 and alpha.10 contract worlds so both released runtime channels can qualify against their immutable contract evidence.",
+      "source": ".buildchain/contract-lock.json"
     }
   ],
   "classification": "minor",
