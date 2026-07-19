@@ -597,7 +597,7 @@ jobs:
       promotion-contract-lock-digest: ${{ needs.resolve-promotion.outputs.contract-lock-digest }}
       promotion-publication-channel: ${{ needs.resolve-promotion.outputs.publication-channel }}
       promotion-target-ref: ${{ needs.resolve-promotion.outputs.target-ref }}
-      promotion-override-used: ${{ needs.resolve-promotion.outputs.override-used }}
+      promotion-override-used: ${{ needs.resolve-promotion.outputs.override-used == 'true' }}
       buildchain-contract-lock-path: ${{ needs.resolve-promotion.outputs.contract-lock-path }}
       buildchain-contract-compatibility-policy: ${{ inputs.buildchain-contract-compatibility-policy }}
       buildchain-contract-drift-issue-mode: ${{ inputs.buildchain-contract-drift-issue-mode }}
