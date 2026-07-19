@@ -187,3 +187,76 @@ test("GitHub client fails closed when auto-merge GraphQL returns errors", async 
     /GitHub GraphQL POST \/graphql failed: Pull request Auto merge is not allowed/,
   );
 });
+
+test("GitHub client reconciles a divergent stable target with an exact-tree source-lock commit", async () => {
+  const candidateSha = "c".repeat(40);
+  const targetSha = "t".repeat(40);
+  const mergeSha = "m".repeat(40);
+  const calls = [];
+  const responses = [
+    [404, { message: "Not Found" }],
+    [200, { sha: candidateSha, tree: { sha: "candidate-tree" } }],
+    [200, { object: { sha: targetSha } }],
+    [200, { status: "diverged" }],
+    [201, { sha: mergeSha }],
+    [201, { object: { sha: mergeSha } }],
+  ];
+  const github = createGitHubStableCandidateClient({
+    repository: "kungfu-systems/example",
+    token: "test-token",
+    fetchImpl: async (url, options) => {
+      calls.push({ url, method: options.method, body: options.body ? JSON.parse(options.body) : undefined });
+      const [status, payload] = responses.shift();
+      return {
+        ok: status >= 200 && status < 300,
+        status,
+        async text() { return JSON.stringify(payload); },
+      };
+    },
+  });
+
+  await github.ensureBranch("publish-gate/release/v2/v2.14/candidate", candidateSha, "release/v2/v2.14");
+
+  assert.equal(responses.length, 0);
+  assert.deepEqual(calls[4].body.parents, [candidateSha, targetSha]);
+  assert.equal(calls[4].body.tree, "candidate-tree");
+  assert.match(calls[4].body.message, /Signed-off-by: Buildchain Patrol/);
+  assert.deepEqual(calls[5].body, {
+    ref: "refs/heads/publish-gate/release/v2/v2.14/candidate",
+    sha: mergeSha,
+  });
+});
+
+test("GitHub client reuses an exact-tree source-lock that already contains the stable target", async () => {
+  const candidateSha = "c".repeat(40);
+  const sourceSha = "s".repeat(40);
+  const targetSha = "t".repeat(40);
+  const calls = [];
+  const responses = [
+    [200, { object: { sha: sourceSha } }],
+    [200, { sha: candidateSha, tree: { sha: "candidate-tree" } }],
+    [200, { sha: sourceSha, tree: { sha: "candidate-tree" } }],
+    [200, { status: "ahead" }],
+    [200, { object: { sha: targetSha } }],
+    [200, { status: "ahead" }],
+  ];
+  const github = createGitHubStableCandidateClient({
+    repository: "kungfu-systems/example",
+    token: "test-token",
+    fetchImpl: async (url, options) => {
+      calls.push({ url, method: options.method });
+      const [status, payload] = responses.shift();
+      return {
+        ok: true,
+        status,
+        async text() { return JSON.stringify(payload); },
+      };
+    },
+  });
+
+  const result = await github.ensureBranch("publish-gate/release/v2/v2.14/candidate", candidateSha, "release/v2/v2.14");
+
+  assert.equal(result.object.sha, sourceSha);
+  assert.equal(responses.length, 0);
+  assert.ok(calls.every((call) => call.method === "GET"));
+});
