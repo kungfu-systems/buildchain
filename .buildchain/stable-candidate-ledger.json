@@ -6,7 +6,7 @@
   "hold": {
     "enabled": false,
     "reason": "",
-    "updatedAt": "2026-07-19T14:28:13.702Z"
+    "updatedAt": "2026-07-19T14:28:49.353Z"
   },
   "candidates": [
     {
@@ -217,7 +217,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-07-19T14:28:13.702Z",
+        "observedAt": "2026-07-19T14:28:49.353Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -244,7 +244,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-07-19T14:28:13.702Z",
+        "updatedAt": "2026-07-19T14:28:49.353Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -257,7 +257,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-07-19T14:28:13.702Z",
+        "observedAt": "2026-07-19T14:28:49.353Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -284,7 +284,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-07-19T14:28:13.702Z",
+        "updatedAt": "2026-07-19T14:28:49.353Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -297,7 +297,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-07-19T14:28:13.702Z",
+        "observedAt": "2026-07-19T14:28:49.353Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -324,7 +324,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-07-19T14:28:13.702Z",
+        "updatedAt": "2026-07-19T14:28:49.353Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -337,7 +337,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-07-19T14:28:13.702Z",
+        "observedAt": "2026-07-19T14:28:49.353Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -364,7 +364,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-07-19T14:28:13.702Z",
+        "updatedAt": "2026-07-19T14:28:49.353Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -377,7 +377,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-07-19T14:28:13.702Z",
+        "observedAt": "2026-07-19T14:28:49.353Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -404,7 +404,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-07-19T14:28:13.702Z",
+        "updatedAt": "2026-07-19T14:28:49.353Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -417,7 +417,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-07-19T14:28:13.702Z",
+        "observedAt": "2026-07-19T14:28:49.353Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -444,7 +444,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-07-19T14:28:13.702Z",
+        "updatedAt": "2026-07-19T14:28:49.353Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -457,7 +457,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-07-19T14:28:13.702Z",
+        "observedAt": "2026-07-19T14:28:49.353Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -484,7 +484,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-07-19T14:28:13.702Z",
+        "updatedAt": "2026-07-19T14:28:49.353Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -497,7 +497,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-07-19T14:28:13.702Z",
+        "observedAt": "2026-07-19T14:28:49.353Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -524,7 +524,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-07-19T14:28:13.702Z",
+        "updatedAt": "2026-07-19T14:28:49.353Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -537,7 +537,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-07-19T14:28:13.702Z",
+        "observedAt": "2026-07-19T14:28:49.353Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -564,7 +564,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-07-19T14:28:13.702Z",
+        "updatedAt": "2026-07-19T14:28:49.353Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -577,9 +577,9 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-07-19T14:28:13.702Z",
+        "observedAt": "2026-07-19T14:28:49.353Z",
         "soakStartedAt": "2026-07-19T14:26:19.000Z",
-        "soakElapsedSeconds": 114,
+        "soakElapsedSeconds": 150,
         "requiredSeconds": 3600,
         "checks": [
           {
@@ -605,19 +605,19 @@
       "decision": {
         "reason": "human-release-now",
         "actor": "human",
-        "updatedAt": "2026-07-19T14:28:13.702Z"
+        "updatedAt": "2026-07-19T14:28:49.353Z"
       },
       "promotionRequest": {
         "stableTag": "v2.14.3",
         "sourceRef": "publish-gate/release/v2/v2.14/2.14.3-alpha.9",
         "targetRef": "release/v2/v2.14",
         "pullRequestUrl": "https://github.com/kungfu-systems/buildchain/pull/1417",
-        "requestedAt": "2026-07-19T14:28:13.702Z",
+        "requestedAt": "2026-07-19T14:28:49.353Z",
         "authority": "human"
       }
     }
   ],
-  "updatedAt": "2026-07-19T14:28:13.702Z",
+  "updatedAt": "2026-07-19T14:28:49.353Z",
   "stableReleases": [
     {
       "version": "2.14.2",
