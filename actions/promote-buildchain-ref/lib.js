@@ -2434,12 +2434,16 @@ async function assertProviderEnforcedChannelTransaction({
   const independentApproval = [...latestReviews.values()].some((review) =>
     review.state === "APPROVED" && review.user?.login !== pullRequest.user?.login
   );
-  const { data: checkRuns } = await octokit.rest.checks.listForRef({
-    owner,
-    repo,
-    ref: sourceSha,
-    per_page: 100,
-  });
+  const pullRequestHeadSha = String(pullRequest.head?.sha || "").trim();
+  const validPullRequestHeadSha = /^[0-9a-f]{40}$/i.test(pullRequestHeadSha);
+  const { data: checkRuns } = validPullRequestHeadSha
+    ? await octokit.rest.checks.listForRef({
+        owner,
+        repo,
+        ref: pullRequestHeadSha,
+        per_page: 100,
+      })
+    : { data: { check_runs: [] } };
   const requiredCheckPassed = (checkRuns.check_runs || []).some((entry) =>
     entry.name === resolvedStatusCheck &&
     entry.conclusion === "success" &&
@@ -2453,6 +2457,9 @@ async function assertProviderEnforcedChannelTransaction({
   }
   if (!protectedStatusCheckNames(protection).includes(resolvedStatusCheck)) {
     missing.push(`must require a ${requiredStatusCheck} status check using the exact context`);
+  }
+  if (!validPullRequestHeadSha) {
+    missing.push("merged source PR must expose an immutable head SHA");
   }
   if (!requiredCheckPassed) missing.push(`required status check ${resolvedStatusCheck} must pass from its configured app`);
   if (!independentApproval) missing.push("must have an independent approving review on the merged source PR");

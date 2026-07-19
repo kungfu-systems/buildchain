@@ -6973,6 +6973,8 @@ test("strict alpha promotion requires a protected dev-to-alpha PR", async () => 
 
 test("strict alpha promotion uses provider transaction evidence when protection details are unreadable", async () => {
   let reviewState = "APPROVED";
+  const pullRequestHeadSha = "b".repeat(40);
+  const checkedRefs = [];
   const octokit = {
     rest: {
       repos: {
@@ -6985,6 +6987,7 @@ test("strict alpha promotion uses provider transaction evidence when protection 
               base: { ref: "alpha/v1/v1.0" },
               head: {
                 ref: "dev/v1/v1.0",
+                sha: pullRequestHeadSha,
                 repo: { full_name: "kungfu-systems/buildchain" },
               },
             },
@@ -7015,7 +7018,8 @@ test("strict alpha promotion uses provider transaction evidence when protection 
       },
       checks: {
         listForRef: async ({ ref }) => {
-          assert.equal(ref, SHA);
+          checkedRefs.push(ref);
+          assert.equal(ref, pullRequestHeadSha);
           return {
             data: {
               check_runs: [{ name: "check", conclusion: "success", app: { id: 15368 } }],
@@ -7035,6 +7039,7 @@ test("strict alpha promotion uses provider transaction evidence when protection 
     requiredStatusCheck: "check",
   });
   assert.equal(resolvedStatusCheck, "check");
+  assert.deepEqual(checkedRefs, [pullRequestHeadSha]);
 
   reviewState = "CHANGES_REQUESTED";
   await assert.rejects(
