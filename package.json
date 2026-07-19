@@ -1,6 +1,6 @@
 {
   "name": "@kungfu-tech/buildchain",
-  "version": "2.14.3-alpha.5",
+  "version": "2.14.3-alpha.6",
   "private": false,
   "description": "Buildchain Release Passport, release governance, CLI toolkit, and site facts.",
   "repository": "https://github.com/kungfu-systems/buildchain",

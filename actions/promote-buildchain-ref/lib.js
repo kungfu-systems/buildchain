@@ -4769,6 +4769,7 @@ async function promoteBuildchainRefs({
         action: "dry-run-publish-transaction",
         version: transactionVersion,
         tag: exactTag,
+        publicTag: releaseTagForPublishedVersion(transactionVersion),
         sha: releaseSha,
       });
       return undefined;

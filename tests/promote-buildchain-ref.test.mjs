@@ -71,6 +71,7 @@ const {
 } = await import("../packages/core/publish-transaction.js");
 const {
   validateRequiredPublishSourceLock,
+  plannedPublicationExactTag,
   collectGitHubReleaseEvidenceAssets,
   publishGitHubReleaseEvidence,
 } = await import("../actions/promote-buildchain-ref/index.js");
@@ -1427,9 +1428,23 @@ fs.writeFileSync("dist/site/buildchain-contract.json", JSON.stringify({
       action: "dry-run-publish-transaction",
       version: "1.0.0-alpha.0",
       tag: "v1.0.0-alpha.0",
+      publicTag: "v1.0.0-alpha.0",
       sha: SHA,
     },
   );
+});
+
+test("publication plan exposes an anchored package version as the exact public tag", () => {
+  const plannedPublication = {
+    action: "dry-run-publish-transaction",
+    version: "22.22.3-kf.3-alpha.19",
+    tag: "v22.22.1-alpha.12",
+    publicTag: "v22.22.3-kf.3-alpha.19",
+    sha: SHA,
+  };
+
+  assert.equal(plannedPublicationExactTag(plannedPublication), "v22.22.3-kf.3-alpha.19");
+  assert.equal(plannedPublication.tag, "v22.22.1-alpha.12");
 });
 
 test("release promotion creates v-prefixed release tag and prepares next alpha tag", async () => {

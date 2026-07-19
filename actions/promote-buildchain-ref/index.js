@@ -11,6 +11,10 @@ import {
 } from "../../packages/core/release-line-dry-run.js";
 import { ensureGitHubRelease } from "../../scripts/ensure-github-release.mjs";
 
+export function plannedPublicationExactTag(plannedPublication = {}) {
+  return plannedPublication.publicTag || plannedPublication.tag || "";
+}
+
 function normalizePublishSourceRef(ref = "") {
   return String(ref || "").trim().replace(/^refs\/heads\//, "").replace(/^refs\/tags\//, "");
 }
@@ -413,7 +417,7 @@ async function main() {
     (update) => update.action === "dry-run-publish-transaction",
   );
   core.setOutput("planned-publication-version", plannedPublication?.version || "");
-  core.setOutput("planned-publication-exact-tag", plannedPublication?.tag || "");
+  core.setOutput("planned-publication-exact-tag", plannedPublicationExactTag(plannedPublication));
   core.setOutput("public-release-tag", result.publishTransaction?.publicReleaseTag || result.publishTransaction?.exactTag || "");
   core.setOutput("transaction-release-sha", result.publishTransaction?.releaseSha || "");
   core.setOutput("transaction-state-ref", result.publishTransaction?.stateRef || "");
