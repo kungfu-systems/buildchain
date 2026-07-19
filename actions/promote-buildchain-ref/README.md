@@ -319,6 +319,14 @@ product-owned `release-passport-kfd-3-artifact-verify-command` such as
 `kungfu agent verify --json`. Buildchain compares declared shipped public
 surfaces with artifact-exposed public surfaces and writes the result under the
 KFD-provided `kfd-3` passport section.
+Set `release-passport-invariant-passport-jsons` to one or more product-owned
+invariant Passport paths, or set `release-passport-invariant-passport-command`
+to a command that emits one canonical Passport JSON document. Buildchain does
+not reinterpret product invariants: it verifies the declared semantic root,
+requires a `verified` verdict, complete platform coverage, a clean exact source
+revision, and then binds the result into `buildchain.release.json`. Missing,
+stale, falsified, incomplete, dirty, or tampered Passport evidence fails the
+release transaction closed.
 Buildchain's own release workflow sets `release-passport-buildchain-self-kfd:
 "true"`. In that mode the action generates Buildchain-owned KFD-1/2/3 witnesses
 inside the final version-state workspace, after the release transaction has

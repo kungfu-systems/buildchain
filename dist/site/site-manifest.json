@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:308bc83b7403f407ac1be13d7c19000fa249f4bedf0c9c90b2f701e5163471a3"
+      "digest": "sha256:fa818a541ee2d70a0cc08caec85bf4c1eb20ff5118be0cc2149062fed50f4620"
     },
     {
       "id": "install",
@@ -69,7 +69,7 @@
       "path": "docs/release-passport.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:0029014ffab7d7228a12d8b92326b78cf6757a41f481b661c5997e2cef06d3cc"
+      "digest": "sha256:2dec5e7cd0050815d17c30dbbfd2f5c3c987f55a4558514118538d81a9c562b0"
     },
     {
       "id": "controller-evidence",
@@ -189,7 +189,7 @@
       "path": "docs/cli.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:1733f9377938a16e6de77511546be7de67c5ab8816220d693fd46f55450a5148"
+      "digest": "sha256:733a43df58e6fa643ef529d8736fbdbea053b5b58e5fbe445b595ea1e25861f6"
     },
     {
       "id": "build-facts",

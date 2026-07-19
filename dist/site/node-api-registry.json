@@ -86,7 +86,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-contract",
       "export": "./buildchain-contract",
       "target": "./packages/core/buildchain-contract.js",
-      "digest": "sha256:f5959c9260e04c9779396c50bd352956012da9ddb6d55532efc64a4536236dfa",
+      "digest": "sha256:17246bb855b53a2fea713ecc8e372705ec75636527d786e203f6faf445172193",
       "summary": "Runtime contract world and compatibility digest APIs for floating-ref drift checks.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -346,7 +346,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:05abae7c71444b0c48c097a4363218ed3ae7d652677588f1cf2c457a358cc4c1",
+      "digest": "sha256:238a3a95bab18e844dc3f6831c40d2ab5a7a853dfefddda113ef07952a26d95d",
       "summary": "Release passport collection, verification, explanation, and evidence APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -412,7 +412,7 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:1733f9377938a16e6de77511546be7de67c5ab8816220d693fd46f55450a5148"
+      "digest": "sha256:733a43df58e6fa643ef529d8736fbdbea053b5b58e5fbe445b595ea1e25861f6"
     },
     {
       "id": "build-facts",

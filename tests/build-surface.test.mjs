@@ -717,6 +717,10 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-passport-kfd-3-artifact-witness-jsons:/);
   assert.match(workflow, /release-passport-kfd-3-artifact-witness-jsons: \$\{\{ inputs\.release-passport-kfd-3-artifact-witness-jsons \}\}/);
   assert.match(workflow, /release-passport-kfd-3-artifact-verify-command:/);
+  assert.match(workflow, /release-passport-invariant-passport-jsons:/);
+  assert.match(workflow, /release-passport-invariant-passport-jsons: \$\{\{ inputs\.release-passport-invariant-passport-jsons \}\}/);
+  assert.match(workflow, /release-passport-invariant-passport-command:/);
+  assert.match(workflow, /release-passport-invariant-passport-command: \$\{\{ inputs\.release-passport-invariant-passport-command \}\}/);
   assert.match(workflow, /release-passport-buildchain-self-kfd:/);
   assert.match(workflow, /release-passport-buildchain-self-kfd: \$\{\{ inputs\.release-passport-buildchain-self-kfd \}\}/);
   assert.match(workflow, /DRY_RUN: \$\{\{ inputs\.dry-run \}\}/);
@@ -2274,6 +2278,8 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(action, /release-passport-kfd-3-prebuild-witness-jsons:/);
   assert.match(action, /release-passport-kfd-3-artifact-witness-jsons:/);
   assert.match(action, /release-passport-kfd-3-artifact-verify-command:/);
+  assert.match(action, /release-passport-invariant-passport-jsons:/);
+  assert.match(action, /release-passport-invariant-passport-command:/);
   assert.match(action, /release-passport-buildchain-self-kfd:/);
   assert.match(implementation, /promoteOnlyReleaseCandidate/);
   assert.match(implementation, /reconciliationWorkspace/);
@@ -2282,11 +2288,14 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(implementation, /releasePassportKfd3PrebuildWitnessJsons/);
   assert.match(implementation, /releasePassportKfd3ArtifactWitnessJsons/);
   assert.match(implementation, /releasePassportKfd3ArtifactVerifyCommand/);
+  assert.match(implementation, /releasePassportInvariantPassportJsons/);
+  assert.match(implementation, /releasePassportInvariantPassportCommand/);
   assert.match(implementation, /releasePassportBuildchainSelfKfd/);
   assert.match(docs, /promote-only-release-candidate: "true"/);
   assert.match(docs, /release-passport-kfd-1-witness-jsons/);
   assert.match(docs, /release-passport-kfd-2-claim-jsons/);
   assert.match(docs, /release-passport-kfd-3-prebuild-witness-jsons/);
+  assert.match(docs, /release-passport-invariant-passport-command/);
 });
 
 test("buildchain ref promotion consumes PR-stage release candidate evidence", () => {
