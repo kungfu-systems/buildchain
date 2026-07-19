@@ -45,6 +45,12 @@ fixes before stable promotion should add `buildchain-channel: auto` plus
 do not duplicate alpha and stable jobs or call
 `.release-candidate-promote.yml` directly.
 
+Buildchain also keeps the workflow-file layout transition declarative in
+`.buildchain/promotion-shell-routing.json`. Until stable `v2` contains the
+hidden advanced workflow, the stable lane is pinned to the immutable SHA of its
+existing public implementation. This is provider-owned compatibility state;
+consumers still keep the same single public promotion job.
+
 ## Migrated Actions
 
 No standalone `action-*` repository is shipped as a Buildchain action anymore.

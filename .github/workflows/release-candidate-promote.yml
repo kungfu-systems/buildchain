@@ -537,12 +537,39 @@ jobs:
       - name: Resolve immutable promotion identities
         id: identities
         shell: bash
+        env:
+          CHANNEL: ${{ steps.route.outputs.channel }}
+          SELECTED_SHELL_REF: ${{ steps.route.outputs.shell-ref }}
+          ALPHA_SHELL_REF: v2-alpha
+          ALPHA_SHELL_CALL_REF: v2-alpha
+          ALPHA_SHELL_WORKFLOW_PATH: .github/workflows/.release-candidate-promote.yml
+          STABLE_SHELL_REF: v2
+          STABLE_SHELL_CALL_REF: c95f9fc36b0ac8fb4ff6400189850c4ae683f3ea
+          STABLE_SHELL_WORKFLOW_PATH: .github/workflows/release-candidate-promote.yml
         run: |
           set -euo pipefail
-          test -f .buildchain/shell/.github/workflows/.release-candidate-promote.yml
+          if [[ "${CHANNEL}" = "alpha" ]]; then
+            expected_ref="${ALPHA_SHELL_REF}"
+            call_ref="${ALPHA_SHELL_CALL_REF}"
+            workflow_path="${ALPHA_SHELL_WORKFLOW_PATH}"
+          else
+            expected_ref="${STABLE_SHELL_REF}"
+            call_ref="${STABLE_SHELL_CALL_REF}"
+            workflow_path="${STABLE_SHELL_WORKFLOW_PATH}"
+          fi
+          if [[ "${SELECTED_SHELL_REF}" != "${expected_ref}" ]]; then
+            echo "::error::Selected promotion shell ref ${SELECTED_SHELL_REF} does not match configured ${expected_ref}"
+            exit 1
+          fi
+          test -f ".buildchain/shell/${workflow_path}"
+          shell_sha="$(git -C .buildchain/shell rev-parse HEAD)"
+          if [[ "${call_ref}" =~ ^[0-9a-f]{40}$ && "${shell_sha}" != "${call_ref}" ]]; then
+            echo "::error::Pinned promotion shell ${call_ref} does not match selected ${shell_sha}"
+            exit 1
+          fi
           {
             echo "router-sha=$(git -C .buildchain/router rev-parse HEAD)"
-            echo "shell-sha=$(git -C .buildchain/shell rev-parse HEAD)"
+            echo "shell-sha=${shell_sha}"
             echo "runtime-sha=$(git -C .buildchain/runtime rev-parse HEAD)"
           } >> "${GITHUB_OUTPUT}"
 
@@ -634,7 +661,7 @@ jobs:
     name: Promote with stable workflow shell
     needs: resolve-promotion
     if: ${{ needs.resolve-promotion.outputs.channel == 'stable' }}
-    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@c95f9fc36b0ac8fb4ff6400189850c4ae683f3ea
     permissions:
       actions: read
       checks: write
