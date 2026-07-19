@@ -178,7 +178,16 @@ test("reusable build workflow exposes the required surface contract", () => {
   );
   assert.match(workflow, /workflow_call:/);
   assert.match(workflow, /name: Validate consumer package manager contract/);
-  assert.match(workflow, /scripts\/validate-package-manager-contract\.mjs/);
+  assert.match(
+    workflow,
+    /validator=\.buildchain\/runtime\/scripts\/validate-package-manager-contract\.mjs/,
+  );
+  assert.match(
+    workflow,
+    /validator=\.buildchain\/workflow-shell\/scripts\/validate-package-manager-contract\.mjs/,
+    "new workflow shells must retain package-manager validation when the selected stable runtime predates the validator",
+  );
+  assert.match(workflow, /node "\$\{validator\}"/);
   assert.match(
     workflow,
     /BUILDCHAIN_PACKAGE_MANAGER_CWD: \.buildchain\/consumer\n/,
