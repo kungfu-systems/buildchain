@@ -19,6 +19,13 @@
       "source": ".github/workflows/release-candidate-promote.yml"
     },
     {
+      "id": "promotion-shell-layout-bootstrap",
+      "impact": "patch",
+      "class": "workflow-contract",
+      "rationale": "The generated router reads a provider-owned shell-layout declaration and pins a legacy stable public workflow to its immutable v2 SHA until the stable tag contains the hidden advanced workflow, preventing cross-repository workflow parsing failures without changing consumer declarations.",
+      "source": ".buildchain/promotion-shell-routing.json"
+    },
+    {
       "id": "release-channel-protection-convergence",
       "impact": "patch",
       "class": "release-governance",

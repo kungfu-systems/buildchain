@@ -2,10 +2,17 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
-import { generateChannelPromotionWorkflow } from "../scripts/generate-channel-promotion-workflow.mjs";
+import {
+  generateChannelPromotionWorkflow,
+  parsePromotionShellRouting,
+} from "../scripts/generate-channel-promotion-workflow.mjs";
 import { resolvePromotionChannel } from "../scripts/promotion-channel-router.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
+const shellRouting = parsePromotionShellRouting(
+  fs.readFileSync(path.join(root, ".buildchain/promotion-shell-routing.json"), "utf8"),
+  { major: 2 },
+);
 
 const base = {
   requestedChannel: "auto",
@@ -92,7 +99,7 @@ function workflowFields(source, section) {
 
 test("generated promotion router preserves every public input and output exactly once", () => {
   const advanced = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
-  const generated = generateChannelPromotionWorkflow(advanced, { major: 2 });
+  const generated = generateChannelPromotionWorkflow(advanced, { major: 2, shellRouting });
   const current = fs.readFileSync(path.join(root, ".github/workflows/release-candidate-promote.yml"), "utf8");
   const internal = new Set(workflowFields(advanced, "inputs").filter((name) => name.startsWith("promotion-")));
   const expectedInputs = workflowFields(advanced, "inputs").filter((name) => !internal.has(name));
@@ -114,12 +121,27 @@ test("alpha-only advanced workflow changes are isolated from the stable shell re
     "name: Release Candidate Promote Advanced",
     "name: Release Candidate Promote Advanced Alpha Fixture",
   );
-  const generated = generateChannelPromotionWorkflow(fixture, { major: 2 });
+  const generated = generateChannelPromotionWorkflow(fixture, { major: 2, shellRouting });
 
   assert.match(generated, /\.release-candidate-promote\.yml@v2-alpha/);
-  assert.match(generated, /\.release-candidate-promote\.yml@v2(?:\n|$)/);
+  assert.match(generated, /release-candidate-promote\.yml@c95f9fc36b0ac8fb4ff6400189850c4ae683f3ea/);
+  assert.doesNotMatch(generated, /\.release-candidate-promote\.yml@v2(?:\n|$)/);
   assert.notEqual(fixture, advanced);
   assert.doesNotMatch(generated, /Advanced Alpha Fixture/);
+});
+
+test("stable bootstrap calls the existing public workflow at the immutable v2 SHA", () => {
+  const advanced = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
+  const generated = generateChannelPromotionWorkflow(advanced, { major: 2, shellRouting });
+
+  assert.deepEqual(shellRouting.stable, {
+    logicalRef: "v2",
+    callRef: "c95f9fc36b0ac8fb4ff6400189850c4ae683f3ea",
+    workflowPath: ".github/workflows/release-candidate-promote.yml",
+  });
+  assert.match(generated, /STABLE_SHELL_REF: v2/);
+  assert.match(generated, /STABLE_SHELL_CALL_REF: c95f9fc36b0ac8fb4ff6400189850c4ae683f3ea/);
+  assert.match(generated, /STABLE_SHELL_WORKFLOW_PATH: \.github\/workflows\/release-candidate-promote\.yml/);
 });
 
 test("promotion router contains no native build job and delegates candidate reuse to the advanced shell", () => {
