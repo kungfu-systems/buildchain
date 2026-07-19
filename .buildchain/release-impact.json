@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-impact",
   "release": {
-    "version": "2.14.3-alpha.8",
+    "version": "2.14.3-alpha.9",
     "line": "v2.14"
   },
   "versionImpact": {
@@ -80,6 +80,13 @@
       "class": "release-governance",
       "rationale": "Provider-policy fallback verifies the configured required check on the merged pull request head SHA while retaining target-branch, same-repository PR, independent approval, exact context, and configured app constraints.",
       "source": "actions/promote-buildchain-ref/lib.js"
+    },
+    {
+      "id": "stable-runtime-package-manager-validator-fallback",
+      "impact": "patch",
+      "class": "workflow-contract",
+      "rationale": "The workflow shell prefers the selected runtime package-manager validator and falls back to its own bundled validator when a legacy stable runtime predates that contract, preserving runtime-first routing and fail-closed validation.",
+      "source": ".github/workflows/.build.yml"
     },
     {
       "id": "artifact-verification-envelope",
