@@ -937,6 +937,8 @@ test("publication control-plane audit defers npm OIDC authorization to the publi
   assert.match(script, /evidenceSource: "exact-workflow-job"/);
   assert.match(script, /policyMode: "provider-enforced-transaction"/);
   assert.match(script, /source pull-request lineage/);
+  assert.match(script, /commits\/\$\{pullRequestHeadSha\}\/check-runs/);
+  assert.doesNotMatch(script, /commits\/\$\{sourceSha\}\/check-runs/);
   assert.doesNotMatch(script, /actions\/permissions\/workflow/);
   assert.doesNotMatch(script, /actions\/runners\?per_page/);
   assert.doesNotMatch(script, /\["trust", "list"/);

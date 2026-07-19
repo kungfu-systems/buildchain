@@ -622,11 +622,13 @@ test("control-plane snapshot qualifies an exact provider-enforced protected-bran
       requiredStatusChecks: ["check / check"],
       requiredStatusCheck: "check / check",
       requiredCheckPassed: true,
+      requiredCheckSha: "b".repeat(40),
       sourceSha,
       headSha: sourceSha,
       mergedPullRequest: true,
       baseRef: "alpha/v2/v2.12",
       headRepository: "kungfu-systems/buildchain",
+      pullRequestHeadSha: "b".repeat(40),
       approvalCount: 1,
       independentApproval: true,
       configurationRead: false,
@@ -656,6 +658,15 @@ test("control-plane snapshot qualifies an exact provider-enforced protected-bran
     },
   });
   assert.equal(mismatchedCheck.facts.find((entry) => entry.id === "branch-policy").status, "fail");
+
+  const mismatchedCheckSha = evaluatePublicationControlPlaneSnapshot({
+    ...common,
+    snapshot: {
+      ...snapshot,
+      branch: { ...snapshot.branch, requiredCheckSha: "c".repeat(40) },
+    },
+  });
+  assert.equal(mismatchedCheckSha.facts.find((entry) => entry.id === "branch-policy").status, "fail");
 });
 
 test("control-plane snapshot audit supports scoped GitHub tokens and sanitized OIDC roles", () => {
