@@ -220,6 +220,7 @@ export function normalizeBuildchainConfig(config) {
   }
   validateWebSurfaceConfig(normalized);
   validateInfraContractConfig(normalized);
+  validateAnchoredDerivedVersionMaterialConfig(normalized);
   return normalized;
 }
 
@@ -1087,6 +1088,42 @@ function validateInfraContractConfig(config) {
   }
 }
 
+function validateAnchoredDerivedVersionMaterialConfig(config) {
+  const derivedFiles = config.version?.derivedFiles || [];
+  if (derivedFiles.length === 0) {
+    return;
+  }
+  if (config.version.strategy !== "anchored" || config.version.next !== "manual") {
+    throw new Error(
+      "version.derived_files requires version.strategy = \"anchored\" and version.next = \"manual\"",
+    );
+  }
+  const versionState =
+    config.lifecycle?.["version-state"] ||
+    config.lifecycle?.version_state;
+  if (!versionState) {
+    throw new Error(
+      "version.derived_files requires lifecycle.version-state to regenerate declared material",
+    );
+  }
+  if (!config.lifecycle?.verify) {
+    throw new Error(
+      "version.derived_files requires lifecycle.verify to validate regenerated material",
+    );
+  }
+  const versionPaths = new Set((config.version.files || []).map((file) => file.path));
+  if (config.version.manifest) {
+    versionPaths.add(config.version.manifest);
+  }
+  for (const filePath of derivedFiles) {
+    if (versionPaths.has(filePath)) {
+      throw new Error(
+        `version.derived_files must not repeat version.files or version.manifest: ${filePath}`,
+      );
+    }
+  }
+}
+
 function validateWebSurfaceSurfaces(config) {
   const surfaces = config.surfaces || {};
   for (const [name, surface] of Object.entries(surfaces)) {
@@ -1129,6 +1166,13 @@ function normalizeVersionSection(version) {
   if (strategy === "anchored" && next !== "manual") {
     throw new Error('version.strategy = "anchored" requires version.next = "manual"');
   }
+  const derivedFiles = normalizeStringArray(
+    version.derived_files,
+    "version.derived_files",
+  ).map((filePath) => posixPath(filePath));
+  if (new Set(derivedFiles).size !== derivedFiles.length) {
+    throw new Error("version.derived_files must not contain duplicate paths");
+  }
   return {
     required: version.required === undefined ? false : Boolean(version.required),
     strategy,
@@ -1137,6 +1181,7 @@ function normalizeVersionSection(version) {
       ? undefined
       : posixPath(assertString(version.manifest, "version.manifest")),
     files: files.map((file, index) => normalizeVersionFile(file, index)),
+    derivedFiles,
   };
 }
 
@@ -1319,6 +1364,27 @@ export function discoverConfiguredVersionStateFiles(cwd = process.cwd(), loadedC
   return files;
 }
 
+export function discoverConfiguredDerivedVersionMaterial(
+  cwd = process.cwd(),
+  loadedConfig = loadBuildchainConfig(cwd),
+) {
+  const configured = loadedConfig?.config?.version?.derivedFiles || [];
+  return configured.map((filePath) => {
+    const absolutePath = path.join(cwd, filePath);
+    if (!fs.existsSync(absolutePath)) {
+      throw new Error(`Configured derived version material does not exist: ${filePath}`);
+    }
+    if (!fs.statSync(absolutePath).isFile()) {
+      throw new Error(`Configured derived version material must be a file: ${filePath}`);
+    }
+    return {
+      path: filePath,
+      filePath: absolutePath,
+      content: fs.readFileSync(absolutePath),
+    };
+  });
+}
+
 function summarizeManifestFields(content) {
   assertPlainObject(content, "version.manifest content");
   return Object.fromEntries(
@@ -1499,6 +1565,8 @@ export function validateBuildchainConfig(
       key: file.key,
       pattern: file.pattern?.source,
     })),
+    derivedVersionMaterial: discoverConfiguredDerivedVersionMaterial(cwd, loadedConfig)
+      .map((file) => ({ path: file.path })),
     lifecycleStages,
     publish: loadedConfig.config.publish,
     release: loadedConfig.config.release,

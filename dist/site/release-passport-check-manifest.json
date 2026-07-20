@@ -27,6 +27,7 @@
       "surfaceImpacts",
       "packageSet",
       "anchorManifest",
+      "versionMaterial",
       "trustedPublishing",
       "transaction",
       "surfaceTimestampPolicy",

@@ -198,6 +198,15 @@ test("reusable build workflow exposes the required surface contract", () => {
       workflow.indexOf("  build-native:"),
     "consumer package-manager incompatibility must fail before native release-candidate jobs",
   );
+  assert.match(workflow, /  anchored-release-preflight:/);
+  assert.match(workflow, /scripts\/anchored-version-material\.mjs/);
+  assert.match(workflow, /kind":"anchored-version-material"/);
+  assert.match(workflow, /target_ref="release\/\$\{BUILDCHAIN_TARGET_LINE\}"/);
+  assert.ok(
+    workflow.indexOf("  anchored-release-preflight:") <
+      workflow.indexOf("  build-native:"),
+    "anchored derived version material must be verified before heavy native builds",
+  );
   assert.match(workflow, /runner-preset:/);
   assert.match(workflow, /platforms-json:/);
   assert.match(workflow, /linux-container-preset:/);
@@ -283,11 +292,11 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /resolve-publish-source\.mjs --mode manifest/);
   assert.equal(
     (workflow.match(/Install Buildchain runtime dependencies/g) || []).length,
-    5,
+    6,
   );
   assert.equal(
     (workflow.match(/pnpm@11\.7\.0 install --dir \.buildchain\/runtime --prod --frozen-lockfile --ignore-scripts/g) || []).length,
-    5,
+    6,
   );
   assert.match(workflow, /install-command:/);
   assert.match(workflow, /build-command:/);

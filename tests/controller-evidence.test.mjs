@@ -203,6 +203,37 @@ test("controller receipts allow optional stages to remain uninstantiated", () =>
   assert.equal(validateControllerReceipt(receipt, { plan: expectedPlan }).qualifying, true);
 });
 
+test("release propagation plans admit optional consumer stages recorded as skipped", () => {
+  const expectedPlan = createControllerPlan({
+    descriptor: descriptor("release-propagation"),
+    source: { repository: "kungfu-systems/kfd", sha: SOURCE_SHA },
+    runtime: { ref: "v2", sha: RUNTIME_SHA, contractDigest: CONTRACT_DIGEST },
+    inputs: {},
+  });
+  const receipt = createControllerReceipt({
+    plan: expectedPlan,
+    stages: expectedPlan.expected.stages.map((stage) => ({
+      id: stage.id,
+      status: stage.required ? "passed" : "skipped",
+    })),
+    evidence: [
+      { kind: "propagation-plan", digest: `sha256:${"4".repeat(64)}` },
+      { kind: "propagation-lock", digest: `sha256:${"5".repeat(64)}` },
+    ],
+  });
+
+  assert.equal(receipt.status, "passed");
+  assert.equal(receipt.qualifying, true);
+  assert.equal(
+    receipt.stages.find((stage) => stage.id === "prepare-consumer").status,
+    "skipped",
+  );
+  assert.equal(
+    validateControllerReceipt(receipt, { plan: expectedPlan }).qualifying,
+    true,
+  );
+});
+
 test("source, runtime, and plan mismatches invalidate receipts", () => {
   const expectedPlan = plan();
   const receipt = createControllerReceipt({

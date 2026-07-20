@@ -1,4 +1,5 @@
 export {
+  discoverConfiguredDerivedVersionMaterial,
   discoverConfiguredVersionStateFiles,
   getLifecycleStage,
   getNativeDiagnosticsProfile,
@@ -13,6 +14,11 @@ export {
   updateConfiguredVersionStateContents,
   validateBuildchainConfig,
 } from "./buildchain-config.js";
+
+export {
+  ANCHORED_VERSION_MATERIAL_CONTRACT,
+  createAnchoredVersionMaterialEvidence,
+} from "./anchored-version-material.js";
 
 export {
   STABLE_CANDIDATE_LEDGER_CONTRACT,

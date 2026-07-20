@@ -1,12 +1,14 @@
 const DEFAULT_REPOSITORY = "kungfu-systems/buildchain";
 import fs from "node:fs";
 import path from "node:path";
+import crypto from "node:crypto";
 import { execFileSync, execSync } from "node:child_process";
 import {
   detectPackageManager,
   getWorkspaceInfo,
 } from "../../packages/core/package-manager.js";
 import {
+  discoverConfiguredDerivedVersionMaterial,
   discoverConfiguredVersionStateFiles,
   getPublishContract,
   getVersionStrategy,
@@ -184,6 +186,10 @@ function readJsonIfExists(filePath) {
 
 function writeJsonContent(value) {
   return `${JSON.stringify(value, null, 2)}\n`;
+}
+
+function sha256Content(content) {
+  return `sha256:${crypto.createHash("sha256").update(content).digest("hex")}`;
 }
 
 function detectVersionPackageManager(cwd) {
@@ -1226,6 +1232,63 @@ async function getGitCommitWithRetry({ octokit, owner, repo, commitSha }) {
   );
 }
 
+async function collectRemoteVersionMaterial({
+  octokit,
+  owner,
+  repo,
+  commitSha,
+  paths,
+}) {
+  const commit = await getGitCommitWithRetry({
+    octokit,
+    owner,
+    repo,
+    commitSha,
+  });
+  const tree = await retryGitHubOperation(
+    `git.getTree ${commitSha} recursive`,
+    () => octokit.rest.git.getTree({
+      owner,
+      repo,
+      tree_sha: commit.data.tree.sha,
+      recursive: "1",
+    }),
+  );
+  const entries = new Map(
+    (tree.data.tree || [])
+      .filter((entry) => entry.type === "blob")
+      .map((entry) => [entry.path, entry]),
+  );
+  return Promise.all(paths.map(async (filePath) => {
+    const entry = entries.get(filePath);
+    if (!entry) {
+      return {
+        path: filePath,
+        present: false,
+        bytes: 0,
+        sha256: "",
+      };
+    }
+    const blob = await retryGitHubOperation(
+      `git.getBlob ${commitSha}:${filePath}`,
+      () => octokit.rest.git.getBlob({
+        owner,
+        repo,
+        file_sha: entry.sha,
+      }),
+    );
+    const content = blob.data.encoding === "base64"
+      ? Buffer.from(String(blob.data.content || "").replace(/\s/g, ""), "base64")
+      : Buffer.from(String(blob.data.content || ""), "utf8");
+    return {
+      path: filePath,
+      present: true,
+      bytes: content.length,
+      sha256: sha256Content(content),
+    };
+  }));
+}
+
 async function listPullRequestsAssociatedWithCommitWithRetry({ octokit, owner, repo, commitSha }) {
   return retryGitHubOperation(
     `repos.listPullRequestsAssociatedWithCommit ${commitSha}`,
@@ -2170,6 +2233,9 @@ async function collectAndPersistReleasePassport({
       : "",
     transactionJson: JSON.stringify(transactionJson),
     anchorManifestJson: anchorManifestPath && fs.existsSync(anchorManifestPath) ? anchorManifestPath : "",
+    versionMaterialJson: result.versionMaterial
+      ? JSON.stringify(result.versionMaterial)
+      : "",
     impactJson: resolvedImpactJson,
     kfd1WitnessJsons: resolvedKfd1WitnessJsons,
     kfd2ClaimJsons: resolvedKfd2ClaimJsons,
@@ -4531,6 +4597,11 @@ async function promoteBuildchainRefs({
     }
 
     const discoveredPaths = discovered.files.map((file) => file.path);
+    const derivedVersionMaterial = discoverConfiguredDerivedVersionMaterial(
+      workspaceCwd,
+      discovered.config,
+    );
+    const derivedPaths = derivedVersionMaterial.map((file) => file.path);
     const versionStrategy = getVersionStrategy(discovered.config);
     const anchorManifest = loadConfiguredAnchorManifest(workspaceCwd, discovered.config);
     const strategyEnv = versionVerificationEnv(versionStrategy, anchorManifest, {
@@ -4552,7 +4623,7 @@ async function promoteBuildchainRefs({
       );
     const anchoredReleaseTreePaths =
       manualNext && anchorManifest && hasVersionVerification
-        ? uniquePaths([...discoveredPaths, anchorManifest.path])
+        ? uniquePaths([...discoveredPaths, anchorManifest.path, ...derivedPaths])
         : discoveredPaths;
     const changedFiles = manualNext
       ? []
@@ -4566,6 +4637,9 @@ async function promoteBuildchainRefs({
     );
     if (anchorManifest) {
       console.log(`> anchor manifest: ${anchorManifest.path}`);
+    }
+    if (derivedPaths.length > 0) {
+      console.log(`> derived version material: ${derivedPaths.join(", ")}`);
     }
     console.log(`> version state files: ${discoveredPaths.join(", ")}`);
     console.log(
@@ -4630,15 +4704,23 @@ async function promoteBuildchainRefs({
         loadedConfig: discovered.config,
         version,
         changedFiles: [],
-        allowedPaths: discoveredPaths,
+        allowedPaths: anchoredReleaseTreePaths,
         env: strategyEnv,
       });
+      const verifiedDerivedVersionMaterial =
+        discoverConfiguredDerivedVersionMaterial(workspaceCwd, discovered.config)
+          .map((file) => ({
+            path: file.path,
+            bytes: file.content.length,
+            sha256: sha256Content(file.content),
+          }));
       updates.push({
         version,
         action: "anchored-manual-version-state",
         packageManager: discovered.packageManager.name,
         files: discoveredPaths,
         manifest: anchorManifest?.path,
+        derivedVersionMaterial: verifiedDerivedVersionMaterial,
         sha: baseSha,
         publishVersion,
       });
@@ -4653,6 +4735,7 @@ async function promoteBuildchainRefs({
         packageManager: discovered.packageManager,
         versionStrategy,
         anchorManifest,
+        derivedVersionMaterial: verifiedDerivedVersionMaterial,
       };
     }
     if (changedFiles.length === 0) {
@@ -5566,6 +5649,65 @@ async function promoteBuildchainRefs({
         releaseCommit.hasVersionVerification,
     });
   }
+  const promotionVersionMaterial =
+    releaseCommit.derivedVersionMaterial?.length > 0 && sourceAlphaMaterial?.sha
+      ? await (async () => {
+          const allowedPaths =
+            releaseCommit.releaseTreeAllowedPaths || releaseCommit.files;
+          const [alphaCommit, releaseCommitInfo, alphaMaterial, releaseMaterial] =
+            await Promise.all([
+              getCommitInfo(
+                octokit,
+                owner,
+                repo,
+                sourceAlphaMaterial.sha,
+              ),
+              getCommitInfo(
+                octokit,
+                owner,
+                repo,
+                releaseSha,
+              ),
+              collectRemoteVersionMaterial({
+                octokit,
+                owner,
+                repo,
+                commitSha: sourceAlphaMaterial.sha,
+                paths: allowedPaths,
+              }),
+              collectRemoteVersionMaterial({
+                octokit,
+                owner,
+                repo,
+                commitSha: releaseSha,
+                paths: allowedPaths,
+              }),
+            ]);
+          return {
+          schemaVersion: 1,
+          contract: "kungfu-buildchain-anchored-version-material/v1",
+          strategy: releaseCommit.versionStrategy,
+          alpha: {
+            ref: sourceAlphaMaterial.tag,
+            commit: sourceAlphaMaterial.sha,
+            tree: alphaCommit.treeSha,
+            material: alphaMaterial,
+          },
+          release: {
+            ref: targetRef,
+            commit: releaseSha,
+            tree: releaseCommitInfo.treeSha,
+            material: releaseMaterial,
+          },
+          allowedPaths,
+          versionFiles: releaseCommit.files,
+          manifest: releaseCommit.anchorManifest?.path || "",
+          derivedPaths: releaseCommit.derivedVersionMaterial
+            .map((file) => file.path),
+          derivedFiles: releaseCommit.derivedVersionMaterial,
+          };
+        })()
+      : undefined;
   await executePublishTransaction({
     version: releaseCommit.publishVersion || releaseVersion,
     exactTag: selectedReleaseCandidate.tag,
@@ -5636,6 +5778,7 @@ async function promoteBuildchainRefs({
         sha: releaseSha,
         nextAlphaRequired: true,
         targetRef,
+        versionMaterial: promotionVersionMaterial,
         updates,
       });
     }
@@ -5721,6 +5864,7 @@ async function promoteBuildchainRefs({
       sha: releaseSha,
       nextAlphaSha,
       targetRef,
+      versionMaterial: promotionVersionMaterial,
       updates,
     });
   } catch (error) {
@@ -5737,6 +5881,7 @@ async function promoteBuildchainRefs({
       sha: releaseSha,
       nextAlphaRequired: true,
       targetRef,
+      versionMaterial: promotionVersionMaterial,
       updates,
     });
   }

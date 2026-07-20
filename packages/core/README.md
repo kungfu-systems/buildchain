@@ -16,6 +16,8 @@ Current shared surfaces:
   `@kungfu-tech/buildchain/build-facts`;
 - release passport creation and verification through
   `@kungfu-tech/buildchain/release-passport`.
+- anchored/manual derived witness preflight and exact-tree evidence through
+  `@kungfu-tech/buildchain/anchored-version-material`.
 - sealed exact-root and KFD assessment inputs for KFX admission through
   `@kungfu-tech/buildchain/artifact-verification-envelope`.
 - managed KFD / Release Passport badge bundle facts and README marker blocks

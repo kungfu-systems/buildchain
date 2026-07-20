@@ -361,6 +361,69 @@ command = "node -e \\"process.exit(0)\\""
   );
 });
 
+test("buildchain.toml validates anchored derived version material and lifecycle binding", () => {
+  withTempRepo(
+    {
+      "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+strategy = "anchored"
+next = "manual"
+manifest = "libnode.release.json"
+derived_files = [
+  ".buildchain/kfd-1/contract-world.witness.json",
+  ".buildchain/kfd-3/collaboration-interface.prebuild.json",
+]
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[lifecycle.version-state]
+command = "node scripts/derive.mjs"
+
+[lifecycle.verify]
+command = "node scripts/verify.mjs"
+`,
+      "package.json": '{ "name": "@kungfu-tech/libnode", "version": "22.22.3-kf.4" }\n',
+      "libnode.release.json": '{ "npmVersion": "22.22.3-kf.4" }\n',
+      ".buildchain/kfd-1/contract-world.witness.json": "{}\n",
+      ".buildchain/kfd-3/collaboration-interface.prebuild.json": "{}\n",
+      "scripts/derive.mjs": "\n",
+      "scripts/verify.mjs": "\n",
+    },
+    (dir) => {
+      const summary = validateBuildchainConfig(dir, {
+        requireVersionState: true,
+      });
+      assert.deepEqual(summary.derivedVersionMaterial, [
+        { path: ".buildchain/kfd-1/contract-world.witness.json" },
+        { path: ".buildchain/kfd-3/collaboration-interface.prebuild.json" },
+      ]);
+    },
+  );
+});
+
+test("buildchain.toml rejects derived material without separate derivation and verification stages", () => {
+  assert.throws(
+    () => normalizeBuildchainConfig({
+      schema: 1,
+      version: {
+        strategy: "anchored",
+        next: "manual",
+        derived_files: ["witness.json"],
+      },
+      lifecycle: {
+        verify: { command: "node verify.mjs" },
+      },
+    }),
+    /requires lifecycle\.version-state/,
+  );
+});
+
 test("buildchain.toml normalizes explicit publish contract", () => {
   withTempRepo(
     {
