@@ -312,6 +312,14 @@ KFD verifier report, source/artifact surfaces, positive and negative transition
 evidence, required recovery/migration/continuation experiments, responsibility,
 residual risk, and non-claims. A valid provisional Profile remains a warning;
 missing or stale evidence fails closed.
+Set `release-passport-kfd-agent-runtime-witness-jsons` to newline-separated KFD
+Agent Runtime witness paths. Each witness binds exact Profile and suite roots,
+required platforms, Core results, adapter artifact digests, the exact product
+source commit, and an explicit claim level. Buildchain reruns the report through
+the packaged offline KFD WASM verifier and fails promotion if the evidence is
+stale, incomplete, producer-only, or asks for an adoption claim without
+distinct evidence. Experimental results are retained separately and are never
+treated as normative Core evidence.
 Buildchain's own release workflow sets `release-passport-buildchain-self-kfd:
 "true"`. In that mode the action generates Buildchain-owned KFD-1/2/3 witnesses
 inside the final version-state workspace, after the release transaction has

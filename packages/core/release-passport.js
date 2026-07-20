@@ -18,6 +18,11 @@ import {
   createKfd7ReleaseGateEvidence,
   validateKfd7ReleaseGateEvidence,
 } from "./kfd7-release-gate.js";
+import {
+  KFD_AGENT_RUNTIME_SECTION_KEY,
+  createKfdAgentRuntimePassportEvidence,
+  validateKfdAgentRuntimePassportEvidence,
+} from "./kfd-agent-runtime-passport.js";
 import { createSurfaceTimestampPolicy } from "./surface-manifest.js";
 import { validatePublishEvidence as validateTransactionPublishEvidence } from "./publish-transaction.js";
 import { normalizeControllerReceiptReferences } from "./controller-evidence.js";
@@ -331,7 +336,7 @@ function mergeAuthoritativePassportBase(passport, basePassport = undefined, { re
     throw new Error("release passport base must be a JSON object");
   }
   const requiredKfdKeys = ["kfd-1", "kfd-2", "kfd-3"];
-  const kfdKeys = [...requiredKfdKeys, "kfd-7"];
+  const kfdKeys = [...requiredKfdKeys, "kfd-7", KFD_AGENT_RUNTIME_SECTION_KEY];
   const missingKfd = requiredKfdKeys.filter((key) => (
     !basePassport[key] ||
     typeof basePassport[key] !== "object" ||
@@ -352,6 +357,10 @@ function mergeAuthoritativePassportBase(passport, basePassport = undefined, { re
       kfd2: basePassport.evidence?.kfd2 || passport.evidence?.kfd2 || "",
       kfd3: basePassport.evidence?.kfd3 || passport.evidence?.kfd3 || "",
       kfd7: basePassport.evidence?.kfd7 || passport.evidence?.kfd7 || "",
+      kfdAgentRuntime:
+        basePassport.evidence?.kfdAgentRuntime ||
+        passport.evidence?.kfdAgentRuntime ||
+        "",
     },
   };
   for (const key of ["versionImpact", "surfaceImpacts"]) {
@@ -1000,6 +1009,7 @@ export function createReleasePassport({
   kfd2Claims = [],
   kfd3 = undefined,
   kfd7 = undefined,
+  kfdAgentRuntime = undefined,
   controllerReceipts = [],
   controllerReceiptReferences = [],
 } = {}) {
@@ -1025,6 +1035,9 @@ export function createReleasePassport({
   const normalizedKfd1 = kfd1?.passportSection ? kfd1 : undefined;
   const normalizedKfd3 = kfd3?.passportSection ? kfd3 : undefined;
   const normalizedKfd7 = kfd7?.passportSection ? kfd7 : undefined;
+  const normalizedKfdAgentRuntime = kfdAgentRuntime?.passportSection
+    ? kfdAgentRuntime
+    : undefined;
   const normalizedKfd2 = createKfd2ReleaseTrustPassportAudit({
     explicitClaims: kfd2Claims,
     kfd1Section: normalizedKfd1?.passportSection,
@@ -1166,6 +1179,12 @@ export function createReleasePassport({
     ...(normalizedKfd2 ? { "kfd-2": normalizedKfd2 } : {}),
     ...(normalizedKfd3 ? { [normalizedKfd3.key || "kfd-3"]: normalizedKfd3.passportSection } : {}),
     ...(normalizedKfd7 ? { [normalizedKfd7.key || "kfd-7"]: normalizedKfd7.passportSection } : {}),
+    ...(normalizedKfdAgentRuntime
+      ? {
+          [normalizedKfdAgentRuntime.key || KFD_AGENT_RUNTIME_SECTION_KEY]:
+            normalizedKfdAgentRuntime.passportSection,
+        }
+      : {}),
     ...(normalizedControllerReceipts.length > 0 ? { controllerReceipts: normalizedControllerReceipts } : {}),
     versionImpact: normalizedImpact.versionImpact,
     surfaceImpacts: normalizedImpact.surfaceImpacts,
@@ -1209,6 +1228,9 @@ export function createReleasePassport({
       kfd2: normalizedKfd2 ? "kfd-2" : "",
       kfd3: normalizedKfd3 ? `${normalizedKfd3.key || "kfd-3"}` : "",
       kfd7: normalizedKfd7 ? `${normalizedKfd7.key || "kfd-7"}` : "",
+      kfdAgentRuntime: normalizedKfdAgentRuntime
+        ? `${normalizedKfdAgentRuntime.key || KFD_AGENT_RUNTIME_SECTION_KEY}`
+        : "",
       impact: impactPath,
       checkReport: checkReportPath,
       agentIndex: agentIndexPath,
@@ -1249,6 +1271,7 @@ export function collectGitHubReleasePassport({
   kfd3ArtifactWitnessJsons = [],
   kfd3ArtifactVerifyCommand = "",
   kfd7DeclarationJsons = [],
+  kfdAgentRuntimeWitnessJsons = [],
   controllerReceiptReferences = [],
   basePassportJson = "",
   requireBaseKfd = false,
@@ -1304,6 +1327,15 @@ export function collectGitHubReleasePassport({
     .filter(Boolean)
     .map((declarationJson) => parseJsonInputWithMeta(declarationJson, undefined, { cwd, label: "kfd7DeclarationJsons entry" }))
     .filter((meta) => meta.value);
+  const kfdAgentRuntimeWitnessMetas = (kfdAgentRuntimeWitnessJsons || [])
+    .filter(Boolean)
+    .map((witnessJson) =>
+      parseJsonInputWithMeta(witnessJson, undefined, {
+        cwd,
+        label: "kfdAgentRuntimeWitnessJsons entry",
+      }),
+    )
+    .filter((meta) => meta.value);
   const publish = parseJsonInput(publishJson, {}, { cwd, label: "publishJson" });
   const assets = [
     ...(Array.isArray(release.assets) ? release.assets : []),
@@ -1337,6 +1369,11 @@ export function collectGitHubReleasePassport({
     cwd,
     artifactRoot: assetsDir || "",
     declarations: kfd7DeclarationMetas.map((meta) => meta.value),
+  });
+  const kfdAgentRuntime = createKfdAgentRuntimePassportEvidence({
+    cwd,
+    artifacts: assets,
+    witnesses: kfdAgentRuntimeWitnessMetas.map((meta) => meta.value),
   });
   const passport = mergeAuthoritativePassportBase(createReleasePassport({
     cwd,
@@ -1382,6 +1419,7 @@ export function collectGitHubReleasePassport({
     kfd2Claims: kfd2ClaimMetas.map((meta) => meta.value),
     kfd3,
     kfd7,
+    kfdAgentRuntime,
     controllerReceiptReferences,
     publishEvidencePath: publishEvidenceMeta.path ? path.relative(resolvedOutputDir, publishEvidenceMeta.path).split(path.sep).join("/") : "",
     transactionStatePath: transactionMeta.path ? path.relative(resolvedOutputDir, transactionMeta.path).split(path.sep).join("/") : "",
@@ -1900,6 +1938,12 @@ export function createReleaseCheckReport({
     }
   }
   issues.push(...validateKfd7ReleaseGateEvidence(passport?.["kfd-7"]));
+  issues.push(
+    ...validateKfdAgentRuntimePassportEvidence(
+      passport?.[KFD_AGENT_RUNTIME_SECTION_KEY],
+      { artifacts: passport?.artifacts || [] },
+    ),
+  );
   if (impactVersion) {
     if (!impactLine) {
       issues.push(issue("error", "impact.release.line", "version-bound impact requires release.line"));

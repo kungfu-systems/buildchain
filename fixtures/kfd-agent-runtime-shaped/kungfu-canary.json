@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-kfd-agent-runtime-canary/v1",
+  "product": {
+    "id": "libkungfu-kfd-agent-runtime",
+    "repository": "kungfu-systems/kungfu",
+    "pullRequest": "https://github.com/kungfu-systems/kungfu/pull/1169"
+  },
+  "source": {
+    "qualificationHead": "e20015bca84dbcede967681e2988f9296b68b075",
+    "reviewedHead": "337a59558034234c159c5bf9c603553c17419884",
+    "mergedHead": "057d4579cd843b2a2413ad26f4957926d45bf3f1",
+    "mergedTree": "4d046c82cff65115daa5e47483169ea38d50b995",
+    "projectCut": "sha256:90edaa8dca6ce24d4efabc21c7b06c954005255b18c1397f9b0ae5dc7f7449f2"
+  },
+  "profile": {
+    "id": "kfd-agent-runtime",
+    "version": "0.1.0-alpha.1",
+    "suite": "kfd-runtime-100",
+    "suiteRoot": "sha256:1e996b8c43b0b3e38630ccd58acf8a714cbc24b339d3794318347faab9057e5f"
+  },
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "evidence": {
+    "adapterDigest": "sha256:cd5985718936746cc52a5075783323c9e9e99557c67d412761a4a334357357b2",
+    "reportDigest": "sha256:ede741e2c8b0be160dcf5e362bf4a3c2e4780f76d6ff5e83cf7d5aa566fb2f97",
+    "verificationReportDigest": "sha256:13ea356183fbad70f7bc8b229c1a46c77753f50e09d5c98a9cefbb38071ccf46",
+    "qualificationReportDigest": "sha256:ff315c89ce47a76c0204660a056fcf1872f544afd82a3104327a46ef613d136e"
+  },
+  "results": {
+    "core": {
+      "passed": 35,
+      "total": 35,
+      "normative": true
+    },
+    "experimental": {
+      "passed": 65,
+      "total": 65,
+      "normative": false
+    },
+    "negativeControlFailures": 100,
+    "retainedEpisodes": {
+      "observed": 41,
+      "expected": 41
+    }
+  },
+  "claimLevel": "independently-verified",
+  "nonClaims": [
+    "external-adoption",
+    "industry-standard-status",
+    "unobserved-platform-conformance",
+    "experimental-partition-is-normative"
+  ]
+}

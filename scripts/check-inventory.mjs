@@ -266,6 +266,9 @@ if (rootPackage.exports?.["./kfd-gate"] !== "./packages/core/kfd-gate.js") {
 if (rootPackage.exports?.["./release-passport"] !== "./packages/core/release-passport.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/release-passport");
 }
+if (rootPackage.exports?.["./kfd-agent-runtime-passport"] !== "./packages/core/kfd-agent-runtime-passport.js") {
+  throw new Error("root package must export @kungfu-tech/buildchain/kfd-agent-runtime-passport");
+}
 if (rootPackage.exports?.["./release-propagation"] !== "./packages/core/release-propagation.js") {
   throw new Error("root package must export @kungfu-tech/buildchain/release-propagation");
 }
@@ -623,6 +626,10 @@ for (const requiredSnippet of [
   "--kfd-3-artifact-verify-cmd",
   "currently named `kfd-3`",
   "KFD-3 collaboration-interface release gate",
+  "--kfd-agent-runtime-witness-json",
+  "KFD Agent Runtime conformance Passport",
+  "independently-verified",
+  "Experimental",
 ]) {
   if (!releasePassportDoc.includes(requiredSnippet)) {
     throw new Error(`release passport doc missing KFD-1 gate snippet: ${requiredSnippet}`);
@@ -830,6 +837,8 @@ for (const requiredSnippet of [
   "release-passport-kfd-3-artifact-witness-jsons:",
   "release-passport-kfd-3-artifact-witness-jsons: ${{ inputs.release-passport-kfd-3-artifact-witness-jsons }}",
   "release-passport-kfd-3-artifact-verify-command:",
+  "release-passport-kfd-agent-runtime-witness-jsons:",
+  "release-passport-kfd-agent-runtime-witness-jsons: ${{ inputs.release-passport-kfd-agent-runtime-witness-jsons }}",
   "release-passport-buildchain-self-kfd:",
   "release-passport-buildchain-self-kfd: ${{ inputs.release-passport-buildchain-self-kfd }}",
   "github-release:",

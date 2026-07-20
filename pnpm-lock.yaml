@@ -11,6 +11,9 @@ importers:
       '@kungfu-tech/kfd':
         specifier: 1.0.0-alpha.35
         version: 1.0.0-alpha.35
+      '@kungfu-tech/kfd-agent-runtime':
+        specifier: npm:@kungfu-tech/kfd@1.0.0-alpha.40
+        version: '@kungfu-tech/kfd@1.0.0-alpha.40'
       ajv:
         specifier: 8.20.0
         version: 8.20.0
@@ -269,6 +272,10 @@ packages:
 
   '@kungfu-tech/kfd@1.0.0-alpha.35':
     resolution: {integrity: sha512-Kfiu5k+ufGAMGYun4755jxaV4fBd4Xvyupa76wMfptO/WF8/wXG8xrgJr6CJ/gY7r7BMg1MpD36HlJWkhGcyiw==}
+    hasBin: true
+
+  '@kungfu-tech/kfd@1.0.0-alpha.40':
+    resolution: {integrity: sha512-+15RLXm8wi4Tbd33bv1gHBsqsPtaGvSpRceZMeQ/DOLUGItLsg8L1uD64DZ0Osrs53WfJIY6Aa/kzaMtbPQ3DA==}
     hasBin: true
 
   '@napi-rs/wasm-runtime@1.1.6':
@@ -1234,6 +1241,8 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.5.5
 
   '@kungfu-tech/kfd@1.0.0-alpha.35': {}
+
+  '@kungfu-tech/kfd@1.0.0-alpha.40': {}
 
   '@napi-rs/wasm-runtime@1.1.6(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)':
     dependencies:

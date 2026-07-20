@@ -17,6 +17,10 @@
 Buildchain Release Passport is a mature product release record for artifacts
 that users or agents depend on.
 
+Release passports can also carry KFD Agent Runtime conformance evidence bound
+to exact Profile/suite roots, product commits, platform reports, release
+artifacts, and explicit non-inferred claim levels.
+
 Buildchain by Kungfu uses GitHub as the execution and trust substrate: protected
 refs, reviewed promotion PRs, exact tags, GitHub Releases, npm Trusted
 Publishing, and machine-readable evidence. Its job is to turn release intent

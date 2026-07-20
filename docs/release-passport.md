@@ -120,6 +120,7 @@ buildchain collect github-release \
   --kfd-1-witness-json .buildchain/kfd/kfd-1/contract-world.witness.json \
   --kfd-2-claim-json .buildchain/kfd/kfd-2/release-claims.json \
   --kfd-7-declaration-json .buildchain/kfd/kfd-7/profile.release-gate.json \
+  --kfd-agent-runtime-witness-json .buildchain/kfd/agent-runtime/passport.witness.json \
   --output-dir .buildchain/release-passport
 ```
 
@@ -367,6 +368,34 @@ provisional or non-activated Profile is retained as `warning`; it is never
 promoted to a false qualification. The generated passport embeds the evidence
 under `kfd-7` with canonical digests so agents can revalidate it without the
 consumer repository.
+
+### KFD Agent Runtime conformance Passport
+
+`--kfd-agent-runtime-witness-json` attaches a product-owned conformance plan to
+the KFD Agent Runtime Profile. The witness binds the exact product source
+commit, Profile id/version/manifest digest, fixed suite id/version/vector root,
+required `os/arch` matrix, report file digest, adapter release artifact digest,
+and one explicit claim level:
+
+- `tested`
+- `independently-verified`
+- `reference-adopter`
+- `externally-adopted`
+
+Buildchain reruns every retained `kfd.agent-runtime-report/v1` through the
+packaged offline WASM verifier owned by `@kungfu-tech/kfd`, then checks that
+every required platform has a complete Core pass and that the adapter digest
+matches an exact release artifact. Producer-only verification, stale suite or
+Profile roots, partial platform evidence, tampered reports, and artifact drift
+fail closed.
+
+Higher claims are never inferred. `reference-adopter` requires exact-source
+independent review evidence from a distinct actor source.
+`externally-adopted` additionally requires a distinct adopter repository and a
+public evidence root. Experimental partition results remain visible with
+`normative: false`; they cannot upgrade Core conformance or adoption status.
+The resulting `kfd-agent-runtime` passport section is reverified whenever
+`buildchain verify release-passport` runs.
 
 ### Floating Buildchain contract lock
 

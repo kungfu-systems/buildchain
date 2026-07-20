@@ -68,6 +68,7 @@ const SITE_CONTRACT_FILES = Object.freeze([
 const SCHEMA_AND_STANDARD_FILES = Object.freeze([
   "packages/core/kfd-gate.js",
   "packages/core/kfd7-release-gate.js",
+  "packages/core/kfd-agent-runtime-passport.js",
   "packages/core/release-passport.js",
   "packages/core/buildchain-contract.js",
   "packages/core/controller-evidence.js",
@@ -249,11 +250,12 @@ export function createBuildchainPublicClaimDefinitions() {
   return [
     {
       id: "claim:buildchain-kfd-release-passport-support",
-      claim: "Buildchain release passports support KFD-1 self contract verification, KFD-2 public release claim audits, KFD-3 collaboration-interface trust proofs, and KFD-7 engineering-contract evidence gates.",
+      claim: "Buildchain release passports support KFD-1 self contract verification, KFD-2 public release claim audits, KFD-3 collaboration-interface trust proofs, KFD-7 engineering-contract evidence gates, and KFD Agent Runtime conformance evidence verified with the packaged KFD authority.",
       sourcePaths: [
         "packages/core/release-passport.js",
         "packages/core/kfd-gate.js",
         "packages/core/kfd7-release-gate.js",
+        "packages/core/kfd-agent-runtime-passport.js",
         "packages/core/buildchain-kfd-claims.js",
         "docs/release-passport.md",
       ],

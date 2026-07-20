@@ -500,6 +500,7 @@ function nodeApiMeta(exportName) {
     "./kfd-gate": { group: "kfd-trust", summary: "KFD-1/KFD-2/KFD-3 release gate evidence and validation APIs." },
     "./kfd7-release-gate": { group: "kfd-trust", summary: "KFD-7 engineering-contract declaration, evidence closure, and release gate validation APIs." },
     "./kfd7-buildchain-profile": { group: "kfd-trust", summary: "Buildchain's read-only KFD-7 release-transaction Profile projection and validation APIs." },
+    "./kfd-agent-runtime-passport": { group: "kfd-trust", summary: "KFD Agent Runtime report, artifact, platform, independent-verifier, and explicit adoption claim Passport APIs." },
     "./buildchain-kfd-claims": { group: "kfd-trust", summary: "Buildchain self KFD claim registry, witnesses, and public claim APIs." },
   }));
   const meta = map.get(exportName);

@@ -4,7 +4,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { createBuildchainLogger } from "../packages/core/logging.js";
 
 function readArg(name, fallback = "") {
@@ -162,6 +162,13 @@ function packageVersion(cwd) {
 function bundleCli({ cwd, tempDir, version, logger }) {
   const outDir = path.join(tempDir, "bundle");
   const configPath = path.join(tempDir, "tsup.config.mjs");
+  const kfdAgentRuntimeVerifierWasmBase64 = fs
+    .readFileSync(
+      fileURLToPath(
+        import.meta.resolve("@kungfu-tech/kfd-agent-runtime/verifier/wasm"),
+      ),
+    )
+    .toString("base64");
   fs.writeFileSync(configPath, `export default {
   entry: {
     buildchain: ${JSON.stringify(path.join(cwd, "bin", "buildchain.mjs"))},
@@ -176,10 +183,11 @@ function bundleCli({ cwd, tempDir, version, logger }) {
   sourcemap: false,
   dts: false,
   shims: true,
-  noExternal: ["ajv", /^ajv\\//, "smol-toml", /^@kungfu-tech\\/kfd(?:\\/|$)/],
+  noExternal: ["ajv", /^ajv\\//, "smol-toml", /^@kungfu-tech\\/kfd(?:-|\\/|$)/],
   define: {
     "process.env.BUILDCHAIN_EMBEDDED_PACKAGE_VERSION": ${JSON.stringify(JSON.stringify(version || packageVersion(cwd)))},
     "process.env.BUILDCHAIN_EMBEDDED_ENTRYPOINT": ${JSON.stringify(JSON.stringify("1"))},
+    "__BUILDCHAIN_EMBEDDED_KFD_AGENT_RUNTIME_WASM_BASE64__": ${JSON.stringify(JSON.stringify(kfdAgentRuntimeVerifierWasmBase64))},
   },
 };
 `);
