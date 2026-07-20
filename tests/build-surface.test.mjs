@@ -1307,6 +1307,10 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /production-release-app-private-key:/);
   assert.match(workflow, /fail-on-release-pr-error:/);
   assert.match(workflow, /Resolve production release PR intent/);
+  assert.match(
+    workflow,
+    /release-intent:\n    name: Resolve production release PR intent\n    runs-on: ubuntu-24\.04\n    permissions:\n      pull-requests: read/,
+  );
   assert.match(workflow, /listPullRequestsAssociatedWithCommit/);
   assert.match(workflow, /associated-release-pr-merged/);
   assert.match(workflow, /no-associated-release-pr/);
