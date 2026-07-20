@@ -818,8 +818,32 @@ jobs:
           path: .buildchain/runtime
           persist-credentials: false
 
+      - name: Checkout Buildchain workflow shell
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-sha }}
+          path: .buildchain/workflow-shell
+          persist-credentials: false
+
       - name: Install Buildchain runtime dependencies
         run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+
+      - name: Resolve anchored material verifier
+        id: anchored-verifier
+        shell: bash
+        run: |
+          set -euo pipefail
+          verifier=.buildchain/runtime/scripts/anchored-version-material.mjs
+          if [[ ! -f "${verifier}" ]]; then
+            verifier=.buildchain/workflow-shell/scripts/anchored-version-material.mjs
+            corepack pnpm@11.7.0 install --dir .buildchain/workflow-shell --prod --frozen-lockfile --ignore-scripts
+          fi
+          if [[ ! -f "${verifier}" ]]; then
+            echo "::error::Anchored material verifier is absent from both the selected runtime and trusted workflow shell"
+            exit 1
+          fi
+          echo "path=${verifier}" >> "$GITHUB_OUTPUT"
 
       - name: Verify declared anchored version material
         id: material
@@ -833,7 +857,7 @@ jobs:
             target_ref="release/v${BASH_REMATCH[1]}/${BUILDCHAIN_TARGET_LINE}"
           fi
           BUILDCHAIN_ANCHORED_TARGET_REF="${target_ref}" \
-            node .buildchain/runtime/scripts/anchored-version-material.mjs
+            node "${{ steps.anchored-verifier.outputs.path }}"
         env:
           BUILDCHAIN_ANCHORED_SOURCE_CWD: source/${{ inputs.working-directory }}
           BUILDCHAIN_ANCHORED_MATERIAL_OUTPUT: .buildchain/artifacts/anchored-version-material.json

@@ -283,6 +283,13 @@
       "class": "release-propagation",
       "rationale": "The released propagation workflow prepares the consumer, refreshes managed README badges, verifies the final tree, and signs managed commits before opening the downstream pull request.",
       "source": ".github/workflows/release-propagation.yml"
+    },
+    {
+      "id": "anchored-preflight-workflow-shell-fallback",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "An additive anchored-material preflight falls back to its trusted workflow-shell verifier when a selected stable runtime predates the helper, preserving mixed-channel compatibility without weakening the gate.",
+      "source": ".github/workflows/.build.yml"
     }
   ],
   "classification": "minor",

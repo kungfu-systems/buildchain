@@ -200,6 +200,20 @@ test("reusable build workflow exposes the required surface contract", () => {
   );
   assert.match(workflow, /  anchored-release-preflight:/);
   assert.match(workflow, /scripts\/anchored-version-material\.mjs/);
+  assert.match(
+    workflow,
+    /verifier=\.buildchain\/runtime\/scripts\/anchored-version-material\.mjs/,
+  );
+  assert.match(
+    workflow,
+    /verifier=\.buildchain\/workflow-shell\/scripts\/anchored-version-material\.mjs/,
+    "new workflow shells must retain the additive anchored preflight when the selected stable runtime predates its verifier",
+  );
+  assert.match(
+    workflow,
+    /install --dir \.buildchain\/workflow-shell --prod --frozen-lockfile --ignore-scripts/,
+  );
+  assert.match(workflow, /node "\$\{\{ steps\.anchored-verifier\.outputs\.path \}\}"/);
   assert.match(workflow, /kind":"anchored-version-material"/);
   assert.match(workflow, /target_ref="release\/\$\{BUILDCHAIN_TARGET_LINE\}"/);
   assert.ok(
