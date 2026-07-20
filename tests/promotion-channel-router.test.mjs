@@ -142,6 +142,10 @@ test("stable bootstrap calls the existing public workflow at the immutable v2 SH
     callRef: "c95f9fc36b0ac8fb4ff6400189850c4ae683f3ea",
     workflowPath: ".github/workflows/release-candidate-promote.yml",
     forwardInternalInputs: false,
+    unsupportedInputs: [
+      "release-passport-invariant-passport-jsons",
+      "release-passport-invariant-passport-command",
+    ],
   });
   assert.match(generated, /STABLE_SHELL_REF: v2/);
   assert.match(generated, /STABLE_SHELL_CALL_REF: c95f9fc36b0ac8fb4ff6400189850c4ae683f3ea/);
@@ -154,6 +158,9 @@ test("stable bootstrap only forwards inputs supported by the pinned legacy wrapp
   const stableBlock = generated.slice(generated.indexOf("  stable:\n"));
 
   for (const name of workflowFields(advanced, "inputs").filter((input) => input.startsWith("promotion-"))) {
+    assert.doesNotMatch(stableBlock, new RegExp(`^      ${name}:`, "m"));
+  }
+  for (const name of shellRouting.stable.unsupportedInputs) {
     assert.doesNotMatch(stableBlock, new RegExp(`^      ${name}:`, "m"));
   }
   assert.match(stableBlock, /^      buildchain-ref:/m);
