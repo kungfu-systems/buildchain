@@ -457,6 +457,7 @@ function createUnifiedPassportFixture({
   packageVersion = "",
   releaseExtra = {},
   impact = defaultSurfaceImpactLedger(),
+  versionMaterial = undefined,
 } = {}) {
   const cwd = tempDir("release-passport-core");
   const assetsDir = path.join(cwd, "dist");
@@ -580,6 +581,9 @@ function createUnifiedPassportFixture({
     publishEvidenceJson: publishEvidencePath,
     transactionJson: transactionPath,
     anchorManifestJson: anchorManifestPath,
+    versionMaterialJson: versionMaterial
+      ? JSON.stringify(versionMaterial)
+      : "",
     packageSetJson: packageSetPath,
     buildSummaryJson: buildSummaryPath,
     platformManifestJsons: [linuxManifestPath, darwinManifestPath, windowsManifestPath],
@@ -2683,6 +2687,76 @@ test("release passport core fails closed on missing anchor manifest digest", asy
 
   assert.equal(report.ok, false);
   assert.match(JSON.stringify(report.issues), /anchorManifest\.sha256/);
+});
+
+test("release passport verifies anchored derived version material", async () => {
+  const versionMaterial = {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-anchored-version-material/v1",
+    alpha: {
+      ref: "v2.3.2-alpha.1",
+      commit: "a".repeat(40),
+      tree: "b".repeat(40),
+      material: [
+        {
+          path: "witness.json",
+          present: true,
+          bytes: 41,
+          sha256: `sha256:${"f".repeat(64)}`,
+        },
+      ],
+    },
+    release: {
+      ref: "release/v2/v2.3",
+      commit: "c".repeat(40),
+      tree: "d".repeat(40),
+      material: [
+        {
+          path: "witness.json",
+          present: true,
+          bytes: 42,
+          sha256: `sha256:${"e".repeat(64)}`,
+        },
+      ],
+    },
+    allowedPaths: ["package.json", "release.json", "witness.json"],
+    versionFiles: ["package.json"],
+    manifest: "release.json",
+    derivedFiles: [
+      {
+        path: "witness.json",
+        bytes: 42,
+        sha256: `sha256:${"e".repeat(64)}`,
+      },
+    ],
+  };
+  const passportPath = createUnifiedPassportFixture({ versionMaterial });
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+
+  assert.equal(report.ok, true);
+  assert.deepEqual(passport.versionMaterial, versionMaterial);
+});
+
+test("release passport rejects unbound anchored derived version material", async () => {
+  const passportPath = createUnifiedPassportFixture({
+    versionMaterial: {
+      contract: "kungfu-buildchain-anchored-version-material/v1",
+      alpha: { tree: "a".repeat(40) },
+      release: { tree: "b".repeat(40) },
+      allowedPaths: ["package.json"],
+      derivedFiles: [
+        {
+          path: "witness.json",
+          sha256: `sha256:${"c".repeat(64)}`,
+        },
+      ],
+    },
+  });
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+
+  assert.equal(report.ok, false);
+  assert.match(JSON.stringify(report.issues), /derived version material/);
 });
 
 test("release passport projects a verified cross-platform invariant Passport", () => {

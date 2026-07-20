@@ -8411,11 +8411,15 @@ required = true
 strategy = "anchored"
 next = "manual"
 manifest = "libnode.release.json"
+derived_files = ["version-witness.json"]
 
 [[version.files]]
 type = "json"
 path = "package.json"
 key = "version"
+
+[lifecycle.version-state]
+command = "node scripts/derive.mjs"
 
 [lifecycle.verify]
 command = "node scripts/verify.mjs"
@@ -8429,18 +8433,28 @@ command = "node scripts/verify.mjs"
       nodeTag: "v22.22.3",
       npmVersion: "22.22.3-kf.0",
     },
+    "version-witness.json": {
+      version: "22.22.3-kf.0",
+    },
+    "scripts/derive.mjs": `
+import fs from "node:fs";
+const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+fs.writeFileSync("version-witness.json", JSON.stringify({ version: pkg.version }, null, 2) + "\\n");
+`,
     "scripts/verify.mjs": `
 import assert from "node:assert/strict";
 import fs from "node:fs";
 
 const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
 const anchor = JSON.parse(fs.readFileSync(process.env.BUILDCHAIN_ANCHOR_MANIFEST, "utf8"));
+const witness = JSON.parse(fs.readFileSync("version-witness.json", "utf8"));
 
 assert.equal(process.env.BUILDCHAIN_VERSION, "22.22.0");
 assert.equal(process.env.BUILDCHAIN_VERSION_STRATEGY, "anchored");
 assert.equal(process.env.BUILDCHAIN_VERSION_NEXT, "manual");
 assert.equal(anchor.npmVersion, "22.22.3-kf.0");
 assert.equal(pkg.version, anchor.npmVersion);
+assert.equal(witness.version, pkg.version);
 `,
   });
   run(["git", "init"], cwd);
@@ -8456,10 +8470,12 @@ assert.equal(pkg.version, anchor.npmVersion);
     ["alpha-tree", [
       { path: "package.json", mode: "100644", type: "blob", sha: "blob-package-alpha" },
       { path: "libnode.release.json", mode: "100644", type: "blob", sha: "blob-anchor-alpha" },
+      { path: "version-witness.json", mode: "100644", type: "blob", sha: "blob-witness-alpha" },
     ]],
     ["release-tree", [
       { path: "package.json", mode: "100644", type: "blob", sha: "blob-package-release" },
       { path: "libnode.release.json", mode: "100644", type: "blob", sha: "blob-anchor-release" },
+      { path: "version-witness.json", mode: "100644", type: "blob", sha: "blob-witness-release" },
     ]],
   ]);
   const octokit = {
@@ -8487,6 +8503,12 @@ assert.equal(pkg.version, anchor.npmVersion);
         }),
         getTree: async ({ tree_sha }) => ({
           data: { tree: trees.get(tree_sha) || [] },
+        }),
+        getBlob: async ({ file_sha }) => ({
+          data: {
+            encoding: "base64",
+            content: Buffer.from(file_sha).toString("base64"),
+          },
         }),
         createBlob: async () => {
           throw new Error("anchored manual release should not create version blobs");
@@ -8530,6 +8552,7 @@ assert.equal(pkg.version, anchor.npmVersion);
               files: [
                 { filename: "package.json" },
                 { filename: "libnode.release.json" },
+                { filename: "version-witness.json" },
               ],
             },
           };
@@ -8554,6 +8577,22 @@ assert.equal(pkg.version, anchor.npmVersion);
   assert.equal(refs.get("tags/v22.22.0"), SHA);
   assert.equal(refs.get("tags/v22.22"), SHA);
   assert.equal(refs.get("tags/v22"), SHA);
+  assert.equal(
+    result.versionMaterial.contract,
+    "kungfu-buildchain-anchored-version-material/v1",
+  );
+  assert.deepEqual(
+    result.versionMaterial.derivedFiles.map((file) => file.path),
+    ["version-witness.json"],
+  );
+  assert.deepEqual(
+    result.versionMaterial.alpha.material.map((file) => file.path),
+    ["package.json", "libnode.release.json", "version-witness.json"],
+  );
+  assert.match(
+    result.versionMaterial.release.material[0].sha256,
+    /^sha256:[0-9a-f]{64}$/,
+  );
 });
 
 test("strict anchored release promotion accepts reviewed target PR with only version material changes", async () => {

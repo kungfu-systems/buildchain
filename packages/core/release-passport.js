@@ -1096,6 +1096,7 @@ export function createReleasePassport({
   assets = [],
   packageSet = undefined,
   anchorManifest = undefined,
+  versionMaterial = undefined,
   publishEvidence = undefined,
   trustedPublishing = undefined,
   transaction = undefined,
@@ -1267,6 +1268,7 @@ export function createReleasePassport({
     ...(normalizedPackageSet ? { packageSet: normalizedPackageSet } : {}),
     ...(normalizedPublishSummary ? { publish: normalizedPublishSummary } : {}),
     ...(anchorManifest ? { anchorManifest } : {}),
+    ...(versionMaterial ? { versionMaterial } : {}),
     ...(normalizedTrustedPublishing ? { trustedPublishing: normalizedTrustedPublishing } : {}),
     ...(normalizedTransaction ? { transaction: normalizedTransaction } : {}),
     ...(normalizedPromotionRouting ? { promotionRouting: normalizedPromotionRouting } : {}),
@@ -1350,6 +1352,7 @@ export function collectGitHubReleasePassport({
   trustedPublishingJson = "",
   transactionJson = "",
   anchorManifestJson = "",
+  versionMaterialJson = "",
   impactJson = "",
   buildSummaryJson = "",
   buildFactsJsons = [],
@@ -1377,6 +1380,11 @@ export function collectGitHubReleasePassport({
   const trustedPublishing = parseJsonInput(trustedPublishingJson, undefined, { cwd, label: "trustedPublishingJson" });
   const transactionMeta = parseJsonInputWithMeta(transactionJson, undefined, { cwd, label: "transactionJson" });
   const anchorManifest = normalizeAnchorManifest(parseJsonInputWithMeta(anchorManifestJson, undefined, { cwd, label: "anchorManifestJson" }));
+  const versionMaterial = parseJsonInput(
+    versionMaterialJson,
+    undefined,
+    { cwd, label: "versionMaterialJson" },
+  );
   const impactMeta = parseJsonInputWithMeta(impactJson, undefined, { cwd, label: "impactJson" });
   const buildSummaryMeta = parseJsonInputWithMeta(buildSummaryJson, undefined, { cwd, label: "buildSummaryJson" });
   const buildFactMetas = (buildFactsJsons || [])
@@ -1465,6 +1473,7 @@ export function collectGitHubReleasePassport({
     assets,
     packageSet,
     anchorManifest,
+    versionMaterial,
     publishEvidence: publishEvidenceMeta.value,
     trustedPublishing,
     transaction: transactionMeta.value,
@@ -1976,6 +1985,56 @@ export function createReleaseCheckReport({
     }
     if (!passport.anchorManifest.fields || typeof passport.anchorManifest.fields !== "object" || Array.isArray(passport.anchorManifest.fields)) {
       issues.push(issue("error", "anchorManifest.fields", "anchorManifest.fields must be an object"));
+    }
+  }
+  if (passport?.versionMaterial) {
+    if (passport.versionMaterial.contract !== "kungfu-buildchain-anchored-version-material/v1") {
+      issues.push(issue(
+        "error",
+        "versionMaterial.contract",
+        "versionMaterial contract must be kungfu-buildchain-anchored-version-material/v1",
+      ));
+    }
+    if (!passport.versionMaterial.alpha?.tree || !passport.versionMaterial.release?.tree) {
+      issues.push(issue(
+        "error",
+        "versionMaterial.tree",
+        "versionMaterial must record alpha and release tree identities",
+      ));
+    }
+    const allowedPaths = Array.isArray(passport.versionMaterial.allowedPaths)
+      ? passport.versionMaterial.allowedPaths
+      : [];
+    const derivedFiles = Array.isArray(passport.versionMaterial.derivedFiles)
+      ? passport.versionMaterial.derivedFiles
+      : [];
+    for (const [index, file] of derivedFiles.entries()) {
+      if (!file?.path || !file?.sha256 || !allowedPaths.includes(file.path)) {
+        issues.push(issue(
+          "error",
+          `versionMaterial.derivedFiles[${index}]`,
+          "derived version material must have a path, digest, and matching allowed path",
+        ));
+      }
+    }
+    for (const side of ["alpha", "release"]) {
+      const material = Array.isArray(passport.versionMaterial[side]?.material)
+        ? passport.versionMaterial[side].material
+        : [];
+      for (const [index, file] of material.entries()) {
+        if (
+          !file?.path ||
+          !allowedPaths.includes(file.path) ||
+          file.present !== true ||
+          !/^sha256:[0-9a-f]{64}$/.test(file.sha256 || "")
+        ) {
+          issues.push(issue(
+            "error",
+            `versionMaterial.${side}.material[${index}]`,
+            "version material must have an allowed path, present bytes, and sha256 digest",
+          ));
+        }
+      }
     }
   }
   if (!passport?.runnerPolicy?.productionDefault) {

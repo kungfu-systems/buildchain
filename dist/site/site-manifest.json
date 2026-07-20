@@ -213,7 +213,7 @@
       "path": "docs/lifecycle-protocol.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:3a03359ec58db04f334303256b02020f6039616e8802c19dfc00e76bbb05bf18"
+      "digest": "sha256:71552baae51146fa790d40af02d5d5b3a1a4aa0d9764af09907bb05d3360b0cc"
     },
     {
       "id": "reusable-build-surface",
@@ -237,7 +237,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:d25a2ceb6cdc1a1db321e7d2a6aa8a454fb4d7a10560177604f8ecb5801a6e66"
+      "digest": "sha256:cea8921c430b208ec127af1800b58be21812ea07066998eb940ea1ac53738f2f"
     },
     {
       "id": "release-flow",
@@ -261,7 +261,7 @@
       "path": "docs/versioning.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:e856ec8aee11ff4bd2760425a8950538a91245cd5624c22c8768af50d6b1a8ce"
+      "digest": "sha256:10ec868fcb3fd58ae35b54ecd8ccd9a4556516f460c262f0c1ee41c81bdbc264"
     },
     {
       "id": "web-surface-deployments",

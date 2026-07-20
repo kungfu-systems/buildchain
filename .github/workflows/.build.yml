@@ -789,6 +789,74 @@ jobs:
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
+  anchored-release-preflight:
+    name: Verify anchored release material
+    runs-on: ubuntu-24.04
+    needs:
+      - trust-gate
+      - resolve-source
+    if: ${{ needs.trust-gate.outputs.trusted == 'true' }}
+    outputs:
+      evidence-artifact: ${{ steps.names.outputs.evidence-artifact }}
+      applicable: ${{ steps.material.outputs.anchored-version-material-applicable }}
+      digest: ${{ steps.material.outputs.anchored-version-material-digest }}
+    steps:
+      - name: Checkout exact release source with tags
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          fetch-depth: 0
+          clean: true
+          persist-credentials: false
+          path: source
+
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Install Buildchain runtime dependencies
+        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+
+      - name: Verify declared anchored version material
+        id: material
+        shell: bash
+        run: |
+          set -euo pipefail
+          target_ref="${BUILDCHAIN_TARGET_REF}"
+          if [[ -z "${target_ref}" && "${BUILDCHAIN_TARGET_LINE}" =~ ^v[0-9]+/v[0-9]+\.[0-9]+$ ]]; then
+            target_ref="release/${BUILDCHAIN_TARGET_LINE}"
+          elif [[ -z "${target_ref}" && "${BUILDCHAIN_TARGET_LINE}" =~ ^v([0-9]+)\.([0-9]+)$ ]]; then
+            target_ref="release/v${BASH_REMATCH[1]}/${BUILDCHAIN_TARGET_LINE}"
+          fi
+          BUILDCHAIN_ANCHORED_TARGET_REF="${target_ref}" \
+            node .buildchain/runtime/scripts/anchored-version-material.mjs
+        env:
+          BUILDCHAIN_ANCHORED_SOURCE_CWD: source/${{ inputs.working-directory }}
+          BUILDCHAIN_ANCHORED_MATERIAL_OUTPUT: .buildchain/artifacts/anchored-version-material.json
+          BUILDCHAIN_ANCHORED_TARGET_CHANNEL: ${{ needs.resolve-source.outputs.publish-source-channel || needs.trust-gate.outputs.publish-channel }}
+          BUILDCHAIN_ANCHORED_RELEASE_REF: HEAD
+          BUILDCHAIN_TARGET_REF: ${{ github.base_ref || github.event.pull_request.base.ref }}
+          BUILDCHAIN_TARGET_LINE: ${{ needs.resolve-source.outputs.publish-source-line }}
+
+      - name: Resolve anchored material artifact name
+        id: names
+        run: echo "evidence-artifact=${ARTIFACT_NAME}-anchored-version-material-${SOURCE_SHA}" >> "$GITHUB_OUTPUT"
+        env:
+          ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+
+      - name: Upload anchored version material evidence
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.names.outputs.evidence-artifact }}
+          path: .buildchain/artifacts/anchored-version-material.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
   resolve-contract:
     name: Resolve reusable contract
     runs-on: ubuntu-24.04
@@ -970,8 +1038,9 @@ jobs:
       - resolve-contract
       - resolve-source
       - controller-plan
+      - anchored-release-preflight
       - artifact-transfer
-    if: ${{ needs.trust-gate.outputs.trusted == 'true' && needs.resolve-contract.outputs.native-platform-count != '0' }}
+    if: ${{ needs.trust-gate.outputs.trusted == 'true' && needs.anchored-release-preflight.result == 'success' && needs.resolve-contract.outputs.native-platform-count != '0' }}
     strategy:
       fail-fast: false
       matrix:
@@ -1258,8 +1327,9 @@ jobs:
       - resolve-contract
       - resolve-source
       - controller-plan
+      - anchored-release-preflight
       - artifact-transfer
-    if: ${{ needs.trust-gate.outputs.trusted == 'true' && needs.resolve-contract.outputs.container-platform-count != '0' }}
+    if: ${{ needs.trust-gate.outputs.trusted == 'true' && needs.anchored-release-preflight.result == 'success' && needs.resolve-contract.outputs.container-platform-count != '0' }}
     strategy:
       fail-fast: false
       matrix:
@@ -1606,11 +1676,12 @@ jobs:
       - resolve-contract
       - resolve-source
       - controller-plan
+      - anchored-release-preflight
       - artifact-transfer
       - build-native
       - build-linux-container
       - relay-artifacts
-    if: ${{ always() && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && (needs.artifact-transfer.outputs.mode == 'github-artifacts' || needs.relay-artifacts.result == 'success') }}
+    if: ${{ always() && needs.anchored-release-preflight.result == 'success' && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && (needs.artifact-transfer.outputs.mode == 'github-artifacts' || needs.relay-artifacts.result == 'success') }}
     runs-on: ubuntu-24.04
     outputs:
       summary-artifact-name: ${{ steps.names.outputs.summary-artifact-name }}
@@ -1694,6 +1765,12 @@ jobs:
           name: ${{ needs.controller-plan.outputs.controller-plan-artifact }}
           path: .buildchain/controller
 
+      - name: Download anchored version material evidence
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ needs.anchored-release-preflight.outputs.evidence-artifact }}
+          path: .buildchain/anchored-version-material
+
       - name: Aggregate artifact summary
         id: summary
         run: node .buildchain/runtime/scripts/aggregate-build-summary.mjs
@@ -1740,8 +1817,8 @@ jobs:
         env:
           BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
           BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
-            [{"id":"resolve-runtime","status":"${{ needs.trust-gate.result }}"},{"id":"resolve-source","status":"${{ needs.resolve-source.result }}"},{"id":"build","status":"${{ (needs.build-native.result == 'failure' || needs.build-linux-container.result == 'failure' || needs.relay-artifacts.result == 'failure') && 'failure' || (needs.build-native.result == 'cancelled' || needs.build-linux-container.result == 'cancelled' || needs.relay-artifacts.result == 'cancelled') && 'cancelled' || (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && 'success' || 'skipped' }}"},{"id":"verify","status":"success"},{"id":"aggregate","status":"success"}]
-          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: '[{"kind":"platform-manifests","path":".buildchain/artifacts/build-summary.json"},{"kind":"build-summary","path":".buildchain/artifacts/build-summary.json"}]'
+            [{"id":"resolve-runtime","status":"${{ needs.trust-gate.result }}"},{"id":"resolve-source","status":"${{ needs.resolve-source.result }}"},{"id":"anchored-release-preflight","status":"${{ needs.anchored-release-preflight.result }}"},{"id":"build","status":"${{ (needs.build-native.result == 'failure' || needs.build-linux-container.result == 'failure' || needs.relay-artifacts.result == 'failure') && 'failure' || (needs.build-native.result == 'cancelled' || needs.build-linux-container.result == 'cancelled' || needs.relay-artifacts.result == 'cancelled') && 'cancelled' || (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && 'success' || 'skipped' }}"},{"id":"verify","status":"success"},{"id":"aggregate","status":"success"}]
+          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: '[{"kind":"anchored-version-material","path":".buildchain/anchored-version-material/anchored-version-material.json"},{"kind":"platform-manifests","path":".buildchain/artifacts/build-summary.json"},{"kind":"build-summary","path":".buildchain/artifacts/build-summary.json"}]'
           BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: ${{ inputs.artifact-name }}-release-candidate-controller-receipt-${{ needs.resolve-source.outputs.publish-source-sha }}
           BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/release-candidate-receipt.json
 
@@ -1809,6 +1886,7 @@ jobs:
       - trust-gate
       - resolve-source
       - controller-plan
+      - anchored-release-preflight
       - build-native
       - build-linux-container
       - relay-artifacts
@@ -1841,14 +1919,21 @@ jobs:
           name: ${{ needs.summarize.outputs.summary-artifact-name }}
           path: .buildchain/controller/evidence
 
+      - name: Download anchored version material evidence
+        if: ${{ needs.anchored-release-preflight.result == 'success' }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ needs.anchored-release-preflight.outputs.evidence-artifact }}
+          path: .buildchain/controller/evidence
+
       - name: Create build controller receipt
         id: receipt
         run: node .buildchain/controller-runtime/scripts/controller-evidence.mjs --mode receipt
         env:
           BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
           BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
-            [{"id":"resolve-runtime","status":"${{ needs.trust-gate.result }}"},{"id":"resolve-source","status":"${{ needs.resolve-source.result }}"},{"id":"build","status":"${{ (needs.build-native.result == 'failure' || needs.build-linux-container.result == 'failure' || needs.relay-artifacts.result == 'failure') && 'failure' || (needs.build-native.result == 'cancelled' || needs.build-linux-container.result == 'cancelled' || needs.relay-artifacts.result == 'cancelled') && 'cancelled' || (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && 'success' || 'skipped' }}"},{"id":"verify","status":"${{ needs.summarize.result }}"},{"id":"aggregate","status":"${{ needs.summarize.result }}"}]
-          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ needs.summarize.result == 'success' && '[{"kind":"platform-manifests","path":".buildchain/controller/evidence/build-summary.json"},{"kind":"build-summary","path":".buildchain/controller/evidence/build-summary.json"}]' || '[]' }}
+            [{"id":"resolve-runtime","status":"${{ needs.trust-gate.result }}"},{"id":"resolve-source","status":"${{ needs.resolve-source.result }}"},{"id":"anchored-release-preflight","status":"${{ needs.anchored-release-preflight.result }}"},{"id":"build","status":"${{ (needs.build-native.result == 'failure' || needs.build-linux-container.result == 'failure' || needs.relay-artifacts.result == 'failure') && 'failure' || (needs.build-native.result == 'cancelled' || needs.build-linux-container.result == 'cancelled' || needs.relay-artifacts.result == 'cancelled') && 'cancelled' || (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && 'success' || 'skipped' }}"},{"id":"verify","status":"${{ needs.summarize.result }}"},{"id":"aggregate","status":"${{ needs.summarize.result }}"}]
+          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ needs.summarize.result == 'success' && '[{"kind":"anchored-version-material","path":".buildchain/controller/evidence/anchored-version-material.json"},{"kind":"platform-manifests","path":".buildchain/controller/evidence/build-summary.json"},{"kind":"build-summary","path":".buildchain/controller/evidence/build-summary.json"}]' || '[]' }}
           BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ needs.summarize.result == 'success' && '' || 'controller-incomplete' }}
           BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Build or verification did not complete successfully
           BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: ${{ inputs.artifact-name }}-controller-receipt-${{ needs.resolve-source.outputs.publish-source-sha }}

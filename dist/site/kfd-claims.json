@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "5d4ff2bbdb09a3050c74729231ac76ccf12eb1b536d40a3a3963a9de68499e8e",
+    "sha256": "4cecf843157266d233e31c16c94d78ee34e7f965e1aae035b4915836d3a1ed13",
     "summary": {
       "cliCommandCount": 83,
       "workflowCount": 49,
@@ -228,7 +228,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "5d4ff2bbdb09a3050c74729231ac76ccf12eb1b536d40a3a3963a9de68499e8e",
+      "sha256": "4cecf843157266d233e31c16c94d78ee34e7f965e1aae035b4915836d3a1ed13",
       "summary": {
         "cliCommandCount": 83,
         "workflowCount": 49,
@@ -1053,6 +1053,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./artifact-verification-envelope"
+        },
+        {
+          "id": "export:./anchored-version-material",
+          "name": "@kungfu-tech/buildchain/anchored-version-material",
+          "kind": "package-export",
+          "sourcePath": "packages/core/anchored-version-material.js",
+          "evidencePath": "packages/core/anchored-version-material.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./anchored-version-material"
         },
         {
           "id": "export:./buildchain-contract",
@@ -4826,6 +4838,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 307
+    "publicSurfaceCount": 308
   }
 }
