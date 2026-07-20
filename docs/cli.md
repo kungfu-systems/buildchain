@@ -663,6 +663,13 @@ into release evidence. A package cannot claim KFD-3 collaboration-interface
 support merely because the docs mention it; the release passport must show the
 frozen declaration, the artifact-side witness digest, and a passing closure
 comparison.
+
+`--invariant-passport-json` attaches a product-owned invariant Passport to the
+release gate and may be repeated. `--invariant-passport-cmd` runs a product
+command that emits one Passport JSON document. Buildchain verifies the
+Passport root, exact clean source identity, `verified` verdict, complete
+platform coverage, and residual-risk shape; it does not redefine the product's
+invariant semantics. Declared invariant Passport input is fail-closed.
 For the KFD repository itself, the witness can declare docs, schemas, standards
 metadata, package exports, and site-consumption contracts as grouped public
 surfaces; the artifact witness must expose the same enumerable package/site

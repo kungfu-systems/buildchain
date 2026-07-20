@@ -96,6 +96,9 @@ required = true
 strategy = "anchored"
 next = "manual"
 manifest = "libnode.release.json"
+derived_files = [
+  "dist/version-witness.json",
+]
 
 [[version.files]]
 type = "json"
@@ -109,6 +112,17 @@ With `strategy = "anchored"` and `next = "manual"`:
   does not rewrite those files to the Buildchain release tag.
 - `lifecycle.verify` is the project-owned truth gate. It should compare the
   package version, anchor manifest, and upstream source/submodule state.
+- `version.derived_files` can declare committed witnesses or generated metadata
+  whose bytes are derived by `lifecycle.version-state`. The field is valid only
+  for anchored/manual projects that declare both `lifecycle.version-state` and
+  `lifecycle.verify`.
+- release-candidate builds rerun derivation and verification before heavy
+  platform builds, require the committed tree to remain unchanged, and bind the
+  alpha/release tree identities plus declared file digests into controller and
+  release-passport evidence.
+- release promotion permits differences from the tested alpha tree only in
+  `version.files`, the anchor manifest, and declared `version.derived_files`;
+  any other changed path fails closed before publication.
 - release promotion still creates the exact/floating production refs for the
   current line;
 - release promotion does not auto-create the next alpha branch or tag;

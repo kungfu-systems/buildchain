@@ -61,6 +61,7 @@ repository changes are patch".
 
 | Date | Action | Line | Faces | Class | Rationale | PR |
 | --- | --- | --- | --- | --- | --- | --- |
+| 2026-07-20 | extend-minor | `v2.14` | anchored-derived-version-material, build-controller-evidence, release-passport, package-subpaths, release-propagation-controller | additive | Anchored/manual consumers can declare derived version witnesses that Buildchain regenerates and verifies before heavy builds, binds to exact alpha/release trees and passports, and admits during protected promotion; propagation receipts now model their existing optional consumer stages. | |
 | 2026-07-17 | extend-minor | `v2.14` | merge-queue-config, release-line-governance-inheritance | additive | Buildchain config can explicitly enable, inherit, or disable exact dev-channel merge queues, and release-line bootstrap reconciles the declared or inherited policy before moving the repository default branch. | |
 | 2026-07-16 | open-minor | `v2.14` | dev-merge-queue-governance | additive | The public CLI adds a dry-run-first, idempotent merge-queue governance command that verifies required workflow event compatibility before applying an exact dev-channel ruleset and removing the strict up-to-date race. | |
 | 2026-07-15 | open-minor | `v2.13` | artifact-verification-envelope, package-subpaths | additive | The public envelope seals exact artifact, provenance, identity, lifecycle, revocation, and existing KFD assessment roots into one consumer-ready KFX admission input, with a dedicated Node API export and fail-closed verifier. | |

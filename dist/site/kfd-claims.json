@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "2475c0ca49560ba9fb686f463a419644ddabd997fdcaaaee206fe6c3a4156ae1",
+    "sha256": "4cecf843157266d233e31c16c94d78ee34e7f965e1aae035b4915836d3a1ed13",
     "summary": {
       "cliCommandCount": 83,
       "workflowCount": 49,
@@ -228,7 +228,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "2475c0ca49560ba9fb686f463a419644ddabd997fdcaaaee206fe6c3a4156ae1",
+      "sha256": "4cecf843157266d233e31c16c94d78ee34e7f965e1aae035b4915836d3a1ed13",
       "summary": {
         "cliCommandCount": 83,
         "workflowCount": 49,
@@ -1053,6 +1053,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./artifact-verification-envelope"
+        },
+        {
+          "id": "export:./anchored-version-material",
+          "name": "@kungfu-tech/buildchain/anchored-version-material",
+          "kind": "package-export",
+          "sourcePath": "packages/core/anchored-version-material.js",
+          "evidencePath": "packages/core/anchored-version-material.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./anchored-version-material"
         },
         {
           "id": "export:./buildchain-contract",
@@ -2777,7 +2789,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 70,
+          "inputCount": 72,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -2835,6 +2847,8 @@
             "release-passport",
             "release-passport-buildchain-self-kfd",
             "release-passport-impact-json",
+            "release-passport-invariant-passport-command",
+            "release-passport-invariant-passport-jsons",
             "release-passport-kfd-1-witness-jsons",
             "release-passport-kfd-2-claim-jsons",
             "release-passport-kfd-3-artifact-verify-command",
@@ -3705,7 +3719,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 62,
+          "inputCount": 64,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -3755,6 +3769,8 @@
             "release-passport",
             "release-passport-buildchain-self-kfd",
             "release-passport-impact-json",
+            "release-passport-invariant-passport-command",
+            "release-passport-invariant-passport-jsons",
             "release-passport-kfd-1-witness-jsons",
             "release-passport-kfd-2-claim-jsons",
             "release-passport-kfd-3-artifact-verify-command",
@@ -3927,7 +3943,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 60,
+          "inputCount": 62,
           "inputs": [
             "allow-repository",
             "branch-protection-bypass-apps",
@@ -3969,6 +3985,8 @@
             "release-passport-build-summary-path",
             "release-passport-buildchain-self-kfd",
             "release-passport-impact-json",
+            "release-passport-invariant-passport-command",
+            "release-passport-invariant-passport-jsons",
             "release-passport-kfd-1-witness-jsons",
             "release-passport-kfd-2-claim-jsons",
             "release-passport-kfd-3-artifact-verify-command",
@@ -4820,6 +4838,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 307
+    "publicSurfaceCount": 308
   }
 }

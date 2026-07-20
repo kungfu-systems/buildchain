@@ -26,6 +26,7 @@ export const PRODUCT_MECHANISM_CONTRACT = "kungfu-buildchain-product-mechanism";
 export const RELEASE_CHECK_REPORT_CONTRACT = "kungfu-buildchain-release-check-report";
 export const KFD2_RELEASE_TRUST_PASSPORT_CONTRACT = "kungfu-buildchain-kfd-2-release-trust-passport-audit";
 export const KFD2_TRUST_PROOF_CONTRACT = "kungfu-buildchain-kfd-2-trust-proof";
+export const INVARIANT_PASSPORT_GATE_CONTRACT = "buildchain.invariant-passport-gate/v1";
 
 const CONTRACTS = new Set([
   RELEASE_PASSPORT_CONTRACT,
@@ -126,6 +127,80 @@ function stableJson(value) {
 
 export function sha256Text(value) {
   return crypto.createHash("sha256").update(value).digest("hex");
+}
+
+function invariantSemanticPreimage(passport) {
+  const value = structuredClone(passport);
+  delete value.passportRoot;
+  delete value.observedAt;
+  return value;
+}
+
+function normalizeInvariantPassport(meta, index = 0) {
+  const value = meta?.value;
+  const label = `invariantPassportJsons[${index}]`;
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`${label} must be a JSON object`);
+  }
+  for (const field of ["schema", "product", "canonicalization", "passportRoot", "contractRoot", "registryRoot", "verdict"]) {
+    nonEmptyString(value[field], `${label}.${field}`);
+  }
+  if (value.canonicalization !== "stable-json-sha256-v1") {
+    throw new Error(`${label}.canonicalization must be stable-json-sha256-v1`);
+  }
+  if (!/^sha256:[0-9a-f]{64}$/.test(value.passportRoot)) {
+    throw new Error(`${label}.passportRoot must be sha256:<64-lowercase-hex>`);
+  }
+  const expectedRoot = `sha256:${sha256Text(stableJson(invariantSemanticPreimage(value)))}`;
+  if (value.passportRoot !== expectedRoot) {
+    throw new Error(`${label}.passportRoot mismatch: expected ${expectedRoot}, got ${value.passportRoot}`);
+  }
+  if (value.verdict !== "verified") {
+    throw new Error(`${label}.verdict must be verified, got ${value.verdict}`);
+  }
+  if (value.coverage?.complete !== true) {
+    throw new Error(`${label}.coverage.complete must be true`);
+  }
+  if (value.source?.dirty !== false) {
+    throw new Error(`${label}.source.dirty must be false`);
+  }
+  if (!/^[0-9a-f]{40}$/.test(optionalString(value.source?.revision))) {
+    throw new Error(`${label}.source.revision must be an exact 40-hex revision`);
+  }
+  const platforms = Array.isArray(value.coverage?.platforms)
+    ? [...new Set(value.coverage.platforms.map(String))].sort()
+    : [];
+  if (platforms.length === 0) throw new Error(`${label}.coverage.platforms must be non-empty`);
+  if (!Array.isArray(value.residualRisk)) throw new Error(`${label}.residualRisk must be an array`);
+  return {
+    path: optionalString(meta.path),
+    sha256: optionalString(meta.sha256),
+    schema: value.schema,
+    product: value.product,
+    passportRoot: value.passportRoot,
+    contractRoot: value.contractRoot,
+    registryRoot: value.registryRoot,
+    verdict: value.verdict,
+    source: structuredClone(value.source),
+    coverage: structuredClone(value.coverage),
+    platforms,
+    residualRisk: structuredClone(value.residualRisk),
+  };
+}
+
+export function createInvariantPassportGate(passportMetas = []) {
+  const passports = passportMetas.filter((meta) => meta?.value).map(normalizeInvariantPassport);
+  if (passports.length === 0) return undefined;
+  return {
+    contract: INVARIANT_PASSPORT_GATE_CONTRACT,
+    result: "passed",
+    passports,
+    responsibility: {
+      invariantSemanticsOwner: "consumer",
+      passportVerificationOwner: "consumer",
+      releaseAdmissionOwner: "Buildchain",
+    },
+  };
 }
 
 export function sha256File(filePath) {
@@ -411,7 +486,12 @@ function parseJsonCommandOutput({ command = "", cwd = process.cwd(), label = "co
   if (!stdout) {
     throw new Error(`${label} produced no JSON on stdout`);
   }
-  const parsed = JSON.parse(stdout);
+  let parsed;
+  try {
+    parsed = JSON.parse(stdout);
+  } catch (error) {
+    throw new Error(`${label} output must be valid JSON: ${error.message}`, { cause: error });
+  }
   return {
     value: parsed,
     path: "",
@@ -1016,6 +1096,7 @@ export function createReleasePassport({
   assets = [],
   packageSet = undefined,
   anchorManifest = undefined,
+  versionMaterial = undefined,
   publishEvidence = undefined,
   trustedPublishing = undefined,
   transaction = undefined,
@@ -1030,6 +1111,7 @@ export function createReleasePassport({
   kfd1 = undefined,
   kfd2Claims = [],
   kfd3 = undefined,
+  invariantPassports = undefined,
   controllerReceipts = [],
   controllerReceiptReferences = [],
 } = {}) {
@@ -1186,6 +1268,7 @@ export function createReleasePassport({
     ...(normalizedPackageSet ? { packageSet: normalizedPackageSet } : {}),
     ...(normalizedPublishSummary ? { publish: normalizedPublishSummary } : {}),
     ...(anchorManifest ? { anchorManifest } : {}),
+    ...(versionMaterial ? { versionMaterial } : {}),
     ...(normalizedTrustedPublishing ? { trustedPublishing: normalizedTrustedPublishing } : {}),
     ...(normalizedTransaction ? { transaction: normalizedTransaction } : {}),
     ...(normalizedPromotionRouting ? { promotionRouting: normalizedPromotionRouting } : {}),
@@ -1196,6 +1279,7 @@ export function createReleasePassport({
     ...(normalizedKfd1 ? { [normalizedKfd1.key || kfd1Metadata.key]: normalizedKfd1.passportSection } : {}),
     ...(normalizedKfd2 ? { "kfd-2": normalizedKfd2 } : {}),
     ...(normalizedKfd3 ? { [normalizedKfd3.key || "kfd-3"]: normalizedKfd3.passportSection } : {}),
+    ...(invariantPassports ? { invariantPassports } : {}),
     ...(normalizedControllerReceipts.length > 0 ? { controllerReceipts: normalizedControllerReceipts } : {}),
     versionImpact: normalizedImpact.versionImpact,
     surfaceImpacts: normalizedImpact.surfaceImpacts,
@@ -1238,6 +1322,7 @@ export function createReleasePassport({
       kfd1: normalizedKfd1 ? `${normalizedKfd1.key || kfd1Metadata.key}` : "",
       kfd2: normalizedKfd2 ? "kfd-2" : "",
       kfd3: normalizedKfd3 ? `${normalizedKfd3.key || "kfd-3"}` : "",
+      invariantPassports: invariantPassports ? "invariantPassports" : "",
       impact: impactPath,
       checkReport: checkReportPath,
       agentIndex: agentIndexPath,
@@ -1267,6 +1352,7 @@ export function collectGitHubReleasePassport({
   trustedPublishingJson = "",
   transactionJson = "",
   anchorManifestJson = "",
+  versionMaterialJson = "",
   impactJson = "",
   buildSummaryJson = "",
   buildFactsJsons = [],
@@ -1277,6 +1363,8 @@ export function collectGitHubReleasePassport({
   kfd3PrebuildWitnessJsons = [],
   kfd3ArtifactWitnessJsons = [],
   kfd3ArtifactVerifyCommand = "",
+  invariantPassportJsons = [],
+  invariantPassportCommand = "",
   controllerReceiptReferences = [],
   basePassportJson = "",
   requireBaseKfd = false,
@@ -1292,6 +1380,11 @@ export function collectGitHubReleasePassport({
   const trustedPublishing = parseJsonInput(trustedPublishingJson, undefined, { cwd, label: "trustedPublishingJson" });
   const transactionMeta = parseJsonInputWithMeta(transactionJson, undefined, { cwd, label: "transactionJson" });
   const anchorManifest = normalizeAnchorManifest(parseJsonInputWithMeta(anchorManifestJson, undefined, { cwd, label: "anchorManifestJson" }));
+  const versionMaterial = parseJsonInput(
+    versionMaterialJson,
+    undefined,
+    { cwd, label: "versionMaterialJson" },
+  );
   const impactMeta = parseJsonInputWithMeta(impactJson, undefined, { cwd, label: "impactJson" });
   const buildSummaryMeta = parseJsonInputWithMeta(buildSummaryJson, undefined, { cwd, label: "buildSummaryJson" });
   const buildFactMetas = (buildFactsJsons || [])
@@ -1324,6 +1417,17 @@ export function collectGitHubReleasePassport({
     cwd,
     label: "KFD-3 artifact verify command",
   });
+  const invariantPassportMetas = (invariantPassportJsons || [])
+    .filter(Boolean)
+    .map((passportJson) => parseJsonInputWithMeta(passportJson, undefined, { cwd, label: "invariantPassportJsons entry" }))
+    .filter((meta) => meta.value);
+  const invariantPassportCommandMeta = parseJsonCommandOutput({
+    command: invariantPassportCommand,
+    cwd,
+    label: "invariant passport command",
+  });
+  if (invariantPassportCommandMeta.value) invariantPassportMetas.push(invariantPassportCommandMeta);
+  const invariantPassports = createInvariantPassportGate(invariantPassportMetas);
   const kfd3ArtifactWitnesses = [
     ...kfd3ArtifactWitnessMetas.map((meta) => meta.value),
     ...(kfd3ArtifactCommandMeta.value ? [kfd3ArtifactCommandMeta.value] : []),
@@ -1369,6 +1473,7 @@ export function collectGitHubReleasePassport({
     assets,
     packageSet,
     anchorManifest,
+    versionMaterial,
     publishEvidence: publishEvidenceMeta.value,
     trustedPublishing,
     transaction: transactionMeta.value,
@@ -1400,6 +1505,7 @@ export function collectGitHubReleasePassport({
     kfd1,
     kfd2Claims: kfd2ClaimMetas.map((meta) => meta.value),
     kfd3,
+    invariantPassports,
     controllerReceiptReferences,
     publishEvidencePath: publishEvidenceMeta.path ? path.relative(resolvedOutputDir, publishEvidenceMeta.path).split(path.sep).join("/") : "",
     transactionStatePath: transactionMeta.path ? path.relative(resolvedOutputDir, transactionMeta.path).split(path.sep).join("/") : "",
@@ -1881,6 +1987,56 @@ export function createReleaseCheckReport({
       issues.push(issue("error", "anchorManifest.fields", "anchorManifest.fields must be an object"));
     }
   }
+  if (passport?.versionMaterial) {
+    if (passport.versionMaterial.contract !== "kungfu-buildchain-anchored-version-material/v1") {
+      issues.push(issue(
+        "error",
+        "versionMaterial.contract",
+        "versionMaterial contract must be kungfu-buildchain-anchored-version-material/v1",
+      ));
+    }
+    if (!passport.versionMaterial.alpha?.tree || !passport.versionMaterial.release?.tree) {
+      issues.push(issue(
+        "error",
+        "versionMaterial.tree",
+        "versionMaterial must record alpha and release tree identities",
+      ));
+    }
+    const allowedPaths = Array.isArray(passport.versionMaterial.allowedPaths)
+      ? passport.versionMaterial.allowedPaths
+      : [];
+    const derivedFiles = Array.isArray(passport.versionMaterial.derivedFiles)
+      ? passport.versionMaterial.derivedFiles
+      : [];
+    for (const [index, file] of derivedFiles.entries()) {
+      if (!file?.path || !file?.sha256 || !allowedPaths.includes(file.path)) {
+        issues.push(issue(
+          "error",
+          `versionMaterial.derivedFiles[${index}]`,
+          "derived version material must have a path, digest, and matching allowed path",
+        ));
+      }
+    }
+    for (const side of ["alpha", "release"]) {
+      const material = Array.isArray(passport.versionMaterial[side]?.material)
+        ? passport.versionMaterial[side].material
+        : [];
+      for (const [index, file] of material.entries()) {
+        if (
+          !file?.path ||
+          !allowedPaths.includes(file.path) ||
+          file.present !== true ||
+          !/^sha256:[0-9a-f]{64}$/.test(file.sha256 || "")
+        ) {
+          issues.push(issue(
+            "error",
+            `versionMaterial.${side}.material[${index}]`,
+            "version material must have an allowed path, present bytes, and sha256 digest",
+          ));
+        }
+      }
+    }
+  }
   if (!passport?.runnerPolicy?.productionDefault) {
     issues.push(issue("warning", "runnerPolicy.productionDefault", "runner policy should record the production default"));
   }
@@ -1915,6 +2071,35 @@ export function createReleaseCheckReport({
   } catch (error) {
     if (fallbackKfd3Section) {
       issues.push(issue("error", "kfd-3.metadata", error.message));
+    }
+  }
+  if (passport?.invariantPassports) {
+    const section = passport.invariantPassports;
+    if (section.contract !== INVARIANT_PASSPORT_GATE_CONTRACT) {
+      issues.push(issue("error", "invariantPassports.contract", `invariantPassports.contract must be ${INVARIANT_PASSPORT_GATE_CONTRACT}`));
+    }
+    if (section.result !== "passed") {
+      issues.push(issue("error", "invariantPassports.result", "invariantPassports.result must be passed"));
+    }
+    if (!Array.isArray(section.passports) || section.passports.length === 0) {
+      issues.push(issue("error", "invariantPassports.empty", "invariantPassports must contain at least one verified passport"));
+    }
+    const acceptedSourceShas = new Set([
+      passport?.release?.sourceSha,
+      passport?.release?.builtSourceSha,
+      passport?.release?.promotionChannelSha,
+    ].filter(Boolean));
+    for (const [index, entry] of (section.passports || []).entries()) {
+      const prefix = `invariantPassports.passports[${index}]`;
+      if (entry.verdict !== "verified") issues.push(issue("error", `${prefix}.verdict`, `${prefix}.verdict must be verified`));
+      if (entry.coverage?.complete !== true) issues.push(issue("error", `${prefix}.coverage`, `${prefix}.coverage.complete must be true`));
+      if (entry.source?.dirty !== false) issues.push(issue("error", `${prefix}.source.dirty`, `${prefix}.source.dirty must be false`));
+      if (acceptedSourceShas.size > 0 && !acceptedSourceShas.has(entry.source?.revision)) {
+        issues.push(issue("error", `${prefix}.source.revision`, `${prefix}.source.revision must match a release source identity`));
+      }
+      if (!/^sha256:[0-9a-f]{64}$/.test(optionalString(entry.passportRoot))) issues.push(issue("error", `${prefix}.passportRoot`, `${prefix}.passportRoot is invalid`));
+      if (!Array.isArray(entry.platforms) || entry.platforms.length === 0) issues.push(issue("error", `${prefix}.platforms`, `${prefix}.platforms must be non-empty`));
+      if (!Array.isArray(entry.residualRisk)) issues.push(issue("error", `${prefix}.residualRisk`, `${prefix}.residualRisk must be an array`));
     }
   }
   if (impactVersion) {

@@ -151,6 +151,9 @@
     "anchorManifest": {
       "type": "object"
     },
+    "versionMaterial": {
+      "type": "object"
+    },
     "trustedPublishing": {
       "type": "object"
     },

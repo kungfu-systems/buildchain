@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:1863f8af4327bf4d77b46d0646043b6675c0094656edb6ba69f221c7b1b8da82",
+      "digest": "sha256:9c2625a1b7951363c478f83f8b352ef918974f084aadc0bc68945ac43e5852ab",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:1863f8af4327bf4d77b46d0646043b6675c0094656edb6ba69f221c7b1b8da82",
+      "digest": "sha256:9c2625a1b7951363c478f83f8b352ef918974f084aadc0bc68945ac43e5852ab",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -83,10 +83,23 @@
       "maturity": "stable"
     },
     {
+      "specifier": "@kungfu-tech/buildchain/anchored-version-material",
+      "export": "./anchored-version-material",
+      "target": "./packages/core/anchored-version-material.js",
+      "digest": "sha256:932eaf178ba56d4a20eecaaac70e27d094512dcf0557b5106a4e531fe39d19c2",
+      "summary": "Anchored/manual derived version material preflight, exact-tree binding, and digest evidence APIs.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
       "specifier": "@kungfu-tech/buildchain/buildchain-contract",
       "export": "./buildchain-contract",
       "target": "./packages/core/buildchain-contract.js",
-      "digest": "sha256:f5959c9260e04c9779396c50bd352956012da9ddb6d55532efc64a4536236dfa",
+      "digest": "sha256:17246bb855b53a2fea713ecc8e372705ec75636527d786e203f6faf445172193",
       "summary": "Runtime contract world and compatibility digest APIs for floating-ref drift checks.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -99,7 +112,7 @@
       "specifier": "@kungfu-tech/buildchain/controller-evidence",
       "export": "./controller-evidence",
       "target": "./packages/core/controller-evidence.js",
-      "digest": "sha256:074c9bd73addbd33e03a4fd251ad27e7fe4bac51c25d0747d66561d31d738bab",
+      "digest": "sha256:0ec292215c9bfd755023916375622b6c5e759966fe31cc355404a0bbdd518384",
       "summary": "Project-independent controller descriptors, source/runtime-bound plans, receipts, aggregates, and validation APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -346,7 +359,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:05abae7c71444b0c48c097a4363218ed3ae7d652677588f1cf2c457a358cc4c1",
+      "digest": "sha256:dab5375c40b77245b04a5d86667ea1608a24f4a8ff804d301f05e7345605ce33",
       "summary": "Release passport collection, verification, explanation, and evidence APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -359,7 +372,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport-contract",
       "export": "./release-passport-contract",
       "target": "./packages/core/release-passport-contract.js",
-      "digest": "sha256:230863e62b63bce897f8ea51859c958a3c8aacf38b87ed9640bdada3c9383da6",
+      "digest": "sha256:b91d4fd2d830b91445c56f72d75e4dc4e7e69094181154a32a2780f86d81d317",
       "summary": "Standalone release passport JSON Schema, ownership/check manifest, and structural validation APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -412,7 +425,7 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:1733f9377938a16e6de77511546be7de67c5ab8816220d693fd46f55450a5148"
+      "digest": "sha256:733a43df58e6fa643ef529d8736fbdbea053b5b58e5fbe445b595ea1e25861f6"
     },
     {
       "id": "build-facts",

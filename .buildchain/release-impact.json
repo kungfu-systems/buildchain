@@ -262,11 +262,32 @@
       "class": "release-governance",
       "rationale": "Buildchain self-dogfood accepts the reviewed stable v2 and alpha.10 contract worlds so both released runtime channels can qualify against their immutable contract evidence.",
       "source": ".buildchain/contract-lock.json"
+    },
+    {
+      "id": "anchored-derived-version-material",
+      "impact": "minor",
+      "class": "evidence-contract",
+      "rationale": "Anchored/manual consumers can declare deterministic derived witnesses that are regenerated before heavy builds, independently reverified during protected promotion, and bound by path, SHA-256, alpha tree, and release tree in controller and release passport evidence.",
+      "source": "packages/core/anchored-version-material.js"
+    },
+    {
+      "id": "release-propagation-controller-stage-alignment",
+      "impact": "patch",
+      "class": "release-propagation",
+      "rationale": "Release propagation controller plans declare the workflow's optional consumer preparation, badge refresh, verification, and pull-request stages so completed downstream writes produce qualifying receipts.",
+      "source": "packages/core/controller-evidence.js"
+    },
+    {
+      "id": "release-propagation-consumer-ready-commit",
+      "impact": "patch",
+      "class": "release-propagation",
+      "rationale": "The released propagation workflow prepares the consumer, refreshes managed README badges, verifies the final tree, and signs managed commits before opening the downstream pull request.",
+      "source": ".github/workflows/release-propagation.yml"
     }
   ],
   "classification": "minor",
   "breaking": false,
   "security": false,
   "migrationRequired": false,
-  "summary": "Buildchain v2.14 extends sealed evidence and release governance with first-class dual-channel promotion workflow-shell routing."
+  "summary": "Buildchain v2.14 extends sealed evidence and release governance with anchored derived version material, aligned propagation receipts, and first-class dual-channel promotion workflow-shell routing."
 }
