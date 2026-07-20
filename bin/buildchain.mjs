@@ -153,6 +153,8 @@ function usage() {
                                     [--kfd-3-prebuild-witness-json <json-or-path>]...
                                     [--kfd-3-artifact-witness-json <json-or-path>]...
                                     [--kfd-3-artifact-verify-cmd <command>]
+                                    [--invariant-passport-json <json-or-path>]...
+                                    [--invariant-passport-cmd <command>]
                                     [--base-passport-json <json-or-path>] [--require-base-kfd]
                                     [--release-extra-json <json-or-path>]
                                     [--publish-json <json-or-path>] [--output-dir <dir>] [--json]
@@ -1773,6 +1775,8 @@ async function main(argv = process.argv.slice(2)) {
       kfd3PrebuildWitnessJsons: readRepeatedFlag(collectArgs, "kfd-3-prebuild-witness-json"),
       kfd3ArtifactWitnessJsons: readRepeatedFlag(collectArgs, "kfd-3-artifact-witness-json"),
       kfd3ArtifactVerifyCommand: readFlag(collectArgs, "kfd-3-artifact-verify-cmd", ""),
+      invariantPassportJsons: readRepeatedFlag(collectArgs, "invariant-passport-json"),
+      invariantPassportCommand: readFlag(collectArgs, "invariant-passport-cmd", ""),
       basePassportJson: readFlag(collectArgs, "base-passport-json", ""),
       requireBaseKfd: readBooleanFlag(collectArgs, "require-base-kfd"),
       releaseJsonExtra: readFlag(collectArgs, "release-extra-json", ""),

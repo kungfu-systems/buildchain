@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import http from "node:http";
 import os from "node:os";
@@ -34,6 +35,39 @@ function writeJson(filePath, value) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`);
   return filePath;
+}
+
+function stableJson(value) {
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stableJson(value[key])}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function invariantPassportFixture(overrides = {}) {
+  const passport = {
+    schema: "kungfu.invariant-passport/v1",
+    product: "Kungfu",
+    canonicalization: "stable-json-sha256-v1",
+    contractRoot: `sha256:${"b".repeat(64)}`,
+    registryRoot: `sha256:${"c".repeat(64)}`,
+    verdict: "verified",
+    source: { revision: "a".repeat(40), tree: "d".repeat(40), dirty: false },
+    coverage: {
+      complete: true,
+      platforms: ["darwin-arm64", "linux-x64", "win32-x64"],
+      invariants: ["fact.identity-separation", "episode.causal-closure"],
+    },
+    residualRisk: [],
+    observedAt: "2026-07-20T00:00:00.000Z",
+    ...overrides,
+  };
+  const preimage = structuredClone(passport);
+  delete preimage.passportRoot;
+  delete preimage.observedAt;
+  passport.passportRoot = `sha256:${crypto.createHash("sha256").update(stableJson(preimage)).digest("hex")}`;
+  return passport;
 }
 
 test("release passport records surface timestamp reproducibility policy", () => {
@@ -423,6 +457,7 @@ function createUnifiedPassportFixture({
   packageVersion = "",
   releaseExtra = {},
   impact = defaultSurfaceImpactLedger(),
+  versionMaterial = undefined,
 } = {}) {
   const cwd = tempDir("release-passport-core");
   const assetsDir = path.join(cwd, "dist");
@@ -546,6 +581,9 @@ function createUnifiedPassportFixture({
     publishEvidenceJson: publishEvidencePath,
     transactionJson: transactionPath,
     anchorManifestJson: anchorManifestPath,
+    versionMaterialJson: versionMaterial
+      ? JSON.stringify(versionMaterial)
+      : "",
     packageSetJson: packageSetPath,
     buildSummaryJson: buildSummaryPath,
     platformManifestJsons: [linuxManifestPath, darwinManifestPath, windowsManifestPath],
@@ -2649,4 +2687,153 @@ test("release passport core fails closed on missing anchor manifest digest", asy
 
   assert.equal(report.ok, false);
   assert.match(JSON.stringify(report.issues), /anchorManifest\.sha256/);
+});
+
+test("release passport verifies anchored derived version material", async () => {
+  const versionMaterial = {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-anchored-version-material/v1",
+    alpha: {
+      ref: "v2.3.2-alpha.1",
+      commit: "a".repeat(40),
+      tree: "b".repeat(40),
+      material: [
+        {
+          path: "witness.json",
+          present: true,
+          bytes: 41,
+          sha256: `sha256:${"f".repeat(64)}`,
+        },
+      ],
+    },
+    release: {
+      ref: "release/v2/v2.3",
+      commit: "c".repeat(40),
+      tree: "d".repeat(40),
+      material: [
+        {
+          path: "witness.json",
+          present: true,
+          bytes: 42,
+          sha256: `sha256:${"e".repeat(64)}`,
+        },
+      ],
+    },
+    allowedPaths: ["package.json", "release.json", "witness.json"],
+    versionFiles: ["package.json"],
+    manifest: "release.json",
+    derivedFiles: [
+      {
+        path: "witness.json",
+        bytes: 42,
+        sha256: `sha256:${"e".repeat(64)}`,
+      },
+    ],
+  };
+  const passportPath = createUnifiedPassportFixture({ versionMaterial });
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+
+  assert.equal(report.ok, true);
+  assert.deepEqual(passport.versionMaterial, versionMaterial);
+});
+
+test("release passport rejects unbound anchored derived version material", async () => {
+  const passportPath = createUnifiedPassportFixture({
+    versionMaterial: {
+      contract: "kungfu-buildchain-anchored-version-material/v1",
+      alpha: { tree: "a".repeat(40) },
+      release: { tree: "b".repeat(40) },
+      allowedPaths: ["package.json"],
+      derivedFiles: [
+        {
+          path: "witness.json",
+          sha256: `sha256:${"c".repeat(64)}`,
+        },
+      ],
+    },
+  });
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+
+  assert.equal(report.ok, false);
+  assert.match(JSON.stringify(report.issues), /derived version material/);
+});
+
+test("release passport projects a verified cross-platform invariant Passport", () => {
+  const cwd = tempDir("invariant-passport");
+  const invariantPath = writeJson(path.join(cwd, "invariant-passport.json"), invariantPassportFixture());
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v2.14.2-alpha.1",
+    repository: "kungfu-systems/kungfu",
+    sourceSha: "a".repeat(40),
+    outputDir: "release-passport",
+    invariantPassportJsons: [invariantPath],
+  });
+  const passport = JSON.parse(fs.readFileSync(path.join(collected.outputDir, "buildchain.release.json"), "utf8"));
+
+  assert.equal(passport.invariantPassports.contract, "buildchain.invariant-passport-gate/v1");
+  assert.equal(passport.invariantPassports.result, "passed");
+  assert.deepEqual(passport.invariantPassports.passports[0].platforms, ["darwin-arm64", "linux-x64", "win32-x64"]);
+  assert.equal(passport.invariantPassports.passports[0].source.revision, "a".repeat(40));
+});
+
+test("invariant Passport gate rejects tampered, falsified, incomplete, and dirty evidence", () => {
+  const cwd = tempDir("invariant-passport-invalid");
+  const collect = (value) => collectGitHubReleasePassport({
+    cwd,
+    tag: "v2.14.2-alpha.1",
+    repository: "kungfu-systems/kungfu",
+    sourceSha: "a".repeat(40),
+    outputDir: `release-passport-${Math.random()}`,
+    invariantPassportJsons: [JSON.stringify(value)],
+  });
+  const tampered = invariantPassportFixture();
+  tampered.coverage.platforms.pop();
+
+  assert.throws(() => collect(tampered), /passportRoot mismatch/);
+  assert.throws(() => collect(invariantPassportFixture({ verdict: "falsified" })), /verdict must be verified/);
+  assert.throws(
+    () => collect(invariantPassportFixture({ coverage: { complete: false, platforms: ["linux-x64"] } })),
+    /coverage\.complete must be true/,
+  );
+  assert.throws(
+    () => collect(invariantPassportFixture({ source: { revision: "a".repeat(40), tree: "d".repeat(40), dirty: true } })),
+    /source\.dirty must be false/,
+  );
+});
+
+test("release passport verification rejects an invariant Passport bound to a stale source revision", async () => {
+  const cwd = tempDir("invariant-passport-stale");
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: "v2.14.2-alpha.1",
+    repository: "kungfu-systems/kungfu",
+    sourceSha: "a".repeat(40),
+    outputDir: "release-passport",
+    invariantPassportJsons: [JSON.stringify(invariantPassportFixture({
+      source: { revision: "e".repeat(40), tree: "f".repeat(40), dirty: false },
+    }))],
+  });
+  const report = await verifyReleasePassport({
+    passportLocation: path.join(collected.outputDir, "buildchain.release.json"),
+  });
+
+  assert.equal(report.ok, false);
+  assert.equal(report.issues.some((entry) => entry.code === "invariantPassports.passports[0].source.revision"), true);
+});
+
+test("invariant Passport command fails closed when it emits no canonical JSON", () => {
+  const cwd = tempDir("invariant-passport-command");
+  assert.throws(
+    () => collectGitHubReleasePassport({
+      cwd,
+      tag: "v2.14.2-alpha.1",
+      repository: "kungfu-systems/kungfu",
+      sourceSha: "a".repeat(40),
+      outputDir: "release-passport",
+      invariantPassportCommand: "node -e 'process.stdout.write(\"not-json\")'",
+    }),
+    /invariant passport command output must be valid JSON/,
+  );
 });

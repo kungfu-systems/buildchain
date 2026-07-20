@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-impact",
   "release": {
-    "version": "2.14.3",
+    "version": "2.14.4-alpha.2",
     "line": "v2.14"
   },
   "versionImpact": {
@@ -87,6 +87,13 @@
       "class": "workflow-contract",
       "rationale": "The workflow shell prefers the selected runtime package-manager validator and falls back to its own bundled validator when a legacy stable runtime predates that contract, preserving runtime-first routing and fail-closed validation.",
       "source": ".github/workflows/.build.yml"
+    },
+    {
+      "id": "stable-candidate-source-lock-ancestry-reconciliation",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Stable candidate patrol preserves the exact qualified candidate tree while adding missing stable target ancestry through a non-forced, idempotent source-lock commit, and fails closed on candidate tree or lineage drift.",
+      "source": "scripts/stable-candidate-patrol.mjs"
     },
     {
       "id": "artifact-verification-envelope",
@@ -248,11 +255,46 @@
       "class": "release-governance",
       "rationale": "Buildchain continuously consumes its released vN-alpha reusable workflow and stable vN runtime, verifies their resolved immutable SHAs, and keeps exact-SHA promotion independent from the floating alpha repair target.",
       "source": ".github/workflows/buildchain-alpha-self-dogfood.yml"
+    },
+    {
+      "id": "self-dogfood-channel-contract-lock-refresh",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Buildchain self-dogfood accepts the reviewed stable v2 and alpha.10 contract worlds so both released runtime channels can qualify against their immutable contract evidence.",
+      "source": ".buildchain/contract-lock.json"
+    },
+    {
+      "id": "anchored-derived-version-material",
+      "impact": "minor",
+      "class": "evidence-contract",
+      "rationale": "Anchored/manual consumers can declare deterministic derived witnesses that are regenerated before heavy builds, independently reverified during protected promotion, and bound by path, SHA-256, alpha tree, and release tree in controller and release passport evidence.",
+      "source": "packages/core/anchored-version-material.js"
+    },
+    {
+      "id": "release-propagation-controller-stage-alignment",
+      "impact": "patch",
+      "class": "release-propagation",
+      "rationale": "Release propagation controller plans declare the workflow's optional consumer preparation, badge refresh, verification, and pull-request stages so completed downstream writes produce qualifying receipts.",
+      "source": "packages/core/controller-evidence.js"
+    },
+    {
+      "id": "release-propagation-consumer-ready-commit",
+      "impact": "patch",
+      "class": "release-propagation",
+      "rationale": "The released propagation workflow prepares the consumer, refreshes managed README badges, verifies the final tree, and signs managed commits before opening the downstream pull request.",
+      "source": ".github/workflows/release-propagation.yml"
+    },
+    {
+      "id": "anchored-preflight-workflow-shell-fallback",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "An additive anchored-material preflight falls back to its trusted workflow-shell verifier when a selected stable runtime predates the helper, preserving mixed-channel compatibility without weakening the gate.",
+      "source": ".github/workflows/.build.yml"
     }
   ],
   "classification": "minor",
   "breaking": false,
   "security": false,
   "migrationRequired": false,
-  "summary": "Buildchain v2.14 extends sealed evidence and release governance with first-class dual-channel promotion workflow-shell routing."
+  "summary": "Buildchain v2.14 extends sealed evidence and release governance with anchored derived version material, aligned propagation receipts, and first-class dual-channel promotion workflow-shell routing."
 }

@@ -346,6 +346,10 @@
             "required": true
           },
           {
+            "id": "anchored-release-preflight",
+            "required": false
+          },
+          {
             "id": "build",
             "required": true
           },
@@ -370,7 +374,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:367be236280f2597ffefc49680feb106b4cf9e8f5fb9420713351f075a168c4a"
+      "digest": "sha256:0dd7ebe7b7543ca4f295e0634ed1434bb4571d2ffb2f4b6ab25794eb2ee5c431"
     },
     {
       "schemaVersion": 1,
@@ -1601,6 +1605,14 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "release-passport-invariant-passport-command": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "release-passport-invariant-passport-jsons": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "release-passport-kfd-1-witness-jsons": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -1699,7 +1711,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:6a531c572b59eb3b8aa5d47df3658f8f438a0d026468dd13b1a6642a3ea8c425"
+      "digest": "sha256:fe4bb0bd543e7db7ef38950354764608639f5b11677a4b8e02caa097900d6898"
     },
     {
       "schemaVersion": 1,
@@ -1795,6 +1807,18 @@
             "required": true
           },
           {
+            "id": "prepare-consumer",
+            "required": false
+          },
+          {
+            "id": "refresh-badges",
+            "required": false
+          },
+          {
+            "id": "verify-consumer",
+            "required": false
+          },
+          {
             "id": "open-pr",
             "required": false
           },
@@ -1814,8 +1838,8 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:ede9eba43b87cf19330d5f8203a1585bf066aa9affc9cac0f43230ac76b8580d"
+      "digest": "sha256:f97656a8df0758c8e404d5b7c387529256a1ec45d1748f8efb6847a3256b1216"
     }
   ],
-  "digest": "sha256:5f771d5b2f481a28afc48f516685f50985c1d51391857cdf04e3238c271fecc8"
+  "digest": "sha256:89d6ba121382c2ba6c81cf1170e5c2e66256d893ee3fbb131af93a018950b891"
 }

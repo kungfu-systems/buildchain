@@ -213,6 +213,14 @@ test("release propagation reusable workflow invokes the checked out Buildchain r
   assert.match(workflow, /Refresh managed README badges/);
   assert.match(workflow, /badges readme --cwd \. --write/);
   assert.match(workflow, /downstream-verify-command:/);
+  assert.ok(
+    workflow.indexOf("Prepare downstream release update") <
+      workflow.indexOf("Refresh managed README badges"),
+  );
+  assert.ok(
+    workflow.indexOf("Refresh managed README badges") <
+      workflow.indexOf("Verify downstream release update"),
+  );
   assert.match(
     workflow,
     /git add --all[\s\S]*?if git diff --cached --quiet/,

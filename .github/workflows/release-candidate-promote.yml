@@ -218,6 +218,16 @@ on:
         default: ""
         type: string
         required: false
+      release-passport-invariant-passport-jsons:
+        description: "Newline- or comma-separated invariant Passport JSON paths passed to the release gate"
+        default: ""
+        type: string
+        required: false
+      release-passport-invariant-passport-command:
+        description: "Product-owned command that emits a canonical invariant Passport JSON document"
+        default: ""
+        type: string
+        required: false
       release-passport-buildchain-self-kfd:
         description: "Generate Buildchain-owned KFD-1/2/3 self witnesses and claims from the checked-out package source before release passport finalization"
         default: false
@@ -636,6 +646,8 @@ jobs:
       release-passport-kfd-3-prebuild-witness-jsons: ${{ inputs.release-passport-kfd-3-prebuild-witness-jsons }}
       release-passport-kfd-3-artifact-witness-jsons: ${{ inputs.release-passport-kfd-3-artifact-witness-jsons }}
       release-passport-kfd-3-artifact-verify-command: ${{ inputs.release-passport-kfd-3-artifact-verify-command }}
+      release-passport-invariant-passport-jsons: ${{ inputs.release-passport-invariant-passport-jsons }}
+      release-passport-invariant-passport-command: ${{ inputs.release-passport-invariant-passport-command }}
       release-passport-buildchain-self-kfd: ${{ inputs.release-passport-buildchain-self-kfd }}
       release-passport-platform-manifest-paths: ${{ inputs.release-passport-platform-manifest-paths }}
       required-artifact-count: ${{ inputs.required-artifact-count }}

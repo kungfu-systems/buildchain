@@ -198,6 +198,29 @@ test("reusable build workflow exposes the required surface contract", () => {
       workflow.indexOf("  build-native:"),
     "consumer package-manager incompatibility must fail before native release-candidate jobs",
   );
+  assert.match(workflow, /  anchored-release-preflight:/);
+  assert.match(workflow, /scripts\/anchored-version-material\.mjs/);
+  assert.match(
+    workflow,
+    /verifier=\.buildchain\/runtime\/scripts\/anchored-version-material\.mjs/,
+  );
+  assert.match(
+    workflow,
+    /verifier=\.buildchain\/workflow-shell\/scripts\/anchored-version-material\.mjs/,
+    "new workflow shells must retain the additive anchored preflight when the selected stable runtime predates its verifier",
+  );
+  assert.match(
+    workflow,
+    /install --dir \.buildchain\/workflow-shell --prod --frozen-lockfile --ignore-scripts/,
+  );
+  assert.match(workflow, /node "\$\{\{ steps\.anchored-verifier\.outputs\.path \}\}"/);
+  assert.match(workflow, /kind":"anchored-version-material"/);
+  assert.match(workflow, /target_ref="release\/\$\{BUILDCHAIN_TARGET_LINE\}"/);
+  assert.ok(
+    workflow.indexOf("  anchored-release-preflight:") <
+      workflow.indexOf("  build-native:"),
+    "anchored derived version material must be verified before heavy native builds",
+  );
   assert.match(workflow, /runner-preset:/);
   assert.match(workflow, /platforms-json:/);
   assert.match(workflow, /linux-container-preset:/);
@@ -283,11 +306,11 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /resolve-publish-source\.mjs --mode manifest/);
   assert.equal(
     (workflow.match(/Install Buildchain runtime dependencies/g) || []).length,
-    5,
+    6,
   );
   assert.equal(
     (workflow.match(/pnpm@11\.7\.0 install --dir \.buildchain\/runtime --prod --frozen-lockfile --ignore-scripts/g) || []).length,
-    5,
+    6,
   );
   assert.match(workflow, /install-command:/);
   assert.match(workflow, /build-command:/);
@@ -717,6 +740,10 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-passport-kfd-3-artifact-witness-jsons:/);
   assert.match(workflow, /release-passport-kfd-3-artifact-witness-jsons: \$\{\{ inputs\.release-passport-kfd-3-artifact-witness-jsons \}\}/);
   assert.match(workflow, /release-passport-kfd-3-artifact-verify-command:/);
+  assert.match(workflow, /release-passport-invariant-passport-jsons:/);
+  assert.match(workflow, /release-passport-invariant-passport-jsons: \$\{\{ inputs\.release-passport-invariant-passport-jsons \}\}/);
+  assert.match(workflow, /release-passport-invariant-passport-command:/);
+  assert.match(workflow, /release-passport-invariant-passport-command: \$\{\{ inputs\.release-passport-invariant-passport-command \}\}/);
   assert.match(workflow, /release-passport-buildchain-self-kfd:/);
   assert.match(workflow, /release-passport-buildchain-self-kfd: \$\{\{ inputs\.release-passport-buildchain-self-kfd \}\}/);
   assert.match(workflow, /DRY_RUN: \$\{\{ inputs\.dry-run \}\}/);
@@ -2274,6 +2301,8 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(action, /release-passport-kfd-3-prebuild-witness-jsons:/);
   assert.match(action, /release-passport-kfd-3-artifact-witness-jsons:/);
   assert.match(action, /release-passport-kfd-3-artifact-verify-command:/);
+  assert.match(action, /release-passport-invariant-passport-jsons:/);
+  assert.match(action, /release-passport-invariant-passport-command:/);
   assert.match(action, /release-passport-buildchain-self-kfd:/);
   assert.match(implementation, /promoteOnlyReleaseCandidate/);
   assert.match(implementation, /reconciliationWorkspace/);
@@ -2282,11 +2311,14 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(implementation, /releasePassportKfd3PrebuildWitnessJsons/);
   assert.match(implementation, /releasePassportKfd3ArtifactWitnessJsons/);
   assert.match(implementation, /releasePassportKfd3ArtifactVerifyCommand/);
+  assert.match(implementation, /releasePassportInvariantPassportJsons/);
+  assert.match(implementation, /releasePassportInvariantPassportCommand/);
   assert.match(implementation, /releasePassportBuildchainSelfKfd/);
   assert.match(docs, /promote-only-release-candidate: "true"/);
   assert.match(docs, /release-passport-kfd-1-witness-jsons/);
   assert.match(docs, /release-passport-kfd-2-claim-jsons/);
   assert.match(docs, /release-passport-kfd-3-prebuild-witness-jsons/);
+  assert.match(docs, /release-passport-invariant-passport-command/);
 });
 
 test("buildchain ref promotion consumes PR-stage release candidate evidence", () => {
@@ -3177,7 +3209,7 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
     fs.readFileSync(path.join(root, "dist/site/buildchain-contract.json"), "utf8"),
   );
   assert.equal(alphaLock.buildchain.ref, "v2-alpha");
-  assert.equal(alphaLock.buildchain.resolvedSha, "11163bfb2cd39382684b543e580cce3411254f47");
+  assert.equal(alphaLock.buildchain.resolvedSha, "fb33099a128e246aaf2b1dc48e1f3c84a99fef2c");
   assert.equal(alphaLock.buildchain.compatibilityPolicy, "major-compatible");
   const alphaEvaluation = evaluateBuildchainContractLock({
     lock: alphaLock,
