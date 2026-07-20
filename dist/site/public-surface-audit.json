@@ -6,8 +6,8 @@
     "cliCommandCount": 79,
     "workflowCount": 47,
     "actionCount": 4,
-    "sitePageCount": 49,
-    "docCommandRefCount": 247,
+    "sitePageCount": 50,
+    "docCommandRefCount": 249,
     "failureCount": 0
   },
   "enumerated": {
@@ -1631,6 +1631,7 @@
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
           "release-passport-kfd-7-declaration-jsons",
+          "release-passport-kfd-agent-runtime-witness-jsons",
           "release-passport-output-dir",
           "release-passport-platform-manifest-paths",
           "release-passport-product-name",
@@ -1641,7 +1642,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 57,
+        "inputCount": 58,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1853,6 +1854,7 @@
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
           "release-passport-kfd-7-declaration-jsons",
+          "release-passport-kfd-agent-runtime-witness-jsons",
           "release-passport-output-dir",
           "release-passport-platform-manifest-paths",
           "release-passport-product-name",
@@ -1867,7 +1869,7 @@
           "transaction-state-path",
           "verification-command"
         ],
-        "inputCount": 55
+        "inputCount": 56
       },
       {
         "id": "report-buildchain-issue",
@@ -2004,6 +2006,10 @@
       },
       {
         "id": "fixture:infra-contract-terraform-shaped",
+        "category": "fixture"
+      },
+      {
+        "id": "fixture:kfd-agent-runtime-shaped",
         "category": "fixture"
       },
       {
@@ -2369,6 +2375,11 @@
       {
         "id": "collect-github-release",
         "path": "docs/cli.md",
+        "command": "buildchain collect github-release"
+      },
+      {
+        "id": "collect-github-release",
+        "path": "docs/kfd-support.md",
         "command": "buildchain collect github-release"
       },
       {
@@ -3373,6 +3384,11 @@
       },
       {
         "id": "verify-release-passport",
+        "path": "docs/release-passport.md",
+        "command": "buildchain verify release-passport"
+      },
+      {
+        "id": "verify-release-passport",
         "path": "README.md",
         "command": "buildchain verify release-passport buildchain"
       },
@@ -3398,8 +3414,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "a6daf4822365bf576425777230246046ebca67b3f8dcfea61fc7a61773776185",
-    "workflowRegistryDigest": "eff933ab5b304497873a9941e60a271ed3c40e82aab5db26f25554bd6fc3d04a",
-    "pageRegistryDigest": "8816a79e0d5daae89b4b0147fdfb8a5669d30c8aef600ab5a731b0d5427868d4"
+    "workflowRegistryDigest": "883ba8e2766e1715d371371de0ad78bd94758852856895d56c72f25f58e05828",
+    "pageRegistryDigest": "97d70f82f0af7d50e2e693ece18338371ce3e69f7de14749edc82043e8711c42"
   },
   "comparison": {
     "missingCliRegistry": [],

@@ -82,7 +82,7 @@
       "maturity": "stable",
       "counts": {
         "manualCount": 4,
-        "pageCount": 16,
+        "pageCount": 17,
         "cliCommandCount": 4,
         "nodeApiCount": 4,
         "workflowCount": 4,
@@ -118,7 +118,7 @@
         "manualCount": 1,
         "pageCount": 1,
         "cliCommandCount": 27,
-        "nodeApiCount": 7,
+        "nodeApiCount": 8,
         "workflowCount": 0,
         "actionCount": 0
       },

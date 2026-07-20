@@ -527,6 +527,7 @@ buildchain collect github-release \
   --kfd-3-prebuild-witness-json .buildchain/kfd/kfd-3/collaboration-interface.prebuild.json \
   --kfd-3-artifact-verify-cmd "kungfu agent verify --json" \
   --kfd-7-declaration-json .buildchain/kfd/kfd-7/profile.release-gate.json \
+  --kfd-agent-runtime-witness-json .buildchain/kfd/agent-runtime/passport.witness.json \
   --release-extra-json '{"channel":"release","targetRef":"release/v2/v2.3"}' \
   --output-dir .buildchain/release-passport
 ```
@@ -597,6 +598,16 @@ stale evidence fails closed; a schema-valid Profile that is still provisional
 or not activated produces a warning instead of a false pass. The resulting
 `kfd-7` passport section embeds canonical-digest-bound evidence for agent-side
 revalidation.
+
+`--kfd-agent-runtime-witness-json` attaches a KFD Agent Runtime conformance
+Passport witness and may be repeated. The collector binds exact Profile and
+suite roots, source commit, required platform matrix, KFD report digest, and
+adapter artifact digest. It independently reruns the packaged
+`@kungfu-tech/kfd` offline WASM verifier and records only the explicitly
+requested claim level: `tested`, `independently-verified`,
+`reference-adopter`, or `externally-adopted`. Higher claims require distinct
+review or adopter evidence and are never inferred. Experimental results are
+reported separately with `normative: false`.
 
 `--impact-json` supplies the surface-aware impact ledger. Production release
 passports (`release/*`) and major publish-gate passports require

@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "fe8359e7f0a85b496ea1dd4bf52764507c30ceab98544959f58e5f3db03bf4dc",
+    "sha256": "174452ae601fc409cda6894caf915ae5dff8cde0b4a66fd3f4266781323861e5",
     "summary": {
       "cliCommandCount": 79,
       "workflowCount": 47,
       "actionCount": 4,
-      "sitePageCount": 49,
-      "docCommandRefCount": 247,
+      "sitePageCount": 50,
+      "docCommandRefCount": 249,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -42,11 +42,12 @@
   "publicClaims": [
     {
       "id": "claim:buildchain-kfd-release-passport-support",
-      "claim": "Buildchain release passports support KFD-1 self contract verification, KFD-2 public release claim audits, KFD-3 collaboration-interface trust proofs, and KFD-7 engineering-contract evidence gates.",
+      "claim": "Buildchain release passports support KFD-1 self contract verification, KFD-2 public release claim audits, KFD-3 collaboration-interface trust proofs, KFD-7 engineering-contract evidence gates, and KFD Agent Runtime conformance evidence verified with the packaged KFD authority.",
       "sourcePaths": [
         "packages/core/release-passport.js",
         "packages/core/kfd-gate.js",
         "packages/core/kfd7-release-gate.js",
+        "packages/core/kfd-agent-runtime-passport.js",
         "packages/core/buildchain-kfd-claims.js",
         "docs/release-passport.md"
       ],
@@ -226,13 +227,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "fe8359e7f0a85b496ea1dd4bf52764507c30ceab98544959f58e5f3db03bf4dc",
+      "sha256": "174452ae601fc409cda6894caf915ae5dff8cde0b4a66fd3f4266781323861e5",
       "summary": {
         "cliCommandCount": 79,
         "workflowCount": 47,
         "actionCount": 4,
-        "sitePageCount": 49,
-        "docCommandRefCount": 247,
+        "sitePageCount": 50,
+        "docCommandRefCount": 249,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -727,6 +728,18 @@
           "plane": "fixture"
         },
         {
+          "id": "doc:fixtures/kfd-agent-runtime-shaped/README.md",
+          "name": "fixtures/kfd-agent-runtime-shaped/README.md",
+          "kind": "documentation",
+          "sourcePath": "fixtures/kfd-agent-runtime-shaped/README.md",
+          "evidencePath": "fixtures/kfd-agent-runtime-shaped/README.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "fixture"
+        },
+        {
           "id": "doc:fixtures/libnode-shaped/README.md",
           "name": "fixtures/libnode-shaped/README.md",
           "kind": "documentation",
@@ -817,6 +830,17 @@
           "kind": "schema",
           "sourcePath": "packages/core/kfd7-release-gate.js",
           "evidencePath": "packages/core/kfd7-release-gate.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
+          "id": "schema:packages/core/kfd-agent-runtime-passport.js",
+          "name": "schema:packages/core/kfd-agent-runtime-passport.js",
+          "kind": "schema",
+          "sourcePath": "packages/core/kfd-agent-runtime-passport.js",
+          "evidencePath": "packages/core/kfd-agent-runtime-passport.js",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
@@ -1278,6 +1302,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./kfd7-buildchain-profile"
+        },
+        {
+          "id": "export:./kfd-agent-runtime-passport",
+          "name": "@kungfu-tech/buildchain/kfd-agent-runtime-passport",
+          "kind": "package-export",
+          "sourcePath": "packages/core/kfd-agent-runtime-passport.js",
+          "evidencePath": "packages/core/kfd-agent-runtime-passport.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./kfd-agent-runtime-passport"
         },
         {
           "id": "export:./release-candidate",
@@ -3546,7 +3582,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 57,
+          "inputCount": 58,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -3596,6 +3632,7 @@
             "release-passport-kfd-3-artifact-witness-jsons",
             "release-passport-kfd-3-prebuild-witness-jsons",
             "release-passport-kfd-7-declaration-jsons",
+            "release-passport-kfd-agent-runtime-witness-jsons",
             "release-passport-output-dir",
             "release-passport-platform-manifest-paths",
             "release-passport-product-name",
@@ -3760,7 +3797,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 55,
+          "inputCount": 56,
           "inputs": [
             "allow-repository",
             "branch-protection-bypass-apps",
@@ -3804,6 +3841,7 @@
             "release-passport-kfd-3-artifact-witness-jsons",
             "release-passport-kfd-3-prebuild-witness-jsons",
             "release-passport-kfd-7-declaration-jsons",
+            "release-passport-kfd-agent-runtime-witness-jsons",
             "release-passport-output-dir",
             "release-passport-platform-manifest-paths",
             "release-passport-product-name",
@@ -4066,6 +4104,18 @@
         {
           "id": "site-page:fixture:infra-contract-terraform-shaped",
           "name": "site-page:fixture:infra-contract-terraform-shaped",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
+          "id": "site-page:fixture:kfd-agent-runtime-shaped",
+          "name": "site-page:fixture:kfd-agent-runtime-shaped",
           "kind": "site-page",
           "sourcePath": "dist/site/page-registry.json",
           "evidencePath": "dist/site/page-registry.json",
@@ -4624,6 +4674,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 299
+    "publicSurfaceCount": 303
   }
 }

@@ -140,6 +140,9 @@ inputs:
   release-passport-kfd-7-declaration-jsons:
     description: "Newline- or comma-separated KFD-7 engineering-contract declaration JSON paths passed to the release passport collector"
     default: ""
+  release-passport-kfd-agent-runtime-witness-jsons:
+    description: "Newline- or comma-separated KFD Agent Runtime conformance witness JSON paths passed to the release passport collector"
+    default: ""
   release-passport-buildchain-self-kfd:
     description: "Generate Buildchain-owned KFD-1/2/3 self witnesses inside the final version-state workspace before release passport finalization"
     default: "false"

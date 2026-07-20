@@ -463,3 +463,12 @@ export {
   applySurfaceTimestampPolicy,
   createSurfaceTimestampPolicy,
 } from "./surface-manifest.js";
+
+export {
+  KFD_AGENT_RUNTIME_CLAIM_LEVELS,
+  KFD_AGENT_RUNTIME_PASSPORT_CONTRACT,
+  KFD_AGENT_RUNTIME_SECTION_KEY,
+  KFD_AGENT_RUNTIME_WITNESS_CONTRACT,
+  createKfdAgentRuntimePassportEvidence,
+  validateKfdAgentRuntimePassportEvidence,
+} from "./kfd-agent-runtime-passport.js";

@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:58febcd44994bc32f775325d49014bb8e3c22623e2b69bee909ca65c5bd840c8",
+      "digest": "sha256:a17165ac2db1b930646c2567c46f4c3ca6c17a535d9ad7a38d63563375ea1e9d",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:58febcd44994bc32f775325d49014bb8e3c22623e2b69bee909ca65c5bd840c8",
+      "digest": "sha256:a17165ac2db1b930646c2567c46f4c3ca6c17a535d9ad7a38d63563375ea1e9d",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -317,6 +317,19 @@
       "maturity": "stable"
     },
     {
+      "specifier": "@kungfu-tech/buildchain/kfd-agent-runtime-passport",
+      "export": "./kfd-agent-runtime-passport",
+      "target": "./packages/core/kfd-agent-runtime-passport.js",
+      "digest": "sha256:ca2481f6c2625e08c9a44c1f9e1f0d95ef946f2d009d4b4e514bee0d8caede92",
+      "summary": "KFD Agent Runtime report, artifact, platform, independent-verifier, and explicit adoption claim Passport APIs.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
       "specifier": "@kungfu-tech/buildchain/release-candidate",
       "export": "./release-candidate",
       "target": "./packages/core/release-candidate.js",
@@ -346,7 +359,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:03c4db62efbfbe5d1fe65e70a2546fe17377a57b743926c6397dbd72d45decea",
+      "digest": "sha256:dd52c3442e0f7b5ac4def7c00828f76a25d478851cfbf744b053532e42fa1e49",
       "summary": "Release passport collection, verification, explanation, and evidence APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -385,7 +398,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-kfd-claims",
       "export": "./buildchain-kfd-claims",
       "target": "./packages/core/buildchain-kfd-claims.js",
-      "digest": "sha256:91baff0253b4e0ec962288d4dee6f5c03a05f328d5b46b2c88218d875f9f7be5",
+      "digest": "sha256:0f63688984686598975e0972648e26c3cfa3d932af0fc85aaff17f901ce38eb4",
       "summary": "Buildchain self KFD claim registry, witnesses, and public claim APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -399,7 +412,7 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:24195d82a92f2dafce04c0699abbc78af02b1b6c37c1fcdfaae78787d764fa97"
+      "digest": "sha256:2364ebba30f250a988173193220e2df276b2cb028bd7f6463d86d3f2dcff176a"
     },
     {
       "id": "build-facts",
@@ -409,7 +422,7 @@
     {
       "id": "kfd-support",
       "path": "docs/kfd-support.md",
-      "digest": "sha256:5a9319f30fd6eb473ada43c938c5ae09519ffa8c27903438aebfb99b2c754d11"
+      "digest": "sha256:da7cd2ee812f96e708e388f1374a36308fddffe305dcd05da5edb2580343c160"
     },
     {
       "id": "readme-badges",
