@@ -442,6 +442,8 @@ jobs:
   release-intent:
     name: Resolve production release PR intent
     runs-on: ubuntu-24.04
+    permissions:
+      pull-requests: read
     outputs:
       production-release-approved: ${{ steps.intent.outputs.production-release-approved }}
       production-release-pr: ${{ steps.intent.outputs.production-release-pr }}
