@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-impact",
   "release": {
-    "version": "2.14.5",
+    "version": "2.14.6-alpha.0",
     "line": "v2.14"
   },
   "versionImpact": {
@@ -276,6 +276,13 @@
       "class": "release-propagation",
       "rationale": "Release propagation controller plans declare the workflow's optional consumer preparation, badge refresh, verification, and pull-request stages so completed downstream writes produce qualifying receipts.",
       "source": "packages/core/controller-evidence.js"
+    },
+    {
+      "id": "public-router-required-check-reconciliation",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "The public channel router emits a stable top-level build aggregate, while an idempotent reconciliation command derives the exact successful context from an already-tested pull request SHA and replaces only stale Buildchain-owned required checks.",
+      "source": ".github/workflows/release-governance-reconcile.yml"
     },
     {
       "id": "release-propagation-consumer-ready-commit",

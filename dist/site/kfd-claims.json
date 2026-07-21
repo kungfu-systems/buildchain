@@ -21,10 +21,10 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "4cecf843157266d233e31c16c94d78ee34e7f965e1aae035b4915836d3a1ed13",
+    "sha256": "ef912776f4c897e333a0cd3edcd04e1163c42affdf8acde1e8dfe7dc34a40b7d",
     "summary": {
-      "cliCommandCount": 83,
-      "workflowCount": 49,
+      "cliCommandCount": 84,
+      "workflowCount": 50,
       "actionCount": 4,
       "sitePageCount": 50,
       "docCommandRefCount": 258,
@@ -228,10 +228,10 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "4cecf843157266d233e31c16c94d78ee34e7f965e1aae035b4915836d3a1ed13",
+      "sha256": "ef912776f4c897e333a0cd3edcd04e1163c42affdf8acde1e8dfe7dc34a40b7d",
       "summary": {
-        "cliCommandCount": 83,
-        "workflowCount": 49,
+        "cliCommandCount": 84,
+        "workflowCount": 50,
         "actionCount": 4,
         "sitePageCount": 50,
         "docCommandRefCount": 258,
@@ -2383,6 +2383,18 @@
           "reverseAuditSource": "bin/buildchain.mjs"
         },
         {
+          "id": "cli:release-governance",
+          "name": "buildchain release-governance reconcile --repository <owner/repo>",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
           "id": "cli:release-line-open",
           "name": "buildchain release line open --major <n> --minor <n> [--source-ref <ref>]",
           "kind": "cli-command",
@@ -3789,6 +3801,25 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:release-governance-reconcile",
+          "name": "workflow:release-governance-reconcile",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/release-governance-reconcile.yml",
+          "evidencePath": ".github/workflows/release-governance-reconcile.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 4,
+          "inputs": [
+            "apply",
+            "branch",
+            "buildchain-ref",
+            "candidate-sha"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:release-line-bootstrap",
           "name": "workflow:release-line-bootstrap",
           "kind": "workflow",
@@ -4838,6 +4869,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 308
+    "publicSurfaceCount": 310
   }
 }

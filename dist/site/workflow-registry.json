@@ -1532,6 +1532,28 @@
       "status": "active"
     },
     {
+      "id": "release-governance-reconcile",
+      "path": ".github/workflows/release-governance-reconcile.yml",
+      "reusable": true,
+      "inputs": [
+        "apply",
+        "branch",
+        "buildchain-ref",
+        "candidate-sha"
+      ],
+      "inputCount": 4,
+      "secrets": [
+        "BUILDCHAIN_PROMOTION_TOKEN",
+        "governance-token"
+      ],
+      "secretCount": 2,
+      "outputs": [],
+      "outputCount": 0,
+      "surface": "release-governance",
+      "capabilityGroup": "api-cli-reference",
+      "status": "active"
+    },
+    {
       "id": "release-line-bootstrap",
       "path": ".github/workflows/release-line-bootstrap.yml",
       "reusable": false,
