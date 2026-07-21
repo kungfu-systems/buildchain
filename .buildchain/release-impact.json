@@ -29,7 +29,7 @@
       "id": "promotion-shell-layout-bootstrap",
       "impact": "patch",
       "class": "workflow-contract",
-      "rationale": "The generated router now pins the stable lane to the hidden advanced workflow shipped by v2.14.12, including planned-version-bound recovery and guarded exact-tag rebinding for validated unfinished anchored publications, while preserving the logical shell ref as public audit metadata and forwarding the exact call ref to the advanced shell identity check without changing consumer declarations.",
+      "rationale": "The generated router now pins the stable lane to the hidden advanced workflow shipped by v2.14.13, including tree-equivalent release-impact inference, planned-version-bound recovery, and guarded exact-tag rebinding for validated unfinished anchored publications, while preserving the logical shell ref as public audit metadata and forwarding the exact call ref to the advanced shell identity check without changing consumer declarations.",
       "source": ".buildchain/promotion-shell-routing.json"
     },
     {
