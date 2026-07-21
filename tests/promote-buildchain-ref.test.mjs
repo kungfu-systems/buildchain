@@ -8904,6 +8904,7 @@ assert.equal(pkg.version, anchor.npmVersion);
       requireGovernance: true,
       requireVersionState: true,
       promoteOnlyReleaseCandidate: true,
+      allowRepository: "kungfu-systems/libnode",
     };
     await assert.rejects(
       promoteBuildchainRefs(promotionInput),
