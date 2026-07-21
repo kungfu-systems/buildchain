@@ -108,6 +108,7 @@ test("floating promotion refs resolve once even when the ref moves during routin
 
   assert.equal(calls, 1);
   assert.equal(identities.shellRef, "v2");
+  assert.equal(identities.shellCallRef, "v2");
   assert.equal(identities.runtimeRef, "v2");
   assert.equal(identities.shellSha, firstV2);
   assert.equal(identities.runtimeSha, firstV2);
@@ -172,6 +173,7 @@ test("stable route calls the hidden advanced workflow at the immutable v2.14.8 S
   assert.match(generated, /STABLE_SHELL_REF: v2/);
   assert.match(generated, /STABLE_SHELL_CALL_REF: 6fb6f1c3b806309ca02baa2a9d31068bc037899d/);
   assert.match(generated, /STABLE_SHELL_WORKFLOW_PATH: \.github\/workflows\/\.release-candidate-promote\.yml/);
+  assert.match(generated, /shell-call-ref: \$\{\{ steps\.identities\.outputs\.shell-call-ref \}\}/);
   assert.match(generated, /BUILDCHAIN_ROUTER_WORKFLOW_SHA: \$\{\{ job\.workflow_sha \}\}/);
   assert.match(generated, /ref: \$\{\{ steps\.router\.outputs\.sha \}\}/);
   assert.match(generated, /ref: \$\{\{ steps\.identities\.outputs\.shell-sha \}\}/);
@@ -186,6 +188,10 @@ test("stable route forwards the complete advanced workflow input surface", () =>
   for (const name of workflowFields(advanced, "inputs")) {
     assert.match(stableBlock, new RegExp(`^      ${name}:`, "m"));
   }
+  assert.match(
+    stableBlock,
+    /^      promotion-shell-ref: \$\{\{ needs\.resolve-promotion\.outputs\.shell-call-ref \}\}$/m,
+  );
   assert.match(stableBlock, /^      buildchain-ref:/m);
   assert.match(stableBlock, /^      buildchain-contract-lock-path:/m);
   assert.match(stableBlock, /^      channel:/m);

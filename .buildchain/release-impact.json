@@ -29,7 +29,7 @@
       "id": "promotion-shell-layout-bootstrap",
       "impact": "patch",
       "class": "workflow-contract",
-      "rationale": "The generated router now pins the stable lane to the hidden advanced workflow shipped by v2.14.8, forwards the complete immutable promotion identity surface, and removes the legacy public-wrapper compatibility boundary without changing consumer declarations.",
+      "rationale": "The generated router now pins the stable lane to the hidden advanced workflow shipped by v2.14.8, preserves the logical shell ref as public audit metadata, forwards the exact call ref to the advanced shell identity check, and removes the legacy public-wrapper compatibility boundary without changing consumer declarations.",
       "source": ".buildchain/promotion-shell-routing.json"
     },
     {

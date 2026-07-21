@@ -758,8 +758,11 @@ The generated router also owns the stable-shell layout transition through
 advanced workflow, so the stable lane calls that workflow at the exact immutable
 SHA behind the released `v2` state and forwards the complete internal promotion
 identity surface. The logical shell identity remains `vN`, and the router
-verifies that its checkout SHA equals the pinned call SHA. Updating the routing
-pin after a stable release does not require any consumer declaration change.
+retains it in the public audit outputs. The internal advanced-shell call receives
+the exact call ref selected by the routing configuration, so its called-workflow
+ref check and checkout SHA both bind to the same immutable identity. Updating the
+routing pin after a stable release does not require any consumer declaration
+change.
 
 The router resolves immutable SHAs and the selected lock digest before candidate
 download. The advanced shell verifies the same router, shell, runtime, lock,
