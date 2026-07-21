@@ -15,6 +15,9 @@ It is intentionally small, but it keeps the important shape:
 - lifecycle commands are Node-based and cross-platform;
 - build output lands under `dist/`, which the reusable build workflow uploads
   with a deterministic artifact name and manifest;
+- `.github/workflows/build.yml` exercises the public `build.yml@v2` channel
+  router with a caller job named `build`, including its stable top-level
+  `build / Summarize build contract` aggregate;
 - the fixture can be resolved through a publish-gate source lock, which binds
   the requested consumer version to `package.json` and `libnode.release.json`
   before any publish side effect is allowed;
