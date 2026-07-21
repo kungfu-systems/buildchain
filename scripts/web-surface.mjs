@@ -220,6 +220,7 @@ export function compactWebSurfaceApplyResult(result = {}) {
           accessControl: binding.accessControl || "",
           healthStrategy: binding.healthStrategy || "",
           mutableDeleteExcludes: binding.mutableDeleteExcludes || [],
+          observedEvidenceOwnership: binding.observedEvidenceOwnership || null,
         }))
       : [],
   };

@@ -589,6 +589,7 @@ patrol workflow family:
 | `.github/workflows/patrol-daily.yml` | daily | lightweight inspection plus ready dev PR maintenance |
 | `.github/workflows/patrol-weekly.yml` | weekly | release-state, passport, gate, and stale-state health checks as they are added |
 | `.github/workflows/patrol-monthly.yml` | monthly | governance, permission, branch-protection, and workflow drift checks as they are added |
+| `.github/workflows/patrol-observed-evidence.yml` | caller-selected schedule | validated immutable observation plus atomic last-known-good publication; no per-refresh PR |
 | `.github/workflows/stable-candidate-patrol.yml` | repository-selected release window | qualify immutable alpha candidates and open the exact source-lock stable PR |
 
 The cadence names describe patrol intensity, not release cadence:
@@ -603,6 +604,11 @@ caller-owned cron is a release-intent window. Its candidate ledger and selection
 remain generic; registry-specific side effects still run through the normal
 repository `lifecycle.publish` transaction. See
 [`stable-candidate-patrol.md`](stable-candidate-patrol.md).
+
+Observed data that is mechanically regenerated and path-scoped uses the
+separate [`Observed Evidence Patrol`](observed-evidence-patrol.md) contract.
+Its one-time mechanism changes remain reviewed, while steady-state snapshot
+refreshes publish directly from trusted default-branch schedule/manual callers.
 
 Consumers should schedule thin callers and keep their YAML declarative. For
 example:
