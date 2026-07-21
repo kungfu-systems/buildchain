@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-impact",
   "release": {
-    "version": "2.14.9",
+    "version": "2.14.10-alpha.1",
     "line": "v2.14"
   },
   "versionImpact": {
@@ -29,8 +29,15 @@
       "id": "promotion-shell-layout-bootstrap",
       "impact": "patch",
       "class": "workflow-contract",
-      "rationale": "The generated router now pins the stable lane to the hidden advanced workflow shipped by v2.14.8, preserves the logical shell ref as public audit metadata, forwards the exact call ref to the advanced shell identity check, and removes the legacy public-wrapper compatibility boundary without changing consumer declarations.",
+      "rationale": "The generated router now pins the stable lane to the hidden advanced workflow shipped by v2.14.9, including exact protected-check context resolution for publication admission, while preserving the logical shell ref as public audit metadata and forwarding the exact call ref to the advanced shell identity check without changing consumer declarations.",
       "source": ".buildchain/promotion-shell-routing.json"
+    },
+    {
+      "id": "exact-rc-release-source-admission",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Promote-only stable publication accepts a broader reviewed release PR only when the downloaded PR-stage RC passport proves exact target-tree equivalence, while stale, generated, mismatched, or unreviewed sources retain the existing alpha-tree and declared version-state gates.",
+      "source": "actions/promote-buildchain-ref/lib.js"
     },
     {
       "id": "release-channel-protection-convergence",

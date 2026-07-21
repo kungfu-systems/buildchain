@@ -520,7 +520,7 @@ jobs:
           ALPHA_SHELL_REF: v2-alpha
           ALPHA_SHELL_CALL_REF: v2-alpha
           STABLE_SHELL_REF: v2
-          STABLE_SHELL_CALL_REF: 6fb6f1c3b806309ca02baa2a9d31068bc037899d
+          STABLE_SHELL_CALL_REF: 1ea9324f79d16548d85cf4f5175cc379c9eb5dac
         run: |
           set -euo pipefail
           if [[ "${CHANNEL}" = "alpha" ]]; then
@@ -698,7 +698,7 @@ jobs:
     name: Promote with stable workflow shell
     needs: resolve-promotion
     if: ${{ needs.resolve-promotion.outputs.channel == 'stable' }}
-    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@6fb6f1c3b806309ca02baa2a9d31068bc037899d
+    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@1ea9324f79d16548d85cf4f5175cc379c9eb5dac
     permissions:
       actions: read
       checks: write

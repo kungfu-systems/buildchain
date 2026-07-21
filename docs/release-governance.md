@@ -303,6 +303,16 @@ Buildchain then:
     commit.
 11. Moves `vX-alpha` to that next alpha only when this remains the highest published alpha minor.
 
+The historical alpha tree comparison remains the default stable source gate.
+A promote-only stable run may accept a broader reviewed release PR only when
+the downloaded RC passport proves that the PR's exact target tree is the tree
+that completed the PR-stage build. Buildchain also requires the target commit
+to belong to a merged same-repository PR into the selected release branch and
+records the accepted commit, tree, RC source, alpha source, and PR as promotion
+evidence. A stale passport, a different target tree, a generated final release
+commit, or an unreviewed target commit still falls through to the normal
+alpha-tree and declared version-state checks.
+
 The production channel and the test channel therefore intentionally diverge
 after release: production stays on the release commit, while alpha/dev continue
 at the next prerelease commit.
