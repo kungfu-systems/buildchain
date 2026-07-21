@@ -297,6 +297,44 @@ function resolveReleaseImpactInput({ cwd = process.cwd(), impactJson = "", versi
   return fs.readFileSync(inputPath, "utf8");
 }
 
+function createTreeEquivalentReleaseImpact({
+  channel = "",
+  version = "",
+  tag = "",
+  line = "",
+  releaseCandidateValidation = undefined,
+} = {}) {
+  if (channel !== "release" || releaseCandidateValidation?.treeEquivalent !== true) {
+    return "";
+  }
+  const candidateHash = String(releaseCandidateValidation.candidateHash || "").trim();
+  return JSON.stringify({
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-impact",
+    release: { tag, line, version },
+    versionImpact: {
+      final: "patch",
+      source: "release-candidate-tree-equivalence",
+      rationale: "Buildchain verified that stable publication uses the exact tree already qualified as the release candidate.",
+    },
+    surfaceImpacts: [
+      {
+        id: "release-candidate-stable-finalization",
+        impact: "patch",
+        class: "release-governance",
+        rationale: "Stable finalization changes release authority and evidence only; the qualified release-candidate tree is unchanged.",
+        source: candidateHash
+          ? `release-candidate-passport:${candidateHash}`
+          : "release-candidate-passport",
+      },
+    ],
+    classification: "patch",
+    breaking: false,
+    migrationRequired: false,
+    summary: "Tree-equivalent release-candidate promotion to the stable publication channel.",
+  });
+}
+
 function expectedHeadRefForTarget(targetRef) {
   const rule = getPromotionRule(targetRef);
   if (rule.channel === "major") {
@@ -2262,9 +2300,16 @@ async function collectAndPersistReleasePassport({
   const internalVersion = stripTagPrefix(result.transaction.exact_tag || "");
   const publishedVersion = result.transaction.version || internalVersion;
   const publicReleaseTag = publicReleaseTagForTransaction(result.transaction);
+  const inferredImpactJson = createTreeEquivalentReleaseImpact({
+    channel,
+    version: publishedVersion,
+    tag: publicReleaseTag,
+    line,
+    releaseCandidateValidation,
+  });
   const resolvedImpactJson = resolveReleaseImpactInput({
     cwd,
-    impactJson,
+    impactJson: String(impactJson || "").trim() || inferredImpactJson,
     version: publishedVersion,
   });
   const promotionRouting = String(promotionRoutingJson || "").trim()
@@ -6049,5 +6094,6 @@ export {
   stripTagPrefix,
   updateVersionStateContents,
   resolveReleaseImpactInput,
+  createTreeEquivalentReleaseImpact,
   validatePromotionReleaseCandidate,
 };
