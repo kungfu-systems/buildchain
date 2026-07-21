@@ -285,6 +285,7 @@ function syncStaticArtifactArgs({ artifactRoot, bucket, objectPrefix, deleteExcl
 }
 
 const PUBLICATION_ARCHIVE_POLICY_CONTRACT = "kungfu-buildchain-publication-archive-policy";
+const OBSERVED_EVIDENCE_OWNERSHIP_CONTRACT = "kungfu-buildchain-observed-evidence-ownership";
 
 function immutablePrefix(value, label) {
   const raw = String(value || "").trim().replaceAll("\\", "/");
@@ -343,12 +344,37 @@ function publicationImmutablePolicy({ artifactRoot, binding }) {
   };
 }
 
+function observedEvidenceOwnershipPolicy({ artifactRoot, binding }) {
+  const surfaceRoot = surfaceArtifactRootFor({ artifactRoot, binding });
+  const policyFile = path.join(surfaceRoot, ".buildchain", "observed-evidence-ownership.json");
+  if (!fs.existsSync(policyFile)) return null;
+  let policy;
+  try {
+    policy = JSON.parse(fs.readFileSync(policyFile, "utf8"));
+  } catch (error) {
+    throw new Error(`invalid observed evidence ownership policy: ${error.message}`);
+  }
+  if (policy?.schemaVersion !== 1 || policy?.contract !== OBSERVED_EVIDENCE_OWNERSHIP_CONTRACT) {
+    throw new Error(`observed evidence ownership policy must be ${OBSERVED_EVIDENCE_OWNERSHIP_CONTRACT} schemaVersion 1`);
+  }
+  const paths = [...new Set(policy.paths || [])].map((entry) => String(entry).replaceAll("\\", "/").replace(/^\/+/, ""));
+  if (paths.length === 0 || paths.some((entry) => !entry || entry.split("/").includes("..") || entry === "*")) {
+    throw new Error("observed evidence ownership policy requires bounded relative paths");
+  }
+  return {
+    contract: OBSERVED_EVIDENCE_OWNERSHIP_CONTRACT,
+    policyPath: toPosix(path.relative(artifactRoot, policyFile)),
+    paths: paths.sort(),
+  };
+}
+
 function withImmutablePublicationPolicies(bindings, { cwd, artifactPath }) {
   const artifactRoot = path.resolve(cwd, artifactPath);
   const withOwnPolicies = bindings.map((binding) => {
     const immutablePublication = publicationImmutablePolicy({ artifactRoot, binding });
-    if (!immutablePublication) return binding;
-    return { ...binding, immutablePublication };
+    const observedEvidenceOwnership = observedEvidenceOwnershipPolicy({ artifactRoot, binding });
+    if (!immutablePublication && !observedEvidenceOwnership) return binding;
+    return { ...binding, ...(immutablePublication ? { immutablePublication } : {}), ...(observedEvidenceOwnership ? { observedEvidenceOwnership } : {}) };
   });
   const protectedRoots = withOwnPolicies.flatMap((binding) =>
     (binding.immutablePublication?.preservedRoots || []).map((root) => ({
@@ -358,15 +384,17 @@ function withImmutablePublicationPolicies(bindings, { cwd, artifactPath }) {
   );
   const withDeleteExcludes = withOwnPolicies.map((binding) => {
     const bindingPrefix = normalizeS3Key(binding.artifactPathPrefix);
-    const mutableDeleteExcludes = protectedRoots
+    const mutableDeleteExcludes = [...new Set([
+      ...protectedRoots
       .map((protectedRoot) => {
         if (!bindingPrefix) return `${protectedRoot.path}/*`;
         if (protectedRoot.path === bindingPrefix) return "*";
         if (!protectedRoot.path.startsWith(`${bindingPrefix}/`)) return "";
         return `${protectedRoot.path.slice(bindingPrefix.length + 1)}/*`;
       })
-      .filter(Boolean)
-      .sort();
+      .filter(Boolean),
+      ...(binding.observedEvidenceOwnership?.paths || []),
+    ])].sort();
     return mutableDeleteExcludes.length > 0
       ? { ...binding, mutableDeleteExcludes }
       : binding;

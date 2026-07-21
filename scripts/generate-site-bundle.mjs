@@ -328,6 +328,7 @@ const manualMetaById = new Map(Object.entries({
   "publish-transaction": { capabilityGroup: "release-passport-trust", audience: ["release-operator"], maturity: "stable", order: 120 },
   "release-candidate": { capabilityGroup: "reusable-build", audience: ["release-operator", "consumer"], maturity: "stable", order: 130 },
   "stable-candidate-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer"], maturity: "preview", order: 135 },
+  "observed-evidence-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer", "agent"], maturity: "preview", order: 140 },
   "reusable-build-surface": { capabilityGroup: "reusable-build", audience: ["consumer", "release-operator"], maturity: "stable", order: 200 },
   "lifecycle-protocol": { capabilityGroup: "reusable-build", audience: ["consumer", "developer"], maturity: "stable", order: 210 },
   "runtime-train-validation": { capabilityGroup: "governance-versioning", audience: ["maintainer", "consumer"], maturity: "stable", order: 220 },
@@ -782,6 +783,7 @@ function buildSiteBundle() {
       "docs/reusable-build-surface.md",
       "docs/release-candidate.md",
       "docs/stable-candidate-patrol.md",
+      "docs/observed-evidence-patrol.md",
       "docs/release-governance.md",
       "docs/release-passport.md",
       "docs/controller-evidence.md",
@@ -870,6 +872,7 @@ function buildSiteBundle() {
         ["patrol-daily", "repository-patrol"],
         ["patrol-weekly", "repository-patrol"],
         ["patrol-monthly", "repository-patrol"],
+        ["patrol-observed-evidence", "repository-patrol"],
       ]);
       const statusById = new Map([
         ["release-propagation", "preview"],

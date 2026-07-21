@@ -673,6 +673,51 @@ test("web-surface deploy preserves publication archives while deleting mutable p
   });
 });
 
+test("web-surface deploy preserves Patrol-owned observed evidence paths", async () => {
+  await withFixtureAsync(async (fixture) => {
+    const policyDir = path.join(fixture, "dist", ".buildchain");
+    fs.mkdirSync(policyDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(policyDir, "observed-evidence-ownership.json"),
+      `${JSON.stringify({
+        schemaVersion: 1,
+        contract: "kungfu-buildchain-observed-evidence-ownership",
+        paths: ["dogfood-evidence.json", "dogfood-evidence/snapshots/*"],
+      }, null, 2)}\n`,
+    );
+    const plan = planWebSurfaceDeploy({
+      cwd: fixture,
+      channel: "staging",
+      sourceSha: "b".repeat(40),
+      deployedAt: "2026-07-01T00:00:00.000Z",
+    });
+    const hub = plan.manifest.surfaceBindings.find((entry) => entry.surface === "hub");
+    assert.deepEqual(hub.observedEvidenceOwnership?.paths, [
+      "dogfood-evidence.json",
+      "dogfood-evidence/snapshots/*",
+    ]);
+    assert.deepEqual(hub.mutableDeleteExcludes, [
+      "dogfood-evidence.json",
+      "dogfood-evidence/snapshots/*",
+    ]);
+    const calls = [];
+    applyWebSurfaceDeploy({
+      cwd: fixture,
+      plan,
+      dryRun: false,
+      commandRunner(operation) {
+        calls.push(operation);
+        return { exitCode: 0, stdout: `${operation.action}\n`, stderr: "" };
+      },
+    });
+    const sync = calls.find((call) => call.action === "sync-static-artifact" && call.surface === "hub");
+    assert.deepEqual(sync.args.slice(-4), [
+      "--exclude", "dogfood-evidence.json",
+      "--exclude", "dogfood-evidence/snapshots/*",
+    ]);
+  });
+});
+
 test("web-surface deploy apply fails closed when saved plan artifact drifted", () => {
   withFixture((fixture) => {
     fs.mkdirSync(path.join(fixture, "dist"), { recursive: true });

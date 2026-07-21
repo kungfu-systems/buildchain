@@ -395,6 +395,21 @@
       "notes": ""
     },
     {
+      "workflowPath": ".github/workflows/patrol-observed-evidence.yml",
+      "authorityClass": "product-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "observed-evidence-publication"
+      ],
+      "credentialMode": "oidc",
+      "publisherWorkflowMode": "caller-bound",
+      "publisherWorkflowPath": ".github/workflows/patrol-observed-evidence.yml",
+      "environment": "consumer-defined",
+      "environmentMode": "caller-bound",
+      "runnerPolicy": "qualified-measured",
+      "notes": ""
+    },
+    {
       "workflowPath": ".github/workflows/patrol-weekly.yml",
       "authorityClass": "governance-write",
       "publicationCapable": false,
@@ -745,6 +760,15 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/patrol-observed-evidence.yml",
+      "signals": [
+        "oidc",
+        "environment",
+        "cloud-credential"
+      ],
+      "classified": true
+    },
+    {
       "path": ".github/workflows/patrol-weekly.yml",
       "signals": [
         "write-permission"
@@ -822,5 +846,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "32141f0156da6220adadf9fde40e0778fd025da03d7b6697ac5ae29ff9c8be22"
+  "registryDigest": "588256fc42c36c1e03286f1de1f7abe1e393ce2e452ae1bf548668f017316590"
 }

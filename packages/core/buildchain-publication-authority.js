@@ -33,6 +33,7 @@ const DESCRIPTORS = Object.freeze([
   [".github/workflows/paper-release.yml", "product-publication", true, ["npm-publish", "github-release"], "trusted-publishing", "none", "fixed", "caller-bound"],
   [".github/workflows/patrol-daily.yml", "governance-write"],
   [".github/workflows/patrol-monthly.yml", "governance-write"],
+  [".github/workflows/patrol-observed-evidence.yml", "product-publication", true, ["observed-evidence-publication"], "oidc", "consumer-defined", "caller-bound", "caller-bound"],
   [".github/workflows/patrol-weekly.yml", "governance-write"],
   [".github/workflows/publication-artifact.yml", "evidence-publication"],
   [".github/workflows/release-candidate-promote.yml", "product-publication", true, ["npm-publish", "github-release", "channel-ref"], "trusted-publishing", "none", "fixed", "caller-bound"],

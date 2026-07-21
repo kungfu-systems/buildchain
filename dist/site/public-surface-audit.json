@@ -4,9 +4,9 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 84,
-    "workflowCount": 50,
+    "workflowCount": 51,
     "actionCount": 4,
-    "sitePageCount": 50,
+    "sitePageCount": 51,
     "docCommandRefCount": 258,
     "failureCount": 0
   },
@@ -1658,6 +1658,32 @@
         "outputCount": 5
       },
       {
+        "id": "patrol-observed-evidence",
+        "path": ".github/workflows/patrol-observed-evidence.yml",
+        "reusable": true,
+        "inputs": [
+          "artifact-path",
+          "build-command",
+          "buildchain-ref",
+          "cloudfront-distribution",
+          "evidence-source-path",
+          "evidence-source-ref",
+          "evidence-source-repository",
+          "manifest-path",
+          "production-aws-role-arn",
+          "production-bucket",
+          "production-environment",
+          "verify-command"
+        ],
+        "inputCount": 12,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [
+          "receipt-path"
+        ],
+        "outputCount": 1
+      },
+      {
         "id": "patrol-weekly",
         "path": ".github/workflows/patrol-weekly.yml",
         "reusable": true,
@@ -2278,6 +2304,10 @@
       },
       {
         "id": "manual:migration-inventory",
+        "category": "manual"
+      },
+      {
+        "id": "manual:observed-evidence-patrol",
         "category": "manual"
       },
       {
@@ -3659,8 +3689,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "90c8650f870c350ca187c612c37f2459dcbfe265aa9b1d5b375ee5c4fb31fab6",
-    "workflowRegistryDigest": "d78171b48ff1752f905c91c4dbb3286c84d8cef8a671dee64268f40f302bf418",
-    "pageRegistryDigest": "1a9dd99f8572bf54188f75c342a2ab5ecffa71bdd9972cf6e89c58c40d7436e0"
+    "workflowRegistryDigest": "02950eef2769b1bd2d899099ef23c7b9ae716b18d602e25aef169d788bc6ece0",
+    "pageRegistryDigest": "813255a900666cfd7e061e709293a6f67b5e6945d2f0fd27183344ba8db36cc2"
   },
   "comparison": {
     "missingCliRegistry": [],
