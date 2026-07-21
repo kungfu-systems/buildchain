@@ -3055,6 +3055,7 @@ async function resumableAlphaTransactionState({
   releasePrefix,
   targetRef,
   sourceSha,
+  expectedVersion = "",
 }) {
   const candidates = refs
     .map((ref) => parseAlphaPrereleaseRef(ref.ref, releasePrefix))
@@ -3101,6 +3102,7 @@ async function resumableAlphaTransactionState({
       );
     if (
       transaction &&
+      (!expectedVersion || transaction.version === expectedVersion) &&
       transaction.target_ref === targetRef &&
       transaction.exact_tag === candidate.tag &&
       !["complete", "abandoned", "failed_permanently"].includes(transaction.state) &&
@@ -3124,6 +3126,7 @@ async function resumableReleaseTransactionState({
   releasePrefix,
   targetRef,
   sourceSha,
+  expectedVersion = "",
 }) {
   const candidates = refs
     .map((ref) => parseReleaseTransactionStateRef(ref.ref, releasePrefix))
@@ -3170,6 +3173,7 @@ async function resumableReleaseTransactionState({
       );
     if (
       transaction &&
+      (!expectedVersion || transaction.version === expectedVersion) &&
       transaction.target_ref === targetRef &&
       transaction.exact_tag === candidate.tag &&
       !["complete", "abandoned", "failed_permanently"].includes(transaction.state) &&
@@ -5311,6 +5315,7 @@ async function promoteBuildchainRefs({
           releasePrefix: rule.releasePrefix,
           targetRef,
           sourceSha: sha,
+          expectedVersion: expectedPublicationVersion,
         });
     const currentAlphaTagSha = currentAlpha
       ? await readRefSha(`tags/${currentAlpha.tag}`)
@@ -5555,6 +5560,7 @@ async function promoteBuildchainRefs({
         releasePrefix: rule.releasePrefix,
         targetRef,
         sourceSha: sha,
+        expectedVersion: expectedPublicationVersion,
       });
   const currentRelease = selectedRelease
     ? undefined

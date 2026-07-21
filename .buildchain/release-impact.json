@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-impact",
   "release": {
-    "version": "2.14.10",
+    "version": "2.14.11-alpha.1",
     "line": "v2.14"
   },
   "versionImpact": {
@@ -29,7 +29,7 @@
       "id": "promotion-shell-layout-bootstrap",
       "impact": "patch",
       "class": "workflow-contract",
-      "rationale": "The generated router now pins the stable lane to the hidden advanced workflow shipped by v2.14.9, including exact protected-check context resolution for publication admission, while preserving the logical shell ref as public audit metadata and forwarding the exact call ref to the advanced shell identity check without changing consumer declarations.",
+      "rationale": "The generated router now pins the stable lane to the hidden advanced workflow shipped by v2.14.10, including exact RC release-source admission and protected-check context resolution for publication, while preserving the logical shell ref as public audit metadata and forwarding the exact call ref to the advanced shell identity check without changing consumer declarations.",
       "source": ".buildchain/promotion-shell-routing.json"
     },
     {
@@ -37,6 +37,13 @@
       "impact": "patch",
       "class": "release-governance",
       "rationale": "Promote-only stable publication accepts a broader reviewed release PR only when the downloaded PR-stage RC passport proves exact target-tree equivalence, while stale, generated, mismatched, or unreviewed sources retain the existing alpha-tree and declared version-state gates.",
+      "source": "actions/promote-buildchain-ref/lib.js"
+    },
+    {
+      "id": "publication-version-bound-recovery",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Alpha and release promotion resume an unfinished durable transaction from source history only when its recorded version matches the exact publication version planned for the current run, preventing an ancestor failure from reclaiming an older tag after a newer package set is published.",
       "source": "actions/promote-buildchain-ref/lib.js"
     },
     {
