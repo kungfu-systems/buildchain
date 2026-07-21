@@ -4415,8 +4415,45 @@ async function promoteBuildchainRefs({
     alphaTreeSha,
     allowedPaths,
     allowDirectAllowedChanges = false,
+    exactReleaseCandidateSource,
   }) => {
     const commit = await getCommitInfo(octokit, owner, repo, commitSha);
+    if (
+      exactReleaseCandidateSource?.treeEquivalent === true &&
+      exactReleaseCandidateSource.promotionChannelSha === commitSha &&
+      exactReleaseCandidateSource.promotionChannelTreeSha === commit.treeSha
+    ) {
+      let promotionPullRequest;
+      try {
+        promotionPullRequest = await assertChannelPromotionPr({
+          octokit,
+          owner,
+          repo,
+          sha: commitSha,
+          targetRef,
+        });
+      } catch (error) {
+        promotionPullRequest = await findMatchingTargetPullRequest({
+          commitSha,
+          targetRef,
+        });
+        if (!promotionPullRequest) {
+          throw error;
+        }
+      }
+      updates.push({
+        action: "accepted-exact-release-candidate-source",
+        sha: commitSha,
+        treeSha: commit.treeSha,
+        builtSourceSha: exactReleaseCandidateSource.builtSourceSha,
+        builtSourceTreeSha: exactReleaseCandidateSource.builtSourceTreeSha,
+        alphaTag,
+        alphaSha,
+        targetRef,
+        pullRequest: promotionPullRequest?.html_url || promotionPullRequest?.url,
+      });
+      return;
+    }
     if (commit.treeSha === alphaTreeSha) {
       try {
         await assertChannelPromotionPr({
@@ -5647,6 +5684,10 @@ async function promoteBuildchainRefs({
         releaseCommit.files.length > 0 &&
         Boolean(releaseCommit.anchorManifest) &&
         releaseCommit.hasVersionVerification,
+      exactReleaseCandidateSource:
+        promoteOnlyReleaseCandidate && releaseSha === sha
+          ? releaseCandidateValidation
+          : undefined,
     });
   }
   const promotionVersionMaterial =

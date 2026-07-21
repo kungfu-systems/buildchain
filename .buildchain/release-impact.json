@@ -33,6 +33,13 @@
       "source": ".buildchain/promotion-shell-routing.json"
     },
     {
+      "id": "exact-rc-release-source-admission",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Promote-only stable publication accepts a broader reviewed release PR only when the downloaded PR-stage RC passport proves exact target-tree equivalence, while stale, generated, mismatched, or unreviewed sources retain the existing alpha-tree and declared version-state gates.",
+      "source": "actions/promote-buildchain-ref/lib.js"
+    },
+    {
       "id": "release-channel-protection-convergence",
       "impact": "patch",
       "class": "release-governance",
