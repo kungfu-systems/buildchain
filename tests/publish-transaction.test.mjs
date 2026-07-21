@@ -335,11 +335,25 @@ test("transaction identity allows tooling drift but fails closed on material dri
     assertTransactionIdentity(record, {
       repository: "kungfu-systems/buildchain",
       version: "1.0.0",
+      exactTag: "v1.0.0",
       sourceSha: SHA,
       targetRef: "release/v1/v1.0",
       releaseMaterialSha: RELEASE_SHA,
       publishToolingSha: "d".repeat(40),
     }, { allowToolingDrift: true }),
+  );
+  assert.throws(
+    () =>
+      assertTransactionIdentity(record, {
+        repository: "kungfu-systems/buildchain",
+        version: "1.0.0",
+        exactTag: "v1.0.1",
+        sourceSha: SHA,
+        targetRef: "release/v1/v1.0",
+        releaseMaterialSha: RELEASE_SHA,
+        publishToolingSha: "d".repeat(40),
+      }, { allowToolingDrift: true }),
+    /exact_tag mismatch/,
   );
   assert.throws(
     () =>

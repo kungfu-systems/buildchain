@@ -1084,6 +1084,63 @@ function ensureTransactionCanResume({
   }
 }
 
+async function canRebindPublishedTransactionExactTag({
+  octokit,
+  owner,
+  repo,
+  error,
+  existing,
+  validation,
+  version,
+  exactTag,
+  releaseSha,
+  releaseMaterialSha,
+  requiredArtifacts,
+}) {
+  if (!/exact_tag mismatch/.test(error?.message || "")) {
+    return false;
+  }
+  if (
+    !existing ||
+    existing.version !== version ||
+    !existing.exact_tag ||
+    existing.exact_tag === exactTag ||
+    !["published", "finalizing"].includes(existing.state || "") ||
+    !validation?.valid ||
+    !transactionCoversRequiredArtifacts(existing, requiredArtifacts)
+  ) {
+    return false;
+  }
+
+  const previousTag = await getGitRefOrUndefined({
+    octokit,
+    owner,
+    repo,
+    ref: `tags/${existing.exact_tag}`,
+  });
+  const transactionShas = new Set([
+    existing.release_sha,
+    existing.release_material_sha,
+  ].filter(Boolean));
+  if (previousTag?.object?.sha && transactionShas.has(previousTag.object.sha)) {
+    return false;
+  }
+
+  const requestedTag = await getGitRefOrUndefined({
+    octokit,
+    owner,
+    repo,
+    ref: `tags/${exactTag}`,
+  });
+  const acceptedRequestedTagShas = new Set([
+    releaseSha,
+    releaseMaterialSha,
+    existing.release_sha,
+    existing.release_material_sha,
+  ].filter(Boolean));
+  return !requestedTag?.object?.sha || acceptedRequestedTagShas.has(requestedTag.object.sha);
+}
+
 function canReplaceStaleVersionStateTransaction({
   error,
   existing,
@@ -1747,6 +1804,7 @@ async function runPublishTransaction({
   const expected = {
     repository,
     version,
+    exactTag,
     sourceSha,
     targetRef,
     releaseMaterialSha: releaseMaterialSha || releaseSha,
@@ -1794,6 +1852,19 @@ async function runPublishTransaction({
       validation: existingValidation,
     });
   } catch (error) {
+    const canRebindExactTag = await canRebindPublishedTransactionExactTag({
+      octokit,
+      owner,
+      repo,
+      error,
+      existing,
+      validation: existingValidation,
+      version,
+      exactTag,
+      releaseSha,
+      releaseMaterialSha: expected.releaseMaterialSha,
+      requiredArtifacts,
+    });
     const canFinalizeVersionState =
       allowVersionStateFinalization &&
       materialErrorRequiresRepair(error) &&
@@ -1830,10 +1901,21 @@ async function runPublishTransaction({
         explicitOverride,
         localOnly: Boolean(localExisting && !durableExisting),
       });
-    if (!canFinalizeVersionState && !canReplaceStaleVersionState) {
+    if (!canRebindExactTag && !canFinalizeVersionState && !canReplaceStaleVersionState) {
       throw error;
     }
-    if (canFinalizeVersionState) {
+    if (canRebindExactTag) {
+      existing = {
+        ...transitionReleaseTransaction(existing, existing.state, {
+          actor,
+          runId,
+          failure: "",
+        }),
+        exact_tag: exactTag,
+        state_path: path.relative(cwd, resolvedStatePath).split(path.sep).join("/"),
+        evidence_path: path.relative(cwd, resolvedEvidencePath).split(path.sep).join("/"),
+      };
+    } else if (canFinalizeVersionState) {
       versionStateFinalization = true;
     } else {
       existing = undefined;
