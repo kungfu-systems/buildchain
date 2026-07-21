@@ -785,6 +785,16 @@ current source or its history only when its recorded version matches that plan;
 an older failed transaction that happens to be an ancestor cannot reserve its
 old exact tag for a newer package publication.
 
+The exact tag is also part of the durable transaction identity. If an anchored
+package publication completed registry side effects under a stale internal tag
+selection, a retry may rebind the unfinished `published` or `finalizing`
+transaction to the newly planned internal tag only when the package version,
+source, release material, target, complete artifact set, and evidence all still
+match; the stale tag must not point at the transaction, and the requested tag
+must be absent or already point at accepted release material. This preserves an
+immutable tag that represents a completed transaction while allowing a tag
+collision discovered after registry publication to recover without republishing.
+
 Every Buildchain publish model that can run registry side effects must bind the
 publish entrypoint to an immutable `publish-gate/*` source lock. The reusable
 `release-candidate-promote.yml@v2` wrapper creates or updates that gate ref and

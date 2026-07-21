@@ -648,6 +648,7 @@ export function assertTransactionIdentity(record, expected, { allowToolingDrift 
   };
   check(record.repository, expected.repository, "repository");
   check(record.version, expected.version, "version");
+  check(record.exact_tag, expected.exactTag, "exact_tag");
   check(record.source_sha, expected.sourceSha, "source_sha");
   check(record.target_ref, expected.targetRef, "target_ref");
   check(record.release_material_sha, expected.releaseMaterialSha, "release_material_sha");

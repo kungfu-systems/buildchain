@@ -229,7 +229,7 @@
       "path": "docs/publish-transaction.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:950ca4fb2f7ab0a7d40775593e3864f8bb1229f8543b266b00154af82c619e95"
+      "digest": "sha256:57673d6e1e57a9be0019b30ad0f8784cd05c9a0f389a775ac5f49f67d8f52a79"
     },
     {
       "id": "release-governance",
@@ -237,7 +237,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:e5d6b527ee6d5674b91e4287f52c7f03134c82876bc96fc4e9085834e4e4ce89"
+      "digest": "sha256:adb3c5d2eb414ffde6e75032c8f795de0c4ad929baa2d1e5d0f8cd7a9af39f1f"
     },
     {
       "id": "release-flow",
