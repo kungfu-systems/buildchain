@@ -9160,6 +9160,171 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   assert.equal(refs.get("tags/v22.22.3-kf.3"), SHA);
 });
 
+test("anchored retry safely rebinds a published package transaction from a stale internal tag", async () => {
+  const packageVersion = "22.22.3-kf.4";
+  const staleTag = "v22.22.0";
+  const requestedTag = "v22.22.1";
+  const alphaSha = "c".repeat(40);
+  const staleTagSha = "d".repeat(40);
+  const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+strategy = "anchored"
+next = "manual"
+manifest = "libnode.release.json"
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[publish]
+mode = "publish-final-version"
+auth = "trusted-publishing"
+dist_tag = "latest"
+
+[lifecycle.verify]
+command = "node scripts/verify.mjs"
+
+[lifecycle.publish]
+command = "node scripts/publish.mjs"
+`,
+    "package.json": {
+      name: "@kungfu-tech/libnode",
+      version: packageVersion,
+    },
+    "libnode.release.json": {
+      nodeVersion: "22.22.3",
+      nodeTag: "v22.22.3",
+      npmVersion: packageVersion,
+    },
+    "scripts/verify.mjs": `
+import assert from "node:assert/strict";
+import fs from "node:fs";
+
+const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+assert.equal(process.env.BUILDCHAIN_VERSION, "22.22.1");
+assert.equal(pkg.version, "${packageVersion}");
+`,
+    "scripts/publish.mjs": `
+throw new Error("validated durable evidence must prevent a second registry publish");
+`,
+  });
+  run(["git", "init"], cwd);
+  run(["git", "add", "."], cwd);
+  run(["git", "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-m", "release material"], cwd);
+
+  const artifact = {
+    group: "libnode",
+    kind: "npm",
+    name: "@kungfu-tech/libnode",
+    ref: packageVersion,
+    digest: "sha512:libnode",
+    role: "main",
+    required: true,
+  };
+  const staleEvidencePath = path.join(
+    cwd,
+    ".buildchain/release-evidence/v22.22.0/evidence.json",
+  );
+  fs.mkdirSync(path.dirname(staleEvidencePath), { recursive: true });
+  fs.writeFileSync(staleEvidencePath, JSON.stringify({
+    schema: 1,
+    version: packageVersion,
+    channel: "release",
+    source_sha: SHA,
+    release_sha: SHA,
+    target_ref: "release/v22/v22.22",
+    release_material_sha: SHA,
+    publish_tooling_sha: SHA,
+    artifacts: [artifact],
+  }, null, 2) + "\n");
+
+  const { octokit, refs } = createGitMock({
+    refs: new Map([
+      ["heads/release/v22/v22.22", SHA],
+      [`tags/${staleTag}`, staleTagSha],
+      ["tags/v22.22.1-alpha.0", alphaSha],
+    ]),
+  });
+  await persistDurableReleaseTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "libnode",
+    cwd,
+    transaction: {
+      schema: 1,
+      id: "anchored-stale-internal-tag",
+      repository: "kungfu-systems/libnode",
+      target_ref: "release/v22/v22.22",
+      source_sha: SHA,
+      release_sha: SHA,
+      release_material_sha: SHA,
+      publish_tooling_sha: SHA,
+      version: packageVersion,
+      exact_tag: staleTag,
+      channel: "release",
+      line: "v22.22",
+      version_strategy: "anchored",
+      lifecycle_identity: "lifecycle.publish",
+      state_ref: "buildchain/release-state/22-22-3-kf-4",
+      state_path: ".buildchain/release-state/v22.22.0.json",
+      evidence_path: ".buildchain/release-evidence/v22.22.0/evidence.json",
+      state: "finalizing",
+      previous_state: "published",
+      actor: "codex",
+      run_id: "1",
+      superseded_by: "",
+      failure: "",
+      artifacts: [artifact],
+      evidence: [".buildchain/release-evidence/v22.22.0/evidence.json"],
+      created_at: "2026-07-01T00:00:00.000Z",
+      updated_at: "2026-07-01T00:00:00.000Z",
+    },
+    evidencePath: staleEvidencePath,
+  });
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "libnode",
+    allowRepository: "kungfu-systems/libnode",
+    sha: SHA,
+    targetRef: "release/v22/v22.22",
+    cwd,
+    publishTransaction: true,
+    expectedPublicationVersion: packageVersion,
+    releasePassport: false,
+    releasePassportImpactJson: productionImpactJson({
+      tag: requestedTag,
+      line: "v22.22",
+      rationale: "Recover the already-published anchored package set under the next safe internal line tag.",
+    }),
+    publishRequiredArtifactsJson: JSON.stringify([artifact]),
+  });
+
+  assert.equal(result.publishTransaction.state, "complete");
+  assert.equal(result.publishTransaction.exactTag, requestedTag);
+  assert.equal(result.publishTransaction.publicReleaseTag, `v${packageVersion}`);
+  assert.equal(refs.get(`tags/${staleTag}`), staleTagSha);
+  assert.equal(refs.get(`tags/${requestedTag}`), SHA);
+  assert.equal(refs.get(`tags/v${packageVersion}`), SHA);
+
+  const recovered = await restoreDurableReleaseTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "libnode",
+    stateRef: "buildchain/release-state/22-22-3-kf-4",
+    statePath: path.join(cwd, ".buildchain/release-state/recovered.json"),
+    evidencePath: path.join(cwd, ".buildchain/release-evidence/recovered.json"),
+  });
+  assert.equal(recovered.exact_tag, requestedTag);
+  assert.equal(recovered.state, "complete");
+});
+
 test("strict release promotion rejects code changes after alpha", async () => {
   const alphaSha = "c".repeat(40);
   const refs = new Map([
