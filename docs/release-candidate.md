@@ -87,6 +87,26 @@ finished uploading evidence, the resolver waits up to ten minutes for the exact
 merged PR's successful workflow run and paired artifacts. Polling remains bound
 to the PR/head identity; timeout or a sibling run still fails closed.
 
+The public promotion router preserves the requested `vN` or `vN-alpha` ref as
+audit metadata, but binds the router to GitHub's selected reusable-workflow SHA
+and resolves each remaining floating shell/runtime ref exactly once. Every
+later checkout and delegated promotion receives those immutable SHAs, so a
+channel tag moving during the run cannot mix two Buildchain revisions.
+
+If a promote-only run failed after its consumer commit was already merged and
+its PR-stage artifacts were built, rerun the complete failed workflow after the
+fixed Buildchain channel is published:
+
+```bash
+gh run rerun <run-id> --repo <owner>/<consumer>
+```
+
+Use a complete rerun, not `--failed`, so GitHub resolves the reusable workflow
+again. The release-candidate resolver reuses the existing candidate artifacts,
+and the durable publication transaction makes the recovery idempotent; do not
+open a replacement consumer PR or rebuild the native matrix solely for this
+router failure.
+
 By default, the wrapper forwards GitHub Release publication to the underlying
 `promote-buildchain-ref` semver model. Once the release transaction is complete,
 the action creates or updates the public GitHub Release, applies

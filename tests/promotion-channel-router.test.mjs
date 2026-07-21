@@ -7,6 +7,7 @@ import {
   parsePromotionShellRouting,
 } from "../scripts/generate-channel-promotion-workflow.mjs";
 import { resolvePromotionChannel } from "../scripts/promotion-channel-router.mjs";
+import { resolvePromotionIdentities } from "../scripts/promotion-identity-resolver.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const shellRouting = parsePromotionShellRouting(
@@ -88,6 +89,30 @@ test("train and exact-SHA overrides retain auto-only selection and target shell 
   );
 });
 
+test("floating promotion refs resolve once even when the ref moves during routing", async () => {
+  const firstV2 = "1".repeat(40);
+  const movedV2 = "2".repeat(40);
+  let calls = 0;
+  const identities = await resolvePromotionIdentities({
+    routerRef: "v2-alpha",
+    routerSha: "a".repeat(40),
+    shellRef: "v2",
+    shellCallRef: "v2",
+    runtimeRef: "v2",
+    resolveRef: async (ref) => {
+      assert.equal(ref, "v2");
+      calls += 1;
+      return calls === 1 ? firstV2 : movedV2;
+    },
+  });
+
+  assert.equal(calls, 1);
+  assert.equal(identities.shellRef, "v2");
+  assert.equal(identities.runtimeRef, "v2");
+  assert.equal(identities.shellSha, firstV2);
+  assert.equal(identities.runtimeSha, firstV2);
+});
+
 function workflowFields(source, section) {
   const lines = source.split(/\r?\n/);
   const start = lines.findIndex((line) => line === `    ${section}:`);
@@ -150,6 +175,10 @@ test("stable bootstrap calls the existing public workflow at the immutable v2 SH
   assert.match(generated, /STABLE_SHELL_REF: v2/);
   assert.match(generated, /STABLE_SHELL_CALL_REF: c95f9fc36b0ac8fb4ff6400189850c4ae683f3ea/);
   assert.match(generated, /STABLE_SHELL_WORKFLOW_PATH: \.github\/workflows\/release-candidate-promote\.yml/);
+  assert.match(generated, /BUILDCHAIN_ROUTER_WORKFLOW_SHA: \$\{\{ job\.workflow_sha \}\}/);
+  assert.match(generated, /ref: \$\{\{ steps\.router\.outputs\.sha \}\}/);
+  assert.match(generated, /ref: \$\{\{ steps\.identities\.outputs\.shell-sha \}\}/);
+  assert.match(generated, /ref: \$\{\{ steps\.identities\.outputs\.runtime-sha \}\}/);
 });
 
 test("stable bootstrap only forwards inputs supported by the pinned legacy wrapper", () => {
@@ -167,6 +196,7 @@ test("stable bootstrap only forwards inputs supported by the pinned legacy wrapp
   assert.match(stableBlock, /^      buildchain-contract-lock-path:/m);
   assert.match(stableBlock, /^      channel:/m);
   assert.match(stableBlock, /^      target-ref:/m);
+  assert.match(stableBlock, /^      buildchain-ref: \$\{\{ needs\.resolve-promotion\.outputs\.runtime-sha \}\}$/m);
 });
 
 test("alpha router coerces string job output before forwarding a boolean input", () => {
@@ -190,5 +220,7 @@ test("promotion router contains no native build job and delegates candidate reus
   assert.doesNotMatch(router, /matrix:|Build native|pnpm run build/);
   assert.match(advanced, /Resolve PR-stage release candidate/);
   assert.match(advanced, /release-candidate-resolver\.mjs/);
+  assert.match(advanced, /CALLED_WORKFLOW_SHA: \$\{\{ job\.workflow_sha \}\}/);
+  assert.match(advanced, /\[\[ "\$\{CALLED_WORKFLOW_SHA\}" = "\$\{SHELL_SHA\}" \]\]/);
   assert.doesNotMatch(advanced, /strategy:\n\s+matrix:/);
 });

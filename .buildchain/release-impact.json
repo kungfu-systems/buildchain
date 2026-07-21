@@ -12,6 +12,13 @@
   },
   "surfaceImpacts": [
     {
+      "id": "promotion-floating-ref-single-resolution",
+      "impact": "patch",
+      "class": "source-integrity",
+      "rationale": "The public promotion router binds its own GitHub-selected reusable-workflow SHA, resolves each floating shell and runtime ref once, and uses only immutable SHAs for later checkouts and delegated promotion while retaining logical refs as audit metadata.",
+      "source": ".github/workflows/release-candidate-promote.yml"
+    },
+    {
       "id": "dual-channel-promotion-workflow-shell-router",
       "impact": "minor",
       "class": "workflow-contract",
