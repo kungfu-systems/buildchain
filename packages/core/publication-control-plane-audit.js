@@ -68,13 +68,22 @@ export function evaluatePublicationControlPlaneSnapshot({
     Number(branchPolicy.requiredApprovals || 0) >= 1 &&
     branchPolicy.requireConversationResolution === true &&
     branchPolicy.enforceAdmins === true;
+  const declaredRequiredStatusCheck = branchPolicy.declaredRequiredStatusCheck || branchPolicy.requiredStatusCheck;
+  const resolvedRequiredStatusCheck = branchPolicy.requiredStatusCheck;
+  const requiredStatusCheckBindingPass = declaredRequiredStatusCheck === requiredStatusCheck && (
+    resolvedRequiredStatusCheck === declaredRequiredStatusCheck ||
+    (
+      resolvedRequiredStatusCheck.startsWith(`${declaredRequiredStatusCheck} / `) &&
+      branchPolicy.requiredStatusCheckMatchCount === 1
+    )
+  );
   const providerTransactionBranchPass = branchPolicy.ref === branch &&
     branchPolicy.policyMode === "provider-enforced-transaction" &&
     branchPolicy.protected === true &&
     branchPolicy.enforcementLevel === "everyone" &&
     Array.isArray(branchPolicy.requiredStatusChecks) &&
-    branchPolicy.requiredStatusCheck === requiredStatusCheck &&
-    branchPolicy.requiredStatusChecks.includes(requiredStatusCheck) &&
+    requiredStatusCheckBindingPass &&
+    branchPolicy.requiredStatusChecks.includes(resolvedRequiredStatusCheck) &&
     branchPolicy.requiredCheckPassed === true &&
     /^[0-9a-f]{40}$/i.test(String(branchPolicy.requiredCheckSha || "")) &&
     branchPolicy.requiredCheckSha === branchPolicy.pullRequestHeadSha &&

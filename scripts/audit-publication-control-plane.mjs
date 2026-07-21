@@ -283,17 +283,33 @@ function main() {
       ? githubJson(`repos/${repository}/commits/${pullRequestHeadSha}/check-runs?per_page=100`, "merged pull-request head check runs")
       : { check_runs: [] };
     const requiredStatusCheckPolicy = branchState.protection?.required_status_checks || {};
-    const requiredStatusChecks = requiredStatusCheckPolicy.contexts || [];
-    const requiredCheckSource = (requiredStatusCheckPolicy.checks || []).find((entry) => entry.context === requiredStatusCheck);
+    const requiredStatusChecks = [...new Set([
+      ...(requiredStatusCheckPolicy.contexts || []),
+      ...(requiredStatusCheckPolicy.checks || []).map((entry) => entry.context),
+    ].filter(Boolean))];
+    const exactRequiredStatusCheck = requiredStatusChecks.includes(requiredStatusCheck)
+      ? requiredStatusCheck
+      : "";
+    const prefixedRequiredStatusChecks = requiredStatusChecks.filter((context) =>
+      context.startsWith(`${requiredStatusCheck} / `)
+    );
+    const resolvedRequiredStatusCheck = exactRequiredStatusCheck ||
+      (prefixedRequiredStatusChecks.length === 1 ? prefixedRequiredStatusChecks[0] : requiredStatusCheck);
+    const requiredStatusCheckMatchCount = exactRequiredStatusCheck ? 1 : prefixedRequiredStatusChecks.length;
+    const requiredCheckSource = (requiredStatusCheckPolicy.checks || []).find((entry) =>
+      entry.context === resolvedRequiredStatusCheck
+    );
     branchPolicy = {
       ref: branch,
       policyMode: "provider-enforced-transaction",
       protected: branchState.protected === true,
       enforcementLevel: branchState.protection?.required_status_checks?.enforcement_level || "",
       requiredStatusChecks,
-      requiredStatusCheck,
+      declaredRequiredStatusCheck: requiredStatusCheck,
+      requiredStatusCheck: resolvedRequiredStatusCheck,
+      requiredStatusCheckMatchCount,
       requiredCheckPassed: (checkRuns.check_runs || []).some((entry) =>
-        entry.name === requiredStatusCheck &&
+        entry.name === resolvedRequiredStatusCheck &&
         entry.conclusion === "success" &&
         (!requiredCheckSource?.app_id || entry.app?.id === requiredCheckSource.app_id)
       ),

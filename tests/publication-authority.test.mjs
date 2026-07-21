@@ -641,6 +641,38 @@ test("control-plane snapshot qualifies an exact provider-enforced protected-bran
   const receipt = evaluatePublicationControlPlaneSnapshot({ ...common, snapshot });
   assert.equal(receipt.facts.every((entry) => entry.status === "pass"), true);
 
+  const legacyJobId = evaluatePublicationControlPlaneSnapshot({
+    ...common,
+    requiredStatusCheck: "build",
+    snapshot: {
+      ...snapshot,
+      branch: {
+        ...snapshot.branch,
+        declaredRequiredStatusCheck: "build",
+        requiredStatusCheck: "build / Build with resolved channel / Summarize build contract",
+        requiredStatusChecks: ["build / Build with resolved channel / Summarize build contract"],
+        requiredStatusCheckMatchCount: 1,
+      },
+    },
+  });
+  assert.equal(legacyJobId.facts.find((entry) => entry.id === "branch-policy").status, "pass");
+
+  const ambiguousLegacyJobId = evaluatePublicationControlPlaneSnapshot({
+    ...common,
+    requiredStatusCheck: "build",
+    snapshot: {
+      ...snapshot,
+      branch: {
+        ...snapshot.branch,
+        declaredRequiredStatusCheck: "build",
+        requiredStatusCheck: "build / Build with resolved channel / Summarize build contract",
+        requiredStatusChecks: ["build / Build with resolved channel / Summarize build contract"],
+        requiredStatusCheckMatchCount: 2,
+      },
+    },
+  });
+  assert.equal(ambiguousLegacyJobId.facts.find((entry) => entry.id === "branch-policy").status, "fail");
+
   const drifted = evaluatePublicationControlPlaneSnapshot({
     ...common,
     snapshot: {
