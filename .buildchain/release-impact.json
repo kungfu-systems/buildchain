@@ -40,6 +40,13 @@
       "source": "actions/promote-buildchain-ref/lib.js"
     },
     {
+      "id": "publication-version-bound-recovery",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Alpha and release promotion resume an unfinished durable transaction from source history only when its recorded version matches the exact publication version planned for the current run, preventing an ancestor failure from reclaiming an older tag after a newer package set is published.",
+      "source": "actions/promote-buildchain-ref/lib.js"
+    },
+    {
       "id": "release-channel-protection-convergence",
       "impact": "patch",
       "class": "release-governance",
