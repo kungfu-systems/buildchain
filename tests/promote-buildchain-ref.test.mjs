@@ -8752,6 +8752,191 @@ assert.equal(pkg.version, anchor.npmVersion);
   assert.equal(refs.get("tags/v22.22.0"), SHA);
 });
 
+test("promote-only stable release accepts an exact RC tree from a reviewed target PR", async () => {
+  const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+strategy = "anchored"
+next = "manual"
+manifest = "libnode.release.json"
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[lifecycle.verify]
+command = "node scripts/verify.mjs"
+`,
+    "package.json": {
+      name: "@kungfu-tech/libnode",
+      version: "22.22.3-kf.4",
+    },
+    "libnode.release.json": {
+      nodeVersion: "22.22.3",
+      nodeTag: "v22.22.3",
+      npmVersion: "22.22.3-kf.4",
+    },
+    "scripts/verify.mjs": `
+import assert from "node:assert/strict";
+import fs from "node:fs";
+
+const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+const anchor = JSON.parse(fs.readFileSync(process.env.BUILDCHAIN_ANCHOR_MANIFEST, "utf8"));
+
+assert.equal(process.env.BUILDCHAIN_VERSION, "22.22.0");
+assert.equal(anchor.npmVersion, "22.22.3-kf.4");
+assert.equal(pkg.version, anchor.npmVersion);
+`,
+    ".buildchain/artifacts/release-candidate-passport.json": {
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-release-candidate-passport",
+      repository: "kungfu-systems/libnode",
+      target: {
+        channel: "release",
+        ref: "release/v22/v22.22",
+        version: "22.22.3-kf.4",
+      },
+      source: {
+        headSha: OTHER_SHA,
+        mergeRefSha: OTHER_SHA,
+        treeHash: "release-tree",
+      },
+      platformMatrix: [
+        { platformId: "linux-x64", artifactName: "libnode-linux-x64" },
+      ],
+      diagnostics: {},
+    },
+  });
+  run(["git", "init"], cwd);
+  run(["git", "add", "."], cwd);
+  run(["git", "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-m", "release material"], cwd);
+
+  const alphaSha = "c".repeat(40);
+  const refs = new Map([
+    ["heads/release/v22/v22.22", SHA],
+    ["tags/v22.22.0-alpha.0", alphaSha],
+  ]);
+  const releasePullRequest = {
+    html_url: "https://github.com/kungfu-systems/libnode/pull/112",
+    merged_at: "2026-07-21T00:00:00Z",
+    base: { ref: "release/v22/v22.22" },
+    head: {
+      ref: "release/libnode-kf4",
+      repo: { full_name: "kungfu-systems/libnode" },
+    },
+  };
+  let exposeReleasePullRequest = false;
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (refs.has(ref)) {
+            return { data: { object: { sha: refs.get(ref) } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async ({ ref }) => ({
+          data: [...refs.entries()]
+            .filter(([name]) => name.startsWith(ref))
+            .map(([name, objectSha]) => ({
+              ref: `refs/${name}`,
+              object: { sha: objectSha },
+            })),
+        }),
+        getCommit: async ({ commit_sha }) => ({
+          data: {
+            tree: { sha: commit_sha === alphaSha ? "alpha-tree" : "release-tree" },
+            parents: [],
+          },
+        }),
+        createBlob: async () => {
+          throw new Error("anchored manual release should not create version blobs");
+        },
+        createTree: async () => {
+          throw new Error("anchored manual release should not create version trees");
+        },
+        createCommit: async () => {
+          throw new Error("anchored manual release should not create version commits");
+        },
+        updateRef: async ({ ref, sha }) => {
+          refs.set(ref, sha);
+          return {};
+        },
+        createRef: async ({ ref, sha }) => {
+          refs.set(ref.replace(/^refs\//, ""), sha);
+          return {};
+        },
+      },
+      repos: {
+        getBranchProtection: async () => ({ data: protectedChannel() }),
+        listPullRequestsAssociatedWithCommit: async ({ commit_sha }) => ({
+          data:
+            exposeReleasePullRequest && commit_sha === SHA
+              ? [releasePullRequest]
+              : [],
+        }),
+        compareCommitsWithBasehead: async () => ({
+          data: {
+            files: [
+              { filename: "package.json" },
+              { filename: "libnode.release.json" },
+              { filename: "src/node_api.cc" },
+              { filename: "tools/dep_updaters/update-v8.sh" },
+            ],
+          },
+        }),
+      },
+    },
+  };
+
+  try {
+    const promotionInput = {
+      octokit,
+      owner: "kungfu-systems",
+      repo: "libnode",
+      sha: SHA,
+      targetRef: "release/v22/v22.22",
+      cwd,
+      requireGovernance: true,
+      requireVersionState: true,
+      promoteOnlyReleaseCandidate: true,
+      allowRepository: "kungfu-systems/libnode",
+    };
+    await assert.rejects(
+      promoteBuildchainRefs(promotionInput),
+      /merged same-repository PR/,
+    );
+
+    exposeReleasePullRequest = true;
+    const result = await promoteBuildchainRefs(promotionInput);
+
+    assert.equal(result.sha, SHA);
+    assert.equal(refs.get("tags/v22.22.0"), SHA);
+    assert.deepEqual(
+      result.updates.find(
+        (update) => update.action === "accepted-exact-release-candidate-source",
+      ),
+      {
+        action: "accepted-exact-release-candidate-source",
+        sha: SHA,
+        treeSha: "release-tree",
+        builtSourceSha: OTHER_SHA,
+        builtSourceTreeSha: "release-tree",
+        alphaTag: "v22.22.0-alpha.0",
+        alphaSha,
+        targetRef: "release/v22/v22.22",
+        pullRequest: releasePullRequest.html_url,
+      },
+    );
+  } finally {
+    fs.rmSync(cwd, { recursive: true, force: true });
+  }
+});
+
 test("anchored manual publish transactions use declared package version for durable state", async () => {
   const cwd = makeTempWorkspace({
     "buildchain.toml": `
