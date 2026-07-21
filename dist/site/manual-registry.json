@@ -79,7 +79,7 @@
       "title": "Release Candidate Passport",
       "path": "docs/release-candidate.md",
       "plane": "verify",
-      "digest": "sha256:81463a74dfe3d337768797b5b47f8cb3a22389312a917447f9b0e6096ab4f90a",
+      "digest": "sha256:5528710ec63dbdf86a34e69a7ea86dbb4194d72522951fc67108f5cfc58fdd99",
       "capabilityGroup": "reusable-build",
       "audience": [
         "release-operator",

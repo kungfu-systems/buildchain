@@ -51,6 +51,7 @@ const requiredPaths = [
   "scripts/buildchain-channel-router.mjs",
   "scripts/generate-channel-build-workflow.mjs",
   "scripts/promotion-channel-router.mjs",
+  "scripts/promotion-identity-resolver.mjs",
   "scripts/generate-channel-promotion-workflow.mjs",
   "scripts/build-standalone-binary.mjs",
   "scripts/create-release-bundle.mjs",
@@ -246,6 +247,8 @@ for (const requiredSnippet of [
   ".github/workflows/.build.yml:",
   ".github/workflows/.gate-profile.yml:",
   'property "workflow_ref" is not defined in object type',
+  'property "workflow_repository" is not defined in object type',
+  'property "workflow_sha" is not defined in object type',
 ]) {
   if (!actionlintConfig.includes(requiredSnippet)) {
     throw new Error(`actionlint config missing scoped job.workflow_ref compatibility rule: ${requiredSnippet}`);

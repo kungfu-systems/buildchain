@@ -97,7 +97,7 @@ function forwardedInputs(inputNames, { includeInternal = true, unsupportedInputs
     .filter((name) => !unsupported.has(name))
     .map((name) => {
       const routed = {
-        "buildchain-ref": "runtime-ref",
+        "buildchain-ref": "runtime-sha",
         "buildchain-contract-lock-path": "contract-lock-path",
         channel: "publication-channel",
         "target-ref": "target-ref",
@@ -221,7 +221,7 @@ jobs:
       publication-channel: \${{ steps.route.outputs.publication-channel }}
       target-ref: \${{ steps.route.outputs.target-ref }}
       router-ref: \${{ steps.router.outputs.ref }}
-      router-sha: \${{ steps.identities.outputs.router-sha }}
+      router-sha: \${{ steps.router.outputs.sha }}
       shell-ref: \${{ steps.route.outputs.shell-ref }}
       shell-sha: \${{ steps.identities.outputs.shell-sha }}
       runtime-ref: \${{ steps.route.outputs.runtime-ref }}
@@ -237,25 +237,35 @@ jobs:
         shell: bash
         env:
           BUILDCHAIN_ROUTER_WORKFLOW_REF: \${{ job.workflow_ref }}
+          BUILDCHAIN_ROUTER_WORKFLOW_REPOSITORY: \${{ job.workflow_repository }}
+          BUILDCHAIN_ROUTER_WORKFLOW_SHA: \${{ job.workflow_sha }}
         run: |
           set -euo pipefail
           workflow_ref="\${BUILDCHAIN_ROUTER_WORKFLOW_REF}"
-          repository="\${workflow_ref%%/.github/workflows/*}"
+          repository="\${BUILDCHAIN_ROUTER_WORKFLOW_REPOSITORY}"
           ref="\${workflow_ref##*@}"
           ref="\${ref#refs/heads/}"
           ref="\${ref#refs/tags/}"
-          if [[ -z "\${repository}" || "\${repository}" = "\${workflow_ref}" || -z "\${ref}" ]]; then
+          parsed_repository="\${workflow_ref%%/.github/workflows/*}"
+          if [[ -z "\${repository}" || "\${repository}" != "\${parsed_repository}" || -z "\${ref}" ]]; then
             echo "::error::Unable to resolve promotion router source from job.workflow_ref=\${workflow_ref}"
             exit 1
           fi
-          echo "repository=\${repository}" >> "\${GITHUB_OUTPUT}"
-          echo "ref=\${ref}" >> "\${GITHUB_OUTPUT}"
+          if [[ ! "\${BUILDCHAIN_ROUTER_WORKFLOW_SHA}" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "::error::job.workflow_sha is not an exact commit SHA"
+            exit 1
+          fi
+          {
+            echo "repository=\${repository}"
+            echo "ref=\${ref}"
+            echo "sha=\${BUILDCHAIN_ROUTER_WORKFLOW_SHA,,}"
+          } >> "\${GITHUB_OUTPUT}"
 
       - name: Checkout promotion router
         uses: actions/checkout@v7.0.0
         with:
           repository: \${{ steps.router.outputs.repository }}
-          ref: \${{ steps.router.outputs.ref }}
+          ref: \${{ steps.router.outputs.sha }}
           path: .buildchain/router
           persist-credentials: false
 
@@ -289,11 +299,43 @@ jobs:
               throw new Error(\`promotion runtime override requires write, maintain, or admin permission; actor has \${level}\`);
             }
 
+      - name: Resolve immutable promotion identities
+        id: identities
+        shell: bash
+        env:
+          GITHUB_TOKEN: \${{ github.token }}
+          CHANNEL: \${{ steps.route.outputs.channel }}
+          SELECTED_SHELL_REF: \${{ steps.route.outputs.shell-ref }}
+          ALPHA_SHELL_REF: ${alphaRoute.logicalRef}
+          ALPHA_SHELL_CALL_REF: ${alphaRoute.callRef}
+          STABLE_SHELL_REF: ${stableRoute.logicalRef}
+          STABLE_SHELL_CALL_REF: ${stableRoute.callRef}
+        run: |
+          set -euo pipefail
+          if [[ "\${CHANNEL}" = "alpha" ]]; then
+            expected_ref="\${ALPHA_SHELL_REF}"
+            call_ref="\${ALPHA_SHELL_CALL_REF}"
+          else
+            expected_ref="\${STABLE_SHELL_REF}"
+            call_ref="\${STABLE_SHELL_CALL_REF}"
+          fi
+          if [[ "\${SELECTED_SHELL_REF}" != "\${expected_ref}" ]]; then
+            echo "::error::Selected promotion shell ref \${SELECTED_SHELL_REF} does not match configured \${expected_ref}"
+            exit 1
+          fi
+          node .buildchain/router/scripts/promotion-identity-resolver.mjs \\
+            --repository "\${{ steps.router.outputs.repository }}" \\
+            --router-ref "\${{ steps.router.outputs.ref }}" \\
+            --router-sha "\${{ steps.router.outputs.sha }}" \\
+            --shell-ref "\${SELECTED_SHELL_REF}" \\
+            --shell-call-ref "\${call_ref}" \\
+            --runtime-ref "\${{ steps.route.outputs.runtime-ref }}"
+
       - name: Checkout selected promotion workflow shell
         uses: actions/checkout@v7.0.0
         with:
           repository: \${{ steps.router.outputs.repository }}
-          ref: \${{ steps.route.outputs.shell-ref }}
+          ref: \${{ steps.identities.outputs.shell-sha }}
           path: .buildchain/shell
           persist-credentials: false
 
@@ -301,7 +343,7 @@ jobs:
         uses: actions/checkout@v7.0.0
         with:
           repository: \${{ steps.router.outputs.repository }}
-          ref: \${{ steps.route.outputs.runtime-ref }}
+          ref: \${{ steps.identities.outputs.runtime-sha }}
           path: .buildchain/runtime
           persist-credentials: false
 
@@ -334,44 +376,26 @@ jobs:
           echo "path=\${path}" >> "\${GITHUB_OUTPUT}"
           echo "digest=\${digest}" >> "\${GITHUB_OUTPUT}"
 
-      - name: Resolve immutable promotion identities
-        id: identities
+      - name: Verify immutable promotion checkouts
         shell: bash
         env:
           CHANNEL: \${{ steps.route.outputs.channel }}
-          SELECTED_SHELL_REF: \${{ steps.route.outputs.shell-ref }}
-          ALPHA_SHELL_REF: ${alphaRoute.logicalRef}
-          ALPHA_SHELL_CALL_REF: ${alphaRoute.callRef}
           ALPHA_SHELL_WORKFLOW_PATH: ${alphaRoute.workflowPath}
-          STABLE_SHELL_REF: ${stableRoute.logicalRef}
-          STABLE_SHELL_CALL_REF: ${stableRoute.callRef}
           STABLE_SHELL_WORKFLOW_PATH: ${stableRoute.workflowPath}
+          ROUTER_SHA: \${{ steps.router.outputs.sha }}
+          SHELL_SHA: \${{ steps.identities.outputs.shell-sha }}
+          RUNTIME_SHA: \${{ steps.identities.outputs.runtime-sha }}
         run: |
           set -euo pipefail
           if [[ "\${CHANNEL}" = "alpha" ]]; then
-            expected_ref="\${ALPHA_SHELL_REF}"
-            call_ref="\${ALPHA_SHELL_CALL_REF}"
             workflow_path="\${ALPHA_SHELL_WORKFLOW_PATH}"
           else
-            expected_ref="\${STABLE_SHELL_REF}"
-            call_ref="\${STABLE_SHELL_CALL_REF}"
             workflow_path="\${STABLE_SHELL_WORKFLOW_PATH}"
           fi
-          if [[ "\${SELECTED_SHELL_REF}" != "\${expected_ref}" ]]; then
-            echo "::error::Selected promotion shell ref \${SELECTED_SHELL_REF} does not match configured \${expected_ref}"
-            exit 1
-          fi
           test -f ".buildchain/shell/\${workflow_path}"
-          shell_sha="$(git -C .buildchain/shell rev-parse HEAD)"
-          if [[ "\${call_ref}" =~ ^[0-9a-f]{40}$ && "\${shell_sha}" != "\${call_ref}" ]]; then
-            echo "::error::Pinned promotion shell \${call_ref} does not match selected \${shell_sha}"
-            exit 1
-          fi
-          {
-            echo "router-sha=$(git -C .buildchain/router rev-parse HEAD)"
-            echo "shell-sha=\${shell_sha}"
-            echo "runtime-sha=$(git -C .buildchain/runtime rev-parse HEAD)"
-          } >> "\${GITHUB_OUTPUT}"
+          [[ "$(git -C .buildchain/router rev-parse HEAD)" = "\${ROUTER_SHA}" ]] || { echo "::error::Promotion router checkout moved"; exit 1; }
+          [[ "$(git -C .buildchain/shell rev-parse HEAD)" = "\${SHELL_SHA}" ]] || { echo "::error::Promotion shell checkout moved"; exit 1; }
+          [[ "$(git -C .buildchain/runtime rev-parse HEAD)" = "\${RUNTIME_SHA}" ]] || { echo "::error::Promotion runtime checkout moved"; exit 1; }
 
   alpha:
     name: Promote with alpha workflow shell
