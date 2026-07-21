@@ -15,6 +15,7 @@ const {
   assertProviderEnforcedChannelTransaction,
   assertPromotableRepository,
   assertPromotableTargetRef,
+  createTreeEquivalentReleaseImpact,
   discoverVersionStateFiles,
   ensureManagedChannelBranchProtection,
   expectedHeadRefForTarget,
@@ -133,6 +134,54 @@ key = "release.version"
   assert.equal(resolved.release.line, "v2.11");
   assert.equal(resolved.classification, "patch");
   assert.equal(resolved.summary, "Version-bound Buildchain release impact.");
+});
+
+test("tree-equivalent stable promotion derives a release-governance impact ledger", () => {
+  const impact = JSON.parse(createTreeEquivalentReleaseImpact({
+    channel: "release",
+    version: "22.22.3-kf.4",
+    tag: "v22.22.3-kf.4",
+    line: "v22.22",
+    releaseCandidateValidation: {
+      treeEquivalent: true,
+      candidateHash: "sha256:qualified-candidate",
+    },
+  }));
+
+  assert.deepEqual(impact.release, {
+    tag: "v22.22.3-kf.4",
+    line: "v22.22",
+    version: "22.22.3-kf.4",
+  });
+  assert.equal(impact.versionImpact.final, "patch");
+  assert.equal(impact.versionImpact.source, "release-candidate-tree-equivalence");
+  assert.deepEqual(
+    impact.surfaceImpacts.map((entry) => entry.id),
+    ["release-candidate-stable-finalization"],
+  );
+  assert.equal(
+    impact.surfaceImpacts[0].source,
+    "release-candidate-passport:sha256:qualified-candidate",
+  );
+});
+
+test("release impact inference stays fail-closed without exact RC tree equivalence", () => {
+  assert.equal(
+    createTreeEquivalentReleaseImpact({
+      channel: "release",
+      version: "22.22.3-kf.4",
+      releaseCandidateValidation: { treeEquivalent: false },
+    }),
+    "",
+  );
+  assert.equal(
+    createTreeEquivalentReleaseImpact({
+      channel: "alpha",
+      version: "22.22.3-kf.4-alpha.1",
+      releaseCandidateValidation: { treeEquivalent: true },
+    }),
+    "",
+  );
 });
 
 function productionImpactJson({ tag = "v1.0.0", line = "v1.0", rationale = "Production promotion preserves existing registered surfaces." } = {}) {
@@ -9164,7 +9213,7 @@ test("anchored retry safely rebinds a published package transaction from a stale
   const packageVersion = "22.22.3-kf.4";
   const staleTag = "v22.22.0";
   const requestedTag = "v22.22.1";
-  const alphaSha = "c".repeat(40);
+  const alphaSha = SHA;
   const staleTagSha = "d".repeat(40);
   const cwd = makeTempWorkspace({
     "buildchain.toml": `
@@ -9200,6 +9249,25 @@ command = "node scripts/publish.mjs"
       nodeVersion: "22.22.3",
       nodeTag: "v22.22.3",
       npmVersion: packageVersion,
+    },
+    ".buildchain/artifacts/release-candidate-passport.json": {
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-release-candidate-passport",
+      repository: "kungfu-systems/libnode",
+      target: {
+        channel: "release",
+        ref: "release/v22/v22.22",
+        version: packageVersion,
+      },
+      source: {
+        headSha: SHA,
+        mergeRefSha: SHA,
+        treeHash: `tree-${SHA}`,
+      },
+      platformMatrix: [
+        { platformId: "linux-x64", artifactName: "libnode-linux-x64" },
+      ],
+      diagnostics: {},
     },
     "scripts/verify.mjs": `
 import assert from "node:assert/strict";
@@ -9296,13 +9364,10 @@ throw new Error("validated durable evidence must prevent a second registry publi
     targetRef: "release/v22/v22.22",
     cwd,
     publishTransaction: true,
+    promoteOnlyReleaseCandidate: true,
     expectedPublicationVersion: packageVersion,
-    releasePassport: false,
-    releasePassportImpactJson: productionImpactJson({
-      tag: requestedTag,
-      line: "v22.22",
-      rationale: "Recover the already-published anchored package set under the next safe internal line tag.",
-    }),
+    releasePassport: true,
+    releasePassportProductName: "Libnode",
     publishRequiredArtifactsJson: JSON.stringify([artifact]),
   });
 
@@ -9312,6 +9377,14 @@ throw new Error("validated durable evidence must prevent a second registry publi
   assert.equal(refs.get(`tags/${staleTag}`), staleTagSha);
   assert.equal(refs.get(`tags/${requestedTag}`), SHA);
   assert.equal(refs.get(`tags/v${packageVersion}`), SHA);
+  const recoveredImpact = JSON.parse(
+    fs.readFileSync(path.join(cwd, ".buildchain/release-passport/impact.json"), "utf8"),
+  );
+  assert.equal(recoveredImpact.versionImpact.source, "release-candidate-tree-equivalence");
+  assert.equal(
+    recoveredImpact.surfaceImpacts[0].id,
+    "release-candidate-stable-finalization",
+  );
 
   const recovered = await restoreDurableReleaseTransaction({
     octokit,

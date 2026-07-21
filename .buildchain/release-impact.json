@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-impact",
   "release": {
-    "version": "2.14.12",
+    "version": "2.14.13-alpha.1",
     "line": "v2.14"
   },
   "versionImpact": {
@@ -29,7 +29,7 @@
       "id": "promotion-shell-layout-bootstrap",
       "impact": "patch",
       "class": "workflow-contract",
-      "rationale": "The generated router now pins the stable lane to the hidden advanced workflow shipped by v2.14.10, including exact RC release-source admission and protected-check context resolution for publication, while preserving the logical shell ref as public audit metadata and forwarding the exact call ref to the advanced shell identity check without changing consumer declarations.",
+      "rationale": "The generated router now pins the stable lane to the hidden advanced workflow shipped by v2.14.12, including planned-version-bound recovery and guarded exact-tag rebinding for validated unfinished anchored publications, while preserving the logical shell ref as public audit metadata and forwarding the exact call ref to the advanced shell identity check without changing consumer declarations.",
       "source": ".buildchain/promotion-shell-routing.json"
     },
     {
@@ -44,6 +44,13 @@
       "impact": "patch",
       "class": "release-governance",
       "rationale": "Alpha and release promotion resume an unfinished durable transaction from source history only when its recorded version matches the exact publication version planned for the current run. Exact-tag recovery also requires matching publication identity and validated artifacts, and only rebinds an unfinished anchored transaction when the stale tag does not represent it and the requested tag is safe, preventing ancestor or tag-selection drift from reclaiming an older public tag after a newer package set is published.",
+      "source": "actions/promote-buildchain-ref/lib.js"
+    },
+    {
+      "id": "tree-equivalent-release-impact",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Promote-only stable publication derives a version-bound patch impact ledger only when PR-stage evidence proves the stable source tree exactly matches the qualified release candidate, allowing durable finalization without inventing product changes while keeping missing or non-equivalent evidence fail-closed.",
       "source": "actions/promote-buildchain-ref/lib.js"
     },
     {
