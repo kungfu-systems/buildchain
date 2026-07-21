@@ -395,6 +395,15 @@ last transient error seen before a rerun.
 An exact tag at an unrelated SHA is still a material conflict and blocks
 recovery.
 
+For anchored package versions, the package version and internal line tag are
+separate transaction coordinates. A retry can correct a stale internal tag on
+an unfinished `published` or `finalizing` transaction only when its validated
+evidence and complete artifact set match the same package version, source,
+release material, and target. Buildchain additionally requires that the stale
+tag does not already point at the transaction and that the newly selected tag
+is unclaimed or already points at accepted release material. No registry publish
+command is rerun during this exact-tag rebind.
+
 Governed retries distinguish unrelated channel advancement from advancement
 made by their own durable transaction. An unrelated descendant remains an
 auditable `superseded-promotion` no-op. When the target ref is exactly the
