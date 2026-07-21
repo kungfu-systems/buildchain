@@ -49,6 +49,7 @@ export async function resolvePromotionIdentities({
     routerRef: requested.router,
     routerSha: immutableRouterSha,
     shellRef: requested.shell,
+    shellCallRef: requested.shellCall,
     shellSha: await resolveOnce(requested.shellCall),
     runtimeRef: requested.runtime,
     runtimeSha: await resolveOnce(requested.runtime),
@@ -96,6 +97,7 @@ async function githubCommitResolver({ repository, token }) {
 function writeOutputs(file, identities) {
   const outputs = {
     "router-sha": identities.routerSha,
+    "shell-call-ref": identities.shellCallRef,
     "shell-sha": identities.shellSha,
     "runtime-sha": identities.runtimeSha,
   };

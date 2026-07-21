@@ -65,7 +65,7 @@
       "title": "Sealed publication authority",
       "path": "docs/publication-authority.md",
       "plane": "verify",
-      "digest": "sha256:e191d248a52fc6488aef48050949ed0fd31064ab2a64cca2a5b529eeb68f0ff6",
+      "digest": "sha256:118dc751fa3c37b4b20f4b909534458148c0f42c2c9d69f13e2fa5373dbfe244",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",
@@ -205,7 +205,7 @@
       "title": "Migration inventory",
       "path": "docs/migration-inventory.md",
       "plane": "verify",
-      "digest": "sha256:bdaa1c051fa6672f52a958debf5460b73e9ba265107e583d6fd99d13a2686ca9",
+      "digest": "sha256:92ea0214d0eed7f88bc7df133e1929aa8bce681851e3e374a2a289a3b3233deb",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -302,7 +302,7 @@
       "title": "Reusable build surface",
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
-      "digest": "sha256:7810aa5ff3b2539a958ff25086e49f96ee607fe59254bb21d8da019974be52d3",
+      "digest": "sha256:6c473ae69534e61c724026feb753f48325d08bf1174707b65bf8179c4159ed8a",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",

@@ -102,6 +102,11 @@ successful check, same-repository lineage, and current branch head. This records
 provider-enforced transaction evidence without treating an unavailable
 administration endpoint as an unprotected branch. It avoids turning a
 repository-admin token into a publication prerequisite.
+When a legacy caller declares a reusable job id such as `build`, the collector
+accepts it only if the protected branch exposes exactly one required context
+under `build / ...`; it then verifies that exact context, configured app, and PR
+head SHA. Exact declarations remain unchanged, and ambiguous prefixes fail
+closed.
 
 For non-dry-run workflows, missing admission, runner, control-plane, Gate, or
 expected-binding evidence is rejected before Buildchain downloads candidate

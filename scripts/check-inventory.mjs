@@ -211,7 +211,7 @@ if (channelPromotionWorkflow !== generateChannelPromotionWorkflow(advancedPromot
 for (const requiredSnippet of [
   "buildchain-channel:",
   `/.github/workflows/.release-candidate-promote.yml@v${selfDogfoodMajor}-alpha`,
-  `/release-candidate-promote.yml@${promotionShellRouting.stable.callRef}`,
+  `/${promotionShellRouting.stable.workflowPath}@${promotionShellRouting.stable.callRef}`,
   `STABLE_SHELL_REF: v${selfDogfoodMajor}`,
   "promotion-contract-lock-digest:",
   "promotion runtime override is only allowed for trusted workflow_dispatch runs",

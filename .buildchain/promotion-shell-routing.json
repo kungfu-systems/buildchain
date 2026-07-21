@@ -9,12 +9,8 @@
   },
   "stable": {
     "logicalRef": "v2",
-    "callRef": "c95f9fc36b0ac8fb4ff6400189850c4ae683f3ea",
-    "workflowPath": ".github/workflows/release-candidate-promote.yml",
-    "forwardInternalInputs": false,
-    "unsupportedInputs": [
-      "release-passport-invariant-passport-jsons",
-      "release-passport-invariant-passport-command"
-    ]
+    "callRef": "6fb6f1c3b806309ca02baa2a9d31068bc037899d",
+    "workflowPath": ".github/workflows/.release-candidate-promote.yml",
+    "forwardInternalInputs": true
   }
 }

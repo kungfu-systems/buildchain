@@ -103,7 +103,7 @@ function forwardedInputs(inputNames, { includeInternal = true, unsupportedInputs
         "target-ref": "target-ref",
         "promotion-router-ref": "router-ref",
         "promotion-router-sha": "router-sha",
-        "promotion-shell-ref": "shell-ref",
+        "promotion-shell-ref": "shell-call-ref",
         "promotion-shell-sha": "shell-sha",
         "promotion-runtime-ref": "runtime-ref",
         "promotion-runtime-sha": "runtime-sha",
@@ -223,6 +223,7 @@ jobs:
       router-ref: \${{ steps.router.outputs.ref }}
       router-sha: \${{ steps.router.outputs.sha }}
       shell-ref: \${{ steps.route.outputs.shell-ref }}
+      shell-call-ref: \${{ steps.identities.outputs.shell-call-ref }}
       shell-sha: \${{ steps.identities.outputs.shell-sha }}
       runtime-ref: \${{ steps.route.outputs.runtime-ref }}
       runtime-sha: \${{ steps.identities.outputs.runtime-sha }}
