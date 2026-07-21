@@ -205,7 +205,7 @@
       "title": "Migration inventory",
       "path": "docs/migration-inventory.md",
       "plane": "verify",
-      "digest": "sha256:dd4b7e2aefef64d62c0a7d53b7c96ed0a1be963b2b7210962bd6e73560f2fbc5",
+      "digest": "sha256:a5f7271a065544f7ac525dbddfe3d4b9f621b5284c730089f086dd9f961e883c",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -302,7 +302,7 @@
       "title": "Reusable build surface",
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
-      "digest": "sha256:9b615d68390ace8f870ef2e6fd481ae077e28514fc2f34d8efa089ca2f11a8c8",
+      "digest": "sha256:dea8ec2f1f2ea75e569a989988e9d6f76067e1d0ae496dadc34ef1dcfbfa35dd",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
