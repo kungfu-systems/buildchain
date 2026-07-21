@@ -153,25 +153,25 @@ test("alpha-only advanced workflow changes are isolated from the stable shell re
   const generated = generateChannelPromotionWorkflow(fixture, { major: 2, shellRouting });
 
   assert.match(generated, /\.release-candidate-promote\.yml@v2-alpha/);
-  assert.match(generated, /\.release-candidate-promote\.yml@198da1d35928c79b03878407a1446f0c75a51742/);
+  assert.match(generated, /\.release-candidate-promote\.yml@10e8567e32a2a92746808cf087359d72c754d1bd/);
   assert.doesNotMatch(generated, /\.release-candidate-promote\.yml@v2(?:\n|$)/);
   assert.notEqual(fixture, advanced);
   assert.doesNotMatch(generated, /Advanced Alpha Fixture/);
 });
 
-test("stable route calls the hidden advanced workflow at the immutable v2.14.10 SHA", () => {
+test("stable route calls the hidden advanced workflow at the immutable v2.14.12 SHA", () => {
   const advanced = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
   const generated = generateChannelPromotionWorkflow(advanced, { major: 2, shellRouting });
 
   assert.deepEqual(shellRouting.stable, {
     logicalRef: "v2",
-    callRef: "198da1d35928c79b03878407a1446f0c75a51742",
+    callRef: "10e8567e32a2a92746808cf087359d72c754d1bd",
     workflowPath: ".github/workflows/.release-candidate-promote.yml",
     forwardInternalInputs: true,
     unsupportedInputs: [],
   });
   assert.match(generated, /STABLE_SHELL_REF: v2/);
-  assert.match(generated, /STABLE_SHELL_CALL_REF: 198da1d35928c79b03878407a1446f0c75a51742/);
+  assert.match(generated, /STABLE_SHELL_CALL_REF: 10e8567e32a2a92746808cf087359d72c754d1bd/);
   assert.match(generated, /STABLE_SHELL_WORKFLOW_PATH: \.github\/workflows\/\.release-candidate-promote\.yml/);
   assert.match(generated, /shell-call-ref: \$\{\{ steps\.identities\.outputs\.shell-call-ref \}\}/);
   assert.match(generated, /BUILDCHAIN_ROUTER_WORKFLOW_SHA: \$\{\{ job\.workflow_sha \}\}/);
