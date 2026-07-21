@@ -15,6 +15,9 @@ const FUNCTION_CODE = `function handler(event) {
 }
 `;
 
+const DISTRIBUTION_UPDATE_MAX_ATTEMPTS = 3;
+const DISTRIBUTION_UPDATE_RETRY_DELAY_MS = 250;
+
 function readArg(name, fallback = "") {
   const flag = `--${name}`;
   const index = process.argv.indexOf(flag);
@@ -31,7 +34,7 @@ function runAws(args, { allowFailure = false } = {}) {
   });
   if (result.error) {
     if (allowFailure) {
-      return { ok: false, stdout: "", stderr: String(result.error.message || result.error) };
+      return { ok: false, status: null, stdout: "", stderr: String(result.error.message || result.error) };
     }
     throw result.error;
   }
@@ -39,11 +42,11 @@ function runAws(args, { allowFailure = false } = {}) {
   const stderr = String(result.stderr || "");
   if (result.status !== 0) {
     if (allowFailure) {
-      return { ok: false, stdout, stderr };
+      return { ok: false, status: result.status, stdout, stderr };
     }
     throw new Error(`aws ${args.join(" ")} failed with exit code ${result.status}${stderr.trim() ? `: ${stderr.trim()}` : ""}`);
   }
-  return { ok: true, stdout, stderr };
+  return { ok: true, status: result.status, stdout, stderr };
 }
 
 function runAwsJson(args, options = {}) {
@@ -56,6 +59,22 @@ function runAwsJson(args, options = {}) {
 
 function functionConfig(comment) {
   return `Comment=${comment.replace(/,/g, " ")},Runtime=cloudfront-js-2.0`;
+}
+
+function awsFailureMessage(args, result) {
+  const status = result.status === null || result.status === undefined
+    ? ""
+    : ` with exit code ${result.status}`;
+  const stderr = String(result.stderr || "").trim();
+  return `aws ${args.join(" ")} failed${status}${stderr ? `: ${stderr}` : ""}`;
+}
+
+function isStaleDistributionEtag(result) {
+  return result.ok === false && /\bPreconditionFailed\b/.test(String(result.stderr || ""));
+}
+
+function sleepSync(milliseconds) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, milliseconds);
 }
 
 function writeFunctionCode(tmpDir) {
@@ -130,57 +149,85 @@ function publishFunction({ name, etag }) {
 }
 
 function attachFunction({ distributionId, functionArn }) {
-  const current = runAwsJson(["cloudfront", "get-distribution-config", "--id", distributionId]);
-  const etag = current.data?.ETag || "";
-  const config = current.data?.DistributionConfig;
-  if (!etag || !config) {
-    throw new Error(`cloudfront get-distribution-config did not return ETag and DistributionConfig for ${distributionId}`);
+  let previousViewerRequestFunction;
+  for (let attempt = 1; attempt <= DISTRIBUTION_UPDATE_MAX_ATTEMPTS; attempt += 1) {
+    const current = runAwsJson(["cloudfront", "get-distribution-config", "--id", distributionId]);
+    const etag = current.data?.ETag || "";
+    const config = current.data?.DistributionConfig;
+    if (!etag || !config) {
+      throw new Error(`cloudfront get-distribution-config did not return ETag and DistributionConfig for ${distributionId}`);
+    }
+    const defaultBehavior = config.DefaultCacheBehavior || {};
+    const existing = defaultBehavior.FunctionAssociations || { Quantity: 0, Items: [] };
+    const items = Array.isArray(existing.Items) ? [...existing.Items] : [];
+    const currentViewer = items.find((item) => item.EventType === "viewer-request");
+    if (previousViewerRequestFunction === undefined) {
+      previousViewerRequestFunction = currentViewer?.FunctionARN || "";
+    }
+    if (currentViewer && currentViewer.FunctionARN && currentViewer.FunctionARN !== functionArn) {
+      throw new Error(
+        `CloudFront distribution ${distributionId} already has a different viewer-request function ${currentViewer.FunctionARN}; ` +
+        "remove or migrate it before Buildchain can manage directory-index rewrites",
+      );
+    }
+    if (currentViewer?.FunctionARN === functionArn) {
+      return {
+        previousViewerRequestFunction,
+        nextViewerRequestFunction: functionArn,
+      };
+    }
+
+    const nextItems = [
+      ...items.filter((item) => item.EventType !== "viewer-request"),
+      {
+        EventType: "viewer-request",
+        FunctionARN: functionArn,
+      },
+    ];
+    config.DefaultCacheBehavior = {
+      ...defaultBehavior,
+      FunctionAssociations: {
+        Quantity: nextItems.length,
+        Items: nextItems,
+      },
+    };
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-cloudfront-distribution-"));
+    let args;
+    let updated;
+    try {
+      const configFile = path.join(tmpDir, "distribution-config.json");
+      fs.writeFileSync(configFile, `${JSON.stringify(config, null, 2)}\n`);
+      args = [
+        "cloudfront",
+        "update-distribution",
+        "--id",
+        distributionId,
+        "--if-match",
+        etag,
+        "--distribution-config",
+        `file://${configFile}`,
+      ];
+      updated = runAws(args, { allowFailure: true });
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+    if (updated.ok) {
+      return {
+        previousViewerRequestFunction,
+        nextViewerRequestFunction: functionArn,
+      };
+    }
+    if (!isStaleDistributionEtag(updated)) {
+      throw new Error(awsFailureMessage(args, updated));
+    }
+    if (attempt === DISTRIBUTION_UPDATE_MAX_ATTEMPTS) {
+      throw new Error(
+        `CloudFront update-distribution still failed after ${attempt} attempts: ${awsFailureMessage(args, updated)}`,
+      );
+    }
+    sleepSync(DISTRIBUTION_UPDATE_RETRY_DELAY_MS * attempt);
   }
-  const defaultBehavior = config.DefaultCacheBehavior || {};
-  const existing = defaultBehavior.FunctionAssociations || { Quantity: 0, Items: [] };
-  const items = Array.isArray(existing.Items) ? [...existing.Items] : [];
-  const currentViewer = items.find((item) => item.EventType === "viewer-request");
-  if (currentViewer && currentViewer.FunctionARN && currentViewer.FunctionARN !== functionArn) {
-    throw new Error(
-      `CloudFront distribution ${distributionId} already has a different viewer-request function ${currentViewer.FunctionARN}; ` +
-      "remove or migrate it before Buildchain can manage directory-index rewrites",
-    );
-  }
-  const nextItems = [
-    ...items.filter((item) => item.EventType !== "viewer-request"),
-    {
-      EventType: "viewer-request",
-      FunctionARN: functionArn,
-    },
-  ];
-  config.DefaultCacheBehavior = {
-    ...defaultBehavior,
-    FunctionAssociations: {
-      Quantity: nextItems.length,
-      Items: nextItems,
-    },
-  };
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-cloudfront-distribution-"));
-  try {
-    const configFile = path.join(tmpDir, "distribution-config.json");
-    fs.writeFileSync(configFile, `${JSON.stringify(config, null, 2)}\n`);
-    runAws([
-      "cloudfront",
-      "update-distribution",
-      "--id",
-      distributionId,
-      "--if-match",
-      etag,
-      "--distribution-config",
-      `file://${configFile}`,
-    ]);
-  } finally {
-    fs.rmSync(tmpDir, { recursive: true, force: true });
-  }
-  return {
-    previousViewerRequestFunction: currentViewer?.FunctionARN || "",
-    nextViewerRequestFunction: functionArn,
-  };
+  throw new Error(`CloudFront update-distribution retry loop ended unexpectedly for ${distributionId}`);
 }
 
 export function ensureCloudFrontDirectoryIndexRewrite({
