@@ -329,7 +329,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:ee7294d1047b4213b7c45adc742db9d7b26f9bf9beb37800ec3f73c4e825ecf2",
+      "digest": "sha256:32825b9d248cf0415aec5a8c6eda742ab32d9f16b21963762c4a3794f3968c10",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -403,6 +403,7 @@
     "docs/reusable-build-surface.md",
     "docs/release-candidate.md",
     "docs/stable-candidate-patrol.md",
+    "docs/observed-evidence-patrol.md",
     "docs/release-governance.md",
     "docs/release-passport.md",
     "docs/controller-evidence.md",

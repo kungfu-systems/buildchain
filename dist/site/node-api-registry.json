@@ -307,7 +307,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-publication-authority",
       "export": "./buildchain-publication-authority",
       "target": "./packages/core/buildchain-publication-authority.js",
-      "digest": "sha256:2c999f7b237e532aceb2221ce504144aac26357ed3057b47f853b15f4eb76298",
+      "digest": "sha256:994218d8ca1474f4d58f637124a9e9393b832c68fbb0d90cfbe1dbeae8a1e2e2",
       "summary": "Buildchain-owned closed-world publication authority descriptor registry.",
       "capabilityGroup": "release-passport-trust",
       "audience": [

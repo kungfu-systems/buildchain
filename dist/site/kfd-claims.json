@@ -21,12 +21,12 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "ef912776f4c897e333a0cd3edcd04e1163c42affdf8acde1e8dfe7dc34a40b7d",
+    "sha256": "718d09d60b1d04d3c93b2e0021131e23a1462a2de080c968b03dfa0ec0a03a00",
     "summary": {
       "cliCommandCount": 84,
-      "workflowCount": 50,
+      "workflowCount": 51,
       "actionCount": 4,
-      "sitePageCount": 50,
+      "sitePageCount": 51,
       "docCommandRefCount": 258,
       "failureCount": 0
     },
@@ -228,12 +228,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "ef912776f4c897e333a0cd3edcd04e1163c42affdf8acde1e8dfe7dc34a40b7d",
+      "sha256": "718d09d60b1d04d3c93b2e0021131e23a1462a2de080c968b03dfa0ec0a03a00",
       "summary": {
         "cliCommandCount": 84,
-        "workflowCount": 50,
+        "workflowCount": 51,
         "actionCount": 4,
-        "sitePageCount": 50,
+        "sitePageCount": 51,
         "docCommandRefCount": 258,
         "failureCount": 0
       },
@@ -3667,6 +3667,33 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:patrol-observed-evidence",
+          "name": "workflow:patrol-observed-evidence",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/patrol-observed-evidence.yml",
+          "evidencePath": ".github/workflows/patrol-observed-evidence.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 12,
+          "inputs": [
+            "artifact-path",
+            "build-command",
+            "buildchain-ref",
+            "cloudfront-distribution",
+            "evidence-source-path",
+            "evidence-source-ref",
+            "evidence-source-repository",
+            "manifest-path",
+            "production-aws-role-arn",
+            "production-bucket",
+            "production-environment",
+            "verify-command"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:patrol-weekly",
           "name": "workflow:patrol-weekly",
           "kind": "workflow",
@@ -4514,6 +4541,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:observed-evidence-patrol",
+          "name": "site-page:manual:observed-evidence-patrol",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:ownership",
           "name": "site-page:manual:ownership",
           "kind": "site-page",
@@ -4869,6 +4908,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 310
+    "publicSurfaceCount": 312
   }
 }

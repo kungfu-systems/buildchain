@@ -1341,6 +1341,35 @@
       "status": "active"
     },
     {
+      "id": "patrol-observed-evidence",
+      "path": ".github/workflows/patrol-observed-evidence.yml",
+      "reusable": true,
+      "inputs": [
+        "artifact-path",
+        "build-command",
+        "buildchain-ref",
+        "cloudfront-distribution",
+        "evidence-source-path",
+        "evidence-source-ref",
+        "evidence-source-repository",
+        "manifest-path",
+        "production-aws-role-arn",
+        "production-bucket",
+        "production-environment",
+        "verify-command"
+      ],
+      "inputCount": 12,
+      "secrets": [],
+      "secretCount": 0,
+      "outputs": [
+        "receipt-path"
+      ],
+      "outputCount": 1,
+      "surface": "repository-patrol",
+      "capabilityGroup": "governance-versioning",
+      "status": "active"
+    },
+    {
       "id": "patrol-weekly",
       "path": ".github/workflows/patrol-weekly.yml",
       "reusable": true,
