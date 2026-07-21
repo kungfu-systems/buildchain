@@ -686,6 +686,12 @@ collector copies `versionImpact` plus `surfaceImpacts` into
 `buildchain explain release --for agent --json` state why a release is patch,
 minor, or major instead of relying on file-path memory.
 
+For a promote-only stable transaction, Buildchain can derive a patch-level
+release-governance ledger when the PR-stage release-candidate passport proves
+the stable source tree is exactly the previously qualified candidate tree.
+This fallback is unavailable when candidate evidence is absent, stale, or not
+tree-equivalent.
+
 Buildchain dogfoods its observability toolkit in this lane. The standalone
 builder writes API-generated events, while the workflow uses `buildchain mark`,
 `buildchain span`, `buildchain verify observability-log`, and `buildchain log

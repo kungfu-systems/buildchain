@@ -47,6 +47,13 @@
       "source": "actions/promote-buildchain-ref/lib.js"
     },
     {
+      "id": "tree-equivalent-release-impact",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Promote-only stable publication derives a version-bound patch impact ledger only when PR-stage evidence proves the stable source tree exactly matches the qualified release candidate, allowing durable finalization without inventing product changes while keeping missing or non-equivalent evidence fail-closed.",
+      "source": "actions/promote-buildchain-ref/lib.js"
+    },
+    {
       "id": "release-channel-protection-convergence",
       "impact": "patch",
       "class": "release-governance",

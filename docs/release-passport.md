@@ -405,6 +405,12 @@ content can remain patch while an additive `registry.kind` field on the
 machine-consumed KFD registry schema records a minor `kfd-registry-schema`
 surface impact.
 
+Promote-only stable publication may omit an explicit impact ledger only when
+the downloaded PR-stage release-candidate passport proves exact tree
+equivalence. Buildchain then records a patch-level release-governance impact
+bound to that candidate. Missing, stale, or non-equivalent candidate evidence
+does not receive this fallback and remains fail-closed.
+
 Verify a release passport:
 
 ```bash
