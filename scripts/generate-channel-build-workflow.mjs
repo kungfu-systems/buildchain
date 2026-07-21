@@ -203,6 +203,29 @@ function routerControllerReceiptJob() {
           exit 1`;
 }
 
+function routerAggregateJob() {
+  return `  summarize:
+    name: Summarize build contract
+    needs:
+      - build
+      - controller-receipt
+    if: \${{ always() }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Enforce public channel router aggregate
+        shell: bash
+        env:
+          BUILD_RESULT: \${{ needs.build.result }}
+          CONTROLLER_RECEIPT_RESULT: \${{ needs.controller-receipt.result }}
+        run: |
+          set -euo pipefail
+          if [[ "\${BUILD_RESULT}" != "success" || "\${CONTROLLER_RECEIPT_RESULT}" != "success" ]]; then
+            echo "::error::Buildchain channel router did not qualify: build=\${BUILD_RESULT} controller-receipt=\${CONTROLLER_RECEIPT_RESULT}"
+            exit 1
+          fi
+          echo "Buildchain channel router aggregate passed."`;
+}
+
 function generateChannelBuildWorkflowBase(source) {
   const inputs = blockBetween(source, "    inputs:\n", "    secrets:\n");
   const secrets = blockBetween(source, "    secrets:\n", "    outputs:\n");
@@ -230,7 +253,7 @@ export function generateChannelBuildWorkflow(source) {
       "    needs: resolve-channel\n    uses: ./.github/workflows/.build.yml",
       "    needs:\n      - resolve-channel\n      - controller-plan\n    uses: ./.github/workflows/.build.yml",
     );
-  return `${generated.trimEnd()}\n\n${routerControllerReceiptJob()}\n`;
+  return `${generated.trimEnd()}\n\n${routerControllerReceiptJob()}\n\n${routerAggregateJob()}\n`;
 }
 
 function main() {

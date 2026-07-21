@@ -47,6 +47,7 @@ const requiredPaths = [
   "docs/toolkit-observability.md",
   "docs/versioning.md",
   "scripts/release-line-dry-run.mjs",
+  "scripts/reconcile-release-governance.mjs",
   "scripts/buildchain-channel-router.mjs",
   "scripts/generate-channel-build-workflow.mjs",
   "scripts/promotion-channel-router.mjs",
@@ -79,6 +80,7 @@ const requiredPaths = [
   ".github/workflows/self-hosted-runner-smoke.yml",
   ".github/workflows/buildchain-ref-promotion.yml",
   ".github/workflows/release-line-bootstrap.yml",
+  ".github/workflows/release-governance-reconcile.yml",
   ".github/workflows/dev-pr-auto-merge.yml",
   ".github/workflows/buildchain-patrol.yml",
   ".github/workflows/patrol-daily.yml",
@@ -103,6 +105,7 @@ const requiredPaths = [
   ".github/workflows/build-surface-fixture.yml",
   ".github/workflows/candidate-lab.yml",
   "fixtures/libnode-shaped/buildchain.toml",
+  "fixtures/libnode-shaped/.github/workflows/build.yml",
   "fixtures/libnode-shaped/package.json"
 ];
 

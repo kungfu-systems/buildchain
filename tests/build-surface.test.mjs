@@ -127,6 +127,31 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   assert.match(channelRouter, /\.buildchain\/controller-runtime\/scripts\/controller-evidence\.mjs/);
   assert.match(channelRouter, /BUILDCHAIN_CONTROLLER_REGISTRY: \.buildchain\/controller-runtime\/dist\/site\/controller-registry\.json/);
   assert.doesNotMatch(channelRouter, /\.buildchain\/runtime\/scripts\/controller-evidence\.mjs/);
+  assert.match(
+    channelRouter,
+    /  summarize:\n    name: Summarize build contract\n    needs:\n      - build\n      - controller-receipt/,
+    "the public router must emit a stable top-level aggregate independent of nested workflow job names",
+  );
+  assert.match(channelRouter, /Enforce public channel router aggregate/);
+
+  const governanceReconciliation = fs.readFileSync(
+    path.join(root, ".github/workflows/release-governance-reconcile.yml"),
+    "utf8",
+  );
+  assert.match(governanceReconciliation, /workflow_call:/);
+  assert.match(governanceReconciliation, /workflow_dispatch:/);
+  assert.match(governanceReconciliation, /--candidate-sha "\$\{BUILDCHAIN_CANDIDATE_SHA\}"/);
+  assert.match(governanceReconciliation, /args\+\=\(--apply\)/);
+  assert.match(governanceReconciliation, /persist-credentials: false/);
+
+  const libnodeConsumer = fs.readFileSync(
+    path.join(root, "fixtures/libnode-shaped/.github/workflows/build.yml"),
+    "utf8",
+  );
+  assert.match(
+    libnodeConsumer,
+    /  build:\n    uses: kungfu-systems\/buildchain\/\.github\/workflows\/build\.yml@v2/,
+  );
 
   const reusableBuild = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
   assert.match(reusableBuild, /Checkout build controller workflow shell/);
@@ -2214,6 +2239,7 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   assert.match(workflow, /issues: write/);
   assert.match(workflow, /id-token: write/);
   assert.match(workflow, /secrets: inherit/);
+  assert.match(workflow, /uses: \.\/\.github\/workflows\/build\.yml/);
   assert.match(
     workflow,
     /artifact-transfer-mode: \$\{\{ github\.event\.inputs\['artifact-transfer-mode'\] \|\| 'github-artifacts' \}\}/,
