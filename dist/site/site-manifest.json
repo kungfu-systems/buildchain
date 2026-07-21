@@ -165,7 +165,7 @@
       "path": "docs/migration-inventory.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:92ea0214d0eed7f88bc7df133e1929aa8bce681851e3e374a2a289a3b3233deb"
+      "digest": "sha256:023f7a0c35336f6cf9a77f263b163d588ef7561f443578ea9b9a76a31a7d10d9"
     },
     {
       "id": "ownership",
@@ -221,7 +221,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:6c473ae69534e61c724026feb753f48325d08bf1174707b65bf8179c4159ed8a"
+      "digest": "sha256:2d3d34f0a5bb92e7f6bfed2aaf547e1a90e885228d00ab34e3df05a32b751676"
     },
     {
       "id": "publish-transaction",
