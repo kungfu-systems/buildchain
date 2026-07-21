@@ -288,8 +288,8 @@
       "id": "self-dogfood-channel-contract-lock-refresh",
       "impact": "patch",
       "class": "release-governance",
-      "rationale": "Buildchain self-dogfood accepts the reviewed stable v2 and alpha.10 contract worlds so both released runtime channels can qualify against their immutable contract evidence.",
-      "source": ".buildchain/contract-lock.json"
+      "rationale": "Buildchain self-dogfood accepts the reviewed v2.14.14-alpha.0 contract world while retaining the stable v2 lock, so the released alpha runtime can qualify without compatible-drift noise.",
+      "source": ".buildchain/alpha-contract-lock.json"
     },
     {
       "id": "anchored-derived-version-material",
