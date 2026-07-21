@@ -767,6 +767,11 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/release-governance-reconcile.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
       "path": ".github/workflows/release-line-bootstrap.yml",
       "signals": [
         "write-permission",
@@ -817,5 +822,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "ac085131119085cfc02e37913ec5eabc9f38b04100c58d797ede3b8e2b7e3046"
+  "registryDigest": "32141f0156da6220adadf9fde40e0778fd025da03d7b6697ac5ae29ff9c8be22"
 }

@@ -101,6 +101,45 @@ The implementation is intentionally stricter than a local release script:
   release source tree against that tested alpha tree;
 - generated version-state commits are verified before refs move.
 
+## Reconciling a protected line without rebuilding
+
+The public `build.yml` channel router ends with a top-level job named
+`Summarize build contract`. Keeping this aggregate at the public router boundary
+prevents its required check context from changing when the internal reusable
+build workflow gains another nesting layer.
+
+For an already-tested pull request whose protected target still requires an
+older Buildchain aggregate context, inspect the exact candidate SHA first:
+
+```bash
+GH_TOKEN="$(gh auth token)" npx @kungfu-tech/buildchain@latest \
+  release-governance reconcile \
+  --repository kungfu-systems/example \
+  --branch release/v2/v2.14 \
+  --candidate-sha <tested-pr-head-sha> \
+  --json
+```
+
+The dry run reads the successful checks emitted for that SHA and reports the
+exact expected/actual context pair. It chooses the shallowest successful
+`Summarize build contract` context, so a new top-level router aggregate wins
+over the nested internal build summary. To apply the plan, rerun the same
+command with `--apply` using a token that can update branch protection.
+
+Reconciliation changes only the required-status-check subresource. It replaces
+stale Buildchain aggregate contexts, preserves unrelated checks and strictness,
+and does not modify review requirements, administrator enforcement,
+conversation resolution, force-push policy, or deletion policy. The candidate
+must still be the head of a pull request targeting the named managed branch;
+the command fails closed otherwise. This lets a previously successful candidate
+continue from the same SHA without another native build or an administrator
+merge bypass.
+
+Repositories may also expose a small caller workflow around
+`.github/workflows/release-governance-reconcile.yml@v2`. Pass `branch`,
+`candidate-sha`, and `apply`, and provide `governance-token` through the caller's
+secrets. The reusable workflow uploads the JSON reconciliation receipt.
+
 Exact publication planning installs the checked-out promotion source's declared
 dependencies before version-state verification. This keeps the pre-authority
 version plan on the same package-manager boundary as the later promotion job,

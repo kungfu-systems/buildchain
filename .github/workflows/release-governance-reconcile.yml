@@ -1,0 +1,99 @@
+name: Release Governance Reconcile
+
+on:
+  workflow_call:
+    inputs:
+      branch:
+        description: "Managed dev/alpha/release branch whose required checks will be inspected"
+        required: true
+        type: string
+      candidate-sha:
+        description: "Already-tested pull request head SHA used to derive the emitted aggregate check"
+        required: true
+        type: string
+      apply:
+        description: "Replace stale Buildchain aggregate contexts while preserving all other required checks"
+        default: false
+        required: false
+        type: boolean
+      buildchain-ref:
+        description: "Buildchain runtime ref containing the reconciliation command"
+        default: "v2"
+        required: false
+        type: string
+    secrets:
+      governance-token:
+        description: "Token with read access to checks and administration access to branch protection"
+        required: false
+      BUILDCHAIN_PROMOTION_TOKEN:
+        description: "Repository promotion token used by direct workflow dispatch"
+        required: false
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Managed dev/alpha/release branch whose required checks will be inspected"
+        required: true
+        type: string
+      candidate-sha:
+        description: "Already-tested pull request head SHA used to derive the emitted aggregate check"
+        required: true
+        type: string
+      apply:
+        description: "Replace stale Buildchain aggregate contexts while preserving all other required checks"
+        default: false
+        required: false
+        type: boolean
+      buildchain-ref:
+        description: "Buildchain runtime ref containing the reconciliation command"
+        default: "v2"
+        required: false
+        type: string
+
+permissions:
+  actions: read
+  checks: read
+  contents: read
+  pull-requests: read
+
+jobs:
+  reconcile:
+    name: Reconcile required build aggregate
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ secrets['governance-token'] || secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+    steps:
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: kungfu-systems/buildchain
+          ref: ${{ inputs.buildchain-ref }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Reconcile release governance
+        shell: bash
+        env:
+          BUILDCHAIN_APPLY: ${{ inputs.apply }}
+          BUILDCHAIN_BRANCH: ${{ inputs.branch }}
+          BUILDCHAIN_CANDIDATE_SHA: ${{ inputs.candidate-sha }}
+        run: |
+          set -euo pipefail
+          args=(
+            reconcile
+            --repository "${GITHUB_REPOSITORY}"
+            --branch "${BUILDCHAIN_BRANCH}"
+            --candidate-sha "${BUILDCHAIN_CANDIDATE_SHA}"
+            --json
+          )
+          if [[ "${BUILDCHAIN_APPLY}" = "true" ]]; then
+            args+=(--apply)
+          fi
+          node .buildchain/runtime/scripts/reconcile-release-governance.mjs "${args[@]}" |
+            tee .buildchain-release-governance-reconciliation.json
+
+      - name: Upload reconciliation evidence
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-release-governance-${{ inputs.candidate-sha }}
+          path: .buildchain-release-governance-reconciliation.json
+          if-no-files-found: error

@@ -278,6 +278,13 @@
       "source": "packages/core/controller-evidence.js"
     },
     {
+      "id": "public-router-required-check-reconciliation",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "The public channel router emits a stable top-level build aggregate, while an idempotent reconciliation command derives the exact successful context from an already-tested pull request SHA and replaces only stale Buildchain-owned required checks.",
+      "source": ".github/workflows/release-governance-reconcile.yml"
+    },
+    {
       "id": "release-propagation-consumer-ready-commit",
       "impact": "patch",
       "class": "release-propagation",

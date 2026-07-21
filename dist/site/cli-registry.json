@@ -798,6 +798,18 @@
       "maturity": "stable"
     },
     {
+      "id": "release-governance",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain release-governance reconcile --repository <owner/repo>",
+      "purpose": "Reconcile a managed branch's Buildchain aggregate check to an already-tested pull request SHA.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
       "id": "release-line-open",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain release line open --major <n> --minor <n> [--source-ref <ref>]",

@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import {
   BUILDCHAIN_CONTROLLER_EVIDENCE_CONTRACT,
   BUILDCHAIN_CONTROLLER_REGISTRY_CONTRACT,
@@ -21,6 +24,7 @@ import {
 const SOURCE_SHA = "a".repeat(40);
 const RUNTIME_SHA = "b".repeat(40);
 const CONTRACT_DIGEST = `sha256:${"c".repeat(64)}`;
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 function registry() {
   return createControllerRegistry({
@@ -232,6 +236,21 @@ test("release propagation plans admit optional consumer stages recorded as skipp
     validateControllerReceipt(receipt, { plan: expectedPlan }).qualifying,
     true,
   );
+});
+
+test("release propagation workflow emits only stages declared by its controller descriptor", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github", "workflows", "release-propagation.yml"),
+    "utf8",
+  );
+  const stagesBlock = workflow.match(
+    /BUILDCHAIN_CONTROLLER_STAGES_JSON:\s*>-\s*\n([\s\S]*?)\n\s+BUILDCHAIN_CONTROLLER_EVIDENCE_/,
+  );
+  assert.ok(stagesBlock, "release propagation workflow must declare controller receipt stages");
+  const emitted = [...stagesBlock[1].matchAll(/\{"id":"([^"]+)"/g)].map((match) => match[1]);
+  const declared = descriptor("release-propagation").expected.stages.map((stage) => stage.id);
+
+  assert.deepEqual(emitted, declared);
 });
 
 test("source, runtime, and plan mismatches invalidate receipts", () => {

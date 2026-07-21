@@ -9,6 +9,7 @@ import { npmPublishDryRun } from "../scripts/npm-publish-dry-run.mjs";
 import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
 import { verifyInfraContractEvidenceBundle } from "../scripts/infra-contract-core.mjs";
 import { runReleasePropagationCli } from "../scripts/release-propagation.mjs";
+import { runReleaseGovernanceCli } from "../scripts/reconcile-release-governance.mjs";
 import { runPublicationArtifactCli } from "../scripts/publication-artifact.mjs";
 import { runPublicationPackageCli } from "../scripts/publication-package.mjs";
 import { validateBuildchainConfig } from "../packages/core/buildchain-config.js";
@@ -133,6 +134,9 @@ function usage() {
                                       [--tags <comma-list>] [--json]
   buildchain release line open --major <n> --minor <n> [--source-ref <ref>]
                                [--initial-version <version>] [--write] [--json]
+  buildchain release-governance reconcile --repository <owner/repo>
+                               --branch <dev|alpha|release/vN/vN.N>
+                               --candidate-sha <sha> [--apply] [--json]
   buildchain release <inspect|recover|finalize|abort> ...
   buildchain transaction inspect ...
   buildchain collect github-release --tag <tag> [--repository <owner/repo>]
@@ -2066,6 +2070,11 @@ async function main(argv = process.argv.slice(2)) {
 
   if (command === "release-propagation") {
     runReleasePropagationCli(args);
+    return;
+  }
+
+  if (command === "release-governance") {
+    await runReleaseGovernanceCli(args);
     return;
   }
 
