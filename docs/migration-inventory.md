@@ -46,7 +46,7 @@ do not duplicate alpha and stable jobs or call
 `.release-candidate-promote.yml` directly.
 
 Buildchain also keeps the workflow-file layout transition declarative in
-`.buildchain/promotion-shell-routing.json`. Stable `v2.14.12` contains the hidden
+`.buildchain/promotion-shell-routing.json`. Stable `v2.14.13` contains the hidden
 advanced workflow, so the stable lane is pinned to that implementation's
 immutable release SHA and forwards the full internal identity surface. This is
 provider-owned compatibility state; consumers still keep the same single public

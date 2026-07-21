@@ -9,7 +9,7 @@
   },
   "stable": {
     "logicalRef": "v2",
-    "callRef": "10e8567e32a2a92746808cf087359d72c754d1bd",
+    "callRef": "725592ae025003071b8d33fdb49e0157842fe76c",
     "workflowPath": ".github/workflows/.release-candidate-promote.yml",
     "forwardInternalInputs": true
   }

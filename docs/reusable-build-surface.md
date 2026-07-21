@@ -754,7 +754,7 @@ promotion starts:
   `vN`, and `buildchain-stable-contract-lock-path`.
 
 The generated router also owns the stable-shell layout transition through
-`.buildchain/promotion-shell-routing.json`. Stable `v2.14.12` contains the hidden
+`.buildchain/promotion-shell-routing.json`. Stable `v2.14.13` contains the hidden
 advanced workflow, so the stable lane calls that workflow at the exact immutable
 SHA behind the released `v2` state and forwards the complete internal promotion
 identity surface. The logical shell identity remains `vN`, and the router
