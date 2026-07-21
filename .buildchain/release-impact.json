@@ -264,6 +264,13 @@
       "source": "scripts/web-surface-core.mjs"
     },
     {
+      "id": "web-surface-cloudfront-stale-etag-retry",
+      "impact": "patch",
+      "class": "web-surface",
+      "rationale": "Buildchain-managed directory-index attachment re-reads CloudFront distribution state and retries bounded optimistic-lock failures while preserving immediate failure for conflicting functions and non-ETag AWS errors.",
+      "source": "scripts/web-surface-cloudfront-rewrite.mjs"
+    },
+    {
       "id": "stable-canary-runtime-binding",
       "impact": "patch",
       "class": "release-governance",
