@@ -152,45 +152,39 @@ test("alpha-only advanced workflow changes are isolated from the stable shell re
   const generated = generateChannelPromotionWorkflow(fixture, { major: 2, shellRouting });
 
   assert.match(generated, /\.release-candidate-promote\.yml@v2-alpha/);
-  assert.match(generated, /release-candidate-promote\.yml@c95f9fc36b0ac8fb4ff6400189850c4ae683f3ea/);
+  assert.match(generated, /\.release-candidate-promote\.yml@6fb6f1c3b806309ca02baa2a9d31068bc037899d/);
   assert.doesNotMatch(generated, /\.release-candidate-promote\.yml@v2(?:\n|$)/);
   assert.notEqual(fixture, advanced);
   assert.doesNotMatch(generated, /Advanced Alpha Fixture/);
 });
 
-test("stable bootstrap calls the existing public workflow at the immutable v2 SHA", () => {
+test("stable route calls the hidden advanced workflow at the immutable v2.14.8 SHA", () => {
   const advanced = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
   const generated = generateChannelPromotionWorkflow(advanced, { major: 2, shellRouting });
 
   assert.deepEqual(shellRouting.stable, {
     logicalRef: "v2",
-    callRef: "c95f9fc36b0ac8fb4ff6400189850c4ae683f3ea",
-    workflowPath: ".github/workflows/release-candidate-promote.yml",
-    forwardInternalInputs: false,
-    unsupportedInputs: [
-      "release-passport-invariant-passport-jsons",
-      "release-passport-invariant-passport-command",
-    ],
+    callRef: "6fb6f1c3b806309ca02baa2a9d31068bc037899d",
+    workflowPath: ".github/workflows/.release-candidate-promote.yml",
+    forwardInternalInputs: true,
+    unsupportedInputs: [],
   });
   assert.match(generated, /STABLE_SHELL_REF: v2/);
-  assert.match(generated, /STABLE_SHELL_CALL_REF: c95f9fc36b0ac8fb4ff6400189850c4ae683f3ea/);
-  assert.match(generated, /STABLE_SHELL_WORKFLOW_PATH: \.github\/workflows\/release-candidate-promote\.yml/);
+  assert.match(generated, /STABLE_SHELL_CALL_REF: 6fb6f1c3b806309ca02baa2a9d31068bc037899d/);
+  assert.match(generated, /STABLE_SHELL_WORKFLOW_PATH: \.github\/workflows\/\.release-candidate-promote\.yml/);
   assert.match(generated, /BUILDCHAIN_ROUTER_WORKFLOW_SHA: \$\{\{ job\.workflow_sha \}\}/);
   assert.match(generated, /ref: \$\{\{ steps\.router\.outputs\.sha \}\}/);
   assert.match(generated, /ref: \$\{\{ steps\.identities\.outputs\.shell-sha \}\}/);
   assert.match(generated, /ref: \$\{\{ steps\.identities\.outputs\.runtime-sha \}\}/);
 });
 
-test("stable bootstrap only forwards inputs supported by the pinned legacy wrapper", () => {
+test("stable route forwards the complete advanced workflow input surface", () => {
   const advanced = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
   const generated = generateChannelPromotionWorkflow(advanced, { major: 2, shellRouting });
   const stableBlock = generated.slice(generated.indexOf("  stable:\n"));
 
-  for (const name of workflowFields(advanced, "inputs").filter((input) => input.startsWith("promotion-"))) {
-    assert.doesNotMatch(stableBlock, new RegExp(`^      ${name}:`, "m"));
-  }
-  for (const name of shellRouting.stable.unsupportedInputs) {
-    assert.doesNotMatch(stableBlock, new RegExp(`^      ${name}:`, "m"));
+  for (const name of workflowFields(advanced, "inputs")) {
+    assert.match(stableBlock, new RegExp(`^      ${name}:`, "m"));
   }
   assert.match(stableBlock, /^      buildchain-ref:/m);
   assert.match(stableBlock, /^      buildchain-contract-lock-path:/m);

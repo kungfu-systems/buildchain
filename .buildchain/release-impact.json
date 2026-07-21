@@ -29,7 +29,7 @@
       "id": "promotion-shell-layout-bootstrap",
       "impact": "patch",
       "class": "workflow-contract",
-      "rationale": "The generated router reads a provider-owned shell-layout declaration and pins a legacy stable public workflow to its immutable v2 SHA until the stable tag contains the hidden advanced workflow, preventing cross-repository workflow parsing failures without changing consumer declarations.",
+      "rationale": "The generated router now pins the stable lane to the hidden advanced workflow shipped by v2.14.8, forwards the complete immutable promotion identity surface, and removes the legacy public-wrapper compatibility boundary without changing consumer declarations.",
       "source": ".buildchain/promotion-shell-routing.json"
     },
     {
