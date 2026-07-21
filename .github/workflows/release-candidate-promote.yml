@@ -519,7 +519,7 @@ jobs:
           ALPHA_SHELL_REF: v2-alpha
           ALPHA_SHELL_CALL_REF: v2-alpha
           STABLE_SHELL_REF: v2
-          STABLE_SHELL_CALL_REF: c95f9fc36b0ac8fb4ff6400189850c4ae683f3ea
+          STABLE_SHELL_CALL_REF: 6fb6f1c3b806309ca02baa2a9d31068bc037899d
         run: |
           set -euo pipefail
           if [[ "${CHANNEL}" = "alpha" ]]; then
@@ -591,7 +591,7 @@ jobs:
         env:
           CHANNEL: ${{ steps.route.outputs.channel }}
           ALPHA_SHELL_WORKFLOW_PATH: .github/workflows/.release-candidate-promote.yml
-          STABLE_SHELL_WORKFLOW_PATH: .github/workflows/release-candidate-promote.yml
+          STABLE_SHELL_WORKFLOW_PATH: .github/workflows/.release-candidate-promote.yml
           ROUTER_SHA: ${{ steps.router.outputs.sha }}
           SHELL_SHA: ${{ steps.identities.outputs.shell-sha }}
           RUNTIME_SHA: ${{ steps.identities.outputs.runtime-sha }}
@@ -697,7 +697,7 @@ jobs:
     name: Promote with stable workflow shell
     needs: resolve-promotion
     if: ${{ needs.resolve-promotion.outputs.channel == 'stable' }}
-    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@c95f9fc36b0ac8fb4ff6400189850c4ae683f3ea
+    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@6fb6f1c3b806309ca02baa2a9d31068bc037899d
     permissions:
       actions: read
       checks: write
@@ -707,6 +707,17 @@ jobs:
     with:
       buildchain-repository: ${{ inputs.buildchain-repository }}
       buildchain-ref: ${{ needs.resolve-promotion.outputs.runtime-sha }}
+      promotion-router-ref: ${{ needs.resolve-promotion.outputs.router-ref }}
+      promotion-router-sha: ${{ needs.resolve-promotion.outputs.router-sha }}
+      promotion-shell-ref: ${{ needs.resolve-promotion.outputs.shell-ref }}
+      promotion-shell-sha: ${{ needs.resolve-promotion.outputs.shell-sha }}
+      promotion-runtime-ref: ${{ needs.resolve-promotion.outputs.runtime-ref }}
+      promotion-runtime-sha: ${{ needs.resolve-promotion.outputs.runtime-sha }}
+      promotion-contract-lock-path: ${{ needs.resolve-promotion.outputs.contract-lock-path }}
+      promotion-contract-lock-digest: ${{ needs.resolve-promotion.outputs.contract-lock-digest }}
+      promotion-publication-channel: ${{ needs.resolve-promotion.outputs.publication-channel }}
+      promotion-target-ref: ${{ needs.resolve-promotion.outputs.target-ref }}
+      promotion-override-used: ${{ needs.resolve-promotion.outputs.override-used == 'true' }}
       buildchain-contract-lock-path: ${{ needs.resolve-promotion.outputs.contract-lock-path }}
       buildchain-contract-compatibility-policy: ${{ inputs.buildchain-contract-compatibility-policy }}
       buildchain-contract-drift-issue-mode: ${{ inputs.buildchain-contract-drift-issue-mode }}
@@ -745,6 +756,8 @@ jobs:
       release-passport-kfd-3-prebuild-witness-jsons: ${{ inputs.release-passport-kfd-3-prebuild-witness-jsons }}
       release-passport-kfd-3-artifact-witness-jsons: ${{ inputs.release-passport-kfd-3-artifact-witness-jsons }}
       release-passport-kfd-3-artifact-verify-command: ${{ inputs.release-passport-kfd-3-artifact-verify-command }}
+      release-passport-invariant-passport-jsons: ${{ inputs.release-passport-invariant-passport-jsons }}
+      release-passport-invariant-passport-command: ${{ inputs.release-passport-invariant-passport-command }}
       release-passport-buildchain-self-kfd: ${{ inputs.release-passport-buildchain-self-kfd }}
       release-passport-platform-manifest-paths: ${{ inputs.release-passport-platform-manifest-paths }}
       required-artifact-count: ${{ inputs.required-artifact-count }}
