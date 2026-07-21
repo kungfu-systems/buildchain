@@ -36,7 +36,7 @@
       "title": "Release Passport protocol",
       "path": "docs/release-passport.md",
       "plane": "verify",
-      "digest": "sha256:2dec5e7cd0050815d17c30dbbfd2f5c3c987f55a4558514118538d81a9c562b0",
+      "digest": "sha256:f10d2f0f9cc694976b2a1d2a61195ed155c1bc24c964de1551475882e8197c92",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",
@@ -246,7 +246,7 @@
       "title": "CLI and npm package",
       "path": "docs/cli.md",
       "plane": "use",
-      "digest": "sha256:733a43df58e6fa643ef529d8736fbdbea053b5b58e5fbe445b595ea1e25861f6",
+      "digest": "sha256:758625143a51d0fe66871220c52273ceaf5c7a47fc1a99bda4608e3ad587ae81",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
