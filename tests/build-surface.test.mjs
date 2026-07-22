@@ -1941,8 +1941,12 @@ test("binary evidence and product publication are isolated by the sealed asset w
   assert.match(workflow, /BUILDCHAIN_CONTROLLER_ID: binary-distribution/);
   assert.match(workflow, /buildchain-controller-binary-distribution/);
   assert.match(workflow, /controller-receipt-qualifying != 'true'/);
-  assert.match(publicPublication, /workflow_run:/);
-  assert.match(publicPublication, /workflows: \["Binary Distribution"\]/);
+  assert.match(workflow, /name: Dispatch sealed binary asset publication/);
+  assert.match(workflow, /needs: passport/);
+  assert.match(workflow, /name: Dispatch exact evidence run to Binary Release Assets/);
+  assert.match(workflow, /gh workflow run binary-release-assets\.yml/);
+  assert.match(workflow, /-f evidence-run-id="\$\{GITHUB_RUN_ID\}"/);
+  assert.doesNotMatch(publicPublication, /workflow_run:/);
   assert.match(publicPublication, /Binary Distribution source \$source_sha does not match \$release_tag/);
   assert.match(publicPublication, /auto-admission: true/);
   assert.match(publication, /auto-admission-kind: binary-release-assets/);

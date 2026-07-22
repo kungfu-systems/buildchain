@@ -1,9 +1,6 @@
 name: Binary Release Assets
 
 on:
-  workflow_run:
-    workflows: ["Binary Distribution"]
-    types: [completed]
   workflow_dispatch:
     inputs:
       buildchain-ref:
@@ -38,7 +35,6 @@ permissions:
 jobs:
   resolve:
     name: Resolve exact binary publication transaction
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && (github.event.workflow_run.event == 'workflow_dispatch' || github.event.workflow_run.event == 'push')) }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -54,25 +50,15 @@ jobs:
         id: transaction
         env:
           GH_TOKEN: ${{ github.token }}
-          EVENT_NAME: ${{ github.event_name }}
-          AUTO_RUN_ID: ${{ github.event.workflow_run.id }}
-          AUTO_RELEASE_TAG: ${{ github.event.workflow_run.head_branch }}
-          AUTO_SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
           INPUT_BUILDCHAIN_REF: ${{ inputs.buildchain-ref }}
           INPUT_RUN_ID: ${{ inputs.evidence-run-id }}
           INPUT_RELEASE_TAG: ${{ inputs.release-tag }}
         shell: bash
         run: |
           set -euo pipefail
-          if [[ "$EVENT_NAME" == "workflow_run" ]]; then
-            run_id="$AUTO_RUN_ID"
-            release_tag="$AUTO_RELEASE_TAG"
-            source_sha="$AUTO_SOURCE_SHA"
-          else
-            run_id="$INPUT_RUN_ID"
-            release_tag="$INPUT_RELEASE_TAG"
-            source_sha="$(gh api "repos/${{ github.repository }}/commits/${release_tag}" --jq .sha)"
-          fi
+          run_id="$INPUT_RUN_ID"
+          release_tag="$INPUT_RELEASE_TAG"
+          source_sha="$(gh api "repos/${{ github.repository }}/commits/${release_tag}" --jq .sha)"
           if [[ ! "$run_id" =~ ^[0-9]+$ ]]; then
             echo "::error::binary release publication requires an exact evidence run id"
             exit 1

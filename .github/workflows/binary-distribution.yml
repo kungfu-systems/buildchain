@@ -347,3 +347,26 @@ jobs:
           name: buildchain-release-passport
           path: .buildchain/release-passport/*
           if-no-files-found: error
+
+  dispatch-publication:
+    name: Dispatch sealed binary asset publication
+    needs: passport
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+    steps:
+      - name: Dispatch exact evidence run to Binary Release Assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh workflow run binary-release-assets.yml \
+            --repo "${GITHUB_REPOSITORY}" \
+            --ref "${RELEASE_TAG}" \
+            -f buildchain-ref="${GITHUB_SHA}" \
+            -f evidence-run-id="${GITHUB_RUN_ID}" \
+            -f release-tag="${RELEASE_TAG}" \
+            -f publication-used-nonces-json='[]'
