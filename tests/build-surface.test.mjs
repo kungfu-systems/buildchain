@@ -1902,6 +1902,7 @@ test("binary evidence and product publication are isolated by the sealed asset w
     "utf8",
   );
   assert.match(workflow, /Fetch durable release-state passport/);
+  assert.match(workflow, /name: Write checksums[\s\S]*?! -name checksums\.txt/);
   assert.match(workflow, /refs\/heads\/\$\{ref\}:refs\/remotes\/origin\/\$\{ref\}/);
   assert.match(workflow, /authoritative-release-state-passport\.json/);
   assert.match(workflow, /authoritative-release-state-impact\.json/);
@@ -1930,6 +1931,9 @@ test("binary evidence and product publication are isolated by the sealed asset w
   assert.match(publication, /needs: publication-authority/);
   assert.match(publication, /environment: buildchain-release-assets/);
   assert.match(publication, /scripts\/ensure-github-release\.mjs/);
+  assert.match(publication, /name: Write public binary checksums/);
+  assert.match(publication, /! -name checksums\.txt/);
+  assert.match(publication, /dist\/binary\/\*/);
   assert.match(publication, /--repository "\$\{\{ github\.repository \}\}"/);
   assert.match(publication, /--tag "\$RELEASE_TAG"/);
   assert.match(publication, /gh release upload "\$RELEASE_TAG"/);
