@@ -214,6 +214,10 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "kfd-agent-hub": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "lifecycle-timeout-minutes": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -374,7 +378,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:0dd7ebe7b7543ca4f295e0634ed1434bb4571d2ffb2f4b6ab25794eb2ee5c431"
+      "digest": "sha256:b3e101ac0b0f75aebff59b2129e4eff512c38d4d0a34a0a3785e8ea8f998846a"
     },
     {
       "schemaVersion": 1,
@@ -526,6 +530,10 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "kfd-agent-hub": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "lifecycle-timeout-minutes": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -672,7 +680,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:2e113607af3cb0a17b4da64b8758652a4bee4a162656ce7256a8e06de3d4cf2f"
+      "digest": "sha256:5ca752570c4180746f09df3fdf5c17e7ce90b04ed06fff362d2a195048024dda"
     },
     {
       "schemaVersion": 1,
@@ -1887,5 +1895,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:dcc7a1c660fa1544357156327b5ca3ab15eaec894393ba62493aed755373d3a8"
+  "digest": "sha256:4299e55749fb2cb292678639e45f2bb123e803e594405f5fdbbc2e1b74584e40"
 }

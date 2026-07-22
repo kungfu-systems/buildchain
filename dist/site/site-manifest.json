@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:fa818a541ee2d70a0cc08caec85bf4c1eb20ff5118be0cc2149062fed50f4620"
+      "digest": "sha256:7f007a9d295d597dfc5b1447629ab0d6bf2b3fa3d625b02d27abf7493d73bb40"
     },
     {
       "id": "install",
@@ -206,6 +206,14 @@
       "plane": "verify",
       "exists": true,
       "digest": "sha256:ab15de33a1a9e292b6da74c00b8b96b7c46330d0553a454d1de4c24c672fc025"
+    },
+    {
+      "id": "kfd-agent-hub",
+      "title": "KFD Agent Hub Builder flow",
+      "path": "docs/kfd-agent-hub.md",
+      "plane": "use",
+      "exists": true,
+      "digest": "sha256:7528f8a11c7fe67b350c0dd380b77d724c2d9e0001b4427949ee1c6012735d49"
     },
     {
       "id": "lifecycle-protocol",

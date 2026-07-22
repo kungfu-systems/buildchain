@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "435ae12e8e06e738c18c136e239aa9fb6e62b63f6e10871350ade1a5ab954853",
+    "sha256": "8338aecb7c1bb26e6dd8cf4fbe9ead7af2cca6711fbe91da58d2871af3aa0043",
     "summary": {
-      "cliCommandCount": 84,
+      "cliCommandCount": 85,
       "workflowCount": 51,
       "actionCount": 4,
-      "sitePageCount": 51,
-      "docCommandRefCount": 258,
+      "sitePageCount": 52,
+      "docCommandRefCount": 264,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -228,13 +228,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "435ae12e8e06e738c18c136e239aa9fb6e62b63f6e10871350ade1a5ab954853",
+      "sha256": "8338aecb7c1bb26e6dd8cf4fbe9ead7af2cca6711fbe91da58d2871af3aa0043",
       "summary": {
-        "cliCommandCount": 84,
+        "cliCommandCount": 85,
         "workflowCount": 51,
         "actionCount": 4,
-        "sitePageCount": 51,
-        "docCommandRefCount": 258,
+        "sitePageCount": 52,
+        "docCommandRefCount": 264,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -410,6 +410,18 @@
           "kind": "documentation",
           "sourcePath": "docs/install.md",
           "evidencePath": "docs/install.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
+        },
+        {
+          "id": "doc:docs/kfd-agent-hub.md",
+          "name": "KFD Agent Hub Builder flow",
+          "kind": "documentation",
+          "sourcePath": "docs/kfd-agent-hub.md",
+          "evidencePath": "docs/kfd-agent-hub.md",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
@@ -1137,6 +1149,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./kfd"
+        },
+        {
+          "id": "export:./kfd-agent-hub",
+          "name": "@kungfu-tech/buildchain/kfd-agent-hub",
+          "kind": "package-export",
+          "sourcePath": "packages/core/kfd-agent-hub.js",
+          "evidencePath": "packages/core/kfd-agent-hub.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./kfd-agent-hub"
         },
         {
           "id": "export:./buildchain-layout",
@@ -2131,6 +2155,18 @@
           "reverseAuditSource": "bin/buildchain.mjs"
         },
         {
+          "id": "cli:kfd-hub",
+          "name": "buildchain kfd hub <init|inspect|test|explain> [--cwd <dir>]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
           "id": "cli:kfd-migrate-layout",
           "name": "buildchain kfd migrate-layout [--cwd <dir>] [--write] [--force] [--json]",
           "kind": "cli-command",
@@ -2637,7 +2673,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 59,
+          "inputCount": 60,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -2668,6 +2704,7 @@
             "expected-artifacts-json",
             "gate-profile-aggregate-json",
             "install-command",
+            "kfd-agent-hub",
             "lifecycle-timeout-minutes",
             "linux-container-image",
             "linux-container-preset",
@@ -3244,7 +3281,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 62,
+          "inputCount": 63,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -3278,6 +3315,7 @@
             "expected-artifacts-json",
             "gate-profile-aggregate-json",
             "install-command",
+            "kfd-agent-hub",
             "lifecycle-timeout-minutes",
             "linux-container-image",
             "linux-container-preset",
@@ -4498,6 +4536,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:kfd-agent-hub",
+          "name": "site-page:manual:kfd-agent-hub",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:kfd-support",
           "name": "site-page:manual:kfd-support",
           "kind": "site-page",
@@ -4913,6 +4963,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 312
+    "publicSurfaceCount": 316
   }
 }

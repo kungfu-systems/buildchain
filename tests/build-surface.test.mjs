@@ -202,6 +202,11 @@ test("reusable build workflow exposes the required surface contract", () => {
     "utf8",
   );
   assert.match(workflow, /workflow_call:/);
+  assert.match(workflow, /kfd-agent-hub:\n\s+description: "Agent Hub conformance mode: off or auto/);
+  assert.equal((workflow.match(/name: Run KFD Agent Hub conformance/g) || []).length, 2);
+  assert.equal((workflow.match(/name: Upload KFD Agent Hub evidence/g) || []).length, 2);
+  assert.match(workflow, /buildchain\.mjs kfd hub test/);
+  assert.match(workflow, /artifact-name \}\}-kfd-agent-hub-\$\{\{ matrix\.platform\.id \}\}/);
   assert.match(workflow, /name: Validate consumer package manager contract/);
   assert.match(
     workflow,

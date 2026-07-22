@@ -66,6 +66,7 @@
         "expected-artifacts-json",
         "gate-profile-aggregate-json",
         "install-command",
+        "kfd-agent-hub",
         "lifecycle-timeout-minutes",
         "linux-container-image",
         "linux-container-preset",
@@ -97,7 +98,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 59,
+      "inputCount": 60,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -836,6 +837,7 @@
         "expected-artifacts-json",
         "gate-profile-aggregate-json",
         "install-command",
+        "kfd-agent-hub",
         "lifecycle-timeout-minutes",
         "linux-container-image",
         "linux-container-preset",
@@ -867,7 +869,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 62,
+      "inputCount": 63,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",

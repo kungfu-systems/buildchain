@@ -146,6 +146,11 @@ on:
         default: ""
         type: string
         required: false
+      kfd-agent-hub:
+        description: "Agent Hub conformance mode: off or auto. Auto reads .buildchain/kfd/agent-hub.json and runs the fixed KFD suite."
+        default: "off"
+        type: string
+        required: false
       lifecycle-timeout-minutes:
         description: "Maximum minutes for the build matrix job and fallback timeout for each lifecycle stage"
         default: 120
@@ -621,6 +626,7 @@ jobs:
       install-command: ${{ inputs.install-command }}
       build-command: ${{ inputs.build-command }}
       verify-command: ${{ inputs.verify-command }}
+      kfd-agent-hub: ${{ inputs.kfd-agent-hub }}
       lifecycle-timeout-minutes: ${{ inputs.lifecycle-timeout-minutes }}
       require-install: ${{ inputs.require-install }}
       require-build: ${{ inputs.require-build }}
