@@ -398,6 +398,8 @@ cache_control_immutable = "public,max-age=31536000,immutable"
 `cache_control_mutable` is then applied to HTML, JSON, XML, generated directory
 index aliases, and the deployment manifest. `cache_control_immutable` applies
 to append-only publication roots discovered through the archive policy below.
+Mutable metadata updates exclude those append-only roots, so HTML or JSON inside
+an immutable version archive keeps the immutable class.
 The deploy plan, surface binding, apply operations, and deployment manifest all
 record the effective values. Existing consumers that omit these fields retain
 their prior upload behavior.

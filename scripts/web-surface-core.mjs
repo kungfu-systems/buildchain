@@ -290,9 +290,9 @@ function syncStaticArtifactArgs({ artifactRoot, bucket, objectPrefix, deleteExcl
   return args;
 }
 
-function mutableCacheControlArgs({ artifactRoot, bucket, objectPrefix, cacheControl = "" }) {
+function mutableCacheControlArgs({ artifactRoot, bucket, objectPrefix, cacheControl = "", excludePatterns = [] }) {
   if (!cacheControl) return [];
-  return [
+  const args = [
     "s3",
     "cp",
     artifactRoot,
@@ -306,9 +306,12 @@ function mutableCacheControlArgs({ artifactRoot, bucket, objectPrefix, cacheCont
     "*.json",
     "--include",
     "*.xml",
-    "--cache-control",
-    cacheControl,
   ];
+  for (const pattern of excludePatterns) {
+    args.push("--exclude", pattern);
+  }
+  args.push("--cache-control", cacheControl);
+  return args;
 }
 
 const PUBLICATION_ARCHIVE_POLICY_CONTRACT = "kungfu-buildchain-publication-archive-policy";
@@ -2058,9 +2061,11 @@ function deployBindingOperations({ artifactRoot, deployConfig, manifest, binding
             bucket,
             objectPrefix: binding.objectPrefix,
             cacheControl: binding.cacheControl.mutable,
+            excludePatterns: binding.mutableDeleteExcludes || [],
           }),
           cacheControl: binding.cacheControl.mutable,
           patterns: ["*.html", "*.json", "*.xml"],
+          excludes: binding.mutableDeleteExcludes || [],
         }]
       : []),
     ...directoryIndexAliasOperations({ surfaceArtifactRoot, bucket, binding }),
@@ -2143,6 +2148,7 @@ function planAdapterSteps(adapter, deployConfig, manifest) {
             surface: binding.surface,
             cacheControl: binding.cacheControl.mutable,
             patterns: ["*.html", "*.json", "*.xml"],
+            excludes: binding.mutableDeleteExcludes || [],
           }]
         : []),
       {

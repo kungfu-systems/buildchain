@@ -604,7 +604,12 @@ test("web-surface deploy preserves publication archives while deleting mutable p
       configPath,
       fs.readFileSync(configPath, "utf8").replace(
         '[deploy.staging]\nadapter = "aws-s3-cloudfront"',
-        '[deploy.staging]\nadapter = "aws-s3-cloudfront"\ncache_control_immutable = "public,max-age=31536000,immutable"',
+        [
+          '[deploy.staging]',
+          'adapter = "aws-s3-cloudfront"',
+          'cache_control_mutable = "public,max-age=300,must-revalidate"',
+          'cache_control_immutable = "public,max-age=31536000,immutable"',
+        ].join("\n"),
       ),
     );
     const archiveRoot = path.join(fixture, "dist", "buildchain", "archive", "paper", "v1.0.0");
@@ -676,6 +681,13 @@ test("web-surface deploy preserves publication archives while deleting mutable p
     assert.equal(immutableSync.args[3], "s3://libkungfu-dev-staging/staging/buildchain/archive");
     const mutableSync = buildchainCalls.find((call) => call.action === "sync-static-artifact");
     assert.deepEqual(mutableSync.args.slice(-2), ["--exclude", "archive/*"]);
+    const mutableMetadata = buildchainCalls.find((call) => call.action === "apply-mutable-cache-control");
+    assert.deepEqual(mutableMetadata.args.slice(-4), [
+      "--exclude",
+      "archive/*",
+      "--cache-control",
+      "public,max-age=300,must-revalidate",
+    ]);
     const hubMutableSync = calls.find((call) => call.action === "sync-static-artifact" && call.surface === "hub");
     assert.deepEqual(hubMutableSync.args.slice(-2), ["--exclude", "buildchain/archive/*"]);
     assert.ok(
