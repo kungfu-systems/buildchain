@@ -1923,6 +1923,10 @@ test("binary evidence and product publication are isolated by the sealed asset w
   assert.doesNotMatch(workflow, /scripts\/ensure-github-release\.mjs/);
   assert.doesNotMatch(workflow, /gh release upload/);
   assert.match(publication, /uses: \.\/\.github\/workflows\/\.publication-authority\.yml/);
+  assert.match(
+    publication,
+    /name: Seal binary release asset capability\n    permissions:\n      actions: read\n      contents: read/,
+  );
   assert.match(publication, /needs: publication-authority/);
   assert.match(publication, /environment: buildchain-release-assets/);
   assert.match(publication, /scripts\/ensure-github-release\.mjs/);
