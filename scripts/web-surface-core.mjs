@@ -354,7 +354,7 @@ function publicationImmutablePolicy({ artifactRoot, binding }) {
       throw new Error(`declared immutable publication prefix does not exist in artifact: ${prefix}`);
     }
   }
-  const preservedRoots = [...new Set(declaredPrefixes.map((prefix) => prefix.split("/")[0]))].sort();
+  const preservedRoots = declaredPrefixes;
   const files = preservedRoots
     .flatMap((root) => listFiles(surfaceRoot, root))
     .map((filePath) => ({
