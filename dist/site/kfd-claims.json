@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "8338aecb7c1bb26e6dd8cf4fbe9ead7af2cca6711fbe91da58d2871af3aa0043",
+    "sha256": "985325d77f75673576fff45c81afd458fe46c6f8b71b5784e8359dc31129dc86",
     "summary": {
       "cliCommandCount": 85,
       "workflowCount": 51,
@@ -228,7 +228,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "8338aecb7c1bb26e6dd8cf4fbe9ead7af2cca6711fbe91da58d2871af3aa0043",
+      "sha256": "985325d77f75673576fff45c81afd458fe46c6f8b71b5784e8359dc31129dc86",
       "summary": {
         "cliCommandCount": 85,
         "workflowCount": 51,
@@ -2843,7 +2843,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 72,
+          "inputCount": 73,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -2914,6 +2914,7 @@
             "required-artifact-count",
             "required-status-check",
             "runner-preset",
+            "standalone-binary-distribution",
             "target-ref",
             "target-sha",
             "trusted-publishing"
@@ -3801,7 +3802,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 64,
+          "inputCount": 65,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -3864,6 +3865,7 @@
             "required-artifact-count",
             "required-status-check",
             "runner-preset",
+            "standalone-binary-distribution",
             "target-ref",
             "target-sha",
             "trusted-publishing"

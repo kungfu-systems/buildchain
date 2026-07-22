@@ -1973,6 +1973,26 @@ test("binary evidence and product publication are isolated by the sealed asset w
   assert.doesNotMatch(workflow, /gh release create/);
 });
 
+test("npm-only promotion does not require a standalone binary workflow", () => {
+  const promotion = fs.readFileSync(
+    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
+    "utf8",
+  );
+  const selfPromotion = fs.readFileSync(
+    path.join(root, ".github/workflows/buildchain-ref-promotion.yml"),
+    "utf8",
+  );
+  assert.match(
+    promotion,
+    /standalone-binary-distribution:\n\s+description: "Dispatch binary-distribution\.yml after promotion; enable only when the caller repository provides that workflow"\n\s+default: false/,
+  );
+  assert.match(
+    promotion,
+    /if: \$\{\{ inputs\.standalone-binary-distribution && !inputs\.dry-run && steps\.promote\.outcome == 'success'/,
+  );
+  assert.match(selfPromotion, /standalone-binary-distribution: true/);
+});
+
 test("runtime selection accepts official channels and gates train or SHA overrides", () => {
   assert.deepEqual(
     resolveRuntimeSelection({ requestedRef: "", workflowRef: "kungfu-systems/buildchain/.github/workflows/.build.yml@v2" }),

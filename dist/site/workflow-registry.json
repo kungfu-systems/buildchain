@@ -343,11 +343,12 @@
         "required-artifact-count",
         "required-status-check",
         "runner-preset",
+        "standalone-binary-distribution",
         "target-ref",
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 72,
+      "inputCount": 73,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1522,11 +1523,12 @@
         "required-artifact-count",
         "required-status-check",
         "runner-preset",
+        "standalone-binary-distribution",
         "target-ref",
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 64,
+      "inputCount": 65,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
