@@ -391,7 +391,7 @@ export function createControllerReceipt({ plan, stages = [], evidence = [], reas
     stages: normalizedStages,
     evidence: normalizedEvidence,
     issues,
-    ...(reason ? {
+    ...(status !== "passed" && reason ? {
       reason: {
         code: nonEmptyString(reason.code, "reason.code"),
         summary: nonEmptyString(reason.summary, "reason.summary"),
@@ -414,6 +414,7 @@ export function validateControllerReceipt(receipt, {
   if (receipt.contract !== BUILDCHAIN_CONTROLLER_EVIDENCE_CONTRACT) issues.push(`receipt contract must be ${BUILDCHAIN_CONTROLLER_EVIDENCE_CONTRACT}`);
   if (receipt.kind !== "receipt") issues.push("receipt kind must be receipt");
   if (receipt.digest !== digestDocument(receipt)) issues.push("receipt digest mismatch");
+  if (receipt.status === "passed" && receipt.reason) issues.push("passed controller receipt must not declare a failure reason");
   issues.push(...(receipt.issues || []));
   if (plan) {
     if (receipt.planDigest !== plan.digest) issues.push("receipt plan digest mismatch");
