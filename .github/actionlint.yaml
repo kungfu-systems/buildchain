@@ -21,10 +21,12 @@ config-variables: null
 # are ignored. This is similar to the "-ignore" command line option.
 paths:
   .github/workflows/build.yml:
-    # GitHub.com exposes job.workflow_ref for called-workflow identity. Keep
-    # this exact false-positive scoped until actionlint's context schema ships it.
+    # GitHub.com exposes these job properties for called-workflow identity. Keep
+    # these exact false-positives scoped until actionlint's context schema ships them.
     ignore:
       - 'property "workflow_ref" is not defined in object type'
+      - 'property "workflow_repository" is not defined in object type'
+      - 'property "workflow_sha" is not defined in object type'
   .github/workflows/.build.yml:
     # GitHub.com exposes job.workflow_ref for called-workflow identity. Keep
     # this exact false-positive scoped until actionlint's context schema ships it.
