@@ -6,6 +6,27 @@
   "category": "Buildchain Release Passport",
   "purpose": "A mature product release record for artifacts that users or agents depend on.",
   "executionSubstrate": "GitHub Actions, protected refs, exact tags, GitHub Releases, npm Trusted Publishing, and machine-readable evidence.",
+  "agentSupplyChain": {
+    "layer": "buildchain",
+    "order": 2,
+    "owner": "Buildchain",
+    "input": "KFD-3-discoverable product declarations and an exact source cut",
+    "output": "artifact-bound provenance, checks, and promotion evidence",
+    "statusClass": "proved-now",
+    "publicStatement": "Buildchain proves consistency between product-owned declarations and exact release artifacts, and fails or downgrades when evidence drifts.",
+    "downstream": "KFD-2 purpose-bound assessment and receiver-owned admission",
+    "evidence": [
+      "buildchain.release.json",
+      "artifact-evidence.json",
+      "product-mechanism.json"
+    ],
+    "knownLimits": [
+      "Buildchain does not create product facts or make the receiver's trust decision.",
+      "A passing passport is exact-artifact evidence, not blanket certification or adoption proof."
+    ],
+    "humanRoute": "https://buildchain.libkungfu.dev/",
+    "agentRoute": "https://buildchain.libkungfu.dev/manifest.json"
+  },
   "notA": [
     "a replacement CI/CD platform",
     "a binary-only release tool",
