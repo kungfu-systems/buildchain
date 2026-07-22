@@ -168,7 +168,7 @@ test("stable route calls the hidden advanced workflow at the immutable v2.14.13 
     callRef: "725592ae025003071b8d33fdb49e0157842fe76c",
     workflowPath: ".github/workflows/.release-candidate-promote.yml",
     forwardInternalInputs: true,
-    unsupportedInputs: [],
+    unsupportedInputs: ["standalone-binary-distribution"],
   });
   assert.match(generated, /STABLE_SHELL_REF: v2/);
   assert.match(generated, /STABLE_SHELL_CALL_REF: 725592ae025003071b8d33fdb49e0157842fe76c/);
@@ -180,14 +180,16 @@ test("stable route calls the hidden advanced workflow at the immutable v2.14.13 
   assert.match(generated, /ref: \$\{\{ steps\.identities\.outputs\.runtime-sha \}\}/);
 });
 
-test("stable route forwards the complete advanced workflow input surface", () => {
+test("stable route forwards only inputs supported by its immutable workflow shell", () => {
   const advanced = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
   const generated = generateChannelPromotionWorkflow(advanced, { major: 2, shellRouting });
   const stableBlock = generated.slice(generated.indexOf("  stable:\n"));
 
   for (const name of workflowFields(advanced, "inputs")) {
+    if (shellRouting.stable.unsupportedInputs.includes(name)) continue;
     assert.match(stableBlock, new RegExp(`^      ${name}:`, "m"));
   }
+  assert.doesNotMatch(stableBlock, /^      standalone-binary-distribution:/m);
   assert.match(
     stableBlock,
     /^      promotion-shell-ref: \$\{\{ needs\.resolve-promotion\.outputs\.shell-call-ref \}\}$/m,
