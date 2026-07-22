@@ -745,7 +745,6 @@ jobs:
       github-release: ${{ inputs.github-release }}
       github-release-title: ${{ inputs.github-release-title }}
       github-release-notes: ${{ inputs.github-release-notes }}
-      standalone-binary-distribution: ${{ inputs.standalone-binary-distribution }}
       runner-preset: ${{ inputs.runner-preset }}
       trusted-publishing: ${{ inputs.trusted-publishing }}
       publish-command: ${{ inputs.publish-command }}
