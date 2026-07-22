@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.libkungfu.dev/schemas/kfd-agent-hub-adoption.schema.json",
+  "title": "Buildchain KFD Agent Hub adoption declaration",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "contract",
+    "profile",
+    "adapter",
+    "capabilities"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://buildchain.libkungfu.dev/schemas/kfd-agent-hub-adoption.schema.json"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "contract": {
+      "const": "kungfu-buildchain-kfd-agent-hub-adoption/v1"
+    },
+    "profile": {
+      "type": "object",
+      "required": [
+        "package",
+        "id"
+      ],
+      "properties": {
+        "package": {
+          "const": "@kungfu-tech/kfd"
+        },
+        "id": {
+          "const": "kfd-agent-hub-conformance"
+        }
+      },
+      "additionalProperties": false
+    },
+    "adapter": {
+      "type": "object",
+      "required": [
+        "id",
+        "version",
+        "path"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "build": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "capabilities": {
+      "type": "object",
+      "required": [
+        "operations",
+        "topologies",
+        "hubBindings"
+      ],
+      "properties": {
+        "operations": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "topologies": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "hubBindings": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

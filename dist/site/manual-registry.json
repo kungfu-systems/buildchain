@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:fa818a541ee2d70a0cc08caec85bf4c1eb20ff5118be0cc2149062fed50f4620",
+      "digest": "sha256:7f007a9d295d597dfc5b1447629ab0d6bf2b3fa3d625b02d27abf7493d73bb40",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -79,7 +79,7 @@
       "title": "Release Candidate Passport",
       "path": "docs/release-candidate.md",
       "plane": "verify",
-      "digest": "sha256:2127c22b7b567befd05cba7d50ed0ca229b366072506e06fa09a0962ccfc1db7",
+      "digest": "sha256:15bfe69e1da8c9bf7310c5cd89968d206886a25447f71fdc7cd58db2af0c7608",
       "capabilityGroup": "reusable-build",
       "audience": [
         "release-operator",
@@ -282,6 +282,21 @@
       ],
       "maturity": "stable",
       "order": 300
+    },
+    {
+      "id": "kfd-agent-hub",
+      "title": "KFD Agent Hub Builder flow",
+      "path": "docs/kfd-agent-hub.md",
+      "plane": "use",
+      "digest": "sha256:7528f8a11c7fe67b350c0dd380b77d724c2d9e0001b4427949ee1c6012735d49",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "consumer",
+        "maintainer"
+      ],
+      "maturity": "preview",
+      "order": 305
     },
     {
       "id": "lifecycle-protocol",

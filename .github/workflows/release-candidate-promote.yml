@@ -128,6 +128,11 @@ on:
         default: ""
         type: string
         required: false
+      standalone-binary-distribution:
+        description: "Dispatch binary-distribution.yml after promotion; enable only when the caller repository provides that workflow"
+        default: false
+        type: boolean
+        required: false
       runner-preset:
         description: "Runner preset recorded for audit"
         default: "github-hosted"
@@ -653,6 +658,7 @@ jobs:
       github-release: ${{ inputs.github-release }}
       github-release-title: ${{ inputs.github-release-title }}
       github-release-notes: ${{ inputs.github-release-notes }}
+      standalone-binary-distribution: ${{ inputs.standalone-binary-distribution }}
       runner-preset: ${{ inputs.runner-preset }}
       trusted-publishing: ${{ inputs.trusted-publishing }}
       publish-command: ${{ inputs.publish-command }}
@@ -739,6 +745,7 @@ jobs:
       github-release: ${{ inputs.github-release }}
       github-release-title: ${{ inputs.github-release-title }}
       github-release-notes: ${{ inputs.github-release-notes }}
+      standalone-binary-distribution: ${{ inputs.standalone-binary-distribution }}
       runner-preset: ${{ inputs.runner-preset }}
       trusted-publishing: ${{ inputs.trusted-publishing }}
       publish-command: ${{ inputs.publish-command }}

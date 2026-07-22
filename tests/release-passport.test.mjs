@@ -70,6 +70,69 @@ function invariantPassportFixture(overrides = {}) {
   return passport;
 }
 
+function kfdAgentHubEvidenceFixture() {
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-kfd-agent-hub-evidence/v1",
+    report: { path: "report.json", digest: `sha256:${"a".repeat(64)}` },
+    verification: {
+      path: "verification.json",
+      contract: "kungfu-buildchain-kfd-agent-hub-verification/v1",
+      valid: true,
+    },
+    lock: { path: "adoption-lock.json", root: `sha256:${"b".repeat(64)}` },
+    kfd: {
+      package: { name: "@kungfu-tech/kfd", version: "1.0.0-alpha.41", packageManifestDigest: `sha256:${"c".repeat(64)}`, releaseAnchorDigest: `sha256:${"d".repeat(64)}` },
+      profile: { id: "kfd-agent-hub-conformance", version: "0.1.0-alpha.1", manifestDigest: `sha256:${"e".repeat(64)}` },
+      protocol: { id: "kfd-agent-hub", version: "0.1.0-alpha.1", manifestDigest: `sha256:${"f".repeat(64)}` },
+      suite: { id: "kfd-agent-hub-20", version: "0.1.0-alpha.1", vectorCount: 20, vectorRoot: `sha256:${"1".repeat(64)}` },
+      failureInventory: { root: `sha256:${"2".repeat(64)}`, digest: `sha256:${"3".repeat(64)}` },
+    },
+    scope: {
+      adapterArtifactDigest: `sha256:${"4".repeat(64)}`,
+      invocationBinding: "jsonl-stdio/v1",
+      capabilities: {
+        operations: ["fact-admission"],
+        topologies: ["local-peer"],
+        hubBindings: ["local-file-bundle"],
+      },
+    },
+    qualifying: false,
+    certification: false,
+    claimBoundary: "Exact adapter evidence only; not certification.",
+  };
+}
+
+test("release passport binds and re-verifies exact Agent Hub evidence", async () => {
+  const cwd = tempDir("release-passport-agent-hub");
+  const evidencePath = writeJson(path.join(cwd, "agent-hub-evidence.json"), kfdAgentHubEvidenceFixture());
+  const assetsDir = path.join(cwd, "assets");
+  fs.mkdirSync(assetsDir, { recursive: true });
+  fs.writeFileSync(path.join(assetsDir, "fixture.tar.gz"), "fixture\n");
+  const result = collectGitHubReleasePassport({
+    cwd,
+    tag: "v2.15.0-alpha.1",
+    sourceSha: "a".repeat(40),
+    outputDir: "release-passport",
+    assetsDir,
+    kfdAgentHubEvidenceJson: evidencePath,
+  });
+  assert.equal(result.passport.kfdAgentHub.contract, "kungfu-buildchain-kfd-agent-hub-release-evidence/v1");
+  assert.equal(result.passport.kfdAgentHub.scope.capabilities.hubBindings[0], "local-file-bundle");
+  assert.equal(result.passport.kfdAgentHub.scope.invocationBinding, "jsonl-stdio/v1");
+  assert.equal(result.checkReport.ok, true, JSON.stringify(result.checkReport.issues));
+
+  const passportPath = path.join(cwd, "release-passport", "buildchain.release.json");
+  assert.equal((await verifyReleasePassport({ passportLocation: passportPath })).ok, true);
+  const bundledEvidencePath = path.join(cwd, "release-passport", "kfd-agent-hub-evidence.json");
+  const tampered = JSON.parse(fs.readFileSync(bundledEvidencePath, "utf8"));
+  tampered.scope.capabilities.hubBindings = ["different-binding"];
+  writeJson(bundledEvidencePath, tampered);
+  const tamperedReport = await verifyReleasePassport({ passportLocation: passportPath });
+  assert.equal(tamperedReport.ok, false);
+  assert.ok(tamperedReport.issues.some((entry) => entry.code === "kfdAgentHub.evidenceDigest"));
+});
+
 test("release passport records surface timestamp reproducibility policy", () => {
   const passport = createReleasePassport({
     repository: "kungfu-systems/buildchain",

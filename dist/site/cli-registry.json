@@ -546,6 +546,18 @@
       "maturity": "stable"
     },
     {
+      "id": "kfd-hub",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd hub <init|inspect|test|explain> [--cwd <dir>]",
+      "purpose": "Initialize, inspect, test, and explain one declarative KFD Agent Hub adapter adoption.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
       "id": "kfd-migrate-layout",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain kfd migrate-layout [--cwd <dir>] [--write] [--force] [--json]",
