@@ -1941,6 +1941,14 @@ test("binary evidence and product publication are isolated by the sealed asset w
   assert.match(publication, /gate-aggregate-json:/);
   assert.match(promotion, /Dispatch standalone binary distribution for the exact public tag/);
   assert.match(promotion, /gh workflow run binary-distribution\.yml/);
+  assert.match(
+    promotion,
+    /name: Preflight PR-stage release candidate evidence[\s\S]*?permissions:\n      actions: read\n      contents: read/,
+  );
+  assert.match(
+    promotion,
+    /name: Promote release candidate[\s\S]*?permissions:\n      actions: write\n      checks: write/,
+  );
   assert.match(assembler, /validateControllerReceipt/);
   assert.match(assembler, /buildchain-aarch64-apple-darwin\.tar\.gz/);
   assert.match(assembler, /buildchain-x86_64-unknown-linux-gnu\.tar\.gz/);
