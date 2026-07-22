@@ -202,6 +202,11 @@ test("reusable build workflow exposes the required surface contract", () => {
     "utf8",
   );
   assert.match(workflow, /workflow_call:/);
+  assert.match(workflow, /kfd-agent-hub:\n\s+description: "Agent Hub conformance mode: off or auto/);
+  assert.equal((workflow.match(/name: Run KFD Agent Hub conformance/g) || []).length, 2);
+  assert.equal((workflow.match(/name: Upload KFD Agent Hub evidence/g) || []).length, 2);
+  assert.match(workflow, /buildchain\.mjs kfd hub test/);
+  assert.match(workflow, /artifact-name \}\}-kfd-agent-hub-\$\{\{ matrix\.platform\.id \}\}/);
   assert.match(workflow, /name: Validate consumer package manager contract/);
   assert.match(
     workflow,
@@ -1966,6 +1971,26 @@ test("binary evidence and product publication are isolated by the sealed asset w
   assert.match(assembler, /buildchain-x86_64-unknown-linux-gnu\.tar\.gz/);
   assert.match(assembler, /buildchain-x86_64-pc-windows-msvc\.zip/);
   assert.doesNotMatch(workflow, /gh release create/);
+});
+
+test("npm-only promotion does not require a standalone binary workflow", () => {
+  const promotion = fs.readFileSync(
+    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
+    "utf8",
+  );
+  const selfPromotion = fs.readFileSync(
+    path.join(root, ".github/workflows/buildchain-ref-promotion.yml"),
+    "utf8",
+  );
+  assert.match(
+    promotion,
+    /standalone-binary-distribution:\n\s+description: "Dispatch binary-distribution\.yml after promotion; enable only when the caller repository provides that workflow"\n\s+default: false/,
+  );
+  assert.match(
+    promotion,
+    /if: \$\{\{ inputs\.standalone-binary-distribution && !inputs\.dry-run && steps\.promote\.outcome == 'success'/,
+  );
+  assert.match(selfPromotion, /standalone-binary-distribution: true/);
 });
 
 test("runtime selection accepts official channels and gates train or SHA overrides", () => {

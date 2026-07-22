@@ -121,6 +121,13 @@ For anchored/manual package releases, the public GitHub Release tag defaults to
 `v<publishedVersion>` while the internal transaction exact tag remains recorded
 in the release passport.
 
+Standalone binary publication is a separate consumer capability. The promotion
+wrapper does not assume that an npm-only repository provides
+`.github/workflows/binary-distribution.yml`. Repositories that own that workflow
+opt in with `standalone-binary-distribution: true`; Buildchain's self-promotion
+does so explicitly. Once enabled, a missing or invalid binary workflow remains a
+hard failure rather than being silently skipped.
+
 Products that publish KFD release trust evidence can keep that path declarative
 too. Pass KFD-1 self contract witnesses, KFD-2 public claim files, and KFD-3
 pre-build/artifact evidence into the wrapper:
