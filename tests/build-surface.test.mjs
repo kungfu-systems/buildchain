@@ -2420,7 +2420,10 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
     "utf8",
   );
 
-  assert.match(workflow, /actions: read/);
+  assert.match(
+    workflow,
+    /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml\n    permissions:\n      actions: write/,
+  );
   assert.match(workflow, /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml/);
   assert.match(workflow, /github\.event\.workflow_run\.event == 'push'/);
   assert.match(workflow, /startsWith\(github\.event\.workflow_run\.head_branch, 'alpha\/'\)/);

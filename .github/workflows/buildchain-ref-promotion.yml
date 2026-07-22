@@ -87,7 +87,7 @@ jobs:
     # the first alpha that introduces a new advanced shell path.
     uses: ./.github/workflows/.release-candidate-promote.yml
     permissions:
-      actions: read
+      actions: write
       checks: write
       contents: write
       id-token: write
