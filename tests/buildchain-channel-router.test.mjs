@@ -95,5 +95,15 @@ test("generated channel workflow mirrors the advanced build surface", () => {
   assert.match(current, /uses: \.\/\.github\/workflows\/\.build\.yml/);
   assert.match(current, /buildchain-ref: \$\{\{ needs\.resolve-channel\.outputs\.buildchain-ref \}\}/);
   assert.match(current, /buildchain-contract-lock-path: \$\{\{ needs\.resolve-channel\.outputs\.contract-lock-path \}\}/);
+  assert.match(current, /BUILDCHAIN_ROUTER_WORKFLOW_REPOSITORY: \$\{\{ job\.workflow_repository \}\}/);
+  assert.match(current, /BUILDCHAIN_ROUTER_WORKFLOW_SHA: \$\{\{ job\.workflow_sha \}\}/);
+  assert.match(current, /router-sha: \$\{\{ steps\.router\.outputs\.sha \}\}/);
+  assert.match(current, /ref: \$\{\{ steps\.router\.outputs\.sha \}\}/);
+  assert.match(current, /ref: \$\{\{ needs\.resolve-channel\.outputs\.router-sha \}\}/);
+  assert.doesNotMatch(
+    current,
+    /ref: \$\{\{ steps\.router\.outputs\.ref \}\}\n\s+path: \.buildchain\/router/,
+    "closed pull-request reruns must checkout the immutable workflow SHA, not refs/pull/N/merge",
+  );
   assert.doesNotMatch(current, /uses: .*\$\{\{/);
 });

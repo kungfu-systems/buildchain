@@ -3372,6 +3372,8 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   assert.match(actionlintConfig, /\.github\/workflows\/\.build\.yml:/);
   assert.match(actionlintConfig, /\.github\/workflows\/build\.yml:/);
   assert.match(actionlintConfig, /property "workflow_ref" is not defined in object type/);
+  assert.match(actionlintConfig, /property "workflow_repository" is not defined in object type/);
+  assert.match(actionlintConfig, /property "workflow_sha" is not defined in object type/);
 
   assert.match(promotion, /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.sha \|\| github\.sha \}\}/);
   assert.doesNotMatch(promotion, /buildchain-ref: (?:v\d+-alpha|\$\{\{[^\n]*v\d+-alpha)/);
