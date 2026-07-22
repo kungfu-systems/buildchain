@@ -1976,6 +1976,10 @@ test("binary evidence and product publication are isolated by the sealed asset w
     /name: Promote release candidate[\s\S]*?permissions:\n      actions: write\n      checks: write/,
   );
   assert.match(assembler, /validateControllerReceipt/);
+  assert.match(assembler, /validateControllerPlan/);
+  assert.match(assembler, /oneFile\(controllerRoot, "plan\.json"\)/);
+  assert.match(assembler, /plan: controllerPlan/);
+  assert.doesNotMatch(assembler, /expectedRuntimeSha: runtimeSha/);
   assert.match(assembler, /buildchain-aarch64-apple-darwin\.tar\.gz/);
   assert.match(assembler, /buildchain-x86_64-unknown-linux-gnu\.tar\.gz/);
   assert.match(assembler, /buildchain-x86_64-pc-windows-msvc\.zip/);
