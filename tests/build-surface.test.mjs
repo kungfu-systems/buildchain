@@ -2242,6 +2242,10 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   assert.match(workflow, /uses: \.\/\.github\/workflows\/build\.yml/);
   assert.match(
     workflow,
+    /buildchain-ref: \$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/,
+  );
+  assert.match(
+    workflow,
     /artifact-transfer-mode: \$\{\{ github\.event\.inputs\['artifact-transfer-mode'\] \|\| 'github-artifacts' \}\}/,
   );
   assert.match(workflow, /buildchain-contract-drift-issue-mode: "off"/);
