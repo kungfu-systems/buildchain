@@ -287,10 +287,12 @@ bookkeeping, not a consumer-authored release change.
 Set `github-release: "true"` when the semver promotion should also publish the
 public GitHub Release. After the release transaction reaches `complete` and
 `finalization-needed` is false, the action creates or updates the GitHub Release
-for `public-release-tag`, applies deterministic semver metadata
-(`prerelease=true` and `make_latest=false` for prerelease tags, latest for stable
-tags), and uploads the publish evidence file plus generated release passport
-assets. For anchored/manual package releases, `public-release-tag` is derived
+for `public-release-tag`, applies deterministic metadata from the authoritative
+publication channel (`alpha` is a prerelease and never latest; `release`,
+`stable`, and `major` are stable and latest), and uploads the publish evidence
+file plus generated release passport assets. Tag syntax remains the fallback for
+ordinary callers that do not supply publication intent. For anchored/manual
+package releases, `public-release-tag` is derived
 from the published package version, while `transaction-exact-tag` remains the
 internal Buildchain transaction ref for recovery and audit. If the transaction is
 not complete yet, the action defers GitHub Release publication to the next

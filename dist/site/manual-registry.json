@@ -79,7 +79,7 @@
       "title": "Release Candidate Passport",
       "path": "docs/release-candidate.md",
       "plane": "verify",
-      "digest": "sha256:5528710ec63dbdf86a34e69a7ea86dbb4194d72522951fc67108f5cfc58fdd99",
+      "digest": "sha256:2127c22b7b567befd05cba7d50ed0ca229b366072506e06fa09a0962ccfc1db7",
       "capabilityGroup": "reusable-build",
       "audience": [
         "release-operator",
@@ -191,7 +191,7 @@
       "title": "Site bundle contract",
       "path": "docs/site-bundle-contract.md",
       "plane": "use",
-      "digest": "sha256:d67a874b356fbfbee9a5d5ece7021fb52b2848347dc6a14f5562c98570096916",
+      "digest": "sha256:583661a7886bdca7e8352a5325a105a9df5d134b3896dbda13ad9b637697481f",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "site",
@@ -329,7 +329,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:adb3c5d2eb414ffde6e75032c8f795de0c4ad929baa2d1e5d0f8cd7a9af39f1f",
+      "digest": "sha256:4476d9464d29b4ff3951a362607a11c78b7a3b723247af93ded1b15ff8f0b83e",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",

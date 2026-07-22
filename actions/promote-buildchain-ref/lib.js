@@ -5146,6 +5146,7 @@ async function promoteBuildchainRefs({
         exactTag: latestPublishTransaction.transaction.exact_tag,
         publicReleaseTag: latestPublishTransaction.publicReleaseTag ||
           publicReleaseTagForTransaction(latestPublishTransaction.transaction),
+        channel: latestPublishTransaction.transaction.channel,
         releaseSha: latestPublishTransaction.transaction.release_sha,
         stateRef: latestPublishTransaction.transaction.state_ref,
         stateSha: latestPublishTransaction.durable?.sha,

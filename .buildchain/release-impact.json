@@ -332,6 +332,27 @@
       "class": "release-governance",
       "rationale": "An additive anchored-material preflight falls back to its trusted workflow-shell verifier when a selected stable runtime predates the helper, preserving mixed-channel compatibility without weakening the gate.",
       "source": ".github/workflows/.build.yml"
+    },
+    {
+      "id": "github-release-authoritative-publication-channel",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "GitHub Release prerelease and latest metadata now follows the sealed Buildchain publication channel, so anchored stable versions containing a hyphen remain stable while callers without publication intent retain tag-derived compatibility.",
+      "source": "scripts/ensure-github-release.mjs"
+    },
+    {
+      "id": "site-bundle-managed-badge-boundary",
+      "impact": "patch",
+      "class": "web-surface",
+      "rationale": "The site bundle projects the complete managed README badge block into homepage.lead and keeps homepage.mechanismSummary prose-only, with partial marker blocks rejected instead of exported ambiguously.",
+      "source": "scripts/site-bundle-homepage.mjs"
+    },
+    {
+      "id": "contract-drift-stable-issue-identity",
+      "impact": "patch",
+      "class": "observability-diagnostics",
+      "rationale": "Compatible and breaking contract-drift reports keep one issue identity per consumer, Buildchain ref, and drift class instead of opening a new issue for every compatible contract digest or workflow occurrence.",
+      "source": "packages/core/issue-reporting.js"
     }
   ],
   "classification": "minor",

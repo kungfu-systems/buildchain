@@ -207,6 +207,7 @@ export async function publishGitHubReleaseEvidence({
   apiUrl,
   tag,
   target,
+  channel = "",
   title = "",
   notes = "",
   publishEvidencePath = "",
@@ -231,6 +232,7 @@ export async function publishGitHubReleaseEvidence({
     title: title || tag,
     notes: notes || `Buildchain release passport assets for ${tag}.`,
     target,
+    channel,
   });
   const assetResults = [];
   for (const assetPath of assets) {
@@ -446,6 +448,7 @@ async function main() {
         apiUrl: process.env.GITHUB_API_URL || "https://api.github.com",
         tag: result.publishTransaction?.publicReleaseTag || result.publishTransaction?.exactTag || "",
         target: result.publishTransaction?.releaseSha || sha,
+        channel: result.publishTransaction?.channel || "",
         title: githubReleaseTitle,
         notes: githubReleaseNotes,
         publishEvidencePath: result.publishTransaction?.evidencePath || "",

@@ -2244,6 +2244,7 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
     workflow,
     /artifact-transfer-mode: \$\{\{ github\.event\.inputs\['artifact-transfer-mode'\] \|\| 'github-artifacts' \}\}/,
   );
+  assert.match(workflow, /buildchain-contract-drift-issue-mode: "off"/);
   assert.match(workflow, /checkout-cache-mode: auto/);
   assert.match(workflow, /checkout-cache-fallback: github/);
   assert.doesNotMatch(workflow, /run: node scripts\/artifact-relay-s3\.mjs/);
@@ -3239,7 +3240,7 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
     fs.readFileSync(path.join(root, "dist/site/buildchain-contract.json"), "utf8"),
   );
   assert.equal(alphaLock.buildchain.ref, "v2-alpha");
-  assert.equal(alphaLock.buildchain.resolvedSha, "843e08e099264642265ec11586e44ae7e58ac23b");
+  assert.equal(alphaLock.buildchain.resolvedSha, "dfed5c87558b009c1f60ab549e592ea0c38e8989");
   assert.equal(alphaLock.buildchain.compatibilityPolicy, "major-compatible");
   const alphaEvaluation = evaluateBuildchainContractLock({
     lock: alphaLock,

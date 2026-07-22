@@ -99,7 +99,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-contract",
       "export": "./buildchain-contract",
       "target": "./packages/core/buildchain-contract.js",
-      "digest": "sha256:17246bb855b53a2fea713ecc8e372705ec75636527d786e203f6faf445172193",
+      "digest": "sha256:751b99e537b3f98e04e8048f598cfba3f03f340a70173642a2ca1af9a71cc953",
       "summary": "Runtime contract world and compatibility digest APIs for floating-ref drift checks.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -151,7 +151,7 @@
       "specifier": "@kungfu-tech/buildchain/issue-reporting",
       "export": "./issue-reporting",
       "target": "./packages/core/issue-reporting.js",
-      "digest": "sha256:d6e0a450a52b7a4fba84bff855d5370e0cfa2ec3c4be737b3c9099a72f705e2d",
+      "digest": "sha256:2e6fb7f8b3d15b9c93e9bec952fbb70d7dc466311b7d8f94e654e145eb29ec49",
       "summary": "Buildchain-owned issue reporting API for workflow friction feedback.",
       "capabilityGroup": "observability-diagnostics",
       "audience": [
@@ -450,7 +450,7 @@
     {
       "id": "site-bundle-contract",
       "path": "docs/site-bundle-contract.md",
-      "digest": "sha256:d67a874b356fbfbee9a5d5ece7021fb52b2848347dc6a14f5562c98570096916"
+      "digest": "sha256:583661a7886bdca7e8352a5325a105a9df5d134b3896dbda13ad9b637697481f"
     }
   ],
   "guidance": "These are the public Node import surfaces shipped by the npm package. Agents should prefer these exports over internal file paths."

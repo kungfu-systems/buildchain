@@ -813,9 +813,11 @@ generated channel router, where GitHub Release publication is enabled by default
 disabled with `github-release: false`; the wrapper passes that declaration to
 the action. After the publish transaction reaches `complete`, Buildchain creates
 or updates the public GitHub Release and uploads the generated
-`buildchain.release.json`, release-passport assets, and publish evidence. Semver
-prerelease tags are marked `prerelease=true` and `make_latest=false`; stable
-semver tags are marked latest. For anchored/manual package releases, the public
+`buildchain.release.json`, release-passport assets, and publish evidence. The
+authoritative publication channel controls GitHub metadata: alpha is marked
+`prerelease=true` and `make_latest=false`; release/stable/major is marked latest.
+Semver tag syntax remains the fallback for ordinary callers without explicit
+publication intent. For anchored/manual package releases, the public
 release tag defaults to `v<publishedVersion>` while the internal exact
 transaction tag remains in the release passport and release-state ref. This is
 the supported path for downstream
