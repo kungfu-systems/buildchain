@@ -68,6 +68,7 @@ jobs:
   publication-authority:
     name: Seal binary release asset capability
     permissions:
+      actions: read
       contents: read
     uses: ./.github/workflows/.publication-authority.yml
     with:
