@@ -1,5 +1,41 @@
 import { createPublicationControlPlaneAudit, publicationAuthorityDigest } from "./publication-authority.js";
 
+export const BUILDCHAIN_RELEASE_RECONCILIATION_PATHS = Object.freeze([
+  ".buildchain/release-impact.json",
+  "dist/site/buildchain-contract.json",
+  "dist/site/buildchain-site.json",
+  "dist/site/kfd-upstream-aggregate.json",
+  "dist/site/publication-registry.json",
+  "dist/site/site-manifest.json",
+  "package.json",
+]);
+
+export function evaluateBuildchainReleaseReconciliation({
+  repository,
+  publicationVersion,
+  packageVersion,
+  message,
+  parentSha,
+  changedPaths,
+} = {}) {
+  const normalizedPaths = Array.isArray(changedPaths) ? changedPaths.map(String) : [];
+  const allowedPaths = new Set(BUILDCHAIN_RELEASE_RECONCILIATION_PATHS);
+  return {
+    qualifying: repository === "kungfu-systems/buildchain" &&
+      /^\d+\.\d+\.\d+$/.test(String(publicationVersion || "")) &&
+      message === `chore(release): release v${publicationVersion}` &&
+      packageVersion === publicationVersion &&
+      normalizedPaths.length > 0 &&
+      normalizedPaths.every((entry) => allowedPaths.has(entry)) &&
+      /^[0-9a-f]{40}$/.test(String(parentSha || "")),
+    parentSha: String(parentSha || ""),
+    version: String(publicationVersion || ""),
+    packageVersion: String(packageVersion || ""),
+    message: String(message || ""),
+    changedPaths: normalizedPaths,
+  };
+}
+
 function fact(id, pass, observed) {
   return {
     id,
@@ -77,6 +113,15 @@ export function evaluatePublicationControlPlaneSnapshot({
       branchPolicy.requiredStatusCheckMatchCount === 1
     )
   );
+  const authorizationSha = branchPolicy.authorizationSha || branchPolicy.sourceSha;
+  const sourceAuthorizationPass = branchPolicy.sourceSha === authorizationSha || (
+    branchPolicy.releaseReconciliation?.qualifying === true &&
+    branchPolicy.releaseReconciliation.parentSha === authorizationSha &&
+    /^\d+\.\d+\.\d+$/.test(String(branchPolicy.releaseReconciliation.version || "")) &&
+    branchPolicy.releaseReconciliation.packageVersion === branchPolicy.releaseReconciliation.version &&
+    Array.isArray(branchPolicy.releaseReconciliation.changedPaths) &&
+    branchPolicy.releaseReconciliation.changedPaths.length > 0
+  );
   const providerTransactionBranchPass = branchPolicy.ref === branch &&
     branchPolicy.policyMode === "provider-enforced-transaction" &&
     branchPolicy.protected === true &&
@@ -88,6 +133,7 @@ export function evaluatePublicationControlPlaneSnapshot({
     /^[0-9a-f]{40}$/i.test(String(branchPolicy.requiredCheckSha || "")) &&
     branchPolicy.requiredCheckSha === branchPolicy.pullRequestHeadSha &&
     branchPolicy.sourceSha === branchPolicy.headSha &&
+    sourceAuthorizationPass &&
     branchPolicy.mergedPullRequest === true &&
     branchPolicy.baseRef === branch &&
     branchPolicy.headRepository === repository &&

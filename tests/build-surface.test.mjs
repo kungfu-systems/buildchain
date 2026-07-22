@@ -1003,6 +1003,9 @@ test("publication control-plane audit defers npm OIDC authorization to the publi
   assert.match(script, /evidenceSource: "exact-workflow-job"/);
   assert.match(script, /policyMode: "provider-enforced-transaction"/);
   assert.match(script, /source pull-request lineage/);
+  assert.match(script, /--allow-release-reconciliation/);
+  assert.match(script, /evaluateBuildchainReleaseReconciliation/);
+  assert.match(script, /release parent pull-request lineage/);
   assert.match(script, /commits\/\$\{pullRequestHeadSha\}\/check-runs/);
   assert.doesNotMatch(script, /commits\/\$\{sourceSha\}\/check-runs/);
   assert.doesNotMatch(script, /actions\/permissions\/workflow/);
@@ -1898,6 +1901,10 @@ test("binary evidence and product publication are isolated by the sealed asset w
     path.join(root, ".github/workflows/binary-release-assets.yml"),
     "utf8",
   );
+  const authority = fs.readFileSync(
+    path.join(root, ".github/workflows/.publication-authority.yml"),
+    "utf8",
+  );
   const promotion = fs.readFileSync(
     path.join(root, ".github/workflows/.release-candidate-promote.yml"),
     "utf8",
@@ -1953,6 +1960,8 @@ test("binary evidence and product publication are isolated by the sealed asset w
   assert.match(workflow, /-f evidence-run-id="\$\{GITHUB_RUN_ID\}"/);
   assert.doesNotMatch(publicPublication, /workflow_run:/);
   assert.match(publicPublication, /Binary Distribution source \$source_sha does not match \$release_tag/);
+  assert.match(publicPublication, /manual buildchain-ref must equal the exact workflow source SHA/);
+  assert.match(authority, /--allow-release-reconciliation/);
   assert.match(publicPublication, /auto-admission: true/);
   assert.match(publication, /auto-admission-kind: binary-release-assets/);
   assert.match(publication, /gate-aggregate-json:/);
