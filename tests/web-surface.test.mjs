@@ -597,7 +597,7 @@ test("web-surface deploy apply honors explicit bucket-root prefix", () => {
   });
 });
 
-test("web-surface deploy preserves publication archives while deleting mutable paths", async () => {
+test("web-surface deploy preserves version prefixes while updating the archive index", async () => {
   await withFixtureAsync(async (fixture) => {
     const configPath = path.join(fixture, "buildchain.toml");
     fs.writeFileSync(
@@ -612,8 +612,10 @@ test("web-surface deploy preserves publication archives while deleting mutable p
         ].join("\n"),
       ),
     );
+    const archiveIndex = path.join(fixture, "dist", "buildchain", "archive", "index.html");
     const archiveRoot = path.join(fixture, "dist", "buildchain", "archive", "paper", "v1.0.0");
     fs.mkdirSync(archiveRoot, { recursive: true });
+    fs.writeFileSync(archiveIndex, "mutable archive index\n");
     fs.writeFileSync(path.join(archiveRoot, "index.html"), "immutable reader\n");
     fs.writeFileSync(path.join(archiveRoot, "main.pdf"), "immutable pdf\n");
     fs.writeFileSync(
@@ -639,15 +641,15 @@ test("web-surface deploy preserves publication archives while deleting mutable p
       deployedAt: "2026-07-01T00:00:00.000Z",
     });
     const binding = plan.manifest.surfaceBindings.find((entry) => entry.surface === "buildchain");
-    assert.deepEqual(binding.immutablePublication?.preservedRoots, ["archive"]);
+    assert.deepEqual(binding.immutablePublication?.preservedRoots, ["archive/paper/v1.0.0"]);
     assert.deepEqual(binding.immutablePublication?.declaredPrefixes, ["archive/paper/v1.0.0"]);
     assert.deepEqual(
       binding.immutablePublication?.files.map((file) => file.path),
       ["archive/paper/v1.0.0/index.html", "archive/paper/v1.0.0/main.pdf"],
     );
     const hubBinding = plan.manifest.surfaceBindings.find((entry) => entry.surface === "hub");
-    assert.deepEqual(hubBinding.mutableDeleteExcludes, ["buildchain/archive/*"]);
-    assert.deepEqual(binding.mutableDeleteExcludes, ["archive/*"]);
+    assert.deepEqual(hubBinding.mutableDeleteExcludes, ["buildchain/archive/paper/v1.0.0/*"]);
+    assert.deepEqual(binding.mutableDeleteExcludes, ["archive/paper/v1.0.0/*"]);
 
     const calls = [];
     const result = applyWebSurfaceDeploy({
@@ -677,39 +679,38 @@ test("web-surface deploy preserves publication archives while deleting mutable p
       "--cache-control",
       "public,max-age=31536000,immutable",
     ]);
-    assert.equal(immutableSync.args[2], path.join(fixture, "dist", "buildchain", "archive"));
-    assert.equal(immutableSync.args[3], "s3://libkungfu-dev-staging/staging/buildchain/archive");
+    assert.equal(immutableSync.args[2], path.join(fixture, "dist", "buildchain", "archive", "paper", "v1.0.0"));
+    assert.equal(immutableSync.args[3], "s3://libkungfu-dev-staging/staging/buildchain/archive/paper/v1.0.0");
     const mutableSync = buildchainCalls.find((call) => call.action === "sync-static-artifact");
-    assert.deepEqual(mutableSync.args.slice(-2), ["--exclude", "archive/*"]);
+    assert.deepEqual(mutableSync.args.slice(-2), ["--exclude", "archive/paper/v1.0.0/*"]);
     const mutableMetadata = buildchainCalls.find((call) => call.action === "apply-mutable-cache-control");
     assert.deepEqual(mutableMetadata.args.slice(-4), [
       "--exclude",
-      "archive/*",
+      "archive/paper/v1.0.0/*",
       "--cache-control",
       "public,max-age=300,must-revalidate",
     ]);
     const hubMutableSync = calls.find((call) => call.action === "sync-static-artifact" && call.surface === "hub");
-    assert.deepEqual(hubMutableSync.args.slice(-2), ["--exclude", "buildchain/archive/*"]);
+    assert.deepEqual(hubMutableSync.args.slice(-2), ["--exclude", "buildchain/archive/paper/v1.0.0/*"]);
     assert.ok(
       calls.findLastIndex((call) => call.action === "verify-immutable-artifact-after-upload") <
       calls.indexOf(hubMutableSync),
     );
-    assert.equal(
-      buildchainCalls.some((call) =>
-        call.action === "write-directory-index-alias" &&
-        call.args[call.args.indexOf("--key") + 1]?.includes("/archive/")),
-      false,
-    );
+    const directoryIndexAliases = buildchainCalls
+      .filter((call) => call.action === "write-directory-index-alias")
+      .map((call) => call.args[call.args.indexOf("--key") + 1]);
+    assert.ok(directoryIndexAliases.some((key) => key?.endsWith("/archive")));
+    assert.equal(directoryIndexAliases.some((key) => key?.includes("/archive/paper/v1.0.0")), false);
     assert.deepEqual(result.immutablePreservation, [{
       surface: "buildchain",
       manifestPath: "buildchain/manifest.json",
-      preservedRoots: ["archive"],
+      preservedRoots: ["archive/paper/v1.0.0"],
       declaredPrefixes: ["archive/paper/v1.0.0"],
       fileCount: 2,
-      mutableDeleteExcludes: ["archive/*"],
+      mutableDeleteExcludes: ["archive/paper/v1.0.0/*"],
       coveringBindings: [
-        { surface: "buildchain", mutableDeleteExcludes: ["archive/*"] },
-        { surface: "hub", mutableDeleteExcludes: ["buildchain/archive/*"] },
+        { surface: "buildchain", mutableDeleteExcludes: ["archive/paper/v1.0.0/*"] },
+        { surface: "hub", mutableDeleteExcludes: ["buildchain/archive/paper/v1.0.0/*"] },
       ],
       status: "applied",
     }]);
@@ -730,8 +731,8 @@ test("web-surface deploy preserves publication archives while deleting mutable p
     assert.equal(preservation.status, "pass");
     assert.equal(preservation.bindings[0].fileCount, 2);
     assert.deepEqual(preservation.bindings[0].coveringBindings, [
-      { surface: "buildchain", mutableDeleteExcludes: ["archive/*"], status: "pass" },
-      { surface: "hub", mutableDeleteExcludes: ["buildchain/archive/*"], status: "pass" },
+      { surface: "buildchain", mutableDeleteExcludes: ["archive/paper/v1.0.0/*"], status: "pass" },
+      { surface: "hub", mutableDeleteExcludes: ["buildchain/archive/paper/v1.0.0/*"], status: "pass" },
     ]);
 
     const failedCalls = [];

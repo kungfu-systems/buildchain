@@ -4,7 +4,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 
-import { validateControllerReceipt } from "../packages/core/controller-evidence.js";
+import {
+  validateControllerPlan,
+  validateControllerReceipt,
+} from "../packages/core/controller-evidence.js";
 import {
   createPublicationAdmission,
   createPublicationGateDecision,
@@ -102,15 +105,23 @@ function main() {
   const controllerRoot = path.join(evidenceRoot, "binary-controller");
   const manifest = readJson(oneFile(passportRoot, "buildchain-release-bundle.json"));
   const archivePath = oneFile(passportRoot, "buildchain-release-bundle.tar.gz");
+  const controllerPlan = readJson(oneFile(controllerRoot, "plan.json"));
   const controllerReceipt = readJson(oneFile(controllerRoot, "receipt.json"));
   validateBundle(manifest, archivePath, { sourceSha, releaseTag });
 
-  const runtimeSha = execFileSync("git", ["-C", runtimeRoot, "rev-parse", "HEAD"], { encoding: "utf8" })
+  const authorityRuntimeSha = execFileSync("git", ["-C", runtimeRoot, "rev-parse", "HEAD"], { encoding: "utf8" })
     .trim()
     .toLowerCase();
+  if (!/^[0-9a-f]{40}$/.test(authorityRuntimeSha)) {
+    throw new Error("publication authority runtime SHA is invalid");
+  }
+  const controllerPlanValidation = validateControllerPlan(controllerPlan);
+  if (!controllerPlanValidation.ok || !controllerPlanValidation.qualifying) {
+    throw new Error(`binary distribution controller plan did not qualify: ${controllerPlanValidation.issues.join("; ")}`);
+  }
   const controllerValidation = validateControllerReceipt(controllerReceipt, {
+    plan: controllerPlan,
     expectedSourceSha: sourceSha,
-    expectedRuntimeSha: runtimeSha,
   });
   if (!controllerValidation.ok || !controllerValidation.qualifying) {
     throw new Error(`binary distribution controller receipt did not qualify: ${controllerValidation.issues.join("; ")}`);
@@ -118,6 +129,7 @@ function main() {
   if (controllerReceipt.controller?.id !== "binary-distribution") {
     throw new Error("binary distribution controller receipt has the wrong controller id");
   }
+  const runtimeSha = controllerReceipt.runtime.sha;
 
   const controlPlaneAudit = readJson(required("BUILDCHAIN_CONTROL_PLANE_AUDIT_PATH"));
   const registry = readJson(path.join(runtimeRoot, "dist/site/publication-authority-registry.json"));

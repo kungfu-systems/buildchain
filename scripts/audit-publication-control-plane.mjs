@@ -3,7 +3,10 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
-import { evaluatePublicationControlPlaneSnapshot } from "../packages/core/publication-control-plane-audit.js";
+import {
+  evaluateBuildchainReleaseReconciliation,
+  evaluatePublicationControlPlaneSnapshot,
+} from "../packages/core/publication-control-plane-audit.js";
 
 function flag(name, fallback = "") {
   const index = process.argv.indexOf(`--${name}`);
@@ -199,6 +202,8 @@ function main() {
   const sourceSha = flag("source-sha").toLowerCase();
   const packageName = flag("package", "@kungfu-tech/buildchain");
   const publisherMode = flag("publisher-mode", "npm-trusted-publisher");
+  const publicationVersion = flag("publication-version");
+  const allowReleaseReconciliation = process.argv.includes("--allow-release-reconciliation");
   if (!repository || !branch) throw new Error("--repository and --branch are required");
 
   const encodedWorkflow = workflowPath.split("/").map(encodeURIComponent).join("/");
@@ -260,13 +265,51 @@ function main() {
     if (!/^[0-9a-f]{40}$/.test(sourceSha)) {
       throw new Error("--source-sha is required when detailed branch policy is not readable");
     }
-    const pullRequests = githubJson(`repos/${repository}/commits/${sourceSha}/pulls`, "source pull-request lineage");
-    const mergedPullRequest = (Array.isArray(pullRequests) ? pullRequests : []).find((entry) =>
+    const sourceCommit = githubJson(`repos/${repository}/commits/${sourceSha}`, "source commit");
+    const sourceParents = Array.isArray(sourceCommit.parents) ? sourceCommit.parents.map((entry) => String(entry?.sha || "").toLowerCase()) : [];
+    const sourceChangedPaths = Array.isArray(sourceCommit.files) ? sourceCommit.files.map((entry) => String(entry?.filename || "")) : [];
+    const sourceMessage = String(sourceCommit.commit?.message || "").split("\n", 1)[0];
+    let authorizationSha = sourceSha;
+    let releaseReconciliation = {
+      qualifying: false,
+      parentSha: "",
+      version: publicationVersion,
+      message: sourceMessage,
+      changedPaths: sourceChangedPaths,
+    };
+    let pullRequests = githubJson(`repos/${repository}/commits/${authorizationSha}/pulls`, "source pull-request lineage");
+    let mergedPullRequest = (Array.isArray(pullRequests) ? pullRequests : []).find((entry) =>
       entry?.merged_at &&
-      entry.merge_commit_sha === sourceSha &&
+      entry.merge_commit_sha === authorizationSha &&
       entry.base?.ref === branch &&
       entry.head?.repo?.full_name === repository
     );
+    if (!mergedPullRequest && allowReleaseReconciliation) {
+      const packageFile = githubJson(
+        `repos/${repository}/contents/package.json?ref=${encodeURIComponent(sourceSha)}`,
+        "release reconciliation package metadata",
+      );
+      const packageJson = JSON.parse(Buffer.from(String(packageFile.content || ""), "base64").toString("utf8"));
+      const parentSha = sourceParents.length === 1 ? sourceParents[0] : "";
+      releaseReconciliation = evaluateBuildchainReleaseReconciliation({
+        repository,
+        publicationVersion,
+        packageVersion: packageJson.version,
+        message: sourceMessage,
+        parentSha,
+        changedPaths: sourceChangedPaths,
+      });
+      if (releaseReconciliation.qualifying) {
+        authorizationSha = parentSha;
+        pullRequests = githubJson(`repos/${repository}/commits/${authorizationSha}/pulls`, "release parent pull-request lineage");
+        mergedPullRequest = (Array.isArray(pullRequests) ? pullRequests : []).find((entry) =>
+          entry?.merged_at &&
+          entry.merge_commit_sha === authorizationSha &&
+          entry.base?.ref === branch &&
+          entry.head?.repo?.full_name === repository
+        );
+      }
+    }
     const reviews = mergedPullRequest
       ? githubJson(`repos/${repository}/pulls/${mergedPullRequest.number}/reviews?per_page=100`, "source pull-request reviews")
       : [];
@@ -316,7 +359,9 @@ function main() {
       requiredCheckAppId: requiredCheckSource?.app_id || 0,
       requiredCheckSha: pullRequestHeadSha,
       sourceSha,
+      authorizationSha,
       headSha: String(branchState.commit?.sha || "").toLowerCase(),
+      releaseReconciliation,
       mergedPullRequest: Boolean(mergedPullRequest),
       pullRequestNumber: mergedPullRequest?.number || 0,
       pullRequestHeadSha,
