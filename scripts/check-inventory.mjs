@@ -910,6 +910,8 @@ for (const requiredSnippet of [
   "if (dryRun) {",
   "Enforce Buildchain stable release canary gate",
   "BUILDCHAIN_STABLE_RELEASE_POLICY: .buildchain/stable-release-policy.json",
+  "Consumer has no binary-distribution.yml; standalone binary dispatch is not applicable.",
+  "gh workflow view binary-distribution.yml",
 ]) {
   if (!releaseCandidatePromoteWorkflow.includes(requiredSnippet)) {
     throw new Error(`release candidate promote workflow missing KFD gate pass-through: ${requiredSnippet}`);
