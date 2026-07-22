@@ -396,10 +396,12 @@ jobs:
 
   controller-plan:
     name: Plan web-surface controller
-    needs: runtime
+    needs:
+      - runtime
+      - release-intent
     runs-on: ubuntu-24.04
     outputs:
-      controller-plan-artifact: buildchain-web-surface-controller-plan-${{ github.sha }}
+      controller-plan-artifact: buildchain-web-surface-controller-plan-${{ needs.release-intent.outputs.production-source-sha }}
       controller-plan-json: ${{ steps.controller-plan.outputs.controller-plan-json }}
       controller-plan-digest: ${{ steps.controller-plan.outputs.controller-plan-digest }}
     steps:
@@ -424,7 +426,7 @@ jobs:
         env:
           BUILDCHAIN_CONTROLLER_ID: web-surface
           BUILDCHAIN_CONTROLLER_SOURCE_REPOSITORY: ${{ github.repository }}
-          BUILDCHAIN_CONTROLLER_SOURCE_SHA: ${{ github.sha }}
+          BUILDCHAIN_CONTROLLER_SOURCE_SHA: ${{ needs.release-intent.outputs.production-source-sha }}
           BUILDCHAIN_CONTROLLER_RUNTIME_REF: ${{ needs.runtime.outputs.runtime-ref }}
           BUILDCHAIN_CONTROLLER_RUNTIME_SHA: ${{ needs.runtime.outputs.runtime-sha }}
           BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST: ${{ steps.controller-runtime.outputs.contract-digest }}
@@ -435,7 +437,7 @@ jobs:
       - name: Upload web-surface controller plan
         uses: actions/upload-artifact@v7.0.1
         with:
-          name: buildchain-web-surface-controller-plan-${{ github.sha }}
+          name: buildchain-web-surface-controller-plan-${{ needs.release-intent.outputs.production-source-sha }}
           path: .buildchain/controller/plan.json
           if-no-files-found: error
 
@@ -449,12 +451,14 @@ jobs:
       production-release-pr: ${{ steps.intent.outputs.production-release-pr }}
       production-release-source: ${{ steps.intent.outputs.production-release-source }}
       production-release-reason: ${{ steps.intent.outputs.production-release-reason }}
+      production-source-sha: ${{ steps.intent.outputs.production-source-sha }}
     steps:
       - name: Resolve production release PR intent
         id: intent
         uses: actions/github-script@v8
         env:
           EVENT_NAME: ${{ github.event_name }}
+          EVENT_ACTION: ${{ github.event.action }}
           REF_NAME: ${{ github.ref_name }}
           PRODUCTION_RELEASE_ON_MAIN: ${{ inputs.production-release-on-main }}
           PRODUCTION_RELEASE_LABEL: ${{ inputs.production-release-label }}
@@ -466,19 +470,23 @@ jobs:
               "production-release-pr": "",
               "production-release-source": "",
               "production-release-reason": "not-a-main-release-push",
+              "production-source-sha": context.sha,
             };
             for (const [name, value] of Object.entries(defaults)) core.setOutput(name, value);
 
             const enabled = process.env.PRODUCTION_RELEASE_ON_MAIN === "true";
             const eventName = process.env.EVENT_NAME || "";
+            const eventAction = process.env.EVENT_ACTION || "";
             const refName = process.env.REF_NAME || "";
-            if (!enabled || eventName !== "push" || refName !== "main") {
+            const mainPush = eventName === "push" && refName === "main";
+            const closedPullRequest = eventName === "pull_request" && eventAction === "closed";
+            if (!enabled || (!mainPush && !closedPullRequest)) {
               await core.summary
                 .addHeading("Buildchain production release PR intent")
                 .addRaw(`- approved: \`false\`\n`)
-                .addRaw(`- reason: \`${enabled ? "not-a-main-push" : "release-pr-publish-disabled"}\`\n`)
+                .addRaw(`- reason: \`${enabled ? "not-a-release-event" : "release-pr-publish-disabled"}\`\n`)
                 .write();
-              core.setOutput("production-release-reason", enabled ? "not-a-main-push" : "release-pr-publish-disabled");
+              core.setOutput("production-release-reason", enabled ? "not-a-release-event" : "release-pr-publish-disabled");
               return;
             }
 
@@ -490,12 +498,14 @@ jobs:
 
             const { owner, repo } = context.repo;
             const fullName = `${owner}/${repo}`;
-            const associated = await github.paginate(github.rest.repos.listPullRequestsAssociatedWithCommit, {
-              owner,
-              repo,
-              commit_sha: context.sha,
-              per_page: 100,
-            });
+            const associated = closedPullRequest
+              ? [context.payload.pull_request]
+              : await github.paginate(github.rest.repos.listPullRequestsAssociatedWithCommit, {
+                  owner,
+                  repo,
+                  commit_sha: context.sha,
+                  per_page: 100,
+                });
             const candidates = associated.filter((pull) => {
               const labels = (pull.labels || []).map((label) => label.name);
               const sameRepoHead = pull.head?.repo?.full_name === fullName;
@@ -523,15 +533,21 @@ jobs:
             }
 
             const releasePull = candidates[0];
+            const productionSourceSha = releasePull.merge_commit_sha || context.sha;
+            if (!/^[0-9a-f]{40}$/i.test(productionSourceSha)) {
+              throw new Error(`matching production release PR has invalid merge commit SHA: ${productionSourceSha || "(empty)"}`);
+            }
             core.setOutput("production-release-approved", "true");
             core.setOutput("production-release-pr", String(releasePull.number));
             core.setOutput("production-release-source", releasePull.head.ref || "");
-            core.setOutput("production-release-reason", "associated-release-pr-merged");
+            core.setOutput("production-release-reason", closedPullRequest ? "closed-release-pr-merged" : "associated-release-pr-merged");
+            core.setOutput("production-source-sha", productionSourceSha);
             await core.summary
               .addHeading("Buildchain production release PR intent")
               .addRaw(`- approved: \`true\`\n`)
               .addRaw(`- release PR: #${releasePull.number}\n`)
               .addRaw(`- source branch: \`${releasePull.head.ref || ""}\`\n`)
+              .addRaw(`- production source SHA: \`${productionSourceSha}\`\n`)
               .addRaw(`- required label: \`${requiredLabel}\`\n`)
               .addRaw(`- required head prefix: \`${requiredHeadPrefix || "(none)"}\`\n`)
               .write();
@@ -567,6 +583,8 @@ jobs:
           BUILDCHAIN_PRODUCTION_RELEASE_APPROVED: ${{ needs.release-intent.outputs.production-release-approved }}
           BUILDCHAIN_PRODUCTION_RELEASE_PR: ${{ needs.release-intent.outputs.production-release-pr }}
           BUILDCHAIN_PRODUCTION_RELEASE_SOURCE: ${{ needs.release-intent.outputs.production-release-source }}
+          BUILDCHAIN_PRODUCTION_SOURCE_SHA: ${{ needs.release-intent.outputs.production-source-sha }}
+          GITHUB_EVENT_ACTION: ${{ github.event.action }}
 
   apply-input-gate:
     name: Validate web-surface apply inputs
@@ -598,11 +616,12 @@ jobs:
           PRODUCTION_ROLE_ARN: ${{ inputs.production-aws-role-arn }}
         run: |
           set -euo pipefail
+          production_event_approved="$PRODUCTION_DECISION_APPROVED"
           if [ "$EVENT_NAME" = "pull_request" ] && [ "$EVENT_ACTION" != "closed" ] && [ "$PREVIEW_APPLY" = "true" ] && [ -z "$PREVIEW_ROLE_ARN" ]; then
             echo "::error::preview-aws-role-arn is required before preview-apply can build or deploy"
             exit 1
           fi
-          if [ "$EVENT_NAME" = "pull_request" ] && [ "$EVENT_ACTION" = "closed" ] && [ "$PREVIEW_CLEANUP_APPLY" = "true" ] && [ -z "$PREVIEW_ROLE_ARN" ]; then
+          if [ "$EVENT_NAME" = "pull_request" ] && [ "$EVENT_ACTION" = "closed" ] && [ "$production_event_approved" != "true" ] && [ "$PREVIEW_CLEANUP_APPLY" = "true" ] && [ -z "$PREVIEW_ROLE_ARN" ]; then
             echo "::error::preview-aws-role-arn is required before preview-cleanup-apply can run"
             exit 1
           fi
@@ -610,18 +629,17 @@ jobs:
             echo "::error::staging-aws-role-arn is required before staging-apply can build or deploy"
             exit 1
           fi
-          production_event_approved="$PRODUCTION_DECISION_APPROVED"
           if [ "$PRODUCTION_APPLY" = "true" ] && [ "$production_event_approved" = "true" ] && [ -z "$PRODUCTION_ROLE_ARN" ]; then
             echo "::error::production-aws-role-arn is required before production-apply can build or deploy"
             exit 1
           fi
           web_surface_channel=""
           web_surface_alias=""
-          if [ "$EVENT_NAME" = "pull_request" ]; then
+          if [ "$production_event_approved" = "true" ]; then
+            web_surface_channel=production
+          elif [ "$EVENT_NAME" = "pull_request" ]; then
             web_surface_channel=preview
             web_surface_alias="pr-${{ github.event.pull_request.number }}"
-          elif [ "$production_event_approved" = "true" ]; then
-            web_surface_channel=production
           elif [ "$EVENT_NAME" = "push" ] && [ "$REF_NAME" = "main" ]; then
             web_surface_channel=staging
           elif [ "$EVENT_NAME" = "workflow_dispatch" ]; then
@@ -658,6 +676,7 @@ jobs:
       - name: Checkout caller repository
         uses: actions/checkout@v7.0.0
         with:
+          ref: ${{ needs.release-intent.outputs.production-source-sha }}
           persist-credentials: false
 
       - name: Checkout Buildchain runtime
@@ -735,7 +754,7 @@ jobs:
           buildchain-version: ${{ steps.contract-lock.outputs.contract-digest }}
           consumer-repository: ${{ github.repository }}
           consumer-ref: ${{ github.ref }}
-          consumer-sha: ${{ github.sha }}
+          consumer-sha: ${{ needs.release-intent.outputs.production-source-sha }}
           workflow: ${{ github.workflow }}
           run-id: ${{ github.run_id }}
           run-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -793,7 +812,7 @@ jobs:
 
       - name: Plan pull request preview cleanup
         id: cleanup
-        if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' }}
+        if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' && needs.release-intent.outputs.production-release-approved != 'true' }}
         run: >-
           node .buildchain/runtime/scripts/web-surface.mjs
           --mode cleanup-plan
@@ -813,7 +832,7 @@ jobs:
           --mode deploy-plan
           --cwd "${{ inputs.working-directory }}"
           --channel staging
-          --source-sha "${{ github.sha }}"
+          --source-sha "${{ needs.release-intent.outputs.production-source-sha }}"
           --artifact-path "${{ inputs.artifact-path }}"
           --runtime-id "${{ needs.runtime.outputs.runtime-sha }}"
           --rollback-pointer "${{ needs.runtime.outputs.rollback-ref }}"
@@ -828,7 +847,7 @@ jobs:
           --mode deploy-plan
           --cwd "${{ inputs.working-directory }}"
           --channel production
-          --source-sha "${{ github.sha }}"
+          --source-sha "${{ needs.release-intent.outputs.production-source-sha }}"
           --artifact-path "${{ inputs.artifact-path }}"
           --runtime-id "${{ needs.runtime.outputs.runtime-sha }}"
           --rollback-pointer "${{ needs.runtime.outputs.rollback-ref }}"
@@ -1052,11 +1071,12 @@ jobs:
 
   preview-cleanup:
     name: Apply pull request preview cleanup
-    if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' && inputs.preview-cleanup-apply }}
+    if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' && inputs.preview-cleanup-apply && needs.release-intent.outputs.production-release-approved != 'true' }}
     runs-on: ubuntu-24.04
     needs:
       - plan
       - runtime
+      - release-intent
     environment: ${{ inputs.preview-environment }}
     outputs:
       preview-cleanup-result-json: ${{ steps.apply.outputs.web-surface-cleanup-result-json }}
@@ -1543,6 +1563,7 @@ jobs:
       - runtime
       - controller-plan
       - publication-decision
+      - release-intent
     if: >-
       ${{
         inputs.production-apply &&
@@ -1595,7 +1616,7 @@ jobs:
           BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
             [{"id":"resolve-runtime","status":"${{ needs.runtime.result }}"},{"id":"plan","status":"${{ needs.plan.result }}"},{"id":"build","status":"${{ needs.plan.outputs.build-outcome || needs.plan.result }}"},{"id":"verify","status":"${{ needs.plan.outputs.verify-outcome || needs.plan.result }}"},{"id":"publication-authority","status":"skipped"},{"id":"apply","status":"skipped"},{"id":"aggregate","status":"success"}]
           BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: '[{"kind":"web-surface-plan","path":".buildchain/controller/web-surface-plan.json"}]'
-          BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: buildchain-web-surface-prepublication-receipt-${{ github.sha }}
+          BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: buildchain-web-surface-prepublication-receipt-${{ needs.release-intent.outputs.production-source-sha }}
           BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/receipt.json
 
       - name: Assemble and verify managed web publication admission
@@ -1604,7 +1625,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           BUILDCHAIN_REPOSITORY: ${{ github.repository }}
-          BUILDCHAIN_SOURCE_SHA: ${{ github.sha }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.release-intent.outputs.production-source-sha }}
           BUILDCHAIN_RUNTIME_ROOT: .buildchain/runtime
           BUILDCHAIN_WEB_SURFACE_PLAN_PATH: .buildchain/controller/web-surface-plan.json
           BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/receipt.json
@@ -1683,7 +1704,7 @@ jobs:
           BUILDCHAIN_PUBLICATION_CAPABILITY_JSON: ${{ needs.publication-authority.outputs.capability-json || needs.external-publication-authority.outputs.capability-json }}
           BUILDCHAIN_WEB_SURFACE_CANDIDATE_JSON: ${{ needs.publication-authority.outputs.candidate-json }}
           BUILDCHAIN_REPOSITORY: ${{ github.repository }}
-          BUILDCHAIN_SOURCE_SHA: ${{ github.sha }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.release-intent.outputs.production-source-sha }}
           BUILDCHAIN_RUNTIME_SHA: ${{ needs.runtime.outputs.runtime-sha }}
           BUILDCHAIN_PUBLICATION_ENVIRONMENT: ${{ inputs.production-environment }}
           BUILDCHAIN_PRODUCTION_ROLE_ARN: ${{ inputs.production-aws-role-arn }}
@@ -1820,10 +1841,11 @@ jobs:
       - publication-authority
       - external-publication-authority
       - production-apply
+      - release-intent
     if: ${{ always() && needs.controller-plan.result == 'success' }}
     runs-on: ubuntu-24.04
     outputs:
-      controller-receipt-artifact: buildchain-web-surface-controller-receipt-${{ github.sha }}
+      controller-receipt-artifact: buildchain-web-surface-controller-receipt-${{ needs.release-intent.outputs.production-source-sha }}
       controller-receipt-json: ${{ steps.controller-receipt.outputs.controller-receipt-json }}
       controller-receipt-digest: ${{ steps.controller-receipt.outputs.controller-receipt-digest }}
       controller-receipt-status: ${{ steps.controller-receipt.outputs.controller-receipt-status }}
@@ -1873,14 +1895,14 @@ jobs:
           BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ steps.select-plan.outcome == 'success' && '[{"kind":"web-surface-plan","path":".buildchain/controller/web-surface-plan.json"}]' || '[]' }}
           BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ needs.plan.result != 'success' && 'web-surface-incomplete' || steps.select-plan.outcome != 'success' && 'no-applicable-web-surface-channel' || '' }}
           BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Web-surface controller did not complete an applicable channel successfully
-          BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: buildchain-web-surface-controller-receipt-${{ github.sha }}
+          BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: buildchain-web-surface-controller-receipt-${{ needs.release-intent.outputs.production-source-sha }}
           BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/receipt.json
 
       - name: Upload web-surface controller receipt
         if: ${{ always() && steps.controller-receipt.outcome == 'success' }}
         uses: actions/upload-artifact@v7.0.1
         with:
-          name: buildchain-web-surface-controller-receipt-${{ github.sha }}
+          name: buildchain-web-surface-controller-receipt-${{ needs.release-intent.outputs.production-source-sha }}
           path: .buildchain/controller/receipt.json
           if-no-files-found: error
 

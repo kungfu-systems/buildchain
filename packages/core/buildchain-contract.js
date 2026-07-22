@@ -351,6 +351,9 @@ export function createBuildchainContractWorld({
         "publish transactions can require a resolved publish-gate source lock to prevent floating-ref drift",
         "semver GitHub Releases are created or updated only after transaction completion, with prerelease/latest metadata bound to the authoritative publication channel and tag syntax retained as the fallback for ordinary callers",
       ],
+      compatibleBreakingDigests: [
+        "sha256:a59f0910e6df842e7699139472e5dd69ac2fdd7f7213bf2cb346d1d622556874",
+      ],
     }),
     surface(root, {
       id: "report-buildchain-issue-action",
@@ -758,7 +761,11 @@ export function evaluateBuildchainContractLock({
       reasons.push(`surface removed: ${oldSurface.id}`);
       continue;
     }
-    if (nextSurface.breakingDigest !== oldSurface.breakingDigest) {
+    const compatibleBreakingDigests = new Set(nextSurface.compatibleBreakingDigests || []);
+    if (
+      nextSurface.breakingDigest !== oldSurface.breakingDigest
+      && !compatibleBreakingDigests.has(oldSurface.breakingDigest)
+    ) {
       reasons.push(`surface breaking digest changed: ${oldSurface.id}`);
     }
   }
