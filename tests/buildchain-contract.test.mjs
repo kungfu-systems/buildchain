@@ -231,6 +231,7 @@ test("contract world exposes versioned controller evidence surfaces", () => {
     "controller:paper-release",
     "controller:release-candidate-promotion",
     "controller:release-propagation",
+    "controller:binary-distribution",
   ]);
   assert.ok(controllers.every((entry) => entry.requiredOutputs.includes("controller-receipt-digest")));
   assert.ok(controllers.every((entry) => entry.breakingDefaults.evidenceContract === "buildchain.controller-evidence/v1"));

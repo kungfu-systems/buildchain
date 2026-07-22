@@ -91,6 +91,7 @@ export function createBuildchainContractWorld({
     "release-candidate-promote",
     ".release-candidate-promote",
     "release-propagation",
+    "binary-distribution",
   ]);
   const hasCompleteControllerSource = [...controllerWorkflowIds]
     .every((id) => workflowDescriptors.some((workflow) => workflow.id === id));

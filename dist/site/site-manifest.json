@@ -125,7 +125,7 @@
       "path": "docs/binary-distribution.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:08be4e97e1940a45a2c0aa2506012255888c23c1cbf8f5362b27c2b21089eb58"
+      "digest": "sha256:ae0f8e6cafbb4c39732e6a7252d46b523b0a69e8e05d3ce7ee0b51a916b1b027"
     },
     {
       "id": "consumer-issue-reporting",

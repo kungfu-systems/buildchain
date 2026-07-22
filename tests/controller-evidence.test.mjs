@@ -44,6 +44,7 @@ function registry() {
       { id: "release-candidate-promote", path: ".github/workflows/release-candidate-promote.yml", inputs: ["channel"] },
       { id: ".release-candidate-promote", path: ".github/workflows/.release-candidate-promote.yml", inputs: ["channel"] },
       { id: "release-propagation", path: ".github/workflows/release-propagation.yml", inputs: ["graph-json"] },
+      { id: "binary-distribution", path: ".github/workflows/binary-distribution.yml", inputs: [] },
     ],
   });
 }
@@ -83,6 +84,7 @@ test("controller registry freezes the first project-independent public inventory
     "paper-release",
     "release-candidate-promotion",
     "release-propagation",
+    "binary-distribution",
   ]);
   assert.equal(descriptor().inputs["working-directory"].classification, "digest-only");
   assert.equal(descriptor().inputs["build-command"].classification, "digest-only");

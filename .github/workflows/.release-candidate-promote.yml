@@ -650,7 +650,7 @@ jobs:
     if: ${{ needs.preflight.outputs.action == 'promote' }}
     runs-on: ubuntu-24.04
     permissions:
-      actions: read
+      actions: write
       contents: read
     outputs:
       evidence-run-id: ${{ steps.release-candidate.outputs.release-candidate-run-id }}
@@ -1390,6 +1390,24 @@ jobs:
           release-candidate-passport-path: ${{ steps.rc.outputs.release-candidate-passport-path }}
           release-candidate-build-summary-path: ${{ steps.rc.outputs.release-candidate-build-summary-path }}
           release-candidate-version: ${{ steps.rc.outputs.release-candidate-version }}
+
+      - name: Dispatch standalone binary distribution for the exact public tag
+        if: ${{ !inputs.dry-run && steps.promote.outcome == 'success' && steps.promote.outputs.public-release-tag != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.promote.outputs.public-release-tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-alpha\.[0-9]+)?$ ]]; then
+            echo "::error::promotion produced an invalid standalone release tag: $RELEASE_TAG"
+            exit 1
+          fi
+          gh workflow run binary-distribution.yml \
+            --repo "${{ github.repository }}" \
+            --ref "$RELEASE_TAG" \
+            -f tag="$RELEASE_TAG" \
+            -f upload-release=false
 
       - name: Bundle release-candidate-promotion controller evidence
         id: controller-evidence

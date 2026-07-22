@@ -414,7 +414,7 @@ on:
         value: ${{ jobs.alpha.outputs.controller-receipt-status || jobs.stable.outputs.controller-receipt-status }}
 
 permissions:
-  actions: read
+  actions: write
   checks: write
   contents: write
   id-token: write
@@ -614,7 +614,7 @@ jobs:
     if: ${{ needs.resolve-promotion.outputs.channel == 'alpha' }}
     uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v2-alpha
     permissions:
-      actions: read
+      actions: write
       checks: write
       contents: write
       id-token: write
@@ -700,7 +700,7 @@ jobs:
     if: ${{ needs.resolve-promotion.outputs.channel == 'stable' }}
     uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@725592ae025003071b8d33fdb49e0157842fe76c
     permissions:
-      actions: read
+      actions: write
       checks: write
       contents: write
       id-token: write
