@@ -28,6 +28,7 @@ import {
   enumerateWorkflowInputs,
 } from "../packages/core/public-surface-audit.js";
 import { createSurfaceTimestampPolicy } from "../packages/core/surface-manifest.js";
+import { projectHomepageIntro } from "./site-bundle-homepage.mjs";
 
 const SITE_BUNDLE_CONTRACT = "kungfu-buildchain-site-bundle";
 const PUBLICATION_RELEASE_REGISTRY_CONTRACT = "kungfu-buildchain-publication-release-registry";
@@ -702,6 +703,7 @@ function buildSiteBundle() {
   const packageJson = readJson("package.json");
   const inventory = readJson("tests/buildchain-inventory.json");
   const readme = parseReadme(readText(README_PATH));
+  const homepageIntro = projectHomepageIntro(readme.intro);
   const docs = BUILDCHAIN_AGENT_MANUALS.map((manual) => docEntry(manual.id, manual.title, manual.path, manual.plane));
   const pages = buildSitePages();
   const preservedTimestampPolicy = readExistingSiteTimestampPolicy(packageJson.version);
@@ -945,8 +947,10 @@ function buildSiteBundle() {
     },
     githubRelease: {
       exactTagRelease: true,
-      prereleaseTags: "semver prerelease tags set prerelease=true and make_latest=false",
-      stableTags: "stable semver tags set make_latest=true",
+      authoritativeIntent: "Buildchain publication channel controls prerelease/latest metadata when available",
+      alphaChannel: "alpha publication sets prerelease=true and make_latest=false",
+      stableChannels: "release, stable, and major publication set prerelease=false and make_latest=true",
+      tagFallback: "ordinary callers without publication intent use semver prerelease syntax",
       evidenceAssets: [
         "publish evidence JSON",
         "buildchain.release.json",
@@ -1218,8 +1222,8 @@ function buildSiteBundle() {
     },
     homepage: {
       title: readme.title,
-      lead: paragraphBlocks(readme.intro)[0] || "",
-      mechanismSummary: paragraphBlocks(readme.intro).slice(1),
+      lead: homepageIntro.lead,
+      mechanismSummary: homepageIntro.mechanismSummary,
       sections: homepageSections,
       displayPlan: {
         firstScreen: {

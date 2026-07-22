@@ -38,8 +38,10 @@
   },
   "githubRelease": {
     "exactTagRelease": true,
-    "prereleaseTags": "semver prerelease tags set prerelease=true and make_latest=false",
-    "stableTags": "stable semver tags set make_latest=true",
+    "authoritativeIntent": "Buildchain publication channel controls prerelease/latest metadata when available",
+    "alphaChannel": "alpha publication sets prerelease=true and make_latest=false",
+    "stableChannels": "release, stable, and major publication set prerelease=false and make_latest=true",
+    "tagFallback": "ordinary callers without publication intent use semver prerelease syntax",
     "evidenceAssets": [
       "publish evidence JSON",
       "buildchain.release.json",

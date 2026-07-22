@@ -1998,6 +1998,24 @@ test("runtime selection accepts official channels and gates train or SHA overrid
       reason: "buildchain-ref override is only allowed for trusted workflow_dispatch runs",
     },
   );
+  assert.deepEqual(
+    validateRuntimeOverrideTrust({
+      requestedRef: "a".repeat(40),
+      eventName: "pull_request",
+      sameRepositoryPullRequest: true,
+      pullRequestHeadSha: "a".repeat(40),
+    }),
+    { ok: true, decision: "same-repository-pr-head" },
+  );
+  assert.equal(
+    validateRuntimeOverrideTrust({
+      requestedRef: "a".repeat(40),
+      eventName: "pull_request",
+      sameRepositoryPullRequest: true,
+      pullRequestHeadSha: "b".repeat(40),
+    }).ok,
+    false,
+  );
   assert.equal(
     validateRuntimeOverrideTrust({
       requestedRef: "train/v2/v2.3/runtime-loader",
@@ -2045,6 +2063,15 @@ test("runtime-aware workflows pin same-repository pull request merge refs", () =
     assert.match(workflow, /const workflowSha = String\(context\.sha \|\| ""\)/);
     assert.match(workflow, /current workflow SHA is invalid for Buildchain pull request merge ref/);
   }
+});
+
+test("build workflow only trusts an exact same-repository pull request head override", () => {
+  const workflow = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
+  assert.match(workflow, /const trustedSameRepositoryPullRequestHead =/);
+  assert.match(workflow, /pullRequestHeadRepository === repository/);
+  assert.match(workflow, /requested\.toLowerCase\(\) === pullRequestHeadSha\.toLowerCase\(\)/);
+  assert.match(workflow, /!trustedSameRepositoryPullRequestHead && context\.eventName !== "workflow_dispatch"/);
+  assert.match(workflow, /\? "same-repository-pr-head"/);
 });
 
 test("promote action exposes generic publish source-lock gate", () => {
@@ -2242,8 +2269,13 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   assert.match(workflow, /uses: \.\/\.github\/workflows\/build\.yml/);
   assert.match(
     workflow,
+    /buildchain-ref: \$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/,
+  );
+  assert.match(
+    workflow,
     /artifact-transfer-mode: \$\{\{ github\.event\.inputs\['artifact-transfer-mode'\] \|\| 'github-artifacts' \}\}/,
   );
+  assert.match(workflow, /buildchain-contract-drift-issue-mode: "off"/);
   assert.match(workflow, /checkout-cache-mode: auto/);
   assert.match(workflow, /checkout-cache-fallback: github/);
   assert.doesNotMatch(workflow, /run: node scripts\/artifact-relay-s3\.mjs/);
@@ -3239,7 +3271,7 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
     fs.readFileSync(path.join(root, "dist/site/buildchain-contract.json"), "utf8"),
   );
   assert.equal(alphaLock.buildchain.ref, "v2-alpha");
-  assert.equal(alphaLock.buildchain.resolvedSha, "843e08e099264642265ec11586e44ae7e58ac23b");
+  assert.equal(alphaLock.buildchain.resolvedSha, "dfed5c87558b009c1f60ab549e592ea0c38e8989");
   assert.equal(alphaLock.buildchain.compatibilityPolicy, "major-compatible");
   const alphaEvaluation = evaluateBuildchainContractLock({
     lock: alphaLock,

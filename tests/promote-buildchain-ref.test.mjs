@@ -775,6 +775,54 @@ test("promote action publishes semver GitHub Release evidence assets", async (t)
   ]);
 });
 
+test("promote action publishes anchored stable tags from release intent", async (t) => {
+  const cwd = makeTempWorkspace({
+    ".buildchain/release-evidence/v22.22.3-kf.4/evidence.json": { ok: true },
+    ".buildchain/release-passport/buildchain.release.json": { release: { tag: "v22.22.3-kf.4" } },
+  });
+  const originalFetch = globalThis.fetch;
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+  globalThis.fetch = async (url, options = {}) => {
+    if (String(url).endsWith("/releases/tags/v22.22.3-kf.4")) {
+      return new Response(JSON.stringify({ id: 456, name: "v22.22.3-kf.4" }), { status: 200 });
+    }
+    if (String(url).endsWith("/releases/456") && options.method === "PATCH") {
+      const body = JSON.parse(options.body);
+      assert.equal(body.prerelease, false);
+      assert.equal(body.make_latest, "true");
+      return new Response(JSON.stringify({ id: 456, html_url: "https://github.test/stable" }), { status: 200 });
+    }
+    throw new Error(`unexpected request: ${options.method || "GET"} ${url}`);
+  };
+  const octokit = {
+    rest: {
+      repos: {
+        listReleaseAssets: async () => ({ data: [] }),
+        uploadReleaseAsset: async () => ({}),
+      },
+    },
+  };
+
+  const result = await publishGitHubReleaseEvidence({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "libnode",
+    token: "token",
+    apiUrl: "https://api.github.test",
+    tag: "v22.22.3-kf.4",
+    target: SHA,
+    channel: "release",
+    publishEvidencePath: path.join(cwd, ".buildchain/release-evidence/v22.22.3-kf.4/evidence.json"),
+    releasePassportPath: path.join(cwd, ".buildchain/release-passport/buildchain.release.json"),
+    releasePassportOutputDir: path.join(cwd, ".buildchain/release-passport"),
+  });
+
+  assert.equal(result.action, "updated");
+  assert.equal(result.assetCount, 2);
+});
+
 test("promote action preserves byte-identical GitHub Release assets on duplicate delivery", async (t) => {
   const cwd = makeTempWorkspace({
     ".buildchain/release-evidence/v1.0.1-alpha.0/evidence.json": { ok: true },
