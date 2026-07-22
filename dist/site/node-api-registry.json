@@ -112,7 +112,7 @@
       "specifier": "@kungfu-tech/buildchain/controller-evidence",
       "export": "./controller-evidence",
       "target": "./packages/core/controller-evidence.js",
-      "digest": "sha256:3767d8dce1a18e610d4d1dcad3ef5e5c457d97f01769c9961cb45eb4d682ce59",
+      "digest": "sha256:c061ed32e02713fd99ffd291ee8ed4a4dba563265ee530deef4b37197cbb65e6",
       "summary": "Project-independent controller descriptors, source/runtime-bound plans, receipts, aggregates, and validation APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
