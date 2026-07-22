@@ -1902,6 +1902,7 @@ test("binary evidence and product publication are isolated by the sealed asset w
     "utf8",
   );
   assert.match(workflow, /Fetch durable release-state passport/);
+  assert.match(workflow, /name: Write checksums[\s\S]*?! -name checksums\.txt/);
   assert.match(workflow, /refs\/heads\/\$\{ref\}:refs\/remotes\/origin\/\$\{ref\}/);
   assert.match(workflow, /authoritative-release-state-passport\.json/);
   assert.match(workflow, /authoritative-release-state-impact\.json/);
@@ -1923,9 +1924,16 @@ test("binary evidence and product publication are isolated by the sealed asset w
   assert.doesNotMatch(workflow, /scripts\/ensure-github-release\.mjs/);
   assert.doesNotMatch(workflow, /gh release upload/);
   assert.match(publication, /uses: \.\/\.github\/workflows\/\.publication-authority\.yml/);
+  assert.match(
+    publication,
+    /name: Seal binary release asset capability\n    permissions:\n      actions: read\n      contents: read/,
+  );
   assert.match(publication, /needs: publication-authority/);
   assert.match(publication, /environment: buildchain-release-assets/);
   assert.match(publication, /scripts\/ensure-github-release\.mjs/);
+  assert.match(publication, /name: Write public binary checksums/);
+  assert.match(publication, /! -name checksums\.txt/);
+  assert.match(publication, /dist\/binary\/\*/);
   assert.match(publication, /--repository "\$\{\{ github\.repository \}\}"/);
   assert.match(publication, /--tag "\$RELEASE_TAG"/);
   assert.match(publication, /gh release upload "\$RELEASE_TAG"/);
@@ -1941,6 +1949,14 @@ test("binary evidence and product publication are isolated by the sealed asset w
   assert.match(publication, /gate-aggregate-json:/);
   assert.match(promotion, /Dispatch standalone binary distribution for the exact public tag/);
   assert.match(promotion, /gh workflow run binary-distribution\.yml/);
+  assert.match(
+    promotion,
+    /name: Preflight PR-stage release candidate evidence[\s\S]*?permissions:\n      actions: read\n      contents: read/,
+  );
+  assert.match(
+    promotion,
+    /name: Promote release candidate[\s\S]*?permissions:\n      actions: write\n      checks: write/,
+  );
   assert.match(assembler, /validateControllerReceipt/);
   assert.match(assembler, /buildchain-aarch64-apple-darwin\.tar\.gz/);
   assert.match(assembler, /buildchain-x86_64-unknown-linux-gnu\.tar\.gz/);

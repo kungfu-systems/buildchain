@@ -68,6 +68,7 @@ jobs:
   publication-authority:
     name: Seal binary release asset capability
     permissions:
+      actions: read
       contents: read
     uses: ./.github/workflows/.publication-authority.yml
     with:
@@ -126,6 +127,18 @@ jobs:
           github-token: ${{ github.token }}
           name: buildchain-release-passport
           path: .buildchain/release-passport
+
+      - name: Write public binary checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          checksum_path="${RUNNER_TEMP}/buildchain-checksums-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.txt"
+          cd dist/binary
+          find . -maxdepth 1 -type f ! -name checksums.txt -print0 \
+            | LC_ALL=C sort -z \
+            | xargs -0 sha256sum > "$checksum_path"
+          mv "$checksum_path" checksums.txt
+          test -s checksums.txt
 
       - name: Verify capability against downloaded bundle and tag
         env:

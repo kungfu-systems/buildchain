@@ -650,7 +650,7 @@ jobs:
     if: ${{ needs.preflight.outputs.action == 'promote' }}
     runs-on: ubuntu-24.04
     permissions:
-      actions: write
+      actions: read
       contents: read
     outputs:
       evidence-run-id: ${{ steps.release-candidate.outputs.release-candidate-run-id }}
@@ -958,7 +958,7 @@ jobs:
     if: ${{ needs.preflight.outputs.action == 'promote' && needs.publication-authority.result == 'success' && needs.publication-qualification.result == 'success' }}
     runs-on: ubuntu-24.04
     permissions:
-      actions: read
+      actions: write
       checks: write
       contents: write
       id-token: write
