@@ -1,8 +1,8 @@
 import crypto from "node:crypto";
-import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
+import { spawnSyncCommand } from "./spawn-command.js";
 
 export const KFD_AGENT_HUB_DECLARATION = ".buildchain/kfd/agent-hub.json";
 export const KFD_AGENT_HUB_OUTPUT_DIR = ".buildchain/artifacts/kfd-agent-hub";
@@ -278,7 +278,7 @@ function inspectKfdCut(kfd) {
 }
 
 function defaultRun(command, args, { cwd }) {
-  const result = spawnSync(command, args, { cwd, encoding: "utf8", env: process.env });
+  const result = spawnSyncCommand(command, args, { cwd, encoding: "utf8", env: process.env });
   return { status: result.status ?? 2, stdout: result.stdout || "", stderr: result.stderr || "", error: result.error };
 }
 

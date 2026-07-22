@@ -6,6 +6,12 @@ import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { createBuildchainLogger } from "../packages/core/logging.js";
+import {
+  resolveSpawnCommand,
+  usesShellForSpawnCommand,
+} from "../packages/core/spawn-command.js";
+
+export { resolveSpawnCommand, usesShellForSpawnCommand };
 
 function readArg(name, fallback = "") {
   const index = process.argv.indexOf(`--${name}`);
@@ -40,22 +46,6 @@ function timed(logger, eventName, details, callback) {
     });
     throw error;
   }
-}
-
-const WINDOWS_CMD_SHIMS = new Set(["corepack", "npm", "npx", "pnpm", "yarn"]);
-
-export function resolveSpawnCommand(command, platform = process.platform) {
-  if (platform !== "win32") {
-    return command;
-  }
-  if (!WINDOWS_CMD_SHIMS.has(command)) {
-    return command;
-  }
-  return `${command}.cmd`;
-}
-
-export function usesShellForSpawnCommand(command, platform = process.platform) {
-  return platform === "win32" && WINDOWS_CMD_SHIMS.has(command);
 }
 
 function run(command, args, options = {}) {

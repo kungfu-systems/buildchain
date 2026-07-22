@@ -13,6 +13,7 @@ import {
   inspectKfdAgentHub,
   testKfdAgentHub,
 } from "../packages/core/kfd-agent-hub.js";
+import { spawnSyncCommand } from "../packages/core/spawn-command.js";
 
 function tempDir(name) {
   return fs.mkdtempSync(path.join(os.tmpdir(), `buildchain-${name}-`));
@@ -122,6 +123,23 @@ test("init emits one declaration without overwriting by default", () => {
   assert.equal(result.write, true);
   assert.equal(result.declaration.contract, KFD_AGENT_HUB_ADOPTION_CONTRACT);
   assert.throws(() => initKfdAgentHub({ cwd, write: true }), /declaration-exists/);
+});
+
+test("default runner resolves Windows package-manager command shims", () => {
+  const calls = [];
+  const result = spawnSyncCommand("npm", ["run", "build"], { cwd: "C:\\agent-hub" }, {
+    platform: "win32",
+    spawn(command, args, options) {
+      calls.push({ command, args, options });
+      return { status: 0, stdout: "", stderr: "" };
+    },
+  });
+
+  assert.equal(result.status, 0);
+  assert.equal(calls[0].command, "npm.cmd");
+  assert.deepEqual(calls[0].args, ["run", "build"]);
+  assert.equal(calls[0].options.cwd, "C:\\agent-hub");
+  assert.equal(calls[0].options.shell, true);
 });
 
 test("inspect locks the exact KFD package, profile, suite, and adapter artifact", () => {

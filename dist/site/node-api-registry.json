@@ -177,7 +177,7 @@
       "specifier": "@kungfu-tech/buildchain/kfd-agent-hub",
       "export": "./kfd-agent-hub",
       "target": "./packages/core/kfd-agent-hub.js",
-      "digest": "sha256:b301acb17af17f462af75f086f506bb529d2456647bfdbd78182852a413f5671",
+      "digest": "sha256:0221784b744fb2a0da02b95ed02b642b7456df2b8c2d8fb818aaa7e8a9a2deb1",
       "summary": "Declarative Agent Hub adapter inspection, fixed-suite execution, exact KFD cut locking, and agent explanation APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [
