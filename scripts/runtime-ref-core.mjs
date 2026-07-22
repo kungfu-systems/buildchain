@@ -111,12 +111,24 @@ export function validateRuntimeOverrideTrust({
   requestedRef = "",
   eventName = "",
   actorPermission = "",
+  sameRepositoryPullRequest = false,
+  pullRequestHeadSha = "",
 } = {}) {
   if (!String(requestedRef || "").trim()) {
     return { ok: true, decision: "stable-default" };
   }
   if (isOfficialBuildchainChannelRef(requestedRef)) {
     return { ok: true, decision: "official-channel" };
+  }
+  const normalizedRequested = String(requestedRef || "").trim().toLowerCase();
+  const normalizedHeadSha = String(pullRequestHeadSha || "").trim().toLowerCase();
+  if (
+    eventName === "pull_request" &&
+    sameRepositoryPullRequest === true &&
+    EXACT_SHA_RE.test(normalizedRequested) &&
+    normalizedRequested === normalizedHeadSha
+  ) {
+    return { ok: true, decision: "same-repository-pr-head" };
   }
   if (eventName !== "workflow_dispatch") {
     return {

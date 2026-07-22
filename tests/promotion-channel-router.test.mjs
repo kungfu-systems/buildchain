@@ -153,25 +153,25 @@ test("alpha-only advanced workflow changes are isolated from the stable shell re
   const generated = generateChannelPromotionWorkflow(fixture, { major: 2, shellRouting });
 
   assert.match(generated, /\.release-candidate-promote\.yml@v2-alpha/);
-  assert.match(generated, /\.release-candidate-promote\.yml@10e8567e32a2a92746808cf087359d72c754d1bd/);
+  assert.match(generated, /\.release-candidate-promote\.yml@725592ae025003071b8d33fdb49e0157842fe76c/);
   assert.doesNotMatch(generated, /\.release-candidate-promote\.yml@v2(?:\n|$)/);
   assert.notEqual(fixture, advanced);
   assert.doesNotMatch(generated, /Advanced Alpha Fixture/);
 });
 
-test("stable route calls the hidden advanced workflow at the immutable v2.14.12 SHA", () => {
+test("stable route calls the hidden advanced workflow at the immutable v2.14.13 SHA", () => {
   const advanced = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
   const generated = generateChannelPromotionWorkflow(advanced, { major: 2, shellRouting });
 
   assert.deepEqual(shellRouting.stable, {
     logicalRef: "v2",
-    callRef: "10e8567e32a2a92746808cf087359d72c754d1bd",
+    callRef: "725592ae025003071b8d33fdb49e0157842fe76c",
     workflowPath: ".github/workflows/.release-candidate-promote.yml",
     forwardInternalInputs: true,
-    unsupportedInputs: [],
+    unsupportedInputs: ["standalone-binary-distribution"],
   });
   assert.match(generated, /STABLE_SHELL_REF: v2/);
-  assert.match(generated, /STABLE_SHELL_CALL_REF: 10e8567e32a2a92746808cf087359d72c754d1bd/);
+  assert.match(generated, /STABLE_SHELL_CALL_REF: 725592ae025003071b8d33fdb49e0157842fe76c/);
   assert.match(generated, /STABLE_SHELL_WORKFLOW_PATH: \.github\/workflows\/\.release-candidate-promote\.yml/);
   assert.match(generated, /shell-call-ref: \$\{\{ steps\.identities\.outputs\.shell-call-ref \}\}/);
   assert.match(generated, /BUILDCHAIN_ROUTER_WORKFLOW_SHA: \$\{\{ job\.workflow_sha \}\}/);
@@ -180,14 +180,16 @@ test("stable route calls the hidden advanced workflow at the immutable v2.14.12 
   assert.match(generated, /ref: \$\{\{ steps\.identities\.outputs\.runtime-sha \}\}/);
 });
 
-test("stable route forwards the complete advanced workflow input surface", () => {
+test("stable route forwards only inputs supported by its immutable workflow shell", () => {
   const advanced = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
   const generated = generateChannelPromotionWorkflow(advanced, { major: 2, shellRouting });
   const stableBlock = generated.slice(generated.indexOf("  stable:\n"));
 
   for (const name of workflowFields(advanced, "inputs")) {
+    if (shellRouting.stable.unsupportedInputs.includes(name)) continue;
     assert.match(stableBlock, new RegExp(`^      ${name}:`, "m"));
   }
+  assert.doesNotMatch(stableBlock, /^      standalone-binary-distribution:/m);
   assert.match(
     stableBlock,
     /^      promotion-shell-ref: \$\{\{ needs\.resolve-promotion\.outputs\.shell-call-ref \}\}$/m,

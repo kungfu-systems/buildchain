@@ -295,6 +295,52 @@ test("publication admission constructor canonicalizes every sealed binding", () 
   assert.deepEqual(createPublicationAdmission(input), values.admission);
 });
 
+test("binary release evidence binds all three standalone archives to the sealed capability", () => {
+  const values = fixture();
+  const { digest: _oldReceiptDigest, ...receiptPayload } = values.publicationEvidence.controllerReceipt;
+  const controllerReceipt = {
+    ...receiptPayload,
+    controller: { ...receiptPayload.controller, id: "binary-distribution" },
+  };
+  controllerReceipt.digest = controllerEvidenceDigest(controllerReceipt);
+  const { admissionDigest: _oldAdmissionDigest, ...admissionPayload } = values.admission;
+  values.admission = {
+    ...admissionPayload,
+    controllerReceiptDigest: controllerReceipt.digest.replace(/^sha256:/, ""),
+    artifactDigest: DIGESTS.artifactDigest,
+  };
+  values.admission.admissionDigest = publicationAuthorityDigest(values.admission);
+  values.expectedBindings.controllerReceiptDigest = values.admission.controllerReceiptDigest;
+  values.expectedBindings.artifactDigest = values.admission.artifactDigest;
+  values.publicationEvidence = {
+    binaryReleaseEvidence: {
+      sourceTreeSha: DIGESTS.sourceTreeSha,
+      bundleArchiveDigest: DIGESTS.artifactDigest,
+      controllerReceipt,
+      bundleManifest: {
+        contract: "kungfu-buildchain-release-evidence-bundle",
+        release: { tag: `v${values.admission.version}`, sourceSha: DIGESTS.sourceSha },
+        bundle: { sha256: DIGESTS.artifactDigest },
+        files: [
+          "release-assets/buildchain-aarch64-apple-darwin.tar.gz",
+          "release-assets/buildchain-x86_64-unknown-linux-gnu.tar.gz",
+          "release-assets/buildchain-x86_64-pc-windows-msvc.zip",
+          "release-assets/checksums.txt",
+          "release-passport/buildchain.release.json",
+        ].map((bundlePath) => ({ bundlePath })),
+      },
+    },
+    gateAggregate: values.publicationEvidence.gateAggregate,
+  };
+
+  const capability = verify(values);
+  assert.equal(capability.artifactDigest, DIGESTS.artifactDigest);
+  assert.deepEqual(capability.capabilityIds, ["npm-publish"]);
+
+  values.publicationEvidence.binaryReleaseEvidence.bundleManifest.files.pop();
+  assert.throws(() => verify(values), /binary release evidence is missing release-passport\/buildchain\.release\.json/);
+});
+
 function qualificationFixture() {
   const values = fixture({ qualificationRequired: true });
   const now = new Date("2026-07-14T00:05:00.000Z");

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-site-manifest",
-  "generatedAt": "2026-07-21T20:06:36.670Z",
-  "publishedAt": "2026-07-21T20:06:36.670Z",
+  "generatedAt": "2026-07-22T07:38:04.463Z",
+  "publishedAt": "2026-07-22T07:38:04.463Z",
   "reproducible": true,
   "timestampPolicy": "ci-injected",
   "deterministicInputs": [
@@ -19,7 +19,7 @@
     "declared Buildchain surface manifest contract"
   ],
   "sourceDateEpoch": "0",
-  "sourceRevision": "d82f8d214b48af62d41cb47d8c3b25838e16d6f1",
+  "sourceRevision": "5ec517227d615b2f11db8b5e36183f16082479b8",
   "timestampPolicyDetails": {
     "contract": "kungfu-buildchain-surface-timestamp-policy",
     "timestampFields": [
@@ -37,7 +37,7 @@
   },
   "package": {
     "name": "@kungfu-tech/buildchain",
-    "version": "2.14.13",
+    "version": "2.14.14-alpha.8",
     "versionSource": "package.json#version"
   },
   "entrypoint": "buildchain-site.json",
@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:fa818a541ee2d70a0cc08caec85bf4c1eb20ff5118be0cc2149062fed50f4620"
+      "digest": "sha256:7f007a9d295d597dfc5b1447629ab0d6bf2b3fa3d625b02d27abf7493d73bb40"
     },
     {
       "id": "install",
@@ -93,7 +93,7 @@
       "path": "docs/release-candidate.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:5528710ec63dbdf86a34e69a7ea86dbb4194d72522951fc67108f5cfc58fdd99"
+      "digest": "sha256:15bfe69e1da8c9bf7310c5cd89968d206886a25447f71fdc7cd58db2af0c7608"
     },
     {
       "id": "release-propagation",
@@ -125,7 +125,7 @@
       "path": "docs/binary-distribution.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:08be4e97e1940a45a2c0aa2506012255888c23c1cbf8f5362b27c2b21089eb58"
+      "digest": "sha256:ae0f8e6cafbb4c39732e6a7252d46b523b0a69e8e05d3ce7ee0b51a916b1b027"
     },
     {
       "id": "consumer-issue-reporting",
@@ -157,7 +157,7 @@
       "path": "docs/site-bundle-contract.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:d67a874b356fbfbee9a5d5ece7021fb52b2848347dc6a14f5562c98570096916"
+      "digest": "sha256:583661a7886bdca7e8352a5325a105a9df5d134b3896dbda13ad9b637697481f"
     },
     {
       "id": "migration-inventory",
@@ -165,7 +165,7 @@
       "path": "docs/migration-inventory.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:a5f7271a065544f7ac525dbddfe3d4b9f621b5284c730089f086dd9f961e883c"
+      "digest": "sha256:18f98635bb16a4e43cac2d46443b3e812c305f708f071929dc6a46a8cd5dccd5"
     },
     {
       "id": "ownership",
@@ -208,6 +208,14 @@
       "digest": "sha256:ab15de33a1a9e292b6da74c00b8b96b7c46330d0553a454d1de4c24c672fc025"
     },
     {
+      "id": "kfd-agent-hub",
+      "title": "KFD Agent Hub Builder flow",
+      "path": "docs/kfd-agent-hub.md",
+      "plane": "use",
+      "exists": true,
+      "digest": "sha256:7528f8a11c7fe67b350c0dd380b77d724c2d9e0001b4427949ee1c6012735d49"
+    },
+    {
       "id": "lifecycle-protocol",
       "title": "Lifecycle protocol",
       "path": "docs/lifecycle-protocol.md",
@@ -221,7 +229,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:dea8ec2f1f2ea75e569a989988e9d6f76067e1d0ae496dadc34ef1dcfbfa35dd"
+      "digest": "sha256:9c125f6d2b519c96718f45da62ac1a891ab618bcb331d3b14c4b88b5158fc4a9"
     },
     {
       "id": "publish-transaction",
@@ -237,7 +245,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:adb3c5d2eb414ffde6e75032c8f795de0c4ad929baa2d1e5d0f8cd7a9af39f1f"
+      "digest": "sha256:4476d9464d29b4ff3951a362607a11c78b7a3b723247af93ded1b15ff8f0b83e"
     },
     {
       "id": "release-flow",
@@ -269,7 +277,7 @@
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:856a7602cf1c2d3a0a540cdf0d64566914f79dde24417c92089f0466bee25df1"
+      "digest": "sha256:efbfc97a947978e61c79dac9d67f87050b1bef2297617303340af8aa499703c9"
     }
   ],
   "facts": [

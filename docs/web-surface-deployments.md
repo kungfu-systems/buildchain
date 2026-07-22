@@ -456,7 +456,12 @@ compatibility evidence, but root correctness comes from the viewer-request
 rewrite contract, not from extensionless S3 keys. If Buildchain-managed mode
 finds a distribution with a different viewer-request function, apply fails
 closed and records that conflict in the apply result instead of silently serving
-403s. The reusable workflow uploads `buildchain-web-surface-*-diagnostics`
+403s. If CloudFront rejects `UpdateDistribution` because its optimistic-lock
+ETag became stale, Buildchain re-reads the distribution and retries with the
+new ETag at most twice. A concurrent update that already attached the intended
+function is accepted as converged; a different viewer-request function or any
+non-ETag AWS error still fails immediately. The reusable workflow uploads
+`buildchain-web-surface-*-diagnostics`
 artifacts containing the apply and health JSON so the failing AWS operation or
 HTTP check is visible from the consumer run.
 

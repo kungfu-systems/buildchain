@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:fa818a541ee2d70a0cc08caec85bf4c1eb20ff5118be0cc2149062fed50f4620",
+      "digest": "sha256:7f007a9d295d597dfc5b1447629ab0d6bf2b3fa3d625b02d27abf7493d73bb40",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -79,7 +79,7 @@
       "title": "Release Candidate Passport",
       "path": "docs/release-candidate.md",
       "plane": "verify",
-      "digest": "sha256:5528710ec63dbdf86a34e69a7ea86dbb4194d72522951fc67108f5cfc58fdd99",
+      "digest": "sha256:15bfe69e1da8c9bf7310c5cd89968d206886a25447f71fdc7cd58db2af0c7608",
       "capabilityGroup": "reusable-build",
       "audience": [
         "release-operator",
@@ -135,7 +135,7 @@
       "title": "Binary distribution contract",
       "path": "docs/binary-distribution.md",
       "plane": "verify",
-      "digest": "sha256:08be4e97e1940a45a2c0aa2506012255888c23c1cbf8f5362b27c2b21089eb58",
+      "digest": "sha256:ae0f8e6cafbb4c39732e6a7252d46b523b0a69e8e05d3ce7ee0b51a916b1b027",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",
@@ -191,7 +191,7 @@
       "title": "Site bundle contract",
       "path": "docs/site-bundle-contract.md",
       "plane": "use",
-      "digest": "sha256:d67a874b356fbfbee9a5d5ece7021fb52b2848347dc6a14f5562c98570096916",
+      "digest": "sha256:583661a7886bdca7e8352a5325a105a9df5d134b3896dbda13ad9b637697481f",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "site",
@@ -205,7 +205,7 @@
       "title": "Migration inventory",
       "path": "docs/migration-inventory.md",
       "plane": "verify",
-      "digest": "sha256:a5f7271a065544f7ac525dbddfe3d4b9f621b5284c730089f086dd9f961e883c",
+      "digest": "sha256:18f98635bb16a4e43cac2d46443b3e812c305f708f071929dc6a46a8cd5dccd5",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -284,6 +284,21 @@
       "order": 300
     },
     {
+      "id": "kfd-agent-hub",
+      "title": "KFD Agent Hub Builder flow",
+      "path": "docs/kfd-agent-hub.md",
+      "plane": "use",
+      "digest": "sha256:7528f8a11c7fe67b350c0dd380b77d724c2d9e0001b4427949ee1c6012735d49",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "consumer",
+        "maintainer"
+      ],
+      "maturity": "preview",
+      "order": 305
+    },
+    {
       "id": "lifecycle-protocol",
       "title": "Lifecycle protocol",
       "path": "docs/lifecycle-protocol.md",
@@ -302,7 +317,7 @@
       "title": "Reusable build surface",
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
-      "digest": "sha256:dea8ec2f1f2ea75e569a989988e9d6f76067e1d0ae496dadc34ef1dcfbfa35dd",
+      "digest": "sha256:9c125f6d2b519c96718f45da62ac1a891ab618bcb331d3b14c4b88b5158fc4a9",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -329,7 +344,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:adb3c5d2eb414ffde6e75032c8f795de0c4ad929baa2d1e5d0f8cd7a9af39f1f",
+      "digest": "sha256:4476d9464d29b4ff3951a362607a11c78b7a3b723247af93ded1b15ff8f0b83e",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -384,7 +399,7 @@
       "title": "Web surface deployments",
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
-      "digest": "sha256:856a7602cf1c2d3a0a540cdf0d64566914f79dde24417c92089f0466bee25df1",
+      "digest": "sha256:efbfc97a947978e61c79dac9d67f87050b1bef2297617303340af8aa499703c9",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "site",

@@ -8,17 +8,22 @@
       "path": ".github/workflows/.binary-release-assets.yml",
       "reusable": true,
       "inputs": [
+        "auto-admission",
         "buildchain-ref",
         "buildchain-repository",
         "evidence-run-id",
         "publication-admission-json",
         "publication-control-plane-audit-json",
         "publication-expected-json",
+        "publication-gate-aggregate-json",
         "publication-runner-provenance-json",
         "publication-used-nonces-json",
-        "release-tag"
+        "publication-version",
+        "release-tag",
+        "source-sha",
+        "target-ref"
       ],
-      "inputCount": 9,
+      "inputCount": 14,
       "secrets": [],
       "secretCount": 0,
       "outputs": [],
@@ -61,6 +66,7 @@
         "expected-artifacts-json",
         "gate-profile-aggregate-json",
         "install-command",
+        "kfd-agent-hub",
         "lifecycle-timeout-minutes",
         "linux-container-image",
         "linux-container-preset",
@@ -92,7 +98,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 59,
+      "inputCount": 60,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -337,11 +343,12 @@
         "required-artifact-count",
         "required-status-check",
         "runner-preset",
+        "standalone-binary-distribution",
         "target-ref",
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 72,
+      "inputCount": 73,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -831,6 +838,7 @@
         "expected-artifacts-json",
         "gate-profile-aggregate-json",
         "install-command",
+        "kfd-agent-hub",
         "lifecycle-timeout-minutes",
         "linux-container-image",
         "linux-container-preset",
@@ -862,7 +870,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 62,
+      "inputCount": 63,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1515,11 +1523,12 @@
         "required-artifact-count",
         "required-status-check",
         "runner-preset",
+        "standalone-binary-distribution",
         "target-ref",
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 64,
+      "inputCount": 65,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",

@@ -87,7 +87,7 @@ jobs:
     # the first alpha that introduces a new advanced shell path.
     uses: ./.github/workflows/.release-candidate-promote.yml
     permissions:
-      actions: read
+      actions: write
       checks: write
       contents: write
       id-token: write
@@ -103,6 +103,7 @@ jobs:
       release-candidate-workflow-file: build-surface-fixture.yml
       release-candidate-workflow-name: Build Surface Fixture
       github-release: true
+      standalone-binary-distribution: true
       required-status-check: check
       branch-protection-bypass-apps: ${{ vars.BUILDCHAIN_PROMOTION_BYPASS_APPS || 'github-actions' }}
       branch-protection-bypass-users: ${{ vars.BUILDCHAIN_PROMOTION_BYPASS_USERS }}

@@ -14,6 +14,7 @@ import {
 import {
   collectKfdUpstreamFacts,
 } from "../packages/core/kfd.js";
+import { KFD_AGENT_HUB_ADOPTION_SCHEMA } from "../packages/core/kfd-agent-hub.js";
 import {
   createReadmeBadgeEndpointRegistry,
 } from "../packages/core/readme-badges.js";
@@ -28,6 +29,7 @@ import {
   enumerateWorkflowInputs,
 } from "../packages/core/public-surface-audit.js";
 import { createSurfaceTimestampPolicy } from "../packages/core/surface-manifest.js";
+import { projectHomepageIntro } from "./site-bundle-homepage.mjs";
 
 const SITE_BUNDLE_CONTRACT = "kungfu-buildchain-site-bundle";
 const PUBLICATION_RELEASE_REGISTRY_CONTRACT = "kungfu-buildchain-publication-release-registry";
@@ -333,6 +335,7 @@ const manualMetaById = new Map(Object.entries({
   "lifecycle-protocol": { capabilityGroup: "reusable-build", audience: ["consumer", "developer"], maturity: "stable", order: 210 },
   "runtime-train-validation": { capabilityGroup: "governance-versioning", audience: ["maintainer", "consumer"], maturity: "stable", order: 220 },
   "kfd-support": { capabilityGroup: "kfd-trust", audience: ["agent", "maintainer"], maturity: "stable", order: 300 },
+  "kfd-agent-hub": { capabilityGroup: "kfd-trust", audience: ["agent", "consumer", "maintainer"], maturity: "preview", order: 305 },
   "site-bundle-contract": { capabilityGroup: "site-and-propagation", audience: ["site", "agent"], maturity: "stable", order: 400 },
   "web-surface-deployments": { capabilityGroup: "site-and-propagation", audience: ["site", "release-operator"], maturity: "stable", order: 410 },
   "release-propagation": { capabilityGroup: "site-and-propagation", audience: ["release-operator", "agent"], maturity: "preview", order: 420 },
@@ -409,6 +412,7 @@ function cliCommandMeta(id) {
     "inspect-artifact": { group: "release-passport-trust", purpose: "Inspect artifact evidence." },
     "inspect-release": { group: "release-passport-trust", purpose: "Inspect release passport evidence." },
     kfd: { group: "kfd-trust", purpose: "Inspect KFD standards, schemas, and versioned KFD command families." },
+    "kfd-hub": { group: "kfd-trust", purpose: "Initialize, inspect, test, and explain one declarative KFD Agent Hub adapter adoption." },
     layout: { group: "kfd-trust", purpose: "Return the versioned repository-layout and KFD registry discovery contract for tools such as Shifu." },
     "kfd-schema": { group: "kfd-trust", purpose: "Inspect KFD schema command families." },
     "kfd-schema-list": { group: "kfd-trust", purpose: "List machine-readable schemas exposed by the KFD package standards metadata." },
@@ -503,6 +507,7 @@ function nodeApiMeta(exportName) {
     "./artifact-verification-envelope": { group: "release-passport-trust", summary: "Sealed exact-root, lifecycle, identity, and existing KFD assessment inputs for KFX admission." },
     "./anchored-version-material": { group: "reusable-build", summary: "Anchored/manual derived version material preflight, exact-tree binding, and digest evidence APIs." },
     "./release-passport": { group: "release-passport-trust", summary: "Release passport collection, verification, explanation, and evidence APIs." },
+    "./kfd-agent-hub": { group: "kfd-trust", summary: "Declarative Agent Hub adapter inspection, fixed-suite execution, exact KFD cut locking, and agent explanation APIs." },
     "./release-passport-contract": { group: "release-passport-trust", summary: "Standalone release passport JSON Schema, ownership/check manifest, and structural validation APIs." },
     "./release-candidate": { group: "reusable-build", summary: "PR-stage release-candidate artifact, passport, and promote-only resolver APIs." },
     "./stable-candidate-ledger": { group: "governance-versioning", summary: "Immutable alpha candidate ledger, qualification, revocation, selection, and exact stable source-lock APIs." },
@@ -702,6 +707,7 @@ function buildSiteBundle() {
   const packageJson = readJson("package.json");
   const inventory = readJson("tests/buildchain-inventory.json");
   const readme = parseReadme(readText(README_PATH));
+  const homepageIntro = projectHomepageIntro(readme.intro);
   const docs = BUILDCHAIN_AGENT_MANUALS.map((manual) => docEntry(manual.id, manual.title, manual.path, manual.plane));
   const pages = buildSitePages();
   const preservedTimestampPolicy = readExistingSiteTimestampPolicy(packageJson.version);
@@ -945,8 +951,10 @@ function buildSiteBundle() {
     },
     githubRelease: {
       exactTagRelease: true,
-      prereleaseTags: "semver prerelease tags set prerelease=true and make_latest=false",
-      stableTags: "stable semver tags set make_latest=true",
+      authoritativeIntent: "Buildchain publication channel controls prerelease/latest metadata when available",
+      alphaChannel: "alpha publication sets prerelease=true and make_latest=false",
+      stableChannels: "release, stable, and major publication set prerelease=false and make_latest=true",
+      tagFallback: "ordinary callers without publication intent use semver prerelease syntax",
       evidenceAssets: [
         "publish evidence JSON",
         "buildchain.release.json",
@@ -971,6 +979,7 @@ function buildSiteBundle() {
       "buildchain.release.json",
       "release-passport-check-manifest.json",
       "schemas/release-passport-v1.schema.json",
+      "schemas/kfd-agent-hub-adoption.schema.json",
       "artifact-evidence.json",
       "product-mechanism.json",
       "impact.json",
@@ -998,6 +1007,7 @@ function buildSiteBundle() {
       "artifact-schemas.json",
       "release-passport-check-manifest.json",
       "schemas/release-passport-v1.schema.json",
+      "schemas/kfd-agent-hub-adoption.schema.json",
       "buildchain-contract.json",
       "kfd-claims.json",
       "product-mechanism.json",
@@ -1019,6 +1029,23 @@ function buildSiteBundle() {
     category: "Buildchain Release Passport",
     purpose: "A mature product release record for artifacts that users or agents depend on.",
     executionSubstrate: "GitHub Actions, protected refs, exact tags, GitHub Releases, npm Trusted Publishing, and machine-readable evidence.",
+    agentSupplyChain: {
+      layer: "buildchain",
+      order: 2,
+      owner: "Buildchain",
+      input: "KFD-3-discoverable product declarations and an exact source cut",
+      output: "artifact-bound provenance, checks, and promotion evidence",
+      statusClass: "proved-now",
+      publicStatement: "Buildchain proves consistency between product-owned declarations and exact release artifacts, and fails or downgrades when evidence drifts.",
+      downstream: "KFD-2 purpose-bound assessment and receiver-owned admission",
+      evidence: ["buildchain.release.json", "artifact-evidence.json", "product-mechanism.json"],
+      knownLimits: [
+        "Buildchain does not create product facts or make the receiver's trust decision.",
+        "A passing passport is exact-artifact evidence, not blanket certification or adoption proof.",
+      ],
+      humanRoute: "https://buildchain.libkungfu.dev/",
+      agentRoute: "https://buildchain.libkungfu.dev/manifest.json",
+    },
     notA: [
       "a replacement CI/CD platform",
       "a binary-only release tool",
@@ -1109,6 +1136,7 @@ function buildSiteBundle() {
       "artifact-schemas.json",
       "release-passport-check-manifest.json",
       "schemas/release-passport-v1.schema.json",
+      "schemas/kfd-agent-hub-adoption.schema.json",
       "buildchain-contract.json",
       "kfd-upstream-aggregate.json",
       "kfd-claims.json",
@@ -1218,8 +1246,8 @@ function buildSiteBundle() {
     },
     homepage: {
       title: readme.title,
-      lead: paragraphBlocks(readme.intro)[0] || "",
-      mechanismSummary: paragraphBlocks(readme.intro).slice(1),
+      lead: homepageIntro.lead,
+      mechanismSummary: homepageIntro.mechanismSummary,
       sections: homepageSections,
       displayPlan: {
         firstScreen: {
@@ -1281,6 +1309,7 @@ function buildSiteBundle() {
     "artifact-schemas.json": artifactSchemas,
     "release-passport-check-manifest.json": createReleasePassportCheckManifest(),
     "schemas/release-passport-v1.schema.json": RELEASE_PASSPORT_SCHEMA,
+    "schemas/kfd-agent-hub-adoption.schema.json": KFD_AGENT_HUB_ADOPTION_SCHEMA,
     "badge-endpoint-registry.json": badgeEndpointRegistry,
     "publication-registry.json": publicationRegistry,
     "buildchain-contract.json": createBuildchainContractWorld({ root, controllerRegistry }),

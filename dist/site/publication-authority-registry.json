@@ -618,13 +618,16 @@
     },
     {
       "path": ".github/workflows/binary-distribution.yml",
-      "signals": [],
+      "signals": [
+        "write-permission"
+      ],
       "classified": true
     },
     {
       "path": ".github/workflows/binary-release-assets.yml",
       "signals": [
-        "write-permission"
+        "write-permission",
+        "github-release"
       ],
       "classified": true
     },
@@ -846,5 +849,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "588256fc42c36c1e03286f1de1f7abe1e393ce2e452ae1bf548668f017316590"
+  "registryDigest": "5f3d4759ffd0dda1addde124221238f8c1a9b6cf07005419d68a0ab946b2841e"
 }

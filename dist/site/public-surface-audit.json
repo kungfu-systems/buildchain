@@ -3,11 +3,11 @@
   "contract": "kungfu-buildchain-public-surface-reverse-audit",
   "status": "passed",
   "summary": {
-    "cliCommandCount": 84,
+    "cliCommandCount": 85,
     "workflowCount": 51,
     "actionCount": 4,
-    "sitePageCount": 51,
-    "docCommandRefCount": 258,
+    "sitePageCount": 52,
+    "docCommandRefCount": 264,
     "failureCount": 0
   },
   "enumerated": {
@@ -238,6 +238,11 @@
         "usage": "buildchain kfd aggregate [--cwd <dir>] [--json]"
       },
       {
+        "id": "kfd-hub",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd hub <init|inspect|test|explain> [--cwd <dir>]"
+      },
+      {
         "id": "kfd-migrate-layout",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain kfd migrate-layout [--cwd <dir>] [--write] [--force] [--json]"
@@ -439,17 +444,22 @@
         "path": ".github/workflows/.binary-release-assets.yml",
         "reusable": true,
         "inputs": [
+          "auto-admission",
           "buildchain-ref",
           "buildchain-repository",
           "evidence-run-id",
           "publication-admission-json",
           "publication-control-plane-audit-json",
           "publication-expected-json",
+          "publication-gate-aggregate-json",
           "publication-runner-provenance-json",
           "publication-used-nonces-json",
-          "release-tag"
+          "publication-version",
+          "release-tag",
+          "source-sha",
+          "target-ref"
         ],
-        "inputCount": 9,
+        "inputCount": 14,
         "secrets": [],
         "secretCount": 0,
         "outputs": [],
@@ -489,6 +499,7 @@
           "expected-artifacts-json",
           "gate-profile-aggregate-json",
           "install-command",
+          "kfd-agent-hub",
           "lifecycle-timeout-minutes",
           "linux-container-image",
           "linux-container-preset",
@@ -520,7 +531,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 59,
+        "inputCount": 60,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -753,11 +764,12 @@
           "required-artifact-count",
           "required-status-check",
           "runner-preset",
+          "standalone-binary-distribution",
           "target-ref",
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 72,
+        "inputCount": 73,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1202,6 +1214,7 @@
           "expected-artifacts-json",
           "gate-profile-aggregate-json",
           "install-command",
+          "kfd-agent-hub",
           "lifecycle-timeout-minutes",
           "linux-container-image",
           "linux-container-preset",
@@ -1233,7 +1246,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 62,
+        "inputCount": 63,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1823,11 +1836,12 @@
           "required-artifact-count",
           "required-status-check",
           "runner-preset",
+          "standalone-binary-distribution",
           "target-ref",
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 64,
+        "inputCount": 65,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2291,6 +2305,10 @@
         "category": "manual"
       },
       {
+        "id": "manual:kfd-agent-hub",
+        "category": "manual"
+      },
+      {
         "id": "manual:kfd-support",
         "category": "manual"
       },
@@ -2605,6 +2623,11 @@
       {
         "id": "collect-github-release",
         "path": "docs/cli.md",
+        "command": "buildchain collect github-release"
+      },
+      {
+        "id": "collect-github-release",
+        "path": "docs/kfd-agent-hub.md",
         "command": "buildchain collect github-release"
       },
       {
@@ -3091,6 +3114,26 @@
         "id": "kfd-aggregate",
         "path": "docs/kfd-support.md",
         "command": "buildchain kfd aggregate --json"
+      },
+      {
+        "id": "kfd-hub",
+        "path": "docs/kfd-agent-hub.md",
+        "command": "buildchain kfd hub init"
+      },
+      {
+        "id": "kfd-hub",
+        "path": "docs/kfd-agent-hub.md",
+        "command": "buildchain kfd hub inspect"
+      },
+      {
+        "id": "kfd-hub",
+        "path": "docs/kfd-agent-hub.md",
+        "command": "buildchain kfd hub test"
+      },
+      {
+        "id": "kfd-hub",
+        "path": "docs/kfd-agent-hub.md",
+        "command": "buildchain kfd hub explain"
       },
       {
         "id": "kfd-migrate-layout",
@@ -3654,6 +3697,11 @@
       },
       {
         "id": "verify-release-passport",
+        "path": "docs/kfd-agent-hub.md",
+        "command": "buildchain verify release-passport"
+      },
+      {
+        "id": "verify-release-passport",
         "path": "docs/release-passport.md",
         "command": "buildchain verify release-passport"
       },
@@ -3688,9 +3736,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "90c8650f870c350ca187c612c37f2459dcbfe265aa9b1d5b375ee5c4fb31fab6",
-    "workflowRegistryDigest": "02950eef2769b1bd2d899099ef23c7b9ae716b18d602e25aef169d788bc6ece0",
-    "pageRegistryDigest": "01c3418ba850dcf1bc678be943f60082c609c0984c5101cc2181bb9803cd6aa4"
+    "cliRegistryDigest": "07802d410c2111838c8c5f3d93392d7e8205ba64ab4c76ce594f09864ab5baaf",
+    "workflowRegistryDigest": "a954f67672292e16be1f4f663a98d0c69285f7359a43d5d6333b3ffcf6463c35",
+    "pageRegistryDigest": "21cef72eb7210cf206d4d6797d3467ad0e196dc30cf018aed1921528c19360d9"
   },
   "comparison": {
     "missingCliRegistry": [],

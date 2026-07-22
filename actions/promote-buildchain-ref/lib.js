@@ -5146,6 +5146,7 @@ async function promoteBuildchainRefs({
         exactTag: latestPublishTransaction.transaction.exact_tag,
         publicReleaseTag: latestPublishTransaction.publicReleaseTag ||
           publicReleaseTagForTransaction(latestPublishTransaction.transaction),
+        channel: latestPublishTransaction.transaction.channel,
         releaseSha: latestPublishTransaction.transaction.release_sha,
         stateRef: latestPublishTransaction.transaction.state_ref,
         stateSha: latestPublishTransaction.durable?.sha,
@@ -5530,7 +5531,23 @@ async function promoteBuildchainRefs({
       updates.push(ownsMajorAlphaTag
         ? { tag: rule.majorAlphaTag, action: "existing", sha }
         : { tag: rule.majorAlphaTag, action: "skipped-newer-minor-alpha-exists", sha });
-      return { owner, repo, sourceSha: sha, sha, targetRef, updates };
+      if (publishTransaction || publishCommand) {
+        const settledVersion = selectedAlpha.version || stripTagPrefix(selectedAlpha.tag);
+        await executePublishTransaction({
+          version: settledVersion,
+          exactTag: selectedAlpha.tag,
+          channel: rule.channel,
+          line: rule.releasePrefix,
+          releaseSha: sha,
+          publishDistTagOverride: alphaPublishDistTag,
+          allowVersionStateFinalization: true,
+        });
+        if (!dryRun && latestPublishTransaction) {
+          await markFinalizing();
+          await markComplete();
+        }
+      }
+      return withPublishTransaction({ owner, repo, sourceSha: sha, sha, targetRef, updates });
     }
     const prepareAlphaCommit = async (candidate) => {
       const version = stripTagPrefix(candidate.tag);

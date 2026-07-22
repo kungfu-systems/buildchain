@@ -328,6 +328,19 @@ export {
 } from "./release-passport.js";
 
 export {
+  KFD_AGENT_HUB_ADOPTION_CONTRACT,
+  KFD_AGENT_HUB_ADOPTION_SCHEMA,
+  KFD_AGENT_HUB_DECLARATION,
+  KFD_AGENT_HUB_LOCK_CONTRACT,
+  KFD_AGENT_HUB_OUTPUT_DIR,
+  KFD_AGENT_HUB_VERIFICATION_CONTRACT,
+  explainKfdAgentHub,
+  initKfdAgentHub,
+  inspectKfdAgentHub,
+  testKfdAgentHub,
+} from "./kfd-agent-hub.js";
+
+export {
   RELEASE_PASSPORT_CHECK_MANIFEST_CONTRACT,
   RELEASE_PASSPORT_SCHEMA,
   RELEASE_PASSPORT_SCHEMA_ID,

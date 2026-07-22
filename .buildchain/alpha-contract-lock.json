@@ -3,13 +3,13 @@
   "contract": "kungfu-buildchain-contract-lock",
   "buildchain": {
     "ref": "v2-alpha",
-    "resolvedSha": "fb33099a128e246aaf2b1dc48e1f3c84a99fef2c",
+    "resolvedSha": "dfed5c87558b009c1f60ab549e592ea0c38e8989",
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "contractDigest": "sha256:311379747d9beb4f3d8a1126b8c34122e92750690694ba5a04677ace3004bd21",
-    "compatibilityDigest": "sha256:edc3653e5cb34efd97065a6941db16140bbf375a565bbcf329d9d795bb07676f",
+    "contractDigest": "sha256:4ada3b44eb46bb0d6e6a1d18abd6dd0d3b918b424a908c893161514ebae103d6",
+    "compatibilityDigest": "sha256:0a8d38d5336300b1baf413244338e9d9217c8b28e26a187caf608b19b1864630",
     "majorLine": "v2",
     "compatibilityPolicy": "major-compatible",
-    "acceptedAt": "2026-07-19T15:19:05.000Z",
+    "acceptedAt": "2026-07-22T00:33:00.000Z",
     "surfaces": [
       {
         "id": "reusable-build",
@@ -39,7 +39,7 @@
       {
         "id": "promote-buildchain-ref-action",
         "kind": "action",
-        "breakingDigest": "sha256:a59f0910e6df842e7699139472e5dd69ac2fdd7f7213bf2cb346d1d622556874"
+        "breakingDigest": "sha256:6147c0a8d5c36bfaa6021871574e1fc28192a3f1b8cfdae4d24ef3059ac1ebda"
       },
       {
         "id": "report-buildchain-issue-action",

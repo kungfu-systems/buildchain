@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-impact",
   "release": {
-    "version": "2.14.13",
+    "version": "2.14.14-alpha.8",
     "line": "v2.14"
   },
   "versionImpact": {
@@ -29,7 +29,7 @@
       "id": "promotion-shell-layout-bootstrap",
       "impact": "patch",
       "class": "workflow-contract",
-      "rationale": "The generated router now pins the stable lane to the hidden advanced workflow shipped by v2.14.12, including planned-version-bound recovery and guarded exact-tag rebinding for validated unfinished anchored publications, while preserving the logical shell ref as public audit metadata and forwarding the exact call ref to the advanced shell identity check without changing consumer declarations.",
+      "rationale": "The generated router now pins the stable lane to the hidden advanced workflow shipped by v2.14.13, including tree-equivalent release-impact inference, planned-version-bound recovery, and guarded exact-tag rebinding for validated unfinished anchored publications, while preserving the logical shell ref as public audit metadata and forwarding the exact call ref to the advanced shell identity check without changing consumer declarations.",
       "source": ".buildchain/promotion-shell-routing.json"
     },
     {
@@ -264,6 +264,13 @@
       "source": "scripts/web-surface-core.mjs"
     },
     {
+      "id": "web-surface-cloudfront-stale-etag-retry",
+      "impact": "patch",
+      "class": "web-surface",
+      "rationale": "Buildchain-managed directory-index attachment re-reads CloudFront distribution state and retries bounded optimistic-lock failures while preserving immediate failure for conflicting functions and non-ETag AWS errors.",
+      "source": "scripts/web-surface-cloudfront-rewrite.mjs"
+    },
+    {
       "id": "stable-canary-runtime-binding",
       "impact": "patch",
       "class": "release-governance",
@@ -288,8 +295,8 @@
       "id": "self-dogfood-channel-contract-lock-refresh",
       "impact": "patch",
       "class": "release-governance",
-      "rationale": "Buildchain self-dogfood accepts the reviewed stable v2 and alpha.10 contract worlds so both released runtime channels can qualify against their immutable contract evidence.",
-      "source": ".buildchain/contract-lock.json"
+      "rationale": "Buildchain self-dogfood accepts the reviewed v2.14.14-alpha.0 contract world while retaining the stable v2 lock, so the released alpha runtime can qualify without compatible-drift noise.",
+      "source": ".buildchain/alpha-contract-lock.json"
     },
     {
       "id": "anchored-derived-version-material",
@@ -324,6 +331,34 @@
       "impact": "patch",
       "class": "release-governance",
       "rationale": "An additive anchored-material preflight falls back to its trusted workflow-shell verifier when a selected stable runtime predates the helper, preserving mixed-channel compatibility without weakening the gate.",
+      "source": ".github/workflows/.build.yml"
+    },
+    {
+      "id": "github-release-authoritative-publication-channel",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "GitHub Release prerelease and latest metadata now follows the sealed Buildchain publication channel, so anchored stable versions containing a hyphen remain stable while callers without publication intent retain tag-derived compatibility.",
+      "source": "scripts/ensure-github-release.mjs"
+    },
+    {
+      "id": "site-bundle-managed-badge-boundary",
+      "impact": "patch",
+      "class": "web-surface",
+      "rationale": "The site bundle projects the complete managed README badge block into homepage.lead and keeps homepage.mechanismSummary prose-only, with partial marker blocks rejected instead of exported ambiguously.",
+      "source": "scripts/site-bundle-homepage.mjs"
+    },
+    {
+      "id": "contract-drift-stable-issue-identity",
+      "impact": "patch",
+      "class": "observability-diagnostics",
+      "rationale": "Compatible and breaking contract-drift reports keep one issue identity per consumer, Buildchain ref, and drift class instead of opening a new issue for every compatible contract digest or workflow occurrence.",
+      "source": "packages/core/issue-reporting.js"
+    },
+    {
+      "id": "same-repository-pr-head-runtime-trust",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "Buildchain self-fixture pull requests can validate the exact same-repository head SHA when the caller, runtime repository, head repository, and event SHA all agree, while arbitrary pull-request runtime overrides remain rejected.",
       "source": ".github/workflows/.build.yml"
     }
   ],

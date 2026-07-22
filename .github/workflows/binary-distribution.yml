@@ -147,6 +147,30 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Resolve binary distribution contract digest
+        id: contract
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+          const contract = JSON.parse(fs.readFileSync("dist/site/buildchain-contract.json", "utf8"));
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `json=${JSON.stringify({ contractDigest: contract.contractDigest })}\n`);
+          NODE
+
+      - name: Plan binary distribution controller evidence
+        id: controller-plan
+        env:
+          BUILDCHAIN_CONTROLLER_REGISTRY: dist/site/controller-registry.json
+          BUILDCHAIN_CONTROLLER_ID: binary-distribution
+          BUILDCHAIN_CONTROLLER_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_CONTROLLER_SOURCE_SHA: ${{ github.sha }}
+          BUILDCHAIN_CONTROLLER_RUNTIME_REF: ${{ github.sha }}
+          BUILDCHAIN_CONTROLLER_RUNTIME_SHA: ${{ github.sha }}
+          BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST: ${{ fromJSON(steps.contract.outputs.json).contractDigest }}
+          BUILDCHAIN_CONTROLLER_INPUTS_JSON: '{}'
+          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+        run: node scripts/controller-evidence.mjs --mode plan
+
       - name: Download binary artifacts
         uses: actions/download-artifact@v6.0.0
         with:
@@ -156,14 +180,17 @@ jobs:
 
       - name: Write checksums
         shell: bash
-        run: >-
-          node bin/buildchain.mjs span
-          --event release-passport.checksums
-          --phase passport
-          --component workflow
-          --source buildchain
-          --
-          bash -lc 'cd dist/binary && sha256sum ./* > checksums.txt'
+        run: |
+          checksum_path="${RUNNER_TEMP}/buildchain-checksums-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.txt"
+          node bin/buildchain.mjs span \
+            --event release-passport.checksums \
+            --phase passport \
+            --component workflow \
+            --source buildchain \
+            -- \
+            bash -lc "cd dist/binary && find . -maxdepth 1 -type f ! -name checksums.txt -print0 | LC_ALL=C sort -z | xargs -0 sha256sum > \"${checksum_path}\""
+          mv "$checksum_path" dist/binary/checksums.txt
+          test -s dist/binary/checksums.txt
 
       - name: Fetch durable release-state passport
         id: fetch-durable-release-state
@@ -287,9 +314,59 @@ jobs:
           test -f .buildchain/release-passport/buildchain-release-bundle.tar.gz
           test -f .buildchain/release-passport/buildchain-release-bundle.json
 
+      - name: Seal binary distribution controller receipt
+        id: controller-receipt
+        env:
+          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+          BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
+            [{"id":"resolve-runtime","status":"passed"},{"id":"build","status":"passed"},{"id":"verify","status":"passed"},{"id":"bundle","status":"passed"},{"id":"aggregate","status":"passed"}]
+          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: >-
+            [{"kind":"release-evidence-bundle","path":".buildchain/release-passport/buildchain-release-bundle.json","artifact":"buildchain-release-passport"},{"kind":"release-passport","path":".buildchain/release-passport/buildchain.release.json","artifact":"buildchain-release-passport"}]
+          BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: buildchain-controller-binary-distribution
+          BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/receipt.json
+        run: node scripts/controller-evidence.mjs --mode receipt
+
+      - name: Upload binary distribution controller receipt
+        uses: actions/upload-artifact@v6.0.0
+        with:
+          name: buildchain-controller-binary-distribution
+          path: |
+            .buildchain/controller/plan.json
+            .buildchain/controller/receipt.json
+          if-no-files-found: error
+
+      - name: Enforce qualifying binary distribution receipt
+        if: ${{ steps.controller-receipt.outputs.controller-receipt-qualifying != 'true' }}
+        run: |
+          echo "::error::binary distribution controller receipt is not qualifying: ${{ steps.controller-receipt.outputs.controller-receipt-status }}"
+          exit 1
+
       - name: Upload release passport artifact
         uses: actions/upload-artifact@v6.0.0
         with:
           name: buildchain-release-passport
           path: .buildchain/release-passport/*
           if-no-files-found: error
+
+  dispatch-publication:
+    name: Dispatch sealed binary asset publication
+    needs: passport
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+    steps:
+      - name: Dispatch exact evidence run to Binary Release Assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh workflow run binary-release-assets.yml \
+            --repo "${GITHUB_REPOSITORY}" \
+            --ref "${RELEASE_TAG}" \
+            -f buildchain-ref="${GITHUB_SHA}" \
+            -f evidence-run-id="${GITHUB_RUN_ID}" \
+            -f release-tag="${RELEASE_TAG}" \
+            -f publication-used-nonces-json='[]'

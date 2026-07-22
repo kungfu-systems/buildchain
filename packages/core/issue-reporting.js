@@ -112,17 +112,22 @@ export function buildConsumerIssueReport(options = {}) {
   const consumerRef = options.consumerRef || env.GITHUB_REF || "";
   const consumerSha = options.consumerSha || env.GITHUB_SHA || "";
   const failureCode = options.failureCode || "consumer-report";
+  const contractDrift = /^buildchain-contract-(?:compatible|breaking)-drift$/.test(failureCode);
   const fingerprint =
     options.fingerprint ||
     computeConsumerIssueFingerprint({
       targetRepository: target.fullName,
       consumerRepository,
-      workflow,
-      job,
       failureCode,
       buildchainRef: options.buildchainRef,
-      buildchainVersion: options.buildchainVersion,
-      title: options.title,
+      ...(contractDrift
+        ? {}
+        : {
+            workflow,
+            job,
+            buildchainVersion: options.buildchainVersion,
+            title: options.title,
+          }),
     });
   const title = redactIssueText(
     options.title ||

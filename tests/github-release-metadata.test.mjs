@@ -42,6 +42,19 @@ test("Buildchain stable releases become the latest release", () => {
   });
 });
 
+test("explicit stable publication intent overrides anchored tag prerelease syntax", () => {
+  assert.deepEqual(classifyReleaseTag("v22.22.3-kf.4", { channel: "release" }), {
+    tag: "v22.22.3-kf.4",
+    prerelease: false,
+    makeLatest: "true",
+  });
+  assert.deepEqual(classifyReleaseTag("v22.22.3-kf.4-alpha.1", { channel: "alpha" }), {
+    tag: "v22.22.3-kf.4-alpha.1",
+    prerelease: true,
+    makeLatest: "false",
+  });
+});
+
 test("unsupported release tags fail closed", () => {
   assert.throws(() => classifyReleaseTag("v2.6-alpha"), /Unsupported semver release tag/);
   assert.throws(() => classifyReleaseTag("latest"), /Unsupported semver release tag/);

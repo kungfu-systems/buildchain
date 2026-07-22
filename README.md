@@ -25,6 +25,27 @@ its existing CI.
 
 The same mechanism releases Buildchain itself.
 
+## Where Buildchain sits in the Agent Supply Chain
+
+Buildchain binds a product's declarations to the exact source cut, build,
+artifacts, checks, and promotion record that produced a release. In the wider
+Agent Supply Chain it sits between KFD-3 product discovery and KFD-2
+purpose-bound assessment:
+
+```text
+KFD-3 declaration -> Buildchain exact-artifact evidence -> KFD-2 assessment
+```
+
+Buildchain can prove that a declared claim and an exact artifact remain
+consistent, or fail/downgrade when their evidence drifts. It does not invent
+the product fact, decide whether a receiver should trust it for a purpose,
+certify every platform, or prove external adoption. Receivers and downstream
+KFD-2 assessors retain the admission decision and residual risk.
+
+To evaluate the layer, inspect a release's `buildchain.release.json` and
+`artifact-evidence.json`, verify them with the CLI, and report missing product
+or protocol evidence through the repository issue tracker.
+
 ## Install and Verify
 
 For standalone use, install a platform archive from a GitHub Release and verify

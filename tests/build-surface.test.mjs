@@ -202,6 +202,11 @@ test("reusable build workflow exposes the required surface contract", () => {
     "utf8",
   );
   assert.match(workflow, /workflow_call:/);
+  assert.match(workflow, /kfd-agent-hub:\n\s+description: "Agent Hub conformance mode: off or auto/);
+  assert.equal((workflow.match(/name: Run KFD Agent Hub conformance/g) || []).length, 2);
+  assert.equal((workflow.match(/name: Upload KFD Agent Hub evidence/g) || []).length, 2);
+  assert.match(workflow, /buildchain\.mjs kfd hub test/);
+  assert.match(workflow, /artifact-name \}\}-kfd-agent-hub-\$\{\{ matrix\.platform\.id \}\}/);
   assert.match(workflow, /name: Validate consumer package manager contract/);
   assert.match(
     workflow,
@@ -1889,7 +1894,20 @@ test("binary evidence and product publication are isolated by the sealed asset w
     path.join(root, ".github/workflows/.binary-release-assets.yml"),
     "utf8",
   );
+  const publicPublication = fs.readFileSync(
+    path.join(root, ".github/workflows/binary-release-assets.yml"),
+    "utf8",
+  );
+  const promotion = fs.readFileSync(
+    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
+    "utf8",
+  );
+  const assembler = fs.readFileSync(
+    path.join(root, "scripts/assemble-binary-release-admission.mjs"),
+    "utf8",
+  );
   assert.match(workflow, /Fetch durable release-state passport/);
+  assert.match(workflow, /name: Write checksums[\s\S]*?! -name checksums\.txt/);
   assert.match(workflow, /refs\/heads\/\$\{ref\}:refs\/remotes\/origin\/\$\{ref\}/);
   assert.match(workflow, /authoritative-release-state-passport\.json/);
   assert.match(workflow, /authoritative-release-state-impact\.json/);
@@ -1911,14 +1929,68 @@ test("binary evidence and product publication are isolated by the sealed asset w
   assert.doesNotMatch(workflow, /scripts\/ensure-github-release\.mjs/);
   assert.doesNotMatch(workflow, /gh release upload/);
   assert.match(publication, /uses: \.\/\.github\/workflows\/\.publication-authority\.yml/);
+  assert.match(
+    publication,
+    /name: Seal binary release asset capability\n    permissions:\n      actions: read\n      contents: read/,
+  );
   assert.match(publication, /needs: publication-authority/);
   assert.match(publication, /environment: buildchain-release-assets/);
   assert.match(publication, /scripts\/ensure-github-release\.mjs/);
+  assert.match(publication, /name: Write public binary checksums/);
+  assert.match(publication, /! -name checksums\.txt/);
+  assert.match(publication, /dist\/binary\/\*/);
   assert.match(publication, /--repository "\$\{\{ github\.repository \}\}"/);
   assert.match(publication, /--tag "\$RELEASE_TAG"/);
   assert.match(publication, /gh release upload "\$RELEASE_TAG"/);
   assert.match(publication, /capability\.artifactDigest !== actualArtifact/);
+  assert.match(workflow, /BUILDCHAIN_CONTROLLER_ID: binary-distribution/);
+  assert.match(workflow, /buildchain-controller-binary-distribution/);
+  assert.match(workflow, /controller-receipt-qualifying != 'true'/);
+  assert.match(workflow, /name: Dispatch sealed binary asset publication/);
+  assert.match(workflow, /needs: passport/);
+  assert.match(workflow, /name: Dispatch exact evidence run to Binary Release Assets/);
+  assert.match(workflow, /gh workflow run binary-release-assets\.yml/);
+  assert.match(workflow, /-f evidence-run-id="\$\{GITHUB_RUN_ID\}"/);
+  assert.doesNotMatch(publicPublication, /workflow_run:/);
+  assert.match(publicPublication, /Binary Distribution source \$source_sha does not match \$release_tag/);
+  assert.match(publicPublication, /auto-admission: true/);
+  assert.match(publication, /auto-admission-kind: binary-release-assets/);
+  assert.match(publication, /gate-aggregate-json:/);
+  assert.match(promotion, /Dispatch standalone binary distribution for the exact public tag/);
+  assert.match(promotion, /gh workflow run binary-distribution\.yml/);
+  assert.match(
+    promotion,
+    /name: Preflight PR-stage release candidate evidence[\s\S]*?permissions:\n      actions: read\n      contents: read/,
+  );
+  assert.match(
+    promotion,
+    /name: Promote release candidate[\s\S]*?permissions:\n      actions: write\n      checks: write/,
+  );
+  assert.match(assembler, /validateControllerReceipt/);
+  assert.match(assembler, /buildchain-aarch64-apple-darwin\.tar\.gz/);
+  assert.match(assembler, /buildchain-x86_64-unknown-linux-gnu\.tar\.gz/);
+  assert.match(assembler, /buildchain-x86_64-pc-windows-msvc\.zip/);
   assert.doesNotMatch(workflow, /gh release create/);
+});
+
+test("npm-only promotion does not require a standalone binary workflow", () => {
+  const promotion = fs.readFileSync(
+    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
+    "utf8",
+  );
+  const selfPromotion = fs.readFileSync(
+    path.join(root, ".github/workflows/buildchain-ref-promotion.yml"),
+    "utf8",
+  );
+  assert.match(
+    promotion,
+    /standalone-binary-distribution:\n\s+description: "Dispatch binary-distribution\.yml after promotion; enable only when the caller repository provides that workflow"\n\s+default: false/,
+  );
+  assert.match(
+    promotion,
+    /if: \$\{\{ inputs\.standalone-binary-distribution && !inputs\.dry-run && steps\.promote\.outcome == 'success'/,
+  );
+  assert.match(selfPromotion, /standalone-binary-distribution: true/);
 });
 
 test("runtime selection accepts official channels and gates train or SHA overrides", () => {
@@ -1998,6 +2070,24 @@ test("runtime selection accepts official channels and gates train or SHA overrid
       reason: "buildchain-ref override is only allowed for trusted workflow_dispatch runs",
     },
   );
+  assert.deepEqual(
+    validateRuntimeOverrideTrust({
+      requestedRef: "a".repeat(40),
+      eventName: "pull_request",
+      sameRepositoryPullRequest: true,
+      pullRequestHeadSha: "a".repeat(40),
+    }),
+    { ok: true, decision: "same-repository-pr-head" },
+  );
+  assert.equal(
+    validateRuntimeOverrideTrust({
+      requestedRef: "a".repeat(40),
+      eventName: "pull_request",
+      sameRepositoryPullRequest: true,
+      pullRequestHeadSha: "b".repeat(40),
+    }).ok,
+    false,
+  );
   assert.equal(
     validateRuntimeOverrideTrust({
       requestedRef: "train/v2/v2.3/runtime-loader",
@@ -2045,6 +2135,15 @@ test("runtime-aware workflows pin same-repository pull request merge refs", () =
     assert.match(workflow, /const workflowSha = String\(context\.sha \|\| ""\)/);
     assert.match(workflow, /current workflow SHA is invalid for Buildchain pull request merge ref/);
   }
+});
+
+test("build workflow only trusts an exact same-repository pull request head override", () => {
+  const workflow = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
+  assert.match(workflow, /const trustedSameRepositoryPullRequestHead =/);
+  assert.match(workflow, /pullRequestHeadRepository === repository/);
+  assert.match(workflow, /requested\.toLowerCase\(\) === pullRequestHeadSha\.toLowerCase\(\)/);
+  assert.match(workflow, /!trustedSameRepositoryPullRequestHead && context\.eventName !== "workflow_dispatch"/);
+  assert.match(workflow, /\? "same-repository-pr-head"/);
 });
 
 test("promote action exposes generic publish source-lock gate", () => {
@@ -2242,8 +2341,13 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   assert.match(workflow, /uses: \.\/\.github\/workflows\/build\.yml/);
   assert.match(
     workflow,
+    /buildchain-ref: \$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/,
+  );
+  assert.match(
+    workflow,
     /artifact-transfer-mode: \$\{\{ github\.event\.inputs\['artifact-transfer-mode'\] \|\| 'github-artifacts' \}\}/,
   );
+  assert.match(workflow, /buildchain-contract-drift-issue-mode: "off"/);
   assert.match(workflow, /checkout-cache-mode: auto/);
   assert.match(workflow, /checkout-cache-fallback: github/);
   assert.doesNotMatch(workflow, /run: node scripts\/artifact-relay-s3\.mjs/);
@@ -2361,7 +2465,10 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
     "utf8",
   );
 
-  assert.match(workflow, /actions: read/);
+  assert.match(
+    workflow,
+    /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml\n    permissions:\n      actions: write/,
+  );
   assert.match(workflow, /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml/);
   assert.match(workflow, /github\.event\.workflow_run\.event == 'push'/);
   assert.match(workflow, /startsWith\(github\.event\.workflow_run\.head_branch, 'alpha\/'\)/);
@@ -3239,7 +3346,7 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
     fs.readFileSync(path.join(root, "dist/site/buildchain-contract.json"), "utf8"),
   );
   assert.equal(alphaLock.buildchain.ref, "v2-alpha");
-  assert.equal(alphaLock.buildchain.resolvedSha, "fb33099a128e246aaf2b1dc48e1f3c84a99fef2c");
+  assert.equal(alphaLock.buildchain.resolvedSha, "dfed5c87558b009c1f60ab549e592ea0c38e8989");
   assert.equal(alphaLock.buildchain.compatibilityPolicy, "major-compatible");
   const alphaEvaluation = evaluateBuildchainContractLock({
     lock: alphaLock,
@@ -3265,6 +3372,8 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   assert.match(actionlintConfig, /\.github\/workflows\/\.build\.yml:/);
   assert.match(actionlintConfig, /\.github\/workflows\/build\.yml:/);
   assert.match(actionlintConfig, /property "workflow_ref" is not defined in object type/);
+  assert.match(actionlintConfig, /property "workflow_repository" is not defined in object type/);
+  assert.match(actionlintConfig, /property "workflow_sha" is not defined in object type/);
 
   assert.match(promotion, /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.sha \|\| github\.sha \}\}/);
   assert.doesNotMatch(promotion, /buildchain-ref: (?:v\d+-alpha|\$\{\{[^\n]*v\d+-alpha)/);

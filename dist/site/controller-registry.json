@@ -214,6 +214,10 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "kfd-agent-hub": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "lifecycle-timeout-minutes": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -374,7 +378,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:0dd7ebe7b7543ca4f295e0634ed1434bb4571d2ffb2f4b6ab25794eb2ee5c431"
+      "digest": "sha256:b3e101ac0b0f75aebff59b2129e4eff512c38d4d0a34a0a3785e8ea8f998846a"
     },
     {
       "schemaVersion": 1,
@@ -526,6 +530,10 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "kfd-agent-hub": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "lifecycle-timeout-minutes": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -672,7 +680,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:2e113607af3cb0a17b4da64b8758652a4bee4a162656ce7256a8e06de3d4cf2f"
+      "digest": "sha256:5ca752570c4180746f09df3fdf5c17e7ce90b04ed06fff362d2a195048024dda"
     },
     {
       "schemaVersion": 1,
@@ -1657,6 +1665,10 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "standalone-binary-distribution": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "target-ref": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -1711,7 +1723,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:fe4bb0bd543e7db7ef38950354764608639f5b11677a4b8e02caa097900d6898"
+      "digest": "sha256:2bb0137a7dd25706b86beeb212938df2a71c69d2ef6e49391c615e4cb21a19a6"
     },
     {
       "schemaVersion": 1,
@@ -1839,7 +1851,53 @@
         ]
       },
       "digest": "sha256:f97656a8df0758c8e404d5b7c387529256a1ec45d1748f8efb6847a3256b1216"
+    },
+    {
+      "schemaVersion": 1,
+      "contract": "buildchain.controller-descriptor/v1",
+      "id": "binary-distribution",
+      "version": 1,
+      "workflow": {
+        "id": "binary-distribution",
+        "path": ".github/workflows/binary-distribution.yml"
+      },
+      "inputs": {},
+      "expected": {
+        "stages": [
+          {
+            "id": "resolve-runtime",
+            "required": true
+          },
+          {
+            "id": "build",
+            "required": true
+          },
+          {
+            "id": "verify",
+            "required": true
+          },
+          {
+            "id": "bundle",
+            "required": true
+          },
+          {
+            "id": "aggregate",
+            "required": true
+          }
+        ],
+        "capabilities": [
+          "standalone-binary-build",
+          "release-evidence-bundle",
+          "artifact-admission"
+        ],
+        "evidence": [
+          "release-evidence-bundle",
+          "release-passport",
+          "controller-receipt"
+        ]
+      },
+      "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:89d6ba121382c2ba6c81cf1170e5c2e66256d893ee3fbb131af93a018950b891"
+  "digest": "sha256:40a7362d72303c106c064126881dae0716ed2d1902a8cac43f409af78bd7cddf"
 }
