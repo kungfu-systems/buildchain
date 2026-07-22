@@ -1998,6 +1998,24 @@ test("runtime selection accepts official channels and gates train or SHA overrid
       reason: "buildchain-ref override is only allowed for trusted workflow_dispatch runs",
     },
   );
+  assert.deepEqual(
+    validateRuntimeOverrideTrust({
+      requestedRef: "a".repeat(40),
+      eventName: "pull_request",
+      sameRepositoryPullRequest: true,
+      pullRequestHeadSha: "a".repeat(40),
+    }),
+    { ok: true, decision: "same-repository-pr-head" },
+  );
+  assert.equal(
+    validateRuntimeOverrideTrust({
+      requestedRef: "a".repeat(40),
+      eventName: "pull_request",
+      sameRepositoryPullRequest: true,
+      pullRequestHeadSha: "b".repeat(40),
+    }).ok,
+    false,
+  );
   assert.equal(
     validateRuntimeOverrideTrust({
       requestedRef: "train/v2/v2.3/runtime-loader",
@@ -2045,6 +2063,15 @@ test("runtime-aware workflows pin same-repository pull request merge refs", () =
     assert.match(workflow, /const workflowSha = String\(context\.sha \|\| ""\)/);
     assert.match(workflow, /current workflow SHA is invalid for Buildchain pull request merge ref/);
   }
+});
+
+test("build workflow only trusts an exact same-repository pull request head override", () => {
+  const workflow = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
+  assert.match(workflow, /const trustedSameRepositoryPullRequestHead =/);
+  assert.match(workflow, /pullRequestHeadRepository === repository/);
+  assert.match(workflow, /requested\.toLowerCase\(\) === pullRequestHeadSha\.toLowerCase\(\)/);
+  assert.match(workflow, /!trustedSameRepositoryPullRequestHead && context\.eventName !== "workflow_dispatch"/);
+  assert.match(workflow, /\? "same-repository-pr-head"/);
 });
 
 test("promote action exposes generic publish source-lock gate", () => {
