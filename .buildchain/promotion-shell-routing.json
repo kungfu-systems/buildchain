@@ -11,6 +11,9 @@
     "logicalRef": "v2",
     "callRef": "725592ae025003071b8d33fdb49e0157842fe76c",
     "workflowPath": ".github/workflows/.release-candidate-promote.yml",
-    "forwardInternalInputs": true
+    "forwardInternalInputs": true,
+    "unsupportedInputs": [
+      "standalone-binary-distribution"
+    ]
   }
 }

@@ -1408,6 +1408,16 @@ jobs:
             echo "::error::promotion produced an invalid standalone release tag: $RELEASE_TAG"
             exit 1
           fi
+          workflow_probe="${RUNNER_TEMP}/binary-distribution-workflow.txt"
+          if ! gh workflow view binary-distribution.yml \
+            --repo "${{ github.repository }}" >"$workflow_probe" 2>&1; then
+            if grep -q 'HTTP 404' "$workflow_probe"; then
+              echo "::notice::Consumer has no binary-distribution.yml; standalone binary dispatch is not applicable."
+              exit 0
+            fi
+            cat "$workflow_probe" >&2
+            exit 1
+          fi
           gh workflow run binary-distribution.yml \
             --repo "${{ github.repository }}" \
             --ref "$RELEASE_TAG" \
