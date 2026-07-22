@@ -204,7 +204,7 @@ ${secrets.trimEnd()}
 ${publicOutputs(outputs)}
 
 permissions:
-  actions: read
+  actions: write
   checks: write
   contents: write
   id-token: write
@@ -404,7 +404,7 @@ jobs:
     if: \${{ needs.resolve-promotion.outputs.channel == 'alpha' }}
     uses: kungfu-systems/buildchain/${alphaRoute.workflowPath}@${alphaRoute.callRef}
     permissions:
-      actions: read
+      actions: write
       checks: write
       contents: write
       id-token: write
@@ -419,7 +419,7 @@ ${alphaForwarded}
     if: \${{ needs.resolve-promotion.outputs.channel == 'stable' }}
     uses: kungfu-systems/buildchain/${stableRoute.workflowPath}@${stableRoute.callRef}
     permissions:
-      actions: read
+      actions: write
       checks: write
       contents: write
       id-token: write

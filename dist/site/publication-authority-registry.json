@@ -624,7 +624,8 @@
     {
       "path": ".github/workflows/binary-release-assets.yml",
       "signals": [
-        "write-permission"
+        "write-permission",
+        "github-release"
       ],
       "classified": true
     },
@@ -846,5 +847,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "588256fc42c36c1e03286f1de1f7abe1e393ce2e452ae1bf548668f017316590"
+  "registryDigest": "9981084c8a18fe72639de7441112a14e32f16b8aa49c0ba0ab9b92dee9bb4df3"
 }

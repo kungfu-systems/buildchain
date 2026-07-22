@@ -1889,6 +1889,18 @@ test("binary evidence and product publication are isolated by the sealed asset w
     path.join(root, ".github/workflows/.binary-release-assets.yml"),
     "utf8",
   );
+  const publicPublication = fs.readFileSync(
+    path.join(root, ".github/workflows/binary-release-assets.yml"),
+    "utf8",
+  );
+  const promotion = fs.readFileSync(
+    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
+    "utf8",
+  );
+  const assembler = fs.readFileSync(
+    path.join(root, "scripts/assemble-binary-release-admission.mjs"),
+    "utf8",
+  );
   assert.match(workflow, /Fetch durable release-state passport/);
   assert.match(workflow, /refs\/heads\/\$\{ref\}:refs\/remotes\/origin\/\$\{ref\}/);
   assert.match(workflow, /authoritative-release-state-passport\.json/);
@@ -1918,6 +1930,21 @@ test("binary evidence and product publication are isolated by the sealed asset w
   assert.match(publication, /--tag "\$RELEASE_TAG"/);
   assert.match(publication, /gh release upload "\$RELEASE_TAG"/);
   assert.match(publication, /capability\.artifactDigest !== actualArtifact/);
+  assert.match(workflow, /BUILDCHAIN_CONTROLLER_ID: binary-distribution/);
+  assert.match(workflow, /buildchain-controller-binary-distribution/);
+  assert.match(workflow, /controller-receipt-qualifying != 'true'/);
+  assert.match(publicPublication, /workflow_run:/);
+  assert.match(publicPublication, /workflows: \["Binary Distribution"\]/);
+  assert.match(publicPublication, /Binary Distribution source \$source_sha does not match \$release_tag/);
+  assert.match(publicPublication, /auto-admission: true/);
+  assert.match(publication, /auto-admission-kind: binary-release-assets/);
+  assert.match(publication, /gate-aggregate-json:/);
+  assert.match(promotion, /Dispatch standalone binary distribution for the exact public tag/);
+  assert.match(promotion, /gh workflow run binary-distribution\.yml/);
+  assert.match(assembler, /validateControllerReceipt/);
+  assert.match(assembler, /buildchain-aarch64-apple-darwin\.tar\.gz/);
+  assert.match(assembler, /buildchain-x86_64-unknown-linux-gnu\.tar\.gz/);
+  assert.match(assembler, /buildchain-x86_64-pc-windows-msvc\.zip/);
   assert.doesNotMatch(workflow, /gh release create/);
 });
 
