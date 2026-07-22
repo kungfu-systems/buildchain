@@ -465,6 +465,81 @@ function validatePublicationEvidence(publicationEvidence, admission) {
   if (!publicationEvidence || typeof publicationEvidence !== "object" || Array.isArray(publicationEvidence)) {
     throw new Error("independent publication evidence is required");
   }
+  if (publicationEvidence.binaryReleaseEvidence) {
+    const evidence = publicationEvidence.binaryReleaseEvidence;
+    const manifest = evidence.bundleManifest;
+    if (manifest?.contract !== "kungfu-buildchain-release-evidence-bundle") {
+      throw new Error("binary release evidence bundle contract mismatch");
+    }
+    if (manifest.release?.tag !== `v${admission.version}`) {
+      throw new Error("binary release evidence tag mismatch");
+    }
+    if (normalizeGitSha(manifest.release?.sourceSha, "bundleManifest.release.sourceSha") !== admission.sourceSha) {
+      throw new Error("binary release evidence source mismatch");
+    }
+    const archiveDigest = normalizeDigest(evidence.bundleArchiveDigest, "binaryReleaseEvidence.bundleArchiveDigest");
+    const manifestDigest = normalizeDigest(manifest.bundle?.sha256, "bundleManifest.bundle.sha256");
+    if (archiveDigest !== manifestDigest) {
+      throw new Error("binary release evidence archive digest mismatch");
+    }
+    if (manifestDigest !== normalizeDigest(admission.artifactDigest, "admission.artifactDigest")) {
+      throw new Error("binary release evidence admission binding mismatch");
+    }
+    const fileNames = new Set((manifest.files || []).map((entry) => entry.bundlePath));
+    for (const required of [
+      "release-assets/buildchain-aarch64-apple-darwin.tar.gz",
+      "release-assets/buildchain-x86_64-unknown-linux-gnu.tar.gz",
+      "release-assets/buildchain-x86_64-pc-windows-msvc.zip",
+      "release-assets/checksums.txt",
+      "release-passport/buildchain.release.json",
+    ]) {
+      if (!fileNames.has(required)) throw new Error(`binary release evidence is missing ${required}`);
+    }
+    const controllerReceipt = evidence.controllerReceipt;
+    const controllerValidation = validateControllerReceipt(controllerReceipt, {
+      expectedSourceSha: admission.sourceSha,
+      expectedRuntimeSha: admission.runtimeSha,
+    });
+    if (!controllerValidation.ok || !controllerValidation.qualifying) {
+      throw new Error(`binary distribution controller receipt did not qualify: ${controllerValidation.issues.join("; ")}`);
+    }
+    if (controllerReceipt.controller?.id !== "binary-distribution") {
+      throw new Error("binary release evidence controller mismatch");
+    }
+    const controllerReceiptDigest = normalizeDigest(controllerReceipt.digest, "controllerReceipt.digest");
+    if (controllerReceiptDigest !== normalizeDigest(admission.controllerReceiptDigest, "admission.controllerReceiptDigest")) {
+      throw new Error("binary release controller receipt binding mismatch");
+    }
+    const contractDigest = normalizeDigest(controllerReceipt.runtime?.contractDigest, "controllerReceipt.runtime.contractDigest");
+    if (contractDigest !== normalizeDigest(admission.contractDigest, "admission.contractDigest")) {
+      throw new Error("binary release runtime contract binding mismatch");
+    }
+    const gate = validateGateAggregate(publicationEvidence.gateAggregate, {
+      admission,
+      sourceSha: admission.sourceSha,
+    });
+    if (gate.gateAggregateDigest !== normalizeDigest(admission.gateAggregateDigest, "admission.gateAggregateDigest")) {
+      throw new Error("binary release Gate aggregate binding mismatch");
+    }
+    if (gate.policyDigest !== normalizeDigest(admission.policyDigest, "admission.policyDigest")) {
+      throw new Error("binary release Gate policy binding mismatch");
+    }
+    return {
+      sourceTreeSha: normalizeGitSha(evidence.sourceTreeSha, "binaryReleaseEvidence.sourceTreeSha"),
+      controllerReceiptDigest,
+      contractDigest,
+      gateAggregateDigest: gate.gateAggregateDigest,
+      policyDigest: gate.policyDigest,
+      gateRegistryDigest: gate.registryDigest,
+      artifactDigest: manifestDigest,
+      evidenceDigest: publicationAuthorityDigest({
+        sourceTreeSha: evidence.sourceTreeSha,
+        controllerReceiptDigest,
+        gateAggregateDigest: gate.gateAggregateDigest,
+        artifactDigest: manifestDigest,
+      }),
+    };
+  }
   if (publicationEvidence.webSurfaceCandidate) {
     const evidence = publicationEvidence.webSurfaceCandidate;
     const candidate = createWebSurfacePublicationCandidate(evidence);

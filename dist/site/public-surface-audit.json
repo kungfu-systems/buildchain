@@ -439,17 +439,22 @@
         "path": ".github/workflows/.binary-release-assets.yml",
         "reusable": true,
         "inputs": [
+          "auto-admission",
           "buildchain-ref",
           "buildchain-repository",
           "evidence-run-id",
           "publication-admission-json",
           "publication-control-plane-audit-json",
           "publication-expected-json",
+          "publication-gate-aggregate-json",
           "publication-runner-provenance-json",
           "publication-used-nonces-json",
-          "release-tag"
+          "publication-version",
+          "release-tag",
+          "source-sha",
+          "target-ref"
         ],
-        "inputCount": 9,
+        "inputCount": 14,
         "secrets": [],
         "secretCount": 0,
         "outputs": [],
@@ -3689,8 +3694,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "90c8650f870c350ca187c612c37f2459dcbfe265aa9b1d5b375ee5c4fb31fab6",
-    "workflowRegistryDigest": "02950eef2769b1bd2d899099ef23c7b9ae716b18d602e25aef169d788bc6ece0",
-    "pageRegistryDigest": "2121b86c6c11ad27c69b5b00bda989c1203ddb3f7cb4a864df375a62e13fced6"
+    "workflowRegistryDigest": "cdc3924bccc6ddf1242603f0a588e69cbb45882e602f4fba60fa23866813eb50",
+    "pageRegistryDigest": "b544ae35ecc853f227e6b9b233ef5b58b3f8b4867c28377a07cb5cb325f56454"
   },
   "comparison": {
     "missingCliRegistry": [],

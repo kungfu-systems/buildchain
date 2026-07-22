@@ -35,6 +35,10 @@ It includes a `homepage` object generated from `README.md`, including
 `homepage.rendererContract` that is implementation metadata rather than
 ordinary homepage copy. Site repositories should consume those fields instead
 of parsing `README.md` themselves.
+When the README intro starts with the managed Buildchain badge block,
+`homepage.lead` contains that complete marker-delimited block and
+`homepage.mechanismSummary` starts with prose after the block. A renderer must
+not repair or recombine split badge fragments.
 It also includes a `pages` collection that mirrors `page-registry.json`, so a
 site repository can build the full Buildchain public documentation surface from
 the npm package without scanning the source checkout.

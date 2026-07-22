@@ -1,6 +1,9 @@
 name: Binary Release Assets
 
 on:
+  workflow_run:
+    workflows: ["Binary Distribution"]
+    types: [completed]
   workflow_dispatch:
     inputs:
       buildchain-ref:
@@ -13,17 +16,17 @@ on:
         description: "Existing v* release tag."
         required: true
       publication-admission-json:
-        description: "Fresh sealed publication admission JSON."
-        required: true
+        description: "Deprecated: auto-admission now seals the exact evidence run."
+        required: false
       publication-runner-provenance-json:
-        description: "Qualified runner provenance receipt JSON."
-        required: true
+        description: "Deprecated: auto-admission records GitHub-hosted provenance."
+        required: false
       publication-control-plane-audit-json:
-        description: "Fresh external control-plane audit receipt JSON."
-        required: true
+        description: "Deprecated: auto-admission audits the live control plane."
+        required: false
       publication-expected-json:
-        description: "Exact source, runtime, Gate, artifact, target, version, and channel bindings JSON."
-        required: true
+        description: "Deprecated: auto-admission derives exact bindings."
+        required: false
       publication-used-nonces-json:
         description: "JSON array of already consumed admission nonces."
         required: true
@@ -33,18 +36,98 @@ permissions:
   contents: read
 
 jobs:
+  resolve:
+    name: Resolve exact binary publication transaction
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && (github.event.workflow_run.event == 'workflow_dispatch' || github.event.workflow_run.event == 'push')) }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      buildchain-ref: ${{ steps.transaction.outputs.buildchain-ref }}
+      evidence-run-id: ${{ steps.transaction.outputs.evidence-run-id }}
+      release-tag: ${{ steps.transaction.outputs.release-tag }}
+      source-sha: ${{ steps.transaction.outputs.source-sha }}
+      target-ref: ${{ steps.transaction.outputs.target-ref }}
+      publication-version: ${{ steps.transaction.outputs.publication-version }}
+    steps:
+      - name: Validate evidence run and release tag identity
+        id: transaction
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          AUTO_RUN_ID: ${{ github.event.workflow_run.id }}
+          AUTO_RELEASE_TAG: ${{ github.event.workflow_run.head_branch }}
+          AUTO_SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
+          INPUT_BUILDCHAIN_REF: ${{ inputs.buildchain-ref }}
+          INPUT_RUN_ID: ${{ inputs.evidence-run-id }}
+          INPUT_RELEASE_TAG: ${{ inputs.release-tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "workflow_run" ]]; then
+            run_id="$AUTO_RUN_ID"
+            release_tag="$AUTO_RELEASE_TAG"
+            source_sha="$AUTO_SOURCE_SHA"
+          else
+            run_id="$INPUT_RUN_ID"
+            release_tag="$INPUT_RELEASE_TAG"
+            source_sha="$(gh api "repos/${{ github.repository }}/commits/${release_tag}" --jq .sha)"
+          fi
+          if [[ ! "$run_id" =~ ^[0-9]+$ ]]; then
+            echo "::error::binary release publication requires an exact evidence run id"
+            exit 1
+          fi
+          if [[ ! "$release_tag" =~ ^v([0-9]+)\.([0-9]+)\.[0-9]+(-alpha\.[0-9]+)?$ ]]; then
+            echo "::error::binary release publication requires an exact semver tag"
+            exit 1
+          fi
+          major="${BASH_REMATCH[1]}"
+          minor="${BASH_REMATCH[2]}"
+          tag_sha="$(gh api "repos/${{ github.repository }}/commits/${release_tag}" --jq .sha)"
+          if [[ "$source_sha" != "$tag_sha" ]]; then
+            echo "::error::Binary Distribution source $source_sha does not match $release_tag at $tag_sha"
+            exit 1
+          fi
+          if [[ -n "$INPUT_BUILDCHAIN_REF" && ! "$INPUT_BUILDCHAIN_REF" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "::error::manual buildchain-ref must be an exact commit SHA"
+            exit 1
+          fi
+          if [[ -n "$INPUT_BUILDCHAIN_REF" && "${INPUT_BUILDCHAIN_REF,,}" != "$source_sha" ]]; then
+            echo "::error::manual buildchain-ref must equal the release tag source SHA"
+            exit 1
+          fi
+          if [[ "$release_tag" == *-alpha.* ]]; then
+            target_ref="alpha/v${major}/v${major}.${minor}"
+          else
+            target_ref="release/v${major}/v${major}.${minor}"
+          fi
+          gh release view "$release_tag" --repo "${{ github.repository }}" >/dev/null
+          {
+            echo "buildchain-ref=$source_sha"
+            echo "evidence-run-id=$run_id"
+            echo "release-tag=$release_tag"
+            echo "source-sha=$source_sha"
+            echo "target-ref=$target_ref"
+            echo "publication-version=${release_tag#v}"
+          } >> "$GITHUB_OUTPUT"
+
   publish:
+    needs: resolve
     uses: ./.github/workflows/.binary-release-assets.yml
     permissions:
       actions: read
       contents: write
     with:
       buildchain-repository: kungfu-systems/buildchain
-      buildchain-ref: ${{ inputs.buildchain-ref }}
-      evidence-run-id: ${{ inputs.evidence-run-id }}
-      release-tag: ${{ inputs.release-tag }}
+      buildchain-ref: ${{ needs.resolve.outputs.buildchain-ref }}
+      evidence-run-id: ${{ needs.resolve.outputs.evidence-run-id }}
+      release-tag: ${{ needs.resolve.outputs.release-tag }}
+      source-sha: ${{ needs.resolve.outputs.source-sha }}
+      target-ref: ${{ needs.resolve.outputs.target-ref }}
+      publication-version: ${{ needs.resolve.outputs.publication-version }}
+      auto-admission: true
       publication-admission-json: ${{ inputs.publication-admission-json }}
       publication-runner-provenance-json: ${{ inputs.publication-runner-provenance-json }}
       publication-control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
       publication-expected-json: ${{ inputs.publication-expected-json }}
-      publication-used-nonces-json: ${{ inputs.publication-used-nonces-json }}
+      publication-used-nonces-json: ${{ inputs.publication-used-nonces-json || '[]' }}

@@ -1,13 +1,22 @@
 #!/usr/bin/env node
 import { pathToFileURL } from "node:url";
 
-export function classifyReleaseTag(tag) {
+function classifyPublicationChannel(channel = "") {
+  const normalized = String(channel || "").trim().toLowerCase();
+  if (!normalized) return undefined;
+  if (normalized === "alpha") return true;
+  if (["release", "stable", "major"].includes(normalized)) return false;
+  throw new Error(`Unsupported GitHub Release publication channel: ${channel}`);
+}
+
+export function classifyReleaseTag(tag, { channel = "" } = {}) {
   const normalized = String(tag || "").trim();
   const match = normalized.match(/^v\d+\.\d+\.\d+(?:-[0-9A-Za-z][0-9A-Za-z.-]*)?$/);
   if (!match) {
     throw new Error(`Unsupported semver release tag: ${tag}`);
   }
-  const prerelease = normalized.includes("-");
+  const channelPrerelease = classifyPublicationChannel(channel);
+  const prerelease = channelPrerelease ?? normalized.includes("-");
   return {
     tag: normalized,
     prerelease,
@@ -23,6 +32,7 @@ function parseArgs(argv) {
     title: "",
     notes: "",
     target: "",
+    channel: "",
   };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
@@ -38,6 +48,7 @@ function parseArgs(argv) {
     else if (arg === "--title") args.title = readValue();
     else if (arg === "--notes") args.notes = readValue();
     else if (arg === "--target") args.target = readValue();
+    else if (arg === "--channel") args.channel = readValue();
     else if (arg === "--api-url") args.apiUrl = readValue();
     else if (arg === "--help" || arg === "-h") {
       args.help = true;
@@ -50,11 +61,12 @@ function parseArgs(argv) {
 
 function usage() {
   return [
-    "usage: node scripts/ensure-github-release.mjs --repository <owner/repo> --tag <tag>",
+    "usage: node scripts/ensure-github-release.mjs --repository <owner/repo> --tag <tag> [--channel alpha|release]",
     "",
     "Ensures Buildchain GitHub Release metadata is deterministic:",
-    "- vX.Y.Z-alpha.N => prerelease=true, make_latest=false",
-    "- vX.Y.Z => prerelease=false, make_latest=true",
+    "- explicit alpha => prerelease=true, make_latest=false",
+    "- explicit release/stable/major => prerelease=false, make_latest=true",
+    "- without --channel, semver prerelease syntax remains the fallback",
   ].join("\n");
 }
 
@@ -106,9 +118,10 @@ export async function ensureGitHubRelease({
   title = "",
   notes = "",
   target = "",
+  channel = "",
 } = {}) {
   const { owner, repo } = splitRepository(repository);
-  const metadata = classifyReleaseTag(tag);
+  const metadata = classifyReleaseTag(tag, { channel });
   const encodedTag = encodeURIComponent(metadata.tag);
   const releasePath = `/repos/${owner}/${repo}/releases/tags/${encodedTag}`;
   const refPath = `/repos/${owner}/${repo}/git/ref/tags/${encodedTag}`;
@@ -163,6 +176,7 @@ async function main() {
     title: args.title,
     notes: args.notes,
     target: args.target,
+    channel: args.channel,
   });
   console.log(`github-release-${result.action}=${result.metadata.tag}`);
   console.log(`github-release-prerelease=${result.metadata.prerelease}`);

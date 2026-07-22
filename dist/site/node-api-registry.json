@@ -99,7 +99,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-contract",
       "export": "./buildchain-contract",
       "target": "./packages/core/buildchain-contract.js",
-      "digest": "sha256:17246bb855b53a2fea713ecc8e372705ec75636527d786e203f6faf445172193",
+      "digest": "sha256:da92e920f6cc00dd5e21405f06580c2fa943eead3b755dc36b6c3a2381e68423",
       "summary": "Runtime contract world and compatibility digest APIs for floating-ref drift checks.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -112,7 +112,7 @@
       "specifier": "@kungfu-tech/buildchain/controller-evidence",
       "export": "./controller-evidence",
       "target": "./packages/core/controller-evidence.js",
-      "digest": "sha256:0ec292215c9bfd755023916375622b6c5e759966fe31cc355404a0bbdd518384",
+      "digest": "sha256:3767d8dce1a18e610d4d1dcad3ef5e5c457d97f01769c9961cb45eb4d682ce59",
       "summary": "Project-independent controller descriptors, source/runtime-bound plans, receipts, aggregates, and validation APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -151,7 +151,7 @@
       "specifier": "@kungfu-tech/buildchain/issue-reporting",
       "export": "./issue-reporting",
       "target": "./packages/core/issue-reporting.js",
-      "digest": "sha256:d6e0a450a52b7a4fba84bff855d5370e0cfa2ec3c4be737b3c9099a72f705e2d",
+      "digest": "sha256:2e6fb7f8b3d15b9c93e9bec952fbb70d7dc466311b7d8f94e654e145eb29ec49",
       "summary": "Buildchain-owned issue reporting API for workflow friction feedback.",
       "capabilityGroup": "observability-diagnostics",
       "audience": [
@@ -281,7 +281,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-authority",
       "export": "./publication-authority",
       "target": "./packages/core/publication-authority.js",
-      "digest": "sha256:e1812dd1bd4d8fad6f7cf0ba769462e4785e2d9bb595ab7e74d8c5bbccf23741",
+      "digest": "sha256:90bbbe0105f4c4458fdaa8eb37bf2595a00627724d6d3ac54b9e6634ee749fc4",
       "summary": "Sealed publication authority registry, runner provenance, control-plane audit, admission, and independent verification APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -450,7 +450,7 @@
     {
       "id": "site-bundle-contract",
       "path": "docs/site-bundle-contract.md",
-      "digest": "sha256:d67a874b356fbfbee9a5d5ece7021fb52b2848347dc6a14f5562c98570096916"
+      "digest": "sha256:583661a7886bdca7e8352a5325a105a9df5d134b3896dbda13ad9b637697481f"
     }
   ],
   "guidance": "These are the public Node import surfaces shipped by the npm package. Agents should prefer these exports over internal file paths."

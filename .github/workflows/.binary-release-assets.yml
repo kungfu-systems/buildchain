@@ -19,18 +19,43 @@ on:
         description: "Existing v* tag whose assets will be updated."
         type: string
         required: true
+      source-sha:
+        description: "Exact release tag commit admitted by binary evidence."
+        type: string
+        required: true
+      target-ref:
+        description: "Protected alpha/release channel branch that governed the tag."
+        type: string
+        required: true
+      publication-version:
+        description: "Release tag without the leading v."
+        type: string
+        required: true
+      auto-admission:
+        description: "Assemble sealed authority evidence from the exact Binary Distribution run."
+        type: boolean
+        default: true
+        required: false
       publication-admission-json:
         type: string
-        required: true
+        required: false
+        default: ""
       publication-runner-provenance-json:
         type: string
-        required: true
+        required: false
+        default: ""
       publication-control-plane-audit-json:
         type: string
-        required: true
+        required: false
+        default: ""
+      publication-gate-aggregate-json:
+        type: string
+        required: false
+        default: ""
       publication-expected-json:
         type: string
-        required: true
+        required: false
+        default: ""
       publication-used-nonces-json:
         default: "[]"
         type: string
@@ -51,8 +76,24 @@ jobs:
       admission-json: ${{ inputs.publication-admission-json }}
       runner-provenance-json: ${{ inputs.publication-runner-provenance-json }}
       control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
+      gate-aggregate-json: ${{ inputs.publication-gate-aggregate-json }}
       expected-json: ${{ inputs.publication-expected-json }}
       used-nonces-json: ${{ inputs.publication-used-nonces-json }}
+      auto-admission: ${{ inputs.auto-admission }}
+      auto-admission-kind: binary-release-assets
+      auto-no-gate: true
+      source-sha: ${{ inputs.source-sha }}
+      target-ref: ${{ inputs.target-ref }}
+      required-status-check: check
+      publisher-workflow-path: .github/workflows/.binary-release-assets.yml
+      authority-workflow-path: .github/workflows/.binary-release-assets.yml
+      product: Buildchain standalone binary
+      publication-target: github-release:${{ inputs.buildchain-repository }}@${{ inputs.release-tag }}
+      publication-version: ${{ inputs.publication-version }}
+      evidence-repository: ${{ inputs.buildchain-repository }}
+      evidence-run-id: ${{ inputs.evidence-run-id }}
+      evidence-passport-artifact: buildchain-release-passport
+      evidence-controller-artifact: buildchain-controller-binary-distribution
 
   publish:
     name: Publish sealed binary release assets
@@ -135,4 +176,3 @@ jobs:
             .buildchain/release-passport/* \
             .buildchain/publication-authority/capability.json \
             --clobber
-

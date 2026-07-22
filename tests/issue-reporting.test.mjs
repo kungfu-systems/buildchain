@@ -60,6 +60,40 @@ test("computeConsumerIssueFingerprint ignores empty fields and is order independ
   );
 });
 
+test("contract drift reports keep one issue identity across compatible runtime updates", () => {
+  const first = buildConsumerIssueReport({
+    env: {},
+    targetRepository: "kungfu-systems/kfd",
+    consumerRepository: "kungfu-systems/kfd",
+    workflow: "Build",
+    job: "trust-gate",
+    failureCode: "buildchain-contract-compatible-drift",
+    buildchainRef: "v2-alpha",
+    buildchainVersion: "sha256:first",
+  });
+  const second = buildConsumerIssueReport({
+    env: {},
+    targetRepository: "kungfu-systems/kfd",
+    consumerRepository: "kungfu-systems/kfd",
+    workflow: "Buildchain Ref Promotion",
+    job: "promote",
+    failureCode: "buildchain-contract-compatible-drift",
+    buildchainRef: "v2-alpha",
+    buildchainVersion: "sha256:second",
+  });
+  const stable = buildConsumerIssueReport({
+    env: {},
+    targetRepository: "kungfu-systems/kfd",
+    consumerRepository: "kungfu-systems/kfd",
+    failureCode: "buildchain-contract-compatible-drift",
+    buildchainRef: "v2",
+    buildchainVersion: "sha256:second",
+  });
+
+  assert.equal(first.fingerprint, second.fingerprint);
+  assert.notEqual(first.fingerprint, stable.fingerprint);
+});
+
 test("reportBuildchainIssue creates a new issue when no open matching issue exists", async () => {
   const request = createMockRequest([
     { total_count: 0, items: [] },

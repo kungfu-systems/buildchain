@@ -16,16 +16,25 @@ The release lane does not upload loose top-level `buildchain` or
 inside their archives, so top-level loose assets would collide when matrix
 artifacts are merged.
 
-Release asset upload is gated before the matrix starts. Manual
-`workflow_dispatch` runs are binary dry-runs only and must keep
-`upload-release=false`; real GitHub Release uploads must come from a true
-`v*` tag-triggered run so an invalid manual upload request cannot spend the
-three-platform build matrix and then fail at `gh release upload`.
+`Binary Distribution` is evidence-only. It never receives `contents: write`
+and never calls `gh release upload`; `upload-release=true` is rejected before
+the matrix starts. A completed promotion explicitly dispatches the workflow at
+the exact public tag because tags created by `GITHUB_TOKEN` do not recursively
+start ordinary `push` workflows.
 
-GitHub Release metadata is deterministic and tag-derived. Exact alpha tags such
+After all three runners qualify, the workflow seals a
+`binary-distribution` controller receipt over the exact source/runtime SHA,
+release bundle, and Release Passport. `Binary Release Assets` observes the
+successful evidence run, rechecks that its source SHA still equals the exact
+tag, derives the governed alpha/release branch, and asks the credential-free
+publication authority to assemble a short-lived capability. Only the nested
+publisher owns `contents: write`, and it runs behind the protected
+`buildchain-release-assets` Environment.
+
+GitHub Release metadata remains deterministic and tag-derived. Exact alpha tags such
 as `v2.6.2-alpha.0` are created or updated with `prerelease=true` and
 `make_latest=false`; exact stable tags such as `v2.6.1` are created or updated
-with `prerelease=false` and `make_latest=true`. The workflow uses
+with `prerelease=false` and `make_latest=true`. The sealed publisher uses
 `scripts/ensure-github-release.mjs` before asset upload instead of relying on
 GitHub's default latest-release heuristic.
 
@@ -84,6 +93,11 @@ buildchain-release-bundle/
 `buildchain-release-bundle.json` records the bundle digest and every included
 file digest. Consumers can download the bundle when they want one artifact for
 offline review, mirroring, or site ingestion.
+
+Publication fails closed unless the bundle contains all three archives,
+`checksums.txt`, and `buildchain.release.json`; its archive digest, controller
+receipt, live control-plane audit, runner provenance, source/runtime SHA, and
+exact target tag must all match the sealed admission.
 
 ## Local Smoke
 

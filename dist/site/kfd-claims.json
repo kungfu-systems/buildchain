@@ -14,14 +14,14 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:edc3653e5cb34efd97065a6941db16140bbf375a565bbcf329d9d795bb07676f",
+    "compatibilityDigest": "sha256:cdf588422ec6b460bd6f631400efa6e361a045e052c8967d6c50fadd7aa4dd90",
     "majorLine": "v2"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "b16881c373ca74de5ce72b699b7fce525751c6c57ba845377bf1910b9b29b7f5",
+    "sha256": "a6750354bb14571c67bd9dea77ee99d4f52e42ec5633dfa2ad860b170b093a45",
     "summary": {
       "cliCommandCount": 84,
       "workflowCount": 51,
@@ -228,7 +228,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "b16881c373ca74de5ce72b699b7fce525751c6c57ba845377bf1910b9b29b7f5",
+      "sha256": "a6750354bb14571c67bd9dea77ee99d4f52e42ec5633dfa2ad860b170b093a45",
       "summary": {
         "cliCommandCount": 84,
         "workflowCount": 51,
@@ -2608,17 +2608,22 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 9,
+          "inputCount": 14,
           "inputs": [
+            "auto-admission",
             "buildchain-ref",
             "buildchain-repository",
             "evidence-run-id",
             "publication-admission-json",
             "publication-control-plane-audit-json",
             "publication-expected-json",
+            "publication-gate-aggregate-json",
             "publication-runner-provenance-json",
             "publication-used-nonces-json",
-            "release-tag"
+            "publication-version",
+            "release-tag",
+            "source-sha",
+            "target-ref"
           ],
           "reverseAuditSource": ".github/workflows"
         },

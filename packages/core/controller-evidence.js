@@ -113,6 +113,14 @@ const CONTROLLER_SPECS = [
     ],
     evidence: ["propagation-plan", "propagation-lock", "controller-receipt"],
   },
+  {
+    id: "binary-distribution",
+    workflowId: "binary-distribution",
+    version: 1,
+    capabilities: ["standalone-binary-build", "release-evidence-bundle", "artifact-admission"],
+    stages: ["resolve-runtime", "build", "verify", "bundle", "aggregate"],
+    evidence: ["release-evidence-bundle", "release-passport", "controller-receipt"],
+  },
 ];
 
 function stableJson(value) {

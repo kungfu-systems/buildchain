@@ -470,6 +470,16 @@ jobs:
             const pullRequestMergeRef = /^refs\/pull\/\d+\/merge$/;
             const workflowRef = process.env.BUILDCHAIN_WORKFLOW_REF || process.env.GITHUB_WORKFLOW_REF || "";
             const sameRepositoryWorkflow = workflowRef.startsWith(`${repository}/.github/workflows/`);
+            const currentRepository = `${context.repo.owner}/${context.repo.repo}`;
+            const pullRequestHeadRepository = String(context.payload.pull_request?.head?.repo?.full_name || "");
+            const pullRequestHeadSha = String(context.payload.pull_request?.head?.sha || "");
+            const trustedSameRepositoryPullRequestHead =
+              context.eventName === "pull_request" &&
+              sameRepositoryWorkflow &&
+              currentRepository === repository &&
+              pullRequestHeadRepository === repository &&
+              exactSha.test(requested) &&
+              requested.toLowerCase() === pullRequestHeadSha.toLowerCase();
             const shellRef = (sameRepositoryWorkflow
               ? (workflowRef.split("@").pop() || defaultRef).trim() || defaultRef
               : defaultRef).replace(/^refs\/(?:heads|tags)\//, "");
@@ -492,17 +502,19 @@ jobs:
                 ? "override-requested"
                 : "stable-default";
             if (runtimeOverride) {
-              if (context.eventName !== "workflow_dispatch") {
+              if (!trustedSameRepositoryPullRequestHead && context.eventName !== "workflow_dispatch") {
                 throw new Error("buildchain-ref override is only allowed for trusted workflow_dispatch runs");
               }
-              const permission = await github.rest.repos.getCollaboratorPermissionLevel({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                username: context.actor,
-              });
-              const actorPermission = permission.data.permission || "";
-              if (!["admin", "maintain", "write"].includes(actorPermission)) {
-                throw new Error(`buildchain-ref override requires write, maintain, or admin permission; actor has ${actorPermission || "none"}`);
+              if (!trustedSameRepositoryPullRequestHead) {
+                const permission = await github.rest.repos.getCollaboratorPermissionLevel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  username: context.actor,
+                });
+                const actorPermission = permission.data.permission || "";
+                if (!["admin", "maintain", "write"].includes(actorPermission)) {
+                  throw new Error(`buildchain-ref override requires write, maintain, or admin permission; actor has ${actorPermission || "none"}`);
+                }
               }
               if (exactSha.test(requested)) {
                 runtimeRef = requested;
@@ -516,7 +528,9 @@ jobs:
                 runtimeFullRef = `refs/heads/${runtimeRef}`;
                 runtimeClass = "train";
               }
-              trustDecision = "override-accepted";
+              trustDecision = trustedSameRepositoryPullRequestHead
+                ? "same-repository-pr-head"
+                : "override-accepted";
             }
             async function resolveRef(ref) {
               if (exactSha.test(ref)) return ref;

@@ -62,7 +62,7 @@ on:
         required: false
         default: false
       auto-admission-kind:
-        description: "Managed evidence kind: release-candidate or publication-artifact"
+        description: "Managed evidence kind: release-candidate, publication-artifact, or binary-release-assets"
         type: string
         required: false
         default: "release-candidate"
@@ -297,6 +297,20 @@ jobs:
                 exit 1
               fi
               ;;
+            binary-release-assets)
+              if [[ "$BUILDCHAIN_EVIDENCE_REPOSITORY" != "kungfu-systems/buildchain" ]]; then
+                echo "::error::binary release admission evidence must belong to the canonical Buildchain repository"
+                exit 1
+              fi
+              if [[ "$BUILDCHAIN_PUBLISHER_WORKFLOW_PATH" != ".github/workflows/.binary-release-assets.yml" ]]; then
+                echo "::error::binary release admission requires the sealed binary publisher workflow"
+                exit 1
+              fi
+              if [[ -z "$BUILDCHAIN_GATE_AGGREGATE_JSON" && "$BUILDCHAIN_AUTO_NO_GATE" != "true" ]]; then
+                echo "::error::binary release admission requires a Gate aggregate or explicit no-Gate decision"
+                exit 1
+              fi
+              ;;
             *)
               echo "::error::unsupported automatic admission kind: $BUILDCHAIN_AUTO_ADMISSION_KIND"
               exit 1
@@ -412,6 +426,26 @@ jobs:
           name: ${{ inputs.evidence-controller-artifact }}
           path: .buildchain/publication-evidence/controller
 
+      - name: Download exact binary release evidence bundle
+        if: ${{ !inputs.dry-run && inputs.auto-admission-kind == 'binary-release-assets' }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          repository: ${{ inputs.evidence-repository }}
+          run-id: ${{ inputs.evidence-run-id }}
+          github-token: ${{ github.token }}
+          name: ${{ inputs.evidence-passport-artifact }}
+          path: .buildchain/publication-evidence/binary-passport
+
+      - name: Download exact binary distribution controller receipt
+        if: ${{ !inputs.dry-run && inputs.auto-admission-kind == 'binary-release-assets' }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          repository: ${{ inputs.evidence-repository }}
+          run-id: ${{ inputs.evidence-run-id }}
+          github-token: ${{ github.token }}
+          name: ${{ inputs.evidence-controller-artifact }}
+          path: .buildchain/publication-evidence/binary-controller
+
       - name: Audit managed release-candidate publication control plane
         if: ${{ !inputs.dry-run && inputs.auto-admission && inputs.auto-admission-kind == 'release-candidate' }}
         env:
@@ -499,14 +533,52 @@ jobs:
         shell: bash
         run: node .buildchain/authority-runtime/scripts/assemble-publication-artifact-admission.mjs
 
+      - name: Audit managed binary release publication control plane
+        if: ${{ !inputs.dry-run && inputs.auto-admission && inputs.auto-admission-kind == 'binary-release-assets' }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .buildchain/publication-authority/auto
+          node .buildchain/authority-runtime/scripts/audit-publication-control-plane.mjs \
+            --repository "${{ inputs.evidence-repository }}" \
+            --workflow-repository "${{ inputs.buildchain-repository }}" \
+            --branch "${{ inputs.target-ref }}" \
+            --source-sha "${{ inputs.source-sha }}" \
+            --workflow "${{ inputs.authority-workflow-path || '.github/workflows/.binary-release-assets.yml' }}" \
+            --workflow-ref "${{ inputs.buildchain-ref }}" \
+            --publisher-workflow "${{ inputs.publisher-workflow-path }}" \
+            --required-status-check "${{ inputs.required-status-check }}" \
+            --job publish \
+            --environment buildchain-release-assets \
+            --publisher-mode github-token \
+            --output .buildchain/publication-authority/auto/control-plane.json
+
+      - name: Assemble managed binary release admission
+        if: ${{ !inputs.dry-run && inputs.auto-admission && inputs.auto-admission-kind == 'binary-release-assets' }}
+        id: binary-auto-evidence
+        env:
+          BUILDCHAIN_REPOSITORY: ${{ inputs.evidence-repository }}
+          BUILDCHAIN_SOURCE_SHA: ${{ inputs.source-sha }}
+          BUILDCHAIN_RELEASE_TAG: v${{ inputs.publication-version }}
+          BUILDCHAIN_AUTHORITY_WORKFLOW_PATH: ${{ inputs.authority-workflow-path || '.github/workflows/.binary-release-assets.yml' }}
+          BUILDCHAIN_PUBLISHER_WORKFLOW_PATH: ${{ inputs.publisher-workflow-path }}
+          BUILDCHAIN_CONTROL_PLANE_AUDIT_PATH: .buildchain/publication-authority/auto/control-plane.json
+          BUILDCHAIN_PUBLICATION_VERSION: ${{ inputs.publication-version }}
+          BUILDCHAIN_GATE_AGGREGATE_JSON: ${{ inputs.gate-aggregate-json }}
+          BUILDCHAIN_ALLOW_NO_GATE: ${{ inputs.auto-no-gate }}
+        shell: bash
+        run: node .buildchain/authority-runtime/scripts/assemble-binary-release-admission.mjs
+
       - name: Verify sealed publication admission
         if: ${{ !inputs.dry-run }}
         env:
-          BUILDCHAIN_PUBLICATION_ADMISSION_JSON: ${{ inputs.admission-json || steps.auto-evidence.outputs.admission-json || steps.paper-auto-evidence.outputs.admission-json }}
-          BUILDCHAIN_RUNNER_PROVENANCE_JSON: ${{ inputs.runner-provenance-json || steps.auto-evidence.outputs.runner-provenance-json || steps.paper-auto-evidence.outputs.runner-provenance-json }}
-          BUILDCHAIN_CONTROL_PLANE_AUDIT_JSON: ${{ inputs.control-plane-audit-json || steps.auto-evidence.outputs.control-plane-audit-json || steps.paper-auto-evidence.outputs.control-plane-audit-json }}
-          BUILDCHAIN_GATE_AGGREGATE_JSON: ${{ inputs.gate-aggregate-json || steps.auto-evidence.outputs.gate-aggregate-json || steps.paper-auto-evidence.outputs.gate-aggregate-json }}
-          BUILDCHAIN_PUBLICATION_EXPECTED_JSON: ${{ inputs.expected-json || steps.auto-evidence.outputs.expected-json || steps.paper-auto-evidence.outputs.expected-json }}
+          BUILDCHAIN_PUBLICATION_ADMISSION_JSON: ${{ inputs.admission-json || steps.auto-evidence.outputs.admission-json || steps.paper-auto-evidence.outputs.admission-json || steps.binary-auto-evidence.outputs.admission-json }}
+          BUILDCHAIN_RUNNER_PROVENANCE_JSON: ${{ inputs.runner-provenance-json || steps.auto-evidence.outputs.runner-provenance-json || steps.paper-auto-evidence.outputs.runner-provenance-json || steps.binary-auto-evidence.outputs.runner-provenance-json }}
+          BUILDCHAIN_CONTROL_PLANE_AUDIT_JSON: ${{ inputs.control-plane-audit-json || steps.auto-evidence.outputs.control-plane-audit-json || steps.paper-auto-evidence.outputs.control-plane-audit-json || steps.binary-auto-evidence.outputs.control-plane-audit-json }}
+          BUILDCHAIN_GATE_AGGREGATE_JSON: ${{ inputs.gate-aggregate-json || steps.auto-evidence.outputs.gate-aggregate-json || steps.paper-auto-evidence.outputs.gate-aggregate-json || steps.binary-auto-evidence.outputs.gate-aggregate-json }}
+          BUILDCHAIN_PUBLICATION_EXPECTED_JSON: ${{ inputs.expected-json || steps.auto-evidence.outputs.expected-json || steps.paper-auto-evidence.outputs.expected-json || steps.binary-auto-evidence.outputs.expected-json }}
           BUILDCHAIN_USED_NONCES_JSON: ${{ inputs.used-nonces-json }}
           BUILDCHAIN_PLANNED_PUBLICATION_VERSION: ${{ inputs.publication-version }}
           BUILDCHAIN_AUTO_ADMISSION_KIND: ${{ inputs.auto-admission-kind }}
@@ -576,7 +648,22 @@ jobs:
           const commit = await response.json();
           const actualRuntimeSha = execFileSync("git", ["-C", ".buildchain/authority-runtime", "rev-parse", "HEAD"], { encoding: "utf8" }).trim().toLowerCase();
           let publicationEvidence;
-          if (process.env.BUILDCHAIN_AUTO_ADMISSION_KIND === "publication-artifact") {
+          if (process.env.BUILDCHAIN_AUTO_ADMISSION_KIND === "binary-release-assets") {
+            const bundleManifest = one(".buildchain/publication-evidence/binary-passport", "buildchain-release-bundle.json");
+            const bundleArchive = filesNamed(".buildchain/publication-evidence/binary-passport", "buildchain-release-bundle.tar.gz");
+            if (bundleArchive.length !== 1) {
+              throw new Error(`expected exactly one buildchain-release-bundle.tar.gz, found ${bundleArchive.length}`);
+            }
+            publicationEvidence = {
+              binaryReleaseEvidence: {
+                sourceTreeSha: commit.tree?.sha,
+                bundleManifest,
+                bundleArchiveDigest: sha256File(bundleArchive[0]),
+                controllerReceipt: one(".buildchain/publication-evidence/binary-controller", "receipt.json"),
+              },
+              gateAggregate: parse("BUILDCHAIN_GATE_AGGREGATE_JSON"),
+            };
+          } else if (process.env.BUILDCHAIN_AUTO_ADMISSION_KIND === "publication-artifact") {
             const candidateBundle = buildPublicationArtifactCandidate({
               artifactRoot: ".buildchain/publication-evidence/artifact",
               controllerRoot: ".buildchain/publication-evidence/controller",
