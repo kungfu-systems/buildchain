@@ -182,6 +182,9 @@ function surfaceDeployConfig(deployConfig, surfaceName) {
   return {
     ...deployConfig,
     ...overrides,
+    cacheControl: deployConfig.cacheControl || overrides.cacheControl
+      ? { ...(deployConfig.cacheControl || {}), ...(overrides.cacheControl || {}) }
+      : undefined,
     surfaces: deployConfig.surfaces,
     secretRefs: [
       ...new Set([
@@ -273,7 +276,7 @@ function surfaceArtifactRootFor({ artifactRoot, binding }) {
   return artifactRoot;
 }
 
-function syncStaticArtifactArgs({ artifactRoot, bucket, objectPrefix, deleteExcludes = [] }) {
+function syncStaticArtifactArgs({ artifactRoot, bucket, objectPrefix, deleteExcludes = [], cacheControl = "" }) {
   const args = ["s3", "sync", artifactRoot, s3Uri(bucket, objectPrefix), "--delete"];
   if (!objectPrefix) {
     args.push("--exclude", ".buildchain/*");
@@ -281,7 +284,31 @@ function syncStaticArtifactArgs({ artifactRoot, bucket, objectPrefix, deleteExcl
   for (const pattern of deleteExcludes) {
     args.push("--exclude", pattern);
   }
+  if (cacheControl) {
+    args.push("--cache-control", cacheControl);
+  }
   return args;
+}
+
+function mutableCacheControlArgs({ artifactRoot, bucket, objectPrefix, cacheControl = "" }) {
+  if (!cacheControl) return [];
+  return [
+    "s3",
+    "cp",
+    artifactRoot,
+    s3Uri(bucket, objectPrefix),
+    "--recursive",
+    "--exclude",
+    "*",
+    "--include",
+    "*.html",
+    "--include",
+    "*.json",
+    "--include",
+    "*.xml",
+    "--cache-control",
+    cacheControl,
+  ];
 }
 
 const PUBLICATION_ARCHIVE_POLICY_CONTRACT = "kungfu-buildchain-publication-archive-policy";
@@ -486,6 +513,9 @@ function directoryIndexAliasOperations({ surfaceArtifactRoot, bucket, binding })
           filePath,
           "--content-type",
           "text/html",
+          ...(binding.cacheControl?.mutable
+            ? ["--cache-control", binding.cacheControl.mutable]
+            : []),
         ],
         routing: {
           ...(binding.routing || {}),
@@ -836,6 +866,7 @@ function resolveSurfaceBindings({ config, channelName, alias, deployConfig }) {
       directoryIndexResolution: true,
       directoryIndexRewrite: effectiveDeploy.directoryIndexRewrite || "buildchain",
       healthStrategy: effectiveDeploy.healthStrategy || "",
+      cacheControl: effectiveDeploy.cacheControl || undefined,
       canonicalUrl: surface.productionUrl || (channelName === "production" ? url : ""),
       pathOnly: Boolean(surface.pathOnly),
       bucket,
@@ -1985,6 +2016,9 @@ function deployBindingOperations({ artifactRoot, deployConfig, manifest, binding
       "--no-overwrite",
       "--checksum-algorithm",
       "SHA256",
+      ...(binding.cacheControl?.immutable
+        ? ["--cache-control", binding.cacheControl.immutable]
+        : []),
     ],
     immutable: {
       preservedRoot: root,
@@ -2004,6 +2038,7 @@ function deployBindingOperations({ artifactRoot, deployConfig, manifest, binding
         bucket,
         objectPrefix: binding.objectPrefix,
         deleteExcludes: binding.mutableDeleteExcludes || [],
+        cacheControl: binding.cacheControl?.default || "",
       }),
       routing: binding.routing,
       preservation: binding.mutableDeleteExcludes?.length > 0
@@ -2013,12 +2048,37 @@ function deployBindingOperations({ artifactRoot, deployConfig, manifest, binding
           }
         : undefined,
     },
+    ...(binding.cacheControl?.mutable
+      ? [{
+          action: "apply-mutable-cache-control",
+          surface: binding.surface,
+          command: "aws",
+          args: mutableCacheControlArgs({
+            artifactRoot: surfaceArtifactRoot,
+            bucket,
+            objectPrefix: binding.objectPrefix,
+            cacheControl: binding.cacheControl.mutable,
+          }),
+          cacheControl: binding.cacheControl.mutable,
+          patterns: ["*.html", "*.json", "*.xml"],
+        }]
+      : []),
     ...directoryIndexAliasOperations({ surfaceArtifactRoot, bucket, binding }),
     {
       action: "write-deployment-manifest",
       surface: binding.surface,
       command: "aws",
-      args: ["s3", "cp", "-", s3Uri(bucket, binding.manifestKey), "--content-type", "application/json"],
+      args: [
+        "s3",
+        "cp",
+        "-",
+        s3Uri(bucket, binding.manifestKey),
+        "--content-type",
+        "application/json",
+        ...(binding.cacheControl?.mutable
+          ? ["--cache-control", binding.cacheControl.mutable]
+          : []),
+      ],
       stdin: `${JSON.stringify({
         ...manifest,
         surface: binding.surface,
@@ -2075,7 +2135,16 @@ function planAdapterSteps(adapter, deployConfig, manifest) {
         target: binding.bucket,
         prefix: binding.objectPrefix,
         deleteExcludes: binding.mutableDeleteExcludes || [],
+        cacheControl: binding.cacheControl || undefined,
       },
+      ...(binding.cacheControl?.mutable
+        ? [{
+            action: "apply-mutable-cache-control",
+            surface: binding.surface,
+            cacheControl: binding.cacheControl.mutable,
+            patterns: ["*.html", "*.json", "*.xml"],
+          }]
+        : []),
       {
         action: "write-deployment-manifest",
         surface: binding.surface,

@@ -287,6 +287,57 @@ test("web-surface deploy apply executes aws s3 and cloudfront commands through r
   });
 });
 
+test("web-surface deploy records and applies explicit cache-control classes", () => {
+  withFixture((fixture) => {
+    const configPath = path.join(fixture, "buildchain.toml");
+    fs.writeFileSync(
+      configPath,
+      fs.readFileSync(configPath, "utf8").replace(
+        '[deploy.staging]\nadapter = "aws-s3-cloudfront"',
+        [
+          '[deploy.staging]',
+          'adapter = "aws-s3-cloudfront"',
+          'cache_control_default = "public,max-age=3600"',
+          'cache_control_mutable = "public,max-age=300,must-revalidate"',
+          'cache_control_immutable = "public,max-age=31536000,immutable"',
+        ].join("\n"),
+      ),
+    );
+    fs.mkdirSync(path.join(fixture, "dist"), { recursive: true });
+    fs.writeFileSync(path.join(fixture, "dist", "index.html"), "hello\n");
+    fs.writeFileSync(path.join(fixture, "dist", "manifest.json"), "{}\n");
+    const calls = [];
+    const result = applyWebSurfaceDeploy({
+      cwd: fixture,
+      channel: "staging",
+      sourceSha: "a".repeat(40),
+      dryRun: false,
+      appliedAt: "2026-07-22T00:00:00.000Z",
+      commandRunner(operation) {
+        calls.push(operation);
+        return { exitCode: 0, stdout: `${operation.action}\n`, stderr: "" };
+      },
+    });
+
+    assert.deepEqual(result.surfaceBindings[0].cacheControl, {
+      default: "public,max-age=3600",
+      mutable: "public,max-age=300,must-revalidate",
+      immutable: "public,max-age=31536000,immutable",
+    });
+    const sync = calls.find((call) => call.action === "sync-static-artifact" && call.surface === "hub");
+    assert.deepEqual(sync.args.slice(-2), ["--cache-control", "public,max-age=3600"]);
+    const mutable = calls.find((call) => call.action === "apply-mutable-cache-control" && call.surface === "hub");
+    assert.deepEqual(mutable.args.slice(-2), ["--cache-control", "public,max-age=300,must-revalidate"]);
+    assert.deepEqual(
+      mutable.args.filter((value, index) => mutable.args[index - 1] === "--include"),
+      ["*.html", "*.json", "*.xml"],
+    );
+    const manifest = calls.find((call) => call.action === "write-deployment-manifest" && call.surface === "hub");
+    assert.deepEqual(manifest.args.slice(-2), ["--cache-control", "public,max-age=300,must-revalidate"]);
+    assert.match(manifest.stdin, /"cacheControl"/);
+  });
+});
+
 test("web-surface health waits for applied CloudFront invalidations", () => {
   const result = {
     operations: [
@@ -548,6 +599,14 @@ test("web-surface deploy apply honors explicit bucket-root prefix", () => {
 
 test("web-surface deploy preserves publication archives while deleting mutable paths", async () => {
   await withFixtureAsync(async (fixture) => {
+    const configPath = path.join(fixture, "buildchain.toml");
+    fs.writeFileSync(
+      configPath,
+      fs.readFileSync(configPath, "utf8").replace(
+        '[deploy.staging]\nadapter = "aws-s3-cloudfront"',
+        '[deploy.staging]\nadapter = "aws-s3-cloudfront"\ncache_control_immutable = "public,max-age=31536000,immutable"',
+      ),
+    );
     const archiveRoot = path.join(fixture, "dist", "buildchain", "archive", "paper", "v1.0.0");
     fs.mkdirSync(archiveRoot, { recursive: true });
     fs.writeFileSync(path.join(archiveRoot, "index.html"), "immutable reader\n");
@@ -606,7 +665,13 @@ test("web-surface deploy preserves publication archives while deleting mutable p
       "sync-static-artifact",
     ]);
     const immutableSync = buildchainCalls.find((call) => call.action === "sync-immutable-artifact");
-    assert.deepEqual(immutableSync.args.slice(-3), ["--no-overwrite", "--checksum-algorithm", "SHA256"]);
+    assert.deepEqual(immutableSync.args.slice(-5), [
+      "--no-overwrite",
+      "--checksum-algorithm",
+      "SHA256",
+      "--cache-control",
+      "public,max-age=31536000,immutable",
+    ]);
     assert.equal(immutableSync.args[2], path.join(fixture, "dist", "buildchain", "archive"));
     assert.equal(immutableSync.args[3], "s3://libkungfu-dev-staging/staging/buildchain/archive");
     const mutableSync = buildchainCalls.find((call) => call.action === "sync-static-artifact");
