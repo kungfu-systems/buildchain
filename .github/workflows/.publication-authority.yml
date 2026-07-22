@@ -550,6 +550,8 @@ jobs:
             --workflow-ref "${{ inputs.buildchain-ref }}" \
             --publisher-workflow "${{ inputs.publisher-workflow-path }}" \
             --required-status-check "${{ inputs.required-status-check }}" \
+            --publication-version "${{ inputs.publication-version }}" \
+            --allow-release-reconciliation \
             --job publish \
             --environment buildchain-release-assets \
             --publisher-mode github-token \

@@ -22,7 +22,10 @@ import {
   verifyPublicationAdmission,
   verifyPublicationQualificationReceipt,
 } from "../packages/core/publication-authority.js";
-import { evaluatePublicationControlPlaneSnapshot } from "../packages/core/publication-control-plane-audit.js";
+import {
+  evaluateBuildchainReleaseReconciliation,
+  evaluatePublicationControlPlaneSnapshot,
+} from "../packages/core/publication-control-plane-audit.js";
 import { sha256Json } from "../packages/core/release-candidate.js";
 
 const DIGESTS = Object.freeze({
@@ -728,6 +731,49 @@ test("control-plane snapshot qualifies an exact provider-enforced protected-bran
   });
   assert.equal(drifted.facts.find((entry) => entry.id === "branch-policy").status, "fail");
 
+  const releaseSha = "c".repeat(40);
+  const releaseReconciliation = evaluatePublicationControlPlaneSnapshot({
+    ...common,
+    snapshot: {
+      ...snapshot,
+      branch: {
+        ...snapshot.branch,
+        sourceSha: releaseSha,
+        headSha: releaseSha,
+        authorizationSha: sourceSha,
+        releaseReconciliation: {
+          qualifying: true,
+          parentSha: sourceSha,
+          version: "2.12.9",
+          packageVersion: "2.12.9",
+          changedPaths: ["package.json"],
+        },
+      },
+    },
+  });
+  assert.equal(releaseReconciliation.facts.find((entry) => entry.id === "branch-policy").status, "pass");
+
+  const unqualifiedReleaseReconciliation = evaluatePublicationControlPlaneSnapshot({
+    ...common,
+    snapshot: {
+      ...snapshot,
+      branch: {
+        ...snapshot.branch,
+        sourceSha: releaseSha,
+        headSha: releaseSha,
+        authorizationSha: sourceSha,
+        releaseReconciliation: {
+          qualifying: false,
+          parentSha: sourceSha,
+          version: "2.12.9",
+          packageVersion: "2.12.9",
+          changedPaths: ["package.json"],
+        },
+      },
+    },
+  });
+  assert.equal(unqualifiedReleaseReconciliation.facts.find((entry) => entry.id === "branch-policy").status, "fail");
+
   const mismatchedCheck = evaluatePublicationControlPlaneSnapshot({
     ...common,
     snapshot: {
@@ -745,6 +791,33 @@ test("control-plane snapshot qualifies an exact provider-enforced protected-bran
     },
   });
   assert.equal(mismatchedCheckSha.facts.find((entry) => entry.id === "branch-policy").status, "fail");
+});
+
+test("Buildchain stable reconciliation inherits only a single approved release parent with release-only paths", () => {
+  const parentSha = "a".repeat(40);
+  const expected = {
+    repository: "kungfu-systems/buildchain",
+    publicationVersion: "2.14.16",
+    packageVersion: "2.14.16",
+    message: "chore(release): release v2.14.16",
+    parentSha,
+    changedPaths: ["package.json", ".buildchain/release-impact.json", "dist/site/site-manifest.json"],
+  };
+  assert.equal(evaluateBuildchainReleaseReconciliation(expected).qualifying, true);
+  assert.equal(evaluateBuildchainReleaseReconciliation({
+    ...expected,
+    changedPaths: [...expected.changedPaths, "scripts/unauthorized.mjs"],
+  }).qualifying, false);
+  assert.equal(evaluateBuildchainReleaseReconciliation({
+    ...expected,
+    publicationVersion: "2.14.16-alpha.0",
+    packageVersion: "2.14.16-alpha.0",
+    message: "chore(release): release v2.14.16-alpha.0",
+  }).qualifying, false);
+  assert.equal(evaluateBuildchainReleaseReconciliation({
+    ...expected,
+    parentSha: "b".repeat(39),
+  }).qualifying, false);
 });
 
 test("control-plane snapshot audit supports scoped GitHub tokens and sanitized OIDC roles", () => {
