@@ -550,6 +550,8 @@ jobs:
             --workflow-ref "${{ inputs.buildchain-ref }}" \
             --publisher-workflow "${{ inputs.publisher-workflow-path }}" \
             --required-status-check "${{ inputs.required-status-check }}" \
+            --publication-version "${{ inputs.publication-version }}" \
+            --allow-release-reconciliation \
             --job publish \
             --environment buildchain-release-assets \
             --publisher-mode github-token \
@@ -581,6 +583,7 @@ jobs:
           BUILDCHAIN_PUBLICATION_EXPECTED_JSON: ${{ inputs.expected-json || steps.auto-evidence.outputs.expected-json || steps.paper-auto-evidence.outputs.expected-json || steps.binary-auto-evidence.outputs.expected-json }}
           BUILDCHAIN_USED_NONCES_JSON: ${{ inputs.used-nonces-json }}
           BUILDCHAIN_PLANNED_PUBLICATION_VERSION: ${{ inputs.publication-version }}
+          BUILDCHAIN_AUTHORITY_REF: ${{ inputs.buildchain-ref }}
           BUILDCHAIN_AUTO_ADMISSION_KIND: ${{ inputs.auto-admission-kind }}
           BUILDCHAIN_CONSUMER_QUALIFICATION_REQUIRED: ${{ inputs.consumer-qualification-required }}
           BUILDCHAIN_CONSUMER_PREDICATE_ID: ${{ inputs.consumer-predicate-id }}
@@ -647,6 +650,10 @@ jobs:
           if (!response.ok) throw new Error(`could not resolve admitted source tree: GitHub API ${response.status}`);
           const commit = await response.json();
           const actualRuntimeSha = execFileSync("git", ["-C", ".buildchain/authority-runtime", "rev-parse", "HEAD"], { encoding: "utf8" }).trim().toLowerCase();
+          const expectedAuthorityRuntimeSha = process.env.BUILDCHAIN_AUTHORITY_REF.toLowerCase();
+          if (actualRuntimeSha !== expectedAuthorityRuntimeSha) {
+            throw new Error(`authority runtime checkout mismatch: expected ${expectedAuthorityRuntimeSha}, got ${actualRuntimeSha}`);
+          }
           let publicationEvidence;
           if (process.env.BUILDCHAIN_AUTO_ADMISSION_KIND === "binary-release-assets") {
             const bundleManifest = one(".buildchain/publication-evidence/binary-passport", "buildchain-release-bundle.json");
@@ -698,7 +705,10 @@ jobs:
             expected: parse("BUILDCHAIN_PUBLICATION_EXPECTED_JSON"),
             usedNonces: parse("BUILDCHAIN_USED_NONCES_JSON"),
           });
-          if (capability.runtimeSha !== actualRuntimeSha) {
+          if (
+            process.env.BUILDCHAIN_AUTO_ADMISSION_KIND !== "binary-release-assets" &&
+            capability.runtimeSha !== actualRuntimeSha
+          ) {
             throw new Error(`authority runtime checkout mismatch: expected ${capability.runtimeSha}, got ${actualRuntimeSha}`);
           }
           if (capability.version !== process.env.BUILDCHAIN_PLANNED_PUBLICATION_VERSION) {

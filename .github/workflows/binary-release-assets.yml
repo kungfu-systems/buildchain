@@ -78,8 +78,8 @@ jobs:
             echo "::error::manual buildchain-ref must be an exact commit SHA"
             exit 1
           fi
-          if [[ -n "$INPUT_BUILDCHAIN_REF" && "${INPUT_BUILDCHAIN_REF,,}" != "$source_sha" ]]; then
-            echo "::error::manual buildchain-ref must equal the release tag source SHA"
+          if [[ -n "$INPUT_BUILDCHAIN_REF" && "${INPUT_BUILDCHAIN_REF,,}" != "${GITHUB_SHA,,}" ]]; then
+            echo "::error::manual buildchain-ref must equal the exact workflow source SHA"
             exit 1
           fi
           if [[ "$release_tag" == *-alpha.* ]]; then
@@ -89,7 +89,7 @@ jobs:
           fi
           gh release view "$release_tag" --repo "${{ github.repository }}" >/dev/null
           {
-            echo "buildchain-ref=$source_sha"
+            echo "buildchain-ref=${INPUT_BUILDCHAIN_REF:-$source_sha}"
             echo "evidence-run-id=$run_id"
             echo "release-tag=$release_tag"
             echo "source-sha=$source_sha"
