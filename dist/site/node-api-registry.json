@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:9c2625a1b7951363c478f83f8b352ef918974f084aadc0bc68945ac43e5852ab",
+      "digest": "sha256:78c4f1885d1f619242f31e27b6cd4d1e21e0fd9c67fbe92f8b613abe9acdd3c1",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:9c2625a1b7951363c478f83f8b352ef918974f084aadc0bc68945ac43e5852ab",
+      "digest": "sha256:78c4f1885d1f619242f31e27b6cd4d1e21e0fd9c67fbe92f8b613abe9acdd3c1",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -166,6 +166,19 @@
       "target": "./packages/core/kfd.js",
       "digest": "sha256:7b4c15c375e19f5e558476cd0e17c6ea86372bb04a08e80cdf268f8ad8077fc4",
       "summary": "Unified KFD standards, schema discovery, KFD-1/KFD-2/KFD-3 grouped APIs, KFD-4 schema discovery, upstream KFD aggregate facts, and Buildchain KFD claim helpers.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/kfd-agent-hub",
+      "export": "./kfd-agent-hub",
+      "target": "./packages/core/kfd-agent-hub.js",
+      "digest": "sha256:b301acb17af17f462af75f086f506bb529d2456647bfdbd78182852a413f5671",
+      "summary": "Declarative Agent Hub adapter inspection, fixed-suite execution, exact KFD cut locking, and agent explanation APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [
         "developer",
@@ -359,7 +372,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:dab5375c40b77245b04a5d86667ea1608a24f4a8ff804d301f05e7345605ce33",
+      "digest": "sha256:6d30420aa771b3504473cabd5d53c16868cfe267b817cfa446b20eabc153f886",
       "summary": "Release passport collection, verification, explanation, and evidence APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -411,7 +424,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-kfd-claims",
       "export": "./buildchain-kfd-claims",
       "target": "./packages/core/buildchain-kfd-claims.js",
-      "digest": "sha256:316ca2f86a3934ccacd13b2321e2c10701337638266793d230c687c2fe963e84",
+      "digest": "sha256:a2c297daa22fb8d3bf7e84e2ee22ba269e81c206b2772ac9fd18bf095dcb2b84",
       "summary": "Buildchain self KFD claim registry, witnesses, and public claim APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [

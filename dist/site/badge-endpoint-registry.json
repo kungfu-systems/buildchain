@@ -976,6 +976,1126 @@
       ]
     },
     {
+      "id": "kfd-7",
+      "label": "KFD-7",
+      "messageTemplate": "machine artifact conforming to schemas/kfd-7/domain-profile.schema.json {state}",
+      "linkRole": "repository-release-passport",
+      "states": [
+        {
+          "state": "passed",
+          "path": "badges/v1/kfd-7/passed.json",
+          "svgPath": "badges/v1/kfd-7/passed.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-7",
+            "message": "machine artifact conforming to schemas/kfd-7/domain-profile.schema.json passed",
+            "color": "2ea44f",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "aligned",
+          "path": "badges/v1/kfd-7/aligned.json",
+          "svgPath": "badges/v1/kfd-7/aligned.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-7",
+            "message": "machine artifact conforming to schemas/kfd-7/domain-profile.schema.json aligned",
+            "color": "0969da",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "declared",
+          "path": "badges/v1/kfd-7/declared.json",
+          "svgPath": "badges/v1/kfd-7/declared.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-7",
+            "message": "machine artifact conforming to schemas/kfd-7/domain-profile.schema.json declared",
+            "color": "6e7781",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "planned",
+          "path": "badges/v1/kfd-7/planned.json",
+          "svgPath": "badges/v1/kfd-7/planned.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-7",
+            "message": "machine artifact conforming to schemas/kfd-7/domain-profile.schema.json planned",
+            "color": "bf8700",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "draft",
+          "path": "badges/v1/kfd-7/draft.json",
+          "svgPath": "badges/v1/kfd-7/draft.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-7",
+            "message": "machine artifact conforming to schemas/kfd-7/domain-profile.schema.json draft",
+            "color": "8250df",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "downgraded",
+          "path": "badges/v1/kfd-7/downgraded.json",
+          "svgPath": "badges/v1/kfd-7/downgraded.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-7",
+            "message": "machine artifact conforming to schemas/kfd-7/domain-profile.schema.json downgraded",
+            "color": "bf8700",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "failed",
+          "path": "badges/v1/kfd-7/failed.json",
+          "svgPath": "badges/v1/kfd-7/failed.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-7",
+            "message": "machine artifact conforming to schemas/kfd-7/domain-profile.schema.json failed",
+            "color": "cf222e",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "missing",
+          "path": "badges/v1/kfd-7/missing.json",
+          "svgPath": "badges/v1/kfd-7/missing.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-7",
+            "message": "machine artifact conforming to schemas/kfd-7/domain-profile.schema.json missing",
+            "color": "6e7781",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "kfd-8",
+      "label": "KFD-8",
+      "messageTemplate": "independently addressable perspective coordinate bound to a perspective holder, declared vantage or decision purpose, admitted Fact cut, typed source authority, freshness conditions, omissions, conflicts, unknowns, and declared transformation loss {state}",
+      "linkRole": "repository-release-passport",
+      "states": [
+        {
+          "state": "passed",
+          "path": "badges/v1/kfd-8/passed.json",
+          "svgPath": "badges/v1/kfd-8/passed.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-8",
+            "message": "independently addressable perspective coordinate bound to a perspective holder, declared vantage or decision purpose, admitted Fact cut, typed source authority, freshness conditions, omissions, conflicts, unknowns, and declared transformation loss passed",
+            "color": "2ea44f",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "aligned",
+          "path": "badges/v1/kfd-8/aligned.json",
+          "svgPath": "badges/v1/kfd-8/aligned.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-8",
+            "message": "independently addressable perspective coordinate bound to a perspective holder, declared vantage or decision purpose, admitted Fact cut, typed source authority, freshness conditions, omissions, conflicts, unknowns, and declared transformation loss aligned",
+            "color": "0969da",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "declared",
+          "path": "badges/v1/kfd-8/declared.json",
+          "svgPath": "badges/v1/kfd-8/declared.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-8",
+            "message": "independently addressable perspective coordinate bound to a perspective holder, declared vantage or decision purpose, admitted Fact cut, typed source authority, freshness conditions, omissions, conflicts, unknowns, and declared transformation loss declared",
+            "color": "6e7781",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "planned",
+          "path": "badges/v1/kfd-8/planned.json",
+          "svgPath": "badges/v1/kfd-8/planned.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-8",
+            "message": "independently addressable perspective coordinate bound to a perspective holder, declared vantage or decision purpose, admitted Fact cut, typed source authority, freshness conditions, omissions, conflicts, unknowns, and declared transformation loss planned",
+            "color": "bf8700",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "draft",
+          "path": "badges/v1/kfd-8/draft.json",
+          "svgPath": "badges/v1/kfd-8/draft.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-8",
+            "message": "independently addressable perspective coordinate bound to a perspective holder, declared vantage or decision purpose, admitted Fact cut, typed source authority, freshness conditions, omissions, conflicts, unknowns, and declared transformation loss draft",
+            "color": "8250df",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "downgraded",
+          "path": "badges/v1/kfd-8/downgraded.json",
+          "svgPath": "badges/v1/kfd-8/downgraded.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-8",
+            "message": "independently addressable perspective coordinate bound to a perspective holder, declared vantage or decision purpose, admitted Fact cut, typed source authority, freshness conditions, omissions, conflicts, unknowns, and declared transformation loss downgraded",
+            "color": "bf8700",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "failed",
+          "path": "badges/v1/kfd-8/failed.json",
+          "svgPath": "badges/v1/kfd-8/failed.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-8",
+            "message": "independently addressable perspective coordinate bound to a perspective holder, declared vantage or decision purpose, admitted Fact cut, typed source authority, freshness conditions, omissions, conflicts, unknowns, and declared transformation loss failed",
+            "color": "cf222e",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "missing",
+          "path": "badges/v1/kfd-8/missing.json",
+          "svgPath": "badges/v1/kfd-8/missing.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-8",
+            "message": "independently addressable perspective coordinate bound to a perspective holder, declared vantage or decision purpose, admitted Fact cut, typed source authority, freshness conditions, omissions, conflicts, unknowns, and declared transformation loss missing",
+            "color": "6e7781",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "kfd-9",
+      "label": "KFD-9",
+      "messageTemplate": "independently addressable intended change or maintained condition with continuing direction, progress relation, typed relations, lineage, and settlement semantics; Domain Profiles own terminal success conditions {state}",
+      "linkRole": "repository-release-passport",
+      "states": [
+        {
+          "state": "passed",
+          "path": "badges/v1/kfd-9/passed.json",
+          "svgPath": "badges/v1/kfd-9/passed.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-9",
+            "message": "independently addressable intended change or maintained condition with continuing direction, progress relation, typed relations, lineage, and settlement semantics; Domain Profiles own terminal success conditions passed",
+            "color": "2ea44f",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "aligned",
+          "path": "badges/v1/kfd-9/aligned.json",
+          "svgPath": "badges/v1/kfd-9/aligned.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-9",
+            "message": "independently addressable intended change or maintained condition with continuing direction, progress relation, typed relations, lineage, and settlement semantics; Domain Profiles own terminal success conditions aligned",
+            "color": "0969da",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "declared",
+          "path": "badges/v1/kfd-9/declared.json",
+          "svgPath": "badges/v1/kfd-9/declared.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-9",
+            "message": "independently addressable intended change or maintained condition with continuing direction, progress relation, typed relations, lineage, and settlement semantics; Domain Profiles own terminal success conditions declared",
+            "color": "6e7781",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "planned",
+          "path": "badges/v1/kfd-9/planned.json",
+          "svgPath": "badges/v1/kfd-9/planned.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-9",
+            "message": "independently addressable intended change or maintained condition with continuing direction, progress relation, typed relations, lineage, and settlement semantics; Domain Profiles own terminal success conditions planned",
+            "color": "bf8700",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "draft",
+          "path": "badges/v1/kfd-9/draft.json",
+          "svgPath": "badges/v1/kfd-9/draft.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-9",
+            "message": "independently addressable intended change or maintained condition with continuing direction, progress relation, typed relations, lineage, and settlement semantics; Domain Profiles own terminal success conditions draft",
+            "color": "8250df",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "downgraded",
+          "path": "badges/v1/kfd-9/downgraded.json",
+          "svgPath": "badges/v1/kfd-9/downgraded.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-9",
+            "message": "independently addressable intended change or maintained condition with continuing direction, progress relation, typed relations, lineage, and settlement semantics; Domain Profiles own terminal success conditions downgraded",
+            "color": "bf8700",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "failed",
+          "path": "badges/v1/kfd-9/failed.json",
+          "svgPath": "badges/v1/kfd-9/failed.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-9",
+            "message": "independently addressable intended change or maintained condition with continuing direction, progress relation, typed relations, lineage, and settlement semantics; Domain Profiles own terminal success conditions failed",
+            "color": "cf222e",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "missing",
+          "path": "badges/v1/kfd-9/missing.json",
+          "svgPath": "badges/v1/kfd-9/missing.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-9",
+            "message": "independently addressable intended change or maintained condition with continuing direction, progress relation, typed relations, lineage, and settlement semantics; Domain Profiles own terminal success conditions missing",
+            "color": "6e7781",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "kfd-10",
+      "label": "KFD-10",
+      "messageTemplate": "independently addressable bounded authority with grantor, holder, authentic derivation, validity conditions, typed limits, attenuation, residual responsibility, and revocation {state}",
+      "linkRole": "repository-release-passport",
+      "states": [
+        {
+          "state": "passed",
+          "path": "badges/v1/kfd-10/passed.json",
+          "svgPath": "badges/v1/kfd-10/passed.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-10",
+            "message": "independently addressable bounded authority with grantor, holder, authentic derivation, validity conditions, typed limits, attenuation, residual responsibility, and revocation passed",
+            "color": "2ea44f",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "aligned",
+          "path": "badges/v1/kfd-10/aligned.json",
+          "svgPath": "badges/v1/kfd-10/aligned.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-10",
+            "message": "independently addressable bounded authority with grantor, holder, authentic derivation, validity conditions, typed limits, attenuation, residual responsibility, and revocation aligned",
+            "color": "0969da",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "declared",
+          "path": "badges/v1/kfd-10/declared.json",
+          "svgPath": "badges/v1/kfd-10/declared.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-10",
+            "message": "independently addressable bounded authority with grantor, holder, authentic derivation, validity conditions, typed limits, attenuation, residual responsibility, and revocation declared",
+            "color": "6e7781",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "planned",
+          "path": "badges/v1/kfd-10/planned.json",
+          "svgPath": "badges/v1/kfd-10/planned.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-10",
+            "message": "independently addressable bounded authority with grantor, holder, authentic derivation, validity conditions, typed limits, attenuation, residual responsibility, and revocation planned",
+            "color": "bf8700",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "draft",
+          "path": "badges/v1/kfd-10/draft.json",
+          "svgPath": "badges/v1/kfd-10/draft.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-10",
+            "message": "independently addressable bounded authority with grantor, holder, authentic derivation, validity conditions, typed limits, attenuation, residual responsibility, and revocation draft",
+            "color": "8250df",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "downgraded",
+          "path": "badges/v1/kfd-10/downgraded.json",
+          "svgPath": "badges/v1/kfd-10/downgraded.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-10",
+            "message": "independently addressable bounded authority with grantor, holder, authentic derivation, validity conditions, typed limits, attenuation, residual responsibility, and revocation downgraded",
+            "color": "bf8700",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "failed",
+          "path": "badges/v1/kfd-10/failed.json",
+          "svgPath": "badges/v1/kfd-10/failed.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-10",
+            "message": "independently addressable bounded authority with grantor, holder, authentic derivation, validity conditions, typed limits, attenuation, residual responsibility, and revocation failed",
+            "color": "cf222e",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "missing",
+          "path": "badges/v1/kfd-10/missing.json",
+          "svgPath": "badges/v1/kfd-10/missing.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-10",
+            "message": "independently addressable bounded authority with grantor, holder, authentic derivation, validity conditions, typed limits, attenuation, residual responsibility, and revocation missing",
+            "color": "6e7781",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "kfd-11",
+      "label": "KFD-11",
+      "messageTemplate": "KFD-11 {state}",
+      "linkRole": "repository-release-passport",
+      "states": [
+        {
+          "state": "passed",
+          "path": "badges/v1/kfd-11/passed.json",
+          "svgPath": "badges/v1/kfd-11/passed.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-11",
+            "message": "KFD-11 passed",
+            "color": "2ea44f",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "aligned",
+          "path": "badges/v1/kfd-11/aligned.json",
+          "svgPath": "badges/v1/kfd-11/aligned.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-11",
+            "message": "KFD-11 aligned",
+            "color": "0969da",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "declared",
+          "path": "badges/v1/kfd-11/declared.json",
+          "svgPath": "badges/v1/kfd-11/declared.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-11",
+            "message": "KFD-11 declared",
+            "color": "6e7781",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "planned",
+          "path": "badges/v1/kfd-11/planned.json",
+          "svgPath": "badges/v1/kfd-11/planned.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-11",
+            "message": "KFD-11 planned",
+            "color": "bf8700",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "draft",
+          "path": "badges/v1/kfd-11/draft.json",
+          "svgPath": "badges/v1/kfd-11/draft.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-11",
+            "message": "KFD-11 draft",
+            "color": "8250df",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "downgraded",
+          "path": "badges/v1/kfd-11/downgraded.json",
+          "svgPath": "badges/v1/kfd-11/downgraded.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-11",
+            "message": "KFD-11 downgraded",
+            "color": "bf8700",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "failed",
+          "path": "badges/v1/kfd-11/failed.json",
+          "svgPath": "badges/v1/kfd-11/failed.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-11",
+            "message": "KFD-11 failed",
+            "color": "cf222e",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "missing",
+          "path": "badges/v1/kfd-11/missing.json",
+          "svgPath": "badges/v1/kfd-11/missing.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-11",
+            "message": "KFD-11 missing",
+            "color": "6e7781",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "kfd-12",
+      "label": "KFD-12",
+      "messageTemplate": "software-domain separation of Initiative, Assignment, occurrence, Claim, Assessment, Decision, Admission, and continuation {state}",
+      "linkRole": "repository-release-passport",
+      "states": [
+        {
+          "state": "passed",
+          "path": "badges/v1/kfd-12/passed.json",
+          "svgPath": "badges/v1/kfd-12/passed.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-12",
+            "message": "software-domain separation of Initiative, Assignment, occurrence, Claim, Assessment, Decision, Admission, and continuation passed",
+            "color": "2ea44f",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "aligned",
+          "path": "badges/v1/kfd-12/aligned.json",
+          "svgPath": "badges/v1/kfd-12/aligned.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-12",
+            "message": "software-domain separation of Initiative, Assignment, occurrence, Claim, Assessment, Decision, Admission, and continuation aligned",
+            "color": "0969da",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "declared",
+          "path": "badges/v1/kfd-12/declared.json",
+          "svgPath": "badges/v1/kfd-12/declared.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-12",
+            "message": "software-domain separation of Initiative, Assignment, occurrence, Claim, Assessment, Decision, Admission, and continuation declared",
+            "color": "6e7781",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "planned",
+          "path": "badges/v1/kfd-12/planned.json",
+          "svgPath": "badges/v1/kfd-12/planned.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-12",
+            "message": "software-domain separation of Initiative, Assignment, occurrence, Claim, Assessment, Decision, Admission, and continuation planned",
+            "color": "bf8700",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "draft",
+          "path": "badges/v1/kfd-12/draft.json",
+          "svgPath": "badges/v1/kfd-12/draft.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-12",
+            "message": "software-domain separation of Initiative, Assignment, occurrence, Claim, Assessment, Decision, Admission, and continuation draft",
+            "color": "8250df",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "downgraded",
+          "path": "badges/v1/kfd-12/downgraded.json",
+          "svgPath": "badges/v1/kfd-12/downgraded.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-12",
+            "message": "software-domain separation of Initiative, Assignment, occurrence, Claim, Assessment, Decision, Admission, and continuation downgraded",
+            "color": "bf8700",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "failed",
+          "path": "badges/v1/kfd-12/failed.json",
+          "svgPath": "badges/v1/kfd-12/failed.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-12",
+            "message": "software-domain separation of Initiative, Assignment, occurrence, Claim, Assessment, Decision, Admission, and continuation failed",
+            "color": "cf222e",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "missing",
+          "path": "badges/v1/kfd-12/missing.json",
+          "svgPath": "badges/v1/kfd-12/missing.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-12",
+            "message": "software-domain separation of Initiative, Assignment, occurrence, Claim, Assessment, Decision, Admission, and continuation missing",
+            "color": "6e7781",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "kfd-13",
+      "label": "KFD-13",
+      "messageTemplate": "software-project settlement binding that preserves independently authoritative source, Atlas, Episode, policy, omission, and risk coordinates {state}",
+      "linkRole": "repository-release-passport",
+      "states": [
+        {
+          "state": "passed",
+          "path": "badges/v1/kfd-13/passed.json",
+          "svgPath": "badges/v1/kfd-13/passed.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-13",
+            "message": "software-project settlement binding that preserves independently authoritative source, Atlas, Episode, policy, omission, and risk coordinates passed",
+            "color": "2ea44f",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "aligned",
+          "path": "badges/v1/kfd-13/aligned.json",
+          "svgPath": "badges/v1/kfd-13/aligned.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-13",
+            "message": "software-project settlement binding that preserves independently authoritative source, Atlas, Episode, policy, omission, and risk coordinates aligned",
+            "color": "0969da",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "declared",
+          "path": "badges/v1/kfd-13/declared.json",
+          "svgPath": "badges/v1/kfd-13/declared.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-13",
+            "message": "software-project settlement binding that preserves independently authoritative source, Atlas, Episode, policy, omission, and risk coordinates declared",
+            "color": "6e7781",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "planned",
+          "path": "badges/v1/kfd-13/planned.json",
+          "svgPath": "badges/v1/kfd-13/planned.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-13",
+            "message": "software-project settlement binding that preserves independently authoritative source, Atlas, Episode, policy, omission, and risk coordinates planned",
+            "color": "bf8700",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "draft",
+          "path": "badges/v1/kfd-13/draft.json",
+          "svgPath": "badges/v1/kfd-13/draft.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-13",
+            "message": "software-project settlement binding that preserves independently authoritative source, Atlas, Episode, policy, omission, and risk coordinates draft",
+            "color": "8250df",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "downgraded",
+          "path": "badges/v1/kfd-13/downgraded.json",
+          "svgPath": "badges/v1/kfd-13/downgraded.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-13",
+            "message": "software-project settlement binding that preserves independently authoritative source, Atlas, Episode, policy, omission, and risk coordinates downgraded",
+            "color": "bf8700",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "failed",
+          "path": "badges/v1/kfd-13/failed.json",
+          "svgPath": "badges/v1/kfd-13/failed.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-13",
+            "message": "software-project settlement binding that preserves independently authoritative source, Atlas, Episode, policy, omission, and risk coordinates failed",
+            "color": "cf222e",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        },
+        {
+          "state": "missing",
+          "path": "badges/v1/kfd-13/missing.json",
+          "svgPath": "badges/v1/kfd-13/missing.svg",
+          "payload": {
+            "schemaVersion": 1,
+            "label": "KFD-13",
+            "message": "software-project settlement binding that preserves independently authoritative source, Atlas, Episode, policy, omission, and risk coordinates missing",
+            "color": "6e7781",
+            "logoPolicy": {
+              "contract": "kungfu-buildchain-badge-logo-policy",
+              "mode": "hosted-placeholder",
+              "placeholder": "buildchain-monogram",
+              "futureLogoUpdateRequiresConsumerAction": false,
+              "owner": "Buildchain site badge endpoint",
+              "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "buildchain-release-passport",
       "label": "buildchain",
       "messageTemplate": "release passport {state}",

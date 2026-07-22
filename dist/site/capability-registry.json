@@ -115,15 +115,16 @@
       ],
       "maturity": "stable",
       "counts": {
-        "manualCount": 1,
-        "pageCount": 1,
-        "cliCommandCount": 27,
-        "nodeApiCount": 5,
+        "manualCount": 2,
+        "pageCount": 2,
+        "cliCommandCount": 28,
+        "nodeApiCount": 6,
         "workflowCount": 0,
         "actionCount": 0
       },
       "manuals": [
-        "docs/kfd-support.md"
+        "docs/kfd-support.md",
+        "docs/kfd-agent-hub.md"
       ],
       "factSources": [
         "page-registry.json",

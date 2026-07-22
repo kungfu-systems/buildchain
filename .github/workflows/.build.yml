@@ -130,6 +130,11 @@ on:
         default: ""
         type: string
         required: false
+      kfd-agent-hub:
+        description: "Agent Hub conformance mode: off or auto. Auto reads .buildchain/kfd/agent-hub.json and runs the fixed KFD suite."
+        default: "off"
+        type: string
+        required: false
       lifecycle-timeout-minutes:
         description: "Maximum minutes for the build matrix job and fallback timeout for each lifecycle stage"
         default: 120
@@ -1269,6 +1274,23 @@ jobs:
           process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
           process-summary-required: ${{ inputs.process-summary-path != '' || inputs.require-build }}
 
+      - name: Run KFD Agent Hub conformance
+        if: ${{ inputs.kfd-agent-hub == 'auto' }}
+        run: >-
+          node .buildchain/runtime/bin/buildchain.mjs kfd hub test
+          --cwd "${{ inputs.working-directory }}"
+          --output-dir ".buildchain/artifacts/kfd-agent-hub/${{ matrix.platform.id }}"
+          --for agent
+
+      - name: Upload KFD Agent Hub evidence
+        if: ${{ inputs.kfd-agent-hub == 'auto' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-kfd-agent-hub-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: ${{ inputs.working-directory }}/.buildchain/artifacts/kfd-agent-hub/${{ matrix.platform.id }}
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
       - name: Configure AWS credentials for artifact relay upload
         if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' }}
         uses: aws-actions/configure-aws-credentials@v6.1.0
@@ -1522,6 +1544,23 @@ jobs:
           expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
           process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
           process-summary-required: ${{ inputs.process-summary-path != '' || inputs.require-build }}
+
+      - name: Run KFD Agent Hub conformance
+        if: ${{ inputs.kfd-agent-hub == 'auto' }}
+        run: >-
+          node .buildchain/runtime/bin/buildchain.mjs kfd hub test
+          --cwd "${{ inputs.working-directory }}"
+          --output-dir ".buildchain/artifacts/kfd-agent-hub/${{ matrix.platform.id }}"
+          --for agent
+
+      - name: Upload KFD Agent Hub evidence
+        if: ${{ inputs.kfd-agent-hub == 'auto' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-kfd-agent-hub-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: ${{ inputs.working-directory }}/.buildchain/artifacts/kfd-agent-hub/${{ matrix.platform.id }}
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Configure AWS credentials for artifact relay upload
         if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' }}
