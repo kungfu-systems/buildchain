@@ -1355,12 +1355,21 @@ jobs:
           BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
           BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
 
-      - name: Upload macOS credential-island input
+      - name: Upload macOS credential-island app archive
         if: ${{ runner.os == 'macOS' && inputs.credential-island-macos-app-path != '' && matrix.platform.id == inputs.credential-island-macos-platform-id }}
         uses: actions/upload-artifact@v7.0.1
         with:
-          name: ${{ inputs.artifact-name }}-credential-island-input-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
-          path: .buildchain/credential-island/${{ matrix.platform.id }}
+          path: .buildchain/credential-island/${{ matrix.platform.id }}/unsigned-app.zip
+          archive: false
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload macOS credential-island input manifest
+        if: ${{ runner.os == 'macOS' && inputs.credential-island-macos-app-path != '' && matrix.platform.id == inputs.credential-island-macos-platform-id }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-credential-island-input-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: .buildchain/credential-island/${{ matrix.platform.id }}/credential-input.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
           compression-level: 0
@@ -1874,10 +1883,16 @@ jobs:
           name: ${{ inputs.artifact-name }}-credential-island-runtime-${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           path: .buildchain/runtime/actions/macos-credential-island
 
-      - name: Download source-bound sealed application
+      - name: Download source-bound sealed application archive
         uses: actions/download-artifact@v7.0.0
         with:
-          name: ${{ inputs.artifact-name }}-credential-island-input-${{ inputs.credential-island-macos-platform-id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          name: unsigned-app.zip
+          path: .buildchain/credential-island-input
+
+      - name: Download source-bound sealed application manifest
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ inputs.artifact-name }}-credential-island-input-manifest-${{ inputs.credential-island-macos-platform-id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           path: .buildchain/credential-island-input
 
       - name: Sign, notarize, staple, and verify
