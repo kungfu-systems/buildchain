@@ -754,7 +754,6 @@ jobs:
       runner-preset: ${{ inputs.runner-preset }}
       trusted-publishing: ${{ inputs.trusted-publishing }}
       publish-command: ${{ inputs.publish-command }}
-      publish-rematerialize-on-resume: ${{ inputs.publish-rematerialize-on-resume }}
       publish-required-artifacts-json: ${{ inputs.publish-required-artifacts-json }}
       publish-artifact-kind: ${{ inputs.publish-artifact-kind }}
       publish-mode: ${{ inputs.publish-mode }}
