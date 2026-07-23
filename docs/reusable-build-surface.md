@@ -115,6 +115,13 @@ Only include platforms that should run. GitHub schedules matrix jobs before
 steps execute, so a disabled entry with unavailable runner labels can still
 block the workflow queue.
 
+`fail-fast` defaults to `false`, preserving the diagnostic behavior that
+collects every platform result. Required promotion callers can set it to `true`
+to cancel sibling native, container, and relay matrix lanes after the first
+failure. This input changes scheduling only: it does not reduce the declared
+platform matrix, turn cancellation into a pass, or alter artifact and release
+admission.
+
 ## Linux Job Containers
 
 Linux build platforms can run inside a digest-pinned job container while macOS

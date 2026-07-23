@@ -67,6 +67,7 @@
         "credential-island-macos-app-path",
         "credential-island-macos-platform-id",
         "expected-artifacts-json",
+        "fail-fast",
         "gate-profile-aggregate-json",
         "install-command",
         "kfd-agent-hub",
@@ -101,7 +102,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 63,
+      "inputCount": 64,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -850,6 +851,7 @@
         "credential-island-macos-app-path",
         "credential-island-macos-platform-id",
         "expected-artifacts-json",
+        "fail-fast",
         "gate-profile-aggregate-json",
         "install-command",
         "kfd-agent-hub",
@@ -884,7 +886,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 66,
+      "inputCount": 67,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",

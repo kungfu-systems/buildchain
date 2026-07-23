@@ -41,6 +41,11 @@ on:
         default: ""
         type: string
         required: false
+      fail-fast:
+        description: "Cancel sibling platform lanes after a required matrix failure; false retains all-platform diagnostics"
+        default: false
+        type: boolean
+        required: false
       linux-container-preset:
         description: "Optional Linux job container preset: kungfu-verify, none, or custom with linux-container-image"
         default: ""
@@ -449,6 +454,7 @@ on:
         value: ${{ jobs.controller-receipt.outputs.controller-receipt-status }}
 
 permissions:
+  actions: read
   contents: read
   issues: write
   id-token: write
@@ -1144,7 +1150,7 @@ jobs:
       - artifact-transfer
     if: ${{ needs.trust-gate.outputs.trusted == 'true' && needs.anchored-release-preflight.result == 'success' && needs.resolve-contract.outputs.native-platform-count != '0' }}
     strategy:
-      fail-fast: false
+      fail-fast: ${{ inputs.fail-fast }}
       matrix:
         platform: ${{ fromJSON(needs.resolve-contract.outputs.native-platforms-json) }}
     runs-on: ${{ fromJSON(matrix.platform.runner) }}
@@ -1475,7 +1481,7 @@ jobs:
       - artifact-transfer
     if: ${{ needs.trust-gate.outputs.trusted == 'true' && needs.anchored-release-preflight.result == 'success' && needs.resolve-contract.outputs.container-platform-count != '0' }}
     strategy:
-      fail-fast: false
+      fail-fast: ${{ inputs.fail-fast }}
       matrix:
         platform: ${{ fromJSON(needs.resolve-contract.outputs.container-platforms-json) }}
     runs-on: ${{ fromJSON(matrix.platform.runner) }}
@@ -1747,7 +1753,7 @@ jobs:
       - build-linux-container
     if: ${{ always() && needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') }}
     strategy:
-      fail-fast: false
+      fail-fast: ${{ inputs.fail-fast }}
       matrix:
         platform: ${{ fromJSON(needs.resolve-contract.outputs.platforms-json) }}
     runs-on: ubuntu-24.04

@@ -505,6 +505,7 @@
           "credential-island-macos-app-path",
           "credential-island-macos-platform-id",
           "expected-artifacts-json",
+          "fail-fast",
           "gate-profile-aggregate-json",
           "install-command",
           "kfd-agent-hub",
@@ -539,7 +540,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 63,
+        "inputCount": 64,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1231,6 +1232,7 @@
           "credential-island-macos-app-path",
           "credential-island-macos-platform-id",
           "expected-artifacts-json",
+          "fail-fast",
           "gate-profile-aggregate-json",
           "install-command",
           "kfd-agent-hub",
@@ -1265,7 +1267,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 66,
+        "inputCount": 67,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -3801,8 +3803,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "cc76cd0f061103d8ab78ee97dd0b7f0d28d64489f79b7ed06c94d8fef28bc200",
-    "workflowRegistryDigest": "5ae14da2c43f67e49d155e93a6078e77d217b71c5e3b8b90b58705876c4bf927",
-    "pageRegistryDigest": "1ce953e607b26081d40816426bb6dad44b80c2524db5d8056392b3d0df5ebe3e"
+    "workflowRegistryDigest": "3a444436846b336459e4ee7e968f820e442a170b642d7b73ea19eaa28ed7da6c",
+    "pageRegistryDigest": "47fb460187d5775db272b95f59ce44d89fce89d10301d52a815b00eebebbadca"
   },
   "comparison": {
     "missingCliRegistry": [],

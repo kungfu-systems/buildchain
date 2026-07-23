@@ -50,7 +50,7 @@
         "retryable GitHub fallback fetches use a bounded attempt budget before exact source SHA and tree verification"
       ],
       "breakingDigest": "sha256:a6a35370d6b0d0f46e1b2712dcc01961fe53c2febde95409a27a485c10a36650",
-      "auditDigest": "sha256:eac21480b99d6b3acf8b4e809bf84e914f7e7d20d9ebd59dd137cd1947e48263"
+      "auditDigest": "sha256:ea76a52d7fdac0ed8e30ffbb48b155cc4d16a94d2b49cd05379d3e56661c60d4"
     },
     {
       "contractVersion": 1,
@@ -89,7 +89,7 @@
         "alpha and stable channel selections use separate consumer contract locks by default"
       ],
       "breakingDigest": "sha256:c4597dfa89e1a58f1023905092b849644f5c080abf150aeba9c7e1cd5ed43962",
-      "auditDigest": "sha256:f4b34aac7b72bb8268e7b6464644c631449801d2f6d6a025e20d331e5b6201dc"
+      "auditDigest": "sha256:50baf9fb6743b74d4c2489941dbc1e2e917a6df8e053258a4a4414e4868ec0cc"
     },
     {
       "contractVersion": 1,
@@ -641,7 +641,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:ebb3c0261d8ed341bd67f8423f2b1cda3f7b0cd81914995c214992011e454d77"
+      "auditDigest": "sha256:eba91f08a1327fc7465029e7788d8da9b909531581ddb2bc402a46452f54e17e"
     },
     {
       "contractVersion": 1,
@@ -714,7 +714,7 @@
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
         "digest": "sha256:373723a73d188194d389dee04c394d3b79cb0c016a370f2f5d0f60979a02ed48",
-        "registryDigest": "sha256:554cd1d7afdde09e559151d655a0b2e5e32b7ef78e05cb666c02af8bf5ebc2ce",
+        "registryDigest": "sha256:f3c286292ba70b3c9b74eb8ae4052bafb8d5c393ce0037a06b4fc8e675de0f40",
         "inputClassifications": {
           "buildchain-ref": {
             "classification": "included",
@@ -834,6 +834,7 @@
         "credential-island-macos-app-path",
         "credential-island-macos-platform-id",
         "expected-artifacts-json",
+        "fail-fast",
         "gate-profile-aggregate-json",
         "install-command",
         "kfd-agent-hub",
@@ -870,8 +871,8 @@
       ],
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
-        "digest": "sha256:2fd6fb356add8b08731fbdf469ff1744633fc262067f5e71205f4846b8fa5429",
-        "registryDigest": "sha256:554cd1d7afdde09e559151d655a0b2e5e32b7ef78e05cb666c02af8bf5ebc2ce",
+        "digest": "sha256:fd1519f97e045331a21454da1132385d3f4e68f21479b311f0f3569618fe62b1",
+        "registryDigest": "sha256:f3c286292ba70b3c9b74eb8ae4052bafb8d5c393ce0037a06b4fc8e675de0f40",
         "inputClassifications": {
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN": {
             "classification": "redacted",
@@ -1025,6 +1026,10 @@
             "classification": "digest-only",
             "source": "workflow-call-input"
           },
+          "fail-fast": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
           "gate-profile-aggregate-json": {
             "classification": "digest-only",
             "source": "workflow-call-input"
@@ -1169,7 +1174,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:30745921541e9b0f70475bb2178c2559f6aef248f6680670ccd44d8c5a69a6b1",
-      "auditDigest": "sha256:eac21480b99d6b3acf8b4e809bf84e914f7e7d20d9ebd59dd137cd1947e48263"
+      "auditDigest": "sha256:ea76a52d7fdac0ed8e30ffbb48b155cc4d16a94d2b49cd05379d3e56661c60d4"
     },
     {
       "contractVersion": 1,
@@ -1248,6 +1253,7 @@
         "credential-island-macos-app-path",
         "credential-island-macos-platform-id",
         "expected-artifacts-json",
+        "fail-fast",
         "gate-profile-aggregate-json",
         "install-command",
         "kfd-agent-hub",
@@ -1284,8 +1290,8 @@
       ],
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
-        "digest": "sha256:67f988a94ad4c8f7515bce8ce0ba73985ac9b8b5a5d04ad186005c9fda7a01b9",
-        "registryDigest": "sha256:554cd1d7afdde09e559151d655a0b2e5e32b7ef78e05cb666c02af8bf5ebc2ce",
+        "digest": "sha256:1f6bc118b79876ecab5760356676a3b5076da44f4ba763a6b110f9b1d6fdfb38",
+        "registryDigest": "sha256:f3c286292ba70b3c9b74eb8ae4052bafb8d5c393ce0037a06b4fc8e675de0f40",
         "inputClassifications": {
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN": {
             "classification": "redacted",
@@ -1451,6 +1457,10 @@
             "classification": "digest-only",
             "source": "workflow-call-input"
           },
+          "fail-fast": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
           "gate-profile-aggregate-json": {
             "classification": "digest-only",
             "source": "workflow-call-input"
@@ -1592,7 +1602,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:d40dd05d7e07473d4b2dc1b62fbb0ed6f06449b4d3a7c44a2e8014313e3c0273",
-      "auditDigest": "sha256:f4b34aac7b72bb8268e7b6464644c631449801d2f6d6a025e20d331e5b6201dc"
+      "auditDigest": "sha256:50baf9fb6743b74d4c2489941dbc1e2e917a6df8e053258a4a4414e4868ec0cc"
     },
     {
       "contractVersion": 1,
@@ -1651,7 +1661,7 @@
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
         "digest": "sha256:29569f4b754595792a16742d1c4c63838b54601674a2cb6c96261a72c962dece",
-        "registryDigest": "sha256:554cd1d7afdde09e559151d655a0b2e5e32b7ef78e05cb666c02af8bf5ebc2ce",
+        "registryDigest": "sha256:f3c286292ba70b3c9b74eb8ae4052bafb8d5c393ce0037a06b4fc8e675de0f40",
         "inputClassifications": {
           "artifact-name": {
             "classification": "included",
@@ -1822,7 +1832,7 @@
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
         "digest": "sha256:7e6283c8fbeab7a680bae57c9ab9c8eb94aab7400d3ee01c5b9dfdd03f149edb",
-        "registryDigest": "sha256:554cd1d7afdde09e559151d655a0b2e5e32b7ef78e05cb666c02af8bf5ebc2ce",
+        "registryDigest": "sha256:f3c286292ba70b3c9b74eb8ae4052bafb8d5c393ce0037a06b4fc8e675de0f40",
         "inputClassifications": {
           "artifact-path": {
             "classification": "digest-only",
@@ -2058,7 +2068,7 @@
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
         "digest": "sha256:6b132790b9798e8a5dfbe095701d8e024c160a08bc7c4bd477ee79feef7a9cfd",
-        "registryDigest": "sha256:554cd1d7afdde09e559151d655a0b2e5e32b7ef78e05cb666c02af8bf5ebc2ce",
+        "registryDigest": "sha256:f3c286292ba70b3c9b74eb8ae4052bafb8d5c393ce0037a06b4fc8e675de0f40",
         "inputClassifications": {
           "artifact-name": {
             "classification": "included",
@@ -2239,7 +2249,7 @@
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
         "digest": "sha256:0613ea545fe2d630f34e665c8e6fe99df3f5333d75051a7176e9cf991e494f59",
-        "registryDigest": "sha256:554cd1d7afdde09e559151d655a0b2e5e32b7ef78e05cb666c02af8bf5ebc2ce",
+        "registryDigest": "sha256:f3c286292ba70b3c9b74eb8ae4052bafb8d5c393ce0037a06b4fc8e675de0f40",
         "inputClassifications": {
           "artifact-name": {
             "classification": "included",
@@ -2528,7 +2538,7 @@
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
         "digest": "sha256:bde6769a31f35ea89e8bdc67a4ca37175f24028b2b3975ff795ba5b2fb95d3a5",
-        "registryDigest": "sha256:554cd1d7afdde09e559151d655a0b2e5e32b7ef78e05cb666c02af8bf5ebc2ce",
+        "registryDigest": "sha256:f3c286292ba70b3c9b74eb8ae4052bafb8d5c393ce0037a06b4fc8e675de0f40",
         "inputClassifications": {
           "BUILDCHAIN_ISSUE_APP_ID": {
             "classification": "redacted",
@@ -2924,7 +2934,7 @@
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
         "digest": "sha256:f97656a8df0758c8e404d5b7c387529256a1ec45d1748f8efb6847a3256b1216",
-        "registryDigest": "sha256:554cd1d7afdde09e559151d655a0b2e5e32b7ef78e05cb666c02af8bf5ebc2ce",
+        "registryDigest": "sha256:f3c286292ba70b3c9b74eb8ae4052bafb8d5c393ce0037a06b4fc8e675de0f40",
         "inputClassifications": {
           "buildchain-ref": {
             "classification": "included",
@@ -3047,7 +3057,7 @@
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
         "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555",
-        "registryDigest": "sha256:554cd1d7afdde09e559151d655a0b2e5e32b7ef78e05cb666c02af8bf5ebc2ce",
+        "registryDigest": "sha256:f3c286292ba70b3c9b74eb8ae4052bafb8d5c393ce0037a06b4fc8e675de0f40",
         "inputClassifications": {}
       },
       "guarantees": [
@@ -3061,5 +3071,5 @@
     }
   ],
   "compatibilityDigest": "sha256:df13c3b8066068925ce847b31002201d533034d10d342542422db3a665c10475",
-  "contractDigest": "sha256:74ea6200962c0647ffc27663e57afd45ff393857e844adc3b5c6584c38fce398"
+  "contractDigest": "sha256:9d4e281692268d950ff9dfebbd2a1e1855ba1737f30f8a2b7b0b57ca66114814"
 }
