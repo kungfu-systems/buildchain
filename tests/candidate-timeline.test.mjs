@@ -63,6 +63,68 @@ test("candidate timeline never sums nested or parallel spans", () => {
   assert.equal(timeline.attempts[0].phases["sdk-wire"].intervalUnionMs, 8_000);
 });
 
+test("candidate timeline exposes lane skew, cache state, and a falsifiable target", () => {
+  const timeline = createCandidateTimeline({
+    candidate,
+    events: [
+      event("partition-0-build", "mq-0", "core-build", 0, 20, {
+        category: "workflow-step",
+        attributes: {
+          sourceSha: candidate.sourceSha,
+          laneId: "affected-native/partition-0",
+        },
+        gate: {
+          id: "source.changed-scope",
+          platform: "linux",
+          partition: 0,
+        },
+      }),
+      event("partition-1-build", "mq-0", "native-build", 0, 8, {
+        category: "workflow-step",
+        attributes: {
+          sourceSha: candidate.sourceSha,
+          laneId: "affected-native/partition-1",
+        },
+        gate: {
+          id: "source.changed-scope",
+          platform: "linux",
+          partition: 1,
+        },
+      }),
+      {
+        id: "compiler-cache",
+        attempt: { id: "mq-0", index: 0, kind: "merge-queue" },
+        phase: "cache-validation",
+        category: "cache-evidence",
+        status: "not-required",
+        cache: { layer: "compiler", outcome: "hit-exact" },
+        criticalPathEligible: false,
+        attributes: { sourceSha: candidate.sourceSha },
+      },
+    ],
+  });
+  const optimization = timeline.attempts[0].optimization;
+  assert.equal(optimization.laneSkew.measuredLaneCount, 2);
+  assert.equal(
+    optimization.laneSkew.slowestLane,
+    "affected-native/partition-0",
+  );
+  assert.equal(optimization.laneSkew.skewMs, 12_000);
+  assert.deepEqual(optimization.cacheOutcomes, { "compiler:hit-exact": 1 });
+  assert.equal(
+    optimization.nextOptimizationTarget.eventId,
+    "partition-0-build",
+  );
+  assert.match(
+    optimization.nextOptimizationTarget.falsifier,
+    /same source-bound cohort/,
+  );
+  assert.match(
+    formatCandidateTimelineReport(timeline),
+    /next-target=partition-0-build 20000ms/,
+  );
+});
+
 test("candidate timeline isolates retries into independent attempts", () => {
   const timeline = createCandidateTimeline({
     candidate,
