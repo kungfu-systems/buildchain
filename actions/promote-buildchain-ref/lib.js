@@ -797,9 +797,24 @@ function releasePassportArtifactFiles(outputDir) {
   if (!outputDir || !fs.existsSync(outputDir)) {
     return [];
   }
+  const durableTextExtensions = new Set([
+    ".json",
+    ".jsonl",
+    ".md",
+    ".sha256",
+    ".txt",
+    ".yaml",
+    ".yml",
+  ]);
   return fs
     .readdirSync(outputDir, { withFileTypes: true })
-    .filter((entry) => entry.isFile())
+    .filter((entry) => (
+      entry.isFile() &&
+      (
+        entry.name === "SHA256SUMS" ||
+        durableTextExtensions.has(path.extname(entry.name).toLowerCase())
+      )
+    ))
     .map((entry) => {
       const filePath = path.join(outputDir, entry.name);
       return {
@@ -6136,5 +6151,6 @@ export {
   updateVersionStateContents,
   resolveReleaseImpactInput,
   createTreeEquivalentReleaseImpact,
+  releasePassportArtifactFiles,
   validatePromotionReleaseCandidate,
 };
