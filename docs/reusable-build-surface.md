@@ -509,6 +509,47 @@ release jobs can detect drifting diagnostics JSON contracts and missing or
 drifting diagnostics sidecar manifests without downloading the per-platform
 diagnostics artifacts first.
 
+## macOS Credential Island
+
+Alpha consumers can ask the build controller to seal one exact macOS app and
+hand it to a separate protected signing job:
+
+```yaml
+with:
+  credential-island-macos-app-path: product/dist/desktop/mac-arm64/Kungfu Episodes.app
+  credential-island-environment: alpha-macos-signing
+  credential-island-macos-platform-id: macos-arm64
+```
+
+The ordinary matrix uploads
+`credential-island-input-<platform>-<source-sha>`, containing a `ditto`
+archive and a manifest bound to the caller repository, source commit, source
+tree, bundle identity, version, size, and digest. The pinned reusable workflow
+then starts a separate GitHub-hosted macOS job that names the caller
+environment. That job has no source checkout or package-manager step: it
+downloads the immutable Buildchain action runtime plus the sealed app and never
+invokes consumer code.
+
+The protected environment supplies these non-secret variables:
+
+- `BUILDCHAIN_MACOS_EXPECTED_BUNDLE_ID`
+- `BUILDCHAIN_MACOS_EXPECTED_TEAM_ID`
+- `BUILDCHAIN_MACOS_CERTIFICATE_SHA1`
+
+and these secrets:
+
+- `BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64`
+- `BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD`
+- `BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64`
+- `BUILDCHAIN_MACOS_NOTARY_API_KEY_ID`
+- `BUILDCHAIN_MACOS_NOTARY_API_ISSUER`
+
+The signed DMG, signed app ZIP, credential evidence, and their source-bound
+platform manifest form one additional release-candidate platform. Reviewers can
+therefore verify the exact caller source and immutable Buildchain runtime that
+entered the credential island before admitting or publishing the signed
+artifacts.
+
 ## Artifact Transfer Relay
 
 By default, platform jobs upload payloads, manifests, and diagnostics directly

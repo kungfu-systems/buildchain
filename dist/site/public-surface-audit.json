@@ -5,8 +5,8 @@
   "summary": {
     "cliCommandCount": 86,
     "workflowCount": 51,
-    "actionCount": 4,
-    "sitePageCount": 52,
+    "actionCount": 5,
+    "sitePageCount": 53,
     "docCommandRefCount": 265,
     "failureCount": 0
   },
@@ -501,6 +501,9 @@
           "checkout-cache-mode",
           "checkout-cache-reference-repository-template",
           "checkout-cache-timeout-seconds",
+          "credential-island-environment",
+          "credential-island-macos-app-path",
+          "credential-island-macos-platform-id",
           "expected-artifacts-json",
           "gate-profile-aggregate-json",
           "install-command",
@@ -536,13 +539,18 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 60,
+        "inputCount": 63,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
-          "BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN"
+          "BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN",
+          "BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64",
+          "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD",
+          "BUILDCHAIN_MACOS_NOTARY_API_ISSUER",
+          "BUILDCHAIN_MACOS_NOTARY_API_KEY_ID",
+          "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64"
         ],
-        "secretCount": 3,
+        "secretCount": 8,
         "outputs": [
           "build-diagnostics-summary-artifact",
           "build-diagnostics-summary-json",
@@ -563,6 +571,8 @@
           "controller-receipt-digest",
           "controller-receipt-json",
           "controller-receipt-status",
+          "credential-island-macos-artifact",
+          "credential-island-macos-manifest-artifact",
           "linux-container-enabled",
           "linux-container-image",
           "platform-count",
@@ -584,7 +594,7 @@
           "runner-preset",
           "trusted-event"
         ],
-        "outputCount": 39
+        "outputCount": 41
       },
       {
         "id": ".bump-minor-version",
@@ -749,6 +759,7 @@
           "publish-mode",
           "publish-package-main",
           "publish-package-set-order",
+          "publish-rematerialize-on-resume",
           "publish-required-artifacts-json",
           "publish-target",
           "release-candidate-workflow-file",
@@ -774,7 +785,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 73,
+        "inputCount": 74,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1216,6 +1227,9 @@
           "checkout-cache-mode",
           "checkout-cache-reference-repository-template",
           "checkout-cache-timeout-seconds",
+          "credential-island-environment",
+          "credential-island-macos-app-path",
+          "credential-island-macos-platform-id",
           "expected-artifacts-json",
           "gate-profile-aggregate-json",
           "install-command",
@@ -1251,13 +1265,18 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 63,
+        "inputCount": 66,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
-          "BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN"
+          "BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN",
+          "BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64",
+          "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD",
+          "BUILDCHAIN_MACOS_NOTARY_API_ISSUER",
+          "BUILDCHAIN_MACOS_NOTARY_API_KEY_ID",
+          "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64"
         ],
-        "secretCount": 3,
+        "secretCount": 8,
         "outputs": [
           "build-diagnostics-summary-artifact",
           "build-diagnostics-summary-json",
@@ -1281,6 +1300,8 @@
           "controller-receipt-digest",
           "controller-receipt-json",
           "controller-receipt-status",
+          "credential-island-macos-artifact",
+          "credential-island-macos-manifest-artifact",
           "linux-container-enabled",
           "linux-container-image",
           "platform-count",
@@ -1302,7 +1323,7 @@
           "runner-preset",
           "trusted-event"
         ],
-        "outputCount": 42
+        "outputCount": 44
       },
       {
         "id": "buildchain-alpha-self-dogfood",
@@ -1821,6 +1842,7 @@
           "publish-mode",
           "publish-package-main",
           "publish-package-set-order",
+          "publish-rematerialize-on-resume",
           "publish-required-artifacts-json",
           "publish-target",
           "release-candidate-workflow-file",
@@ -1846,7 +1868,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 65,
+        "inputCount": 66,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2047,6 +2069,33 @@
     ],
     "actionInputs": [
       {
+        "id": "macos-credential-island",
+        "path": "actions/macos-credential-island/action.yml",
+        "inputs": [
+          "artifact-name",
+          "artifact-relative-output",
+          "artifact-stem",
+          "buildchain-runtime-sha",
+          "certificate-p12-base64",
+          "certificate-password",
+          "certificate-sha1",
+          "entitlements-profile",
+          "expected-bundle-id",
+          "expected-team-id",
+          "input-root",
+          "notary-api-issuer",
+          "notary-api-key-id",
+          "notary-api-key-p8-base64",
+          "output-root",
+          "platform-id",
+          "source-ref",
+          "source-repository",
+          "source-sha",
+          "source-tree-sha"
+        ],
+        "inputCount": 20
+      },
+      {
         "id": "promote-buildchain-ref",
         "path": "actions/promote-buildchain-ref/action.yml",
         "inputs": [
@@ -2074,6 +2123,7 @@
           "publish-mode",
           "publish-package-main",
           "publish-package-set-order",
+          "publish-rematerialize-on-resume",
           "publish-required-artifacts-json",
           "publish-source-locked",
           "publish-source-ref",
@@ -2113,7 +2163,7 @@
           "transaction-state-path",
           "verification-command"
         ],
-        "inputCount": 62
+        "inputCount": 63
       },
       {
         "id": "report-buildchain-issue",
@@ -2205,6 +2255,10 @@
       }
     ],
     "sitePages": [
+      {
+        "id": "action:macos-credential-island",
+        "category": "action"
+      },
       {
         "id": "action:promote-buildchain-ref",
         "category": "action"
@@ -3747,8 +3801,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "cc76cd0f061103d8ab78ee97dd0b7f0d28d64489f79b7ed06c94d8fef28bc200",
-    "workflowRegistryDigest": "a954f67672292e16be1f4f663a98d0c69285f7359a43d5d6333b3ffcf6463c35",
-    "pageRegistryDigest": "f75cb9e5f5c42ab391d947ba4a144f4d5a65ed15f3cbe30cbc92a0e2671a2c81"
+    "workflowRegistryDigest": "5ae14da2c43f67e49d155e93a6078e77d217b71c5e3b8b90b58705876c4bf927",
+    "pageRegistryDigest": "1ce953e607b26081d40816426bb6dad44b80c2524db5d8056392b3d0df5ebe3e"
   },
   "comparison": {
     "missingCliRegistry": [],

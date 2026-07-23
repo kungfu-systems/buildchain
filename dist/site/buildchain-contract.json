@@ -50,7 +50,7 @@
         "retryable GitHub fallback fetches use a bounded attempt budget before exact source SHA and tree verification"
       ],
       "breakingDigest": "sha256:a6a35370d6b0d0f46e1b2712dcc01961fe53c2febde95409a27a485c10a36650",
-      "auditDigest": "sha256:d393c10fe8c970730c19495e2e7db7dfd802ebb628f1a2de835aa918a990e2cc"
+      "auditDigest": "sha256:eac21480b99d6b3acf8b4e809bf84e914f7e7d20d9ebd59dd137cd1947e48263"
     },
     {
       "contractVersion": 1,
@@ -89,7 +89,7 @@
         "alpha and stable channel selections use separate consumer contract locks by default"
       ],
       "breakingDigest": "sha256:c4597dfa89e1a58f1023905092b849644f5c080abf150aeba9c7e1cd5ed43962",
-      "auditDigest": "sha256:7804f03ac13edf2ffda40774c17d95e24416a97ee4b9091fc28b6cc32daea46e"
+      "auditDigest": "sha256:f4b34aac7b72bb8268e7b6464644c631449801d2f6d6a025e20d331e5b6201dc"
     },
     {
       "contractVersion": 1,
@@ -170,7 +170,7 @@
         "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes"
       ],
       "breakingDigest": "sha256:1f476fb9a4854b362c4b24cef89a3c7675d7d63baf3bc828d7b8ae7d2787cead",
-      "auditDigest": "sha256:0fbb4713eead1951f01ec1cf7896cac9ab25cd73986573b3c3227ad133550f69"
+      "auditDigest": "sha256:e093604b261fa77e8e14cece686430523ebb3ca96f3960715d2797984840fca6"
     },
     {
       "contractVersion": 1,
@@ -212,7 +212,7 @@
         "promotion reuses PR-stage release-candidate artifacts and does not run the heavy native build matrix"
       ],
       "breakingDigest": "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0",
-      "auditDigest": "sha256:a68b535582028c1dd708e447a43f5083106074df092b74528dfa16db4a4f4153"
+      "auditDigest": "sha256:ce4cdad0b0165349fe2fa1377f10a7625faa90fa2fb858d7603640b19de0de06"
     },
     {
       "contractVersion": 1,
@@ -327,7 +327,63 @@
         "sha256:a59f0910e6df842e7699139472e5dd69ac2fdd7f7213bf2cb346d1d622556874"
       ],
       "breakingDigest": "sha256:6147c0a8d5c36bfaa6021871574e1fc28192a3f1b8cfdae4d24ef3059ac1ebda",
-      "auditDigest": "sha256:ff220542fd1cb21fc4780d0bb31eb9f78d44d70746b6c4364483e104b48ae083"
+      "auditDigest": "sha256:cfb90e83dd459200534dbabeabce0effbc143e1e2578313c849743d009864d86"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "macos-credential-island-action",
+      "kind": "action",
+      "path": "actions/macos-credential-island/action.yml",
+      "publicRef": "kungfu-systems/buildchain/actions/macos-credential-island@v2",
+      "requiredInputs": [
+        "input-root",
+        "output-root",
+        "source-repository",
+        "source-sha",
+        "source-tree-sha",
+        "buildchain-runtime-sha",
+        "artifact-name",
+        "expected-bundle-id",
+        "expected-team-id",
+        "certificate-sha1",
+        "certificate-p12-base64",
+        "certificate-password",
+        "notary-api-key-p8-base64",
+        "notary-api-key-id",
+        "notary-api-issuer"
+      ],
+      "requiredOutputs": [
+        "evidence-path",
+        "manifest-path",
+        "artifact-root",
+        "dmg-path",
+        "zip-path",
+        "dmg-sha256",
+        "zip-sha256"
+      ],
+      "breakingDefaults": {
+        "entitlementsProfile": "electron-desktop-v1",
+        "credentialBoundary": "protected-caller-job",
+        "consumerCodeExecution": "forbidden"
+      },
+      "optionalInputs": [
+        "source-ref",
+        "platform-id",
+        "entitlements-profile",
+        "artifact-stem",
+        "artifact-relative-output"
+      ],
+      "guarantees": [
+        "the action validates a source-bound sealed app before credentials are imported",
+        "the action accepts one exact Developer ID Application fingerprint and a Buildchain-owned entitlements profile",
+        "consumer source and artifact-contained executables are never invoked",
+        "the app and DMG are notarized, stapled, Gatekeeper assessed, and bound to retained evidence",
+        "temporary keychain and API key material are cleaned in both main and post phases"
+      ],
+      "breakingDigest": "sha256:61866985864205770c70cbe14c3c60f479512a32c0b007b5fd6d8d65132ff8be",
+      "auditDigest": "sha256:efbc4a3641ab7e7137da5a197f5a9414c40a070bf75c6bf9fcb98ddcbf621e73"
     },
     {
       "contractVersion": 1,
@@ -585,7 +641,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:1e317df3ea404e45356a58b6ecff784678f0c23eb3f1ef4fff6e0a8aeb4e65c6"
+      "auditDigest": "sha256:ebb3c0261d8ed341bd67f8423f2b1cda3f7b0cd81914995c214992011e454d77"
     },
     {
       "contractVersion": 1,
@@ -607,7 +663,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:9e2b6b4eabe11e6edb76b60737843014d942773523c021b7e55e7794b3aceb8e"
+      "auditDigest": "sha256:0e17c4d3fd07e8c4b4db81efa6757cf7554449139dfe9657aeaaf81dc79f8c0d"
     },
     {
       "contractVersion": 1,
@@ -658,7 +714,7 @@
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
         "digest": "sha256:373723a73d188194d389dee04c394d3b79cb0c016a370f2f5d0f60979a02ed48",
-        "registryDigest": "sha256:40a7362d72303c106c064126881dae0716ed2d1902a8cac43f409af78bd7cddf",
+        "registryDigest": "sha256:554cd1d7afdde09e559151d655a0b2e5e32b7ef78e05cb666c02af8bf5ebc2ce",
         "inputClassifications": {
           "buildchain-ref": {
             "classification": "included",
@@ -728,6 +784,7 @@
         "capabilities": [
           "source-lock",
           "lifecycle-build",
+          "credential-island",
           "lifecycle-verify",
           "artifact-admission"
         ],
@@ -742,6 +799,11 @@
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN",
+        "BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64",
+        "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD",
+        "BUILDCHAIN_MACOS_NOTARY_API_ISSUER",
+        "BUILDCHAIN_MACOS_NOTARY_API_KEY_ID",
+        "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64",
         "artifact-name",
         "artifact-name-template",
         "artifact-paths",
@@ -768,6 +830,9 @@
         "checkout-cache-mode",
         "checkout-cache-reference-repository-template",
         "checkout-cache-timeout-seconds",
+        "credential-island-environment",
+        "credential-island-macos-app-path",
+        "credential-island-macos-platform-id",
         "expected-artifacts-json",
         "gate-profile-aggregate-json",
         "install-command",
@@ -805,8 +870,8 @@
       ],
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
-        "digest": "sha256:b3e101ac0b0f75aebff59b2129e4eff512c38d4d0a34a0a3785e8ea8f998846a",
-        "registryDigest": "sha256:40a7362d72303c106c064126881dae0716ed2d1902a8cac43f409af78bd7cddf",
+        "digest": "sha256:2fd6fb356add8b08731fbdf469ff1744633fc262067f5e71205f4846b8fa5429",
+        "registryDigest": "sha256:554cd1d7afdde09e559151d655a0b2e5e32b7ef78e05cb666c02af8bf5ebc2ce",
         "inputClassifications": {
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN": {
             "classification": "redacted",
@@ -817,6 +882,26 @@
             "source": "workflow-call-secret"
           },
           "BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN": {
+            "classification": "redacted",
+            "source": "workflow-call-secret"
+          },
+          "BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64": {
+            "classification": "redacted",
+            "source": "workflow-call-secret"
+          },
+          "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD": {
+            "classification": "redacted",
+            "source": "workflow-call-secret"
+          },
+          "BUILDCHAIN_MACOS_NOTARY_API_ISSUER": {
+            "classification": "redacted",
+            "source": "workflow-call-secret"
+          },
+          "BUILDCHAIN_MACOS_NOTARY_API_KEY_ID": {
+            "classification": "redacted",
+            "source": "workflow-call-secret"
+          },
+          "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64": {
             "classification": "redacted",
             "source": "workflow-call-secret"
           },
@@ -922,6 +1007,18 @@
           },
           "checkout-cache-timeout-seconds": {
             "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "credential-island-environment": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "credential-island-macos-app-path": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "credential-island-macos-platform-id": {
+            "classification": "included",
             "source": "workflow-call-input"
           },
           "expected-artifacts-json": {
@@ -1062,14 +1159,17 @@
           }
         }
       },
+      "compatibleBreakingDigests": [
+        "sha256:e264a79f9f399038c2fcfd21e4168c68c2e1485ee5c651c02242a02b622ac2be"
+      ],
       "guarantees": [
         "plans bind exact consumer source SHA, exact Buildchain runtime SHA, and the runtime contract digest",
         "receipts bind the plan digest and preserve pass, fail, skip, and partial stage outcomes",
         "redacted input values are never serialized and digest-only input values are never emitted in plaintext",
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
-      "breakingDigest": "sha256:e264a79f9f399038c2fcfd21e4168c68c2e1485ee5c651c02242a02b622ac2be",
-      "auditDigest": "sha256:d393c10fe8c970730c19495e2e7db7dfd802ebb628f1a2de835aa918a990e2cc"
+      "breakingDigest": "sha256:30745921541e9b0f70475bb2178c2559f6aef248f6680670ccd44d8c5a69a6b1",
+      "auditDigest": "sha256:eac21480b99d6b3acf8b4e809bf84e914f7e7d20d9ebd59dd137cd1947e48263"
     },
     {
       "contractVersion": 1,
@@ -1110,6 +1210,11 @@
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN",
+        "BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64",
+        "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD",
+        "BUILDCHAIN_MACOS_NOTARY_API_ISSUER",
+        "BUILDCHAIN_MACOS_NOTARY_API_KEY_ID",
+        "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64",
         "artifact-name",
         "artifact-name-template",
         "artifact-paths",
@@ -1139,6 +1244,9 @@
         "checkout-cache-mode",
         "checkout-cache-reference-repository-template",
         "checkout-cache-timeout-seconds",
+        "credential-island-environment",
+        "credential-island-macos-app-path",
+        "credential-island-macos-platform-id",
         "expected-artifacts-json",
         "gate-profile-aggregate-json",
         "install-command",
@@ -1176,8 +1284,8 @@
       ],
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
-        "digest": "sha256:5ca752570c4180746f09df3fdf5c17e7ce90b04ed06fff362d2a195048024dda",
-        "registryDigest": "sha256:40a7362d72303c106c064126881dae0716ed2d1902a8cac43f409af78bd7cddf",
+        "digest": "sha256:67f988a94ad4c8f7515bce8ce0ba73985ac9b8b5a5d04ad186005c9fda7a01b9",
+        "registryDigest": "sha256:554cd1d7afdde09e559151d655a0b2e5e32b7ef78e05cb666c02af8bf5ebc2ce",
         "inputClassifications": {
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN": {
             "classification": "redacted",
@@ -1188,6 +1296,26 @@
             "source": "workflow-call-secret"
           },
           "BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN": {
+            "classification": "redacted",
+            "source": "workflow-call-secret"
+          },
+          "BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64": {
+            "classification": "redacted",
+            "source": "workflow-call-secret"
+          },
+          "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD": {
+            "classification": "redacted",
+            "source": "workflow-call-secret"
+          },
+          "BUILDCHAIN_MACOS_NOTARY_API_ISSUER": {
+            "classification": "redacted",
+            "source": "workflow-call-secret"
+          },
+          "BUILDCHAIN_MACOS_NOTARY_API_KEY_ID": {
+            "classification": "redacted",
+            "source": "workflow-call-secret"
+          },
+          "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64": {
             "classification": "redacted",
             "source": "workflow-call-secret"
           },
@@ -1305,6 +1433,18 @@
           },
           "checkout-cache-timeout-seconds": {
             "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "credential-island-environment": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "credential-island-macos-app-path": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "credential-island-macos-platform-id": {
+            "classification": "included",
             "source": "workflow-call-input"
           },
           "expected-artifacts-json": {
@@ -1452,7 +1592,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:d40dd05d7e07473d4b2dc1b62fbb0ed6f06449b4d3a7c44a2e8014313e3c0273",
-      "auditDigest": "sha256:7804f03ac13edf2ffda40774c17d95e24416a97ee4b9091fc28b6cc32daea46e"
+      "auditDigest": "sha256:f4b34aac7b72bb8268e7b6464644c631449801d2f6d6a025e20d331e5b6201dc"
     },
     {
       "contractVersion": 1,
@@ -1511,7 +1651,7 @@
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
         "digest": "sha256:29569f4b754595792a16742d1c4c63838b54601674a2cb6c96261a72c962dece",
-        "registryDigest": "sha256:40a7362d72303c106c064126881dae0716ed2d1902a8cac43f409af78bd7cddf",
+        "registryDigest": "sha256:554cd1d7afdde09e559151d655a0b2e5e32b7ef78e05cb666c02af8bf5ebc2ce",
         "inputClassifications": {
           "artifact-name": {
             "classification": "included",
@@ -1682,7 +1822,7 @@
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
         "digest": "sha256:7e6283c8fbeab7a680bae57c9ab9c8eb94aab7400d3ee01c5b9dfdd03f149edb",
-        "registryDigest": "sha256:40a7362d72303c106c064126881dae0716ed2d1902a8cac43f409af78bd7cddf",
+        "registryDigest": "sha256:554cd1d7afdde09e559151d655a0b2e5e32b7ef78e05cb666c02af8bf5ebc2ce",
         "inputClassifications": {
           "artifact-path": {
             "classification": "digest-only",
@@ -1918,7 +2058,7 @@
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
         "digest": "sha256:6b132790b9798e8a5dfbe095701d8e024c160a08bc7c4bd477ee79feef7a9cfd",
-        "registryDigest": "sha256:40a7362d72303c106c064126881dae0716ed2d1902a8cac43f409af78bd7cddf",
+        "registryDigest": "sha256:554cd1d7afdde09e559151d655a0b2e5e32b7ef78e05cb666c02af8bf5ebc2ce",
         "inputClassifications": {
           "artifact-name": {
             "classification": "included",
@@ -2099,7 +2239,7 @@
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
         "digest": "sha256:0613ea545fe2d630f34e665c8e6fe99df3f5333d75051a7176e9cf991e494f59",
-        "registryDigest": "sha256:40a7362d72303c106c064126881dae0716ed2d1902a8cac43f409af78bd7cddf",
+        "registryDigest": "sha256:554cd1d7afdde09e559151d655a0b2e5e32b7ef78e05cb666c02af8bf5ebc2ce",
         "inputClassifications": {
           "artifact-name": {
             "classification": "included",
@@ -2359,6 +2499,7 @@
         "publish-mode",
         "publish-package-main",
         "publish-package-set-order",
+        "publish-rematerialize-on-resume",
         "publish-required-artifacts-json",
         "publish-target",
         "release-candidate-workflow-file",
@@ -2386,8 +2527,8 @@
       ],
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
-        "digest": "sha256:2bb0137a7dd25706b86beeb212938df2a71c69d2ef6e49391c615e4cb21a19a6",
-        "registryDigest": "sha256:40a7362d72303c106c064126881dae0716ed2d1902a8cac43f409af78bd7cddf",
+        "digest": "sha256:bde6769a31f35ea89e8bdc67a4ca37175f24028b2b3975ff795ba5b2fb95d3a5",
+        "registryDigest": "sha256:554cd1d7afdde09e559151d655a0b2e5e32b7ef78e05cb666c02af8bf5ebc2ce",
         "inputClassifications": {
           "BUILDCHAIN_ISSUE_APP_ID": {
             "classification": "redacted",
@@ -2613,6 +2754,10 @@
             "classification": "included",
             "source": "workflow-call-input"
           },
+          "publish-rematerialize-on-resume": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
           "publish-required-artifacts-json": {
             "classification": "digest-only",
             "source": "workflow-call-input"
@@ -2718,7 +2863,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:015d8de793adbd4c539416be7d7512e18cc92097e629b0203fa06d2c183e98bd",
-      "auditDigest": "sha256:a68b535582028c1dd708e447a43f5083106074df092b74528dfa16db4a4f4153"
+      "auditDigest": "sha256:ce4cdad0b0165349fe2fa1377f10a7625faa90fa2fb858d7603640b19de0de06"
     },
     {
       "contractVersion": 1,
@@ -2779,7 +2924,7 @@
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
         "digest": "sha256:f97656a8df0758c8e404d5b7c387529256a1ec45d1748f8efb6847a3256b1216",
-        "registryDigest": "sha256:40a7362d72303c106c064126881dae0716ed2d1902a8cac43f409af78bd7cddf",
+        "registryDigest": "sha256:554cd1d7afdde09e559151d655a0b2e5e32b7ef78e05cb666c02af8bf5ebc2ce",
         "inputClassifications": {
           "buildchain-ref": {
             "classification": "included",
@@ -2902,7 +3047,7 @@
       "controllerDescriptor": {
         "contract": "buildchain.controller-descriptor/v1",
         "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555",
-        "registryDigest": "sha256:40a7362d72303c106c064126881dae0716ed2d1902a8cac43f409af78bd7cddf",
+        "registryDigest": "sha256:554cd1d7afdde09e559151d655a0b2e5e32b7ef78e05cb666c02af8bf5ebc2ce",
         "inputClassifications": {}
       },
       "guarantees": [
@@ -2915,6 +3060,6 @@
       "auditDigest": "sha256:e07a5db56a71bd0ac79c81f12619938055361bf0a0ed8e5891f88ca1c51f1c93"
     }
   ],
-  "compatibilityDigest": "sha256:cdf588422ec6b460bd6f631400efa6e361a045e052c8967d6c50fadd7aa4dd90",
-  "contractDigest": "sha256:6e122f7568aeadb983d6a95b1aa455f3b2ee80c885cbbf82ae7b3ccdf346e02c"
+  "compatibilityDigest": "sha256:df13c3b8066068925ce847b31002201d533034d10d342542422db3a665c10475",
+  "contractDigest": "sha256:74ea6200962c0647ffc27663e57afd45ff393857e844adc3b5c6584c38fce398"
 }
