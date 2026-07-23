@@ -531,10 +531,7 @@ with:
 The ordinary matrix uploads
 `credential-island-input-<platform>-<source-sha>`, containing a `ditto`
 archive and a manifest bound to the caller repository, source commit, source
-tree, bundle identity, version, size, and digest. Because the app is already a
-sealed ZIP, the artifact handoff disables outer recompression to avoid wasting
-CPU and holding a second streaming compression pipe for large desktop bundles.
-The pinned reusable workflow
+tree, bundle identity, version, size, and digest. The pinned reusable workflow
 then starts a separate GitHub-hosted macOS job that names the caller
 environment. That job has no source checkout or package-manager step: it
 downloads the immutable Buildchain action runtime plus the sealed app and never
