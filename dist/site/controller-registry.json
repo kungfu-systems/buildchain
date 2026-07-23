@@ -238,6 +238,10 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "fail-fast": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "gate-profile-aggregate-json": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -415,7 +419,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:2fd6fb356add8b08731fbdf469ff1744633fc262067f5e71205f4846b8fa5429"
+      "digest": "sha256:fd1519f97e045331a21454da1132385d3f4e68f21479b311f0f3569618fe62b1"
     },
     {
       "schemaVersion": 1,
@@ -591,6 +595,10 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "fail-fast": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "gate-profile-aggregate-json": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -749,7 +757,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:67f988a94ad4c8f7515bce8ce0ba73985ac9b8b5a5d04ad186005c9fda7a01b9"
+      "digest": "sha256:1f6bc118b79876ecab5760356676a3b5076da44f4ba763a6b110f9b1d6fdfb38"
     },
     {
       "schemaVersion": 1,
@@ -1972,5 +1980,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:554cd1d7afdde09e559151d655a0b2e5e32b7ef78e05cb666c02af8bf5ebc2ce"
+  "digest": "sha256:f3c286292ba70b3c9b74eb8ae4052bafb8d5c393ce0037a06b4fc8e675de0f40"
 }

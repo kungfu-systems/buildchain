@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "068a7f02a200676a738ed505ef3ae4270724eca36119b353a5faff20916852de",
+    "sha256": "c473db3464da86da98a089fb487525f80d56da7aad2103e58845cc8d3e0efb0f",
     "summary": {
       "cliCommandCount": 86,
       "workflowCount": 51,
@@ -228,7 +228,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "068a7f02a200676a738ed505ef3ae4270724eca36119b353a5faff20916852de",
+      "sha256": "c473db3464da86da98a089fb487525f80d56da7aad2103e58845cc8d3e0efb0f",
       "summary": {
         "cliCommandCount": 86,
         "workflowCount": 51,
@@ -2709,7 +2709,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 63,
+          "inputCount": 64,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -2741,6 +2741,7 @@
             "credential-island-macos-app-path",
             "credential-island-macos-platform-id",
             "expected-artifacts-json",
+            "fail-fast",
             "gate-profile-aggregate-json",
             "install-command",
             "kfd-agent-hub",
@@ -3322,7 +3323,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 66,
+          "inputCount": 67,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -3357,6 +3358,7 @@
             "credential-island-macos-app-path",
             "credential-island-macos-platform-id",
             "expected-artifacts-json",
+            "fail-fast",
             "gate-profile-aggregate-json",
             "install-command",
             "kfd-agent-hub",
