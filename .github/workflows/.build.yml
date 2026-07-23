@@ -167,6 +167,21 @@ on:
           build/stage
         type: string
         required: false
+      credential-island-macos-app-path:
+        description: "Optional exact .app path to seal for the Buildchain-owned credential-island job"
+        default: ""
+        type: string
+        required: false
+      credential-island-environment:
+        description: "Caller-repository protected environment that owns macOS signing credentials and policy variables"
+        default: ""
+        type: string
+        required: false
+      credential-island-macos-platform-id:
+        description: "macOS build platform whose sealed app is admitted to the credential island"
+        default: "macos-arm64"
+        type: string
+        required: false
       release-candidate:
         description: "Generate and upload a PR-stage release-candidate passport after the full platform matrix succeeds"
         default: false
@@ -298,6 +313,16 @@ on:
         required: false
       BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN:
         required: false
+      BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64:
+        required: false
+      BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD:
+        required: false
+      BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64:
+        required: false
+      BUILDCHAIN_MACOS_NOTARY_API_KEY_ID:
+        required: false
+      BUILDCHAIN_MACOS_NOTARY_API_ISSUER:
+        required: false
     outputs:
       runner-preset:
         description: "Resolved runner preset name"
@@ -317,6 +342,12 @@ on:
       build-summary-artifact:
         description: "Uploaded aggregate build summary artifact name"
         value: ${{ jobs.summarize.outputs.summary-artifact-name }}
+      credential-island-macos-artifact:
+        description: "Uploaded signed macOS payload artifact name when the credential island is enabled"
+        value: ${{ jobs.credential-island-macos.outputs.artifact-name }}
+      credential-island-macos-manifest-artifact:
+        description: "Uploaded signed macOS manifest artifact name when the credential island is enabled"
+        value: ${{ jobs.credential-island-macos.outputs.manifest-artifact-name }}
       build-diagnostics-summary-artifact:
         description: "Uploaded aggregate diagnostics summary artifact name"
         value: ${{ jobs.summarize.outputs.diagnostics-summary-artifact-name }}
@@ -613,6 +644,34 @@ jobs:
           path: .buildchain/workflow-shell/scripts/locked-source-checkout.mjs
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload macOS credential-island runtime
+        if: ${{ inputs.credential-island-macos-app-path != '' && inputs.credential-island-environment != '' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-credential-island-runtime-${{ steps.runtime.outputs.runtime-sha }}
+          path: .buildchain/runtime/actions/macos-credential-island
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Validate macOS credential-island request
+        shell: bash
+        env:
+          BUILDCHAIN_CREDENTIAL_APP_PATH: ${{ inputs.credential-island-macos-app-path }}
+          BUILDCHAIN_CREDENTIAL_ENVIRONMENT: ${{ inputs.credential-island-environment }}
+          BUILDCHAIN_CREDENTIAL_PLATFORM_ID: ${{ inputs.credential-island-macos-platform-id }}
+        run: |
+          set -euo pipefail
+          if { [ -n "${BUILDCHAIN_CREDENTIAL_APP_PATH}" ] && [ -z "${BUILDCHAIN_CREDENTIAL_ENVIRONMENT}" ]; } ||
+             { [ -z "${BUILDCHAIN_CREDENTIAL_APP_PATH}" ] && [ -n "${BUILDCHAIN_CREDENTIAL_ENVIRONMENT}" ]; }; then
+            echo "::error::credential-island-macos-app-path and credential-island-environment must be configured together"
+            exit 1
+          fi
+          if [ -n "${BUILDCHAIN_CREDENTIAL_APP_PATH}" ] &&
+             ! [[ "${BUILDCHAIN_CREDENTIAL_PLATFORM_ID}" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$ ]]; then
+            echo "::error::credential-island-macos-platform-id is invalid"
+            exit 1
+          fi
 
       - name: Checkout consumer contract lock
         uses: actions/checkout@v7.0.0
@@ -1274,6 +1333,26 @@ jobs:
           process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
           process-summary-required: ${{ inputs.process-summary-path != '' || inputs.require-build }}
 
+      - name: Seal macOS credential-island input
+        if: ${{ runner.os == 'macOS' && inputs.credential-island-macos-app-path != '' && matrix.platform.id == inputs.credential-island-macos-platform-id }}
+        run: node .buildchain/runtime/scripts/seal-macos-credential-input.mjs
+        env:
+          BUILDCHAIN_CREDENTIAL_ISLAND_APP_PATH: ${{ inputs.credential-island-macos-app-path }}
+          BUILDCHAIN_CREDENTIAL_ISLAND_OUTPUT: .buildchain/credential-island/${{ matrix.platform.id }}
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
+          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
+
+      - name: Upload macOS credential-island input
+        if: ${{ runner.os == 'macOS' && inputs.credential-island-macos-app-path != '' && matrix.platform.id == inputs.credential-island-macos-platform-id }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-credential-island-input-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: .buildchain/credential-island/${{ matrix.platform.id }}
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
       - name: Run KFD Agent Hub conformance
         if: ${{ inputs.kfd-agent-hub == 'auto' }}
         run: >-
@@ -1746,6 +1825,89 @@ jobs:
           BUILDCHAIN_ARTIFACT_RELAY_REGION: ${{ needs.artifact-transfer.outputs.s3-region }}
           BUILDCHAIN_ARTIFACT_RELAY_PLATFORM_ID: ${{ matrix.platform.id }}
 
+  credential-island-macos:
+    name: Sign and notarize sealed macOS application
+    needs:
+      - trust-gate
+      - resolve-source
+      - build-native
+    if: ${{ inputs.credential-island-macos-app-path != '' && inputs.credential-island-environment != '' && needs.trust-gate.outputs.trusted == 'true' && needs.build-native.result == 'success' }}
+    runs-on: macos-15
+    timeout-minutes: 90
+    environment:
+      name: ${{ inputs.credential-island-environment }}
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      artifact-name: ${{ steps.names.outputs.artifact-name }}
+      manifest-artifact-name: ${{ steps.names.outputs.manifest-artifact-name }}
+      evidence-path: ${{ steps.credential-island.outputs.evidence-path }}
+    steps:
+      - name: Resolve signed artifact names
+        id: names
+        shell: bash
+        env:
+          BUILDCHAIN_ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+        run: |
+          {
+            echo "artifact-name=${BUILDCHAIN_ARTIFACT_NAME}-macos-credential-${BUILDCHAIN_SOURCE_SHA}"
+            echo "manifest-artifact-name=${BUILDCHAIN_ARTIFACT_NAME}-manifest-macos-credential-${BUILDCHAIN_SOURCE_SHA}"
+          } >> "${GITHUB_OUTPUT}"
+
+      - name: Download immutable credential-island runtime
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ inputs.artifact-name }}-credential-island-runtime-${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          path: .buildchain/runtime/actions/macos-credential-island
+
+      - name: Download source-bound sealed application
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ inputs.artifact-name }}-credential-island-input-${{ inputs.credential-island-macos-platform-id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: .buildchain/credential-island-input
+
+      - name: Sign, notarize, staple, and verify
+        id: credential-island
+        uses: ./.buildchain/runtime/actions/macos-credential-island
+        with:
+          input-root: .buildchain/credential-island-input
+          output-root: .buildchain/credential-island-output
+          source-repository: ${{ github.repository }}
+          source-sha: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          source-tree-sha: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
+          source-ref: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          buildchain-runtime-sha: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          artifact-name: ${{ steps.names.outputs.artifact-name }}
+          platform-id: ${{ inputs.credential-island-macos-platform-id }}-credential
+          artifact-relative-output: product/release
+          expected-bundle-id: ${{ vars.BUILDCHAIN_MACOS_EXPECTED_BUNDLE_ID }}
+          expected-team-id: ${{ vars.BUILDCHAIN_MACOS_EXPECTED_TEAM_ID }}
+          certificate-sha1: ${{ vars.BUILDCHAIN_MACOS_CERTIFICATE_SHA1 }}
+          certificate-p12-base64: ${{ secrets.BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64 }}
+          certificate-password: ${{ secrets.BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD }}
+          notary-api-key-p8-base64: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64 }}
+          notary-api-key-id: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_KEY_ID }}
+          notary-api-issuer: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_ISSUER }}
+
+      - name: Upload authoritative signed macOS payload
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.names.outputs.artifact-name }}
+          path: ${{ steps.credential-island.outputs.artifact-root }}
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+          compression-level: 0
+
+      - name: Upload authoritative signed macOS manifest
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.names.outputs.manifest-artifact-name }}
+          path: ${{ steps.credential-island.outputs.manifest-path }}
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
   summarize:
     name: Summarize build contract
     needs:
@@ -1758,7 +1920,8 @@ jobs:
       - build-native
       - build-linux-container
       - relay-artifacts
-    if: ${{ always() && needs.anchored-release-preflight.result == 'success' && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && (needs.artifact-transfer.outputs.mode == 'github-artifacts' || needs.relay-artifacts.result == 'success') }}
+      - credential-island-macos
+    if: ${{ always() && needs.anchored-release-preflight.result == 'success' && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && (needs.artifact-transfer.outputs.mode == 'github-artifacts' || needs.relay-artifacts.result == 'success') && ((inputs.credential-island-macos-app-path == '' && needs.credential-island-macos.result == 'skipped') || needs.credential-island-macos.result == 'success') }}
     runs-on: ubuntu-24.04
     outputs:
       summary-artifact-name: ${{ steps.names.outputs.summary-artifact-name }}
@@ -1856,6 +2019,7 @@ jobs:
           BUILDCHAIN_SUMMARY_OUTPUT: .buildchain/artifacts/build-summary.json
           BUILDCHAIN_ARTIFACT_NAME: ${{ inputs.artifact-name }}
           BUILDCHAIN_PLATFORM_COUNT: ${{ needs.resolve-contract.outputs.platform-count }}
+          BUILDCHAIN_ADDITIONAL_PLATFORM_COUNT: ${{ inputs.credential-island-macos-app-path != '' && '1' || '0' }}
           BUILDCHAIN_TRUSTED_EVENT: ${{ needs.trust-gate.outputs.trusted-event }}
           BUILDCHAIN_PUBLISH_CHANNEL: ${{ needs.trust-gate.outputs.publish-channel }}
           BUILDCHAIN_PUBLISH_ALLOWED: ${{ needs.trust-gate.outputs.publish-allowed }}
@@ -1894,7 +2058,7 @@ jobs:
         env:
           BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
           BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
-            [{"id":"resolve-runtime","status":"${{ needs.trust-gate.result }}"},{"id":"resolve-source","status":"${{ needs.resolve-source.result }}"},{"id":"anchored-release-preflight","status":"${{ needs.anchored-release-preflight.result }}"},{"id":"build","status":"${{ (needs.build-native.result == 'failure' || needs.build-linux-container.result == 'failure' || needs.relay-artifacts.result == 'failure') && 'failure' || (needs.build-native.result == 'cancelled' || needs.build-linux-container.result == 'cancelled' || needs.relay-artifacts.result == 'cancelled') && 'cancelled' || (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && 'success' || 'skipped' }}"},{"id":"verify","status":"success"},{"id":"aggregate","status":"success"}]
+            [{"id":"resolve-runtime","status":"${{ needs.trust-gate.result }}"},{"id":"resolve-source","status":"${{ needs.resolve-source.result }}"},{"id":"anchored-release-preflight","status":"${{ needs.anchored-release-preflight.result }}"},{"id":"build","status":"${{ (needs.build-native.result == 'failure' || needs.build-linux-container.result == 'failure' || needs.relay-artifacts.result == 'failure') && 'failure' || (needs.build-native.result == 'cancelled' || needs.build-linux-container.result == 'cancelled' || needs.relay-artifacts.result == 'cancelled') && 'cancelled' || (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && 'success' || 'skipped' }}"},{"id":"credential-island","status":"${{ needs.credential-island-macos.result }}"},{"id":"verify","status":"success"},{"id":"aggregate","status":"success"}]
           BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: '[{"kind":"anchored-version-material","path":".buildchain/anchored-version-material/anchored-version-material.json"},{"kind":"platform-manifests","path":".buildchain/artifacts/build-summary.json"},{"kind":"build-summary","path":".buildchain/artifacts/build-summary.json"}]'
           BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: ${{ inputs.artifact-name }}-release-candidate-controller-receipt-${{ needs.resolve-source.outputs.publish-source-sha }}
           BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/release-candidate-receipt.json
@@ -1967,6 +2131,7 @@ jobs:
       - build-native
       - build-linux-container
       - relay-artifacts
+      - credential-island-macos
       - summarize
     if: ${{ always() && needs.controller-plan.result == 'success' }}
     outputs:
@@ -2009,7 +2174,7 @@ jobs:
         env:
           BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
           BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
-            [{"id":"resolve-runtime","status":"${{ needs.trust-gate.result }}"},{"id":"resolve-source","status":"${{ needs.resolve-source.result }}"},{"id":"anchored-release-preflight","status":"${{ needs.anchored-release-preflight.result }}"},{"id":"build","status":"${{ (needs.build-native.result == 'failure' || needs.build-linux-container.result == 'failure' || needs.relay-artifacts.result == 'failure') && 'failure' || (needs.build-native.result == 'cancelled' || needs.build-linux-container.result == 'cancelled' || needs.relay-artifacts.result == 'cancelled') && 'cancelled' || (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && 'success' || 'skipped' }}"},{"id":"verify","status":"${{ needs.summarize.result }}"},{"id":"aggregate","status":"${{ needs.summarize.result }}"}]
+            [{"id":"resolve-runtime","status":"${{ needs.trust-gate.result }}"},{"id":"resolve-source","status":"${{ needs.resolve-source.result }}"},{"id":"anchored-release-preflight","status":"${{ needs.anchored-release-preflight.result }}"},{"id":"build","status":"${{ (needs.build-native.result == 'failure' || needs.build-linux-container.result == 'failure' || needs.relay-artifacts.result == 'failure') && 'failure' || (needs.build-native.result == 'cancelled' || needs.build-linux-container.result == 'cancelled' || needs.relay-artifacts.result == 'cancelled') && 'cancelled' || (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && 'success' || 'skipped' }}"},{"id":"credential-island","status":"${{ needs.credential-island-macos.result }}"},{"id":"verify","status":"${{ needs.summarize.result }}"},{"id":"aggregate","status":"${{ needs.summarize.result }}"}]
           BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ needs.summarize.result == 'success' && '[{"kind":"anchored-version-material","path":".buildchain/controller/evidence/anchored-version-material.json"},{"kind":"platform-manifests","path":".buildchain/controller/evidence/build-summary.json"},{"kind":"build-summary","path":".buildchain/controller/evidence/build-summary.json"}]' || '[]' }}
           BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ needs.summarize.result == 'success' && '' || 'controller-incomplete' }}
           BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Build or verification did not complete successfully

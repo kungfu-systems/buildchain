@@ -13,13 +13,18 @@ export function aggregateBuildSummaryCli() {
   const outputPath = path.resolve(readEnv("BUILDCHAIN_SUMMARY_OUTPUT", ".buildchain/artifacts/build-summary.json"));
   const artifactName = readEnv("BUILDCHAIN_ARTIFACT_NAME", "buildchain-artifact");
   const expectedPlatformCount = Number(readEnv("BUILDCHAIN_PLATFORM_COUNT", "0"));
+  const additionalPlatformCount = Number(readEnv("BUILDCHAIN_ADDITIONAL_PLATFORM_COUNT", "0"));
+  if (!Number.isInteger(additionalPlatformCount) || additionalPlatformCount < 0) {
+    throw new Error("BUILDCHAIN_ADDITIONAL_PLATFORM_COUNT must be a non-negative integer");
+  }
+  const expectedManifestCount = expectedPlatformCount + additionalPlatformCount;
   const manifestFiles = findJsonFiles(inputRoot)
     .filter((file) => path.basename(file) === "manifest.json")
     .sort();
   const manifests = manifestFiles.map((file) => JSON.parse(fs.readFileSync(file, "utf8")));
-  if (expectedPlatformCount > 0 && manifests.length !== expectedPlatformCount) {
+  if (expectedManifestCount > 0 && manifests.length !== expectedManifestCount) {
     throw new Error(
-      `expected ${expectedPlatformCount} platform manifests, found ${manifests.length} under ${inputRoot}`,
+      `expected ${expectedManifestCount} platform manifests, found ${manifests.length} under ${inputRoot}`,
     );
   }
   const summary = {

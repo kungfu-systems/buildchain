@@ -98,6 +98,26 @@
           "classification": "redacted",
           "source": "workflow-call-secret"
         },
+        "BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
+        "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
+        "BUILDCHAIN_MACOS_NOTARY_API_ISSUER": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
+        "BUILDCHAIN_MACOS_NOTARY_API_KEY_ID": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
+        "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
         "artifact-name": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -200,6 +220,18 @@
         },
         "checkout-cache-timeout-seconds": {
           "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "credential-island-environment": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "credential-island-macos-app-path": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "credential-island-macos-platform-id": {
+          "classification": "included",
           "source": "workflow-call-input"
         },
         "expected-artifacts-json": {
@@ -358,6 +390,10 @@
             "required": true
           },
           {
+            "id": "credential-island",
+            "required": false
+          },
+          {
             "id": "verify",
             "required": true
           },
@@ -369,6 +405,7 @@
         "capabilities": [
           "source-lock",
           "lifecycle-build",
+          "credential-island",
           "lifecycle-verify",
           "artifact-admission"
         ],
@@ -378,7 +415,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:b3e101ac0b0f75aebff59b2129e4eff512c38d4d0a34a0a3785e8ea8f998846a"
+      "digest": "sha256:2fd6fb356add8b08731fbdf469ff1744633fc262067f5e71205f4846b8fa5429"
     },
     {
       "schemaVersion": 1,
@@ -399,6 +436,26 @@
           "source": "workflow-call-secret"
         },
         "BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
+        "BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
+        "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
+        "BUILDCHAIN_MACOS_NOTARY_API_ISSUER": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
+        "BUILDCHAIN_MACOS_NOTARY_API_KEY_ID": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
+        "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64": {
           "classification": "redacted",
           "source": "workflow-call-secret"
         },
@@ -516,6 +573,18 @@
         },
         "checkout-cache-timeout-seconds": {
           "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "credential-island-environment": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "credential-island-macos-app-path": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "credential-island-macos-platform-id": {
+          "classification": "included",
           "source": "workflow-call-input"
         },
         "expected-artifacts-json": {
@@ -680,7 +749,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:5ca752570c4180746f09df3fdf5c17e7ce90b04ed06fff362d2a195048024dda"
+      "digest": "sha256:67f988a94ad4c8f7515bce8ce0ba73985ac9b8b5a5d04ad186005c9fda7a01b9"
     },
     {
       "schemaVersion": 1,
@@ -1899,5 +1968,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:40a7362d72303c106c064126881dae0716ed2d1902a8cac43f409af78bd7cddf"
+  "digest": "sha256:518d8f192264268ad2312971ad3665d8cb845cd27613a6f59a9a826fd82b44af"
 }

@@ -18,6 +18,13 @@
       "bundle": "actions/promote-buildchain-ref/dist/index.js"
     },
     {
+      "path": "actions/macos-credential-island",
+      "disposition": "isolated-macos-signing-and-notarization",
+      "runtime": "node24",
+      "build": "tsup",
+      "bundle": "actions/macos-credential-island/dist/index.js"
+    },
+    {
       "path": "actions/report-buildchain-issue",
       "disposition": "consumer-feedback-issue-reporting",
       "runtime": "node24",

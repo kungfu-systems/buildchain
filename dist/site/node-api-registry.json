@@ -99,7 +99,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-contract",
       "export": "./buildchain-contract",
       "target": "./packages/core/buildchain-contract.js",
-      "digest": "sha256:1e5f8a1741a0a98116e754ef0874337db4c1821bb7a153ab398009145509681c",
+      "digest": "sha256:cf08a6c4fd2a56dff45e4a97d1c470ce94e453ab613a304bd86b3fe9d298a153",
       "summary": "Runtime contract world and compatibility digest APIs for floating-ref drift checks.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -125,7 +125,7 @@
       "specifier": "@kungfu-tech/buildchain/controller-evidence",
       "export": "./controller-evidence",
       "target": "./packages/core/controller-evidence.js",
-      "digest": "sha256:c061ed32e02713fd99ffd291ee8ed4a4dba563265ee530deef4b37197cbb65e6",
+      "digest": "sha256:5a4d6d9f2180f60de2eaab5eeb5a0deb79cde688d6047719c3748eaefdd31940",
       "summary": "Project-independent controller descriptors, source/runtime-bound plans, receipts, aggregates, and validation APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -437,7 +437,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-kfd-claims",
       "export": "./buildchain-kfd-claims",
       "target": "./packages/core/buildchain-kfd-claims.js",
-      "digest": "sha256:a2c297daa22fb8d3bf7e84e2ee22ba269e81c206b2772ac9fd18bf095dcb2b84",
+      "digest": "sha256:c61f4ce244fae5030afc308661f95a87b72dcab00d1edb11c17a8d734d2fb5c6",
       "summary": "Buildchain self KFD claim registry, witnesses, and public claim APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [
