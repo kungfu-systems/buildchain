@@ -326,6 +326,10 @@ test("public action and workflow keep credentials outside the build matrix", () 
   assert.match(workflow, /Seal macOS credential-island input/);
   assert.match(
     workflow,
+    /CSC_IDENTITY_AUTO_DISCOVERY: \$\{\{ inputs\.credential-island-macos-app-path != '' && 'false' \|\| '' \}\}/,
+  );
+  assert.match(
+    workflow,
     /credential-island-input-\$\{\{ matrix\.platform\.id \}\}/,
   );
   const credentialJob = workflow.match(

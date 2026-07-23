@@ -1288,6 +1288,11 @@ jobs:
           BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
           SHIFU_CACHE_PROFILE_REF: ${{ inputs.shifu-cache-profile-ref }}
           SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
+          # The ordinary matrix must emit an unsigned sealed input. Prevent a
+          # persistent self-hosted macOS keychain from being discovered by
+          # electron-builder; only the protected credential-island job imports
+          # the exact ephemeral signing identity.
+          CSC_IDENTITY_AUTO_DISCOVERY: ${{ inputs.credential-island-macos-app-path != '' && 'false' || '' }}
         with:
           cwd: ${{ inputs.working-directory }}
           stage: build
