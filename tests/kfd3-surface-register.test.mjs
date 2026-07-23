@@ -219,6 +219,61 @@ test("KFD-3 distribution declarations require artifact kind, platform, and pathG
   assert.throws(() => kfd3.readSurfaceRegistry({ cwd }), /sha256/);
 });
 
+test("KFD-3 audits bind detected binaries through declared distribution artifacts", () => {
+  const cwd = tempDir("distribution-binding");
+  fs.mkdirSync(path.join(cwd, "src"), { recursive: true });
+  fs.mkdirSync(path.join(cwd, "dist"), { recursive: true });
+  fs.writeFileSync(path.join(cwd, "src", "cli.js"), "#!/usr/bin/env node\n");
+  fs.writeFileSync(path.join(cwd, "dist", "fixture.exe"), "binary");
+  writeJson(path.join(cwd, "package.json"), {
+    name: "@example/fixture",
+    version: "1.0.0",
+    type: "module",
+    bin: { fixture: "./src/cli.js" },
+  });
+  const registered = kfd3.registerSurfaces({
+    cwd,
+    kinds: ["cli"],
+    product: { id: "fixture", name: "Fixture" },
+  });
+  const cli = registered.registry.surfaces.find(
+    (entry) => entry.id === "cli:fixture",
+  );
+  cli.distribution = {
+    registrar: "buildchain",
+    tasks: ["build", "publish-github-release"],
+    artifacts: [
+      {
+        kind: "standalone-binary",
+        platform: "windows-x64",
+        pathGlob: "dist/fixture.exe",
+      },
+    ],
+  };
+  kfd3.writeSurfaceRegistry({
+    cwd,
+    registry: registered.registry,
+  });
+
+  const audit = kfd3.auditSurfaces({
+    cwd,
+    kinds: ["cli", "binary"],
+  });
+  assert.equal(audit.status, "passed");
+  assert.equal(audit.summary.detectedButUnregistered, 0);
+  assert.deepEqual(audit.comparison.distributionBindings, [
+    {
+      detectedSurfaceId: "binary:dist/fixture.exe",
+      declaredSurfaceId: "cli:fixture",
+      artifact: {
+        kind: "standalone-binary",
+        platform: "windows-x64",
+        pathGlob: "dist/fixture.exe",
+      },
+    },
+  ]);
+});
+
 test("Buildchain self KFD registry declares standalone binaries for Shifu", () => {
   const registry = createBuildchainKfdSurfaceRegistry({ root });
   const surface = registry.additionalSurfaces.find((entry) => entry.id === "distribution:buildchain-standalone");

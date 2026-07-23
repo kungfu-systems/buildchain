@@ -124,6 +124,50 @@ function normalizeRegistrySurface(entry) {
   };
 }
 
+function globPatternRegExp(pattern) {
+  const normalized = String(pattern || "").replaceAll("\\", "/");
+  let source = "";
+  for (let index = 0; index < normalized.length; index += 1) {
+    const character = normalized[index];
+    if (character === "*" && normalized[index + 1] === "*") {
+      source += ".*";
+      index += 1;
+    } else if (character === "*") {
+      source += "[^/]*";
+    } else if (character === "?") {
+      source += "[^/]";
+    } else {
+      source += character.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+  }
+  return new RegExp(`^${source}$`);
+}
+
+function distributionBindings(registry, detectedSurfaces) {
+  return detectedSurfaces.flatMap((detected) =>
+    registry.surfaces.flatMap((declared) =>
+      (declared.distribution?.artifacts || [])
+        .filter(
+          (artifact) =>
+            normalizeKind(artifact.kind) === detected.kind &&
+            globPatternRegExp(artifact.pathGlob).test(
+              String(detected.artifactPath || "").replaceAll("\\", "/"),
+            ),
+        )
+        .map((artifact) => ({
+          detectedSurfaceId: detected.id,
+          declaredSurfaceId: declared.id,
+          artifact: {
+            kind: artifact.kind,
+            platform: artifact.platform,
+            pathGlob: artifact.pathGlob,
+            ...(artifact.sha256 ? { sha256: artifact.sha256 } : {}),
+          },
+        })),
+    ),
+  );
+}
+
 function stableId(value) {
   return String(value || "")
     .toLowerCase()
@@ -507,7 +551,11 @@ export function auditKfd3Surfaces({
   const registry = readKfd3SurfaceRegistry({ cwd, registryPath });
   const detectedIds = new Set(detection.surfaces.map((entry) => entry.id));
   const declaredIds = new Set(registry.surfaces.map((entry) => entry.id));
-  const detectedButUnregistered = detection.surfaces.filter((entry) => !declaredIds.has(entry.id));
+  const bindings = distributionBindings(registry, detection.surfaces);
+  const distributedIds = new Set(bindings.map((entry) => entry.detectedSurfaceId));
+  const detectedButUnregistered = detection.surfaces.filter(
+    (entry) => !declaredIds.has(entry.id) && !distributedIds.has(entry.id),
+  );
   const declaredButMissing = registry.surfaces.filter((entry) => !detectedIds.has(entry.id));
   const enforced = registry.surfaces.filter((entry) => entry.state === "enforced" || entry.enforcement === "enforced");
   const issues = [
@@ -543,10 +591,12 @@ export function auditKfd3Surfaces({
       detected: detection.surfaces,
       declared: registry.surfaces,
       enforced,
+      distributionBindings: bindings,
     },
     comparison: {
       detectedButUnregistered,
       declaredButMissing,
+      distributionBindings: bindings,
     },
     issues,
   };
