@@ -766,6 +766,11 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /publish-dist-tag:/);
   assert.match(workflow, /publish-package-set-order:/);
   assert.match(workflow, /publish-package-main:/);
+  assert.match(workflow, /publish-rematerialize-on-resume:/);
+  assert.match(
+    workflow,
+    /publish-rematerialize-on-resume: \$\{\{ inputs\.publish-rematerialize-on-resume \}\}/,
+  );
   assert.match(workflow, /github-release:/);
   assert.match(workflow, /github-release:\n\s+description: "Create\/update the public GitHub Release and upload Buildchain release passport\/evidence assets after a complete release transaction"\n\s+default: true/);
   assert.match(workflow, /github-release-title:/);
@@ -2484,6 +2489,7 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(action, /release-passport-invariant-passport-jsons:/);
   assert.match(action, /release-passport-invariant-passport-command:/);
   assert.match(action, /release-passport-buildchain-self-kfd:/);
+  assert.match(action, /publish-rematerialize-on-resume:/);
   assert.match(implementation, /promoteOnlyReleaseCandidate/);
   assert.match(implementation, /reconciliationWorkspace/);
   assert.match(implementation, /releasePassportKfd1WitnessJsons/);
@@ -2494,11 +2500,13 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(implementation, /releasePassportInvariantPassportJsons/);
   assert.match(implementation, /releasePassportInvariantPassportCommand/);
   assert.match(implementation, /releasePassportBuildchainSelfKfd/);
+  assert.match(implementation, /publishRematerializeOnResume/);
   assert.match(docs, /promote-only-release-candidate: "true"/);
   assert.match(docs, /release-passport-kfd-1-witness-jsons/);
   assert.match(docs, /release-passport-kfd-2-claim-jsons/);
   assert.match(docs, /release-passport-kfd-3-prebuild-witness-jsons/);
   assert.match(docs, /release-passport-invariant-passport-command/);
+  assert.match(docs, /publish-rematerialize-on-resume: true/);
 });
 
 test("buildchain ref promotion consumes PR-stage release candidate evidence", () => {
