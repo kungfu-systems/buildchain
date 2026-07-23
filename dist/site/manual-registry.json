@@ -79,7 +79,7 @@
       "title": "Release Candidate Passport",
       "path": "docs/release-candidate.md",
       "plane": "verify",
-      "digest": "sha256:15bfe69e1da8c9bf7310c5cd89968d206886a25447f71fdc7cd58db2af0c7608",
+      "digest": "sha256:e933241bc138661a73cf1b419690cad629ba328ce05ecbd85841199a337d37c1",
       "capabilityGroup": "reusable-build",
       "audience": [
         "release-operator",
@@ -177,7 +177,7 @@
       "title": "Toolkit observability",
       "path": "docs/toolkit-observability.md",
       "plane": "use",
-      "digest": "sha256:239949a75ca81b6002a2e148f7028402dbd98c00e246acd8d0955855781206a1",
+      "digest": "sha256:b2ffc3b2520ca7879309b7607b2eaa1aceb647503e893887159a6916de14e2d7",
       "capabilityGroup": "observability-diagnostics",
       "audience": [
         "developer",

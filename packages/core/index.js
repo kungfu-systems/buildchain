@@ -83,6 +83,14 @@ export {
 } from "./logging.js";
 
 export {
+  BUILDCHAIN_CANDIDATE_TIMELINE_CONTRACT,
+  BUILDCHAIN_CANDIDATE_TIMELINE_EVENT_CONTRACT,
+  createCandidateTimeline,
+  formatCandidateTimelineReport,
+  normalizeCandidateTimelineEvent,
+} from "./candidate-timeline.js";
+
+export {
   BUILDCHAIN_ANCHORED_PACKAGE_RELEASE_VALIDATION_CONTRACT,
   BUILDCHAIN_DIAGNOSTICS_CONTRACT,
   BUILDCHAIN_DIAGNOSTICS_MANIFEST_CONTRACT,

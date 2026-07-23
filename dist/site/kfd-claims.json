@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "85d9b19de156773aab9a45cc7f8c201c0cebfc07a3f8d4ae902ca2d0e9fbfd86",
+    "sha256": "847949ab0db4f76342603c628bf668218f9046ad1eceb27c8368e0e539d9bd8f",
     "summary": {
-      "cliCommandCount": 85,
+      "cliCommandCount": 86,
       "workflowCount": 51,
       "actionCount": 4,
       "sitePageCount": 52,
-      "docCommandRefCount": 264,
+      "docCommandRefCount": 265,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -228,13 +228,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "85d9b19de156773aab9a45cc7f8c201c0cebfc07a3f8d4ae902ca2d0e9fbfd86",
+      "sha256": "847949ab0db4f76342603c628bf668218f9046ad1eceb27c8368e0e539d9bd8f",
       "summary": {
-        "cliCommandCount": 85,
+        "cliCommandCount": 86,
         "workflowCount": 51,
         "actionCount": 4,
         "sitePageCount": 52,
-        "docCommandRefCount": 264,
+        "docCommandRefCount": 265,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -1091,6 +1091,18 @@
           "packageExport": "./buildchain-contract"
         },
         {
+          "id": "export:./candidate-timeline",
+          "name": "@kungfu-tech/buildchain/candidate-timeline",
+          "kind": "package-export",
+          "sourcePath": "packages/core/candidate-timeline.js",
+          "evidencePath": "packages/core/candidate-timeline.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./candidate-timeline"
+        },
+        {
           "id": "export:./controller-evidence",
           "name": "@kungfu-tech/buildchain/controller-evidence",
           "kind": "package-export",
@@ -1677,6 +1689,18 @@
         {
           "id": "cli:build-facts",
           "name": "buildchain facts module [--cwd <dir>] [--module <id>] [--module-root <path>]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:candidate",
+          "name": "buildchain candidate timeline --input <file-or-json> [--output <file>] [--json]",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -4965,6 +4989,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 316
+    "publicSurfaceCount": 318
   }
 }

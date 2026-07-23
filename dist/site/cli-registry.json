@@ -78,6 +78,18 @@
       "maturity": "stable"
     },
     {
+      "id": "candidate",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain candidate timeline --input <file-or-json> [--output <file>] [--json]",
+      "purpose": "Inspect source-bound candidate evidence command families.",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
       "id": "collect",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain collect",

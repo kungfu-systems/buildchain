@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:78c4f1885d1f619242f31e27b6cd4d1e21e0fd9c67fbe92f8b613abe9acdd3c1",
+      "digest": "sha256:1e02f99f2424f2850c0f264ad6a0bb75973144bc1099dba82d06ba0434c2b406",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:78c4f1885d1f619242f31e27b6cd4d1e21e0fd9c67fbe92f8b613abe9acdd3c1",
+      "digest": "sha256:1e02f99f2424f2850c0f264ad6a0bb75973144bc1099dba82d06ba0434c2b406",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -99,9 +99,22 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-contract",
       "export": "./buildchain-contract",
       "target": "./packages/core/buildchain-contract.js",
-      "digest": "sha256:da92e920f6cc00dd5e21405f06580c2fa943eead3b755dc36b6c3a2381e68423",
+      "digest": "sha256:1e5f8a1741a0a98116e754ef0874337db4c1821bb7a153ab398009145509681c",
       "summary": "Runtime contract world and compatibility digest APIs for floating-ref drift checks.",
       "capabilityGroup": "governance-versioning",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/candidate-timeline",
+      "export": "./candidate-timeline",
+      "target": "./packages/core/candidate-timeline.js",
+      "digest": "sha256:0b79dbbb523c7adbd969a0b4bec73d9adabf280319fc9a73b6912f4b95a9d6e8",
+      "summary": "Source-bound candidate event normalization, per-attempt critical-path-safe aggregation, and compact reporting APIs.",
+      "capabilityGroup": "observability-diagnostics",
       "audience": [
         "developer",
         "agent"
@@ -307,7 +320,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-control-plane-audit",
       "export": "./publication-control-plane-audit",
       "target": "./packages/core/publication-control-plane-audit.js",
-      "digest": "sha256:8220ad9cdf7fb9d2f361cf7b066aad039412a378350676edfdb4c1f7019cda20",
+      "digest": "sha256:0f16457858b95d504e2a9e53558356a8f509f6ca8b011f550efd60bd8db469a4",
       "summary": "Read-only publication control-plane snapshot evaluation APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [

@@ -3,11 +3,11 @@
   "contract": "kungfu-buildchain-public-surface-reverse-audit",
   "status": "passed",
   "summary": {
-    "cliCommandCount": 85,
+    "cliCommandCount": 86,
     "workflowCount": 51,
     "actionCount": 4,
     "sitePageCount": 52,
-    "docCommandRefCount": 264,
+    "docCommandRefCount": 265,
     "failureCount": 0
   },
   "enumerated": {
@@ -41,6 +41,11 @@
         "id": "build-facts",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain facts module [--cwd <dir>] [--module <id>] [--module-root <path>]"
+      },
+      {
+        "id": "candidate",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain candidate timeline --input <file-or-json> [--output <file>] [--json]"
       },
       {
         "id": "collect",
@@ -2596,6 +2601,11 @@
         "command": "buildchain facts verify --fact"
       },
       {
+        "id": "candidate",
+        "path": "docs/toolkit-observability.md",
+        "command": "buildchain candidate timeline"
+      },
+      {
         "id": "collect-github-release",
         "path": "docs/binary-distribution.md",
         "command": "buildchain collect github-release"
@@ -3736,9 +3746,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "07802d410c2111838c8c5f3d93392d7e8205ba64ab4c76ce594f09864ab5baaf",
+    "cliRegistryDigest": "cc76cd0f061103d8ab78ee97dd0b7f0d28d64489f79b7ed06c94d8fef28bc200",
     "workflowRegistryDigest": "a954f67672292e16be1f4f663a98d0c69285f7359a43d5d6333b3ffcf6463c35",
-    "pageRegistryDigest": "75384a857698af54b7a739b40b6eefe0bb641e90bae584c47dd1e2c0b7aa8b2b"
+    "pageRegistryDigest": "683eb0c1a92cb0f03ae8c31c514adb468bbdeaa9b4b9b3618c34f830bd4c6e88"
   },
   "comparison": {
     "missingCliRegistry": [],

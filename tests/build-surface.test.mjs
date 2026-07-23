@@ -950,6 +950,8 @@ test("sealed publication authority verifier is independent and credential-free",
   assert.match(workflow, /name: Restrict automatic admission to declared managed publication surfaces/);
   assert.match(workflow, /release-candidate admission evidence must belong to the caller repository/);
   assert.match(workflow, /release-candidate admission requires a repository-local publisher workflow path/);
+  assert.match(workflow, /release-candidate GitHub Release admission requires an empty publication-package-name and exact github-release:/);
+  assert.match(workflow, /publisher_mode="github-token"/);
   assert.match(workflow, /release-candidate admission requires a Gate aggregate or explicit publication-auto-no-gate decision/);
   assert.match(workflow, /name: Audit managed release-candidate publication control plane/);
   assert.match(workflow, /--repository "\$\{\{ inputs\.evidence-repository \}\}"/);
@@ -1345,13 +1347,22 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
     /release-intent:\n    name: Resolve production release PR intent\n    runs-on: ubuntu-24\.04\n    permissions:\n      pull-requests: read/,
   );
   assert.match(workflow, /listPullRequestsAssociatedWithCommit/);
+  assert.match(workflow, /closedPullRequest/);
+  assert.match(workflow, /context\.payload\.pull_request/);
+  assert.match(workflow, /releasePull\.merge_commit_sha/);
+  assert.match(workflow, /production-source-sha/);
   assert.match(workflow, /associated-release-pr-merged/);
+  assert.match(workflow, /closed-release-pr-merged/);
   assert.match(workflow, /no-associated-release-pr/);
   assert.match(workflow, /Comment release PR staging review URL/);
   assert.match(workflow, /web-surface-release-pr-review\.mjs/);
   assert.match(workflow, /Plan pull request preview/);
   assert.match(workflow, /github\.event\.action != 'closed'/);
   assert.match(workflow, /Plan pull request preview cleanup/);
+  assert.match(
+    workflow,
+    /github\.event\.action == 'closed' && needs\.release-intent\.outputs\.production-release-approved != 'true'/,
+  );
   assert.match(workflow, /pull-request-closed/);
   assert.match(workflow, /--dry-run false/);
   assert.match(workflow, /Apply pull request preview/);
@@ -1468,7 +1479,11 @@ test("web-surface side-effect jobs and sealed production paths have explicit aut
   assert.match(decision, /BUILDCHAIN_PRODUCTION_RELEASE_APPROVED/);
   const inputGate = job("apply-input-gate");
   assert.doesNotMatch(inputGate, /production-apply requires a trusted manual actor/);
-  assert.match(inputGate, /elif \[ "\$production_event_approved" = "true" \]; then\n\s+web_surface_channel=production/);
+  assert.match(inputGate, /if \[ "\$production_event_approved" = "true" \]; then\n\s+web_surface_channel=production/);
+  assert.ok(
+    inputGate.indexOf('if [ "$production_event_approved" = "true" ]') <
+      inputGate.indexOf('elif [ "$EVENT_NAME" = "pull_request" ]'),
+  );
   const authority = job("publication-authority");
   assert.match(authority, /Create qualifying pre-publication controller receipt/);
   assert.match(authority, /assemble-web-surface-publication-admission\.mjs/);

@@ -8,6 +8,7 @@ const TRUSTED_PERMISSIONS = new Set(["write", "maintain", "admin"]);
 
 export function resolveWebSurfaceProductionDecision({
   eventName,
+  eventAction = "",
   refName,
   repository,
   sourceSha,
@@ -36,9 +37,11 @@ export function resolveWebSurfaceProductionDecision({
       reason: trusted ? "trusted-manual-dispatch" : "manual-actor-permission-insufficient",
     });
   }
+  const reviewedReleaseEvent =
+    (eventName === "push" && refName === "main") ||
+    (eventName === "pull_request" && eventAction === "closed");
   if (
-    eventName === "push" &&
-    refName === "main" &&
+    reviewedReleaseEvent &&
     productionApply === true &&
     productionReleaseOnMain === true &&
     releaseApproved === true
@@ -103,9 +106,10 @@ async function main() {
   }
   const decision = resolveWebSurfaceProductionDecision({
     eventName,
+    eventAction: process.env.GITHUB_EVENT_ACTION,
     refName: process.env.GITHUB_REF_NAME,
     repository,
-    sourceSha: process.env.GITHUB_SHA,
+    sourceSha: process.env.BUILDCHAIN_PRODUCTION_SOURCE_SHA || process.env.GITHUB_SHA,
     actor,
     productionApply: bool("BUILDCHAIN_PRODUCTION_APPLY"),
     productionApproved: bool("BUILDCHAIN_PRODUCTION_APPROVED"),
