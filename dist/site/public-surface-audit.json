@@ -759,6 +759,7 @@
           "publish-mode",
           "publish-package-main",
           "publish-package-set-order",
+          "publish-rematerialize-on-resume",
           "publish-required-artifacts-json",
           "publish-target",
           "release-candidate-workflow-file",
@@ -784,7 +785,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 73,
+        "inputCount": 74,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1841,6 +1842,7 @@
           "publish-mode",
           "publish-package-main",
           "publish-package-set-order",
+          "publish-rematerialize-on-resume",
           "publish-required-artifacts-json",
           "publish-target",
           "release-candidate-workflow-file",
@@ -1866,7 +1868,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 65,
+        "inputCount": 66,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2121,6 +2123,7 @@
           "publish-mode",
           "publish-package-main",
           "publish-package-set-order",
+          "publish-rematerialize-on-resume",
           "publish-required-artifacts-json",
           "publish-source-locked",
           "publish-source-ref",
@@ -2160,7 +2163,7 @@
           "transaction-state-path",
           "verification-command"
         ],
-        "inputCount": 62
+        "inputCount": 63
       },
       {
         "id": "report-buildchain-issue",
@@ -3798,8 +3801,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "cc76cd0f061103d8ab78ee97dd0b7f0d28d64489f79b7ed06c94d8fef28bc200",
-    "workflowRegistryDigest": "31ffc655ae78aa6923f89cbda2a074875b0a3192e0578ed0ca1dfcf4413aa910",
-    "pageRegistryDigest": "e4ac8e1b8d181af37553f1359684849f33dd7b54f08a836ce49412e6337c9951"
+    "workflowRegistryDigest": "5ae14da2c43f67e49d155e93a6078e77d217b71c5e3b8b90b58705876c4bf927",
+    "pageRegistryDigest": "1ce953e607b26081d40816426bb6dad44b80c2524db5d8056392b3d0df5ebe3e"
   },
   "comparison": {
     "missingCliRegistry": [],

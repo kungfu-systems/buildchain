@@ -295,6 +295,7 @@ async function main() {
   const releaseMaterialSha = core.getInput("release-material-sha");
   const publishToolingSha = core.getInput("publish-tooling-sha");
   const publishTransactionOverride = core.getBooleanInput("publish-transaction-override");
+  const publishRematerializeOnResume = core.getBooleanInput("publish-rematerialize-on-resume");
   const releasePassport = core.getBooleanInput("release-passport");
   const releasePassportOutputDir = core.getInput("release-passport-output-dir");
   const releasePassportProductName = core.getInput("release-passport-product-name");
@@ -374,6 +375,7 @@ async function main() {
     publishDistTag,
     publishPackageSetOrder,
     publishPackageMain,
+    publishRematerializeOnResume,
     expectedPublicationVersion,
     requirePublicationQualification,
     publicationCapabilityJson,

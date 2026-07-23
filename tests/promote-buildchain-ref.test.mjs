@@ -26,6 +26,7 @@ const {
   persistDurableReleaseTransaction,
   promoteBuildchainRefs,
   restoreDurableReleaseTransaction,
+  runPublishTransaction,
   resolveTagsForTarget,
   runVersionVerification,
   resolveReleaseImpactInput,
@@ -35,6 +36,9 @@ const {
   updateVersionStateContents,
   validatePromotionReleaseCandidate,
 } = await import("../actions/promote-buildchain-ref/lib.js");
+const {
+  loadBuildchainConfig,
+} = await import("../packages/core/buildchain-config.js");
 
 test("older minor alpha publication preserves the global npm alpha channel", () => {
   assert.equal(alphaDistTagForPromotion({
@@ -5647,6 +5651,89 @@ test("publish transaction durable ref restores state and evidence in a fresh wor
   assert.equal(restored.id, "tx-1");
   assert.equal(JSON.parse(fs.readFileSync(freshStatePath, "utf8")).id, "tx-1");
   assert.equal(JSON.parse(fs.readFileSync(freshEvidencePath, "utf8")).artifacts[0].digest, "sha256:ok");
+});
+
+test("publish transaction can opt in to rematerialize ephemeral Passport inputs on resume", async () => {
+  const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[lifecycle.publish]
+command = "node scripts/publish.mjs"
+`,
+    "scripts/publish.mjs": `
+import fs from "node:fs";
+import path from "node:path";
+
+const countPath = path.join(process.cwd(), ".buildchain/publish-count");
+const count = Number(fs.existsSync(countPath) ? fs.readFileSync(countPath, "utf8") : "0") + 1;
+fs.mkdirSync(path.dirname(countPath), { recursive: true });
+fs.writeFileSync(countPath, String(count));
+const witnessPath = path.join(process.cwd(), ".buildchain/release-inputs/witness.json");
+fs.mkdirSync(path.dirname(witnessPath), { recursive: true });
+fs.writeFileSync(witnessPath, JSON.stringify({ count }, null, 2) + "\\n");
+fs.mkdirSync(process.env.BUILDCHAIN_EVIDENCE_DIR, { recursive: true });
+fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
+  schema: 1,
+  version: process.env.BUILDCHAIN_VERSION,
+  channel: process.env.BUILDCHAIN_CHANNEL,
+  source_sha: process.env.BUILDCHAIN_SOURCE_SHA,
+  release_sha: process.env.BUILDCHAIN_RELEASE_SHA,
+  target_ref: process.env.BUILDCHAIN_TARGET_REF,
+  release_material_sha: process.env.BUILDCHAIN_RELEASE_MATERIAL_SHA,
+  publish_tooling_sha: process.env.BUILDCHAIN_PUBLISH_TOOLING_SHA,
+  artifacts: [{
+    kind: "github-release",
+    name: "rematerialization-fixture",
+    ref: process.env.BUILDCHAIN_VERSION,
+    digest: "sha256:${"1".repeat(64)}"
+  }]
+}, null, 2) + "\\n");
+`,
+  });
+  const { octokit } = createGitMock();
+  const statePath = path.join(cwd, ".buildchain/release-state/1.0.0-alpha.0.json");
+  const evidencePath = path.join(cwd, ".buildchain/release-evidence/1.0.0-alpha.0/evidence.json");
+  const args = {
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    loadedConfig: loadBuildchainConfig(cwd),
+    targetRef: "alpha/v1/v1.0",
+    sourceSha: SHA,
+    releaseSha: OTHER_SHA,
+    version: "1.0.0-alpha.0",
+    exactTag: "v1.0.0-alpha.0",
+    channel: "alpha",
+    line: "v1.0",
+    publishTransaction: true,
+    publishEvidencePath: evidencePath,
+    transactionStatePath: statePath,
+  };
+
+  await runPublishTransaction(args);
+  assert.equal(fs.readFileSync(path.join(cwd, ".buildchain/publish-count"), "utf8"), "1");
+
+  fs.rmSync(path.join(cwd, ".buildchain/release-inputs/witness.json"));
+  fs.rmSync(statePath);
+  fs.rmSync(evidencePath);
+
+  const resumed = await runPublishTransaction({
+    ...args,
+    publishRematerializeOnResume: true,
+  });
+
+  assert.equal(resumed.validation.valid, true);
+  assert.equal(fs.readFileSync(path.join(cwd, ".buildchain/publish-count"), "utf8"), "2");
+  assert.equal(
+    JSON.parse(fs.readFileSync(path.join(cwd, ".buildchain/release-inputs/witness.json"), "utf8")).count,
+    2,
+  );
+  assert.equal(
+    JSON.parse(fs.readFileSync(resumed.distTagEvidencePath, "utf8")).source,
+    "resume-rematerialized:buildchain.toml",
+  );
 });
 
 test("publish transaction durable ref updates when create races existing ref visibility", async () => {

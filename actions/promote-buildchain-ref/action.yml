@@ -119,6 +119,9 @@ inputs:
   publish-transaction-override:
     description: "Explicitly allow controlled recovery from terminal transaction states or replacement of an unpublished stale transaction with the same version, tag, target, and channel"
     default: "false"
+  publish-rematerialize-on-resume:
+    description: "Opt in to replay lifecycle.publish or publish-command after valid durable evidence is restored so ephemeral local Passport inputs and release assets are recreated"
+    default: "false"
   release-passport:
     description: "Generate and persist the unified buildchain-release-passport after publish transaction completion"
     default: "true"

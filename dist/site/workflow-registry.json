@@ -333,6 +333,7 @@
         "publish-mode",
         "publish-package-main",
         "publish-package-set-order",
+        "publish-rematerialize-on-resume",
         "publish-required-artifacts-json",
         "publish-target",
         "release-candidate-workflow-file",
@@ -358,7 +359,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 73,
+      "inputCount": 74,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1523,6 +1524,7 @@
         "publish-mode",
         "publish-package-main",
         "publish-package-set-order",
+        "publish-rematerialize-on-resume",
         "publish-required-artifacts-json",
         "publish-target",
         "release-candidate-workflow-file",
@@ -1548,7 +1550,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 65,
+      "inputCount": 66,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1836,6 +1838,7 @@
         "publish-mode",
         "publish-package-main",
         "publish-package-set-order",
+        "publish-rematerialize-on-resume",
         "publish-required-artifacts-json",
         "publish-source-locked",
         "publish-source-ref",
@@ -1875,7 +1878,7 @@
         "transaction-state-path",
         "verification-command"
       ],
-      "inputCount": 62,
+      "inputCount": 63,
       "capabilityGroup": "release-passport-trust",
       "status": "active"
     },

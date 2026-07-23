@@ -1654,6 +1654,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "publish-rematerialize-on-resume": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "publish-required-artifacts-json": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -1792,7 +1796,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:2bb0137a7dd25706b86beeb212938df2a71c69d2ef6e49391c615e4cb21a19a6"
+      "digest": "sha256:bde6769a31f35ea89e8bdc67a4ca37175f24028b2b3975ff795ba5b2fb95d3a5"
     },
     {
       "schemaVersion": 1,
@@ -1968,5 +1972,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:518d8f192264268ad2312971ad3665d8cb845cd27613a6f59a9a826fd82b44af"
+  "digest": "sha256:554cd1d7afdde09e559151d655a0b2e5e32b7ef78e05cb666c02af8bf5ebc2ce"
 }

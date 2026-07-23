@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "e2e288c44cd45d5cba9e5665c6086c814330598a007508aa7a8bdf20c307d37c",
+    "sha256": "068a7f02a200676a738ed505ef3ae4270724eca36119b353a5faff20916852de",
     "summary": {
       "cliCommandCount": 86,
       "workflowCount": 51,
@@ -228,7 +228,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "e2e288c44cd45d5cba9e5665c6086c814330598a007508aa7a8bdf20c307d37c",
+      "sha256": "068a7f02a200676a738ed505ef3ae4270724eca36119b353a5faff20916852de",
       "summary": {
         "cliCommandCount": 86,
         "workflowCount": 51,
@@ -2882,7 +2882,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 73,
+          "inputCount": 74,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -2933,6 +2933,7 @@
             "publish-mode",
             "publish-package-main",
             "publish-package-set-order",
+            "publish-rematerialize-on-resume",
             "publish-required-artifacts-json",
             "publish-target",
             "release-candidate-workflow-file",
@@ -3844,7 +3845,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 65,
+          "inputCount": 66,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -3887,6 +3888,7 @@
             "publish-mode",
             "publish-package-main",
             "publish-package-set-order",
+            "publish-rematerialize-on-resume",
             "publish-required-artifacts-json",
             "publish-target",
             "release-candidate-workflow-file",
@@ -4123,7 +4125,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 62,
+          "inputCount": 63,
           "inputs": [
             "allow-repository",
             "branch-protection-bypass-apps",
@@ -4149,6 +4151,7 @@
             "publish-mode",
             "publish-package-main",
             "publish-package-set-order",
+            "publish-rematerialize-on-resume",
             "publish-required-artifacts-json",
             "publish-source-locked",
             "publish-source-ref",
