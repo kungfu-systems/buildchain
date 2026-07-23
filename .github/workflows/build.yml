@@ -57,6 +57,11 @@ on:
         default: ""
         type: string
         required: false
+      fail-fast:
+        description: "Cancel sibling platform lanes after a required matrix failure; false retains all-platform diagnostics"
+        default: false
+        type: boolean
+        required: false
       linux-container-preset:
         description: "Optional Linux job container preset: kungfu-verify, none, or custom with linux-container-image"
         default: ""
@@ -616,6 +621,7 @@ jobs:
       working-directory: ${{ inputs.working-directory }}
       runner-preset: ${{ inputs.runner-preset }}
       platforms-json: ${{ inputs.platforms-json }}
+      fail-fast: ${{ inputs.fail-fast }}
       linux-container-preset: ${{ inputs.linux-container-preset }}
       linux-container-image: ${{ inputs.linux-container-image }}
       require-trusted-event: ${{ inputs.require-trusted-event }}

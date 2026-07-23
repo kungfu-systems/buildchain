@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "ead07dbf383ebaf13b788d153d480993477b3fbc52afa1616e8a05cb7f0ba50e",
+    "sha256": "16a56386015f535f3b9cf3c95926d283147cce34b36a89426322dba335c0b60d",
     "summary": {
       "cliCommandCount": 86,
       "workflowCount": 51,
@@ -228,7 +228,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "ead07dbf383ebaf13b788d153d480993477b3fbc52afa1616e8a05cb7f0ba50e",
+      "sha256": "16a56386015f535f3b9cf3c95926d283147cce34b36a89426322dba335c0b60d",
       "summary": {
         "cliCommandCount": 86,
         "workflowCount": 51,
@@ -2697,7 +2697,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 60,
+          "inputCount": 61,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -2726,6 +2726,7 @@
             "checkout-cache-reference-repository-template",
             "checkout-cache-timeout-seconds",
             "expected-artifacts-json",
+            "fail-fast",
             "gate-profile-aggregate-json",
             "install-command",
             "kfd-agent-hub",
@@ -3307,7 +3308,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 63,
+          "inputCount": 64,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -3339,6 +3340,7 @@
             "checkout-cache-reference-repository-template",
             "checkout-cache-timeout-seconds",
             "expected-artifacts-json",
+            "fail-fast",
             "gate-profile-aggregate-json",
             "install-command",
             "kfd-agent-hub",

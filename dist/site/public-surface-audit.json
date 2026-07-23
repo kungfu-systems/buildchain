@@ -502,6 +502,7 @@
           "checkout-cache-reference-repository-template",
           "checkout-cache-timeout-seconds",
           "expected-artifacts-json",
+          "fail-fast",
           "gate-profile-aggregate-json",
           "install-command",
           "kfd-agent-hub",
@@ -536,7 +537,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 60,
+        "inputCount": 61,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1218,6 +1219,7 @@
           "checkout-cache-reference-repository-template",
           "checkout-cache-timeout-seconds",
           "expected-artifacts-json",
+          "fail-fast",
           "gate-profile-aggregate-json",
           "install-command",
           "kfd-agent-hub",
@@ -1252,7 +1254,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 63,
+        "inputCount": 64,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -3750,8 +3752,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "cc76cd0f061103d8ab78ee97dd0b7f0d28d64489f79b7ed06c94d8fef28bc200",
-    "workflowRegistryDigest": "57637048062d68ee36577c35ac5abac520c6d8748f8dce2462c742a1732f6840",
-    "pageRegistryDigest": "f00c302e62e96557101370c2877a0e1534abfb7369b6104b516bc8382ef4e993"
+    "workflowRegistryDigest": "b8d07216bd65155e67036ad90fcf8c50353955d79c4c0d3b1b87a37e1a615edf",
+    "pageRegistryDigest": "d38f23b1b53552a0ee47285a85c9a1b1521661c3e5ccf06c5ad202629e658eb5"
   },
   "comparison": {
     "missingCliRegistry": [],
