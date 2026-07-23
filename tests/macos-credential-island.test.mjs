@@ -355,6 +355,10 @@ test("public action and workflow keep credentials outside the build matrix", () 
     workflow,
     /credential-island-input-\$\{\{ matrix\.platform\.id \}\}/,
   );
+  assert.match(
+    nativeBuildJob,
+    /Upload macOS credential-island input[\s\S]+?compression-level:\s*0/,
+  );
   const credentialJob = workflow.match(
     /\n  credential-island-macos:[\s\S]+?(?=\n  summarize:)/u,
   )?.[0];
