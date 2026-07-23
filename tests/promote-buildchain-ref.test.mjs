@@ -31,6 +31,7 @@ const {
   runVersionVerification,
   resolveReleaseImpactInput,
   resolveProtectedStatusCheckContext,
+  releasePassportArtifactFiles,
   selectAlphaTag,
   selectReleaseTag,
   updateVersionStateContents,
@@ -84,6 +85,24 @@ const {
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SHA = "a".repeat(40);
 const OTHER_SHA = "b".repeat(40);
+
+test("durable release passport state excludes binary release assets", () => {
+  const outputDir = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-release-passport-"));
+  fs.writeFileSync(path.join(outputDir, "buildchain.release.json"), "{}\n");
+  fs.writeFileSync(path.join(outputDir, "SHA256SUMS"), `${"a".repeat(64)}  agent-hub-demo-linux-x64\n`);
+  fs.writeFileSync(path.join(outputDir, "agent-hub-demo-linux-x64.sha256"), `${"a".repeat(64)}\n`);
+  fs.writeFileSync(path.join(outputDir, "agent-hub-demo-linux-x64"), Buffer.from([0, 255, 1, 254]));
+  fs.writeFileSync(path.join(outputDir, "agent-hub-demo-windows-x64.exe"), Buffer.from([77, 90, 0, 255]));
+
+  assert.deepEqual(
+    releasePassportArtifactFiles(outputDir).map((entry) => entry.path),
+    [
+      "release-passport/agent-hub-demo-linux-x64.sha256",
+      "release-passport/buildchain.release.json",
+      "release-passport/SHA256SUMS",
+    ],
+  );
+});
 
 test("release governance preserves the emitted reusable workflow check context", () => {
   assert.equal(resolveProtectedStatusCheckContext({
