@@ -184,6 +184,118 @@ function groupIntervalSummary(events, field) {
   );
 }
 
+function laneId(event) {
+  if (event.attributes?.laneId) return String(event.attributes.laneId);
+  const platform = event.gate?.platform;
+  const partition = event.gate?.partition;
+  if (partition !== undefined) {
+    return `${platform || "unknown-platform"}/partition-${partition}`;
+  }
+  if (platform && event.gate?.id) return `${platform}/${event.gate.id}`;
+  return null;
+}
+
+function laneSummary(events) {
+  const lanes = new Map();
+  for (const event of events) {
+    const id = laneId(event);
+    if (!id) continue;
+    if (!lanes.has(id)) lanes.set(id, []);
+    lanes.get(id).push(event);
+  }
+  return [...lanes.entries()]
+    .map(([id, selected]) => {
+      const measured = selected.filter(
+        (event) => event.timing.measured && event.criticalPathEligible,
+      );
+      const intervals = measured.map(interval);
+      const starts = intervals.map(([start]) => start);
+      const ends = intervals.map(([, end]) => end);
+      const startedAtMs = starts.length ? Math.min(...starts) : null;
+      const completedAtMs = ends.length ? Math.max(...ends) : null;
+      return {
+        id,
+        eventCount: selected.length,
+        measuredEventCount: measured.length,
+        startedAt:
+          startedAtMs === null ? null : new Date(startedAtMs).toISOString(),
+        completedAt:
+          completedAtMs === null ? null : new Date(completedAtMs).toISOString(),
+        durationMs:
+          startedAtMs === null || completedAtMs === null
+            ? null
+            : completedAtMs - startedAtMs,
+        activeIntervalUnionMs: intervalUnionMs(intervals),
+      };
+    })
+    .sort((left, right) => left.id.localeCompare(right.id));
+}
+
+function optimizationSummary(events) {
+  const lanes = laneSummary(events);
+  const measuredLanes = lanes.filter((lane) => lane.durationMs !== null);
+  const orderedLanes = [...measuredLanes].sort(
+    (left, right) =>
+      right.durationMs - left.durationMs || left.id.localeCompare(right.id),
+  );
+  const actionable = events
+    .filter(
+      (event) =>
+        event.timing.measured &&
+        event.criticalPathEligible &&
+        !["queue", "workflow", "job", "runner-wait"].includes(event.category) &&
+        ![
+          "pr-admission",
+          "queue-residence",
+          "authoritative-build",
+          "gate-fanout",
+        ].includes(event.phase),
+    )
+    .sort(
+      (left, right) =>
+        right.timing.durationMs - left.timing.durationMs ||
+        left.id.localeCompare(right.id),
+    );
+  const cache = {};
+  for (const event of events) {
+    if (!event.cache?.layer || !event.cache?.outcome) continue;
+    const key = `${event.cache.layer}:${event.cache.outcome}`;
+    cache[key] = (cache[key] || 0) + 1;
+  }
+  const dominantSpans = actionable.slice(0, 10).map((event) =>
+    compactObject({
+      eventId: event.id,
+      phase: event.phase,
+      category: event.category,
+      durationMs: event.timing.durationMs,
+      lane: laneId(event),
+      gateId: event.gate?.id,
+    }),
+  );
+  const target = dominantSpans[0];
+  return {
+    lanes,
+    laneSkew: {
+      measuredLaneCount: measuredLanes.length,
+      slowestLane: orderedLanes[0]?.id || null,
+      fastestLane: orderedLanes.at(-1)?.id || null,
+      skewMs:
+        orderedLanes.length > 1
+          ? orderedLanes[0].durationMs - orderedLanes.at(-1).durationMs
+          : null,
+    },
+    cacheOutcomes: cache,
+    dominantSpans,
+    nextOptimizationTarget: target
+      ? {
+          ...target,
+          falsifier:
+            "Repeat the same source-bound cohort and reduce this span below the next measured span without increasing attempt elapsed time or failures.",
+        }
+      : null,
+  };
+}
+
 function attemptOrder(left, right) {
   const leftIndex = left.attempt.index;
   const rightIndex = right.attempt.index;
@@ -227,6 +339,7 @@ function summarizeAttempt(events) {
     measuredEventCount: ordered.filter((event) => event.timing.measured).length,
     phases: groupIntervalSummary(ordered, "phase"),
     categories: groupIntervalSummary(ordered, "category"),
+    optimization: optimizationSummary(ordered),
     criticalPath: {
       method: "attempt-wall-clock-envelope",
       status: unmeasured.length
@@ -344,6 +457,19 @@ export function formatCandidateTimelineReport(timeline) {
         `  phase=${phase} union=${summary.intervalUnionMs}ms measured=${summary.measuredEventCount}/${summary.eventCount}`,
       );
     }
+    const optimization = attempt.optimization;
+    lines.push(
+      `  lane-skew=${optimization.laneSkew.skewMs === null ? "unknown" : `${optimization.laneSkew.skewMs}ms`} slowest=${optimization.laneSkew.slowestLane || "unknown"}`,
+    );
+    const cache = Object.entries(optimization.cacheOutcomes)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, count]) => `${key}=${count}`)
+      .join(",");
+    lines.push(`  cache=${cache || "unobserved"}`);
+    const target = optimization.nextOptimizationTarget;
+    lines.push(
+      `  next-target=${target ? `${target.eventId} ${target.durationMs}ms` : "unobserved"}`,
+    );
   }
   return lines.join("\n");
 }

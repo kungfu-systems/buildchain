@@ -149,7 +149,7 @@
       "path": "docs/toolkit-observability.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:ed6c2d0a7e76a5e4fc3fbee635966e462947f748a52d88e515fe4f95a630ac91"
+      "digest": "sha256:b2ffc3b2520ca7879309b7607b2eaa1aceb647503e893887159a6916de14e2d7"
     },
     {
       "id": "site-bundle-contract",

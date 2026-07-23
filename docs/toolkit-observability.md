@@ -139,6 +139,15 @@ does not combine a failed or dequeued attempt with a later retry. Missing
 required measurements make that attempt `incomplete` instead of producing fake
 precision.
 
+Each attempt also reports measured execution lanes, lane skew, cache outcome
+counts, the ten longest actionable spans, and one falsifiable next optimization
+target. Queue residence, whole-workflow envelopes, and job parents are excluded
+from the actionable ranking so they cannot hide the build or qualification
+stage that can actually be changed. The target is an observation, not a causal
+claim: repeat the same source-bound cohort and disprove it by reducing that span
+below the next measured span without increasing attempt elapsed time or
+failures.
+
 Shell and workflow consumers can generate the same machine artifact plus a
 compact report:
 
