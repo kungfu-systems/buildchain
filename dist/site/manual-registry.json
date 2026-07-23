@@ -177,7 +177,7 @@
       "title": "Toolkit observability",
       "path": "docs/toolkit-observability.md",
       "plane": "use",
-      "digest": "sha256:239949a75ca81b6002a2e148f7028402dbd98c00e246acd8d0955855781206a1",
+      "digest": "sha256:ed6c2d0a7e76a5e4fc3fbee635966e462947f748a52d88e515fe4f95a630ac91",
       "capabilityGroup": "observability-diagnostics",
       "audience": [
         "developer",
