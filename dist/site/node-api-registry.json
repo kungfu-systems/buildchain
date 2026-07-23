@@ -112,7 +112,7 @@
       "specifier": "@kungfu-tech/buildchain/candidate-timeline",
       "export": "./candidate-timeline",
       "target": "./packages/core/candidate-timeline.js",
-      "digest": "sha256:d394d97d2165d2294ade84921e81e272c7d9e2a0a0673124531760f0fe428a1a",
+      "digest": "sha256:0b79dbbb523c7adbd969a0b4bec73d9adabf280319fc9a73b6912f4b95a9d6e8",
       "summary": "Source-bound candidate event normalization, per-attempt critical-path-safe aggregation, and compact reporting APIs.",
       "capabilityGroup": "observability-diagnostics",
       "audience": [
