@@ -202,6 +202,8 @@ export async function classifyWorkflowFriction({
   buildWorkflowName = DEFAULT_BUILD_WORKFLOW_NAME,
   releaseCandidateOutcome = env("BUILDCHAIN_RC_RESOLVE_OUTCOME"),
   releaseCandidateDiagnosis = env("BUILDCHAIN_RC_DIAGNOSIS"),
+  promotionOutcome = env("BUILDCHAIN_PROMOTION_OUTCOME"),
+  promotionDiagnosis = env("BUILDCHAIN_PROMOTION_DIAGNOSIS"),
   runUrl = env("BUILDCHAIN_WORKFLOW_RUN_URL"),
   outputDir = ".buildchain/workflow-friction",
   fetchImpl = globalThis.fetch,
@@ -256,14 +258,23 @@ export async function classifyWorkflowFriction({
   if (releaseCandidateOutcome === "failure") {
     diagnosisParts.push("Promotion reached the post-Verify workflow before required PR-stage RC evidence could be resolved.");
   }
-  if (releaseCandidateDiagnosis) {
+  if (releaseCandidateOutcome === "failure" && releaseCandidateDiagnosis) {
     diagnosisParts.push(releaseCandidateDiagnosis);
+  }
+  if (promotionOutcome === "failure") {
+    diagnosisParts.push(
+      promotionDiagnosis
+        ? `Promotion failed: ${promotionDiagnosis}`
+        : "Promotion failed after PR-stage release-candidate evidence resolved successfully.",
+    );
   }
   diagnosisParts.push(...workflowRunDiagnostics);
   const diagnosis = diagnosisParts.join(" ") || "Buildchain ref promotion failed after Verify succeeded; inspect the classified evidence and keep the fix in Buildchain.";
   const nextAction = frictionClass === "late-fail-fast"
     ? "Move the missing/stale RC evidence check earlier or make the promotion workflow consume the exact PR-stage RC passport before any publish side effect."
-    : "Deduplicate the PR/build path or tighten Buildchain workflow gates so the next channel promotion reaches publish exactly once.";
+    : ["duplicate-channel-pr", "duplicate-heavy-build"].includes(frictionClass)
+      ? "Deduplicate the PR/build path or tighten Buildchain workflow gates so the next channel promotion reaches publish exactly once."
+      : "Fix the concrete promotion failure above, then rerun through the protected channel workflow; do not treat successful RC resolution as the failure diagnosis.";
   fs.mkdirSync(outputDir, { recursive: true });
   const bodyFile = path.join(outputDir, "issue-body.md");
   const body = buildWorkflowFrictionBody({

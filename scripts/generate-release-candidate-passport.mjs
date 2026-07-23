@@ -25,6 +25,10 @@ export function generateReleaseCandidatePassportCli() {
     "BUILDCHAIN_RC_VERSION",
     buildSummary.publishSource?.consumerVersion || "",
   );
+  const gateAggregateJson = env("BUILDCHAIN_GATE_PROFILE_AGGREGATE_JSON");
+  const gateAggregate = gateAggregateJson ? JSON.parse(gateAggregateJson) : undefined;
+  const controllerReceiptJson = env("BUILDCHAIN_CONTROLLER_RECEIPT_JSON");
+  const controllerReceipts = controllerReceiptJson ? [JSON.parse(controllerReceiptJson)] : [];
   const passport = createReleaseCandidatePassport({
     repository: env("GITHUB_REPOSITORY", buildSummary.git?.repository || ""),
     pullRequest: {
@@ -46,6 +50,8 @@ export function generateReleaseCandidatePassportCli() {
       version: env("BUILDCHAIN_RUNTIME_VERSION"),
       workflowShellRef: env("BUILDCHAIN_WORKFLOW_SHELL_REF", buildSummary.runtime?.workflowShellRef || ""),
     },
+    gateAggregate,
+    controllerReceipts,
     workflow: {
       name: env("GITHUB_WORKFLOW"),
       runId: env("GITHUB_RUN_ID", buildSummary.git?.runId || ""),
@@ -73,6 +79,8 @@ export function generateReleaseCandidatePassportCli() {
       source: passport.source,
       candidateHash: passport.candidateHash,
       platformCount: passport.platformMatrix.length,
+      gateProfileEvidence: passport.gateProfileEvidence,
+      controllerReceipts: passport.controllerReceipts || [],
     }),
   });
   return passport;

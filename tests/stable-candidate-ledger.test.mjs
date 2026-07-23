@@ -88,6 +88,29 @@ test("candidate identity is immutable and promotion consumes the stable version"
   assert.match(state.candidates[1].decision.reason, /stable-version-promoted-by/);
 });
 
+test("published human promotion reconciles after refreshed checks stop qualifying", () => {
+  let state = register(ledger(), "2.12.0-alpha.4", SHA4, "2026-07-11T00:00:00Z");
+  const candidate = state.candidates[0];
+  candidate.promotionRequest = {
+    stableTag: "v2.12.0",
+    authority: "human",
+    requestedAt: "2026-07-11T01:00:00Z",
+  };
+  candidate.decision = {
+    reason: "checks-incomplete",
+    actor: "buildchain-patrol",
+    updatedAt: "2026-07-11T02:00:00Z",
+  };
+
+  state = markStableCandidatePromoted(state, "2.12.0-alpha.4", {
+    stableSha: "a".repeat(40),
+    now: "2026-07-11T03:00:00Z",
+  });
+
+  assert.equal(state.candidates[0].state, "promoted");
+  assert.equal(state.candidates[0].promotion.stableTag, "v2.12.0");
+});
+
 test("promotion refs freeze the exact qualified alpha tree", () => {
   assert.deepEqual(
     stableCandidatePromotionRefs({ version: "2.12.0-alpha.4" }, "release/v2/v2.12"),

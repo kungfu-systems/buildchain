@@ -182,38 +182,42 @@ on:
 
 jobs:
   paper-release:
-    uses: kungfu-systems/buildchain/.github/workflows/paper-release.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/paper-release-sealed.yml@v2
     permissions:
+      actions: read
       checks: write
       contents: write
       id-token: write
       issues: write
-    secrets:
-      BUILDCHAIN_PROMOTION_TOKEN: ${{ secrets.RELEASE_AUTHORITY_TOKEN }}
     with:
       buildchain-ref: ${{ inputs.buildchain-ref || '' }}
+      publisher-workflow-path: .github/workflows/paper-release.yml
       toolchain-type: config
       verify-command: make check
+      artifact-paths: _build/paper-name.pdf
       buildchain-contract-lock-path: .buildchain/contract-lock.json
+    secrets:
+      BUILDCHAIN_PROMOTION_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
 ```
 
-`RELEASE_AUTHORITY_TOKEN` is a caller-chosen release authority secret name.
-Map whichever repository or organization secret owns protected release
-bookkeeping into the reusable workflow's `BUILDCHAIN_PROMOTION_TOKEN` contract;
-the reusable workflow does not require that provider-side secret to use a
-specific name. Before it builds the paper, the workflow uses that authority to
-read the target channel's branch protection and fails with a configuration
-diagnostic if the protection is not readable. `github.token` remains a fallback
-for repositories where its permissions are sufficient.
+The sealed preset does not use a long-lived token for npm publication. It may
+accept an optional `BUILDCHAIN_PROMOTION_TOKEN` only for machine-generated
+version-state updates on protected channel branches; npm publication remains
+bound to GitHub OIDC trusted publishing. The preset builds and packages the
+paper in a read-only job, then a credential-free authority job downloads that
+exact candidate, audits the external control plane, and seals a capability over
+the source tree, Buildchain runtime, controller receipt, PDF, and npm package
+bytes. Only the final job receives write and OIDC permissions; it downloads the
+admitted candidate, recomputes the capability binding, and publishes without
+executing consumer build commands. npm binds the OIDC identity to the consumer
+workflow named by `publisher-workflow-path`.
 
 The preset:
 
-- resolves the same floating Buildchain runtime and contract lock as the build
-  workflow;
-- verifies that the declared promotion authority can read the protected target
-  channel before starting the publication build;
+- resolves the floating Buildchain runtime once and binds the exact SHA into the
+  publication candidate and authority capability;
 - builds the PDF through the declared pinned LaTeX Docker toolchain or custom
-  command;
+  command in a read-only job;
 - verifies the paper repository;
 - writes the publication manifest, publication passport, optional archive
   registry, and source bundle;
@@ -224,13 +228,21 @@ The preset:
 - creates a `publish-gate/<alpha|release>/.../<version>` source lock for the
   channel commit and requires `promote-buildchain-ref` to verify that lock
   before any publish side effect;
-- publishes the package through npm Trusted Publishing;
+- verifies the complete candidate again after authority and publishes the
+  package through npm Trusted Publishing without rebuilding it;
 - writes Buildchain release/passport evidence; and
-- creates or updates the exact-version GitHub Release by default.
+- creates or updates the exact-version GitHub Release by default, uploading
+  every file declared by `publication.primary_artifact` and
+  `publication.artifact_paths` alongside the release evidence.
 
 Consumers can opt out of the GitHub Release with `github-release: false`, but
 the default is on so downstream release propagation can observe
 `release.published` without hand-written `gh release` steps.
+
+Declared publication artifacts are resolved from the generated publication
+manifest rather than repeated in consumer workflow YAML. Publication fails
+before upload if a declared artifact is missing or if its basename would
+collide with another GitHub Release asset.
 
 For npm Trusted Publishing, register the consumer workflow file that calls this
 preset, for example `.github/workflows/paper-release.yml`, against the declared

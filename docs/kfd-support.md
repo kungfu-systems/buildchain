@@ -7,8 +7,8 @@ facts, not as README prose. The machine-readable sources are:
   collaboration surfaces;
 - `dist/site/public-surface-audit.json` for reverse enumeration of exposed CLI,
   workflow, action, site, and documented command surfaces;
-- `buildchain.release.json` for release-specific KFD-1, KFD-2, and KFD-3
-  passport results;
+- `buildchain.release.json` for release-specific KFD-1, KFD-2, KFD-3, KFD-7,
+  and KFD Agent Runtime Passport results;
 - `.buildchain/buildchain.toml` for repository-owned Buildchain configuration;
 - `.buildchain/kfd/kfd-2/registry.json` for product-owned KFD-2 public claim
   declarations;
@@ -43,7 +43,11 @@ buildchain kfd 3 query buildchain --json
 buildchain kfd 4 schema --json
 ```
 
-KFD-1, KFD-2, and KFD-3 have concrete Buildchain workflows. KFD-4 is currently
+KFD-1, KFD-2, and KFD-3 have concrete Buildchain namespace workflows. KFD-7
+and the KFD Agent Runtime Profile have concrete release-passport gates exposed
+by `collect github-release` and the public
+`@kungfu-tech/buildchain/kfd7-release-gate` and
+`@kungfu-tech/buildchain/kfd-agent-runtime-passport` APIs. KFD-4 is currently
 schema-only in Buildchain: agents can discover and read the KFD-4 schema from
 `@kungfu-tech/kfd`, but Buildchain does not claim KFD-4 verification.
 
@@ -278,6 +282,60 @@ The second layer is product surface registration. Products can ask Buildchain to
 detect standard public surfaces, write a small product-owned registry, audit the
 registry against the current artifact/source tree, generate a release-passport
 compatible witness, and query the resulting capability map.
+
+## KFD-7
+
+KFD-7 release gates validate product-owned work Profile declarations without
+copying their workflow implementation into Buildchain. A declaration passed via
+`buildchain collect github-release --kfd-7-declaration-json <path>` must bind:
+
+- the exact product source SHA and KFD-verified action contract;
+- matching source and released artifact surfaces;
+- retained positive and negative transition reports;
+- role deletion or fusion, export/import/rebuild, backend migration,
+  concurrency/retry/compensation, Warrant decay or revocation, Atlas staleness
+  or loss, Pursuit continuity and settlement, Episode replay and contraction,
+  cold-start continuation, session round-trip refinement, session complexity
+  breakpoint, and context-insufficiency counterexample reports;
+- KFD-2 residual-risk vocabulary, responsibility owners, and explicit
+  non-claims.
+
+The gate records `pass`, `warning`, or `fail`. Provisional and non-activated
+Profiles remain warnings even when their retained evidence is internally
+complete. Buildchain verifies engineering-contract evidence closure; it does
+not claim to measure real-world task quality.
+
+Buildchain also dogfoods KFD-7 through the public
+`@kungfu-tech/buildchain/kfd7-buildchain-profile` projection. It reads the
+existing release candidate passport, release transaction, and publication
+admission authorities as one release-transaction Profile with stable Fact,
+Episode, Pursuit, Atlas, and Warrant roles. The projection owns no second state
+machine, store, credential, or publication authority; Buildchain's release
+lifecycle vocabulary remains product-owned.
+
+## KFD Agent Runtime Profile
+
+The KFD Agent Runtime Passport validates product-owned conformance evidence
+without importing the product's Hub topology or execution model. A product
+passes one or more witnesses with:
+
+```bash
+buildchain collect github-release \
+  --kfd-agent-runtime-witness-json .buildchain/kfd/agent-runtime/passport.witness.json
+```
+
+Each witness freezes the exact Profile manifest and suite vector roots, product
+source commit, required platform matrix, report digest, and released adapter
+artifact digest. Buildchain runs the report through the packaged offline
+`@kungfu-tech/kfd` WASM verifier and requires complete normative Core closure.
+Experimental vectors are recorded separately as non-normative evidence.
+
+Claims form an explicit ladder: `tested`, `independently-verified`,
+`reference-adopter`, and `externally-adopted`. Buildchain never promotes one
+level into another. The two adoption levels require distinct review/adopter
+evidence with public coordinates and exact roots; absence of that evidence
+fails the requested claim instead of turning local success into an ecosystem
+claim.
 
 ## Shifu Discovery and Distribution Declarations
 

@@ -94,6 +94,15 @@ configuration diagnostic instead of opening a post-publish human PR. Reusable
 wrapper callers should allow `checks: write` so the generated check is owned by
 GitHub Actions and matches the managed branch protection rule.
 
+Stable promotion also protects concurrent development work. The reusable
+wrapper checks out the exact current `dev/vN/vN.M` head as a reconciliation
+workspace. If next-alpha bookkeeping cannot fast-forward that branch, the
+action reruns the declared version-state generation and verification from that
+dev tree, creates a two-parent reconciliation commit from the regenerated
+files, and fails closed if the checkout moved before the mutation boundary.
+This prevents generated projections from an older release tree from replacing
+capabilities that reached dev while the release was in progress.
+
 For Buildchain-owned automation, callers may pass
 `branch-protection-bypass-apps`, `branch-protection-bypass-users`, or
 `branch-protection-bypass-teams`. The action still configures managed
@@ -238,7 +247,16 @@ BUILDCHAIN_RELEASE_SHA
 BUILDCHAIN_RELEASE_MATERIAL_SHA
 BUILDCHAIN_PUBLISH_TOOLING_SHA
 BUILDCHAIN_PUBLISH_EVIDENCE
+BUILDCHAIN_REQUIRED_ARTIFACTS
 ```
+
+`BUILDCHAIN_REQUIRED_ARTIFACTS` is the normalized requirement array after the
+action resolves a missing artifact `ref` to `BUILDCHAIN_VERSION`, or expands an
+optional `ref_template` containing exactly one `{version}`, and binds any
+declared provenance to the current release coordinate. Template expansion
+happens after exact version selection; ambiguous or unsupported templates fail
+before `lifecycle.publish`. Requirement descriptors may omit `digest`; final
+publish evidence may not.
 
 The action outputs `transaction-id`, `transaction-state`,
 `transaction-exact-tag`, `public-release-tag`, `transaction-release-sha`,
@@ -288,6 +306,20 @@ product-owned `release-passport-kfd-3-artifact-verify-command` such as
 `kungfu agent verify --json`. Buildchain compares declared shipped public
 surfaces with artifact-exposed public surfaces and writes the result under the
 KFD-provided `kfd-3` passport section.
+Set `release-passport-kfd-7-declaration-jsons` to newline-separated KFD-7
+engineering-contract declaration paths. Buildchain checks the frozen Profile,
+KFD verifier report, source/artifact surfaces, positive and negative transition
+evidence, required recovery/migration/continuation experiments, responsibility,
+residual risk, and non-claims. A valid provisional Profile remains a warning;
+missing or stale evidence fails closed.
+Set `release-passport-kfd-agent-runtime-witness-jsons` to newline-separated KFD
+Agent Runtime witness paths. Each witness binds exact Profile and suite roots,
+required platforms, Core results, adapter artifact digests, the exact product
+source commit, and an explicit claim level. Buildchain reruns the report through
+the packaged offline KFD WASM verifier and fails promotion if the evidence is
+stale, incomplete, producer-only, or asks for an adoption claim without
+distinct evidence. Experimental results are retained separately and are never
+treated as normative Core evidence.
 Buildchain's own release workflow sets `release-passport-buildchain-self-kfd:
 "true"`. In that mode the action generates Buildchain-owned KFD-1/2/3 witnesses
 inside the final version-state workspace, after the release transaction has
@@ -315,16 +347,29 @@ missing floating tags or dev/alpha refs before marking the transaction
 
 Normal reruns accept already-published artifacts only when evidence matches.
 Missing required artifacts can be published on the next run. Conflicting
-artifacts put the transaction into `repair_required`; `abandoned` and
+refs, digests, or declared provenance put the transaction into
+`repair_required`; `abandoned` and
 `failed_permanently` also fail closed unless `publish-transaction-override` is
-set for a controlled repair.
+set for a controlled repair. The same override may replace a stale transaction
+only when its version, exact tag, target ref, and channel are unchanged, the
+transaction is not complete, and it contains no published artifacts or
+evidence. This lets a newly admitted source retry a previously failed paper
+publication without weakening already-published facts.
 
 In strict buildchain promotion, ref movement is also gated by the old ABV
 governance semantics:
 
-- the target channel branch protection details must be readable, must enforce
-  protection for administrators, and must require approving PR review plus the
-  strict `check` job from the `Verify` workflow;
+- when detailed target branch protection is readable, it must enforce
+  protection for administrators and require approving PR review plus the strict
+  `check` job from the `Verify` workflow; when GitHub withholds that
+  administration endpoint from the workflow token, the exact transaction must
+  instead prove a protected current head, same-repository merged PR,
+  independent approval, and the required successful `check` from its configured
+  GitHub App;
+- post-publish channel reconciliation reuses an already qualifying
+  provider-enforced policy when the workflow token cannot read or rewrite the
+  administrative protection document, and fails closed if the public branch
+  summary no longer carries the required check for everyone;
 - alpha promotion must come from a merged same-repository PR
   `dev/vN/vN.M -> alpha/vN/vN.M`, or from a strict same-line
   `publish-gate/alpha/vN/vN.M/<version> -> alpha/vN/vN.M` source-lock PR;

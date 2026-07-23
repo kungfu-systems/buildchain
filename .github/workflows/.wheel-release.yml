@@ -19,7 +19,8 @@ on:
         AWS_USER_SECRET_ACCESS_KEY:
           required: false
   
-permissions: write-all
+permissions:
+  contents: read
   
 jobs:
     retired:

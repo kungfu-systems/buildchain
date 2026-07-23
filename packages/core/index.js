@@ -1,4 +1,21 @@
 export {
+  BUILDCHAIN_KFD7_ACTION_CONTRACT,
+  BUILDCHAIN_KFD7_PROFILE_ID,
+  BUILDCHAIN_KFD7_PROFILE_SCHEMA,
+  BUILDCHAIN_KFD7_ROLES,
+  BUILDCHAIN_KFD7_SESSION_COMPRESSIBILITY_SCHEMA,
+  BUILDCHAIN_KFD7_SESSION_EXPANSION_SCHEMA,
+  BUILDCHAIN_KFD7_SESSION_SCHEMA,
+  buildchainKfd7SessionCompressibility,
+  buildchainKfd7SessionValidActions,
+  createBuildchainKfd7ProfileSnapshot,
+  createBuildchainKfd7ReleaseSession,
+  expandBuildchainKfd7ReleaseSession,
+  projectBuildchainKfd7ReleaseSession,
+  validateBuildchainKfd7ProfileSnapshot,
+} from "./kfd7-buildchain-profile.js";
+
+export {
   discoverConfiguredVersionStateFiles,
   getLifecycleStage,
   getNativeDiagnosticsProfile,
@@ -133,6 +150,41 @@ export {
 } from "./publication-package.js";
 
 export {
+  PUBLICATION_ADMISSION_CONTRACT,
+  PUBLICATION_ARTIFACT_MANIFEST_SET_CONTRACT,
+  PUBLICATION_AUTHORITY_CLASSES,
+  PUBLICATION_AUTHORITY_REGISTRY_CONTRACT,
+  PUBLICATION_CAPABILITY_CONTRACT,
+  PUBLICATION_CONTROL_PLANE_AUDIT_CONTRACT,
+  PUBLICATION_GATE_DECISION_CONTRACT,
+  RUNNER_PROVENANCE_CLASSES,
+  RUNNER_PROVENANCE_CONTRACT,
+  createPublicationAuthorityRegistry,
+  createPublicationAdmission,
+  createPublicationArtifactManifestSet,
+  createPublicationControlPlaneAudit,
+  createPublicationGateDecision,
+  createRunnerProvenance,
+  detectPublicationAuthoritySignals,
+  publicationAuthorityDigest,
+  verifyPublicationAdmission,
+} from "./publication-authority.js";
+
+export {
+  PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT,
+  createPublicationArtifactCandidate,
+  publicationArtifactCandidateDigest,
+  resolvePublicationCandidateFile,
+} from "./publication-artifact-candidate.js";
+
+export {
+  buildchainPublicationAuthorityDescriptors,
+  createBuildchainPublicationAuthorityRegistry,
+} from "./buildchain-publication-authority.js";
+
+export { evaluatePublicationControlPlaneSnapshot } from "./publication-control-plane-audit.js";
+
+export {
   ARTIFACT_PASSPORT_LOCATOR_CONTRACT,
   ARTIFACT_PASSPORT_POINTER_CONTRACT,
   ARTIFACT_VERIFICATION_CONTRACT,
@@ -159,6 +211,23 @@ export {
 } from "./buildchain-contract.js";
 
 export {
+  BUILDCHAIN_CONTROLLER_AGGREGATE_CONTRACT,
+  BUILDCHAIN_CONTROLLER_DESCRIPTOR_CONTRACT,
+  BUILDCHAIN_CONTROLLER_EVIDENCE_CONTRACT,
+  BUILDCHAIN_CONTROLLER_REGISTRY_CONTRACT,
+  aggregateControllerReceipts,
+  controllerEvidenceDigest,
+  createControllerPlan,
+  createControllerReceipt,
+  createControllerReceiptReference,
+  createControllerRegistry,
+  normalizeControllerReceiptReferences,
+  validateControllerPlan,
+  validateControllerReceipt,
+  validateControllerReceiptReference,
+} from "./controller-evidence.js";
+
+export {
   planReleaseLineBootstrap,
   writeReleaseLineBootstrapVersionState,
 } from "./release-line-bootstrap.js";
@@ -181,6 +250,14 @@ export {
   validateKfd1ReleaseGateEvidence,
   validateKfd3CollaborationInterfaceReleaseGateEvidence,
 } from "./kfd-gate.js";
+
+export {
+  KFD7_EVIDENCE_REPORT_CONTRACT,
+  KFD7_RELEASE_GATE_CONTRACT,
+  KFD7_RELEASE_GATE_INPUT_CONTRACT,
+  createKfd7ReleaseGateEvidence,
+  validateKfd7ReleaseGateEvidence,
+} from "./kfd7-release-gate.js";
 
 export {
   BUILDCHAIN_AGENT_MANUALS,
@@ -386,3 +463,12 @@ export {
   applySurfaceTimestampPolicy,
   createSurfaceTimestampPolicy,
 } from "./surface-manifest.js";
+
+export {
+  KFD_AGENT_RUNTIME_CLAIM_LEVELS,
+  KFD_AGENT_RUNTIME_PASSPORT_CONTRACT,
+  KFD_AGENT_RUNTIME_SECTION_KEY,
+  KFD_AGENT_RUNTIME_WITNESS_CONTRACT,
+  createKfdAgentRuntimePassportEvidence,
+  validateKfdAgentRuntimePassportEvidence,
+} from "./kfd-agent-runtime-passport.js";

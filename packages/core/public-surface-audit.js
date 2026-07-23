@@ -108,6 +108,38 @@ export function enumerateCliCommandsFromBin({ root = process.cwd(), binPath = "b
   }));
 }
 
+function parseYamlWorkflowCall(text) {
+  const lines = text.split(/\r?\n/);
+  const result = { reusable: false, inputs: [], secrets: [], outputs: [] };
+  const workflowCallIndex = lines.findIndex((line) => /^(\s*)workflow_call:\s*$/.test(line));
+  if (workflowCallIndex === -1) return result;
+  result.reusable = true;
+  const workflowCallIndent = lines[workflowCallIndex].match(/^(\s*)/)?.[1].length || 0;
+  let section = "";
+  for (const line of lines.slice(workflowCallIndex + 1)) {
+    const currentIndent = line.match(/^(\s*)/)?.[1].length || 0;
+    if (line.trim() && currentIndent <= workflowCallIndent) break;
+    const sectionMatch = line.match(new RegExp(`^\\s{${workflowCallIndent + 2}}(inputs|secrets|outputs):\\s*$`));
+    if (sectionMatch) {
+      section = sectionMatch[1];
+      continue;
+    }
+    if (line.trim() && currentIndent <= workflowCallIndent + 2) {
+      section = "";
+      continue;
+    }
+    if (!section) continue;
+    const fieldMatch = line.match(new RegExp(`^\\s{${workflowCallIndent + 4}}([A-Za-z0-9_-]+):\\s*$`));
+    if (fieldMatch) result[section].push(fieldMatch[1]);
+  }
+  return {
+    reusable: result.reusable,
+    inputs: uniqueSorted(result.inputs),
+    secrets: uniqueSorted(result.secrets),
+    outputs: uniqueSorted(result.outputs),
+  };
+}
+
 function parseYamlTopLevelInputs(text) {
   const lines = text.split(/\r?\n/);
   const inputs = [];
@@ -134,12 +166,17 @@ function parseYamlTopLevelInputs(text) {
 
 export function enumerateWorkflowInputs({ root = process.cwd() } = {}) {
   return listFiles(root, ".github/workflows", (name) => /\.ya?ml$/.test(name)).map((relPath) => {
-    const inputs = parseYamlTopLevelInputs(readText(root, relPath));
+    const contract = parseYamlWorkflowCall(readText(root, relPath));
     return {
       id: relPath.replace(/^\.github\/workflows\//, "").replace(/\.ya?ml$/, ""),
       path: relPath,
-      inputs,
-      inputCount: inputs.length,
+      reusable: contract.reusable,
+      inputs: contract.inputs,
+      inputCount: contract.inputs.length,
+      secrets: contract.secrets,
+      secretCount: contract.secrets.length,
+      outputs: contract.outputs,
+      outputCount: contract.outputs.length,
     };
   });
 }

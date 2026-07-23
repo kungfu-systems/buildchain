@@ -1,6 +1,8 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { createControllerRegistry } from "./controller-evidence.js";
+import { enumerateWorkflowInputs } from "./public-surface-audit.js";
 
 export const BUILDCHAIN_RUNTIME_CONTRACT_WORLD = "kungfu-buildchain-runtime-contract-world";
 export const BUILDCHAIN_CONTRACT_LOCK = "kungfu-buildchain-contract-lock";
@@ -70,9 +72,31 @@ function majorLineFromPackageVersion(version = "") {
   return match ? `v${match[1]}` : "v2";
 }
 
-export function createBuildchainContractWorld({ root = process.cwd(), packageJson = undefined } = {}) {
+export function createBuildchainContractWorld({
+  root = process.cwd(),
+  packageJson = undefined,
+  controllerRegistry = undefined,
+} = {}) {
   const pkg = packageJson || readJson(path.join(root, "package.json"), {});
   const majorLine = majorLineFromPackageVersion(pkg.version);
+  const workflowDescriptors = controllerRegistry ? [] : enumerateWorkflowInputs({ root });
+  const controllerWorkflowIds = new Set([
+    "check",
+    ".build",
+    "build",
+    ".gate-profile",
+    ".web-surface",
+    "publication-artifact",
+    "paper-release",
+    "release-candidate-promote",
+    "release-propagation",
+  ]);
+  const hasCompleteControllerSource = [...controllerWorkflowIds]
+    .every((id) => workflowDescriptors.some((workflow) => workflow.id === id));
+  const resolvedControllerRegistry = controllerRegistry
+    || (hasCompleteControllerSource
+      ? createControllerRegistry({ workflows: workflowDescriptors })
+      : readJson(path.join(root, "dist/site/controller-registry.json"), { controllers: [] }));
   const surfaces = [
     surface(root, {
       id: "reusable-build",
@@ -168,6 +192,23 @@ export function createBuildchainContractWorld({ root = process.cwd(), packageJso
         "github-release-title",
         "github-release-notes",
       ],
+      publishArtifactSchema: {
+        requirementDigest: "optional-before-publish-required-after-publish",
+        exactRefResolution: "missing requirement refs resolve to the promoted exact version",
+        exactRefTemplate: "optional ref_template expands one {version} after exact version selection",
+        provenanceActions: ["built", "reused"],
+        provenanceCoordinates: ["content", "release"],
+        verificationFields: [
+          "public_manifest",
+          "ref",
+          "digest",
+          "platform",
+          "contract_major",
+          "parent_digest",
+          "smoke",
+          "evidence",
+        ],
+      },
       guarantees: [
         "promotion reuses PR-stage release-candidate artifacts",
         "promotion does not run the heavy native build matrix",
@@ -241,6 +282,23 @@ export function createBuildchainContractWorld({ root = process.cwd(), packageJso
         "github-release-title",
         "github-release-notes",
       ],
+      publishArtifactSchema: {
+        requirementDigest: "optional-before-publish-required-after-publish",
+        exactRefResolution: "missing requirement refs resolve to the promoted exact version",
+        exactRefTemplate: "optional ref_template expands one {version} after exact version selection",
+        provenanceActions: ["built", "reused"],
+        provenanceCoordinates: ["content", "release"],
+        verificationFields: [
+          "public_manifest",
+          "ref",
+          "digest",
+          "platform",
+          "contract_major",
+          "parent_digest",
+          "smoke",
+          "evidence",
+        ],
+      },
       guarantees: [
         "protected release refs and durable release-state are finalized by Buildchain",
         "release passport finalization is idempotent after publish side effects",
@@ -442,6 +500,43 @@ export function createBuildchainContractWorld({ root = process.cwd(), packageJso
       ],
     }),
   ];
+  for (const descriptor of resolvedControllerRegistry.controllers) {
+    surfaces.push(surface(root, {
+      id: `controller:${descriptor.id}`,
+      kind: "controller",
+      path: descriptor.workflow.path,
+      requiredInputs: [],
+      requiredOutputs: [
+        "controller-plan-json",
+        "controller-plan-digest",
+        "controller-receipt-json",
+        "controller-receipt-digest",
+        "controller-receipt-status",
+      ],
+      breakingDefaults: {
+        evidenceContract: "buildchain.controller-evidence/v1",
+        descriptorVersion: descriptor.version,
+        workflowPath: descriptor.workflow.path,
+        requiredStages: descriptor.expected.stages.filter((stage) => stage.required).map((stage) => stage.id),
+        capabilities: descriptor.expected.capabilities,
+        evidenceRequirements: descriptor.expected.evidence,
+        inputClassificationPolicy: "buildchain-controller-input-policy/v1",
+      },
+      optionalInputs: Object.keys(descriptor.inputs),
+      controllerDescriptor: {
+        contract: descriptor.contract,
+        digest: descriptor.digest,
+        registryDigest: resolvedControllerRegistry.digest,
+        inputClassifications: descriptor.inputs,
+      },
+      guarantees: [
+        "plans bind exact consumer source SHA, exact Buildchain runtime SHA, and the runtime contract digest",
+        "receipts bind the plan digest and preserve pass, fail, skip, and partial stage outcomes",
+        "redacted input values are never serialized and digest-only input values are never emitted in plaintext",
+        "missing receipts are non-qualifying and must not be represented as a successful controller run",
+      ],
+    }));
+  }
   const base = {
     schemaVersion: 1,
     contract: BUILDCHAIN_RUNTIME_CONTRACT_WORLD,

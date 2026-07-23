@@ -1,0 +1,379 @@
+name: Buildchain Sealed Paper Release
+
+on:
+  workflow_call:
+    inputs:
+      buildchain-repository:
+        default: "kungfu-systems/buildchain"
+        type: string
+        required: false
+      buildchain-ref:
+        description: "Official floating Buildchain channel or trusted manual override"
+        default: ""
+        type: string
+        required: false
+      buildchain-contract-lock-path:
+        default: ".buildchain/contract-lock.json"
+        type: string
+        required: false
+      working-directory:
+        default: "."
+        type: string
+        required: false
+      toolchain-type:
+        default: "config"
+        type: string
+        required: false
+      verify-command:
+        default: "make check"
+        type: string
+        required: false
+      package-name:
+        default: ""
+        type: string
+        required: false
+      publish-dist-tag:
+        default: ""
+        type: string
+        required: false
+      target-ref:
+        default: ""
+        type: string
+        required: false
+      target-sha:
+        default: ""
+        type: string
+        required: false
+      publisher-workflow-path:
+        description: "Repository-local workflow path configured as the npm trusted publisher"
+        default: ".github/workflows/paper-release.yml"
+        type: string
+        required: false
+      artifact-name:
+        default: "paper-publication"
+        type: string
+        required: false
+      artifact-paths:
+        description: "Declared release assets in addition to Buildchain publication evidence and npm package bytes"
+        default: "_build/*.pdf"
+        type: string
+        required: false
+      artifact-retention-days:
+        default: 30
+        type: number
+        required: false
+      required-status-check:
+        default: "check / check"
+        type: string
+        required: false
+      branch-protection-bypass-apps:
+        default: "github-actions"
+        type: string
+        required: false
+      branch-protection-bypass-users:
+        default: ""
+        type: string
+        required: false
+      branch-protection-bypass-teams:
+        default: ""
+        type: string
+        required: false
+      github-release:
+        default: true
+        type: boolean
+        required: false
+      github-release-title:
+        default: ""
+        type: string
+        required: false
+      github-release-notes:
+        default: ""
+        type: string
+        required: false
+      release-passport-output-dir:
+        default: ".buildchain/release-passport"
+        type: string
+        required: false
+      release-passport-product-name:
+        default: ""
+        type: string
+        required: false
+      release-passport-impact-json:
+        default: ""
+        type: string
+        required: false
+      dry-run:
+        default: false
+        type: boolean
+        required: false
+    secrets:
+      BUILDCHAIN_PROMOTION_TOKEN:
+        description: "Optional bypass-capable token used only for generated protected ref updates"
+        required: false
+    outputs:
+      package-name:
+        value: ${{ jobs.publish.outputs.package-name }}
+      package-version:
+        value: ${{ jobs.publish.outputs.package-version }}
+      public-release-tag:
+        value: ${{ jobs.publish.outputs.public-release-tag }}
+      release-passport-path:
+        value: ${{ jobs.publish.outputs.release-passport-path }}
+      github-release-url:
+        value: ${{ jobs.publish.outputs.github-release-url }}
+
+permissions:
+  contents: read
+
+jobs:
+  publication-candidate:
+    name: Build read-only paper publication candidate
+    permissions:
+      contents: read
+      issues: write
+    uses: ./.github/workflows/publication-artifact.yml
+    with:
+      buildchain-repository: ${{ inputs.buildchain-repository }}
+      buildchain-ref: ${{ inputs.buildchain-ref }}
+      buildchain-contract-lock-path: ${{ inputs.buildchain-contract-lock-path }}
+      working-directory: ${{ inputs.working-directory }}
+      toolchain-type: ${{ inputs.toolchain-type }}
+      verify-command: ${{ inputs.verify-command }}
+      prepare-paper-package: true
+      package-name: ${{ inputs.package-name }}
+      publish-dist-tag: ${{ inputs.publish-dist-tag }}
+      target-ref: ${{ inputs.target-ref || github.ref_name }}
+      artifact-name: ${{ inputs.artifact-name }}
+      artifact-paths: ${{ inputs.artifact-paths }}
+      artifact-retention-days: ${{ inputs.artifact-retention-days }}
+
+  publication-authority:
+    name: Seal exact paper publication capability
+    needs: publication-candidate
+    permissions:
+      actions: read
+      contents: read
+    uses: ./.github/workflows/.publication-authority.yml
+    with:
+      buildchain-repository: ${{ inputs.buildchain-repository }}
+      buildchain-ref: ${{ needs.publication-candidate.outputs.runtime-sha }}
+      auto-admission: true
+      auto-admission-kind: publication-artifact
+      authority-workflow-path: .github/workflows/paper-release-sealed.yml
+      source-sha: ${{ inputs.target-sha || github.sha }}
+      target-ref: ${{ inputs.target-ref || github.ref_name }}
+      publisher-workflow-path: ${{ inputs.publisher-workflow-path }}
+      required-status-check: ${{ inputs.required-status-check }}
+      product: ${{ inputs.release-passport-product-name || needs.publication-candidate.outputs.package-name }}
+      publication-target: npm:${{ needs.publication-candidate.outputs.package-name }}
+      publication-version: ${{ needs.publication-candidate.outputs.package-version }}
+      package-name: ${{ needs.publication-candidate.outputs.package-name }}
+      evidence-repository: ${{ github.repository }}
+      evidence-run-id: ${{ github.run_id }}
+      evidence-publication-artifact: ${{ needs.publication-candidate.outputs.publication-artifact-name }}
+      evidence-controller-artifact: ${{ needs.publication-candidate.outputs.controller-receipt-artifact }}
+      dry-run: ${{ inputs.dry-run }}
+
+  publish:
+    name: Publish admitted paper candidate
+    needs: [publication-candidate, publication-authority]
+    if: ${{ needs.publication-authority.result == 'success' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      checks: write
+      contents: write
+      id-token: write
+      issues: write
+    outputs:
+      package-name: ${{ steps.candidate.outputs.package-name }}
+      package-version: ${{ steps.candidate.outputs.package-version }}
+      public-release-tag: ${{ steps.promote.outputs.public-release-tag }}
+      release-passport-path: ${{ steps.promote.outputs.release-passport-path }}
+      github-release-url: ${{ steps.promote.outputs.github-release-url }}
+    steps:
+      - name: Setup trusted-publishing Node.js
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "24"
+
+      - name: Checkout exact admitted source
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ inputs.target-sha || github.sha }}
+          clean: true
+          persist-credentials: false
+
+      - name: Checkout exact admitted Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.publication-candidate.outputs.runtime-sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Download admitted publication candidate
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ needs.publication-candidate.outputs.publication-artifact-name }}
+          path: .buildchain/admitted/artifact
+
+      - name: Download admitted publication controller receipt
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ needs.publication-candidate.outputs.controller-receipt-artifact }}
+          path: .buildchain/admitted/controller
+
+      - name: Verify candidate bytes against sealed capability
+        id: candidate
+        env:
+          BUILDCHAIN_CAPABILITY_JSON: ${{ needs.publication-authority.outputs.capability-json }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.publication-candidate.outputs.runtime-sha }}
+          BUILDCHAIN_PACKAGE_NAME: ${{ needs.publication-candidate.outputs.package-name }}
+          BUILDCHAIN_PACKAGE_VERSION: ${{ needs.publication-candidate.outputs.package-version }}
+          BUILDCHAIN_DIST_TAG: ${{ needs.publication-candidate.outputs.publish-dist-tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+          import path from "node:path";
+          import { execFileSync } from "node:child_process";
+          import {
+            buildPublicationArtifactCandidate,
+            resolvePublicationCandidateFile,
+          } from "./.buildchain/runtime/scripts/publication-artifact-candidate.mjs";
+
+          const root = ".buildchain/admitted/artifact";
+          const sourceSha = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim().toLowerCase();
+          const sourceTreeSha = execFileSync("git", ["rev-parse", "HEAD^{tree}"], { encoding: "utf8" }).trim().toLowerCase();
+          const bundle = buildPublicationArtifactCandidate({
+            artifactRoot: root,
+            controllerRoot: ".buildchain/admitted/controller",
+            repository: process.env.GITHUB_REPOSITORY,
+            sourceSha,
+            sourceTreeSha,
+            runtimeSha: process.env.BUILDCHAIN_RUNTIME_SHA,
+          });
+          const capability = JSON.parse(process.env.BUILDCHAIN_CAPABILITY_JSON);
+          if (capability.decision !== "allow" || capability.artifactDigest !== bundle.candidate.candidateDigest) {
+            throw new Error("downloaded publication candidate does not match the sealed publication capability");
+          }
+          const exactPath = (candidatePath) => path.resolve(
+            root,
+            resolvePublicationCandidateFile(bundle.evidence.files, candidatePath),
+          );
+          const packageResultPath = exactPath(".buildchain/paper-release/package-result.json");
+          const packageResult = JSON.parse(fs.readFileSync(packageResultPath, "utf8"));
+          const packageJsonPath = exactPath(".buildchain/publication/npm-package/package.json");
+          const packageDir = path.dirname(packageJsonPath);
+          const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+          if (packageJson.name !== process.env.BUILDCHAIN_PACKAGE_NAME || packageJson.version !== process.env.BUILDCHAIN_PACKAGE_VERSION) {
+            throw new Error("prepared npm package identity differs from the admitted publication plan");
+          }
+          const manifestPath = exactPath(".buildchain/publication/publication-artifact.json");
+          const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+          const releaseAssets = (manifest.artifacts || []).map((entry) => exactPath(entry.path));
+          const requiredArtifactsPath = exactPath(".buildchain/paper-release/publish-required-artifacts.json");
+          const buildSummaryPath = exactPath(".buildchain/paper-release/build-summary.json");
+          const output = fs.createWriteStream(process.env.GITHUB_OUTPUT, { flags: "a" });
+          output.write(`package-dir=${packageDir}\n`);
+          output.write(`package-name=${packageJson.name}\n`);
+          output.write(`package-version=${packageJson.version}\n`);
+          output.write(`dist-tag=${process.env.BUILDCHAIN_DIST_TAG}\n`);
+          output.write(`exact-tag=v${packageJson.version}\n`);
+          output.write(`manifest-path=${manifestPath}\n`);
+          output.write(`build-summary-path=${buildSummaryPath}\n`);
+          output.write(`required-artifacts-json=${JSON.stringify(JSON.parse(fs.readFileSync(requiredArtifactsPath, "utf8")))}\n`);
+          const marker = `EOF_ASSETS_${Date.now()}`;
+          output.write(`github-release-artifact-paths<<${marker}\n${releaseAssets.join("\n")}\n${marker}\n`);
+          output.end();
+          void packageResult;
+          NODE
+
+      - name: Resolve protected publication target
+        id: target
+        env:
+          INPUT_TARGET_REF: ${{ inputs.target-ref }}
+          INPUT_TARGET_SHA: ${{ inputs.target-sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          target_ref="${INPUT_TARGET_REF:-${GITHUB_REF_NAME}}"
+          target_sha="${INPUT_TARGET_SHA:-${GITHUB_SHA}}"
+          case "$target_ref" in
+            alpha/*) channel="alpha" ;;
+            release/*) channel="release" ;;
+            *) echo "::error::sealed paper release requires alpha/* or release/* target, got $target_ref"; exit 1 ;;
+          esac
+          test "$(git rev-parse HEAD)" = "$target_sha"
+          printf 'ref=%s\nsha=%s\nchannel=%s\n' "$target_ref" "$target_sha" "$channel" >> "$GITHUB_OUTPUT"
+
+      - name: Ensure publish-gate ref locks admitted commit
+        id: publish-gate
+        uses: actions/github-script@v8
+        env:
+          CHANNEL: ${{ steps.target.outputs.channel }}
+          TARGET_REF: ${{ steps.target.outputs.ref }}
+          TARGET_SHA: ${{ steps.target.outputs.sha }}
+          VERSION: ${{ steps.candidate.outputs.package-version }}
+        with:
+          script: |
+            const gateRef = `publish-gate/${process.env.CHANNEL}/${process.env.TARGET_REF.replace(/^(alpha|release)\//, "")}/${process.env.VERSION}`;
+            const ref = `heads/${gateRef}`;
+            try {
+              const current = await github.rest.git.getRef({ owner: context.repo.owner, repo: context.repo.repo, ref });
+              if (current.data.object.sha !== process.env.TARGET_SHA) {
+                await github.rest.git.updateRef({ owner: context.repo.owner, repo: context.repo.repo, ref, sha: process.env.TARGET_SHA, force: true });
+              }
+            } catch (error) {
+              if (error.status !== 404) throw error;
+              await github.rest.git.createRef({ owner: context.repo.owner, repo: context.repo.repo, ref: `refs/${ref}`, sha: process.env.TARGET_SHA });
+            }
+            core.setOutput("ref", gateRef);
+            core.setOutput("sha", process.env.TARGET_SHA);
+            core.setOutput("locked", "true");
+
+      - name: Publish admitted npm package and GitHub Release assets
+        id: promote
+        uses: ./.buildchain/runtime/actions/promote-buildchain-ref
+        with:
+          token: ${{ github.token }}
+          sha: ${{ steps.target.outputs.sha }}
+          target-ref: ${{ steps.target.outputs.ref }}
+          tags: ${{ steps.candidate.outputs.exact-tag }}
+          dry-run: ${{ inputs.dry-run }}
+          require-governance: "true"
+          require-version-state: "false"
+          required-status-check: ${{ inputs.required-status-check }}
+          generated-status-check-token: ${{ github.token }}
+          generated-ref-update-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+          branch-protection-bypass-apps: ${{ inputs.branch-protection-bypass-apps }}
+          branch-protection-bypass-users: ${{ inputs.branch-protection-bypass-users }}
+          branch-protection-bypass-teams: ${{ inputs.branch-protection-bypass-teams }}
+          allow-repository: ${{ github.repository }}
+          publish-transaction: "true"
+          publish-command: >-
+            node "${{ github.workspace }}/.buildchain/runtime/scripts/npm-publish-transaction.mjs"
+            --cwd "${{ steps.candidate.outputs.package-dir }}"
+          publish-required-artifacts-json: ${{ steps.candidate.outputs.required-artifacts-json }}
+          publish-mode: "publish-final-version"
+          publish-auth: "trusted-publishing"
+          publish-dist-tag: ${{ steps.candidate.outputs.dist-tag }}
+          publish-package-set-order: "as-provided"
+          publish-package-main: ${{ steps.candidate.outputs.package-name }}
+          require-publish-source-lock: "true"
+          publish-source-ref: ${{ steps.publish-gate.outputs.ref }}
+          publish-source-sha: ${{ steps.publish-gate.outputs.sha }}
+          publish-source-locked: ${{ steps.publish-gate.outputs.locked }}
+          publish-transaction-override: "true"
+          release-passport: "true"
+          release-passport-output-dir: ${{ inputs.release-passport-output-dir }}
+          release-passport-product-name: ${{ inputs.release-passport-product-name || steps.candidate.outputs.package-name }}
+          release-passport-build-summary-path: ${{ steps.candidate.outputs.build-summary-path }}
+          release-passport-platform-manifest-paths: ${{ steps.candidate.outputs.manifest-path }}
+          release-passport-impact-json: ${{ inputs.release-passport-impact-json }}
+          github-release: ${{ inputs.github-release }}
+          github-release-artifact-paths: ${{ steps.candidate.outputs.github-release-artifact-paths }}
+          github-release-title: ${{ inputs.github-release-title }}
+          github-release-notes: ${{ inputs.github-release-notes }}

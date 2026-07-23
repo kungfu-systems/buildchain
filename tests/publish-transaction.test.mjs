@@ -12,7 +12,9 @@ import {
   defaultReleaseStatePath,
   planArtifactPublish,
   planTransactionRecovery,
+  parsePublishArtifactsJson,
   readReleaseTransaction,
+  resolvePublishArtifactRequirements,
   transitionReleaseTransaction,
   validatePublishEvidence,
   writeReleaseTransaction,
@@ -108,6 +110,176 @@ test("artifact publish plan resumes missing artifacts and requires repair on con
   assert.deepEqual(plan.publish.map((artifact) => artifact.name), ["darwin-arm64"]);
   assert.equal(plan.conflicts.length, 1);
   assert.equal(plan.repairRequired, true);
+});
+
+test("post-publish requirements resolve the exact release ref without inventing a digest", () => {
+  const requiredArtifacts = resolvePublishArtifactRequirements([
+    { group: "image", kind: "oci", name: "ghcr.io/kungfu-systems/base-linux" },
+    { group: "image", kind: "oci", name: "ghcr.io/kungfu-systems/node24-pnpm" },
+  ], {
+    version: "1.2.0-alpha.3",
+    targetRef: "alpha/v1/v1.2",
+    sourceSha: SHA,
+    releaseMaterialSha: RELEASE_SHA,
+  });
+
+  assert.deepEqual(requiredArtifacts.map(({ name, ref, digest }) => ({ name, ref, digest })), [
+    { name: "ghcr.io/kungfu-systems/base-linux", ref: "1.2.0-alpha.3", digest: "" },
+    { name: "ghcr.io/kungfu-systems/node24-pnpm", ref: "1.2.0-alpha.3", digest: "" },
+  ]);
+  const validation = validatePublishEvidence({
+    evidence: evidence({
+      version: "1.2.0-alpha.3",
+      channel: "alpha",
+      target_ref: "alpha/v1/v1.2",
+      artifacts: requiredArtifacts.map((artifact, index) => ({
+        ...artifact,
+        digest: `sha256:image-${index}`,
+      })),
+    }),
+    version: "1.2.0-alpha.3",
+    channel: "alpha",
+    sourceSha: SHA,
+    releaseSha: RELEASE_SHA,
+    targetRef: "alpha/v1/v1.2",
+    releaseMaterialSha: RELEASE_SHA,
+    requiredArtifacts,
+  });
+
+  assert.equal(validation.valid, true, validation.errors.join("\n"));
+});
+
+test("post-publish requirements expand exact ref templates after version selection", () => {
+  const [artifact] = resolvePublishArtifactRequirements(parsePublishArtifactsJson(JSON.stringify([{
+    group: "image",
+    kind: "oci",
+    name: "ghcr.io/kungfu-systems/base-linux",
+    ref_template: "v{version}",
+  }])), {
+    version: "1.2.0-alpha.4",
+    targetRef: "alpha/v1/v1.2",
+    sourceSha: SHA,
+    releaseMaterialSha: RELEASE_SHA,
+  });
+
+  assert.deepEqual(artifact, {
+    group: "image",
+    kind: "oci",
+    name: "ghcr.io/kungfu-systems/base-linux",
+    ref: "v1.2.0-alpha.4",
+    digest: "",
+    role: "",
+    required: true,
+  });
+});
+
+test("post-publish ref templates reject ambiguity and unsupported placeholders", () => {
+  for (const descriptor of [
+    { ref: "v{version}" },
+    { ref: "v1.2.3", ref_template: "v{version}" },
+    { ref_template: "v{tag}" },
+    { ref_template: "v{version" },
+    { ref_template: "v{version}{version}" },
+    { ref_template: "v1.2.3" },
+  ]) {
+    assert.throws(
+      () => parsePublishArtifactsJson(JSON.stringify([{
+        kind: "oci",
+        name: "ghcr.io/kungfu-systems/base-linux",
+        ...descriptor,
+      }])),
+      /ref_template|both ref and ref_template|template braces/,
+    );
+  }
+});
+
+test("mixed OCI family provenance is preserved and validated fail closed", () => {
+  const names = ["base-linux", "node24-pnpm", "latex-pdf-builder", "native-linux-x64", "kungfu-verify"];
+  const requirements = resolvePublishArtifactRequirements(names.map((name, index) => ({
+    group: "image",
+    kind: "oci",
+    name: `ghcr.io/kungfu-systems/${name}`,
+    action: index === 2 ? "built" : "reused",
+    platform: "linux/amd64",
+    contract_major: 1,
+    ...(index > 0 ? { parent_digest: `sha256:parent-${index}` } : {}),
+    ...(index === 2 ? {} : {
+      content: {
+        version: "1.1.9",
+        ref: "1.1.9",
+        source_sha: "c".repeat(40),
+        material_sha: "d".repeat(40),
+      },
+    }),
+  })), {
+    version: "1.2.0-alpha.3",
+    targetRef: "alpha/v1/v1.2",
+    sourceSha: SHA,
+    releaseMaterialSha: RELEASE_SHA,
+  });
+  const artifacts = requirements.map((artifact, index) => {
+    const digest = `sha256:image-${index}`;
+    return {
+      ...artifact,
+      digest,
+      verification: {
+        public_manifest: true,
+        ref: artifact.ref,
+        digest,
+        platform: artifact.platform,
+        contract_major: artifact.contract_major,
+        ...(artifact.parent_digest ? { parent_digest: artifact.parent_digest } : {}),
+        evidence: `registry-inspect-${index}.json`,
+        smoke: {
+          policy: "manifest-contract",
+          passed: true,
+          evidence: `smoke-${index}.json`,
+        },
+      },
+    };
+  });
+  const validation = validatePublishEvidence({
+    evidence: evidence({
+      version: "1.2.0-alpha.3",
+      channel: "alpha",
+      target_ref: "alpha/v1/v1.2",
+      artifacts,
+    }),
+    version: "1.2.0-alpha.3",
+    channel: "alpha",
+    sourceSha: SHA,
+    releaseSha: RELEASE_SHA,
+    targetRef: "alpha/v1/v1.2",
+    releaseMaterialSha: RELEASE_SHA,
+    requiredArtifacts: requirements,
+  });
+
+  assert.equal(validation.valid, true, validation.errors.join("\n"));
+  assert.deepEqual(validation.evidence.artifacts.map((artifact) => artifact.action), [
+    "reused", "reused", "built", "reused", "reused",
+  ]);
+  assert.equal(validation.evidence.artifacts[0].content.material_sha, "d".repeat(40));
+
+  const drifted = structuredClone(artifacts);
+  drifted[0].verification.digest = "sha256:registry-drift";
+  assert.throws(
+    () => validatePublishEvidence({
+      evidence: evidence({
+        version: "1.2.0-alpha.3",
+        channel: "alpha",
+        target_ref: "alpha/v1/v1.2",
+        artifacts: drifted,
+      }),
+      version: "1.2.0-alpha.3",
+      channel: "alpha",
+      sourceSha: SHA,
+      releaseSha: RELEASE_SHA,
+      targetRef: "alpha/v1/v1.2",
+      releaseMaterialSha: RELEASE_SHA,
+      requiredArtifacts: requirements,
+    }),
+    /verification\.digest mismatch/,
+  );
 });
 
 test("transaction recovery blocks repair and abandoned states unless override is explicit", () => {

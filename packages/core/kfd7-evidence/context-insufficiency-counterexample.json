@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-kfd-7-evidence-report",
+  "profileId": "buildchain-release-transaction-profile",
+  "profileVersion": "0.1.0",
+  "stateMachineVersion": "0.1.0",
+  "sourceSha": "1c830d6612782208896b709c7d5b982c85a873c7",
+  "category": "context-insufficiency-counterexample",
+  "outcome": "pass",
+  "matchedExpectation": true,
+  "checks": [
+    { "id": "visible-candidate-payload-held-constant", "status": "pass" },
+    { "id": "missing-intent-changes-valid-action-set", "status": "pass" },
+    { "id": "missing-authority-changes-valid-action-set", "status": "pass" },
+    { "id": "stale-passport-changes-valid-action-set", "status": "pass" }
+  ],
+  "observations": {
+    "suite": "tests/kfd7-buildchain-profile.test.mjs",
+    "baselineActions": ["publish-release"],
+    "missingIntentActions": [],
+    "missingAuthorityActions": [],
+    "staleContextActions": [],
+    "conclusion": "context-alone-is-not-sufficient"
+  }
+}

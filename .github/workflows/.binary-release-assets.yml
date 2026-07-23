@@ -1,0 +1,138 @@
+name: Buildchain Binary Release Assets
+
+on:
+  workflow_call:
+    inputs:
+      buildchain-repository:
+        default: "kungfu-systems/buildchain"
+        type: string
+        required: false
+      buildchain-ref:
+        description: "Exact Buildchain runtime SHA that owns the verifier."
+        type: string
+        required: true
+      evidence-run-id:
+        description: "Successful Binary Distribution run containing the exact evidence bundle."
+        type: string
+        required: true
+      release-tag:
+        description: "Existing v* tag whose assets will be updated."
+        type: string
+        required: true
+      publication-admission-json:
+        type: string
+        required: true
+      publication-runner-provenance-json:
+        type: string
+        required: true
+      publication-control-plane-audit-json:
+        type: string
+        required: true
+      publication-expected-json:
+        type: string
+        required: true
+      publication-used-nonces-json:
+        default: "[]"
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  publication-authority:
+    name: Seal binary release asset capability
+    permissions:
+      contents: read
+    uses: ./.github/workflows/.publication-authority.yml
+    with:
+      buildchain-repository: ${{ inputs.buildchain-repository }}
+      buildchain-ref: ${{ inputs.buildchain-ref }}
+      admission-json: ${{ inputs.publication-admission-json }}
+      runner-provenance-json: ${{ inputs.publication-runner-provenance-json }}
+      control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
+      expected-json: ${{ inputs.publication-expected-json }}
+      used-nonces-json: ${{ inputs.publication-used-nonces-json }}
+
+  publish:
+    name: Publish sealed binary release assets
+    needs: publication-authority
+    runs-on: ubuntu-24.04
+    environment: buildchain-release-assets
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - name: Checkout exact release tag
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ inputs.release-tag }}
+          persist-credentials: false
+
+      - name: Download binary evidence
+        uses: actions/download-artifact@v7.0.0
+        with:
+          run-id: ${{ inputs.evidence-run-id }}
+          github-token: ${{ github.token }}
+          pattern: buildchain-binary-*
+          path: dist/binary
+          merge-multiple: true
+
+      - name: Download release passport evidence
+        uses: actions/download-artifact@v7.0.0
+        with:
+          run-id: ${{ inputs.evidence-run-id }}
+          github-token: ${{ github.token }}
+          name: buildchain-release-passport
+          path: .buildchain/release-passport
+
+      - name: Verify capability against downloaded bundle and tag
+        env:
+          BUILDCHAIN_PUBLICATION_CAPABILITY_JSON: ${{ needs.publication-authority.outputs.capability-json }}
+          RELEASE_TAG: ${{ inputs.release-tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+          const capability = JSON.parse(process.env.BUILDCHAIN_PUBLICATION_CAPABILITY_JSON);
+          const manifest = JSON.parse(fs.readFileSync(".buildchain/release-passport/buildchain-release-bundle.json", "utf8"));
+          const tag = process.env.RELEASE_TAG;
+          const actualSource = String(manifest.release?.sourceSha || "").replace(/^sha256:/, "");
+          const actualArtifact = String(manifest.bundle?.sha256 || "").replace(/^sha256:/, "");
+          const failures = [];
+          if (capability.decision !== "allow") failures.push("capability decision is not allow");
+          if (capability.workflowPath !== ".github/workflows/.binary-release-assets.yml") failures.push("capability workflow mismatch");
+          if (!capability.capabilityIds?.includes("github-release")) failures.push("github-release capability is missing");
+          if (capability.environment !== "buildchain-release-assets") failures.push("capability environment mismatch");
+          if (capability.channel !== "release-assets") failures.push("capability channel mismatch");
+          if (capability.version !== tag.replace(/^v/, "")) failures.push("capability version mismatch");
+          if (manifest.release?.tag !== tag) failures.push("evidence bundle tag mismatch");
+          if (capability.sourceSha !== actualSource) failures.push("capability source mismatch");
+          if (capability.artifactDigest !== actualArtifact) failures.push("capability artifact mismatch");
+          if (Date.parse(capability.expiresAt) <= Date.now()) failures.push("capability is stale");
+          if (failures.length) throw new Error(failures.join("; "));
+          fs.mkdirSync(".buildchain/publication-authority", { recursive: true });
+          fs.writeFileSync(".buildchain/publication-authority/capability.json", `${JSON.stringify(capability, null, 2)}\n`);
+          NODE
+
+      - name: Upload GitHub Release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release-tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          release_target="$(git rev-parse "$RELEASE_TAG^{commit}")"
+          node scripts/ensure-github-release.mjs \
+            --repository "${{ github.repository }}" \
+            --tag "$RELEASE_TAG" \
+            --title "$RELEASE_TAG" \
+            --notes "Buildchain release passport assets for $RELEASE_TAG." \
+            --target "$release_target"
+          gh release upload "$RELEASE_TAG" \
+            dist/binary/* \
+            .buildchain/release-passport/* \
+            .buildchain/publication-authority/capability.json \
+            --clobber
+

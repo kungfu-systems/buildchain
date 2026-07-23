@@ -292,6 +292,11 @@ on:
         default: ""
         type: string
         required: false
+      gate-profile-aggregate-json:
+        description: "Optional qualifying buildchain.shifu-gate-aggregate/v1 JSON from the reusable Gate workflow"
+        default: ""
+        type: string
+        required: false
     secrets:
       BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN:
         required: false
@@ -405,6 +410,27 @@ on:
       release-manifest-json:
         description: "Resolved release manifest JSON"
         value: ${{ jobs.build.outputs.release-manifest-json }}
+      controller-plan-artifact:
+        description: "Uploaded build-channel-router controller plan artifact name"
+        value: ${{ jobs.controller-plan.outputs.controller-plan-artifact }}
+      controller-plan-json:
+        description: "Compact source/runtime-bound build-channel-router controller plan"
+        value: ${{ jobs.controller-plan.outputs.controller-plan-json }}
+      controller-plan-digest:
+        description: "Digest of the build-channel-router controller plan"
+        value: ${{ jobs.controller-plan.outputs.controller-plan-digest }}
+      controller-receipt-artifact:
+        description: "Uploaded build-channel-router controller receipt artifact name"
+        value: ${{ jobs.controller-receipt.outputs.controller-receipt-artifact }}
+      controller-receipt-json:
+        description: "Compact build-channel-router controller receipt"
+        value: ${{ jobs.controller-receipt.outputs.controller-receipt-json }}
+      controller-receipt-digest:
+        description: "Digest of the build-channel-router controller receipt"
+        value: ${{ jobs.controller-receipt.outputs.controller-receipt-digest }}
+      controller-receipt-status:
+        description: "Final build-channel-router controller status"
+        value: ${{ jobs.controller-receipt.outputs.controller-receipt-status }}
 
 permissions:
   contents: read
@@ -419,6 +445,8 @@ jobs:
       channel: ${{ steps.channel.outputs.channel }}
       buildchain-ref: ${{ steps.channel.outputs.buildchain-ref }}
       contract-lock-path: ${{ steps.lock.outputs.path }}
+      router-repository: ${{ steps.router.outputs.repository }}
+      router-ref: ${{ steps.router.outputs.ref }}
       selection-source: ${{ steps.channel.outputs.selection-source }}
       reason: ${{ steps.channel.outputs.reason }}
     steps:
@@ -493,9 +521,68 @@ jobs:
           fi
           echo "path=${path}" >> "${GITHUB_OUTPUT}"
 
+  controller-plan:
+    name: Plan channel router controller evidence
+    needs: resolve-channel
+    runs-on: ubuntu-24.04
+    outputs:
+      controller-plan-artifact: ${{ steps.names.outputs.controller-plan-artifact }}
+      controller-plan-json: ${{ steps.plan.outputs.controller-plan-json }}
+      controller-plan-digest: ${{ steps.plan.outputs.controller-plan-digest }}
+      runtime-sha: ${{ steps.identities.outputs.runtime-sha }}
+    steps:
+      - name: Checkout Buildchain controller workflow shell
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ needs.resolve-channel.outputs.router-repository }}
+          ref: ${{ needs.resolve-channel.outputs.router-ref }}
+          path: .buildchain/controller-runtime
+          persist-credentials: false
+
+      - name: Resolve controller workflow shell identity
+        id: identities
+        shell: bash
+        run: |
+          runtime_sha="$(git -C .buildchain/controller-runtime rev-parse HEAD)"
+          contract_digest="$(node -e 'const fs=require("fs"); const value=JSON.parse(fs.readFileSync(".buildchain/controller-runtime/dist/site/buildchain-contract.json","utf8")); process.stdout.write(value.contractDigest)')"
+          {
+            echo "runtime-sha=${runtime_sha}"
+            echo "contract-digest=${contract_digest}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create channel router controller plan
+        id: plan
+        run: node .buildchain/controller-runtime/scripts/controller-evidence.mjs --mode plan
+        env:
+          BUILDCHAIN_CONTROLLER_ID: build-channel-router
+          BUILDCHAIN_CONTROLLER_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_CONTROLLER_SOURCE_SHA: ${{ github.sha }}
+          BUILDCHAIN_CONTROLLER_RUNTIME_REF: ${{ needs.resolve-channel.outputs.router-ref }}
+          BUILDCHAIN_CONTROLLER_RUNTIME_SHA: ${{ steps.identities.outputs.runtime-sha }}
+          BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST: ${{ steps.identities.outputs.contract-digest }}
+          BUILDCHAIN_CONTROLLER_REGISTRY: .buildchain/controller-runtime/dist/site/controller-registry.json
+          BUILDCHAIN_CONTROLLER_INPUTS_JSON: ${{ toJSON(inputs) }}
+          BUILDCHAIN_CONTROLLER_INPUT_BOUNDARY: workflow-call
+          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+
+      - name: Resolve channel router controller plan artifact
+        id: names
+        run: echo "controller-plan-artifact=buildchain-channel-controller-plan-${SOURCE_SHA}" >> "$GITHUB_OUTPUT"
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+
+      - name: Upload channel router controller plan
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.names.outputs.controller-plan-artifact }}
+          path: .buildchain/controller/plan.json
+          if-no-files-found: error
+
   build:
     name: Build with resolved channel
-    needs: resolve-channel
+    needs:
+      - resolve-channel
+      - controller-plan
     uses: ./.github/workflows/.build.yml
     permissions:
       contents: read
@@ -559,4 +646,66 @@ jobs:
       checkout-cache-fetch-attempts: ${{ inputs.checkout-cache-fetch-attempts }}
       shifu-cache-profile-ref: ${{ inputs.shifu-cache-profile-ref }}
       shifu-cache-profile-digest: ${{ inputs.shifu-cache-profile-digest }}
+      gate-profile-aggregate-json: ${{ inputs.gate-profile-aggregate-json }}
     secrets: inherit
+
+  controller-receipt:
+    name: Finalize channel router controller evidence
+    needs:
+      - resolve-channel
+      - controller-plan
+      - build
+    if: ${{ always() && needs.controller-plan.result == 'success' }}
+    runs-on: ubuntu-24.04
+    outputs:
+      controller-receipt-artifact: ${{ steps.names.outputs.controller-receipt-artifact }}
+      controller-receipt-json: ${{ steps.receipt.outputs.controller-receipt-json }}
+      controller-receipt-digest: ${{ steps.receipt.outputs.controller-receipt-digest }}
+      controller-receipt-status: ${{ steps.receipt.outputs.controller-receipt-status }}
+    steps:
+      - name: Checkout Buildchain controller workflow shell
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ needs.resolve-channel.outputs.router-repository }}
+          ref: ${{ needs.controller-plan.outputs.runtime-sha }}
+          path: .buildchain/controller-runtime
+          persist-credentials: false
+
+      - name: Download channel router controller plan
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ needs.controller-plan.outputs.controller-plan-artifact }}
+          path: .buildchain/controller
+
+      - name: Create channel router controller receipt
+        id: receipt
+        run: node .buildchain/controller-runtime/scripts/controller-evidence.mjs --mode receipt
+        env:
+          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+          BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
+            [{"id":"resolve-channel","status":"${{ needs.resolve-channel.result }}"},{"id":"build","status":"${{ needs.build.result }}"},{"id":"aggregate","status":"${{ needs.build.result }}"}]
+          BUILDCHAIN_CONTROLLER_EVIDENCE_JSON: ${{ needs.build.outputs.controller-receipt-digest != '' && format('[{{"kind":"nested-controller-receipt","digest":"{0}"}}]', needs.build.outputs.controller-receipt-digest) || '[]' }}
+          BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ needs.build.result == 'success' && '' || 'nested-build-incomplete' }}
+          BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Nested build controller did not complete successfully
+          BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: buildchain-channel-controller-receipt-${{ github.sha }}
+          BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/receipt.json
+
+      - name: Resolve channel router controller receipt artifact
+        id: names
+        run: echo "controller-receipt-artifact=buildchain-channel-controller-receipt-${SOURCE_SHA}" >> "$GITHUB_OUTPUT"
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+
+      - name: Upload channel router controller receipt
+        if: ${{ always() && steps.receipt.outcome == 'success' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.names.outputs.controller-receipt-artifact }}
+          path: .buildchain/controller/receipt.json
+          if-no-files-found: error
+
+      - name: Enforce qualifying channel router controller receipt
+        if: ${{ steps.receipt.outputs.controller-receipt-qualifying != 'true' }}
+        run: |
+          echo "::error::channel router controller receipt is not qualifying: ${{ steps.receipt.outputs.controller-receipt-status }}"
+          exit 1

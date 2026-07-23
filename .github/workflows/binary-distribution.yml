@@ -12,20 +12,20 @@ on:
         required: true
         default: "v2.2.0-alpha.0"
       upload-release:
-        description: "Upload assets to a GitHub Release. Only true tag runs should use this."
+        description: "Deprecated and fail-closed. Product upload moved to Binary Release Assets."
         required: true
         default: false
         type: boolean
 
 permissions:
-  contents: write
-  id-token: write
-  attestations: write
+  contents: read
 
 jobs:
   preflight:
     name: Binary distribution preflight
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     steps:
       - name: Reject manual release upload before matrix
         env:
@@ -33,9 +33,9 @@ jobs:
           UPLOAD_RELEASE: ${{ inputs.upload-release || false }}
         run: |
           set -euo pipefail
-          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$UPLOAD_RELEASE" = "true" ]; then
-            echo "::error::upload-release=true is only allowed on true tag-triggered release runs"
-            echo "::error::Run this workflow from a v* tag, or keep upload-release=false for manual binary dry-runs."
+          if [ "$UPLOAD_RELEASE" = "true" ]; then
+            echo "::error::upload-release is retired from the evidence-only Binary Distribution workflow"
+            echo "::error::Build evidence here, then use Binary Release Assets with a sealed publication capability."
             exit 1
           fi
 
@@ -43,6 +43,8 @@ jobs:
     name: Build ${{ matrix.platform }}
     needs: preflight
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
     env:
       BUILDCHAIN_LOG_PATH: .buildchain/logs/events-${{ matrix.platform }}.jsonl
       BUILDCHAIN_LOG_RUN_ID: binary-${{ github.run_id }}-${{ matrix.platform }}
@@ -121,6 +123,8 @@ jobs:
     name: Collect release passport
     needs: [preflight, binary]
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     env:
       BUILDCHAIN_LOG_PATH: .buildchain/logs/passport.jsonl
       BUILDCHAIN_LOG_RUN_ID: passport-${{ github.run_id }}
@@ -289,18 +293,3 @@ jobs:
           name: buildchain-release-passport
           path: .buildchain/release-passport/*
           if-no-files-found: error
-
-      - name: Upload GitHub Release assets
-        if: ${{ (startsWith(github.ref, 'refs/tags/') || inputs.upload-release) && steps.fetch-durable-release-state.outputs.found != 'false' }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          release_target="$(git rev-parse "$RELEASE_TAG^{commit}")"
-          node scripts/ensure-github-release.mjs \
-            --repository "${{ github.repository }}" \
-            --tag "$RELEASE_TAG" \
-            --title "$RELEASE_TAG" \
-            --notes "Buildchain release passport assets for $RELEASE_TAG." \
-            --target "$release_target"
-          gh release upload "$RELEASE_TAG" dist/binary/* .buildchain/release-passport/* --clobber

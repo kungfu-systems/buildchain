@@ -276,6 +276,11 @@ on:
         default: ""
         type: string
         required: false
+      gate-profile-aggregate-json:
+        description: "Optional qualifying buildchain.shifu-gate-aggregate/v1 JSON from the reusable Gate workflow"
+        default: ""
+        type: string
+        required: false
     secrets:
       BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN:
         required: false
@@ -380,6 +385,27 @@ on:
       release-manifest-json:
         description: "Resolved release manifest JSON"
         value: ${{ jobs.resolve-source.outputs.release-manifest-json }}
+      controller-plan-artifact:
+        description: "Uploaded build-lifecycle controller plan artifact name"
+        value: ${{ jobs.controller-plan.outputs.controller-plan-artifact }}
+      controller-plan-json:
+        description: "Compact source/runtime-bound build-lifecycle controller plan"
+        value: ${{ jobs.controller-plan.outputs.controller-plan-json }}
+      controller-plan-digest:
+        description: "Digest of the build-lifecycle controller plan"
+        value: ${{ jobs.controller-plan.outputs.controller-plan-digest }}
+      controller-receipt-artifact:
+        description: "Uploaded build-lifecycle controller receipt artifact name"
+        value: ${{ jobs.controller-receipt.outputs.controller-receipt-artifact }}
+      controller-receipt-json:
+        description: "Compact build-lifecycle controller receipt"
+        value: ${{ jobs.controller-receipt.outputs.controller-receipt-json }}
+      controller-receipt-digest:
+        description: "Digest of the build-lifecycle controller receipt"
+        value: ${{ jobs.controller-receipt.outputs.controller-receipt-digest }}
+      controller-receipt-status:
+        description: "Final build-lifecycle controller status"
+        value: ${{ jobs.controller-receipt.outputs.controller-receipt-status }}
 
 permissions:
   contents: read
@@ -436,8 +462,10 @@ jobs:
             const exactSha = /^[0-9a-f]{40}$/i;
             const trainRef = /^train\/v\d+\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
             const officialChannelRef = /^v\d+(?:\.\d+)?(?:-alpha)?$/;
+            const pullRequestMergeRef = /^refs\/pull\/\d+\/merge$/;
             const workflowRef = process.env.BUILDCHAIN_WORKFLOW_REF || process.env.GITHUB_WORKFLOW_REF || "";
-            const shellRef = (workflowRef.startsWith(`${repository}/.github/workflows/`)
+            const sameRepositoryWorkflow = workflowRef.startsWith(`${repository}/.github/workflows/`);
+            const shellRef = (sameRepositoryWorkflow
               ? (workflowRef.split("@").pop() || defaultRef).trim() || defaultRef
               : defaultRef).replace(/^refs\/(?:heads|tags)\//, "");
             const normalizeClass = (ref) => {
@@ -487,6 +515,13 @@ jobs:
             }
             async function resolveRef(ref) {
               if (exactSha.test(ref)) return ref;
+              if (sameRepositoryWorkflow && pullRequestMergeRef.test(ref)) {
+                const workflowSha = String(context.sha || "");
+                if (!exactSha.test(workflowSha)) {
+                  throw new Error(`current workflow SHA is invalid for Buildchain pull request merge ref: ${ref}`);
+                }
+                return workflowSha;
+              }
               const normalized = ref.replace(/^refs\/heads\//, "").replace(/^refs\/tags\//, "");
               const candidates = ref.startsWith("refs/")
                 ? [ref.replace(/^refs\//, "")]
@@ -773,6 +808,56 @@ jobs:
           BUILDCHAIN_LINUX_CONTAINER_PRESET: ${{ inputs.linux-container-preset }}
           BUILDCHAIN_LINUX_CONTAINER_IMAGE: ${{ inputs.linux-container-image }}
 
+  controller-plan:
+    name: Plan build controller evidence
+    runs-on: ubuntu-24.04
+    needs:
+      - trust-gate
+      - resolve-source
+    if: ${{ needs.trust-gate.result == 'success' && needs.resolve-source.result == 'success' }}
+    outputs:
+      controller-plan-artifact: ${{ steps.names.outputs.controller-plan-artifact }}
+      controller-plan-json: ${{ steps.plan.outputs.controller-plan-json }}
+      controller-plan-digest: ${{ steps.plan.outputs.controller-plan-digest }}
+    steps:
+      - name: Checkout build controller workflow shell
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-sha }}
+          path: .buildchain/controller-runtime
+          persist-credentials: false
+
+      - name: Create build controller plan
+        id: plan
+        run: node .buildchain/controller-runtime/scripts/controller-evidence.mjs --mode plan
+        env:
+          BUILDCHAIN_CONTROLLER_ID: build-lifecycle
+          BUILDCHAIN_CONTROLLER_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_CONTROLLER_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_CONTROLLER_RUNTIME_REF: ${{ needs.trust-gate.outputs.buildchain-runtime-ref }}
+          BUILDCHAIN_CONTROLLER_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST: ${{ needs.trust-gate.outputs.buildchain-contract-digest }}
+          BUILDCHAIN_CONTROLLER_REGISTRY: .buildchain/controller-runtime/dist/site/controller-registry.json
+          BUILDCHAIN_CONTROLLER_INPUTS_JSON: ${{ toJSON(inputs) }}
+          BUILDCHAIN_CONTROLLER_INPUT_BOUNDARY: workflow-call
+          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+
+      - name: Resolve build controller plan artifact
+        id: names
+        run: echo "controller-plan-artifact=${ARTIFACT_NAME}-controller-plan-${SOURCE_SHA}" >> "$GITHUB_OUTPUT"
+        env:
+          ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+
+      - name: Upload build controller plan
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.names.outputs.controller-plan-artifact }}
+          path: .buildchain/controller/plan.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
   artifact-transfer:
     name: Resolve artifact transfer
     runs-on: ubuntu-24.04
@@ -867,6 +952,7 @@ jobs:
       - trust-gate
       - resolve-contract
       - resolve-source
+      - controller-plan
       - artifact-transfer
     if: ${{ needs.trust-gate.outputs.trusted == 'true' && needs.resolve-contract.outputs.native-platform-count != '0' }}
     strategy:
@@ -882,6 +968,16 @@ jobs:
         uses: actions/setup-node@v6.4.0
         with:
           node-version: ${{ inputs.node-version }}
+
+      - name: Expose Windows runner user toolchain
+        if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
+        run: Add-Content -LiteralPath $env:GITHUB_PATH -Value (Join-Path $HOME ".local\bin")
+
+      - name: Expose POSIX runner user toolchain
+        if: ${{ runner.os != 'Windows' }}
+        shell: bash
+        run: echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
 
       - name: Setup Rust toolchain on Windows
         if: ${{ inputs.setup-rust && runner.os == 'Windows' }}
@@ -1045,6 +1141,17 @@ jobs:
           process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
           process-summary-required: ${{ inputs.process-summary-path != '' || inputs.require-build }}
 
+      - name: Upload failed lifecycle evidence
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-failure-evidence-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: |
+            ${{ inputs.artifact-paths }}
+            .buildchain/artifacts/${{ matrix.platform.id }}
+          if-no-files-found: warn
+          retention-days: ${{ inputs.artifact-retention-days }}
+
       - name: Configure AWS credentials for artifact relay upload
         if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' }}
         uses: aws-actions/configure-aws-credentials@v6.1.0
@@ -1140,6 +1247,7 @@ jobs:
       - trust-gate
       - resolve-contract
       - resolve-source
+      - controller-plan
       - artifact-transfer
     if: ${{ needs.trust-gate.outputs.trusted == 'true' && needs.resolve-contract.outputs.container-platform-count != '0' }}
     strategy:
@@ -1293,6 +1401,17 @@ jobs:
           process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
           process-summary-required: ${{ inputs.process-summary-path != '' || inputs.require-build }}
 
+      - name: Upload failed lifecycle evidence
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-failure-evidence-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: |
+            ${{ inputs.artifact-paths }}
+            .buildchain/artifacts/${{ matrix.platform.id }}
+          if-no-files-found: warn
+          retention-days: ${{ inputs.artifact-retention-days }}
+
       - name: Configure AWS credentials for artifact relay upload
         if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' }}
         uses: aws-actions/configure-aws-credentials@v6.1.0
@@ -1388,6 +1507,7 @@ jobs:
       - trust-gate
       - resolve-contract
       - resolve-source
+      - controller-plan
       - artifact-transfer
       - build-native
       - build-linux-container
@@ -1482,6 +1602,7 @@ jobs:
       - trust-gate
       - resolve-contract
       - resolve-source
+      - controller-plan
       - artifact-transfer
       - build-native
       - build-linux-container
@@ -1564,6 +1685,12 @@ jobs:
           path: .buildchain/downloaded-diagnostics
           merge-multiple: false
 
+      - name: Download build controller plan for release-candidate passport
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ needs.controller-plan.outputs.controller-plan-artifact }}
+          path: .buildchain/controller
+
       - name: Aggregate artifact summary
         id: summary
         run: node .buildchain/runtime/scripts/aggregate-build-summary.mjs
@@ -1603,6 +1730,27 @@ jobs:
           BUILDCHAIN_DIAGNOSTICS_OUTPUT: .buildchain/artifacts/diagnostics-summary.json
           BUILDCHAIN_PLATFORM_COUNT: ${{ needs.resolve-contract.outputs.platform-count }}
 
+      - name: Create build controller receipt for release-candidate passport
+        id: release-candidate-controller-receipt
+        if: ${{ steps.names.outputs.release-candidate-enabled == 'true' }}
+        run: node .buildchain/runtime/scripts/controller-evidence.mjs --mode receipt
+        env:
+          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+          BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
+            [{"id":"resolve-runtime","status":"${{ needs.trust-gate.result }}"},{"id":"resolve-source","status":"${{ needs.resolve-source.result }}"},{"id":"build","status":"${{ (needs.build-native.result == 'failure' || needs.build-linux-container.result == 'failure' || needs.relay-artifacts.result == 'failure') && 'failure' || (needs.build-native.result == 'cancelled' || needs.build-linux-container.result == 'cancelled' || needs.relay-artifacts.result == 'cancelled') && 'cancelled' || (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && 'success' || 'skipped' }}"},{"id":"verify","status":"success"},{"id":"aggregate","status":"success"}]
+          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: '[{"kind":"platform-manifests","path":".buildchain/artifacts/build-summary.json"},{"kind":"build-summary","path":".buildchain/artifacts/build-summary.json"}]'
+          BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: ${{ inputs.artifact-name }}-release-candidate-controller-receipt-${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/release-candidate-receipt.json
+
+      - name: Upload build controller receipt for release-candidate passport
+        if: ${{ steps.names.outputs.release-candidate-enabled == 'true' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-release-candidate-controller-receipt-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: .buildchain/controller/release-candidate-receipt.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
       - name: Generate release candidate passport
         id: release-candidate
         if: ${{ steps.names.outputs.release-candidate-enabled == 'true' }}
@@ -1619,6 +1767,8 @@ jobs:
           BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           BUILDCHAIN_WORKFLOW_SHELL_REF: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-ref }}
           BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          BUILDCHAIN_GATE_PROFILE_AGGREGATE_JSON: ${{ inputs.gate-profile-aggregate-json }}
+          BUILDCHAIN_CONTROLLER_RECEIPT_JSON: ${{ steps.release-candidate-controller-receipt.outputs.controller-receipt-json }}
           BUILDCHAIN_PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
           BUILDCHAIN_PULL_REQUEST_URL: ${{ github.event.pull_request.html_url }}
           BUILDCHAIN_PULL_REQUEST_HEAD_REF: ${{ github.event.pull_request.head.ref }}
@@ -1648,3 +1798,77 @@ jobs:
           path: .buildchain/artifacts/release-candidate-passport.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
+
+  controller-receipt:
+    name: Finalize build controller evidence
+    runs-on: ubuntu-24.04
+    needs:
+      - trust-gate
+      - resolve-source
+      - controller-plan
+      - build-native
+      - build-linux-container
+      - relay-artifacts
+      - summarize
+    if: ${{ always() && needs.controller-plan.result == 'success' }}
+    outputs:
+      controller-receipt-artifact: ${{ steps.names.outputs.controller-receipt-artifact }}
+      controller-receipt-json: ${{ steps.receipt.outputs.controller-receipt-json }}
+      controller-receipt-digest: ${{ steps.receipt.outputs.controller-receipt-digest }}
+      controller-receipt-status: ${{ steps.receipt.outputs.controller-receipt-status }}
+    steps:
+      - name: Checkout build controller workflow shell
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-sha }}
+          path: .buildchain/controller-runtime
+          persist-credentials: false
+
+      - name: Download build controller plan
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ needs.controller-plan.outputs.controller-plan-artifact }}
+          path: .buildchain/controller
+
+      - name: Download aggregate build summary
+        if: ${{ needs.summarize.result == 'success' }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ needs.summarize.outputs.summary-artifact-name }}
+          path: .buildchain/controller/evidence
+
+      - name: Create build controller receipt
+        id: receipt
+        run: node .buildchain/controller-runtime/scripts/controller-evidence.mjs --mode receipt
+        env:
+          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+          BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
+            [{"id":"resolve-runtime","status":"${{ needs.trust-gate.result }}"},{"id":"resolve-source","status":"${{ needs.resolve-source.result }}"},{"id":"build","status":"${{ (needs.build-native.result == 'failure' || needs.build-linux-container.result == 'failure' || needs.relay-artifacts.result == 'failure') && 'failure' || (needs.build-native.result == 'cancelled' || needs.build-linux-container.result == 'cancelled' || needs.relay-artifacts.result == 'cancelled') && 'cancelled' || (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && 'success' || 'skipped' }}"},{"id":"verify","status":"${{ needs.summarize.result }}"},{"id":"aggregate","status":"${{ needs.summarize.result }}"}]
+          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ needs.summarize.result == 'success' && '[{"kind":"platform-manifests","path":".buildchain/controller/evidence/build-summary.json"},{"kind":"build-summary","path":".buildchain/controller/evidence/build-summary.json"}]' || '[]' }}
+          BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ needs.summarize.result == 'success' && '' || 'controller-incomplete' }}
+          BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Build or verification did not complete successfully
+          BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: ${{ inputs.artifact-name }}-controller-receipt-${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/receipt.json
+
+      - name: Resolve build controller receipt artifact
+        id: names
+        run: echo "controller-receipt-artifact=${ARTIFACT_NAME}-controller-receipt-${SOURCE_SHA}" >> "$GITHUB_OUTPUT"
+        env:
+          ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+
+      - name: Upload build controller receipt
+        if: ${{ always() && steps.receipt.outcome == 'success' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.names.outputs.controller-receipt-artifact }}
+          path: .buildchain/controller/receipt.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Enforce qualifying build controller receipt
+        if: ${{ steps.receipt.outputs.controller-receipt-qualifying != 'true' }}
+        run: |
+          echo "::error::build controller receipt is not qualifying: ${{ steps.receipt.outputs.controller-receipt-status }}"
+          exit 1

@@ -6,6 +6,7 @@ import path from "node:path";
 import test from "node:test";
 import {
   LOCKED_SOURCE_CHECKOUT_CONTRACT,
+  ISOLATED_GIT_GLOBAL_CONFIG,
   fetchSourceCommit,
   runBoundedFetch,
   lockedSourceCheckout,
@@ -19,12 +20,12 @@ function git(args, cwd) {
   }).trim();
 }
 
-function createRepository() {
+function createRepository(content = "hello\n") {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-checkout-origin-"));
   git(["init"], root);
   git(["config", "user.name", "Buildchain Test"], root);
   git(["config", "user.email", "buildchain@example.test"], root);
-  fs.writeFileSync(path.join(root, "README.md"), "hello\n");
+  fs.writeFileSync(path.join(root, "README.md"), content);
   git(["add", "README.md"], root);
   git(["commit", "-m", "initial"], root);
   const sha = git(["rev-parse", "HEAD"], root);
@@ -133,6 +134,41 @@ test("locked source checkout auto mode falls back to GitHub transport", () => {
   assert.equal(evidence.verification.treeOk, true);
 });
 
+test("locked fallback fetch is immune to a stale runner-global bundle rewrite", () => {
+  const origin = createRepository();
+  const stale = createRepository("stale bundle\n");
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-checkout-isolated-"));
+  const config = path.join(workspace, "runner-global.gitconfig");
+  fs.writeFileSync(config, "");
+  git([
+    "config",
+    "--file",
+    config,
+    "--add",
+    `url.file://${stale.bare}.insteadOf`,
+    `file://${origin.bare}`,
+  ], workspace);
+  const previous = process.env.GIT_CONFIG_GLOBAL;
+  process.env.GIT_CONFIG_GLOBAL = config;
+  let evidence;
+  try {
+    evidence = lockedSourceCheckout({
+      workspace,
+      repository: "kungfu-systems/example",
+      sourceSha: origin.sha,
+      sourceTreeSha: origin.tree,
+      mode: "off",
+      githubRemote: `file://${origin.bare}`,
+      diagnosticsPath: ".buildchain/diagnostics/source-checkout.json",
+    });
+  } finally {
+    if (previous == null) delete process.env.GIT_CONFIG_GLOBAL;
+    else process.env.GIT_CONFIG_GLOBAL = previous;
+  }
+  assert.equal(evidence.verification.head, origin.sha);
+  assert.notEqual(evidence.verification.head, stale.sha);
+});
+
 test("source fetch seeds from the advertised ref before trying a raw SHA", () => {
   const calls = [];
   let containsCommit = false;
@@ -205,6 +241,100 @@ test("source fetch preserves stderr for retry classification and diagnostics", (
   const fetch = calls.find(({ args }) => args[0] === "fetch");
   assert.ok(fetch);
   assert.equal(fetch.options.stdio, undefined);
+  assert.equal(fetch.options.env.GIT_CONFIG_GLOBAL, ISOLATED_GIT_GLOBAL_CONFIG);
+  assert.equal(fetch.options.env.GIT_CONFIG_NOSYSTEM, "1");
+  assert.equal(fetch.options.env.GIT_CONFIG_COUNT, "1");
+  assert.equal(fetch.options.env.GIT_CONFIG_KEY_0, "safe.directory");
+  assert.equal(
+    fetch.options.env.GIT_CONFIG_VALUE_0,
+    path.resolve("/tmp/buildchain-source-fetch-diagnostics-fixture"),
+  );
+});
+
+test("source fetch ignores runner-global single-SHA URL rewrites", () => {
+  const calls = [];
+  fetchSourceCommit({
+    targetPath: "/tmp/buildchain-source-fetch-isolation-fixture",
+    remoteName: "origin",
+    remoteUrl: "https://github.com/kungfu-systems/example.git",
+    sha: "a".repeat(40),
+    fetchRef: "refs/heads/dev/v4/v4.0",
+    timeoutMs: 600000,
+    env: {
+      GIT_CONFIG_GLOBAL: "/tmp/stale-single-sha-bundle.gitconfig",
+    },
+    runGit: (args, options) => {
+      calls.push({ args, options });
+      return "";
+    },
+    containsCommit: () => true,
+  });
+
+  const fetch = calls.find(({ args }) => args[0] === "fetch");
+  assert.ok(fetch);
+  assert.equal(fetch.options.env.GIT_CONFIG_GLOBAL, ISOLATED_GIT_GLOBAL_CONFIG);
+  assert.equal(fetch.options.env.GIT_CONFIG_NOSYSTEM, "1");
+  assert.equal(fetch.options.env.GIT_CONFIG_COUNT, "1");
+  assert.equal(fetch.options.env.GIT_CONFIG_KEY_0, "safe.directory");
+});
+
+test("source fetch preserves command-scoped auth while isolating global config", () => {
+  const calls = [];
+  fetchSourceCommit({
+    targetPath: "/tmp/buildchain-source-fetch-auth-fixture",
+    remoteName: "origin",
+    remoteUrl: "https://github.com/kungfu-systems/example.git",
+    sha: "a".repeat(40),
+    fetchRef: "refs/heads/dev/v4/v4.0",
+    timeoutMs: 600000,
+    env: {
+      GIT_CONFIG_COUNT: "1",
+      GIT_CONFIG_KEY_0: "http.https://github.com/.extraheader",
+      GIT_CONFIG_VALUE_0: "AUTHORIZATION: basic redacted",
+    },
+    runGit: (args, options) => {
+      calls.push({ args, options });
+      return "";
+    },
+    containsCommit: () => true,
+  });
+
+  const fetch = calls.find(({ args }) => args[0] === "fetch");
+  assert.ok(fetch);
+  assert.equal(fetch.options.env.GIT_CONFIG_COUNT, "2");
+  assert.equal(fetch.options.env.GIT_CONFIG_KEY_0, "http.https://github.com/.extraheader");
+  assert.equal(fetch.options.env.GIT_CONFIG_VALUE_0, "AUTHORIZATION: basic redacted");
+  assert.equal(fetch.options.env.GIT_CONFIG_KEY_1, "safe.directory");
+  assert.equal(fetch.options.env.GIT_CONFIG_GLOBAL, ISOLATED_GIT_GLOBAL_CONFIG);
+});
+
+test("mirror source fetch retries without depth when dumb HTTP rejects shallow fetch", () => {
+  const calls = [];
+  const result = fetchSourceCommit({
+    targetPath: "/tmp/buildchain-source-fetch-dumb-http-fixture",
+    remoteName: "buildchain-cache",
+    remoteUrl: "http://cache.example.test/buildchain.git",
+    sha: "a".repeat(40),
+    fetchRef: "a".repeat(40),
+    timeoutMs: 60000,
+    allowFullFetchRetry: true,
+    runGit: (args, options) => {
+      calls.push({ args, options });
+      if (args[0] === "fetch" && args.includes("--depth=1")) {
+        throw new Error("fatal: dumb http transport does not support shallow capabilities");
+      }
+      return "";
+    },
+    containsCommit: () => true,
+  });
+
+  const fetches = calls.filter(({ args }) => args[0] === "fetch");
+  assert.equal(fetches.length, 2);
+  assert.ok(fetches[0].args.includes("--depth=1"));
+  assert.ok(!fetches[1].args.some((arg) => arg.startsWith("--depth")));
+  assert.equal(fetches[1].args.at(-1), `+${"a".repeat(40)}:refs/buildchain/source-ref`);
+  assert.equal(result.selector, "ref");
+  assert.equal(result.fetchMode, "full");
 });
 
 test("locked checkout accepts a regenerated pull merge commit with the exact locked tree", () => {

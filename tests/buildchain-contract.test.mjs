@@ -194,6 +194,53 @@ test("contract world exposes web-surface floating contract lock gate", () => {
   assert.match(surface.guarantees.join("\n"), /breaking contract drift fails closed/);
 });
 
+test("contract world exposes additive post-publish artifact provenance schema", () => {
+  const contract = createBuildchainContractWorld({
+    root: path.resolve(import.meta.dirname, ".."),
+    packageJson: { name: "@kungfu-tech/buildchain", version: "2.12.2-alpha.0" },
+  });
+  for (const id of ["release-candidate-promote", "promote-buildchain-ref-action"]) {
+    const surface = contract.surfaces.find((entry) => entry.id === id);
+    assert.equal(
+      surface.publishArtifactSchema.requirementDigest,
+      "optional-before-publish-required-after-publish",
+    );
+    assert.match(surface.publishArtifactSchema.exactRefTemplate, /\{version\}/);
+    assert.deepEqual(surface.publishArtifactSchema.provenanceActions, ["built", "reused"]);
+    assert.match(surface.publishArtifactSchema.provenanceCoordinates.join("\n"), /content/);
+    assert.match(surface.publishArtifactSchema.provenanceCoordinates.join("\n"), /release/);
+    assert.match(surface.publishArtifactSchema.verificationFields.join("\n"), /parent_digest/);
+    assert.match(surface.publishArtifactSchema.verificationFields.join("\n"), /smoke/);
+  }
+});
+
+test("contract world exposes versioned controller evidence surfaces", () => {
+  const contract = createBuildchainContractWorld({
+    root: path.resolve(import.meta.dirname, ".."),
+    packageJson: { name: "@kungfu-tech/buildchain", version: "2.12.5-alpha.0" },
+  });
+  const controllers = contract.surfaces.filter((entry) => entry.kind === "controller");
+
+  assert.deepEqual(controllers.map((entry) => entry.id), [
+    "controller:source-check",
+    "controller:build-lifecycle",
+    "controller:build-channel-router",
+    "controller:shifu-gate-profile-envelope",
+    "controller:web-surface",
+    "controller:publication-artifact",
+    "controller:paper-release",
+    "controller:release-candidate-promotion",
+    "controller:release-propagation",
+  ]);
+  assert.ok(controllers.every((entry) => entry.requiredOutputs.includes("controller-receipt-digest")));
+  assert.ok(controllers.every((entry) => entry.breakingDefaults.evidenceContract === "buildchain.controller-evidence/v1"));
+  assert.match(
+    controllers.find((entry) => entry.id === "controller:build-lifecycle")
+      .controllerDescriptor.inputClassifications["build-command"].classification,
+    /digest-only/,
+  );
+});
+
 test("write-lock records resolved SHA and contract digest", () => {
   const workspace = tempDir("write-lock");
   const contract = createBuildchainContractWorld({

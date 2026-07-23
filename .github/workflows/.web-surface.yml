@@ -144,6 +144,31 @@ on:
         default: "production"
         type: string
         required: false
+      publication-admission-json:
+        description: "Fresh sealed admission for production deploy; ignored by preview and staging lanes."
+        default: ""
+        type: string
+        required: false
+      publication-runner-provenance-json:
+        description: "Qualified runner provenance bound by the production admission."
+        default: ""
+        type: string
+        required: false
+      publication-control-plane-audit-json:
+        description: "Fresh consumer control-plane audit bound to production-environment."
+        default: ""
+        type: string
+        required: false
+      publication-expected-json:
+        description: "Consumer-owned exact production source, runtime, Gate, artifact, target, and channel bindings."
+        default: ""
+        type: string
+        required: false
+      publication-used-nonces-json:
+        description: "Consumer-owned JSON array of already consumed admission nonces."
+        default: "[]"
+        type: string
+        required: false
       release-feedback-actor-privacy:
         description: "Actor identity mode for web-surface release feedback passports: public, redacted, or private-ref."
         default: "public"
@@ -202,12 +227,31 @@ on:
       buildchain-runtime-override:
         description: "Whether a train or exact-SHA buildchain-ref override was used"
         value: ${{ jobs.runtime.outputs.runtime-override }}
+      controller-plan-artifact:
+        description: "Controller plan artifact name"
+        value: ${{ jobs.controller-plan.outputs.controller-plan-artifact }}
+      controller-plan-json:
+        description: "Compact controller plan JSON"
+        value: ${{ jobs.controller-plan.outputs.controller-plan-json }}
+      controller-plan-digest:
+        description: "Controller plan digest"
+        value: ${{ jobs.controller-plan.outputs.controller-plan-digest }}
+      controller-receipt-artifact:
+        description: "Controller receipt artifact name"
+        value: ${{ jobs.controller-receipt.outputs.controller-receipt-artifact }}
+      controller-receipt-json:
+        description: "Compact controller receipt JSON"
+        value: ${{ jobs.controller-receipt.outputs.controller-receipt-json }}
+      controller-receipt-digest:
+        description: "Controller receipt digest"
+        value: ${{ jobs.controller-receipt.outputs.controller-receipt-digest }}
+      controller-receipt-status:
+        description: "Controller receipt status"
+        value: ${{ jobs.controller-receipt.outputs.controller-receipt-status }}
 
 permissions:
+  actions: read
   contents: read
-  id-token: write
-  issues: write
-  pull-requests: write
 
 jobs:
   runtime:
@@ -243,8 +287,10 @@ jobs:
             const exactSha = /^[0-9a-f]{40}$/i;
             const trainRef = /^train\/v\d+\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
             const officialChannelRef = /^v\d+(?:\.\d+)?(?:-alpha)?$/;
+            const pullRequestMergeRef = /^refs\/pull\/\d+\/merge$/;
             const workflowRef = process.env.BUILDCHAIN_WORKFLOW_REF || process.env.GITHUB_WORKFLOW_REF || "";
-            const shellRef = (workflowRef.startsWith(`${repository}/.github/workflows/`)
+            const sameRepositoryWorkflow = workflowRef.startsWith(`${repository}/.github/workflows/`);
+            const shellRef = (sameRepositoryWorkflow
               ? (workflowRef.split("@").pop() || defaultRef).trim() || defaultRef
               : defaultRef).replace(/^refs\/(?:heads|tags)\//, "");
             const normalizeClass = (ref) => {
@@ -294,6 +340,13 @@ jobs:
             }
             async function resolveRef(ref) {
               if (exactSha.test(ref)) return ref;
+              if (sameRepositoryWorkflow && pullRequestMergeRef.test(ref)) {
+                const workflowSha = String(context.sha || "");
+                if (!exactSha.test(workflowSha)) {
+                  throw new Error(`current workflow SHA is invalid for Buildchain pull request merge ref: ${ref}`);
+                }
+                return workflowSha;
+              }
               const normalized = ref.replace(/^refs\/heads\//, "").replace(/^refs\/tags\//, "");
               const candidates = ref.startsWith("refs/")
                 ? [ref.replace(/^refs\//, "")]
@@ -334,6 +387,51 @@ jobs:
               .addRaw(`- trust decision: \`${trustDecision}\`\n`)
               .addRaw(`- rollback ref: \`${shellRef}\`\n`)
               .write();
+
+  controller-plan:
+    name: Plan web-surface controller
+    needs: runtime
+    runs-on: ubuntu-24.04
+    outputs:
+      controller-plan-artifact: buildchain-web-surface-controller-plan-${{ github.sha }}
+      controller-plan-json: ${{ steps.controller-plan.outputs.controller-plan-json }}
+      controller-plan-digest: ${{ steps.controller-plan.outputs.controller-plan-digest }}
+    steps:
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.runtime.outputs.runtime-sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Resolve controller runtime contract
+        id: controller-runtime
+        shell: bash
+        run: |
+          contract_digest="$(node -e 'const fs=require("fs"); const value=JSON.parse(fs.readFileSync(".buildchain/runtime/dist/site/buildchain-contract.json","utf8")); process.stdout.write(value.contractDigest)')"
+          echo "contract-digest=${contract_digest}" >> "$GITHUB_OUTPUT"
+
+      - name: Create web-surface controller plan
+        id: controller-plan
+        run: node .buildchain/runtime/scripts/controller-evidence.mjs --mode plan
+        env:
+          BUILDCHAIN_CONTROLLER_ID: web-surface
+          BUILDCHAIN_CONTROLLER_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_CONTROLLER_SOURCE_SHA: ${{ github.sha }}
+          BUILDCHAIN_CONTROLLER_RUNTIME_REF: ${{ needs.runtime.outputs.runtime-ref }}
+          BUILDCHAIN_CONTROLLER_RUNTIME_SHA: ${{ needs.runtime.outputs.runtime-sha }}
+          BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST: ${{ steps.controller-runtime.outputs.contract-digest }}
+          BUILDCHAIN_CONTROLLER_INPUTS_JSON: ${{ toJSON(inputs) }}
+          BUILDCHAIN_CONTROLLER_INPUT_BOUNDARY: workflow-call
+          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+
+      - name: Upload web-surface controller plan
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-web-surface-controller-plan-${{ github.sha }}
+          path: .buildchain/controller/plan.json
+          if-no-files-found: error
 
   release-intent:
     name: Resolve production release PR intent
@@ -509,6 +607,7 @@ jobs:
       - runtime
       - release-intent
       - apply-input-gate
+      - controller-plan
     outputs:
       web-surface-channel: ${{ steps.web.outputs.web-surface-channel }}
       web-surface-alias: ${{ steps.web.outputs.web-surface-alias }}
@@ -516,6 +615,8 @@ jobs:
       web-surface-urls-json: ${{ steps.web.outputs.web-surface-urls-json }}
       web-surface-manifest-json: ${{ steps.web.outputs.web-surface-manifest-json }}
       web-surface-cleanup-plan-json: ${{ steps.web.outputs.web-surface-cleanup-plan-json }}
+      build-outcome: ${{ steps.build.outcome }}
+      verify-outcome: ${{ steps.verify.outcome }}
     steps:
       - name: Checkout caller repository
         uses: actions/checkout@v7.0.0
@@ -608,6 +709,7 @@ jobs:
           fail-on-error: "false"
 
       - name: Run caller build
+        id: build
         if: ${{ inputs.build-command != '' && needs.apply-input-gate.outputs.web-surface-channel != '' }}
         working-directory: ${{ inputs.working-directory }}
         env:
@@ -618,6 +720,7 @@ jobs:
         run: ${{ inputs.build-command }}
 
       - name: Run caller verify
+        id: verify
         if: ${{ inputs.verify-command != '' && needs.apply-input-gate.outputs.web-surface-channel != '' }}
         working-directory: ${{ inputs.working-directory }}
         env:
@@ -1369,6 +1472,33 @@ jobs:
           include-hidden-files: true
           if-no-files-found: warn
 
+  publication-authority:
+    name: Seal web production publication capability
+    needs:
+      - plan
+      - runtime
+      - release-intent
+    if: >-
+      ${{
+        inputs.production-apply &&
+        (
+          (github.event_name == 'workflow_dispatch' && inputs.production-approved) ||
+          (github.event_name == 'push' && github.ref_name == 'main' && inputs.production-release-on-main && needs.release-intent.outputs.production-release-approved == 'true')
+        )
+      }}
+    permissions:
+      actions: read
+      contents: read
+    uses: ./.github/workflows/.publication-authority.yml
+    with:
+      buildchain-repository: ${{ inputs.buildchain-repository }}
+      buildchain-ref: ${{ needs.runtime.outputs.runtime-sha }}
+      admission-json: ${{ inputs.publication-admission-json }}
+      runner-provenance-json: ${{ inputs.publication-runner-provenance-json }}
+      control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
+      expected-json: ${{ inputs.publication-expected-json }}
+      used-nonces-json: ${{ inputs.publication-used-nonces-json }}
+
   production-apply:
     name: Apply production deploy
     if: >-
@@ -1384,6 +1514,7 @@ jobs:
       - plan
       - runtime
       - release-intent
+      - publication-authority
     environment: ${{ inputs.production-environment }}
     outputs:
       production-apply-result-json: ${{ steps.apply.outputs.web-surface-apply-result-json }}
@@ -1543,3 +1674,84 @@ jobs:
           path: .buildchain/web-surface-production-release-passport.json
           include-hidden-files: true
           if-no-files-found: error
+
+  controller-receipt:
+    name: Record web-surface controller receipt
+    needs:
+      - runtime
+      - controller-plan
+      - plan
+      - preview-apply
+      - preview-cleanup
+      - staging-apply
+      - publication-authority
+      - production-apply
+    if: ${{ always() && needs.controller-plan.result == 'success' }}
+    runs-on: ubuntu-24.04
+    outputs:
+      controller-receipt-artifact: buildchain-web-surface-controller-receipt-${{ github.sha }}
+      controller-receipt-json: ${{ steps.controller-receipt.outputs.controller-receipt-json }}
+      controller-receipt-digest: ${{ steps.controller-receipt.outputs.controller-receipt-digest }}
+      controller-receipt-status: ${{ steps.controller-receipt.outputs.controller-receipt-status }}
+    steps:
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.runtime.outputs.runtime-sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Download web-surface controller plan
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ needs.controller-plan.outputs.controller-plan-artifact }}
+          path: .buildchain/controller
+
+      - name: Download web-surface deployment plan
+        if: ${{ needs.plan.result == 'success' && (needs.plan.outputs.web-surface-channel != '' || needs.plan.outputs.web-surface-cleanup-plan-json != '') }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: buildchain-web-surface-plans
+          path: .buildchain/controller/web-plans
+
+      - name: Select web-surface plan evidence
+        id: select-plan
+        if: ${{ needs.plan.result == 'success' && (needs.plan.outputs.web-surface-channel != '' || needs.plan.outputs.web-surface-cleanup-plan-json != '') }}
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require("node:fs");
+          const path = require("node:path");
+          const root = ".buildchain/controller/web-plans";
+          const candidates = fs.readdirSync(root).filter((name) => name.endsWith("-plan.json")).sort();
+          if (candidates.length !== 1) throw new Error(`expected one web-surface plan, found ${candidates.length}`);
+          fs.copyFileSync(path.join(root, candidates[0]), ".buildchain/controller/web-surface-plan.json");
+          NODE
+
+      - name: Create web-surface controller receipt
+        id: controller-receipt
+        run: node .buildchain/runtime/scripts/controller-evidence.mjs --mode receipt
+        env:
+          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+          BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
+            [{"id":"resolve-runtime","status":"${{ needs.runtime.result }}"},{"id":"plan","status":"${{ needs.plan.result }}"},{"id":"build","status":"${{ needs.plan.outputs.build-outcome || needs.plan.result }}"},{"id":"verify","status":"${{ needs.plan.outputs.verify-outcome || needs.plan.result }}"},{"id":"publication-authority","status":"${{ needs.publication-authority.result }}"},{"id":"apply","status":"${{ (needs.preview-apply.result == 'failure' || needs.preview-cleanup.result == 'failure' || needs.staging-apply.result == 'failure' || needs.production-apply.result == 'failure') && 'failure' || (needs.preview-apply.result == 'cancelled' || needs.preview-cleanup.result == 'cancelled' || needs.staging-apply.result == 'cancelled' || needs.production-apply.result == 'cancelled') && 'cancelled' || (needs.preview-apply.result == 'success' || needs.preview-cleanup.result == 'success' || needs.staging-apply.result == 'success' || needs.production-apply.result == 'success') && 'success' || 'skipped' }}"},{"id":"aggregate","status":"${{ (needs.plan.result == 'failure' || needs.preview-apply.result == 'failure' || needs.preview-cleanup.result == 'failure' || needs.staging-apply.result == 'failure' || needs.production-apply.result == 'failure') && 'failure' || (needs.plan.result == 'cancelled' || needs.preview-apply.result == 'cancelled' || needs.preview-cleanup.result == 'cancelled' || needs.staging-apply.result == 'cancelled' || needs.production-apply.result == 'cancelled') && 'cancelled' || needs.plan.result == 'success' && 'success' || 'skipped' }}"}]
+          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ steps.select-plan.outcome == 'success' && '[{"kind":"web-surface-plan","path":".buildchain/controller/web-surface-plan.json"}]' || '[]' }}
+          BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ needs.plan.result != 'success' && 'web-surface-incomplete' || steps.select-plan.outcome != 'success' && 'no-applicable-web-surface-channel' || '' }}
+          BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Web-surface controller did not complete an applicable channel successfully
+          BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: buildchain-web-surface-controller-receipt-${{ github.sha }}
+          BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/receipt.json
+
+      - name: Upload web-surface controller receipt
+        if: ${{ always() && steps.controller-receipt.outcome == 'success' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-web-surface-controller-receipt-${{ github.sha }}
+          path: .buildchain/controller/receipt.json
+          if-no-files-found: error
+
+      - name: Enforce qualifying web-surface controller receipt
+        if: ${{ always() && (needs.plan.result != 'success' || steps.select-plan.outcome == 'success') && steps.controller-receipt.outputs.controller-receipt-qualifying != 'true' }}
+        run: |
+          echo "::error::web-surface controller receipt is not qualifying: ${{ steps.controller-receipt.outputs.controller-receipt-status }}"
+          exit 1

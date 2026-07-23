@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-site-manifest",
-  "generatedAt": "2026-07-13T07:22:41.239Z",
-  "publishedAt": "2026-07-13T07:22:41.239Z",
+  "generatedAt": "2026-07-16T02:23:01.656Z",
+  "publishedAt": "2026-07-16T02:23:01.656Z",
   "reproducible": true,
   "timestampPolicy": "ci-injected",
   "deterministicInputs": [
@@ -19,7 +19,7 @@
     "declared Buildchain surface manifest contract"
   ],
   "sourceDateEpoch": "0",
-  "sourceRevision": "699b971025689b6906d085ca456ee81ca6df30e1",
+  "sourceRevision": "7ab8004aa2c6f99118710b81525f86d38615035b",
   "timestampPolicyDetails": {
     "contract": "kungfu-buildchain-surface-timestamp-policy",
     "timestampFields": [
@@ -37,7 +37,7 @@
   },
   "package": {
     "name": "@kungfu-tech/buildchain",
-    "version": "2.12.2-alpha.0",
+    "version": "2.12.9-alpha.1",
     "versionSource": "package.json#version"
   },
   "entrypoint": "buildchain-site.json",
@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:0735009b21cea9227f2c9b9bcbec1219898f4d211776b60aa030ace65821ec80"
+      "digest": "sha256:38c54f5156c2ffec353d9cb9d3fe69c6a50f0700007a6c9312c90735df6eb0be"
     },
     {
       "id": "install",
@@ -61,7 +61,7 @@
       "path": "docs/install.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:2600738a92b5853bc26d4e01211f0c07b8b36a21d4d72ca809bc6032dff5dc5f"
+      "digest": "sha256:1879849c01f82b8820f2d9aeb09faed0931954cb7fe6939176a5eb69110cee59"
     },
     {
       "id": "release-passport",
@@ -69,7 +69,23 @@
       "path": "docs/release-passport.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:f278f148e36f508f7217ad0e41501fa1cf5fe4d0a54d81dfbab867b3d35465c7"
+      "digest": "sha256:8e4e005e2d885be06a9e552b471a2d306ddfd1c986589c8e72f17d518897bb36"
+    },
+    {
+      "id": "controller-evidence",
+      "title": "Controller evidence contract",
+      "path": "docs/controller-evidence.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:442e1b72e3977af56a8ae5e081ffd89c2f3ebcd9cfd50f07af730344bdf9fb0e"
+    },
+    {
+      "id": "publication-authority",
+      "title": "Sealed publication authority",
+      "path": "docs/publication-authority.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:05bc22c7e5885e591bc121fc43f588e5d49ccf0a8de6a642811c1d0d03dcee1e"
     },
     {
       "id": "release-candidate",
@@ -77,7 +93,7 @@
       "path": "docs/release-candidate.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:841d6f3281ba6dfe80527e4f149807bdbd05d41f9e94afe1c446fcd6d29e307c"
+      "digest": "sha256:6a20c6e3e483327d5ccbe70271f7fb4752731bd0523eeddb96f27b2b6ebf1cf8"
     },
     {
       "id": "release-propagation",
@@ -173,7 +189,7 @@
       "path": "docs/cli.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:3b3ac97c353f7549229f1102cca38236e734ec8d08c219d4a6e5ef2a48fc0e16"
+      "digest": "sha256:2364ebba30f250a988173193220e2df276b2cb028bd7f6463d86d3f2dcff176a"
     },
     {
       "id": "build-facts",
@@ -189,7 +205,7 @@
       "path": "docs/kfd-support.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:ab15de33a1a9e292b6da74c00b8b96b7c46330d0553a454d1de4c24c672fc025"
+      "digest": "sha256:da7cd2ee812f96e708e388f1374a36308fddffe305dcd05da5edb2580343c160"
     },
     {
       "id": "lifecycle-protocol",
@@ -205,7 +221,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:fbc74dee3a6f2283ea69a2a9a31945ac82ccaf1d270995539f5d80235ab74614"
+      "digest": "sha256:6916d88ae0f25fa129308354b04d339552b72796d4d7d7938015e0e2f4dcaa6a"
     },
     {
       "id": "publish-transaction",
@@ -213,7 +229,7 @@
       "path": "docs/publish-transaction.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:2523dd9a81e837918afae30c203349a7b29f00fdf953962a6db360fd95e0c6cb"
+      "digest": "sha256:9e77030dbd69e27c2402d855980f7560a465270cac1f3225c0470523ab4a8ddf"
     },
     {
       "id": "release-governance",
@@ -221,7 +237,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:3ae2bbc2df394726f350e58be1a71dd0379b99b19cd6ccf15fbe3b843f3890b6"
+      "digest": "sha256:d85ac78b7c73b85b0a59a4a39131230522ae65225fa1b52f9dfe6939f1bb839c"
     },
     {
       "id": "release-flow",
@@ -263,6 +279,8 @@
     "manual-registry.json",
     "node-api-registry.json",
     "workflow-registry.json",
+    "controller-registry.json",
+    "publication-authority-registry.json",
     "public-surface-audit.json",
     "release-model.json",
     "artifact-schemas.json",

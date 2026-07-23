@@ -103,6 +103,7 @@ export function collectGitHubReleaseEvidenceAssets({
   publishEvidencePath = "",
   releasePassportPath = "",
   releasePassportOutputDir = "",
+  additionalAssetPaths = [],
 } = {}) {
   assertFile(publishEvidencePath, "a publish evidence file");
   assertFile(releasePassportPath, "buildchain.release.json");
@@ -118,6 +119,16 @@ export function collectGitHubReleaseEvidenceAssets({
   }
   if (assets.length < 2) {
     throw new Error(`github-release=true found no release passport assets under ${releasePassportOutputDir}`);
+  }
+  const occupiedBasenames = new Set(assets.map((assetPath) => path.basename(assetPath)));
+  for (const assetPath of additionalAssetPaths) {
+    assertFile(assetPath, "a declared GitHub Release artifact");
+    const basename = path.basename(assetPath);
+    if (occupiedBasenames.has(basename)) {
+      throw new Error(`github-release=true found duplicate asset basename '${basename}'`);
+    }
+    occupiedBasenames.add(basename);
+    assets.push(assetPath);
   }
   return assets;
 }
@@ -161,6 +172,7 @@ export async function publishGitHubReleaseEvidence({
   publishEvidencePath = "",
   releasePassportPath = "",
   releasePassportOutputDir = "",
+  additionalAssetPaths = [],
 } = {}) {
   if (!tag) {
     throw new Error("github-release=true requires promote-buildchain-ref to resolve a public release tag");
@@ -169,6 +181,7 @@ export async function publishGitHubReleaseEvidence({
     publishEvidencePath,
     releasePassportPath,
     releasePassportOutputDir,
+    additionalAssetPaths,
   });
   const release = await ensureGitHubRelease({
     apiUrl,
@@ -206,6 +219,7 @@ async function main() {
   const requireGovernance = core.getBooleanInput("require-governance");
   const requireVersionState = core.getBooleanInput("require-version-state");
   const verificationCommand = core.getInput("verification-command");
+  const reconciliationWorkspace = core.getInput("reconciliation-workspace");
   const requiredStatusCheck = core.getInput("required-status-check") || "check / check";
   const generatedStatusCheckToken = core.getInput("generated-status-check-token") || token;
   const generatedRefUpdateToken = core.getInput("generated-ref-update-token") || token;
@@ -223,6 +237,7 @@ async function main() {
   const publishDistTag = core.getInput("publish-dist-tag");
   const publishPackageSetOrder = core.getInput("publish-package-set-order");
   const publishPackageMain = core.getInput("publish-package-main");
+  const expectedPublicationVersion = core.getInput("expected-publication-version");
   const requirePublishSourceLock = core.getBooleanInput("require-publish-source-lock");
   const publishSourceRef = core.getInput("publish-source-ref");
   const publishSourceSha = core.getInput("publish-source-sha");
@@ -241,8 +256,13 @@ async function main() {
   const releasePassportKfd3PrebuildWitnessJsons = core.getInput("release-passport-kfd-3-prebuild-witness-jsons");
   const releasePassportKfd3ArtifactWitnessJsons = core.getInput("release-passport-kfd-3-artifact-witness-jsons");
   const releasePassportKfd3ArtifactVerifyCommand = core.getInput("release-passport-kfd-3-artifact-verify-command");
+  const releasePassportKfd7DeclarationJsons = core.getInput("release-passport-kfd-7-declaration-jsons");
+  const releasePassportKfdAgentRuntimeWitnessJsons = core.getInput("release-passport-kfd-agent-runtime-witness-jsons");
   const releasePassportBuildchainSelfKfd = core.getBooleanInput("release-passport-buildchain-self-kfd");
   const githubRelease = core.getBooleanInput("github-release");
+  const githubReleaseArtifactPaths = core.getMultilineInput("github-release-artifact-paths")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
   const githubReleaseTitle = core.getInput("github-release-title");
   const githubReleaseNotes = core.getInput("github-release-notes");
   const promoteOnlyReleaseCandidate = core.getBooleanInput("promote-only-release-candidate");
@@ -286,6 +306,7 @@ async function main() {
     requireGovernance,
     requireVersionState,
     verificationCommand,
+    reconciliationWorkspace,
     requiredStatusCheck,
     statusCheckOctokit,
     refUpdateOctokit,
@@ -302,6 +323,7 @@ async function main() {
     publishDistTag,
     publishPackageSetOrder,
     publishPackageMain,
+    expectedPublicationVersion,
     releaseMaterialSha,
     publishToolingSha,
     releasePassport,
@@ -315,6 +337,8 @@ async function main() {
     releasePassportKfd3PrebuildWitnessJsons,
     releasePassportKfd3ArtifactWitnessJsons,
     releasePassportKfd3ArtifactVerifyCommand,
+    releasePassportKfd7DeclarationJsons,
+    releasePassportKfdAgentRuntimeWitnessJsons,
     releasePassportBuildchainSelfKfd,
     promoteOnlyReleaseCandidate,
     releaseCandidatePassportPath,
@@ -338,6 +362,11 @@ async function main() {
   core.setOutput("transaction-id", result.publishTransaction?.id || "");
   core.setOutput("transaction-state", result.publishTransaction?.state || "");
   core.setOutput("transaction-exact-tag", result.publishTransaction?.exactTag || "");
+  const plannedPublication = result.updates.find(
+    (update) => update.action === "dry-run-publish-transaction",
+  );
+  core.setOutput("planned-publication-version", plannedPublication?.version || "");
+  core.setOutput("planned-publication-exact-tag", plannedPublication?.tag || "");
   core.setOutput("public-release-tag", result.publishTransaction?.publicReleaseTag || result.publishTransaction?.exactTag || "");
   core.setOutput("transaction-release-sha", result.publishTransaction?.releaseSha || "");
   core.setOutput("transaction-state-ref", result.publishTransaction?.stateRef || "");
@@ -367,6 +396,7 @@ async function main() {
         publishEvidencePath: result.publishTransaction?.evidencePath || "",
         releasePassportPath: result.publishTransaction?.releasePassportPath || "",
         releasePassportOutputDir: result.publishTransaction?.releasePassportOutputDir || "",
+        additionalAssetPaths: githubReleaseArtifactPaths,
       });
       core.info(`github release ${githubReleaseResult.action}: ${githubReleaseResult.tag} (${githubReleaseResult.assetCount} assets)`);
     } else {
@@ -388,7 +418,11 @@ async function main() {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   main().catch((error) => {
+    const failureMessage = String(error?.message || error || "promotion failed")
+      .replace(/\r?\n/g, " ")
+      .slice(0, 2000);
+    core.setOutput("failure-message", failureMessage);
     console.error(error);
-    core.setFailed(error.message);
+    core.setFailed(failureMessage);
   });
 }
