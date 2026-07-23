@@ -59,6 +59,7 @@ const requiredPaths = [
   "scripts/generate-site-bundle.mjs",
   "scripts/generate-buildchain-kfd-witnesses.mjs",
   "scripts/generate-release-candidate-passport.mjs",
+  "scripts/seal-macos-credential-input.mjs",
   "scripts/shifu-gate-profile.mjs",
   "scripts/artifact-relay-s3.mjs",
   "scripts/anchored-version-material.mjs",
