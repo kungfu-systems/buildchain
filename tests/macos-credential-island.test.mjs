@@ -336,6 +336,10 @@ test("public action and workflow keep credentials outside the build matrix", () 
     publicWorkflow,
     /credential-island-macos-manifest-artifact:\n\s+description:[^\n]+\n\s+value: \$\{\{ jobs\.build\.outputs\.credential-island-macos-manifest-artifact \}\}/,
   );
+  assert.match(
+    publicWorkflow,
+    /\n  build:\n[\s\S]*?uses: \.\/\.github\/workflows\/\.build\.yml\n\s+permissions:\n\s+actions: read\n\s+contents: read/,
+  );
   for (const buildJob of [nativeBuildJob, containerBuildJob]) {
     assert.doesNotMatch(
       buildJob,

@@ -641,6 +641,7 @@ jobs:
       - controller-plan
     uses: ./.github/workflows/.build.yml
     permissions:
+      actions: read
       contents: read
       issues: write
       id-token: write
