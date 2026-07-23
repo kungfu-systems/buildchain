@@ -19,6 +19,7 @@
     "./artifact-verification-envelope": "./packages/core/artifact-verification-envelope.js",
     "./anchored-version-material": "./packages/core/anchored-version-material.js",
     "./buildchain-contract": "./packages/core/buildchain-contract.js",
+    "./candidate-timeline": "./packages/core/candidate-timeline.js",
     "./controller-evidence": "./packages/core/controller-evidence.js",
     "./diagnostics": "./packages/core/diagnostics.js",
     "./homebrew": "./packages/core/homebrew.js",
