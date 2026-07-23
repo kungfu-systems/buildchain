@@ -1363,6 +1363,7 @@ jobs:
           path: .buildchain/credential-island/${{ matrix.platform.id }}
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
+          compression-level: 0
 
       - name: Run KFD Agent Hub conformance
         if: ${{ inputs.kfd-agent-hub == 'auto' }}
