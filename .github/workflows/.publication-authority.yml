@@ -278,10 +278,24 @@ jobs:
                 echo "::error::release-candidate admission requires a repository-local publisher workflow path"
                 exit 1
               fi
-              if [[ -z "$BUILDCHAIN_PACKAGE_NAME" || "$BUILDCHAIN_PUBLICATION_TARGET" != "npm:${BUILDCHAIN_PACKAGE_NAME}" ]]; then
-                echo "::error::release-candidate admission requires an exact npm target matching publication-package-name"
-                exit 1
-              fi
+              case "$BUILDCHAIN_PUBLICATION_TARGET" in
+                npm:*)
+                  if [[ -z "$BUILDCHAIN_PACKAGE_NAME" || "$BUILDCHAIN_PUBLICATION_TARGET" != "npm:${BUILDCHAIN_PACKAGE_NAME}" ]]; then
+                    echo "::error::release-candidate npm admission requires an exact target matching publication-package-name"
+                    exit 1
+                  fi
+                  ;;
+                github-release:*)
+                  if [[ -n "$BUILDCHAIN_PACKAGE_NAME" || "$BUILDCHAIN_PUBLICATION_TARGET" != "github-release:${GITHUB_REPOSITORY}" ]]; then
+                    echo "::error::release-candidate GitHub Release admission requires an empty publication-package-name and exact github-release:${GITHUB_REPOSITORY} target"
+                    exit 1
+                  fi
+                  ;;
+                *)
+                  echo "::error::release-candidate admission supports only exact npm or GitHub Release targets"
+                  exit 1
+                  ;;
+              esac
               if [[ -z "$BUILDCHAIN_GATE_AGGREGATE_JSON" && "$BUILDCHAIN_AUTO_NO_GATE" != "true" ]]; then
                 echo "::error::release-candidate admission requires a Gate aggregate or explicit publication-auto-no-gate decision"
                 exit 1
@@ -450,10 +464,15 @@ jobs:
         if: ${{ !inputs.dry-run && inputs.auto-admission && inputs.auto-admission-kind == 'release-candidate' }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          BUILDCHAIN_PUBLICATION_TARGET: ${{ inputs.publication-target }}
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p .buildchain/publication-authority/auto
+          publisher_mode="npm-trusted-publisher"
+          if [[ "$BUILDCHAIN_PUBLICATION_TARGET" == github-release:* ]]; then
+            publisher_mode="github-token"
+          fi
           node .buildchain/authority-runtime/scripts/audit-publication-control-plane.mjs \
             --repository "${{ inputs.evidence-repository }}" \
             --workflow-repository "${{ inputs.buildchain-repository }}" \
@@ -466,6 +485,7 @@ jobs:
             --job promote \
             --environment none \
             --package "${{ inputs.package-name }}" \
+            --publisher-mode "$publisher_mode" \
             --output .buildchain/publication-authority/auto/control-plane.json
 
       - name: Assemble managed release-candidate admission

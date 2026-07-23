@@ -171,7 +171,25 @@ short-lived admission JSON in repository-specific workflow code:
 consumer with a Shifu Gate registry supplies `publication-gate-aggregate-json`
 instead. Buildchain still requires caller-owned RC evidence, an exact authority
 runtime and source SHA, a repository-local publisher workflow, matching npm
-target/package identity, and a qualifying control-plane audit.
+target/package identity or exact caller-bound GitHub Release target, and a
+qualifying control-plane audit.
+
+GitHub-Release-only consumers use the same managed admission without inventing
+an npm package identity:
+
+```yaml
+      publication-auto-admission: true
+      publication-auto-no-gate: true
+      publication-publisher-workflow-path: .github/workflows/buildchain-ref-promotion.yml
+      publication-product: Example Binary
+      publication-target: github-release:example/example-binary
+      publication-package-name: ""
+```
+
+The target must exactly match the caller repository. Buildchain audits the
+job-scoped GitHub token, exact release-candidate payloads and manifests,
+protected channel lineage, and public release transaction before allowing the
+GitHub Release mutation.
 
 A consumer that owns additional product qualification semantics can opt in to
 the sealed handoff without teaching Buildchain those semantics:
