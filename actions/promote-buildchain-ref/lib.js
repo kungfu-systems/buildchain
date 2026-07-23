@@ -1778,6 +1778,7 @@ async function runPublishTransaction({
   publishDistTag = "",
   publishPackageSetOrder = "",
   publishPackageMain = "",
+  publishRematerializeOnResume = false,
   actor = "",
   runId = "",
   explicitOverride = false,
@@ -2022,6 +2023,30 @@ async function runPublishTransaction({
   let validation;
   let publishSource = existingEvidence ? "existing-evidence" : "";
   let distTagEvidencePath = "";
+  const publishEnvironment = {
+    BUILDCHAIN_VERSION: version,
+    BUILDCHAIN_CHANNEL: channel,
+    BUILDCHAIN_SOURCE_SHA: sourceSha,
+    BUILDCHAIN_TARGET_REF: targetRef,
+    BUILDCHAIN_RELEASE_STATE: resolvedStatePath,
+    BUILDCHAIN_EVIDENCE_DIR: path.dirname(resolvedEvidencePath),
+    BUILDCHAIN_RELEASE_SHA: releaseSha,
+    BUILDCHAIN_RELEASE_MATERIAL_SHA: expected.releaseMaterialSha,
+    BUILDCHAIN_PUBLISH_TOOLING_SHA: expected.publishToolingSha,
+    BUILDCHAIN_SITE_GENERATED_AT: promotionGeneratedAt,
+    BUILDCHAIN_SITE_PUBLISHED_AT: promotionGeneratedAt,
+    BUILDCHAIN_SITE_TIMESTAMP_POLICY: "ci-injected",
+    BUILDCHAIN_SURFACE_GENERATED_AT: promotionGeneratedAt,
+    BUILDCHAIN_SURFACE_PUBLISHED_AT: promotionGeneratedAt,
+    BUILDCHAIN_SURFACE_TIMESTAMP_POLICY: "ci-injected",
+    BUILDCHAIN_PUBLISH_EVIDENCE: resolvedEvidencePath,
+    BUILDCHAIN_REQUIRED_ARTIFACTS: JSON.stringify(requiredArtifacts),
+    BUILDCHAIN_PUBLISH_MODE: publishContract.mode,
+    BUILDCHAIN_PUBLISH_AUTH: publishContract.auth,
+    BUILDCHAIN_NPM_DIST_TAG: publishContract.distTag,
+    BUILDCHAIN_PACKAGE_SET_ORDER: publishContract.packageSetOrder,
+    BUILDCHAIN_PACKAGE_SET_MAIN_PACKAGE: publishContract.mainPackage,
+  };
   try {
     const evidence = existingEvidence || readPublishEvidence(resolvedEvidencePath);
     if (evidence) {
@@ -2048,6 +2073,25 @@ async function runPublishTransaction({
     });
     if (recovery.blocked) {
       throw new Error(`release transaction cannot recover: ${recovery.reason}`);
+    }
+    if (existing && validation?.valid && publishRematerializeOnResume) {
+      if (existingNpmPromotion) {
+        throw new Error(
+          "publish-rematerialize-on-resume cannot replay promote-existing-version provider mutations",
+        );
+      }
+      publishSource = runPublishCommand({
+        cwd,
+        command: publishCommand,
+        loadedConfig,
+        env: publishEnvironment,
+      });
+      if (publishSource === "none") {
+        throw new Error(
+          "publish-rematerialize-on-resume requires lifecycle.publish or publish-command",
+        );
+      }
+      publishSource = `resume-rematerialized:${publishSource}`;
     }
     if (!validation?.valid) {
       if (transaction.state === "repair_required" && explicitOverride) {
@@ -2085,30 +2129,7 @@ async function runPublishTransaction({
           cwd,
           command: publishCommand,
           loadedConfig,
-          env: {
-            BUILDCHAIN_VERSION: version,
-            BUILDCHAIN_CHANNEL: channel,
-            BUILDCHAIN_SOURCE_SHA: sourceSha,
-            BUILDCHAIN_TARGET_REF: targetRef,
-            BUILDCHAIN_RELEASE_STATE: resolvedStatePath,
-            BUILDCHAIN_EVIDENCE_DIR: path.dirname(resolvedEvidencePath),
-            BUILDCHAIN_RELEASE_SHA: releaseSha,
-            BUILDCHAIN_RELEASE_MATERIAL_SHA: expected.releaseMaterialSha,
-            BUILDCHAIN_PUBLISH_TOOLING_SHA: expected.publishToolingSha,
-            BUILDCHAIN_SITE_GENERATED_AT: promotionGeneratedAt,
-            BUILDCHAIN_SITE_PUBLISHED_AT: promotionGeneratedAt,
-            BUILDCHAIN_SITE_TIMESTAMP_POLICY: "ci-injected",
-            BUILDCHAIN_SURFACE_GENERATED_AT: promotionGeneratedAt,
-            BUILDCHAIN_SURFACE_PUBLISHED_AT: promotionGeneratedAt,
-            BUILDCHAIN_SURFACE_TIMESTAMP_POLICY: "ci-injected",
-            BUILDCHAIN_PUBLISH_EVIDENCE: resolvedEvidencePath,
-            BUILDCHAIN_REQUIRED_ARTIFACTS: JSON.stringify(requiredArtifacts),
-            BUILDCHAIN_PUBLISH_MODE: publishContract.mode,
-            BUILDCHAIN_PUBLISH_AUTH: publishContract.auth,
-            BUILDCHAIN_NPM_DIST_TAG: publishContract.distTag,
-            BUILDCHAIN_PACKAGE_SET_ORDER: publishContract.packageSetOrder,
-            BUILDCHAIN_PACKAGE_SET_MAIN_PACKAGE: publishContract.mainPackage,
-          },
+          env: publishEnvironment,
         });
       }
       if (publishSource === "none") {
@@ -3627,6 +3648,7 @@ async function promoteBuildchainRefs({
   publishDistTag = "",
   publishPackageSetOrder = "",
   publishPackageMain = "",
+  publishRematerializeOnResume = false,
   expectedPublicationVersion = "",
   requirePublicationQualification = false,
   publicationCapabilityJson = "",
@@ -5064,6 +5086,7 @@ async function promoteBuildchainRefs({
       publishDistTag: publishDistTagOverride,
       publishPackageSetOrder,
       publishPackageMain,
+      publishRematerializeOnResume,
       actor,
       runId,
       explicitOverride: publishTransactionOverride,
@@ -6102,6 +6125,7 @@ export {
   persistDurableReleaseTransaction,
   readDurableReleaseTransaction,
   restoreDurableReleaseTransaction,
+  runPublishTransaction,
   resolveTagsForTarget,
   runVersionVerification,
   selectAlphaTag,

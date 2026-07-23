@@ -187,6 +187,11 @@ on:
         default: ""
         type: string
         required: false
+      publish-rematerialize-on-resume:
+        description: "Replay the consumer publish materialization step after valid durable evidence is restored; use only when the command is idempotent and recreates ephemeral Passport inputs or release assets"
+        default: false
+        type: boolean
+        required: false
       publish-required-artifacts-json:
         description: "Required publish artifacts JSON passed to the promotion action; ref_template may contain one {version} placeholder"
         default: ""
@@ -1357,6 +1362,7 @@ jobs:
           allow-repository: ${{ inputs.allow-repository || github.repository }}
           publish-transaction: "true"
           publish-command: ${{ inputs.publish-command }}
+          publish-rematerialize-on-resume: ${{ inputs.publish-rematerialize-on-resume }}
           publish-required-artifacts-json: ${{ inputs.publish-required-artifacts-json || steps.rc.outputs.publish-required-artifacts-json }}
           publish-mode: ${{ inputs.publish-mode }}
           publish-auth: ${{ inputs.trusted-publishing && 'trusted-publishing' || 'npm-token' }}

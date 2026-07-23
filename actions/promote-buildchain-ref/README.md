@@ -229,6 +229,14 @@ a machine-managed branch under `buildchain/release-state/<version>`, with
 that durable ref before running publish, so reruns do not depend on a previous
 runner's local `.buildchain` directory.
 
+Consumers whose publish lifecycle only assembles local release assets or
+Passport inputs may set `publish-rematerialize-on-resume: true`. After
+Buildchain restores and validates durable publish evidence, it replays that
+consumer-owned lifecycle with the original transaction environment before
+Passport collection. This is explicit opt-in because registry publication and
+other provider mutations must not be replayed blindly; the option rejects
+`promote-existing-version`.
+
 The action runs `lifecycle.publish` from `buildchain.toml` or the explicit
 `publish-command` input, then validates publish evidence before exact tags and
 floating refs move. If durable state persistence fails, the action fails closed
