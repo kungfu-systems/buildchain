@@ -183,6 +183,21 @@ on:
           build/stage
         type: string
         required: false
+      credential-island-macos-app-path:
+        description: "Optional exact .app path to seal for the Buildchain-owned credential-island job"
+        default: ""
+        type: string
+        required: false
+      credential-island-environment:
+        description: "Caller-repository protected environment that owns macOS signing credentials and policy variables"
+        default: ""
+        type: string
+        required: false
+      credential-island-macos-platform-id:
+        description: "macOS build platform whose sealed app is admitted to the credential island"
+        default: "macos-arm64"
+        type: string
+        required: false
       release-candidate:
         description: "Generate and upload a PR-stage release-candidate passport after the full platform matrix succeeds"
         default: false
@@ -314,6 +329,16 @@ on:
         required: false
       BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN:
         required: false
+      BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64:
+        required: false
+      BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD:
+        required: false
+      BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64:
+        required: false
+      BUILDCHAIN_MACOS_NOTARY_API_KEY_ID:
+        required: false
+      BUILDCHAIN_MACOS_NOTARY_API_ISSUER:
+        required: false
     outputs:
       buildchain-channel:
         description: "Resolved Buildchain channel: alpha, stable, or override"
@@ -342,6 +367,12 @@ on:
       build-summary-artifact:
         description: "Uploaded aggregate build summary artifact name"
         value: ${{ jobs.build.outputs.summary-artifact-name }}
+      credential-island-macos-artifact:
+        description: "Uploaded signed macOS payload artifact name when the credential island is enabled"
+        value: ${{ jobs.build.outputs.artifact-name }}
+      credential-island-macos-manifest-artifact:
+        description: "Uploaded signed macOS manifest artifact name when the credential island is enabled"
+        value: ${{ jobs.build.outputs.manifest-artifact-name }}
       build-diagnostics-summary-artifact:
         description: "Uploaded aggregate diagnostics summary artifact name"
         value: ${{ jobs.build.outputs.diagnostics-summary-artifact-name }}
@@ -643,6 +674,9 @@ jobs:
       artifact-name: ${{ inputs.artifact-name }}
       artifact-name-template: ${{ inputs.artifact-name-template }}
       artifact-paths: ${{ inputs.artifact-paths }}
+      credential-island-macos-app-path: ${{ inputs.credential-island-macos-app-path }}
+      credential-island-environment: ${{ inputs.credential-island-environment }}
+      credential-island-macos-platform-id: ${{ inputs.credential-island-macos-platform-id }}
       release-candidate: ${{ inputs.release-candidate }}
       expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
       process-summary-path: ${{ inputs.process-summary-path }}

@@ -285,11 +285,11 @@
       "maturity": "stable",
       "counts": {
         "manualCount": 1,
-        "pageCount": 6,
+        "pageCount": 7,
         "cliCommandCount": 0,
         "nodeApiCount": 2,
         "workflowCount": 33,
-        "actionCount": 0
+        "actionCount": 1
       },
       "manuals": [
         "docs/cli.md"

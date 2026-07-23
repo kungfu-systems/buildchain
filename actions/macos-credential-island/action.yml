@@ -1,0 +1,88 @@
+name: "Buildchain macOS Credential Island"
+description: "Sign and notarize one sealed macOS app without executing consumer source or artifact code"
+inputs:
+  input-root:
+    description: "Directory containing one Buildchain macOS credential input manifest and archive"
+    required: true
+  output-root:
+    description: "Directory for signed DMG, ZIP, and evidence"
+    required: true
+  source-repository:
+    description: "Expected owner/repository for the sealed source"
+    required: true
+  source-sha:
+    description: "Expected 40-character source commit"
+    required: true
+  source-tree-sha:
+    description: "Expected 40-character source tree"
+    required: true
+  buildchain-runtime-sha:
+    description: "Immutable Buildchain runtime commit that owns this signing action"
+    required: true
+  source-ref:
+    description: "Locked source ref associated with the sealed source commit"
+    required: false
+    default: ""
+  artifact-name:
+    description: "Deterministic signed payload artifact name"
+    required: true
+  platform-id:
+    description: "Credential-island platform id; defaults to the sealed platform plus -credential"
+    required: false
+    default: ""
+  expected-bundle-id:
+    description: "Expected application bundle identifier"
+    required: true
+  expected-team-id:
+    description: "Expected Apple Developer team identifier"
+    required: true
+  certificate-sha1:
+    description: "Exact Developer ID Application certificate SHA-1 fingerprint"
+    required: true
+  certificate-p12-base64:
+    description: "Base64 encoded PKCS#12 containing the Developer ID identity"
+    required: true
+  certificate-password:
+    description: "PKCS#12 password"
+    required: true
+  notary-api-key-p8-base64:
+    description: "Base64 encoded App Store Connect team API private key"
+    required: true
+  notary-api-key-id:
+    description: "App Store Connect API key identifier"
+    required: true
+  notary-api-issuer:
+    description: "App Store Connect API issuer identifier"
+    required: true
+  entitlements-profile:
+    description: "Buildchain-owned signing entitlements profile"
+    required: false
+    default: "electron-desktop-v1"
+  artifact-stem:
+    description: "Safe output filename stem; defaults to the sealed product name"
+    required: false
+    default: ""
+  artifact-relative-output:
+    description: "Buildchain-owned relative directory for signed release files"
+    required: false
+    default: "product/release"
+outputs:
+  evidence-path:
+    description: "Credential-island evidence JSON"
+  manifest-path:
+    description: "Buildchain platform manifest for the signed payload"
+  artifact-root:
+    description: "Root directory to upload as the signed payload artifact"
+  dmg-path:
+    description: "Signed, notarized, and stapled DMG"
+  zip-path:
+    description: "ZIP containing the signed, notarized, and stapled app"
+  dmg-sha256:
+    description: "SHA-256 digest of the DMG"
+  zip-sha256:
+    description: "SHA-256 digest of the ZIP"
+runs:
+  using: "node24"
+  main: "dist/index.js"
+  post: "dist/cleanup.js"
+  post-if: "always()"
