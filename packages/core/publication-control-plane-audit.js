@@ -81,7 +81,7 @@ export function evaluatePublicationControlPlaneSnapshot({
     : publisherMode === "github-token"
       ? publisher.provider === "github-token" &&
         publisher.repository === repository &&
-        publisher.workflowPath === publisherWorkflowPath &&
+        publisher.workflowPath === workflowPath &&
         publisher.permissionScoped === true &&
         publisher.longLivedWorkflowCredentialPresent === false
       : publisherMode === "oidc-role"
