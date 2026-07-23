@@ -950,6 +950,8 @@ test("sealed publication authority verifier is independent and credential-free",
   assert.match(workflow, /name: Restrict automatic admission to declared managed publication surfaces/);
   assert.match(workflow, /release-candidate admission evidence must belong to the caller repository/);
   assert.match(workflow, /release-candidate admission requires a repository-local publisher workflow path/);
+  assert.match(workflow, /release-candidate GitHub Release admission requires an empty publication-package-name and exact github-release:/);
+  assert.match(workflow, /publisher_mode="github-token"/);
   assert.match(workflow, /release-candidate admission requires a Gate aggregate or explicit publication-auto-no-gate decision/);
   assert.match(workflow, /name: Audit managed release-candidate publication control plane/);
   assert.match(workflow, /--repository "\$\{\{ inputs\.evidence-repository \}\}"/);

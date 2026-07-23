@@ -830,6 +830,7 @@ test("control-plane snapshot audit supports scoped GitHub tokens and sanitized O
   const common = {
     repository: "kungfu-systems/buildchain",
     workflowPath: ".github/workflows/.binary-release-assets.yml",
+    publisherWorkflowPath: ".github/workflows/binary-release-assets.yml",
     environment: "release-assets",
     branch: "release/v2/v2.12",
     observedAt: "2026-07-14T00:00:00.000Z",
