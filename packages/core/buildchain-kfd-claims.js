@@ -87,6 +87,8 @@ const WORKFLOW_AND_ACTION_FILES = Object.freeze([
   ".github/workflows/release-candidate-promote.yml",
   ".github/workflows/buildchain-ref-promotion.yml",
   ".github/workflows/release-propagation.yml",
+  "actions/macos-credential-island/action.yml",
+  "actions/macos-credential-island/index.js",
   "actions/promote-buildchain-ref/action.yml",
   "actions/promote-buildchain-ref/index.js",
 ]);

@@ -14,19 +14,19 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:cdf588422ec6b460bd6f631400efa6e361a045e052c8967d6c50fadd7aa4dd90",
+    "compatibilityDigest": "sha256:df13c3b8066068925ce847b31002201d533034d10d342542422db3a665c10475",
     "majorLine": "v2"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "16a56386015f535f3b9cf3c95926d283147cce34b36a89426322dba335c0b60d",
+    "sha256": "c473db3464da86da98a089fb487525f80d56da7aad2103e58845cc8d3e0efb0f",
     "summary": {
       "cliCommandCount": 86,
       "workflowCount": 51,
-      "actionCount": 4,
-      "sitePageCount": 52,
+      "actionCount": 5,
+      "sitePageCount": 53,
       "docCommandRefCount": 265,
       "failureCount": 0
     },
@@ -228,12 +228,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "16a56386015f535f3b9cf3c95926d283147cce34b36a89426322dba335c0b60d",
+      "sha256": "c473db3464da86da98a089fb487525f80d56da7aad2103e58845cc8d3e0efb0f",
       "summary": {
         "cliCommandCount": 86,
         "workflowCount": 51,
-        "actionCount": 4,
-        "sitePageCount": 52,
+        "actionCount": 5,
+        "sitePageCount": 53,
         "docCommandRefCount": 265,
         "failureCount": 0
       },
@@ -259,6 +259,18 @@
           "participantFacing": true,
           "public": true,
           "plane": "use"
+        },
+        {
+          "id": "doc:actions/macos-credential-island/README.md",
+          "name": "actions/macos-credential-island/README.md",
+          "kind": "documentation",
+          "sourcePath": "actions/macos-credential-island/README.md",
+          "evidencePath": "actions/macos-credential-island/README.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "action"
         },
         {
           "id": "doc:actions/promote-buildchain-ref/README.md",
@@ -2697,7 +2709,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 61,
+          "inputCount": 64,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -2725,6 +2737,9 @@
             "checkout-cache-mode",
             "checkout-cache-reference-repository-template",
             "checkout-cache-timeout-seconds",
+            "credential-island-environment",
+            "credential-island-macos-app-path",
+            "credential-island-macos-platform-id",
             "expected-artifacts-json",
             "fail-fast",
             "gate-profile-aggregate-json",
@@ -3308,7 +3323,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 64,
+          "inputCount": 67,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -3339,6 +3354,9 @@
             "checkout-cache-mode",
             "checkout-cache-reference-repository-template",
             "checkout-cache-timeout-seconds",
+            "credential-island-environment",
+            "credential-island-macos-app-path",
+            "credential-island-macos-platform-id",
             "expected-artifacts-json",
             "fail-fast",
             "gate-profile-aggregate-json",
@@ -4065,6 +4083,41 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "action:macos-credential-island",
+          "name": "action:macos-credential-island",
+          "kind": "action",
+          "sourcePath": "actions/macos-credential-island/action.yml",
+          "evidencePath": "actions/macos-credential-island/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 20,
+          "inputs": [
+            "artifact-name",
+            "artifact-relative-output",
+            "artifact-stem",
+            "buildchain-runtime-sha",
+            "certificate-p12-base64",
+            "certificate-password",
+            "certificate-sha1",
+            "entitlements-profile",
+            "expected-bundle-id",
+            "expected-team-id",
+            "input-root",
+            "notary-api-issuer",
+            "notary-api-key-id",
+            "notary-api-key-p8-base64",
+            "output-root",
+            "platform-id",
+            "source-ref",
+            "source-repository",
+            "source-sha",
+            "source-tree-sha"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
           "id": "action:promote-buildchain-ref",
           "name": "action:promote-buildchain-ref",
           "kind": "action",
@@ -4253,6 +4306,18 @@
             "require-version-state"
           ],
           "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "site-page:action:macos-credential-island",
+          "name": "site-page:action:macos-credential-island",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
           "id": "site-page:action:promote-buildchain-ref",
@@ -4937,6 +5002,28 @@
         "public": true
       },
       {
+        "id": "control:actions/macos-credential-island/action.yml",
+        "name": "control:actions/macos-credential-island/action.yml",
+        "kind": "action",
+        "sourcePath": "actions/macos-credential-island/action.yml",
+        "evidencePath": "actions/macos-credential-island/action.yml",
+        "availability": "shipped",
+        "visibility": "public",
+        "participantFacing": true,
+        "public": true
+      },
+      {
+        "id": "control:actions/macos-credential-island/index.js",
+        "name": "control:actions/macos-credential-island/index.js",
+        "kind": "action",
+        "sourcePath": "actions/macos-credential-island/index.js",
+        "evidencePath": "actions/macos-credential-island/index.js",
+        "availability": "shipped",
+        "visibility": "public",
+        "participantFacing": true,
+        "public": true
+      },
+      {
         "id": "control:actions/promote-buildchain-ref/action.yml",
         "name": "control:actions/promote-buildchain-ref/action.yml",
         "kind": "action",
@@ -4994,6 +5081,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 318
+    "publicSurfaceCount": 323
   }
 }
