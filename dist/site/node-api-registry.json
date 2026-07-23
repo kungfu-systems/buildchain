@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:78c4f1885d1f619242f31e27b6cd4d1e21e0fd9c67fbe92f8b613abe9acdd3c1",
+      "digest": "sha256:1e02f99f2424f2850c0f264ad6a0bb75973144bc1099dba82d06ba0434c2b406",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:78c4f1885d1f619242f31e27b6cd4d1e21e0fd9c67fbe92f8b613abe9acdd3c1",
+      "digest": "sha256:1e02f99f2424f2850c0f264ad6a0bb75973144bc1099dba82d06ba0434c2b406",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -102,6 +102,19 @@
       "digest": "sha256:1e5f8a1741a0a98116e754ef0874337db4c1821bb7a153ab398009145509681c",
       "summary": "Runtime contract world and compatibility digest APIs for floating-ref drift checks.",
       "capabilityGroup": "governance-versioning",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/candidate-timeline",
+      "export": "./candidate-timeline",
+      "target": "./packages/core/candidate-timeline.js",
+      "digest": "sha256:d394d97d2165d2294ade84921e81e272c7d9e2a0a0673124531760f0fe428a1a",
+      "summary": "Source-bound candidate event normalization, per-attempt critical-path-safe aggregation, and compact reporting APIs.",
+      "capabilityGroup": "observability-diagnostics",
       "audience": [
         "developer",
         "agent"

@@ -104,6 +104,10 @@ import {
 } from "../packages/core/kfd3-surface-register.js";
 import { createBuildchainLayoutDiscovery } from "../packages/core/buildchain-layout.js";
 import { createPortableDevCachePlan, createPortableDevCacheReceipt } from "../packages/core/portable-dev-cache.js";
+import {
+  createCandidateTimeline,
+  formatCandidateTimelineReport,
+} from "../packages/core/candidate-timeline.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const embeddedPackageVersion = process.env.BUILDCHAIN_EMBEDDED_PACKAGE_VERSION || "";
@@ -121,6 +125,7 @@ function usage() {
                                     [--validation-reason <text>]
                                     [--cold-fallback-status not-run|passed|failed]
                                     [--output <file>] [--json]
+  buildchain candidate timeline --input <file-or-json> [--output <file>] [--json]
   buildchain init [--cwd <dir>] [--type package|native|web-surface|infra-contract|publication-artifact|anchored-package] [--force]
                   [--package-manager pnpm|npm|yarn] [--runner-preset <preset>]
                   [--artifact-name <template>]
@@ -1449,6 +1454,28 @@ async function main(argv = process.argv.slice(2)) {
       return;
     }
     throw new Error("usage: buildchain portable-cache <plan|receipt> ...");
+  }
+
+  if (command === "candidate") {
+    const [subcommand = "", ...candidateArgs] = args;
+    if (subcommand !== "timeline") {
+      throw new Error("usage: buildchain candidate timeline --input <file-or-json>");
+    }
+    const inputValue = readFlag(candidateArgs, "input", "");
+    if (!inputValue) {
+      throw new Error("buildchain candidate timeline requires --input <file-or-json>");
+    }
+    const input = readJsonInput(inputValue, { label: "candidate timeline input" });
+    const timeline = createCandidateTimeline(input);
+    const output = readFlag(candidateArgs, "output", "");
+    if (output) writeJsonFile(path.resolve(output), timeline);
+    if (readBooleanFlag(candidateArgs, "json") || !output) {
+      printJson(timeline);
+    } else {
+      process.stdout.write(`${formatCandidateTimelineReport(timeline)}\n`);
+      process.stdout.write(`wrote: ${output}\n`);
+    }
+    return;
   }
 
   if (command === "init") {
