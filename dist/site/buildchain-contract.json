@@ -50,7 +50,7 @@
         "retryable GitHub fallback fetches use a bounded attempt budget before exact source SHA and tree verification"
       ],
       "breakingDigest": "sha256:a6a35370d6b0d0f46e1b2712dcc01961fe53c2febde95409a27a485c10a36650",
-      "auditDigest": "sha256:dfbd9b8bb7d6b733947fa830d9404fa659520416d5d59408862c27d3b1a19681"
+      "auditDigest": "sha256:ea76a52d7fdac0ed8e30ffbb48b155cc4d16a94d2b49cd05379d3e56661c60d4"
     },
     {
       "contractVersion": 1,
@@ -89,7 +89,7 @@
         "alpha and stable channel selections use separate consumer contract locks by default"
       ],
       "breakingDigest": "sha256:c4597dfa89e1a58f1023905092b849644f5c080abf150aeba9c7e1cd5ed43962",
-      "auditDigest": "sha256:3c82b1ef785f4798085e9b17cebe29dbb71bbaa8f5a5ac07ea62e96a55afd10f"
+      "auditDigest": "sha256:2842520b07976b0b05bcd74c636c34f5b7fe61f5ebb4279c631d7c297169073f"
     },
     {
       "contractVersion": 1,
@@ -1174,7 +1174,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:30745921541e9b0f70475bb2178c2559f6aef248f6680670ccd44d8c5a69a6b1",
-      "auditDigest": "sha256:dfbd9b8bb7d6b733947fa830d9404fa659520416d5d59408862c27d3b1a19681"
+      "auditDigest": "sha256:ea76a52d7fdac0ed8e30ffbb48b155cc4d16a94d2b49cd05379d3e56661c60d4"
     },
     {
       "contractVersion": 1,
@@ -1602,7 +1602,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:d40dd05d7e07473d4b2dc1b62fbb0ed6f06449b4d3a7c44a2e8014313e3c0273",
-      "auditDigest": "sha256:3c82b1ef785f4798085e9b17cebe29dbb71bbaa8f5a5ac07ea62e96a55afd10f"
+      "auditDigest": "sha256:2842520b07976b0b05bcd74c636c34f5b7fe61f5ebb4279c631d7c297169073f"
     },
     {
       "contractVersion": 1,
@@ -3071,5 +3071,5 @@
     }
   ],
   "compatibilityDigest": "sha256:df13c3b8066068925ce847b31002201d533034d10d342542422db3a665c10475",
-  "contractDigest": "sha256:a5889fa1c74c4e9bf0d378cfe6d80f5a026b7723910880027f268fa3c0528fe8"
+  "contractDigest": "sha256:4c6d5e896a61cf780bc225249cca3945cbddf8c7a715e4395f42c636a21dd5d2"
 }

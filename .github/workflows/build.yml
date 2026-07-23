@@ -374,10 +374,10 @@ on:
         value: ${{ jobs.build.outputs.summary-artifact-name }}
       credential-island-macos-artifact:
         description: "Uploaded signed macOS payload artifact name when the credential island is enabled"
-        value: ${{ jobs.build.outputs.artifact-name }}
+        value: ${{ jobs.build.outputs.credential-island-macos-artifact }}
       credential-island-macos-manifest-artifact:
         description: "Uploaded signed macOS manifest artifact name when the credential island is enabled"
-        value: ${{ jobs.build.outputs.manifest-artifact-name }}
+        value: ${{ jobs.build.outputs.credential-island-macos-manifest-artifact }}
       build-diagnostics-summary-artifact:
         description: "Uploaded aggregate diagnostics summary artifact name"
         value: ${{ jobs.build.outputs.diagnostics-summary-artifact-name }}
@@ -479,6 +479,7 @@ on:
         value: ${{ jobs.controller-receipt.outputs.controller-receipt-status }}
 
 permissions:
+  actions: read
   contents: read
   issues: write
   id-token: write

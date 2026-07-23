@@ -307,6 +307,14 @@ test("public action and workflow keep credentials outside the build matrix", () 
     path.join(root, ".github/workflows/.build.yml"),
     "utf8",
   );
+  const publicWorkflow = fs.readFileSync(
+    path.join(root, ".github/workflows/build.yml"),
+    "utf8",
+  );
+  const fixtureWorkflow = fs.readFileSync(
+    path.join(root, ".github/workflows/build-surface-fixture.yml"),
+    "utf8",
+  );
   const nativeBuildJob = workflow.match(
     /\n  build-native:[\s\S]+?(?=\n  build-linux-container:)/u,
   )?.[0];
@@ -317,6 +325,17 @@ test("public action and workflow keep credentials outside the build matrix", () 
   assert.ok(containerBuildJob);
   assert.match(action, /post: "dist\/cleanup\.js"/);
   assert.match(action, /certificate-p12-base64/);
+  for (const caller of [workflow, publicWorkflow, fixtureWorkflow]) {
+    assert.match(caller, /permissions:\n  actions: read\n  contents: read/);
+  }
+  assert.match(
+    publicWorkflow,
+    /credential-island-macos-artifact:\n\s+description:[^\n]+\n\s+value: \$\{\{ jobs\.build\.outputs\.credential-island-macos-artifact \}\}/,
+  );
+  assert.match(
+    publicWorkflow,
+    /credential-island-macos-manifest-artifact:\n\s+description:[^\n]+\n\s+value: \$\{\{ jobs\.build\.outputs\.credential-island-macos-manifest-artifact \}\}/,
+  );
   for (const buildJob of [nativeBuildJob, containerBuildJob]) {
     assert.doesNotMatch(
       buildJob,

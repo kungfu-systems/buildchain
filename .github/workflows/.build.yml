@@ -454,6 +454,7 @@ on:
         value: ${{ jobs.controller-receipt.outputs.controller-receipt-status }}
 
 permissions:
+  actions: read
   contents: read
   issues: write
   id-token: write
