@@ -102,7 +102,9 @@ jobs:
     uses: ./.github/workflows/.binary-release-assets.yml
     permissions:
       actions: read
+      checks: read
       contents: write
+      pull-requests: read
     with:
       buildchain-repository: kungfu-systems/buildchain
       buildchain-ref: ${{ needs.resolve.outputs.buildchain-ref }}

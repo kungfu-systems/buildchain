@@ -2001,6 +2001,10 @@ test("binary evidence and product publication are isolated by the sealed asset w
   assert.match(workflow, /gh workflow run binary-release-assets\.yml/);
   assert.match(workflow, /-f evidence-run-id="\$\{GITHUB_RUN_ID\}"/);
   assert.doesNotMatch(publicPublication, /workflow_run:/);
+  assert.match(
+    publicPublication,
+    /uses: \.\/\.github\/workflows\/\.binary-release-assets\.yml\n    permissions:\n      actions: read\n      checks: read\n      contents: write\n      pull-requests: read/,
+  );
   assert.match(publicPublication, /Binary Distribution source \$source_sha does not match \$release_tag/);
   assert.match(publicPublication, /manual buildchain-ref must equal the exact workflow source SHA/);
   assert.match(authority, /--allow-release-reconciliation/);
