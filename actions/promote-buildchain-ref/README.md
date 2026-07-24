@@ -115,6 +115,14 @@ allowance only lets the named automation identity apply generated version-state
 or channel bookkeeping without a second human review after the reviewed channel
 PR has already merged.
 
+GitHub may return either `403` or a deliberately opaque `404` when a
+non-administrator token reads the full branch-protection endpoint. In that
+case, promotion reads the provider's branch summary and accepts only an
+already-protected branch that enforces the exact required check for everyone.
+It does not interpret the opaque response as missing protection or try to
+rewrite policy with a developer token. The independent publication-authority
+audit remains responsible for the complete read-only governance proof.
+
 ## Publish Transactions
 
 Promotion can also own external publish side effects. Enable this only from a

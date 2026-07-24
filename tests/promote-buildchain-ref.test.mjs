@@ -7354,12 +7354,17 @@ test("strict alpha promotion uses provider transaction evidence when protection 
 
 test("managed channels reuse provider-enforced policy when protection details are unreadable", async () => {
   let requiredContexts = ["check"];
+  let protectionReadStatus = 403;
   const octokit = {
     rest: {
       repos: {
         getBranchProtection: async () => {
-          const error = new Error("Resource not accessible by integration");
-          error.status = 403;
+          const error = new Error(
+            protectionReadStatus === 404
+              ? "Not Found"
+              : "Resource not accessible by integration",
+          );
+          error.status = protectionReadStatus;
           throw error;
         },
         getBranch: async () => ({
@@ -7391,6 +7396,17 @@ test("managed channels reuse provider-enforced policy when protection details ar
   assert.equal(evidence.action, "branch-protection-policy-observed");
   assert.equal(evidence.policySource, "provider-enforced-existing-policy");
   assert.deepEqual(evidence.after.requiredStatusChecks, ["check"]);
+
+  protectionReadStatus = 404;
+  const hiddenEvidence = await ensureManagedChannelBranchProtection({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    branch: "alpha/v1/v1.0",
+    requiredStatusCheck: "check",
+  });
+  assert.equal(hiddenEvidence.action, "branch-protection-policy-observed");
+  assert.deepEqual(hiddenEvidence.after.requiredStatusChecks, ["check"]);
 
   requiredContexts = ["security"];
   await assert.rejects(
