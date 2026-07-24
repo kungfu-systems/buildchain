@@ -1,0 +1,67 @@
+name: "Prepare or finalize a GitHub artifact attestation"
+author: "Keren Dong"
+description: "Validate source-bound Linux release evidence without executing consumer code, then seal GitHub/Sigstore attestation evidence"
+inputs:
+  mode:
+    description: "prepare or finalize"
+    required: true
+  subject-path:
+    description: "Exact downloaded release artifact file"
+    required: false
+  platform-manifest-path:
+    description: "Exact Buildchain platform manifest JSON"
+    required: false
+  release-passport-path:
+    description: "Exact Buildchain Release Passport JSON"
+    required: false
+  policy-json:
+    description: "Exact Buildchain GitHub artifact attestation policy JSON"
+    required: false
+  expected-buildchain-ref:
+    description: "Exact Buildchain commit loaded by the reusable workflow"
+    required: true
+  expected-caller-repository:
+    description: "Caller repository from the trusted GitHub context"
+    required: true
+  expected-source-sha:
+    description: "Caller source SHA from the trusted GitHub context"
+    required: true
+  preparation-json:
+    description: "Preparation JSON emitted by prepare mode"
+    required: false
+  attestation-id:
+    description: "GitHub attestation id emitted by actions/attest"
+    required: false
+  attestation-url:
+    description: "GitHub attestation URL emitted by actions/attest"
+    required: false
+  bundle-path:
+    description: "Sigstore bundle emitted by actions/attest"
+    required: false
+  output-dir:
+    description: "Directory for predicate, preparation, and evidence JSON"
+    default: ".buildchain/github-artifact-attestation"
+outputs:
+  subject-name:
+    description: "Attested subject name"
+  subject-path:
+    description: "Absolute attested subject path"
+  subject-digest:
+    description: "Attested subject SHA-256"
+  predicate-type:
+    description: "Custom Buildchain predicate type"
+  predicate-path:
+    description: "Generated custom predicate JSON"
+  preparation-path:
+    description: "Generated preparation JSON"
+  preparation-json:
+    description: "Compact preparation JSON"
+  evidence-path:
+    description: "Generated Buildchain attestation evidence JSON"
+  evidence-root:
+    description: "Semantic root of generated evidence"
+  bundle-digest:
+    description: "SHA-256 of the retained Sigstore bundle"
+runs:
+  using: "node24"
+  main: "dist/index.js"

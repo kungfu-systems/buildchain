@@ -328,6 +328,7 @@ const manualMetaById = new Map(Object.entries({
   "product-mechanism": { capabilityGroup: "getting-started", audience: ["agent", "maintainer"], maturity: "stable", order: 30 },
   cli: { capabilityGroup: "api-cli-reference", audience: ["agent", "developer"], maturity: "stable", order: 40 },
   "release-passport": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "stable", order: 100 },
+  "github-artifact-attestation": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "preview", order: 108 },
   "publication-authority": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "preview", order: 105 },
   "github-governance-authority": { capabilityGroup: "governance-versioning", audience: ["maintainer", "release-operator", "agent"], maturity: "preview", order: 106 },
   "controller-evidence": { capabilityGroup: "reusable-build", audience: ["consumer", "release-operator", "agent"], maturity: "draft", order: 205 },
@@ -405,6 +406,7 @@ function cliCommandMeta(id) {
     "collect-github-release": { group: "release-passport-trust", purpose: "Collect GitHub Release assets into a release passport." },
     create: { group: "release-passport-trust", purpose: "Create canonical sealed publication evidence documents." },
     "create-publication-admission": { group: "release-passport-trust", purpose: "Create a canonical short-lived publication admission envelope from exact consumer bindings." },
+    "create-github-artifact-attestation-policy": { group: "release-passport-trust", purpose: "Create an exact source, signer, Linux build, and Release Passport attestation policy." },
     "create-runner-provenance": { group: "release-passport-trust", purpose: "Create runner provenance evidence with an explicit qualification floor." },
     diagnostics: { group: "observability-diagnostics", purpose: "Inspect diagnostics command families." },
     "diagnostics-summary": { group: "observability-diagnostics", purpose: "Summarize diagnostics artifacts into JSON and cross-platform lifecycle timing tables." },
@@ -494,6 +496,7 @@ function cliCommandMeta(id) {
     verify: { group: "release-passport-trust", purpose: "Inspect release and artifact verification command families." },
     "verify-artifact": { group: "release-passport-trust", purpose: "Verify artifact subjects against release passport evidence." },
     "verify-artifact-envelope": { group: "release-passport-trust", purpose: "Verify exact roots, identity, lifecycle, revocation, and an existing KFD assessment in a sealed artifact envelope." },
+    "verify-github-artifact-attestation": { group: "release-passport-trust", purpose: "Verify GitHub keyless attestation identity plus local artifact, manifest, Passport, predicate, bundle, and evidence bindings." },
     "verify-infra-contract-evidence-bundle": { group: "governance-versioning", purpose: "Fail closed unless an infra-contract lifecycle evidence bundle is complete, hash-bound, and validation-consistent." },
     "verify-observability-log": { group: "observability-diagnostics", purpose: "Verify Buildchain observability log events." },
     "verify-publication-admission": { group: "release-passport-trust", purpose: "Independently verify sealed publication admission, runner provenance, control-plane audit, nonce freshness, and exact artifact bindings." },
@@ -532,6 +535,7 @@ function nodeApiMeta(exportName) {
     "./artifact-verification-envelope": { group: "release-passport-trust", summary: "Sealed exact-root, lifecycle, identity, and existing KFD assessment inputs for KFX admission." },
     "./anchored-version-material": { group: "reusable-build", summary: "Anchored/manual derived version material preflight, exact-tree binding, and digest evidence APIs." },
     "./release-passport": { group: "release-passport-trust", summary: "Release passport collection, verification, explanation, and evidence APIs." },
+    "./github-artifact-attestation": { group: "release-passport-trust", summary: "GitHub keyless artifact attestation policy, predicate, provider evidence, and fail-closed verification APIs." },
     "./kfd-agent-hub": { group: "kfd-trust", summary: "Declarative Agent Hub adapter inspection, fixed-suite execution, exact KFD cut locking, and agent explanation APIs." },
     "./release-passport-contract": { group: "release-passport-trust", summary: "Standalone release passport JSON Schema, ownership/check manifest, and structural validation APIs." },
     "./release-candidate": { group: "reusable-build", summary: "PR-stage release-candidate artifact, passport, and promote-only resolver APIs." },
@@ -606,6 +610,7 @@ function buildCapabilityRegistry({ docs, pages, cliRegistry, manualRegistry, nod
 }
 
 function workflowCapabilityGroup(entry) {
+  if (entry.id === "github-artifact-attestation") return capabilityGroup("release-passport-trust");
   if (["web-surface", "release-propagation"].includes(entry.id)) return capabilityGroup("site-and-propagation");
   if (["build", "release-candidate-promote", "publication-artifact", "paper-release"].includes(entry.id)) return capabilityGroup("reusable-build");
   if (["buildchain-ref-promotion", "release-line-bootstrap"].includes(entry.id)) return capabilityGroup("release-passport-trust");
@@ -615,6 +620,7 @@ function workflowCapabilityGroup(entry) {
 }
 
 function actionCapabilityGroup(id) {
+  if (id === "github-artifact-attestation") return capabilityGroup("release-passport-trust");
   if (id === "promote-buildchain-ref") return capabilityGroup("release-passport-trust");
   if (id === "run-lifecycle" || id === "validate-config") return capabilityGroup("reusable-build");
   if (id === "report-buildchain-issue") return capabilityGroup("observability-diagnostics");
@@ -898,6 +904,7 @@ function buildSiteBundle() {
         ["dev-pr-auto-merge", "dev-governance"],
         ["github-governance-audit", "dev-governance"],
         ["binary-distribution", "release-passport"],
+        ["github-artifact-attestation", "release-passport"],
         ["buildchain-patrol", "repository-patrol"],
         ["buildchain-patrol-daily", "repository-patrol"],
         ["buildchain-patrol-weekly", "repository-patrol"],
@@ -991,6 +998,7 @@ function buildSiteBundle() {
         "publish evidence JSON",
         "buildchain.release.json",
         "release passport assets",
+        "GitHub artifact attestation Sigstore bundle and Buildchain evidence JSON",
       ],
       owner: "promote-buildchain-ref",
     },
@@ -1023,6 +1031,10 @@ function buildSiteBundle() {
       "llms.txt",
       "buildchain-release-bundle.json",
       "buildchain-release-bundle.tar.gz",
+      "github-artifact-attestation.policy.json",
+      "github-artifact-attestation.predicate.json",
+      "github-artifact-attestation.evidence.json",
+      "attestation.sigstore.json",
     ],
     site: [
       "buildchain-site.json",

@@ -5,6 +5,12 @@ Buildchain's release semantics but cannot be described as a simple Node package.
 The first target shape is `libnode`: expensive native builds, multiple operating
 systems, self-hosted runner labels, and release artifacts that must be auditable.
 
+For Linux release artifacts, the build workflow can hand the sealed artifact,
+platform manifest, and Release Passport to the separate GitHub-hosted keyless
+attester. The compiler runner remains the recorded build identity; the attester
+only signs and verifies immutable data. See
+[`github-artifact-attestation.md`](github-artifact-attestation.md).
+
 ## Automatic Channel Router
 
 The preferred consumer surface is one reusable workflow call. After v2.12

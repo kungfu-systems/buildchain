@@ -374,6 +374,25 @@ export {
 } from "./release-passport.js";
 
 export {
+  GITHUB_ARTIFACT_ATTESTATION_EVIDENCE_CONTRACT,
+  GITHUB_ARTIFACT_ATTESTATION_POLICY_CONTRACT,
+  GITHUB_ARTIFACT_ATTESTATION_PREDICATE_CONTRACT,
+  GITHUB_ARTIFACT_ATTESTATION_PREDICATE_TYPE,
+  GITHUB_ARTIFACT_ATTESTATION_VERIFICATION_CONTRACT,
+  GITHUB_ARTIFACT_ATTESTATION_WORKFLOW,
+  createGitHubArtifactAttestationEvidence,
+  createGitHubArtifactAttestationPolicy,
+  createGitHubArtifactAttestationVerificationPlan,
+  githubArtifactAttestationRequiredPermissions,
+  githubArtifactAttestationSemanticRoot,
+  githubArtifactAttestationSha256Buffer,
+  githubArtifactAttestationSha256File,
+  normalizeGitHubArtifactAttestationPolicy,
+  prepareGitHubArtifactAttestation,
+  verifyGitHubArtifactAttestationEvidence,
+} from "./github-artifact-attestation.js";
+
+export {
   KFD_AGENT_HUB_ADOPTION_CONTRACT,
   KFD_AGENT_HUB_ADOPTION_SCHEMA,
   KFD_AGENT_HUB_DECLARATION,

@@ -74,6 +74,7 @@ import { verifyKfd1ReleaseGate } from "@kungfu-tech/buildchain/kfd-gate";
 import { collectBadgeBundleFacts } from "@kungfu-tech/buildchain/badges";
 import { collectReadmeBadgeFacts } from "@kungfu-tech/buildchain/readme-badges";
 import { verifyReleasePassport } from "@kungfu-tech/buildchain/release-passport";
+import { verifyGitHubArtifactAttestationEvidence } from "@kungfu-tech/buildchain/github-artifact-attestation";
 import { createReleasePropagationPlan } from "@kungfu-tech/buildchain/release-propagation";
 import { planReleaseLineBootstrap } from "@kungfu-tech/buildchain/release-line-bootstrap";
 import { collectPublicSurfaceReverseAudit } from "@kungfu-tech/buildchain/public-surface-audit";
@@ -91,6 +92,14 @@ their SHA-256 digests. Use `dist/site/buildchain-contract.json` to verify the
 floating-ref contract world for a runtime such as `@v3`.
 
 ## Commands
+
+`buildchain create github-artifact-attestation-policy` seals the expected
+artifact, caller source, original Linux build, immutable Buildchain signer, and
+GitHub permission set before the Release Passport is collected.
+`buildchain verify github-artifact-attestation` invokes `gh attestation verify`
+with the exact signer/source policy and then verifies the retained bundle,
+predicate, platform manifest, Passport, and Buildchain evidence locally. See
+[`github-artifact-attestation.md`](github-artifact-attestation.md).
 
 `buildchain layout` is the stable machine question for repository layout. Tools
 such as Shifu should call it instead of copying `.buildchain/` path constants:

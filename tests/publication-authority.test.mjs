@@ -276,6 +276,13 @@ test("publication authority signal detection covers credentials and write surfac
   );
 });
 
+test("publication authority signal detection covers GitHub attestation write scopes", () => {
+  assert.deepEqual(
+    detectPublicationAuthoritySignals("permissions:\n  attestations: write\n  artifact-metadata: write"),
+    ["write-permission"],
+  );
+});
+
 test("publication authority registry denies unclassified authority-bearing workflows", () => {
   assert.throws(
     () => createPublicationAuthorityRegistry({ workflows: [{ path: ".github/workflows/new.yml", text: "permissions: write-all" }] }),

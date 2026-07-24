@@ -96,6 +96,7 @@ export const RELEASE_PASSPORT_SCHEMA = {
     platformArtifactManifests: { type: "array", items: OBJECT },
     distTagPromotion: OBJECT,
     controllerReceipts: { type: "array", items: OBJECT },
+    githubArtifactAttestations: { type: "array", items: OBJECT },
     "kfd-1": OBJECT,
     "kfd-2": OBJECT,
     "kfd-3": OBJECT,
