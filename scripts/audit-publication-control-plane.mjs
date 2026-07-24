@@ -259,7 +259,7 @@ function main() {
       enforceAdmins: protection.enforce_admins?.enabled === true,
       observedRulesetCount: rulesets.length,
     };
-  } else if (rulesetBranchPolicy.rulesetCount > 0) {
+  } else if (rulesetBranchPolicy.rulesetCount > 0 && rulesetBranchPolicy.strict) {
     branchPolicy = rulesetBranchPolicy;
   } else {
     if (!/^[0-9a-f]{40}$/.test(sourceSha)) {
@@ -371,6 +371,8 @@ function main() {
       independentApproval: independentApprovals.length > 0,
       configurationRead: false,
       evidenceSource: "public-provider-transaction",
+      observedRulesetCount: rulesetBranchPolicy.rulesetCount,
+      configuredPolicyMode: rulesetBranchPolicy.rulesetCount > 0 ? "ruleset" : "unreadable",
     };
   }
   let publisher;
