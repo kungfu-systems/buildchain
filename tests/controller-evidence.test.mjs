@@ -174,7 +174,11 @@ test("controller receipts preserve pass, fail, skip, and partial outcomes", () =
   });
   const partial = createControllerReceipt({
     plan: expectedPlan,
-    stages: [{ id: "resolve-runtime", status: "passed" }, { id: "resolve-source", status: "passed" }],
+    stages: [
+      { id: "resolve-runtime", status: "passed" },
+      { id: "resolve-source", status: "passed" },
+      { id: "build", status: "partial" },
+    ],
     reason: { code: "cancelled", summary: "run was cancelled" },
   });
 
