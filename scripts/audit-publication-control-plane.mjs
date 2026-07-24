@@ -239,6 +239,16 @@ function main() {
   const deploymentBranches = environment !== "none" && environmentState.deployment_branch_policy?.custom_branch_policies === true
     ? githubJson(`repos/${repository}/environments/${encodeURIComponent(environment)}/deployment-branch-policies?per_page=100`, "Environment deployment branch policy")
     : { branch_policies: [] };
+  const exactEnvironmentBranchPolicy = (deploymentBranches.branch_policies || []).find((entry) =>
+    entry?.type === "branch" && entry?.name === branch
+  );
+  const environmentBranchAuthorized = environment !== "none" && (
+    (
+      environmentState.deployment_branch_policy?.protected_branches === true &&
+      branchState.protected === true
+    ) ||
+    Boolean(exactEnvironmentBranchPolicy)
+  );
   const oidc = githubJson(`repos/${repository}/actions/oidc/customization/sub`, "OIDC subject policy");
   if (!["npm-trusted-publisher", "github-token", "oidc-role"].includes(publisherMode)) {
     throw new Error(`unsupported --publisher-mode: ${publisherMode}`);
@@ -454,6 +464,13 @@ function main() {
         protected: (environmentState.protection_rules || []).length > 0 ||
           environmentState.deployment_branch_policy?.protected_branches === true ||
           (deploymentBranches.branch_policies || []).length > 0,
+        branchAuthorized: environmentBranchAuthorized,
+        branchPolicyMode: environmentState.deployment_branch_policy?.protected_branches === true
+          ? "protected-branches"
+          : exactEnvironmentBranchPolicy
+            ? "exact-custom-branch"
+            : "unqualified",
+        authorizedBranch: exactEnvironmentBranchPolicy?.name || "",
         reviewRequired: reviewRules.length > 0,
         preventSelfReview: reviewRules.some((rule) => rule.prevent_self_review === true),
       },

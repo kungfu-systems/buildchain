@@ -160,6 +160,7 @@ export function evaluatePublicationControlPlaneSnapshot({
           environmentPolicy.declared === true &&
           environmentPolicy.exists === true &&
           environmentPolicy.protected === true &&
+          environmentPolicy.branchAuthorized === true &&
           (environmentPolicy.reviewRequired !== true || environmentPolicy.preventSelfReview === true),
       environmentPolicy,
     ),
