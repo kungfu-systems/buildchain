@@ -512,11 +512,28 @@ function runVersionVerification({ cwd, command, loadedConfig, version, changedFi
   return collectAllowedLocalChanges(cwd, allowedPaths);
 }
 
-function versionVerificationEnv(versionStrategy, anchorManifest, { generatedAt = "", sourceSha = "" } = {}) {
+function versionVerificationEnv(
+  versionStrategy,
+  anchorManifest,
+  {
+    generatedAt = "",
+    sourceSha = "",
+    preserveExistingLifecycleIdentity = false,
+  } = {},
+) {
   return {
     BUILDCHAIN_VERSION_STRATEGY: versionStrategy.strategy,
     BUILDCHAIN_VERSION_NEXT: versionStrategy.next,
-    ...(generatedAt
+    ...(preserveExistingLifecycleIdentity
+      ? {
+          BUILDCHAIN_SITE_GENERATED_AT: "",
+          BUILDCHAIN_SITE_PUBLISHED_AT: "",
+          BUILDCHAIN_SITE_TIMESTAMP_POLICY: "",
+          BUILDCHAIN_SURFACE_GENERATED_AT: "",
+          BUILDCHAIN_SURFACE_PUBLISHED_AT: "",
+          BUILDCHAIN_SURFACE_TIMESTAMP_POLICY: "",
+        }
+      : generatedAt
       ? {
           BUILDCHAIN_SITE_GENERATED_AT: generatedAt,
           BUILDCHAIN_SITE_PUBLISHED_AT: generatedAt,
@@ -526,7 +543,11 @@ function versionVerificationEnv(versionStrategy, anchorManifest, { generatedAt =
           BUILDCHAIN_SURFACE_TIMESTAMP_POLICY: "ci-injected",
         }
       : {}),
-    ...(sourceSha ? { BUILDCHAIN_SOURCE_SHA: sourceSha } : {}),
+    ...(preserveExistingLifecycleIdentity
+      ? { BUILDCHAIN_SOURCE_SHA: "" }
+      : sourceSha
+        ? { BUILDCHAIN_SOURCE_SHA: sourceSha }
+        : {}),
     ...(anchorManifest
       ? {
           BUILDCHAIN_ANCHOR_MANIFEST: anchorManifest.path,
@@ -4998,6 +5019,7 @@ async function promoteBuildchainRefs({
     const strategyEnv = versionVerificationEnv(versionStrategy, anchorManifest, {
       generatedAt: preserveExistingLifecycleIdentity ? "" : promotionGeneratedAt,
       sourceSha: preserveExistingLifecycleIdentity ? "" : sha,
+      preserveExistingLifecycleIdentity,
     });
     if (rule.channel === "major") {
       strategyEnv.BUILDCHAIN_MAJOR_VERSION_BOOTSTRAP = "true";
