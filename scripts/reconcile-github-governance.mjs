@@ -10,9 +10,11 @@ import {
   GITHUB_GOVERNANCE_ROLLOUT_CONTRACT,
   createGithubGovernanceRolloutPlan,
   createGithubRulesetBypassRolloutPlan,
+  createGithubRulesetGovernanceRolloutPlan,
   githubGovernanceDigest,
   normalizeGithubBranchProtectionSnapshot,
   normalizeGithubRulesetSnapshot,
+  resolveGithubGovernanceTargetPolicy,
 } from "../packages/core/github-governance-authority.js";
 
 function flag(args, name, fallback = "") {
@@ -188,6 +190,61 @@ function rulesetPlan(args) {
   return finalPlan;
 }
 
+function rulesetPolicyPlan(args) {
+  const repository = required(flag(args, "repository"), "--repository");
+  const branch = required(flag(args, "branch"), "--branch")
+    .replace(/^refs\/heads\//, "");
+  const rulesetId = Number(required(flag(args, "ruleset-id"), "--ruleset-id"));
+  if (!Number.isInteger(rulesetId) || rulesetId <= 0) {
+    throw new Error("--ruleset-id must be a positive integer");
+  }
+  const snapshotOutput = required(flag(args, "snapshot-output"), "--snapshot-output");
+  const planOutput = required(flag(args, "plan-output"), "--plan-output");
+  const before = readRuleset(repository, rulesetId);
+  const targetPolicy = resolveGithubGovernanceTargetPolicy({
+    repository,
+    targetRef: branch,
+  });
+  const snapshotCore = {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-github-governance-ruleset-rollback-snapshot",
+    repository,
+    targetRef: branch,
+    rulesetId,
+    ruleset: before,
+  };
+  const snapshot = {
+    ...snapshotCore,
+    snapshotRoot: githubGovernanceDigest(snapshotCore),
+  };
+  const rollout = createGithubRulesetGovernanceRolloutPlan({
+    repository,
+    targetRef: branch,
+    rulesetId,
+    inventory: before,
+    rollbackSnapshot: before,
+    desiredProtection: {
+      strictRequiredChecks: targetPolicy.strictRequiredChecks,
+      requiredCheckBindings: targetPolicy.requiredCheckBindings,
+      requiredApprovals: targetPolicy.requiredApprovals,
+      allowedBypassActors: targetPolicy.allowedBypassActors,
+    },
+  });
+  const boundCore = {
+    ...rollout,
+    snapshotRoot: snapshot.snapshotRoot,
+    snapshotPath: path.resolve(snapshotOutput),
+  };
+  const { planRoot: ignored, ...planCore } = boundCore;
+  const finalPlan = {
+    ...planCore,
+    planRoot: githubGovernanceDigest(planCore),
+  };
+  fs.writeFileSync(path.resolve(snapshotOutput), `${JSON.stringify(snapshot, null, 2)}\n`);
+  fs.writeFileSync(path.resolve(planOutput), `${JSON.stringify(finalPlan, null, 2)}\n`);
+  return finalPlan;
+}
+
 function rulesetApply(args) {
   const planPath = required(flag(args, "plan-json"), "--plan-json");
   const confirmed = required(flag(args, "confirm-plan-root"), "--confirm-plan-root");
@@ -214,8 +271,7 @@ function rulesetApply(args) {
   });
   const after = readRuleset(rollout.repository, rollout.rulesetId);
   const afterRoot = githubGovernanceDigest(after);
-  if (afterRoot !== rollout.expectedObservation.rulesetRoot ||
-      after.bypass_actors.length !== 0) {
+  if (afterRoot !== rollout.expectedObservation.rulesetRoot) {
     throw new Error("post-change GitHub ruleset read-back does not match the rollout plan");
   }
   return {
@@ -406,26 +462,20 @@ function rollback(args) {
 
 function main(args = process.argv.slice(2)) {
   const mode = args[0] || "plan";
-  const modes = [
-    "plan",
-    "apply",
-    "rollback",
-    "ruleset-plan",
-    "ruleset-apply",
-    "ruleset-rollback",
-  ];
-  const rest = modes.includes(mode) ? args.slice(1) : args;
-  const result = mode === "apply"
-    ? apply(rest)
-    : mode === "rollback"
-      ? rollback(rest)
-      : mode === "ruleset-plan"
-        ? rulesetPlan(rest)
-        : mode === "ruleset-apply"
-          ? rulesetApply(rest)
-          : mode === "ruleset-rollback"
-            ? rulesetRollback(rest)
-            : plan(rest);
+  const handlers = new Map([
+    ["plan", plan],
+    ["apply", apply],
+    ["rollback", rollback],
+    ["ruleset-plan", rulesetPlan],
+    ["ruleset-apply", rulesetApply],
+    ["ruleset-rollback", rulesetRollback],
+    ["ruleset-policy-plan", rulesetPolicyPlan],
+    ["ruleset-policy-apply", rulesetApply],
+    ["ruleset-policy-rollback", rulesetRollback],
+  ]);
+  const handler = handlers.get(mode) || plan;
+  const rest = handlers.has(mode) ? args.slice(1) : args;
+  const result = handler(rest);
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
 }
 

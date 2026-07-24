@@ -213,12 +213,14 @@ export {
   createBuildchainGithubGovernanceAuthority,
   createGithubGovernanceRolloutPlan,
   createGithubRulesetBypassRolloutPlan,
+  createGithubRulesetGovernanceRolloutPlan,
   evaluateCodeownersAuthority,
   evaluateGithubGovernanceSnapshot,
   githubGovernanceDigest,
   normalizeGithubBranchProtectionSnapshot,
   normalizeGithubRulesetSnapshot,
   parseCodeowners,
+  resolveGithubGovernanceTargetPolicy,
   verifyGithubGovernanceReceipt,
 } from "./github-governance-authority.js";
 

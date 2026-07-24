@@ -196,24 +196,34 @@ buildchain github-governance rollback \
   --confirm-rollback-root sha256:...
 ```
 
-Repository ruleset bypass removal uses the same freeze/apply/read-back/rollback
-boundary:
+For an admitted exact target, repository ruleset reconciliation compiles the
+target descriptor into the provider body. It replaces bypass actors with the
+exact admitted authority set, requires fresh Code Owner approval and resolved
+review threads, and binds required checks plus strict-update semantics to the
+target policy. The target condition must contain exactly one branch; unrelated
+rules and conditions are preserved in place.
 
 ```bash
-buildchain github-governance ruleset-plan \
+buildchain github-governance ruleset-policy-plan \
   --repository kungfu-systems/buildchain \
-  --ruleset-id 19076734 \
+  --branch alpha/v2/v2.14 \
+  --ruleset-id 19518955 \
   --snapshot-output ruleset-rollback.json \
   --plan-output ruleset-rollout.json
 
-buildchain github-governance ruleset-apply \
+buildchain github-governance ruleset-policy-apply \
   --plan-json ruleset-rollout.json \
   --confirm-plan-root sha256:...
+
+buildchain github-governance ruleset-policy-rollback \
+  --plan-json ruleset-rollout.json \
+  --confirm-rollback-root sha256:...
 ```
 
-The operation changes only `bypass_actors`; name, target, enforcement,
-conditions, and rules must retain the same canonical root. Rollback requires
-the frozen ruleset snapshot root.
+The narrower `ruleset-plan` mode changes only `bypass_actors`; it remains
+available for a bypass-only canary, but it cannot prove that an effective
+ruleset matches the target descriptor. Both modes require the frozen ruleset
+snapshot root for rollback.
 
 Paid-plan purchase, billing, legal/account-owner decisions, and any operation
 that could remove the last recoverable owner remain external human gates.
