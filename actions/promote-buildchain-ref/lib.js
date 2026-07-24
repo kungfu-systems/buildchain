@@ -4864,6 +4864,52 @@ async function promoteBuildchainRefs({
         });
         return;
       }
+      const exactCandidateSha =
+        exactReleaseCandidateSource?.promotionChannelSha;
+      const exactCandidateTreeSha =
+        exactReleaseCandidateSource?.promotionChannelTreeSha;
+      if (
+        exactReleaseCandidateSource?.treeEquivalent === true &&
+        parentSha === exactCandidateSha &&
+        parent.treeSha === exactCandidateTreeSha
+      ) {
+        let promotionPullRequest;
+        try {
+          promotionPullRequest = await assertChannelPromotionPr({
+            octokit,
+            owner,
+            repo,
+            sha: parentSha,
+            targetRef,
+          });
+        } catch (error) {
+          promotionPullRequest = await findMatchingTargetPullRequest({
+            commitSha: parentSha,
+            targetRef,
+          });
+          if (!promotionPullRequest) {
+            throw error;
+          }
+        }
+        await assertOnlyAllowedChangesBetween({
+          baseSha: parentSha,
+          headSha: commitSha,
+          allowedPaths,
+        });
+        updates.push({
+          action: "accepted-exact-release-candidate-parent",
+          sha: parentSha,
+          treeSha: parent.treeSha,
+          builtSourceSha: exactReleaseCandidateSource.builtSourceSha,
+          builtSourceTreeSha: exactReleaseCandidateSource.builtSourceTreeSha,
+          alphaTag,
+          alphaSha,
+          targetRef,
+          pullRequest:
+            promotionPullRequest?.html_url || promotionPullRequest?.url,
+        });
+        return;
+      }
     }
     const matchingReleaseRecoveryPullRequest =
       await findMatchingReleaseRecoveryPullRequest({ commitSha, targetRef });
