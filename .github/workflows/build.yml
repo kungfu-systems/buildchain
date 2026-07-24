@@ -189,14 +189,19 @@ on:
         type: string
         required: false
       credential-island-macos-app-path:
-        description: "Optional exact .app path to seal for the Buildchain-owned credential-island job"
+        description: "Optional exact .app path to seal for a protected macOS credential-island job"
         default: ""
         type: string
         required: false
       credential-island-environment:
-        description: "Caller-repository protected environment that owns macOS signing credentials and policy variables"
+        description: "Protected environment used by the built-in signer; leave empty for caller-owned signing"
         default: ""
         type: string
+        required: false
+      credential-island-caller-owned:
+        description: "Seal and export the macOS input/runtime for a caller-owned protected signing job instead of running the built-in signer"
+        default: false
+        type: boolean
         required: false
       credential-island-macos-platform-id:
         description: "macOS build platform whose sealed app is admitted to the credential island"
@@ -684,6 +689,7 @@ jobs:
       artifact-paths: ${{ inputs.artifact-paths }}
       credential-island-macos-app-path: ${{ inputs.credential-island-macos-app-path }}
       credential-island-environment: ${{ inputs.credential-island-environment }}
+      credential-island-caller-owned: ${{ inputs.credential-island-caller-owned }}
       credential-island-macos-platform-id: ${{ inputs.credential-island-macos-platform-id }}
       release-candidate: ${{ inputs.release-candidate }}
       expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
