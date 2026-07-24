@@ -227,7 +227,7 @@ function rulesetPolicyPlan(args) {
       strictRequiredChecks: targetPolicy.strictRequiredChecks,
       requiredCheckBindings: targetPolicy.requiredCheckBindings,
       requiredApprovals: targetPolicy.requiredApprovals,
-      allowedBypassActors: targetPolicy.allowedBypassActors,
+      rulesetBypassActors: [],
     },
   });
   const boundCore = {

@@ -198,10 +198,14 @@ buildchain github-governance rollback \
 
 For an admitted exact target, repository ruleset reconciliation compiles the
 target descriptor into the provider body. It replaces bypass actors with the
-exact admitted authority set, requires fresh Code Owner approval and resolved
-review threads, and binds required checks plus strict-update semantics to the
-target policy. The target condition must contain exactly one branch; unrelated
-rules and conditions are preserved in place.
+exact provider-admitted desired set, requires fresh Code Owner approval and
+resolved review threads, and binds required checks plus strict-update semantics
+to the target policy. Repository rulesets default to no bypass actors. The
+descriptor's target-bound GitHub Actions allowance is an upper bound on
+effective provider state, not a requirement to add that actor to every
+protection layer; when needed, the built-in App allowance is expressed by
+classic branch protection. The target condition must contain exactly one
+branch; unrelated rules and conditions are preserved in place.
 
 ```bash
 buildchain github-governance ruleset-policy-plan \
