@@ -7933,6 +7933,68 @@ test("strict alpha promotion rejects publish-gate PR lineage for a different lin
   );
 });
 
+test("release channel admission accepts only an exact line-scoped recovery PR", async () => {
+  const pullRequest = await assertChannelPromotionPr({
+    octokit: {
+      rest: {
+        repos: {
+          listPullRequestsAssociatedWithCommit: async () => ({
+            data: [
+              {
+                merged_at: "2026-07-24T00:00:00Z",
+                base: { ref: "release/v2/v2.14" },
+                head: {
+                  ref: "fix/release-line-v2-v2.14-finalization-recovery",
+                  repo: { full_name: "kungfu-systems/buildchain" },
+                },
+              },
+            ],
+          }),
+        },
+      },
+    },
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "release/v2/v2.14",
+  });
+
+  assert.equal(
+    pullRequest.head.ref,
+    "fix/release-line-v2-v2.14-finalization-recovery",
+  );
+});
+
+test("release channel admission rejects a recovery PR for another line", async () => {
+  await assert.rejects(
+    assertChannelPromotionPr({
+      octokit: {
+        rest: {
+          repos: {
+            listPullRequestsAssociatedWithCommit: async () => ({
+              data: [
+                {
+                  merged_at: "2026-07-24T00:00:00Z",
+                  base: { ref: "release/v2/v2.14" },
+                  head: {
+                    ref: "fix/release-line-v2-v2.13-finalization-recovery",
+                    repo: { full_name: "kungfu-systems/buildchain" },
+                  },
+                },
+              ],
+            }),
+          },
+        },
+      },
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sha: SHA,
+      targetRef: "release/v2/v2.14",
+    }),
+    /exact line-scoped release recovery PR/,
+  );
+});
+
 test("strict alpha promotion no-ops settled generated version-state commits", async () => {
   const refs = new Map([
     ["heads/alpha/v1/v1.0", SHA],
