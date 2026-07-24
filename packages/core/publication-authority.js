@@ -54,10 +54,6 @@ const REQUIRED_CONTROL_PLANE_FACTS = Object.freeze([
   "runner-policy",
 ]);
 
-function releaseCandidateEvidenceChannel(publicationChannel) {
-  return publicationChannel === "major" ? "release" : publicationChannel;
-}
-
 function stableJson(value) {
   if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
   if (value && typeof value === "object") {
@@ -637,7 +633,7 @@ function validatePublicationEvidence(publicationEvidence, admission) {
     passport,
     buildSummary,
     repository: admission.repository,
-    targetChannel: releaseCandidateEvidenceChannel(admission.channel),
+    targetChannel: admission.channel,
   });
   if (!passportValidation.ok) {
     throw new Error(`release-candidate passport did not qualify: ${passportValidation.errors.join("; ")}`);
