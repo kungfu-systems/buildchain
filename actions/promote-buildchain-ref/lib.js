@@ -4805,6 +4805,54 @@ async function promoteBuildchainRefs({
       const matchingReleaseRecoveryPullRequest =
         await findMatchingReleaseRecoveryPullRequest({ commitSha: parentSha, targetRef });
       if (matchingReleaseRecoveryPullRequest) {
+        const recoveryBaseSha = matchingReleaseRecoveryPullRequest.base?.sha;
+        const recoveryHeadSha = matchingReleaseRecoveryPullRequest.head?.sha;
+        const exactCandidateSha =
+          exactReleaseCandidateSource?.promotionChannelSha;
+        const exactCandidateTreeSha =
+          exactReleaseCandidateSource?.promotionChannelTreeSha;
+        if (
+          recoveryBaseSha &&
+          recoveryHeadSha &&
+          exactReleaseCandidateSource?.treeEquivalent === true &&
+          parentSha === exactCandidateSha &&
+          parent.treeSha === exactCandidateTreeSha
+        ) {
+          const recoveryHead = await getCommitInfo(
+            octokit,
+            owner,
+            repo,
+            recoveryHeadSha,
+          );
+          if (recoveryHead.treeSha !== parent.treeSha) {
+            throw new Error(
+              `Release-line recovery PR head tree ${recoveryHead.treeSha} must equal exact release candidate tree ${parent.treeSha}`,
+            );
+          }
+          await assertOnlyAllowedReleaseRecoveryChangesBetween({
+            baseSha: recoveryBaseSha,
+            headSha: recoveryHeadSha,
+            allowedPaths,
+          });
+          await assertOnlyAllowedChangesBetween({
+            baseSha: parentSha,
+            headSha: commitSha,
+            allowedPaths,
+          });
+          updates.push({
+            action: "accepted-exact-release-recovery-parent",
+            sha: parentSha,
+            treeSha: parent.treeSha,
+            recoveryBaseSha,
+            recoveryHeadSha,
+            builtSourceSha: exactReleaseCandidateSource.builtSourceSha,
+            builtSourceTreeSha: exactReleaseCandidateSource.builtSourceTreeSha,
+            alphaTag,
+            alphaSha,
+            targetRef,
+          });
+          return;
+        }
         await assertOnlyAllowedReleaseRecoveryChangesBetween({
           baseSha: alphaSha,
           headSha: parentSha,
@@ -6113,7 +6161,7 @@ async function promoteBuildchainRefs({
         Boolean(releaseCommit.anchorManifest) &&
         releaseCommit.hasVersionVerification,
       exactReleaseCandidateSource:
-        promoteOnlyReleaseCandidate && releaseSha === sha
+        promoteOnlyReleaseCandidate
           ? releaseCandidateValidation
           : undefined,
     });
