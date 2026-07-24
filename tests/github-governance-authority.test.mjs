@@ -700,6 +700,10 @@ test("ruleset policy rollout compiles the exact target descriptor with rollback"
     {
       allowed_merge_methods: ["merge", "squash", "rebase"],
       dismiss_stale_reviews_on_push: true,
+      dismissal_restriction: {
+        allowed_actors: [],
+        enabled: false,
+      },
       require_code_owner_review: true,
       require_last_push_approval: true,
       required_approving_review_count: 1,
@@ -731,6 +735,66 @@ test("ruleset policy rollout compiles the exact target descriptor with rollback"
     plan.expectedObservation.rulesetRoot,
     githubGovernanceDigest(plan.operations[0].body),
   );
+
+  const mergeQueueOnly = normalizeGithubRulesetSnapshot({
+    name: "Buildchain dev merge queue: dev/v2/v2.14",
+    target: "branch",
+    enforcement: "active",
+    bypass_actors: [],
+    conditions: {
+      ref_name: {
+        include: ["refs/heads/dev/v2/v2.14"],
+        exclude: [],
+      },
+    },
+    rules: [{
+      type: "merge_queue",
+      parameters: {
+        merge_method: "MERGE",
+        max_entries_to_build: 1,
+      },
+    }],
+  });
+  const canonicalPlan = createGithubRulesetGovernanceRolloutPlan({
+    repository: "kungfu-systems/buildchain",
+    targetRef: "dev/v2/v2.14",
+    rulesetId: 19076734,
+    inventory: mergeQueueOnly,
+    rollbackSnapshot: mergeQueueOnly,
+    desiredProtection: {
+      strictRequiredChecks: false,
+      requiredCheckBindings: [{ context: "check", appId: 15368 }],
+      requiredApprovals: 1,
+      rulesetBypassActors: [],
+    },
+  });
+  assert.deepEqual(
+    canonicalPlan.operations[0].body.rules
+      .find((rule) => rule.type === "pull_request").parameters,
+    {
+      allowed_merge_methods: ["merge", "squash", "rebase"],
+      dismiss_stale_reviews_on_push: true,
+      dismissal_restriction: {
+        allowed_actors: [],
+        enabled: false,
+      },
+      require_code_owner_review: true,
+      require_last_push_approval: true,
+      required_approving_review_count: 1,
+      required_review_thread_resolution: true,
+      required_reviewers: [],
+    },
+  );
+  assert.deepEqual(
+    canonicalPlan.operations[0].body.rules
+      .find((rule) => rule.type === "required_status_checks").parameters,
+    {
+      do_not_enforce_on_create: false,
+      required_status_checks: [{ context: "check", integration_id: 15368 }],
+      strict_required_status_checks_policy: false,
+    },
+  );
+
   const installedAppPlan = createGithubRulesetGovernanceRolloutPlan({
     repository: "kungfu-systems/buildchain",
     targetRef: "alpha/v2/v2.14",

@@ -93,7 +93,7 @@
       "path": "docs/github-governance-authority.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:abafcef53f8021d1f2069c11c8df2793cbbde4f7b36dec8287020f1c497b4316"
+      "digest": "sha256:3103d7982c9a30b344c603566520aeb1d5d90c1c54958d9c1c2b7ae897359da8"
     },
     {
       "id": "release-candidate",
