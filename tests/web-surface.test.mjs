@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -43,6 +44,82 @@ async function withFixtureAsync(fn) {
     return await fn(fixture);
   } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
+  }
+}
+
+function writeInstallerPublicationFixture(fixture, { appendOnly = true } = {}) {
+  const dist = path.join(fixture, "dist");
+  const immutablePath = "installers/v1/alpha/0123456789abcdef";
+  fs.mkdirSync(path.join(dist, immutablePath), { recursive: true });
+  fs.writeFileSync(path.join(dist, "index.html"), "hello\n");
+  const assets = [
+    ["install.sh", Buffer.from("#!/bin/sh\nexit 0\n")],
+    ["install.ps1", Buffer.from("exit 0\r\n")],
+  ].map(([name, bytes]) => {
+    fs.writeFileSync(path.join(dist, name), bytes);
+    fs.writeFileSync(path.join(dist, immutablePath, name), bytes);
+    return {
+      name,
+      contentType: "text/plain; charset=utf-8",
+      size: bytes.length,
+      digest: `sha256:${createHash("sha256").update(bytes).digest("hex")}`,
+      friendlyUrl: `https://libkungfu.dev/${name}`,
+      immutableUrl: `https://libkungfu.dev/${immutablePath}/${name}`,
+    };
+  });
+  fs.writeFileSync(
+    path.join(dist, "installer-publication.json"),
+    `${JSON.stringify({
+      schema: "kungfu.bootstrap-installer-publication/v1",
+      installerVersion: "v1",
+      channel: "alpha",
+      sourceCommit: "a".repeat(40),
+      channelUrl: "https://releases.kungfu.tech/channels/alpha.json",
+      channelPayloadRoot: `sha256:${"1".repeat(64)}`,
+      channelFileDigest: `sha256:${"2".repeat(64)}`,
+      releasePassport: {
+        ref: "buildchain:release-candidate-passport/fixture",
+        root: `sha256:${"3".repeat(64)}`,
+      },
+      immutablePath,
+      entries: [{
+        platform: "linux",
+        architecture: "x64",
+        version: "4.0.0-alpha.1",
+        sourceCommit: "a".repeat(40),
+        manifestRoot: `sha256:${"4".repeat(64)}`,
+        artifactRoot: `sha256:${"5".repeat(64)}`,
+        artifactUrl:
+          "https://github.com/kungfu-systems/kungfu/releases/download/v4.0.0-alpha.1/kungfu-cli-linux-x64.tar.gz",
+        artifactSize: 4096,
+        artifactDigest: `sha256:${"6".repeat(64)}`,
+        artifactSignature: "sigstore:fixture",
+        archiveName: "kungfu-cli-linux-x64.tar.gz",
+        archiveBase: "kungfu-cli-linux-x64",
+      }],
+      assets,
+    }, null, 2)}\n`,
+  );
+  if (appendOnly) {
+    fs.writeFileSync(
+      path.join(dist, "manifest.json"),
+      `${JSON.stringify({
+        schemaVersion: 1,
+        contract: "kungfu-bootstrap-installer-web-surface/v1",
+        archivePolicy: {
+          contract: "kungfu-buildchain-publication-archive-policy",
+          deploymentBoundary: "append-only immutable version prefixes",
+        },
+        installerPublication: "installer-publication.json",
+        publications: [{
+          id: "kungfu-bootstrap-installer-alpha",
+          versions: [{
+            version: `sha256:${"1".repeat(64)}`,
+            immutablePath: `/${immutablePath}/`,
+          }],
+        }],
+      }, null, 2)}\n`,
+    );
   }
 }
 
@@ -128,6 +205,65 @@ test("web-surface deploy plan emits deterministic manifest without touching AWS"
         "write-deployment-manifest",
         "invalidate-cdn",
       ],
+    );
+  });
+});
+
+test("web-surface deploy welds installer bytes, append-only policy, and cache metadata", () => {
+  withFixture((fixture) => {
+    writeInstallerPublicationFixture(fixture);
+    const plan = planWebSurfaceDeploy({
+      cwd: fixture,
+      channel: "preview",
+      alias: "sha-aaaaaaaaaaaa",
+      sourceSha: "a".repeat(40),
+      deployedAt: "2026-07-24T00:00:00.000Z",
+    });
+    assert.equal(plan.manifest.installerPublicationEvidence.state, "verified");
+    assert.match(plan.manifest.installerPublicationEvidence.evidenceRoot, /^sha256:[a-f0-9]{64}$/);
+
+    const calls = [];
+    applyWebSurfaceDeploy({
+      cwd: fixture,
+      plan,
+      dryRun: false,
+      commandRunner(operation) {
+        calls.push(operation);
+        return { exitCode: 0, stdout: "", stderr: "" };
+      },
+    });
+    const immutableSync = calls.find((operation) => operation.action === "sync-immutable-artifact");
+    assert.deepEqual(immutableSync.args.slice(-4), [
+      "--content-type",
+      "application/octet-stream",
+      "--cache-control",
+      "public,max-age=31536000,immutable",
+    ]);
+    const friendly = calls.filter((operation) => operation.action === "publish-friendly-installer");
+    assert.deepEqual(
+      friendly.map((operation) => operation.installer.name).sort(),
+      ["install.ps1", "install.sh"],
+    );
+    assert.equal(
+      friendly.every((operation) =>
+        operation.args.includes("public,max-age=300,must-revalidate")),
+      true,
+    );
+  });
+});
+
+test("web-surface deploy rejects installer publication without append-only coverage", () => {
+  withFixture((fixture) => {
+    writeInstallerPublicationFixture(fixture, { appendOnly: false });
+    assert.throws(
+      () => planWebSurfaceDeploy({
+        cwd: fixture,
+        channel: "preview",
+        alias: "sha-aaaaaaaaaaaa",
+        sourceSha: "a".repeat(40),
+        deployedAt: "2026-07-24T00:00:00.000Z",
+      }),
+      /not covered by append-only publication policy/,
     );
   });
 });
@@ -284,6 +420,57 @@ test("web-surface deploy apply executes aws s3 and cloudfront commands through r
       result.operations.map((operation) => operation.executed),
       Array.from({ length: 21 }, () => true),
     );
+  });
+});
+
+test("web-surface deploy records and applies explicit cache-control classes", () => {
+  withFixture((fixture) => {
+    const configPath = path.join(fixture, "buildchain.toml");
+    fs.writeFileSync(
+      configPath,
+      fs.readFileSync(configPath, "utf8").replace(
+        '[deploy.staging]\nadapter = "aws-s3-cloudfront"',
+        [
+          '[deploy.staging]',
+          'adapter = "aws-s3-cloudfront"',
+          'cache_control_default = "public,max-age=3600"',
+          'cache_control_mutable = "public,max-age=300,must-revalidate"',
+          'cache_control_immutable = "public,max-age=31536000,immutable"',
+        ].join("\n"),
+      ),
+    );
+    fs.mkdirSync(path.join(fixture, "dist"), { recursive: true });
+    fs.writeFileSync(path.join(fixture, "dist", "index.html"), "hello\n");
+    fs.writeFileSync(path.join(fixture, "dist", "manifest.json"), "{}\n");
+    const calls = [];
+    const result = applyWebSurfaceDeploy({
+      cwd: fixture,
+      channel: "staging",
+      sourceSha: "a".repeat(40),
+      dryRun: false,
+      appliedAt: "2026-07-22T00:00:00.000Z",
+      commandRunner(operation) {
+        calls.push(operation);
+        return { exitCode: 0, stdout: `${operation.action}\n`, stderr: "" };
+      },
+    });
+
+    assert.deepEqual(result.surfaceBindings[0].cacheControl, {
+      default: "public,max-age=3600",
+      mutable: "public,max-age=300,must-revalidate",
+      immutable: "public,max-age=31536000,immutable",
+    });
+    const sync = calls.find((call) => call.action === "sync-static-artifact" && call.surface === "hub");
+    assert.deepEqual(sync.args.slice(-2), ["--cache-control", "public,max-age=3600"]);
+    const mutable = calls.find((call) => call.action === "apply-mutable-cache-control" && call.surface === "hub");
+    assert.deepEqual(mutable.args.slice(-2), ["--cache-control", "public,max-age=300,must-revalidate"]);
+    assert.deepEqual(
+      mutable.args.filter((value, index) => mutable.args[index - 1] === "--include"),
+      ["*.html", "*.json", "*.xml"],
+    );
+    const manifest = calls.find((call) => call.action === "write-deployment-manifest" && call.surface === "hub");
+    assert.deepEqual(manifest.args.slice(-2), ["--cache-control", "public,max-age=300,must-revalidate"]);
+    assert.match(manifest.stdin, /"cacheControl"/);
   });
 });
 
@@ -546,10 +733,25 @@ test("web-surface deploy apply honors explicit bucket-root prefix", () => {
   });
 });
 
-test("web-surface deploy preserves publication archives while deleting mutable paths", async () => {
+test("web-surface deploy preserves version prefixes while updating the archive index", async () => {
   await withFixtureAsync(async (fixture) => {
+    const configPath = path.join(fixture, "buildchain.toml");
+    fs.writeFileSync(
+      configPath,
+      fs.readFileSync(configPath, "utf8").replace(
+        '[deploy.staging]\nadapter = "aws-s3-cloudfront"',
+        [
+          '[deploy.staging]',
+          'adapter = "aws-s3-cloudfront"',
+          'cache_control_mutable = "public,max-age=300,must-revalidate"',
+          'cache_control_immutable = "public,max-age=31536000,immutable"',
+        ].join("\n"),
+      ),
+    );
+    const archiveIndex = path.join(fixture, "dist", "buildchain", "archive", "index.html");
     const archiveRoot = path.join(fixture, "dist", "buildchain", "archive", "paper", "v1.0.0");
     fs.mkdirSync(archiveRoot, { recursive: true });
+    fs.writeFileSync(archiveIndex, "mutable archive index\n");
     fs.writeFileSync(path.join(archiveRoot, "index.html"), "immutable reader\n");
     fs.writeFileSync(path.join(archiveRoot, "main.pdf"), "immutable pdf\n");
     fs.writeFileSync(
@@ -575,15 +777,15 @@ test("web-surface deploy preserves publication archives while deleting mutable p
       deployedAt: "2026-07-01T00:00:00.000Z",
     });
     const binding = plan.manifest.surfaceBindings.find((entry) => entry.surface === "buildchain");
-    assert.deepEqual(binding.immutablePublication?.preservedRoots, ["archive"]);
+    assert.deepEqual(binding.immutablePublication?.preservedRoots, ["archive/paper/v1.0.0"]);
     assert.deepEqual(binding.immutablePublication?.declaredPrefixes, ["archive/paper/v1.0.0"]);
     assert.deepEqual(
       binding.immutablePublication?.files.map((file) => file.path),
       ["archive/paper/v1.0.0/index.html", "archive/paper/v1.0.0/main.pdf"],
     );
     const hubBinding = plan.manifest.surfaceBindings.find((entry) => entry.surface === "hub");
-    assert.deepEqual(hubBinding.mutableDeleteExcludes, ["buildchain/archive/*"]);
-    assert.deepEqual(binding.mutableDeleteExcludes, ["archive/*"]);
+    assert.deepEqual(hubBinding.mutableDeleteExcludes, ["buildchain/archive/paper/v1.0.0/*"]);
+    assert.deepEqual(binding.mutableDeleteExcludes, ["archive/paper/v1.0.0/*"]);
 
     const calls = [];
     const result = applyWebSurfaceDeploy({
@@ -606,33 +808,45 @@ test("web-surface deploy preserves publication archives while deleting mutable p
       "sync-static-artifact",
     ]);
     const immutableSync = buildchainCalls.find((call) => call.action === "sync-immutable-artifact");
-    assert.deepEqual(immutableSync.args.slice(-3), ["--no-overwrite", "--checksum-algorithm", "SHA256"]);
-    assert.equal(immutableSync.args[2], path.join(fixture, "dist", "buildchain", "archive"));
-    assert.equal(immutableSync.args[3], "s3://libkungfu-dev-staging/staging/buildchain/archive");
+    assert.deepEqual(immutableSync.args.slice(-5), [
+      "--no-overwrite",
+      "--checksum-algorithm",
+      "SHA256",
+      "--cache-control",
+      "public,max-age=31536000,immutable",
+    ]);
+    assert.equal(immutableSync.args[2], path.join(fixture, "dist", "buildchain", "archive", "paper", "v1.0.0"));
+    assert.equal(immutableSync.args[3], "s3://libkungfu-dev-staging/staging/buildchain/archive/paper/v1.0.0");
     const mutableSync = buildchainCalls.find((call) => call.action === "sync-static-artifact");
-    assert.deepEqual(mutableSync.args.slice(-2), ["--exclude", "archive/*"]);
+    assert.deepEqual(mutableSync.args.slice(-2), ["--exclude", "archive/paper/v1.0.0/*"]);
+    const mutableMetadata = buildchainCalls.find((call) => call.action === "apply-mutable-cache-control");
+    assert.deepEqual(mutableMetadata.args.slice(-4), [
+      "--exclude",
+      "archive/paper/v1.0.0/*",
+      "--cache-control",
+      "public,max-age=300,must-revalidate",
+    ]);
     const hubMutableSync = calls.find((call) => call.action === "sync-static-artifact" && call.surface === "hub");
-    assert.deepEqual(hubMutableSync.args.slice(-2), ["--exclude", "buildchain/archive/*"]);
+    assert.deepEqual(hubMutableSync.args.slice(-2), ["--exclude", "buildchain/archive/paper/v1.0.0/*"]);
     assert.ok(
       calls.findLastIndex((call) => call.action === "verify-immutable-artifact-after-upload") <
       calls.indexOf(hubMutableSync),
     );
-    assert.equal(
-      buildchainCalls.some((call) =>
-        call.action === "write-directory-index-alias" &&
-        call.args[call.args.indexOf("--key") + 1]?.includes("/archive/")),
-      false,
-    );
+    const directoryIndexAliases = buildchainCalls
+      .filter((call) => call.action === "write-directory-index-alias")
+      .map((call) => call.args[call.args.indexOf("--key") + 1]);
+    assert.ok(directoryIndexAliases.some((key) => key?.endsWith("/archive")));
+    assert.equal(directoryIndexAliases.some((key) => key?.includes("/archive/paper/v1.0.0")), false);
     assert.deepEqual(result.immutablePreservation, [{
       surface: "buildchain",
       manifestPath: "buildchain/manifest.json",
-      preservedRoots: ["archive"],
+      preservedRoots: ["archive/paper/v1.0.0"],
       declaredPrefixes: ["archive/paper/v1.0.0"],
       fileCount: 2,
-      mutableDeleteExcludes: ["archive/*"],
+      mutableDeleteExcludes: ["archive/paper/v1.0.0/*"],
       coveringBindings: [
-        { surface: "buildchain", mutableDeleteExcludes: ["archive/*"] },
-        { surface: "hub", mutableDeleteExcludes: ["buildchain/archive/*"] },
+        { surface: "buildchain", mutableDeleteExcludes: ["archive/paper/v1.0.0/*"] },
+        { surface: "hub", mutableDeleteExcludes: ["buildchain/archive/paper/v1.0.0/*"] },
       ],
       status: "applied",
     }]);
@@ -653,8 +867,8 @@ test("web-surface deploy preserves publication archives while deleting mutable p
     assert.equal(preservation.status, "pass");
     assert.equal(preservation.bindings[0].fileCount, 2);
     assert.deepEqual(preservation.bindings[0].coveringBindings, [
-      { surface: "buildchain", mutableDeleteExcludes: ["archive/*"], status: "pass" },
-      { surface: "hub", mutableDeleteExcludes: ["buildchain/archive/*"], status: "pass" },
+      { surface: "buildchain", mutableDeleteExcludes: ["archive/paper/v1.0.0/*"], status: "pass" },
+      { surface: "hub", mutableDeleteExcludes: ["buildchain/archive/paper/v1.0.0/*"], status: "pass" },
     ]);
 
     const failedCalls = [];

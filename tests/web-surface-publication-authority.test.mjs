@@ -94,7 +94,8 @@ test("trusted manual and reviewed release PR paths both authorize production", (
     actorPermission: "write",
   });
   const release = resolveWebSurfaceProductionDecision({
-    eventName: "push",
+    eventName: "pull_request",
+    eventAction: "closed",
     refName: "main",
     repository: "kungfu-systems/site",
     sourceSha: SOURCE_SHA,
@@ -109,6 +110,22 @@ test("trusted manual and reviewed release PR paths both authorize production", (
   assert.equal(manual.kind, "manual-dispatch");
   assert.equal(release.approved, true);
   assert.equal(release.kind, "release-pr");
+});
+
+test("ordinary closed pull requests do not authorize production", () => {
+  const decision = resolveWebSurfaceProductionDecision({
+    eventName: "pull_request",
+    eventAction: "closed",
+    refName: "main",
+    repository: "kungfu-systems/site",
+    sourceSha: SOURCE_SHA,
+    actor: "maintainer",
+    productionApply: true,
+    productionReleaseOnMain: true,
+    releaseApproved: false,
+  });
+  assert.equal(decision.approved, false);
+  assert.equal(decision.kind, "none");
 });
 
 test("ordinary main push keeps production capability dormant", () => {

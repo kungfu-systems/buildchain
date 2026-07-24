@@ -61,6 +61,42 @@ test("Buildchain contract lock allows compatible floating SHA drift", () => {
   assert.equal(result.issueRecommended, true);
 });
 
+test("optional promote action inputs remain compatible with the accepted alpha contract", () => {
+  const current = createBuildchainContractWorld({
+    root: path.resolve(import.meta.dirname, ".."),
+    packageJson: { name: "@kungfu-tech/buildchain", version: "2.14.17-alpha.0" },
+  });
+  const accepted = createBuildchainContractLock({
+    buildchainRef: "v2-alpha",
+    resolvedSha: "a".repeat(40),
+    contractWorld: current,
+  });
+  const acceptedSurface = accepted.buildchain.surfaces.find(
+    (entry) => entry.id === "promote-buildchain-ref-action",
+  );
+  acceptedSurface.breakingDigest =
+    "sha256:a59f0910e6df842e7699139472e5dd69ac2fdd7f7213bf2cb346d1d622556874";
+  accepted.buildchain.contractDigest = "sha256:accepted-alpha-contract";
+
+  const actionSurface = current.surfaces.find(
+    (entry) => entry.id === "promote-buildchain-ref-action",
+  );
+  assert.match(actionSurface.optionalInputs.join("\n"), /release-passport-invariant-passport-jsons/);
+  assert.match(actionSurface.optionalInputs.join("\n"), /release-passport-invariant-passport-command/);
+
+  const result = evaluateBuildchainContractLock({
+    lock: accepted,
+    current,
+    runtimeRef: "v2-alpha",
+    runtimeSha: "b".repeat(40),
+    runtimeClass: "alpha",
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.status, "compatible-drift");
+  assert.doesNotMatch(result.reasons.join("\n"), /promote-buildchain-ref-action/);
+});
+
 test("Buildchain contract lock fails closed on breaking drift", () => {
   const current = createBuildchainContractWorld({
     root: path.resolve(import.meta.dirname, ".."),

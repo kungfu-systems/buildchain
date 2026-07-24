@@ -351,6 +351,60 @@ export function createBuildchainContractWorld({
         "publish transactions can require a resolved publish-gate source lock to prevent floating-ref drift",
         "semver GitHub Releases are created or updated only after transaction completion, with prerelease/latest metadata bound to the authoritative publication channel and tag syntax retained as the fallback for ordinary callers",
       ],
+      compatibleBreakingDigests: [
+        "sha256:a59f0910e6df842e7699139472e5dd69ac2fdd7f7213bf2cb346d1d622556874",
+      ],
+    }),
+    surface(root, {
+      id: "macos-credential-island-action",
+      kind: "action",
+      path: "actions/macos-credential-island/action.yml",
+      publicRef: `kungfu-systems/buildchain/actions/macos-credential-island@${majorLine}`,
+      requiredInputs: [
+        "input-root",
+        "output-root",
+        "source-repository",
+        "source-sha",
+        "source-tree-sha",
+        "buildchain-runtime-sha",
+        "artifact-name",
+        "expected-bundle-id",
+        "expected-team-id",
+        "certificate-sha1",
+        "certificate-p12-base64",
+        "certificate-password",
+        "notary-api-key-p8-base64",
+        "notary-api-key-id",
+        "notary-api-issuer",
+      ],
+      requiredOutputs: [
+        "evidence-path",
+        "manifest-path",
+        "artifact-root",
+        "dmg-path",
+        "zip-path",
+        "dmg-sha256",
+        "zip-sha256",
+      ],
+      breakingDefaults: {
+        entitlementsProfile: "electron-desktop-v1",
+        credentialBoundary: "protected-caller-job",
+        consumerCodeExecution: "forbidden",
+      },
+      optionalInputs: [
+        "source-ref",
+        "platform-id",
+        "entitlements-profile",
+        "artifact-stem",
+        "artifact-relative-output",
+      ],
+      guarantees: [
+        "the action validates a source-bound sealed app before credentials are imported",
+        "the action accepts one exact Developer ID Application fingerprint and a Buildchain-owned entitlements profile",
+        "consumer source and artifact-contained executables are never invoked",
+        "the app and DMG are notarized, stapled, Gatekeeper assessed, and bound to retained evidence",
+        "temporary keychain and API key material are cleaned in both main and post phases",
+      ],
     }),
     surface(root, {
       id: "report-buildchain-issue-action",
@@ -575,6 +629,13 @@ export function createBuildchainContractWorld({
         registryDigest: resolvedControllerRegistry.digest,
         inputClassifications: descriptor.inputs,
       },
+      ...(descriptor.id === "build-lifecycle"
+        ? {
+            compatibleBreakingDigests: [
+              "sha256:e264a79f9f399038c2fcfd21e4168c68c2e1485ee5c651c02242a02b622ac2be",
+            ],
+          }
+        : {}),
       guarantees: [
         "plans bind exact consumer source SHA, exact Buildchain runtime SHA, and the runtime contract digest",
         "receipts bind the plan digest and preserve pass, fail, skip, and partial stage outcomes",
@@ -758,7 +819,11 @@ export function evaluateBuildchainContractLock({
       reasons.push(`surface removed: ${oldSurface.id}`);
       continue;
     }
-    if (nextSurface.breakingDigest !== oldSurface.breakingDigest) {
+    const compatibleBreakingDigests = new Set(nextSurface.compatibleBreakingDigests || []);
+    if (
+      nextSurface.breakingDigest !== oldSurface.breakingDigest
+      && !compatibleBreakingDigests.has(oldSurface.breakingDigest)
+    ) {
       reasons.push(`surface breaking digest changed: ${oldSurface.id}`);
     }
   }

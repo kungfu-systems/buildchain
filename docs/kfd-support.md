@@ -322,6 +322,12 @@ Buildchain validates this shape whenever a KFD-3 registry is read or written.
 Repositories that do not declare the registrar remain outside Shifu's
 distribution jurisdiction.
 
+KFD-3 surface audits also bind a detected artifact to its owning declared
+surface when the detected kind and path match one of these distribution
+artifacts. This lets one participant-facing CLI remain the declared interface
+while its platform binaries are proved as distributions of that interface,
+instead of being reported as unrelated unregistered surfaces.
+
 ## Detected, Declared, Enforced
 
 KFD-3 surface registration uses three states.

@@ -1,0 +1,134 @@
+name: GitHub Governance Authority Audit
+
+on:
+  pull_request:
+  merge_group:
+  schedule:
+    - cron: "41 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: github-governance-authority-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    name: Governance receipt
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+
+      - name: Mint bounded governance auditor token
+        id: auditor
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ vars.KUNGFU_GOVERNANCE_AUDITOR_APP_ID }}
+          private-key: ${{ secrets.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Collect sanitized managed-zone governance receipts
+        env:
+          GH_TOKEN: ${{ steps.auditor.outputs.token }}
+          AUDIT_REPOSITORY: ${{ (github.event_name == 'pull_request' || github.event_name == 'merge_group') && github.repository || '' }}
+          AUDIT_TARGET_REF: ${{ github.event.pull_request.base.ref || github.event.merge_group.base_ref || '' }}
+        run: |
+          set -euo pipefail
+          args=(
+            --organization "${GITHUB_REPOSITORY_OWNER}"
+            --source-revision "${GITHUB_SHA}"
+            --output github-governance-audit.json
+          )
+          if [[ -n "$AUDIT_REPOSITORY" ]]; then
+            args+=(--repository "$AUDIT_REPOSITORY" --target-ref "$AUDIT_TARGET_REF")
+          fi
+          node scripts/audit-github-governance.mjs "${args[@]}"
+
+      - name: Publish audit summary
+        id: summary
+        run: |
+          qualifying="$(jq -r '.inventory.qualifyingCount' github-governance-audit.json)"
+          non_qualifying="$(jq -r '.inventory.nonQualifyingCount' github-governance-audit.json)"
+          audit_root="$(jq -r '.auditRoot' github-governance-audit.json)"
+          {
+            echo "## GitHub governance authority"
+            echo
+            echo "- qualifying: ${qualifying}"
+            echo "- non-qualifying: ${non_qualifying}"
+            echo "- audit root: \`${audit_root}\`"
+          } >> "${GITHUB_STEP_SUMMARY}"
+          echo "non-qualifying=${non_qualifying}" >> "${GITHUB_OUTPUT}"
+          echo "audit-root=${audit_root}" >> "${GITHUB_OUTPUT}"
+
+      - name: Upload sanitized immutable audit
+        uses: actions/upload-artifact@v7
+        with:
+          name: github-governance-audit-${{ github.run_id }}-${{ github.run_attempt }}
+          path: github-governance-audit.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Open or update one governance drift incident
+        if: >-
+          ${{
+            steps.summary.outputs.non-qualifying != '0' &&
+            (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+          }}
+        uses: actions/github-script@v8
+        env:
+          AUDIT_ROOT: ${{ steps.summary.outputs.audit-root }}
+          NON_QUALIFYING: ${{ steps.summary.outputs.non-qualifying }}
+        with:
+          script: |
+            const title = "[governance] Managed zone is non-qualifying";
+            const marker = "<!-- kungfu-github-governance-authority-drift -->";
+            const body = [
+              marker,
+              "The scheduled GitHub governance authority audit failed closed.",
+              "",
+              `Non-qualifying repositories: ${process.env.NON_QUALIFYING}`,
+              `Audit root: \`${process.env.AUDIT_ROOT}\``,
+              `Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              "",
+              "Use the sanitized run artifact for exact remediation pointers. Do not paste private provider payloads into this issue.",
+            ].join("\n");
+            const open = await github.paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open",
+              per_page: 100,
+            });
+            const existing = open.find((issue) =>
+              issue.title === title && String(issue.body || "").includes(marker));
+            if (existing) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.number,
+                body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+              });
+            }
+
+      - name: Enforce governance qualification
+        if: steps.summary.outputs.non-qualifying != '0'
+        run: |
+          echo "::error::Managed-zone GitHub governance is non-qualifying."
+          exit 1

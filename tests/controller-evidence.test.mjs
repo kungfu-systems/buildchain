@@ -160,6 +160,7 @@ test("controller receipts preserve pass, fail, skip, and partial outcomes", () =
       { kind: "platform-manifests", digest: `sha256:${"2".repeat(64)}` },
       { kind: "build-summary", digest: `sha256:${"3".repeat(64)}` },
     ],
+    reason: { code: "stale-failure", summary: "must not survive a passing receipt" },
   });
   const failed = createControllerReceipt({
     plan: expectedPlan,
@@ -173,16 +174,28 @@ test("controller receipts preserve pass, fail, skip, and partial outcomes", () =
   });
   const partial = createControllerReceipt({
     plan: expectedPlan,
-    stages: [{ id: "resolve-runtime", status: "passed" }, { id: "resolve-source", status: "passed" }],
+    stages: [
+      { id: "resolve-runtime", status: "passed" },
+      { id: "resolve-source", status: "passed" },
+      { id: "build", status: "partial" },
+    ],
     reason: { code: "cancelled", summary: "run was cancelled" },
   });
 
   assert.equal(passed.status, "passed");
   assert.equal(passed.qualifying, true);
+  assert.equal(passed.reason, undefined);
   assert.equal(failed.status, "failed");
   assert.equal(skipped.status, "skipped");
   assert.equal(partial.status, "partial");
   assert.equal(validateControllerReceipt(passed, { plan: expectedPlan }).ok, true);
+  assert.match(
+    validateControllerReceipt({
+      ...passed,
+      reason: { code: "stale-failure", summary: "contradicts passed status" },
+    }, { plan: expectedPlan }).issues.join("; "),
+    /passed controller receipt must not declare a failure reason/,
+  );
 });
 
 test("controller receipts allow optional stages to remain uninstantiated", () => {

@@ -115,6 +115,13 @@ Only include platforms that should run. GitHub schedules matrix jobs before
 steps execute, so a disabled entry with unavailable runner labels can still
 block the workflow queue.
 
+`fail-fast` defaults to `false`, preserving the diagnostic behavior that
+collects every platform result. Required promotion callers can set it to `true`
+to cancel sibling native, container, and relay matrix lanes after the first
+failure. This input changes scheduling only: it does not reduce the declared
+platform matrix, turn cancellation into a pass, or alter artifact and release
+admission.
+
 ## Linux Job Containers
 
 Linux build platforms can run inside a digest-pinned job container while macOS
@@ -509,6 +516,66 @@ release jobs can detect drifting diagnostics JSON contracts and missing or
 drifting diagnostics sidecar manifests without downloading the per-platform
 diagnostics artifacts first.
 
+## macOS Credential Island
+
+Alpha consumers can ask the build controller to seal one exact macOS app and
+hand it to a separate protected signing job. The built-in mode is suitable
+when the protected environment belongs to the repository that defines the
+reusable workflow:
+
+```yaml
+with:
+  credential-island-macos-app-path: product/dist/desktop/mac-arm64/Kungfu Episodes.app
+  credential-island-environment: alpha-macos-signing
+  credential-island-macos-platform-id: macos-arm64
+```
+
+For a cross-repository reusable workflow, keep the credentials in the consumer
+repository and select caller-owned mode:
+
+```yaml
+with:
+  credential-island-macos-app-path: product/dist/desktop/mac-arm64/Kungfu Episodes.app
+  credential-island-caller-owned: true
+  credential-island-macos-platform-id: macos-arm64
+```
+
+The caller then runs its own no-checkout macOS job after the reusable build,
+binds the consumer-owned protected environment on that job, and downloads the
+source-bound input plus immutable action runtime from the same workflow run.
+This is required for cross-repository callers because environment credentials
+must never be widened into repository secrets merely to cross a reusable
+workflow boundary.
+
+The ordinary matrix uploads
+`credential-island-input-<platform>-<source-sha>`, containing a `ditto`
+archive and a manifest bound to the caller repository, source commit, source
+tree, bundle identity, version, size, and digest. The pinned reusable workflow
+either starts its built-in GitHub-hosted macOS job or leaves that job to the
+caller. In both modes the credential-bearing job has no source checkout or
+package-manager step: it downloads the immutable Buildchain action runtime plus
+the sealed app and never invokes consumer code.
+
+The protected environment supplies these non-secret variables:
+
+- `BUILDCHAIN_MACOS_EXPECTED_BUNDLE_ID`
+- `BUILDCHAIN_MACOS_EXPECTED_TEAM_ID`
+- `BUILDCHAIN_MACOS_CERTIFICATE_SHA1`
+
+and these secrets:
+
+- `BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64`
+- `BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD`
+- `BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64`
+- `BUILDCHAIN_MACOS_NOTARY_API_KEY_ID`
+- `BUILDCHAIN_MACOS_NOTARY_API_ISSUER`
+
+The signed DMG, signed app ZIP, credential evidence, and their source-bound
+platform manifest form one additional release-candidate platform. Reviewers can
+therefore verify the exact caller source and immutable Buildchain runtime that
+entered the credential island before admitting or publishing the signed
+artifacts.
+
 ## Artifact Transfer Relay
 
 By default, platform jobs upload payloads, manifests, and diagnostics directly
@@ -733,12 +800,11 @@ floating `@v2` consumers receive publish-side source-lock drift protection by
 default. It also defaults `branch-protection-bypass-apps` to `github-actions`
 so the workflow automation can apply generated version-state and channel
 bookkeeping on protected `dev`/`alpha`/`release` branches after the reviewed
-channel PR has merged; consumers using a different promotion identity can pass
-`branch-protection-bypass-users`, `branch-protection-bypass-teams`, or a
-different app slug declaratively. The wrapper uses
-`secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token` as the generated ref update
-token for protected bookkeeping PATCH calls, so a bypass-capable promotion token
-can sync dev immediately after alpha/release publish without a post-publish PR.
+channel PR has merged. Other App slugs and all user or team bypass actors are
+rejected. The wrapper uses the run-scoped `github.token` as the generated ref
+update token for protected bookkeeping PATCH calls, so the exact GitHub Actions
+App authority can sync dev immediately after alpha/release publish without a
+post-publish PR.
 It does not call `.build.yml`, does not create a matrix, and must fail before
 publish if the RC evidence, payload set, or source-lock ref is missing or
 ambiguous.

@@ -1,6 +1,6 @@
 {
   "name": "@kungfu-tech/buildchain",
-  "version": "2.14.14-alpha.5",
+  "version": "2.14.18",
   "private": false,
   "description": "Buildchain Release Passport, release governance, CLI toolkit, and site facts.",
   "repository": "https://github.com/kungfu-systems/buildchain",
@@ -19,6 +19,7 @@
     "./artifact-verification-envelope": "./packages/core/artifact-verification-envelope.js",
     "./anchored-version-material": "./packages/core/anchored-version-material.js",
     "./buildchain-contract": "./packages/core/buildchain-contract.js",
+    "./candidate-timeline": "./packages/core/candidate-timeline.js",
     "./controller-evidence": "./packages/core/controller-evidence.js",
     "./diagnostics": "./packages/core/diagnostics.js",
     "./homebrew": "./packages/core/homebrew.js",
@@ -36,6 +37,7 @@
     "./publication-authority": "./packages/core/publication-authority.js",
     "./publication-control-plane-audit": "./packages/core/publication-control-plane-audit.js",
     "./buildchain-publication-authority": "./packages/core/buildchain-publication-authority.js",
+    "./github-governance-authority": "./packages/core/github-governance-authority.js",
     "./kfd-gate": "./packages/core/kfd-gate.js",
     "./release-candidate": "./packages/core/release-candidate.js",
     "./stable-candidate-ledger": "./packages/core/stable-candidate-ledger.js",

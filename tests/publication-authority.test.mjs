@@ -22,7 +22,10 @@ import {
   verifyPublicationAdmission,
   verifyPublicationQualificationReceipt,
 } from "../packages/core/publication-authority.js";
-import { evaluatePublicationControlPlaneSnapshot } from "../packages/core/publication-control-plane-audit.js";
+import {
+  evaluateBuildchainReleaseReconciliation,
+  evaluatePublicationControlPlaneSnapshot,
+} from "../packages/core/publication-control-plane-audit.js";
 import { sha256Json } from "../packages/core/release-candidate.js";
 
 const DIGESTS = Object.freeze({
@@ -604,7 +607,7 @@ test("control-plane snapshot audit covers all external publication authorities",
     snapshot: {
       actions: { defaultWorkflowPermissions: "read", canApprovePullRequestReviews: false },
       branch: { ref: "release/v2/v2.12", strict: true, requiredApprovals: 1, requireConversationResolution: true, enforceAdmins: true },
-      environment: { name: "npm-production", declared: true, exists: true, protected: true, preventSelfReview: true },
+      environment: { name: "npm-production", declared: true, exists: true, protected: true, branchAuthorized: true, preventSelfReview: true },
       oidc: { workflowPath: ".github/workflows/release.yml", environment: "npm-production", idTokenJobScoped: true, longLivedCredentialPresent: false },
       publisher: { packageName: "@kungfu-tech/buildchain", provider: "github", repository: "kungfu-systems/buildchain", workflowFilename: "release.yml", environment: "npm-production", allowPublish: true, enforcement: "audited-control-plane", longLivedWorkflowCredentialPresent: false },
       runner: { class: "ephemeral", label: "ubuntu-24.04", githubHosted: true, selfHostedAuthorized: false },
@@ -687,6 +690,32 @@ test("control-plane snapshot qualifies an exact provider-enforced protected-bran
   const receipt = evaluatePublicationControlPlaneSnapshot({ ...common, snapshot });
   assert.equal(receipt.facts.every((entry) => entry.status === "pass"), true);
 
+  const historicalSource = evaluatePublicationControlPlaneSnapshot({
+    ...common,
+    snapshot: {
+      ...snapshot,
+      branch: {
+        ...snapshot.branch,
+        headSha: "c".repeat(40),
+        sourceContainedInBranch: true,
+      },
+    },
+  });
+  assert.equal(historicalSource.facts.find((entry) => entry.id === "branch-policy").status, "pass");
+
+  const uncontainedHistoricalSource = evaluatePublicationControlPlaneSnapshot({
+    ...common,
+    snapshot: {
+      ...snapshot,
+      branch: {
+        ...snapshot.branch,
+        headSha: "c".repeat(40),
+        sourceContainedInBranch: false,
+      },
+    },
+  });
+  assert.equal(uncontainedHistoricalSource.facts.find((entry) => entry.id === "branch-policy").status, "fail");
+
   const legacyJobId = evaluatePublicationControlPlaneSnapshot({
     ...common,
     requiredStatusCheck: "build",
@@ -728,6 +757,49 @@ test("control-plane snapshot qualifies an exact provider-enforced protected-bran
   });
   assert.equal(drifted.facts.find((entry) => entry.id === "branch-policy").status, "fail");
 
+  const releaseSha = "c".repeat(40);
+  const releaseReconciliation = evaluatePublicationControlPlaneSnapshot({
+    ...common,
+    snapshot: {
+      ...snapshot,
+      branch: {
+        ...snapshot.branch,
+        sourceSha: releaseSha,
+        headSha: releaseSha,
+        authorizationSha: sourceSha,
+        releaseReconciliation: {
+          qualifying: true,
+          parentSha: sourceSha,
+          version: "2.12.9",
+          packageVersion: "2.12.9",
+          changedPaths: ["package.json"],
+        },
+      },
+    },
+  });
+  assert.equal(releaseReconciliation.facts.find((entry) => entry.id === "branch-policy").status, "pass");
+
+  const unqualifiedReleaseReconciliation = evaluatePublicationControlPlaneSnapshot({
+    ...common,
+    snapshot: {
+      ...snapshot,
+      branch: {
+        ...snapshot.branch,
+        sourceSha: releaseSha,
+        headSha: releaseSha,
+        authorizationSha: sourceSha,
+        releaseReconciliation: {
+          qualifying: false,
+          parentSha: sourceSha,
+          version: "2.12.9",
+          packageVersion: "2.12.9",
+          changedPaths: ["package.json"],
+        },
+      },
+    },
+  });
+  assert.equal(unqualifiedReleaseReconciliation.facts.find((entry) => entry.id === "branch-policy").status, "fail");
+
   const mismatchedCheck = evaluatePublicationControlPlaneSnapshot({
     ...common,
     snapshot: {
@@ -747,16 +819,44 @@ test("control-plane snapshot qualifies an exact provider-enforced protected-bran
   assert.equal(mismatchedCheckSha.facts.find((entry) => entry.id === "branch-policy").status, "fail");
 });
 
+test("Buildchain stable reconciliation inherits only a single approved release parent with release-only paths", () => {
+  const parentSha = "a".repeat(40);
+  const expected = {
+    repository: "kungfu-systems/buildchain",
+    publicationVersion: "2.14.16",
+    packageVersion: "2.14.16",
+    message: "chore(release): release v2.14.16",
+    parentSha,
+    changedPaths: ["package.json", ".buildchain/release-impact.json", "dist/site/site-manifest.json"],
+  };
+  assert.equal(evaluateBuildchainReleaseReconciliation(expected).qualifying, true);
+  assert.equal(evaluateBuildchainReleaseReconciliation({
+    ...expected,
+    changedPaths: [...expected.changedPaths, "scripts/unauthorized.mjs"],
+  }).qualifying, false);
+  assert.equal(evaluateBuildchainReleaseReconciliation({
+    ...expected,
+    publicationVersion: "2.14.16-alpha.0",
+    packageVersion: "2.14.16-alpha.0",
+    message: "chore(release): release v2.14.16-alpha.0",
+  }).qualifying, false);
+  assert.equal(evaluateBuildchainReleaseReconciliation({
+    ...expected,
+    parentSha: "b".repeat(39),
+  }).qualifying, false);
+});
+
 test("control-plane snapshot audit supports scoped GitHub tokens and sanitized OIDC roles", () => {
   const base = {
     actions: { defaultWorkflowPermissions: "read", canApprovePullRequestReviews: false },
     branch: { ref: "release/v2/v2.12", strict: true, requiredApprovals: 1, requireConversationResolution: true, enforceAdmins: true },
-    environment: { name: "release-assets", declared: true, exists: true, protected: true, preventSelfReview: true },
+    environment: { name: "release-assets", declared: true, exists: true, protected: true, branchAuthorized: true, preventSelfReview: true },
     runner: { class: "ephemeral", label: "ubuntu-24.04", githubHosted: true, selfHostedAuthorized: false },
   };
   const common = {
     repository: "kungfu-systems/buildchain",
     workflowPath: ".github/workflows/.binary-release-assets.yml",
+    publisherWorkflowPath: ".github/workflows/binary-release-assets.yml",
     environment: "release-assets",
     branch: "release/v2/v2.12",
     observedAt: "2026-07-14T00:00:00.000Z",
@@ -778,6 +878,27 @@ test("control-plane snapshot audit supports scoped GitHub tokens and sanitized O
     },
   });
   assert.equal(githubToken.facts.every((entry) => entry.status === "pass"), true);
+
+  const unauthorizedEnvironmentBranch = evaluatePublicationControlPlaneSnapshot({
+    ...common,
+    publisherMode: "github-token",
+    snapshot: {
+      ...base,
+      environment: { ...base.environment, branchAuthorized: false },
+      oidc: { githubTokenJobScoped: true, longLivedCredentialPresent: false },
+      publisher: {
+        provider: "github-token",
+        repository: common.repository,
+        workflowPath: common.workflowPath,
+        permissionScoped: true,
+        longLivedWorkflowCredentialPresent: false,
+      },
+    },
+  });
+  assert.equal(
+    unauthorizedEnvironmentBranch.facts.find((entry) => entry.id === "environment-policy").status,
+    "fail",
+  );
 
   const oidcRole = evaluatePublicationControlPlaneSnapshot({
     ...common,

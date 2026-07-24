@@ -3,6 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import {
   createDevMergeQueuePlan,
   reconcileConfiguredDevMergeQueue,
@@ -12,6 +13,8 @@ import {
   selectMergeQueueMethod,
   validateMergeGroupWorkflows,
 } from "../scripts/dev-merge-queue.mjs";
+
+const REPOSITORY_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 function withPolicyFixture(policy, fn) {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-merge-queue-"));
@@ -201,6 +204,23 @@ bypass_users = ["release-owner"]`, async (cwd) => {
       { actor_id: 202, actor_type: "User", bypass_mode: "always" },
     ]);
   });
+});
+
+test("repository dev merge queue controller declares no bypass actors", async () => {
+  const resolution = await resolveConfiguredDevMergeQueuePolicy({
+    api: {
+      request() {
+        throw new Error("enabled repository policy must not require provider discovery");
+      },
+    },
+    repository: "kungfu-systems/buildchain",
+    branch: "dev/v2/v2.14",
+    cwd: REPOSITORY_ROOT,
+  });
+  assert.equal(resolution.mode, "enabled");
+  assert.deepEqual(resolution.policy.bypassApps, []);
+  assert.deepEqual(resolution.policy.bypassUsers, []);
+  assert.deepEqual(resolution.policy.bypassTeams, []);
 });
 
 test("configured merge queue inherit mode copies the active dev ruleset policy", async () => {

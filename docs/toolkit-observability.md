@@ -94,6 +94,73 @@ Use the API when a build script has internal stages that are invisible to the
 outer workflow. Keep secret values out of attributes; known sensitive keys are
 redacted, but callers should still avoid logging private material.
 
+## Candidate timelines and critical-path-safe timing
+
+Lifecycle diagnostics retain their existing summed-duration tables for
+compatibility. Do not interpret those tables as elapsed time when spans are
+nested or jobs run in parallel. Use the candidate timeline contract when a
+change must be followed from pull-request admission through Merge Queue attempts
+to its final merge:
+
+```js
+import {
+  createCandidateTimeline,
+  formatCandidateTimelineReport,
+} from "@kungfu-tech/buildchain/candidate-timeline";
+
+const timeline = createCandidateTimeline({
+  candidate: {
+    repository: "owner/repository",
+    baseBranch: "dev/v4/v4.0",
+    sourceSha,
+    pullRequest: 123,
+  },
+  events,
+});
+
+console.log(formatCandidateTimelineReport(timeline));
+```
+
+Each event binds a stable event id to one attempt id and may also bind a Gate
+id, merge-group SHA, workflow run, platform, partition, cache outcome, execution
+boundary, and parent span. Terminal execution states (`success`, `failure`, and
+`cancelled`) require start and completion timestamps. Non-executed states use
+`skipped`, `dependency-blocked`, or `not-required` without invented timings.
+Record the clock and timestamp precision explicitly: GitHub Actions timestamps
+are normally provider wall-clock observations with one-second precision, while
+an in-process span may also carry a monotonic duration with millisecond or
+better precision.
+
+The `buildchain.candidate-timeline/v1` artifact reports an independent critical
+path for every attempt. Its critical-path duration is the attempt's observed
+wall-clock envelope; its active duration and per-phase durations are interval
+unions. This prevents nested or parallel spans from being added twice, and it
+does not combine a failed or dequeued attempt with a later retry. Missing
+required measurements make that attempt `incomplete` instead of producing fake
+precision.
+
+Each attempt also reports measured execution lanes, lane skew, cache outcome
+counts, the ten longest actionable spans, and one falsifiable next optimization
+target. Queue residence, whole-workflow envelopes, and job parents are excluded
+from the actionable ranking so they cannot hide the build or qualification
+stage that can actually be changed. The target is an observation, not a causal
+claim: repeat the same source-bound cohort and disprove it by reducing that span
+below the next measured span without increasing attempt elapsed time or
+failures.
+
+Shell and workflow consumers can generate the same machine artifact plus a
+compact report:
+
+```sh
+buildchain candidate timeline \
+  --input .buildchain/candidate-timeline-input.json \
+  --output .buildchain/candidate-timeline.json
+```
+
+The input and output should contain only bounded correlation facts and timing
+receipts. Do not include tokens, environment dumps, full commands, raw process
+dumps, or private absolute paths.
+
 CommonJS scripts should import Buildchain's ESM surfaces dynamically:
 
 ```js

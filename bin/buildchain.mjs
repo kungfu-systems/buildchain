@@ -104,6 +104,10 @@ import {
 } from "../packages/core/kfd3-surface-register.js";
 import { createBuildchainLayoutDiscovery } from "../packages/core/buildchain-layout.js";
 import { createPortableDevCachePlan, createPortableDevCacheReceipt } from "../packages/core/portable-dev-cache.js";
+import {
+  createCandidateTimeline,
+  formatCandidateTimelineReport,
+} from "../packages/core/candidate-timeline.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const embeddedPackageVersion = process.env.BUILDCHAIN_EMBEDDED_PACKAGE_VERSION || "";
@@ -121,6 +125,7 @@ function usage() {
                                     [--validation-reason <text>]
                                     [--cold-fallback-status not-run|passed|failed]
                                     [--output <file>] [--json]
+  buildchain candidate timeline --input <file-or-json> [--output <file>] [--json]
   buildchain init [--cwd <dir>] [--type package|native|web-surface|infra-contract|publication-artifact|anchored-package] [--force]
                   [--package-manager pnpm|npm|yarn] [--runner-preset <preset>]
                   [--artifact-name <template>]
@@ -143,6 +148,7 @@ function usage() {
   buildchain release-governance reconcile --repository <owner/repo>
                                --branch <dev|alpha|release/vN/vN.N>
                                --candidate-sha <sha> [--apply] [--json]
+  buildchain github-governance <plan|apply|rollback|protection-policy-plan|ruleset-policy-plan> ...
   buildchain release <inspect|recover|finalize|abort> ...
   buildchain transaction inspect ...
   buildchain collect github-release --tag <tag> [--repository <owner/repo>]
@@ -179,6 +185,8 @@ function usage() {
                           --publication-evidence-json <file-or-json>
                           [--expected-json <file-or-json>] [--used-nonce <nonce>]... [--json]
   buildchain audit publication-control-plane --repository <owner/repo> --branch <protected-branch>
+  buildchain audit github-governance [--organization <owner>] [--repository <owner/repo>]
+                                     [--output <file>] [--require-qualifying] [--json]
                           [--source-sha <merged-branch-sha>] [--workflow-repository <owner/repo>]
                           [--workflow <path>] [--workflow-ref <sha-or-ref>]
                           [--job <id>] [--environment <name>] [--package <name>]
@@ -1451,6 +1459,28 @@ async function main(argv = process.argv.slice(2)) {
     throw new Error("usage: buildchain portable-cache <plan|receipt> ...");
   }
 
+  if (command === "candidate") {
+    const [subcommand = "", ...candidateArgs] = args;
+    if (subcommand !== "timeline") {
+      throw new Error("usage: buildchain candidate timeline --input <file-or-json>");
+    }
+    const inputValue = readFlag(candidateArgs, "input", "");
+    if (!inputValue) {
+      throw new Error("buildchain candidate timeline requires --input <file-or-json>");
+    }
+    const input = readJsonInput(inputValue, { label: "candidate timeline input" });
+    const timeline = createCandidateTimeline(input);
+    const output = readFlag(candidateArgs, "output", "");
+    if (output) writeJsonFile(path.resolve(output), timeline);
+    if (readBooleanFlag(candidateArgs, "json") || !output) {
+      printJson(timeline);
+    } else {
+      process.stdout.write(`${formatCandidateTimelineReport(timeline)}\n`);
+      process.stdout.write(`wrote: ${output}\n`);
+    }
+    return;
+  }
+
   if (command === "init") {
     const result = initBuildchainRepo({
       cwd: readFlag(args, "cwd", process.cwd()),
@@ -1997,11 +2027,15 @@ async function main(argv = process.argv.slice(2)) {
 
   if (command === "audit") {
     const [subcommand = "", ...auditArgs] = args;
-    if (subcommand !== "publication-control-plane") {
-      throw new Error("usage: buildchain audit publication-control-plane --repository <owner/repo> --branch <protected-branch>");
+    if (subcommand === "publication-control-plane") {
+      runScript("audit-publication-control-plane.mjs", auditArgs);
+      return;
     }
-    runScript("audit-publication-control-plane.mjs", auditArgs);
-    return;
+    if (subcommand === "github-governance") {
+      runScript("audit-github-governance.mjs", auditArgs);
+      return;
+    }
+    throw new Error("usage: buildchain audit <publication-control-plane|github-governance> ...");
   }
 
   if (command === "explain") {
@@ -2119,6 +2153,11 @@ async function main(argv = process.argv.slice(2)) {
 
   if (command === "release-governance") {
     await runReleaseGovernanceCli(args);
+    return;
+  }
+
+  if (command === "github-governance") {
+    runScript("reconcile-github-governance.mjs", args);
     return;
   }
 

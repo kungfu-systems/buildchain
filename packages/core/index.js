@@ -83,6 +83,14 @@ export {
 } from "./logging.js";
 
 export {
+  BUILDCHAIN_CANDIDATE_TIMELINE_CONTRACT,
+  BUILDCHAIN_CANDIDATE_TIMELINE_EVENT_CONTRACT,
+  createCandidateTimeline,
+  formatCandidateTimelineReport,
+  normalizeCandidateTimelineEvent,
+} from "./candidate-timeline.js";
+
+export {
   BUILDCHAIN_ANCHORED_PACKAGE_RELEASE_VALIDATION_CONTRACT,
   BUILDCHAIN_DIAGNOSTICS_CONTRACT,
   BUILDCHAIN_DIAGNOSTICS_MANIFEST_CONTRACT,
@@ -193,6 +201,28 @@ export {
 } from "./buildchain-publication-authority.js";
 
 export { evaluatePublicationControlPlaneSnapshot } from "./publication-control-plane-audit.js";
+export {
+  BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY,
+  BUILDCHAIN_GITHUB_GOVERNANCE_PROTECTED_PATHS,
+  GITHUB_GOVERNANCE_AUTHORITY_CONTRACT,
+  GITHUB_GOVERNANCE_RECEIPT_CONTRACT,
+  GITHUB_GOVERNANCE_ROLLOUT_CONTRACT,
+  GITHUB_GOVERNANCE_RULESET_ROLLOUT_CONTRACT,
+  codeownersForPath,
+  compileEffectiveGithubGovernancePolicy,
+  createBuildchainGithubGovernanceAuthority,
+  createGithubGovernanceRolloutPlan,
+  createGithubRulesetBypassRolloutPlan,
+  createGithubRulesetGovernanceRolloutPlan,
+  evaluateCodeownersAuthority,
+  evaluateGithubGovernanceSnapshot,
+  githubGovernanceDigest,
+  normalizeGithubBranchProtectionSnapshot,
+  normalizeGithubRulesetSnapshot,
+  parseCodeowners,
+  resolveGithubGovernanceTargetPolicy,
+  verifyGithubGovernanceReceipt,
+} from "./github-governance-authority.js";
 
 export {
   ARTIFACT_PASSPORT_LOCATOR_CONTRACT,

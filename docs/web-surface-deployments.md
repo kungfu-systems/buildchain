@@ -381,6 +381,33 @@ node scripts/web-surface.mjs \
   --output .buildchain/web-surface-staging-apply.json
 ```
 
+### Explicit cache classes
+
+The S3/CloudFront adapter can declare cache metadata per deploy channel or
+surface override:
+
+```toml
+[deploy.production]
+adapter = "aws-s3-cloudfront"
+cache_control_default = "public,max-age=3600"
+cache_control_mutable = "public,max-age=300,must-revalidate"
+cache_control_immutable = "public,max-age=31536000,immutable"
+```
+
+`cache_control_default` applies to the ordinary artifact sync.
+`cache_control_mutable` is then applied to HTML, JSON, XML, generated directory
+index aliases, and the deployment manifest. `cache_control_immutable` applies
+to append-only publication roots discovered through the archive policy below.
+Mutable metadata updates exclude those append-only roots, so HTML or JSON inside
+an immutable version archive keeps the immutable class.
+The deploy plan, surface binding, apply operations, and deployment manifest all
+record the effective values. Existing consumers that omit these fields retain
+their prior upload behavior.
+
+Cache metadata complements, rather than replaces, invalidation. Every deploy
+still records and creates the exact surface wildcard and deployment-manifest
+invalidation paths.
+
 ### Immutable publication paths
 
 When a surface artifact contains `manifest.json` with
@@ -916,6 +943,52 @@ Then add the channel, deploy, retention, and security declarations shown above.
 The project may use pnpm, npm, yarn, Vite, Astro, Next static export, Sphinx,
 MkDocs, CMake-generated docs, or another lifecycle command source. Buildchain
 only needs a deterministic artifact path and the manifest facts.
+
+## Signed bootstrap installer publications
+
+A web-surface artifact that contains `installer-publication.json` opts into the
+`kungfu.bootstrap-installer-publication/v1` seam. During planning, Buildchain
+fails closed unless the manifest binds:
+
+- one signed-channel payload root and exact channel-file digest;
+- one source SHA and Release Passport;
+- unique platform/architecture entries with manifest, artifact, and archive
+  digest roots; and
+- byte-identical friendly and immutable `install.sh` / `install.ps1` assets.
+
+The resulting `kungfu-buildchain-installer-publication-evidence/v1` object and
+root are welded into the deployment manifest. This does not make Buildchain the
+product installer authority: Kungfu generates the installer from its signed
+release channel, while the site owns only routes and presentation.
+
+The site artifact should also declare the existing
+`kungfu-buildchain-publication-archive-policy` in its root `manifest.json`, with
+the versioned installer directory as `immutablePath`. Buildchain then performs
+pre-upload object digest checks, `--no-overwrite` upload, post-upload checks, and
+excludes the immutable root from mutable deletion.
+
+Local verification:
+
+```sh
+node scripts/installer-publication.mjs \
+  --manifest dist/installer-publication.json \
+  --artifact-root dist
+```
+
+After preview, staging, or production apply, public read-back verifies exact
+bytes plus route semantics. Friendly routes require a revalidated cache policy
+with `max-age` no greater than 300 seconds; immutable routes require at least
+one year and the `immutable` directive:
+
+```sh
+node scripts/installer-publication.mjs \
+  --manifest dist/installer-publication.json \
+  --public-readback
+```
+
+Redirects are not accepted as successful read-back. The evidence retains
+content type, cache control, ETag, object version id when exposed, size, digest,
+URL, channel root, source SHA, and Release Passport coordinates.
 
 ## Boundaries
 

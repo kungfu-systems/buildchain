@@ -291,7 +291,7 @@ function writeManifest(manifestPath, manifest) {
 }
 
 function resolveUploadGroups() {
-  return [
+  const groups = [
     {
       role: "payload",
       artifactName: env("BUILDCHAIN_ARTIFACT_RELAY_PAYLOAD_ARTIFACT_NAME"),
@@ -311,6 +311,16 @@ function resolveUploadGroups() {
       required: true,
     },
   ];
+  const credentialInputPaths = splitLines(env("BUILDCHAIN_ARTIFACT_RELAY_CREDENTIAL_INPUT_PATHS"));
+  if (credentialInputPaths.length > 0) {
+    groups.push({
+      role: "credential-input",
+      artifactName: env("BUILDCHAIN_ARTIFACT_RELAY_CREDENTIAL_INPUT_ARTIFACT_NAME"),
+      paths: credentialInputPaths,
+      required: true,
+    });
+  }
+  return groups;
 }
 
 export async function uploadRelayArtifacts({

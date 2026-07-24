@@ -48,6 +48,10 @@ on:
         type: string
         required: false
         default: ""
+      github-governance-receipt-json:
+        type: string
+        required: false
+        default: ""
       publication-gate-aggregate-json:
         type: string
         required: false
@@ -69,14 +73,18 @@ jobs:
     name: Seal binary release asset capability
     permissions:
       actions: read
+      checks: read
       contents: read
+      pull-requests: read
     uses: ./.github/workflows/.publication-authority.yml
+    secrets: inherit
     with:
       buildchain-repository: ${{ inputs.buildchain-repository }}
       buildchain-ref: ${{ inputs.buildchain-ref }}
       admission-json: ${{ inputs.publication-admission-json }}
       runner-provenance-json: ${{ inputs.publication-runner-provenance-json }}
       control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
+      github-governance-receipt-json: ${{ inputs.github-governance-receipt-json }}
       gate-aggregate-json: ${{ inputs.publication-gate-aggregate-json }}
       expected-json: ${{ inputs.publication-expected-json }}
       used-nonces-json: ${{ inputs.publication-used-nonces-json }}

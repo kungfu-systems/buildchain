@@ -1,0 +1,14 @@
+{
+  "name": "@kungfu-systems/buildchain-macos-credential-island",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsup index.js cleanup.js --format esm --config ../../scripts/tsup-action.config.mjs && node ../../scripts/strip-trailing-whitespace.mjs dist/index.js dist/cleanup.js",
+    "package": "echo noop"
+  },
+  "dependencies": {
+    "@actions/core": "1.11.1",
+    "@electron/osx-sign": "1.3.3"
+  },
+  "devDependencies": {}
+}

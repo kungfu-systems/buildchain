@@ -797,9 +797,24 @@ function releasePassportArtifactFiles(outputDir) {
   if (!outputDir || !fs.existsSync(outputDir)) {
     return [];
   }
+  const durableTextExtensions = new Set([
+    ".json",
+    ".jsonl",
+    ".md",
+    ".sha256",
+    ".txt",
+    ".yaml",
+    ".yml",
+  ]);
   return fs
     .readdirSync(outputDir, { withFileTypes: true })
-    .filter((entry) => entry.isFile())
+    .filter((entry) => (
+      entry.isFile() &&
+      (
+        entry.name === "SHA256SUMS" ||
+        durableTextExtensions.has(path.extname(entry.name).toLowerCase())
+      )
+    ))
     .map((entry) => {
       const filePath = path.join(outputDir, entry.name);
       return {
@@ -1741,6 +1756,53 @@ function transactionAcceptedExactTagShas(transaction, publicSha) {
   ]);
 }
 
+async function materializeTransactionSourceWorkspace({
+  octokit,
+  owner,
+  repo,
+  cwd,
+  sourceSha,
+}) {
+  assertSha(sourceSha);
+  const root = path.resolve(cwd, ".buildchain/transaction-finalization-source");
+  const workspace = path.join(root, sourceSha);
+  const archivePath = path.join(root, `${sourceSha}.tar.gz`);
+  fs.rmSync(root, { recursive: true, force: true });
+  fs.mkdirSync(workspace, { recursive: true });
+  const response = await octokit.request(
+    "GET /repos/{owner}/{repo}/tarball/{ref}",
+    {
+      owner,
+      repo,
+      ref: sourceSha,
+    },
+  );
+  const archive = Buffer.isBuffer(response.data)
+    ? response.data
+    : response.data instanceof ArrayBuffer
+      ? Buffer.from(response.data)
+      : ArrayBuffer.isView(response.data)
+        ? Buffer.from(
+            response.data.buffer,
+            response.data.byteOffset,
+            response.data.byteLength,
+          )
+        : Buffer.from(response.data || "");
+  if (archive.length === 0) {
+    throw new Error(
+      `Transaction source archive ${sourceSha} is empty; refusing cross-tree finalization`,
+    );
+  }
+  fs.writeFileSync(archivePath, archive);
+  execFileSync(
+    "tar",
+    ["-xzf", archivePath, "-C", workspace, "--strip-components=1"],
+    { stdio: "pipe" },
+  );
+  fs.rmSync(archivePath, { force: true });
+  return { root, workspace };
+}
+
 function releaseTagForPublishedVersion(version = "") {
   const value = String(version || "").trim();
   if (!value) {
@@ -1778,6 +1840,7 @@ async function runPublishTransaction({
   publishDistTag = "",
   publishPackageSetOrder = "",
   publishPackageMain = "",
+  publishRematerializeOnResume = false,
   actor = "",
   runId = "",
   explicitOverride = false,
@@ -1904,7 +1967,7 @@ async function runPublishTransaction({
       requiredArtifacts,
     });
     const canFinalizeVersionState =
-      allowVersionStateFinalization &&
+      (allowVersionStateFinalization || explicitOverride) &&
       materialErrorRequiresRepair(error) &&
       existing?.version === version &&
       existing?.exact_tag === exactTag &&
@@ -2022,6 +2085,30 @@ async function runPublishTransaction({
   let validation;
   let publishSource = existingEvidence ? "existing-evidence" : "";
   let distTagEvidencePath = "";
+  const publishEnvironment = {
+    BUILDCHAIN_VERSION: version,
+    BUILDCHAIN_CHANNEL: channel,
+    BUILDCHAIN_SOURCE_SHA: sourceSha,
+    BUILDCHAIN_TARGET_REF: targetRef,
+    BUILDCHAIN_RELEASE_STATE: resolvedStatePath,
+    BUILDCHAIN_EVIDENCE_DIR: path.dirname(resolvedEvidencePath),
+    BUILDCHAIN_RELEASE_SHA: releaseSha,
+    BUILDCHAIN_RELEASE_MATERIAL_SHA: expected.releaseMaterialSha,
+    BUILDCHAIN_PUBLISH_TOOLING_SHA: expected.publishToolingSha,
+    BUILDCHAIN_SITE_GENERATED_AT: promotionGeneratedAt,
+    BUILDCHAIN_SITE_PUBLISHED_AT: promotionGeneratedAt,
+    BUILDCHAIN_SITE_TIMESTAMP_POLICY: "ci-injected",
+    BUILDCHAIN_SURFACE_GENERATED_AT: promotionGeneratedAt,
+    BUILDCHAIN_SURFACE_PUBLISHED_AT: promotionGeneratedAt,
+    BUILDCHAIN_SURFACE_TIMESTAMP_POLICY: "ci-injected",
+    BUILDCHAIN_PUBLISH_EVIDENCE: resolvedEvidencePath,
+    BUILDCHAIN_REQUIRED_ARTIFACTS: JSON.stringify(requiredArtifacts),
+    BUILDCHAIN_PUBLISH_MODE: publishContract.mode,
+    BUILDCHAIN_PUBLISH_AUTH: publishContract.auth,
+    BUILDCHAIN_NPM_DIST_TAG: publishContract.distTag,
+    BUILDCHAIN_PACKAGE_SET_ORDER: publishContract.packageSetOrder,
+    BUILDCHAIN_PACKAGE_SET_MAIN_PACKAGE: publishContract.mainPackage,
+  };
   try {
     const evidence = existingEvidence || readPublishEvidence(resolvedEvidencePath);
     if (evidence) {
@@ -2048,6 +2135,25 @@ async function runPublishTransaction({
     });
     if (recovery.blocked) {
       throw new Error(`release transaction cannot recover: ${recovery.reason}`);
+    }
+    if (existing && validation?.valid && publishRematerializeOnResume) {
+      if (existingNpmPromotion) {
+        throw new Error(
+          "publish-rematerialize-on-resume cannot replay promote-existing-version provider mutations",
+        );
+      }
+      publishSource = runPublishCommand({
+        cwd,
+        command: publishCommand,
+        loadedConfig,
+        env: publishEnvironment,
+      });
+      if (publishSource === "none") {
+        throw new Error(
+          "publish-rematerialize-on-resume requires lifecycle.publish or publish-command",
+        );
+      }
+      publishSource = `resume-rematerialized:${publishSource}`;
     }
     if (!validation?.valid) {
       if (transaction.state === "repair_required" && explicitOverride) {
@@ -2085,30 +2191,7 @@ async function runPublishTransaction({
           cwd,
           command: publishCommand,
           loadedConfig,
-          env: {
-            BUILDCHAIN_VERSION: version,
-            BUILDCHAIN_CHANNEL: channel,
-            BUILDCHAIN_SOURCE_SHA: sourceSha,
-            BUILDCHAIN_TARGET_REF: targetRef,
-            BUILDCHAIN_RELEASE_STATE: resolvedStatePath,
-            BUILDCHAIN_EVIDENCE_DIR: path.dirname(resolvedEvidencePath),
-            BUILDCHAIN_RELEASE_SHA: releaseSha,
-            BUILDCHAIN_RELEASE_MATERIAL_SHA: expected.releaseMaterialSha,
-            BUILDCHAIN_PUBLISH_TOOLING_SHA: expected.publishToolingSha,
-            BUILDCHAIN_SITE_GENERATED_AT: promotionGeneratedAt,
-            BUILDCHAIN_SITE_PUBLISHED_AT: promotionGeneratedAt,
-            BUILDCHAIN_SITE_TIMESTAMP_POLICY: "ci-injected",
-            BUILDCHAIN_SURFACE_GENERATED_AT: promotionGeneratedAt,
-            BUILDCHAIN_SURFACE_PUBLISHED_AT: promotionGeneratedAt,
-            BUILDCHAIN_SURFACE_TIMESTAMP_POLICY: "ci-injected",
-            BUILDCHAIN_PUBLISH_EVIDENCE: resolvedEvidencePath,
-            BUILDCHAIN_REQUIRED_ARTIFACTS: JSON.stringify(requiredArtifacts),
-            BUILDCHAIN_PUBLISH_MODE: publishContract.mode,
-            BUILDCHAIN_PUBLISH_AUTH: publishContract.auth,
-            BUILDCHAIN_NPM_DIST_TAG: publishContract.distTag,
-            BUILDCHAIN_PACKAGE_SET_ORDER: publishContract.packageSetOrder,
-            BUILDCHAIN_PACKAGE_SET_MAIN_PACKAGE: publishContract.mainPackage,
-          },
+          env: publishEnvironment,
         });
       }
       if (publishSource === "none") {
@@ -2520,6 +2603,8 @@ async function assertChannelPromotionPr({
     const headRepo = pullRequest.head?.repo?.full_name;
     const matchingVersionStateTarget = parseVersionStateBranchName(headRef);
     const matchingPublishGateTarget = parsePublishGateChannelRef(headRef)?.targetRef;
+    const matchingReleaseRecoveryTarget =
+      parseReleaseLineRecoveryRef(headRef)?.targetRef;
     if (getPromotionRule(targetRef).channel === "major") {
       return (
         pullRequest.merged_at &&
@@ -2534,14 +2619,18 @@ async function assertChannelPromotionPr({
       (
         headRef === expectedHeadRef ||
         matchingVersionStateTarget === targetRef ||
-        matchingPublishGateTarget === targetRef
+        matchingPublishGateTarget === targetRef ||
+        (
+          getPromotionRule(targetRef).channel === "release" &&
+          matchingReleaseRecoveryTarget === targetRef
+        )
       ) &&
       headRepo === `${owner}/${repo}`
     );
   });
   if (!matchingPullRequest) {
     throw new Error(
-      `Promotion source ${sha} must come from a merged same-repository PR ${expectedHeadRef} -> ${targetRef}, publish-gate/${getPromotionRule(targetRef).channel}/... -> ${targetRef}, or buildchain/version-state/* -> ${targetRef}`,
+      `Promotion source ${sha} must come from a merged same-repository PR ${expectedHeadRef} -> ${targetRef}, publish-gate/${getPromotionRule(targetRef).channel}/... -> ${targetRef}, buildchain/version-state/* -> ${targetRef}, or an exact line-scoped release recovery PR`,
     );
   }
   return matchingPullRequest;
@@ -2762,6 +2851,15 @@ function branchProtectionBypassAllowances({
     teams: parseBranchProtectionBypassList(teams),
   };
   if (
+    allowances.users.length > 0 ||
+    allowances.teams.length > 0 ||
+    allowances.apps.some((app) => app !== "github-actions")
+  ) {
+    throw new Error(
+      "managed channel protection permits only the descriptor-bound github-actions App bypass actor",
+    );
+  }
+  if (
     allowances.apps.length === 0 &&
     allowances.users.length === 0 &&
     allowances.teams.length === 0
@@ -2769,57 +2867,6 @@ function branchProtectionBypassAllowances({
     return undefined;
   }
   return allowances;
-}
-
-async function resolveAuthenticatedBypassAllowances({
-  octokit,
-  allowances,
-} = {}) {
-  const resolved = {
-    apps: [...(allowances?.apps || [])],
-    users: [...(allowances?.users || [])],
-    teams: [...(allowances?.teams || [])],
-  };
-  const addUnique = (key, value) => {
-    const normalized = String(value || "").trim();
-    if (normalized && !resolved[key].includes(normalized)) {
-      resolved[key].push(normalized);
-    }
-  };
-
-  if (typeof octokit?.rest?.users?.getAuthenticated === "function") {
-    try {
-      const { data } = await retryGitHubOperation(
-        "users.getAuthenticated",
-        () => octokit.rest.users.getAuthenticated(),
-      );
-      addUnique("users", data?.login);
-    } catch (error) {
-      console.log(
-        `buildchain: unable to resolve authenticated promotion user for branch-protection bypass: ${error.message}`,
-      );
-    }
-  }
-
-  if (typeof octokit?.rest?.apps?.getAuthenticated === "function") {
-    try {
-      const { data } = await retryGitHubOperation(
-        "apps.getAuthenticated",
-        () => octokit.rest.apps.getAuthenticated(),
-      );
-      addUnique("apps", data?.slug || data?.name);
-    } catch (error) {
-      console.log(
-        `buildchain: unable to resolve authenticated promotion app for branch-protection bypass: ${error.message}`,
-      );
-    }
-  }
-
-  return (
-    resolved.apps.length || resolved.users.length || resolved.teams.length
-      ? resolved
-      : undefined
-  );
 }
 
 async function ensureManagedChannelBranchProtection({
@@ -2843,7 +2890,10 @@ async function ensureManagedChannelBranchProtection({
     try {
       ({ data: currentProtection } = await octokit.rest.repos.getBranchProtection({ owner, repo, branch }));
     } catch (error) {
-      if (error.status === 403 && typeof octokit.rest.repos?.getBranch === "function") {
+      if (
+        (error.status === 403 || notFound(error)) &&
+        typeof octokit.rest.repos?.getBranch === "function"
+      ) {
         const { data: branchSummary } = await octokit.rest.repos.getBranch({ owner, repo, branch });
         const providerProtection = branchSummary.protection || {};
         const resolvedStatusCheck = resolveProtectedStatusCheckContext({
@@ -2897,10 +2947,7 @@ async function ensureManagedChannelBranchProtection({
     users: branchProtectionBypassUsers,
     teams: branchProtectionBypassTeams,
   });
-  const bypassAllowances = await resolveAuthenticatedBypassAllowances({
-    octokit,
-    allowances: configuredBypassAllowances,
-  });
+  const bypassAllowances = configuredBypassAllowances;
   const strictStatusChecks = managedChannelStrictStatusChecks(branch, currentProtection);
   await retryGitHubOperation(
     `repos.updateBranchProtection ${branch}`,
@@ -2914,10 +2961,10 @@ async function ensureManagedChannelBranchProtection({
       },
       enforce_admins: true,
       required_pull_request_reviews: {
-        dismiss_stale_reviews: false,
-        require_code_owner_reviews: false,
+        dismiss_stale_reviews: true,
+        require_code_owner_reviews: true,
         required_approving_review_count: 1,
-        require_last_push_approval: false,
+        require_last_push_approval: true,
         ...(bypassAllowances
           ? { bypass_pull_request_allowances: bypassAllowances }
           : {}),
@@ -3508,7 +3555,7 @@ function protectedBranchDirectUpdateError({ branch, branchSha, error }) {
   const message = error?.response?.data?.message || error?.message || String(error || "");
   return new Error(
     `Buildchain generated version-state update for ${branch} -> ${branchSha} was rejected by branch protection: ${message}. ` +
-      "Promotion must complete without a post-publish human PR; configure BUILDCHAIN_PROMOTION_TOKEN as a direct-write release authority and allow Buildchain to create the generated version-state required check before updating the protected ref.",
+      "The promotion caller must enable Buildchain's protected version-state PR fallback or use an explicitly admitted release authority; do not weaken branch protection or bypass the repository's declared governance.",
   );
 }
 
@@ -3610,6 +3657,7 @@ async function promoteBuildchainRefs({
   verificationCommand = "",
   requiredStatusCheck = "check",
   statusCheckOctokit = octokit,
+  pullRequestOctokit = octokit,
   refUpdateOctokit = octokit,
   branchProtectionBypassApps = "",
   branchProtectionBypassUsers = "",
@@ -3627,6 +3675,7 @@ async function promoteBuildchainRefs({
   publishDistTag = "",
   publishPackageSetOrder = "",
   publishPackageMain = "",
+  publishRematerializeOnResume = false,
   expectedPublicationVersion = "",
   requirePublicationQualification = false,
   publicationCapabilityJson = "",
@@ -3946,19 +3995,13 @@ async function promoteBuildchainRefs({
   };
 
   const readRefSha = async (ref) => {
-    try {
-      const { data: refData } = await octokit.rest.git.getRef({
-        owner,
-        repo,
-        ref,
-      });
-      return refData.object.sha;
-    } catch (error) {
-      if (notFound(error)) {
-        return undefined;
-      }
-      throw error;
-    }
+    const refData = await getGitRefOrUndefined({
+      octokit,
+      owner,
+      repo,
+      ref,
+    });
+    return refData?.object?.sha;
   };
 
   const updateBranch = async (branch, branchSha, action = "updated", protectedUpdate) => {
@@ -3986,7 +4029,7 @@ async function promoteBuildchainRefs({
       if (
         !protectedUpdate?.allowPendingPullRequest ||
         !protectedUpdate?.title ||
-        typeof octokit.rest.pulls?.create !== "function"
+        typeof pullRequestOctokit.rest.pulls?.create !== "function"
       ) {
         throw protectedBranchDirectUpdateError({ branch, branchSha, error });
       }
@@ -4011,8 +4054,8 @@ async function promoteBuildchainRefs({
           sha: branchSha,
         });
       }
-      if (typeof octokit.rest.pulls?.list === "function") {
-        const { data: existingPullRequests } = await octokit.rest.pulls.list({
+      if (typeof pullRequestOctokit.rest.pulls?.list === "function") {
+        const { data: existingPullRequests } = await pullRequestOctokit.rest.pulls.list({
           owner,
           repo,
           state: "open",
@@ -4035,7 +4078,7 @@ async function promoteBuildchainRefs({
           };
         }
       }
-      const { data: pullRequest } = await octokit.rest.pulls.create({
+      const { data: pullRequest } = await pullRequestOctokit.rest.pulls.create({
         owner,
         repo,
         title: protectedUpdate.title,
@@ -4388,8 +4431,13 @@ async function promoteBuildchainRefs({
       );
     });
     if (unexpected.length > 0) {
+      const recoveryScope = [
+        ...RELEASE_LINE_RECOVERY_PATHS,
+        ...allowedPaths,
+      ].join(", ");
       throw new Error(
-        `Release-line recovery PR changed files outside buildchain recovery scope: ${unexpected.join(", ")}`,
+        `Release-line recovery PR changed files outside buildchain recovery scope: ${unexpected.join(", ")}. ` +
+          `Open a follow-up exact line-scoped recovery PR that contains this candidate and changes only: ${recoveryScope}`,
       );
     }
   };
@@ -4587,13 +4635,25 @@ async function promoteBuildchainRefs({
     }
     if (commit.treeSha === alphaTreeSha) {
       try {
-        await assertChannelPromotionPr({
+        const promotionPullRequest = await assertChannelPromotionPr({
           octokit,
           owner,
           repo,
           sha: commitSha,
           targetRef,
         });
+        if (
+          parseReleaseLineRecoveryRef(promotionPullRequest.head?.ref)?.targetRef ===
+          targetRef
+        ) {
+          updates.push({
+            action: "accepted-release-recovery-tree-equivalent-source",
+            sha: commitSha,
+            alphaTag,
+            alphaSha,
+            targetRef,
+          });
+        }
       } catch (error) {
         const matchingReleaseRecoveryPullRequest =
           await findMatchingReleaseRecoveryPullRequest({ commitSha, targetRef });
@@ -4645,17 +4705,81 @@ async function promoteBuildchainRefs({
         return;
       }
     }
+    const matchingCurrentReleaseRecoveryPullRequest =
+      await findMatchingReleaseRecoveryPullRequest({ commitSha, targetRef });
+    if (matchingCurrentReleaseRecoveryPullRequest) {
+      const recoveryBaseSha =
+        matchingCurrentReleaseRecoveryPullRequest.base?.sha;
+      const recoveryHeadSha =
+        matchingCurrentReleaseRecoveryPullRequest.head?.sha;
+      if (recoveryBaseSha && recoveryHeadSha) {
+        const exactCandidateSha =
+          exactReleaseCandidateSource?.promotionChannelSha;
+        if (
+          recoveryBaseSha !== alphaSha &&
+          recoveryBaseSha !== exactCandidateSha
+        ) {
+          throw new Error(
+            `Release-line recovery PR base ${recoveryBaseSha} must equal ${alphaTag} ${alphaSha} or the exact release candidate ${exactCandidateSha || "(missing)"}`,
+          );
+        }
+        const recoveryHead = await getCommitInfo(
+          octokit,
+          owner,
+          repo,
+          recoveryHeadSha,
+        );
+        if (recoveryHead.treeSha !== commit.treeSha) {
+          throw new Error(
+            `Release-line recovery PR head tree ${recoveryHead.treeSha} must equal promotion tree ${commit.treeSha}`,
+          );
+        }
+        await assertOnlyAllowedReleaseRecoveryChangesBetween({
+          baseSha: recoveryBaseSha,
+          headSha: recoveryHeadSha,
+          allowedPaths,
+        });
+      } else {
+        await assertOnlyAllowedReleaseRecoveryChangesBetween({
+          baseSha: alphaSha,
+          headSha: commitSha,
+          allowedPaths,
+        });
+      }
+      updates.push({
+        action: "accepted-exact-release-recovery-source",
+        sha: commitSha,
+        recoveryBaseSha,
+        recoveryHeadSha,
+        alphaTag,
+        alphaSha,
+        targetRef,
+      });
+      return;
+    }
     for (const parentSha of commit.parents) {
       const parent = await getCommitInfo(octokit, owner, repo, parentSha);
       if (parent.treeSha === alphaTreeSha) {
         try {
-          await assertChannelPromotionPr({
+          const promotionPullRequest = await assertChannelPromotionPr({
             octokit,
             owner,
             repo,
             sha: parentSha,
             targetRef,
           });
+          if (
+            parseReleaseLineRecoveryRef(promotionPullRequest.head?.ref)?.targetRef ===
+            targetRef
+          ) {
+            updates.push({
+              action: "accepted-release-recovery-tree-equivalent-source",
+              sha: parentSha,
+              alphaTag,
+              alphaSha,
+              targetRef,
+            });
+          }
         } catch (error) {
           const matchingReleaseRecoveryPullRequest =
             await findMatchingReleaseRecoveryPullRequest({ commitSha: parentSha, targetRef });
@@ -4680,6 +4804,54 @@ async function promoteBuildchainRefs({
       const matchingReleaseRecoveryPullRequest =
         await findMatchingReleaseRecoveryPullRequest({ commitSha: parentSha, targetRef });
       if (matchingReleaseRecoveryPullRequest) {
+        const recoveryBaseSha = matchingReleaseRecoveryPullRequest.base?.sha;
+        const recoveryHeadSha = matchingReleaseRecoveryPullRequest.head?.sha;
+        const exactCandidateSha =
+          exactReleaseCandidateSource?.promotionChannelSha;
+        const exactCandidateTreeSha =
+          exactReleaseCandidateSource?.promotionChannelTreeSha;
+        if (
+          recoveryBaseSha &&
+          recoveryHeadSha &&
+          exactReleaseCandidateSource?.treeEquivalent === true &&
+          parentSha === exactCandidateSha &&
+          parent.treeSha === exactCandidateTreeSha
+        ) {
+          const recoveryHead = await getCommitInfo(
+            octokit,
+            owner,
+            repo,
+            recoveryHeadSha,
+          );
+          if (recoveryHead.treeSha !== parent.treeSha) {
+            throw new Error(
+              `Release-line recovery PR head tree ${recoveryHead.treeSha} must equal exact release candidate tree ${parent.treeSha}`,
+            );
+          }
+          await assertOnlyAllowedReleaseRecoveryChangesBetween({
+            baseSha: recoveryBaseSha,
+            headSha: recoveryHeadSha,
+            allowedPaths,
+          });
+          await assertOnlyAllowedChangesBetween({
+            baseSha: parentSha,
+            headSha: commitSha,
+            allowedPaths,
+          });
+          updates.push({
+            action: "accepted-exact-release-recovery-parent",
+            sha: parentSha,
+            treeSha: parent.treeSha,
+            recoveryBaseSha,
+            recoveryHeadSha,
+            builtSourceSha: exactReleaseCandidateSource.builtSourceSha,
+            builtSourceTreeSha: exactReleaseCandidateSource.builtSourceTreeSha,
+            alphaTag,
+            alphaSha,
+            targetRef,
+          });
+          return;
+        }
         await assertOnlyAllowedReleaseRecoveryChangesBetween({
           baseSha: alphaSha,
           headSha: parentSha,
@@ -5001,19 +5173,13 @@ async function promoteBuildchainRefs({
   };
 
   const shouldPromoteMajorTag = async () => {
-    try {
-      await octokit.rest.git.getRef({
-        owner,
-        repo,
-        ref: `tags/v${rule.major}.${rule.minor + 1}`,
-      });
-      return false;
-    } catch (error) {
-      if (notFound(error)) {
-        return true;
-      }
-      throw error;
-    }
+    const nextMinorRef = await getGitRefOrUndefined({
+      octokit,
+      owner,
+      repo,
+      ref: `tags/v${rule.major}.${rule.minor + 1}`,
+    });
+    return !nextMinorRef;
   };
 
   let latestPublishTransaction;
@@ -5023,6 +5189,10 @@ async function promoteBuildchainRefs({
     channel,
     line,
     releaseSha,
+    releaseCandidateVersion = "",
+    sourceShaOverride = sha,
+    releaseMaterialShaOverride = releaseMaterialSha,
+    publishToolingShaOverride = publishToolingSha,
     publishDistTagOverride = publishDistTag,
     allowVersionStateFinalization = false,
   }) => {
@@ -5035,6 +5205,7 @@ async function promoteBuildchainRefs({
         tag: exactTag,
         publicTag: releaseTagForPublishedVersion(transactionVersion),
         sha: releaseSha,
+        ...(releaseCandidateVersion ? { releaseCandidateVersion } : {}),
       });
       return undefined;
     }
@@ -5046,7 +5217,7 @@ async function promoteBuildchainRefs({
       cwd,
       loadedConfig: loadBuildchainConfig(cwd),
       targetRef,
-      sourceSha: sha,
+      sourceSha: sourceShaOverride,
       releaseSha,
       version: transactionVersion,
       exactTag,
@@ -5057,13 +5228,14 @@ async function promoteBuildchainRefs({
       publishEvidencePath,
       transactionStatePath,
       publishRequiredArtifactsJson,
-      releaseMaterialSha,
-      publishToolingSha,
+      releaseMaterialSha: releaseMaterialShaOverride,
+      publishToolingSha: publishToolingShaOverride,
       publishMode,
       publishAuth,
       publishDistTag: publishDistTagOverride,
       publishPackageSetOrder,
       publishPackageMain,
+      publishRematerializeOnResume,
       actor,
       runId,
       explicitOverride: publishTransactionOverride,
@@ -5091,34 +5263,50 @@ async function promoteBuildchainRefs({
     latestPublishTransaction = await beginTransactionFinalization(latestPublishTransaction, actor, runId);
   };
 
-  const markComplete = async ({ channel, line } = {}) => {
+  const markComplete = async ({
+    channel,
+    line,
+    passportCwd = cwd,
+    passportBuildSummaryPath = releasePassportBuildSummaryPath,
+    passportPlatformManifestPaths = splitPathList(releasePassportPlatformManifestPaths),
+    passportPromotionRoutingJson = releasePassportPromotionRoutingJson,
+    passportKfd1WitnessJsons = splitPathList(releasePassportKfd1WitnessJsons),
+    passportKfd2ClaimJsons = splitPathList(releasePassportKfd2ClaimJsons),
+    passportKfd3PrebuildWitnessJsons = splitPathList(releasePassportKfd3PrebuildWitnessJsons),
+    passportKfd3ArtifactWitnessJsons = splitPathList(releasePassportKfd3ArtifactWitnessJsons),
+    passportInvariantPassportJsons = splitPathList(releasePassportInvariantPassportJsons),
+    passportReleaseCandidateValidation = releaseCandidateValidation,
+  } = {}) => {
     latestPublishTransaction = await completeTransactionFinalization(latestPublishTransaction, actor, runId);
     latestPublishTransaction = await collectAndPersistReleasePassport({
       result: latestPublishTransaction,
       owner,
       repo,
-      cwd,
+      cwd: passportCwd,
       sourceSha: sha,
       targetRef,
       channel: channel || rule.channel,
       line: line || rule.releasePrefix || "",
       packageName: publishPackageMain,
-      outputDir: releasePassportOutputDir,
+      outputDir: path.resolve(
+        cwd,
+        releasePassportOutputDir || ".buildchain/release-passport",
+      ),
       productName: releasePassportProductName,
-      buildSummaryPath: releasePassportBuildSummaryPath,
-      platformManifestPaths: splitPathList(releasePassportPlatformManifestPaths),
+      buildSummaryPath: passportBuildSummaryPath,
+      platformManifestPaths: passportPlatformManifestPaths,
       impactJson: releasePassportImpactJson,
-      promotionRoutingJson: releasePassportPromotionRoutingJson,
-      kfd1WitnessJsons: splitPathList(releasePassportKfd1WitnessJsons),
-      kfd2ClaimJsons: splitPathList(releasePassportKfd2ClaimJsons),
-      kfd3PrebuildWitnessJsons: splitPathList(releasePassportKfd3PrebuildWitnessJsons),
-      kfd3ArtifactWitnessJsons: splitPathList(releasePassportKfd3ArtifactWitnessJsons),
+      promotionRoutingJson: passportPromotionRoutingJson,
+      kfd1WitnessJsons: passportKfd1WitnessJsons,
+      kfd2ClaimJsons: passportKfd2ClaimJsons,
+      kfd3PrebuildWitnessJsons: passportKfd3PrebuildWitnessJsons,
+      kfd3ArtifactWitnessJsons: passportKfd3ArtifactWitnessJsons,
       kfd3ArtifactVerifyCommand: releasePassportKfd3ArtifactVerifyCommand,
-      invariantPassportJsons: splitPathList(releasePassportInvariantPassportJsons),
+      invariantPassportJsons: passportInvariantPassportJsons,
       invariantPassportCommand: releasePassportInvariantPassportCommand,
       buildchainSelfKfd: Boolean(releasePassportBuildchainSelfKfd),
       enabled: Boolean(releasePassport),
-      releaseCandidateValidation,
+      releaseCandidateValidation: passportReleaseCandidateValidation,
     });
     if (latestPublishTransaction?.transaction) {
       const publicReleaseTag = latestPublishTransaction.publicReleaseTag ||
@@ -5503,6 +5691,124 @@ async function promoteBuildchainRefs({
         currentAlphaSettled ||
         currentAlphaCanReplaceStaleTransaction
       );
+    const currentAlphaNeedsContainedPublishedFinalization =
+      currentAlpha &&
+      currentAlphaTransactionOpen &&
+      ["published", "finalizing"].includes(currentAlphaTransaction.state || "") &&
+      transactionHasPublishedMaterial(currentAlphaTransaction) &&
+      currentAlphaContainsTransaction &&
+      currentAlpha.version === currentAlphaTransaction.version &&
+      currentAlpha.tag === currentAlphaTransaction.exact_tag &&
+      currentAlphaTransaction.target_ref === targetRef &&
+      (!expectedPublicationVersion ||
+        expectedPublicationVersion === currentAlphaTransaction.version) &&
+      !currentAlphaTagSha;
+    if (currentAlphaNeedsContainedPublishedFinalization) {
+      if (dryRun) {
+        updates.push({
+          action: "dry-run-publish-transaction",
+          version: currentAlphaTransaction.version,
+          tag: currentAlphaTransaction.exact_tag,
+          publicTag: publicReleaseTagForTransaction(currentAlphaTransaction),
+          sha: currentAlphaTransaction.release_sha,
+          finalizationOnly: true,
+        });
+        updates.push({
+          action: "contained-published-transaction-finalization",
+          tag: currentAlphaTransaction.exact_tag,
+          sourceSha: currentAlphaTransaction.source_sha,
+          releaseSha: currentAlphaTransaction.release_sha,
+          currentChannelSha: sha,
+          sha: currentAlphaTransaction.release_sha,
+        });
+        return {
+          owner,
+          repo,
+          sourceSha: sha,
+          sha,
+          targetRef,
+          updates,
+        };
+      }
+
+      let finalizationSource;
+      try {
+        if (releasePassport) {
+          finalizationSource = await materializeTransactionSourceWorkspace({
+            octokit,
+            owner,
+            repo,
+            cwd,
+            sourceSha: currentAlphaTransaction.source_sha,
+          });
+        }
+        await executePublishTransaction({
+          version: currentAlphaTransaction.version,
+          exactTag: currentAlphaTransaction.exact_tag,
+          channel: currentAlphaTransaction.channel || rule.channel,
+          line: currentAlphaTransaction.line || rule.releasePrefix,
+          releaseSha: currentAlphaTransaction.release_sha,
+          sourceShaOverride: currentAlphaTransaction.source_sha,
+          releaseMaterialShaOverride:
+            currentAlphaTransaction.release_material_sha ||
+            currentAlphaTransaction.release_sha,
+          publishToolingShaOverride:
+            currentAlphaTransaction.publish_tooling_sha ||
+            currentAlphaTransaction.release_sha,
+          publishDistTagOverride: alphaPublishDistTag,
+        });
+        await markFinalizing();
+        await ensureTag(
+          currentAlphaTransaction.exact_tag,
+          currentAlphaTransaction.release_sha,
+          {
+            acceptedExistingShas: transactionAcceptedExactTagShas(
+              currentAlphaTransaction,
+              currentAlphaTransaction.release_sha,
+            ),
+          },
+        );
+        await updateTag(rule.alphaTag, currentAlphaTransaction.release_sha);
+        await updateMajorAlphaFloatingTag({
+          sha: currentAlphaTransaction.release_sha,
+        });
+        await markComplete({
+          passportCwd: finalizationSource?.workspace || cwd,
+          passportBuildSummaryPath: "",
+          passportPlatformManifestPaths: [],
+          passportPromotionRoutingJson: "",
+          passportKfd1WitnessJsons: [],
+          passportKfd2ClaimJsons: [],
+          passportKfd3PrebuildWitnessJsons: [],
+          passportKfd3ArtifactWitnessJsons: [],
+          passportInvariantPassportJsons: [],
+          passportReleaseCandidateValidation: null,
+        });
+      } finally {
+        if (finalizationSource?.root) {
+          fs.rmSync(finalizationSource.root, {
+            recursive: true,
+            force: true,
+          });
+        }
+      }
+      updates.push({
+        action: "finalized-contained-published-transaction",
+        tag: currentAlphaTransaction.exact_tag,
+        sourceSha: currentAlphaTransaction.source_sha,
+        releaseSha: currentAlphaTransaction.release_sha,
+        currentChannelSha: sha,
+        sha: currentAlphaTransaction.release_sha,
+      });
+      return withPublishTransaction({
+        owner,
+        repo,
+        sourceSha: sha,
+        sha,
+        targetRef,
+        updates,
+      });
+    }
     let selectedAlpha = explicitAlphaTags[0]
       ? { tag: explicitAlphaTags[0] }
       : currentAlphaTransactionOpen && currentAlphaContainsTransaction && !currentAlphaSettled
@@ -5531,7 +5837,23 @@ async function promoteBuildchainRefs({
       updates.push(ownsMajorAlphaTag
         ? { tag: rule.majorAlphaTag, action: "existing", sha }
         : { tag: rule.majorAlphaTag, action: "skipped-newer-minor-alpha-exists", sha });
-      return { owner, repo, sourceSha: sha, sha, targetRef, updates };
+      if (publishTransaction || publishCommand) {
+        const settledVersion = selectedAlpha.version || stripTagPrefix(selectedAlpha.tag);
+        await executePublishTransaction({
+          version: settledVersion,
+          exactTag: selectedAlpha.tag,
+          channel: rule.channel,
+          line: rule.releasePrefix,
+          releaseSha: sha,
+          publishDistTagOverride: alphaPublishDistTag,
+          allowVersionStateFinalization: true,
+        });
+        if (!dryRun && latestPublishTransaction) {
+          await markFinalizing();
+          await markComplete();
+        }
+      }
+      return withPublishTransaction({ owner, repo, sourceSha: sha, sha, targetRef, updates });
     }
     const prepareAlphaCommit = async (candidate) => {
       const version = stripTagPrefix(candidate.tag);
@@ -5623,6 +5945,7 @@ async function promoteBuildchainRefs({
       const targetUpdate = await updateBranch(targetRef, alpha.sha, "updated", {
         title: `Prepare ${selectedAlpha.tag}`,
         body: `Create the generated version-state commit for ${selectedAlpha.tag}.`,
+        allowPendingPullRequest: true,
       });
       if (targetUpdate.pending) {
         return withPublishTransaction({
@@ -5635,7 +5958,7 @@ async function promoteBuildchainRefs({
           updates,
         }, { finalizationNeeded: true });
       }
-      await updateBranch(
+      const devUpdate = await updateBranch(
         `dev/v${rule.major}/v${rule.major}.${rule.minor}`,
         alpha.sha,
         "updated",
@@ -5643,8 +5966,20 @@ async function promoteBuildchainRefs({
           title: `Prepare ${selectedAlpha.tag}`,
           body: `Create the generated version-state commit for ${selectedAlpha.tag}.`,
           allowNonFastForwardSkip: true,
+          allowPendingPullRequest: true,
         },
       );
+      if (devUpdate.pending) {
+        return withPublishTransaction({
+          owner,
+          repo,
+          sourceSha: sha,
+          sha: alpha.sha,
+          targetRef,
+          pendingPullRequest: devUpdate.pullRequest.html_url || devUpdate.pullRequest.url,
+          updates,
+        }, { finalizationNeeded: true });
+      }
     }
     await markFinalizing();
     await ensureTag(selectedAlpha.tag, alpha.sha, {
@@ -5819,7 +6154,7 @@ async function promoteBuildchainRefs({
         Boolean(releaseCommit.anchorManifest) &&
         releaseCommit.hasVersionVerification,
       exactReleaseCandidateSource:
-        promoteOnlyReleaseCandidate && releaseSha === sha
+        promoteOnlyReleaseCandidate
           ? releaseCandidateValidation
           : undefined,
     });
@@ -5889,6 +6224,9 @@ async function promoteBuildchainRefs({
     channel: rule.channel,
     line: rule.releasePrefix,
     releaseSha,
+    releaseCandidateVersion: stripTagPrefix(
+      sourceAlphaMaterial?.exactTag || sourceAlphaMaterial?.tag || "",
+    ),
     allowVersionStateFinalization: releaseCommit.action === "existing",
   });
   if (versionState) {
@@ -6086,6 +6424,7 @@ export {
   persistDurableReleaseTransaction,
   readDurableReleaseTransaction,
   restoreDurableReleaseTransaction,
+  runPublishTransaction,
   resolveTagsForTarget,
   runVersionVerification,
   selectAlphaTag,
@@ -6096,5 +6435,6 @@ export {
   updateVersionStateContents,
   resolveReleaseImpactInput,
   createTreeEquivalentReleaseImpact,
+  releasePassportArtifactFiles,
   validatePromotionReleaseCandidate,
 };

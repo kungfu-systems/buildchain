@@ -324,6 +324,19 @@
       "notes": ""
     },
     {
+      "workflowPath": ".github/workflows/github-governance-audit.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/github-governance-audit.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
       "workflowPath": ".github/workflows/npm-publish.yml",
       "authorityClass": "dry-run-only",
       "publicationCapable": false,
@@ -520,6 +533,7 @@
       "signals": [
         "write-permission",
         "oidc",
+        "environment",
         "cloud-credential"
       ],
       "classified": true
@@ -726,6 +740,13 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/github-governance-audit.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
       "path": ".github/workflows/npm-publish.yml",
       "signals": [
         "npm-publish"
@@ -849,5 +870,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "5f3d4759ffd0dda1addde124221238f8c1a9b6cf07005419d68a0ab946b2841e"
+  "registryDigest": "5487944a7dcac3931faeec5cde33a00254b9fdd8023ef0d21e1569c43d65e1bf"
 }

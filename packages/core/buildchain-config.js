@@ -827,11 +827,13 @@ function normalizeDeployConfig(name, config) {
   if (healthStrategy !== undefined && !SUPPORTED_HEALTH_STRATEGIES.has(healthStrategy)) {
     throw new Error(`deploy.${name}.health_strategy must be one of http or s3-object`);
   }
+  const cacheControl = normalizeWebSurfaceCacheControl(config, `deploy.${name}`);
   const normalized = {
     ...config,
     adapter,
     directoryIndexRewrite,
     healthStrategy,
+    cacheControl,
     artifactPath: config.artifact_path === undefined
       ? undefined
       : posixPath(assertString(config.artifact_path, `deploy.${name}.artifact_path`)),
@@ -842,16 +844,35 @@ function normalizeDeployConfig(name, config) {
   };
   delete normalized.directory_index_rewrite;
   delete normalized.health_strategy;
+  delete normalized.cache_control_default;
+  delete normalized.cache_control_mutable;
+  delete normalized.cache_control_immutable;
   delete normalized.artifact_path;
   delete normalized.secret_refs;
   if (normalized.healthStrategy === undefined) {
     delete normalized.healthStrategy;
+  }
+  if (normalized.cacheControl === undefined) {
+    delete normalized.cacheControl;
   }
   if (normalized.surfaces === undefined) {
     delete normalized.surfaces;
   }
   assertNoInlineSecretValues(config, `deploy.${name}`, new Set(["secret_refs", "surfaces"]));
   return normalized;
+}
+
+function normalizeWebSurfaceCacheControl(config, label) {
+  const entries = [
+    ["default", "cache_control_default"],
+    ["mutable", "cache_control_mutable"],
+    ["immutable", "cache_control_immutable"],
+  ].flatMap(([normalizedKey, sourceKey]) => (
+    config[sourceKey] === undefined
+      ? []
+      : [[normalizedKey, assertString(config[sourceKey], `${label}.${sourceKey}`)]]
+  ));
+  return entries.length > 0 ? Object.fromEntries(entries) : undefined;
 }
 
 function normalizeDeploySurfaceOverrides(channelName, surfaces) {
@@ -879,10 +900,12 @@ function normalizeDeploySurfaceOverride(channelName, surfaceName, override) {
   if (healthStrategy !== undefined && !SUPPORTED_HEALTH_STRATEGIES.has(healthStrategy)) {
     throw new Error(`${label}.health_strategy must be one of http or s3-object`);
   }
+  const cacheControl = normalizeWebSurfaceCacheControl(override, label);
   const normalized = {
     ...override,
     directoryIndexRewrite,
     healthStrategy,
+    cacheControl,
     artifactPath: override.artifact_path === undefined
       ? undefined
       : posixPath(assertString(override.artifact_path, `${label}.artifact_path`)),
@@ -893,6 +916,9 @@ function normalizeDeploySurfaceOverride(channelName, surfaceName, override) {
   };
   delete normalized.directory_index_rewrite;
   delete normalized.health_strategy;
+  delete normalized.cache_control_default;
+  delete normalized.cache_control_mutable;
+  delete normalized.cache_control_immutable;
   delete normalized.artifact_path;
   delete normalized.origin_path;
   delete normalized.secret_refs;
@@ -910,6 +936,9 @@ function normalizeDeploySurfaceOverride(channelName, surfaceName, override) {
   }
   if (normalized.healthStrategy === undefined) {
     delete normalized.healthStrategy;
+  }
+  if (normalized.cacheControl === undefined) {
+    delete normalized.cacheControl;
   }
   assertNoInlineSecretValues(override, label, new Set(["secret_refs"]));
   return normalized;

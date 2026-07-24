@@ -78,6 +78,18 @@
       "maturity": "stable"
     },
     {
+      "id": "candidate",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain candidate timeline --input <file-or-json> [--output <file>] [--json]",
+      "purpose": "Inspect source-bound candidate evidence command families.",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
       "id": "collect",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain collect",
@@ -203,6 +215,18 @@
       "usage": "buildchain facts",
       "purpose": "Inspect build facts command families.",
       "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "github-governance",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain github-governance <plan|apply|rollback|protection-policy-plan|ruleset-policy-plan> ...",
+      "purpose": "Plan, apply, or roll back one root-bound GitHub branch-protection rollout after a frozen read-only inventory.",
+      "capabilityGroup": "governance-versioning",
       "audience": [
         "agent",
         "operator"

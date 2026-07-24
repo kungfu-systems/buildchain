@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:7f007a9d295d597dfc5b1447629ab0d6bf2b3fa3d625b02d27abf7493d73bb40",
+      "digest": "sha256:c9eb92eb02601e1e36cb38d7df93097c582dec2b8dc34f769f58c30fc5190bbe",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -75,11 +75,26 @@
       "order": 105
     },
     {
+      "id": "github-governance-authority",
+      "title": "GitHub governance authority",
+      "path": "docs/github-governance-authority.md",
+      "plane": "verify",
+      "digest": "sha256:8484b18d5b0fe6d61d102d6b9cb9e18beac9f47ecb516d430fb5427518e2931f",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "maintainer",
+        "release-operator",
+        "agent"
+      ],
+      "maturity": "preview",
+      "order": 106
+    },
+    {
       "id": "release-candidate",
       "title": "Release Candidate Passport",
       "path": "docs/release-candidate.md",
       "plane": "verify",
-      "digest": "sha256:15bfe69e1da8c9bf7310c5cd89968d206886a25447f71fdc7cd58db2af0c7608",
+      "digest": "sha256:e933241bc138661a73cf1b419690cad629ba328ce05ecbd85841199a337d37c1",
       "capabilityGroup": "reusable-build",
       "audience": [
         "release-operator",
@@ -177,7 +192,7 @@
       "title": "Toolkit observability",
       "path": "docs/toolkit-observability.md",
       "plane": "use",
-      "digest": "sha256:239949a75ca81b6002a2e148f7028402dbd98c00e246acd8d0955855781206a1",
+      "digest": "sha256:b2ffc3b2520ca7879309b7607b2eaa1aceb647503e893887159a6916de14e2d7",
       "capabilityGroup": "observability-diagnostics",
       "audience": [
         "developer",
@@ -274,7 +289,7 @@
       "title": "KFD support and KFD-3 surface registration",
       "path": "docs/kfd-support.md",
       "plane": "verify",
-      "digest": "sha256:ab15de33a1a9e292b6da74c00b8b96b7c46330d0553a454d1de4c24c672fc025",
+      "digest": "sha256:58a60b3e54bc47d4bc9b6e08a432ba4ff75ed2275ef056d04c44cc2bc25046da",
       "capabilityGroup": "kfd-trust",
       "audience": [
         "agent",
@@ -303,7 +318,7 @@
       "title": "Lifecycle protocol",
       "path": "docs/lifecycle-protocol.md",
       "plane": "use",
-      "digest": "sha256:71552baae51146fa790d40af02d5d5b3a1a4aa0d9764af09907bb05d3360b0cc",
+      "digest": "sha256:9c669d3d2d1926dc5b421207089cca85bac0a6dcdb5544c28a7e1659ba9ed5ee",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -317,7 +332,7 @@
       "title": "Reusable build surface",
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
-      "digest": "sha256:9c125f6d2b519c96718f45da62ac1a891ab618bcb331d3b14c4b88b5158fc4a9",
+      "digest": "sha256:ff6f36e1db2be12df37ef076935b5583493742528d98403297678a0682b67dc2",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -331,7 +346,7 @@
       "title": "Publish transaction",
       "path": "docs/publish-transaction.md",
       "plane": "verify",
-      "digest": "sha256:57673d6e1e57a9be0019b30ad0f8784cd05c9a0f389a775ac5f49f67d8f52a79",
+      "digest": "sha256:cde5256d5f6443a6d32b47783900a0677e973855266af5a360db8d4d112bb677",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator"
@@ -344,7 +359,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:4476d9464d29b4ff3951a362607a11c78b7a3b723247af93ded1b15ff8f0b83e",
+      "digest": "sha256:5aa7fef2c831d14b4d1df4cddb45c6ce97929d8530eb14e3b3dfa3dee5e0d651",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -386,7 +401,7 @@
       "title": "Versioning",
       "path": "docs/versioning.md",
       "plane": "why",
-      "digest": "sha256:10ec868fcb3fd58ae35b54ecd8ccd9a4556516f460c262f0c1ee41c81bdbc264",
+      "digest": "sha256:199ed8e83c988836f757c9a16b58ec441e0bd04a4f3465f21cc73ed7f530e610",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer"
@@ -399,7 +414,7 @@
       "title": "Web surface deployments",
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
-      "digest": "sha256:efbfc97a947978e61c79dac9d67f87050b1bef2297617303340af8aa499703c9",
+      "digest": "sha256:809d765d89277320d710ecfdc2287029530b74fe38f36dd04d057076dded9a0d",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "site",
