@@ -2412,6 +2412,12 @@ test("promotion commits consumer discovery authority only after public release a
     wrapper,
     /Bundle release-candidate-promotion controller evidence[\s\S]*?steps\.promote\.outcome == 'success'/,
   );
+  assert.match(wrapper, /FINALIZATION_NEEDED: \$\{\{ steps\.promote\.outputs\.finalization-needed \}\}/);
+  assert.match(wrapper, /if \(!finalizationNeeded\) \{[\s\S]*?release-passport\.json/);
+  assert.match(
+    wrapper,
+    /needs\.promote\.outputs\.finalization-needed == 'true'[\s\S]*?release-candidate-passport[\s\S]*?publish-evidence[\s\S]*?needs\.promote\.result == 'success'[\s\S]*?release-passport/,
+  );
   assert.match(wrapper, /finalization-needed: \$\{\{ steps\.promote\.outputs\.finalization-needed \}\}/);
   assert.match(wrapper, /promotion-finalization-pending/);
   assert.match(
