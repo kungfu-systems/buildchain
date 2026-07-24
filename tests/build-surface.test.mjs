@@ -65,6 +65,7 @@ import {
 } from "../scripts/runtime-ref-core.mjs";
 import { resolvePublishSourceCli } from "../scripts/resolve-publish-source.mjs";
 import { evaluateBuildchainContractLock } from "../packages/core/buildchain-contract.js";
+import { resolveSelfDogfoodMajor } from "../packages/core/self-dogfood-version.js";
 import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
 import { verifyPublishChannelRefCli } from "../scripts/verify-publish-channel-ref.mjs";
 import { verifyPublishSourceLockCli } from "../scripts/verify-publish-source-lock.mjs";
@@ -3585,6 +3586,55 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
 
   assert.match(promotion, /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.sha \|\| github\.sha \}\}/);
   assert.doesNotMatch(promotion, /buildchain-ref: (?:v\d+-alpha|\$\{\{[^\n]*v\d+-alpha)/);
+});
+
+test("major self-dogfood bootstrap is bounded to the adjacent 0.0 release transition", () => {
+  assert.deepEqual(
+    resolveSelfDogfoodMajor({
+      packageVersion: "2.14.18-alpha.5",
+      alphaRef: "v2-alpha",
+    }),
+    { packageMajor: 2, workflowMajor: 2, bootstrap: false },
+  );
+  assert.deepEqual(
+    resolveSelfDogfoodMajor({
+      packageVersion: "3.0.0",
+      alphaRef: "v2-alpha",
+      majorBootstrap: true,
+    }),
+    { packageMajor: 3, workflowMajor: 2, bootstrap: true },
+  );
+  assert.deepEqual(
+    resolveSelfDogfoodMajor({
+      packageVersion: "3.0.1-alpha.0",
+      alphaRef: "v2-alpha",
+      majorBootstrap: true,
+    }),
+    { packageMajor: 3, workflowMajor: 2, bootstrap: true },
+  );
+  for (const input of [
+    { packageVersion: "3.0.0", alphaRef: "v2-alpha" },
+    {
+      packageVersion: "3.0.1",
+      alphaRef: "v2-alpha",
+      majorBootstrap: true,
+    },
+    {
+      packageVersion: "3.0.2-alpha.0",
+      alphaRef: "v2-alpha",
+      majorBootstrap: true,
+    },
+    {
+      packageVersion: "4.0.0",
+      alphaRef: "v2-alpha",
+      majorBootstrap: true,
+    },
+  ]) {
+    assert.throws(
+      () => resolveSelfDogfoodMajor(input),
+      /must target the current major alpha ref/,
+    );
+  }
 });
 
 test("libnode-shaped fixture declares the build lifecycle contract", () => {
