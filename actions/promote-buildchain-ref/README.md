@@ -89,10 +89,11 @@ tries to apply that commit directly. If GitHub still rejects release
 finalization bookkeeping, Buildchain creates or reuses a same-repository
 `buildchain/version-state/*` PR based on the current target channel head and
 returns `finalization-needed=true`; a later idempotent promotion run can resume
-from the durable transaction state. Strict alpha promotion still fails with a
-configuration diagnostic instead of opening a post-publish human PR. Reusable
-wrapper callers should allow `checks: write` so the generated checks are owned by
-GitHub Actions and matches the managed branch protection rule.
+from the durable transaction state. Strict alpha uses the same protected
+version-state PR recovery for its target and dev bookkeeping, and does not move
+tags until those provider-enforced transactions land. Reusable wrapper callers
+should allow `checks: write` so the generated checks are owned by GitHub Actions
+and match the managed branch protection rule.
 
 Stable promotion also protects concurrent development work. The reusable
 wrapper checks out the exact current `dev/vN/vN.M` head as a reconciliation
