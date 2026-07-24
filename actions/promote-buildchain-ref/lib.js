@@ -2798,6 +2798,15 @@ function branchProtectionBypassAllowances({
     teams: parseBranchProtectionBypassList(teams),
   };
   if (
+    allowances.users.length > 0 ||
+    allowances.teams.length > 0 ||
+    allowances.apps.some((app) => app !== "github-actions")
+  ) {
+    throw new Error(
+      "managed channel protection permits only the descriptor-bound github-actions App bypass actor",
+    );
+  }
+  if (
     allowances.apps.length === 0 &&
     allowances.users.length === 0 &&
     allowances.teams.length === 0
@@ -2805,57 +2814,6 @@ function branchProtectionBypassAllowances({
     return undefined;
   }
   return allowances;
-}
-
-async function resolveAuthenticatedBypassAllowances({
-  octokit,
-  allowances,
-} = {}) {
-  const resolved = {
-    apps: [...(allowances?.apps || [])],
-    users: [...(allowances?.users || [])],
-    teams: [...(allowances?.teams || [])],
-  };
-  const addUnique = (key, value) => {
-    const normalized = String(value || "").trim();
-    if (normalized && !resolved[key].includes(normalized)) {
-      resolved[key].push(normalized);
-    }
-  };
-
-  if (typeof octokit?.rest?.users?.getAuthenticated === "function") {
-    try {
-      const { data } = await retryGitHubOperation(
-        "users.getAuthenticated",
-        () => octokit.rest.users.getAuthenticated(),
-      );
-      addUnique("users", data?.login);
-    } catch (error) {
-      console.log(
-        `buildchain: unable to resolve authenticated promotion user for branch-protection bypass: ${error.message}`,
-      );
-    }
-  }
-
-  if (typeof octokit?.rest?.apps?.getAuthenticated === "function") {
-    try {
-      const { data } = await retryGitHubOperation(
-        "apps.getAuthenticated",
-        () => octokit.rest.apps.getAuthenticated(),
-      );
-      addUnique("apps", data?.slug || data?.name);
-    } catch (error) {
-      console.log(
-        `buildchain: unable to resolve authenticated promotion app for branch-protection bypass: ${error.message}`,
-      );
-    }
-  }
-
-  return (
-    resolved.apps.length || resolved.users.length || resolved.teams.length
-      ? resolved
-      : undefined
-  );
 }
 
 async function ensureManagedChannelBranchProtection({
@@ -2933,10 +2891,7 @@ async function ensureManagedChannelBranchProtection({
     users: branchProtectionBypassUsers,
     teams: branchProtectionBypassTeams,
   });
-  const bypassAllowances = await resolveAuthenticatedBypassAllowances({
-    octokit,
-    allowances: configuredBypassAllowances,
-  });
+  const bypassAllowances = configuredBypassAllowances;
   const strictStatusChecks = managedChannelStrictStatusChecks(branch, currentProtection);
   await retryGitHubOperation(
     `repos.updateBranchProtection ${branch}`,
@@ -2950,10 +2905,10 @@ async function ensureManagedChannelBranchProtection({
       },
       enforce_admins: true,
       required_pull_request_reviews: {
-        dismiss_stale_reviews: false,
-        require_code_owner_reviews: false,
+        dismiss_stale_reviews: true,
+        require_code_owner_reviews: true,
         required_approving_review_count: 1,
-        require_last_push_approval: false,
+        require_last_push_approval: true,
         ...(bypassAllowances
           ? { bypass_pull_request_allowances: bypassAllowances }
           : {}),

@@ -28,7 +28,9 @@ one short-lived immutable receipt.
 
 The machine contract is
 `@kungfu-tech/buildchain/github-governance-authority`. Its policy root covers
-the managed-zone admission rules, the dual-account authority split, protected
+the managed-zone repository and target-ref admission rules, the exact
+required-check context/App bindings and strict-update semantics for every
+public authoritative target, the dual-account authority split, protected
 verifier paths, native review requirements, break-glass constraints, and the
 explicit trust boundary.
 
@@ -57,8 +59,12 @@ target must require:
 - a pull request, at least one independent Code Owner approval, and a fresh
   approval after the latest reviewable push;
 - administrator enforcement, resolved review conversations, and a non-empty
-  exact required-check set;
-- no unapproved bypass actor, force push, or protected-ref deletion;
+  required-check set whose exact contexts, GitHub App producer identities, and
+  strict-update setting match the versioned target policy;
+- no unapproved bypass actor, force push, or protected-ref deletion. Managed
+  dev/alpha/release ref bookkeeping may admit only the exact GitHub Actions App
+  identity versioned for that target; user and team bypass actors remain
+  non-qualifying;
 - exact last-match ownership of CODEOWNERS and the governance descriptor,
   collector, rollout planner, and scheduled audit workflow;
 - complete readable GitHub API evidence. Missing, forbidden, ambiguous, or
@@ -74,8 +80,25 @@ policy.
 The 2026-07-24 baseline contains 16 managed repositories: 13 public and three
 private. Public repository names are versioned in the descriptor. Private
 repository names are never emitted in public evidence; their identities are
-represented by roots. A newly discovered repository is non-authoritative until
-explicitly admitted.
+represented by stable roots derived from the GitHub provider repository ID,
+independent of the governance policy root. This prevents a policy revision from
+changing repository identity or creating a circular admission dependency. A
+newly discovered repository or target ref is non-authoritative until explicitly
+admitted.
+
+The descriptor also versions every active public merge target. The full audit
+evaluates one receipt per authoritative target rather than assuming the default
+branch represents dev, alpha, release, or major publish-gate branches. The live
+default branch is always included even if it drifts outside the registry, in
+which case it is non-qualifying. Retained historical channels and generated
+per-release publish-gate refs are not silently deleted or promoted to current
+authority; they require an explicit registry revision before they can qualify.
+
+For an admitted private repository, the active target set is the current
+default branch plus existing alpha/release siblings on the same version line.
+Its required-check bindings remain non-qualifying until their sanitized binding
+roots are sealed into the private identity entry after supported native
+protection exists.
 
 Public repositories can qualify on supported Free, Team, or Enterprise
 enforcement. Private repositories and organization-wide rules require Team or
@@ -108,15 +131,21 @@ buildchain audit github-governance \
 
 Protected merge and publication consumers verify the receipt against the exact
 repository, target base ref, policy root, freshness window, and exact
-Buildchain verifier source revision. The publication authority workflow is
-itself an explicit Code Owner path. A receipt from another ref or verifier
-revision cannot authorize a later publication.
+Buildchain verifier source revision. Non-dry-run publication does not trust a
+caller-supplied JSON hash: it mints a bounded token for the dedicated read-only
+governance auditor GitHub App, recollects live provider state with the exact
+Buildchain runtime, requires the resulting single-repository/single-target
+audit to qualify, and consumes that independently generated receipt. Missing
+App configuration or unreadable provider state denies publication before
+provider mutation. The publication authority workflow is itself an explicit
+Code Owner path.
 
 The output is sanitized. Public repositories retain their public identity.
 Private repositories expose only an identity root, visibility class, target
-ref, fact roots, and a qualifying or non-qualifying decision. Tokens, cookies,
-recovery material, private CODEOWNERS bytes, raw permission payloads, and
-credential-bearing URLs are never included.
+ref, sanitized required-check bindings and fact roots, and a qualifying or
+non-qualifying decision. Tokens, cookies, recovery material, private
+CODEOWNERS bytes, raw permission payloads, and credential-bearing URLs are
+never included.
 
 ## Mutation and rollback boundary
 

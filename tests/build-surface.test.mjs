@@ -883,7 +883,7 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /token: \$\{\{ github\.token \}\}/);
   assert.match(
     workflow,
-    /generated-ref-update-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token \}\}/,
+    /generated-ref-update-token: \$\{\{ github\.token \}\}/,
   );
   assert.doesNotMatch(workflow, /NODE_AUTH_TOKEN|NPM_TOKEN/);
   assert.match(workflow, /if: \$\{\{ needs\.preflight\.outputs\.action == 'promote' \}\}/);
@@ -2261,7 +2261,7 @@ test("promote wrapper exposes controlled branch-protection review bypass", () =>
   assert.match(wrapper, /BUILDCHAIN_PROMOTION_TOKEN:\n\s+description:/);
   assert.match(
     wrapper,
-    /generated-ref-update-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token \}\}/,
+    /generated-ref-update-token: \$\{\{ github\.token \}\}/,
   );
 
   const selfPromotion = fs.readFileSync(
@@ -2270,8 +2270,8 @@ test("promote wrapper exposes controlled branch-protection review bypass", () =>
   );
   assert.match(selfPromotion, /checks: write/);
   assert.match(selfPromotion, /BUILDCHAIN_PROMOTION_BYPASS_APPS/);
-  assert.match(selfPromotion, /BUILDCHAIN_PROMOTION_BYPASS_USERS/);
-  assert.match(selfPromotion, /BUILDCHAIN_PROMOTION_BYPASS_TEAMS/);
+  assert.doesNotMatch(selfPromotion, /BUILDCHAIN_PROMOTION_BYPASS_USERS/);
+  assert.doesNotMatch(selfPromotion, /BUILDCHAIN_PROMOTION_BYPASS_TEAMS/);
 });
 
 test("Buildchain stable promotion gates publication after RC resolution", () => {
@@ -2552,13 +2552,16 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
     bootstrap,
     /required-status-check:\n\s+description: "Exact required branch-protection check context"\n\s+required: false\n\s+default: "check"/,
   );
-  assert.match(bootstrap, /BUILDCHAIN_PROMOTION_BYPASS_APPS: \$\{\{ vars\.BUILDCHAIN_PROMOTION_BYPASS_APPS \}\}/);
-  assert.match(bootstrap, /BUILDCHAIN_PROMOTION_BYPASS_USERS: \$\{\{ vars\.BUILDCHAIN_PROMOTION_BYPASS_USERS \}\}/);
-  assert.match(bootstrap, /BUILDCHAIN_PROMOTION_BYPASS_TEAMS: \$\{\{ vars\.BUILDCHAIN_PROMOTION_BYPASS_TEAMS \}\}/);
-  assert.match(bootstrap, /Release line bootstrap requires a declared promotion bypass app, user, or team/);
-  assert.match(bootstrap, /bypass_pull_request_allowances:\s*\{\s*apps: \$bypass_apps,\s*users: \$bypass_users,\s*teams: \$bypass_teams\s*\}/);
-  assert.match(bootstrap, /strict: \$dev_channel/);
-  assert.match(bootstrap, /\[\$context, "verify"\] \| unique/);
+  assert.match(bootstrap, /GH_TOKEN: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/);
+  assert.match(bootstrap, /token: \$\{\{ github\.token \}\}/);
+  assert.doesNotMatch(bootstrap, /BUILDCHAIN_PROMOTION_BYPASS_(APPS|USERS|TEAMS)/);
+  assert.match(bootstrap, /requires BUILDCHAIN_PROMOTION_TOKEN to configure branch protection/);
+  assert.match(bootstrap, /apps: \["github-actions"\],\s*users: \[\],\s*teams: \[\]/);
+  assert.match(bootstrap, /strict: \$release_channel/);
+  assert.match(bootstrap, /map\(\{context: \., app_id: \$github_actions_app_id\}\)/);
+  assert.match(bootstrap, /dismiss_stale_reviews: true/);
+  assert.match(bootstrap, /require_code_owner_reviews: true/);
+  assert.match(bootstrap, /require_last_push_approval: true/);
   assert.match(bootstrap, /name: Reconcile dev merge queue governance/);
   assert.match(bootstrap, /--from-config/);
   assert.ok(

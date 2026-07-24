@@ -8314,12 +8314,6 @@ test("strict alpha promotion protects created dev branches with one required app
           return { data: { id: checkRuns.length } };
         },
       },
-      users: {
-        getAuthenticated: async () => ({ data: { login: "current-release-bot" } }),
-      },
-      apps: {
-        getAuthenticated: async () => ({ data: { slug: "current-release-app" } }),
-      },
       repos: {
         getBranchProtection: async () => ({
           data: protectedChannel({
@@ -8356,9 +8350,7 @@ test("strict alpha promotion protects created dev branches with one required app
     requireGovernance: true,
     requireVersionState: true,
     requiredStatusCheck: "Build",
-    branchProtectionBypassApps: "github-actions, buildchain-promotion",
-    branchProtectionBypassUsers: "release-bot",
-    branchProtectionBypassTeams: "release-engineering",
+    branchProtectionBypassApps: "github-actions",
   });
 
   const devProtection = protections.find(
@@ -8370,14 +8362,14 @@ test("strict alpha promotion protects created dev branches with one required app
     checks: [{ context: "Build", app_id: 15368 }, { context: "security", app_id: 15368 }],
   });
   assert.deepEqual(devProtection.required_pull_request_reviews, {
-    dismiss_stale_reviews: false,
-    require_code_owner_reviews: false,
+    dismiss_stale_reviews: true,
+    require_code_owner_reviews: true,
     required_approving_review_count: 1,
-    require_last_push_approval: false,
+    require_last_push_approval: true,
     bypass_pull_request_allowances: {
-      apps: ["github-actions", "buildchain-promotion", "current-release-app"],
-      users: ["release-bot", "current-release-bot"],
-      teams: ["release-engineering"],
+      apps: ["github-actions"],
+      users: [],
+      teams: [],
     },
   });
   assert.equal(devProtection.enforce_admins, true);
@@ -8407,6 +8399,43 @@ test("strict alpha promotion protects created dev branches with one required app
         conclusion: "success",
       },
     ],
+  );
+});
+
+test("managed channel protection rejects actors outside the exact GitHub Actions App", async () => {
+  await assert.rejects(
+    () => ensureManagedChannelBranchProtection({
+      octokit: {
+        rest: {
+          repos: {
+            getBranchProtection: async () => ({ data: protectedChannel() }),
+            updateBranchProtection: async () => ({ data: {} }),
+          },
+        },
+      },
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      branch: "dev/v2/v2.14",
+      branchProtectionBypassUsers: "release-owner",
+    }),
+    /permits only the descriptor-bound github-actions App bypass actor/,
+  );
+  await assert.rejects(
+    () => ensureManagedChannelBranchProtection({
+      octokit: {
+        rest: {
+          repos: {
+            getBranchProtection: async () => ({ data: protectedChannel() }),
+            updateBranchProtection: async () => ({ data: {} }),
+          },
+        },
+      },
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      branch: "dev/v2/v2.14",
+      branchProtectionBypassApps: "buildchain-promotion",
+    }),
+    /permits only the descriptor-bound github-actions App bypass actor/,
   );
 });
 

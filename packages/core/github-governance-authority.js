@@ -10,32 +10,127 @@ export const GITHUB_GOVERNANCE_RULESET_ROLLOUT_CONTRACT =
   "kungfu-buildchain-github-governance-ruleset-rollout-plan";
 
 const SHA256 = /^sha256:[0-9a-f]{64}$/;
-const PUBLIC_REPOSITORIES = Object.freeze([
-  "agent-hub-demo",
-  "build-images",
-  "buildchain",
-  "homebrew-tap",
-  "kfd",
-  "kungfu",
-  "libnode",
-  "paper-episodes-to-primitives",
-  "paper-kfd-foundation-real-world-agent-work",
-  "paper-kungfu-product-white-paper",
-  "paper-observer-declared-timelines",
-  "site-kungfu-tech",
-  "site-libkungfu-dev",
+const GITHUB_ACTIONS_APP_ID = 15368;
+const GITHUB_ACTIONS_BYPASS_ACTOR = Object.freeze({
+  actorType: "Integration",
+  actorId: GITHUB_ACTIONS_APP_ID,
+  bypassMode: "always",
+});
+const check = (context, appId = GITHUB_ACTIONS_APP_ID) => ({
+  context,
+  appId,
+});
+const target = (
+  targetRef,
+  requiredCheckBindings,
+  strictRequiredChecks,
+  allowedBypassActors = /^(dev|alpha|release)\//.test(targetRef)
+    ? [GITHUB_ACTIONS_BYPASS_ACTOR]
+    : [],
+) => ({
+  targetRef,
+  requiredCheckBindings,
+  strictRequiredChecks,
+  allowedBypassActors,
+});
+const PUBLIC_REPOSITORY_TARGETS = Object.freeze({
+  "agent-hub-demo": [
+    target("dev/v0/v0.2", [check("check / check")], true),
+    target("alpha/v0/v0.2", [check("check / check")], false),
+    target("release/v0/v0.2", [check("check / check")], false),
+  ],
+  "build-images": [
+    target("dev/v1/v1.1", [check("check")], true),
+    target("alpha/v1/v1.1", [check("check")], true),
+    target("release/v1/v1.1", [check("check")], true),
+    target("publish-gate/major", [check("check")], true),
+  ],
+  buildchain: [
+    target("dev/v2/v2.14", [check("check")], false),
+    target("alpha/v2/v2.14", [check("check"), check("verify")], false),
+    target("release/v2/v2.14", [check("check")], true),
+    target("publish-gate/major", [check("check")], true),
+  ],
+  "homebrew-tap": [
+    target("main", [check("check / Finalize channel router controller evidence")], false),
+  ],
+  kfd: [
+    target("dev/v1/v1.0", [check("check / check")], true),
+    target("alpha/v1/v1.0", [check("check / check")], true),
+  ],
+  kungfu: [
+    target("dev/v4/v4.0", [check("affected-native / linux")], false),
+    target("alpha/v4/v4.0", [
+      check("build", null),
+      check("signoff"),
+      check("validate"),
+    ], true),
+  ],
+  libnode: [
+    target("dev/v22/v22.22", [check("build")], true),
+    target("alpha/v22/v22.22", [check("build")], true),
+    target(
+      "release/v22/v22.22",
+      [check("build / Build with resolved channel / Summarize build contract")],
+      true,
+    ),
+  ],
+  "paper-episodes-to-primitives": [
+    target("main", [check("governance")], false),
+    target("dev/v0/v0.1", [check("check / check")], true),
+    target("alpha/v0/v0.1", [check("check / check")], true),
+  ],
+  "paper-kfd-foundation-real-world-agent-work": [
+    target("main", [check("check / check")], false),
+    target("dev/v0/v0.1", [check("check / check")], true),
+    target("alpha/v0/v0.1", [check("check / check")], true),
+  ],
+  "paper-kungfu-product-white-paper": [
+    target("main", [check("check / check")], false),
+    target("dev/v0/v0.1", [check("check / check")], true),
+    target("alpha/v0/v0.1", [check("check / check")], true),
+  ],
+  "paper-observer-declared-timelines": [
+    target("main", [check("check / check")], false),
+    target("dev/v0/v0.1", [check("check / check")], true),
+    target("alpha/v0/v0.1", [check("check / check")], true),
+  ],
+  "site-kungfu-tech": [
+    target("main", [check("web-surface / Record web-surface controller receipt")], false),
+  ],
+  "site-libkungfu-dev": [
+    target("main", [check("web-surface / Record web-surface controller receipt")], false),
+  ],
+});
+const PUBLIC_REPOSITORIES = Object.freeze(Object.keys(PUBLIC_REPOSITORY_TARGETS).sort());
+const PRIVATE_REPOSITORY_IDENTITIES = Object.freeze([
+  "sha256:581823ab841e1d9a9025c92d0c47b164c6aaa1ea22112fdbc8d73bd2c862a05f",
+  "sha256:b7255e01d10000eb3a2786456b4c558178675ccb6cf28a6e39a74dbfe918df35",
+  "sha256:f41bd767e9c4a0ab429ca2a2f456d29ddefab0e996d75000ba36334689eb177e",
 ]);
 const PROTECTED_AUTHORITY_PATHS = Object.freeze([
   ".github/CODEOWNERS",
   ".github/workflows/.publication-authority.yml",
+  ".github/workflows/.release-candidate-promote.yml",
+  ".github/workflows/buildchain-ref-promotion.yml",
   ".github/workflows/github-governance-audit.yml",
+  ".github/workflows/paper-release-sealed.yml",
+  ".github/workflows/paper-release.yml",
+  ".github/workflows/release-line-bootstrap.yml",
+  ".github/workflows/release-candidate-promote.yml",
+  "actions/promote-buildchain-ref/action.yml",
+  "actions/promote-buildchain-ref/dist/index.js",
+  "actions/promote-buildchain-ref/index.js",
+  "actions/promote-buildchain-ref/lib.js",
   "packages/core/github-governance-authority.js",
+  "packages/core/buildchain-publication-authority.js",
   "scripts/audit-github-governance.mjs",
   "scripts/reconcile-github-governance.mjs",
 ]);
 const REQUIRED_FACTS = Object.freeze([
   "api-evidence",
   "repository-admission",
+  "target-ref-admission",
   "plan-capability",
   "codeowners-source",
   "codeowners-authority",
@@ -46,6 +141,7 @@ const REQUIRED_FACTS = Object.freeze([
   "bypass-policy",
   "conversation-resolution",
   "required-checks",
+  "strict-required-checks",
   "ref-integrity",
   "development-least-privilege",
   "review-authority",
@@ -122,20 +218,71 @@ function ruleParameters(rulesets, type) {
     .map((rule) => rule.parameters || {});
 }
 
-function protectionChecks(protection) {
-  const status = protection?.required_status_checks || {};
-  const checks = [
-    ...(status.checks || []).map((entry) => String(entry?.context || "").trim()),
-    ...(status.contexts || []).map((entry) => String(entry || "").trim()),
-  ].filter(Boolean);
-  return [...new Set(checks)].sort();
+function normalizeCheckBinding(entry) {
+  const context = String(
+    typeof entry === "string" ? entry : entry?.context || "",
+  ).trim();
+  if (!context) return null;
+  const providerAppId = typeof entry === "string"
+    ? null
+    : entry?.app_id ?? entry?.integration_id ?? null;
+  return {
+    context,
+    appId: Number.isInteger(providerAppId) && providerAppId > 0
+      ? providerAppId
+      : null,
+  };
 }
 
-function rulesetChecks(rulesets) {
-  return [...new Set(ruleParameters(rulesets, "required_status_checks")
+function uniqueCheckBindings(bindings) {
+  return bindings
+    .filter(Boolean)
+    .filter((binding, index, values) =>
+      values.findIndex((candidate) =>
+        candidate.context === binding.context &&
+        candidate.appId === binding.appId) === index)
+    .sort((left, right) =>
+      `${left.context}:${left.appId ?? ""}`.localeCompare(
+        `${right.context}:${right.appId ?? ""}`,
+      ));
+}
+
+function uniqueBypassActors(actors) {
+  return (actors || [])
+    .map((actor) => ({
+      actorType: String(actor?.actorType || ""),
+      actorId: Number(actor?.actorId || 0),
+      bypassMode: String(actor?.bypassMode || ""),
+    }))
+    .filter((actor) =>
+      actor.actorType &&
+      Number.isInteger(actor.actorId) &&
+      actor.actorId > 0 &&
+      actor.bypassMode)
+    .filter((actor, index, values) =>
+      values.findIndex((candidate) =>
+        candidate.actorType === actor.actorType &&
+        candidate.actorId === actor.actorId &&
+        candidate.bypassMode === actor.bypassMode) === index)
+    .sort((left, right) =>
+      `${left.actorType}:${left.actorId}:${left.bypassMode}`.localeCompare(
+        `${right.actorType}:${right.actorId}:${right.bypassMode}`,
+      ));
+}
+
+function protectionCheckBindings(protection) {
+  const status = protection?.required_status_checks || {};
+  const checks = Array.isArray(status.checks) ? status.checks : [];
+  return uniqueCheckBindings(
+    (checks.length > 0 ? checks : status.contexts || [])
+      .map(normalizeCheckBinding),
+  );
+}
+
+function rulesetCheckBindings(rulesets) {
+  return uniqueCheckBindings(ruleParameters(rulesets, "required_status_checks")
     .flatMap((parameters) => parameters.required_status_checks || [])
-    .map((entry) => String(entry?.context || "").trim())
-    .filter(Boolean))].sort();
+    .map(normalizeCheckBinding));
 }
 
 function classicBypassActors(review = {}) {
@@ -170,10 +317,13 @@ export function compileEffectiveGithubGovernancePolicy({
   const applicable = applicableRulesets(rulesets, target, defaultBranch);
   const pullRequests = ruleParameters(applicable, "pull_request");
   const classicReview = protection?.required_pull_request_reviews || {};
-  const requiredChecks = [...new Set([
-    ...protectionChecks(protection),
-    ...rulesetChecks(applicable),
-  ])].sort();
+  const requiredCheckBindings = uniqueCheckBindings([
+    ...protectionCheckBindings(protection),
+    ...rulesetCheckBindings(applicable),
+  ]);
+  const requiredChecks = [...new Set(
+    requiredCheckBindings.map((entry) => entry.context),
+  )].sort();
   const bypassActors = [
     ...classicBypassActors(classicReview),
     ...applicable.flatMap((ruleset) => ruleset.bypass_actors || []),
@@ -212,6 +362,7 @@ export function compileEffectiveGithubGovernancePolicy({
     requireLastPushApproval,
     conversationResolution,
     requiredChecks,
+    requiredCheckBindings,
     strictRequiredChecks: protection?.required_status_checks?.strict === true ||
       ruleParameters(applicable, "required_status_checks")
         .some((policy) => policy.strict_required_status_checks_policy === true),
@@ -321,6 +472,26 @@ export function createBuildchainGithubGovernanceAuthority() {
     },
     repositoryAdmission: {
       publicRepositories: [...PUBLIC_REPOSITORIES],
+      publicAuthoritativeTargets: Object.fromEntries(
+        Object.entries(PUBLIC_REPOSITORY_TARGETS).map(([repository, targets]) => [
+          repository,
+          targets.map((entry) => ({
+            targetRef: entry.targetRef,
+            requiredCheckBindings: entry.requiredCheckBindings.map((binding) => ({
+              ...binding,
+            })),
+            strictRequiredChecks: entry.strictRequiredChecks,
+            allowedBypassActors: entry.allowedBypassActors.map((actor) => ({
+              ...actor,
+            })),
+          })),
+        ]),
+      ),
+      privateRepositoryIdentities: PRIVATE_REPOSITORY_IDENTITIES.map((identityRoot) => ({
+        identityRoot,
+        targetPolicy: "default-and-current-version-line",
+        requiredCheckPolicies: {},
+      })),
       privateRepositoryPolicy: "non-authoritative-until-plan-capability-qualifies",
       unknownRepositoryPolicy: "non-authoritative-until-explicit-admission",
       baseline: {
@@ -328,6 +499,8 @@ export function createBuildchainGithubGovernanceAuthority() {
         repositoryCount: 16,
         publicCount: 13,
         privateCount: 3,
+        authoritativePublicTargetCount: Object.values(PUBLIC_REPOSITORY_TARGETS)
+          .reduce((count, targets) => count + targets.length, 0),
       },
     },
     planCapability: {
@@ -340,9 +513,10 @@ export function createBuildchainGithubGovernanceAuthority() {
       minimumIndependentApprovals: 1,
       freshApprovalAfterLatestPush: true,
       administratorEnforcement: true,
-      allowedBypassActors: [],
+      allowedBypassActors: "target-bound-official-integrations-only",
       conversationResolution: true,
-      requiredChecks: "non-empty",
+      requiredChecks: "descriptor-bound-exact-context-and-app-identity",
+      strictRequiredChecks: "descriptor-bound",
       forcePush: false,
       deletion: false,
       nativeEnforcementRequired: true,
@@ -364,17 +538,95 @@ export function createBuildchainGithubGovernanceAuthority() {
   };
 }
 
+export function githubRepositoryIdentityRoot({
+  provider = "github",
+  providerRepositoryId,
+} = {}) {
+  return githubGovernanceDigest({
+    provider: requiredString(provider, "repository identity provider"),
+    providerRepositoryId: requiredString(
+      providerRepositoryId,
+      "provider repository id",
+    ),
+  });
+}
+
+function privateRepositoryPolicy(descriptor, identityRoot) {
+  return descriptor.repositoryAdmission.privateRepositoryIdentities
+    .find((entry) => entry.identityRoot === identityRoot);
+}
+
 function repositoryAdmission(descriptor, repository) {
   const [owner, name] = requiredString(repository.fullName, "repository full name").split("/");
   if (owner !== descriptor.organization) return "non-authoritative-foreign-owner";
   if (repository.visibility === "private") {
-    return repository.admitted === true
+    return privateRepositoryPolicy(descriptor, repository.identityRoot)
       ? "admitted-private"
       : "non-authoritative-explicit-admission-required";
   }
   return descriptor.repositoryAdmission.publicRepositories.includes(name)
     ? "admitted-public"
     : "non-authoritative-explicit-admission-required";
+}
+
+function activeVersionLineTargets(defaultBranch) {
+  const normalized = normalizedRef(defaultBranch);
+  const match = normalized.match(/^dev\/(v\d+)\/(v\d+\.\d+)$/);
+  if (!match) return [normalized];
+  return [
+    normalized,
+    `alpha/${match[1]}/${match[2]}`,
+    `release/${match[1]}/${match[2]}`,
+  ];
+}
+
+function publicTargetPolicy(descriptor, repository, targetRef) {
+  const name = requiredString(repository.fullName, "repository full name").split("/")[1];
+  return (descriptor.repositoryAdmission.publicAuthoritativeTargets[name] || [])
+    .find((entry) => entry.targetRef === normalizedRef(targetRef));
+}
+
+function privateTargetPolicy(descriptor, repository, targetRef) {
+  const policy = privateRepositoryPolicy(descriptor, repository.identityRoot);
+  if (!policy) return null;
+  const normalized = normalizedRef(targetRef);
+  if (!activeVersionLineTargets(repository.defaultBranch || normalized).includes(normalized)) {
+    return null;
+  }
+  return {
+    targetRef: normalized,
+    ...(policy.requiredCheckPolicies?.[normalized] || {}),
+  };
+}
+
+function targetPolicy(descriptor, repository, targetRef) {
+  return repository.visibility === "private"
+    ? privateTargetPolicy(descriptor, repository, targetRef)
+    : publicTargetPolicy(descriptor, repository, targetRef);
+}
+
+export function resolveGithubGovernanceTargetRefs({
+  descriptor = BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY,
+  repository,
+  availableRefs = [],
+  requestedTargetRef = "",
+} = {}) {
+  if (requestedTargetRef) return [normalizedRef(requestedTargetRef)];
+  const defaultBranch = normalizedRef(repository.defaultBranch);
+  if (repository.visibility === "private") {
+    if (!privateRepositoryPolicy(descriptor, repository.identityRoot)) {
+      return [defaultBranch];
+    }
+    const available = new Set(availableRefs.map(normalizedRef));
+    return activeVersionLineTargets(defaultBranch)
+      .filter((ref) => ref === defaultBranch || available.has(ref));
+  }
+  const name = requiredString(repository.fullName, "repository full name").split("/")[1];
+  const admitted = descriptor.repositoryAdmission.publicAuthoritativeTargets[name] || [];
+  return [...new Set([
+    ...admitted.map((entry) => entry.targetRef),
+    defaultBranch,
+  ])].sort();
 }
 
 function planCapability(descriptor, repository, planName) {
@@ -436,6 +688,7 @@ export function evaluateGithubGovernanceSnapshot({
   }
   const identity = sanitizedRepositoryIdentity(repository || {});
   const admission = repositoryAdmission(descriptor, repository || {});
+  const admittedTargetPolicy = targetPolicy(descriptor, repository || {}, targetRef);
   const capability = planCapability(descriptor, repository || {}, organizationPlan);
   const policy = effectivePolicy || {};
   const ownership = codeowners || {};
@@ -448,9 +701,40 @@ export function evaluateGithubGovernanceSnapshot({
     apiEvidence.ambiguous !== true;
   const admitted = admission === "admitted-public" ||
     admission === "admitted-private";
+  const observedCheckBindings = uniqueCheckBindings(policy.requiredCheckBindings || []);
+  const observedCheckBindingRoot = githubGovernanceDigest(observedCheckBindings);
+  const expectedCheckBindingRoot = admittedTargetPolicy?.requiredCheckBindingRoot ||
+    (admittedTargetPolicy?.requiredCheckBindings
+      ? githubGovernanceDigest(uniqueCheckBindings(
+          admittedTargetPolicy.requiredCheckBindings.map((entry) => ({
+            context: entry.context,
+            appId: entry.appId,
+          })),
+        ))
+      : "");
+  const exactRequiredChecks = observedCheckBindings.length > 0 &&
+    SHA256.test(expectedCheckBindingRoot) &&
+    observedCheckBindingRoot === expectedCheckBindingRoot;
+  const strictRequiredChecks = typeof admittedTargetPolicy?.strictRequiredChecks === "boolean" &&
+    policy.strictRequiredChecks === admittedTargetPolicy.strictRequiredChecks;
+  const observedBypassActors = uniqueBypassActors(policy.bypassActors);
+  const allowedBypassActors = uniqueBypassActors(
+    admittedTargetPolicy?.allowedBypassActors,
+  );
+  const unapprovedBypassActors = observedBypassActors.filter((actor) =>
+    !allowedBypassActors.some((allowed) =>
+      allowed.actorType === actor.actorType &&
+      allowed.actorId === actor.actorId &&
+      allowed.bypassMode === actor.bypassMode));
   const facts = [
     fact("api-evidence", apiPass, apiEvidence),
     fact("repository-admission", admitted, { admission, visibility: repository?.visibility }),
+    fact("target-ref-admission", Boolean(admittedTargetPolicy), {
+      targetAdmission: admittedTargetPolicy
+        ? "admitted-authoritative-target"
+        : "non-authoritative-target",
+      targetRef: normalizedRef(targetRef),
+    }),
     fact("plan-capability", capability.qualifying, capability),
     fact("codeowners-source", ownership.exists === true && SHA256.test(ownership.sourceDigest || ""), {
       exists: ownership.exists,
@@ -482,14 +766,23 @@ export function evaluateGithubGovernanceSnapshot({
     fact("administrator-enforcement", policy.enforceAdmins === true, {
       enforceAdmins: policy.enforceAdmins,
     }),
-    fact("bypass-policy", Array.isArray(policy.bypassActors) && policy.bypassActors.length === 0, {
-      bypassActors: policy.bypassActors || [],
+    fact("bypass-policy", unapprovedBypassActors.length === 0, {
+      bypassActors: observedBypassActors,
+      allowedBypassActors,
+      unapprovedBypassActors,
     }),
     fact("conversation-resolution", policy.conversationResolution === true, {
       conversationResolution: policy.conversationResolution,
     }),
-    fact("required-checks", Array.isArray(policy.requiredChecks) && policy.requiredChecks.length > 0, {
+    fact("required-checks", exactRequiredChecks, {
       requiredChecks: policy.requiredChecks || [],
+      requiredCheckBindings: observedCheckBindings,
+      observedCheckBindingRoot,
+      expectedCheckBindingRoot,
+    }),
+    fact("strict-required-checks", strictRequiredChecks, {
+      observed: policy.strictRequiredChecks === true,
+      expected: admittedTargetPolicy?.strictRequiredChecks,
     }),
     fact("ref-integrity", policy.allowForcePushes === false && policy.allowDeletions === false, {
       allowForcePushes: policy.allowForcePushes,
@@ -520,7 +813,18 @@ export function evaluateGithubGovernanceSnapshot({
         ? [githubGovernanceDigest({
             targetRef: policy.targetRef,
             classicProtectionObserved: true,
-            requiredChecks: policy.requiredChecks,
+            nativePullRequestRequired: policy.nativePullRequestRequired,
+            requiredApprovals: policy.requiredApprovals,
+            codeOwnerReviewRequired: policy.codeOwnerReviewRequired,
+            dismissStaleReviews: policy.dismissStaleReviews,
+            requireLastPushApproval: policy.requireLastPushApproval,
+            conversationResolution: policy.conversationResolution,
+            requiredCheckBindings: observedCheckBindings,
+            strictRequiredChecks: policy.strictRequiredChecks,
+            enforceAdmins: policy.enforceAdmins,
+            bypassActors: policy.bypassActors,
+            allowForcePushes: policy.allowForcePushes,
+            allowDeletions: policy.allowDeletions,
           })]
         : []),
     ].sort(),
@@ -529,6 +833,12 @@ export function evaluateGithubGovernanceSnapshot({
       review: { state: review.state || "", roleClass: review.role || "" },
     }),
     requiredChecks: [...(policy.requiredChecks || [])].sort(),
+    requiredCheckBindings: observedCheckBindings,
+    requiredCheckBindingRoot: observedCheckBindingRoot,
+    expectedRequiredCheckBindingRoot: expectedCheckBindingRoot,
+    targetAdmission: admittedTargetPolicy
+      ? "admitted-authoritative-target"
+      : "non-authoritative-target",
     admission,
     planCapability: capability,
     apiEvidence: {

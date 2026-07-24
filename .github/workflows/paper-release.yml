@@ -103,12 +103,12 @@ on:
         type: string
         required: false
       branch-protection-bypass-users:
-        description: "GitHub users allowed to bypass pull-request review for Buildchain-managed generated channel ref updates"
+        description: "Reserved compatibility input; managed channel protection rejects user bypass actors"
         default: ""
         type: string
         required: false
       branch-protection-bypass-teams:
-        description: "GitHub team slugs allowed to bypass pull-request review for Buildchain-managed generated channel ref updates"
+        description: "Reserved compatibility input; managed channel protection rejects team bypass actors"
         default: ""
         type: string
         required: false
@@ -245,6 +245,7 @@ jobs:
       target-ref: ${{ inputs.target-ref || github.ref_name }}
       evidence-repository: ${{ github.repository }}
       dry-run: ${{ inputs.dry-run }}
+    secrets: inherit
 
   paper-release:
     name: Build and publish paper package

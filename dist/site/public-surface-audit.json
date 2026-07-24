@@ -702,8 +702,10 @@
           "used-nonces-json"
         ],
         "inputCount": 33,
-        "secrets": [],
-        "secretCount": 0,
+        "secrets": [
+          "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
+        ],
+        "secretCount": 1,
         "outputs": [
           "capability-artifact",
           "capability-digest",
@@ -3865,8 +3867,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "4f93fe74d076b7cb775d270da1510641a8801e6aa72d5d8a3babeead9d749f53",
-    "workflowRegistryDigest": "26be93780a4b1ce9c63e4c4d48c45f9d272a6025648332399c15e6491b8abf91",
-    "pageRegistryDigest": "458540b7fbeecd1d867d2ead31919b1cfdcb25535eb37d2c1362cde97ffe4038"
+    "workflowRegistryDigest": "16ab065f3e96d55673333a4ddae65c1ba2b660c0857c3265e4e4ab8ddd3b4c1e",
+    "pageRegistryDigest": "87e8487f3f55e2ed94a109f66c4621b66b0407fa6607c435342b62ea77515ffd"
   },
   "comparison": {
     "missingCliRegistry": [],
