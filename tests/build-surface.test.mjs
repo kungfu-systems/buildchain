@@ -612,7 +612,7 @@ test("paper release workflow publishes declared npm package with source lock and
   assert.match(workflow, /name: Seal paper publication capability/);
   assert.match(
     workflow,
-    /name: Seal paper publication capability\n    permissions:\n      actions: read\n      contents: read/,
+    /name: Seal paper publication capability\n    permissions:\n      actions: read\n      checks: read\n      contents: read\n      pull-requests: read/,
   );
   assert.match(workflow, /permissions:\n      checks: write\n      contents: write\n      id-token: write/);
   assert.doesNotMatch(workflow, /^ {4}environment\s*:/m);
@@ -1455,7 +1455,7 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /Seal managed web production publication capability/);
   assert.match(
     workflow,
-    /name: Verify external web production publication capability[\s\S]*?permissions:\n      actions: read\n      contents: read[\s\S]*?uses: \.\/\.github\/workflows\/\.publication-authority\.yml/,
+    /name: Verify external web production publication capability[\s\S]*?permissions:\n      actions: read\n      checks: read\n      contents: read\n      pull-requests: read[\s\S]*?uses: \.\/\.github\/workflows\/\.publication-authority\.yml/,
   );
   assert.match(workflow, /uses: \.\/\.github\/workflows\/\.publication-authority\.yml/);
   assert.match(workflow, /publication-admission-json:/);
@@ -1980,7 +1980,7 @@ test("binary evidence and product publication are isolated by the sealed asset w
   assert.match(publication, /uses: \.\/\.github\/workflows\/\.publication-authority\.yml/);
   assert.match(
     publication,
-    /name: Seal binary release asset capability\n    permissions:\n      actions: read\n      contents: read/,
+    /name: Seal binary release asset capability\n    permissions:\n      actions: read\n      checks: read\n      contents: read\n      pull-requests: read/,
   );
   assert.match(publication, /needs: publication-authority/);
   assert.match(publication, /environment: buildchain-release-assets/);

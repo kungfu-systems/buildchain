@@ -73,7 +73,9 @@ jobs:
     name: Seal binary release asset capability
     permissions:
       actions: read
+      checks: read
       contents: read
+      pull-requests: read
     uses: ./.github/workflows/.publication-authority.yml
     with:
       buildchain-repository: ${{ inputs.buildchain-repository }}
