@@ -8,6 +8,7 @@ import {
   compileEffectiveGithubGovernancePolicy,
   createGithubGovernanceRolloutPlan,
   createGithubRulesetBypassRolloutPlan,
+  createGithubRulesetGovernanceRolloutPlan,
   evaluateCodeownersAuthority,
   evaluateGithubGovernanceSnapshot,
   githubGovernanceDigest,
@@ -15,6 +16,7 @@ import {
   normalizeGithubBranchProtectionSnapshot,
   normalizeGithubRulesetSnapshot,
   parseCodeowners,
+  resolveGithubGovernanceTargetPolicy,
   resolveGithubGovernanceTargetRefs,
   verifyGithubGovernanceReceipt,
 } from "../packages/core/github-governance-authority.js";
@@ -598,6 +600,130 @@ test("ruleset bypass rollout preserves rules and carries an exact inverse", () =
     plan.expectedObservation.rulesetRoot,
     githubGovernanceDigest(plan.operations[0].body),
   );
+});
+
+test("ruleset policy rollout compiles the exact target descriptor with rollback", () => {
+  const targetPolicy = resolveGithubGovernanceTargetPolicy({
+    repository: "kungfu-systems/buildchain",
+    targetRef: "alpha/v2/v2.14",
+  });
+  assert.deepEqual(targetPolicy.requiredCheckBindings, [
+    { context: "check", appId: 15368 },
+    { context: "verify", appId: 15368 },
+  ]);
+  assert.equal(targetPolicy.strictRequiredChecks, false);
+  assert.equal(targetPolicy.requiredApprovals, 1);
+  assert.deepEqual(targetPolicy.allowedBypassActors, [{
+    actorType: "Integration",
+    actorId: 15368,
+    bypassMode: "always",
+  }]);
+  const before = normalizeGithubRulesetSnapshot({
+    name: "Buildchain alpha publication authority: alpha/v2/v2.14",
+    target: "branch",
+    enforcement: "active",
+    bypass_actors: [{
+      actor_id: 209317,
+      actor_type: "User",
+      bypass_mode: "always",
+    }],
+    conditions: {
+      ref_name: {
+        include: ["refs/heads/alpha/v2/v2.14"],
+        exclude: [],
+      },
+    },
+    rules: [
+      {
+        type: "pull_request",
+        parameters: {
+          allowed_merge_methods: ["merge", "squash", "rebase"],
+          dismiss_stale_reviews_on_push: false,
+          require_code_owner_review: false,
+          require_last_push_approval: false,
+          required_approving_review_count: 1,
+          required_review_thread_resolution: true,
+          required_reviewers: [],
+        },
+      },
+      { type: "non_fast_forward" },
+      {
+        type: "required_status_checks",
+        parameters: {
+          do_not_enforce_on_create: false,
+          required_status_checks: [
+            { context: "check", integration_id: 15368 },
+            { context: "verify", integration_id: 15368 },
+          ],
+          strict_required_status_checks_policy: true,
+        },
+      },
+    ],
+  });
+  const plan = createGithubRulesetGovernanceRolloutPlan({
+    repository: "kungfu-systems/buildchain",
+    targetRef: "alpha/v2/v2.14",
+    rulesetId: 19518955,
+    inventory: before,
+    rollbackSnapshot: before,
+    desiredProtection: {
+      strictRequiredChecks: targetPolicy.strictRequiredChecks,
+      requiredCheckBindings: targetPolicy.requiredCheckBindings,
+      requiredApprovals: 1,
+      allowedBypassActors: targetPolicy.allowedBypassActors,
+    },
+  });
+  assert.deepEqual(plan.operations[0].body.bypass_actors, [{
+    actor_id: 15368,
+    actor_type: "Integration",
+    bypass_mode: "always",
+  }]);
+  assert.deepEqual(
+    plan.operations[0].body.rules.find((rule) => rule.type === "pull_request").parameters,
+    {
+      allowed_merge_methods: ["merge", "squash", "rebase"],
+      dismiss_stale_reviews_on_push: true,
+      require_code_owner_review: true,
+      require_last_push_approval: true,
+      required_approving_review_count: 1,
+      required_review_thread_resolution: true,
+      required_reviewers: [],
+    },
+  );
+  assert.deepEqual(
+    plan.operations[0].body.rules
+      .find((rule) => rule.type === "required_status_checks").parameters,
+    {
+      do_not_enforce_on_create: false,
+      required_status_checks: [
+        { context: "check", integration_id: 15368 },
+        { context: "verify", integration_id: 15368 },
+      ],
+      strict_required_status_checks_policy: false,
+    },
+  );
+  assert.ok(plan.operations[0].body.rules.some((rule) => rule.type === "non_fast_forward"));
+  assert.deepEqual(plan.operations[0].body.rules.map((rule) => rule.type), [
+    "pull_request",
+    "non_fast_forward",
+    "required_status_checks",
+  ]);
+  assert.deepEqual(plan.rollback[0].body, before);
+  assert.equal(plan.rollback[0].preconditionRoot, githubGovernanceDigest(before));
+  assert.equal(
+    plan.expectedObservation.rulesetRoot,
+    githubGovernanceDigest(plan.operations[0].body),
+  );
+  assert.throws(() => createGithubRulesetGovernanceRolloutPlan({
+    repository: "kungfu-systems/buildchain",
+    targetRef: "release/v2/v2.14",
+    rulesetId: 19518955,
+    inventory: before,
+    rollbackSnapshot: before,
+    desiredProtection: {
+      requiredCheckBindings: targetPolicy.requiredCheckBindings,
+    },
+  }), /one exact target branch condition/);
 });
 
 test("tampering and stale receipts are rejected", () => {

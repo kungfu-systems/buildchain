@@ -605,6 +605,29 @@ function targetPolicy(descriptor, repository, targetRef) {
     : publicTargetPolicy(descriptor, repository, targetRef);
 }
 
+export function resolveGithubGovernanceTargetPolicy({
+  descriptor = BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY,
+  repository,
+  targetRef,
+} = {}) {
+  const fullName = requiredString(repository, "repository");
+  const [owner] = fullName.split("/");
+  if (owner !== descriptor.organization) {
+    throw new Error("repository is outside the governance authority organization");
+  }
+  const policy = publicTargetPolicy(descriptor, {
+    fullName,
+    visibility: "public",
+  }, targetRef);
+  if (!policy) {
+    throw new Error("target ref is not admitted by the governance authority");
+  }
+  return {
+    ...structuredClone(policy),
+    requiredApprovals: descriptor.authority.minimumIndependentApprovals,
+  };
+}
+
 export function resolveGithubGovernanceTargetRefs({
   descriptor = BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY,
   repository,
@@ -1117,6 +1140,154 @@ export function createGithubRulesetBypassRolloutPlan({
     expectedObservation: {
       rulesetRoot: githubGovernanceDigest(desired),
       bypassActors: [],
+    },
+    rollback: [{
+      method: "PUT",
+      endpoint,
+      body: before,
+      preconditionRoot: githubGovernanceDigest(before),
+    }],
+  };
+  return { ...core, planRoot: githubGovernanceDigest(core) };
+}
+
+function providerRulesetCheckBindings(bindings) {
+  return (bindings || []).map((entry) => {
+    const context = requiredString(entry?.context, "required check context");
+    const appId = entry?.app_id ?? entry?.appId ?? null;
+    if (appId !== null && (!Number.isInteger(appId) || appId <= 0)) {
+      throw new Error(`required check app id must be a positive integer or null: ${context}`);
+    }
+    return {
+      context,
+      ...(appId === null ? {} : { integration_id: appId }),
+    };
+  });
+}
+
+function providerRulesetBypassActors(actors) {
+  return (actors || []).map((actor) => {
+    const actorId = Number(actor?.actor_id ?? actor?.actorId ?? 0);
+    const actorType = requiredString(
+      actor?.actor_type ?? actor?.actorType,
+      "ruleset bypass actor type",
+    );
+    const bypassMode = requiredString(
+      actor?.bypass_mode ?? actor?.bypassMode,
+      "ruleset bypass mode",
+    );
+    if (!Number.isInteger(actorId) || actorId <= 0) {
+      throw new Error("ruleset bypass actor id must be a positive integer");
+    }
+    return {
+      actor_id: actorId,
+      actor_type: actorType,
+      bypass_mode: bypassMode,
+    };
+  });
+}
+
+export function createGithubRulesetGovernanceRolloutPlan({
+  repository,
+  targetRef,
+  rulesetId,
+  inventory,
+  rollbackSnapshot,
+  desiredProtection,
+} = {}) {
+  const fullName = requiredString(repository, "repository");
+  const branch = normalizedRef(targetRef);
+  const id = Number(rulesetId);
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new Error("ruleset id must be a positive integer");
+  }
+  if (!inventory || !rollbackSnapshot) {
+    throw new Error("read-only inventory and frozen rollback snapshot are required");
+  }
+  const before = normalizeGithubRulesetSnapshot(rollbackSnapshot);
+  const exactInclude = before.conditions?.ref_name?.include || [];
+  const exactExclude = before.conditions?.ref_name?.exclude || [];
+  if (
+    exactInclude.length !== 1 ||
+    exactInclude[0] !== `refs/heads/${branch}` ||
+    exactExclude.length !== 0
+  ) {
+    throw new Error("ruleset policy rollout requires one exact target branch condition");
+  }
+  const requiredStatusChecks = providerRulesetCheckBindings(
+    desiredProtection?.requiredCheckBindings,
+  );
+  if (requiredStatusChecks.length === 0) {
+    throw new Error("ruleset policy rollout requires descriptor-bound status checks");
+  }
+  const requiredApprovals = Number(desiredProtection?.requiredApprovals);
+  if (!Number.isInteger(requiredApprovals) || requiredApprovals < 1) {
+    throw new Error("ruleset policy rollout requires a positive approval count");
+  }
+  const pullRequestRules = before.rules.filter((rule) => rule.type === "pull_request");
+  const statusCheckRules = before.rules.filter(
+    (rule) => rule.type === "required_status_checks",
+  );
+  if (pullRequestRules.length > 1 || statusCheckRules.length > 1) {
+    throw new Error("ruleset policy rollout rejects duplicate managed rule types");
+  }
+  const desiredPullRequestRule = {
+    type: "pull_request",
+    parameters: {
+      ...(pullRequestRules[0]?.parameters || {}),
+      dismiss_stale_reviews_on_push: true,
+      require_code_owner_review: true,
+      require_last_push_approval: true,
+      required_approving_review_count: requiredApprovals,
+      required_review_thread_resolution: true,
+    },
+  };
+  const desiredStatusCheckRule = {
+    type: "required_status_checks",
+    parameters: {
+      ...(statusCheckRules[0]?.parameters || {}),
+      required_status_checks: requiredStatusChecks,
+      strict_required_status_checks_policy:
+        desiredProtection?.strictRequiredChecks === true,
+    },
+  };
+  const desiredRules = before.rules.map((rule) => {
+    if (rule.type === "pull_request") return desiredPullRequestRule;
+    if (rule.type === "required_status_checks") return desiredStatusCheckRule;
+    return structuredClone(rule);
+  });
+  if (pullRequestRules.length === 0) desiredRules.push(desiredPullRequestRule);
+  if (statusCheckRules.length === 0) desiredRules.push(desiredStatusCheckRule);
+  const desired = {
+    ...before,
+    bypass_actors: providerRulesetBypassActors(
+      desiredProtection?.allowedBypassActors,
+    ),
+    rules: desiredRules,
+  };
+  const endpoint = `repos/${fullName}/rulesets/${id}`;
+  const core = {
+    schemaVersion: 1,
+    contract: GITHUB_GOVERNANCE_RULESET_ROLLOUT_CONTRACT,
+    repository: fullName,
+    targetRef: branch,
+    rulesetId: id,
+    inventoryRoot: githubGovernanceDigest(inventory),
+    rollbackSnapshotRoot: githubGovernanceDigest(before),
+    operations: [{ method: "PUT", endpoint, body: desired }],
+    impact: [
+      "replace ruleset bypass actors with the exact target-bound authority set",
+      "require fresh Code Owner review and resolved review threads",
+      "bind required status checks and strictness to the authoritative target descriptor",
+      "preserve unrelated ruleset rules and exact target conditions",
+    ],
+    expectedObservation: {
+      rulesetRoot: githubGovernanceDigest(desired),
+      bypassActors: desired.bypass_actors,
+      requiredCheckBindings: requiredStatusChecks,
+      strictRequiredChecks:
+        desiredProtection?.strictRequiredChecks === true,
+      requiredApprovals,
     },
     rollback: [{
       method: "PUT",

@@ -7,7 +7,7 @@
     "workflowCount": 52,
     "actionCount": 5,
     "sitePageCount": 54,
-    "docCommandRefCount": 272,
+    "docCommandRefCount": 273,
     "failureCount": 0
   },
   "enumerated": {
@@ -2843,12 +2843,17 @@
       {
         "id": "github-governance",
         "path": "docs/github-governance-authority.md",
-        "command": "buildchain github-governance ruleset-plan"
+        "command": "buildchain github-governance ruleset-policy-plan"
       },
       {
         "id": "github-governance",
         "path": "docs/github-governance-authority.md",
-        "command": "buildchain github-governance ruleset-apply"
+        "command": "buildchain github-governance ruleset-policy-apply"
+      },
+      {
+        "id": "github-governance",
+        "path": "docs/github-governance-authority.md",
+        "command": "buildchain github-governance ruleset-policy-rollback"
       },
       {
         "id": "help",
@@ -3868,7 +3873,7 @@
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "4f93fe74d076b7cb775d270da1510641a8801e6aa72d5d8a3babeead9d749f53",
     "workflowRegistryDigest": "16ab065f3e96d55673333a4ddae65c1ba2b660c0857c3265e4e4ab8ddd3b4c1e",
-    "pageRegistryDigest": "87e8487f3f55e2ed94a109f66c4621b66b0407fa6607c435342b62ea77515ffd"
+    "pageRegistryDigest": "5cdf26dfe6e60693f01d14f4afa8fef6effc9c4e10d181fc777d1d923ce70961"
   },
   "comparison": {
     "missingCliRegistry": [],
