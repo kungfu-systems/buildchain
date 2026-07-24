@@ -105,6 +105,7 @@ jobs:
       checks: read
       contents: write
       pull-requests: read
+    secrets: inherit
     with:
       buildchain-repository: kungfu-systems/buildchain
       buildchain-ref: ${{ needs.resolve.outputs.buildchain-ref }}
