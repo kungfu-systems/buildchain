@@ -3499,7 +3499,7 @@ function protectedBranchDirectUpdateError({ branch, branchSha, error }) {
   const message = error?.response?.data?.message || error?.message || String(error || "");
   return new Error(
     `Buildchain generated version-state update for ${branch} -> ${branchSha} was rejected by branch protection: ${message}. ` +
-      "Promotion must complete without a post-publish human PR; configure BUILDCHAIN_PROMOTION_TOKEN as a direct-write release authority and allow Buildchain to create the generated version-state required check before updating the protected ref.",
+      "The promotion caller must enable Buildchain's protected version-state PR fallback or use an explicitly admitted release authority; do not weaken branch protection or bypass the repository's declared governance.",
   );
 }
 
@@ -5632,6 +5632,7 @@ async function promoteBuildchainRefs({
       const targetUpdate = await updateBranch(targetRef, alpha.sha, "updated", {
         title: `Prepare ${selectedAlpha.tag}`,
         body: `Create the generated version-state commit for ${selectedAlpha.tag}.`,
+        allowPendingPullRequest: true,
       });
       if (targetUpdate.pending) {
         return withPublishTransaction({
@@ -5644,7 +5645,7 @@ async function promoteBuildchainRefs({
           updates,
         }, { finalizationNeeded: true });
       }
-      await updateBranch(
+      const devUpdate = await updateBranch(
         `dev/v${rule.major}/v${rule.major}.${rule.minor}`,
         alpha.sha,
         "updated",
@@ -5652,8 +5653,20 @@ async function promoteBuildchainRefs({
           title: `Prepare ${selectedAlpha.tag}`,
           body: `Create the generated version-state commit for ${selectedAlpha.tag}.`,
           allowNonFastForwardSkip: true,
+          allowPendingPullRequest: true,
         },
       );
+      if (devUpdate.pending) {
+        return withPublishTransaction({
+          owner,
+          repo,
+          sourceSha: sha,
+          sha: alpha.sha,
+          targetRef,
+          pendingPullRequest: devUpdate.pullRequest.html_url || devUpdate.pullRequest.url,
+          updates,
+        }, { finalizationNeeded: true });
+      }
     }
     await markFinalizing();
     await ensureTag(selectedAlpha.tag, alpha.sha, {
