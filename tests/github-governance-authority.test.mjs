@@ -21,7 +21,10 @@ import {
   verifyGithubGovernanceReceipt,
 } from "../packages/core/github-governance-authority.js";
 import { resolveVerifierSourceRevision } from "../scripts/audit-github-governance.mjs";
-import { resolveRequiredCheckBindings } from "../scripts/reconcile-github-governance.mjs";
+import {
+  resolveGithubProtectionTargetPolicy,
+  resolveRequiredCheckBindings,
+} from "../scripts/reconcile-github-governance.mjs";
 
 const CODEOWNERS = `* @kungfu-origin
 /.github/CODEOWNERS @kungfu-origin
@@ -529,6 +532,24 @@ test("rollout CLI preserves observed check apps and requires explicit new bindin
       [{ context: "check", app_id: 15368 }],
     ),
     /must preserve an observed app_id or declare/,
+  );
+});
+
+test("protection policy plan preserves descriptor-bound and unbound checks", () => {
+  assert.deepEqual(
+    resolveGithubProtectionTargetPolicy({
+      repository: "kungfu-systems/kungfu",
+      targetRef: "alpha/v4/v4.0",
+    }),
+    {
+      strictRequiredChecks: true,
+      requiredCheckBindings: [
+        { context: "build", app_id: null },
+        { context: "signoff", app_id: 15368 },
+        { context: "validate", app_id: 15368 },
+      ],
+      requiredApprovals: 1,
+    },
   );
 });
 
