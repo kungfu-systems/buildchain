@@ -2320,6 +2320,52 @@ test("Buildchain stable promotion gates publication after RC resolution", () => 
   );
 });
 
+test("promotion commits consumer discovery authority only after public release assets", () => {
+  const wrapper = fs.readFileSync(
+    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
+    "utf8",
+  );
+  const topologyIndex = wrapper.indexOf(
+    "- name: Validate final publication commit topology",
+  );
+  const publishGateIndex = wrapper.indexOf(
+    "- name: Ensure publish-gate ref locks promotion commit",
+  );
+  const promoteIndex = wrapper.indexOf("- name: Promote-only publish");
+  const commitIndex = wrapper.indexOf(
+    "- name: Commit consumer publication authority last",
+  );
+  const evidenceIndex = wrapper.indexOf(
+    "- name: Bundle release-candidate-promotion controller evidence",
+  );
+
+  assert.ok(
+    topologyIndex >= 0 &&
+      publishGateIndex > topologyIndex &&
+      promoteIndex > publishGateIndex &&
+      commitIndex > promoteIndex &&
+      evidenceIndex > commitIndex,
+  );
+  assert.match(wrapper, /github-release-payload-patterns:/);
+  assert.match(
+    wrapper,
+    /github-release-artifact-paths: \$\{\{ steps\.rc\.outputs\.release-candidate-github-release-artifact-paths \}\}/,
+  );
+  assert.match(wrapper, /publication-commit-command:/);
+  assert.match(
+    wrapper,
+    /node \.buildchain\/runtime\/scripts\/publication-commit-evidence\.mjs/,
+  );
+  assert.match(
+    wrapper,
+    /publication-commit-command requires standalone-binary-distribution=false/,
+  );
+  assert.match(
+    wrapper,
+    /PUBLICATION_COMMIT_EVIDENCE.*publication-commit-evidence\.json/s,
+  );
+});
+
 test("reusable build exposes release-candidate passport outputs", () => {
   const workflow = fs.readFileSync(
     path.join(root, ".github/workflows/.build.yml"),
