@@ -277,10 +277,24 @@ function main() {
       message: sourceMessage,
       changedPaths: sourceChangedPaths,
     };
+    const branchHeadSha = String(branchState.commit?.sha || "").toLowerCase();
+    const sourceComparison = sourceSha === branchHeadSha
+      ? null
+      : githubJson(
+        `repos/${repository}/compare/${sourceSha}...${branchHeadSha}`,
+        "source protected-branch lineage",
+      );
+    const sourceContainedInBranch = sourceSha === branchHeadSha || (
+      sourceComparison?.status === "ahead" &&
+      String(sourceComparison?.merge_base_commit?.sha || "").toLowerCase() === sourceSha
+    );
     let pullRequests = githubJson(`repos/${repository}/commits/${authorizationSha}/pulls`, "source pull-request lineage");
     let mergedPullRequest = (Array.isArray(pullRequests) ? pullRequests : []).find((entry) =>
       entry?.merged_at &&
-      entry.merge_commit_sha === authorizationSha &&
+      (
+        String(entry.merge_commit_sha || "").toLowerCase() === authorizationSha ||
+        String(entry.head?.sha || "").toLowerCase() === authorizationSha
+      ) &&
       entry.base?.ref === branch &&
       entry.head?.repo?.full_name === repository
     );
@@ -318,10 +332,12 @@ function main() {
       const login = String(review?.user?.login || "");
       if (login) latestReviews.set(login, review);
     }
-    const independentApprovals = [...latestReviews.values()].filter((review) =>
-      review.state === "APPROVED" && review.user?.login !== mergedPullRequest?.user?.login
-    );
     const pullRequestHeadSha = String(mergedPullRequest?.head?.sha || "").toLowerCase();
+    const independentApprovals = [...latestReviews.values()].filter((review) =>
+      review.state === "APPROVED" &&
+      review.user?.login !== mergedPullRequest?.user?.login &&
+      String(review.commit_id || "").toLowerCase() === pullRequestHeadSha
+    );
     const checkRuns = /^[0-9a-f]{40}$/.test(pullRequestHeadSha)
       ? githubJson(`repos/${repository}/commits/${pullRequestHeadSha}/check-runs?per_page=100`, "merged pull-request head check runs")
       : { check_runs: [] };
@@ -360,7 +376,8 @@ function main() {
       requiredCheckSha: pullRequestHeadSha,
       sourceSha,
       authorizationSha,
-      headSha: String(branchState.commit?.sha || "").toLowerCase(),
+      headSha: branchHeadSha,
+      sourceContainedInBranch,
       releaseReconciliation,
       mergedPullRequest: Boolean(mergedPullRequest),
       pullRequestNumber: mergedPullRequest?.number || 0,
