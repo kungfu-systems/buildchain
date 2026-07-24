@@ -399,6 +399,9 @@ on:
       BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY:
         description: "Optional consumer-owned private signing material exposed only to the final publication commit command"
         required: false
+      KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY:
+        description: "Private key for the dedicated read-only GitHub governance auditor App"
+        required: false
       buildchain-issue-token:
         description: "Optional token with issues:write on the Buildchain repository for workflow-friction reports"
         required: false
