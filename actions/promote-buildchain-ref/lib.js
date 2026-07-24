@@ -4431,8 +4431,13 @@ async function promoteBuildchainRefs({
       );
     });
     if (unexpected.length > 0) {
+      const recoveryScope = [
+        ...RELEASE_LINE_RECOVERY_PATHS,
+        ...allowedPaths,
+      ].join(", ");
       throw new Error(
-        `Release-line recovery PR changed files outside buildchain recovery scope: ${unexpected.join(", ")}`,
+        `Release-line recovery PR changed files outside buildchain recovery scope: ${unexpected.join(", ")}. ` +
+          `Open a follow-up exact line-scoped recovery PR that contains this candidate and changes only: ${recoveryScope}`,
       );
     }
   };
