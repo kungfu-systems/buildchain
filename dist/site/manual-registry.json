@@ -79,7 +79,7 @@
       "title": "GitHub governance authority",
       "path": "docs/github-governance-authority.md",
       "plane": "verify",
-      "digest": "sha256:826b745c0029b2c34a0c637088f426e96d4ecfff175d261131b10c9613f8263f",
+      "digest": "sha256:6b6aeac1b63c208bf5e9985cf21395d4b15a828c1ba021ebf3241eaeaa2cbec7",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -318,7 +318,7 @@
       "title": "Lifecycle protocol",
       "path": "docs/lifecycle-protocol.md",
       "plane": "use",
-      "digest": "sha256:71552baae51146fa790d40af02d5d5b3a1a4aa0d9764af09907bb05d3360b0cc",
+      "digest": "sha256:ffe57d0a938d799033310d2f89e1b4b7502af5677b6b8ae90a1bbde239339982",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -332,7 +332,7 @@
       "title": "Reusable build surface",
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
-      "digest": "sha256:069ba73cf32b9f55a62fd5f4bfaec00608498019b53e8ae1387d7dc9de26bc29",
+      "digest": "sha256:2f7c62f22fdf00f65ec63ac312bd42ec9e5c09326a5981d43b809c8da0819ac3",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -346,7 +346,7 @@
       "title": "Publish transaction",
       "path": "docs/publish-transaction.md",
       "plane": "verify",
-      "digest": "sha256:57673d6e1e57a9be0019b30ad0f8784cd05c9a0f389a775ac5f49f67d8f52a79",
+      "digest": "sha256:d258ff508261cfa6d0a57cf6b744300440a19a5fa1a9c3afd931e8858203ba36",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator"
@@ -359,7 +359,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:4476d9464d29b4ff3951a362607a11c78b7a3b723247af93ded1b15ff8f0b83e",
+      "digest": "sha256:79cdd69569fc0600fed9e61475ffd0e28a19ea442af62e4c0811c9220e7fdb68",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",

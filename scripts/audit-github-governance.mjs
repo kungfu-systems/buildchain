@@ -11,6 +11,8 @@ import {
   evaluateCodeownersAuthority,
   evaluateGithubGovernanceSnapshot,
   githubGovernanceDigest,
+  githubRepositoryIdentityRoot,
+  resolveGithubGovernanceTargetRefs,
 } from "../packages/core/github-governance-authority.js";
 
 const CODEOWNERS_PATHS = [
@@ -148,6 +150,66 @@ function readRulesets(repository) {
   return { readable, listing, rulesets };
 }
 
+function readBranchNames(repository) {
+  const names = [];
+  for (let page = 1; page <= 20; page += 1) {
+    const response = githubApi(
+      `repos/${repository}/branches?per_page=100&page=${page}`,
+      `${repository} branches page ${page}`,
+    );
+    if (!response.ok) {
+      return { readable: false, result: response, names: [] };
+    }
+    const entries = Array.isArray(response.data) ? response.data : [];
+    names.push(...entries.map((entry) => String(entry?.name || "")).filter(Boolean));
+    if (entries.length < 100) {
+      return {
+        readable: true,
+        result: response,
+        names: [...new Set(names)].sort(),
+      };
+    }
+  }
+  return {
+    readable: false,
+    result: {
+      ok: false,
+      reason: "pagination-limit",
+    },
+    names: [],
+  };
+}
+
+function readOrganizationRepositories(organization) {
+  const repositories = [];
+  for (let page = 1; page <= 20; page += 1) {
+    const response = githubApi(
+      `orgs/${organization}/repos?per_page=100&type=all&page=${page}`,
+      `managed repositories page ${page}`,
+    );
+    if (!response.ok) {
+      return { readable: false, result: response, repositories: [] };
+    }
+    const entries = Array.isArray(response.data) ? response.data : [];
+    repositories.push(...entries);
+    if (entries.length < 100) {
+      return {
+        readable: true,
+        result: response,
+        repositories,
+      };
+    }
+  }
+  return {
+    readable: false,
+    result: {
+      ok: false,
+      reason: "pagination-limit",
+    },
+    repositories: [],
+  };
+}
+
 function normalizeMembership(result) {
   return result.ok
     ? {
@@ -217,10 +279,7 @@ export function collectGithubGovernanceAudit({
     throw new Error("injected API clients must use collectGithubGovernanceAuditFromSnapshot");
   }
   const organizationState = githubApi(`orgs/${organization}`, "organization");
-  const repositoriesState = githubApi(
-    `orgs/${organization}/repos?per_page=100&type=all`,
-    "managed repositories",
-  );
+  const repositoriesState = readOrganizationRepositories(organization);
   const developmentMembership = githubApi(
     `orgs/${organization}/memberships/${BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY.authority.developmentIdentity}`,
     "development membership",
@@ -229,10 +288,10 @@ export function collectGithubGovernanceAudit({
     `orgs/${organization}/memberships/${BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY.authority.reviewIdentity}`,
     "review membership",
   );
-  if (!organizationState.ok || !repositoriesState.ok) {
+  if (!organizationState.ok || !repositoriesState.readable) {
     throw new Error("organization or managed repository inventory is unreadable; governance audit fails closed");
   }
-  const selected = repositorySelector(repositoriesState.data || [], repository);
+  const selected = repositorySelector(repositoriesState.repositories, repository);
   if (targetRef && selected.length !== 1) {
     throw new Error("--target-ref requires exactly one selected repository");
   }
@@ -257,79 +316,108 @@ export function collectGithubGovernanceAudit({
   const diagnostics = [];
   for (const metadata of selected) {
     const fullName = String(metadata.full_name || "");
-    const repositoryIdentityRoot = githubGovernanceDigest({
+    const visibilityClass = String(
+      metadata.visibility || (metadata.private ? "private" : "public"),
+    );
+    const repositoryIdentityRoot = githubRepositoryIdentityRoot({
       provider: "github",
       providerRepositoryId: String(metadata.node_id || metadata.id || ""),
-      policyRoot: BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY.policyRoot,
     });
-    const branch = String(targetRef || metadata.default_branch || "").replace(/^refs\/heads\//, "");
-    const branchState = githubApi(
-      `repos/${fullName}/branches/${encodeURIComponent(branch)}`,
-      `${fullName} branch`,
-    );
-    const protectionState = githubApi(
-      `repos/${fullName}/branches/${encodeURIComponent(branch)}/protection`,
-      `${fullName} branch protection`,
-    );
-    const rulesetState = readRulesets(fullName);
-    const codeownersState = readCodeowners(fullName, branch);
-    const codeowners = evaluateCodeownersAuthority({
-      source: codeownersState.source,
-      sourcePath: codeownersState.path,
-      reviewAuthority: BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY.authority.reviewIdentity,
-    });
-    const effectivePolicy = compileEffectiveGithubGovernancePolicy({
-      branch,
-      defaultBranch: branch,
-      protectedBranch: branchState.data?.protected === true,
-      protection: protectionState.ok ? protectionState.data : null,
-      rulesets: rulesetState.rulesets,
-    });
-    const apiEvidence = {
-      complete: branchState.ok &&
-        resolvedAbsence(protectionState) &&
-        rulesetState.readable &&
-        codeownersState.readable &&
-        developmentMembership.ok &&
-        reviewMembership.ok,
-      readable: branchState.ok &&
-        rulesetState.readable &&
-        codeownersState.readable,
-      ambiguous: false,
-      provider: "github",
-      endpointClasses: {
-        organization: organizationState.ok ? "read" : organizationState.reason,
-        repositories: repositoriesState.ok ? "read" : repositoriesState.reason,
-        branch: branchState.ok ? "read" : branchState.reason,
-        protection: protectionState.ok ? "read" : protectionState.reason,
-        rulesets: rulesetState.readable ? "read" : rulesetState.listing.reason,
-        codeowners: codeowners.exists ? "present" : codeownersState.readable ? "absent" : "unreadable",
-        memberships: developmentMembership.ok && reviewMembership.ok ? "read" : "unreadable",
-      },
+    const defaultBranch = String(metadata.default_branch || "").replace(/^refs\/heads\//, "");
+    const repositoryState = {
+      fullName,
+      visibility: visibilityClass,
+      identityRoot: repositoryIdentityRoot,
+      defaultBranch,
     };
-    receipts.push(evaluateGithubGovernanceSnapshot({
-      repository: {
-        fullName,
-        visibility: String(metadata.visibility || (metadata.private ? "private" : "public")),
-        identityRoot: repositoryIdentityRoot,
-      },
-      targetRef: branch,
-      organizationPlan: String(organizationState.data?.plan?.name || ""),
-      codeowners,
-      effectivePolicy,
-      memberships,
-      apiEvidence,
-      observedAt,
-      expiresAt: addMinutes(observedAt, ttlMinutes),
-      verifier,
-    }));
-    diagnostics.push({
-      repositoryIdentityRoot,
-      visibility: String(metadata.visibility || (metadata.private ? "private" : "public")),
-      targetRef: branch,
-      endpointClasses: apiEvidence.endpointClasses,
-      codeownersAttempts: codeownersState.attempts,
+    const branchesState = targetRef
+      ? {
+          readable: true,
+          result: { ok: true, reason: "targeted-read" },
+          names: [String(targetRef).replace(/^refs\/heads\//, "")],
+        }
+      : readBranchNames(fullName);
+    const branches = resolveGithubGovernanceTargetRefs({
+      repository: repositoryState,
+      availableRefs: branchesState.names,
+      requestedTargetRef: targetRef,
     });
+    const rulesetState = readRulesets(fullName);
+    for (const branch of branches) {
+      const branchState = githubApi(
+        `repos/${fullName}/branches/${encodeURIComponent(branch)}`,
+        `${fullName} branch`,
+      );
+      const protectionState = githubApi(
+        `repos/${fullName}/branches/${encodeURIComponent(branch)}/protection`,
+        `${fullName} branch protection`,
+      );
+      const codeownersState = readCodeowners(fullName, branch);
+      const codeowners = evaluateCodeownersAuthority({
+        source: codeownersState.source,
+        sourcePath: codeownersState.path,
+        reviewAuthority: BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY.authority.reviewIdentity,
+      });
+      const effectivePolicy = compileEffectiveGithubGovernancePolicy({
+        branch,
+        defaultBranch,
+        protectedBranch: branchState.data?.protected === true,
+        protection: protectionState.ok ? protectionState.data : null,
+        rulesets: rulesetState.rulesets,
+      });
+      const apiEvidence = {
+        complete: branchesState.readable &&
+          branchState.ok &&
+          resolvedAbsence(protectionState) &&
+          rulesetState.readable &&
+          codeownersState.readable &&
+          developmentMembership.ok &&
+          reviewMembership.ok,
+        readable: branchesState.readable &&
+          branchState.ok &&
+          rulesetState.readable &&
+          codeownersState.readable,
+        ambiguous: false,
+        provider: "github",
+        endpointClasses: {
+          organization: organizationState.ok ? "read" : organizationState.reason,
+          repositories: repositoriesState.readable
+            ? "read"
+            : repositoriesState.result.reason,
+          branches: branchesState.readable ? "read" : branchesState.result.reason,
+          branch: branchState.ok ? "read" : branchState.reason,
+          protection: protectionState.ok ? "read" : protectionState.reason,
+          rulesets: rulesetState.readable ? "read" : rulesetState.listing.reason,
+          codeowners: codeowners.exists
+            ? "present"
+            : codeownersState.readable
+              ? "absent"
+              : "unreadable",
+          memberships: developmentMembership.ok && reviewMembership.ok
+            ? "read"
+            : "unreadable",
+        },
+      };
+      receipts.push(evaluateGithubGovernanceSnapshot({
+        repository: repositoryState,
+        targetRef: branch,
+        organizationPlan: String(organizationState.data?.plan?.name || ""),
+        codeowners,
+        effectivePolicy,
+        memberships,
+        apiEvidence,
+        observedAt,
+        expiresAt: addMinutes(observedAt, ttlMinutes),
+        verifier,
+      }));
+      diagnostics.push({
+        repositoryIdentityRoot,
+        visibility: visibilityClass,
+        targetRef: branch,
+        endpointClasses: apiEvidence.endpointClasses,
+        codeownersAttempts: codeownersState.attempts,
+      });
+    }
   }
   const visibility = selected.reduce((counts, item) => {
     const key = String(item.visibility || (item.private ? "private" : "public"));
@@ -346,6 +434,7 @@ export function collectGithubGovernanceAudit({
     expiresAt: addMinutes(observedAt, ttlMinutes),
     inventory: {
       repositoryCount: selected.length,
+      targetCount: receipts.length,
       visibility,
       qualifyingCount: receipts.filter((receipt) => receipt.qualifying).length,
       nonQualifyingCount: receipts.filter((receipt) => !receipt.qualifying).length,

@@ -268,8 +268,10 @@
         "used-nonces-json"
       ],
       "inputCount": 33,
-      "secrets": [],
-      "secretCount": 0,
+      "secrets": [
+        "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
+      ],
+      "secretCount": 1,
       "outputs": [
         "capability-artifact",
         "capability-digest",

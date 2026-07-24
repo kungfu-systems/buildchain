@@ -346,7 +346,7 @@
       "specifier": "@kungfu-tech/buildchain/github-governance-authority",
       "export": "./github-governance-authority",
       "target": "./packages/core/github-governance-authority.js",
-      "digest": "sha256:9ca3e6ce722fe9d98ece4558f820471c2ba77857a1e6a8bb88d0e0a98c83f406",
+      "digest": "sha256:dae176c50e1936795f408ce8ed471b4335a59e4f3ad0e27c6192fb323dc118db",
       "summary": "Fail-closed GitHub ownership, effective-policy, managed-zone admission, rollout-plan, and immutable receipt APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [

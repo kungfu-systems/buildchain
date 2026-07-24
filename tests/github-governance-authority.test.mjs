@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import test from "node:test";
 
 import {
@@ -10,9 +11,11 @@ import {
   evaluateCodeownersAuthority,
   evaluateGithubGovernanceSnapshot,
   githubGovernanceDigest,
+  githubRepositoryIdentityRoot,
   normalizeGithubBranchProtectionSnapshot,
   normalizeGithubRulesetSnapshot,
   parseCodeowners,
+  resolveGithubGovernanceTargetRefs,
   verifyGithubGovernanceReceipt,
 } from "../packages/core/github-governance-authority.js";
 import { resolveVerifierSourceRevision } from "../scripts/audit-github-governance.mjs";
@@ -21,6 +24,17 @@ import { resolveRequiredCheckBindings } from "../scripts/reconcile-github-govern
 const CODEOWNERS = `* @kungfu-origin
 /.github/CODEOWNERS @kungfu-origin
 /.github/workflows/.publication-authority.yml @kungfu-origin
+/.github/workflows/.release-candidate-promote.yml @kungfu-origin
+/.github/workflows/buildchain-ref-promotion.yml @kungfu-origin
+/.github/workflows/paper-release-sealed.yml @kungfu-origin
+/.github/workflows/paper-release.yml @kungfu-origin
+/.github/workflows/release-line-bootstrap.yml @kungfu-origin
+/.github/workflows/release-candidate-promote.yml @kungfu-origin
+/actions/promote-buildchain-ref/action.yml @kungfu-origin
+/actions/promote-buildchain-ref/dist/index.js @kungfu-origin
+/actions/promote-buildchain-ref/index.js @kungfu-origin
+/actions/promote-buildchain-ref/lib.js @kungfu-origin
+/packages/core/buildchain-publication-authority.js @kungfu-origin
 /packages/core/github-governance-authority.js @kungfu-origin
 /scripts/audit-github-governance.mjs @kungfu-origin
 /scripts/reconcile-github-governance.mjs @kungfu-origin
@@ -47,11 +61,17 @@ function classicProtection() {
 }
 
 function qualifyingInput(overrides = {}) {
+  const protection = classicProtection();
+  protection.required_status_checks = {
+    strict: false,
+    checks: [{ context: "check", app_id: 15368 }],
+    contexts: ["check"],
+  };
   const effectivePolicy = compileEffectiveGithubGovernancePolicy({
     branch: "dev/v2/v2.14",
     defaultBranch: "dev/v2/v2.14",
     protectedBranch: true,
-    protection: classicProtection(),
+    protection,
   });
   return {
     repository: {
@@ -91,6 +111,8 @@ test("authority descriptor freezes the TCB, baseline, plan boundary, and non-cla
   assert.equal(descriptor.organization, "kungfu-systems");
   assert.equal(descriptor.repositoryAdmission.baseline.repositoryCount, 16);
   assert.equal(descriptor.repositoryAdmission.publicRepositories.length, 13);
+  assert.equal(descriptor.repositoryAdmission.privateRepositoryIdentities.length, 3);
+  assert.equal(descriptor.repositoryAdmission.baseline.authoritativePublicTargetCount, 33);
   assert.deepEqual(descriptor.planCapability.privateRepositories, ["team", "enterprise"]);
   assert.match(descriptor.trustedComputingBase.nonClaims.join("\n"), /GitHub platform compromise/);
   assert.equal(descriptor.policyRoot, githubGovernanceDigest(
@@ -99,7 +121,7 @@ test("authority descriptor freezes the TCB, baseline, plan boundary, and non-cla
 });
 
 test("CODEOWNERS last-match authority protects the authority file and verifier surfaces", () => {
-  assert.equal(parseCodeowners(CODEOWNERS).length, 7);
+  assert.equal(parseCodeowners(CODEOWNERS).length, 18);
   assert.deepEqual(codeownersForPath(CODEOWNERS, ".github/CODEOWNERS"), ["@kungfu-origin"]);
   assert.deepEqual(
     codeownersForPath(
@@ -127,8 +149,34 @@ test("classic protection compiles to one effective fail-closed policy", () => {
   assert.equal(policy.codeOwnerReviewRequired, true);
   assert.equal(policy.enforceAdmins, true);
   assert.deepEqual(policy.requiredChecks, ["DCO", "Source Acceptance"]);
+  assert.deepEqual(policy.requiredCheckBindings, [
+    { context: "DCO", appId: null },
+    { context: "Source Acceptance", appId: null },
+  ]);
   assert.equal(policy.allowForcePushes, false);
   assert.equal(policy.allowDeletions, false);
+});
+
+test("classic status checks prefer App-bound checks over legacy duplicate contexts", () => {
+  const protection = classicProtection();
+  protection.required_status_checks = {
+    strict: false,
+    checks: [{ context: "check", app_id: 15368 }],
+    contexts: ["check"],
+  };
+  const policy = compileEffectiveGithubGovernancePolicy({
+    branch: "dev/v2/v2.14",
+    defaultBranch: "dev/v2/v2.14",
+    protectedBranch: true,
+    protection,
+  });
+  assert.deepEqual(policy.requiredCheckBindings, [{
+    context: "check",
+    appId: 15368,
+  }]);
+  assert.equal(evaluateGithubGovernanceSnapshot(qualifyingInput({
+    effectivePolicy: policy,
+  })).qualifying, true);
 });
 
 test("classic branch-protection bypass allowances are effective bypass actors", () => {
@@ -153,6 +201,33 @@ test("classic branch-protection bypass allowances are effective bypass actors", 
     effectivePolicy: policy,
   }));
   assert.ok(receipt.failureIds.includes("bypass-policy"));
+});
+
+test("only the target-bound GitHub Actions App bypass is admitted", () => {
+  const protection = qualifyingInput().effectivePolicy;
+  const admitted = evaluateGithubGovernanceSnapshot(qualifyingInput({
+    effectivePolicy: {
+      ...protection,
+      bypassActors: [{
+        actorType: "Integration",
+        actorId: 15368,
+        bypassMode: "always",
+      }],
+    },
+  }));
+  assert.equal(admitted.qualifying, true);
+
+  const substituted = evaluateGithubGovernanceSnapshot(qualifyingInput({
+    effectivePolicy: {
+      ...protection,
+      bypassActors: [{
+        actorType: "Integration",
+        actorId: 999999,
+        bypassMode: "always",
+      }],
+    },
+  }));
+  assert.ok(substituted.failureIds.includes("bypass-policy"));
 });
 
 test("repository and organization rulesets aggregate with classic protection", () => {
@@ -204,7 +279,10 @@ test("qualifying receipt binds policy, ownership, effective rules, authority, an
   assert.equal(receipt.status, "qualifying");
   assert.deepEqual(receipt.failureIds, []);
   assert.match(receipt.receiptRoot, /^sha256:[0-9a-f]{64}$/);
-  assert.ok(receipt.requiredChecks.includes("Source Acceptance"));
+  assert.deepEqual(receipt.requiredCheckBindings, [{
+    context: "check",
+    appId: 15368,
+  }]);
   assert.equal(
     verifyGithubGovernanceReceipt(receipt, {
       expectedOrganization: "kungfu-systems",
@@ -250,6 +328,115 @@ test("private repositories on Free remain anonymous and non-qualifying", () => {
   assert.equal(receipt.planCapability.qualifying, false);
   assert.ok(receipt.failureIds.includes("plan-capability"));
   assert.equal(JSON.stringify(receipt).includes("private-control"), false);
+});
+
+test("private admission uses a policy-independent provider identity root and sealed target checks", () => {
+  const descriptor = structuredClone(BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY);
+  const identityRoot = descriptor.repositoryAdmission.privateRepositoryIdentities[0].identityRoot;
+  const requiredCheckBindings = [{ context: "check", appId: 15368 }];
+  descriptor.repositoryAdmission.privateRepositoryIdentities[0].requiredCheckPolicies = {
+    "dev/v2/v2.14": {
+      requiredCheckBindingRoot: githubGovernanceDigest(requiredCheckBindings),
+      strictRequiredChecks: false,
+    },
+  };
+  const { policyRoot: ignored, ...descriptorCore } = descriptor;
+  descriptor.policyRoot = githubGovernanceDigest(descriptorCore);
+  assert.equal(
+    githubRepositoryIdentityRoot({
+      provider: "github",
+      providerRepositoryId: "R_private_stable_id",
+    }),
+    githubGovernanceDigest({
+      provider: "github",
+      providerRepositoryId: "R_private_stable_id",
+    }),
+  );
+  const input = qualifyingInput({
+    descriptor,
+    repository: {
+      fullName: "kungfu-systems/private-control",
+      visibility: "private",
+      identityRoot,
+      defaultBranch: "dev/v2/v2.14",
+    },
+    organizationPlan: "team",
+  });
+  const receipt = evaluateGithubGovernanceSnapshot(input);
+  assert.equal(receipt.qualifying, true);
+  assert.equal(receipt.admission, "admitted-private");
+  assert.equal(receipt.targetAdmission, "admitted-authoritative-target");
+  assert.equal(receipt.repository, null);
+  assert.equal(JSON.stringify(receipt).includes("private-control"), false);
+});
+
+test("authoritative target registry detects default drift and constrains private version lines", () => {
+  const publicTargets = resolveGithubGovernanceTargetRefs({
+    repository: {
+      fullName: "kungfu-systems/buildchain",
+      visibility: "public",
+      defaultBranch: "dev/v2/v2.15",
+    },
+  });
+  assert.ok(publicTargets.includes("dev/v2/v2.14"));
+  assert.ok(publicTargets.includes("alpha/v2/v2.14"));
+  assert.ok(publicTargets.includes("release/v2/v2.14"));
+  assert.ok(publicTargets.includes("publish-gate/major"));
+  assert.ok(publicTargets.includes("dev/v2/v2.15"));
+
+  const privateTargets = resolveGithubGovernanceTargetRefs({
+    repository: {
+      fullName: "kungfu-systems/private-control",
+      visibility: "private",
+      identityRoot:
+        BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY.repositoryAdmission
+          .privateRepositoryIdentities[0].identityRoot,
+      defaultBranch: "dev/v7/v7.3",
+    },
+    availableRefs: [
+      "dev/v7/v7.3",
+      "alpha/v7/v7.3",
+      "release/v7/v7.3",
+      "dev/v7/v7.2",
+    ],
+  });
+  assert.deepEqual(privateTargets, [
+    "dev/v7/v7.3",
+    "alpha/v7/v7.3",
+    "release/v7/v7.3",
+  ]);
+});
+
+test("unadmitted targets, required-check removal, producer substitution, and strict drift deny", () => {
+  const unadmitted = evaluateGithubGovernanceSnapshot(qualifyingInput({
+    targetRef: "dev/v2/v2.13",
+  }));
+  assert.ok(unadmitted.failureIds.includes("target-ref-admission"));
+
+  const baseline = qualifyingInput().effectivePolicy;
+  for (const [label, effectivePolicy, expectedFailure] of [
+    [
+      "required check removal",
+      { ...baseline, requiredChecks: [], requiredCheckBindings: [] },
+      "required-checks",
+    ],
+    [
+      "required check producer substitution",
+      {
+        ...baseline,
+        requiredCheckBindings: [{ context: "check", appId: 999999 }],
+      },
+      "required-checks",
+    ],
+    [
+      "required check strict drift",
+      { ...baseline, strictRequiredChecks: true },
+      "strict-required-checks",
+    ],
+  ]) {
+    const receipt = evaluateGithubGovernanceSnapshot(qualifyingInput({ effectivePolicy }));
+    assert.ok(receipt.failureIds.includes(expectedFailure), label);
+  }
 });
 
 test("latest-push review, Code Owner self-protection, bypass, and provider-read failures deny", () => {
@@ -449,4 +636,37 @@ test("auditor source identity must equal the exact verifier checkout", () => {
     ),
     /contains tracked drift/,
   );
+});
+
+test("publication authority recollects live App-authenticated governance instead of trusting input JSON", () => {
+  const authorityWorkflow = fs.readFileSync(
+    new URL("../.github/workflows/.publication-authority.yml", import.meta.url),
+    "utf8",
+  );
+  assert.match(authorityWorkflow, /actions\/create-github-app-token@v3/);
+  assert.match(authorityWorkflow, /KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY/);
+  assert.match(
+    authorityWorkflow,
+    /audit-github-governance\.mjs[\s\S]+--repository "\$repository"[\s\S]+--target-ref "\$target_ref"[\s\S]+--require-qualifying/,
+  );
+  assert.match(authorityWorkflow, /audit\.inventory\?\.targetCount !== 1/);
+  assert.doesNotMatch(
+    authorityWorkflow,
+    /const receipt = JSON\.parse\(serialized\)/,
+  );
+  for (const workflow of [
+    ".release-candidate-promote.yml",
+    "paper-release.yml",
+    "paper-release-sealed.yml",
+  ]) {
+    const source = fs.readFileSync(
+      new URL(`../.github/workflows/${workflow}`, import.meta.url),
+      "utf8",
+    );
+    assert.match(
+      source,
+      /uses: \.\/\.github\/workflows\/\.publication-authority\.yml[\s\S]+?secrets: inherit/,
+      workflow,
+    );
+  }
 });

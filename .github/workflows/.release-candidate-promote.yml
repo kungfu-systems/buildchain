@@ -138,12 +138,12 @@ on:
         type: string
         required: false
       branch-protection-bypass-users:
-        description: "GitHub users allowed to bypass pull-request review for Buildchain-managed generated channel ref updates"
+        description: "Reserved compatibility input; managed channel protection rejects user bypass actors"
         default: ""
         type: string
         required: false
       branch-protection-bypass-teams:
-        description: "GitHub team slugs allowed to bypass pull-request review for Buildchain-managed generated channel ref updates"
+        description: "Reserved compatibility input; managed channel protection rejects team bypass actors"
         default: ""
         type: string
         required: false
@@ -838,6 +838,7 @@ jobs:
       evidence-manifest-pattern: ${{ needs.release-candidate-preflight.outputs.manifest-pattern }}
       evidence-payload-pattern: ${{ needs.release-candidate-preflight.outputs.payload-pattern }}
       dry-run: ${{ inputs.dry-run }}
+    secrets: inherit
 
   qualification-plan:
     name: Bind consumer publication predicate
@@ -1361,7 +1362,7 @@ jobs:
           reconciliation-workspace: ${{ steps.reconciliation.outputs.workspace }}
           required-status-check: ${{ inputs.required-status-check }}
           generated-status-check-token: ${{ github.token }}
-          generated-ref-update-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+          generated-ref-update-token: ${{ github.token }}
           branch-protection-bypass-apps: ${{ inputs.branch-protection-bypass-apps }}
           branch-protection-bypass-users: ${{ inputs.branch-protection-bypass-users }}
           branch-protection-bypass-teams: ${{ inputs.branch-protection-bypass-teams }}

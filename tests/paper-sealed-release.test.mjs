@@ -25,7 +25,7 @@ test("sealed paper release separates read-only build, authority, and admitted pu
   assert.match(workflow, /BUILDCHAIN_PROMOTION_TOKEN:\n\s+description:/);
   assert.match(
     workflow,
-    /generated-ref-update-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token \}\}/,
+    /generated-ref-update-token: \$\{\{ github\.token \}\}/,
   );
   assert.match(workflow, /Verify candidate bytes against sealed capability/);
   assert.match(workflow, /capability\.artifactDigest !== bundle\.candidate\.candidateDigest/);

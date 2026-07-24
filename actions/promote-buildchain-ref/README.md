@@ -82,8 +82,8 @@ explicitly, then run the normal channel promotion flow for that line.
 
 When branch protection requires pull requests, generated version-state commits
 still run through promotion automation first. The action updates
-Buildchain-managed channel protection before generated bookkeeping, adds the
-authenticated promotion token user or app to the bypass allowlist, creates
+Buildchain-managed channel protection before generated bookkeeping, admits only
+the exact `github-actions` App to the target-bound bypass allowlist, creates
 every configured required check on the exact generated version-state commit, then
 tries to apply that commit directly. If GitHub still rejects release
 finalization bookkeeping, Buildchain creates or reuses a same-repository
@@ -104,17 +104,15 @@ This prevents generated projections from an older release tree from replacing
 capabilities that reached dev while the release was in progress.
 
 For Buildchain-owned automation, callers may pass
-`branch-protection-bypass-apps`, `branch-protection-bypass-users`, or
-`branch-protection-bypass-teams`. The action still configures managed
+`branch-protection-bypass-apps: github-actions`. The action rejects every other
+App slug and all user or team bypass actors. It configures managed
 `dev/vN/vN.M`, `alpha/vN/vN.M`, and `release/vN/vN.M` branches with one
-required approving review, strict GitHub Actions checks, admin enforcement,
+required approving review, Code Owner review, stale-review dismissal,
+latest-push approval, exact App-bound GitHub Actions checks, admin enforcement,
 conversation resolution, no force pushes, and no deletions; the bypass
 allowance only lets the named automation identity apply generated version-state
 or channel bookkeeping without a second human review after the reviewed channel
-PR has already merged. Direct action calls automatically include the current
-promotion token's authenticated user or app when GitHub exposes it; explicit
-inputs are supplemental allowlist entries for less discoverable release
-authorities.
+PR has already merged.
 
 ## Publish Transactions
 
@@ -125,7 +123,7 @@ trusted channel workflow:
 - uses: kungfu-systems/buildchain/actions/promote-buildchain-ref@v2
   with:
     token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
-    generated-ref-update-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+    generated-ref-update-token: ${{ github.token }}
     sha: ${{ github.sha }}
     target-ref: release/v2/v2.0
     publish-transaction: "true"
@@ -414,18 +412,14 @@ merged same-repository PR lineage before heavy build runners start. This action
 still independently rechecks PR lineage, alpha/release tree equivalence, and
 generated version-state verification before moving channel refs and tags.
 Generated version-state direct ref updates can use a separate
-`generated-ref-update-token`; the reusable wrapper defaults it to
-`secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token`. Consumers that protect
-`dev/*`, `alpha/*`, or `release/*` with one required review should configure
-`BUILDCHAIN_PROMOTION_TOKEN` as the bypass-capable release authority, so
-post-publish dev/alpha/release bookkeeping completes without a human PR.
+`generated-ref-update-token`; the reusable wrapper binds it to the run-scoped
+`github.token`.
 The reusable `release-candidate-promote.yml` wrapper defaults
 `branch-protection-bypass-apps` to `github-actions`, so flow-internal promotion
 can complete generated `dev`/`alpha`/`release` bookkeeping while ordinary human
 pushes and PR merges remain governed by the one-review branch protection rule.
-The promotion action also auto-discovers the current token's authenticated user
-or app and adds it to the managed bypass allowlist, so consumers do not have to
-declare the same release authority twice.
+The promotion action rejects alternate App slugs and every user or team bypass,
+so the mutation path cannot widen the authority descriptor.
 
 The tag names intentionally follow the old ABV release semantics:
 exact release tags are `vX.Y.Z`, exact alpha tags are `vX.Y.Z-alpha.N`, floating
