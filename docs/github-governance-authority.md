@@ -140,6 +140,14 @@ App configuration or unreadable provider state denies publication before
 provider mutation. The publication authority workflow is itself an explicit
 Code Owner path.
 
+The publication authority job and every reusable-workflow caller grant the
+built-in `GITHUB_TOKEN` only `actions: read`, `checks: read`, `contents: read`,
+and `pull-requests: read`. The dedicated auditor App independently recollects
+the organization-wide governance receipt, while these job-scoped permissions
+allow the exact publication transaction audit to resolve required check runs
+and merged pull-request review lineage. Omitting either read permission makes
+the transaction evidence incomplete and therefore non-qualifying.
+
 The output is sanitized. Public repositories retain their public identity.
 Private repositories expose only an identity root, visibility class, target
 ref, sanitized required-check bindings and fact roots, and a qualifying or

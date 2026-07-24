@@ -212,7 +212,7 @@
         "promotion reuses PR-stage release-candidate artifacts and does not run the heavy native build matrix"
       ],
       "breakingDigest": "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0",
-      "auditDigest": "sha256:9584d878d09eccaad6f85a031cd90e59c367e19fe6dd7c8bc1f762a50814ec0a"
+      "auditDigest": "sha256:6d6d3756548e7031345deadba793d6965576cb272119a67d2bb0f57352515fab"
     },
     {
       "contractVersion": 1,
@@ -256,7 +256,7 @@
         "channel-aware artifact host facts are checked against the deploy plan before adapter side effects"
       ],
       "breakingDigest": "sha256:da569f90374e878948e3d5160ed9929338ce0572473ca8ee54867b0fe1aaeace",
-      "auditDigest": "sha256:3032fbbba0920b0ec2b7e1e4ba96a5a7e51c10249ff4e5bc9f0ad81b933eae45"
+      "auditDigest": "sha256:063dfe24e1ccdd95b4ffbf89a154aa71197c8bd1cb98b4705d8663917c026366"
     },
     {
       "contractVersion": 1,
@@ -641,7 +641,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:79677fecc366c7769100648324a597456e03e91768a5e16570a3ce3c171d8e84"
+      "auditDigest": "sha256:e4d6e0b9016dec3a0bc2425fffedf2414969345b7fabef615a6b9715dddbab27"
     },
     {
       "contractVersion": 1,
@@ -2018,7 +2018,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:f14825324a16b51c2e9ed708ebe64e1932e05b6d5e0866f83aea8439decb4a27",
-      "auditDigest": "sha256:3032fbbba0920b0ec2b7e1e4ba96a5a7e51c10249ff4e5bc9f0ad81b933eae45"
+      "auditDigest": "sha256:063dfe24e1ccdd95b4ffbf89a154aa71197c8bd1cb98b4705d8663917c026366"
     },
     {
       "contractVersion": 1,
@@ -2428,7 +2428,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:0eb318df455ef9cb737a7c2515a2411b685d34ed0bde7b5f5b173a7a42513114",
-      "auditDigest": "sha256:56a9f981034988be3d796119a5704c592bd080d61211a03eb364e93210323d9d"
+      "auditDigest": "sha256:fd939f9dcce745f3e1b8063b68715460cb8e1af6d2b813a96b37a741740122b9"
     },
     {
       "contractVersion": 1,
@@ -2928,7 +2928,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:015d8de793adbd4c539416be7d7512e18cc92097e629b0203fa06d2c183e98bd",
-      "auditDigest": "sha256:9584d878d09eccaad6f85a031cd90e59c367e19fe6dd7c8bc1f762a50814ec0a"
+      "auditDigest": "sha256:6d6d3756548e7031345deadba793d6965576cb272119a67d2bb0f57352515fab"
     },
     {
       "contractVersion": 1,
@@ -3126,5 +3126,5 @@
     }
   ],
   "compatibilityDigest": "sha256:df13c3b8066068925ce847b31002201d533034d10d342542422db3a665c10475",
-  "contractDigest": "sha256:92605863049faa8ba76b48ad87f073f3b8e77f0cdcbea5cfcbac3e4aa3ed05fa"
+  "contractDigest": "sha256:949c688e0c37ca62f9393a2e5828c86f381c57ac29d40c7cbb33918c75f87e09"
 }

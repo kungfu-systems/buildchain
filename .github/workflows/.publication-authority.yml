@@ -192,7 +192,9 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       actions: read
+      checks: read
       contents: read
+      pull-requests: read
     outputs:
       capability-json: ${{ steps.result.outputs.capability-json }}
       capability-digest: ${{ steps.result.outputs.capability-digest }}
