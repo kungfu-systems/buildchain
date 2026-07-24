@@ -99,12 +99,12 @@ on:
         type: string
         required: false
       branch-protection-bypass-users:
-        description: "GitHub users allowed to bypass pull-request review for Buildchain-managed generated channel ref updates"
+        description: "Reserved compatibility input; managed channel protection rejects user bypass actors"
         default: ""
         type: string
         required: false
       branch-protection-bypass-teams:
-        description: "GitHub team slugs allowed to bypass pull-request review for Buildchain-managed generated channel ref updates"
+        description: "Reserved compatibility input; managed channel protection rejects team bypass actors"
         default: ""
         type: string
         required: false
@@ -265,6 +265,11 @@ on:
         required: false
       publication-control-plane-audit-json:
         description: "Fresh external control-plane audit receipt bound by the admission"
+        default: ""
+        type: string
+        required: false
+      github-governance-receipt-json:
+        description: "Fresh qualifying governance receipt for the exact publication repository and target ref"
         default: ""
         type: string
         required: false
@@ -691,6 +696,7 @@ jobs:
       publication-admission-json: ${{ inputs.publication-admission-json }}
       publication-runner-provenance-json: ${{ inputs.publication-runner-provenance-json }}
       publication-control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
+      github-governance-receipt-json: ${{ inputs.github-governance-receipt-json }}
       publication-gate-aggregate-json: ${{ inputs.publication-gate-aggregate-json }}
       publication-expected-json: ${{ inputs.publication-expected-json }}
       publication-used-nonces-json: ${{ inputs.publication-used-nonces-json }}
@@ -777,6 +783,7 @@ jobs:
       publication-admission-json: ${{ inputs.publication-admission-json }}
       publication-runner-provenance-json: ${{ inputs.publication-runner-provenance-json }}
       publication-control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
+      github-governance-receipt-json: ${{ inputs.github-governance-receipt-json }}
       publication-gate-aggregate-json: ${{ inputs.publication-gate-aggregate-json }}
       publication-expected-json: ${{ inputs.publication-expected-json }}
       publication-used-nonces-json: ${{ inputs.publication-used-nonces-json }}

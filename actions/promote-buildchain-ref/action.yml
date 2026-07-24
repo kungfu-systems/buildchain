@@ -39,13 +39,13 @@ inputs:
     description: "GitHub token used to update Buildchain-generated protected version-state refs. Defaults to token."
     default: ""
   branch-protection-bypass-apps:
-    description: "Comma- or newline-separated GitHub App slugs allowed to bypass pull-request review on Buildchain-managed channel branches while required approval remains enforced for humans"
+    description: "Exact GitHub Actions App slug used for generated managed-channel bookkeeping; only github-actions is accepted"
     default: ""
   branch-protection-bypass-users:
-    description: "Comma- or newline-separated GitHub users allowed to bypass pull-request review on Buildchain-managed channel branches while required approval remains enforced for humans"
+    description: "Reserved compatibility input; managed channel protection rejects user bypass actors"
     default: ""
   branch-protection-bypass-teams:
-    description: "Comma- or newline-separated GitHub team slugs allowed to bypass pull-request review on Buildchain-managed channel branches while required approval remains enforced for humans"
+    description: "Reserved compatibility input; managed channel protection rejects team bypass actors"
     default: ""
   allow-repository:
     description: "Repository allowed to promote"

@@ -376,8 +376,9 @@ ref update token for the protected ref PATCH. If release finalization
 bookkeeping is still rejected, Buildchain creates or reuses a same-repository
 `buildchain/version-state/*` PR based on the current target channel head and
 leaves the transaction resumable with `finalization-needed=true`. Strict alpha
-bookkeeping remains fail-fast. The reusable wrapper defaults that token to
-`secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token`.
+bookkeeping remains fail-fast. The reusable wrapper binds that token to the
+run-scoped `github.token` and rejects user, team, or alternate App bypass
+actors.
 
 If finalization fails after an exact Git tag, a channel branch, or dev/alpha
 sync ref has already moved, the next run reads the durable `finalizing` state

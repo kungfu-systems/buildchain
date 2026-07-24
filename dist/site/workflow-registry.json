@@ -12,6 +12,7 @@
         "buildchain-ref",
         "buildchain-repository",
         "evidence-run-id",
+        "github-governance-receipt-json",
         "publication-admission-json",
         "publication-control-plane-audit-json",
         "publication-expected-json",
@@ -23,7 +24,7 @@
         "source-sha",
         "target-ref"
       ],
-      "inputCount": 14,
+      "inputCount": 15,
       "secrets": [],
       "secretCount": 0,
       "outputs": [],
@@ -254,6 +255,7 @@
         "evidence-summary-artifact",
         "expected-json",
         "gate-aggregate-json",
+        "github-governance-receipt-json",
         "package-name",
         "product",
         "publication-target",
@@ -265,9 +267,11 @@
         "target-ref",
         "used-nonces-json"
       ],
-      "inputCount": 32,
-      "secrets": [],
-      "secretCount": 0,
+      "inputCount": 33,
+      "secrets": [
+        "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
+      ],
+      "secretCount": 1,
       "outputs": [
         "capability-artifact",
         "capability-digest",
@@ -298,6 +302,7 @@
         "buildchain-repository",
         "channel",
         "dry-run",
+        "github-governance-receipt-json",
         "github-release",
         "github-release-notes",
         "github-release-title",
@@ -360,7 +365,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 74,
+      "inputCount": 75,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -660,6 +665,7 @@
         "buildchain-ref",
         "buildchain-repository",
         "fail-on-release-pr-error",
+        "github-governance-receipt-json",
         "node-version",
         "preview-apply",
         "preview-aws-role-arn",
@@ -691,7 +697,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 39,
+      "inputCount": 40,
       "secrets": [
         "production-release-app-private-key"
       ],
@@ -1182,6 +1188,20 @@
       "status": "active"
     },
     {
+      "id": "github-governance-audit",
+      "path": ".github/workflows/github-governance-audit.yml",
+      "reusable": false,
+      "inputs": [],
+      "inputCount": 0,
+      "secrets": [],
+      "secretCount": 0,
+      "outputs": [],
+      "outputCount": 0,
+      "surface": "dev-governance",
+      "capabilityGroup": "api-cli-reference",
+      "status": "active"
+    },
+    {
       "id": "npm-publish",
       "path": ".github/workflows/npm-publish.yml",
       "reusable": false,
@@ -1210,6 +1230,7 @@
         "buildchain-ref",
         "buildchain-repository",
         "dry-run",
+        "github-governance-receipt-json",
         "github-release",
         "github-release-notes",
         "github-release-title",
@@ -1226,7 +1247,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 25,
+      "inputCount": 26,
       "secrets": [
         "BUILDCHAIN_PROMOTION_TOKEN"
       ],
@@ -1260,6 +1281,7 @@
         "buildchain-ref",
         "buildchain-repository",
         "dry-run",
+        "github-governance-receipt-json",
         "github-release",
         "github-release-notes",
         "github-release-title",
@@ -1286,7 +1308,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 37,
+      "inputCount": 38,
       "secrets": [],
       "secretCount": 0,
       "outputs": [
@@ -1501,6 +1523,7 @@
         "buildchain-stable-contract-lock-path",
         "channel",
         "dry-run",
+        "github-governance-receipt-json",
         "github-release",
         "github-release-notes",
         "github-release-title",
@@ -1552,7 +1575,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 66,
+      "inputCount": 67,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",

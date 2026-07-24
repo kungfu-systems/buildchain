@@ -1,0 +1,22 @@
+# GitHub review and governance authority.
+* @kungfu-origin
+
+# These last-match rules protect the authority definition and every verifier,
+# rollout, and scheduled enforcement surface from ownership self-modification.
+/.github/CODEOWNERS @kungfu-origin
+/.github/workflows/.publication-authority.yml @kungfu-origin
+/.github/workflows/.release-candidate-promote.yml @kungfu-origin
+/.github/workflows/buildchain-ref-promotion.yml @kungfu-origin
+/.github/workflows/github-governance-audit.yml @kungfu-origin
+/.github/workflows/paper-release-sealed.yml @kungfu-origin
+/.github/workflows/paper-release.yml @kungfu-origin
+/.github/workflows/release-line-bootstrap.yml @kungfu-origin
+/.github/workflows/release-candidate-promote.yml @kungfu-origin
+/actions/promote-buildchain-ref/action.yml @kungfu-origin
+/actions/promote-buildchain-ref/dist/index.js @kungfu-origin
+/actions/promote-buildchain-ref/index.js @kungfu-origin
+/actions/promote-buildchain-ref/lib.js @kungfu-origin
+/packages/core/buildchain-publication-authority.js @kungfu-origin
+/packages/core/github-governance-authority.js @kungfu-origin
+/scripts/audit-github-governance.mjs @kungfu-origin
+/scripts/reconcile-github-governance.mjs @kungfu-origin

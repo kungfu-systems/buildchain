@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:7f007a9d295d597dfc5b1447629ab0d6bf2b3fa3d625b02d27abf7493d73bb40"
+      "digest": "sha256:c9eb92eb02601e1e36cb38d7df93097c582dec2b8dc34f769f58c30fc5190bbe"
     },
     {
       "id": "install",
@@ -86,6 +86,14 @@
       "plane": "verify",
       "exists": true,
       "digest": "sha256:118dc751fa3c37b4b20f4b909534458148c0f42c2c9d69f13e2fa5373dbfe244"
+    },
+    {
+      "id": "github-governance-authority",
+      "title": "GitHub governance authority",
+      "path": "docs/github-governance-authority.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:872098c5c904dc972794bda9d3ac8d93f8fe7d78918885dc21106b30ee3195a9"
     },
     {
       "id": "release-candidate",
@@ -221,7 +229,7 @@
       "path": "docs/lifecycle-protocol.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:71552baae51146fa790d40af02d5d5b3a1a4aa0d9764af09907bb05d3360b0cc"
+      "digest": "sha256:ffe57d0a938d799033310d2f89e1b4b7502af5677b6b8ae90a1bbde239339982"
     },
     {
       "id": "reusable-build-surface",
@@ -229,7 +237,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:069ba73cf32b9f55a62fd5f4bfaec00608498019b53e8ae1387d7dc9de26bc29"
+      "digest": "sha256:2f7c62f22fdf00f65ec63ac312bd42ec9e5c09326a5981d43b809c8da0819ac3"
     },
     {
       "id": "publish-transaction",
@@ -237,7 +245,7 @@
       "path": "docs/publish-transaction.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:57673d6e1e57a9be0019b30ad0f8784cd05c9a0f389a775ac5f49f67d8f52a79"
+      "digest": "sha256:d258ff508261cfa6d0a57cf6b744300440a19a5fa1a9c3afd931e8858203ba36"
     },
     {
       "id": "release-governance",
@@ -245,7 +253,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:4476d9464d29b4ff3951a362607a11c78b7a3b723247af93ded1b15ff8f0b83e"
+      "digest": "sha256:79cdd69569fc0600fed9e61475ffd0e28a19ea442af62e4c0811c9220e7fdb68"
     },
     {
       "id": "release-flow",
@@ -277,7 +285,7 @@
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:ecdece4b7d916b7d8b323db68c5d81c533d67348c71907b46eb97d3c2fe432ba"
+      "digest": "sha256:809d765d89277320d710ecfdc2287029530b74fe38f36dd04d057076dded9a0d"
     }
   ],
   "facts": [
