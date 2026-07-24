@@ -10290,6 +10290,8 @@ test("strict release promotion accepts line-scoped buildchain recovery PRs", asy
 });
 
 test("strict release promotion binds a generated version commit to the exact recovery RC parent", async () => {
+  const originalRetryDelay = process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS;
+  process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS = "0";
   const cwd = makeTempWorkspace({
     "package.json": {
       name: "@kungfu-tech/buildchain",
@@ -10326,10 +10328,17 @@ test("strict release promotion binds a generated version commit to the exact rec
     ["tags/v1.0.2-alpha.0", alphaSha],
   ]);
   let createCommitCount = 0;
+  let transientMissingRefAttempts = 0;
   const octokit = {
     rest: {
       git: {
         getRef: async ({ ref }) => {
+          if (
+            ref === "tags/v1.1" &&
+            transientMissingRefAttempts++ === 0
+          ) {
+            throw transientGitHubError();
+          }
           if (refs.has(ref)) {
             return { data: { object: { sha: refs.get(ref) } } };
           }
@@ -10464,6 +10473,7 @@ test("strict release promotion binds a generated version commit to the exact rec
     assert.equal(result.sha, generatedReleaseSha);
     assert.equal(refs.get("tags/v1.0.2"), generatedReleaseSha);
     assert.equal(refs.get("tags/v1.0.3-alpha.0"), nextAlphaSha);
+    assert.equal(transientMissingRefAttempts, 2);
     assert.equal(
       result.updates.some(
         (update) =>
@@ -10476,6 +10486,11 @@ test("strict release promotion binds a generated version commit to the exact rec
     );
   } finally {
     fs.rmSync(cwd, { recursive: true, force: true });
+    if (originalRetryDelay === undefined) {
+      delete process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS;
+    } else {
+      process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS = originalRetryDelay;
+    }
   }
 });
 
