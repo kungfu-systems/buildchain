@@ -7513,6 +7513,49 @@ test("promote-only RC passport accepts channel merge commit with matching source
   }
 });
 
+test("major promotion requires a release passport with the matching source tree", () => {
+  const passportPath = ".buildchain/artifacts/release-candidate-passport.json";
+  const cwd = makeTempWorkspace({
+    [passportPath]: {
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-release-candidate-passport",
+      repository: "kungfu-systems/buildchain",
+      target: { channel: "release", ref: "release/v2/v2.14", version: "22.22.3-kf.0" },
+      source: { headSha: OTHER_SHA, mergeRefSha: OTHER_SHA, treeHash: `tree-${SHA}` },
+      platformMatrix: [{ platformId: "linux-x64", artifactName: "buildchain-linux-x64" }],
+      diagnostics: {},
+    },
+  });
+  try {
+    const result = validatePromotionReleaseCandidate({
+      cwd,
+      passportPath,
+      repository: "kungfu-systems/buildchain",
+      targetChannel: "major",
+      sourceHeadSha: SHA,
+      sourceTreeSha: `tree-${SHA}`,
+    });
+    assert.equal(result.treeEquivalent, true);
+
+    const passport = JSON.parse(fs.readFileSync(path.join(cwd, passportPath), "utf8"));
+    passport.target.channel = "alpha";
+    fs.writeFileSync(path.join(cwd, passportPath), `${JSON.stringify(passport)}\n`);
+    assert.throws(
+      () => validatePromotionReleaseCandidate({
+        cwd,
+        passportPath,
+        repository: "kungfu-systems/buildchain",
+        targetChannel: "major",
+        sourceHeadSha: SHA,
+        sourceTreeSha: `tree-${SHA}`,
+      }),
+      /target channel mismatch: expected release, got alpha/,
+    );
+  } finally {
+    fs.rmSync(cwd, { recursive: true, force: true });
+  }
+});
+
 test("promote-only RC passport tolerates legacy unbound target channel", () => {
   const cwd = makeTempWorkspace({
     ".buildchain/artifacts/release-candidate-passport.json": {

@@ -879,6 +879,10 @@ function splitPathList(value = "") {
     .filter(Boolean);
 }
 
+function releaseCandidateEvidenceChannel(publicationChannel) {
+  return publicationChannel === "major" ? "release" : publicationChannel;
+}
+
 function validatePromotionReleaseCandidate({
   cwd,
   passportPath = ".buildchain/artifacts/release-candidate-passport.json",
@@ -904,7 +908,7 @@ function validatePromotionReleaseCandidate({
   const validation = validateReleaseCandidatePassport({
     passport,
     repository,
-    targetChannel,
+    targetChannel: releaseCandidateEvidenceChannel(targetChannel),
     version,
     buildSummary,
     requirePlatforms,
