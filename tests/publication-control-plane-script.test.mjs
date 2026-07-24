@@ -9,8 +9,10 @@ import { fileURLToPath } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SOURCE_SHA = "a".repeat(40);
 const HEAD_SHA = "b".repeat(40);
+const BRANCH_HEAD_SHA = "c".repeat(40);
+const MERGE_SHA = "d".repeat(40);
 
-function fakeGithubCli(requiredCheckConclusion) {
+function fakeGithubCli(requiredCheckConclusion, historicalSource) {
   const workflow = `permissions:\n  contents: read\njobs:\n  promote:\n    runs-on: ubuntu-24.04\n    permissions:\n      contents: read\n      id-token: write\n`;
   const responses = {
     "repos/kungfu-systems/buildchain/contents/.github/workflows/release-candidate-promote.yml": {
@@ -19,7 +21,7 @@ function fakeGithubCli(requiredCheckConclusion) {
     "repos/kungfu-systems/buildchain": { default_branch: "dev/v2/v2.14" },
     "repos/kungfu-systems/buildchain/branches/alpha%2Fv2%2Fv2.14": {
       protected: true,
-      commit: { sha: SOURCE_SHA },
+      commit: { sha: historicalSource ? BRANCH_HEAD_SHA : SOURCE_SHA },
       protection: {
         required_status_checks: {
           enforcement_level: "everyone",
@@ -65,35 +67,40 @@ function fakeGithubCli(requiredCheckConclusion) {
     [`repos/kungfu-systems/buildchain/commits/${SOURCE_SHA}/pulls`]: [{
       number: 7,
       merged_at: "2026-07-24T00:00:00Z",
-      merge_commit_sha: SOURCE_SHA,
+      merge_commit_sha: historicalSource ? MERGE_SHA : SOURCE_SHA,
       user: { login: "author" },
       base: { ref: "alpha/v2/v2.14" },
       head: {
-        sha: HEAD_SHA,
+        sha: historicalSource ? SOURCE_SHA : HEAD_SHA,
         repo: { full_name: "kungfu-systems/buildchain" },
       },
     }],
     "repos/kungfu-systems/buildchain/pulls/7/reviews?per_page=100": [{
       state: "APPROVED",
       user: { login: "reviewer" },
+      commit_id: historicalSource ? SOURCE_SHA : HEAD_SHA,
     }],
-    [`repos/kungfu-systems/buildchain/commits/${HEAD_SHA}/check-runs?per_page=100`]: {
+    [`repos/kungfu-systems/buildchain/commits/${historicalSource ? SOURCE_SHA : HEAD_SHA}/check-runs?per_page=100`]: {
       check_runs: [{
         name: "check",
         conclusion: requiredCheckConclusion,
         app: { id: 15368 },
       }],
     },
+    [`repos/kungfu-systems/buildchain/compare/${SOURCE_SHA}...${BRANCH_HEAD_SHA}`]: {
+      status: "ahead",
+      merge_base_commit: { sha: SOURCE_SHA },
+    },
   };
   return `#!/usr/bin/env node\nconst responses = ${JSON.stringify(responses)};\nconst route = process.argv[3];\nif (!(route in responses)) { console.error(\`missing fake route: \${route}\`); process.exit(1); }\nprocess.stdout.write(JSON.stringify(responses[route]));\n`;
 }
 
-function runAudit({ requiredCheckConclusion = "success" } = {}) {
+function runAudit({ requiredCheckConclusion = "success", historicalSource = false } = {}) {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-control-plane-"));
   const bin = path.join(cwd, "bin");
   fs.mkdirSync(bin);
   const gh = path.join(bin, "gh");
-  fs.writeFileSync(gh, fakeGithubCli(requiredCheckConclusion));
+  fs.writeFileSync(gh, fakeGithubCli(requiredCheckConclusion, historicalSource));
   fs.chmodSync(gh, 0o755);
   const result = spawnSync(process.execPath, [
     path.join(root, "scripts/audit-publication-control-plane.mjs"),
@@ -124,4 +131,11 @@ test("non-strict managed rulesets reject a failed required check", () => {
   const result = runAudit({ requiredCheckConclusion: "failure" });
   assert.equal(result.status, 1);
   assert.match(result.stderr, /non-qualifying: branch-policy/);
+});
+
+test("non-strict managed rulesets accept an exact historical pull-request head still contained in the branch", () => {
+  const result = runAudit({ historicalSource: true });
+  assert.equal(result.status, 0, result.stderr);
+  const receipt = JSON.parse(result.stdout);
+  assert.equal(receipt.facts.find((entry) => entry.id === "branch-policy").status, "pass");
 });

@@ -122,6 +122,8 @@ export function evaluatePublicationControlPlaneSnapshot({
     Array.isArray(branchPolicy.releaseReconciliation.changedPaths) &&
     branchPolicy.releaseReconciliation.changedPaths.length > 0
   );
+  const sourceBranchBindingPass = branchPolicy.sourceSha === branchPolicy.headSha ||
+    branchPolicy.sourceContainedInBranch === true;
   const providerTransactionBranchPass = branchPolicy.ref === branch &&
     branchPolicy.policyMode === "provider-enforced-transaction" &&
     branchPolicy.protected === true &&
@@ -132,7 +134,7 @@ export function evaluatePublicationControlPlaneSnapshot({
     branchPolicy.requiredCheckPassed === true &&
     /^[0-9a-f]{40}$/i.test(String(branchPolicy.requiredCheckSha || "")) &&
     branchPolicy.requiredCheckSha === branchPolicy.pullRequestHeadSha &&
-    branchPolicy.sourceSha === branchPolicy.headSha &&
+    sourceBranchBindingPass &&
     sourceAuthorizationPass &&
     branchPolicy.mergedPullRequest === true &&
     branchPolicy.baseRef === branch &&
