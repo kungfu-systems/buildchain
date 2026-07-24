@@ -373,9 +373,11 @@ discovery authority, not another artifact publisher.
 
 The command receives the exact version, source SHA, release SHA, release tag,
 release passport path, and downloaded payload directory through
-`BUILDCHAIN_PUBLICATION_COMMIT_*`. An optional consumer-owned credential is
-available only as `BUILDCHAIN_PUBLICATION_COMMIT_TOKEN`; Buildchain never logs
-or interprets it. The command must write
+`BUILDCHAIN_PUBLICATION_COMMIT_*`. Optional consumer-owned dispatch/API
+credentials and private signing material are exposed separately as
+`BUILDCHAIN_PUBLICATION_COMMIT_TOKEN` and
+`BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY`; Buildchain never logs, persists,
+or interprets either value. The command must write
 `.buildchain/publication-commit/evidence.json` (or another declared path below
 `.buildchain/`) with this contract:
 

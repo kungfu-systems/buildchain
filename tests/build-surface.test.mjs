@@ -2352,6 +2352,8 @@ test("promotion commits consumer discovery authority only after public release a
     /github-release-artifact-paths: \$\{\{ steps\.rc\.outputs\.release-candidate-github-release-artifact-paths \}\}/,
   );
   assert.match(wrapper, /publication-commit-command:/);
+  assert.match(wrapper, /BUILDCHAIN_PUBLICATION_COMMIT_TOKEN:/);
+  assert.match(wrapper, /BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY:/);
   assert.match(
     wrapper,
     /node \.buildchain\/runtime\/scripts\/publication-commit-evidence\.mjs/,

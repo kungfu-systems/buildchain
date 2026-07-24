@@ -903,6 +903,7 @@ for (const requiredSnippet of [
   "github-release-title: ${{ inputs.github-release-title }}",
   "github-release-notes: ${{ inputs.github-release-notes }}",
   "publication-commit-command:",
+  "BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY:",
   "Commit consumer publication authority last",
   "node .buildchain/runtime/scripts/publication-commit-evidence.mjs",
   "require-publish-source-lock: \"true\"",
