@@ -207,6 +207,11 @@ on:
         default: false
         type: boolean
         required: false
+      publish-transaction-override:
+        description: "Explicitly allow ancestry-bound finalization recovery for an already published durable transaction"
+        default: false
+        type: boolean
+        required: false
       publish-required-artifacts-json:
         description: "Required publish artifacts JSON passed to the promotion action; ref_template may contain one {version} placeholder"
         default: ""
@@ -1445,6 +1450,7 @@ jobs:
           allow-repository: ${{ inputs.allow-repository || github.repository }}
           publish-transaction: "true"
           publish-command: ${{ inputs.publish-command }}
+          publish-transaction-override: ${{ inputs.publish-transaction-override }}
           publish-rematerialize-on-resume: ${{ inputs.publish-rematerialize-on-resume }}
           publish-required-artifacts-json: ${{ inputs.publish-required-artifacts-json || steps.rc.outputs.publish-required-artifacts-json }}
           publish-mode: ${{ inputs.publish-mode }}
