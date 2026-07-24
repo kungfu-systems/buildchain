@@ -2064,6 +2064,22 @@ test("npm-only promotion does not require a standalone binary workflow", () => {
     /if: \$\{\{ inputs\.standalone-binary-distribution && !inputs\.dry-run && steps\.promote\.outcome == 'success'/,
   );
   assert.match(selfPromotion, /standalone-binary-distribution: true/);
+  assert.match(
+    selfPromotion,
+    /recover-durable-transaction:[\s\S]*?type: boolean/,
+  );
+  assert.match(
+    selfPromotion,
+    /recover-durable-transaction'\] == true && inputs\.sha != ''/,
+  );
+  assert.match(
+    selfPromotion,
+    /publication-auto-admission: \$\{\{ github\.event_name == 'workflow_run' \|\| inputs\['recover-durable-transaction'\] == true \}\}/,
+  );
+  assert.match(
+    selfPromotion,
+    /reject-invalid-durable-recovery:[\s\S]*?Durable transaction recovery requires the exact current protected channel SHA/,
+  );
 });
 
 test("runtime selection accepts official channels and gates train or SHA overrides", () => {
@@ -2676,8 +2692,14 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   );
   assert.match(workflow, /publish-required-artifacts-json: "\[\]"/);
   assert.match(workflow, /release-passport-impact-json: \.buildchain\/release-impact\.json/);
-  assert.match(workflow, /publication-auto-admission: \$\{\{ github\.event_name == 'workflow_run' \}\}/);
-  assert.match(workflow, /publication-auto-no-gate: \$\{\{ github\.event_name == 'workflow_run' \}\}/);
+  assert.match(
+    workflow,
+    /publication-auto-admission: \$\{\{ github\.event_name == 'workflow_run' \|\| inputs\['recover-durable-transaction'\] == true \}\}/,
+  );
+  assert.match(
+    workflow,
+    /publication-auto-no-gate: \$\{\{ github\.event_name == 'workflow_run' \|\| inputs\['recover-durable-transaction'\] == true \}\}/,
+  );
   assert.match(workflow, /publication-publisher-workflow-path: \.github\/workflows\/buildchain-ref-promotion\.yml/);
   assert.doesNotMatch(workflow, /Buildchain v2\.10 patch release/);
   assert.doesNotMatch(workflow, /run: node scripts\/release-candidate-resolver\.mjs/);
