@@ -134,10 +134,16 @@ buildchain github-governance plan \
   --repository kungfu-systems/buildchain \
   --branch dev/v2/v2.14 \
   --required-check check \
+  --required-check-app-id check=15368 \
   --required-approvals 1 \
   --snapshot-output rollback.json \
   --plan-output rollout.json
 ```
+
+An already protected check preserves its observed GitHub App binding. Every new
+required check must declare `--required-check-app-id <context>=<app-id>`;
+context-only replacement is rejected because it would broaden which producer
+can satisfy the gate.
 
 The plan prints a `planRoot`. Apply requires that exact root and stops if live
 protection no longer matches the frozen inventory:

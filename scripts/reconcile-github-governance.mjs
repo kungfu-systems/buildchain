@@ -25,6 +25,33 @@ function repeatedFlag(args, name) {
   return values.filter(Boolean);
 }
 
+export function resolveRequiredCheckBindings(checks, appBindings, observedChecks) {
+  const explicit = new Map(appBindings.map((value) => {
+    const separator = value.lastIndexOf("=");
+    const context = value.slice(0, separator).trim();
+    const appId = Number(value.slice(separator + 1));
+    if (separator <= 0 || !context || !Number.isInteger(appId) || appId <= 0) {
+      throw new Error("--required-check-app-id must use <context>=<positive-app-id>");
+    }
+    return [context, appId];
+  }));
+  for (const context of explicit.keys()) {
+    if (!checks.includes(context)) {
+      throw new Error(`required check app binding has no matching --required-check: ${context}`);
+    }
+  }
+  return checks.map((context) => {
+    const observed = observedChecks.find((entry) => entry.context === context);
+    const appId = explicit.get(context) ?? observed?.app_id;
+    if (!Number.isInteger(appId) || appId <= 0) {
+      throw new Error(
+        `required check must preserve an observed app_id or declare --required-check-app-id: ${context}`,
+      );
+    }
+    return { context, app_id: appId };
+  });
+}
+
 function hasFlag(args, name) {
   return args.includes(`--${name}`);
 }
@@ -111,12 +138,18 @@ function plan(args) {
   const repository = required(flag(args, "repository"), "--repository");
   const branch = required(flag(args, "branch"), "--branch").replace(/^refs\/heads\//, "");
   const checks = repeatedFlag(args, "required-check");
+  const checkAppBindings = repeatedFlag(args, "required-check-app-id");
   if (checks.length === 0) {
     throw new Error("at least one --required-check is required");
   }
   const snapshotOutput = required(flag(args, "snapshot-output"), "--snapshot-output");
   const planOutput = required(flag(args, "plan-output"), "--plan-output");
   const protection = readProtection(repository, branch);
+  const checkBindings = resolveRequiredCheckBindings(
+    checks,
+    checkAppBindings,
+    protection.body?.required_status_checks?.checks || [],
+  );
   const snapshot = snapshotCore(repository, branch, protection);
   const snapshotWithRoot = {
     ...snapshot,
@@ -133,7 +166,7 @@ function plan(args) {
     rollbackProtectionExists: protection.exists,
     desiredProtection: {
       strictRequiredChecks: hasFlag(args, "strict-required-checks"),
-      requiredChecks: checks,
+      requiredCheckBindings: checkBindings,
       requiredApprovals: Number(flag(args, "required-approvals", "1")),
     },
   });
@@ -182,9 +215,14 @@ function apply(args) {
   const after = readProtection(rollout.repository, rollout.targetRef);
   if (!after.exists) throw new Error("post-change branch protection is absent");
   const expected = rollout.expectedObservation;
-  const actualChecks = (after.body.required_status_checks?.checks || [])
-    .map((entry) => entry.context)
-    .sort();
+  const actualChecks = [...(after.body.required_status_checks?.checks || [])]
+    .sort((left, right) => `${left.context}:${left.app_id}`.localeCompare(
+      `${right.context}:${right.app_id}`,
+    ));
+  const expectedChecks = [...expected.requiredCheckBindings]
+    .sort((left, right) => `${left.context}:${left.app_id}`.localeCompare(
+      `${right.context}:${right.app_id}`,
+    ));
   if (
     after.body.enforce_admins !== true ||
     after.body.required_pull_request_reviews?.require_code_owner_reviews !== true ||
@@ -193,7 +231,7 @@ function apply(args) {
     after.body.required_conversation_resolution !== true ||
     after.body.allow_force_pushes !== false ||
     after.body.allow_deletions !== false ||
-    JSON.stringify(actualChecks) !== JSON.stringify([...expected.requiredChecks].sort())
+    JSON.stringify(actualChecks) !== JSON.stringify(expectedChecks)
   ) {
     throw new Error("post-change GitHub read-back does not match the rollout plan");
   }

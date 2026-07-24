@@ -586,13 +586,22 @@ export function createGithubGovernanceRolloutPlan({
   }
   const inventoryRoot = githubGovernanceDigest(inventory);
   const rollbackSnapshotRoot = githubGovernanceDigest(rollbackSnapshot);
+  const requiredCheckBindings = (desiredProtection?.requiredCheckBindings ||
+    desiredProtection?.requiredChecks || []).map((entry) => {
+    const context = requiredString(
+      typeof entry === "string" ? entry : entry?.context,
+      "required check context",
+    );
+    const appId = typeof entry === "string" ? null : entry?.app_id;
+    if (appId !== null && (!Number.isInteger(appId) || appId <= 0)) {
+      throw new Error(`required check app_id must be a positive integer or null: ${context}`);
+    }
+    return { context, app_id: appId ?? null };
+  });
   const body = {
     required_status_checks: {
       strict: desiredProtection?.strictRequiredChecks === true,
-      checks: [...(desiredProtection?.requiredChecks || [])].map((context) => ({
-        context,
-        app_id: null,
-      })),
+      checks: requiredCheckBindings,
     },
     enforce_admins: true,
     required_pull_request_reviews: {
@@ -630,6 +639,7 @@ export function createGithubGovernanceRolloutPlan({
       requireLastPushApproval: true,
       enforceAdmins: true,
       requiredChecks: body.required_status_checks.checks.map((entry) => entry.context),
+      requiredCheckBindings: body.required_status_checks.checks,
       allowForcePushes: false,
       allowDeletions: false,
     },
