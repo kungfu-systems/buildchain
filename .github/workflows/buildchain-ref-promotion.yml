@@ -23,6 +23,11 @@ on:
         description: "Only print planned tag updates"
         required: true
         default: "true"
+      recover-durable-transaction:
+        description: "Recover an existing durable transaction from the exact current protected channel SHA using fresh GitHub-hosted admission"
+        required: true
+        default: false
+        type: boolean
       publication-admission-json:
         description: "Fresh sealed admission JSON required for manual apply"
         required: false
@@ -53,7 +58,7 @@ permissions:
 
 jobs:
   reject-manual-apply:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs['dry-run'] != 'true' && inputs['publication-admission-json'] == '' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs['dry-run'] != 'true' && inputs['recover-durable-transaction'] != true && inputs['publication-admission-json'] == '' }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -64,10 +69,28 @@ jobs:
           echo "::error::Provide admission, runner, control-plane audit, expected bindings, and used nonces JSON."
           exit 1
 
+  reject-invalid-durable-recovery:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs['recover-durable-transaction'] == true && inputs.sha == '' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Require exact recovery SHA
+        run: |
+          echo "::error::Durable transaction recovery requires the exact current protected channel SHA."
+          exit 1
+
   promote:
     if: >-
       ${{
-        (github.event_name == 'workflow_dispatch' && (inputs['dry-run'] == 'true' || inputs['publication-admission-json'] != '')) ||
+        (
+          github.event_name == 'workflow_dispatch' &&
+          (
+            inputs['dry-run'] == 'true' ||
+            inputs['publication-admission-json'] != '' ||
+            (inputs['recover-durable-transaction'] == true && inputs.sha != '')
+          )
+        ) ||
         (
           github.event.workflow_run.conclusion == 'success' &&
           github.event.workflow_run.event == 'push' &&
@@ -120,8 +143,8 @@ jobs:
       publication-gate-aggregate-json: ${{ inputs['publication-gate-aggregate-json'] || '' }}
       publication-expected-json: ${{ inputs['publication-expected-json'] || '' }}
       publication-used-nonces-json: ${{ inputs['publication-used-nonces-json'] || '[]' }}
-      publication-auto-admission: ${{ github.event_name == 'workflow_run' }}
-      publication-auto-no-gate: ${{ github.event_name == 'workflow_run' }}
+      publication-auto-admission: ${{ github.event_name == 'workflow_run' || inputs['recover-durable-transaction'] == true }}
+      publication-auto-no-gate: ${{ github.event_name == 'workflow_run' || inputs['recover-durable-transaction'] == true }}
       publication-publisher-workflow-path: .github/workflows/buildchain-ref-promotion.yml
       publication-product: Buildchain
       publication-target: npm:@kungfu-tech/buildchain
