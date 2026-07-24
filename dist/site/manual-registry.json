@@ -79,7 +79,7 @@
       "title": "GitHub governance authority",
       "path": "docs/github-governance-authority.md",
       "plane": "verify",
-      "digest": "sha256:dec33286a49d37ff7c77b5d33009e2f7c1c6dec7e5e60f33a2d79301b0970bc9",
+      "digest": "sha256:826b745c0029b2c34a0c637088f426e96d4ecfff175d261131b10c9613f8263f",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",

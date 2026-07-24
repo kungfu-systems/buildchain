@@ -6,10 +6,13 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  GITHUB_GOVERNANCE_RULESET_ROLLOUT_CONTRACT,
   GITHUB_GOVERNANCE_ROLLOUT_CONTRACT,
   createGithubGovernanceRolloutPlan,
+  createGithubRulesetBypassRolloutPlan,
   githubGovernanceDigest,
   normalizeGithubBranchProtectionSnapshot,
+  normalizeGithubRulesetSnapshot,
 } from "../packages/core/github-governance-authority.js";
 
 function flag(args, name, fallback = "") {
@@ -112,6 +115,16 @@ function readProtection(repository, branch) {
   };
 }
 
+function rulesetEndpoint(repository, rulesetId) {
+  return `repos/${repository}/rulesets/${rulesetId}`;
+}
+
+function readRuleset(repository, rulesetId) {
+  const response = githubApi(rulesetEndpoint(repository, rulesetId));
+  if (!response.exists) throw new Error("GitHub ruleset is absent");
+  return normalizeGithubRulesetSnapshot(response.data);
+}
+
 function snapshotCore(repository, branch, protection) {
   return {
     schemaVersion: 1,
@@ -123,8 +136,8 @@ function snapshotCore(repository, branch, protection) {
   };
 }
 
-function verifyPlan(plan) {
-  if (plan?.contract !== GITHUB_GOVERNANCE_ROLLOUT_CONTRACT) {
+function verifyPlan(plan, expectedContract = GITHUB_GOVERNANCE_ROLLOUT_CONTRACT) {
+  if (plan?.contract !== expectedContract) {
     throw new Error("rollout plan contract mismatch");
   }
   const { planRoot, ...core } = plan;
@@ -132,6 +145,119 @@ function verifyPlan(plan) {
     throw new Error("rollout plan root mismatch");
   }
   return plan;
+}
+
+function rulesetPlan(args) {
+  const repository = required(flag(args, "repository"), "--repository");
+  const rulesetId = Number(required(flag(args, "ruleset-id"), "--ruleset-id"));
+  if (!Number.isInteger(rulesetId) || rulesetId <= 0) {
+    throw new Error("--ruleset-id must be a positive integer");
+  }
+  const snapshotOutput = required(flag(args, "snapshot-output"), "--snapshot-output");
+  const planOutput = required(flag(args, "plan-output"), "--plan-output");
+  const before = readRuleset(repository, rulesetId);
+  const snapshotCore = {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-github-governance-ruleset-rollback-snapshot",
+    repository,
+    rulesetId,
+    ruleset: before,
+  };
+  const snapshot = {
+    ...snapshotCore,
+    snapshotRoot: githubGovernanceDigest(snapshotCore),
+  };
+  const rollout = createGithubRulesetBypassRolloutPlan({
+    repository,
+    rulesetId,
+    inventory: before,
+    rollbackSnapshot: before,
+  });
+  const boundCore = {
+    ...rollout,
+    snapshotRoot: snapshot.snapshotRoot,
+    snapshotPath: path.resolve(snapshotOutput),
+  };
+  const { planRoot: ignored, ...planCore } = boundCore;
+  const finalPlan = {
+    ...planCore,
+    planRoot: githubGovernanceDigest(planCore),
+  };
+  fs.writeFileSync(path.resolve(snapshotOutput), `${JSON.stringify(snapshot, null, 2)}\n`);
+  fs.writeFileSync(path.resolve(planOutput), `${JSON.stringify(finalPlan, null, 2)}\n`);
+  return finalPlan;
+}
+
+function rulesetApply(args) {
+  const planPath = required(flag(args, "plan-json"), "--plan-json");
+  const confirmed = required(flag(args, "confirm-plan-root"), "--confirm-plan-root");
+  const rollout = verifyPlan(
+    readJson(planPath, "ruleset rollout plan"),
+    GITHUB_GOVERNANCE_RULESET_ROLLOUT_CONTRACT,
+  );
+  if (rollout.planRoot !== confirmed) {
+    throw new Error("--confirm-plan-root does not match the frozen ruleset rollout plan");
+  }
+  const snapshot = readJson(rollout.snapshotPath, "ruleset rollback snapshot");
+  const { snapshotRoot, ...snapshotCore } = snapshot;
+  if (snapshotRoot !== rollout.snapshotRoot ||
+      snapshotRoot !== githubGovernanceDigest(snapshotCore)) {
+    throw new Error("ruleset rollback snapshot root mismatch");
+  }
+  const current = readRuleset(rollout.repository, rollout.rulesetId);
+  if (githubGovernanceDigest(current) !== rollout.inventoryRoot) {
+    throw new Error("live GitHub ruleset drifted after planning; apply stopped");
+  }
+  githubApi(rollout.operations[0].endpoint, {
+    method: rollout.operations[0].method,
+    body: rollout.operations[0].body,
+  });
+  const after = readRuleset(rollout.repository, rollout.rulesetId);
+  const afterRoot = githubGovernanceDigest(after);
+  if (afterRoot !== rollout.expectedObservation.rulesetRoot ||
+      after.bypass_actors.length !== 0) {
+    throw new Error("post-change GitHub ruleset read-back does not match the rollout plan");
+  }
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-github-governance-ruleset-rollout-receipt",
+    status: "applied",
+    planRoot: rollout.planRoot,
+    snapshotRoot: rollout.snapshotRoot,
+    afterRoot,
+    repository: rollout.repository,
+    rulesetId: rollout.rulesetId,
+  };
+}
+
+function rulesetRollback(args) {
+  const planPath = required(flag(args, "plan-json"), "--plan-json");
+  const confirmed = required(flag(args, "confirm-rollback-root"), "--confirm-rollback-root");
+  const rollout = verifyPlan(
+    readJson(planPath, "ruleset rollout plan"),
+    GITHUB_GOVERNANCE_RULESET_ROLLOUT_CONTRACT,
+  );
+  if (rollout.snapshotRoot !== confirmed) {
+    throw new Error("--confirm-rollback-root does not match the frozen ruleset snapshot");
+  }
+  const operation = rollout.rollback[0];
+  githubApi(operation.endpoint, {
+    method: operation.method,
+    body: operation.body,
+  });
+  const restored = readRuleset(rollout.repository, rollout.rulesetId);
+  if (githubGovernanceDigest(restored) !== operation.preconditionRoot) {
+    throw new Error("ruleset rollback read-back does not match the frozen snapshot");
+  }
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-github-governance-ruleset-rollback-receipt",
+    status: "restored",
+    planRoot: rollout.planRoot,
+    snapshotRoot: rollout.snapshotRoot,
+    repository: rollout.repository,
+    rulesetId: rollout.rulesetId,
+  };
 }
 
 function plan(args) {
@@ -280,12 +406,26 @@ function rollback(args) {
 
 function main(args = process.argv.slice(2)) {
   const mode = args[0] || "plan";
-  const rest = ["plan", "apply", "rollback"].includes(mode) ? args.slice(1) : args;
+  const modes = [
+    "plan",
+    "apply",
+    "rollback",
+    "ruleset-plan",
+    "ruleset-apply",
+    "ruleset-rollback",
+  ];
+  const rest = modes.includes(mode) ? args.slice(1) : args;
   const result = mode === "apply"
     ? apply(rest)
     : mode === "rollback"
       ? rollback(rest)
-      : plan(rest);
+      : mode === "ruleset-plan"
+        ? rulesetPlan(rest)
+        : mode === "ruleset-apply"
+          ? rulesetApply(rest)
+          : mode === "ruleset-rollback"
+            ? rulesetRollback(rest)
+            : plan(rest);
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
 }
 

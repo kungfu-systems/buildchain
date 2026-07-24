@@ -167,6 +167,25 @@ buildchain github-governance rollback \
   --confirm-rollback-root sha256:...
 ```
 
+Repository ruleset bypass removal uses the same freeze/apply/read-back/rollback
+boundary:
+
+```bash
+buildchain github-governance ruleset-plan \
+  --repository kungfu-systems/buildchain \
+  --ruleset-id 19076734 \
+  --snapshot-output ruleset-rollback.json \
+  --plan-output ruleset-rollout.json
+
+buildchain github-governance ruleset-apply \
+  --plan-json ruleset-rollout.json \
+  --confirm-plan-root sha256:...
+```
+
+The operation changes only `bypass_actors`; name, target, enforcement,
+conditions, and rules must retain the same canonical root. Rollback requires
+the frozen ruleset snapshot root.
+
 Paid-plan purchase, billing, legal/account-owner decisions, and any operation
 that could remove the last recoverable owner remain external human gates.
 Break-glass is disabled by default and, if ever admitted, must be separately

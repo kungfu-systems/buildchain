@@ -6,10 +6,12 @@ import {
   codeownersForPath,
   compileEffectiveGithubGovernancePolicy,
   createGithubGovernanceRolloutPlan,
+  createGithubRulesetBypassRolloutPlan,
   evaluateCodeownersAuthority,
   evaluateGithubGovernanceSnapshot,
   githubGovernanceDigest,
   normalizeGithubBranchProtectionSnapshot,
+  normalizeGithubRulesetSnapshot,
   parseCodeowners,
   verifyGithubGovernanceReceipt,
 } from "../packages/core/github-governance-authority.js";
@@ -369,6 +371,46 @@ test("provider branch protection normalizes into an exact reversible write body"
   );
   assert.deepEqual(normalized.restrictions.teams, ["release"]);
   assert.equal(normalized.enforce_admins, true);
+});
+
+test("ruleset bypass rollout preserves rules and carries an exact inverse", () => {
+  const before = normalizeGithubRulesetSnapshot({
+    name: "Buildchain dev merge queue: dev/v2/v2.14",
+    target: "branch",
+    enforcement: "active",
+    bypass_actors: [{
+      actor_id: 209317,
+      actor_type: "User",
+      bypass_mode: "always",
+    }],
+    conditions: {
+      ref_name: {
+        include: ["refs/heads/dev/v2/v2.14"],
+        exclude: [],
+      },
+    },
+    rules: [{
+      type: "merge_queue",
+      parameters: {
+        merge_method: "MERGE",
+        max_entries_to_build: 1,
+      },
+    }],
+  });
+  const plan = createGithubRulesetBypassRolloutPlan({
+    repository: "kungfu-systems/buildchain",
+    rulesetId: 19076734,
+    inventory: before,
+    rollbackSnapshot: before,
+  });
+  assert.deepEqual(plan.operations[0].body.bypass_actors, []);
+  assert.deepEqual(plan.operations[0].body.rules, before.rules);
+  assert.deepEqual(plan.rollback[0].body, before);
+  assert.equal(plan.rollback[0].preconditionRoot, githubGovernanceDigest(before));
+  assert.equal(
+    plan.expectedObservation.rulesetRoot,
+    githubGovernanceDigest(plan.operations[0].body),
+  );
 });
 
 test("tampering and stale receipts are rejected", () => {
