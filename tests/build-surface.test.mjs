@@ -2017,6 +2017,10 @@ test("binary evidence and product publication are isolated by the sealed asset w
   assert.match(promotion, /gh workflow run binary-distribution\.yml/);
   assert.match(
     promotion,
+    /steps\.promote\.outputs\.finalization-needed != 'true'[\s\S]*?steps\.promote\.outputs\.public-release-tag != ''/,
+  );
+  assert.match(
+    promotion,
     /name: Preflight PR-stage release candidate evidence[\s\S]*?permissions:\n      actions: read\n      contents: read/,
   );
   assert.match(
@@ -2391,6 +2395,14 @@ test("promotion commits consumer discovery authority only after public release a
   assert.match(
     wrapper,
     /PUBLICATION_COMMIT_EVIDENCE.*publication-commit-evidence\.json/s,
+  );
+  assert.match(
+    wrapper,
+    /Commit consumer publication authority last[\s\S]*?steps\.promote\.outputs\.finalization-needed != 'true'/,
+  );
+  assert.match(
+    wrapper,
+    /Bundle release-candidate-promotion controller evidence[\s\S]*?steps\.promote\.outputs\.finalization-needed != 'true'/,
   );
 });
 

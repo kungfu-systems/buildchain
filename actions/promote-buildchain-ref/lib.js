@@ -1756,6 +1756,53 @@ function transactionAcceptedExactTagShas(transaction, publicSha) {
   ]);
 }
 
+async function materializeTransactionSourceWorkspace({
+  octokit,
+  owner,
+  repo,
+  cwd,
+  sourceSha,
+}) {
+  assertSha(sourceSha);
+  const root = path.resolve(cwd, ".buildchain/transaction-finalization-source");
+  const workspace = path.join(root, sourceSha);
+  const archivePath = path.join(root, `${sourceSha}.tar.gz`);
+  fs.rmSync(root, { recursive: true, force: true });
+  fs.mkdirSync(workspace, { recursive: true });
+  const response = await octokit.request(
+    "GET /repos/{owner}/{repo}/tarball/{ref}",
+    {
+      owner,
+      repo,
+      ref: sourceSha,
+    },
+  );
+  const archive = Buffer.isBuffer(response.data)
+    ? response.data
+    : response.data instanceof ArrayBuffer
+      ? Buffer.from(response.data)
+      : ArrayBuffer.isView(response.data)
+        ? Buffer.from(
+            response.data.buffer,
+            response.data.byteOffset,
+            response.data.byteLength,
+          )
+        : Buffer.from(response.data || "");
+  if (archive.length === 0) {
+    throw new Error(
+      `Transaction source archive ${sourceSha} is empty; refusing cross-tree finalization`,
+    );
+  }
+  fs.writeFileSync(archivePath, archive);
+  execFileSync(
+    "tar",
+    ["-xzf", archivePath, "-C", workspace, "--strip-components=1"],
+    { stdio: "pipe" },
+  );
+  fs.rmSync(archivePath, { force: true });
+  return { root, workspace };
+}
+
 function releaseTagForPublishedVersion(version = "") {
   const value = String(version || "").trim();
   if (!value) {
@@ -5019,6 +5066,9 @@ async function promoteBuildchainRefs({
     channel,
     line,
     releaseSha,
+    sourceShaOverride = sha,
+    releaseMaterialShaOverride = releaseMaterialSha,
+    publishToolingShaOverride = publishToolingSha,
     publishDistTagOverride = publishDistTag,
     allowVersionStateFinalization = false,
   }) => {
@@ -5042,7 +5092,7 @@ async function promoteBuildchainRefs({
       cwd,
       loadedConfig: loadBuildchainConfig(cwd),
       targetRef,
-      sourceSha: sha,
+      sourceSha: sourceShaOverride,
       releaseSha,
       version: transactionVersion,
       exactTag,
@@ -5053,8 +5103,8 @@ async function promoteBuildchainRefs({
       publishEvidencePath,
       transactionStatePath,
       publishRequiredArtifactsJson,
-      releaseMaterialSha,
-      publishToolingSha,
+      releaseMaterialSha: releaseMaterialShaOverride,
+      publishToolingSha: publishToolingShaOverride,
       publishMode,
       publishAuth,
       publishDistTag: publishDistTagOverride,
@@ -5088,34 +5138,50 @@ async function promoteBuildchainRefs({
     latestPublishTransaction = await beginTransactionFinalization(latestPublishTransaction, actor, runId);
   };
 
-  const markComplete = async ({ channel, line } = {}) => {
+  const markComplete = async ({
+    channel,
+    line,
+    passportCwd = cwd,
+    passportBuildSummaryPath = releasePassportBuildSummaryPath,
+    passportPlatformManifestPaths = splitPathList(releasePassportPlatformManifestPaths),
+    passportPromotionRoutingJson = releasePassportPromotionRoutingJson,
+    passportKfd1WitnessJsons = splitPathList(releasePassportKfd1WitnessJsons),
+    passportKfd2ClaimJsons = splitPathList(releasePassportKfd2ClaimJsons),
+    passportKfd3PrebuildWitnessJsons = splitPathList(releasePassportKfd3PrebuildWitnessJsons),
+    passportKfd3ArtifactWitnessJsons = splitPathList(releasePassportKfd3ArtifactWitnessJsons),
+    passportInvariantPassportJsons = splitPathList(releasePassportInvariantPassportJsons),
+    passportReleaseCandidateValidation = releaseCandidateValidation,
+  } = {}) => {
     latestPublishTransaction = await completeTransactionFinalization(latestPublishTransaction, actor, runId);
     latestPublishTransaction = await collectAndPersistReleasePassport({
       result: latestPublishTransaction,
       owner,
       repo,
-      cwd,
+      cwd: passportCwd,
       sourceSha: sha,
       targetRef,
       channel: channel || rule.channel,
       line: line || rule.releasePrefix || "",
       packageName: publishPackageMain,
-      outputDir: releasePassportOutputDir,
+      outputDir: path.resolve(
+        cwd,
+        releasePassportOutputDir || ".buildchain/release-passport",
+      ),
       productName: releasePassportProductName,
-      buildSummaryPath: releasePassportBuildSummaryPath,
-      platformManifestPaths: splitPathList(releasePassportPlatformManifestPaths),
+      buildSummaryPath: passportBuildSummaryPath,
+      platformManifestPaths: passportPlatformManifestPaths,
       impactJson: releasePassportImpactJson,
-      promotionRoutingJson: releasePassportPromotionRoutingJson,
-      kfd1WitnessJsons: splitPathList(releasePassportKfd1WitnessJsons),
-      kfd2ClaimJsons: splitPathList(releasePassportKfd2ClaimJsons),
-      kfd3PrebuildWitnessJsons: splitPathList(releasePassportKfd3PrebuildWitnessJsons),
-      kfd3ArtifactWitnessJsons: splitPathList(releasePassportKfd3ArtifactWitnessJsons),
+      promotionRoutingJson: passportPromotionRoutingJson,
+      kfd1WitnessJsons: passportKfd1WitnessJsons,
+      kfd2ClaimJsons: passportKfd2ClaimJsons,
+      kfd3PrebuildWitnessJsons: passportKfd3PrebuildWitnessJsons,
+      kfd3ArtifactWitnessJsons: passportKfd3ArtifactWitnessJsons,
       kfd3ArtifactVerifyCommand: releasePassportKfd3ArtifactVerifyCommand,
-      invariantPassportJsons: splitPathList(releasePassportInvariantPassportJsons),
+      invariantPassportJsons: passportInvariantPassportJsons,
       invariantPassportCommand: releasePassportInvariantPassportCommand,
       buildchainSelfKfd: Boolean(releasePassportBuildchainSelfKfd),
       enabled: Boolean(releasePassport),
-      releaseCandidateValidation,
+      releaseCandidateValidation: passportReleaseCandidateValidation,
     });
     if (latestPublishTransaction?.transaction) {
       const publicReleaseTag = latestPublishTransaction.publicReleaseTag ||
@@ -5500,6 +5566,124 @@ async function promoteBuildchainRefs({
         currentAlphaSettled ||
         currentAlphaCanReplaceStaleTransaction
       );
+    const currentAlphaNeedsContainedPublishedFinalization =
+      currentAlpha &&
+      currentAlphaTransactionOpen &&
+      ["published", "finalizing"].includes(currentAlphaTransaction.state || "") &&
+      transactionHasPublishedMaterial(currentAlphaTransaction) &&
+      currentAlphaContainsTransaction &&
+      currentAlpha.version === currentAlphaTransaction.version &&
+      currentAlpha.tag === currentAlphaTransaction.exact_tag &&
+      currentAlphaTransaction.target_ref === targetRef &&
+      (!expectedPublicationVersion ||
+        expectedPublicationVersion === currentAlphaTransaction.version) &&
+      !currentAlphaTagSha;
+    if (currentAlphaNeedsContainedPublishedFinalization) {
+      if (dryRun) {
+        updates.push({
+          action: "dry-run-publish-transaction",
+          version: currentAlphaTransaction.version,
+          tag: currentAlphaTransaction.exact_tag,
+          publicTag: publicReleaseTagForTransaction(currentAlphaTransaction),
+          sha: currentAlphaTransaction.release_sha,
+          finalizationOnly: true,
+        });
+        updates.push({
+          action: "contained-published-transaction-finalization",
+          tag: currentAlphaTransaction.exact_tag,
+          sourceSha: currentAlphaTransaction.source_sha,
+          releaseSha: currentAlphaTransaction.release_sha,
+          currentChannelSha: sha,
+          sha: currentAlphaTransaction.release_sha,
+        });
+        return {
+          owner,
+          repo,
+          sourceSha: sha,
+          sha,
+          targetRef,
+          updates,
+        };
+      }
+
+      let finalizationSource;
+      try {
+        if (releasePassport) {
+          finalizationSource = await materializeTransactionSourceWorkspace({
+            octokit,
+            owner,
+            repo,
+            cwd,
+            sourceSha: currentAlphaTransaction.source_sha,
+          });
+        }
+        await executePublishTransaction({
+          version: currentAlphaTransaction.version,
+          exactTag: currentAlphaTransaction.exact_tag,
+          channel: currentAlphaTransaction.channel || rule.channel,
+          line: currentAlphaTransaction.line || rule.releasePrefix,
+          releaseSha: currentAlphaTransaction.release_sha,
+          sourceShaOverride: currentAlphaTransaction.source_sha,
+          releaseMaterialShaOverride:
+            currentAlphaTransaction.release_material_sha ||
+            currentAlphaTransaction.release_sha,
+          publishToolingShaOverride:
+            currentAlphaTransaction.publish_tooling_sha ||
+            currentAlphaTransaction.release_sha,
+          publishDistTagOverride: alphaPublishDistTag,
+        });
+        await markFinalizing();
+        await ensureTag(
+          currentAlphaTransaction.exact_tag,
+          currentAlphaTransaction.release_sha,
+          {
+            acceptedExistingShas: transactionAcceptedExactTagShas(
+              currentAlphaTransaction,
+              currentAlphaTransaction.release_sha,
+            ),
+          },
+        );
+        await updateTag(rule.alphaTag, currentAlphaTransaction.release_sha);
+        await updateMajorAlphaFloatingTag({
+          sha: currentAlphaTransaction.release_sha,
+        });
+        await markComplete({
+          passportCwd: finalizationSource?.workspace || cwd,
+          passportBuildSummaryPath: "",
+          passportPlatformManifestPaths: [],
+          passportPromotionRoutingJson: "",
+          passportKfd1WitnessJsons: [],
+          passportKfd2ClaimJsons: [],
+          passportKfd3PrebuildWitnessJsons: [],
+          passportKfd3ArtifactWitnessJsons: [],
+          passportInvariantPassportJsons: [],
+          passportReleaseCandidateValidation: null,
+        });
+      } finally {
+        if (finalizationSource?.root) {
+          fs.rmSync(finalizationSource.root, {
+            recursive: true,
+            force: true,
+          });
+        }
+      }
+      updates.push({
+        action: "finalized-contained-published-transaction",
+        tag: currentAlphaTransaction.exact_tag,
+        sourceSha: currentAlphaTransaction.source_sha,
+        releaseSha: currentAlphaTransaction.release_sha,
+        currentChannelSha: sha,
+        sha: currentAlphaTransaction.release_sha,
+      });
+      return withPublishTransaction({
+        owner,
+        repo,
+        sourceSha: sha,
+        sha,
+        targetRef,
+        updates,
+      });
+    }
     let selectedAlpha = explicitAlphaTags[0]
       ? { tag: explicitAlphaTags[0] }
       : currentAlphaTransactionOpen && currentAlphaContainsTransaction && !currentAlphaSettled

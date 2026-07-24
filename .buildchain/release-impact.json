@@ -47,6 +47,13 @@
       "source": "actions/promote-buildchain-ref/lib.js"
     },
     {
+      "id": "protected-version-state-transaction-finalization",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "When a protected version-state pull request merges after registry publication, promotion finalizes only the exact durable source, release material, tooling, evidence, version, and target transaction; it does not republish or authorize the newer composite channel tree, and deferred binary, controller, and consumer publication steps wait until the exact tag and passport exist.",
+      "source": "actions/promote-buildchain-ref/lib.js"
+    },
+    {
       "id": "tree-equivalent-release-impact",
       "impact": "patch",
       "class": "release-governance",
