@@ -60,3 +60,19 @@ export function resolveSelfDogfoodMajor({
     "Buildchain self-dogfood alpha lock must target the current major alpha ref",
   );
 }
+
+export function contractForSelfDogfoodEvaluation({
+  currentContract,
+  majorResolution,
+} = {}) {
+  if (!currentContract || typeof currentContract !== "object") {
+    throw new Error("Buildchain self-dogfood requires a current contract");
+  }
+  if (!majorResolution?.bootstrap) {
+    return currentContract;
+  }
+  return {
+    ...currentContract,
+    majorLine: `v${majorResolution.workflowMajor}`,
+  };
+}

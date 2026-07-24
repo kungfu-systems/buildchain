@@ -65,7 +65,10 @@ import {
 } from "../scripts/runtime-ref-core.mjs";
 import { resolvePublishSourceCli } from "../scripts/resolve-publish-source.mjs";
 import { evaluateBuildchainContractLock } from "../packages/core/buildchain-contract.js";
-import { resolveSelfDogfoodMajor } from "../packages/core/self-dogfood-version.js";
+import {
+  contractForSelfDogfoodEvaluation,
+  resolveSelfDogfoodMajor,
+} from "../packages/core/self-dogfood-version.js";
 import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
 import { verifyPublishChannelRefCli } from "../scripts/verify-publish-channel-ref.mjs";
 import { verifyPublishSourceLockCli } from "../scripts/verify-publish-source-lock.mjs";
@@ -3635,6 +3638,47 @@ test("major self-dogfood bootstrap is bounded to the adjacent 0.0 release transi
       /must target the current major alpha ref/,
     );
   }
+
+  const alphaLock = JSON.parse(
+    fs.readFileSync(path.join(root, ".buildchain/alpha-contract-lock.json"), "utf8"),
+  );
+  const currentContract = JSON.parse(
+    fs.readFileSync(path.join(root, "dist/site/buildchain-contract.json"), "utf8"),
+  );
+  const majorResolution = resolveSelfDogfoodMajor({
+    packageVersion: "3.0.0",
+    alphaRef: "v2-alpha",
+    majorBootstrap: true,
+  });
+  const nextMajorContract = { ...currentContract, majorLine: "v3" };
+  const bootstrapContract = contractForSelfDogfoodEvaluation({
+    currentContract: nextMajorContract,
+    majorResolution,
+  });
+  assert.equal(bootstrapContract.majorLine, "v2");
+  assert.equal(nextMajorContract.majorLine, "v3");
+  assert.equal(
+    evaluateBuildchainContractLock({
+      lock: alphaLock,
+      current: bootstrapContract,
+      runtimeRef: "v2-alpha",
+      runtimeSha: "current-development-contract",
+      runtimeClass: "alpha",
+    }).compatible,
+    true,
+  );
+  const breakingContract = structuredClone(bootstrapContract);
+  breakingContract.surfaces[0].breakingDigest = "sha256:breaking-bootstrap-drift";
+  assert.equal(
+    evaluateBuildchainContractLock({
+      lock: alphaLock,
+      current: breakingContract,
+      runtimeRef: "v2-alpha",
+      runtimeSha: "current-development-contract",
+      runtimeClass: "alpha",
+    }).compatible,
+    false,
+  );
 });
 
 test("libnode-shaped fixture declares the build lifecycle contract", () => {
