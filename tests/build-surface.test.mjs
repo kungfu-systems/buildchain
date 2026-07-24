@@ -697,10 +697,16 @@ test("artifact relay uploads to S3 and downloads verified GitHub artifact payloa
           ],
           required: true,
         },
+        {
+          role: "credential-input",
+          artifactName: "libnode-credential-input-linux-x64",
+          paths: ["dist/package.tgz"],
+          required: true,
+        },
       ],
     });
     assert.equal(manifest.contract, "kungfu-buildchain-artifact-relay-s3");
-    assert.equal(manifest.groups.length, 3);
+    assert.equal(manifest.groups.length, 4);
     assert.ok(fs.existsSync(path.join(fakeS3Root, "relay-bucket")));
 
     const download = await downloadRelayArtifacts({
@@ -717,6 +723,10 @@ test("artifact relay uploads to S3 and downloads verified GitHub artifact payloa
     assert.equal(
       fs.readFileSync(path.join(workspace, "relayed", "manifest", ".buildchain", "artifacts", "linux-x64", "manifest.json"), "utf8"),
       "{}\n",
+    );
+    assert.equal(
+      fs.readFileSync(path.join(workspace, "relayed", "credential-input", "dist", "package.tgz"), "utf8"),
+      "payload\n",
     );
     const cleanup = await cleanupRelayArtifacts({
       inputRoot: path.join(workspace, ".buildchain", "artifacts", "linux-x64"),

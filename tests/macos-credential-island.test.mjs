@@ -357,7 +357,7 @@ test("public action and workflow keep credentials outside the build matrix", () 
   );
   assert.match(
     workflow,
-    /Upload macOS credential-island app archive[\s\S]*?path: \.buildchain\/credential-island\/\$\{\{ matrix\.platform\.id \}\}\/unsigned-app\.zip[\s\S]*?archive: false/,
+    /Upload macOS credential-island app archive[\s\S]*?needs\.artifact-transfer\.outputs\.mode == 'github-artifacts'[\s\S]*?path: \.buildchain\/credential-island\/\$\{\{ matrix\.platform\.id \}\}\/unsigned-app\.zip[\s\S]*?archive: false/,
   );
   assert.match(
     workflow,
@@ -367,10 +367,26 @@ test("public action and workflow keep credentials outside the build matrix", () 
     workflow,
     /Download source-bound sealed application archive[\s\S]*?name: unsigned-app\.zip[\s\S]*?Download source-bound sealed application manifest/,
   );
+  assert.match(
+    nativeBuildJob,
+    /BUILDCHAIN_ARTIFACT_RELAY_CREDENTIAL_INPUT_PATHS:[\s\S]*?\.buildchain\/credential-island\/\{0\}/,
+  );
+  assert.match(
+    workflow,
+    /Upload relayed macOS credential-island input[\s\S]*?steps\.relay-download\.outputs\.credential-input-path/,
+  );
   const credentialJob = workflow.match(
     /\n  credential-island-macos:[\s\S]+?(?=\n  summarize:)/u,
   )?.[0];
   assert.ok(credentialJob);
+  assert.match(
+    credentialJob,
+    /always\(\)[\s\S]*?needs\.artifact-transfer\.outputs\.mode == 'github-artifacts'[\s\S]*?needs\.relay-artifacts\.result == 'success'/,
+  );
+  assert.match(
+    credentialJob,
+    /Download relayed source-bound credential-island input[\s\S]*?needs\.artifact-transfer\.outputs\.mode == 's3-to-github-artifacts'/,
+  );
   assert.match(
     credentialJob,
     /environment:\s*\n\s+name: \$\{\{ inputs\.credential-island-environment \}\}/,
