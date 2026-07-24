@@ -209,6 +209,7 @@ permissions:
   contents: write
   id-token: write
   issues: write
+  pull-requests: write
 
 jobs:
   resolve-promotion:
@@ -409,6 +410,7 @@ jobs:
       contents: write
       id-token: write
       issues: write
+      pull-requests: write
     with:
 ${alphaForwarded}
     secrets: inherit
@@ -424,6 +426,7 @@ ${alphaForwarded}
       contents: write
       id-token: write
       issues: write
+      pull-requests: write
     with:
 ${stableForwarded}
     secrets: inherit

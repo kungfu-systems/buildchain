@@ -363,6 +363,73 @@ When publish transactions are enabled, promotion order is:
 7. move floating tags and channel refs;
 8. mark the transaction `complete`.
 
+When a protected channel requires a generated version-state pull request, the
+first run can stop at `finalizing` after registry publication. If the reviewed
+merge commit later contains that exact transaction release material but the
+exact tag is still absent, a retry performs finalization only: it reloads the
+same durable source, release material, tooling, evidence, version, and target
+bindings; creates the exact and floating tags at the transaction release SHA;
+and completes the passport from the transaction source tree. It does not rerun
+the provider mutation and does not authorize the newer composite channel tree
+as published material. A different source tree still requires a new version and
+a fresh release candidate.
+
+Deferred binary dispatch, controller-evidence bundling, and any consumer
+publication commit are skipped while `finalization-needed=true`. They run only
+after the exact public tag and complete release passport exist.
+
+Consumer products that expose a signed well-known channel can opt into one
+additional, deliberately final step with `publication-commit-command`. Before
+that command runs, Buildchain has already completed the transaction, created
+the public GitHub Release, and uploaded every release-passport file plus the
+explicit PR-stage payload files selected by
+`github-release-payload-patterns`. The command is therefore a commit point for
+discovery authority, not another artifact publisher.
+
+The command receives the exact version, source SHA, release SHA, release tag,
+release passport path, and downloaded payload directory through
+`BUILDCHAIN_PUBLICATION_COMMIT_*`. Optional consumer-owned dispatch/API
+credentials and private signing material are exposed separately as
+`BUILDCHAIN_PUBLICATION_COMMIT_TOKEN` and
+`BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY`; Buildchain never logs, persists,
+or interprets either value. The command must write
+`.buildchain/publication-commit/evidence.json` (or another declared path below
+`.buildchain/`) with this contract:
+
+```json
+{
+  "schema": "kungfu-buildchain-publication-commit-evidence/v1",
+  "status": "passed",
+  "identity": {
+    "version": "4.0.0-alpha.2",
+    "sourceSha": "<source-sha>",
+    "releaseSha": "<release-sha>",
+    "releaseTag": "v4.0.0-alpha.2"
+  },
+  "publication": {
+    "url": "https://example.test/.well-known/product/alpha.json",
+    "payloadRoot": "sha256:<64-lowercase-hex>"
+  },
+  "readback": {
+    "status": "passed",
+    "url": "https://example.test/.well-known/product/alpha.json",
+    "payloadRoot": "sha256:<same-root>"
+  },
+  "recovery": {
+    "previousAuthority": "preserved",
+    "rollbackReference": "sha256:<previous-root>"
+  }
+}
+```
+
+Buildchain rejects stale evidence, identity drift, non-public or mutable URLs,
+read-back root drift, and missing recovery evidence. It also rejects
+`standalone-binary-distribution=true` with a final commit command because that
+would queue product mutations after the authority moved. On any command or
+read-back failure, the consumer must leave the previous well-known document
+authoritative; Buildchain does not retry the command behind a successful
+receipt.
+
 If protected branch finalization is interrupted after publish evidence is
 valid, the transaction can stop in `finalizing` and output
 `finalization-needed=true`. A later run resumes from the same transaction state
@@ -374,10 +441,12 @@ the exact generated version-state commit so branch protection can
 validate the automation path without a second build, then uses the generated
 ref update token for the protected ref PATCH. If release finalization
 bookkeeping is still rejected, Buildchain creates or reuses a same-repository
-`buildchain/version-state/*` PR based on the current target channel head and
-leaves the transaction resumable with `finalization-needed=true`. Strict alpha
-bookkeeping remains fail-fast. The reusable wrapper defaults that token to
-`secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token`.
+`buildchain/version-state/*` PR and leaves the transaction resumable with
+`finalization-needed=true`. Strict alpha uses the same protected PR fallback
+for both its target channel and subsequent dev reconciliation. A later
+idempotent run continues only after the provider shows that the PR reached the
+protected branch. The reusable wrapper binds that token to the run-scoped
+`github.token` and rejects user, team, or alternate App bypass actors.
 
 If finalization fails after an exact Git tag, a channel branch, or dev/alpha
 sync ref has already moved, the next run reads the durable `finalizing` state

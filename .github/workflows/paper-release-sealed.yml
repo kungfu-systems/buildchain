@@ -102,6 +102,11 @@ on:
         default: ""
         type: string
         required: false
+      github-governance-receipt-json:
+        description: "Fresh qualifying governance receipt for the exact publication repository and target ref"
+        default: ""
+        type: string
+        required: false
       dry-run:
         default: false
         type: boolean
@@ -152,11 +157,14 @@ jobs:
     needs: publication-candidate
     permissions:
       actions: read
+      checks: read
       contents: read
+      pull-requests: read
     uses: ./.github/workflows/.publication-authority.yml
     with:
       buildchain-repository: ${{ inputs.buildchain-repository }}
       buildchain-ref: ${{ needs.publication-candidate.outputs.runtime-sha }}
+      github-governance-receipt-json: ${{ inputs.github-governance-receipt-json }}
       auto-admission: true
       auto-admission-kind: publication-artifact
       authority-workflow-path: .github/workflows/paper-release-sealed.yml
@@ -173,6 +181,7 @@ jobs:
       evidence-publication-artifact: ${{ needs.publication-candidate.outputs.publication-artifact-name }}
       evidence-controller-artifact: ${{ needs.publication-candidate.outputs.controller-receipt-artifact }}
       dry-run: ${{ inputs.dry-run }}
+    secrets: inherit
 
   publish:
     name: Publish admitted paper candidate
@@ -347,7 +356,7 @@ jobs:
           require-version-state: "false"
           required-status-check: ${{ inputs.required-status-check }}
           generated-status-check-token: ${{ github.token }}
-          generated-ref-update-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+          generated-ref-update-token: ${{ github.token }}
           branch-protection-bypass-apps: ${{ inputs.branch-protection-bypass-apps }}
           branch-protection-bypass-users: ${{ inputs.branch-protection-bypass-users }}
           branch-protection-bypass-teams: ${{ inputs.branch-protection-bypass-teams }}

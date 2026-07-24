@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -293,6 +294,27 @@ test("cleanup restores search list and removes temporary material", () => {
   assert.equal(fs.existsSync(root), false);
 });
 
+test("credential island bundle loads before validating runner inputs", () => {
+  const root = path.resolve(import.meta.dirname, "..");
+  const result = spawnSync(
+    process.execPath,
+    [path.join(root, "actions/macos-credential-island/dist/index.js")],
+    {
+      encoding: "utf8",
+      env: {
+        PATH: process.env.PATH || "",
+      },
+    },
+  );
+  const output = `${result.stdout || ""}${result.stderr || ""}`;
+  assert.equal(result.status, 1);
+  assert.match(
+    output,
+    /macOS credential island requires a macOS runner|Input required and not supplied: source-repository/u,
+  );
+  assert.doesNotMatch(output, /ReferenceError: module is not defined/u);
+});
+
 test("public action and workflow keep credentials outside the build matrix", () => {
   const root = path.resolve(import.meta.dirname, "..");
   const action = fs.readFileSync(
@@ -349,7 +371,19 @@ test("public action and workflow keep credentials outside the build matrix", () 
   assert.match(workflow, /Seal macOS credential-island input/);
   assert.match(
     workflow,
+    /credential-island-caller-owned:\n\s+description:[^\n]+\n\s+default: false\n\s+type: boolean/,
+  );
+  assert.match(
+    workflow,
     /CSC_IDENTITY_AUTO_DISCOVERY: \$\{\{ inputs\.credential-island-macos-app-path != '' && 'false' \|\| '' \}\}/,
+  );
+  assert.match(
+    workflow,
+    /Upload macOS credential-island runtime[\s\S]*?if: \$\{\{ inputs\.credential-island-macos-app-path != '' \}\}/,
+  );
+  assert.match(
+    workflow,
+    /caller-owned credential-island signing must bind its environment in the caller workflow/,
   );
   assert.match(
     workflow,
@@ -381,7 +415,7 @@ test("public action and workflow keep credentials outside the build matrix", () 
   assert.ok(credentialJob);
   assert.match(
     credentialJob,
-    /always\(\)[\s\S]*?needs\.artifact-transfer\.outputs\.mode == 'github-artifacts'[\s\S]*?needs\.relay-artifacts\.result == 'success'/,
+    /always\(\)[\s\S]*?!inputs\.credential-island-caller-owned[\s\S]*?needs\.artifact-transfer\.outputs\.mode == 'github-artifacts'[\s\S]*?needs\.relay-artifacts\.result == 'success'/,
   );
   assert.match(
     credentialJob,
@@ -401,7 +435,7 @@ test("public action and workflow keep credentials outside the build matrix", () 
   );
   assert.match(
     workflow,
-    /BUILDCHAIN_ADDITIONAL_PLATFORM_COUNT: \$\{\{ inputs\.credential-island-macos-app-path != '' && '1' \|\| '0' \}\}/,
+    /BUILDCHAIN_ADDITIONAL_PLATFORM_COUNT: \$\{\{ inputs\.credential-island-macos-app-path != '' && !inputs\.credential-island-caller-owned && '1' \|\| '0' \}\}/,
   );
   assert.doesNotMatch(implementation, /execSync|shell:\s*true/);
   assert.match(implementation, /schema:\s*EVIDENCE_CONTRACT/);

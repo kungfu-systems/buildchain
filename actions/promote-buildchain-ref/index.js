@@ -267,6 +267,7 @@ async function main() {
   const reconciliationWorkspace = core.getInput("reconciliation-workspace");
   const requiredStatusCheck = core.getInput("required-status-check") || "check / check";
   const generatedStatusCheckToken = core.getInput("generated-status-check-token") || token;
+  const generatedPullRequestToken = core.getInput("generated-pull-request-token") || token;
   const generatedRefUpdateToken = core.getInput("generated-ref-update-token") || token;
   const branchProtectionBypassApps = core.getInput("branch-protection-bypass-apps");
   const branchProtectionBypassUsers = core.getInput("branch-protection-bypass-users");
@@ -324,6 +325,8 @@ async function main() {
   const octokit = github.getOctokit(token);
   const statusCheckOctokit =
     generatedStatusCheckToken === token ? octokit : github.getOctokit(generatedStatusCheckToken);
+  const pullRequestOctokit =
+    generatedPullRequestToken === token ? octokit : github.getOctokit(generatedPullRequestToken);
   const refUpdateOctokit =
     generatedRefUpdateToken === token ? octokit : github.getOctokit(generatedRefUpdateToken);
   if (requirePublishSourceLock) {
@@ -361,6 +364,7 @@ async function main() {
     reconciliationWorkspace,
     requiredStatusCheck,
     statusCheckOctokit,
+    pullRequestOctokit,
     refUpdateOctokit,
     branchProtectionBypassApps,
     branchProtectionBypassUsers,
@@ -426,6 +430,10 @@ async function main() {
   );
   core.setOutput("planned-publication-version", plannedPublication?.version || "");
   core.setOutput("planned-publication-exact-tag", plannedPublicationExactTag(plannedPublication));
+  core.setOutput(
+    "planned-release-candidate-version",
+    plannedPublication?.releaseCandidateVersion || "",
+  );
   core.setOutput("public-release-tag", result.publishTransaction?.publicReleaseTag || result.publishTransaction?.exactTag || "");
   core.setOutput("transaction-release-sha", result.publishTransaction?.releaseSha || "");
   core.setOutput("transaction-state-ref", result.publishTransaction?.stateRef || "");
