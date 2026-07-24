@@ -374,12 +374,13 @@
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
         "BUILDCHAIN_ISSUE_TOKEN",
         "BUILDCHAIN_PROMOTION_TOKEN",
+        "BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY",
         "BUILDCHAIN_PUBLICATION_COMMIT_TOKEN",
         "buildchain-issue-app-id",
         "buildchain-issue-app-private-key",
         "buildchain-issue-token"
       ],
-      "secretCount": 8,
+      "secretCount": 9,
       "outputs": [
         "built-source-sha",
         "controller-plan-artifact",
@@ -1592,12 +1593,13 @@
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
         "BUILDCHAIN_ISSUE_TOKEN",
         "BUILDCHAIN_PROMOTION_TOKEN",
+        "BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY",
         "BUILDCHAIN_PUBLICATION_COMMIT_TOKEN",
         "buildchain-issue-app-id",
         "buildchain-issue-app-private-key",
         "buildchain-issue-token"
       ],
-      "secretCount": 8,
+      "secretCount": 9,
       "outputs": [
         "buildchain-channel",
         "built-source-sha",

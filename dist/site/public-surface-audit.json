@@ -805,12 +805,13 @@
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
           "BUILDCHAIN_ISSUE_TOKEN",
           "BUILDCHAIN_PROMOTION_TOKEN",
+          "BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY",
           "BUILDCHAIN_PUBLICATION_COMMIT_TOKEN",
           "buildchain-issue-app-id",
           "buildchain-issue-app-private-key",
           "buildchain-issue-token"
         ],
-        "secretCount": 8,
+        "secretCount": 9,
         "outputs": [
           "built-source-sha",
           "controller-plan-artifact",
@@ -1912,12 +1913,13 @@
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
           "BUILDCHAIN_ISSUE_TOKEN",
           "BUILDCHAIN_PROMOTION_TOKEN",
+          "BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY",
           "BUILDCHAIN_PUBLICATION_COMMIT_TOKEN",
           "buildchain-issue-app-id",
           "buildchain-issue-app-private-key",
           "buildchain-issue-token"
         ],
-        "secretCount": 8,
+        "secretCount": 9,
         "outputs": [
           "buildchain-channel",
           "built-source-sha",
@@ -3888,8 +3890,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "4f93fe74d076b7cb775d270da1510641a8801e6aa72d5d8a3babeead9d749f53",
-    "workflowRegistryDigest": "24124f493469840ca7eefa2b5a445338e73712464e7aa7b8040f6b55a9f86075",
-    "pageRegistryDigest": "2320fb80ff46ba132a13a8d4c8c83b038ab5b727abd76976041c6631c98953ba"
+    "workflowRegistryDigest": "105aa4c411abad4f35e9a9dfc816af6e0ccaac2809bec4854bc5675bf1e9c172",
+    "pageRegistryDigest": "cb540b36d7f7ca8e23008b41ae3efcde5e48affc6f1b196baa68affc433446dc"
   },
   "comparison": {
     "missingCliRegistry": [],
