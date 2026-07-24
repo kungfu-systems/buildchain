@@ -883,6 +883,27 @@ test("publication authority recollects live App-authenticated governance instead
     authorityWorkflow,
     /const receipt = JSON\.parse\(serialized\)/,
   );
+  assert.match(
+    authorityWorkflow,
+    /name: Independently verify publication admission[\s\S]+?permissions:\n      actions: read\n      checks: read\n      contents: read\n      pull-requests: read/,
+  );
+  for (const workflow of [
+    ".binary-release-assets.yml",
+    ".release-candidate-promote.yml",
+    ".web-surface.yml",
+    "paper-release.yml",
+    "paper-release-sealed.yml",
+  ]) {
+    const source = fs.readFileSync(
+      new URL(`../.github/workflows/${workflow}`, import.meta.url),
+      "utf8",
+    );
+    assert.match(
+      source,
+      /permissions:\n      actions: read\n      checks: read\n      contents: read\n      pull-requests: read\n    uses: \.\/\.github\/workflows\/\.publication-authority\.yml/,
+      workflow,
+    );
+  }
   for (const workflow of [
     ".release-candidate-promote.yml",
     "paper-release.yml",

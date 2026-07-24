@@ -157,7 +157,9 @@ jobs:
     needs: publication-candidate
     permissions:
       actions: read
+      checks: read
       contents: read
+      pull-requests: read
     uses: ./.github/workflows/.publication-authority.yml
     with:
       buildchain-repository: ${{ inputs.buildchain-repository }}
