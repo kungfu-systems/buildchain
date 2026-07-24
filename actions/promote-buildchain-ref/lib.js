@@ -4706,6 +4706,58 @@ async function promoteBuildchainRefs({
         return;
       }
     }
+    const matchingCurrentReleaseRecoveryPullRequest =
+      await findMatchingReleaseRecoveryPullRequest({ commitSha, targetRef });
+    if (matchingCurrentReleaseRecoveryPullRequest) {
+      const recoveryBaseSha =
+        matchingCurrentReleaseRecoveryPullRequest.base?.sha;
+      const recoveryHeadSha =
+        matchingCurrentReleaseRecoveryPullRequest.head?.sha;
+      if (recoveryBaseSha && recoveryHeadSha) {
+        const exactCandidateSha =
+          exactReleaseCandidateSource?.promotionChannelSha;
+        if (
+          recoveryBaseSha !== alphaSha &&
+          recoveryBaseSha !== exactCandidateSha
+        ) {
+          throw new Error(
+            `Release-line recovery PR base ${recoveryBaseSha} must equal ${alphaTag} ${alphaSha} or the exact release candidate ${exactCandidateSha || "(missing)"}`,
+          );
+        }
+        const recoveryHead = await getCommitInfo(
+          octokit,
+          owner,
+          repo,
+          recoveryHeadSha,
+        );
+        if (recoveryHead.treeSha !== commit.treeSha) {
+          throw new Error(
+            `Release-line recovery PR head tree ${recoveryHead.treeSha} must equal promotion tree ${commit.treeSha}`,
+          );
+        }
+        await assertOnlyAllowedReleaseRecoveryChangesBetween({
+          baseSha: recoveryBaseSha,
+          headSha: recoveryHeadSha,
+          allowedPaths,
+        });
+      } else {
+        await assertOnlyAllowedReleaseRecoveryChangesBetween({
+          baseSha: alphaSha,
+          headSha: commitSha,
+          allowedPaths,
+        });
+      }
+      updates.push({
+        action: "accepted-exact-release-recovery-source",
+        sha: commitSha,
+        recoveryBaseSha,
+        recoveryHeadSha,
+        alphaTag,
+        alphaSha,
+        targetRef,
+      });
+      return;
+    }
     for (const parentSha of commit.parents) {
       const parent = await getCommitInfo(octokit, owner, repo, parentSha);
       if (parent.treeSha === alphaTreeSha) {

@@ -10256,9 +10256,13 @@ test("strict release promotion accepts line-scoped buildchain recovery PRs", asy
               ? [
                   {
                     merged_at: "2026-07-01T00:00:00Z",
-                    base: { ref: "release/v1/v1.0" },
+                    base: {
+                      ref: "release/v1/v1.0",
+                      sha: alphaSha,
+                    },
                     head: {
                       ref: "fix/release-line-v1-v1.0-finalization-recovery",
+                      sha: SHA,
                       repo: { full_name: "kungfu-systems/buildchain" },
                     },
                   },
