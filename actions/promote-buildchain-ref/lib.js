@@ -3995,19 +3995,13 @@ async function promoteBuildchainRefs({
   };
 
   const readRefSha = async (ref) => {
-    try {
-      const { data: refData } = await octokit.rest.git.getRef({
-        owner,
-        repo,
-        ref,
-      });
-      return refData.object.sha;
-    } catch (error) {
-      if (notFound(error)) {
-        return undefined;
-      }
-      throw error;
-    }
+    const refData = await getGitRefOrUndefined({
+      octokit,
+      owner,
+      repo,
+      ref,
+    });
+    return refData?.object?.sha;
   };
 
   const updateBranch = async (branch, branchSha, action = "updated", protectedUpdate) => {
@@ -5174,19 +5168,13 @@ async function promoteBuildchainRefs({
   };
 
   const shouldPromoteMajorTag = async () => {
-    try {
-      await octokit.rest.git.getRef({
-        owner,
-        repo,
-        ref: `tags/v${rule.major}.${rule.minor + 1}`,
-      });
-      return false;
-    } catch (error) {
-      if (notFound(error)) {
-        return true;
-      }
-      throw error;
-    }
+    const nextMinorRef = await getGitRefOrUndefined({
+      octokit,
+      owner,
+      repo,
+      ref: `tags/v${rule.major}.${rule.minor + 1}`,
+    });
+    return !nextMinorRef;
   };
 
   let latestPublishTransaction;
