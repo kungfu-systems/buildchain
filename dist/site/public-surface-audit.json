@@ -2154,6 +2154,7 @@
           "branch-protection-bypass-users",
           "dry-run",
           "expected-publication-version",
+          "generated-pull-request-token",
           "generated-ref-update-token",
           "generated-status-check-token",
           "github-release",
@@ -2212,7 +2213,7 @@
           "transaction-state-path",
           "verification-command"
         ],
-        "inputCount": 63
+        "inputCount": 64
       },
       {
         "id": "report-buildchain-issue",
@@ -3909,8 +3910,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "5ba7fd93a13993b05767b6f02d0626a7347f25c3d7cd4589ed4f70028c1f1bd1",
-    "workflowRegistryDigest": "1c2d1662c528b7762c45f626b815387430b89f8d062085ca47fc7205460c12a5",
-    "pageRegistryDigest": "e51c48e1bb54a03d392e705f31dc7fb49b0d78a5975b5f4797558d35b18272a0"
+    "workflowRegistryDigest": "c2abf629b205a96f536e8758c3d9cdb3eade6945294fe278774877ef41d90b60",
+    "pageRegistryDigest": "35cc8794b15ffe6e8927cad756821aabbcbf0287cbf78fdd59e1c4bf60d52f7b"
   },
   "comparison": {
     "missingCliRegistry": [],

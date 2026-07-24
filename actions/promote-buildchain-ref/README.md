@@ -405,16 +405,16 @@ governance semantics:
   with either the `verification-command` input or `buildchain.toml`
   `lifecycle.verify` before any tags or channel refs move.
 
-The promotion workflow should use `BUILDCHAIN_PROMOTION_TOKEN` for non-dry-run
-promotion. The token is the buildchain equivalent of the old ABV runner release
-authority: protected branch review and check rules guard human channel merges,
-while the reusable build trust gate now checks the source-lock channel HEAD and
-merged same-repository PR lineage before heavy build runners start. This action
-still independently rechecks PR lineage, alpha/release tree equivalence, and
-generated version-state verification before moving channel refs and tags.
-Generated version-state direct ref updates can use a separate
-`generated-ref-update-token`; the reusable wrapper binds it to the run-scoped
-`github.token`.
+The reusable promotion workflow keeps governance reads, generated status checks,
+and generated ref updates on the run-scoped `github.token`. When branch
+protection rejects generated bookkeeping, it supplies `BUILDCHAIN_PROMOTION_TOKEN`
+only through `generated-pull-request-token` so the same-repository recovery PR can
+be listed or created without broadening the governance client. Protected branch
+review and check rules guard human channel merges, while the reusable build trust
+gate checks the source-lock channel HEAD and merged same-repository PR lineage
+before heavy build runners start. This action still independently rechecks PR
+lineage, alpha/release tree equivalence, and generated version-state verification
+before moving channel refs and tags.
 The reusable `release-candidate-promote.yml` wrapper defaults
 `branch-protection-bypass-apps` to `github-actions`, so flow-internal promotion
 can complete generated `dev`/`alpha`/`release` bookkeeping while ordinary human
