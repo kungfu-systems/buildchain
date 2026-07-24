@@ -212,7 +212,7 @@
         "promotion reuses PR-stage release-candidate artifacts and does not run the heavy native build matrix"
       ],
       "breakingDigest": "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0",
-      "auditDigest": "sha256:dd9c3179fd7ccd0736396f4924c297bf7ce3452ea6bb9c423d32f15455761c9e"
+      "auditDigest": "sha256:8eea73b0f1dafd490b8bbbfc41fb345055b457097e16a8c05fe6258d43bd6983"
     },
     {
       "contractVersion": 1,
@@ -663,7 +663,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:6cc4353f5c2ae7b5e260b38b1810e4216e7ac31528ffe8da850d22e73246b6f6"
+      "auditDigest": "sha256:2b5ddfdf209121d62d41bd8565094e4df5e2314a3f26e5e71ed6422c7fd6f69e"
     },
     {
       "contractVersion": 1,
@@ -2928,7 +2928,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:015d8de793adbd4c539416be7d7512e18cc92097e629b0203fa06d2c183e98bd",
-      "auditDigest": "sha256:dd9c3179fd7ccd0736396f4924c297bf7ce3452ea6bb9c423d32f15455761c9e"
+      "auditDigest": "sha256:8eea73b0f1dafd490b8bbbfc41fb345055b457097e16a8c05fe6258d43bd6983"
     },
     {
       "contractVersion": 1,
@@ -3126,5 +3126,5 @@
     }
   ],
   "compatibilityDigest": "sha256:df13c3b8066068925ce847b31002201d533034d10d342542422db3a665c10475",
-  "contractDigest": "sha256:06320dcd2ff82c1da78a29b4032f2fb8ee7e52e69e73b13439c0152892c21a5d"
+  "contractDigest": "sha256:1e89139f0def79b96c3977a99b17ec2a9736fd6210825cd619e7403b8817ba40"
 }

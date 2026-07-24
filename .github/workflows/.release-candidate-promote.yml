@@ -1025,6 +1025,7 @@ jobs:
       release-candidate-artifact: ${{ steps.rc.outputs.release-candidate-artifact }}
       release-candidate-outcome: ${{ steps.rc.outcome }}
       promotion-outcome: ${{ steps.promote.outcome }}
+      finalization-needed: ${{ steps.promote.outputs.finalization-needed }}
       publication-commit-evidence-path: ${{ steps.publication-commit.outputs.evidence-path }}
       publication-commit-evidence-digest: ${{ steps.publication-commit.outputs.evidence-digest }}
       publication-commit-url: ${{ steps.publication-commit.outputs.public-url }}
@@ -1563,7 +1564,7 @@ jobs:
 
       - name: Bundle release-candidate-promotion controller evidence
         id: controller-evidence
-        if: ${{ always() && !inputs.dry-run && steps.promote.outcome == 'success' && steps.promote.outputs.finalization-needed != 'true' }}
+        if: ${{ always() && !inputs.dry-run && steps.promote.outcome == 'success' }}
         shell: bash
         env:
           RELEASE_CANDIDATE_PASSPORT: ${{ steps.routing-evidence.outputs.candidate-passport-path || steps.rc.outputs.release-candidate-passport-path }}
@@ -1741,9 +1742,9 @@ jobs:
         env:
           BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
           BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
-            [{"id":"preflight","status":"${{ needs.preflight.result }}"},{"id":"admit-release-candidate","status":"${{ needs.release-candidate-preflight.result == 'success' && needs.promote.outputs.release-candidate-outcome || needs.release-candidate-preflight.result }}"},{"id":"publication-authority","status":"${{ needs.promote.result == 'success' && 'success' || needs.publication-authority.result }}"},{"id":"publish","status":"${{ inputs.dry-run && 'skipped' || needs.promote.outputs.promotion-outcome || needs.promote.result }}"},{"id":"passport","status":"${{ inputs.dry-run && 'skipped' || needs.promote.outputs.promotion-outcome || needs.promote.result }}"},{"id":"aggregate","status":"${{ needs.promote.result }}"}]
+            [{"id":"preflight","status":"${{ needs.preflight.result }}"},{"id":"admit-release-candidate","status":"${{ needs.release-candidate-preflight.result == 'success' && needs.promote.outputs.release-candidate-outcome || needs.release-candidate-preflight.result }}"},{"id":"publication-authority","status":"${{ needs.promote.result == 'success' && 'success' || needs.publication-authority.result }}"},{"id":"publish","status":"${{ inputs.dry-run && 'skipped' || needs.promote.outputs.finalization-needed == 'true' && 'partial' || needs.promote.outputs.promotion-outcome || needs.promote.result }}"},{"id":"passport","status":"${{ inputs.dry-run && 'skipped' || needs.promote.outputs.finalization-needed == 'true' && 'partial' || needs.promote.outputs.promotion-outcome || needs.promote.result }}"},{"id":"aggregate","status":"${{ needs.promote.outputs.finalization-needed == 'true' && 'partial' || needs.promote.result }}"}]
           BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ !inputs.dry-run && needs.promote.result == 'success' && '[{"kind":"release-candidate-passport","path":".buildchain/controller/promotion-evidence/release-candidate-passport.json"},{"kind":"publish-evidence","path":".buildchain/controller/promotion-evidence/publish-evidence.json"},{"kind":"release-passport","path":".buildchain/controller/promotion-evidence/release-passport.json"}]' || '[]' }}
-          BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ inputs.dry-run && 'promotion-dry-run' || needs.promote.result == 'success' && '' || needs.preflight.outputs.action == 'noop' && 'promotion-superseded' || 'promotion-incomplete' }}
+          BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ inputs.dry-run && 'promotion-dry-run' || needs.promote.outputs.finalization-needed == 'true' && 'promotion-finalization-pending' || needs.promote.result == 'success' && '' || needs.preflight.outputs.action == 'noop' && 'promotion-superseded' || 'promotion-incomplete' }}
           BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Release-candidate promotion did not complete successfully
           BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: buildchain-release-promotion-controller-receipt-${{ needs.preflight.outputs.requested-sha }}
           BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/receipt.json
