@@ -5,7 +5,10 @@ import {
   collectPublicSurfaceReverseAudit,
 } from "../packages/core/public-surface-audit.js";
 import { evaluateBuildchainContractLock } from "../packages/core/buildchain-contract.js";
-import { resolveSelfDogfoodMajor } from "../packages/core/self-dogfood-version.js";
+import {
+  contractForSelfDogfoodEvaluation,
+  resolveSelfDogfoodMajor,
+} from "../packages/core/self-dogfood-version.js";
 import { generateChannelBuildWorkflow } from "./generate-channel-build-workflow.mjs";
 import {
   generateChannelPromotionWorkflow,
@@ -153,7 +156,10 @@ if (selfDogfoodAlphaLock.buildchain?.compatibilityPolicy !== "major-compatible")
 }
 const selfDogfoodAlphaEvaluation = evaluateBuildchainContractLock({
   lock: selfDogfoodAlphaLock,
-  current: currentBuildchainContract,
+  current: contractForSelfDogfoodEvaluation({
+    currentContract: currentBuildchainContract,
+    majorResolution: selfDogfoodMajorResolution,
+  }),
   runtimeRef: `v${selfDogfoodMajor}-alpha`,
   runtimeSha: "current-development-contract",
   runtimeClass: "alpha",
