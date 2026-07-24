@@ -5910,6 +5910,124 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   );
 });
 
+test("explicit recovery finalizes an ancestry-bound published transaction without replaying publication", async () => {
+  const cwd = makeTempWorkspace({});
+  const version = "1.0.0";
+  const exactTag = `v${version}`;
+  const oldSourceSha = "1".repeat(40);
+  const oldReleaseSha = "2".repeat(40);
+  const newSourceSha = "3".repeat(40);
+  const newReleaseSha = "4".repeat(40);
+  const artifact = {
+    kind: "npm",
+    name: "@kungfu-tech/buildchain",
+    ref: version,
+    digest: "sha512:published",
+  };
+  const statePath = path.join(
+    cwd,
+    ".buildchain/release-state/1.0.0.json",
+  );
+  const evidencePath = path.join(
+    cwd,
+    ".buildchain/release-evidence/1.0.0/evidence.json",
+  );
+  fs.mkdirSync(path.dirname(evidencePath), { recursive: true });
+  fs.writeFileSync(evidencePath, JSON.stringify({
+    schema: 1,
+    version,
+    channel: "release",
+    source_sha: oldSourceSha,
+    release_sha: oldReleaseSha,
+    target_ref: "release/v1/v1.0",
+    release_material_sha: oldReleaseSha,
+    publish_tooling_sha: oldReleaseSha,
+    artifacts: [artifact],
+  }, null, 2) + "\n");
+
+  const { octokit, commits } = createGitMock();
+  commits.set(oldReleaseSha, {
+    sha: oldReleaseSha,
+    tree: { sha: `tree-${oldReleaseSha}` },
+    parents: [],
+  });
+  commits.set(newReleaseSha, {
+    sha: newReleaseSha,
+    tree: { sha: `tree-${newReleaseSha}` },
+    parents: [{ sha: oldReleaseSha }],
+  });
+  await persistDurableReleaseTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    transaction: {
+      schema: 1,
+      id: "published-stable-recovery",
+      repository: "kungfu-systems/buildchain",
+      target_ref: "release/v1/v1.0",
+      source_sha: oldSourceSha,
+      release_sha: oldReleaseSha,
+      release_material_sha: oldReleaseSha,
+      publish_tooling_sha: oldReleaseSha,
+      version,
+      exact_tag: exactTag,
+      channel: "release",
+      line: "v1.0",
+      version_strategy: "",
+      lifecycle_identity: "lifecycle.publish",
+      state_ref: "buildchain/release-state/1-0-0",
+      state_path: ".buildchain/release-state/1.0.0.json",
+      evidence_path: ".buildchain/release-evidence/1.0.0/evidence.json",
+      state: "published",
+      previous_state: "publishing",
+      actor: "codex",
+      run_id: "1",
+      superseded_by: "",
+      failure: "",
+      artifacts: [artifact],
+      evidence: [".buildchain/release-evidence/1.0.0/evidence.json"],
+      created_at: "2026-07-01T00:00:00.000Z",
+      updated_at: "2026-07-01T00:00:00.000Z",
+    },
+    evidencePath,
+  });
+
+  const args = {
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    targetRef: "release/v1/v1.0",
+    sourceSha: newSourceSha,
+    releaseSha: newReleaseSha,
+    version,
+    exactTag,
+    channel: "release",
+    line: "v1.0",
+    publishTransaction: true,
+    publishEvidencePath: evidencePath,
+    transactionStatePath: statePath,
+    publishRequiredArtifactsJson: JSON.stringify([artifact]),
+  };
+
+  await assert.rejects(
+    runPublishTransaction(args),
+    /release transaction identity mismatch/,
+  );
+
+  const recovered = await runPublishTransaction({
+    ...args,
+    explicitOverride: true,
+  });
+
+  assert.equal(recovered.transaction.id, "published-stable-recovery");
+  assert.equal(recovered.transaction.source_sha, oldSourceSha);
+  assert.equal(recovered.transaction.release_sha, oldReleaseSha);
+  assert.equal(recovered.transaction.state, "published");
+  assert.equal(recovered.validation, undefined);
+});
+
 test("publish transaction durable ref updates when create races existing ref visibility", async () => {
   const cwd = makeTempWorkspace({});
   const statePath = path.join(cwd, ".buildchain/release-state/1.0.0.json");
