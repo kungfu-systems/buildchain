@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -43,6 +44,82 @@ async function withFixtureAsync(fn) {
     return await fn(fixture);
   } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
+  }
+}
+
+function writeInstallerPublicationFixture(fixture, { appendOnly = true } = {}) {
+  const dist = path.join(fixture, "dist");
+  const immutablePath = "installers/v1/alpha/0123456789abcdef";
+  fs.mkdirSync(path.join(dist, immutablePath), { recursive: true });
+  fs.writeFileSync(path.join(dist, "index.html"), "hello\n");
+  const assets = [
+    ["install.sh", Buffer.from("#!/bin/sh\nexit 0\n")],
+    ["install.ps1", Buffer.from("exit 0\r\n")],
+  ].map(([name, bytes]) => {
+    fs.writeFileSync(path.join(dist, name), bytes);
+    fs.writeFileSync(path.join(dist, immutablePath, name), bytes);
+    return {
+      name,
+      contentType: "text/plain; charset=utf-8",
+      size: bytes.length,
+      digest: `sha256:${createHash("sha256").update(bytes).digest("hex")}`,
+      friendlyUrl: `https://libkungfu.dev/${name}`,
+      immutableUrl: `https://libkungfu.dev/${immutablePath}/${name}`,
+    };
+  });
+  fs.writeFileSync(
+    path.join(dist, "installer-publication.json"),
+    `${JSON.stringify({
+      schema: "kungfu.bootstrap-installer-publication/v1",
+      installerVersion: "v1",
+      channel: "alpha",
+      sourceCommit: "a".repeat(40),
+      channelUrl: "https://releases.kungfu.tech/channels/alpha.json",
+      channelPayloadRoot: `sha256:${"1".repeat(64)}`,
+      channelFileDigest: `sha256:${"2".repeat(64)}`,
+      releasePassport: {
+        ref: "buildchain:release-candidate-passport/fixture",
+        root: `sha256:${"3".repeat(64)}`,
+      },
+      immutablePath,
+      entries: [{
+        platform: "linux",
+        architecture: "x64",
+        version: "4.0.0-alpha.1",
+        sourceCommit: "a".repeat(40),
+        manifestRoot: `sha256:${"4".repeat(64)}`,
+        artifactRoot: `sha256:${"5".repeat(64)}`,
+        artifactUrl:
+          "https://github.com/kungfu-systems/kungfu/releases/download/v4.0.0-alpha.1/kungfu-cli-linux-x64.tar.gz",
+        artifactSize: 4096,
+        artifactDigest: `sha256:${"6".repeat(64)}`,
+        artifactSignature: "sigstore:fixture",
+        archiveName: "kungfu-cli-linux-x64.tar.gz",
+        archiveBase: "kungfu-cli-linux-x64",
+      }],
+      assets,
+    }, null, 2)}\n`,
+  );
+  if (appendOnly) {
+    fs.writeFileSync(
+      path.join(dist, "manifest.json"),
+      `${JSON.stringify({
+        schemaVersion: 1,
+        contract: "kungfu-bootstrap-installer-web-surface/v1",
+        archivePolicy: {
+          contract: "kungfu-buildchain-publication-archive-policy",
+          deploymentBoundary: "append-only immutable version prefixes",
+        },
+        installerPublication: "installer-publication.json",
+        publications: [{
+          id: "kungfu-bootstrap-installer-alpha",
+          versions: [{
+            version: `sha256:${"1".repeat(64)}`,
+            immutablePath: `/${immutablePath}/`,
+          }],
+        }],
+      }, null, 2)}\n`,
+    );
   }
 }
 
@@ -128,6 +205,65 @@ test("web-surface deploy plan emits deterministic manifest without touching AWS"
         "write-deployment-manifest",
         "invalidate-cdn",
       ],
+    );
+  });
+});
+
+test("web-surface deploy welds installer bytes, append-only policy, and cache metadata", () => {
+  withFixture((fixture) => {
+    writeInstallerPublicationFixture(fixture);
+    const plan = planWebSurfaceDeploy({
+      cwd: fixture,
+      channel: "preview",
+      alias: "sha-aaaaaaaaaaaa",
+      sourceSha: "a".repeat(40),
+      deployedAt: "2026-07-24T00:00:00.000Z",
+    });
+    assert.equal(plan.manifest.installerPublicationEvidence.state, "verified");
+    assert.match(plan.manifest.installerPublicationEvidence.evidenceRoot, /^sha256:[a-f0-9]{64}$/);
+
+    const calls = [];
+    applyWebSurfaceDeploy({
+      cwd: fixture,
+      plan,
+      dryRun: false,
+      commandRunner(operation) {
+        calls.push(operation);
+        return { exitCode: 0, stdout: "", stderr: "" };
+      },
+    });
+    const immutableSync = calls.find((operation) => operation.action === "sync-immutable-artifact");
+    assert.deepEqual(immutableSync.args.slice(-4), [
+      "--content-type",
+      "application/octet-stream",
+      "--cache-control",
+      "public,max-age=31536000,immutable",
+    ]);
+    const friendly = calls.filter((operation) => operation.action === "publish-friendly-installer");
+    assert.deepEqual(
+      friendly.map((operation) => operation.installer.name).sort(),
+      ["install.ps1", "install.sh"],
+    );
+    assert.equal(
+      friendly.every((operation) =>
+        operation.args.includes("public,max-age=300,must-revalidate")),
+      true,
+    );
+  });
+});
+
+test("web-surface deploy rejects installer publication without append-only coverage", () => {
+  withFixture((fixture) => {
+    writeInstallerPublicationFixture(fixture, { appendOnly: false });
+    assert.throws(
+      () => planWebSurfaceDeploy({
+        cwd: fixture,
+        channel: "preview",
+        alias: "sha-aaaaaaaaaaaa",
+        sourceSha: "a".repeat(40),
+        deployedAt: "2026-07-24T00:00:00.000Z",
+      }),
+      /not covered by append-only publication policy/,
     );
   });
 });
