@@ -2251,9 +2251,12 @@ test("promote wrapper exposes controlled branch-protection review bypass", () =>
   assert.match(action, /branch-protection-bypass-apps:/);
   assert.match(action, /branch-protection-bypass-users:/);
   assert.match(action, /branch-protection-bypass-teams:/);
+  assert.match(action, /generated-pull-request-token:/);
   assert.match(action, /generated-ref-update-token:/);
   assert.match(implementation, /branchProtectionBypassApps/);
   assert.match(implementation, /generatedRefUpdateToken/);
+  assert.match(implementation, /generatedPullRequestToken/);
+  assert.match(implementation, /pullRequestOctokit/);
   assert.match(implementation, /refUpdateOctokit/);
   assert.match(wrapper, /branch-protection-bypass-apps:/);
   assert.match(wrapper, /default: "github-actions"/);
@@ -2263,11 +2266,12 @@ test("promote wrapper exposes controlled branch-protection review bypass", () =>
   assert.match(wrapper, /checks: write/);
   assert.match(wrapper, /pull-requests: write/);
   assert.equal(publicWrapper.match(/pull-requests: write/g)?.length, 3);
+  assert.match(wrapper, /token: \$\{\{ github\.token \}\}/);
+  assert.match(wrapper, /generated-status-check-token: \$\{\{ github\.token \}\}/);
   assert.match(
     wrapper,
-    /token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token \}\}/,
+    /generated-pull-request-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token \}\}/,
   );
-  assert.match(wrapper, /generated-status-check-token: \$\{\{ github\.token \}\}/);
   assert.match(wrapper, /BUILDCHAIN_PROMOTION_TOKEN:\n\s+description:/);
   assert.match(
     wrapper,

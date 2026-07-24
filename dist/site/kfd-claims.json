@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "78fef7571f7d10ee5b01710c7554afa23e15535ac19ba1393f75e66d3b88c297",
+    "sha256": "9630ecd8a84c94ae0782aa7fbd22caeb027cca9f9fa40d2c3fac6f5b9ae1735e",
     "summary": {
       "cliCommandCount": 87,
       "workflowCount": 52,
@@ -228,7 +228,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "78fef7571f7d10ee5b01710c7554afa23e15535ac19ba1393f75e66d3b88c297",
+      "sha256": "9630ecd8a84c94ae0782aa7fbd22caeb027cca9f9fa40d2c3fac6f5b9ae1735e",
       "summary": {
         "cliCommandCount": 87,
         "workflowCount": 52,
@@ -4203,7 +4203,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 63,
+          "inputCount": 64,
           "inputs": [
             "allow-repository",
             "branch-protection-bypass-apps",
@@ -4211,6 +4211,7 @@
             "branch-protection-bypass-users",
             "dry-run",
             "expected-publication-version",
+            "generated-pull-request-token",
             "generated-ref-update-token",
             "generated-status-check-token",
             "github-release",

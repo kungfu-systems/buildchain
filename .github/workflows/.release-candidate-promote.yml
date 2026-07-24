@@ -1419,7 +1419,7 @@ jobs:
         id: promote
         uses: ./.buildchain/runtime/actions/promote-buildchain-ref
         with:
-          token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+          token: ${{ github.token }}
           sha: ${{ needs.preflight.outputs.requested-sha }}
           target-ref: ${{ needs.preflight.outputs.target-ref }}
           dry-run: ${{ inputs.dry-run }}
@@ -1428,6 +1428,7 @@ jobs:
           reconciliation-workspace: ${{ steps.reconciliation.outputs.workspace }}
           required-status-check: ${{ inputs.required-status-check }}
           generated-status-check-token: ${{ github.token }}
+          generated-pull-request-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
           generated-ref-update-token: ${{ github.token }}
           branch-protection-bypass-apps: ${{ inputs.branch-protection-bypass-apps }}
           branch-protection-bypass-users: ${{ inputs.branch-protection-bypass-users }}
