@@ -5748,6 +5748,7 @@ test("release promotion does not resume an ancestor transaction for another plan
       tag: "v1.0.1",
       publicTag: "v1.0.1",
       sha: mergeSha,
+      releaseCandidateVersion: "1.0.1-alpha.0",
     },
   );
   assert.equal(refs.get("tags/v1.0.0"), oldTagSha);
