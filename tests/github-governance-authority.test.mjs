@@ -670,14 +670,10 @@ test("ruleset policy rollout compiles the exact target descriptor with rollback"
       strictRequiredChecks: targetPolicy.strictRequiredChecks,
       requiredCheckBindings: targetPolicy.requiredCheckBindings,
       requiredApprovals: 1,
-      allowedBypassActors: targetPolicy.allowedBypassActors,
+      rulesetBypassActors: [],
     },
   });
-  assert.deepEqual(plan.operations[0].body.bypass_actors, [{
-    actor_id: 15368,
-    actor_type: "Integration",
-    bypass_mode: "always",
-  }]);
+  assert.deepEqual(plan.operations[0].body.bypass_actors, []);
   assert.deepEqual(
     plan.operations[0].body.rules.find((rule) => rule.type === "pull_request").parameters,
     {
@@ -714,6 +710,28 @@ test("ruleset policy rollout compiles the exact target descriptor with rollback"
     plan.expectedObservation.rulesetRoot,
     githubGovernanceDigest(plan.operations[0].body),
   );
+  const installedAppPlan = createGithubRulesetGovernanceRolloutPlan({
+    repository: "kungfu-systems/buildchain",
+    targetRef: "alpha/v2/v2.14",
+    rulesetId: 19518955,
+    inventory: before,
+    rollbackSnapshot: before,
+    desiredProtection: {
+      strictRequiredChecks: targetPolicy.strictRequiredChecks,
+      requiredCheckBindings: targetPolicy.requiredCheckBindings,
+      requiredApprovals: 1,
+      rulesetBypassActors: [{
+        actorType: "Integration",
+        actorId: 4212844,
+        bypassMode: "always",
+      }],
+    },
+  });
+  assert.deepEqual(installedAppPlan.operations[0].body.bypass_actors, [{
+    actor_id: 4212844,
+    actor_type: "Integration",
+    bypass_mode: "always",
+  }]);
   assert.throws(() => createGithubRulesetGovernanceRolloutPlan({
     repository: "kungfu-systems/buildchain",
     targetRef: "release/v2/v2.14",

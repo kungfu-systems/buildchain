@@ -1261,7 +1261,7 @@ export function createGithubRulesetGovernanceRolloutPlan({
   const desired = {
     ...before,
     bypass_actors: providerRulesetBypassActors(
-      desiredProtection?.allowedBypassActors,
+      desiredProtection?.rulesetBypassActors,
     ),
     rules: desiredRules,
   };
@@ -1276,7 +1276,7 @@ export function createGithubRulesetGovernanceRolloutPlan({
     rollbackSnapshotRoot: githubGovernanceDigest(before),
     operations: [{ method: "PUT", endpoint, body: desired }],
     impact: [
-      "replace ruleset bypass actors with the exact target-bound authority set",
+      "replace ruleset bypass actors with the exact provider-admitted desired set",
       "require fresh Code Owner review and resolved review threads",
       "bind required status checks and strictness to the authoritative target descriptor",
       "preserve unrelated ruleset rules and exact target conditions",
