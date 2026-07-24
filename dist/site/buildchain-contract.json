@@ -551,7 +551,7 @@
         "README badge block checks and writes are generated from machine-readable repository facts"
       ],
       "breakingDigest": "sha256:90a73892b2d6c214048448d5f45df75639bdf7b7e8fefd9c596e04b087407bcc",
-      "auditDigest": "sha256:5a1d197e6e55bb184d54612de973052492b1c00e28a15b9dd579ab20fb0ca11e"
+      "auditDigest": "sha256:a6f8915ef3ade05f04efff98c1723f7562e2b4fc83dcdb1e7decead0e5ac7533"
     },
     {
       "contractVersion": 1,
@@ -641,7 +641,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:e77d1c6e3f92a0e8c4a844c9f1a8674251c47b0fa4508d9ed75af5fa781c26eb"
+      "auditDigest": "sha256:7b5cd63815a1cb0733ecf0ad198277aff2a10fdb59acb7ab2024085b05dc0639"
     },
     {
       "contractVersion": 1,
@@ -3111,5 +3111,5 @@
     }
   ],
   "compatibilityDigest": "sha256:df13c3b8066068925ce847b31002201d533034d10d342542422db3a665c10475",
-  "contractDigest": "sha256:41cf2bf535f97c59956e8b420867e8e346425acf767664bd238dcec850b78851"
+  "contractDigest": "sha256:1c88f1a28ec23c5ebeb3e06a72abe5c544fa26e1223ed3eff47099703d3a7255"
 }

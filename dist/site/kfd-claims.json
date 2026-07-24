@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "154a3ed077f7c8cc13f650244eac27a1d6810043b43d685fd66a5924366c02a3",
+    "sha256": "6489cd56afba9476b9055adca3146f53f636d66148ea2c6748ac4b4a2791f0a3",
     "summary": {
       "cliCommandCount": 87,
       "workflowCount": 52,
       "actionCount": 5,
       "sitePageCount": 54,
-      "docCommandRefCount": 273,
+      "docCommandRefCount": 276,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -228,13 +228,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "154a3ed077f7c8cc13f650244eac27a1d6810043b43d685fd66a5924366c02a3",
+      "sha256": "6489cd56afba9476b9055adca3146f53f636d66148ea2c6748ac4b4a2791f0a3",
       "summary": {
         "cliCommandCount": 87,
         "workflowCount": 52,
         "actionCount": 5,
         "sitePageCount": 54,
-        "docCommandRefCount": 273,
+        "docCommandRefCount": 276,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -1891,7 +1891,7 @@
         },
         {
           "id": "cli:github-governance",
-          "name": "buildchain github-governance <plan|apply|rollback> ...",
+          "name": "buildchain github-governance <plan|apply|rollback|protection-policy-plan|ruleset-policy-plan> ...",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
