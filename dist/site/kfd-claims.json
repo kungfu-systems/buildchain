@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "daf4884e74aa11da3de0f5379f74d30285f44dd4eef838da71cb29cdf179cb07",
+    "sha256": "104e69d4005f1a1bf92b7be1c0c7ccf62fad313e5c4003b3e01faf750369fc61",
     "summary": {
       "cliCommandCount": 87,
       "workflowCount": 52,
@@ -228,7 +228,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "daf4884e74aa11da3de0f5379f74d30285f44dd4eef838da71cb29cdf179cb07",
+      "sha256": "104e69d4005f1a1bf92b7be1c0c7ccf62fad313e5c4003b3e01faf750369fc61",
       "summary": {
         "cliCommandCount": 87,
         "workflowCount": 52,
@@ -2757,7 +2757,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 64,
+          "inputCount": 65,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -2785,6 +2785,7 @@
             "checkout-cache-mode",
             "checkout-cache-reference-repository-template",
             "checkout-cache-timeout-seconds",
+            "credential-island-caller-owned",
             "credential-island-environment",
             "credential-island-macos-app-path",
             "credential-island-macos-platform-id",
@@ -3377,7 +3378,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 67,
+          "inputCount": 68,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -3408,6 +3409,7 @@
             "checkout-cache-mode",
             "checkout-cache-reference-repository-template",
             "checkout-cache-timeout-seconds",
+            "credential-island-caller-owned",
             "credential-island-environment",
             "credential-island-macos-app-path",
             "credential-island-macos-platform-id",
