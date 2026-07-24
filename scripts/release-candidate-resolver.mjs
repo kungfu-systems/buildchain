@@ -402,9 +402,7 @@ export async function resolveReleaseCandidateArtifacts({
   const repoInfo = splitRepository(repository);
   const sha = assertSha(targetSha, "targetSha");
   const normalizedTarget = normalizeBranch(targetRef);
-  const releaseCandidateTarget = /^(alpha|release)\/v\d+\/v\d+\.\d+$/.test(normalizedTarget);
-  const majorGateTarget = normalizedTarget === "publish-gate/major" || normalizedTarget === "major-gate";
-  if (!releaseCandidateTarget && !majorGateTarget) {
+  if (!/^(alpha|release)\/v\d+\/v\d+\.\d+$/.test(normalizedTarget)) {
     return {
       enabled: false,
       reason: `target ref ${normalizedTarget || "(empty)"} does not require release-candidate promotion`,
@@ -416,48 +414,13 @@ export async function resolveReleaseCandidateArtifacts({
     fetchImpl,
     path: `/repos/${repoInfo.owner}/${repoInfo.repo}/commits/${sha}/pulls`,
   });
-  const channelPullRequest = selectMergedChannelPullRequest({
+  const pullRequest = selectMergedChannelPullRequest({
     pullRequests: Array.isArray(pulls) ? pulls : [],
     targetRef: normalizedTarget,
     repository: repoInfo.fullName,
   });
-  if (!channelPullRequest) {
+  if (!pullRequest) {
     throw new Error(`no same-repository merged channel PR found for ${sha} into ${normalizedTarget}`);
-  }
-  let pullRequest = channelPullRequest;
-  if (majorGateTarget) {
-    const releaseRef = normalizeBranch(channelPullRequest.head?.ref || "");
-    if (!/^release\/v\d+\/v\d+\.\d+$/.test(releaseRef)) {
-      throw new Error(
-        `major gate ${normalizedTarget} must be merged from a release/vN/vN.M head, got ${releaseRef || "<empty>"}`,
-      );
-    }
-    const releaseSha = assertSha(channelPullRequest.head?.sha, "major gate release head SHA");
-    const releasePulls = await githubJson({
-      apiUrl,
-      token,
-      fetchImpl,
-      path: `/repos/${repoInfo.owner}/${repoInfo.repo}/commits/${releaseSha}/pulls`,
-    });
-    pullRequest = selectMergedChannelPullRequest({
-      pullRequests: Array.isArray(releasePulls) ? releasePulls : [],
-      targetRef: releaseRef,
-      repository: repoInfo.fullName,
-    });
-    if (!pullRequest) {
-      throw new Error(
-        `no same-repository merged release-candidate PR found for major gate release head ${releaseSha} into ${releaseRef}`,
-      );
-    }
-    const releaseMergeSha = assertSha(
-      pullRequest.merge_commit_sha || pullRequest.mergeCommit?.oid,
-      "release-candidate PR merge SHA",
-    );
-    if (releaseMergeSha !== releaseSha) {
-      throw new Error(
-        `major gate release head ${releaseSha} does not equal release-candidate PR #${pullRequest.number} merge ${releaseMergeSha}`,
-      );
-    }
   }
   const timeoutMs = Number(waitSeconds) * 1000;
   const intervalMs = Number(pollIntervalMs);
@@ -538,16 +501,6 @@ export async function resolveReleaseCandidateArtifacts({
       headRef: pullRequest.head?.ref || "",
       baseRef: pullRequest.base?.ref || "",
     },
-    ...(majorGateTarget
-      ? {
-          promotionPullRequest: {
-            number: channelPullRequest.number,
-            url: channelPullRequest.html_url || channelPullRequest.url || "",
-            headRef: channelPullRequest.head?.ref || "",
-            baseRef: channelPullRequest.base?.ref || "",
-          },
-        }
-      : {}),
     run: {
       id: String(run.id || ""),
       url: run.html_url || run.url || "",
