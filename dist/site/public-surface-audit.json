@@ -3,11 +3,11 @@
   "contract": "kungfu-buildchain-public-surface-reverse-audit",
   "status": "passed",
   "summary": {
-    "cliCommandCount": 86,
-    "workflowCount": 51,
+    "cliCommandCount": 87,
+    "workflowCount": 52,
     "actionCount": 5,
-    "sitePageCount": 53,
-    "docCommandRefCount": 265,
+    "sitePageCount": 54,
+    "docCommandRefCount": 270,
     "failureCount": 0
   },
   "enumerated": {
@@ -101,6 +101,11 @@
         "id": "facts",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain facts"
+      },
+      {
+        "id": "github-governance",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain github-governance <plan|apply|rollback> ..."
       },
       {
         "id": "help",
@@ -453,6 +458,7 @@
           "buildchain-ref",
           "buildchain-repository",
           "evidence-run-id",
+          "github-governance-receipt-json",
           "publication-admission-json",
           "publication-control-plane-audit-json",
           "publication-expected-json",
@@ -464,7 +470,7 @@
           "source-sha",
           "target-ref"
         ],
-        "inputCount": 14,
+        "inputCount": 15,
         "secrets": [],
         "secretCount": 0,
         "outputs": [],
@@ -683,6 +689,7 @@
           "evidence-summary-artifact",
           "expected-json",
           "gate-aggregate-json",
+          "github-governance-receipt-json",
           "package-name",
           "product",
           "publication-target",
@@ -694,7 +701,7 @@
           "target-ref",
           "used-nonces-json"
         ],
-        "inputCount": 32,
+        "inputCount": 33,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -724,6 +731,7 @@
           "buildchain-repository",
           "channel",
           "dry-run",
+          "github-governance-receipt-json",
           "github-release",
           "github-release-notes",
           "github-release-title",
@@ -786,7 +794,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 74,
+        "inputCount": 75,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1059,6 +1067,7 @@
           "buildchain-ref",
           "buildchain-repository",
           "fail-on-release-pr-error",
+          "github-governance-receipt-json",
           "node-version",
           "preview-apply",
           "preview-aws-role-arn",
@@ -1090,7 +1099,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 39,
+        "inputCount": 40,
         "secrets": [
           "production-release-app-private-key"
         ],
@@ -1524,6 +1533,17 @@
         "outputCount": 6
       },
       {
+        "id": "github-governance-audit",
+        "path": ".github/workflows/github-governance-audit.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
         "id": "npm-publish",
         "path": ".github/workflows/npm-publish.yml",
         "reusable": false,
@@ -1549,6 +1569,7 @@
           "buildchain-ref",
           "buildchain-repository",
           "dry-run",
+          "github-governance-receipt-json",
           "github-release",
           "github-release-notes",
           "github-release-title",
@@ -1565,7 +1586,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 25,
+        "inputCount": 26,
         "secrets": [
           "BUILDCHAIN_PROMOTION_TOKEN"
         ],
@@ -1596,6 +1617,7 @@
           "buildchain-ref",
           "buildchain-repository",
           "dry-run",
+          "github-governance-receipt-json",
           "github-release",
           "github-release-notes",
           "github-release-title",
@@ -1622,7 +1644,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 37,
+        "inputCount": 38,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -1819,6 +1841,7 @@
           "buildchain-stable-contract-lock-path",
           "channel",
           "dry-run",
+          "github-governance-receipt-json",
           "github-release",
           "github-release-notes",
           "github-release-title",
@@ -1870,7 +1893,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 66,
+        "inputCount": 67,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2354,6 +2377,10 @@
         "category": "manual"
       },
       {
+        "id": "manual:github-governance-authority",
+        "category": "manual"
+      },
+      {
         "id": "manual:homebrew",
         "category": "manual"
       },
@@ -2471,6 +2498,16 @@
       }
     ],
     "docCommandRefs": [
+      {
+        "id": "audit",
+        "path": "docs/github-governance-authority.md",
+        "command": "buildchain audit github-governance"
+      },
+      {
+        "id": "audit",
+        "path": "docs/github-governance-authority.md",
+        "command": "buildchain audit github-governance"
+      },
       {
         "id": "audit",
         "path": "docs/publication-authority.md",
@@ -2785,6 +2822,21 @@
         "id": "facts",
         "path": "docs/cli.md",
         "command": "buildchain facts"
+      },
+      {
+        "id": "github-governance",
+        "path": "docs/github-governance-authority.md",
+        "command": "buildchain github-governance plan"
+      },
+      {
+        "id": "github-governance",
+        "path": "docs/github-governance-authority.md",
+        "command": "buildchain github-governance apply"
+      },
+      {
+        "id": "github-governance",
+        "path": "docs/github-governance-authority.md",
+        "command": "buildchain github-governance rollback"
       },
       {
         "id": "help",
@@ -3802,9 +3854,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "cc76cd0f061103d8ab78ee97dd0b7f0d28d64489f79b7ed06c94d8fef28bc200",
-    "workflowRegistryDigest": "3a444436846b336459e4ee7e968f820e442a170b642d7b73ea19eaa28ed7da6c",
-    "pageRegistryDigest": "47fb460187d5775db272b95f59ce44d89fce89d10301d52a815b00eebebbadca"
+    "cliRegistryDigest": "4f93fe74d076b7cb775d270da1510641a8801e6aa72d5d8a3babeead9d749f53",
+    "workflowRegistryDigest": "26be93780a4b1ce9c63e4c4d48c45f9d272a6025648332399c15e6491b8abf91",
+    "pageRegistryDigest": "139d61aa9176401163dfa236ae90a42379be46dec9304be911c67db8d42a28bd"
   },
   "comparison": {
     "missingCliRegistry": [],

@@ -201,6 +201,23 @@ export {
 } from "./buildchain-publication-authority.js";
 
 export { evaluatePublicationControlPlaneSnapshot } from "./publication-control-plane-audit.js";
+export {
+  BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY,
+  BUILDCHAIN_GITHUB_GOVERNANCE_PROTECTED_PATHS,
+  GITHUB_GOVERNANCE_AUTHORITY_CONTRACT,
+  GITHUB_GOVERNANCE_RECEIPT_CONTRACT,
+  GITHUB_GOVERNANCE_ROLLOUT_CONTRACT,
+  codeownersForPath,
+  compileEffectiveGithubGovernancePolicy,
+  createBuildchainGithubGovernanceAuthority,
+  createGithubGovernanceRolloutPlan,
+  evaluateCodeownersAuthority,
+  evaluateGithubGovernanceSnapshot,
+  githubGovernanceDigest,
+  normalizeGithubBranchProtectionSnapshot,
+  parseCodeowners,
+  verifyGithubGovernanceReceipt,
+} from "./github-governance-authority.js";
 
 export {
   ARTIFACT_PASSPORT_LOCATOR_CONTRACT,

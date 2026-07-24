@@ -362,6 +362,7 @@ npm pack --dry-run --json --registry=https://registry.npmjs.org/
 - [Documentation map](docs/MAP.md)
 - [Product mechanism](docs/product-mechanism.md)
 - [Release Passport and binary distribution](docs/release-passport.md)
+- [GitHub governance authority](docs/github-governance-authority.md)
 - [Binary distribution details](docs/binary-distribution.md)
 - [Toolkit observability](docs/toolkit-observability.md)
 - [Site bundle contract](docs/site-bundle-contract.md)

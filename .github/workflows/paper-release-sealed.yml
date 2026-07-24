@@ -102,6 +102,11 @@ on:
         default: ""
         type: string
         required: false
+      github-governance-receipt-json:
+        description: "Fresh qualifying governance receipt for the exact publication repository and target ref"
+        default: ""
+        type: string
+        required: false
       dry-run:
         default: false
         type: boolean
@@ -157,6 +162,7 @@ jobs:
     with:
       buildchain-repository: ${{ inputs.buildchain-repository }}
       buildchain-ref: ${{ needs.publication-candidate.outputs.runtime-sha }}
+      github-governance-receipt-json: ${{ inputs.github-governance-receipt-json }}
       auto-admission: true
       auto-admission-kind: publication-artifact
       authority-workflow-path: .github/workflows/paper-release-sealed.yml
