@@ -212,7 +212,7 @@
         "promotion reuses PR-stage release-candidate artifacts and does not run the heavy native build matrix"
       ],
       "breakingDigest": "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0",
-      "auditDigest": "sha256:9584d878d09eccaad6f85a031cd90e59c367e19fe6dd7c8bc1f762a50814ec0a"
+      "auditDigest": "sha256:e853c4590ea91f36604c3a958f429e3bec6e9a8d42e6090fea42b3befbccfbc0"
     },
     {
       "contractVersion": 1,
@@ -2928,7 +2928,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:015d8de793adbd4c539416be7d7512e18cc92097e629b0203fa06d2c183e98bd",
-      "auditDigest": "sha256:9584d878d09eccaad6f85a031cd90e59c367e19fe6dd7c8bc1f762a50814ec0a"
+      "auditDigest": "sha256:e853c4590ea91f36604c3a958f429e3bec6e9a8d42e6090fea42b3befbccfbc0"
     },
     {
       "contractVersion": 1,
@@ -3126,5 +3126,5 @@
     }
   ],
   "compatibilityDigest": "sha256:df13c3b8066068925ce847b31002201d533034d10d342542422db3a665c10475",
-  "contractDigest": "sha256:92605863049faa8ba76b48ad87f073f3b8e77f0cdcbea5cfcbac3e4aa3ed05fa"
+  "contractDigest": "sha256:90d60f6ea2375b4b76f5ab3cf9902510558dbb0f052db6ad62a36f70a5519447"
 }
