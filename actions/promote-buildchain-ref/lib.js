@@ -4952,6 +4952,7 @@ async function promoteBuildchainRefs({
     message,
     workspaceCwd = cwd,
     parents = [baseSha],
+    preserveExistingLifecycleIdentity = false,
   }) => {
     if (!versionState) {
       return {
@@ -4991,8 +4992,8 @@ async function promoteBuildchainRefs({
     const versionStrategy = getVersionStrategy(discovered.config);
     const anchorManifest = loadConfiguredAnchorManifest(workspaceCwd, discovered.config);
     const strategyEnv = versionVerificationEnv(versionStrategy, anchorManifest, {
-      generatedAt: promotionGeneratedAt,
-      sourceSha: sha,
+      generatedAt: preserveExistingLifecycleIdentity ? "" : promotionGeneratedAt,
+      sourceSha: preserveExistingLifecycleIdentity ? "" : sha,
     });
     const manualNext =
       versionStrategy.strategy === "anchored" && versionStrategy.next === "manual";
@@ -5031,6 +5032,11 @@ async function promoteBuildchainRefs({
     console.log(
       `> version state changes for ${version}: ${changedPaths.length ? changedPaths.join(", ") : "none"}`,
     );
+    if (preserveExistingLifecycleIdentity) {
+      console.log(
+        "> version state lifecycle identity: preserve the contained published transaction inputs",
+      );
+    }
     const createVerifiedVersionStateCommit = async (verifiedChangedFiles) => {
       const { data: baseCommit } = await getGitCommitWithRetry({ octokit, owner, repo, commitSha: baseSha });
       const tree = [];
@@ -6142,6 +6148,32 @@ async function promoteBuildchainRefs({
       }
     }
   }
+  const currentReleaseContainsPublishedMaterial =
+    currentRelease &&
+    currentReleaseTransaction &&
+    ["published", "finalizing"].includes(currentReleaseTransaction.state || "") &&
+    transactionHasPublishedMaterial(currentReleaseTransaction) &&
+    currentRelease.version === currentReleaseTransaction.version &&
+    currentRelease.tag === currentReleaseTransaction.exact_tag &&
+    currentReleaseTransaction.target_ref === targetRef &&
+    (!expectedPublicationVersion ||
+      expectedPublicationVersion === currentReleaseTransaction.version) &&
+    (
+      await releaseCommitIncludesTransactionHead({
+        octokit,
+        owner,
+        repo,
+        releaseSha: sha,
+        transactionReleaseSha: currentReleaseTransaction.release_sha,
+      }) ||
+      await releaseCommitIncludesTransactionHead({
+        octokit,
+        owner,
+        repo,
+        releaseSha: sha,
+        transactionReleaseSha: currentReleaseTransaction.release_material_sha,
+      })
+    );
   const floatingAlphaSha = sourceAlpha?.sha
     ? await readRefSha(`tags/${rule.alphaTag}`)
     : undefined;
@@ -6174,6 +6206,9 @@ async function promoteBuildchainRefs({
     baseSha: sha,
     version: releaseVersion,
     message: `chore(release): release ${selectedReleaseCandidate.tag}`,
+    preserveExistingLifecycleIdentity: Boolean(
+      currentReleaseContainsPublishedMaterial,
+    ),
   });
   const releaseSha = releaseCommit.sha;
   if (requireGovernance && !dryRun) {
