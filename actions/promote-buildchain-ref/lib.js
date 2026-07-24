@@ -2837,7 +2837,10 @@ async function ensureManagedChannelBranchProtection({
     try {
       ({ data: currentProtection } = await octokit.rest.repos.getBranchProtection({ owner, repo, branch }));
     } catch (error) {
-      if (error.status === 403 && typeof octokit.rest.repos?.getBranch === "function") {
+      if (
+        (error.status === 403 || notFound(error)) &&
+        typeof octokit.rest.repos?.getBranch === "function"
+      ) {
         const { data: branchSummary } = await octokit.rest.repos.getBranch({ owner, repo, branch });
         const providerProtection = branchSummary.protection || {};
         const resolvedStatusCheck = resolveProtectedStatusCheckContext({
