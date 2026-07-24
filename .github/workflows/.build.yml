@@ -197,6 +197,21 @@ on:
         default: "macos-arm64"
         type: string
         required: false
+      github-artifact-attestation-subject-path:
+        description: "Optional exact artifact path to bind to a GitHub keyless attestation policy after the final platform manifest is sealed"
+        default: ""
+        type: string
+        required: false
+      github-artifact-attestation-signer-sha:
+        description: "Exact 40-hex Buildchain commit containing the trusted reusable signer workflow"
+        default: ""
+        type: string
+        required: false
+      github-artifact-attestation-platform-id:
+        description: "Linux platform id that owns github-artifact-attestation-subject-path"
+        default: "linux-x64"
+        type: string
+        required: false
       release-candidate:
         description: "Generate and upload a PR-stage release-candidate passport after the full platform matrix succeeds"
         default: false
@@ -1436,6 +1451,29 @@ jobs:
           retention-days: ${{ inputs.artifact-retention-days }}
           compression-level: 0
 
+      - name: Create GitHub artifact attestation policy
+        if: ${{ inputs.github-artifact-attestation-subject-path != '' && matrix.platform.id == inputs.github-artifact-attestation-platform-id }}
+        run: node .buildchain/runtime/scripts/create-github-artifact-attestation-policy.mjs
+        env:
+          BUILDCHAIN_SOURCE_CWD: ${{ inputs.working-directory }}
+          BUILDCHAIN_GITHUB_ATTESTATION_SUBJECT_PATH: ${{ inputs.github-artifact-attestation-subject-path }}
+          BUILDCHAIN_GITHUB_ATTESTATION_PLATFORM_MANIFEST: .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
+          BUILDCHAIN_GITHUB_ATTESTATION_POLICY_OUTPUT: .buildchain/artifacts/${{ matrix.platform.id }}/github-artifact-attestation-policy.json
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_GITHUB_ATTESTATION_SIGNER_SHA: ${{ inputs.github-artifact-attestation-signer-sha }}
+          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
+
+      - name: Upload GitHub artifact attestation policy
+        if: ${{ inputs.github-artifact-attestation-subject-path != '' && matrix.platform.id == inputs.github-artifact-attestation-platform-id }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-attestation-policy-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: .buildchain/artifacts/${{ matrix.platform.id }}/github-artifact-attestation-policy.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
       - name: Run KFD Agent Hub conformance
         if: ${{ inputs.kfd-agent-hub == 'auto' }}
         run: >-
@@ -1709,6 +1747,30 @@ jobs:
           expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
           process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
           process-summary-required: ${{ inputs.process-summary-path != '' || inputs.require-build }}
+
+      - name: Create GitHub artifact attestation policy
+        if: ${{ inputs.github-artifact-attestation-subject-path != '' && matrix.platform.id == inputs.github-artifact-attestation-platform-id }}
+        run: node .buildchain/runtime/scripts/create-github-artifact-attestation-policy.mjs
+        env:
+          BUILDCHAIN_SOURCE_CWD: ${{ inputs.working-directory }}
+          BUILDCHAIN_GITHUB_ATTESTATION_SUBJECT_PATH: ${{ inputs.github-artifact-attestation-subject-path }}
+          BUILDCHAIN_GITHUB_ATTESTATION_PLATFORM_MANIFEST: .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
+          BUILDCHAIN_GITHUB_ATTESTATION_POLICY_OUTPUT: .buildchain/artifacts/${{ matrix.platform.id }}/github-artifact-attestation-policy.json
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_GITHUB_ATTESTATION_SIGNER_SHA: ${{ inputs.github-artifact-attestation-signer-sha }}
+          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
+
+      - name: Upload GitHub artifact attestation policy
+        if: ${{ inputs.github-artifact-attestation-subject-path != '' && matrix.platform.id == inputs.github-artifact-attestation-platform-id }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-attestation-policy-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: .buildchain/artifacts/${{ matrix.platform.id }}/github-artifact-attestation-policy.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Run KFD Agent Hub conformance
         if: ${{ inputs.kfd-agent-hub == 'auto' }}

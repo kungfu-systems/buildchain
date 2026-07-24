@@ -62,11 +62,14 @@ async function main() {
     return;
   }
   if (mode === "finalize") {
+    const stagedBundlePath = path.join(outputDir, "sigstore-bundle.json");
+    fs.mkdirSync(outputDir, { recursive: true });
+    fs.copyFileSync(input("bundle-path", true), stagedBundlePath);
     const evidence = createGitHubArtifactAttestationEvidence({
       preparation: parseJson(input("preparation-json", true), "preparation-json"),
       attestationId: input("attestation-id", true),
       attestationUrl: input("attestation-url", true),
-      bundlePath: input("bundle-path", true),
+      bundlePath: stagedBundlePath,
       workflow: workflowEvidence(),
     });
     const evidencePath = path.join(outputDir, "github-artifact-attestation-evidence.json");
@@ -74,6 +77,7 @@ async function main() {
     core.setOutput("evidence-path", evidencePath);
     core.setOutput("evidence-root", evidence.evidenceRoot);
     core.setOutput("bundle-digest", evidence.attestation.bundle.digest);
+    core.setOutput("bundle-path", stagedBundlePath);
     return;
   }
   throw new Error("mode must be prepare or finalize");

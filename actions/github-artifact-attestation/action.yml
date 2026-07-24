@@ -62,6 +62,8 @@ outputs:
     description: "Semantic root of generated evidence"
   bundle-digest:
     description: "SHA-256 of the retained Sigstore bundle"
+  bundle-path:
+    description: "Retained Sigstore bundle copied under output-dir"
 runs:
   using: "node24"
   main: "dist/index.js"

@@ -596,6 +596,9 @@
           "expected-artifacts-json",
           "fail-fast",
           "gate-profile-aggregate-json",
+          "github-artifact-attestation-platform-id",
+          "github-artifact-attestation-signer-sha",
+          "github-artifact-attestation-subject-path",
           "install-command",
           "kfd-agent-hub",
           "lifecycle-timeout-minutes",
@@ -828,6 +831,9 @@
           "buildchain-repository",
           "channel",
           "dry-run",
+          "github-artifact-attestation-environment",
+          "github-artifact-attestation-policy-json",
+          "github-artifact-attestation-retention-days",
           "github-governance-receipt-json",
           "github-release",
           "github-release-notes",
@@ -924,6 +930,10 @@
           "controller-receipt-digest",
           "controller-receipt-json",
           "controller-receipt-status",
+          "github-artifact-attestation-evidence-root",
+          "github-artifact-attestation-id",
+          "github-artifact-attestation-publication-receipt-digest",
+          "github-artifact-attestation-url",
           "promoted-sha",
           "publication-capability-digest",
           "publication-commit-evidence-digest",
@@ -932,7 +942,7 @@
           "publication-commit-url",
           "release-candidate-artifact"
         ],
-        "outputCount": 15
+        "outputCount": 19
       },
       {
         "id": ".release-docker",
@@ -1363,6 +1373,9 @@
           "expected-artifacts-json",
           "fail-fast",
           "gate-profile-aggregate-json",
+          "github-artifact-attestation-platform-id",
+          "github-artifact-attestation-signer-sha",
+          "github-artifact-attestation-subject-path",
           "install-command",
           "kfd-agent-hub",
           "lifecycle-timeout-minutes",
@@ -1991,6 +2004,9 @@
           "buildchain-stable-contract-lock-path",
           "channel",
           "dry-run",
+          "github-artifact-attestation-environment",
+          "github-artifact-attestation-policy-json",
+          "github-artifact-attestation-retention-days",
           "github-governance-receipt-json",
           "github-release",
           "github-release-notes",
@@ -2077,6 +2093,10 @@
           "controller-receipt-digest",
           "controller-receipt-json",
           "controller-receipt-status",
+          "github-artifact-attestation-evidence-root",
+          "github-artifact-attestation-id",
+          "github-artifact-attestation-publication-receipt-digest",
+          "github-artifact-attestation-url",
           "promoted-sha",
           "promotion-contract-lock-digest",
           "promotion-contract-lock-path",
@@ -2096,7 +2116,7 @@
           "publication-commit-url",
           "release-candidate-artifact"
         ],
-        "outputCount": 27
+        "outputCount": 31
       },
       {
         "id": "release-governance-reconcile",
@@ -2332,6 +2352,7 @@
           "release-passport",
           "release-passport-build-summary-path",
           "release-passport-buildchain-self-kfd",
+          "release-passport-github-artifact-attestation-policy-jsons",
           "release-passport-impact-json",
           "release-passport-invariant-passport-command",
           "release-passport-invariant-passport-jsons",

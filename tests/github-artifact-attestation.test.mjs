@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import childProcess from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -11,6 +12,7 @@ import {
   createGitHubArtifactAttestationVerificationPlan,
   githubArtifactAttestationSha256File,
   prepareGitHubArtifactAttestation,
+  stageGitHubArtifactAttestationInputs,
   verifyGitHubArtifactAttestationEvidence,
 } from "../packages/core/github-artifact-attestation.js";
 import { createReleasePassport } from "../packages/core/release-passport.js";
@@ -159,6 +161,34 @@ test("policy fixes keyless permissions, Linux builder evidence, and immutable si
   assert.ok(policy.claims.excludes.includes("embedded-elf-signing"));
 });
 
+test("final Linux build manifest creates the exact v3 attestation policy", () => {
+  const value = fixture();
+  const output = path.join(value.root, "created", "github-artifact-attestation-policy.json");
+  const result = childProcess.spawnSync(
+    process.execPath,
+    ["scripts/create-github-artifact-attestation-policy.mjs"],
+    {
+      cwd: path.resolve("."),
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        BUILDCHAIN_SOURCE_CWD: path.join(value.root, "subject"),
+        BUILDCHAIN_GITHUB_ATTESTATION_SUBJECT_PATH: "dist/kungfu-linux-x64.tar.gz",
+        BUILDCHAIN_GITHUB_ATTESTATION_PLATFORM_MANIFEST: value.manifestPath,
+        BUILDCHAIN_GITHUB_ATTESTATION_POLICY_OUTPUT: output,
+        BUILDCHAIN_SOURCE_REPOSITORY: "kungfu-systems/kungfu",
+        BUILDCHAIN_SOURCE_SHA: SOURCE_SHA,
+        BUILDCHAIN_SOURCE_TREE_SHA: SOURCE_TREE_SHA,
+        BUILDCHAIN_RUNTIME_SHA: BUILDCHAIN_SHA,
+        BUILDCHAIN_GITHUB_ATTESTATION_SIGNER_SHA: SIGNER_SHA,
+        BUILDCHAIN_PLATFORM_ID: "linux-x64",
+      },
+    },
+  );
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(JSON.parse(fs.readFileSync(output, "utf8")), value.policy);
+});
+
 test("reusable signer verifies the actual certificate identity before retaining evidence", () => {
   const workflow = fs.readFileSync(
     path.resolve(".github/workflows/github-artifact-attestation.yml"),
@@ -190,6 +220,54 @@ test("preparation binds exact subject, original runner manifest, source tree, Bu
     preparation.predicate.releasePassport.digest,
     githubArtifactAttestationSha256File(passportPath),
   );
+});
+
+test("promotion stages one digest-selected subject, manifest, policy, and Passport without consumer execution", () => {
+  const value = fixture();
+  const staged = stageGitHubArtifactAttestationInputs({
+    policy: value.policy,
+    subjectRoots: [path.dirname(path.dirname(value.subjectPath))],
+    platformManifestPaths: [value.manifestPath],
+    releasePassportPath: value.passportPath,
+    outputDir: path.join(value.root, "staged"),
+  });
+  assert.equal(staged.relativePaths.subject, "subject/kungfu-linux-x64.tar.gz");
+  assert.equal(
+    githubArtifactAttestationSha256File(staged.paths.subject),
+    value.policy.subject.digest,
+  );
+  assert.deepEqual(JSON.parse(fs.readFileSync(staged.paths.policy, "utf8")), value.policy);
+});
+
+test("promotion refuses a digest-identical subject at the wrong declared path", () => {
+  const value = fixture();
+  const wrongRoot = path.join(value.root, "wrong-subject-root");
+  const wrongPath = path.join(wrongRoot, "different", value.policy.subject.name);
+  fs.mkdirSync(path.dirname(wrongPath), { recursive: true });
+  fs.copyFileSync(value.subjectPath, wrongPath);
+  assert.throws(() => stageGitHubArtifactAttestationInputs({
+    policy: value.policy,
+    subjectRoots: [wrongRoot],
+    platformManifestPaths: [value.manifestPath],
+    releasePassportPath: value.passportPath,
+    outputDir: path.join(value.root, "wrong-staged"),
+  }), /attestation subject must resolve to exactly one digest-matching file, got 0/);
+});
+
+test("policy rejects path-like subject names before staging", () => {
+  const value = fixture();
+  assert.throws(() => createGitHubArtifactAttestationPolicy({
+    ...value.policy,
+    subject: { ...value.policy.subject, name: "../escaped.tar.gz" },
+  }), /policy.subject.name must be a safe file name/);
+});
+
+test("policy rejects an ungrounded runner receipt root", () => {
+  const value = fixture();
+  assert.throws(() => createGitHubArtifactAttestationPolicy({
+    ...value.policy,
+    build: { ...value.policy.build, runnerReceiptRoot: `sha256:${"9".repeat(64)}` },
+  }), /runner receipt root and platform manifest digest mismatch/);
 });
 
 test("retained evidence and explicit gh policy verify the matching bundle", () => {

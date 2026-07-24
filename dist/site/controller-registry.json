@@ -266,6 +266,18 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "github-artifact-attestation-platform-id": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "github-artifact-attestation-signer-sha": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "github-artifact-attestation-subject-path": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "install-command": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -640,6 +652,18 @@
           "source": "workflow-call-input"
         },
         "gate-profile-aggregate-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "github-artifact-attestation-platform-id": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "github-artifact-attestation-signer-sha": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "github-artifact-attestation-subject-path": {
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
@@ -1623,6 +1647,18 @@
           "source": "workflow-call-input"
         },
         "dry-run": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "github-artifact-attestation-environment": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "github-artifact-attestation-policy-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "github-artifact-attestation-retention-days": {
           "classification": "included",
           "source": "workflow-call-input"
         },

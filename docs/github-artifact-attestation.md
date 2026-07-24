@@ -53,7 +53,8 @@ The Release Passport first records
 
 - artifact name, relative path, byte size, and SHA-256;
 - caller repository, source commit, and source tree;
-- original Linux platform, platform-manifest digest, and runner receipt root;
+- original Linux platform and platform-manifest digest; the initial v3 contract
+  requires the runner receipt root to equal that exact manifest digest;
 - Buildchain signer workflow path and exact signer-bootstrap commit;
 - exact Buildchain runtime commit used to build and release the artifact;
 - exact GitHub permission set.
@@ -97,9 +98,7 @@ buildchain create github-artifact-attestation-policy \
 The input object contains `subject`, `caller`, `signer`, and `build` objects.
 The CLI computes no trusted values implicitly: the caller supplies the already
 measured subject size/digest, source commit/tree, platform-manifest digest,
-runner receipt root, exact signer-bootstrap commit, and exact Buildchain runtime
-commit. The bootstrap PR lands the reusable signer first; a later integration
-PR can then pin that immutable signer SHA while retaining its own runtime SHA.
+runner receipt root, and exact Buildchain workflow commit.
 
 Pass the policy into Release Passport collection:
 
@@ -112,9 +111,50 @@ buildchain collect github-release \
 ```
 
 The build, Passport, and attestation jobs must stay in the same workflow run.
-Low-level callers can call the reusable attester after the Passport job. Both
-the reusable workflow ref and `buildchain-ref` pin the exact signer-bootstrap
-commit:
+The release-candidate build declares both the subject and the already-merged
+signer bootstrap commit. The Buildchain runtime remains the exact runtime ref
+used by the build workflow and may be a later commit:
+
+```yaml
+with:
+  github-artifact-attestation-subject-path: dist/kungfu-linux-x64.tar.gz
+  github-artifact-attestation-signer-sha: <exact-signer-bootstrap-sha>
+  github-artifact-attestation-platform-id: linux-x64
+```
+
+For release promotion, prefer the integrated v3 route. The policy must already
+be present in the downloaded release-candidate payload:
+
+```yaml
+permissions:
+  actions: write
+  artifact-metadata: write
+  attestations: write
+  checks: write
+  contents: write
+  id-token: write
+  issues: write
+
+jobs:
+  promote:
+    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@<exact-buildchain-v3-runtime-sha>
+    with:
+      buildchain-ref: <exact-buildchain-v3-runtime-sha>
+      github-release: true
+      release-passport: true
+      github-artifact-attestation-policy-json: .buildchain/release-candidate/payload/<artifact>/policy.json
+      github-artifact-attestation-environment: buildchain-artifact-attestation
+```
+
+Promotion binds the policy into the Passport, stages only digest-matching data,
+calls the exact v3 signer, verifies the provider identity a second time, and
+publishes immutable bundle, predicate, verification, evidence, and receipt
+assets beside the release artifact. A same-name Release asset with different
+bytes is rejected instead of overwritten.
+
+Low-level callers may call the reusable attester directly after their Passport
+job. Both the reusable workflow ref and `buildchain-ref` use the same exact
+40-hex signer-bootstrap commit and fail closed if the provider identity differs:
 
 ```yaml
 jobs:
@@ -130,6 +170,7 @@ jobs:
     with:
       buildchain-ref: <exact-signer-bootstrap-sha>
       evidence-run-id: ${{ github.run_id }}
+      source-sha: ${{ github.sha }}
       subject-artifact-name: linux-release
       subject-relative-path: libnode-linux-x64.tar.gz
       platform-manifest-artifact-name: linux-platform-manifest
@@ -152,8 +193,8 @@ The reusable workflow runs that same exact signer/source verification
 immediately after `actions/attest` and before it finalizes or uploads evidence.
 Passing a different `buildchain-ref` than the commit used to invoke the reusable
 workflow therefore fails in the signer job, not only during later consumption.
-The policy separately retains the exact Buildchain runtime SHA that created the
-build and release evidence; it need not equal the signer-bootstrap SHA.
+The policy additionally retains the distinct Buildchain runtime SHA that
+created the build and release evidence.
 
 ```bash
 buildchain verify github-artifact-attestation \
@@ -171,7 +212,8 @@ expected statement, or GitHub reports a self-hosted signer.
 
 ## Qualification Policy
 
-New protocol work qualifies on the Buildchain v3 alpha line first. Production
+New protocol work qualifies on the Buildchain v3 alpha line first. The v2
+development branch is not a supported landing target. Production
 adoption waits for the exact v3 implementation commit to pass the repository
 suite and a real GitHub OIDC/Sigstore qualification run, including the negative
 cases above. A successful local fixture is necessary but not sufficient.

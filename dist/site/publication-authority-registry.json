@@ -588,7 +588,8 @@
       "path": ".github/workflows/.release-candidate-promote.yml",
       "signals": [
         "write-permission",
-        "oidc"
+        "oidc",
+        "environment"
       ],
       "classified": true
     },

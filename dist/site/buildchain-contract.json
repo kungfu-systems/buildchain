@@ -34,6 +34,8 @@
         "runner-preset",
         "platforms-json",
         "release-candidate",
+        "github-artifact-attestation-subject-path",
+        "github-artifact-attestation-platform-id",
         "artifact-transfer-mode",
         "checkout-cache-mode",
         "checkout-cache-fallback",
@@ -129,6 +131,9 @@
         "release-passport-kfd-3-artifact-verify-command",
         "release-passport-invariant-passport-jsons",
         "release-passport-invariant-passport-command",
+        "github-artifact-attestation-policy-json",
+        "github-artifact-attestation-environment",
+        "github-artifact-attestation-retention-days",
         "buildchain-contract-lock-path",
         "buildchain-contract-drift-issue-mode",
         "github-release",
@@ -340,6 +345,7 @@
         "release-passport-kfd-3-artifact-verify-command",
         "release-passport-invariant-passport-jsons",
         "release-passport-invariant-passport-command",
+        "release-passport-github-artifact-attestation-policy-jsons",
         "github-release",
         "github-release-title",
         "github-release-notes"
@@ -891,6 +897,9 @@
         "expected-artifacts-json",
         "fail-fast",
         "gate-profile-aggregate-json",
+        "github-artifact-attestation-platform-id",
+        "github-artifact-attestation-signer-sha",
+        "github-artifact-attestation-subject-path",
         "install-command",
         "kfd-agent-hub",
         "lifecycle-timeout-minutes",
@@ -1106,6 +1115,18 @@
             "source": "workflow-call-input"
           },
           "gate-profile-aggregate-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "github-artifact-attestation-platform-id": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "github-artifact-attestation-signer-sha": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "github-artifact-attestation-subject-path": {
             "classification": "digest-only",
             "source": "workflow-call-input"
           },
@@ -1335,6 +1356,9 @@
         "expected-artifacts-json",
         "fail-fast",
         "gate-profile-aggregate-json",
+        "github-artifact-attestation-platform-id",
+        "github-artifact-attestation-signer-sha",
+        "github-artifact-attestation-subject-path",
         "install-command",
         "kfd-agent-hub",
         "lifecycle-timeout-minutes",
@@ -1562,6 +1586,18 @@
             "source": "workflow-call-input"
           },
           "gate-profile-aggregate-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "github-artifact-attestation-platform-id": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "github-artifact-attestation-signer-sha": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "github-artifact-attestation-subject-path": {
             "classification": "digest-only",
             "source": "workflow-call-input"
           },
@@ -2646,6 +2682,9 @@
         "buildchain-repository",
         "channel",
         "dry-run",
+        "github-artifact-attestation-environment",
+        "github-artifact-attestation-policy-json",
+        "github-artifact-attestation-retention-days",
         "github-governance-receipt-json",
         "github-release",
         "github-release-notes",
@@ -2813,6 +2852,18 @@
             "source": "workflow-call-input"
           },
           "dry-run": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "github-artifact-attestation-environment": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "github-artifact-attestation-policy-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "github-artifact-attestation-retention-days": {
             "classification": "included",
             "source": "workflow-call-input"
           },

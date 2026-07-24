@@ -11,6 +11,10 @@ on:
         description: "Exact successful caller workflow run containing the sealed subject, platform manifest, and Release Passport."
         type: string
         required: true
+      source-sha:
+        description: "Exact caller source SHA already bound by the build manifest and Release Passport."
+        type: string
+        required: true
       subject-artifact-name:
         description: "GitHub Actions artifact containing the exact release subject."
         type: string
@@ -104,6 +108,8 @@ jobs:
           BUILDCHAIN_REF: ${{ inputs.buildchain-ref }}
           EVIDENCE_RUN_ID: ${{ inputs.evidence-run-id }}
           CURRENT_RUN_ID: ${{ github.run_id }}
+          SOURCE_SHA: ${{ inputs.source-sha }}
+          CURRENT_SOURCE_SHA: ${{ github.sha }}
           SUBJECT_RELATIVE_PATH: ${{ inputs.subject-relative-path }}
           PLATFORM_MANIFEST_RELATIVE_PATH: ${{ inputs.platform-manifest-relative-path }}
           RELEASE_PASSPORT_RELATIVE_PATH: ${{ inputs.release-passport-relative-path }}
@@ -116,6 +122,10 @@ jobs:
           fi
           if [[ "$EVIDENCE_RUN_ID" != "$CURRENT_RUN_ID" ]]; then
             echo "::error::attestation inputs must come from the current caller workflow run"
+            exit 1
+          fi
+          if [[ ! "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ || "$SOURCE_SHA" != "$CURRENT_SOURCE_SHA" ]]; then
+            echo "::error::source-sha must equal the exact caller workflow SHA attested by GitHub"
             exit 1
           fi
           for relative_path in \
@@ -175,7 +185,7 @@ jobs:
           policy-json: ${{ inputs.policy-json }}
           expected-buildchain-ref: ${{ inputs.buildchain-ref }}
           expected-caller-repository: ${{ github.repository }}
-          expected-source-sha: ${{ github.sha }}
+          expected-source-sha: ${{ inputs.source-sha }}
 
       - name: Create GitHub/Sigstore attestation
         id: attest
@@ -192,7 +202,7 @@ jobs:
           BUNDLE_PATH: ${{ steps.attest.outputs.bundle-path }}
           PREDICATE_TYPE: ${{ steps.prepare.outputs.predicate-type }}
           CALLER_REPOSITORY: ${{ github.repository }}
-          CALLER_SOURCE_SHA: ${{ github.sha }}
+          CALLER_SOURCE_SHA: ${{ inputs.source-sha }}
           BUILDCHAIN_REF: ${{ inputs.buildchain-ref }}
         shell: bash
         run: |
@@ -224,9 +234,4 @@ jobs:
           name: ${{ inputs.evidence-artifact-name }}
           retention-days: ${{ inputs.retention-days }}
           if-no-files-found: error
-          path: |
-            ${{ steps.prepare.outputs.predicate-path }}
-            ${{ steps.prepare.outputs.preparation-path }}
-            ${{ steps.attest.outputs.bundle-path }}
-            .buildchain/github-artifact-attestation/provider-verification.json
-            ${{ steps.finalize.outputs.evidence-path }}
+          path: .buildchain/github-artifact-attestation/

@@ -94,12 +94,16 @@ export function githubArtifactAttestationSemanticRoot(value) {
 
 function normalizeSubject(value) {
   const subject = object(value, "policy.subject");
+  const name = string(subject.name, "policy.subject.name").replace(/\\/g, "/");
+  if (name === "." || name === ".." || name.includes("/")) {
+    throw new Error("policy.subject.name must be a safe file name");
+  }
   const size = Number(subject.size);
   if (!Number.isSafeInteger(size) || size < 0) {
     throw new Error("policy.subject.size must be a non-negative safe integer");
   }
   return {
-    name: string(subject.name, "policy.subject.name"),
+    name,
     path: relativeFile(subject.path, "policy.subject.path"),
     size,
     digest: sha256(subject.digest, "policy.subject.digest"),
@@ -165,6 +169,11 @@ export function normalizeGitHubArtifactAttestationPolicy(value) {
   }
   const signer = normalizeSigner(policy.signer);
   const build = normalizeBuild(policy.build);
+  assertEqual(
+    build.runnerReceiptRoot,
+    build.platformManifestDigest,
+    "policy runner receipt root and platform manifest digest",
+  );
   return {
     contract: GITHUB_ARTIFACT_ATTESTATION_POLICY_CONTRACT,
     predicateType: GITHUB_ARTIFACT_ATTESTATION_PREDICATE_TYPE,
@@ -336,6 +345,106 @@ export function prepareGitHubArtifactAttestation({
     predicateType: GITHUB_ARTIFACT_ATTESTATION_PREDICATE_TYPE,
     predicate,
     predicateRoot: githubArtifactAttestationSemanticRoot(predicate),
+  };
+}
+
+function walkRegularFiles(root) {
+  const resolvedRoot = path.resolve(root);
+  if (!fs.existsSync(resolvedRoot)) return [];
+  const pending = [resolvedRoot];
+  const files = [];
+  while (pending.length > 0) {
+    const current = pending.pop();
+    const stat = fs.lstatSync(current);
+    if (stat.isSymbolicLink()) continue;
+    if (stat.isDirectory()) {
+      for (const entry of fs.readdirSync(current).sort().reverse()) {
+        pending.push(path.join(current, entry));
+      }
+    } else if (stat.isFile()) {
+      files.push(current);
+    }
+  }
+  return files;
+}
+
+function uniqueDigestMatch(paths, expectedDigest, label, suffix = "") {
+  const normalizedSuffix = String(suffix || "").replace(/\\/g, "/");
+  const digestMatches = paths.filter((candidate) => (
+    githubArtifactAttestationSha256File(candidate) === expectedDigest
+  ));
+  const suffixMatches = normalizedSuffix
+    ? digestMatches.filter((candidate) => (
+        candidate.replace(/\\/g, "/").endsWith(`/${normalizedSuffix}`)
+        || path.basename(candidate) === normalizedSuffix
+      ))
+    : digestMatches;
+  const matches = normalizedSuffix ? suffixMatches : digestMatches;
+  if (matches.length !== 1) {
+    throw new Error(`${label} must resolve to exactly one digest-matching file, got ${matches.length}`);
+  }
+  return matches[0];
+}
+
+export function stageGitHubArtifactAttestationInputs({
+  policy,
+  subjectRoots = [],
+  platformManifestPaths = [],
+  releasePassportPath,
+  outputDir = ".buildchain/github-artifact-attestation-input",
+} = {}) {
+  const normalizedPolicy = normalizeGitHubArtifactAttestationPolicy(policy);
+  const subjectCandidates = subjectRoots.flatMap(walkRegularFiles);
+  const subjectPath = uniqueDigestMatch(
+    subjectCandidates,
+    normalizedPolicy.subject.digest,
+    "attestation subject",
+    normalizedPolicy.subject.path,
+  );
+  const manifestCandidates = platformManifestPaths
+    .flatMap((candidate) => {
+      const resolved = path.resolve(candidate);
+      return fs.existsSync(resolved) && fs.lstatSync(resolved).isDirectory()
+        ? walkRegularFiles(resolved)
+        : [resolved];
+    })
+    .filter((candidate) => fs.existsSync(candidate) && fs.lstatSync(candidate).isFile());
+  const platformManifestPath = uniqueDigestMatch(
+    manifestCandidates,
+    normalizedPolicy.build.platformManifestDigest,
+    "platform manifest",
+  );
+  const preparation = prepareGitHubArtifactAttestation({
+    subjectPath,
+    platformManifestPath,
+    releasePassportPath,
+    policy: normalizedPolicy,
+  });
+  const resolvedOutput = path.resolve(outputDir);
+  const staged = {
+    subject: path.join(resolvedOutput, "subject", normalizedPolicy.subject.name),
+    platformManifest: path.join(resolvedOutput, "platform-manifest", "manifest.json"),
+    releasePassport: path.join(resolvedOutput, "release-passport", "buildchain.release.json"),
+    policy: path.join(resolvedOutput, "policy", "policy.json"),
+  };
+  for (const target of Object.values(staged)) fs.mkdirSync(path.dirname(target), { recursive: true });
+  fs.copyFileSync(subjectPath, staged.subject);
+  fs.copyFileSync(platformManifestPath, staged.platformManifest);
+  fs.copyFileSync(path.resolve(releasePassportPath), staged.releasePassport);
+  fs.writeFileSync(staged.policy, `${JSON.stringify(normalizedPolicy, null, 2)}\n`);
+  return {
+    contract: "buildchain.github-artifact-attestation-input/v1",
+    outputDir: resolvedOutput,
+    policy: normalizedPolicy,
+    policyJson: JSON.stringify(normalizedPolicy),
+    preparation,
+    paths: staged,
+    relativePaths: {
+      subject: path.posix.join("subject", normalizedPolicy.subject.name),
+      platformManifest: "platform-manifest/manifest.json",
+      releasePassport: "release-passport/buildchain.release.json",
+      policy: "policy/policy.json",
+    },
   };
 }
 

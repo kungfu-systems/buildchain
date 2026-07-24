@@ -213,6 +213,21 @@ on:
         default: "macos-arm64"
         type: string
         required: false
+      github-artifact-attestation-subject-path:
+        description: "Optional exact artifact path to bind to a GitHub keyless attestation policy after the final platform manifest is sealed"
+        default: ""
+        type: string
+        required: false
+      github-artifact-attestation-signer-sha:
+        description: "Exact 40-hex Buildchain commit containing the trusted reusable signer workflow"
+        default: ""
+        type: string
+        required: false
+      github-artifact-attestation-platform-id:
+        description: "Linux platform id that owns github-artifact-attestation-subject-path"
+        default: "linux-x64"
+        type: string
+        required: false
       release-candidate:
         description: "Generate and upload a PR-stage release-candidate passport after the full platform matrix succeeds"
         default: false
@@ -715,6 +730,9 @@ jobs:
       credential-island-environment: ${{ inputs.credential-island-environment }}
       credential-island-caller-owned: ${{ inputs.credential-island-caller-owned }}
       credential-island-macos-platform-id: ${{ inputs.credential-island-macos-platform-id }}
+      github-artifact-attestation-subject-path: ${{ inputs.github-artifact-attestation-subject-path }}
+      github-artifact-attestation-signer-sha: ${{ inputs.github-artifact-attestation-signer-sha }}
+      github-artifact-attestation-platform-id: ${{ inputs.github-artifact-attestation-platform-id }}
       release-candidate: ${{ inputs.release-candidate }}
       expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
       process-summary-path: ${{ inputs.process-summary-path }}
