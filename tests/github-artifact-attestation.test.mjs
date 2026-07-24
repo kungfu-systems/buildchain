@@ -18,6 +18,7 @@ import { createReleasePassport } from "../packages/core/release-passport.js";
 const SOURCE_SHA = "1".repeat(40);
 const SOURCE_TREE_SHA = "2".repeat(40);
 const BUILDCHAIN_SHA = "3".repeat(40);
+const SIGNER_SHA = "4".repeat(40);
 
 function writeJson(filePath, value) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -66,7 +67,7 @@ function fixture() {
     signer: {
       repository: "kungfu-systems/buildchain",
       workflowPath: ".github/workflows/github-artifact-attestation.yml",
-      workflowDigest: BUILDCHAIN_SHA,
+      workflowDigest: SIGNER_SHA,
     },
     build: {
       platform: "linux-x64",
@@ -93,7 +94,7 @@ function fixture() {
     platformManifestPath: manifestPath,
     releasePassportPath: passportPath,
     policy,
-    expectedBuildchainRef: BUILDCHAIN_SHA,
+    expectedBuildchainRef: SIGNER_SHA,
     expectedCallerRepository: "kungfu-systems/kungfu",
     expectedSourceSha: SOURCE_SHA,
   });
@@ -151,8 +152,9 @@ test("policy fixes keyless permissions, Linux builder evidence, and immutable si
     "contents:read",
     "id-token:write",
   ]);
-  assert.equal(policy.signer.workflowDigest, BUILDCHAIN_SHA);
+  assert.equal(policy.signer.workflowDigest, SIGNER_SHA);
   assert.equal(policy.build.buildchainRuntimeSha, BUILDCHAIN_SHA);
+  assert.notEqual(policy.signer.workflowDigest, policy.build.buildchainRuntimeSha);
   assert.equal(policy.claims.kind, "artifact-attestation-and-provenance");
   assert.ok(policy.claims.excludes.includes("embedded-elf-signing"));
 });
@@ -182,7 +184,8 @@ test("preparation binds exact subject, original runner manifest, source tree, Bu
   const { preparation, passportPath } = fixture();
   assert.equal(preparation.predicate.subject.name, "kungfu-linux-x64.tar.gz");
   assert.equal(preparation.predicate.caller.sourceTreeSha, SOURCE_TREE_SHA);
-  assert.equal(preparation.predicate.signer.workflowDigest, BUILDCHAIN_SHA);
+  assert.equal(preparation.predicate.signer.workflowDigest, SIGNER_SHA);
+  assert.equal(preparation.predicate.build.buildchainRuntimeSha, BUILDCHAIN_SHA);
   assert.equal(
     preparation.predicate.releasePassport.digest,
     githubArtifactAttestationSha256File(passportPath),
@@ -200,7 +203,7 @@ test("retained evidence and explicit gh policy verify the matching bundle", () =
   assert.deepEqual(plan.args.slice(0, 2), ["attestation", "verify"]);
   assert.ok(plan.args.includes("--deny-self-hosted-runners"));
   assert.equal(plan.args[plan.args.indexOf("--repo") + 1], "kungfu-systems/kungfu");
-  assert.equal(plan.args[plan.args.indexOf("--signer-digest") + 1], BUILDCHAIN_SHA);
+  assert.equal(plan.args[plan.args.indexOf("--signer-digest") + 1], SIGNER_SHA);
   assert.equal(plan.args[plan.args.indexOf("--source-digest") + 1], SOURCE_SHA);
   const report = verifyGitHubArtifactAttestationEvidence({
     artifactPath: value.subjectPath,

@@ -165,11 +165,6 @@ export function normalizeGitHubArtifactAttestationPolicy(value) {
   }
   const signer = normalizeSigner(policy.signer);
   const build = normalizeBuild(policy.build);
-  assertEqual(
-    build.buildchainRuntimeSha,
-    signer.workflowDigest,
-    "policy Buildchain runtime and signer workflow digest",
-  );
   return {
     contract: GITHUB_ARTIFACT_ATTESTATION_POLICY_CONTRACT,
     predicateType: GITHUB_ARTIFACT_ATTESTATION_PREDICATE_TYPE,

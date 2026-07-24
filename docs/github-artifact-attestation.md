@@ -54,7 +54,8 @@ The Release Passport first records
 - artifact name, relative path, byte size, and SHA-256;
 - caller repository, source commit, and source tree;
 - original Linux platform, platform-manifest digest, and runner receipt root;
-- Buildchain signer workflow path and exact Buildchain commit;
+- Buildchain signer workflow path and exact signer-bootstrap commit;
+- exact Buildchain runtime commit used to build and release the artifact;
 - exact GitHub permission set.
 
 The GitHub attestation predicate then records the completed Release Passport
@@ -79,8 +80,9 @@ permissions:
 
 The reusable workflow pins `actions/checkout`, `actions/download-artifact`,
 `actions/upload-artifact`, and `actions/attest` by full commit SHA. The workflow
-itself must also be called at an exact Buildchain commit, because that commit is
-part of the expected signer identity.
+itself must also be called at its exact signer-bootstrap commit. The signer
+commit and the later Buildchain runtime commit are separately bound so the
+first v3 integration never relies on a mutable or self-referential workflow ref.
 
 ## Prepare the Release Passport
 
@@ -95,7 +97,9 @@ buildchain create github-artifact-attestation-policy \
 The input object contains `subject`, `caller`, `signer`, and `build` objects.
 The CLI computes no trusted values implicitly: the caller supplies the already
 measured subject size/digest, source commit/tree, platform-manifest digest,
-runner receipt root, and exact Buildchain workflow commit.
+runner receipt root, exact signer-bootstrap commit, and exact Buildchain runtime
+commit. The bootstrap PR lands the reusable signer first; a later integration
+PR can then pin that immutable signer SHA while retaining its own runtime SHA.
 
 Pass the policy into Release Passport collection:
 
@@ -108,7 +112,9 @@ buildchain collect github-release \
 ```
 
 The build, Passport, and attestation jobs must stay in the same workflow run.
-Call the reusable attester after the Passport job and pin Buildchain exactly:
+Low-level callers can call the reusable attester after the Passport job. Both
+the reusable workflow ref and `buildchain-ref` pin the exact signer-bootstrap
+commit:
 
 ```yaml
 jobs:
@@ -120,9 +126,9 @@ jobs:
       attestations: write
       contents: read
       id-token: write
-    uses: kungfu-systems/buildchain/.github/workflows/github-artifact-attestation.yml@<exact-buildchain-sha>
+    uses: kungfu-systems/buildchain/.github/workflows/github-artifact-attestation.yml@<exact-signer-bootstrap-sha>
     with:
-      buildchain-ref: <exact-buildchain-sha>
+      buildchain-ref: <exact-signer-bootstrap-sha>
       evidence-run-id: ${{ github.run_id }}
       subject-artifact-name: linux-release
       subject-relative-path: libnode-linux-x64.tar.gz
@@ -146,6 +152,8 @@ The reusable workflow runs that same exact signer/source verification
 immediately after `actions/attest` and before it finalizes or uploads evidence.
 Passing a different `buildchain-ref` than the commit used to invoke the reusable
 workflow therefore fails in the signer job, not only during later consumption.
+The policy separately retains the exact Buildchain runtime SHA that created the
+build and release evidence; it need not equal the signer-bootstrap SHA.
 
 ```bash
 buildchain verify github-artifact-attestation \
