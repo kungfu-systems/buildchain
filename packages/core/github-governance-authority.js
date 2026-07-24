@@ -1234,6 +1234,12 @@ export function createGithubRulesetGovernanceRolloutPlan({
   const desiredPullRequestRule = {
     type: "pull_request",
     parameters: {
+      allowed_merge_methods: ["merge", "squash", "rebase"],
+      dismissal_restriction: {
+        allowed_actors: [],
+        enabled: false,
+      },
+      required_reviewers: [],
       ...(pullRequestRules[0]?.parameters || {}),
       dismiss_stale_reviews_on_push: true,
       require_code_owner_review: true,
@@ -1245,6 +1251,7 @@ export function createGithubRulesetGovernanceRolloutPlan({
   const desiredStatusCheckRule = {
     type: "required_status_checks",
     parameters: {
+      do_not_enforce_on_create: false,
       ...(statusCheckRules[0]?.parameters || {}),
       required_status_checks: requiredStatusChecks,
       strict_required_status_checks_policy:

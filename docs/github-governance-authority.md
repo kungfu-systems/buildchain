@@ -221,7 +221,9 @@ For an admitted exact target, repository ruleset reconciliation compiles the
 target descriptor into the provider body. It replaces bypass actors with the
 exact provider-admitted desired set, requires fresh Code Owner approval and
 resolved review threads, and binds required checks plus strict-update semantics
-to the target policy. Repository rulesets default to no bypass actors. The
+to the target policy. Newly synthesized managed rules include GitHub's explicit
+canonical defaults so the frozen expected root matches provider read-back.
+Repository rulesets default to no bypass actors. The
 descriptor's target-bound GitHub Actions allowance is an upper bound on
 effective provider state, not a requirement to add that actor to every
 protection layer; when needed, the built-in App allowance is expressed by
