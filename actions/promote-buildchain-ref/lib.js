@@ -2603,6 +2603,8 @@ async function assertChannelPromotionPr({
     const headRepo = pullRequest.head?.repo?.full_name;
     const matchingVersionStateTarget = parseVersionStateBranchName(headRef);
     const matchingPublishGateTarget = parsePublishGateChannelRef(headRef)?.targetRef;
+    const matchingReleaseRecoveryTarget =
+      parseReleaseLineRecoveryRef(headRef)?.targetRef;
     if (getPromotionRule(targetRef).channel === "major") {
       return (
         pullRequest.merged_at &&
@@ -2617,14 +2619,18 @@ async function assertChannelPromotionPr({
       (
         headRef === expectedHeadRef ||
         matchingVersionStateTarget === targetRef ||
-        matchingPublishGateTarget === targetRef
+        matchingPublishGateTarget === targetRef ||
+        (
+          getPromotionRule(targetRef).channel === "release" &&
+          matchingReleaseRecoveryTarget === targetRef
+        )
       ) &&
       headRepo === `${owner}/${repo}`
     );
   });
   if (!matchingPullRequest) {
     throw new Error(
-      `Promotion source ${sha} must come from a merged same-repository PR ${expectedHeadRef} -> ${targetRef}, publish-gate/${getPromotionRule(targetRef).channel}/... -> ${targetRef}, or buildchain/version-state/* -> ${targetRef}`,
+      `Promotion source ${sha} must come from a merged same-repository PR ${expectedHeadRef} -> ${targetRef}, publish-gate/${getPromotionRule(targetRef).channel}/... -> ${targetRef}, buildchain/version-state/* -> ${targetRef}, or an exact line-scoped release recovery PR`,
     );
   }
   return matchingPullRequest;
@@ -4630,13 +4636,25 @@ async function promoteBuildchainRefs({
     }
     if (commit.treeSha === alphaTreeSha) {
       try {
-        await assertChannelPromotionPr({
+        const promotionPullRequest = await assertChannelPromotionPr({
           octokit,
           owner,
           repo,
           sha: commitSha,
           targetRef,
         });
+        if (
+          parseReleaseLineRecoveryRef(promotionPullRequest.head?.ref)?.targetRef ===
+          targetRef
+        ) {
+          updates.push({
+            action: "accepted-release-recovery-tree-equivalent-source",
+            sha: commitSha,
+            alphaTag,
+            alphaSha,
+            targetRef,
+          });
+        }
       } catch (error) {
         const matchingReleaseRecoveryPullRequest =
           await findMatchingReleaseRecoveryPullRequest({ commitSha, targetRef });
@@ -4692,13 +4710,25 @@ async function promoteBuildchainRefs({
       const parent = await getCommitInfo(octokit, owner, repo, parentSha);
       if (parent.treeSha === alphaTreeSha) {
         try {
-          await assertChannelPromotionPr({
+          const promotionPullRequest = await assertChannelPromotionPr({
             octokit,
             owner,
             repo,
             sha: parentSha,
             targetRef,
           });
+          if (
+            parseReleaseLineRecoveryRef(promotionPullRequest.head?.ref)?.targetRef ===
+            targetRef
+          ) {
+            updates.push({
+              action: "accepted-release-recovery-tree-equivalent-source",
+              sha: parentSha,
+              alphaTag,
+              alphaSha,
+              targetRef,
+            });
+          }
         } catch (error) {
           const matchingReleaseRecoveryPullRequest =
             await findMatchingReleaseRecoveryPullRequest({ commitSha: parentSha, targetRef });
