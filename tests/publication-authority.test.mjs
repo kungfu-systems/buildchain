@@ -690,6 +690,32 @@ test("control-plane snapshot qualifies an exact provider-enforced protected-bran
   const receipt = evaluatePublicationControlPlaneSnapshot({ ...common, snapshot });
   assert.equal(receipt.facts.every((entry) => entry.status === "pass"), true);
 
+  const historicalSource = evaluatePublicationControlPlaneSnapshot({
+    ...common,
+    snapshot: {
+      ...snapshot,
+      branch: {
+        ...snapshot.branch,
+        headSha: "c".repeat(40),
+        sourceContainedInBranch: true,
+      },
+    },
+  });
+  assert.equal(historicalSource.facts.find((entry) => entry.id === "branch-policy").status, "pass");
+
+  const uncontainedHistoricalSource = evaluatePublicationControlPlaneSnapshot({
+    ...common,
+    snapshot: {
+      ...snapshot,
+      branch: {
+        ...snapshot.branch,
+        headSha: "c".repeat(40),
+        sourceContainedInBranch: false,
+      },
+    },
+  });
+  assert.equal(uncontainedHistoricalSource.facts.find((entry) => entry.id === "branch-policy").status, "fail");
+
   const legacyJobId = evaluatePublicationControlPlaneSnapshot({
     ...common,
     requiredStatusCheck: "build",
