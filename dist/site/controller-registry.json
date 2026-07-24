@@ -1470,6 +1470,10 @@
           "classification": "redacted",
           "source": "workflow-call-secret"
         },
+        "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
         "allow-repository": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -1836,7 +1840,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:d9e2d37a8902d4c72f41de6029cc633952ba5911fc0af4a3ffc751e851d8c5ee"
+      "digest": "sha256:98e2676d01470992d7b4ca9c2a1e12b0e6c816c0586a8e8e1736f4b58a1360a9"
     },
     {
       "schemaVersion": 1,
@@ -2012,5 +2016,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:07b21fc27e006ab5679536a8661e8fef2cacfd96035c238938fd8d12b99fd65a"
+  "digest": "sha256:b7eb27d09a44a5c91dbbc6421fbfe4098aa9bce6596ae5327e1632e0e7677d0e"
 }
