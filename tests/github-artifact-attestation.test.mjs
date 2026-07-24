@@ -277,3 +277,36 @@ test("wrong source, signer digest, Passport root, or missing verified statement 
   assert.equal(missingStatement.ok, false);
   assert.match(missingStatement.issues[0].message, /no matching verified statement/);
 });
+
+test("wrong caller repository and missing bundle or evidence fail closed", () => {
+  const value = fixture();
+  assert.throws(
+    () => prepareGitHubArtifactAttestation({
+      subjectPath: value.subjectPath,
+      platformManifestPath: value.manifestPath,
+      releasePassportPath: value.passportPath,
+      policy: value.policy,
+      expectedCallerRepository: "kungfu-systems/substituted",
+    }),
+    /policy caller repository mismatch/,
+  );
+  const missingBundle = verifyGitHubArtifactAttestationEvidence({
+    artifactPath: value.subjectPath,
+    platformManifestPath: value.manifestPath,
+    releasePassportPath: value.passportPath,
+    bundlePath: path.join(value.root, "missing", "bundle.json"),
+    evidence: value.evidence,
+    verificationResults: [{ verificationResult: { statement: value.statement } }],
+  });
+  assert.equal(missingBundle.ok, false);
+  assert.match(missingBundle.issues[0].message, /ENOENT/);
+  const missingEvidence = verifyGitHubArtifactAttestationEvidence({
+    artifactPath: value.subjectPath,
+    platformManifestPath: value.manifestPath,
+    releasePassportPath: value.passportPath,
+    bundlePath: value.bundlePath,
+    verificationResults: [{ verificationResult: { statement: value.statement } }],
+  });
+  assert.equal(missingEvidence.ok, false);
+  assert.match(missingEvidence.issues[0].message, /evidence must be a JSON object/);
+});
