@@ -239,6 +239,16 @@ function main() {
   const deploymentBranches = environment !== "none" && environmentState.deployment_branch_policy?.custom_branch_policies === true
     ? githubJson(`repos/${repository}/environments/${encodeURIComponent(environment)}/deployment-branch-policies?per_page=100`, "Environment deployment branch policy")
     : { branch_policies: [] };
+  const exactEnvironmentBranchPolicy = (deploymentBranches.branch_policies || []).find((entry) =>
+    entry?.type === "branch" && entry?.name === branch
+  );
+  const environmentBranchAuthorized = environment !== "none" && (
+    (
+      environmentState.deployment_branch_policy?.protected_branches === true &&
+      branchState.protected === true
+    ) ||
+    Boolean(exactEnvironmentBranchPolicy)
+  );
   const oidc = githubJson(`repos/${repository}/actions/oidc/customization/sub`, "OIDC subject policy");
   if (!["npm-trusted-publisher", "github-token", "oidc-role"].includes(publisherMode)) {
     throw new Error(`unsupported --publisher-mode: ${publisherMode}`);
@@ -259,7 +269,7 @@ function main() {
       enforceAdmins: protection.enforce_admins?.enabled === true,
       observedRulesetCount: rulesets.length,
     };
-  } else if (rulesetBranchPolicy.rulesetCount > 0) {
+  } else if (rulesetBranchPolicy.rulesetCount > 0 && rulesetBranchPolicy.strict) {
     branchPolicy = rulesetBranchPolicy;
   } else {
     if (!/^[0-9a-f]{40}$/.test(sourceSha)) {
@@ -277,10 +287,24 @@ function main() {
       message: sourceMessage,
       changedPaths: sourceChangedPaths,
     };
+    const branchHeadSha = String(branchState.commit?.sha || "").toLowerCase();
+    const sourceComparison = sourceSha === branchHeadSha
+      ? null
+      : githubJson(
+        `repos/${repository}/compare/${sourceSha}...${branchHeadSha}`,
+        "source protected-branch lineage",
+      );
+    const sourceContainedInBranch = sourceSha === branchHeadSha || (
+      sourceComparison?.status === "ahead" &&
+      String(sourceComparison?.merge_base_commit?.sha || "").toLowerCase() === sourceSha
+    );
     let pullRequests = githubJson(`repos/${repository}/commits/${authorizationSha}/pulls`, "source pull-request lineage");
     let mergedPullRequest = (Array.isArray(pullRequests) ? pullRequests : []).find((entry) =>
       entry?.merged_at &&
-      entry.merge_commit_sha === authorizationSha &&
+      (
+        String(entry.merge_commit_sha || "").toLowerCase() === authorizationSha ||
+        String(entry.head?.sha || "").toLowerCase() === authorizationSha
+      ) &&
       entry.base?.ref === branch &&
       entry.head?.repo?.full_name === repository
     );
@@ -318,10 +342,12 @@ function main() {
       const login = String(review?.user?.login || "");
       if (login) latestReviews.set(login, review);
     }
-    const independentApprovals = [...latestReviews.values()].filter((review) =>
-      review.state === "APPROVED" && review.user?.login !== mergedPullRequest?.user?.login
-    );
     const pullRequestHeadSha = String(mergedPullRequest?.head?.sha || "").toLowerCase();
+    const independentApprovals = [...latestReviews.values()].filter((review) =>
+      review.state === "APPROVED" &&
+      review.user?.login !== mergedPullRequest?.user?.login &&
+      String(review.commit_id || "").toLowerCase() === pullRequestHeadSha
+    );
     const checkRuns = /^[0-9a-f]{40}$/.test(pullRequestHeadSha)
       ? githubJson(`repos/${repository}/commits/${pullRequestHeadSha}/check-runs?per_page=100`, "merged pull-request head check runs")
       : { check_runs: [] };
@@ -360,7 +386,8 @@ function main() {
       requiredCheckSha: pullRequestHeadSha,
       sourceSha,
       authorizationSha,
-      headSha: String(branchState.commit?.sha || "").toLowerCase(),
+      headSha: branchHeadSha,
+      sourceContainedInBranch,
       releaseReconciliation,
       mergedPullRequest: Boolean(mergedPullRequest),
       pullRequestNumber: mergedPullRequest?.number || 0,
@@ -371,6 +398,8 @@ function main() {
       independentApproval: independentApprovals.length > 0,
       configurationRead: false,
       evidenceSource: "public-provider-transaction",
+      observedRulesetCount: rulesetBranchPolicy.rulesetCount,
+      configuredPolicyMode: rulesetBranchPolicy.rulesetCount > 0 ? "ruleset" : "unreadable",
     };
   }
   let publisher;
@@ -435,6 +464,13 @@ function main() {
         protected: (environmentState.protection_rules || []).length > 0 ||
           environmentState.deployment_branch_policy?.protected_branches === true ||
           (deploymentBranches.branch_policies || []).length > 0,
+        branchAuthorized: environmentBranchAuthorized,
+        branchPolicyMode: environmentState.deployment_branch_policy?.protected_branches === true
+          ? "protected-branches"
+          : exactEnvironmentBranchPolicy
+            ? "exact-custom-branch"
+            : "unqualified",
+        authorizedBranch: exactEnvironmentBranchPolicy?.name || "",
         reviewRequired: reviewRules.length > 0,
         preventSelfReview: reviewRules.some((rule) => rule.prevent_self_review === true),
       },

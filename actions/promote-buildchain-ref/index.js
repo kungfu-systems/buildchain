@@ -267,6 +267,7 @@ async function main() {
   const reconciliationWorkspace = core.getInput("reconciliation-workspace");
   const requiredStatusCheck = core.getInput("required-status-check") || "check / check";
   const generatedStatusCheckToken = core.getInput("generated-status-check-token") || token;
+  const generatedPullRequestToken = core.getInput("generated-pull-request-token") || token;
   const generatedRefUpdateToken = core.getInput("generated-ref-update-token") || token;
   const branchProtectionBypassApps = core.getInput("branch-protection-bypass-apps");
   const branchProtectionBypassUsers = core.getInput("branch-protection-bypass-users");
@@ -295,6 +296,7 @@ async function main() {
   const releaseMaterialSha = core.getInput("release-material-sha");
   const publishToolingSha = core.getInput("publish-tooling-sha");
   const publishTransactionOverride = core.getBooleanInput("publish-transaction-override");
+  const publishRematerializeOnResume = core.getBooleanInput("publish-rematerialize-on-resume");
   const releasePassport = core.getBooleanInput("release-passport");
   const releasePassportOutputDir = core.getInput("release-passport-output-dir");
   const releasePassportProductName = core.getInput("release-passport-product-name");
@@ -323,6 +325,8 @@ async function main() {
   const octokit = github.getOctokit(token);
   const statusCheckOctokit =
     generatedStatusCheckToken === token ? octokit : github.getOctokit(generatedStatusCheckToken);
+  const pullRequestOctokit =
+    generatedPullRequestToken === token ? octokit : github.getOctokit(generatedPullRequestToken);
   const refUpdateOctokit =
     generatedRefUpdateToken === token ? octokit : github.getOctokit(generatedRefUpdateToken);
   if (requirePublishSourceLock) {
@@ -360,6 +364,7 @@ async function main() {
     reconciliationWorkspace,
     requiredStatusCheck,
     statusCheckOctokit,
+    pullRequestOctokit,
     refUpdateOctokit,
     branchProtectionBypassApps,
     branchProtectionBypassUsers,
@@ -374,6 +379,7 @@ async function main() {
     publishDistTag,
     publishPackageSetOrder,
     publishPackageMain,
+    publishRematerializeOnResume,
     expectedPublicationVersion,
     requirePublicationQualification,
     publicationCapabilityJson,

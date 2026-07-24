@@ -168,7 +168,10 @@ test("stable route calls the hidden advanced workflow at the immutable v2.14.13 
     callRef: "725592ae025003071b8d33fdb49e0157842fe76c",
     workflowPath: ".github/workflows/.release-candidate-promote.yml",
     forwardInternalInputs: true,
-    unsupportedInputs: ["standalone-binary-distribution"],
+    unsupportedInputs: [
+      "standalone-binary-distribution",
+      "publish-rematerialize-on-resume",
+    ],
   });
   assert.match(generated, /STABLE_SHELL_REF: v2/);
   assert.match(generated, /STABLE_SHELL_CALL_REF: 725592ae025003071b8d33fdb49e0157842fe76c/);
@@ -190,6 +193,7 @@ test("stable route forwards only inputs supported by its immutable workflow shel
     assert.match(stableBlock, new RegExp(`^      ${name}:`, "m"));
   }
   assert.doesNotMatch(stableBlock, /^      standalone-binary-distribution:/m);
+  assert.doesNotMatch(stableBlock, /^      publish-rematerialize-on-resume:/m);
   assert.match(
     stableBlock,
     /^      promotion-shell-ref: \$\{\{ needs\.resolve-promotion\.outputs\.shell-call-ref \}\}$/m,

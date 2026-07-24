@@ -50,15 +50,12 @@ jobs:
     name: Bootstrap release line
     runs-on: ubuntu-24.04
     env:
-      GH_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+      GH_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
       BUILDCHAIN_MAJOR: ${{ inputs.major }}
       BUILDCHAIN_MINOR: ${{ inputs.minor }}
       BUILDCHAIN_SOURCE_REF: ${{ inputs.source-ref }}
       BUILDCHAIN_INITIAL_VERSION: ${{ inputs.initial-version }}
       BUILDCHAIN_REQUIRED_STATUS_CHECK: ${{ inputs.required-status-check }}
-      BUILDCHAIN_PROMOTION_BYPASS_APPS: ${{ vars.BUILDCHAIN_PROMOTION_BYPASS_APPS }}
-      BUILDCHAIN_PROMOTION_BYPASS_USERS: ${{ vars.BUILDCHAIN_PROMOTION_BYPASS_USERS }}
-      BUILDCHAIN_PROMOTION_BYPASS_TEAMS: ${{ vars.BUILDCHAIN_PROMOTION_BYPASS_TEAMS }}
       BUILDCHAIN_CREATE_ALPHA_PR: ${{ inputs.create-alpha-pr }}
       BUILDCHAIN_SET_DEFAULT_BRANCH: ${{ inputs.set-default-branch }}
       BUILDCHAIN_APPLY: ${{ inputs.apply }}
@@ -68,7 +65,7 @@ jobs:
         with:
           ref: ${{ inputs.source-ref }}
           fetch-depth: 0
-          token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+          token: ${{ github.token }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -177,44 +174,39 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          csv_json() {
-            jq -Rn --arg value "$1" \
-              '$value | split(",") | map(gsub("^\\s+|\\s+$"; "")) | map(select(length > 0))'
-          }
-          bypass_apps="$(csv_json "$BUILDCHAIN_PROMOTION_BYPASS_APPS")"
-          bypass_users="$(csv_json "$BUILDCHAIN_PROMOTION_BYPASS_USERS")"
-          bypass_teams="$(csv_json "$BUILDCHAIN_PROMOTION_BYPASS_TEAMS")"
-          if jq -e -n \
-            --argjson apps "$bypass_apps" \
-            --argjson users "$bypass_users" \
-            --argjson teams "$bypass_teams" \
-            '($apps + $users + $teams) | length == 0' >/dev/null; then
-            echo "::error::Release line bootstrap requires a declared promotion bypass app, user, or team." >&2
-            echo "::error::Configure BUILDCHAIN_PROMOTION_BYPASS_APPS, BUILDCHAIN_PROMOTION_BYPASS_USERS, or BUILDCHAIN_PROMOTION_BYPASS_TEAMS before apply=true." >&2
+          if [[ -z "$GH_TOKEN" ]]; then
+            echo "::error::Release line bootstrap requires BUILDCHAIN_PROMOTION_TOKEN to configure branch protection." >&2
             exit 1
           fi
           for branch in "${{ steps.plan.outputs.dev_ref }}" "${{ steps.plan.outputs.alpha_ref }}" "${{ steps.plan.outputs.release_ref }}"; do
             jq -n \
               --arg context "$BUILDCHAIN_REQUIRED_STATUS_CHECK" \
               --arg branch "$branch" \
-              --argjson bypass_apps "$bypass_apps" \
-              --argjson bypass_users "$bypass_users" \
-              --argjson bypass_teams "$bypass_teams" \
-              '($branch | startswith("dev/")) as $dev_channel |
+              --argjson github_actions_app_id 15368 \
+              '($branch | startswith("alpha/")) as $alpha_channel |
+              ($branch | startswith("release/")) as $release_channel |
               {
                 required_status_checks: {
-                  strict: $dev_channel,
-                  contexts: (if $dev_channel then [$context] else [$context, "verify"] | unique end)
+                  strict: $release_channel,
+                  checks: (
+                    if $alpha_channel
+                    then [$context, "verify"]
+                    else [$context]
+                    end
+                    | unique
+                    | map({context: ., app_id: $github_actions_app_id})
+                  )
                 },
                 enforce_admins: true,
                 required_pull_request_reviews: {
+                  dismiss_stale_reviews: true,
                   required_approving_review_count: 1,
-                  require_code_owner_reviews: false,
-                  require_last_push_approval: false,
+                  require_code_owner_reviews: true,
+                  require_last_push_approval: true,
                   bypass_pull_request_allowances: {
-                    apps: $bypass_apps,
-                    users: $bypass_users,
-                    teams: $bypass_teams
+                    apps: ["github-actions"],
+                    users: [],
+                    teams: []
                   }
                 },
                 restrictions: null,

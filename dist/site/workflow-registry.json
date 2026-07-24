@@ -12,6 +12,7 @@
         "buildchain-ref",
         "buildchain-repository",
         "evidence-run-id",
+        "github-governance-receipt-json",
         "publication-admission-json",
         "publication-control-plane-audit-json",
         "publication-expected-json",
@@ -23,7 +24,7 @@
         "source-sha",
         "target-ref"
       ],
-      "inputCount": 14,
+      "inputCount": 15,
       "secrets": [],
       "secretCount": 0,
       "outputs": [],
@@ -63,7 +64,12 @@
         "checkout-cache-mode",
         "checkout-cache-reference-repository-template",
         "checkout-cache-timeout-seconds",
+        "credential-island-caller-owned",
+        "credential-island-environment",
+        "credential-island-macos-app-path",
+        "credential-island-macos-platform-id",
         "expected-artifacts-json",
+        "fail-fast",
         "gate-profile-aggregate-json",
         "install-command",
         "kfd-agent-hub",
@@ -98,13 +104,18 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 60,
+      "inputCount": 65,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
-        "BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN"
+        "BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN",
+        "BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64",
+        "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD",
+        "BUILDCHAIN_MACOS_NOTARY_API_ISSUER",
+        "BUILDCHAIN_MACOS_NOTARY_API_KEY_ID",
+        "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64"
       ],
-      "secretCount": 3,
+      "secretCount": 8,
       "outputs": [
         "build-diagnostics-summary-artifact",
         "build-diagnostics-summary-json",
@@ -125,6 +136,8 @@
         "controller-receipt-digest",
         "controller-receipt-json",
         "controller-receipt-status",
+        "credential-island-macos-artifact",
+        "credential-island-macos-manifest-artifact",
         "linux-container-enabled",
         "linux-container-image",
         "platform-count",
@@ -146,7 +159,7 @@
         "runner-preset",
         "trusted-event"
       ],
-      "outputCount": 39,
+      "outputCount": 41,
       "surface": "reusable-build",
       "capabilityGroup": "api-cli-reference",
       "status": "active"
@@ -243,6 +256,7 @@
         "evidence-summary-artifact",
         "expected-json",
         "gate-aggregate-json",
+        "github-governance-receipt-json",
         "package-name",
         "product",
         "publication-target",
@@ -254,9 +268,11 @@
         "target-ref",
         "used-nonces-json"
       ],
-      "inputCount": 32,
-      "secrets": [],
-      "secretCount": 0,
+      "inputCount": 33,
+      "secrets": [
+        "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
+      ],
+      "secretCount": 1,
       "outputs": [
         "capability-artifact",
         "capability-digest",
@@ -287,8 +303,10 @@
         "buildchain-repository",
         "channel",
         "dry-run",
+        "github-governance-receipt-json",
         "github-release",
         "github-release-notes",
+        "github-release-payload-patterns",
         "github-release-title",
         "package-manager",
         "promotion-contract-lock-digest",
@@ -305,6 +323,8 @@
         "publication-admission-json",
         "publication-auto-admission",
         "publication-auto-no-gate",
+        "publication-commit-command",
+        "publication-commit-evidence-path",
         "publication-consumer-predicate-id",
         "publication-consumer-qualification-command",
         "publication-control-plane-audit-json",
@@ -323,6 +343,7 @@
         "publish-mode",
         "publish-package-main",
         "publish-package-set-order",
+        "publish-rematerialize-on-resume",
         "publish-required-artifacts-json",
         "publish-target",
         "release-candidate-workflow-file",
@@ -348,17 +369,20 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 73,
+      "inputCount": 78,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
         "BUILDCHAIN_ISSUE_TOKEN",
         "BUILDCHAIN_PROMOTION_TOKEN",
+        "BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY",
+        "BUILDCHAIN_PUBLICATION_COMMIT_TOKEN",
+        "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY",
         "buildchain-issue-app-id",
         "buildchain-issue-app-private-key",
         "buildchain-issue-token"
       ],
-      "secretCount": 7,
+      "secretCount": 10,
       "outputs": [
         "built-source-sha",
         "controller-plan-artifact",
@@ -370,9 +394,13 @@
         "controller-receipt-status",
         "promoted-sha",
         "publication-capability-digest",
+        "publication-commit-evidence-digest",
+        "publication-commit-evidence-path",
+        "publication-commit-payload-root",
+        "publication-commit-url",
         "release-candidate-artifact"
       ],
-      "outputCount": 11,
+      "outputCount": 15,
       "surface": "reusable-workflow",
       "capabilityGroup": "api-cli-reference",
       "status": "active"
@@ -648,6 +676,7 @@
         "buildchain-ref",
         "buildchain-repository",
         "fail-on-release-pr-error",
+        "github-governance-receipt-json",
         "node-version",
         "preview-apply",
         "preview-aws-role-arn",
@@ -679,7 +708,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 39,
+      "inputCount": 40,
       "secrets": [
         "production-release-app-private-key"
       ],
@@ -835,7 +864,12 @@
         "checkout-cache-mode",
         "checkout-cache-reference-repository-template",
         "checkout-cache-timeout-seconds",
+        "credential-island-caller-owned",
+        "credential-island-environment",
+        "credential-island-macos-app-path",
+        "credential-island-macos-platform-id",
         "expected-artifacts-json",
+        "fail-fast",
         "gate-profile-aggregate-json",
         "install-command",
         "kfd-agent-hub",
@@ -870,13 +904,18 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 63,
+      "inputCount": 68,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
-        "BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN"
+        "BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN",
+        "BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64",
+        "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD",
+        "BUILDCHAIN_MACOS_NOTARY_API_ISSUER",
+        "BUILDCHAIN_MACOS_NOTARY_API_KEY_ID",
+        "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64"
       ],
-      "secretCount": 3,
+      "secretCount": 8,
       "outputs": [
         "build-diagnostics-summary-artifact",
         "build-diagnostics-summary-json",
@@ -900,6 +939,8 @@
         "controller-receipt-digest",
         "controller-receipt-json",
         "controller-receipt-status",
+        "credential-island-macos-artifact",
+        "credential-island-macos-manifest-artifact",
         "linux-container-enabled",
         "linux-container-image",
         "platform-count",
@@ -921,7 +962,7 @@
         "runner-preset",
         "trusted-event"
       ],
-      "outputCount": 42,
+      "outputCount": 44,
       "surface": "channel-build-router",
       "capabilityGroup": "reusable-build",
       "status": "active"
@@ -1159,6 +1200,20 @@
       "status": "active"
     },
     {
+      "id": "github-governance-audit",
+      "path": ".github/workflows/github-governance-audit.yml",
+      "reusable": false,
+      "inputs": [],
+      "inputCount": 0,
+      "secrets": [],
+      "secretCount": 0,
+      "outputs": [],
+      "outputCount": 0,
+      "surface": "dev-governance",
+      "capabilityGroup": "api-cli-reference",
+      "status": "active"
+    },
+    {
       "id": "npm-publish",
       "path": ".github/workflows/npm-publish.yml",
       "reusable": false,
@@ -1187,6 +1242,7 @@
         "buildchain-ref",
         "buildchain-repository",
         "dry-run",
+        "github-governance-receipt-json",
         "github-release",
         "github-release-notes",
         "github-release-title",
@@ -1203,7 +1259,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 25,
+      "inputCount": 26,
       "secrets": [
         "BUILDCHAIN_PROMOTION_TOKEN"
       ],
@@ -1237,6 +1293,7 @@
         "buildchain-ref",
         "buildchain-repository",
         "dry-run",
+        "github-governance-receipt-json",
         "github-release",
         "github-release-notes",
         "github-release-title",
@@ -1263,7 +1320,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 37,
+      "inputCount": 38,
       "secrets": [],
       "secretCount": 0,
       "outputs": [
@@ -1478,13 +1535,17 @@
         "buildchain-stable-contract-lock-path",
         "channel",
         "dry-run",
+        "github-governance-receipt-json",
         "github-release",
         "github-release-notes",
+        "github-release-payload-patterns",
         "github-release-title",
         "package-manager",
         "publication-admission-json",
         "publication-auto-admission",
         "publication-auto-no-gate",
+        "publication-commit-command",
+        "publication-commit-evidence-path",
         "publication-consumer-predicate-id",
         "publication-consumer-qualification-command",
         "publication-control-plane-audit-json",
@@ -1503,6 +1564,7 @@
         "publish-mode",
         "publish-package-main",
         "publish-package-set-order",
+        "publish-rematerialize-on-resume",
         "publish-required-artifacts-json",
         "publish-target",
         "release-candidate-workflow-file",
@@ -1528,17 +1590,20 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 65,
+      "inputCount": 70,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
         "BUILDCHAIN_ISSUE_TOKEN",
         "BUILDCHAIN_PROMOTION_TOKEN",
+        "BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY",
+        "BUILDCHAIN_PUBLICATION_COMMIT_TOKEN",
+        "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY",
         "buildchain-issue-app-id",
         "buildchain-issue-app-private-key",
         "buildchain-issue-token"
       ],
-      "secretCount": 7,
+      "secretCount": 10,
       "outputs": [
         "buildchain-channel",
         "built-source-sha",
@@ -1562,9 +1627,13 @@
         "promotion-shell-sha",
         "promotion-target-ref",
         "publication-capability-digest",
+        "publication-commit-evidence-digest",
+        "publication-commit-evidence-path",
+        "publication-commit-payload-root",
+        "publication-commit-url",
         "release-candidate-artifact"
       ],
-      "outputCount": 23,
+      "outputCount": 27,
       "surface": "release-governance",
       "capabilityGroup": "reusable-build",
       "status": "active"
@@ -1760,6 +1829,35 @@
   "actionSource": "actions/*/action.yml reverse input enumeration",
   "actions": [
     {
+      "id": "macos-credential-island",
+      "path": "actions/macos-credential-island/action.yml",
+      "inputs": [
+        "artifact-name",
+        "artifact-relative-output",
+        "artifact-stem",
+        "buildchain-runtime-sha",
+        "certificate-p12-base64",
+        "certificate-password",
+        "certificate-sha1",
+        "entitlements-profile",
+        "expected-bundle-id",
+        "expected-team-id",
+        "input-root",
+        "notary-api-issuer",
+        "notary-api-key-id",
+        "notary-api-key-p8-base64",
+        "output-root",
+        "platform-id",
+        "source-ref",
+        "source-repository",
+        "source-sha",
+        "source-tree-sha"
+      ],
+      "inputCount": 20,
+      "capabilityGroup": "api-cli-reference",
+      "status": "active"
+    },
+    {
       "id": "promote-buildchain-ref",
       "path": "actions/promote-buildchain-ref/action.yml",
       "inputs": [
@@ -1769,6 +1867,7 @@
         "branch-protection-bypass-users",
         "dry-run",
         "expected-publication-version",
+        "generated-pull-request-token",
         "generated-ref-update-token",
         "generated-status-check-token",
         "github-release",
@@ -1787,6 +1886,7 @@
         "publish-mode",
         "publish-package-main",
         "publish-package-set-order",
+        "publish-rematerialize-on-resume",
         "publish-required-artifacts-json",
         "publish-source-locked",
         "publish-source-ref",
@@ -1826,7 +1926,7 @@
         "transaction-state-path",
         "verification-command"
       ],
-      "inputCount": 62,
+      "inputCount": 64,
       "capabilityGroup": "release-passport-trust",
       "status": "active"
     },

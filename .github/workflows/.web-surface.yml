@@ -160,6 +160,11 @@ on:
         default: ""
         type: string
         required: false
+      github-governance-receipt-json:
+        description: "Fresh qualifying governance receipt for the exact production repository and target ref"
+        default: ""
+        type: string
+        required: false
       publication-gate-aggregate-json:
         description: "Optional complete Gate aggregate for the external sealed-evidence compatibility path."
         default: ""
@@ -1543,7 +1548,9 @@ jobs:
       }}
     permissions:
       actions: read
+      checks: read
       contents: read
+      pull-requests: read
     uses: ./.github/workflows/.publication-authority.yml
     with:
       buildchain-repository: ${{ inputs.buildchain-repository }}
@@ -1551,9 +1558,12 @@ jobs:
       admission-json: ${{ inputs.publication-admission-json }}
       runner-provenance-json: ${{ inputs.publication-runner-provenance-json }}
       control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
+      github-governance-receipt-json: ${{ inputs.github-governance-receipt-json }}
       gate-aggregate-json: ${{ inputs.publication-gate-aggregate-json }}
       expected-json: ${{ inputs.publication-expected-json }}
       used-nonces-json: ${{ inputs.publication-used-nonces-json }}
+      target-ref: ${{ github.ref_name }}
+      evidence-repository: ${{ github.repository }}
 
   publication-authority:
     name: Seal managed web production publication capability
@@ -1585,6 +1595,42 @@ jobs:
           ref: ${{ needs.runtime.outputs.runtime-sha }}
           path: .buildchain/runtime
           persist-credentials: false
+
+      - name: Verify exact GitHub governance authority
+        env:
+          BUILDCHAIN_GITHUB_GOVERNANCE_RECEIPT_JSON: ${{ inputs.github-governance-receipt-json }}
+          BUILDCHAIN_GITHUB_GOVERNANCE_EXPECTED_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_GITHUB_GOVERNANCE_EXPECTED_TARGET_REF: ${{ github.ref_name }}
+          BUILDCHAIN_AUTHORITY_REF: ${{ needs.runtime.outputs.runtime-sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import { execFileSync } from "node:child_process";
+          import {
+            BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY,
+            verifyGithubGovernanceReceipt,
+          } from "./.buildchain/runtime/packages/core/github-governance-authority.js";
+          const serialized = process.env.BUILDCHAIN_GITHUB_GOVERNANCE_RECEIPT_JSON;
+          if (!serialized) {
+            throw new Error("production publication requires a fresh GitHub governance receipt");
+          }
+          const actualRuntimeSha = execFileSync(
+            "git",
+            ["-C", ".buildchain/runtime", "rev-parse", "HEAD"],
+            { encoding: "utf8" },
+          ).trim().toLowerCase();
+          if (actualRuntimeSha !== process.env.BUILDCHAIN_AUTHORITY_REF.toLowerCase()) {
+            throw new Error("governance verifier checkout does not match the exact Buildchain runtime");
+          }
+          verifyGithubGovernanceReceipt(JSON.parse(serialized), {
+            expectedOrganization: BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY.organization,
+            expectedRepository: process.env.BUILDCHAIN_GITHUB_GOVERNANCE_EXPECTED_REPOSITORY,
+            expectedTargetRef: process.env.BUILDCHAIN_GITHUB_GOVERNANCE_EXPECTED_TARGET_REF,
+            expectedPolicyRoot: BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY.policyRoot,
+            expectedVerifierSourceRevision: actualRuntimeSha,
+          });
+          NODE
 
       - name: Download web-surface controller plan
         uses: actions/download-artifact@v7.0.0

@@ -7,7 +7,7 @@ export const BUILDCHAIN_CONTROLLER_AGGREGATE_CONTRACT = "buildchain.controller-e
 
 const SHA256_PATTERN = /^sha256:[0-9a-f]{64}$/;
 const GIT_SHA_PATTERN = /^[0-9a-f]{40}$/;
-const STAGE_STATUSES = new Set(["passed", "failed", "skipped", "cancelled", "missing"]);
+const STAGE_STATUSES = new Set(["passed", "failed", "skipped", "cancelled", "missing", "partial"]);
 
 const CONTROLLER_SPECS = [
   {
@@ -22,16 +22,23 @@ const CONTROLLER_SPECS = [
     id: "build-lifecycle",
     workflowId: ".build",
     version: 1,
-    capabilities: ["source-lock", "lifecycle-build", "lifecycle-verify", "artifact-admission"],
+    capabilities: [
+      "source-lock",
+      "lifecycle-build",
+      "credential-island",
+      "lifecycle-verify",
+      "artifact-admission",
+    ],
     stages: [
       "resolve-runtime",
       "resolve-source",
       "anchored-release-preflight",
       "build",
+      "credential-island",
       "verify",
       "aggregate",
     ],
-    optionalStages: ["anchored-release-preflight"],
+    optionalStages: ["anchored-release-preflight", "credential-island"],
     evidence: [
       "platform-manifests",
       "build-summary",

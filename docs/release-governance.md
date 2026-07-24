@@ -703,29 +703,28 @@ same material binding.
 Protected release-line branches keep their normal human review gate. Managed
 `dev/vN/vN.M`, `alpha/vN/vN.M`, and `release/vN/vN.M` branches are configured
 with one required approving review, required GitHub Actions checks, administrator
-enforcement, conversation resolution, no force pushes, and no deletions. Dev
-keeps its repository-selected strict or merge-queue policy. Alpha and release
-require both `check` and the pair-specific `verify` aggregate without requiring
-the source branch to contain the target's generated bookkeeping history. The
+enforcement, conversation resolution, no force pushes, and no deletions. Each
+target uses the exact check set, GitHub App identity, and strictness declared by
+the governance authority descriptor. The
 reusable `release-candidate-promote.yml` wrapper defaults
 `branch-protection-bypass-apps` to `github-actions`, which lets the workflow's
 automation identity apply generated version-state or post-publish channel
 bookkeeping after the reviewed channel PR has merged. Direct
-`promote-buildchain-ref` callers must opt into the same controlled bypass with
-`branch-protection-bypass-apps`, `branch-protection-bypass-users`, or
-`branch-protection-bypass-teams`; the action also adds the current promotion
-token's authenticated user or app to the managed bypass allowlist. Before
+`promote-buildchain-ref` callers may opt into that one controlled bypass with
+`branch-protection-bypass-apps: github-actions`; every other App slug and all
+user or team bypass actors are rejected. Before
 patching a protected generated bookkeeping ref, the action creates the
 full configured required-check set on the exact generated version-state commit, so strict
 status checks are satisfied by machine-verifiable Buildchain evidence rather
 than a human PR. The protected ref PATCH itself uses the generated ref update
-token; the reusable wrapper defaults it to
-`secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token`. If direct generated
+token; the reusable wrapper binds it to the run-scoped `github.token`. If direct generated
 release finalization bookkeeping is still rejected, Buildchain creates or
-reuses a same-repository `buildchain/version-state/*` PR based on the current
-target channel head and records `finalization-needed=true` in the durable
-transaction output. Strict alpha bookkeeping still fails with a
-token/protection diagnostic instead of creating a post-publish PR.
+reuses a same-repository `buildchain/version-state/*` PR and records
+`finalization-needed=true` in the durable transaction output. Strict alpha
+follows the same provider-enforced PR path for its alpha and dev bookkeeping.
+The PR remains subject to the declared review, required checks, and merge-queue
+policy; publication resumes idempotently after that protected transaction
+lands.
 
 For a stable release, the wrapper also checks out the exact current development
 channel into `.buildchain/reconciliation/dev`. When the prepared next-alpha
@@ -734,16 +733,14 @@ promotion action applies the next version to that checkout, regenerates every
 declared derived version-state file, reruns the verification lifecycle, and
 only then creates the two-parent reconciliation commit. A checkout/current-ref
 SHA mismatch blocks reconciliation instead of committing stale projections.
-Buildchain's own promotion workflow reads `BUILDCHAIN_PROMOTION_BYPASS_APPS`,
-`BUILDCHAIN_PROMOTION_BYPASS_USERS`, and
-`BUILDCHAIN_PROMOTION_BYPASS_TEAMS` repository variables so the declared bypass
-identity can match the actual `BUILDCHAIN_PROMOTION_TOKEN` actor, but consumers
-do not need to duplicate that actor manually when the token identity is
-discoverable. Buildchain's release-line bootstrap applies the same declared
-allowances when it creates new `dev`, `alpha`, and `release` branch protection,
-and fails closed before changing protection when no promotion authority is
-declared. This keeps a new minor line publishable without weakening its normal
-human review gate.
+Buildchain's own promotion workflow accepts only
+`BUILDCHAIN_PROMOTION_BYPASS_APPS=github-actions`, defaulting to that exact App
+when the variable is absent. Buildchain's release-line bootstrap uses the
+administrator-scoped promotion token only to configure protection; branch
+creation and generated ref updates use the run-scoped token. New channel
+protection binds required checks to GitHub Actions App id `15368`, enables Code
+Owner, stale-review, and latest-push review gates, and admits no user or team
+bypass actor.
 
 ## What This Guarantees
 
@@ -829,6 +826,23 @@ preserves an existing asset when its SHA-256 digest matches the regenerated
 bytes, uploads only missing assets, and fails with an immutable-release
 collision when a same-name asset has different bytes. It never deletes and
 replaces an existing asset during retry or duplicate workflow delivery.
+
+Product payloads are included only through the explicit
+`github-release-payload-patterns` input. Patterns match basenames inside the
+downloaded PR-stage RC payload bundle; zero matches or duplicate public
+basenames fail closed. This preserves the exact PR-built bytes instead of
+rebuilding archives during promotion.
+
+Consumers with a signed well-known discovery document can additionally provide
+`publication-commit-command`. The advanced promotion workflow validates its
+topology before any publish-gate or release mutation, then runs it only after
+the GitHub Release and its immutable payload/passport assets exist. The command
+must publicly read back the exact new payload root and emit
+`kungfu-buildchain-publication-commit-evidence/v1`; that evidence is copied
+into the controller artifact and exposed as workflow outputs. The previous
+authority must remain valid on every failure. Deferred standalone binary
+distribution is incompatible with this mode because the discovery authority
+must be the final product mutation.
 
 Buildchain also does not maintain bare exact tags such as `1.0.0`. The supported
 exact release and alpha refs are v-prefixed:

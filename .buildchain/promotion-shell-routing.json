@@ -13,7 +13,8 @@
     "workflowPath": ".github/workflows/.release-candidate-promote.yml",
     "forwardInternalInputs": true,
     "unsupportedInputs": [
-      "standalone-binary-distribution"
+      "standalone-binary-distribution",
+      "publish-rematerialize-on-resume"
     ]
   }
 }

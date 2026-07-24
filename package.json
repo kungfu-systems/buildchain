@@ -1,6 +1,6 @@
 {
   "name": "@kungfu-tech/buildchain",
-  "version": "2.14.17",
+  "version": "2.14.18-alpha.11",
   "private": false,
   "description": "Buildchain Release Passport, release governance, CLI toolkit, and site facts.",
   "repository": "https://github.com/kungfu-systems/buildchain",
@@ -37,6 +37,7 @@
     "./publication-authority": "./packages/core/publication-authority.js",
     "./publication-control-plane-audit": "./packages/core/publication-control-plane-audit.js",
     "./buildchain-publication-authority": "./packages/core/buildchain-publication-authority.js",
+    "./github-governance-authority": "./packages/core/github-governance-authority.js",
     "./kfd-gate": "./packages/core/kfd-gate.js",
     "./release-candidate": "./packages/core/release-candidate.js",
     "./stable-candidate-ledger": "./packages/core/stable-candidate-ledger.js",

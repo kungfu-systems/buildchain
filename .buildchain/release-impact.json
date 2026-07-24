@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-impact",
   "release": {
-    "version": "2.14.17",
+    "version": "2.14.18-alpha.11",
     "line": "v2.14"
   },
   "versionImpact": {
@@ -44,6 +44,13 @@
       "impact": "patch",
       "class": "release-governance",
       "rationale": "Alpha and release promotion resume an unfinished durable transaction from source history only when its recorded version matches the exact publication version planned for the current run. Exact-tag recovery also requires matching publication identity and validated artifacts, and only rebinds an unfinished anchored transaction when the stale tag does not represent it and the requested tag is safe, preventing ancestor or tag-selection drift from reclaiming an older public tag after a newer package set is published.",
+      "source": "actions/promote-buildchain-ref/lib.js"
+    },
+    {
+      "id": "protected-version-state-transaction-finalization",
+      "impact": "patch",
+      "class": "release-governance",
+      "rationale": "When a protected version-state pull request merges after registry publication, promotion finalizes only the exact durable source, release material, tooling, evidence, version, and target transaction; it does not republish or authorize the newer composite channel tree, and deferred binary, controller, and consumer publication steps wait until the exact tag and passport exist.",
       "source": "actions/promote-buildchain-ref/lib.js"
     },
     {

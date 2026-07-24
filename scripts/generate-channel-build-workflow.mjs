@@ -54,7 +54,15 @@ function routerOutputs(outputBlock) {
     .replace("value: ${{ jobs.build.outputs.controller-receipt-artifact }}", "value: ${{ jobs.controller-receipt.outputs.controller-receipt-artifact }}")
     .replace("value: ${{ jobs.build.outputs.controller-receipt-json }}", "value: ${{ jobs.controller-receipt.outputs.controller-receipt-json }}")
     .replace("value: ${{ jobs.build.outputs.controller-receipt-digest }}", "value: ${{ jobs.controller-receipt.outputs.controller-receipt-digest }}")
-    .replace("value: ${{ jobs.build.outputs.controller-receipt-status }}", "value: ${{ jobs.controller-receipt.outputs.controller-receipt-status }}");
+    .replace("value: ${{ jobs.build.outputs.controller-receipt-status }}", "value: ${{ jobs.controller-receipt.outputs.controller-receipt-status }}")
+    .replace(
+      /(      credential-island-macos-artifact:\n(?:        .*\n)*?        value:) \$\{\{ jobs\.build\.outputs\.artifact-name \}\}/,
+      "$1 ${{ jobs.build.outputs.credential-island-macos-artifact }}",
+    )
+    .replace(
+      /(      credential-island-macos-manifest-artifact:\n(?:        .*\n)*?        value:) \$\{\{ jobs\.build\.outputs\.manifest-artifact-name \}\}/,
+      "$1 ${{ jobs.build.outputs.credential-island-macos-manifest-artifact }}",
+    );
   return [
     "      buildchain-channel:",
     '        description: "Resolved Buildchain channel: alpha, stable, or override"',
@@ -288,6 +296,10 @@ function bindRouterCheckoutToWorkflowSha(workflow) {
 export function generateChannelBuildWorkflow(source) {
   const generated = bindRouterCheckoutToWorkflowSha(generateChannelBuildWorkflowBase(source))
     .replace(
+      "\npermissions:\n  contents: read\n",
+      "\npermissions:\n  actions: read\n  contents: read\n",
+    )
+    .replace(
       "      contract-lock-path: ${{ steps.lock.outputs.path }}\n",
       [
         "      contract-lock-path: ${{ steps.lock.outputs.path }}",
@@ -301,6 +313,10 @@ export function generateChannelBuildWorkflow(source) {
     .replace(
       "    needs: resolve-channel\n    uses: ./.github/workflows/.build.yml",
       "    needs:\n      - resolve-channel\n      - controller-plan\n    uses: ./.github/workflows/.build.yml",
+    )
+    .replace(
+      "    uses: ./.github/workflows/.build.yml\n    permissions:\n      contents: read\n",
+      "    uses: ./.github/workflows/.build.yml\n    permissions:\n      actions: read\n      contents: read\n",
     );
   return `${generated.trimEnd()}\n\n${routerControllerReceiptJob()}\n\n${routerAggregateJob()}\n`;
 }

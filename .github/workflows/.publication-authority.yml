@@ -26,6 +26,11 @@ on:
         type: string
         required: false
         default: ""
+      github-governance-receipt-json:
+        description: "Optional prior governance receipt for diagnostics; non-dry-run authority always recollects live GitHub state with the dedicated auditor App"
+        type: string
+        required: false
+        default: ""
       gate-aggregate-json:
         description: "Qualifying Shifu Gate aggregate or explicit consumer-owned no-Gate decision"
         type: string
@@ -173,6 +178,10 @@ on:
       gate-aggregate-digest:
         description: "Canonical digest of the transported Gate aggregate"
         value: ${{ jobs.verify.outputs.gate-aggregate-digest }}
+    secrets:
+      KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY:
+        description: "Private key for the dedicated read-only GitHub governance auditor App"
+        required: false
 
 permissions:
   contents: read
@@ -183,7 +192,9 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       actions: read
+      checks: read
       contents: read
+      pull-requests: read
     outputs:
       capability-json: ${{ steps.result.outputs.capability-json }}
       capability-digest: ${{ steps.result.outputs.capability-digest }}
@@ -338,6 +349,83 @@ jobs:
           ref: ${{ inputs.buildchain-ref }}
           path: .buildchain/authority-runtime
           persist-credentials: false
+
+      - name: Mint bounded governance auditor token
+        if: ${{ !inputs.dry-run }}
+        id: governance-auditor
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ vars.KUNGFU_GOVERNANCE_AUDITOR_APP_ID }}
+          private-key: ${{ secrets.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Collect and verify exact live GitHub governance authority
+        if: ${{ !inputs.dry-run }}
+        env:
+          GH_TOKEN: ${{ steps.governance-auditor.outputs.token }}
+          BUILDCHAIN_GITHUB_GOVERNANCE_EXPECTED_REPOSITORY: ${{ inputs.evidence-repository || github.repository }}
+          BUILDCHAIN_GITHUB_GOVERNANCE_EXPECTED_TARGET_REF: ${{ inputs.target-ref }}
+          BUILDCHAIN_AUTHORITY_REF: ${{ inputs.buildchain-ref }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          repository="$BUILDCHAIN_GITHUB_GOVERNANCE_EXPECTED_REPOSITORY"
+          target_ref="$BUILDCHAIN_GITHUB_GOVERNANCE_EXPECTED_TARGET_REF"
+          if [[ -z "$repository" || -z "$target_ref" ]]; then
+            echo "::error::live GitHub governance verification requires an exact repository and target ref"
+            exit 1
+          fi
+          mkdir -p .buildchain/publication-authority
+          node .buildchain/authority-runtime/scripts/audit-github-governance.mjs \
+            --organization "${repository%%/*}" \
+            --repository "$repository" \
+            --target-ref "$target_ref" \
+            --source-revision "$BUILDCHAIN_AUTHORITY_REF" \
+            --ttl-minutes 15 \
+            --output .buildchain/publication-authority/github-governance-audit.json \
+            --require-qualifying
+
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+          import { execFileSync } from "node:child_process";
+          import {
+            BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY,
+            verifyGithubGovernanceReceipt,
+          } from "./.buildchain/authority-runtime/packages/core/github-governance-authority.js";
+
+          const repository = process.env.BUILDCHAIN_GITHUB_GOVERNANCE_EXPECTED_REPOSITORY;
+          const targetRef = process.env.BUILDCHAIN_GITHUB_GOVERNANCE_EXPECTED_TARGET_REF;
+          const actualRuntimeSha = execFileSync(
+            "git",
+            ["-C", ".buildchain/authority-runtime", "rev-parse", "HEAD"],
+            { encoding: "utf8" },
+          ).trim().toLowerCase();
+          const expectedRuntimeSha = process.env.BUILDCHAIN_AUTHORITY_REF.toLowerCase();
+          if (actualRuntimeSha !== expectedRuntimeSha) {
+            throw new Error(`governance verifier checkout mismatch: expected ${expectedRuntimeSha}, got ${actualRuntimeSha}`);
+          }
+          const audit = JSON.parse(fs.readFileSync(
+            ".buildchain/publication-authority/github-governance-audit.json",
+            "utf8",
+          ));
+          if (audit.inventory?.repositoryCount !== 1 ||
+              audit.inventory?.targetCount !== 1 ||
+              audit.receipts?.length !== 1) {
+            throw new Error("live governance audit did not resolve exactly one repository and target");
+          }
+          const receipt = audit.receipts[0];
+          verifyGithubGovernanceReceipt(receipt, {
+            expectedOrganization: BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY.organization,
+            expectedRepository: repository,
+            expectedTargetRef: targetRef,
+            expectedPolicyRoot: BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY.policyRoot,
+            expectedVerifierSourceRevision: actualRuntimeSha,
+          });
+          fs.writeFileSync(
+            ".buildchain/publication-authority/github-governance-receipt.json",
+            `${JSON.stringify(receipt, null, 2)}\n`,
+          );
+          NODE
 
       - name: Download exact release-candidate passport evidence
         if: ${{ !inputs.dry-run && inputs.auto-admission-kind == 'release-candidate' }}
@@ -781,7 +869,10 @@ jobs:
         uses: actions/upload-artifact@v7.0.1
         with:
           name: buildchain-publication-capability-${{ github.run_id }}-${{ github.run_attempt }}
-          path: .buildchain/publication-authority/capability.json
+          path: |
+            .buildchain/publication-authority/capability.json
+            .buildchain/publication-authority/github-governance-audit.json
+            .buildchain/publication-authority/github-governance-receipt.json
           if-no-files-found: error
 
       - name: Upload assembled self-publication evidence

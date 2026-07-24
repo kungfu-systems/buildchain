@@ -944,6 +944,52 @@ The project may use pnpm, npm, yarn, Vite, Astro, Next static export, Sphinx,
 MkDocs, CMake-generated docs, or another lifecycle command source. Buildchain
 only needs a deterministic artifact path and the manifest facts.
 
+## Signed bootstrap installer publications
+
+A web-surface artifact that contains `installer-publication.json` opts into the
+`kungfu.bootstrap-installer-publication/v1` seam. During planning, Buildchain
+fails closed unless the manifest binds:
+
+- one signed-channel payload root and exact channel-file digest;
+- one source SHA and Release Passport;
+- unique platform/architecture entries with manifest, artifact, and archive
+  digest roots; and
+- byte-identical friendly and immutable `install.sh` / `install.ps1` assets.
+
+The resulting `kungfu-buildchain-installer-publication-evidence/v1` object and
+root are welded into the deployment manifest. This does not make Buildchain the
+product installer authority: Kungfu generates the installer from its signed
+release channel, while the site owns only routes and presentation.
+
+The site artifact should also declare the existing
+`kungfu-buildchain-publication-archive-policy` in its root `manifest.json`, with
+the versioned installer directory as `immutablePath`. Buildchain then performs
+pre-upload object digest checks, `--no-overwrite` upload, post-upload checks, and
+excludes the immutable root from mutable deletion.
+
+Local verification:
+
+```sh
+node scripts/installer-publication.mjs \
+  --manifest dist/installer-publication.json \
+  --artifact-root dist
+```
+
+After preview, staging, or production apply, public read-back verifies exact
+bytes plus route semantics. Friendly routes require a revalidated cache policy
+with `max-age` no greater than 300 seconds; immutable routes require at least
+one year and the `immutable` directive:
+
+```sh
+node scripts/installer-publication.mjs \
+  --manifest dist/installer-publication.json \
+  --public-readback
+```
+
+Redirects are not accepted as successful read-back. The evidence retains
+content type, cache control, ETag, object version id when exposed, size, digest,
+URL, channel root, source SHA, and Release Passport coordinates.
+
 ## Boundaries
 
 Buildchain only performs live AWS mutations in explicit apply modes with

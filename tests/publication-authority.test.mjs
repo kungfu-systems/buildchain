@@ -607,7 +607,7 @@ test("control-plane snapshot audit covers all external publication authorities",
     snapshot: {
       actions: { defaultWorkflowPermissions: "read", canApprovePullRequestReviews: false },
       branch: { ref: "release/v2/v2.12", strict: true, requiredApprovals: 1, requireConversationResolution: true, enforceAdmins: true },
-      environment: { name: "npm-production", declared: true, exists: true, protected: true, preventSelfReview: true },
+      environment: { name: "npm-production", declared: true, exists: true, protected: true, branchAuthorized: true, preventSelfReview: true },
       oidc: { workflowPath: ".github/workflows/release.yml", environment: "npm-production", idTokenJobScoped: true, longLivedCredentialPresent: false },
       publisher: { packageName: "@kungfu-tech/buildchain", provider: "github", repository: "kungfu-systems/buildchain", workflowFilename: "release.yml", environment: "npm-production", allowPublish: true, enforcement: "audited-control-plane", longLivedWorkflowCredentialPresent: false },
       runner: { class: "ephemeral", label: "ubuntu-24.04", githubHosted: true, selfHostedAuthorized: false },
@@ -689,6 +689,32 @@ test("control-plane snapshot qualifies an exact provider-enforced protected-bran
   };
   const receipt = evaluatePublicationControlPlaneSnapshot({ ...common, snapshot });
   assert.equal(receipt.facts.every((entry) => entry.status === "pass"), true);
+
+  const historicalSource = evaluatePublicationControlPlaneSnapshot({
+    ...common,
+    snapshot: {
+      ...snapshot,
+      branch: {
+        ...snapshot.branch,
+        headSha: "c".repeat(40),
+        sourceContainedInBranch: true,
+      },
+    },
+  });
+  assert.equal(historicalSource.facts.find((entry) => entry.id === "branch-policy").status, "pass");
+
+  const uncontainedHistoricalSource = evaluatePublicationControlPlaneSnapshot({
+    ...common,
+    snapshot: {
+      ...snapshot,
+      branch: {
+        ...snapshot.branch,
+        headSha: "c".repeat(40),
+        sourceContainedInBranch: false,
+      },
+    },
+  });
+  assert.equal(uncontainedHistoricalSource.facts.find((entry) => entry.id === "branch-policy").status, "fail");
 
   const legacyJobId = evaluatePublicationControlPlaneSnapshot({
     ...common,
@@ -824,7 +850,7 @@ test("control-plane snapshot audit supports scoped GitHub tokens and sanitized O
   const base = {
     actions: { defaultWorkflowPermissions: "read", canApprovePullRequestReviews: false },
     branch: { ref: "release/v2/v2.12", strict: true, requiredApprovals: 1, requireConversationResolution: true, enforceAdmins: true },
-    environment: { name: "release-assets", declared: true, exists: true, protected: true, preventSelfReview: true },
+    environment: { name: "release-assets", declared: true, exists: true, protected: true, branchAuthorized: true, preventSelfReview: true },
     runner: { class: "ephemeral", label: "ubuntu-24.04", githubHosted: true, selfHostedAuthorized: false },
   };
   const common = {
@@ -852,6 +878,27 @@ test("control-plane snapshot audit supports scoped GitHub tokens and sanitized O
     },
   });
   assert.equal(githubToken.facts.every((entry) => entry.status === "pass"), true);
+
+  const unauthorizedEnvironmentBranch = evaluatePublicationControlPlaneSnapshot({
+    ...common,
+    publisherMode: "github-token",
+    snapshot: {
+      ...base,
+      environment: { ...base.environment, branchAuthorized: false },
+      oidc: { githubTokenJobScoped: true, longLivedCredentialPresent: false },
+      publisher: {
+        provider: "github-token",
+        repository: common.repository,
+        workflowPath: common.workflowPath,
+        permissionScoped: true,
+        longLivedWorkflowCredentialPresent: false,
+      },
+    },
+  });
+  assert.equal(
+    unauthorizedEnvironmentBranch.facts.find((entry) => entry.id === "environment-policy").status,
+    "fail",
+  );
 
   const oidcRole = evaluatePublicationControlPlaneSnapshot({
     ...common,

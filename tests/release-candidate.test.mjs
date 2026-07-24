@@ -17,6 +17,7 @@ import {
   readNpmPackageArtifact,
   resolveReleaseCandidateArtifacts,
   releaseCandidateDownloadEnabled,
+  selectReleaseAssetPaths,
   selectMergedChannelPullRequest,
   selectPayloadArtifacts,
   selectReleaseCandidateArtifacts,
@@ -651,6 +652,45 @@ test("release candidate resolver selects payload artifacts and generates publish
       platform: "linux-x64",
     },
   ]);
+});
+
+test("release candidate resolver selects unique explicit GitHub Release assets", () => {
+  const workspace = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-rc-release-assets-"),
+  );
+  try {
+    fs.mkdirSync(path.join(workspace, "linux"), { recursive: true });
+    fs.mkdirSync(path.join(workspace, "macos"), { recursive: true });
+    fs.writeFileSync(path.join(workspace, "linux", "kungfu-linux.tar.gz"), "a");
+    fs.writeFileSync(path.join(workspace, "macos", "kungfu-macos.tar.gz"), "b");
+    fs.writeFileSync(path.join(workspace, "linux", "manifest.json"), "{}");
+    assert.deepEqual(
+      selectReleaseAssetPaths({
+        payloadRoot: workspace,
+        patterns: ["kungfu-*.tar.gz"],
+      }).map((filePath) => path.basename(filePath)),
+      ["kungfu-linux.tar.gz", "kungfu-macos.tar.gz"],
+    );
+    assert.throws(
+      () =>
+        selectReleaseAssetPaths({
+          payloadRoot: workspace,
+          patterns: ["missing-*"],
+        }),
+      /matched no files/,
+    );
+    fs.writeFileSync(path.join(workspace, "macos", "kungfu-linux.tar.gz"), "c");
+    assert.throws(
+      () =>
+        selectReleaseAssetPaths({
+          payloadRoot: workspace,
+          patterns: ["kungfu-*.tar.gz"],
+        }),
+      /basename is not unique/,
+    );
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
 });
 
 test("release candidate resolver generates npm package-set required artifacts from tarballs", () => {

@@ -98,6 +98,26 @@
           "classification": "redacted",
           "source": "workflow-call-secret"
         },
+        "BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
+        "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
+        "BUILDCHAIN_MACOS_NOTARY_API_ISSUER": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
+        "BUILDCHAIN_MACOS_NOTARY_API_KEY_ID": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
+        "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
         "artifact-name": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -202,8 +222,28 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "credential-island-caller-owned": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "credential-island-environment": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "credential-island-macos-app-path": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "credential-island-macos-platform-id": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "expected-artifacts-json": {
           "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "fail-fast": {
+          "classification": "included",
           "source": "workflow-call-input"
         },
         "gate-profile-aggregate-json": {
@@ -358,6 +398,10 @@
             "required": true
           },
           {
+            "id": "credential-island",
+            "required": false
+          },
+          {
             "id": "verify",
             "required": true
           },
@@ -369,6 +413,7 @@
         "capabilities": [
           "source-lock",
           "lifecycle-build",
+          "credential-island",
           "lifecycle-verify",
           "artifact-admission"
         ],
@@ -378,7 +423,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:b3e101ac0b0f75aebff59b2129e4eff512c38d4d0a34a0a3785e8ea8f998846a"
+      "digest": "sha256:a06607b6ebd3fb00b77519098c81d6fb5e9943ec268aebb1e5fdbefef6e598ad"
     },
     {
       "schemaVersion": 1,
@@ -399,6 +444,26 @@
           "source": "workflow-call-secret"
         },
         "BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
+        "BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
+        "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
+        "BUILDCHAIN_MACOS_NOTARY_API_ISSUER": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
+        "BUILDCHAIN_MACOS_NOTARY_API_KEY_ID": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
+        "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64": {
           "classification": "redacted",
           "source": "workflow-call-secret"
         },
@@ -518,8 +583,28 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "credential-island-caller-owned": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "credential-island-environment": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "credential-island-macos-app-path": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "credential-island-macos-platform-id": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "expected-artifacts-json": {
           "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "fail-fast": {
+          "classification": "included",
           "source": "workflow-call-input"
         },
         "gate-profile-aggregate-json": {
@@ -680,7 +765,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:5ca752570c4180746f09df3fdf5c17e7ce90b04ed06fff362d2a195048024dda"
+      "digest": "sha256:4fc6c33bf5b429f8087ac752d5cf2a19f4a1cc30db01aae927a28cee1cf924f0"
     },
     {
       "schemaVersion": 1,
@@ -839,6 +924,10 @@
         },
         "fail-on-release-pr-error": {
           "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "github-governance-receipt-json": {
+          "classification": "digest-only",
           "source": "workflow-call-input"
         },
         "node-version": {
@@ -1009,7 +1098,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:7e6283c8fbeab7a680bae57c9ab9c8eb94aab7400d3ee01c5b9dfdd03f149edb"
+      "digest": "sha256:65cc01e6d2b622277d67237e4811e82d24d2289d55c2f7d2dfb72325c610b2ea"
     },
     {
       "schemaVersion": 1,
@@ -1200,6 +1289,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "github-governance-receipt-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "github-release": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -1349,7 +1442,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:0613ea545fe2d630f34e665c8e6fe99df3f5333d75051a7176e9cf991e494f59"
+      "digest": "sha256:6d71409659fbf8543c7e520b0c493d8afe86bdf60286b860bb917f0041ebc173"
     },
     {
       "schemaVersion": 1,
@@ -1374,6 +1467,18 @@
           "source": "workflow-call-secret"
         },
         "BUILDCHAIN_PROMOTION_TOKEN": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
+        "BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
+        "BUILDCHAIN_PUBLICATION_COMMIT_TOKEN": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
+        "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY": {
           "classification": "redacted",
           "source": "workflow-call-secret"
         },
@@ -1441,12 +1546,20 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "github-governance-receipt-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "github-release": {
           "classification": "included",
           "source": "workflow-call-input"
         },
         "github-release-notes": {
           "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "github-release-payload-patterns": {
+          "classification": "included",
           "source": "workflow-call-input"
         },
         "github-release-title": {
@@ -1511,6 +1624,14 @@
         },
         "publication-auto-no-gate": {
           "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "publication-commit-command": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-commit-evidence-path": {
+          "classification": "digest-only",
           "source": "workflow-call-input"
         },
         "publication-consumer-predicate-id": {
@@ -1582,6 +1703,10 @@
           "source": "workflow-call-input"
         },
         "publish-package-set-order": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "publish-rematerialize-on-resume": {
           "classification": "included",
           "source": "workflow-call-input"
         },
@@ -1723,7 +1848,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:2bb0137a7dd25706b86beeb212938df2a71c69d2ef6e49391c615e4cb21a19a6"
+      "digest": "sha256:98e2676d01470992d7b4ca9c2a1e12b0e6c816c0586a8e8e1736f4b58a1360a9"
     },
     {
       "schemaVersion": 1,
@@ -1899,5 +2024,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:40a7362d72303c106c064126881dae0716ed2d1902a8cac43f409af78bd7cddf"
+  "digest": "sha256:15fdbedc9c0a2b51104e854300d1725bcab76b11cebde61f53a70a49fe43966b"
 }

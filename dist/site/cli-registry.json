@@ -222,6 +222,18 @@
       "maturity": "stable"
     },
     {
+      "id": "github-governance",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain github-governance <plan|apply|rollback|protection-policy-plan|ruleset-policy-plan> ...",
+      "purpose": "Plan, apply, or roll back one root-bound GitHub branch-protection rollout after a frozen read-only inventory.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
       "id": "help",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain --help",
