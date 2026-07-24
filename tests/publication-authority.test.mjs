@@ -292,6 +292,37 @@ test("independent verifier issues an exact short-lived publication capability", 
   assert.deepEqual(capability.capabilityIds, ["npm-publish"]);
 });
 
+test("major publication requires an exact-tree release passport", () => {
+  const values = fixture();
+  values.publicationEvidence.releaseCandidatePassport.target.channel = "release";
+  values.publicationEvidence.releaseCandidatePassport.candidateHash = sha256Json({
+    repository: values.publicationEvidence.releaseCandidatePassport.repository,
+    target: values.publicationEvidence.releaseCandidatePassport.target,
+    source: values.publicationEvidence.releaseCandidatePassport.source,
+    platformMatrix: values.publicationEvidence.releaseCandidatePassport.platformMatrix,
+    buildchain: values.publicationEvidence.releaseCandidatePassport.buildchain,
+    controllerReceipts: values.publicationEvidence.releaseCandidatePassport.controllerReceipts,
+  });
+  values.admission.channel = "major";
+  const { admissionDigest: _oldAdmissionDigest, ...admissionPayload } = values.admission;
+  values.admission.admissionDigest = publicationAuthorityDigest(admissionPayload);
+  values.expectedBindings.channel = "major";
+
+  const capability = verify(values);
+  assert.equal(capability.channel, "major");
+
+  values.publicationEvidence.releaseCandidatePassport.target.channel = "alpha";
+  values.publicationEvidence.releaseCandidatePassport.candidateHash = sha256Json({
+    repository: values.publicationEvidence.releaseCandidatePassport.repository,
+    target: values.publicationEvidence.releaseCandidatePassport.target,
+    source: values.publicationEvidence.releaseCandidatePassport.source,
+    platformMatrix: values.publicationEvidence.releaseCandidatePassport.platformMatrix,
+    buildchain: values.publicationEvidence.releaseCandidatePassport.buildchain,
+    controllerReceipts: values.publicationEvidence.releaseCandidatePassport.controllerReceipts,
+  });
+  assert.throws(() => verify(values), /target channel mismatch: expected release, got alpha/);
+});
+
 test("publication admission constructor canonicalizes every sealed binding", () => {
   const values = fixture();
   const { admissionDigest: _digest, schemaVersion: _schemaVersion, contract: _contract, ...input } = values.admission;
