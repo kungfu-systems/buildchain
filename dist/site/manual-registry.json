@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:7f007a9d295d597dfc5b1447629ab0d6bf2b3fa3d625b02d27abf7493d73bb40",
+      "digest": "sha256:c9eb92eb02601e1e36cb38d7df93097c582dec2b8dc34f769f58c30fc5190bbe",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -73,6 +73,21 @@
       ],
       "maturity": "preview",
       "order": 105
+    },
+    {
+      "id": "github-governance-authority",
+      "title": "GitHub governance authority",
+      "path": "docs/github-governance-authority.md",
+      "plane": "verify",
+      "digest": "sha256:a23994803824ed7a3d6182c8baa0eb582a6ad3edeb5af7c462a614fc17d2cb52",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "maintainer",
+        "release-operator",
+        "agent"
+      ],
+      "maturity": "preview",
+      "order": 106
     },
     {
       "id": "release-candidate",

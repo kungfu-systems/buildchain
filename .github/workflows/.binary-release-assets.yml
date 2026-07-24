@@ -48,6 +48,10 @@ on:
         type: string
         required: false
         default: ""
+      github-governance-receipt-json:
+        type: string
+        required: false
+        default: ""
       publication-gate-aggregate-json:
         type: string
         required: false
@@ -77,6 +81,7 @@ jobs:
       admission-json: ${{ inputs.publication-admission-json }}
       runner-provenance-json: ${{ inputs.publication-runner-provenance-json }}
       control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
+      github-governance-receipt-json: ${{ inputs.github-governance-receipt-json }}
       gate-aggregate-json: ${{ inputs.publication-gate-aggregate-json }}
       expected-json: ${{ inputs.publication-expected-json }}
       used-nonces-json: ${{ inputs.publication-used-nonces-json }}

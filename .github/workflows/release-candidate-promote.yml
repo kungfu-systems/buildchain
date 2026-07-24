@@ -268,6 +268,11 @@ on:
         default: ""
         type: string
         required: false
+      github-governance-receipt-json:
+        description: "Fresh qualifying governance receipt for the exact publication repository and target ref"
+        default: ""
+        type: string
+        required: false
       publication-gate-aggregate-json:
         description: "Qualifying Shifu Gate aggregate or explicit consumer-owned no-Gate decision"
         default: ""
@@ -691,6 +696,7 @@ jobs:
       publication-admission-json: ${{ inputs.publication-admission-json }}
       publication-runner-provenance-json: ${{ inputs.publication-runner-provenance-json }}
       publication-control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
+      github-governance-receipt-json: ${{ inputs.github-governance-receipt-json }}
       publication-gate-aggregate-json: ${{ inputs.publication-gate-aggregate-json }}
       publication-expected-json: ${{ inputs.publication-expected-json }}
       publication-used-nonces-json: ${{ inputs.publication-used-nonces-json }}
@@ -777,6 +783,7 @@ jobs:
       publication-admission-json: ${{ inputs.publication-admission-json }}
       publication-runner-provenance-json: ${{ inputs.publication-runner-provenance-json }}
       publication-control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
+      github-governance-receipt-json: ${{ inputs.github-governance-receipt-json }}
       publication-gate-aggregate-json: ${{ inputs.publication-gate-aggregate-json }}
       publication-expected-json: ${{ inputs.publication-expected-json }}
       publication-used-nonces-json: ${{ inputs.publication-used-nonces-json }}

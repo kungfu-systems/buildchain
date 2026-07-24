@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "c473db3464da86da98a089fb487525f80d56da7aad2103e58845cc8d3e0efb0f",
+    "sha256": "0800db2082d1ae636ef09d2d3a91d8d3edfed01148def1b2dd77454c5b07e116",
     "summary": {
-      "cliCommandCount": 86,
-      "workflowCount": 51,
+      "cliCommandCount": 87,
+      "workflowCount": 52,
       "actionCount": 5,
-      "sitePageCount": 53,
-      "docCommandRefCount": 265,
+      "sitePageCount": 54,
+      "docCommandRefCount": 270,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -228,13 +228,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "c473db3464da86da98a089fb487525f80d56da7aad2103e58845cc8d3e0efb0f",
+      "sha256": "0800db2082d1ae636ef09d2d3a91d8d3edfed01148def1b2dd77454c5b07e116",
       "summary": {
-        "cliCommandCount": 86,
-        "workflowCount": 51,
+        "cliCommandCount": 87,
+        "workflowCount": 52,
         "actionCount": 5,
-        "sitePageCount": 53,
-        "docCommandRefCount": 265,
+        "sitePageCount": 54,
+        "docCommandRefCount": 270,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -386,6 +386,18 @@
           "kind": "documentation",
           "sourcePath": "docs/controller-evidence.md",
           "evidencePath": "docs/controller-evidence.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "verify"
+        },
+        {
+          "id": "doc:docs/github-governance-authority.md",
+          "name": "GitHub governance authority",
+          "kind": "documentation",
+          "sourcePath": "docs/github-governance-authority.md",
+          "evidencePath": "docs/github-governance-authority.md",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
@@ -904,6 +916,17 @@
           "public": true
         },
         {
+          "id": "schema:packages/core/github-governance-authority.js",
+          "name": "schema:packages/core/github-governance-authority.js",
+          "kind": "schema",
+          "sourcePath": "packages/core/github-governance-authority.js",
+          "evidencePath": "packages/core/github-governance-authority.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
           "id": "schema:packages/core/buildchain-kfd-claims.js",
           "name": "schema:packages/core/buildchain-kfd-claims.js",
           "kind": "schema",
@@ -1317,6 +1340,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./buildchain-publication-authority"
+        },
+        {
+          "id": "export:./github-governance-authority",
+          "name": "@kungfu-tech/buildchain/github-governance-authority",
+          "kind": "package-export",
+          "sourcePath": "packages/core/github-governance-authority.js",
+          "evidencePath": "packages/core/github-governance-authority.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./github-governance-authority"
         },
         {
           "id": "export:./kfd-gate",
@@ -1845,6 +1880,18 @@
         {
           "id": "cli:facts",
           "name": "buildchain facts",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:github-governance",
+          "name": "buildchain github-governance <plan|apply|rollback> ...",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -2680,12 +2727,13 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 14,
+          "inputCount": 15,
           "inputs": [
             "auto-admission",
             "buildchain-ref",
             "buildchain-repository",
             "evidence-run-id",
+            "github-governance-receipt-json",
             "publication-admission-json",
             "publication-control-plane-audit-json",
             "publication-expected-json",
@@ -2836,7 +2884,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 32,
+          "inputCount": 33,
           "inputs": [
             "admission-json",
             "authority-workflow-path",
@@ -2860,6 +2908,7 @@
             "evidence-summary-artifact",
             "expected-json",
             "gate-aggregate-json",
+            "github-governance-receipt-json",
             "package-name",
             "product",
             "publication-target",
@@ -2883,7 +2932,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 74,
+          "inputCount": 75,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -2898,6 +2947,7 @@
             "buildchain-repository",
             "channel",
             "dry-run",
+            "github-governance-receipt-json",
             "github-release",
             "github-release-notes",
             "github-release-title",
@@ -3189,7 +3239,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 39,
+          "inputCount": 40,
           "inputs": [
             "artifact-path",
             "aws-region",
@@ -3200,6 +3250,7 @@
             "buildchain-ref",
             "buildchain-repository",
             "fail-on-release-pr-error",
+            "github-governance-receipt-json",
             "node-version",
             "preview-apply",
             "preview-aws-role-arn",
@@ -3603,6 +3654,20 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:github-governance-audit",
+          "name": "workflow:github-governance-audit",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/github-governance-audit.yml",
+          "evidencePath": ".github/workflows/github-governance-audit.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:npm-publish",
           "name": "workflow:npm-publish",
           "kind": "workflow",
@@ -3626,7 +3691,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 25,
+          "inputCount": 26,
           "inputs": [
             "artifact-name",
             "artifact-paths",
@@ -3638,6 +3703,7 @@
             "buildchain-ref",
             "buildchain-repository",
             "dry-run",
+            "github-governance-receipt-json",
             "github-release",
             "github-release-notes",
             "github-release-title",
@@ -3666,7 +3732,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 37,
+          "inputCount": 38,
           "inputs": [
             "artifact-name",
             "artifact-retention-days",
@@ -3680,6 +3746,7 @@
             "buildchain-ref",
             "buildchain-repository",
             "dry-run",
+            "github-governance-receipt-json",
             "github-release",
             "github-release-notes",
             "github-release-title",
@@ -3847,7 +3914,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 66,
+          "inputCount": 67,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -3865,6 +3932,7 @@
             "buildchain-stable-contract-lock-path",
             "channel",
             "dry-run",
+            "github-governance-receipt-json",
             "github-release",
             "github-release-notes",
             "github-release-title",
@@ -4596,6 +4664,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:github-governance-authority",
+          "name": "site-page:manual:github-governance-authority",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:homebrew",
           "name": "site-page:manual:homebrew",
           "kind": "site-page",
@@ -5081,6 +5161,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 323
+    "publicSurfaceCount": 329
   }
 }

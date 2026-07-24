@@ -247,14 +247,15 @@
       ],
       "maturity": "stable",
       "counts": {
-        "manualCount": 7,
-        "pageCount": 7,
-        "cliCommandCount": 7,
-        "nodeApiCount": 3,
+        "manualCount": 8,
+        "pageCount": 8,
+        "cliCommandCount": 8,
+        "nodeApiCount": 4,
         "workflowCount": 11,
         "actionCount": 0
       },
       "manuals": [
+        "docs/github-governance-authority.md",
         "docs/infra-contract.md",
         "docs/migration-inventory.md",
         "docs/ownership.md",
@@ -288,7 +289,7 @@
         "pageCount": 7,
         "cliCommandCount": 0,
         "nodeApiCount": 2,
-        "workflowCount": 33,
+        "workflowCount": 34,
         "actionCount": 1
       },
       "manuals": [

@@ -157,6 +157,11 @@ on:
         default: ""
         type: string
         required: false
+      github-governance-receipt-json:
+        description: "Fresh qualifying governance receipt for the exact publication repository and target ref"
+        default: ""
+        type: string
+        required: false
       publication-expected-json:
         description: "Independent exact publication bindings JSON"
         default: ""
@@ -234,8 +239,11 @@ jobs:
       admission-json: ${{ inputs.publication-admission-json }}
       runner-provenance-json: ${{ inputs.publication-runner-provenance-json }}
       control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
+      github-governance-receipt-json: ${{ inputs.github-governance-receipt-json }}
       expected-json: ${{ inputs.publication-expected-json }}
       used-nonces-json: ${{ inputs.publication-used-nonces-json }}
+      target-ref: ${{ inputs.target-ref || github.ref_name }}
+      evidence-repository: ${{ github.repository }}
       dry-run: ${{ inputs.dry-run }}
 
   paper-release:

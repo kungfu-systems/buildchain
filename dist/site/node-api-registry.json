@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:1e02f99f2424f2850c0f264ad6a0bb75973144bc1099dba82d06ba0434c2b406",
+      "digest": "sha256:0244d3316a89f161a376403d9c300474a53159b0471bfb1697f7a3134e206668",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:1e02f99f2424f2850c0f264ad6a0bb75973144bc1099dba82d06ba0434c2b406",
+      "digest": "sha256:0244d3316a89f161a376403d9c300474a53159b0471bfb1697f7a3134e206668",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -333,9 +333,22 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-publication-authority",
       "export": "./buildchain-publication-authority",
       "target": "./packages/core/buildchain-publication-authority.js",
-      "digest": "sha256:994218d8ca1474f4d58f637124a9e9393b832c68fbb0d90cfbe1dbeae8a1e2e2",
+      "digest": "sha256:46484b94389d78a2092c9ae60399020930d879abc847234ffe7cb69ec4f61161",
       "summary": "Buildchain-owned closed-world publication authority descriptor registry.",
       "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/github-governance-authority",
+      "export": "./github-governance-authority",
+      "target": "./packages/core/github-governance-authority.js",
+      "digest": "sha256:956853af858410223a4bdeb0ecbbeb79d01ebc73370e1e77a3618fbf9b7b9abb",
+      "summary": "Fail-closed GitHub ownership, effective-policy, managed-zone admission, rollout-plan, and immutable receipt APIs.",
+      "capabilityGroup": "governance-versioning",
       "audience": [
         "developer",
         "agent"
@@ -437,7 +450,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-kfd-claims",
       "export": "./buildchain-kfd-claims",
       "target": "./packages/core/buildchain-kfd-claims.js",
-      "digest": "sha256:c61f4ce244fae5030afc308661f95a87b72dcab00d1edb11c17a8d734d2fb5c6",
+      "digest": "sha256:fc916f55d366db8eb7270389fdaf6ac02e18bcd4fe5f1fdbdb1283e5fc4c9929",
       "summary": "Buildchain self KFD claim registry, witnesses, and public claim APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [

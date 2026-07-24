@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:7f007a9d295d597dfc5b1447629ab0d6bf2b3fa3d625b02d27abf7493d73bb40"
+      "digest": "sha256:c9eb92eb02601e1e36cb38d7df93097c582dec2b8dc34f769f58c30fc5190bbe"
     },
     {
       "id": "install",
@@ -86,6 +86,14 @@
       "plane": "verify",
       "exists": true,
       "digest": "sha256:118dc751fa3c37b4b20f4b909534458148c0f42c2c9d69f13e2fa5373dbfe244"
+    },
+    {
+      "id": "github-governance-authority",
+      "title": "GitHub governance authority",
+      "path": "docs/github-governance-authority.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:a23994803824ed7a3d6182c8baa0eb582a6ad3edeb5af7c462a614fc17d2cb52"
     },
     {
       "id": "release-candidate",

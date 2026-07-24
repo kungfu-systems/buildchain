@@ -26,6 +26,11 @@ on:
         type: string
         required: false
         default: ""
+      github-governance-receipt-json:
+        description: "Fresh qualifying GitHub governance receipt bound to the exact repository, target ref, policy, and verifier revision"
+        type: string
+        required: false
+        default: ""
       gate-aggregate-json:
         description: "Qualifying Shifu Gate aggregate or explicit consumer-owned no-Gate decision"
         type: string
@@ -338,6 +343,57 @@ jobs:
           ref: ${{ inputs.buildchain-ref }}
           path: .buildchain/authority-runtime
           persist-credentials: false
+
+      - name: Verify exact GitHub governance authority
+        if: ${{ !inputs.dry-run }}
+        env:
+          BUILDCHAIN_GITHUB_GOVERNANCE_RECEIPT_JSON: ${{ inputs.github-governance-receipt-json }}
+          BUILDCHAIN_GITHUB_GOVERNANCE_EXPECTED_REPOSITORY: ${{ inputs.evidence-repository || github.repository }}
+          BUILDCHAIN_GITHUB_GOVERNANCE_EXPECTED_TARGET_REF: ${{ inputs.target-ref }}
+          BUILDCHAIN_AUTHORITY_REF: ${{ inputs.buildchain-ref }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+          import { execFileSync } from "node:child_process";
+          import {
+            BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY,
+            verifyGithubGovernanceReceipt,
+          } from "./.buildchain/authority-runtime/packages/core/github-governance-authority.js";
+
+          const serialized = process.env.BUILDCHAIN_GITHUB_GOVERNANCE_RECEIPT_JSON;
+          if (!serialized) {
+            throw new Error("non-dry-run publication requires a fresh GitHub governance receipt");
+          }
+          const repository = process.env.BUILDCHAIN_GITHUB_GOVERNANCE_EXPECTED_REPOSITORY;
+          const targetRef = process.env.BUILDCHAIN_GITHUB_GOVERNANCE_EXPECTED_TARGET_REF;
+          if (!repository || !targetRef) {
+            throw new Error("GitHub governance receipt verification requires an exact repository and target ref");
+          }
+          const actualRuntimeSha = execFileSync(
+            "git",
+            ["-C", ".buildchain/authority-runtime", "rev-parse", "HEAD"],
+            { encoding: "utf8" },
+          ).trim().toLowerCase();
+          const expectedRuntimeSha = process.env.BUILDCHAIN_AUTHORITY_REF.toLowerCase();
+          if (actualRuntimeSha !== expectedRuntimeSha) {
+            throw new Error(`governance verifier checkout mismatch: expected ${expectedRuntimeSha}, got ${actualRuntimeSha}`);
+          }
+          const receipt = JSON.parse(serialized);
+          verifyGithubGovernanceReceipt(receipt, {
+            expectedOrganization: BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY.organization,
+            expectedRepository: repository,
+            expectedTargetRef: targetRef,
+            expectedPolicyRoot: BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY.policyRoot,
+            expectedVerifierSourceRevision: actualRuntimeSha,
+          });
+          fs.mkdirSync(".buildchain/publication-authority", { recursive: true });
+          fs.writeFileSync(
+            ".buildchain/publication-authority/github-governance-receipt.json",
+            `${JSON.stringify(receipt, null, 2)}\n`,
+          );
+          NODE
 
       - name: Download exact release-candidate passport evidence
         if: ${{ !inputs.dry-run && inputs.auto-admission-kind == 'release-candidate' }}
@@ -781,7 +837,9 @@ jobs:
         uses: actions/upload-artifact@v7.0.1
         with:
           name: buildchain-publication-capability-${{ github.run_id }}-${{ github.run_attempt }}
-          path: .buildchain/publication-authority/capability.json
+          path: |
+            .buildchain/publication-authority/capability.json
+            .buildchain/publication-authority/github-governance-receipt.json
           if-no-files-found: error
 
       - name: Upload assembled self-publication evidence

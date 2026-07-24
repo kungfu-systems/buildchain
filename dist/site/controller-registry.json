@@ -918,6 +918,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "github-governance-receipt-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "node-version": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -1086,7 +1090,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:7e6283c8fbeab7a680bae57c9ab9c8eb94aab7400d3ee01c5b9dfdd03f149edb"
+      "digest": "sha256:65cc01e6d2b622277d67237e4811e82d24d2289d55c2f7d2dfb72325c610b2ea"
     },
     {
       "schemaVersion": 1,
@@ -1277,6 +1281,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "github-governance-receipt-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "github-release": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -1426,7 +1434,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:0613ea545fe2d630f34e665c8e6fe99df3f5333d75051a7176e9cf991e494f59"
+      "digest": "sha256:6d71409659fbf8543c7e520b0c493d8afe86bdf60286b860bb917f0041ebc173"
     },
     {
       "schemaVersion": 1,
@@ -1516,6 +1524,10 @@
         },
         "dry-run": {
           "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "github-governance-receipt-json": {
+          "classification": "digest-only",
           "source": "workflow-call-input"
         },
         "github-release": {
@@ -1804,7 +1816,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:bde6769a31f35ea89e8bdc67a4ca37175f24028b2b3975ff795ba5b2fb95d3a5"
+      "digest": "sha256:f4a55b6291407c7ff2c5631a5158f944a70ad0b0b1e96591b83cff755a2f1dc4"
     },
     {
       "schemaVersion": 1,
@@ -1980,5 +1992,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:f3c286292ba70b3c9b74eb8ae4052bafb8d5c393ce0037a06b4fc8e675de0f40"
+  "digest": "sha256:a229a6b11397e5b92e50be151918634fc2f75117360ed1961a38cd5e3ba8dea5"
 }

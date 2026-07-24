@@ -148,6 +148,7 @@ function usage() {
   buildchain release-governance reconcile --repository <owner/repo>
                                --branch <dev|alpha|release/vN/vN.N>
                                --candidate-sha <sha> [--apply] [--json]
+  buildchain github-governance <plan|apply|rollback> ...
   buildchain release <inspect|recover|finalize|abort> ...
   buildchain transaction inspect ...
   buildchain collect github-release --tag <tag> [--repository <owner/repo>]
@@ -184,6 +185,8 @@ function usage() {
                           --publication-evidence-json <file-or-json>
                           [--expected-json <file-or-json>] [--used-nonce <nonce>]... [--json]
   buildchain audit publication-control-plane --repository <owner/repo> --branch <protected-branch>
+  buildchain audit github-governance [--organization <owner>] [--repository <owner/repo>]
+                                     [--output <file>] [--require-qualifying] [--json]
                           [--source-sha <merged-branch-sha>] [--workflow-repository <owner/repo>]
                           [--workflow <path>] [--workflow-ref <sha-or-ref>]
                           [--job <id>] [--environment <name>] [--package <name>]
@@ -2024,11 +2027,15 @@ async function main(argv = process.argv.slice(2)) {
 
   if (command === "audit") {
     const [subcommand = "", ...auditArgs] = args;
-    if (subcommand !== "publication-control-plane") {
-      throw new Error("usage: buildchain audit publication-control-plane --repository <owner/repo> --branch <protected-branch>");
+    if (subcommand === "publication-control-plane") {
+      runScript("audit-publication-control-plane.mjs", auditArgs);
+      return;
     }
-    runScript("audit-publication-control-plane.mjs", auditArgs);
-    return;
+    if (subcommand === "github-governance") {
+      runScript("audit-github-governance.mjs", auditArgs);
+      return;
+    }
+    throw new Error("usage: buildchain audit <publication-control-plane|github-governance> ...");
   }
 
   if (command === "explain") {
@@ -2146,6 +2153,11 @@ async function main(argv = process.argv.slice(2)) {
 
   if (command === "release-governance") {
     await runReleaseGovernanceCli(args);
+    return;
+  }
+
+  if (command === "github-governance") {
+    runScript("reconcile-github-governance.mjs", args);
     return;
   }
 
