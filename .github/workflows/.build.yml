@@ -173,14 +173,19 @@ on:
         type: string
         required: false
       credential-island-macos-app-path:
-        description: "Optional exact .app path to seal for the Buildchain-owned credential-island job"
+        description: "Optional exact .app path to seal for a protected macOS credential-island job"
         default: ""
         type: string
         required: false
       credential-island-environment:
-        description: "Caller-repository protected environment that owns macOS signing credentials and policy variables"
+        description: "Protected environment used by the built-in signer; leave empty for caller-owned signing"
         default: ""
         type: string
+        required: false
+      credential-island-caller-owned:
+        description: "Seal and export the macOS input/runtime for a caller-owned protected signing job instead of running the built-in signer"
+        default: false
+        type: boolean
         required: false
       credential-island-macos-platform-id:
         description: "macOS build platform whose sealed app is admitted to the credential island"
@@ -652,7 +657,7 @@ jobs:
           retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Upload macOS credential-island runtime
-        if: ${{ inputs.credential-island-macos-app-path != '' && inputs.credential-island-environment != '' }}
+        if: ${{ inputs.credential-island-macos-app-path != '' }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-credential-island-runtime-${{ steps.runtime.outputs.runtime-sha }}
@@ -665,12 +670,24 @@ jobs:
         env:
           BUILDCHAIN_CREDENTIAL_APP_PATH: ${{ inputs.credential-island-macos-app-path }}
           BUILDCHAIN_CREDENTIAL_ENVIRONMENT: ${{ inputs.credential-island-environment }}
+          BUILDCHAIN_CREDENTIAL_CALLER_OWNED: ${{ inputs.credential-island-caller-owned }}
           BUILDCHAIN_CREDENTIAL_PLATFORM_ID: ${{ inputs.credential-island-macos-platform-id }}
         run: |
           set -euo pipefail
-          if { [ -n "${BUILDCHAIN_CREDENTIAL_APP_PATH}" ] && [ -z "${BUILDCHAIN_CREDENTIAL_ENVIRONMENT}" ]; } ||
-             { [ -z "${BUILDCHAIN_CREDENTIAL_APP_PATH}" ] && [ -n "${BUILDCHAIN_CREDENTIAL_ENVIRONMENT}" ]; }; then
-            echo "::error::credential-island-macos-app-path and credential-island-environment must be configured together"
+          if [ -z "${BUILDCHAIN_CREDENTIAL_APP_PATH}" ] &&
+             { [ -n "${BUILDCHAIN_CREDENTIAL_ENVIRONMENT}" ] || [ "${BUILDCHAIN_CREDENTIAL_CALLER_OWNED}" = "true" ]; }; then
+            echo "::error::credential-island environment or caller-owned mode requires credential-island-macos-app-path"
+            exit 1
+          fi
+          if [ -n "${BUILDCHAIN_CREDENTIAL_APP_PATH}" ] &&
+             [ "${BUILDCHAIN_CREDENTIAL_CALLER_OWNED}" != "true" ] &&
+             [ -z "${BUILDCHAIN_CREDENTIAL_ENVIRONMENT}" ]; then
+            echo "::error::built-in credential-island signing requires credential-island-environment"
+            exit 1
+          fi
+          if [ "${BUILDCHAIN_CREDENTIAL_CALLER_OWNED}" = "true" ] &&
+             [ -n "${BUILDCHAIN_CREDENTIAL_ENVIRONMENT}" ]; then
+            echo "::error::caller-owned credential-island signing must bind its environment in the caller workflow"
             exit 1
           fi
           if [ -n "${BUILDCHAIN_CREDENTIAL_APP_PATH}" ] &&
@@ -1866,7 +1883,7 @@ jobs:
       - artifact-transfer
       - build-native
       - relay-artifacts
-    if: ${{ always() && inputs.credential-island-macos-app-path != '' && inputs.credential-island-environment != '' && needs.trust-gate.outputs.trusted == 'true' && needs.build-native.result == 'success' && (needs.artifact-transfer.outputs.mode == 'github-artifacts' || needs.relay-artifacts.result == 'success') }}
+    if: ${{ always() && inputs.credential-island-macos-app-path != '' && !inputs.credential-island-caller-owned && inputs.credential-island-environment != '' && needs.trust-gate.outputs.trusted == 'true' && needs.build-native.result == 'success' && (needs.artifact-transfer.outputs.mode == 'github-artifacts' || needs.relay-artifacts.result == 'success') }}
     runs-on: macos-15
     timeout-minutes: 90
     environment:
@@ -1971,7 +1988,7 @@ jobs:
       - build-linux-container
       - relay-artifacts
       - credential-island-macos
-    if: ${{ always() && needs.anchored-release-preflight.result == 'success' && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && (needs.artifact-transfer.outputs.mode == 'github-artifacts' || needs.relay-artifacts.result == 'success') && ((inputs.credential-island-macos-app-path == '' && needs.credential-island-macos.result == 'skipped') || needs.credential-island-macos.result == 'success') }}
+    if: ${{ always() && needs.anchored-release-preflight.result == 'success' && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && (needs.artifact-transfer.outputs.mode == 'github-artifacts' || needs.relay-artifacts.result == 'success') && ((inputs.credential-island-macos-app-path == '' && needs.credential-island-macos.result == 'skipped') || (inputs.credential-island-caller-owned && needs.credential-island-macos.result == 'skipped') || needs.credential-island-macos.result == 'success') }}
     runs-on: ubuntu-24.04
     outputs:
       summary-artifact-name: ${{ steps.names.outputs.summary-artifact-name }}
@@ -2069,7 +2086,7 @@ jobs:
           BUILDCHAIN_SUMMARY_OUTPUT: .buildchain/artifacts/build-summary.json
           BUILDCHAIN_ARTIFACT_NAME: ${{ inputs.artifact-name }}
           BUILDCHAIN_PLATFORM_COUNT: ${{ needs.resolve-contract.outputs.platform-count }}
-          BUILDCHAIN_ADDITIONAL_PLATFORM_COUNT: ${{ inputs.credential-island-macos-app-path != '' && '1' || '0' }}
+          BUILDCHAIN_ADDITIONAL_PLATFORM_COUNT: ${{ inputs.credential-island-macos-app-path != '' && !inputs.credential-island-caller-owned && '1' || '0' }}
           BUILDCHAIN_TRUSTED_EVENT: ${{ needs.trust-gate.outputs.trusted-event }}
           BUILDCHAIN_PUBLISH_CHANNEL: ${{ needs.trust-gate.outputs.publish-channel }}
           BUILDCHAIN_PUBLISH_ALLOWED: ${{ needs.trust-gate.outputs.publish-allowed }}

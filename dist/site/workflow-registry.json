@@ -64,6 +64,7 @@
         "checkout-cache-mode",
         "checkout-cache-reference-repository-template",
         "checkout-cache-timeout-seconds",
+        "credential-island-caller-owned",
         "credential-island-environment",
         "credential-island-macos-app-path",
         "credential-island-macos-platform-id",
@@ -103,7 +104,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 64,
+      "inputCount": 65,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -863,6 +864,7 @@
         "checkout-cache-mode",
         "checkout-cache-reference-repository-template",
         "checkout-cache-timeout-seconds",
+        "credential-island-caller-owned",
         "credential-island-environment",
         "credential-island-macos-app-path",
         "credential-island-macos-platform-id",
@@ -902,7 +904,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 67,
+      "inputCount": 68,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
