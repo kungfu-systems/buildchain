@@ -6732,6 +6732,25 @@ assert.equal(fields.nodeTag, "v22.22.3");
 
 test("publish-gate/major promotion publishes next major production and prepares next alpha", async () => {
   const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[[version.files]]
+type = "json"
+path = "actions/promote-buildchain-ref/package.json"
+key = "version"
+
+[lifecycle.verify]
+command = "node scripts/verify-major-bootstrap.mjs"
+`,
     "package.json": {
       name: "@kungfu-tech/buildchain",
       version: "1.0.10",
@@ -6743,7 +6762,29 @@ test("publish-gate/major promotion publishes next major production and prepares 
       version: "1.0.10",
       private: true,
     },
+    "scripts/verify-major-bootstrap.mjs": `
+import assert from "node:assert/strict";
+import fs from "node:fs";
+assert.equal(process.env.BUILDCHAIN_MAJOR_VERSION_BOOTSTRAP, "true");
+const version = JSON.parse(fs.readFileSync("package.json", "utf8")).version;
+assert.match(version, /^2\\.0\\.(?:0|1-alpha\\.0)$/);
+`,
   });
+  run(["git", "init"], cwd);
+  run(["git", "add", "."], cwd);
+  run(
+    [
+      "git",
+      "-c",
+      "user.name=Test",
+      "-c",
+      "user.email=test@example.com",
+      "commit",
+      "-m",
+      "init",
+    ],
+    cwd,
+  );
   const refs = new Map([["heads/publish-gate/major", SHA]]);
   const blobs = [];
   const commits = [];

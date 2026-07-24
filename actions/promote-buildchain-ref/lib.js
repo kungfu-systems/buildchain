@@ -4999,6 +4999,9 @@ async function promoteBuildchainRefs({
       generatedAt: preserveExistingLifecycleIdentity ? "" : promotionGeneratedAt,
       sourceSha: preserveExistingLifecycleIdentity ? "" : sha,
     });
+    if (rule.channel === "major") {
+      strategyEnv.BUILDCHAIN_MAJOR_VERSION_BOOTSTRAP = "true";
+    }
     const manualNext =
       versionStrategy.strategy === "anchored" && versionStrategy.next === "manual";
     const configuredVersion = manualNext
