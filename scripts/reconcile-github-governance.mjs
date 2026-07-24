@@ -228,6 +228,9 @@ function apply(args) {
     after.body.required_pull_request_reviews?.require_code_owner_reviews !== true ||
     after.body.required_pull_request_reviews?.dismiss_stale_reviews !== true ||
     after.body.required_pull_request_reviews?.require_last_push_approval !== true ||
+    ["users", "teams", "apps"].some((kind) =>
+      (after.body.required_pull_request_reviews?.bypass_pull_request_allowances?.[kind] || [])
+        .length !== 0) ||
     after.body.required_conversation_resolution !== true ||
     after.body.allow_force_pushes !== false ||
     after.body.allow_deletions !== false ||

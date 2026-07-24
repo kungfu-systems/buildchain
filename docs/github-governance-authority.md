@@ -145,6 +145,11 @@ required check must declare `--required-check-app-id <context>=<app-id>`;
 context-only replacement is rejected because it would broaden which producer
 can satisfy the gate.
 
+Classic branch-protection bypass allowances and ruleset bypass actors are both
+part of the effective policy. Reconciliation writes explicit empty user, team,
+and App bypass lists and verifies those lists after apply; omitting the provider
+field is not treated as removal because GitHub may preserve the prior value.
+
 The plan prints a `planRoot`. Apply requires that exact root and stops if live
 protection no longer matches the frozen inventory:
 
