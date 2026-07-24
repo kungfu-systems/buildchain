@@ -430,6 +430,10 @@ async function main() {
   );
   core.setOutput("planned-publication-version", plannedPublication?.version || "");
   core.setOutput("planned-publication-exact-tag", plannedPublicationExactTag(plannedPublication));
+  core.setOutput(
+    "planned-release-candidate-version",
+    plannedPublication?.releaseCandidateVersion || "",
+  );
   core.setOutput("public-release-tag", result.publishTransaction?.publicReleaseTag || result.publishTransaction?.exactTag || "");
   core.setOutput("transaction-release-sha", result.publishTransaction?.releaseSha || "");
   core.setOutput("transaction-state-ref", result.publishTransaction?.stateRef || "");

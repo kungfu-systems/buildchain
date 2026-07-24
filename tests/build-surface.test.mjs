@@ -2251,8 +2251,10 @@ test("promote action exposes generic publish source-lock gate", () => {
   assert.match(action, /publish-source-locked:/);
   assert.match(action, /expected-publication-version:/);
   assert.match(action, /planned-publication-version:/);
+  assert.match(action, /planned-release-candidate-version:/);
   assert.match(implementation, /expectedPublicationVersion/);
   assert.match(implementation, /planned-publication-version/);
+  assert.match(implementation, /planned-release-candidate-version/);
   assert.match(implementation, /kungfu-buildchain-publish-source-lock-validation/);
   assert.match(implementation, /publish-gate\/\{alpha,release,major\}/);
   assert.match(implementation, /does not match promotion sha/);
@@ -2340,7 +2342,18 @@ test("Buildchain stable promotion gates publication after RC resolution", () => 
       publishGateIndex > immediateAuthorityIndex,
   );
   assert.match(wrapper, /needs\.preflight\.outputs\.channel == 'release'/);
-  assert.match(wrapper, /Buildchain stable candidate must declare an exact alpha version/);
+  assert.match(
+    wrapper,
+    /BUILDCHAIN_RELEASE_CANDIDATE_VERSION: \$\{\{ needs\.publication-plan\.outputs\.release-candidate-version \}\}/,
+  );
+  assert.match(
+    wrapper,
+    /Buildchain stable publication plan must bind an exact alpha candidate version/,
+  );
+  assert.match(
+    wrapper,
+    /Buildchain stable candidate \$\{version\} does not match planned publication/,
+  );
   assert.match(
     wrapper,
     /BUILDCHAIN_RELEASE_CANDIDATE_VERSION: \$\{\{ steps\.buildchain-stable-candidate\.outputs\.version \}\}/,
