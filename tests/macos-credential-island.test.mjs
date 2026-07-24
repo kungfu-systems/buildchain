@@ -347,6 +347,14 @@ test("public action and workflow keep credentials outside the build matrix", () 
   assert.ok(containerBuildJob);
   assert.match(action, /post: "dist\/cleanup\.js"/);
   assert.match(action, /certificate-p12-base64/);
+  for (const label of [
+    "create temporary keychain",
+    "unlock temporary keychain",
+    "import Developer ID PKCS#12",
+    "configure Developer ID key access",
+  ]) {
+    assert.match(implementation, new RegExp(`failureLabel: "${label}"`, "u"));
+  }
   for (const caller of [workflow, publicWorkflow, fixtureWorkflow]) {
     assert.match(caller, /permissions:\n  actions: read\n  contents: read/);
   }
