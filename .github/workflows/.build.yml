@@ -1356,7 +1356,7 @@ jobs:
           BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
 
       - name: Upload macOS credential-island app archive
-        if: ${{ runner.os == 'macOS' && inputs.credential-island-macos-app-path != '' && matrix.platform.id == inputs.credential-island-macos-platform-id }}
+        if: ${{ runner.os == 'macOS' && inputs.credential-island-macos-app-path != '' && matrix.platform.id == inputs.credential-island-macos-platform-id && needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
         uses: actions/upload-artifact@v7.0.1
         with:
           path: .buildchain/credential-island/${{ matrix.platform.id }}/unsigned-app.zip
@@ -1365,7 +1365,7 @@ jobs:
           retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Upload macOS credential-island input manifest
-        if: ${{ runner.os == 'macOS' && inputs.credential-island-macos-app-path != '' && matrix.platform.id == inputs.credential-island-macos-platform-id }}
+        if: ${{ runner.os == 'macOS' && inputs.credential-island-macos-app-path != '' && matrix.platform.id == inputs.credential-island-macos-platform-id && needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-credential-island-input-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
@@ -1430,6 +1430,8 @@ jobs:
             .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
             .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
             .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
+          BUILDCHAIN_ARTIFACT_RELAY_CREDENTIAL_INPUT_ARTIFACT_NAME: ${{ inputs.artifact-name }}-credential-island-input-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_ARTIFACT_RELAY_CREDENTIAL_INPUT_PATHS: ${{ matrix.platform.id == inputs.credential-island-macos-platform-id && inputs.credential-island-macos-app-path != '' && format('.buildchain/credential-island/{0}', matrix.platform.id) || '' }}
 
       - name: Upload artifact relay manifest
         if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' }}
@@ -1838,6 +1840,16 @@ jobs:
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
+      - name: Upload relayed macOS credential-island input
+        if: ${{ matrix.platform.id == inputs.credential-island-macos-platform-id && inputs.credential-island-macos-app-path != '' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-credential-island-input-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: ${{ steps.relay-download.outputs.credential-input-path }}
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
       - name: Cleanup S3 artifact relay payload
         if: ${{ success() }}
         run: node .buildchain/runtime/scripts/artifact-relay-s3.mjs cleanup
@@ -1851,8 +1863,10 @@ jobs:
     needs:
       - trust-gate
       - resolve-source
+      - artifact-transfer
       - build-native
-    if: ${{ inputs.credential-island-macos-app-path != '' && inputs.credential-island-environment != '' && needs.trust-gate.outputs.trusted == 'true' && needs.build-native.result == 'success' }}
+      - relay-artifacts
+    if: ${{ always() && inputs.credential-island-macos-app-path != '' && inputs.credential-island-environment != '' && needs.trust-gate.outputs.trusted == 'true' && needs.build-native.result == 'success' && (needs.artifact-transfer.outputs.mode == 'github-artifacts' || needs.relay-artifacts.result == 'success') }}
     runs-on: macos-15
     timeout-minutes: 90
     environment:
@@ -1884,15 +1898,24 @@ jobs:
           path: .buildchain/runtime/actions/macos-credential-island
 
       - name: Download source-bound sealed application archive
+        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
         uses: actions/download-artifact@v7.0.0
         with:
           name: unsigned-app.zip
           path: .buildchain/credential-island-input
 
       - name: Download source-bound sealed application manifest
+        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
         uses: actions/download-artifact@v7.0.0
         with:
           name: ${{ inputs.artifact-name }}-credential-island-input-manifest-${{ inputs.credential-island-macos-platform-id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: .buildchain/credential-island-input
+
+      - name: Download relayed source-bound credential-island input
+        if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ inputs.artifact-name }}-credential-island-input-${{ inputs.credential-island-macos-platform-id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           path: .buildchain/credential-island-input
 
       - name: Sign, notarize, staple, and verify
