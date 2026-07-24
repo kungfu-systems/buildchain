@@ -19,6 +19,7 @@ const {
   discoverVersionStateFiles,
   ensureManagedChannelBranchProtection,
   expectedHeadRefForTarget,
+  isAllowedReleaseLineRecoveryPath,
   latestAlphaForPatch,
   ownsMajorAlphaChannel,
   parseReleaseLineRef,
@@ -10519,7 +10520,10 @@ test("strict release promotion accepts line-scoped buildchain recovery PRs", asy
                 { filename: "package.json" },
                 { filename: "actions/promote-buildchain-ref/lib.js" },
                 { filename: "actions/promote-buildchain-ref/dist/index.js" },
+                { filename: "packages/core/self-dogfood-version.js" },
+                { filename: "scripts/check-inventory.mjs" },
                 { filename: "scripts/release-line-policy.mjs" },
+                { filename: "tests/build-surface.test.mjs" },
                 { filename: "tests/promote-buildchain-ref.test.mjs" },
                 { filename: "tests/release-line-policy.test.mjs" },
               ],
@@ -10563,6 +10567,27 @@ test("strict release promotion accepts line-scoped buildchain recovery PRs", asy
   assert.equal(result.sha, SHA);
   assert.equal(refs.get("tags/v1.0.2"), SHA);
   assert.equal(refs.get("tags/v1.0.3-alpha.0"), nextAlphaSha);
+});
+
+test("release recovery bootstrap scope stays exact outside the promotion action directory", () => {
+  for (const file of [
+    "packages/core/self-dogfood-version.js",
+    "scripts/check-inventory.mjs",
+    "tests/build-surface.test.mjs",
+  ]) {
+    assert.equal(isAllowedReleaseLineRecoveryPath(file), true);
+  }
+  for (const file of [
+    "packages/core/buildchain-contract.js",
+    "scripts/generate-site-bundle.mjs",
+    "tests/buildchain-contract.test.mjs",
+  ]) {
+    assert.equal(isAllowedReleaseLineRecoveryPath(file), false);
+  }
+  assert.equal(
+    isAllowedReleaseLineRecoveryPath("package.json", ["package.json"]),
+    true,
+  );
 });
 
 test("strict release promotion binds a generated version commit to the exact recovery RC parent", async () => {
