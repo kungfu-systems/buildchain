@@ -749,6 +749,7 @@ jobs:
     outputs:
       version: ${{ steps.plan.outputs.planned-publication-version }}
       exact-tag: ${{ steps.plan.outputs.planned-publication-exact-tag }}
+      release-candidate-version: ${{ steps.plan.outputs.planned-release-candidate-version }}
     steps:
       - name: Checkout promotion channel commit
         uses: actions/checkout@v7.0.0
@@ -1312,10 +1313,17 @@ jobs:
         id: buildchain-stable-candidate
         if: ${{ needs.preflight.outputs.channel == 'release' && github.repository == 'kungfu-systems/buildchain' }}
         shell: bash
+        env:
+          BUILDCHAIN_RELEASE_CANDIDATE_VERSION: ${{ needs.publication-plan.outputs.release-candidate-version }}
+          BUILDCHAIN_PUBLICATION_VERSION: ${{ needs.publication-plan.outputs.version }}
         run: |
-          version="$(node -e 'const fs = require("node:fs"); const manifest = JSON.parse(fs.readFileSync("package.json", "utf8")); process.stdout.write(String(manifest.version || ""));')"
+          version="${BUILDCHAIN_RELEASE_CANDIDATE_VERSION}"
           if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-alpha\.[0-9]+$ ]]; then
-            echo "::error::Buildchain stable candidate must declare an exact alpha version, got ${version:-<empty>}"
+            echo "::error::Buildchain stable publication plan must bind an exact alpha candidate version, got ${version:-<empty>}"
+            exit 1
+          fi
+          if [[ "${version%%-alpha.*}" != "${BUILDCHAIN_PUBLICATION_VERSION}" ]]; then
+            echo "::error::Buildchain stable candidate ${version} does not match planned publication ${BUILDCHAIN_PUBLICATION_VERSION:-<empty>}"
             exit 1
           fi
           echo "version=${version}" >> "${GITHUB_OUTPUT}"

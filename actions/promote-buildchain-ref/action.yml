@@ -213,6 +213,8 @@ outputs:
     description: "Exact version selected during a dry-run publication plan"
   planned-publication-exact-tag:
     description: "Exact public tag corresponding to the planned publication version"
+  planned-release-candidate-version:
+    description: "Exact alpha candidate version bound to a planned stable publication"
   public-release-tag:
     description: "Public GitHub Release tag; anchored package publishes use v<publishedVersion> while transaction-exact-tag remains internal"
   transaction-release-sha:

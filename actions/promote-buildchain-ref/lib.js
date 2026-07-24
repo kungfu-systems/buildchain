@@ -5066,6 +5066,7 @@ async function promoteBuildchainRefs({
     channel,
     line,
     releaseSha,
+    releaseCandidateVersion = "",
     sourceShaOverride = sha,
     releaseMaterialShaOverride = releaseMaterialSha,
     publishToolingShaOverride = publishToolingSha,
@@ -5081,6 +5082,7 @@ async function promoteBuildchainRefs({
         tag: exactTag,
         publicTag: releaseTagForPublishedVersion(transactionVersion),
         sha: releaseSha,
+        ...(releaseCandidateVersion ? { releaseCandidateVersion } : {}),
       });
       return undefined;
     }
@@ -6099,6 +6101,9 @@ async function promoteBuildchainRefs({
     channel: rule.channel,
     line: rule.releasePrefix,
     releaseSha,
+    releaseCandidateVersion: stripTagPrefix(
+      sourceAlphaMaterial?.exactTag || sourceAlphaMaterial?.tag || "",
+    ),
     allowVersionStateFinalization: releaseCommit.action === "existing",
   });
   if (versionState) {
