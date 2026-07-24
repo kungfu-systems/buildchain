@@ -6,6 +6,8 @@ export const GITHUB_GOVERNANCE_RECEIPT_CONTRACT =
   "kungfu-buildchain-github-governance-receipt";
 export const GITHUB_GOVERNANCE_ROLLOUT_CONTRACT =
   "kungfu-buildchain-github-governance-rollout-plan";
+export const GITHUB_GOVERNANCE_RULESET_ROLLOUT_CONTRACT =
+  "kungfu-buildchain-github-governance-ruleset-rollout-plan";
 
 const SHA256 = /^sha256:[0-9a-f]{64}$/;
 const PUBLIC_REPOSITORIES = Object.freeze([
@@ -756,6 +758,64 @@ export function normalizeGithubBranchProtectionSnapshot(protection = {}) {
     lock_branch: protection.lock_branch?.enabled === true,
     allow_fork_syncing: protection.allow_fork_syncing?.enabled === true,
   };
+}
+
+export function normalizeGithubRulesetSnapshot(ruleset = {}) {
+  return {
+    name: requiredString(ruleset.name, "ruleset name"),
+    target: requiredString(ruleset.target, "ruleset target"),
+    enforcement: requiredString(ruleset.enforcement, "ruleset enforcement"),
+    bypass_actors: (ruleset.bypass_actors || []).map((actor) => ({
+      actor_id: Number(actor?.actor_id || 0),
+      actor_type: requiredString(actor?.actor_type, "ruleset bypass actor type"),
+      bypass_mode: requiredString(actor?.bypass_mode, "ruleset bypass mode"),
+    })),
+    conditions: structuredClone(ruleset.conditions || {}),
+    rules: structuredClone(ruleset.rules || []),
+  };
+}
+
+export function createGithubRulesetBypassRolloutPlan({
+  repository,
+  rulesetId,
+  inventory,
+  rollbackSnapshot,
+} = {}) {
+  const fullName = requiredString(repository, "repository");
+  const id = Number(rulesetId);
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new Error("ruleset id must be a positive integer");
+  }
+  if (!inventory || !rollbackSnapshot) {
+    throw new Error("read-only inventory and frozen rollback snapshot are required");
+  }
+  const before = normalizeGithubRulesetSnapshot(rollbackSnapshot);
+  const desired = { ...before, bypass_actors: [] };
+  const endpoint = `repos/${fullName}/rulesets/${id}`;
+  const core = {
+    schemaVersion: 1,
+    contract: GITHUB_GOVERNANCE_RULESET_ROLLOUT_CONTRACT,
+    repository: fullName,
+    rulesetId: id,
+    inventoryRoot: githubGovernanceDigest(inventory),
+    rollbackSnapshotRoot: githubGovernanceDigest(before),
+    operations: [{ method: "PUT", endpoint, body: desired }],
+    impact: [
+      "remove every user, team, and App bypass actor from one exact repository ruleset",
+      "preserve the ruleset name, target, enforcement, conditions, and rules",
+    ],
+    expectedObservation: {
+      rulesetRoot: githubGovernanceDigest(desired),
+      bypassActors: [],
+    },
+    rollback: [{
+      method: "PUT",
+      endpoint,
+      body: before,
+      preconditionRoot: githubGovernanceDigest(before),
+    }],
+  };
+  return { ...core, planRoot: githubGovernanceDigest(core) };
 }
 
 export const BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY =

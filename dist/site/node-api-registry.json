@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:0244d3316a89f161a376403d9c300474a53159b0471bfb1697f7a3134e206668",
+      "digest": "sha256:39d4cbbd44e97557458a61b9caffdbd11e4c9db17d5ff87b4b4d03c5d468fb80",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:0244d3316a89f161a376403d9c300474a53159b0471bfb1697f7a3134e206668",
+      "digest": "sha256:39d4cbbd44e97557458a61b9caffdbd11e4c9db17d5ff87b4b4d03c5d468fb80",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -346,7 +346,7 @@
       "specifier": "@kungfu-tech/buildchain/github-governance-authority",
       "export": "./github-governance-authority",
       "target": "./packages/core/github-governance-authority.js",
-      "digest": "sha256:d94d0c191530636477f7fe67a2c3ee07c7b215fe5eb4b28327d36055c3e8cd10",
+      "digest": "sha256:9ca3e6ce722fe9d98ece4558f820471c2ba77857a1e6a8bb88d0e0a98c83f406",
       "summary": "Fail-closed GitHub ownership, effective-policy, managed-zone admission, rollout-plan, and immutable receipt APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
