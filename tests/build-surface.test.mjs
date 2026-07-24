@@ -2263,6 +2263,10 @@ test("promote wrapper exposes controlled branch-protection review bypass", () =>
   assert.match(wrapper, /checks: write/);
   assert.match(wrapper, /pull-requests: write/);
   assert.equal(publicWrapper.match(/pull-requests: write/g)?.length, 3);
+  assert.match(
+    wrapper,
+    /token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token \}\}/,
+  );
   assert.match(wrapper, /generated-status-check-token: \$\{\{ github\.token \}\}/);
   assert.match(wrapper, /BUILDCHAIN_PROMOTION_TOKEN:\n\s+description:/);
   assert.match(
