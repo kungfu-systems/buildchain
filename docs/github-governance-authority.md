@@ -196,6 +196,27 @@ buildchain github-governance rollback \
   --confirm-rollback-root sha256:...
 ```
 
+For an admitted exact target, classic branch protection can also be compiled
+directly from the authority descriptor. This mode preserves both App-bound
+checks and intentionally unbound check contexts such as Kungfu alpha's
+`build`, rather than guessing a provider App identity.
+
+```bash
+buildchain github-governance protection-policy-plan \
+  --repository kungfu-systems/kungfu \
+  --branch alpha/v4/v4.0 \
+  --snapshot-output protection-rollback.json \
+  --plan-output protection-rollout.json
+
+buildchain github-governance protection-policy-apply \
+  --plan-json protection-rollout.json \
+  --confirm-plan-root sha256:...
+
+buildchain github-governance protection-policy-rollback \
+  --plan-json protection-rollout.json \
+  --confirm-rollback-root sha256:...
+```
+
 For an admitted exact target, repository ruleset reconciliation compiles the
 target descriptor into the provider body. It replaces bypass actors with the
 exact provider-admitted desired set, requires fresh Code Owner approval and
