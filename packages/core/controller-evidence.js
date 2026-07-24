@@ -7,7 +7,7 @@ export const BUILDCHAIN_CONTROLLER_AGGREGATE_CONTRACT = "buildchain.controller-e
 
 const SHA256_PATTERN = /^sha256:[0-9a-f]{64}$/;
 const GIT_SHA_PATTERN = /^[0-9a-f]{40}$/;
-const STAGE_STATUSES = new Set(["passed", "failed", "skipped", "cancelled", "missing"]);
+const STAGE_STATUSES = new Set(["passed", "failed", "skipped", "cancelled", "missing", "partial"]);
 
 const CONTROLLER_SPECS = [
   {
