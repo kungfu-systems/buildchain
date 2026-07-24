@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-release-propagation-graph",
+  "nodes": [
+    {
+      "id": "kfd",
+      "repository": "kungfu-systems/kfd",
+      "package": "@kungfu-tech/kfd"
+    },
+    {
+      "id": "site-libkungfu-dev",
+      "repository": "kungfu-systems/site-libkungfu-dev",
+      "lockPath": "buildchain.upstreams/kfd.release.json",
+      "baseRef": "dev/v2/v2.7"
+    }
+  ],
+  "edges": [
+    {
+      "id": "kfd-to-site",
+      "from": "kfd",
+      "to": "site-libkungfu-dev",
+      "channelPolicy": "preserve"
+    }
+  ]
+}

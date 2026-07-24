@@ -14,11 +14,26 @@ inputs:
 outputs:
   config-path:
     description: "Resolved Buildchain config path"
+  project-type:
+    description: "Configured Buildchain project type"
+  project-name:
+    description: "Configured Buildchain project name"
+  project-site:
+    description: "Configured web-surface site identifier"
+  channels:
+    description: "Comma-separated configured channel names"
+  deploy-adapters-json:
+    description: "JSON object mapping channel names to deploy adapter names"
   version-files:
     description: "Comma-separated configured version-state files"
   lifecycle-stages:
     description: "Comma-separated configured lifecycle stages"
+  version-strategy:
+    description: "Configured version strategy"
+  version-next:
+    description: "Configured next-version behavior"
+  anchor-manifest:
+    description: "Configured anchor manifest path"
 runs:
   using: "node24"
   main: "dist/index.js"
-

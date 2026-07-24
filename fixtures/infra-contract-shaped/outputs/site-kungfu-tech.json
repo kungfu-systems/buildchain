@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "outputs": {
+    "bucketName": "kungfu-tech-staging",
+    "distributionId": "E-KUNGFU-TECH-STAGING",
+    "stagingUrl": "https://staging.kungfu.tech"
+  },
+  "provenance": {
+    "adapter": "manual-observed",
+    "reviewedBy": "platform-maintainer",
+    "observedAt": "2026-07-03T00:00:00.000Z"
+  }
+}

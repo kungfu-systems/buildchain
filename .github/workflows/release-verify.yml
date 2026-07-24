@@ -6,6 +6,7 @@ on:
     branches:
       - alpha/*/*
       - release/*/*
+      - publish-gate/major
       - major-gate
 
 permissions:
@@ -19,9 +20,7 @@ jobs:
       prebuild: false
       find-dependencies: false
       publish-versioning: false
-      action-bump-version-repository: kungfu-systems/buildchain
-      action-bump-version-ref: ${{ github.head_ref || github.ref_name }}
-      action-bump-version-path: actions/bump-version
+      buildchain-repository: kungfu-systems/buildchain
   
   verify:
     # report status for branch protection rule

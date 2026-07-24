@@ -1,0 +1,10 @@
+{
+  "site": "libkungfu.dev",
+  "channel": "staging",
+  "requiredOutputs": [
+    "bucketName",
+    "distributionId",
+    "stagingUrl"
+  ],
+  "ownership": "observed/import-needed"
+}

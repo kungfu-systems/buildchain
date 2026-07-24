@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-release-model",
+  "exactTags": "v-prefixed exact tags are immutable release records.",
+  "floatingTags": "vX, vX-alpha, vX.Y, and vX.Y-alpha are channel pointers updated by Buildchain transactions; vX-alpha follows the highest minor in major X with a published alpha.",
+  "channelBranches": [
+    "dev/vX/vX.Y",
+    "alpha/vX/vX.Y",
+    "release/vX/vX.Y",
+    "publish-gate/major"
+  ],
+  "protectedDevelopmentBranches": [
+    "dev/vX/vX.Y"
+  ],
+  "releasePassport": {
+    "entrypoint": "buildchain.release.json",
+    "bundle": "buildchain-release-bundle.tar.gz",
+    "contract": "kungfu-buildchain-release-passport",
+    "schema": "schemas/release-passport-v1.schema.json",
+    "checkManifest": "release-passport-check-manifest.json"
+  },
+  "releasePropagation": {
+    "graphContract": "kungfu-buildchain-release-propagation-graph",
+    "planContract": "kungfu-buildchain-release-propagation-plan",
+    "lockContract": "kungfu-buildchain-release-propagation-lock",
+    "defaultChannelPolicy": "preserve",
+    "defaultChannelMap": {
+      "alpha": "alpha",
+      "release": "release"
+    }
+  },
+  "npm": {
+    "package": "@kungfu-tech/buildchain",
+    "command": "./bin/buildchain.mjs",
+    "versionSource": "package.json#version",
+    "alphaDistTag": "alpha",
+    "stableDistTag": "latest"
+  },
+  "githubRelease": {
+    "exactTagRelease": true,
+    "authoritativeIntent": "Buildchain publication channel controls prerelease/latest metadata when available",
+    "alphaChannel": "alpha publication sets prerelease=true and make_latest=false",
+    "stableChannels": "release, stable, and major publication set prerelease=false and make_latest=true",
+    "tagFallback": "ordinary callers without publication intent use semver prerelease syntax",
+    "evidenceAssets": [
+      "publish evidence JSON",
+      "buildchain.release.json",
+      "release passport assets"
+    ],
+    "owner": "promote-buildchain-ref"
+  },
+  "distributionIndexes": {
+    "homebrewTap": {
+      "projectType": "distribution-index",
+      "manifest": "tap-manifest.json",
+      "command": "buildchain homebrew check",
+      "sourceOfTruth": "upstream release passport and sibling evidence"
+    }
+  }
+}

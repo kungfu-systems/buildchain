@@ -1,0 +1,17 @@
+{
+  "resource": {
+    "aws_s3_bucket": {
+      "site": {
+        "bucket": "example-opentofu-preview"
+      }
+    }
+  },
+  "output": {
+    "bucket_name": {
+      "value": "${aws_s3_bucket.site.bucket}"
+    },
+    "website_url": {
+      "value": "https://example-opentofu-preview.s3-website.example"
+    }
+  }
+}

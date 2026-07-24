@@ -15,7 +15,7 @@ inputs:
     description: "Optional comma-separated ABV-style tags to update. Defaults from target-ref channel and release-line patch/prerelease sequence."
     default: ""
   dry-run:
-    description: "Only print planned ref updates"
+    description: "Explain the release-line promotion plan and report planned ref updates without writing refs"
     default: "false"
   require-governance:
     description: "Require protected-channel PR lineage and release-from-alpha checks"
@@ -26,12 +26,211 @@ inputs:
   verification-command:
     description: "Command to run against each generated version-state tree before refs move"
     default: ""
+  reconciliation-workspace:
+    description: "Optional checkout of the current development branch used to regenerate version state before reconciling a divergent post-release dev ref"
+    default: ""
   required-status-check:
-    description: "Status check name fragment required by protected channel branches"
-    default: "check"
+    description: "Exact status check context required by protected channel branches"
+    default: "check / check"
+  generated-status-check-token:
+    description: "GitHub token used to create every generated version-state check required by the managed branch before direct protected branch updates. Defaults to token."
+    default: ""
+  generated-ref-update-token:
+    description: "GitHub token used to update Buildchain-generated protected version-state refs. Defaults to token."
+    default: ""
+  branch-protection-bypass-apps:
+    description: "Comma- or newline-separated GitHub App slugs allowed to bypass pull-request review on Buildchain-managed channel branches while required approval remains enforced for humans"
+    default: ""
+  branch-protection-bypass-users:
+    description: "Comma- or newline-separated GitHub users allowed to bypass pull-request review on Buildchain-managed channel branches while required approval remains enforced for humans"
+    default: ""
+  branch-protection-bypass-teams:
+    description: "Comma- or newline-separated GitHub team slugs allowed to bypass pull-request review on Buildchain-managed channel branches while required approval remains enforced for humans"
+    default: ""
   allow-repository:
     description: "Repository allowed to promote"
     default: "kungfu-systems/buildchain"
+  publish-transaction:
+    description: "Run lifecycle.publish or publish-command and require valid publish evidence before final refs move"
+    default: "false"
+  publish-command:
+    description: "Explicit publish command. Overrides lifecycle.publish when set."
+    default: ""
+  publish-evidence-path:
+    description: "Path to publish evidence JSON. Defaults to .buildchain/release-evidence/<tag>/evidence.json"
+    default: ""
+  transaction-state-path:
+    description: "Path to release transaction state JSON. Defaults to .buildchain/release-state/<tag>.json"
+    default: ""
+  publish-required-artifacts-json:
+    description: "JSON array of required artifacts whose post-publish evidence must exist before refs move; digest and ref may be omitted, or ref_template may contain one {version} placeholder"
+    default: ""
+  publish-mode:
+    description: "Publish mode: publish-final-version or promote-existing-version"
+    default: ""
+  publish-auth:
+    description: "Publish auth model: trusted-publishing or npm-token"
+    default: ""
+  publish-dist-tag:
+    description: "Expected npm dist-tag for publish or existing-version promotion"
+    default: ""
+  publish-package-set-order:
+    description: "Package-set order: as-provided or platforms-first-main-last"
+    default: ""
+  publish-package-main:
+    description: "Main npm package name for package-set visibility gating"
+    default: ""
+  expected-publication-version:
+    description: "Exact publication version sealed by the pre-publication authority plan; promotion fails if transaction selection drifts"
+    default: ""
+  require-publication-qualification:
+    description: "Require an exact consumer qualification receipt before any provider mutation"
+    default: "false"
+  publication-capability-json:
+    description: "Sealed publication capability JSON bound to the consumer qualification"
+    default: ""
+  publication-gate-aggregate-json:
+    description: "Complete Gate aggregate evaluated by the consumer predicate"
+    default: ""
+  publication-qualification-receipt-json:
+    description: "Deterministic consumer qualification receipt JSON"
+    default: ""
+  publication-used-qualification-nonces-json:
+    description: "JSON array of already consumed consumer qualification nonces"
+    default: "[]"
+  require-publish-source-lock:
+    description: "Require publish side effects to come from a resolved publish-gate source lock"
+    default: "false"
+  publish-source-ref:
+    description: "Resolved publish-gate source ref from the reusable build workflow"
+    default: ""
+  publish-source-sha:
+    description: "Resolved publish-gate source SHA from the reusable build workflow"
+    default: ""
+  publish-source-locked:
+    description: "Whether the reusable build workflow locked the publish source ref"
+    default: ""
+  release-material-sha:
+    description: "Material SHA that published artifacts must prove. Defaults to the generated release SHA."
+    default: ""
+  publish-tooling-sha:
+    description: "Publish tooling SHA used for controlled repair. Defaults to the generated release SHA."
+    default: ""
+  publish-transaction-override:
+    description: "Explicitly allow controlled recovery from terminal transaction states or replacement of an unpublished stale transaction with the same version, tag, target, and channel"
+    default: "false"
+  release-passport:
+    description: "Generate and persist the unified buildchain-release-passport after publish transaction completion"
+    default: "true"
+  release-passport-output-dir:
+    description: "Directory where the generated buildchain-release-passport files are written"
+    default: ".buildchain/release-passport"
+  release-passport-product-name:
+    description: "Product name recorded in buildchain.release.json"
+    default: "Buildchain"
+  release-passport-build-summary-path:
+    description: "Aggregate build summary JSON to include in buildchain.release.json when present"
+    default: ".buildchain/artifacts/build-summary.json"
+  release-passport-platform-manifest-paths:
+    description: "Optional comma- or newline-separated platform artifact manifest JSON paths to include"
+    default: ""
+  release-passport-impact-json:
+    description: "Surface-aware impact ledger JSON or path; required when the generated release passport target requires surfaceImpacts[]"
+    default: ""
+  release-passport-promotion-routing-json:
+    description: "Promotion router/shell/runtime/lock evidence JSON or path to bind into the final release passport"
+    default: ""
+  release-passport-kfd-1-witness-jsons:
+    description: "Newline- or comma-separated KFD-1 contract-world witness JSON paths to include in the release passport"
+    default: ""
+  release-passport-kfd-2-claim-jsons:
+    description: "Newline- or comma-separated KFD-2 public release trust claim JSON paths to audit in the release passport"
+    default: ""
+  release-passport-kfd-3-prebuild-witness-jsons:
+    description: "Newline- or comma-separated KFD-3 collaboration-interface pre-build witness JSON paths to include in the release passport"
+    default: ""
+  release-passport-kfd-3-artifact-witness-jsons:
+    description: "Newline- or comma-separated KFD-3 artifact-side collaboration-interface witness JSON paths to include in the release passport"
+    default: ""
+  release-passport-kfd-3-artifact-verify-command:
+    description: "Product-owned command that emits a KFD-3 artifact-side collaboration-interface witness JSON document"
+    default: ""
+  release-passport-invariant-passport-jsons:
+    description: "Newline- or comma-separated invariant Passport JSON paths required by the release gate"
+    default: ""
+  release-passport-invariant-passport-command:
+    description: "Product-owned command that emits a canonical invariant Passport JSON document"
+    default: ""
+  release-passport-buildchain-self-kfd:
+    description: "Generate Buildchain-owned KFD-1/2/3 self witnesses inside the final version-state workspace before release passport finalization"
+    default: "false"
+  github-release:
+    description: "Create/update the public GitHub Release and upload publish evidence plus release passport assets after a complete release transaction"
+    default: "false"
+  github-release-artifact-paths:
+    description: "Newline-separated declared product artifact paths to upload alongside GitHub Release evidence"
+    default: ""
+  github-release-title:
+    description: "Optional GitHub Release title. Empty defaults to the public release tag."
+    default: ""
+  github-release-notes:
+    description: "Optional GitHub Release notes. Empty uses a Buildchain release-passport asset note."
+    default: ""
+  promote-only-release-candidate:
+    description: "Fail fast unless a verified PR-stage release-candidate passport matches the promotion source before publish-gate side effects run"
+    default: "false"
+  release-candidate-passport-path:
+    description: "Path to the PR-stage release-candidate passport JSON used by promote-only-release-candidate"
+    default: ".buildchain/artifacts/release-candidate-passport.json"
+  release-candidate-build-summary-path:
+    description: "Optional aggregate build summary JSON whose hash must match the release-candidate passport when present"
+    default: ".buildchain/artifacts/build-summary.json"
+  release-candidate-version:
+    description: "Optional expected product version recorded in the release-candidate passport"
+    default: ""
+outputs:
+  failure-message:
+    description: "Single-line promotion failure passed to workflow-friction reporting"
+  sha:
+    description: "Final promoted release or alpha commit SHA"
+  tags:
+    description: "Comma-separated tags updated by the promotion"
+  next-anchor-required:
+    description: "true when anchored/manual strategy leaves next anchor creation to the repository"
+  transaction-id:
+    description: "Stable release transaction identity"
+  transaction-state:
+    description: "Final release transaction state"
+  transaction-exact-tag:
+    description: "Exact release or prerelease tag governed by the transaction"
+  planned-publication-version:
+    description: "Exact version selected during a dry-run publication plan"
+  planned-publication-exact-tag:
+    description: "Exact public tag corresponding to the planned publication version"
+  public-release-tag:
+    description: "Public GitHub Release tag; anchored package publishes use v<publishedVersion> while transaction-exact-tag remains internal"
+  transaction-release-sha:
+    description: "Release/version-state SHA governed by the transaction"
+  transaction-state-ref:
+    description: "Machine-managed durable release transaction ref"
+  transaction-state-sha:
+    description: "Commit SHA at the durable release transaction ref"
+  transaction-state-path:
+    description: "Release transaction state file path"
+  publish-evidence-path:
+    description: "Publish evidence file path"
+  release-passport-path:
+    description: "Generated buildchain.release.json path"
+  release-passport-output-dir:
+    description: "Generated buildchain-release-passport directory"
+  release-passport-state-sha:
+    description: "Durable release-state commit SHA after uploading passport files"
+  finalization-needed:
+    description: "true when publish completed but protected ref finalization still needs a later run"
+  github-release-url:
+    description: "HTML URL of the created or updated public GitHub Release"
+  github-release-action:
+    description: "created, updated, or empty when GitHub Release publication did not run"
 runs:
   using: "node24"
   main: "dist/index.js"

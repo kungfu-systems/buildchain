@@ -1,0 +1,6 @@
+{
+  "name": "@kungfu-systems/publish-transaction-shaped",
+  "version": "1.0.0-alpha.0",
+  "private": true,
+  "type": "module"
+}

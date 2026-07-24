@@ -2,11 +2,14 @@ name: Verify
 
 on:
   pull_request:
+  merge_group:
+    types: [checks_requested]
   push:
     branches:
       - dev/v*/v*
       - alpha/v*/v*
       - release/v*/v*
+      - publish-gate/major
       - major-gate
   workflow_dispatch:
 
@@ -18,17 +21,52 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7.0.0
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
       - uses: actions/setup-node@v6.4.0
         with:
           node-version: "24"
       - uses: actions/setup-go@v6.5.0
         with:
           go-version: "1.25.x"
-      - name: Enable pnpm
+      - name: Enable package manager shims
         run: |
-          corepack enable pnpm
+          corepack prepare pnpm@11.7.0 --activate
+          corepack enable
           pnpm --version
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-      - name: Check inventory and structure
-        run: pnpm run check
+      - name: Install Buildchain runtime dependencies
+        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+      - name: Validate declared check lifecycle
+        run: >-
+          node .buildchain/runtime/bin/buildchain.mjs validate
+          --cwd .
+          --require-version-state
+          --require-lifecycle-stages install,verify
+      - name: Run declared install lifecycle
+        run: >-
+          node .buildchain/runtime/bin/buildchain.mjs lifecycle run install
+          --cwd .
+          --required
+          --artifact-name buildchain-check-install
+          --manifest-path .buildchain/artifacts/check-install-manifest.json
+          --summary-path .buildchain/artifacts/check-install-summary.json
+      - name: Run declared verify lifecycle
+        run: >-
+          node .buildchain/runtime/bin/buildchain.mjs lifecycle run verify
+          --cwd .
+          --required
+          --artifact-name buildchain-check
+          --manifest-path .buildchain/artifacts/check-manifest.json
+          --summary-path .buildchain/artifacts/check-summary.json
+      - name: Upload check evidence
+        if: always()
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-check
+          path: .buildchain/artifacts/
+          if-no-files-found: error

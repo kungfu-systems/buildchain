@@ -1,0 +1,93 @@
+schema = 1
+
+[project]
+type = "web-surface"
+name = "site-libkungfu-dev"
+site = "libkungfu-dev"
+
+[channels.preview]
+url_pattern = "https://{alias}.preview.libkungfu.dev"
+visibility = "ephemeral"
+requires_auth = false
+noindex = true
+
+[channels.staging]
+url = "https://staging.libkungfu.dev"
+visibility = "protected"
+access_control = "managed-network"
+edge_auth = "none"
+noindex = true
+promotable = true
+
+[channels.production]
+url = "https://libkungfu.dev"
+visibility = "public"
+canonical = true
+noindex = false
+
+[surfaces.hub]
+path = "/"
+production_url = "https://libkungfu.dev"
+staging_url = "https://staging.libkungfu.dev"
+preview_url_pattern = "https://{alias}.preview.libkungfu.dev"
+
+[surfaces.core]
+path = "/core/"
+production_url = "https://core.libkungfu.dev"
+staging_url = "https://core.staging.libkungfu.dev"
+preview_url_pattern = "https://core-{alias}.preview.libkungfu.dev"
+
+[surfaces.buildchain]
+path = "/buildchain/"
+production_url = "https://buildchain.libkungfu.dev"
+staging_url = "https://buildchain.staging.libkungfu.dev"
+preview_url_pattern = "https://buildchain-{alias}.preview.libkungfu.dev"
+
+[surfaces.kfd]
+path = "/kfd/"
+production_url = "https://kfd.libkungfu.dev"
+staging_url = "https://kfd.staging.libkungfu.dev"
+preview_url_pattern = "https://kfd-{alias}.preview.libkungfu.dev"
+
+[deploy.preview]
+adapter = "aws-s3-cloudfront"
+bucket = "libkungfu-dev-preview"
+cloudfront_distribution = "E-PREVIEW"
+artifact_path = "dist"
+secret_refs = ["AWS_ROLE_ARN"]
+
+[deploy.staging]
+adapter = "aws-s3-cloudfront"
+bucket = "libkungfu-dev-staging"
+cloudfront_distribution = "E-STAGING"
+artifact_path = "dist"
+secret_refs = ["AWS_ROLE_ARN"]
+
+[deploy.production]
+adapter = "aws-s3-cloudfront"
+bucket = "libkungfu-dev-production"
+cloudfront_distribution = "E-PRODUCTION"
+artifact_path = "dist"
+secret_refs = ["AWS_ROLE_ARN"]
+
+[retention.preview]
+pr_days = 14
+sha_days = 90
+
+[retention.staging]
+days = 90
+keep_deploys = 10
+
+[retention.production]
+days = 365
+
+[security.staging]
+noindex = true
+isolated_providers = true
+sandbox_data = true
+
+[lifecycle.build]
+command = "node scripts/build.mjs"
+
+[lifecycle.verify]
+command = "node scripts/verify.mjs"

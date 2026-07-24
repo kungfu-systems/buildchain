@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "outputs": {
+    "bucketName": "example-aws-cli-preview",
+    "policyState": "restricted-public-access",
+    "stagingUrl": "https://aws-cli-preview.example"
+  },
+  "provenance": {
+    "adapter": "aws-cli",
+    "source": "static-aws-cli-describe-fixture",
+    "observedAt": "2026-07-03T00:00:00.000Z"
+  }
+}

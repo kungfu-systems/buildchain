@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "label": "KFD-4",
+  "message": "observer perspective aligned",
+  "color": "0969da",
+  "logoPolicy": {
+    "contract": "kungfu-buildchain-badge-logo-policy",
+    "mode": "hosted-placeholder",
+    "placeholder": "buildchain-monogram",
+    "futureLogoUpdateRequiresConsumerAction": false,
+    "owner": "Buildchain site badge endpoint",
+    "note": "README image URLs point at stable Buildchain-hosted badge endpoints; the rendered logo is controlled by the endpoint, not by consumer README text."
+  }
+}

@@ -2,6 +2,9 @@ schema = 1
 
 [version]
 required = true
+strategy = "anchored"
+next = "manual"
+manifest = "libnode.release.json"
 
 [[version.files]]
 type = "json"
@@ -16,3 +19,21 @@ command = "node scripts/build.mjs"
 
 [lifecycle.verify]
 command = "node scripts/verify.mjs"
+
+[lifecycle.publish]
+command = "node scripts/verify.mjs"
+
+[diagnostics.native]
+enabled = true
+sample_process_tree = true
+compiler_cache = "auto"
+expected_tools = ["node", "pnpm", "git", "cmake", "ninja", "ccache", "sccache"]
+artifact_dirs = ["dist", "build"]
+cache_dirs = [".ccache", ".sccache"]
+
+[publish]
+mode = "publish-final-version"
+auth = "trusted-publishing"
+dist_tag = "latest"
+package_set_order = "platforms-first-main-last"
+main_package = "@kungfu-tech/libnode"

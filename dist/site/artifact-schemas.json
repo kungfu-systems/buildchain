@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-artifact-schema-index",
+  "releasePassport": [
+    "buildchain.release.json",
+    "release-passport-check-manifest.json",
+    "schemas/release-passport-v1.schema.json",
+    "schemas/kfd-agent-hub-adoption.schema.json",
+    "artifact-evidence.json",
+    "product-mechanism.json",
+    "impact.json",
+    "agent-index.json",
+    "check-report.json",
+    "llms.txt",
+    "buildchain-release-bundle.json",
+    "buildchain-release-bundle.tar.gz"
+  ],
+  "site": [
+    "buildchain-site.json",
+    "site-manifest.json",
+    "badge-endpoint-registry.json",
+    "publication-registry.json",
+    "page-registry.json",
+    "capability-registry.json",
+    "cli-registry.json",
+    "manual-registry.json",
+    "node-api-registry.json",
+    "workflow-registry.json",
+    "controller-registry.json",
+    "publication-authority-registry.json",
+    "public-surface-audit.json",
+    "release-model.json",
+    "artifact-schemas.json",
+    "release-passport-check-manifest.json",
+    "schemas/release-passport-v1.schema.json",
+    "schemas/kfd-agent-hub-adoption.schema.json",
+    "buildchain-contract.json",
+    "kfd-claims.json",
+    "product-mechanism.json",
+    "release-provenance.json",
+    "agent-index.json"
+  ],
+  "infraContract": [
+    "infra-contract-plan.json",
+    "buildchain.infra-contract.json",
+    "infra-contract-propagation.json"
+  ]
+}

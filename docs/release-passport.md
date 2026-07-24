@@ -1,0 +1,503 @@
+# Release Passport
+
+Buildchain Release Passport is the core product mechanism: a mature product
+release record for artifacts that users or agents depend on.
+
+The protocol is GitHub-native because it uses protected refs, reviewed
+promotion PRs, exact tags, GitHub Releases, npm Trusted Publishing, and
+machine-readable evidence. A project can keep its existing build system and use
+Buildchain to make the release record auditable.
+
+Release-candidate and final passports may also include compact
+`controllerReceipts[]` references. These bind a real reusable-workflow receipt
+to its plan digest, consumer source SHA, and exact Buildchain runtime SHA; they
+do not infer execution evidence from a green job. See
+[`controller-evidence.md`](controller-evidence.md).
+
+## Contract
+
+The release passport surface is a welded contract. Additive fields are allowed;
+breaking semantic changes require a new major line.
+
+Independent verifiers can pin two package-owned, standalone files without
+scraping this implementation:
+
+- `dist/site/schemas/release-passport-v1.schema.json` is the self-contained
+  JSON Schema for the Buildchain-owned envelope;
+- `dist/site/release-passport-check-manifest.json` names the normative checker,
+  required and conditional sibling evidence, local-resolution rules,
+  Buildchain aggregation fields, canonical KFD subsection schema authorities,
+  and forward-compatibility policy.
+
+The same files are exported as
+`@kungfu-tech/buildchain/site/schemas/release-passport-v1.schema.json` and
+`@kungfu-tech/buildchain/site/release-passport-check-manifest.json`. The schema
+checks the envelope shape. `buildchain verify release-passport` remains the
+normative semantic checker: it resolves sibling evidence relative to the
+passport and fails closed on missing evidence, digest drift, or inconsistent
+release facts. Buildchain owns envelope aggregation; KFD retains schema and
+compatibility authority for the `kfd-1`, `kfd-2`, and `kfd-3` subsections.
+
+P0 protocol artifacts:
+
+- `product-mechanism.json`
+- `buildchain.release.json`
+- `artifact-evidence.json`
+- `impact.json`
+- `agent-index.json`
+- `check-report.json`
+- `llms.txt`
+- `buildchain-release-bundle.json`
+- `buildchain-release-bundle.tar.gz`
+
+`buildchain.release.json` is the first file an agent should read. It points to
+artifact evidence, impact, recovery, product mechanism, and agent index facts.
+It is also the unified release responsibility summary: when publish
+transactions are used, the same passport records the package set, npm dist-tags,
+release source refs, release-state ref, anchor manifest, registry artifact
+digests, trusted publishing evidence, and transaction result.
+
+Additive passport sections:
+
+- `release`: public release tag, internal transaction tag, line, channel,
+  source SHA, target ref, release SHA, release material SHA, publish tooling
+  SHA, and durable release-state ref. Anchored/manual package releases use the
+  published package version for the public tag while preserving the internal
+  exact transaction tag for Buildchain recovery.
+- `versionImpact`: final patch/minor/major classification, source, and
+  rationale.
+- `surfaceImpacts`: per registered surface classification. The final impact is
+  the highest entry in this list.
+- `packageSet`: main package, platform packages, package-set order, registry,
+  versions, dist-tags, and package digests.
+- `anchorManifest`: anchored/manual version manifest path, digest, and fields.
+- `trustedPublishing`: provider, auth mode, workflow run evidence, and whether
+  trusted publishing was enabled.
+- `transaction`: durable Buildchain release transaction id, state, exact tag,
+  release SHA, state ref, and state SHA.
+- `surfaceTimestampPolicy`: the common Buildchain surface manifest timestamp
+  policy. It records real CI/release generation and publication times,
+  reproducibility inputs, source revision or source-date-epoch, and whether
+  timestamp fields participate in the release artifact digest.
+- `buildFacts`: module/product build facts that bind Git source digests,
+  version sources, lifecycle invocations, platforms, outputs, product
+  artifacts, and verification results to the release.
+- `artifacts`: release assets and registry artifacts in one list, each pointing
+  back to the evidence file that proves its digest. Registry artifacts retain
+  optional built/reused action, content and current-release coordinates,
+  platform/contract/parent metadata, and fail-closed verification evidence.
+- `invariantPassports`: product-owned invariant verification results admitted
+  by Buildchain. Each entry binds the product contract and registry roots,
+  semantic Passport root, exact clean source revision, complete platform
+  coverage, verdict, and residual risk. Buildchain owns release admission, not
+  the meaning of the product invariants.
+
+Buildchain's own binary lane also publishes observability artifacts generated by
+the Buildchain logging API and CLI:
+
+- `buildchain-log-events-<platform>.jsonl`
+- `buildchain-log-summary-<platform>.json`
+- `buildchain-log-events-passport.jsonl`
+- `buildchain-log-summary-passport.json`
+
+`buildchain-release-bundle.tar.gz` is the single evidence bundle for consumers
+that want one file for offline inspection, mirroring, or site ingestion.
+`buildchain-release-bundle.json` records its digest and the digest of every
+included file.
+
+## Runner Policy
+
+Production binary distribution should use GitHub-hosted runners by default:
+
+- `ubuntu-24.04`
+- `macos-latest`
+- `windows-2022`
+
+This keeps the public release path easy for other projects to reproduce.
+Self-hosted runners remain compatibility fixtures: they prove that the protocol
+does not depend on GitHub-hosted images, but they are not the default public
+distribution lane.
+
+The protocol records runner facts in `artifact-evidence.json`; it does not
+require a specific runner class.
+
+## CLI
+
+Generate a local release passport bundle from release assets:
+
+```bash
+buildchain collect github-release \
+  --tag v2.2.0 \
+  --repository kungfu-systems/buildchain \
+  --assets-dir dist \
+  --publish-evidence-json .buildchain/release-evidence/v2.2.0/evidence.json \
+  --transaction-json .buildchain/release-state/v2.2.0/state.json \
+  --package-set-json package-set.json \
+  --anchor-manifest-json libnode.release.json \
+  --build-summary-json .buildchain/artifacts/build-summary.json \
+  --build-facts-json .buildchain/facts/native-core.json \
+  --build-facts-json .buildchain/facts/product.json \
+  --platform-manifest-json .buildchain/artifacts/linux-x64/manifest.json \
+  --platform-manifest-json .buildchain/artifacts/darwin-arm64/manifest.json \
+  --platform-manifest-json .buildchain/artifacts/win32-x64/manifest.json \
+  --dist-tag-evidence-json .buildchain/release-evidence/v2.2.0/dist-tag-evidence.json \
+  --kfd-1-witness-json .buildchain/kfd/kfd-1/contract-world.witness.json \
+  --kfd-2-claim-json .buildchain/kfd/kfd-2/release-claims.json \
+  --invariant-passport-json product/release/qualification/invariant-passport.json \
+  --output-dir .buildchain/release-passport
+```
+
+For a promotion workflow, consumers can instead use
+`release-passport-invariant-passport-command`. The command must emit exactly one
+canonical JSON object on stdout; for example:
+
+```yaml
+release-passport-invariant-passport-command: >-
+  node scripts/kungfu-invariant.mjs --collect-evidence .
+  --passport product/release/qualification/invariant-passport.json --json
+```
+
+Supplying the input makes the invariant gate mandatory. Command failure,
+missing output, semantic-root drift, a non-`verified` verdict, incomplete
+coverage, dirty source state, or a source revision unrelated to the release
+fails closed before release publication.
+
+`packageSet` records the ordered main-plus-platform package set.
+`publish.packages[]` summarizes each published npm package with its version,
+dist-tag, registry, role, platform, and digest, so agents do not need to stitch
+npm facts back together from the lower-level evidence files.
+`buildSummary`, `platformArtifactManifests`, and `distTagPromotion` preserve the
+build and npm dist-tag evidence chain in the same passport. `buildFacts[]`
+records first-class module/product build facts, while
+`evidence.buildFacts[]` gives agents compact paths, SHA-256 hashes, contracts,
+ids, and digests for quick audit traversal. See
+[`build-facts.md`](build-facts.md) for the fact collection and verification
+contract.
+
+### KFD-1 contract-world release gate
+
+Buildchain can gate release artifacts with KFD-1 contract-world witnesses. This
+is a structured evidence protocol, not a request for consumers to shell out to
+the Kungfu SDK. The authority chain is:
+
+1. KFD owns the standard metadata and schema ids in `@kungfu-tech/kfd`.
+2. Buildchain imports that metadata, owns the JSON formatting policy, freezes
+   the pre-build witness, and independently verifies post-build artifact bytes.
+3. Consumers only pass declarative witness JSON plus the artifact payloads their
+   build already produced.
+
+This gives agents a concrete answer to "what changed and can I trust it?" A
+release can include both normal release passport evidence and KFD-1 evidence:
+the passport proves the release transaction and artifacts are complete, while
+KFD-1 proves selected contract-world surfaces inside those artifacts are the
+byte-for-byte surfaces the release intended to ship.
+
+The witness JSON names the contract world, the canonical serialization policy,
+and the release surfaces that must be byte-for-byte verified:
+
+```json
+{
+  "id": "kungfu-config",
+  "standard": "kfd-1",
+  "source": "kfd",
+  "contractWorld": {
+    "id": "kungfu-config",
+    "kind": "schema",
+    "name": "Kungfu config schema"
+  },
+  "canonicalPolicy": {
+    "format": "json",
+    "encoding": "utf-8",
+    "indent": 2,
+    "trailingNewline": true
+  },
+  "surfaces": [
+    {
+      "id": "kungfu-config-schema",
+      "artifactPath": "Contents/Resources/core/config.schema.json",
+      "expectedSha256": "..."
+    }
+  ]
+}
+```
+
+`collect github-release` writes the result under the KFD-provided top-level key
+currently named `kfd-1`. Each contract world records the frozen witness digest,
+the KFD package version, KFD schema ids, the Buildchain formatting policy, and
+the actual artifact digest observed after the build. Verification fails closed
+when the witness is missing required facts, an artifact cannot be found, or a
+post-build digest does not match the frozen witness.
+
+For the KFD repository itself, the KFD-1 witness can be a self-hosted standard
+contract witness. In that mode KFD owns the standard-contract facts and
+Buildchain verifies declared source standard metadata, schemas, package
+exports, and site-consumption entrypoints against the packaged artifact. The
+passport records source and artifact hash summaries, schema ids, the
+self-hosting boundary, result, residual risk, and responsibility state for
+source ownership, artifact verification, and release-passport proof ownership.
+
+Good KFD-1 witnesses should point at release payload surfaces, not at private
+build-machine state. For Buildchain itself, the natural witness set is the
+release passport schema and implementation, KFD-1 gate implementation,
+`dist/site/buildchain-contract.json`, and the npm package payload files that
+expose the public CLI, reusable workflow/action contracts, and site facts.
+The final `buildchain.release.json` file should not be used as an ordinary
+byte-for-byte KFD surface because it contains KFD evidence; instead, the
+passport is audited through release-state SHA, `check-report.json`, and the
+contract files that generate and verify it.
+
+### KFD-2 release trust passport audit
+
+Buildchain can write a KFD-2 release trust passport audit under the top-level
+`kfd-2` section. The section is generated automatically from KFD-1 and KFD-3
+release-gate evidence, and callers may add explicit public release claims with
+`--kfd-2-claim-json`.
+
+Every public claim must bind:
+
+- declared sources;
+- machine-readable evidence;
+- source/evidence/artifact hashes;
+- artifact coordinates;
+- verification results;
+- audit boundary;
+- responsibility state;
+- residual risk, even when the array is empty.
+
+Unbound public claims fail release passport verification. Claims that are
+machine-bound but only supported by prose downgrade the KFD-2 audit and produce
+a warning, so agents can distinguish "verified", "needs review", and "not
+bound to evidence" without reading release notes.
+
+For Buildchain's own releases, public release claims are not authored in prose
+inside the workflow. The source registry is
+`packages/core/buildchain-kfd-claims.js`, published as
+`dist/site/kfd-claims.json` and exported as
+`@kungfu-tech/buildchain/buildchain-kfd-claims`. That registry is the
+version-invariant source of public claims and collaboration surfaces: it does
+not store the exact release version, promotion SHA, or exact runtime contract
+digest. Those run-specific facts belong in the release passport and generated
+witnesses. During Buildchain promotion,
+`scripts/generate-buildchain-kfd-witnesses.mjs` binds the source registry to the
+current source/artifact hashes and generates:
+
+- a KFD-1 self contract-world witness for the packaged docs, schemas, workflows,
+  actions, Node exports, and site-consumption facts;
+- one KFD-2 claim JSON per public Buildchain release claim;
+- KFD-3 pre-build and artifact witnesses for the same public collaboration
+  surfaces.
+
+The generated claim set covers Buildchain's KFD release passport support,
+agent-first single source of truth, floating `@v2` contract drift protection,
+semver GitHub Release evidence publication, channel-preserving release
+propagation, and npm publish evidence/finalization. Buildchain self promotion
+passes those files into `promote-buildchain-ref`; `verifyReleasePassport()` then
+fails closed if any claim is missing source bindings, machine evidence, hashes,
+artifact coordinates, verification result, audit boundary, responsibility, or
+residual risk.
+
+### KFD-3 collaboration-interface release gate
+
+KFD-3 asks a different release question than KFD-1. KFD-1 proves that named
+payload bytes match one contract world. KFD-3 proves that a product's shipped
+participant-facing collaboration/control surface is closed over its declared
+interface.
+
+For Buildchain itself, the declared interface starts in
+`packages/core/buildchain-kfd-claims.js`, not in this Markdown file. The
+registry enumerates public human/agent surfaces across manuals, schema and
+standard metadata, package exports, site-consumption contracts, workflows, and
+actions. `dist/site/kfd-claims.json` is the packaged machine-readable form used
+by downstream sites and by Buildchain's own release passport. Exact release
+version/SHA binding is deliberately deferred to the promotion witness, so the
+source registry can remain stable across semver version-state bumps.
+
+Buildchain also performs a reverse audit before that witness is used. The
+generated `dist/site/public-surface-audit.json` enumerates real CLI commands
+from `bin/buildchain.mjs`, workflow inputs, action inputs, site pages, and docs
+command references, then compares them with the generated registries. Buildchain
+self KFD witnesses include that audit result and classify the collaboration
+interface as closed-world only when the reverse audit passes. If a public
+command, workflow input, action input, or site page is exposed without a
+registry entry, `pnpm run check` fails before release promotion can produce a
+passport.
+
+The product remains the fact source. Before build/publish, the product writes a
+pre-build witness:
+
+```bash
+kungfu sdk collaboration-interface witness --json \
+  > .buildchain/kfd/kfd-3/collaboration-interface.prebuild.json
+```
+
+That witness must contain, or point to, the product-owned KFD-3 collaboration
+interface, registry digest, participants, and declared public shipped surfaces.
+KFD repository self-verification can declare the same facts as grouped machine
+surfaces: docs, schemas, standards metadata, package exports, and
+site-consumption contracts.
+After the artifact is built, the product also provides artifact-side evidence,
+either as a JSON file or a command:
+
+```bash
+buildchain collect github-release \
+  --kfd-3-prebuild-witness-json .buildchain/kfd/kfd-3/collaboration-interface.prebuild.json \
+  --kfd-3-artifact-verify-cmd "kungfu agent verify --json"
+```
+
+Buildchain imports the KFD-3 metadata from `@kungfu-tech/kfd`, freezes the
+pre-build witness digest, ingests the artifact witness, and compares the two
+sets:
+
+- every declared `shipped` public participant-facing surface must appear in the
+  artifact witness;
+- every artifact-exposed public participant-facing surface must be declared by
+  the pre-build witness;
+- if both witnesses record `collaborationInterface.digest`, the digests must
+  match;
+- contradictory, missing, stale, or schema-incomplete evidence fails closed.
+
+The generated release passport records the result under the KFD-provided
+top-level key currently named `kfd-3`. The section includes the KFD package
+version, schema ids/paths, pre-build witness digest, artifact witness digest,
+declared/exposed surface counts, missing declared shipped surfaces, and
+unclassified artifact public surfaces. Buildchain also projects the same
+collaboration-interface evidence into the top-level `kfd-2` audit as a
+machine-readable `trustProof` object on the generated `kfd-3:*` public claim.
+That proof carries `releaseStatus`, witness file hashes and canonical hashes,
+declared capability verification, reverse audit result and boundary, residual
+risk, and responsibility state.
+
+The trust proof makes the strongest claim only when the witnesses justify it:
+`No unclassified reachable surface within the declared audit boundary.` If the
+product declares non-exhaustive surfaces, Buildchain keeps the passport
+verifiable but marks the interface `audited` instead of `enforced` and records
+the residual risk explicitly. Draft or partial KFD-3 declarations are
+downgraded; missing declared capabilities, undeclared public artifact surfaces,
+or stale collaboration-interface digests fail the proof.
+
+This makes KFD-3 support usable by readers and agents immediately: they can
+inspect `buildchain.release.json` and know whether the released package
+actually exposes no more and no less than the declared collaboration interface,
+instead of trusting docs or release notes.
+
+### Floating Buildchain contract lock
+
+KFD-1 protects release payload surfaces. Floating ref contract locks protect the
+consumer's relationship to Buildchain itself. A consumer can keep
+`.buildchain/contract-lock.json` with the Buildchain floating ref it accepted,
+the resolved SHA, the contract digest, and the compatibility policy. Each
+Buildchain run reads the actual contract from the checked-out Buildchain ref
+and compares it before heavy build or publish work begins.
+
+Compatible drift, such as optional inputs or extra diagnostics, continues and
+creates a consumer-local issue for review. Breaking drift fails fast. This means
+consumers can use `@v2` without silently accepting incompatible changes, while
+Buildchain maintainers can still ship compatible improvements under the same
+major floating tag.
+
+`impact.json` can be supplied with `--impact-json`. Production release
+passports (`release/*`) and major publish-gate passports require
+`surfaceImpacts[]`; alpha, local, and legacy passport contexts keep the field
+optional. When `surfaceImpacts[]` is required or supplied, verification fails
+closed unless each entry has an id, impact, and rationale, and
+`versionImpact.final` matches the highest surface impact. For example, KFD-2
+content can remain patch while an additive `registry.kind` field on the
+machine-consumed KFD registry schema records a minor `kfd-registry-schema`
+surface impact.
+
+Promote-only stable publication may omit an explicit impact ledger only when
+the downloaded PR-stage release-candidate passport proves exact tree
+equivalence. Buildchain then records a patch-level release-governance impact
+bound to that candidate. Missing, stale, or non-equivalent candidate evidence
+does not receive this fallback and remains fail-closed.
+
+Verify a release passport:
+
+```bash
+buildchain verify release-passport .buildchain/release-passport/buildchain.release.json
+```
+
+Verify a specific artifact by discovering its detached passport:
+
+```bash
+buildchain verify artifact ./Kungfu-2.8.0-windows-x64.exe
+```
+
+Artifact verification is subject-centric. Buildchain identifies the subject,
+computes or obtains its digest, discovers a detached `buildchain.release.json`,
+verifies that release passport and its evidence, then proves the subject digest
+appears in the passport's artifacts, package set, publish evidence, or artifact
+evidence. The command returns `pass`, `fail`, or `unverifiable`; missing
+passports and digest mismatches fail closed.
+
+For npm subjects, Buildchain treats the registry as the package digest source:
+`npm:<name>@<version>` resolves `dist.integrity` and matches it against
+`packageSet.main.digest`, `packageSet.platforms[].digest`, and publish evidence.
+Use `--npm-registry <url>` when the package comes from a non-default registry.
+
+Discovery is ordered and auditable:
+
+1. explicit `--passport`;
+2. sidecar pointer;
+3. embedded/package pointer;
+4. local config or org index;
+5. GitHub Release default from artifact naming/repository/tag hints;
+6. custom locator;
+7. unverifiable with retry guidance.
+
+For Buildchain-managed GitHub Release lanes, release passport files are
+published as release assets by default when the upload backend is enabled, so a
+GitHub Release asset URL can discover the sibling `buildchain.release.json`
+without a consumer copying YAML resolver logic.
+
+Explain a release to an agent:
+
+```bash
+buildchain explain release \
+  --passport .buildchain/release-passport/buildchain.release.json \
+  --for agent \
+  --json
+```
+
+The verifier fails closed when a passport omits artifacts, omits evidence, has
+digest mismatches, or misses required protocol files.
+
+## Binary Distribution
+
+Initial binary distribution stays lightweight:
+
+- GitHub Release assets.
+- `checksums.txt`.
+- release passport artifacts.
+- a single release evidence bundle.
+- install scripts and Homebrew tap fixtures after the passport path is reliable.
+
+Buildchain publishes platform-specific archives, not loose top-level
+executables:
+
+- `buildchain-x86_64-unknown-linux-gnu.tar.gz`
+- `buildchain-aarch64-apple-darwin.tar.gz`
+- `buildchain-x86_64-pc-windows-msvc.zip`
+
+The executable name inside each archive stays natural for the platform
+(`buildchain` or `buildchain.exe`). Top-level loose executable assets are not
+uploaded, because Linux and macOS would otherwise collide when GitHub Actions
+matrix artifacts are merged.
+
+Heavy package manager channels such as apt, yum, winget, choco, Scoop, mise, or
+asdf are out of the P0/P1 scope until there is real external demand.
+
+Standalone binaries are a distribution shape, not a second implementation. The
+source of truth remains the Node/ESM CLI and core library.
+
+The standalone binary builder imports `@kungfu-tech/buildchain/logging` directly
+and records setup, SEA blob generation, injection, signing, archiving, manifest,
+and evidence phases. The GitHub workflow wraps the same build and passport
+steps with `buildchain mark`, `buildchain span`,
+`buildchain verify observability-log`, and `buildchain log summary`. Logging is
+a hard release gate: missing events, error events, or missing required phases
+fail the job before assets are uploaded. The verified logs are release assets
+and are covered by the release passport digest checks.
+
+See also [`binary-distribution.md`](binary-distribution.md) for asset naming and
+bundle details, and [`install.md`](install.md) for consumer commands.

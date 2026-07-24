@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-site-agent-index",
+  "readOrder": [
+    "site-manifest.json",
+    "capability-registry.json",
+    "page-registry.json",
+    "product-mechanism.json",
+    "release-model.json",
+    "cli-registry.json",
+    "manual-registry.json",
+    "node-api-registry.json",
+    "workflow-registry.json",
+    "controller-registry.json",
+    "publication-authority-registry.json",
+    "public-surface-audit.json",
+    "artifact-schemas.json",
+    "release-passport-check-manifest.json",
+    "schemas/release-passport-v1.schema.json",
+    "schemas/kfd-agent-hub-adoption.schema.json",
+    "buildchain-contract.json",
+    "kfd-upstream-aggregate.json",
+    "kfd-claims.json",
+    "badge-endpoint-registry.json",
+    "publication-registry.json"
+  ],
+  "instruction": "Use this bundle as the package-owned fact source for Buildchain pages. Do not infer current release mechanics from prose alone."
+}

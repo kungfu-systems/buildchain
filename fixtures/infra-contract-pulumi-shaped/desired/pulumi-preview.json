@@ -1,0 +1,13 @@
+{
+  "steps": [
+    {
+      "op": "same",
+      "urn": "urn:pulumi:preview::site::aws:s3/bucket:Bucket::site",
+      "provider": "pulumi"
+    }
+  ],
+  "outputs": {
+    "bucketName": "example-pulumi-preview",
+    "stagingUrl": "https://pulumi-preview.example"
+  }
+}

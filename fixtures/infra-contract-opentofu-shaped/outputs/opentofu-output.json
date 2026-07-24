@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "outputs": {
+    "bucketName": "example-opentofu-preview",
+    "websiteUrl": "https://example-opentofu-preview.s3-website.example"
+  },
+  "provenance": {
+    "adapter": "opentofu",
+    "source": "static-tofu-output-fixture",
+    "observedAt": "2026-07-03T00:00:00.000Z"
+  }
+}

@@ -1,0 +1,1041 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-cli-registry",
+  "binary": "buildchain",
+  "npmPackage": "@kungfu-tech/buildchain",
+  "commandSource": "bin/buildchain.mjs reverse enumeration",
+  "commands": [
+    {
+      "id": "audit",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain audit publication-control-plane --repository <owner/repo> --branch <protected-branch>",
+      "purpose": "Inspect read-only publication authority audit commands.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "badges",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain badges",
+      "purpose": "Inspect README badge command families.",
+      "capabilityGroup": "distribution-indexes",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "badges-bundle",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain badges bundle [--cwd <dir>] [--readme <path>] [--claims <csv>] [--check] [--write] [--json]",
+      "purpose": "Generate or verify the combined KFD and Release Passport badge bundle.",
+      "capabilityGroup": "distribution-indexes",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "badges-readme",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain badges readme [--cwd <dir>] [--readme <path>] [--check] [--write] [--json]",
+      "purpose": "Generate or verify managed README badge blocks.",
+      "capabilityGroup": "distribution-indexes",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "build-contract",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain build-contract ...",
+      "purpose": "Resolve Buildchain runtime contract metadata for floating-ref drift checks.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "build-facts",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain facts module [--cwd <dir>] [--module <id>] [--module-root <path>]",
+      "purpose": "Collect and verify Git source, version, module output, product artifact, and legacy Kungfu buildinfo facts.",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "candidate",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain candidate timeline --input <file-or-json> [--output <file>] [--json]",
+      "purpose": "Inspect source-bound candidate evidence command families.",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "collect",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain collect",
+      "purpose": "Inspect release evidence collection command families.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "collect-github-release",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain collect github-release --tag <tag> [--repository <owner/repo>]",
+      "purpose": "Collect GitHub Release assets into a release passport.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "create",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain create publication-admission --input-json <file-or-json> [--output <file>] [--json]",
+      "purpose": "Create canonical sealed publication evidence documents.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "dev",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain dev merge-queue --repository <owner/repo> --branch <dev/vN/vN.M>",
+      "purpose": "Inspect protected development-channel governance command families.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "diagnostics",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain diagnostics",
+      "purpose": "Inspect diagnostics command families.",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "diagnostics-summary",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain diagnostics summary <diagnostics.json>... [--artifact <file>]...",
+      "purpose": "Summarize diagnostics artifacts into JSON and cross-platform lifecycle timing tables.",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "doctor",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain doctor [--cwd <dir>] [--require-publish-source-lock] [--json]",
+      "purpose": "Report local integration readiness.",
+      "capabilityGroup": "getting-started",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "explain",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain explain",
+      "purpose": "Inspect release and artifact explanation command families.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "explain-artifact",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain explain artifact <subject> [--passport <file-or-url>] [--npm-registry <url>] [--for human|agent] [--json]",
+      "purpose": "Explain artifact evidence for humans or agents.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "explain-release",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain explain release --passport <file-or-url> [--for human|agent] [--json]",
+      "purpose": "Explain a release passport for humans or agents.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "facts",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain facts",
+      "purpose": "Inspect build facts command families.",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "help",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain --help",
+      "purpose": "Print Buildchain CLI help.",
+      "capabilityGroup": "getting-started",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "homebrew",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain homebrew",
+      "purpose": "Inspect Homebrew distribution-index command families.",
+      "capabilityGroup": "distribution-indexes",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "homebrew-check",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain homebrew check [--cwd <dir>] [--package <name>] [--release-passport <file-or-url>] [--json]",
+      "purpose": "Verify Homebrew tap metadata against upstream release passport evidence.",
+      "capabilityGroup": "distribution-indexes",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "homebrew-update-formula",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain homebrew update-formula --package <name> --release-passport <file-or-url> [--write] [--json]",
+      "purpose": "Generate Homebrew Formula metadata from upstream release passport evidence.",
+      "capabilityGroup": "distribution-indexes",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "infra-contract",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain infra-contract ...",
+      "purpose": "Validate and publish provider-neutral infrastructure contract evidence.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "init",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain init [--cwd <dir>] [--type package|native|web-surface|infra-contract|publication-artifact|anchored-package] [--force]",
+      "purpose": "Bootstrap a repository with Buildchain configuration and caller workflow files.",
+      "capabilityGroup": "getting-started",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "inspect",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain inspect",
+      "purpose": "Inspect release and artifact evidence command families.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "inspect-artifact",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain inspect artifact <subject> [--passport <file-or-url>] [--npm-registry <url>] [--json]",
+      "purpose": "Inspect artifact evidence.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "inspect-release",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain inspect release --passport <file-or-url> [--json]",
+      "purpose": "Inspect release passport evidence.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd ...",
+      "purpose": "Inspect KFD standards, schemas, and versioned KFD command families.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-1-gate",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 1 gate --witness-json <file-or-json>... [--cwd <dir>] [--artifact-root <dir>]",
+      "purpose": "Generate KFD-1 release gate evidence from declared contract-world witnesses.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-1-schema",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 1 schema [--schema <name>] [--json]",
+      "purpose": "Print the default KFD-1 schema exposed by the KFD package standards metadata.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-1-verify",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 1 verify --gate-json <file-or-json> [--json]",
+      "purpose": "Validate KFD-1 release gate evidence.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-1-witness",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 1 witness [--cwd <dir>] [--source-sha <sha>] [--output <file>] [--json]",
+      "purpose": "Generate Buildchain's KFD-1 self contract-world witness.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-2-claims",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 2 claims [--cwd <dir>] [--output-dir <dir>] [--json]",
+      "purpose": "Generate Buildchain's KFD-2 public trust claim evidence.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-2-product-claims",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 2 product-claims <check|write|render> [--cwd <dir>] [--registry <path>]",
+      "purpose": "Validate and render product-owned KFD-2 claims in the canonical .buildchain/kfd layout.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-2-schema",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 2 schema [--schema <name>] [--json]",
+      "purpose": "Print the default KFD-2 schema exposed by the KFD package standards metadata.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-2-taxonomy",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 2 taxonomy --entry-json <file-or-json>... [--kind residualRisk|downgradeReason] [--json]",
+      "purpose": "Validate KFD-2 trust taxonomy entries from the KFD package standards metadata.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-2-trust-assessment",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 2 trust-assessment [--assessment-json <file-or-json>] [--json]",
+      "purpose": "Expose and validate the KFD package foundation KFD-2 trust assessment.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-2-trust-claims",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 2 trust-claims [--claims-json <file-or-json>] [--json]",
+      "purpose": "Expose and validate the KFD package foundation KFD-2 trust claims.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-3",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 3 ...",
+      "purpose": "Inspect KFD-3 surface detection, registry, witness, audit, and query command families under the unified KFD namespace.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-3-audit",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 3 audit [--cwd <dir>] [--registry <path>] [--artifact <path>] [--json]",
+      "purpose": "Compare detected, declared, and enforced KFD-3 public surfaces.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-3-detect",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 3 detect [--cwd <dir>] [--kind <kind>]... [--artifact <path>] [--json]",
+      "purpose": "Detect standard KFD-3 public surface candidates from source and artifact metadata.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-3-query",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 3 query [<product>] [--cwd <dir>] [--registry <path>]",
+      "purpose": "Return an agent-readable KFD-3 capability map for a product, registry, or release passport.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-3-register",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 3 register <node-api|python-api|cli|binary|documentation|site-bundle>",
+      "purpose": "Declare detected KFD-3 public surfaces into a product-owned surface registry.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-3-witness",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 3 witness [--cwd <dir>] [--registry <path>] [--kind prebuild|artifact]",
+      "purpose": "Generate release-passport-compatible KFD-3 surface witnesses from a product registry.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-4-schema",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd 4 schema [--schema <name>] [--json]",
+      "purpose": "Print the default KFD-4 schema exposed by the KFD package standards metadata.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-aggregate",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd aggregate [--cwd <dir>] [--json]",
+      "purpose": "Return a product KFD view that combines own KFD status with upstream KFD aggregate facts.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-hub",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd hub <init|inspect|test|explain> [--cwd <dir>]",
+      "purpose": "Initialize, inspect, test, and explain one declarative KFD Agent Hub adapter adoption.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-migrate-layout",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd migrate-layout [--cwd <dir>] [--write] [--force] [--json]",
+      "purpose": "Plan or apply migration of legacy root Buildchain files into .buildchain/.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-schema-list",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd schema list [--standard kfd-1|kfd-2|kfd-3|kfd-4] [--json]",
+      "purpose": "List machine-readable schemas exposed by the KFD package standards metadata.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-schema-show",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd schema show <kfd-1|kfd-2|kfd-3|kfd-4> [--schema <name>] [--json]",
+      "purpose": "Print a machine-readable KFD schema from the KFD package standards metadata.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-status",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd status [--cwd <dir>] [--json]",
+      "purpose": "Report implemented KFD support and the active .buildchain repository layout.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-upstream-check",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd upstream check [--cwd <dir>] [--aggregate-json <file-or-json>] [--json]",
+      "purpose": "Validate a KFD upstream aggregate document and fail closed on missing evidence.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-upstream-collect",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd upstream collect [--cwd <dir>] [--output <file>] [--json]",
+      "purpose": "Collect declared KFD-aware upstream package evidence and hashes from Buildchain config.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "kfd-upstream-roles",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain kfd upstream roles [--json]",
+      "purpose": "List Buildchain-managed KFD upstream role values and inference policy.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "layout",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain layout [--cwd <dir>] [--json]",
+      "purpose": "Return the versioned repository-layout and KFD registry discovery contract for tools such as Shifu.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "lifecycle",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain lifecycle run <stage> [--cwd <dir>] [--required]",
+      "purpose": "Run configured lifecycle commands and write deterministic artifact manifests.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "log",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain log",
+      "purpose": "Inspect Buildchain logging command families.",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "logging",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain log <info|warn|error> --event <name> [--phase <phase>]",
+      "purpose": "Emit timestamped build events, summarize logs, and enforce required phases.",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "mark",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain mark --event <name> [--phase <phase>] [--component <name>]",
+      "purpose": "Emit a single Buildchain log event.",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "npm",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain npm",
+      "purpose": "Inspect npm publishing command families.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "npm-dry-run",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain npm dry-run [--cwd <dir>] [--expected-tag <tag>] [--registry <url>]",
+      "purpose": "Verify npm publish shape before a release transaction.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "portable-cache",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain portable-cache plan --manifest <file-or-json> [--output <file>]",
+      "purpose": "Plan exact portable dependency/compiler cache inputs and seal provider outcomes.",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "project",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain project kfx-admission <file-or-json> [--assessment-time <epoch>]",
+      "purpose": "Inspect read-only consumer projection command families.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "publication-artifact",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain publication-artifact",
+      "purpose": "Generate publication artifact manifests, passports, and source bundles for paper/report repositories.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "publication-artifact-manifest",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain publication-artifact manifest [--cwd <dir>] [--source-sha <sha>]",
+      "purpose": "Write a site-consumable publication artifact manifest, publication passport, and source bundle.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "publication-artifact-npm-package",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain publication-artifact npm-package [--cwd <dir>] [--output-dir <dir>] [--package-name <name>] [--json]",
+      "purpose": "Synthesize the declared npm paper package from a publication artifact manifest, passport, registry, source bundle, and primary artifact.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "publish-source",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain publish-source <lock|manifest|verify-lock|verify-channel-ref|validate-anchored-release> ...",
+      "purpose": "Create, inspect, or verify publish-gate source-lock refs.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "release-dry-run",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain release --dry-run --target-ref <ref> [--sha <sha>] [--source-ref <ref>]",
+      "purpose": "Explain what a channel merge would publish before the PR is merged.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "release-governance",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain release-governance reconcile --repository <owner/repo>",
+      "purpose": "Reconcile a managed branch's Buildchain aggregate check to an already-tested pull request SHA.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "release-line-open",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain release line open --major <n> --minor <n> [--source-ref <ref>]",
+      "purpose": "Plan or write the initial version-state commit for a new minor release line.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "release-propagation",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain release-propagation <plan|write-lock> ...",
+      "purpose": "Plan channel-preserving downstream release PRs and write exact upstream release locks.",
+      "capabilityGroup": "site-and-propagation",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "release-transaction",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain release <inspect|recover|finalize|abort> ...",
+      "purpose": "Inspect, recover, finalize, or abort durable release transactions.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "sample",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain sample",
+      "purpose": "Inspect sampler command families.",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "sample-process-tree",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain sample process-tree [--interval-ms <n>] [--label <name>]",
+      "purpose": "Sample process-tree diagnostics for a wrapped command.",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "span",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain span --event <name> [--phase <phase>] [--component <name>]",
+      "purpose": "Run a command inside a Buildchain log span.",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "transaction-inspect",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain transaction inspect ...",
+      "purpose": "Inspect durable release transaction state.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "validate",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain validate [--cwd <dir>] [--require-version-state]",
+      "purpose": "Validate .buildchain/buildchain.toml and declared lifecycle surfaces.",
+      "capabilityGroup": "getting-started",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "verify",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain verify",
+      "purpose": "Inspect release and artifact verification command families.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "verify-artifact",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain verify artifact <file|dir|url|npm:...|oci:...|github-release:...>",
+      "purpose": "Verify artifact subjects against release passport evidence.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "verify-artifact-envelope",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain verify artifact-envelope <file-or-json> [--assessment-time <epoch>]",
+      "purpose": "Verify exact roots, identity, lifecycle, revocation, and an existing KFD assessment in a sealed artifact envelope.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "verify-infra-contract-evidence-bundle",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain verify infra-contract-evidence-bundle <file> [--json]",
+      "purpose": "Fail closed unless an infra-contract lifecycle evidence bundle is complete, hash-bound, and validation-consistent.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "verify-observability-log",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain verify observability-log <jsonl> [--min-events <n>]",
+      "purpose": "Verify Buildchain observability log events.",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "verify-publication-admission",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain verify publication-admission <file-or-json>",
+      "purpose": "Independently verify sealed publication admission, runner provenance, control-plane audit, nonce freshness, and exact artifact bindings.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "verify-release-passport",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain verify release-passport <file-or-url> [--json]",
+      "purpose": "Fail closed unless a release passport and its evidence are complete.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "version",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain version",
+      "purpose": "Print the package or embedded binary version.",
+      "capabilityGroup": "getting-started",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "id": "web-surface",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain web-surface ...",
+      "purpose": "Plan, verify, and apply Buildchain web-surface deployments.",
+      "capabilityGroup": "site-and-propagation",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "maturity": "stable"
+    }
+  ]
+}

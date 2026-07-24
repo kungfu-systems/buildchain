@@ -1,0 +1,303 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-site-manifest",
+  "generatedAt": "2026-07-23T20:15:49.277Z",
+  "publishedAt": "2026-07-23T20:15:49.277Z",
+  "reproducible": true,
+  "timestampPolicy": "ci-injected",
+  "deterministicInputs": [
+    "README.md",
+    "docs/*.md",
+    "actions/*/README.md",
+    "fixtures/*/README.md",
+    "packages/core/README.md",
+    "package.json#exports",
+    "tests/buildchain-inventory.json",
+    "sourceRevision",
+    "sourceDateEpoch",
+    "package content",
+    "declared Buildchain surface manifest contract"
+  ],
+  "sourceDateEpoch": "0",
+  "sourceRevision": "28126ef585164dbb5315d098c39a8f3f9f7363e8",
+  "timestampPolicyDetails": {
+    "contract": "kungfu-buildchain-surface-timestamp-policy",
+    "timestampFields": [
+      "generatedAt",
+      "publishedAt"
+    ],
+    "timestampFieldsParticipateInArtifactDigest": true,
+    "artifactDigestScope": "npm package dist/site JSON files",
+    "note": "Human-readable timestamps are separate from reproducibility inputs; do not infer reproducibility from epoch timestamps."
+  },
+  "product": {
+    "name": "Buildchain",
+    "formalName": "Buildchain by Kungfu",
+    "category": "Buildchain Release Passport"
+  },
+  "package": {
+    "name": "@kungfu-tech/buildchain",
+    "version": "2.14.17",
+    "versionSource": "package.json#version"
+  },
+  "entrypoint": "buildchain-site.json",
+  "source": {
+    "homepageTextSource": "README.md",
+    "docsMap": "docs/MAP.md",
+    "siteFactsDir": "dist/site"
+  },
+  "docs": [
+    {
+      "id": "map",
+      "title": "Buildchain documentation map",
+      "path": "docs/MAP.md",
+      "plane": "use",
+      "exists": true,
+      "digest": "sha256:7f007a9d295d597dfc5b1447629ab0d6bf2b3fa3d625b02d27abf7493d73bb40"
+    },
+    {
+      "id": "install",
+      "title": "Install and verify Buildchain",
+      "path": "docs/install.md",
+      "plane": "use",
+      "exists": true,
+      "digest": "sha256:1879849c01f82b8820f2d9aeb09faed0931954cb7fe6939176a5eb69110cee59"
+    },
+    {
+      "id": "release-passport",
+      "title": "Release Passport protocol",
+      "path": "docs/release-passport.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:f10d2f0f9cc694976b2a1d2a61195ed155c1bc24c964de1551475882e8197c92"
+    },
+    {
+      "id": "controller-evidence",
+      "title": "Controller evidence contract",
+      "path": "docs/controller-evidence.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:442e1b72e3977af56a8ae5e081ffd89c2f3ebcd9cfd50f07af730344bdf9fb0e"
+    },
+    {
+      "id": "publication-authority",
+      "title": "Sealed publication authority",
+      "path": "docs/publication-authority.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:118dc751fa3c37b4b20f4b909534458148c0f42c2c9d69f13e2fa5373dbfe244"
+    },
+    {
+      "id": "release-candidate",
+      "title": "Release Candidate Passport",
+      "path": "docs/release-candidate.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:e933241bc138661a73cf1b419690cad629ba328ce05ecbd85841199a337d37c1"
+    },
+    {
+      "id": "release-propagation",
+      "title": "Release propagation",
+      "path": "docs/release-propagation.md",
+      "plane": "use",
+      "exists": true,
+      "digest": "sha256:fc2b743e3d76c4f90cdd8c6560cf9d619ad25d74c15c074be96db7bcb6cc2a29"
+    },
+    {
+      "id": "readme-badges",
+      "title": "README badge blocks",
+      "path": "docs/readme-badges.md",
+      "plane": "use",
+      "exists": true,
+      "digest": "sha256:d032ddd27db62bdb21031cbd0673d9ae61af0250c12522fe6106e7aff835fb21"
+    },
+    {
+      "id": "homebrew",
+      "title": "Homebrew distribution indexes",
+      "path": "docs/homebrew.md",
+      "plane": "use",
+      "exists": true,
+      "digest": "sha256:2fc4e8411f35ca86d19d61c7843b9a1fa440f7afea25df13d3aa03342f09f90c"
+    },
+    {
+      "id": "binary-distribution",
+      "title": "Binary distribution contract",
+      "path": "docs/binary-distribution.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:ae0f8e6cafbb4c39732e6a7252d46b523b0a69e8e05d3ce7ee0b51a916b1b027"
+    },
+    {
+      "id": "consumer-issue-reporting",
+      "title": "Consumer issue reporting",
+      "path": "docs/consumer-issue-reporting.md",
+      "plane": "use",
+      "exists": true,
+      "digest": "sha256:8e2159312e47b42ab0bb644cb195362150acc8872e6ac0e7380ece0c5cf36955"
+    },
+    {
+      "id": "infra-contract",
+      "title": "Infra Contract",
+      "path": "docs/infra-contract.md",
+      "plane": "use",
+      "exists": true,
+      "digest": "sha256:7826e8c70ac2d90ddd8d4e38bcdd1bcfa36eef5106431d7ad94b2fe9c8d3d5dc"
+    },
+    {
+      "id": "toolkit-observability",
+      "title": "Toolkit observability",
+      "path": "docs/toolkit-observability.md",
+      "plane": "use",
+      "exists": true,
+      "digest": "sha256:b2ffc3b2520ca7879309b7607b2eaa1aceb647503e893887159a6916de14e2d7"
+    },
+    {
+      "id": "site-bundle-contract",
+      "title": "Site bundle contract",
+      "path": "docs/site-bundle-contract.md",
+      "plane": "use",
+      "exists": true,
+      "digest": "sha256:583661a7886bdca7e8352a5325a105a9df5d134b3896dbda13ad9b637697481f"
+    },
+    {
+      "id": "migration-inventory",
+      "title": "Migration inventory",
+      "path": "docs/migration-inventory.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:18f98635bb16a4e43cac2d46443b3e812c305f708f071929dc6a46a8cd5dccd5"
+    },
+    {
+      "id": "ownership",
+      "title": "Ownership",
+      "path": "docs/ownership.md",
+      "plane": "why",
+      "exists": true,
+      "digest": "sha256:49074fb520c404d3c9f5b49b33562d4bdc4e3ed407cf22543fa8e19e312a6b8e"
+    },
+    {
+      "id": "product-mechanism",
+      "title": "Product mechanism",
+      "path": "docs/product-mechanism.md",
+      "plane": "why",
+      "exists": true,
+      "digest": "sha256:da50022f96f8876bb275a7832190cb1f6ab0fa6aab9d045dda924a7abddc3edf"
+    },
+    {
+      "id": "cli",
+      "title": "CLI and npm package",
+      "path": "docs/cli.md",
+      "plane": "use",
+      "exists": true,
+      "digest": "sha256:758625143a51d0fe66871220c52273ceaf5c7a47fc1a99bda4608e3ad587ae81"
+    },
+    {
+      "id": "build-facts",
+      "title": "Build Facts",
+      "path": "docs/build-facts.md",
+      "plane": "use",
+      "exists": true,
+      "digest": "sha256:75dcf7a6628dac9e982a455de9966044ae771611d4efc04e7264a2d4adb0bd3e"
+    },
+    {
+      "id": "kfd-support",
+      "title": "KFD support and KFD-3 surface registration",
+      "path": "docs/kfd-support.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:ab15de33a1a9e292b6da74c00b8b96b7c46330d0553a454d1de4c24c672fc025"
+    },
+    {
+      "id": "kfd-agent-hub",
+      "title": "KFD Agent Hub Builder flow",
+      "path": "docs/kfd-agent-hub.md",
+      "plane": "use",
+      "exists": true,
+      "digest": "sha256:7528f8a11c7fe67b350c0dd380b77d724c2d9e0001b4427949ee1c6012735d49"
+    },
+    {
+      "id": "lifecycle-protocol",
+      "title": "Lifecycle protocol",
+      "path": "docs/lifecycle-protocol.md",
+      "plane": "use",
+      "exists": true,
+      "digest": "sha256:71552baae51146fa790d40af02d5d5b3a1a4aa0d9764af09907bb05d3360b0cc"
+    },
+    {
+      "id": "reusable-build-surface",
+      "title": "Reusable build surface",
+      "path": "docs/reusable-build-surface.md",
+      "plane": "use",
+      "exists": true,
+      "digest": "sha256:9c125f6d2b519c96718f45da62ac1a891ab618bcb331d3b14c4b88b5158fc4a9"
+    },
+    {
+      "id": "publish-transaction",
+      "title": "Publish transaction",
+      "path": "docs/publish-transaction.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:57673d6e1e57a9be0019b30ad0f8784cd05c9a0f389a775ac5f49f67d8f52a79"
+    },
+    {
+      "id": "release-governance",
+      "title": "Release governance",
+      "path": "docs/release-governance.md",
+      "plane": "why",
+      "exists": true,
+      "digest": "sha256:4476d9464d29b4ff3951a362607a11c78b7a3b723247af93ded1b15ff8f0b83e"
+    },
+    {
+      "id": "release-flow",
+      "title": "Release flow",
+      "path": "docs/release-flow.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:fc6495a7b5124c17c880777e16fc98e60ed7766ec9a958abfca3030bdc2c321e"
+    },
+    {
+      "id": "runtime-train-validation",
+      "title": "Runtime train validation",
+      "path": "docs/runtime-train-validation.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:1872e511b31c04ba75fc3a005c7a4f857c8b06ecadfedb75bc35b2ce70e7764a"
+    },
+    {
+      "id": "versioning",
+      "title": "Versioning",
+      "path": "docs/versioning.md",
+      "plane": "why",
+      "exists": true,
+      "digest": "sha256:10ec868fcb3fd58ae35b54ecd8ccd9a4556516f460c262f0c1ee41c81bdbc264"
+    },
+    {
+      "id": "web-surface-deployments",
+      "title": "Web surface deployments",
+      "path": "docs/web-surface-deployments.md",
+      "plane": "use",
+      "exists": true,
+      "digest": "sha256:ecdece4b7d916b7d8b323db68c5d81c533d67348c71907b46eb97d3c2fe432ba"
+    }
+  ],
+  "facts": [
+    "page-registry.json",
+    "capability-registry.json",
+    "cli-registry.json",
+    "manual-registry.json",
+    "node-api-registry.json",
+    "workflow-registry.json",
+    "controller-registry.json",
+    "publication-authority-registry.json",
+    "public-surface-audit.json",
+    "release-model.json",
+    "artifact-schemas.json",
+    "badge-endpoint-registry.json",
+    "publication-registry.json",
+    "product-mechanism.json",
+    "release-provenance.json",
+    "kfd-upstream-aggregate.json",
+    "kfd-claims.json",
+    "agent-index.json"
+  ]
+}

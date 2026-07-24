@@ -1,0 +1,20 @@
+{
+  "version": "36.0.0",
+  "artifacts": {
+    "PreviewSiteStack": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://123456789012/us-east-1",
+      "properties": {
+        "templateFile": "PreviewSiteStack.template.json"
+      },
+      "metadata": {
+        "aws:cdk:path": [
+          {
+            "type": "aws:cdk:path",
+            "data": "PreviewSite/PreviewSiteStack"
+          }
+        ]
+      }
+    }
+  }
+}

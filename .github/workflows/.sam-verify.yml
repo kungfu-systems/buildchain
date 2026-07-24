@@ -23,7 +23,8 @@ on:
       NODE_AUTH_TOKEN:
         required: false
 
-permissions: write-all
+permissions:
+  contents: read
 
 jobs:
   prepare:
@@ -33,7 +34,7 @@ jobs:
         uses: actions/checkout@v7.0.0
 
       - name: Set Pull Request Title
-        uses: kungfu-systems/buildchain/actions/bump-version@v1
+        uses: kungfu-systems/buildchain/actions/bump-version@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           action: "verify"
@@ -67,13 +68,13 @@ jobs:
         uses: actions/checkout@v7.0.0
 
       - name: Bump Version
-        uses: kungfu-systems/buildchain/actions/bump-version@v1
+        uses: kungfu-systems/buildchain/actions/bump-version@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           action: "prebuild"
 
       - name: Verify Version
-        uses: kungfu-systems/buildchain/actions/bump-version@v1
+        uses: kungfu-systems/buildchain/actions/bump-version@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           action: "verify"

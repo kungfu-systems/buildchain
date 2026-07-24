@@ -1,0 +1,41 @@
+{
+  "repository": "kungfu-systems/paper-observer-declared-timelines",
+  "channel": "alpha",
+  "tag": "v0.1.0-alpha.1",
+  "sourceSha": "4444444444444444444444444444444444444444",
+  "releasePassport": {
+    "url": "https://github.com/kungfu-systems/paper-observer-declared-timelines/releases/download/v0.1.0-alpha.1/buildchain.release.json",
+    "sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+  },
+  "publicationArtifact": {
+    "id": "observer-declared-timelines",
+    "kind": "paper",
+    "version": "0.1.0-alpha.1",
+    "canonicalUrl": "https://papers.libkungfu.dev/observer-declared-timelines/",
+    "latestUrl": "https://papers.libkungfu.dev/observer-declared-timelines/latest/",
+    "latestEvidenceUrl": "https://papers.libkungfu.dev/observer-declared-timelines/latest/buildchain.release.json",
+    "immutableVersionUrl": "https://papers.libkungfu.dev/archive/observer-declared-timelines/v0.1.0-alpha.1/",
+    "registry": {
+      "url": "https://github.com/kungfu-systems/paper-observer-declared-timelines/releases/download/v0.1.0-alpha.1/publication-registry.json",
+      "sha256": "6666666666666666666666666666666666666666666666666666666666666666"
+    },
+    "manifest": {
+      "url": "https://github.com/kungfu-systems/paper-observer-declared-timelines/releases/download/v0.1.0-alpha.1/publication-artifact.json",
+      "sha256": "7777777777777777777777777777777777777777777777777777777777777777"
+    },
+    "passport": {
+      "url": "https://github.com/kungfu-systems/paper-observer-declared-timelines/releases/download/v0.1.0-alpha.1/publication-artifact-passport.json",
+      "sha256": "8888888888888888888888888888888888888888888888888888888888888888"
+    },
+    "primaryArtifact": {
+      "path": "_build/main.pdf",
+      "url": "https://papers.libkungfu.dev/archive/observer-declared-timelines/v0.1.0-alpha.1/main.pdf",
+      "sha256": "9999999999999999999999999999999999999999999999999999999999999999"
+    },
+    "sourceBundle": {
+      "path": ".buildchain/publication/source.tar.gz",
+      "url": "https://papers.libkungfu.dev/archive/observer-declared-timelines/v0.1.0-alpha.1/source.tar.gz",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  }
+}

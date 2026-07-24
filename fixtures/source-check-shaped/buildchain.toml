@@ -1,0 +1,13 @@
+schema = 1
+
+[lifecycle.install]
+command = "node scripts/lifecycle.mjs install"
+
+[lifecycle.check]
+command = "node scripts/lifecycle.mjs check"
+
+[lifecycle.build]
+command = "node scripts/lifecycle.mjs build"
+
+[lifecycle.verify]
+command = "node scripts/lifecycle.mjs verify"

@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "major": 2,
+  "alpha": {
+    "logicalRef": "v2-alpha",
+    "callRef": "v2-alpha",
+    "workflowPath": ".github/workflows/.release-candidate-promote.yml",
+    "forwardInternalInputs": true
+  },
+  "stable": {
+    "logicalRef": "v2",
+    "callRef": "725592ae025003071b8d33fdb49e0157842fe76c",
+    "workflowPath": ".github/workflows/.release-candidate-promote.yml",
+    "forwardInternalInputs": true,
+    "unsupportedInputs": [
+      "standalone-binary-distribution"
+    ]
+  }
+}

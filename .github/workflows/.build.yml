@@ -8,7 +8,23 @@ on:
         type: string
         required: false
       buildchain-ref:
-        default: "v1"
+        description: "Official floating Buildchain channel, or a temporary train/SHA for trusted manual validation."
+        default: ""
+        type: string
+        required: false
+      buildchain-contract-lock-path:
+        description: "Consumer-owned Buildchain contract lock path"
+        default: "buildchain.contract-lock.json"
+        type: string
+        required: false
+      buildchain-contract-compatibility-policy:
+        description: "Contract compatibility policy: major-compatible, allow-additive, or exact"
+        default: "major-compatible"
+        type: string
+        required: false
+      buildchain-contract-drift-issue-mode:
+        description: "Consumer issue behavior for Buildchain floating-ref contract drift: off, breaking-only, or compatible-and-breaking"
+        default: "compatible-and-breaking"
         type: string
         required: false
       working-directory:
@@ -25,6 +41,16 @@ on:
         default: ""
         type: string
         required: false
+      linux-container-preset:
+        description: "Optional Linux job container preset: kungfu-verify, none, or custom with linux-container-image"
+        default: ""
+        type: string
+        required: false
+      linux-container-image:
+        description: "Optional explicit Linux job container image, preferably pinned by digest"
+        default: ""
+        type: string
+        required: false
       require-trusted-event:
         default: true
         type: boolean
@@ -34,12 +60,62 @@ on:
         default: "fail"
         type: string
         required: false
+      publish-channel:
+        description: "Publish channel requested by the caller: none, alpha, release, major, or a custom channel from publish-refs-json"
+        default: "none"
+        type: string
+        required: false
+      publish-refs-json:
+        description: "Optional JSON object mapping publish channels to allowed Git ref regular expressions"
+        default: ""
+        type: string
+        required: false
+      publish-source-ref:
+        description: "Optional source branch such as publish-gate/alpha/<line>/<version> to resolve and lock before build"
+        default: ""
+        type: string
+        required: false
+      publish-anchor-request-json:
+        description: "Required JSON request when publish-source-ref resolves to publish-gate/anchor"
+        default: ""
+        type: string
+        required: false
+      publish-registry:
+        description: "Registry recorded in the resolved publish source manifest"
+        default: "https://registry.npmjs.org/"
+        type: string
+        required: false
       setup-node:
         default: true
         type: boolean
         required: false
       node-version:
         default: "24"
+        type: string
+        required: false
+      setup-rust:
+        description: "Install a Rust toolchain for native lifecycle jobs"
+        default: false
+        type: boolean
+        required: false
+      rust-toolchain:
+        description: "Rust toolchain installed when setup-rust is enabled"
+        default: "stable"
+        type: string
+        required: false
+      rustup-dist-server:
+        description: "Optional rustup distribution mirror; empty uses the official Rust server"
+        default: ""
+        type: string
+        required: false
+      rustup-update-root:
+        description: "Optional rustup self-update mirror; empty uses the official Rust server"
+        default: ""
+        type: string
+        required: false
+      cargo-registry-index:
+        description: "Optional crates.io-compatible Cargo registry index; empty uses the Cargo default"
+        default: ""
         type: string
         required: false
       install-command:
@@ -53,6 +129,16 @@ on:
       verify-command:
         default: ""
         type: string
+        required: false
+      kfd-agent-hub:
+        description: "Agent Hub conformance mode: off or auto. Auto reads .buildchain/kfd/agent-hub.json and runs the fixed KFD suite."
+        default: "off"
+        type: string
+        required: false
+      lifecycle-timeout-minutes:
+        description: "Maximum minutes for the build matrix job and fallback timeout for each lifecycle stage"
+        default: 120
+        type: number
         required: false
       require-install:
         default: false
@@ -81,14 +167,136 @@ on:
           build/stage
         type: string
         required: false
+      release-candidate:
+        description: "Generate and upload a PR-stage release-candidate passport after the full platform matrix succeeds"
+        default: false
+        type: boolean
+        required: false
       expected-artifacts-json:
         description: "Optional JSON expectation contract for final artifact files"
         default: ""
         type: string
         required: false
+      process-summary-path:
+        description: "Optional process sampler summary JSON path, relative to workspace, to embed in final diagnostics"
+        default: ""
+        type: string
+        required: false
+      sample-process-tree:
+        description: "Wrap the build lifecycle with the process tree sampler"
+        default: true
+        type: boolean
+        required: false
+      process-sample-interval-ms:
+        description: "Process sampler interval in milliseconds"
+        default: 15000
+        type: number
+        required: false
+      requested-parallelism:
+        description: "Optional expected build parallelism recorded in process diagnostics"
+        default: 0
+        type: number
+        required: false
       artifact-retention-days:
         default: 14
         type: number
+        required: false
+      artifact-transfer-mode:
+        description: "Artifact transfer mode: github-artifacts or s3-to-github-artifacts"
+        default: "github-artifacts"
+        type: string
+        required: false
+      artifact-relay-s3-bucket:
+        description: "Optional S3 bucket for artifact relay. Empty may use BUILDCHAIN_ARTIFACT_RELAY_S3_BUCKET repo/org variable."
+        default: ""
+        type: string
+        required: false
+      artifact-relay-s3-region:
+        description: "Optional S3 region for artifact relay. Empty may use BUILDCHAIN_ARTIFACT_RELAY_S3_REGION repo/org variable."
+        default: ""
+        type: string
+        required: false
+      artifact-relay-s3-prefix:
+        description: "Optional S3 key prefix for artifact relay. Empty may use BUILDCHAIN_ARTIFACT_RELAY_S3_PREFIX repo/org variable."
+        default: ""
+        type: string
+        required: false
+      artifact-relay-s3-role-arn:
+        description: "Optional shared OIDC role ARN for S3 relay upload/download. Prefer repo/org variables or secrets."
+        default: ""
+        type: string
+        required: false
+      artifact-relay-s3-upload-role-arn:
+        description: "Optional upload OIDC role ARN for self-hosted build runners."
+        default: ""
+        type: string
+        required: false
+      artifact-relay-s3-download-role-arn:
+        description: "Optional download OIDC role ARN for the GitHub-hosted relay runner."
+        default: ""
+        type: string
+        required: false
+      artifact-relay-s3-oidc-audience:
+        description: "Optional OIDC audience for S3 relay roles. Defaults to sts.amazonaws.com.cn for cn-* regions, otherwise sts.amazonaws.com."
+        default: ""
+        type: string
+        required: false
+      checkout-cache-mode:
+        description: "Locked source checkout cache mode: off, auto, or require"
+        default: "off"
+        type: string
+        required: false
+      checkout-cache-mirror-url-template:
+        description: "Trusted local/LAN Git mirror URL template. Supports {owner}, {repo}, {repository}, {repositorySlug}, and {sha}."
+        default: ""
+        type: string
+        required: false
+      checkout-cache-reference-repository-template:
+        description: "Trusted runner-local bare reference repository template. Supports {owner}, {repo}, {repository}, {repositorySlug}, and {sha}."
+        default: ""
+        type: string
+        required: false
+      checkout-cache-fallback:
+        description: "Fallback when checkout cache misses: github or fail"
+        default: "github"
+        type: string
+        required: false
+      checkout-cache-timeout-seconds:
+        description: "Timeout for each trusted cache transport attempt"
+        default: 60
+        type: number
+        required: false
+      checkout-cache-github-timeout-seconds:
+        description: "Timeout for each GitHub fallback fetch attempt"
+        default: 600
+        type: number
+        required: false
+      checkout-cache-fetch-attempts:
+        description: "Maximum bounded attempts for retryable GitHub fallback fetch failures"
+        default: 3
+        type: number
+        required: false
+      shifu-cache-profile-ref:
+        description: "Opaque trusted Shifu cache profile reference passed to lifecycle commands without interpretation"
+        default: ""
+        type: string
+        required: false
+      shifu-cache-profile-digest:
+        description: "Opaque expected Shifu cache profile digest passed to lifecycle commands without interpretation"
+        default: ""
+        type: string
+        required: false
+      gate-profile-aggregate-json:
+        description: "Optional qualifying buildchain.shifu-gate-aggregate/v1 JSON from the reusable Gate workflow"
+        default: ""
+        type: string
+        required: false
+    secrets:
+      BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN:
+        required: false
+      BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN:
+        required: false
+      BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN:
         required: false
     outputs:
       runner-preset:
@@ -100,25 +308,396 @@ on:
       platform-count:
         description: "Resolved platform count"
         value: ${{ jobs.resolve-contract.outputs.platform-count }}
+      linux-container-enabled:
+        description: "Whether Linux build platforms are routed through a job container"
+        value: ${{ jobs.resolve-contract.outputs.linux-container-enabled }}
+      linux-container-image:
+        description: "Resolved Linux job container image"
+        value: ${{ jobs.resolve-contract.outputs.linux-container-image }}
       build-summary-artifact:
         description: "Uploaded aggregate build summary artifact name"
         value: ${{ jobs.summarize.outputs.summary-artifact-name }}
+      build-diagnostics-summary-artifact:
+        description: "Uploaded aggregate diagnostics summary artifact name"
+        value: ${{ jobs.summarize.outputs.diagnostics-summary-artifact-name }}
+      release-candidate-passport-artifact:
+        description: "Uploaded release-candidate passport artifact name when release-candidate is enabled"
+        value: ${{ jobs.summarize.outputs.release-candidate-passport-artifact-name }}
+      release-candidate-artifact:
+        description: "Uploaded release-candidate passport artifact name when release-candidate is enabled"
+        value: ${{ jobs.summarize.outputs.release-candidate-passport-artifact-name }}
+      release-candidate-passport-json:
+        description: "Compact release-candidate passport JSON when release-candidate is enabled"
+        value: ${{ jobs.summarize.outputs.release-candidate-passport-json }}
       build-summary-json:
         description: "Compact aggregate build summary JSON"
         value: ${{ jobs.summarize.outputs.artifact-summary-json }}
+      build-diagnostics-summary-json:
+        description: "Compact aggregate diagnostics summary JSON with lifecycle, diagnostics contract warning, and sidecar manifest warning totals"
+        value: ${{ jobs.summarize.outputs.diagnostics-summary-json }}
+      trusted-event:
+        description: "Whether the event is trusted enough to run build jobs"
+        value: ${{ jobs.trust-gate.outputs.trusted-event }}
+      buildchain-runtime-ref:
+        description: "Resolved Buildchain runtime ref"
+        value: ${{ jobs.trust-gate.outputs.buildchain-runtime-ref }}
+      buildchain-runtime-sha:
+        description: "Resolved immutable Buildchain runtime SHA"
+        value: ${{ jobs.trust-gate.outputs.buildchain-runtime-sha }}
+      buildchain-runtime-class:
+        description: "Runtime stability class: stable, alpha, train, exact-sha, or development"
+        value: ${{ jobs.trust-gate.outputs.buildchain-runtime-class }}
+      buildchain-runtime-override:
+        description: "Whether a train or exact-SHA buildchain-ref override was used"
+        value: ${{ jobs.trust-gate.outputs.buildchain-runtime-override }}
+      buildchain-runtime-trust-decision:
+        description: "Runtime override trust decision"
+        value: ${{ jobs.trust-gate.outputs.buildchain-runtime-trust-decision }}
+      buildchain-contract-lock-status:
+        description: "Floating Buildchain runtime contract lock status"
+        value: ${{ jobs.trust-gate.outputs.buildchain-contract-lock-status }}
+      buildchain-contract-lock-drift:
+        description: "Whether the floating Buildchain runtime SHA or contract digest drifted from the consumer lock"
+        value: ${{ jobs.trust-gate.outputs.buildchain-contract-lock-drift }}
+      buildchain-contract-digest:
+        description: "Current Buildchain runtime contract digest"
+        value: ${{ jobs.trust-gate.outputs.buildchain-contract-digest }}
+      publish-channel:
+        description: "Resolved publish channel"
+        value: ${{ jobs.trust-gate.outputs.publish-channel }}
+      publish-allowed:
+        description: "Whether this event/ref may publish after successful verification"
+        value: ${{ jobs.trust-gate.outputs.publish-allowed }}
+      publish-reason:
+        description: "Human-readable publish gate reason"
+        value: ${{ jobs.trust-gate.outputs.publish-reason }}
+      publish-source-ref:
+        description: "Resolved publish source ref"
+        value: ${{ jobs.trust-gate.outputs.publish-source-ref }}
+      publish-source-sha:
+        description: "Locked source SHA used for checkout/build/summary"
+        value: ${{ jobs.trust-gate.outputs.publish-source-sha }}
+      publish-source-tree-sha:
+        description: "Git tree SHA for the locked source commit used by release-candidate promotion equivalence checks"
+        value: ${{ jobs.resolve-source.outputs.publish-source-tree-sha }}
+      publish-source-locked:
+        description: "Whether a publish-gate source ref was explicitly locked"
+        value: ${{ jobs.trust-gate.outputs.publish-source-locked }}
+      publish-source-channel:
+        description: "Channel parsed from the publish-gate source ref"
+        value: ${{ jobs.trust-gate.outputs.publish-source-channel }}
+      publish-source-line:
+        description: "Line parsed from the publish-gate source ref"
+        value: ${{ jobs.trust-gate.outputs.publish-source-line }}
+      publish-source-consumer-version:
+        description: "Consumer version parsed from the publish-gate source ref"
+        value: ${{ jobs.trust-gate.outputs.publish-source-consumer-version }}
+      release-manifest-json:
+        description: "Resolved release manifest JSON"
+        value: ${{ jobs.resolve-source.outputs.release-manifest-json }}
+      controller-plan-artifact:
+        description: "Uploaded build-lifecycle controller plan artifact name"
+        value: ${{ jobs.controller-plan.outputs.controller-plan-artifact }}
+      controller-plan-json:
+        description: "Compact source/runtime-bound build-lifecycle controller plan"
+        value: ${{ jobs.controller-plan.outputs.controller-plan-json }}
+      controller-plan-digest:
+        description: "Digest of the build-lifecycle controller plan"
+        value: ${{ jobs.controller-plan.outputs.controller-plan-digest }}
+      controller-receipt-artifact:
+        description: "Uploaded build-lifecycle controller receipt artifact name"
+        value: ${{ jobs.controller-receipt.outputs.controller-receipt-artifact }}
+      controller-receipt-json:
+        description: "Compact build-lifecycle controller receipt"
+        value: ${{ jobs.controller-receipt.outputs.controller-receipt-json }}
+      controller-receipt-digest:
+        description: "Digest of the build-lifecycle controller receipt"
+        value: ${{ jobs.controller-receipt.outputs.controller-receipt-digest }}
+      controller-receipt-status:
+        description: "Final build-lifecycle controller status"
+        value: ${{ jobs.controller-receipt.outputs.controller-receipt-status }}
 
 permissions:
   contents: read
+  issues: write
+  id-token: write
 
 jobs:
   trust-gate:
     name: Trust gate
     runs-on: ubuntu-24.04
     outputs:
-      trusted: ${{ steps.gate.outputs.trusted }}
+      trusted: ${{ steps.trust.outputs.trusted }}
+      trusted-event: ${{ steps.publish.outputs.trusted-event }}
+      publish-channel: ${{ steps.publish.outputs.publish-channel }}
+      publish-allowed: ${{ steps.publish.outputs.publish-allowed }}
+      publish-reason: ${{ steps.publish.outputs.publish-reason }}
+      publish-source-ref: ${{ steps.source.outputs.publish-source-ref }}
+      publish-source-full-ref: ${{ steps.source.outputs.publish-source-full-ref }}
+      publish-source-sha: ${{ steps.source.outputs.publish-source-sha }}
+      publish-source-locked: ${{ steps.source.outputs.publish-source-locked }}
+      publish-source-channel: ${{ steps.source.outputs.publish-source-channel }}
+      publish-source-line: ${{ steps.source.outputs.publish-source-line }}
+      publish-source-consumer-version: ${{ steps.source.outputs.publish-source-consumer-version }}
+      buildchain-runtime-ref: ${{ steps.runtime.outputs.runtime-ref }}
+      buildchain-runtime-full-ref: ${{ steps.runtime.outputs.runtime-full-ref }}
+      buildchain-runtime-sha: ${{ steps.runtime.outputs.runtime-sha }}
+      buildchain-runtime-class: ${{ steps.runtime.outputs.runtime-class }}
+      buildchain-runtime-override: ${{ steps.runtime.outputs.runtime-override }}
+      buildchain-runtime-trust-decision: ${{ steps.runtime.outputs.runtime-trust-decision }}
+      buildchain-workflow-shell-ref: ${{ steps.runtime.outputs.workflow-shell-ref }}
+      buildchain-workflow-shell-sha: ${{ steps.runtime.outputs.workflow-shell-sha }}
+      buildchain-rollback-ref: ${{ steps.runtime.outputs.rollback-ref }}
+      buildchain-contract-lock-status: ${{ steps.contract-lock.outputs.contract-lock-status }}
+      buildchain-contract-lock-drift: ${{ steps.contract-lock.outputs.contract-lock-drift }}
+      buildchain-contract-digest: ${{ steps.contract-lock.outputs.contract-digest }}
     steps:
+      - name: Resolve Buildchain runtime
+        id: runtime
+        uses: actions/github-script@v8
+        env:
+          BUILDCHAIN_REPOSITORY: ${{ inputs.buildchain-repository }}
+          BUILDCHAIN_REQUESTED_REF: ${{ inputs.buildchain-ref }}
+          BUILDCHAIN_DEFAULT_REF: v2
+          BUILDCHAIN_WORKFLOW_REF: ${{ job.workflow_ref }}
+        with:
+          script: |
+            const requested = (process.env.BUILDCHAIN_REQUESTED_REF || "").trim();
+            const repository = (process.env.BUILDCHAIN_REPOSITORY || "kungfu-systems/buildchain").trim();
+            const defaultRef = (process.env.BUILDCHAIN_DEFAULT_REF || "v2").trim();
+            const [runtimeOwner, runtimeRepo] = repository.split("/");
+            if (!runtimeOwner || !runtimeRepo) {
+              throw new Error(`invalid buildchain repository: ${repository}`);
+            }
+            const exactSha = /^[0-9a-f]{40}$/i;
+            const trainRef = /^train\/v\d+\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
+            const officialChannelRef = /^v\d+(?:\.\d+)?(?:-alpha)?$/;
+            const pullRequestMergeRef = /^refs\/pull\/\d+\/merge$/;
+            const workflowRef = process.env.BUILDCHAIN_WORKFLOW_REF || process.env.GITHUB_WORKFLOW_REF || "";
+            const sameRepositoryWorkflow = workflowRef.startsWith(`${repository}/.github/workflows/`);
+            const currentRepository = `${context.repo.owner}/${context.repo.repo}`;
+            const pullRequestHeadRepository = String(context.payload.pull_request?.head?.repo?.full_name || "");
+            const pullRequestHeadSha = String(context.payload.pull_request?.head?.sha || "");
+            const trustedSameRepositoryPullRequestHead =
+              context.eventName === "pull_request" &&
+              sameRepositoryWorkflow &&
+              currentRepository === repository &&
+              pullRequestHeadRepository === repository &&
+              exactSha.test(requested) &&
+              requested.toLowerCase() === pullRequestHeadSha.toLowerCase();
+            const shellRef = (sameRepositoryWorkflow
+              ? (workflowRef.split("@").pop() || defaultRef).trim() || defaultRef
+              : defaultRef).replace(/^refs\/(?:heads|tags)\//, "");
+            const normalizeClass = (ref) => {
+              const value = String(ref || "").replace(/^refs\/heads\//, "").replace(/^refs\/tags\//, "");
+              if (exactSha.test(value)) return "exact-sha";
+              if (trainRef.test(value)) return "train";
+              if (/^v\d+(?:\.\d+)?$/.test(value) || /^v\d+\.\d+\.\d+$/.test(value)) return "stable";
+              if (/^v\d+(?:\.\d+)?-alpha$/.test(value) || /^v\d+\.\d+\.\d+-alpha\.\d+$/.test(value)) return "alpha";
+              return "development";
+            };
+            let runtimeRef = requested || shellRef;
+            let runtimeFullRef = runtimeRef;
+            let runtimeClass = normalizeClass(runtimeRef);
+            const officialChannel = officialChannelRef.test(requested);
+            let runtimeOverride = requested !== "" && !officialChannel;
+            let trustDecision = officialChannel
+              ? "official-channel"
+              : runtimeOverride
+                ? "override-requested"
+                : "stable-default";
+            if (runtimeOverride) {
+              if (!trustedSameRepositoryPullRequestHead && context.eventName !== "workflow_dispatch") {
+                throw new Error("buildchain-ref override is only allowed for trusted workflow_dispatch runs");
+              }
+              if (!trustedSameRepositoryPullRequestHead) {
+                const permission = await github.rest.repos.getCollaboratorPermissionLevel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  username: context.actor,
+                });
+                const actorPermission = permission.data.permission || "";
+                if (!["admin", "maintain", "write"].includes(actorPermission)) {
+                  throw new Error(`buildchain-ref override requires write, maintain, or admin permission; actor has ${actorPermission || "none"}`);
+                }
+              }
+              if (exactSha.test(requested)) {
+                runtimeRef = requested;
+                runtimeFullRef = requested;
+                runtimeClass = "exact-sha";
+              } else {
+                runtimeRef = requested.replace(/^refs\/heads\//, "");
+                if (!trainRef.test(runtimeRef)) {
+                  throw new Error("buildchain-ref override must be train/vN/vN.M/<capability>, refs/heads/train/vN/vN.M/<capability>, or an exact 40-character SHA");
+                }
+                runtimeFullRef = `refs/heads/${runtimeRef}`;
+                runtimeClass = "train";
+              }
+              trustDecision = trustedSameRepositoryPullRequestHead
+                ? "same-repository-pr-head"
+                : "override-accepted";
+            }
+            async function resolveRef(ref) {
+              if (exactSha.test(ref)) return ref;
+              if (sameRepositoryWorkflow && pullRequestMergeRef.test(ref)) {
+                const workflowSha = String(context.sha || "");
+                if (!exactSha.test(workflowSha)) {
+                  throw new Error(`current workflow SHA is invalid for Buildchain pull request merge ref: ${ref}`);
+                }
+                return workflowSha;
+              }
+              const normalized = ref.replace(/^refs\/heads\//, "").replace(/^refs\/tags\//, "");
+              const candidates = ref.startsWith("refs/")
+                ? [ref.replace(/^refs\//, "")]
+                : [`tags/${normalized}`, `heads/${normalized}`];
+              for (const candidate of candidates) {
+                try {
+                  const response = await github.rest.git.getRef({
+                    owner: runtimeOwner,
+                    repo: runtimeRepo,
+                    ref: candidate,
+                  });
+                  return response.data.object.sha;
+                } catch (error) {
+                  if (error.status !== 404) throw error;
+                }
+              }
+              throw new Error(`unable to resolve Buildchain runtime ref: ${ref}`);
+            }
+            const runtimeSha = await resolveRef(runtimeFullRef);
+            const workflowShellSha = await resolveRef(shellRef);
+            const outputs = {
+              "runtime-ref": runtimeRef,
+              "runtime-full-ref": runtimeFullRef,
+              "runtime-sha": runtimeSha,
+              "runtime-class": runtimeClass,
+              "runtime-override": String(runtimeOverride),
+              "runtime-trust-decision": trustDecision,
+              "workflow-shell-ref": shellRef,
+              "workflow-shell-sha": workflowShellSha,
+              "rollback-ref": shellRef,
+            };
+            for (const [name, value] of Object.entries(outputs)) core.setOutput(name, value);
+            await core.summary
+              .addHeading("Buildchain runtime")
+              .addRaw(`- workflow shell ref: \`${shellRef}\`\n`)
+              .addRaw(`- requested runtime ref: \`${requested || "(default)"}\`\n`)
+              .addRaw(`- resolved runtime ref: \`${runtimeRef}\`\n`)
+              .addRaw(`- resolved runtime sha: \`${runtimeSha}\`\n`)
+              .addRaw(`- workflow shell sha: \`${workflowShellSha}\`\n`)
+              .addRaw(`- stability: \`${runtimeClass}\`\n`)
+              .addRaw(`- trust decision: \`${trustDecision}\`\n`)
+              .addRaw(`- rollback ref: \`${shellRef}\`\n`)
+              .write();
+
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ steps.runtime.outputs.runtime-sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Checkout Buildchain workflow shell
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ steps.runtime.outputs.workflow-shell-sha }}
+          path: .buildchain/workflow-shell
+          persist-credentials: false
+
+      - name: Upload Buildchain runtime checkout bootstrap
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-runtime-checkout-bootstrap-${{ steps.runtime.outputs.runtime-sha }}
+          path: .buildchain/workflow-shell/scripts/locked-source-checkout.mjs
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Checkout consumer contract lock
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ github.sha }}
+          clean: true
+          persist-credentials: false
+          path: .buildchain/consumer
+
+      - name: Validate consumer package manager contract
+        id: package-manager
+        shell: bash
+        run: |
+          validator=.buildchain/runtime/scripts/validate-package-manager-contract.mjs
+          if [ ! -f "${validator}" ]; then
+            validator=.buildchain/workflow-shell/scripts/validate-package-manager-contract.mjs
+          fi
+          node "${validator}"
+        env:
+          BUILDCHAIN_PACKAGE_MANAGER_CWD: .buildchain/consumer
+
+      - name: Check Buildchain contract lock
+        id: contract-lock
+        shell: bash
+        run: |
+          if [ -f .buildchain/runtime/scripts/buildchain-contract-lock.mjs ]; then
+            node .buildchain/runtime/scripts/buildchain-contract-lock.mjs check
+          else
+            {
+              echo "contract-lock-status=runtime-contract-unavailable"
+              echo "contract-lock-compatible=true"
+              echo "contract-lock-drift=false"
+              echo "contract-lock-issue-needed=false"
+              echo "contract-lock-issue-body-file="
+              echo "contract-digest="
+              echo "contract-compatibility-digest="
+              echo "accepted-contract-digest="
+              echo "accepted-buildchain-sha="
+              echo "current-buildchain-sha=${BUILDCHAIN_RUNTIME_SHA}"
+            } >> "${GITHUB_OUTPUT}"
+            if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+              {
+                echo "## Buildchain contract lock"
+                echo
+                echo "- Status: \`runtime-contract-unavailable\`"
+                echo "- Runtime ref: \`${BUILDCHAIN_RUNTIME_REF}\`"
+                echo "- Runtime SHA: \`${BUILDCHAIN_RUNTIME_SHA}\`"
+                echo "- Note: the checked-out Buildchain runtime does not yet ship contract lock support."
+              } >> "${GITHUB_STEP_SUMMARY}"
+            fi
+          fi
+        env:
+          BUILDCHAIN_CONTRACT_LOCK_PATH: .buildchain/consumer/${{ inputs.buildchain-contract-lock-path }}
+          BUILDCHAIN_CONTRACT_COMPATIBILITY_POLICY: ${{ inputs.buildchain-contract-compatibility-policy }}
+          BUILDCHAIN_CONTRACT_DRIFT_ISSUE_MODE: ${{ inputs.buildchain-contract-drift-issue-mode }}
+          BUILDCHAIN_RUNTIME_ROOT: .buildchain/runtime
+          BUILDCHAIN_RUNTIME_REF: ${{ steps.runtime.outputs.runtime-ref }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ steps.runtime.outputs.runtime-sha }}
+          BUILDCHAIN_RUNTIME_CLASS: ${{ steps.runtime.outputs.runtime-class }}
+          BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Report consumer Buildchain contract drift
+        if: ${{ always() && steps.contract-lock.outputs.contract-lock-issue-needed == 'true' }}
+        uses: ./.buildchain/runtime/actions/report-buildchain-issue
+        with:
+          token: ${{ github.token }}
+          target-repository: ${{ github.repository }}
+          title: "[Buildchain contract] ${{ github.repository }} drift on ${{ steps.runtime.outputs.runtime-ref }}"
+          failure-code: buildchain-contract-${{ steps.contract-lock.outputs.contract-lock-status }}
+          buildchain-ref: ${{ steps.runtime.outputs.runtime-ref }}
+          buildchain-version: ${{ steps.contract-lock.outputs.contract-digest }}
+          consumer-repository: ${{ github.repository }}
+          consumer-ref: ${{ github.ref }}
+          consumer-sha: ${{ github.sha }}
+          workflow: ${{ github.workflow }}
+          run-id: ${{ github.run_id }}
+          run-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          summary: "Buildchain floating runtime contract drift: ${{ steps.contract-lock.outputs.contract-lock-status }}"
+          body-file: ${{ steps.contract-lock.outputs.contract-lock-issue-body-file }}
+          labels: "buildchain-contract-drift"
+          comment-cooldown-hours: "24"
+          fail-on-error: "false"
+
       - name: Evaluate event trust
-        id: gate
+        id: trust
         shell: bash
         run: |
           trusted=true
@@ -130,25 +709,221 @@ jobs:
           echo "trusted=${trusted}" >> "$GITHUB_OUTPUT"
           if [ "${trusted}" != "true" ]; then
             echo "::warning::Untrusted event is not allowed to reach Buildchain build runners."
-            if [ "${{ inputs.untrusted-policy }}" = "fail" ]; then
-              exit 1
-            fi
           fi
+
+      - name: Resolve publish gate
+        id: publish
+        run: node .buildchain/runtime/scripts/resolve-publish-gate.mjs
+        env:
+          BUILDCHAIN_TRUSTED_EVENT: ${{ steps.trust.outputs.trusted }}
+          BUILDCHAIN_PUBLISH_CHANNEL: ${{ inputs.publish-channel }}
+          BUILDCHAIN_PUBLISH_REFS_JSON: ${{ inputs.publish-refs-json }}
+          GITHUB_REF: ${{ github.ref }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+
+      - name: Resolve publish source lock
+        id: source
+        run: node .buildchain/runtime/scripts/resolve-publish-source.mjs --mode lock
+        env:
+          BUILDCHAIN_PUBLISH_SOURCE_REF: ${{ inputs.publish-source-ref }}
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF: ${{ github.ref }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Verify publish target channel ref and PR lineage
+        run: node .buildchain/runtime/scripts/verify-publish-channel-ref.mjs
+        env:
+          BUILDCHAIN_PUBLISH_SOURCE_REF: ${{ steps.source.outputs.publish-source-ref }}
+          BUILDCHAIN_PUBLISH_SOURCE_SHA: ${{ steps.source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Reject untrusted event
+        if: ${{ steps.trust.outputs.trusted != 'true' && inputs.untrusted-policy == 'fail' }}
+        run: exit 1
+
+  resolve-source:
+    name: Resolve publish source
+    runs-on: ubuntu-24.04
+    needs:
+      - trust-gate
+    if: ${{ needs.trust-gate.outputs.trusted == 'true' }}
+    outputs:
+      publish-source-ref: ${{ steps.manifest.outputs.publish-source-ref }}
+      publish-source-sha: ${{ steps.manifest.outputs.publish-source-sha }}
+      publish-source-tree-sha: ${{ steps.source-tree.outputs.publish-source-tree-sha }}
+      publish-source-locked: ${{ steps.manifest.outputs.publish-source-locked }}
+      publish-source-channel: ${{ steps.manifest.outputs.publish-source-channel }}
+      publish-source-line: ${{ steps.manifest.outputs.publish-source-line }}
+      publish-source-consumer-version: ${{ steps.manifest.outputs.publish-source-consumer-version }}
+      release-manifest-path: ${{ steps.manifest.outputs.release-manifest-path }}
+      release-manifest-json: ${{ steps.manifest.outputs.release-manifest-json }}
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ needs.trust-gate.outputs.publish-source-sha }}
+          clean: true
+          persist-credentials: false
+          path: source
+
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Install Buildchain runtime dependencies
+        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+
+      - name: Resolve release manifest
+        id: manifest
+        run: node .buildchain/runtime/scripts/resolve-publish-source.mjs --mode manifest
+        env:
+          BUILDCHAIN_SOURCE_CWD: source/${{ inputs.working-directory }}
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_PUBLISH_SOURCE_REF: ${{ needs.trust-gate.outputs.publish-source-ref }}
+          BUILDCHAIN_PUBLISH_SOURCE_SHA: ${{ needs.trust-gate.outputs.publish-source-sha }}
+          BUILDCHAIN_PUBLISH_ANCHOR_REQUEST_JSON: ${{ inputs.publish-anchor-request-json }}
+          BUILDCHAIN_PUBLISH_REGISTRY: ${{ inputs.publish-registry }}
+          BUILDCHAIN_RELEASE_MANIFEST: .buildchain/artifacts/publish-source-manifest.json
+
+      - name: Resolve source tree SHA
+        id: source-tree
+        shell: bash
+        run: |
+          tree_sha="$(git -C source rev-parse "HEAD^{tree}")"
+          echo "publish-source-tree-sha=${tree_sha}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload resolved release manifest
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-publish-source-${{ needs.trust-gate.outputs.publish-source-sha }}
+          path: .buildchain/artifacts/publish-source-manifest.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+  anchored-release-preflight:
+    name: Verify anchored release material
+    runs-on: ubuntu-24.04
+    needs:
+      - trust-gate
+      - resolve-source
+    if: ${{ needs.trust-gate.outputs.trusted == 'true' }}
+    outputs:
+      evidence-artifact: ${{ steps.names.outputs.evidence-artifact }}
+      applicable: ${{ steps.material.outputs.anchored-version-material-applicable }}
+      digest: ${{ steps.material.outputs.anchored-version-material-digest }}
+    steps:
+      - name: Checkout exact release source with tags
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          fetch-depth: 0
+          clean: true
+          persist-credentials: false
+          path: source
+
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Checkout Buildchain workflow shell
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-sha }}
+          path: .buildchain/workflow-shell
+          persist-credentials: false
+
+      - name: Install Buildchain runtime dependencies
+        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+
+      - name: Resolve anchored material verifier
+        id: anchored-verifier
+        shell: bash
+        run: |
+          set -euo pipefail
+          verifier=.buildchain/runtime/scripts/anchored-version-material.mjs
+          if [[ ! -f "${verifier}" ]]; then
+            verifier=.buildchain/workflow-shell/scripts/anchored-version-material.mjs
+            corepack pnpm@11.7.0 install --dir .buildchain/workflow-shell --prod --frozen-lockfile --ignore-scripts
+          fi
+          if [[ ! -f "${verifier}" ]]; then
+            echo "::error::Anchored material verifier is absent from both the selected runtime and trusted workflow shell"
+            exit 1
+          fi
+          echo "path=${verifier}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify declared anchored version material
+        id: material
+        shell: bash
+        run: |
+          set -euo pipefail
+          target_ref="${BUILDCHAIN_TARGET_REF}"
+          if [[ -z "${target_ref}" && "${BUILDCHAIN_TARGET_LINE}" =~ ^v[0-9]+/v[0-9]+\.[0-9]+$ ]]; then
+            target_ref="release/${BUILDCHAIN_TARGET_LINE}"
+          elif [[ -z "${target_ref}" && "${BUILDCHAIN_TARGET_LINE}" =~ ^v([0-9]+)\.([0-9]+)$ ]]; then
+            target_ref="release/v${BASH_REMATCH[1]}/${BUILDCHAIN_TARGET_LINE}"
+          fi
+          BUILDCHAIN_ANCHORED_TARGET_REF="${target_ref}" \
+            node "${{ steps.anchored-verifier.outputs.path }}"
+        env:
+          BUILDCHAIN_ANCHORED_SOURCE_CWD: source/${{ inputs.working-directory }}
+          BUILDCHAIN_ANCHORED_MATERIAL_OUTPUT: .buildchain/artifacts/anchored-version-material.json
+          BUILDCHAIN_ANCHORED_TARGET_CHANNEL: ${{ needs.resolve-source.outputs.publish-source-channel || needs.trust-gate.outputs.publish-channel }}
+          BUILDCHAIN_ANCHORED_RELEASE_REF: HEAD
+          BUILDCHAIN_TARGET_REF: ${{ github.base_ref || github.event.pull_request.base.ref }}
+          BUILDCHAIN_TARGET_LINE: ${{ needs.resolve-source.outputs.publish-source-line }}
+
+      - name: Resolve anchored material artifact name
+        id: names
+        run: echo "evidence-artifact=${ARTIFACT_NAME}-anchored-version-material-${SOURCE_SHA}" >> "$GITHUB_OUTPUT"
+        env:
+          ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+
+      - name: Upload anchored version material evidence
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.names.outputs.evidence-artifact }}
+          path: .buildchain/artifacts/anchored-version-material.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
 
   resolve-contract:
     name: Resolve reusable contract
     runs-on: ubuntu-24.04
+    needs:
+      - trust-gate
     outputs:
       runner-preset: ${{ steps.runners.outputs.runner-preset }}
       platforms-json: ${{ steps.runners.outputs.platforms-json }}
       platform-count: ${{ steps.runners.outputs.platform-count }}
       platform-source: ${{ steps.runners.outputs.platform-source }}
+      native-platforms-json: ${{ steps.runners.outputs.native-platforms-json }}
+      native-platform-count: ${{ steps.runners.outputs.native-platform-count }}
+      container-platforms-json: ${{ steps.runners.outputs.container-platforms-json }}
+      container-platform-count: ${{ steps.runners.outputs.container-platform-count }}
+      linux-container-enabled: ${{ steps.runners.outputs.linux-container-enabled }}
+      linux-container-preset: ${{ steps.runners.outputs.linux-container-preset }}
+      linux-container-image: ${{ steps.runners.outputs.linux-container-image }}
+      linux-container-source: ${{ steps.runners.outputs.linux-container-source }}
     steps:
       - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.buildchain-ref }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           path: .buildchain/runtime
           persist-credentials: false
 
@@ -158,32 +933,264 @@ jobs:
         env:
           BUILDCHAIN_RUNNER_PRESET: ${{ inputs.runner-preset }}
           BUILDCHAIN_PLATFORMS_JSON: ${{ inputs.platforms-json }}
+          BUILDCHAIN_LINUX_CONTAINER_PRESET: ${{ inputs.linux-container-preset }}
+          BUILDCHAIN_LINUX_CONTAINER_IMAGE: ${{ inputs.linux-container-image }}
 
-  build:
+  controller-plan:
+    name: Plan build controller evidence
+    runs-on: ubuntu-24.04
+    needs:
+      - trust-gate
+      - resolve-source
+    if: ${{ needs.trust-gate.result == 'success' && needs.resolve-source.result == 'success' }}
+    outputs:
+      controller-plan-artifact: ${{ steps.names.outputs.controller-plan-artifact }}
+      controller-plan-json: ${{ steps.plan.outputs.controller-plan-json }}
+      controller-plan-digest: ${{ steps.plan.outputs.controller-plan-digest }}
+    steps:
+      - name: Checkout build controller workflow shell
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-sha }}
+          path: .buildchain/controller-runtime
+          persist-credentials: false
+
+      - name: Create build controller plan
+        id: plan
+        run: node .buildchain/controller-runtime/scripts/controller-evidence.mjs --mode plan
+        env:
+          BUILDCHAIN_CONTROLLER_ID: build-lifecycle
+          BUILDCHAIN_CONTROLLER_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_CONTROLLER_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_CONTROLLER_RUNTIME_REF: ${{ needs.trust-gate.outputs.buildchain-runtime-ref }}
+          BUILDCHAIN_CONTROLLER_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST: ${{ needs.trust-gate.outputs.buildchain-contract-digest }}
+          BUILDCHAIN_CONTROLLER_REGISTRY: .buildchain/controller-runtime/dist/site/controller-registry.json
+          BUILDCHAIN_CONTROLLER_INPUTS_JSON: ${{ toJSON(inputs) }}
+          BUILDCHAIN_CONTROLLER_INPUT_BOUNDARY: workflow-call
+          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+
+      - name: Resolve build controller plan artifact
+        id: names
+        run: echo "controller-plan-artifact=${ARTIFACT_NAME}-controller-plan-${SOURCE_SHA}" >> "$GITHUB_OUTPUT"
+        env:
+          ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+
+      - name: Upload build controller plan
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.names.outputs.controller-plan-artifact }}
+          path: .buildchain/controller/plan.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+  artifact-transfer:
+    name: Resolve artifact transfer
+    runs-on: ubuntu-24.04
+    needs:
+      - trust-gate
+    if: ${{ needs.trust-gate.outputs.trusted == 'true' }}
+    outputs:
+      mode: ${{ steps.transfer.outputs.mode }}
+      s3-bucket: ${{ steps.transfer.outputs.s3-bucket }}
+      s3-region: ${{ steps.transfer.outputs.s3-region }}
+      s3-prefix: ${{ steps.transfer.outputs.s3-prefix }}
+      oidc-audience: ${{ steps.transfer.outputs.oidc-audience }}
+    steps:
+      - name: Resolve artifact transfer mode
+        id: transfer
+        shell: bash
+        run: |
+          mode="${INPUT_TRANSFER_MODE:-github-artifacts}"
+          case "${mode}" in
+            github-artifacts|s3-to-github-artifacts) ;;
+            *)
+              echo "::error::artifact-transfer-mode must be github-artifacts or s3-to-github-artifacts, got: ${mode}"
+              exit 1
+              ;;
+          esac
+          bucket="${INPUT_S3_BUCKET:-${VAR_S3_BUCKET:-}}"
+          region="${INPUT_S3_REGION:-${VAR_S3_REGION:-}}"
+          prefix="${INPUT_S3_PREFIX:-${VAR_S3_PREFIX:-buildchain-artifacts}}"
+          audience="${INPUT_OIDC_AUDIENCE:-${VAR_OIDC_AUDIENCE:-}}"
+          upload_role="${INPUT_S3_UPLOAD_ROLE_ARN:-${VAR_S3_UPLOAD_ROLE_ARN:-${SECRET_S3_UPLOAD_ROLE_ARN:-}}}"
+          download_role="${INPUT_S3_DOWNLOAD_ROLE_ARN:-${VAR_S3_DOWNLOAD_ROLE_ARN:-${SECRET_S3_DOWNLOAD_ROLE_ARN:-}}}"
+          shared_role="${INPUT_S3_ROLE_ARN:-${VAR_S3_ROLE_ARN:-${SECRET_S3_ROLE_ARN:-}}}"
+          if [ "${mode}" = "s3-to-github-artifacts" ]; then
+            if [ -z "${bucket}" ]; then
+              echo "::error::artifact-transfer-mode=s3-to-github-artifacts requires artifact-relay-s3-bucket or BUILDCHAIN_ARTIFACT_RELAY_S3_BUCKET"
+              exit 1
+            fi
+            if [ -z "${region}" ]; then
+              echo "::error::artifact-transfer-mode=s3-to-github-artifacts requires artifact-relay-s3-region or BUILDCHAIN_ARTIFACT_RELAY_S3_REGION"
+              exit 1
+            fi
+            if [ -z "${upload_role}${shared_role}" ]; then
+              echo "::error::artifact-transfer-mode=s3-to-github-artifacts requires an upload role ARN input, variable, or secret"
+              exit 1
+            fi
+            if [ -z "${download_role}${shared_role}" ]; then
+              echo "::error::artifact-transfer-mode=s3-to-github-artifacts requires a download role ARN input, variable, or secret"
+              exit 1
+            fi
+            if [ -z "${audience}" ]; then
+              case "${region}" in
+                cn-*) audience="sts.amazonaws.com.cn" ;;
+                *) audience="sts.amazonaws.com" ;;
+              esac
+            fi
+          else
+            bucket=""
+            region=""
+            prefix=""
+            audience=""
+          fi
+          {
+            echo "mode=${mode}"
+            echo "s3-bucket=${bucket}"
+            echo "s3-region=${region}"
+            echo "s3-prefix=${prefix}"
+            echo "oidc-audience=${audience}"
+          } >> "${GITHUB_OUTPUT}"
+        env:
+          INPUT_TRANSFER_MODE: ${{ inputs.artifact-transfer-mode }}
+          INPUT_S3_BUCKET: ${{ inputs.artifact-relay-s3-bucket }}
+          INPUT_S3_REGION: ${{ inputs.artifact-relay-s3-region }}
+          INPUT_S3_PREFIX: ${{ inputs.artifact-relay-s3-prefix }}
+          INPUT_S3_ROLE_ARN: ${{ inputs.artifact-relay-s3-role-arn }}
+          INPUT_S3_UPLOAD_ROLE_ARN: ${{ inputs.artifact-relay-s3-upload-role-arn }}
+          INPUT_S3_DOWNLOAD_ROLE_ARN: ${{ inputs.artifact-relay-s3-download-role-arn }}
+          INPUT_OIDC_AUDIENCE: ${{ inputs.artifact-relay-s3-oidc-audience }}
+          VAR_S3_BUCKET: ${{ vars.BUILDCHAIN_ARTIFACT_RELAY_S3_BUCKET }}
+          VAR_S3_REGION: ${{ vars.BUILDCHAIN_ARTIFACT_RELAY_S3_REGION }}
+          VAR_S3_PREFIX: ${{ vars.BUILDCHAIN_ARTIFACT_RELAY_S3_PREFIX }}
+          VAR_S3_ROLE_ARN: ${{ vars.BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN }}
+          VAR_S3_UPLOAD_ROLE_ARN: ${{ vars.BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN }}
+          VAR_S3_DOWNLOAD_ROLE_ARN: ${{ vars.BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN }}
+          VAR_OIDC_AUDIENCE: ${{ vars.BUILDCHAIN_ARTIFACT_RELAY_S3_OIDC_AUDIENCE }}
+          SECRET_S3_ROLE_ARN: ${{ secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN }}
+          SECRET_S3_UPLOAD_ROLE_ARN: ${{ secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN }}
+          SECRET_S3_DOWNLOAD_ROLE_ARN: ${{ secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN }}
+
+  build-native:
     name: ${{ matrix.platform.name }}
     needs:
       - trust-gate
       - resolve-contract
-    if: ${{ needs.trust-gate.outputs.trusted == 'true' }}
+      - resolve-source
+      - controller-plan
+      - anchored-release-preflight
+      - artifact-transfer
+    if: ${{ needs.trust-gate.outputs.trusted == 'true' && needs.anchored-release-preflight.result == 'success' && needs.resolve-contract.outputs.native-platform-count != '0' }}
     strategy:
       fail-fast: false
       matrix:
-        platform: ${{ fromJSON(needs.resolve-contract.outputs.platforms-json) }}
+        platform: ${{ fromJSON(needs.resolve-contract.outputs.native-platforms-json) }}
     runs-on: ${{ fromJSON(matrix.platform.runner) }}
+    timeout-minutes: ${{ inputs.lifecycle-timeout-minutes }}
+    env:
+      CARGO_REGISTRIES_CRATES_IO_INDEX: ${{ inputs.cargo-registry-index }}
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v7.0.0
+      - name: Setup Node.js
+        if: ${{ inputs.setup-node }}
+        uses: actions/setup-node@v6.4.0
         with:
-          clean: true
-          persist-credentials: false
+          node-version: ${{ inputs.node-version }}
+
+      - name: Expose Windows runner user toolchain
+        if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
+        run: Add-Content -LiteralPath $env:GITHUB_PATH -Value (Join-Path $HOME ".local\bin")
+
+      - name: Expose POSIX runner user toolchain
+        if: ${{ runner.os != 'Windows' }}
+        shell: bash
+        run: echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
+
+      - name: Setup Rust toolchain on Windows
+        if: ${{ inputs.setup-rust && runner.os == 'Windows' }}
+        shell: cmd
+        env:
+          BUILDCHAIN_RUST_TOOLCHAIN: ${{ inputs.rust-toolchain }}
+          RUSTUP_DIST_SERVER: ${{ inputs.rustup-dist-server || 'https://static.rust-lang.org' }}
+          RUSTUP_UPDATE_ROOT: ${{ inputs.rustup-update-root || 'https://static.rust-lang.org/rustup' }}
+        run: |
+          @echo off
+          set "CARGO_HOME=%RUNNER_TEMP%\buildchain-cargo-%GITHUB_RUN_ID%-%GITHUB_RUN_ATTEMPT%"
+          set "RUSTUP_HOME=%RUNNER_TEMP%\buildchain-rustup-%GITHUB_RUN_ID%-%GITHUB_RUN_ATTEMPT%"
+          set "RUSTUP_INIT_ROOT=%RUNNER_TEMP%\buildchain-rustup-init-%GITHUB_RUN_ID%-%GITHUB_RUN_ATTEMPT%"
+          set "RUSTUP_INIT=%RUSTUP_INIT_ROOT%\rustup-init.exe"
+          if not exist "%RUSTUP_INIT_ROOT%" mkdir "%RUSTUP_INIT_ROOT%"
+          if errorlevel 1 exit /b %errorlevel%
+          curl.exe --proto "=https" --tlsv1.2 --retry 10 --retry-connrefused --fail --silent --show-error --location "https://win.rustup.rs/x86_64" --output "%RUSTUP_INIT%"
+          if errorlevel 1 exit /b %errorlevel%
+          "%RUSTUP_INIT%" --default-toolchain "%BUILDCHAIN_RUST_TOOLCHAIN%" --profile minimal -y --no-modify-path
+          if errorlevel 1 exit /b %errorlevel%
+          echo %CARGO_HOME%\bin>>"%GITHUB_PATH%"
+          echo CARGO_HOME=%CARGO_HOME%>>"%GITHUB_ENV%"
+          echo RUSTUP_HOME=%RUSTUP_HOME%>>"%GITHUB_ENV%"
+
+      - name: Setup Rust toolchain
+        if: ${{ inputs.setup-rust && runner.os != 'Windows' }}
+        uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
+        env:
+          RUSTUP_DIST_SERVER: ${{ inputs.rustup-dist-server || 'https://static.rust-lang.org' }}
+          RUSTUP_UPDATE_ROOT: ${{ inputs.rustup-update-root || 'https://static.rust-lang.org/rustup' }}
+        with:
+          toolchain: ${{ inputs.rust-toolchain }}
+
+      - name: Download Buildchain runtime checkout bootstrap
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ inputs.artifact-name }}-runtime-checkout-bootstrap-${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          path: .buildchain/runtime-bootstrap
 
       - name: Checkout Buildchain runtime
-        uses: actions/checkout@v7.0.0
+        run: node .buildchain/runtime-bootstrap/locked-source-checkout.mjs
+        env:
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ inputs.buildchain-repository }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_SOURCE_REF: ${{ needs.trust-gate.outputs.buildchain-runtime-full-ref }}
+          BUILDCHAIN_SOURCE_CHECKOUT_PATH: .buildchain/runtime
+          BUILDCHAIN_CHECKOUT_CACHE_MODE: ${{ inputs.checkout-cache-mode }}
+          BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE: ${{ inputs.checkout-cache-mirror-url-template || vars.BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE }}
+          BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE: ${{ inputs.checkout-cache-reference-repository-template || vars.BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE }}
+          BUILDCHAIN_CHECKOUT_CACHE_FALLBACK: ${{ inputs.checkout-cache-fallback }}
+          BUILDCHAIN_CHECKOUT_CACHE_TIMEOUT_SECONDS: ${{ inputs.checkout-cache-timeout-seconds }}
+          BUILDCHAIN_CHECKOUT_CACHE_GITHUB_TIMEOUT_SECONDS: ${{ inputs.checkout-cache-github-timeout-seconds }}
+          BUILDCHAIN_CHECKOUT_CACHE_FETCH_ATTEMPTS: ${{ inputs.checkout-cache-fetch-attempts }}
+          BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH: .buildchain/diagnostics/runtime-checkout.json
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Upload Buildchain runtime checkout diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7.0.1
         with:
-          repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.buildchain-ref }}
-          path: .buildchain/runtime
-          persist-credentials: false
+          name: ${{ inputs.artifact-name }}-runtime-checkout-${{ matrix.platform.id }}-${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          path: .buildchain/diagnostics/runtime-checkout.json
+          if-no-files-found: warn
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Checkout locked source
+        run: node .buildchain/runtime-bootstrap/locked-source-checkout.mjs
+        env:
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
+          BUILDCHAIN_CHECKOUT_CACHE_MODE: ${{ inputs.checkout-cache-mode }}
+          BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE: ${{ inputs.checkout-cache-mirror-url-template || vars.BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE }}
+          BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE: ${{ inputs.checkout-cache-reference-repository-template || vars.BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE }}
+          BUILDCHAIN_CHECKOUT_CACHE_FALLBACK: ${{ inputs.checkout-cache-fallback }}
+          BUILDCHAIN_CHECKOUT_CACHE_TIMEOUT_SECONDS: ${{ inputs.checkout-cache-timeout-seconds }}
+          BUILDCHAIN_CHECKOUT_CACHE_GITHUB_TIMEOUT_SECONDS: ${{ inputs.checkout-cache-github-timeout-seconds }}
+          BUILDCHAIN_CHECKOUT_CACHE_FETCH_ATTEMPTS: ${{ inputs.checkout-cache-fetch-attempts }}
+          BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH: .buildchain/diagnostics/source-checkout.json
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Install Buildchain runtime dependencies
+        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
 
       - name: Resolve artifact contract
         id: artifact-contract
@@ -193,20 +1200,21 @@ jobs:
           BUILDCHAIN_ARTIFACT_NAME_TEMPLATE: ${{ inputs.artifact-name-template }}
           BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
           BUILDCHAIN_PLATFORM_NAME: ${{ matrix.platform.name }}
-
-      - name: Setup Node.js
-        if: ${{ inputs.setup-node }}
-        uses: actions/setup-node@v6.4.0
-        with:
-          node-version: ${{ inputs.node-version }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
 
       - name: Run install lifecycle
         uses: ./.buildchain/runtime/actions/run-lifecycle
+        env:
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          SHIFU_CACHE_PROFILE_REF: ${{ inputs.shifu-cache-profile-ref }}
+          SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
         with:
           cwd: ${{ inputs.working-directory }}
           stage: install
           command: ${{ inputs.install-command }}
           required: ${{ inputs.require-install }}
+          timeout-minutes: ${{ inputs.lifecycle-timeout-minutes }}
           artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
           platform-id: ${{ matrix.platform.id }}
           platform-name: ${{ matrix.platform.name }}
@@ -216,35 +1224,124 @@ jobs:
 
       - name: Run build lifecycle
         uses: ./.buildchain/runtime/actions/run-lifecycle
+        env:
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          SHIFU_CACHE_PROFILE_REF: ${{ inputs.shifu-cache-profile-ref }}
+          SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
         with:
           cwd: ${{ inputs.working-directory }}
           stage: build
           command: ${{ inputs.build-command }}
           required: ${{ inputs.require-build }}
+          timeout-minutes: ${{ inputs.lifecycle-timeout-minutes }}
           artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
           platform-id: ${{ matrix.platform.id }}
           platform-name: ${{ matrix.platform.name }}
           artifact-paths: ${{ inputs.artifact-paths }}
           manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest-build.json
           summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary-build.json
+          process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
+          process-samples-path: .buildchain/diagnostics/process-samples.jsonl
+          sample-process-tree: ${{ inputs.sample-process-tree }}
+          process-sample-interval-ms: ${{ inputs.process-sample-interval-ms }}
+          requested-parallelism: ${{ inputs.requested-parallelism }}
+          process-summary-required: ${{ inputs.require-build }}
 
       - name: Run verify lifecycle
         id: verify-lifecycle
         uses: ./.buildchain/runtime/actions/run-lifecycle
+        env:
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          SHIFU_CACHE_PROFILE_REF: ${{ inputs.shifu-cache-profile-ref }}
+          SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
         with:
           cwd: ${{ inputs.working-directory }}
           stage: verify
           command: ${{ inputs.verify-command }}
           required: ${{ inputs.require-verify }}
+          timeout-minutes: ${{ inputs.lifecycle-timeout-minutes }}
           artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
+          manifest-artifact-name: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          diagnostics-artifact-name: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           platform-id: ${{ matrix.platform.id }}
           platform-name: ${{ matrix.platform.name }}
           artifact-paths: ${{ inputs.artifact-paths }}
           manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
           summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
           expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
+          process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
+          process-summary-required: ${{ inputs.process-summary-path != '' || inputs.require-build }}
+
+      - name: Run KFD Agent Hub conformance
+        if: ${{ inputs.kfd-agent-hub == 'auto' }}
+        run: >-
+          node .buildchain/runtime/bin/buildchain.mjs kfd hub test
+          --cwd "${{ inputs.working-directory }}"
+          --output-dir ".buildchain/artifacts/kfd-agent-hub/${{ matrix.platform.id }}"
+          --for agent
+
+      - name: Upload KFD Agent Hub evidence
+        if: ${{ inputs.kfd-agent-hub == 'auto' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-kfd-agent-hub-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: ${{ inputs.working-directory }}/.buildchain/artifacts/kfd-agent-hub/${{ matrix.platform.id }}
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Configure AWS credentials for artifact relay upload
+        if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' }}
+        uses: aws-actions/configure-aws-credentials@v6.1.0
+        with:
+          role-to-assume: ${{ inputs.artifact-relay-s3-upload-role-arn || vars.BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN || secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN || inputs.artifact-relay-s3-role-arn || vars.BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN || secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN }}
+          aws-region: ${{ needs.artifact-transfer.outputs.s3-region }}
+          audience: ${{ needs.artifact-transfer.outputs.oidc-audience }}
+
+      - name: Upload payload to S3 artifact relay
+        id: artifact-relay
+        if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' }}
+        run: node .buildchain/runtime/scripts/artifact-relay-s3.mjs upload
+        env:
+          BUILDCHAIN_ARTIFACT_RELAY_BUCKET: ${{ needs.artifact-transfer.outputs.s3-bucket }}
+          BUILDCHAIN_ARTIFACT_RELAY_REGION: ${{ needs.artifact-transfer.outputs.s3-region }}
+          BUILDCHAIN_ARTIFACT_RELAY_PREFIX: ${{ needs.artifact-transfer.outputs.s3-prefix }}
+          BUILDCHAIN_ARTIFACT_RELAY_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_ARTIFACT_RELAY_PLATFORM_ID: ${{ matrix.platform.id }}
+          BUILDCHAIN_ARTIFACT_RELAY_PLATFORM_NAME: ${{ matrix.platform.name }}
+          BUILDCHAIN_ARTIFACT_RELAY_MANIFEST_PATH: .buildchain/artifacts/${{ matrix.platform.id }}/relay-manifest.json
+          BUILDCHAIN_ARTIFACT_RELAY_PAYLOAD_ARTIFACT_NAME: ${{ steps.artifact-contract.outputs.artifact-name }}
+          BUILDCHAIN_ARTIFACT_RELAY_PAYLOAD_PATHS: |
+            ${{ inputs.artifact-paths }}
+            .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+          BUILDCHAIN_ARTIFACT_RELAY_MANIFEST_ARTIFACT_NAME: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_ARTIFACT_RELAY_MANIFEST_PATHS: |
+            .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+          BUILDCHAIN_ARTIFACT_RELAY_DIAGNOSTICS_ARTIFACT_NAME: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_ARTIFACT_RELAY_DIAGNOSTICS_PATHS: |
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics-manifest.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/source-checkout.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
+            .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
+
+      - name: Upload artifact relay manifest
+        if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-relay-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: .buildchain/artifacts/${{ matrix.platform.id }}/relay-manifest.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Upload deterministic artifact
+        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ steps.artifact-contract.outputs.artifact-name }}
@@ -252,51 +1349,504 @@ jobs:
             ${{ inputs.artifact-paths }}
             .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
             .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload artifact manifest
+        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: |
+            .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload diagnostics artifact
+        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: |
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics-manifest.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/source-checkout.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
+            .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+  build-linux-container:
+    name: ${{ matrix.platform.name }} container
+    needs:
+      - trust-gate
+      - resolve-contract
+      - resolve-source
+      - controller-plan
+      - anchored-release-preflight
+      - artifact-transfer
+    if: ${{ needs.trust-gate.outputs.trusted == 'true' && needs.anchored-release-preflight.result == 'success' && needs.resolve-contract.outputs.container-platform-count != '0' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: ${{ fromJSON(needs.resolve-contract.outputs.container-platforms-json) }}
+    runs-on: ${{ fromJSON(matrix.platform.runner) }}
+    timeout-minutes: ${{ inputs.lifecycle-timeout-minutes }}
+    container:
+      image: ${{ needs.resolve-contract.outputs.linux-container-image }}
+      options: --user root
+    steps:
+      - name: Setup Buildchain Node.js with fnm
+        shell: bash
+        run: |
+          eval "$(fnm env --shell bash)"
+          fnm install "${BUILDCHAIN_NODE_VERSION}"
+          fnm use "${BUILDCHAIN_NODE_VERSION}"
+          dirname "$(command -v node)" >> "${GITHUB_PATH}"
+          node --version
+          corepack enable
+        env:
+          BUILDCHAIN_NODE_VERSION: ${{ inputs.node-version }}
+
+      - name: Download Buildchain runtime checkout bootstrap
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ inputs.artifact-name }}-runtime-checkout-bootstrap-${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          path: .buildchain/runtime-bootstrap
+
+      - name: Checkout Buildchain runtime
+        run: node .buildchain/runtime-bootstrap/locked-source-checkout.mjs
+        env:
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ inputs.buildchain-repository }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_SOURCE_REF: ${{ needs.trust-gate.outputs.buildchain-runtime-full-ref }}
+          BUILDCHAIN_SOURCE_CHECKOUT_PATH: .buildchain/runtime
+          BUILDCHAIN_CHECKOUT_CACHE_MODE: ${{ inputs.checkout-cache-mode }}
+          BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE: ${{ inputs.checkout-cache-mirror-url-template || vars.BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE }}
+          BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE: ${{ inputs.checkout-cache-reference-repository-template || vars.BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE }}
+          BUILDCHAIN_CHECKOUT_CACHE_FALLBACK: ${{ inputs.checkout-cache-fallback }}
+          BUILDCHAIN_CHECKOUT_CACHE_TIMEOUT_SECONDS: ${{ inputs.checkout-cache-timeout-seconds }}
+          BUILDCHAIN_CHECKOUT_CACHE_GITHUB_TIMEOUT_SECONDS: ${{ inputs.checkout-cache-github-timeout-seconds }}
+          BUILDCHAIN_CHECKOUT_CACHE_FETCH_ATTEMPTS: ${{ inputs.checkout-cache-fetch-attempts }}
+          BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH: .buildchain/diagnostics/runtime-checkout.json
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Upload Buildchain runtime checkout diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-runtime-checkout-${{ matrix.platform.id }}-${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          path: .buildchain/diagnostics/runtime-checkout.json
+          if-no-files-found: warn
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Checkout locked source
+        run: node .buildchain/runtime-bootstrap/locked-source-checkout.mjs
+        env:
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
+          BUILDCHAIN_CHECKOUT_CACHE_MODE: ${{ inputs.checkout-cache-mode }}
+          BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE: ${{ inputs.checkout-cache-mirror-url-template || vars.BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE }}
+          BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE: ${{ inputs.checkout-cache-reference-repository-template || vars.BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE }}
+          BUILDCHAIN_CHECKOUT_CACHE_FALLBACK: ${{ inputs.checkout-cache-fallback }}
+          BUILDCHAIN_CHECKOUT_CACHE_TIMEOUT_SECONDS: ${{ inputs.checkout-cache-timeout-seconds }}
+          BUILDCHAIN_CHECKOUT_CACHE_GITHUB_TIMEOUT_SECONDS: ${{ inputs.checkout-cache-github-timeout-seconds }}
+          BUILDCHAIN_CHECKOUT_CACHE_FETCH_ATTEMPTS: ${{ inputs.checkout-cache-fetch-attempts }}
+          BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH: .buildchain/diagnostics/source-checkout.json
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Install Buildchain runtime dependencies
+        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+
+      - name: Resolve artifact contract
+        id: artifact-contract
+        run: node .buildchain/runtime/scripts/resolve-build-contract.mjs --mode artifact
+        env:
+          BUILDCHAIN_ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          BUILDCHAIN_ARTIFACT_NAME_TEMPLATE: ${{ inputs.artifact-name-template }}
+          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
+          BUILDCHAIN_PLATFORM_NAME: ${{ matrix.platform.name }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+
+      - name: Run install lifecycle
+        uses: ./.buildchain/runtime/actions/run-lifecycle
+        env:
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          SHIFU_CACHE_PROFILE_REF: ${{ inputs.shifu-cache-profile-ref }}
+          SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
+        with:
+          cwd: ${{ inputs.working-directory }}
+          stage: install
+          command: ${{ inputs.install-command }}
+          required: ${{ inputs.require-install }}
+          timeout-minutes: ${{ inputs.lifecycle-timeout-minutes }}
+          artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
+          platform-id: ${{ matrix.platform.id }}
+          platform-name: ${{ matrix.platform.name }}
+          artifact-paths: ${{ inputs.artifact-paths }}
+          manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest-install.json
+          summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary-install.json
+
+      - name: Run build lifecycle
+        uses: ./.buildchain/runtime/actions/run-lifecycle
+        env:
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          SHIFU_CACHE_PROFILE_REF: ${{ inputs.shifu-cache-profile-ref }}
+          SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
+        with:
+          cwd: ${{ inputs.working-directory }}
+          stage: build
+          command: ${{ inputs.build-command }}
+          required: ${{ inputs.require-build }}
+          timeout-minutes: ${{ inputs.lifecycle-timeout-minutes }}
+          artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
+          platform-id: ${{ matrix.platform.id }}
+          platform-name: ${{ matrix.platform.name }}
+          artifact-paths: ${{ inputs.artifact-paths }}
+          manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest-build.json
+          summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary-build.json
+          process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
+          process-samples-path: .buildchain/diagnostics/process-samples.jsonl
+          sample-process-tree: ${{ inputs.sample-process-tree }}
+          process-sample-interval-ms: ${{ inputs.process-sample-interval-ms }}
+          requested-parallelism: ${{ inputs.requested-parallelism }}
+          process-summary-required: ${{ inputs.require-build }}
+
+      - name: Run verify lifecycle
+        id: verify-lifecycle
+        uses: ./.buildchain/runtime/actions/run-lifecycle
+        env:
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          SHIFU_CACHE_PROFILE_REF: ${{ inputs.shifu-cache-profile-ref }}
+          SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
+        with:
+          cwd: ${{ inputs.working-directory }}
+          stage: verify
+          command: ${{ inputs.verify-command }}
+          required: ${{ inputs.require-verify }}
+          timeout-minutes: ${{ inputs.lifecycle-timeout-minutes }}
+          artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
+          manifest-artifact-name: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          diagnostics-artifact-name: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          platform-id: ${{ matrix.platform.id }}
+          platform-name: ${{ matrix.platform.name }}
+          artifact-paths: ${{ inputs.artifact-paths }}
+          manifest-path: .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
+          summary-path: .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
+          expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
+          process-summary-path: ${{ inputs.process-summary-path || (inputs.sample-process-tree && '.buildchain/diagnostics/process-summary.json') || '' }}
+          process-summary-required: ${{ inputs.process-summary-path != '' || inputs.require-build }}
+
+      - name: Run KFD Agent Hub conformance
+        if: ${{ inputs.kfd-agent-hub == 'auto' }}
+        run: >-
+          node .buildchain/runtime/bin/buildchain.mjs kfd hub test
+          --cwd "${{ inputs.working-directory }}"
+          --output-dir ".buildchain/artifacts/kfd-agent-hub/${{ matrix.platform.id }}"
+          --for agent
+
+      - name: Upload KFD Agent Hub evidence
+        if: ${{ inputs.kfd-agent-hub == 'auto' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-kfd-agent-hub-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: ${{ inputs.working-directory }}/.buildchain/artifacts/kfd-agent-hub/${{ matrix.platform.id }}
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Configure AWS credentials for artifact relay upload
+        if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' }}
+        uses: aws-actions/configure-aws-credentials@v6.1.0
+        with:
+          role-to-assume: ${{ inputs.artifact-relay-s3-upload-role-arn || vars.BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN || secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN || inputs.artifact-relay-s3-role-arn || vars.BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN || secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN }}
+          aws-region: ${{ needs.artifact-transfer.outputs.s3-region }}
+          audience: ${{ needs.artifact-transfer.outputs.oidc-audience }}
+
+      - name: Upload payload to S3 artifact relay
+        id: artifact-relay
+        if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' }}
+        run: node .buildchain/runtime/scripts/artifact-relay-s3.mjs upload
+        env:
+          BUILDCHAIN_ARTIFACT_RELAY_BUCKET: ${{ needs.artifact-transfer.outputs.s3-bucket }}
+          BUILDCHAIN_ARTIFACT_RELAY_REGION: ${{ needs.artifact-transfer.outputs.s3-region }}
+          BUILDCHAIN_ARTIFACT_RELAY_PREFIX: ${{ needs.artifact-transfer.outputs.s3-prefix }}
+          BUILDCHAIN_ARTIFACT_RELAY_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_ARTIFACT_RELAY_PLATFORM_ID: ${{ matrix.platform.id }}
+          BUILDCHAIN_ARTIFACT_RELAY_PLATFORM_NAME: ${{ matrix.platform.name }}
+          BUILDCHAIN_ARTIFACT_RELAY_MANIFEST_PATH: .buildchain/artifacts/${{ matrix.platform.id }}/relay-manifest.json
+          BUILDCHAIN_ARTIFACT_RELAY_PAYLOAD_ARTIFACT_NAME: ${{ steps.artifact-contract.outputs.artifact-name }}
+          BUILDCHAIN_ARTIFACT_RELAY_PAYLOAD_PATHS: |
+            ${{ inputs.artifact-paths }}
+            .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+          BUILDCHAIN_ARTIFACT_RELAY_MANIFEST_ARTIFACT_NAME: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_ARTIFACT_RELAY_MANIFEST_PATHS: |
+            .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+          BUILDCHAIN_ARTIFACT_RELAY_DIAGNOSTICS_ARTIFACT_NAME: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_ARTIFACT_RELAY_DIAGNOSTICS_PATHS: |
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics-manifest.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/source-checkout.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
+            .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
+
+      - name: Upload artifact relay manifest
+        if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-relay-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: .buildchain/artifacts/${{ matrix.platform.id }}/relay-manifest.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload deterministic artifact
+        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.artifact-contract.outputs.artifact-name }}
+          path: |
+            ${{ inputs.artifact-paths }}
+            .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload artifact manifest
+        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: |
+            .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload diagnostics artifact
+        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: |
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics-manifest.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/source-checkout.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
+            .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
+            .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+  relay-artifacts:
+    name: Relay ${{ matrix.platform.name }} artifacts
+    needs:
+      - trust-gate
+      - resolve-contract
+      - resolve-source
+      - controller-plan
+      - artifact-transfer
+      - build-native
+      - build-linux-container
+    if: ${{ always() && needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: ${{ fromJSON(needs.resolve-contract.outputs.platforms-json) }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Install Buildchain runtime dependencies
+        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+
+      - name: Resolve artifact contract
+        id: artifact-contract
+        run: node .buildchain/runtime/scripts/resolve-build-contract.mjs --mode artifact
+        env:
+          BUILDCHAIN_ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          BUILDCHAIN_ARTIFACT_NAME_TEMPLATE: ${{ inputs.artifact-name-template }}
+          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
+          BUILDCHAIN_PLATFORM_NAME: ${{ matrix.platform.name }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+
+      - name: Download artifact relay manifest
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ inputs.artifact-name }}-relay-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: .buildchain/downloaded-relay-manifests/${{ matrix.platform.id }}
+
+      - name: Configure AWS credentials for artifact relay download
+        uses: aws-actions/configure-aws-credentials@v6.1.0
+        with:
+          role-to-assume: ${{ inputs.artifact-relay-s3-download-role-arn || vars.BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN || secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN || inputs.artifact-relay-s3-role-arn || vars.BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN || secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN }}
+          aws-region: ${{ needs.artifact-transfer.outputs.s3-region }}
+          audience: ${{ needs.artifact-transfer.outputs.oidc-audience }}
+
+      - name: Download and verify S3 relay payload
+        id: relay-download
+        run: node .buildchain/runtime/scripts/artifact-relay-s3.mjs download
+        env:
+          BUILDCHAIN_ARTIFACT_RELAY_INPUT_ROOT: .buildchain/downloaded-relay-manifests/${{ matrix.platform.id }}
+          BUILDCHAIN_ARTIFACT_RELAY_OUTPUT_ROOT: .buildchain/relayed-artifacts/${{ matrix.platform.id }}
+          BUILDCHAIN_ARTIFACT_RELAY_REGION: ${{ needs.artifact-transfer.outputs.s3-region }}
+          BUILDCHAIN_ARTIFACT_RELAY_PLATFORM_ID: ${{ matrix.platform.id }}
+
+      - name: Upload deterministic artifact
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.artifact-contract.outputs.artifact-name }}
+          path: ${{ steps.relay-download.outputs.payload-path }}
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Upload artifact manifest
         uses: actions/upload-artifact@v7.0.1
         with:
-          name: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ github.sha }}
-          path: |
-            .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
-            .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
+          name: ${{ inputs.artifact-name }}-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: ${{ steps.relay-download.outputs.manifest-path }}
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload diagnostics artifact
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: ${{ steps.relay-download.outputs.diagnostics-path }}
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Cleanup S3 artifact relay payload
+        if: ${{ success() }}
+        run: node .buildchain/runtime/scripts/artifact-relay-s3.mjs cleanup
+        env:
+          BUILDCHAIN_ARTIFACT_RELAY_INPUT_ROOT: .buildchain/downloaded-relay-manifests/${{ matrix.platform.id }}
+          BUILDCHAIN_ARTIFACT_RELAY_REGION: ${{ needs.artifact-transfer.outputs.s3-region }}
+          BUILDCHAIN_ARTIFACT_RELAY_PLATFORM_ID: ${{ matrix.platform.id }}
 
   summarize:
     name: Summarize build contract
     needs:
+      - trust-gate
       - resolve-contract
-      - build
-    if: ${{ always() && needs.build.result == 'success' }}
+      - resolve-source
+      - controller-plan
+      - anchored-release-preflight
+      - artifact-transfer
+      - build-native
+      - build-linux-container
+      - relay-artifacts
+    if: ${{ always() && needs.anchored-release-preflight.result == 'success' && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && (needs.artifact-transfer.outputs.mode == 'github-artifacts' || needs.relay-artifacts.result == 'success') }}
     runs-on: ubuntu-24.04
     outputs:
       summary-artifact-name: ${{ steps.names.outputs.summary-artifact-name }}
+      diagnostics-summary-artifact-name: ${{ steps.names.outputs.diagnostics-summary-artifact-name }}
       summary-path: ${{ steps.summary.outputs.summary-path }}
       artifact-summary-json: ${{ steps.summary.outputs.artifact-summary-json }}
+      diagnostics-summary-path: ${{ steps.diagnostics.outputs.diagnostics-summary-path }}
+      diagnostics-summary-json: ${{ steps.diagnostics.outputs.diagnostics-summary-json }}
+      release-candidate-passport-artifact-name: ${{ steps.names.outputs.release-candidate-passport-artifact-name }}
+      release-candidate-passport-json: ${{ steps.release-candidate.outputs.release-candidate-passport-json }}
     steps:
       - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.buildchain-ref }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           path: .buildchain/runtime
           persist-credentials: false
 
+      - name: Install Buildchain runtime dependencies
+        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+
       - name: Resolve summary artifact name
         id: names
-        run: echo "summary-artifact-name=${BUILDCHAIN_SUMMARY_ARTIFACT_NAME}" >> "${GITHUB_OUTPUT}"
+        run: |
+          rc_target_channel="${BUILDCHAIN_RC_TARGET_CHANNEL}"
+          if { [ -z "${rc_target_channel}" ] || [ "${rc_target_channel}" = "none" ]; } && [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
+            case "${BUILDCHAIN_RC_PR_BASE_REF}" in
+              alpha/*)
+                rc_target_channel="alpha"
+                ;;
+              release/*)
+                rc_target_channel="release"
+                ;;
+              publish-gate/major|major-gate)
+                rc_target_channel="major"
+                ;;
+            esac
+          fi
+          release_candidate_enabled=false
+          if [ "${BUILDCHAIN_RC_REQUESTED}" = "true" ] && [ -n "${rc_target_channel}" ] && [ "${rc_target_channel}" != "none" ]; then
+            release_candidate_enabled=true
+          fi
+          {
+            echo "summary-artifact-name=${BUILDCHAIN_SUMMARY_ARTIFACT_NAME}"
+            echo "diagnostics-summary-artifact-name=${BUILDCHAIN_DIAGNOSTICS_SUMMARY_ARTIFACT_NAME}"
+            echo "release-candidate-enabled=${release_candidate_enabled}"
+            echo "release-candidate-target-channel=${rc_target_channel}"
+            if [ "${release_candidate_enabled}" = "true" ]; then
+              echo "release-candidate-passport-artifact-name=${BUILDCHAIN_RC_PASSPORT_ARTIFACT_NAME}"
+            else
+              echo "release-candidate-passport-artifact-name="
+            fi
+          } >> "${GITHUB_OUTPUT}"
         env:
-          BUILDCHAIN_SUMMARY_ARTIFACT_NAME: ${{ inputs.artifact-name }}-summary-${{ github.sha }}
+          BUILDCHAIN_SUMMARY_ARTIFACT_NAME: ${{ inputs.artifact-name }}-summary-${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_DIAGNOSTICS_SUMMARY_ARTIFACT_NAME: ${{ inputs.artifact-name }}-diagnostics-summary-${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_RC_PASSPORT_ARTIFACT_NAME: ${{ inputs.artifact-name }}-release-candidate-${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_RC_REQUESTED: ${{ inputs.release-candidate }}
+          BUILDCHAIN_RC_TARGET_CHANNEL: ${{ needs.resolve-source.outputs.publish-source-channel || needs.trust-gate.outputs.publish-channel }}
+          BUILDCHAIN_RC_PR_BASE_REF: ${{ github.base_ref || github.event.pull_request.base.ref }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
 
       - name: Download platform manifests
         uses: actions/download-artifact@v7.0.0
         with:
-          pattern: ${{ inputs.artifact-name }}-manifest-*-${{ github.sha }}
+          pattern: ${{ inputs.artifact-name }}-manifest-*-${{ needs.resolve-source.outputs.publish-source-sha }}
           path: .buildchain/downloaded-manifests
           merge-multiple: false
+
+      - name: Download platform diagnostics
+        uses: actions/download-artifact@v7.0.0
+        with:
+          pattern: ${{ inputs.artifact-name }}-diagnostics-*-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: .buildchain/downloaded-diagnostics
+          merge-multiple: false
+
+      - name: Download build controller plan for release-candidate passport
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ needs.controller-plan.outputs.controller-plan-artifact }}
+          path: .buildchain/controller
+
+      - name: Download anchored version material evidence
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ needs.anchored-release-preflight.outputs.evidence-artifact }}
+          path: .buildchain/anchored-version-material
 
       - name: Aggregate artifact summary
         id: summary
@@ -306,6 +1856,80 @@ jobs:
           BUILDCHAIN_SUMMARY_OUTPUT: .buildchain/artifacts/build-summary.json
           BUILDCHAIN_ARTIFACT_NAME: ${{ inputs.artifact-name }}
           BUILDCHAIN_PLATFORM_COUNT: ${{ needs.resolve-contract.outputs.platform-count }}
+          BUILDCHAIN_TRUSTED_EVENT: ${{ needs.trust-gate.outputs.trusted-event }}
+          BUILDCHAIN_PUBLISH_CHANNEL: ${{ needs.trust-gate.outputs.publish-channel }}
+          BUILDCHAIN_PUBLISH_ALLOWED: ${{ needs.trust-gate.outputs.publish-allowed }}
+          BUILDCHAIN_PUBLISH_REASON: ${{ needs.trust-gate.outputs.publish-reason }}
+          BUILDCHAIN_PUBLISH_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref }}
+          BUILDCHAIN_PUBLISH_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_PUBLISH_SOURCE_LOCKED: ${{ needs.resolve-source.outputs.publish-source-locked }}
+          BUILDCHAIN_PUBLISH_SOURCE_CHANNEL: ${{ needs.resolve-source.outputs.publish-source-channel }}
+          BUILDCHAIN_PUBLISH_SOURCE_LINE: ${{ needs.resolve-source.outputs.publish-source-line }}
+          BUILDCHAIN_PUBLISH_SOURCE_CONSUMER_VERSION: ${{ needs.resolve-source.outputs.publish-source-consumer-version }}
+          BUILDCHAIN_RELEASE_MANIFEST_JSON: ${{ needs.resolve-source.outputs.release-manifest-json }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
+          BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          BUILDCHAIN_RUNTIME_REQUESTED_REF: ${{ inputs.buildchain-ref }}
+          BUILDCHAIN_RUNTIME_REF: ${{ needs.trust-gate.outputs.buildchain-runtime-ref }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_RUNTIME_CLASS: ${{ needs.trust-gate.outputs.buildchain-runtime-class }}
+          BUILDCHAIN_RUNTIME_OVERRIDE: ${{ needs.trust-gate.outputs.buildchain-runtime-override }}
+          BUILDCHAIN_RUNTIME_TRUST_DECISION: ${{ needs.trust-gate.outputs.buildchain-runtime-trust-decision }}
+          BUILDCHAIN_WORKFLOW_SHELL_REF: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-ref }}
+          BUILDCHAIN_ROLLBACK_REF: ${{ needs.trust-gate.outputs.buildchain-rollback-ref }}
+
+      - name: Aggregate diagnostics summary
+        id: diagnostics
+        run: node .buildchain/runtime/scripts/aggregate-diagnostics-summary.mjs
+        env:
+          BUILDCHAIN_DIAGNOSTICS_INPUT: .buildchain/downloaded-diagnostics
+          BUILDCHAIN_DIAGNOSTICS_OUTPUT: .buildchain/artifacts/diagnostics-summary.json
+          BUILDCHAIN_PLATFORM_COUNT: ${{ needs.resolve-contract.outputs.platform-count }}
+
+      - name: Create build controller receipt for release-candidate passport
+        id: release-candidate-controller-receipt
+        if: ${{ steps.names.outputs.release-candidate-enabled == 'true' }}
+        run: node .buildchain/runtime/scripts/controller-evidence.mjs --mode receipt
+        env:
+          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+          BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
+            [{"id":"resolve-runtime","status":"${{ needs.trust-gate.result }}"},{"id":"resolve-source","status":"${{ needs.resolve-source.result }}"},{"id":"anchored-release-preflight","status":"${{ needs.anchored-release-preflight.result }}"},{"id":"build","status":"${{ (needs.build-native.result == 'failure' || needs.build-linux-container.result == 'failure' || needs.relay-artifacts.result == 'failure') && 'failure' || (needs.build-native.result == 'cancelled' || needs.build-linux-container.result == 'cancelled' || needs.relay-artifacts.result == 'cancelled') && 'cancelled' || (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && 'success' || 'skipped' }}"},{"id":"verify","status":"success"},{"id":"aggregate","status":"success"}]
+          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: '[{"kind":"anchored-version-material","path":".buildchain/anchored-version-material/anchored-version-material.json"},{"kind":"platform-manifests","path":".buildchain/artifacts/build-summary.json"},{"kind":"build-summary","path":".buildchain/artifacts/build-summary.json"}]'
+          BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: ${{ inputs.artifact-name }}-release-candidate-controller-receipt-${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/release-candidate-receipt.json
+
+      - name: Upload build controller receipt for release-candidate passport
+        if: ${{ steps.names.outputs.release-candidate-enabled == 'true' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-release-candidate-controller-receipt-${{ needs.resolve-source.outputs.publish-source-sha }}
+          path: .buildchain/controller/release-candidate-receipt.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Generate release candidate passport
+        id: release-candidate
+        if: ${{ steps.names.outputs.release-candidate-enabled == 'true' }}
+        run: node .buildchain/runtime/scripts/generate-release-candidate-passport.mjs
+        env:
+          BUILDCHAIN_BUILD_SUMMARY_PATH: .buildchain/artifacts/build-summary.json
+          BUILDCHAIN_RC_PASSPORT_PATH: .buildchain/artifacts/release-candidate-passport.json
+          BUILDCHAIN_RC_TARGET_CHANNEL: ${{ steps.names.outputs.release-candidate-target-channel }}
+          BUILDCHAIN_RC_VERSION: ${{ needs.resolve-source.outputs.publish-source-consumer-version }}
+          BUILDCHAIN_RC_SOURCE_HEAD_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_RC_MERGE_REF_SHA: ${{ github.sha }}
+          BUILDCHAIN_RC_SOURCE_TREE_HASH: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
+          BUILDCHAIN_RUNTIME_REF: ${{ needs.trust-gate.outputs.buildchain-runtime-ref }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_WORKFLOW_SHELL_REF: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-ref }}
+          BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          BUILDCHAIN_GATE_PROFILE_AGGREGATE_JSON: ${{ inputs.gate-profile-aggregate-json }}
+          BUILDCHAIN_CONTROLLER_RECEIPT_JSON: ${{ steps.release-candidate-controller-receipt.outputs.controller-receipt-json }}
+          BUILDCHAIN_PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
+          BUILDCHAIN_PULL_REQUEST_URL: ${{ github.event.pull_request.html_url }}
+          BUILDCHAIN_PULL_REQUEST_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          BUILDCHAIN_PULL_REQUEST_BASE_REF: ${{ github.event.pull_request.base.ref }}
 
       - name: Upload aggregate build summary
         uses: actions/upload-artifact@v7.0.1
@@ -314,3 +1938,102 @@ jobs:
           path: .buildchain/artifacts/build-summary.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload aggregate diagnostics summary
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.names.outputs.diagnostics-summary-artifact-name }}
+          path: .buildchain/artifacts/diagnostics-summary.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Upload release candidate passport
+        if: ${{ steps.names.outputs.release-candidate-enabled == 'true' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.names.outputs.release-candidate-passport-artifact-name }}
+          path: .buildchain/artifacts/release-candidate-passport.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+  controller-receipt:
+    name: Finalize build controller evidence
+    runs-on: ubuntu-24.04
+    needs:
+      - trust-gate
+      - resolve-source
+      - controller-plan
+      - anchored-release-preflight
+      - build-native
+      - build-linux-container
+      - relay-artifacts
+      - summarize
+    if: ${{ always() && needs.controller-plan.result == 'success' }}
+    outputs:
+      controller-receipt-artifact: ${{ steps.names.outputs.controller-receipt-artifact }}
+      controller-receipt-json: ${{ steps.receipt.outputs.controller-receipt-json }}
+      controller-receipt-digest: ${{ steps.receipt.outputs.controller-receipt-digest }}
+      controller-receipt-status: ${{ steps.receipt.outputs.controller-receipt-status }}
+    steps:
+      - name: Checkout build controller workflow shell
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-sha }}
+          path: .buildchain/controller-runtime
+          persist-credentials: false
+
+      - name: Download build controller plan
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ needs.controller-plan.outputs.controller-plan-artifact }}
+          path: .buildchain/controller
+
+      - name: Download aggregate build summary
+        if: ${{ needs.summarize.result == 'success' }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ needs.summarize.outputs.summary-artifact-name }}
+          path: .buildchain/controller/evidence
+
+      - name: Download anchored version material evidence
+        if: ${{ needs.anchored-release-preflight.result == 'success' }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ needs.anchored-release-preflight.outputs.evidence-artifact }}
+          path: .buildchain/controller/evidence
+
+      - name: Create build controller receipt
+        id: receipt
+        run: node .buildchain/controller-runtime/scripts/controller-evidence.mjs --mode receipt
+        env:
+          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+          BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
+            [{"id":"resolve-runtime","status":"${{ needs.trust-gate.result }}"},{"id":"resolve-source","status":"${{ needs.resolve-source.result }}"},{"id":"anchored-release-preflight","status":"${{ needs.anchored-release-preflight.result }}"},{"id":"build","status":"${{ (needs.build-native.result == 'failure' || needs.build-linux-container.result == 'failure' || needs.relay-artifacts.result == 'failure') && 'failure' || (needs.build-native.result == 'cancelled' || needs.build-linux-container.result == 'cancelled' || needs.relay-artifacts.result == 'cancelled') && 'cancelled' || (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && 'success' || 'skipped' }}"},{"id":"verify","status":"${{ needs.summarize.result }}"},{"id":"aggregate","status":"${{ needs.summarize.result }}"}]
+          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ needs.summarize.result == 'success' && '[{"kind":"anchored-version-material","path":".buildchain/controller/evidence/anchored-version-material.json"},{"kind":"platform-manifests","path":".buildchain/controller/evidence/build-summary.json"},{"kind":"build-summary","path":".buildchain/controller/evidence/build-summary.json"}]' || '[]' }}
+          BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ needs.summarize.result == 'success' && '' || 'controller-incomplete' }}
+          BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Build or verification did not complete successfully
+          BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: ${{ inputs.artifact-name }}-controller-receipt-${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/receipt.json
+
+      - name: Resolve build controller receipt artifact
+        id: names
+        run: echo "controller-receipt-artifact=${ARTIFACT_NAME}-controller-receipt-${SOURCE_SHA}" >> "$GITHUB_OUTPUT"
+        env:
+          ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+
+      - name: Upload build controller receipt
+        if: ${{ always() && steps.receipt.outcome == 'success' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.names.outputs.controller-receipt-artifact }}
+          path: .buildchain/controller/receipt.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Enforce qualifying build controller receipt
+        if: ${{ steps.receipt.outputs.controller-receipt-qualifying != 'true' }}
+        run: |
+          echo "::error::build controller receipt is not qualifying: ${{ steps.receipt.outputs.controller-receipt-status }}"
+          exit 1

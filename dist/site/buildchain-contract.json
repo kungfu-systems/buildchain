@@ -1,0 +1,2920 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-runtime-contract-world",
+  "product": {
+    "name": "Buildchain",
+    "package": "@kungfu-tech/buildchain",
+    "version": "2.14.17",
+    "repository": "https://github.com/kungfu-systems/buildchain"
+  },
+  "majorLine": "v2",
+  "compatibilityPolicy": "major-compatible",
+  "surfaces": [
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "reusable-build",
+      "kind": "workflow",
+      "path": ".github/workflows/.build.yml",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/.build.yml@v2",
+      "requiredInputs": [],
+      "requiredOutputs": [
+        "buildchain-runtime-sha",
+        "publish-source-sha",
+        "build-summary-artifact",
+        "release-candidate-artifact"
+      ],
+      "breakingDefaults": {
+        "buildchainRefDefault": "workflow-shell-ref-or-v2",
+        "promoteOnlyHeavyBuildPolicy": "pr-stage-only"
+      },
+      "optionalInputs": [
+        "buildchain-ref",
+        "runner-preset",
+        "platforms-json",
+        "release-candidate",
+        "artifact-transfer-mode",
+        "checkout-cache-mode",
+        "checkout-cache-fallback",
+        "checkout-cache-timeout-seconds",
+        "checkout-cache-fetch-attempts",
+        "buildchain-contract-lock-path",
+        "buildchain-contract-drift-issue-mode"
+      ],
+      "guarantees": [
+        "runtime floating refs are resolved to immutable SHAs before matrix jobs",
+        "publish source locks are verified before heavy build jobs",
+        "release-candidate builds do not publish registry artifacts",
+        "contract drift is checked before heavy build jobs for stable floating refs",
+        "retryable GitHub fallback fetches use a bounded attempt budget before exact source SHA and tree verification"
+      ],
+      "breakingDigest": "sha256:a6a35370d6b0d0f46e1b2712dcc01961fe53c2febde95409a27a485c10a36650",
+      "auditDigest": "sha256:d393c10fe8c970730c19495e2e7db7dfd802ebb628f1a2de835aa918a990e2cc"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "channel-build-router",
+      "kind": "workflow",
+      "path": ".github/workflows/build.yml",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/build.yml@v2",
+      "requiredInputs": [],
+      "requiredOutputs": [
+        "buildchain-channel",
+        "buildchain-runtime-sha",
+        "build-summary-artifact"
+      ],
+      "breakingDefaults": {
+        "channelDefault": "auto",
+        "developmentDefault": "alpha",
+        "prereleaseDefault": "alpha",
+        "stableReleaseDefault": "stable",
+        "ambiguousReleasePolicy": "fail-closed"
+      },
+      "optionalInputs": [
+        "buildchain-channel",
+        "buildchain-ref",
+        "buildchain-alpha-contract-lock-path",
+        "buildchain-stable-contract-lock-path",
+        "buildchain-contract-lock-path"
+      ],
+      "guarantees": [
+        "consumers declare one build job while Buildchain selects the matching generic major channel",
+        "development and prerelease intent select vN-alpha",
+        "stable release intent selects vN",
+        "ambiguous release-like intent fails before build jobs",
+        "explicit train and exact-SHA overrides retain the reusable build trust gate",
+        "alpha and stable channel selections use separate consumer contract locks by default"
+      ],
+      "breakingDigest": "sha256:c4597dfa89e1a58f1023905092b849644f5c080abf150aeba9c7e1cd5ed43962",
+      "auditDigest": "sha256:7804f03ac13edf2ffda40774c17d95e24416a97ee4b9091fc28b6cc32daea46e"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "release-candidate-promote",
+      "kind": "workflow",
+      "path": ".github/workflows/release-candidate-promote.yml",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v2",
+      "requiredInputs": [
+        "channel"
+      ],
+      "requiredOutputs": [
+        "promoted-sha",
+        "built-source-sha",
+        "release-candidate-artifact"
+      ],
+      "breakingDefaults": {
+        "channelDefault": "auto",
+        "alphaShellDefault": "v2-alpha",
+        "stableShellDefault": "v2",
+        "promoteOnlyReleaseCandidate": true,
+        "requiredStatusCheck": "check / check"
+      },
+      "optionalInputs": [
+        "buildchain-channel",
+        "buildchain-ref",
+        "buildchain-alpha-contract-lock-path",
+        "buildchain-stable-contract-lock-path",
+        "release-candidate-workflow-file",
+        "release-candidate-workflow-name",
+        "publish-required-artifacts-json",
+        "release-passport-kfd-1-witness-jsons",
+        "release-passport-kfd-2-claim-jsons",
+        "release-passport-kfd-3-prebuild-witness-jsons",
+        "release-passport-kfd-3-artifact-witness-jsons",
+        "release-passport-kfd-3-artifact-verify-command",
+        "release-passport-invariant-passport-jsons",
+        "release-passport-invariant-passport-command",
+        "buildchain-contract-lock-path",
+        "buildchain-contract-drift-issue-mode",
+        "github-release",
+        "github-release-title",
+        "github-release-notes"
+      ],
+      "publishArtifactSchema": {
+        "requirementDigest": "optional-before-publish-required-after-publish",
+        "exactRefResolution": "missing requirement refs resolve to the promoted exact version",
+        "exactRefTemplate": "optional ref_template expands one {version} after exact version selection",
+        "provenanceActions": [
+          "built",
+          "reused"
+        ],
+        "provenanceCoordinates": [
+          "content",
+          "release"
+        ],
+        "verificationFields": [
+          "public_manifest",
+          "ref",
+          "digest",
+          "platform",
+          "contract_major",
+          "parent_digest",
+          "smoke",
+          "evidence"
+        ]
+      },
+      "guarantees": [
+        "one declarative promotion job selects matching alpha or stable workflow shell, runtime, and contract lock",
+        "router, shell, runtime, lock, publication channel, target ref, and override identities are bound before candidate download",
+        "train and exact-SHA runtime overrides remain limited to trusted workflow_dispatch actors",
+        "promotion reuses PR-stage release-candidate artifacts",
+        "promotion does not run the heavy native build matrix",
+        "built source and promotion channel SHA are recorded separately",
+        "contract drift is checked before release-candidate resolution and publish",
+        "publish-gate source locks are created by the wrapper and enforced by promote-buildchain-ref before publish side effects",
+        "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes"
+      ],
+      "breakingDigest": "sha256:1f476fb9a4854b362c4b24cef89a3c7675d7d63baf3bc828d7b8ae7d2787cead",
+      "auditDigest": "sha256:0fbb4713eead1951f01ec1cf7896cac9ab25cd73986573b3c3227ad133550f69"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "advanced-release-candidate-promote",
+      "kind": "workflow",
+      "path": ".github/workflows/.release-candidate-promote.yml",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v2",
+      "requiredInputs": [
+        "channel"
+      ],
+      "requiredOutputs": [
+        "promoted-sha",
+        "built-source-sha",
+        "release-candidate-artifact"
+      ],
+      "breakingDefaults": {
+        "promoteOnlyReleaseCandidate": true,
+        "requiredStatusCheck": "check / check"
+      },
+      "optionalInputs": [
+        "buildchain-ref",
+        "buildchain-contract-lock-path",
+        "promotion-router-ref",
+        "promotion-router-sha",
+        "promotion-shell-ref",
+        "promotion-shell-sha",
+        "promotion-runtime-ref",
+        "promotion-runtime-sha",
+        "promotion-contract-lock-path",
+        "promotion-contract-lock-digest",
+        "promotion-publication-channel",
+        "promotion-target-ref",
+        "promotion-override-used"
+      ],
+      "guarantees": [
+        "advanced promotion verifies routed shell, runtime, lock, publication channel, and target bindings before candidate resolution",
+        "promotion reuses PR-stage release-candidate artifacts and does not run the heavy native build matrix"
+      ],
+      "breakingDigest": "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0",
+      "auditDigest": "sha256:a68b535582028c1dd708e447a43f5083106074df092b74528dfa16db4a4f4153"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "web-surface",
+      "kind": "workflow",
+      "path": ".github/workflows/.web-surface.yml",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/.web-surface.yml@v2",
+      "requiredInputs": [],
+      "requiredOutputs": [
+        "buildchain-runtime-sha",
+        "web-surface-channel",
+        "web-surface-url",
+        "web-surface-manifest-json"
+      ],
+      "breakingDefaults": {
+        "buildchainRefDefault": "workflow-shell-ref-or-v2",
+        "contractCompatibilityPolicy": "major-compatible",
+        "breakingDriftPolicy": "fail-closed-before-build"
+      },
+      "optionalInputs": [
+        "buildchain-ref",
+        "buildchain-contract-lock-path",
+        "buildchain-contract-compatibility-policy",
+        "buildchain-contract-drift-issue-mode",
+        "build-command",
+        "verify-command",
+        "artifact-path",
+        "preview-apply",
+        "staging-apply",
+        "production-apply",
+        "production-release-on-main"
+      ],
+      "guarantees": [
+        "runtime floating refs are resolved to immutable SHAs before caller build and deploy work",
+        "contract drift is checked before caller build, web-surface render, deploy planning, and apply side effects",
+        "compatible contract drift continues and produces a consumer issue or summary",
+        "breaking contract drift fails closed before rendering, deployment, or release publication",
+        "effective channel and preview alias are injected before caller build and verify commands",
+        "channel-aware artifact host facts are checked against the deploy plan before adapter side effects"
+      ],
+      "breakingDigest": "sha256:da569f90374e878948e3d5160ed9929338ce0572473ca8ee54867b0fe1aaeace",
+      "auditDigest": "sha256:4a7c696ec399c14aa3170fdd24adac0d624bd33db6a2639c489e2b58726c190b"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "promote-buildchain-ref-action",
+      "kind": "action",
+      "path": "actions/promote-buildchain-ref/action.yml",
+      "publicRef": "kungfu-systems/buildchain/actions/promote-buildchain-ref@v2",
+      "requiredInputs": [
+        "token",
+        "sha",
+        "target-ref"
+      ],
+      "requiredOutputs": [
+        "sha"
+      ],
+      "breakingDefaults": {
+        "requireGovernance": false,
+        "releasePassport": true,
+        "requiredStatusCheck": "check / check"
+      },
+      "optionalInputs": [
+        "publish-transaction",
+        "publish-required-artifacts-json",
+        "promote-only-release-candidate",
+        "release-passport-kfd-1-witness-jsons",
+        "release-passport-kfd-2-claim-jsons",
+        "release-passport-kfd-3-prebuild-witness-jsons",
+        "release-passport-kfd-3-artifact-witness-jsons",
+        "release-passport-kfd-3-artifact-verify-command",
+        "release-passport-invariant-passport-jsons",
+        "release-passport-invariant-passport-command",
+        "github-release",
+        "github-release-title",
+        "github-release-notes"
+      ],
+      "publishArtifactSchema": {
+        "requirementDigest": "optional-before-publish-required-after-publish",
+        "exactRefResolution": "missing requirement refs resolve to the promoted exact version",
+        "exactRefTemplate": "optional ref_template expands one {version} after exact version selection",
+        "provenanceActions": [
+          "built",
+          "reused"
+        ],
+        "provenanceCoordinates": [
+          "content",
+          "release"
+        ],
+        "verificationFields": [
+          "public_manifest",
+          "ref",
+          "digest",
+          "platform",
+          "contract_major",
+          "parent_digest",
+          "smoke",
+          "evidence"
+        ]
+      },
+      "guarantees": [
+        "protected release refs and durable release-state are finalized by Buildchain",
+        "release passport finalization is idempotent after publish side effects",
+        "publish transactions can require a resolved publish-gate source lock to prevent floating-ref drift",
+        "semver GitHub Releases are created or updated only after transaction completion, with prerelease/latest metadata bound to the authoritative publication channel and tag syntax retained as the fallback for ordinary callers"
+      ],
+      "compatibleBreakingDigests": [
+        "sha256:a59f0910e6df842e7699139472e5dd69ac2fdd7f7213bf2cb346d1d622556874"
+      ],
+      "breakingDigest": "sha256:6147c0a8d5c36bfaa6021871574e1fc28192a3f1b8cfdae4d24ef3059ac1ebda",
+      "auditDigest": "sha256:ff220542fd1cb21fc4780d0bb31eb9f78d44d70746b6c4364483e104b48ae083"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "report-buildchain-issue-action",
+      "kind": "action",
+      "path": "actions/report-buildchain-issue/action.yml",
+      "publicRef": "kungfu-systems/buildchain/actions/report-buildchain-issue@v2",
+      "requiredInputs": [
+        "token"
+      ],
+      "requiredOutputs": [
+        "ok",
+        "action",
+        "issue-url",
+        "fingerprint"
+      ],
+      "breakingDefaults": {
+        "failOnError": false,
+        "mode": "create-or-comment"
+      },
+      "optionalInputs": [
+        "report-kind",
+        "target-repository",
+        "body-file",
+        "comment-cooldown-hours"
+      ],
+      "guarantees": [
+        "issue reporting is fail-soft by default",
+        "GitHub API 429 and 5xx failures are retried",
+        "missing issue permissions produce a copyable summary fallback"
+      ],
+      "breakingDigest": "sha256:575a2cb02cdb2e61bb2e84d5bbaaf64b430aa5d7936645660b592de4549d81b0",
+      "auditDigest": "sha256:512ccfeb7deedd950da87b112d25aa8667e081775b3b604f121374d25420eec1"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "release-passport-schema",
+      "kind": "schema",
+      "path": "packages/core/release-passport.js",
+      "requiredInputs": [
+        "buildchain.release.json"
+      ],
+      "requiredOutputs": [
+        "check-report.json"
+      ],
+      "breakingDefaults": {
+        "schemaVersion": 1,
+        "contract": "kungfu-buildchain-release-passport"
+      },
+      "guarantees": [
+        "release passport verification fails closed for malformed required evidence",
+        "release-state SHA is recorded as a durable audit entrance"
+      ],
+      "breakingDigest": "sha256:b627e1b2ece9b6049517a942c5139e342e6077cdd3d8962d61cef8481b1f70ad",
+      "auditDigest": "sha256:6d30420aa771b3504473cabd5d53c16868cfe267b817cfa446b20eabc153f886"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "kfd-1-release-gate",
+      "kind": "schema",
+      "path": "packages/core/kfd-gate.js",
+      "requiredInputs": [
+        "KFD-1 witness JSON"
+      ],
+      "requiredOutputs": [
+        "kfd-1 release gate evidence"
+      ],
+      "breakingDefaults": {
+        "witnessContract": "kungfu-buildchain-kfd-1-witness-set",
+        "releaseGateContract": "kungfu-buildchain-kfd-1-release-gate"
+      },
+      "guarantees": [
+        "KFD-1 witnesses must include at least one artifact byte surface",
+        "artifact bytes are sha256 checked before passport finalization succeeds",
+        "KFD self contract witnesses record source/artifact hashes, self-hosting boundary, and responsibility state"
+      ],
+      "breakingDigest": "sha256:f46c1f67b94957ad956cf70db59a73fd5690bd67c91edf9c2d0eb8f3d1e3cf8d",
+      "auditDigest": "sha256:f31691f36f2a7930798805cb470aff7acd3503799cb72b954c7787b1d8b3eb31"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "kfd-2-release-trust-passport-audit",
+      "kind": "schema",
+      "path": "packages/core/release-passport.js",
+      "requiredInputs": [
+        "public release claim evidence"
+      ],
+      "requiredOutputs": [
+        "kfd-2 release trust passport audit"
+      ],
+      "breakingDefaults": {
+        "releaseTrustPassportContract": "kungfu-buildchain-kfd-2-release-trust-passport-audit"
+      },
+      "guarantees": [
+        "public release claims must bind declared sources, machine evidence, hashes, artifacts, verification, audit boundary, responsibility, and residual risk",
+        "unbound public claims fail release passport verification",
+        "prose-only public claims downgrade the release trust passport audit"
+      ],
+      "breakingDigest": "sha256:f0b636eb925ddbf45ff1a8872454ab7b4dd98857cac12bb75217830130e62a16",
+      "auditDigest": "sha256:6d30420aa771b3504473cabd5d53c16868cfe267b817cfa446b20eabc153f886"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "kfd-3-collaboration-interface-release-gate",
+      "kind": "schema",
+      "path": "packages/core/kfd-gate.js",
+      "requiredInputs": [
+        "KFD-3 prebuild witness JSON",
+        "KFD-3 artifact witness JSON or verify command"
+      ],
+      "requiredOutputs": [
+        "kfd-3 collaboration-interface release gate evidence"
+      ],
+      "breakingDefaults": {
+        "prebuildWitnessContract": "kungfu-buildchain-kfd-3-collaboration-interface-prebuild-witness",
+        "artifactWitnessContract": "kungfu-buildchain-kfd-3-collaboration-interface-artifact-witness",
+        "releaseGateContract": "kungfu-buildchain-kfd-3-collaboration-interface-release-gate"
+      },
+      "guarantees": [
+        "KFD-3 pre-build witnesses must declare participant-facing public surfaces",
+        "artifact witnesses must not expose undeclared public participant-facing surfaces",
+        "collaborationInterface.digest mismatches fail passport verification",
+        "KFD repository self-verification can declare docs, schemas, standards metadata, package exports, and site-consumption contracts",
+        "KFD-3 passports expose releaseStatus, witness hashes, declared capability verification, reverse audit boundary, residual risk, and responsibility state"
+      ],
+      "breakingDigest": "sha256:33654f3444c893754aacc42dde3051f0a371bd17c6ef7c657c579a07159cd7c1",
+      "auditDigest": "sha256:f31691f36f2a7930798805cb470aff7acd3503799cb72b954c7787b1d8b3eb31"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "buildchain-cli",
+      "kind": "cli",
+      "path": "bin/buildchain.mjs",
+      "requiredInputs": [],
+      "requiredOutputs": [],
+      "breakingDefaults": {
+        "binary": "buildchain",
+        "moduleSystem": "esm"
+      },
+      "optionalInputs": [
+        "validate",
+        "lifecycle",
+        "badges readme",
+        "homebrew update-formula",
+        "homebrew check",
+        "collect github-release",
+        "verify release-passport",
+        "release-propagation",
+        "infra-contract"
+      ],
+      "guarantees": [
+        "CLI commands are stable within the major line unless the contract major changes",
+        "README badge block checks and writes are generated from machine-readable repository facts"
+      ],
+      "breakingDigest": "sha256:90a73892b2d6c214048448d5f45df75639bdf7b7e8fefd9c596e04b087407bcc",
+      "auditDigest": "sha256:0e33a9c24a2a23e5657d06ee7013454ada97b141a3dbae0c10490554bb74bf1f"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "homebrew-distribution-index",
+      "kind": "node-api",
+      "path": "packages/core/homebrew.js",
+      "requiredInputs": [
+        "upstream release passport"
+      ],
+      "requiredOutputs": [
+        "kungfu-buildchain-homebrew-tap-facts",
+        "kungfu-buildchain-homebrew-tap-manifest",
+        "Formula/*.rb"
+      ],
+      "breakingDefaults": {
+        "projectType": "distribution-index",
+        "tapManifest": "tap-manifest.json",
+        "kfdPassedSource": "verified upstream release passport"
+      },
+      "optionalInputs": [
+        "buildchain.toml [project] type=distribution-index",
+        "Formula path",
+        "manifest path",
+        "release passport URL or local path"
+      ],
+      "guarantees": [
+        "Formula metadata is a deterministic projection of upstream release passport evidence",
+        "tap-manifest.json is checked against upstream version, URLs, SHA-256 digests, and KFD status",
+        "KFD passed claims fail closed unless the upstream release passport verifies the corresponding section",
+        "CLI and JavaScript callers use the same Node API implementation"
+      ],
+      "breakingDigest": "sha256:148c0387ff4cea76433bbde80cd9d77c5aa67e1a29856ced33e4d819366f2213",
+      "auditDigest": "sha256:0e978219bd6fca754d80a616d538d5825b116eec78b65857bbe5063b8c84d933"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "readme-badge-facts",
+      "kind": "node-api",
+      "path": "packages/core/readme-badges.js",
+      "requiredInputs": [
+        "repository checkout"
+      ],
+      "requiredOutputs": [
+        "kungfu-buildchain-readme-badge-facts"
+      ],
+      "breakingDefaults": {
+        "markerStart": "<!-- buildchain:badges:start -->",
+        "markerEnd": "<!-- buildchain:badges:end -->",
+        "kfdPassedSource": "verified repository-owned release passport"
+      },
+      "optionalInputs": [
+        "buildchain.toml [badges]",
+        "release passport URL or local path",
+        "workflow file list",
+        "platform declarations"
+      ],
+      "guarantees": [
+        "README badge Markdown is a deterministic projection of badge facts",
+        "KFD passed badges require the repository's own verified release passport section",
+        "unreleased repositories downgrade KFD status to explicit non-passed declarations",
+        "CLI and JavaScript callers use the same Node API implementation"
+      ],
+      "breakingDigest": "sha256:bcd72ad6dfba8013c96f8b2f7b0a307d2e7713972a1219348f0d5ecc493939a0",
+      "auditDigest": "sha256:13914ebabbc92ed49dd842c2aa51cc99d72b0732423c0b53a030c6458a0cd9d8"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "agent-manual-registry",
+      "kind": "site-contract",
+      "path": "dist/site/manual-registry.json",
+      "requiredInputs": [],
+      "requiredOutputs": [
+        "manuals",
+        "requiredAgentManuals"
+      ],
+      "breakingDefaults": {
+        "contract": "kungfu-buildchain-agent-manual-registry"
+      },
+      "guarantees": [
+        "agent-facing packaged docs are enumerable from the npm package site bundle",
+        "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
+      ],
+      "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
+      "auditDigest": "sha256:0fb186b28d135cf5a22bfdcadee21ac37b8eee72899e53e44a3ca17b999b0568"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "node-api-registry",
+      "kind": "site-contract",
+      "path": "dist/site/node-api-registry.json",
+      "requiredInputs": [],
+      "requiredOutputs": [
+        "exports"
+      ],
+      "breakingDefaults": {
+        "contract": "kungfu-buildchain-node-api-registry",
+        "moduleSystem": "module"
+      },
+      "guarantees": [
+        "public Node import surfaces are derived from package.json exports",
+        "agents can discover supported Node APIs without importing internal file paths"
+      ],
+      "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
+      "auditDigest": "sha256:9b3996940294ff7e8d2f6eb9a6f63451fb5bad2a9668a1e8c953199360b5c1b4"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "controller:source-check",
+      "kind": "controller",
+      "path": ".github/workflows/check.yml",
+      "requiredInputs": [],
+      "requiredOutputs": [
+        "controller-plan-json",
+        "controller-plan-digest",
+        "controller-receipt-json",
+        "controller-receipt-digest",
+        "controller-receipt-status"
+      ],
+      "breakingDefaults": {
+        "evidenceContract": "buildchain.controller-evidence/v1",
+        "descriptorVersion": 1,
+        "workflowPath": ".github/workflows/check.yml",
+        "requiredStages": [
+          "resolve-runtime",
+          "checkout-source",
+          "install",
+          "check",
+          "aggregate"
+        ],
+        "capabilities": [
+          "source-acceptance",
+          "lifecycle-check"
+        ],
+        "evidenceRequirements": [
+          "lifecycle-manifest",
+          "lifecycle-summary",
+          "controller-receipt"
+        ],
+        "inputClassificationPolicy": "buildchain-controller-input-policy/v1"
+      },
+      "optionalInputs": [
+        "buildchain-ref",
+        "buildchain-repository",
+        "mode",
+        "node-version",
+        "require-version-state",
+        "upload-artifacts",
+        "working-directory"
+      ],
+      "controllerDescriptor": {
+        "contract": "buildchain.controller-descriptor/v1",
+        "digest": "sha256:373723a73d188194d389dee04c394d3b79cb0c016a370f2f5d0f60979a02ed48",
+        "registryDigest": "sha256:40a7362d72303c106c064126881dae0716ed2d1902a8cac43f409af78bd7cddf",
+        "inputClassifications": {
+          "buildchain-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "buildchain-repository": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "mode": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "node-version": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "require-version-state": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "upload-artifacts": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "working-directory": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          }
+        }
+      },
+      "guarantees": [
+        "plans bind exact consumer source SHA, exact Buildchain runtime SHA, and the runtime contract digest",
+        "receipts bind the plan digest and preserve pass, fail, skip, and partial stage outcomes",
+        "redacted input values are never serialized and digest-only input values are never emitted in plaintext",
+        "missing receipts are non-qualifying and must not be represented as a successful controller run"
+      ],
+      "breakingDigest": "sha256:d4bd0f2a1921bfed71a4d9104d45934555bde74a5c189f93ad79f37074c02b87",
+      "auditDigest": "sha256:aa1727de29ad42d50ccc6e6cb8923a7b532da0f6ce6e53372d63801a120de65e"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "controller:build-lifecycle",
+      "kind": "controller",
+      "path": ".github/workflows/.build.yml",
+      "requiredInputs": [],
+      "requiredOutputs": [
+        "controller-plan-json",
+        "controller-plan-digest",
+        "controller-receipt-json",
+        "controller-receipt-digest",
+        "controller-receipt-status"
+      ],
+      "breakingDefaults": {
+        "evidenceContract": "buildchain.controller-evidence/v1",
+        "descriptorVersion": 1,
+        "workflowPath": ".github/workflows/.build.yml",
+        "requiredStages": [
+          "resolve-runtime",
+          "resolve-source",
+          "build",
+          "verify",
+          "aggregate"
+        ],
+        "capabilities": [
+          "source-lock",
+          "lifecycle-build",
+          "lifecycle-verify",
+          "artifact-admission"
+        ],
+        "evidenceRequirements": [
+          "platform-manifests",
+          "build-summary",
+          "controller-receipt"
+        ],
+        "inputClassificationPolicy": "buildchain-controller-input-policy/v1"
+      },
+      "optionalInputs": [
+        "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
+        "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
+        "BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN",
+        "artifact-name",
+        "artifact-name-template",
+        "artifact-paths",
+        "artifact-relay-s3-bucket",
+        "artifact-relay-s3-download-role-arn",
+        "artifact-relay-s3-oidc-audience",
+        "artifact-relay-s3-prefix",
+        "artifact-relay-s3-region",
+        "artifact-relay-s3-role-arn",
+        "artifact-relay-s3-upload-role-arn",
+        "artifact-retention-days",
+        "artifact-transfer-mode",
+        "build-command",
+        "buildchain-contract-compatibility-policy",
+        "buildchain-contract-drift-issue-mode",
+        "buildchain-contract-lock-path",
+        "buildchain-ref",
+        "buildchain-repository",
+        "cargo-registry-index",
+        "checkout-cache-fallback",
+        "checkout-cache-fetch-attempts",
+        "checkout-cache-github-timeout-seconds",
+        "checkout-cache-mirror-url-template",
+        "checkout-cache-mode",
+        "checkout-cache-reference-repository-template",
+        "checkout-cache-timeout-seconds",
+        "expected-artifacts-json",
+        "gate-profile-aggregate-json",
+        "install-command",
+        "kfd-agent-hub",
+        "lifecycle-timeout-minutes",
+        "linux-container-image",
+        "linux-container-preset",
+        "node-version",
+        "platforms-json",
+        "process-sample-interval-ms",
+        "process-summary-path",
+        "publish-anchor-request-json",
+        "publish-channel",
+        "publish-refs-json",
+        "publish-registry",
+        "publish-source-ref",
+        "release-candidate",
+        "requested-parallelism",
+        "require-build",
+        "require-install",
+        "require-trusted-event",
+        "require-verify",
+        "runner-preset",
+        "rust-toolchain",
+        "rustup-dist-server",
+        "rustup-update-root",
+        "sample-process-tree",
+        "setup-node",
+        "setup-rust",
+        "shifu-cache-profile-digest",
+        "shifu-cache-profile-ref",
+        "untrusted-policy",
+        "verify-command",
+        "working-directory"
+      ],
+      "controllerDescriptor": {
+        "contract": "buildchain.controller-descriptor/v1",
+        "digest": "sha256:b3e101ac0b0f75aebff59b2129e4eff512c38d4d0a34a0a3785e8ea8f998846a",
+        "registryDigest": "sha256:40a7362d72303c106c064126881dae0716ed2d1902a8cac43f409af78bd7cddf",
+        "inputClassifications": {
+          "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN": {
+            "classification": "redacted",
+            "source": "workflow-call-secret"
+          },
+          "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN": {
+            "classification": "redacted",
+            "source": "workflow-call-secret"
+          },
+          "BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN": {
+            "classification": "redacted",
+            "source": "workflow-call-secret"
+          },
+          "artifact-name": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "artifact-name-template": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "artifact-paths": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "artifact-relay-s3-bucket": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "artifact-relay-s3-download-role-arn": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "artifact-relay-s3-oidc-audience": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "artifact-relay-s3-prefix": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "artifact-relay-s3-region": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "artifact-relay-s3-role-arn": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "artifact-relay-s3-upload-role-arn": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "artifact-retention-days": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "artifact-transfer-mode": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "build-command": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "buildchain-contract-compatibility-policy": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "buildchain-contract-drift-issue-mode": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "buildchain-contract-lock-path": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "buildchain-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "buildchain-repository": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "cargo-registry-index": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "checkout-cache-fallback": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "checkout-cache-fetch-attempts": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "checkout-cache-github-timeout-seconds": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "checkout-cache-mirror-url-template": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "checkout-cache-mode": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "checkout-cache-reference-repository-template": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "checkout-cache-timeout-seconds": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "expected-artifacts-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "gate-profile-aggregate-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "install-command": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "kfd-agent-hub": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "lifecycle-timeout-minutes": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "linux-container-image": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "linux-container-preset": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "node-version": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "platforms-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "process-sample-interval-ms": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "process-summary-path": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "publish-anchor-request-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "publish-channel": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "publish-refs-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "publish-registry": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "publish-source-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "release-candidate": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "requested-parallelism": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "require-build": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "require-install": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "require-trusted-event": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "require-verify": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "runner-preset": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "rust-toolchain": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "rustup-dist-server": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "rustup-update-root": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "sample-process-tree": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "setup-node": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "setup-rust": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "shifu-cache-profile-digest": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "shifu-cache-profile-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "untrusted-policy": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "verify-command": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "working-directory": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          }
+        }
+      },
+      "guarantees": [
+        "plans bind exact consumer source SHA, exact Buildchain runtime SHA, and the runtime contract digest",
+        "receipts bind the plan digest and preserve pass, fail, skip, and partial stage outcomes",
+        "redacted input values are never serialized and digest-only input values are never emitted in plaintext",
+        "missing receipts are non-qualifying and must not be represented as a successful controller run"
+      ],
+      "breakingDigest": "sha256:e264a79f9f399038c2fcfd21e4168c68c2e1485ee5c651c02242a02b622ac2be",
+      "auditDigest": "sha256:d393c10fe8c970730c19495e2e7db7dfd802ebb628f1a2de835aa918a990e2cc"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "controller:build-channel-router",
+      "kind": "controller",
+      "path": ".github/workflows/build.yml",
+      "requiredInputs": [],
+      "requiredOutputs": [
+        "controller-plan-json",
+        "controller-plan-digest",
+        "controller-receipt-json",
+        "controller-receipt-digest",
+        "controller-receipt-status"
+      ],
+      "breakingDefaults": {
+        "evidenceContract": "buildchain.controller-evidence/v1",
+        "descriptorVersion": 1,
+        "workflowPath": ".github/workflows/build.yml",
+        "requiredStages": [
+          "resolve-channel",
+          "build",
+          "aggregate"
+        ],
+        "capabilities": [
+          "channel-selection",
+          "runtime-selection",
+          "build-delegation"
+        ],
+        "evidenceRequirements": [
+          "nested-controller-receipt",
+          "controller-receipt"
+        ],
+        "inputClassificationPolicy": "buildchain-controller-input-policy/v1"
+      },
+      "optionalInputs": [
+        "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
+        "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
+        "BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN",
+        "artifact-name",
+        "artifact-name-template",
+        "artifact-paths",
+        "artifact-relay-s3-bucket",
+        "artifact-relay-s3-download-role-arn",
+        "artifact-relay-s3-oidc-audience",
+        "artifact-relay-s3-prefix",
+        "artifact-relay-s3-region",
+        "artifact-relay-s3-role-arn",
+        "artifact-relay-s3-upload-role-arn",
+        "artifact-retention-days",
+        "artifact-transfer-mode",
+        "build-command",
+        "buildchain-alpha-contract-lock-path",
+        "buildchain-channel",
+        "buildchain-contract-compatibility-policy",
+        "buildchain-contract-drift-issue-mode",
+        "buildchain-contract-lock-path",
+        "buildchain-ref",
+        "buildchain-repository",
+        "buildchain-stable-contract-lock-path",
+        "cargo-registry-index",
+        "checkout-cache-fallback",
+        "checkout-cache-fetch-attempts",
+        "checkout-cache-github-timeout-seconds",
+        "checkout-cache-mirror-url-template",
+        "checkout-cache-mode",
+        "checkout-cache-reference-repository-template",
+        "checkout-cache-timeout-seconds",
+        "expected-artifacts-json",
+        "gate-profile-aggregate-json",
+        "install-command",
+        "kfd-agent-hub",
+        "lifecycle-timeout-minutes",
+        "linux-container-image",
+        "linux-container-preset",
+        "node-version",
+        "platforms-json",
+        "process-sample-interval-ms",
+        "process-summary-path",
+        "publish-anchor-request-json",
+        "publish-channel",
+        "publish-refs-json",
+        "publish-registry",
+        "publish-source-ref",
+        "release-candidate",
+        "requested-parallelism",
+        "require-build",
+        "require-install",
+        "require-trusted-event",
+        "require-verify",
+        "runner-preset",
+        "rust-toolchain",
+        "rustup-dist-server",
+        "rustup-update-root",
+        "sample-process-tree",
+        "setup-node",
+        "setup-rust",
+        "shifu-cache-profile-digest",
+        "shifu-cache-profile-ref",
+        "untrusted-policy",
+        "verify-command",
+        "working-directory"
+      ],
+      "controllerDescriptor": {
+        "contract": "buildchain.controller-descriptor/v1",
+        "digest": "sha256:5ca752570c4180746f09df3fdf5c17e7ce90b04ed06fff362d2a195048024dda",
+        "registryDigest": "sha256:40a7362d72303c106c064126881dae0716ed2d1902a8cac43f409af78bd7cddf",
+        "inputClassifications": {
+          "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN": {
+            "classification": "redacted",
+            "source": "workflow-call-secret"
+          },
+          "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN": {
+            "classification": "redacted",
+            "source": "workflow-call-secret"
+          },
+          "BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN": {
+            "classification": "redacted",
+            "source": "workflow-call-secret"
+          },
+          "artifact-name": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "artifact-name-template": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "artifact-paths": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "artifact-relay-s3-bucket": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "artifact-relay-s3-download-role-arn": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "artifact-relay-s3-oidc-audience": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "artifact-relay-s3-prefix": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "artifact-relay-s3-region": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "artifact-relay-s3-role-arn": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "artifact-relay-s3-upload-role-arn": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "artifact-retention-days": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "artifact-transfer-mode": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "build-command": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "buildchain-alpha-contract-lock-path": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "buildchain-channel": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "buildchain-contract-compatibility-policy": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "buildchain-contract-drift-issue-mode": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "buildchain-contract-lock-path": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "buildchain-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "buildchain-repository": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "buildchain-stable-contract-lock-path": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "cargo-registry-index": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "checkout-cache-fallback": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "checkout-cache-fetch-attempts": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "checkout-cache-github-timeout-seconds": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "checkout-cache-mirror-url-template": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "checkout-cache-mode": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "checkout-cache-reference-repository-template": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "checkout-cache-timeout-seconds": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "expected-artifacts-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "gate-profile-aggregate-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "install-command": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "kfd-agent-hub": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "lifecycle-timeout-minutes": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "linux-container-image": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "linux-container-preset": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "node-version": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "platforms-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "process-sample-interval-ms": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "process-summary-path": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "publish-anchor-request-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "publish-channel": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "publish-refs-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "publish-registry": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "publish-source-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "release-candidate": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "requested-parallelism": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "require-build": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "require-install": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "require-trusted-event": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "require-verify": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "runner-preset": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "rust-toolchain": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "rustup-dist-server": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "rustup-update-root": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "sample-process-tree": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "setup-node": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "setup-rust": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "shifu-cache-profile-digest": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "shifu-cache-profile-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "untrusted-policy": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "verify-command": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "working-directory": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          }
+        }
+      },
+      "guarantees": [
+        "plans bind exact consumer source SHA, exact Buildchain runtime SHA, and the runtime contract digest",
+        "receipts bind the plan digest and preserve pass, fail, skip, and partial stage outcomes",
+        "redacted input values are never serialized and digest-only input values are never emitted in plaintext",
+        "missing receipts are non-qualifying and must not be represented as a successful controller run"
+      ],
+      "breakingDigest": "sha256:d40dd05d7e07473d4b2dc1b62fbb0ed6f06449b4d3a7c44a2e8014313e3c0273",
+      "auditDigest": "sha256:7804f03ac13edf2ffda40774c17d95e24416a97ee4b9091fc28b6cc32daea46e"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "controller:shifu-gate-profile-envelope",
+      "kind": "controller",
+      "path": ".github/workflows/.gate-profile.yml",
+      "requiredInputs": [],
+      "requiredOutputs": [
+        "controller-plan-json",
+        "controller-plan-digest",
+        "controller-receipt-json",
+        "controller-receipt-digest",
+        "controller-receipt-status"
+      ],
+      "breakingDefaults": {
+        "evidenceContract": "buildchain.controller-evidence/v1",
+        "descriptorVersion": 1,
+        "workflowPath": ".github/workflows/.gate-profile.yml",
+        "requiredStages": [
+          "plan",
+          "execute",
+          "aggregate"
+        ],
+        "capabilities": [
+          "shifu-gate-profile-delegation"
+        ],
+        "evidenceRequirements": [
+          "shifu-gate-aggregate",
+          "controller-receipt"
+        ],
+        "inputClassificationPolicy": "buildchain-controller-input-policy/v1"
+      },
+      "optionalInputs": [
+        "artifact-name",
+        "artifact-retention-days",
+        "buildchain-ref",
+        "buildchain-repository",
+        "gate-command-json",
+        "gate-environment-json",
+        "gate-plan-command-json",
+        "gate-profile",
+        "gate-registry",
+        "include-advisory",
+        "node-version",
+        "platforms-json",
+        "require-trusted-event",
+        "runner-preset",
+        "shifu-cache-profile-digest",
+        "shifu-cache-profile-ref",
+        "source-ref",
+        "untrusted-policy",
+        "working-directory"
+      ],
+      "controllerDescriptor": {
+        "contract": "buildchain.controller-descriptor/v1",
+        "digest": "sha256:29569f4b754595792a16742d1c4c63838b54601674a2cb6c96261a72c962dece",
+        "registryDigest": "sha256:40a7362d72303c106c064126881dae0716ed2d1902a8cac43f409af78bd7cddf",
+        "inputClassifications": {
+          "artifact-name": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "artifact-retention-days": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "buildchain-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "buildchain-repository": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "gate-command-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "gate-environment-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "gate-plan-command-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "gate-profile": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "gate-registry": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "include-advisory": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "node-version": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "platforms-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "require-trusted-event": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "runner-preset": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "shifu-cache-profile-digest": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "shifu-cache-profile-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "source-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "untrusted-policy": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "working-directory": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          }
+        }
+      },
+      "guarantees": [
+        "plans bind exact consumer source SHA, exact Buildchain runtime SHA, and the runtime contract digest",
+        "receipts bind the plan digest and preserve pass, fail, skip, and partial stage outcomes",
+        "redacted input values are never serialized and digest-only input values are never emitted in plaintext",
+        "missing receipts are non-qualifying and must not be represented as a successful controller run"
+      ],
+      "breakingDigest": "sha256:5f1868478b7ccd9fb79aea76bc771289d2ca6bd2dccd1abf57575426f1eae5fb",
+      "auditDigest": "sha256:f478f291726cd47d998c37d454d9fc3e97f1d4a45dc60fe756d8c239fa1245bd"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "controller:web-surface",
+      "kind": "controller",
+      "path": ".github/workflows/.web-surface.yml",
+      "requiredInputs": [],
+      "requiredOutputs": [
+        "controller-plan-json",
+        "controller-plan-digest",
+        "controller-receipt-json",
+        "controller-receipt-digest",
+        "controller-receipt-status"
+      ],
+      "breakingDefaults": {
+        "evidenceContract": "buildchain.controller-evidence/v1",
+        "descriptorVersion": 1,
+        "workflowPath": ".github/workflows/.web-surface.yml",
+        "requiredStages": [
+          "resolve-runtime",
+          "plan",
+          "aggregate"
+        ],
+        "capabilities": [
+          "web-build",
+          "web-verify",
+          "deployment-plan",
+          "deployment-apply",
+          "publication-authority"
+        ],
+        "evidenceRequirements": [
+          "web-surface-plan",
+          "controller-receipt"
+        ],
+        "inputClassificationPolicy": "buildchain-controller-input-policy/v1"
+      },
+      "optionalInputs": [
+        "artifact-path",
+        "aws-region",
+        "build-command",
+        "buildchain-contract-compatibility-policy",
+        "buildchain-contract-drift-issue-mode",
+        "buildchain-contract-lock-path",
+        "buildchain-ref",
+        "buildchain-repository",
+        "fail-on-release-pr-error",
+        "node-version",
+        "preview-apply",
+        "preview-aws-role-arn",
+        "preview-cleanup-apply",
+        "preview-comment",
+        "preview-environment",
+        "production-apply",
+        "production-approved",
+        "production-aws-role-arn",
+        "production-environment",
+        "production-release-app-client-id",
+        "production-release-app-id",
+        "production-release-app-private-key",
+        "production-release-branch-channel",
+        "production-release-head-prefix",
+        "production-release-label",
+        "production-release-on-main",
+        "production-release-pr-mode",
+        "production-release-pr-token",
+        "publication-admission-json",
+        "publication-control-plane-audit-json",
+        "publication-expected-json",
+        "publication-gate-aggregate-json",
+        "publication-runner-provenance-json",
+        "publication-used-nonces-json",
+        "release-feedback-actor-privacy",
+        "staging-apply",
+        "staging-aws-role-arn",
+        "staging-environment",
+        "verify-command",
+        "working-directory"
+      ],
+      "controllerDescriptor": {
+        "contract": "buildchain.controller-descriptor/v1",
+        "digest": "sha256:7e6283c8fbeab7a680bae57c9ab9c8eb94aab7400d3ee01c5b9dfdd03f149edb",
+        "registryDigest": "sha256:40a7362d72303c106c064126881dae0716ed2d1902a8cac43f409af78bd7cddf",
+        "inputClassifications": {
+          "artifact-path": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "aws-region": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "build-command": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "buildchain-contract-compatibility-policy": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "buildchain-contract-drift-issue-mode": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "buildchain-contract-lock-path": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "buildchain-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "buildchain-repository": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "fail-on-release-pr-error": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "node-version": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "preview-apply": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "preview-aws-role-arn": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "preview-cleanup-apply": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "preview-comment": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "preview-environment": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "production-apply": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "production-approved": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "production-aws-role-arn": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "production-environment": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "production-release-app-client-id": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "production-release-app-id": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "production-release-app-private-key": {
+            "classification": "redacted",
+            "source": "workflow-call-secret"
+          },
+          "production-release-branch-channel": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "production-release-head-prefix": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "production-release-label": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "production-release-on-main": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "production-release-pr-mode": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "production-release-pr-token": {
+            "classification": "redacted",
+            "source": "workflow-call-input"
+          },
+          "publication-admission-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "publication-control-plane-audit-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "publication-expected-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "publication-gate-aggregate-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "publication-runner-provenance-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "publication-used-nonces-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "release-feedback-actor-privacy": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "staging-apply": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "staging-aws-role-arn": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "staging-environment": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "verify-command": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "working-directory": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          }
+        }
+      },
+      "guarantees": [
+        "plans bind exact consumer source SHA, exact Buildchain runtime SHA, and the runtime contract digest",
+        "receipts bind the plan digest and preserve pass, fail, skip, and partial stage outcomes",
+        "redacted input values are never serialized and digest-only input values are never emitted in plaintext",
+        "missing receipts are non-qualifying and must not be represented as a successful controller run"
+      ],
+      "breakingDigest": "sha256:f14825324a16b51c2e9ed708ebe64e1932e05b6d5e0866f83aea8439decb4a27",
+      "auditDigest": "sha256:4a7c696ec399c14aa3170fdd24adac0d624bd33db6a2639c489e2b58726c190b"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "controller:publication-artifact",
+      "kind": "controller",
+      "path": ".github/workflows/publication-artifact.yml",
+      "requiredInputs": [],
+      "requiredOutputs": [
+        "controller-plan-json",
+        "controller-plan-digest",
+        "controller-receipt-json",
+        "controller-receipt-digest",
+        "controller-receipt-status"
+      ],
+      "breakingDefaults": {
+        "evidenceContract": "buildchain.controller-evidence/v1",
+        "descriptorVersion": 1,
+        "workflowPath": ".github/workflows/publication-artifact.yml",
+        "requiredStages": [
+          "resolve-runtime",
+          "build",
+          "collect",
+          "aggregate"
+        ],
+        "capabilities": [
+          "publication-build",
+          "publication-verify",
+          "artifact-admission"
+        ],
+        "evidenceRequirements": [
+          "publication-manifest",
+          "publication-passport",
+          "controller-receipt"
+        ],
+        "inputClassificationPolicy": "buildchain-controller-input-policy/v1"
+      },
+      "optionalInputs": [
+        "artifact-name",
+        "artifact-paths",
+        "artifact-retention-days",
+        "build-command",
+        "buildchain-contract-compatibility-policy",
+        "buildchain-contract-drift-issue-mode",
+        "buildchain-contract-lock-path",
+        "buildchain-ref",
+        "buildchain-repository",
+        "node-version",
+        "package-name",
+        "prepare-paper-package",
+        "publish-dist-tag",
+        "setup-node",
+        "target-ref",
+        "toolchain-command",
+        "toolchain-digest",
+        "toolchain-image",
+        "toolchain-type",
+        "verify-command",
+        "working-directory"
+      ],
+      "controllerDescriptor": {
+        "contract": "buildchain.controller-descriptor/v1",
+        "digest": "sha256:6b132790b9798e8a5dfbe095701d8e024c160a08bc7c4bd477ee79feef7a9cfd",
+        "registryDigest": "sha256:40a7362d72303c106c064126881dae0716ed2d1902a8cac43f409af78bd7cddf",
+        "inputClassifications": {
+          "artifact-name": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "artifact-paths": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "artifact-retention-days": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "build-command": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "buildchain-contract-compatibility-policy": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "buildchain-contract-drift-issue-mode": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "buildchain-contract-lock-path": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "buildchain-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "buildchain-repository": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "node-version": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "package-name": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "prepare-paper-package": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "publish-dist-tag": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "setup-node": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "target-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "toolchain-command": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "toolchain-digest": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "toolchain-image": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "toolchain-type": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "verify-command": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "working-directory": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          }
+        }
+      },
+      "guarantees": [
+        "plans bind exact consumer source SHA, exact Buildchain runtime SHA, and the runtime contract digest",
+        "receipts bind the plan digest and preserve pass, fail, skip, and partial stage outcomes",
+        "redacted input values are never serialized and digest-only input values are never emitted in plaintext",
+        "missing receipts are non-qualifying and must not be represented as a successful controller run"
+      ],
+      "breakingDigest": "sha256:3f76502666069c2727d23efcfdb08fb80f89ced1955a69e29f11525ae88aca1d",
+      "auditDigest": "sha256:f83405748e500d31a237240438f7f410c1bb2b4ef39ab7323131fa54f38c1a59"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "controller:paper-release",
+      "kind": "controller",
+      "path": ".github/workflows/paper-release.yml",
+      "requiredInputs": [],
+      "requiredOutputs": [
+        "controller-plan-json",
+        "controller-plan-digest",
+        "controller-receipt-json",
+        "controller-receipt-digest",
+        "controller-receipt-status"
+      ],
+      "breakingDefaults": {
+        "evidenceContract": "buildchain.controller-evidence/v1",
+        "descriptorVersion": 1,
+        "workflowPath": ".github/workflows/paper-release.yml",
+        "requiredStages": [
+          "resolve-runtime",
+          "build",
+          "collect",
+          "publication-authority",
+          "publish",
+          "passport",
+          "aggregate"
+        ],
+        "capabilities": [
+          "publication-build",
+          "artifact-admission",
+          "publication-authority",
+          "release-publish",
+          "release-passport"
+        ],
+        "evidenceRequirements": [
+          "publication-manifest",
+          "release-passport",
+          "controller-receipt"
+        ],
+        "inputClassificationPolicy": "buildchain-controller-input-policy/v1"
+      },
+      "optionalInputs": [
+        "artifact-name",
+        "artifact-retention-days",
+        "branch-protection-bypass-apps",
+        "branch-protection-bypass-teams",
+        "branch-protection-bypass-users",
+        "build-command",
+        "buildchain-contract-compatibility-policy",
+        "buildchain-contract-drift-issue-mode",
+        "buildchain-contract-lock-path",
+        "buildchain-ref",
+        "buildchain-repository",
+        "dry-run",
+        "github-release",
+        "github-release-notes",
+        "github-release-title",
+        "node-version",
+        "package-name",
+        "publication-admission-json",
+        "publication-control-plane-audit-json",
+        "publication-expected-json",
+        "publication-runner-provenance-json",
+        "publication-used-nonces-json",
+        "publish-dist-tag",
+        "publish-package-set-order",
+        "release-passport-impact-json",
+        "release-passport-output-dir",
+        "release-passport-product-name",
+        "required-status-check",
+        "setup-node",
+        "target-ref",
+        "target-sha",
+        "toolchain-command",
+        "toolchain-digest",
+        "toolchain-image",
+        "toolchain-type",
+        "verify-command",
+        "working-directory"
+      ],
+      "controllerDescriptor": {
+        "contract": "buildchain.controller-descriptor/v1",
+        "digest": "sha256:0613ea545fe2d630f34e665c8e6fe99df3f5333d75051a7176e9cf991e494f59",
+        "registryDigest": "sha256:40a7362d72303c106c064126881dae0716ed2d1902a8cac43f409af78bd7cddf",
+        "inputClassifications": {
+          "artifact-name": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "artifact-retention-days": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "branch-protection-bypass-apps": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "branch-protection-bypass-teams": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "branch-protection-bypass-users": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "build-command": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "buildchain-contract-compatibility-policy": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "buildchain-contract-drift-issue-mode": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "buildchain-contract-lock-path": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "buildchain-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "buildchain-repository": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "dry-run": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "github-release": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "github-release-notes": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "github-release-title": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "node-version": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "package-name": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "publication-admission-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "publication-control-plane-audit-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "publication-expected-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "publication-runner-provenance-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "publication-used-nonces-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "publish-dist-tag": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "publish-package-set-order": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "release-passport-impact-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "release-passport-output-dir": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "release-passport-product-name": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "required-status-check": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "setup-node": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "target-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "target-sha": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "toolchain-command": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "toolchain-digest": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "toolchain-image": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "toolchain-type": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "verify-command": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "working-directory": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          }
+        }
+      },
+      "guarantees": [
+        "plans bind exact consumer source SHA, exact Buildchain runtime SHA, and the runtime contract digest",
+        "receipts bind the plan digest and preserve pass, fail, skip, and partial stage outcomes",
+        "redacted input values are never serialized and digest-only input values are never emitted in plaintext",
+        "missing receipts are non-qualifying and must not be represented as a successful controller run"
+      ],
+      "breakingDigest": "sha256:0eb318df455ef9cb737a7c2515a2411b685d34ed0bde7b5f5b173a7a42513114",
+      "auditDigest": "sha256:9b810a4120c819dc28021921da243ddcc8d3f832fd610ef9d1be0212d3ba3fa6"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "controller:release-candidate-promotion",
+      "kind": "controller",
+      "path": ".github/workflows/.release-candidate-promote.yml",
+      "requiredInputs": [],
+      "requiredOutputs": [
+        "controller-plan-json",
+        "controller-plan-digest",
+        "controller-receipt-json",
+        "controller-receipt-digest",
+        "controller-receipt-status"
+      ],
+      "breakingDefaults": {
+        "evidenceContract": "buildchain.controller-evidence/v1",
+        "descriptorVersion": 1,
+        "workflowPath": ".github/workflows/.release-candidate-promote.yml",
+        "requiredStages": [
+          "preflight",
+          "admit-release-candidate",
+          "publication-authority",
+          "publish",
+          "passport",
+          "aggregate"
+        ],
+        "capabilities": [
+          "promotion-preflight",
+          "artifact-admission",
+          "publication-authority",
+          "publish-transaction",
+          "release-passport"
+        ],
+        "evidenceRequirements": [
+          "release-candidate-passport",
+          "publish-evidence",
+          "release-passport",
+          "controller-receipt"
+        ],
+        "inputClassificationPolicy": "buildchain-controller-input-policy/v1"
+      },
+      "optionalInputs": [
+        "BUILDCHAIN_ISSUE_APP_ID",
+        "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
+        "BUILDCHAIN_ISSUE_TOKEN",
+        "BUILDCHAIN_PROMOTION_TOKEN",
+        "allow-repository",
+        "artifact-name",
+        "artifact-patterns",
+        "branch-protection-bypass-apps",
+        "branch-protection-bypass-teams",
+        "branch-protection-bypass-users",
+        "buildchain-contract-compatibility-policy",
+        "buildchain-contract-drift-issue-mode",
+        "buildchain-contract-lock-path",
+        "buildchain-issue-app-id",
+        "buildchain-issue-app-private-key",
+        "buildchain-issue-token",
+        "buildchain-ref",
+        "buildchain-repository",
+        "channel",
+        "dry-run",
+        "github-release",
+        "github-release-notes",
+        "github-release-title",
+        "package-manager",
+        "promotion-contract-lock-digest",
+        "promotion-contract-lock-path",
+        "promotion-override-used",
+        "promotion-publication-channel",
+        "promotion-router-ref",
+        "promotion-router-sha",
+        "promotion-runtime-ref",
+        "promotion-runtime-sha",
+        "promotion-shell-ref",
+        "promotion-shell-sha",
+        "promotion-target-ref",
+        "publication-admission-json",
+        "publication-auto-admission",
+        "publication-auto-no-gate",
+        "publication-consumer-predicate-id",
+        "publication-consumer-qualification-command",
+        "publication-control-plane-audit-json",
+        "publication-expected-json",
+        "publication-gate-aggregate-json",
+        "publication-package-name",
+        "publication-product",
+        "publication-publisher-workflow-path",
+        "publication-runner-provenance-json",
+        "publication-target",
+        "publication-used-nonces-json",
+        "publication-used-qualification-nonces-json",
+        "publish-artifact-kind",
+        "publish-command",
+        "publish-dist-tag",
+        "publish-mode",
+        "publish-package-main",
+        "publish-package-set-order",
+        "publish-required-artifacts-json",
+        "publish-target",
+        "release-candidate-workflow-file",
+        "release-candidate-workflow-name",
+        "release-passport",
+        "release-passport-buildchain-self-kfd",
+        "release-passport-impact-json",
+        "release-passport-invariant-passport-command",
+        "release-passport-invariant-passport-jsons",
+        "release-passport-kfd-1-witness-jsons",
+        "release-passport-kfd-2-claim-jsons",
+        "release-passport-kfd-3-artifact-verify-command",
+        "release-passport-kfd-3-artifact-witness-jsons",
+        "release-passport-kfd-3-prebuild-witness-jsons",
+        "release-passport-output-dir",
+        "release-passport-platform-manifest-paths",
+        "release-passport-product-name",
+        "required-artifact-count",
+        "required-status-check",
+        "runner-preset",
+        "standalone-binary-distribution",
+        "target-ref",
+        "target-sha",
+        "trusted-publishing"
+      ],
+      "controllerDescriptor": {
+        "contract": "buildchain.controller-descriptor/v1",
+        "digest": "sha256:2bb0137a7dd25706b86beeb212938df2a71c69d2ef6e49391c615e4cb21a19a6",
+        "registryDigest": "sha256:40a7362d72303c106c064126881dae0716ed2d1902a8cac43f409af78bd7cddf",
+        "inputClassifications": {
+          "BUILDCHAIN_ISSUE_APP_ID": {
+            "classification": "redacted",
+            "source": "workflow-call-secret"
+          },
+          "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY": {
+            "classification": "redacted",
+            "source": "workflow-call-secret"
+          },
+          "BUILDCHAIN_ISSUE_TOKEN": {
+            "classification": "redacted",
+            "source": "workflow-call-secret"
+          },
+          "BUILDCHAIN_PROMOTION_TOKEN": {
+            "classification": "redacted",
+            "source": "workflow-call-secret"
+          },
+          "allow-repository": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "artifact-name": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "artifact-patterns": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "branch-protection-bypass-apps": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "branch-protection-bypass-teams": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "branch-protection-bypass-users": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "buildchain-contract-compatibility-policy": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "buildchain-contract-drift-issue-mode": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "buildchain-contract-lock-path": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "buildchain-issue-app-id": {
+            "classification": "redacted",
+            "source": "workflow-call-secret"
+          },
+          "buildchain-issue-app-private-key": {
+            "classification": "redacted",
+            "source": "workflow-call-secret"
+          },
+          "buildchain-issue-token": {
+            "classification": "redacted",
+            "source": "workflow-call-secret"
+          },
+          "buildchain-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "buildchain-repository": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "channel": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "dry-run": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "github-release": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "github-release-notes": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "github-release-title": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "package-manager": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "promotion-contract-lock-digest": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "promotion-contract-lock-path": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "promotion-override-used": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "promotion-publication-channel": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "promotion-router-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "promotion-router-sha": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "promotion-runtime-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "promotion-runtime-sha": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "promotion-shell-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "promotion-shell-sha": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "promotion-target-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "publication-admission-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "publication-auto-admission": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "publication-auto-no-gate": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "publication-consumer-predicate-id": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "publication-consumer-qualification-command": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "publication-control-plane-audit-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "publication-expected-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "publication-gate-aggregate-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "publication-package-name": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "publication-product": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "publication-publisher-workflow-path": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "publication-runner-provenance-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "publication-target": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "publication-used-nonces-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "publication-used-qualification-nonces-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "publish-artifact-kind": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "publish-command": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "publish-dist-tag": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "publish-mode": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "publish-package-main": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "publish-package-set-order": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "publish-required-artifacts-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "publish-target": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "release-candidate-workflow-file": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "release-candidate-workflow-name": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "release-passport": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "release-passport-buildchain-self-kfd": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "release-passport-impact-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "release-passport-invariant-passport-command": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "release-passport-invariant-passport-jsons": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "release-passport-kfd-1-witness-jsons": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "release-passport-kfd-2-claim-jsons": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "release-passport-kfd-3-artifact-verify-command": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "release-passport-kfd-3-artifact-witness-jsons": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "release-passport-kfd-3-prebuild-witness-jsons": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "release-passport-output-dir": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "release-passport-platform-manifest-paths": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "release-passport-product-name": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "required-artifact-count": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "required-status-check": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "runner-preset": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "standalone-binary-distribution": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "target-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "target-sha": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "trusted-publishing": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          }
+        }
+      },
+      "guarantees": [
+        "plans bind exact consumer source SHA, exact Buildchain runtime SHA, and the runtime contract digest",
+        "receipts bind the plan digest and preserve pass, fail, skip, and partial stage outcomes",
+        "redacted input values are never serialized and digest-only input values are never emitted in plaintext",
+        "missing receipts are non-qualifying and must not be represented as a successful controller run"
+      ],
+      "breakingDigest": "sha256:015d8de793adbd4c539416be7d7512e18cc92097e629b0203fa06d2c183e98bd",
+      "auditDigest": "sha256:a68b535582028c1dd708e447a43f5083106074df092b74528dfa16db4a4f4153"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "controller:release-propagation",
+      "kind": "controller",
+      "path": ".github/workflows/release-propagation.yml",
+      "requiredInputs": [],
+      "requiredOutputs": [
+        "controller-plan-json",
+        "controller-plan-digest",
+        "controller-receipt-json",
+        "controller-receipt-digest",
+        "controller-receipt-status"
+      ],
+      "breakingDefaults": {
+        "evidenceContract": "buildchain.controller-evidence/v1",
+        "descriptorVersion": 1,
+        "workflowPath": ".github/workflows/release-propagation.yml",
+        "requiredStages": [
+          "resolve-runtime",
+          "plan",
+          "write-lock",
+          "aggregate"
+        ],
+        "capabilities": [
+          "release-propagation-plan",
+          "downstream-lock",
+          "pull-request-handoff"
+        ],
+        "evidenceRequirements": [
+          "propagation-plan",
+          "propagation-lock",
+          "controller-receipt"
+        ],
+        "inputClassificationPolicy": "buildchain-controller-input-policy/v1"
+      },
+      "optionalInputs": [
+        "buildchain-ref",
+        "buildchain-repository",
+        "downstream-base-ref",
+        "downstream-branch",
+        "downstream-prepare-command",
+        "downstream-repository",
+        "downstream-target",
+        "downstream-verify-command",
+        "dry-run",
+        "graph-json",
+        "lock-path",
+        "pr-body",
+        "pr-title",
+        "propagation-token",
+        "refresh-managed-readme-badges",
+        "source-node",
+        "upstream-release-json"
+      ],
+      "controllerDescriptor": {
+        "contract": "buildchain.controller-descriptor/v1",
+        "digest": "sha256:f97656a8df0758c8e404d5b7c387529256a1ec45d1748f8efb6847a3256b1216",
+        "registryDigest": "sha256:40a7362d72303c106c064126881dae0716ed2d1902a8cac43f409af78bd7cddf",
+        "inputClassifications": {
+          "buildchain-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "buildchain-repository": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "downstream-base-ref": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "downstream-branch": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "downstream-prepare-command": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "downstream-repository": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "downstream-target": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "downstream-verify-command": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "dry-run": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "graph-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "lock-path": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "pr-body": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          },
+          "pr-title": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "propagation-token": {
+            "classification": "redacted",
+            "source": "workflow-call-secret"
+          },
+          "refresh-managed-readme-badges": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "source-node": {
+            "classification": "included",
+            "source": "workflow-call-input"
+          },
+          "upstream-release-json": {
+            "classification": "digest-only",
+            "source": "workflow-call-input"
+          }
+        }
+      },
+      "guarantees": [
+        "plans bind exact consumer source SHA, exact Buildchain runtime SHA, and the runtime contract digest",
+        "receipts bind the plan digest and preserve pass, fail, skip, and partial stage outcomes",
+        "redacted input values are never serialized and digest-only input values are never emitted in plaintext",
+        "missing receipts are non-qualifying and must not be represented as a successful controller run"
+      ],
+      "breakingDigest": "sha256:d7a1f15990ce8bd13149474888232c7d4451dd2a49bebf4d4ce1336695da430e",
+      "auditDigest": "sha256:43fd4da155c701d4c5078373c1f47b50bebc6a46556b8db5e3c4d502c113fa95"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "controller:binary-distribution",
+      "kind": "controller",
+      "path": ".github/workflows/binary-distribution.yml",
+      "requiredInputs": [],
+      "requiredOutputs": [
+        "controller-plan-json",
+        "controller-plan-digest",
+        "controller-receipt-json",
+        "controller-receipt-digest",
+        "controller-receipt-status"
+      ],
+      "breakingDefaults": {
+        "evidenceContract": "buildchain.controller-evidence/v1",
+        "descriptorVersion": 1,
+        "workflowPath": ".github/workflows/binary-distribution.yml",
+        "requiredStages": [
+          "resolve-runtime",
+          "build",
+          "verify",
+          "bundle",
+          "aggregate"
+        ],
+        "capabilities": [
+          "standalone-binary-build",
+          "release-evidence-bundle",
+          "artifact-admission"
+        ],
+        "evidenceRequirements": [
+          "release-evidence-bundle",
+          "release-passport",
+          "controller-receipt"
+        ],
+        "inputClassificationPolicy": "buildchain-controller-input-policy/v1"
+      },
+      "optionalInputs": [],
+      "controllerDescriptor": {
+        "contract": "buildchain.controller-descriptor/v1",
+        "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555",
+        "registryDigest": "sha256:40a7362d72303c106c064126881dae0716ed2d1902a8cac43f409af78bd7cddf",
+        "inputClassifications": {}
+      },
+      "guarantees": [
+        "plans bind exact consumer source SHA, exact Buildchain runtime SHA, and the runtime contract digest",
+        "receipts bind the plan digest and preserve pass, fail, skip, and partial stage outcomes",
+        "redacted input values are never serialized and digest-only input values are never emitted in plaintext",
+        "missing receipts are non-qualifying and must not be represented as a successful controller run"
+      ],
+      "breakingDigest": "sha256:7c18fdd3df180db9e1f043a2286ef3f02fae60b84e42b76cd50da9cfeb77883d",
+      "auditDigest": "sha256:e07a5db56a71bd0ac79c81f12619938055361bf0a0ed8e5891f88ca1c51f1c93"
+    }
+  ],
+  "compatibilityDigest": "sha256:cdf588422ec6b460bd6f631400efa6e361a045e052c8967d6c50fadd7aa4dd90",
+  "contractDigest": "sha256:b0e34eb1c596aebf2e32c195a0fbf05534ed6ca5624b26059d3d9e753aeb3053"
+}

@@ -1,0 +1,22 @@
+name: Libnode-shaped Buildchain Consumer
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+permissions:
+  contents: read
+  issues: write
+  id-token: write
+
+jobs:
+  build:
+    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v2
+    with:
+      working-directory: fixtures/libnode-shaped
+      runner-preset: github-hosted
+      require-install: true
+      require-build: true
+      require-verify: true
+      artifact-name: libnode-shaped
+      artifact-paths: fixtures/libnode-shaped/dist

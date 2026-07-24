@@ -1,0 +1,18 @@
+schema = 1
+
+[project]
+type = "infra-contract"
+name = "infra-aws-cdk-shaped"
+
+[infra]
+adapter = "aws-cdk"
+adoption_mode = "observe-only"
+apply = "disabled"
+environment = "preview"
+desired = ["desired/cdk.out/manifest.json"]
+contract = ["outputs/cdk-stack-outputs.json"]
+
+[[consumers]]
+repo = "kungfu-systems/site-cdk-example"
+path = "infra/outputs.json"
+source = "outputs/cdk-stack-outputs.json"

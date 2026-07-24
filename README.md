@@ -1,182 +1,374 @@
-# Kungfu Buildchain
+# Buildchain
 
-Kungfu Buildchain is the v1 source of truth for Kungfu reusable GitHub
-workflows, GitHub Actions, and release-line automation.
+<!-- buildchain:badges:start -->
 
-The repository does more than collect workflow files. Its main job is to make a
-Kungfu release auditable and repeatable: a protected branch merge should produce
-the right version commit, exact release tag, floating channel tag, and next
-alpha line without a maintainer hand-moving refs or repairing package metadata
-after the fact.
+[![KFD-1: passed](https://buildchain.libkungfu.dev/badges/v1/kfd-1/passed.svg)](https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json)
+[![KFD-2: passed](https://buildchain.libkungfu.dev/badges/v1/kfd-2/passed.svg)](https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json)
+[![KFD-3: passed](https://buildchain.libkungfu.dev/badges/v1/kfd-3/passed.svg)](https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json)
+[![KFD-4: declared](https://buildchain.libkungfu.dev/badges/v1/kfd-4/declared.svg)](https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json)
+[![Buildchain Release Passport: passed](https://buildchain.libkungfu.dev/badges/v1/buildchain-release-passport/passed.svg)](https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-0969da.svg)](https://github.com/kungfu-systems/buildchain/blob/HEAD/LICENSE)
+[![Platform: macOS | Linux | Windows](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-6e7781.svg)](https://github.com/kungfu-systems/buildchain/releases/latest/download/buildchain.release.json)
+[![Verify](https://github.com/kungfu-systems/buildchain/actions/workflows/verify.yml/badge.svg)](https://github.com/kungfu-systems/buildchain/actions/workflows/verify.yml)
+[![Buildchain Ref Promotion](https://github.com/kungfu-systems/buildchain/actions/workflows/buildchain-ref-promotion.yml/badge.svg)](https://github.com/kungfu-systems/buildchain/actions/workflows/buildchain-ref-promotion.yml)
+[![Binary Distribution](https://github.com/kungfu-systems/buildchain/actions/workflows/binary-distribution.yml/badge.svg)](https://github.com/kungfu-systems/buildchain/actions/workflows/binary-distribution.yml)
+<!-- buildchain:badges:end -->
 
-## Why This Exists
+Buildchain Release Passport is a mature product release record for artifacts
+that users or agents depend on.
 
-Kungfu release automation has to solve a few problems at the same time:
+Buildchain by Kungfu uses GitHub as the execution and trust substrate: protected
+refs, reviewed promotion PRs, exact tags, GitHub Releases, npm Trusted
+Publishing, and machine-readable evidence. Its job is to turn release intent
+into an auditable product record, not to ask a repository to migrate away from
+its existing CI.
 
-- consumers need stable refs such as `v1`, `v1.0`, and `v1.0-alpha`;
-- maintainers need exact immutable refs such as `v1.0.4` and
-  `v1.0.5-alpha.0` for audit and rollback;
-- package manifests must record the same version that the release tag
-  advertises;
-- alpha and release promotion must follow reviewed PRs, not local scripts or
-  manually edited tags;
-- the release toolchain itself must be released by the same governance model
-  that it applies to product repositories.
+The same mechanism releases Buildchain itself.
 
-The older ABV model solved this by treating a GitHub release PR as the release
-intent. Buildchain v1 keeps that semantic contract, but implements it inside a
-modern monorepo with Node 24 actions, pnpm, tsup bundles, committed `dist`
-outputs, reusable workflow tests, package-manager adapters, and a TOML lifecycle
-protocol for non-Node projects.
+## Where Buildchain sits in the Agent Supply Chain
 
-## Mental Model
-
-Buildchain release automation is branch-driven:
-
-| Merge path | Meaning | Exact tag | Floating tags and branches |
-| --- | --- | --- | --- |
-| `dev/vX/vX.Y -> alpha/vX/vX.Y` | publish the next testable alpha for a minor line | `vX.Y.Z-alpha.N` | `vX.Y-alpha`, `alpha/vX/vX.Y`, `dev/vX/vX.Y` |
-| `alpha/vX/vX.Y -> release/vX/vX.Y` | publish production for that minor line | `vX.Y.Z` | `vX.Y`, usually `vX`, `release/vX/vX.Y` |
-| `release/vX/vX.Y -> major-gate` | publish the next major from a reviewed production line | `v(X+1).0.0` | `v(X+1)`, `v(X+1).0`, `release/v(X+1)/v(X+1).0` |
-
-After a production release, Buildchain prepares the next alpha source commit for
-the same minor line and moves `dev/vX/vX.Y`, `alpha/vX/vX.Y`, and
-`vX.Y-alpha` to that next prerelease state. This is why a release can leave the
-production channel at `v1.0.4` while the test channel is already at
-`v1.0.5-alpha.0`.
-
-Kungfu treats minor lines as long-running product trains. `v1.0`, `v1.1`, and
-future minor refs can each receive many patch releases such as `v1.0.1234`.
-`v1` points at the selected stable major line, while `v1.0` points at the
-latest production patch for that minor line.
-
-`major-gate` replaces the old ABV `main` channel. It is deliberately not named
-`main` because it is not the active development trunk. Maintainers use the same
-PR flow as other channel promotions: merging `release/v1/v1.0 -> major-gate`
-means "publish the next major line from this production state." The promotion
-then creates the next major production version, for example `v2.0.0`, and
-prepares `dev/v2/v2.0` plus `alpha/v2/v2.0` at `v2.0.1-alpha.0`.
-
-Exact tags are always v-prefixed. Use `v1.0.0` and `v1.0.1-alpha.0`; bare tags
-such as `1.0.0` are not maintained as Buildchain release entrypoints.
-
-## Repository Layout
+Buildchain binds a product's declarations to the exact source cut, build,
+artifacts, checks, and promotion record that produced a release. In the wider
+Agent Supply Chain it sits between KFD-3 product discovery and KFD-2
+purpose-bound assessment:
 
 ```text
-.github/workflows/        Repository checks, reusable workflows, and release promotion
-actions/                  GitHub Actions implementations, grouped by action
-fixtures/                 Safe fixture repositories or fixture descriptors
-packages/                 Shared libraries, added only when justified
-tests/                    Inventory and contract data used by checks
-docs/                     Governance, migration, architecture, and rollback notes
-scripts/                  Local verification scripts
+KFD-3 declaration -> Buildchain exact-artifact evidence -> KFD-2 assessment
 ```
 
-## Buildchain v1 Contract
+Buildchain can prove that a declared claim and an exact artifact remain
+consistent, or fail/downgrade when their evidence drifts. It does not invent
+the product fact, decide whether a receiver should trust it for a purpose,
+certify every platform, or prove external adoption. Receivers and downstream
+KFD-2 assessors retain the admission decision and residual risk.
 
-Buildchain v1 ships these active migration surfaces:
+To evaluate the layer, inspect a release's `buildchain.release.json` and
+`artifact-evidence.json`, verify them with the CLI, and report missing product
+or protocol evidence through the repository issue tracker.
 
-- reusable workflows under `.github/workflows`;
-- GitHub Actions under `actions/<name>`;
-- action runtime on Node 24;
-- workspace package management with pnpm;
-- action bundling through tsup;
-- committed `dist/index.js` bundles for direct GitHub Actions consumption;
-- package-manager adapters for pnpm, npm, and yarn version-state updates;
-- `buildchain.toml` lifecycle configuration for custom version files and
-  verification commands;
-- `actions/validate-config` migration preflight for TOML version-state and
-  lifecycle declarations without running heavyweight builds;
-- `.github/workflows/.build.yml` as the reusable build surface for
-  tri-platform runner presets, custom runner matrices, caller-provided lifecycle
-  commands, trusted event gating, artifact name templates, expected artifact
-  checks, deterministic artifact manifests, and aggregate build summaries;
-- `actions/run-lifecycle` for callers that need the same lifecycle/manifest
-  contract inside their own workflows;
-- governance-closed self-promotion through `Buildchain Ref Promotion`.
+## Install and Verify
 
-Stable consumers should reference actions as:
+For standalone use, install a platform archive from a GitHub Release and verify
+the release passport before trusting the binary:
+
+```bash
+# Example for Linux x64. Use the archive that matches your platform.
+curl -LO https://github.com/kungfu-systems/buildchain/releases/download/v2.2.1/buildchain-x86_64-unknown-linux-gnu.tar.gz
+curl -LO https://github.com/kungfu-systems/buildchain/releases/download/v2.2.1/buildchain.release.json
+curl -LO https://github.com/kungfu-systems/buildchain/releases/download/v2.2.1/artifact-evidence.json
+npx @kungfu-tech/buildchain verify release-passport buildchain.release.json
+tar -xzf buildchain-x86_64-unknown-linux-gnu.tar.gz
+./buildchain version
+```
+
+Release pages publish platform archives, checksums, release passport files, and
+a single evidence bundle:
+
+- `buildchain-x86_64-unknown-linux-gnu.tar.gz`
+- `buildchain-aarch64-apple-darwin.tar.gz`
+- `buildchain-x86_64-pc-windows-msvc.zip`
+- `checksums.txt`
+- `buildchain.release.json`
+- `artifact-evidence.json`
+- `product-mechanism.json`
+- `impact.json`
+- `agent-index.json`
+- `check-report.json`
+- `llms.txt`
+- `buildchain-release-bundle.tar.gz`
+- `buildchain-release-bundle.json`
+
+Loose top-level `buildchain` and `buildchain.exe` assets are intentionally not
+published. The executable lives inside each platform archive, which prevents
+Linux and macOS artifacts from overwriting each other in a merged release lane.
+
+For npm consumers:
+
+```bash
+npm install -D @kungfu-tech/buildchain
+npx buildchain version
+npx buildchain doctor --json
+```
+
+The npm package is also the Buildchain toolkit. Use the command when a workflow
+or shell step needs an executable; use the ESM APIs directly from JavaScript
+build scripts. JavaScript callers should import the package instead of spawning
+the CLI or unpacking the standalone binary:
+
+```js
+import {
+  createBuildchainLogger,
+  verifyBuildchainLogEvents,
+} from "@kungfu-tech/buildchain/logging";
+
+const logger = createBuildchainLogger({
+  path: ".buildchain/logs/native-build.jsonl",
+  source: "user",
+  component: "native-build",
+});
+
+await logger.span("native.compile", { phase: "build" }, async () => {
+  await compileNativeTargets();
+});
+
+const report = verifyBuildchainLogEvents({
+  path: logger.path,
+  requireEvents: ["native.compile.start", "native.compile.end"],
+});
+```
+
+The package also ships `dist/site/` as the Buildchain-owned fact source for
+`buildchain.libkungfu.dev`.
+
+Repositories can also generate README status badges from Buildchain-owned facts
+instead of hand-maintaining badge Markdown:
+
+```bash
+buildchain badges bundle --check
+buildchain badges bundle --write
+buildchain badges readme --check
+buildchain badges readme --write
+```
+
+## Project Governance
+
+- [`LICENSE-POLICY.md`](LICENSE-POLICY.md) explains the Apache-2.0 project
+  license, DCO-based contributions, and third-party notice boundary.
+- [`TRADEMARK.md`](TRADEMARK.md) explains official project marks and fork
+  identity boundaries.
+- [`ACCEPTABLE_USE.md`](ACCEPTABLE_USE.md) explains acceptable use of official
+  services and maintainer-operated infrastructure.
+- [`PROVIDER_COMPLIANCE.md`](PROVIDER_COMPLIANCE.md) explains the official
+  posture for GitHub, npm, cloud, credential, release evidence, and other
+  provider integrations.
+- [`SECURITY.md`](SECURITY.md) explains private vulnerability reporting.
+
+Native build consumers can import the diagnostics toolkit instead of copying
+repository-local probes:
+
+```js
+import {
+  collectBuildchainDiagnostics,
+  collectRunnerDiagnostics,
+  writeDiagnosticsArtifact,
+} from "@kungfu-tech/buildchain/diagnostics";
+
+writeDiagnosticsArtifact(".buildchain/artifacts/diagnostics.json", {
+  contract: "consumer-build-diagnostics",
+  buildchain: collectBuildchainDiagnostics({ cwd: process.cwd() }),
+  runner: collectRunnerDiagnostics(),
+});
+```
+
+`buildchain lifecycle run` writes a small `diagnostics.json` next to the
+platform manifest. It includes lifecycle-wide observability, runner/tool/cache
+snapshots, Git state, and links to the larger manifest and artifact outputs.
+
+Consumers can report Buildchain-owned workflow failures directly to the
+Buildchain repository with a scoped issue-write token:
 
 ```yaml
-uses: kungfu-systems/buildchain/actions/<name>@v1
+- uses: kungfu-systems/buildchain/actions/report-buildchain-issue@v2
+  if: failure()
+  with:
+    token: ${{ steps.buildchain-issue-token.outputs.token }}
+    summary: "Reusable build failed before artifact finalization"
+    failure-code: reusable-build-failed
+    buildchain-ref: v2
+    diagnostics-path: .buildchain/artifacts/diagnostics.json
 ```
 
-Reusable workflows should be referenced as:
+The action deduplicates by fingerprint, comments on existing open reports, and
+is fail-soft by default so issue reporting does not hide the original failure.
+Use `report-kind: workflow-friction` when Buildchain workflows should report
+their own repeated release friction back to the Buildchain issue tracker.
+
+## Use Buildchain
+
+Bootstrap a repository:
+
+```bash
+npx @kungfu-tech/buildchain init --type package --package-manager pnpm
+npx @kungfu-tech/buildchain validate --require-version-state
+npx @kungfu-tech/buildchain release --dry-run --target-ref alpha/v2/v2.2
+```
+
+Buildchain supports package and non-package projects through
+`.buildchain/buildchain.toml`. Legacy root `buildchain.toml` files remain
+readable, but new consumers should keep Buildchain-owned files under
+`.buildchain/`:
+
+```text
+.buildchain/buildchain.toml
+.buildchain/contract-lock.json
+.buildchain/kfd/kfd-3/surfaces.json
+.buildchain/release-passport/buildchain.release.json
+```
+
+Lifecycle commands can call pnpm, npm, yarn, pip, Conan, CMake, Make, custom
+scripts, or any other command that can run in the repository checkout.
+
+The KFD entrypoint is `buildchain kfd`. Buildchain currently provides concrete
+KFD-1 contract-world, KFD-2 trust-claim, and KFD-3 collaboration-surface
+workflows; KFD-4 is exposed as schema-only until a verification protocol exists.
+
+Buildchain's active GitHub Action surface is deliberately small:
+
+- `actions/validate-config`
+- `actions/run-lifecycle`
+- `actions/promote-buildchain-ref`
+- `actions/report-buildchain-issue`
+
+The active reusable workflow surfaces are:
+
+- `.github/workflows/.gate-profile.yml` for project-neutral Shifu Gate profile
+  planning, capability-aware runner dispatch, receipt validation, and one
+  stable aggregate check;
+- `.github/workflows/.build.yml` for deterministic multi-platform build and
+  artifact contracts;
+- `.github/workflows/build.yml` for the single-config channel router that uses
+  `vN-alpha` during development/prerelease work and `vN` for stable releases;
+- `.github/workflows/release-candidate-promote.yml` for post-merge
+  promote-only publication from a PR-stage release candidate, without a second
+  heavy build;
+- `.github/workflows/.web-surface.yml` for preview, staging, production, and
+  cleanup plans for site/app repositories;
+- `.github/workflows/buildchain-ref-promotion.yml` for protected release
+  promotion and version-state transactions;
+- `.github/workflows/binary-distribution.yml` for Buildchain's own release
+  passport proof case.
+
+Stable consumers should reference actions and workflows through floating major
+refs after reviewing the exact release passport:
 
 ```yaml
-uses: kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v1
+uses: kungfu-systems/buildchain/actions/validate-config@v2
 ```
 
-Standalone `workflows` and `action-*` repositories remain compatibility and
-rollback anchors until consumers migrate to stable Buildchain refs.
+```yaml
+uses: kungfu-systems/buildchain/.github/workflows/build.yml@v2
+```
 
-## Release Governance
+```yaml
+uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v2
+```
 
-Buildchain promotes its own release refs through
-`.github/workflows/buildchain-ref-promotion.yml` and
-`actions/promote-buildchain-ref`.
+## Release Model
 
-The important constraints are:
+Buildchain treats a reviewed branch merge as release intent:
 
-- non-dry-run promotion is not available from manual dispatch;
-- promotion must be backed by a protected same-repository PR channel path;
-- protected channel details must be readable and must enforce protection for
-  administrators;
-- alpha promotion must come from `dev/vX/vX.Y -> alpha/vX/vX.Y`;
-- release promotion must come from `alpha/vX/vX.Y -> release/vX/vX.Y`;
-- major promotion must come from `release/vX/vX.Y -> major-gate`;
-- release promotion must match an existing same-patch alpha tag tree;
-- generated version-state commits must pass the configured verification command
-  before refs move;
-- `BUILDCHAIN_PROMOTION_TOKEN` is the release authority used to move protected
-  refs when repository policy requires it.
+| Merge path                              | Meaning                                                | Exact tag        | Floating refs                                        |
+| --------------------------------------- | ------------------------------------------------------ | ---------------- | ---------------------------------------------------- |
+| `dev/vX/vX.Y -> alpha/vX/vX.Y`          | publish the next testable alpha for a minor line       | `vX.Y.Z-alpha.N` | `vX.Y-alpha`, `alpha/vX/vX.Y`, `dev/vX/vX.Y`         |
+| `alpha/vX/vX.Y -> release/vX/vX.Y`      | publish production for that minor line                 | `vX.Y.Z`         | `vX.Y`, usually `vX`, `release/vX/vX.Y`              |
+| `release/vX/vX.Y -> publish-gate/major` | publish the next major from a reviewed production line | `v(X+1).0.0`     | `v(X+1)`, `v(X+1).0`, new dev/alpha/release branches |
 
-Buildchain's top-level `Release - New Version` workflow is intentionally a
-no-op for this repository. Consumer repositories still call the reusable
-`.release-new-version.yml`; Buildchain itself is promoted only by
-`Buildchain Ref Promotion` after `Verify` succeeds.
+Exact tags are immutable. Floating channel tags and branches are machine-updated
+by Buildchain and must remain writable by the release authority.
 
-## Read Next
+After a production release, Buildchain prepares the next alpha source commit for
+the same minor line. That keeps production consumers pinned to the production
+passport while development can continue on the next testable patch.
 
-- [Release governance](docs/release-governance.md) explains the design problem,
-  old ABV compatibility, hard constraints, and operational guarantees.
-- [Release flow diagrams](docs/release-flow.md) gives the branch/tag state
-  machine and Mermaid diagrams.
-- [Migration inventory](docs/migration-inventory.md) lists migrated and retired
-  action repositories.
-- [Ownership rules](docs/ownership.md) defines source-of-truth and rollback
-  boundaries.
-- [promote-buildchain-ref](actions/promote-buildchain-ref/README.md) documents
-  the internal promotion action.
-- [Lifecycle protocol](docs/lifecycle-protocol.md) documents `buildchain.toml`
-  for custom version-state files and lifecycle commands.
-- [Reusable build surface](docs/reusable-build-surface.md) documents the build
-  workflow, local runner matrix, artifact contract, and libnode-shaped fixture.
+`publish-gate/major` is not an active development trunk. It is a reviewed
+promotion gate used when maintainers decide that the next production release
+should open a new major line.
+
+## Toolkit Observability
+
+Buildchain includes a logging toolkit for release and build steps. Inside
+JavaScript build code, prefer the package API:
+
+```js
+import { createBuildchainLogger } from "@kungfu-tech/buildchain/logging";
+
+const logger = createBuildchainLogger({ source: "user", component: "conan" });
+logger.mark("conan.profile.ready", { phase: "configure" });
+await logger.span("conan.install", { phase: "dependencies" }, runConanInstall);
+```
+
+In workflows or shell scripts, use the equivalent CLI:
+
+```bash
+buildchain mark --event native.configure --phase configure --component cmake
+buildchain span --event native.build --phase build -- cmake --build build
+buildchain log summary --json
+buildchain verify observability-log .buildchain/logs/events.jsonl --min-events 4
+```
+
+Every event records a timestamp. `span` records duration. The API form can be
+imported from repository scripts so heavy builds can mark phases from inside
+their own code.
+
+## Site Fact Source
+
+`@kungfu-tech/buildchain` publishes `dist/site/`:
+
+- `buildchain-site.json`
+- `site-manifest.json`
+- `page-registry.json`
+- `cli-registry.json`
+- `workflow-registry.json`
+- `release-model.json`
+- `artifact-schemas.json`
+- `product-mechanism.json`
+- `release-provenance.json`
+- `agent-index.json`
+
+`buildchain.libkungfu.dev` should render from these package-owned facts, then
+layer presentation around them. The site should not hand-write Buildchain's
+current release mechanics. `page-registry.json` is the complete markdown page
+source for the public site: README homepage content, all packaged `docs/*.md`
+manuals, action READMEs, the Node API package overview, and fixture guides.
+
+## Homepage Content Contract
+
+This README is also the homepage text source for `buildchain.libkungfu.dev`.
+When a site repository consumes the `@kungfu-tech/buildchain` npm package, it
+should use the generated `dist/site/buildchain-site.json` homepage fields
+instead of parsing this README or maintaining separate homepage copy.
+
+The first screen should be derived from:
+
+- Page identity: the top-level heading.
+- Lead: the opening paragraph that defines Buildchain Release Passport.
+- Trust signal: the start of `Install and Verify`, especially passport-first
+  binary verification.
+- Use signal: the start of `Use Buildchain`, especially the reusable workflow
+  and action surfaces.
+
+The package-owned site bundle exposes ordered `homepage.sections`,
+`homepage.displayPlan`, `homepage.rendererContract`, and a complete
+`pages` collection mirrored from `page-registry.json`. A site renderer may adapt
+layout, navigation, typography, examples, and visual assets, but it should not
+maintain separate wording for Buildchain's release mechanics, workflow surface,
+operation manuals, Node API overview, fixture guides, or release-passport trust
+model. Renderer-contract text is machine/implementation metadata, not ordinary
+homepage content.
 
 ## Local Verification
 
 ```bash
 corepack enable pnpm
 pnpm install --frozen-lockfile
+pnpm run generate:site
 pnpm run check
+npm pack --dry-run --json --registry=https://registry.npmjs.org/
 ```
 
-`pnpm run check` validates inventory data, lints all root workflows including
-hidden reusable workflows, and rebuilds every action bundle.
+## Read Next
 
-## Lifecycle Configuration
-
-Projects can add `buildchain.toml` to declare release version state and
-lifecycle commands. Buildchain v1 supports TOML only. The promotion action uses
-configured version files to create source version commits, then runs
-`lifecycle.verify` before moving release refs.
-
-## Safety Defaults
-
-- Lab workflows are manual by default.
-- Publishing is disabled unless explicitly enabled by a production release
-  workflow.
-- Fork pull requests must not reach secrets or self-hosted runners.
-- Candidate refs are expected to come from `kungfu-systems/*`.
-- Self-hosted runner validation is available only through the manual
-  `Self-hosted Runner Smoke` workflow.
+- [Install and verify](docs/install.md)
+- [Documentation map](docs/MAP.md)
+- [Product mechanism](docs/product-mechanism.md)
+- [Release Passport and binary distribution](docs/release-passport.md)
+- [Binary distribution details](docs/binary-distribution.md)
+- [Toolkit observability](docs/toolkit-observability.md)
+- [Site bundle contract](docs/site-bundle-contract.md)
+- [Lifecycle protocol](docs/lifecycle-protocol.md)
+- [Reusable build surface](docs/reusable-build-surface.md)
+- [Shifu Gate profile orchestration](docs/shifu-gate-profiles.md)
+- [Release candidate passport](docs/release-candidate.md)
+- [Consumer issue reporting](docs/consumer-issue-reporting.md)
+- [Publish transaction](docs/publish-transaction.md)
+- [Release governance](docs/release-governance.md)

@@ -1,0 +1,176 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-site-bundle-generation",
+  "outputDir": "dist/site",
+  "files": [
+    "agent-index.json",
+    "artifact-schemas.json",
+    "badge-endpoint-registry.json",
+    "badges/v1/buildchain-release-passport/aligned.json",
+    "badges/v1/buildchain-release-passport/declared.json",
+    "badges/v1/buildchain-release-passport/downgraded.json",
+    "badges/v1/buildchain-release-passport/draft.json",
+    "badges/v1/buildchain-release-passport/failed.json",
+    "badges/v1/buildchain-release-passport/missing.json",
+    "badges/v1/buildchain-release-passport/passed.json",
+    "badges/v1/buildchain-release-passport/planned.json",
+    "badges/v1/kfd-1/aligned.json",
+    "badges/v1/kfd-1/declared.json",
+    "badges/v1/kfd-1/downgraded.json",
+    "badges/v1/kfd-1/draft.json",
+    "badges/v1/kfd-1/failed.json",
+    "badges/v1/kfd-1/missing.json",
+    "badges/v1/kfd-1/passed.json",
+    "badges/v1/kfd-1/planned.json",
+    "badges/v1/kfd-2/aligned.json",
+    "badges/v1/kfd-2/declared.json",
+    "badges/v1/kfd-2/downgraded.json",
+    "badges/v1/kfd-2/draft.json",
+    "badges/v1/kfd-2/failed.json",
+    "badges/v1/kfd-2/missing.json",
+    "badges/v1/kfd-2/passed.json",
+    "badges/v1/kfd-2/planned.json",
+    "badges/v1/kfd-3/aligned.json",
+    "badges/v1/kfd-3/declared.json",
+    "badges/v1/kfd-3/downgraded.json",
+    "badges/v1/kfd-3/draft.json",
+    "badges/v1/kfd-3/failed.json",
+    "badges/v1/kfd-3/missing.json",
+    "badges/v1/kfd-3/passed.json",
+    "badges/v1/kfd-3/planned.json",
+    "badges/v1/kfd-4/aligned.json",
+    "badges/v1/kfd-4/declared.json",
+    "badges/v1/kfd-4/downgraded.json",
+    "badges/v1/kfd-4/draft.json",
+    "badges/v1/kfd-4/failed.json",
+    "badges/v1/kfd-4/missing.json",
+    "badges/v1/kfd-4/passed.json",
+    "badges/v1/kfd-4/planned.json",
+    "buildchain-contract.json",
+    "buildchain-site.json",
+    "capability-registry.json",
+    "cli-registry.json",
+    "controller-registry.json",
+    "kfd-claims.json",
+    "kfd-upstream-aggregate.json",
+    "manual-registry.json",
+    "node-api-registry.json",
+    "page-registry.json",
+    "product-mechanism.json",
+    "public-surface-audit.json",
+    "publication-authority-registry.json",
+    "publication-registry.json",
+    "release-model.json",
+    "release-provenance.json",
+    "site-manifest.json",
+    "workflow-registry.json"
+  ],
+  "check": false
+}
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-release-line-bootstrap",
+  "dryRun": false,
+  "cwd": "/home/runner/work/buildchain/buildchain",
+  "line": "v2.14",
+  "major": 2,
+  "minor": 14,
+  "initialVersion": "2.14.0-alpha.0",
+  "source": {
+    "ref": "dev/v2/v2.13",
+    "sha": "2fd842ada24a60c2308d6a9f2c15413ca0cadca1"
+  },
+  "refs": {
+    "dev": "dev/v2/v2.14",
+    "alpha": "alpha/v2/v2.14",
+    "release": "release/v2/v2.14",
+    "bootstrap": "buildchain/release-line/v2.14"
+  },
+  "versionState": {
+    "files": [
+      "package.json",
+      ".buildchain/release-impact.json",
+      "dist/site/buildchain-contract.json",
+      "dist/site/buildchain-site.json",
+      "dist/site/site-manifest.json",
+      "dist/site/publication-registry.json",
+      "dist/site/kfd-upstream-aggregate.json"
+    ],
+    "lifecycle": "version-state"
+  },
+  "protection": {
+    "requiredStatusCheck": "check",
+    "strictStatusChecks": true,
+    "requiredApprovingReviewCount": 1,
+    "requiredConversationResolution": true,
+    "enforceAdmins": true,
+    "protectedRefs": [
+      "dev/v2/v2.14",
+      "alpha/v2/v2.14",
+      "release/v2/v2.14"
+    ]
+  },
+  "repositoryActions": [
+    {
+      "action": "create-or-verify-source-ref",
+      "ref": "dev/v2/v2.13"
+    },
+    {
+      "action": "commit-initial-version-state",
+      "ref": "buildchain/release-line/v2.14",
+      "version": "2.14.0-alpha.0"
+    },
+    {
+      "action": "create-dev-branch",
+      "ref": "dev/v2/v2.14",
+      "from": "buildchain/release-line/v2.14"
+    },
+    {
+      "action": "create-alpha-branch",
+      "ref": "alpha/v2/v2.14",
+      "from": "dev/v2/v2.13"
+    },
+    {
+      "action": "create-release-branch",
+      "ref": "release/v2/v2.14",
+      "from": "dev/v2/v2.13"
+    },
+    {
+      "action": "set-default-branch",
+      "ref": "dev/v2/v2.14"
+    },
+    {
+      "action": "protect-branch",
+      "ref": "dev/v2/v2.14"
+    },
+    {
+      "action": "protect-branch",
+      "ref": "alpha/v2/v2.14"
+    },
+    {
+      "action": "protect-branch",
+      "ref": "release/v2/v2.14"
+    },
+    {
+      "action": "open-alpha-pr",
+      "head": "dev/v2/v2.14",
+      "base": "alpha/v2/v2.14"
+    }
+  ],
+  "notes": [
+    "This bootstrap creates the new minor line before the first alpha promotion.",
+    "The source ref stays as the baseline for alpha/release until reviewed channel PRs move them.",
+    "The dev branch receives only the initial version-state commit and becomes the active line when setDefault is true."
+  ],
+  "changedFiles": [
+    ".buildchain-release-line-plan.json",
+    ".buildchain-release-line-write.json",
+    ".buildchain/release-impact.json",
+    "dist/site/buildchain-contract.json",
+    "dist/site/buildchain-site.json",
+    "dist/site/kfd-upstream-aggregate.json",
+    "dist/site/publication-registry.json",
+    "dist/site/site-manifest.json",
+    "package.json"
+  ]
+}

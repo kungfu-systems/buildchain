@@ -1,0 +1,10 @@
+{
+  "site": "kungfu.tech",
+  "channel": "staging",
+  "requiredOutputs": [
+    "bucketName",
+    "distributionId",
+    "stagingUrl"
+  ],
+  "ownership": "observed/import-needed"
+}

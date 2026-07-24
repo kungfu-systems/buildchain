@@ -1,0 +1,555 @@
+name: Buildchain Shifu Gate Profile
+
+on:
+  workflow_call:
+    inputs:
+      buildchain-repository:
+        default: "kungfu-systems/buildchain"
+        type: string
+        required: false
+      buildchain-ref:
+        description: "Official Buildchain channel, or a trusted workflow_dispatch train/SHA override"
+        default: ""
+        type: string
+        required: false
+      source-ref:
+        description: "Optional immutable consumer source ref; defaults to the caller event SHA"
+        default: ""
+        type: string
+        required: false
+      working-directory:
+        default: "."
+        type: string
+        required: false
+      gate-profile:
+        description: "Consumer-owned Shifu Gate profile id"
+        type: string
+        required: true
+      gate-command-json:
+        description: "Project-owned Shifu execution argv by platform; Buildchain never evaluates a shell string"
+        default: '{"linux":["./shifu"],"macos":["./shifu"],"windows":["./shifu.cmd"]}'
+        type: string
+        required: false
+      gate-plan-command-json:
+        description: "Optional lightweight Shifu planning argv by platform; defaults to gate-command-json"
+        default: ""
+        type: string
+        required: false
+      gate-registry:
+        description: "Optional project-relative Shifu Gate registry path"
+        default: ""
+        type: string
+        required: false
+      gate-environment-json:
+        description: "Optional non-sensitive project environment passed to Shifu as a JSON object"
+        default: "{}"
+        type: string
+        required: false
+      shifu-cache-profile-ref:
+        description: "Opaque trusted Shifu cache profile reference passed without interpretation"
+        default: ""
+        type: string
+        required: false
+      shifu-cache-profile-digest:
+        description: "Opaque expected Shifu cache profile digest passed without interpretation"
+        default: ""
+        type: string
+        required: false
+      include-advisory:
+        default: false
+        type: boolean
+        required: false
+      runner-preset:
+        description: "Runner preset: github-hosted, kungfu-v4-self-hosted, or custom with platforms-json"
+        default: "github-hosted"
+        type: string
+        required: false
+      platforms-json:
+        description: "Optional runner objects: id, name, platform, runner JSON string, capabilities, and optional required=false"
+        default: ""
+        type: string
+        required: false
+      artifact-name:
+        default: "buildchain-gates"
+        type: string
+        required: false
+      artifact-retention-days:
+        default: 14
+        type: number
+        required: false
+      node-version:
+        default: "24"
+        type: string
+        required: false
+      require-trusted-event:
+        default: true
+        type: boolean
+        required: false
+      untrusted-policy:
+        description: "fail or skip when an untrusted fork event asks for Gate execution"
+        default: "fail"
+        type: string
+        required: false
+    outputs:
+      source-sha:
+        description: "Immutable consumer source SHA bound into every Shifu receipt"
+        value: ${{ jobs.plan.outputs.source-sha }}
+      buildchain-runtime-sha:
+        description: "Immutable Buildchain runtime SHA used for planning and aggregation"
+        value: ${{ jobs.plan.outputs.buildchain-runtime-sha }}
+      gate-matrix-digest:
+        description: "Deterministic Buildchain runner matrix digest"
+        value: ${{ jobs.plan.outputs.gate-matrix-digest }}
+      gate-aggregate-artifact:
+        description: "Uploaded Shifu Gate aggregate artifact name"
+        value: ${{ jobs.aggregate.outputs.gate-aggregate-artifact }}
+      gate-aggregate-json:
+        description: "Compact Shifu Gate aggregate JSON for release-candidate evidence binding"
+        value: ${{ jobs.aggregate.outputs.gate-aggregate-json }}
+      gate-aggregate-digest:
+        description: "Shifu Gate aggregate digest"
+        value: ${{ jobs.aggregate.outputs.gate-aggregate-digest }}
+      gate-aggregate-status:
+        description: "pass or fail"
+        value: ${{ jobs.aggregate.outputs.gate-aggregate-status }}
+      controller-plan-artifact:
+        description: "Uploaded Shifu profile envelope controller plan artifact name"
+        value: ${{ jobs.plan.outputs.controller-plan-artifact }}
+      controller-plan-json:
+        description: "Compact source/runtime-bound Shifu profile envelope plan"
+        value: ${{ jobs.plan.outputs.controller-plan-json }}
+      controller-plan-digest:
+        description: "Digest of the Shifu profile envelope controller plan"
+        value: ${{ jobs.plan.outputs.controller-plan-digest }}
+      controller-receipt-artifact:
+        description: "Uploaded Shifu profile envelope controller receipt artifact name"
+        value: ${{ jobs.aggregate.outputs.controller-receipt-artifact }}
+      controller-receipt-json:
+        description: "Compact Shifu profile envelope controller receipt"
+        value: ${{ jobs.aggregate.outputs.controller-receipt-json }}
+      controller-receipt-digest:
+        description: "Digest of the Shifu profile envelope controller receipt"
+        value: ${{ jobs.aggregate.outputs.controller-receipt-digest }}
+      controller-receipt-status:
+        description: "Final Shifu profile envelope controller status"
+        value: ${{ jobs.aggregate.outputs.controller-receipt-status }}
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    name: Gate profile / plan
+    runs-on: ubuntu-24.04
+    outputs:
+      trusted: ${{ steps.trust.outputs.trusted }}
+      source-sha: ${{ steps.source.outputs.source-sha }}
+      buildchain-runtime-sha: ${{ steps.runtime.outputs.runtime-sha }}
+      gate-matrix-json: ${{ steps.plan.outputs.gate-matrix-json }}
+      gate-matrix-digest: ${{ steps.plan.outputs.gate-matrix-digest }}
+      gate-matrix-artifact: ${{ steps.names.outputs.gate-matrix-artifact }}
+      controller-plan-artifact: ${{ steps.controller-names.outputs.controller-plan-artifact }}
+      controller-plan-json: ${{ steps.controller-plan.outputs.controller-plan-json }}
+      controller-plan-digest: ${{ steps.controller-plan.outputs.controller-plan-digest }}
+    steps:
+      - name: Evaluate event trust
+        id: trust
+        shell: bash
+        env:
+          REQUIRE_TRUSTED_EVENT: ${{ inputs.require-trusted-event }}
+          PR_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+          CALLER_REPOSITORY: ${{ github.repository }}
+        run: |
+          trusted=true
+          if [ "${REQUIRE_TRUSTED_EVENT}" = "true" ] && [ "${GITHUB_EVENT_NAME}" = "pull_request" ] && [ "${PR_HEAD_REPOSITORY}" != "${CALLER_REPOSITORY}" ]; then
+            trusted=false
+          fi
+          echo "trusted=${trusted}" >> "${GITHUB_OUTPUT}"
+
+      - name: Reject untrusted event
+        if: ${{ steps.trust.outputs.trusted != 'true' && inputs.untrusted-policy == 'fail' }}
+        run: exit 1
+
+      - name: Resolve Buildchain runtime
+        if: ${{ steps.trust.outputs.trusted == 'true' }}
+        id: runtime
+        uses: actions/github-script@v8
+        env:
+          BUILDCHAIN_REPOSITORY: ${{ inputs.buildchain-repository }}
+          BUILDCHAIN_REQUESTED_REF: ${{ inputs.buildchain-ref }}
+          BUILDCHAIN_WORKFLOW_REF: ${{ job.workflow_ref }}
+        with:
+          script: |
+            const repository = (process.env.BUILDCHAIN_REPOSITORY || "kungfu-systems/buildchain").trim();
+            const [owner, repo] = repository.split("/");
+            if (!owner || !repo) throw new Error(`invalid Buildchain repository: ${repository}`);
+            const workflowRef = process.env.BUILDCHAIN_WORKFLOW_REF || process.env.GITHUB_WORKFLOW_REF || "";
+            const sameRepositoryWorkflow = workflowRef.startsWith(`${repository}/.github/workflows/`);
+            const shellRef = (sameRepositoryWorkflow
+              ? workflowRef.split("@").pop() || "v2"
+              : "v2").replace(/^refs\/(?:heads|tags)\//, "");
+            const requested = (process.env.BUILDCHAIN_REQUESTED_REF || "").trim();
+            const official = /^v\d+(?:\.\d+)?(?:-alpha)?$/;
+            const exactSha = /^[0-9a-f]{40}$/i;
+            const pullRequestMergeRef = /^refs\/pull\/\d+\/merge$/;
+            const train = /^train\/v\d+\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
+            const runtimeRef = requested || shellRef;
+            if (requested && !official.test(requested)) {
+              if (context.eventName !== "workflow_dispatch") {
+                throw new Error("Buildchain Gate runtime override is only allowed for trusted workflow_dispatch runs");
+              }
+              const permission = await github.rest.repos.getCollaboratorPermissionLevel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                username: context.actor,
+              });
+              if (!["admin", "maintain", "write"].includes(permission.data.permission || "")) {
+                throw new Error("Buildchain Gate runtime override requires write, maintain, or admin permission");
+              }
+              if (!exactSha.test(requested) && !train.test(requested.replace(/^refs\/heads\//, ""))) {
+                throw new Error("Buildchain Gate runtime override must be a train ref or exact SHA");
+              }
+            }
+            const resolve = async (ref) => {
+              if (exactSha.test(ref)) return ref;
+              if (sameRepositoryWorkflow && pullRequestMergeRef.test(ref)) {
+                const workflowSha = String(context.sha || "");
+                if (!exactSha.test(workflowSha)) {
+                  throw new Error(`current workflow SHA is invalid for Buildchain pull request merge ref: ${ref}`);
+                }
+                return workflowSha;
+              }
+              const normalized = ref.replace(/^refs\/(?:heads|tags)\//, "");
+              for (const candidate of [`tags/${normalized}`, `heads/${normalized}`]) {
+                try {
+                  return (await github.rest.git.getRef({ owner, repo, ref: candidate })).data.object.sha;
+                } catch (error) {
+                  if (error.status !== 404) throw error;
+                }
+              }
+              throw new Error(`unable to resolve Buildchain Gate runtime ref: ${ref}`);
+            };
+            core.setOutput("runtime-ref", runtimeRef);
+            core.setOutput("runtime-sha", await resolve(runtimeRef));
+
+      - name: Checkout locked consumer source
+        if: ${{ steps.trust.outputs.trusted == 'true' }}
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ inputs.source-ref || github.sha }}
+          path: source
+          clean: true
+          persist-credentials: false
+
+      - name: Record locked source SHA
+        if: ${{ steps.trust.outputs.trusted == 'true' }}
+        id: source
+        shell: bash
+        run: echo "source-sha=$(git -C source rev-parse HEAD)" >> "${GITHUB_OUTPUT}"
+
+      - name: Checkout Buildchain runtime
+        if: ${{ steps.trust.outputs.trusted == 'true' }}
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ steps.runtime.outputs.runtime-sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Setup Node.js
+        if: ${{ steps.trust.outputs.trusted == 'true' }}
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Resolve controller runtime contract digest
+        if: ${{ steps.trust.outputs.trusted == 'true' }}
+        id: controller-identities
+        run: node -e 'const fs=require("fs"); const value=JSON.parse(fs.readFileSync(".buildchain/runtime/dist/site/buildchain-contract.json","utf8")); fs.appendFileSync(process.env.GITHUB_OUTPUT, "contract-digest="+value.contractDigest+"\n")'
+
+      - name: Create Shifu profile envelope controller plan
+        if: ${{ steps.trust.outputs.trusted == 'true' }}
+        id: controller-plan
+        run: node .buildchain/runtime/scripts/controller-evidence.mjs --mode plan
+        env:
+          BUILDCHAIN_CONTROLLER_ID: shifu-gate-profile-envelope
+          BUILDCHAIN_CONTROLLER_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_CONTROLLER_SOURCE_SHA: ${{ steps.source.outputs.source-sha }}
+          BUILDCHAIN_CONTROLLER_RUNTIME_REF: ${{ steps.runtime.outputs.runtime-ref }}
+          BUILDCHAIN_CONTROLLER_RUNTIME_SHA: ${{ steps.runtime.outputs.runtime-sha }}
+          BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST: ${{ steps.controller-identities.outputs.contract-digest }}
+          BUILDCHAIN_CONTROLLER_INPUTS_JSON: ${{ toJSON(inputs) }}
+          BUILDCHAIN_CONTROLLER_INPUT_BOUNDARY: workflow-call
+          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+
+      - name: Resolve Shifu profile envelope controller plan artifact
+        if: ${{ steps.trust.outputs.trusted == 'true' }}
+        id: controller-names
+        run: echo "controller-plan-artifact=${ARTIFACT_NAME}-controller-plan-${SOURCE_SHA}" >> "$GITHUB_OUTPUT"
+        env:
+          ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          SOURCE_SHA: ${{ steps.source.outputs.source-sha }}
+
+      - name: Upload Shifu profile envelope controller plan
+        if: ${{ steps.trust.outputs.trusted == 'true' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.controller-names.outputs.controller-plan-artifact }}
+          path: .buildchain/controller/plan.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Resolve Shifu Gate plans and runner matrix
+        if: ${{ steps.trust.outputs.trusted == 'true' }}
+        id: plan
+        run: node .buildchain/runtime/scripts/shifu-gate-profile.mjs --mode plan
+        env:
+          BUILDCHAIN_GATE_PROFILE: ${{ inputs.gate-profile }}
+          BUILDCHAIN_GATE_INCLUDE_ADVISORY: ${{ inputs.include-advisory }}
+          BUILDCHAIN_GATE_COMMAND_JSON: ${{ inputs.gate-command-json }}
+          BUILDCHAIN_GATE_PLAN_COMMAND_JSON: ${{ inputs.gate-plan-command-json }}
+          BUILDCHAIN_GATE_REGISTRY: ${{ inputs.gate-registry }}
+          BUILDCHAIN_GATE_ENVIRONMENT_JSON: ${{ inputs.gate-environment-json }}
+          BUILDCHAIN_SHIFU_CACHE_PROFILE_REF: ${{ inputs.shifu-cache-profile-ref }}
+          BUILDCHAIN_SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
+          BUILDCHAIN_GATE_SOURCE_CWD: source/${{ inputs.working-directory }}
+          BUILDCHAIN_GATE_OUTPUT_ROOT: .buildchain/gates/plan
+          BUILDCHAIN_RUNNER_PRESET: ${{ inputs.runner-preset }}
+          BUILDCHAIN_PLATFORMS_JSON: ${{ inputs.platforms-json }}
+
+      - name: Resolve Gate matrix artifact name
+        if: ${{ steps.trust.outputs.trusted == 'true' }}
+        id: names
+        shell: bash
+        run: echo "gate-matrix-artifact=${ARTIFACT_NAME}-matrix-${SOURCE_SHA}" >> "${GITHUB_OUTPUT}"
+        env:
+          ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          SOURCE_SHA: ${{ steps.source.outputs.source-sha }}
+
+      - name: Upload Gate plans and matrix
+        if: ${{ steps.trust.outputs.trusted == 'true' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.names.outputs.gate-matrix-artifact }}
+          path: .buildchain/gates/plan
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+  run-gates:
+    name: Gate profile / ${{ matrix.gate.name }}
+    needs: plan
+    if: ${{ needs.plan.outputs.trusted == 'true' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        gate: ${{ fromJSON(needs.plan.outputs.gate-matrix-json) }}
+    runs-on: ${{ fromJSON(matrix.gate.runner) }}
+    timeout-minutes: ${{ matrix.gate.timeoutMinutes }}
+    steps:
+      - name: Reset prior Windows Gate source workspace
+        if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          $workspace = [System.IO.Path]::GetFullPath($env:GITHUB_WORKSPACE)
+          $source = [System.IO.Path]::GetFullPath((Join-Path $workspace "source"))
+          $gitCache = [System.IO.Path]::GetFullPath((Join-Path $workspace ".buildchain/windows-gate-source-git"))
+          if ([System.IO.Path]::GetDirectoryName($source) -ne $workspace) {
+            throw "refusing to clean Gate source outside GITHUB_WORKSPACE"
+          }
+          $sourceGit = Join-Path $source ".git"
+          if (Test-Path -LiteralPath $sourceGit -PathType Container) {
+            if (Test-Path -LiteralPath $gitCache) {
+              & cmd.exe /d /c "rd /s /q `"$gitCache`""
+              if ($LASTEXITCODE -ne 0 -or (Test-Path -LiteralPath $gitCache)) {
+                throw "failed to reset prior Windows Gate Git cache: $gitCache"
+              }
+            }
+            New-Item -ItemType Directory -Force -Path ([System.IO.Path]::GetDirectoryName($gitCache)) | Out-Null
+            Move-Item -LiteralPath $sourceGit -Destination $gitCache
+          }
+          if (Test-Path -LiteralPath $source) {
+            & cmd.exe /d /c "rd /s /q `"$source`""
+            if ($LASTEXITCODE -ne 0 -or (Test-Path -LiteralPath $source)) {
+              throw "failed to reset prior Windows Gate source workspace: $source"
+            }
+          }
+          if (Test-Path -LiteralPath $gitCache -PathType Container) {
+            New-Item -ItemType Directory -Force -Path $source | Out-Null
+            Move-Item -LiteralPath $gitCache -Destination (Join-Path $source ".git")
+          }
+
+      - name: Checkout locked consumer source
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ needs.plan.outputs.source-sha }}
+          path: source
+          clean: true
+          persist-credentials: false
+
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.plan.outputs.buildchain-runtime-sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Expose Windows runner user toolchain
+        if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
+        run: Add-Content -LiteralPath $env:GITHUB_PATH -Value (Join-Path $HOME ".local\bin")
+
+      - name: Expose POSIX runner user toolchain
+        if: ${{ runner.os != 'Windows' }}
+        shell: bash
+        run: echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
+
+      - name: Download locked Gate plan
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ needs.plan.outputs.gate-matrix-artifact }}
+          path: .buildchain/gates/plan
+
+      - name: Run and validate Shifu Gate profile
+        id: gate
+        continue-on-error: true
+        run: node .buildchain/runtime/scripts/shifu-gate-profile.mjs --mode run
+        env:
+          BUILDCHAIN_GATE_MATRIX_ENTRY_JSON: ${{ toJSON(matrix.gate) }}
+          BUILDCHAIN_GATE_COMMAND_JSON: ${{ inputs.gate-command-json }}
+          BUILDCHAIN_GATE_REGISTRY: ${{ inputs.gate-registry }}
+          BUILDCHAIN_GATE_ENVIRONMENT_JSON: ${{ inputs.gate-environment-json }}
+          BUILDCHAIN_SHIFU_CACHE_PROFILE_REF: ${{ inputs.shifu-cache-profile-ref }}
+          BUILDCHAIN_SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
+          BUILDCHAIN_GATE_SOURCE_CWD: source/${{ inputs.working-directory }}
+          BUILDCHAIN_GATE_OUTPUT_ROOT: .buildchain/gates/executions/${{ matrix.gate.id }}
+
+      - name: Upload Shifu Gate receipt
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-receipt-${{ matrix.gate.id }}-${{ needs.plan.outputs.source-sha }}
+          path: .buildchain/gates/executions/${{ matrix.gate.id }}
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Enforce Shifu Gate qualification
+        if: ${{ steps.gate.outcome != 'success' }}
+        run: exit 1
+
+  aggregate:
+    name: Gate profile / aggregate
+    needs:
+      - plan
+      - run-gates
+    if: ${{ always() && needs.plan.outputs.trusted == 'true' }}
+    runs-on: ubuntu-24.04
+    outputs:
+      gate-aggregate-artifact: ${{ steps.names.outputs.gate-aggregate-artifact }}
+      gate-aggregate-json: ${{ steps.aggregate.outputs.gate-aggregate-json }}
+      gate-aggregate-digest: ${{ steps.aggregate.outputs.gate-aggregate-digest }}
+      gate-aggregate-status: ${{ steps.aggregate.outputs.gate-aggregate-status }}
+      controller-receipt-artifact: ${{ steps.controller-names.outputs.controller-receipt-artifact }}
+      controller-receipt-json: ${{ steps.controller-receipt.outputs.controller-receipt-json }}
+      controller-receipt-digest: ${{ steps.controller-receipt.outputs.controller-receipt-digest }}
+      controller-receipt-status: ${{ steps.controller-receipt.outputs.controller-receipt-status }}
+    steps:
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.plan.outputs.buildchain-runtime-sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Download locked Gate plan
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ needs.plan.outputs.gate-matrix-artifact }}
+          path: .buildchain/gates/plan
+
+      - name: Download Shifu profile envelope controller plan
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ needs.plan.outputs.controller-plan-artifact }}
+          path: .buildchain/controller
+
+      - name: Download Shifu Gate receipts
+        continue-on-error: true
+        uses: actions/download-artifact@v7.0.0
+        with:
+          pattern: ${{ inputs.artifact-name }}-receipt-*-${{ needs.plan.outputs.source-sha }}
+          path: .buildchain/gates/downloaded-executions
+          merge-multiple: false
+
+      - name: Aggregate Shifu Gate receipts
+        id: aggregate
+        continue-on-error: true
+        run: node .buildchain/runtime/scripts/shifu-gate-profile.mjs --mode aggregate
+        env:
+          BUILDCHAIN_GATE_MATRIX_PATH: .buildchain/gates/plan/matrix.json
+          BUILDCHAIN_GATE_EXECUTION_INPUT: .buildchain/gates/downloaded-executions
+          BUILDCHAIN_GATE_AGGREGATE_PATH: .buildchain/gates/gate-aggregate.json
+          BUILDCHAIN_GATE_SOURCE_SHA: ${{ needs.plan.outputs.source-sha }}
+
+      - name: Resolve Gate aggregate artifact name
+        id: names
+        shell: bash
+        run: echo "gate-aggregate-artifact=${ARTIFACT_NAME}-aggregate-${SOURCE_SHA}" >> "${GITHUB_OUTPUT}"
+        env:
+          ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          SOURCE_SHA: ${{ needs.plan.outputs.source-sha }}
+
+      - name: Upload Shifu Gate aggregate
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.names.outputs.gate-aggregate-artifact }}
+          path: .buildchain/gates/gate-aggregate.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Create Shifu profile envelope controller receipt
+        id: controller-receipt
+        if: ${{ always() }}
+        run: node .buildchain/runtime/scripts/controller-evidence.mjs --mode receipt
+        env:
+          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+          BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
+            [{"id":"plan","status":"${{ needs.plan.result }}"},{"id":"execute","status":"${{ needs.run-gates.result }}"},{"id":"aggregate","status":"${{ steps.aggregate.outcome }}"}]
+          BUILDCHAIN_CONTROLLER_EVIDENCE_JSON: ${{ steps.aggregate.outputs.gate-aggregate-digest != '' && format('[{{"kind":"shifu-gate-aggregate","digest":"{0}"}}]', steps.aggregate.outputs.gate-aggregate-digest) || '[]' }}
+          BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ steps.aggregate.outcome == 'success' && '' || 'gate-aggregate-incomplete' }}
+          BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Shifu Gate aggregate did not qualify
+          BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: ${{ inputs.artifact-name }}-controller-receipt-${{ needs.plan.outputs.source-sha }}
+          BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/receipt.json
+
+      - name: Resolve Shifu profile envelope controller receipt artifact
+        id: controller-names
+        if: ${{ always() && steps.controller-receipt.outcome == 'success' }}
+        run: echo "controller-receipt-artifact=${ARTIFACT_NAME}-controller-receipt-${SOURCE_SHA}" >> "$GITHUB_OUTPUT"
+        env:
+          ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          SOURCE_SHA: ${{ needs.plan.outputs.source-sha }}
+
+      - name: Upload Shifu profile envelope controller receipt
+        if: ${{ always() && steps.controller-receipt.outcome == 'success' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ steps.controller-names.outputs.controller-receipt-artifact }}
+          path: .buildchain/controller/receipt.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
+      - name: Enforce aggregate qualification
+        if: ${{ steps.aggregate.outcome != 'success' || steps.controller-receipt.outputs.controller-receipt-qualifying != 'true' }}
+        run: exit 1
