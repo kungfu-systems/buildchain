@@ -4199,6 +4199,160 @@ fs.writeFileSync("generated.json", JSON.stringify(value, null, 2) + "\\n");
   );
 });
 
+test("published alpha finalization stays bound to its exact transaction after the protected version-state PR merges", async () => {
+  const transactionSourceSha = "1".repeat(40);
+  const transactionReleaseSha = "2".repeat(40);
+  const channelMergeSha = "3".repeat(40);
+  const version = "1.0.0-alpha.0";
+  const exactTag = `v${version}`;
+  const artifact = {
+    kind: "npm",
+    name: "@kungfu-tech/buildchain",
+    ref: version,
+    digest: "sha512:alpha0",
+  };
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version,
+      packageManager: "pnpm@11.7.0",
+    },
+  });
+  const evidencePath = path.join(
+    cwd,
+    ".buildchain/release-evidence",
+    exactTag,
+    "evidence.json",
+  );
+  fs.mkdirSync(path.dirname(evidencePath), { recursive: true });
+  fs.writeFileSync(evidencePath, JSON.stringify({
+    schema: 1,
+    version,
+    channel: "alpha",
+    source_sha: transactionSourceSha,
+    release_sha: transactionReleaseSha,
+    target_ref: "alpha/v1/v1.0",
+    release_material_sha: transactionReleaseSha,
+    publish_tooling_sha: transactionReleaseSha,
+    artifacts: [artifact],
+  }, null, 2) + "\n");
+  const { octokit, refs, commits } = createGitMock({
+    refs: new Map([
+      ["heads/alpha/v1/v1.0", channelMergeSha],
+      ["heads/dev/v1/v1.0", channelMergeSha],
+    ]),
+  });
+  commits.set(channelMergeSha, {
+    sha: channelMergeSha,
+    tree: { sha: `tree-${channelMergeSha}` },
+    parents: [{ sha: transactionSourceSha }, { sha: transactionReleaseSha }],
+  });
+  await persistDurableReleaseTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    transaction: {
+      schema: 1,
+      id: "contained-published-alpha",
+      repository: "kungfu-systems/buildchain",
+      target_ref: "alpha/v1/v1.0",
+      source_sha: transactionSourceSha,
+      release_sha: transactionReleaseSha,
+      release_material_sha: transactionReleaseSha,
+      publish_tooling_sha: transactionReleaseSha,
+      version,
+      exact_tag: exactTag,
+      channel: "alpha",
+      line: "v1.0",
+      version_strategy: "",
+      lifecycle_identity: "lifecycle.publish",
+      state_ref: "buildchain/release-state/1-0-0-alpha-0",
+      state_path: "",
+      evidence_path: "",
+      state: "finalizing",
+      previous_state: "published",
+      actor: "codex",
+      run_id: "1",
+      superseded_by: "",
+      failure: "",
+      artifacts: [artifact],
+      evidence: [".buildchain/release-evidence/v1.0.0-alpha.0/evidence.json"],
+      created_at: "2026-07-01T00:00:00.000Z",
+      updated_at: "2026-07-01T00:00:00.000Z",
+    },
+    evidencePath,
+  });
+  fs.rmSync(path.join(cwd, ".buildchain/release-state"), {
+    recursive: true,
+    force: true,
+  });
+  fs.rmSync(path.join(cwd, ".buildchain/release-evidence"), {
+    recursive: true,
+    force: true,
+  });
+
+  const plan = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: channelMergeSha,
+    targetRef: "alpha/v1/v1.0",
+    cwd,
+    dryRun: true,
+    publishTransaction: true,
+    requireVersionState: true,
+  });
+  assert.deepEqual(
+    plan.updates.find((update) => update.action === "dry-run-publish-transaction"),
+    {
+      action: "dry-run-publish-transaction",
+      version,
+      tag: exactTag,
+      publicTag: exactTag,
+      sha: transactionReleaseSha,
+      finalizationOnly: true,
+    },
+  );
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: channelMergeSha,
+    targetRef: "alpha/v1/v1.0",
+    cwd,
+    publishTransaction: true,
+    publishRequiredArtifactsJson: JSON.stringify([artifact]),
+    requireVersionState: true,
+    expectedPublicationVersion: version,
+    releasePassport: false,
+  });
+
+  assert.equal(result.sha, channelMergeSha);
+  assert.equal(result.publishTransaction.state, "complete");
+  assert.equal(result.publishTransaction.releaseSha, transactionReleaseSha);
+  assert.equal(refs.get("heads/alpha/v1/v1.0"), channelMergeSha);
+  assert.equal(refs.get("heads/dev/v1/v1.0"), channelMergeSha);
+  assert.equal(refs.get(`tags/${exactTag}`), transactionReleaseSha);
+  assert.equal(refs.get("tags/v1.0-alpha"), transactionReleaseSha);
+  assert.equal(refs.get("tags/v1-alpha"), transactionReleaseSha);
+  assert.equal(refs.has("tags/v1.0.0-alpha.1"), false);
+  assert.deepEqual(
+    result.updates.find(
+      (update) => update.action === "finalized-contained-published-transaction",
+    ),
+    {
+      action: "finalized-contained-published-transaction",
+      tag: exactTag,
+      sourceSha: transactionSourceSha,
+      releaseSha: transactionReleaseSha,
+      currentChannelSha: channelMergeSha,
+      sha: transactionReleaseSha,
+    },
+  );
+});
+
 test("publish transaction resumes partial alpha finalization with exact tag on release material", async () => {
   const oldAlphaSha = "3".repeat(40);
   const versionHeadSha = "4".repeat(40);

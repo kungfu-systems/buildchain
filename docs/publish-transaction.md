@@ -363,6 +363,21 @@ When publish transactions are enabled, promotion order is:
 7. move floating tags and channel refs;
 8. mark the transaction `complete`.
 
+When a protected channel requires a generated version-state pull request, the
+first run can stop at `finalizing` after registry publication. If the reviewed
+merge commit later contains that exact transaction release material but the
+exact tag is still absent, a retry performs finalization only: it reloads the
+same durable source, release material, tooling, evidence, version, and target
+bindings; creates the exact and floating tags at the transaction release SHA;
+and completes the passport from the transaction source tree. It does not rerun
+the provider mutation and does not authorize the newer composite channel tree
+as published material. A different source tree still requires a new version and
+a fresh release candidate.
+
+Deferred binary dispatch, controller-evidence bundling, and any consumer
+publication commit are skipped while `finalization-needed=true`. They run only
+after the exact public tag and complete release passport exist.
+
 Consumer products that expose a signed well-known channel can opt into one
 additional, deliberately final step with `publication-commit-command`. Before
 that command runs, Buildchain has already completed the transaction, created
