@@ -129,6 +129,30 @@ test("classic protection compiles to one effective fail-closed policy", () => {
   assert.equal(policy.allowDeletions, false);
 });
 
+test("classic branch-protection bypass allowances are effective bypass actors", () => {
+  const protection = classicProtection();
+  protection.required_pull_request_reviews.bypass_pull_request_allowances = {
+    users: [{ id: 209317, login: "dongkeren" }],
+    teams: [],
+    apps: [],
+  };
+  const policy = compileEffectiveGithubGovernancePolicy({
+    branch: "dev/v2/v2.14",
+    defaultBranch: "dev/v2/v2.14",
+    protectedBranch: true,
+    protection,
+  });
+  assert.deepEqual(policy.bypassActors, [{
+    actorType: "User",
+    bypassMode: "always",
+    actorId: 209317,
+  }]);
+  const receipt = evaluateGithubGovernanceSnapshot(qualifyingInput({
+    effectivePolicy: policy,
+  }));
+  assert.ok(receipt.failureIds.includes("bypass-policy"));
+});
+
 test("repository and organization rulesets aggregate with classic protection", () => {
   const policy = compileEffectiveGithubGovernancePolicy({
     branch: "main",
@@ -276,6 +300,10 @@ test("rollout plan requires frozen inventory and carries exact rollback", () => 
     { context: "DCO", app_id: 15368 },
     { context: "Source Acceptance", app_id: 15368 },
   ]);
+  assert.deepEqual(
+    plan.operations[0].body.required_pull_request_reviews.bypass_pull_request_allowances,
+    { users: [], teams: [], apps: [] },
+  );
   assert.match(plan.planRoot, /^sha256:[0-9a-f]{64}$/);
 });
 

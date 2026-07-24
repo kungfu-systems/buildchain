@@ -136,6 +136,27 @@ function rulesetChecks(rulesets) {
     .filter(Boolean))].sort();
 }
 
+function classicBypassActors(review = {}) {
+  const allowances = review.bypass_pull_request_allowances || {};
+  return [
+    ...(allowances.users || []).map((actor) => ({
+      actor_type: "User",
+      bypass_mode: "always",
+      actor_id: Number(actor?.id || 0),
+    })),
+    ...(allowances.teams || []).map((actor) => ({
+      actor_type: "Team",
+      bypass_mode: "always",
+      actor_id: Number(actor?.id || 0),
+    })),
+    ...(allowances.apps || []).map((actor) => ({
+      actor_type: "Integration",
+      bypass_mode: "always",
+      actor_id: Number(actor?.id || 0),
+    })),
+  ];
+}
+
 export function compileEffectiveGithubGovernancePolicy({
   branch,
   defaultBranch,
@@ -151,7 +172,10 @@ export function compileEffectiveGithubGovernancePolicy({
     ...protectionChecks(protection),
     ...rulesetChecks(applicable),
   ])].sort();
-  const bypassActors = applicable.flatMap((ruleset) => ruleset.bypass_actors || []);
+  const bypassActors = [
+    ...classicBypassActors(classicReview),
+    ...applicable.flatMap((ruleset) => ruleset.bypass_actors || []),
+  ];
   const classicProtected = Boolean(protection);
   const rulesetPullRequest = pullRequests.length > 0;
   const requiredApprovals = Math.max(
@@ -612,6 +636,16 @@ export function createGithubGovernanceRolloutPlan({
         Number(desiredProtection?.requiredApprovals || 1),
       ),
       require_last_push_approval: true,
+      dismissal_restrictions: {
+        users: [],
+        teams: [],
+        apps: [],
+      },
+      bypass_pull_request_allowances: {
+        users: [],
+        teams: [],
+        apps: [],
+      },
     },
     restrictions: null,
     required_conversation_resolution: true,
@@ -640,6 +674,7 @@ export function createGithubGovernanceRolloutPlan({
       enforceAdmins: true,
       requiredChecks: body.required_status_checks.checks.map((entry) => entry.context),
       requiredCheckBindings: body.required_status_checks.checks,
+      bypassActors: [],
       allowForcePushes: false,
       allowDeletions: false,
     },
