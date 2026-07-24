@@ -14,6 +14,7 @@ import {
   verifyGithubGovernanceReceipt,
 } from "../packages/core/github-governance-authority.js";
 import { resolveVerifierSourceRevision } from "../scripts/audit-github-governance.mjs";
+import { resolveRequiredCheckBindings } from "../scripts/reconcile-github-governance.mjs";
 
 const CODEOWNERS = `* @kungfu-origin
 /.github/CODEOWNERS @kungfu-origin
@@ -261,14 +262,55 @@ test("rollout plan requires frozen inventory and carries exact rollback", () => 
     rollbackSnapshot,
     desiredProtection: {
       strictRequiredChecks: true,
-      requiredChecks: ["DCO", "Source Acceptance"],
+      requiredCheckBindings: [
+        { context: "DCO", app_id: 15368 },
+        { context: "Source Acceptance", app_id: 15368 },
+      ],
       requiredApprovals: 1,
     },
   });
   assert.equal(plan.operations[0].method, "PUT");
   assert.equal(plan.rollback[0].body, rollbackSnapshot);
   assert.equal(plan.rollback[0].preconditionRoot, plan.rollbackSnapshotRoot);
+  assert.deepEqual(plan.expectedObservation.requiredCheckBindings, [
+    { context: "DCO", app_id: 15368 },
+    { context: "Source Acceptance", app_id: 15368 },
+  ]);
   assert.match(plan.planRoot, /^sha256:[0-9a-f]{64}$/);
+});
+
+test("rollout plan rejects invalid required-check app bindings", () => {
+  assert.throws(() => createGithubGovernanceRolloutPlan({
+    repository: "kungfu-systems/buildchain",
+    targetRef: "dev/v2/v2.14",
+    inventory: {},
+    rollbackSnapshot: {},
+    desiredProtection: {
+      requiredCheckBindings: [{ context: "check", app_id: 0 }],
+    },
+  }), /positive integer or null/);
+});
+
+test("rollout CLI preserves observed check apps and requires explicit new bindings", () => {
+  assert.deepEqual(
+    resolveRequiredCheckBindings(
+      ["check", "Governance receipt"],
+      ["Governance receipt=15368"],
+      [{ context: "check", app_id: 15368 }],
+    ),
+    [
+      { context: "check", app_id: 15368 },
+      { context: "Governance receipt", app_id: 15368 },
+    ],
+  );
+  assert.throws(
+    () => resolveRequiredCheckBindings(
+      ["check", "Governance receipt"],
+      [],
+      [{ context: "check", app_id: 15368 }],
+    ),
+    /must preserve an observed app_id or declare/,
+  );
 });
 
 test("provider branch protection normalizes into an exact reversible write body", () => {
