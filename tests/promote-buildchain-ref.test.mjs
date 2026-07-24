@@ -5577,12 +5577,52 @@ test("publish transaction resumes partial release finalization with exact tag on
   const previousFinalizedSha = "2".repeat(40);
   const mergeSha = "3".repeat(40);
   const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[[version.files]]
+type = "json"
+path = "dist/site/site-manifest.json"
+key = "version"
+
+[lifecycle.version-state]
+command = "node scripts/generate-site-manifest.mjs"
+`,
     "package.json": {
       name: "@kungfu-tech/buildchain",
       version: "1.0.0",
       packageManager: "pnpm@11.7.0",
     },
+    "dist/site/site-manifest.json": {
+      version: "1.0.0",
+      generatedAt: "2026-07-01T00:00:00.000Z",
+      sourceRevision: versionHeadSha,
+    },
+    "scripts/generate-site-manifest.mjs": `
+import fs from "node:fs";
+const manifestPath = "dist/site/site-manifest.json";
+const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+fs.writeFileSync(manifestPath, JSON.stringify({
+  ...manifest,
+  generatedAt: process.env.BUILDCHAIN_SITE_GENERATED_AT || manifest.generatedAt,
+  sourceRevision: process.env.BUILDCHAIN_SOURCE_SHA || manifest.sourceRevision,
+}, null, 2) + "\\n");
+`,
   });
+  run(["git", "init"], cwd);
+  run(["git", "add", "."], cwd);
+  run(
+    ["git", "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-m", "init"],
+    cwd,
+  );
   const { octokit, refs, commits } = createGitMock({
     refs: new Map([
       ["heads/release/v1/v1.0", mergeSha],
@@ -5630,7 +5670,17 @@ test("publish transaction resumes partial release finalization with exact tag on
       run_id: "1",
       superseded_by: "",
       failure: "",
-      artifacts: [],
+      artifacts: [
+        {
+          group: "node",
+          kind: "npm",
+          name: "@kungfu-tech/buildchain",
+          ref: "1.0.0",
+          digest: "sha512-release",
+          role: "main",
+          required: true,
+        },
+      ],
       evidence: [],
       created_at: "2026-07-01T00:00:00.000Z",
       updated_at: "2026-07-01T00:00:00.000Z",
@@ -5658,6 +5708,14 @@ test("publish transaction resumes partial release finalization with exact tag on
   assert.equal(refs.get("tags/v1.0"), mergeSha);
   assert.equal(refs.get("tags/v1"), mergeSha);
   assert.equal(refs.has("tags/v1.0.1"), false);
+  assert.equal(
+    result.updates.some(
+      (update) =>
+        update.action === "created-version-state" &&
+        update.version === "1.0.0",
+    ),
+    false,
+  );
 });
 
 test("release promotion does not resume an ancestor transaction for another planned version", async () => {
