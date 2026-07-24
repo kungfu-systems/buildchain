@@ -777,6 +777,7 @@
           "publish-rematerialize-on-resume",
           "publish-required-artifacts-json",
           "publish-target",
+          "publish-transaction-override",
           "release-candidate-workflow-file",
           "release-candidate-workflow-name",
           "release-passport",
@@ -800,7 +801,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 78,
+        "inputCount": 79,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1887,6 +1888,7 @@
           "publish-rematerialize-on-resume",
           "publish-required-artifacts-json",
           "publish-target",
+          "publish-transaction-override",
           "release-candidate-workflow-file",
           "release-candidate-workflow-name",
           "release-passport",
@@ -1910,7 +1912,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 70,
+        "inputCount": 71,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -3910,7 +3912,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "5ba7fd93a13993b05767b6f02d0626a7347f25c3d7cd4589ed4f70028c1f1bd1",
-    "workflowRegistryDigest": "c2abf629b205a96f536e8758c3d9cdb3eade6945294fe278774877ef41d90b60",
+    "workflowRegistryDigest": "aab70864785c4b8f2089dd833732dbbb26b1b29cf20063a2fcdeeee3f36d2780",
     "pageRegistryDigest": "16a40ed6f3848fcb6a743f9d0369b04e956dfb7b8548b1a7a79266f76b928c80"
   },
   "comparison": {

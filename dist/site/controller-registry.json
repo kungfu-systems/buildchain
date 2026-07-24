@@ -1718,6 +1718,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "publish-transaction-override": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "release-candidate-workflow-file": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -1848,7 +1852,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:98e2676d01470992d7b4ca9c2a1e12b0e6c816c0586a8e8e1736f4b58a1360a9"
+      "digest": "sha256:0fcfcb36cad335e6ffe50b087d17f8bce9d6bd711e285740b28ce05bf9be7c6e"
     },
     {
       "schemaVersion": 1,
@@ -2024,5 +2028,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:15fdbedc9c0a2b51104e854300d1725bcab76b11cebde61f53a70a49fe43966b"
+  "digest": "sha256:5dc72042c6cd7d50fc4b77d186e14b676b48be0ac8c88ee85eb54ea1b428e144"
 }

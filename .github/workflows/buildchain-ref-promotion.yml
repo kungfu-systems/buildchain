@@ -132,6 +132,7 @@ jobs:
       branch-protection-bypass-apps: ${{ vars.BUILDCHAIN_PROMOTION_BYPASS_APPS || 'github-actions' }}
       required-artifact-count: 0
       publish-required-artifacts-json: "[]"
+      publish-transaction-override: ${{ github.event_name == 'workflow_dispatch' && inputs['recover-durable-transaction'] == true }}
       trusted-publishing: true
       release-passport: true
       release-passport-product-name: Buildchain

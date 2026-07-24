@@ -1967,7 +1967,7 @@ async function runPublishTransaction({
       requiredArtifacts,
     });
     const canFinalizeVersionState =
-      allowVersionStateFinalization &&
+      (allowVersionStateFinalization || explicitOverride) &&
       materialErrorRequiresRepair(error) &&
       existing?.version === version &&
       existing?.exact_tag === exactTag &&

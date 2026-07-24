@@ -346,6 +346,7 @@
         "publish-rematerialize-on-resume",
         "publish-required-artifacts-json",
         "publish-target",
+        "publish-transaction-override",
         "release-candidate-workflow-file",
         "release-candidate-workflow-name",
         "release-passport",
@@ -369,7 +370,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 78,
+      "inputCount": 79,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1567,6 +1568,7 @@
         "publish-rematerialize-on-resume",
         "publish-required-artifacts-json",
         "publish-target",
+        "publish-transaction-override",
         "release-candidate-workflow-file",
         "release-candidate-workflow-name",
         "release-passport",
@@ -1590,7 +1592,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 70,
+      "inputCount": 71,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
