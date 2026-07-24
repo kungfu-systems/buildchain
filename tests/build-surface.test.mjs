@@ -2243,6 +2243,10 @@ test("promote wrapper exposes controlled branch-protection review bypass", () =>
     path.join(root, ".github/workflows/.release-candidate-promote.yml"),
     "utf8",
   );
+  const publicWrapper = fs.readFileSync(
+    path.join(root, ".github/workflows/release-candidate-promote.yml"),
+    "utf8",
+  );
 
   assert.match(action, /branch-protection-bypass-apps:/);
   assert.match(action, /branch-protection-bypass-users:/);
@@ -2257,6 +2261,8 @@ test("promote wrapper exposes controlled branch-protection review bypass", () =>
   assert.match(wrapper, /branch-protection-bypass-teams:/);
   assert.match(wrapper, /branch-protection-bypass-apps: \$\{\{ inputs\.branch-protection-bypass-apps \}\}/);
   assert.match(wrapper, /checks: write/);
+  assert.match(wrapper, /pull-requests: write/);
+  assert.equal(publicWrapper.match(/pull-requests: write/g)?.length, 3);
   assert.match(wrapper, /generated-status-check-token: \$\{\{ github\.token \}\}/);
   assert.match(wrapper, /BUILDCHAIN_PROMOTION_TOKEN:\n\s+description:/);
   assert.match(
@@ -2269,6 +2275,7 @@ test("promote wrapper exposes controlled branch-protection review bypass", () =>
     "utf8",
   );
   assert.match(selfPromotion, /checks: write/);
+  assert.match(selfPromotion, /pull-requests: write/);
   assert.match(selfPromotion, /BUILDCHAIN_PROMOTION_BYPASS_APPS/);
   assert.doesNotMatch(selfPromotion, /BUILDCHAIN_PROMOTION_BYPASS_USERS/);
   assert.doesNotMatch(selfPromotion, /BUILDCHAIN_PROMOTION_BYPASS_TEAMS/);
