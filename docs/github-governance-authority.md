@@ -196,11 +196,34 @@ buildchain github-governance rollback \
   --confirm-rollback-root sha256:...
 ```
 
+For an admitted exact target, classic branch protection can also be compiled
+directly from the authority descriptor. This mode preserves both App-bound
+checks and intentionally unbound check contexts such as Kungfu alpha's
+`build`, rather than guessing a provider App identity.
+
+```bash
+buildchain github-governance protection-policy-plan \
+  --repository kungfu-systems/kungfu \
+  --branch alpha/v4/v4.0 \
+  --snapshot-output protection-rollback.json \
+  --plan-output protection-rollout.json
+
+buildchain github-governance protection-policy-apply \
+  --plan-json protection-rollout.json \
+  --confirm-plan-root sha256:...
+
+buildchain github-governance protection-policy-rollback \
+  --plan-json protection-rollout.json \
+  --confirm-rollback-root sha256:...
+```
+
 For an admitted exact target, repository ruleset reconciliation compiles the
 target descriptor into the provider body. It replaces bypass actors with the
 exact provider-admitted desired set, requires fresh Code Owner approval and
 resolved review threads, and binds required checks plus strict-update semantics
-to the target policy. Repository rulesets default to no bypass actors. The
+to the target policy. Newly synthesized managed rules include GitHub's explicit
+canonical defaults so the frozen expected root matches provider read-back.
+Repository rulesets default to no bypass actors. The
 descriptor's target-bound GitHub Actions allowance is an upper bound on
 effective provider state, not a requirement to add that actor to every
 protection layer; when needed, the built-in App allowance is expressed by

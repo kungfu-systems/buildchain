@@ -363,6 +363,58 @@ When publish transactions are enabled, promotion order is:
 7. move floating tags and channel refs;
 8. mark the transaction `complete`.
 
+Consumer products that expose a signed well-known channel can opt into one
+additional, deliberately final step with `publication-commit-command`. Before
+that command runs, Buildchain has already completed the transaction, created
+the public GitHub Release, and uploaded every release-passport file plus the
+explicit PR-stage payload files selected by
+`github-release-payload-patterns`. The command is therefore a commit point for
+discovery authority, not another artifact publisher.
+
+The command receives the exact version, source SHA, release SHA, release tag,
+release passport path, and downloaded payload directory through
+`BUILDCHAIN_PUBLICATION_COMMIT_*`. Optional consumer-owned dispatch/API
+credentials and private signing material are exposed separately as
+`BUILDCHAIN_PUBLICATION_COMMIT_TOKEN` and
+`BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY`; Buildchain never logs, persists,
+or interprets either value. The command must write
+`.buildchain/publication-commit/evidence.json` (or another declared path below
+`.buildchain/`) with this contract:
+
+```json
+{
+  "schema": "kungfu-buildchain-publication-commit-evidence/v1",
+  "status": "passed",
+  "identity": {
+    "version": "4.0.0-alpha.2",
+    "sourceSha": "<source-sha>",
+    "releaseSha": "<release-sha>",
+    "releaseTag": "v4.0.0-alpha.2"
+  },
+  "publication": {
+    "url": "https://example.test/.well-known/product/alpha.json",
+    "payloadRoot": "sha256:<64-lowercase-hex>"
+  },
+  "readback": {
+    "status": "passed",
+    "url": "https://example.test/.well-known/product/alpha.json",
+    "payloadRoot": "sha256:<same-root>"
+  },
+  "recovery": {
+    "previousAuthority": "preserved",
+    "rollbackReference": "sha256:<previous-root>"
+  }
+}
+```
+
+Buildchain rejects stale evidence, identity drift, non-public or mutable URLs,
+read-back root drift, and missing recovery evidence. It also rejects
+`standalone-binary-distribution=true` with a final commit command because that
+would queue product mutations after the authority moved. On any command or
+read-back failure, the consumer must leave the previous well-known document
+authoritative; Buildchain does not retry the command behind a successful
+receipt.
+
 If protected branch finalization is interrupted after publish evidence is
 valid, the transaction can stop in `finalizing` and output
 `finalization-needed=true`. A later run resumes from the same transaction state

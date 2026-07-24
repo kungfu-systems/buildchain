@@ -128,6 +128,21 @@ on:
         default: ""
         type: string
         required: false
+      github-release-payload-patterns:
+        description: "Newline-separated basename patterns selecting PR-stage payload files for the immutable public GitHub Release"
+        default: ""
+        type: string
+        required: false
+      publication-commit-command:
+        description: "Optional consumer command that commits the well-known publication authority after every artifact, passport, and public read-back prerequisite succeeds"
+        default: ""
+        type: string
+        required: false
+      publication-commit-evidence-path:
+        description: "Consumer evidence JSON written by publication-commit-command under .buildchain/"
+        default: ".buildchain/publication-commit/evidence.json"
+        type: string
+        required: false
       standalone-binary-distribution:
         description: "Dispatch binary-distribution.yml after promotion; enable only when the caller repository provides that workflow"
         default: false
@@ -339,6 +354,15 @@ on:
       BUILDCHAIN_PROMOTION_TOKEN:
         description: "Optional bypass-capable token used only for generated protected ref updates"
         required: false
+      BUILDCHAIN_PUBLICATION_COMMIT_TOKEN:
+        description: "Optional consumer-owned credential exposed only to the final publication commit command"
+        required: false
+      BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY:
+        description: "Optional consumer-owned private signing material exposed only to the final publication commit command"
+        required: false
+      KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY:
+        description: "Private key for the dedicated read-only GitHub governance auditor App"
+        required: false
       buildchain-issue-token:
         description: "Optional token with issues:write on the Buildchain repository for workflow-friction reports"
         required: false
@@ -403,6 +427,18 @@ on:
       release-candidate-artifact:
         description: "Resolved release-candidate artifact name"
         value: ${{ jobs.alpha.outputs.release-candidate-artifact || jobs.stable.outputs.release-candidate-artifact }}
+      publication-commit-evidence-path:
+        description: "Validated consumer publication commit evidence path"
+        value: ${{ jobs.alpha.outputs.publication-commit-evidence-path || jobs.stable.outputs.publication-commit-evidence-path }}
+      publication-commit-evidence-digest:
+        description: "sha256 digest of validated consumer publication commit evidence"
+        value: ${{ jobs.alpha.outputs.publication-commit-evidence-digest || jobs.stable.outputs.publication-commit-evidence-digest }}
+      publication-commit-url:
+        description: "Canonical public authority URL validated after the final commit"
+        value: ${{ jobs.alpha.outputs.publication-commit-url || jobs.stable.outputs.publication-commit-url }}
+      publication-commit-payload-root:
+        description: "Exact public authority payload root validated after the final commit"
+        value: ${{ jobs.alpha.outputs.publication-commit-payload-root || jobs.stable.outputs.publication-commit-payload-root }}
       controller-plan-artifact:
         description: "Controller plan artifact name"
         value: ${{ jobs.alpha.outputs.controller-plan-artifact || jobs.stable.outputs.controller-plan-artifact }}
@@ -668,6 +704,9 @@ jobs:
       github-release: ${{ inputs.github-release }}
       github-release-title: ${{ inputs.github-release-title }}
       github-release-notes: ${{ inputs.github-release-notes }}
+      github-release-payload-patterns: ${{ inputs.github-release-payload-patterns }}
+      publication-commit-command: ${{ inputs.publication-commit-command }}
+      publication-commit-evidence-path: ${{ inputs.publication-commit-evidence-path }}
       standalone-binary-distribution: ${{ inputs.standalone-binary-distribution }}
       runner-preset: ${{ inputs.runner-preset }}
       trusted-publishing: ${{ inputs.trusted-publishing }}
@@ -757,6 +796,9 @@ jobs:
       github-release: ${{ inputs.github-release }}
       github-release-title: ${{ inputs.github-release-title }}
       github-release-notes: ${{ inputs.github-release-notes }}
+      github-release-payload-patterns: ${{ inputs.github-release-payload-patterns }}
+      publication-commit-command: ${{ inputs.publication-commit-command }}
+      publication-commit-evidence-path: ${{ inputs.publication-commit-evidence-path }}
       runner-preset: ${{ inputs.runner-preset }}
       trusted-publishing: ${{ inputs.trusted-publishing }}
       publish-command: ${{ inputs.publish-command }}

@@ -204,6 +204,47 @@ function findDownloadedFilesByExtension(root, extensions = []) {
   return matches.sort();
 }
 
+export function selectReleaseAssetPaths({
+  payloadRoot,
+  patterns = [],
+} = {}) {
+  const matchers = splitPatterns(patterns).map(artifactPatternToRegExp);
+  if (matchers.length === 0) return [];
+  const files = [];
+  const stack = fs.existsSync(payloadRoot) ? [payloadRoot] : [];
+  while (stack.length) {
+    const current = stack.pop();
+    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+      const fullPath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        stack.push(fullPath);
+      } else if (
+        entry.isFile() &&
+        matchers.some((matcher) => matcher.test(entry.name))
+      ) {
+        files.push(fullPath);
+      }
+    }
+  }
+  files.sort();
+  if (files.length === 0) {
+    throw new Error(
+      `release candidate payload patterns matched no files: ${splitPatterns(patterns).join(", ")}`,
+    );
+  }
+  const basenames = new Set();
+  for (const filePath of files) {
+    const basename = path.basename(filePath);
+    if (basenames.has(basename)) {
+      throw new Error(
+        `release candidate public asset basename is not unique: ${basename}`,
+      );
+    }
+    basenames.add(basename);
+  }
+  return files;
+}
+
 function packageNameFromArtifactPath(filePath) {
   const basename = path.basename(String(filePath || ""));
   return basename
@@ -347,6 +388,7 @@ export async function resolveReleaseCandidateArtifacts({
   workflowName = "Build Surface Fixture",
   artifactName = "",
   artifactPatterns = "",
+  githubReleasePayloadPatterns = "",
   requiredArtifactCount = 0,
   publishArtifactKind = "npm",
   publishPackageMain = "",
@@ -522,6 +564,10 @@ export async function resolveReleaseCandidateArtifacts({
   const npmTarballPaths = publishArtifactKind === "npm"
     ? findDownloadedFilesByExtension(payloadDir, [".tgz"])
     : [];
+  const releaseAssetPaths = selectReleaseAssetPaths({
+    payloadRoot: payloadDir,
+    patterns: githubReleasePayloadPatterns,
+  });
   const downloadedRequiredArtifactCount = publishArtifactKind === "npm"
     ? npmTarballPaths.length
     : platformManifestPaths.length;
@@ -547,6 +593,7 @@ export async function resolveReleaseCandidateArtifacts({
       payloads: outputPath(payloadDir),
       platformManifests: platformManifestPaths.map(outputPath),
       npmTarballs: npmTarballPaths.map(outputPath),
+      releaseAssets: releaseAssetPaths.map(outputPath),
       publishRequiredArtifacts: outputPath(requiredArtifactsPath),
     },
     version: passport.target?.version || "",
@@ -567,6 +614,9 @@ export async function resolveReleaseCandidateArtifactsCli() {
     workflowName: env("BUILDCHAIN_RC_WORKFLOW_NAME", ""),
     artifactName: env("BUILDCHAIN_ARTIFACT_NAME"),
     artifactPatterns: env("BUILDCHAIN_ARTIFACT_PATTERNS"),
+    githubReleasePayloadPatterns: env(
+      "BUILDCHAIN_GITHUB_RELEASE_PAYLOAD_PATTERNS",
+    ),
     requiredArtifactCount: env("BUILDCHAIN_REQUIRED_ARTIFACT_COUNT", "0"),
     publishArtifactKind: env("BUILDCHAIN_PUBLISH_ARTIFACT_KIND", "npm"),
     publishPackageMain: env("BUILDCHAIN_PUBLISH_PACKAGE_MAIN"),
@@ -589,6 +639,9 @@ export async function resolveReleaseCandidateArtifactsCli() {
     "release-candidate-platform-manifest-count": String(result.platformManifestCount || 0),
     "release-candidate-npm-tarball-paths": (result.paths?.npmTarballs || []).join(","),
     "release-candidate-npm-tarball-count": String(result.npmTarballCount || 0),
+    "release-candidate-github-release-artifact-paths": (
+      result.paths?.releaseAssets || []
+    ).join("\n"),
     "publish-required-artifacts-json": JSON.stringify(result.publishRequiredArtifacts || []),
     "publish-required-artifacts-path": result.paths?.publishRequiredArtifacts || "",
     "release-candidate-run-id": result.run?.id || "",

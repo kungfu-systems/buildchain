@@ -825,6 +825,23 @@ bytes, uploads only missing assets, and fails with an immutable-release
 collision when a same-name asset has different bytes. It never deletes and
 replaces an existing asset during retry or duplicate workflow delivery.
 
+Product payloads are included only through the explicit
+`github-release-payload-patterns` input. Patterns match basenames inside the
+downloaded PR-stage RC payload bundle; zero matches or duplicate public
+basenames fail closed. This preserves the exact PR-built bytes instead of
+rebuilding archives during promotion.
+
+Consumers with a signed well-known discovery document can additionally provide
+`publication-commit-command`. The advanced promotion workflow validates its
+topology before any publish-gate or release mutation, then runs it only after
+the GitHub Release and its immutable payload/passport assets exist. The command
+must publicly read back the exact new payload root and emit
+`kungfu-buildchain-publication-commit-evidence/v1`; that evidence is copied
+into the controller artifact and exposed as workflow outputs. The previous
+authority must remain valid on every failure. Deferred standalone binary
+distribution is incompatible with this mode because the discovery authority
+must be the final product mutation.
+
 Buildchain also does not maintain bare exact tags such as `1.0.0`. The supported
 exact release and alpha refs are v-prefixed:
 

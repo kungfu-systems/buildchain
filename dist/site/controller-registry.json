@@ -1462,6 +1462,18 @@
           "classification": "redacted",
           "source": "workflow-call-secret"
         },
+        "BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
+        "BUILDCHAIN_PUBLICATION_COMMIT_TOKEN": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
+        "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY": {
+          "classification": "redacted",
+          "source": "workflow-call-secret"
+        },
         "allow-repository": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -1538,6 +1550,10 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "github-release-payload-patterns": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "github-release-title": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -1600,6 +1616,14 @@
         },
         "publication-auto-no-gate": {
           "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "publication-commit-command": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "publication-commit-evidence-path": {
+          "classification": "digest-only",
           "source": "workflow-call-input"
         },
         "publication-consumer-predicate-id": {
@@ -1816,7 +1840,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:f4a55b6291407c7ff2c5631a5158f944a70ad0b0b1e96591b83cff755a2f1dc4"
+      "digest": "sha256:98e2676d01470992d7b4ca9c2a1e12b0e6c816c0586a8e8e1736f4b58a1360a9"
     },
     {
       "schemaVersion": 1,
@@ -1992,5 +2016,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:a229a6b11397e5b92e50be151918634fc2f75117360ed1961a38cd5e3ba8dea5"
+  "digest": "sha256:b7eb27d09a44a5c91dbbc6421fbfe4098aa9bce6596ae5327e1632e0e7677d0e"
 }

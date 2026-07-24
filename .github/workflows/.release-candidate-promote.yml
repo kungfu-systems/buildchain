@@ -167,6 +167,21 @@ on:
         default: ""
         type: string
         required: false
+      github-release-payload-patterns:
+        description: "Newline-separated basename patterns selecting PR-stage payload files for the immutable public GitHub Release"
+        default: ""
+        type: string
+        required: false
+      publication-commit-command:
+        description: "Optional consumer command that commits the well-known publication authority after every artifact, passport, and public read-back prerequisite succeeds"
+        default: ""
+        type: string
+        required: false
+      publication-commit-evidence-path:
+        description: "Consumer evidence JSON written by publication-commit-command under .buildchain/"
+        default: ".buildchain/publication-commit/evidence.json"
+        type: string
+        required: false
       standalone-binary-distribution:
         description: "Dispatch binary-distribution.yml after promotion; enable only when the caller repository provides that workflow"
         default: false
@@ -378,6 +393,15 @@ on:
       BUILDCHAIN_PROMOTION_TOKEN:
         description: "Optional bypass-capable token used only for generated protected ref updates"
         required: false
+      BUILDCHAIN_PUBLICATION_COMMIT_TOKEN:
+        description: "Optional consumer-owned credential exposed only to the final publication commit command"
+        required: false
+      BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY:
+        description: "Optional consumer-owned private signing material exposed only to the final publication commit command"
+        required: false
+      KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY:
+        description: "Private key for the dedicated read-only GitHub governance auditor App"
+        required: false
       buildchain-issue-token:
         description: "Optional token with issues:write on the Buildchain repository for workflow-friction reports"
         required: false
@@ -406,6 +430,18 @@ on:
       release-candidate-artifact:
         description: "Resolved release-candidate artifact name"
         value: ${{ jobs.promote.outputs.release-candidate-artifact }}
+      publication-commit-evidence-path:
+        description: "Validated consumer publication commit evidence path"
+        value: ${{ jobs.promote.outputs.publication-commit-evidence-path }}
+      publication-commit-evidence-digest:
+        description: "sha256 digest of validated consumer publication commit evidence"
+        value: ${{ jobs.promote.outputs.publication-commit-evidence-digest }}
+      publication-commit-url:
+        description: "Canonical public authority URL validated after the final commit"
+        value: ${{ jobs.promote.outputs.publication-commit-url }}
+      publication-commit-payload-root:
+        description: "Exact public authority payload root validated after the final commit"
+        value: ${{ jobs.promote.outputs.publication-commit-payload-root }}
       controller-plan-artifact:
         description: "Controller plan artifact name"
         value: ${{ jobs.controller-plan.outputs.controller-plan-artifact }}
@@ -986,6 +1022,10 @@ jobs:
       release-candidate-artifact: ${{ steps.rc.outputs.release-candidate-artifact }}
       release-candidate-outcome: ${{ steps.rc.outcome }}
       promotion-outcome: ${{ steps.promote.outcome }}
+      publication-commit-evidence-path: ${{ steps.publication-commit.outputs.evidence-path }}
+      publication-commit-evidence-digest: ${{ steps.publication-commit.outputs.evidence-digest }}
+      publication-commit-url: ${{ steps.publication-commit.outputs.public-url }}
+      publication-commit-payload-root: ${{ steps.publication-commit.outputs.payload-root }}
     steps:
       - name: Download release-candidate-promotion controller plan
         uses: actions/download-artifact@v7.0.0
@@ -1202,6 +1242,7 @@ jobs:
           BUILDCHAIN_TARGET_REF: ${{ needs.preflight.outputs.target-ref }}
           BUILDCHAIN_ARTIFACT_NAME: ${{ inputs.artifact-name }}
           BUILDCHAIN_ARTIFACT_PATTERNS: ${{ inputs.artifact-patterns }}
+          BUILDCHAIN_GITHUB_RELEASE_PAYLOAD_PATTERNS: ${{ inputs.github-release-payload-patterns }}
           BUILDCHAIN_RC_WORKFLOW_FILE: ${{ inputs.release-candidate-workflow-file }}
           BUILDCHAIN_RC_WORKFLOW_NAME: ${{ inputs.release-candidate-workflow-name }}
           BUILDCHAIN_REQUIRED_ARTIFACT_COUNT: ${{ inputs.required-artifact-count }}
@@ -1311,6 +1352,28 @@ jobs:
             echo "::notice::Authority reason: ${BUILDCHAIN_STABLE_RELEASE_REASON}"
           fi
 
+      - name: Validate final publication commit topology
+        if: ${{ inputs.publication-commit-command != '' }}
+        shell: bash
+        env:
+          BUILDCHAIN_GITHUB_RELEASE_ENABLED: ${{ inputs.github-release }}
+          BUILDCHAIN_STANDALONE_DISTRIBUTION_ENABLED: ${{ inputs.standalone-binary-distribution }}
+          BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE: ${{ inputs.publication-commit-evidence-path }}
+        run: |
+          set -euo pipefail
+          if [ "${BUILDCHAIN_GITHUB_RELEASE_ENABLED}" != "true" ]; then
+            echo "::error::publication-commit-command requires github-release=true so public artifacts and passport evidence are durable before authority moves"
+            exit 1
+          fi
+          if [ "${BUILDCHAIN_STANDALONE_DISTRIBUTION_ENABLED}" = "true" ]; then
+            echo "::error::publication-commit-command requires standalone-binary-distribution=false so no deferred product mutation can follow the final authority commit"
+            exit 1
+          fi
+          if [[ "${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}" != .buildchain/* || "${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}" == *".."* ]]; then
+            echo "::error::publication-commit-evidence-path must stay under .buildchain/"
+            exit 1
+          fi
+
       - name: Ensure publish-gate ref locks promotion commit
         id: publish-gate
         uses: actions/github-script@v8
@@ -1402,6 +1465,7 @@ jobs:
           release-passport-invariant-passport-command: ${{ inputs.release-passport-invariant-passport-command }}
           release-passport-buildchain-self-kfd: ${{ inputs.release-passport-buildchain-self-kfd }}
           github-release: ${{ inputs.github-release }}
+          github-release-artifact-paths: ${{ steps.rc.outputs.release-candidate-github-release-artifact-paths }}
           github-release-title: ${{ inputs.github-release-title }}
           github-release-notes: ${{ inputs.github-release-notes }}
           promote-only-release-candidate: "true"
@@ -1437,6 +1501,62 @@ jobs:
             -f tag="$RELEASE_TAG" \
             -f upload-release=false
 
+      - name: Commit consumer publication authority last
+        id: publication-commit
+        if: ${{ inputs.publication-commit-command != '' && !inputs.dry-run && steps.promote.outcome == 'success' }}
+        shell: bash
+        env:
+          BUILDCHAIN_PUBLICATION_COMMIT_COMMAND: ${{ inputs.publication-commit-command }}
+          BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE: ${{ inputs.publication-commit-evidence-path }}
+          BUILDCHAIN_PUBLICATION_COMMIT_TOKEN: ${{ secrets.BUILDCHAIN_PUBLICATION_COMMIT_TOKEN }}
+          BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY: ${{ secrets.BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY }}
+          BUILDCHAIN_PUBLICATION_COMMIT_SOURCE_SHA: ${{ needs.preflight.outputs.requested-sha }}
+          BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_SHA: ${{ steps.promote.outputs.transaction-release-sha }}
+          BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_TAG: ${{ steps.promote.outputs.public-release-tag }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if ${{ inputs.standalone-binary-distribution }}; then
+            echo "::error::publication-commit-command requires standalone-binary-distribution=false so no deferred product mutation can follow the final authority commit"
+            exit 1
+          fi
+          if [[ "${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}" != .buildchain/* || "${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}" == *".."* ]]; then
+            echo "::error::publication-commit-evidence-path must stay under .buildchain/"
+            exit 1
+          fi
+          if [ -e "${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}" ]; then
+            echo "::error::refusing stale publication commit evidence at ${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}"
+            exit 1
+          fi
+          export BUILDCHAIN_PUBLICATION_COMMIT_VERSION="${BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_TAG#v}"
+          export BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_PASSPORT="${{ steps.promote.outputs.release-passport-path }}"
+          export BUILDCHAIN_PUBLICATION_COMMIT_PAYLOAD_DIR="${{ steps.rc.outputs.release-candidate-payload-dir }}"
+          mkdir -p "$(dirname "${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}")"
+          bash -euo pipefail -c "${BUILDCHAIN_PUBLICATION_COMMIT_COMMAND}"
+          result="$(
+            node .buildchain/runtime/scripts/publication-commit-evidence.mjs \
+              --evidence "${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}" \
+              --version "${BUILDCHAIN_PUBLICATION_COMMIT_VERSION}" \
+              --source-sha "${BUILDCHAIN_PUBLICATION_COMMIT_SOURCE_SHA}" \
+              --release-sha "${BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_SHA}" \
+              --release-tag "${BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_TAG}"
+          )"
+          RESULT="${result}" EVIDENCE_PATH="${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}" node <<'NODE'
+          const crypto = require("node:crypto");
+          const fs = require("node:fs");
+          const result = JSON.parse(process.env.RESULT);
+          const digest = crypto.createHash("sha256")
+            .update(fs.readFileSync(process.env.EVIDENCE_PATH))
+            .digest("hex");
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, [
+            `evidence-path=${process.env.EVIDENCE_PATH}`,
+            `evidence-digest=sha256:${digest}`,
+            `public-url=${result.publicUrl}`,
+            `payload-root=${result.payloadRoot}`,
+            "",
+          ].join("\n"));
+          NODE
+
       - name: Bundle release-candidate-promotion controller evidence
         id: controller-evidence
         if: ${{ always() && !inputs.dry-run && steps.promote.outcome == 'success' }}
@@ -1445,6 +1565,8 @@ jobs:
           RELEASE_CANDIDATE_PASSPORT: ${{ steps.routing-evidence.outputs.candidate-passport-path || steps.rc.outputs.release-candidate-passport-path }}
           PUBLISH_EVIDENCE: ${{ steps.promote.outputs.publish-evidence-path }}
           RELEASE_PASSPORT: ${{ steps.promote.outputs.release-passport-path }}
+          PUBLICATION_COMMIT_ENABLED: ${{ inputs.publication-commit-command != '' }}
+          PUBLICATION_COMMIT_EVIDENCE: ${{ steps.publication-commit.outputs.evidence-path }}
         run: |
           node <<'NODE'
           const fs = require("node:fs");
@@ -1454,6 +1576,9 @@ jobs:
             [process.env.PUBLISH_EVIDENCE, "publish-evidence.json"],
             [process.env.RELEASE_PASSPORT, "release-passport.json"],
           ];
+          if (process.env.PUBLICATION_COMMIT_ENABLED === "true") {
+            files.push([process.env.PUBLICATION_COMMIT_EVIDENCE, "publication-commit-evidence.json"]);
+          }
           fs.mkdirSync(".buildchain/controller/promotion-evidence", { recursive: true });
           for (const [source, name] of files) {
             if (!source || !fs.existsSync(source)) throw new Error(`promotion controller evidence is missing: ${source || name}`);

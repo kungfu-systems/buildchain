@@ -93,7 +93,7 @@
       "path": "docs/github-governance-authority.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:872098c5c904dc972794bda9d3ac8d93f8fe7d78918885dc21106b30ee3195a9"
+      "digest": "sha256:3103d7982c9a30b344c603566520aeb1d5d90c1c54958d9c1c2b7ae897359da8"
     },
     {
       "id": "release-candidate",
@@ -245,7 +245,7 @@
       "path": "docs/publish-transaction.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:d258ff508261cfa6d0a57cf6b744300440a19a5fa1a9c3afd931e8858203ba36"
+      "digest": "sha256:8f6cc435f57807889827ad2c9bfec1e4ad94290fde6fe02e72a15967e7072edc"
     },
     {
       "id": "release-governance",
@@ -253,7 +253,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:79cdd69569fc0600fed9e61475ffd0e28a19ea442af62e4c0811c9220e7fdb68"
+      "digest": "sha256:4e7c4649ee0fa7cea11ccb7031d5dd38046a3aef15dba6a00d24b3a12361b05f"
     },
     {
       "id": "release-flow",

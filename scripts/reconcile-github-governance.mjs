@@ -57,6 +57,21 @@ export function resolveRequiredCheckBindings(checks, appBindings, observedChecks
   });
 }
 
+export function resolveGithubProtectionTargetPolicy({ repository, targetRef } = {}) {
+  const policy = resolveGithubGovernanceTargetPolicy({
+    repository,
+    targetRef,
+  });
+  return {
+    strictRequiredChecks: policy.strictRequiredChecks,
+    requiredCheckBindings: policy.requiredCheckBindings.map((entry) => ({
+      context: entry.context,
+      app_id: entry.appId ?? null,
+    })),
+    requiredApprovals: policy.requiredApprovals,
+  };
+}
+
 function hasFlag(args, name) {
   return args.includes(`--${name}`);
 }
@@ -316,6 +331,48 @@ function rulesetRollback(args) {
   };
 }
 
+function protectionPolicyPlan(args) {
+  const repository = required(flag(args, "repository"), "--repository");
+  const branch = required(flag(args, "branch"), "--branch")
+    .replace(/^refs\/heads\//, "");
+  const snapshotOutput = required(flag(args, "snapshot-output"), "--snapshot-output");
+  const planOutput = required(flag(args, "plan-output"), "--plan-output");
+  const protection = readProtection(repository, branch);
+  const desiredProtection = resolveGithubProtectionTargetPolicy({
+    repository,
+    targetRef: branch,
+  });
+  const snapshot = snapshotCore(repository, branch, protection);
+  const snapshotWithRoot = {
+    ...snapshot,
+    snapshotRoot: githubGovernanceDigest(snapshot),
+  };
+  const rollout = createGithubGovernanceRolloutPlan({
+    repository,
+    targetRef: branch,
+    inventory: {
+      protectionExists: protection.exists,
+      protection: protection.body,
+    },
+    rollbackSnapshot: protection.body || {},
+    rollbackProtectionExists: protection.exists,
+    desiredProtection,
+  });
+  const bound = {
+    ...rollout,
+    snapshotRoot: snapshotWithRoot.snapshotRoot,
+    snapshotPath: path.resolve(snapshotOutput),
+  };
+  const { planRoot: ignored, ...boundCore } = bound;
+  const finalPlan = {
+    ...boundCore,
+    planRoot: githubGovernanceDigest(boundCore),
+  };
+  fs.writeFileSync(path.resolve(snapshotOutput), `${JSON.stringify(snapshotWithRoot, null, 2)}\n`);
+  fs.writeFileSync(path.resolve(planOutput), `${JSON.stringify(finalPlan, null, 2)}\n`);
+  return finalPlan;
+}
+
 function plan(args) {
   const repository = required(flag(args, "repository"), "--repository");
   const branch = required(flag(args, "branch"), "--branch").replace(/^refs\/heads\//, "");
@@ -472,6 +529,9 @@ function main(args = process.argv.slice(2)) {
     ["ruleset-policy-plan", rulesetPolicyPlan],
     ["ruleset-policy-apply", rulesetApply],
     ["ruleset-policy-rollback", rulesetRollback],
+    ["protection-policy-plan", protectionPolicyPlan],
+    ["protection-policy-apply", apply],
+    ["protection-policy-rollback", rollback],
   ]);
   const handler = handlers.get(mode) || plan;
   const rest = handlers.has(mode) ? args.slice(1) : args;
