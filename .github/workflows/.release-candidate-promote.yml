@@ -138,12 +138,12 @@ on:
         type: string
         required: false
       branch-protection-bypass-users:
-        description: "GitHub users allowed to bypass pull-request review for Buildchain-managed generated channel ref updates"
+        description: "Reserved compatibility input; managed channel protection rejects user bypass actors"
         default: ""
         type: string
         required: false
       branch-protection-bypass-teams:
-        description: "GitHub team slugs allowed to bypass pull-request review for Buildchain-managed generated channel ref updates"
+        description: "Reserved compatibility input; managed channel protection rejects team bypass actors"
         default: ""
         type: string
         required: false
@@ -167,6 +167,21 @@ on:
         default: ""
         type: string
         required: false
+      github-release-payload-patterns:
+        description: "Newline-separated basename patterns selecting PR-stage payload files for the immutable public GitHub Release"
+        default: ""
+        type: string
+        required: false
+      publication-commit-command:
+        description: "Optional consumer command that commits the well-known publication authority after every artifact, passport, and public read-back prerequisite succeeds"
+        default: ""
+        type: string
+        required: false
+      publication-commit-evidence-path:
+        description: "Consumer evidence JSON written by publication-commit-command under .buildchain/"
+        default: ".buildchain/publication-commit/evidence.json"
+        type: string
+        required: false
       standalone-binary-distribution:
         description: "Dispatch binary-distribution.yml after promotion; enable only when the caller repository provides that workflow"
         default: false
@@ -186,6 +201,16 @@ on:
         description: "Optional publish command. Defaults to lifecycle.publish from buildchain.toml."
         default: ""
         type: string
+        required: false
+      publish-rematerialize-on-resume:
+        description: "Replay the consumer publish materialization step after valid durable evidence is restored; use only when the command is idempotent and recreates ephemeral Passport inputs or release assets"
+        default: false
+        type: boolean
+        required: false
+      publish-transaction-override:
+        description: "Explicitly allow ancestry-bound finalization recovery for an already published durable transaction"
+        default: false
+        type: boolean
         required: false
       publish-required-artifacts-json:
         description: "Required publish artifacts JSON passed to the promotion action; ref_template may contain one {version} placeholder"
@@ -302,6 +327,11 @@ on:
         default: ""
         type: string
         required: false
+      github-governance-receipt-json:
+        description: "Fresh qualifying governance receipt for the exact publication repository and target ref"
+        default: ""
+        type: string
+        required: false
       publication-gate-aggregate-json:
         description: "Qualifying Shifu Gate aggregate or explicit consumer-owned no-Gate decision"
         default: ""
@@ -368,6 +398,15 @@ on:
       BUILDCHAIN_PROMOTION_TOKEN:
         description: "Optional bypass-capable token used only for generated protected ref updates"
         required: false
+      BUILDCHAIN_PUBLICATION_COMMIT_TOKEN:
+        description: "Optional consumer-owned credential exposed only to the final publication commit command"
+        required: false
+      BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY:
+        description: "Optional consumer-owned private signing material exposed only to the final publication commit command"
+        required: false
+      KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY:
+        description: "Private key for the dedicated read-only GitHub governance auditor App"
+        required: false
       buildchain-issue-token:
         description: "Optional token with issues:write on the Buildchain repository for workflow-friction reports"
         required: false
@@ -396,6 +435,18 @@ on:
       release-candidate-artifact:
         description: "Resolved release-candidate artifact name"
         value: ${{ jobs.promote.outputs.release-candidate-artifact }}
+      publication-commit-evidence-path:
+        description: "Validated consumer publication commit evidence path"
+        value: ${{ jobs.promote.outputs.publication-commit-evidence-path }}
+      publication-commit-evidence-digest:
+        description: "sha256 digest of validated consumer publication commit evidence"
+        value: ${{ jobs.promote.outputs.publication-commit-evidence-digest }}
+      publication-commit-url:
+        description: "Canonical public authority URL validated after the final commit"
+        value: ${{ jobs.promote.outputs.publication-commit-url }}
+      publication-commit-payload-root:
+        description: "Exact public authority payload root validated after the final commit"
+        value: ${{ jobs.promote.outputs.publication-commit-payload-root }}
       controller-plan-artifact:
         description: "Controller plan artifact name"
         value: ${{ jobs.controller-plan.outputs.controller-plan-artifact }}
@@ -703,6 +754,7 @@ jobs:
     outputs:
       version: ${{ steps.plan.outputs.planned-publication-version }}
       exact-tag: ${{ steps.plan.outputs.planned-publication-exact-tag }}
+      release-candidate-version: ${{ steps.plan.outputs.planned-release-candidate-version }}
     steps:
       - name: Checkout promotion channel commit
         uses: actions/checkout@v7.0.0
@@ -795,7 +847,9 @@ jobs:
     if: ${{ needs.preflight.outputs.action == 'promote' }}
     permissions:
       actions: read
+      checks: read
       contents: read
+      pull-requests: read
     uses: ./.github/workflows/.publication-authority.yml
     with:
       buildchain-repository: ${{ inputs.buildchain-repository }}
@@ -803,6 +857,7 @@ jobs:
       admission-json: ${{ inputs.publication-admission-json }}
       runner-provenance-json: ${{ inputs.publication-runner-provenance-json }}
       control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
+      github-governance-receipt-json: ${{ inputs.github-governance-receipt-json }}
       gate-aggregate-json: ${{ inputs.publication-gate-aggregate-json }}
       expected-json: ${{ inputs.publication-expected-json }}
       used-nonces-json: ${{ inputs.publication-used-nonces-json }}
@@ -827,6 +882,7 @@ jobs:
       evidence-manifest-pattern: ${{ needs.release-candidate-preflight.outputs.manifest-pattern }}
       evidence-payload-pattern: ${{ needs.release-candidate-preflight.outputs.payload-pattern }}
       dry-run: ${{ inputs.dry-run }}
+    secrets: inherit
 
   qualification-plan:
     name: Bind consumer publication predicate
@@ -968,12 +1024,18 @@ jobs:
       contents: write
       id-token: write
       issues: write
+      pull-requests: write
     outputs:
       promoted-sha: ${{ needs.preflight.outputs.requested-sha }}
       built-source-sha: ${{ steps.rc.outputs.release-candidate-source-sha }}
       release-candidate-artifact: ${{ steps.rc.outputs.release-candidate-artifact }}
       release-candidate-outcome: ${{ steps.rc.outcome }}
       promotion-outcome: ${{ steps.promote.outcome }}
+      finalization-needed: ${{ steps.promote.outputs.finalization-needed }}
+      publication-commit-evidence-path: ${{ steps.publication-commit.outputs.evidence-path }}
+      publication-commit-evidence-digest: ${{ steps.publication-commit.outputs.evidence-digest }}
+      publication-commit-url: ${{ steps.publication-commit.outputs.public-url }}
+      publication-commit-payload-root: ${{ steps.publication-commit.outputs.payload-root }}
     steps:
       - name: Download release-candidate-promotion controller plan
         uses: actions/download-artifact@v7.0.0
@@ -1190,6 +1252,7 @@ jobs:
           BUILDCHAIN_TARGET_REF: ${{ needs.preflight.outputs.target-ref }}
           BUILDCHAIN_ARTIFACT_NAME: ${{ inputs.artifact-name }}
           BUILDCHAIN_ARTIFACT_PATTERNS: ${{ inputs.artifact-patterns }}
+          BUILDCHAIN_GITHUB_RELEASE_PAYLOAD_PATTERNS: ${{ inputs.github-release-payload-patterns }}
           BUILDCHAIN_RC_WORKFLOW_FILE: ${{ inputs.release-candidate-workflow-file }}
           BUILDCHAIN_RC_WORKFLOW_NAME: ${{ inputs.release-candidate-workflow-name }}
           BUILDCHAIN_REQUIRED_ARTIFACT_COUNT: ${{ inputs.required-artifact-count }}
@@ -1255,10 +1318,17 @@ jobs:
         id: buildchain-stable-candidate
         if: ${{ needs.preflight.outputs.channel == 'release' && github.repository == 'kungfu-systems/buildchain' }}
         shell: bash
+        env:
+          BUILDCHAIN_RELEASE_CANDIDATE_VERSION: ${{ needs.publication-plan.outputs.release-candidate-version }}
+          BUILDCHAIN_PUBLICATION_VERSION: ${{ needs.publication-plan.outputs.version }}
         run: |
-          version="$(node -e 'const fs = require("node:fs"); const manifest = JSON.parse(fs.readFileSync("package.json", "utf8")); process.stdout.write(String(manifest.version || ""));')"
+          version="${BUILDCHAIN_RELEASE_CANDIDATE_VERSION}"
           if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-alpha\.[0-9]+$ ]]; then
-            echo "::error::Buildchain stable candidate must declare an exact alpha version, got ${version:-<empty>}"
+            echo "::error::Buildchain stable publication plan must bind an exact alpha candidate version, got ${version:-<empty>}"
+            exit 1
+          fi
+          if [[ "${version%%-alpha.*}" != "${BUILDCHAIN_PUBLICATION_VERSION}" ]]; then
+            echo "::error::Buildchain stable candidate ${version} does not match planned publication ${BUILDCHAIN_PUBLICATION_VERSION:-<empty>}"
             exit 1
           fi
           echo "version=${version}" >> "${GITHUB_OUTPUT}"
@@ -1297,6 +1367,28 @@ jobs:
           echo "::notice::Immediate stable release authorized for ${BUILDCHAIN_STABLE_RELEASE_NOW}"
           if [ -n "${BUILDCHAIN_STABLE_RELEASE_REASON}" ]; then
             echo "::notice::Authority reason: ${BUILDCHAIN_STABLE_RELEASE_REASON}"
+          fi
+
+      - name: Validate final publication commit topology
+        if: ${{ inputs.publication-commit-command != '' }}
+        shell: bash
+        env:
+          BUILDCHAIN_GITHUB_RELEASE_ENABLED: ${{ inputs.github-release }}
+          BUILDCHAIN_STANDALONE_DISTRIBUTION_ENABLED: ${{ inputs.standalone-binary-distribution }}
+          BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE: ${{ inputs.publication-commit-evidence-path }}
+        run: |
+          set -euo pipefail
+          if [ "${BUILDCHAIN_GITHUB_RELEASE_ENABLED}" != "true" ]; then
+            echo "::error::publication-commit-command requires github-release=true so public artifacts and passport evidence are durable before authority moves"
+            exit 1
+          fi
+          if [ "${BUILDCHAIN_STANDALONE_DISTRIBUTION_ENABLED}" = "true" ]; then
+            echo "::error::publication-commit-command requires standalone-binary-distribution=false so no deferred product mutation can follow the final authority commit"
+            exit 1
+          fi
+          if [[ "${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}" != .buildchain/* || "${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}" == *".."* ]]; then
+            echo "::error::publication-commit-evidence-path must stay under .buildchain/"
+            exit 1
           fi
 
       - name: Ensure publish-gate ref locks promotion commit
@@ -1350,13 +1442,16 @@ jobs:
           reconciliation-workspace: ${{ steps.reconciliation.outputs.workspace }}
           required-status-check: ${{ inputs.required-status-check }}
           generated-status-check-token: ${{ github.token }}
-          generated-ref-update-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+          generated-pull-request-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+          generated-ref-update-token: ${{ github.token }}
           branch-protection-bypass-apps: ${{ inputs.branch-protection-bypass-apps }}
           branch-protection-bypass-users: ${{ inputs.branch-protection-bypass-users }}
           branch-protection-bypass-teams: ${{ inputs.branch-protection-bypass-teams }}
           allow-repository: ${{ inputs.allow-repository || github.repository }}
           publish-transaction: "true"
           publish-command: ${{ inputs.publish-command }}
+          publish-transaction-override: ${{ inputs.publish-transaction-override }}
+          publish-rematerialize-on-resume: ${{ inputs.publish-rematerialize-on-resume }}
           publish-required-artifacts-json: ${{ inputs.publish-required-artifacts-json || steps.rc.outputs.publish-required-artifacts-json }}
           publish-mode: ${{ inputs.publish-mode }}
           publish-auth: ${{ inputs.trusted-publishing && 'trusted-publishing' || 'npm-token' }}
@@ -1389,6 +1484,7 @@ jobs:
           release-passport-invariant-passport-command: ${{ inputs.release-passport-invariant-passport-command }}
           release-passport-buildchain-self-kfd: ${{ inputs.release-passport-buildchain-self-kfd }}
           github-release: ${{ inputs.github-release }}
+          github-release-artifact-paths: ${{ steps.rc.outputs.release-candidate-github-release-artifact-paths }}
           github-release-title: ${{ inputs.github-release-title }}
           github-release-notes: ${{ inputs.github-release-notes }}
           promote-only-release-candidate: "true"
@@ -1397,7 +1493,7 @@ jobs:
           release-candidate-version: ${{ steps.rc.outputs.release-candidate-version }}
 
       - name: Dispatch standalone binary distribution for the exact public tag
-        if: ${{ inputs.standalone-binary-distribution && !inputs.dry-run && steps.promote.outcome == 'success' && steps.promote.outputs.public-release-tag != '' }}
+        if: ${{ inputs.standalone-binary-distribution && !inputs.dry-run && steps.promote.outcome == 'success' && steps.promote.outputs.finalization-needed != 'true' && steps.promote.outputs.public-release-tag != '' }}
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ steps.promote.outputs.public-release-tag }}
@@ -1424,6 +1520,62 @@ jobs:
             -f tag="$RELEASE_TAG" \
             -f upload-release=false
 
+      - name: Commit consumer publication authority last
+        id: publication-commit
+        if: ${{ inputs.publication-commit-command != '' && !inputs.dry-run && steps.promote.outcome == 'success' && steps.promote.outputs.finalization-needed != 'true' }}
+        shell: bash
+        env:
+          BUILDCHAIN_PUBLICATION_COMMIT_COMMAND: ${{ inputs.publication-commit-command }}
+          BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE: ${{ inputs.publication-commit-evidence-path }}
+          BUILDCHAIN_PUBLICATION_COMMIT_TOKEN: ${{ secrets.BUILDCHAIN_PUBLICATION_COMMIT_TOKEN }}
+          BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY: ${{ secrets.BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY }}
+          BUILDCHAIN_PUBLICATION_COMMIT_SOURCE_SHA: ${{ needs.preflight.outputs.requested-sha }}
+          BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_SHA: ${{ steps.promote.outputs.transaction-release-sha }}
+          BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_TAG: ${{ steps.promote.outputs.public-release-tag }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if ${{ inputs.standalone-binary-distribution }}; then
+            echo "::error::publication-commit-command requires standalone-binary-distribution=false so no deferred product mutation can follow the final authority commit"
+            exit 1
+          fi
+          if [[ "${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}" != .buildchain/* || "${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}" == *".."* ]]; then
+            echo "::error::publication-commit-evidence-path must stay under .buildchain/"
+            exit 1
+          fi
+          if [ -e "${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}" ]; then
+            echo "::error::refusing stale publication commit evidence at ${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}"
+            exit 1
+          fi
+          export BUILDCHAIN_PUBLICATION_COMMIT_VERSION="${BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_TAG#v}"
+          export BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_PASSPORT="${{ steps.promote.outputs.release-passport-path }}"
+          export BUILDCHAIN_PUBLICATION_COMMIT_PAYLOAD_DIR="${{ steps.rc.outputs.release-candidate-payload-dir }}"
+          mkdir -p "$(dirname "${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}")"
+          bash -euo pipefail -c "${BUILDCHAIN_PUBLICATION_COMMIT_COMMAND}"
+          result="$(
+            node .buildchain/runtime/scripts/publication-commit-evidence.mjs \
+              --evidence "${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}" \
+              --version "${BUILDCHAIN_PUBLICATION_COMMIT_VERSION}" \
+              --source-sha "${BUILDCHAIN_PUBLICATION_COMMIT_SOURCE_SHA}" \
+              --release-sha "${BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_SHA}" \
+              --release-tag "${BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_TAG}"
+          )"
+          RESULT="${result}" EVIDENCE_PATH="${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}" node <<'NODE'
+          const crypto = require("node:crypto");
+          const fs = require("node:fs");
+          const result = JSON.parse(process.env.RESULT);
+          const digest = crypto.createHash("sha256")
+            .update(fs.readFileSync(process.env.EVIDENCE_PATH))
+            .digest("hex");
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, [
+            `evidence-path=${process.env.EVIDENCE_PATH}`,
+            `evidence-digest=sha256:${digest}`,
+            `public-url=${result.publicUrl}`,
+            `payload-root=${result.payloadRoot}`,
+            "",
+          ].join("\n"));
+          NODE
+
       - name: Bundle release-candidate-promotion controller evidence
         id: controller-evidence
         if: ${{ always() && !inputs.dry-run && steps.promote.outcome == 'success' }}
@@ -1432,15 +1584,24 @@ jobs:
           RELEASE_CANDIDATE_PASSPORT: ${{ steps.routing-evidence.outputs.candidate-passport-path || steps.rc.outputs.release-candidate-passport-path }}
           PUBLISH_EVIDENCE: ${{ steps.promote.outputs.publish-evidence-path }}
           RELEASE_PASSPORT: ${{ steps.promote.outputs.release-passport-path }}
+          FINALIZATION_NEEDED: ${{ steps.promote.outputs.finalization-needed }}
+          PUBLICATION_COMMIT_ENABLED: ${{ inputs.publication-commit-command != '' }}
+          PUBLICATION_COMMIT_EVIDENCE: ${{ steps.publication-commit.outputs.evidence-path }}
         run: |
           node <<'NODE'
           const fs = require("node:fs");
           const path = require("node:path");
+          const finalizationNeeded = process.env.FINALIZATION_NEEDED === "true";
           const files = [
             [process.env.RELEASE_CANDIDATE_PASSPORT, "release-candidate-passport.json"],
             [process.env.PUBLISH_EVIDENCE, "publish-evidence.json"],
-            [process.env.RELEASE_PASSPORT, "release-passport.json"],
           ];
+          if (!finalizationNeeded) {
+            files.push([process.env.RELEASE_PASSPORT, "release-passport.json"]);
+          }
+          if (process.env.PUBLICATION_COMMIT_ENABLED === "true" && !finalizationNeeded) {
+            files.push([process.env.PUBLICATION_COMMIT_EVIDENCE, "publication-commit-evidence.json"]);
+          }
           fs.mkdirSync(".buildchain/controller/promotion-evidence", { recursive: true });
           for (const [source, name] of files) {
             if (!source || !fs.existsSync(source)) throw new Error(`promotion controller evidence is missing: ${source || name}`);
@@ -1599,9 +1760,9 @@ jobs:
         env:
           BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
           BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
-            [{"id":"preflight","status":"${{ needs.preflight.result }}"},{"id":"admit-release-candidate","status":"${{ needs.release-candidate-preflight.result == 'success' && needs.promote.outputs.release-candidate-outcome || needs.release-candidate-preflight.result }}"},{"id":"publication-authority","status":"${{ needs.promote.result == 'success' && 'success' || needs.publication-authority.result }}"},{"id":"publish","status":"${{ inputs.dry-run && 'skipped' || needs.promote.outputs.promotion-outcome || needs.promote.result }}"},{"id":"passport","status":"${{ inputs.dry-run && 'skipped' || needs.promote.outputs.promotion-outcome || needs.promote.result }}"},{"id":"aggregate","status":"${{ needs.promote.result }}"}]
-          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ !inputs.dry-run && needs.promote.result == 'success' && '[{"kind":"release-candidate-passport","path":".buildchain/controller/promotion-evidence/release-candidate-passport.json"},{"kind":"publish-evidence","path":".buildchain/controller/promotion-evidence/publish-evidence.json"},{"kind":"release-passport","path":".buildchain/controller/promotion-evidence/release-passport.json"}]' || '[]' }}
-          BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ inputs.dry-run && 'promotion-dry-run' || needs.promote.result == 'success' && '' || needs.preflight.outputs.action == 'noop' && 'promotion-superseded' || 'promotion-incomplete' }}
+            [{"id":"preflight","status":"${{ needs.preflight.result }}"},{"id":"admit-release-candidate","status":"${{ needs.release-candidate-preflight.result == 'success' && needs.promote.outputs.release-candidate-outcome || needs.release-candidate-preflight.result }}"},{"id":"publication-authority","status":"${{ needs.promote.result == 'success' && 'success' || needs.publication-authority.result }}"},{"id":"publish","status":"${{ inputs.dry-run && 'skipped' || needs.promote.outputs.finalization-needed == 'true' && 'partial' || needs.promote.outputs.promotion-outcome || needs.promote.result }}"},{"id":"passport","status":"${{ inputs.dry-run && 'skipped' || needs.promote.outputs.finalization-needed == 'true' && 'partial' || needs.promote.outputs.promotion-outcome || needs.promote.result }}"},{"id":"aggregate","status":"${{ needs.promote.outputs.finalization-needed == 'true' && 'partial' || needs.promote.result }}"}]
+          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ !inputs.dry-run && needs.promote.result == 'success' && needs.promote.outputs.finalization-needed == 'true' && '[{"kind":"release-candidate-passport","path":".buildchain/controller/promotion-evidence/release-candidate-passport.json"},{"kind":"publish-evidence","path":".buildchain/controller/promotion-evidence/publish-evidence.json"}]' || !inputs.dry-run && needs.promote.result == 'success' && '[{"kind":"release-candidate-passport","path":".buildchain/controller/promotion-evidence/release-candidate-passport.json"},{"kind":"publish-evidence","path":".buildchain/controller/promotion-evidence/publish-evidence.json"},{"kind":"release-passport","path":".buildchain/controller/promotion-evidence/release-passport.json"}]' || '[]' }}
+          BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ inputs.dry-run && 'promotion-dry-run' || needs.promote.outputs.finalization-needed == 'true' && 'promotion-finalization-pending' || needs.promote.result == 'success' && '' || needs.preflight.outputs.action == 'noop' && 'promotion-superseded' || 'promotion-incomplete' }}
           BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Release-candidate promotion did not complete successfully
           BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: buildchain-release-promotion-controller-receipt-${{ needs.preflight.outputs.requested-sha }}
           BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/receipt.json

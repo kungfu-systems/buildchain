@@ -14,20 +14,20 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:cdf588422ec6b460bd6f631400efa6e361a045e052c8967d6c50fadd7aa4dd90",
+    "compatibilityDigest": "sha256:df13c3b8066068925ce847b31002201d533034d10d342542422db3a665c10475",
     "majorLine": "v2"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "847949ab0db4f76342603c628bf668218f9046ad1eceb27c8368e0e539d9bd8f",
+    "sha256": "e04e65883d48ed353c4a07f340b827444122ec28815d9b0d876b6fe45833e3bf",
     "summary": {
-      "cliCommandCount": 86,
-      "workflowCount": 51,
-      "actionCount": 4,
-      "sitePageCount": 52,
-      "docCommandRefCount": 265,
+      "cliCommandCount": 87,
+      "workflowCount": 52,
+      "actionCount": 5,
+      "sitePageCount": 54,
+      "docCommandRefCount": 276,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -228,13 +228,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "847949ab0db4f76342603c628bf668218f9046ad1eceb27c8368e0e539d9bd8f",
+      "sha256": "e04e65883d48ed353c4a07f340b827444122ec28815d9b0d876b6fe45833e3bf",
       "summary": {
-        "cliCommandCount": 86,
-        "workflowCount": 51,
-        "actionCount": 4,
-        "sitePageCount": 52,
-        "docCommandRefCount": 265,
+        "cliCommandCount": 87,
+        "workflowCount": 52,
+        "actionCount": 5,
+        "sitePageCount": 54,
+        "docCommandRefCount": 276,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -259,6 +259,18 @@
           "participantFacing": true,
           "public": true,
           "plane": "use"
+        },
+        {
+          "id": "doc:actions/macos-credential-island/README.md",
+          "name": "actions/macos-credential-island/README.md",
+          "kind": "documentation",
+          "sourcePath": "actions/macos-credential-island/README.md",
+          "evidencePath": "actions/macos-credential-island/README.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "action"
         },
         {
           "id": "doc:actions/promote-buildchain-ref/README.md",
@@ -374,6 +386,18 @@
           "kind": "documentation",
           "sourcePath": "docs/controller-evidence.md",
           "evidencePath": "docs/controller-evidence.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "verify"
+        },
+        {
+          "id": "doc:docs/github-governance-authority.md",
+          "name": "GitHub governance authority",
+          "kind": "documentation",
+          "sourcePath": "docs/github-governance-authority.md",
+          "evidencePath": "docs/github-governance-authority.md",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
@@ -892,6 +916,17 @@
           "public": true
         },
         {
+          "id": "schema:packages/core/github-governance-authority.js",
+          "name": "schema:packages/core/github-governance-authority.js",
+          "kind": "schema",
+          "sourcePath": "packages/core/github-governance-authority.js",
+          "evidencePath": "packages/core/github-governance-authority.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true
+        },
+        {
           "id": "schema:packages/core/buildchain-kfd-claims.js",
           "name": "schema:packages/core/buildchain-kfd-claims.js",
           "kind": "schema",
@@ -1305,6 +1340,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./buildchain-publication-authority"
+        },
+        {
+          "id": "export:./github-governance-authority",
+          "name": "@kungfu-tech/buildchain/github-governance-authority",
+          "kind": "package-export",
+          "sourcePath": "packages/core/github-governance-authority.js",
+          "evidencePath": "packages/core/github-governance-authority.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./github-governance-authority"
         },
         {
           "id": "export:./kfd-gate",
@@ -1833,6 +1880,18 @@
         {
           "id": "cli:facts",
           "name": "buildchain facts",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:github-governance",
+          "name": "buildchain github-governance <plan|apply|rollback|protection-policy-plan|ruleset-policy-plan> ...",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -2668,12 +2727,13 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 14,
+          "inputCount": 15,
           "inputs": [
             "auto-admission",
             "buildchain-ref",
             "buildchain-repository",
             "evidence-run-id",
+            "github-governance-receipt-json",
             "publication-admission-json",
             "publication-control-plane-audit-json",
             "publication-expected-json",
@@ -2697,7 +2757,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 60,
+          "inputCount": 65,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -2725,7 +2785,12 @@
             "checkout-cache-mode",
             "checkout-cache-reference-repository-template",
             "checkout-cache-timeout-seconds",
+            "credential-island-caller-owned",
+            "credential-island-environment",
+            "credential-island-macos-app-path",
+            "credential-island-macos-platform-id",
             "expected-artifacts-json",
+            "fail-fast",
             "gate-profile-aggregate-json",
             "install-command",
             "kfd-agent-hub",
@@ -2820,7 +2885,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 32,
+          "inputCount": 33,
           "inputs": [
             "admission-json",
             "authority-workflow-path",
@@ -2844,6 +2909,7 @@
             "evidence-summary-artifact",
             "expected-json",
             "gate-aggregate-json",
+            "github-governance-receipt-json",
             "package-name",
             "product",
             "publication-target",
@@ -2867,7 +2933,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 73,
+          "inputCount": 79,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -2882,8 +2948,10 @@
             "buildchain-repository",
             "channel",
             "dry-run",
+            "github-governance-receipt-json",
             "github-release",
             "github-release-notes",
+            "github-release-payload-patterns",
             "github-release-title",
             "package-manager",
             "promotion-contract-lock-digest",
@@ -2900,6 +2968,8 @@
             "publication-admission-json",
             "publication-auto-admission",
             "publication-auto-no-gate",
+            "publication-commit-command",
+            "publication-commit-evidence-path",
             "publication-consumer-predicate-id",
             "publication-consumer-qualification-command",
             "publication-control-plane-audit-json",
@@ -2918,8 +2988,10 @@
             "publish-mode",
             "publish-package-main",
             "publish-package-set-order",
+            "publish-rematerialize-on-resume",
             "publish-required-artifacts-json",
             "publish-target",
+            "publish-transaction-override",
             "release-candidate-workflow-file",
             "release-candidate-workflow-name",
             "release-passport",
@@ -3172,7 +3244,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 39,
+          "inputCount": 40,
           "inputs": [
             "artifact-path",
             "aws-region",
@@ -3183,6 +3255,7 @@
             "buildchain-ref",
             "buildchain-repository",
             "fail-on-release-pr-error",
+            "github-governance-receipt-json",
             "node-version",
             "preview-apply",
             "preview-aws-role-arn",
@@ -3306,7 +3379,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 63,
+          "inputCount": 68,
           "inputs": [
             "artifact-name",
             "artifact-name-template",
@@ -3337,7 +3410,12 @@
             "checkout-cache-mode",
             "checkout-cache-reference-repository-template",
             "checkout-cache-timeout-seconds",
+            "credential-island-caller-owned",
+            "credential-island-environment",
+            "credential-island-macos-app-path",
+            "credential-island-macos-platform-id",
             "expected-artifacts-json",
+            "fail-fast",
             "gate-profile-aggregate-json",
             "install-command",
             "kfd-agent-hub",
@@ -3582,6 +3660,20 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:github-governance-audit",
+          "name": "workflow:github-governance-audit",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/github-governance-audit.yml",
+          "evidencePath": ".github/workflows/github-governance-audit.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:npm-publish",
           "name": "workflow:npm-publish",
           "kind": "workflow",
@@ -3605,7 +3697,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 25,
+          "inputCount": 26,
           "inputs": [
             "artifact-name",
             "artifact-paths",
@@ -3617,6 +3709,7 @@
             "buildchain-ref",
             "buildchain-repository",
             "dry-run",
+            "github-governance-receipt-json",
             "github-release",
             "github-release-notes",
             "github-release-title",
@@ -3645,7 +3738,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 37,
+          "inputCount": 38,
           "inputs": [
             "artifact-name",
             "artifact-retention-days",
@@ -3659,6 +3752,7 @@
             "buildchain-ref",
             "buildchain-repository",
             "dry-run",
+            "github-governance-receipt-json",
             "github-release",
             "github-release-notes",
             "github-release-title",
@@ -3826,7 +3920,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 65,
+          "inputCount": 71,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -3844,13 +3938,17 @@
             "buildchain-stable-contract-lock-path",
             "channel",
             "dry-run",
+            "github-governance-receipt-json",
             "github-release",
             "github-release-notes",
+            "github-release-payload-patterns",
             "github-release-title",
             "package-manager",
             "publication-admission-json",
             "publication-auto-admission",
             "publication-auto-no-gate",
+            "publication-commit-command",
+            "publication-commit-evidence-path",
             "publication-consumer-predicate-id",
             "publication-consumer-qualification-command",
             "publication-control-plane-audit-json",
@@ -3869,8 +3967,10 @@
             "publish-mode",
             "publish-package-main",
             "publish-package-set-order",
+            "publish-rematerialize-on-resume",
             "publish-required-artifacts-json",
             "publish-target",
+            "publish-transaction-override",
             "release-candidate-workflow-file",
             "release-candidate-workflow-name",
             "release-passport",
@@ -4061,6 +4161,41 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "action:macos-credential-island",
+          "name": "action:macos-credential-island",
+          "kind": "action",
+          "sourcePath": "actions/macos-credential-island/action.yml",
+          "evidencePath": "actions/macos-credential-island/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 20,
+          "inputs": [
+            "artifact-name",
+            "artifact-relative-output",
+            "artifact-stem",
+            "buildchain-runtime-sha",
+            "certificate-p12-base64",
+            "certificate-password",
+            "certificate-sha1",
+            "entitlements-profile",
+            "expected-bundle-id",
+            "expected-team-id",
+            "input-root",
+            "notary-api-issuer",
+            "notary-api-key-id",
+            "notary-api-key-p8-base64",
+            "output-root",
+            "platform-id",
+            "source-ref",
+            "source-repository",
+            "source-sha",
+            "source-tree-sha"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
           "id": "action:promote-buildchain-ref",
           "name": "action:promote-buildchain-ref",
           "kind": "action",
@@ -4070,7 +4205,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 62,
+          "inputCount": 64,
           "inputs": [
             "allow-repository",
             "branch-protection-bypass-apps",
@@ -4078,6 +4213,7 @@
             "branch-protection-bypass-users",
             "dry-run",
             "expected-publication-version",
+            "generated-pull-request-token",
             "generated-ref-update-token",
             "generated-status-check-token",
             "github-release",
@@ -4096,6 +4232,7 @@
             "publish-mode",
             "publish-package-main",
             "publish-package-set-order",
+            "publish-rematerialize-on-resume",
             "publish-required-artifacts-json",
             "publish-source-locked",
             "publish-source-ref",
@@ -4248,6 +4385,18 @@
             "require-version-state"
           ],
           "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "site-page:action:macos-credential-island",
+          "name": "site-page:action:macos-credential-island",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
           "id": "site-page:action:promote-buildchain-ref",
@@ -4516,6 +4665,18 @@
         {
           "id": "site-page:manual:controller-evidence",
           "name": "site-page:manual:controller-evidence",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
+          "id": "site-page:manual:github-governance-authority",
+          "name": "site-page:manual:github-governance-authority",
           "kind": "site-page",
           "sourcePath": "dist/site/page-registry.json",
           "evidencePath": "dist/site/page-registry.json",
@@ -4932,6 +5093,28 @@
         "public": true
       },
       {
+        "id": "control:actions/macos-credential-island/action.yml",
+        "name": "control:actions/macos-credential-island/action.yml",
+        "kind": "action",
+        "sourcePath": "actions/macos-credential-island/action.yml",
+        "evidencePath": "actions/macos-credential-island/action.yml",
+        "availability": "shipped",
+        "visibility": "public",
+        "participantFacing": true,
+        "public": true
+      },
+      {
+        "id": "control:actions/macos-credential-island/index.js",
+        "name": "control:actions/macos-credential-island/index.js",
+        "kind": "action",
+        "sourcePath": "actions/macos-credential-island/index.js",
+        "evidencePath": "actions/macos-credential-island/index.js",
+        "availability": "shipped",
+        "visibility": "public",
+        "participantFacing": true,
+        "public": true
+      },
+      {
         "id": "control:actions/promote-buildchain-ref/action.yml",
         "name": "control:actions/promote-buildchain-ref/action.yml",
         "kind": "action",
@@ -4989,6 +5172,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 318
+    "publicSurfaceCount": 329
   }
 }

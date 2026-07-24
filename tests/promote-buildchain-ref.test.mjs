@@ -26,15 +26,20 @@ const {
   persistDurableReleaseTransaction,
   promoteBuildchainRefs,
   restoreDurableReleaseTransaction,
+  runPublishTransaction,
   resolveTagsForTarget,
   runVersionVerification,
   resolveReleaseImpactInput,
   resolveProtectedStatusCheckContext,
+  releasePassportArtifactFiles,
   selectAlphaTag,
   selectReleaseTag,
   updateVersionStateContents,
   validatePromotionReleaseCandidate,
 } = await import("../actions/promote-buildchain-ref/lib.js");
+const {
+  loadBuildchainConfig,
+} = await import("../packages/core/buildchain-config.js");
 
 test("older minor alpha publication preserves the global npm alpha channel", () => {
   assert.equal(alphaDistTagForPromotion({
@@ -80,6 +85,24 @@ const {
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SHA = "a".repeat(40);
 const OTHER_SHA = "b".repeat(40);
+
+test("durable release passport state excludes binary release assets", () => {
+  const outputDir = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-release-passport-"));
+  fs.writeFileSync(path.join(outputDir, "buildchain.release.json"), "{}\n");
+  fs.writeFileSync(path.join(outputDir, "SHA256SUMS"), `${"a".repeat(64)}  agent-hub-demo-linux-x64\n`);
+  fs.writeFileSync(path.join(outputDir, "agent-hub-demo-linux-x64.sha256"), `${"a".repeat(64)}\n`);
+  fs.writeFileSync(path.join(outputDir, "agent-hub-demo-linux-x64"), Buffer.from([0, 255, 1, 254]));
+  fs.writeFileSync(path.join(outputDir, "agent-hub-demo-windows-x64.exe"), Buffer.from([77, 90, 0, 255]));
+
+  assert.deepEqual(
+    releasePassportArtifactFiles(outputDir).map((entry) => entry.path),
+    [
+      "release-passport/agent-hub-demo-linux-x64.sha256",
+      "release-passport/buildchain.release.json",
+      "release-passport/SHA256SUMS",
+    ],
+  );
+});
 
 test("release governance preserves the emitted reusable workflow check context", () => {
   assert.equal(resolveProtectedStatusCheckContext({
@@ -4176,6 +4199,160 @@ fs.writeFileSync("generated.json", JSON.stringify(value, null, 2) + "\\n");
   );
 });
 
+test("published alpha finalization stays bound to its exact transaction after the protected version-state PR merges", async () => {
+  const transactionSourceSha = "1".repeat(40);
+  const transactionReleaseSha = "2".repeat(40);
+  const channelMergeSha = "3".repeat(40);
+  const version = "1.0.0-alpha.0";
+  const exactTag = `v${version}`;
+  const artifact = {
+    kind: "npm",
+    name: "@kungfu-tech/buildchain",
+    ref: version,
+    digest: "sha512:alpha0",
+  };
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version,
+      packageManager: "pnpm@11.7.0",
+    },
+  });
+  const evidencePath = path.join(
+    cwd,
+    ".buildchain/release-evidence",
+    exactTag,
+    "evidence.json",
+  );
+  fs.mkdirSync(path.dirname(evidencePath), { recursive: true });
+  fs.writeFileSync(evidencePath, JSON.stringify({
+    schema: 1,
+    version,
+    channel: "alpha",
+    source_sha: transactionSourceSha,
+    release_sha: transactionReleaseSha,
+    target_ref: "alpha/v1/v1.0",
+    release_material_sha: transactionReleaseSha,
+    publish_tooling_sha: transactionReleaseSha,
+    artifacts: [artifact],
+  }, null, 2) + "\n");
+  const { octokit, refs, commits } = createGitMock({
+    refs: new Map([
+      ["heads/alpha/v1/v1.0", channelMergeSha],
+      ["heads/dev/v1/v1.0", channelMergeSha],
+    ]),
+  });
+  commits.set(channelMergeSha, {
+    sha: channelMergeSha,
+    tree: { sha: `tree-${channelMergeSha}` },
+    parents: [{ sha: transactionSourceSha }, { sha: transactionReleaseSha }],
+  });
+  await persistDurableReleaseTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    transaction: {
+      schema: 1,
+      id: "contained-published-alpha",
+      repository: "kungfu-systems/buildchain",
+      target_ref: "alpha/v1/v1.0",
+      source_sha: transactionSourceSha,
+      release_sha: transactionReleaseSha,
+      release_material_sha: transactionReleaseSha,
+      publish_tooling_sha: transactionReleaseSha,
+      version,
+      exact_tag: exactTag,
+      channel: "alpha",
+      line: "v1.0",
+      version_strategy: "",
+      lifecycle_identity: "lifecycle.publish",
+      state_ref: "buildchain/release-state/1-0-0-alpha-0",
+      state_path: "",
+      evidence_path: "",
+      state: "finalizing",
+      previous_state: "published",
+      actor: "codex",
+      run_id: "1",
+      superseded_by: "",
+      failure: "",
+      artifacts: [artifact],
+      evidence: [".buildchain/release-evidence/v1.0.0-alpha.0/evidence.json"],
+      created_at: "2026-07-01T00:00:00.000Z",
+      updated_at: "2026-07-01T00:00:00.000Z",
+    },
+    evidencePath,
+  });
+  fs.rmSync(path.join(cwd, ".buildchain/release-state"), {
+    recursive: true,
+    force: true,
+  });
+  fs.rmSync(path.join(cwd, ".buildchain/release-evidence"), {
+    recursive: true,
+    force: true,
+  });
+
+  const plan = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: channelMergeSha,
+    targetRef: "alpha/v1/v1.0",
+    cwd,
+    dryRun: true,
+    publishTransaction: true,
+    requireVersionState: true,
+  });
+  assert.deepEqual(
+    plan.updates.find((update) => update.action === "dry-run-publish-transaction"),
+    {
+      action: "dry-run-publish-transaction",
+      version,
+      tag: exactTag,
+      publicTag: exactTag,
+      sha: transactionReleaseSha,
+      finalizationOnly: true,
+    },
+  );
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: channelMergeSha,
+    targetRef: "alpha/v1/v1.0",
+    cwd,
+    publishTransaction: true,
+    publishRequiredArtifactsJson: JSON.stringify([artifact]),
+    requireVersionState: true,
+    expectedPublicationVersion: version,
+    releasePassport: false,
+  });
+
+  assert.equal(result.sha, channelMergeSha);
+  assert.equal(result.publishTransaction.state, "complete");
+  assert.equal(result.publishTransaction.releaseSha, transactionReleaseSha);
+  assert.equal(refs.get("heads/alpha/v1/v1.0"), channelMergeSha);
+  assert.equal(refs.get("heads/dev/v1/v1.0"), channelMergeSha);
+  assert.equal(refs.get(`tags/${exactTag}`), transactionReleaseSha);
+  assert.equal(refs.get("tags/v1.0-alpha"), transactionReleaseSha);
+  assert.equal(refs.get("tags/v1-alpha"), transactionReleaseSha);
+  assert.equal(refs.has("tags/v1.0.0-alpha.1"), false);
+  assert.deepEqual(
+    result.updates.find(
+      (update) => update.action === "finalized-contained-published-transaction",
+    ),
+    {
+      action: "finalized-contained-published-transaction",
+      tag: exactTag,
+      sourceSha: transactionSourceSha,
+      releaseSha: transactionReleaseSha,
+      currentChannelSha: channelMergeSha,
+      sha: transactionReleaseSha,
+    },
+  );
+});
+
 test("publish transaction resumes partial alpha finalization with exact tag on release material", async () => {
   const oldAlphaSha = "3".repeat(40);
   const versionHeadSha = "4".repeat(40);
@@ -5400,12 +5577,52 @@ test("publish transaction resumes partial release finalization with exact tag on
   const previousFinalizedSha = "2".repeat(40);
   const mergeSha = "3".repeat(40);
   const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[[version.files]]
+type = "json"
+path = "dist/site/site-manifest.json"
+key = "version"
+
+[lifecycle.version-state]
+command = "node scripts/generate-site-manifest.mjs"
+`,
     "package.json": {
       name: "@kungfu-tech/buildchain",
       version: "1.0.0",
       packageManager: "pnpm@11.7.0",
     },
+    "dist/site/site-manifest.json": {
+      version: "1.0.0",
+      generatedAt: "2026-07-01T00:00:00.000Z",
+      sourceRevision: versionHeadSha,
+    },
+    "scripts/generate-site-manifest.mjs": `
+import fs from "node:fs";
+const manifestPath = "dist/site/site-manifest.json";
+const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+fs.writeFileSync(manifestPath, JSON.stringify({
+  ...manifest,
+  generatedAt: process.env.BUILDCHAIN_SITE_GENERATED_AT || manifest.generatedAt,
+  sourceRevision: process.env.BUILDCHAIN_SOURCE_SHA || manifest.sourceRevision,
+}, null, 2) + "\\n");
+`,
   });
+  run(["git", "init"], cwd);
+  run(["git", "add", "."], cwd);
+  run(
+    ["git", "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-m", "init"],
+    cwd,
+  );
   const { octokit, refs, commits } = createGitMock({
     refs: new Map([
       ["heads/release/v1/v1.0", mergeSha],
@@ -5453,7 +5670,17 @@ test("publish transaction resumes partial release finalization with exact tag on
       run_id: "1",
       superseded_by: "",
       failure: "",
-      artifacts: [],
+      artifacts: [
+        {
+          group: "node",
+          kind: "npm",
+          name: "@kungfu-tech/buildchain",
+          ref: "1.0.0",
+          digest: "sha512-release",
+          role: "main",
+          required: true,
+        },
+      ],
       evidence: [],
       created_at: "2026-07-01T00:00:00.000Z",
       updated_at: "2026-07-01T00:00:00.000Z",
@@ -5481,6 +5708,14 @@ test("publish transaction resumes partial release finalization with exact tag on
   assert.equal(refs.get("tags/v1.0"), mergeSha);
   assert.equal(refs.get("tags/v1"), mergeSha);
   assert.equal(refs.has("tags/v1.0.1"), false);
+  assert.equal(
+    result.updates.some(
+      (update) =>
+        update.action === "created-version-state" &&
+        update.version === "1.0.0",
+    ),
+    false,
+  );
 });
 
 test("release promotion does not resume an ancestor transaction for another planned version", async () => {
@@ -5571,6 +5806,7 @@ test("release promotion does not resume an ancestor transaction for another plan
       tag: "v1.0.1",
       publicTag: "v1.0.1",
       sha: mergeSha,
+      releaseCandidateVersion: "1.0.1-alpha.0",
     },
   );
   assert.equal(refs.get("tags/v1.0.0"), oldTagSha);
@@ -5647,6 +5883,207 @@ test("publish transaction durable ref restores state and evidence in a fresh wor
   assert.equal(restored.id, "tx-1");
   assert.equal(JSON.parse(fs.readFileSync(freshStatePath, "utf8")).id, "tx-1");
   assert.equal(JSON.parse(fs.readFileSync(freshEvidencePath, "utf8")).artifacts[0].digest, "sha256:ok");
+});
+
+test("publish transaction can opt in to rematerialize ephemeral Passport inputs on resume", async () => {
+  const cwd = makeTempWorkspace({
+    "buildchain.toml": `
+schema = 1
+
+[lifecycle.publish]
+command = "node scripts/publish.mjs"
+`,
+    "scripts/publish.mjs": `
+import fs from "node:fs";
+import path from "node:path";
+
+const countPath = path.join(process.cwd(), ".buildchain/publish-count");
+const count = Number(fs.existsSync(countPath) ? fs.readFileSync(countPath, "utf8") : "0") + 1;
+fs.mkdirSync(path.dirname(countPath), { recursive: true });
+fs.writeFileSync(countPath, String(count));
+const witnessPath = path.join(process.cwd(), ".buildchain/release-inputs/witness.json");
+fs.mkdirSync(path.dirname(witnessPath), { recursive: true });
+fs.writeFileSync(witnessPath, JSON.stringify({ count }, null, 2) + "\\n");
+fs.mkdirSync(process.env.BUILDCHAIN_EVIDENCE_DIR, { recursive: true });
+fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
+  schema: 1,
+  version: process.env.BUILDCHAIN_VERSION,
+  channel: process.env.BUILDCHAIN_CHANNEL,
+  source_sha: process.env.BUILDCHAIN_SOURCE_SHA,
+  release_sha: process.env.BUILDCHAIN_RELEASE_SHA,
+  target_ref: process.env.BUILDCHAIN_TARGET_REF,
+  release_material_sha: process.env.BUILDCHAIN_RELEASE_MATERIAL_SHA,
+  publish_tooling_sha: process.env.BUILDCHAIN_PUBLISH_TOOLING_SHA,
+  artifacts: [{
+    kind: "github-release",
+    name: "rematerialization-fixture",
+    ref: process.env.BUILDCHAIN_VERSION,
+    digest: "sha256:${"1".repeat(64)}"
+  }]
+}, null, 2) + "\\n");
+`,
+  });
+  const { octokit } = createGitMock();
+  const statePath = path.join(cwd, ".buildchain/release-state/1.0.0-alpha.0.json");
+  const evidencePath = path.join(cwd, ".buildchain/release-evidence/1.0.0-alpha.0/evidence.json");
+  const args = {
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    loadedConfig: loadBuildchainConfig(cwd),
+    targetRef: "alpha/v1/v1.0",
+    sourceSha: SHA,
+    releaseSha: OTHER_SHA,
+    version: "1.0.0-alpha.0",
+    exactTag: "v1.0.0-alpha.0",
+    channel: "alpha",
+    line: "v1.0",
+    publishTransaction: true,
+    publishEvidencePath: evidencePath,
+    transactionStatePath: statePath,
+  };
+
+  await runPublishTransaction(args);
+  assert.equal(fs.readFileSync(path.join(cwd, ".buildchain/publish-count"), "utf8"), "1");
+
+  fs.rmSync(path.join(cwd, ".buildchain/release-inputs/witness.json"));
+  fs.rmSync(statePath);
+  fs.rmSync(evidencePath);
+
+  const resumed = await runPublishTransaction({
+    ...args,
+    publishRematerializeOnResume: true,
+  });
+
+  assert.equal(resumed.validation.valid, true);
+  assert.equal(fs.readFileSync(path.join(cwd, ".buildchain/publish-count"), "utf8"), "2");
+  assert.equal(
+    JSON.parse(fs.readFileSync(path.join(cwd, ".buildchain/release-inputs/witness.json"), "utf8")).count,
+    2,
+  );
+  assert.equal(
+    JSON.parse(fs.readFileSync(resumed.distTagEvidencePath, "utf8")).source,
+    "resume-rematerialized:buildchain.toml",
+  );
+});
+
+test("explicit recovery finalizes an ancestry-bound published transaction without replaying publication", async () => {
+  const cwd = makeTempWorkspace({});
+  const version = "1.0.0";
+  const exactTag = `v${version}`;
+  const oldSourceSha = "1".repeat(40);
+  const oldReleaseSha = "2".repeat(40);
+  const newSourceSha = "3".repeat(40);
+  const newReleaseSha = "4".repeat(40);
+  const artifact = {
+    kind: "npm",
+    name: "@kungfu-tech/buildchain",
+    ref: version,
+    digest: "sha512:published",
+  };
+  const statePath = path.join(
+    cwd,
+    ".buildchain/release-state/1.0.0.json",
+  );
+  const evidencePath = path.join(
+    cwd,
+    ".buildchain/release-evidence/1.0.0/evidence.json",
+  );
+  fs.mkdirSync(path.dirname(evidencePath), { recursive: true });
+  fs.writeFileSync(evidencePath, JSON.stringify({
+    schema: 1,
+    version,
+    channel: "release",
+    source_sha: oldSourceSha,
+    release_sha: oldReleaseSha,
+    target_ref: "release/v1/v1.0",
+    release_material_sha: oldReleaseSha,
+    publish_tooling_sha: oldReleaseSha,
+    artifacts: [artifact],
+  }, null, 2) + "\n");
+
+  const { octokit, commits } = createGitMock();
+  commits.set(oldReleaseSha, {
+    sha: oldReleaseSha,
+    tree: { sha: `tree-${oldReleaseSha}` },
+    parents: [],
+  });
+  commits.set(newReleaseSha, {
+    sha: newReleaseSha,
+    tree: { sha: `tree-${newReleaseSha}` },
+    parents: [{ sha: oldReleaseSha }],
+  });
+  await persistDurableReleaseTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    transaction: {
+      schema: 1,
+      id: "published-stable-recovery",
+      repository: "kungfu-systems/buildchain",
+      target_ref: "release/v1/v1.0",
+      source_sha: oldSourceSha,
+      release_sha: oldReleaseSha,
+      release_material_sha: oldReleaseSha,
+      publish_tooling_sha: oldReleaseSha,
+      version,
+      exact_tag: exactTag,
+      channel: "release",
+      line: "v1.0",
+      version_strategy: "",
+      lifecycle_identity: "lifecycle.publish",
+      state_ref: "buildchain/release-state/1-0-0",
+      state_path: ".buildchain/release-state/1.0.0.json",
+      evidence_path: ".buildchain/release-evidence/1.0.0/evidence.json",
+      state: "published",
+      previous_state: "publishing",
+      actor: "codex",
+      run_id: "1",
+      superseded_by: "",
+      failure: "",
+      artifacts: [artifact],
+      evidence: [".buildchain/release-evidence/1.0.0/evidence.json"],
+      created_at: "2026-07-01T00:00:00.000Z",
+      updated_at: "2026-07-01T00:00:00.000Z",
+    },
+    evidencePath,
+  });
+
+  const args = {
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    targetRef: "release/v1/v1.0",
+    sourceSha: newSourceSha,
+    releaseSha: newReleaseSha,
+    version,
+    exactTag,
+    channel: "release",
+    line: "v1.0",
+    publishTransaction: true,
+    publishEvidencePath: evidencePath,
+    transactionStatePath: statePath,
+    publishRequiredArtifactsJson: JSON.stringify([artifact]),
+  };
+
+  await assert.rejects(
+    runPublishTransaction(args),
+    /release transaction identity mismatch/,
+  );
+
+  const recovered = await runPublishTransaction({
+    ...args,
+    explicitOverride: true,
+  });
+
+  assert.equal(recovered.transaction.id, "published-stable-recovery");
+  assert.equal(recovered.transaction.source_sha, oldSourceSha);
+  assert.equal(recovered.transaction.release_sha, oldReleaseSha);
+  assert.equal(recovered.transaction.state, "published");
+  assert.equal(recovered.validation, undefined);
 });
 
 test("publish transaction durable ref updates when create races existing ref visibility", async () => {
@@ -7248,12 +7685,17 @@ test("strict alpha promotion uses provider transaction evidence when protection 
 
 test("managed channels reuse provider-enforced policy when protection details are unreadable", async () => {
   let requiredContexts = ["check"];
+  let protectionReadStatus = 403;
   const octokit = {
     rest: {
       repos: {
         getBranchProtection: async () => {
-          const error = new Error("Resource not accessible by integration");
-          error.status = 403;
+          const error = new Error(
+            protectionReadStatus === 404
+              ? "Not Found"
+              : "Resource not accessible by integration",
+          );
+          error.status = protectionReadStatus;
           throw error;
         },
         getBranch: async () => ({
@@ -7285,6 +7727,17 @@ test("managed channels reuse provider-enforced policy when protection details ar
   assert.equal(evidence.action, "branch-protection-policy-observed");
   assert.equal(evidence.policySource, "provider-enforced-existing-policy");
   assert.deepEqual(evidence.after.requiredStatusChecks, ["check"]);
+
+  protectionReadStatus = 404;
+  const hiddenEvidence = await ensureManagedChannelBranchProtection({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    branch: "alpha/v1/v1.0",
+    requiredStatusCheck: "check",
+  });
+  assert.equal(hiddenEvidence.action, "branch-protection-policy-observed");
+  assert.deepEqual(hiddenEvidence.after.requiredStatusChecks, ["check"]);
 
   requiredContexts = ["security"];
   await assert.rejects(
@@ -7656,6 +8109,68 @@ test("strict alpha promotion rejects publish-gate PR lineage for a different lin
   );
 });
 
+test("release channel admission accepts only an exact line-scoped recovery PR", async () => {
+  const pullRequest = await assertChannelPromotionPr({
+    octokit: {
+      rest: {
+        repos: {
+          listPullRequestsAssociatedWithCommit: async () => ({
+            data: [
+              {
+                merged_at: "2026-07-24T00:00:00Z",
+                base: { ref: "release/v2/v2.14" },
+                head: {
+                  ref: "fix/release-line-v2-v2.14-finalization-recovery",
+                  repo: { full_name: "kungfu-systems/buildchain" },
+                },
+              },
+            ],
+          }),
+        },
+      },
+    },
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "release/v2/v2.14",
+  });
+
+  assert.equal(
+    pullRequest.head.ref,
+    "fix/release-line-v2-v2.14-finalization-recovery",
+  );
+});
+
+test("release channel admission rejects a recovery PR for another line", async () => {
+  await assert.rejects(
+    assertChannelPromotionPr({
+      octokit: {
+        rest: {
+          repos: {
+            listPullRequestsAssociatedWithCommit: async () => ({
+              data: [
+                {
+                  merged_at: "2026-07-24T00:00:00Z",
+                  base: { ref: "release/v2/v2.14" },
+                  head: {
+                    ref: "fix/release-line-v2-v2.13-finalization-recovery",
+                    repo: { full_name: "kungfu-systems/buildchain" },
+                  },
+                },
+              ],
+            }),
+          },
+        },
+      },
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sha: SHA,
+      targetRef: "release/v2/v2.14",
+    }),
+    /exact line-scoped release recovery PR/,
+  );
+});
+
 test("strict alpha promotion no-ops settled generated version-state commits", async () => {
   const refs = new Map([
     ["heads/alpha/v1/v1.0", SHA],
@@ -7921,7 +8436,7 @@ fs.writeFileSync("publish-must-not-run", "unexpected\n");
   assert.equal(refs.get("tags/v1.0.0-alpha.41"), SHA);
 });
 
-test("strict alpha promotion fails fast when direct version-state sync is not authorized", async () => {
+test("strict alpha promotion opens a protected version-state PR when direct sync is rejected", async () => {
   const cwd = makeTempWorkspace({
     "package.json": {
       name: "@kungfu-tech/buildchain",
@@ -7934,7 +8449,23 @@ test("strict alpha promotion fails fast when direct version-state sync is not au
     ["heads/alpha/v1/v1.0", SHA],
     ["tags/v1.0.0", OTHER_SHA],
   ]);
-  let createdPullRequest = false;
+  let createdPullRequest;
+  const pullRequestOctokit = {
+    rest: {
+      pulls: {
+        list: async () => ({ data: [] }),
+        create: async ({ head, base, title }) => {
+          createdPullRequest = {
+            html_url: "https://github.com/kungfu-systems/buildchain/pull/alpha-version-state",
+            head,
+            base,
+            title,
+          };
+          return { data: createdPullRequest };
+        },
+      },
+    },
+  };
   const octokit = {
     rest: {
       git: {
@@ -7973,11 +8504,105 @@ test("strict alpha promotion fails fast when direct version-state sync is not au
           return {};
         },
       },
+      repos: {
+        getBranchProtection: async () => ({ data: protectedChannel() }),
+        listPullRequestsAssociatedWithCommit: async () => ({
+          data: [
+            {
+              merged_at: "2026-06-29T00:00:00Z",
+              base: { ref: "alpha/v1/v1.0" },
+              head: {
+                ref: "dev/v1/v1.0",
+                repo: { full_name: "kungfu-systems/buildchain" },
+              },
+            },
+          ],
+        }),
+      },
+    },
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    cwd,
+    requireGovernance: true,
+    requireVersionState: true,
+    pullRequestOctokit,
+  });
+
+  const versionStateBranch = versionStateBranchName("alpha/v1/v1.0", versionSha);
+  assert.equal(refs.get(`heads/${versionStateBranch}`), versionSha);
+  assert.equal(createdPullRequest.base, "alpha/v1/v1.0");
+  assert.equal(createdPullRequest.head, versionStateBranch);
+  assert.equal(result.pendingPullRequest, createdPullRequest.html_url);
+  assert.equal(refs.has("tags/v1.0.1-alpha.0"), false);
+});
+
+test("strict alpha promotion returns a pending dev version-state PR after alpha finalization", async () => {
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "1.0.0-alpha.0",
+      packageManager: "pnpm@11.7.0",
+    },
+  });
+  const refs = new Map([
+    ["heads/alpha/v1/v1.0", SHA],
+    ["heads/dev/v1/v1.0", OTHER_SHA],
+    ["tags/v1.0.0", OTHER_SHA],
+  ]);
+  let createdPullRequest;
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (refs.has(ref)) {
+            return { data: { object: { sha: refs.get(ref) } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async ({ ref }) => ({
+          data: [...refs.entries()]
+            .filter(([name]) => name.startsWith(ref))
+            .map(([name, objectSha]) => ({
+              ref: `refs/${name}`,
+              object: { sha: objectSha },
+            })),
+        }),
+        getCommit: async ({ commit_sha }) => ({
+          data: { tree: { sha: `tree-${commit_sha}` } },
+        }),
+        createBlob: async () => ({ data: { sha: "blob-sha" } }),
+        createTree: async () => ({ data: { sha: "tree-sha" } }),
+        createCommit: async () => ({ data: { sha: "e".repeat(40) } }),
+        updateRef: async ({ ref, sha }) => {
+          if (ref === "heads/dev/v1/v1.0") {
+            const error = new Error("Changes must be made through a pull request.");
+            error.status = 422;
+            throw error;
+          }
+          refs.set(ref, sha);
+          return {};
+        },
+        createRef: async ({ ref, sha }) => {
+          refs.set(ref.replace(/^refs\//, ""), sha);
+          return {};
+        },
+      },
       pulls: {
         list: async () => ({ data: [] }),
-        create: async () => {
-          createdPullRequest = true;
-          throw new Error("test should not create a version-state PR");
+        create: async ({ head, base, title }) => {
+          createdPullRequest = {
+            html_url: "https://github.com/kungfu-systems/buildchain/pull/dev-version-state",
+            head,
+            base,
+            title,
+          };
+          return { data: createdPullRequest };
         },
       },
       repos: {
@@ -7998,20 +8623,24 @@ test("strict alpha promotion fails fast when direct version-state sync is not au
     },
   };
 
-  await assert.rejects(
-    () => promoteBuildchainRefs({
-      octokit,
-      owner: "kungfu-systems",
-      repo: "buildchain",
-      sha: SHA,
-      targetRef: "alpha/v1/v1.0",
-      cwd,
-      requireGovernance: true,
-      requireVersionState: true,
-    }),
-    /generated version-state update.*rejected by branch protection.*without a post-publish human PR/,
-  );
-  assert.equal(createdPullRequest, false);
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "alpha/v1/v1.0",
+    cwd,
+    requireGovernance: true,
+    requireVersionState: true,
+  });
+
+  const versionStateBranch = versionStateBranchName("dev/v1/v1.0", SHA);
+  assert.equal(refs.get("heads/alpha/v1/v1.0"), SHA);
+  assert.equal(refs.get(`heads/${versionStateBranch}`), SHA);
+  assert.equal(createdPullRequest.base, "dev/v1/v1.0");
+  assert.equal(createdPullRequest.head, versionStateBranch);
+  assert.equal(result.pendingPullRequest, createdPullRequest.html_url);
+  assert.equal(refs.has("tags/v1.0.1-alpha.0"), false);
 });
 
 test("strict alpha promotion uses generated ref update token for protected version-state sync", async () => {
@@ -8208,12 +8837,6 @@ test("strict alpha promotion protects created dev branches with one required app
           return { data: { id: checkRuns.length } };
         },
       },
-      users: {
-        getAuthenticated: async () => ({ data: { login: "current-release-bot" } }),
-      },
-      apps: {
-        getAuthenticated: async () => ({ data: { slug: "current-release-app" } }),
-      },
       repos: {
         getBranchProtection: async () => ({
           data: protectedChannel({
@@ -8250,9 +8873,7 @@ test("strict alpha promotion protects created dev branches with one required app
     requireGovernance: true,
     requireVersionState: true,
     requiredStatusCheck: "Build",
-    branchProtectionBypassApps: "github-actions, buildchain-promotion",
-    branchProtectionBypassUsers: "release-bot",
-    branchProtectionBypassTeams: "release-engineering",
+    branchProtectionBypassApps: "github-actions",
   });
 
   const devProtection = protections.find(
@@ -8264,14 +8885,14 @@ test("strict alpha promotion protects created dev branches with one required app
     checks: [{ context: "Build", app_id: 15368 }, { context: "security", app_id: 15368 }],
   });
   assert.deepEqual(devProtection.required_pull_request_reviews, {
-    dismiss_stale_reviews: false,
-    require_code_owner_reviews: false,
+    dismiss_stale_reviews: true,
+    require_code_owner_reviews: true,
     required_approving_review_count: 1,
-    require_last_push_approval: false,
+    require_last_push_approval: true,
     bypass_pull_request_allowances: {
-      apps: ["github-actions", "buildchain-promotion", "current-release-app"],
-      users: ["release-bot", "current-release-bot"],
-      teams: ["release-engineering"],
+      apps: ["github-actions"],
+      users: [],
+      teams: [],
     },
   });
   assert.equal(devProtection.enforce_admins, true);
@@ -8301,6 +8922,43 @@ test("strict alpha promotion protects created dev branches with one required app
         conclusion: "success",
       },
     ],
+  );
+});
+
+test("managed channel protection rejects actors outside the exact GitHub Actions App", async () => {
+  await assert.rejects(
+    () => ensureManagedChannelBranchProtection({
+      octokit: {
+        rest: {
+          repos: {
+            getBranchProtection: async () => ({ data: protectedChannel() }),
+            updateBranchProtection: async () => ({ data: {} }),
+          },
+        },
+      },
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      branch: "dev/v2/v2.14",
+      branchProtectionBypassUsers: "release-owner",
+    }),
+    /permits only the descriptor-bound github-actions App bypass actor/,
+  );
+  await assert.rejects(
+    () => ensureManagedChannelBranchProtection({
+      octokit: {
+        rest: {
+          repos: {
+            getBranchProtection: async () => ({ data: protectedChannel() }),
+            updateBranchProtection: async () => ({ data: {} }),
+          },
+        },
+      },
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      branch: "dev/v2/v2.14",
+      branchProtectionBypassApps: "buildchain-promotion",
+    }),
+    /permits only the descriptor-bound github-actions App bypass actor/,
   );
 });
 
@@ -9774,9 +10432,13 @@ test("strict release promotion accepts line-scoped buildchain recovery PRs", asy
               ? [
                   {
                     merged_at: "2026-07-01T00:00:00Z",
-                    base: { ref: "release/v1/v1.0" },
+                    base: {
+                      ref: "release/v1/v1.0",
+                      sha: alphaSha,
+                    },
                     head: {
                       ref: "fix/release-line-v1-v1.0-finalization-recovery",
+                      sha: SHA,
                       repo: { full_name: "kungfu-systems/buildchain" },
                     },
                   },
@@ -9801,6 +10463,389 @@ test("strict release promotion accepts line-scoped buildchain recovery PRs", asy
   assert.equal(result.sha, SHA);
   assert.equal(refs.get("tags/v1.0.2"), SHA);
   assert.equal(refs.get("tags/v1.0.3-alpha.0"), nextAlphaSha);
+});
+
+test("strict release promotion binds a generated version commit to the exact recovery RC parent", async () => {
+  const originalRetryDelay = process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS;
+  process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS = "0";
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "1.0.2-alpha.0",
+      packageManager: "pnpm@11.7.0",
+    },
+    ".buildchain/artifacts/release-candidate-passport.json": {
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-release-candidate-passport",
+      repository: "kungfu-systems/buildchain",
+      target: {
+        channel: "release",
+        ref: "release/v1/v1.0",
+        version: "1.0.2",
+      },
+      source: {
+        headSha: OTHER_SHA,
+        mergeRefSha: SHA,
+        treeHash: "recovery-tree",
+      },
+      platformMatrix: [
+        { platformId: "linux-x64", artifactName: "buildchain-linux-x64" },
+      ],
+      diagnostics: {},
+    },
+  });
+  const alphaSha = "c".repeat(40);
+  const recoveryBaseSha = "b".repeat(40);
+  const generatedReleaseSha = "e".repeat(40);
+  const nextAlphaSha = "d".repeat(40);
+  const refs = new Map([
+    ["heads/release/v1/v1.0", SHA],
+    ["tags/v1.0.1", recoveryBaseSha],
+    ["tags/v1.0.2-alpha.0", alphaSha],
+  ]);
+  let createCommitCount = 0;
+  let transientMissingRefAttempts = 0;
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (
+            ref === "tags/v1.1" &&
+            transientMissingRefAttempts++ === 0
+          ) {
+            throw transientGitHubError();
+          }
+          if (refs.has(ref)) {
+            return { data: { object: { sha: refs.get(ref) } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async ({ ref }) => ({
+          data: [...refs.entries()]
+            .filter(([name]) => name.startsWith(ref))
+            .map(([name, objectSha]) => ({
+              ref: `refs/${name}`,
+              object: { sha: objectSha },
+            })),
+        }),
+        getCommit: async ({ commit_sha }) => ({
+          data: {
+            tree: {
+              sha:
+                commit_sha === alphaSha
+                  ? "alpha-tree"
+                  : commit_sha === generatedReleaseSha
+                    ? "generated-release-tree"
+                    : "recovery-tree",
+            },
+            parents:
+              commit_sha === generatedReleaseSha
+                ? [{ sha: SHA }]
+                : [],
+          },
+        }),
+        getTree: async ({ tree_sha }) => ({
+          data: {
+            tree: [
+              {
+                path: "package.json",
+                type: "blob",
+                sha:
+                  tree_sha === "generated-release-tree"
+                    ? "stable-package-blob"
+                    : "alpha-package-blob",
+                mode: "100644",
+              },
+              {
+                path: "actions/promote-buildchain-ref/lib.js",
+                type: "blob",
+                sha: "shared-lib-blob",
+                mode: "100644",
+              },
+            ],
+          },
+        }),
+        createBlob: async () => ({ data: { sha: "blob-sha" } }),
+        createTree: async () => ({ data: { sha: "tree-sha" } }),
+        createCommit: async () => ({
+          data: {
+            sha:
+              createCommitCount++ === 0
+                ? generatedReleaseSha
+                : nextAlphaSha,
+          },
+        }),
+        updateRef: async ({ ref, sha }) => {
+          refs.set(ref, sha);
+          return {};
+        },
+        createRef: async ({ ref, sha }) => {
+          refs.set(ref.replace(/^refs\//, ""), sha);
+          return {};
+        },
+      },
+      repos: {
+        getBranchProtection: async () => ({
+          data: protectedChannel(),
+        }),
+        compareCommitsWithBasehead: async ({ basehead }) => {
+          if (basehead === `${recoveryBaseSha}...${OTHER_SHA}`) {
+            return {
+              data: {
+                files: [
+                  { filename: "actions/promote-buildchain-ref/lib.js" },
+                  { filename: "actions/promote-buildchain-ref/dist/index.js" },
+                  { filename: "tests/promote-buildchain-ref.test.mjs" },
+                ],
+              },
+            };
+          }
+          if (basehead === `${SHA}...${generatedReleaseSha}`) {
+            return {
+              data: {
+                files: [{ filename: "package.json" }],
+              },
+            };
+          }
+          throw new Error(`unexpected comparison ${basehead}`);
+        },
+        listPullRequestsAssociatedWithCommit: async ({ commit_sha }) => ({
+          data:
+            commit_sha === SHA
+              ? [
+                  {
+                    merged_at: "2026-07-24T00:00:00Z",
+                    base: {
+                      ref: "release/v1/v1.0",
+                      sha: recoveryBaseSha,
+                    },
+                    head: {
+                      ref: "fix/release-line-v1-v1.0-finalization-recovery",
+                      sha: OTHER_SHA,
+                      repo: { full_name: "kungfu-systems/buildchain" },
+                    },
+                  },
+                ]
+              : [],
+        }),
+      },
+    },
+  };
+
+  try {
+    const result = await promoteBuildchainRefs({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sha: SHA,
+      targetRef: "release/v1/v1.0",
+      cwd,
+      requireGovernance: true,
+      requireVersionState: true,
+      promoteOnlyReleaseCandidate: true,
+      allowRepository: "kungfu-systems/buildchain",
+    });
+
+    assert.equal(result.sha, generatedReleaseSha);
+    assert.equal(refs.get("tags/v1.0.2"), generatedReleaseSha);
+    assert.equal(refs.get("tags/v1.0.3-alpha.0"), nextAlphaSha);
+    assert.equal(transientMissingRefAttempts, 2);
+    assert.equal(
+      result.updates.some(
+        (update) =>
+          update.action === "accepted-exact-release-recovery-parent" &&
+          update.sha === SHA &&
+          update.recoveryBaseSha === recoveryBaseSha &&
+          update.recoveryHeadSha === OTHER_SHA,
+      ),
+      true,
+    );
+  } finally {
+    fs.rmSync(cwd, { recursive: true, force: true });
+    if (originalRetryDelay === undefined) {
+      delete process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS;
+    } else {
+      process.env.BUILDCHAIN_GITHUB_RETRY_DELAY_MS = originalRetryDelay;
+    }
+  }
+});
+
+test("strict release promotion accepts a generated version commit whose parent is the exact tree-equivalent RC", async () => {
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "1.0.2-alpha.0",
+      packageManager: "pnpm@11.7.0",
+    },
+    ".buildchain/artifacts/release-candidate-passport.json": {
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-release-candidate-passport",
+      repository: "kungfu-systems/buildchain",
+      target: {
+        channel: "release",
+        ref: "release/v1/v1.0",
+        version: "1.0.2",
+      },
+      source: {
+        headSha: OTHER_SHA,
+        mergeRefSha: SHA,
+        treeHash: "candidate-tree",
+      },
+      platformMatrix: [
+        { platformId: "linux-x64", artifactName: "buildchain-linux-x64" },
+      ],
+      diagnostics: {},
+    },
+  });
+  const alphaSha = "c".repeat(40);
+  const previousReleaseSha = "b".repeat(40);
+  const generatedReleaseSha = "e".repeat(40);
+  const nextAlphaSha = "d".repeat(40);
+  const refs = new Map([
+    ["heads/release/v1/v1.0", SHA],
+    ["tags/v1.0.1", previousReleaseSha],
+    ["tags/v1.0.2-alpha.0", alphaSha],
+  ]);
+  let createCommitCount = 0;
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (refs.has(ref)) {
+            return { data: { object: { sha: refs.get(ref) } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async ({ ref }) => ({
+          data: [...refs.entries()]
+            .filter(([name]) => name.startsWith(ref))
+            .map(([name, objectSha]) => ({
+              ref: `refs/${name}`,
+              object: { sha: objectSha },
+            })),
+        }),
+        getCommit: async ({ commit_sha }) => ({
+          data: {
+            tree: {
+              sha:
+                commit_sha === alphaSha
+                  ? "alpha-tree"
+                  : commit_sha === generatedReleaseSha
+                    ? "generated-release-tree"
+                    : "candidate-tree",
+            },
+            parents:
+              commit_sha === generatedReleaseSha
+                ? [{ sha: SHA }]
+                : [],
+          },
+        }),
+        getTree: async ({ tree_sha }) => ({
+          data: {
+            tree: [
+              {
+                path: "package.json",
+                type: "blob",
+                sha:
+                  tree_sha === "generated-release-tree"
+                    ? "stable-package-blob"
+                    : "candidate-package-blob",
+                mode: "100644",
+              },
+              {
+                path: "actions/promote-buildchain-ref/lib.js",
+                type: "blob",
+                sha: "shared-lib-blob",
+                mode: "100644",
+              },
+            ],
+          },
+        }),
+        createBlob: async () => ({ data: { sha: "blob-sha" } }),
+        createTree: async () => ({ data: { sha: "tree-sha" } }),
+        createCommit: async () => ({
+          data: {
+            sha:
+              createCommitCount++ === 0
+                ? generatedReleaseSha
+                : nextAlphaSha,
+          },
+        }),
+        updateRef: async ({ ref, sha }) => {
+          refs.set(ref, sha);
+          return {};
+        },
+        createRef: async ({ ref, sha }) => {
+          refs.set(ref.replace(/^refs\//, ""), sha);
+          return {};
+        },
+      },
+      repos: {
+        getBranchProtection: async () => ({
+          data: protectedChannel(),
+        }),
+        compareCommitsWithBasehead: async ({ basehead }) => {
+          assert.equal(basehead, `${SHA}...${generatedReleaseSha}`);
+          return {
+            data: {
+              files: [{ filename: "package.json" }],
+            },
+          };
+        },
+        listPullRequestsAssociatedWithCommit: async ({ commit_sha }) => ({
+          data:
+            commit_sha === SHA
+              ? [
+                  {
+                    merged_at: "2026-07-24T00:00:00Z",
+                    html_url:
+                      "https://github.com/kungfu-systems/buildchain/pull/1693",
+                    base: {
+                      ref: "release/v1/v1.0",
+                      sha: previousReleaseSha,
+                    },
+                    head: {
+                      ref: "buildchain/version-state/release-v1-v1.0/example",
+                      sha: OTHER_SHA,
+                      repo: { full_name: "kungfu-systems/buildchain" },
+                    },
+                  },
+                ]
+              : [],
+        }),
+      },
+    },
+  };
+
+  try {
+    const result = await promoteBuildchainRefs({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sha: SHA,
+      targetRef: "release/v1/v1.0",
+      cwd,
+      requireGovernance: true,
+      requireVersionState: true,
+      promoteOnlyReleaseCandidate: true,
+      allowRepository: "kungfu-systems/buildchain",
+    });
+
+    assert.equal(result.sha, generatedReleaseSha);
+    assert.equal(refs.get("tags/v1.0.2"), generatedReleaseSha);
+    assert.equal(refs.get("tags/v1.0.3-alpha.0"), nextAlphaSha);
+    assert.equal(
+      result.updates.some(
+        (update) =>
+          update.action === "accepted-exact-release-candidate-parent" &&
+          update.sha === SHA &&
+          update.treeSha === "candidate-tree",
+      ),
+      true,
+    );
+  } finally {
+    fs.rmSync(cwd, { recursive: true, force: true });
+  }
 });
 
 test("strict release promotion accepts recovery from floating alpha material after exact alpha", async () => {

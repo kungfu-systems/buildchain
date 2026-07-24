@@ -82,17 +82,18 @@ explicitly, then run the normal channel promotion flow for that line.
 
 When branch protection requires pull requests, generated version-state commits
 still run through promotion automation first. The action updates
-Buildchain-managed channel protection before generated bookkeeping, adds the
-authenticated promotion token user or app to the bypass allowlist, creates
+Buildchain-managed channel protection before generated bookkeeping, admits only
+the exact `github-actions` App to the target-bound bypass allowlist, creates
 every configured required check on the exact generated version-state commit, then
 tries to apply that commit directly. If GitHub still rejects release
 finalization bookkeeping, Buildchain creates or reuses a same-repository
 `buildchain/version-state/*` PR based on the current target channel head and
 returns `finalization-needed=true`; a later idempotent promotion run can resume
-from the durable transaction state. Strict alpha promotion still fails with a
-configuration diagnostic instead of opening a post-publish human PR. Reusable
-wrapper callers should allow `checks: write` so the generated checks are owned by
-GitHub Actions and matches the managed branch protection rule.
+from the durable transaction state. Strict alpha uses the same protected
+version-state PR recovery for its target and dev bookkeeping, and does not move
+tags until those provider-enforced transactions land. Reusable wrapper callers
+should allow `checks: write` so the generated checks are owned by GitHub Actions
+and match the managed branch protection rule.
 
 Stable promotion also protects concurrent development work. The reusable
 wrapper checks out the exact current `dev/vN/vN.M` head as a reconciliation
@@ -104,17 +105,23 @@ This prevents generated projections from an older release tree from replacing
 capabilities that reached dev while the release was in progress.
 
 For Buildchain-owned automation, callers may pass
-`branch-protection-bypass-apps`, `branch-protection-bypass-users`, or
-`branch-protection-bypass-teams`. The action still configures managed
+`branch-protection-bypass-apps: github-actions`. The action rejects every other
+App slug and all user or team bypass actors. It configures managed
 `dev/vN/vN.M`, `alpha/vN/vN.M`, and `release/vN/vN.M` branches with one
-required approving review, strict GitHub Actions checks, admin enforcement,
+required approving review, Code Owner review, stale-review dismissal,
+latest-push approval, exact App-bound GitHub Actions checks, admin enforcement,
 conversation resolution, no force pushes, and no deletions; the bypass
 allowance only lets the named automation identity apply generated version-state
 or channel bookkeeping without a second human review after the reviewed channel
-PR has already merged. Direct action calls automatically include the current
-promotion token's authenticated user or app when GitHub exposes it; explicit
-inputs are supplemental allowlist entries for less discoverable release
-authorities.
+PR has already merged.
+
+GitHub may return either `403` or a deliberately opaque `404` when a
+non-administrator token reads the full branch-protection endpoint. In that
+case, promotion reads the provider's branch summary and accepts only an
+already-protected branch that enforces the exact required check for everyone.
+It does not interpret the opaque response as missing protection or try to
+rewrite policy with a developer token. The independent publication-authority
+audit remains responsible for the complete read-only governance proof.
 
 ## Publish Transactions
 
@@ -125,7 +132,7 @@ trusted channel workflow:
 - uses: kungfu-systems/buildchain/actions/promote-buildchain-ref@v2
   with:
     token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
-    generated-ref-update-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+    generated-ref-update-token: ${{ github.token }}
     sha: ${{ github.sha }}
     target-ref: release/v2/v2.0
     publish-transaction: "true"
@@ -228,6 +235,14 @@ a machine-managed branch under `buildchain/release-state/<version>`, with
 `state.json` and, once available, `evidence.json`. Fresh GitHub runners read
 that durable ref before running publish, so reruns do not depend on a previous
 runner's local `.buildchain` directory.
+
+Consumers whose publish lifecycle only assembles local release assets or
+Passport inputs may set `publish-rematerialize-on-resume: true`. After
+Buildchain restores and validates durable publish evidence, it replays that
+consumer-owned lifecycle with the original transaction environment before
+Passport collection. This is explicit opt-in because registry publication and
+other provider mutations must not be replayed blindly; the option rejects
+`promote-existing-version`.
 
 The action runs `lifecycle.publish` from `buildchain.toml` or the explicit
 `publish-command` input, then validates publish evidence before exact tags and
@@ -398,26 +413,22 @@ governance semantics:
   with either the `verification-command` input or `buildchain.toml`
   `lifecycle.verify` before any tags or channel refs move.
 
-The promotion workflow should use `BUILDCHAIN_PROMOTION_TOKEN` for non-dry-run
-promotion. The token is the buildchain equivalent of the old ABV runner release
-authority: protected branch review and check rules guard human channel merges,
-while the reusable build trust gate now checks the source-lock channel HEAD and
-merged same-repository PR lineage before heavy build runners start. This action
-still independently rechecks PR lineage, alpha/release tree equivalence, and
-generated version-state verification before moving channel refs and tags.
-Generated version-state direct ref updates can use a separate
-`generated-ref-update-token`; the reusable wrapper defaults it to
-`secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token`. Consumers that protect
-`dev/*`, `alpha/*`, or `release/*` with one required review should configure
-`BUILDCHAIN_PROMOTION_TOKEN` as the bypass-capable release authority, so
-post-publish dev/alpha/release bookkeeping completes without a human PR.
+The reusable promotion workflow keeps governance reads, generated status checks,
+and generated ref updates on the run-scoped `github.token`. When branch
+protection rejects generated bookkeeping, it supplies `BUILDCHAIN_PROMOTION_TOKEN`
+only through `generated-pull-request-token` so the same-repository recovery PR can
+be listed or created without broadening the governance client. Protected branch
+review and check rules guard human channel merges, while the reusable build trust
+gate checks the source-lock channel HEAD and merged same-repository PR lineage
+before heavy build runners start. This action still independently rechecks PR
+lineage, alpha/release tree equivalence, and generated version-state verification
+before moving channel refs and tags.
 The reusable `release-candidate-promote.yml` wrapper defaults
 `branch-protection-bypass-apps` to `github-actions`, so flow-internal promotion
 can complete generated `dev`/`alpha`/`release` bookkeeping while ordinary human
 pushes and PR merges remain governed by the one-review branch protection rule.
-The promotion action also auto-discovers the current token's authenticated user
-or app and adds it to the managed bypass allowlist, so consumers do not have to
-declare the same release authority twice.
+The promotion action rejects alternate App slugs and every user or team bypass,
+so the mutation path cannot widen the authority descriptor.
 
 The tag names intentionally follow the old ABV release semantics:
 exact release tags are `vX.Y.Z`, exact alpha tags are `vX.Y.Z-alpha.N`, floating

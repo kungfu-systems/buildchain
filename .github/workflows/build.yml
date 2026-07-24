@@ -57,6 +57,11 @@ on:
         default: ""
         type: string
         required: false
+      fail-fast:
+        description: "Cancel sibling platform lanes after a required matrix failure; false retains all-platform diagnostics"
+        default: false
+        type: boolean
+        required: false
       linux-container-preset:
         description: "Optional Linux job container preset: kungfu-verify, none, or custom with linux-container-image"
         default: ""
@@ -181,6 +186,26 @@ on:
         default: |
           dist
           build/stage
+        type: string
+        required: false
+      credential-island-macos-app-path:
+        description: "Optional exact .app path to seal for a protected macOS credential-island job"
+        default: ""
+        type: string
+        required: false
+      credential-island-environment:
+        description: "Protected environment used by the built-in signer; leave empty for caller-owned signing"
+        default: ""
+        type: string
+        required: false
+      credential-island-caller-owned:
+        description: "Seal and export the macOS input/runtime for a caller-owned protected signing job instead of running the built-in signer"
+        default: false
+        type: boolean
+        required: false
+      credential-island-macos-platform-id:
+        description: "macOS build platform whose sealed app is admitted to the credential island"
+        default: "macos-arm64"
         type: string
         required: false
       release-candidate:
@@ -314,6 +339,16 @@ on:
         required: false
       BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN:
         required: false
+      BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64:
+        required: false
+      BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD:
+        required: false
+      BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64:
+        required: false
+      BUILDCHAIN_MACOS_NOTARY_API_KEY_ID:
+        required: false
+      BUILDCHAIN_MACOS_NOTARY_API_ISSUER:
+        required: false
     outputs:
       buildchain-channel:
         description: "Resolved Buildchain channel: alpha, stable, or override"
@@ -342,6 +377,12 @@ on:
       build-summary-artifact:
         description: "Uploaded aggregate build summary artifact name"
         value: ${{ jobs.build.outputs.summary-artifact-name }}
+      credential-island-macos-artifact:
+        description: "Uploaded signed macOS payload artifact name when the credential island is enabled"
+        value: ${{ jobs.build.outputs.credential-island-macos-artifact }}
+      credential-island-macos-manifest-artifact:
+        description: "Uploaded signed macOS manifest artifact name when the credential island is enabled"
+        value: ${{ jobs.build.outputs.credential-island-macos-manifest-artifact }}
       build-diagnostics-summary-artifact:
         description: "Uploaded aggregate diagnostics summary artifact name"
         value: ${{ jobs.build.outputs.diagnostics-summary-artifact-name }}
@@ -443,6 +484,7 @@ on:
         value: ${{ jobs.controller-receipt.outputs.controller-receipt-status }}
 
 permissions:
+  actions: read
   contents: read
   issues: write
   id-token: write
@@ -604,6 +646,7 @@ jobs:
       - controller-plan
     uses: ./.github/workflows/.build.yml
     permissions:
+      actions: read
       contents: read
       issues: write
       id-token: write
@@ -616,6 +659,7 @@ jobs:
       working-directory: ${{ inputs.working-directory }}
       runner-preset: ${{ inputs.runner-preset }}
       platforms-json: ${{ inputs.platforms-json }}
+      fail-fast: ${{ inputs.fail-fast }}
       linux-container-preset: ${{ inputs.linux-container-preset }}
       linux-container-image: ${{ inputs.linux-container-image }}
       require-trusted-event: ${{ inputs.require-trusted-event }}
@@ -643,6 +687,10 @@ jobs:
       artifact-name: ${{ inputs.artifact-name }}
       artifact-name-template: ${{ inputs.artifact-name-template }}
       artifact-paths: ${{ inputs.artifact-paths }}
+      credential-island-macos-app-path: ${{ inputs.credential-island-macos-app-path }}
+      credential-island-environment: ${{ inputs.credential-island-environment }}
+      credential-island-caller-owned: ${{ inputs.credential-island-caller-owned }}
+      credential-island-macos-platform-id: ${{ inputs.credential-island-macos-platform-id }}
       release-candidate: ${{ inputs.release-candidate }}
       expected-artifacts-json: ${{ inputs.expected-artifacts-json }}
       process-summary-path: ${{ inputs.process-summary-path }}
