@@ -5688,34 +5688,50 @@ fs.writeFileSync(manifestPath, JSON.stringify({
     evidencePath: "",
   });
 
-  const result = await promoteBuildchainRefs({
-    octokit,
-    owner: "kungfu-systems",
-    repo: "buildchain",
-    sha: mergeSha,
-    targetRef: "release/v1/v1.0",
-    cwd,
-    publishTransaction: true,
-    requireVersionState: true,
-    expectedPublicationVersion: "1.0.0",
-  });
+  const inheritedLifecycleEnv = {
+    BUILDCHAIN_SOURCE_SHA: process.env.BUILDCHAIN_SOURCE_SHA,
+    BUILDCHAIN_SITE_GENERATED_AT: process.env.BUILDCHAIN_SITE_GENERATED_AT,
+  };
+  process.env.BUILDCHAIN_SOURCE_SHA = "f".repeat(40);
+  process.env.BUILDCHAIN_SITE_GENERATED_AT = "2026-07-24T23:00:00.000Z";
+  try {
+    const result = await promoteBuildchainRefs({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sha: mergeSha,
+      targetRef: "release/v1/v1.0",
+      cwd,
+      publishTransaction: true,
+      requireVersionState: true,
+      expectedPublicationVersion: "1.0.0",
+    });
 
-  assert.equal(result.sha, mergeSha);
-  assert.equal(result.publishTransaction.state, "complete");
-  assert.equal(result.publishTransaction.exactTag, "v1.0.0");
-  assert.equal(refs.get("heads/release/v1/v1.0"), mergeSha);
-  assert.equal(refs.get("tags/v1.0.0"), previousFinalizedSha);
-  assert.equal(refs.get("tags/v1.0"), mergeSha);
-  assert.equal(refs.get("tags/v1"), mergeSha);
-  assert.equal(refs.has("tags/v1.0.1"), false);
-  assert.equal(
-    result.updates.some(
-      (update) =>
-        update.action === "created-version-state" &&
-        update.version === "1.0.0",
-    ),
-    false,
-  );
+    assert.equal(result.sha, mergeSha);
+    assert.equal(result.publishTransaction.state, "complete");
+    assert.equal(result.publishTransaction.exactTag, "v1.0.0");
+    assert.equal(refs.get("heads/release/v1/v1.0"), mergeSha);
+    assert.equal(refs.get("tags/v1.0.0"), previousFinalizedSha);
+    assert.equal(refs.get("tags/v1.0"), mergeSha);
+    assert.equal(refs.get("tags/v1"), mergeSha);
+    assert.equal(refs.has("tags/v1.0.1"), false);
+    assert.equal(
+      result.updates.some(
+        (update) =>
+          update.action === "created-version-state" &&
+          update.version === "1.0.0",
+      ),
+      false,
+    );
+  } finally {
+    for (const [key, value] of Object.entries(inheritedLifecycleEnv)) {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+  }
 });
 
 test("release promotion does not resume an ancestor transaction for another planned version", async () => {
