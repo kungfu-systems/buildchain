@@ -736,6 +736,7 @@
           "github-governance-receipt-json",
           "github-release",
           "github-release-notes",
+          "github-release-payload-patterns",
           "github-release-title",
           "package-manager",
           "promotion-contract-lock-digest",
@@ -752,6 +753,8 @@
           "publication-admission-json",
           "publication-auto-admission",
           "publication-auto-no-gate",
+          "publication-commit-command",
+          "publication-commit-evidence-path",
           "publication-consumer-predicate-id",
           "publication-consumer-qualification-command",
           "publication-control-plane-audit-json",
@@ -796,17 +799,18 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 75,
+        "inputCount": 78,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
           "BUILDCHAIN_ISSUE_TOKEN",
           "BUILDCHAIN_PROMOTION_TOKEN",
+          "BUILDCHAIN_PUBLICATION_COMMIT_TOKEN",
           "buildchain-issue-app-id",
           "buildchain-issue-app-private-key",
           "buildchain-issue-token"
         ],
-        "secretCount": 7,
+        "secretCount": 8,
         "outputs": [
           "built-source-sha",
           "controller-plan-artifact",
@@ -818,9 +822,13 @@
           "controller-receipt-status",
           "promoted-sha",
           "publication-capability-digest",
+          "publication-commit-evidence-digest",
+          "publication-commit-evidence-path",
+          "publication-commit-payload-root",
+          "publication-commit-url",
           "release-candidate-artifact"
         ],
-        "outputCount": 11
+        "outputCount": 15
       },
       {
         "id": ".release-docker",
@@ -1846,11 +1854,14 @@
           "github-governance-receipt-json",
           "github-release",
           "github-release-notes",
+          "github-release-payload-patterns",
           "github-release-title",
           "package-manager",
           "publication-admission-json",
           "publication-auto-admission",
           "publication-auto-no-gate",
+          "publication-commit-command",
+          "publication-commit-evidence-path",
           "publication-consumer-predicate-id",
           "publication-consumer-qualification-command",
           "publication-control-plane-audit-json",
@@ -1895,17 +1906,18 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 67,
+        "inputCount": 70,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
           "BUILDCHAIN_ISSUE_TOKEN",
           "BUILDCHAIN_PROMOTION_TOKEN",
+          "BUILDCHAIN_PUBLICATION_COMMIT_TOKEN",
           "buildchain-issue-app-id",
           "buildchain-issue-app-private-key",
           "buildchain-issue-token"
         ],
-        "secretCount": 7,
+        "secretCount": 8,
         "outputs": [
           "buildchain-channel",
           "built-source-sha",
@@ -1929,9 +1941,13 @@
           "promotion-shell-sha",
           "promotion-target-ref",
           "publication-capability-digest",
+          "publication-commit-evidence-digest",
+          "publication-commit-evidence-path",
+          "publication-commit-payload-root",
+          "publication-commit-url",
           "release-candidate-artifact"
         ],
-        "outputCount": 23
+        "outputCount": 27
       },
       {
         "id": "release-governance-reconcile",
@@ -3887,8 +3903,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "5ba7fd93a13993b05767b6f02d0626a7347f25c3d7cd4589ed4f70028c1f1bd1",
-    "workflowRegistryDigest": "16ab065f3e96d55673333a4ddae65c1ba2b660c0857c3265e4e4ab8ddd3b4c1e",
-    "pageRegistryDigest": "300114efb22df2ddfff07b5f6e47fd11e801449386dcdd93121cbe6ed6fa090a"
+    "workflowRegistryDigest": "24124f493469840ca7eefa2b5a445338e73712464e7aa7b8040f6b55a9f86075",
+    "pageRegistryDigest": "5e634600d369b611f692cfae6372e4d3737c2bc0bcd81aa7c6d8939a7bb57cd4"
   },
   "comparison": {
     "missingCliRegistry": [],
