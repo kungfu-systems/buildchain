@@ -1,5 +1,5 @@
 import * as core from "@actions/core";
-import { signAsync } from "@electron/osx-sign";
+import { signAsync } from "@electron/osx-sign/dist/cjs/index.js";
 import { spawnSync } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs";

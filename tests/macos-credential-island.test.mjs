@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -291,6 +292,27 @@ test("cleanup restores search list and removes temporary material", () => {
     "/tmp/login.keychain-db",
   ]);
   assert.equal(fs.existsSync(root), false);
+});
+
+test("credential island bundle loads before validating runner inputs", () => {
+  const root = path.resolve(import.meta.dirname, "..");
+  const result = spawnSync(
+    process.execPath,
+    [path.join(root, "actions/macos-credential-island/dist/index.js")],
+    {
+      encoding: "utf8",
+      env: {
+        PATH: process.env.PATH || "",
+      },
+    },
+  );
+  const output = `${result.stdout || ""}${result.stderr || ""}`;
+  assert.equal(result.status, 1);
+  assert.match(
+    output,
+    /macOS credential island requires a macOS runner|Input required and not supplied: source-repository/u,
+  );
+  assert.doesNotMatch(output, /ReferenceError: module is not defined/u);
 });
 
 test("public action and workflow keep credentials outside the build matrix", () => {
