@@ -1478,7 +1478,7 @@ jobs:
           release-candidate-version: ${{ steps.rc.outputs.release-candidate-version }}
 
       - name: Dispatch standalone binary distribution for the exact public tag
-        if: ${{ inputs.standalone-binary-distribution && !inputs.dry-run && steps.promote.outcome == 'success' && steps.promote.outputs.public-release-tag != '' }}
+        if: ${{ inputs.standalone-binary-distribution && !inputs.dry-run && steps.promote.outcome == 'success' && steps.promote.outputs.finalization-needed != 'true' && steps.promote.outputs.public-release-tag != '' }}
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ steps.promote.outputs.public-release-tag }}
@@ -1507,7 +1507,7 @@ jobs:
 
       - name: Commit consumer publication authority last
         id: publication-commit
-        if: ${{ inputs.publication-commit-command != '' && !inputs.dry-run && steps.promote.outcome == 'success' }}
+        if: ${{ inputs.publication-commit-command != '' && !inputs.dry-run && steps.promote.outcome == 'success' && steps.promote.outputs.finalization-needed != 'true' }}
         shell: bash
         env:
           BUILDCHAIN_PUBLICATION_COMMIT_COMMAND: ${{ inputs.publication-commit-command }}
@@ -1563,7 +1563,7 @@ jobs:
 
       - name: Bundle release-candidate-promotion controller evidence
         id: controller-evidence
-        if: ${{ always() && !inputs.dry-run && steps.promote.outcome == 'success' }}
+        if: ${{ always() && !inputs.dry-run && steps.promote.outcome == 'success' && steps.promote.outputs.finalization-needed != 'true' }}
         shell: bash
         env:
           RELEASE_CANDIDATE_PASSPORT: ${{ steps.routing-evidence.outputs.candidate-passport-path || steps.rc.outputs.release-candidate-passport-path }}

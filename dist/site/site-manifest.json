@@ -245,7 +245,7 @@
       "path": "docs/publish-transaction.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:732e7da899ab0b532bda2f77181d753ee8af2e397db4b0eedaaa10657ade7b2a"
+      "digest": "sha256:cde5256d5f6443a6d32b47783900a0677e973855266af5a360db8d4d112bb677"
     },
     {
       "id": "release-governance",
