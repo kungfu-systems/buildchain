@@ -8057,6 +8057,22 @@ test("strict alpha promotion opens a protected version-state PR when direct sync
     ["tags/v1.0.0", OTHER_SHA],
   ]);
   let createdPullRequest;
+  const pullRequestOctokit = {
+    rest: {
+      pulls: {
+        list: async () => ({ data: [] }),
+        create: async ({ head, base, title }) => {
+          createdPullRequest = {
+            html_url: "https://github.com/kungfu-systems/buildchain/pull/alpha-version-state",
+            head,
+            base,
+            title,
+          };
+          return { data: createdPullRequest };
+        },
+      },
+    },
+  };
   const octokit = {
     rest: {
       git: {
@@ -8095,18 +8111,6 @@ test("strict alpha promotion opens a protected version-state PR when direct sync
           return {};
         },
       },
-      pulls: {
-        list: async () => ({ data: [] }),
-        create: async ({ head, base, title }) => {
-          createdPullRequest = {
-            html_url: "https://github.com/kungfu-systems/buildchain/pull/alpha-version-state",
-            head,
-            base,
-            title,
-          };
-          return { data: createdPullRequest };
-        },
-      },
       repos: {
         getBranchProtection: async () => ({ data: protectedChannel() }),
         listPullRequestsAssociatedWithCommit: async () => ({
@@ -8134,6 +8138,7 @@ test("strict alpha promotion opens a protected version-state PR when direct sync
     cwd,
     requireGovernance: true,
     requireVersionState: true,
+    pullRequestOctokit,
   });
 
   const versionStateBranch = versionStateBranchName("alpha/v1/v1.0", versionSha);

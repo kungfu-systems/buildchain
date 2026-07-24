@@ -3604,6 +3604,7 @@ async function promoteBuildchainRefs({
   verificationCommand = "",
   requiredStatusCheck = "check",
   statusCheckOctokit = octokit,
+  pullRequestOctokit = octokit,
   refUpdateOctokit = octokit,
   branchProtectionBypassApps = "",
   branchProtectionBypassUsers = "",
@@ -3981,7 +3982,7 @@ async function promoteBuildchainRefs({
       if (
         !protectedUpdate?.allowPendingPullRequest ||
         !protectedUpdate?.title ||
-        typeof octokit.rest.pulls?.create !== "function"
+        typeof pullRequestOctokit.rest.pulls?.create !== "function"
       ) {
         throw protectedBranchDirectUpdateError({ branch, branchSha, error });
       }
@@ -4006,8 +4007,8 @@ async function promoteBuildchainRefs({
           sha: branchSha,
         });
       }
-      if (typeof octokit.rest.pulls?.list === "function") {
-        const { data: existingPullRequests } = await octokit.rest.pulls.list({
+      if (typeof pullRequestOctokit.rest.pulls?.list === "function") {
+        const { data: existingPullRequests } = await pullRequestOctokit.rest.pulls.list({
           owner,
           repo,
           state: "open",
@@ -4030,7 +4031,7 @@ async function promoteBuildchainRefs({
           };
         }
       }
-      const { data: pullRequest } = await octokit.rest.pulls.create({
+      const { data: pullRequest } = await pullRequestOctokit.rest.pulls.create({
         owner,
         repo,
         title: protectedUpdate.title,
