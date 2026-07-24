@@ -62,10 +62,22 @@ const LEGACY_MAJOR_GATE_REF = "major-gate";
 const GITHUB_ACTIONS_APP_ID = 15368;
 const RELEASE_LINE_RECOVERY_PATHS = [
   "actions/promote-buildchain-ref/",
+  "packages/core/self-dogfood-version.js",
+  "scripts/check-inventory.mjs",
   "scripts/release-line-policy.mjs",
+  "tests/build-surface.test.mjs",
   "tests/promote-buildchain-ref.test.mjs",
   "tests/release-line-policy.test.mjs",
 ];
+
+export function isAllowedReleaseLineRecoveryPath(file, allowedPaths = []) {
+  if (allowedPaths.includes(file)) {
+    return true;
+  }
+  return RELEASE_LINE_RECOVERY_PATHS.some((allowedPath) =>
+    allowedPath.endsWith("/") ? file.startsWith(allowedPath) : file === allowedPath,
+  );
+}
 
 function parseTags(input) {
   const tags = String(input || "")
@@ -4447,14 +4459,9 @@ async function promoteBuildchainRefs({
       basehead: `${baseSha}...${headSha}`,
     });
     const changedPaths = (comparison.files || []).map((file) => file.filename);
-    const unexpected = changedPaths.filter((file) => {
-      if (allowedPaths.includes(file)) {
-        return false;
-      }
-      return !RELEASE_LINE_RECOVERY_PATHS.some((allowedPath) =>
-        allowedPath.endsWith("/") ? file.startsWith(allowedPath) : file === allowedPath,
-      );
-    });
+    const unexpected = changedPaths.filter(
+      (file) => !isAllowedReleaseLineRecoveryPath(file, allowedPaths),
+    );
     if (unexpected.length > 0) {
       const recoveryScope = [
         ...RELEASE_LINE_RECOVERY_PATHS,
