@@ -8,6 +8,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 import { loadBuildchainConfig, validateBuildchainConfig } from "../packages/core/buildchain-config.js";
 import { createSurfaceTimestampPolicy } from "../packages/core/surface-manifest.js";
+import { validateInstallerPublication, verifyInstallerPublicReadback } from "./installer-publication.mjs";
 
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 
@@ -1004,6 +1005,18 @@ export function createWebSurfaceArtifactHash({ cwd = process.cwd(), artifactPath
   };
 }
 
+function installerPublicationEvidence(artifactRoot) {
+  const manifestPath = path.join(artifactRoot, "installer-publication.json");
+  if (!fs.existsSync(manifestPath)) return null;
+  let publication;
+  try {
+    publication = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  } catch (error) {
+    throw new Error(`invalid installer publication manifest: ${error.message}`);
+  }
+  return validateInstallerPublication({ publication, artifactRoot });
+}
+
 export function createWebSurfaceDeploymentManifest({
   cwd = process.cwd(),
   channel = "preview",
@@ -1133,6 +1146,12 @@ export function planWebSurfaceDeploy({
     rollbackLimitations,
     deployedAt,
   });
+  const installerEvidence = installerPublicationEvidence(
+    path.resolve(cwd, artifactPath || deployConfig.artifactPath || "."),
+  );
+  if (installerEvidence) {
+    manifest.installerPublicationEvidence = installerEvidence;
+  }
   const surfaceBindings = withImmutablePublicationPolicies(withSurfaceRoutingEvidence(manifest.surfaceBindings, {
     artifactPath: artifactPath || deployConfig.artifactPath || ".",
     files: resolvedArtifact.files,
@@ -1140,6 +1159,15 @@ export function planWebSurfaceDeploy({
     cwd,
     artifactPath: artifactPath || deployConfig.artifactPath || ".",
   });
+  if (installerEvidence) {
+    const preserved = surfaceBindings.some((binding) =>
+      binding.immutablePublication?.declaredPrefixes?.includes(installerEvidence.immutablePath));
+    if (!preserved) {
+      throw new Error(
+        `installer immutable path is not covered by append-only publication policy: ${installerEvidence.immutablePath}`,
+      );
+    }
+  }
   manifest.surfaceBindings = surfaceBindings;
   return {
     schemaVersion: 1,
@@ -1953,6 +1981,42 @@ export async function checkWebSurfaceHealth({
     });
   }
 
+  const installerPublication = manifest?.installerPublicationEvidence;
+  const managedInstallerSurface =
+    config.channels?.[channel]?.accessControl === "managed-network" &&
+    !allowedManagedNetworkRunner;
+  if (installerPublication && !managedInstallerSurface) {
+    try {
+      const publicBase = new URL(urls.hub || manifest?.url || Object.values(urls)[0]);
+      const projected = {
+        ...installerPublication,
+        assets: installerPublication.assets.map((asset) => ({
+          ...asset,
+          friendlyUrl: new URL(new URL(asset.friendlyUrl).pathname, publicBase).href,
+          immutableUrl: new URL(new URL(asset.immutableUrl).pathname, publicBase).href,
+        })),
+      };
+      const evidence = await verifyInstallerPublicReadback({
+        publication: projected,
+        fetchImpl,
+      });
+      checks.push({
+        surface: "__installer__",
+        url: publicBase.href,
+        status: "pass",
+        evidence,
+        message: "friendly and immutable installer routes match signed publication bytes and cache policy",
+      });
+    } catch (error) {
+      checks.push({
+        surface: "__installer__",
+        url: urls.hub || manifest?.url || "",
+        status: "fail",
+        message: String(error.message || error),
+      });
+    }
+  }
+
   const manifestChecks = bindings.map((binding) => ({
     surface: binding.surface,
     manifestKey: binding.manifestKey,
@@ -1987,6 +2051,20 @@ function deployBindingOperations({ artifactRoot, deployConfig, manifest, binding
   const distribution = binding.distributionId || effectiveDeploy.cloudfront_distribution || effectiveDeploy.distribution || "";
   const surfaceArtifactRoot = surfaceArtifactRootFor({ artifactRoot, binding });
   const immutable = binding.immutablePublication;
+  const installer = manifest.installerPublicationEvidence;
+  const installerRoot = installer?.immutablePath || "";
+  const ownsArtifactRoot = normalizeS3Key(
+    binding.artifactPathPrefix || surfaceArtifactPrefix(binding),
+  ) === "";
+  const ownsInstallerAssets = installer?.assets?.every((asset) =>
+    fs.existsSync(path.join(surfaceArtifactRoot, asset.friendly.path)));
+  const installerBinding =
+    installer &&
+    ownsArtifactRoot &&
+    ownsInstallerAssets &&
+    immutable?.declaredPrefixes?.includes(installer.immutablePath)
+      ? installer
+      : null;
   const immutableVerifier = path.join(moduleDir, "web-surface-immutable-object.mjs");
   const verifyImmutable = (phase) => (immutable?.files || []).map((file) => ({
     action: `verify-immutable-artifact-${phase}`,
@@ -2007,25 +2085,59 @@ function deployBindingOperations({ artifactRoot, deployConfig, manifest, binding
       sha256: file.sha256,
     },
   }));
-  const syncImmutable = (immutable?.preservedRoots || []).map((root) => ({
-    action: "sync-immutable-artifact",
+  const syncImmutable = (immutable?.preservedRoots || []).map((root) => {
+    const isInstallerRoot = Boolean(installerBinding && root === installerRoot);
+    const immutableMetadataArgs = isInstallerRoot
+      ? [
+          "--content-type",
+          "application/octet-stream",
+          "--cache-control",
+          "public,max-age=31536000,immutable",
+        ]
+      : binding.cacheControl?.immutable
+        ? ["--cache-control", binding.cacheControl.immutable]
+        : [];
+    return {
+      action: "sync-immutable-artifact",
+      surface: binding.surface,
+      command: "aws",
+      args: [
+        "s3",
+        "sync",
+        path.join(surfaceArtifactRoot, root),
+        s3Uri(bucket, joinS3Key(binding.objectPrefix, root)),
+        "--no-overwrite",
+        "--checksum-algorithm",
+        "SHA256",
+        ...immutableMetadataArgs,
+      ],
+      immutable: {
+        preservedRoot: root,
+        overwrite: false,
+        cacheControl: isInstallerRoot
+          ? "public,max-age=31536000,immutable"
+          : binding.cacheControl?.immutable,
+      },
+    };
+  });
+  const publishFriendlyInstallers = (installerBinding?.assets || []).map((asset) => ({
+    action: "publish-friendly-installer",
     surface: binding.surface,
     command: "aws",
     args: [
       "s3",
-      "sync",
-      path.join(surfaceArtifactRoot, root),
-      s3Uri(bucket, joinS3Key(binding.objectPrefix, root)),
-      "--no-overwrite",
-      "--checksum-algorithm",
-      "SHA256",
-      ...(binding.cacheControl?.immutable
-        ? ["--cache-control", binding.cacheControl.immutable]
-        : []),
+      "cp",
+      path.join(surfaceArtifactRoot, asset.friendly.path),
+      s3Uri(bucket, joinS3Key(binding.objectPrefix, asset.friendly.path)),
+      "--content-type",
+      asset.contentType,
+      "--cache-control",
+      "public,max-age=300,must-revalidate",
     ],
-    immutable: {
-      preservedRoot: root,
-      overwrite: false,
+    installer: {
+      name: asset.name,
+      digest: asset.digest,
+      cacheControl: "public,max-age=300,must-revalidate",
     },
   }));
   const operations = [
@@ -2068,6 +2180,7 @@ function deployBindingOperations({ artifactRoot, deployConfig, manifest, binding
           excludes: binding.mutableDeleteExcludes || [],
         }]
       : []),
+    ...publishFriendlyInstallers,
     ...directoryIndexAliasOperations({ surfaceArtifactRoot, bucket, binding }),
     {
       action: "write-deployment-manifest",
