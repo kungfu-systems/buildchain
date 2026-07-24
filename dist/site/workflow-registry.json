@@ -376,11 +376,12 @@
         "BUILDCHAIN_PROMOTION_TOKEN",
         "BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY",
         "BUILDCHAIN_PUBLICATION_COMMIT_TOKEN",
+        "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY",
         "buildchain-issue-app-id",
         "buildchain-issue-app-private-key",
         "buildchain-issue-token"
       ],
-      "secretCount": 9,
+      "secretCount": 10,
       "outputs": [
         "built-source-sha",
         "controller-plan-artifact",
@@ -1595,11 +1596,12 @@
         "BUILDCHAIN_PROMOTION_TOKEN",
         "BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY",
         "BUILDCHAIN_PUBLICATION_COMMIT_TOKEN",
+        "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY",
         "buildchain-issue-app-id",
         "buildchain-issue-app-private-key",
         "buildchain-issue-token"
       ],
-      "secretCount": 9,
+      "secretCount": 10,
       "outputs": [
         "buildchain-channel",
         "built-source-sha",

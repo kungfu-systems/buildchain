@@ -2356,6 +2356,17 @@ test("promotion commits consumer discovery authority only after public release a
   assert.match(wrapper, /BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY:/);
   assert.match(
     wrapper,
+    /KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY:/,
+  );
+  assert.match(
+    fs.readFileSync(
+      path.join(root, ".github/workflows/release-candidate-promote.yml"),
+      "utf8",
+    ),
+    /KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY:/,
+  );
+  assert.match(
+    wrapper,
     /node \.buildchain\/runtime\/scripts\/publication-commit-evidence\.mjs/,
   );
   assert.match(
