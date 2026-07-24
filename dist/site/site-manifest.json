@@ -229,7 +229,7 @@
       "path": "docs/lifecycle-protocol.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:ffe57d0a938d799033310d2f89e1b4b7502af5677b6b8ae90a1bbde239339982"
+      "digest": "sha256:9c669d3d2d1926dc5b421207089cca85bac0a6dcdb5544c28a7e1659ba9ed5ee"
     },
     {
       "id": "reusable-build-surface",
@@ -245,7 +245,7 @@
       "path": "docs/publish-transaction.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:8f6cc435f57807889827ad2c9bfec1e4ad94290fde6fe02e72a15967e7072edc"
+      "digest": "sha256:732e7da899ab0b532bda2f77181d753ee8af2e397db4b0eedaaa10657ade7b2a"
     },
     {
       "id": "release-governance",
@@ -253,7 +253,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:4e7c4649ee0fa7cea11ccb7031d5dd38046a3aef15dba6a00d24b3a12361b05f"
+      "digest": "sha256:5aa7fef2c831d14b4d1df4cddb45c6ce97929d8530eb14e3b3dfa3dee5e0d651"
     },
     {
       "id": "release-flow",

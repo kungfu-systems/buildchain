@@ -719,10 +719,12 @@ status checks are satisfied by machine-verifiable Buildchain evidence rather
 than a human PR. The protected ref PATCH itself uses the generated ref update
 token; the reusable wrapper binds it to the run-scoped `github.token`. If direct generated
 release finalization bookkeeping is still rejected, Buildchain creates or
-reuses a same-repository `buildchain/version-state/*` PR based on the current
-target channel head and records `finalization-needed=true` in the durable
-transaction output. Strict alpha bookkeeping still fails with a
-token/protection diagnostic instead of creating a post-publish PR.
+reuses a same-repository `buildchain/version-state/*` PR and records
+`finalization-needed=true` in the durable transaction output. Strict alpha
+follows the same provider-enforced PR path for its alpha and dev bookkeeping.
+The PR remains subject to the declared review, required checks, and merge-queue
+policy; publication resumes idempotently after that protected transaction
+lands.
 
 For a stable release, the wrapper also checks out the exact current development
 channel into `.buildchain/reconciliation/dev`. When the prepared next-alpha
