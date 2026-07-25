@@ -3561,14 +3561,34 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   assert.equal(alphaLock.buildchain.ref, "v2-alpha");
   assert.equal(alphaLock.buildchain.resolvedSha, "dfed5c87558b009c1f60ab549e592ea0c38e8989");
   assert.equal(alphaLock.buildchain.compatibilityPolicy, "major-compatible");
+  const packageVersion = JSON.parse(
+    fs.readFileSync(path.join(root, "package.json"), "utf8"),
+  ).version;
+  const majorResolution = resolveSelfDogfoodMajor({
+    packageVersion,
+    alphaRef: alphaLock.buildchain.ref,
+    majorBootstrap: process.env.BUILDCHAIN_MAJOR_VERSION_BOOTSTRAP === "true",
+  });
   const alphaEvaluation = evaluateBuildchainContractLock({
     lock: alphaLock,
-    current: currentContract,
+    current: contractForSelfDogfoodEvaluation({
+      currentContract,
+      majorResolution,
+    }),
     runtimeRef: "v2-alpha",
     runtimeSha: "current-development-contract",
     runtimeClass: "alpha",
   });
-  assert.equal(alphaEvaluation.compatible, true);
+  assert.equal(
+    canAdmitSelfDogfoodLockEvaluation({
+      evaluation: alphaEvaluation,
+      majorResolution,
+    }),
+    true,
+  );
+  if (!majorResolution.bootstrap) {
+    assert.equal(alphaEvaluation.compatible, true);
+  }
 
   const reusableBuild = fs.readFileSync(
     path.join(root, ".github/workflows/.build.yml"),
@@ -3658,16 +3678,23 @@ test("major self-dogfood bootstrap is bounded to the adjacent 0.0 release transi
   });
   assert.equal(bootstrapContract.majorLine, "v2");
   assert.equal(nextMajorContract.majorLine, "v3");
+  const bootstrapEvaluation = evaluateBuildchainContractLock({
+    lock: alphaLock,
+    current: bootstrapContract,
+    runtimeRef: "v2-alpha",
+    runtimeSha: "current-development-contract",
+    runtimeClass: "alpha",
+  });
   assert.equal(
-    evaluateBuildchainContractLock({
-      lock: alphaLock,
-      current: bootstrapContract,
-      runtimeRef: "v2-alpha",
-      runtimeSha: "current-development-contract",
-      runtimeClass: "alpha",
-    }).compatible,
+    canAdmitSelfDogfoodLockEvaluation({
+      evaluation: bootstrapEvaluation,
+      majorResolution,
+    }),
     true,
   );
+  if (process.env.BUILDCHAIN_MAJOR_VERSION_BOOTSTRAP !== "true") {
+    assert.equal(bootstrapEvaluation.compatible, true);
+  }
   const breakingContract = structuredClone(bootstrapContract);
   breakingContract.surfaces[0].breakingDigest = "sha256:breaking-bootstrap-drift";
   const breakingEvaluation = evaluateBuildchainContractLock({
