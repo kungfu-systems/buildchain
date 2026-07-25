@@ -76,3 +76,10 @@ export function contractForSelfDogfoodEvaluation({
     majorLine: `v${majorResolution.workflowMajor}`,
   };
 }
+
+export function canAdmitSelfDogfoodLockEvaluation({
+  evaluation,
+  majorResolution,
+} = {}) {
+  return evaluation?.compatible === true || majorResolution?.bootstrap === true;
+}

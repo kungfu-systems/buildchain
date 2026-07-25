@@ -66,6 +66,7 @@ import {
 import { resolvePublishSourceCli } from "../scripts/resolve-publish-source.mjs";
 import { evaluateBuildchainContractLock } from "../packages/core/buildchain-contract.js";
 import {
+  canAdmitSelfDogfoodLockEvaluation,
   contractForSelfDogfoodEvaluation,
   resolveSelfDogfoodMajor,
 } from "../packages/core/self-dogfood-version.js";
@@ -3669,14 +3670,26 @@ test("major self-dogfood bootstrap is bounded to the adjacent 0.0 release transi
   );
   const breakingContract = structuredClone(bootstrapContract);
   breakingContract.surfaces[0].breakingDigest = "sha256:breaking-bootstrap-drift";
+  const breakingEvaluation = evaluateBuildchainContractLock({
+    lock: alphaLock,
+    current: breakingContract,
+    runtimeRef: "v2-alpha",
+    runtimeSha: "current-development-contract",
+    runtimeClass: "alpha",
+  });
+  assert.equal(breakingEvaluation.compatible, false);
   assert.equal(
-    evaluateBuildchainContractLock({
-      lock: alphaLock,
-      current: breakingContract,
-      runtimeRef: "v2-alpha",
-      runtimeSha: "current-development-contract",
-      runtimeClass: "alpha",
-    }).compatible,
+    canAdmitSelfDogfoodLockEvaluation({
+      evaluation: breakingEvaluation,
+      majorResolution,
+    }),
+    true,
+  );
+  assert.equal(
+    canAdmitSelfDogfoodLockEvaluation({
+      evaluation: breakingEvaluation,
+      majorResolution: { ...majorResolution, bootstrap: false },
+    }),
     false,
   );
 });
