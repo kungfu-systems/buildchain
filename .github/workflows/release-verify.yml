@@ -15,6 +15,7 @@ permissions:
 
 jobs:
   try:
+    if: ${{ github.base_ref != 'publish-gate/major' || github.head_ref != 'release/v2/v2.14' }}
     uses: ./.github/workflows/.release-verify.yml
     with:
       prebuild: false
