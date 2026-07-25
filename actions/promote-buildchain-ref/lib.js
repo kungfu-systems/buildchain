@@ -286,6 +286,41 @@ function updateVersionStateContents(files, version) {
     .filter((file) => file.changed);
 }
 
+function alignMajorBootstrapReleaseImpact(changedFiles, { version, line } = {}) {
+  if (!changedFiles.some((file) => file.path === ".buildchain/release-impact.json")) {
+    return changedFiles;
+  }
+  const versionMatch = String(version || "").match(/^(\d+)\.(\d+)\./);
+  const expectedLine = versionMatch ? `v${versionMatch[1]}.${versionMatch[2]}` : "";
+  if (!expectedLine || line !== expectedLine) {
+    throw new Error(
+      `Major bootstrap release impact line must match version ${version}: expected ${expectedLine || "<invalid-version>"}, got ${line || "<empty>"}`,
+    );
+  }
+
+  return changedFiles.map((file) => {
+    if (file.path !== ".buildchain/release-impact.json") {
+      return file;
+    }
+    const impact = JSON.parse(file.content);
+    if (impact.release?.version !== version) {
+      throw new Error(
+        `Major bootstrap release impact version mismatch: expected ${version}, got ${impact.release?.version || "<empty>"}`,
+      );
+    }
+    return {
+      ...file,
+      content: writeJsonContent({
+        ...impact,
+        release: {
+          ...impact.release,
+          line,
+        },
+      }),
+    };
+  });
+}
+
 function resolveReleaseImpactInput({ cwd = process.cwd(), impactJson = "", version = "" } = {}) {
   const input = String(impactJson || "").trim();
   if (!input) {
@@ -5048,9 +5083,15 @@ async function promoteBuildchainRefs({
       manualNext && anchorManifest && hasVersionVerification
         ? uniquePaths([...discoveredPaths, anchorManifest.path, ...derivedPaths])
         : discoveredPaths;
-    const changedFiles = manualNext
+    let changedFiles = manualNext
       ? []
       : updateVersionStateContents(discovered.files, version);
+    if (rule.channel === "major" && changedFiles.length > 0) {
+      changedFiles = alignMajorBootstrapReleaseImpact(changedFiles, {
+        version,
+        line: rule.releasePrefix,
+      });
+    }
     const changedPaths = changedFiles.map((file) => file.path);
     console.log(
       `> version state manager: ${discovered.packageManager.name} (${discovered.packageManager.reason})`,
@@ -6550,6 +6591,7 @@ export {
   alphaDistTagForPromotion,
   stripTagPrefix,
   updateVersionStateContents,
+  alignMajorBootstrapReleaseImpact,
   resolveReleaseImpactInput,
   createTreeEquivalentReleaseImpact,
   releasePassportArtifactFiles,
