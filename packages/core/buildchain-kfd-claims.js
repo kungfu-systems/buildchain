@@ -13,6 +13,7 @@ export const BUILDCHAIN_KFD_COLLABORATION_INTERFACE_CONTRACT = "kungfu-buildchai
 
 export const BUILDCHAIN_AGENT_MANUALS = Object.freeze([
   { id: "map", title: "Buildchain documentation map", path: "docs/MAP.md", plane: "use" },
+  { id: "auditable-demo", title: "Auditable demo artifact pipeline", path: "docs/auditable-demo.md", plane: "verify" },
   { id: "install", title: "Install and verify Buildchain", path: "docs/install.md", plane: "use" },
   { id: "release-passport", title: "Release Passport protocol", path: "docs/release-passport.md", plane: "verify" },
   { id: "controller-evidence", title: "Controller evidence contract", path: "docs/controller-evidence.md", plane: "verify" },

@@ -4,9 +4,9 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 87,
-    "workflowCount": 52,
+    "workflowCount": 53,
     "actionCount": 5,
-    "sitePageCount": 55,
+    "sitePageCount": 56,
     "docCommandRefCount": 276,
     "failureCount": 0
   },
@@ -450,6 +450,39 @@
     ],
     "workflowInputs": [
       {
+        "id": ".auditable-demo",
+        "path": ".github/workflows/.auditable-demo.yml",
+        "reusable": true,
+        "inputs": [
+          "adapter-path",
+          "artifact-retention-days",
+          "buildchain-repository",
+          "render-media",
+          "renderer-image",
+          "require-trusted-event",
+          "source-artifact-digest",
+          "source-artifact-name",
+          "source-ref"
+        ],
+        "inputCount": 9,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [
+          "gate-artifact-digest",
+          "gate-artifact-id",
+          "gate-artifact-name",
+          "gate-artifact-url",
+          "gate-root",
+          "media-artifact-digest",
+          "media-artifact-id",
+          "media-artifact-name",
+          "media-artifact-url",
+          "media-root",
+          "source-sha"
+        ],
+        "outputCount": 11
+      },
+      {
         "id": ".binary-release-assets",
         "path": ".github/workflows/.binary-release-assets.yml",
         "reusable": true,
@@ -560,6 +593,7 @@
         ],
         "secretCount": 8,
         "outputs": [
+          "artifact-coordinates-json",
           "build-diagnostics-summary-artifact",
           "build-diagnostics-summary-json",
           "build-summary-artifact",
@@ -602,7 +636,7 @@
           "runner-preset",
           "trusted-event"
         ],
-        "outputCount": 41
+        "outputCount": 42
       },
       {
         "id": ".bump-minor-version",
@@ -1309,6 +1343,7 @@
         ],
         "secretCount": 8,
         "outputs": [
+          "artifact-coordinates-json",
           "build-diagnostics-summary-artifact",
           "build-diagnostics-summary-json",
           "build-summary-artifact",
@@ -1354,7 +1389,7 @@
           "runner-preset",
           "trusted-event"
         ],
-        "outputCount": 44
+        "outputCount": 45
       },
       {
         "id": "buildchain-alpha-self-dogfood",
@@ -2390,6 +2425,10 @@
       },
       {
         "id": "manual:artifact-verification-envelope",
+        "category": "manual"
+      },
+      {
+        "id": "manual:auditable-demo",
         "category": "manual"
       },
       {
@@ -3925,8 +3964,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "5ba7fd93a13993b05767b6f02d0626a7347f25c3d7cd4589ed4f70028c1f1bd1",
-    "workflowRegistryDigest": "4289e5a54fd0ef2f683636bb24337fec6456fb9fa8fb50155fa3b35c323e7c70",
-    "pageRegistryDigest": "23aacdefa707c4b4c0a0911741c44294411f0508d36695e7c717cfd77a4c8fb5"
+    "workflowRegistryDigest": "4a627dcf07131d07095d5e6bf0a3373e55c62cf325b3f81bb156c43d31367d62",
+    "pageRegistryDigest": "76226870160a4e17ebde9e166bb9d3ffe4ce4aa6f6276e992778ffee52ab9a55"
   },
   "comparison": {
     "missingCliRegistry": [],

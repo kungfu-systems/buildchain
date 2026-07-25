@@ -327,6 +327,7 @@ const manualMetaById = new Map(Object.entries({
   "publication-authority": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "preview", order: 105 },
   "github-governance-authority": { capabilityGroup: "governance-versioning", audience: ["maintainer", "release-operator", "agent"], maturity: "preview", order: 106 },
   "controller-evidence": { capabilityGroup: "reusable-build", audience: ["consumer", "release-operator", "agent"], maturity: "draft", order: 205 },
+  "auditable-demo": { capabilityGroup: "reusable-build", audience: ["consumer", "agent"], maturity: "preview", order: 207 },
   "binary-distribution": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "stable", order: 110 },
   "publish-transaction": { capabilityGroup: "release-passport-trust", audience: ["release-operator"], maturity: "stable", order: 120 },
   "release-activation-transaction": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "preview", order: 125 },
@@ -868,6 +869,7 @@ function buildSiteBundle() {
       const surfaceById = new Map([
         ["build", "channel-build-router"],
         [".build", "reusable-build"],
+        [".auditable-demo", "auditable-demo"],
         ["web-surface", "site-app-deployment"],
         ["buildchain-ref-promotion", "release-governance"],
         ["release-line-bootstrap", "release-governance"],
@@ -891,6 +893,7 @@ function buildSiteBundle() {
         ["patrol-observed-evidence", "repository-patrol"],
       ]);
       const statusById = new Map([
+        [".auditable-demo", "preview"],
         ["release-propagation", "preview"],
         ["candidate-lab", "repository-internal"],
         ["build-surface-fixture", "repository-internal"],

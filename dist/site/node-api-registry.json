@@ -99,7 +99,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-contract",
       "export": "./buildchain-contract",
       "target": "./packages/core/buildchain-contract.js",
-      "digest": "sha256:cf08a6c4fd2a56dff45e4a97d1c470ce94e453ab613a304bd86b3fe9d298a153",
+      "digest": "sha256:5772ad10d66e8fbbc07c06f4df521c7d60b631b0505b47540ce05804bcb576b0",
       "summary": "Runtime contract world and compatibility digest APIs for floating-ref drift checks.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -333,7 +333,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-publication-authority",
       "export": "./buildchain-publication-authority",
       "target": "./packages/core/buildchain-publication-authority.js",
-      "digest": "sha256:46484b94389d78a2092c9ae60399020930d879abc847234ffe7cb69ec4f61161",
+      "digest": "sha256:85f524a61cfc9931cae24158f8ff718ef0eae3a2a839670ab01744cbdfdd10c3",
       "summary": "Buildchain-owned closed-world publication authority descriptor registry.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -463,7 +463,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-kfd-claims",
       "export": "./buildchain-kfd-claims",
       "target": "./packages/core/buildchain-kfd-claims.js",
-      "digest": "sha256:fc916f55d366db8eb7270389fdaf6ac02e18bcd4fe5f1fdbdb1283e5fc4c9929",
+      "digest": "sha256:f3a719c64881e650a6ef68e3e0d4acd40878722b0eb76b88d30081db77ad92c8",
       "summary": "Buildchain self KFD claim registry, witnesses, and public claim APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [
