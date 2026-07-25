@@ -697,18 +697,35 @@ function defaultDistTagForChannel(channel) {
   return channel === "alpha" ? "alpha" : "latest";
 }
 
+function releaseLineMajor(line) {
+  const match = String(line || "").match(/^v(\d+)\.\d+$/);
+  return match ? Number(match[1]) : undefined;
+}
+
 function alphaDistTagForPromotion({
   ownsMajorAlphaTag,
   line,
   publishDistTag = "",
+  sharedAlphaAuthorityMajor,
 } = {}) {
-  if (ownsMajorAlphaTag) {
+  const major = releaseLineMajor(line);
+  if (!major) {
+    throw new Error(
+      `alpha publication requires a vN.N release line; got ${line || "<empty>"}`,
+    );
+  }
+  const ownsSharedAlphaAuthority =
+    ownsMajorAlphaTag &&
+    (!sharedAlphaAuthorityMajor || major === sharedAlphaAuthorityMajor);
+  if (ownsSharedAlphaAuthority) {
     return publishDistTag;
   }
-  if (!/^v\d+\.\d+$/.test(String(line || ""))) {
-    throw new Error(`older-minor alpha publication requires a vN.N release line; got ${line || "<empty>"}`);
+  if (publishDistTag === "alpha") {
+    throw new Error(
+      `shared npm alpha authority belongs to v${sharedAlphaAuthorityMajor}; ${line} must use its line-specific dist-tag`,
+    );
   }
-  return `${line}-alpha`;
+  return publishDistTag || `${line}-alpha`;
 }
 
 function resolvePublishContract({
@@ -727,6 +744,7 @@ function resolvePublishContract({
   const packageSetOrder = publishPackageSetOrder || configured.packageSetOrder || "as-provided";
   const mainPackage = publishPackageMain || configured.mainPackage || "";
   const distTag = publishDistTag || configured.distTag || defaultDistTagForChannel(channel);
+  const sharedAlphaAuthorityMajor = configured.sharedAlphaAuthorityMajor;
   if (!["publish-final-version", "promote-existing-version"].includes(mode)) {
     throw new Error("publish mode must be one of publish-final-version or promote-existing-version");
   }
@@ -743,6 +761,16 @@ function resolvePublishContract({
     throw new Error("release publish-final-version must use dist-tag latest");
   }
   const alphaDistTags = new Set(["alpha", ...(line ? [`${line}-alpha`] : [])]);
+  if (
+    channel === "alpha" &&
+    distTag === "alpha" &&
+    sharedAlphaAuthorityMajor &&
+    releaseLineMajor(line) !== sharedAlphaAuthorityMajor
+  ) {
+    throw new Error(
+      `shared npm alpha authority belongs to v${sharedAlphaAuthorityMajor}; ${line || "<unknown line>"} must use its line-specific dist-tag`,
+    );
+  }
   if (channel === "alpha" && mode === "publish-final-version" && !alphaDistTags.has(distTag)) {
     throw new Error(`alpha publish-final-version must use dist-tag alpha or ${line ? `${line}-alpha` : "the line-specific alpha tag"}`);
   }
@@ -750,6 +778,7 @@ function resolvePublishContract({
     mode,
     auth,
     distTag,
+    sharedAlphaAuthorityMajor,
     packageSetOrder,
     mainPackage,
   };
@@ -5943,10 +5972,14 @@ async function promoteBuildchainRefs({
 
   if (rule.channel === "alpha") {
     const ownsMajorAlphaTag = await ownsMajorAlphaFloatingTag();
+    const sharedAlphaAuthorityMajor = getPublishContract(
+      loadBuildchainConfig(cwd),
+    )?.sharedAlphaAuthorityMajor;
     const alphaPublishDistTag = alphaDistTagForPromotion({
       ownsMajorAlphaTag,
       line: rule.releasePrefix,
       publishDistTag,
+      sharedAlphaAuthorityMajor,
     });
     const explicitAlphaTags = requestedTags
       ? requestedTags.filter((tag) => tag.includes("-alpha."))
