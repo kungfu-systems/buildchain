@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 
 const {
   alphaDistTagForPromotion,
+  alignMajorBootstrapReleaseImpact,
   assertAllowedLocalChanges,
   assertExpectedPublicationVersion,
   assertChannelPromotionPr,
@@ -67,6 +68,39 @@ test("publication authority version binding fails closed on transaction drift", 
   assert.throws(
     () => assertExpectedPublicationVersion("2.12.7-alpha.3", "2.12.7-alpha.4"),
     /publication version changed after authority planning: expected 2\.12\.7-alpha\.3, got 2\.12\.7-alpha\.4/,
+  );
+});
+
+test("major bootstrap aligns version-bound release impact to the new line", () => {
+  const unchanged = {
+    path: "package.json",
+    content: '{"version":"3.0.0"}\n',
+  };
+  const aligned = alignMajorBootstrapReleaseImpact([
+    unchanged,
+    {
+      path: ".buildchain/release-impact.json",
+      content: JSON.stringify({
+        release: { version: "3.0.0", line: "v2.14" },
+        classification: "major",
+      }),
+    },
+  ], {
+    version: "3.0.0",
+    line: "v3.0",
+  });
+
+  assert.equal(aligned[0], unchanged);
+  assert.deepEqual(JSON.parse(aligned[1].content).release, {
+    version: "3.0.0",
+    line: "v3.0",
+  });
+  assert.throws(
+    () => alignMajorBootstrapReleaseImpact(aligned, {
+      version: "3.0.0",
+      line: "v3.1",
+    }),
+    /must match version 3\.0\.0/,
   );
 });
 const {
