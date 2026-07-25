@@ -124,7 +124,7 @@ Limit a canary to one repository:
 ```bash
 buildchain audit github-governance \
   --repository kungfu-systems/buildchain \
-  --target-ref dev/v2/v2.14 \
+  --target-ref dev/v3/v3.0 \
   --require-qualifying \
   --json
 ```
@@ -169,7 +169,7 @@ Plan one exact branch without mutation:
 ```bash
 buildchain github-governance plan \
   --repository kungfu-systems/buildchain \
-  --branch dev/v2/v2.14 \
+  --branch dev/v3/v3.0 \
   --required-check check \
   --required-check-app-id check=15368 \
   --required-approvals 1 \
