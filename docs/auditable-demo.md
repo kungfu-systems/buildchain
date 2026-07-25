@@ -63,7 +63,8 @@ platform id to its same-run artifact id, name, upload digest, URL, and expiry,
 so a consumer that delegates its build to Buildchain can pass an exact
 coordinate without rediscovering authority in a downstream job. The build
 aggregate fails closed if any declared platform lacks one live, digest-bearing
-artifact coordinate.
+artifact coordinate. The compact coordinate set is sorted by platform id so
+downstream machine consumers do not depend on matrix completion order.
 
 The adapter runs with a disposable Home/XDG/npm prefix, a minimal environment,
 and no GitHub, npm, or cloud credential injection. It must be a regular,
