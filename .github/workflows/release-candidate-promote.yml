@@ -829,13 +829,9 @@ jobs:
       github-release: ${{ inputs.github-release }}
       github-release-title: ${{ inputs.github-release-title }}
       github-release-notes: ${{ inputs.github-release-notes }}
-      release-activation-receipt-set-path: ${{ inputs.release-activation-receipt-set-path }}
-      release-passport-evidence-command: ${{ inputs.release-passport-evidence-command }}
-      release-passport-evidence-path: ${{ inputs.release-passport-evidence-path }}
       runner-preset: ${{ inputs.runner-preset }}
       trusted-publishing: ${{ inputs.trusted-publishing }}
       publish-command: ${{ inputs.publish-command }}
-      publish-transaction-override: ${{ inputs.publish-transaction-override }}
       publish-required-artifacts-json: ${{ inputs.publish-required-artifacts-json }}
       publish-artifact-kind: ${{ inputs.publish-artifact-kind }}
       publish-mode: ${{ inputs.publish-mode }}
@@ -859,7 +855,6 @@ jobs:
       publication-admission-json: ${{ inputs.publication-admission-json }}
       publication-runner-provenance-json: ${{ inputs.publication-runner-provenance-json }}
       publication-control-plane-audit-json: ${{ inputs.publication-control-plane-audit-json }}
-      github-governance-receipt-json: ${{ inputs.github-governance-receipt-json }}
       publication-gate-aggregate-json: ${{ inputs.publication-gate-aggregate-json }}
       publication-expected-json: ${{ inputs.publication-expected-json }}
       publication-used-nonces-json: ${{ inputs.publication-used-nonces-json }}
