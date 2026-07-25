@@ -4102,6 +4102,37 @@ async function promoteBuildchainRefs({
       updates.push({ ref: branch, action: "existing", sha: branchSha });
       return { updated: true, existing: true };
     }
+    const generatedVersionStateBranch = protectedUpdate
+      ? versionStateBranchName(branch, branchSha)
+      : "";
+    const generatedVersionStateSha = generatedVersionStateBranch
+      ? await readRefSha(`heads/${generatedVersionStateBranch}`)
+      : undefined;
+    if (
+      currentSha &&
+      generatedVersionStateSha === branchSha &&
+      typeof octokit.rest.repos?.compareCommitsWithBasehead === "function"
+    ) {
+      const { data: comparison } = await octokit.rest.repos.compareCommitsWithBasehead({
+        owner,
+        repo,
+        basehead: `${branchSha}...${currentSha}`,
+      });
+      if (comparison.status === "ahead") {
+        updates.push({
+          ref: branch,
+          action: "existing-contained-version-state",
+          sha: currentSha,
+          sourceSha: branchSha,
+        });
+        return {
+          updated: true,
+          existing: true,
+          contained: true,
+          currentSha,
+        };
+      }
+    }
     const branchWriteOctokit = protectedUpdate ? (refUpdateOctokit || octokit) : octokit;
     const openVersionStatePullRequest = async ({ error }) => {
       const message = error?.response?.data?.message || error?.message || String(error || "");

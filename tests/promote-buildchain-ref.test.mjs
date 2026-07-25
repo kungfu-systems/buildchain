@@ -7083,6 +7083,140 @@ test("publish-gate/major finalization opens next-alpha PR from current alpha hea
   assert.equal(result.pendingPullRequest, createdPullRequest.html_url);
 });
 
+test("publish-gate/major settles a generated next-alpha commit already contained by the protected branch", async () => {
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "1.0.10",
+      packageManager: "pnpm@11.7.0",
+    },
+  });
+  const generatedAlphaSha = "b".repeat(40);
+  const currentAlphaSha = "c".repeat(40);
+  const versionStateBranch = versionStateBranchName(
+    "alpha/v2/v2.0",
+    generatedAlphaSha,
+  );
+  const refs = new Map([
+    ["heads/publish-gate/major", SHA],
+    ["heads/alpha/v2/v2.0", currentAlphaSha],
+    [`heads/${versionStateBranch}`, generatedAlphaSha],
+    ["tags/v2.0.1-alpha.0", generatedAlphaSha],
+  ]);
+  const commits = [];
+  const branchUpdates = [];
+  const comparisons = [];
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (refs.has(ref)) {
+            return { data: { object: { sha: refs.get(ref) } } };
+          }
+          throw notFound();
+        },
+        listMatchingRefs: async ({ ref }) => ({
+          data: [...refs.entries()]
+            .filter(([name]) => name.startsWith(ref))
+            .map(([name, objectSha]) => ({
+              ref: `refs/${name}`,
+              object: { sha: objectSha },
+            })),
+        }),
+        getCommit: async ({ commit_sha }) => ({
+          data: { tree: { sha: `tree-${commit_sha}` }, parents: [] },
+        }),
+        createBlob: async () => ({ data: { sha: "blob-sha" } }),
+        createTree: async () => ({ data: { sha: "tree-sha" } }),
+        createCommit: async ({ message, parents }) => {
+          const sha = `commit-${commits.length + 1}`.padEnd(40, "0");
+          commits.push({ sha, message, parents });
+          return { data: { sha } };
+        },
+        updateRef: async ({ ref, sha }) => {
+          branchUpdates.push({ ref, sha });
+          if (ref === "heads/alpha/v2/v2.0") {
+            const error = new Error("Update is not a fast forward");
+            error.status = 422;
+            throw error;
+          }
+          refs.set(ref, sha);
+          return {};
+        },
+        createRef: async ({ ref, sha }) => {
+          refs.set(ref.replace(/^refs\//, ""), sha);
+          return {};
+        },
+      },
+      pulls: {
+        list: async () => {
+          assert.fail("contained generated commits should not need an open PR lookup");
+        },
+        create: async () => {
+          assert.fail("contained generated commits should not create a duplicate PR");
+        },
+      },
+      repos: {
+        compareCommitsWithBasehead: async ({ basehead }) => {
+          comparisons.push(basehead);
+          return {
+            data: {
+              status:
+                basehead === `${generatedAlphaSha}...${currentAlphaSha}`
+                  ? "ahead"
+                  : "diverged",
+            },
+          };
+        },
+        update: async () => ({}),
+        listPullRequestsAssociatedWithCommit: async ({ commit_sha }) => {
+          assert.equal(commit_sha, SHA);
+          return {
+            data: [
+              {
+                merged_at: "2026-06-30T00:00:00Z",
+                base: { ref: "publish-gate/major" },
+                head: {
+                  ref: "release/v1/v1.0",
+                  repo: { full_name: "kungfu-systems/buildchain" },
+                },
+              },
+            ],
+          };
+        },
+      },
+    },
+  };
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: SHA,
+    targetRef: "publish-gate/major",
+    cwd,
+  });
+
+  assert.equal(refs.get("heads/alpha/v2/v2.0"), currentAlphaSha);
+  assert.equal(refs.get("heads/dev/v2/v2.0"), generatedAlphaSha);
+  assert.equal(
+    branchUpdates.some(({ ref }) => ref === "heads/alpha/v2/v2.0"),
+    false,
+  );
+  assert(comparisons.includes(`${generatedAlphaSha}...${currentAlphaSha}`));
+  assert.deepEqual(
+    result.updates.find(
+      (update) => update.action === "existing-contained-version-state",
+    ),
+    {
+      ref: "alpha/v2/v2.0",
+      action: "existing-contained-version-state",
+      sha: currentAlphaSha,
+      sourceSha: generatedAlphaSha,
+    },
+  );
+});
+
 test("release promotion rerun reuses prepared next alpha version commit", async () => {
   const releaseSha = "c".repeat(40);
   const nextAlphaSha = "d".repeat(40);
