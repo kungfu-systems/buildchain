@@ -87,7 +87,6 @@ test("major bootstrap aligns version-bound release impact to the new line", () =
     },
   ], {
     version: "3.0.0",
-    line: "v3.0",
   });
 
   assert.equal(aligned[0], unchanged);
@@ -97,10 +96,9 @@ test("major bootstrap aligns version-bound release impact to the new line", () =
   });
   assert.throws(
     () => alignMajorBootstrapReleaseImpact(aligned, {
-      version: "3.0.0",
-      line: "v3.1",
+      version: "not-semver",
     }),
-    /must match version 3\.0\.0/,
+    /requires an exact semantic version/,
   );
 });
 const {
