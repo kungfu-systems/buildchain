@@ -170,7 +170,7 @@
         "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes"
       ],
       "breakingDigest": "sha256:acd401cfc46450115a3763fd4b679d85f185e8757ebd52510d6262e1533df4cf",
-      "auditDigest": "sha256:fb1e6e05c16df3e357a9b47d2c8335b99e23b2ccf8d92432b0cbc655fa9196a1"
+      "auditDigest": "sha256:1856785c61ca323d496294da7468054c7e77dc19b79c9d368559cb963696a48d"
     },
     {
       "contractVersion": 1,
@@ -663,7 +663,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:9e45dffc31b061f2c074cbc50e2d2b61da67250504f20cff475c4648fea4ae65"
+      "auditDigest": "sha256:45234032867a180112ff8028c9a710c1d126e0278520589932067656f78147da"
     },
     {
       "contractVersion": 1,
@@ -3131,5 +3131,5 @@
     }
   ],
   "compatibilityDigest": "sha256:199fd83a7da33b0f654692ca973b33155e376ed50f0ce1f5864e1b6b18e0500a",
-  "contractDigest": "sha256:23e2f34e279ef3fa97b660050ecf966eefa374b21d792f0a183eecbf84f83f0b"
+  "contractDigest": "sha256:24d09b8081908769cfed189477226f9ecd26332511b5750a5c023e378e4b9cf1"
 }

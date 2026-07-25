@@ -2,14 +2,14 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-contract-lock",
   "buildchain": {
-    "ref": "v2-alpha",
-    "resolvedSha": "dfed5c87558b009c1f60ab549e592ea0c38e8989",
+    "ref": "v3-alpha",
+    "resolvedSha": "85b4b69c3a76f3e64e8e96d8357d87cac62c9f16",
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "contractDigest": "sha256:4ada3b44eb46bb0d6e6a1d18abd6dd0d3b918b424a908c893161514ebae103d6",
-    "compatibilityDigest": "sha256:0a8d38d5336300b1baf413244338e9d9217c8b28e26a187caf608b19b1864630",
-    "majorLine": "v2",
+    "contractDigest": "sha256:23e2f34e279ef3fa97b660050ecf966eefa374b21d792f0a183eecbf84f83f0b",
+    "compatibilityDigest": "sha256:199fd83a7da33b0f654692ca973b33155e376ed50f0ce1f5864e1b6b18e0500a",
+    "majorLine": "v3",
     "compatibilityPolicy": "major-compatible",
-    "acceptedAt": "2026-07-22T00:33:00.000Z",
+    "acceptedAt": "2026-07-25T06:20:00.000Z",
     "surfaces": [
       {
         "id": "reusable-build",
@@ -24,7 +24,7 @@
       {
         "id": "release-candidate-promote",
         "kind": "workflow",
-        "breakingDigest": "sha256:1f476fb9a4854b362c4b24cef89a3c7675d7d63baf3bc828d7b8ae7d2787cead"
+        "breakingDigest": "sha256:acd401cfc46450115a3763fd4b679d85f185e8757ebd52510d6262e1533df4cf"
       },
       {
         "id": "advanced-release-candidate-promote",
@@ -40,6 +40,11 @@
         "id": "promote-buildchain-ref-action",
         "kind": "action",
         "breakingDigest": "sha256:6147c0a8d5c36bfaa6021871574e1fc28192a3f1b8cfdae4d24ef3059ac1ebda"
+      },
+      {
+        "id": "macos-credential-island-action",
+        "kind": "action",
+        "breakingDigest": "sha256:61866985864205770c70cbe14c3c60f479512a32c0b007b5fd6d8d65132ff8be"
       },
       {
         "id": "report-buildchain-issue-action",
@@ -99,7 +104,7 @@
       {
         "id": "controller:build-lifecycle",
         "kind": "controller",
-        "breakingDigest": "sha256:e264a79f9f399038c2fcfd21e4168c68c2e1485ee5c651c02242a02b622ac2be"
+        "breakingDigest": "sha256:30745921541e9b0f70475bb2178c2559f6aef248f6680670ccd44d8c5a69a6b1"
       },
       {
         "id": "controller:build-channel-router",
@@ -135,6 +140,11 @@
         "id": "controller:release-propagation",
         "kind": "controller",
         "breakingDigest": "sha256:d7a1f15990ce8bd13149474888232c7d4451dd2a49bebf4d4ce1336695da430e"
+      },
+      {
+        "id": "controller:binary-distribution",
+        "kind": "controller",
+        "breakingDigest": "sha256:7c18fdd3df180db9e1f043a2286ef3f02fae60b84e42b76cd50da9cfeb77883d"
       }
     ]
   }

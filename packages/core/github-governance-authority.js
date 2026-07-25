@@ -47,8 +47,8 @@ const PUBLIC_REPOSITORY_TARGETS = Object.freeze({
   ],
   buildchain: [
     target("dev/v2/v2.14", [check("check")], false),
-    target("alpha/v2/v2.14", [check("check"), check("verify")], false),
-    target("release/v2/v2.14", [check("check")], true),
+    target("alpha/v3/v3.0", [check("check"), check("verify")], false),
+    target("release/v3/v3.0", [check("check")], true),
     target("publish-gate/major", [check("check")], true),
   ],
   "homebrew-tap": [
