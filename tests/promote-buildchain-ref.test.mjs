@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 const {
   alphaDistTagForPromotion,
   alignMajorBootstrapReleaseImpact,
+  versionVerificationAllowedPathsForPromotion,
   assertAllowedLocalChanges,
   assertExpectedPublicationVersion,
   assertChannelPromotionPr,
@@ -99,6 +100,22 @@ test("major bootstrap aligns version-bound release impact to the new line", () =
       version: "not-semver",
     }),
     /requires an exact semantic version/,
+  );
+});
+
+test("major bootstrap admits only its exact generated KFD claim sidecar", () => {
+  const configured = ["package.json", "dist/site/buildchain-contract.json"];
+  assert.deepEqual(
+    versionVerificationAllowedPathsForPromotion("major", configured),
+    [
+      "package.json",
+      "dist/site/buildchain-contract.json",
+      "dist/site/kfd-claims.json",
+    ],
+  );
+  assert.deepEqual(
+    versionVerificationAllowedPathsForPromotion("release", configured),
+    ["package.json", "dist/site/buildchain-contract.json"],
   );
 });
 const {
