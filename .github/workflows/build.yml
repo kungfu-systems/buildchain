@@ -398,6 +398,9 @@ on:
       build-summary-json:
         description: "Compact aggregate build summary JSON"
         value: ${{ jobs.build.outputs.artifact-summary-json }}
+      artifact-coordinates-json:
+        description: "Producer-owned exact GitHub Artifact coordinates for every resolved build platform"
+        value: ${{ jobs.build.outputs.artifact-coordinates-json }}
       build-diagnostics-summary-json:
         description: "Compact aggregate diagnostics summary JSON with lifecycle, diagnostics contract warning, and sidecar manifest warning totals"
         value: ${{ jobs.build.outputs.diagnostics-summary-json }}

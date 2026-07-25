@@ -68,6 +68,7 @@ const requiredPaths = [
   "scripts/seal-macos-credential-input.mjs",
   "scripts/shifu-gate-profile.mjs",
   "scripts/auditable-demo.mjs",
+  "scripts/resolve-artifact-coordinates.mjs",
   "scripts/artifact-relay-s3.mjs",
   "scripts/anchored-version-material.mjs",
   "scripts/npm-publish-dry-run.mjs",

@@ -373,6 +373,9 @@ on:
       build-summary-json:
         description: "Compact aggregate build summary JSON"
         value: ${{ jobs.summarize.outputs.artifact-summary-json }}
+      artifact-coordinates-json:
+        description: "Producer-owned exact GitHub Artifact coordinates for every resolved build platform"
+        value: ${{ jobs.summarize.outputs.artifact-coordinates-json }}
       build-diagnostics-summary-json:
         description: "Compact aggregate diagnostics summary JSON with lifecycle, diagnostics contract warning, and sidecar manifest warning totals"
         value: ${{ jobs.summarize.outputs.diagnostics-summary-json }}
@@ -1999,6 +2002,7 @@ jobs:
       diagnostics-summary-json: ${{ steps.diagnostics.outputs.diagnostics-summary-json }}
       release-candidate-passport-artifact-name: ${{ steps.names.outputs.release-candidate-passport-artifact-name }}
       release-candidate-passport-json: ${{ steps.release-candidate.outputs.release-candidate-passport-json }}
+      artifact-coordinates-json: ${{ steps.artifact-coordinates.outputs.artifact-coordinates-json }}
     steps:
       - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
@@ -2117,6 +2121,36 @@ jobs:
           BUILDCHAIN_DIAGNOSTICS_INPUT: .buildchain/downloaded-diagnostics
           BUILDCHAIN_DIAGNOSTICS_OUTPUT: .buildchain/artifacts/diagnostics-summary.json
           BUILDCHAIN_PLATFORM_COUNT: ${{ needs.resolve-contract.outputs.platform-count }}
+
+      - name: Discover same-run build artifacts for producer-owned coordinates
+        uses: actions/github-script@v8.0.0
+        with:
+          script: |
+            const fs = require("fs");
+            const artifacts = await github.paginate(
+              github.rest.actions.listWorkflowRunArtifacts,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: context.runId,
+                per_page: 100,
+              },
+            );
+            fs.writeFileSync(
+              ".buildchain/artifacts/github-artifacts.json",
+              JSON.stringify(artifacts, null, 2) + "\n",
+            );
+
+      - name: Bind producer-owned exact artifact coordinates
+        id: artifact-coordinates
+        run: node .buildchain/runtime/scripts/resolve-artifact-coordinates.mjs
+        env:
+          BUILDCHAIN_ARTIFACT_LIST_PATH: .buildchain/artifacts/github-artifacts.json
+          BUILDCHAIN_ARTIFACT_COORDINATES_PATH: .buildchain/artifacts/artifact-coordinates.json
+          BUILDCHAIN_PLATFORMS_JSON: ${{ needs.resolve-contract.outputs.platforms-json }}
+          BUILDCHAIN_ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          BUILDCHAIN_ARTIFACT_NAME_TEMPLATE: ${{ inputs.artifact-name-template }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
 
       - name: Create build controller receipt for release-candidate passport
         id: release-candidate-controller-receipt

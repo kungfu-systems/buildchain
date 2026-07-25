@@ -50,7 +50,7 @@
         "retryable GitHub fallback fetches use a bounded attempt budget before exact source SHA and tree verification"
       ],
       "breakingDigest": "sha256:a6a35370d6b0d0f46e1b2712dcc01961fe53c2febde95409a27a485c10a36650",
-      "auditDigest": "sha256:1e1386b49f8f3ea813f8157afb96cecec7609b6efe01f07895c893c097b1ed66"
+      "auditDigest": "sha256:a7041273c13b8f5cfe9bfb881c5d56193ec26559fac1ba29c838fe44aa11afe5"
     },
     {
       "contractVersion": 1,
@@ -89,7 +89,7 @@
         "alpha and stable channel selections use separate consumer contract locks by default"
       ],
       "breakingDigest": "sha256:c4597dfa89e1a58f1023905092b849644f5c080abf150aeba9c7e1cd5ed43962",
-      "auditDigest": "sha256:1f29079465cb11004db3f1a6ec4f37b1900fdd90d3278d8d0bacb223757bffa5"
+      "auditDigest": "sha256:e0d7c74d69eeec495e8fcd39b232dbfa18af59665a1ebb0b1d373906c1aa474f"
     },
     {
       "contractVersion": 1,
@@ -691,7 +691,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:87848fdfe9996bbad61255c4b6bf3c85691e536620ec002a9ab0a698f80f8850"
+      "auditDigest": "sha256:c513c8f8597c63eb5e2d9db51f24ecce4e61304203fb6ae55ab4cf51b80ad812"
     },
     {
       "contractVersion": 1,
@@ -1229,7 +1229,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:30745921541e9b0f70475bb2178c2559f6aef248f6680670ccd44d8c5a69a6b1",
-      "auditDigest": "sha256:1e1386b49f8f3ea813f8157afb96cecec7609b6efe01f07895c893c097b1ed66"
+      "auditDigest": "sha256:a7041273c13b8f5cfe9bfb881c5d56193ec26559fac1ba29c838fe44aa11afe5"
     },
     {
       "contractVersion": 1,
@@ -1662,7 +1662,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:d40dd05d7e07473d4b2dc1b62fbb0ed6f06449b4d3a7c44a2e8014313e3c0273",
-      "auditDigest": "sha256:1f29079465cb11004db3f1a6ec4f37b1900fdd90d3278d8d0bacb223757bffa5"
+      "auditDigest": "sha256:e0d7c74d69eeec495e8fcd39b232dbfa18af59665a1ebb0b1d373906c1aa474f"
     },
     {
       "contractVersion": 1,
@@ -3206,5 +3206,5 @@
     }
   ],
   "compatibilityDigest": "sha256:eeb8b2307260745ca818089500128d8647a09bdaad61e44da34b1c88039325a8",
-  "contractDigest": "sha256:195d5cf0fb84ca09ee0c21ebac191e6f4049740691f1c4175ca5edb39804be52"
+  "contractDigest": "sha256:4739103ee99067d23cc00d5670a8c78ce49130ea0b8ce68cc80a00afe8ff6851"
 }

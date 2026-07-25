@@ -57,6 +57,12 @@ digest emitted by their own `upload-artifact` step; a name resolved later from
 the Actions API is discovery evidence, not a substitute for that producer
 output.
 
+Buildchain's reusable build workflow exposes `artifact-coordinates-json` after
+all resolved platform uploads complete. That producer-owned output binds every
+platform id to its same-run artifact id, name, upload digest, URL, and expiry,
+so a consumer that delegates its build to Buildchain can pass an exact
+coordinate without rediscovering authority in a downstream job.
+
 The adapter runs with a disposable Home/XDG/npm prefix, a minimal environment,
 and no GitHub, npm, or cloud credential injection. It must be a regular,
 non-symlink, executable file inside the exact checked-out consumer source.

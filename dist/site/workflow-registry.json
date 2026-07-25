@@ -153,6 +153,7 @@
       ],
       "secretCount": 8,
       "outputs": [
+        "artifact-coordinates-json",
         "build-diagnostics-summary-artifact",
         "build-diagnostics-summary-json",
         "build-summary-artifact",
@@ -195,7 +196,7 @@
         "runner-preset",
         "trusted-event"
       ],
-      "outputCount": 41,
+      "outputCount": 42,
       "surface": "reusable-build",
       "capabilityGroup": "api-cli-reference",
       "status": "active"
@@ -959,6 +960,7 @@
       ],
       "secretCount": 8,
       "outputs": [
+        "artifact-coordinates-json",
         "build-diagnostics-summary-artifact",
         "build-diagnostics-summary-json",
         "build-summary-artifact",
@@ -1004,7 +1006,7 @@
         "runner-preset",
         "trusted-event"
       ],
-      "outputCount": 44,
+      "outputCount": 45,
       "surface": "channel-build-router",
       "capabilityGroup": "reusable-build",
       "status": "active"
