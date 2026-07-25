@@ -5,6 +5,11 @@ import {
   collectPublicSurfaceReverseAudit,
 } from "../packages/core/public-surface-audit.js";
 import { evaluateBuildchainContractLock } from "../packages/core/buildchain-contract.js";
+import {
+  canAdmitSelfDogfoodLockEvaluation,
+  contractForSelfDogfoodEvaluation,
+  resolveSelfDogfoodMajor,
+} from "../packages/core/self-dogfood-version.js";
 import { generateChannelBuildWorkflow } from "./generate-channel-build-workflow.mjs";
 import {
   generateChannelPromotionWorkflow,
@@ -138,13 +143,12 @@ const selfDogfoodAlphaLock = JSON.parse(
 const currentBuildchainContract = JSON.parse(
   fs.readFileSync(path.join(root, "dist/site/buildchain-contract.json"), "utf8"),
 );
-const selfDogfoodMajor = String(rootPackage.version || "").match(/^(\d+)\./)?.[1];
-if (!selfDogfoodMajor) {
-  throw new Error("root package version must expose a numeric major for self-dogfood");
-}
-if (selfDogfoodAlphaLock.buildchain?.ref !== `v${selfDogfoodMajor}-alpha`) {
-  throw new Error("Buildchain self-dogfood alpha lock must target the current major alpha ref");
-}
+const selfDogfoodMajorResolution = resolveSelfDogfoodMajor({
+  packageVersion: rootPackage.version,
+  alphaRef: selfDogfoodAlphaLock.buildchain?.ref,
+  majorBootstrap: process.env.BUILDCHAIN_MAJOR_VERSION_BOOTSTRAP === "true",
+});
+const selfDogfoodMajor = String(selfDogfoodMajorResolution.workflowMajor);
 if (!/^[0-9a-f]{40}$/.test(selfDogfoodAlphaLock.buildchain?.resolvedSha || "")) {
   throw new Error("Buildchain self-dogfood alpha lock must record an exact accepted SHA");
 }
@@ -153,12 +157,20 @@ if (selfDogfoodAlphaLock.buildchain?.compatibilityPolicy !== "major-compatible")
 }
 const selfDogfoodAlphaEvaluation = evaluateBuildchainContractLock({
   lock: selfDogfoodAlphaLock,
-  current: currentBuildchainContract,
+  current: contractForSelfDogfoodEvaluation({
+    currentContract: currentBuildchainContract,
+    majorResolution: selfDogfoodMajorResolution,
+  }),
   runtimeRef: `v${selfDogfoodMajor}-alpha`,
   runtimeSha: "current-development-contract",
   runtimeClass: "alpha",
 });
-if (!selfDogfoodAlphaEvaluation.compatible) {
+if (
+  !canAdmitSelfDogfoodLockEvaluation({
+    evaluation: selfDogfoodAlphaEvaluation,
+    majorResolution: selfDogfoodMajorResolution,
+  })
+) {
   throw new Error("Buildchain self-dogfood alpha lock requires review after a breaking contract change");
 }
 for (const requiredSnippet of [

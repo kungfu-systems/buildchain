@@ -182,6 +182,26 @@ on:
         default: ".buildchain/publication-commit/evidence.json"
         type: string
         required: false
+      release-activation-command:
+        description: "Optional consumer command that completes exact site publication/readback and writes the authoritative activation receipt set"
+        default: ""
+        type: string
+        required: false
+      release-activation-receipt-set-path:
+        description: "Consumer activation receipt set written under .buildchain/"
+        default: ".buildchain/release-activation/receipt-set.json"
+        type: string
+        required: false
+      release-passport-evidence-command:
+        description: "Optional consumer command that synthesizes released evidence only from the validated activation receipt set"
+        default: ""
+        type: string
+        required: false
+      release-passport-evidence-path:
+        description: "Released evidence JSON written by release-passport-evidence-command under .buildchain/"
+        default: ".buildchain/release-evidence/product-released-evidence.json"
+        type: string
+        required: false
       standalone-binary-distribution:
         description: "Dispatch binary-distribution.yml after promotion; enable only when the caller repository provides that workflow"
         default: false
@@ -204,6 +224,11 @@ on:
         required: false
       publish-rematerialize-on-resume:
         description: "Replay the consumer publish materialization step after valid durable evidence is restored; use only when the command is idempotent and recreates ephemeral Passport inputs or release assets"
+        default: false
+        type: boolean
+        required: false
+      publish-transaction-override:
+        description: "Explicitly allow ancestry-bound finalization recovery for an already published durable transaction"
         default: false
         type: boolean
         required: false
@@ -749,6 +774,7 @@ jobs:
     outputs:
       version: ${{ steps.plan.outputs.planned-publication-version }}
       exact-tag: ${{ steps.plan.outputs.planned-publication-exact-tag }}
+      release-candidate-version: ${{ steps.plan.outputs.planned-release-candidate-version }}
     steps:
       - name: Checkout promotion channel commit
         uses: actions/checkout@v7.0.0
@@ -1312,10 +1338,17 @@ jobs:
         id: buildchain-stable-candidate
         if: ${{ needs.preflight.outputs.channel == 'release' && github.repository == 'kungfu-systems/buildchain' }}
         shell: bash
+        env:
+          BUILDCHAIN_RELEASE_CANDIDATE_VERSION: ${{ needs.publication-plan.outputs.release-candidate-version }}
+          BUILDCHAIN_PUBLICATION_VERSION: ${{ needs.publication-plan.outputs.version }}
         run: |
-          version="$(node -e 'const fs = require("node:fs"); const manifest = JSON.parse(fs.readFileSync("package.json", "utf8")); process.stdout.write(String(manifest.version || ""));')"
+          version="${BUILDCHAIN_RELEASE_CANDIDATE_VERSION}"
           if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-alpha\.[0-9]+$ ]]; then
-            echo "::error::Buildchain stable candidate must declare an exact alpha version, got ${version:-<empty>}"
+            echo "::error::Buildchain stable publication plan must bind an exact alpha candidate version, got ${version:-<empty>}"
+            exit 1
+          fi
+          if [[ "${version%%-alpha.*}" != "${BUILDCHAIN_PUBLICATION_VERSION}" ]]; then
+            echo "::error::Buildchain stable candidate ${version} does not match planned publication ${BUILDCHAIN_PUBLICATION_VERSION:-<empty>}"
             exit 1
           fi
           echo "version=${version}" >> "${GITHUB_OUTPUT}"
@@ -1416,6 +1449,20 @@ jobs:
             core.setOutput("sha", targetSha);
             core.setOutput("locked", "true");
 
+      - name: Validate release activation command chain
+        if: ${{ inputs.release-activation-command != '' || inputs.release-passport-evidence-command != '' }}
+        env:
+          PUBLICATION_COMMIT_COMMAND: ${{ inputs.publication-commit-command }}
+          RELEASE_ACTIVATION_COMMAND: ${{ inputs.release-activation-command }}
+          RELEASE_EVIDENCE_COMMAND: ${{ inputs.release-passport-evidence-command }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "$PUBLICATION_COMMIT_COMMAND" ] || [ -z "$RELEASE_ACTIVATION_COMMAND" ] || [ -z "$RELEASE_EVIDENCE_COMMAND" ]; then
+            echo "::error::publication commit, release activation, and receipt-only evidence synthesis must be configured together"
+            exit 1
+          fi
+
       - name: Promote-only publish
         id: promote
         uses: ./.buildchain/runtime/actions/promote-buildchain-ref
@@ -1437,6 +1484,7 @@ jobs:
           allow-repository: ${{ inputs.allow-repository || github.repository }}
           publish-transaction: "true"
           publish-command: ${{ inputs.publish-command }}
+          publish-transaction-override: ${{ inputs.publish-transaction-override }}
           publish-rematerialize-on-resume: ${{ inputs.publish-rematerialize-on-resume }}
           publish-required-artifacts-json: ${{ inputs.publish-required-artifacts-json || steps.rc.outputs.publish-required-artifacts-json }}
           publish-mode: ${{ inputs.publish-mode }}
@@ -1562,6 +1610,71 @@ jobs:
           ].join("\n"));
           NODE
 
+      - name: Complete exact consumer release activation
+        id: release-activation
+        if: ${{ inputs.release-activation-command != '' && !inputs.dry-run && steps.publication-commit.outcome == 'success' }}
+        shell: bash
+        env:
+          BUILDCHAIN_RELEASE_ACTIVATION_COMMAND: ${{ inputs.release-activation-command }}
+          BUILDCHAIN_RELEASE_ACTIVATION_RECEIPTS: ${{ inputs.release-activation-receipt-set-path }}
+          BUILDCHAIN_RELEASE_ACTIVATION_TOKEN: ${{ secrets.BUILDCHAIN_PUBLICATION_COMMIT_TOKEN }}
+          BUILDCHAIN_RELEASE_SOURCE_SHA: ${{ needs.preflight.outputs.requested-sha }}
+          BUILDCHAIN_RELEASE_TAG: ${{ steps.promote.outputs.public-release-tag }}
+          BUILDCHAIN_RELEASE_CHANNEL: ${{ needs.preflight.outputs.channel }}
+          BUILDCHAIN_RELEASE_PASSPORT: ${{ steps.promote.outputs.release-passport-path }}
+          BUILDCHAIN_PUBLISH_EVIDENCE: ${{ steps.promote.outputs.publish-evidence-path }}
+          BUILDCHAIN_RELEASE_CANDIDATE_PASSPORT: ${{ steps.rc.outputs.release-candidate-passport-path }}
+          BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE: ${{ steps.publication-commit.outputs.evidence-path }}
+          GH_TOKEN: ${{ secrets.BUILDCHAIN_PUBLICATION_COMMIT_TOKEN }}
+        run: |
+          set -euo pipefail
+          receipt_set="${BUILDCHAIN_RELEASE_ACTIVATION_RECEIPTS}"
+          if [[ "${receipt_set}" != .buildchain/* || "${receipt_set}" == *".."* ]]; then
+            echo "::error::release-activation-receipt-set-path must stay under .buildchain/"
+            exit 1
+          fi
+          if [ -e "${receipt_set}" ]; then
+            echo "::error::refusing stale activation receipt set at ${receipt_set}"
+            exit 1
+          fi
+          export BUILDCHAIN_RELEASE_VERSION="${BUILDCHAIN_RELEASE_TAG#v}"
+          mkdir -p "$(dirname "${receipt_set}")"
+          bash -euo pipefail -c "${BUILDCHAIN_RELEASE_ACTIVATION_COMMAND}"
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+          import { validateReleaseActivationReceiptSet } from "./.buildchain/runtime/packages/core/release-activation-transaction.js";
+          const receiptSet = JSON.parse(fs.readFileSync(process.env.BUILDCHAIN_RELEASE_ACTIVATION_RECEIPTS, "utf8"));
+          const result = validateReleaseActivationReceiptSet(receiptSet, { allowShadow: false });
+          if (!result.valid) throw new Error(`activation receipt set is invalid: ${result.issues.join("; ")}`);
+          NODE
+          echo "receipt-set-path=${receipt_set}" >> "${GITHUB_OUTPUT}"
+
+      - name: Synthesize consumer released evidence from receipts
+        id: release-evidence
+        if: ${{ inputs.release-passport-evidence-command != '' && !inputs.dry-run && steps.release-activation.outcome == 'success' }}
+        shell: bash
+        env:
+          BUILDCHAIN_RELEASE_ACTIVATION_RECEIPTS: ${{ steps.release-activation.outputs.receipt-set-path }}
+          BUILDCHAIN_RELEASE_EVIDENCE_PATH: ${{ inputs.release-passport-evidence-path }}
+          BUILDCHAIN_RELEASE_SOURCE_SHA: ${{ needs.preflight.outputs.requested-sha }}
+          BUILDCHAIN_RELEASE_TAG: ${{ steps.promote.outputs.public-release-tag }}
+          BUILDCHAIN_RELEASE_CHANNEL: ${{ needs.preflight.outputs.channel }}
+        run: |
+          set -euo pipefail
+          export BUILDCHAIN_RELEASE_VERSION="${BUILDCHAIN_RELEASE_TAG#v}"
+          if [[ "${BUILDCHAIN_RELEASE_EVIDENCE_PATH}" != .buildchain/* || "${BUILDCHAIN_RELEASE_EVIDENCE_PATH}" == *".."* ]]; then
+            echo "::error::release-passport-evidence-path must stay under .buildchain/"
+            exit 1
+          fi
+          if [ -e "${BUILDCHAIN_RELEASE_EVIDENCE_PATH}" ]; then
+            echo "::error::refusing stale released evidence at ${BUILDCHAIN_RELEASE_EVIDENCE_PATH}"
+            exit 1
+          fi
+          mkdir -p "$(dirname "${BUILDCHAIN_RELEASE_EVIDENCE_PATH}")"
+          bash -euo pipefail -c "${{ inputs.release-passport-evidence-command }}"
+          test -f "${BUILDCHAIN_RELEASE_EVIDENCE_PATH}"
+          echo "evidence-path=${BUILDCHAIN_RELEASE_EVIDENCE_PATH}" >> "${GITHUB_OUTPUT}"
+
       - name: Bundle release-candidate-promotion controller evidence
         id: controller-evidence
         if: ${{ always() && !inputs.dry-run && steps.promote.outcome == 'success' }}
@@ -1573,6 +1686,8 @@ jobs:
           FINALIZATION_NEEDED: ${{ steps.promote.outputs.finalization-needed }}
           PUBLICATION_COMMIT_ENABLED: ${{ inputs.publication-commit-command != '' }}
           PUBLICATION_COMMIT_EVIDENCE: ${{ steps.publication-commit.outputs.evidence-path }}
+          RELEASE_ACTIVATION_RECEIPTS: ${{ steps.release-activation.outputs.receipt-set-path }}
+          RELEASED_PRODUCT_EVIDENCE: ${{ steps.release-evidence.outputs.evidence-path }}
         run: |
           node <<'NODE'
           const fs = require("node:fs");
@@ -1587,6 +1702,12 @@ jobs:
           }
           if (process.env.PUBLICATION_COMMIT_ENABLED === "true" && !finalizationNeeded) {
             files.push([process.env.PUBLICATION_COMMIT_EVIDENCE, "publication-commit-evidence.json"]);
+          }
+          if (process.env.RELEASE_ACTIVATION_RECEIPTS && !finalizationNeeded) {
+            files.push([process.env.RELEASE_ACTIVATION_RECEIPTS, "release-activation-receipt-set.json"]);
+          }
+          if (process.env.RELEASED_PRODUCT_EVIDENCE && !finalizationNeeded) {
+            files.push([process.env.RELEASED_PRODUCT_EVIDENCE, "released-product-evidence.json"]);
           }
           fs.mkdirSync(".buildchain/controller/promotion-evidence", { recursive: true });
           for (const [source, name] of files) {

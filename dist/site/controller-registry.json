@@ -1006,6 +1006,10 @@
           "classification": "redacted",
           "source": "workflow-call-input"
         },
+        "production-source-sha": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "publication-admission-json": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -1098,7 +1102,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:65cc01e6d2b622277d67237e4811e82d24d2289d55c2f7d2dfb72325c610b2ea"
+      "digest": "sha256:c5274b37f04d0054559fdc8698c51bd0f0d8ae470baf163e9caa7699aa970575"
     },
     {
       "schemaVersion": 1,
@@ -1718,6 +1722,18 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "publish-transaction-override": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "release-activation-command": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "release-activation-receipt-set-path": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "release-candidate-workflow-file": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -1732,6 +1748,14 @@
         },
         "release-passport-buildchain-self-kfd": {
           "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "release-passport-evidence-command": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "release-passport-evidence-path": {
+          "classification": "digest-only",
           "source": "workflow-call-input"
         },
         "release-passport-impact-json": {
@@ -1848,7 +1872,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:98e2676d01470992d7b4ca9c2a1e12b0e6c816c0586a8e8e1736f4b58a1360a9"
+      "digest": "sha256:2bae7310eb27f48a3afc6b7f993872d6b6121cf3f67ad4d6e2da35b254c4d047"
     },
     {
       "schemaVersion": 1,
@@ -2024,5 +2048,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:15fdbedc9c0a2b51104e854300d1725bcab76b11cebde61f53a70a49fe43966b"
+  "digest": "sha256:4b5425a3111fa55d3c9244c4af08effa9045362680bd0833a30d718aba256600"
 }

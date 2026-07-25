@@ -65,6 +65,11 @@ import {
 } from "../scripts/runtime-ref-core.mjs";
 import { resolvePublishSourceCli } from "../scripts/resolve-publish-source.mjs";
 import { evaluateBuildchainContractLock } from "../packages/core/buildchain-contract.js";
+import {
+  canAdmitSelfDogfoodLockEvaluation,
+  contractForSelfDogfoodEvaluation,
+  resolveSelfDogfoodMajor,
+} from "../packages/core/self-dogfood-version.js";
 import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
 import { verifyPublishChannelRefCli } from "../scripts/verify-publish-channel-ref.mjs";
 import { verifyPublishSourceLockCli } from "../scripts/verify-publish-source-lock.mjs";
@@ -1253,6 +1258,10 @@ test("check workflow preserves verify mode and exposes source-check mode", () =>
     path.join(root, ".github/workflows/verify.yml"),
     "utf8",
   );
+  const releaseVerify = fs.readFileSync(
+    path.join(root, ".github/workflows/release-verify.yml"),
+    "utf8",
+  );
 
   assert.match(reusable, /workflow_call:/);
   assert.match(reusable, /mode:/);
@@ -1281,6 +1290,14 @@ test("check workflow preserves verify mode and exposes source-check mode", () =>
   assert.match(verify, /Validate declared check lifecycle/);
   assert.match(verify, /lifecycle run install/);
   assert.match(verify, /lifecycle run verify/);
+  assert.match(
+    verify,
+    /BUILDCHAIN_MAJOR_VERSION_BOOTSTRAP: \$\{\{ \(\(github\.event_name == 'pull_request' && github\.base_ref == 'publish-gate\/major' && \(startsWith\(github\.head_ref, 'buildchain\/version-state\/publish-gate-major\/'\) \|\| github\.head_ref == 'release\/v2\/v2\.14'\)\) \|\| \(github\.event_name == 'push' && github\.ref == 'refs\/heads\/publish-gate\/major'\)\) && 'true' \|\| 'false' \}\}/,
+  );
+  assert.match(
+    releaseVerify,
+    /if: \$\{\{ github\.base_ref != 'publish-gate\/major' \|\| github\.head_ref != 'release\/v2\/v2\.14' \}\}/,
+  );
 });
 
 test("source-check fixture executes only install and check", () => {
@@ -2251,8 +2268,10 @@ test("promote action exposes generic publish source-lock gate", () => {
   assert.match(action, /publish-source-locked:/);
   assert.match(action, /expected-publication-version:/);
   assert.match(action, /planned-publication-version:/);
+  assert.match(action, /planned-release-candidate-version:/);
   assert.match(implementation, /expectedPublicationVersion/);
   assert.match(implementation, /planned-publication-version/);
+  assert.match(implementation, /planned-release-candidate-version/);
   assert.match(implementation, /kungfu-buildchain-publish-source-lock-validation/);
   assert.match(implementation, /publish-gate\/\{alpha,release,major\}/);
   assert.match(implementation, /does not match promotion sha/);
@@ -2340,7 +2359,18 @@ test("Buildchain stable promotion gates publication after RC resolution", () => 
       publishGateIndex > immediateAuthorityIndex,
   );
   assert.match(wrapper, /needs\.preflight\.outputs\.channel == 'release'/);
-  assert.match(wrapper, /Buildchain stable candidate must declare an exact alpha version/);
+  assert.match(
+    wrapper,
+    /BUILDCHAIN_RELEASE_CANDIDATE_VERSION: \$\{\{ needs\.publication-plan\.outputs\.release-candidate-version \}\}/,
+  );
+  assert.match(
+    wrapper,
+    /Buildchain stable publication plan must bind an exact alpha candidate version/,
+  );
+  assert.match(
+    wrapper,
+    /Buildchain stable candidate \$\{version\} does not match planned publication/,
+  );
   assert.match(
     wrapper,
     /BUILDCHAIN_RELEASE_CANDIDATE_VERSION: \$\{\{ steps\.buildchain-stable-candidate\.outputs\.version \}\}/,
@@ -3543,14 +3573,34 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   assert.equal(alphaLock.buildchain.ref, "v2-alpha");
   assert.equal(alphaLock.buildchain.resolvedSha, "dfed5c87558b009c1f60ab549e592ea0c38e8989");
   assert.equal(alphaLock.buildchain.compatibilityPolicy, "major-compatible");
+  const packageVersion = JSON.parse(
+    fs.readFileSync(path.join(root, "package.json"), "utf8"),
+  ).version;
+  const majorResolution = resolveSelfDogfoodMajor({
+    packageVersion,
+    alphaRef: alphaLock.buildchain.ref,
+    majorBootstrap: process.env.BUILDCHAIN_MAJOR_VERSION_BOOTSTRAP === "true",
+  });
   const alphaEvaluation = evaluateBuildchainContractLock({
     lock: alphaLock,
-    current: currentContract,
+    current: contractForSelfDogfoodEvaluation({
+      currentContract,
+      majorResolution,
+    }),
     runtimeRef: "v2-alpha",
     runtimeSha: "current-development-contract",
     runtimeClass: "alpha",
   });
-  assert.equal(alphaEvaluation.compatible, true);
+  assert.equal(
+    canAdmitSelfDogfoodLockEvaluation({
+      evaluation: alphaEvaluation,
+      majorResolution,
+    }),
+    true,
+  );
+  if (!majorResolution.bootstrap) {
+    assert.equal(alphaEvaluation.compatible, true);
+  }
 
   const reusableBuild = fs.readFileSync(
     path.join(root, ".github/workflows/.build.yml"),
@@ -3572,6 +3622,115 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
 
   assert.match(promotion, /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.sha \|\| github\.sha \}\}/);
   assert.doesNotMatch(promotion, /buildchain-ref: (?:v\d+-alpha|\$\{\{[^\n]*v\d+-alpha)/);
+});
+
+test("major self-dogfood bootstrap is bounded to the adjacent 0.0 release transition", () => {
+  assert.deepEqual(
+    resolveSelfDogfoodMajor({
+      packageVersion: "2.14.18-alpha.5",
+      alphaRef: "v2-alpha",
+    }),
+    { packageMajor: 2, workflowMajor: 2, bootstrap: false },
+  );
+  assert.deepEqual(
+    resolveSelfDogfoodMajor({
+      packageVersion: "3.0.0",
+      alphaRef: "v2-alpha",
+      majorBootstrap: true,
+    }),
+    { packageMajor: 3, workflowMajor: 2, bootstrap: true },
+  );
+  assert.deepEqual(
+    resolveSelfDogfoodMajor({
+      packageVersion: "3.0.1-alpha.0",
+      alphaRef: "v2-alpha",
+      majorBootstrap: true,
+    }),
+    { packageMajor: 3, workflowMajor: 2, bootstrap: true },
+  );
+  for (const input of [
+    { packageVersion: "3.0.0", alphaRef: "v2-alpha" },
+    {
+      packageVersion: "3.0.1",
+      alphaRef: "v2-alpha",
+      majorBootstrap: true,
+    },
+    {
+      packageVersion: "3.0.2-alpha.0",
+      alphaRef: "v2-alpha",
+      majorBootstrap: true,
+    },
+    {
+      packageVersion: "4.0.0",
+      alphaRef: "v2-alpha",
+      majorBootstrap: true,
+    },
+  ]) {
+    assert.throws(
+      () => resolveSelfDogfoodMajor(input),
+      /must target the current major alpha ref/,
+    );
+  }
+
+  const alphaLock = JSON.parse(
+    fs.readFileSync(path.join(root, ".buildchain/alpha-contract-lock.json"), "utf8"),
+  );
+  const currentContract = JSON.parse(
+    fs.readFileSync(path.join(root, "dist/site/buildchain-contract.json"), "utf8"),
+  );
+  const majorResolution = resolveSelfDogfoodMajor({
+    packageVersion: "3.0.0",
+    alphaRef: "v2-alpha",
+    majorBootstrap: true,
+  });
+  const nextMajorContract = { ...currentContract, majorLine: "v3" };
+  const bootstrapContract = contractForSelfDogfoodEvaluation({
+    currentContract: nextMajorContract,
+    majorResolution,
+  });
+  assert.equal(bootstrapContract.majorLine, "v2");
+  assert.equal(nextMajorContract.majorLine, "v3");
+  const bootstrapEvaluation = evaluateBuildchainContractLock({
+    lock: alphaLock,
+    current: bootstrapContract,
+    runtimeRef: "v2-alpha",
+    runtimeSha: "current-development-contract",
+    runtimeClass: "alpha",
+  });
+  assert.equal(
+    canAdmitSelfDogfoodLockEvaluation({
+      evaluation: bootstrapEvaluation,
+      majorResolution,
+    }),
+    true,
+  );
+  if (process.env.BUILDCHAIN_MAJOR_VERSION_BOOTSTRAP !== "true") {
+    assert.equal(bootstrapEvaluation.compatible, true);
+  }
+  const breakingContract = structuredClone(bootstrapContract);
+  breakingContract.surfaces[0].breakingDigest = "sha256:breaking-bootstrap-drift";
+  const breakingEvaluation = evaluateBuildchainContractLock({
+    lock: alphaLock,
+    current: breakingContract,
+    runtimeRef: "v2-alpha",
+    runtimeSha: "current-development-contract",
+    runtimeClass: "alpha",
+  });
+  assert.equal(breakingEvaluation.compatible, false);
+  assert.equal(
+    canAdmitSelfDogfoodLockEvaluation({
+      evaluation: breakingEvaluation,
+      majorResolution,
+    }),
+    true,
+  );
+  assert.equal(
+    canAdmitSelfDogfoodLockEvaluation({
+      evaluation: breakingEvaluation,
+      majorResolution: { ...majorResolution, bootstrap: false },
+    }),
+    false,
+  );
 });
 
 test("libnode-shaped fixture declares the build lifecycle contract", () => {

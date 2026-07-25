@@ -522,6 +522,20 @@ export {
 } from "./release-propagation.js";
 
 export {
+  RELEASE_ACTIVATION_CONTRACT,
+  RELEASE_ACTIVATION_PHASES,
+  RELEASE_ACTIVATION_RECEIPT_SET_CONTRACT,
+  abortReleaseActivationTransaction,
+  createReleaseActivationReceiptSet,
+  createReleaseActivationTransaction,
+  recordReleaseActivationPhase,
+  releaseActivationRoot,
+  rollbackReleaseActivationTransaction,
+  validateReleaseActivationReceiptSet,
+  validateReleaseActivationTransaction,
+} from "./release-activation-transaction.js";
+
+export {
   SURFACE_TIMESTAMP_POLICY_CONTRACT,
   applySurfaceTimestampPolicy,
   createSurfaceTimestampPolicy,

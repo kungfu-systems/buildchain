@@ -60,7 +60,10 @@ function writeInstallerPublicationFixture(fixture, { appendOnly = true } = {}) {
     fs.writeFileSync(path.join(dist, immutablePath, name), bytes);
     return {
       name,
-      contentType: "text/plain; charset=utf-8",
+      contentType:
+        name === "install.sh"
+          ? "text/x-shellscript; charset=utf-8"
+          : "text/plain; charset=utf-8",
       size: bytes.length,
       digest: `sha256:${createHash("sha256").update(bytes).digest("hex")}`,
       friendlyUrl: `https://libkungfu.dev/${name}`,

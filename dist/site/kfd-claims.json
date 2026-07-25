@@ -21,12 +21,12 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "e2ed3df53a48587531486466e02c82f044920fb629a77b0880e9b9aaa762adac",
+    "sha256": "15df59be9425d65035f0e4a7f1225f77d16c7eb5329c9b6d741feac7ebc5dee8",
     "summary": {
       "cliCommandCount": 87,
       "workflowCount": 52,
       "actionCount": 5,
-      "sitePageCount": 54,
+      "sitePageCount": 55,
       "docCommandRefCount": 276,
       "failureCount": 0
     },
@@ -228,12 +228,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "e2ed3df53a48587531486466e02c82f044920fb629a77b0880e9b9aaa762adac",
+      "sha256": "15df59be9425d65035f0e4a7f1225f77d16c7eb5329c9b6d741feac7ebc5dee8",
       "summary": {
         "cliCommandCount": 87,
         "workflowCount": 52,
         "actionCount": 5,
-        "sitePageCount": 54,
+        "sitePageCount": 55,
         "docCommandRefCount": 276,
         "failureCount": 0
       },
@@ -1424,6 +1424,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./release-propagation"
+        },
+        {
+          "id": "export:./release-activation-transaction",
+          "name": "@kungfu-tech/buildchain/release-activation-transaction",
+          "kind": "package-export",
+          "sourcePath": "packages/core/release-activation-transaction.js",
+          "evidencePath": "packages/core/release-activation-transaction.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./release-activation-transaction"
         },
         {
           "id": "export:./surface-manifest",
@@ -2933,7 +2945,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 78,
+          "inputCount": 83,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -2991,10 +3003,15 @@
             "publish-rematerialize-on-resume",
             "publish-required-artifacts-json",
             "publish-target",
+            "publish-transaction-override",
+            "release-activation-command",
+            "release-activation-receipt-set-path",
             "release-candidate-workflow-file",
             "release-candidate-workflow-name",
             "release-passport",
             "release-passport-buildchain-self-kfd",
+            "release-passport-evidence-command",
+            "release-passport-evidence-path",
             "release-passport-impact-json",
             "release-passport-invariant-passport-command",
             "release-passport-invariant-passport-jsons",
@@ -3243,7 +3260,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 40,
+          "inputCount": 41,
           "inputs": [
             "artifact-path",
             "aws-region",
@@ -3273,6 +3290,7 @@
             "production-release-on-main",
             "production-release-pr-mode",
             "production-release-pr-token",
+            "production-source-sha",
             "publication-admission-json",
             "publication-control-plane-audit-json",
             "publication-expected-json",
@@ -3919,7 +3937,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 70,
+          "inputCount": 75,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -3969,10 +3987,15 @@
             "publish-rematerialize-on-resume",
             "publish-required-artifacts-json",
             "publish-target",
+            "publish-transaction-override",
+            "release-activation-command",
+            "release-activation-receipt-set-path",
             "release-candidate-workflow-file",
             "release-candidate-workflow-name",
             "release-passport",
             "release-passport-buildchain-self-kfd",
+            "release-passport-evidence-command",
+            "release-passport-evidence-path",
             "release-passport-impact-json",
             "release-passport-invariant-passport-command",
             "release-passport-invariant-passport-jsons",
@@ -4865,6 +4888,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:release-activation-transaction",
+          "name": "site-page:manual:release-activation-transaction",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:release-candidate",
           "name": "site-page:manual:release-candidate",
           "kind": "site-page",
@@ -5170,6 +5205,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 329
+    "publicSurfaceCount": 331
   }
 }

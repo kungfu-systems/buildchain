@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-site-bundle",
-  "generatedAt": "2026-07-24T15:58:21.871Z",
-  "publishedAt": "2026-07-24T15:58:21.871Z",
+  "generatedAt": "2026-07-24T12:46:36.499Z",
+  "publishedAt": "2026-07-24T12:46:36.499Z",
   "reproducible": true,
   "timestampPolicy": "ci-injected",
   "deterministicInputs": [
@@ -19,7 +19,7 @@
     "declared Buildchain surface manifest contract"
   ],
   "sourceDateEpoch": "0",
-  "sourceRevision": "89243e5a9cb346e8c52cec5c69733ada91dcd153",
+  "sourceRevision": "13b001a82ed1e6845b864028e0cce5b72c5d36c7",
   "timestampPolicyDetails": {
     "contract": "kungfu-buildchain-surface-timestamp-policy",
     "timestampFields": [
@@ -37,7 +37,7 @@
   },
   "package": {
     "name": "@kungfu-tech/buildchain",
-    "version": "2.14.18-alpha.11",
+    "version": "2.14.18-alpha.5",
     "versionSource": "package.json#version"
   },
   "source": {
@@ -1437,6 +1437,27 @@
       "markdown": "# README Badge Blocks\n\nBuildchain can generate a managed README badge block from repository-owned\nfacts. The README keeps only a projection; the source facts remain in\n`.buildchain/buildchain.toml`, package metadata, workflow files, KFD standards metadata,\nand the repository's own release passport.\n\nThe managed block is delimited by:\n\n```markdown\n<!-- buildchain:badges:start -->\n...\n<!-- buildchain:badges:end -->\n```\n\nBuildchain owns only that block. Everything outside the markers remains normal\nREADME content.\n\n## Node API\n\nUse the public package export:\n\n```js\nimport {\n  collectBadgeBundleFacts,\n  collectReadmeBadgeFacts,\n  createKfdBadgeSpecsFromStandards,\n  renderBadgeBundleBlock,\n  renderReadmeBadgeBlock,\n  checkBadgeBundleBlock,\n  checkReadmeBadgeBlock,\n  updateBadgeBundleBlock,\n  updateReadmeBadgeBlock,\n} from \"@kungfu-tech/buildchain/badges\";\n```\n\n`@kungfu-tech/buildchain/readme-badges` remains available for compatibility,\nbut new integrations should use `@kungfu-tech/buildchain/badges`.\n\n`collectReadmeBadgeFacts({ cwd })` returns a machine-readable object with\ncontract `kungfu-buildchain-readme-badge-facts`. It collects repository\nidentity, package name/version/license, configured platforms, configured\nworkflow status badges, the repository's own Buildchain Release Passport\nlocation and verification result, and KFD badge state. KFD badge labels,\nhuman-facing concept text, standard document links, schema IDs, and interface\ncontracts are read from\n`@kungfu-tech/kfd/standards.json` when the package is installed, or from an\nexplicit `kfd_standards` path/URL. When present, it also summarizes local KFD\nclaim registry and product-mechanism facts from the package-owned site bundle,\nso downstream agents can connect README badges back to Buildchain's\nKFD/source-of-truth surfaces.\n\n`renderReadmeBadgeBlock(facts)` renders deterministic Markdown from that facts\nobject. `checkReadmeBadgeBlock({ readmeText, facts })` compares the current\nREADME marker block against the expected block and reports missing or stale\ndrift. `updateReadmeBadgeBlock({ readmeText, facts })` inserts or replaces the\nmanaged block.\n\nThe Node API is the implementation source. The CLI delegates to it.\n\n`collectBadgeBundleFacts({ cwd, claims })` is the trust-badge bundle API. It\nuses the same repository facts, but returns contract\n`kungfu-buildchain-badge-bundle-facts` and only renders the Buildchain trust\nclaims: every active `kfd-*` standard discovered from KFD standards metadata,\nplus `release-passport`. KFD-1, KFD-2, KFD-3, KFD-4, and release passport are\nenabled by default with current KFD metadata. Callers can pass\n`claims: \"kfd-1,release-passport\"` or an array to narrow the bundle without\nhand-writing badge Markdown.\n\n## CLI\n\nGenerate facts as JSON:\n\n```bash\nbuildchain badges readme --json\n```\n\nFail closed when the README block is missing or stale:\n\n```bash\nbuildchain badges readme --check\n```\n\nInsert or replace the block:\n\n```bash\nbuildchain badges readme --write\n```\n\nGenerate only the Buildchain trust badge bundle:\n\n```bash\nbuildchain badges bundle --json\nbuildchain badges bundle --check\nbuildchain badges bundle --write\n```\n\nNarrow the bundle to specific claims:\n\n```bash\nbuildchain badges bundle --claims kfd-1,release-passport --write\n```\n\nAll commands accept `--cwd <dir>` and `--readme <path>`. Repositories can add\n`buildchain badges bundle --check` or `buildchain badges readme --check` to CI\nso badge drift is detected like any other generated release-facing surface.\n\n## Configuration\n\nThe optional `[badges]` table in `.buildchain/buildchain.toml` declares local facts that\ncannot be inferred safely:\n\n```toml\n[badges]\nrelease_passport = \"https://github.com/example/project/releases/latest/download/buildchain.release.json\"\nkfd_standards = \"node_modules/@kungfu-tech/kfd/standards.json\"\nkfd_1 = \"declared\"\nkfd_2 = \"planned\"\nkfd_3 = \"aligned\"\nkfd_4 = \"declared\"\nplatforms = [\"macOS\", \"Linux\", \"Windows\"]\nworkflows = [\"verify.yml\", \"build.yml\"]\n\n[badges.bundle]\nclaims = [\"kfd-1\", \"kfd-2\", \"kfd-3\", \"kfd-4\", \"release-passport\"]\n```\n\n`release_passport` may be a local path or URL. If omitted, Buildchain tries\n`buildchain.release.json`, then `.buildchain/release-passport/buildchain.release.json`,\nthen the repository's latest GitHub Release asset when the GitHub repository\ncan be discovered.\n\nThe generated `Buildchain Release Passport` badge is a repository capability\nbadge: it says whether the current repository has a Buildchain release passport\nthat can be verified. It does not report the upstream `kungfu-systems/buildchain`\nrepository status. Buildchain's own README dogfoods the same rule because its\nconfigured `release_passport` points at Buildchain's own release passport.\n\nBuildchain-owned badges use stable hosted image URLs by default:\n\n```text\nhttps://buildchain.libkungfu.dev/badges/v1/{badge}/{state}.svg\n```\n\nThe URL is part of the Buildchain badge contract. Consumers do not need to\nregenerate README files when Buildchain replaces the placeholder badge logo\nwith a formal logo; the hosted endpoint owns logo rendering. The package-owned\nsite bundle publishes `badge-endpoint-registry.json` plus Shields-compatible\nJSON payloads under `badges/v1/**` so the site repository can serve or render\nthe exact SVG endpoints without inventing badge facts.\n\nForks or private deployments can override the image host with:\n\n```toml\n[badges]\nbadge_endpoint_base_url = \"https://example.com/buildchain-badges/v1\"\n```\n\n`kfd_standards` is optional. If omitted, Buildchain tries the installed\n`@kungfu-tech/kfd/standards.json` package export. Use the explicit path or URL\nonly when a repository deliberately vendors KFD standards metadata or validates\nagainst a local KFD development checkout. The KFD standards metadata controls\nthe badge vocabulary; the release passport still controls whether a repository\nmay display a KFD state as `passed`.\n\n## KFD Badge Rules\n\nKFD passed is evidence-backed. A repository may display `KFD-N passed` only when\nits own release passport verifies successfully and the corresponding passport\nsection has `status: \"passed\"`. The KFD badge vocabulary comes from KFD\nstandards metadata, not Buildchain private strings: for example KFD-2 uses the\n`releaseTrustPassport` concept and KFD-4 uses the `observerPerspective` concept\nfrom `@kungfu-tech/kfd/standards.json`.\n\nWhen no release passport exists yet, or when the passport cannot be verified,\nBuildchain downgrades each KFD badge to the explicit local declaration such as\n`declared`, `aligned`, or `planned`. A local `passed` declaration is treated as\n`declared`; unknown local states are normalized to a non-passed fallback.\n\nBuildchain's own README may link to Buildchain's own release passport. Other\nrepositories must not claim Buildchain's KFD status as their own; their badge\nlinks must point to their own release passport or evidence page.\n\n## CI Contract\n\nRecommended CI gate:\n\n```bash\nbuildchain badges readme --check\n```\n\nor, when the repository only wants the Buildchain trust bundle:\n\n```bash\nbuildchain badges bundle --check\n```\n\nThe check fails when:\n\n- the marker block is missing;\n- generated Markdown differs from repository facts;\n- a previously hand-written KFD passed claim is not backed by the repository's\n  verified release passport facts.\n\nThe machine-readable facts object should be used by downstream site renderers\nor audit tools when Markdown badges are not enough."
     },
     {
+      "id": "manual:release-activation-transaction",
+      "title": "Release activation transaction",
+      "route": "/docs/release-activation-transaction",
+      "category": "manual",
+      "capabilityGroup": "getting-started",
+      "audience": [
+        "agent"
+      ],
+      "maturity": "stable",
+      "sourcePath": "docs/release-activation-transaction.md",
+      "digest": "sha256:c3de5838603d3e6dd3ea03c599e67aafa1d1fc184498fb779cb703f8796424cf",
+      "headings": [
+        {
+          "level": 1,
+          "title": "Release activation transaction",
+          "anchor": "release-activation-transaction"
+        }
+      ],
+      "markdown": "# Release activation transaction\n\nBuildchain exposes `release-activation-transaction` as the final cross-repository\ncontract between a qualified product release, its public web surface, and the\nproduct-owned released-evidence projection.\n\nThe canonical order is:\n\n1. `candidate-qualified`\n2. `artifacts-published`\n3. `passport-sealed`\n4. `site-published`\n5. `public-readback`\n6. `evidence-synthesized`\n\n`packages/core/release-activation-transaction.js` is the executable authority.\nEvery transaction binds an exact product source SHA, exact reviewed site source\nSHA, tag, channel, version, environment, artifact-set root, and the three\nrepository owners. A later phase cannot pass while an earlier phase is\nincomplete. Replaying a passed phase is idempotent only when its retained\nreceipt roots are unchanged.\n\nReleased evidence must be synthesized from a canonical receipt set containing\nexactly one artifact-publication, release-passport, site-publication,\npublic-readback, and product-qualification receipt. Every receipt repeats the\nsame binding root. Missing, duplicated, stale, or substituted roots fail\nclosed.\n\nShadow rehearsal uses `mode=shadow`, `environment=shadow`, and always emits\n`releasedUseClaim=false`. It is suitable for protected PR qualification and\nmust never be published as real release evidence. Activation mode requires the\nproduction environment; actual channel mutation remains the caller's protected\npublication responsibility.\n\nThe web-surface workflow accepts `production-source-sha` only for an explicitly\napproved `workflow_dispatch`. It checks out and plans the exact reviewed\nconsumer commit, while the production environment and normal publication\nauthority gates remain intact."
+    },
+    {
       "id": "manual:release-candidate",
       "title": "Release Candidate Passport",
       "route": "/docs/release-candidate",
@@ -2547,7 +2568,7 @@
   "pageRegistry": {
     "path": "page-registry.json",
     "contract": "kungfu-buildchain-site-page-registry",
-    "pageCount": 54,
+    "pageCount": 55,
     "categories": [
       "action",
       "api",
