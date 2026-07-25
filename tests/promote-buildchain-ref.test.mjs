@@ -207,6 +207,17 @@ key = "release.version"
   assert.equal(resolved.release.line, "v2.11");
   assert.equal(resolved.classification, "patch");
   assert.equal(resolved.summary, "Version-bound Buildchain release impact.");
+
+  const nextMajor = JSON.parse(resolveReleaseImpactInput({
+    cwd,
+    impactJson: ".buildchain/release-impact.json",
+    version: "3.0.0",
+    line: "v3.0",
+  }));
+  assert.deepEqual(nextMajor.release, {
+    version: "3.0.0",
+    line: "v3.0",
+  });
 });
 
 test("tree-equivalent stable promotion derives a release-governance impact ledger", () => {
@@ -7144,6 +7155,54 @@ process.exitCode = 9;
       default_branch: "dev/v2/v2.0",
     },
   ]);
+
+  for (const ref of [
+    "heads/alpha/v2/v2.0",
+    "heads/dev/v2/v2.0",
+    "tags/v2.0.1-alpha.0",
+    "tags/v2.0-alpha",
+    "tags/v2-alpha",
+  ]) {
+    refs.delete(ref);
+  }
+
+  const completedPlan = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: channelMergeSha,
+    targetRef: "publish-gate/major",
+    cwd,
+    dryRun: true,
+    publishTransaction: true,
+    requireVersionState: true,
+  });
+  assert.equal(
+    completedPlan.updates.find((update) =>
+      update.action === "dry-run-publish-transaction"
+    )?.version,
+    version,
+  );
+
+  const completedResume = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: channelMergeSha,
+    targetRef: "publish-gate/major",
+    cwd,
+    publishTransaction: true,
+    publishCommand: "node scripts/unexpected-publish.mjs",
+    publishRequiredArtifactsJson: JSON.stringify([artifact]),
+    requireVersionState: true,
+    expectedPublicationVersion: version,
+    releasePassport: false,
+  });
+  assert.equal(completedResume.publishTransaction.state, "complete");
+  assert.equal(refs.get("tags/v2.0.1"), undefined);
+  assert.equal(fs.existsSync(path.join(cwd, "unexpected-publish.txt")), false);
+  assert.equal(refs.has("heads/alpha/v2/v2.0"), true);
+  assert.equal(refs.has("heads/dev/v2/v2.0"), true);
 });
 
 test("publish-gate/major finalization opens next-alpha PR from current alpha head", async () => {
