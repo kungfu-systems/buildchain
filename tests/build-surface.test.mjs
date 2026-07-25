@@ -1286,6 +1286,10 @@ test("check workflow preserves verify mode and exposes source-check mode", () =>
   assert.match(verify, /Validate declared check lifecycle/);
   assert.match(verify, /lifecycle run install/);
   assert.match(verify, /lifecycle run verify/);
+  assert.match(
+    verify,
+    /BUILDCHAIN_MAJOR_VERSION_BOOTSTRAP: \$\{\{ github\.event_name == 'pull_request' && github\.base_ref == 'publish-gate\/major' && startsWith\(github\.head_ref, 'buildchain\/version-state\/publish-gate-major\/'\) && 'true' \|\| 'false' \}\}/,
+  );
 });
 
 test("source-check fixture executes only install and check", () => {
