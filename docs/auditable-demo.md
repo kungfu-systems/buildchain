@@ -52,7 +52,10 @@ The adapter must not rebuild or rerun the product. It receives:
 `--source-coordinate` identifies the caller repository, run, artifact id,
 artifact name, upload digest, expiry, and exact source SHA. The workflow finds
 exactly one live artifact with the requested name in the current caller run and
-rejects a digest mismatch before invoking the adapter.
+rejects a digest mismatch before invoking the adapter. Callers must pass the
+digest emitted by their own `upload-artifact` step; a name resolved later from
+the Actions API is discovery evidence, not a substitute for that producer
+output.
 
 The adapter runs with a disposable Home/XDG/npm prefix, a minimal environment,
 and no GitHub, npm, or cloud credential injection. It must be a regular,
