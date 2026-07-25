@@ -6,7 +6,7 @@
     "tag": "v3.0.0",
     "sourceSha": "173df79be292987e76383a1955c8a9d31b0cb499"
   },
-  "generatedAt": "2026-07-25T07:35:14.971Z",
+  "generatedAt": "2026-07-25T07:40:55.424Z",
   "runner": {
     "kind": "github-hosted",
     "os": "Linux",
@@ -17,7 +17,7 @@
   "workflow": {
     "name": "Buildchain Ref Promotion",
     "runId": "30146102303",
-    "runAttempt": "2",
+    "runAttempt": "3",
     "url": "https://github.com/kungfu-systems/buildchain/actions/runs/30146102303"
   },
   "artifacts": []
