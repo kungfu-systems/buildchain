@@ -2050,6 +2050,17 @@ test("release passport collect verify and explain form an agent-readable contrac
     name: "@kungfu-tech/buildchain",
     version: "2.2.0-alpha.0",
   }, null, 2));
+  const releaseEvidencePath = path.join(cwd, "product-release-evidence.json");
+  fs.writeFileSync(releaseEvidencePath, JSON.stringify({
+    schemaVersion: 1,
+    contract: "fixture-product-release-evidence",
+    id: "fixture-product",
+    release: {
+      sourceSha: "e".repeat(40),
+      tag: "v2.2.0-alpha.0",
+      channel: "alpha",
+    },
+  }, null, 2));
 
   const collected = JSON.parse(runBuildchain([
     "collect",
@@ -2068,6 +2079,10 @@ test("release passport collect verify and explain form an agent-readable contrac
     assetsDir,
     "--output-dir",
     "release-passport",
+    "--release-extra-json",
+    JSON.stringify({ channel: "alpha" }),
+    "--release-evidence-json",
+    releaseEvidencePath,
     "--json",
   ], { cwd }));
   const passportPath = path.join(collected.outputDir, "buildchain.release.json");
@@ -2078,11 +2093,17 @@ test("release passport collect verify and explain form an agent-readable contrac
   assert.equal(passport.runnerPolicy.productionDefault, "github-hosted");
   assert.equal(passport.runnerPolicy.compatibilityFixture, "self-hosted");
   assert.equal(passport.artifacts.length, 2);
+  assert.equal(passport.releaseEvidence[0].id, "fixture-product");
+  assert.equal(
+    fs.existsSync(path.join(collected.outputDir, "release-evidence-fixture-product.json")),
+    true,
+  );
 
   const report = JSON.parse(runBuildchain(["verify", "release-passport", passportPath, "--json"], { cwd }));
   assert.equal(report.contract, "kungfu-buildchain-release-check-report");
   assert.equal(report.ok, true);
   assert.equal(report.completeness.artifactCount, 2);
+  assert.equal(report.completeness.releaseEvidenceCount, 1);
 
   const explanation = JSON.parse(runBuildchain([
     "explain",

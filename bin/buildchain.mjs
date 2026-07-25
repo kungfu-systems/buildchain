@@ -1688,6 +1688,7 @@ async function main(argv = process.argv.slice(2)) {
         collectArgs,
         "kfd-agent-runtime-witness-json",
       ),
+      releaseEvidenceJsons: readRepeatedFlag(collectArgs, "release-evidence-json"),
       basePassportJson: readFlag(collectArgs, "base-passport-json", ""),
       requireBaseKfd: readBooleanFlag(collectArgs, "require-base-kfd"),
       releaseJsonExtra: readFlag(collectArgs, "release-extra-json", ""),

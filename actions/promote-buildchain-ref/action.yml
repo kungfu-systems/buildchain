@@ -143,6 +143,12 @@ inputs:
   release-passport-kfd-agent-runtime-witness-jsons:
     description: "Newline- or comma-separated KFD Agent Runtime conformance witness JSON paths passed to the release passport collector"
     default: ""
+  release-passport-evidence-jsons:
+    description: "Newline- or comma-separated product-owned release evidence index paths; each must bind the exact source SHA, tag, and channel"
+    default: ""
+  release-passport-evidence-command:
+    description: "Product-owned command that writes release evidence indexes and emits JSON with a files array"
+    default: ""
   release-passport-buildchain-self-kfd:
     description: "Generate Buildchain-owned KFD-1/2/3 self witnesses inside the final version-state workspace before release passport finalization"
     default: "false"

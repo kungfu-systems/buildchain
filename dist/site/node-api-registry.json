@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:a17165ac2db1b930646c2567c46f4c3ca6c17a535d9ad7a38d63563375ea1e9d",
+      "digest": "sha256:5d70d965020214d9f414eec7efc6bf84eb5aef7f8ada762bc802a1f0d80dceac",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:a17165ac2db1b930646c2567c46f4c3ca6c17a535d9ad7a38d63563375ea1e9d",
+      "digest": "sha256:5d70d965020214d9f414eec7efc6bf84eb5aef7f8ada762bc802a1f0d80dceac",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -359,7 +359,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:dd52c3442e0f7b5ac4def7c00828f76a25d478851cfbf744b053532e42fa1e49",
+      "digest": "sha256:6647343ab9563bb52f8e67cd32cb80b0f432c16d3f56f596b13aee11ffcb54e4",
       "summary": "Release passport collection, verification, explanation, and evidence APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [

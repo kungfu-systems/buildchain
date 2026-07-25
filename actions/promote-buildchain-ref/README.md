@@ -320,6 +320,19 @@ the packaged offline KFD WASM verifier and fails promotion if the evidence is
 stale, incomplete, producer-only, or asks for an adoption claim without
 distinct evidence. Experimental results are retained separately and are never
 treated as normative Core evidence.
+Set `release-passport-evidence-jsons` to newline-separated product-owned release
+evidence indexes. Each JSON document must declare `schemaVersion`, a stable
+`id`, a product contract, and the exact release source SHA, tag, and channel.
+Buildchain copies and hashes the documents, verifies their coordinates against
+the final passport, publishes them with the other passport assets, and retains
+them inside the release evidence bundle without interpreting product-specific
+or legal claims. When release coordinates are not known until promotion, use
+`release-passport-evidence-command`; Buildchain supplies
+`BUILDCHAIN_RELEASE_SOURCE_SHA`, `BUILDCHAIN_RELEASE_TAG`,
+`BUILDCHAIN_RELEASE_CHANNEL`, `BUILDCHAIN_RELEASE_VERSION`,
+`BUILDCHAIN_RELEASE_DEPLOYMENT_COORDINATE`, `BUILDCHAIN_RELEASE_TARGET_REF`, and
+`BUILDCHAIN_RELEASE_PASSPORT_OUTPUT_DIR`. The command must emit JSON containing
+a non-empty `files` array.
 Buildchain's own release workflow sets `release-passport-buildchain-self-kfd:
 "true"`. In that mode the action generates Buildchain-owned KFD-1/2/3 witnesses
 inside the final version-state workspace, after the release transaction has

@@ -212,6 +212,16 @@ on:
         default: ""
         type: string
         required: false
+      release-passport-evidence-jsons:
+        description: "Newline- or comma-separated product-owned release evidence index paths bound to the exact release coordinates"
+        default: ""
+        type: string
+        required: false
+      release-passport-evidence-command:
+        description: "Product-owned command that emits generated release evidence index paths as JSON"
+        default: ""
+        type: string
+        required: false
       release-passport-buildchain-self-kfd:
         description: "Generate Buildchain-owned KFD-1/2/3 self witnesses and claims from the checked-out package source before release passport finalization"
         default: false
@@ -998,6 +1008,8 @@ jobs:
           release-passport-kfd-3-artifact-verify-command: ${{ inputs.release-passport-kfd-3-artifact-verify-command }}
           release-passport-kfd-7-declaration-jsons: ${{ inputs.release-passport-kfd-7-declaration-jsons }}
           release-passport-kfd-agent-runtime-witness-jsons: ${{ inputs.release-passport-kfd-agent-runtime-witness-jsons }}
+          release-passport-evidence-jsons: ${{ inputs.release-passport-evidence-jsons }}
+          release-passport-evidence-command: ${{ inputs.release-passport-evidence-command }}
           release-passport-buildchain-self-kfd: ${{ inputs.release-passport-buildchain-self-kfd }}
           github-release: ${{ inputs.github-release }}
           github-release-title: ${{ inputs.github-release-title }}

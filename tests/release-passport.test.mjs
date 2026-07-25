@@ -35,6 +35,83 @@ function writeJson(filePath, value) {
   return filePath;
 }
 
+test("release passport retains and verifies product-owned release evidence indexes", async () => {
+  const cwd = tempDir("release-evidence-attachment");
+  const assetsDir = path.join(cwd, "dist");
+  const sourceSha = "a".repeat(40);
+  const tag = "v4.0.0-alpha.1";
+  fs.mkdirSync(assetsDir, { recursive: true });
+  fs.writeFileSync(path.join(assetsDir, "kungfu.tar.gz"), "release artifact\n");
+  const evidencePath = writeJson(path.join(cwd, "ungfu-public-use.json"), {
+    schemaVersion: 1,
+    contract: "kungfu-ungfu-release-evidence-index",
+    id: "ungfu-public-use",
+    kind: "public-acquisition-and-capability-evidence",
+    release: { sourceSha, tag, channel: "alpha" },
+    publicReadback: { url: "https://kungfu.tech/install/" },
+  });
+
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag,
+    sourceSha,
+    assetsDir,
+    outputDir: "release-passport",
+    releaseJsonExtra: JSON.stringify({ channel: "alpha" }),
+    releaseEvidenceJsons: [evidencePath],
+  });
+  const passportPath = path.join(collected.outputDir, "buildchain.release.json");
+  const retainedPath = path.join(collected.outputDir, "release-evidence-ungfu-public-use.json");
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+
+  assert.equal(fs.readFileSync(retainedPath, "utf8"), fs.readFileSync(evidencePath, "utf8"));
+  assert.equal(passport.releaseEvidence[0].release.sourceSha, sourceSha);
+  assert.equal(passport.releaseEvidence[0].release.tag, tag);
+  assert.equal(passport.releaseEvidence[0].release.channel, "alpha");
+  assert.equal(collected.files.includes("release-evidence-ungfu-public-use.json"), true);
+
+  const report = await verifyReleasePassport({ passportLocation: passportPath });
+  assert.equal(report.ok, true);
+  assert.equal(report.completeness.releaseEvidenceCount, 1);
+
+  const tampered = JSON.parse(fs.readFileSync(retainedPath, "utf8"));
+  tampered.publicReadback.url = "https://example.invalid/";
+  writeJson(retainedPath, tampered);
+  const tamperedReport = await verifyReleasePassport({ passportLocation: passportPath });
+  assert.equal(tamperedReport.ok, false);
+  assert.equal(tamperedReport.issues.some((entry) => entry.code === "releaseEvidence[0].sha256"), true);
+});
+
+test("release evidence attachment rejects stale release coordinates", () => {
+  const cwd = tempDir("release-evidence-stale");
+  const assetsDir = path.join(cwd, "dist");
+  fs.mkdirSync(assetsDir, { recursive: true });
+  fs.writeFileSync(path.join(assetsDir, "kungfu.tar.gz"), "release artifact\n");
+  const evidencePath = writeJson(path.join(cwd, "stale.json"), {
+    schemaVersion: 1,
+    contract: "kungfu-ungfu-release-evidence-index",
+    id: "ungfu-public-use",
+    release: {
+      sourceSha: "b".repeat(40),
+      tag: "v4.0.0-alpha.0",
+      channel: "alpha",
+    },
+  });
+
+  assert.throws(
+    () => collectGitHubReleasePassport({
+      cwd,
+      tag: "v4.0.0-alpha.1",
+      sourceSha: "a".repeat(40),
+      assetsDir,
+      outputDir: "release-passport",
+      releaseJsonExtra: JSON.stringify({ channel: "alpha" }),
+      releaseEvidenceJsons: [evidencePath],
+    }),
+    /sourceSha must match the release passport source SHA/,
+  );
+});
+
 test("release passport records surface timestamp reproducibility policy", () => {
   const passport = createReleasePassport({
     repository: "kungfu-systems/buildchain",
