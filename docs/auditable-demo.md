@@ -1,0 +1,143 @@
+---
+status: draft
+period: 2026-07
+theme: auditable-demo-pipeline
+doc_type: technical-contract
+source_level: local-files
+confidence: high
+sensitivity: public
+evidence_grade: A
+review_state: self-reviewed
+last_reviewed: 2026-07-25
+ai_provenance:
+  model_family: GPT-5
+  product: Codex
+  generated_at: 2026-07-25
+  invisible_context_boundary: No hidden model build, parameter count, or private corpus is asserted.
+---
+
+# Auditable Demo Pipeline
+
+Buildchain's auditable demo workflow turns an exact GitHub build artifact into
+two distinct evidence products:
+
+1. a required qualified Gate bundle; and
+2. an optional rendered media bundle that can exist only after that exact Gate
+   bundle passes.
+
+The public reusable workflow is
+`.github/workflows/.auditable-demo.yml`. It is consumer-neutral: Buildchain
+does not know how a Kungfu, library, service, or application artifact should be
+interpreted. The consumer owns a small checked-in executable adapter.
+
+## Authority Boundary
+
+The retained build output is authoritative. The adapter reads that exact
+artifact and projects three files:
+
+```text
+complete-transcript.txt
+public-projection.json
+scene.json
+```
+
+The adapter must not rebuild or rerun the product. It receives:
+
+```text
+--artifact-root PATH
+--output PATH
+--source-coordinate PATH
+```
+
+`--source-coordinate` identifies the caller repository, run, artifact id,
+artifact name, upload digest, expiry, and exact source SHA. The workflow finds
+exactly one live artifact with the requested name in the current caller run and
+rejects a digest mismatch before invoking the adapter.
+
+The adapter runs with a disposable Home/XDG/npm prefix, a minimal environment,
+and no GitHub, npm, or cloud credential injection. It must be a regular,
+non-symlink, executable file inside the exact checked-out consumer source.
+
+## Required Gate
+
+The Gate:
+
+- checks out the exact consumer source and exact called-workflow SHA;
+- resolves and downloads one exact same-run GitHub Artifact;
+- invokes the checked-in adapter by argv, never as an evaluated shell string;
+- rejects undeclared adapter outputs, symlinks, invalid UTF-8, invalid scene or
+  projection schemas, out-of-range transcript references, and oversized input;
+- derives a one-second compatibility scene from the consumer projection;
+- anonymously pulls an immutable `image@sha256:digest` renderer;
+- runs it as non-root with `--network none`, a read-only root filesystem, and a
+  bounded tmpfs;
+- verifies the renderer manifest, media probe, exact input roots, exact output
+  member set, and complete checksums;
+- uploads a content-addressed qualified bundle plus an independent GitHub
+  Artifact id, URL, archive digest, and expiry-bearing source coordinate.
+
+The Gate bundle contains the complete consumer transcript/projection/scene,
+source artifact coordinate, adapter identity, bounded renderer evidence, a
+passed gate receipt, and checksums covering every member exactly once.
+
+## Selective Render
+
+`render-media: true` enables the second job. It downloads the just-uploaded Gate
+bundle by its content-addressed name, recomputes the Gate member root, verifies
+the exact source SHA and renderer digest, and only then renders the complete
+qualified scene.
+
+The media bundle contains MP4, WebM, GIF, poster, probe, renderer manifest,
+renderer checksums, passed Gate receipt, media receipt, and distribution
+checksums. `render-media: false` does not weaken or skip the Gate.
+
+## Consumer Example
+
+The build job must expose both the exact artifact name and the digest returned
+by `upload-artifact`:
+
+```yaml
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    outputs:
+      artifact-name: product-linux-${{ github.sha }}
+      artifact-digest: ${{ steps.upload.outputs.artifact-digest }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      - run: ./scripts/build-product
+      - id: upload
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: product-linux-${{ github.sha }}
+          path: dist
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+  auditable-demo:
+    needs: build
+    permissions:
+      actions: read
+      contents: read
+    uses: kungfu-systems/buildchain/.github/workflows/.auditable-demo.yml@BUILDCHAIN_EXACT_SHA
+    with:
+      source-ref: ${{ github.sha }}
+      source-artifact-name: ${{ needs.build.outputs.artifact-name }}
+      source-artifact-digest: ${{ needs.build.outputs.artifact-digest }}
+      adapter-path: scripts/auditable-demo-adapter
+      renderer-image: ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:RENDERER_DIGEST
+      render-media: false
+```
+
+Replace both placeholders with reviewed immutable SHAs or digests. An eligible
+build should always call the reusable workflow. Selection policy changes only
+`render-media`; it must never condition away the Gate job.
+
+## Failure Evidence
+
+Gate and render jobs use bounded timeouts and non-cancelling concurrency.
+Diagnostics artifacts are attempted with `always()` so adapter stdout/stderr
+and the resolved source coordinate remain available when qualification fails.
+No production deployment, publication authority, token, or provider mutation
+is part of this workflow.

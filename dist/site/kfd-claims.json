@@ -14,19 +14,19 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:df13c3b8066068925ce847b31002201d533034d10d342542422db3a665c10475",
+    "compatibilityDigest": "sha256:eeb8b2307260745ca818089500128d8647a09bdaad61e44da34b1c88039325a8",
     "majorLine": "v2"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "15df59be9425d65035f0e4a7f1225f77d16c7eb5329c9b6d741feac7ebc5dee8",
+    "sha256": "532816c4739a2a9c9202ae59af70bdb24b9c5de7aaa694f55d322aa7a614a9a5",
     "summary": {
       "cliCommandCount": 87,
-      "workflowCount": 52,
+      "workflowCount": 53,
       "actionCount": 5,
-      "sitePageCount": 55,
+      "sitePageCount": 56,
       "docCommandRefCount": 276,
       "failureCount": 0
     },
@@ -228,12 +228,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "15df59be9425d65035f0e4a7f1225f77d16c7eb5329c9b6d741feac7ebc5dee8",
+      "sha256": "532816c4739a2a9c9202ae59af70bdb24b9c5de7aaa694f55d322aa7a614a9a5",
       "summary": {
         "cliCommandCount": 87,
-        "workflowCount": 52,
+        "workflowCount": 53,
         "actionCount": 5,
-        "sitePageCount": 55,
+        "sitePageCount": 56,
         "docCommandRefCount": 276,
         "failureCount": 0
       },
@@ -331,6 +331,18 @@
           "participantFacing": true,
           "public": true,
           "plane": "use"
+        },
+        {
+          "id": "doc:docs/auditable-demo.md",
+          "name": "Auditable demo artifact pipeline",
+          "kind": "documentation",
+          "sourcePath": "docs/auditable-demo.md",
+          "evidencePath": "docs/auditable-demo.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "verify"
         },
         {
           "id": "doc:docs/binary-distribution.md",
@@ -2730,6 +2742,30 @@
           "reverseAuditSource": "bin/buildchain.mjs"
         },
         {
+          "id": "workflow:.auditable-demo",
+          "name": "workflow:.auditable-demo",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/.auditable-demo.yml",
+          "evidencePath": ".github/workflows/.auditable-demo.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 9,
+          "inputs": [
+            "adapter-path",
+            "artifact-retention-days",
+            "buildchain-repository",
+            "render-media",
+            "renderer-image",
+            "require-trusted-event",
+            "source-artifact-digest",
+            "source-artifact-name",
+            "source-ref"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:.binary-release-assets",
           "name": "workflow:.binary-release-assets",
           "kind": "workflow",
@@ -4636,6 +4672,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:auditable-demo",
+          "name": "site-page:manual:auditable-demo",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:binary-distribution",
           "name": "site-page:manual:binary-distribution",
           "kind": "site-page",
@@ -5205,6 +5253,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 331
+    "publicSurfaceCount": 334
   }
 }

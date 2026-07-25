@@ -4,9 +4,9 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 87,
-    "workflowCount": 52,
+    "workflowCount": 53,
     "actionCount": 5,
-    "sitePageCount": 55,
+    "sitePageCount": 56,
     "docCommandRefCount": 276,
     "failureCount": 0
   },
@@ -449,6 +449,39 @@
       }
     ],
     "workflowInputs": [
+      {
+        "id": ".auditable-demo",
+        "path": ".github/workflows/.auditable-demo.yml",
+        "reusable": true,
+        "inputs": [
+          "adapter-path",
+          "artifact-retention-days",
+          "buildchain-repository",
+          "render-media",
+          "renderer-image",
+          "require-trusted-event",
+          "source-artifact-digest",
+          "source-artifact-name",
+          "source-ref"
+        ],
+        "inputCount": 9,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [
+          "gate-artifact-digest",
+          "gate-artifact-id",
+          "gate-artifact-name",
+          "gate-artifact-url",
+          "gate-root",
+          "media-artifact-digest",
+          "media-artifact-id",
+          "media-artifact-name",
+          "media-artifact-url",
+          "media-root",
+          "source-sha"
+        ],
+        "outputCount": 11
+      },
       {
         "id": ".binary-release-assets",
         "path": ".github/workflows/.binary-release-assets.yml",
@@ -2393,6 +2426,10 @@
         "category": "manual"
       },
       {
+        "id": "manual:auditable-demo",
+        "category": "manual"
+      },
+      {
         "id": "manual:binary-distribution",
         "category": "manual"
       },
@@ -3925,8 +3962,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "5ba7fd93a13993b05767b6f02d0626a7347f25c3d7cd4589ed4f70028c1f1bd1",
-    "workflowRegistryDigest": "4289e5a54fd0ef2f683636bb24337fec6456fb9fa8fb50155fa3b35c323e7c70",
-    "pageRegistryDigest": "23aacdefa707c4b4c0a0911741c44294411f0508d36695e7c717cfd77a4c8fb5"
+    "workflowRegistryDigest": "637d100e9f1f3921b04f40fe3512c7503d2830a91b92826b7f8b0dd124bb70d6",
+    "pageRegistryDigest": "bcf535f723f3f7a7d1ea0fac5423625065314275e77dc828d36d99c7868838b3"
   },
   "comparison": {
     "missingCliRegistry": [],

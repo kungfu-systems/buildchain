@@ -4,6 +4,7 @@ import path from "node:path";
 import { createPublicationAuthorityRegistry } from "./publication-authority.js";
 
 const DESCRIPTORS = Object.freeze([
+  [".github/workflows/.auditable-demo.yml", "non-publication-oidc"],
   [".github/workflows/.build.yml", "non-publication-oidc"],
   [".github/workflows/.release-candidate-promote.yml", "product-publication", true, ["npm-publish", "github-release", "channel-ref"], "trusted-publishing", "none", "fixed", "caller-bound"],
   [".github/workflows/.publication-authority.yml", "evidence-publication"],
