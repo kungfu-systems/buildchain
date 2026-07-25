@@ -15,6 +15,7 @@ const {
   assertExpectedPublicationVersion,
   assertChannelPromotionPr,
   assertProviderEnforcedChannelTransaction,
+  assertProtectedChannel,
   assertPromotableRepository,
   assertPromotableTargetRef,
   createTreeEquivalentReleaseImpact,
@@ -8129,11 +8130,21 @@ test("strict alpha promotion requires a protected dev-to-alpha PR", async () => 
 
 test("strict alpha promotion uses provider transaction evidence when protection details are unreadable", async () => {
   let reviewState = "APPROVED";
+  let protectionReadStatus = 403;
   const pullRequestHeadSha = "b".repeat(40);
   const checkedRefs = [];
   const octokit = {
     rest: {
       repos: {
+        getBranchProtection: async () => {
+          const error = new Error(
+            protectionReadStatus === 404
+              ? "Not Found"
+              : "Resource not accessible by integration",
+          );
+          error.status = protectionReadStatus;
+          throw error;
+        },
         listPullRequestsAssociatedWithCommit: async () => ({
           data: [
             {
@@ -8186,20 +8197,23 @@ test("strict alpha promotion uses provider transaction evidence when protection 
     },
   };
 
-  const resolvedStatusCheck = await assertProviderEnforcedChannelTransaction({
-    octokit,
-    owner: "kungfu-systems",
-    repo: "buildchain",
-    sourceSha: SHA,
-    targetRef: "alpha/v1/v1.0",
-    requiredStatusCheck: "check",
-  });
-  assert.equal(resolvedStatusCheck, "check");
-  assert.deepEqual(checkedRefs, [pullRequestHeadSha]);
+  for (const status of [403, 404]) {
+    protectionReadStatus = status;
+    const resolvedStatusCheck = await assertProtectedChannel({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sourceSha: SHA,
+      targetRef: "alpha/v1/v1.0",
+      requiredStatusCheck: "check",
+    });
+    assert.equal(resolvedStatusCheck, "check");
+  }
+  assert.deepEqual(checkedRefs, [pullRequestHeadSha, pullRequestHeadSha]);
 
   reviewState = "CHANGES_REQUESTED";
   await assert.rejects(
-    assertProviderEnforcedChannelTransaction({
+    assertProtectedChannel({
       octokit,
       owner: "kungfu-systems",
       repo: "buildchain",

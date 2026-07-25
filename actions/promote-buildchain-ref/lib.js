@@ -2868,7 +2868,8 @@ async function assertProtectedChannel({
       branch: targetRef,
     }));
   } catch (error) {
-    if (error.status === 403) {
+    // GitHub may hide an existing protected branch as either 403 or 404.
+    if (error.status === 403 || notFound(error)) {
       return assertProviderEnforcedChannelTransaction({
         octokit,
         owner,
