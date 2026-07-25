@@ -347,10 +347,14 @@
         "publish-required-artifacts-json",
         "publish-target",
         "publish-transaction-override",
+        "release-activation-command",
+        "release-activation-receipt-set-path",
         "release-candidate-workflow-file",
         "release-candidate-workflow-name",
         "release-passport",
         "release-passport-buildchain-self-kfd",
+        "release-passport-evidence-command",
+        "release-passport-evidence-path",
         "release-passport-impact-json",
         "release-passport-invariant-passport-command",
         "release-passport-invariant-passport-jsons",
@@ -370,7 +374,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 79,
+      "inputCount": 83,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -696,6 +700,7 @@
         "production-release-on-main",
         "production-release-pr-mode",
         "production-release-pr-token",
+        "production-source-sha",
         "publication-admission-json",
         "publication-control-plane-audit-json",
         "publication-expected-json",
@@ -709,7 +714,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 40,
+      "inputCount": 41,
       "secrets": [
         "production-release-app-private-key"
       ],
@@ -1569,10 +1574,14 @@
         "publish-required-artifacts-json",
         "publish-target",
         "publish-transaction-override",
+        "release-activation-command",
+        "release-activation-receipt-set-path",
         "release-candidate-workflow-file",
         "release-candidate-workflow-name",
         "release-passport",
         "release-passport-buildchain-self-kfd",
+        "release-passport-evidence-command",
+        "release-passport-evidence-path",
         "release-passport-impact-json",
         "release-passport-invariant-passport-command",
         "release-passport-invariant-passport-jsons",
@@ -1592,7 +1601,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 71,
+      "inputCount": 75,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",

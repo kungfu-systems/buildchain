@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:b1cccdca930eb1ab2be006b8fabc795966f61fafdb4933758a42a7bf3c3bf6cd",
+      "digest": "sha256:7f1f3ce6c862e556dc73a0b3b7fe96b8c6772b96de3e677a77eed87c8a03047f",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:b1cccdca930eb1ab2be006b8fabc795966f61fafdb4933758a42a7bf3c3bf6cd",
+      "digest": "sha256:7f1f3ce6c862e556dc73a0b3b7fe96b8c6772b96de3e677a77eed87c8a03047f",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -427,6 +427,19 @@
       "digest": "sha256:74eecd2917cabbf9b2e2f7c37c75bb924ecaaa72d0b94255d5c5ab01820c26f2",
       "summary": "Release propagation graph, plan, and exact upstream lock APIs.",
       "capabilityGroup": "site-and-propagation",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/release-activation-transaction",
+      "export": "./release-activation-transaction",
+      "target": "./packages/core/release-activation-transaction.js",
+      "digest": "sha256:0f33d276a3089dd314c76712adc42d60ef61793f52de32092e03d43be6922756",
+      "summary": "Ordered cross-repository activation, exact receipt-set binding, retry, abort, rollback, and shadow-rehearsal APIs.",
+      "capabilityGroup": "release-passport-trust",
       "audience": [
         "developer",
         "agent"
