@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-release-passport",
-  "generatedAt": "2026-07-25T07:40:55.445Z",
+  "generatedAt": "2026-07-25T07:44:27.988Z",
   "surfaceTimestampPolicy": {
-    "generatedAt": "2026-07-25T07:40:55.445Z",
-    "publishedAt": "2026-07-25T07:40:55.445Z",
+    "generatedAt": "2026-07-25T07:44:27.988Z",
+    "publishedAt": "2026-07-25T07:44:27.988Z",
     "reproducible": true,
     "timestampPolicy": "ci-injected",
     "deterministicInputs": [
@@ -59,7 +59,7 @@
     "promotionChannelTreeSha": "",
     "publishToolingSha": "9e904de2c85dbea7c799780ee166510b3336d812",
     "releaseStateRef": "refs/heads/buildchain/release-state/3-0-0",
-    "releaseStateSha": "e8c17a1a130e6a22179db1c94c9f7f7572f9c2b3",
+    "releaseStateSha": "",
     "package": {
       "name": "@kungfu-tech/buildchain",
       "version": "3.0.0"
@@ -69,7 +69,7 @@
   "workflow": {
     "name": "Buildchain Ref Promotion",
     "runId": "30146102303",
-    "runAttempt": "3",
+    "runAttempt": "4",
     "url": "https://github.com/kungfu-systems/buildchain/actions/runs/30146102303"
   },
   "runnerPolicy": {
@@ -82,7 +82,7 @@
     "enabled": true,
     "auth": "trusted-publishing",
     "workflowRunId": "30146102303",
-    "workflowRunAttempt": "3",
+    "workflowRunAttempt": "4",
     "evidence": ""
   },
   "transaction": {
@@ -1115,7 +1115,7 @@
         },
         "sourceVerification": {
           "status": "passed",
-          "verifiedAt": "2026-07-25T07:40:55.424Z",
+          "verifiedAt": "2026-07-25T07:44:27.965Z",
           "required": true,
           "surfaces": [
             {
@@ -1898,7 +1898,7 @@
         },
         "artifactVerification": {
           "status": "passed",
-          "verifiedAt": "2026-07-25T07:40:55.424Z",
+          "verifiedAt": "2026-07-25T07:44:27.965Z",
           "surfaces": [
             {
               "name": ".github/workflows/.build.yml",
@@ -2976,7 +2976,7 @@
     "schemaVersion": 1,
     "contract": "kungfu-buildchain-kfd-2-release-trust-passport-audit",
     "status": "passed",
-    "verifiedAt": "2026-07-25T07:40:55.446Z",
+    "verifiedAt": "2026-07-25T07:44:27.989Z",
     "auditBoundary": {
       "scope": "public release claims visible to humans or agents",
       "policy": "public claims must bind declared sources, machine-readable evidence, hashes, artifact coordinates, verification results, audit boundaries, responsibility state, and residual risk"
@@ -12618,7 +12618,7 @@
         },
         "comparison": {
           "status": "passed",
-          "verifiedAt": "2026-07-25T07:40:55.441Z",
+          "verifiedAt": "2026-07-25T07:44:27.982Z",
           "supportLevel": "release",
           "declaredPublicSurfaceCount": 131,
           "declaredShippedPublicSurfaceCount": 131,
