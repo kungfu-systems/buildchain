@@ -171,6 +171,8 @@ test("stable route calls the hidden advanced workflow at the immutable v2.14.13 
     unsupportedInputs: [
       "github-release-payload-patterns",
       "publication-commit-command",
+      "publication-commit-evidence-path",
+      "release-activation-command",
       "standalone-binary-distribution",
       "publish-rematerialize-on-resume",
     ],
@@ -194,6 +196,8 @@ test("stable route forwards only inputs supported by its immutable workflow shel
     if (shellRouting.stable.unsupportedInputs.includes(name)) continue;
     assert.match(stableBlock, new RegExp(`^      ${name}:`, "m"));
   }
+  assert.doesNotMatch(stableBlock, /^      publication-commit-evidence-path:/m);
+  assert.doesNotMatch(stableBlock, /^      release-activation-command:/m);
   assert.doesNotMatch(stableBlock, /^      standalone-binary-distribution:/m);
   assert.doesNotMatch(stableBlock, /^      publish-rematerialize-on-resume:/m);
   assert.match(
