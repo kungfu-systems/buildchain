@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-site-bundle",
-  "generatedAt": "2026-07-25T06:13:29.146Z",
-  "publishedAt": "2026-07-25T06:13:29.146Z",
+  "generatedAt": "2026-07-25T06:17:49.569Z",
+  "publishedAt": "2026-07-25T06:17:49.569Z",
   "reproducible": true,
   "timestampPolicy": "ci-injected",
   "deterministicInputs": [
