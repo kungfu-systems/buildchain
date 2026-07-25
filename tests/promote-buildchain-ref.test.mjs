@@ -207,6 +207,17 @@ key = "release.version"
   assert.equal(resolved.release.line, "v2.11");
   assert.equal(resolved.classification, "patch");
   assert.equal(resolved.summary, "Version-bound Buildchain release impact.");
+
+  const nextMajor = JSON.parse(resolveReleaseImpactInput({
+    cwd,
+    impactJson: ".buildchain/release-impact.json",
+    version: "3.0.0",
+    line: "v3.0",
+  }));
+  assert.deepEqual(nextMajor.release, {
+    version: "3.0.0",
+    line: "v3.0",
+  });
 });
 
 test("tree-equivalent stable promotion derives a release-governance impact ledger", () => {

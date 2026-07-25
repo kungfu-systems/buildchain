@@ -328,7 +328,12 @@ function versionVerificationAllowedPathsForPromotion(channel, discoveredPaths = 
   ]);
 }
 
-function resolveReleaseImpactInput({ cwd = process.cwd(), impactJson = "", version = "" } = {}) {
+function resolveReleaseImpactInput({
+  cwd = process.cwd(),
+  impactJson = "",
+  version = "",
+  line = "",
+} = {}) {
   const input = String(impactJson || "").trim();
   if (!input) {
     return "";
@@ -345,7 +350,17 @@ function resolveReleaseImpactInput({ cwd = process.cwd(), impactJson = "", versi
     const updated = updateVersionStateContents([configuredFile], version)
       .find((file) => file.path === relativePath);
     if (updated) {
-      return updated.content;
+      if (!line) {
+        return updated.content;
+      }
+      const impact = JSON.parse(updated.content);
+      return writeJsonContent({
+        ...impact,
+        release: {
+          ...impact.release,
+          line,
+        },
+      });
     }
   }
   return fs.readFileSync(inputPath, "utf8");
@@ -2473,6 +2488,7 @@ async function collectAndPersistReleasePassport({
     cwd,
     impactJson: String(impactJson || "").trim() || inferredImpactJson,
     version: publishedVersion,
+    line,
   });
   const promotionRouting = String(promotionRoutingJson || "").trim()
     ? (() => {
@@ -5624,7 +5640,7 @@ async function promoteBuildchainRefs({
     );
     const containedPublishedMajorTransaction =
       initialMajorTransaction &&
-      ["published", "finalizing"].includes(initialMajorTransaction.state || "") &&
+      ["published", "finalizing", "complete"].includes(initialMajorTransaction.state || "") &&
       transactionHasPublishedMaterial(initialMajorTransaction) &&
       initialMajorTransaction.version === initialMajorVersion &&
       initialMajorTransaction.exact_tag === initialMajorTag &&
