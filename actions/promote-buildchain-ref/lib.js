@@ -321,6 +321,13 @@ function alignMajorBootstrapReleaseImpact(changedFiles, { version } = {}) {
   });
 }
 
+function versionVerificationAllowedPathsForPromotion(channel, discoveredPaths = []) {
+  return uniquePaths([
+    ...discoveredPaths,
+    ...(channel === "major" ? ["dist/site/kfd-claims.json"] : []),
+  ]);
+}
+
 function resolveReleaseImpactInput({ cwd = process.cwd(), impactJson = "", version = "" } = {}) {
   const input = String(impactJson || "").trim();
   if (!input) {
@@ -5051,6 +5058,8 @@ async function promoteBuildchainRefs({
     }
 
     const discoveredPaths = discovered.files.map((file) => file.path);
+    const versionStateAllowedPaths =
+      versionVerificationAllowedPathsForPromotion(rule.channel, discoveredPaths);
     const derivedVersionMaterial = discoverConfiguredDerivedVersionMaterial(
       workspaceCwd,
       discovered.config,
@@ -5213,7 +5222,7 @@ async function promoteBuildchainRefs({
         loadedConfig: discovered.config,
         version,
         changedFiles: [],
-        allowedPaths: discoveredPaths,
+        allowedPaths: versionStateAllowedPaths,
         env: strategyEnv,
       });
       if (verifiedChangedFiles.length > 0) {
@@ -5257,7 +5266,7 @@ async function promoteBuildchainRefs({
         action: "existing",
         publishVersion,
         files: discoveredPaths,
-        releaseTreeAllowedPaths: discoveredPaths,
+        releaseTreeAllowedPaths: versionStateAllowedPaths,
         hasVersionVerification,
         packageManager: discovered.packageManager,
         versionStrategy,
@@ -5279,7 +5288,7 @@ async function promoteBuildchainRefs({
         action: "dry-run",
         publishVersion,
         files: changedFiles.map((file) => file.path),
-        releaseTreeAllowedPaths: changedFiles.map((file) => file.path),
+        releaseTreeAllowedPaths: versionStateAllowedPaths,
         hasVersionVerification,
         packageManager: discovered.packageManager,
         versionStrategy,
@@ -5293,7 +5302,7 @@ async function promoteBuildchainRefs({
       loadedConfig: discovered.config,
       version,
       changedFiles,
-      allowedPaths: discoveredPaths,
+      allowedPaths: versionStateAllowedPaths,
       env: strategyEnv,
     });
 
@@ -6591,6 +6600,7 @@ export {
   stripTagPrefix,
   updateVersionStateContents,
   alignMajorBootstrapReleaseImpact,
+  versionVerificationAllowedPathsForPromotion,
   resolveReleaseImpactInput,
   createTreeEquivalentReleaseImpact,
   releasePassportArtifactFiles,
