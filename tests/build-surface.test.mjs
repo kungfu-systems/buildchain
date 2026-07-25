@@ -3540,7 +3540,7 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   assert.match(workflow, /schedule:/);
   assert.match(workflow, /group: buildchain-release-promotion-\$\{\{ github\.repository \}\}/);
   assert.match(workflow, /cancel-in-progress: false/);
-  assert.match(workflow, /build\.yml@v2-alpha/);
+  assert.match(workflow, /build\.yml@v3-alpha/);
   assert.match(workflow, /buildchain-channel: auto/);
   assert.match(workflow, /buildchain-channel: stable/);
   assert.match(workflow, /ALPHA_RUNTIME_SHA: \$\{\{ needs\.alpha-consumer\.outputs\.buildchain-runtime-sha \}\}/);
@@ -3549,7 +3549,7 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   assert.match(workflow, /kungfu-buildchain-alpha-self-dogfood/);
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
   assert.doesNotMatch(workflow, /buildchain-ref:/);
-  assert.doesNotMatch(workflow, /\.build\.yml@v2\n/);
+  assert.doesNotMatch(workflow, /\.build\.yml@v3\n/);
   assert.doesNotMatch(workflow, /buildchain-contract-lock-path:/);
 
   const alphaLock = JSON.parse(
@@ -3558,8 +3558,8 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   const currentContract = JSON.parse(
     fs.readFileSync(path.join(root, "dist/site/buildchain-contract.json"), "utf8"),
   );
-  assert.equal(alphaLock.buildchain.ref, "v2-alpha");
-  assert.equal(alphaLock.buildchain.resolvedSha, "dfed5c87558b009c1f60ab549e592ea0c38e8989");
+  assert.equal(alphaLock.buildchain.ref, "v3-alpha");
+  assert.equal(alphaLock.buildchain.resolvedSha, "85b4b69c3a76f3e64e8e96d8357d87cac62c9f16");
   assert.equal(alphaLock.buildchain.compatibilityPolicy, "major-compatible");
   const packageVersion = JSON.parse(
     fs.readFileSync(path.join(root, "package.json"), "utf8"),
@@ -3575,7 +3575,7 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
       currentContract,
       majorResolution,
     }),
-    runtimeRef: "v2-alpha",
+    runtimeRef: "v3-alpha",
     runtimeSha: "current-development-contract",
     runtimeClass: "alpha",
   });
@@ -3667,21 +3667,21 @@ test("major self-dogfood bootstrap is bounded to the adjacent 0.0 release transi
     fs.readFileSync(path.join(root, "dist/site/buildchain-contract.json"), "utf8"),
   );
   const majorResolution = resolveSelfDogfoodMajor({
-    packageVersion: "3.0.0",
-    alphaRef: "v2-alpha",
+    packageVersion: "4.0.0",
+    alphaRef: "v3-alpha",
     majorBootstrap: true,
   });
-  const nextMajorContract = { ...currentContract, majorLine: "v3" };
+  const nextMajorContract = { ...currentContract, majorLine: "v4" };
   const bootstrapContract = contractForSelfDogfoodEvaluation({
     currentContract: nextMajorContract,
     majorResolution,
   });
-  assert.equal(bootstrapContract.majorLine, "v2");
-  assert.equal(nextMajorContract.majorLine, "v3");
+  assert.equal(bootstrapContract.majorLine, "v3");
+  assert.equal(nextMajorContract.majorLine, "v4");
   const bootstrapEvaluation = evaluateBuildchainContractLock({
     lock: alphaLock,
     current: bootstrapContract,
-    runtimeRef: "v2-alpha",
+    runtimeRef: "v3-alpha",
     runtimeSha: "current-development-contract",
     runtimeClass: "alpha",
   });
@@ -3700,7 +3700,7 @@ test("major self-dogfood bootstrap is bounded to the adjacent 0.0 release transi
   const breakingEvaluation = evaluateBuildchainContractLock({
     lock: alphaLock,
     current: breakingContract,
-    runtimeRef: "v2-alpha",
+    runtimeRef: "v3-alpha",
     runtimeSha: "current-development-contract",
     runtimeClass: "alpha",
   });
