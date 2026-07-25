@@ -224,6 +224,9 @@ The active reusable workflow surfaces are:
 - `.github/workflows/.gate-profile.yml` for project-neutral Shifu Gate profile
   planning, capability-aware runner dispatch, receipt validation, and one
   stable aggregate check;
+- `.github/workflows/.auditable-demo.yml` for exact-artifact demo
+  qualification, transcript-bound renderer smoke, and optional media rendering
+  from the exact passing Gate bundle;
 - `.github/workflows/.build.yml` for deterministic multi-platform build and
   artifact contracts;
 - `.github/workflows/build.yml` for the single-config channel router that uses

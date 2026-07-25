@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsup index.js cleanup.js --format esm --config ../../scripts/tsup-action.config.mjs && node ../../scripts/strip-trailing-whitespace.mjs dist/index.js dist/cleanup.js",
+    "build": "tsup index.js cleanup.js --format esm --inject ./dirname-shim.js --config ../../scripts/tsup-action.config.mjs && node ../../scripts/strip-trailing-whitespace.mjs dist/index.js dist/cleanup.js",
     "package": "echo noop"
   },
   "dependencies": {

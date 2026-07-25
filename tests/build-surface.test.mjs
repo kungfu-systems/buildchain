@@ -3538,6 +3538,12 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   assert.match(workflow, /workflow_run:/);
   assert.match(workflow, /workflows: \["Buildchain Ref Promotion"\]/);
   assert.match(workflow, /schedule:/);
+  assert.match(workflow, /permissions:\n  actions: read\n  contents: read/);
+  assert.equal(
+    workflow.match(/^\s{6}actions: read$/gmu)?.length,
+    2,
+    "both self-dogfood reusable-workflow call jobs must propagate artifact read permission",
+  );
   assert.match(workflow, /group: buildchain-release-promotion-\$\{\{ github\.repository \}\}/);
   assert.match(workflow, /cancel-in-progress: false/);
   assert.match(workflow, /build\.yml@v3-alpha/);

@@ -15,6 +15,7 @@ const {
   assertExpectedPublicationVersion,
   assertChannelPromotionPr,
   assertProviderEnforcedChannelTransaction,
+  assertProtectedChannel,
   assertPromotableRepository,
   assertPromotableTargetRef,
   createTreeEquivalentReleaseImpact,
@@ -44,23 +45,40 @@ const {
   loadBuildchainConfig,
 } = await import("../packages/core/buildchain-config.js");
 
-test("older minor alpha publication preserves the global npm alpha channel", () => {
+test("only the configured major can write the shared npm alpha channel", () => {
   assert.equal(alphaDistTagForPromotion({
     ownsMajorAlphaTag: true,
-    line: "v2.13",
+    line: "v3.0",
+    sharedAlphaAuthorityMajor: 3,
   }), "");
   assert.equal(alphaDistTagForPromotion({
     ownsMajorAlphaTag: true,
-    line: "v2.13",
+    line: "v3.0",
     publishDistTag: "alpha",
+    sharedAlphaAuthorityMajor: 3,
   }), "alpha");
   assert.equal(alphaDistTagForPromotion({
+    ownsMajorAlphaTag: true,
+    line: "v2.14",
+    sharedAlphaAuthorityMajor: 3,
+  }), "v2.14-alpha");
+  assert.equal(alphaDistTagForPromotion({
     ownsMajorAlphaTag: false,
-    line: "v2.12",
-  }), "v2.12-alpha");
+    line: "v3.0",
+    sharedAlphaAuthorityMajor: 3,
+  }), "v3.0-alpha");
+  assert.throws(
+    () => alphaDistTagForPromotion({
+      ownsMajorAlphaTag: true,
+      line: "v2.14",
+      publishDistTag: "alpha",
+      sharedAlphaAuthorityMajor: 3,
+    }),
+    /shared npm alpha authority belongs to v3/,
+  );
   assert.throws(
     () => alphaDistTagForPromotion({ ownsMajorAlphaTag: false, line: "" }),
-    /older-minor alpha publication requires a vN\.N release line/,
+    /alpha publication requires a vN\.N release line/,
   );
 });
 
@@ -8129,11 +8147,21 @@ test("strict alpha promotion requires a protected dev-to-alpha PR", async () => 
 
 test("strict alpha promotion uses provider transaction evidence when protection details are unreadable", async () => {
   let reviewState = "APPROVED";
+  let protectionReadStatus = 403;
   const pullRequestHeadSha = "b".repeat(40);
   const checkedRefs = [];
   const octokit = {
     rest: {
       repos: {
+        getBranchProtection: async () => {
+          const error = new Error(
+            protectionReadStatus === 404
+              ? "Not Found"
+              : "Resource not accessible by integration",
+          );
+          error.status = protectionReadStatus;
+          throw error;
+        },
         listPullRequestsAssociatedWithCommit: async () => ({
           data: [
             {
@@ -8186,20 +8214,23 @@ test("strict alpha promotion uses provider transaction evidence when protection 
     },
   };
 
-  const resolvedStatusCheck = await assertProviderEnforcedChannelTransaction({
-    octokit,
-    owner: "kungfu-systems",
-    repo: "buildchain",
-    sourceSha: SHA,
-    targetRef: "alpha/v1/v1.0",
-    requiredStatusCheck: "check",
-  });
-  assert.equal(resolvedStatusCheck, "check");
-  assert.deepEqual(checkedRefs, [pullRequestHeadSha]);
+  for (const status of [403, 404]) {
+    protectionReadStatus = status;
+    const resolvedStatusCheck = await assertProtectedChannel({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sourceSha: SHA,
+      targetRef: "alpha/v1/v1.0",
+      requiredStatusCheck: "check",
+    });
+    assert.equal(resolvedStatusCheck, "check");
+  }
+  assert.deepEqual(checkedRefs, [pullRequestHeadSha, pullRequestHeadSha]);
 
   reviewState = "CHANGES_REQUESTED";
   await assert.rejects(
-    assertProviderEnforcedChannelTransaction({
+    assertProtectedChannel({
       octokit,
       owner: "kungfu-systems",
       repo: "buildchain",

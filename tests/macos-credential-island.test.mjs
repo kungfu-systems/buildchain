@@ -296,9 +296,14 @@ test("cleanup restores search list and removes temporary material", () => {
 
 test("credential island bundle loads before validating runner inputs", () => {
   const root = path.resolve(import.meta.dirname, "..");
+  const bundlePath = path.join(
+    root,
+    "actions/macos-credential-island/dist/index.js",
+  );
+  const bundle = fs.readFileSync(bundlePath, "utf8");
   const result = spawnSync(
     process.execPath,
-    [path.join(root, "actions/macos-credential-island/dist/index.js")],
+    [bundlePath],
     {
       encoding: "utf8",
       env: {
@@ -313,6 +318,7 @@ test("credential island bundle loads before validating runner inputs", () => {
     /macOS credential island requires a macOS runner|Input required and not supplied: source-repository/u,
   );
   assert.doesNotMatch(output, /ReferenceError: module is not defined/u);
+  assert.doesNotMatch(bundle, /\b__dirname\b/u);
 });
 
 test("public action and workflow keep credentials outside the build matrix", () => {
@@ -347,6 +353,14 @@ test("public action and workflow keep credentials outside the build matrix", () 
   assert.ok(containerBuildJob);
   assert.match(action, /post: "dist\/cleanup\.js"/);
   assert.match(action, /certificate-p12-base64/);
+  for (const label of [
+    "create temporary keychain",
+    "unlock temporary keychain",
+    "import Developer ID PKCS#12",
+    "configure Developer ID key access",
+  ]) {
+    assert.match(implementation, new RegExp(`failureLabel: "${label}"`, "u"));
+  }
   for (const caller of [workflow, publicWorkflow, fixtureWorkflow]) {
     assert.match(caller, /permissions:\n  actions: read\n  contents: read/);
   }

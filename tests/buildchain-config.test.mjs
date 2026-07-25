@@ -434,6 +434,7 @@ schema = 1
 mode = "promote-existing-version"
 auth = "npm-token"
 dist_tag = "latest"
+shared_alpha_authority_major = 3
 package_set_order = "platforms-first-main-last"
 main_package = "@kungfu-tech/libnode"
 `,
@@ -444,6 +445,7 @@ main_package = "@kungfu-tech/libnode"
         mode: "promote-existing-version",
         auth: "npm-token",
         distTag: "latest",
+        sharedAlphaAuthorityMajor: 3,
         packageSetOrder: "platforms-first-main-last",
         mainPackage: "@kungfu-tech/libnode",
       });
@@ -607,6 +609,19 @@ test("buildchain.toml rejects dist-tag promotion without npm token auth", () => 
         },
       }),
     /requires publish\.auth = "npm-token"/,
+  );
+});
+
+test("buildchain.toml rejects an invalid shared alpha authority major", () => {
+  assert.throws(
+    () =>
+      normalizeBuildchainConfig({
+        schema: 1,
+        publish: {
+          shared_alpha_authority_major: 0,
+        },
+      }),
+    /shared_alpha_authority_major must be a positive integer/,
   );
 });
 
