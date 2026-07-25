@@ -1,0 +1,391 @@
+name: Buildchain Auditable Demo
+
+on:
+  workflow_call:
+    inputs:
+      buildchain-repository:
+        description: "Repository that owns this reusable workflow"
+        default: "kungfu-systems/buildchain"
+        type: string
+        required: false
+      source-ref:
+        description: "Optional immutable consumer source ref; defaults to the caller event SHA"
+        default: ""
+        type: string
+        required: false
+      source-artifact-name:
+        description: "Exact GitHub Artifact produced earlier in this caller run"
+        type: string
+        required: true
+      source-artifact-digest:
+        description: "Exact sha256 digest returned by upload-artifact for source-artifact-name"
+        type: string
+        required: true
+      adapter-path:
+        description: "Executable project-relative adapter; receives --artifact-root, --output, and --source-coordinate"
+        type: string
+        required: true
+      renderer-image:
+        description: "Immutable demo renderer image@sha256:digest coordinate"
+        type: string
+        required: true
+      render-media:
+        description: "Render the complete qualified scene after the required Gate passes"
+        default: false
+        type: boolean
+        required: false
+      artifact-retention-days:
+        default: 14
+        type: number
+        required: false
+      require-trusted-event:
+        default: true
+        type: boolean
+        required: false
+    outputs:
+      source-sha:
+        description: "Exact consumer source SHA evaluated by the Gate"
+        value: ${{ jobs.gate.outputs.source-sha }}
+      gate-artifact-name:
+        description: "Content-addressed qualified Gate bundle name"
+        value: ${{ jobs.gate.outputs.gate-artifact-name }}
+      gate-artifact-id:
+        description: "GitHub Artifact id for the qualified Gate bundle"
+        value: ${{ jobs.gate.outputs.gate-artifact-id }}
+      gate-artifact-digest:
+        description: "GitHub Artifact archive digest for the qualified Gate bundle"
+        value: ${{ jobs.gate.outputs.gate-artifact-digest }}
+      gate-artifact-url:
+        description: "GitHub Artifact URL for the qualified Gate bundle"
+        value: ${{ jobs.gate.outputs.gate-artifact-url }}
+      gate-root:
+        description: "Deterministic member root of the qualified Gate bundle"
+        value: ${{ jobs.gate.outputs.gate-root }}
+      media-artifact-name:
+        description: "Content-addressed rendered media bundle name; empty when render-media is false"
+        value: ${{ jobs.render.outputs.media-artifact-name }}
+      media-artifact-id:
+        description: "GitHub Artifact id for the rendered media bundle"
+        value: ${{ jobs.render.outputs.media-artifact-id }}
+      media-artifact-digest:
+        description: "GitHub Artifact archive digest for the rendered media bundle"
+        value: ${{ jobs.render.outputs.media-artifact-digest }}
+      media-artifact-url:
+        description: "GitHub Artifact URL for the rendered media bundle"
+        value: ${{ jobs.render.outputs.media-artifact-url }}
+      media-root:
+        description: "Deterministic member root of the rendered media bundle"
+        value: ${{ jobs.render.outputs.media-root }}
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: auditable-demo-${{ github.repository }}-${{ github.workflow }}-${{ github.ref }}-${{ inputs.source-artifact-digest }}
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    name: Auditable demo / required Gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    outputs:
+      source-sha: ${{ steps.source.outputs.source-sha }}
+      gate-artifact-name: ${{ steps.finalize.outputs.gate-artifact-name }}
+      gate-artifact-id: ${{ steps.upload.outputs.artifact-id }}
+      gate-artifact-digest: ${{ steps.upload.outputs.artifact-digest }}
+      gate-artifact-url: ${{ steps.upload.outputs.artifact-url }}
+      gate-root: ${{ steps.finalize.outputs.gate-root }}
+    steps:
+      - name: Evaluate event trust
+        id: trust
+        shell: bash
+        env:
+          REQUIRE_TRUSTED_EVENT: ${{ inputs.require-trusted-event }}
+          PR_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+          CALLER_REPOSITORY: ${{ github.repository }}
+        run: |
+          trusted=true
+          if [ "${REQUIRE_TRUSTED_EVENT}" = "true" ] && [ "${GITHUB_EVENT_NAME}" = "pull_request" ] && [ "${PR_HEAD_REPOSITORY}" != "${CALLER_REPOSITORY}" ]; then
+            trusted=false
+          fi
+          echo "trusted=${trusted}" >> "${GITHUB_OUTPUT}"
+          if [ "${trusted}" != "true" ]; then
+            echo "::error::Untrusted fork events cannot execute a consumer-owned demo adapter."
+            exit 1
+          fi
+
+      - name: Checkout exact consumer source
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ inputs.source-ref || github.sha }}
+          path: source
+          clean: true
+          persist-credentials: false
+
+      - name: Record exact consumer source
+        id: source
+        shell: bash
+        run: echo "source-sha=$(git -C source rev-parse HEAD)" >> "${GITHUB_OUTPUT}"
+
+      - name: Checkout exact Buildchain workflow runtime
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/runtime
+          clean: true
+          persist-credentials: false
+
+      - name: Resolve exact source artifact coordinate
+        id: source-artifact
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        env:
+          EXPECTED_NAME: ${{ inputs.source-artifact-name }}
+          EXPECTED_DIGEST: ${{ inputs.source-artifact-digest }}
+          SOURCE_SHA: ${{ steps.source.outputs.source-sha }}
+        with:
+          script: |
+            const fs = require("fs");
+            const expectedName = process.env.EXPECTED_NAME || "";
+            const expectedDigest = process.env.EXPECTED_DIGEST || "";
+            if (!expectedName || expectedName.length > 256 || /[\0\r\n]/.test(expectedName)) {
+              throw new Error("source artifact name is invalid");
+            }
+            if (!/^sha256:[0-9a-f]{64}$/.test(expectedDigest)) {
+              throw new Error("source artifact digest must be an exact sha256 coordinate");
+            }
+            const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId,
+              per_page: 100,
+            });
+            const matches = artifacts.filter((artifact) => artifact.name === expectedName && !artifact.expired);
+            if (matches.length !== 1) {
+              throw new Error(`expected exactly one live artifact named ${expectedName}, found ${matches.length}`);
+            }
+            const artifact = matches[0];
+            if (artifact.digest !== expectedDigest) {
+              throw new Error(`artifact digest mismatch: expected ${expectedDigest}, observed ${artifact.digest || "<empty>"}`);
+            }
+            fs.mkdirSync("gate-work", { recursive: true });
+            fs.mkdirSync("gate-diagnostics", { recursive: true });
+            fs.writeFileSync("gate-work/source-artifact.json", JSON.stringify({
+              schema: "buildchain.github-artifact-coordinate/v1",
+              repository: `${context.repo.owner}/${context.repo.repo}`,
+              runId: String(context.runId),
+              runAttempt: String(process.env.GITHUB_RUN_ATTEMPT || ""),
+              sourceSha: process.env.SOURCE_SHA,
+              id: String(artifact.id),
+              nodeId: artifact.node_id,
+              name: artifact.name,
+              digest: artifact.digest,
+              sizeInBytes: artifact.size_in_bytes,
+              createdAt: artifact.created_at,
+              expiresAt: artifact.expires_at,
+            }, null, 2) + "\n");
+            core.setOutput("artifact-id", String(artifact.id));
+
+      - name: Download exact source artifact
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: ${{ inputs.source-artifact-name }}
+          path: source-artifact
+
+      - name: Run checked-in consumer adapter
+        shell: bash
+        env:
+          ADAPTER_PATH: ${{ inputs.adapter-path }}
+        run: |
+          set -euo pipefail
+          node .buildchain/runtime/scripts/auditable-demo.mjs run-adapter \
+            --source-root "${GITHUB_WORKSPACE}/source" \
+            --artifact-root "${GITHUB_WORKSPACE}/source-artifact" \
+            --source-coordinate "${GITHUB_WORKSPACE}/gate-work/source-artifact.json" \
+            --adapter "${ADAPTER_PATH}" \
+            --output "${GITHUB_WORKSPACE}/gate-work/adapter-output" \
+            --diagnostics "${GITHUB_WORKSPACE}/gate-diagnostics"
+
+      - name: Prepare bounded renderer smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          node .buildchain/runtime/scripts/auditable-demo.mjs prepare-smoke \
+            --adapter-output "${GITHUB_WORKSPACE}/gate-work/adapter-output" \
+            --output "${GITHUB_WORKSPACE}/gate-work/smoke-input"
+
+      - name: Run immutable network-disabled renderer smoke
+        shell: bash
+        env:
+          RENDERER_IMAGE: ${{ inputs.renderer-image }}
+        run: |
+          set -euo pipefail
+          if ! [[ "${RENDERER_IMAGE}" =~ ^[a-z0-9][a-z0-9./_-]*@sha256:[0-9a-f]{64}$ ]]; then
+            echo "::error::renderer-image must be an immutable image@sha256:digest coordinate"
+            exit 1
+          fi
+          docker pull "${RENDERER_IMAGE}"
+          mkdir -p gate-work/smoke-render
+          chmod 0777 gate-work/smoke-render
+          docker run --rm --network none --read-only \
+            --tmpfs /tmp:rw,noexec,nosuid,size=512m \
+            --volume "${GITHUB_WORKSPACE}/gate-work/smoke-input:/input:ro" \
+            --volume "${GITHUB_WORKSPACE}/gate-work/smoke-render:/output" \
+            "${RENDERER_IMAGE}" \
+            demo-renderer \
+            --scene /input/scene.json \
+            --transcript /input/complete-transcript.txt \
+            --projection /input/public-projection.json \
+            --output /output \
+            --renderer-image "${RENDERER_IMAGE}"
+
+      - name: Finalize content-addressed Gate bundle
+        id: finalize
+        shell: bash
+        env:
+          ADAPTER_PATH: ${{ inputs.adapter-path }}
+          RENDERER_IMAGE: ${{ inputs.renderer-image }}
+          SOURCE_SHA: ${{ steps.source.outputs.source-sha }}
+        run: |
+          set -euo pipefail
+          node .buildchain/runtime/scripts/auditable-demo.mjs finalize-gate \
+            --adapter-output "${GITHUB_WORKSPACE}/gate-work/adapter-output" \
+            --smoke-input "${GITHUB_WORKSPACE}/gate-work/smoke-input" \
+            --smoke-output "${GITHUB_WORKSPACE}/gate-work/smoke-render" \
+            --source-coordinate "${GITHUB_WORKSPACE}/gate-work/source-artifact.json" \
+            --diagnostics "${GITHUB_WORKSPACE}/gate-diagnostics" \
+            --adapter "${ADAPTER_PATH}" \
+            --renderer-image "${RENDERER_IMAGE}" \
+            --source-sha "${SOURCE_SHA}" \
+            --output "${GITHUB_WORKSPACE}/gate-bundle" \
+            --github-output "${GITHUB_OUTPUT}"
+
+      - name: Upload content-addressed qualified Gate bundle
+        id: upload
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ steps.finalize.outputs.gate-artifact-name }}
+          path: gate-bundle
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+          compression-level: 0
+          overwrite: false
+
+      - name: Upload Gate diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: auditable-demo-gate-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            gate-diagnostics
+            gate-work/source-artifact.json
+          if-no-files-found: warn
+          retention-days: ${{ inputs.artifact-retention-days }}
+          compression-level: 0
+          overwrite: false
+
+  render:
+    name: Auditable demo / selective render
+    if: ${{ inputs.render-media }}
+    needs: gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    outputs:
+      media-artifact-name: ${{ steps.finalize.outputs.media-artifact-name }}
+      media-artifact-id: ${{ steps.upload.outputs.artifact-id }}
+      media-artifact-digest: ${{ steps.upload.outputs.artifact-digest }}
+      media-artifact-url: ${{ steps.upload.outputs.artifact-url }}
+      media-root: ${{ steps.finalize.outputs.media-root }}
+    steps:
+      - name: Checkout exact Buildchain workflow runtime
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/runtime
+          clean: true
+          persist-credentials: false
+
+      - name: Download exact passing Gate bundle
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: ${{ needs.gate.outputs.gate-artifact-name }}
+          path: gate-bundle
+
+      - name: Verify exact Gate bundle
+        shell: bash
+        env:
+          GATE_ROOT: ${{ needs.gate.outputs.gate-root }}
+          RENDERER_IMAGE: ${{ inputs.renderer-image }}
+          SOURCE_SHA: ${{ needs.gate.outputs.source-sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p render-diagnostics
+          node .buildchain/runtime/scripts/auditable-demo.mjs verify-gate \
+            --bundle "${GITHUB_WORKSPACE}/gate-bundle" \
+            --expected-root "${GATE_ROOT}" \
+            --renderer-image "${RENDERER_IMAGE}" \
+            --source-sha "${SOURCE_SHA}"
+
+      - name: Render qualified media with immutable network-disabled renderer
+        shell: bash
+        env:
+          RENDERER_IMAGE: ${{ inputs.renderer-image }}
+        run: |
+          set -euo pipefail
+          docker pull "${RENDERER_IMAGE}"
+          mkdir -p render-work
+          chmod 0777 render-work
+          docker run --rm --network none --read-only \
+            --tmpfs /tmp:rw,noexec,nosuid,size=1g \
+            --volume "${GITHUB_WORKSPACE}/gate-bundle:/input:ro" \
+            --volume "${GITHUB_WORKSPACE}/render-work:/output" \
+            "${RENDERER_IMAGE}" \
+            demo-renderer \
+            --scene /input/scene.json \
+            --transcript /input/complete-transcript.txt \
+            --projection /input/public-projection.json \
+            --output /output \
+            --renderer-image "${RENDERER_IMAGE}"
+
+      - name: Finalize content-addressed media bundle
+        id: finalize
+        shell: bash
+        env:
+          GATE_ROOT: ${{ needs.gate.outputs.gate-root }}
+          RENDERER_IMAGE: ${{ inputs.renderer-image }}
+          SOURCE_SHA: ${{ needs.gate.outputs.source-sha }}
+        run: |
+          set -euo pipefail
+          node .buildchain/runtime/scripts/auditable-demo.mjs finalize-media \
+            --gate-bundle "${GITHUB_WORKSPACE}/gate-bundle" \
+            --gate-root "${GATE_ROOT}" \
+            --render-output "${GITHUB_WORKSPACE}/render-work" \
+            --renderer-image "${RENDERER_IMAGE}" \
+            --source-sha "${SOURCE_SHA}" \
+            --output "${GITHUB_WORKSPACE}/media-bundle" \
+            --github-output "${GITHUB_OUTPUT}"
+
+      - name: Upload content-addressed media bundle
+        id: upload
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ steps.finalize.outputs.media-artifact-name }}
+          path: media-bundle
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+          compression-level: 0
+          overwrite: false
+
+      - name: Upload render diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: auditable-demo-render-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: render-diagnostics
+          if-no-files-found: warn
+          retention-days: ${{ inputs.artifact-retention-days }}
+          compression-level: 0
+          overwrite: false
