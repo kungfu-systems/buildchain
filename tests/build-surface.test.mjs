@@ -1288,7 +1288,7 @@ test("check workflow preserves verify mode and exposes source-check mode", () =>
   assert.match(verify, /lifecycle run verify/);
   assert.match(
     verify,
-    /BUILDCHAIN_MAJOR_VERSION_BOOTSTRAP: \$\{\{ \(\(github\.event_name == 'pull_request' && github\.base_ref == 'publish-gate\/major' && startsWith\(github\.head_ref, 'buildchain\/version-state\/publish-gate-major\/'\)\) \|\| \(github\.event_name == 'push' && github\.ref == 'refs\/heads\/publish-gate\/major'\)\) && 'true' \|\| 'false' \}\}/,
+    /BUILDCHAIN_MAJOR_VERSION_BOOTSTRAP: \$\{\{ \(\(github\.event_name == 'pull_request' && github\.base_ref == 'publish-gate\/major' && \(startsWith\(github\.head_ref, 'buildchain\/version-state\/publish-gate-major\/'\) \|\| github\.head_ref == 'release\/v2\/v2\.14'\)\) \|\| \(github\.event_name == 'push' && github\.ref == 'refs\/heads\/publish-gate\/major'\)\) && 'true' \|\| 'false' \}\}/,
   );
 });
 
