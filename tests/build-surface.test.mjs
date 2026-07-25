@@ -713,6 +713,10 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-passport-kfd-7-declaration-jsons: \$\{\{ inputs\.release-passport-kfd-7-declaration-jsons \}\}/);
   assert.match(workflow, /release-passport-kfd-agent-runtime-witness-jsons:/);
   assert.match(workflow, /release-passport-kfd-agent-runtime-witness-jsons: \$\{\{ inputs\.release-passport-kfd-agent-runtime-witness-jsons \}\}/);
+  assert.match(workflow, /release-passport-evidence-jsons:/);
+  assert.match(workflow, /release-passport-evidence-jsons: \$\{\{ inputs\.release-passport-evidence-jsons \}\}/);
+  assert.match(workflow, /release-passport-evidence-command:/);
+  assert.match(workflow, /release-passport-evidence-command: \$\{\{ inputs\.release-passport-evidence-command \}\}/);
   assert.match(workflow, /release-passport-buildchain-self-kfd:/);
   assert.match(workflow, /release-passport-buildchain-self-kfd: \$\{\{ inputs\.release-passport-buildchain-self-kfd \}\}/);
   assert.match(workflow, /DRY_RUN: \$\{\{ inputs\.dry-run \}\}/);
@@ -2152,6 +2156,8 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(action, /release-passport-kfd-3-artifact-verify-command:/);
   assert.match(action, /release-passport-kfd-7-declaration-jsons:/);
   assert.match(action, /release-passport-kfd-agent-runtime-witness-jsons:/);
+  assert.match(action, /release-passport-evidence-jsons:/);
+  assert.match(action, /release-passport-evidence-command:/);
   assert.match(action, /release-passport-buildchain-self-kfd:/);
   assert.match(implementation, /promoteOnlyReleaseCandidate/);
   assert.match(implementation, /reconciliationWorkspace/);
@@ -2162,6 +2168,8 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(implementation, /releasePassportKfd3ArtifactVerifyCommand/);
   assert.match(implementation, /releasePassportKfd7DeclarationJsons/);
   assert.match(implementation, /releasePassportKfdAgentRuntimeWitnessJsons/);
+  assert.match(implementation, /releasePassportEvidenceJsons/);
+  assert.match(implementation, /releasePassportEvidenceCommand/);
   assert.match(implementation, /releasePassportBuildchainSelfKfd/);
   assert.match(docs, /promote-only-release-candidate: "true"/);
   assert.match(docs, /release-passport-kfd-1-witness-jsons/);
@@ -2169,6 +2177,8 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(docs, /release-passport-kfd-3-prebuild-witness-jsons/);
   assert.match(docs, /release-passport-kfd-7-declaration-jsons/);
   assert.match(docs, /release-passport-kfd-agent-runtime-witness-jsons/);
+  assert.match(docs, /release-passport-evidence-jsons/);
+  assert.match(docs, /release-passport-evidence-command/);
 });
 
 test("buildchain ref promotion consumes PR-stage release candidate evidence", () => {

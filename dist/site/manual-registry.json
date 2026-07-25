@@ -36,7 +36,7 @@
       "title": "Release Passport protocol",
       "path": "docs/release-passport.md",
       "plane": "verify",
-      "digest": "sha256:8e4e005e2d885be06a9e552b471a2d306ddfd1c986589c8e72f17d518897bb36",
+      "digest": "sha256:6a0ca75008da285e9f33cb5eadc1a45d00024da98039d93c009ce63646e4e330",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",

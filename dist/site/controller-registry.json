@@ -1529,6 +1529,14 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "release-passport-evidence-command": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "release-passport-evidence-jsons": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "release-passport-impact-json": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -1639,7 +1647,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:a12be7c3b5d9b169e043e3eea34457ed79537a5bf5e5e2293d7d396bb12dd390"
+      "digest": "sha256:55f7eef0174ec8acdd2f3ec646182c59e265bc4d647f7166949cfa8fdf9ac283"
     },
     {
       "schemaVersion": 1,
@@ -1745,5 +1753,5 @@
       "digest": "sha256:9b9f9a2320c4349903d72ee46e329211b5538ed5ebebaa93559df4eafb835997"
     }
   ],
-  "digest": "sha256:f7a84779472081ce343376db94667deb369ff69ef92e5590c7197e8bbaeee1de"
+  "digest": "sha256:3e2d56d393cb2baf146d47f85acfbbee560bf750910d88eda059b68f2f0b6e3e"
 }

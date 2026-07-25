@@ -2060,6 +2060,60 @@ function generateBuildchainSelfKfdInputs({
   };
 }
 
+function generateReleaseEvidenceInputs({
+  command,
+  cwd,
+  sourceSha,
+  tag,
+  channel,
+  version,
+  deploymentCoordinate,
+  targetRef,
+  outputDir,
+}) {
+  if (!command) {
+    return [];
+  }
+  let parsed;
+  try {
+    const output = execSync(command, {
+      cwd,
+      env: {
+        ...process.env,
+        BUILDCHAIN_RELEASE_SOURCE_SHA: sourceSha,
+        BUILDCHAIN_RELEASE_TAG: tag,
+        BUILDCHAIN_RELEASE_CHANNEL: channel,
+        BUILDCHAIN_RELEASE_VERSION: version,
+        BUILDCHAIN_RELEASE_DEPLOYMENT_COORDINATE: deploymentCoordinate,
+        BUILDCHAIN_RELEASE_TARGET_REF: targetRef,
+        BUILDCHAIN_RELEASE_PASSPORT_OUTPUT_DIR: outputDir,
+      },
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    parsed = JSON.parse(output);
+  } catch (error) {
+    const message = error.stderr?.toString?.().trim() || error.message;
+    throw new Error(`release passport evidence command failed: ${message}`);
+  }
+  const files = Array.isArray(parsed) ? parsed : parsed?.files;
+  if (!Array.isArray(files) || files.length === 0) {
+    throw new Error(
+      "release passport evidence command must emit a JSON array or an object with a non-empty files array",
+    );
+  }
+  return files.map((file, index) => {
+    const normalized = String(file || "").trim();
+    const resolved = normalized ? resolveMaybeRelative(cwd, normalized) : "";
+    if (!resolved || !fs.existsSync(resolved) || !fs.statSync(resolved).isFile()) {
+      throw new Error(
+        `release passport evidence command files[${index}] does not exist: ${normalized || "<empty>"}`,
+      );
+    }
+    return resolved;
+  });
+}
+
 async function collectAndPersistReleasePassport({
   result,
   owner,
@@ -2082,6 +2136,8 @@ async function collectAndPersistReleasePassport({
   kfd3ArtifactVerifyCommand = "",
   kfd7DeclarationJsons = [],
   kfdAgentRuntimeWitnessJsons = [],
+  releaseEvidenceJsons = [],
+  releaseEvidenceCommand = "",
   buildchainSelfKfd = false,
   enabled = true,
   releaseCandidateValidation = undefined,
@@ -2114,6 +2170,17 @@ async function collectAndPersistReleasePassport({
   const internalVersion = stripTagPrefix(result.transaction.exact_tag || "");
   const publishedVersion = result.transaction.version || internalVersion;
   const publicReleaseTag = publicReleaseTagForTransaction(result.transaction);
+  const generatedReleaseEvidenceJsons = generateReleaseEvidenceInputs({
+    command: releaseEvidenceCommand,
+    cwd,
+    sourceSha: passportSourceSha,
+    tag: publicReleaseTag,
+    channel,
+    version: publishedVersion,
+    deploymentCoordinate: `github-release:${owner}/${repo}@${publicReleaseTag}`,
+    targetRef,
+    outputDir: resolvedOutputDir,
+  });
   const resolvedImpactJson = resolveReleaseImpactInput({
     cwd,
     impactJson,
@@ -2167,6 +2234,10 @@ async function collectAndPersistReleasePassport({
     kfd3ArtifactVerifyCommand,
     kfd7DeclarationJsons,
     kfdAgentRuntimeWitnessJsons,
+    releaseEvidenceJsons: [
+      ...releaseEvidenceJsons,
+      ...generatedReleaseEvidenceJsons,
+    ],
     buildSummaryJson,
     platformManifestJsons: platformManifests,
     distTagEvidenceJson: existingJsonObjectFile(result.distTagEvidencePath),
@@ -3410,6 +3481,8 @@ async function promoteBuildchainRefs({
   releasePassportKfd3ArtifactVerifyCommand = "",
   releasePassportKfd7DeclarationJsons = "",
   releasePassportKfdAgentRuntimeWitnessJsons = "",
+  releasePassportEvidenceJsons = "",
+  releasePassportEvidenceCommand = "",
   releasePassportBuildchainSelfKfd = false,
   promoteOnlyReleaseCandidate = false,
   releaseCandidatePassportPath = ".buildchain/artifacts/release-candidate-passport.json",
@@ -4720,6 +4793,8 @@ async function promoteBuildchainRefs({
       kfd3ArtifactVerifyCommand: releasePassportKfd3ArtifactVerifyCommand,
       kfd7DeclarationJsons: splitPathList(releasePassportKfd7DeclarationJsons),
       kfdAgentRuntimeWitnessJsons: splitPathList(releasePassportKfdAgentRuntimeWitnessJsons),
+      releaseEvidenceJsons: splitPathList(releasePassportEvidenceJsons),
+      releaseEvidenceCommand: releasePassportEvidenceCommand,
       buildchainSelfKfd: Boolean(releasePassportBuildchainSelfKfd),
       enabled: Boolean(releasePassport),
       releaseCandidateValidation,
@@ -5611,5 +5686,6 @@ export {
   stripTagPrefix,
   updateVersionStateContents,
   resolveReleaseImpactInput,
+  generateReleaseEvidenceInputs,
   validatePromotionReleaseCandidate,
 };
