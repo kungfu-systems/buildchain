@@ -169,6 +169,8 @@ test("stable route calls the hidden advanced workflow at the immutable v2.14.13 
     workflowPath: ".github/workflows/.release-candidate-promote.yml",
     forwardInternalInputs: true,
     unsupportedInputs: [
+      "github-release-payload-patterns",
+      "publication-commit-command",
       "standalone-binary-distribution",
       "publish-rematerialize-on-resume",
     ],

@@ -81,14 +81,15 @@
       ],
       "maturity": "stable",
       "counts": {
-        "manualCount": 4,
-        "pageCount": 16,
+        "manualCount": 5,
+        "pageCount": 17,
         "cliCommandCount": 4,
         "nodeApiCount": 5,
         "workflowCount": 4,
         "actionCount": 2
       },
       "manuals": [
+        "docs/auditable-demo.md",
         "docs/controller-evidence.md",
         "docs/release-candidate.md",
         "docs/lifecycle-protocol.md",
@@ -289,7 +290,7 @@
         "pageCount": 7,
         "cliCommandCount": 0,
         "nodeApiCount": 2,
-        "workflowCount": 34,
+        "workflowCount": 35,
         "actionCount": 1
       },
       "manuals": [
