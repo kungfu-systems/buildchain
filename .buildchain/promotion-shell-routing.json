@@ -13,6 +13,8 @@
     "workflowPath": ".github/workflows/.release-candidate-promote.yml",
     "forwardInternalInputs": true,
     "unsupportedInputs": [
+      "github-release-payload-patterns",
+      "publication-commit-command",
       "standalone-binary-distribution",
       "publish-rematerialize-on-resume"
     ]

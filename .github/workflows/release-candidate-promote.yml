@@ -829,8 +829,6 @@ jobs:
       github-release: ${{ inputs.github-release }}
       github-release-title: ${{ inputs.github-release-title }}
       github-release-notes: ${{ inputs.github-release-notes }}
-      github-release-payload-patterns: ${{ inputs.github-release-payload-patterns }}
-      publication-commit-command: ${{ inputs.publication-commit-command }}
       publication-commit-evidence-path: ${{ inputs.publication-commit-evidence-path }}
       release-activation-command: ${{ inputs.release-activation-command }}
       release-activation-receipt-set-path: ${{ inputs.release-activation-receipt-set-path }}
