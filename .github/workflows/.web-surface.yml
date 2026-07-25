@@ -92,6 +92,11 @@ on:
         default: false
         type: boolean
         required: false
+      production-source-sha:
+        description: "Optional exact reviewed consumer source SHA for a trusted workflow_dispatch production activation."
+        default: ""
+        type: string
+        required: false
       production-release-on-main:
         description: "Treat a reviewed release pull request merge into main as production approval."
         default: false
@@ -468,6 +473,8 @@ jobs:
           PRODUCTION_RELEASE_ON_MAIN: ${{ inputs.production-release-on-main }}
           PRODUCTION_RELEASE_LABEL: ${{ inputs.production-release-label }}
           PRODUCTION_RELEASE_HEAD_PREFIX: ${{ inputs.production-release-head-prefix }}
+          PRODUCTION_APPROVED: ${{ inputs.production-approved }}
+          PRODUCTION_SOURCE_SHA: ${{ inputs.production-source-sha }}
         with:
           script: |
             const defaults = {
@@ -483,6 +490,29 @@ jobs:
             const eventName = process.env.EVENT_NAME || "";
             const eventAction = process.env.EVENT_ACTION || "";
             const refName = process.env.REF_NAME || "";
+            const requestedSourceSha = (process.env.PRODUCTION_SOURCE_SHA || "").trim().toLowerCase();
+            if (requestedSourceSha) {
+              if (
+                eventName !== "workflow_dispatch" ||
+                process.env.PRODUCTION_APPROVED !== "true"
+              ) {
+                throw new Error("production-source-sha is admitted only by an explicitly approved workflow_dispatch");
+              }
+              if (!/^[0-9a-f]{40}$/.test(requestedSourceSha)) {
+                throw new Error("production-source-sha must be an exact 40-character Git SHA");
+              }
+              core.setOutput("production-release-approved", "true");
+              core.setOutput("production-release-source", "exact-reviewed-source");
+              core.setOutput("production-release-reason", "exact-reviewed-workflow-dispatch");
+              core.setOutput("production-source-sha", requestedSourceSha);
+              await core.summary
+                .addHeading("Buildchain exact production activation intent")
+                .addRaw(`- approved: \`true\`\n`)
+                .addRaw(`- source SHA: \`${requestedSourceSha}\`\n`)
+                .addRaw(`- environment: \`${{ inputs.production-environment }}\`\n`)
+                .write();
+              return;
+            }
             const mainPush = eventName === "push" && refName === "main";
             const closedPullRequest = eventName === "pull_request" && eventAction === "closed";
             if (!enabled || (!mainPush && !closedPullRequest)) {
@@ -778,6 +808,7 @@ jobs:
           BUILDCHAIN_SURFACE_CHANNEL: ${{ needs.apply-input-gate.outputs.web-surface-channel }}
           BUILDCHAIN_PREVIEW_ALIAS: ${{ needs.apply-input-gate.outputs.web-surface-alias }}
           BUILDCHAIN_WEB_SURFACE_ALIAS: ${{ needs.apply-input-gate.outputs.web-surface-alias }}
+          BUILDCHAIN_SITE_SOURCE_SHA: ${{ needs.release-intent.outputs.production-source-sha }}
         run: ${{ inputs.build-command }}
 
       - name: Run caller verify
@@ -789,6 +820,7 @@ jobs:
           BUILDCHAIN_SURFACE_CHANNEL: ${{ needs.apply-input-gate.outputs.web-surface-channel }}
           BUILDCHAIN_PREVIEW_ALIAS: ${{ needs.apply-input-gate.outputs.web-surface-alias }}
           BUILDCHAIN_WEB_SURFACE_ALIAS: ${{ needs.apply-input-gate.outputs.web-surface-alias }}
+          BUILDCHAIN_SITE_SOURCE_SHA: ${{ needs.release-intent.outputs.production-source-sha }}
         run: ${{ inputs.verify-command }}
 
       - name: Validate web-surface config
@@ -1714,6 +1746,7 @@ jobs:
       - name: Checkout caller repository
         uses: actions/checkout@v7.0.0
         with:
+          ref: ${{ needs.release-intent.outputs.production-source-sha }}
           persist-credentials: false
 
       - name: Checkout Buildchain runtime
