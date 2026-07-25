@@ -8,9 +8,16 @@
   "versionImpact": {
     "final": "minor",
     "source": "buildchain-version-state",
-    "rationale": "Buildchain v2.14 adds compatible release-governance, artifact-verification, and controller evidence contracts without changing existing consumer inputs."
+    "rationale": "Buildchain v3.0 converges compatible v2.14 release-governance, artifact-verification, and controller evidence contracts without changing existing consumer inputs."
   },
   "surfaceImpacts": [
+    {
+      "id": "auditable-demo-artifact-gate",
+      "impact": "minor",
+      "class": "workflow-contract",
+      "rationale": "A new consumer-neutral reusable workflow binds an exact same-run GitHub Artifact to a checked-in adapter, immutable network-disabled renderer evidence, a content-addressed required Gate bundle, and optional media rendered only from that exact passing Gate; the reusable build exports producer-owned id, name, digest, URL, and expiry coordinates for every resolved platform.",
+      "source": ".github/workflows/.auditable-demo.yml"
+    },
     {
       "id": "promotion-floating-ref-single-resolution",
       "impact": "patch",

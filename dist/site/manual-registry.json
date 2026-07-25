@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:c9eb92eb02601e1e36cb38d7df93097c582dec2b8dc34f769f58c30fc5190bbe",
+      "digest": "sha256:11ccb0a90cc0583a1a67da36609a8b07207f259815ac9ac0926c2ec8d7a8764a",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -17,6 +17,20 @@
       ],
       "maturity": "stable",
       "order": 10
+    },
+    {
+      "id": "auditable-demo",
+      "title": "Auditable demo artifact pipeline",
+      "path": "docs/auditable-demo.md",
+      "plane": "verify",
+      "digest": "sha256:cff9786d4de098c84ea7e494b523627d6431909f15c82940e2193dbda1ef10e9",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "consumer",
+        "agent"
+      ],
+      "maturity": "preview",
+      "order": 207
     },
     {
       "id": "install",
@@ -401,7 +415,7 @@
       "title": "Versioning",
       "path": "docs/versioning.md",
       "plane": "why",
-      "digest": "sha256:199ed8e83c988836f757c9a16b58ec441e0bd04a4f3465f21cc73ed7f530e610",
+      "digest": "sha256:8b15aca6f63e53e77df13eba5cc5ad14b6e27c62ec9affb324af53414ddab75d",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer"
