@@ -384,8 +384,8 @@ test("authoritative target registry detects default drift and constrains private
     },
   });
   assert.ok(publicTargets.includes("dev/v2/v2.14"));
-  assert.ok(publicTargets.includes("alpha/v2/v2.14"));
-  assert.ok(publicTargets.includes("release/v2/v2.14"));
+  assert.ok(publicTargets.includes("alpha/v3/v3.0"));
+  assert.ok(publicTargets.includes("release/v3/v3.0"));
   assert.ok(publicTargets.includes("publish-gate/major"));
   assert.ok(publicTargets.includes("dev/v2/v2.15"));
 
@@ -626,7 +626,7 @@ test("ruleset bypass rollout preserves rules and carries an exact inverse", () =
 test("ruleset policy rollout compiles the exact target descriptor with rollback", () => {
   const targetPolicy = resolveGithubGovernanceTargetPolicy({
     repository: "kungfu-systems/buildchain",
-    targetRef: "alpha/v2/v2.14",
+    targetRef: "alpha/v3/v3.0",
   });
   assert.deepEqual(targetPolicy.requiredCheckBindings, [
     { context: "check", appId: 15368 },
@@ -640,7 +640,7 @@ test("ruleset policy rollout compiles the exact target descriptor with rollback"
     bypassMode: "always",
   }]);
   const before = normalizeGithubRulesetSnapshot({
-    name: "Buildchain alpha publication authority: alpha/v2/v2.14",
+    name: "Buildchain alpha publication authority: alpha/v3/v3.0",
     target: "branch",
     enforcement: "active",
     bypass_actors: [{
@@ -650,7 +650,7 @@ test("ruleset policy rollout compiles the exact target descriptor with rollback"
     }],
     conditions: {
       ref_name: {
-        include: ["refs/heads/alpha/v2/v2.14"],
+        include: ["refs/heads/alpha/v3/v3.0"],
         exclude: [],
       },
     },
@@ -683,7 +683,7 @@ test("ruleset policy rollout compiles the exact target descriptor with rollback"
   });
   const plan = createGithubRulesetGovernanceRolloutPlan({
     repository: "kungfu-systems/buildchain",
-    targetRef: "alpha/v2/v2.14",
+    targetRef: "alpha/v3/v3.0",
     rulesetId: 19518955,
     inventory: before,
     rollbackSnapshot: before,
@@ -797,7 +797,7 @@ test("ruleset policy rollout compiles the exact target descriptor with rollback"
 
   const installedAppPlan = createGithubRulesetGovernanceRolloutPlan({
     repository: "kungfu-systems/buildchain",
-    targetRef: "alpha/v2/v2.14",
+    targetRef: "alpha/v3/v3.0",
     rulesetId: 19518955,
     inventory: before,
     rollbackSnapshot: before,
