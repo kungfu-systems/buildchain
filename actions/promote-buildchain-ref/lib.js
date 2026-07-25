@@ -286,15 +286,15 @@ function updateVersionStateContents(files, version) {
     .filter((file) => file.changed);
 }
 
-function alignMajorBootstrapReleaseImpact(changedFiles, { version, line } = {}) {
+function alignMajorBootstrapReleaseImpact(changedFiles, { version } = {}) {
   if (!changedFiles.some((file) => file.path === ".buildchain/release-impact.json")) {
     return changedFiles;
   }
   const versionMatch = String(version || "").match(/^(\d+)\.(\d+)\./);
   const expectedLine = versionMatch ? `v${versionMatch[1]}.${versionMatch[2]}` : "";
-  if (!expectedLine || line !== expectedLine) {
+  if (!expectedLine) {
     throw new Error(
-      `Major bootstrap release impact line must match version ${version}: expected ${expectedLine || "<invalid-version>"}, got ${line || "<empty>"}`,
+      `Major bootstrap release impact line requires an exact semantic version; got ${version || "<empty>"}`,
     );
   }
 
@@ -314,7 +314,7 @@ function alignMajorBootstrapReleaseImpact(changedFiles, { version, line } = {}) 
         ...impact,
         release: {
           ...impact.release,
-          line,
+          line: expectedLine,
         },
       }),
     };
@@ -5089,7 +5089,6 @@ async function promoteBuildchainRefs({
     if (rule.channel === "major" && changedFiles.length > 0) {
       changedFiles = alignMajorBootstrapReleaseImpact(changedFiles, {
         version,
-        line: rule.releasePrefix,
       });
     }
     const changedPaths = changedFiles.map((file) => file.path);
