@@ -1258,6 +1258,10 @@ test("check workflow preserves verify mode and exposes source-check mode", () =>
     path.join(root, ".github/workflows/verify.yml"),
     "utf8",
   );
+  const releaseVerify = fs.readFileSync(
+    path.join(root, ".github/workflows/release-verify.yml"),
+    "utf8",
+  );
 
   assert.match(reusable, /workflow_call:/);
   assert.match(reusable, /mode:/);
@@ -1289,6 +1293,10 @@ test("check workflow preserves verify mode and exposes source-check mode", () =>
   assert.match(
     verify,
     /BUILDCHAIN_MAJOR_VERSION_BOOTSTRAP: \$\{\{ \(\(github\.event_name == 'pull_request' && github\.base_ref == 'publish-gate\/major' && \(startsWith\(github\.head_ref, 'buildchain\/version-state\/publish-gate-major\/'\) \|\| github\.head_ref == 'release\/v2\/v2\.14'\)\) \|\| \(github\.event_name == 'push' && github\.ref == 'refs\/heads\/publish-gate\/major'\)\) && 'true' \|\| 'false' \}\}/,
+  );
+  assert.match(
+    releaseVerify,
+    /if: \$\{\{ github\.base_ref != 'publish-gate\/major' \|\| github\.head_ref != 'release\/v2\/v2\.14' \}\}/,
   );
 });
 
