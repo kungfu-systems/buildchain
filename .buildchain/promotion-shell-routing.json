@@ -17,8 +17,13 @@
       "publication-commit-command",
       "publication-commit-evidence-path",
       "release-activation-command",
+      "release-activation-receipt-set-path",
+      "release-passport-evidence-command",
+      "release-passport-evidence-path",
       "standalone-binary-distribution",
-      "publish-rematerialize-on-resume"
+      "publish-rematerialize-on-resume",
+      "publish-transaction-override",
+      "github-governance-receipt-json"
     ]
   }
 }

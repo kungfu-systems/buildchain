@@ -173,8 +173,13 @@ test("stable route calls the hidden advanced workflow at the immutable v2.14.13 
       "publication-commit-command",
       "publication-commit-evidence-path",
       "release-activation-command",
+      "release-activation-receipt-set-path",
+      "release-passport-evidence-command",
+      "release-passport-evidence-path",
       "standalone-binary-distribution",
       "publish-rematerialize-on-resume",
+      "publish-transaction-override",
+      "github-governance-receipt-json",
     ],
   });
   assert.match(generated, /STABLE_SHELL_REF: v2/);
@@ -196,10 +201,9 @@ test("stable route forwards only inputs supported by its immutable workflow shel
     if (shellRouting.stable.unsupportedInputs.includes(name)) continue;
     assert.match(stableBlock, new RegExp(`^      ${name}:`, "m"));
   }
-  assert.doesNotMatch(stableBlock, /^      publication-commit-evidence-path:/m);
-  assert.doesNotMatch(stableBlock, /^      release-activation-command:/m);
-  assert.doesNotMatch(stableBlock, /^      standalone-binary-distribution:/m);
-  assert.doesNotMatch(stableBlock, /^      publish-rematerialize-on-resume:/m);
+  for (const name of shellRouting.stable.unsupportedInputs) {
+    assert.doesNotMatch(stableBlock, new RegExp(`^      ${name}:`, "m"));
+  }
   assert.match(
     stableBlock,
     /^      promotion-shell-ref: \$\{\{ needs\.resolve-promotion\.outputs\.shell-call-ref \}\}$/m,
