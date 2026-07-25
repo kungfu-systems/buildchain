@@ -6,6 +6,7 @@ import {
 } from "../packages/core/public-surface-audit.js";
 import { evaluateBuildchainContractLock } from "../packages/core/buildchain-contract.js";
 import {
+  canAdmitSelfDogfoodLockEvaluation,
   contractForSelfDogfoodEvaluation,
   resolveSelfDogfoodMajor,
 } from "../packages/core/self-dogfood-version.js";
@@ -164,7 +165,12 @@ const selfDogfoodAlphaEvaluation = evaluateBuildchainContractLock({
   runtimeSha: "current-development-contract",
   runtimeClass: "alpha",
 });
-if (!selfDogfoodAlphaEvaluation.compatible) {
+if (
+  !canAdmitSelfDogfoodLockEvaluation({
+    evaluation: selfDogfoodAlphaEvaluation,
+    majorResolution: selfDogfoodMajorResolution,
+  })
+) {
   throw new Error("Buildchain self-dogfood alpha lock requires review after a breaking contract change");
 }
 for (const requiredSnippet of [
