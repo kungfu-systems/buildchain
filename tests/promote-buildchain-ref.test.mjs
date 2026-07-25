@@ -7030,6 +7030,9 @@ process.exitCode = 9;
   });
   const repoUpdates = [];
   octokit.rest.repos = {
+    get: async () => ({
+      data: { default_branch: "dev/v2/v2.0" },
+    }),
     update: async (input) => {
       repoUpdates.push(input);
       return {};
@@ -7148,13 +7151,16 @@ process.exitCode = 9;
   assert.equal(refs.get("tags/v2-alpha"), nextAlphaSha);
   assert.equal(refs.has("tags/v2.0.1"), false);
   assert.equal(fs.existsSync(path.join(cwd, "unexpected-publish.txt")), false);
-  assert.deepEqual(repoUpdates, [
+  assert.deepEqual(repoUpdates, []);
+  assert.deepEqual(
+    result.updates.find(
+      (update) => update.action === "existing-default-branch",
+    ),
     {
-      owner: "kungfu-systems",
-      repo: "buildchain",
-      default_branch: "dev/v2/v2.0",
+      ref: "dev/v2/v2.0",
+      action: "existing-default-branch",
     },
-  ]);
+  );
 
   for (const ref of [
     "heads/alpha/v2/v2.0",

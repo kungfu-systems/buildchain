@@ -4466,6 +4466,16 @@ async function promoteBuildchainRefs({
       updates.push({ ref: branch, action: "dry-run-default-branch" });
       return;
     }
+    if (typeof octokit.rest.repos?.get === "function") {
+      const { data: repository } = await octokit.rest.repos.get({
+        owner,
+        repo,
+      });
+      if (repository.default_branch === branch) {
+        updates.push({ ref: branch, action: "existing-default-branch" });
+        return;
+      }
+    }
     if (typeof octokit.rest.repos?.update !== "function") {
       updates.push({ ref: branch, action: "skipped-default-branch-update-unavailable" });
       return;
