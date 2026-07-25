@@ -61,7 +61,9 @@ Buildchain's reusable build workflow exposes `artifact-coordinates-json` after
 all resolved platform uploads complete. That producer-owned output binds every
 platform id to its same-run artifact id, name, upload digest, URL, and expiry,
 so a consumer that delegates its build to Buildchain can pass an exact
-coordinate without rediscovering authority in a downstream job.
+coordinate without rediscovering authority in a downstream job. The build
+aggregate fails closed if any declared platform lacks one live, digest-bearing
+artifact coordinate.
 
 The adapter runs with a disposable Home/XDG/npm prefix, a minimal environment,
 and no GitHub, npm, or cloud credential injection. It must be a regular,
