@@ -4,10 +4,10 @@
   "product": {
     "name": "Buildchain",
     "package": "@kungfu-tech/buildchain",
-    "version": "2.14.18",
+    "version": "3.0.0",
     "repository": "https://github.com/kungfu-systems/buildchain"
   },
-  "majorLine": "v2",
+  "majorLine": "v3",
   "compatibilityPolicy": "major-compatible",
   "surfaces": [
     {
@@ -17,7 +17,7 @@
       "id": "reusable-build",
       "kind": "workflow",
       "path": ".github/workflows/.build.yml",
-      "publicRef": "kungfu-systems/buildchain/.github/workflows/.build.yml@v2",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/.build.yml@v3",
       "requiredInputs": [],
       "requiredOutputs": [
         "buildchain-runtime-sha",
@@ -59,7 +59,7 @@
       "id": "channel-build-router",
       "kind": "workflow",
       "path": ".github/workflows/build.yml",
-      "publicRef": "kungfu-systems/buildchain/.github/workflows/build.yml@v2",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/build.yml@v3",
       "requiredInputs": [],
       "requiredOutputs": [
         "buildchain-channel",
@@ -98,7 +98,7 @@
       "id": "release-candidate-promote",
       "kind": "workflow",
       "path": ".github/workflows/release-candidate-promote.yml",
-      "publicRef": "kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v2",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v3",
       "requiredInputs": [
         "channel"
       ],
@@ -109,8 +109,8 @@
       ],
       "breakingDefaults": {
         "channelDefault": "auto",
-        "alphaShellDefault": "v2-alpha",
-        "stableShellDefault": "v2",
+        "alphaShellDefault": "v3-alpha",
+        "stableShellDefault": "v3",
         "promoteOnlyReleaseCandidate": true,
         "requiredStatusCheck": "check / check"
       },
@@ -169,7 +169,7 @@
         "publish-gate source locks are created by the wrapper and enforced by promote-buildchain-ref before publish side effects",
         "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes"
       ],
-      "breakingDigest": "sha256:1f476fb9a4854b362c4b24cef89a3c7675d7d63baf3bc828d7b8ae7d2787cead",
+      "breakingDigest": "sha256:acd401cfc46450115a3763fd4b679d85f185e8757ebd52510d6262e1533df4cf",
       "auditDigest": "sha256:fb1e6e05c16df3e357a9b47d2c8335b99e23b2ccf8d92432b0cbc655fa9196a1"
     },
     {
@@ -179,7 +179,7 @@
       "id": "advanced-release-candidate-promote",
       "kind": "workflow",
       "path": ".github/workflows/.release-candidate-promote.yml",
-      "publicRef": "kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v2",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v3",
       "requiredInputs": [
         "channel"
       ],
@@ -221,7 +221,7 @@
       "id": "web-surface",
       "kind": "workflow",
       "path": ".github/workflows/.web-surface.yml",
-      "publicRef": "kungfu-systems/buildchain/.github/workflows/.web-surface.yml@v2",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/.web-surface.yml@v3",
       "requiredInputs": [],
       "requiredOutputs": [
         "buildchain-runtime-sha",
@@ -265,7 +265,7 @@
       "id": "promote-buildchain-ref-action",
       "kind": "action",
       "path": "actions/promote-buildchain-ref/action.yml",
-      "publicRef": "kungfu-systems/buildchain/actions/promote-buildchain-ref@v2",
+      "publicRef": "kungfu-systems/buildchain/actions/promote-buildchain-ref@v3",
       "requiredInputs": [
         "token",
         "sha",
@@ -336,7 +336,7 @@
       "id": "macos-credential-island-action",
       "kind": "action",
       "path": "actions/macos-credential-island/action.yml",
-      "publicRef": "kungfu-systems/buildchain/actions/macos-credential-island@v2",
+      "publicRef": "kungfu-systems/buildchain/actions/macos-credential-island@v3",
       "requiredInputs": [
         "input-root",
         "output-root",
@@ -392,7 +392,7 @@
       "id": "report-buildchain-issue-action",
       "kind": "action",
       "path": "actions/report-buildchain-issue/action.yml",
-      "publicRef": "kungfu-systems/buildchain/actions/report-buildchain-issue@v2",
+      "publicRef": "kungfu-systems/buildchain/actions/report-buildchain-issue@v3",
       "requiredInputs": [
         "token"
       ],
@@ -3130,6 +3130,6 @@
       "auditDigest": "sha256:e07a5db56a71bd0ac79c81f12619938055361bf0a0ed8e5891f88ca1c51f1c93"
     }
   ],
-  "compatibilityDigest": "sha256:df13c3b8066068925ce847b31002201d533034d10d342542422db3a665c10475",
-  "contractDigest": "sha256:6d24516ae4d901beda90ddad12dd0f88e2fa9a49dbf17282177a06c686e5260a"
+  "compatibilityDigest": "sha256:199fd83a7da33b0f654692ca973b33155e376ed50f0ce1f5864e1b6b18e0500a",
+  "contractDigest": "sha256:914720131f07664cd187a1033f357c4952ef1008f5553cb6b285a75f786a7fbc"
 }
