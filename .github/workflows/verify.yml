@@ -57,7 +57,7 @@ jobs:
           --summary-path .buildchain/artifacts/check-install-summary.json
       - name: Run declared verify lifecycle
         env:
-          BUILDCHAIN_MAJOR_VERSION_BOOTSTRAP: ${{ github.event_name == 'pull_request' && github.base_ref == 'publish-gate/major' && startsWith(github.head_ref, 'buildchain/version-state/publish-gate-major/') && 'true' || 'false' }}
+          BUILDCHAIN_MAJOR_VERSION_BOOTSTRAP: ${{ ((github.event_name == 'pull_request' && github.base_ref == 'publish-gate/major' && startsWith(github.head_ref, 'buildchain/version-state/publish-gate-major/')) || (github.event_name == 'push' && github.ref == 'refs/heads/publish-gate/major')) && 'true' || 'false' }}
         run: >-
           node .buildchain/runtime/bin/buildchain.mjs lifecycle run verify
           --cwd .
