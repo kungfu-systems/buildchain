@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "6d778d2a4d04a1b93ed21622719e08b3fa1e149af2941e09675c66582a3ebcdd",
+    "sha256": "92ba5a2c87d457897cc984eacb0aa4f0579ed25170796c1cccf3505fc22c1274",
     "summary": {
       "cliCommandCount": 97,
       "workflowCount": 55,
@@ -228,7 +228,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "6d778d2a4d04a1b93ed21622719e08b3fa1e149af2941e09675c66582a3ebcdd",
+      "sha256": "92ba5a2c87d457897cc984eacb0aa4f0579ed25170796c1cccf3505fc22c1274",
       "summary": {
         "cliCommandCount": 97,
         "workflowCount": 55,
@@ -1159,6 +1159,30 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./github-artifact-attestation"
+        },
+        {
+          "id": "export:./artifact-signing",
+          "name": "@kungfu-tech/buildchain/artifact-signing",
+          "kind": "package-export",
+          "sourcePath": "packages/core/artifact-signing.js",
+          "evidencePath": "packages/core/artifact-signing.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./artifact-signing"
+        },
+        {
+          "id": "export:./detached-artifact-signature",
+          "name": "@kungfu-tech/buildchain/detached-artifact-signature",
+          "kind": "package-export",
+          "sourcePath": "packages/core/detached-artifact-signature.js",
+          "evidencePath": "packages/core/detached-artifact-signature.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./detached-artifact-signature"
         },
         {
           "id": "export:./anchored-version-material",
@@ -5644,6 +5668,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 360
+    "publicSurfaceCount": 362
   }
 }

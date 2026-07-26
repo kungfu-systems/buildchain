@@ -407,6 +407,9 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /artifact-name:/);
   assert.match(workflow, /artifact-name-template:/);
   assert.match(workflow, /expected-artifacts-json:/);
+  assert.equal((workflow.match(/Seal declared artifact signing requests/g) || []).length, 2);
+  assert.equal((workflow.match(/Publish Buildchain-owned artifact signing request/g) || []).length, 2);
+  assert.match(workflow, /signing-request-\$\{\{ matrix\.platform\.id \}\}-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/);
   assert.match(workflow, /process-summary-path:/);
   assert.match(workflow, /sample-process-tree:/);
   assert.match(workflow, /process-sample-interval-ms:/);

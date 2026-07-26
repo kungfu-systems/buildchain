@@ -360,7 +360,7 @@
       "title": "Reusable build surface",
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
-      "digest": "sha256:5d46d0f5e6e03541c187ffea154dcce703ef78e59d16bd0e4fa7c175da940480",
+      "digest": "sha256:adc76169ef79330c993a0e2ae8123ff6d6a953ca88c17edbd7fbfbfba397c9a6",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -387,7 +387,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:a77c2bb1d2245e1ee2318f650ad64ada6c8cdd3292a62a028e3ccc7517fb4e12",
+      "digest": "sha256:c3efafc2601f526c5884a8d14f62c2721bfb582a20d2abea513da954d7897540",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",

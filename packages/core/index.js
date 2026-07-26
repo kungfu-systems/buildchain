@@ -263,6 +263,25 @@ export {
 } from "./artifact-verification-envelope.js";
 
 export {
+  ARTIFACT_SIGNING_AUTHORITY_CONTRACT,
+  ARTIFACT_SIGNING_RECEIPT_CONTRACT,
+  ARTIFACT_SIGNING_REQUEST_CONTRACT,
+  artifactSigningDigest,
+  createArtifactSigningReceipt,
+  createArtifactSigningRequest,
+  listArtifactSigningProfiles,
+  resolveArtifactSigningProfile,
+  validateArtifactSigningReceipt,
+  validateArtifactSigningRequest,
+} from "./artifact-signing.js";
+
+export {
+  DETACHED_ARTIFACT_SIGNATURE_CONTRACT,
+  signDetachedArtifactRequest,
+  verifyDetachedArtifactSignature,
+} from "./detached-artifact-signature.js";
+
+export {
   BUILDCHAIN_CONTRACT_LOCK,
   BUILDCHAIN_RUNTIME_CONTRACT_WORLD,
   contractSummary,

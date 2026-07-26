@@ -17,7 +17,7 @@ import {
   createCredentialArtifactManifest,
   decodeBase64Secret,
   entitlementsForProfile,
-  loadCredentialInput,
+  loadMacosSigningInput,
   parseIdentityListing,
   parseNotarySubmission,
   requirePattern,
@@ -40,13 +40,7 @@ function input(name, required = true) {
 function runFile(
   command,
   args,
-  {
-    cwd,
-    env,
-    redact = false,
-    stdoutOnly = false,
-    failureLabel = "",
-  } = {},
+  { cwd, env, redact = false, stdoutOnly = false, failureLabel = "" } = {},
 ) {
   const result = spawnSync(command, args, {
     cwd,
@@ -253,10 +247,12 @@ async function main() {
   const entitlements = entitlementsForProfile(
     input("entitlements-profile", false) || "electron-desktop-v1",
   );
-  const sealed = loadCredentialInput(inputRoot, {
+  const sealed = loadMacosSigningInput(inputRoot, {
     repository: sourceRepository,
     sourceSha,
     sourceTreeSha,
+    runtimeSha,
+    platformId: input("platform-id", false),
     bundleId: expectedBundleId,
   });
   const artifactStem = safeArtifactStem(
