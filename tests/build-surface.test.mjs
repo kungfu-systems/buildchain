@@ -1139,7 +1139,10 @@ test("declared merge queue governance reconciles automatically on dev changes", 
   );
   assert.match(workflow, /push:\n\s+branches:\n\s+- dev\/v\*\/v\*/);
   assert.match(workflow, /\.buildchain\/buildchain\.toml/);
-  assert.match(workflow, /BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token/);
+  assert.match(
+    workflow,
+    /BUILDCHAIN_GOVERNANCE_TOKEN \|\| secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token/,
+  );
   assert.match(workflow, /--from-config/);
   assert.match(workflow, /github\.event_name == 'push' \|\| inputs\.apply/);
 });
