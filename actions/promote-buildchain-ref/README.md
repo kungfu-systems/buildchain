@@ -95,6 +95,11 @@ tags until those provider-enforced transactions land. Reusable wrapper callers
 should allow `checks: write` so the generated checks are owned by GitHub Actions
 and match the managed branch protection rule.
 
+If the governed promotion runtime itself needs a recovery fix on a protected
+release line, carry it through an exact line-scoped
+`fix/release-line-vN-vN.M-finalization-recovery` PR. This keeps the recovery
+source machine-verifiable without weakening normal alpha-to-release lineage.
+
 Stable promotion also protects concurrent development work. The reusable
 wrapper checks out the exact current `dev/vN/vN.M` head as a reconciliation
 workspace. If next-alpha bookkeeping cannot fast-forward that branch, the
