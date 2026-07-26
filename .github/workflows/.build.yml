@@ -1254,6 +1254,7 @@ jobs:
       - name: Download Buildchain runtime checkout bootstrap
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ inputs.artifact-name }}-runtime-checkout-bootstrap-${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           path: .buildchain/runtime-bootstrap
 
@@ -1578,6 +1579,7 @@ jobs:
       - name: Download Buildchain runtime checkout bootstrap
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ inputs.artifact-name }}-runtime-checkout-bootstrap-${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           path: .buildchain/runtime-bootstrap
 
@@ -1855,6 +1857,7 @@ jobs:
       - name: Download artifact relay manifest
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ inputs.artifact-name }}-relay-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           path: .buildchain/downloaded-relay-manifests/${{ matrix.platform.id }}
 
@@ -1955,6 +1958,7 @@ jobs:
       - name: Download immutable credential-island runtime
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ inputs.artifact-name }}-credential-island-runtime-${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           path: .buildchain/runtime/actions/macos-credential-island
 
@@ -1962,6 +1966,7 @@ jobs:
         if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: unsigned-app.zip
           path: .buildchain/credential-island-input
 
@@ -1969,6 +1974,7 @@ jobs:
         if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ inputs.artifact-name }}-credential-island-input-manifest-${{ inputs.credential-island-macos-platform-id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           path: .buildchain/credential-island-input
 
@@ -1976,6 +1982,7 @@ jobs:
         if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' }}
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ inputs.artifact-name }}-credential-island-input-${{ inputs.credential-island-macos-platform-id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           path: .buildchain/credential-island-input
 
@@ -2108,6 +2115,7 @@ jobs:
       - name: Download platform manifests
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           pattern: ${{ inputs.artifact-name }}-manifest-*-${{ needs.resolve-source.outputs.publish-source-sha }}
           path: .buildchain/downloaded-manifests
           merge-multiple: false
@@ -2115,6 +2123,7 @@ jobs:
       - name: Download platform diagnostics
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           pattern: ${{ inputs.artifact-name }}-diagnostics-*-${{ needs.resolve-source.outputs.publish-source-sha }}
           path: .buildchain/downloaded-diagnostics
           merge-multiple: false
@@ -2122,12 +2131,14 @@ jobs:
       - name: Download build controller plan for release-candidate passport
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ needs.controller-plan.outputs.controller-plan-artifact }}
           path: .buildchain/controller
 
       - name: Download anchored version material evidence
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ needs.anchored-release-preflight.outputs.evidence-artifact }}
           path: .buildchain/anchored-version-material
 
@@ -2316,6 +2327,7 @@ jobs:
       - name: Download build controller plan
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ needs.controller-plan.outputs.controller-plan-artifact }}
           path: .buildchain/controller
 
@@ -2323,6 +2335,7 @@ jobs:
         if: ${{ needs.summarize.result == 'success' }}
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ needs.summarize.outputs.summary-artifact-name }}
           path: .buildchain/controller/evidence
 
@@ -2330,6 +2343,7 @@ jobs:
         if: ${{ needs.anchored-release-preflight.result == 'success' }}
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ needs.anchored-release-preflight.outputs.evidence-artifact }}
           path: .buildchain/controller/evidence
 
