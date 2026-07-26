@@ -1542,6 +1542,13 @@ async function main(argv = process.argv.slice(2)) {
         process.stdout.write(`buildchain log summary: ${summary.eventCount} events\n`);
         process.stdout.write(`sources: ${Object.keys(summary.sources).join(", ") || "none"}\n`);
         process.stdout.write(`phases: ${Object.keys(summary.phases).join(", ") || "none"}\n`);
+        if (summary.controlPlane.eventCount > 0) {
+          process.stdout.write(
+            `control plane: ${summary.controlPlane.eventCount} events, ` +
+            `incident reuse ${summary.controlPlane.workflowFriction.incidentReuseRate ?? "n/a"}, ` +
+            `release-intent suppression ${summary.controlPlane.releaseIntent.suppressionRate ?? "n/a"}\n`,
+          );
+        }
       }
       return;
     }

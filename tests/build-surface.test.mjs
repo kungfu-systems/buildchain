@@ -36,6 +36,7 @@ import {
   compactProductionReleasePrSummary,
   createProductionReleasePrHandoff,
   openProductionReleasePr,
+  recordProductionReleasePrOutcome,
   releaseBranchName,
   readStagingReleasePrSummary,
   renderProductionReleasePrBody,
@@ -1706,6 +1707,28 @@ test("web-surface production release PR suppresses a duplicate for a merged rele
   }
 });
 
+test("web-surface release-intent suppression records a durable control-plane outcome", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-release-pr-suppression-event-"));
+  const logPath = path.join(workspace, ".buildchain", "logs", "events.jsonl");
+  recordProductionReleasePrOutcome({
+    action: "suppressed-merged-release-pr",
+    status: "suppressed-merged-release-pr",
+    suppressionReason: "source-commit-already-has-qualifying-merged-release-pr",
+    repository: "kungfu-systems/site-libkungfu-dev",
+    productionReleaseChannel: "production",
+    pullNumber: 42,
+    sourceSha: "abcdef1234567890abcdef1234567890abcdef12",
+  }, { BUILDCHAIN_LOG_PATH: logPath });
+
+  const event = JSON.parse(fs.readFileSync(logPath, "utf8").trim());
+  assert.equal(event.event, "control-plane.release-intent.outcome");
+  assert.equal(event.attributes.outcome, "suppressed");
+  assert.equal(
+    event.attributes.reason,
+    "source-commit-already-has-qualifying-merged-release-pr",
+  );
+});
+
 test("web-surface production release PR permission-denied is a non-fatal handoff", async () => {
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-release-pr-permission-"));
   const previousCwd = process.cwd();
@@ -1714,6 +1737,7 @@ test("web-surface production release PR permission-denied is a non-fatal handoff
   const summaryPath = path.join(workspace, "staging-summary.json");
   const outputPath = path.join(workspace, "github-output.txt");
   const stepSummaryPath = path.join(workspace, "step-summary.md");
+  const logPath = path.join(workspace, ".buildchain", "logs", "events.jsonl");
   fs.writeFileSync(
     summaryPath,
     `${JSON.stringify({
@@ -1762,6 +1786,7 @@ test("web-surface production release PR permission-denied is a non-fatal handoff
       FAIL_ON_RELEASE_PR_ERROR: "false",
       PRODUCTION_RELEASE_PR_SUMMARY_PATH: ".buildchain/production-release-pr/handoff.json",
       PRODUCTION_RELEASE_PR_BODY_PATH: ".buildchain/production-release-pr/body.md",
+      BUILDCHAIN_LOG_PATH: logPath,
     });
     assert.equal(result.status, "permission-denied");
     assert.match(fs.readFileSync(outputPath, "utf8"), /release-pr-status=permission-denied/);
@@ -1771,6 +1796,10 @@ test("web-surface production release PR permission-denied is a non-fatal handoff
     assert.equal(handoff.status, "permission-denied");
     assert.equal(handoff.error.status, 403);
     assert.equal(handoff.tokenSource, "github-token");
+    const event = JSON.parse(fs.readFileSync(logPath, "utf8").trim());
+    assert.equal(event.event, "control-plane.release-intent.outcome");
+    assert.equal(event.attributes.outcome, "failed");
+    assert.equal(event.attributes.action, "permission-denied");
     assert.ok(calls.some((call) => call.method === "POST" && call.url.endsWith("/pulls")));
   } finally {
     process.chdir(previousCwd);
@@ -2663,6 +2692,10 @@ test("report issue action exposes workflow-friction feedback mode", () => {
   assert.match(workflow, /body-file: \$\{\{ steps\.friction\.outputs\.body-file \}\}/);
   assert.match(implementation, /Copyable issue body/);
   assert.match(implementation, /buildWorkflowFrictionIssueReport/);
+  assert.match(implementation, /recordBuildchainControlPlaneOutcome/);
+  assert.match(action, /observability-log-path:/);
+  assert.match(workflow, /Upload Buildchain control-plane observability/);
+  assert.match(workflow, /\.buildchain\/logs\/events\.jsonl/);
 
   const promoteAction = fs.readFileSync(
     path.join(root, "actions/promote-buildchain-ref/action.yml"),
