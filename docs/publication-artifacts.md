@@ -120,7 +120,7 @@ call the build-only wrapper directly:
 ```yaml
 jobs:
   publication:
-    uses: kungfu-systems/buildchain/.github/workflows/publication-artifact.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/publication-artifact.yml@v3
     with:
       toolchain-type: config
       verify-command: make check
@@ -182,7 +182,7 @@ on:
 
 jobs:
   paper-release:
-    uses: kungfu-systems/buildchain/.github/workflows/paper-release-sealed.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/paper-release-sealed.yml@v3
     permissions:
       actions: read
       checks: write

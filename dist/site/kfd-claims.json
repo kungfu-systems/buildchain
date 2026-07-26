@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "f209130ca70758470ae2ab803774f045e68acddd0999de7bf81380ba6d417baa",
+    "sha256": "cb46e0ac1c5733bea85d5e0f5df30cd04cf92b557cb35807cd43ef558fe45bcd",
     "summary": {
       "cliCommandCount": 87,
       "workflowCount": 53,
       "actionCount": 5,
       "sitePageCount": 57,
-      "docCommandRefCount": 276,
+      "docCommandRefCount": 275,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -228,13 +228,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "f209130ca70758470ae2ab803774f045e68acddd0999de7bf81380ba6d417baa",
+      "sha256": "cb46e0ac1c5733bea85d5e0f5df30cd04cf92b557cb35807cd43ef558fe45bcd",
       "summary": {
         "cliCommandCount": 87,
         "workflowCount": 53,
         "actionCount": 5,
         "sitePageCount": 57,
-        "docCommandRefCount": 276,
+        "docCommandRefCount": 275,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -2911,12 +2911,19 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 19,
+          "inputCount": 26,
           "inputs": [
             "artifact-name",
             "artifact-retention-days",
             "buildchain-ref",
             "buildchain-repository",
+            "checkout-cache-fallback",
+            "checkout-cache-fetch-attempts",
+            "checkout-cache-github-timeout-seconds",
+            "checkout-cache-mirror-url-template",
+            "checkout-cache-mode",
+            "checkout-cache-reference-repository-template",
+            "checkout-cache-timeout-seconds",
             "gate-command-json",
             "gate-environment-json",
             "gate-plan-command-json",

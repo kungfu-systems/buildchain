@@ -154,7 +154,7 @@ The P0 bundle includes:
 - workflow/action registry;
 - release model facts;
 - artifact and evidence schema index;
-- Buildchain runtime contract world for `@v2` floating-ref compatibility checks,
+- Buildchain runtime contract world for `@v3` floating-ref compatibility checks,
   KFD-1/KFD-2/KFD-3 release gates, GitHub Release evidence publication, and
   site-consumption contracts;
 - Buildchain KFD claim registry for release-passport self verification and

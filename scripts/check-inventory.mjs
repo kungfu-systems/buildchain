@@ -729,7 +729,7 @@ for (const requiredSnippet of [
 for (const requiredSnippet of [
   "Capability Coverage",
   "KFD-1 / KFD-2 / KFD-3",
-  "floating `@v2`",
+  "floating `@v3`",
   "npm publish transactions",
   "Git/source/version/module/product build facts",
   "GitHub Release",
@@ -800,7 +800,7 @@ for (const requiredSnippet of [
 for (const [docName, docSource] of Object.entries({ "docs/cli.md": cliDoc, "docs/install.md": installDoc })) {
   for (const requiredSnippet of [
     "minimumReleaseAgeExclude",
-    "@kungfu-tech/buildchain@2.2.5",
+    "@kungfu-tech/buildchain@3.0.0",
     "package/version-specific",
   ]) {
     if (!docSource.includes(requiredSnippet)) {
@@ -988,7 +988,7 @@ for (const retiredWorkflow of [
   const retiredSource = fs.readFileSync(path.join(workflowDir, retiredWorkflow), "utf8");
   for (const requiredSnippet of [
     "release path is retired",
-    "release-candidate-promote.yml@v2",
+    "release-candidate-promote.yml@v3",
     "publish-gate source-lock enforcement",
   ]) {
     if (!retiredSource.includes(requiredSnippet)) {
@@ -1134,12 +1134,12 @@ if (inventory.release !== "buildchain-v2") {
   throw new Error("inventory release must be buildchain-v2");
 }
 
-if (inventory.stableRefs?.actions !== "kungfu-systems/buildchain/actions/<name>@v2") {
-  throw new Error("inventory stable action ref must point at @v2");
+if (inventory.stableRefs?.actions !== "kungfu-systems/buildchain/actions/<name>@v3") {
+  throw new Error("inventory stable action ref must point at @v3");
 }
 
-if (inventory.stableRefs?.workflows !== "kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v2") {
-  throw new Error("inventory stable workflow ref must point at @v2");
+if (inventory.stableRefs?.workflows !== "kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v3") {
+  throw new Error("inventory stable workflow ref must point at @v3");
 }
 if (inventory.safety?.releasePassport?.line !== "v2.2") {
   throw new Error("release passport inventory must be registered as a v2.2 surface");

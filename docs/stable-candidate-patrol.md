@@ -125,7 +125,7 @@ permissions:
 
 jobs:
   stable:
-    uses: kungfu-systems/buildchain/.github/workflows/stable-candidate-patrol.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/stable-candidate-patrol.yml@v3
     with:
       release-now: ${{ inputs.release-now }}
       dry-run: false
@@ -203,7 +203,7 @@ step; the durable authority record remains the candidate ledger entry and PR.
 The default ledger ref is derived from the release line, for example:
 
 ```text
-buildchain/candidate-ledger/v2/v2.12
+buildchain/candidate-ledger/v3/v3.0
 ```
 
 It stores `.buildchain/stable-candidate-ledger.json`. Patrol runs are serialized

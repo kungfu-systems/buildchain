@@ -167,7 +167,7 @@ floating ref, such as:
 ```yaml
 jobs:
   web:
-    uses: kungfu-systems/buildchain/.github/workflows/.web-surface.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/.web-surface.yml@v3
     with:
       buildchain-contract-lock-path: .buildchain/contract-lock.json
       buildchain-contract-compatibility-policy: major-compatible
@@ -667,7 +667,7 @@ the standard PR review and promotion flow without copying bespoke glue:
 ```yaml
 jobs:
   web-surface:
-    uses: kungfu-systems/buildchain/.github/workflows/.web-surface.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/.web-surface.yml@v3
     with:
       build-command: npm run build
       verify-command: npm run check
@@ -686,7 +686,7 @@ The reusable workflow maps GitHub events to Buildchain web-surface semantics:
 
 The optional `buildchain-ref` input is empty by default. Empty keeps the
 web-surface run on the stable Buildchain runtime selected by the reusable
-workflow ref, normally `@v2`. A trusted maintainer can expose a
+workflow ref, normally `@v3`. A trusted maintainer can expose a
 `workflow_dispatch` input and pass it through for one-off train validation.
 See [`runtime-train-validation.md`](runtime-train-validation.md) for the shared
 train protocol and notification template:
@@ -702,7 +702,7 @@ on:
 
 jobs:
   web-surface:
-    uses: kungfu-systems/buildchain/.github/workflows/.web-surface.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/.web-surface.yml@v3
     with:
       buildchain-ref: ${{ inputs.buildchain-ref || '' }}
       build-command: pnpm run build
@@ -712,7 +712,7 @@ jobs:
 
 Only trusted `workflow_dispatch` runs by repository actors with write,
 maintain, or admin permission may use a non-empty runtime override. Train refs
-such as `train/v2/v2.3/site-source-of-truth` are temporary validation refs, not
+such as `train/v3/v3.0/site-source-of-truth` are temporary validation refs, not
 stable production dependencies or pending merge targets. They may remain for a
 retention window after release as a fast-use and rollback channel, with old
 trains handled by periodic Buildchain cleanup. The web-surface deployment
@@ -730,7 +730,7 @@ permissions:
 
 jobs:
   web-surface:
-    uses: kungfu-systems/buildchain/.github/workflows/.web-surface.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/.web-surface.yml@v3
     with:
       build-command: pnpm run build
       verify-command: pnpm run check
@@ -824,7 +824,7 @@ For release-PR publishing, callers opt in explicitly:
 ```yaml
 jobs:
   web-surface:
-    uses: kungfu-systems/buildchain/.github/workflows/.web-surface.yml@v2
+    uses: kungfu-systems/buildchain/.github/workflows/.web-surface.yml@v3
     with:
       build-command: npm run build
       verify-command: npm run check

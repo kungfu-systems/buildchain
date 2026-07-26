@@ -477,7 +477,7 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:f7a27ef72c0ffe3e18ad5d4d0520e14d8f343a55a417182c5da74a150b8f58fc"
+      "digest": "sha256:f4518193026571d1e84bc245725a9f83e842b2e4b4dfaa072c8207021fa89cd1"
     },
     {
       "id": "build-facts",
@@ -497,12 +497,12 @@
     {
       "id": "homebrew",
       "path": "docs/homebrew.md",
-      "digest": "sha256:2fc4e8411f35ca86d19d61c7843b9a1fa440f7afea25df13d3aa03342f09f90c"
+      "digest": "sha256:e690ea465d4289f2246d93765776b057c6aca1c68dc290abcee94c947e5d5c47"
     },
     {
       "id": "site-bundle-contract",
       "path": "docs/site-bundle-contract.md",
-      "digest": "sha256:583661a7886bdca7e8352a5325a105a9df5d134b3896dbda13ad9b637697481f"
+      "digest": "sha256:40831ce35dca6ac2a3a81d54a83fb0e5ab064137829a4f7844e5d80ba61aa65c"
     }
   ],
   "guidance": "These are the public Node import surfaces shipped by the npm package. Agents should prefer these exports over internal file paths."

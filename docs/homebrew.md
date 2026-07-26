@@ -21,6 +21,8 @@ name = "homebrew-tap"
 command = "buildchain homebrew check"
 ```
 
+Buildchain v3.0.0 currently publishes evidence assets but no standalone platform archives, so the Buildchain formula continues to index the latest verified legacy binary line, v2.14.16. This does not change the tap repository's v3 management workflow.
+
 The tap manifest is the repository-owned declaration of which upstream releases
 are indexed. Buildchain writes `tap-manifest.json` as a machine-readable
 projection:
@@ -37,10 +39,10 @@ projection:
       "path": "Formula/buildchain.rb",
       "upstream": {
         "repository": "kungfu-systems/buildchain",
-        "tag": "v2.8.15",
-        "releasePassportUrl": "https://github.com/kungfu-systems/buildchain/releases/download/v2.8.15/buildchain.release.json"
+        "tag": "v2.14.16",
+        "releasePassportUrl": "https://github.com/kungfu-systems/buildchain/releases/download/v2.14.16/buildchain.release.json"
       },
-      "version": "2.8.15",
+      "version": "2.14.16",
       "kfd": {
         "kfd-1": "passed",
         "kfd-2": "passed",
@@ -49,7 +51,7 @@ projection:
       "artifacts": [
         {
           "platform": "darwin-arm64",
-          "url": "https://github.com/kungfu-systems/buildchain/releases/download/v2.8.15/buildchain-aarch64-apple-darwin.tar.gz",
+          "url": "https://github.com/kungfu-systems/buildchain/releases/download/v2.14.16/buildchain-aarch64-apple-darwin.tar.gz",
           "sha256": "..."
         }
       ]
@@ -65,7 +67,7 @@ Update a formula and manifest from an upstream passport:
 ```bash
 buildchain homebrew update-formula \
   --package buildchain \
-  --release-passport https://github.com/kungfu-systems/buildchain/releases/download/v2.8.15/buildchain.release.json \
+  --release-passport https://github.com/kungfu-systems/buildchain/releases/download/v2.14.16/buildchain.release.json \
   --write
 ```
 

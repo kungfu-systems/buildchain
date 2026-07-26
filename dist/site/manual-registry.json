@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:11ccb0a90cc0583a1a67da36609a8b07207f259815ac9ac0926c2ec8d7a8764a",
+      "digest": "sha256:fc8f7c63b8427e513f9524b8e22e4b0dcd8981fcc724417a29b942fe237fc0a9",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -37,7 +37,7 @@
       "title": "Install and verify Buildchain",
       "path": "docs/install.md",
       "plane": "use",
-      "digest": "sha256:1879849c01f82b8820f2d9aeb09faed0931954cb7fe6939176a5eb69110cee59",
+      "digest": "sha256:570bf79189925ae0dfc040a83804a71149cda122c033d5aa763672b2a137072a",
       "capabilityGroup": "getting-started",
       "audience": [
         "consumer"
@@ -50,7 +50,7 @@
       "title": "Release Passport protocol",
       "path": "docs/release-passport.md",
       "plane": "verify",
-      "digest": "sha256:f10d2f0f9cc694976b2a1d2a61195ed155c1bc24c964de1551475882e8197c92",
+      "digest": "sha256:c7f096af40224efb53b2e0e8b7e1ceedc3aafeb341c476a7cce7e5974004a775",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator",
@@ -108,7 +108,7 @@
       "title": "Release Candidate Passport",
       "path": "docs/release-candidate.md",
       "plane": "verify",
-      "digest": "sha256:e933241bc138661a73cf1b419690cad629ba328ce05ecbd85841199a337d37c1",
+      "digest": "sha256:887bc3c041c3231d8e6dd403964d04d28a9eb13081bc4154dc2a6ebd56697ecd",
       "capabilityGroup": "reusable-build",
       "audience": [
         "release-operator",
@@ -122,7 +122,7 @@
       "title": "Release propagation",
       "path": "docs/release-propagation.md",
       "plane": "use",
-      "digest": "sha256:fc2b743e3d76c4f90cdd8c6560cf9d619ad25d74c15c074be96db7bcb6cc2a29",
+      "digest": "sha256:b7d2deef7d50fc412aa21c7ef1019c4c2bd8b0392b9b323356b1c0b1fc2596b6",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "release-operator",
@@ -150,7 +150,7 @@
       "title": "Homebrew distribution indexes",
       "path": "docs/homebrew.md",
       "plane": "use",
-      "digest": "sha256:2fc4e8411f35ca86d19d61c7843b9a1fa440f7afea25df13d3aa03342f09f90c",
+      "digest": "sha256:e690ea465d4289f2246d93765776b057c6aca1c68dc290abcee94c947e5d5c47",
       "capabilityGroup": "distribution-indexes",
       "audience": [
         "consumer",
@@ -178,7 +178,7 @@
       "title": "Consumer issue reporting",
       "path": "docs/consumer-issue-reporting.md",
       "plane": "use",
-      "digest": "sha256:8e2159312e47b42ab0bb644cb195362150acc8872e6ac0e7380ece0c5cf36955",
+      "digest": "sha256:96804310360c02f408fee9d540385d875a40d09bef046c3df369228d311a1cdd",
       "capabilityGroup": "observability-diagnostics",
       "audience": [
         "consumer",
@@ -220,7 +220,7 @@
       "title": "Site bundle contract",
       "path": "docs/site-bundle-contract.md",
       "plane": "use",
-      "digest": "sha256:583661a7886bdca7e8352a5325a105a9df5d134b3896dbda13ad9b637697481f",
+      "digest": "sha256:40831ce35dca6ac2a3a81d54a83fb0e5ab064137829a4f7844e5d80ba61aa65c",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "site",
@@ -234,7 +234,7 @@
       "title": "Migration inventory",
       "path": "docs/migration-inventory.md",
       "plane": "verify",
-      "digest": "sha256:18f98635bb16a4e43cac2d46443b3e812c305f708f071929dc6a46a8cd5dccd5",
+      "digest": "sha256:bb73731a3b747d02b9453537109754f194c58dba92c260ac84c632b0d58607af",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -248,7 +248,7 @@
       "title": "Ownership",
       "path": "docs/ownership.md",
       "plane": "why",
-      "digest": "sha256:49074fb520c404d3c9f5b49b33562d4bdc4e3ed407cf22543fa8e19e312a6b8e",
+      "digest": "sha256:a9f54f211b55da6464d890b0ebfe046dbf564aabdfee3aadf457723f9aae398a",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer"
@@ -275,7 +275,7 @@
       "title": "CLI and npm package",
       "path": "docs/cli.md",
       "plane": "use",
-      "digest": "sha256:f7a27ef72c0ffe3e18ad5d4d0520e14d8f343a55a417182c5da74a150b8f58fc",
+      "digest": "sha256:f4518193026571d1e84bc245725a9f83e842b2e4b4dfaa072c8207021fa89cd1",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -317,7 +317,7 @@
       "title": "KFD Agent Hub Builder flow",
       "path": "docs/kfd-agent-hub.md",
       "plane": "use",
-      "digest": "sha256:7528f8a11c7fe67b350c0dd380b77d724c2d9e0001b4427949ee1c6012735d49",
+      "digest": "sha256:9bfba0a872590bb1b4f260ddbe71b54572ef291f3fc11d32bcd04e79f5e740ff",
       "capabilityGroup": "kfd-trust",
       "audience": [
         "agent",
@@ -332,7 +332,7 @@
       "title": "Lifecycle protocol",
       "path": "docs/lifecycle-protocol.md",
       "plane": "use",
-      "digest": "sha256:9c669d3d2d1926dc5b421207089cca85bac0a6dcdb5544c28a7e1659ba9ed5ee",
+      "digest": "sha256:55425241363da6105a6b36a46bf8c9d7edd5b0e0f9dbcebe1452327642eb2af9",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -346,7 +346,7 @@
       "title": "Reusable build surface",
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
-      "digest": "sha256:ff6f36e1db2be12df37ef076935b5583493742528d98403297678a0682b67dc2",
+      "digest": "sha256:fe73561e8f038e73624bc776f7c527efe59bab105e1208bbaa5af6ebeade6216",
       "capabilityGroup": "reusable-build",
       "audience": [
         "consumer",
@@ -373,7 +373,7 @@
       "title": "Release governance",
       "path": "docs/release-governance.md",
       "plane": "why",
-      "digest": "sha256:e203cbfd6fd895a70ae136a8365bc91ded1821d634d1a465034864a2615381b5",
+      "digest": "sha256:0f89edb4fbaca7fb2f859a2ba0e0c2638558c057e72ac7ebd53cb597f4466fcc",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -401,7 +401,7 @@
       "title": "Runtime train validation",
       "path": "docs/runtime-train-validation.md",
       "plane": "verify",
-      "digest": "sha256:1872e511b31c04ba75fc3a005c7a4f857c8b06ecadfedb75bc35b2ce70e7764a",
+      "digest": "sha256:1315fe264d0e22215183122fc05e287be974751a78268642076898b689e435e6",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer",
@@ -428,7 +428,7 @@
       "title": "Web surface deployments",
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
-      "digest": "sha256:809d765d89277320d710ecfdc2287029530b74fe38f36dd04d057076dded9a0d",
+      "digest": "sha256:ed4ff02dcb6f66118a29084784f25d8008ca472f59005b2e014133524706a9c5",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "site",
