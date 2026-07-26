@@ -21,12 +21,12 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "08eb47b0eeab5cf1a11b63314b9572115ba71feb20843adf3e6cef0536dd5f47",
+    "sha256": "f552c4b158b68cf604eef7c07d6959ca7758a517ff79e7646a099285de78d677",
     "summary": {
       "cliCommandCount": 96,
-      "workflowCount": 53,
+      "workflowCount": 54,
       "actionCount": 5,
-      "sitePageCount": 56,
+      "sitePageCount": 57,
       "docCommandRefCount": 286,
       "failureCount": 0
     },
@@ -228,12 +228,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "08eb47b0eeab5cf1a11b63314b9572115ba71feb20843adf3e6cef0536dd5f47",
+      "sha256": "f552c4b158b68cf604eef7c07d6959ca7758a517ff79e7646a099285de78d677",
       "summary": {
         "cliCommandCount": 96,
-        "workflowCount": 53,
+        "workflowCount": 54,
         "actionCount": 5,
-        "sitePageCount": 56,
+        "sitePageCount": 57,
         "docCommandRefCount": 286,
         "failureCount": 0
       },
@@ -1148,6 +1148,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./candidate-timeline"
+        },
+        {
+          "id": "export:./channel-candidate",
+          "name": "@kungfu-tech/buildchain/channel-candidate",
+          "kind": "package-export",
+          "sourcePath": "packages/core/channel-candidate.js",
+          "evidencePath": "packages/core/channel-candidate.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./channel-candidate"
         },
         {
           "id": "export:./cache-evidence",
@@ -3824,6 +3836,30 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:dev-alpha-candidate-patrol",
+          "name": "workflow:dev-alpha-candidate-patrol",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/dev-alpha-candidate-patrol.yml",
+          "evidencePath": ".github/workflows/dev-alpha-candidate-patrol.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 9,
+          "inputs": [
+            "alpha-workflow-path",
+            "buildchain-ref",
+            "buildchain-repository",
+            "create-pull-request",
+            "dev-workflow-path",
+            "dry-run",
+            "max-age-seconds",
+            "source-branch",
+            "target-branch"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:dev-merge-queue-governance",
           "name": "workflow:dev-merge-queue-governance",
           "kind": "workflow",
@@ -4901,6 +4937,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:dev-alpha-candidate-patrol",
+          "name": "site-page:manual:dev-alpha-candidate-patrol",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:github-governance-authority",
           "name": "site-page:manual:github-governance-authority",
           "kind": "site-page",
@@ -5410,6 +5458,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 345
+    "publicSurfaceCount": 348
   }
 }

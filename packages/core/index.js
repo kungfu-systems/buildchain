@@ -101,6 +101,12 @@ export {
 } from "./candidate-timeline.js";
 
 export {
+  CHANNEL_CANDIDATE_DECISION_SCHEMA,
+  channelCandidateSourceLockRef,
+  decideChannelCandidate,
+} from "./channel-candidate.js";
+
+export {
   BUILDCHAIN_ANCHORED_PACKAGE_RELEASE_VALIDATION_CONTRACT,
   BUILDCHAIN_DIAGNOSTICS_CONTRACT,
   BUILDCHAIN_DIAGNOSTICS_MANIFEST_CONTRACT,
