@@ -309,6 +309,8 @@ async function main() {
   const releasePassportKfd3PrebuildWitnessJsons = core.getInput("release-passport-kfd-3-prebuild-witness-jsons");
   const releasePassportKfd3ArtifactWitnessJsons = core.getInput("release-passport-kfd-3-artifact-witness-jsons");
   const releasePassportKfd3ArtifactVerifyCommand = core.getInput("release-passport-kfd-3-artifact-verify-command");
+  const releasePassportKfdSupportMatrixJson = core.getInput("release-passport-kfd-support-matrix-json");
+  const releasePassportKfdProductGateJsons = core.getInput("release-passport-kfd-product-gate-jsons");
   const releasePassportInvariantPassportJsons = core.getInput("release-passport-invariant-passport-jsons");
   const releasePassportInvariantPassportCommand = core.getInput("release-passport-invariant-passport-command");
   const releasePassportBuildchainSelfKfd = core.getBooleanInput("release-passport-buildchain-self-kfd");
@@ -400,6 +402,8 @@ async function main() {
     releasePassportKfd3PrebuildWitnessJsons,
     releasePassportKfd3ArtifactWitnessJsons,
     releasePassportKfd3ArtifactVerifyCommand,
+    releasePassportKfdSupportMatrixJson,
+    releasePassportKfdProductGateJsons,
     releasePassportInvariantPassportJsons,
     releasePassportInvariantPassportCommand,
     releasePassportBuildchainSelfKfd,

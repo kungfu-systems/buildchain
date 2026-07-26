@@ -266,12 +266,12 @@ function normalizeKfdSupport(component = {}) {
   const support = component.kfd && typeof component.kfd === "object" && !Array.isArray(component.kfd)
     ? { ...component.kfd }
     : {};
-  for (const [key, aliases] of Object.entries({
-    kfd1: ["kfd1", "kfd_1", "kfd-1"],
-    kfd2: ["kfd2", "kfd_2", "kfd-2"],
-    kfd3: ["kfd3", "kfd_3", "kfd-3"],
-    kfd4: ["kfd4", "kfd_4", "kfd-4"],
-  })) {
+  for (const [key, aliases] of Object.entries(Object.fromEntries(
+    Array.from({ length: 13 }, (_, index) => {
+      const number = index + 1;
+      return [`kfd${number}`, [`kfd${number}`, `kfd_${number}`, `kfd-${number}`]];
+    }),
+  ))) {
     const found = aliases.map((alias) => component[alias] ?? support[alias]).find((value) => value !== undefined);
     support[key] = found === undefined ? support[key] || "declared" : String(found);
   }
@@ -940,7 +940,16 @@ export function collectKfdStatus({ cwd = process.cwd() } = {}) {
       "kfd-1": ["schema", "witness", "gate", "verify"],
       "kfd-2": ["schema", "taxonomy", "claims", "product-claims", "trust-claims", "trust-assessment", "upstream"],
       "kfd-3": ["schema", "detect", "register", "audit", "witness", "query", "aggregate"],
-      "kfd-4": ["schema"],
+      "kfd-4": ["schema", "product-gate", "verify", "support-projection"],
+      "kfd-5": ["schema", "product-gate", "verify", "support-projection"],
+      "kfd-6": ["schema", "unsupported-claim-barrier"],
+      "kfd-7": ["schema", "product-gate", "verify", "support-projection"],
+      "kfd-8": ["schema", "draft-claim-barrier"],
+      "kfd-9": ["schema", "draft-claim-barrier"],
+      "kfd-10": ["schema", "draft-claim-barrier"],
+      "kfd-11": ["schema", "draft-claim-barrier"],
+      "kfd-12": ["schema", "draft-claim-barrier"],
+      "kfd-13": ["schema", "draft-claim-barrier"],
     },
     paths: pathStatus,
   };

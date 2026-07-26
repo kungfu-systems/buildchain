@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "label": "KFD-13",
-  "message": "software-project settlement binding that preserves independently authoritative source, Atlas, Episode, policy, omission, and risk coordinates failed",
+  "message": "KFD-13 failed",
   "color": "cf222e",
   "logoPolicy": {
     "contract": "kungfu-buildchain-badge-logo-policy",

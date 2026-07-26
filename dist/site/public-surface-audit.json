@@ -3,11 +3,11 @@
   "contract": "kungfu-buildchain-public-surface-reverse-audit",
   "status": "passed",
   "summary": {
-    "cliCommandCount": 87,
+    "cliCommandCount": 96,
     "workflowCount": 53,
     "actionCount": 5,
     "sitePageCount": 56,
-    "docCommandRefCount": 275,
+    "docCommandRefCount": 286,
     "failureCount": 0
   },
   "enumerated": {
@@ -238,9 +238,49 @@
         "usage": "buildchain kfd 3 witness [--cwd <dir>] [--registry <path>] [--kind prebuild|artifact]"
       },
       {
+        "id": "kfd-4-gate",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd 4 gate --input-json <file-or-json> [--cwd <dir>] [--output <file>] [--json]"
+      },
+      {
         "id": "kfd-4-schema",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain kfd 4 schema [--schema <name>] [--json]"
+      },
+      {
+        "id": "kfd-4-verify",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd 4 verify --gate-json <file-or-json> [--expected-source-sha <sha>] [--json]"
+      },
+      {
+        "id": "kfd-5-gate",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd 5 gate --input-json <file-or-json> [--cwd <dir>] [--output <file>] [--json]"
+      },
+      {
+        "id": "kfd-5-schema",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd 5 schema [--schema <name>] [--json]"
+      },
+      {
+        "id": "kfd-5-verify",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd 5 verify --gate-json <file-or-json> [--expected-source-sha <sha>] [--json]"
+      },
+      {
+        "id": "kfd-7-gate",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd 7 gate --input-json <file-or-json> [--cwd <dir>] [--output <file>] [--json]"
+      },
+      {
+        "id": "kfd-7-schema",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd 7 schema [--schema <name>] [--json]"
+      },
+      {
+        "id": "kfd-7-verify",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd 7 verify --gate-json <file-or-json> [--expected-source-sha <sha>] [--json]"
       },
       {
         "id": "kfd-aggregate",
@@ -271,6 +311,11 @@
         "id": "kfd-status",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain kfd status [--cwd <dir>] [--json]"
+      },
+      {
+        "id": "kfd-support",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd support project --matrix-json <file-or-json> --gate-json <file-or-json>..."
       },
       {
         "id": "kfd-upstream-check",
@@ -840,6 +885,8 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-product-gate-jsons",
+          "release-passport-kfd-support-matrix-json",
           "release-passport-output-dir",
           "release-passport-platform-manifest-paths",
           "release-passport-product-name",
@@ -851,7 +898,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 83,
+        "inputCount": 85,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1958,6 +2005,8 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-product-gate-jsons",
+          "release-passport-kfd-support-matrix-json",
           "release-passport-output-dir",
           "release-passport-platform-manifest-paths",
           "release-passport-product-name",
@@ -1969,7 +2018,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 75,
+        "inputCount": 77,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2256,6 +2305,8 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-product-gate-jsons",
+          "release-passport-kfd-support-matrix-json",
           "release-passport-output-dir",
           "release-passport-platform-manifest-paths",
           "release-passport-product-name",
@@ -2272,7 +2323,7 @@
           "transaction-state-path",
           "verification-command"
         ],
-        "inputCount": 64
+        "inputCount": 66
       },
       {
         "id": "report-buildchain-issue",
@@ -3331,6 +3382,16 @@
         "command": "buildchain kfd 3 witness"
       },
       {
+        "id": "kfd-4-gate",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd 4 gate"
+      },
+      {
+        "id": "kfd-4-gate",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 4 gate"
+      },
+      {
         "id": "kfd-4-schema",
         "path": "docs/cli.md",
         "command": "buildchain kfd 4 schema"
@@ -3344,6 +3405,36 @@
         "id": "kfd-4-schema",
         "path": "docs/kfd-support.md",
         "command": "buildchain kfd 4 schema"
+      },
+      {
+        "id": "kfd-5-gate",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd 5 gate"
+      },
+      {
+        "id": "kfd-5-gate",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 5 gate"
+      },
+      {
+        "id": "kfd-5-schema",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 5 schema"
+      },
+      {
+        "id": "kfd-7-gate",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd 7 gate"
+      },
+      {
+        "id": "kfd-7-gate",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 7 gate"
+      },
+      {
+        "id": "kfd-7-schema",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 7 schema"
       },
       {
         "id": "kfd-aggregate",
@@ -3424,6 +3515,21 @@
         "id": "kfd-status",
         "path": "docs/kfd-support.md",
         "command": "buildchain kfd status --json"
+      },
+      {
+        "id": "kfd-support",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd support project"
+      },
+      {
+        "id": "kfd-support",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd support project"
+      },
+      {
+        "id": "kfd-support",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd support project"
       },
       {
         "id": "kfd-upstream-check",
@@ -3971,9 +4077,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "5ba7fd93a13993b05767b6f02d0626a7347f25c3d7cd4589ed4f70028c1f1bd1",
-    "workflowRegistryDigest": "1554826457054dabf1b877aa2bd2ae2b764f90b0bab5552230ea38278ca707df",
-    "pageRegistryDigest": "91dcb302decbe07ebb402c3571f59b5d624feb28e4ac90ef11678050a2c73c67"
+    "cliRegistryDigest": "a1c10dd6977d85a7bc793054baa549108b46d6d18098de109733e01b9151a024",
+    "workflowRegistryDigest": "97e21bf5f4332b830cbaffecc3c1891d9fa1036984c7093e77daac78dc8e3221",
+    "pageRegistryDigest": "d11a4b7ed807d075b52fedb80c85bfa8f13431f5aa86dae38fc00d3f428f0c6e"
   },
   "comparison": {
     "missingCliRegistry": [],

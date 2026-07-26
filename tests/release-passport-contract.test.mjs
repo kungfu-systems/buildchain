@@ -49,8 +49,11 @@ test("release passport check manifest declares closure, ownership, and compatibi
     "evidence.agentIndex",
   ]);
   assert.ok(manifest.ownership.aggregationFields.includes("packageSet"));
+  assert.ok(manifest.ownership.aggregationFields.includes("kfdSupport"));
   assert.deepEqual(manifest.ownership.kfdSections.map((entry) => entry.section), ["kfd-1", "kfd-2", "kfd-3"]);
   assert.ok(manifest.ownership.kfdSections.every((entry) => entry.owner === "KFD"));
+  assert.equal(manifest.passport.kfdSupportProjection.evidence, "kfd-support.json");
+  assert.ok(manifest.localClosure.conditionalSiblings.some((entry) => entry.pointer === "evidence.kfdSupport"));
   assert.match(manifest.compatibility.envelope, /optional fields may be added/);
   assert.match(manifest.compatibility.kfdSections, /@kungfu-tech\/kfd/);
 });

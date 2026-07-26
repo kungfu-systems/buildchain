@@ -20,6 +20,9 @@ const KIND_ALIASES = Object.freeze({
   command: "cli",
   binary: "binary",
   "standalone-binary": "binary",
+  app: "binary",
+  appimage: "binary",
+  installer: "binary",
   docs: "documentation",
   documentation: "documentation",
   site: "site-bundle",
@@ -602,6 +605,100 @@ export function auditKfd3Surfaces({
   };
 }
 
+function auditProductDeclaredKfd3Surfaces({ cwd, registry }) {
+  const issues = [];
+  const ids = new Set();
+  for (const [index, entry] of registry.surfaces.entries()) {
+    const label = `surfaces[${index}]`;
+    if (!entry.id || ids.has(entry.id)) {
+      issues.push({
+        level: "error",
+        code: "declared-surface-id",
+        surfaceId: entry.id || "",
+        message: `${label}.id must be non-empty and unique`,
+      });
+    }
+    ids.add(entry.id);
+    for (const field of ["kind", "name", "sourcePath"]) {
+      if (!String(entry[field] || "").trim()) {
+        issues.push({
+          level: "error",
+          code: "declared-surface-field",
+          surfaceId: entry.id || "",
+          message: `${label}.${field} is required`,
+        });
+      }
+    }
+    const evidencePath = String(entry.evidencePath || entry.artifactPath || "").trim();
+    if (!evidencePath) {
+      issues.push({
+        level: "error",
+        code: "declared-surface-evidence",
+        surfaceId: entry.id || "",
+        message: `${label} must bind evidencePath or artifactPath`,
+      });
+    }
+    for (const [field, relativePath] of [
+      ["sourcePath", entry.sourcePath],
+      ["evidencePath", evidencePath],
+    ]) {
+      const normalized = String(relativePath || "").replaceAll("\\", "/");
+      const filePath = path.resolve(cwd, normalized);
+      const relative = path.relative(path.resolve(cwd), filePath);
+      if (
+        !normalized ||
+        path.isAbsolute(normalized) ||
+        relative.startsWith("..") ||
+        path.isAbsolute(relative) ||
+        !fs.existsSync(filePath)
+      ) {
+        issues.push({
+          level: "error",
+          code: "declared-surface-evidence-missing",
+          surfaceId: entry.id || "",
+          message: `${label}.${field} must resolve inside the product repository`,
+        });
+      }
+    }
+  }
+  const ok = issues.length === 0;
+  return {
+    schemaVersion: 1,
+    contract: KFD3_SURFACE_AUDIT_CONTRACT,
+    ok,
+    status: ok ? "passed" : "failed",
+    registryPath: registry.registryPath,
+    detection: {
+      schemaVersion: 1,
+      contract: KFD3_SURFACE_DETECTION_CONTRACT,
+      cwd: path.resolve(cwd),
+      artifactPath: "",
+      detectedAt: new Date().toISOString(),
+      kinds: [...new Set(registry.surfaces.map((entry) => entry.kind))].sort(),
+      summary: {
+        surfaceCount: registry.surfaces.length,
+        byKind: Object.fromEntries(
+          [...new Set(registry.surfaces.map((entry) => entry.kind))]
+            .sort()
+            .map((kind) => [kind, registry.surfaces.filter((entry) => entry.kind === kind).length]),
+        ),
+      },
+      surfaces: registry.surfaces,
+    },
+    registry,
+    summary: {
+      detected: registry.surfaces.length,
+      declared: registry.surfaces.length,
+      enforced: registry.surfaces.filter((entry) => entry.state === "enforced" || entry.enforcement === "enforced").length,
+      detectedButUnregistered: 0,
+      declaredButMissing: issues.length,
+    },
+    issues,
+    verificationMode: "product-declared-registry",
+    verifier: String(registry.policy?.customSurfaceDetection || ""),
+  };
+}
+
 export function createKfd3SurfaceWitness({
   cwd = process.cwd(),
   registryPath = "",
@@ -766,7 +863,13 @@ export async function queryKfd3Capabilities({
   const effectiveRegistryPath = resolveRegistryPath(cwd, registryPath);
   const registry = readKfd3SurfaceRegistry({ cwd, registryPath: effectiveRegistryPath });
   const hasRegistry = fs.existsSync(path.resolve(cwd, effectiveRegistryPath));
-  const audit = hasRegistry ? auditKfd3Surfaces({ cwd, registryPath: effectiveRegistryPath, artifactPath }) : null;
+  const audit = hasRegistry
+    ? (
+        registry.policy?.customSurfaceDetection
+          ? auditProductDeclaredKfd3Surfaces({ cwd, registry })
+          : auditKfd3Surfaces({ cwd, registryPath: effectiveRegistryPath, artifactPath })
+      )
+    : null;
   if (hasRegistry) {
     return {
       schemaVersion: 1,
@@ -774,6 +877,7 @@ export async function queryKfd3Capabilities({
       product: product || registry.product?.name || registry.product?.id || "local-product",
       source: { type: "surface-registry", path: effectiveRegistryPath },
       status: audit.status,
+      verificationMode: audit.verificationMode || "buildchain-detected-surface-audit",
       summary: audit.summary,
       capabilities: capabilitiesFromRegistry({ registry, audit }),
       kfd: {
