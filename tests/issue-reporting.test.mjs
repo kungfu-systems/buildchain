@@ -184,6 +184,57 @@ test("workflow friction issue reports use their own marker, labels, and redactio
   assert.match(report.body, /\[REDACTED\]/);
 });
 
+test("workflow friction identity is stable across release occurrences", () => {
+  const shared = {
+    env: {},
+    targetRepository: "kungfu-systems/buildchain",
+    repository: "kungfu-systems/buildchain",
+    workflow: "Buildchain Ref Promotion",
+    channel: "alpha",
+    frictionClass: "buildchain-ref-promotion-failed",
+  };
+  const first = buildWorkflowFrictionIssueReport({
+    ...shared,
+    runId: "101",
+    releaseIntent: "3.0.1-alpha.1",
+    sourceRef: "refs/heads/dev/v3/v3.0",
+    sourceSha: "a".repeat(40),
+  });
+  const second = buildWorkflowFrictionIssueReport({
+    ...shared,
+    runId: "202",
+    releaseIntent: "3.0.1-alpha.2",
+    sourceRef: "refs/heads/alpha/v3/v3.0",
+    sourceSha: "b".repeat(40),
+  });
+
+  assert.equal(first.fingerprint, second.fingerprint);
+  assert.match(second.commentBody, /Release intent: 3\.0\.1-alpha\.2/);
+  assert.match(second.commentBody, /Source ref: refs\/heads\/alpha\/v3\/v3\.0/);
+  assert.match(second.commentBody, new RegExp(`Source SHA: ${"b".repeat(40)}`));
+});
+
+test("workflow friction identity keeps incident dimensions distinct", () => {
+  const shared = {
+    env: {},
+    targetRepository: "kungfu-systems/buildchain",
+    repository: "kungfu-systems/buildchain",
+    workflow: "Buildchain Ref Promotion",
+    channel: "alpha",
+    frictionClass: "buildchain-ref-promotion-failed",
+  };
+  const baseline = buildWorkflowFrictionIssueReport(shared);
+
+  assert.notEqual(
+    baseline.fingerprint,
+    buildWorkflowFrictionIssueReport({ ...shared, channel: "release" }).fingerprint,
+  );
+  assert.notEqual(
+    baseline.fingerprint,
+    buildWorkflowFrictionIssueReport({ ...shared, frictionClass: "duplicate-channel-pr" }).fingerprint,
+  );
+});
+
 test("reportWorkflowFrictionIssue searches by workflow friction marker", async () => {
   const request = createMockRequest([
     { total_count: 0, items: [] },

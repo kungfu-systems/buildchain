@@ -374,6 +374,33 @@ async function createOrUpdateBranch({ apiUrl, token, owner, repo, branchName, so
   return createdCommit.sha;
 }
 
+function findMergedProductionReleasePr({
+  pullRequests = [],
+  repository,
+  productionReleaseLabel = "buildchain-release",
+  productionReleaseHeadPrefix = "release/",
+  base = "main",
+} = {}) {
+  const fullName = requiredString(repository, "repository");
+  const label = requiredString(productionReleaseLabel, "productionReleaseLabel");
+  const headPrefix = optionalString(productionReleaseHeadPrefix);
+  const candidates = (Array.isArray(pullRequests) ? pullRequests : []).filter((pull) => {
+    const labels = Array.isArray(pull?.labels) ? pull.labels.map((entry) => entry?.name || entry) : [];
+    const headRef = optionalString(pull?.head?.ref);
+    return Boolean(pull?.merged_at) &&
+      pull?.base?.ref === base &&
+      pull?.head?.repo?.full_name === fullName &&
+      labels.includes(label) &&
+      (!headPrefix || headRef.startsWith(headPrefix));
+  });
+  if (candidates.length > 1) {
+    throw new Error(
+      `multiple merged production release PRs matched the source commit: ${candidates.map((pull) => `#${pull.number}`).join(", ")}`,
+    );
+  }
+  return candidates[0];
+}
+
 export async function openProductionReleasePr({
   apiUrl = "https://api.github.com",
   token,
@@ -400,6 +427,29 @@ export async function openProductionReleasePr({
   });
   const { owner, repo, branchName, title, body, head } = handoff;
   const normalizedToken = requiredString(token, "token");
+  const associated = await githubJson({
+    apiUrl,
+    token: normalizedToken,
+    path: `/repos/${owner}/${repo}/commits/${encodeURIComponent(handoff.sourceSha)}/pulls?per_page=100`,
+  });
+  const mergedReleasePull = findMergedProductionReleasePr({
+    pullRequests: associated,
+    repository,
+    productionReleaseLabel,
+    productionReleaseHeadPrefix,
+    base: handoff.base,
+  });
+  if (mergedReleasePull) {
+    return {
+      action: "suppressed-merged-release-pr",
+      status: "suppressed-merged-release-pr",
+      ...handoff,
+      branchName,
+      pullNumber: mergedReleasePull.number,
+      pullUrl: mergedReleasePull.html_url || mergedReleasePull.url || "",
+      suppressionReason: "source-commit-already-has-qualifying-merged-release-pr",
+    };
+  }
   const existing = await githubJson({
     apiUrl,
     token: normalizedToken,
