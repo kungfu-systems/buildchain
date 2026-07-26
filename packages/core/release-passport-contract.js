@@ -99,6 +99,7 @@ export const RELEASE_PASSPORT_SCHEMA = {
     "kfd-1": OBJECT,
     "kfd-2": OBJECT,
     "kfd-3": OBJECT,
+    kfdSupport: OBJECT,
   },
   additionalProperties: true,
 };
@@ -121,6 +122,7 @@ const BUILDCHAIN_AGGREGATION_FIELDS = [
   "platformArtifactManifests",
   "distTagPromotion",
   "controllerReceipts",
+  "kfdSupport",
   "artifacts",
   "evidence",
   "recovery",
@@ -158,6 +160,13 @@ export function createReleasePassportCheckManifest({ standards = kfdStandards } 
         nodeApi: "@kungfu-tech/buildchain/release-passport#verifyReleasePassport",
         result: "check-report.json",
       },
+      kfdSupportProjection: {
+        inputSchema: "schemas/kfd-product-gate-input-v1.schema.json",
+        projectionSchema: "schemas/kfd-support-projection-v1.schema.json",
+        evidence: "kfd-support.json",
+        rule:
+          "The passport mirrors one product-owned support matrix and validated product-gate results without widening any claim state.",
+      },
     },
     ownership: {
       envelopeOwner: "Buildchain",
@@ -183,6 +192,10 @@ export function createReleasePassportCheckManifest({ standards = kfdStandards } 
         {
           when: "evidence.transactionState is present",
           pointer: "evidence.transactionState",
+        },
+        {
+          when: "kfdSupport is present",
+          pointer: "evidence.kfdSupport",
         },
       ],
       rule:

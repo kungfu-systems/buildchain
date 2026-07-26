@@ -65,6 +65,16 @@ export {
 } from "./portable-dev-cache.js";
 
 export {
+  BUILDCHAIN_CACHE_EVIDENCE_SET_CONTRACT,
+  BUILDCHAIN_CACHE_OPERATION_RECEIPT_CONTRACT,
+  cacheEvidenceDigest,
+  createCacheEvidenceSet,
+  createCacheOperationReceipt,
+  verifyCacheEvidenceSet,
+  verifyCacheOperationReceipt,
+} from "./cache-evidence.js";
+
+export {
   explainReleaseLineDryRun,
   formatReleaseLineDryRun,
 } from "./release-line-dry-run.js";
@@ -369,6 +379,23 @@ export {
   inspectKfdAgentHub,
   testKfdAgentHub,
 } from "./kfd-agent-hub.js";
+
+export {
+  KFD_PRODUCT_GATE_CONTRACT,
+  KFD_PRODUCT_GATE_INPUT_CONTRACT,
+  KFD_PRODUCT_GATE_INPUT_SCHEMA,
+  KFD_PRODUCT_GATE_INPUT_SCHEMA_ID,
+  KFD_SUPPORT_PROJECTION_CONTRACT,
+  KFD_SUPPORT_PROJECTION_SCHEMA,
+  KFD_SUPPORT_PROJECTION_SCHEMA_ID,
+  createKfdSupportProjection,
+  evaluateKfdProductGate,
+  kfdProductGateDigest,
+  kfdProductGates,
+  validateKfdProductGateResult,
+  validateKfdSupportProjection,
+  verifyKfdRecord,
+} from "./kfd-product-gates.js";
 
 export {
   RELEASE_PASSPORT_CHECK_MANIFEST_CONTRACT,

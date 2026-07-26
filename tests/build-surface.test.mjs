@@ -212,7 +212,26 @@ test("reusable build workflow exposes the required surface contract", () => {
     workflow.indexOf("  summarize:"),
     workflow.indexOf("\n  controller-receipt:", workflow.indexOf("  summarize:")),
   );
+  const artifactDownloads =
+    workflow.match(/uses: actions\/download-artifact@v7\.0\.0/g) || [];
+  const authenticatedArtifactDownloads =
+    workflow.match(
+      /uses: actions\/download-artifact@v7\.0\.0\n\s+with:\n\s+github-token: \$\{\{ github\.token \}\}/g,
+    ) || [];
   assert.match(workflow, /workflow_call:/);
+  assert.equal(
+    authenticatedArtifactDownloads.length,
+    artifactDownloads.length,
+    "every reusable-build artifact download must use the REST-backed token path so failed-job reruns can consume prior-attempt evidence",
+  );
+  assert.match(
+    workflow,
+    /control-runner-json:\n\s+description: "JSON runner-label array for trusted control-plane jobs"[\s\S]*?default: '\["ubuntu-24\.04"\]'/,
+  );
+  assert.equal(
+    (workflow.match(/runs-on: \$\{\{ fromJSON\(inputs\.control-runner-json\) \}\}/g) || []).length,
+    9,
+  );
   assert.match(
     workflow,
     /fail-fast:\n\s+description: "Cancel sibling platform lanes[\s\S]*?default: false[\s\S]*?type: boolean/,
@@ -825,6 +844,10 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-passport-kfd-3-artifact-witness-jsons:/);
   assert.match(workflow, /release-passport-kfd-3-artifact-witness-jsons: \$\{\{ inputs\.release-passport-kfd-3-artifact-witness-jsons \}\}/);
   assert.match(workflow, /release-passport-kfd-3-artifact-verify-command:/);
+  assert.match(workflow, /release-passport-kfd-support-matrix-json:/);
+  assert.match(workflow, /release-passport-kfd-support-matrix-json: \$\{\{ inputs\.release-passport-kfd-support-matrix-json \}\}/);
+  assert.match(workflow, /release-passport-kfd-product-gate-jsons:/);
+  assert.match(workflow, /release-passport-kfd-product-gate-jsons: \$\{\{ inputs\.release-passport-kfd-product-gate-jsons \}\}/);
   assert.match(workflow, /release-passport-invariant-passport-jsons:/);
   assert.match(workflow, /release-passport-invariant-passport-jsons: \$\{\{ inputs\.release-passport-invariant-passport-jsons \}\}/);
   assert.match(workflow, /release-passport-invariant-passport-command:/);
@@ -2654,6 +2677,10 @@ test("reusable Shifu Gate workflow keeps project policy outside Buildchain", () 
   assert.match(workflow, /checkout-cache-mode:/);
   assert.match(workflow, /checkout-cache-fallback:/);
   assert.match(workflow, /checkout-cache-fetch-attempts:/);
+  assert.match(workflow, /rust-toolchain:/);
+  assert.match(workflow, /rustup-dist-server:/);
+  assert.match(workflow, /rustup-update-root:/);
+  assert.match(workflow, /cargo-registry-index:/);
   assert.match(workflow, /shifu-gate-profile\.mjs --mode plan/);
   assert.match(workflow, /shifu-gate-profile\.mjs --mode run/);
   assert.match(workflow, /shifu-gate-profile\.mjs --mode aggregate/);
@@ -2671,6 +2698,11 @@ test("reusable Shifu Gate workflow keeps project policy outside Buildchain", () 
   assert.match(workflow, /name: Expose POSIX runner user toolchain/);
   assert.match(workflow, /\$\{HOME\}\/\.local\/bin/);
   assert.match(workflow, /\$\{HOME\}\/\.cargo\/bin/);
+  assert.match(workflow, /name: Setup Rust toolchain on Windows/);
+  assert.match(workflow, /contains\(matrix\.gate\.capabilities, 'rust'\)/);
+  assert.match(workflow, /buildchain-gate-cargo-/);
+  assert.match(workflow, /name: Setup Rust toolchain/);
+  assert.match(workflow, /dtolnay\/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30/);
   assert.match(workflow, /name: Upload Buildchain runtime checkout bootstrap/);
   assert.match(workflow, /name: Download Buildchain runtime checkout bootstrap/);
   assert.equal(
@@ -2800,6 +2832,8 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(action, /release-passport-kfd-3-prebuild-witness-jsons:/);
   assert.match(action, /release-passport-kfd-3-artifact-witness-jsons:/);
   assert.match(action, /release-passport-kfd-3-artifact-verify-command:/);
+  assert.match(action, /release-passport-kfd-support-matrix-json:/);
+  assert.match(action, /release-passport-kfd-product-gate-jsons:/);
   assert.match(action, /release-passport-invariant-passport-jsons:/);
   assert.match(action, /release-passport-invariant-passport-command:/);
   assert.match(action, /release-passport-buildchain-self-kfd:/);
@@ -2811,6 +2845,8 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(implementation, /releasePassportKfd3PrebuildWitnessJsons/);
   assert.match(implementation, /releasePassportKfd3ArtifactWitnessJsons/);
   assert.match(implementation, /releasePassportKfd3ArtifactVerifyCommand/);
+  assert.match(implementation, /releasePassportKfdSupportMatrixJson/);
+  assert.match(implementation, /releasePassportKfdProductGateJsons/);
   assert.match(implementation, /releasePassportInvariantPassportJsons/);
   assert.match(implementation, /releasePassportInvariantPassportCommand/);
   assert.match(implementation, /releasePassportBuildchainSelfKfd/);
@@ -2819,6 +2855,8 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(docs, /release-passport-kfd-1-witness-jsons/);
   assert.match(docs, /release-passport-kfd-2-claim-jsons/);
   assert.match(docs, /release-passport-kfd-3-prebuild-witness-jsons/);
+  assert.match(docs, /release-passport-kfd-support-matrix-json/);
+  assert.match(docs, /release-passport-kfd-product-gate-jsons/);
   assert.match(docs, /release-passport-invariant-passport-command/);
   assert.match(docs, /publish-rematerialize-on-resume: true/);
 });

@@ -1778,7 +1778,7 @@
     {
       "id": "kfd-12",
       "label": "KFD-12",
-      "messageTemplate": "software-domain separation of Initiative, Assignment, occurrence, Claim, Assessment, Decision, Admission, and continuation {state}",
+      "messageTemplate": "KFD-12 {state}",
       "linkRole": "repository-release-passport",
       "states": [
         {
@@ -1788,7 +1788,7 @@
           "payload": {
             "schemaVersion": 1,
             "label": "KFD-12",
-            "message": "software-domain separation of Initiative, Assignment, occurrence, Claim, Assessment, Decision, Admission, and continuation passed",
+            "message": "KFD-12 passed",
             "color": "2ea44f",
             "logoPolicy": {
               "contract": "kungfu-buildchain-badge-logo-policy",
@@ -1807,7 +1807,7 @@
           "payload": {
             "schemaVersion": 1,
             "label": "KFD-12",
-            "message": "software-domain separation of Initiative, Assignment, occurrence, Claim, Assessment, Decision, Admission, and continuation aligned",
+            "message": "KFD-12 aligned",
             "color": "0969da",
             "logoPolicy": {
               "contract": "kungfu-buildchain-badge-logo-policy",
@@ -1826,7 +1826,7 @@
           "payload": {
             "schemaVersion": 1,
             "label": "KFD-12",
-            "message": "software-domain separation of Initiative, Assignment, occurrence, Claim, Assessment, Decision, Admission, and continuation declared",
+            "message": "KFD-12 declared",
             "color": "6e7781",
             "logoPolicy": {
               "contract": "kungfu-buildchain-badge-logo-policy",
@@ -1845,7 +1845,7 @@
           "payload": {
             "schemaVersion": 1,
             "label": "KFD-12",
-            "message": "software-domain separation of Initiative, Assignment, occurrence, Claim, Assessment, Decision, Admission, and continuation planned",
+            "message": "KFD-12 planned",
             "color": "bf8700",
             "logoPolicy": {
               "contract": "kungfu-buildchain-badge-logo-policy",
@@ -1864,7 +1864,7 @@
           "payload": {
             "schemaVersion": 1,
             "label": "KFD-12",
-            "message": "software-domain separation of Initiative, Assignment, occurrence, Claim, Assessment, Decision, Admission, and continuation draft",
+            "message": "KFD-12 draft",
             "color": "8250df",
             "logoPolicy": {
               "contract": "kungfu-buildchain-badge-logo-policy",
@@ -1883,7 +1883,7 @@
           "payload": {
             "schemaVersion": 1,
             "label": "KFD-12",
-            "message": "software-domain separation of Initiative, Assignment, occurrence, Claim, Assessment, Decision, Admission, and continuation downgraded",
+            "message": "KFD-12 downgraded",
             "color": "bf8700",
             "logoPolicy": {
               "contract": "kungfu-buildchain-badge-logo-policy",
@@ -1902,7 +1902,7 @@
           "payload": {
             "schemaVersion": 1,
             "label": "KFD-12",
-            "message": "software-domain separation of Initiative, Assignment, occurrence, Claim, Assessment, Decision, Admission, and continuation failed",
+            "message": "KFD-12 failed",
             "color": "cf222e",
             "logoPolicy": {
               "contract": "kungfu-buildchain-badge-logo-policy",
@@ -1921,7 +1921,7 @@
           "payload": {
             "schemaVersion": 1,
             "label": "KFD-12",
-            "message": "software-domain separation of Initiative, Assignment, occurrence, Claim, Assessment, Decision, Admission, and continuation missing",
+            "message": "KFD-12 missing",
             "color": "6e7781",
             "logoPolicy": {
               "contract": "kungfu-buildchain-badge-logo-policy",
@@ -1938,7 +1938,7 @@
     {
       "id": "kfd-13",
       "label": "KFD-13",
-      "messageTemplate": "software-project settlement binding that preserves independently authoritative source, Atlas, Episode, policy, omission, and risk coordinates {state}",
+      "messageTemplate": "KFD-13 {state}",
       "linkRole": "repository-release-passport",
       "states": [
         {
@@ -1948,7 +1948,7 @@
           "payload": {
             "schemaVersion": 1,
             "label": "KFD-13",
-            "message": "software-project settlement binding that preserves independently authoritative source, Atlas, Episode, policy, omission, and risk coordinates passed",
+            "message": "KFD-13 passed",
             "color": "2ea44f",
             "logoPolicy": {
               "contract": "kungfu-buildchain-badge-logo-policy",
@@ -1967,7 +1967,7 @@
           "payload": {
             "schemaVersion": 1,
             "label": "KFD-13",
-            "message": "software-project settlement binding that preserves independently authoritative source, Atlas, Episode, policy, omission, and risk coordinates aligned",
+            "message": "KFD-13 aligned",
             "color": "0969da",
             "logoPolicy": {
               "contract": "kungfu-buildchain-badge-logo-policy",
@@ -1986,7 +1986,7 @@
           "payload": {
             "schemaVersion": 1,
             "label": "KFD-13",
-            "message": "software-project settlement binding that preserves independently authoritative source, Atlas, Episode, policy, omission, and risk coordinates declared",
+            "message": "KFD-13 declared",
             "color": "6e7781",
             "logoPolicy": {
               "contract": "kungfu-buildchain-badge-logo-policy",
@@ -2005,7 +2005,7 @@
           "payload": {
             "schemaVersion": 1,
             "label": "KFD-13",
-            "message": "software-project settlement binding that preserves independently authoritative source, Atlas, Episode, policy, omission, and risk coordinates planned",
+            "message": "KFD-13 planned",
             "color": "bf8700",
             "logoPolicy": {
               "contract": "kungfu-buildchain-badge-logo-policy",
@@ -2024,7 +2024,7 @@
           "payload": {
             "schemaVersion": 1,
             "label": "KFD-13",
-            "message": "software-project settlement binding that preserves independently authoritative source, Atlas, Episode, policy, omission, and risk coordinates draft",
+            "message": "KFD-13 draft",
             "color": "8250df",
             "logoPolicy": {
               "contract": "kungfu-buildchain-badge-logo-policy",
@@ -2043,7 +2043,7 @@
           "payload": {
             "schemaVersion": 1,
             "label": "KFD-13",
-            "message": "software-project settlement binding that preserves independently authoritative source, Atlas, Episode, policy, omission, and risk coordinates downgraded",
+            "message": "KFD-13 downgraded",
             "color": "bf8700",
             "logoPolicy": {
               "contract": "kungfu-buildchain-badge-logo-policy",
@@ -2062,7 +2062,7 @@
           "payload": {
             "schemaVersion": 1,
             "label": "KFD-13",
-            "message": "software-project settlement binding that preserves independently authoritative source, Atlas, Episode, policy, omission, and risk coordinates failed",
+            "message": "KFD-13 failed",
             "color": "cf222e",
             "logoPolicy": {
               "contract": "kungfu-buildchain-badge-logo-policy",
@@ -2081,7 +2081,7 @@
           "payload": {
             "schemaVersion": 1,
             "label": "KFD-13",
-            "message": "software-project settlement binding that preserves independently authoritative source, Atlas, Episode, policy, omission, and risk coordinates missing",
+            "message": "KFD-13 missing",
             "color": "6e7781",
             "logoPolicy": {
               "contract": "kungfu-buildchain-badge-logo-policy",

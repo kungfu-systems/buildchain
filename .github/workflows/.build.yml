@@ -41,6 +41,11 @@ on:
         default: ""
         type: string
         required: false
+      control-runner-json:
+        description: "JSON runner-label array for trusted control-plane jobs"
+        default: '["ubuntu-24.04"]'
+        type: string
+        required: false
       fail-fast:
         description: "Cancel sibling platform lanes after a required matrix failure; false retains all-platform diagnostics"
         default: false
@@ -311,6 +316,21 @@ on:
         default: ""
         type: string
         required: false
+      cache-dependency-lock-root:
+        description: "Optional consumer-owned exact dependency-lock root bound into structured cache evidence"
+        default: ""
+        type: string
+        required: false
+      cache-toolchain-root:
+        description: "Optional consumer-owned exact toolchain root bound into structured cache evidence"
+        default: ""
+        type: string
+        required: false
+      cache-policy-root:
+        description: "Optional consumer-owned exact qualification policy root bound into structured cache evidence"
+        default: ""
+        type: string
+        required: false
       gate-profile-aggregate-json:
         description: "Optional qualifying buildchain.shifu-gate-aggregate/v1 JSON from the reusable Gate workflow"
         default: ""
@@ -470,7 +490,7 @@ permissions:
 jobs:
   trust-gate:
     name: Trust gate
-    runs-on: ubuntu-24.04
+    runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     outputs:
       trusted: ${{ steps.trust.outputs.trusted }}
       trusted-event: ${{ steps.publish.outputs.trusted-event }}
@@ -832,7 +852,7 @@ jobs:
 
   resolve-source:
     name: Resolve publish source
-    runs-on: ubuntu-24.04
+    runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     needs:
       - trust-gate
     if: ${{ needs.trust-gate.outputs.trusted == 'true' }}
@@ -895,7 +915,7 @@ jobs:
 
   anchored-release-preflight:
     name: Verify anchored release material
-    runs-on: ubuntu-24.04
+    runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     needs:
       - trust-gate
       - resolve-source
@@ -987,7 +1007,7 @@ jobs:
 
   resolve-contract:
     name: Resolve reusable contract
-    runs-on: ubuntu-24.04
+    runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     needs:
       - trust-gate
     outputs:
@@ -1023,7 +1043,7 @@ jobs:
 
   controller-plan:
     name: Plan build controller evidence
-    runs-on: ubuntu-24.04
+    runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     needs:
       - trust-gate
       - resolve-source
@@ -1073,7 +1093,7 @@ jobs:
 
   artifact-transfer:
     name: Resolve artifact transfer
-    runs-on: ubuntu-24.04
+    runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     needs:
       - trust-gate
     if: ${{ needs.trust-gate.outputs.trusted == 'true' }}
@@ -1177,6 +1197,7 @@ jobs:
     timeout-minutes: ${{ inputs.lifecycle-timeout-minutes }}
     env:
       CARGO_REGISTRIES_CRATES_IO_INDEX: ${{ inputs.cargo-registry-index }}
+      CCACHE_STATSLOG: ${{ github.workspace }}/.buildchain/diagnostics/ccache-stats-${{ matrix.platform.id }}.log
     steps:
       - name: Setup Node.js
         if: ${{ inputs.setup-node }}
@@ -1233,6 +1254,7 @@ jobs:
       - name: Download Buildchain runtime checkout bootstrap
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ inputs.artifact-name }}-runtime-checkout-bootstrap-${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           path: .buildchain/runtime-bootstrap
 
@@ -1266,8 +1288,9 @@ jobs:
         run: node .buildchain/runtime-bootstrap/locked-source-checkout.mjs
         env:
           BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
           BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
+          BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           BUILDCHAIN_CHECKOUT_CACHE_MODE: ${{ inputs.checkout-cache-mode }}
           BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE: ${{ inputs.checkout-cache-mirror-url-template || vars.BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE }}
           BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE: ${{ inputs.checkout-cache-reference-repository-template || vars.BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE }}
@@ -1295,7 +1318,12 @@ jobs:
         uses: ./.buildchain/runtime/actions/run-lifecycle
         env:
           BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
           BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_DEPENDENCY_LOCK_ROOT: ${{ inputs.cache-dependency-lock-root }}
+          BUILDCHAIN_TOOLCHAIN_ROOT: ${{ inputs.cache-toolchain-root }}
+          BUILDCHAIN_CACHE_POLICY_ROOT: ${{ inputs.cache-policy-root }}
           SHIFU_CACHE_PROFILE_REF: ${{ inputs.shifu-cache-profile-ref }}
           SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
         with:
@@ -1315,7 +1343,12 @@ jobs:
         uses: ./.buildchain/runtime/actions/run-lifecycle
         env:
           BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
           BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_DEPENDENCY_LOCK_ROOT: ${{ inputs.cache-dependency-lock-root }}
+          BUILDCHAIN_TOOLCHAIN_ROOT: ${{ inputs.cache-toolchain-root }}
+          BUILDCHAIN_CACHE_POLICY_ROOT: ${{ inputs.cache-policy-root }}
           SHIFU_CACHE_PROFILE_REF: ${{ inputs.shifu-cache-profile-ref }}
           SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
           # The ordinary matrix must emit an unsigned sealed input. Prevent a
@@ -1347,7 +1380,12 @@ jobs:
         uses: ./.buildchain/runtime/actions/run-lifecycle
         env:
           BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
           BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
+          BUILDCHAIN_DEPENDENCY_LOCK_ROOT: ${{ inputs.cache-dependency-lock-root }}
+          BUILDCHAIN_TOOLCHAIN_ROOT: ${{ inputs.cache-toolchain-root }}
+          BUILDCHAIN_CACHE_POLICY_ROOT: ${{ inputs.cache-policy-root }}
           SHIFU_CACHE_PROFILE_REF: ${{ inputs.shifu-cache-profile-ref }}
           SHIFU_CACHE_PROFILE_DIGEST: ${{ inputs.shifu-cache-profile-digest }}
         with:
@@ -1541,6 +1579,7 @@ jobs:
       - name: Download Buildchain runtime checkout bootstrap
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ inputs.artifact-name }}-runtime-checkout-bootstrap-${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           path: .buildchain/runtime-bootstrap
 
@@ -1792,7 +1831,7 @@ jobs:
       fail-fast: ${{ inputs.fail-fast }}
       matrix:
         platform: ${{ fromJSON(needs.resolve-contract.outputs.platforms-json) }}
-    runs-on: ubuntu-24.04
+    runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     steps:
       - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
@@ -1818,6 +1857,7 @@ jobs:
       - name: Download artifact relay manifest
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ inputs.artifact-name }}-relay-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           path: .buildchain/downloaded-relay-manifests/${{ matrix.platform.id }}
 
@@ -1918,6 +1958,7 @@ jobs:
       - name: Download immutable credential-island runtime
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ inputs.artifact-name }}-credential-island-runtime-${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           path: .buildchain/runtime/actions/macos-credential-island
 
@@ -1925,6 +1966,7 @@ jobs:
         if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: unsigned-app.zip
           path: .buildchain/credential-island-input
 
@@ -1932,6 +1974,7 @@ jobs:
         if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' }}
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ inputs.artifact-name }}-credential-island-input-manifest-${{ inputs.credential-island-macos-platform-id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           path: .buildchain/credential-island-input
 
@@ -1939,6 +1982,7 @@ jobs:
         if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' }}
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ inputs.artifact-name }}-credential-island-input-${{ inputs.credential-island-macos-platform-id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
           path: .buildchain/credential-island-input
 
@@ -1996,7 +2040,7 @@ jobs:
       - relay-artifacts
       - credential-island-macos
     if: ${{ always() && needs.anchored-release-preflight.result == 'success' && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && (needs.artifact-transfer.outputs.mode == 'github-artifacts' || needs.relay-artifacts.result == 'success') && ((inputs.credential-island-macos-app-path == '' && needs.credential-island-macos.result == 'skipped') || (inputs.credential-island-caller-owned && needs.credential-island-macos.result == 'skipped') || needs.credential-island-macos.result == 'success') }}
-    runs-on: ubuntu-24.04
+    runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     outputs:
       summary-artifact-name: ${{ steps.names.outputs.summary-artifact-name }}
       diagnostics-summary-artifact-name: ${{ steps.names.outputs.diagnostics-summary-artifact-name }}
@@ -2071,6 +2115,7 @@ jobs:
       - name: Download platform manifests
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           pattern: ${{ inputs.artifact-name }}-manifest-*-${{ needs.resolve-source.outputs.publish-source-sha }}
           path: .buildchain/downloaded-manifests
           merge-multiple: false
@@ -2078,6 +2123,7 @@ jobs:
       - name: Download platform diagnostics
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           pattern: ${{ inputs.artifact-name }}-diagnostics-*-${{ needs.resolve-source.outputs.publish-source-sha }}
           path: .buildchain/downloaded-diagnostics
           merge-multiple: false
@@ -2085,12 +2131,14 @@ jobs:
       - name: Download build controller plan for release-candidate passport
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ needs.controller-plan.outputs.controller-plan-artifact }}
           path: .buildchain/controller
 
       - name: Download anchored version material evidence
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ needs.anchored-release-preflight.outputs.evidence-artifact }}
           path: .buildchain/anchored-version-material
 
@@ -2250,7 +2298,7 @@ jobs:
 
   controller-receipt:
     name: Finalize build controller evidence
-    runs-on: ubuntu-24.04
+    runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     needs:
       - trust-gate
       - resolve-source
@@ -2279,6 +2327,7 @@ jobs:
       - name: Download build controller plan
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ needs.controller-plan.outputs.controller-plan-artifact }}
           path: .buildchain/controller
 
@@ -2286,6 +2335,7 @@ jobs:
         if: ${{ needs.summarize.result == 'success' }}
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ needs.summarize.outputs.summary-artifact-name }}
           path: .buildchain/controller/evidence
 
@@ -2293,6 +2343,7 @@ jobs:
         if: ${{ needs.anchored-release-preflight.result == 'success' }}
         uses: actions/download-artifact@v7.0.0
         with:
+          github-token: ${{ github.token }}
           name: ${{ needs.anchored-release-preflight.outputs.evidence-artifact }}
           path: .buildchain/controller/evidence
 

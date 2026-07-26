@@ -39,6 +39,8 @@ function writeAdapterOutput(directory, durationMs = 2500) {
     durationMs,
     title: "Qualified build",
     commandLabel: "pnpm run build",
+    background: "#0B1020",
+    accent: "#67E8A5",
   }));
   fs.writeFileSync(path.join(directory, "public-projection.json"), stableJson({
     schema: "build-images.demo-projection/v1",
@@ -55,13 +57,22 @@ function writeAdapterOutput(directory, durationMs = 2500) {
 
 function writeRendererOutput(directory, inputs) {
   fs.mkdirSync(directory, { recursive: true });
-  for (const [name, source] of Object.entries({
-    "complete-transcript.txt": inputs.transcript,
-    "public-projection.json": inputs.projection,
-    "scene.json": inputs.scene,
-  })) {
-    fs.copyFileSync(source, path.join(directory, name));
-  }
+  const transcript = fs.readFileSync(inputs.transcript, "utf8").replace(/\r\n/g, "\n").replace(/\n*$/, "\n");
+  const sceneInput = JSON.parse(fs.readFileSync(inputs.scene, "utf8"));
+  const projectionInput = JSON.parse(fs.readFileSync(inputs.projection, "utf8"));
+  const scene = {
+    ...sceneInput,
+    commandLabel: sceneInput.commandLabel ?? "",
+    background: (sceneInput.background ?? "#10151f").toLowerCase(),
+    accent: (sceneInput.accent ?? "#67e8a5").toLowerCase(),
+  };
+  const projection = {
+    ...projectionInput,
+    cues: projectionInput.cues.map((cue) => ({ ...cue, annotation: cue.annotation ?? "" })),
+  };
+  fs.writeFileSync(path.join(directory, "complete-transcript.txt"), transcript);
+  fs.writeFileSync(path.join(directory, "public-projection.json"), stableJson(projection));
+  fs.writeFileSync(path.join(directory, "scene.json"), stableJson(scene));
   for (const name of ["demo.gif", "demo.mp4", "demo.webm", "poster.png"]) {
     fs.writeFileSync(path.join(directory, name), Buffer.from(`${name}-fixture-data`));
   }
@@ -81,9 +92,9 @@ function writeRendererOutput(directory, inputs) {
     schema: "build-images.auditable-demo-render/v1",
     renderer: { image: RENDERER_IMAGE },
     inputs: {
-      scene: { root: sha256(fs.readFileSync(inputs.scene)) },
-      transcript: { root: sha256(fs.readFileSync(inputs.transcript)) },
-      projection: { root: sha256(fs.readFileSync(inputs.projection)) },
+      scene: { root: sha256(fs.readFileSync(path.join(directory, "scene.json"))) },
+      transcript: { root: sha256(fs.readFileSync(path.join(directory, "complete-transcript.txt"))) },
+      projection: { root: sha256(fs.readFileSync(path.join(directory, "public-projection.json"))) },
     },
     outputs,
   }));

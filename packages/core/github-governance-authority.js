@@ -1191,20 +1191,38 @@ export function createGithubRulesetGovernanceRolloutPlan({
   repository,
   targetRef,
   rulesetId,
+  rulesetName,
   inventory,
   rollbackSnapshot,
   desiredProtection,
 } = {}) {
   const fullName = requiredString(repository, "repository");
   const branch = normalizedRef(targetRef);
-  const id = Number(rulesetId);
-  if (!Number.isInteger(id) || id <= 0) {
-    throw new Error("ruleset id must be a positive integer");
+  const creating = rulesetId === null || rulesetId === undefined || rulesetId === "";
+  const id = creating ? null : Number(rulesetId);
+  if (!creating && (!Number.isInteger(id) || id <= 0)) {
+    throw new Error("ruleset id must be a positive integer when supplied");
   }
-  if (!inventory || !rollbackSnapshot) {
-    throw new Error("read-only inventory and frozen rollback snapshot are required");
+  if (!inventory || (!creating && !rollbackSnapshot)) {
+    throw new Error(
+      "read-only inventory and any existing frozen rollback snapshot are required",
+    );
   }
-  const before = normalizeGithubRulesetSnapshot(rollbackSnapshot);
+  const before = creating
+    ? {
+        name: requiredString(rulesetName, "ruleset name"),
+        target: "branch",
+        enforcement: "active",
+        bypass_actors: [],
+        conditions: {
+          ref_name: {
+            include: [`refs/heads/${branch}`],
+            exclude: [],
+          },
+        },
+        rules: [],
+      }
+    : normalizeGithubRulesetSnapshot(rollbackSnapshot);
   const exactInclude = before.conditions?.ref_name?.include || [];
   const exactExclude = before.conditions?.ref_name?.exclude || [];
   if (
@@ -1265,28 +1283,53 @@ export function createGithubRulesetGovernanceRolloutPlan({
   });
   if (pullRequestRules.length === 0) desiredRules.push(desiredPullRequestRule);
   if (statusCheckRules.length === 0) desiredRules.push(desiredStatusCheckRule);
+  if (
+    desiredProtection?.blockDeletions === true &&
+    !desiredRules.some((rule) => rule.type === "deletion")
+  ) {
+    desiredRules.push({ type: "deletion" });
+  }
+  if (
+    desiredProtection?.blockNonFastForward === true &&
+    !desiredRules.some((rule) => rule.type === "non_fast_forward")
+  ) {
+    desiredRules.push({ type: "non_fast_forward" });
+  }
   const desired = {
     ...before,
+    name: rulesetName
+      ? requiredString(rulesetName, "ruleset name")
+      : before.name,
     bypass_actors: providerRulesetBypassActors(
       desiredProtection?.rulesetBypassActors,
     ),
     rules: desiredRules,
   };
-  const endpoint = `repos/${fullName}/rulesets/${id}`;
+  const endpoint = creating
+    ? `repos/${fullName}/rulesets`
+    : `repos/${fullName}/rulesets/${id}`;
   const core = {
     schemaVersion: 1,
     contract: GITHUB_GOVERNANCE_RULESET_ROLLOUT_CONTRACT,
     repository: fullName,
     targetRef: branch,
     rulesetId: id,
+    rulesetName: desired.name,
+    action: creating ? "create" : "update",
     inventoryRoot: githubGovernanceDigest(inventory),
-    rollbackSnapshotRoot: githubGovernanceDigest(before),
-    operations: [{ method: "PUT", endpoint, body: desired }],
+    rollbackSnapshotRoot: creating
+      ? githubGovernanceDigest({ rulesetExists: false, targetRef: branch })
+      : githubGovernanceDigest(before),
+    operations: [
+      { method: creating ? "POST" : "PUT", endpoint, body: desired },
+    ],
     impact: [
       "replace ruleset bypass actors with the exact provider-admitted desired set",
       "require fresh Code Owner review and resolved review threads",
       "bind required status checks and strictness to the authoritative target descriptor",
-      "preserve unrelated ruleset rules and exact target conditions",
+      creating
+        ? "create one exact-branch active ruleset because no matching ruleset exists"
+        : "preserve unrelated ruleset rules and exact target conditions",
     ],
     expectedObservation: {
       rulesetRoot: githubGovernanceDigest(desired),
@@ -1296,12 +1339,24 @@ export function createGithubRulesetGovernanceRolloutPlan({
         desiredProtection?.strictRequiredChecks === true,
       requiredApprovals,
     },
-    rollback: [{
-      method: "PUT",
-      endpoint,
-      body: before,
-      preconditionRoot: githubGovernanceDigest(before),
-    }],
+    rollback: creating
+      ? [
+          {
+            method: "DELETE",
+            endpoint: `repos/${fullName}/rulesets/{ruleset_id}`,
+            body: null,
+            preconditionRoot: githubGovernanceDigest(desired),
+            requiresApplyReceipt: true,
+          },
+        ]
+      : [
+          {
+            method: "PUT",
+            endpoint,
+            body: before,
+            preconditionRoot: githubGovernanceDigest(before),
+          },
+        ],
   };
   return { ...core, planRoot: githubGovernanceDigest(core) };
 }

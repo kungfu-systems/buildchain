@@ -380,6 +380,21 @@ inspect `buildchain.release.json` and know whether the released package
 actually exposes no more and no less than the declared collaboration interface,
 instead of trusting docs or release notes.
 
+### KFD support projection
+
+Pass `--kfd-support-matrix-json` together with three
+`--kfd-product-gate-json` arguments for KFD-4, KFD-5, and KFD-7. The collector
+verifies the product-owned KFD-1..13 matrix against the installed
+`@kungfu-tech/kfd` standards, binds each gate to the exact release source and
+fresh evidence cut, and emits `kfd-support.json`. The identical projection is
+embedded as `kfdSupport` in `buildchain.release.json`.
+
+Release verification fails closed when the sibling is missing or differs,
+when a gate expires, when matrix and gate status disagree, or when a matrix
+widens KFD-4/5 candidate, KFD-6 unsupported, KFD-8..13 draft, or any non-shipped
+state. A passed projection is release evidence only; product qualification,
+activation, certification, and support ownership remain outside Buildchain.
+
 ### Floating Buildchain contract lock
 
 KFD-1 protects release payload surfaces. Floating ref contract locks protect the

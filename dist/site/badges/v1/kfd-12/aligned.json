@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "label": "KFD-12",
-  "message": "software-domain separation of Initiative, Assignment, occurrence, Claim, Assessment, Decision, Admission, and continuation aligned",
+  "message": "KFD-12 aligned",
   "color": "0969da",
   "logoPolicy": {
     "contract": "kungfu-buildchain-badge-logo-policy",

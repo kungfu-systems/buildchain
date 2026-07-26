@@ -829,6 +829,57 @@ test("ruleset policy rollout compiles the exact target descriptor with rollback"
   }), /one exact target branch condition/);
 });
 
+test("ruleset policy rollout creates a missing exact target with deletion and force-push protection", () => {
+  const targetPolicy = resolveGithubGovernanceTargetPolicy({
+    repository: "kungfu-systems/kungfu",
+    targetRef: "alpha/v4/v4.0",
+  });
+  const inventory = {
+    repository: "kungfu-systems/kungfu",
+    targetRef: "alpha/v4/v4.0",
+    matchingRulesets: [],
+  };
+  const plan = createGithubRulesetGovernanceRolloutPlan({
+    repository: "kungfu-systems/kungfu",
+    targetRef: "alpha/v4/v4.0",
+    rulesetName: "Kungfu Alpha candidate authority: alpha/v4/v4.0",
+    inventory,
+    rollbackSnapshot: null,
+    desiredProtection: {
+      strictRequiredChecks: targetPolicy.strictRequiredChecks,
+      requiredCheckBindings: targetPolicy.requiredCheckBindings,
+      requiredApprovals: 1,
+      rulesetBypassActors: [],
+      blockDeletions: true,
+      blockNonFastForward: true,
+    },
+  });
+  assert.equal(plan.action, "create");
+  assert.equal(plan.rulesetId, null);
+  assert.equal(plan.operations[0].method, "POST");
+  assert.equal(
+    plan.operations[0].endpoint,
+    "repos/kungfu-systems/kungfu/rulesets",
+  );
+  assert.deepEqual(plan.operations[0].body.bypass_actors, []);
+  assert.deepEqual(
+    plan.operations[0].body.conditions.ref_name.include,
+    ["refs/heads/alpha/v4/v4.0"],
+  );
+  assert.deepEqual(
+    plan.operations[0].body.rules.map(({ type }) => type).sort(),
+    [
+      "deletion",
+      "non_fast_forward",
+      "pull_request",
+      "required_status_checks",
+    ],
+  );
+  assert.equal(plan.rollback[0].method, "DELETE");
+  assert.equal(plan.rollback[0].requiresApplyReceipt, true);
+  assert.match(plan.rollback[0].endpoint, /\{ruleset_id\}$/);
+});
+
 test("tampering and stale receipts are rejected", () => {
   const receipt = evaluateGithubGovernanceSnapshot(qualifyingInput());
   assert.throws(

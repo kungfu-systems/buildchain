@@ -3,11 +3,11 @@
   "contract": "kungfu-buildchain-public-surface-reverse-audit",
   "status": "passed",
   "summary": {
-    "cliCommandCount": 87,
+    "cliCommandCount": 96,
     "workflowCount": 53,
     "actionCount": 5,
     "sitePageCount": 57,
-    "docCommandRefCount": 275,
+    "docCommandRefCount": 286,
     "failureCount": 0
   },
   "enumerated": {
@@ -238,9 +238,49 @@
         "usage": "buildchain kfd 3 witness [--cwd <dir>] [--registry <path>] [--kind prebuild|artifact]"
       },
       {
+        "id": "kfd-4-gate",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd 4 gate --input-json <file-or-json> [--cwd <dir>] [--output <file>] [--json]"
+      },
+      {
         "id": "kfd-4-schema",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain kfd 4 schema [--schema <name>] [--json]"
+      },
+      {
+        "id": "kfd-4-verify",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd 4 verify --gate-json <file-or-json> [--expected-source-sha <sha>] [--json]"
+      },
+      {
+        "id": "kfd-5-gate",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd 5 gate --input-json <file-or-json> [--cwd <dir>] [--output <file>] [--json]"
+      },
+      {
+        "id": "kfd-5-schema",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd 5 schema [--schema <name>] [--json]"
+      },
+      {
+        "id": "kfd-5-verify",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd 5 verify --gate-json <file-or-json> [--expected-source-sha <sha>] [--json]"
+      },
+      {
+        "id": "kfd-7-gate",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd 7 gate --input-json <file-or-json> [--cwd <dir>] [--output <file>] [--json]"
+      },
+      {
+        "id": "kfd-7-schema",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd 7 schema [--schema <name>] [--json]"
+      },
+      {
+        "id": "kfd-7-verify",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd 7 verify --gate-json <file-or-json> [--expected-source-sha <sha>] [--json]"
       },
       {
         "id": "kfd-aggregate",
@@ -271,6 +311,11 @@
         "id": "kfd-status",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain kfd status [--cwd <dir>] [--json]"
+      },
+      {
+        "id": "kfd-support",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain kfd support project --matrix-json <file-or-json> --gate-json <file-or-json>..."
       },
       {
         "id": "kfd-upstream-check",
@@ -532,6 +577,9 @@
           "buildchain-contract-lock-path",
           "buildchain-ref",
           "buildchain-repository",
+          "cache-dependency-lock-root",
+          "cache-policy-root",
+          "cache-toolchain-root",
           "cargo-registry-index",
           "checkout-cache-fallback",
           "checkout-cache-fetch-attempts",
@@ -540,6 +588,7 @@
           "checkout-cache-mode",
           "checkout-cache-reference-repository-template",
           "checkout-cache-timeout-seconds",
+          "control-runner-json",
           "credential-island-caller-owned",
           "credential-island-environment",
           "credential-island-macos-app-path",
@@ -580,7 +629,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 65,
+        "inputCount": 69,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -660,6 +709,7 @@
           "artifact-retention-days",
           "buildchain-ref",
           "buildchain-repository",
+          "cargo-registry-index",
           "checkout-cache-fallback",
           "checkout-cache-fetch-attempts",
           "checkout-cache-github-timeout-seconds",
@@ -677,13 +727,16 @@
           "platforms-json",
           "require-trusted-event",
           "runner-preset",
+          "rust-toolchain",
+          "rustup-dist-server",
+          "rustup-update-root",
           "shifu-cache-profile-digest",
           "shifu-cache-profile-ref",
           "source-ref",
           "untrusted-policy",
           "working-directory"
         ],
-        "inputCount": 26,
+        "inputCount": 30,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -835,6 +888,8 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-product-gate-jsons",
+          "release-passport-kfd-support-matrix-json",
           "release-passport-output-dir",
           "release-passport-platform-manifest-paths",
           "release-passport-product-name",
@@ -846,7 +901,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 83,
+        "inputCount": 85,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1289,6 +1344,9 @@
           "buildchain-ref",
           "buildchain-repository",
           "buildchain-stable-contract-lock-path",
+          "cache-dependency-lock-root",
+          "cache-policy-root",
+          "cache-toolchain-root",
           "cargo-registry-index",
           "checkout-cache-fallback",
           "checkout-cache-fetch-attempts",
@@ -1297,6 +1355,7 @@
           "checkout-cache-mode",
           "checkout-cache-reference-repository-template",
           "checkout-cache-timeout-seconds",
+          "control-runner-json",
           "credential-island-caller-owned",
           "credential-island-environment",
           "credential-island-macos-app-path",
@@ -1337,7 +1396,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 68,
+        "inputCount": 72,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1952,6 +2011,8 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-product-gate-jsons",
+          "release-passport-kfd-support-matrix-json",
           "release-passport-output-dir",
           "release-passport-platform-manifest-paths",
           "release-passport-product-name",
@@ -1963,7 +2024,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 75,
+        "inputCount": 77,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2250,6 +2311,8 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-product-gate-jsons",
+          "release-passport-kfd-support-matrix-json",
           "release-passport-output-dir",
           "release-passport-platform-manifest-paths",
           "release-passport-product-name",
@@ -2266,7 +2329,7 @@
           "transaction-state-path",
           "verification-command"
         ],
-        "inputCount": 64
+        "inputCount": 66
       },
       {
         "id": "report-buildchain-issue",
@@ -3329,6 +3392,16 @@
         "command": "buildchain kfd 3 witness"
       },
       {
+        "id": "kfd-4-gate",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd 4 gate"
+      },
+      {
+        "id": "kfd-4-gate",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 4 gate"
+      },
+      {
         "id": "kfd-4-schema",
         "path": "docs/cli.md",
         "command": "buildchain kfd 4 schema"
@@ -3342,6 +3415,36 @@
         "id": "kfd-4-schema",
         "path": "docs/kfd-support.md",
         "command": "buildchain kfd 4 schema"
+      },
+      {
+        "id": "kfd-5-gate",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd 5 gate"
+      },
+      {
+        "id": "kfd-5-gate",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 5 gate"
+      },
+      {
+        "id": "kfd-5-schema",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 5 schema"
+      },
+      {
+        "id": "kfd-7-gate",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd 7 gate"
+      },
+      {
+        "id": "kfd-7-gate",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 7 gate"
+      },
+      {
+        "id": "kfd-7-schema",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd 7 schema"
       },
       {
         "id": "kfd-aggregate",
@@ -3422,6 +3525,21 @@
         "id": "kfd-status",
         "path": "docs/kfd-support.md",
         "command": "buildchain kfd status --json"
+      },
+      {
+        "id": "kfd-support",
+        "path": "docs/cli.md",
+        "command": "buildchain kfd support project"
+      },
+      {
+        "id": "kfd-support",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd support project"
+      },
+      {
+        "id": "kfd-support",
+        "path": "docs/kfd-support.md",
+        "command": "buildchain kfd support project"
       },
       {
         "id": "kfd-upstream-check",
@@ -3969,9 +4087,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "5ba7fd93a13993b05767b6f02d0626a7347f25c3d7cd4589ed4f70028c1f1bd1",
-    "workflowRegistryDigest": "1ae515aa9c38a443aaac1ea21f92ecd53e0e0d771c949bf157e1c29c036ddc6e",
-    "pageRegistryDigest": "4a7e8a1b61c38ebd1fefdf17942da0e1b7f53aa97e38c0ab83f9c6b53ae6f23e"
+    "cliRegistryDigest": "a1c10dd6977d85a7bc793054baa549108b46d6d18098de109733e01b9151a024",
+    "workflowRegistryDigest": "634213ebd845a158a7acd5820844a4830e4d35058896a5de369fc9cd1006b671",
+    "pageRegistryDigest": "c8b914a43a9c91cbf37a3978e16466b396cb652302c80538168ac1b81f991d59"
   },
   "comparison": {
     "missingCliRegistry": [],

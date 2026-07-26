@@ -195,6 +195,9 @@
     },
     "kfd-3": {
       "type": "object"
+    },
+    "kfdSupport": {
+      "type": "object"
     }
   },
   "additionalProperties": true

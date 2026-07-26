@@ -57,6 +57,11 @@ on:
         default: ""
         type: string
         required: false
+      control-runner-json:
+        description: "JSON runner-label array for trusted control-plane jobs"
+        default: '["ubuntu-24.04"]'
+        type: string
+        required: false
       fail-fast:
         description: "Cancel sibling platform lanes after a required matrix failure; false retains all-platform diagnostics"
         default: false
@@ -327,6 +332,21 @@ on:
         default: ""
         type: string
         required: false
+      cache-dependency-lock-root:
+        description: "Optional consumer-owned exact dependency-lock root bound into structured cache evidence"
+        default: ""
+        type: string
+        required: false
+      cache-toolchain-root:
+        description: "Optional consumer-owned exact toolchain root bound into structured cache evidence"
+        default: ""
+        type: string
+        required: false
+      cache-policy-root:
+        description: "Optional consumer-owned exact qualification policy root bound into structured cache evidence"
+        default: ""
+        type: string
+        required: false
       gate-profile-aggregate-json:
         description: "Optional qualifying buildchain.shifu-gate-aggregate/v1 JSON from the reusable Gate workflow"
         default: ""
@@ -495,7 +515,7 @@ permissions:
 jobs:
   resolve-channel:
     name: Resolve Buildchain channel
-    runs-on: ubuntu-24.04
+    runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     outputs:
       channel: ${{ steps.channel.outputs.channel }}
       buildchain-ref: ${{ steps.channel.outputs.buildchain-ref }}
@@ -588,7 +608,7 @@ jobs:
   controller-plan:
     name: Plan channel router controller evidence
     needs: resolve-channel
-    runs-on: ubuntu-24.04
+    runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     outputs:
       controller-plan-artifact: ${{ steps.names.outputs.controller-plan-artifact }}
       controller-plan-json: ${{ steps.plan.outputs.controller-plan-json }}
@@ -662,6 +682,7 @@ jobs:
       working-directory: ${{ inputs.working-directory }}
       runner-preset: ${{ inputs.runner-preset }}
       platforms-json: ${{ inputs.platforms-json }}
+      control-runner-json: ${{ inputs.control-runner-json }}
       fail-fast: ${{ inputs.fail-fast }}
       linux-container-preset: ${{ inputs.linux-container-preset }}
       linux-container-image: ${{ inputs.linux-container-image }}
@@ -718,6 +739,9 @@ jobs:
       checkout-cache-fetch-attempts: ${{ inputs.checkout-cache-fetch-attempts }}
       shifu-cache-profile-ref: ${{ inputs.shifu-cache-profile-ref }}
       shifu-cache-profile-digest: ${{ inputs.shifu-cache-profile-digest }}
+      cache-dependency-lock-root: ${{ inputs.cache-dependency-lock-root }}
+      cache-toolchain-root: ${{ inputs.cache-toolchain-root }}
+      cache-policy-root: ${{ inputs.cache-policy-root }}
       gate-profile-aggregate-json: ${{ inputs.gate-profile-aggregate-json }}
     secrets: inherit
 
@@ -728,7 +752,7 @@ jobs:
       - controller-plan
       - build
     if: ${{ always() && needs.controller-plan.result == 'success' }}
-    runs-on: ubuntu-24.04
+    runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     outputs:
       controller-receipt-artifact: ${{ steps.names.outputs.controller-receipt-artifact }}
       controller-receipt-json: ${{ steps.receipt.outputs.controller-receipt-json }}
@@ -788,7 +812,7 @@ jobs:
       - build
       - controller-receipt
     if: ${{ always() }}
-    runs-on: ubuntu-24.04
+    runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     steps:
       - name: Enforce public channel router aggregate
         shell: bash
