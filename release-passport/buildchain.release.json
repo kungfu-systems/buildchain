@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-release-passport",
-  "generatedAt": "2026-07-26T15:31:20.790Z",
+  "generatedAt": "2026-07-26T15:36:42.542Z",
   "surfaceTimestampPolicy": {
-    "generatedAt": "2026-07-26T15:31:20.790Z",
-    "publishedAt": "2026-07-26T15:31:20.790Z",
+    "generatedAt": "2026-07-26T15:36:42.542Z",
+    "publishedAt": "2026-07-26T15:36:42.542Z",
     "reproducible": true,
     "timestampPolicy": "ci-injected",
     "deterministicInputs": [
@@ -60,7 +60,7 @@
     "treeEquivalent": true,
     "publishToolingSha": "5c28cea6fbef341794bb0b808b0af87526246cdc",
     "releaseStateRef": "refs/heads/buildchain/release-state/3-0-1",
-    "releaseStateSha": "1b6e24de3c759a2bd9a71967f5ed56b7d707f9eb",
+    "releaseStateSha": "",
     "package": {
       "name": "@kungfu-tech/buildchain",
       "version": "3.0.1"
@@ -4796,7 +4796,7 @@
         },
         "sourceVerification": {
           "status": "passed",
-          "verifiedAt": "2026-07-26T15:31:20.760Z",
+          "verifiedAt": "2026-07-26T15:36:42.520Z",
           "required": true,
           "surfaces": [
             {
@@ -5587,7 +5587,7 @@
         },
         "artifactVerification": {
           "status": "passed",
-          "verifiedAt": "2026-07-26T15:31:20.760Z",
+          "verifiedAt": "2026-07-26T15:36:42.520Z",
           "surfaces": [
             {
               "name": ".github/workflows/.build.yml",
@@ -6676,7 +6676,7 @@
     "schemaVersion": 1,
     "contract": "kungfu-buildchain-kfd-2-release-trust-passport-audit",
     "status": "passed",
-    "verifiedAt": "2026-07-26T15:31:20.791Z",
+    "verifiedAt": "2026-07-26T15:36:42.543Z",
     "auditBoundary": {
       "scope": "public release claims visible to humans or agents",
       "policy": "public claims must bind declared sources, machine-readable evidence, hashes, artifact coordinates, verification results, audit boundaries, responsibility state, and residual risk"
@@ -16434,7 +16434,7 @@
         },
         "comparison": {
           "status": "passed",
-          "verifiedAt": "2026-07-26T15:31:20.784Z",
+          "verifiedAt": "2026-07-26T15:36:42.536Z",
           "supportLevel": "release",
           "declaredPublicSurfaceCount": 133,
           "declaredShippedPublicSurfaceCount": 133,
