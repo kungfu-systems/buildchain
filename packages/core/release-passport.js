@@ -1190,13 +1190,27 @@ export function createReleasePassport({
     kfd3Section: normalizedKfd3?.passportSection,
   });
   const builtSourceSha = optionalString(release.builtSourceSha || release.built_source_sha);
+  const builtSourceTreeSha = optionalString(
+    release.builtSourceTreeSha || release.built_source_tree_sha,
+  );
   const promotionChannelSha = optionalString(release.promotionChannelSha || release.promotion_channel_sha);
+  const promotionChannelTreeSha = optionalString(
+    release.promotionChannelTreeSha || release.promotion_channel_tree_sha,
+  );
   const treeEquivalent = release.treeEquivalent === true;
+  const recoveryTreeEquivalent = Boolean(
+    treeEquivalent &&
+    builtSourceTreeSha &&
+    promotionChannelTreeSha &&
+    builtSourceTreeSha === promotionChannelTreeSha,
+  );
   const normalizedControllerReceipts = normalizeControllerReceiptReferences({
     receipts: controllerReceipts,
     references: controllerReceiptReferences,
     expectedSourceSha: sourceSha,
-    acceptedSourceShas: treeEquivalent && promotionChannelSha === sourceSha && builtSourceSha
+    acceptedSourceShas: treeEquivalent && builtSourceSha && (
+      promotionChannelSha === sourceSha || recoveryTreeEquivalent
+    )
       ? [builtSourceSha]
       : [],
     requirePassed: true,
@@ -1279,9 +1293,9 @@ export function createReleasePassport({
       releaseSha,
       releaseMaterialSha,
       builtSourceSha: optionalString(release.builtSourceSha || release.built_source_sha),
-      builtSourceTreeSha: optionalString(release.builtSourceTreeSha || release.built_source_tree_sha),
+      builtSourceTreeSha,
       promotionChannelSha: optionalString(release.promotionChannelSha || release.promotion_channel_sha),
-      promotionChannelTreeSha: optionalString(release.promotionChannelTreeSha || release.promotion_channel_tree_sha),
+      promotionChannelTreeSha,
       treeEquivalent: release.treeEquivalent === undefined ? undefined : Boolean(release.treeEquivalent),
       publishToolingSha: optionalString(
         release.publishToolingSha ||
