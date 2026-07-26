@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:7f1f3ce6c862e556dc73a0b3b7fe96b8c6772b96de3e677a77eed87c8a03047f",
+      "digest": "sha256:57c80eb8634782e2f24a80dd866f18d9e5ab6ef6dcd7796918ac7692f914a770",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:7f1f3ce6c862e556dc73a0b3b7fe96b8c6772b96de3e677a77eed87c8a03047f",
+      "digest": "sha256:57c80eb8634782e2f24a80dd866f18d9e5ab6ef6dcd7796918ac7692f914a770",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -122,6 +122,19 @@
       "maturity": "stable"
     },
     {
+      "specifier": "@kungfu-tech/buildchain/cache-evidence",
+      "export": "./cache-evidence",
+      "target": "./packages/core/cache-evidence.js",
+      "digest": "sha256:9f8453c53d7f31bccbfc9cdf5c5e62578d531c08fd213416845f753f92ee1d2e",
+      "summary": "Content-addressed cache operation receipts and source/platform-bound evidence-set verification APIs.",
+      "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
       "specifier": "@kungfu-tech/buildchain/controller-evidence",
       "export": "./controller-evidence",
       "target": "./packages/core/controller-evidence.js",
@@ -138,7 +151,7 @@
       "specifier": "@kungfu-tech/buildchain/diagnostics",
       "export": "./diagnostics",
       "target": "./packages/core/diagnostics.js",
-      "digest": "sha256:a0e54f60ec24d9c15529a8dbad33129c8ec537e9f34203119d876d1e2fb26fe7",
+      "digest": "sha256:0644c80bf6807abd09f5585d0b5abd1982f0008c6a03cc484828e7b354275bdd",
       "summary": "Native diagnostics collection, summarization, cache, compiler, and process-sampler APIs.",
       "capabilityGroup": "observability-diagnostics",
       "audience": [
@@ -346,7 +359,7 @@
       "specifier": "@kungfu-tech/buildchain/github-governance-authority",
       "export": "./github-governance-authority",
       "target": "./packages/core/github-governance-authority.js",
-      "digest": "sha256:63f3ce1520edf99e4f877b1dd28afa33d85150266940cd60f82c2aadba38c50d",
+      "digest": "sha256:68f1bca0873f715f4909994c81a97bdc0559879972b1f2026d4e5bbdaf304251",
       "summary": "Fail-closed GitHub ownership, effective-policy, managed-zone admission, rollout-plan, and immutable receipt APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [

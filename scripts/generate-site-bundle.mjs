@@ -503,6 +503,7 @@ function nodeApiMeta(exportName) {
     "./homebrew": { group: "distribution-indexes", summary: "Homebrew tap fact collection, Formula rendering, update, and check APIs." },
     "./build-facts": { group: "observability-diagnostics", summary: "Git source, version, module output, product artifact, and legacy Kungfu build fact APIs." },
     "./candidate-timeline": { group: "observability-diagnostics", summary: "Source-bound candidate event normalization, per-attempt critical-path-safe aggregation, and compact reporting APIs." },
+    "./cache-evidence": { group: "observability-diagnostics", summary: "Content-addressed cache operation receipts and source/platform-bound evidence-set verification APIs." },
     "./diagnostics": { group: "observability-diagnostics", summary: "Native diagnostics collection, summarization, cache, compiler, and process-sampler APIs." },
     "./logging": { group: "observability-diagnostics", summary: "Buildchain JSONL logging, span, summary, and verification APIs." },
     "./portable-dev-cache": { group: "observability-diagnostics", summary: "Portable dependency/compiler cache plan, exact-root verification, and provider receipt APIs." },
