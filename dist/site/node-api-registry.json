@@ -151,7 +151,7 @@
       "specifier": "@kungfu-tech/buildchain/diagnostics",
       "export": "./diagnostics",
       "target": "./packages/core/diagnostics.js",
-      "digest": "sha256:0644c80bf6807abd09f5585d0b5abd1982f0008c6a03cc484828e7b354275bdd",
+      "digest": "sha256:be62d59d4a6e18e8fe96a98539012cd8db82976eea2593540db80a8522d52e73",
       "summary": "Native diagnostics collection, summarization, cache, compiler, and process-sampler APIs.",
       "capabilityGroup": "observability-diagnostics",
       "audience": [
