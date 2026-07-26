@@ -415,7 +415,7 @@
       "title": "Versioning",
       "path": "docs/versioning.md",
       "plane": "why",
-      "digest": "sha256:8b15aca6f63e53e77df13eba5cc5ad14b6e27c62ec9affb324af53414ddab75d",
+      "digest": "sha256:f3665f2f173bdcb287cf8aa509035164e818b20088849f4a2bce098951c84ea3",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "maintainer"
