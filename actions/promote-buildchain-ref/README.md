@@ -140,7 +140,7 @@ trusted channel workflow:
     publish-auth: trusted-publishing
     publish-required-artifacts-json: >-
       [
-        {"kind":"npm","name":"@kungfu-tech/buildchain","ref":"2.0.0","digest":"sha256:..."}
+        {"kind":"npm","name":"@kungfu-tech/buildchain","ref":"3.0.0","digest":"sha256:..."}
       ]
 ```
 

@@ -712,7 +712,7 @@ jobs:
 
 Only trusted `workflow_dispatch` runs by repository actors with write,
 maintain, or admin permission may use a non-empty runtime override. Train refs
-such as `train/v2/v2.3/site-source-of-truth` are temporary validation refs, not
+such as `train/v3/v3.0/site-source-of-truth` are temporary validation refs, not
 stable production dependencies or pending merge targets. They may remain for a
 retention window after release as a fast-use and rollback channel, with old
 trains handled by periodic Buildchain cleanup. The web-surface deployment

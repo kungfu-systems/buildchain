@@ -245,8 +245,8 @@ Allowed override refs are deliberately narrow:
 
 | Ref form | Meaning |
 | --- | --- |
-| `train/v2/v2.3/<capability>` | Temporary capability train under the active minor line |
-| `refs/heads/train/v2/v2.3/<capability>` | Explicit branch ref for the same train |
+| `train/v3/v3.0/<capability>` | Temporary capability train under the active minor line |
+| `refs/heads/train/v3/v3.0/<capability>` | Explicit branch ref for the same train |
 | `<40-character SHA>` | Exact immutable Buildchain runtime commit |
 
 Override requests fail closed unless the event is `workflow_dispatch` and the
@@ -445,7 +445,7 @@ When a Buildchain maintainer asks for downstream validation, the expected
 request is:
 
 ```text
-Buildchain train ready: buildchain-ref=train/v2/v2.3/<capability>.
+Buildchain train ready: buildchain-ref=train/v3/v3.0/<capability>.
 Keep uses: ...@v3; run workflow_dispatch with that buildchain-ref and report the runtime evidence summary.
 ```
 

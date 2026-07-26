@@ -800,7 +800,7 @@ for (const requiredSnippet of [
 for (const [docName, docSource] of Object.entries({ "docs/cli.md": cliDoc, "docs/install.md": installDoc })) {
   for (const requiredSnippet of [
     "minimumReleaseAgeExclude",
-    "@kungfu-tech/buildchain@2.2.5",
+    "@kungfu-tech/buildchain@3.0.0",
     "package/version-specific",
   ]) {
     if (!docSource.includes(requiredSnippet)) {
