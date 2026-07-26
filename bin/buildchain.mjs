@@ -74,6 +74,12 @@ import {
   queryKfd3Capabilities,
   registerKfd3Surfaces,
 } from "../packages/core/kfd3-surface-register.js";
+import {
+  createKfdSupportProjection,
+  evaluateKfdProductGate,
+  validateKfdProductGateResult,
+  validateKfdSupportProjection,
+} from "../packages/core/kfd-product-gates.js";
 import { createBuildchainLayoutDiscovery } from "../packages/core/buildchain-layout.js";
 import { createPortableDevCachePlan, createPortableDevCacheReceipt } from "../packages/core/portable-dev-cache.js";
 import {
@@ -154,6 +160,8 @@ function usage() {
                                     [--kfd-3-prebuild-witness-json <json-or-path>]...
                                     [--kfd-3-artifact-witness-json <json-or-path>]...
                                     [--kfd-3-artifact-verify-cmd <command>]
+                                    [--kfd-support-matrix-json <json-or-path>]
+                                    [--kfd-product-gate-json <json-or-path>]...
                                     [--invariant-passport-json <json-or-path>]...
                                     [--invariant-passport-cmd <command>]
                                     [--kfd-agent-hub-evidence-json <json-or-path>]
@@ -253,6 +261,19 @@ function usage() {
   buildchain kfd 3 query [<product>] [--cwd <dir>] [--registry <path>]
                           [--passport <file-or-url>] [--artifact <path>] [--json]
   buildchain kfd 4 schema [--schema <name>] [--json]
+  buildchain kfd 4 gate --input-json <file-or-json> [--cwd <dir>] [--output <file>] [--json]
+  buildchain kfd 4 verify --gate-json <file-or-json> [--expected-source-sha <sha>] [--json]
+  buildchain kfd 5 schema [--schema <name>] [--json]
+  buildchain kfd 5 gate --input-json <file-or-json> [--cwd <dir>] [--output <file>] [--json]
+  buildchain kfd 5 verify --gate-json <file-or-json> [--expected-source-sha <sha>] [--json]
+  buildchain kfd 7 schema [--schema <name>] [--json]
+  buildchain kfd 7 gate --input-json <file-or-json> [--cwd <dir>] [--output <file>] [--json]
+  buildchain kfd 7 verify --gate-json <file-or-json> [--expected-source-sha <sha>] [--json]
+  buildchain kfd support project --matrix-json <file-or-json> --gate-json <file-or-json>...
+                                  [--expected-source-sha <sha>] [--checked-at <date-time>]
+                                  [--output <file>] [--json]
+  buildchain kfd support verify --projection-json <file-or-json>
+                                  [--expected-source-sha <sha>] [--checked-at <date-time>] [--json]
   buildchain sample process-tree [--interval-ms <n>] [--label <name>]
                                  [--output <jsonl>] [--summary-output <json>]
                                  [--requested-parallelism <n>] [--json]
@@ -865,10 +886,136 @@ function runKfd2Cli(args = []) {
   throw new Error("usage: buildchain kfd 2 <schema|taxonomy|claims|product-claims|trust-claims|trust-assessment> ...");
 }
 
+async function runKfdProductGateCli(standard, args = []) {
+  const [rawAction = "schema", ...rest] = args;
+  const action = rawAction || "schema";
+  const cwd = path.resolve(readFlag(rest, "cwd", process.cwd()));
+  const json = readBooleanFlag(rest, "json");
+  if (action === "schema") {
+    printKfdSchemaOrJson({
+      result: readKfdSchema({ standard, schema: readFlag(rest, "schema", "") }),
+      json,
+    });
+    return;
+  }
+  if (action === "gate") {
+    const inputValue = readFlag(rest, "input-json", "");
+    if (!inputValue) {
+      throw new Error(`buildchain kfd ${standard.slice(4)} gate requires --input-json <file-or-json>`);
+    }
+    const result = await evaluateKfdProductGate({
+      cwd,
+      input: readJsonInput(inputValue, { cwd, label: `${standard} product gate input` }),
+      expectedSourceSha: readFlag(rest, "expected-source-sha", ""),
+      checkedAt: readFlag(rest, "checked-at", "") || new Date().toISOString(),
+    });
+    const output = readFlag(rest, "output", "");
+    if (output) writeJsonFile(path.resolve(cwd, output), result);
+    if (json || !output) {
+      printJson(result);
+    } else {
+      process.stdout.write(`${standard} product gate: ${result.status} -> ${output}\n`);
+      for (const entry of result.issues) {
+        process.stdout.write(`- ${entry.code}: ${entry.path}: ${entry.message}\n`);
+      }
+    }
+    if (result.status !== "passed") process.exitCode = 1;
+    return;
+  }
+  if (action === "verify") {
+    const gateValue = readFlag(rest, "gate-json", "");
+    if (!gateValue) {
+      throw new Error(`buildchain kfd ${standard.slice(4)} verify requires --gate-json <file-or-json>`);
+    }
+    const gate = readJsonInput(gateValue, { cwd, label: `${standard} product gate result` });
+    const validation = validateKfdProductGateResult(gate, {
+      expectedSourceSha: readFlag(rest, "expected-source-sha", ""),
+      checkedAt: readFlag(rest, "checked-at", "") || new Date().toISOString(),
+    });
+    const result = {
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-kfd-product-gate-verification",
+      valid: validation.valid,
+      passed: validation.valid && gate.status === "passed",
+      standard: gate.standard || standard,
+      gateRoot: gate.gateRoot || "",
+      issues: validation.issues,
+    };
+    if (json) printJson(result);
+    else process.stdout.write(`${standard} product gate verify: ${result.passed ? "passed" : "failed"}\n`);
+    if (!result.passed) process.exitCode = 1;
+    return;
+  }
+  throw new Error(`usage: buildchain kfd ${standard.slice(4)} <schema|gate|verify> ...`);
+}
+
+function runKfdSupportCli(args = []) {
+  const [action = "", ...rest] = args;
+  const cwd = path.resolve(readFlag(rest, "cwd", process.cwd()));
+  const json = readBooleanFlag(rest, "json");
+  const checkedAt = readFlag(rest, "checked-at", "") || new Date().toISOString();
+  const expectedSourceSha = readFlag(rest, "expected-source-sha", "");
+  if (action === "project") {
+    const matrixInput = readFlag(rest, "matrix-json", "");
+    if (!matrixInput) {
+      throw new Error("buildchain kfd support project requires --matrix-json <file-or-json>");
+    }
+    const matrix = readJsonInput(matrixInput, { cwd, label: "KFD support matrix" });
+    const matrixPath = path.resolve(cwd, matrixInput);
+    const matrixRoot = fs.existsSync(matrixPath)
+      ? `sha256:${crypto.createHash("sha256").update(fs.readFileSync(matrixPath)).digest("hex")}`
+      : "";
+    const gateResults = readRepeatedJsonInputs(rest, "gate-json", {
+      cwd,
+      label: "KFD product gate result",
+    });
+    const result = createKfdSupportProjection({
+      matrix,
+      matrixRoot,
+      gateResults,
+      expectedSourceSha,
+      checkedAt,
+    });
+    const output = readFlag(rest, "output", "");
+    if (output) writeJsonFile(path.resolve(cwd, output), result);
+    if (json || !output) {
+      printJson(result);
+    } else {
+      process.stdout.write(`KFD support projection: ${result.status} -> ${output}\n`);
+      for (const entry of result.issues) {
+        process.stdout.write(`- ${entry.code}: ${entry.path}: ${entry.message}\n`);
+      }
+    }
+    if (result.status !== "passed") process.exitCode = 1;
+    return;
+  }
+  if (action === "verify") {
+    const projectionInput = readFlag(rest, "projection-json", "");
+    if (!projectionInput) {
+      throw new Error("buildchain kfd support verify requires --projection-json <file-or-json>");
+    }
+    const result = validateKfdSupportProjection(
+      readJsonInput(projectionInput, { cwd, label: "KFD support projection" }),
+      { expectedSourceSha, checkedAt },
+    );
+    const report = {
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-kfd-support-projection-verification",
+      ok: result.valid,
+      issues: result.issues,
+    };
+    if (json) printJson(report);
+    else process.stdout.write(`KFD support projection verify: ${report.ok ? "passed" : "failed"}\n`);
+    if (!report.ok) process.exitCode = 1;
+    return;
+  }
+  throw new Error("usage: buildchain kfd support <project|verify> ...");
+}
+
 async function runKfdCli(args = []) {
   const [subcommand = "", maybeStandardOrAction = "", ...rest] = args;
   if (!subcommand) {
-    throw new Error("usage: buildchain kfd <status|migrate-layout|schema|upstream|aggregate|hub|1|2|3|4> ...");
+    throw new Error("usage: buildchain kfd <status|migrate-layout|schema|upstream|aggregate|hub|support|1|2|3|4|5|7> ...");
   }
 
   if (subcommand === "hub") {
@@ -957,7 +1104,7 @@ async function runKfdCli(args = []) {
     if (schemaCommand === "show") {
       const standard = maybeStandard && !maybeStandard.startsWith("--") ? maybeStandard : readFlag(effectiveArgs, "standard", "");
       if (!standard) {
-        throw new Error("usage: buildchain kfd schema show <kfd-1|kfd-2|kfd-3|kfd-4> [--schema <name>]");
+        throw new Error("usage: buildchain kfd schema show <kfd-1..kfd-13> [--schema <name>]");
       }
       const result = readKfdSchema({ standard, schema: readFlag(effectiveArgs, "schema", "") });
       if (json) {
@@ -1036,6 +1183,11 @@ async function runKfdCli(args = []) {
     return;
   }
 
+  if (subcommand === "support") {
+    runKfdSupportCli([maybeStandardOrAction, ...rest]);
+    return;
+  }
+
   const standard = normalizeKfdStandardId(subcommand);
   if (standard === "kfd-1") {
     runKfd1Cli([maybeStandardOrAction, ...rest]);
@@ -1049,17 +1201,11 @@ async function runKfdCli(args = []) {
     await runKfd3Cli([maybeStandardOrAction, ...rest]);
     return;
   }
-  if (standard === "kfd-4") {
-    const action = maybeStandardOrAction || "schema";
-    if (action === "schema") {
-      const schemaArgs = rest;
-      const json = readBooleanFlag(schemaArgs, "json");
-      printKfdSchemaOrJson({ result: readKfdSchema({ standard, schema: readFlag(schemaArgs, "schema", "") }), json });
-      return;
-    }
-    throw new Error("KFD-4 is currently schema-only in Buildchain; use: buildchain kfd 4 schema");
+  if (["kfd-4", "kfd-5", "kfd-7"].includes(standard)) {
+    await runKfdProductGateCli(standard, [maybeStandardOrAction, ...rest]);
+    return;
   }
-  throw new Error("usage: buildchain kfd <status|migrate-layout|schema|upstream|aggregate|hub|1|2|3|4> ...");
+  throw new Error("usage: buildchain kfd <status|migrate-layout|schema|upstream|aggregate|hub|support|1|2|3|4|5|7> ...");
 }
 
 async function runBuildFactsCli(args = []) {

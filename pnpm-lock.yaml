@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@kungfu-tech/kfd':
-        specifier: 1.0.0-alpha.41
-        version: 1.0.0-alpha.41
+        specifier: 1.0.0-alpha.47
+        version: 1.0.0-alpha.47
       smol-toml:
         specifier: 1.7.0
         version: 1.7.0
@@ -278,8 +278,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@kungfu-tech/kfd@1.0.0-alpha.41':
-    resolution: {integrity: sha512-e+iIuvsijDLSFotb3gPKqwn649lLGRX3xEWOwn7xfBeu8L8kvw5RPRznJ4xKVM+NYCrfYCRVmUzpJI58k97C+Q==}
+  '@kungfu-tech/kfd@1.0.0-alpha.47':
+    resolution: {integrity: sha512-tFyFev5UKm2snujWB0FXwHkwLpKhWxmE16MPjn1zSyl0X/y7QTERG7oCL0TIBuMpKC20QnNi6r0oVKRawyQ7fA==}
     hasBin: true
 
   '@napi-rs/wasm-runtime@1.1.6':
@@ -1279,7 +1279,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@kungfu-tech/kfd@1.0.0-alpha.41': {}
+  '@kungfu-tech/kfd@1.0.0-alpha.47': {}
 
   '@napi-rs/wasm-runtime@1.1.6(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)':
     dependencies:

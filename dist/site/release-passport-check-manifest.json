@@ -14,6 +14,12 @@
       "command": "buildchain verify release-passport <buildchain.release.json>",
       "nodeApi": "@kungfu-tech/buildchain/release-passport#verifyReleasePassport",
       "result": "check-report.json"
+    },
+    "kfdSupportProjection": {
+      "inputSchema": "schemas/kfd-product-gate-input-v1.schema.json",
+      "projectionSchema": "schemas/kfd-support-projection-v1.schema.json",
+      "evidence": "kfd-support.json",
+      "rule": "The passport mirrors one product-owned support matrix and validated product-gate results without widening any claim state."
     }
   },
   "ownership": {
@@ -36,6 +42,7 @@
       "platformArtifactManifests",
       "distTagPromotion",
       "controllerReceipts",
+      "kfdSupport",
       "artifacts",
       "evidence",
       "recovery"
@@ -181,6 +188,10 @@
       {
         "when": "evidence.transactionState is present",
         "pointer": "evidence.transactionState"
+      },
+      {
+        "when": "kfdSupport is present",
+        "pointer": "evidence.kfdSupport"
       }
     ],
     "rule": "The normative checker resolves every declared sibling relative to the passport and fails closed on missing required evidence, digest drift, or semantic mismatch."

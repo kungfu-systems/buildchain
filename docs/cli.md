@@ -281,8 +281,9 @@ assertPublicSurfaceReverseAudit(collectPublicSurfaceReverseAudit({ root: process
 `buildchain kfd` is the product-facing KFD namespace. Schema commands expose the
 machine-readable KFD standards shipped by `@kungfu-tech/kfd`, while versioned
 subcommands host concrete product workflows. KFD-1, KFD-2, and KFD-3 are
-first-class Buildchain surfaces. KFD-4 is schema-only until Buildchain has a
-real verification protocol for it.
+first-class Buildchain surfaces. KFD-4, KFD-5, and KFD-7 expose fail-closed
+product-evidence gate and verification protocols; passing those protocols does
+not itself qualify, certify, activate, or ship support.
 
 `status` reports implemented support and the active repo-owned file layout.
 `migrate-layout` moves legacy root files into `.buildchain/`:
@@ -290,6 +291,12 @@ real verification protocol for it.
 ```bash
 buildchain kfd status --json
 buildchain kfd migrate-layout --write
+buildchain kfd 4 gate --input-json kfd-4-gate-input.json --output kfd-4-gate.json
+buildchain kfd 5 gate --input-json kfd-5-gate-input.json --output kfd-5-gate.json
+buildchain kfd 7 gate --input-json kfd-7-gate-input.json --output kfd-7-gate.json
+buildchain kfd support project --matrix-json support-matrix.json \
+  --gate-json kfd-4-gate.json --gate-json kfd-5-gate.json \
+  --gate-json kfd-7-gate.json --output kfd-support.json
 ```
 
 KFD-1 commands generate and validate contract-world release evidence:

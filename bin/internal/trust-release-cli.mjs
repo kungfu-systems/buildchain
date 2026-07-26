@@ -186,6 +186,8 @@ async function dispatchTrustReleaseCommand({ command, args, runScript, packageVe
       kfd3PrebuildWitnessJsons: readRepeatedFlag(collectArgs, "kfd-3-prebuild-witness-json"),
       kfd3ArtifactWitnessJsons: readRepeatedFlag(collectArgs, "kfd-3-artifact-witness-json"),
       kfd3ArtifactVerifyCommand: readFlag(collectArgs, "kfd-3-artifact-verify-cmd", ""),
+      kfdSupportMatrixJson: readFlag(collectArgs, "kfd-support-matrix-json", ""),
+      kfdProductGateJsons: readRepeatedFlag(collectArgs, "kfd-product-gate-json"),
       invariantPassportJsons: readRepeatedFlag(collectArgs, "invariant-passport-json"),
       invariantPassportCommand: readFlag(collectArgs, "invariant-passport-cmd", ""),
       kfdAgentHubEvidenceJson: readFlag(collectArgs, "kfd-agent-hub-evidence-json", ""),

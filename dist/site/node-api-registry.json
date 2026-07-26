@@ -8,7 +8,7 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:7f1f3ce6c862e556dc73a0b3b7fe96b8c6772b96de3e677a77eed87c8a03047f",
+      "digest": "sha256:47761a66474e783b4defb0de8a6df8fb9b73f61b766152c323099354e8a42517",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -47,7 +47,7 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:7f1f3ce6c862e556dc73a0b3b7fe96b8c6772b96de3e677a77eed87c8a03047f",
+      "digest": "sha256:47761a66474e783b4defb0de8a6df8fb9b73f61b766152c323099354e8a42517",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
@@ -177,8 +177,21 @@
       "specifier": "@kungfu-tech/buildchain/kfd",
       "export": "./kfd",
       "target": "./packages/core/kfd.js",
-      "digest": "sha256:7b4c15c375e19f5e558476cd0e17c6ea86372bb04a08e80cdf268f8ad8077fc4",
+      "digest": "sha256:d9e72c8220cf09a4d92ac995a7ddef8b4b0ff17e97440cb87363480eef0b8c8c",
       "summary": "Unified KFD standards, schema discovery, KFD-1/KFD-2/KFD-3 grouped APIs, KFD-4 schema discovery, upstream KFD aggregate facts, and Buildchain KFD claim helpers.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "maturity": "stable"
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/kfd-product-gates",
+      "export": "./kfd-product-gates",
+      "target": "./packages/core/kfd-product-gates.js",
+      "digest": "sha256:42c393d2d3adc7223d6d8784428556b036c29707e8a3e6becd07b72683f800fb",
+      "summary": "Fail-closed KFD-4, KFD-5, and KFD-7 product evidence gates plus non-widening KFD support-matrix release projections.",
       "capabilityGroup": "kfd-trust",
       "audience": [
         "developer",
@@ -398,7 +411,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:c06fa15a2a2e5192c4d61737af1f84301d7b5d48bbbe9861884e00ca59039fad",
+      "digest": "sha256:842f7f1e60a8de253225ada03cf238948ce527481eb640bc6f14c6cc0ef38880",
       "summary": "Release passport collection, verification, explanation, and evidence APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -411,7 +424,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport-contract",
       "export": "./release-passport-contract",
       "target": "./packages/core/release-passport-contract.js",
-      "digest": "sha256:b91d4fd2d830b91445c56f72d75e4dc4e7e69094181154a32a2780f86d81d317",
+      "digest": "sha256:5623da00b6355cfafc7564deb9206d36f7b2dafb24e29fec77c35deee5de5f6b",
       "summary": "Standalone release passport JSON Schema, ownership/check manifest, and structural validation APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -477,7 +490,7 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:f4518193026571d1e84bc245725a9f83e842b2e4b4dfaa072c8207021fa89cd1"
+      "digest": "sha256:47be88f5e5fd14124d03510b807722215034d34eefcebdfe2599a310350b7697"
     },
     {
       "id": "build-facts",
@@ -487,7 +500,7 @@
     {
       "id": "kfd-support",
       "path": "docs/kfd-support.md",
-      "digest": "sha256:58a60b3e54bc47d4bc9b6e08a432ba4ff75ed2275ef056d04c44cc2bc25046da"
+      "digest": "sha256:3a6143e450ab7976a50788fee48ec4d7313706774ff5cf8f71075a7b9e196e01"
     },
     {
       "id": "readme-badges",

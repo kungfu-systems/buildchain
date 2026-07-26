@@ -307,6 +307,16 @@ on:
         default: ""
         type: string
         required: false
+      release-passport-kfd-support-matrix-json:
+        description: "KFD-1..13 support matrix JSON path projected into the release passport"
+        default: ""
+        type: string
+        required: false
+      release-passport-kfd-product-gate-jsons:
+        description: "Newline- or comma-separated KFD-4/5/7 product gate result JSON paths"
+        default: ""
+        type: string
+        required: false
       release-passport-invariant-passport-jsons:
         description: "Newline- or comma-separated invariant Passport JSON paths passed to the release gate"
         default: ""
@@ -1451,6 +1461,8 @@ jobs:
           release-passport-kfd-3-prebuild-witness-jsons: ${{ inputs.release-passport-kfd-3-prebuild-witness-jsons }}
           release-passport-kfd-3-artifact-witness-jsons: ${{ inputs.release-passport-kfd-3-artifact-witness-jsons }}
           release-passport-kfd-3-artifact-verify-command: ${{ inputs.release-passport-kfd-3-artifact-verify-command }}
+          release-passport-kfd-support-matrix-json: ${{ inputs.release-passport-kfd-support-matrix-json }}
+          release-passport-kfd-product-gate-jsons: ${{ inputs.release-passport-kfd-product-gate-jsons }}
           release-passport-invariant-passport-jsons: ${{ inputs.release-passport-invariant-passport-jsons }}
           release-passport-invariant-passport-command: ${{ inputs.release-passport-invariant-passport-command }}
           release-passport-buildchain-self-kfd: ${{ inputs.release-passport-buildchain-self-kfd }}
